@@ -27,7 +27,6 @@
 #include "mon.h"
 #include "item_lib.h"
 #include "files_interfaces.h"
-#include "logging_old.h"
 #include "pipes.h"
 
 #ifdef HAVE_NOVA
@@ -65,7 +64,7 @@ void MonProcessesGatherData(double *cf_this)
 
     DeleteItemList(userList);
 
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "(Users,root,other) = (%d,%d,%d)\n", (int) cf_this[ob_users], (int) cf_this[ob_rootprocs],
+    Log(LOG_LEVEL_VERBOSE, "(Users,root,other) = (%d,%d,%d)", (int) cf_this[ob_users], (int) cf_this[ob_rootprocs],
           (int) cf_this[ob_otherprocs]);
 }
 

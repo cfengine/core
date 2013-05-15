@@ -27,6 +27,7 @@
 #include "logging.h"
 #include "logging_priv.h"
 #include "misc_lib.h"
+#include "string_lib.h"
 #include "env_context.h"
 
 #include <assert.h>
@@ -36,6 +37,7 @@ typedef struct
     const EvalContext *eval_context;
     int promise_level;
 
+    char *stack_path;
     char *last_message;
 } PromiseLoggingContext;
 
@@ -78,7 +80,7 @@ static LogLevel GetLevelForPromise(const EvalContext *ctx, const Promise *pp, co
 
 static LogLevel CalculateLogLevel(const EvalContext *ctx, const Promise *pp)
 {
-    LogLevel log_level = LoggingPrivGetGlobalLogLevel();
+    LogLevel log_level = LogGetGlobalLevel();
 
     if (pp)
     {
@@ -97,7 +99,7 @@ static LogLevel CalculateLogLevel(const EvalContext *ctx, const Promise *pp)
 
 static LogLevel CalculateReportLevel(const EvalContext *ctx, const Promise *pp)
 {
-    LogLevel report_level = LoggingPrivGetGlobalLogLevel();
+    LogLevel report_level = LogGetGlobalLevel();
 
     if (pp)
     {
@@ -107,14 +109,27 @@ static LogLevel CalculateReportLevel(const EvalContext *ctx, const Promise *pp)
     return report_level;
 }
 
-static void LogHook(LoggingPrivContext *pctx, const char *message)
+static const char *LogHook(LoggingPrivContext *pctx, const char *message)
 {
     PromiseLoggingContext *plctx = pctx->param;
 
     if (plctx->promise_level)
     {
         free(plctx->last_message);
-        plctx->last_message = xstrdup(message);
+        if (LEGACY_OUTPUT)
+        {
+            plctx->last_message = xstrdup(message);
+        }
+        else
+        {
+            plctx->last_message = StringConcatenate(3, plctx->stack_path, ": ", message);
+        }
+
+        return plctx->last_message;
+    }
+    else
+    {
+        return message;
     }
 }
 
@@ -162,6 +177,7 @@ void PromiseLoggingPromiseEnter(const EvalContext *eval_context, const Promise *
     }
 
     plctx->promise_level++;
+    plctx->stack_path = EvalContextStackPath(eval_context);
 
     LoggingPrivSetLevels(CalculateLogLevel(eval_context, pp), CalculateReportLevel(eval_context, pp));
 }
@@ -194,8 +210,9 @@ char *PromiseLoggingPromiseFinish(const EvalContext *eval_context, const Promise
 
     plctx->promise_level--;
     plctx->last_message = NULL;
+    free(plctx->stack_path);
 
-    LoggingPrivSetLevels(LoggingPrivGetGlobalLogLevel(), LoggingPrivGetGlobalLogLevel());
+    LoggingPrivSetLevels(LogGetGlobalLevel(), LogGetGlobalLevel());
 
     return last_message;
 }

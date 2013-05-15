@@ -73,9 +73,8 @@ check_PROGRAMS = \
 	exec-config-test \
 	generic_agent_test \
 	syntax_test \
-	hashes_test
-
-#	ipaddress_test
+       ipaddress_test \
+	hashes_test 
 
 if HAVE_AVAHI_CLIENT
 if HAVE_AVAHI_COMMON
@@ -178,7 +177,7 @@ connection_management_test_SOURCES = connection_management_test.c ../../cf-serve
 connection_management_test_LDADD = ../../libpromises/libpromises.la libtest.la
 
 rlist_test_SOURCES = rlist_test.c \
-       ../../libpromises/rlist.c
+       ../../libpromises/rlist.c ../../libutils/logging.c
 rlist_test_LDADD = libtest.la libstr.la
 
 if LINUX

@@ -25,7 +25,6 @@
 #include "cf3.defs.h"
 
 #include "mon.h"
-#include "logging_old.h"
 
 #ifdef HAVE_SYS_LOADAVG_H
 # include <sys/loadavg.h>
@@ -42,8 +41,6 @@ void MonLoadGatherData(double *cf_this)
     double load[LOADAVG_5MIN], sum = 0.0;
     int i, n;
 
-    CfDebug("GatherLoadData\n\n");
-
     if ((n = getloadavg(load, LOADAVG_5MIN)) == -1)
     {
         cf_this[ob_loadavg] = 0.0;
@@ -59,14 +56,14 @@ void MonLoadGatherData(double *cf_this)
 /* Scale load average by 100 to make it visible */
 
     cf_this[ob_loadavg] = sum;
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Load Average = %.2lf\n", cf_this[ob_loadavg]);
+    Log(LOG_LEVEL_VERBOSE, "Load Average = %.2lf", cf_this[ob_loadavg]);
 }
 
 #else
 
 void MonLoadGatherData(double *cf_this)
 {
-    CfDebug("Average load data is not available.\n");
+    Log(LOG_LEVEL_DEBUG, "Average load data is not available.");
 }
 
 #endif

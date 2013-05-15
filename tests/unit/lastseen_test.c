@@ -191,18 +191,19 @@ void FatalError(char *s, ...)
     exit(42);
 }
 
-void CfOut(OutputLevel level, const char *errstr, const char *fmt, ...)
+void Log(LogLevel level, const char *fmt, ...)
 {
     fprintf(stderr, "CFOUT<%d>: ", level);
-    if (errstr)
-    {
-        fprintf(stderr, " %s: %s ", errstr, strerror(errno));
-    }
     va_list ap;
     va_start(ap, fmt);
     vfprintf(stderr, fmt, ap);
     va_end(ap);
     fprintf(stderr, "\n");
+}
+
+const char *GetErrorStr(void)
+{
+    return strerror(errno);
 }
 
 HashMethod CF_DEFAULT_DIGEST;
@@ -212,9 +213,6 @@ const char *SHIFT_TEXT[] = {};
 pthread_mutex_t *cft_output;
 char VIPADDRESS[CF_MAX_IP_LEN];
 RSA *PUBKEY;
-
-int DEBUG;
-
 bool MINUSF;
 
 char *MapAddress(char *addr)

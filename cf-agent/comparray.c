@@ -45,8 +45,6 @@ int FixCompressedArrayValue(int i, char *value, CompressedArray **start)
         }
     }
 
-    CfDebug("FixCompressedArrayValue(%d,%s)\n", i, value);
-
     ap = xmalloc(sizeof(CompressedArray));
 
     ap->key = i;
@@ -79,8 +77,6 @@ void DeleteCompressedArray(CompressedArray *start)
 int CompressedArrayElementExists(CompressedArray *start, int key)
 {
     CompressedArray *ap;
-
-    CfDebug("CompressedArrayElementExists(%d)\n", key);
 
     for (ap = start; ap != NULL; ap = ap->next)
     {

@@ -1,0 +1,290 @@
+######################################################
+#
+#  ACL tests
+#  This test is not convergent, since it tests the
+#  same file over and over. But it saves us a lot
+#  of test code.
+#
+#####################################################
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { "init", "test" };
+  version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+  classes:
+    "cfengine_internal_getfacl" expression => fileexists("/var/cfengine/bin/getfacl");
+    "system_getfacl" expression => fileexists("/usr/bin/getfacl");
+
+  vars:
+    linux.cfengine_internal_getfacl::
+      "cmd" string => "/var/cfengine/bin/getfacl";
+    linux.!cfengine_internal_getfacl.system_getfacl::
+      "cmd" string => "/usr/bin/getfacl";
+    windows::
+      "cmd" string => "C:\windows\system32\cmd.exe /C cacls";
+
+  vars:
+    windows::
+      "rootuser" string => "Administrator";
+    !windows::
+      "rootuser" string => "root";
+
+  vars:
+    # ACLs may work on many Unixes, but only Linux has the tool we use to check the permissions.
+    linux::
+      # Ordering is important here, in the case of append.
+      "acl_method[regular_posix]" string => "overwrite";
+      "aces[regular_posix]" slist => { "user:*:=rw:allow", "group:*:=rw:allow", "all:=r:allow" };
+      "regcmp[regular_posix]" string => ".*user::rw-.*group::rw-.*other::r--.*";
+
+      "acl_method[regular_posix2]" string => "overwrite";
+      "aces[regular_posix2]" slist => { "user:*:=x:allow", "group:*:=x:allow", "all:=w:allow" };
+      "regcmp[regular_posix2]" string => ".*user::--x.*group::--x.*other::-w-.*";
+
+      "acl_method[specific_user]" string => "overwrite";
+      "aces[specific_user]" slist => { "user:*:=r:allow", "group:*:=r:allow", "all:=r:allow", "user:root:=rwx:allow" };
+      "regcmp[specific_user]" string => ".*user::r--.*user:root:rwx.*group::r--.*other::r--.*";
+      "notregcmp[specific_user]" string => ".*group:root:.*";
+
+      "acl_method[specific_group_append]" string => "append";
+      "aces[specific_group_append]" slist => { "group:root:=rw:allow" };
+      "regcmp[specific_group_append]" string => ".*user::r--.*user:root:rwx.*group::r--.*group:root:rw-.*other::r--.*";
+
+      "acl_method[no_mask]" string => "overwrite";
+      "aces[no_mask]" slist => { "user:*:=r:allow", "group:*:=r:allow", "all:=r:allow", "user:root:=rx:allow" };
+      "regcmp[no_mask]" string => ".*user::r--.*user:root:r-x.*group::r--.*mask::r-x.*other::r--.*";
+
+      "acl_type[specific_mask]" string => "posix";
+      "acl_method[specific_mask]" string => "overwrite";
+      "aces[specific_mask]" slist => { "user:*:=r:allow", "group:*:=r:allow", "mask:=r:allow", "all:=r:allow", "user:root:=rw:allow" };
+      "regcmp[specific_mask]" string => ".*user::r--.*user:root:rw-.*group::r--.*mask::r--.*other::r--.*";
+      "notregcmp[specific_mask]" string => ".*group:root:.*";
+
+      "acl_method[mask_and_append_group]" string => "append";
+      "aces[mask_and_append_group]" slist => { "group:root:=rx:allow" };
+      "regcmp[mask_and_append_group]" string => ".*user::r--.*user:root:rw-.*group::r--.*group:root:r-x.*mask::rwx.*other::r--.*";
+
+      "acl_method[no_perm_group]" string => "append";
+      "aces[no_perm_group]" slist => { "group:root:=:allow" };
+      "regcmp[no_perm_group]" string => ".*user::r--.*user:root:rw-.*group::r--.*group:root:---.*mask::rw-.*other::r--.*";
+
+      "acl_method[add_perm]" string => "append";
+      "aces[add_perm]" slist => { "user:*:+x:allow" };
+      "regcmp[add_perm]" string => ".*user::r-x.*user:root:rw-.*group::r--.*group:root:---.*mask::rw-.*other::r--.*";
+
+      "acl_method[add_perm_user]" string => "append";
+      "aces[add_perm_user]" slist => { "user:root:+x:allow" };
+      "regcmp[add_perm_user]" string => ".*user::r-x.*user:root:rwx.*group::r--.*group:root:---.*mask::rwx.*other::r--.*";
+
+      "acl_method[rm_perm]" string => "append";
+      "aces[rm_perm]" slist => { "all:-r:allow", "user:root:-rw:allow" };
+      "regcmp[rm_perm]" string => ".*user::r-x.*user:root:--x.*group::r--.*group:root:---.*mask::r-x.*other::---.*";
+
+      "acl_method[overwrite_add_remove]" string => "overwrite"; # Overwrite starts with blank permissions.
+      "aces[overwrite_add_remove]" slist => { "all:+r:allow", "user:*:-x:allow", "group:*:+x:allow" };
+      "regcmp[overwrite_add_remove]" string => ".*user::---.*group::--x.*other::r--.*";
+      "notregcmp[overwrite_add_remove]" string => ".*user:root:.*|.*group:root:.*";
+
+      # This test oscillates between pass and fail. Check out "other::r--" vs "other::r-x"
+      "acl_method[default]" string => "overwrite";
+      "aces[default]" slist => { "all:r:allow", "user:*:rwx:allow", "group:*:rw:allow" };
+      "acl_default[default]" string => "access";
+      "use_dir[default]" string => "true";
+      "regcmp[default]" string => ".*user::rwx.*group::rw-.*other::r--.*default:user::rwx.*default:group::rw-.*default:other::r--.*";
+
+      # Fails but should pass.
+      "acl_method[default_specify]" string => "overwrite";
+      "aces[default_specify]" slist => { "user:*:r:allow", "group:*:r:allow", "all:r:allow" };
+      "acl_default[default_specify]" string => "specify";
+      "specify_default_aces[default_specify]" slist => { "user:*:rwx:allow", "group:*:rw:allow", "all:rw:allow", "user:root:x:allow" };
+      "use_dir[default_specify]" string => "true";
+      "regcmp[default_specify]" string => ".*user::r--.*group::r--.*other::r--.*default:user::rwx.*default:user:root:--x.*default:group::rw-.*default:other::rw-.*";
+
+      "tests" slist => { "regular_posix",
+                         "regular_posix2",
+                         "specific_user",
+                         "specific_group_append",
+                         "no_mask",
+                         "specific_mask",
+                         "mask_and_append_group",
+                         "no_perm_group",
+                         "add_perm",
+                         "add_perm_user",
+                         "rm_perm",
+                         "overwrite_add_remove",
+                         #"default",
+                         #"default_specify",
+                       } ;
+
+    windows::
+      "acl_method[read]" string => "overwrite";
+      "aces[read]" slist => { "user:Administrator:r:allow" };
+      "acl_inherit[read]" string => "false";
+      "regcmp[read]" string => ".*Administrator:.*READ_CONTROL.*FILE_GENERIC_READ.*FILE_READ_DATA.*FILE_READ_EA.*FILE_READ_ATTRIBUTES.*";
+      "notregcmp[read]" string => ".*\(ID\).*";
+
+      "acl_method[write]" string => "overwrite";
+      "aces[write]" slist => { "user:Administrator:w:allow" };
+      "regcmp[write]" string => ".*Administrator:.*FILE_WRITE_DATA.*FILE_APPEND_DATA.*FILE_WRITE_EA.*FILE_WRITE_ATTRIBUTES.*";
+      "notregcmp[write]" string => ".*\(ID\).*";
+
+      "acl_method[append_read]" string => "append";
+      "aces[append_read]" slist => { "user:Administrator:r:allow" };
+      "regcmp[append_read]" string => ".*Administrator:.*READ_CONTROL.*FILE_GENERIC_READ.*FILE_READ_DATA.*FILE_READ_EA.*FILE_READ_ATTRIBUTES.*";
+      "notregcmp[append_read]" string => ".*(Administrator:.*(FILE_WRITE_DATA|FILE_APPEND_DATA|FILE_WRITE_EA|FILE_WRITE_ATTRIBUTES)|\(ID\)).*";
+
+      "acl_method[add_write]" string => "append";
+      "aces[add_write]" slist => { "user:Administrator:+w:allow" };
+      "regcmp[add_write]" string => ".*Administrator:.*READ_CONTROL.*FILE_GENERIC_READ.*FILE_GENERIC_WRITE.*FILE_READ_DATA.*FILE_WRITE_DATA.*FILE_APPEND_DATA.*FILE_READ_EA.*FILE_WRITE_EA.*FILE_READ_ATTRIBUTES.*FILE_WRITE_ATTRIBUTES.*";
+      "notregcmp[add_write]" string => ".*\(ID\).*";
+
+      "acl_method[rm_write]" string => "append";
+      "aces[rm_write]" slist => { "user:Administrator:-w:allow" };
+      "regcmp[rm_write]" string => ".*Administrator:.*READ_CONTROL.*FILE_GENERIC_READ.*FILE_READ_DATA.*FILE_READ_EA.*FILE_READ_ATTRIBUTES.*";
+      "notregcmp[rm_write]" string => ".*\(ID\).*";
+
+      "acl_method[no_default]" string => "overwrite";
+      "aces[no_default]" slist => { "user:Administrator:rwx:allow" };
+      "acl_default[no_default]" string => "clear";
+      "use_dir[no_default]" string => "true";
+      "regcmp[no_default]" string => ".*Administrator:.*READ_CONTROL.*FILE_GENERIC_READ.*FILE_GENERIC_WRITE.*FILE_READ_DATA.*FILE_WRITE_DATA.*FILE_APPEND_DATA.*FILE_READ_EA.*FILE_WRITE_EA.*FILE_EXECUTE.*FILE_READ_ATTRIBUTES.*FILE_WRITE_ATTRIBUTES.*";
+      "notregcmp[no_default]" string => ".*(\(OI\)|\(CI\)).*";
+
+      "acl_method[default]" string => "overwrite";
+      "aces[default]" slist => { "user:Administrator:rwx:allow" };
+      "acl_default[default]" string => "access";
+      "use_dir[default]" string => "true";
+      "regcmp[default]" string => ".*Administrator:\(OI\)\(CI\).*READ_CONTROL.*FILE_GENERIC_READ.*FILE_GENERIC_WRITE.*FILE_READ_DATA.*FILE_WRITE_DATA.*FILE_APPEND_DATA.*FILE_READ_EA.*FILE_WRITE_EA.*FILE_EXECUTE.*FILE_READ_ATTRIBUTES.*FILE_WRITE_ATTRIBUTES.*";
+
+      "acl_method[inherit]" string => "overwrite";
+      "aces[inherit]" slist => { "group:Everyone:r:allow" };
+      "acl_inherit[inherit]" string => "true";
+      "regcmp[inherit]" string => ".*Everyone:.*READ_CONTROL.*FILE_GENERIC_READ.*FILE_READ_DATA.*FILE_READ_EA.*FILE_READ_ATTRIBUTES.*Administrator:\(ID\).*READ_CONTROL.*FILE_GENERIC_READ.*FILE_GENERIC_WRITE.*FILE_READ_DATA.*FILE_WRITE_DATA.*FILE_APPEND_DATA.*FILE_READ_EA.*FILE_WRITE_EA.*FILE_READ_ATTRIBUTES.*FILE_WRITE_ATTRIBUTES.*";
+
+      "acl_method[inherit_nochange]" string => "append";
+      "aces[inherit_nochange]" slist => { "group:Everyone:+w:allow" };
+      "acl_inherit[inherit_nochange]" string => "nochange";
+      "regcmp[inherit_nochange]" string => ".*Everyone:.*READ_CONTROL.*FILE_GENERIC_READ.*FILE_GENERIC_WRITE.*FILE_READ_DATA.*FILE_WRITE_DATA.*FILE_APPEND_DATA.*FILE_READ_EA.*FILE_WRITE_EA.*FILE_READ_ATTRIBUTES.*FILE_WRITE_ATTRIBUTES.*Administrator:\(ID\).*READ_CONTROL.*FILE_GENERIC_READ.*FILE_GENERIC_WRITE.*FILE_READ_DATA.*FILE_WRITE_DATA.*FILE_APPEND_DATA.*FILE_READ_EA.*FILE_WRITE_EA.*FILE_READ_ATTRIBUTES.*FILE_WRITE_ATTRIBUTES.*";
+
+      "acl_method[empty]" string => "append";
+      "aces[empty]" slist => { "group:Everyone:-rw:allow" };
+      "acl_inherit[empty]" string => "nochange";
+      "regcmp[empty]" string => ".*Administrator:\(ID\).*READ_CONTROL.*FILE_GENERIC_READ.*FILE_GENERIC_WRITE.*FILE_READ_DATA.*FILE_WRITE_DATA.*FILE_APPEND_DATA.*FILE_READ_EA.*FILE_WRITE_EA.*FILE_READ_ATTRIBUTES.*FILE_WRITE_ATTRIBUTES.*";
+      "notregcmp[empty]" string => ".*Everyone.*";
+
+      "acl_method[no_inherit]" string => "append";
+      "aces[no_inherit]" slist => { "group:Everyone:+rw:allow" };
+      "acl_inherit[no_inherit]" string => "false";
+      "regcmp[no_inherit]" string => ".*Everyone:.*READ_CONTROL.*FILE_GENERIC_READ.*FILE_GENERIC_WRITE.*FILE_READ_DATA.*FILE_WRITE_DATA.*FILE_APPEND_DATA.*FILE_READ_EA.*FILE_WRITE_EA.*FILE_READ_ATTRIBUTES.*FILE_WRITE_ATTRIBUTES.*";
+      "notregcmp[no_inherit]" string => ".*\(ID\).*";
+
+      "acl_type[ext_attr_delete]" string => "ntfs";
+      "acl_method[ext_attr_delete]" string => "overwrite";
+      "aces[ext_attr_delete]" slist => { "user:Administrator:(d):allow" };
+      "regcmp[ext_attr_delete]" string => ".*Administrator:.*DELETE.*";
+      "notregcmp[ext_attr_delete]" string => ".*(\(ID\)|READ|WRITE).*";
+
+      "acl_type[ext_attr_half1]" string => "ntfs";
+      "acl_method[ext_attr_half1]" string => "append";
+      "aces[ext_attr_half1]" slist => { "user:Administrator:+(rtxTwa):allow" };
+      "regcmp[ext_attr_half1]" string => ".*Administrator:.*DELETE.*FILE_READ_DATA.*FILE_WRITE_DATA.*FILE_APPEND_DATA.*FILE_READ_EA.*FILE_EXECUTE.*FILE_READ_ATTRIBUTES.*";
+      "notregcmp[ext_attr_half1]" string => ".*\(ID\).*";
+
+      "acl_type[ext_attr_half2]" string => "ntfs";
+      "acl_method[ext_attr_half2]" string => "append";
+      "aces[ext_attr_half2]" slist => { "user:Administrator:-(drtxTwa),+(bBpcoD):allow" };
+      "regcmp[ext_attr_half2]" string => ".*Administrator:.*READ_CONTROL.*WRITE_DAC.*WRITE_OWNER.*FILE_WRITE_EA.*FILE_DELETE_CHILD.*FILE_WRITE_ATTRIBUTES.*";
+      "notregcmp[ext_attr_half2]" string => ".*(\(ID\)|[^_]DELETE|FILE_READ_DATA|FILE_WRITE_DATA|FILE_APPEND_DATA|FILE_READ_EA|FILE_EXECUTE|FILE_READ_ATTRIBUTES).*";
+
+      "tests" slist => { "read",
+                         "write",
+                         "append_read",
+                         "add_write",
+                         "rm_write",
+                         "no_default",
+                         "default",
+                         "inherit",
+                         "inherit_nochange",
+                         "empty",
+                         "no_inherit",
+                         "ext_attr_delete",
+                         "ext_attr_half1",
+                         "ext_attr_half2",
+                       };
+
+  files:
+    "$(G.testdir)$(G.DS)file"
+      create => "true";
+}
+
+#######################################################
+
+bundle agent test
+{
+  methods:
+    linux|windows::
+      "any" usebundle => test_and_check("$(init.tests)");
+}
+
+bundle agent test_and_check(testname)
+{
+  classes:
+    "use_dir" expression => isvariable("init.use_dir[$(testname)]");
+  methods:
+    use_dir::
+      "any" usebundle => test_exec("$(testname)", "$(G.testdir)");
+      "any" usebundle => test_check("$(testname)", "$(G.testdir)");
+    !use_dir::
+      "any" usebundle => test_exec("$(testname)", "$(G.testdir)$(G.DS)file");
+      "any" usebundle => test_check("$(testname)", "$(G.testdir)$(G.DS)file");
+}
+
+bundle agent test_exec(testname, file)
+{
+  classes:
+    "acl_type" expression => isvariable("init.acl_type[$(testname)]");
+    "acl_default" expression => isvariable("init.acl_default[$(testname)]");
+    acl_default::
+      "specify_default_aces" expression => strcmp("init.acl_default[$(testname)]", "specify");
+  files:
+    "$(file)" acl => acldef("$(testname)", "$(file)");
+}
+
+body acl acldef(testname, file)
+{
+  acl_method => "$(init.acl_method[$(testname)])";
+  acl_inherit => "$(init.acl_inherit[$(testname)])";
+  aces =>  { "@(init.aces[$(testname)])" };
+  acl_type::
+    acl_type => "$(init.acl_type[$(testname)])";
+  !acl_type::
+    acl_type => "generic";
+  acl_default::
+    acl_default => "$(init.acl_default[$(testname)])";
+  specify_default_aces::
+    specify_default_aces => { "@(init.specify_default_aces[$(testname)])" };
+}
+
+bundle agent test_check(testname, file)
+{
+  vars:
+    "output" string => execresult("$(init.cmd) $(file)", "noshell");
+
+  classes:
+    "regcmp_matched" expression => regcmp("$(init.regcmp[$(testname)])", "$(output)");
+    "notregcmp_exists" expression => isvariable("init.notregcmp[$(testname)]");
+    notregcmp_exists::
+      "notregcmp_matched" expression => regcmp("$(init.notregcmp[$(testname)])", "$(output)");
+  reports:
+    !regcmp_matched|notregcmp_matched::
+      "Test \"$(testname)\" failed: Got \"$(output)\"";
+      "Should contain \"$(init.regcmp[$(testname)])\"";
+    (!regcmp_matched|notregcmp_matched)&notregcmp_exists::
+      "Should NOT contain \"$(init.notregcmp[$(testname)])\"";
+}

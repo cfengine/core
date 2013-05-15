@@ -1,13 +1,12 @@
-#include "logging_old.h"
 #include "env_context.h"
 
 #include <stdarg.h>
 
-void CfOut(OutputLevel level, const char *errstr, const char *fmt, ...)
+void Log(LogLevel level, const char *fmt, ...)
 {
     va_list ap;
 
-    fprintf(stderr, "CfOut[%d,%s] ", level, errstr);
+    fprintf(stderr, "Log[%d] ", level);
     va_start(ap, fmt);
     vfprintf(stderr, fmt, ap);
     va_end(ap);

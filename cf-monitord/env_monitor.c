@@ -36,7 +36,6 @@
 #include "expand.h"
 #include "scope.h"
 #include "sysinfo.h"
-#include "logging_old.h"
 #include "signals.h"
 #include "locks.h"
 #include "exec_tools.h"
@@ -171,7 +170,7 @@ void MonitorInitialize(void)
     MonTempInit();
     MonOtherInit();
 
-    CfDebug("Finished with initialization.\n");
+    Log(LOG_LEVEL_DEBUG, "Finished with monitor initialization");
 }
 
 /*********************************************************************/
@@ -190,11 +189,11 @@ static void GetDatabaseAge()
     if (ReadDB(dbp, "DATABASE_AGE", &AGE, sizeof(double)))
     {
         WAGE = AGE / SECONDS_PER_WEEK * CF_MEASURE_INTERVAL;
-        CfDebug("\n\nPrevious DATABASE_AGE %f\n\n", AGE);
+        Log(LOG_LEVEL_DEBUG, "Previous DATABASE_AGE %f", AGE);
     }
     else
     {
-        CfDebug("No previous AGE\n");
+        Log(LOG_LEVEL_DEBUG, "No previous DATABASE_AGE");
         AGE = 0.0;
     }
 
@@ -215,7 +214,7 @@ static void LoadHistogram(void)
 
     if ((fp = fopen(filename, "r")) == NULL)
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "fopen", "Unable to load histogram data");
+        Log(LOG_LEVEL_VERBOSE, "Unable to load histogram data. (fopen: %s)", GetErrorStr());
         return;
     }
 
@@ -228,7 +227,7 @@ static void LoadHistogram(void)
     {
         if (fscanf(fp, "%d ", &position) != 1)
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "", "Format error in histogram file '%s' - aborting", filename);
+            Log(LOG_LEVEL_ERR, "Format error in histogram file '%s' - aborting", filename);
             break;
         }
 
@@ -238,7 +237,7 @@ static void LoadHistogram(void)
             {
                 if (fscanf(fp, "%lf ", &(HISTOGRAM[i][day][position])) != 1)
                 {
-                    CfOut(OUTPUT_LEVEL_VERBOSE, "fscanf", "Format error in histogram file '%s'", filename);
+                    Log(LOG_LEVEL_VERBOSE, "Format error in histogram file '%s'. (fscanf: %s)", filename, GetErrorStr());
                     HISTOGRAM[i][day][position] = 0;
                 }
 
@@ -283,14 +282,14 @@ void MonitorStartServer(EvalContext *ctx, const Policy *policy)
 
     if (!NO_FORK)
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Windows does not support starting processes in the background - starting in foreground");
+        Log(LOG_LEVEL_VERBOSE, "Windows does not support starting processes in the background - starting in foreground");
     }
 
 #else /* !__MINGW32__ */
 
     if ((!NO_FORK) && (fork() != 0))
     {
-        CfOut(OUTPUT_LEVEL_INFORM, "", "cf-monitord: starting\n");
+        Log(LOG_LEVEL_INFO, "cf-monitord: starting");
         _exit(0);
     }
 
@@ -340,8 +339,6 @@ void MonitorStartServer(EvalContext *ctx, const Policy *policy)
 
 static void GetQ(EvalContext *ctx, const Policy *policy)
 {
-    CfDebug("========================= GET Q ==============================\n");
-
     MonEntropyClassesReset();
 
     ZeroArrivals();
@@ -374,7 +371,7 @@ static Averages EvalAvQ(EvalContext *ctx, char *t)
 
     if ((lastweek_vals = GetCurrentAverages(t)) == NULL)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Error reading average database");
+        Log(LOG_LEVEL_ERR, "Error reading average database");
         exit(1);
     }
 
@@ -416,12 +413,12 @@ static Averages EvalAvQ(EvalContext *ctx, char *t)
         
         LOCALAV.Q[i].q = This[i];
 
-        CfDebug("Previous week's %s.q %lf\n", name, lastweek_vals->Q[i].q);
-        CfDebug("Previous week's %s.var %lf\n", name, lastweek_vals->Q[i].var);
-        CfDebug("Previous week's %s.ex %lf\n", name, lastweek_vals->Q[i].expect);
+        Log(LOG_LEVEL_DEBUG, "Previous week's '%s.q' %lf", name, lastweek_vals->Q[i].q);
+        Log(LOG_LEVEL_DEBUG, "Previous week's '%s.var' %lf", name, lastweek_vals->Q[i].var);
+        Log(LOG_LEVEL_DEBUG, "Previous week's '%s.ex' %lf", name, lastweek_vals->Q[i].expect);
 
-        CfDebug("Just measured: CF_THIS[%s] = %lf\n", name, CF_THIS[i]);
-        CfDebug("Just sanitized: This[%s] = %lf\n", name, This[i]);
+        Log(LOG_LEVEL_DEBUG, "Just measured: CF_THIS[%s] = %lf", name, CF_THIS[i]);
+        Log(LOG_LEVEL_DEBUG, "Just sanitized: This[%s] = %lf", name, This[i]);
 
         newvals.Q[i].expect = WAverage(This[i], lastweek_vals->Q[i].expect, WAGE);
         LOCALAV.Q[i].expect = WAverage(newvals.Q[i].expect, LOCALAV.Q[i].expect, ITER);
@@ -454,15 +451,15 @@ static Averages EvalAvQ(EvalContext *ctx, char *t)
             LOCALAV.Q[i].var = WAverage(newvals.Q[i].var, LOCALAV.Q[i].var, ITER);
         }
 
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "[%d] %s q=%lf, var=%lf, ex=%lf", i, name,
+        Log(LOG_LEVEL_VERBOSE, "[%d] %s q=%lf, var=%lf, ex=%lf", i, name,
               newvals.Q[i].q, newvals.Q[i].var, newvals.Q[i].expect);
 
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "[%d] = %lf -> (%lf#%lf) local [%lf#%lf]\n", i, This[i], newvals.Q[i].expect,
+        Log(LOG_LEVEL_VERBOSE, "[%d] = %lf -> (%lf#%lf) local [%lf#%lf]", i, This[i], newvals.Q[i].expect,
               sqrt(newvals.Q[i].var), LOCALAV.Q[i].expect, sqrt(LOCALAV.Q[i].var));
 
         if (This[i] > 0)
         {
-            CfOut(OUTPUT_LEVEL_VERBOSE, "", "Storing %.2lf in %s\n", This[i], name);
+            Log(LOG_LEVEL_VERBOSE, "Storing %.2lf in %s", This[i], name);
         }
     }
 
@@ -486,7 +483,7 @@ static void LeapDetection(void)
 
         if (!LDT_FULL)
         {
-            CfDebug("LDT Buffer full at %d\n", LDT_BUFSIZE);
+            Log(LOG_LEVEL_DEBUG, "LDT Buffer full at %d", LDT_BUFSIZE);
             LDT_FULL = true;
         }
     }
@@ -597,8 +594,6 @@ static void ArmClasses(Averages av, char *timekey)
     extern Item *ALL_INCOMING;
     extern Item *MON_UDP4, *MON_UDP6, *MON_TCP4, *MON_TCP6;
 
-    CfDebug("Arm classes for %s\n", timekey);
-
     for (i = 0; i < CF_OBSERVABLES; i++)
     {
         char desc[CF_BUFSIZE];
@@ -622,7 +617,7 @@ static void ArmClasses(Averages av, char *timekey)
         {
             anomaly[i][LDT_POS] = true; /* Remember the last anomaly value */
 
-            CfOut(OUTPUT_LEVEL_VERBOSE, "", "LDT(%d) in %s chi = %.2f thresh %.2f \n", LDT_POS, name, CHI[i], CHI_LIMIT[i]);
+            Log(LOG_LEVEL_VERBOSE, "LDT(%d) in %s chi = %.2f thresh %.2f ", LDT_POS, name, CHI[i], CHI_LIMIT[i]);
 
             /* Last printed element is now */
 
@@ -693,7 +688,7 @@ static void ArmClasses(Averages av, char *timekey)
 
     if (ListLen(MON_TCP6) + ListLen(MON_TCP4) > 512)
     {
-        CfOut(OUTPUT_LEVEL_INFORM, "", "Disabling address information of TCP ports in LISTEN state: more than 512 listening ports are detected");
+        Log(LOG_LEVEL_INFO, "Disabling address information of TCP ports in LISTEN state: more than 512 listening ports are detected");
     }
     else
     {
@@ -750,12 +745,12 @@ static Averages *GetCurrentAverages(char *timekey)
 
         for (i = 0; i < CF_OBSERVABLES; i++)
         {
-            CfDebug("Previous values (%lf,..) for time index %s\n\n", entry.Q[i].expect, timekey);
+            Log(LOG_LEVEL_DEBUG, "Previous values (%lf,..) for time index '%s'", entry.Q[i].expect, timekey);
         }
     }
     else
     {
-        CfDebug("No previous value for time index %s\n", timekey);
+        Log(LOG_LEVEL_DEBUG, "No previous value for time index '%s'", timekey);
     }
 
     CloseDB(dbp);
@@ -773,7 +768,7 @@ static void UpdateAverages(EvalContext *ctx, char *timekey, Averages newvals)
         return;
     }
 
-    CfOut(OUTPUT_LEVEL_INFORM, "", "Updated averages at %s\n", timekey);
+    Log(LOG_LEVEL_INFO, "Updated averages at %s", timekey);
 
     WriteDB(dbp, timekey, &newvals, sizeof(Averages));
     WriteDB(dbp, "DATABASE_AGE", &AGE, sizeof(double));
@@ -814,7 +809,7 @@ static void UpdateDistributions(EvalContext *ctx, char *timekey, Averages *av)
 
         if ((fp = fopen(filename, "w")) == NULL)
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "fopen", "Unable to save histograms");
+            Log(LOG_LEVEL_ERR, "Unable to save histograms. (fopen: %s)", GetErrorStr());
             return;
         }
 
@@ -913,20 +908,17 @@ static double SetClasses(char *name, double variable, double av_expect, double a
     char buffer[CF_BUFSIZE], buffer2[CF_BUFSIZE];
     double dev, delta, sigma, ldelta, lsigma, sig;
 
-    CfDebug("\n SetClasses(%s,X=%lf,avX=%lf,varX=%lf,lavX=%lf,lvarX=%lf,%s)\n", name, variable, av_expect, av_var,
-            localav_expect, localav_var, timekey);
-
     delta = variable - av_expect;
     sigma = sqrt(av_var);
     ldelta = variable - localav_expect;
     lsigma = sqrt(localav_var);
     sig = sqrt(sigma * sigma + lsigma * lsigma);
 
-    CfDebug(" delta = %lf,sigma = %lf, lsigma = %lf, sig = %lf\n", delta, sigma, lsigma, sig);
+    Log(LOG_LEVEL_DEBUG, "delta = %lf, sigma = %lf, lsigma = %lf, sig = %lf", delta, sigma, lsigma, sig);
 
     if ((sigma == 0.0) || (lsigma == 0.0))
     {
-        CfDebug(" No sigma variation .. can't measure class\n");
+        Log(LOG_LEVEL_DEBUG, "No sigma variation .. can't measure class");
 
         snprintf(buffer, CF_MAXVARSIZE, "entropy_%s.*", name);
         MonEntropyPurgeUnused(buffer);
@@ -934,11 +926,11 @@ static double SetClasses(char *name, double variable, double av_expect, double a
         return sig;
     }
 
-    CfDebug("Setting classes for %s...\n", name);
+    Log(LOG_LEVEL_DEBUG, "Setting classes for '%s'...", name);
 
     if (fabs(delta) < cf_noise_threshold)       /* Arbitrary limits on sensitivity  */
     {
-        CfDebug(" Sensitivity too high ..\n");
+        Log(LOG_LEVEL_DEBUG, "Sensitivity too high");
 
         buffer[0] = '\0';
         strcpy(buffer, name);
@@ -1114,7 +1106,7 @@ static double RejectAnomaly(double new, double average, double variance, double 
     }
     else
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Value accepted\n");
+        Log(LOG_LEVEL_VERBOSE, "Value accepted");
         return new;
     }
 }
@@ -1167,21 +1159,36 @@ static void KeepMonitorPromise(EvalContext *ctx, Promise *pp, ARG_UNUSED void *p
 
     if (!IsDefinedClass(ctx, pp->classes, PromiseGetNamespace(pp)))
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", ". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Skipping whole next promise (%s), as context %s is not relevant\n", pp->promiser,
-              pp->classes);
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", ". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
+        if (LEGACY_OUTPUT)
+        {
+            Log(LOG_LEVEL_VERBOSE, "\n");
+            Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . ");
+            Log(LOG_LEVEL_VERBOSE, "Skipping whole next promise (%s), as context %s is not relevant", pp->promiser,
+                  pp->classes);
+            Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . ");
+        }
+        else
+        {
+            Log(LOG_LEVEL_VERBOSE, "Skipping next promise '%s', as context '%s' is not relevant", pp->promiser, pp->classes);
+        }
         return;
     }
 
     if (VarClassExcluded(ctx, pp, &sp))
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", ". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Skipping whole next promise (%s), as var-context %s is not relevant\n", pp->promiser,
-              sp);
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", ". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
+        if (LEGACY_OUTPUT)
+        {
+            Log(LOG_LEVEL_VERBOSE, "\n");
+            Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . ");
+            Log(LOG_LEVEL_VERBOSE, "Skipping whole next promise (%s), as var-context %s is not relevant", pp->promiser,
+                  sp);
+            Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . ");
+        }
+        else
+        {
+            Log(LOG_LEVEL_VERBOSE, "Skipping next promise '%s', as var-context '%s' is not relevant", pp->promiser,
+                  sp);
+        }
         return;
     }
 

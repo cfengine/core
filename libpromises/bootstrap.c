@@ -28,14 +28,12 @@
 #include "files_names.h"
 #include "scope.h"
 #include "files_interfaces.h"
-#include "logging_old.h"
 #include "exec_tools.h"
 #include "generic_agent.h" // PrintVersionBanner
 #include "audit.h"
 #include "logging.h"
 #include "string_lib.h"
-
-#include <ftw.h>
+#include "files_lib.h"
 
 /*
 
@@ -84,22 +82,26 @@ bool WriteAmPolicyHubFile(const char *workdir, bool am_policy_hub)
     char *filename = AmPolicyHubFilename(workdir);
     if (am_policy_hub)
     {
-        Log(LOG_LEVEL_INFO, "Assuming role as policy server, with policy distribution point at %s/masterfiles", CFWORKDIR);
-        if (creat(filename, 0600) == -1)
+        if (!GetAmPolicyHub(workdir))
         {
-            Log(LOG_LEVEL_ERR, "Error writing marker file '%s'", filename);
-            free(filename);
-            return false;
+            if (creat(filename, 0600) == -1)
+            {
+                Log(LOG_LEVEL_ERR, "Error writing marker file '%s'", filename);
+                free(filename);
+                return false;
+            }
         }
     }
     else
     {
-        Log(LOG_LEVEL_INFO, "Not assuming role as policy server");
-        if (unlink(filename) != 0)
+        if (GetAmPolicyHub(workdir))
         {
-            Log(LOG_LEVEL_ERR, "Error removing marker file '%s'", filename);
-            free(filename);
-            return false;
+            if (unlink(filename) != 0)
+            {
+                Log(LOG_LEVEL_ERR, "Error removing marker file '%s'", filename);
+                free(filename);
+                return false;
+            }
         }
     }
     free(filename);
@@ -110,7 +112,7 @@ void SetPolicyServer(EvalContext *ctx, const char *new_policy_server)
 {
     if (new_policy_server)
     {
-        snprintf(POLICY_SERVER, CF_MAXVARSIZE, "%s", new_policy_server);
+        snprintf(POLICY_SERVER, CF_MAX_IP_LEN, "%s", new_policy_server);
         ScopeNewSpecialScalar(ctx, "sys", "policy_hub", new_policy_server, DATA_TYPE_STRING);
     }
     else
@@ -145,7 +147,7 @@ static char *PolicyServerFilename(const char *workdir)
 
 char *ReadPolicyServerFile(const char *workdir)
 {
-    char contents[4096] = "";
+    char contents[CF_MAX_IP_LEN] = "";
 
     char *filename = PolicyServerFilename(workdir);
     FILE *fp = fopen(filename, "r");
@@ -153,7 +155,7 @@ char *ReadPolicyServerFile(const char *workdir)
 
     if (fp)
     {
-        if (fscanf(fp, "%4095s", contents) != 1)
+        if (fscanf(fp, "%63s", contents) != 1)
         {
             fclose(fp);
             return NULL;
@@ -210,40 +212,64 @@ bool GetAmPolicyHub(const char *workdir)
     return stat(path, &sb) == 0;
 }
 
-int RemoveExistingInputFileCallback(const char *input_path, const struct stat *sb, int typeflag, struct FTW *ftwbuf)
-{
-    switch (typeflag)
-    {
-    case FTW_F:
-        Log(LOG_LEVEL_VERBOSE, "Removing file '%s'", input_path);
-        if (unlink(input_path) != 0)
-        {
-            Log(LOG_LEVEL_ERR, "Error removing file '%s'", input_path);
-            return -1;
-        }
-        return 0;
-
-    case FTW_D:
-        return 0;
-
-    case FTW_DNR:
-        Log(LOG_LEVEL_ERR, "Cannot read directory '%s' to remove existing input files");
-        return 0;
-
-    default:
-        Log(LOG_LEVEL_ERR, "Encountered unknown file type while removing existing input files at '%s', file type '%d'", input_path, typeflag);
-        return 0;
-    }
-}
-
 bool RemoveAllExistingPolicyInInputs(const char *workdir)
 {
     char inputs_path[CF_BUFSIZE] = { 0 };
-    snprintf(inputs_path, sizeof(inputs_path), "%s/inputs/.", workdir);
+    snprintf(inputs_path, sizeof(inputs_path), "%s/inputs/", workdir);
     MapName(inputs_path);
 
     Log(LOG_LEVEL_INFO, "Removing all files in '%s'", inputs_path);
-    return nftw(inputs_path, RemoveExistingInputFileCallback, 1, FTW_MOUNT | FTW_PHYS) == 0;
+
+    struct stat sb;
+    if (stat(inputs_path, &sb) == -1)
+    {
+        if (errno == ENOENT)
+        {
+            return true;
+        }
+        else
+        {
+            Log(LOG_LEVEL_ERR, "Could not stat inputs directory at '%s'. (stat: %s)", inputs_path, GetErrorStr());
+            return false;
+        }
+    }
+
+    if (!S_ISDIR(sb.st_mode))
+    {
+        Log(LOG_LEVEL_ERR, "Inputs path exists at '%s', but it is not a directory", inputs_path);
+        return false;
+    }
+
+    return DeleteDirectoryTree(inputs_path);
+}
+
+bool MasterfileExists(const char *workdir)
+{
+    char filename[CF_BUFSIZE] = { 0 };
+    snprintf(filename, sizeof(filename), "%s/masterfiles/promises.cf", workdir);
+    MapName(filename);
+
+    struct stat sb;
+    if (stat(filename, &sb) == -1)
+    {
+        if (errno == ENOENT)
+        {
+            return false;
+        }
+        else
+        {
+            Log(LOG_LEVEL_ERR, "Could not stat file '%s'. (stat: %s)", filename, GetErrorStr());
+            return false;
+        }
+    }
+
+    if (!S_ISREG(sb.st_mode))
+    {
+        Log(LOG_LEVEL_ERR, "Path exists at '%s', but it is not a regular file", filename);
+        return false;
+    }
+
+    return true;
 }
 
 /********************************************************************/
@@ -356,10 +382,10 @@ bool WriteBuiltinFailsafePolicyToPath(const char *filename)
             "   \"This autonomous node assumes the role of voluntary client\"\n"
             "      handle => \"cfe_internal_bootstrap_update_reports_assume_voluntary_client\";\n"
             "  got_policy::\n"
-            "   \" -> Updated local policy from policy server\"\n"
+            "   \"Updated local policy from policy server\"\n"
             "      handle => \"cfe_internal_bootstrap_update_reports_got_policy\";\n"
             "  !got_policy.!have_promises_cf::\n"
-            "   \" !! Failed to copy policy from policy server at $(sys.policy_hub):/var/cfengine/masterfiles\n"
+            "   \"Failed to copy policy from policy server at $(sys.policy_hub):/var/cfengine/masterfiles\n"
             "       Please check\n"
             "       * cf-serverd is running on $(sys.policy_hub)\n"
             "       * network connectivity to $(sys.policy_hub) on port 5308\n"
@@ -369,19 +395,19 @@ bool WriteBuiltinFailsafePolicyToPath(const char *filename)
             "       When updating masterfiles, wait (usually 5 minutes) for files to propagate to inputs on $(sys.policy_hub) before retrying.\"\n"
             "      handle => \"cfe_internal_bootstrap_update_reports_did_not_get_policy\";\n"
             "  server_started::\n"
-            "   \" -> Started the server\"\n"
+            "   \"Started the server\"\n"
             "      handle => \"cfe_internal_bootstrap_update_reports_started_serverd\";\n"
             "  am_policy_hub.!server_started.!have_promises_cf::\n"
-            "   \" !! Failed to start the server\"\n"
+            "   \"Failed to start the server\"\n"
             "      handle => \"cfe_internal_bootstrap_update_reports_failed_to_start_serverd\";\n"
             "  executor_started::\n"
-            "   \" -> Started the scheduler\"\n"
+            "   \"Started the scheduler\"\n"
             "      handle => \"cfe_internal_bootstrap_update_reports_started_execd\";\n"
             "  !executor_started.!have_promises_cf::\n"
-            "   \" !! Did not start the scheduler\"\n"
+            "   \"Did not start the scheduler\"\n"
             "      handle => \"cfe_internal_bootstrap_update_reports_failed_to_start_execd\";\n"
             "  !executor_started.have_promises_cf::\n"
-            "   \" -> You are running a hard-coded failsafe. Please use the following command instead.\n"
+            "   \"You are running a hard-coded failsafe. Please use the following command instead.\n"
             "    - 3.0.0: $(sys.cf_agent) -f $(sys.workdir)/inputs/failsafe/failsafe.cf\n"
             "    - 3.0.1: $(sys.cf_agent) -f $(sys.workdir)/inputs/update.cf\"\n"
             "      handle => \"cfe_internal_bootstrap_update_reports_run_another_failsafe_instead\";\n"

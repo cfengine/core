@@ -241,7 +241,7 @@ void uneven_lengths_20(void)
 int main()
 {
     PRINT_TEST_BANNER();
-    VERBOSE = 1;
+    LogSetGlobalLevel(LOG_LEVEL_VERBOSE);
 
     const UnitTest tests[] =
         {

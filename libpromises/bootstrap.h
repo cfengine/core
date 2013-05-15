@@ -80,4 +80,9 @@ bool WriteBuiltinFailsafePolicyToPath(const char *filename);
  */
 bool RemoveAllExistingPolicyInInputs(const char *workdir);
 
+/**
+ * @return True if the file WORKDIR/masterfiles/promises.cf exists
+ */
+bool MasterfileExists(const char *workdir);
+
 #endif

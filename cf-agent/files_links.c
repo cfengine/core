@@ -30,7 +30,6 @@
 #include "files_operators.h"
 #include "files_lib.h"
 #include "locks.h"
-#include "logging_old.h"
 #include "string_lib.h"
 #include "misc_lib.h"
 #include "env_context.h"
@@ -48,7 +47,7 @@ static char *AbsLinkPath(const char *from, const char *relto);
 
 PromiseResult VerifyLink(EvalContext *ctx, char *destination, const char *source, Attributes attr, const Promise *pp)
 {
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Windows does not support symbolic links (at VerifyLink())");
+    Log(LOG_LEVEL_VERBOSE, "Windows does not support symbolic links (at VerifyLink())");
     return PROMISE_RESULT_FAIL;
 }
 
@@ -64,8 +63,6 @@ PromiseResult VerifyLink(EvalContext *ctx, char *destination, const char *source
     char to[CF_BUFSIZE], linkbuf[CF_BUFSIZE], absto[CF_BUFSIZE];
     struct stat sb;
 
-    CfDebug("Linkfiles(%s -> %s)\n", destination, source);
-
     memset(to, 0, CF_BUFSIZE);
 
     if ((!IsAbsoluteFileName(source)) && (*source != '.'))        /* links without a directory reference */
@@ -79,9 +76,9 @@ PromiseResult VerifyLink(EvalContext *ctx, char *destination, const char *source
 
     if (!IsAbsoluteFileName(to))        /* relative path, must still check if exists */
     {
-        CfDebug("Relative link destination detected: %s\n", to);
+        Log(LOG_LEVEL_DEBUG, "Relative link destination detected '%s'", to);
         strcpy(absto, AbsLinkPath(destination, to));
-        CfDebug("Absolute path to relative link = %s, destination %s\n", absto, destination);
+        Log(LOG_LEVEL_DEBUG, "Absolute path to relative link '%s', '%s'", absto, destination);
     }
     else
     {
@@ -92,14 +89,14 @@ PromiseResult VerifyLink(EvalContext *ctx, char *destination, const char *source
 
     if (stat(absto, &sb) == -1)
     {
-        CfDebug("No source file\n");
+        Log(LOG_LEVEL_DEBUG, "No source file");
         source_file_exists = false;
     }
 
     if ((!source_file_exists) && (attr.link.when_no_file != cfa_force) && (attr.link.when_no_file != cfa_delete))
     {
-        CfOut(OUTPUT_LEVEL_INFORM, "", "Source %s for linking is absent", absto);
-        cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, "", pp, attr, " !! Unable to create link %s -> %s, no source", destination, to);
+        Log(LOG_LEVEL_INFO, "Source %s for linking is absent", absto);
+        cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, pp, attr, "Unable to create link %s -> %s, no source", destination, to);
         return PROMISE_RESULT_WARN;
     }
 
@@ -116,7 +113,7 @@ PromiseResult VerifyLink(EvalContext *ctx, char *destination, const char *source
 
         if (!MakeParentDirectory2(destination, attr.move_obstructions, EnforcePromise(attr.transaction.action)))
         {
-            cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "", pp, attr, " !! Unable to create parent directory of link %s -> %s (enforce=%d)",
+            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Unable to create parent directory of link %s -> %s (enforce=%d)",
                  destination, to, EnforcePromise(attr.transaction.action));
             return PROMISE_RESULT_FAIL;
         }
@@ -124,7 +121,7 @@ PromiseResult VerifyLink(EvalContext *ctx, char *destination, const char *source
         {
             if (!MoveObstruction(ctx, destination, attr, pp))
             {
-                cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, "", pp, attr, " !! Unable to create link %s -> %s", destination, to);
+                cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, pp, attr, "Unable to create link %s -> %s", destination, to);
                 return PROMISE_RESULT_FAIL;
             }
 
@@ -150,11 +147,11 @@ PromiseResult VerifyLink(EvalContext *ctx, char *destination, const char *source
             {
                 if (!DONTDO)
                 {
-                    cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_CHANGE, "", pp, attr, "Overriding incorrect link %s\n", destination);
+                    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, attr, "Overriding incorrect link %s\n", destination);
 
                     if (unlink(destination) == -1)
                     {
-                        cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, "", pp, attr, " !! Link %s points to %s not %s - error removing link",
+                        cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, pp, attr, "Link %s points to %s not %s - error removing link",
                              destination, linkbuf, to);
                         return PROMISE_RESULT_FAIL;
                     }
@@ -163,20 +160,20 @@ PromiseResult VerifyLink(EvalContext *ctx, char *destination, const char *source
                 }
                 else
                 {
-                    CfOut(OUTPUT_LEVEL_ERROR, "", " !! Must remove incorrect link %s\n", destination);
+                    Log(LOG_LEVEL_ERR, "Must remove incorrect link %s", destination);
                     return PROMISE_RESULT_NOOP;
                 }
             }
             else
             {
-                cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, "", pp, attr, " !! Link %s points to %s not %s - not authorized to override",
+                cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, pp, attr, "Link %s points to %s not %s - not authorized to override",
                      destination, linkbuf, to);
                 return true;
             }
         }
         else
         {
-            cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, "", pp, attr, " -> Link %s points to %s - promise kept", destination, source);
+            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, attr, "Link %s points to %s - promise kept", destination, source);
             return PROMISE_RESULT_NOOP;
         }
     }
@@ -190,8 +187,6 @@ PromiseResult VerifyAbsoluteLink(EvalContext *ctx, char *destination, const char
     char absto[CF_BUFSIZE];
     char expand[CF_BUFSIZE];
     char linkto[CF_BUFSIZE];
-
-    CfDebug("VerifyAbsoluteLink(%s,%s)\n", destination, source);
 
     if (*source == '.')
     {
@@ -213,13 +208,13 @@ PromiseResult VerifyAbsoluteLink(EvalContext *ctx, char *destination, const char
     {
         if (!ExpandLinks(expand, absto, 0))     /* begin at level 1 and beam out at 15 */
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "", " !! Failed to make absolute link in\n");
-            PromiseRef(OUTPUT_LEVEL_ERROR, pp);
+            Log(LOG_LEVEL_ERR, "Failed to make absolute link in");
+            PromiseRef(LOG_LEVEL_ERR, pp);
             return PROMISE_RESULT_FAIL;
         }
         else
         {
-            CfDebug("ExpandLinks returned %s\n", expand);
+            Log(LOG_LEVEL_DEBUG, "ExpandLinks returned '%s'", expand);
         }
     }
     else
@@ -240,8 +235,6 @@ PromiseResult VerifyRelativeLink(EvalContext *ctx, char *destination, const char
     char buff[CF_BUFSIZE], linkto[CF_BUFSIZE], add[CF_BUFSIZE];
     int levels = 0;
 
-    CfDebug("RelativeLink(%s,%s)\n", destination, source);
-
     if (*source == '.')
     {
         return VerifyLink(ctx, destination, source, attr, pp);
@@ -249,7 +242,7 @@ PromiseResult VerifyRelativeLink(EvalContext *ctx, char *destination, const char
 
     if (!CompressPath(linkto, source))
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "", pp, attr, " !! Failed to link %s to %s\n", destination, source);
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, attr, "Failed to link %s to %s\n", destination, source);
         return PROMISE_RESULT_FAIL;
     }
 
@@ -258,7 +251,7 @@ PromiseResult VerifyRelativeLink(EvalContext *ctx, char *destination, const char
 
     if (strcmp(commonto, commonfrom) == 0)
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "", pp, attr, " !! Failed to link %s to %s - can't link file %s to itself\n",
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, attr, "Failed to link %s to %s - can't link file %s to itself\n",
              destination, source, commonto);
         return PROMISE_RESULT_FAIL;
     }
@@ -328,9 +321,9 @@ PromiseResult VerifyHardLink(EvalContext *ctx, char *destination, const char *so
 
     if (!IsAbsoluteFileName(to))        /* relative path, must still check if exists */
     {
-        CfDebug("Relative link destination detected: %s\n", to);
+        Log(LOG_LEVEL_DEBUG, "Relative link destination detected '%s'", to);
         strcpy(absto, AbsLinkPath(destination, to));
-        CfDebug("Absolute path to relative link = %s, destination %s\n", absto, destination);
+        Log(LOG_LEVEL_DEBUG, "Absolute path to relative link '%s', destination '%s'", absto, destination);
     }
     else
     {
@@ -339,18 +332,18 @@ PromiseResult VerifyHardLink(EvalContext *ctx, char *destination, const char *so
 
     if (stat(absto, &ssb) == -1)
     {
-        cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_INTERRUPTED, "", pp, attr, " !! Source file %s doesn't exist\n", source);
+        cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_INTERRUPTED, pp, attr, "Source file %s doesn't exist\n", source);
         return PROMISE_RESULT_WARN;
     }
 
     if (!S_ISREG(ssb.st_mode))
     {
-        cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_FAIL, "", pp, attr,
-             " !! Source file %s is not a regular file, not appropriate to hard-link\n", to);
+        cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, attr,
+             "Source file %s is not a regular file, not appropriate to hard-link\n", to);
         return PROMISE_RESULT_WARN;
     }
 
-    CfDebug("Trying to (hard) link %s -> %s\n", destination, to);
+    Log(LOG_LEVEL_DEBUG, "Trying to hard link '%s' -> '%s'", destination, to);
 
     if (stat(destination, &dsb) == -1)
     {
@@ -363,12 +356,12 @@ PromiseResult VerifyHardLink(EvalContext *ctx, char *destination, const char *so
 
     if ((dsb.st_ino != ssb.st_ino) && (dsb.st_dev != ssb.st_dev))
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", " !! If this is POSIX, unable to determine if %s is hard link is correct\n", destination);
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", " !! since it points to a different filesystem!\n");
+        Log(LOG_LEVEL_VERBOSE, "If this is POSIX, unable to determine if %s is hard link is correct", destination);
+        Log(LOG_LEVEL_VERBOSE, "since it points to a different filesystem!");
 
         if ((dsb.st_mode == ssb.st_mode) && (dsb.st_size == ssb.st_size))
         {
-            cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, "", pp, attr, "Hard link (%s->%s) on different device APPEARS okay\n", destination,
+            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, attr, "Hard link (%s->%s) on different device APPEARS okay\n", destination,
                  to);
             return PROMISE_RESULT_NOOP;
         }
@@ -376,11 +369,11 @@ PromiseResult VerifyHardLink(EvalContext *ctx, char *destination, const char *so
 
     if ((dsb.st_ino == ssb.st_ino) && (dsb.st_dev == ssb.st_dev))
     {
-        cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, "", pp, attr, " -> Hard link (%s->%s) exists and is okay\n", destination, to);
+        cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, attr, "Hard link (%s->%s) exists and is okay\n", destination, to);
         return PROMISE_RESULT_NOOP;
     }
 
-    CfOut(OUTPUT_LEVEL_INFORM, "", " !! %s does not appear to be a hard link to %s\n", destination, to);
+    Log(LOG_LEVEL_INFO, "%s does not appear to be a hard link to %s", destination, to);
 
     if (!MoveObstruction(ctx, destination, attr, pp))
     {
@@ -398,8 +391,8 @@ PromiseResult VerifyHardLink(EvalContext *ctx, char *destination, const char *so
 
 int KillGhostLink(EvalContext *ctx, const char *name, Attributes attr, const Promise *pp)
 {
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Windows does not support symbolic links (at KillGhostLink())");
-    cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "", pp, attr, " !! Windows does not support killing link \"%s\"", name);
+    Log(LOG_LEVEL_VERBOSE, "Windows does not support symbolic links (at KillGhostLink())");
+    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Windows does not support killing link \"%s\"", name);
     return false;
 }
 
@@ -411,14 +404,12 @@ int KillGhostLink(EvalContext *ctx, const char *name, Attributes attr, const Pro
     char linkpath[CF_BUFSIZE], *sp;
     struct stat statbuf;
 
-    CfDebug("KillGhostLink(%s)\n", name);
-
     memset(linkbuf, 0, CF_BUFSIZE);
     memset(linkpath, 0, CF_BUFSIZE);
 
     if (readlink(name, linkbuf, CF_BUFSIZE - 1) == -1)
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", " !! (Can't read link %s while checking for deadlinks)\n", name);
+        Log(LOG_LEVEL_VERBOSE, "(Can't read link %s while checking for deadlinks)", name);
         return true;            /* ignore */
     }
 
@@ -439,14 +430,14 @@ int KillGhostLink(EvalContext *ctx, const char *name, Attributes attr, const Pro
     {
         if ((attr.link.when_no_file == cfa_delete) || (attr.recursion.rmdeadlinks))
         {
-            CfOut(OUTPUT_LEVEL_VERBOSE, "", " !! %s is a link which points to %s, but that file doesn't seem to exist\n", name,
+            Log(LOG_LEVEL_VERBOSE, "%s is a link which points to %s, but that file doesn't seem to exist", name,
                   linkbuf);
 
             if (!DONTDO)
             {
                 unlink(name);   /* May not work on a client-mounted system ! */
-                cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_CHANGE, "", pp, attr,
-                     " -> Removing ghost %s - reference to something that is not there\n", name);
+                cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, attr,
+                     "Removing ghost %s - reference to something that is not there\n", name);
                 return true;
             }
         }
@@ -463,19 +454,20 @@ static int MakeLink(EvalContext *ctx, const char *from, const char *to, Attribut
 {
     if (DONTDO || (attr.transaction.action == cfa_warn))
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", " !! Need to link files %s -> %s\n", from, to);
+        Log(LOG_LEVEL_ERR, "Need to link files %s -> %s", from, to);
         return false;
     }
     else
     {
         if (symlink(to, from) == -1)
         {
-            cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "symlink", pp, attr, " !! Couldn't link %s to %s\n", to, from);
+            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Couldn't link '%s' to '%s'. (symlink: %s)",
+                 to, from, GetErrorStr());
             return false;
         }
         else
         {
-            cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_CHANGE, "", pp, attr, " -> Linked files %s -> %s\n", from, to);
+            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, attr, "Linked files %s -> %s\n", from, to);
             return true;
         }
     }
@@ -488,8 +480,8 @@ static int MakeLink(EvalContext *ctx, const char *from, const char *to, Attribut
 
 int MakeHardLink(EvalContext *ctx, const char *from, const char *to, Attributes attr, const Promise *pp)
 {                               // TODO: Implement ?
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Hard links are not yet supported on Windows");
-    cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "link", pp, attr, " !! Couldn't (hard) link %s to %s\n", to, from);
+    Log(LOG_LEVEL_VERBOSE, "Hard links are not yet supported on Windows");
+    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Couldn't (hard) link %s to %s\n", to, from);
     return false;
 }
 
@@ -499,19 +491,20 @@ int MakeHardLink(EvalContext *ctx, const char *from, const char *to, Attributes 
 {
     if (DONTDO)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", " !! Need to hard link files %s -> %s\n", from, to);
+        Log(LOG_LEVEL_ERR, "Need to hard link files %s -> %s", from, to);
         return false;
     }
     else
     {
         if (link(to, from) == -1)
         {
-            cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "link", pp, attr, " !! Couldn't (hard) link %s to %s\n", to, from);
+            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Couldn't (hard) link '%s' to '%s'. (link: %s)",
+                 to, from, GetErrorStr());
             return false;
         }
         else
         {
-            cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_CHANGE, "", pp, attr, " -> (Hard) Linked files %s -> %s\n", from, to);
+            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, attr, "(Hard) Linked files %s -> %s\n", from, to);
             return true;
         }
     }
@@ -528,7 +521,7 @@ int MakeHardLink(EvalContext *ctx, const char *from, const char *to, Attributes 
 
 int ExpandLinks(char *dest, const char *from, int level)
 {
-    CfOut(OUTPUT_LEVEL_ERROR, "", "!! Windows does not support symbolic links (at ExpandLinks(%s,%s))", dest, from);
+    Log(LOG_LEVEL_ERR, "Windows does not support symbolic links (at ExpandLinks(%s,%s))", dest, from);
     return false;
 }
 
@@ -545,7 +538,7 @@ int ExpandLinks(char *dest, const char *from, int level)
 
     if (level >= CF_MAXLINKLEVEL)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", " !! Too many levels of symbolic links to evaluate absolute path\n");
+        Log(LOG_LEVEL_ERR, "Too many levels of symbolic links to evaluate absolute path");
         return false;
     }
 
@@ -585,7 +578,7 @@ int ExpandLinks(char *dest, const char *from, int level)
 
         if (lstat(dest, &statbuf) == -1)        /* File doesn't exist so we can stop here */
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "lstat", " !! Can't stat %s in ExpandLinks\n", dest);
+            Log(LOG_LEVEL_ERR, "Can't stat '%s' in ExpandLinks. (lstat: %s)", dest, GetErrorStr());
             return false;
         }
 
@@ -595,7 +588,7 @@ int ExpandLinks(char *dest, const char *from, int level)
 
             if (readlink(dest, buff, CF_BUFSIZE - 1) == -1)
             {
-                CfOut(OUTPUT_LEVEL_ERROR, "readlink", " !! Expand links can't stat %s\n", dest);
+                Log(LOG_LEVEL_ERR, "Expand links can't stat '%s'. (readlink: %s)", dest, GetErrorStr());
                 return false;
             }
             else
@@ -618,7 +611,7 @@ int ExpandLinks(char *dest, const char *from, int level)
 
                     if (strcmp(dest, from) == 0)
                     {
-                        CfDebug("No links to be expanded\n");
+                        Log(LOG_LEVEL_DEBUG, "No links to be expanded");
                         return true;
                     }
 
@@ -636,7 +629,7 @@ int ExpandLinks(char *dest, const char *from, int level)
 
                     if (strcmp(dest, from) == 0)
                     {
-                        CfDebug("No links to be expanded\n");
+                        Log(LOG_LEVEL_DEBUG, "No links to be expanded");
                         return true;
                     }
 
@@ -706,6 +699,6 @@ static char *AbsLinkPath(const char *from, const char *relto)
     }
 
     strcat(destination, sp);
-    CfDebug("Reconstructed absolute linkname = %s\n", destination);
+    Log(LOG_LEVEL_DEBUG, "Reconstructed absolute linkname '%s'", destination);
     return destination;
 }

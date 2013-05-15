@@ -24,7 +24,7 @@
 
 #include "addr_lib.h"
 
-#include "logging_old.h"
+#include "logging.h"
 #include "string_lib.h"
 
 #define CF_ADDRSIZE 128
@@ -85,13 +85,13 @@ int FuzzySetMatch(const char *s1, const char *s2)
 
     if (isCIDR && isrange)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Cannot mix CIDR notation with xxx-yyy range notation: %s", s1);
+        Log(LOG_LEVEL_ERR, "Cannot mix CIDR notation with xxx-yyy range notation: %s", s1);
         return -1;
     }
 
     if (!(isv6 || isv4))
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Not a valid address range - or not a fully qualified name: %s", s1);
+        Log(LOG_LEVEL_ERR, "Not a valid address range - or not a fully qualified name: %s", s1);
         return -1;
     }
 
@@ -169,13 +169,13 @@ int FuzzySetMatch(const char *s1, const char *s2)
 
                     if ((from < 0) || (to < 0))
                     {
-                        CfDebug("Couldn't read range\n");
+                        Log(LOG_LEVEL_DEBUG, "Couldn't read range");
                         return -1;
                     }
 
                     if ((from > cmp) || (cmp > to))
                     {
-                        CfDebug("Out of range %ld > %ld > %ld (range %s)\n", from, cmp, to, buffer2);
+                        Log(LOG_LEVEL_DEBUG, "Out of range %ld > %ld > %ld (range '%s')", from, cmp, to, buffer2);
                         return -1;
                     }
                 }
@@ -186,15 +186,15 @@ int FuzzySetMatch(const char *s1, const char *s2)
 
                     if (from != cmp)
                     {
-                        CfDebug("Unequal\n");
+                        Log(LOG_LEVEL_DEBUG, "Unequal");
                         return -1;
                     }
                 }
 
-                CfDebug("Matched octet %s with %s\n", buffer1, buffer2);
+                Log(LOG_LEVEL_DEBUG, "Matched octet '%s' with '%s'", buffer1, buffer2);
             }
 
-            CfDebug("Matched IP range\n");
+            Log(LOG_LEVEL_DEBUG, "Matched IP range");
             return 0;
         }
     }
@@ -216,7 +216,7 @@ int FuzzySetMatch(const char *s1, const char *s2)
 
             if (mask % 8 != 0)
             {
-                CfOut(OUTPUT_LEVEL_ERROR, "", "Cannot handle ipv6 masks which are not 8 bit multiples (fix me)");
+                Log(LOG_LEVEL_ERR, "Cannot handle ipv6 masks which are not 8 bit multiples (fix me)");
                 return -1;
             }
 
@@ -261,7 +261,7 @@ int FuzzySetMatch(const char *s1, const char *s2)
 
                     if ((from >= cmp) || (cmp > to))
                     {
-                        CfDebug("%lx < %lx < %lx\n", from, cmp, to);
+                        Log(LOG_LEVEL_DEBUG, "%lx < %lx < %lx", from, cmp, to);
                         return -1;
                     }
                 }
@@ -293,7 +293,7 @@ int FuzzyHostParse(char *arg2)
 
     if (n != 2)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "",
+        Log(LOG_LEVEL_ERR,
               "HostRange syntax error: second arg should have X-Y format where X and Y are decimal numbers");
         return false;
     }
@@ -357,8 +357,6 @@ int FuzzyMatchParse(char *s)
     char address[CF_ADDRSIZE];
     int mask, count = 0;
 
-    CfDebug("Check ParsingIPRange(%s)\n", s);
-
     for (sp = s; *sp != '\0'; sp++)     /* Is this an address or hostname */
     {
         if (!isxdigit((int) *sp))
@@ -415,13 +413,13 @@ int FuzzyMatchParse(char *s)
 
     if (isv4 && isv6)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Mixture of IPv6 and IPv4 addresses");
+        Log(LOG_LEVEL_ERR, "Mixture of IPv6 and IPv4 addresses");
         return false;
     }
 
     if (isCIDR && isrange)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Cannot mix CIDR notation with xx-yy range notation");
+        Log(LOG_LEVEL_ERR, "Cannot mix CIDR notation with xx-yy range notation");
         return false;
     }
 
@@ -429,7 +427,7 @@ int FuzzyMatchParse(char *s)
     {
         if (strlen(s) > 4 + 3 * 4 + 1 + 2)      /* xxx.yyy.zzz.mmm/cc */
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "", "IPv4 address looks too long");
+            Log(LOG_LEVEL_ERR, "IPv4 address looks too long");
             return false;
         }
 
@@ -439,13 +437,13 @@ int FuzzyMatchParse(char *s)
 
         if (mask < 8)
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "", "Mask value %d in %s is less than 8", mask, s);
+            Log(LOG_LEVEL_ERR, "Mask value %d in %s is less than 8", mask, s);
             return false;
         }
 
         if (mask > 30)
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "", "Mask value %d in %s is silly (> 30)", mask, s);
+            Log(LOG_LEVEL_ERR, "Mask value %d in %s is silly (> 30)", mask, s);
             return false;
         }
     }
@@ -469,13 +467,13 @@ int FuzzyMatchParse(char *s)
 
                 if ((from < 0) || (to < 0))
                 {
-                    CfOut(OUTPUT_LEVEL_ERROR, "", "Error in IP range - looks like address, or bad hostname");
+                    Log(LOG_LEVEL_ERR, "Error in IP range - looks like address, or bad hostname");
                     return false;
                 }
 
                 if (to < from)
                 {
-                    CfOut(OUTPUT_LEVEL_ERROR, "", "Bad IP range");
+                    Log(LOG_LEVEL_ERR, "Bad IP range");
                     return false;
                 }
 
@@ -490,13 +488,13 @@ int FuzzyMatchParse(char *s)
 
         if (strlen(s) < 20)
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "", "IPv6 address looks too short");
+            Log(LOG_LEVEL_ERR, "IPv6 address looks too short");
             return false;
         }
 
         if (strlen(s) > 42)
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "", "IPv6 address looks too long");
+            Log(LOG_LEVEL_ERR, "IPv6 address looks too long");
             return false;
         }
 
@@ -506,13 +504,13 @@ int FuzzyMatchParse(char *s)
 
         if (mask % 8 != 0)
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "", "Cannot handle ipv6 masks which are not 8 bit multiples (fix me)");
+            Log(LOG_LEVEL_ERR, "Cannot handle ipv6 masks which are not 8 bit multiples (fix me)");
             return false;
         }
 
         if (mask > 15)
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "", "IPv6 CIDR mask is too large");
+            Log(LOG_LEVEL_ERR, "IPv6 CIDR mask is too large");
             return false;
         }
     }

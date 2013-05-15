@@ -26,7 +26,6 @@
 
 #include "attributes.h"
 #include "matching.h"
-#include "logging_old.h"
 #include "files_names.h"
 #include "fncall.h"
 #include "rlist.h"
@@ -53,19 +52,19 @@ void VerifyClassPromise(EvalContext *ctx, Promise *pp, ARG_UNUSED void *param)
 
     if (!FullTextMatch("[a-zA-Z0-9_]+", pp->promiser))
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Class identifier \"%s\" contains illegal characters - canonifying", pp->promiser);
+        Log(LOG_LEVEL_VERBOSE, "Class identifier \"%s\" contains illegal characters - canonifying", pp->promiser);
         snprintf(pp->promiser, strlen(pp->promiser) + 1, "%s", CanonifyName(pp->promiser));
     }
 
     if (a.context.nconstraints == 0)
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "", pp, a, "No constraints for class promise %s", pp->promiser);
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "No constraints for class promise %s", pp->promiser);
         return;
     }
 
     if (a.context.nconstraints > 1)
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "", pp, a, "Irreconcilable constraints in classes for %s", pp->promiser);
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Irreconcilable constraints in classes for %s", pp->promiser);
         return;
     }
 
@@ -99,25 +98,25 @@ void VerifyClassPromise(EvalContext *ctx, Promise *pp, ARG_UNUSED void *param)
     {
         if (!ValidClassName(pp->promiser))
         {
-            cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "", pp, a,
-                 " !! Attempted to name a class \"%s\", which is an illegal class identifier", pp->promiser);
+            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a,
+                 "Attempted to name a class '%s', which is an illegal class identifier", pp->promiser);
         }
         else
         {
             if (global_class)
             {
-                CfOut(OUTPUT_LEVEL_VERBOSE, "", " ?> defining additional global class %s\n", pp->promiser);
+                Log(LOG_LEVEL_VERBOSE, "Adding global class '%s'", pp->promiser);
                 EvalContextHeapAddSoft(ctx, pp->promiser, PromiseGetNamespace(pp));
             }
             else
             {
-                CfOut(OUTPUT_LEVEL_VERBOSE, "", " ?> defining explicit local bundle class %s\n", pp->promiser);
+                Log(LOG_LEVEL_VERBOSE, "Adding local bundle class '%s'", pp->promiser);
                 EvalContextStackFrameAddSoft(ctx, pp->promiser);
             }
 
             if (a.context.persistent > 0)
             {
-                CfOut(OUTPUT_LEVEL_VERBOSE, "", " ?> defining explicit persistent class %s (%d mins)\n", pp->promiser,
+                Log(LOG_LEVEL_VERBOSE, "Adding persistent class '%s'. (%d minutes)", pp->promiser,
                       a.context.persistent);
                 EvalContextHeapPersistentSave(pp->promiser, PromiseGetNamespace(pp), a.context.persistent, CONTEXT_STATE_POLICY_RESET);
             }
@@ -138,7 +137,7 @@ static int EvalClassExpression(EvalContext *ctx, Constraint *cp, Promise *pp)
 
     if (cp == NULL)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", " !! EvalClassExpression internal diagnostic discovered an ill-formed condition");
+        Log(LOG_LEVEL_ERR, "EvalClassExpression internal diagnostic discovered an ill-formed condition");
     }
 
     if (!IsDefinedClass(ctx, pp->classes, PromiseGetNamespace(pp)))
@@ -155,7 +154,7 @@ static int EvalClassExpression(EvalContext *ctx, Constraint *cp, Promise *pp)
     {
         if (PromiseGetConstraintAsInt(ctx, "persistence", pp) == 0)
         {
-            CfOut(OUTPUT_LEVEL_VERBOSE, "", " ?> Cancelling cached persistent class %s", pp->promiser);
+            Log(LOG_LEVEL_VERBOSE, " ?> Cancelling cached persistent class %s", pp->promiser);
             EvalContextHeapPersistentRemove(pp->promiser);
         }
         return false;
@@ -241,8 +240,8 @@ static int EvalClassExpression(EvalContext *ctx, Constraint *cp, Promise *pp)
 
         if (total == 0)
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "", " !! No classes to select on RHS");
-            PromiseRef(OUTPUT_LEVEL_ERROR, pp);
+            Log(LOG_LEVEL_ERR, "No classes to select on RHS");
+            PromiseRef(LOG_LEVEL_ERR, pp);
             return false;
         }
 
@@ -264,8 +263,8 @@ static int EvalClassExpression(EvalContext *ctx, Constraint *cp, Promise *pp)
 
     if (cp->rval.type != RVAL_TYPE_LIST)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", " !! RHS of promise body attribute \"%s\" is not a list\n", cp->lval);
-        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
+        Log(LOG_LEVEL_ERR, "RHS of promise body attribute \"%s\" is not a list", cp->lval);
+        PromiseRef(LOG_LEVEL_ERR, pp);
         return true;
     }
 
@@ -279,8 +278,8 @@ static int EvalClassExpression(EvalContext *ctx, Constraint *cp, Promise *pp)
 
             if (result < 0)
             {
-                CfOut(OUTPUT_LEVEL_ERROR, "", " !! Non-positive integer in class distribution");
-                PromiseRef(OUTPUT_LEVEL_ERROR, pp);
+                Log(LOG_LEVEL_ERR, "Non-positive integer in class distribution");
+                PromiseRef(LOG_LEVEL_ERR, pp);
                 return false;
             }
 
@@ -289,8 +288,8 @@ static int EvalClassExpression(EvalContext *ctx, Constraint *cp, Promise *pp)
 
         if (total == 0)
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "", " !! An empty distribution was specified on RHS");
-            PromiseRef(OUTPUT_LEVEL_ERROR, pp);
+            Log(LOG_LEVEL_ERR, "An empty distribution was specified on RHS");
+            PromiseRef(LOG_LEVEL_ERR, pp);
             return false;
         }
 
@@ -321,7 +320,6 @@ static int EvalClassExpression(EvalContext *ctx, Constraint *cp, Promise *pp)
             EvalContextStackFrameAddSoft(ctx, buffer);
         }
 
-        CfDebug(" ?? \'Strategy\' distribution class interval -> %s\n", buffer);
         return true;
     }
 

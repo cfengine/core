@@ -31,8 +31,6 @@
 #include "vars.h"
 #include "sort.h"
 #include "attributes.h"
-#include "logging_old.h"
-#include "logging.h"
 #include "communication.h"
 #include "locks.h"
 #include "string_lib.h"
@@ -85,12 +83,12 @@ void VerifyReportPromise(EvalContext *ctx, Promise *pp)
 
     if (a.transaction.action == cfa_warn)
     {
-        cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_WARN, "", pp, a, "Need to repair reports promise: %s", pp->promiser);
+        cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_WARN, pp, a, "Need to repair reports promise: %s", pp->promiser);
         YieldCurrentLock(thislock);
         return;
     }
 
-    cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, "", pp, a, "Report: %s", pp->promiser);
+    cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, "Report: %s", pp->promiser);
 
     if (a.report.to_file)
     {
@@ -124,7 +122,7 @@ static void ReportToFile(const char *logfile, const char *message)
     FILE *fp = fopen(logfile, "a");
     if (fp == NULL)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "fopen", "Could not open log file %s\n", logfile);
+        Log(LOG_LEVEL_ERR, "Could not open log file '%s'. (fopen: %s)", logfile, GetErrorStr());
         printf("%s\n", message);
     }
     else
@@ -142,13 +140,13 @@ static void PrintFile(EvalContext *ctx, Attributes a, Promise *pp)
 
     if (a.report.filename == NULL)
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Printfile promise was incomplete, with no filename.\n");
+        Log(LOG_LEVEL_VERBOSE, "Printfile promise was incomplete, with no filename.");
         return;
     }
 
     if ((fp = fopen(a.report.filename, "r")) == NULL)
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "fopen", pp, a, " !! Printing of file %s was not possible.\n", a.report.filename);
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a, "Printing of file '%s' was not possible. (fopen: %s)", a.report.filename, GetErrorStr());
         return;
     }
 
@@ -166,7 +164,7 @@ static void PrintFile(EvalContext *ctx, Attributes a, Promise *pp)
                 break;
             }
         }
-        CfOut(OUTPUT_LEVEL_ERROR, "", "R: %s", buffer);
+        Log(LOG_LEVEL_ERR, "R: %s", buffer);
         lines++;
     }
 

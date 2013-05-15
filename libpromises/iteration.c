@@ -26,7 +26,6 @@
 
 #include "scope.h"
 #include "vars.h"
-#include "logging_old.h"
 #include "fncall.h"
 #include "env_context.h"
 
@@ -40,15 +39,13 @@ static Rlist *RlistAppendOrthog(Rlist **start, void *item, RvalType type)
     Rlist *rp, *lp;
     CfAssoc *cp;
 
-    CfDebug("OrthogAppendRlist\n");
-
     switch (type)
     {
     case RVAL_TYPE_LIST:
-        CfDebug("Expanding and appending list object, orthogonally\n");
+        Log(LOG_LEVEL_DEBUG, "Expanding and appending list object, orthogonally");
         break;
     default:
-        CfDebug("Cannot append %c to rval-list [%s]\n", type, (char *) item);
+        Log(LOG_LEVEL_DEBUG, "Cannot append %c to rval-list '%s'", type, (char *) item);
         return NULL;
     }
 
@@ -92,15 +89,12 @@ Rlist *NewIterationContext(EvalContext *ctx, const char *scopeid, Rlist *namelis
     CfAssoc *new;
     Rval newret;
 
-    CfDebug("\n*\nNewIterationContext(from %s)\n*\n", scopeid);
-
     ScopeCopy("this", ScopeGet(scopeid));
 
     ScopeGet("this");
 
     if (namelist == NULL)
     {
-        CfDebug("No lists to iterate over\n");
         return NULL;
     }
 
@@ -109,9 +103,9 @@ Rlist *NewIterationContext(EvalContext *ctx, const char *scopeid, Rlist *namelis
         dtype = DATA_TYPE_NONE;
         if (!EvalContextVariableGet(ctx, (VarRef) { NULL, scopeid, rp->item }, &retval, &dtype))
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "", " !! Couldn't locate variable %s apparently in %s\n", RlistScalarValue(rp), scopeid);
-            CfOut(OUTPUT_LEVEL_ERROR, "",
-                  " !! Could be incorrect use of a global iterator -- see reference manual on list substitution");
+            Log(LOG_LEVEL_ERR, "Couldn't locate variable %s apparently in %s", RlistScalarValue(rp), scopeid);
+            Log(LOG_LEVEL_ERR,
+                  "Could be incorrect use of a global iterator -- see reference manual on list substitution");
             continue;
         }
 
@@ -167,31 +161,24 @@ void DeleteIterationContext(Rlist *deref)
 
 /*****************************************************************************/
 
-static int IncrementIterationContextInternal(Rlist *iterator, int level)
+static bool IncrementIterationContextInternal(Rlist *iterator, int level)
 {
-    Rlist *state;
-    CfAssoc *cp;
-
     if (iterator == NULL)
     {
         return false;
     }
 
-// iterator->next points to the next list
-// iterator->state_ptr points to the current item in the current list
-
-    cp = (CfAssoc *) iterator->item;
-    state = iterator->state_ptr;
+    // iterator->next points to the next list
+    // iterator->state_ptr points to the current item in the current list
+    CfAssoc *cp = (CfAssoc *) iterator->item;
+    Rlist *state = iterator->state_ptr;
 
     if (state == NULL)
     {
         return false;
     }
 
-/* Go ahead and increment */
-
-    CfDebug(" -> Incrementing (%s - level %d) from \"%s\"\n", cp->lval, level, (char *) iterator->state_ptr->item);
-
+    // Go ahead and increment
     if (state->next == NULL)
     {
         /* This wheel has come to full revolution, so move to next */
@@ -223,8 +210,6 @@ static int IncrementIterationContextInternal(Rlist *iterator, int level)
     {
         /* Update the current wheel */
         iterator->state_ptr = state->next;
-
-        CfDebug(" <- Incrementing wheel (%s) to \"%s\"\n", cp->lval, (char *) iterator->state_ptr->item);
 
         while (NullIterators(iterator))
         {

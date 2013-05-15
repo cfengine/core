@@ -24,10 +24,7 @@
 
 #include <stdint.h>
 #include <ctype.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netinet/ip.h>
-
+#include "platform.h"
 #include "ip_address.h"
 #include "alloc.h"
 
@@ -930,6 +927,9 @@ Buffer *IPAddressGetAddress(IPAddress *address)
         result = BufferPrintf(buffer, "%u.%u.%u.%u", ipv4->octets[0], ipv4->octets[1], ipv4->octets[2], ipv4->octets[3]);
 #elif LITTLE_ENDIAN
         result = BufferPrintf(buffer, "%u.%u.%u.%u", ipv4->octets[3], ipv4->octets[2], ipv4->octets[1], ipv4->octets[0]);
+#else
+#warning "Unrecognized endianness, assuming big endian"
+        result = BufferPrintf(buffer, "%u.%u.%u.%u", ipv4->octets[0], ipv4->octets[1], ipv4->octets[2], ipv4->octets[3]);
 #endif
     }
     else if (address->type == IP_ADDRESS_TYPE_IPV6)
@@ -942,6 +942,10 @@ Buffer *IPAddressGetAddress(IPAddress *address)
 #elif LITTLE_ENDIAN
         result = BufferPrintf(buffer, "%x:%x:%x:%x:%x:%x:%x:%x", ipv6->sixteen[7], ipv6->sixteen[6], ipv6->sixteen[5],
                               ipv6->sixteen[4], ipv6->sixteen[3], ipv6->sixteen[2], ipv6->sixteen[1], ipv6->sixteen[0]);
+#else
+#warning "Unrecognized endianness, assuming big endian"
+        result = BufferPrintf(buffer, "%x:%x:%x:%x:%x:%x:%x:%x", ipv6->sixteen[0], ipv6->sixteen[1], ipv6->sixteen[2],
+                              ipv6->sixteen[3], ipv6->sixteen[4], ipv6->sixteen[5], ipv6->sixteen[6], ipv6->sixteen[7]);
 #endif
     }
     else
@@ -979,3 +983,62 @@ int IPAddressGetPort(IPAddress *address)
     }
     return port;
 }
+
+/*
+ * Comparison for IPV4 addresses
+ */
+static int IPV4Compare(struct IPV4Address *a, struct IPV4Address *b)
+{
+    int i = 0;
+    for (i = 0; i < 4; ++i)
+    {
+        if (a->octets[i] != b->octets[i])
+        {
+            return 0;
+        }
+    }
+    return 1;
+}
+
+/*
+ * Comparison for IPV6 addresses
+ */
+static int IPV6Compare(struct IPV6Address *a, struct IPV6Address *b)
+{
+    int i = 0;
+    for (i = 0; i < 8; ++i)
+    {
+        if (a->sixteen[i] != b->sixteen[i])
+        {
+            return 0;
+        }
+    }
+    return 1;
+}
+
+int IPAddressIsEqual(IPAddress *a, IPAddress *b)
+{
+    /*
+     * We do not support IPV4 versus IPV6 comparisons.
+     * This is trickier than what it seems, since even the IPV6 representation of an IPV6 address is not
+     * clear yet.
+     */
+     if (!a || !b)
+     {
+         return -1;
+     }
+     if (a->type != b->type)
+     {
+         return -1;
+     }
+     if (a->type == IP_ADDRESS_TYPE_IPV4)
+     {
+         return IPV4Compare((struct IPV4Address *)a->address, (struct IPV4Address *)b->address);
+     }
+     else if (a->type == IP_ADDRESS_TYPE_IPV6)
+     {
+         return IPV6Compare((struct IPV6Address *)a->address, (struct IPV6Address *)b->address);
+     }
+     return -1;
+}
+

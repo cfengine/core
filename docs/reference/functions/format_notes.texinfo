@@ -1,0 +1,7 @@
+
+Applies sprintf() formatting to a given string with the rest of the
+parameters applied in place.
+
+Will fail if it doesn't have enough arguments; if any format specifier
+contains the modifiers @code{hLqjzt}; or if any format specifier is not
+one of @code{doxfs}.

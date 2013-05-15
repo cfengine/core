@@ -32,7 +32,6 @@
 
 #include "cf3.defs.h"
 
-#include "logging_old.h"
 #include "audit.h"
 
 static char *cf_format_strtimestamp(struct tm *tm, char *buf);
@@ -194,7 +193,7 @@ int seteuid(uid_t uid)
 # ifdef HAVE_SETREUID
     return setreuid(-1, uid);
 # else
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "(This system does not have setreuid (patches.c)\n");
+    Log(LOG_LEVEL_VERBOSE, "(This system does not have setreuid (patches.c)");
     return -1;
 # endif
 }
@@ -210,7 +209,7 @@ int setegid(gid_t gid)
 # ifdef HAVE_SETREGID
     return setregid(-1, gid);
 # else
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "(This system does not have setregid (patches.c)\n");
+    Log(LOG_LEVEL_VERBOSE, "(This system does not have setregid (patches.c)");
     return -1;
 # endif
 }
@@ -248,7 +247,7 @@ char *cf_strtimestamp_local(const time_t time, char *buf)
 
     if (localtime_r(&time, &tm) == NULL)
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "localtime_r", "Unable to parse passed timestamp");
+        Log(LOG_LEVEL_VERBOSE, "Unable to parse passed timestamp. (localtime_r: %s)", GetErrorStr());
         return NULL;
     }
 
@@ -263,7 +262,7 @@ char *cf_strtimestamp_utc(const time_t time, char *buf)
 
     if (gmtime_r(&time, &tm) == NULL)
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "gmtime_r", "Unable to parse passed timestamp");
+        Log(LOG_LEVEL_VERBOSE, "Unable to parse passed timestamp. (gmtime_r: %s)", GetErrorStr());
         return NULL;
     }
 
@@ -277,7 +276,7 @@ static char *cf_format_strtimestamp(struct tm *tm, char *buf)
     /* Security checks */
     if ((tm->tm_year < -2899) || (tm->tm_year > 8099))
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Unable to format timestamp: passed year is out of range: %d", tm->tm_year + 1900);
+        Log(LOG_LEVEL_ERR, "Unable to format timestamp: passed year is out of range: %d", tm->tm_year + 1900);
         return NULL;
     }
 
@@ -287,7 +286,7 @@ static char *cf_format_strtimestamp(struct tm *tm, char *buf)
                  DAY_TEXT[tm->tm_wday ? (tm->tm_wday - 1) : 6], MONTH_TEXT[tm->tm_mon],
                  tm->tm_mday, tm->tm_hour, tm->tm_min, tm->tm_sec, tm->tm_year + 1900) >= 26)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Unable to format timestamp: passed values are out of range");
+        Log(LOG_LEVEL_ERR, "Unable to format timestamp: passed values are out of range");
         return NULL;
     }
 
@@ -308,7 +307,7 @@ int cf_closesocket(int sd)
 
     if (res != 0)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "cf_closesocket", "!! Could not close socket");
+        Log(LOG_LEVEL_ERR, "Could not close socket. (cf_closesocket: %s)", GetErrorStr());
     }
 
     return res;

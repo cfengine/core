@@ -30,7 +30,6 @@
 #include "item_lib.h"
 #include "conversion.h"
 #include "scope.h"
-#include "logging_old.h"
 #include "misc_lib.h"
 #include "rlist.h"
 
@@ -45,7 +44,7 @@ static pcre *CompileRegExp(const char *regexp)
 
     if (rx == NULL)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Regular expression error \"%s\" in expression \"%s\" at %d\n", errorstr, regexp,
+        Log(LOG_LEVEL_ERR, "Regular expression error \"%s\" in expression \"%s\" at %d", errorstr, regexp,
               erroffset);
     }
 
@@ -195,13 +194,7 @@ char *ExtractFirstReference(const char *regexp, const char *teststring)
 
     if (strlen(backreference) == 0)
     {
-        CfDebug("The regular expression \"%s\" yielded no matching back-reference\n", regexp);
         strncpy(backreference, "CF_NOMATCH", CF_MAXVARSIZE);
-    }
-    else
-    {
-        CfDebug("The regular expression \"%s\" yielded backreference \"%s\" on %s\n", regexp, backreference,
-                teststring);
     }
 
     return backreference;
@@ -358,10 +351,10 @@ int IsPathRegex(char *str)
 
                 if ((*sp == FILE_SEPARATOR) && (r || s))
                 {
-                    CfOut(OUTPUT_LEVEL_ERROR, "",
+                    Log(LOG_LEVEL_ERR,
                           "Path regular expression %s seems to use expressions containing the directory symbol %c", str,
                           FILE_SEPARATOR);
-                    CfOut(OUTPUT_LEVEL_ERROR, "", "Use a work-around to avoid pathological behaviour\n");
+                    Log(LOG_LEVEL_ERR, "Use a work-around to avoid pathological behaviour");
                     return false;
                 }
                 break;
@@ -389,19 +382,18 @@ int IsRegexItemIn(const EvalContext *ctx, Item *list, char *regex)
 
         if (strcmp(regex, ptr->name) == 0)
         {
-            return (true);
+            return true;
         }
 
         /* Make it commutative */
 
         if ((FullTextMatch(regex, ptr->name)) || (FullTextMatch(ptr->name, regex)))
         {
-            CfDebug("IsRegexItem(%s,%s)\n", regex, ptr->name);
-            return (true);
+            return true;
         }
     }
 
-    return (false);
+    return false;
 }
 
 int MatchPolicy(const char *camel, const char *haystack, Rlist *insert_match, const Promise *pp)
@@ -440,8 +432,8 @@ int MatchPolicy(const char *camel, const char *haystack, Rlist *insert_match, co
             {
                 if ((rp->next != NULL) || (rp != insert_match))
                 {
-                    CfOut(OUTPUT_LEVEL_ERROR, "", " !! Multiple policies conflict with \"exact_match\", using exact match");
-                    PromiseRef(OUTPUT_LEVEL_ERROR, pp);
+                    Log(LOG_LEVEL_ERR, "Multiple policies conflict with \"exact_match\", using exact match");
+                    PromiseRef(LOG_LEVEL_ERR, pp);
                 }
 
                 ok = ok || direct_cmp;
@@ -550,7 +542,6 @@ int MatchRlistItem(Rlist *listofregex, const char *teststring)
 
         if (FullTextMatch(rp->item, teststring))
         {
-            CfDebug("MatchRlistItem(%s > %s)\n", (char *) rp->item, teststring);
             return true;
         }
     }

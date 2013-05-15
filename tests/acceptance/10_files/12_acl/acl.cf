@@ -1,0 +1,86 @@
+######################################################
+#
+#  ACL tests
+#
+#####################################################
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+  classes:
+    "cfengine_internal_getfacl" expression => fileexists("/var/cfengine/bin/getfacl");
+    "system_getfacl" expression => fileexists("/usr/bin/getfacl");
+
+  vars:
+    linux.cfengine_internal_getfacl::
+      "cmd" string => "/var/cfengine/bin/getfacl";
+    linux.!cfengine_internal_getfacl.system_getfacl::
+      "cmd" string => "/usr/bin/getfacl";
+
+  files:
+    "$(G.testdir)$(G.DS)file"
+      create => "true",
+      acl => acl_sanity_check;
+}
+
+body acl acl_sanity_check
+{
+  acl_method => "append";
+  aces => { "all:=rwx:allow" };
+}
+
+#######################################################
+
+bundle agent test
+{
+  vars:
+    linux::
+      "sanity_perms" string => execresult("$(init.cmd) $(G.testdir)$(G.DS)file", "noshell");
+  classes:
+    linux::
+      # Some filesystems don't have ACL capability, so we do this sanity check.
+      "linux_go_ahead" expression => regcmp(".*other::rwx.*", "$(sanity_perms)");
+  vars:
+    linux_go_ahead|windows::
+      "result" string => execresult("$(sys.cf_agent) -Kf $(G.cwd)$(G.DS)$(this.promise_filename).sub", "noshell");
+    !linux_go_ahead.!windows::
+      "result" string => "";
+
+  reports:
+    DEBUG.!linux_go_ahead.!windows::
+      "ACL support not detected. Try remounting the filesystem with -o acl.";
+}
+
+#######################################################
+
+bundle agent check
+{
+  classes:
+    "ok" not => regcmp(".*(error|failed).*", "$(test.result)");
+  reports:
+    DEBUG::
+        "Tests various ACL features";
+    DEBUG.!ok::
+        "Subtest(s) failing: $(test.result)";
+    ok::
+        "$(this.promise_filename) Pass";
+    !ok::
+        "$(this.promise_filename) FAIL";
+
+  files:
+    "$(G.testdir)$(G.DS)file"
+      acl => acl_sanity_check_reset;
+}
+
+body acl acl_sanity_check_reset
+{
+  acl_method => "append";
+  aces => { "all:-rwx:allow" };
+}

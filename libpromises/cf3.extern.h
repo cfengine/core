@@ -27,6 +27,8 @@
 
 /* See variables in cf3globals.c and syntax.c */
 
+extern bool LEGACY_OUTPUT;
+
 extern pid_t ALARM_PID;
 extern RSA *PRIVKEY, *PUBKEY;
 extern char BINDINTERFACE[CF_BUFSIZE];
@@ -59,11 +61,6 @@ extern char VDOMAIN[CF_MAXVARSIZE];
 extern PlatformContext VSYSTEMHARDCLASS;
 extern char VFQNAME[];
 extern char VUQNAME[];
-
-extern int DEBUG;
-
-extern int VERBOSE;
-extern int INFORM;
 
 extern int DONTDO;
 extern int IGNORELOCK;

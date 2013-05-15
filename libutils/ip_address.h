@@ -63,4 +63,12 @@ Buffer *IPAddressGetAddress(IPAddress *address);
   @return A valid port for connections or -1 if it was not available.
   */
 int IPAddressGetPort(IPAddress *address);
+/**
+  @brief Compares two ip addresses.
+  @param a IP address of the first object.
+  @param b IP address of the second object.
+  @return 1 if both addresses are equal, 0 if they are not and -1 in case of error.
+  */
+int IPAddressIsEqual(IPAddress *a, IPAddress *b);
+
 #endif // CFENGINE_IP_ADDRESS_H

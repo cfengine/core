@@ -29,7 +29,6 @@
 #include "files_interfaces.h"
 #include "promises.h"
 #include "matching.h"
-#include "logging_old.h"
 #include "string_lib.h"
 #include "pipes.h"
 #include "promises.h"
@@ -65,19 +64,19 @@ int SelectLeaf(char *path, struct stat *sb, FileSelect fs)
 #ifdef __MINGW32__
     if (fs.issymlinkto != NULL)
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "",
+        Log(LOG_LEVEL_VERBOSE,
               "files_select.issymlinkto is ignored on Windows (symbolic links are not supported by Windows)");
     }
 
     if (fs.groups != NULL)
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "",
+        Log(LOG_LEVEL_VERBOSE,
               "files_select.search_groups is ignored on Windows (file groups are not supported by Windows)");
     }
 
     if (fs.bsdflags != NULL)
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "files_select.search_bsdflags is ignored on Windows");
+        Log(LOG_LEVEL_VERBOSE, "files_select.search_bsdflags is ignored on Windows");
     }
 #endif /* __MINGW32__ */
 
@@ -188,7 +187,7 @@ int SelectLeaf(char *path, struct stat *sb, FileSelect fs)
 
     result = EvalFileResult(fs.result, leaf_attr);
 
-    CfDebug("Select result \"%s\"on %s was %d\n", fs.result, path, result);
+    Log(LOG_LEVEL_DEBUG, "Select result '%s' on '%s' was %d", fs.result, path, result);
 
     StringSetDestroy(leaf_attr);
 
@@ -304,14 +303,14 @@ static int SelectOwnerMatch(char *path, struct stat *lstatptr, Rlist *crit)
     {
         if (EvalFileResult((char *) rp->item, leafattrib))
         {
-            CfDebug(" - ? Select owner match\n");
+            Log(LOG_LEVEL_DEBUG, "Select owner match");
             StringSetDestroy(leafattrib);
             return true;
         }
 
         if (gotOwner && (FullTextMatch((char *) rp->item, ownerName)))
         {
-            CfDebug(" - ? Select owner match\n");
+            Log(LOG_LEVEL_DEBUG, "Select owner match");
             StringSetDestroy(leafattrib);
             return true;
         }
@@ -319,7 +318,7 @@ static int SelectOwnerMatch(char *path, struct stat *lstatptr, Rlist *crit)
 #ifndef __MINGW32__
         if (FullTextMatch((char *) rp->item, buffer))
         {
-            CfDebug(" - ? Select owner match\n");
+            Log(LOG_LEVEL_DEBUG, "Select owner match");
             StringSetDestroy(leafattrib);
             return true;
         }
@@ -344,7 +343,7 @@ static int SelectModeMatch(struct stat *lstatptr, Rlist *list)
 
         if (!ParseModeString(rp->item, &plus, &minus))
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "", " !! Problem validating a mode string \"%s\" in search filter", RlistScalarValue(rp));
+            Log(LOG_LEVEL_ERR, "Problem validating a mode string \"%s\" in search filter", RlistScalarValue(rp));
             continue;
         }
 
@@ -370,7 +369,7 @@ static int SelectBSDMatch(struct stat *lstatptr, Rlist *bsdflags)
 
     if (!ParseFlagString(bsdflags, &plus, &minus))
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", " !! Problem validating a BSD flag string");
+        Log(LOG_LEVEL_ERR, "Problem validating a BSD flag string");
     }
 
     newflags = (lstatptr->st_flags & CHFLAGS_MASK);
@@ -431,7 +430,7 @@ static bool SelectExecRegexMatch(char *filename, char *crit, char *prog)
 
     if ((pp = cf_popen(buf, "r", true)) == NULL)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "cf_popen", "Couldn't open pipe to command %s\n", buf);
+        Log(LOG_LEVEL_ERR, "Couldn't open pipe to command '%s'. (cf_popen: %s)", buf, GetErrorStr());
         return false;
     }
 
@@ -440,7 +439,7 @@ static bool SelectExecRegexMatch(char *filename, char *crit, char *prog)
         ssize_t res = CfReadLine(line, CF_BUFSIZE, pp);
         if (res == -1)
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "fgets", "Error reading output from command %s", buf);
+            Log(LOG_LEVEL_ERR, "Error reading output from command '%s'. (fgets: %s)", buf, GetErrorStr());
             cf_pclose(pp);
             return false;
         }
@@ -476,7 +475,8 @@ static int SelectIsSymLinkTo(char *filename, Rlist *crit)
 
         if (readlink(filename, buffer, CF_BUFSIZE - 1) == -1)
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "readlink", "Unable to read link %s in filter", filename);
+            Log(LOG_LEVEL_ERR, "Unable to read link '%s' in filter. (readlink: %s)",
+                filename, GetErrorStr());
             return false;
         }
 
@@ -503,7 +503,7 @@ static int SelectExecProgram(char *filename, char *command)
 
     if (ShellCommandReturnsZero(buf, SHELL_TYPE_NONE))
     {
-        CfDebug(" - ? Select ExecProgram match for %s\n", buf);
+        Log(LOG_LEVEL_DEBUG, "Select ExecProgram match for '%s'", buf);
         return true;
     }
     else
@@ -527,8 +527,8 @@ int GetOwnerName(ARG_UNUSED char *path, struct stat *lstatptr, char *owner, int 
 
     if (pw == NULL)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "getpwuid", "!! Could not get owner name of user with uid=%ju",
-              (uintmax_t)lstatptr->st_uid);
+        Log(LOG_LEVEL_ERR, "Could not get owner name of user with 'uid=%ju'. (getpwuid: %s)",
+              (uintmax_t)lstatptr->st_uid, GetErrorStr());
         return false;
     }
 
@@ -563,21 +563,21 @@ static int SelectGroupMatch(struct stat *lstatptr, Rlist *crit)
     {
         if (EvalFileResult((char *) rp->item, leafattrib))
         {
-            CfDebug(" - ? Select group match\n");
+            Log(LOG_LEVEL_DEBUG, "Select group match");
             StringSetDestroy(leafattrib);
             return true;
         }
 
         if (gr && (FullTextMatch((char *) rp->item, gr->gr_name)))
         {
-            CfDebug(" - ? Select owner match\n");
+            Log(LOG_LEVEL_DEBUG, "Select group match");
             StringSetDestroy(leafattrib);
             return true;
         }
 
         if (FullTextMatch((char *) rp->item, buffer))
         {
-            CfDebug(" - ? Select owner match\n");
+            Log(LOG_LEVEL_DEBUG, "Select group match");
             StringSetDestroy(leafattrib);
             return true;
         }

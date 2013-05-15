@@ -31,7 +31,6 @@
 #include "fncall.h"
 #include "rlist.h"
 #include "conversion.h"
-#include "logging_old.h"
 #include "expand.h"
 #include "scope.h"
 #include "promises.h"
@@ -227,7 +226,7 @@ void VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates
 
         if (Epimenides(ctx, PromiseGetBundle(pp)->name, pp->promiser, rval, 0))
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "", "Variable \"%s\" contains itself indirectly - an unkeepable promise", pp->promiser);
+            Log(LOG_LEVEL_ERR, "Variable \"%s\" contains itself indirectly - an unkeepable promise", pp->promiser);
             exit(1);
         }
         else
@@ -253,26 +252,26 @@ void VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates
                 switch (rval.type)
                 {
                 case RVAL_TYPE_SCALAR:
-                    CfOut(OUTPUT_LEVEL_VERBOSE, "", " !! Redefinition of a constant scalar \"%s\" (was %s now %s)",
+                    Log(LOG_LEVEL_VERBOSE, "Redefinition of a constant scalar \"%s\" (was %s now %s)",
                           pp->promiser, RvalScalarValue(existing_var_rval), RvalScalarValue(rval));
-                    PromiseRef(OUTPUT_LEVEL_VERBOSE, pp);
+                    PromiseRef(LOG_LEVEL_VERBOSE, pp);
                     break;
 
                 case RVAL_TYPE_LIST:
                     {
-                        CfOut(OUTPUT_LEVEL_VERBOSE, "", " !! Redefinition of a constant list \"%s\".", pp->promiser);
+                        Log(LOG_LEVEL_VERBOSE, "Redefinition of a constant list \"%s\".", pp->promiser);
                         Writer *w = StringWriter();
                         RlistWrite(w, existing_var_rval.item);
                         char *oldstr = StringWriterClose(w);
-                        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Old value: %s", oldstr);
+                        Log(LOG_LEVEL_VERBOSE, "Old value: %s", oldstr);
                         free(oldstr);
 
                         w = StringWriter();
                         RlistWrite(w, rval.item);
                         char *newstr = StringWriterClose(w);
-                        CfOut(OUTPUT_LEVEL_VERBOSE, "", " New value: %s", newstr);
+                        Log(LOG_LEVEL_VERBOSE, " New value: %s", newstr);
                         free(newstr);
-                        PromiseRef(OUTPUT_LEVEL_VERBOSE, pp);
+                        PromiseRef(LOG_LEVEL_VERBOSE, pp);
                     }
                     break;
 
@@ -293,8 +292,8 @@ void VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates
 
         if (!FullTextMatch("[a-zA-Z0-9_\200-\377.]+(\\[.+\\])*", pp->promiser))
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "", " !! Variable identifier contains illegal characters");
-            PromiseRef(OUTPUT_LEVEL_ERROR, pp);
+            Log(LOG_LEVEL_ERR, "Variable identifier contains illegal characters");
+            PromiseRef(LOG_LEVEL_ERR, pp);
             RvalDestroy(rval);
             free(scope);
             BufferDestroy(&qualified_scope);
@@ -315,8 +314,8 @@ void VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates
 
         if (!EvalContextVariablePut(ctx, (VarRef) { NULL, BufferData(qualified_scope), pp->promiser }, rval, DataTypeFromString(opts.cp_save->lval)))
         {
-            CfOut(OUTPUT_LEVEL_VERBOSE, "", "Unable to converge %s.%s value (possibly empty or infinite regression)\n", BufferData(qualified_scope), pp->promiser);
-            PromiseRef(OUTPUT_LEVEL_VERBOSE, pp);
+            Log(LOG_LEVEL_VERBOSE, "Unable to converge %s.%s value (possibly empty or infinite regression)", BufferData(qualified_scope), pp->promiser);
+            PromiseRef(LOG_LEVEL_VERBOSE, pp);
             promise_result = PROMISE_RESULT_FAIL;
         }
         else
@@ -326,8 +325,8 @@ void VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates
     }
     else
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", " !! Variable %s has no promised value\n", pp->promiser);
-        CfOut(OUTPUT_LEVEL_ERROR, "", " !! Rule from %s at/before line %zu\n", PromiseGetBundle(pp)->source_path, opts.cp_save->offset.line);
+        Log(LOG_LEVEL_ERR, "Variable %s has no promised value", pp->promiser);
+        Log(LOG_LEVEL_ERR, "Rule from %s at/before line %zu", PromiseGetBundle(pp)->source_path, opts.cp_save->offset.line);
         promise_result = PROMISE_RESULT_FAIL;
     }
 
@@ -445,7 +444,7 @@ static bool Epimenides(EvalContext *ctx, const char *scope, const char *var, Rva
 
         if (StringContainsVar(rval.item, var))
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "", "Scalar variable \"%s\" contains itself (non-convergent): %s", var, (char *) rval.item);
+            Log(LOG_LEVEL_ERR, "Scalar variable \"%s\" contains itself (non-convergent): %s", var, (char *) rval.item);
             return true;
         }
 
@@ -457,9 +456,6 @@ static bool Epimenides(EvalContext *ctx, const char *scope, const char *var, Rva
             {
                 return false;
             }
-
-            CfDebug("bling %d-%s: (look for %s) in \"%s\" => %s \n", level, scope, var, (const char *) rval.item,
-                    exp);
 
             if (level > 3)
             {
@@ -571,7 +567,7 @@ static ConvergeVariableOptions CollectConvergeVariableOptions(EvalContext *ctx, 
                 break;
 
             default:
-                CfOut(OUTPUT_LEVEL_ERROR, "", "!! Invalid ifvarclass type '%c': should be string or function", cp->rval.type);
+                Log(LOG_LEVEL_ERR, "Invalid ifvarclass type '%c': should be string or function", cp->rval.type);
                 continue;
             }
 
@@ -603,15 +599,15 @@ static ConvergeVariableOptions CollectConvergeVariableOptions(EvalContext *ctx, 
 
     if (opts.cp_save == NULL)
     {
-        CfOut(OUTPUT_LEVEL_INFORM, "", "Warning: Variable body for \"%s\" seems incomplete", pp->promiser);
-        PromiseRef(OUTPUT_LEVEL_INFORM, pp);
+        Log(LOG_LEVEL_INFO, "Warning: Variable body for \"%s\" seems incomplete", pp->promiser);
+        PromiseRef(LOG_LEVEL_INFO, pp);
         return opts;
     }
 
     if (num_values > 2)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Variable \"%s\" breaks its own promise with multiple values (code %d)", pp->promiser, num_values);
-        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
+        Log(LOG_LEVEL_ERR, "Variable \"%s\" breaks its own promise with multiple values (code %d)", pp->promiser, num_values);
+        PromiseRef(LOG_LEVEL_ERR, pp);
         return opts;
     }
 

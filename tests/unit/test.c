@@ -4,10 +4,6 @@
 #include "test.h"
 #include "alloc.h"
 
-#ifdef __hpux
-int DEBUG = 1;
-#endif
-
 char *file_read_string(FILE *in)
 {
     fpos_t pos;

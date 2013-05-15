@@ -29,8 +29,6 @@
 #include "env_monitor.h"
 #include "conversion.h"
 #include "vars.h"
-#include "logging_old.h"
-#include "logging.h"
 #include "signals.h"
 #include "scope.h"
 #include "sysinfo.h"
@@ -82,6 +80,7 @@ static const struct option OPTIONS[14] =
     {"no-fork", no_argument, 0, 'F'},
     {"histograms", no_argument, 0, 'H'},
     {"tcpdump", no_argument, 0, 'T'},
+    {"legacy-output", no_argument, 0, 'l'},
     {NULL, 0, 0, '\0'}
 };
 
@@ -99,6 +98,7 @@ static const char *HINTS[14] =
     "Run process in foreground, not as a daemon",
     "Ignored for backward compatibility",
     "Interface with tcpdump if available to collect data about network",
+    "Use legacy output format",
     NULL
 };
 
@@ -135,10 +135,14 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
     int c;
     GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_MONITOR);
 
-    while ((c = getopt_long(argc, argv, "dvnIf:VSxHTKMFh", OPTIONS, &optindex)) != EOF)
+    while ((c = getopt_long(argc, argv, "dvnIf:VSxHTKMFhl", OPTIONS, &optindex)) != EOF)
     {
         switch ((char) c)
         {
+        case 'l':
+            LEGACY_OUTPUT = true;
+            break;
+
         case 'f':
             GenericAgentConfigSetInputFile(config, GetWorkDir(), optarg);
             MINUSF = true;
@@ -154,11 +158,11 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             break;
 
         case 'I':
-            INFORM = true;
+            LogSetGlobalLevel(LOG_LEVEL_INFO);
             break;
 
         case 'v':
-            VERBOSE = true;
+            LogSetGlobalLevel(LOG_LEVEL_VERBOSE);
             NO_FORK = true;
             break;
 
@@ -194,7 +198,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             }
 
         case 'x':
-            CfOut(OUTPUT_LEVEL_ERROR, "", "Self-diagnostic functionality is retired.");
+            Log(LOG_LEVEL_ERR, "Self-diagnostic functionality is retired.");
             exit(0);
 
         default:
@@ -232,7 +236,7 @@ static void KeepPromises(EvalContext *ctx, Policy *policy)
 
             if (!EvalContextVariableGet(ctx, (VarRef) { NULL, "control_monitor", cp->lval }, &retval, NULL))
             {
-                CfOut(OUTPUT_LEVEL_ERROR, "", "Unknown lval %s in monitor control body", cp->lval);
+                Log(LOG_LEVEL_ERR, "Unknown lval %s in monitor control body", cp->lval);
                 continue;
             }
 
@@ -249,7 +253,7 @@ static void KeepPromises(EvalContext *ctx, Policy *policy)
             if (strcmp(cp->lval, CFM_CONTROLBODY[MONITOR_CONTROL_FORGET_RATE].lval) == 0)
             {
                 sscanf(retval.item, "%lf", &FORGETRATE);
-                CfDebug("forget rate = %f\n", FORGETRATE);
+                Log(LOG_LEVEL_DEBUG, "forget rate %f", FORGETRATE);
             }
         }
     }

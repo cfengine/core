@@ -1,0 +1,108 @@
+#######################################################
+#
+# Test formatint(), formatreal(), and formatstring()
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };
+  version => "1.0";
+nova_edition::
+  host_licenses_paid => "5";
+}
+
+#######################################################
+
+bundle agent init
+{
+vars:
+    "dummy" string => "dummy";
+
+files:
+    "$(G.testfile).expected"
+        create => "true",
+        edit_defaults => empty,
+        edit_line => init_insert;
+}
+
+body edit_defaults empty
+{
+      empty_file_before_editing => "true";
+      edit_backup => "false";
+}
+
+bundle edit_line init_insert
+{
+insert_lines:
+    "key='c32' value='(unhandled format)'";
+    "key='c107' value='(unhandled format)'";
+    "key='int100' value='100'";
+    "key='string100' value='100'";
+    "key='int0100' value='0100'";
+    "key='string0100' value='0100'";
+    "key='real200' value='200.0'";
+    "key='string200' value='200.0'";
+    "key='real0200_00' value='0200.00'";
+    "key='string0200_00' value='0200.00'";
+    "key='stringabc' value='abc'";
+    "key='string06abc' value='   abc'";
+    "key='string-06abc' value='abc   '";
+    "key='2strings-06abc-06def' value='abc   def   '";
+    "key='badend' value='ends badly '";
+    "key='escape' value='% should be a single percent'";
+}
+
+#######################################################
+
+bundle agent test
+{
+vars:
+    "array[c32]" string => format("%c", 32);
+    "array[c107]" string => format("%c", 107);
+    "array[int100]" string => format("%d", 100);
+    "array[string100]" string => format("%d", "100");
+    "array[int0100]" string => format("%04d", 100);
+    "array[string0100]" string => format("%04d", "100");
+    "array[real200]" string => format("%.1f", 200);
+    "array[string200]" string => format("%.1f", "200.00");
+    "array[real0200_00]" string => format("%07.2f", 200);
+    "array[string0200_00]" string => format("%07.2f", "200.00");
+    "array[stringabc]" string => format("%s", "abc");
+    "array[string06abc]" string => format("%06s", "abc");
+    "array[string-06abc]" string => format("%-06s", "abc");
+    "array[2strings-06abc-06def]" string => format("%-06s%-06s", "abc", "def");
+    "array[badend]" string => format("ends badly %");
+    "array[escape]" string => format("%% should be a single percent");
+
+    "formatted" slist => maparray("key='$(this.k)' value='$(this.v)'", "array");
+
+files:
+    "$(G.testfile).actual"
+        create => "true",
+        edit_line => test_insert;
+
+reports:
+    DEBUG::
+        "Inserting line: $(formatted)";
+}
+
+bundle edit_line test_insert
+{
+vars:
+    "formatted" slist => { @{test.formatted} };
+
+insert_lines:
+    "$(formatted)";
+}
+
+#######################################################
+
+bundle agent check
+{
+methods:
+        "any" usebundle => sorted_check_diff("$(G.testfile).actual",
+                                              "$(G.testfile).expected",
+                                              "$(this.promise_filename)");
+}

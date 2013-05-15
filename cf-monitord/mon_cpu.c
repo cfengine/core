@@ -25,7 +25,6 @@
 #include "cf3.defs.h"
 
 #include "mon.h"
-#include "logging_old.h"
 
 #if !defined(__MINGW32__)
 
@@ -51,11 +50,11 @@ void MonCPUGatherData(double *cf_this)
 
     if ((fp = fopen("/proc/stat", "r")) == NULL)
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Didn't find proc data\n");
+        Log(LOG_LEVEL_VERBOSE, "Didn't find proc data");
         return;
     }
 
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Reading /proc/stat utilization data -------\n");
+    Log(LOG_LEVEL_VERBOSE, "Reading /proc/stat utilization data -------");
 
     while (!feof(fp))
     {
@@ -67,7 +66,7 @@ void MonCPUGatherData(double *cf_this)
         if (sscanf(buf, "%s%ld%ld%ld%ld%ld%ld%ld", cpuname, &userticks, &niceticks, &systemticks, &idle, &iowait, &irq,
                &softirq) != 8)
         {
-            CfOut(OUTPUT_LEVEL_VERBOSE, "", "Could not scan /proc/stat line: %60s", buf);
+            Log(LOG_LEVEL_VERBOSE, "Could not scan /proc/stat line: %60s", buf);
             continue;
         }
 
@@ -77,7 +76,7 @@ void MonCPUGatherData(double *cf_this)
 
         if (strcmp(cpuname, "cpu") == 0)
         {
-            CfOut(OUTPUT_LEVEL_VERBOSE, "", "Found aggregate CPU\n");
+            Log(LOG_LEVEL_VERBOSE, "Found aggregate CPU");
             slot = ob_cpuall;
             cpuidx = MON_CPU_MAX;
         }
@@ -98,7 +97,7 @@ void MonCPUGatherData(double *cf_this)
         }
         else
         {
-            CfOut(OUTPUT_LEVEL_VERBOSE, "", "Found nothing (%s)\n", cpuname);
+            Log(LOG_LEVEL_VERBOSE, "Found nothing (%s)", cpuname);
             slot = ob_spare;
             fclose(fp);
             return;
@@ -115,7 +114,7 @@ void MonCPUGatherData(double *cf_this)
         LAST_CPU_Q[cpuidx] = q;
         LAST_CPU_T[cpuidx] = total_time;
 
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Set %s=%d to %.1lf after %ld 100ths of a second \n", OBS[slot][1], slot, cf_this[slot],
+        Log(LOG_LEVEL_VERBOSE, "Set %s=%d to %.1lf after %ld 100ths of a second ", OBS[slot][1], slot, cf_this[slot],
               total_time);
     }
 

@@ -24,7 +24,6 @@
 
 #include "locks.h"
 #include "mutex.h"
-#include "logging_old.h"
 #include "string_lib.h"
 #include "files_interfaces.h"
 #include "files_lib.h"
@@ -120,8 +119,6 @@ time_t FindLockTime(char *name)
     LockData entry = {
         .process_start_time = PROCESS_START_TIME_UNKNOWN,
     };
-
-    CfDebug("FindLockTime(%s)\n", name);
 
     if ((dbp = OpenLock()) == NULL)
     {
@@ -283,7 +280,7 @@ static time_t FindLock(char *last)
 
         if (WriteLock(last) == -1)
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "", "Unable to lock %s\n", last);
+            Log(LOG_LEVEL_ERR, "Unable to lock %s", last);
             return 0;
         }
 
@@ -326,8 +323,6 @@ static void LogLockCompletion(char *cflog, int pid, char *str, char *operator, c
     struct stat statbuf;
     time_t tim;
 
-    CfDebug("LockLogCompletion(%s)\n", str);
-
     if (cflog == NULL)
     {
         return;
@@ -335,20 +330,20 @@ static void LogLockCompletion(char *cflog, int pid, char *str, char *operator, c
 
     if ((fp = fopen(cflog, "a")) == NULL)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "fopen", "Can't open lock-log file %s\n", cflog);
+        Log(LOG_LEVEL_ERR, "Can't open lock-log file '%s'. (fopen: %s)", cflog, GetErrorStr());
         exit(1);
     }
 
     if ((tim = time((time_t *) NULL)) == -1)
     {
-        CfDebug("CFEngine: couldn't read system clock\n");
+        Log(LOG_LEVEL_DEBUG, "Couldn't read system clock");
     }
 
     sprintf(buffer, "%s", ctime(&tim));
 
     if (Chop(buffer, CF_EXPANDSIZE) == -1)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Chop was called on a string that seemed to have no terminator");
+        Log(LOG_LEVEL_ERR, "Chop was called on a string that seemed to have no terminator");
     }
 
     fprintf(fp, "%s:%s:pid=%d:%s:%s\n", buffer, str, pid, operator, operand);
@@ -359,7 +354,7 @@ static void LogLockCompletion(char *cflog, int pid, char *str, char *operator, c
     {
         if (statbuf.st_size > CFLOGSIZE)
         {
-            CfOut(OUTPUT_LEVEL_VERBOSE, "", "Rotating lock-runlog file\n");
+            Log(LOG_LEVEL_VERBOSE, "Rotating lock-runlog file");
             RotateFiles(cflog, 2);
         }
     }
@@ -424,7 +419,7 @@ static char *BodyName(const Promise *pp)
 
 static bool KillLockHolder(ARG_UNUSED const char *lock)
 {
-    CfOut(OUTPUT_LEVEL_VERBOSE, "",
+    Log(LOG_LEVEL_VERBOSE,
           "Process is not running - ignoring lock (Windows does not support graceful processes termination)\n");
     return true;
 }
@@ -436,7 +431,7 @@ static bool KillLockHolder(const char *lock)
     CF_DB *dbp = OpenLock();
     if (dbp == NULL)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Unable to open locks database");
+        Log(LOG_LEVEL_ERR, "Unable to open locks database");
         return false;
     }
 
@@ -602,7 +597,7 @@ CfLock AcquireLock(EvalContext *ctx, char *operand, char *host, time_t now, Tran
     {
         if (IsItemIn(DONELIST, str_digest))
         {
-            CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> This promise has already been verified");
+            Log(LOG_LEVEL_VERBOSE, "This promise has already been verified");
             return this;
         }
 
@@ -625,8 +620,8 @@ CfLock AcquireLock(EvalContext *ctx, char *operand, char *host, time_t now, Tran
 
     free(promise);
 
-    CfDebug("AcquireLock(%s,%s), ExpireAfter=%d, IfElapsed=%d\n", cc_operator, cc_operand, tc.expireafter,
-            tc.ifelapsed);
+    Log(LOG_LEVEL_DEBUG, "AcquireLock(%s,%s), ExpireAfter = %d, IfElapsed = %d", cc_operator, cc_operand, tc.expireafter,
+        tc.ifelapsed);
 
     for (i = 0; cc_operator[i] != '\0'; i++)
     {
@@ -642,7 +637,7 @@ CfLock AcquireLock(EvalContext *ctx, char *operand, char *host, time_t now, Tran
     snprintf(cflock, CF_BUFSIZE, "lock.%.100s.%s.%.100s_%d_%s", PromiseGetBundle(pp)->name, cc_operator, cc_operand, sum, str_digest);
     snprintf(cflast, CF_BUFSIZE, "last.%.100s.%s.%.100s_%d_%s", PromiseGetBundle(pp)->name, cc_operator, cc_operand, sum, str_digest);
 
-    CfDebug("LOCK(%s)[%s]\n", PromiseGetBundle(pp)->name, cflock);
+    Log(LOG_LEVEL_DEBUG, "Log for bundle '%s', '%s'", PromiseGetBundle(pp)->name, cflock);
 
 // Now see if we can get exclusivity to edit the locks
 
@@ -657,7 +652,7 @@ CfLock AcquireLock(EvalContext *ctx, char *operand, char *host, time_t now, Tran
 
     if (elapsedtime < 0)
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", " XX Another cf-agent seems to have done this since I started (elapsed=%jd)\n",
+        Log(LOG_LEVEL_VERBOSE, " XX Another cf-agent seems to have done this since I started (elapsed=%jd)",
               (intmax_t) elapsedtime);
         ReleaseCriticalSection();
         return this;
@@ -665,7 +660,7 @@ CfLock AcquireLock(EvalContext *ctx, char *operand, char *host, time_t now, Tran
 
     if (elapsedtime < tc.ifelapsed)
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", " XX Nothing promised here [%.40s] (%jd/%u minutes elapsed)\n", cflast,
+        Log(LOG_LEVEL_VERBOSE, " XX Nothing promised here [%.40s] (%jd/%u minutes elapsed)", cflast,
               (intmax_t) elapsedtime, tc.ifelapsed);
         ReleaseCriticalSection();
         return this;
@@ -682,7 +677,7 @@ CfLock AcquireLock(EvalContext *ctx, char *operand, char *host, time_t now, Tran
         {
             if (elapsedtime >= tc.expireafter)
             {
-                CfOut(OUTPUT_LEVEL_INFORM, "", "Lock %s expired (after %jd/%u minutes)\n", cflock, (intmax_t) elapsedtime,
+                Log(LOG_LEVEL_INFO, "Lock %s expired (after %jd/%u minutes)", cflock, (intmax_t) elapsedtime,
                       tc.expireafter);
 
                 pid_t pid = FindLockPid(cflock);
@@ -694,13 +689,13 @@ CfLock AcquireLock(EvalContext *ctx, char *operand, char *host, time_t now, Tran
                 }
                 else
                 {
-                    CfOut(OUTPUT_LEVEL_ERROR, "", "Unable to kill expired process %d from lock %s", (int)pid, cflock);
+                    Log(LOG_LEVEL_ERR, "Unable to kill expired process %d from lock %s", (int)pid, cflock);
                 }
             }
             else
             {
                 ReleaseCriticalSection();
-                CfOut(OUTPUT_LEVEL_VERBOSE, "", "Couldn't obtain lock for %s (already running!)\n", cflock);
+                Log(LOG_LEVEL_VERBOSE, "Couldn't obtain lock for %s (already running!)", cflock);
                 return this;
             }
         }
@@ -735,11 +730,11 @@ void YieldCurrentLock(CfLock this)
         return;
     }
 
-    CfDebug("Yielding lock %s\n", this.lock);
+    Log(LOG_LEVEL_DEBUG, "Yielding lock '%s'", this.lock);
 
     if (RemoveLock(this.lock) == -1)
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Unable to remove lock %s\n", this.lock);
+        Log(LOG_LEVEL_VERBOSE, "Unable to remove lock %s", this.lock);
         free(this.last);
         free(this.lock);
         free(this.log);
@@ -748,7 +743,7 @@ void YieldCurrentLock(CfLock this)
 
     if (WriteLock(this.last) == -1)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "creat", "Unable to create %s\n", this.last);
+        Log(LOG_LEVEL_ERR, "Unable to create '%s'. (creat: %s)", this.last, GetErrorStr());
         free(this.last);
         free(this.lock);
         free(this.log);
@@ -820,13 +815,13 @@ void PurgeLocks(void)
     {
         if (now - entry.time < SECONDS_PER_WEEK * 4)
         {
-            CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> No lock purging scheduled");
+            Log(LOG_LEVEL_VERBOSE, "No lock purging scheduled");
             CloseLock(dbp);
             return;
         }
     }
 
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Looking for stale locks to purge");
+    Log(LOG_LEVEL_VERBOSE, "Looking for stale locks to purge");
 
     if (!NewDBCursor(dbp, &dbcp))
     {
@@ -844,7 +839,7 @@ void PurgeLocks(void)
 
         if (now - entry.time > (time_t) CF_LOCKHORIZON)
         {
-            CfOut(OUTPUT_LEVEL_VERBOSE, "", " --> Purging lock (%jd) %s", (intmax_t)(now - entry.time), key);
+            Log(LOG_LEVEL_VERBOSE, " --> Purging lock (%jd) %s", (intmax_t)(now - entry.time), key);
             DBCursorDeleteEntry(dbcp);
         }
     }
@@ -859,8 +854,6 @@ void PurgeLocks(void)
 int WriteLock(char *name)
 {
     CF_DB *dbp;
-
-    CfDebug("WriteLock(%s)\n", name);
 
     ThreadLock(cft_lock);
     if ((dbp = OpenLock()) == NULL)

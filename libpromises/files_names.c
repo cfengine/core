@@ -31,7 +31,6 @@
 #include "item_lib.h"
 #include "assert.h"
 #include "files_interfaces.h"
-#include "logging_old.h"
 #include "string_lib.h"
 
 #ifdef HAVE_NOVA
@@ -51,7 +50,7 @@ int IsNewerFileTree(char *dir, time_t reftime)
 
     if (lstat(dir, &sb) == -1)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "stat", " !! Unable to stat directory %s in IsNewerFileTree", dir);
+        Log(LOG_LEVEL_ERR, "Unable to stat directory '%s' in IsNewerFileTree. (stat: %s)", dir, GetErrorStr());
         // return true to provoke update
         return true;
     }
@@ -60,14 +59,14 @@ int IsNewerFileTree(char *dir, time_t reftime)
     {
         if (sb.st_mtime > reftime)
         {
-            CfOut(OUTPUT_LEVEL_VERBOSE, "", " >> Detected change in %s", dir);
+            Log(LOG_LEVEL_VERBOSE, " >> Detected change in %s", dir);
             return true;
         }
     }
 
     if ((dirh = DirOpen(dir)) == NULL)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "opendir", " !! Unable to open directory '%s' in IsNewerFileTree", dir);
+        Log(LOG_LEVEL_ERR, "Unable to open directory '%s' in IsNewerFileTree. (opendir: %s)", dir, GetErrorStr());
         return false;
     }
     else
@@ -83,7 +82,7 @@ int IsNewerFileTree(char *dir, time_t reftime)
 
             if (!JoinPath(path, dirp->d_name))
             {
-                CfOut(OUTPUT_LEVEL_ERROR, "", "Internal limit: Buffer ran out of space adding %s to %s in IsNewerFileTree", dir,
+                Log(LOG_LEVEL_ERR, "Internal limit: Buffer ran out of space adding %s to %s in IsNewerFileTree", dir,
                       path);
                 DirClose(dirh);
                 return false;
@@ -91,7 +90,7 @@ int IsNewerFileTree(char *dir, time_t reftime)
 
             if (lstat(path, &sb) == -1)
             {
-                CfOut(OUTPUT_LEVEL_ERROR, "stat", " !! Unable to stat directory %s in IsNewerFileTree", path);
+                Log(LOG_LEVEL_ERR, "Unable to stat directory '%s' in IsNewerFileTree. (lstat: %s)", path, GetErrorStr());
                 DirClose(dirh);
                 // return true to provoke update
                 return true;
@@ -101,7 +100,7 @@ int IsNewerFileTree(char *dir, time_t reftime)
             {
                 if (sb.st_mtime > reftime)
                 {
-                    CfOut(OUTPUT_LEVEL_VERBOSE, "", " >> Detected change in %s", path);
+                    Log(LOG_LEVEL_VERBOSE, " >> Detected change in %s", path);
                     DirClose(dirh);
                     return true;
                 }
@@ -156,13 +155,13 @@ char *JoinPath(char *path, const char *leaf)
 
     if (Chop(path, CF_EXPANDSIZE) == -1)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Chop was called on a string that seemed to have no terminator");
+        Log(LOG_LEVEL_ERR, "Chop was called on a string that seemed to have no terminator");
     }
     AddSlash(path);
 
     if ((strlen(path) + len) > (CF_BUFSIZE - CF_BUFFERMARGIN))
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Internal limit 1: Buffer ran out of space constructing string. Tried to add %s to %s\n",
+        Log(LOG_LEVEL_ERR, "Internal limit 1: Buffer ran out of space constructing string. Tried to add %s to %s",
               leaf, path);
         return NULL;
     }
@@ -179,13 +178,13 @@ char *JoinSuffix(char *path, char *leaf)
 
     if (Chop(path, CF_EXPANDSIZE) == -1)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Chop was called on a string that seemed to have no terminator");
+        Log(LOG_LEVEL_ERR, "Chop was called on a string that seemed to have no terminator");
     }
     DeleteSlash(path);
 
     if ((strlen(path) + len) > (CF_BUFSIZE - CF_BUFFERMARGIN))
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Internal limit 2: Buffer ran out of space constructing string. Tried to add %s to %s\n",
+        Log(LOG_LEVEL_ERR, "Internal limit 2: Buffer ran out of space constructing string. Tried to add %s to %s",
               leaf, path);
         return NULL;
     }
@@ -281,7 +280,7 @@ char *GetParentDirectoryCopy(const char *path)
 
     if(!sp)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Path %s does not contain file separators (GetParentDirectory())", path_copy);
+        Log(LOG_LEVEL_ERR, "Path %s does not contain file separators (GetParentDirectory())", path_copy);
         free(path_copy);
         return NULL;
     }
@@ -509,8 +508,6 @@ int CompressPath(char *dest, const char *src)
     int nodelen;
     int rootlen;
 
-    CfDebug("CompressPath(%s,%s)\n", dest, src);
-
     memset(dest, 0, CF_BUFSIZE);
 
     rootlen = RootDirLength(src);
@@ -527,7 +524,7 @@ int CompressPath(char *dest, const char *src)
         {
             if (nodelen > CF_MAXLINKSIZE)
             {
-                CfOut(OUTPUT_LEVEL_ERROR, "", "Link in path suspiciously large");
+                Log(LOG_LEVEL_ERR, "Link in path suspiciously large");
                 return false;
             }
         }
@@ -546,7 +543,7 @@ int CompressPath(char *dest, const char *src)
         {
             if (!ChopLastNode(dest))
             {
-                CfDebug("cfengine: used .. beyond top of filesystem!\n");
+                Log(LOG_LEVEL_DEBUG, "used .. beyond top of filesystem!");
                 return false;
             }
 

@@ -26,13 +26,10 @@
 
 #include "env_context.h"
 #include "conversion.h"
-#include "logging_old.h"
-#include "logging.h"
 #include "syntax.h"
 #include "rlist.h"
 #include "parser.h"
 #include "sysinfo.h"
-#include "logging_old.h"
 #include "man.h"
 
 #include <time.h>
@@ -69,6 +66,7 @@ static const struct option OPTIONS[] =
     {"syntax-description", required_argument, 0, 's'},
     {"full-check", no_argument, 0, 'c'},
     {"warn", optional_argument, 0, 'W'},
+    {"legacy-output", no_argument, 0, 'l'},
     {NULL, 0, 0, '\0'}
 };
 
@@ -90,6 +88,7 @@ static const char *HINTS[] =
     "Output a document describing the available syntax elements of CFEngine. Possible values: 'none', 'json'. Default is 'none'.",
     "Ensure full policy integrity checks",
     "Pass comma-separated <warnings>|all to enable non-default warnings, or error=<warnings>|all",
+    "Use legacy output format",
     NULL
 };
 
@@ -107,7 +106,7 @@ int main(int argc, char *argv[])
     Policy *policy = GenericAgentLoadPolicy(ctx, config);
     if (!policy)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Input files contain errors.\n");
+        Log(LOG_LEVEL_ERR, "Input files contain errors.");
         exit(EXIT_FAILURE);
     }
 
@@ -163,10 +162,14 @@ GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
     int c;
     GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_COMMON);
 
-    while ((c = getopt_long(argc, argv, "dvnIf:D:N:VSrxMb:i:p:s:cg:hW:", OPTIONS, &optindex)) != EOF)
+    while ((c = getopt_long(argc, argv, "dvnIf:D:N:VSrxMb:i:p:s:cg:hW:l", OPTIONS, &optindex)) != EOF)
     {
         switch ((char) c)
         {
+        case 'l':
+            LEGACY_OUTPUT = true;
+            break;
+
         case 'c':
             config->check_runnable = true;
             break;
@@ -175,7 +178,7 @@ GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
 
             if (optarg && (strlen(optarg) < 5))
             {
-                CfOut(OUTPUT_LEVEL_ERROR, "", " -f used but argument \"%s\" incorrect", optarg);
+                Log(LOG_LEVEL_ERR, " -f used but argument \"%s\" incorrect", optarg);
                 exit(EXIT_FAILURE);
             }
 
@@ -211,7 +214,7 @@ GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             }
             else
             {
-                CfOut(OUTPUT_LEVEL_ERROR, "", "Invalid policy output format: '%s'. Possible values are 'none', 'cf', 'json'", optarg);
+                Log(LOG_LEVEL_ERR, "Invalid policy output format: '%s'. Possible values are 'none', 'cf', 'json'", optarg);
                 exit(EXIT_FAILURE);
             }
             break;
@@ -250,11 +253,11 @@ GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             break;
 
         case 'I':
-            INFORM = true;
+            LogSetGlobalLevel(LOG_LEVEL_INFO);
             break;
 
         case 'v':
-            VERBOSE = true;
+            LogSetGlobalLevel(LOG_LEVEL_VERBOSE);
             break;
 
         case 'n':
@@ -297,7 +300,7 @@ GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             break;
 
         case 'x':
-            CfOut(OUTPUT_LEVEL_ERROR, "", "Self-diagnostic functionality is retired.");
+            Log(LOG_LEVEL_ERR, "Self-diagnostic functionality is retired.");
             exit(0);
 
         default:

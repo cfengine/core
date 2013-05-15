@@ -78,9 +78,6 @@ bool CFDB_HostsWithClass(EvalContext *ctx, Rlist **return_list, char *class_name
 void ShowPromises(const Seq* bundles, const Seq *bodies);
 void ShowPromise(const Promise *pp);
 
-void LogPromiseResult(char *promiser, char peeType, void *promisee, char status, OutputLevel log_level,
-                      Item *mess);
-
 /* manual.c */
 
 void TexinfoManual(EvalContext *ctx, const char *source_dir, const char *output_file);

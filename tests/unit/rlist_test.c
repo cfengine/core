@@ -186,6 +186,185 @@ static void test_reverse(void)
 
     RlistDestroy(list);
 }
+/***************************************************************************/
+static struct ParseRoulette
+{
+    int nfields;
+    char *str;
+} PR[] =
+{
+        /*Simple */
+    {
+    1, "{\"a\"}"},
+    {
+    2, "{\"a\",\"b\"}"},
+    {
+    3, "{\"a\",\"b\",\"c\"}"},
+        /*Simple empty */
+    {
+    1, "{\"\"}"},
+    {
+    2, "{\"\",\"\"}"},
+    {
+    3, "{\"\",\"\",\"\"}"},
+        /*Single escaped */
+    {
+    1, "{\"\\\"\"}"},
+    {
+    1, "{\",\"}"},
+    {
+    1, "{\"\\\\\"}"},
+    {
+    1, "{\"}\"}"},
+    {
+    1, "{\"{\"}"},
+    {
+    1, "{\"'\"}"},
+        /*Couple double-escaped */
+    {
+    1, "{\"\\\",\"}"},          /*   [",]    */
+    {
+    1, "{\",\\\"\"}"},          /*   [,"]    */
+    {
+    1, "{\",,\"}"},             /*   [\\]    */
+    {
+    1, "{\"\\\\\\\\\"}"},       /*   [\\]    */
+    {
+    1, "{\"\\\\\\\"\"}"},       /*   [\"]    */
+    {
+    1, "{\"\\\"\\\\\"}"},       /*   ["\]    */
+        /*Very long */
+    {
+    1, "{\"AaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaA\"}"},
+    {
+    2, "{\"Aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\\\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaA\"  ,  \"Bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\\\\bbbbbbbbbbbbbbbbbbbbbbbb\\\\bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\\\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbB\" }"},
+        /*Inner space (inside elements) */
+    {
+    1, "{\" \"}"},
+    {
+    1, "{\"  \"}"},
+    {
+    1, "{\"   \"}"},
+    {
+    1, "{\"\t\"}"},
+        /*Outer space (outside elements) */
+    {
+    1, "     {\"\"}       "},
+    {
+    1, "     {\"a\"}       "},
+    {
+    2, "     {\"a\",\"b\"}       "},
+    {
+    1, "{    \"a\"      }"},
+    {
+    2, "{    \"a\",\"b\"      }"},
+    {
+    2, "{    \"a\"    ,\"b\"      }"},
+    {
+    2, "{    \"a\",    \"b\"      }"},
+    {
+    2, "{    \"a\",    \"b\"}       "},
+        /*Normal */
+    {
+    4, "   { \" ab,c,d\\\\ \" ,  \" e,f\\\"g \" ,\"hi\\\\jk\", \"l''m \" }   "},
+    {
+    21, "   { \"A\\\"\\\\    \", \"    \\\\\",   \"}B\",   \"\\\\\\\\\"  ,   \"   \\\\C\\\"\"  ,   \"\\\",\"  ,   \",\\\"D\"  ,   \"   ,,    \", \"E\\\\\\\\F\", \"\", \"{\",   \"   G    '\"  ,   \"\\\\\\\"\", \" \\\"  H \\\\    \", \",   ,\"  ,   \"I\", \"  \",   \"\\\"    J  \",   \"\\\",\", \",\\\"\", \",\"  }   "},
+    {
+    -1, (char *)NULL}
+};
+
+static char *PFR[] = {
+    /* trim left failure */
+    "",
+    " ",
+    "a",
+    "\"",
+    "\"\"",
+    /* trim right failure */
+    "{",
+    "{ ",
+    "{a",
+    "{\"",
+    "{\"\"",
+    /* parse failure */
+    /* un-even number of quotation marks */
+    "{\"\"\"}",
+    "{\"\",\"}",
+    "{\"\"\"\"}",
+    "{\"\"\"\"\"}",
+    "{\"\",\"\"\"}",
+    "{\"\"\"\",\"}",
+    "{\"\",\"\",\"}",
+    /* Misplaced commas*/
+    "{\"a\",}",
+    "{,\"a\"}",
+    "{,,\"a\"}",
+    "{\"a\",,\"b\"}",
+    " {,}",
+    " {,,}",
+    " {,,,}",
+    " {,\"\"}",
+    " {\"\",}",
+    " {,\"\",}",
+    " {\"\",,}",
+    " {\"\",,,}",
+    " {,,\"\",,}",
+    " {\"\",\"\",}",
+    " {\"\",\"\",,}",
+    " {   \"\"  ,  \"\" ,  , }",
+    /*Ignore space's oddities */
+    "\" {\"\"}",
+    "{ {\"\"}",
+    "{\"\"}\"",
+    "{\"\"}\\",
+    "{\"\"} } ",
+    "a{\"\"}",
+    " a {\"\"}",
+    "{a\"\"}",
+    "{ a \"\"}",
+    "{\"\"}a",
+    "{\"\"}  a ",
+    "{\"\"a}",
+    "{\"\" a }",
+    "a{\"\"}b",
+    "{a\"\"b}",
+    "a{\"\"b}",
+    "{a\"\"}b",
+    "{\"\"a\"\"}",
+    "{\"\",\"\"a\"\"}",
+    /*Incomplete */
+    NULL
+};
+
+
+static void test_new_parser_success()
+{
+    Rlist *list = NULL;
+    int i = 0;
+    while (PR[i].nfields != -1)
+    {
+        list = RlistParseString(PR[i].str, NULL);
+        assert_int_equal(PR[i].nfields, RlistLen(list));
+        if (list != NULL)
+        {
+            RlistDestroy(list);
+        }
+        i++;
+    }
+}
+
+static void test_new_parser_failure()
+{
+    int i = 0;
+    Rlist *list = NULL;
+    while (PFR[i] != NULL)
+    {
+        list = RlistParseString(PFR[i], NULL);
+        assert_true(RlistLast(list) == NULL);
+        if(list) RlistDestroy(list);
+        i++;
+    }
+}
 
 int main()
 {
@@ -206,6 +385,8 @@ int main()
         unit_test(test_filter),
         unit_test(test_filter_everything),
         unit_test(test_reverse),
+        unit_test(test_new_parser_success),
+        unit_test(test_new_parser_failure),
     };
 
     return run_tests(tests);
@@ -213,7 +394,6 @@ int main()
 
 /* Stub out functionality we don't really use */
 
-int DEBUG;
 char CONTEXTID[32];
 
 void __ProgrammingError(const char *file, int lineno, const char *format, ...)
@@ -252,11 +432,6 @@ void FnCallShow(FILE *fout, const FnCall *fp)
     fail();
 }
 
-void CfOut(OutputLevel level, const char *errstr, const char *fmt, ...)
-{
-    fail();
-}
-
 int IsNakedVar(const char *str, char vtype)
 {
     fail();
@@ -271,6 +446,13 @@ void GetNaked(char *s1, const char *s2)
 {
     fail();
 }
+
+/*
+void Log(LogLevel level, const char *fmt, ...)
+{
+    fail();
+}
+*/
 
 DataType ScopeGetVariable(const char *scope, const char *lval, Rval *returnv)
 {

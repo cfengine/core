@@ -26,7 +26,6 @@
 
 #include "dbm_api.h"
 #include "files_interfaces.h"
-#include "logging_old.h"
 #include "client_code.h"
 #include "files_lib.h"
 #include "rlist.h"
@@ -68,11 +67,9 @@ void HashFile(char *filename, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMet
     unsigned char buffer[1024];
     const EVP_MD *md = NULL;
 
-    CfDebug("HashFile(%d,%s)\n", type, filename);
-
     if ((file = fopen(filename, "rb")) == NULL)
     {
-        CfOut(OUTPUT_LEVEL_INFORM, "fopen", "%s can't be opened\n", filename);
+        Log(LOG_LEVEL_INFO, "Cannot open file for hashing '%s'. (fopen: %s)", filename, GetErrorStr());
     }
     else
     {
@@ -100,12 +97,10 @@ void HashString(const char *buffer, int len, unsigned char digest[EVP_MAX_MD_SIZ
     const EVP_MD *md = NULL;
     int md_len;
 
-    CfDebug("HashString(%c)\n", type);
-
     switch (type)
     {
     case HASH_METHOD_CRYPT:
-        CfOut(OUTPUT_LEVEL_ERROR, "", "The crypt support is not presently implemented, please use another algorithm instead");
+        Log(LOG_LEVEL_ERR, "The crypt support is not presently implemented, please use another algorithm instead");
         memset(digest, 0, EVP_MAX_MD_SIZE + 1);
         break;
 
@@ -114,7 +109,7 @@ void HashString(const char *buffer, int len, unsigned char digest[EVP_MAX_MD_SIZ
 
         if (md == NULL)
         {
-            CfOut(OUTPUT_LEVEL_INFORM, "", " !! Digest type %s not supported by OpenSSL library", CF_DIGEST_TYPES[type][0]);
+            Log(LOG_LEVEL_INFO, "Digest type %s not supported by OpenSSL library", CF_DIGEST_TYPES[type][0]);
         }
 
         EVP_DigestInit(&context, md);
@@ -132,8 +127,6 @@ void HashPubKey(RSA *key, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMethod 
     const EVP_MD *md = NULL;
     int md_len, i, buf_len, actlen;
     unsigned char *buffer;
-
-    CfDebug("HashPubKey(%d)\n", type);
 
     if (key->n)
     {
@@ -157,7 +150,7 @@ void HashPubKey(RSA *key, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMethod 
     switch (type)
     {
     case HASH_METHOD_CRYPT:
-        CfOut(OUTPUT_LEVEL_ERROR, "", "The crypt support is not presently implemented, please use sha256 instead");
+        Log(LOG_LEVEL_ERR, "The crypt support is not presently implemented, please use sha256 instead");
         break;
 
     default:
@@ -165,7 +158,7 @@ void HashPubKey(RSA *key, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMethod 
 
         if (md == NULL)
         {
-            CfOut(OUTPUT_LEVEL_INFORM, "", " !! Digest type %s not supported by OpenSSL library", CF_DIGEST_TYPES[type][0]);
+            Log(LOG_LEVEL_INFO, "Digest type %s not supported by OpenSSL library", CF_DIGEST_TYPES[type][0]);
         }
 
         EVP_DigestInit(&context, md);
@@ -187,12 +180,8 @@ int HashesMatch(unsigned char digest1[EVP_MAX_MD_SIZE + 1], unsigned char digest
                 HashMethod type)
 {
     int i, size = EVP_MAX_MD_SIZE;
-    char buffer[EVP_MAX_MD_SIZE * 4];
 
     size = FileHashSize(type);
-
-    CfDebug("1. CHECKING DIGEST type %d - size %d (%s)\n", type, size, HashPrintSafe(type, digest1, buffer));
-    CfDebug("2. CHECKING DIGEST type %d - size %d (%s)\n", type, size, HashPrintSafe(type, digest2, buffer));
 
     for (i = 0; i < size; i++)
     {

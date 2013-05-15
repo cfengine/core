@@ -33,7 +33,7 @@
 
 typedef struct LoggingPrivContext LoggingPrivContext;
 
-typedef void (*LoggingPrivLogHook)(LoggingPrivContext *context, const char *message);
+typedef const char *(*LoggingPrivLogHook)(LoggingPrivContext *context, const char *message);
 
 struct LoggingPrivContext
 {
@@ -56,10 +56,5 @@ LoggingPrivContext *LoggingPrivGetContext(void);
  * @brief Set logging (syslog) and reporting (stdout) level for current thread
  */
 void LoggingPrivSetLevels(LogLevel log_level, LogLevel report_level);
-
-/**
- * @brief Return global logging level
- */
-LogLevel LoggingPrivGetGlobalLogLevel(void);
 
 #endif

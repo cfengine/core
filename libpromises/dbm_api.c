@@ -28,7 +28,7 @@
 #include "dbm_priv.h"
 #include "dbm_migration.h"
 #include "atexit.h"
-#include "logging_old.h"
+#include "logging.h"
 #include "misc_lib.h"
 
 #include <assert.h>
@@ -157,8 +157,7 @@ static void CloseAllDB(void)
             if (ret != 0)
             {
                 errno = ret;
-                CfOut(OUTPUT_LEVEL_ERROR, "pthread_mutex_destroy",
-                      "Unable to close database %s", DB_PATHS[i]);
+                Log(LOG_LEVEL_ERR, "Unable to close database '%s'. (pthread_mutex_destroy: %s)", DB_PATHS[i], GetErrorStr());
             }
         }
     }
@@ -236,7 +235,7 @@ void CloseDB(DBHandle *handle)
 
     if (handle->refcount < 1)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Trying to close database %s which is not open", handle->filename);
+        Log(LOG_LEVEL_ERR, "Trying to close database %s which is not open", handle->filename);
     }
     else if (--handle->refcount == 0)
     {
@@ -338,14 +337,14 @@ static int DBPathLock(const char *filename)
 
     if(fd == -1)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "flock", "!! Unable to open database lock file '%s'", filename_lock);
+        Log(LOG_LEVEL_ERR, "Unable to open database lock file '%s'. (flock: %s)", filename_lock, GetErrorStr());
         free(filename_lock);
         return -1;
     }
 
     if (ExclusiveLockFile(fd) == -1)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "fcntl(F_SETLK)", "!! Unable to lock database lock file '%s'", filename_lock);
+        Log(LOG_LEVEL_ERR, "Unable to lock database lock file '%s'. (fcntl(F_SETLK): %s)", filename_lock, GetErrorStr());
         free(filename_lock);
         close(fd);
         return -1;
@@ -360,7 +359,7 @@ static void DBPathUnLock(int fd)
 {
     if(ExclusiveUnlockFile(fd) != 0)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "close", "!! Could not close db lock-file");
+        Log(LOG_LEVEL_ERR, "Could not close db lock-file. (close: %s)", GetErrorStr());
     }
 }
 
@@ -369,12 +368,12 @@ static void DBPathMoveBroken(const char *filename)
     char *filename_broken;
     if (xasprintf(&filename_broken, "%s.broken", filename) == -1)
     {
-        ProgrammingError("Unable to construct broken database filename for file %s", filename);
+        ProgrammingError("Unable to construct broken database filename for file '%s'", filename);
     }
 
     if(rename(filename, filename_broken) != 0)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "!! Failed moving broken db out of the way");
+        Log(LOG_LEVEL_ERR, "Failed moving broken db out of the way");
     }
 
     free(filename_broken);

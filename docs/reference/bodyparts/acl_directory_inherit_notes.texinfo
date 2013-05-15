@@ -6,7 +6,7 @@ ability to inherit an ACL to sub-objects created within them. POSIX
 calls the former ACL type "access ACL" and the latter "default ACL",
 and we will use the same terminology.
 
-The constraint @code{acl_directory_inherit} gives control over the
+The constraint @code{acl_default} gives control over the
 default ACL of directories. The default ACL can be left unchanged
 (@code{nochange}), empty (@code{clear}), or be explicitly specified
 (@code{specify}). In addition, the default ACL can be set equal to the

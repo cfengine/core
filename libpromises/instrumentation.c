@@ -27,7 +27,6 @@
 #include "dbm_api.h"
 #include "files_names.h"
 #include "item_lib.h"
-#include "logging_old.h"
 #include "string_lib.h"
 #include "policy.h"
 
@@ -45,7 +44,7 @@ struct timespec BeginMeasure()
 
     if (clock_gettime(CLOCK_REALTIME, &start) == -1)
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "clock_gettime", "Clock gettime failure");
+        Log(LOG_LEVEL_VERBOSE, "Clock gettime failure. (clock_gettime: %s)", GetErrorStr());
     }
 
     return start;
@@ -64,7 +63,7 @@ void EndMeasurePromise(EvalContext *ctx, struct timespec start, Promise *pp)
         snprintf(id, CF_BUFSIZE, "%s:%s:%.100s", (char *) mid, pp->parent_promise_type->name, pp->promiser);
         if (Chop(id, CF_EXPANDSIZE) == -1)
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "", "Chop was called on a string that seemed to have no terminator");
+            Log(LOG_LEVEL_ERR, "Chop was called on a string that seemed to have no terminator");
         }
         EndMeasure(id, start);
     }
@@ -80,7 +79,7 @@ void EndMeasure(char *eventname, struct timespec start)
 
     if (clock_gettime(CLOCK_REALTIME, &stop) == -1)
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "clock_gettime", "Clock gettime failure");
+        Log(LOG_LEVEL_VERBOSE, "Clock gettime failure. (clock_gettime: %s)", GetErrorStr());
         measured_ok = false;
     }
 
@@ -102,7 +101,7 @@ int EndMeasureValueMs(struct timespec start)
 
     if (clock_gettime(CLOCK_REALTIME, &stop) == -1)
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "clock_gettime", "Clock gettime failure");
+        Log(LOG_LEVEL_VERBOSE, "Clock gettime failure. (clock_gettime: %s)", GetErrorStr());
         measured_ok = false;
     }
 
@@ -125,8 +124,6 @@ static void NotePerformance(char *eventname, time_t t, double value)
     double lastseen;
     int lsea = SECONDS_PER_WEEK;
     time_t now = time(NULL);
-
-    CfDebug("PerformanceEvent(%s,%.1f s)\n", eventname, value);
 
     if (!OpenDB(&dbp, dbid_performance))
     {
@@ -159,13 +156,11 @@ static void NotePerformance(char *eventname, time_t t, double value)
 
     if (lastseen > (double) lsea)
     {
-        CfDebug("Performance record %s expired\n", eventname);
+        Log(LOG_LEVEL_DEBUG, "Performance record '%s' expired", eventname);
         DeleteDB(dbp, eventname);
     }
     else
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Performance(%s): time=%.4lf secs, av=%.4lf +/- %.4lf\n", eventname, value, newe.Q.expect,
-              sqrt(newe.Q.var));
         WriteDB(dbp, eventname, &newe, sizeof(newe));
     }
 
@@ -214,7 +209,7 @@ void NoteClassUsage(StringSetIterator context_iterator, int purge)
         {
             if ((IsContextIgnorableForReporting(context)))
             {
-                CfDebug("Ignoring class %s (not packing)", context);
+                Log(LOG_LEVEL_DEBUG, "Ignoring class '%s' (not packing)", context);
                 continue;
             }
 
@@ -233,7 +228,7 @@ void NoteClassUsage(StringSetIterator context_iterator, int purge)
     {
         if (ReadDB(dbp, ip->name, &e, sizeof(e)))
         {
-            CfDebug("FOUND %s with %lf\n", ip->name, e.Q.expect);
+            Log(LOG_LEVEL_DEBUG, "Found '%s' with %lf", ip->name, e.Q.expect);
             lastseen = now - e.t;
             newe.t = now;
 
@@ -249,7 +244,7 @@ void NoteClassUsage(StringSetIterator context_iterator, int purge)
 
         if (lastseen > lsea)
         {
-            CfDebug("Class usage record %s expired\n", ip->name);
+            Log(LOG_LEVEL_DEBUG, "Class usage record '%s' expired", ip->name);
             DeleteDB(dbp, ip->name);
         }
         else
@@ -274,7 +269,7 @@ void NoteClassUsage(StringSetIterator context_iterator, int purge)
 
         if (!NewDBCursor(dbp, &dbcp))
         {
-            CfOut(OUTPUT_LEVEL_INFORM, "", " !! Unable to scan class db");
+            Log(LOG_LEVEL_INFO, "Unable to scan class db");
             CloseDB(dbp);
             DeleteItemList(list);
             return;
@@ -299,7 +294,7 @@ void NoteClassUsage(StringSetIterator context_iterator, int purge)
 
                 if (lastseen > lsea)
                 {
-                    CfDebug("Class usage record %s expired\n", eventname);
+                    Log(LOG_LEVEL_DEBUG, "Class usage record '%s' expired", eventname);
                     DBCursorDeleteEntry(dbcp);
                 }
                 else if (!IsItemIn(list, eventname))
@@ -310,12 +305,12 @@ void NoteClassUsage(StringSetIterator context_iterator, int purge)
 
                     if (newe.Q.expect <= 0.0001)
                     {
-                        CfDebug("Deleting class %s as %lf is zero\n", eventname, newe.Q.expect);
+                        Log(LOG_LEVEL_DEBUG, "Deleting class '%s' as %lf is zero", eventname, newe.Q.expect);
                         DBCursorDeleteEntry(dbcp);
                     }
                     else
                     {
-                        CfDebug("Downgrading class %s from %lf to %lf\n", eventname, entry.Q.expect, newe.Q.expect);
+                        Log(LOG_LEVEL_DEBUG, "Downgrading class '%s' from %lf to %lf", eventname, entry.Q.expect, newe.Q.expect);
                         DBCursorWriteEntry(dbcp, &newe, sizeof(newe));
                     }
                 }

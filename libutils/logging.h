@@ -36,11 +36,16 @@ typedef enum
     LOG_LEVEL_NOTICE,
     LOG_LEVEL_INFO,
     LOG_LEVEL_VERBOSE,
-    LOG_LEVEL_DEBUG,
+    LOG_LEVEL_DEBUG
 } LogLevel;
+
+const char *LogLevelToString(LogLevel level);
 
 void Log(LogLevel level, const char *fmt, ...) FUNC_ATTR_PRINTF(2, 3);
 void VLog(LogLevel level, const char *fmt, va_list ap);
+
+void LogSetGlobalLevel(LogLevel level);
+LogLevel LogGetGlobalLevel(void);
 
 /*
  * Portable strerror(errno)

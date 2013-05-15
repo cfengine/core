@@ -34,6 +34,7 @@
 #endif
 
 #include "sequence.h"
+#include "logging.h"
 
 /*******************************************************************/
 /* Preprocessor tricks                                             */
@@ -165,9 +166,6 @@ typedef enum
 
 #define CF_OBSERVABLES 100
 
-/* Output control defines */
-
-#define CfDebug   if (DEBUG) printf
 
 #include "statistics.h"
 
@@ -566,13 +564,6 @@ typedef enum
 
 typedef enum
 {
-    OUTPUT_LEVEL_INFORM,
-    OUTPUT_LEVEL_VERBOSE,
-    OUTPUT_LEVEL_ERROR,
-} OutputLevel;
-
-typedef enum
-{
     EDIT_ORDER_BEFORE,
     EDIT_ORDER_AFTER
 } EditOrder;
@@ -936,20 +927,29 @@ typedef enum
 
 typedef enum
 {
-    ACL_INHERITANCE_NO_CHANGE,
-    ACL_INHERITANCE_SPECIFY,
-    ACL_INHERITANCE_PARENT,
-    ACL_INHERITANCE_CLEAR,
-    ACL_INHERITANCE_NONE
-} AclInheritance;
+    ACL_DEFAULT_NO_CHANGE,
+    ACL_DEFAULT_SPECIFY,
+    ACL_DEFAULT_ACCESS,
+    ACL_DEFAULT_CLEAR,
+    ACL_DEFAULT_NONE
+} AclDefault;
+
+typedef enum
+{
+    ACL_INHERIT_FALSE,
+    ACL_INHERIT_TRUE,
+    ACL_INHERIT_NOCHANGE
+} AclInherit;
 
 typedef struct
 {
     AclMethod acl_method;
     AclType acl_type;
-    AclInheritance acl_directory_inherit;
+    AclDefault acl_default;
     Rlist *acl_entries;
-    Rlist *acl_inherit_entries;
+    Rlist *acl_default_entries;
+    /* Only used on Windows */
+    AclInherit acl_inherit;
 } Acl;
 
 typedef enum
@@ -1035,8 +1035,8 @@ typedef struct
     double value_notkept;
     double value_repaired;
     int audit;
-    OutputLevel report_level;
-    OutputLevel log_level;
+    LogLevel report_level;
+    LogLevel log_level;
 } TransactionContext;
 
 /*************************************************************************/

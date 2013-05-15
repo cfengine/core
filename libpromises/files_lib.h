@@ -41,10 +41,11 @@ int MakeParentDirectory2(char *parentandchild, int force, bool enforce_promise);
 void RotateFiles(char *name, int number);
 void CreateEmptyFile(char *name);
 
-/*
- * Deletes directory #path recursively. Symlinks are not followed.
- *
- * @returns true if directory was deleted succesfully, false if one or more files were not deleted.
+/**
+ * @brief Deletes directory path recursively. Symlinks are not followed.
+ *        Note that this function only deletes the contents of the directory, not the directory itself.
+ * @param path
+ * @return true if directory was deleted succesfully, false if one or more files were not deleted.
  */
 bool DeleteDirectoryTree(const char *path);
 

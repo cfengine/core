@@ -29,7 +29,6 @@
 #include "expand.h"
 #include "matching.h"
 #include "scope.h"
-#include "logging_old.h"
 #include "fncall.h"
 #include "string_lib.h"
 #include "mutex.h"
@@ -266,7 +265,7 @@ Rval RvalCopy(Rval rval)
         return RvalCopyList(rval);
 
     default:
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Unknown type %c in CopyRvalItem - should not happen", rval.type);
+        Log(LOG_LEVEL_VERBOSE, "Unknown type %c in CopyRvalItem - should not happen", rval.type);
         return ((Rval) {NULL, rval.type});
     }
 }
@@ -276,8 +275,6 @@ Rval RvalCopy(Rval rval)
 Rlist *RlistCopy(const Rlist *list)
 {
     Rlist *start = NULL;
-
-    CfDebug("CopyRlist()\n");
 
     if (list == NULL)
     {
@@ -429,10 +426,8 @@ Rlist *RlistAppendFnCall(Rlist **start, const FnCall *fn)
 }
 
 Rlist *RlistAppend(Rlist **start, const void *item, RvalType type)
-   /* Allocates new memory for objects - careful, could leak!  */
 {
     Rlist *rp, *lp = *start;
-    FnCall *fp;
 
     switch (type)
     {
@@ -440,18 +435,9 @@ Rlist *RlistAppend(Rlist **start, const void *item, RvalType type)
         return RlistAppendScalar(start, item);
 
     case RVAL_TYPE_FNCALL:
-        CfDebug("Appending function to rval-list function call: ");
-        fp = (FnCall *) item;
-        if (DEBUG)
-        {
-            FnCallShow(stdout, fp);
-        }
-        CfDebug("\n");
         break;
 
     case RVAL_TYPE_LIST:
-        CfDebug("Expanding and appending list object\n");
-
         for (rp = (Rlist *) item; rp != NULL; rp = rp->next)
         {
             lp = RlistAppend(start, rp->item, rp->type);
@@ -460,7 +446,7 @@ Rlist *RlistAppend(Rlist **start, const void *item, RvalType type)
         return lp;
 
     default:
-        CfDebug("Cannot append %c to rval-list [%s]\n", type, (char *) item);
+        Log(LOG_LEVEL_DEBUG, "Cannot append %c to rval-list '%s'", type, (char *) item);
         return NULL;
     }
 
@@ -536,9 +522,6 @@ Rlist *RlistPrepend(Rlist **start, const void *item, RvalType type)
         return RlistPrependScalar(start, item);
 
     case RVAL_TYPE_LIST:
-
-        CfDebug("Expanding and prepending list (ends up in reverse)\n");
-
         for (rp = (Rlist *) item; rp != NULL; rp = rp->next)
         {
             lp = RlistPrepend(start, rp->item, rp->type);
@@ -548,7 +531,7 @@ Rlist *RlistPrepend(Rlist **start, const void *item, RvalType type)
     case RVAL_TYPE_FNCALL:
         return RlistPrependFnCall(start, item);
     default:
-        CfDebug("Cannot prepend %c to rval-list [%s]\n", type, (char *) item);
+        Log(LOG_LEVEL_DEBUG, "Cannot prepend %c to rval-list '%s'", type, (char *) item);
         return NULL;
     }
 
@@ -608,22 +591,242 @@ Rlist *RlistParseShown(char *string)
     return newlist;
 }
 
+/*******************************************************************/
+
+static Rlist *RlistParseStringBounded(char *left,
+                                      char *right, int *n)
+{
+    Rlist *newlist = NULL;
+    char str2[CF_MAXVARSIZE];
+    char *s = left;
+    char *s2 = str2;
+    bool precede = false;  //set if we just encountred escaping character
+    bool ignore = true;    //set if we're outside quotation marks
+    bool skipped = true;   //set if a separating comma is behind us
+    char *extract = NULL;
+
+    if (n!=NULL)
+    {
+        *n = 0;
+    }
+
+    memset(str2, 0, CF_MAXVARSIZE);
+
+    while (*s && s < right)
+    {
+        if (*s != '\\')
+        {
+            if (precede)
+            {
+                if (*s != '\\' && *s != '"')
+                {
+                    Log(LOG_LEVEL_ERR, "Presence of illegal %c after escaping character", *s);
+                    goto clean;
+                }
+                else
+                {
+                    *s2++ = *s;
+                }
+                precede = false;
+            }
+            else
+            {
+                if (*s == '"')
+                {
+                    if (ignore)
+                    {
+                        if (skipped != true)
+                        {
+                            Log(LOG_LEVEL_ERR, "Quotation marks \" should follow commas");
+                            goto clean;
+                        }
+                        ignore = false;
+                        extract = s2;
+                    }
+                    else
+                    {
+                        *s2='\0';
+                        Log(LOG_LEVEL_VERBOSE, "Extracted string [%s] of length (%zd)", extract,
+                               (size_t) (s2 - extract));
+                        RlistAppendScalar(&newlist, extract);
+                        ignore = true;
+                        extract = NULL;
+                        if (n != NULL)
+                        {
+                            *n += 1;
+                        }
+                    }
+                    skipped = false;
+                }
+                else if (*s == ',')
+                {
+                    if (ignore)
+                    {
+                        if (skipped == false)
+                        {
+                            skipped = true;
+                        }
+                        else
+                        {
+                            Log(LOG_LEVEL_ERR, "Only one comma should separate different list elements");
+                            goto clean;
+                        }
+                    }
+                    else
+                    {
+                        *s2++ = *s;
+                    }
+                }
+                else
+                {
+                    if (ignore == true && *s != ' ')
+                    {
+                        Log(LOG_LEVEL_ERR, "Only white characters are permitted outside of list elements. Character %c is illegal.", *s);
+                        goto clean;
+                    }
+                    *s2++ = *s;
+                }
+            }
+        }
+        else
+        {
+            if (precede)
+            {
+                *s2++ = '\\';
+                precede = false;
+            }
+            else
+            {
+                precede = true;
+            }
+        }
+        s++;
+    }
+    if (ignore)
+    {
+        return newlist;
+    }
+    else
+    {
+        goto clean;
+    }
+  clean:
+    if (newlist)
+    {
+        RlistDestroy(newlist);
+    }
+    return NULL;
+}
+
+static char *TrimLeft(char *str)
+{
+    char *s = str;
+
+    bool crossed = false;
+    if (!s)
+    {
+        return NULL;
+    }
+    while (*s)
+    {
+        if (crossed == false)
+        {
+            if (*s == ' ')
+            {
+            }
+            else if (*s == '{')
+            {
+                crossed = true;
+            }
+            else
+            {
+                return NULL;
+            }
+        }
+        else
+        {
+            if (*s == ' ')
+            {
+            }
+            else if (*s == '"')
+            {
+                return s;
+            }
+            else
+            {
+                return NULL;
+            }
+        }
+        s++;
+    }
+    return NULL;
+}
+
+static char *TrimRight(char *str)
+{
+    bool crossed = false;
+    char *s = str + strlen(str) - 1;
+    while (*s && s > str)
+    {
+        if (crossed == false)
+        {
+            if (*s == ' ')
+            {
+            }
+            else if (*s == '}')
+            {
+                crossed = true;
+            }
+            else
+            {
+                return NULL;
+            }
+        }
+        else
+        {
+            if (*s == ' ')
+            {
+            }
+            else if (*s == '"')
+            {
+                return s + 1;
+            }
+            else
+            {
+                return NULL;
+            }
+        }
+        s--;
+    }
+    return NULL;
+}
+
+Rlist *RlistParseString(char *string, int *n)
+{
+    Rlist *newlist = NULL;
+
+    char *l = TrimLeft(string);
+    if (l == NULL)
+    {
+        return NULL;
+    }
+    char *r = TrimRight(l);
+    if (r == NULL)
+    {
+        return NULL;
+    }
+    newlist = RlistParseStringBounded(l, r, n);
+    return newlist;
+}
+
+/*******************************************************************/
+
 void RvalDestroy(Rval rval)
 {
     Rlist *clist, *next = NULL;
 
-    CfDebug("DeleteRvalItem(%c)", rval.type);
-
-    if (DEBUG)
-    {
-        RvalShow(stdout, rval);
-    }
-
-    CfDebug("\n");
-
     if (rval.item == NULL)
     {
-        CfDebug("DeleteRval NULL\n");
         return;
     }
 
@@ -661,7 +864,6 @@ void RvalDestroy(Rval rval)
         break;
 
     default:
-        CfDebug("Nothing to do\n");
         return;
     }
 }
@@ -817,8 +1019,6 @@ Rlist *RlistFromSplitString(const char *string, char sep)
     char node[CF_MAXVARSIZE];
     int maxlen = strlen(string);
 
-    CfDebug("SplitStringAsRList(%s)\n", string);
-
     for (const char *sp = string; *sp != '\0'; sp++)
     {
         if (*sp == '\0' || sp > string + maxlen)
@@ -853,8 +1053,6 @@ Rlist *RlistFromSplitRegex(const char *string, const char *regex, int max, int b
     {
         return NULL;
     }
-
-    CfDebug("\n\nSplit \"%s\" with regex \"%s\" (up to maxent %d)\n\n", string, regex, max);
 
     const char *sp = string;
 

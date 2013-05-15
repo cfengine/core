@@ -32,7 +32,6 @@
 #include "files_interfaces.h"
 #include "files_hashes.h"
 #include "keyring.h"
-#include "logging_old.h"
 #include "communication.h"
 #include "env_context.h"
 #include "crypto.h"
@@ -57,14 +56,15 @@ RSA* LoadPublicKey(const char* filename)
     fp = fopen(filename, "r");
     if (fp == NULL)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "fopen", "Cannot open file '%s'.\n", filename);
+        Log(LOG_LEVEL_ERR, "Cannot open file '%s'. (fopen: %s)", filename, GetErrorStr());
         return NULL;
     };
 
     if ((key = PEM_read_RSAPublicKey(fp, NULL, NULL, passphrase)) == NULL)
     {
         err = ERR_get_error();
-        CfOut(OUTPUT_LEVEL_ERROR, "PEM_read_RSAPublicKey", "Error reading public key = %s\n", ERR_reason_error_string(err));
+        Log(LOG_LEVEL_ERR, "Error reading public key. (PEM_read_RSAPublicKey: %s)",
+            ERR_reason_error_string(err));
         fclose(fp);
         return NULL;
     };
@@ -73,7 +73,8 @@ RSA* LoadPublicKey(const char* filename)
 
     if (BN_num_bits(key->e) < 2 || !BN_is_odd(key->e))
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "BN_num_bits", "ERROR: RSA Exponent in key %s too small or not odd\n", filename);
+        Log(LOG_LEVEL_ERR, "RSA Exponent in key '%s' too small or not odd. (BN_num_bits: %s)",
+            filename, GetErrorStr());
         return NULL;
     };
 
@@ -160,7 +161,7 @@ void ShowLastSeenHosts()
 
     if (!ScanLastSeenQuality(ShowHost, &count))
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Unable to show lastseen database");
+        Log(LOG_LEVEL_ERR, "Unable to show lastseen database");
         return;
     }
 
@@ -175,7 +176,7 @@ int RemoveKeys(const char *host)
 
     if (Hostname2IPString(ipaddr, host, sizeof(ipaddr)) == -1)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", 
+        Log(LOG_LEVEL_ERR, 
             "ERROR, could not resolve %s, not removing", host);
         return 255;
     }
@@ -188,17 +189,17 @@ int RemoveKeys(const char *host)
 
     if ((removed_by_ip == -1) || (removed_by_digest == -1))
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Unable to remove keys for the host %s", host);
+        Log(LOG_LEVEL_ERR, "Unable to remove keys for the host %s", host);
         return 255;
     }
     else if (removed_by_ip + removed_by_digest == 0)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "No keys for host %s were found", host);
+        Log(LOG_LEVEL_ERR, "No keys for host %s were found", host);
         return 1;
     }
     else
     {
-        CfOut(OUTPUT_LEVEL_INFORM, "", "Removed %d key(s) for host %s",
+        Log(LOG_LEVEL_INFO, "Removed %d key(s) for host %s",
               removed_by_ip + removed_by_digest, host);
         return 0;
     }
@@ -248,36 +249,31 @@ void KeepKeyPromises(const char *public_key_file, const char *private_key_file)
 #endif
     {
         err = ERR_get_error();
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Unable to generate key: %s\n", ERR_reason_error_string(err));
+        Log(LOG_LEVEL_ERR, "Unable to generate key: %s", ERR_reason_error_string(err));
         return;
-    }
-
-    if (DEBUG)
-    {
-        RSA_print_fp(stdout, pair, 0);
     }
 
     fd = open(private_key_file, O_WRONLY | O_CREAT | O_TRUNC, 0600);
 
     if (fd < 0)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "open", "Open %s failed: %s.", private_key_file, strerror(errno));
+        Log(LOG_LEVEL_ERR, "Open '%s' failed. (open: %s)", private_key_file, GetErrorStr());
         return;
     }
 
     if ((fp = fdopen(fd, "w")) == NULL)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "fdopen", "Couldn't open private key %s.", private_key_file);
+        Log(LOG_LEVEL_ERR, "Couldn't open private key '%s'. (fdopen: %s)", private_key_file, GetErrorStr());
         close(fd);
         return;
     }
 
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Writing private key to %s\n", private_key_file);
+    Log(LOG_LEVEL_VERBOSE, "Writing private key to '%s'", private_key_file);
 
     if (!PEM_write_RSAPrivateKey(fp, pair, cipher, passphrase, strlen(passphrase), NULL, NULL))
     {
         err = ERR_get_error();
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Couldn't write private key: %s\n", ERR_reason_error_string(err));
+        Log(LOG_LEVEL_ERR, "Couldn't write private key. (PEM_write_RSAPrivateKey: %s)", ERR_reason_error_string(err));
         return;
     }
 
@@ -287,23 +283,24 @@ void KeepKeyPromises(const char *public_key_file, const char *private_key_file)
 
     if (fd < 0)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "open", "Unable to open public key %s.", public_key_file);
+        Log(LOG_LEVEL_ERR, "Unable to open public key '%s'. (open: %s)",
+            public_key_file, GetErrorStr());
         return;
     }
 
     if ((fp = fdopen(fd, "w")) == NULL)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "fdopen", "Open %s failed.", public_key_file);
+        Log(LOG_LEVEL_ERR, "Open '%s' failed. (fdopen: %s)", public_key_file, GetErrorStr());
         close(fd);
         return;
     }
 
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Writing public key to %s\n", public_key_file);
+    Log(LOG_LEVEL_VERBOSE, "Writing public key to %s", public_key_file);
 
     if (!PEM_write_RSAPublicKey(fp, pair))
     {
         err = ERR_get_error();
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Unable to write public key: %s\n", ERR_reason_error_string(err));
+        Log(LOG_LEVEL_ERR, "Unable to write public key: %s", ERR_reason_error_string(err));
         return;
     }
 
@@ -318,7 +315,7 @@ void KeepKeyPromises(const char *public_key_file, const char *private_key_file)
 #ifndef HAVE_NOVA
 bool LicenseInstall(ARG_UNUSED char *path_source)
 {
-    CfOut(OUTPUT_LEVEL_ERROR, "", "!! License installation only applies to CFEngine Enterprise");
+    Log(LOG_LEVEL_ERR, "License installation only applies to CFEngine Enterprise");
 
     return false;
 }
@@ -330,7 +327,7 @@ bool LicenseInstall(char *path_source)
 
     if(stat(path_source, &sb) == -1)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "stat", "!! Can not stat input license file %s", path_source);
+        Log(LOG_LEVEL_ERR, "Can not stat input license file '%s'. (stat: %s)", path_source, GetErrorStr());
         return false;
     }
 
@@ -340,7 +337,7 @@ bool LicenseInstall(char *path_source)
 
     if(stat(path_destination, &sb) == 0)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "!! A license file is already installed in %s -- please move it out of the way and try again", path_destination);
+        Log(LOG_LEVEL_ERR, "A license file is already installed in %s -- please move it out of the way and try again", path_destination);
         return false;
     }
 
@@ -348,12 +345,12 @@ bool LicenseInstall(char *path_source)
 
     if(!LicensePublicKeyPath(path_public_key, path_source))
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "!! Could not find path to public key -- license parse error?");
+        Log(LOG_LEVEL_ERR, "Could not find path to public key -- license parse error?");
     }
 
     if(stat(path_public_key, &sb) != 0)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "!! The licensed public key is not installed -- please copy it to %s and try again", path_public_key);
+        Log(LOG_LEVEL_ERR, "The licensed public key is not installed -- please copy it to %s and try again", path_public_key);
         return false;
     }
 
@@ -362,11 +359,11 @@ bool LicenseInstall(char *path_source)
 
     if(success)
     {
-        CfOut(OUTPUT_LEVEL_INFORM, "", "Installed license at %s", path_destination);
+        Log(LOG_LEVEL_INFO, "Installed license at %s", path_destination);
     }
     else
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "!! Failed copying license from %s to %s", path_source, path_destination);
+        Log(LOG_LEVEL_ERR, "Failed copying license from %s to %s", path_source, path_destination);
     }
 
     return success;

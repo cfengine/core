@@ -192,11 +192,6 @@ void __UnexpectedError(const char *file, int lineno, const char *format, ...)
     fail();
 }
 
-void CfOut(OutputLevel level, const char *errstr, const char *fmt, ...)
-{
-    fail();
-}
-
 const char *NameVersion(void)
 {
     fail();
@@ -326,7 +321,6 @@ void RlistDestroy(Rlist *list)
 
 /* Stub out variables */
 
-int DEBUG;
 AgentType THIS_AGENT_TYPE;
 Item *IPADDRESSES;
 struct utsname VSYSNAME;

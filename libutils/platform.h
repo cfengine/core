@@ -309,6 +309,7 @@ char *strsep(char **stringp, const char *delim);
 # include <sys/ioctl.h>
 # include <net/if.h>
 # include <netinet/in.h>
+# include <netinet/in_systm.h>
 # include <netinet/ip.h>
 # include <netinet/tcp.h>
 # include <arpa/inet.h>

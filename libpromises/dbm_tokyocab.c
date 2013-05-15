@@ -204,6 +204,33 @@ bool DBPrivRead(DBPriv *db, const void *key, int key_size, void *dest, int dest_
     return true;
 }
 
+bool DBPrivReadInv(DBPriv *db, const char *key_list[], const char *value, int *iterator)
+{   
+    const  char *key;
+    char dest[CF_BUFSIZE];
+    tchdbiterinit(db->hdb);
+    while((key=tchdbiternext2(db->hdb))!=NULL)
+    {
+        if (tchdbget3(db->hdb, key, strlen(key)+1, dest, sizeof(dest)) == -1)
+        {
+            if (tchdbecode(db->hdb) != TCENOREC)
+            {  
+                CfOut(OUTPUT_LEVEL_ERROR, "", "ReadComplexKeyDB(%s): Could not read: %s\n", (const char *)key, ErrorMessage(db->hdb));
+            } 
+            return false;
+        }
+        if(strcmp(value,dest)==0) 
+            {
+                key_list[*iterator]=xstrdup(key);
+                (*iterator)++;
+            }
+
+            free(key);
+    }
+
+    return true;
+}
+
 static bool Write(TCHDB *hdb, const void *key, int key_size, const void *value, int value_size)
 {
     if (!tchdbput(hdb, key, key_size, value, value_size))

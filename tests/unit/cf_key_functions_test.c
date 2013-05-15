@@ -8,6 +8,7 @@
 static void test_RemoveKeys(void)
 {
 	assert_true(1);
+    assert_int_equal(RemoveKeys("somehostname"), 255);
 }
 
 int main()

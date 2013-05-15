@@ -112,7 +112,7 @@ static StackFrame *LastStackFrameBundle(const EvalContext *ctx)
         }
 
     case STACK_FRAME_TYPE_PROMISE:
-        {
+        {       
             StackFrame *previous_frame = LastStackFrame(ctx, 1);
             assert(previous_frame);
             assert("Promise stack frame does not follow bundle stack frame" && previous_frame->type == STACK_FRAME_TYPE_BUNDLE);

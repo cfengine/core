@@ -1,5 +1,4 @@
-/*
-   Copyright (C) CFEngine AS
+opyright (C) CFEngine AS
 
    This file is part of CFEngine 3 - written and maintained by CFEngine AS.
 

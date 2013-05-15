@@ -168,25 +168,32 @@ void ShowLastSeenHosts()
     printf("Total Entries: %d\n", count);
 }
 
+bool ParseHost(const char *host)
+{
+    bool isKey=false;
+    if( (strncmp(host,"MD5",2)==0) || (strncmp(host,"SHA",2)==0))
+    {
+        isKey=true;
+    }
+    return isKey;
+}
 
 int RemoveKeys(const char *host)
 {
-    char digest[CF_BUFSIZE];
-    char ipaddr[CF_MAX_IP_LEN];
+    int removed_by_ip=0;
+    int removed_by_digest=0;
 
-    if (Hostname2IPString(ipaddr, host, sizeof(ipaddr)) == -1)
+    if(!ParseHost(host))
     {
-        Log(LOG_LEVEL_ERR, 
-            "ERROR, could not resolve %s, not removing", host);
-        return 255;
+        RemoveIPFromLastSeen(host);
+        removed_by_ip = RemovePublicKey(host);
     }
-
-    Address2Hostkey(ipaddr, digest);
-    RemoveHostFromLastSeen(digest);
-
-    int removed_by_ip = RemovePublicKey(ipaddr);
-    int removed_by_digest = RemovePublicKey(digest);
-
+    else 
+    {
+        RemoveDigestFromLastSeen(host);
+        removed_by_digest = RemovePublicKey(host);
+    }
+ 
     if ((removed_by_ip == -1) || (removed_by_digest == -1))
     {
         Log(LOG_LEVEL_ERR, "Unable to remove keys for the host %s", host);
@@ -202,7 +209,7 @@ int RemoveKeys(const char *host)
         Log(LOG_LEVEL_INFO, "Removed %d key(s) for host %s",
               removed_by_ip + removed_by_digest, host);
         return 0;
-    }
+    } 
 }
 
 

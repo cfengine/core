@@ -67,6 +67,7 @@ bool ReadComplexKeyDB(CF_DB *dbp, const char *key, int key_size, void *dest, int
 bool WriteComplexKeyDB(CF_DB *dbp, const char *key, int keySz, const void *src, int srcSz);
 bool DeleteComplexKeyDB(CF_DB *dbp, const char *key, int size);
 bool ReadDB(CF_DB *dbp, const char *key, void *dest, int destSz);
+bool ReadDBInv(CF_DB *dbp, const char *key_list[], const char *value,int *iterator);
 bool WriteDB(CF_DB *dbp, const char *key, const void *src, int srcSz);
 bool DeleteDB(CF_DB *dbp, const char *key);
 

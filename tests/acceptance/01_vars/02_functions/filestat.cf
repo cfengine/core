@@ -85,7 +85,7 @@ bundle agent check
 
       "fields" slist => getindices("test.stat");
 
-      "joint_condition" string => join("|", "expects");
+      "joint_condition" string => join(".", "expects");
   classes:
       "$(expects)" expression => strcmp("$(test.stat[$(expects)])", "$(expected[$(expects)])");
       "ok" expression => "$(joint_condition)";

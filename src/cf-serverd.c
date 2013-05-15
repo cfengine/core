@@ -918,7 +918,9 @@ static void *HandleConnection(ServerConnectionState *conn)
 
         if (TRIES++ > MAXTRIES) /* When to say we're hung / apoptosis threshold */
         {
-            CfOut(cf_error, "", "Server seems to be paralyzed. DOS attack? Committing apoptosis...");
+            CfOut(cf_error, "",
+                  "Server had to drop %d connections in a row, all existing ones seem hung. DOS attack? Committing apoptosis...",
+                  TRIES);
             HandleSignals(SIGTERM);
         }
 
@@ -926,7 +928,6 @@ static void *HandleConnection(ServerConnectionState *conn)
         {
         }
 
-        CfOut(cf_error, "", "Too many threads (>=%d) -- increase server maxconnections?", CFD_MAXPROCESSES);
         snprintf(output, CF_BUFSIZE, "BAD: Server is currently too busy -- increase maxconnections or splaytime?");
         SendTransaction(conn->sd_reply, output, 0, CF_DONE);
         DeleteConn(conn);

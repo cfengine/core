@@ -53,7 +53,7 @@ typedef struct
     bool ignore_missing_bundles;
     bool ignore_missing_inputs;
 
-    union
+    struct
     {
         struct
         {

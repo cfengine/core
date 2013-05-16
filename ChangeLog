@@ -19,9 +19,24 @@
        - Tokyo Cabinet databases are now automatically checked for
          correctness during opening. It should prevent a number of issues
          with corrupted TC databases causing binaries to hang.
+       - Improved ACL handling on Windows, which led to some syntax changes. We now consistently
+         use the term "default" to describe ACLs that can be inherited by child objects. These
+         keywords have received new names:
+           acl_directory_inherit -> acl_default
+            specify_inherit_aces -> specify_default_aces
+         The old keywords are deprecated, but still valid. In addition, a new keyword
+         "acl_inherit" controls inheritance behavior on Windows. This feature does not exist on
+         Unix platforms. (Redmine #1832)
 
        Bugfixes:
        - bundles are allowed to be empty (Redmine #2411)
+       - Fixed '.' and '-' not being accepted by a commands module. (Redmine #2384)
+       - Fixed issue with package management and warn. (Redmine #1831)
+       - Fixed JSON crash. (Redmine #2151)
+       - Improved error checking when using fgets(). (Redmine #2451)
+       - Fixed error message when deleting nonexistent files. (Redmine #2448)
+       - Honor warn-only when purging from local directory. (Redmine #2162)
+       - Make sure "restart" and "reload" are recognized keywords in packages. (Redmine #2468)
 
 3.5.0 - Alpha 2
 

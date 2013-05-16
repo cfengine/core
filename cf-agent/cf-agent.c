@@ -1802,7 +1802,7 @@ static bool VerifyBootstrap(void)
         return false;
     }
 
-    printf("Bootstrap to '%s' completed successfully!\n", POLICY_SERVER);
+    Log(LOG_LEVEL_NOTICE, "Bootstrap to '%s' completed successfully!\n", POLICY_SERVER);
 
     return true;
 }

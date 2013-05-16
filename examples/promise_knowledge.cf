@@ -482,11 +482,11 @@ body_constraints::
    comment => "Containment options for the execution process",
    association => a("is a possible body constraint for","promise_types::commands","can have body constraints");
    "useshell"
-   comment => "true/false embed the command in a shell environment (true)",
+   comment => "noshell/useshell/powershell embed the command in the given shell environment (noshell)",
    association => a("is a possible sub-body constraint for","contain","may have sub-body constraints");
 body_constraints::
    "useshell" association => a("is a body constraint of type","(menu option)","has possible body constraints"),
-          comment => "true/false embed the command in a shell environment (true)";
+          comment => "noshell/useshell/powershell embed the command in the given shell environment (noshell)";
    "umask"
    comment => "The umask value for the child process",
    association => a("is a possible sub-body constraint for","contain","may have sub-body constraints");

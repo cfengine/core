@@ -915,7 +915,7 @@ reports:
 body contain standard
 
 {
-useshell => "true";
+useshell => "useshell";
 }
 
 ######################################################################

@@ -110,12 +110,12 @@ commands:
 
 body contain shell_command
 {
-    useshell    => "yes";
+    useshell    => "useshell";
 }
 
 body contain not_paranoid
 {
-    useshell    => "no";
+    useshell    => "noshell";
     exec_owner  => "root";
     umask       => "22";
 }

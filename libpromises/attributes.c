@@ -353,7 +353,7 @@ ExecContain GetExecContainConstraints(const EvalContext *ctx, const Promise *pp)
 {
     ExecContain e;
 
-    e.useshell = PromiseGetConstraintAsBoolean(ctx, "useshell", pp);
+    e.shelltype = ShellTypeFromString(ConstraintGetRvalValue(ctx, "useshell", pp, RVAL_TYPE_SCALAR));
     e.umask = PromiseGetConstraintAsOctal(ctx, "umask", pp);
     e.owner = PromiseGetConstraintAsUid(ctx, "exec_owner", pp);
     e.group = PromiseGetConstraintAsGid(ctx, "exec_group", pp);

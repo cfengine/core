@@ -361,7 +361,7 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
                     }
 
                     int err = AutomaticBootstrap(config);
-                    if (err < 0);
+                    if (err < 0)
                     {
                         Log(LOG_LEVEL_ERR, "Automatic bootstrap failed, error code '%d'", err);
                         exit(EXIT_FAILURE);
@@ -1802,7 +1802,7 @@ static bool VerifyBootstrap(void)
         return false;
     }
 
-    printf("Bootstrap to '%s' completed successfully!\n", POLICY_SERVER);
+    Log(LOG_LEVEL_NOTICE, "Bootstrap to '%s' completed successfully!\n", POLICY_SERVER);
 
     return true;
 }

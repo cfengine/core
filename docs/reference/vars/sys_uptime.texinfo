@@ -1,0 +1,12 @@
+
+A variable containing the number of minutes which the system has been
+online.  (Not implemented on the Windows platform.)
+
+@verbatim
+
+# uptime = 69735
+
+Equivalent uptime command output:
+ 16:24:52 up 48 days, 10:15,  1 user,  load average: 0.00, 0.00, 0.00
+
+@end verbatim

@@ -1,0 +1,12 @@
+
+A variable containing the result of the time() system call, which is the
+time since the UNIX Epoch (00:00:00 UTC, January 1, 1970), measured in
+seconds. See also @code{sys.sysday}.
+
+@verbatim
+
+# systime = 1352754900
+
+Corresponds to Mon Nov 12 21:15:00 2012 UTC.
+
+@end verbatim

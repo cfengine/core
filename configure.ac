@@ -768,6 +768,22 @@ AC_CHECK_HEADERS(sys/sysctl.h, [], [], [AC_INCLUDES_DEFAULT
 #endif
 ])
    
+dnl ######################################################################
+dnl Requirements for GetUptimeMinutes() to set $(sys.uptime)
+dnl ######################################################################
+dnl Linux sysinfo() call
+AC_CHECK_MEMBERS([struct sysinfo.uptime], , , [#include <sys/sysinfo.h>])
+
+dnl BSD uses sys/sysctl.h to get time-of-boot
+AC_CHECK_HEADERS(sys/sysctl.h, [], [], [AC_INCLUDES_DEFAULT
+#ifdef HAVE_SYS_PARAM_H
+# include <sys/param.h>
+#endif
+])
+
+dnl Solaris uses kstat.h to get time-of-boot
+AC_CHECK_HEADERS(kstat.h)
+
 dnl #######################################################################
 dnl Newer BSD systems don't have a compatible rtentry - use ortentry
 dnl #######################################################################

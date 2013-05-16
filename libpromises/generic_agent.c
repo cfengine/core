@@ -309,7 +309,7 @@ int CheckPromises(const GenericAgentConfig *config)
         strlcat(cmd, " -D bootstrap_mode", CF_BUFSIZE);
     }
 
-    Log(LOG_LEVEL_VERBOSE, "Checking policy with command \"%s\"", cmd);
+    Log(LOG_LEVEL_VERBOSE, "Checking policy with command '%s'", cmd);
 
     if (ShellCommandReturnsZero(cmd, true))
     {

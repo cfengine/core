@@ -175,7 +175,7 @@ void KeepControlPromises()
     Rval retval;
 
     CFD_MAXPROCESSES = 30;
-    MAXTRIES = 5;
+    MAXTRIES = 90;
     CFD_INTERVAL = 0;
     DENYBADCLOCKS = true;
     CFRUNCOMMAND[0] = '\0';
@@ -232,7 +232,7 @@ void KeepControlPromises()
         if (strcmp(cp->lval, CFS_CONTROLBODY[cfs_maxconnections].lval) == 0)
         {
             CFD_MAXPROCESSES = (int) Str2Int(retval.item);
-            MAXTRIES = CFD_MAXPROCESSES / 3;
+            MAXTRIES = CFD_MAXPROCESSES * 3;
             CfOut(cf_verbose, "", "SET maxconnections = %d\n", CFD_MAXPROCESSES);
             continue;
         }

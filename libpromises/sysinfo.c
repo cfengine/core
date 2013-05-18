@@ -491,7 +491,7 @@ void GetNameInfo3(EvalContext *ctx, AgentType agent_type)
             if (NovaWin_FileExists(filename))
             {
                 EvalContextHeapAddHard(ctx, "powershell");
-                CfOut(OUTPUT_LEVEL_VERBOSE, "", "Additional hard class defined as: %s\n", "powershell");
+                Log(LOG_LEVEL_VERBOSE, "Additional hard class defined as: %s", "powershell");
             }
         }
     }

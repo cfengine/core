@@ -28,7 +28,7 @@
 
 static const ConstraintSyntax contain_constraints[] =
 {
-    ConstraintSyntaxNewBool("useshell", "true/false embed the command in a shell environment. Default value: false", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewOption("useshell", "noshell,useshell,powershell," CF_BOOL, "noshell/useshell/powershell embed the command in the given shell environment. Default value: noshell", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewOption("umask", "0,77,22,27,72,077,002,022,027,072", "The umask value for the child process", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("exec_owner", "", "The user name or id under which to run the process", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("exec_group", "", "The group name or id under which to run the process", SYNTAX_STATUS_NORMAL),

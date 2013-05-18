@@ -33,7 +33,7 @@ bundlesequence  => { "example" };
 body contain cd(dir) 
 {
 chdir => "${dir}";
-useshell => "true";
+useshell => "useshell";
 }
 
 bundle agent example 

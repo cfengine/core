@@ -501,7 +501,7 @@ static int SelectExecProgram(char *filename, char *command)
     ReplaceStr(command, buf, sizeof(buf), "$(this.promiser)", filename);
     ReplaceStr(command, buf, sizeof(buf), "${this.promiser}", filename);
 
-    if (ShellCommandReturnsZero(buf, false))
+    if (ShellCommandReturnsZero(buf, SHELL_TYPE_NONE))
     {
         Log(LOG_LEVEL_DEBUG, "Select ExecProgram match for '%s'", buf);
         return true;

@@ -195,20 +195,23 @@ static ActionResult RepairExec(EvalContext *ctx, Attributes a, Promise *pp)
     int cmdOutBufPos = 0;
     int lineOutLen;
 
-    if (!IsExecutable(CommandArg0(pp->promiser)))
+    if (a.contain.shelltype == SHELL_TYPE_NONE)
     {
-        Log(LOG_LEVEL_ERR, "%s promises to be executable but isn't", pp->promiser);
-
-        if (strchr(pp->promiser, ' '))
+        if (!IsExecutable(CommandArg0(pp->promiser)))
         {
-            Log(LOG_LEVEL_VERBOSE, "Paths with spaces must be inside escaped quoutes (e.g. \\\"%s\\\")", pp->promiser);
-        }
+            Log(LOG_LEVEL_ERR, "%s promises to be executable but isn't", pp->promiser);
 
-        return ACTION_RESULT_FAILED;
-    }
-    else
-    {
-        Log(LOG_LEVEL_VERBOSE, "Promiser string contains a valid executable (%s) - ok", CommandArg0(pp->promiser));
+            if (strchr(pp->promiser, ' '))
+            {
+                Log(LOG_LEVEL_VERBOSE, "Paths with spaces must be inside escaped quoutes (e.g. \\\"%s\\\")", pp->promiser);
+            }
+
+            return ACTION_RESULT_FAILED;
+        }
+        else
+        {
+            Log(LOG_LEVEL_VERBOSE, "Promiser string contains a valid executable (%s) - ok", CommandArg0(pp->promiser));
+        }
     }
 
     char timeout_str[CF_BUFSIZE];
@@ -284,7 +287,18 @@ static ActionResult RepairExec(EvalContext *ctx, Attributes a, Promise *pp)
         }
 #endif /* !__MINGW32__ */
 
-        if (a.contain.useshell)
+        if (a.contain.shelltype == SHELL_TYPE_POWERSHELL)
+        {
+#ifdef __MINGW32__
+            pfp =
+                cf_popen_powershell_setuid(cmdline, "r", a.contain.owner, a.contain.group, a.contain.chdir, a.contain.chroot,
+                                  a.transaction.background);
+#else // !__MINGW32__
+            Log(LOG_LEVEL_ERR, "Powershell is only supported on Windows");
+            return ACTION_RESULT_FAILED;
+#endif // !__MINGW32__
+        }
+        else if (a.contain.shelltype == SHELL_TYPE_USE)
         {
             pfp =
                 cf_popen_shsetuid(cmdline, "r", a.contain.owner, a.contain.group, a.contain.chdir, a.contain.chroot,

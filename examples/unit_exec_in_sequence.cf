@@ -68,7 +68,7 @@ body contain standard
 
 {
 exec_owner => "mark";
-useshell => "true";
+useshell => "useshell";
 }
 
 ######################################################################

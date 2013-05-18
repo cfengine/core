@@ -1,0 +1,65 @@
+#######################################################
+#
+# Test command useshell parameters
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+  vars:
+    "shelltypes" slist => { "useshell_true",
+                            "useshell_false",
+                            "useshell_yes",
+                            "useshell_no",
+                            "useshell_on",
+                            "useshell_off",
+                            "useshell_noshell",
+                            "useshell_useshell",
+                            "useshell_powershell"
+                          };
+}
+
+#######################################################
+
+bundle agent test
+{
+  classes:
+    "$(init.shelltypes)" expression => regcmp(".*(Succeeded|Powershell is only supported on Windows).*", execresult("$(sys.cf_agent) -D $(init.shelltypes) -Kf $(G.cwd)$(G.DS)tryshell.cf.sub", "noshell"));
+
+    "ok" and => { "@(init.shelltypes)" };
+
+  vars:
+    ok::
+      "ok" string => "ok";
+
+  reports:
+    DEBUG::
+      "$(init.shelltypes) test failed"
+        ifvarclass => "!$(init.shelltypes)";
+}
+
+#######################################################
+
+bundle agent check
+{
+  classes:
+    "ok" expression => strcmp("$(test.ok)", "ok");
+
+  reports:
+    DEBUG::
+        "Tests powershell in commands promises.";
+    ok::
+        "$(this.promise_filename) Pass";
+    !ok::
+        "$(this.promise_filename) FAIL ";
+}
+

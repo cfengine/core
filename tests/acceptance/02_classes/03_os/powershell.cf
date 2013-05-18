@@ -1,0 +1,57 @@
+#######################################################
+#
+# Test powershell class
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+  vars:
+    "dummy" string => "dummy";
+}
+
+#######################################################
+
+bundle agent test
+{
+  vars:
+    "dummy" string => "dummy";
+}
+
+#######################################################
+
+bundle agent check
+{
+  classes:
+    "ok" and => { "!windows", "!powershell" };
+    # This relies on powershell being in the path, which it should be for a standard install.
+    "detected_powershell" expression => regcmp(".*Succeeded.*", execresult("powershell Get-Content $(G.cwd)$(G.DS)text.txt", "useshell"));
+    "ok" and => { "windows", "powershell", "detected_powershell" };
+    "ok" and => { "windows", "!powershell", "!detected_powershell" };
+
+  reports:
+    DEBUG.windows.powershell.!detected_powershell::
+      "Powershell was detected by CFEngine, but not by the test.";
+    DEBUG.windows.!powershell.detected_powershell::
+      "Powershell was detected by the test, but not by CFEngine.";
+    DEBUG.windows.powershell.detected_powershell::
+      "Powershell was detected by CFEngine and the test.";
+    DEBUG.windows.!powershell.!detected_powershell::
+      "Powershell was not detected by the test, nor by CFEngine.";
+    DEBUG.!windows.powershell::
+      "Powershell was detected on a non-Windows system.";
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}
+

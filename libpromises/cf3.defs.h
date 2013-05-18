@@ -1241,9 +1241,16 @@ typedef struct
 
 /*************************************************************************/
 
+typedef enum
+{
+    SHELL_TYPE_NONE,
+    SHELL_TYPE_USE,
+    SHELL_TYPE_POWERSHELL
+} ShellType;
+
 typedef struct
 {
-    int useshell;
+    ShellType shelltype;
     mode_t umask;
     uid_t owner;
     gid_t group;

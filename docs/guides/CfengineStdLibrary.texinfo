@@ -549,7 +549,7 @@ chdir => "$(s)";
 body contain in_dir_shell(s)
 {
 chdir => "$(s)";
-useshell => "true";
+useshell => "useshell";
 }
 
 
@@ -561,7 +561,7 @@ useshell => "true";
 @verbatim
 body contain in_dir_shell_and_silent(dir)
 {
-useshell => "true";
+useshell => "useshell";
 no_output => "true";
 chdir => "$(dir)";
 }
@@ -575,7 +575,7 @@ chdir => "$(dir)";
 @verbatim
 body contain in_shell
 {
-useshell => "true";
+useshell => "useshell";
 }
 
 
@@ -587,7 +587,7 @@ useshell => "true";
 @verbatim
 body contain in_shell_and_silent
 {
-useshell => "true";
+useshell => "useshell";
 no_output => "true";
 }
 
@@ -600,7 +600,7 @@ no_output => "true";
 @verbatim
 body contain in_shell_bg
 {
-useshell => "true";
+useshell => "useshell";
 background => "true";
 }
 
@@ -614,7 +614,7 @@ background => "true";
 body contain jail(owner,root,dir)
 {
 exec_owner => "$(owner)";
-useshell => "true";
+useshell => "useshell";
 chdir => "$(dir)";
 chroot => "$(root)";
 }
@@ -631,7 +631,7 @@ chroot => "$(root)";
 body contain setuid(x)
 {
 exec_owner => "$(x)";
-useshell => "false";
+useshell => "noshell";
 }
 
 
@@ -644,7 +644,7 @@ useshell => "false";
 body contain setuid_sh(x)
 {
 exec_owner => "$(x)";
-useshell => "true";
+useshell => "useshell";
 }
 
 
@@ -658,7 +658,7 @@ body contain setuidgid_sh(owner,group)
 {
 exec_owner => "$(owner)";
 exec_group => "$(group)";
-useshell => "true";
+useshell => "useshell";
 }
 
 

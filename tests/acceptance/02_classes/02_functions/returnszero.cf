@@ -1,0 +1,180 @@
+#######################################################
+#
+# Test returnszero()
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };   
+  version => "1.0";
+}
+
+bundle common g
+{
+vars:
+	"dummy" string => "dummy";
+}
+
+#######################################################
+
+bundle agent init
+{
+vars:
+	"dummy" string => "dummy";
+}
+
+#######################################################
+
+bundle agent test
+{
+vars:
+	"dummy" string => "dummy";
+}
+
+#######################################################
+
+bundle agent check
+{
+vars:
+    windows::
+	"zero_rel" string => "fc $(this.promise_filename) $(this.promise_filename)";
+	"one_rel" string => "fc $(this.promise_filename) $(this.promise_filename).doesnotexist";
+	"nxe_rel" string => "nosuchprogramexists";
+	"zero_abs" string => "c:\windows\system32\fc.exe $(this.promise_filename) $(this.promise_filename)";
+	"one_abs" string => "c:\windows\system32\fc.exe $(this.promise_filename) $(this.promise_filename).doesnotexist";
+	"nxe_abs" string => "c:\xbin\nosuchprogramexists";
+	"zero_powershell" string => "if (diff $(this.promise_filename) $(this.promise_filename)) { exit 1 } else { exit 0 }";
+	"one_powershell" string => "if (diff $(this.promise_filename) $(this.promise_filename).doesnotexit) { exit 1 } else { exit 0 }";
+	"nxe_powershell" string => "nosuchprogramexists";
+    !windows::
+	"zero_rel" string => "grep -q root /etc/passwd";
+	"one_rel" string => "grep -q gluequaggaunlikely /etc/passwd";
+	"nxe_rel" string => "nosuchprogramexists";
+	"zero_abs" string => "$(G.grep) -q root /etc/passwd";
+	"one_abs" string => "$(G.grep) -q gluequaggaunlikely /etc/passwd";
+	"nxe_abs" string => "/xbin/nosuchprogramexists";
+
+classes:
+	"zero_noshell_rel" expression => returnszero("$(zero_rel)", "noshell");
+	"zero_useshell_rel" expression => returnszero("$(zero_rel)", "useshell");
+	"zero_noshell_abs" expression => returnszero("$(zero_abs)", "noshell");
+	"zero_useshell_abs" expression => returnszero("$(zero_abs)", "useshell");
+
+	"one_noshell_rel" expression => returnszero("$(one_rel)", "noshell");
+	"one_useshell_rel" expression => returnszero("$(one_rel)", "useshell");
+	"one_noshell_abs" expression => returnszero("$(one_abs)", "noshell");
+	"one_useshell_abs" expression => returnszero("$(one_abs)", "useshell");
+
+	"nxe_noshell_rel" expression => returnszero("$(nxe_rel)", "noshell");
+	"nxe_useshell_rel" expression => returnszero("$(nxe_rel)", "useshell");
+	"nxe_noshell_abs" expression => returnszero("$(nxe_abs)", "noshell");
+	"nxe_useshell_abs" expression => returnszero("$(nxe_abs)", "useshell");
+    windows::
+	"zero_powershell" expression => returnszero("$(zero_powershell)", "powershell");
+	"one_powershell" expression => returnszero("$(one_powershell)", "powershell");
+	"nxe_powershell" expression => returnszero("$(nxe_powershell)", "powershell");
+
+    any::
+	"ok_common" and => {
+		    "!zero_noshell_rel", "zero_useshell_rel", "zero_noshell_abs", "zero_useshell_abs",
+		    "!one_noshell_rel", "!one_useshell_rel", "!one_noshell_abs", "!one_useshell_abs",
+		    "!nxe_noshell_rel", "!nxe_useshell_rel", "!nxe_noshell_abs", "!nxe_useshell_abs",
+		    };
+    windows::
+	"ok_windows" and => {
+		    "zero_powershell", "!one_powershell", "!nxe_powershell",
+		    };
+        "ok" and => {
+                    "ok_common", "ok_windows",
+                    };
+
+    !windows::
+        "ok" and => { "ok_common" };
+
+reports:
+    DEBUG.zero_noshell_rel::
+	"'$(zero_rel)' erroneously returns 0 with noshell";
+    DEBUG.!zero_noshell_rel::
+	"'$(zero_rel)' returns non-zero with noshell";
+
+    DEBUG.zero_useshell_rel::
+	"'$(zero_rel)' returns 0 with useshell";
+    DEBUG.!zero_useshell_rel::
+	"'$(zero_rel)' erroneously returns non-zero with useshell";
+
+
+    DEBUG.!one_noshell_rel::
+	"'$(one_rel)' returns non-zero with noshell";
+    DEBUG.one_noshell_rel::
+	"'$(one_rel)' erroneously returns 0 with noshell";
+
+    DEBUG.!one_useshell_rel::
+	"'$(one_rel)' returns non-zero with useshell";
+    DEBUG.one_useshell_rel::
+	"'$(one_rel)' erroneously returns 0 with useshell";
+
+
+    DEBUG.!nxe_noshell_rel::
+	"'$(nxe_rel)' returns non-zero with noshell";
+    DEBUG.nxe_noshell_rel::
+	"'$(nxe_rel)' erroneously returns 0 with noshell";
+
+    DEBUG.!nxe_useshell_rel::
+	"'$(nxe_rel)' returns non-zero with useshell";
+    DEBUG.nxe_useshell_rel::
+	"'$(nxe_rel)' erroneously returns 0 with useshell";
+
+    DEBUG.zero_noshell_abs::
+	"'$(zero_abs)' returns 0 with noshell";
+    DEBUG.!zero_noshell_abs::
+	"'$(zero_abs)' erroneously returns non-zero with noshell";
+
+    DEBUG.zero_useshell_abs::
+	"'$(zero_abs)' returns 0 with useshell";
+    DEBUG.!zero_useshell_abs::
+	"'$(zero_abs)' erroneously returns non-zero with useshell";
+
+
+    DEBUG.!one_noshell_abs::
+	"'$(one_abs)' returns non-zero with noshell";
+    DEBUG.one_noshell_abs::
+	"'$(one_abs)' erroneously returns 0 with noshell";
+
+    DEBUG.!one_useshell_abs::
+	"'$(one_abs)' returns non-zero with useshell";
+    DEBUG.one_useshell_abs::
+	"'$(one_abs)' erroneously returns 0 with useshell";
+
+
+    DEBUG.!nxe_noshell_abs::
+	"'$(nxe_abs)' returns non-zero with noshell";
+    DEBUG.nxe_noshell_abs::
+	"'$(nxe_abs)' erroneously returns 0 with noshell";
+
+    DEBUG.!nxe_useshell_abs::
+	"'$(nxe_abs)' returns non-zero with useshell";
+    DEBUG.nxe_useshell_abs::
+	"'$(nxe_abs)' erroneously returns 0 with useshell";
+
+    windows.DEBUG.!zero_powershell::
+	"'$(zero_powershell)' erroneously returns non-zero with powershell";
+    windows.DEBUG.zero_powershell::
+	"'$(zero_powershell)' returns 0 with powershell";
+
+    windows.DEBUG.!one_powershell::
+	"'$(one_powershell)' returns non-zero with powershell";
+    windows.DEBUG.one_powershell::
+	"'$(one_powershell)' erroneously returns 0 with powershell";
+
+    windows.DEBUG.!nxe_powershell::
+	"'$(nxe_powershell)' returns non-zero with powershell";
+    windows.DEBUG.nxe_powershell::
+	"'$(nxe_powershell)' erroneously returns 0 with powershell";
+
+    ok::
+	"$(this.promise_filename) Pass";
+    !ok::
+	"$(this.promise_filename) FAIL";
+}

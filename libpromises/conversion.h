@@ -48,7 +48,7 @@ AclInherit AclInheritFromString(const char *string);
 ServicePolicy ServicePolicyFromString(const char *string);
 int SignalFromString(const char *s);
 int SyslogPriorityFromString(const char *s);
-
+ShellType ShellTypeFromString(const char *s);
 
 // Date/Time conversion
 long Months2Seconds(int m);

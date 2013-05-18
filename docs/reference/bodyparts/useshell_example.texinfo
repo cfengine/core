@@ -3,7 +3,7 @@
 
 body contain example
 {
-useshell => "true";
+useshell => "useshell";
 }
 
 @end verbatim

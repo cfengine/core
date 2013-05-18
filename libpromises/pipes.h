@@ -34,4 +34,10 @@ FILE *cf_popen_shsetuid(const char *command, char *type, uid_t uid, gid_t gid, c
 int cf_pclose(FILE *pp);
 bool PipeToPid(pid_t *pid, FILE *pp);
 
+#ifdef __MINGW32__
+FILE *cf_popen_powershell(const char *command, char *type);
+FILE *cf_popen_powershell_setuid(const char *command, char *type, uid_t uid, gid_t gid, char *chdirv, char *chrootv,
+                              int background);
+#endif
+
 #endif

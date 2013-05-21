@@ -612,6 +612,10 @@ FilePathType FilePathGetType(const char *file_path)
 
 bool IsFileOutsideDefaultRepository(const char *f)
 {
+    if (strncmp(CFWORKDIR, f, strlen(CFWORKDIR)) == 0)
+    {
+       return false;
+    }
     return (*f == '.') || (IsAbsoluteFileName(f));
 }
 

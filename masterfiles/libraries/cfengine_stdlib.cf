@@ -2098,15 +2098,15 @@ body package_method yum_rpm_enable_repo(repoid)
 # the EPEL, which normally you do not want to install packages from.
 {
   package_changes => "bulk";
-  package_list_command => "/bin/rpm -qa --qf '%{name} %{version}-%{release} %{arch}\n'";
+  package_list_command => "/bin/rpm -qa --qf '%{name}.%{arch} %{version}-%{release}\n'";
   package_patch_list_command => "/usr/bin/yum --quiet check-update";
 
-  package_list_name_regex    => "^(\S+?)\s\S+?\s\S+$";
-  package_list_version_regex => "^\S+?\s(\S+?)\s\S+$";
-  package_list_arch_regex    => "^\S+?\s\S+?\s(\S+)$";
+  package_list_name_regex    => "([^.]+).*";
+  package_list_version_regex => "[^\s]\s+([^\s]+).*";
+  package_list_arch_regex    => "[^.]+\.([^\s]+).*";
 
   package_installed_regex => ".*";
-  package_name_convention => "$(name)";
+  package_name_convention => "$(name)-$(version).$(arch)";
 
   # set it to "0" to avoid caching of list during upgrade
   package_list_update_command => "/usr/bin/yum --quiet check-update";
@@ -2119,8 +2119,8 @@ body package_method yum_rpm_enable_repo(repoid)
 
   package_add_command    => "/usr/bin/yum --enablerepo=$(repoid) -y install";
   package_update_command => "/usr/bin/yum --enablerepo=$(repoid) -y update";
-  package_patch_command => "/usr/bin/yum -y update";
-  package_delete_command => "/bin/rpm -e --nodeps --allmatches";
+  package_patch_command  => "/usr/bin/yum -y update";
+  package_delete_command => "/bin/rpm -e --nodeps";
   package_verify_command => "/bin/rpm -V";
 }
 
@@ -2212,7 +2212,7 @@ body package_method rpm_filebased(path)
   # but rpm goes ahead and installs the epel-release RPM and the EPEL GPG key.
 
   package_name_convention => "$(name)-$(version).$(arch).rpm";
-  # The above is a change from Tron's yum_rpm body. When package_file_repositories is in play,
+  # The above is a change from Trond's yum_rpm body. When package_file_repositories is in play,
   # package_name_convention has to match the file name, not the package name, per the
   # CFEngine 3 Reference Manual
 
@@ -2222,16 +2222,15 @@ body package_method rpm_filebased(path)
 
   # The rest is unchanged from Trond's yum_rpm body
   package_changes => "bulk";
-  package_list_command => "/bin/rpm -qa --qf '%{name} %{version}-%{release} %{arch}\n'";
+  package_list_command => "/bin/rpm -qa --qf '%{name}.%{arch} %{version}-%{release}\n'";
 
-  package_list_name_regex => "^(\S+?)\s\S+?\s\S+$";
-  package_list_version_regex => "^\S+?\s(\S+?)\s\S+$";
-  package_list_arch_regex => "^\S+?\s\S+?\s(\S+)$";
+  package_list_name_regex    => "([^.]+).*";
+  package_list_version_regex => "[^\s]\s+([^\s]+).*";
+  package_list_arch_regex    => "[^.]+\.([^\s]+).*";
 
   package_installed_regex => ".*";
 
-
-  package_delete_command => "/bin/rpm -e --allmatches";
+  package_delete_command => "/bin/rpm -e --nodeps";
   package_verify_command => "/bin/rpm -V";
 }
 
@@ -2486,13 +2485,13 @@ SuSE::
 
 redhat::
  package_changes => "bulk";
- package_list_command => "/bin/rpm -qa --qf '%{name} %{version}-%{release} %{arch}\n'";
+ package_list_command => "/bin/rpm -qa --qf '%{name}.%{arch} %{version}-%{release}\n'";
  package_patch_list_command => "/usr/bin/yum --quiet check-update";
- package_list_name_regex    => "^(\S+?)\s\S+?\s\S+$";
- package_list_version_regex => "^\S+?\s(\S+?)\s\S+$";
- package_list_arch_regex    => "^\S+?\s\S+?\s(\S+)$";
+ package_list_name_regex    => "([^.]+).*";
+ package_list_version_regex => "[^\s]\s+([^\s]+).*";
+ package_list_arch_regex    => "[^.]+\.([^\s]+).*";
  package_installed_regex => ".*";
- package_name_convention => "$(name)";
+ package_name_convention => "$(name)-$(version).$(arch)";
  package_list_update_command => "/usr/bin/yum --quiet check-update";
  package_list_update_ifelapsed => "0";     # sometimes, caching is pretty disturbing
  package_patch_installed_regex => "^\s.*";
@@ -2502,7 +2501,7 @@ redhat::
  package_add_command    => "/usr/bin/yum -y install";
  package_update_command => "/usr/bin/yum -y update";
  package_patch_command => "/usr/bin/yum -y update";
- package_delete_command => "/bin/rpm -e --nodeps --allmatches";
+ package_delete_command => "/bin/rpm -e --nodeps";
  package_verify_command => "/bin/rpm -V";
 
 # package_changes => "bulk";

@@ -16,6 +16,8 @@ body common control
 bundle agent init
 {
   vars:
+    "origtestdir" string => dirname("$(this.promise_filename)");
+
     "shelltypes" slist => { "useshell_true",
                             "useshell_false",
                             "useshell_yes",
@@ -33,7 +35,7 @@ bundle agent init
 bundle agent test
 {
   classes:
-    "$(init.shelltypes)" expression => regcmp(".*(Succeeded|Powershell is only supported on Windows).*", execresult("$(sys.cf_agent) -D $(init.shelltypes) -Kf $(G.cwd)$(G.DS)tryshell.cf.sub", "noshell"));
+    "$(init.shelltypes)" expression => regcmp(".*(Succeeded|Powershell is only supported on Windows).*", execresult("$(sys.cf_agent) -D $(init.shelltypes) -Kf $(init.origtestdir)$(G.DS)tryshell.cf.sub", "noshell"));
 
     "ok" and => { "@(init.shelltypes)" };
 

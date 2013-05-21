@@ -35,6 +35,12 @@
 #include "cf3.extern.h"
 #include "lastseen.h"
 
+#ifdef DARWIN
+// On Mac OSX 10.7 and later, majority of functions in /usr/include/openssl/crypto.h
+// are deprecated. No known replacement, so shutting up compiler warnings
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
+
 static void MD5Random(unsigned char digest[EVP_MAX_MD_SIZE + 1]);
 static void RandomSeed(void);
 

@@ -35,6 +35,12 @@
 #include "sysinfo.h"
 #include "bootstrap.h"
 
+#ifdef DARWIN
+// On Mac OSX 10.7 and later, majority of functions in /usr/include/openssl/crypto.h
+// are deprecated. No known replacement, so shutting up compiler warnings
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
+
 static void RandomSeed(void);
 
 static char *CFPUBKEYFILE;

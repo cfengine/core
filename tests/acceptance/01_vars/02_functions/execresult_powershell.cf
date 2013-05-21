@@ -21,7 +21,8 @@ vars:
 
 bundle agent init
 {
-vars:
+  vars:
+    "origtestdir" string => dirname("$(this.promise_filename)");
 }
 
 #######################################################
@@ -38,7 +39,7 @@ bundle agent check
 {
 vars:
   windows::
-    "cwd" string => execresult("Get-Content $(G.cwd)\text.txt", "powershell");
+    "cwd" string => execresult("Get-Content $(init.origtestdir)\text.txt", "powershell");
 
 classes:
 

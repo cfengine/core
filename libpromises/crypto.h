@@ -28,6 +28,7 @@
 #include "platform.h"
 
 void CryptoInitialize(void);
+void CryptoDeInitialize(void);
 
 void DebugBinOut(char *buffer, int len, char *com);
 bool LoadSecretKeys(const char *policy_server);

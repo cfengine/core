@@ -7,8 +7,16 @@
 body common control
 {
   inputs => { "../../default.cf.sub" };
-  bundlesequence  => { "test" };
+  bundlesequence  => { "init", "test" };
   version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+  vars:
+    "origtestdir" string => dirname("$(this.promise_filename)");
 }
 
 #######################################################
@@ -56,7 +64,7 @@ bundle agent test
 
   commands:
     shell_specified::
-      "$(shellcmd) $(G.cwd)$(G.DS)text.txt"
+      "$(shellcmd) $(init.origtestdir)$(G.DS)text.txt"
         contain => shelltype;
 
   reports:

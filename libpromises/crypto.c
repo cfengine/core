@@ -311,15 +311,12 @@ void SavePublicKey(const char *user, const char *digest, const RSA *key)
         return;
     }
 
-    ThreadLock(cft_system);
-
     if (!PEM_write_RSAPublicKey(fp, key))
     {
         err = ERR_get_error();
         Log(LOG_LEVEL_ERR, "Error saving public key to '%s'. (PEM_write_RSAPublicKey: %s)", filename, ERR_reason_error_string(err));
     }
 
-    ThreadUnlock(cft_system);
     fclose(fp);
 }
 

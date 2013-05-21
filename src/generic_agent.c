@@ -254,6 +254,8 @@ void GenericDeInitialize()
     CloseNetwork();
     CloseLog();
     CloseAllDB();
+
+    CryptoDeInitialize();
 }
 
 /*****************************************************************************/

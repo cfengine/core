@@ -28,6 +28,7 @@
 #include "cf.defs.h"
 
 void CryptoInitialize(void);
+void CryptoDeInitialize(void);
 
 void DebugBinOut(char *buffer, int len, char *com);
 void LoadSecretKeys(void);

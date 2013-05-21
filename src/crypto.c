@@ -43,15 +43,18 @@
 
 static void MD5Random(unsigned char digest[EVP_MAX_MD_SIZE + 1]);
 static void RandomSeed(void);
+static void SetupOpenSSLThreadLocks(void);
+static void CleanupOpenSSLThreadLocks(void);
 
 /**********************************************************************/
 
+static bool crypto_initialized = false;
+
 void CryptoInitialize()
 {
-    static bool crypto_initialized = false;
-
     if (!crypto_initialized)
     {
+        SetupOpenSSLThreadLocks();
         OpenSSL_add_all_algorithms();
         OpenSSL_add_all_digests();
         ERR_load_crypto_strings();
@@ -65,6 +68,16 @@ void CryptoInitialize()
         srand48((long) seed);
 
         crypto_initialized = true;
+    }
+}
+
+void CryptoDeInitialize()
+{
+    if (crypto_initialized)
+    {
+        EVP_cleanup();
+        CleanupOpenSSLThreadLocks();
+        crypto_initialized = false;
     }
 }
 
@@ -452,3 +465,53 @@ void DebugBinOut(char *buffer, int len, char *comment)
 
     CfOut(cf_verbose, "", "BinaryBuffer(%d bytes => %s) -> [%s]", len, comment, buf);
 }
+
+/*********************************************************************
+ * Functions for threadsafe OpenSSL usage                            *
+ *********************************************************************/
+
+static pthread_mutex_t *cf_openssl_locks;
+
+unsigned long ThreadId_callback(void)
+{
+    return (unsigned long)pthread_self();
+}
+
+static void OpenSSLLock_callback(int mode, int index, char *file, int line)
+{
+    if (mode & CRYPTO_LOCK)
+    {
+        pthread_mutex_lock(&(cf_openssl_locks[index]));
+    }
+    else
+    {
+        pthread_mutex_unlock(&(cf_openssl_locks[index]));
+    }
+}
+
+static void SetupOpenSSLThreadLocks(void)
+{
+    const int numLocks = CRYPTO_num_locks();
+    cf_openssl_locks = OPENSSL_malloc(numLocks * sizeof(pthread_mutex_t));
+
+    for (int i = 0; i < numLocks; i++)
+    {
+        pthread_mutex_init(&(cf_openssl_locks[i]),NULL);
+    }
+
+    CRYPTO_set_id_callback((unsigned long (*)())ThreadId_callback);
+    CRYPTO_set_locking_callback((void (*)())OpenSSLLock_callback);
+}
+
+static void CleanupOpenSSLThreadLocks(void)
+{
+    const int numLocks = CRYPTO_num_locks();
+    CRYPTO_set_locking_callback(NULL);
+
+    for (int i = 0; i < numLocks; i++)
+    {
+        pthread_mutex_destroy(&(cf_openssl_locks[i]));
+    }
+    OPENSSL_free(cf_openssl_locks);
+}
+

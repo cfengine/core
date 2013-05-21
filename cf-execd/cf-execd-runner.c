@@ -111,18 +111,16 @@ static void ConstructFailsafeCommand(bool scheduled_run, char *buffer)
 
 #ifndef __MINGW32__
 
-static bool IsReadReady(int fd, int timeout_sec)
-{
-    fd_set  rset;
-    FD_ZERO(&rset);
 #if defined(__hpux) && defined(__GNUC__)
 #pragma GCC diagnostic ignored "-Wstrict-aliasing"
 // Avoid spurious HP-UX GCC type-pun warning on FD_SET() macro
 #endif
+
+static bool IsReadReady(int fd, int timeout_sec)
+{
+    fd_set  rset;
+    FD_ZERO(&rset);
     FD_SET(fd, &rset);
-#if defined(__hpux) && defined(__GNUC__)
-#pragma GCC diagnostic warning "-Wstrict-aliasing"
-#endif
 
     struct timeval tv = {
         .tv_sec = timeout_sec,
@@ -152,6 +150,9 @@ static bool IsReadReady(int fd, int timeout_sec)
 
     return false;
 }
+#if defined(__hpux) && defined(__GNUC__)
+#pragma GCC diagnostic warning "-Wstrict-aliasing"
+#endif
 
 #endif  /* __MINGW32__ */
 

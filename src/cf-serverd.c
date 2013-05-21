@@ -2608,8 +2608,6 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
 
     CfDebug("Challenge encryption = %c, nonce = %d, buf = %d\n", iscrypt, nonce_len, crypt_len);
 
-    ThreadLock(cft_system);
-
     decrypted_nonce = xmalloc(crypt_len);
 
     if (iscrypt == 'y')
@@ -2619,7 +2617,6 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
         {
             err = ERR_get_error();
 
-            ThreadUnlock(cft_system);
             CfOut(cf_error, "", "Private decrypt failed = %s\n", ERR_reason_error_string(err));
             free(decrypted_nonce);
             return false;
@@ -2629,7 +2626,6 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
     {
         if (nonce_len > crypt_len)
         {
-            ThreadUnlock(cft_system);
             CfOut(cf_error, "", "Illegal challenge\n");
             free(decrypted_nonce);
             return false;
@@ -2637,8 +2633,6 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
 
         memcpy(decrypted_nonce, recvbuffer + CF_RSA_PROTO_OFFSET, nonce_len);
     }
-
-    ThreadUnlock(cft_system);
 
 /* Client's ID is now established by key or trusted, reply with digest */
 
@@ -2648,9 +2642,7 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
 
 /* Get the public key from the client */
 
-    ThreadLock(cft_system);
     newkey = RSA_new();
-    ThreadUnlock(cft_system);
 
 /* proposition C2 */
     if ((len_n = ReceiveTransaction(conn->sd_reply, recvbuffer, NULL)) == -1)
@@ -2733,8 +2725,6 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
 
 /* Send counter challenge to be sure this is a live session */
 
-    ThreadLock(cft_system);
-
     counter_challenge = BN_new();
     BN_rand(counter_challenge, CF_NONCELEN, 0, 0);
     nonce_len = BN_bn2mpi(counter_challenge, in);
@@ -2755,8 +2745,6 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
         free(out);
         return false;
     }
-
-    ThreadUnlock(cft_system);
 
 /* proposition S3 */
     SendTransaction(conn->sd_reply, out, encrypted_len, CF_DONE);
@@ -2833,8 +2821,6 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
         return false;
     }
 
-    ThreadLock(cft_system);
-
     session_size = CfSessionKeySize(enterprise_field);
     conn->session_key = xmalloc(session_size);
     conn->encryption_type = enterprise_field;
@@ -2853,7 +2839,6 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
 
         if (RSA_private_decrypt(keylen, in, out, PRIVKEY, RSA_PKCS1_PADDING) <= 0)
         {
-            ThreadUnlock(cft_system);
             err = ERR_get_error();
             CfOut(cf_error, "", "Private decrypt failed = %s\n", ERR_reason_error_string(err));
             return false;
@@ -2861,8 +2846,6 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
 
         memcpy(conn->session_key, out, session_size);
     }
-
-    ThreadUnlock(cft_system);
 
 //DebugBinOut(conn->session_key,session_size,"Session key received");
 

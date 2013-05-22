@@ -175,7 +175,7 @@ void VerifyServices(EvalContext *ctx, Attributes a, Promise *pp)
         DoVerifyServices(ctx, a, pp);
     }
 
-    ScopeDeleteSpecialScalar("this", "promiser");
+    ScopeDeleteSpecial("this", "promiser");
     YieldCurrentLock(thislock);
 }
 

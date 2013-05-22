@@ -683,7 +683,7 @@ void Get3Environment(EvalContext *ctx, AgentType agent_type)
         Log(LOG_LEVEL_ERR, "Chop was called on a string that seemed to have no terminator");
     }
 
-    ScopeDeleteSpecialScalar("mon", "env_time");
+    ScopeDeleteSpecial("mon", "env_time");
     ScopeNewSpecialScalar(ctx, "mon", "env_time", value, DATA_TYPE_STRING);
 
     Log(LOG_LEVEL_VERBOSE, "Loading environment...");
@@ -733,7 +733,7 @@ void Get3Environment(EvalContext *ctx, AgentType agent_type)
 
             if (agent_type != AGENT_TYPE_EXECUTOR)
             {
-                ScopeDeleteSpecialScalar("mon", name);
+                ScopeDeleteSpecial("mon", name);
                 ScopeNewSpecialScalar(ctx, "mon", name, value, DATA_TYPE_STRING);
                 Log(LOG_LEVEL_DEBUG, "Setting new monitoring scalar '%s' => '%s'", name, value);
             }

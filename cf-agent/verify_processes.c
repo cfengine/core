@@ -123,11 +123,11 @@ static void VerifyProcesses(EvalContext *ctx, Attributes a, Promise *pp)
         return;
     }
 
-    ScopeDeleteSpecialScalar("this", "promiser");
+    ScopeDeleteSpecial("this", "promiser");
     ScopeNewSpecialScalar(ctx, "this", "promiser", pp->promiser, DATA_TYPE_STRING);
     PromiseBanner(pp);
     VerifyProcessOp(ctx, PROCESSTABLE, a, pp);
-    ScopeDeleteSpecialScalar("this", "promiser");
+    ScopeDeleteSpecial("this", "promiser");
 
     YieldCurrentLock(thislock);
 }

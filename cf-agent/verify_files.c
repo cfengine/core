@@ -195,7 +195,7 @@ static void VerifyFilePromise(EvalContext *ctx, char *path, Promise *pp)
         return;
     }
 
-    ScopeDeleteSpecialScalar("this", "promiser");
+    ScopeDeleteSpecial("this", "promiser");
     ScopeNewSpecialScalar(ctx, "this", "promiser", path, DATA_TYPE_STRING);
     
     thislock = AcquireLock(ctx, path, VUQNAME, CFSTARTTIME, a.transaction, pp, false);

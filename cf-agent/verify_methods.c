@@ -49,7 +49,7 @@ void VerifyMethodsPromise(EvalContext *ctx, Promise *pp)
     a = GetMethodAttributes(ctx, pp);
 
     VerifyMethod(ctx, "usebundle", a, pp);
-    ScopeDeleteSpecialScalar("this", "promiser");
+    ScopeDeleteSpecial("this", "promiser");
 }
 
 /*****************************************************************************/

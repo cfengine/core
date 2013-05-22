@@ -473,7 +473,7 @@ void ScopeNewSpecialScalar(EvalContext *ctx, const char *scope, const char *lval
     Rval rvald;
     if (EvalContextVariableGet(ctx, (VarRef) { NULL, scope, lval }, &rvald, NULL))
     {
-        ScopeDeleteSpecialScalar(scope, lval);
+        ScopeDeleteSpecial(scope, lval);
     }
 
     EvalContextVariablePut(ctx, (VarRef) { NULL, scope, lval }, (Rval) {(char *) rval, RVAL_TYPE_SCALAR }, dt);
@@ -486,7 +486,7 @@ void ScopeDeleteScalar(VarRef lval)
     assert(!ScopeIsReserved(lval.scope));
     if (ScopeIsReserved(lval.scope))
     {
-        ScopeDeleteSpecialScalar(lval.scope, lval.lval);
+        ScopeDeleteSpecial(lval.scope, lval.lval);
     }
 
     Scope *scope = ScopeGet(lval.scope);
@@ -502,7 +502,7 @@ void ScopeDeleteScalar(VarRef lval)
     }
 }
 
-void ScopeDeleteSpecialScalar(const char *scope, const char *lval)
+void ScopeDeleteSpecial(const char *scope, const char *lval)
 {
     assert(ScopeIsReserved(scope));
 

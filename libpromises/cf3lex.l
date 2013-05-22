@@ -207,8 +207,6 @@ promise_type   [a-zA-Z_]+:
 {class}               {
                           char *tmp = NULL;
                         
-                          tmp = xmalloc(yyleng + 1);
-
                           P.line_pos += yyleng;
                           ParserDebug("\tL:class %s %d\n", yytext, P.line_pos);
 
@@ -229,7 +227,6 @@ promise_type   [a-zA-Z_]+:
 {promise_type}        {
                           char *tmp = NULL;
 
-                          tmp = xmalloc(yyleng + 1);
                           P.line_pos += yyleng;
                           ParserDebug("\tL:promise_type %s %d\n", yytext, P.line_pos);
                           P.offsets.last_promise_type_id = P.offsets.current - yyleng;
@@ -287,6 +284,10 @@ promise_type   [a-zA-Z_]+:
 {nakedvar}            {
                           P.line_pos += yyleng;
                           ParserDebug("\tL: %s %d\n", yytext, P.line_pos);
+                          if (P.currentstring)
+                          {
+                              free(P.currentstring);
+                          }
                           P.currentstring = xstrdup(yytext);
                           return NAKEDVAR;
                       }

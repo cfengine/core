@@ -154,6 +154,7 @@ void ExpandPromise(EvalContext *ctx, Promise *pp, PromiseActuator *ActOnPromise,
 
     PromiseDestroy(pcopy);
     RlistDestroy(listvars);
+    RlistDestroy(scalars);
 
     EvalContextStackPopFrame(ctx);
 }
@@ -980,7 +981,7 @@ static void CopyLocalizedScalarsToThisScope(EvalContext *ctx, const char *scope,
 
             if (EvalContextVariableGet(ctx, (VarRef) { NULL, orgscope, orgname }, &retval, NULL))
             {
-                ScopeNewScalar(ctx, (VarRef) { NULL, scope, rp->item }, RvalCopy((Rval) {retval.item, RVAL_TYPE_SCALAR}).item, DATA_TYPE_STRING);
+                ScopeNewScalar(ctx, (VarRef) { NULL, scope, rp->item }, retval.item, DATA_TYPE_STRING);
             }
         }
     }

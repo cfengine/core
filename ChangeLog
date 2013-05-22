@@ -65,6 +65,16 @@
          The old keywords are deprecated, but still valid. In addition, a new keyword
          "acl_inherit" controls inheritance behavior on Windows. This feature does not exist on
          Unix platforms. (Redmine #1832)
+       - Networking code is moved from libpromises to its own library,
+         libcfnet. Work has begun on making the API more sane and thread-safe.
+         Lots of legacy code was removed.
+       - Add getaddrinfo() replacement in libcompat (borrowed from PostgreSQL).
+       - Replace old deprecated and non thread-safe resolver calls with
+         getaddrinfo() and getnameinfo().
+       - Hostname2IPString(), IPString2Hostname() are now thread-safe, and are
+         returning error when resolution fails.
+       - Running cf-execd --once now implies --no-fork, and also does not wait
+         for splaytime to pass.
 
        Bugfixes:
        - bundles are allowed to be empty (Redmine #2411)
@@ -82,6 +92,7 @@
        - ifvarclass checked from classes promises in common bundles
        - do not wait for splaytime when executing only once
        - disable xml editing functionality when libxml2 doesn't provide necessary APIs (Redmine #1937)
+       - Out-of-tree builds should work again, fixed a bunch of related bugs.
 
 3.4.5   (Bugfix and Stability release)
 

@@ -179,7 +179,9 @@ Policy *PolicyMerge(Policy *a, Policy *b)
     Policy *result = PolicyNew();
 
     SeqAppendSeq(result->bundles, a->bundles);
+    SeqSoftDestroy(a->bundles);
     SeqAppendSeq(result->bundles, b->bundles);
+    SeqSoftDestroy(b->bundles);
 
     for (size_t i = 0; i < SeqLength(result->bundles); i++)
     {
@@ -188,7 +190,9 @@ Policy *PolicyMerge(Policy *a, Policy *b)
     }
 
     SeqAppendSeq(result->bodies, a->bodies);
+    SeqSoftDestroy(a->bodies);
     SeqAppendSeq(result->bodies, b->bodies);
+    SeqSoftDestroy(b->bodies);
 
     for (size_t i = 0; i < SeqLength(result->bodies); i++)
     {
@@ -1150,6 +1154,7 @@ static void BundleDestroy(Bundle *bundle)
         free(bundle->name);
         free(bundle->type);
         free(bundle->ns);
+        free(bundle->source_path);
 
         RlistDestroy(bundle->args);
         SeqDestroy(bundle->promise_types);
@@ -1164,6 +1169,7 @@ static void BodyDestroy(Body *body)
         free(body->name);
         free(body->type);
         free(body->ns);
+        free(body->source_path);
 
         RlistDestroy(body->args);
         SeqDestroy(body->conlist);

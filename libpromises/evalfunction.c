@@ -1802,13 +1802,13 @@ static FnCallResult FnCallMapArray(EvalContext *ctx, FnCall *fp, Rlist *finalarg
                         strstr(expbuf, "$(this.v)") || strstr(expbuf, "${this.v}"))
                     {
                         RlistDestroy(returnlist);
-                        ScopeDeleteSpecialScalar("this", "k");
-                        ScopeDeleteSpecialScalar("this", "v");
+                        ScopeDeleteSpecial("this", "k");
+                        ScopeDeleteSpecial("this", "v");
                         return (FnCallResult) { FNCALL_FAILURE };
                     }
 
                     RlistAppendScalar(&returnlist, expbuf);
-                    ScopeDeleteSpecialScalar("this", "v");
+                    ScopeDeleteSpecial("this", "v");
                     break;
 
                 case RVAL_TYPE_LIST:
@@ -1821,20 +1821,20 @@ static FnCallResult FnCallMapArray(EvalContext *ctx, FnCall *fp, Rlist *finalarg
                             strstr(expbuf, "$(this.v)") || strstr(expbuf, "${this.v}"))
                         {
                             RlistDestroy(returnlist);
-                            ScopeDeleteSpecialScalar("this", "k");
-                            ScopeDeleteSpecialScalar("this", "v");
+                            ScopeDeleteSpecial("this", "k");
+                            ScopeDeleteSpecial("this", "v");
                             return (FnCallResult) { FNCALL_FAILURE };
                         }
 
                         RlistAppendScalarIdemp(&returnlist, expbuf);
-                        ScopeDeleteSpecialScalar("this", "v");
+                        ScopeDeleteSpecial("this", "v");
                     }
                     break;
 
                 default:
                     break;
                 }
-                ScopeDeleteSpecialScalar("this", "k");
+                ScopeDeleteSpecial("this", "k");
             }
         }
     }
@@ -1916,7 +1916,7 @@ static FnCallResult FnCallMapList(EvalContext *ctx, FnCall *fp, Rlist *finalargs
         }
 
         RlistAppendScalar(&newlist, expbuf);
-        ScopeDeleteSpecialScalar("this", "this");
+        ScopeDeleteSpecial("this", "this");
     }
 
     return (FnCallResult) { FNCALL_SUCCESS, { newlist, RVAL_TYPE_LIST } };

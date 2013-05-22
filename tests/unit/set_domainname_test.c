@@ -288,7 +288,7 @@ bool IsDefinedClass(const EvalContext *ctx, const char *class, const char *ns)
     fail();
 }
 
-void ScopeDeleteSpecialScalar(const char *scope, const char *id)
+void ScopeDeleteSpecial(const char *scope, const char *id)
 {
     fail();
 }

@@ -44,24 +44,14 @@ vars:
 files:
         "$(G.testfile)"
             create => "true",
-            perms => test_perms;
+            perms => test_perms($(mode));
 }
 
-body perms test_perms
+body perms test_perms(m)
 {
-mode => "$(test.mode)";
-# In the POSIX model, one cannot create a file for another user, one can only
-# create a file as you, and then change owners.  This test file will be created
-# # by root, and thus the promise to be owned by root is kept.
-linux::
-    owners => { "sys", "root" };
-    groups => { "sys", "root" };
-freebsd::
-    owners => { "bin", "root" };
-    groups => { "sys", "wheel" };
-!(linux|freebsd)::
-    owners => { "undefined-please-fix" };
-    groups => { "undefined-please-fix" };
+        mode => "$(m)";
+        owners => { "0" };
+        groups => { "0" };
 }
 
 #######################################################

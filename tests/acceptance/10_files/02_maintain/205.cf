@@ -87,10 +87,15 @@ body perms test_perms(m)
 {
 mode => "$(m)";
 owners => { "root" };
-linux::
+linux|hpux|solaris::
     groups => { "root" };
-freebsd::
+freebsd|netbsd|openbsd|darwin::
     groups => { "wheel" };
+aix::
+    groups => { "system" };
+cray::
+    groups => { "sys" };
+# Still need unix_sv, sco, qnx, dragonfly, vmware
 }
 
 

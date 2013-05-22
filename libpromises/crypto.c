@@ -41,6 +41,10 @@
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #endif
 
+#ifdef OPENSSL_NO_DEPRECATED
+void CRYPTO_set_id_callback(unsigned long (*func)(void));
+#endif
+
 static void RandomSeed(void);
 static void SetupOpenSSLThreadLocks(void);
 static void CleanupOpenSSLThreadLocks(void);

@@ -86,11 +86,8 @@ files:
 body perms test_perms(m)
 {
 mode => "$(m)";
-owners => { "root" };
-linux::
-    groups => { "root" };
-freebsd::
-    groups => { "wheel" };
+owners => { "0" };
+groups => { "0" };
 }
 
 

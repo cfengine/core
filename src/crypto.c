@@ -474,10 +474,12 @@ void DebugBinOut(char *buffer, int len, char *comment)
 #if defined(HAVE_PTHREAD)
 static pthread_mutex_t *cf_openssl_locks;
 
+#ifndef __MINGW32__
 unsigned long ThreadId_callback(void)
 {
     return (unsigned long)pthread_self();
 }
+#endif
 
 static void OpenSSLLock_callback(int mode, int index, char *file, int line)
 {
@@ -503,7 +505,9 @@ static void SetupOpenSSLThreadLocks(void)
         pthread_mutex_init(&(cf_openssl_locks[i]),NULL);
     }
 
+#ifndef __MINGW32__
     CRYPTO_set_id_callback((unsigned long (*)())ThreadId_callback);
+#endif
     CRYPTO_set_locking_callback((void (*)())OpenSSLLock_callback);
 #endif
 }
@@ -513,6 +517,9 @@ static void CleanupOpenSSLThreadLocks(void)
 #if defined(HAVE_PTHREAD)
     const int numLocks = CRYPTO_num_locks();
     CRYPTO_set_locking_callback(NULL);
+#ifndef __MINGW32__
+    CRYPTO_set_id_callback(NULL);
+#endif
 
     for (int i = 0; i < numLocks; i++)
     {

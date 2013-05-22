@@ -250,7 +250,7 @@ void ThisAgentInit(void)
 
 /*******************************************************************/
 
-void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config)
+void StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
 {
     int sd = -1, sd_reply;
     fd_set rset;
@@ -340,7 +340,7 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config)
         {
             if (ACTIVE_THREADS == 0)
             {
-                CheckFileChanges(ctx, &policy, config);
+                CheckFileChanges(ctx, policy, config);
             }
             ThreadUnlock(cft_server_children);
         }

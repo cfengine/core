@@ -1,9 +1,7 @@
 #include "test.h"
 
 #include <string.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netinet/ip.h>
+#include "platform.h"
 #include "buffer.h"
 #include "ip_address.c"
 #include "ip_address.h"

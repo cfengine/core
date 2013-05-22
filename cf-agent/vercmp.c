@@ -64,8 +64,8 @@ static VersionCmpResult RunCmpCommand(EvalContext *ctx, const char *command, con
     char expanded_command[CF_EXPANDSIZE];
 
     {
-        ScopeNewScalar(ctx, (VarRef) { NULL, "cf_pack_context", "v1" }, v1, DATA_TYPE_STRING);
-        ScopeNewScalar(ctx, (VarRef) { NULL, "cf_pack_context", "v2" }, v2, DATA_TYPE_STRING);
+        EvalContextVariablePut(ctx, (VarRef) { NULL, "cf_pack_context", "v1" }, (Rval) { v1, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
+        EvalContextVariablePut(ctx, (VarRef) { NULL, "cf_pack_context", "v2" }, (Rval) { v2, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
         ExpandScalar(ctx, "cf_pack_context", command, expanded_command);
 
         ScopeClear("cf_pack_context");

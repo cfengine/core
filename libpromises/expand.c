@@ -980,7 +980,7 @@ static void CopyLocalizedScalarsToThisScope(EvalContext *ctx, const char *scope,
 
             if (EvalContextVariableGet(ctx, (VarRef) { NULL, orgscope, orgname }, &retval, NULL))
             {
-                ScopeNewScalar(ctx, (VarRef) { NULL, scope, rp->item }, RvalCopy((Rval) {retval.item, RVAL_TYPE_SCALAR}).item, DATA_TYPE_STRING);
+                EvalContextVariablePut(ctx, (VarRef) { NULL, scope, rp->item }, (Rval) { retval.item, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
             }
         }
     }

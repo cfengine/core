@@ -222,7 +222,7 @@ void ScopeAugment(EvalContext *ctx, const Bundle *bp, const Promise *pp, const R
                 break;
             default:
                 Log(LOG_LEVEL_ERR, "List parameter \"%s\" not found while constructing scope \"%s\" - use @(scope.variable) in calling reference", naked, bp->name);
-                ScopeNewScalar(ctx, (VarRef) { NULL, bp->name, lval }, rpr->item, DATA_TYPE_STRING);
+                EvalContextVariablePut(ctx, (VarRef) { NULL, bp->name, lval }, (Rval) { rpr->item, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
                 break;
             }
         }
@@ -231,7 +231,7 @@ void ScopeAugment(EvalContext *ctx, const Bundle *bp, const Promise *pp, const R
             switch(rpr->type)
             {
             case RVAL_TYPE_SCALAR:
-                ScopeNewScalar(ctx, (VarRef) { NULL, bp->name, lval }, rpr->item, DATA_TYPE_STRING);
+                EvalContextVariablePut(ctx, (VarRef) { NULL, bp->name, lval }, (Rval) { rpr->item, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
                 break;
 
             case RVAL_TYPE_FNCALL:
@@ -240,7 +240,7 @@ void ScopeAugment(EvalContext *ctx, const Bundle *bp, const Promise *pp, const R
                     Rval rval = FnCallEvaluate(ctx, subfp, pp).rval;
                     if (rval.type == RVAL_TYPE_SCALAR)
                     {
-                        ScopeNewScalar(ctx, (VarRef) { NULL, bp->name, lval }, rval.item, DATA_TYPE_STRING);
+                        EvalContextVariablePut(ctx, (VarRef) { NULL, bp->name, lval }, (Rval) { rval.item, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
                     }
                     else
                     {
@@ -443,27 +443,6 @@ bool ScopeIsReserved(const char *scope)
             || strcmp("mon", scope) == 0
             || strcmp("sys", scope) == 0
             || strcmp("this", scope) == 0;
-}
-
-void ScopeNewScalar(EvalContext *ctx, VarRef lval, const char *rval, DataType dt)
-{
-    assert(!ScopeIsReserved(lval.scope));
-    if (ScopeIsReserved(lval.scope))
-    {
-        ScopeNewSpecialScalar(ctx, lval.scope, lval.lval, rval, dt);
-    }
-
-    Rval rvald;
-    if (EvalContextVariableGet(ctx, lval, &rvald, NULL))
-    {
-        ScopeDeleteScalar(lval);
-    }
-
-/*
- * We know AddVariableHash does not change passed Rval structure or its
- * contents, but we have no easy way to express it in C type system, hence cast.
- */
-    EvalContextVariablePut(ctx, lval, (Rval) {(char *) rval, RVAL_TYPE_SCALAR }, dt);
 }
 
 void ScopeNewSpecialScalar(EvalContext *ctx, const char *scope, const char *lval, const char *rval, DataType dt)

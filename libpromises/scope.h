@@ -93,7 +93,6 @@ void ScopePopThis(void);
 
 
 void ScopeToList(Scope *sp, Rlist **list);
-void ScopeNewScalar(EvalContext *ctx, VarRef lval, const char *rval, DataType dt);
 void ScopeNewSpecialScalar(EvalContext *ctx, const char *scope, const char *lval, const char *rval, DataType dt);
 void ScopeDeleteScalar(VarRef lval);
 void ScopeDeleteSpecial(const char *scope, const char *lval);

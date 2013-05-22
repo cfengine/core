@@ -79,7 +79,7 @@ ExpectedVars expected_vars[] =
     {"domain", "cfengine.com"},
 };
 
-void ScopeNewScalar(EvalContext *ctx, const char *ns, const char *varname, const char *value, DataType type)
+void ScopeNewSpecialScalar(EvalContext *ctx, const char *ns, const char *varname, const char *value, DataType type)
 {
     int i;
 
@@ -96,12 +96,7 @@ void ScopeNewScalar(EvalContext *ctx, const char *ns, const char *varname, const
         }
     }
     fprintf(stderr, "${%s.%s} <- %s (%c)\n", ns, varname, value, type);  /* LCOV_EXCL_LINE */
-    fail();                     /* LCOV_EXCL_LINE */
-}
-
-void ScopeNewSpecialScalar(EvalContext *ctx, const char *ns, const char *varname, const char *value, DataType type)
-{
-    ScopeNewScalar(ctx, ns, varname, value, type);
+    fail();
 }
 
 static void test_set_names(void)

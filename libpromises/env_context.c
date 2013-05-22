@@ -798,7 +798,7 @@ static void StackFrameDestroy(StackFrame *frame)
             ProgrammingError("Unhandled stack frame type");
         }
 
-
+        free(frame);
     }
 }
 
@@ -849,6 +849,8 @@ void EvalContextDestroy(EvalContext *ctx)
         StringSetDestroy(ctx->dependency_handles);
 
         PromiseSetDestroy(ctx->promises_done);
+
+        free(ctx);
     }
 }
 

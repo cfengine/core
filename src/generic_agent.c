@@ -255,7 +255,10 @@ void GenericDeInitialize()
     CloseLog();
     CloseAllDB();
 
-    CryptoDeInitialize();
+    // since this function is called from signal handler while
+    // threads (doing encrpytion) are still running, don't deinitialize
+    // OpenSSL.
+    // CryptoDeInitialize();
 }
 
 /*****************************************************************************/

@@ -468,7 +468,7 @@ static int HailServer(EvalContext *ctx, char *host)
     else
     {
         Log(LOG_LEVEL_INFO, "Hailing '%s' : %u, with options '%s' (serial)", peer, fc.portnumber,
-            REMOTE_AGENT_OPTIONS);)
+            REMOTE_AGENT_OPTIONS);
     }
 
 

@@ -954,7 +954,7 @@ static void CopyLocalizedIteratorsToThisScope(EvalContext *ctx, const char *scop
             {
                 Rlist *list = RvalCopy((Rval) {retval.item, RVAL_TYPE_LIST}).item;
                 RlistFlatten(ctx, &list);
-                ScopeNewList(ctx, (VarRef) { NULL, scope, rp->item }, list, DATA_TYPE_STRING_LIST);
+                EvalContextVariablePut(ctx, (VarRef) { NULL, scope, rp->item }, (Rval) { list, RVAL_TYPE_LIST }, DATA_TYPE_STRING_LIST);
             }
         }
     }

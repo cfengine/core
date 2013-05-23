@@ -299,11 +299,6 @@ Rlist *RlistParseShown(char *string)
     fail();
 }
 
-void ScopeNewList(EvalContext *ctx, const char *scope, const char *lval, void *rval, DataType dt)
-{
-    fail();
-}
-
 void ScopeNewSpecialList(EvalContext *ctx, const char *scope, const char *lval, void *rval, DataType dt)
 {
     fail();

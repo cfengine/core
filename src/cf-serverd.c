@@ -32,7 +32,8 @@
 #include "files_names.h"
 #include "vars.h"
 
-#define QUEUESIZE 50
+#define QUEUESIZE 128
+/* listen() backlog, on Linux it's limited by net.core.somaxconn sysctl. */
 #define CF_BUFEXT 128
 
 typedef struct

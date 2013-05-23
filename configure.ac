@@ -719,20 +719,7 @@ AC_CHECK_TYPES(struct sockaddr_storage, [], [], [[
     #include <netdb.h>
 #endif]])
 
-AC_CHECK_DECLS(getaddrinfo, [], [], [[
-#if HAVE_WINSOCK2_H
-    #include <winsock2.h>
-#endif
-#if HAVE_WS2TCPIP_H
-    #include <ws2tcpip.h>
-#else
-    #include <sys/socket.h>
-    #include <netdb.h>
-#endif]])
-
-AC_LINK_IFELSE(
-  [AC_LANG_PROGRAM(
-    [[
+AC_CHECK_DECLS(getaddrinfo, [], [AC_LIBOBJ(getaddrinfo)], [[
 #if HAVE_WINSOCK2_H
     #include <winsock2.h>
 #endif
@@ -742,13 +729,7 @@ AC_LINK_IFELSE(
     #include <sys/socket.h>
     #include <netdb.h>
 #endif
-    ]],
-    [[getaddrinfo(NULL, NULL, NULL, NULL);]]
-  )],
-  [ac_cv_func_getaddrinfo=yes]
-)
-
-AC_REPLACE_FUNCS(getaddrinfo)
+]])
 
 AC_CHECK_DECLS([[inet_ntop], [inet_pton]], [], [], [[#include <arpa/inet.h>]])
 AC_REPLACE_FUNCS(inet_ntop inet_pton)

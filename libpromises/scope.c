@@ -218,7 +218,7 @@ void ScopeAugment(EvalContext *ctx, const Bundle *bp, const Promise *pp, const R
             case DATA_TYPE_STRING_LIST:
             case DATA_TYPE_INT_LIST:
             case DATA_TYPE_REAL_LIST:
-                ScopeNewList(ctx, (VarRef) { NULL, bp->name, lval }, RvalCopy((Rval) { retval.item, RVAL_TYPE_LIST}).item, DATA_TYPE_STRING_LIST);
+                EvalContextVariablePut(ctx, (VarRef) { NULL, bp->name, lval }, (Rval) { retval.item, RVAL_TYPE_LIST}, DATA_TYPE_STRING_LIST);
                 break;
             default:
                 Log(LOG_LEVEL_ERR, "List parameter \"%s\" not found while constructing scope \"%s\" - use @(scope.variable) in calling reference", naked, bp->name);
@@ -496,25 +496,6 @@ void ScopeDeleteSpecial(const char *scope, const char *lval)
     {
         Log(LOG_LEVEL_DEBUG, "Attempt to delete non-existent variable '%s' in scope '%s'", lval, scope);
     }
-}
-
-/*******************************************************************/
-
-void ScopeNewList(EvalContext *ctx, VarRef lval, void *rval, DataType dt)
-{
-    assert(!ScopeIsReserved(lval.scope));
-    if (ScopeIsReserved(lval.scope))
-    {
-        ScopeNewSpecialScalar(ctx, lval.scope, lval.lval, rval, dt);
-    }
-    Rval rvald;
-
-    if (EvalContextVariableGet(ctx, lval, &rvald, NULL))
-    {
-        ScopeDeleteVariable(lval.scope, lval.lval);
-    }
-
-    EvalContextVariablePut(ctx, lval, (Rval) {rval, RVAL_TYPE_LIST }, dt);
 }
 
 void ScopeNewSpecialList(EvalContext *ctx, const char *scope, const char *lval, void *rval, DataType dt)

@@ -5037,7 +5037,7 @@ void ModuleProtocol(EvalContext *ctx, char *command, char *line, int print, cons
             list = RlistParseString(content, NULL);
             Log(LOG_LEVEL_VERBOSE, "Defined variable '%s' in context '%s' with value '%s'", name, context, content);
 
-            ScopeNewList(ctx, (VarRef) { NULL, context, name }, list, DATA_TYPE_STRING_LIST);
+            EvalContextVariablePut(ctx, (VarRef) { NULL, context, name }, (Rval) { list, RVAL_TYPE_LIST }, DATA_TYPE_STRING_LIST);
         }
         break;
 

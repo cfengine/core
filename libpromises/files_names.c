@@ -407,7 +407,7 @@ void CanonifyNameInPlace(char *s)
 {
     for (; *s != '\0'; s++)
     {
-        if ((!isalnum((int)*s)) || (*s == '.'))
+        if ((!isalnum((int)(unsigned char)*s)) || (*s == '.'))
         {
             *s = '_';
         }

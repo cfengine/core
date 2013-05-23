@@ -1229,18 +1229,9 @@ static FnCallResult FnCallGetIndices(EvalContext *ctx, FnCall *fp, Rlist *finala
 
         if (strncmp(match, assoc->lval, strlen(match)) == 0)
         {
-            char *sp;
 
             index[0] = '\0';
-            sscanf(assoc->lval + strlen(match), "%127[^\n]", index);
-            if ((sp = strchr(index, ']')))
-            {
-                *sp = '\0';
-            }
-            else
-            {
-                index[strlen(index) - 1] = '\0';
-            }
+            strlcpy(index, ExtractFirstReference("([^\\]\\[\n]+)", assoc->lval + strlen(match)), CF_MAXVARSIZE);
 
             if (strlen(index) > 0)
             {

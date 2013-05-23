@@ -37,6 +37,7 @@ typedef struct
     char *mail_server;
     char *mail_from_address;
     char *mail_to_address;
+    char *mail_subject;
     int mail_max_lines;
 
     StringSet *schedule;

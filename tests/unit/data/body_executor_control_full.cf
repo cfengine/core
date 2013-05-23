@@ -3,6 +3,7 @@ body executor control
     splaytime => "1";
     mailto => "cfengine_mail@example.org";
     mailfrom => "cfengine@$(g.host).example.org";
+    mailsubject => "Test [localhost/127.0.0.1]";
     smtpserver => "localhost";
     mailmaxlines => "50";
     schedule => { "Min00_05", "Min05_10" };

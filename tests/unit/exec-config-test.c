@@ -23,6 +23,7 @@ static void TestCheckConfigIsDefault(ExecConfig *c)
     assert_int_equal(30, c->mail_max_lines);
     assert_string_equal("", c->mail_server);
     assert_string_equal("",c->mail_to_address);
+    assert_string_equal("",c->mail_subject);
     assert_int_equal(0, c->splay_time);
 
     assert_int_equal(12, StringSetSize(c->schedule));
@@ -71,6 +72,7 @@ static void test_load(void)
         assert_int_equal(50, c->mail_max_lines);
         assert_string_equal("localhost", c->mail_server);
         assert_string_equal("cfengine_mail@example.org",c->mail_to_address);
+        assert_string_equal("Test [localhost/127.0.0.1]",c->mail_subject);
 
         // splay time hard to test (pseudo random)
 
@@ -102,6 +104,7 @@ static void test_load(void)
             assert_int_equal(30, c->mail_max_lines);
             assert_string_equal("", c->mail_server);
             assert_string_equal("",c->mail_to_address);
+            assert_string_equal("",c->mail_subject);
             assert_int_equal(0, c->splay_time);
 
             assert_int_equal(12, StringSetSize(c->schedule));

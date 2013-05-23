@@ -48,7 +48,7 @@ static pthread_key_t log_context_key;
 
 static void LoggingInitializeOnce(void)
 {
-    if (pthread_key_create(&log_context_key, NULL) != 0)
+    if (pthread_key_create(&log_context_key, &free) != 0)
     {
         /* There is no way to signal error out of pthread_once callback.
          * However if pthread_key_create fails we are pretty much guaranteed

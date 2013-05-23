@@ -24,20 +24,24 @@ vars:
 bundle agent test
 {
 vars:
-  linux|freebsd|solaris|openbsd::
+  linux|freebsd|solaris|openbsd|hpux::
     "gid_daemon" int => getgid("daemon");
     "gid_sys" int => getgid("sys");
   darwin::
     "gid_daemon" int => getgid("daemon");
-  !linux.!freebsd.!solaris.!darwin.!openbsd::
+  aix::
+    "gid_sys" int => getgid("sys");
+  !linux.!freebsd.!solaris.!darwin.!openbsd.!hpux.!aix::
     "gid_daemon" string => "fixme";
     "gid_sys" string => "fixme";
 
-  linux|solaris::
+  linux|solaris|hpux::
     "gid_0" int => getgid("root");
   freebsd|darwin|openbsd::
     "gid_0" int => getgid("wheel");
-  !linux.!freebsd.!solaris.!darwin.!openbsd::
+  aix::
+    "gid_0" int => getgid("system");
+  !linux.!freebsd.!solaris.!darwin.!openbsd.!hpux.!aix::
     "gid_0" string => "fixme";
 
   SuSE|redhat|gentoo::
@@ -46,12 +50,14 @@ vars:
     "num_daemon" int => "1";
   solaris::
     "num_daemon" int => "12";
-  !linux.!freebsd.!solaris.!darwin.!openbsd::
+  hpux::
+    "num_daemon" int => "5";
+  !linux.!freebsd.!solaris.!darwin.!openbsd.!hpux.!aix::
     "num_daemon" string => "fixme";
 
-  linux|freebsd|solaris|openbsd::
+  linux|freebsd|solaris|openbsd|hpux|aix::
     "num_sys" int => "3";
-  !linux.!freebsd.!solaris.!darwin.!openbsd::
+  !linux.!freebsd.!solaris.!darwin.!openbsd.!hpux.!aix::
     "num_sys" string => "fixme";
 }
 

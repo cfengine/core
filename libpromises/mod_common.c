@@ -353,6 +353,7 @@ const ConstraintSyntax CFEX_CONTROLBODY[] = /* enum cfexcontrol */
     ConstraintSyntaxNewInt("splaytime", CF_VALRANGE, "Time in minutes to splay this host based on its name hash. Default value: 0", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("mailfrom", ".*@.*", "Email-address cfengine mail appears to come from", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("mailto", ".*@.*", "Email-address cfengine mail is sent to", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewString("mailsubject", "", "Define a custom mailsubject for the email message", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("smtpserver", ".*", "Name or IP of a willing smtp server for sending email", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewInt("mailmaxlines", "0,1000", "Maximum number of lines of output to send by email. Default value: 30", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewStringList("schedule", "", "The class schedule used by cf-execd for activating cf-agent", SYNTAX_STATUS_NORMAL),

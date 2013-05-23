@@ -575,14 +575,24 @@ static void MailResult(const ExecConfig *config, const char *file)
         goto mail_err;
     }
 
+    char mailsubject_anomaly_prefix[8];
     if (anomaly)
     {
-        sprintf(vbuff, "Subject: **!! [%s/%s]\r\n", config->fq_name, config->ip_address);
+        sprintf(mailsubject_anomaly_prefix,"**!! ");
+    }
+    else
+    {
+        sprintf(mailsubject_anomaly_prefix,"");
+    }
+
+    if (strlen(config->mail_subject) == 0)
+    {
+        sprintf(vbuff, "Subject: %s[%s/%s]\r\n", mailsubject_anomaly_prefix, config->fq_name, config->ip_address);
         Log(LOG_LEVEL_DEBUG, "%s", vbuff);
     }
     else
     {
-        sprintf(vbuff, "Subject: [%s/%s]\r\n", config->fq_name, config->ip_address);
+        sprintf(vbuff, "Subject: %s%s\r\n", mailsubject_anomaly_prefix, config->mail_subject);
         Log(LOG_LEVEL_DEBUG, "%s", vbuff);
     }
 

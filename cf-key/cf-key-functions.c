@@ -177,7 +177,7 @@ int RemoveKeys(const char *host)
     if (Hostname2IPString(ipaddr, host, sizeof(ipaddr)) == -1)
     {
         Log(LOG_LEVEL_ERR, 
-            "ERROR, could not resolve %s, not removing", host);
+            "ERROR, could not resolve '%s', not removing", host);
         return 255;
     }
 
@@ -189,17 +189,17 @@ int RemoveKeys(const char *host)
 
     if ((removed_by_ip == -1) || (removed_by_digest == -1))
     {
-        Log(LOG_LEVEL_ERR, "Unable to remove keys for the host %s", host);
+        Log(LOG_LEVEL_ERR, "Unable to remove keys for the host '%s'", host);
         return 255;
     }
     else if (removed_by_ip + removed_by_digest == 0)
     {
-        Log(LOG_LEVEL_ERR, "No keys for host %s were found", host);
+        Log(LOG_LEVEL_ERR, "No keys for host '%s' were found", host);
         return 1;
     }
     else
     {
-        Log(LOG_LEVEL_INFO, "Removed %d key(s) for host %s",
+        Log(LOG_LEVEL_INFO, "Removed %d key(s) for host '%s'",
               removed_by_ip + removed_by_digest, host);
         return 0;
     }
@@ -249,7 +249,7 @@ void KeepKeyPromises(const char *public_key_file, const char *private_key_file)
 #endif
     {
         err = ERR_get_error();
-        Log(LOG_LEVEL_ERR, "Unable to generate key: %s", ERR_reason_error_string(err));
+        Log(LOG_LEVEL_ERR, "Unable to generate key '%s'", ERR_reason_error_string(err));
         return;
     }
 
@@ -295,12 +295,12 @@ void KeepKeyPromises(const char *public_key_file, const char *private_key_file)
         return;
     }
 
-    Log(LOG_LEVEL_VERBOSE, "Writing public key to %s", public_key_file);
+    Log(LOG_LEVEL_VERBOSE, "Writing public key to file '%s'", public_key_file);
 
     if (!PEM_write_RSAPublicKey(fp, pair))
     {
         err = ERR_get_error();
-        Log(LOG_LEVEL_ERR, "Unable to write public key: %s", ERR_reason_error_string(err));
+        Log(LOG_LEVEL_ERR, "Unable to write public key. (PEM_write_RSAPublicKey: %s)", ERR_reason_error_string(err));
         return;
     }
 
@@ -337,7 +337,7 @@ bool LicenseInstall(char *path_source)
 
     if(stat(path_destination, &sb) == 0)
     {
-        Log(LOG_LEVEL_ERR, "A license file is already installed in %s -- please move it out of the way and try again", path_destination);
+        Log(LOG_LEVEL_ERR, "A license file is already installed in '%s' -- please move it out of the way and try again", path_destination);
         return false;
     }
 
@@ -350,7 +350,7 @@ bool LicenseInstall(char *path_source)
 
     if(stat(path_public_key, &sb) != 0)
     {
-        Log(LOG_LEVEL_ERR, "The licensed public key is not installed -- please copy it to %s and try again", path_public_key);
+        Log(LOG_LEVEL_ERR, "The licensed public key is not installed -- please copy it to '%s' and try again", path_public_key);
         return false;
     }
 
@@ -359,11 +359,11 @@ bool LicenseInstall(char *path_source)
 
     if(success)
     {
-        Log(LOG_LEVEL_INFO, "Installed license at %s", path_destination);
+        Log(LOG_LEVEL_INFO, "Installed license at '%s'", path_destination);
     }
     else
     {
-        Log(LOG_LEVEL_ERR, "Failed copying license from %s to %s", path_source, path_destination);
+        Log(LOG_LEVEL_ERR, "Failed copying license from '%s' to '%s'", path_source, path_destination);
     }
 
     return success;

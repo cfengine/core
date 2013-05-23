@@ -208,11 +208,11 @@ RSA *HavePublicKey(const char *username, const char *ipaddress, const char *dige
 
     if (stat(newname, &statbuf) == -1)
     {
-        Log(LOG_LEVEL_VERBOSE, "Did not find new key format %s", newname);
+        Log(LOG_LEVEL_VERBOSE, "Did not find new key format '%s'", newname);
         snprintf(oldname, CF_BUFSIZE, "%s/ppkeys/%s-%s.pub", CFWORKDIR, username, ipaddress);
         MapName(oldname);
 
-        Log(LOG_LEVEL_VERBOSE, "Trying old style %s", oldname);
+        Log(LOG_LEVEL_VERBOSE, "Trying old style '%s'", oldname);
 
         if (stat(oldname, &statbuf) == -1)
         {
@@ -284,7 +284,7 @@ void SavePublicKey(const char *user, const char *digest, const RSA *key)
         return;
     }
 
-    Log(LOG_LEVEL_VERBOSE, "Saving public key %s", filename);
+    Log(LOG_LEVEL_VERBOSE, "Saving public key to file '%s'", filename);
 
     if ((fp = fopen(filename, "w")) == NULL)
     {
@@ -345,7 +345,7 @@ int DecryptString(char type, char *in, char *out, unsigned char *key, int cipher
 
     if (!EVP_DecryptUpdate(&ctx, out, &plainlen, in, cipherlen))
     {
-        Log(LOG_LEVEL_ERR, "Decrypt FAILED");
+        Log(LOG_LEVEL_ERR, "Failed to decrypt string");
         EVP_CIPHER_CTX_cleanup(&ctx);
         return -1;
     }
@@ -354,7 +354,7 @@ int DecryptString(char type, char *in, char *out, unsigned char *key, int cipher
     {
         unsigned long err = ERR_get_error();
 
-        Log(LOG_LEVEL_ERR, "decryption FAILED at final of %d: %s", cipherlen, ERR_error_string(err, NULL));
+        Log(LOG_LEVEL_ERR, "Failed to decrypt at final of cipher length %d. (EVP_DecryptFinal_ex: %s)", cipherlen, ERR_error_string(err, NULL));
         EVP_CIPHER_CTX_cleanup(&ctx);
         return -1;
     }
@@ -376,7 +376,7 @@ void DebugBinOut(char *buffer, int len, char *comment)
 
     if (len >= (sizeof(buf) / 2))       // hex uses two chars per byte
     {
-        Log(LOG_LEVEL_DEBUG, "Debug binary print is too large (len=%d)", len);
+        Log(LOG_LEVEL_DEBUG, "Debug binary print is too large (len = %d)", len);
         return;
     }
 
@@ -388,7 +388,7 @@ void DebugBinOut(char *buffer, int len, char *comment)
         strcat(buf, hexStr);
     }
 
-    Log(LOG_LEVEL_VERBOSE, "BinaryBuffer(%d bytes => %s) -> [%s]", len, comment, buf);
+    Log(LOG_LEVEL_VERBOSE, "BinaryBuffer, %d bytes, comment '%s', buffer '%s'", len, comment, buf);
 }
 
 const char *PublicKeyFile(const char *workdir)

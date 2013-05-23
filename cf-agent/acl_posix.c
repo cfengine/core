@@ -343,7 +343,7 @@ static int CheckPosixLinuxACEs(EvalContext *ctx, Rlist *aces, AclMethod method, 
                 }
             }
 
-            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "%s ACL on \"%s\" successfully changed.", acl_type_str, file_path);
+            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "%s ACL on '%s' successfully changed.", acl_type_str, file_path);
 
             break;
 
@@ -354,7 +354,7 @@ static int CheckPosixLinuxACEs(EvalContext *ctx, Rlist *aces, AclMethod method, 
     }
     else
     {
-        cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_NOOP, pp, a, "%s ACL on \"%s\" needs no modification.", acl_type_str, file_path);
+        cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_NOOP, pp, a, "'%s' ACL on '%s' needs no modification.", acl_type_str, file_path);
     }
 
     acl_free((void *) acl_existing);
@@ -399,7 +399,7 @@ static int CheckDefaultEqualsAccessACL(EvalContext *ctx, char *file_path, Attrib
     switch (equals)
     {
     case 0:                    // they equal, as desired
-        cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_NOOP, pp, a, "Default ACL on \"%s\" needs no modification.", file_path);
+        cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_NOOP, pp, a, "Default ACL on '%s' needs no modification.", file_path);
         result = true;
         break;
 
@@ -409,7 +409,7 @@ static int CheckDefaultEqualsAccessACL(EvalContext *ctx, char *file_path, Attrib
         {
         case cfa_warn:
 
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, a, "Default ACL on \"%s\" needs to be copied from access ACL.",
+            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, a, "Default ACL on '%s' needs to be copied from access ACL.",
                  file_path);
             break;
 
@@ -426,7 +426,7 @@ static int CheckDefaultEqualsAccessACL(EvalContext *ctx, char *file_path, Attrib
                 }
             }
 
-            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "Default ACL on \"%s\" successfully copied from access ACL.",
+            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "Default ACL on '%s' successfully copied from access ACL.",
                  file_path);
             result = true;
 
@@ -480,7 +480,7 @@ int CheckDefaultClearACL(EvalContext *ctx, char *file_path, Attributes a, Promis
         break;
 
     case 0:                    // no entries, as desired
-        cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_NOOP, pp, a, "Default ACL on \"%s\" needs no modification.", file_path);
+        cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_NOOP, pp, a, "Default ACL on '%s' needs no modification.", file_path);
         result = true;
         break;
 
@@ -497,7 +497,7 @@ int CheckDefaultClearACL(EvalContext *ctx, char *file_path, Attributes a, Promis
         {
         case cfa_warn:
 
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, a, "Default ACL on \"%s\" needs to be cleared", file_path);
+            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, a, "Default ACL on '%s' needs to be cleared", file_path);
             break;
 
         case cfa_fix:
@@ -512,7 +512,7 @@ int CheckDefaultClearACL(EvalContext *ctx, char *file_path, Attributes a, Promis
                 }
             }
 
-            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "Default ACL on \"%s\" successfully cleared", file_path);
+            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "Default ACL on '%s' successfully cleared", file_path);
             result = true;
 
             break;

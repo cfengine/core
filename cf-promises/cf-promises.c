@@ -178,7 +178,7 @@ GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
 
             if (optarg && (strlen(optarg) < 5))
             {
-                Log(LOG_LEVEL_ERR, " -f used but argument \"%s\" incorrect", optarg);
+                Log(LOG_LEVEL_ERR, " -f used but argument '%s' incorrect", optarg);
                 exit(EXIT_FAILURE);
             }
 
@@ -187,7 +187,7 @@ GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             break;
 
         case 'd':
-            config->debug_mode = true;
+            LogSetGlobalLevel(LOG_LEVEL_DEBUG);
             break;
 
         case 'b':

@@ -93,12 +93,9 @@ void ScopePopThis(void);
 
 
 void ScopeToList(Scope *sp, Rlist **list);
-void ScopeNewScalar(EvalContext *ctx, VarRef lval, const char *rval, DataType dt);
-void ScopeNewSpecialScalar(EvalContext *ctx, const char *scope, const char *lval, const char *rval, DataType dt);
+void ScopeNewSpecial(EvalContext *ctx, const char *scope, const char *lval, const void *rval, DataType dt);
 void ScopeDeleteScalar(VarRef lval);
-void ScopeDeleteSpecialScalar(const char *scope, const char *lval);
-void ScopeNewList(EvalContext *ctx, VarRef lval, void *rval, DataType dt);
-void ScopeNewSpecialList(EvalContext *ctx, const char *scope, const char *lval, void *rval, DataType dt);
+void ScopeDeleteSpecial(const char *scope, const char *lval);
 bool ScopeIsReserved(const char *scope);
 
 void ScopeDeleteVariable(const char *scope, const char *id);

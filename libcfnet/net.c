@@ -101,7 +101,7 @@ int ReceiveTransaction(int sd, char *buffer, int *more)
 
     if (len > CF_BUFSIZE - CF_INBAND_OFFSET)
     {
-        Log(LOG_LEVEL_ERR, "Bad transaction packet -- too long (%c %d) Proto = %s ", status, len, proto);
+        Log(LOG_LEVEL_ERR, "Bad transaction packet -- too long (%c %d). proto '%s'", status, len, proto);
         return -1;
     }
 
@@ -148,14 +148,14 @@ int RecvSocketStream(int sd, char buffer[CF_BUFSIZE], int toget)
 
         if ((got == -1) && (LastRecvTimedOut()))
         {
-            Log(LOG_LEVEL_ERR, "!! Timeout - remote end did not respond with the expected amount of data (received=%d, expecting=%d): %s",
+            Log(LOG_LEVEL_ERR, "Timeout - remote end did not respond with the expected amount of data (received=%d, expecting=%d). (recv: %s)",
                 already, toget, GetErrorStr());
             return -1;
         }
 
         if (got == -1)
         {
-            Log(LOG_LEVEL_ERR, "Couldn't recv: %s", GetErrorStr());
+            Log(LOG_LEVEL_ERR, "Couldn't receceive. (recv: %s)", GetErrorStr());
             return -1;
         }
 
@@ -186,7 +186,7 @@ int SendSocketStream(int sd, char buffer[CF_BUFSIZE], int tosend, int flags)
 
         if (sent == -1)
         {
-            Log(LOG_LEVEL_VERBOSE, "Couldn't send: %s", GetErrorStr());
+            Log(LOG_LEVEL_VERBOSE, "Couldn't send. (send: %s)", GetErrorStr());
             return -1;
         }
 

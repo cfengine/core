@@ -81,10 +81,10 @@ int CLOCK_DRIFT = 3600;  /* 1hr */
 int ACTIVE_THREADS;
 
 int CFD_MAXPROCESSES = 0;
-int DENYBADCLOCKS = true;
+bool DENYBADCLOCKS = true;
 
 int MAXTRIES = 5;
-int LOGENCRYPT = false;
+bool LOGENCRYPT = false;
 int COLLECT_INTERVAL = 0;
 int COLLECT_WINDOW = 10;
 bool SERVER_LISTEN = true;
@@ -173,18 +173,18 @@ void ServerEntryPoint(EvalContext *ctx, int sd_reply, char *ipaddr)
     char intime[64];
     time_t now;
     
-    Log(LOG_LEVEL_VERBOSE, "Obtained IP address of %s on socket %d from accept", ipaddr, sd_reply);
+    Log(LOG_LEVEL_VERBOSE, "Obtained IP address of '%s' on socket %d from accept", ipaddr, sd_reply);
     
     if ((SV.nonattackerlist) && (!IsMatchItemIn(SV.nonattackerlist, MapAddress(ipaddr))))
     {
-        Log(LOG_LEVEL_ERR, "Not allowing connection from non-authorized IP %s", ipaddr);
+        Log(LOG_LEVEL_ERR, "Not allowing connection from non-authorized IP '%s'", ipaddr);
         cf_closesocket(sd_reply);
         return;
     }
     
     if (IsMatchItemIn(SV.attackerlist, MapAddress(ipaddr)))
     {
-        Log(LOG_LEVEL_ERR, "Denying connection from non-authorized IP %s", ipaddr);
+        Log(LOG_LEVEL_ERR, "Denying connection from non-authorized IP '%s'", ipaddr);
         cf_closesocket(sd_reply);
         return;
     }
@@ -206,7 +206,7 @@ void ServerEntryPoint(EvalContext *ctx, int sd_reply, char *ipaddr)
         if (IsItemIn(SV.connectionlist, MapAddress(ipaddr)))
         {
             ThreadUnlock(cft_count);
-            Log(LOG_LEVEL_ERR, "Denying repeated connection from \"%s\"", ipaddr);
+            Log(LOG_LEVEL_ERR, "Denying repeated connection from '%s'", ipaddr);
             cf_closesocket(sd_reply);
             return;
         }
@@ -216,11 +216,11 @@ void ServerEntryPoint(EvalContext *ctx, int sd_reply, char *ipaddr)
     
     if (SV.logconns)
     {
-        Log(LOG_LEVEL_INFO, "Accepting connection from \"%s\"", ipaddr);
+        Log(LOG_LEVEL_INFO, "Accepting connection from '%s'", ipaddr);
     }
     else
     {
-        Log(LOG_LEVEL_INFO, "Accepting connection from \"%s\"", ipaddr);
+        Log(LOG_LEVEL_INFO, "Accepting connection from '%s'", ipaddr);
     }
     
     snprintf(intime, 63, "%d", (int) now);
@@ -766,7 +766,7 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
         if ((tloc = time((time_t *) NULL)) == -1)
         {
             sprintf(conn->output, "Couldn't read system clock\n");
-            Log(LOG_LEVEL_INFO, "%s. (time: %s)", conn->output, GetErrorStr());
+            Log(LOG_LEVEL_INFO, "Couldn't read system clock. (time: %s)", GetErrorStr());
             SendTransaction(conn->sd_reply, "BAD: clocks out of synch", 0, CF_DONE);
             return true;
         }
@@ -1006,7 +1006,7 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
 
     sprintf(sendbuffer, "BAD: Request denied\n");
     SendTransaction(conn->sd_reply, sendbuffer, 0, CF_DONE);
-    Log(LOG_LEVEL_INFO, "Closing connection, due to request: \"%s\"", recvbuffer);
+    Log(LOG_LEVEL_INFO, "Closing connection, due to request: '%s'", recvbuffer);
     return false;
 }
 
@@ -1108,7 +1108,7 @@ static void DoExec(EvalContext *ctx, ServerConnectionState *conn, char *args)
         return;
     }
 
-    Log(LOG_LEVEL_VERBOSE, "Examining command string: %s", args);
+    Log(LOG_LEVEL_VERBOSE, "Examining command string '%s'", args);
 
     for (sp = args; *sp != '\0'; sp++)  /* Blank out -K -f */
     {

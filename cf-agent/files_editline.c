@@ -89,7 +89,6 @@ static int SanityCheckInsertions(Attributes a);
 static int SanityCheckDeletions(Attributes a, Promise *pp);
 static int SelectLine(char *line, Attributes a);
 static int NotAnchored(char *s);
-static void EditClassBanner(const EvalContext *ctx, enum editlinetypesequence type);
 static int SelectRegion(EvalContext *ctx, Item *start, Item **begin_ptr, Item **end_ptr, Attributes a, Promise *pp, EditContext *edcontext);
 static int MultiLineString(char *s);
 static int InsertFileAtLocation(EvalContext *ctx, Item **start, Item *begin_ptr, Item *end_ptr, Item *location, Item *prev, Attributes a, Promise *pp, EditContext *edcontext);
@@ -114,14 +113,12 @@ int ScheduleEditLineOperations(EvalContext *ctx, Bundle *bp, Attributes a, const
         return false;
     }
 
-    ScopeNewSpecialScalar(ctx, "edit", "filename", edcontext->filename, DATA_TYPE_STRING);
+    ScopeNewSpecial(ctx, "edit", "filename", edcontext->filename, DATA_TYPE_STRING);
 
     for (pass = 1; pass < CF_DONEPASSES; pass++)
     {
         for (type = 0; EDITLINETYPESEQUENCE[type] != NULL; type++)
         {
-            EditClassBanner(ctx, type);
-
             if ((sp = BundleGetPromiseType(bp, EDITLINETYPESEQUENCE[type])) == NULL)
             {
                 continue;
@@ -159,7 +156,7 @@ Bundle *MakeTemporaryBundleFromTemplate(EvalContext *ctx, Policy *policy, Attrib
     FILE *fp = NULL;
     if ((fp = fopen(a.template, "r" )) == NULL)
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a, "Unable to open template file \"%s\" to make \"%s\"", a.template, pp->promiser);
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a, "Unable to open template file '%s' to make '%s'", a.template, pp->promiser);
         return NULL;
     }
 
@@ -208,7 +205,7 @@ Bundle *MakeTemporaryBundleFromTemplate(EvalContext *ctx, Policy *policy, Attrib
 
                 if (strcmp(brack, "%]") != 0)
                 {
-                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a, "Template file \"%s\" syntax error, missing close \"%%]\" at line %d", a.template, lineno);
+                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a, "Template file '%s' syntax error, missing close \"%%]\" at line %d", a.template, lineno);
                     return NULL;
                 }
 
@@ -218,7 +215,7 @@ Bundle *MakeTemporaryBundleFromTemplate(EvalContext *ctx, Policy *policy, Attrib
 
                     if (++level > 1)
                     {
-                        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a, "Template file \"%s\" contains nested blocks which are not allowed, near line %d", a.template, lineno);
+                        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a, "Template file '%s' contains nested blocks which are not allowed, near line %d", a.template, lineno);
                         return NULL;
                     }
 
@@ -289,30 +286,6 @@ Bundle *MakeTemporaryBundleFromTemplate(EvalContext *ctx, Policy *policy, Attrib
 
 /***************************************************************************/
 /* Level                                                                   */
-/***************************************************************************/
-
-// TODO: more really ugly output
-static void EditClassBanner(const EvalContext *ctx, enum editlinetypesequence type)
-{
-    if (type != elp_delete)     /* Just parsed all local classes */
-    {
-        return;
-    }
-
-    {
-        Log(LOG_LEVEL_VERBOSE, "     ??  Private class context");
-
-        StringSetIterator it = EvalContextStackFrameIteratorSoft(ctx);
-        const char *context = NULL;
-        while ((context = StringSetIteratorNext(&it)))
-        {
-            Log(LOG_LEVEL_VERBOSE, "     ??       %s", context);
-        }
-
-        Log(LOG_LEVEL_VERBOSE, "\n");
-    }
-}
-
 /***************************************************************************/
 
 static void KeepEditLinePromise(EvalContext *ctx, Promise *pp, void *param)
@@ -531,7 +504,7 @@ static void VerifyPatterns(EvalContext *ctx, Promise *pp, EditContext *edcontext
     CfLock thislock;
     char lockname[CF_BUFSIZE];
 
-    Log(LOG_LEVEL_VERBOSE, "Looking at pattern %s", pp->promiser);
+    Log(LOG_LEVEL_VERBOSE, "Looking at pattern '%s'", pp->promiser);
 
 /* Are we working in a restricted region? */
 
@@ -634,7 +607,7 @@ static void VerifyLineInsertions(EvalContext *ctx, Promise *pp, EditContext *edc
     {
         if (!SelectItemMatching(*start, a.location.line_matching, begin_ptr, end_ptr, &match, &prev, a.location.first_last))
         {
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a, "The promised line insertion (%s) could not select a locator matching regex \"%s\" in %s", pp->promiser, a.location.line_matching, edcontext->filename);
+            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a, "The promised line insertion (%s) could not select a locator matching regex '%s' in %s", pp->promiser, a.location.line_matching, edcontext->filename);
             YieldCurrentLock(thislock);
             return;
         }
@@ -873,7 +846,7 @@ static int DeletePromisedLinesMatching(EvalContext *ctx, Item **start, Item *beg
             if (a.transaction.action == cfa_warn)
             {
                 cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, a,
-                     "Need to delete line \"%s\" from %s - but only a warning was promised", ip->name,
+                     "Need to delete line '%s' from %s - but only a warning was promised", ip->name,
                      edcontext->filename);
                 np = ip->next;
                 noedits = false;
@@ -882,7 +855,7 @@ static int DeletePromisedLinesMatching(EvalContext *ctx, Item **start, Item *beg
             {
                 for (i = 1; i <= matches; i++)
                 {
-                    cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, "Deleting the promised line %d \"%s\" from %s", i, ip->name,
+                    cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, "Deleting the promised line %d '%s' from %s", i, ip->name,
                          edcontext->filename);
                     retval = true;
                     noedits = false;
@@ -951,7 +924,7 @@ static int ReplacePatterns(EvalContext *ctx, Item *file_start, Item *file_end, A
 
     if (a.replace.occurrences && (strcmp(a.replace.occurrences, "first") == 0))
     {
-        Log(LOG_LEVEL_INFO, "WARNING! Setting replace-occurrences policy to \"first\" is not convergent");
+        Log(LOG_LEVEL_WARNING, "Setting replace-occurrences policy to 'first' is not convergent");
         once_only = true;
     }
 
@@ -984,7 +957,7 @@ static int ReplacePatterns(EvalContext *ctx, Item *file_start, Item *file_end, A
             match_len = end_off - start_off;
             ExpandScalar(ctx, PromiseGetBundle(pp)->name, a.replace.replace_value, replace);
 
-            Log(LOG_LEVEL_VERBOSE, "Verifying replacement of \"%s\" with \"%s\" (%d)", pp->promiser, replace,
+            Log(LOG_LEVEL_VERBOSE, "Verifying replacement of '%s' with '%s', cutoff %d", pp->promiser, replace,
                   cutoff);
 
             before[0] = after[0] = '\0';
@@ -1011,9 +984,9 @@ static int ReplacePatterns(EvalContext *ctx, Item *file_start, Item *file_end, A
         if (NotAnchored(pp->promiser) && BlockTextMatch(pp->promiser, line_buff, &start_off, &end_off))
         {
             cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a,
-                 "Promised replacement \"%s\" on line \"%s\" for pattern \"%s\" is not convergent while editing %s",
+                 "Promised replacement '%s' on line '%s' for pattern '%s' is not convergent while editing '%s'",
                  line_buff, ip->name, pp->promiser, edcontext->filename);
-            Log(LOG_LEVEL_ERR, "Because the regular expression \"%s\" still matches the replacement string \"%s\"",
+            Log(LOG_LEVEL_ERR, "Because the regular expression '%s' still matches the replacement string '%s'",
                   pp->promiser, line_buff);
             PromiseRef(LOG_LEVEL_ERR, pp);
             break;
@@ -1022,7 +995,7 @@ static int ReplacePatterns(EvalContext *ctx, Item *file_start, Item *file_end, A
         if (a.transaction.action == cfa_warn)
         {
             cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_WARN, pp, a,
-                 "Need to replace line \"%s\" in %s - but only a warning was promised", pp->promiser,
+                 "Need to replace line '%s' in '%s' - but only a warning was promised", pp->promiser,
                  edcontext->filename);
             continue;
         }
@@ -1030,12 +1003,12 @@ static int ReplacePatterns(EvalContext *ctx, Item *file_start, Item *file_end, A
         {
             free(ip->name);
             ip->name = xstrdup(line_buff);
-            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, "Replaced pattern \"%s\" in %s", pp->promiser, edcontext->filename);
+            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, "Replaced pattern '%s' in '%s'", pp->promiser, edcontext->filename);
             (edcontext->num_edits)++;
             retval = true;
 
-            Log(LOG_LEVEL_VERBOSE, "<< (%d)\"%s\"", cutoff, ip->name);
-            Log(LOG_LEVEL_VERBOSE, ">> (%d)\"%s\"", cutoff, line_buff);
+            Log(LOG_LEVEL_VERBOSE, "cutoff %d, '%s'", cutoff, ip->name);
+            Log(LOG_LEVEL_VERBOSE, "cutoff %d, '%s'", cutoff, line_buff);
 
             if (once_only)
             {
@@ -1046,10 +1019,10 @@ static int ReplacePatterns(EvalContext *ctx, Item *file_start, Item *file_end, A
             if (BlockTextMatch(pp->promiser, ip->name, &start_off, &end_off))
             {
                 cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_INTERRUPTED, pp, a,
-                     "Promised replacement \"%s\" for pattern \"%s\" is not properly convergent while editing %s",
+                     "Promised replacement '%s' for pattern '%s' is not properly convergent while editing '%s'",
                      ip->name, pp->promiser, edcontext->filename);
                 Log(LOG_LEVEL_INFO,
-                      "Because the regular expression \"%s\" still matches the end-state replacement string \"%s\"",
+                      "Because the regular expression '%s' still matches the end-state replacement string '%s'",
                       pp->promiser, line_buff);
                 PromiseRef(LOG_LEVEL_INFO, pp);
             }
@@ -1058,7 +1031,7 @@ static int ReplacePatterns(EvalContext *ctx, Item *file_start, Item *file_end, A
 
     if (notfound)
     {
-        cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "No pattern \"%s\" in %s", pp->promiser, edcontext->filename);
+        cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "No pattern '%s' in '%s'", pp->promiser, edcontext->filename);
     }
 
     return retval;
@@ -1091,19 +1064,19 @@ static int EditColumns(EvalContext *ctx, Item *file_start, Item *file_end, Attri
         }
         else
         {
-            Log(LOG_LEVEL_VERBOSE, " - Matched line (%s)", ip->name);
+            Log(LOG_LEVEL_VERBOSE, "Matched line '%s'", ip->name);
         }
 
         if (!BlockTextMatch(a.column.column_separator, ip->name, &s, &e))
         {
-            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_INTERRUPTED, pp, a, " ! Field edit - no fields found by promised pattern %s in %s",
+            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_INTERRUPTED, pp, a, "Field edit, no fields found by promised pattern '%s' in '%s'",
                  a.column.column_separator, edcontext->filename);
             return false;
         }
 
         if (e - s > CF_MAXVARSIZE / 2)
         {
-            Log(LOG_LEVEL_ERR, "Line split criterion matches a huge part of the line -- seems to be in error");
+            Log(LOG_LEVEL_ERR, "Line split criterion matches a huge part of the line, seems to be in error");
             return false;
         }
 
@@ -1295,7 +1268,7 @@ static int InsertFileAtLocation(EvalContext *ctx, Item **start, Item *begin_ptr,
         if (!preserve_block && IsItemInRegion(exp, begin_ptr, end_ptr, a.insert_match, pp))
         {
             cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a,
-                 "Promised file line \"%s\" exists within file %s (promise kept)", exp, edcontext->filename);
+                 "Promised file line '%s' exists within file %s (promise kept)", exp, edcontext->filename);
             continue;
         }
         
@@ -1363,7 +1336,7 @@ static int InsertCompoundLineAtLocation(EvalContext *ctx, char *chunk, Item **st
 
         if (!preserve_block && IsItemInRegion(buf, begin_ptr, end_ptr, a.insert_match, pp))
         {
-            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "Promised chunk \"%s\" exists within selected region of %s (promise kept)", pp->promiser, edcontext->filename);
+            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "Promised chunk '%s' exists within selected region of %s (promise kept)", pp->promiser, edcontext->filename);
             continue;
         }
 
@@ -1416,7 +1389,7 @@ static int InsertLineAtLocation(EvalContext *ctx, char *newline, Item **start, I
                 if (a.transaction.action == cfa_warn)
                 {
                     cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, a,
-                         "Need to insert the promised line \"%s\" in %s - but only a warning was promised", newline,
+                         "Need to insert the promised line '%s' in %s - but only a warning was promised", newline,
                          edcontext->filename);
                     return true;
                 }
@@ -1424,7 +1397,7 @@ static int InsertLineAtLocation(EvalContext *ctx, char *newline, Item **start, I
                 {
                     PrependItemList(start, newline);
                     (edcontext->num_edits)++;
-                    cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, "Inserting the promised line \"%s\" into %s", newline,
+                    cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, "Inserting the promised line '%s' into %s", newline,
                          edcontext->filename);
                     return true;
                 }
@@ -1435,7 +1408,7 @@ static int InsertLineAtLocation(EvalContext *ctx, char *newline, Item **start, I
                 if (a.transaction.action == cfa_warn)
                 {
                     cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, a,
-                         "Need to prepend the promised line \"%s\" to %s - but only a warning was promised",
+                         "Need to prepend the promised line '%s' to %s - but only a warning was promised",
                          newline, edcontext->filename);
                     return true;
                 }
@@ -1443,7 +1416,7 @@ static int InsertLineAtLocation(EvalContext *ctx, char *newline, Item **start, I
                 {
                     PrependItemList(start, newline);
                     (edcontext->num_edits)++;
-                    cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, "Prepending the promised line \"%s\" to %s", newline,
+                    cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, "Prepending the promised line '%s' to %s", newline,
                          edcontext->filename);
                     return true;
                 }
@@ -1451,7 +1424,7 @@ static int InsertLineAtLocation(EvalContext *ctx, char *newline, Item **start, I
             else
             {
                 cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a,
-                     "Promised line \"%s\" exists at start of file %s (promise kept)", newline, edcontext->filename);
+                     "Promised line '%s' exists at start of file %s (promise kept)", newline, edcontext->filename);
                 return false;
             }
         }
@@ -1461,7 +1434,7 @@ static int InsertLineAtLocation(EvalContext *ctx, char *newline, Item **start, I
     {    
         if (!preserve_block && NeighbourItemMatches(*start, location, newline, EDIT_ORDER_BEFORE, a.insert_match, pp))
         {
-            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "Promised line \"%s\" exists before locator in (promise kept)",
+            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "Promised line '%s' exists before locator in (promise kept)",
                  newline);
             return false;
         }
@@ -1470,7 +1443,7 @@ static int InsertLineAtLocation(EvalContext *ctx, char *newline, Item **start, I
             if (a.transaction.action == cfa_warn)
             {
                 cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, a,
-                     "Need to insert line \"%s\" into %s but only a warning was promised", newline,
+                     "Need to insert line '%s' into '%s' but only a warning was promised", newline,
                      edcontext->filename);
                 return true;
             }
@@ -1478,7 +1451,7 @@ static int InsertLineAtLocation(EvalContext *ctx, char *newline, Item **start, I
             {
                 InsertAfter(start, prev, newline);
                 (edcontext->num_edits)++;
-                cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, "Inserting the promised line \"%s\" into %s before locator",
+                cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, "Inserting the promised line '%s' into '%s' before locator",
                      newline, edcontext->filename);
                 return true;
             }
@@ -1488,9 +1461,8 @@ static int InsertLineAtLocation(EvalContext *ctx, char *newline, Item **start, I
     {
         if (!preserve_block && NeighbourItemMatches(*start, location, newline, EDIT_ORDER_AFTER, a.insert_match, pp))
         {
-            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "Promised line \"%s\" exists after locator (promise kept)",
+            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "Promised line '%s' exists after locator (promise kept)",
                  newline);
-                        printf("NEIGHMATCH %s\n",newline);
             return false;
         }
         else
@@ -1498,13 +1470,13 @@ static int InsertLineAtLocation(EvalContext *ctx, char *newline, Item **start, I
             if (a.transaction.action == cfa_warn)
             {
                 cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, a,
-                     "Need to insert line \"%s\" in %s but only a warning was promised", newline, edcontext->filename);
+                     "Need to insert line '%s' in '%s' but only a warning was promised", newline, edcontext->filename);
                 return true;
             }
             else
             {
                 InsertAfter(start, location, newline);
-                cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, "Inserting the promised line \"%s\" into %s after locator",
+                cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, "Inserting the promised line '%s' into '%s' after locator",
                      newline, edcontext->filename);
                 (edcontext->num_edits)++;
                 return true;
@@ -1768,7 +1740,7 @@ static int DoEditColumn(Rlist **columns, Attributes a, EditContext *edcontext)
     {
         if ((found = RlistKeyIn(*columns, a.column.column_value)))
         {
-            Log(LOG_LEVEL_INFO, "Deleting column field sub-value %s in %s", a.column.column_value,
+            Log(LOG_LEVEL_INFO, "Deleting column field sub-value '%s' in '%s'", a.column.column_value,
                   edcontext->filename);
             RlistDestroyEntry(columns, found);
             return true;
@@ -1790,7 +1762,7 @@ static int DoEditColumn(Rlist **columns, Attributes a, EditContext *edcontext)
             }
         }
 
-        Log(LOG_LEVEL_INFO, "Setting field sub-value %s in %s", a.column.column_value, edcontext->filename);
+        Log(LOG_LEVEL_INFO, "Setting field sub-value '%s' in '%s'", a.column.column_value, edcontext->filename);
         RlistDestroy(*columns);
         *columns = NULL;
         RlistPrependScalarIdemp(columns, a.column.column_value);
@@ -1802,7 +1774,7 @@ static int DoEditColumn(Rlist **columns, Attributes a, EditContext *edcontext)
     {
         if (RlistPrependScalarIdemp(columns, a.column.column_value))
         {
-            Log(LOG_LEVEL_INFO, "Prepending field sub-value %s in %s", a.column.column_value, edcontext->filename);
+            Log(LOG_LEVEL_INFO, "Prepending field sub-value '%s' in '%s'", a.column.column_value, edcontext->filename);
             return true;
         }
         else

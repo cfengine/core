@@ -79,7 +79,7 @@ ExpectedVars expected_vars[] =
     {"domain", "cfengine.com"},
 };
 
-void ScopeNewSpecialScalar(EvalContext *ctx, const char *ns, const char *varname, const char *value, DataType type)
+void ScopeNewSpecial(EvalContext *ctx, const char *ns, const char *varname, const void *value, DataType type)
 {
     int i;
 
@@ -295,11 +295,6 @@ void ScopeDeleteVariable(const char *scope, const char *id)
 
 
 Rlist *RlistParseShown(char *string)
-{
-    fail();
-}
-
-void ScopeNewSpecialList(EvalContext *ctx, const char *scope, const char *lval, void *rval, DataType dt)
 {
     fail();
 }

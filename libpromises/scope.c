@@ -445,7 +445,7 @@ bool ScopeIsReserved(const char *scope)
             || strcmp("this", scope) == 0;
 }
 
-void ScopeNewSpecialScalar(EvalContext *ctx, const char *scope, const char *lval, const char *rval, DataType dt)
+void ScopeNewSpecial(EvalContext *ctx, const char *scope, const char *lval, const void *rval, DataType dt)
 {
     assert(ScopeIsReserved(scope));
 
@@ -455,7 +455,7 @@ void ScopeNewSpecialScalar(EvalContext *ctx, const char *scope, const char *lval
         ScopeDeleteSpecial(scope, lval);
     }
 
-    EvalContextVariablePut(ctx, (VarRef) { NULL, scope, lval }, (Rval) {(char *) rval, RVAL_TYPE_SCALAR }, dt);
+    EvalContextVariablePut(ctx, (VarRef) { NULL, scope, lval }, (Rval) { rval, DataTypeToRvalType(dt) }, dt);
 }
 
 /*******************************************************************/
@@ -496,20 +496,6 @@ void ScopeDeleteSpecial(const char *scope, const char *lval)
     {
         Log(LOG_LEVEL_DEBUG, "Attempt to delete non-existent variable '%s' in scope '%s'", lval, scope);
     }
-}
-
-void ScopeNewSpecialList(EvalContext *ctx, const char *scope, const char *lval, void *rval, DataType dt)
-{
-    assert(ScopeIsReserved(scope));
-
-    Rval rvald;
-
-    if (EvalContextVariableGet(ctx, (VarRef) { NULL, scope, lval }, &rvald, NULL))
-    {
-        ScopeDeleteVariable(scope, lval);
-    }
-
-    EvalContextVariablePut(ctx, (VarRef) { NULL, scope, lval }, (Rval) {rval, RVAL_TYPE_LIST }, dt);
 }
 
 /*******************************************************************/

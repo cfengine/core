@@ -38,11 +38,11 @@ static int IsCf3Scalar(char *str);
 
 void LoadSystemConstants(EvalContext *ctx)
 {
-    ScopeNewSpecialScalar(ctx, "const", "dollar", "$", DATA_TYPE_STRING);
-    ScopeNewSpecialScalar(ctx, "const", "n", "\n", DATA_TYPE_STRING);
-    ScopeNewSpecialScalar(ctx, "const", "r", "\r", DATA_TYPE_STRING);
-    ScopeNewSpecialScalar(ctx, "const", "t", "\t", DATA_TYPE_STRING);
-    ScopeNewSpecialScalar(ctx, "const", "endl", "\n", DATA_TYPE_STRING);
+    ScopeNewSpecial(ctx, "const", "dollar", "$", DATA_TYPE_STRING);
+    ScopeNewSpecial(ctx, "const", "n", "\n", DATA_TYPE_STRING);
+    ScopeNewSpecial(ctx, "const", "r", "\r", DATA_TYPE_STRING);
+    ScopeNewSpecial(ctx, "const", "t", "\t", DATA_TYPE_STRING);
+    ScopeNewSpecial(ctx, "const", "endl", "\n", DATA_TYPE_STRING);
 /* NewScalar("const","0","\0",cf_str);  - this cannot work */
 
 }

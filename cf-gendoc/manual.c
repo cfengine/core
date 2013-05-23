@@ -249,7 +249,7 @@ void TexinfoManual(EvalContext *ctx, const char *source_dir, const char *output_
 
 // scopes const and sys
 
-    ScopeNewSpecialScalar(ctx, "edit", "filename", "x", DATA_TYPE_STRING);
+    ScopeNewSpecial(ctx, "edit", "filename", "x", DATA_TYPE_STRING);
 
     ScopePutMatch(0, "x");
 

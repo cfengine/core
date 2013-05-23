@@ -75,6 +75,14 @@
          returning error when resolution fails.
        - Running cf-execd --once now implies --no-fork, and also does not wait
          for splaytime to pass.
+       - execresult(), returnszero() and commands promises no longer requires the first word
+         word to be an absolute path when using the shell. (Part of Redmine #2143)
+       - commands promises useshell attribute now accepts "noshell" and "useshell" values. Boolean
+         values are accepted but deprecated. (Part of Redmine #2143)
+       - returnszero() now correctly sets the class name in this scenario  (Part of
+         Redmine #2143):
+           classes:
+             "commandfailed" not => returnszero("/bin/nosuchcommand", "noshell");
 
        Bugfixes:
        - bundles are allowed to be empty (Redmine #2411)

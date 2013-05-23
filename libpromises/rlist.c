@@ -40,7 +40,35 @@
 
 static Rlist *RlistPrependRval(Rlist **start, Rval rval);
 
-/*******************************************************************/
+RvalType DataTypeToRvalType(DataType datatype)
+{
+    switch (datatype)
+    {
+    case DATA_TYPE_BODY:
+    case DATA_TYPE_BUNDLE:
+    case DATA_TYPE_CONTEXT:
+    case DATA_TYPE_COUNTER:
+    case DATA_TYPE_INT:
+    case DATA_TYPE_INT_RANGE:
+    case DATA_TYPE_OPTION:
+    case DATA_TYPE_REAL:
+    case DATA_TYPE_REAL_RANGE:
+    case DATA_TYPE_STRING:
+        return RVAL_TYPE_SCALAR;
+
+    case DATA_TYPE_CONTEXT_LIST:
+    case DATA_TYPE_INT_LIST:
+    case DATA_TYPE_OPTION_LIST:
+    case DATA_TYPE_REAL_LIST:
+    case DATA_TYPE_STRING_LIST:
+        return RVAL_TYPE_LIST;
+
+    case DATA_TYPE_NONE:
+        return RVAL_TYPE_NOPROMISEE;
+    }
+
+    ProgrammingError("DataTypeToRvalType, unhandled");
+}
 
 char *RlistScalarValue(const Rlist *rlist)
 {

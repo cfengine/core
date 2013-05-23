@@ -778,18 +778,18 @@ static void ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp, Rlist *listv
 
         if (PromiseGetBundle(pp)->source_path)
         {
-            ScopeNewSpecialScalar(ctx, "this", "promise_filename",PromiseGetBundle(pp)->source_path, DATA_TYPE_STRING);
+            ScopeNewSpecial(ctx, "this", "promise_filename",PromiseGetBundle(pp)->source_path, DATA_TYPE_STRING);
             snprintf(number, CF_SMALLBUF, "%zu", pp->offset.line);
-            ScopeNewSpecialScalar(ctx, "this", "promise_linenumber", number, DATA_TYPE_STRING);
+            ScopeNewSpecial(ctx, "this", "promise_linenumber", number, DATA_TYPE_STRING);
         }
 
         snprintf(v, CF_MAXVARSIZE, "%d", (int) getuid());
-        ScopeNewSpecialScalar(ctx, "this", "promiser_uid", v, DATA_TYPE_INT);
+        ScopeNewSpecial(ctx, "this", "promiser_uid", v, DATA_TYPE_INT);
         snprintf(v, CF_MAXVARSIZE, "%d", (int) getgid());
-        ScopeNewSpecialScalar(ctx, "this", "promiser_gid", v, DATA_TYPE_INT);
+        ScopeNewSpecial(ctx, "this", "promiser_gid", v, DATA_TYPE_INT);
 
-        ScopeNewSpecialScalar(ctx, "this", "bundle", PromiseGetBundle(pp)->name, DATA_TYPE_STRING);
-        ScopeNewSpecialScalar(ctx, "this", "namespace", PromiseGetNamespace(pp), DATA_TYPE_STRING);
+        ScopeNewSpecial(ctx, "this", "bundle", PromiseGetBundle(pp)->name, DATA_TYPE_STRING);
+        ScopeNewSpecial(ctx, "this", "namespace", PromiseGetNamespace(pp), DATA_TYPE_STRING);
 
         /* Must expand $(this.promiser) here for arg dereferencing in things
            like edit_line and methods, but we might have to
@@ -798,7 +798,7 @@ static void ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp, Rlist *listv
 
         if (pp->has_subbundles)
         {
-            ScopeNewSpecialScalar(ctx, "this", "promiser", pp->promiser, DATA_TYPE_STRING);
+            ScopeNewSpecial(ctx, "this", "promiser", pp->promiser, DATA_TYPE_STRING);
         }
 
         if (handle)
@@ -808,11 +808,11 @@ static void ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp, Rlist *listv
             ExpandScalar(ctx, "this", handle, tmp);
             CanonifyNameInPlace(tmp);
             Log(LOG_LEVEL_DEBUG, "Expanded handle to '%s'", tmp);
-            ScopeNewSpecialScalar(ctx, "this", "handle", tmp, DATA_TYPE_STRING);
+            ScopeNewSpecial(ctx, "this", "handle", tmp, DATA_TYPE_STRING);
         }
         else
         {
-            ScopeNewSpecialScalar(ctx, "this", "handle", PromiseID(pp), DATA_TYPE_STRING);
+            ScopeNewSpecial(ctx, "this", "handle", PromiseID(pp), DATA_TYPE_STRING);
         }
 
         /* End special variables */
@@ -1313,21 +1313,21 @@ static void ParseServices(EvalContext *ctx, Promise *pp)
     switch (a.service.service_policy)
     {
     case SERVICE_POLICY_START:
-        ScopeNewSpecialScalar(ctx, "this", "service_policy", "start", DATA_TYPE_STRING);
+        ScopeNewSpecial(ctx, "this", "service_policy", "start", DATA_TYPE_STRING);
         break;
 
     case SERVICE_POLICY_RESTART:
-        ScopeNewSpecialScalar(ctx, "this", "service_policy", "restart", DATA_TYPE_STRING);
+        ScopeNewSpecial(ctx, "this", "service_policy", "restart", DATA_TYPE_STRING);
         break;
 
     case SERVICE_POLICY_RELOAD:
-        ScopeNewSpecialScalar(ctx, "this", "service_policy", "reload", DATA_TYPE_STRING);
+        ScopeNewSpecial(ctx, "this", "service_policy", "reload", DATA_TYPE_STRING);
         break;
         
     case SERVICE_POLICY_STOP:
     case SERVICE_POLICY_DISABLE:
     default:
-        ScopeNewSpecialScalar(ctx, "this", "service_policy", "stop", DATA_TYPE_STRING);
+        ScopeNewSpecial(ctx, "this", "service_policy", "stop", DATA_TYPE_STRING);
         break;
     }
 

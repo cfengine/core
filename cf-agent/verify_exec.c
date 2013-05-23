@@ -64,7 +64,7 @@ void VerifyExecPromise(EvalContext *ctx, Promise *pp)
 
     a = GetExecAttributes(ctx, pp);
 
-    ScopeNewSpecialScalar(ctx, "this", "promiser", pp->promiser, DATA_TYPE_STRING);
+    ScopeNewSpecial(ctx, "this", "promiser", pp->promiser, DATA_TYPE_STRING);
 
     if (!SyntaxCheckExec(a, pp))
     {

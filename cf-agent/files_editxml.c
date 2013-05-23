@@ -160,7 +160,7 @@ int ScheduleEditXmlOperations(EvalContext *ctx, Bundle *bp, Attributes a, const 
         return false;
     }
 
-    ScopeNewSpecialScalar(ctx, "edit", "filename", edcontext->filename, DATA_TYPE_STRING);
+    ScopeNewSpecial(ctx, "edit", "filename", edcontext->filename, DATA_TYPE_STRING);
 
     for (pass = 1; pass < CF_DONEPASSES; pass++)
     {

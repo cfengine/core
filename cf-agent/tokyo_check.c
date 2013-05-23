@@ -141,8 +141,6 @@ static int AddOffsetToMapUnlessExists(StringMap ** tree, uint64_t offset,
     {
         xasprintf(&val, "%zu", bucket_index);
         StringMapInsert(*tree, tmp, val);
-        free(tmp);
-        free(val);
     }
     else
     {
@@ -347,11 +345,7 @@ static int DBMetaPopulateRecordMap(DBMeta * dbmeta)
                 }
                 else
                 {
-                    StringMapInsert(dbmeta->record_map, key, "0");
-                    if (key)
-                    {
-                        free(key);
-                    }
+                    StringMapInsert(dbmeta->record_map, key, xstrdup("0"));
                 }
             }
             else

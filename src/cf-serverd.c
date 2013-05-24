@@ -190,6 +190,11 @@ Item *MULTICONNLIST = NULL;
 Item *TRUSTKEYLIST = NULL;
 Item *DHCPLIST = NULL;
 Item *ALLOWUSERLIST = NULL;
+
+#if defined(HAVE_PTHREAD)
+/* SKIPVERIFY is also used in server-transform.c but only here it's used from multiple threads. */
+static pthread_mutex_t cft_skipverify = PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP;
+#endif
 Item *SKIPVERIFY = NULL;
 
 Auth *VADMIT = NULL;
@@ -1749,6 +1754,7 @@ static int VerifyConnection(ServerConnectionState *conn, char buf[CF_BUFSIZE])
     char dns_assert[CF_MAXVARSIZE], ip_assert[CF_MAXVARSIZE];
     int matched = false;
     struct passwd *pw;
+    bool SkipVerify = false;
 
 #if defined(HAVE_GETADDRINFO)
     struct addrinfo query, *response = NULL, *ap;
@@ -1782,7 +1788,23 @@ static int VerifyConnection(ServerConnectionState *conn, char buf[CF_BUFSIZE])
    on trust. Once we have a positive key ID, the IP address is irrelevant fr authentication...
    We can save a lot of time by not looking this up ... */
 
-    if ((conn->trust == false) || IsMatchItemIn(SKIPVERIFY, MapAddress(conn->ipaddr)))
+    if (conn->trust == true)
+    {
+#if defined(HAVE_PTHREAD)
+        if (pthread_mutex_lock(&cft_skipverify) == 0)
+        {
+            if (IsMatchItemIn(SKIPVERIFY, MapAddress(conn->ipaddr)))
+            {
+                SkipVerify = true;
+            }
+            pthread_mutex_unlock(&cft_skipverify);
+        }
+#else
+        SkipVerify = IsMatchItemIn(SKIPVERIFY, MapAddress(conn->ipaddr));
+#endif
+    }
+
+    if (conn->trust == false || SkipVerify == true)
     {
         CfOut(cf_verbose, "", "Allowing %s to connect without (re)checking ID\n", ip_assert);
         CfOut(cf_verbose, "", "Non-verified Host ID is %s (Using skipverify)\n", dns_assert);
@@ -3759,8 +3781,21 @@ static int CheckStoreKey(ServerConnectionState *conn, RSA *key)
         CfOut(cf_verbose, "", "A public key was already known from %s/%s - no trust required\n", conn->hostname,
               conn->ipaddr);
 
-        CfOut(cf_verbose, "", "Adding IP %s to SkipVerify - no need to check this if we have a key\n", conn->ipaddr);
-        IdempPrependItem(&SKIPVERIFY, MapAddress(conn->ipaddr), NULL);
+#if defined(HAVE_PTHREAD)
+        if (pthread_mutex_lock(&cft_skipverify) == 0)
+#endif
+
+        {
+            IdempPrependItem(&SKIPVERIFY, MapAddress(conn->ipaddr), NULL);
+
+#if defined(HAVE_PTHREAD)
+            pthread_mutex_unlock(&cft_skipverify);
+#endif
+
+            CfOut(cf_verbose, "",
+                  "Added IP %s to SkipVerify - no need to check this if we have a key\n",
+                  conn->ipaddr);
+        }
 
         if ((BN_cmp(savedkey->e, key->e) == 0) && (BN_cmp(savedkey->n, key->n) == 0))
         {

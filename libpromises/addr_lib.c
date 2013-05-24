@@ -85,13 +85,13 @@ int FuzzySetMatch(const char *s1, const char *s2)
 
     if (isCIDR && isrange)
     {
-        Log(LOG_LEVEL_ERR, "Cannot mix CIDR notation with xxx-yyy range notation: %s", s1);
+        Log(LOG_LEVEL_ERR, "Cannot mix CIDR notation with xxx-yyy range notation '%s'", s1);
         return -1;
     }
 
     if (!(isv6 || isv4))
     {
-        Log(LOG_LEVEL_ERR, "Not a valid address range - or not a fully qualified name: %s", s1);
+        Log(LOG_LEVEL_ERR, "Not a valid address range - or not a fully qualified name '%s'", s1);
         return -1;
     }
 
@@ -175,7 +175,7 @@ int FuzzySetMatch(const char *s1, const char *s2)
 
                     if ((from > cmp) || (cmp > to))
                     {
-                        Log(LOG_LEVEL_DEBUG, "Out of range %ld > %ld > %ld (range '%s')", from, cmp, to, buffer2);
+                        Log(LOG_LEVEL_DEBUG, "Out of range %ld > %ld > %ld, range '%s'", from, cmp, to, buffer2);
                         return -1;
                     }
                 }
@@ -437,13 +437,13 @@ int FuzzyMatchParse(char *s)
 
         if (mask < 8)
         {
-            Log(LOG_LEVEL_ERR, "Mask value %d in %s is less than 8", mask, s);
+            Log(LOG_LEVEL_ERR, "Mask value %d in '%s' is less than 8", mask, s);
             return false;
         }
 
         if (mask > 30)
         {
-            Log(LOG_LEVEL_ERR, "Mask value %d in %s is silly (> 30)", mask, s);
+            Log(LOG_LEVEL_ERR, "Mask value %d in '%s' is silly (> 30)", mask, s);
             return false;
         }
     }

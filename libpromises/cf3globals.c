@@ -35,7 +35,7 @@ int SHOWREPORTS = false;
 /*****************************************************************************/
 
 int LOOKUP = false;
-int FIPS_MODE = false;
+bool FIPS_MODE = false;
 
 struct utsname VSYSNAME;
 
@@ -65,7 +65,7 @@ char POLICY_SERVER[CF_MAX_IP_LEN] = { 0 };
 /*****************************************************************************/
 
 int IGNORELOCK = false;
-int DONTDO = false;
+bool DONTDO = false;
 
 char VFQNAME[CF_MAXVARSIZE] = { 0 };
 char VUQNAME[CF_MAXVARSIZE] = { 0 };

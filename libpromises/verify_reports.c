@@ -68,7 +68,7 @@ void VerifyReportPromise(EvalContext *ctx, Promise *pp)
             snprintf(unique_name, CF_BUFSIZE, "last-result");
         }
 
-        ScopeNewScalar(ctx, (VarRef) { NULL, PromiseGetBundle(pp)->name, unique_name }, pp->promiser, DATA_TYPE_STRING);
+        EvalContextVariablePut(ctx, (VarRef) { NULL, PromiseGetBundle(pp)->name, unique_name }, (Rval) { pp->promiser, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
         return;
     }
        
@@ -122,8 +122,7 @@ static void ReportToFile(const char *logfile, const char *message)
     FILE *fp = fopen(logfile, "a");
     if (fp == NULL)
     {
-        Log(LOG_LEVEL_ERR, "Could not open log file '%s'. (fopen: %s)", logfile, GetErrorStr());
-        printf("%s\n", message);
+        Log(LOG_LEVEL_ERR, "Could not open log file '%s', message '%s'. (fopen: %s)", logfile, message, GetErrorStr());
     }
     else
     {

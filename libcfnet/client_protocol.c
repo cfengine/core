@@ -81,7 +81,7 @@ int IdentifyAgent(int sd)
 
         if (getsockname(sd, (struct sockaddr *) &myaddr, &myaddr_len) == -1)
         {
-            Log(LOG_LEVEL_ERR, "Couldn't get socket address: %s", GetErrorStr());
+            Log(LOG_LEVEL_ERR, "Couldn't get socket address. (getsockname: %s)", GetErrorStr());
             return false;
         }
 
@@ -92,7 +92,7 @@ int IdentifyAgent(int sd)
         if (ret != 0)
         {
             Log(LOG_LEVEL_ERR,
-                  "IdentifyAgent: getnameinfo(NI_NUMERICHOST) ERROR: %s",
+                "During agent identification. (getnameinfo: %s)",
                   gai_strerror(ret));
             return false;
         }
@@ -105,7 +105,7 @@ int IdentifyAgent(int sd)
             /* getnameinfo doesn't fail on resolution failure, it just prints
              * the IP, so here something else is wrong. */
             Log(LOG_LEVEL_ERR,
-                  "getnameinfo ERROR for %s: %s",
+                "During agent identification for '%s'. (getnameinfo: %s)",
                   localip, gai_strerror(ret));
             return false;
         }
@@ -126,7 +126,7 @@ int IdentifyAgent(int sd)
         {
             dnsname[strlen(localip)] = '\0';
             Log(LOG_LEVEL_WARNING,
-                "WARNING getnameinfo() seems to append garbage to unresolvable IPs, bug mitigated by CFEngine but please report your platform!");
+                "getnameinfo() seems to append garbage to unresolvable IPs, bug mitigated by CFEngine but please report your platform!");
         }
     }
     else
@@ -135,7 +135,7 @@ int IdentifyAgent(int sd)
         strcpy(localip, VIPADDRESS);
 
         Log(LOG_LEVEL_VERBOSE,
-            "skipidentify was promised, so we are trusting and simply announcing the identity as \"%s\" for this host",
+            "skipidentify was promised, so we are trusting and simply announcing the identity as '%s' for this host",
             strlen(VFQNAME) > 0 ? VFQNAME : "skipident");
         if (strlen(VFQNAME) > 0)
         {
@@ -160,7 +160,7 @@ int IdentifyAgent(int sd)
     if (SendTransaction(sd, sendbuff, 0, CF_DONE) == -1)
     {
         Log(LOG_LEVEL_ERR,
-              "!! IdentifyAgent: Could not send auth response");
+              "During identify agent, could not send auth response. (SendTransaction: %s)", GetErrorStr());
         return false;
     }
 
@@ -182,7 +182,7 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
 
     if ((PUBKEY == NULL) || (PRIVKEY == NULL))
     {
-        Log(LOG_LEVEL_ERR, "No public/private key pair found at %s", PublicKeyFile(GetWorkDir()));
+        Log(LOG_LEVEL_ERR, "No public/private key pair found at '%s'", PublicKeyFile(GetWorkDir()));
         return false;
     }
 
@@ -235,7 +235,7 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
         if (RSA_public_encrypt(nonce_len, in, out, server_pubkey, RSA_PKCS1_PADDING) <= 0)
         {
             err = ERR_get_error();
-            Log(LOG_LEVEL_ERR, "Public encryption failed = %s", ERR_reason_error_string(err));
+            Log(LOG_LEVEL_ERR, "Public encryption failed. (RSA_public_encrypt: %s)", ERR_reason_error_string(err));
             free(out);
             RSA_free(server_pubkey);
             return false;
@@ -275,14 +275,14 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
 
     if (ReceiveTransaction(conn->sd, in, NULL) == -1)
     {
-        Log(LOG_LEVEL_ERR, "Protocol transaction broken off (1): %s", GetErrorStr());
+        Log(LOG_LEVEL_ERR, "Protocol transaction broken off (1). (ReceiveTransaction: %s)", GetErrorStr());
         RSA_free(server_pubkey);
         return false;
     }
 
     if (BadProtoReply(in))
     {
-        Log(LOG_LEVEL_ERR, "%s", in);
+        Log(LOG_LEVEL_ERR, "Bad protocol reply '%s'", in);
         RSA_free(server_pubkey);
         return false;
     }
@@ -294,7 +294,7 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
 
     if (ReceiveTransaction(conn->sd, in, NULL) == -1)
     {
-        Log(LOG_LEVEL_ERR, "Protocol transaction broken off (2): %s", GetErrorStr());
+        Log(LOG_LEVEL_ERR, "Protocol transaction broken off (2). (ReceiveTransaction: %s)", GetErrorStr());
         RSA_free(server_pubkey);
         return false;
     }
@@ -304,18 +304,18 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
         if (implicitly_trust_server == false)        /* challenge reply was correct */
         {
             Log(LOG_LEVEL_VERBOSE, ".....................[.h.a.i.l.].................................");
-            Log(LOG_LEVEL_VERBOSE, "Strong authentication of server=%s connection confirmed", conn->this_server);
+            Log(LOG_LEVEL_VERBOSE, "Strong authentication of server '%s' connection confirmed", conn->this_server);
         }
         else
         {
             if (trust_key)
             {
-                Log(LOG_LEVEL_VERBOSE, "Trusting server identity, promise to accept key from %s=%s", conn->this_server,
+                Log(LOG_LEVEL_VERBOSE, "Trusting server identity, promise to accept key from '%s' = '%s'", conn->this_server,
                       conn->remoteip);
             }
             else
             {
-                Log(LOG_LEVEL_ERR, "Not authorized to trust the server=%s's public key (trustkey=false)",
+                Log(LOG_LEVEL_ERR, "Not authorized to trust public key of server '%s' (trustkey = false)",
                       conn->this_server);
                 RSA_free(server_pubkey);
                 return false;
@@ -324,7 +324,7 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
     }
     else
     {
-        Log(LOG_LEVEL_ERR, "Challenge response from server %s/%s was incorrect!", conn->this_server,
+        Log(LOG_LEVEL_ERR, "Challenge response from server '%s/%s' was incorrect", conn->this_server,
              conn->remoteip);
         RSA_free(server_pubkey);
         return false;
@@ -348,7 +348,7 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
     if (RSA_private_decrypt(encrypted_len, in, decrypted_cchall, PRIVKEY, RSA_PKCS1_PADDING) <= 0)
     {
         err = ERR_get_error();
-        Log(LOG_LEVEL_ERR, "Private decrypt failed = %s, abandoning",
+        Log(LOG_LEVEL_ERR, "Private decrypt failed, abandoning. (RSA_private_decrypt: %s)",
              ERR_reason_error_string(err));
         RSA_free(server_pubkey);
         return false;
@@ -386,14 +386,14 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
         /* proposition S4 - conditional */
         if ((len = ReceiveTransaction(conn->sd, in, NULL)) <= 0)
         {
-            Log(LOG_LEVEL_ERR, "Protocol error in RSA authentation from IP %s", conn->this_server);
+            Log(LOG_LEVEL_ERR, "Protocol error in RSA authentation from IP '%s'", conn->this_server);
             return false;
         }
 
         if ((newkey->n = BN_mpi2bn(in, len, NULL)) == NULL)
         {
             err = ERR_get_error();
-            Log(LOG_LEVEL_ERR, "Private key decrypt failed = %s", ERR_reason_error_string(err));
+            Log(LOG_LEVEL_ERR, "Private key decrypt failed. (BN_mpi2bn: %s)", ERR_reason_error_string(err));
             RSA_free(newkey);
             return false;
         }
@@ -402,7 +402,7 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
 
         if ((len = ReceiveTransaction(conn->sd, in, NULL)) <= 0)
         {
-            Log(LOG_LEVEL_INFO, "Protocol error in RSA authentation from IP %s",
+            Log(LOG_LEVEL_INFO, "Protocol error in RSA authentation from IP '%s'",
                  conn->this_server);
             RSA_free(newkey);
             return false;
@@ -411,7 +411,7 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
         if ((newkey->e = BN_mpi2bn(in, len, NULL)) == NULL)
         {
             err = ERR_get_error();
-            Log(LOG_LEVEL_ERR, "Public key decrypt failed = %s", ERR_reason_error_string(err));
+            Log(LOG_LEVEL_ERR, "Public key decrypt failed. (BN_mpi2bn: %s)", ERR_reason_error_string(err));
             RSA_free(newkey);
             return false;
         }
@@ -442,7 +442,7 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
     if (RSA_public_encrypt(session_size, conn->session_key, out, server_pubkey, RSA_PKCS1_PADDING) <= 0)
     {
         err = ERR_get_error();
-        Log(LOG_LEVEL_ERR, "Public encryption failed = %s", ERR_reason_error_string(err));
+        Log(LOG_LEVEL_ERR, "Public encryption failed. (RSA_public_encrypt: %s)", ERR_reason_error_string(err));
         free(out);
         RSA_free(server_pubkey);
         return false;
@@ -454,7 +454,7 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
     {
         char buffer[EVP_MAX_MD_SIZE * 4];
         HashPubKey(server_pubkey, conn->digest, CF_DEFAULT_DIGEST);
-        Log(LOG_LEVEL_VERBOSE, "Public key identity of host \"%s\" is \"%s\"", conn->remoteip,
+        Log(LOG_LEVEL_VERBOSE, "Public key identity of host '%s' is '%s'", conn->remoteip,
               HashPrintSafe(CF_DEFAULT_DIGEST, conn->digest, buffer));
         SavePublicKey(conn->username, buffer, server_pubkey);       // FIXME: username is local
         LastSaw(conn->remoteip, conn->digest, LAST_SEEN_ROLE_CONNECT);

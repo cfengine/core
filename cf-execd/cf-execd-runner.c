@@ -111,18 +111,16 @@ static void ConstructFailsafeCommand(bool scheduled_run, char *buffer)
 
 #ifndef __MINGW32__
 
-static bool IsReadReady(int fd, int timeout_sec)
-{
-    fd_set  rset;
-    FD_ZERO(&rset);
 #if defined(__hpux) && defined(__GNUC__)
 #pragma GCC diagnostic ignored "-Wstrict-aliasing"
 // Avoid spurious HP-UX GCC type-pun warning on FD_SET() macro
 #endif
+
+static bool IsReadReady(int fd, int timeout_sec)
+{
+    fd_set  rset;
+    FD_ZERO(&rset);
     FD_SET(fd, &rset);
-#if defined(__hpux) && defined(__GNUC__)
-#pragma GCC diagnostic warning "-Wstrict-aliasing"
-#endif
 
     struct timeval tv = {
         .tv_sec = timeout_sec,
@@ -152,6 +150,9 @@ static bool IsReadReady(int fd, int timeout_sec)
 
     return false;
 }
+#if defined(__hpux) && defined(__GNUC__)
+#pragma GCC diagnostic warning "-Wstrict-aliasing"
+#endif
 
 #endif  /* __MINGW32__ */
 
@@ -395,7 +396,7 @@ static int CompareResult(const char *filename, const char *prev_file)
 
     if (!LinkOrCopy(filename, prev_file, true))
     {
-        Log(LOG_LEVEL_INFO, "Could not symlink or copy %s to %s", filename, prev_file);
+        Log(LOG_LEVEL_INFO, "Could not symlink or copy '%s' to '%s'", filename, prev_file);
         rtn = 1;
     }
 
@@ -490,8 +491,8 @@ static void MailResult(const ExecConfig *config, const char *file)
     struct hostent *hp = gethostbyname(config->mail_server);
     if (!hp)
     {
-        printf("Unknown host: %s\n", config->mail_server);
-        printf("Make sure that fully qualified names can be looked up at your site.\n");
+        Log(LOG_LEVEL_ERR, "While mailing agent output, unknown host '%s'. Make sure that fully qualified names can be looked up at your site.",
+            config->mail_server);
         fclose(fp);
         return;
     }

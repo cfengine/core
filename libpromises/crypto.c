@@ -35,19 +35,32 @@
 #include "sysinfo.h"
 #include "bootstrap.h"
 
+#ifdef DARWIN
+// On Mac OSX 10.7 and later, majority of functions in /usr/include/openssl/crypto.h
+// are deprecated. No known replacement, so shutting up compiler warnings
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
+
+#ifdef OPENSSL_NO_DEPRECATED
+void CRYPTO_set_id_callback(unsigned long (*func)(void));
+#endif
+
 static void RandomSeed(void);
+static void SetupOpenSSLThreadLocks(void);
+static void CleanupOpenSSLThreadLocks(void);
 
 static char *CFPUBKEYFILE;
 static char *CFPRIVKEYFILE;
 
 /**********************************************************************/
 
+static bool crypto_initialized = false;
+
 void CryptoInitialize()
 {
-    static bool crypto_initialized = false;
-
     if (!crypto_initialized)
     {
+        SetupOpenSSLThreadLocks();
         OpenSSL_add_all_algorithms();
         OpenSSL_add_all_digests();
         ERR_load_crypto_strings();
@@ -59,6 +72,16 @@ void CryptoInitialize()
         srand48(seed);
 
         crypto_initialized = true;
+    }
+}
+
+void CryptoDeInitialize()
+{
+    if (crypto_initialized)
+    {
+        EVP_cleanup();
+        CleanupOpenSSLThreadLocks();
+        crypto_initialized = false;
     }
 }
 
@@ -208,11 +231,11 @@ RSA *HavePublicKey(const char *username, const char *ipaddress, const char *dige
 
     if (stat(newname, &statbuf) == -1)
     {
-        Log(LOG_LEVEL_VERBOSE, "Did not find new key format %s", newname);
+        Log(LOG_LEVEL_VERBOSE, "Did not find new key format '%s'", newname);
         snprintf(oldname, CF_BUFSIZE, "%s/ppkeys/%s-%s.pub", CFWORKDIR, username, ipaddress);
         MapName(oldname);
 
-        Log(LOG_LEVEL_VERBOSE, "Trying old style %s", oldname);
+        Log(LOG_LEVEL_VERBOSE, "Trying old style '%s'", oldname);
 
         if (stat(oldname, &statbuf) == -1)
         {
@@ -284,7 +307,7 @@ void SavePublicKey(const char *user, const char *digest, const RSA *key)
         return;
     }
 
-    Log(LOG_LEVEL_VERBOSE, "Saving public key %s", filename);
+    Log(LOG_LEVEL_VERBOSE, "Saving public key to file '%s'", filename);
 
     if ((fp = fopen(filename, "w")) == NULL)
     {
@@ -292,15 +315,12 @@ void SavePublicKey(const char *user, const char *digest, const RSA *key)
         return;
     }
 
-    ThreadLock(cft_system);
-
     if (!PEM_write_RSAPublicKey(fp, key))
     {
         err = ERR_get_error();
         Log(LOG_LEVEL_ERR, "Error saving public key to '%s'. (PEM_write_RSAPublicKey: %s)", filename, ERR_reason_error_string(err));
     }
 
-    ThreadUnlock(cft_system);
     fclose(fp);
 }
 
@@ -345,7 +365,7 @@ int DecryptString(char type, char *in, char *out, unsigned char *key, int cipher
 
     if (!EVP_DecryptUpdate(&ctx, out, &plainlen, in, cipherlen))
     {
-        Log(LOG_LEVEL_ERR, "Decrypt FAILED");
+        Log(LOG_LEVEL_ERR, "Failed to decrypt string");
         EVP_CIPHER_CTX_cleanup(&ctx);
         return -1;
     }
@@ -354,7 +374,7 @@ int DecryptString(char type, char *in, char *out, unsigned char *key, int cipher
     {
         unsigned long err = ERR_get_error();
 
-        Log(LOG_LEVEL_ERR, "decryption FAILED at final of %d: %s", cipherlen, ERR_error_string(err, NULL));
+        Log(LOG_LEVEL_ERR, "Failed to decrypt at final of cipher length %d. (EVP_DecryptFinal_ex: %s)", cipherlen, ERR_error_string(err, NULL));
         EVP_CIPHER_CTX_cleanup(&ctx);
         return -1;
     }
@@ -376,7 +396,7 @@ void DebugBinOut(char *buffer, int len, char *comment)
 
     if (len >= (sizeof(buf) / 2))       // hex uses two chars per byte
     {
-        Log(LOG_LEVEL_DEBUG, "Debug binary print is too large (len=%d)", len);
+        Log(LOG_LEVEL_DEBUG, "Debug binary print is too large (len = %d)", len);
         return;
     }
 
@@ -388,7 +408,7 @@ void DebugBinOut(char *buffer, int len, char *comment)
         strcat(buf, hexStr);
     }
 
-    Log(LOG_LEVEL_VERBOSE, "BinaryBuffer(%d bytes => %s) -> [%s]", len, comment, buf);
+    Log(LOG_LEVEL_VERBOSE, "BinaryBuffer, %d bytes, comment '%s', buffer '%s'", len, comment, buf);
 }
 
 const char *PublicKeyFile(const char *workdir)
@@ -410,3 +430,67 @@ const char *PrivateKeyFile(const char *workdir)
     }
     return CFPRIVKEYFILE;
 }
+
+/*********************************************************************
+ * Functions for threadsafe OpenSSL usage                            *
+ * Only pthread support - we don't create threads with any other API *
+ *********************************************************************/
+
+#if defined(HAVE_PTHREAD)
+static pthread_mutex_t *cf_openssl_locks;
+
+#ifndef __MINGW32__
+unsigned long ThreadId_callback(void)
+{
+    return (unsigned long)pthread_self();
+}
+#endif
+
+static void OpenSSLLock_callback(int mode, int index, char *file, int line)
+{
+    if (mode & CRYPTO_LOCK)
+    {
+        pthread_mutex_lock(&(cf_openssl_locks[index]));
+    }
+    else
+    {
+        pthread_mutex_unlock(&(cf_openssl_locks[index]));
+    }
+}
+#endif
+
+static void SetupOpenSSLThreadLocks(void)
+{
+#if defined(HAVE_PTHREAD)
+    const int numLocks = CRYPTO_num_locks();
+    cf_openssl_locks = OPENSSL_malloc(numLocks * sizeof(pthread_mutex_t));
+
+    for (int i = 0; i < numLocks; i++)
+    {
+        pthread_mutex_init(&(cf_openssl_locks[i]),NULL);
+    }
+
+#ifndef __MINGW32__
+    CRYPTO_set_id_callback((unsigned long (*)())ThreadId_callback);
+#endif
+    CRYPTO_set_locking_callback((void (*)())OpenSSLLock_callback);
+#endif
+}
+
+static void CleanupOpenSSLThreadLocks(void)
+{
+#if defined(HAVE_PTHREAD)
+    const int numLocks = CRYPTO_num_locks();
+    CRYPTO_set_locking_callback(NULL);
+#ifndef __MINGW32__
+    CRYPTO_set_id_callback(NULL);
+#endif
+
+    for (int i = 0; i < numLocks; i++)
+    {
+        pthread_mutex_destroy(&(cf_openssl_locks[i]));
+    }
+    OPENSSL_free(cf_openssl_locks);
+#endif
+}
+

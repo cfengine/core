@@ -66,7 +66,6 @@ char *EDITXMLTYPESEQUENCE[] =
     NULL
 };
 
-static void EditXmlClassBanner(const EvalContext *ctx, enum editxmltypesequence type);
 static void KeepEditXmlPromise(EvalContext *ctx, Promise *pp, void *param);
 #ifdef HAVE_LIBXML2
 static bool VerifyXPathBuild(EvalContext *ctx, Attributes a, Promise *pp, EditContext *edcontext);
@@ -161,14 +160,12 @@ int ScheduleEditXmlOperations(EvalContext *ctx, Bundle *bp, Attributes a, const 
         return false;
     }
 
-    ScopeNewSpecialScalar(ctx, "edit", "filename", edcontext->filename, DATA_TYPE_STRING);
+    ScopeNewSpecial(ctx, "edit", "filename", edcontext->filename, DATA_TYPE_STRING);
 
     for (pass = 1; pass < CF_DONEPASSES; pass++)
     {
         for (type = 0; EDITXMLTYPESEQUENCE[type] != NULL; type++)
         {
-            EditXmlClassBanner(ctx, type);
-
             if ((sp = BundleGetPromiseType(bp, EDITXMLTYPESEQUENCE[type])) == NULL)
             {
                 continue;
@@ -201,30 +198,6 @@ int ScheduleEditXmlOperations(EvalContext *ctx, Bundle *bp, Attributes a, const 
 
 /***************************************************************************/
 /* Level                                                                   */
-/***************************************************************************/
-
-static void EditXmlClassBanner(const EvalContext *ctx, enum editxmltypesequence type)
-{
-    if (type != elx_delete)     /* Just parsed all local classes */
-    {
-        return;
-    }
-
-    {
-        Log(LOG_LEVEL_VERBOSE, "     ??  Private class context");
-
-        StringSetIterator it = EvalContextStackFrameIteratorSoft(ctx);
-        const char *context = NULL;
-        while ((context = StringSetIteratorNext(&it)))
-        {
-            Log(LOG_LEVEL_VERBOSE, "     ??       %s", context);
-        }
-
-        Log(LOG_LEVEL_VERBOSE, "\n");
-    }
-
-}
-
 /***************************************************************************/
 
 static void KeepEditXmlPromise(EvalContext *ctx, Promise *pp, void *param)
@@ -412,7 +385,7 @@ static bool VerifyXPathBuild(EvalContext *ctx, Attributes a, Promise *pp, EditCo
     if (!SanityCheckXPathBuild(ctx, a, pp))
     {
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a,
-             "The promised XPath build: \"%s\", breaks its own promises", rawxpath);
+             "The promised XPath build: '%s', breaks its own promises", rawxpath);
         return false;
     }
 
@@ -462,7 +435,7 @@ static void VerifyTreeDeletions(EvalContext *ctx, Attributes a, Promise *pp, Edi
     if (!SanityCheckTreeDeletions(a))
     {
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a,
-             "The promised tree deletion:\n\"%s\"\nis inconsistent", pp->promiser);
+             "The promised tree deletion '%s' is inconsistent", pp->promiser);
         return;
     }
 
@@ -480,7 +453,7 @@ static void VerifyTreeDeletions(EvalContext *ctx, Attributes a, Promise *pp, Edi
     if (!XmlSelectNode(ctx, a.xml.select_xpath, doc, &docnode, a, pp, edcontext))
     {
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a,
-            "The promised XPath pattern: \"%s\", was NOT successful when selecting an edit node, in XML document(%s)",
+            "The promised XPath pattern '%s', was NOT successful when selecting an edit node, in XML document(%s)",
              a.xml.select_xpath, edcontext->filename);
         return;
     }
@@ -515,7 +488,7 @@ static void VerifyTreeInsertions(EvalContext *ctx, Attributes a, Promise *pp, Ed
     if (!SanityCheckTreeInsertions(a, edcontext))
     {
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a,
-             "The promised tree insertion:\n\"%s\"\nbreaks its own promises", pp->promiser);
+             "The promised tree insertion '%s' breaks its own promises", pp->promiser);
         return;
     }
 
@@ -534,7 +507,7 @@ static void VerifyTreeInsertions(EvalContext *ctx, Attributes a, Promise *pp, Ed
     if (a.xml.haveselectxpath && !XmlSelectNode(ctx, a.xml.select_xpath, doc, &docnode, a, pp, edcontext))
     {
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a,
-            "The promised XPath pattern: \"%s\", was NOT successful when selecting an edit node, in XML document(%s)",
+             "The promised XPath pattern '%s', was NOT successful when selecting an edit node, in XML document '%s'",
              a.xml.select_xpath, edcontext->filename);
         return;
     }
@@ -577,7 +550,7 @@ static void VerifyAttributeDeletions(EvalContext *ctx, Attributes a, Promise *pp
     if (!SanityCheckAttributeDeletions(a))
     {
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a,
-             "The promised attribute deletion: \"%s\", is inconsistent", pp->promiser);
+             "The promised attribute deletion '%s', is inconsistent", pp->promiser);
         return;
     }
 
@@ -595,7 +568,7 @@ static void VerifyAttributeDeletions(EvalContext *ctx, Attributes a, Promise *pp
     if (!XmlSelectNode(ctx, a.xml.select_xpath, doc, &docnode, a, pp, edcontext))
     {
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a,
-            "The promised XPath pattern: \"%s\", was NOT successful when selecting an edit node, in XML document(%s)",
+            "The promised XPath pattern '%s', was NOT successful when selecting an edit node, in XML document(%s)",
              a.xml.select_xpath, edcontext->filename);
         return;
     }
@@ -630,7 +603,7 @@ static void VerifyAttributeSet(EvalContext *ctx, Attributes a, Promise *pp, Edit
     if (!SanityCheckAttributeSet(a))
     {
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a,
-             "The promised attribute set: \"%s\", breaks its own promises", pp->promiser);
+             "The promised attribute set '%s', breaks its own promises", pp->promiser);
         return;
     }
 
@@ -648,7 +621,7 @@ static void VerifyAttributeSet(EvalContext *ctx, Attributes a, Promise *pp, Edit
     if (!XmlSelectNode(ctx, a.xml.select_xpath, doc, &docnode, a, pp, edcontext))
     {
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a,
-            "The promised XPath pattern: \"%s\", was NOT successful when selecting an edit node, in XML document(%s)",
+            "The promised XPath pattern '%s', was NOT successful when selecting an edit node, in XML document(%s)",
              a.xml.select_xpath, edcontext->filename);
         return;
     }
@@ -701,7 +674,7 @@ static void VerifyTextDeletions(EvalContext *ctx, Attributes a, Promise *pp, Edi
     if (!XmlSelectNode(ctx, a.xml.select_xpath, doc, &docnode, a, pp, edcontext))
     {
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a,
-            "The promised XPath pattern: \"%s\", was NOT successful when selecting an edit node, in XML document(%s)",
+            "The promised XPath pattern '%s', was NOT successful when selecting an edit node, in XML document(%s)",
              a.xml.select_xpath, edcontext->filename);
         return;
     }
@@ -754,7 +727,7 @@ static void VerifyTextSet(EvalContext *ctx, Attributes a, Promise *pp, EditConte
     if (!XmlSelectNode(ctx, a.xml.select_xpath, doc, &docnode, a, pp, edcontext))
     {
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a,
-            "The promised XPath pattern: \"%s\", was NOT successful when selecting an edit node, in XML document(%s)",
+            "The promised XPath pattern '%s', was NOT successful when selecting an edit node, in XML document(%s)",
              a.xml.select_xpath, edcontext->filename);
         return;
     }
@@ -807,7 +780,7 @@ static void VerifyTextInsertions(EvalContext *ctx, Attributes a, Promise *pp, Ed
     if (!XmlSelectNode(ctx, a.xml.select_xpath, doc, &docnode, a, pp, edcontext))
     {
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a,
-            "The promised XPath pattern: \"%s\", was NOT successful when selecting an edit node, in XML document(%s)",
+            "The promised XPath pattern '%s', was NOT successful when selecting an edit node, in XML document(%s)",
              a.xml.select_xpath, edcontext->filename);
         return;
     }
@@ -853,19 +826,19 @@ static bool XmlSelectNode(EvalContext *ctx, char *rawxpath, xmlDocPtr doc, xmlNo
     if (!XPathVerifyConvergence(rawxpath))
     {
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a,
-             "select_xpath expression: \"%s\", is NOT convergent", rawxpath);
+             "select_xpath expression '%s', is NOT convergent", rawxpath);
         return false;
     }
 
     if ((xpathExpr = CharToXmlChar(rawxpath)) == NULL)
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a, "Unable to create new XPath expression: \"%s\"", rawxpath);
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a, "Unable to create new XPath expression '%s'", rawxpath);
         return false;
     }
 
     if ((xpathCtx = xmlXPathNewContext(doc)) == NULL)
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a, "Unable to create new XPath context: \"%s\"", rawxpath);
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a, "Unable to create new XPath context '%s'", rawxpath);
         return false;
     }
 
@@ -886,7 +859,7 @@ static bool XmlSelectNode(EvalContext *ctx, char *rawxpath, xmlDocPtr doc, xmlNo
     if (size > 1)
     {
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a,
-             "Current select_xpath expression: \"%s\", returns (%d) edit nodes in XML document(%s), please modify expression to select a unique edit node",
+             "Current select_xpath expression '%s', returns (%d) edit nodes in XML document(%s), please modify expression to select a unique edit node",
              xpathExpr, size, edcontext->filename);
         valid = false;
     }
@@ -906,7 +879,7 @@ static bool XmlSelectNode(EvalContext *ctx, char *rawxpath, xmlDocPtr doc, xmlNo
         if (cur == NULL)
         {
             cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_INTERRUPTED, pp, a,
-                 "The promised XPath pattern: \"%s\", was NOT found when selecting an edit node, in XML document(%s)",
+                 "The promised XPath pattern '%s', was NOT found when selecting an edit node, in XML document(%s)",
                  xpathExpr, edcontext->filename);
             valid = false;
         }
@@ -952,7 +925,7 @@ static bool BuildXPathInFile(EvalContext *ctx, char rawxpath[CF_BUFSIZE], xmlDoc
     }
 
     //insert the content into new XML document, beginning from root node
-    cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, "Building XPath: \"%s\", into an empty XML document (%s)",
+    cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, "Building XPath '%s', into an empty XML document (%s)",
          rawxpath, edcontext->filename);
     if (xmlDocSetRootElement(doc, docnode) != NULL)
     {
@@ -1006,7 +979,7 @@ static bool BuildXPathInNode(EvalContext *ctx, char rawxpath[CF_BUFSIZE], xmlDoc
     }
 
     //insert the new tree into selected node in XML document
-    cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, "Building XPath: \"%s\", in XML document (%s)",
+    cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, "Building XPath '%s', in XML document (%s)",
          rawxpath, edcontext->filename);
     if (docnode != NULL)
     {
@@ -1247,7 +1220,7 @@ static bool DeleteAttributeInNode(EvalContext *ctx, char *rawname, xmlNodePtr do
     if ((name = CharToXmlChar(rawname)) == NULL)
     {
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a,
-             "Name of attribute to be deleted: \"%s\", at XPath (%s) in XML document (%s), was NOT successfully loaded into an XML buffer",
+             "Name of attribute to be deleted '%s', at XPath (%s) in XML document (%s), was NOT successfully loaded into an XML buffer",
              rawname, a.xml.select_xpath, edcontext->filename);
         return false;
     }
@@ -1256,7 +1229,7 @@ static bool DeleteAttributeInNode(EvalContext *ctx, char *rawname, xmlNodePtr do
     if ((attr = xmlHasProp(docnode, name)) == NULL)
     {
         cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a,
-             "The promised attribute to be deleted: \"%s\", does NOT exist, at XPath (%s) in XML document (%s) (promise kept)",
+             "The promised attribute to be deleted '%s', does NOT exist, at XPath (%s) in XML document (%s) (promise kept)",
              rawname, a.xml.select_xpath, edcontext->filename);
         return false;
     }
@@ -1264,18 +1237,18 @@ static bool DeleteAttributeInNode(EvalContext *ctx, char *rawname, xmlNodePtr do
     if (a.transaction.action == cfa_warn)
     {
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, a,
-             "Need to delete the promised attribute: \"%s\", at XPath (%s) in XML document (%s) - but only a warning was promised",
+             "Need to delete the promised attribute '%s', at XPath (%s) in XML document (%s) - but only a warning was promised",
              rawname, a.xml.select_xpath, edcontext->filename);
         return true;
     }
 
     //delete attribute from docnode
-    cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, "Deleting attribute: \"%s\", at XPath (%s) in XML document (%s)",
+    cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, "Deleting attribute '%s', at XPath (%s) in XML document (%s)",
              rawname, a.xml.select_xpath, edcontext->filename);
     if ((xmlRemoveProp(attr)) == -1)
     {
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a,
-             "The promised attribute to be deleted: \"%s\", was NOT deleted successfully, at XPath (%s) in XML document (%s).",
+             "The promised attribute to be deleted '%s', was NOT deleted successfully, at XPath (%s) in XML document (%s).",
              rawname, a.xml.select_xpath, edcontext->filename);
         return false;
     }
@@ -1284,7 +1257,7 @@ static bool DeleteAttributeInNode(EvalContext *ctx, char *rawname, xmlNodePtr do
     if ((attr = xmlHasProp(docnode, name)) != NULL)
     {
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a,
-             "The promised attribute to be deleted: \"%s\", was NOT deleted successfully, at XPath (%s) in XML document (%s)",
+             "The promised attribute to be deleted '%s', was NOT deleted successfully, at XPath (%s) in XML document (%s)",
              rawname, a.xml.select_xpath, edcontext->filename);
         return false;
     }
@@ -1303,7 +1276,7 @@ static bool SetAttributeInNode(EvalContext *ctx, char *rawname, char *rawvalue, 
     if ((name = CharToXmlChar(rawname)) == NULL)
     {
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a,
-             "Name of attribute to be set: \"%s\", at XPath (%s) in XML document (%s), was NOT successfully loaded into an XML buffer",
+             "Name of attribute to be set '%s', at XPath (%s) in XML document (%s), was NOT successfully loaded into an XML buffer",
              rawname, a.xml.select_xpath, edcontext->filename);
         return false;
     }
@@ -1311,7 +1284,7 @@ static bool SetAttributeInNode(EvalContext *ctx, char *rawname, char *rawvalue, 
     if ((value = CharToXmlChar(rawvalue)) == NULL)
     {
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a,
-             "Value of attribute to be set: \"%s\", at XPath (%s) in XML document (%s), was NOT successfully loaded into an XML buffer",
+             "Value of attribute to be set '%s', at XPath (%s) in XML document (%s), was NOT successfully loaded into an XML buffer",
              rawvalue, a.xml.select_xpath, edcontext->filename);
         return false;
     }
@@ -1320,7 +1293,7 @@ static bool SetAttributeInNode(EvalContext *ctx, char *rawname, char *rawvalue, 
     if ((attr = XmlVerifyAttributeInNode(name, value, docnode)) != NULL)
     {
         cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a,
-             "The promised attribute to be set, with name: \"%s\" and value: \"%s\", already exists, at XPath (%s) in XML document (%s) (promise kept)",
+             "The promised attribute to be set, with name '%s' and value '%s', already exists, at XPath (%s) in XML document (%s) (promise kept)",
              rawname, rawvalue, a.xml.select_xpath, edcontext->filename);
         return false;
     }
@@ -1328,18 +1301,18 @@ static bool SetAttributeInNode(EvalContext *ctx, char *rawname, char *rawvalue, 
     if (a.transaction.action == cfa_warn)
     {
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, a,
-             "Need to set the promised attribute, with name: \"%s\" and value: \"%s\", at XPath (%s) in XML document (%s) - but only a warning was promised",
+             "Need to set the promised attribute, with name '%s' and value '%s', at XPath (%s) in XML document (%s) - but only a warning was promised",
              rawname, rawvalue, a.xml.select_xpath, edcontext->filename);
         return true;
     }
 
     //set attribute in docnode
-    cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, "Setting attribute with name: \"%s\" and value: \"%s\", at XPath (%s) in XML document (%s)",
+    cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, "Setting attribute with name '%s' and value '%s', at XPath (%s) in XML document (%s)",
          rawname, rawvalue, a.xml.select_xpath, edcontext->filename);
     if ((attr = xmlSetProp(docnode, name, value)) == NULL)
     {
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a,
-             "The promised attribute to be set, with name: \"%s\" and value: \"%s\", was NOT successfully set, at XPath (%s) in XML document (%s)",
+             "The promised attribute to be set, with name '%s' and value '%s', was NOT successfully set, at XPath (%s) in XML document (%s)",
              rawname, rawvalue, a.xml.select_xpath, edcontext->filename);
         return false;
     }
@@ -1348,7 +1321,7 @@ static bool SetAttributeInNode(EvalContext *ctx, char *rawname, char *rawvalue, 
     if ((attr = XmlVerifyAttributeInNode(name, value, docnode)) == NULL)
     {
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a,
-             "The promised attribute to be set, with name: \"%s\" and value: \"%s\", was NOT successfully set, at XPath (%s) in XML document (%s)",
+             "The promised attribute to be set, with name '%s' and value '%s', was NOT successfully set, at XPath (%s) in XML document (%s)",
              rawname, rawvalue, a.xml.select_xpath, edcontext->filename);
         return false;
     }
@@ -1622,7 +1595,7 @@ static bool SanityCheckTreeInsertions(Attributes a, EditContext *edcontext)
     else if ((!a.xml.haveselectxpath &&  a.xml.havebuildxpath))
     {
         Log(LOG_LEVEL_ERR,
-              "!! Tree insertion requires select_xpath to be specified, unless inserting into an empty file");
+              "Tree insertion requires select_xpath to be specified, unless inserting into an empty file");
         return false;
     }
 
@@ -1640,8 +1613,7 @@ static bool SanityCheckAttributeDeletions(Attributes a)
 {
     if (!(a.xml.haveselectxpath))
     {
-        Log(LOG_LEVEL_ERR,
-              "Attribute deletion requires select_xpath to be specified");
+        Log(LOG_LEVEL_ERR, "Attribute deletion requires select_xpath to be specified");
         return false;
     }
 
@@ -1659,8 +1631,7 @@ static bool SanityCheckAttributeSet(Attributes a)
 {
     if (!(a.xml.haveselectxpath))
     {
-        Log(LOG_LEVEL_ERR,
-              "Attribute insertion requires select_xpath to be specified");
+        Log(LOG_LEVEL_ERR, "Attribute insertion requires select_xpath to be specified");
         return false;
     }
 
@@ -1678,8 +1649,7 @@ static bool SanityCheckTextDeletions(Attributes a)
 {
     if (!(a.xml.haveselectxpath))
     {
-        Log(LOG_LEVEL_ERR,
-              "Tree insertion requires select_xpath to be specified");
+        Log(LOG_LEVEL_ERR, "Tree insertion requires select_xpath to be specified");
         return false;
     }
 
@@ -1697,8 +1667,7 @@ static bool SanityCheckTextSet(Attributes a)
 {
     if (!(a.xml.haveselectxpath))
     {
-        Log(LOG_LEVEL_ERR,
-              "Tree insertion requires select_xpath to be specified");
+        Log(LOG_LEVEL_ERR, "Tree insertion requires select_xpath to be specified");
         return false;
     }
 
@@ -1716,8 +1685,7 @@ static bool SanityCheckTextInsertions(Attributes a)
 {
     if (!(a.xml.haveselectxpath))
     {
-        Log(LOG_LEVEL_ERR,
-              "Tree insertion requires select_xpath to be specified");
+        Log(LOG_LEVEL_ERR, "Tree insertion requires select_xpath to be specified");
         return false;
     }
 

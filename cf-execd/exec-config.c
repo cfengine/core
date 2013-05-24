@@ -144,7 +144,7 @@ void ExecConfigUpdate(const EvalContext *ctx, const Policy *policy, ExecConfig *
             if (!EvalContextVariableGet(ctx, (VarRef) { NULL, "control_executor", cp->lval }, &retval, NULL))
             {
                 // TODO: should've been checked before this point. change to programming error
-                Log(LOG_LEVEL_ERR, "Unknown lval %s in exec control body", cp->lval);
+                Log(LOG_LEVEL_ERR, "Unknown lval '%s' in exec control body", cp->lval);
                 continue;
             }
 

@@ -81,10 +81,10 @@ int CLOCK_DRIFT = 3600;  /* 1hr */
 int ACTIVE_THREADS;
 
 int CFD_MAXPROCESSES = 0;
-int DENYBADCLOCKS = true;
+bool DENYBADCLOCKS = true;
 
 int MAXTRIES = 5;
-int LOGENCRYPT = false;
+bool LOGENCRYPT = false;
 int COLLECT_INTERVAL = 0;
 int COLLECT_WINDOW = 10;
 bool SERVER_LISTEN = true;
@@ -173,18 +173,18 @@ void ServerEntryPoint(EvalContext *ctx, int sd_reply, char *ipaddr)
     char intime[64];
     time_t now;
     
-    Log(LOG_LEVEL_VERBOSE, "Obtained IP address of %s on socket %d from accept", ipaddr, sd_reply);
+    Log(LOG_LEVEL_VERBOSE, "Obtained IP address of '%s' on socket %d from accept", ipaddr, sd_reply);
     
     if ((SV.nonattackerlist) && (!IsMatchItemIn(SV.nonattackerlist, MapAddress(ipaddr))))
     {
-        Log(LOG_LEVEL_ERR, "Not allowing connection from non-authorized IP %s", ipaddr);
+        Log(LOG_LEVEL_ERR, "Not allowing connection from non-authorized IP '%s'", ipaddr);
         cf_closesocket(sd_reply);
         return;
     }
     
     if (IsMatchItemIn(SV.attackerlist, MapAddress(ipaddr)))
     {
-        Log(LOG_LEVEL_ERR, "Denying connection from non-authorized IP %s", ipaddr);
+        Log(LOG_LEVEL_ERR, "Denying connection from non-authorized IP '%s'", ipaddr);
         cf_closesocket(sd_reply);
         return;
     }
@@ -206,7 +206,7 @@ void ServerEntryPoint(EvalContext *ctx, int sd_reply, char *ipaddr)
         if (IsItemIn(SV.connectionlist, MapAddress(ipaddr)))
         {
             ThreadUnlock(cft_count);
-            Log(LOG_LEVEL_ERR, "Denying repeated connection from \"%s\"", ipaddr);
+            Log(LOG_LEVEL_ERR, "Denying repeated connection from '%s'", ipaddr);
             cf_closesocket(sd_reply);
             return;
         }
@@ -216,11 +216,11 @@ void ServerEntryPoint(EvalContext *ctx, int sd_reply, char *ipaddr)
     
     if (SV.logconns)
     {
-        Log(LOG_LEVEL_INFO, "Accepting connection from \"%s\"", ipaddr);
+        Log(LOG_LEVEL_INFO, "Accepting connection from '%s'", ipaddr);
     }
     else
     {
-        Log(LOG_LEVEL_INFO, "Accepting connection from \"%s\"", ipaddr);
+        Log(LOG_LEVEL_INFO, "Accepting connection from '%s'", ipaddr);
     }
     
     snprintf(intime, 63, "%d", (int) now);
@@ -766,7 +766,7 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
         if ((tloc = time((time_t *) NULL)) == -1)
         {
             sprintf(conn->output, "Couldn't read system clock\n");
-            Log(LOG_LEVEL_INFO, "%s. (time: %s)", conn->output, GetErrorStr());
+            Log(LOG_LEVEL_INFO, "Couldn't read system clock. (time: %s)", GetErrorStr());
             SendTransaction(conn->sd_reply, "BAD: clocks out of synch", 0, CF_DONE);
             return true;
         }
@@ -1006,7 +1006,7 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
 
     sprintf(sendbuffer, "BAD: Request denied\n");
     SendTransaction(conn->sd_reply, sendbuffer, 0, CF_DONE);
-    Log(LOG_LEVEL_INFO, "Closing connection, due to request: \"%s\"", recvbuffer);
+    Log(LOG_LEVEL_INFO, "Closing connection, due to request: '%s'", recvbuffer);
     return false;
 }
 
@@ -1108,7 +1108,7 @@ static void DoExec(EvalContext *ctx, ServerConnectionState *conn, char *args)
         return;
     }
 
-    Log(LOG_LEVEL_VERBOSE, "Examining command string: %s", args);
+    Log(LOG_LEVEL_VERBOSE, "Examining command string '%s'", args);
 
     for (sp = args; *sp != '\0'; sp++)  /* Blank out -K -f */
     {
@@ -2042,20 +2042,15 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
 
     if (iscrypt == 'y')
     {
-        ThreadLock(cft_system);
-
         if (RSA_private_decrypt
             (crypt_len, recvbuffer + CF_RSA_PROTO_OFFSET, decrypted_nonce, PRIVKEY, RSA_PKCS1_PADDING) <= 0)
         {
             err = ERR_get_error();
 
-            ThreadUnlock(cft_system);
             Log(LOG_LEVEL_ERR, "Private decrypt failed = '%s'", ERR_reason_error_string(err));
             free(decrypted_nonce);
             return false;
         }
-
-        ThreadUnlock(cft_system);
     }
     else
     {
@@ -2076,10 +2071,7 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
     free(decrypted_nonce);
 
 /* Get the public key from the client */
-
-    ThreadLock(cft_system);
     newkey = RSA_new();
-    ThreadUnlock(cft_system);
 
 /* proposition C2 */
     if ((len_n = ReceiveTransaction(conn->sd_reply, recvbuffer, NULL)) == -1)
@@ -2155,8 +2147,6 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
 
 /* Send counter challenge to be sure this is a live session */
 
-    ThreadLock(cft_system);
-
     counter_challenge = BN_new();
     if (counter_challenge == NULL)
     {
@@ -2184,8 +2174,6 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
         free(out);
         return false;
     }
-
-    ThreadUnlock(cft_system);
 
 /* proposition S3 */
     SendTransaction(conn->sd_reply, out, encrypted_len, CF_DONE);
@@ -2278,17 +2266,12 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
     {
         /* New protocol encrypted */
 
-        ThreadLock(cft_system);
-
         if (RSA_private_decrypt(keylen, in, out, PRIVKEY, RSA_PKCS1_PADDING) <= 0)
         {
-            ThreadUnlock(cft_system);
             err = ERR_get_error();
             Log(LOG_LEVEL_ERR, "Private decrypt failed = %s", ERR_reason_error_string(err));
             return false;
         }
-
-        ThreadUnlock(cft_system);
 
         memcpy(conn->session_key, out, session_size);
     }

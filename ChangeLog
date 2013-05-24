@@ -1,32 +1,21 @@
-3.5.0 - Beta
+3.5.0
 
        New features:
        - classes promises now take an optional scope constraint.
-       - new built-in functions: every, none, some, nth, sublist, uniq, filter.
-
-       - Better diagnostics of parsing errors.
-       - Error messages from parser now show the context of error.
-
-       Changes:
-       - parser no longer allows ',' after promiser or promisee. must be either ';' or lval
-       - Version info removed from mail subject in the emails sent by cf-execd.
-         The subject will only contain "[fqname/ipaddress]" instead of "communnity/nova [fqname/ipaddress]"
-         Please change your email filters accordingly if necessary.
-
-       - "outputs" promise type is retired. Their semantics was not clear, and the functionality
-         is better suited for control body setting, not a promise.
-
-       - Tokyo Cabinet databases are now automatically checked for
-         correctness during opening. It should prevent a number of issues
-         with corrupted TC databases causing binaries to hang.
-
-       Bugfixes:
-       - bundles are allowed to be empty (Redmine #2411)
-
-3.5.0 - Alpha 2
-
-       New features:
-       - new built-in functions: classesmatching, strftime, filestat, ifelse, maparray
+       - new built-in functions: every, none, some, nth, sublist, uniq, filter
+         - every
+         - none
+         - some
+         - nth
+         - sublist
+         - uniq
+         - filter
+         - classesmatching
+         - strftime
+         - filestat
+         - ifelse
+         - maparray
+         - format
        - cf-promises flag --parse-tree is replaced by --policy-output-format=, requiring the
           user to specify the output format (none, cf, json)
        - cf-promises allows partial check of policy (without body common control) without integrity check;
@@ -36,8 +25,21 @@
        - Class "failsafe_fallback" is defined in failsafe.cf when main policy contains errors and
          failsafe is run because of this
        - add scope attribute for body classes (Redmine #2013) 
+       - Better diagnostics of parsing errors
+       - Error messages from parser now show the context of error
+       - new cf-agent option: --self-diagnostics
+       - new output format, and --legacy-output
+       - warnings for cf-promises.
+       - Enable zeroconf-discovery of policy hubs for automatic bootstrapping
+         if Avahi is present
+       - Support for sys.cpus on more platforms than Linux & HPUX
 
        Changes:
+       - parser no longer allows ',' after promiser or promisee. must be either ';' or lval
+       - Make parser output in GCC compatible format the only supported format 
+         (remove --gcc-brief-format flag)
+
+       - Silence license warnings in Enterprise Free25 installations
        - action_policy => "warn" causes not_kept classes to be set on promise needing repair.
        - command line option version (-V) now prints a shorter parsable version without graphic
        - implicit execution of server and common bundles taking arguments is skipped in cf-serverd.
@@ -47,36 +49,92 @@
        - reports promises are now allowed in any context (Redmine #2005)
        - cf-report has been removed
        - cf-execd: --once implies --no-fork
+       - Version info removed from mail subject in the emails sent by cf-execd.
+         The subject will only contain "[fqname/ipaddress]" instead of "communnity/nova [fqname/ipaddress]"
+         Please change your email filters accordingly if necessary.
+       - "outputs" promise type is retired. Their semantics was not clear, and the functionality
+         is better suited for control body setting, not a promise.
+       - Tokyo Cabinet databases are now automatically checked for
+         correctness during opening. It should prevent a number of issues
+         with corrupted TC databases causing binaries to hang.
+       - Improved ACL handling on Windows, which led to some syntax changes. We now consistently
+         use the term "default" to describe ACLs that can be inherited by child objects. These
+         keywords have received new names:
+           acl_directory_inherit -> acl_default
+            specify_inherit_aces -> specify_default_aces
+         The old keywords are deprecated, but still valid. In addition, a new keyword
+         "acl_inherit" controls inheritance behavior on Windows. This feature does not exist on
+         Unix platforms. (Redmine #1832)
+       - Networking code is moved from libpromises to its own library,
+         libcfnet. Work has begun on making the API more sane and thread-safe.
+         Lots of legacy code was removed.
+       - Add getaddrinfo() replacement in libcompat (borrowed from PostgreSQL).
+       - Replace old deprecated and non thread-safe resolver calls with
+         getaddrinfo() and getnameinfo().
+       - Hostname2IPString(), IPString2Hostname() are now thread-safe, and are
+         returning error when resolution fails.
+       - Running cf-execd --once now implies --no-fork, and also does not wait
+         for splaytime to pass.
+       - execresult(), returnszero() and commands promises no longer requires the first word
+         word to be an absolute path when using the shell. (Part of Redmine #2143)
+       - commands promises useshell attribute now accepts "noshell" and "useshell" values. Boolean
+         values are accepted but deprecated. (Part of Redmine #2143)
+       - returnszero() now correctly sets the class name in this scenario  (Part of
+         Redmine #2143):
+           classes:
+             "commandfailed" not => returnszero("/bin/nosuchcommand", "noshell");
 
        Bugfixes:
+       - bundles are allowed to be empty (Redmine #2411)
+       - Fixed '.' and '-' not being accepted by a commands module. (Redmine #2384)
+       - Fixed issue with package management and warn. (Redmine #1831)
+       - Fixed JSON crash. (Redmine #2151)
+       - Improved error checking when using fgets(). (Redmine #2451)
+       - Fixed error message when deleting nonexistent files. (Redmine #2448)
+       - Honor warn-only when purging from local directory. (Redmine #2162)
+       - Make sure "restart" and "reload" are recognized keywords in packages. (Redmine #2468)
+       - Allocate memory dynamically to avoid out-of-buffer or out-of-hash
+         situations
+       - fix edit_xml update of existing attributes  (Redmine #2034)
+       - use failsafe policy from compile-time specified workdir (Redmine #1991)
        - ifvarclass checked from classes promises in common bundles
        - do not wait for splaytime when executing only once
        - disable xml editing functionality when libxml2 doesn't provide necessary APIs (Redmine #1937)
+       - Out-of-tree builds should work again, fixed a bunch of related bugs.
 
-3.5.0 - Alpha 1
+3.4.5   (Bugfix and Stability release)
 
-       New Features:
+      Bugfixes:
 
-       - Enable zeroconf-discovery of policy hubs for automatic bootstrapping
-         if Avahi is present
+      - make qualified arrays expand correcty (Redmine #1998, Mantis #1128)
 
-       - Support for sys.cpus on more platforms than Linux & HPUX
+      - correct possible errors in tcdb files when opening
 
-       Changes:
+      - avoid possible db corruption when mixing read/write and cursor operations
 
-       - Make parser output in GCC compatible format the only supported format 
-         (remove --gcc-brief-format flag)
+      - Allow umask value of 002 (Redmine #2496)
 
-       - Silence license warnings in Enterprise Free25 installations
+3.4.4   (Bugfix and Stability release)
 
        Bugfixes:
 
-       - Allocate memory dynamically to avoid out-of-buffer or out-of-hash
-         situations
+       - prevent possible crash when archiving files (GitHub #316)
 
-       - fix edit_xml update of existing attributes  (Redmine #2034)
+       - don't create symlinks to cf-know in update policy
 
-       - use failsafe policy from compile-time specified workdir (Redmine #1991)
+       - don't enable xml support if libxml2 is too old (Redmine #1937)
+
+3.4.3   (Bugfix and Stability release)
+
+       Bugfixes:
+
+       - Don't flood error messages when processes are out of defined range
+
+       - prevent segmentation fault in cf-monitord -x (Redmine #2021)
+
+       - when copying files, use same file mode as source file, rather than 0600 (Redmine #1804)
+
+       - include xpath in messages generated by edit_xml operations (Redmine #2057)
 
 3.4.2   (Bugfix and Stability release)
 

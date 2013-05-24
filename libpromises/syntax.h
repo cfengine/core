@@ -114,7 +114,7 @@ JsonElement *SyntaxToJson(void);
 #define PromiseTypeSyntaxNew(agent_type, promise_type, constraints, check_fn, status) { agent_type, promise_type, constraints, check_fn, status }
 #define PromiseTypeSyntaxNewNull() PromiseTypeSyntaxNew(NULL, NULL, NULL, NULL, SYNTAX_STATUS_NORMAL)
 
-#define FnCallTypeNew(name, return_type, arguments, implementation, description, is_varargs, status) { name, return_type, arguments, implementation, description, is_varargs, status }
-#define FnCallTypeNewNull() FnCallTypeNew(NULL, DATA_TYPE_NONE, NULL, NULL, NULL, false, SYNTAX_STATUS_NORMAL)
+#define FnCallTypeNew(name, return_type, arguments, implementation, description, is_varargs, category, status) { name, return_type, arguments, implementation, description, is_varargs, category, status }
+#define FnCallTypeNewNull() FnCallTypeNew(NULL, DATA_TYPE_NONE, NULL, NULL, NULL, false, FNCALL_CATEGORY_UTILS, SYNTAX_STATUS_NORMAL)
 
 #endif

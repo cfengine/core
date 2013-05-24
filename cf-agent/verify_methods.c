@@ -49,7 +49,7 @@ void VerifyMethodsPromise(EvalContext *ctx, Promise *pp)
     a = GetMethodAttributes(ctx, pp);
 
     VerifyMethod(ctx, "usebundle", a, pp);
-    ScopeDeleteSpecialScalar("this", "promiser");
+    ScopeDeleteSpecial("this", "promiser");
 }
 
 /*****************************************************************************/
@@ -163,12 +163,12 @@ int VerifyMethod(EvalContext *ctx, char *attrname, Attributes a, Promise *pp)
         }
         if (bp && (bp->name))
         {
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Method \"%s\" was used but was not defined!\n", bp->name);
+            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Method '%s' was used but was not defined", bp->name);
         }
         else
         {
             cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a,
-                 "A method attempted to use a bundle \"%s\" that was apparently not defined!\n", method_name);
+                 "A method attempted to use a bundle '%s' that was apparently not defined", method_name);
         }
     }
 
@@ -227,7 +227,7 @@ static void GetReturnValue(EvalContext *ctx, char *scope, Promise *pp)
                     snprintf(newname, CF_BUFSIZE, "%s", result);
                 }
 
-                ScopeNewScalar(ctx, (VarRef) { NULL, PromiseGetBundle(pp)->name, newname }, assoc->rval.item, DATA_TYPE_STRING);
+                EvalContextVariablePut(ctx, (VarRef) { NULL, PromiseGetBundle(pp)->name, newname }, assoc->rval, DATA_TYPE_STRING);
             }
         }
         

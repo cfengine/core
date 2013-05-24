@@ -6,7 +6,8 @@ computer systems.
 
 ## Installation
 
-Please see the INSTALL file for prerequisites and build instructions.
+Please see the [INSTALL](https://github.com/cfengine/core/blob/master/INSTALL)
+file for prerequisites and build instructions.
 
 ## Example Usage
 
@@ -33,7 +34,7 @@ The following policy code may be executed with cf-agent (the main CFEngine binar
 
 ### Contributing
 
-Please see the HACKING file.
+Please see the [HACKING.md](https://github.com/cfengine/core/blob/master/HACKING.md) file.
 
 ### Relationship to CFEngine 2
 

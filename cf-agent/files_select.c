@@ -343,7 +343,7 @@ static int SelectModeMatch(struct stat *lstatptr, Rlist *list)
 
         if (!ParseModeString(rp->item, &plus, &minus))
         {
-            Log(LOG_LEVEL_ERR, "Problem validating a mode string \"%s\" in search filter", RlistScalarValue(rp));
+            Log(LOG_LEVEL_ERR, "Problem validating a mode string '%s' in search filter", RlistScalarValue(rp));
             continue;
         }
 

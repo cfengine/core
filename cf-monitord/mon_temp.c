@@ -124,7 +124,7 @@ static bool GetAcpi(double *cf_this)
 
         if ((fp = fopen(path, "r")) == NULL)
         {
-            printf("Couldn't open %s\n", path);
+            Log(LOG_LEVEL_ERR, "Couldn't open '%s'", path);
             continue;
         }
 

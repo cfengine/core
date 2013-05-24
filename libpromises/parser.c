@@ -54,12 +54,24 @@ static void ParserStateReset(ParserState *p)
     p->current_namespace = xstrdup("default");
 
     p->currentid[0] = '\0';
+    if (p->currentstring)
+    {
+        free(p->currentstring);
+    }
     p->currentstring = NULL;
     p->currenttype[0] = '\0';
+    if (p->currentclasses)
+    {
+        free(p->currentclasses);
+    }
     p->currentclasses = NULL;
     p->currentRlist = NULL;
     p->currentpromise = NULL;
     p->currentbody = NULL;
+    if (p->promiser)
+    {
+        free(p->promiser);
+    }
     p->promiser = NULL;
     p->blockid[0] = '\0';
     p->blocktype[0] = '\0';
@@ -99,10 +111,13 @@ Policy *ParserParseFile(const char *path, unsigned int warnings, unsigned int wa
     if (P.error_count > 0)
     {
         PolicyDestroy(P.policy);
+        ParserStateReset(&P);
         return NULL;
     }
 
-    return P.policy;
+    Policy *policy = P.policy;
+    ParserStateReset(&P);
+    return policy;
 }
 
 int ParserWarningFromString(const char *warning_str)

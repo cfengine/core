@@ -1378,10 +1378,11 @@ JsonElement *RvalToJson(Rval rval)
 
 void RlistFlatten(EvalContext *ctx, Rlist **list)
 {
-    for (Rlist *rp = *list; rp != NULL; rp = rp->next)
+    for (Rlist *rp = *list; rp != NULL;)
     {
         if (rp->type != RVAL_TYPE_SCALAR)
         {
+            rp = rp->next;
             continue;
         }
 
@@ -1400,8 +1401,10 @@ void RlistFlatten(EvalContext *ctx, Rlist **list)
                     {
                         RlistAppend(list, srp->item, srp->type);
                     }
+                    Rlist *next = rp->next;
                     RlistDestroyEntry(list, rp);
-                    break;
+                    rp = next;
+                    continue;
 
                 default:
                     ProgrammingError("List variable does not resolve to a list");
@@ -1410,5 +1413,6 @@ void RlistFlatten(EvalContext *ctx, Rlist **list)
                 }
             }
         }
+        rp = rp->next;
     }
 }

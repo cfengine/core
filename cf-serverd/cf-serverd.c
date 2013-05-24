@@ -57,9 +57,10 @@ int main(int argc, char *argv[])
     KeepPromises(ctx, policy, config);
     Summarize();
 
-    StartServer(ctx, policy, config);
+    StartServer(ctx, &policy, config);
 
     GenericAgentConfigDestroy(config);
+    PolicyDestroy(policy);
     EvalContextDestroy(ctx);
 
     return 0;

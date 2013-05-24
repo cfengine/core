@@ -72,6 +72,12 @@ Seq *SeqNew(size_t initial_capacity, void (*ItemDestroy) ());
 void SeqDestroy(Seq *seq);
 
 /**
+  @brief Destroy an existing Sequence without destroying its items.
+  @param [in] seq The Sequence to destroy.
+  */
+void SeqSoftDestroy(Seq *seq);
+
+/**
   @brief
   Function to compare two items in a Sequence.
 

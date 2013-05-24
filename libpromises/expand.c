@@ -154,6 +154,7 @@ void ExpandPromise(EvalContext *ctx, Promise *pp, PromiseActuator *ActOnPromise,
 
     PromiseDestroy(pcopy);
     RlistDestroy(listvars);
+    RlistDestroy(scalars);
 
     EvalContextStackPopFrame(ctx);
 }

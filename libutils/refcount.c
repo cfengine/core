@@ -45,10 +45,11 @@ void RefCountDestroy(RefCount **ref)
     {
         // Destroying a refcount which has more than one user is a bug, but we let it
         // pass in production code (memory leak).
-        assert((*ref)->user_count == 1);
+        assert((*ref)->user_count <= 1);
         if ((*ref)->user_count > 1)
             return;
-        free((*ref)->users);
+        if ((*ref)->users)
+            free((*ref)->users);
         free(*ref);
         *ref = NULL;
     }

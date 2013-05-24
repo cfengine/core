@@ -32,7 +32,8 @@
 #include "files_names.h"
 #include "vars.h"
 
-#define QUEUESIZE 50
+#define QUEUESIZE 128
+/* listen() backlog, on Linux it's limited by net.core.somaxconn sysctl. */
 #define CF_BUFEXT 128
 
 typedef struct
@@ -168,6 +169,7 @@ static const char *HINTS[15] =
 
 static int CLOCK_DRIFT = 3600;  /* 1hr */
 static int ACTIVE_THREADS;
+static int EXITNOW = 0;
 
 int CFD_MAXPROCESSES = 0;
 int NO_FORK = false;
@@ -189,6 +191,11 @@ Item *MULTICONNLIST = NULL;
 Item *TRUSTKEYLIST = NULL;
 Item *DHCPLIST = NULL;
 Item *ALLOWUSERLIST = NULL;
+
+#if defined(HAVE_PTHREAD)
+/* SKIPVERIFY is also used in server-transform.c but only here it's used from multiple threads. */
+static pthread_mutex_t cft_skipverify = PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP;
+#endif
 Item *SKIPVERIFY = NULL;
 
 Auth *VADMIT = NULL;
@@ -320,6 +327,11 @@ static void ThisAgentInit(void)
 
 /*******************************************************************/
 
+static void ServerSigHandler(int signum)
+{
+    EXITNOW = 1;
+}
+
 static void StartServer(GenericAgentConfig config)
 {
     char ipaddr[CF_MAXVARSIZE], intime[64];
@@ -349,13 +361,13 @@ static void StartServer(GenericAgentConfig config)
         exit(1);
     }
 
-    signal(SIGINT, HandleSignals);
-    signal(SIGTERM, HandleSignals);
+    signal(SIGINT, ServerSigHandler);
+    signal(SIGTERM, ServerSigHandler);
     signal(SIGHUP, SIG_IGN);
     signal(SIGPIPE, SIG_IGN);
     signal(SIGCHLD, SIG_IGN);
-    signal(SIGUSR1, HandleSignals);
-    signal(SIGUSR2, HandleSignals);
+    signal(SIGUSR1, ServerSigHandler);
+    signal(SIGUSR2, ServerSigHandler);
 
     if (listen(sd, QUEUESIZE) == -1)
     {
@@ -405,7 +417,9 @@ static void StartServer(GenericAgentConfig config)
     fcntl(sd, F_SETFD, FD_CLOEXEC);
 #endif
 
-    while (true)
+    CfOut(cf_cmdout, "", "Server is starting...\n");
+
+    while (!EXITNOW)
     {
         if (ThreadLock(cft_server_children))
         {
@@ -419,7 +433,8 @@ static void StartServer(GenericAgentConfig config)
         FD_ZERO(&rset);
         FD_SET(sd, &rset);
 
-        timeout.tv_sec = 10;    /* Set a 10 second timeout for select */
+        /* Set a 1 second timeout for select so that we exit in a timely manner when signalled. */
+        timeout.tv_sec = 1;
         timeout.tv_usec = 0;
 
         CfDebug(" -> Waiting at incoming select...\n");
@@ -520,7 +535,18 @@ static void StartServer(GenericAgentConfig config)
         }
     }
 
-    YieldCurrentLock(thislock); /* We never get here - this is done by a signal handler */
+    CfOut(cf_cmdout, "", "Cleaning up and exiting...\n");
+
+    YieldCurrentLock(thislock);
+    unlink(PIDFILE);
+
+    /* Do what GenericDeInitialize() does so, except that in the end
+       we call our special CloseAllDBExit(). */
+    CloseWmi();
+    CloseNetwork();
+    CloseLog();
+
+    CloseAllDBExit();
 }
 
 /*********************************************************************/
@@ -889,15 +915,6 @@ static void *HandleConnection(ServerConnectionState *conn)
 {
     char output[CF_BUFSIZE];
 
-#if defined(HAVE_PTHREAD)
-# ifdef HAVE_PTHREAD_SIGMASK
-    sigset_t sigmask;
-
-    sigemptyset(&sigmask);
-    pthread_sigmask(SIG_BLOCK, &sigmask, NULL);
-# endif
-#endif
-
     if (conn == NULL)
     {
         CfDebug("Null connection\n");
@@ -921,7 +938,7 @@ static void *HandleConnection(ServerConnectionState *conn)
             CfOut(cf_error, "",
                   "Server had to drop %d connections in a row, all existing ones seem hung. DOS attack? Committing apoptosis...",
                   TRIES);
-            HandleSignals(SIGTERM);
+            EXITNOW = 1;
         }
 
         if (!ThreadUnlock(cft_server_children))
@@ -948,7 +965,7 @@ static void *HandleConnection(ServerConnectionState *conn)
 
     SetReceiveTimeout(conn->sd_reply, &tv);
 
-    while (BusyWithConnection(conn))
+    while (!EXITNOW && BusyWithConnection(conn))
     {
     }
 
@@ -1001,6 +1018,12 @@ static int BusyWithConnection(ServerConnectionState *conn)
     }
 
     CfDebug("Received: [%s] on socket %d\n", recvbuffer, conn->sd_reply);
+
+    /* Don't process request if we're signalled to exit. */
+    if (EXITNOW)
+    {
+        return false;
+    }
 
     switch (GetCommand(recvbuffer))
     {
@@ -1757,6 +1780,7 @@ static int VerifyConnection(ServerConnectionState *conn, char buf[CF_BUFSIZE])
     char dns_assert[CF_MAXVARSIZE], ip_assert[CF_MAXVARSIZE];
     int matched = false;
     struct passwd *pw;
+    bool SkipVerify = false;
 
 #if defined(HAVE_GETADDRINFO)
     struct addrinfo query, *response = NULL, *ap;
@@ -1790,7 +1814,23 @@ static int VerifyConnection(ServerConnectionState *conn, char buf[CF_BUFSIZE])
    on trust. Once we have a positive key ID, the IP address is irrelevant fr authentication...
    We can save a lot of time by not looking this up ... */
 
-    if ((conn->trust == false) || IsMatchItemIn(SKIPVERIFY, MapAddress(conn->ipaddr)))
+    if (conn->trust == true)
+    {
+#if defined(HAVE_PTHREAD)
+        if (pthread_mutex_lock(&cft_skipverify) == 0)
+        {
+            if (IsMatchItemIn(SKIPVERIFY, MapAddress(conn->ipaddr)))
+            {
+                SkipVerify = true;
+            }
+            pthread_mutex_unlock(&cft_skipverify);
+        }
+#else
+        SkipVerify = IsMatchItemIn(SKIPVERIFY, MapAddress(conn->ipaddr));
+#endif
+    }
+
+    if (conn->trust == false || SkipVerify == true)
     {
         CfOut(cf_verbose, "", "Allowing %s to connect without (re)checking ID\n", ip_assert);
         CfOut(cf_verbose, "", "Non-verified Host ID is %s (Using skipverify)\n", dns_assert);
@@ -3767,8 +3807,21 @@ static int CheckStoreKey(ServerConnectionState *conn, RSA *key)
         CfOut(cf_verbose, "", "A public key was already known from %s/%s - no trust required\n", conn->hostname,
               conn->ipaddr);
 
-        CfOut(cf_verbose, "", "Adding IP %s to SkipVerify - no need to check this if we have a key\n", conn->ipaddr);
-        IdempPrependItem(&SKIPVERIFY, MapAddress(conn->ipaddr), NULL);
+#if defined(HAVE_PTHREAD)
+        if (pthread_mutex_lock(&cft_skipverify) == 0)
+#endif
+
+        {
+            IdempPrependItem(&SKIPVERIFY, MapAddress(conn->ipaddr), NULL);
+
+#if defined(HAVE_PTHREAD)
+            pthread_mutex_unlock(&cft_skipverify);
+#endif
+
+            CfOut(cf_verbose, "",
+                  "Added IP %s to SkipVerify - no need to check this if we have a key\n",
+                  conn->ipaddr);
+        }
 
         if ((BN_cmp(savedkey->e, key->e) == 0) && (BN_cmp(savedkey->n, key->n) == 0))
         {

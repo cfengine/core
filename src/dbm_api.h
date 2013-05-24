@@ -60,6 +60,7 @@ typedef DBCursor CF_DBC;
 bool OpenDB(CF_DB **dbp, dbid db);
 void CloseDB(CF_DB *dbp);
 void CloseAllDB(void);
+void CloseAllDBExit(void);
 
 bool HasKeyDB(CF_DB *dbp, const char *key, int key_size);
 int ValueSizeDB(CF_DB *dbp, const char *key, int key_size);

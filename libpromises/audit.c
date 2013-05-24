@@ -103,7 +103,7 @@ void EndAudit(const EvalContext *ctx, int background_tasks)
 
             if ((fout = fopen(name, "a")) == NULL)
             {
-                Log(LOG_LEVEL_INFO, "Unable to write to the value log %s", name);
+                Log(LOG_LEVEL_INFO, "Unable to write to the value log '%s'", name);
                 return;
             }
 
@@ -131,7 +131,7 @@ void EndAudit(const EvalContext *ctx, int background_tasks)
     if (total == 0)
     {
         *string = '\0';
-        Log(LOG_LEVEL_VERBOSE, "Outcome of version %s: No checks were scheduled", sp);
+        Log(LOG_LEVEL_VERBOSE, "Outcome of version '%s', no checks were scheduled", sp);
         return;
     }
     else

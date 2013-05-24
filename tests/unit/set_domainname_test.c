@@ -79,7 +79,7 @@ ExpectedVars expected_vars[] =
     {"domain", "cfengine.com"},
 };
 
-void ScopeNewScalar(EvalContext *ctx, const char *ns, const char *varname, const char *value, DataType type)
+void ScopeNewSpecial(EvalContext *ctx, const char *ns, const char *varname, const void *value, DataType type)
 {
     int i;
 
@@ -96,12 +96,7 @@ void ScopeNewScalar(EvalContext *ctx, const char *ns, const char *varname, const
         }
     }
     fprintf(stderr, "${%s.%s} <- %s (%c)\n", ns, varname, value, type);  /* LCOV_EXCL_LINE */
-    fail();                     /* LCOV_EXCL_LINE */
-}
-
-void ScopeNewSpecialScalar(EvalContext *ctx, const char *ns, const char *varname, const char *value, DataType type)
-{
-    ScopeNewScalar(ctx, ns, varname, value, type);
+    fail();
 }
 
 static void test_set_names(void)
@@ -288,7 +283,7 @@ bool IsDefinedClass(const EvalContext *ctx, const char *class, const char *ns)
     fail();
 }
 
-void ScopeDeleteSpecialScalar(const char *scope, const char *id)
+void ScopeDeleteSpecial(const char *scope, const char *id)
 {
     fail();
 }
@@ -300,16 +295,6 @@ void ScopeDeleteVariable(const char *scope, const char *id)
 
 
 Rlist *RlistParseShown(char *string)
-{
-    fail();
-}
-
-void ScopeNewList(EvalContext *ctx, const char *scope, const char *lval, void *rval, DataType dt)
-{
-    fail();
-}
-
-void ScopeNewSpecialList(EvalContext *ctx, const char *scope, const char *lval, void *rval, DataType dt)
 {
     fail();
 }

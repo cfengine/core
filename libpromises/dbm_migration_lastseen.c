@@ -75,7 +75,7 @@ static bool LastseenMigrationVersion0(DBHandle *db)
 
             if ((key[0] != 'q') && (key[0] != 'k') && (key[0] != 'a'))
             {
-                Log(LOG_LEVEL_INFO, "LastseenMigrationVersion0: Malformed key found: %s", key);
+                Log(LOG_LEVEL_INFO, "LastseenMigrationVersion0: Malformed key found '%s'", key);
             }
 
             continue;
@@ -93,7 +93,7 @@ static bool LastseenMigrationVersion0(DBHandle *db)
 
         if (vsize != QPOINT0_OFFSET + sizeof(QPoint0))
         {
-            Log(LOG_LEVEL_INFO, "LastseenMigrationVersion0: invalid value size for key %s, entry is deleted",
+            Log(LOG_LEVEL_INFO, "LastseenMigrationVersion0: invalid value size for key '%s', entry is deleted",
                   key);
             DBCursorDeleteEntry(cursor);
             continue;
@@ -104,7 +104,7 @@ static bool LastseenMigrationVersion0(DBHandle *db)
 
         if (!WriteDB(db, hostkey_key, old_data_address, strlen(old_data_address) + 1))
         {
-            Log(LOG_LEVEL_INFO, "Unable to write version 1 lastseen entry for %s", key);
+            Log(LOG_LEVEL_INFO, "Unable to write version 1 lastseen entry for '%s'", key);
             errors = true;
             continue;
         }
@@ -114,7 +114,7 @@ static bool LastseenMigrationVersion0(DBHandle *db)
 
         if (!WriteDB(db, address_key, hostkey, strlen(hostkey) + 1))
         {
-            Log(LOG_LEVEL_INFO, "Unable to write version 1 reverse lastseen entry for %s", key);
+            Log(LOG_LEVEL_INFO, "Unable to write version 1 reverse lastseen entry for '%s'", key);
             errors = true;
             continue;
         }
@@ -131,7 +131,7 @@ static bool LastseenMigrationVersion0(DBHandle *db)
             || (!isfinite(old_data_q.expect))
             || (!isfinite(old_data_q.var)))
         {
-            Log(LOG_LEVEL_INFO, "Ignoring malformed connection quality data for %s", key);
+            Log(LOG_LEVEL_INFO, "Ignoring malformed connection quality data for '%s'", key);
             DBCursorDeleteEntry(cursor);
             continue;
         }
@@ -155,14 +155,14 @@ static bool LastseenMigrationVersion0(DBHandle *db)
 
         if (!WriteDB(db, quality_key, &data, sizeof(data)))
         {
-            Log(LOG_LEVEL_INFO, "Unable to write version 1 connection quality key for %s", key);
+            Log(LOG_LEVEL_INFO, "Unable to write version 1 connection quality key for '%s'", key);
             errors = true;
             continue;
         }
 
         if (!DBCursorDeleteEntry(cursor))
         {
-            Log(LOG_LEVEL_INFO, "Unable to delete version 0 lastseen entry for %s", key);
+            Log(LOG_LEVEL_INFO, "Unable to delete version 0 lastseen entry for '%s'", key);
             errors = true;
         }
     }

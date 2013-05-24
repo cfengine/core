@@ -124,7 +124,7 @@ void BannerSubPromiseType(const EvalContext *ctx, const char *bundlename, const 
             const char *context = NULL;
             while ((context = StringSetIteratorNext(&it)))
             {
-                printf("       %s\n", context);
+                Log(LOG_LEVEL_VERBOSE, "       %s", context);
             }
 
             Log(LOG_LEVEL_VERBOSE, "\n");

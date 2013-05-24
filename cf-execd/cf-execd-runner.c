@@ -396,7 +396,7 @@ static int CompareResult(const char *filename, const char *prev_file)
 
     if (!LinkOrCopy(filename, prev_file, true))
     {
-        Log(LOG_LEVEL_INFO, "Could not symlink or copy %s to %s", filename, prev_file);
+        Log(LOG_LEVEL_INFO, "Could not symlink or copy '%s' to '%s'", filename, prev_file);
         rtn = 1;
     }
 
@@ -491,8 +491,8 @@ static void MailResult(const ExecConfig *config, const char *file)
     struct hostent *hp = gethostbyname(config->mail_server);
     if (!hp)
     {
-        printf("Unknown host: %s\n", config->mail_server);
-        printf("Make sure that fully qualified names can be looked up at your site.\n");
+        Log(LOG_LEVEL_ERR, "While mailing agent output, unknown host '%s'. Make sure that fully qualified names can be looked up at your site.",
+            config->mail_server);
         fclose(fp);
         return;
     }

@@ -1165,6 +1165,21 @@ static JsonElement *BodyTypesToJson(void)
     return body_types;
 }
 
+static const char *FnCallCategoryToString(FnCallCategory category)
+{
+    static const char *category_str[] =
+    {
+        [FNCALL_CATEGORY_COMM] = "communication",
+        [FNCALL_CATEGORY_DATA] = "data",
+        [FNCALL_CATEGORY_FILES] = "files",
+        [FNCALL_CATEGORY_IO] = "io",
+        [FNCALL_CATEGORY_SYSTEM] = "system",
+        [FNCALL_CATEGORY_UTILS] = "utils"
+    };
+
+    return category_str[category];
+}
+
 static JsonElement *FnCallTypeToJson(const FnCallType *fn_syntax)
 {
     JsonElement *json_fn = JsonObjectCreate(10);
@@ -1187,6 +1202,7 @@ static JsonElement *FnCallTypeToJson(const FnCallType *fn_syntax)
     }
 
     JsonObjectAppendBool(json_fn, "variadic", fn_syntax->varargs);
+    JsonObjectAppendString(json_fn, "category", FnCallCategoryToString(fn_syntax->category));
 
     return json_fn;
 }

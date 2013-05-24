@@ -410,7 +410,7 @@ static void SaveTCPEntropyData(Item *list, int i, char *inout)
     FILE *fp;
     char filename[CF_BUFSIZE];
 
-    Log(LOG_LEVEL_VERBOSE, "TCP Save %s", TCPNAMES[i]);
+    Log(LOG_LEVEL_VERBOSE, "TCP Save '%s'", TCPNAMES[i]);
 
     if (list == NULL)
     {
@@ -427,11 +427,11 @@ static void SaveTCPEntropyData(Item *list, int i, char *inout)
         snprintf(filename, CF_BUFSIZE - 1, "%s/state/cf_outgoing.%s", CFWORKDIR, TCPNAMES[i]);
     }
 
-    Log(LOG_LEVEL_VERBOSE, "TCP Save %s", filename);
+    Log(LOG_LEVEL_VERBOSE, "TCP Save '%s'", filename);
 
     if ((fp = fopen(filename, "w")) == NULL)
     {
-        Log(LOG_LEVEL_VERBOSE, "Unable to write datafile %s", filename);
+        Log(LOG_LEVEL_VERBOSE, "Unable to write datafile '%s'", filename);
         return;
     }
 
@@ -491,7 +491,7 @@ void MonNetworkSnifferGatherData(void)
         {
             if ((ByteSizeList(NETOUT_DIST[i]) < statbuf.st_size) && (now < statbuf.st_mtime + 40 * 60))
             {
-                Log(LOG_LEVEL_VERBOSE, "New state %s is smaller, retaining old for 40 mins longer", TCPNAMES[i]);
+                Log(LOG_LEVEL_VERBOSE, "New state '%s' is smaller, retaining old for 40 mins longer", TCPNAMES[i]);
                 DeleteItemList(NETOUT_DIST[i]);
                 NETOUT_DIST[i] = NULL;
                 continue;

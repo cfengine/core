@@ -61,7 +61,7 @@ void EnterpriseContext(ARG_UNUSED EvalContext *ctx)
 
 void LoadSlowlyVaryingObservations(EvalContext *ctx)
 {
-    Log(LOG_LEVEL_VERBOSE, "# Extended system discovery is only available in CFEngine Enterprise");
+    Log(LOG_LEVEL_VERBOSE, "Extended system discovery is only available in CFEngine Enterprise");
 }
 
 /* all agents: cfstream.c, expand.c, generic_agent.c */
@@ -97,7 +97,7 @@ void LogTotalCompliance(const char *version, int background_tasks)
              (double) PR_REPAIRED / total,
              (double) PR_NOTKEPT / total);
 
-    Log(LOG_LEVEL_VERBOSE, "Total: %s", string);
+    Log(LOG_LEVEL_VERBOSE, "Logging total compliance, total '%s'", string);
 
     char filename[CF_BUFSIZE];
     snprintf(filename, CF_BUFSIZE, "%s/%s", CFWORKDIR, CF_PROMISE_LOG);
@@ -106,7 +106,7 @@ void LogTotalCompliance(const char *version, int background_tasks)
     FILE *fout = fopen(filename, "a");
     if (fout == NULL)
     {
-        Log(LOG_LEVEL_ERR, "Could not open '%s'. (fopen: %s)", filename, GetErrorStr());
+        Log(LOG_LEVEL_ERR, "In total compliance logging, could not open file '%s'. (fopen: %s)", filename, GetErrorStr());
     }
     else
     {
@@ -138,18 +138,18 @@ const EVP_CIPHER *CfengineCipher(char type)
 
 char *GetRemoteScalar(EvalContext *ctx, char *proto, char *handle, char *server, int encrypted, char *rcv)
 {
-    Log(LOG_LEVEL_VERBOSE, "# Access to server literals is only available in CFEngine Enterprise");
+    Log(LOG_LEVEL_VERBOSE, "Access to server literals is only available in CFEngine Enterprise");
     return "";
 }
 
 void CacheUnreliableValue(char *caller, char *handle, char *buffer)
 {
-    Log(LOG_LEVEL_VERBOSE, "# Value fault-tolerance only available in CFEngine Enterprise");
+    Log(LOG_LEVEL_VERBOSE, "Value fault-tolerance only available in CFEngine Enterprise");
 }
 
 int RetrieveUnreliableValue(char *caller, char *handle, char *buffer)
 {
-    Log(LOG_LEVEL_VERBOSE, "# Value fault-tolerance only available in CFEngine Enterprise");
+    Log(LOG_LEVEL_VERBOSE, "Value fault-tolerance only available in CFEngine Enterprise");
     return false;
 }
 

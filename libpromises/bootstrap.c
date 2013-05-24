@@ -113,12 +113,12 @@ void SetPolicyServer(EvalContext *ctx, const char *new_policy_server)
     if (new_policy_server)
     {
         snprintf(POLICY_SERVER, CF_MAX_IP_LEN, "%s", new_policy_server);
-        ScopeNewSpecialScalar(ctx, "sys", "policy_hub", new_policy_server, DATA_TYPE_STRING);
+        ScopeNewSpecial(ctx, "sys", "policy_hub", new_policy_server, DATA_TYPE_STRING);
     }
     else
     {
         POLICY_SERVER[0] = '\0';
-        ScopeNewSpecialScalar(ctx, "sys", "policy_hub", "undefined", DATA_TYPE_STRING);
+        ScopeNewSpecial(ctx, "sys", "policy_hub", "undefined", DATA_TYPE_STRING);
     }
 
     // Get the timestamp on policy update
@@ -137,7 +137,7 @@ void SetPolicyServer(EvalContext *ctx, const char *new_policy_server)
     char timebuf[26];
     cf_strtimestamp_local(sb.st_mtime, timebuf);
     
-    ScopeNewSpecialScalar(ctx, "sys", "last_policy_update", timebuf, DATA_TYPE_STRING);
+    ScopeNewSpecial(ctx, "sys", "last_policy_update", timebuf, DATA_TYPE_STRING);
 }
 
 static char *PolicyServerFilename(const char *workdir)

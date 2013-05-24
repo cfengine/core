@@ -29,12 +29,12 @@
 
 void RegisterLiteralServerData(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const char *handle, ARG_UNUSED Promise *pp)
 {
-    Log(LOG_LEVEL_VERBOSE, "# Access to server literals is only available in CFEngine Enterprise");
+    Log(LOG_LEVEL_VERBOSE, "Access to server literals is only available in CFEngine Enterprise");
 }
 
 int ReturnLiteralData(ARG_UNUSED EvalContext *ctx, ARG_UNUSED char *handle, ARG_UNUSED char *ret)
 {
-    Log(LOG_LEVEL_VERBOSE, "# Access to server literals is only available in CFEngine Enterprise");
+    Log(LOG_LEVEL_VERBOSE, "Access to server literals is only available in CFEngine Enterprise");
     return 0;
 }
 

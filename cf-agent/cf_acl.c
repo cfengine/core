@@ -50,7 +50,7 @@ void VerifyACL(EvalContext *ctx, char *file, Attributes a, Promise *pp)
 {
     if (!CheckACLSyntax(file, a.acl, pp))
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a, "Syntax error in access control list for \"%s\"", file);
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a, "Syntax error in access control list for '%s'", file);
         PromiseRef(LOG_LEVEL_ERR, pp);
         return;
     }
@@ -68,7 +68,7 @@ void VerifyACL(EvalContext *ctx, char *file, Attributes a, Promise *pp)
 #elif defined(__MINGW32__)
         Nova_CheckNtACL(ctx, file, a.acl, a, pp);
 #else
-        Log(LOG_LEVEL_INFO, "!! ACLs are not yet supported on this system.");
+        Log(LOG_LEVEL_INFO, "ACLs are not yet supported on this system.");
 #endif
         break;
 
@@ -77,7 +77,7 @@ void VerifyACL(EvalContext *ctx, char *file, Attributes a, Promise *pp)
 #if defined(__linux__)
         CheckPosixLinuxACL(ctx, file, a.acl, a, pp);
 #else
-        Log(LOG_LEVEL_INFO, "!! Posix ACLs are not supported on this system");
+        Log(LOG_LEVEL_INFO, "Posix ACLs are not supported on this system");
 #endif
         break;
 
@@ -158,7 +158,7 @@ static int CheckACLSyntax(char *file, Acl acl, Promise *pp)
 
         if (!valid)             // wrong syntax in this ace
         {
-            Log(LOG_LEVEL_ERR, "The ACE \"%s\" contains errors", RlistScalarValue(rp));
+            Log(LOG_LEVEL_ERR, "The ACE '%s' contains errors", RlistScalarValue(rp));
             PromiseRef(LOG_LEVEL_ERR, pp);
             break;
         }
@@ -170,7 +170,7 @@ static int CheckACLSyntax(char *file, Acl acl, Promise *pp)
 
         if (!valid)             // wrong syntax in this ace
         {
-            Log(LOG_LEVEL_ERR, "The ACE \"%s\" contains errors", RlistScalarValue(rp));
+            Log(LOG_LEVEL_ERR, "The ACE '%s' contains errors", RlistScalarValue(rp));
             PromiseRef(LOG_LEVEL_ERR, pp);
             break;
         }

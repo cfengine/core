@@ -160,13 +160,13 @@ void EvalContextHeapAddSoft(EvalContext *ctx, const char *context, const char *n
 
     if (IsRegexItemIn(ctx, ctx->heap_abort_current_bundle, context_copy))
     {
-        Log(LOG_LEVEL_ERR, "Bundle aborted on defined class \"%s\"", context_copy);
+        Log(LOG_LEVEL_ERR, "Bundle aborted on defined class '%s'", context_copy);
         ABORTBUNDLE = true;
     }
 
     if (IsRegexItemIn(ctx, ctx->heap_abort, context_copy))
     {
-        Log(LOG_LEVEL_ERR, "cf-agent aborted on defined class \"%s\"", context_copy);
+        Log(LOG_LEVEL_ERR, "cf-agent aborted on defined class '%s'", context_copy);
         exit(1);
     }
 
@@ -181,7 +181,7 @@ void EvalContextHeapAddSoft(EvalContext *ctx, const char *context, const char *n
     {
         if (IsDefinedClass(ctx, ip->name, ns))
         {
-            Log(LOG_LEVEL_ERR, "cf-agent aborted on defined class \"%s\" defined in bundle %s", ip->name, StackFrameOwnerName(LastStackFrame(ctx, 0)));
+            Log(LOG_LEVEL_ERR, "cf-agent aborted on defined class '%s' defined in bundle '%s'", ip->name, StackFrameOwnerName(LastStackFrame(ctx, 0)));
             exit(1);
         }
     }
@@ -192,7 +192,7 @@ void EvalContextHeapAddSoft(EvalContext *ctx, const char *context, const char *n
         {
             if (IsDefinedClass(ctx, ip->name, ns))
             {
-                Log(LOG_LEVEL_ERR, "Setting abort for \"%s\" when setting \"%s\"", ip->name, context_copy);
+                Log(LOG_LEVEL_ERR, "Setting abort for '%s' when setting '%s'", ip->name, context_copy);
                 ABORTBUNDLE = true;
                 break;
             }
@@ -220,13 +220,13 @@ void EvalContextHeapAddHard(EvalContext *ctx, const char *context)
 
     if (IsRegexItemIn(ctx, ctx->heap_abort_current_bundle, context_copy))
     {
-        Log(LOG_LEVEL_ERR, "Bundle aborted on defined class \"%s\"", context_copy);
+        Log(LOG_LEVEL_ERR, "Bundle aborted on defined class '%s'", context_copy);
         ABORTBUNDLE = true;
     }
 
     if (IsRegexItemIn(ctx, ctx->heap_abort, context_copy))
     {
-        Log(LOG_LEVEL_ERR, "cf-agent aborted on defined class \"%s\"", context_copy);
+        Log(LOG_LEVEL_ERR, "cf-agent aborted on defined class '%s'", context_copy);
         exit(1);
     }
 
@@ -241,7 +241,7 @@ void EvalContextHeapAddHard(EvalContext *ctx, const char *context)
     {
         if (IsDefinedClass(ctx, ip->name, NULL))
         {
-            Log(LOG_LEVEL_ERR, "cf-agent aborted on defined class \"%s\" defined in bundle %s", ip->name, StackFrameOwnerName(LastStackFrame(ctx, 0)));
+            Log(LOG_LEVEL_ERR, "cf-agent aborted on defined class '%s' defined in bundle '%s'", ip->name, StackFrameOwnerName(LastStackFrame(ctx, 0)));
             exit(1);
         }
     }
@@ -252,7 +252,7 @@ void EvalContextHeapAddHard(EvalContext *ctx, const char *context)
         {
             if (IsDefinedClass(ctx, ip->name, NULL))
             {
-                Log(LOG_LEVEL_ERR, "Setting abort for \"%s\" when setting \"%s\"", ip->name, context_copy);
+                Log(LOG_LEVEL_ERR, "Setting abort for '%s' when setting '%s'", ip->name, context_copy);
                 ABORTBUNDLE = true;
                 break;
             }
@@ -296,19 +296,19 @@ void EvalContextStackFrameAddSoft(EvalContext *ctx, const char *context)
     
     if (IsRegexItemIn(ctx, ctx->heap_abort_current_bundle, copy))
     {
-        Log(LOG_LEVEL_ERR, "Bundle %s aborted on defined class \"%s\"", frame.owner->name, copy);
+        Log(LOG_LEVEL_ERR, "Bundle %s aborted on defined class '%s'", frame.owner->name, copy);
         ABORTBUNDLE = true;
     }
 
     if (IsRegexItemIn(ctx, ctx->heap_abort, copy))
     {
-        Log(LOG_LEVEL_ERR, "cf-agent aborted on defined class \"%s\" defined in bundle %s", copy, frame.owner->name);
+        Log(LOG_LEVEL_ERR, "cf-agent aborted on defined class '%s' defined in bundle '%s'", copy, frame.owner->name);
         exit(1);
     }
 
     if (EvalContextHeapContainsSoft(ctx, copy))
     {
-        Log(LOG_LEVEL_ERR, "WARNING - private class \"%s\" in bundle \"%s\" shadows a global class - you should choose a different name to avoid conflicts",
+        Log(LOG_LEVEL_WARNING, "Private class '%s' in bundle '%s' shadows a global class - you should choose a different name to avoid conflicts",
               copy, frame.owner->name);
     }
 
@@ -323,7 +323,7 @@ void EvalContextStackFrameAddSoft(EvalContext *ctx, const char *context)
     {
         if (IsDefinedClass(ctx, ip->name, frame.owner->ns))
         {
-            Log(LOG_LEVEL_ERR, "cf-agent aborted on defined class \"%s\" defined in bundle %s", copy, frame.owner->name);
+            Log(LOG_LEVEL_ERR, "cf-agent aborted on defined class '%s' defined in bundle '%s'", copy, frame.owner->name);
             exit(1);
         }
     }
@@ -334,7 +334,7 @@ void EvalContextStackFrameAddSoft(EvalContext *ctx, const char *context)
         {
             if (IsDefinedClass(ctx, ip->name, frame.owner->ns))
             {
-                Log(LOG_LEVEL_ERR, "Setting abort for \"%s\" when setting \"%s\"", ip->name, context);
+                Log(LOG_LEVEL_ERR, "Setting abort for '%s' when setting '%s'", ip->name, context);
                 ABORTBUNDLE = true;
                 break;
             }
@@ -430,7 +430,7 @@ bool IsDefinedClass(const EvalContext *ctx, const char *context, const char *ns)
 
     if (!res.result)
     {
-        Log(LOG_LEVEL_ERR, "Unable to parse class expression: %s", context);
+        Log(LOG_LEVEL_ERR, "Unable to parse class expression '%s'", context);
         return false;
     }
     else
@@ -467,7 +467,7 @@ static bool EvalWithTokenFromList(const char *expr, StringSet *token_set)
 
     if (!res.result)
     {
-        Log(LOG_LEVEL_ERR, "Syntax error in expression: %s", expr);
+        Log(LOG_LEVEL_ERR, "Syntax error in expression '%s'", expr);
         return false;           /* FIXME: return error */
     }
     else
@@ -524,7 +524,7 @@ void EvalContextHeapPersistentSave(const char *context, const char *ns, unsigned
         {
             if (now < state.expires)
             {
-                Log(LOG_LEVEL_VERBOSE, "Persisent state %s is already in a preserved state --  %jd minutes to go",
+                Log(LOG_LEVEL_VERBOSE, "Persisent state '%s' is already in a preserved state --  %jd minutes to go",
                       name, (intmax_t)((state.expires - now) / 60));
                 CloseDB(dbp);
                 return;
@@ -533,7 +533,7 @@ void EvalContextHeapPersistentSave(const char *context, const char *ns, unsigned
     }
     else
     {
-        Log(LOG_LEVEL_VERBOSE, "New persistent state %s", name);
+        Log(LOG_LEVEL_VERBOSE, "New persistent state '%s'", name);
     }
 
     state.expires = now + ttl_minutes * 60;
@@ -599,13 +599,13 @@ void EvalContextHeapPersistentLoadAll(EvalContext *ctx)
 
         if (now > q.expires)
         {
-            Log(LOG_LEVEL_VERBOSE, "Persistent class %s expired", key);
+            Log(LOG_LEVEL_VERBOSE, "Persistent class '%s' expired", key);
             DBCursorDeleteEntry(dbcp);
         }
         else
         {
-            Log(LOG_LEVEL_VERBOSE, "Persistent class %s for %jd more minutes", key, (intmax_t)((q.expires - now) / 60));
-            Log(LOG_LEVEL_VERBOSE, "Adding persistent class %s to heap", key);
+            Log(LOG_LEVEL_VERBOSE, "Persistent class '%s' for %jd more minutes", key, (intmax_t)((q.expires - now) / 60));
+            Log(LOG_LEVEL_VERBOSE, "Adding persistent class '%s' to heap", key);
             if (strchr(key, CF_NS))
                {
                char ns[CF_MAXVARSIZE], name[CF_MAXVARSIZE];
@@ -1237,7 +1237,7 @@ bool EvalContextVariablePut(EvalContext *ctx, VarRef lval, Rval rval, DataType t
         case RVAL_TYPE_SCALAR:
             if (StringContainsVar((char *) rval.item, lval.lval))
             {
-                Log(LOG_LEVEL_ERR, "Scalar variable %s.%s contains itself (non-convergent): %s", lval.scope, lval.lval,
+                Log(LOG_LEVEL_ERR, "Scalar variable '%s.%s' contains itself (non-convergent), value '%s'", lval.scope, lval.lval,
                       (char *) rval.item);
                 return false;
             }
@@ -1248,7 +1248,7 @@ bool EvalContextVariablePut(EvalContext *ctx, VarRef lval, Rval rval, DataType t
             {
                 if (StringContainsVar(rp->item, lval.lval))
                 {
-                    Log(LOG_LEVEL_ERR, "List variable %s contains itself (non-convergent)", lval.lval);
+                    Log(LOG_LEVEL_ERR, "List variable '%s' contains itself (non-convergent)", lval.lval);
                     return false;
                 }
             }
@@ -1286,7 +1286,7 @@ bool EvalContextVariablePut(EvalContext *ctx, VarRef lval, Rval rval, DataType t
 
             if (listvars != NULL)
             {
-                Log(LOG_LEVEL_ERR, "Redefinition of variable \"%s\" (embedded list in RHS) in context \"%s\"",
+                Log(LOG_LEVEL_ERR, "Redefinition of variable '%s' (embedded list in RHS) in context '%s'",
                       lval.lval, ScopeGetCurrent()->scope);
             }
 
@@ -1499,7 +1499,7 @@ static void AddAllClasses(EvalContext *ctx, const char *ns, const Rlist *list, b
 
         if (EvalContextHeapContainsHard(ctx, classname))
         {
-            Log(LOG_LEVEL_ERR, "You cannot use reserved hard class \"%s\" as post-condition class", classname);
+            Log(LOG_LEVEL_ERR, "You cannot use reserved hard class '%s' as post-condition class", classname);
             // TODO: ok.. but should we take any action? continue; maybe?
         }
 
@@ -1510,13 +1510,13 @@ static void AddAllClasses(EvalContext *ctx, const char *ns, const Rlist *list, b
                 Log(LOG_LEVEL_INFO, "Automatically promoting context scope for '%s' to namespace visibility, due to persistence", classname);
             }
 
-            Log(LOG_LEVEL_VERBOSE, " ?> defining persistent promise result class %s", classname);
+            Log(LOG_LEVEL_VERBOSE, "Defining persistent promise result class '%s'", classname);
             EvalContextHeapPersistentSave(CanonifyName(rp->item), ns, persist, policy);
             EvalContextHeapAddSoft(ctx, classname, ns);
         }
         else
         {
-            Log(LOG_LEVEL_VERBOSE, " ?> defining promise result class %s", classname);
+            Log(LOG_LEVEL_VERBOSE, "Defining promise result class '%s'", classname);
 
             switch (context_scope)
             {
@@ -1544,13 +1544,13 @@ static void DeleteAllClasses(EvalContext *ctx, const Rlist *list)
 
         if (EvalContextHeapContainsHard(ctx, (char *) rp->item))
         {
-            Log(LOG_LEVEL_ERR, "You cannot cancel a reserved hard class \"%s\" in post-condition classes",
+            Log(LOG_LEVEL_ERR, "You cannot cancel a reserved hard class '%s' in post-condition classes",
                   RlistScalarValue(rp));
         }
 
         const char *string = (char *) (rp->item);
 
-        Log(LOG_LEVEL_VERBOSE, "Cancelling class %s", string);
+        Log(LOG_LEVEL_VERBOSE, "Cancelling class '%s'", string);
 
         EvalContextHeapPersistentRemove(string);
 
@@ -1694,11 +1694,11 @@ static void SummarizeTransaction(EvalContext *ctx, TransactionContext tc, const 
 
             if (fout == NULL)
             {
-                Log(LOG_LEVEL_ERR, "Unable to open private log %s", logname);
+                Log(LOG_LEVEL_ERR, "Unable to open private log '%s'", logname);
                 return;
             }
 
-            Log(LOG_LEVEL_VERBOSE, "Logging string \"%s\" to %s", buffer, logname);
+            Log(LOG_LEVEL_VERBOSE, "Logging string '%s' to '%s'", buffer, logname);
             fprintf(fout, "%s\n", buffer);
 
             fclose(fout);
@@ -1795,29 +1795,29 @@ static void LogPromiseContext(const EvalContext *ctx, const Promise *pp)
         sp = "(unknown)";
     }
 
-    Log(LOG_LEVEL_INFO, "I: Report relates to a promise with handle \"%s\"", sp);
+    Log(LOG_LEVEL_INFO, "Report relates to a promise with handle '%s'", sp);
 
     if (PromiseGetBundle(pp)->source_path)
     {
-        Log(LOG_LEVEL_INFO, "I: Made in version \'%s\' of \'%s\' near line %zu",
+        Log(LOG_LEVEL_INFO, "Made in version '%s' of '%s' near line %zu",
             v, PromiseGetBundle(pp)->source_path, pp->offset.line);
     }
     else
     {
-        Log(LOG_LEVEL_INFO, "I: Promise is made internally by cfengine");
+        Log(LOG_LEVEL_INFO, "Promise is made internally by CFEngine");
     }
 
     switch (pp->promisee.type)
     {
     case RVAL_TYPE_SCALAR:
-        Log(LOG_LEVEL_INFO,"I: The promise was made to: \'%s\'", (char *) pp->promisee.item);
+        Log(LOG_LEVEL_INFO,"The promise was made to '%s'", (char *) pp->promisee.item);
         break;
 
     case RVAL_TYPE_LIST:
     {
         Writer *w = StringWriter();
         RlistWrite(w, pp->promisee.item);
-        Log(LOG_LEVEL_INFO, "I: The promise was made to (stakeholders): %s", StringWriterData(w));
+        Log(LOG_LEVEL_INFO, "The promise was made to (stakeholders) '%s'", StringWriterData(w));
         WriterClose(w);
         break;
     }
@@ -1827,7 +1827,7 @@ static void LogPromiseContext(const EvalContext *ctx, const Promise *pp)
 
     if (pp->comment)
     {
-        Log(LOG_LEVEL_INFO, "I: Comment: %s", pp->comment);
+        Log(LOG_LEVEL_INFO, "Comment '%s'", pp->comment);
     }
 }
 

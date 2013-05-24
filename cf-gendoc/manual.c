@@ -69,7 +69,7 @@ void TexinfoManual(EvalContext *ctx, const char *source_dir, const char *output_
 
     if ((fout = fopen(output_file, "w")) == NULL)
     {
-        Log(LOG_LEVEL_ERR, "Unable to open %s for writing. (fopen: %s)", filename, GetErrorStr());
+        Log(LOG_LEVEL_ERR, "Unable to open '%s' for writing. (fopen: %s)", filename, GetErrorStr());
         return;
     }
 
@@ -249,7 +249,7 @@ void TexinfoManual(EvalContext *ctx, const char *source_dir, const char *output_
 
 // scopes const and sys
 
-    ScopeNewSpecialScalar(ctx, "edit", "filename", "x", DATA_TYPE_STRING);
+    ScopeNewSpecial(ctx, "edit", "filename", "x", DATA_TYPE_STRING);
 
     ScopePutMatch(0, "x");
 

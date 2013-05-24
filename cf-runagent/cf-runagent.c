@@ -220,11 +220,11 @@ int main(int argc, char *argv[])
 #ifndef __MINGW32__
     if (BACKGROUND)
     {
-        printf("Waiting for child processes to finish\n");
+        Log(LOG_LEVEL_NOTICE, "Waiting for child processes to finish");
         while (count > 1)
         {
             pid = wait(&status);
-            Log(LOG_LEVEL_VERBOSE, "Child = %d ended, number = %d", pid, count);
+            Log(LOG_LEVEL_VERBOSE, "Child %d ended, number %d", pid, count);
             count--;
         }
     }
@@ -269,7 +269,7 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             break;
 
         case 'd':
-            config->debug_mode = true;
+            LogSetGlobalLevel(LOG_LEVEL_DEBUG);
             break;
 
         case 'K':
@@ -281,7 +281,7 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
 
             if (strlen(optarg) > CF_MAXVARSIZE)
             {
-                Log(LOG_LEVEL_ERR, "Argument too long");
+                Log(LOG_LEVEL_ERR, "Argument too long (-s)");
                 exit(EXIT_FAILURE);
             }
             break;
@@ -291,7 +291,7 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
 
             if (strlen(optarg) > CF_MAXVARSIZE)
             {
-                Log(LOG_LEVEL_ERR, "Argument too long");
+                Log(LOG_LEVEL_ERR, "Argument too long (-D)");
                 exit(EXIT_FAILURE);
             }
             break;
@@ -375,7 +375,7 @@ static void ThisAgentInit(void)
     if (strstr(REMOTE_AGENT_OPTIONS, "--file") || strstr(REMOTE_AGENT_OPTIONS, "-f"))
     {
         Log(LOG_LEVEL_ERR,
-              "The specified remote options include a useless --file option. The remote server has promised to ignore this, thus it is disallowed.\n");
+              "The specified remote options include a useless --file option. The remote server has promised to ignore this, thus it is disallowed.");
         exit(1);
     }
 }
@@ -398,7 +398,7 @@ static int HailServer(EvalContext *ctx, char *host)
     if (Hostname2IPString(ipaddr, peer, sizeof(ipaddr)) == -1)
     {
         Log(LOG_LEVEL_ERR,
-            "HailServer: ERROR, could not resolve %s", peer);
+            "HailServer: ERROR, could not resolve '%s'", peer);
         return false;
     }
 
@@ -458,24 +458,41 @@ static int HailServer(EvalContext *ctx, char *host)
 
 #ifdef __MINGW32__
 
-    Log(LOG_LEVEL_INFO, "...........................................................................");
-    Log(LOG_LEVEL_INFO, " * Hailing %s : %u, with options \"%s\" (serial)", peer, fc.portnumber,
-          REMOTE_AGENT_OPTIONS);
-    Log(LOG_LEVEL_INFO, "...........................................................................");
-
-#else /* !__MINGW32__ */
-
-    if (BACKGROUND)
-    {
-        Log(LOG_LEVEL_INFO, "Hailing %s : %u, with options \"%s\" (parallel)", peer, fc.portnumber,
-              REMOTE_AGENT_OPTIONS);
-    }
-    else
+    if (LEGACY_OUTPUT)
     {
         Log(LOG_LEVEL_INFO, "...........................................................................");
         Log(LOG_LEVEL_INFO, " * Hailing %s : %u, with options \"%s\" (serial)", peer, fc.portnumber,
               REMOTE_AGENT_OPTIONS);
         Log(LOG_LEVEL_INFO, "...........................................................................");
+    }
+    else
+    {
+        Log(LOG_LEVEL_INFO, "Hailing '%s' : %u, with options '%s' (serial)", peer, fc.portnumber,
+            REMOTE_AGENT_OPTIONS);
+    }
+
+
+#else /* !__MINGW32__ */
+
+    if (BACKGROUND)
+    {
+        Log(LOG_LEVEL_INFO, "Hailing '%s' : %u, with options '%s' (parallel)", peer, fc.portnumber,
+              REMOTE_AGENT_OPTIONS);
+    }
+    else
+    {
+        if (LEGACY_OUTPUT)
+        {
+            Log(LOG_LEVEL_INFO, "...........................................................................");
+            Log(LOG_LEVEL_INFO, " * Hailing %s : %u, with options \"%s\" (serial)", peer, fc.portnumber,
+                  REMOTE_AGENT_OPTIONS);
+            Log(LOG_LEVEL_INFO, "...........................................................................");
+        }
+        else
+        {
+            Log(LOG_LEVEL_INFO, "Hailing '%s' : %u, with options '%s' (serial)", peer, fc.portnumber,
+                  REMOTE_AGENT_OPTIONS);
+        }
     }
 
 #endif /* !__MINGW32__ */
@@ -538,7 +555,7 @@ static void KeepControlPromises(EvalContext *ctx, Policy *policy)
 
             if (!EvalContextVariableGet(ctx, (VarRef) { NULL, "control_runagent", cp->lval }, &retval, NULL))
             {
-                Log(LOG_LEVEL_ERR, "Unknown lval %s in runagent control body", cp->lval);
+                Log(LOG_LEVEL_ERR, "Unknown lval '%s' in runagent control body", cp->lval);
                 continue;
             }
 
@@ -578,8 +595,8 @@ static void KeepControlPromises(EvalContext *ctx, Policy *policy)
                  */
                 if (BACKGROUND || INTERACTIVE)
                 {
-                    Log(LOG_LEVEL_ERR,
-                          "Warning: 'background_children' setting from 'body runagent control' is overriden by command-line option.");
+                    Log(LOG_LEVEL_WARNING,
+                          "'background_children' setting from 'body runagent control' is overriden by command-line option.");
                 }
                 else
                 {
@@ -605,7 +622,7 @@ static void KeepControlPromises(EvalContext *ctx, Policy *policy)
                 if (IsAbsPath(retval.item))
                 {
                     strncpy(OUTPUT_DIRECTORY, retval.item, CF_BUFSIZE - 1);
-                    Log(LOG_LEVEL_VERBOSE, "SET output direcory to = %s", OUTPUT_DIRECTORY);
+                    Log(LOG_LEVEL_VERBOSE, "Setting output direcory to '%s'", OUTPUT_DIRECTORY);
                 }
                 continue;
             }
@@ -774,7 +791,7 @@ static FILE *NewStream(char *name)
 
         if ((fp = fopen(filename, "w")) == NULL)
         {
-            Log(LOG_LEVEL_ERR, "Unable to open file %s", filename);
+            Log(LOG_LEVEL_ERR, "Unable to open file '%s'", filename);
             fp = stdout;
         }
     }

@@ -157,12 +157,12 @@ int FileHashChanged(EvalContext *ctx, char *filename, unsigned char digest[EVP_M
 
                 if (pp->comment)
                 {
-                    Log(LOG_LEVEL_ERR, "Preceding promise: %s", pp->comment);
+                    Log(LOG_LEVEL_ERR, "Preceding promise '%s'", pp->comment);
                 }
 
                 if (attr.change.update)
                 {
-                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_CHANGE, pp, attr, "Updating hash for %s to %s", filename,
+                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_CHANGE, pp, attr, "Updating hash for '%s' to '%s'", filename,
                          HashPrintSafe(type, digest, buffer));
 
                     DeleteHash(dbp, type, filename);
@@ -170,7 +170,7 @@ int FileHashChanged(EvalContext *ctx, char *filename, unsigned char digest[EVP_M
                 }
                 else
                 {
-                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "!! Hash for file \"%s\" changed", filename);
+                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Hash for file '%s' changed", filename);
                 }
 
                 CloseDB(dbp);
@@ -321,7 +321,7 @@ void PurgeHashes(EvalContext *ctx, char *path, Attributes attr, Promise *pp)
             }
             else
             {
-                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, attr, "ALERT: File %s no longer exists!", obj);
+                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, attr, "File '%s' no longer exists", obj);
             }
 
             LogHashChange(obj, FILE_STATE_REMOVED, "File removed", pp);
@@ -384,7 +384,7 @@ void LogHashChange(char *file, FileState status, char *msg, Promise *pp)
     {
         if (sb.st_mode & (S_IWGRP | S_IWOTH))
         {
-            Log(LOG_LEVEL_ERR, "File %s (owner %ju) is writable by others (security exception)", fname, (uintmax_t)sb.st_uid);
+            Log(LOG_LEVEL_ERR, "File '%s' (owner %ju) is writable by others (security exception)", fname, (uintmax_t)sb.st_uid);
         }
     }
 #endif /* !__MINGW32__ */

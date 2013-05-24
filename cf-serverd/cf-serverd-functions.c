@@ -143,7 +143,7 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
 
             if (optarg && (strlen(optarg) < 5))
             {
-                Log(LOG_LEVEL_ERR, " -f used but argument \"%s\" incorrect", optarg);
+                Log(LOG_LEVEL_ERR, " -f used but argument '%s' incorrect", optarg);
                 exit(EXIT_FAILURE);
             }
 
@@ -152,7 +152,7 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
             break;
 
         case 'd':
-            config->debug_mode = true;
+            LogSetGlobalLevel(LOG_LEVEL_DEBUG);
             NO_FORK = true;
 
         case 'K':
@@ -181,7 +181,7 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
             break;
 
         case 'L':
-            Log(LOG_LEVEL_VERBOSE, "Setting LD_LIBRARY_PATH=%s", optarg);
+            Log(LOG_LEVEL_VERBOSE, "Setting LD_LIBRARY_PATH to '%s'", optarg);
             snprintf(ld_library_path, CF_BUFSIZE - 1, "LD_LIBRARY_PATH=%s", optarg);
             putenv(ld_library_path);
             break;
@@ -212,16 +212,17 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
         case 'A':
 #ifdef HAVE_AVAHI_CLIENT_CLIENT_H
 #ifdef HAVE_AVAHI_COMMON_ADDRESS_H
-            printf("Generating Avahi configuration file.\n");
+            Log(LOG_LEVEL_NOTICE, "Generating Avahi configuration file.");
             if (GenerateAvahiConfig("/etc/avahi/services/cfengine-hub.service") != 0)
             {
                 exit(1);
             }
             cf_popen("/etc/init.d/avahi-daemon restart", "r", true);
-            printf("Avahi configuration file generated successfuly.\n");
+            Log(LOG_LEVEL_NOTICE, "Avahi configuration file generated successfuly.");
             exit(0);
 #else
-            printf("This option can only be used when avahi-daemon and libavahi are installed on the machine.\n");
+            Log(LOG_LEVEL_ERR, "Generating avahi configuration can only be done when avahi-daemon and libavahi are installed on the machine.");
+            exit(0);
 #endif
 #endif
 
@@ -522,7 +523,7 @@ void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *con
 
         if (CheckPromises(config))
         {
-            Log(LOG_LEVEL_INFO, "Rereading config files %s..", config->input_file);
+            Log(LOG_LEVEL_INFO, "Rereading policy file '%s'", config->input_file);
 
             /* Free & reload -- lock this to avoid access errors during reload */
             
@@ -618,7 +619,7 @@ static int GenerateAvahiConfig(const char *path)
     fout = fopen(path, "w+");
     if (fout == NULL)
     {
-        Log(LOG_LEVEL_ERR, "Unable to open %s", path);
+        Log(LOG_LEVEL_ERR, "Unable to open '%s'", path);
         return -1;
     }
     writer = FileWriter(fout);

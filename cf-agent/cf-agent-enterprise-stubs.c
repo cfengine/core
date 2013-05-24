@@ -41,5 +41,5 @@ void LogFileChange(ARG_UNUSED EvalContext *ctx, ARG_UNUSED char *file,
 
 void Nova_CheckNtACL(ARG_UNUSED EvalContext *ctx, ARG_UNUSED char *file_path, ARG_UNUSED Acl acl, ARG_UNUSED Attributes a, ARG_UNUSED Promise *pp)
 {
-    Log(LOG_LEVEL_INFO, "!! NTFS ACLs are only supported in CFEngine Enterprise");
+    Log(LOG_LEVEL_INFO, "NTFS ACLs are only supported in CFEngine Enterprise");
 }

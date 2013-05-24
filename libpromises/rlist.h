@@ -37,6 +37,8 @@ struct Rlist_
     Rlist *next;
 };
 
+RvalType DataTypeToRvalType(DataType datatype);
+
 char *RvalScalarValue(Rval rval);
 FnCall *RvalFnCallValue(Rval rval);
 Rlist *RvalRlistValue(Rval rval);

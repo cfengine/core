@@ -173,8 +173,7 @@ bool LoadMountInfo(Rlist **list)
 
         if (strstr(vbuff, "be root"))
         {
-            Log(LOG_LEVEL_ERR, "Mount access is denied. You must be root.");
-            Log(LOG_LEVEL_ERR, "Use the -n option to run safely.");
+            Log(LOG_LEVEL_ERR, "Mount access is denied. You must be root. Use the -n option to run safely");
         }
 
         if ((strstr(vbuff, "retrying")) || (strstr(vbuff, "denied")) || (strstr(vbuff, "backgrounding")))
@@ -334,7 +333,7 @@ int VerifyInFstab(EvalContext *ctx, char *name, Attributes a, Promise *pp)
     {
         if (!LoadFileAsItemList(&FSTABLIST, VFSTAB[VSYSTEMHARDCLASS], a.edits))
         {
-            Log(LOG_LEVEL_ERR, "Couldn't open %s!", VFSTAB[VSYSTEMHARDCLASS]);
+            Log(LOG_LEVEL_ERR, "Couldn't open '%s'", VFSTAB[VSYSTEMHARDCLASS]);
             return false;
         }
         else
@@ -382,13 +381,13 @@ int VerifyInFstab(EvalContext *ctx, char *name, Attributes a, Promise *pp)
     snprintf(fstab, CF_BUFSIZE, "/bin/mount %s:%s %s", host, rmountpt, mountpt);
 #endif
 
-    Log(LOG_LEVEL_VERBOSE, "Verifying %s in %s", mountpt, VFSTAB[VSYSTEMHARDCLASS]);
+    Log(LOG_LEVEL_VERBOSE, "Verifying '%s' in '%s'", mountpt, VFSTAB[VSYSTEMHARDCLASS]);
 
     if (!MatchFSInFstab(mountpt))
     {
         AppendItem(&FSTABLIST, fstab, NULL);
         FSTAB_EDITS++;
-        cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "Adding file system %s:%s seems to %s.\n", host, rmountpt,
+        cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "Adding file system '%s:%s' seems to '%s'", host, rmountpt,
              VFSTAB[VSYSTEMHARDCLASS]);
     }
 
@@ -409,7 +408,7 @@ int VerifyNotInFstab(EvalContext *ctx, char *name, Attributes a, Promise *pp)
     {
         if (!LoadFileAsItemList(&FSTABLIST, VFSTAB[VSYSTEMHARDCLASS], a.edits))
         {
-            Log(LOG_LEVEL_ERR, "Couldn't open %s!", VFSTAB[VSYSTEMHARDCLASS]);
+            Log(LOG_LEVEL_ERR, "Couldn't open '%s'", VFSTAB[VSYSTEMHARDCLASS]);
             return false;
         }
         else
@@ -531,7 +530,7 @@ int VerifyMount(EvalContext *ctx, char *name, Attributes a, Promise *pp)
 
         if ((pfp = cf_popen(comm, "r", true)) == NULL)
         {
-            Log(LOG_LEVEL_ERR, "Failed to open pipe from %s", CommandArg0(VMOUNTCOMM[VSYSTEMHARDCLASS]));
+            Log(LOG_LEVEL_ERR, "Failed to open pipe from '%s'", CommandArg0(VMOUNTCOMM[VSYSTEMHARDCLASS]));
             return 0;
         }
 
@@ -546,7 +545,7 @@ int VerifyMount(EvalContext *ctx, char *name, Attributes a, Promise *pp)
 
         if (res != 0 && ((strstr(line, "busy")) || (strstr(line, "Busy"))))
         {
-            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_INTERRUPTED, pp, a, "The device under %s cannot be mounted\n", mountpt);
+            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_INTERRUPTED, pp, a, "The device under '%s' cannot be mounted", mountpt);
             cf_pclose(pfp);
             return 1;
         }
@@ -754,7 +753,7 @@ static void DeleteThisItem(Item **liststart, Item *entry)
 void CleanupNFS(void)
 {
     Attributes a = { {0} };
-    Log(LOG_LEVEL_VERBOSE, "Number of changes observed in %s is %d", VFSTAB[VSYSTEMHARDCLASS], FSTAB_EDITS);
+    Log(LOG_LEVEL_VERBOSE, "Number of changes observed in '%s' is %d", VFSTAB[VSYSTEMHARDCLASS], FSTAB_EDITS);
 
     if (FSTAB_EDITS && FSTABLIST && !DONTDO)
     {

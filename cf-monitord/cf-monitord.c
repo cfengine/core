@@ -149,7 +149,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             break;
 
         case 'd':
-            config->debug_mode = true;
+            LogSetGlobalLevel(LOG_LEVEL_DEBUG);
             NO_FORK = true;
             break;
 
@@ -236,7 +236,7 @@ static void KeepPromises(EvalContext *ctx, Policy *policy)
 
             if (!EvalContextVariableGet(ctx, (VarRef) { NULL, "control_monitor", cp->lval }, &retval, NULL))
             {
-                Log(LOG_LEVEL_ERR, "Unknown lval %s in monitor control body", cp->lval);
+                Log(LOG_LEVEL_ERR, "Unknown lval '%s' in monitor control body", cp->lval);
                 continue;
             }
 

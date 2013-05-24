@@ -61,13 +61,17 @@ static void DestroyRange(Seq *seq, size_t start, size_t end)
 
 void SeqDestroy(Seq *seq)
 {
+    if (seq && seq->length > 0)
+    {
+        DestroyRange(seq, 0, seq->length - 1);
+    }
+    SeqSoftDestroy(seq);
+}
+
+void SeqSoftDestroy(Seq *seq)
+{
     if (seq)
     {
-        if (seq->length > 0)
-        {
-            DestroyRange(seq, 0, seq->length - 1);
-        }
-
         free(seq->data);
         free(seq);
     }

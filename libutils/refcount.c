@@ -22,6 +22,8 @@
   included file COSL.txt.
 */
 
+#include <assert.h>
+
 #include "alloc.h"
 #include "refcount.h"
 
@@ -41,9 +43,12 @@ void RefCountDestroy(RefCount **ref)
 {
     if (ref && *ref)
     {
-        // Don't destroy the refCount if it is still in use by somebody else.
+        // Destroying a refcount which has more than one user is a bug, but we let it
+        // pass in production code (memory leak).
+        assert((*ref)->user_count == 1);
         if ((*ref)->user_count > 1)
             return;
+        free((*ref)->users);
         free(*ref);
         *ref = NULL;
     }

@@ -2042,20 +2042,15 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
 
     if (iscrypt == 'y')
     {
-        ThreadLock(cft_system);
-
         if (RSA_private_decrypt
             (crypt_len, recvbuffer + CF_RSA_PROTO_OFFSET, decrypted_nonce, PRIVKEY, RSA_PKCS1_PADDING) <= 0)
         {
             err = ERR_get_error();
 
-            ThreadUnlock(cft_system);
             Log(LOG_LEVEL_ERR, "Private decrypt failed = '%s'", ERR_reason_error_string(err));
             free(decrypted_nonce);
             return false;
         }
-
-        ThreadUnlock(cft_system);
     }
     else
     {
@@ -2076,10 +2071,7 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
     free(decrypted_nonce);
 
 /* Get the public key from the client */
-
-    ThreadLock(cft_system);
     newkey = RSA_new();
-    ThreadUnlock(cft_system);
 
 /* proposition C2 */
     if ((len_n = ReceiveTransaction(conn->sd_reply, recvbuffer, NULL)) == -1)
@@ -2155,8 +2147,6 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
 
 /* Send counter challenge to be sure this is a live session */
 
-    ThreadLock(cft_system);
-
     counter_challenge = BN_new();
     if (counter_challenge == NULL)
     {
@@ -2184,8 +2174,6 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
         free(out);
         return false;
     }
-
-    ThreadUnlock(cft_system);
 
 /* proposition S3 */
     SendTransaction(conn->sd_reply, out, encrypted_len, CF_DONE);
@@ -2278,17 +2266,12 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
     {
         /* New protocol encrypted */
 
-        ThreadLock(cft_system);
-
         if (RSA_private_decrypt(keylen, in, out, PRIVKEY, RSA_PKCS1_PADDING) <= 0)
         {
-            ThreadUnlock(cft_system);
             err = ERR_get_error();
             Log(LOG_LEVEL_ERR, "Private decrypt failed = %s", ERR_reason_error_string(err));
             return false;
         }
-
-        ThreadUnlock(cft_system);
 
         memcpy(conn->session_key, out, session_size);
     }

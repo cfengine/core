@@ -31,6 +31,7 @@
 
 char VPREFIX[1024];
 bool LEGACY_OUTPUT = false;
+bool COLORIZED_OUTPUT = false;
 
 typedef struct
 {
@@ -116,6 +117,35 @@ const char *LogLevelToString(LogLevel level)
     }
 }
 
+const char *LogLevelToColor(LogLevel level)
+{
+    if (!COLORIZED_OUTPUT)
+    {
+        return "";
+    }
+
+    switch (level)
+    {
+    case LOG_LEVEL_CRIT:
+    case LOG_LEVEL_ERR:
+        return ANSI_COLOR_RED;
+
+    case LOG_LEVEL_WARNING:
+        return ANSI_COLOR_YELLOW;
+
+    case LOG_LEVEL_NOTICE:
+    case LOG_LEVEL_INFO:
+        return ANSI_COLOR_GREEN;
+
+    case LOG_LEVEL_VERBOSE:
+    case LOG_LEVEL_DEBUG:
+        return ANSI_COLOR_BLUE;
+
+    default:
+        ProgrammingError("Unknown log level passed to LogLevelToColor: %d", level);
+    }
+}
+
 void LogToStdout(const char *msg, ARG_UNUSED LogLevel level)
 {
     if (LEGACY_OUTPUT)
@@ -143,8 +173,10 @@ void LogToStdout(const char *msg, ARG_UNUSED LogLevel level)
         }
 
         const char *string_level = LogLevelToString(level);
+        const char *string_color = LogLevelToColor(level);
+        const char *maybe_color_reset = COLORIZED_OUTPUT ? ANSI_COLOR_RESET : "";
 
-        printf("%-24s %8s: %s\n", formatted_timestamp, string_level, msg);
+        printf("%s%-24s %8s: %s%s\n", string_color, formatted_timestamp, string_level, msg, maybe_color_reset);
     }
 }
 

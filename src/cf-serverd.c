@@ -169,6 +169,7 @@ static const char *HINTS[15] =
 
 static int CLOCK_DRIFT = 3600;  /* 1hr */
 static int ACTIVE_THREADS;
+static int EXITNOW = 0;
 
 int CFD_MAXPROCESSES = 0;
 int NO_FORK = false;
@@ -326,6 +327,11 @@ static void ThisAgentInit(void)
 
 /*******************************************************************/
 
+static void ServerSigHandler(int signum)
+{
+    EXITNOW = 1;
+}
+
 static void StartServer(GenericAgentConfig config)
 {
     char ipaddr[CF_MAXVARSIZE], intime[64];
@@ -355,13 +361,13 @@ static void StartServer(GenericAgentConfig config)
         exit(1);
     }
 
-    signal(SIGINT, HandleSignals);
-    signal(SIGTERM, HandleSignals);
+    signal(SIGINT, ServerSigHandler);
+    signal(SIGTERM, ServerSigHandler);
     signal(SIGHUP, SIG_IGN);
     signal(SIGPIPE, SIG_IGN);
     signal(SIGCHLD, SIG_IGN);
-    signal(SIGUSR1, HandleSignals);
-    signal(SIGUSR2, HandleSignals);
+    signal(SIGUSR1, ServerSigHandler);
+    signal(SIGUSR2, ServerSigHandler);
 
     if (listen(sd, QUEUESIZE) == -1)
     {
@@ -411,7 +417,9 @@ static void StartServer(GenericAgentConfig config)
     fcntl(sd, F_SETFD, FD_CLOEXEC);
 #endif
 
-    while (true)
+    CfOut(cf_cmdout, "", "Server is starting...\n");
+
+    while (!EXITNOW)
     {
         if (ThreadLock(cft_server_children))
         {
@@ -425,7 +433,8 @@ static void StartServer(GenericAgentConfig config)
         FD_ZERO(&rset);
         FD_SET(sd, &rset);
 
-        timeout.tv_sec = 10;    /* Set a 10 second timeout for select */
+        /* Set a 1 second timeout for select so that we exit in a timely manner when signalled. */
+        timeout.tv_sec = 1;
         timeout.tv_usec = 0;
 
         CfDebug(" -> Waiting at incoming select...\n");
@@ -526,7 +535,18 @@ static void StartServer(GenericAgentConfig config)
         }
     }
 
-    YieldCurrentLock(thislock); /* We never get here - this is done by a signal handler */
+    CfOut(cf_cmdout, "", "Cleaning up and exiting...\n");
+
+    YieldCurrentLock(thislock);
+    unlink(PIDFILE);
+
+    /* Do what GenericDeInitialize() does so, except that in the end
+       we call our special CloseAllDBExit(). */
+    CloseWmi();
+    CloseNetwork();
+    CloseLog();
+
+    CloseAllDBExit();
 }
 
 /*********************************************************************/
@@ -918,7 +938,7 @@ static void *HandleConnection(ServerConnectionState *conn)
             CfOut(cf_error, "",
                   "Server had to drop %d connections in a row, all existing ones seem hung. DOS attack? Committing apoptosis...",
                   TRIES);
-            HandleSignals(SIGTERM);
+            EXITNOW = 1;
         }
 
         if (!ThreadUnlock(cft_server_children))
@@ -945,7 +965,7 @@ static void *HandleConnection(ServerConnectionState *conn)
 
     SetReceiveTimeout(conn->sd_reply, &tv);
 
-    while (BusyWithConnection(conn))
+    while (!EXITNOW && BusyWithConnection(conn))
     {
     }
 
@@ -998,6 +1018,12 @@ static int BusyWithConnection(ServerConnectionState *conn)
     }
 
     CfDebug("Received: [%s] on socket %d\n", recvbuffer, conn->sd_reply);
+
+    /* Don't process request if we're signalled to exit. */
+    if (EXITNOW)
+    {
+        return false;
+    }
 
     switch (GetCommand(recvbuffer))
     {

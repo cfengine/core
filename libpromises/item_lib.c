@@ -30,7 +30,6 @@
 #include "misc_lib.h"
 
 /*******************************************************************/
-
 void PrintItemList(const Item *list, Writer *w)
 {
     WriterWriteChar(w, '{');
@@ -151,6 +150,27 @@ bool IsItemIn(const Item *list, const char *item)
 
     return false;
 }
+
+/*********************************************************************/
+
+bool ListsCompare(const Item *list1, const Item *list2)
+{
+    if (ListLen(list1) != ListLen(list2))
+    {
+        return false;
+    }
+
+    for (const Item *ptr = list1; ptr != NULL; ptr = ptr->next)
+    {
+        if (IsItemIn(list2, ptr->name) == false)
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 
 /*********************************************************************/
 

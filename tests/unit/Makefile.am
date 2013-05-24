@@ -146,11 +146,11 @@ file_writer_test_LDFLAGS =
 db_test_SOURCES = db_test.c
 db_test_LDADD = libdb.la
 
-lastseen_test_SOURCES = lastseen_test.c ../../libpromises/lastseen.c ../../libutils/statistics.c
-lastseen_test_LDADD = libdb.la
+lastseen_test_SOURCES = lastseen_test.c ../../libpromises/item_lib.c  ../../libpromises/lastseen.c ../../libutils/statistics.c
+lastseen_test_LDADD = libdb.la ../../libpromises/libpromises.la
 
-lastseen_migration_test_SOURCES = lastseen_migration_test.c ../../libpromises/lastseen.c ../../libutils/statistics.c
-lastseen_migration_test_LDADD = libdb.la
+lastseen_migration_test_SOURCES = lastseen_migration_test.c ../../libpromises/lastseen.c ../../libutils/statistics.c ../../libpromises/item_lib.c 
+lastseen_migration_test_LDADD = libdb.la ../../libpromises/libpromises.la
 
 dbm_migration_bundles_test_SOURCES = dbm_migration_bundles_test.c
 dbm_migration_bundles_test_LDADD = libdb.la

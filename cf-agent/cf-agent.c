@@ -448,6 +448,7 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
         case 'x':
             {
                 const char *workdir = GetWorkDir();
+                strcpy(CFWORKDIR, workdir);
                 Writer *out = FileWriter(stdout);
                 WriterWriteF(out, "self-diagnostics for agent using workdir '%s'\n", workdir);
 

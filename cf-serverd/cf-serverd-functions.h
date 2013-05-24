@@ -47,6 +47,6 @@ GenericAgentConfig *CheckOpts(int argc, char **argv);
 int OpenReceiverChannel(void);
 void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *config);
 int InitServer(size_t queue_size);
-void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config);
+void StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config);
 
 #endif // CFSERVERDFUNCTIONS_H

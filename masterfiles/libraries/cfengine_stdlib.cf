@@ -2581,7 +2581,7 @@ debian.!have_aptitude::
    package_patch_name_regex => "^Inst\s+(\S+)\s+.*";
    package_patch_version_regex => "^Inst\s+\S+\s+\[?\(?([^\],\s]+).*";
 
-freebsd::
+freebsd|openbsd::
  package_changes => "individual";
  package_list_command => "/usr/sbin/pkg_info";
  package_list_name_regex    => "([^\s]+)-.*";

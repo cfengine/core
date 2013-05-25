@@ -3309,6 +3309,421 @@ vars:
   "stopcommand[www]"    string => "/etc/init.d/apache2 stop";
   "pattern[www]"        string => ".*apache2.*";
 
+ openbsd::
+  "startcommand[amd]"   string => "/etc/rc.d/amd -f start";
+  "restartcommand[amd]" string => "/etc/rc.d/amd restart";
+  "reloadcommand[amd]"  string => "/etc/rc.d/amd reload";
+  "stopcommand[amd]"    string => "/etc/rc.d/amd stop";
+  "pattern[amd]"        string => ".*amd.*";
+
+  "startcommand[apmd]"   string => "/etc/rc.d/apmd -f start";
+  "restartcommand[apmd]" string => "/etc/rc.d/apmd restart";
+  "reloadcommand[apmd]"  string => "/etc/rc.d/apmd reload";
+  "stopcommand[apmd]"    string => "/etc/rc.d/apmd stop";
+  "pattern[apmd]"        string => ".*apmd.*";
+
+  "startcommand[bgpd]"   string => "/etc/rc.d/bgpd -f start";
+  "restartcommand[bgpd]" string => "/etc/rc.d/bgpd restart";
+  "reloadcommand[bgpd]"  string => "/etc/rc.d/bgpd reload";
+  "stopcommand[bgpd]"    string => "/etc/rc.d/bgpd stop";
+  "pattern[bgpd]"        string => ".*bgpd.*";
+
+  "startcommand[bootparamd]"   string => "/etc/rc.d/bootparamd -f start";
+  "restartcommand[bootparamd]" string => "/etc/rc.d/bootparamd restart";
+  "reloadcommand[bootparamd]"  string => "/etc/rc.d/bootparamd reload";
+  "stopcommand[bootparamd]"    string => "/etc/rc.d/bootparamd stop";
+  "pattern[bootparamd]"        string => ".*bootparamd.*";
+
+  "startcommand[cron]"   string => "/etc/rc.d/cron -f start";
+  "restartcommand[cron]" string => "/etc/rc.d/cron restart";
+  "reloadcommand[cron]"  string => "/etc/rc.d/cron reload";
+  "stopcommand[cron]"    string => "/etc/rc.d/cron stop";
+  "pattern[cron]"        string => ".*cron.*";
+
+  "startcommand[dhcpd]"   string => "/etc/rc.d/dhcpd -f start";
+  "restartcommand[dhcpd]" string => "/etc/rc.d/dhcpd restart";
+  "reloadcommand[dhcpd]"  string => "/etc/rc.d/dhcpd reload";
+  "stopcommand[dhcpd]"    string => "/etc/rc.d/dhcpd stop";
+  "pattern[dhcpd]"        string => ".*dhcpd.*";
+
+  "startcommand[dhcrelay]"   string => "/etc/rc.d/dhcrelay -f start";
+  "restartcommand[dhcrelay]" string => "/etc/rc.d/dhcrelay restart";
+  "reloadcommand[dhcrelay]"  string => "/etc/rc.d/dhcrelay reload";
+  "stopcommand[dhcrelay]"    string => "/etc/rc.d/dhcrelay stop";
+  "pattern[dhcrelay]"        string => ".*dhcrelay.*";
+
+  "startcommand[dvmrpd]"   string => "/etc/rc.d/dvmrpd -f start";
+  "restartcommand[dvmrpd]" string => "/etc/rc.d/dvmrpd restart";
+  "reloadcommand[dvmrpd]"  string => "/etc/rc.d/dvmrpd reload";
+  "stopcommand[dvmrpd]"    string => "/etc/rc.d/dvmrpd stop";
+  "pattern[dvmrpd]"        string => ".*dvmrpd.*";
+
+  "startcommand[ftpd]"   string => "/etc/rc.d/ftpd -f start";
+  "restartcommand[ftpd]" string => "/etc/rc.d/ftpd restart";
+  "reloadcommand[ftpd]"  string => "/etc/rc.d/ftpd reload";
+  "stopcommand[ftpd]"    string => "/etc/rc.d/ftpd stop";
+  "pattern[ftpd]"        string => ".*ftpd.*";
+
+  "startcommand[ftpproxy]"   string => "/etc/rc.d/ftpproxy -f start";
+  "restartcommand[ftpproxy]" string => "/etc/rc.d/ftpproxy restart";
+  "reloadcommand[ftpproxy]"  string => "/etc/rc.d/ftpproxy reload";
+  "stopcommand[ftpproxy]"    string => "/etc/rc.d/ftpproxy stop";
+  "pattern[ftpproxy]"        string => ".*ftpproxy.*";
+
+  "startcommand[hostapd]"   string => "/etc/rc.d/hostapd -f start";
+  "restartcommand[hostapd]" string => "/etc/rc.d/hostapd restart";
+  "reloadcommand[hostapd]"  string => "/etc/rc.d/hostapd reload";
+  "stopcommand[hostapd]"    string => "/etc/rc.d/hostapd stop";
+  "pattern[hostapd]"        string => ".*hostapd.*";
+
+  "startcommand[hotplugd]"   string => "/etc/rc.d/hotplugd -f start";
+  "restartcommand[hotplugd]" string => "/etc/rc.d/hotplugd restart";
+  "reloadcommand[hotplugd]"  string => "/etc/rc.d/hotplugd reload";
+  "stopcommand[hotplugd]"    string => "/etc/rc.d/hotplugd stop";
+  "pattern[hotplugd]"        string => ".*hotplugd.*";
+
+  "startcommand[httpd]"   string => "/etc/rc.d/httpd -f start";
+  "restartcommand[httpd]" string => "/etc/rc.d/httpd restart";
+  "reloadcommand[httpd]"  string => "/etc/rc.d/httpd reload";
+  "stopcommand[httpd]"    string => "/etc/rc.d/httpd stop";
+  "pattern[httpd]"        string => ".*httpd.*";
+
+  "startcommand[identd]"   string => "/etc/rc.d/identd -f start";
+  "restartcommand[identd]" string => "/etc/rc.d/identd restart";
+  "reloadcommand[identd]"  string => "/etc/rc.d/identd reload";
+  "stopcommand[identd]"    string => "/etc/rc.d/identd stop";
+  "pattern[identd]"        string => ".*identd.*";
+
+  "startcommand[ifstated]"   string => "/etc/rc.d/ifstated -f start";
+  "restartcommand[ifstated]" string => "/etc/rc.d/ifstated restart";
+  "reloadcommand[ifstated]"  string => "/etc/rc.d/ifstated reload";
+  "stopcommand[ifstated]"    string => "/etc/rc.d/ifstated stop";
+  "pattern[ifstated]"        string => ".*ifstated.*";
+
+  "startcommand[iked]"   string => "/etc/rc.d/iked -f start";
+  "restartcommand[iked]" string => "/etc/rc.d/iked restart";
+  "reloadcommand[iked]"  string => "/etc/rc.d/iked reload";
+  "stopcommand[iked]"    string => "/etc/rc.d/iked stop";
+  "pattern[iked]"        string => ".*iked.*";
+
+  "startcommand[inetd]"   string => "/etc/rc.d/inetd -f start";
+  "restartcommand[inetd]" string => "/etc/rc.d/inetd restart";
+  "reloadcommand[inetd]"  string => "/etc/rc.d/inetd reload";
+  "stopcommand[inetd]"    string => "/etc/rc.d/inetd stop";
+  "pattern[inetd]"        string => ".*inetd.*";
+
+  "startcommand[isakmpd]"   string => "/etc/rc.d/isakmpd -f start";
+  "restartcommand[isakmpd]" string => "/etc/rc.d/isakmpd restart";
+  "reloadcommand[isakmpd]"  string => "/etc/rc.d/isakmpd reload";
+  "stopcommand[isakmpd]"    string => "/etc/rc.d/isakmpd stop";
+  "pattern[isakmpd]"        string => ".*isakmpd.*";
+
+  "startcommand[kadmind]"   string => "/etc/rc.d/kadmind -f start";
+  "restartcommand[kadmind]" string => "/etc/rc.d/kadmind restart";
+  "reloadcommand[kadmind]"  string => "/etc/rc.d/kadmind reload";
+  "stopcommand[kadmind]"    string => "/etc/rc.d/kadmind stop";
+  "pattern[kadmind]"        string => ".*kadmind.*";
+
+  "startcommand[kdc]"   string => "/etc/rc.d/kdc -f start";
+  "restartcommand[kdc]" string => "/etc/rc.d/kdc restart";
+  "reloadcommand[kdc]"  string => "/etc/rc.d/kdc reload";
+  "stopcommand[kdc]"    string => "/etc/rc.d/kdc stop";
+  "pattern[kdc]"        string => ".*kdc.*";
+
+  "startcommand[kpasswdd]"   string => "/etc/rc.d/kpasswdd -f start";
+  "restartcommand[kpasswdd]" string => "/etc/rc.d/kpasswdd restart";
+  "reloadcommand[kpasswdd]"  string => "/etc/rc.d/kpasswdd reload";
+  "stopcommand[kpasswdd]"    string => "/etc/rc.d/kpasswdd stop";
+  "pattern[kpasswdd]"        string => ".*kpasswdd.*";
+
+  "startcommand[ldapd]"   string => "/etc/rc.d/ldapd -f start";
+  "restartcommand[ldapd]" string => "/etc/rc.d/ldapd restart";
+  "reloadcommand[ldapd]"  string => "/etc/rc.d/ldapd reload";
+  "stopcommand[ldapd]"    string => "/etc/rc.d/ldapd stop";
+  "pattern[ldapd]"        string => ".*ldapd.*";
+
+  "startcommand[ldattach]" string => "/etc/rc.d/ldattach -f start";
+  "restartcommand[ldattach]" string => "/etc/rc.d/ldattach restart";
+  "reloadcommand[ldattach]" string => "/etc/rc.d/ldattach reload";
+  "stopcommand[ldattach]" string => "/etc/rc.d/ldattach stop";
+  "pattern[ldattach]" string => ".*ldattach.*";
+
+  "startcommand[ldomd]"   string => "/etc/rc.d/ldomd -f start";
+  "restartcommand[ldomd]" string => "/etc/rc.d/ldomd restart";
+  "reloadcommand[ldomd]"  string => "/etc/rc.d/ldomd reload";
+  "stopcommand[ldomd]"    string => "/etc/rc.d/ldomd stop";
+  "pattern[ldomd]"        string => ".*ldomd.*";
+
+  "startcommand[ldpd]"   string => "/etc/rc.d/ldpd -f start";
+  "restartcommand[ldpd]" string => "/etc/rc.d/ldpd restart";
+  "reloadcommand[ldpd]"  string => "/etc/rc.d/ldpd reload";
+  "stopcommand[ldpd]"    string => "/etc/rc.d/ldpd stop";
+  "pattern[ldpd]"        string => ".*ldpd.*";
+
+  "startcommand[lockd]"   string => "/etc/rc.d/lockd -f start";
+  "restartcommand[lockd]" string => "/etc/rc.d/lockd restart";
+  "reloadcommand[lockd]"  string => "/etc/rc.d/lockd reload";
+  "stopcommand[lockd]"    string => "/etc/rc.d/lockd stop";
+  "pattern[lockd]"        string => ".*lockd.*";
+
+  "startcommand[lpd]"   string => "/etc/rc.d/lpd -f start";
+  "restartcommand[lpd]" string => "/etc/rc.d/lpd restart";
+  "reloadcommand[lpd]"  string => "/etc/rc.d/lpd reload";
+  "stopcommand[lpd]"    string => "/etc/rc.d/lpd stop";
+  "pattern[lpd]"        string => ".*lpd.*";
+
+  "startcommand[mopd]"   string => "/etc/rc.d/mopd -f start";
+  "restartcommand[mopd]" string => "/etc/rc.d/mopd restart";
+  "reloadcommand[mopd]"  string => "/etc/rc.d/mopd reload";
+  "stopcommand[mopd]"    string => "/etc/rc.d/mopd stop";
+  "pattern[mopd]"        string => ".*mopd.*";
+
+  "startcommand[mountd]"   string => "/etc/rc.d/mountd -f start";
+  "restartcommand[mountd]" string => "/etc/rc.d/mountd restart";
+  "reloadcommand[mountd]"  string => "/etc/rc.d/mountd reload";
+  "stopcommand[mountd]"    string => "/etc/rc.d/mountd stop";
+  "pattern[mountd]"        string => ".*mountd.*";
+
+  "startcommand[mrouted]"   string => "/etc/rc.d/mrouted -f start";
+  "restartcommand[mrouted]" string => "/etc/rc.d/mrouted restart";
+  "reloadcommand[mrouted]"  string => "/etc/rc.d/mrouted reload";
+  "stopcommand[mrouted]"    string => "/etc/rc.d/mrouted stop";
+  "pattern[mrouted]"        string => ".*mrouted.*";
+
+  "startcommand[named]"   string => "/etc/rc.d/named -f start";
+  "restartcommand[named]" string => "/etc/rc.d/named restart";
+  "reloadcommand[named]"  string => "/etc/rc.d/named reload";
+  "stopcommand[named]"    string => "/etc/rc.d/named stop";
+  "pattern[named]"        string => ".*named.*";
+
+  "startcommand[nfsd]"   string => "/etc/rc.d/nfsd -f start";
+  "restartcommand[nfsd]" string => "/etc/rc.d/nfsd restart";
+  "reloadcommand[nfsd]"  string => "/etc/rc.d/nfsd reload";
+  "stopcommand[nfsd]"    string => "/etc/rc.d/nfsd stop";
+  "pattern[nfsd]"        string => ".*nfsd.*";
+
+  "startcommand[nginx]"   string => "/etc/rc.d/nginx -f start";
+  "restartcommand[nginx]" string => "/etc/rc.d/nginx restart";
+  "reloadcommand[nginx]"  string => "/etc/rc.d/nginx reload";
+  "stopcommand[nginx]"    string => "/etc/rc.d/nginx stop";
+  "pattern[nginx]"        string => ".*nginx.*";
+
+  "startcommand[npppd]"   string => "/etc/rc.d/npppd -f start";
+  "restartcommand[npppd]" string => "/etc/rc.d/npppd restart";
+  "reloadcommand[npppd]"  string => "/etc/rc.d/npppd reload";
+  "stopcommand[npppd]"    string => "/etc/rc.d/npppd stop";
+  "pattern[npppd]"        string => ".*npppd.*";
+
+  "startcommand[nsd]"   string => "/etc/rc.d/nsd -f start";
+  "restartcommand[nsd]" string => "/etc/rc.d/nsd restart";
+  "reloadcommand[nsd]"  string => "/etc/rc.d/nsd reload";
+  "stopcommand[nsd]"    string => "/etc/rc.d/nsd stop";
+  "pattern[nsd]"        string => ".*nsd.*";
+
+  "startcommand[ntpd]"   string => "/etc/rc.d/ntpd -f start";
+  "restartcommand[ntpd]" string => "/etc/rc.d/ntpd restart";
+  "reloadcommand[ntpd]"  string => "/etc/rc.d/ntpd reload";
+  "stopcommand[ntpd]"    string => "/etc/rc.d/ntpd stop";
+  "pattern[ntpd]"        string => ".*ntpd.*";
+
+  "startcommand[ospf6d]"   string => "/etc/rc.d/ospf6d -f start";
+  "restartcommand[ospf6d]" string => "/etc/rc.d/ospf6d restart";
+  "reloadcommand[ospf6d]"  string => "/etc/rc.d/ospf6d reload";
+  "stopcommand[ospf6d]"    string => "/etc/rc.d/ospf6d stop";
+  "pattern[ospf6d]"        string => ".*ospf6d.*";
+
+  "startcommand[ospfd]"   string => "/etc/rc.d/ospfd -f start";
+  "restartcommand[ospfd]" string => "/etc/rc.d/ospfd restart";
+  "reloadcommand[ospfd]"  string => "/etc/rc.d/ospfd reload";
+  "stopcommand[ospfd]"    string => "/etc/rc.d/ospfd stop";
+  "pattern[ospfd]"        string => ".*ospfd.*";
+
+  "startcommand[pflogd]"   string => "/etc/rc.d/pflogd -f start";
+  "restartcommand[pflogd]" string => "/etc/rc.d/pflogd restart";
+  "reloadcommand[pflogd]"  string => "/etc/rc.d/pflogd reload";
+  "stopcommand[pflogd]"    string => "/etc/rc.d/pflogd stop";
+  "pattern[pflogd]"        string => ".*pflogd.*";
+
+  "startcommand[popa3d]"   string => "/etc/rc.d/popa3d -f start";
+  "restartcommand[popa3d]" string => "/etc/rc.d/popa3d restart";
+  "reloadcommand[popa3d]"  string => "/etc/rc.d/popa3d reload";
+  "stopcommand[popa3d]"    string => "/etc/rc.d/popa3d stop";
+  "pattern[popa3d]"        string => ".*popa3d.*";
+
+  "startcommand[portmap]"   string => "/etc/rc.d/portmap -f start";
+  "restartcommand[portmap]" string => "/etc/rc.d/portmap restart";
+  "reloadcommand[portmap]"  string => "/etc/rc.d/portmap reload";
+  "stopcommand[portmap]"    string => "/etc/rc.d/portmap stop";
+  "pattern[portmap]"        string => ".*portmap.*";
+
+  "startcommand[rarpd]"   string => "/etc/rc.d/rarpd -f start";
+  "restartcommand[rarpd]" string => "/etc/rc.d/rarpd restart";
+  "reloadcommand[rarpd]"  string => "/etc/rc.d/rarpd reload";
+  "stopcommand[rarpd]"    string => "/etc/rc.d/rarpd stop";
+  "pattern[rarpd]"        string => ".*rarpd.*";
+
+  "startcommand[rbootd]"   string => "/etc/rc.d/rbootd -f start";
+  "restartcommand[rbootd]" string => "/etc/rc.d/rbootd restart";
+  "reloadcommand[rbootd]"  string => "/etc/rc.d/rbootd reload";
+  "stopcommand[rbootd]"    string => "/etc/rc.d/rbootd stop";
+  "pattern[rbootd]"        string => ".*rbootd.*";
+
+  "startcommand[relayd]"   string => "/etc/rc.d/relayd -f start";
+  "restartcommand[relayd]" string => "/etc/rc.d/relayd restart";
+  "reloadcommand[relayd]"  string => "/etc/rc.d/relayd reload";
+  "stopcommand[relayd]"    string => "/etc/rc.d/relayd stop";
+  "pattern[relayd]"        string => ".*relayd.*";
+
+  "startcommand[ripd]"   string => "/etc/rc.d/ripd -f start";
+  "restartcommand[ripd]" string => "/etc/rc.d/ripd restart";
+  "reloadcommand[ripd]"  string => "/etc/rc.d/ripd reload";
+  "stopcommand[ripd]"    string => "/etc/rc.d/ripd stop";
+  "pattern[ripd]"        string => ".*ripd.*";
+
+  "startcommand[route6d]"   string => "/etc/rc.d/route6d -f start";
+  "restartcommand[route6d]" string => "/etc/rc.d/route6d restart";
+  "reloadcommand[route6d]"  string => "/etc/rc.d/route6d reload";
+  "stopcommand[route6d]"    string => "/etc/rc.d/route6d stop";
+  "pattern[route6d]"        string => ".*route6d.*";
+
+  "startcommand[rtadvd]"   string => "/etc/rc.d/rtadvd -f start";
+  "restartcommand[rtadvd]" string => "/etc/rc.d/rtadvd restart";
+  "reloadcommand[rtadvd]"  string => "/etc/rc.d/rtadvd reload";
+  "stopcommand[rtadvd]"    string => "/etc/rc.d/rtadvd stop";
+  "pattern[rtadvd]"        string => ".*rtadvd.*";
+
+  "startcommand[rtsold]"   string => "/etc/rc.d/rtsold -f start";
+  "restartcommand[rtsold]" string => "/etc/rc.d/rtsold restart";
+  "reloadcommand[rtsold]"  string => "/etc/rc.d/rtsold reload";
+  "stopcommand[rtsold]"    string => "/etc/rc.d/rtsold stop";
+  "pattern[rtsold]"        string => ".*rtsold.*";
+
+  "startcommand[rwhod]"   string => "/etc/rc.d/rwhod -f start";
+  "restartcommand[rwhod]" string => "/etc/rc.d/rwhod restart";
+  "reloadcommand[rwhod]"  string => "/etc/rc.d/rwhod reload";
+  "stopcommand[rwhod]"    string => "/etc/rc.d/rwhod stop";
+  "pattern[rwhod]"        string => ".*rwhod.*";
+
+  "startcommand[sasyncd]"   string => "/etc/rc.d/sasyncd -f start";
+  "restartcommand[sasyncd]" string => "/etc/rc.d/sasyncd restart";
+  "reloadcommand[sasyncd]"  string => "/etc/rc.d/sasyncd reload";
+  "stopcommand[sasyncd]"    string => "/etc/rc.d/sasyncd stop";
+  "pattern[sasyncd]"        string => ".*sasyncd.*";
+
+  "startcommand[sendmail]"   string => "/etc/rc.d/sendmail -f start";
+  "restartcommand[sendmail]" string => "/etc/rc.d/sendmail restart";
+  "reloadcommand[sendmail]"  string => "/etc/rc.d/sendmail reload";
+  "stopcommand[sendmail]"    string => "/etc/rc.d/sendmail stop";
+  "pattern[sendmail]"        string => ".*sendmail.*";
+
+  "startcommand[sensorsd]"   string => "/etc/rc.d/sensorsd -f start";
+  "restartcommand[sensorsd]" string => "/etc/rc.d/sensorsd restart";
+  "reloadcommand[sensorsd]"  string => "/etc/rc.d/sensorsd reload";
+  "stopcommand[sensorsd]"    string => "/etc/rc.d/sensorsd stop";
+  "pattern[sensorsd]"        string => ".*sensorsd.*";
+
+  "startcommand[smtpd]"   string => "/etc/rc.d/smtpd -f start";
+  "restartcommand[smtpd]" string => "/etc/rc.d/smtpd restart";
+  "reloadcommand[smtpd]"  string => "/etc/rc.d/smtpd reload";
+  "stopcommand[smtpd]"    string => "/etc/rc.d/smtpd stop";
+  "pattern[smtpd]"        string => ".*smtpd.*";
+
+  "startcommand[sndiod]"   string => "/etc/rc.d/sndiod -f start";
+  "restartcommand[sndiod]" string => "/etc/rc.d/sndiod restart";
+  "reloadcommand[sndiod]"  string => "/etc/rc.d/sndiod reload";
+  "stopcommand[sndiod]"    string => "/etc/rc.d/sndiod stop";
+  "pattern[sndiod]"        string => ".*sndiod.*";
+
+  "startcommand[snmpd]"   string => "/etc/rc.d/snmpd -f start";
+  "restartcommand[snmpd]" string => "/etc/rc.d/snmpd restart";
+  "reloadcommand[snmpd]"  string => "/etc/rc.d/snmpd reload";
+  "stopcommand[snmpd]"    string => "/etc/rc.d/snmpd stop";
+  "pattern[snmpd]"        string => ".*snmpd.*";
+
+  "startcommand[spamd]"   string => "/etc/rc.d/spamd -f start";
+  "restartcommand[spamd]" string => "/etc/rc.d/spamd restart";
+  "reloadcommand[spamd]"  string => "/etc/rc.d/spamd reload";
+  "stopcommand[spamd]"    string => "/etc/rc.d/spamd stop";
+  "pattern[spamd]"        string => ".*spamd.*";
+
+  "startcommand[spamlogd]"   string => "/etc/rc.d/spamlogd -f start";
+  "restartcommand[spamlogd]" string => "/etc/rc.d/spamlogd restart";
+  "reloadcommand[spamlogd]"  string => "/etc/rc.d/spamlogd reload";
+  "stopcommand[spamlogd]"    string => "/etc/rc.d/spamlogd stop";
+  "pattern[spamlogd]"        string => ".*spamlogd.*";
+
+  "startcommand[sshd]"   string => "/etc/rc.d/sshd -f start";
+  "restartcommand[sshd]" string => "/etc/rc.d/sshd restart";
+  "reloadcommand[sshd]"  string => "/etc/rc.d/sshd reload";
+  "stopcommand[sshd]"    string => "/etc/rc.d/sshd stop";
+  "pattern[sshd]"        string => ".*sshd.*";
+
+  "startcommand[statd]"   string => "/etc/rc.d/statd -f start";
+  "restartcommand[statd]" string => "/etc/rc.d/statd restart";
+  "reloadcommand[statd]"  string => "/etc/rc.d/statd reload";
+  "stopcommand[statd]"    string => "/etc/rc.d/statd stop";
+  "pattern[statd]"        string => ".*statd.*";
+
+  "startcommand[syslogd]"   string => "/etc/rc.d/syslogd -f start";
+  "restartcommand[syslogd]" string => "/etc/rc.d/syslogd restart";
+  "reloadcommand[syslogd]"  string => "/etc/rc.d/syslogd reload";
+  "stopcommand[syslogd]"    string => "/etc/rc.d/syslogd stop";
+  "pattern[syslogd]"        string => ".*syslogd.*";
+
+  "startcommand[tftpd]"   string => "/etc/rc.d/tftpd -f start";
+  "restartcommand[tftpd]" string => "/etc/rc.d/tftpd restart";
+  "reloadcommand[tftpd]"  string => "/etc/rc.d/tftpd reload";
+  "stopcommand[tftpd]"    string => "/etc/rc.d/tftpd stop";
+  "pattern[tftpd]"        string => ".*tftpd.*";
+
+  "startcommand[tftpproxy]"   string => "/etc/rc.d/tftpproxy -f start";
+  "restartcommand[tftpproxy]" string => "/etc/rc.d/tftpproxy restart";
+  "reloadcommand[tftpproxy]"  string => "/etc/rc.d/tftpproxy reload";
+  "stopcommand[tftpproxy]"    string => "/etc/rc.d/tftpproxy stop";
+  "pattern[tftpproxy]"        string => ".*tftpproxy.*";
+
+  "startcommand[watchdogd]"   string => "/etc/rc.d/watchdogd -f start";
+  "restartcommand[watchdogd]" string => "/etc/rc.d/watchdogd restart";
+  "reloadcommand[watchdogd]"  string => "/etc/rc.d/watchdogd reload";
+  "stopcommand[watchdogd]"    string => "/etc/rc.d/watchdogd stop";
+  "pattern[watchdogd]"        string => ".*watchdogd.*";
+
+  "startcommand[wsmoused]"   string => "/etc/rc.d/wsmoused -f start";
+  "restartcommand[wsmoused]" string => "/etc/rc.d/wsmoused restart";
+  "reloadcommand[wsmoused]"  string => "/etc/rc.d/wsmoused reload";
+  "stopcommand[wsmoused]"    string => "/etc/rc.d/wsmoused stop";
+  "pattern[wsmoused]"        string => ".*wsmoused.*";
+
+  "startcommand[xdm]"   string => "/etc/rc.d/xdm -f start";
+  "restartcommand[xdm]" string => "/etc/rc.d/xdm restart";
+  "reloadcommand[xdm]"  string => "/etc/rc.d/xdm reload";
+  "stopcommand[xdm]"    string => "/etc/rc.d/xdm stop";
+  "pattern[xdm]"        string => ".*xdm.*";
+
+  "startcommand[ypbind]"   string => "/etc/rc.d/ypbind -f start";
+  "restartcommand[ypbind]" string => "/etc/rc.d/ypbind restart";
+  "reloadcommand[ypbind]"  string => "/etc/rc.d/ypbind reload";
+  "stopcommand[ypbind]"    string => "/etc/rc.d/ypbind stop";
+  "pattern[ypbind]"        string => ".*ypbind.*";
+
+  "startcommand[ypldap]"   string => "/etc/rc.d/ypldap -f start";
+  "restartcommand[ypldap]" string => "/etc/rc.d/ypldap restart";
+  "reloadcommand[ypldap]"  string => "/etc/rc.d/ypldap reload";
+  "stopcommand[ypldap]"    string => "/etc/rc.d/ypldap stop";
+  "pattern[ypldap]"        string => ".*ypldap.*";
+
+  "startcommand[yppasswdd]"   string => "/etc/rc.d/yppasswdd -f start";
+  "restartcommand[yppasswdd]" string => "/etc/rc.d/yppasswdd restart";
+  "reloadcommand[yppasswdd]"  string => "/etc/rc.d/yppasswdd reload";
+  "stopcommand[yppasswdd]"    string => "/etc/rc.d/yppasswdd stop";
+  "pattern[yppasswdd]"        string => ".*yppasswdd.*";
+
+  "startcommand[ypserv]"   string => "/etc/rc.d/ypserv -f start";
+  "restartcommand[ypserv]" string => "/etc/rc.d/ypserv restart";
+  "reloadcommand[ypserv]"  string => "/etc/rc.d/ypserv reload";
+  "stopcommand[ypserv]"    string => "/etc/rc.d/ypserv stop";
+  "pattern[ypserv]"        string => ".*ypserv.*";
+
 
  # METHODS that implement these ............................................
 

@@ -43,7 +43,7 @@ typedef struct
 
 void LogToSystemLog(const char *msg, LogLevel level);
 
-static pthread_once_t log_context_init_once;
+static pthread_once_t log_context_init_once = PTHREAD_ONCE_INIT;
 static pthread_key_t log_context_key;
 
 static void LoggingInitializeOnce(void)

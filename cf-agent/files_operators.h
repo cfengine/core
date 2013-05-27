@@ -34,5 +34,6 @@ int SaveAsFile(SaveCallbackFn callback, void *param, const char *file, Attribute
 int SaveItemListAsFile(Item *liststart, const char *file, Attributes a);
 
 int CompareToFile(EvalContext *ctx, const Item *liststart, const char *file, Attributes a, const Promise *pp);
+bool CopyFilePermissionsDisk(const char *source, const char *destination);
 
 #endif

@@ -1094,6 +1094,61 @@ static int ParseModePosixLinux(char *mode, acl_permset_t perms)
     return true;
 }
 
+int CopyACLs(const char *src, const char *dst)
+{
+    acl_t acls;
+    struct stat statbuf;
+    int ret;
+
+    acls = acl_get_file(src, ACL_TYPE_ACCESS);
+    if (!acls)
+    {
+        if (errno == ENOTSUP)
+        {
+            return true;
+        }
+        else
+        {
+            Log(LOG_LEVEL_INFO, "Can't copy ACLs from '%s'. (acl_get_file: %s)", src, GetErrorStr());
+            return false;
+        }
+    }
+    ret = acl_set_file(dst, ACL_TYPE_ACCESS, acls);
+    acl_free(acls);
+    if (ret != 0)
+    {
+        Log(LOG_LEVEL_INFO, "Can't copy ACLs to '%s'. (acl_set_file: %s)", dst, GetErrorStr());
+        return false;
+    }
+
+    if (stat(src, &statbuf) != 0)
+    {
+        Log(LOG_LEVEL_INFO, "Can't copy ACLs from '%s'. (stat: %s)", src, GetErrorStr());
+        return false;
+    }
+    if (!S_ISDIR(statbuf.st_mode))
+    {
+        return true;
+    }
+
+    // For directory, copy default ACL too.
+    acls = acl_get_file(src, ACL_TYPE_DEFAULT);
+    if (!acls)
+    {
+        Log(LOG_LEVEL_INFO, "Can't copy ACLs from '%s'. (acl_get_file: %s)", src, GetErrorStr());
+        return false;
+    }
+    ret = acl_set_file(dst, ACL_TYPE_DEFAULT, acls);
+    acl_free(acls);
+    if (ret != 0)
+    {
+        Log(LOG_LEVEL_INFO, "Can't copy ACLs to '%s'. (acl_set_file: %s)", dst, GetErrorStr());
+        return false;
+    }
+
+    return true;
+}
+
 #else /* HAVE_LIBACL */
 
 int CheckPosixLinuxACL(EvalContext *ctx, ARG_UNUSED char *file_path, ARG_UNUSED Acl acl, Attributes a, Promise *pp)
@@ -1101,6 +1156,11 @@ int CheckPosixLinuxACL(EvalContext *ctx, ARG_UNUSED char *file_path, ARG_UNUSED 
     cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a,
          "!! Posix ACLs are not supported on this Linux system - install the Posix acl library");
     PromiseRef(LOG_LEVEL_ERR, pp);
+    return true;
+}
+
+int CopyACLs(const char *src, const char *dst)
+{
     return true;
 }
 

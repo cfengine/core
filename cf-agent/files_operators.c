@@ -184,11 +184,35 @@ int SaveAsFile(SaveCallbackFn callback, void *param, const char *file, Attribute
         return false;
     }
 
-    if (rename(file, backup) == -1)
+    if (!CopyFilePermissionsDisk(file, new))
     {
-        Log(LOG_LEVEL_ERR, "Can't rename '%s' to '%s' - so promised edits could not be moved into place. (rename: %s)",
-            file, backup, GetErrorStr());
+        Log(LOG_LEVEL_ERR, "Can't copy file permissions from '%s' to '%s' - so promised edits could not be moved into place.",
+            file, new);
         return false;
+    }
+
+    unlink(backup);
+#ifndef __MINGW32__
+    if (link(file, backup) == -1)
+    {
+        Log(LOG_LEVEL_VERBOSE, "Can't link '%s' to '%s' - falling back to copy. (link: %s)",
+            file, backup, GetErrorStr());
+#else
+    /* No hardlinks on Windows, go straight to copying */
+    {
+#endif
+        if (!CopyRegularFileDisk(file, backup))
+        {
+            Log(LOG_LEVEL_ERR, "Can't copy '%s' to '%s' - so promised edits could not be moved into place.",
+                file, backup);
+            return false;
+        }
+        if (!CopyFilePermissionsDisk(file, backup))
+        {
+            Log(LOG_LEVEL_ERR, "Can't copy permissions '%s' to '%s' - so promised edits could not be moved into place.",
+                file, backup);
+            return false;
+        }
     }
 
     if (a.edits.backup == BACKUP_OPTION_ROTATE)
@@ -216,22 +240,6 @@ int SaveAsFile(SaveCallbackFn callback, void *param, const char *file, Attribute
             new, file, GetErrorStr());
         return false;
     }
-
-    mask = umask(0);
-    chmod(file, statbuf.st_mode);    /* Restore file permissions etc */
-    if (chown(file, statbuf.st_uid, statbuf.st_gid) != 0)
-    {
-        Log(LOG_LEVEL_ERR, "Failed to restore file permissions for '%s'", file);
-    }
-    umask(mask);
-
-#ifdef WITH_SELINUX
-    if (selinux_enabled)
-    {
-        /* restore file context */
-        setfilecon(file, scontext);
-    }
-#endif
 
     return true;
 }
@@ -403,4 +411,64 @@ int CompareToFile(EvalContext *ctx, const Item *liststart, const char *file, Att
 
     DeleteItemList(cmplist);
     return (true);
+}
+
+bool CopyFilePermissionsDisk(const char *source, const char *destination)
+{
+    struct stat statbuf;
+
+    if (stat(source, &statbuf) == -1)
+    {
+        Log(LOG_LEVEL_INFO, "Can't copy permissions '%s'. (stat: %s)", source, GetErrorStr());
+        return false;
+    }
+
+    if (chmod(destination, statbuf.st_mode) != 0)
+    {
+        Log(LOG_LEVEL_INFO, "Can't copy permissions '%s'. (chmod: %s)", source, GetErrorStr());
+        return false;
+    }
+
+    if (chown(destination, statbuf.st_uid, statbuf.st_gid) != 0)
+    {
+        Log(LOG_LEVEL_INFO, "Can't copy permissions '%s'. (chown: %s)", source, GetErrorStr());
+        return false;
+    }
+
+    if (!CopyACLs(source, destination))
+    {
+        return false;
+    }
+
+#ifdef WITH_SELINUX
+    int selinux_enabled = 0;
+    security_context_t scontext = NULL;
+
+    selinux_enabled = (is_selinux_enabled() > 0);
+
+    if (selinux_enabled)
+    {
+        /* get current security context */
+        if (getfilecon(source, &scontext) != 0)
+        {
+            if (errno != ENOTSUP && errno != ENODATA)
+            {
+                Log(LOG_LEVEL_INFO, "Can't copy security context from '%s'. (getfilecon: %s)", source, GetErrorStr());
+                return false;
+            }
+        }
+        else
+        {
+            int ret = setfilecon(file, scontext);
+            freecon(scontext);
+            if (ret != 0)
+            {
+                Log(LOG_LEVEL_INFO, "Can't copy security context to '%s'. (setfilecon: %s)", destination, GetErrorStr());
+                return false;
+            }
+        }
+    }
+#endif
+
+    return true;
 }

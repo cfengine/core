@@ -36,5 +36,6 @@
 #define CF_VALID_NPERMS_NTFS "drtxTwabBpcoD"
 
 void VerifyACL(char *file, Attributes a, Promise *pp);
+int CopyACLs(const char *src, const char *dst);
 
 #endif

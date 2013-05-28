@@ -473,6 +473,22 @@ static int SelectIsSymLinkTo(char *filename, Rlist *crit)
     {
         memset(buffer, 0, CF_BUFSIZE);
 
+        struct stat statbuf;
+
+        // Don't worry if this gives an error, that's handled above us.
+
+        // We're calling lstat() here to avoid dereferencing the
+        // symlink... and we only care if the inode is a directory.
+        if (lstat(filename, &statbuf) == -1)
+        {
+            // Do nothing.
+        }
+        else if (S_ISDIR(statbuf.st_mode))
+        {
+            Log(LOG_LEVEL_DEBUG, "Skipping readlink() on directory %s", filename);
+            return false;
+        }
+
         if (readlink(filename, buffer, CF_BUFSIZE - 1) == -1)
         {
             Log(LOG_LEVEL_ERR, "Unable to read link '%s' in filter. (readlink: %s)",

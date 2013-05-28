@@ -1117,8 +1117,15 @@ int CopyACLs(const char *src, const char *dst)
     acl_free(acls);
     if (ret != 0)
     {
-        Log(LOG_LEVEL_INFO, "Can't copy ACLs to '%s'. (acl_set_file: %s)", dst, GetErrorStr());
-        return false;
+        if (errno == ENOTSUP)
+        {
+            return true;
+        }
+        else
+        {
+            Log(LOG_LEVEL_INFO, "Can't copy ACLs to '%s'. (acl_set_file: %s)", dst, GetErrorStr());
+            return false;
+        }
     }
 
     if (stat(src, &statbuf) != 0)

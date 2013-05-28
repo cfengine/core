@@ -46,6 +46,7 @@ vars:
 files:
         "$(G.testfile)"
             create => "true",
+            perms => test_perms($(test.mode)),
             link_from => test_link;
 }
 
@@ -53,6 +54,13 @@ body link_from test_link
 {
         link_type => "absolute";
         source => "$(G.testfile).SOURCE";
+}
+
+body perms test_perms(m)
+{
+        mode => "$(m)";
+        owners => { "0" };
+        groups => { "0" };
 }
 
 #######################################################

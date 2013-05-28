@@ -43,12 +43,20 @@ vars:
 files:
         "$(G.testfile)"
             create => "true",
+            perms => test_perms($(mode)),
             copy_from => test_copy;
 }
 
 body copy_from test_copy
 {
         source => "/etc/group";
+}
+
+body perms test_perms(m)
+{
+        mode => "$(m)";
+        owners => { "0" };
+        groups => { "0" };
 }
 
 #######################################################

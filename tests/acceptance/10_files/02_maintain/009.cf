@@ -39,9 +39,13 @@ files:
 
 bundle agent test
 {
+vars:
+    "mode" int => "0600";
+
 files:
     "$(G.testdir)/copy_file"
       comment => "Copy the file behind the link.",
+      perms => test_perms($(mode)),
       copy_from => cp_2_file("$(G.testdir)/linkdir/link");
 }
 
@@ -58,12 +62,19 @@ body copy_from cp_2_file(x) {
   copylink_patterns => { ".*" };
 }
 
+body perms test_perms(m) {
+  mode => "$(m)";
+  owners => { "0" };
+  groups => { "0" };
+}
+
+
 #######################################################
 
 bundle agent check
 {
 vars:
-        "expect" string => "600 1 0 0 0";
+        "expect" string => "$(test.mode) 1 0 0 0";
 
         "result" string => execresult(
             "/usr/bin/perl -le '$(g.command)'", "noshell");

@@ -47,17 +47,3 @@ files:
 
 #########################################################
 
-body changes detect_all_change
-
-{
-report_changes => "all";  
-update_hashes  => "true";
-}
-
-#########################################################
-
-body depth_search recurse(d)
-
-{
-depth        => "$(d)";
-}

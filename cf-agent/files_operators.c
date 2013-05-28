@@ -144,19 +144,6 @@ int SaveAsFile(SaveCallbackFn callback, void *param, const char *file, Attribute
     char stamp[CF_BUFSIZE];
     time_t stamp_now;
 
-#ifdef WITH_SELINUX
-    int selinux_enabled = 0;
-    security_context_t scontext = NULL;
-
-    selinux_enabled = (is_selinux_enabled() > 0);
-
-    if (selinux_enabled)
-    {
-        /* get current security context */
-        getfilecon(file, &scontext);
-    }
-#endif
-
     stamp_now = time((time_t *) NULL);
 
     if (stat(file, &statbuf) == -1)

@@ -546,4 +546,9 @@ bool CFDB_HostsWithClass(Rlist **return_list, char *class_name, char *return_for
     return false;
 }
 
+int CopyACLs(const char *src, const char *dst)
+{
+    return true;
+}
+
 #endif

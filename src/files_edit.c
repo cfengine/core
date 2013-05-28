@@ -32,6 +32,7 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
+#include "files_lib.h"
 #include "files_names.h"
 
 /*****************************************************************************/
@@ -207,19 +208,6 @@ int SaveItemListAsFile(Item *liststart, char *file, Attributes a, Promise *pp)
     char stamp[CF_BUFSIZE];
     time_t stamp_now;
 
-#ifdef WITH_SELINUX
-    int selinux_enabled = 0;
-    security_context_t scontext = NULL;
-
-    selinux_enabled = (is_selinux_enabled() > 0);
-
-    if (selinux_enabled)
-    {
-        /* get current security context */
-        getfilecon(file, &scontext);
-    }
-#endif
-
     stamp_now = time((time_t *) NULL);
 
     if (cfstat(file, &statbuf) == -1)
@@ -261,11 +249,34 @@ int SaveItemListAsFile(Item *liststart, char *file, Attributes a, Promise *pp)
 
     cfPS(cf_inform, CF_CHG, "", pp, a, " -> Edited file %s \n", file);
 
-    if (cf_rename(file, backup) == -1)
+    if (!CopyFilePermissionsDisk(file, new))
     {
         cfPS(cf_error, CF_FAIL, "cf_rename", pp, a,
              " !! Can't rename %s to %s - so promised edits could not be moved into place\n", file, backup);
         return false;
+    }
+
+    unlink(backup);
+#ifndef __MINGW32__
+    if (link(file, backup) == -1)
+    {
+        CfOut(cf_verbose, "links", "Can't link '%s' to '%s' - falling back to copy.", file, backup);
+#else
+    /* No hardlinks on Windows, go straight to copying */
+    {
+#endif
+        if (!CopyRegularFileDisk((char*)file, backup, a, pp))
+        {
+            cfPS(cf_error, CF_FAIL, "", pp, a,
+                 "!! Can't copy '%s' to '%s' - so promised edits could not be moved into place.", file, backup);
+            return false;
+        }
+        if (!CopyFilePermissionsDisk(file, backup))
+        {
+            cfPS(cf_error, CF_FAIL, "", pp, a,
+                 "!! Can't copy permissions '%s' to '%s' - so promised edits could not be moved into place.", file, backup);
+            return false;
+        }
     }
 
     if (a.edits.backup == cfa_rotate)
@@ -292,19 +303,6 @@ int SaveItemListAsFile(Item *liststart, char *file, Attributes a, Promise *pp)
              " !! Can't rename %s to %s - so promised edits could not be moved into place\n", new, file);
         return false;
     }
-
-    mask = umask(0);
-    cf_chmod(file, statbuf.st_mode);    /* Restore file permissions etc */
-    chown(file, statbuf.st_uid, statbuf.st_gid);
-    umask(mask);
-
-#ifdef WITH_SELINUX
-    if (selinux_enabled)
-    {
-        /* restore file context */
-        setfilecon(file, scontext);
-    }
-#endif
 
     return true;
 }
@@ -375,4 +373,67 @@ int AppendIfNoSuchLine(char *filename, char *line)
     }
 
     return result;
+}
+
+bool CopyFilePermissionsDisk(const char *source, const char *destination)
+{
+    struct stat statbuf;
+
+    if (stat(source, &statbuf) == -1)
+    {
+        CfOut(cf_inform, "stat", "Can't copy permissions '%s'.", source);
+        return false;
+    }
+
+    if (chmod(destination, statbuf.st_mode) != 0)
+    {
+        CfOut(cf_inform, "chmod", "Can't copy permissions '%s'.", destination);
+        return false;
+    }
+
+    if (chown(destination, statbuf.st_uid, statbuf.st_gid) != 0)
+    {
+        CfOut(cf_inform, "chown", "Can't copy permissions '%s'.", destination);
+        return false;
+    }
+
+    if (!CopyACLs(source, destination))
+    {
+        return false;
+    }
+
+#ifdef WITH_SELINUX
+    int selinux_enabled = 0;
+    security_context_t scontext = NULL;
+
+    selinux_enabled = (is_selinux_enabled() > 0);
+
+    if (selinux_enabled)
+    {
+        /* get current security context */
+        if (getfilecon(source, &scontext) != 0)
+        {
+            if (errno != ENOTSUP && errno != ENODATA)
+            {
+                CfOut(cf_inform, "getfilecon", "Can't copy security context from '%s'.", source);
+                return false;
+            }
+        }
+        else
+        {
+            int ret = setfilecon(file, scontext);
+            freecon(scontext);
+            if (ret != 0)
+            {
+                if (errno != ENOTSUP)
+                {
+                    CfOut(cf_inform, "setfilecon", "Can't copy security context from '%s'.", destination);
+                    return false;
+                }
+            }
+        }
+    }
+#endif
+
+    return true;
 }

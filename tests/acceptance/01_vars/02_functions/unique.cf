@@ -1,6 +1,6 @@
 #######################################################
 #
-# Test uniq()
+# Test unique()
 #
 #######################################################
 
@@ -18,7 +18,7 @@ bundle agent init
   vars:
       "results" slist => {
                            "starting list = 1,2,3,one,two,three,long string,four,fix,six,one,two,three",
-                           "uniq list = 1,2,3,one,two,three,long string,four,fix,six",
+                           "unique list = 1,2,3,one,two,three,long string,four,fix,six",
       };
 
   files:
@@ -54,8 +54,8 @@ bundle agent test
                       };
       "test_str" string => join(",", "test");
 
-      "test_uniq" slist => uniq("test");
-      "uniq_str" string => join(",", "test_uniq");
+      "test_unique" slist => unique("test");
+      "unique_str" string => join(",", "test_unique");
 
   files:
       "$(G.testfile).actual"
@@ -67,7 +67,7 @@ bundle edit_line test_insert
 {
   insert_lines:
       "starting list = $(test.test_str)";
-      "uniq list = $(test.uniq_str)";
+      "unique list = $(test.unique_str)";
 }
 
 #######################################################

@@ -124,6 +124,11 @@ Scope *ScopeGet(const char *scope)
  * Not thread safe - returns pointer to global memory
  */
 {
+    if (!scope)
+    {
+        return NULL;
+    }
+
     const char *name = scope;
 
     if (strncmp(scope, "default:", strlen("default:")) == 0)  // CF_NS == ':'

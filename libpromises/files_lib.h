@@ -35,7 +35,7 @@ bool FileWriteOver(char *filename, char *contents);
 
 int LoadFileAsItemList(Item **liststart, const char *file, EditDefaults edits);
 
-int MakeParentDirectory(char *parentandchild, int force);
+bool MakeParentDirectory(const char *parentandchild, bool force);
 int MakeParentDirectory2(char *parentandchild, int force, bool enforce_promise);
 
 void RotateFiles(char *name, int number);

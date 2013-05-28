@@ -260,6 +260,7 @@ void VerifyMeasurement(double *this, Attributes a, Promise *pp);
 void SetMeasurementPromises(Item **classlist);
 void LongHaul(time_t current);
 void VerifyACL(char *file, Attributes a, Promise *pp);
+int CopyACLs(const char *src, const char *dst);
 int CheckACLSyntax(char *file, Acl acl, Promise *pp);
 void LogFileChange(char *file, int change, Attributes a, Promise *pp);
 void RemoteSysLog(int log_priority, const char *log_string);

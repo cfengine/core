@@ -34,5 +34,6 @@ int CompareToFile(Item *liststart, char *file, Attributes a, Promise *pp);
 ssize_t FileRead(const char *filename, char *buffer, size_t bufsize);
 ssize_t FileReadMax(char **output, char *filename, size_t size_max);
 bool FileWriteOver(char *filename, char *contents);
+bool CopyFilePermissionsDisk(const char *source, const char *destination);
 
 #endif

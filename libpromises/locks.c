@@ -597,7 +597,7 @@ CfLock AcquireLock(EvalContext *ctx, char *operand, char *host, time_t now, Tran
     {
         if (IsItemIn(DONELIST, str_digest))
         {
-            Log(LOG_LEVEL_VERBOSE, "This promise has already been verified");
+            Log(LOG_LEVEL_DEBUG, "This promise has already been verified");
             return this;
         }
 

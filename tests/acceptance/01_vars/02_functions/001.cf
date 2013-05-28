@@ -30,7 +30,7 @@ vars:
     !darwin::
         "uid_bin" int => getuid("bin");
 
-    (linux.!SuSE.!redhat.!gentoo)|solaris::
+    (linux.!SuSE.!redhat.!gentoo)|solaris|hpux|aix::
         "num_root" int => "0";
         "num_daemon" int => "1";
         "num_bin" int => "2";
@@ -46,7 +46,7 @@ vars:
         "num_root" int => "0";
         "num_daemon" int => "1";
 
-    !freebsd.!linux.!solaris.!darwin.!openbsd::
+    !linux.!solaris.!hpux.!aix.!freebsd.!openbsd.!darwin::
         "num_root" string => "fixme";
         "num_daemon" string => "fixme";
         "num_bin" string => "fixme";

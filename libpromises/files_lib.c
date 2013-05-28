@@ -242,7 +242,7 @@ int MakeParentDirectory2(char *parentandchild, int force, bool enforce_promise)
  * Please consider using MakeParentDirectory2() instead.
  **/
 
-int MakeParentDirectory(char *parentandchild, int force)
+bool MakeParentDirectory(const char *parentandchild, bool force)
 {
     char *spc, *sp;
     char currentpath[CF_BUFSIZE];
@@ -342,7 +342,7 @@ int MakeParentDirectory(char *parentandchild, int force)
                 if (rename(pathbuf, currentpath) == -1)
                 {
                     Log(LOG_LEVEL_INFO, "Warning: The object '%s' is not a directory. (rename: %s)", pathbuf, GetErrorStr());
-                    return (false);
+                    return false;
                 }
             }
         }
@@ -352,7 +352,7 @@ int MakeParentDirectory(char *parentandchild, int force)
             {
                 Log(LOG_LEVEL_INFO,
                       "The object %s is not a directory. Cannot make a new directory without deleting it.", pathbuf);
-                return (false);
+                return false;
             }
         }
     }
@@ -389,7 +389,7 @@ int MakeParentDirectory(char *parentandchild, int force)
                     {
                         Log(LOG_LEVEL_ERR, "Unable to make directories to '%s'. (mkdir: %s)", parentandchild, GetErrorStr());
                         umask(mask);
-                        return (false);
+                        return false;
                     }
                     umask(mask);
                 }
@@ -412,7 +412,7 @@ int MakeParentDirectory(char *parentandchild, int force)
                         if (strncmp(tmpstr, pathbuf, CF_BUFSIZE) == 0)
                         {
                             free(tmpstr);
-                            return (true);
+                            return true;
                         }
                         free(tmpstr);
                     }
@@ -420,7 +420,7 @@ int MakeParentDirectory(char *parentandchild, int force)
 
                     Log(LOG_LEVEL_ERR, "Cannot make %s - %s is not a directory! (use forcedirs=true)", pathbuf,
                           currentpath);
-                    return (false);
+                    return false;
                 }
             }
 
@@ -431,7 +431,7 @@ int MakeParentDirectory(char *parentandchild, int force)
     }
 
     Log(LOG_LEVEL_DEBUG, "Directory for '%s' exists. Okay", parentandchild);
-    return (true);
+    return true;
 }
 
 int LoadFileAsItemList(Item **liststart, const char *file, EditDefaults edits)

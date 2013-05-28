@@ -255,6 +255,36 @@ bool GenericAgentCheckPolicy(EvalContext *ctx, GenericAgentConfig *config, bool 
 /* Level                                                                     */
 /*****************************************************************************/
 
+/**
+ * @brief Writes a file with a contained timestamp to mark a policy file as validated
+ * @return True if successful.
+ */
+static bool WritePolicyValidatedFile(const char *filename)
+{
+    if (!MakeParentDirectory(filename, true))
+    {
+        Log(LOG_LEVEL_ERR, "While writing policy validated marker file '%s', could not create directory (MakeParentDirectory: %s)", filename, GetErrorStr());
+        return false;
+    }
+
+    int fd = creat(filename, 0600);
+    if (fd == -1)
+    {
+        Log(LOG_LEVEL_ERR, "While writing policy validated marker file '%s', could not create file (creat: %s)", filename, GetErrorStr());
+        return false;
+    }
+
+    FILE *fp = fdopen(fd, "w");
+    time_t now = time(NULL);
+
+    char timebuf[26];
+
+    fprintf(fp, "%s", cf_strtimestamp_local(now, timebuf));
+    fclose(fp);
+
+    return true;
+}
+
 int CheckPromises(const GenericAgentConfig *config)
 {
     char cmd[CF_BUFSIZE];
@@ -311,49 +341,31 @@ int CheckPromises(const GenericAgentConfig *config)
 
     Log(LOG_LEVEL_VERBOSE, "Checking policy with command '%s'", cmd);
 
-    if (ShellCommandReturnsZero(cmd, true))
+    if (!ShellCommandReturnsZero(cmd, true))
     {
-        if (!IsFileOutsideDefaultRepository(config->input_file))
-        {
-            char filename[CF_MAXVARSIZE];
-
-            if (MINUSF)
-            {
-                snprintf(filename, CF_MAXVARSIZE, "%s/state/validated_%s", CFWORKDIR, CanonifyName(config->input_file));
-                MapName(filename);
-            }
-            else
-            {
-                snprintf(filename, CF_MAXVARSIZE, "%s/masterfiles/cf_promises_validated", CFWORKDIR);
-                MapName(filename);
-            }
-
-            MakeParentDirectory(filename, true);
-
-            int fd = creat(filename, 0600);
-            if (fd != -1)
-            {
-                FILE *fp = fdopen(fd, "w");
-                time_t now = time(NULL);
-
-                char timebuf[26];
-
-                fprintf(fp, "%s", cf_strtimestamp_local(now, timebuf));
-                fclose(fp);
-                Log(LOG_LEVEL_VERBOSE, "Caching the state of validation");
-            }
-            else
-            {
-                Log(LOG_LEVEL_VERBOSE, "Failed to cache the state of validation. (creat: %s)", GetErrorStr());
-            }
-        }
-
-        return true;
-    }
-    else
-    {
+        Log(LOG_LEVEL_ERR, "Policy failed validation with command '%s'", cmd);
         return false;
     }
+
+    if (!IsFileOutsideDefaultRepository(config->original_input_file))
+    {
+        char validated_filename[CF_MAXVARSIZE];
+
+        if (MINUSF)
+        {
+            snprintf(validated_filename, CF_MAXVARSIZE, "%s/state/validated_%s", CFWORKDIR, CanonifyName(config->original_input_file));
+            MapName(validated_filename);
+        }
+        else
+        {
+            snprintf(validated_filename, CF_MAXVARSIZE, "%s/masterfiles/cf_promises_validated", CFWORKDIR);
+            MapName(validated_filename);
+        }
+
+        WritePolicyValidatedFile(validated_filename);
+    }
+
+    return true;
 }
 
 

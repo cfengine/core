@@ -463,8 +463,11 @@ bool CopyFilePermissionsDisk(const char *source, const char *destination)
             freecon(scontext);
             if (ret != 0)
             {
-                Log(LOG_LEVEL_INFO, "Can't copy security context to '%s'. (setfilecon: %s)", destination, GetErrorStr());
-                return false;
+                if (errno != ENOTSUP)
+                {
+                    Log(LOG_LEVEL_INFO, "Can't copy security context to '%s'. (setfilecon: %s)", destination, GetErrorStr());
+                    return false;
+                }
             }
         }
     }

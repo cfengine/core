@@ -1019,33 +1019,6 @@ if test "x$use_coverage" = "xyes"; then
   LDFLAGS="$LDFLAGS -lgcov"
 fi
 
-dnl
-dnl Documentation generation
-dnl
-
-AC_ARG_ENABLE(docs, AC_HELP_STRING([--enable-docs=html|pdf|all],
-                                   [Enable generation of documentation in specified formats]),
-                    [use_docs=$enableval], [use_docs=no])
-
-if test "x$use_docs" != "xno"; then
-   if test "x$use_docs" = "xhtml" || test "x$use_docs" = "xall"; then
-     if test "$MAKEINFO" = "${am_missing_run}makeinfo"; then
-      AC_MSG_ERROR([makeinfo tool is required for HTML documentation generation])
-     fi
-   fi
-
-   if test "x$use_docs" = "xpdf" || test "x$use_docs" = "xall"; then
-      AC_CHECK_PROG(TEXI2PDF, texi2pdf, texi2pdf)
-
-      if test -z "$TEXI2PDF"; then
-        AC_MSG_ERROR([texi2pdf tool is required for PDF documentation generation])
-      fi
-   fi
-fi
-
-AM_CONDITIONAL(HTML_DOCS, test "x$use_docs" = "xhtml" || test "x$use_docs" = "xall")
-AM_CONDITIONAL(PDF_DOCS, test "x$use_docs" = "xpdf" || test "x$use_docs" = "xall")
-
 #
 # Populate contents of config.post.h
 #
@@ -1130,12 +1103,6 @@ AC_CONFIG_FILES([Makefile
     cf-runagent/Makefile
     cf-serverd/Makefile
     ext/Makefile
-    docs/Makefile
-    docs/guides/Makefile
-    docs/manpages/Makefile
-    docs/reference/Makefile
-    docs/tools/Makefile
-    docs/tex-include/Makefile
     examples/Makefile
     masterfiles/Makefile
     tests/Makefile

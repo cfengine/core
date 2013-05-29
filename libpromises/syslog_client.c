@@ -85,7 +85,7 @@ void RemoteSysLog(int log_priority, const char *log_string)
                     txtaddr, sizeof(txtaddr),
                     NULL, 0, NI_NUMERICHOST);
         Log(LOG_LEVEL_VERBOSE,
-              "Connect to syslog %s = %s on port %s\n",
+            "Connect to syslog '%s' = '%s' on port '%s'",
               SYSLOG_HOST, txtaddr, strport);
 
         if ((sd = socket(ap->ai_family, ap->ai_socktype, IPPROTO_UDP)) == -1)

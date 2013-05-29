@@ -226,7 +226,7 @@ void VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates
 
         if (Epimenides(ctx, PromiseGetBundle(pp)->name, pp->promiser, rval, 0))
         {
-            Log(LOG_LEVEL_ERR, "Variable \"%s\" contains itself indirectly - an unkeepable promise", pp->promiser);
+            Log(LOG_LEVEL_ERR, "Variable '%s' contains itself indirectly - an unkeepable promise", pp->promiser);
             exit(1);
         }
         else
@@ -252,24 +252,24 @@ void VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates
                 switch (rval.type)
                 {
                 case RVAL_TYPE_SCALAR:
-                    Log(LOG_LEVEL_VERBOSE, "Redefinition of a constant scalar \"%s\" (was %s now %s)",
+                    Log(LOG_LEVEL_VERBOSE, "Redefinition of a constant scalar '%s', was '%s' now '%s'",
                           pp->promiser, RvalScalarValue(existing_var_rval), RvalScalarValue(rval));
                     PromiseRef(LOG_LEVEL_VERBOSE, pp);
                     break;
 
                 case RVAL_TYPE_LIST:
                     {
-                        Log(LOG_LEVEL_VERBOSE, "Redefinition of a constant list \"%s\".", pp->promiser);
+                    Log(LOG_LEVEL_VERBOSE, "Redefinition of a constant list '%s'", pp->promiser);
                         Writer *w = StringWriter();
                         RlistWrite(w, existing_var_rval.item);
                         char *oldstr = StringWriterClose(w);
-                        Log(LOG_LEVEL_VERBOSE, "Old value: %s", oldstr);
+                        Log(LOG_LEVEL_VERBOSE, "Old value '%s'", oldstr);
                         free(oldstr);
 
                         w = StringWriter();
                         RlistWrite(w, rval.item);
                         char *newstr = StringWriterClose(w);
-                        Log(LOG_LEVEL_VERBOSE, " New value: %s", newstr);
+                        Log(LOG_LEVEL_VERBOSE, " New value '%s'", newstr);
                         free(newstr);
                         PromiseRef(LOG_LEVEL_VERBOSE, pp);
                     }
@@ -444,7 +444,7 @@ static bool Epimenides(EvalContext *ctx, const char *scope, const char *var, Rva
 
         if (StringContainsVar(rval.item, var))
         {
-            Log(LOG_LEVEL_ERR, "Scalar variable \"%s\" contains itself (non-convergent): %s", var, (char *) rval.item);
+            Log(LOG_LEVEL_ERR, "Scalar variable '%s' contains itself (non-convergent) '%s'", var, (char *) rval.item);
             return true;
         }
 
@@ -599,14 +599,14 @@ static ConvergeVariableOptions CollectConvergeVariableOptions(EvalContext *ctx, 
 
     if (opts.cp_save == NULL)
     {
-        Log(LOG_LEVEL_INFO, "Warning: Variable body for \"%s\" seems incomplete", pp->promiser);
+        Log(LOG_LEVEL_WARNING, "Variable body for '%s' seems incomplete", pp->promiser);
         PromiseRef(LOG_LEVEL_INFO, pp);
         return opts;
     }
 
     if (num_values > 2)
     {
-        Log(LOG_LEVEL_ERR, "Variable \"%s\" breaks its own promise with multiple values (code %d)", pp->promiser, num_values);
+        Log(LOG_LEVEL_ERR, "Variable '%s' breaks its own promise with multiple values (code %d)", pp->promiser, num_values);
         PromiseRef(LOG_LEVEL_ERR, pp);
         return opts;
     }

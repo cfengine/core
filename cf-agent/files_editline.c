@@ -384,7 +384,7 @@ static void VerifyLineDeletions(EvalContext *ctx, Promise *pp, EditContext *edco
 
     if (!SanityCheckDeletions(a, pp))
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a, "The promised line deletion (%s) is inconsistent", pp->promiser);
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a, "The promised line deletion '%s' is inconsistent", pp->promiser);
         return;
     }
 
@@ -400,13 +400,13 @@ static void VerifyLineDeletions(EvalContext *ctx, Promise *pp, EditContext *edco
         if (a.region.include_end || a.region.include_start)
         {
             cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_INTERRUPTED, pp, a,
-                 "The promised line deletion (%s) could not select an edit region in %s (this is a good thing, as policy suggests deleting the markers)",
+                 "The promised line deletion '%s' could not select an edit region in '%s' (this is a good thing, as policy suggests deleting the markers)",
                  pp->promiser, edcontext->filename);
         }
         else
         {
             cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_INTERRUPTED, pp, a,
-                 "The promised line deletion (%s) could not select an edit region in %s (but the delimiters were expected in the file)",
+                 "The promised line deletion '%s' could not select an edit region in '%s' (but the delimiters were expected in the file)",
                  pp->promiser, edcontext->filename);
         }
         return;
@@ -443,21 +443,21 @@ static void VerifyColumnEdits(EvalContext *ctx, Promise *pp, EditContext *edcont
 
     if (a.column.column_separator == NULL)
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, a, "No field_separator in promise to edit by column for %s", pp->promiser);
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, a, "No field_separator in promise to edit by column for '%s'", pp->promiser);
         PromiseRef(LOG_LEVEL_ERR, pp);
         return;
     }
 
     if (a.column.select_column <= 0)
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, a, "No select_field in promise to edit %s", pp->promiser);
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, a, "No select_field in promise to edit '%s'", pp->promiser);
         PromiseRef(LOG_LEVEL_ERR, pp);
         return;
     }
 
     if (!a.column.column_value)
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, a, "No field_value is promised to column_edit %s", pp->promiser);
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, a, "No field_value is promised to column_edit '%s'", pp->promiser);
         PromiseRef(LOG_LEVEL_ERR, pp);
         return;
     }
@@ -471,7 +471,7 @@ static void VerifyColumnEdits(EvalContext *ctx, Promise *pp, EditContext *edcont
     }
     else if (!SelectRegion(ctx, *start, &begin_ptr, &end_ptr, a, pp, edcontext))
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a, "The promised column edit (%s) could not select an edit region in %s",
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a, "The promised column edit '%s' could not select an edit region in '%s'",
              pp->promiser, edcontext->filename);
         return;
     }
@@ -513,7 +513,7 @@ static void VerifyPatterns(EvalContext *ctx, Promise *pp, EditContext *edcontext
 
     if (!a.replace.replace_value)
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a, "The promised pattern replace (%s) had no replacement string",
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a, "The promised pattern replace '%s' had no replacement string",
              pp->promiser);
         return;
     }
@@ -526,7 +526,7 @@ static void VerifyPatterns(EvalContext *ctx, Promise *pp, EditContext *edcontext
     else if (!SelectRegion(ctx, *start, &begin_ptr, &end_ptr, a, pp, edcontext))
     {
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a,
-             "The promised pattern replace (%s) could not select an edit region in %s", pp->promiser,
+             "The promised pattern replace '%s' could not select an edit region in '%s'", pp->promiser,
              edcontext->filename);
         return;
     }
@@ -566,7 +566,7 @@ static void VerifyLineInsertions(EvalContext *ctx, Promise *pp, EditContext *edc
 
     if (!SanityCheckInsertions(a))
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a, "The promised line insertion (%s) breaks its own promises",
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a, "The promised line insertion '%s' breaks its own promises",
              pp->promiser);
         return;
     }
@@ -581,7 +581,7 @@ static void VerifyLineInsertions(EvalContext *ctx, Promise *pp, EditContext *edc
     else if (!SelectRegion(ctx, *start, &begin_ptr, &end_ptr, a, pp, edcontext))
     {
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a,
-             "The promised line insertion (%s) could not select an edit region in %s", pp->promiser,
+             "The promised line insertion '%s' could not select an edit region in '%s'", pp->promiser,
              edcontext->filename);
         return;
     }
@@ -607,7 +607,7 @@ static void VerifyLineInsertions(EvalContext *ctx, Promise *pp, EditContext *edc
     {
         if (!SelectItemMatching(*start, a.location.line_matching, begin_ptr, end_ptr, &match, &prev, a.location.first_last))
         {
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a, "The promised line insertion (%s) could not select a locator matching regex '%s' in %s", pp->promiser, a.location.line_matching, edcontext->filename);
+            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a, "The promised line insertion '%s' could not select a locator matching regex '%s' in '%s'", pp->promiser, a.location.line_matching, edcontext->filename);
             YieldCurrentLock(thislock);
             return;
         }
@@ -649,7 +649,7 @@ If no such region matches, begin_ptr and end_ptr should point to CF_UNDEFINED_IT
                     if (ip->next == NULL)
                     {
                         cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_INTERRUPTED, pp, a,
-                             "The promised start pattern (%s) found an empty region at the end of file %s",
+                             "The promised start pattern '%s' found an empty region at the end of file '%s'",
                              a.region.select_start, edcontext->filename);
                         return false;
                     }
@@ -678,7 +678,7 @@ If no such region matches, begin_ptr and end_ptr should point to CF_UNDEFINED_IT
     if (beg == CF_UNDEFINED_ITEM && a.region.select_start)
     {
         cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_INTERRUPTED, pp, a,
-             "The promised start pattern (%s) was not found when selecting edit region in %s",
+             "The promised start pattern '%s' was not found when selecting edit region in '%s'",
              a.region.select_start, edcontext->filename);
         return false;
     }

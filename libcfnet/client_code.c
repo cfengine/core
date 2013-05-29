@@ -496,7 +496,7 @@ int cf_remote_stat(char *file, struct stat *buf, char *stattype, bool encrypt, A
         return 0;
     }
 
-    Log(LOG_LEVEL_ERR, "Transmission refused or failed statting %s\nGot: %s", file, recvbuffer);
+    Log(LOG_LEVEL_ERR, "Transmission refused or failed statting '%s', got '%s'", file, recvbuffer);
     errno = EPERM;
     return -1;
 }

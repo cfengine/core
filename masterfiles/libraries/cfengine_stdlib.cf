@@ -2416,7 +2416,7 @@ body package_method freebsd_portmaster
 
  package_file_repositories => {
   "/usr/ports/accessibility/",
-  "/usr/port/arabic/"
+  "/usr/port/arabic/",
   "/usr/ports/archivers/",
   "/usr/ports/astro/",
   "/usr/ports/audio/",
@@ -2484,8 +2484,6 @@ body package_method freebsd_portmaster
  package_add_command => "/usr/local/sbin/portmaster -D -G --no-confirm";
  package_update_command => "/usr/local/sbin/portmaster -D -G --no-confirm";
  package_delete_command => "/usr/local/sbin/portmaster --no-confirm -e";
-
- expireafter => 240;
 }
 
 ##

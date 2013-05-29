@@ -1,8 +1,0 @@
-
-Admit promises grant access to file objects on the server. Arguments
-may be IP addresses or hostnames, provided DNS name resolution is
-active. In order to reach this stage, a client must first have passed
-all of the standard connection tests in the control body.
-
-The lists may contain network addresses in CIDR notation or regular
-expressions to match the IP address or name of the connecting host.

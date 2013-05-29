@@ -1,9 +1,0 @@
-
-@verbatim
-
-body hub control
-{
-hub_schedule => { "Min00", "Min30", "(Evening|Night).Min45_50" };
-}
-
-@end verbatim

@@ -1,4 +1,0 @@
-
-The CFEngine process must have access to the object concerned in order for
-this to work.
-

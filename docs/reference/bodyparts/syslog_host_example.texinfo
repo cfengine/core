@@ -1,8 +1,0 @@
-
-@verbatim
-body common control
-{
-syslog_host => "syslog.example.org";
-syslog_port => "514";
-}
-@end verbatim

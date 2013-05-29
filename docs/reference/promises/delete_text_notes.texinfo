@@ -1,4 +1,0 @@
-
-Note that typically, only a single value string, within a single specified
-node, is deleted in each @code{delete_text} promise (you may of course
-have multiple promises that each delete a value string).

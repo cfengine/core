@@ -1,3 +1,0 @@
-
-Issues the generic command to mount file systems defined in the file system table.
-

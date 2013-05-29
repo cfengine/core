@@ -1,6 +1,0 @@
-
-Settings describing the details of the fixed behavioural promises made by
-@code{cf-serverd}.
-Server controls are mainly about determining access policy for the
-connection protocol: i.e. access to the server itself. Access to 
-specific files must be granted in addition.

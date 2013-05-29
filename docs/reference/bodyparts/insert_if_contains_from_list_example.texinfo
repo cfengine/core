@@ -1,9 +1,0 @@
-
-@verbatim
-
-body insert_select example
-{
-insert_if_contains_from_list => { "find_me_1", "find_me_2" };
-}
-
-@end verbatim

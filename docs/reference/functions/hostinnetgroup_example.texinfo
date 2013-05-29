@@ -1,8 +1,0 @@
-
-@verbatim
-
-classes:
-
-  "ingroup" expression => hostinnetgroup("my_net_group");
-
-@end verbatim

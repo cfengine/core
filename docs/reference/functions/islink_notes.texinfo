@@ -1,3 +1,0 @@
-
-The link node must both exist and be a symbolic link. Hard links cannot be
-detected using this function. A hard link is a regular file or directory.

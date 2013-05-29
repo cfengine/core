@@ -1,5 +1,0 @@
-
-The command is run in a shell encapsulation so pipes and shell symbols
-may be used if desired.  Unlike, CFEngine 2, CFEngine 3 does not
-automatically run a separate update sequence before its normal
-run. This can be handled using the approach in the example above.

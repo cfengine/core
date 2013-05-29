@@ -1,8 +1,0 @@
-
-@verbatim
-
-vars:
-
- "ran"    int => randomint(4,88);
-
-@end verbatim

@@ -1,4 +1,0 @@
-
-The address will be checked and if necessary set. Today few hosts will
-be managed in this way: address management will be handled by other services
-like DHCP.

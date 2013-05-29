@@ -1,5 +1,0 @@
-
-If the promiser is contains multiple lines, then CFEngine assumes that
-all of the lines must exist as a contiguous block in order to be
-deletes. This gives @samp{preserve_block} semantics to any multiline
-@code{delete_lines} promise.

@@ -1,9 +1,0 @@
-
-@verbatim
-
-body reporter control
-{
-error_bars => "true";
-}
-
-@end verbatim

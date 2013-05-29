@@ -1,7 +1,0 @@
-
-
-A list of class regular expressions that @code{cf-agent} will watch
-out for. If any matching class becomes defined, it will cause the
-current execution of @code{cf-agent} to be aborted. This may be used
-for validation, for example. To handle class expressions, simply create
-an alias for the expression with a single name.

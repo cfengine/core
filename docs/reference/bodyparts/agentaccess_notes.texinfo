@@ -1,5 +1,0 @@
-
-A list of user names that will be allowed to attempt execution of the
-current configuration. This is mainly a sanity check rather than a
-security measure. 
-

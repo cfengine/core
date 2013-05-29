@@ -1,9 +1,0 @@
-
-@verbatim
-
-body agent control
-{
-track_value => "true";
-}
-
-@end verbatim

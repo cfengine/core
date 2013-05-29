@@ -1,7 +1,0 @@
-
-@verbatim
-body action low_priority
-{
-log_priority => "info";
-}
-@end verbatim

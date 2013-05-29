@@ -1,9 +1,0 @@
-
-@verbatim
-
-body edit_defaults example
-{
-max_file_size => "50K";
-}
-
-@end verbatim

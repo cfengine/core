@@ -1,9 +1,0 @@
-
-@verbatim
-
-body runagent control
-{
-output_to_file => "true";
-}
-
-@end verbatim

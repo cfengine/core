@@ -1,9 +1,0 @@
-
-@verbatim
-
-body server control
-{
-logencryptedtransfers => "true";
-}
-
-@end verbatim

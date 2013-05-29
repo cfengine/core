@@ -1,3 +1,0 @@
-
-On native Windows versions of CFEngine (Nova and above), this string
-is also prefixed messages in the event log.

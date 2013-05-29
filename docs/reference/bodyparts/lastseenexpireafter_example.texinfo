@@ -1,9 +1,0 @@
-
-@verbatim
-
-body common control
-{
-lastseenexpireafter => "72";
-}
-
-@end verbatim

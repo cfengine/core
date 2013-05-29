@@ -1,9 +1,0 @@
-
-@verbatim
-
-body mount example
-{
-unmount => "true";
-}
-
-@end verbatim

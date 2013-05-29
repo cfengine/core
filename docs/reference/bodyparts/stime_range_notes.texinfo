@@ -1,6 +1,0 @@
-
-
-The calculation of time from process table entries is sensitive to
-Daylight Savings Time (Summer/Winter Time) so calculations could be a
-hour off. This is for now a bug to be fixed.
-

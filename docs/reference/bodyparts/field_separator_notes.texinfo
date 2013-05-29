@@ -1,4 +1,0 @@
-
-Most tabular files are separated by simple characters, but by allowing
-a general regular expression one can make creative use of this model to
-edit all kinds of line-based text files.

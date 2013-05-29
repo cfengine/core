@@ -1,6 +1,0 @@
-
-This function applies only to Windows-based systems. It reads a data field for the value named
-in the second argument, which lies within the registry key given by the first argument.
-
-The value is parsed as a string. Currently values of type @code{REG_SZ} (string), 
-@code{REG_EXPAND_SZ} (expandable string) and @code{REG_DWORD} (double word) are supported.

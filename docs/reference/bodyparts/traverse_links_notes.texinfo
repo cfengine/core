@@ -1,4 +1,0 @@
-
-If this is true, @code{cf-agent} will treat symbolic links to
-directories as if they were directories. Normally this is considered a
-potentially dangerous assumption and links are not traversed.

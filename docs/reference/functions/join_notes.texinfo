@@ -1,3 +1,0 @@
-
-Converts a string of type list into a scalar variable using the join string in first
-argument.

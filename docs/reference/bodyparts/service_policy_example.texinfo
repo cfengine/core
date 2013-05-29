@@ -1,9 +1,0 @@
-
-@verbatim
-
-services:
-  
-  "Telnet"
-     service_policy => "disable";
-
-@end verbatim

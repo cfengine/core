@@ -1,9 +1,0 @@
-
-The promise will only apply to the machine with this class set. Thus,
-CFEngine must be running locally on the hypervisor for the promise to
-take effect.
-
-This attribute is required.
-
-@i{History}: this feature was introduced in Nova 2.0.0 (2010), Community 3.3.0 (2012)
-

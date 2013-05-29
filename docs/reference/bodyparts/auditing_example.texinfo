@@ -1,9 +1,0 @@
-
-@verbatim
-
-body agent control
-{
-auditing  => "true";
-}
-
-@end verbatim

@@ -1,9 +1,0 @@
-
-@verbatim
-
-body agent control
-{
-files_auto_define => { "/etc/syslog\.c.*", "/etc/passwd" };
-}
-
-@end verbatim

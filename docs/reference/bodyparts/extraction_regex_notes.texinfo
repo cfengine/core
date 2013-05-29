@@ -1,4 +1,0 @@
-
-A single parenthesized backreference should be given to lift the value to be measured out of the text stream.
-The regular expression may match a partial string (that is, it is unanchored
-@pxref{Anchored vs. unanchored regular expressions}).

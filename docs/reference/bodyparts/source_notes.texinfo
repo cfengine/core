@@ -1,2 +1,0 @@
-
-For remote copies this refers to the file name on the remote server.

@@ -1,4 +1,0 @@
-
-Note that typically, only a single value string, within a single specified
-node, is inserted in each @code{insert_text} promise (you may of course
-have multiple promises that each insert a value string).

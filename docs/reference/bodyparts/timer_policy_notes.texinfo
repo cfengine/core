@@ -1,5 +1,0 @@
-
-The in most cases resetting a timer will give a more honest appraisal
-of which classes are currently important, but if we want to activate
-a response of limited duration as a rare event then an asbolute
-time limit is useful.

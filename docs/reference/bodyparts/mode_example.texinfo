@@ -1,9 +1,0 @@
-
-@verbatim
-
-body perms example
-{
-mode => "a+rx,o+w";
-}
-
-@end verbatim

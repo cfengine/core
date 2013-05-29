@@ -1,4 +1,0 @@
-
-Note that typically, only a single tree, within a single specified node,
-is inserted in each @code{insert_tree} promise (you may of course have
-multiple promises that each insert a tree).

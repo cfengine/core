@@ -1,3 +1,0 @@
-
-Entries may be literal addresses of IPv4 or IPv6, or any name registered
-in the POSIX @code{gethostbyname} service.

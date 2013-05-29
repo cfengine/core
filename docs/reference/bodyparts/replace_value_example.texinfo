@@ -1,9 +1,0 @@
-
-@verbatim
-
-body replace_with example(s)
-{
-replace_value => "$(s)";
-}
-
-@end verbatim

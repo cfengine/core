@@ -1,6 +1,0 @@
-
-Another place to make global aliases for system hardclasses. Classes
-here are added unqeuivocally to the system. If classes are used to
-predicate definition, then they must be defined in terms of global
-hard classes.
-

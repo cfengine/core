@@ -1,3 +1,0 @@
-
-For use if a package verification command uses the return code as the signal
-for a failed package verification.

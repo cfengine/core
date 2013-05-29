@@ -1,6 +1,0 @@
-
-This option is only necessary with the default build directory.  This
-can be used to keep snapshots of the system but it will result in a
-lot of storage be consumed. For most purposes CFEngine is programmed
-to forget the past at a predictable rate and there is no need to
-override this. 

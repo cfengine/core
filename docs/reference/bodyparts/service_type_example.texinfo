@@ -1,9 +1,0 @@
-
-@verbatim
-
-body service_method example
-{
-  type => "windows";
-}
-
-@end verbatim

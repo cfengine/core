@@ -1,3 +1,0 @@
-
-Sets the global default policy for comparing source and image in copy transactions.
-

@@ -1,5 +1,0 @@
-
-These body settings determine the behaviour of @code{cf-execd}, including
-scheduling times and output capture to @file{WORKDIR/outputs} and relay via email.
-Note that the @code{splaytime} and @code{schedule} parameters
-are now coded here rather than (as previously) in the agent.

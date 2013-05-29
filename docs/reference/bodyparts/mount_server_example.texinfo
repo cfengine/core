@@ -1,9 +1,0 @@
-
-@verbatim
-
-body mount example
-{
-mount_server => "nfs_host.example.org";
-}
-
-@end verbatim

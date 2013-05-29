@@ -1,3 +1,0 @@
-
-This was introduced in CFEngine core 3.4.0. (2012)
-

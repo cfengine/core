@@ -1,7 +1,0 @@
-
-This regular expression must match complete lines in the output
-of the list command that are actually installed packages (that is,
-the regex is anchored, @pxref{Anchored vs. unanchored regular expressions}).
-If all the lines match then the regex can be set of @samp{.*}, however
-most package systems output prefix lines and a variety of human
-padding that needs to be ignored.

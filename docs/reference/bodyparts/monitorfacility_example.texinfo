@@ -1,9 +1,0 @@
-
-@verbatim
-
-body monitor control
-{
-monitorfacility => "LOG_USER";
-}
-
-@end verbatim

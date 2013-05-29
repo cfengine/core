@@ -1,9 +1,0 @@
-
-@verbatim
-
-body package_method yum
-{
-package_installed_regex => ".*installed.*";
-}
-
-@end verbatim

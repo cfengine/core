@@ -1,9 +1,0 @@
-
-@verbatim
-
-body executor control
-{
-smtpserver => "smtp.example.org";
-}
-
-@end verbatim

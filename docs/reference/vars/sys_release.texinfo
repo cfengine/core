@@ -1,8 +1,0 @@
-
-The kernel release of the operating system.
-
-@verbatim
-
-# release = 2.6.22.19-0.1-default
-
-@end verbatim

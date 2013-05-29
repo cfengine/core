@@ -1,3 +1,0 @@
-
-The locking time after which CFEngine will attempt to kill and restart 
-its attempt to keep a promise.

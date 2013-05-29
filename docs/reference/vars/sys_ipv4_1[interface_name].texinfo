@@ -1,4 +1,0 @@
-
-The first octet of the IPv4 address of the system interface named
-as the associative array index, e.g.
-@samp{$(ipv4_1[le0])} or @samp{$(ipv4_1[xr1])}, @xref{Variable sys.ipv4[interface_name]}.

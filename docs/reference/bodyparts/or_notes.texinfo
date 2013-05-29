@@ -1,4 +1,0 @@
-
-A useful construction for writing expressions that contain special functions.
-The class in the LHS will be defined if any one (or more) of the class
-expressions in the RHS are true.

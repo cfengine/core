@@ -1,5 +1,0 @@
-
-If true the server will log all transfers of files which the server
-requires to encrypted in order to grant access (see
-@code{ifencrypted}) to syslog. These files are deemed to be
-particularly sensitive.

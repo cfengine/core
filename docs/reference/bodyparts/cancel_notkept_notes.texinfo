@@ -1,8 +1,0 @@
-
-If the promise was not kept but nothing could be done, cancel (undefine)
-any of the listed classes so that they are no longer defined.
-
-Note that any strings passed to this list are automatically
-canonified, so it is unecessary to call a canonify function on such inputs.
-
-@b{History}: This attribute was introduced in CFEngine version 3.0.4 (2010)

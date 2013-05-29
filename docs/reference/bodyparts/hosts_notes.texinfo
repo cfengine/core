@@ -1,5 +1,0 @@
-
-The complete list of contactable hosts. The values may be either
-numerical IP addresses or DNS names, optionally suffixed by a @samp{:}
-and a port number. If no port number is given, the default CFEngine
-port 5308 is assumed.

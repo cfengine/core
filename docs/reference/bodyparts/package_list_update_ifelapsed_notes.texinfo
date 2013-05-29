@@ -1,4 +1,0 @@
-
-Not all package managers update their list information from source
-automatically. This command allows a separate update command to be executed at
-intervals determined by @code{package_list_update_ifelapsed}.

@@ -1,9 +1,0 @@
-
-@verbatim
-
-body agent control
-{
-mountfilesystems => "true";
-}
-
-@end verbatim

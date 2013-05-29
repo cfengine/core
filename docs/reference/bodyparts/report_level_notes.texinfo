@@ -1,7 +1,0 @@
-
-cf-agent can be run in verbose mode (-v), inform mode (-I) and just print errors (no arguments).
-This attribute allows to set these three output levels on a per promise basis, allowing
-the promise to be more verbose than the global setting (but not less).
-
-In CFEngine 2 one would say @samp{inform=true} or @samp{syslog=true}, etc.
-This replaces these levels since they act as encapsulating super-sets.

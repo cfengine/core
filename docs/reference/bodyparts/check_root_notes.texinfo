@@ -1,5 +1,0 @@
-
-When copying files recursively (by depth search), this flag determines
-whether the permissions of the root directory should be set from the
-root of the source. The default is to check only copied file objects
-and subdirectories within this root (false).

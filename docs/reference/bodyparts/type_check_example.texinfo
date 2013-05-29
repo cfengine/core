@@ -1,9 +1,0 @@
-
-@verbatim
-
-body copy_from example
-{
-type_check => "false";
-}
-
-@end verbatim

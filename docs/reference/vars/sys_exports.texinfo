@@ -1,9 +1,0 @@
-
-The location of the system NFS exports file.
-
-@verbatim
-
-# exports = /etc/exports
-# exports = /etc/dfs/dfstab
-
-@end verbatim

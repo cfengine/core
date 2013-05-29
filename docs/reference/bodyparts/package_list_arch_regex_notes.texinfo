@@ -1,8 +1,0 @@
-
-A regular expression that contains exactly one parenthesized back
-reference which marks the location in the listed package at which
-the architecture is specified. The regular expression may match a
-portion of the string (that is, it is unanchored,
-@pxref{Anchored vs. unanchored regular expressions}). If no architecture
-is specified for the given package manager, then do not define this
-regex.

@@ -1,9 +1,0 @@
-
-Hash functions are extremely sensitive to input. You should not expect
-to get the same answer from this function as you would from every other
-tool, since it depends on how whitespace and end of file characters are
-handled.
-
-Valid hash types (depending on availablity) include:
-@code{md5}, @code{sha1}, @code{sha256}, @code{sha512} ,@code{sha384},
-@code{crypt}.

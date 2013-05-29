@@ -1,4 +1,0 @@
-
-Extracts a sublist of elements matching the regular expression in arg1 from a
-list variable specified in arg2.  The regex is anchored.
-@xref{Anchored vs. unanchored regular expressions}.

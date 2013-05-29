@@ -1,9 +1,0 @@
-
-@verbatim
-
-body server control
-{
-hostnamekeys => "true";
-}
-
-@end verbatim

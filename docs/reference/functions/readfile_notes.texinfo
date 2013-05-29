@@ -1,2 +1,0 @@
-
-The file (fragment) is read into a single scalar variable.

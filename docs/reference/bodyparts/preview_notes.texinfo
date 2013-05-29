@@ -1,6 +1,0 @@
-
-Previewing shell scripts during a dry-run is a potentially misleading
-activity. It should only be used on scripts that make no changes to
-the system. It is CFEngine best practice to never write
-change-functionality into user-written scripts except as a last
-resort: CFEngine can apply its safety checks to user defined scripts.

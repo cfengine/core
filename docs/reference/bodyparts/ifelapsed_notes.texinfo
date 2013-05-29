@@ -1,8 +1,0 @@
-
-This overrides the global settings. Promises which take a long time to
-verify should usually be protected with a long value for this
-parameter.  This serves as a resource `spam' protection. A CFEngine
-check could easily run every 5 minutes provided resource intensive
-operations are not performed on every run. Using time classes like
-@code{Hr12} etc., is one part of this strategy; using @code{ifelapsed}
-is another which is not tied to a specific time.

@@ -1,4 +1,0 @@
-
-If this flag is true a client cannot access the file object unless
-its connection is encrypted.
-

@@ -1,8 +1,0 @@
-
-The location of the system resolver file.
-
-@verbatim
-
-# resolv = /etc/resolv.conf
-
-@end verbatim

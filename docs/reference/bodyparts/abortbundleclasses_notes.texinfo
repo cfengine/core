@@ -1,5 +1,0 @@
-
-A list of regular expressions for classes, or class expressions that
-@code{cf-agent} will watch out for. If any of these classes becomes
-defined, it will cause the current bundle to be aborted. This may be
-used for validation, for example.

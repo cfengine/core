@@ -1,9 +1,0 @@
-
-@verbatim
-
-body process_select example
-{
-threads => irange(1,5);
-}
-
-@end verbatim

@@ -1,9 +1,0 @@
-
-@verbatim
-
-body depth_search example
-{
-include_basedir => "true";
-}
-
-@end verbatim

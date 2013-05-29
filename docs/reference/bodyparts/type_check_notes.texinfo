@@ -1,3 +1,0 @@
-
-File types at source and destination should normally match in order for
-updates to overwrite them. This option allows this checking to be switched off.

@@ -1,5 +1,0 @@
-
-If true this encrypts all levels of the queries to the server during
-file transfers. The default is to not encrypt all aspects, since this
-can slow down transfer and basically only contributes to global
-warming for most users.

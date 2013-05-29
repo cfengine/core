@@ -1,7 +1,0 @@
-
-If the send string is empty, no data are sent or received from the socket. Then the
-function only tests whether the TCP port is alive and returns an empty variable.
-
-Note that on some systems the timeout mechanism does not seem to successfully interrupt
-the waiting system calls so this might hang if you send a query string that is incorrect.
-This should not happen, but the cause has yet to be diagnosed.

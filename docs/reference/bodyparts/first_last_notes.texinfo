@@ -1,6 +1,0 @@
-
-In multiple matches, decide whether the first or last occurrence of
-the matching pattern in the case affected by the change. In principle
-this could be generalized to more cases but this seems like a fragile
-quality to evaluate, and only these two cases are deemed of
-reproducible significance.

@@ -1,7 +1,0 @@
-
-
-@verbatim
-
-allowusers => { "cfengine", "root" };
-
-@end verbatim

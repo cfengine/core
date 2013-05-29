@@ -1,0 +1,230 @@
+#######################################################
+#
+# Test returnszero()
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };   
+  version => "1.0";
+}
+
+bundle common g
+{
+vars:
+	"dummy" string => "dummy";
+}
+
+#######################################################
+
+bundle agent init
+{
+vars:
+	"dummy" string => "dummy";
+}
+
+#######################################################
+
+bundle agent test
+{
+vars:
+	"dummy" string => "dummy";
+}
+
+#######################################################
+
+bundle agent check
+{
+vars:
+        "cwd" string => dirname("$(this.promise_filename)");
+
+    windows::
+	"zero_rel" string => "type $(cwd)$(G.DS)text.txt";
+	"one_rel" string => "type $(cwd)$(G.DS)text.txt.doesnotexist";
+	"nxe_rel" string => "nosuchprogramexists";
+	"zero_abs" string => "c:\windows\system32\cmd.exe /C type $(cwd)$(G.DS)text.txt";
+	"one_abs" string => "c:\windows\system32\cmd.exe /C type $(cwd)$(G.DS)text.txt.doesnotexist";
+	"nxe_abs" string => "c:\xbin\nosuchprogramexists";
+	"zero_powershell" string => "Get-Content $(cwd)$(G.DS)text.txt";
+	"one_powershell" string => "Get-Content $(cwd)$(G.DS)text.txt.doesnotexist";
+	"nxe_powershell" string => "nosuchprogramexists";
+    !windows::
+	"zero_rel" string => "cat $(cwd)$(G.DS)text.txt";
+	"one_rel" string => "cat $(cwd)$(G.DS)text.txt.doesnotexist";
+	"nxe_rel" string => "nosuchprogramexists";
+	"zero_abs" string => "/bin/cat $(cwd)$(G.DS)text.txt";
+	"one_abs" string => "/bin/cat $(cwd)$(G.DS)text.txt.doesnotexist";
+	"nxe_abs" string => "/xbin/nosuchprogramexists";
+
+classes:
+        # Test whether we extracted the expected string.
+	"zero_noshell_rel" expression => regcmp(".*Succeeded.*", execresult("$(zero_rel)", "noshell"));
+	"zero_useshell_rel" expression => regcmp(".*Succeeded.*", execresult("$(zero_rel)", "useshell"));
+	"zero_noshell_abs" expression => regcmp(".*Succeeded.*", execresult("$(zero_abs)", "noshell"));
+	"zero_useshell_abs" expression => regcmp(".*Succeeded.*", execresult("$(zero_abs)", "useshell"));
+
+	"one_noshell_rel" expression => regcmp(".*Succeeded.*", execresult("$(one_rel)", "noshell"));
+	"one_useshell_rel" expression => regcmp(".*Succeeded.*", execresult("$(one_rel)", "useshell"));
+	"one_noshell_abs" expression => regcmp(".*Succeeded.*", execresult("$(one_abs)", "noshell"));
+	"one_useshell_abs" expression => regcmp(".*Succeeded.*", execresult("$(one_abs)", "useshell"));
+
+	"nxe_noshell_rel" expression => regcmp(".*Succeeded.*", execresult("$(nxe_rel)", "noshell"));
+	"nxe_useshell_rel" expression => regcmp(".*Succeeded.*", execresult("$(nxe_rel)", "useshell"));
+	"nxe_noshell_abs" expression => regcmp(".*Succeeded.*", execresult("$(nxe_abs)", "noshell"));
+	"nxe_useshell_abs" expression => regcmp(".*Succeeded.*", execresult("$(nxe_abs)", "useshell"));
+
+        # Test whether any assignment happens at all.
+	"does_assign_zero_noshell_rel" expression => regcmp(".*", execresult("$(zero_rel)", "noshell"));
+	"does_assign_zero_useshell_rel" expression => regcmp(".*", execresult("$(zero_rel)", "useshell"));
+	"does_assign_zero_noshell_abs" expression => regcmp(".*", execresult("$(zero_abs)", "noshell"));
+	"does_assign_zero_useshell_abs" expression => regcmp(".*", execresult("$(zero_abs)", "useshell"));
+
+	"does_assign_one_noshell_rel" expression => regcmp(".*", execresult("$(one_rel)", "noshell"));
+	"does_assign_one_useshell_rel" expression => regcmp(".*", execresult("$(one_rel)", "useshell"));
+	"does_assign_one_noshell_abs" expression => regcmp(".*", execresult("$(one_abs)", "noshell"));
+	"does_assign_one_useshell_abs" expression => regcmp(".*", execresult("$(one_abs)", "useshell"));
+
+	"does_assign_nxe_noshell_rel" expression => regcmp(".*", execresult("$(nxe_rel)", "noshell"));
+	"does_assign_nxe_useshell_rel" expression => regcmp(".*", execresult("$(nxe_rel)", "useshell"));
+	"does_assign_nxe_noshell_abs" expression => regcmp(".*", execresult("$(nxe_abs)", "noshell"));
+	"does_assign_nxe_useshell_abs" expression => regcmp(".*", execresult("$(nxe_abs)", "useshell"));
+
+    windows::
+        # Test whether we extracted the expected string.
+	"zero_powershell" expression => regcmp(".*Succeeded.*", execresult("$(zero_powershell)", "powershell"));
+	"one_powershell" expression => regcmp(".*Succeeded.*", execresult("$(one_powershell)", "powershell"));
+	"nxe_powershell" expression => regcmp(".*Succeeded.*", execresult("$(nxe_powershell)", "powershell"));
+
+        # Test whether any assignment happens at all.
+	"does_assign_zero_powershell" expression => regcmp(".*", execresult("$(zero_powershell)", "powershell"));
+	"does_assign_one_powershell" expression => regcmp(".*", execresult("$(one_powershell)", "powershell"));
+	"does_assign_nxe_powershell" expression => regcmp(".*", execresult("$(nxe_powershell)", "powershell"));
+
+    any::
+	"ok_common" and => {
+		    "!zero_noshell_rel", "zero_useshell_rel", "zero_noshell_abs", "zero_useshell_abs",
+		    "!one_noshell_rel", "!one_useshell_rel", "!one_noshell_abs", "!one_useshell_abs",
+		    "!nxe_noshell_rel", "!nxe_useshell_rel", "!nxe_noshell_abs", "!nxe_useshell_abs",
+		    "!does_assign_zero_noshell_rel", "does_assign_zero_useshell_rel", "does_assign_zero_noshell_abs", "does_assign_zero_useshell_abs",
+		    "!does_assign_one_noshell_rel", "does_assign_one_useshell_rel", "does_assign_one_noshell_abs", "does_assign_one_useshell_abs",
+		    "!does_assign_nxe_noshell_rel", "does_assign_nxe_useshell_rel", "!does_assign_nxe_noshell_abs", "!does_assign_nxe_useshell_abs",
+		    };
+    windows::
+	"ok_windows" and => {
+		    "zero_powershell", "!one_powershell", "!nxe_powershell",
+		    "does_assign_zero_powershell", "does_assign_one_powershell", "does_assign_nxe_powershell",
+		    };
+        "ok" and => {
+                    "ok_common", "ok_windows",
+                    };
+
+    !windows::
+        "ok" and => { "ok_common" };
+
+reports:
+    DEBUG.zero_noshell_rel::
+	"'$(zero_rel)' executes command successfully with noshell";
+
+    DEBUG.!zero_useshell_rel::
+	"'$(zero_rel)' executes command unsuccessfully with useshell";
+
+
+    DEBUG.one_noshell_rel::
+	"'$(one_rel)' executes command successfully with noshell";
+
+    DEBUG.one_useshell_rel::
+	"'$(one_rel)' executes command successfully with useshell";
+
+
+    DEBUG.nxe_noshell_rel::
+	"'$(nxe_rel)' executes command successfully with noshell";
+
+    DEBUG.nxe_useshell_rel::
+	"'$(nxe_rel)' executes command successfully with useshell";
+
+    DEBUG.!zero_noshell_abs::
+	"'$(zero_abs)' executes command unsuccessfully with noshell";
+
+    DEBUG.!zero_useshell_abs::
+	"'$(zero_abs)' executes command unsuccessfully with useshell";
+
+
+    DEBUG.one_noshell_abs::
+	"'$(one_abs)' executes command successfully with noshell";
+
+    DEBUG.one_useshell_abs::
+	"'$(one_abs)' executes command successfully with useshell";
+
+
+    DEBUG.nxe_noshell_abs::
+	"'$(nxe_abs)' executes command successfully with noshell";
+
+    DEBUG.nxe_useshell_abs::
+	"'$(nxe_abs)' executes command successfully with useshell";
+
+
+    DEBUG.does_assign_zero_noshell_rel::
+	"'$(zero_rel)' executes command with noshell";
+
+    DEBUG.!does_assign_zero_useshell_rel::
+	"'$(zero_rel)' does not execute command with useshell";
+
+
+    DEBUG.does_assign_one_noshell_rel::
+	"'$(one_rel)' executes command with noshell";
+
+    DEBUG.!does_assign_one_useshell_rel::
+	"'$(one_rel)' does not execute command with useshell";
+
+
+    DEBUG.does_assign_nxe_noshell_rel::
+	"'$(nxe_rel)' executes command with noshell";
+
+    DEBUG.!does_assign_nxe_useshell_rel::
+	"'$(nxe_rel)' does not execute command with useshell";
+
+    DEBUG.!does_assign_zero_noshell_abs::
+	"'$(zero_abs)' does not execute command with noshell";
+
+    DEBUG.!does_assign_zero_useshell_abs::
+	"'$(zero_abs)' does not execute command with useshell";
+
+
+    DEBUG.!does_assign_one_noshell_abs::
+	"'$(one_abs)' does not execute command with noshell";
+
+    DEBUG.!does_assign_one_useshell_abs::
+	"'$(one_abs)' does not execute command with useshell";
+
+
+    DEBUG.does_assign_nxe_noshell_abs::
+	"'$(nxe_abs)' executes command with noshell";
+
+    DEBUG.does_assign_nxe_useshell_abs::
+	"'$(nxe_abs)' executes command with useshell";
+
+    windows.DEBUG.!zero_powershell::
+	"'$(zero_powershell)' executes command unsuccessfully with powershell";
+
+    windows.DEBUG.one_powershell::
+	"'$(one_powershell)' executes command successfully with powershell";
+
+    windows.DEBUG.nxe_powershell::
+	"'$(nxe_powershell)' executes command successfully with powershell";
+
+    windows.DEBUG.!does_assign_zero_powershell::
+	"'$(zero_powershell)' does not execute command with powershell";
+
+    windows.DEBUG.!does_assign_one_powershell::
+	"'$(one_powershell)' does not execute command with powershell";
+
+    windows.DEBUG.!does_assign_nxe_powershell::
+	"'$(nxe_powershell)' does not execute command with powershell";
+
+    ok::
+	"$(this.promise_filename) Pass";
+    !ok::
+	"$(this.promise_filename) FAIL";
+}

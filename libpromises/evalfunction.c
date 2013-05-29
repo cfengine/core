@@ -832,6 +832,7 @@ static FnCallResult FnCallReturnsZero(EvalContext *ctx, FnCall *fp, Rlist *final
     char comm[CF_BUFSIZE];
     const char *shellarg = RlistScalarValue(finalargs->next);
     ShellType shelltype;
+    bool needExecutableCheck = false;
     if (strcmp(shellarg, "useshell") == 0)
     {
         shelltype = SHELL_TYPE_USE;
@@ -845,19 +846,20 @@ static FnCallResult FnCallReturnsZero(EvalContext *ctx, FnCall *fp, Rlist *final
         shelltype = SHELL_TYPE_NONE;
     }
 
-    if (shelltype == SHELL_TYPE_NONE)
+    if (IsAbsoluteFileName(RlistScalarValue(finalargs)))
     {
-        if (!IsAbsoluteFileName(RlistScalarValue(finalargs)))
-        {
-            Log(LOG_LEVEL_ERR, "execresult '%s' does not have an absolute path", RlistScalarValue(finalargs));
-            return (FnCallResult) { FNCALL_SUCCESS, { xstrdup("!any"), RVAL_TYPE_SCALAR } };
-        }
+        needExecutableCheck = true;
+    }
+    else if (shelltype == SHELL_TYPE_NONE)
+    {
+        Log(LOG_LEVEL_ERR, "execresult '%s' does not have an absolute path", RlistScalarValue(finalargs));
+        return (FnCallResult) { FNCALL_SUCCESS, { xstrdup("!any"), RVAL_TYPE_SCALAR } };
+    }
 
-        if (!IsExecutable(CommandArg0(RlistScalarValue(finalargs))))
-        {
-            Log(LOG_LEVEL_ERR, "execresult '%s' is assumed to be executable but isn't", RlistScalarValue(finalargs));
-            return (FnCallResult) { FNCALL_SUCCESS, { xstrdup("!any"), RVAL_TYPE_SCALAR } };
-        }
+    if (needExecutableCheck && !IsExecutable(CommandArg0(RlistScalarValue(finalargs))))
+    {
+        Log(LOG_LEVEL_ERR, "execresult '%s' is assumed to be executable but isn't", RlistScalarValue(finalargs));
+        return (FnCallResult) { FNCALL_SUCCESS, { xstrdup("!any"), RVAL_TYPE_SCALAR } };
     }
 
     snprintf(comm, CF_BUFSIZE, "%s", RlistScalarValue(finalargs));
@@ -879,6 +881,7 @@ static FnCallResult FnCallExecResult(EvalContext *ctx, FnCall *fp, Rlist *finala
 {
     const char *shellarg = RlistScalarValue(finalargs->next);
     ShellType shelltype;
+    bool needExecutableCheck = false;
     if (strcmp(shellarg, "useshell") == 0)
     {
         shelltype = SHELL_TYPE_USE;
@@ -892,19 +895,20 @@ static FnCallResult FnCallExecResult(EvalContext *ctx, FnCall *fp, Rlist *finala
         shelltype = SHELL_TYPE_NONE;
     }
 
-    if (shelltype == SHELL_TYPE_NONE)
+    if (IsAbsoluteFileName(RlistScalarValue(finalargs)))
     {
-        if (!IsAbsoluteFileName(RlistScalarValue(finalargs)))
-        {
-            Log(LOG_LEVEL_ERR, "execresult '%s' does not have an absolute path", RlistScalarValue(finalargs));
-            return (FnCallResult) { FNCALL_FAILURE };
-        }
+        needExecutableCheck = true;
+    }
+    else if (shelltype == SHELL_TYPE_NONE)
+    {
+        Log(LOG_LEVEL_ERR, "execresult '%s' does not have an absolute path", RlistScalarValue(finalargs));
+        return (FnCallResult) { FNCALL_FAILURE };
+    }
 
-        if (!IsExecutable(CommandArg0(RlistScalarValue(finalargs))))
-        {
-            Log(LOG_LEVEL_ERR, "execresult '%s' is assumed to be executable but isn't", RlistScalarValue(finalargs));
-            return (FnCallResult) { FNCALL_FAILURE };
-        }
+    if (needExecutableCheck && !IsExecutable(CommandArg0(RlistScalarValue(finalargs))))
+    {
+        Log(LOG_LEVEL_ERR, "execresult '%s' is assumed to be executable but isn't", RlistScalarValue(finalargs));
+        return (FnCallResult) { FNCALL_FAILURE };
     }
 
     char buffer[CF_EXPANDSIZE];

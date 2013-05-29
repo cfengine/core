@@ -195,7 +195,7 @@ static ActionResult RepairExec(EvalContext *ctx, Attributes a, Promise *pp)
     int cmdOutBufPos = 0;
     int lineOutLen;
 
-    if (a.contain.shelltype == SHELL_TYPE_NONE)
+    if (IsAbsoluteFileName(CommandArg0(pp->promiser)) || a.contain.shelltype == SHELL_TYPE_NONE)
     {
         if (!IsExecutable(CommandArg0(pp->promiser)))
         {

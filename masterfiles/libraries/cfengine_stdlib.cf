@@ -2400,6 +2400,94 @@ body package_method freebsd
  package_delete_command => "/usr/sbin/pkg_delete";
 }
 
+body package_method freebsd_portmaster
+{
+ package_changes => "individual";
+
+ package_list_command => "/usr/sbin/pkg_info";
+
+ package_list_name_regex    => "([^\s]+)-.*";
+ package_list_version_regex => "[^\s]+-([^\s]+).*";
+
+ package_installed_regex => ".*";
+
+ package_name_convention => "$(name)";
+ package_delete_convention => "$(name)-$(version)";
+
+ package_file_repositories => {
+  "/usr/ports/accessibility/",
+  "/usr/port/arabic/"
+  "/usr/ports/archivers/",
+  "/usr/ports/astro/",
+  "/usr/ports/audio/",
+  "/usr/ports/benchmarks/",
+  "/usr/ports/biology/",
+  "/usr/ports/cad/",
+  "/usr/ports/chinese/",
+  "/usr/ports/comms/",
+  "/usr/ports/converters/",
+  "/usr/ports/databases/",
+  "/usr/ports/deskutils/",
+  "/usr/ports/devel/",
+  "/usr/ports/dns/",
+  "/usr/ports/editors/",
+  "/usr/ports/emulators/",
+  "/usr/ports/finance/",
+  "/usr/ports/french/",
+  "/usr/ports/ftp/",
+  "/usr/ports/games/",
+  "/usr/ports/german/",
+  "/usr/ports/graphics/",
+  "/usr/ports/hebrew/",
+  "/usr/ports/hungarian/",
+  "/usr/ports/irc/",
+  "/usr/ports/japanese/",
+  "/usr/ports/java/",
+  "/usr/ports/korean/",
+  "/usr/ports/lang/",
+  "/usr/ports/mail/",
+  "/usr/ports/math/",
+  "/usr/ports/mbone/",
+  "/usr/ports/misc/",
+  "/usr/ports/multimedia/",
+  "/usr/ports/net/",
+  "/usr/ports/net-im/",
+  "/usr/ports/net-mgmt/",
+  "/usr/ports/net-p2p/",
+  "/usr/ports/news/",
+  "/usr/ports/packages/",
+  "/usr/ports/palm/",
+  "/usr/ports/polish/",
+  "/usr/ports/ports-mgmt/",
+  "/usr/ports/portuguese/",
+  "/usr/ports/print/",
+  "/usr/ports/russian/",
+  "/usr/ports/science/",
+  "/usr/ports/security/",
+  "/usr/ports/shells/",
+  "/usr/ports/sysutils/",
+  "/usr/ports/textproc/",
+  "/usr/ports/ukrainian/",
+  "/usr/ports/vietnamese/",
+  "/usr/ports/www/",
+  "/usr/ports/x11/",
+  "/usr/ports/x11-clocks/",
+  "/usr/ports/x11-drivers/",
+  "/usr/ports/x11-fm/",
+  "/usr/ports/x11-fonts/",
+  "/usr/ports/x11-servers/",
+  "/usr/ports/x11-themes/",
+  "/usr/ports/x11-toolkits/",
+  "/usr/ports/x11-wm/",
+ };
+
+ package_add_command => "/usr/local/sbin/portmaster -D -G --no-confirm";
+ package_update_command => "/usr/local/sbin/portmaster -D -G --no-confirm";
+ package_delete_command => "/usr/local/sbin/portmaster --no-confirm -e";
+
+ expireafter => 240;
+}
+
 ##
 
 body package_method alpinelinux

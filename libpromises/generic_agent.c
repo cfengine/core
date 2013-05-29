@@ -1530,6 +1530,18 @@ void WritePID(char *filename)
 
 void BundleHashVariables(EvalContext *ctx, Bundle *bundle)
 {
+    Log(LOG_LEVEL_VERBOSE, "Resolving varibales in bundle '%s'", bundle->name);
+
+    for (size_t j = 0; j < SeqLength(bundle->promise_types); j++)
+    {
+        PromiseType *sp = SeqAt(bundle->promise_types, j);
+
+        if (strcmp(bundle->type, "common") == 0 && strcmp(sp->name, "classes") == 0)
+        {
+            CheckCommonClassPromises(ctx, sp->promises);
+        }
+    }
+
     for (size_t j = 0; j < SeqLength(bundle->promise_types); j++)
     {
         PromiseType *sp = SeqAt(bundle->promise_types, j);
@@ -1538,28 +1550,32 @@ void BundleHashVariables(EvalContext *ctx, Bundle *bundle)
         {
             CheckVariablePromises(ctx, sp->promises);
         }
-
-        // We must also set global classes here?
-
-        if (strcmp(bundle->type, "common") == 0 && strcmp(sp->name, "classes") == 0)
-        {
-            CheckCommonClassPromises(ctx, sp->promises);
-        }
     }
+
 }
 
 void PolicyHashVariables(EvalContext *ctx, Policy *policy)
 {
-    Log(LOG_LEVEL_VERBOSE, "Initiate variable convergence...");
+    for (size_t i = 0; i < SeqLength(policy->bundles); i++)
+    {
+        Bundle *bundle = SeqAt(policy->bundles, i);
+        if (strcmp("common", bundle->type) == 0)
+        {
+            EvalContextStackPushBundleFrame(ctx, bundle, false);
+            BundleHashVariables(ctx, bundle);
+            EvalContextStackPopFrame(ctx);
+        }
+    }
 
     for (size_t i = 0; i < SeqLength(policy->bundles); i++)
     {
         Bundle *bundle = SeqAt(policy->bundles, i);
-        EvalContextStackPushBundleFrame(ctx, bundle, false);
-
-        BundleHashVariables(ctx, bundle);
-
-        EvalContextStackPopFrame(ctx);
+        if (strcmp("common", bundle->type) != 0)
+        {
+            EvalContextStackPushBundleFrame(ctx, bundle, false);
+            BundleHashVariables(ctx, bundle);
+            EvalContextStackPopFrame(ctx);
+        }
     }
 }
 

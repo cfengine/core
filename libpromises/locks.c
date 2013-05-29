@@ -420,7 +420,7 @@ static char *BodyName(const Promise *pp)
 static bool KillLockHolder(ARG_UNUSED const char *lock)
 {
     Log(LOG_LEVEL_VERBOSE,
-          "Process is not running - ignoring lock (Windows does not support graceful processes termination)\n");
+          "Process is not running - ignoring lock (Windows does not support graceful processes termination)");
     return true;
 }
 

@@ -168,14 +168,14 @@ int IsExecutable(const char *file)
 
     if (stat(file, &sb) == -1)
     {
-        Log(LOG_LEVEL_ERR, "Proposed executable file \"%s\" doesn't exist", file);
+        Log(LOG_LEVEL_ERR, "Proposed executable file '%s' doesn't exist", file);
         return false;
     }
 
     if (sb.st_mode & 02)
     {
-        Log(LOG_LEVEL_ERR, "SECURITY ALERT: promised executable \"%s\" is world writable! ", file);
-        Log(LOG_LEVEL_ERR, "SECURITY ALERT: cfengine will not execute this - requires human inspection");
+        Log(LOG_LEVEL_ERR, "SECURITY ALERT: promised executable '%s' is world writable! ", file);
+        Log(LOG_LEVEL_ERR, "SECURITY ALERT: CFEngine will not execute this - requires human inspection");
         return false;
     }
 
@@ -848,7 +848,7 @@ static bool IgnoreInterface(char *name)
     {
         if (FullTextMatch(rp->item,name))
         {
-            Log(LOG_LEVEL_VERBOSE, "Ignoring interface \"%s\" because it matches %s",name,CF_IGNORE_INTERFACES);
+            Log(LOG_LEVEL_VERBOSE, "Ignoring interface '%s' because it matches '%s'",name,CF_IGNORE_INTERFACES);
             return true;
         }    
     }

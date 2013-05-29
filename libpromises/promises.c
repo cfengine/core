@@ -198,7 +198,7 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
             if (strcmp(bp->type, cp->lval) != 0)
             {
                 Log(LOG_LEVEL_ERR,
-                      "Body type mismatch for body reference \"%s\" in promise at line %zu of %s (%s != %s)\n",
+                    "Body type mismatch for body reference '%s' in promise at line %zu of file '%s', '%s' does not equal '%s'",
                       bodyname, pp->offset.line, PromiseGetBundle(pp)->source_path, bp->type, cp->lval);
             }
 
@@ -215,14 +215,14 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
 
                 if (fp == NULL || fp->args == NULL)
                 {
-                    Log(LOG_LEVEL_ERR, "Argument mismatch for body reference \"%s\" in promise at line %zu of %s",
+                    Log(LOG_LEVEL_ERR, "Argument mismatch for body reference '%s' in promise at line %zu of file '%s'",
                           bodyname, pp->offset.line, PromiseGetBundle(pp)->source_path);
                 }
 
                 if (fp && bp && fp->args && bp->args && !ScopeMapBodyArgs(ctx, "body", fp->args, bp->args))
                 {
                     Log(LOG_LEVEL_ERR,
-                          "Number of arguments does not match for body reference \"%s\" in promise at line %zu of %s\n",
+                        "Number of arguments does not match for body reference '%s' in promise at line %zu of file '%s'",
                           bodyname, pp->offset.line, PromiseGetBundle(pp)->source_path);
                 }
 
@@ -373,7 +373,7 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const char *scopeid, const Promise
             {
                 char err[CF_BUFSIZE];
 
-                snprintf(err, CF_BUFSIZE, "Comments can only be scalar objects (not %c in \"%s\")", final.type,
+                snprintf(err, CF_BUFSIZE, "Comments can only be scalar objects, not %c in '%s'", final.type,
                          pp->promiser);
                 yyerror(err);
             }

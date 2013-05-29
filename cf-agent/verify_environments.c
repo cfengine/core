@@ -762,7 +762,7 @@ static int SuspendedVirt(EvalContext *ctx, virConnectPtr vc, Attributes a, Promi
                 return false;
             }
 
-            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, "Virtual domain \"%s\" is in a crashed state, suspending\n",
+            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, "Virtual domain '%s' is in a crashed state, suspending",
                  pp->promiser);
             break;
 

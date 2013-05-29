@@ -766,7 +766,7 @@ void KeepLiteralAccessPromise(EvalContext *ctx, Promise *pp, char *type)
     
     if (strcmp(type, "literal") == 0)
     {
-        Log(LOG_LEVEL_VERBOSE,"Looking at literal access promise \"%s\", type %s",pp->promiser, type);
+        Log(LOG_LEVEL_VERBOSE,"Looking at literal access promise '%s', type '%s'", pp->promiser, type);
 
         if (!GetAuthPath(handle, SV.varadmit))
         {

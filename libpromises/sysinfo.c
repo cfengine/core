@@ -598,7 +598,7 @@ void GetNameInfo3(EvalContext *ctx, AgentType agent_type)
 
     if (!found)
     {
-        Log(LOG_LEVEL_ERR, "CFEngine: I don't understand what architecture this is!");
+        Log(LOG_LEVEL_ERR, "I don't understand what architecture this is");
     }
 
     strcpy(workbuf, "compiled_on_");
@@ -610,7 +610,7 @@ void GetNameInfo3(EvalContext *ctx, AgentType agent_type)
 
     if ((hp = gethostbyname(VFQNAME)) == NULL)
     {
-        Log(LOG_LEVEL_VERBOSE, "Hostname lookup failed on node name \"%s\"", VSYSNAME.nodename);
+        Log(LOG_LEVEL_VERBOSE, "Hostname lookup failed on node name '%s'", VSYSNAME.nodename);
         return;
     }
     else
@@ -641,11 +641,11 @@ void GetNameInfo3(EvalContext *ctx, AgentType agent_type)
 
     if (strcmp(zone, "global") == 0)
     {
-        Log(LOG_LEVEL_VERBOSE, "CFEngine seems to be running inside a global solaris zone of name \"%s\"", zone);
+        Log(LOG_LEVEL_VERBOSE, "CFEngine seems to be running inside a global solaris zone of name '%s'", zone);
     }
     else
     {
-        Log(LOG_LEVEL_VERBOSE, "CFEngine seems to be running inside a local solaris zone of name \"%s\"", zone);
+        Log(LOG_LEVEL_VERBOSE, "CFEngine seems to be running inside a local solaris zone of name '%s'", zone);
     }
 #endif
 }
@@ -1332,7 +1332,7 @@ static int Linux_Redhat_Version(EvalContext *ctx)
         return 1;
     }
 
-    Log(LOG_LEVEL_VERBOSE, "Looking for redhat linux info in \"%s\"", relstring);
+    Log(LOG_LEVEL_VERBOSE, "Looking for redhat linux info in '%s'", relstring);
 
 /* First, try to grok the vendor and the edition (if any) */
     if (!strncmp(relstring, REDHAT_ES_ID, strlen(REDHAT_ES_ID)))
@@ -1572,7 +1572,7 @@ static int Linux_Suse_Version(EvalContext *ctx)
 
     /* Check if it's a SuSE Enterprise version  */
 
-    Log(LOG_LEVEL_VERBOSE, "Looking for SuSE enterprise info in \"%s\"", relstring);
+    Log(LOG_LEVEL_VERBOSE, "Looking for SuSE enterprise info in '%s'", relstring);
 
     /* Convert relstring to lowercase to handle rename of SuSE to
      * SUSE with SUSE 10.0.
@@ -1854,7 +1854,7 @@ static int Linux_Mandrake_Version(EvalContext *ctx)
         return 1;
     }
 
-    Log(LOG_LEVEL_VERBOSE, "Looking for Mandrake linux info in \"%s\"", relstring);
+    Log(LOG_LEVEL_VERBOSE, "Looking for Mandrake linux info in '%s'", relstring);
 
 /* Older Mandrakes had the 'Mandrake Linux' string in reverse order */
 
@@ -1901,7 +1901,7 @@ static int Linux_Mandriva_Version(EvalContext *ctx)
         return 1;
     }
 
-    Log(LOG_LEVEL_VERBOSE, "Looking for Mandriva linux info in \"%s\"", relstring);
+    Log(LOG_LEVEL_VERBOSE, "Looking for Mandriva linux info in '%s'", relstring);
 
     if (!strncmp(relstring, MANDRIVA_ID, strlen(MANDRIVA_ID)))
     {
@@ -1909,7 +1909,7 @@ static int Linux_Mandriva_Version(EvalContext *ctx)
     }
     else
     {
-        Log(LOG_LEVEL_VERBOSE, "Could not identify OS distro from %s", MANDRIVA_REL_FILENAME);
+        Log(LOG_LEVEL_VERBOSE, "Could not identify OS distro from '%s'", MANDRIVA_REL_FILENAME);
         return 2;
     }
 

@@ -59,7 +59,7 @@ int MoveObstruction(EvalContext *ctx, char *from, Attributes attr, const Promise
     {
         if (!attr.move_obstructions)
         {
-            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, pp, attr, "Object %s exists and is obstructing our promise\n", from);
+            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, pp, attr, "Object '%s' exists and is obstructing our promise", from);
             return false;
         }
 
@@ -81,7 +81,7 @@ int MoveObstruction(EvalContext *ctx, char *from, Attributes attr, const Promise
 
             strcat(saved, CF_SAVED);
 
-            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, attr, "Moving file object %s to %s\n", from, saved);
+            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, attr, "Moving file object '%s' to '%s'", from, saved);
 
             if (rename(from, saved) == -1)
             {
@@ -99,7 +99,7 @@ int MoveObstruction(EvalContext *ctx, char *from, Attributes attr, const Promise
 
         if (S_ISDIR(sb.st_mode))
         {
-            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, attr, "Moving directory %s to %s%s\n", from, from, CF_SAVED);
+            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, attr, "Moving directory '%s' to '%s%s'", from, from, CF_SAVED);
 
             if (DONTDO)
             {
@@ -116,9 +116,9 @@ int MoveObstruction(EvalContext *ctx, char *from, Attributes attr, const Promise
 
             if (stat(saved, &sb) != -1)
             {
-                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Couldn't save directory %s, since %s exists already\n", from,
+                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Couldn't save directory '%s', since '%s' exists already", from,
                      saved);
-                Log(LOG_LEVEL_ERR, "Unable to force link to existing directory %s", from);
+                Log(LOG_LEVEL_ERR, "Unable to force link to existing directory '%s'", from);
                 return false;
             }
 

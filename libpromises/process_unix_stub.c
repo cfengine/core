@@ -30,7 +30,7 @@ time_t GetProcessStartTime(ARG_UNUSED pid_t pid)
 {
     Log(LOG_LEVEL_VERBOSE,
           "No platform-specific code for obtaining process start time. - "
-          "Falling back to no PID double-checking on kill().\n");
+          "Falling back to no PID double-checking on kill()");
 
     return PROCESS_START_TIME_UNKNOWN;
 }
@@ -39,7 +39,7 @@ ProcessState GetProcessState(ARG_UNUSED pid_t pid)
 {
     Log(LOG_LEVEL_VERBOSE,
           "No platform-specific code for obtaining process state. - "
-          "Falling back to no PID double-checking on kill().\n");
+          "Falling back to no PID double-checking on kill()");
 
     return PROCESS_STATE_RUNNING;
 }

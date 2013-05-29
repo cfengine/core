@@ -227,14 +227,14 @@ static void VerifyFilePromise(EvalContext *ctx, char *path, Promise *pp)
     {
         if ((a.create) || (a.touch))
         {
-            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "File \"%s\" exists as promised", path);
+            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "File '%s' exists as promised", path);
         }
         exists = true;
     }
 
     if ((a.havedelete) && (!exists))
     {
-        cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "File \"%s\" does not exist as promised", path);
+        cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "File '%s' does not exist as promised", path);
         goto exit;
     }
 

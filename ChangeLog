@@ -101,6 +101,8 @@
        - do not wait for splaytime when executing only once
        - disable xml editing functionality when libxml2 doesn't provide necessary APIs (Redmine #1937)
        - Out-of-tree builds should work again, fixed a bunch of related bugs.
+       - Fixed race condition in file editing. (Redmine #2545)
+       - Fixed memory leak in cf-serverd and others (Redmine #1758)
 
 3.4.5   (Bugfix and Stability release)
 

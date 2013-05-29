@@ -47,3 +47,8 @@ files:
 
 #########################################################
 
+# This section may be removed if you are incorporating this policy into your main policy
+inputs => {
+
+  "libraries/cfengine_stdlib.cf",
+};

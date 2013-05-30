@@ -29,11 +29,7 @@
 body common control
 
 {
-any::
-
-  bundlesequence  => {
-                     test
-                     };   
+bundlesequence  => { "test" };   
 }
 
 #######################################################

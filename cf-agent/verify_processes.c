@@ -311,15 +311,6 @@ static int FindPidMatches(Item *procdata, Item **killlist, Attributes a, const c
 
     for (Item *ip = matched; ip != NULL; ip = ip->next)
     {
-        if (a.transaction.action == cfa_warn)
-        {
-            Log(LOG_LEVEL_ERR, "Matched '%s'", ip->name);
-        }
-        else
-        {
-            Log(LOG_LEVEL_INFO, "Matched '%s'", ip->name);
-        }
-
         pid_t pid = ip->counter;
 
         if (pid == 1)
@@ -354,6 +345,15 @@ static int FindPidMatches(Item *procdata, Item **killlist, Attributes a, const c
         {
             Log(LOG_LEVEL_VERBOSE, "cf-agent will not signal itself!");
             continue;
+        }
+
+        if (a.transaction.action == cfa_warn)
+        {
+            Log(LOG_LEVEL_ERR, "Matched '%s'", ip->name);
+        }
+        else
+        {
+            Log(LOG_LEVEL_VERBOSE, "Matched '%s'", ip->name);
         }
 
         PrependItem(killlist, ip->name, "");

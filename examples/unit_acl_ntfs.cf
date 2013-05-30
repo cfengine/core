@@ -1,12 +1,12 @@
 body common control
 {
 inputs => { "cfengine_stdlib.cf" };
-bundlesequence => { "test" };
+bundlesequence => { "example" };
 }
 
 ###
 
-bundle agent test
+bundle agent example
 {
 vars:
   "acl_secret_dir" slist => { "user:Administrator:rwx:allow", "group:Administrators:rx:allow" };

@@ -48,7 +48,7 @@ mode => "$(x)";
 }
 
 
-bundle agent test
+bundle agent example
 {
 vars:
 

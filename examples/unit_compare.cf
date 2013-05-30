@@ -34,7 +34,7 @@ bundlesequence  => { "test"  };
 
 ###########################################################
 
-bundle agent test
+bundle agent example
 
 {     
 classes:

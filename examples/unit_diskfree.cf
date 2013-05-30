@@ -38,9 +38,6 @@ vars:
 
 reports:
 
-  cfengine_3::
-
     "Freedisk $(free)";
 
 }
-

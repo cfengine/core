@@ -29,11 +29,7 @@
 body common control
 
 {
-any::
-
-  bundlesequence  => {
-                     test
-                     };   
+bundlesequence  => { "example" };   
 }
 
 #######################################################
@@ -47,7 +43,7 @@ vars:
 
 #######################################################
 
-bundle agent test
+bundle agent example
 
 {
 vars:

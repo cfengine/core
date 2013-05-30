@@ -28,12 +28,12 @@ body common control
 
 {
 version => "1.2.3";
-bundlesequence  => { "testbundle" };
+bundlesequence  => { "example" };
 }
 
 ########################################################
 
-bundle agent testbundle
+bundle agent example
 
 {
 files:

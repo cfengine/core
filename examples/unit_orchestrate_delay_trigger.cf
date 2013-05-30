@@ -4,7 +4,7 @@
 
 body common control
 {
-bundlesequence => { "test" };
+bundlesequence => { "example" };
 inputs => { "cfengine_stdlib.cf" };
 }
 
@@ -22,7 +22,7 @@ vars:
 
 ###########################################
 
-bundle agent test
+bundle agent example
 {
 methods:
 

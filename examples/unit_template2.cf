@@ -1,12 +1,12 @@
 
 body common control
 {
-bundlesequence => { "test" };
+bundlesequence => { "example" };
 
 inputs => { "cfengine_stdlib.cf" };
 }
 
-bundle agent test
+bundle agent example
 {
 methods:
 

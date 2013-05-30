@@ -23,7 +23,7 @@
 
 body common control
 {
-bundlesequence => { "test" };
+bundlesequence => { "example" };
 }
 
 body knowledge control

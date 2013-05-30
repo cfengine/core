@@ -29,13 +29,13 @@
 body common control
 
 {
-bundlesequence  => { "testsetvar" };   
+bundlesequence  => { "example" };   
 }
 
 
 #######################################################
 
-bundle agent testsetvar
+bundle agent example
 
 {
 vars:

@@ -1,4 +1,0 @@
-
-It is normal for this to point to the location of @code{cf-agent} but
-it could also point to the @code{cf-execd}, or even another program or
-shell command at your own risk.

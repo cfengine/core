@@ -1,4 +1,0 @@
-
-Client connections are encrypted with using a Blowfish randomly
-generated session key.  The intial connection is encrypted using the
-public/private keys for the client and server hosts.

@@ -1,4 +1,0 @@
-
-@i{History}: Was introduced in version 3.1.3a1,Nova 2.0.2a1 (2010)
-
-This may be used to simplify the identification of synonyms during topic searches.

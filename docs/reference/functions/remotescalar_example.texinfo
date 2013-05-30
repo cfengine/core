@@ -1,8 +1,0 @@
-
-@verbatim
-
-vars:
-
- "remote" string => remotescalar("test_scalar","127.0.0.1","yes");
-
-@end verbatim

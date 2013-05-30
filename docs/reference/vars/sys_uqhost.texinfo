@@ -1,9 +1,0 @@
-
-
-The unqualified name of the current host. See also @code{sys.fqhost}.
-
-@verbatim
-
-# uqhost = myhost
-
-@end verbatim

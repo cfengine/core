@@ -1,5 +1,0 @@
-
-If an expression contains a mixture of different object types that
-need to be ANDed together, this list form is more convenient than
-providing an expression.  If all of the class expressions listed in the
-RHS match, then the class on the LHS is defined.

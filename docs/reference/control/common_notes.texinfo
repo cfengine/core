@@ -1,4 +1,0 @@
-
-The @code{common} control body refers to those promises that are
-hard-coded into all the components of CFEngine, and therefore affect
-the behaviour of all the components.

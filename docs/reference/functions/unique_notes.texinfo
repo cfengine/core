@@ -1,3 +1,0 @@
-
-Extracts a sublist of unique elements (determined by a string
-comparison) from a list variable specified in arg1.  Similar to the standard Unix uniq utility.

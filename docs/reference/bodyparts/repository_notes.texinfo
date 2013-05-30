@@ -1,9 +1,0 @@
-
-A local repository for this object, overrides the default, 
-@xref{default_repository in agent, ,default_repository}.
-
-Note that when a repository is specified, the files are stored using the
-canonified directory name of the original file, concatenated with the name of
-the file.  So, for example, @file{/usr/local/etc/postfix.conf} would ordinarily
-be stored in an alternative repository as
-@file{_usr_local_etc_postfix.conf.cfsaved}.

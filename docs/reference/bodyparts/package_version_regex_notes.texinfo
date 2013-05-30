@@ -1,6 +1,0 @@
-
-If the version of a package is not specified separately using
-@code{package_version}, then this should be a regular expression that
-contains exactly one parenthesized back-reference that matches the version
-string in the promiser.  The regular expression may match a partial string
-(that is, it is unanchored, @pxref{Anchored vs. unanchored regular expressions}).

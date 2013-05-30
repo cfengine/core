@@ -1,4 +1,0 @@
-
-Classes are defined if the processes that are found in the process table satisfy the
-promised process count, i.e. if the promise about the number of processes matching
-the other criteria is kept.

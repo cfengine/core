@@ -1,9 +1,0 @@
-
-@verbatim
-
-body mount example
-{
-edit_fstab => "true";
-}
-
-@end verbatim

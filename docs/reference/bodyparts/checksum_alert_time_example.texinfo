@@ -1,7 +1,0 @@
-
-@verbatim
-body agent control
-{
-checksum_alert_time => "30";
-}
-@end verbatim

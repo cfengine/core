@@ -1,6 +1,0 @@
-
-@verbatim
-
-comment => "This comment follows the data for reference ...",
-
-@end verbatim

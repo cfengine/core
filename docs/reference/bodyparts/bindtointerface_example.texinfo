@@ -1,7 +1,0 @@
-
-
-@verbatim
-
-bindtointerface => "192.168.1.1";
-
-@end verbatim

@@ -1,9 +1,0 @@
-
-@verbatim
-
-body agent control
-{
-dryrun => "true";
-}
-
-@end verbatim

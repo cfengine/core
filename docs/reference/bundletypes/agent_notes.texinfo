@@ -1,3 +1,0 @@
-
-Agent bundles contain user-defined promises for @code{cf-agent}. The
-types of promises and their corresponding bodies are detailed below.

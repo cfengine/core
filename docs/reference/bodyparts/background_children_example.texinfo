@@ -1,9 +1,0 @@
-
-@verbatim
-
-body runagent control
-{
-background_children => "true";
-}
-
-@end verbatim

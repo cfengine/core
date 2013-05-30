@@ -1,8 +1,0 @@
-
-This promise is part of the XML-editing model. It assures that a
-value string, containing the matching substring, will not be present
-in the specified node within the XML file. If the substring is
-found, the default promise is to remove the existing value string,
-from within the specified node. The specified node is determined
-by body-attributes. The promise object referred to is a literal
-string of text.

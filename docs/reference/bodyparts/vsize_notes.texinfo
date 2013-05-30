@@ -1,4 +1,0 @@
-
-On Windows, the virtual memory size is the amount of memory that
-cannot be shared with other processes. In Task Manager, this is
-called Commit Size (Windows 2008), or VM Size (Windows XP).

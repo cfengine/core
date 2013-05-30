@@ -1,9 +1,0 @@
-The list contains literal strings to search for in the secondary
-file (the file being read via the @code{insert_type} attribute, not
-the main file being edited).  If a string with matching starting
-characters is found, then that line from the secondary file will
-be inserted at the present location in the primary file.
-
-@code{insert_if_startswith_from_list} is ignored unless @code{insert_type} is @code{file}
-(@pxref{insert_type in insert_lines}),
-or the promiser is a multi-line block.

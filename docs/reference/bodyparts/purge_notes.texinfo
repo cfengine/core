@@ -1,9 +1,0 @@
-
-Purging files is a potentially dangerous matter during a file copy it
-implies that any promiser (destination) file which is not matched by a
-source will be deleted. Since there is no source, this means the file
-will be irretrievable. Great care should be exercised when using this
-feature.
-
-Note that purging will also delete backup files generated during
-the file copying if @code{copy_backup} is set to true.

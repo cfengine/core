@@ -1,9 +1,0 @@
-
-@verbatim
-
-body depth_search example
-{
-rmdeadlinks => "true";
-}
-
-@end verbatim

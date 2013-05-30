@@ -1,4 +1,0 @@
-
-Append the output of the report to the named file instead of standard
-output.  If the file cannot be opened for writing then the report
-defaults to the standard output.

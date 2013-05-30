@@ -1,9 +1,0 @@
-
-@verbatim
-
-body classes example
-{
-persist_time => "10";
-}
-
-@end verbatim

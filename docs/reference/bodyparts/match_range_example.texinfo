@@ -1,9 +1,0 @@
-
-@verbatim
-
-body process_count example
-{
-match_range => irange("10","50");
-}
-
-@end verbatim

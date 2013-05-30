@@ -1,4 +1,0 @@
-
-@verbatim
-ignore_missing_bundles => "true";
-@end verbatim

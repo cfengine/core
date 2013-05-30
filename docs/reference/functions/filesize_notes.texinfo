@@ -1,5 +1,0 @@
-
-@i{History}: Was introduced in version 3.1.3,Nova 2.0.2 (2010)
-
-If the file object does not exist, the function call fails and the variable
-does not expand.

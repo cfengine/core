@@ -1,5 +1,0 @@
-
-A list of regular expressions. If the file is a symbolic link which
-points to files matched by one of these expressions, the file will be
-selected. As windows does not support symbolic links, this attribute
-is not applicable there.

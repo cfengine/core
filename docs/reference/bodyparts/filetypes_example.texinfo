@@ -1,8 +1,0 @@
-@verbatim
-
-body file_select
-{
-filetypes => { "plain", "symlink" };
-}
-
-@end verbatim

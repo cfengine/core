@@ -1,4 +1,0 @@
-
-By default classes are ephemeral entities that disappear when @code{cf-agent}
-terminates. By setting a persistence time, they can last even when the agent
-is not running.

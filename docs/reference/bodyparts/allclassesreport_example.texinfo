@@ -1,6 +1,0 @@
-@verbatim
-body agent control
-{
-allclassesreport => "true";
-}
-@end verbatim

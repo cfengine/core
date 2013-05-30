@@ -1,9 +1,0 @@
-
-@verbatim
-
-body process_select example
-{
-ttime_range => irange(0,accumulated(0,1,0,0,0,0));
-}
-
-@end verbatim

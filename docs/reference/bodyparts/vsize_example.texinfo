@@ -1,9 +1,0 @@
-
-@verbatim
-
-body process_select example
-{
-vsize => irange("4000","9000");
-}
-
-@end verbatim

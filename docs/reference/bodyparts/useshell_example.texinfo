@@ -1,9 +1,0 @@
-
-@verbatim
-
-body contain example
-{
-useshell => "useshell";
-}
-
-@end verbatim

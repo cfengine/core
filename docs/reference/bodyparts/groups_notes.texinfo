@@ -1,8 +1,0 @@
-
-The first named group is the list is the defaul that will be
-configured if the file does not match an element of the list.  The
-reserved word @samp{none} may be used to match files that are not
-owned by a registered group. On windows, files do not have file groups
-associated with them and thus this attribute is ignored.
-
-ACLs may be used in place for this.

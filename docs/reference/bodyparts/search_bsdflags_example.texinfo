@@ -1,9 +1,0 @@
-
-@verbatim
-
-body file_select xyz
-{
-search_bsdflags => "archived|dump";
-file_result => "bsdflags";
-}
-@end verbatim

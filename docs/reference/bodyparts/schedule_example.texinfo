@@ -1,9 +1,0 @@
-
-@verbatim
-
-body executor control
-{
-schedule => { "Min00", "(Evening|Night).Min15_20", "Min30", "(Evening|Night).Min45_50" };
-}
-
-@end verbatim

@@ -1,9 +1,0 @@
-
-@verbatim
-
-body process_select example
-{
-tty => "pts/[0-9]+";
-}
-
-@end verbatim

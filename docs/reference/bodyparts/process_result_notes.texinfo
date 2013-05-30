@@ -1,4 +1,0 @@
-
-A logical combination of the process selection classifiers. The syntax
-is the same as that for class expressions. There should be no spaces
-in the expressions.

@@ -1,5 +1,0 @@
-
-CFEngine will not normally perform sanity checks on filesystems which
-are not local to the host. If @code{true} it will ignore a partition's
-network location and ask the current host to verify storage located
-physically on other systems.

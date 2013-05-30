@@ -29,9 +29,7 @@
 body common control
 
 {
-any::
-
-  bundlesequence  => { "testsetvar" };   
+bundlesequence  => { "testsetvar" };   
 }
 
 

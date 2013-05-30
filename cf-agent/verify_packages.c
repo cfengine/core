@@ -186,7 +186,7 @@ static int PackageSanityCheck(EvalContext *ctx, Attributes a, Promise *pp)
     if ((!a.packages.package_commands_useshell) && (a.packages.package_list_command) && (!IsExecutable(CommandArg0(a.packages.package_list_command))))
     {
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a,
-             "The proposed package list command \"%s\" was not executable",
+             "The proposed package list command '%s' was not executable",
              a.packages.package_list_command);
         return false;
     }
@@ -210,7 +210,7 @@ static int PackageSanityCheck(EvalContext *ctx, Attributes a, Promise *pp)
         {
             if (strlen(rp->item) > CF_MAXVARSIZE - 1)
             {
-                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "The repository path \"%s\" is too long", RlistScalarValue(rp));
+                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "The repository path '%s' is too long", RlistScalarValue(rp));
                 return false;
             }
         }

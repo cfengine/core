@@ -273,7 +273,7 @@ static int IsCf3Scalar(char *str)
     {
         char output[CF_BUFSIZE];
 
-        snprintf(output, CF_BUFSIZE, "Broken scalar variable syntax or bracket mismatch in \"%s\"", str);
+        snprintf(output, CF_BUFSIZE, "Broken scalar variable syntax or bracket mismatch in '%s'", str);
         yyerror(output);
         return false;
     }

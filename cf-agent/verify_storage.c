@@ -289,7 +289,7 @@ static int VerifyFreeSpace(EvalContext *ctx, char *file, Attributes a, Promise *
         if (free_percentage < threshold_percentage)
         {
             cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a,
-                 "Free disk space is under %d%% for volume containing %s (%d%% free)\n",
+                 "Free disk space is under %d%% for volume containing '%s', %d%% free",
                  threshold_percentage, file, free_percentage);
             return false;
         }

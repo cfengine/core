@@ -90,8 +90,7 @@ Policy *ParserParseFile(const char *path, unsigned int warnings, unsigned int wa
     yyin = fopen(path, "r");
     if (yyin == NULL)
     {
-        fprintf(stderr, "Error opening file %s: %s\n",
-                path, strerror(errno));
+        Log(LOG_LEVEL_ERR, "While pening file '%s' for parsing. (fopen: %s)", path, GetErrorStr());
         exit(1);
     }
 

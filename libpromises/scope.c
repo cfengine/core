@@ -102,12 +102,12 @@ void ScopePutMatch(int index, const char *value)
             /* Different value, bark and replace */
             if (!UnresolvedVariables(assoc, RVAL_TYPE_SCALAR))
             {
-                Log(LOG_LEVEL_INFO, "Duplicate selection of value for variable \"%s\" in scope %s", lval, ptr->scope);
+                Log(LOG_LEVEL_INFO, "Duplicate selection of value for variable '%s' in scope '%s'", lval, ptr->scope);
             }
             RvalDestroy(assoc->rval);
             assoc->rval = RvalCopy(rval);
             assoc->dtype = DATA_TYPE_STRING;
-            Log(LOG_LEVEL_DEBUG, "Stored \"%s\" in context %s\n", lval, "match");
+            Log(LOG_LEVEL_DEBUG, "Stored '%s' in context '%s'", lval, "match");
         }
     }
     else
@@ -177,7 +177,7 @@ void ScopeAugment(EvalContext *ctx, const Bundle *bp, const Promise *pp, const R
 {
     if (RlistLen(bp->args) != RlistLen(arguments))
     {
-        Log(LOG_LEVEL_ERR, "While constructing scope \"%s\"", bp->name);
+        Log(LOG_LEVEL_ERR, "While constructing scope '%s'", bp->name);
         fprintf(stderr, "Formal = ");
         RlistShow(stderr, bp->args);
         fprintf(stderr, ", Actual = ");
@@ -226,7 +226,7 @@ void ScopeAugment(EvalContext *ctx, const Bundle *bp, const Promise *pp, const R
                 EvalContextVariablePut(ctx, (VarRef) { NULL, bp->name, lval }, (Rval) { retval.item, RVAL_TYPE_LIST}, DATA_TYPE_STRING_LIST);
                 break;
             default:
-                Log(LOG_LEVEL_ERR, "List parameter \"%s\" not found while constructing scope \"%s\" - use @(scope.variable) in calling reference", naked, bp->name);
+                Log(LOG_LEVEL_ERR, "List parameter '%s' not found while constructing scope '%s' - use @(scope.variable) in calling reference", naked, bp->name);
                 EvalContextVariablePut(ctx, (VarRef) { NULL, bp->name, lval }, (Rval) { rpr->item, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
                 break;
             }
@@ -496,7 +496,7 @@ void ScopeDeleteScalar(VarRef lval)
 
     if (HashDeleteElement(scope->hashtable, lval.lval) == false)
     {
-        Log(LOG_LEVEL_DEBUG, "Attempt to delete non-existent variable %s in scope %s\n", lval.lval, lval.scope);
+        Log(LOG_LEVEL_DEBUG, "Attempt to delete non-existent variable '%s' in scope '%s'", lval.lval, lval.scope);
     }
 }
 

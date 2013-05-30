@@ -1264,7 +1264,7 @@ static int VerifyConnection(ServerConnectionState *conn, char buf[CF_BUFSIZE])
 
     sscanf(buf, "%255s %255s %255s", ipstring, fqname, username);
 
-    Log(LOG_LEVEL_DEBUG, "(ipstring=[%s],fqname=[%s],username=[%s],socket=[%s])\n",
+    Log(LOG_LEVEL_DEBUG, "(ipstring=[%s],fqname=[%s],username=[%s],socket=[%s])",
             ipstring, fqname, username, conn->ipaddr);
 
     strlcpy(dns_assert, fqname, CF_MAXVARSIZE);
@@ -1670,7 +1670,7 @@ static int LiteralAccessControl(EvalContext *ctx, char *in, ServerConnectionStat
             if ((!ap->literal) && (!ap->variable))
             {
                 Log(LOG_LEVEL_ERR,
-                      "Variable/query \"%s\" requires a literal server item...cannot set variable directly by path\n",
+                    "Variable/query '%s' requires a literal server item...cannot set variable directly by path",
                       ap->path);
                 access = false;
                 break;
@@ -1684,7 +1684,7 @@ static int LiteralAccessControl(EvalContext *ctx, char *in, ServerConnectionStat
             }
             else
             {
-                Log(LOG_LEVEL_DEBUG, "Checking whether to map root privileges..\n");
+                Log(LOG_LEVEL_DEBUG, "Checking whether to map root privileges");
 
                 if ((IsMatchItemIn(ap->maproot, MapAddress(conn->ipaddr))) || (IsRegexItemIn(ctx, ap->maproot, conn->hostname)))
                 {
@@ -1722,17 +1722,17 @@ static int LiteralAccessControl(EvalContext *ctx, char *in, ServerConnectionStat
 
     if (access)
     {
-        Log(LOG_LEVEL_VERBOSE, "Host %s granted access to literal \"%s\"", conn->hostname, name);
+        Log(LOG_LEVEL_VERBOSE, "Host %s granted access to literal '%s'", conn->hostname, name);
 
         if (encrypt && LOGENCRYPT)
         {
             /* Log files that were marked as requiring encryption */
-            Log(LOG_LEVEL_INFO, "Host %s granted access to literal \"%s\"", conn->hostname, name);
+            Log(LOG_LEVEL_INFO, "Host %s granted access to literal '%s'", conn->hostname, name);
         }
     }
     else
     {
-        Log(LOG_LEVEL_VERBOSE, "Host %s denied access to literal \"%s\"", conn->hostname, name);
+        Log(LOG_LEVEL_VERBOSE, "Host %s denied access to literal '%s'", conn->hostname, name);
     }
 
     if (!conn->rsa_auth)
@@ -1761,9 +1761,6 @@ static Item *ContextAccessControl(EvalContext *ctx, char *in, ServerConnectionSt
     Item *ip, *matches = NULL, *candidates = NULL;
 
     sscanf(in, "CONTEXT %255[^\n]", client_regex);
-
-    Log(LOG_LEVEL_DEBUG, "\n\nContextAccessControl(%s)\n", client_regex);
-
 
     if (!OpenDB(&dbp, dbid_state))
     {
@@ -1817,7 +1814,7 @@ static Item *ContextAccessControl(EvalContext *ctx, char *in, ServerConnectionSt
                 if (ap->classpattern == false)
                 {
                     Log(LOG_LEVEL_ERR,
-                          "Context %s requires a literal server item...cannot set variable directly by path\n",
+                          "Context %s requires a literal server item...cannot set variable directly by path",
                           ap->path);
                     access = false;
                     continue;
@@ -1831,7 +1828,7 @@ static Item *ContextAccessControl(EvalContext *ctx, char *in, ServerConnectionSt
                 }
                 else
                 {
-                    Log(LOG_LEVEL_DEBUG, "Checking whether to map root privileges..\n");
+                    Log(LOG_LEVEL_DEBUG, "Checking whether to map root privileges");
 
                     if ((IsMatchItemIn(ap->maproot, MapAddress(conn->ipaddr)))
                         || (IsRegexItemIn(ctx, ap->maproot, conn->hostname)))
@@ -1848,7 +1845,7 @@ static Item *ContextAccessControl(EvalContext *ctx, char *in, ServerConnectionSt
                         || (IsRegexItemIn(ctx, ap->accesslist, conn->hostname)))
                     {
                         access = true;
-                        Log(LOG_LEVEL_DEBUG, "Access privileges - match found\n");
+                        Log(LOG_LEVEL_DEBUG, "Access privileges - match found");
                     }
                 }
             }
@@ -1870,18 +1867,18 @@ static Item *ContextAccessControl(EvalContext *ctx, char *in, ServerConnectionSt
 
         if (access)
         {
-            Log(LOG_LEVEL_VERBOSE, "Host %s granted access to context \"%s\"", conn->hostname, ip->name);
+            Log(LOG_LEVEL_VERBOSE, "Host %s granted access to context '%s'", conn->hostname, ip->name);
             AppendItem(&matches, ip->name, NULL);
 
             if (encrypt && LOGENCRYPT)
             {
                 /* Log files that were marked as requiring encryption */
-                Log(LOG_LEVEL_INFO, "Host %s granted access to context \"%s\"", conn->hostname, ip->name);
+                Log(LOG_LEVEL_INFO, "Host %s granted access to context '%s'", conn->hostname, ip->name);
             }
         }
         else
         {
-            Log(LOG_LEVEL_VERBOSE, "Host %s denied access to context \"%s\"", conn->hostname, ip->name);
+            Log(LOG_LEVEL_VERBOSE, "Host %s denied access to context '%s'", conn->hostname, ip->name);
         }
     }
 
@@ -2875,7 +2872,6 @@ static int CfOpenDirectory(ServerConnectionState *conn, char *sendbuffer, char *
 
     strcpy(sendbuffer + offset, CFD_TERMINATOR);
     SendTransaction(conn->sd_reply, sendbuffer, offset + 2 + strlen(CFD_TERMINATOR), CF_DONE);
-    Log(LOG_LEVEL_DEBUG, "END CfOpenDirectory(%s)\n", dirname);
     DirClose(dirh);
     return 0;
 }

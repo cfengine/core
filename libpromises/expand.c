@@ -572,8 +572,6 @@ bool ExpandScalar(const EvalContext *ctx, const char *scopeid, const char *strin
         return false;
     }
 
-    Log(LOG_LEVEL_DEBUG, "\nExpandPrivateScalar(%s,%s)\n", scopeid, string);
-
     for (sp = string; /* No exit */ ; sp++)     /* check for varitems */
     {
         char var[CF_BUFSIZE];
@@ -1132,7 +1130,7 @@ void GetNaked(char *s2, const char *s1)
 {
     if (strlen(s1) < 4)
     {
-        Log(LOG_LEVEL_ERR, "Naked variable expected, but \"%s\" is malformed", s1);
+        Log(LOG_LEVEL_ERR, "Naked variable expected, but '%s' is malformed", s1);
         strncpy(s2, s1, CF_MAXVARSIZE - 1);
         return;
     }

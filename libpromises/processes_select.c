@@ -218,7 +218,7 @@ static int SelectProcRangeMatch(char *name1, char *name2, int min, int max, char
 
         if (value == CF_NOINT)
         {
-            Log(LOG_LEVEL_INFO, "Failed to extract a valid integer from %s => \"%s\" in process list", names[i],
+            Log(LOG_LEVEL_INFO, "Failed to extract a valid integer from '%s' => '%s' in process list", names[i],
                   line[i]);
             return false;
         }
@@ -284,14 +284,14 @@ static int SelectProcTimeCounterRangeMatch(char *name1, char *name2, time_t min,
 
         if (value == CF_NOINT)
         {
-            Log(LOG_LEVEL_INFO, "Failed to extract a valid integer from %c => \"%s\" in process list", name1[i],
+            Log(LOG_LEVEL_INFO, "Failed to extract a valid integer from %c => '%s' in process list", name1[i],
                   line[i]);
             return false;
         }
 
         if ((min <= value) && (value <= max))
         {
-            Log(LOG_LEVEL_VERBOSE, "Selection filter matched counter range %s/%s = %s in [%jd,%jd] (= %jd secs)",
+            Log(LOG_LEVEL_VERBOSE, "Selection filter matched counter range '%s/%s' = '%s' in [%jd,%jd] (= %jd secs)",
                   name1, name2, line[i], (intmax_t)min, (intmax_t)max, (intmax_t)value);
             return true;
         }
@@ -324,14 +324,14 @@ static int SelectProcTimeAbsRangeMatch(char *name1, char *name2, time_t min, tim
 
         if (value == CF_NOINT)
         {
-            Log(LOG_LEVEL_INFO, "Failed to extract a valid integer from %c => \"%s\" in process list", name1[i],
+            Log(LOG_LEVEL_INFO, "Failed to extract a valid integer from %c => '%s' in process list", name1[i],
                   line[i]);
             return false;
         }
 
         if ((min <= value) && (value <= max))
         {
-            Log(LOG_LEVEL_VERBOSE, "Selection filter matched absolute %s/%s = %s in [%jd,%jd]", name1, name2, line[i],
+            Log(LOG_LEVEL_VERBOSE, "Selection filter matched absolute '%s/%s' = '%s' in [%jd,%jd]", name1, name2, line[i],
                   (intmax_t)min, (intmax_t)max);
             return true;
         }
@@ -538,7 +538,7 @@ bool IsProcessNameRunning(char *procNameRegex)
 
         if (!SplitProcLine(ip->name, colHeaders, start, end, lineSplit))
         {
-            Log(LOG_LEVEL_ERR, "IsProcessNameRunning: Could not split process line \"%s\"", ip->name);
+            Log(LOG_LEVEL_ERR, "IsProcessNameRunning: Could not split process line '%s'", ip->name);
             continue;
         }
 

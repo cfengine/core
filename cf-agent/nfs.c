@@ -468,7 +468,7 @@ int VerifyNotInFstab(EvalContext *ctx, char *name, Attributes a, Promise *pp)
 
                 if (strstr(line, "busy"))
                 {
-                    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_INTERRUPTED, pp, a, "The device under %s cannot be removed from %s\n",
+                    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_INTERRUPTED, pp, a, "The device under '%s' cannot be removed from '%s'",
                          mountpt, VFSTAB[VSYSTEMHARDCLASS]);
                     return 0;
                 }
@@ -484,7 +484,7 @@ int VerifyNotInFstab(EvalContext *ctx, char *name, Attributes a, Promise *pp)
             {
                 if (FullTextMatch(regex, ip->name))
                 {
-                    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "Deleting file system mounted on %s.\n", host);
+                    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "Deleting file system mounted on '%s'", host);
                     // Check host name matches too?
                     DeleteThisItem(&FSTABLIST, ip);
                     FSTAB_EDITS++;
@@ -556,7 +556,7 @@ int VerifyMount(EvalContext *ctx, char *name, Attributes a, Promise *pp)
     /* Since opts is either Rlist2String or xstrdup'd, we need to always free it */
     free(opts);
 
-    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "Mounting %s to keep promise\n", mountpt);
+    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "Mounting '%s' to keep promise", mountpt);
     return 0;
 }
 
@@ -591,7 +591,7 @@ int VerifyUnmount(EvalContext *ctx, char *name, Attributes a, Promise *pp)
 
         if (res != 0 && ((strstr(line, "busy")) || (strstr(line, "Busy"))))
         {
-            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_INTERRUPTED, pp, a, "The device under %s cannot be unmounted\n", mountpt);
+            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_INTERRUPTED, pp, a, "The device under '%s' cannot be unmounted", mountpt);
             cf_pclose(pfp);
             return 1;
         }
@@ -599,7 +599,7 @@ int VerifyUnmount(EvalContext *ctx, char *name, Attributes a, Promise *pp)
         cf_pclose(pfp);
     }
 
-    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "Unmounting %s to keep promise\n", mountpt);
+    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "Unmounting '%s' to keep promise", mountpt);
     return 0;
 }
 

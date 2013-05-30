@@ -250,7 +250,7 @@ static void CfCopyFile(EvalContext *ctx, char *sourcefile, char *destfile, struc
             if ((!S_ISLNK(ssb.st_mode)) && ((attr.copy.type_check) && (attr.copy.link_type != FILE_LINK_TYPE_NONE)))
             {
                 cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr,
-                     "File image exists but destination type is silly (file/dir/link doesn't match)\n");
+                     "File image exists but destination type is silly (file/dir/link doesn't match)");
                 PromiseRef(LOG_LEVEL_ERR, pp);
                 return;
             }
@@ -1707,7 +1707,7 @@ static void VerifyName(EvalContext *ctx, char *path, struct stat *sb, Attributes
         else if (!DONTDO)
         {
             TruncateFile(path);
-            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, attr, "Truncating (emptying) %s\n", path);
+            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, attr, "Truncating (emptying) '%s'", path);
         }
         else
         {
@@ -1959,7 +1959,7 @@ void VerifyFileAttributes(EvalContext *ctx, char *file, struct stat *dstat, Attr
                 }
             }
 
-            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, attr, "Object %s had permission %04jo, changed it to %04jo\n", file,
+            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, attr, "Object '%s' had permission %04jo, changed it to %04jo", file,
                  (uintmax_t)dstat->st_mode & 07777, (uintmax_t)newperm & 07777);
             break;
 
@@ -3185,7 +3185,7 @@ int VerifyOwner(EvalContext *ctx, char *file, Promise *pp, Attributes attr, stru
 
             if ((gp = getgrgid(sb->st_gid)) == NULL)
             {
-                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, attr, "File %s is not owned by any group in group database\n",
+                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, attr, "File '%s' is not owned by any group in group database",
                      file);
                 break;
             }
@@ -3406,7 +3406,7 @@ int CfCreateFile(EvalContext *ctx, char *file, Promise *pp, Attributes attr)
             }
             else
             {
-                cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, attr, "Created file %s, mode = %04jo\n", file, (uintmax_t)filemode);
+                cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, attr, "Created file '%s', mode %04jo", file, (uintmax_t)filemode);
                 close(fd);
                 umask(saveumask);
             }

@@ -21,6 +21,12 @@
 # included file COSL.txt.
 
 
+body common control
+
+{
+bundlesequence => { "example" };
+}
+
 body agent control
 
 {
@@ -29,7 +35,7 @@ abortbundleclasses => { "invalid" };
 
 ###########################################
 
-bundle agent testbundle
+bundle agent example
 
 {
 vars:

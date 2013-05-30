@@ -1776,61 +1776,48 @@ void ClassAuditLog(EvalContext *ctx, const Promise *pp, Attributes attr, Promise
 
 static void LogPromiseContext(const EvalContext *ctx, const Promise *pp)
 {
-    Rval retval;
-    char *v;
-    if (EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_VERSION, &retval))
+    Writer *w = StringWriter();
+    WriterWrite(w, "Additional promise info:");
+    if (PromiseGetHandle(pp))
     {
-        v = (char *) retval.item;
-    }
-    else
-    {
-        v = "not specified";
+        WriterWriteF(w, " handle '%s'", PromiseGetHandle(pp));
     }
 
-    const char *sp = PromiseGetHandle(pp);
-    if (sp == NULL)
     {
-        sp = PromiseID(pp);
-    }
-    if (sp == NULL)
-    {
-        sp = "(unknown)";
-    }
 
-    Log(LOG_LEVEL_INFO, "Report relates to a promise with handle '%s'", sp);
+        Rval retval;
+        if (EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_VERSION, &retval))
+        {
+            WriterWriteF(w, " version '%s'", RvalScalarValue(retval));
+        }
+    }
 
     if (PromiseGetBundle(pp)->source_path)
     {
-        Log(LOG_LEVEL_INFO, "Made in version '%s' of '%s' near line %zu",
-            v, PromiseGetBundle(pp)->source_path, pp->offset.line);
-    }
-    else
-    {
-        Log(LOG_LEVEL_INFO, "Promise is made internally by CFEngine");
+        WriterWriteF(w, " source path '%s' at line %zu", PromiseGetBundle(pp)->source_path, pp->offset.line);
     }
 
     switch (pp->promisee.type)
     {
     case RVAL_TYPE_SCALAR:
-        Log(LOG_LEVEL_INFO,"The promise was made to '%s'", (char *) pp->promisee.item);
+        WriterWriteF(w, " promisee '%s'", RvalScalarValue(pp->promisee));
         break;
 
     case RVAL_TYPE_LIST:
-    {
-        Writer *w = StringWriter();
+        WriterWrite(w, " promisee ");
         RlistWrite(w, pp->promisee.item);
-        Log(LOG_LEVEL_INFO, "The promise was made to (stakeholders) '%s'", StringWriterData(w));
-        WriterClose(w);
         break;
-    }
     default:
         break;
     }
 
     if (pp->comment)
     {
-        Log(LOG_LEVEL_INFO, "Comment '%s'", pp->comment);
+        WriterWriteF(w, " comment '%s'", pp->comment);
     }
+
+    Log(LOG_LEVEL_VERBOSE, "%s", StringWriterData(w));
+    WriterClose(w);
 }
 
 void cfPS(EvalContext *ctx, LogLevel level, PromiseResult status, const Promise *pp, Attributes attr, const char *fmt, ...)
@@ -1857,7 +1844,7 @@ void cfPS(EvalContext *ctx, LogLevel level, PromiseResult status, const Promise 
         PromiseLoggingInit(ctx);
         PromiseLoggingPromiseEnter(ctx, pp);
 
-        if (level == LOG_LEVEL_ERR)
+        if (level >= LOG_LEVEL_VERBOSE)
         {
             LogPromiseContext(ctx, pp);
         }

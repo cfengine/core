@@ -1,9 +1,0 @@
-
-The fully qualified name of the host. In order to compute this value properly, the domain
-name must be defined.
-
-@verbatim
-
-# fqhost = host.example.org
-
-@end verbatim

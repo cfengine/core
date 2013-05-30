@@ -1,3 +1,0 @@
-
-This is part of the customizable file search criteria.
-If the user-defined  program returns exit status 0, the file is considered matched.

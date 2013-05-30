@@ -1,4 +1,0 @@
-
-If @samp{true} the stored reference value is updated as soon as a warning
-message has been given. As most changes are benign (package updates etc)
-this is a common setting.

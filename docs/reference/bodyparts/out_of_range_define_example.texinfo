@@ -1,9 +1,0 @@
-
-@verbatim
-
-body process_count example(s)
-{
-out_of_range_define => { "process_anomaly", "anomaly_$(s)"};
-}
-
-@end verbatim

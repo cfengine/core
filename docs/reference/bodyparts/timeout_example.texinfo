@@ -1,9 +1,0 @@
-
-@verbatim
-
-body runagent control
-{
-timeout => "10";
-}
-
-@end verbatim

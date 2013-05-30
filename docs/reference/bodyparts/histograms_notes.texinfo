@@ -1,5 +1,0 @@
-
-@code{cf-monitord} now always keeps histograms information, so this
-option is a no-op kept for backward compatibility. It used to cause
-CFEngine to learn the conformally transformed distributions of
-fluctuations about the mean.

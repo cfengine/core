@@ -1,2 +1,0 @@
-
-Interface with TCP stream if possible.

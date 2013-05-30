@@ -1,8 +1,0 @@
-
-The date of the system as a text string.
-
-@verbatim
-
-# date = Sun Dec  7 10:39:53 2008
-
-@end verbatim

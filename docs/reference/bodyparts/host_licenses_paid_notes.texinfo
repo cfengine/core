@@ -1,6 +1,0 @@
-
-Licensees of the commercial CFEngine releases have to make a promise
-in acceptance of contract terms by setting this value to the number of licenses
-they have paid for. This is tallied with the number of licenses granted.
-This declaration should be placed in all separate configuration files, e.g.
-@file{failsafe.cf}, @file{promises.cf}.

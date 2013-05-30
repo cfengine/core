@@ -1,4 +1,0 @@
-
-The file's modification time refers to both modification of content but not other attributes
-such as permissions.
-

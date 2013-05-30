@@ -1,5 +1,0 @@
-
-Delete lines from a file unless they start with the sub-strings in the list
-given.  Note that this determination is made only on promised lines (that is,
-this attribute modifies the selection criteria, it does not make the initial
-selection).

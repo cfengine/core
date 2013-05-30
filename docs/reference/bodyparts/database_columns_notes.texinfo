@@ -1,2 +1,0 @@
-
-Columns are a list of tuplets (@var{Name,type,size}). Array items are triplets, and fixed size data elements are doublets.

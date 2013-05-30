@@ -1,5 +1,0 @@
-
-The expression must match a whole line, not a fragment within a line
-(that is, it is anchored, @pxref{Anchored vs. unanchored regular expressions}).
-
-This attribute is mutually exclusive of @code{select_line_number}.

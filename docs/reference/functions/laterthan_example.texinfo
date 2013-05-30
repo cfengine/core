@@ -1,8 +1,0 @@
-
-@verbatim
-
-classes:
-
-  "after_deadline" expression => laterthan(2000,1,1,0,0,0);
-
-@end verbatim

@@ -1,3 +1,0 @@
-
-To make disabled files in a particular manner, use this string suffix.
-The default value is @file{.cf-disabled}.

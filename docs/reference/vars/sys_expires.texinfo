@@ -1,8 +1,0 @@
-
-@verbatim
-reports:
-
- nova::
-
-  "License expires $(sys.expires)";
-@end verbatim

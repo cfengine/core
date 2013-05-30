@@ -1,4 +1,0 @@
-
-On Windows this defaults to, and must be @code{windows}.
-Unix systems can however have multiple means of registering
-services, but the choice must be available on the given system.

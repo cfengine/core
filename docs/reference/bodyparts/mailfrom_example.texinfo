@@ -1,9 +1,0 @@
-
-@verbatim
-
-body executor control
-{
-mailfrom => "mrcfengine@example.org";
-}
-
-@end verbatim

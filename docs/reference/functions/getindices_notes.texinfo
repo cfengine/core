@@ -1,2 +1,0 @@
-
-Make sure you specify the correct scope when supplying the name of the variable.

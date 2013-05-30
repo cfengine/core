@@ -1,9 +1,0 @@
-
-@verbatim
-
-body copy_from example
-{
-findertype => "MacOSX";
-}
-
-@end verbatim

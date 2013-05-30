@@ -1,6 +1,0 @@
-
-If a client's identity matches an entry in this list it is granted to
-permission to send data to the server port. Clients who are not in this
-list may not connect or send data to the server.
-
-See also the warning about regular expressions in @code{allowallconnects}.

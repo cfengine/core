@@ -1,3 +1,0 @@
-
-A way of aliasing class combinations.
-

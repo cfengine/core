@@ -1,8 +1,0 @@
-
-A possible form of attack on the fileserver is to request files based
-on time by setting the clocks incorrectly. This option prevents
-connections from clients whose clocks are drifting too far from the
-server clock (where "too far" is currently defined as "more than an hour
-off"). This serves as a warning about clock asynchronization
-and also a protection against Denial of Service attempts based on
-clock corruption.

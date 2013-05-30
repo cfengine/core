@@ -1,2 +1,0 @@
-
-The default value for the @code{execcommand} is @file{WORKDIR/bin/cf-agent}.

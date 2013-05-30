@@ -1,5 +1,0 @@
-
-This is part of the restriction of privilege for child processes when
-running @code{cf-agent} as the root group, or a group with
-privileges. It is ignored on windows, as processes do not have any
-groups associated with them.

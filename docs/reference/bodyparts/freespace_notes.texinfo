@@ -1,6 +1,0 @@
-
-The amount of freespace that is promised on a storage device. Once
-this promise is found not to be kept (that is, if the free space falls below
-the promised value), warnings are generated.  You may also
-want to use the results of this promise to control other promises,
-@xref{classes in *}.

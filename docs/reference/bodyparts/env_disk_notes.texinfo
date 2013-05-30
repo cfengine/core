@@ -1,4 +1,0 @@
-
-This parameter is currently unsupported, for future extension.
-
-This attribute conflicts with @code{env_spec}.

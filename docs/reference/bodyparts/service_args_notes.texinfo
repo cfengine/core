@@ -1,8 +1,0 @@
-
-These arguments will only be passed if CFEngine Nova starts the
-service. Thus, set @code{service_autostart_policy} to @code{none}
-to ensure that the arguments are always passed.
-
-Escaped quoutes can be used to pass an argument contianing spaces
-as a single argument, e.g. "-f \"file name.conf\"". Passing arguments
-is optional.

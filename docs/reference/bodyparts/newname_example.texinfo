@@ -1,9 +1,0 @@
-
-@verbatim
-
-body rename example(s)
-{
-newname => "$(s)";
-}
-
-@end verbatim

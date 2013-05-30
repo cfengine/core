@@ -1,9 +1,0 @@
-
-@verbatim
-
-body copy_from example
-{
-copy_size => irange("0","50000");
-} 
-
-@end verbatim

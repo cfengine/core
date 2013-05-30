@@ -1,3 +1,0 @@
-
-Attempt to time-out after this number of seconds. This cannot be guaranteed as not all
-commands are willing to be interrupted in case of failure.

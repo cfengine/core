@@ -1,7 +1,0 @@
-
-
-When editing a file using the field or column model, blank fields, especially
-at the start and end are generally discarded. If this is set to true, CFEngine
-will retain the blank fields and print the appropriate number of field separators. 
-
-

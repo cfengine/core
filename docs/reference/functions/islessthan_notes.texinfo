@@ -1,5 +1,0 @@
-
-The complement of @code{isgreaterthan}. 
-The comparison is made numerically if possible. If the values are
-strings, the result is identical to that of comparing with @samp{strcmp()}.
-

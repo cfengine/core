@@ -1,4 +1,0 @@
-
-This function returns true if the canonical form of
-the argument is already a defined class. This is useful, for example,
-transforming variables into classes, @xref{Function canonify}.

@@ -1,5 +1,0 @@
-
-This pattern is used in determining when a new package record
-begins. It is used when package managers (like the solaris package
-manager) use multi-line output formats.
-This pattern matches the first line of a new record.

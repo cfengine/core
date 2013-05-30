@@ -1,5 +1,0 @@
-
-Default behaviour is to set the @samp{x} flag on directories
-automatically if the @samp{r} flag is specified when specifying
-multiple files in a single promise. This is ignored on windows, as the
-permission model uses ACLs.

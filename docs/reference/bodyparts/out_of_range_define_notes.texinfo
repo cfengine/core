@@ -1,3 +1,0 @@
-
-Classes to activate remedial promises conditional on this promise failure
-to be kept.

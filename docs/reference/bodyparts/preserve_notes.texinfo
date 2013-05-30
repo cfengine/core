@@ -1,6 +1,0 @@
-
-Ensures the destination file (promiser) gets the same Unix mode
-as the source. This also applies to remote copies.
-
-@i{History}: Was introduced in version 3.1.0b3,Nova 2.0.0b1 (2010)
-

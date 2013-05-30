@@ -1,8 +1,0 @@
-
-Use this as an alternative to auditing to use the syslog mechanism to centralize
-or manage messaging from CFEngine. A backup of these messages will still be
-kept in @file{WORKDIR/outputs} if you are using @code{cf-execd}.
-
-On native Windows version of CFEngine (Nova or above), using
-@samp{verbose} will include a message when the promise is kept or
-repaired in the event log.

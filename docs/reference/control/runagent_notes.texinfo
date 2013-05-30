@@ -1,8 +1,0 @@
-
-Settings describing the details of the fixed behavioural promises made by
-@code{cf-runagent}.
-The most important parameter here is the list of hosts that the agent
-will poll for connections. This is easily read in from a file list,
-however when doing so always have a stable input source that does not
-depend on the network (including a database or directory service) in
-any way: introducing such dependencies makes configuration brittle.

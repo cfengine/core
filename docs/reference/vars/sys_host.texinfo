@@ -1,9 +1,0 @@
-
-The name of the current host, according to the kernel. It is undefined whether this
-is qualified or unqualified with a domain name.
-
-@verbatim
-
-# host = myhost
-
-@end verbatim

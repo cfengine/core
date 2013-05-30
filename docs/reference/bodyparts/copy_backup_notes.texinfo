@@ -1,7 +1,0 @@
-
-Determines whether a backup of the previous version is kept on the
-system. This should be viewed in connection with the system repository,
-since a defined repository affects the location at which the backup
-is stored.  See
-@ref{default_repository in agent, ,default_repository} and
-@ref{repository in files, ,repository} for further details.

@@ -1,9 +1,0 @@
-
-@verbatim
-body common control
-{
-ignore_missing_inputs => "true";
-
-inputs => { "include1.cf", "might_exist.cf" };
-}
-@end verbatim

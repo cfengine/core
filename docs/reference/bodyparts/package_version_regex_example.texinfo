@@ -1,9 +1,0 @@
-
-@verbatim
-
-body package_method rpm
-{
-package_version_regex => "[^\s]+ ([^.]+).*";
-}
-
-@end verbatim

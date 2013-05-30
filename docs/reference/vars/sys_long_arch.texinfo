@@ -1,9 +1,0 @@
-
-The long architecture name for this system kernel. This name is sometimes quite unwieldy
-but can be useful for logging purposes.
-
-@verbatim
-
-# long_arch = linux_x86_64_2_6_22_19_0_1_default__1_SMP_2008_10_14_22_17_43__0200
-
-@end verbatim

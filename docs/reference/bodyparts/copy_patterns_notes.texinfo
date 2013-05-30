@@ -1,6 +1,0 @@
-
-During the linking of files, it is sometimes useful to buffer changes
-with an actual copy, especially if the link is to an emphemeral file
-system. This list of patterns matches files that arise during a
-linking policy. A positive match means that the file should be copied
-and updated by modification time.

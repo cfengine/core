@@ -1,9 +1,0 @@
-
-@verbatim
-
-body executor control
-{
-executorfacility => "LOG_USER";
-}
-
-@end verbatim

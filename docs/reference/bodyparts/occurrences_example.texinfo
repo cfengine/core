@@ -1,9 +1,0 @@
-
-@verbatim
-
-body replace_with example
-{
-occurrences => "first";		# Warning! Using "first" is non-convergent
-}
-
-@end verbatim

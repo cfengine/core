@@ -1,6 +1,0 @@
-
-Equivalent to (and when present, overrides) the command line option @samp{-I}.
-Sets the default output level `permanently' within the class context indicated.
-
-Every promiser makes an implicit default promise to use output settings declared
-using @code{outputs} promises.

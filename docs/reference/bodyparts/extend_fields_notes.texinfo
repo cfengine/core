@@ -1,8 +1,0 @@
-
-If a user specifies a field that does not exist, because there are not
-so many fields, this allows the number of fields to be extended.
-Without this setting, CFEngine will issue an error if a non-existent field
-is referenced.
-Blank fields in a tabular file can be eliminated or kept depending
-in this setting. If in doubt, set this to true.
-

@@ -1,3 +1,0 @@
-
-This test is applied in all recursive/depth searches.
-

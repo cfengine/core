@@ -39,7 +39,7 @@ bundle agent testbundle
 {
 files:
 
-  "/home/mark/tmp/web" -> "me"
+  "/home/mark/tmp/web"
 
    changes      => detect_all_change,
    depth_search => recurse("inf");

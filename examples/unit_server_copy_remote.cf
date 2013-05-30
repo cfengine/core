@@ -39,15 +39,6 @@
 ########################################################
 
 body common control
-{
-bundlesequence  => { "testbundle" };
-version => "1.2.3";
-#fips_mode => "true";
-}
-
-########################################################
-
-body common control
 
 {
 bundlesequence  => { "testbundle"  };

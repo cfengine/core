@@ -5,7 +5,7 @@ body common control
 bundlesequence => { test("/tmp/test.txt") };
 }
 
-bundle agent test(f) 
+bundle agent example(f) 
 {
 vars:
 

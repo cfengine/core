@@ -22,10 +22,10 @@
 
 body common control 
 {
-bundlesequence => { "test" };
+bundlesequence => { "example" };
 }
 
-bundle agent test 
+bundle agent example 
 {
 vars:
     any::

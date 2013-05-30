@@ -29,7 +29,7 @@
 body common control
 
 {
-bundlesequence  => { "testbundle"  };
+bundlesequence  => { "example"  };
 }
 
 ########################################################
@@ -42,7 +42,7 @@ agentaccess => { "mark", "root" };
 
 ########################################################
 
-bundle agent testbundle
+bundle agent example
 
 {
 commands:

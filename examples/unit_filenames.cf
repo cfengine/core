@@ -24,7 +24,13 @@
 # filenames
 #
 
-bundle agent test
+body common control
+
+{
+bundlesequence => { "example" };
+}
+
+bundle agent example
 {
 files:
 
@@ -39,6 +45,3 @@ create => "true";
   "etc/passwd"
 create => "true";
 }
-
-
-

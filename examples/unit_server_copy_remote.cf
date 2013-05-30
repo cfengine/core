@@ -39,23 +39,14 @@
 ########################################################
 
 body common control
+
 {
-bundlesequence  => { "testbundle" };
-version => "1.2.3";
-#fips_mode => "true";
+bundlesequence  => { "example"  };
 }
 
 ########################################################
 
-body common control
-
-{
-bundlesequence  => { "testbundle"  };
-}
-
-########################################################
-
-bundle agent testbundle
+bundle agent example
 
 {
 files:

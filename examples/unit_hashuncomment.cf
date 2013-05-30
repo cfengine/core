@@ -30,7 +30,7 @@ body common control
 
 {
 version => "1.2.3";
-bundlesequence  => { "testbundle"  };
+bundlesequence  => { "example"  };
 }
 
 # try this on some test data like
@@ -42,7 +42,7 @@ bundlesequence  => { "testbundle"  };
 
 ########################################################
 
-bundle agent testbundle
+bundle agent example
 
 {
 files:

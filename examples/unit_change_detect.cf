@@ -29,17 +29,17 @@
 body common control
 
 {
-bundlesequence  => { "testbundle"  };
+bundlesequence  => { "example"  };
 }
 
 ########################################################
 
-bundle agent testbundle
+bundle agent example
 
 {
 files:
 
-  "/home/mark/tmp/web" -> "me"
+  "/home/mark/tmp/web"  # Directory to monitor for changes.
 
    changes      => detect_all_change,
    depth_search => recurse("inf");

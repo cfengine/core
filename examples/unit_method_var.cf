@@ -5,7 +5,7 @@
 
 body common control
 {
-bundlesequence => { "test" };
+bundlesequence => { "example" };
 }
 
 ###########################################

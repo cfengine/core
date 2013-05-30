@@ -25,14 +25,10 @@
 #
 
 body common control
-   {
-   any::
 
-      bundlesequence  => { 
-                         def,
-                         modtest
-                         };
-   }
+{
+bundlesequence  => { "def", "example" };
+}
 
 ###################################################################
 
@@ -57,7 +53,7 @@ reports:
 
 ###################################################################
 
-bundle agent modtest
+bundle agent example
 
 {
 vars:

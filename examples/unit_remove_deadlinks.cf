@@ -27,18 +27,15 @@
 #######################################################
 
 body common control
-   {
-   any::
 
-      bundlesequence  => { 
-                         "testbundle"
-                         };
-   }
+{
+bundlesequence  => { "example" };
+}
 
 
 ############################################
 
-bundle agent testbundle
+bundle agent example
 
 {
 files:

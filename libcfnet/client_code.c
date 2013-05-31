@@ -1199,6 +1199,7 @@ static AgentConnection *GetIdleConnectionToServer(const char *server)
     {
         Log(LOG_LEVEL_ERR,
             "GetIdleConnectionToServer: could not resolve '%s'", server);
+        return NULL;
     }
 
     ThreadLock(&cft_serverlist);

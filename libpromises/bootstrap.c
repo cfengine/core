@@ -319,7 +319,7 @@ bool WriteBuiltinFailsafePolicyToPath(const char *filename)
             "      handle => \"cfe_internal_bootstrap_update_commands_generate_keys\";\n"
             "\n#\n\n"
             " files:\n\n"
-            "  !windows::\n"
+            "  !windows.have_ppkeys::\n"
             "   \"$(sys.workdir)/inputs\" \n"
             "            handle => \"cfe_internal_bootstrap_update_files_sys_workdir_inputs_not_windows\",\n"
 #ifdef __MINGW32__
@@ -330,7 +330,7 @@ bool WriteBuiltinFailsafePolicyToPath(const char *filename)
             "      depth_search => u_recurse(\"inf\"),\n"
             "           classes => repaired(\"got_policy\");\n"
             "\n"
-            "  windows::\n"
+            "  windows.have_ppkeys::\n"
             "   \"$(sys.workdir)\\inputs\" \n"
             "            handle => \"cfe_internal_bootstrap_update_files_sys_workdir_inputs_windows\",\n"
 #ifdef __MINGW32__

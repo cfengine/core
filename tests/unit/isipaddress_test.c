@@ -63,7 +63,9 @@ static void test_isipaddress_invalid(void)
     assert_true(!IsIPAddress("localhost.localdomain"));
     assert_true(!IsIPAddress("-1.2.3.4"));
 
-    /* glibc 2.15 fails on the following tests! */
+    /* glibc 2.15 accepts the following as valid IP addresses trying to
+     * imitate BSD inet_aton() for class C, B, and A respectively. See page 4
+     * of http://tools.ietf.org/html/draft-main-ipaddr-text-rep-02 */
 //    assert_true(!IsIPAddress("34"));
 //    assert_true(!IsIPAddress("34.98"));
 //    assert_true(!IsIPAddress("34.98.23"));

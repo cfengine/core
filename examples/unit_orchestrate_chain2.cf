@@ -12,7 +12,7 @@
 body common control
 {
 bundlesequence => { "weak_dependency_symphony" };
-inputs => { "cfengine_stdlib.cf" };
+inputs => { "libraries/cfengine_stdlib.cf" };
 }
 
 body server control

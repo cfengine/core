@@ -24,7 +24,7 @@
 body common control
 {
 bundlesequence  => { "my_commands" };
-inputs => { "cfengine_stdlib.cf" };
+inputs => { "libraries/cfengine_stdlib.cf" };
 }
 
 

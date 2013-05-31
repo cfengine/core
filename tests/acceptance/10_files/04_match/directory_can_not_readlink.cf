@@ -1,0 +1,50 @@
+#######################################################
+#
+# Delete a file in a nonexistant directory.
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+  vars:
+      "checkdir" string => "$(G.testdir)";
+
+  commands:
+      "$(G.mkdir) $(checkdir)";
+}
+
+#######################################################
+
+bundle agent test
+{
+  vars:
+    "agent" string => execresult("$(sys.cf_agent) -Kf $(this.promise_filename).sub -D AUTO 2>&1", "useshell");
+}
+
+#######################################################
+
+bundle agent check
+{
+  classes:
+      "checkpoint_fail" not => regcmp(".*CHECKPOINT.*", $(test.agent));
+      "fail" or => { checkpoint_fail,
+                     regcmp(".*$(init.checkdir).*", $(test.agent)) };
+
+  reports:
+    DEBUG::
+      "This should only pass if $(this.promise_filename).sub does not output anything about failing to readlink";
+      "Output from $(this.promise_filename).sub: $(test.agent)";
+    !fail::
+      "$(this.promise_filename) Pass";
+    fail::
+      "$(this.promise_filename) FAIL";
+}

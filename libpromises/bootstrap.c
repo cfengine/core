@@ -35,6 +35,8 @@
 #include "string_lib.h"
 #include "files_lib.h"
 
+#include <assert.h>
+
 /*
 
 Bootstrapping is a tricky sequence of fragile events. We need to map shakey/IP
@@ -110,15 +112,12 @@ bool WriteAmPolicyHubFile(const char *workdir, bool am_policy_hub)
 
 void SetPolicyServer(EvalContext *ctx, const char *new_policy_server)
 {
+    assert(new_policy_server != NULL);
+
     if (new_policy_server)
     {
         snprintf(POLICY_SERVER, CF_MAX_IP_LEN, "%s", new_policy_server);
         ScopeNewSpecial(ctx, "sys", "policy_hub", new_policy_server, DATA_TYPE_STRING);
-    }
-    else
-    {
-        POLICY_SERVER[0] = '\0';
-        ScopeNewSpecial(ctx, "sys", "policy_hub", "undefined", DATA_TYPE_STRING);
     }
 
     // Get the timestamp on policy update

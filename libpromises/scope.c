@@ -279,33 +279,6 @@ void ScopeAugment(EvalContext *ctx, const Bundle *bp, const Promise *pp, const R
 
 /*******************************************************************/
 
-static void ScopeDelete(Scope *scope)
-{
-    if (!ThreadLock(cft_vscope))
-    {
-        Log(LOG_LEVEL_ERR, "Could not lock VSCOPE");
-        return;
-    }
-
-    for (Scope *ptr = VSCOPE; ptr != NULL; ptr = ptr->next)
-    {
-        if (ptr == scope)
-        {
-            VSCOPE = scope->next;
-        }
-        else if (ptr->next == scope)
-        {
-            ptr->next = scope->next;
-        }
-        free(scope->scope);
-        HashFree(scope->hashtable);
-        free(scope);
-        break;
-    }
-
-    ThreadUnlock(cft_vscope);
-}
-
 void ScopeDeleteAll()
 {
     Scope *ptr, *this;
@@ -387,54 +360,67 @@ void ScopeCopy(const char *new_scopename, const Scope *old_scope)
 
 void ScopePushThis()
 {
-    static const char RVAL_TYPE_STACK = 'k';
+    Scope *op;
+    char name[CF_MAXVARSIZE];
 
-    Scope *op = ScopeGet("this");
-    if (!op)
+    op = ScopeGet("this");
+
+    if (op == NULL)
     {
         return;
     }
 
-    int frame_index = RlistLen(CF_STCK);
-    char name[CF_MAXVARSIZE];
-    snprintf(name, CF_MAXVARSIZE, "this_%d", frame_index + 1);
+    int frame_index = RlistLen(CF_STCK) - 1;
+    {
+        Rlist *rp = xmalloc(sizeof(Rlist));
+
+        rp->next = CF_STCK;
+        rp->item = op;
+        rp->type = CF_STACK;
+        CF_STCK = rp;
+    }
+    snprintf(name, CF_MAXVARSIZE, "this_%d", frame_index);
     free(op->scope);
     op->scope = xstrdup(name);
-
-    Rlist *rp = xmalloc(sizeof(Rlist));
-
-    rp->next = CF_STCK;
-    rp->item = op;
-    rp->type = RVAL_TYPE_STACK;
-    CF_STCK = rp;
-
-    ScopeNew("this");
 }
 
 /*******************************************************************/
 
 void ScopePopThis()
 {
+    Scope *op = NULL;
+
     if (RlistLen(CF_STCK) > 0)
     {
-        Scope *current_this = ScopeGet("this");
-        if (current_this)
+        ScopeClear("this");
         {
-            ScopeDelete(current_this);
+            Rlist *rp = CF_STCK;
+
+            if (CF_STCK == NULL)
+            {
+                ProgrammingError("Attempt to pop from empty stack");
+            }
+
+            op = rp->item;
+
+            if (rp->next == NULL)       /* only one left */
+            {
+                CF_STCK = (void *) NULL;
+            }
+            else
+            {
+                CF_STCK = rp->next;
+            }
+
+            free((char *) rp);
+        }
+        if (op == NULL)
+        {
+            return;
         }
 
-        Rlist *rp = CF_STCK;
-        CF_STCK = CF_STCK->next;
-
-        Scope *new_this = rp->item;
-        free(new_this->scope);
-        new_this->scope = xstrdup("this");
-
-        free(rp);
-    }
-    else
-    {
-        ProgrammingError("Attempt to pop from empty stack");
+        free(op->scope);
+        op->scope = xstrdup("this");
     }
 }
 

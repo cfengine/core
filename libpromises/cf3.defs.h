@@ -388,6 +388,8 @@ typedef struct
 /* Fundamental (meta) types                                              */
 /*************************************************************************/
 
+#define CF_STACK  'k'
+
 #define CF_MAPPEDLIST '#'
 
 #define CF_UNDEFINED -1

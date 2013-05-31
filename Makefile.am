@@ -12,7 +12,7 @@ SUBDIRS = libcompat libutils libcfnet $(NOVA_LIB_SUBDIRS) libpromises		\
 
 DIST_SUBDIRS = libcompat libutils libcfnet libpromises cf-agent cf-execd	\
 	cf-gendoc cf-key cf-monitord cf-promises cf-runagent cf-serverd ext	\
-	docs examples masterfiles tests
+	examples masterfiles tests
 
 # Set explicitly to avoid picking up {nova}/*.m4
 

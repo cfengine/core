@@ -6,6 +6,7 @@
 
 body common control
 {
+      inputs => { "../../default.cf.sub" };
       bundlesequence  => { symlinks };
       version => "1.0";
 }
@@ -15,7 +16,7 @@ body common control
 bundle agent symlinks
 {
   vars:
-      "checkdir" string => getenv("CHECKDIR", 256);
+      "checkdir" string => "$(G.testdir)";
 
   files:
       "$(checkdir)"

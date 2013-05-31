@@ -16,10 +16,10 @@ body common control
 bundle agent init
 {
   vars:
-      "checkdir" string => "$(G.testdir)/should-not-show-up-in-output";
+      "checkdir" string => "$(G.testdir)";
 
   commands:
-      "/bin/mkdir -p $(checkdir)";
+      "$(G.mkdir) $(checkdir)";
 }
 
 #######################################################
@@ -27,7 +27,7 @@ bundle agent init
 bundle agent test
 {
   vars:
-    "agent" string => execresult("CHECKDIR=$(init.checkdir) $(sys.cf_agent) -Kf $(this.promise_filename).sub -D AUTO 2>&1", "useshell");
+    "agent" string => execresult("$(sys.cf_agent) -Kf $(this.promise_filename).sub -D AUTO 2>&1", "useshell");
 }
 
 #######################################################

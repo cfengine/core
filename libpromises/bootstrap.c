@@ -34,6 +34,8 @@
 #include "logging.h"
 #include "string_lib.h"
 #include "files_lib.h"
+#include "misc_lib.h"                                    /* UnexpectedError */
+#include "cfnet.h"                                       /* IsIPAddress */
 
 /*
 
@@ -112,8 +114,19 @@ void SetPolicyServer(EvalContext *ctx, const char *new_policy_server)
 {
     if (new_policy_server)
     {
-        snprintf(POLICY_SERVER, CF_MAX_IP_LEN, "%s", new_policy_server);
-        ScopeNewSpecial(ctx, "sys", "policy_hub", new_policy_server, DATA_TYPE_STRING);
+        if (strlen(new_policy_server) < sizeof(POLICY_SERVER) &&
+            IsIPAddress(new_policy_server))
+        {
+            strcpy(POLICY_SERVER, new_policy_server);
+            ScopeNewSpecial(ctx, "sys", "policy_hub",
+                            new_policy_server, DATA_TYPE_STRING);
+        }
+        else
+        {
+            Log(LOG_LEVEL_ERR,
+                "Failed to set policy server to '%s': not an IP address",
+                new_policy_server);
+        }
     }
     else
     {
@@ -153,24 +166,41 @@ char *ReadPolicyServerFile(const char *workdir)
     FILE *fp = fopen(filename, "r");
     free(filename);
 
+    char *s;
     if (fp)
     {
-        if (fscanf(fp, "%63s", contents) != 1)
-        {
-            fclose(fp);
-            return NULL;
-        }
+        s = fgets(contents, sizeof(contents), fp);
         fclose(fp);
+    }
+    if (fp == NULL || s == NULL)
+    {
+        /* Inexistent or empty file: not an error, it's just agent is not
+         * bootstrapped yet. */
+        return NULL;
+    }
+
+    if (IsIPAddress(contents))
+    {
         return xstrdup(contents);
     }
     else
     {
+        Log(LOG_LEVEL_ERR, "Stored policy server '%s'"
+            " is not a valid IP address, ignoring!",
+            contents);
         return NULL;
     }
 }
 
 bool WritePolicyServerFile(const char *workdir, const char *new_policy_server)
 {
+    if (strlen(new_policy_server) >= sizeof(POLICY_SERVER) ||
+        !IsIPAddress(new_policy_server))
+    {
+        UnexpectedError("Policy server written to file should always be an IP address!");
+        return false;
+    }
+
     char *filename = PolicyServerFilename(workdir);
 
     FILE *file = fopen(filename, "w");

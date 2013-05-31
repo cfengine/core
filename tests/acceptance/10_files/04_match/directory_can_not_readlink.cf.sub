@@ -1,0 +1,42 @@
+#######################################################
+#
+# Find a directory when expecting a symlink
+#
+#######################################################
+
+body common control
+{
+      bundlesequence  => { symlinks };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent symlinks
+{
+  vars:
+      "checkdir" string => getenv("CHECKDIR", 256);
+
+  files:
+      "$(checkdir)"
+      handle => "delete_checkdir_link",
+      comment => "Delete checkdir symlink",
+      file_select => select_link("/home"),
+      delete => nodir,
+      pathtype => "literal";
+
+  reports:
+      "CHECKPOINT";
+}
+
+body file_select select_link(name)
+{
+      file_types => { "symlink" };
+      issymlinkto => { "$(name)$" };
+      file_result => "issymlinkto";
+}
+
+body delete nodir
+{
+      rmdirs => "false";
+}

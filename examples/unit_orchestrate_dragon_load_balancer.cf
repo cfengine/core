@@ -19,7 +19,7 @@
 body common control
 {
 bundlesequence => { "dragon_symphony" };
-inputs => { "cfengine_stdlib.cf" };
+inputs => { "libraries/cfengine_stdlib.cf" };
 }
 
 ############################################################

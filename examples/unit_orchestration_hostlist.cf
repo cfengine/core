@@ -19,7 +19,7 @@
 
 body common control
 {
-inputs => { "cfengine_stdlib.cf" };
+inputs => { "libraries/cfengine_stdlib.cf" };
 bundlesequence => { "orchestration_hostlist_update",  "orchestration_hostlist_use"};
 }
 

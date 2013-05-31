@@ -5,7 +5,7 @@
 body common control
 {
 bundlesequence => { "example" };
-inputs => { "cfengine_stdlib.cf" };
+inputs => { "libraries/cfengine_stdlib.cf" };
 }
 
 ###########################################

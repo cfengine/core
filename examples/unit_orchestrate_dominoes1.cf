@@ -12,7 +12,7 @@
 body common control
 {
 bundlesequence => { "dominoes_symphony" };
-inputs => { "cfengine_stdlib.cf" };
+inputs => { "libraries/cfengine_stdlib.cf" };
 }
 
 ############################################################

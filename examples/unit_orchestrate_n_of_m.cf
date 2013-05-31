@@ -13,7 +13,7 @@
 body common control
 {
 bundlesequence => { "n_of_m_symphony" };
-inputs => { "cfengine_stdlib.cf" };
+inputs => { "libraries/cfengine_stdlib.cf" };
 }
 
 ############################################################

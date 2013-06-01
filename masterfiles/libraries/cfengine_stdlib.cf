@@ -1003,7 +1003,7 @@ chdir => "$(s)";
 body contain in_dir_shell(s)
 {
 chdir => "$(s)";
-useshell => "useshell";
+useshell => "true";
 }
 
 ##
@@ -1018,21 +1018,21 @@ no_output => "true";
 
 body contain in_shell
 {
-useshell => "useshell";
+useshell => "true";
 }
 
 ##
 
 body contain in_shell_bg
 {
-useshell => "useshell";
+useshell => "true";
 }
 
 ##
 
 body contain in_shell_and_silent
 {
-useshell => "useshell";
+useshell => "true";
 no_output => "true";
 }
 
@@ -1040,7 +1040,7 @@ no_output => "true";
 
 body contain in_dir_shell_and_silent(dir)
 {
-useshell => "useshell";
+useshell => "true";
 no_output => "true";
 chdir => "$(dir)";
 }
@@ -1050,7 +1050,7 @@ chdir => "$(dir)";
 body contain setuid(x)
 {
 exec_owner => "$(x)";
-useshell => "noshell";
+useshell => "false";
 }
 
 ##
@@ -1058,7 +1058,7 @@ useshell => "noshell";
 body contain setuid_sh(x)
 {
 exec_owner => "$(x)";
-useshell => "useshell";
+useshell => "true";
 }
 
 ##
@@ -1067,7 +1067,7 @@ body contain setuidgid_sh(owner,group)
 {
 exec_owner => "$(owner)";
 exec_group => "$(group)";
-useshell => "useshell";
+useshell => "true";
 }
 
 ##
@@ -1075,7 +1075,7 @@ useshell => "useshell";
 body contain jail(owner,root,dir)
 {
 exec_owner => "$(owner)";
-useshell => "useshell";
+useshell => "true";
 chdir => "$(dir)";
 chroot => "$(root)";
 }

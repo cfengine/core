@@ -30,13 +30,13 @@ bundle agent mycopy
 {
 files:
 
-  "/home/mark/tmp/test_plain"
+  "/tmp/profile"   # /tmp/profile is the copy destination
 
-    copy_from => local_cp("$(sys.workdir)/bin/file");
+      comment => "/tmp/profile promises to be a copy of /etc/profile to demonstrate copying a local file",
+    copy_from => local_cp("/etc/profile");  # /etc/profile is the copy source
 
-  "/home/mark/tmp/test_remote_plain"
+  "/tmp/profile2"
 
-    copy_from => secure_cp("$(sys.workdir)/bin/file","serverhost");
+      comment => "Demonstrate remote file copying.  /tmp/profile2 promises to be a copy of cfengine://serverhost.example.org/repo/config-files/profile",
+    copy_from => secure_cp("/repo/config-files/profile","serverhost.example.org");
 }
-
-

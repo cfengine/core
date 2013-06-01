@@ -16,7 +16,10 @@ body common control
 bundle agent symlinks
 {
   vars:
-      "checkdir" string => "$(G.testdir)";
+      "checkdir" string => "$(G.testdir)/should-not-show-up-in-output";
+
+  classes:
+      "checkdir_exists" expression => fileexists($(checkdir));
 
   files:
       "$(checkdir)"
@@ -27,6 +30,7 @@ bundle agent symlinks
       pathtype => "literal";
 
   reports:
+    checkdir_exists::
       "CHECKPOINT";
 }
 

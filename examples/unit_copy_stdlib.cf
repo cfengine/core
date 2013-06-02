@@ -30,13 +30,14 @@ bundle agent mycopy
 {
 files:
 
-  "/tmp/profile"   # /tmp/profile is the copy destination
+  "/tmp/test_plain"  # Path and name of the file we wish to copy to 
 
-      comment => "/tmp/profile promises to be a copy of /etc/profile to demonstrate copying a local file",
-    copy_from => local_cp("/etc/profile");  # /etc/profile is the copy source
+      comment => "/tmp/test_plain promises to be an up-to-date copy of /bin/echo to demonstrate copying a local file",
+    copy_from => local_cp("/bin/echo");  # Copy locally from path/filename
 
-  "/tmp/profile2"
+  "/tmp/test_plain_remote"
 
-      comment => "Demonstrate remote file copying.  /tmp/profile2 promises to be a copy of cfengine://serverhost.example.org/repo/config-files/profile",
-    copy_from => secure_cp("/repo/config-files/profile","serverhost.example.org");
+      comment => "Demonstrate remote file copying.  /tmp/test_plain_remote promises to be a copy of cfengine://serverhost.example.org/repo/config-files/motd",
+    copy_from => secure_cp("/repo/config-files/motd","serverhost.example.org"); # Copy remotely from path/filename and specified host
+                                                                                # Change to actual host name or IP address
 }

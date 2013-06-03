@@ -16,10 +16,10 @@ body common control
 bundle agent init
 {
   vars:
-      "checkdir" string => "$(G.testdir)";
+      "checkdir" string => "$(G.testdir)/should-not-show-up-in-output";
 
-  commands:
-      "$(G.mkdir) $(checkdir)";
+  files:
+      "$(checkdir)/." create => "true";
 }
 
 #######################################################
@@ -27,7 +27,7 @@ bundle agent init
 bundle agent test
 {
   vars:
-    "agent" string => execresult("$(sys.cf_agent) -Kf $(this.promise_filename).sub -D AUTO 2>&1", "useshell");
+    "agent" string => execresult("$(sys.cf_agent) -Kf $(G.cwd)/$(this.promise_filename).sub -D AUTO 2>&1", "useshell");
 }
 
 #######################################################
@@ -37,12 +37,15 @@ bundle agent check
   classes:
       "checkpoint_fail" not => regcmp(".*CHECKPOINT.*", $(test.agent));
       "fail" or => { checkpoint_fail,
+                     regcmp(".*Unable to read link.*", $(test.agent)),
                      regcmp(".*$(init.checkdir).*", $(test.agent)) };
 
   reports:
     DEBUG::
       "This should only pass if $(this.promise_filename).sub does not output anything about failing to readlink";
       "Output from $(this.promise_filename).sub: $(test.agent)";
+    DEBUG.checkpoint_fail::
+      "The secondary policy in $(this.promise_filename).sub did not checkpoint correctly";
     !fail::
       "$(this.promise_filename) Pass";
     fail::

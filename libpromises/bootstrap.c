@@ -35,6 +35,8 @@
 #include "string_lib.h"
 #include "files_lib.h"
 
+#include <assert.h>
+
 /*
 
 Bootstrapping is a tricky sequence of fragile events. We need to map shakey/IP
@@ -110,15 +112,12 @@ bool WriteAmPolicyHubFile(const char *workdir, bool am_policy_hub)
 
 void SetPolicyServer(EvalContext *ctx, const char *new_policy_server)
 {
+    assert(new_policy_server != NULL);
+
     if (new_policy_server)
     {
         snprintf(POLICY_SERVER, CF_MAX_IP_LEN, "%s", new_policy_server);
         ScopeNewSpecial(ctx, "sys", "policy_hub", new_policy_server, DATA_TYPE_STRING);
-    }
-    else
-    {
-        POLICY_SERVER[0] = '\0';
-        ScopeNewSpecial(ctx, "sys", "policy_hub", "undefined", DATA_TYPE_STRING);
     }
 
     // Get the timestamp on policy update
@@ -315,12 +314,12 @@ bool WriteBuiltinFailsafePolicyToPath(const char *filename)
             "          handle => \"cfe_internal_bootstrap_update_classes_have_promises_cf\";\n"
             "\n#\n\n"
             " commands:\n\n"
-            "  !have_ppkeys::\n"
+            "  gen_keys::\n"
             "   \"$(sys.cf_key)\"\n"
             "      handle => \"cfe_internal_bootstrap_update_commands_generate_keys\";\n"
             "\n#\n\n"
             " files:\n\n"
-            "  !windows::\n"
+            "  !windows.have_ppkeys::\n"
             "   \"$(sys.workdir)/inputs\" \n"
             "            handle => \"cfe_internal_bootstrap_update_files_sys_workdir_inputs_not_windows\",\n"
 #ifdef __MINGW32__
@@ -331,7 +330,7 @@ bool WriteBuiltinFailsafePolicyToPath(const char *filename)
             "      depth_search => u_recurse(\"inf\"),\n"
             "           classes => repaired(\"got_policy\");\n"
             "\n"
-            "  windows::\n"
+            "  windows.have_ppkeys::\n"
             "   \"$(sys.workdir)\\inputs\" \n"
             "            handle => \"cfe_internal_bootstrap_update_files_sys_workdir_inputs_windows\",\n"
 #ifdef __MINGW32__
@@ -375,6 +374,9 @@ bool WriteBuiltinFailsafePolicyToPath(const char *filename)
             "             classes => repaired(\"executor_started\");\n"
             "\n#\n\n"
             " reports:\n\n"
+            "  !have_ppkeys::\n"
+            "   \"Could not find key at $(sys.workdir)/ppkeys/localhost.pub\"\n"
+            "     classes => repaired(\"gen_keys\");"
             "  bootstrap_mode.am_policy_hub::\n"
             "   \"This host assumes the role of policy distribution host\"\n"
             "      handle => \"cfe_internal_bootstrap_update_reports_assume_policy_hub\";\n"
@@ -384,7 +386,7 @@ bool WriteBuiltinFailsafePolicyToPath(const char *filename)
             "  got_policy::\n"
             "   \"Updated local policy from policy server\"\n"
             "      handle => \"cfe_internal_bootstrap_update_reports_got_policy\";\n"
-            "  !got_policy.!have_promises_cf::\n"
+            "  !got_policy.!have_promises_cf.have_ppkeys::\n"
             "   \"Failed to copy policy from policy server at $(sys.policy_hub):/var/cfengine/masterfiles\n"
             "       Please check\n"
             "       * cf-serverd is running on $(sys.policy_hub)\n"
@@ -397,19 +399,18 @@ bool WriteBuiltinFailsafePolicyToPath(const char *filename)
             "  server_started::\n"
             "   \"Started the server\"\n"
             "      handle => \"cfe_internal_bootstrap_update_reports_started_serverd\";\n"
-            "  am_policy_hub.!server_started.!have_promises_cf::\n"
+            "  am_policy_hub.!server_started.!have_promises_cf.have_ppkeys::\n"
             "   \"Failed to start the server\"\n"
             "      handle => \"cfe_internal_bootstrap_update_reports_failed_to_start_serverd\";\n"
             "  executor_started::\n"
             "   \"Started the scheduler\"\n"
             "      handle => \"cfe_internal_bootstrap_update_reports_started_execd\";\n"
-            "  !executor_started.!have_promises_cf::\n"
+            "  !executor_started.!have_promises_cf.have_ppkeys::\n"
             "   \"Did not start the scheduler\"\n"
             "      handle => \"cfe_internal_bootstrap_update_reports_failed_to_start_execd\";\n"
             "  !executor_started.have_promises_cf::\n"
             "   \"You are running a hard-coded failsafe. Please use the following command instead.\n"
-            "    - 3.0.0: $(sys.cf_agent) -f $(sys.workdir)/inputs/failsafe/failsafe.cf\n"
-            "    - 3.0.1: $(sys.cf_agent) -f $(sys.workdir)/inputs/update.cf\"\n"
+            "      $(sys.cf_agent) -f $(sys.workdir)/inputs/update.cf\"\n"
             "      handle => \"cfe_internal_bootstrap_update_reports_run_another_failsafe_instead\";\n"
             "}\n\n"
             "############################################\n"

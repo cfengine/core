@@ -182,8 +182,13 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
 
     if ((PUBKEY == NULL) || (PRIVKEY == NULL))
     {
-        Log(LOG_LEVEL_ERR, "No public/private key pair found at '%s'", PublicKeyFile(GetWorkDir()));
-        return false;
+        /* Try once more to load the keys, maybe the system is converging. */
+        LoadSecretKeys(NULL);
+        if ((PUBKEY == NULL) || (PRIVKEY == NULL))
+        {
+            Log(LOG_LEVEL_ERR, "No public/private key pair found at '%s'", PublicKeyFile(GetWorkDir()));
+            return false;
+        }
     }
 
     enterprise_field = CfEnterpriseOptions();

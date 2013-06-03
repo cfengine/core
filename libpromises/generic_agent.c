@@ -1542,7 +1542,7 @@ void WritePID(char *filename)
 
 void BundleHashVariables(EvalContext *ctx, Bundle *bundle)
 {
-    Log(LOG_LEVEL_VERBOSE, "Resolving varibales in bundle '%s'", bundle->name);
+    Log(LOG_LEVEL_VERBOSE, "Resolving variables in bundle '%s'", bundle->name);
 
     for (size_t j = 0; j < SeqLength(bundle->promise_types); j++)
     {

@@ -1229,9 +1229,16 @@ static FnCallResult FnCallGetIndices(EvalContext *ctx, FnCall *fp, Rlist *finala
 
         if (strncmp(match, assoc->lval, strlen(match)) == 0)
         {
+            char *sp;
+            sp  = strstr(assoc->lval + strlen(match), "\\[");
+            if (sp==NULL)
+            {
+                sp = assoc->lval + strlen(match);
+            }
+            size_t length = strcspn(sp, "\\]\n");
+            length = length < CF_MAXVARSIZE ? length : CF_MAXVARSIZE - 1;
 
-            index[0] = '\0';
-            strlcpy(index, ExtractFirstReference("([^\\]\\[\n]+)", assoc->lval + strlen(match)), CF_MAXVARSIZE);
+            strlcpy(index, sp, length + 1);
 
             if (strlen(index) > 0)
             {

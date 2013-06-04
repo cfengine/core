@@ -230,28 +230,34 @@ void CloseAllDB(void)
     pthread_mutex_unlock(&db_handles_lock);
 }
 
-/* Closes all open DB handles and *KEEPS ALL MUTEXES LOCKED*. Make sure you
- * exit soon afterwards...
-
- * This way we make sure we acquire mutexes and close DBs without leaving a
- * window of opportunity for other threads to re-open or re-access them. */
+/* Wait for all users of all databases to close the DBs. Then acquire the
+ * mutexes *AND KEEP THEM LOCKED* so that no background thread can open any
+ * database. So make sure you exit soon... */
 void CloseAllDBExit()
 {
     pthread_mutex_lock(&db_handles_lock);
 
-    for (int i = 0; i < dbid_count; ++i)
+    for (int i = 0; i < dbid_count; i++)
     {
         if (db_handles[i].filename)
         {
-            /* This lock is used only for OpenDB() and CloseDB() so still a
-             * thread might try to write to a now closed database if it has
-             * already acquired a handle, which I'd say it's harmless. */
+            /* Wait until all DB users are served, or a threshold is reached */
+            int count = 0;
             pthread_mutex_lock(&db_handles[i].lock);
-
-            if (db_handles[i].refcount != 0)
+            while (db_handles[i].refcount > 0 && count < 1000)
             {
-                DBPrivCloseDB(db_handles[i].priv);
+                pthread_mutex_unlock(&db_handles[i].lock);
+
+                struct timespec sleeptime = {
+                    .tv_sec = 0,
+                    .tv_nsec = 10000000                         /* 10 ms */
+                };
+                nanosleep(&sleeptime, NULL);
+                count++;
+
+                pthread_mutex_lock(&db_handles[i].lock);
             }
+            /* Keep mutex locked. */
         }
     }
 }

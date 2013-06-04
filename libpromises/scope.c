@@ -287,16 +287,24 @@ static void ScopeDelete(Scope *scope)
         return;
     }
 
-    for (Scope *ptr = VSCOPE; ptr != NULL; ptr = ptr->next)
+    Scope *prev = NULL;
+
+    for (Scope *curr = VSCOPE; curr; prev = curr, curr = curr->next)
     {
-        if (ptr == scope)
+        if (curr != scope)
+        {
+            continue;
+        }
+
+        if (!prev)
         {
             VSCOPE = scope->next;
         }
-        else if (ptr->next == scope)
+        else
         {
-            ptr->next = scope->next;
+            prev->next = curr->next;
         }
+
         free(scope->scope);
         HashFree(scope->hashtable);
         free(scope);
@@ -420,6 +428,7 @@ void ScopePopThis()
         Scope *current_this = ScopeGet("this");
         if (current_this)
         {
+
             ScopeDelete(current_this);
         }
 

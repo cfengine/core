@@ -8,7 +8,7 @@ AM_CFLAGS = @CFLAGS@ \
 
 AM_YFLAGS = -d
 
-AM_LDFLAGS = -version-info 1:0:0 -no-undefined
+AM_LDFLAGS = -version-info 3:5:0 -no-undefined
 
 libpromises_la_LIBADD = ../libutils/libutils.la ../libcfnet/libcfnet.la $(NOVA_LDADD)
 

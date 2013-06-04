@@ -87,6 +87,7 @@
        Bugfixes:
        - bundles are allowed to be empty (Redmine #2411)
        - Fixed '.' and '-' not being accepted by a commands module. (Redmine #2384)
+       - Correct parsing of list variables by a command module. (Redmine #2239)
        - Fixed issue with package management and warn. (Redmine #1831)
        - Fixed JSON crash. (Redmine #2151)
        - Improved error checking when using fgets(). (Redmine #2451)

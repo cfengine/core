@@ -443,6 +443,12 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
 
     Log(LOG_LEVEL_DEBUG, "Received: [%s] on socket %d", recvbuffer, conn->sd_reply);
 
+    /* Don't process request if we're signalled to exit. */
+    if (IsPendingTermination())
+    {
+        return false;
+    }
+
     switch (GetCommand(recvbuffer))
     {
     case PROTOCOL_COMMAND_EXEC:

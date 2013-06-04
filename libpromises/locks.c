@@ -556,9 +556,6 @@ CfLock AcquireLock(EvalContext *ctx, char *operand, char *host, time_t now, Tran
     CfLock this;
     unsigned char digest[EVP_MAX_MD_SIZE + 1];
 
-    /* Register a cleanup handler */
-    pthread_once(&lock_cleanup_once, &RegisterLockCleanup);
-
     this.last = (char *) CF_UNDEFINED;
     this.lock = (char *) CF_UNDEFINED;
     this.log = (char *) CF_UNDEFINED;
@@ -701,6 +698,14 @@ CfLock AcquireLock(EvalContext *ctx, char *operand, char *host, time_t now, Tran
         }
 
         WriteLock(cflock);
+
+        /* Register a cleanup handler *after* having opened the DB, so that
+         * CloseAllDB() atexit() handler is registered in advance, and it is
+         * called after removing this lock.
+
+         * There is a small race condition here that we'll leave a stale lock
+         * if we exit before the following line. */
+        pthread_once(&lock_cleanup_once, &RegisterLockCleanup);
     }
 
     ReleaseCriticalSection();

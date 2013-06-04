@@ -91,7 +91,6 @@ static int cf_stat(char *file, struct stat *buf, FileCopy fc, AgentConnection *c
 #ifndef __MINGW32__
 static int cf_readlink(EvalContext *ctx, char *sourcefile, char *linkbuf, int buffsize, Attributes attr, Promise *pp, AgentConnection *conn);
 #endif
-static bool CopyRegularFileDiskReport(EvalContext *ctx, char *source, char *destination, Attributes attr, Promise *pp);
 static int SkipDirLinks(char *path, const char *lastnode, Recursion r);
 static int DeviceBoundary(struct stat *sb, dev_t rootdevice);
 static void LinkCopy(EvalContext *ctx, char *sourcefile, char *destfile, struct stat *sb, Attributes attr, Promise *pp, CompressedArray **inode_cache, AgentConnection *conn);
@@ -1190,8 +1189,9 @@ int CopyRegularFile(EvalContext *ctx, char *source, char *dest, struct stat ssta
     }
     else
     {
-        if (!CopyRegularFileDiskReport(ctx, source, new, attr, pp))
+        if (!CopyRegularFileDisk(source, new))
         {
+            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, attr, "Failed copying file '%s' to '%s'", source, new);
             return false;
         }
 
@@ -3001,19 +3001,6 @@ static int cf_readlink(EvalContext *ctx, char *sourcefile, char *linkbuf, int bu
 }
 
 #endif /* !__MINGW32__ */
-
-static bool CopyRegularFileDiskReport(EvalContext *ctx, char *source, char *destination, Attributes attr, Promise *pp)
-// TODO: return error codes in CopyRegularFileDisk and print them to cfPS here
-{
-    bool result = CopyRegularFileDisk(source, destination);
-
-    if(!result)
-    {
-        cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, attr, "Failed copying file '%s' to '%s'", source, destination);
-    }
-
-    return result;
-}
 
 static int SkipDirLinks(char *path, const char *lastnode, Recursion r)
 {

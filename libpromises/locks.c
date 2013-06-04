@@ -502,21 +502,21 @@ static void PromiseHash(const Promise *pp, const char *salt, unsigned char diges
     char *str = NULL;
     if (pp->offset.start)
     {
-        xasprintf(&str, "%lu", (unsigned int)pp->offset.start);
+        xasprintf(&str, "%u", (unsigned int)pp->offset.start);
         EVP_DigestUpdate(&context, str, strlen(str));
         free(str);
     }
 
     if (pp->offset.end)
     {
-        xasprintf(&str, "%lu", (unsigned int)pp->offset.end);
+        xasprintf(&str, "%u", (unsigned int)pp->offset.end);
         EVP_DigestUpdate(&context, str, strlen(str));
         free(str);
     }
 
     if (pp->offset.line)
     {
-        xasprintf(&str, "%lu", (unsigned int)pp->offset.line);
+        xasprintf(&str, "%u", (unsigned int)pp->offset.line);
         EVP_DigestUpdate(&context, str, strlen(str));
         free(str);
     }

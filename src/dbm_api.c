@@ -254,6 +254,8 @@ void CloseAllDBExit()
                 };
                 nanosleep(&sleeptime, NULL);
                 count++;
+
+                pthread_mutex_lock(&db_handles[i].lock);
             }
             /* Keep mutex locked. */
         }

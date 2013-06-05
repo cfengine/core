@@ -199,7 +199,7 @@ static ActionResult RepairExec(EvalContext *ctx, Attributes a, Promise *pp)
     {
         if (!IsExecutable(CommandArg0(pp->promiser)))
         {
-            Log(LOG_LEVEL_ERR, "'%s' promises to be executable but isn't", pp->promiser);
+            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "'%s' promises to be executable but isn't", pp->promiser);
 
             if (strchr(pp->promiser, ' '))
             {

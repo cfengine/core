@@ -57,6 +57,7 @@ void UpdatePromiseCounters(PromiseResult status, TransactionContext tc)
     case PROMISE_RESULT_NOOP:
         PR_KEPT++;
         VAL_KEPT += tc.value_kept;
+        break;
 
     case PROMISE_RESULT_WARN:
     case PROMISE_RESULT_TIMEOUT:

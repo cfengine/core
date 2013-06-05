@@ -1761,7 +1761,7 @@ static void NotifyDependantPromises(PromiseResult status, EvalContext *ctx, cons
 
 void ClassAuditLog(EvalContext *ctx, const Promise *pp, Attributes attr, PromiseResult status)
 {
-    if (!IsPromiseValuableForStatus(pp))
+    if (IsPromiseValuableForStatus(pp))
     {
 #ifdef HAVE_NOVA
         TrackTotalCompliance(status, pp);

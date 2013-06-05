@@ -1,0 +1,78 @@
+#######################################################
+#
+# Test command modules
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+vars:
+  "script_name" string => "$(this.promise_filename).script";
+
+}
+
+#######################################################
+
+bundle agent test
+{
+
+classes:
+  "matched" expression => regextract(".+/([^/]+)$",
+                                     "${init.script_name}",
+                                     "script_basename");
+
+commands:
+  "$(init.script_name)" module => "true";
+
+}
+
+#######################################################
+
+bundle agent check
+{
+vars:
+  "list0" slist => {"abc", "def", "ghi"};
+  "list1" slist => {"{{abc}}", "  ' def}", "ghi'''"};
+  "list2" slist => {'{{a,bc}}', '  " de,f}', 'gh,,i"""'}; 
+  "list3" slist => {"{{a'bc',,}}", '  ",, d"ef}', "ghi,},'''"}; 
+
+  "actual0" string => join(":", "list0");
+  "actual1" string => join(":", "list1");
+  "actual2" string => join(":", "list2");
+  "actual3" string => join(":", "list3");
+
+  "canonical_script_basename" string => canonify("${test.script_basename[1]}");
+
+  "joined0" string => join(":", "${canonical_script_basename}.mylist");
+  "joined1" string => join(":", "${canonical_script_basename}.myalist");
+  "joined2" string => join(":", "${canonical_script_basename}.myblist");
+  "joined3" string => join(":", "${canonical_script_basename}.myclist");
+
+classes:
+
+  any::
+    "var0ok" expression => strcmp("${this.joined0}" , "${this.actual0}");
+    "var1ok" expression => strcmp("${this.joined1}" , "${this.actual1}");
+    "var2ok" expression => strcmp("${this.joined2}" , "${this.actual2}");
+    "var3ok" expression => strcmp("${this.joined3}" , "${this.actual3}");
+
+    "ok" and => { "var0ok", "var1ok", "var2ok", "var3ok" };
+
+reports:
+    !DEBUG::
+        "joined3 = [${this.joined3}] vs actual3 = [${this.actual3}]";
+    ok::
+        "$(this.promise_filename) Pass";
+    !ok::
+        "$(this.promise_filename) FAIL";
+}
+

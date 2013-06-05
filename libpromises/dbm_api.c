@@ -165,9 +165,56 @@ static void CloseAllDB(void)
     pthread_mutex_unlock(&db_handles_lock);
 }
 
+/**
+ * @brief Wait for all users of all databases to close the DBs. Then acquire
+ * the mutexes *AND KEEP THEM LOCKED* so that no background thread can open
+ * any database. So make sure you exit soon...
+
+ * @warning This is usually register with atexit(), however you have to make
+ * sure no other DB-cleaning exit hook was registered before, so that this is
+ * called last.
+ **/
+void CloseAllDBExit()
+{
+    pthread_mutex_lock(&db_handles_lock);
+
+    for (int i = 0; i < dbid_max; i++)
+    {
+        if (db_handles[i].filename)
+        {
+            /* Wait until all DB users are served, or a threshold is reached */
+            int count = 0;
+            pthread_mutex_lock(&db_handles[i].lock);
+            while (db_handles[i].refcount > 0 && count < 1000)
+            {
+                pthread_mutex_unlock(&db_handles[i].lock);
+
+                struct timespec sleeptime = {
+                    .tv_sec = 0,
+                    .tv_nsec = 10000000                         /* 10 ms */
+                };
+                nanosleep(&sleeptime, NULL);
+                count++;
+
+                pthread_mutex_lock(&db_handles[i].lock);
+            }
+            /* Keep mutex locked. */
+
+            /* If we exited because of timeout make sure we Log() it. */
+            if (db_handles[i].refcount != 0)
+            {
+                Log(LOG_LEVEL_ERR,
+                    "Database %s refcount is still not zero (%d), forcing CloseDB()!",
+                    db_handles[i].filename, db_handles[i].refcount);
+                DBPrivCloseDB(db_handles[i].priv);
+            }
+        }
+    }
+}
+
 static void RegisterShutdownHandler(void)
 {
-    RegisterAtExitFunction(&CloseAllDB);
+    RegisterAtExitFunction(&CloseAllDBExit);
 }
 
 bool OpenDB(DBHandle **dbp, dbid id)

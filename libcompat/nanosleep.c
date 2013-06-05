@@ -23,8 +23,6 @@
 */
 
 /*
- * Emulating nanosleep(2) with select(3).
- *
  * NB! Does not calculate "remaining time"
  */
 
@@ -36,8 +34,6 @@
 
 # include <time.h>
 # include <windows.h>
-
-int nanosleep(const struct timespec *rqtp, struct timespec *rmtp);
 
 int nanosleep(const struct timespec *rqtp, struct timespec *rmtp)
 {

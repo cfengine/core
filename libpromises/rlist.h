@@ -58,7 +58,7 @@ char *RlistScalarValue(const Rlist *rlist);
 FnCall *RlistFnCallValue(const Rlist *rlist);
 Rlist *RlistRlistValue(const Rlist *rlist);
 Rlist *RlistParseShown(char *string);
-Rlist *RlistParseString(char *string, int *n);
+Rlist *RlistParseString(char *string);
 bool RlistIsStringIn(const Rlist *list, const char *s);
 bool RlistIsIntIn(const Rlist *list, int i);
 Rlist *RlistKeyIn(Rlist *list, const char *key);

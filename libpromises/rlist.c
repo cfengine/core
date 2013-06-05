@@ -621,230 +621,260 @@ Rlist *RlistParseShown(char *string)
 
 /*******************************************************************/
 
-static Rlist *RlistParseStringBounded(char *left,
-                                      char *right, int *n)
+typedef enum
+{
+    ST_OPENED,
+    ST_PRECLOSED,
+    ST_CLOSED,
+    ST_IO,
+    ST_ELM1,
+    ST_ELM2,
+    ST_END1,
+    ST_END2,
+    ST_SEP,
+    ST_ERROR
+} state;
+
+#define CLASS_BLANK(x)  (((x)==' ')||((x)=='\t'))
+#define CLASS_START1(x) (((x)=='\'')) 
+#define CLASS_START2(x) (((x)=='"'))
+#define CLASS_END1(x)   ((CLASS_START1(x)))
+#define CLASS_END2(x)   ((CLASS_START2(x)))
+#define CLASS_BRA1(x)   (((x)=='{'))
+#define CLASS_BRA2(x)   (((x)=='}'))
+#define CLASS_SEP(x)    (((x)==','))
+#define CLASS_EOL(x)    (((x)=='\0'))
+
+#define CLASS_ANY0(x) ((!CLASS_BLANK(x))&&(!CLASS_BRA1(x)))
+#define CLASS_ANY1(x) ((!CLASS_BLANK(x))&&(!CLASS_START1(x))&&(!CLASS_START2(x)))
+#define CLASS_ANY2(x) ((!CLASS_END1(x)))
+#define CLASS_ANY3(x) ((!CLASS_END2(x)))
+#define CLASS_ANY4(x) ((!CLASS_BLANK(x))&&(!CLASS_SEP(x))&&(!CLASS_BRA2(x)))
+#define CLASS_ANY5(x) ((!CLASS_BLANK(x))&&(!CLASS_SEP(x))&&(!CLASS_BRA2(x)))
+#define CLASS_ANY6(x) ((!CLASS_BLANK(x))&&(!CLASS_START2(x))&&(!CLASS_START2(x)))
+#define CLASS_ANY7(x) ((!CLASS_BLANK(x))&&(!CLASS_EOL(x)))
+
+/**
+ @brief parse elements in a list passed through use_module
+ 
+ @param[in] str: is the string to parse
+ @param[out] newlist: rlist of elements found
+
+ @retval 0: successful >0: failed
+ */
+static int LaunchParsingMachine(char *str, Rlist **newlist)
+{
+    char *s = str;
+    state current_state = ST_OPENED;
+    int ret;
+
+    char snatched[CF_MAXVARSIZE];
+    snatched[0]='\0';
+    char *sn = NULL;
+
+    while (current_state != ST_CLOSED && *s)
+    {
+        switch(current_state) {
+            case ST_ERROR:
+                Log(LOG_LEVEL_ERR, "Parsing error : Malformed string");
+                ret = 1;
+                goto clean;
+            case ST_OPENED:
+                if (CLASS_BLANK(*s))
+                {
+                    current_state = ST_OPENED;
+                }
+                else if (CLASS_BRA1(*s)) 
+                {
+                    current_state = ST_IO;
+                }
+                else if (CLASS_ANY0(*s))
+                {
+                    current_state = ST_ERROR;
+                }
+                s++;
+                break;
+            case ST_IO:
+                if (CLASS_BLANK(*s))
+                {
+                    current_state = ST_IO;
+                }
+                else if (CLASS_START1(*s))
+                {
+                    sn=snatched;
+                    current_state = ST_ELM1;
+                }
+                else if (CLASS_START2(*s))
+                {
+                      sn=snatched; 
+                      current_state = ST_ELM2;
+                }
+                else if (CLASS_ANY1(*s))
+                {
+                    current_state = ST_ERROR;
+                }
+                s++;
+                break;
+            case ST_ELM1:
+                if (CLASS_END1(*s))
+                {
+                    if (sn==NULL)
+                    {
+                        sn=snatched;
+                    }
+                    *sn='\0'; 
+                    RlistAppendScalar(newlist, snatched);
+                    sn=NULL;
+                    current_state = ST_END1;
+                }
+                else if (CLASS_ANY2(*s))
+                {
+                    if (sn==NULL)
+                    {
+                        sn=snatched;
+                    }
+                    *sn=*s;
+                    sn++; 
+                    current_state = ST_ELM1;
+                }
+                s++;
+                break;
+            case ST_ELM2:
+                if (CLASS_END2(*s))
+                {
+                    if (sn==NULL)
+                    {
+                        sn=snatched;
+                    }
+                    *sn='\0'; 
+                    RlistAppendScalar(newlist, snatched);
+                    sn=NULL; 
+                    current_state = ST_END2;
+                }
+                else if (CLASS_ANY3(*s))
+                {
+                    if (sn==NULL) 
+                    {
+                        sn=snatched;
+                    }
+                    *sn=*s;
+                    sn++;
+                    current_state = ST_ELM2;
+                }
+                s++;
+                break;
+            case ST_END1:
+                if (CLASS_SEP(*s))
+                {
+                    current_state = ST_SEP;
+                }
+                else if (CLASS_BRA2(*s))
+                {
+                    current_state = ST_PRECLOSED;
+                }
+                else if (CLASS_BLANK(*s))
+                {
+                    current_state = ST_END1;
+                }
+                else if (CLASS_ANY4(*s))
+                {
+                    current_state = ST_ERROR;
+                }
+                s++;
+                break;
+            case ST_END2:
+                if (CLASS_SEP(*s))
+                {
+                    current_state = ST_SEP;
+                }
+                else if (CLASS_BRA2(*s))
+                {
+                    current_state = ST_PRECLOSED;
+                }
+                else if (CLASS_BLANK(*s))
+                {
+                    current_state = ST_END2;
+                }
+                else if (CLASS_ANY5(*s))
+                {
+                    current_state = ST_ERROR;
+                }
+                s++;
+                break;
+            case ST_SEP:
+                if (CLASS_BLANK(*s))
+                {
+                    current_state = ST_SEP;
+                }
+                else if (CLASS_START1(*s))
+                {
+                    current_state = ST_ELM1;
+                }
+                else if (CLASS_START2(*s))
+                {
+                    current_state = ST_ELM2;
+                }
+                else if (CLASS_ANY6(*s))
+                {
+                    current_state = ST_ERROR;
+                }
+                s++;
+                break;
+            case ST_PRECLOSED:
+                if (CLASS_BLANK(*s))
+                {
+                    current_state = ST_PRECLOSED;
+                }
+                else if (CLASS_EOL(*s))
+                {
+                    current_state = ST_CLOSED;
+                }
+                else if (CLASS_ANY7(*s))
+                {
+                    current_state = ST_ERROR;
+                }
+                s++;
+                break;
+            default:
+                Log(LOG_LEVEL_ERR, "Parsing logic error: unknown state");
+                ret = 2;
+                goto clean;
+                break;
+        }
+    }
+
+    if (current_state != ST_CLOSED && current_state != ST_PRECLOSED )
+    {
+        Log(LOG_LEVEL_ERR, "Parsing error : Malformed string (unexpected end of input)");
+        ret = 3;
+        goto clean;
+    }
+
+    return 0;
+
+clean:
+    if (newlist)
+    {
+        RlistDestroy(*newlist);
+    }
+    return ret;
+}
+
+Rlist *RlistParseString(char *string)
 {
     Rlist *newlist = NULL;
-    char str2[CF_MAXVARSIZE];
-    char *s = left;
-    char *s2 = str2;
-    bool precede = false;  //set if we just encountred escaping character
-    bool ignore = true;    //set if we're outside quotation marks
-    bool skipped = true;   //set if a separating comma is behind us
-    char *extract = NULL;
+    int ret;
 
-    if (n!=NULL)
-    {
-        *n = 0;
-    }
+    ret = LaunchParsingMachine(string, &newlist);
 
-    memset(str2, 0, CF_MAXVARSIZE);
-
-    while (*s && s < right)
-    {
-        if (*s != '\\')
-        {
-            if (precede)
-            {
-                if (*s != '\\' && *s != '"')
-                {
-                    Log(LOG_LEVEL_ERR, "Presence of illegal %c after escaping character", *s);
-                    goto clean;
-                }
-                else
-                {
-                    *s2++ = *s;
-                }
-                precede = false;
-            }
-            else
-            {
-                if (*s == '"')
-                {
-                    if (ignore)
-                    {
-                        if (skipped != true)
-                        {
-                            Log(LOG_LEVEL_ERR, "Quotation marks \" should follow commas");
-                            goto clean;
-                        }
-                        ignore = false;
-                        extract = s2;
-                    }
-                    else
-                    {
-                        *s2='\0';
-                        Log(LOG_LEVEL_VERBOSE, "Extracted string [%s] of length (%zd)", extract,
-                               (size_t) (s2 - extract));
-                        RlistAppendScalar(&newlist, extract);
-                        ignore = true;
-                        extract = NULL;
-                        if (n != NULL)
-                        {
-                            *n += 1;
-                        }
-                    }
-                    skipped = false;
-                }
-                else if (*s == ',')
-                {
-                    if (ignore)
-                    {
-                        if (skipped == false)
-                        {
-                            skipped = true;
-                        }
-                        else
-                        {
-                            Log(LOG_LEVEL_ERR, "Only one comma should separate different list elements");
-                            goto clean;
-                        }
-                    }
-                    else
-                    {
-                        *s2++ = *s;
-                    }
-                }
-                else
-                {
-                    if (ignore == true && *s != ' ')
-                    {
-                        Log(LOG_LEVEL_ERR, "Only white characters are permitted outside of list elements. Character %c is illegal.", *s);
-                        goto clean;
-                    }
-                    *s2++ = *s;
-                }
-            }
-        }
-        else
-        {
-            if (precede)
-            {
-                *s2++ = '\\';
-                precede = false;
-            }
-            else
-            {
-                precede = true;
-            }
-        }
-        s++;
-    }
-    if (ignore)
+    if (!ret)
     {
         return newlist;
     }
     else
     {
-        goto clean;
-    }
-  clean:
-    if (newlist)
-    {
-        RlistDestroy(newlist);
-    }
-    return NULL;
-}
-
-static char *TrimLeft(char *str)
-{
-    char *s = str;
-
-    bool crossed = false;
-    if (!s)
-    {
         return NULL;
     }
-    while (*s)
-    {
-        if (crossed == false)
-        {
-            if (*s == ' ')
-            {
-            }
-            else if (*s == '{')
-            {
-                crossed = true;
-            }
-            else
-            {
-                return NULL;
-            }
-        }
-        else
-        {
-            if (*s == ' ')
-            {
-            }
-            else if (*s == '"')
-            {
-                return s;
-            }
-            else
-            {
-                return NULL;
-            }
-        }
-        s++;
-    }
-    return NULL;
-}
-
-static char *TrimRight(char *str)
-{
-    bool crossed = false;
-    char *s = str + strlen(str) - 1;
-    while (*s && s > str)
-    {
-        if (crossed == false)
-        {
-            if (*s == ' ')
-            {
-            }
-            else if (*s == '}')
-            {
-                crossed = true;
-            }
-            else
-            {
-                return NULL;
-            }
-        }
-        else
-        {
-            if (*s == ' ')
-            {
-            }
-            else if (*s == '"')
-            {
-                return s + 1;
-            }
-            else
-            {
-                return NULL;
-            }
-        }
-        s--;
-    }
-    return NULL;
-}
-
-Rlist *RlistParseString(char *string, int *n)
-{
-    Rlist *newlist = NULL;
-
-    char *l = TrimLeft(string);
-    if (l == NULL)
-    {
-        return NULL;
-    }
-    char *r = TrimRight(l);
-    if (r == NULL)
-    {
-        return NULL;
-    }
-    newlist = RlistParseStringBounded(l, r, n);
-    return newlist;
 }
 
 /*******************************************************************/

@@ -207,37 +207,74 @@ static struct ParseRoulette
     2, "{\"\",\"\"}"},
     {
     3, "{\"\",\"\",\"\"}"},
-        /*Single escaped */
+        /*Simple mixed kind of quotations */
     {
-    1, "{\"\\\"\"}"},
+    1, "{\"'\"}"},
+    {
+    1, "{'\"'}"},
     {
     1, "{\",\"}"},
     {
+    1, "{','}"},
+    {
     1, "{\"\\\\\"}"},
+    {
+    1, "{'\\\\'}"},
     {
     1, "{\"}\"}"},
     {
+    1, "{'}'}"},
+    {
     1, "{\"{\"}"},
     {
+    1, "{'{'}"},
+    {
     1, "{\"'\"}"},
-        /*Couple double-escaped */
     {
-    1, "{\"\\\",\"}"},          /*   [",]    */
+    1, "{'\"'}"},
     {
-    1, "{\",\\\"\"}"},          /*   [,"]    */
+    1, "{'\\\",'}"},          /*   [",]    */
+    {
+    1, "{\"\\',\"}"},          /*   [",]    */
+
+    {
+    1, "{',\\\"'}"},          /*   [,"]    */
+    {
+    1, "{\",\\'\"}"},          /*   [,"]    */
+
     {
     1, "{\",,\"}"},             /*   [\\]    */
     {
+    1, "{',,'}"},             /*   [\\]    */
+
+    {
     1, "{\"\\\\\\\\\"}"},       /*   [\\]    */
     {
-    1, "{\"\\\\\\\"\"}"},       /*   [\"]    */
+    1, "{'\\\\\\\\'}"},       /*   [\\]    */
+
     {
-    1, "{\"\\\"\\\\\"}"},       /*   ["\]    */
+    1, "{'\\\\\\\"'}"},       /*   [\"]    */
+    {
+    1, "{\"\\\\\\'\"}"},       /*   [\"]    */
+
+    {
+    1, "{'\\\"\\\\'}"},       /*   ["\]    */
+    {
+    1, "{\"\\'\\\\\"}"},       /*   ["\]    */
+
         /*Very long */
     {
     1, "{\"AaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaA\"}"},
     {
-    2, "{\"Aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\\\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaA\"  ,  \"Bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\\\\bbbbbbbbbbbbbbbbbbbbbbbb\\\\bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\\\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbB\" }"},
+    1, "{'AaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaA'}"},
+
+    {
+    2, "{\"Aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa''aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaA\"  ,  \"Bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\\\\bbbbbbbbbbbbbbbbbbbbbbbb\\\\bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb''bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbB\" }"},
+    {
+    2, "{'Aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\\\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaA'  ,  'Bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\\\\bbbbbbbbbbbbbbbbbbbbbbbb\\\\bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\\\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbB' }"},
+    {
+    2, "{\"Aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa''aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaA\"  ,  'Bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\\\\bbbbbbbbbbbbbbbbbbbbbbbb\\\\bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\\\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbB' }"},
+  
         /*Inner space (inside elements) */
     {
     1, "{\" \"}"},
@@ -266,9 +303,19 @@ static struct ParseRoulette
     2, "{    \"a\",    \"b\"}       "},
         /*Normal */
     {
-    4, "   { \" ab,c,d\\\\ \" ,  \" e,f\\\"g \" ,\"hi\\\\jk\", \"l''m \" }   "},
+    4, "   { \" ab,c,d\\\\ \" ,  ' e,f\\\"g ' ,\"hi\\\\jk\", \"l''m \" }   "},
     {
-    21, "   { \"A\\\"\\\\    \", \"    \\\\\",   \"}B\",   \"\\\\\\\\\"  ,   \"   \\\\C\\\"\"  ,   \"\\\",\"  ,   \",\\\"D\"  ,   \"   ,,    \", \"E\\\\\\\\F\", \"\", \"{\",   \"   G    '\"  ,   \"\\\\\\\"\", \" \\\"  H \\\\    \", \",   ,\"  ,   \"I\", \"  \",   \"\\\"    J  \",   \"\\\",\", \",\\\"\", \",\"  }   "},
+    21, "   { 'A\\\"\\\\    ', \"    \\\\\",   \"}B\",   \"\\\\\\\\\"  ,   \"   \\\\C\\'\"  ,   \"\\',\"  ,   ',\\\"D'  ,   \"   ,,    \", \"E\\\\\\\\F\", \"\", \"{\",   \"   G    '\"  ,   \"\\\\\\'\", ' \\\"  H \\\\    ', \",   ,\"  ,   \"I\", \"  \",   \"\\'    J  \",   '\\\",', \",\\'\", \",\"  }   "},
+    {
+    3,  "{   \"   aaa    \",    \"    bbbb       \"  ,   \"   cc    \"          }    "},
+    {
+    3,  "  {   \"   a'a    \",    \"    b''b       \"  ,   \"   c'c   \"          }    "},
+    {
+    3,  "  {   '   a\"a    ',    '    b\"\"b       '  ,   '   c\"c   '          }    "},
+    {
+    3,  "  {   '   a\"a    ',    \"    b''b       \"  ,   '   c\"c   '          }    "},
+    {
+    3,  "  {   '   a,\"a } { ',    \"  } b','b       \"  ,   ' {, c\"c } '          }    "},
     {
     -1, (char *)NULL}
 };
@@ -279,13 +326,20 @@ static char *PFR[] = {
     " ",
     "a",
     "\"",
+    "'",
     "\"\"",
+    "''",
+    "'\"",
+    "\"'",
     /* trim right failure */
     "{",
     "{ ",
     "{a",
     "{\"",
+    "{'",
     "{\"\"",
+    "{''",
+    "{\"'",
     /* parse failure */
     /* un-even number of quotation marks */
     "{\"\"\"}",
@@ -295,11 +349,34 @@ static char *PFR[] = {
     "{\"\",\"\"\"}",
     "{\"\"\"\",\"}",
     "{\"\",\"\",\"}",
+    "{'''}",
+    "{'','}",
+    "{''''}",
+    "{'''''}",
+    "{'','''}",
+    "{'''','}",
+    "{\"}",
+    "{'}",
+    "{'','','}",
+    "{\"\"'}",
+    "{\"\",'}",
+    "{\"'\"'}",
+    "{\"\"'\"\"}",
+    "{\"\",'\"\"}",
+    "{'\"\"\",\"}",
+    "{'',\"\",'}",
+
     /* Misplaced commas*/
     "{\"a\",}",
     "{,\"a\"}",
     "{,,\"a\"}",
     "{\"a\",,\"b\"}",
+    "{'a',}",
+    "{,'a'}",
+    "{,,'a'}",
+    "{'a',,'b'}",
+    "{\"a\",,'b'}",
+    "{'a',,\"b\"}",
     " {,}",
     " {,,}",
     " {,,,}",
@@ -312,6 +389,20 @@ static char *PFR[] = {
     " {\"\",\"\",}",
     " {\"\",\"\",,}",
     " {   \"\"  ,  \"\" ,  , }",
+    " {,''}",
+    " {'',}",
+    " {,'',}",
+    " {'',,}",
+    " {'',,,}",
+    " {,,'',,}",
+    " {'','',}",
+    " {'','',,}",
+    " {   ''  ,  '' ,  , }",
+    " {'',\"\",}",
+    " {\"\",'',,}",
+    " {   ''  ,  \"\" ,  , }",
+    " {   \"\"  ,  '' ,  , }",
+
     /*Ignore space's oddities */
     "\" {\"\"}",
     "{ {\"\"}",
@@ -332,7 +423,41 @@ static char *PFR[] = {
     "{a\"\"}b",
     "{\"\"a\"\"}",
     "{\"\",\"\"a\"\"}",
-    /*Incomplete */
+    "' {''}",
+    "{ {''}",
+    "{''}'",
+    "{''}\\",
+    "{''} } ",
+    "a{''}",
+    " a {''}",
+    "{a''}",
+    "{ a ''}",
+    "{''}a",
+    "{''}  a ",
+    "{''a}",
+    "{'' a }",
+    "a{''}b",
+    "{a''b}",
+    "a{''b}",
+    "{a''}b",
+    "{''a''}",
+    "{'',''a''}",
+    "{''a\"\"}",
+    "{\"\"a''}",
+    "{\"\",''a''}",
+    "{'',\"\"a''}",
+    "{'',''a\"\"}",
+    "{\"\",''a\"\"}",
+    /* Bad type of quotation inside an element */
+    "{'aa'aa'}",
+    "{\"aa\"aa\"}",
+    "{'aa\"''}",
+    "{'aa\"\"''}",
+    "{\"aa'\"\"}",
+    "{\"aa''\"\"}",
+    "{'aa\"'', 'aa\"\"'',\"aa'\"\"}",
+    "{\"aa\"aa\", 'aa\"'', 'aa\"\"''}",
+    "{ \"aa\"aa\"   ,'aa\"\"'',\"aa''\"\"   }",
     NULL
 };
 
@@ -343,7 +468,7 @@ static void test_new_parser_success()
     int i = 0;
     while (PR[i].nfields != -1)
     {
-        list = RlistParseString(PR[i].str, NULL);
+        list = RlistParseString(PR[i].str);
         assert_int_equal(PR[i].nfields, RlistLen(list));
         if (list != NULL)
         {
@@ -359,7 +484,7 @@ static void test_new_parser_failure()
     Rlist *list = NULL;
     while (PFR[i] != NULL)
     {
-        list = RlistParseString(PFR[i], NULL);
+        list = RlistParseString(PFR[i]);
         assert_true(RlistLast(list) == NULL);
         if(list) RlistDestroy(list);
         i++;

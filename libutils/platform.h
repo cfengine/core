@@ -409,6 +409,9 @@ int lstat(const char *file_name, struct stat *buf);
 #if !HAVE_DECL_SLEEP
 unsigned int sleep(unsigned int seconds);
 #endif
+#if !HAVE_DECL_NANOSLEEP
+int nanosleep(const struct timespec *req, struct timespec *rem);
+#endif
 #if !HAVE_DECL_CHOWN
 int chown(const char *path, uid_t owner, gid_t group);
 #endif

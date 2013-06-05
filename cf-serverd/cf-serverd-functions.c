@@ -363,7 +363,9 @@ void StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
             FD_ZERO(&rset);
             FD_SET(sd, &rset);
 
-            timeout.tv_sec = 10;    /* Set a 10 second timeout for select */
+            /* Set 1 second timeout for select, so that signals are handled in
+             * a timely manner */
+            timeout.tv_sec = 1;
             timeout.tv_usec = 0;
 
             Log(LOG_LEVEL_DEBUG, "Waiting at incoming select...");

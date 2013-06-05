@@ -38,17 +38,16 @@ Latest stable versions of the tools and libraries are generally advised.
 OPERATING SYSTEMS
 -----------------
 
-CFEngine is regularely built and tested on the following operating systems:
+CFEngine is regularly built and tested on the following operating systems:
 
 * GNU/Linux (many distributions)
-* FreeBSD
-* NetBSD
 * Solaris
+* Windows with MinGW
 
 HARDWARE PLATFORMS
 ------------------
 
-CFEngine is regularely built and tested on the following CPU architectures:
+CFEngine is regularly built and tested on the following CPU architectures:
 
 * x86
 * x86-64
@@ -57,7 +56,7 @@ CFEngine is regularely built and tested on the following CPU architectures:
 OTHER CONFIGURATIONS
 --------------------
 
-In case you have succesfully compiled CFEngine on a different OS and/or using
+In case you have successfully compiled CFEngine on a different OS and/or using
 different tools or versions of tools, please report it to help-cfengine@ mailing
 list[1]. Please consider running a testsuite (see below), and posting results to
 mailing list too.
@@ -89,7 +88,7 @@ INSTALLATION INSTRUCTIONS
 CFEngine might be installed in two configurations:
 
  * (default) Native CFEngine file layout. Everything is installed in
-   /var/cfengine layed out as a "secondary FHS root". This layout is designed to
+   /var/cfengine, layed out as a "secondary FHS root". This layout is designed to
    keep CFEngine running even if most of the system is broken (e.g. /usr is not
    mounted due to NFS breakage).
 

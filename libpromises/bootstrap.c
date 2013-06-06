@@ -376,7 +376,7 @@ bool WriteBuiltinFailsafePolicyToPath(const char *filename)
             "\n#\n\n"
             " reports:\n\n"
             "  bootstrap_mode.am_policy_hub::\n"
-            "   \"This host assumes the role of policy distribution host\"\n"
+            "   \"This host assumes the role of policy server\"\n"
             "      handle => \"cfe_internal_bootstrap_update_reports_assume_policy_hub\";\n"
             "  bootstrap_mode.!am_policy_hub::\n"
             "   \"This autonomous node assumes the role of voluntary client\"\n"

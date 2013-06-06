@@ -66,6 +66,7 @@ static pthread_mutex_t db_handles_lock = PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP
 
 static DBHandle db_handles[dbid_max] = { { 0 } };
 
+
 static pthread_once_t db_shutdown_once = PTHREAD_ONCE_INIT;
 
 /******************************************************************************/
@@ -93,6 +94,7 @@ static const char *DB_PATHS[] = {
     [dbid_agent_execution] = "nova_agent_execution",
     [dbid_bundles] = "bundles",
 };
+
 
 /******************************************************************************/
 
@@ -229,12 +231,23 @@ bool OpenDB(DBHandle **dbp, dbid id)
 
         if(lock_fd != -1)
         {
+#if TCDB
+            bool optimize = false;
+            if ((int)(rand()%10) == 0) {
+                optimize = true;
+            }
+            handle->priv = DBPrivOpenDB2(handle->filename, optimize);
+#else
             handle->priv = DBPrivOpenDB(handle->filename);
-
+#endif
             if (handle->priv == DB_PRIV_DATABASE_BROKEN)
             {
                 DBPathMoveBroken(handle->filename);
+#if TCDB
+                handle->priv = DBPrivOpenDB2(handle->filename, false);
+#else
                 handle->priv = DBPrivOpenDB(handle->filename);
+#endif
                 if (handle->priv == DB_PRIV_DATABASE_BROKEN)
                 {
                     handle->priv = NULL;

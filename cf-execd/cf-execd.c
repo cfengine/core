@@ -50,6 +50,8 @@
 # include "cf.nova.h"
 #endif
 
+#include "cf-execd.h"
+
 #define CF_EXEC_IFELAPSED 0
 #define CF_EXEC_EXPIREAFTER 1
 
@@ -69,8 +71,6 @@ static void Apoptosis(void);
 #endif
 
 static bool LocalExecInThread(const ExecConfig *config);
-
-void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, ExecConfig *exec_config);
 
 /*******************************************************************/
 /* Command line options                                            */

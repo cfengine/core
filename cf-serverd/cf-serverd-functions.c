@@ -220,11 +220,10 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
             cf_popen("/etc/init.d/avahi-daemon restart", "r", true);
             Log(LOG_LEVEL_NOTICE, "Avahi configuration file generated successfuly.");
             exit(0);
-#else
+#endif
+#endif
             Log(LOG_LEVEL_ERR, "Generating avahi configuration can only be done when avahi-daemon and libavahi are installed on the machine.");
             exit(0);
-#endif
-#endif
 
         default:
             PrintHelp("cf-serverd", OPTIONS, HINTS, true);

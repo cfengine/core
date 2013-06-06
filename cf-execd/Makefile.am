@@ -19,7 +19,7 @@ LDADD += ../nova/libcfexecd/libcfexecd.la
 endif
 
 cf_execd_SOURCES = \
-        cf-execd.c \
+        cf-execd.c cf-execd.h \
         cf-execd-runner.c cf-execd-runner.h \
         exec-config.c exec-config.h
 

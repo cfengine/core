@@ -117,11 +117,13 @@ static bool OpenTokyoDatabase(const char *filename, TCHDB **hdb)
         return false;
     }
 
+#ifndef _AIX
     if (!tchdboptimize(*hdb, -1, -1, -1, false))
     {
         tchdbclose(*hdb);
         return false;
     }
+#endif
 
     return true;
 }
@@ -263,6 +265,13 @@ DBCursorPriv *DBPrivOpenCursor(DBPriv *db)
     {
         return false;
     }
+
+#ifdef _AIX
+    if (!tchdboptimize(db->hdb, -1, -1, -1, false))
+    {
+        Log(LOG_LEVEL_ERR, "tchdboptimize failed for AIX: %s", GetErrorStr());
+    }
+#endif
 
     DBCursorPriv *cursor = xcalloc(1, sizeof(DBCursorPriv));
     cursor->db = db;

@@ -118,10 +118,45 @@ static bool OpenTokyoDatabase(const char *filename, TCHDB **hdb)
         return false;
     }
 
-    if (!tchdboptimize(*hdb, -1, -1, -1, false))
+    static int threshold = -1; 
+
+    if (threshold == -1)
     {
-        tchdbclose(*hdb);
-        return false;
+        /** 
+           Optimize always if TCDB_OPTIMIZE_PERCENT is equal to 100
+           Never optimize if  TCDB_OPTIMIZE_PERCENT is equal to 0
+         */
+        const char *perc = getenv("TCDB_OPTIMIZE_PERCENT");
+        if (perc != NULL)
+        {
+            /* Environment variable exists */
+            char *end;
+            long result = strtol(perc, &end, 10);
+ 
+            /* Environment variable is a number and in 0..100 range */
+            if(*end && result>-1 && result<101) 
+            {
+               threshold = 100 - (int)result;
+            }
+            else
+            {
+                /* This corresponds to 1% */
+                threshold = 99; 
+            }
+        }
+        else
+        {
+            /* This corresponds to 1% */
+            threshold = 99; 
+        }
+    }
+    if (threshold == 0 || (int)(rand()%threshold) == 0)
+    {
+        if (!tchdboptimize(*hdb, -1, -1, -1, false))
+        {
+            tchdbclose(*hdb);
+            return false;
+        }
     }
 
     return true;

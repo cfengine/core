@@ -103,7 +103,7 @@ static const char *ErrorMessage(TCHDB *hdb)
     return tchdberrmsg(tchdbecode(hdb));
 }
 
-static bool OpenTokyoDatabase(const char *filename, TCHDB **hdb)
+static bool OpenTokyoDatabase(const char *filename, TCHDB **hdb, bool optimize)
 {
     *hdb = tchdbnew();
 
@@ -117,22 +117,24 @@ static bool OpenTokyoDatabase(const char *filename, TCHDB **hdb)
         return false;
     }
 
-    if (!tchdboptimize(*hdb, -1, -1, -1, false))
-    {
-        tchdbclose(*hdb);
-        return false;
+    if (optimize == true) {
+        if (!tchdboptimize(*hdb, -1, -1, -1, false))
+        {
+            tchdbclose(*hdb);
+            return false;
+        }
     }
 
     return true;
 }
 
-DBPriv *DBPrivOpenDB(const char *dbpath)
+DBPriv *DBPrivOpenDB2(const char *dbpath, bool optimize)
 {
     DBPriv *db = xcalloc(1, sizeof(DBPriv));
 
     pthread_mutex_init(&db->cursor_lock, NULL);
 
-    if (!OpenTokyoDatabase(dbpath, &db->hdb))
+    if (!OpenTokyoDatabase(dbpath, &db->hdb, optimize))
     {
         Log(LOG_LEVEL_ERR, "Could not open Tokyo database at path '%s'. (OpenTokyoDatabase: %s)",
               dbpath, ErrorMessage(db->hdb));

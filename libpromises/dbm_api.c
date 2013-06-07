@@ -66,6 +66,7 @@ static pthread_mutex_t db_handles_lock = PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP
 
 static DBHandle db_handles[dbid_max] = { { 0 } };
 
+
 static pthread_once_t db_shutdown_once = PTHREAD_ONCE_INIT;
 
 /******************************************************************************/
@@ -93,6 +94,7 @@ static const char *DB_PATHS[] = {
     [dbid_agent_execution] = "nova_agent_execution",
     [dbid_bundles] = "bundles",
 };
+
 
 /******************************************************************************/
 
@@ -229,12 +231,45 @@ bool OpenDB(DBHandle **dbp, dbid id)
 
         if(lock_fd != -1)
         {
-            handle->priv = DBPrivOpenDB(handle->filename);
+#if TCDB
+            bool optimize = false;
 
+            /* This corresponds to 1% */
+            int threshold = 99; 
+
+            /** 
+               Optimize always if TCDB_OPTIMIZE_PERCENT is equal to 100
+               Never optimize if  TCDB_OPTIMIZE_PERCENT is equal to 0
+             */
+            const char *perc = getenv("TCDB_OPTIMIZE_PERCENT");
+            if (perc != NULL)
+            {
+                /* Environment variable exists */
+                char *end;
+                long result = strtol(perc, &end, 10);
+
+                /* Environment variable is a number and in 0..100 range */
+                if(*end && result>-1 && result<101) 
+                {
+                   threshold = 100 - (int)result;
+                }
+            }
+            if (threshold == 0 || (int)(rand()%threshold) == 0)
+            {
+                optimize = true;
+            }
+            handle->priv = DBPrivOpenDB2(handle->filename, optimize);
+#else
+            handle->priv = DBPrivOpenDB(handle->filename);
+#endif
             if (handle->priv == DB_PRIV_DATABASE_BROKEN)
             {
                 DBPathMoveBroken(handle->filename);
+#if TCDB
+                handle->priv = DBPrivOpenDB2(handle->filename, false);
+#else
                 handle->priv = DBPrivOpenDB(handle->filename);
+#endif
                 if (handle->priv == DB_PRIV_DATABASE_BROKEN)
                 {
                     handle->priv = NULL;

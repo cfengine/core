@@ -448,10 +448,16 @@ static const long DAYS[] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
 
 static int GetMonthLength(int month, int year)
 {
-    /* FIXME: really? */
     if ((month == 1) && (year % 4 == 0))
     {
-        return 29;
+        if ((year % 100 == 0) && (year % 400 != 0))
+        {
+           return DAYS[month];
+        }
+        else
+        {
+           return 29;
+        }
     }
     else
     {
@@ -462,9 +468,9 @@ static int GetMonthLength(int month, int year)
 long TimeAbs2Int(const char *s)
 {
     time_t cftime;
-    int i;
     char mon[4], h[3], m[3];
     long month = 0, day = 0, hour = 0, min = 0, year = 0;
+    struct tm tm;
 
     if (s == NULL)
     {
@@ -480,6 +486,15 @@ long TimeAbs2Int(const char *s)
         day = IntFromString(VDAY);
         hour = IntFromString(h);
         min = IntFromString(m);
+
+        tm.tm_year = year - 1900;
+        tm.tm_mon = month - 1;
+        tm.tm_mday = day; 
+        tm.tm_hour = hour; 
+        tm.tm_min = min; 
+        tm.tm_sec = 0;
+        tm.tm_isdst = -1;
+        cftime = mktime(&tm);
     }
     else                        /* date Month */
     {
@@ -492,20 +507,15 @@ long TimeAbs2Int(const char *s)
             /* Wrapped around */
             year--;
         }
+        tm.tm_year = year - 1900;
+        tm.tm_mon = month - 1;
+        tm.tm_mday = day; 
+        tm.tm_hour = 0; 
+        tm.tm_min = 0; 
+        tm.tm_sec = 0;
+        tm.tm_isdst = -1;
+        cftime = mktime(&tm);
     }
-
-    cftime = 0;
-    cftime += min * 60;
-    cftime += hour * 3600;
-    cftime += (day - 1) * 24 * 3600;
-    cftime += 24 * 3600 * ((year - 1970) / 4);  /* Leap years */
-
-    for (i = 0; i < month - 1; i++)
-    {
-        cftime += GetMonthLength(i, year) * 24 * 3600;
-    }
-
-    cftime += (year - 1970) * 365 * 24 * 3600;
 
     return (long) cftime;
 }

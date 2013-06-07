@@ -11,6 +11,7 @@
        - make discovery and loading of avahi libraries more robust
        - compile and packaging fixes for HP-UX, AIX and Solaris
        - fix fatal error in lsdir() when directory doesn't exist (Redmine #3273)
+       - fix epoch calculation for stime inrange calculation (Redmine #2921)
 
 3.5.2
        Bug fixes:

@@ -233,7 +233,29 @@ bool OpenDB(DBHandle **dbp, dbid id)
         {
 #if TCDB
             bool optimize = false;
-            if ((int)(rand()%10) == 0) {
+
+            /* This corresponds to 1% */
+            int threshold = 99; 
+
+            /** 
+               Optimize always if TCDB_OPTIMIZE_PERCENT is equal to 100
+               Never optimize if  TCDB_OPTIMIZE_PERCENT is equal to 0
+             */
+            const char *perc = getenv("TCDB_OPTIMIZE_PERCENT");
+            if (perc != NULL)
+            {
+                /* Environment variable exists */
+                char *end;
+                long result = strtol(perc, &end, 10);
+
+                /* Environment variable is a number and in 0..100 range */
+                if(*end && result>-1 && result<101) 
+                {
+                   threshold = 100 - (int)result;
+                }
+            }
+            if (threshold == 0 || (int)(rand()%threshold) == 0)
+            {
                 optimize = true;
             }
             handle->priv = DBPrivOpenDB2(handle->filename, optimize);

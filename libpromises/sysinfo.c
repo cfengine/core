@@ -1828,6 +1828,13 @@ static int Linux_Debian_Version(EvalContext *ctx)
             EvalContextHeapAddHard(ctx, buffer);
         }
     }
+    else if (strcmp(os, "Linux") == 0)
+    {
+        sscanf(buffer, "%*s %*s %s", version);
+        snprintf(buffer, CF_MAXVARSIZE, "mint_%s", version);
+        SetFlavour(ctx, buffer);
+        EvalContextHeapAddHard(ctx, "mint");
+    }
 
     return 0;
 }

@@ -36,8 +36,13 @@ const char *DBPrivGetFileExtension(void);
 /*
  * These two functions will always be called with a per-database lock held.
  */
+#if TCDB
+DBPriv *DBPrivOpenDB2(const char *dbpath, bool optimize);
+#else
 DBPriv *DBPrivOpenDB(const char *dbpath);
+#endif
 void DBPrivCloseDB(DBPriv *hdbp);
+
 
 bool DBPrivHasKey(DBPriv *db, const void *key, int key_size);
 int DBPrivGetValueSize(DBPriv *db, const void *key, int key_size);

@@ -134,7 +134,7 @@ static bool OpenTokyoDatabase(const char *filename, TCHDB **hdb)
             long result = strtol(perc, &end, 10);
  
             /* Environment variable is a number and in 0..100 range */
-            if(*end && result>-1 && result<101) 
+            if(!*end && result>-1 && result<101)
             {
                threshold = 100 - (int)result;
             }
@@ -150,7 +150,7 @@ static bool OpenTokyoDatabase(const char *filename, TCHDB **hdb)
             threshold = 99; 
         }
     }
-    if (threshold == 0 || (int)(rand()%threshold) == 0)
+    if ((threshold != 100) && (threshold == 0 || (int)(rand()%threshold) == 0))
     {
         if (!tchdboptimize(*hdb, -1, -1, -1, false))
         {

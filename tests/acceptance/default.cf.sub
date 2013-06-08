@@ -20,7 +20,7 @@ vars:
     "DS" string => "/";
 
   any::
-  "cmds" slist => { "sort", "touch", "grep", "gzip", "hexdump", "od", "diff", "rm", "true", "false", "mkdir", "ln", "pwd", "wc", "printf" };
+  "cmds" slist => { "diff", "echo", "false", "grep", "gzip", "hexdump", "ln", "mkdir", "od", "printf", "pwd", "rm", "sort", "touch", "true", "wc" };
 
 
   "$(cmds)"  string => "/bin/$(cmds)",

@@ -40,10 +40,10 @@ insert_lines:
 bundle agent test
 {
 vars:
-  "all_lines" string => execresult("/bin/egrep -c '.' $(G.testfile)", "useshell");
-  "re_lines" string => execresult("/bin/egrep -c 'a.test' $(G.testfile)", "useshell");
-  "lit_lines" string => execresult("/bin/egrep -c 'a\.test' $(G.testfile)", "useshell");
-  "doubleslash_lit_lines" string => execresult("/bin/egrep -c 'a\\.test' $(G.testfile)", "useshell");
+  "all_lines" string => execresult("$(G.egrep) -c '.' $(G.testfile)", "useshell");
+  "re_lines" string => execresult("$(G.egrep) -c 'a.test' $(G.testfile)", "useshell");
+  "lit_lines" string => execresult("$(G.egrep) -c 'a\.test' $(G.testfile)", "useshell");
+  "doubleslash_lit_lines" string => execresult("$(G.egrep) -c 'a\\.test' $(G.testfile)", "useshell");
 }
 
 #######################################################

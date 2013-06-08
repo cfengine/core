@@ -20,7 +20,7 @@ vars:
         "source" string => "/etc/group";
         "source_command" string => 'printf "%d", (stat("$(g.source)"))[7]';
         "source_size" string => execresult(
-            "/usr/bin/perl -le '$(g.source_command)'",
+            "$(G.perl) -le '$(g.source_command)'",
             "noshell");
 }
 

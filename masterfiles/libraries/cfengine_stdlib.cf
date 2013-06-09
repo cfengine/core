@@ -2898,12 +2898,6 @@ vars:
   "stopcommand[sendmail]"    string => "/etc/init.d/sendmail stop";
   "pattern[sendmail]"        string => ".*sendmail.*";
 
-  "startcommand[ssh]"   string => "/etc/init.d/sshd start";
-  "restartcommand[ssh]" string => "/etc/init.d/sshd restart";
-  "reloadcommand[ssh]"  string => "/etc/init.d/sshd reload";
-  "stopcommand[ssh]"    string => "/etc/init.d/sshd stop";
-  "pattern[ssh]"        string => ".*sshd.*";
-
   "startcommand[tomcat5]"   string => "/etc/init.d/tomcat5 start";
   "restartcommand[tomcat5]" string => "/etc/init.d/tomcat5 restart";
   "reloadcommand[tomcat5]"  string => "/etc/init.d/tomcat5 reload";
@@ -2947,6 +2941,12 @@ vars:
   "reloadcommand[ntpd]"  string => "/etc/init.d/ntpd reload";
   "stopcommand[ntpd]"    string => "/etc/init.d/ntpd stop";
   "pattern[ntpd]"        string => ".*ntpd.*";
+
+  "startcommand[ssh]"   string => "/etc/init.d/sshd start";
+  "restartcommand[ssh]" string => "/etc/init.d/sshd restart";
+  "reloadcommand[ssh]"  string => "/etc/init.d/sshd reload";
+  "stopcommand[ssh]"    string => "/etc/init.d/sshd stop";
+  "pattern[ssh]"        string => ".*sshd.*";
 
  redhat::
 
@@ -3292,6 +3292,12 @@ vars:
   "stopcommand[yum-updatesd]"    string => "/etc/init.d/yum-updatesd stop";
   "pattern[yum-updatesd]"        string => ".*yum-updatesd.*";
 
+  "startcommand[ssh]"   string => "/etc/init.d/sshd start";
+  "restartcommand[ssh]" string => "/etc/init.d/sshd restart";
+  "reloadcommand[ssh]"  string => "/etc/init.d/sshd reload";
+  "stopcommand[ssh]"    string => "/etc/init.d/sshd stop";
+  "pattern[ssh]"        string => ".*sshd.*";
+
  debian|ubuntu::
 
   "startcommand[atd]"   string => "/etc/init.d/atd start";
@@ -3389,6 +3395,12 @@ vars:
   "reloadcommand[www]"  string => "/etc/init.d/apache2 reload";
   "stopcommand[www]"    string => "/etc/init.d/apache2 stop";
   "pattern[www]"        string => ".*apache2.*";
+
+  "startcommand[ssh]"   string => "/etc/init.d/ssh start";
+  "restartcommand[ssh]" string => "/etc/init.d/ssh restart";
+  "reloadcommand[ssh]"  string => "/etc/init.d/ssh reload";
+  "stopcommand[ssh]"    string => "/etc/init.d/ssh stop";
+  "pattern[ssh]"        string => ".*sshd.*";
 
 
  # METHODS that implement these ............................................

@@ -2942,6 +2942,11 @@ vars:
   "stopcommand[www]"    string => "/etc/init.d/apache2 stop";
   "pattern[www]"        string => ".*apache2.*";
 
+  "startcommand[ntpd]"   string => "/etc/init.d/ntpd start";
+  "restartcommand[ntpd]" string => "/etc/init.d/ntpd restart";
+  "reloadcommand[ntpd]"  string => "/etc/init.d/ntpd reload";
+  "stopcommand[ntpd]"    string => "/etc/init.d/ntpd stop";
+  "pattern[ntpd]"        string => ".*ntpd.*";
 
  redhat::
 
@@ -3149,6 +3154,12 @@ vars:
   "stopcommand[nscd]"    string => "/etc/init.d/nscd stop";
   "pattern[nscd]"        string => ".*nscd.*";
 
+  "startcommand[ntpd]"   string => "/etc/init.d/ntpd start";
+  "restartcommand[ntpd]" string => "/etc/init.d/ntpd restart";
+  "reloadcommand[ntpd]"  string => "/etc/init.d/ntpd reload";
+  "stopcommand[ntpd]"    string => "/etc/init.d/ntpd stop";
+  "pattern[ntpd]"        string => ".*ntpd.*";
+
   "startcommand[oddjobd]"   string => "/etc/init.d/oddjobd start";
   "restartcommand[oddjobd]" string => "/etc/init.d/oddjobd restart";
   "reloadcommand[oddjobd]"  string => "/etc/init.d/oddjobd reload";
@@ -3318,6 +3329,12 @@ vars:
   "reloadcommand[mysql]"  string => "/etc/init.d/mysql reload";
   "stopcommand[mysql]"    string => "/etc/init.d/mysql stop";
   "pattern[mysql]"        string => ".*mysqld.*";
+
+  "startcommand[ntpd]"   string => "/etc/init.d/ntp start";
+  "restartcommand[ntpd]" string => "/etc/init.d/ntp restart";
+  "reloadcommand[ntpd]"  string => "/etc/init.d/ntp reload";
+  "stopcommand[ntpd]"    string => "/etc/init.d/ntp stop";
+  "pattern[ntpd]"        string => ".*ntpd.*";
 
   "startcommand[NetworkManager]"   string => "/etc/init.d/network-manager start";
   "restartcommand[NetworkManager]" string => "/etc/init.d/network-manager restart";

@@ -1,3 +1,5 @@
+	Introduced alias 'policy_server' for context 'am_policy_hub' (the latter will be deprecated)
+
 3.5.0
 
        New features:

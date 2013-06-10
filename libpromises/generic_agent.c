@@ -105,8 +105,10 @@ void CheckForPolicyHub(EvalContext *ctx)
 
     if (stat(name, &sb) != -1)
     {
-        EvalContextHeapAddHard(ctx, "am_policy_hub");
+        EvalContextHeapAddHard(ctx, "am_policy_hub");  // DEPRECATED: use policy_server instead
         Log(LOG_LEVEL_VERBOSE, "Additional class defined: am_policy_hub");
+        EvalContextHeapAddHard(ctx, "policy_server");
+        Log(LOG_LEVEL_VERBOSE, "Additional class defined: policy_server");
     }
 }
 

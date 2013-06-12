@@ -195,6 +195,7 @@ static const struct option OPTIONS[15] =
     {"verbose", no_argument, 0, 'v'},
     {"version", no_argument, 0, 'V'},
     {"legacy-output", no_argument, 0, 'l'},
+    {"color-output", no_argument, 0, 'c'},
     {NULL, 0, 0, '\0'}
 };
 
@@ -293,6 +294,7 @@ int main(int argc, char *argv[])
 
 static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
 {
+    extern bool COLORIZED_OUTPUT;
     extern char *optarg;
     int c;
     GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_AGENT);
@@ -312,12 +314,16 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
     char **argv_new = TranslateOldBootstrapOptionsConcatenated(argc_new, argv_tmp);
     FreeStringArray(argc_new, argv_tmp);
 
-    while ((c = getopt_long(argc_new, argv_new, "dvnKIf:D:N:VxMB:b:hl", OPTIONS, NULL)) != EOF)
+    while ((c = getopt_long(argc_new, argv_new, "cdvnKIf:D:N:VxMB:b:hl", OPTIONS, NULL)) != EOF)
     {
         switch ((char) c)
         {
         case 'l':
             LEGACY_OUTPUT = true;
+            break;
+
+        case 'c':
+            COLORIZED_OUTPUT = true;
             break;
 
         case 'f':

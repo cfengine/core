@@ -195,11 +195,11 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
         char *existing_policy_server = ReadPolicyServerFile(GetWorkDir());
         if (existing_policy_server)
         {
-            Log(LOG_LEVEL_INFO, "This agent is bootstrapped to '%s'", existing_policy_server);
+            Log(LOG_LEVEL_VERBOSE, "This agent is bootstrapped to '%s'", existing_policy_server);
         }
         else
         {
-            Log(LOG_LEVEL_INFO, "This agent is not bootstrapped");
+            Log(LOG_LEVEL_VERBOSE, "This agent is not bootstrapped");
         }
         SetPolicyServer(ctx, existing_policy_server);
     }
@@ -545,7 +545,7 @@ Policy *GenericAgentLoadPolicy(EvalContext *ctx, GenericAgentConfig *config)
         {
             if (!config->bundlesequence && (PolicyIsRunnable(main_policy) || config->check_runnable))
             {
-                Log(LOG_LEVEL_INFO, "Running full policy integrity checks");
+                Log(LOG_LEVEL_VERBOSE, "Running full policy integrity checks");
                 PolicyCheckRunnable(ctx, main_policy, errors, config->ignore_missing_bundles);
             }
         }

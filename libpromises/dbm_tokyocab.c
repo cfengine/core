@@ -117,10 +117,13 @@ static bool OpenTokyoDatabase(const char *filename, TCHDB **hdb)
         return false;
     }
 
-    if (!tchdboptimize(*hdb, -1, -1, -1, false))
+    if (rand() % 100 < 1)                              /* corresponds to 1% */
     {
-        tchdbclose(*hdb);
-        return false;
+        if (!tchdboptimize(*hdb, -1, -1, -1, false))
+        {
+            tchdbclose(*hdb);
+            return false;
+        }
     }
 
     return true;

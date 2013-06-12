@@ -47,6 +47,8 @@ void VLog(LogLevel level, const char *fmt, va_list ap);
 void LogSetGlobalLevel(LogLevel level);
 LogLevel LogGetGlobalLevel(void);
 
+void LoggingSetColor(bool enabled);
+
 /*
  * Portable strerror(errno)
  */

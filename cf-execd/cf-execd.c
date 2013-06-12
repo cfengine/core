@@ -102,10 +102,11 @@ static const struct option OPTIONS[] =
     {"no-winsrv", no_argument, 0, 'W'},
     {"ld-library-path", required_argument, 0, 'L'},
     {"legacy-output", no_argument, 0, 'l'},
+    {"color", optional_argument, 0, 'C'},
     {NULL, 0, 0, '\0'}
 };
 
-static const char *HINTS[sizeof(OPTIONS)/sizeof(OPTIONS[0])] =
+static const char *HINTS[] =
 {
     "Print the help message",
     "Enable debugging output",
@@ -123,6 +124,7 @@ static const char *HINTS[sizeof(OPTIONS)/sizeof(OPTIONS[0])] =
     "Do not run as a service on windows - use this when running from a command shell (CFEngine Nova only)",
     "Set the internal value of LD_LIBRARY_PATH for child processes",
     "Use legacy output format",
+    "Enable colorized output. Possible values: 'always', 'auto', 'never'. Default is 'never'",
     NULL
 };
 
@@ -285,6 +287,13 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
         case 'x':
             Log(LOG_LEVEL_ERR, "Self-diagnostic functionality is retired.");
             exit(0);
+
+        case 'C':
+            if (!GenericAgentConfigParseColor(config, optarg))
+            {
+                exit(EXIT_FAILURE);
+            }
+            break;
 
         default:
             PrintHelp("cf-execd", OPTIONS, HINTS, true);

@@ -66,7 +66,7 @@ static const char *CF_MONITORD_MANPAGE_LONG_DESCRIPTION =
         "normal system state based on current and past observations. Current estimates are made available as "
         "special variables (e.g. $(mon.av_cpu)) to cf-agent, which may use them to inform policy decisions.";
 
-static const struct option OPTIONS[14] =
+static const struct option OPTIONS[] =
 {
     {"help", no_argument, 0, 'h'},
     {"debug", no_argument, 0, 'd'},
@@ -81,10 +81,11 @@ static const struct option OPTIONS[14] =
     {"histograms", no_argument, 0, 'H'},
     {"tcpdump", no_argument, 0, 'T'},
     {"legacy-output", no_argument, 0, 'l'},
+    {"color", optional_argument, 0, 'C'},
     {NULL, 0, 0, '\0'}
 };
 
-static const char *HINTS[14] =
+static const char *HINTS[] =
 {
     "Print the help message",
     "Enable debugging output",
@@ -99,6 +100,7 @@ static const char *HINTS[14] =
     "Ignored for backward compatibility",
     "Interface with tcpdump if available to collect data about network",
     "Use legacy output format",
+    "Enable colorized output. Possible values: 'always', 'auto', 'never'. Default is 'never'",
     NULL
 };
 
@@ -200,6 +202,13 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
         case 'x':
             Log(LOG_LEVEL_ERR, "Self-diagnostic functionality is retired.");
             exit(0);
+
+        case 'C':
+            if (!GenericAgentConfigParseColor(config, optarg))
+            {
+                exit(EXIT_FAILURE);
+            }
+            break;
 
         default:
             PrintHelp("cf-monitord", OPTIONS, HINTS, true);

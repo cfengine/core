@@ -84,7 +84,7 @@ static const char *CF_RUNAGENT_MANPAGE_LONG_DESCRIPTION =
     "the user requests cf-agent should define on execution. "
     "The latter type is regulated by cf-serverd's role based access control.";
 
-static const struct option OPTIONS[17] =
+static const struct option OPTIONS[] =
 {
     {"help", no_argument, 0, 'h'},
     {"background", optional_argument, 0, 'b'},
@@ -102,10 +102,11 @@ static const struct option OPTIONS[17] =
     {"interactive", no_argument, 0, 'i'},
     {"timeout", required_argument, 0, 't'},
     {"legacy-output", no_argument, 0, 'l'},
+    {"color", optional_argument, 0, 'C'},
     {NULL, 0, 0, '\0'}
 };
 
-static const char *HINTS[17] =
+static const char *HINTS[] =
 {
     "Print the help message",
     "Parallelize connections (50 by default)",
@@ -123,6 +124,7 @@ static const char *HINTS[17] =
     "Enable interactive mode for key trust",
     "Connection timeout, seconds",
     "Use legacy output format",
+    "Enable colorized output. Possible values: 'always', 'auto', 'never'. Default is 'never'",
     NULL
 };
 
@@ -349,6 +351,13 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
         case 'x':
             Log(LOG_LEVEL_ERR, "Self-diagnostic functionality is retired.");
             exit(0);
+
+        case 'C':
+            if (!GenericAgentConfigParseColor(config, optarg))
+            {
+                exit(EXIT_FAILURE);
+            }
+            break;
 
         default:
             PrintHelp("cf-runagent", OPTIONS, HINTS, true);

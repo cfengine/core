@@ -1745,6 +1745,30 @@ bool GenericAgentConfigParseWarningOptions(GenericAgentConfig *config, const cha
     return true;
 }
 
+bool GenericAgentConfigParseColor(GenericAgentConfig *config, const char *mode)
+{
+    if (strcmp("auto", mode) == 0)
+    {
+        config->color = config->tty_interactive;
+        return true;
+    }
+    else if (strcmp("always", mode) == 0)
+    {
+        config->color = true;
+        return true;
+    }
+    else if (strcmp("never", mode) == 0)
+    {
+        config->color = false;
+        return true;
+    }
+    else
+    {
+        Log(LOG_LEVEL_ERR, "Unrecognized color mode '%s'", mode);
+        return false;
+    }
+}
+
 GenericAgentConfig *GenericAgentConfigNewDefault(AgentType agent_type)
 {
     GenericAgentConfig *config = xmalloc(sizeof(GenericAgentConfig));
@@ -1753,6 +1777,8 @@ GenericAgentConfig *GenericAgentConfigNewDefault(AgentType agent_type)
 
     // TODO: system state, perhaps pull out as param
     config->tty_interactive = isatty(0) && isatty(1);
+
+    config->color = false;
 
     config->bundlesequence = NULL;
 
@@ -1845,6 +1871,11 @@ void GenericAgentConfigApply(EvalContext *ctx, const GenericAgentConfig *config)
     if (config->agent_specific.agent.bootstrap_policy_server)
     {
         EvalContextHeapAddHard(ctx, "bootstrap_mode");
+    }
+
+    if (config->color)
+    {
+        LoggingSetColor(config->color);
     }
 }
 

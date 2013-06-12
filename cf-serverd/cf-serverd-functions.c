@@ -52,7 +52,7 @@ static const char *CF_SERVERD_MANPAGE_LONG_DESCRIPTION =
         "cf-serverd instance to request updated policy code, but may also request additional files for download. "
         "cf-serverd employs role based access control (defined in policy code) to authorize requests.";
 
-static const struct option OPTIONS[16] =
+static const struct option OPTIONS[] =
 {
     {"help", no_argument, 0, 'h'},
     {"debug", no_argument, 0, 'd'},
@@ -68,10 +68,11 @@ static const struct option OPTIONS[16] =
     {"ld-library-path", required_argument, 0, 'L'},
     {"generate-avahi-conf", no_argument, 0, 'A'},
     {"legacy-output", no_argument, 0, 'l'},
+    {"color", optional_argument, 0, 'C'},
     {NULL, 0, 0, '\0'}
 };
 
-static const char *HINTS[16] =
+static const char *HINTS[] =
 {
     "Print the help message",
     "Enable debugging output",
@@ -87,6 +88,7 @@ static const char *HINTS[16] =
     "Set the internal value of LD_LIBRARY_PATH for child processes",
     "Generates avahi configuration file to enable policy server to be discovered in the network",
     "Use legacy output format",
+    "Enable colorized output. Possible values: 'always', 'auto', 'never'. Default is 'never'",
     NULL
 };
 
@@ -224,6 +226,13 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
 #endif
             Log(LOG_LEVEL_ERR, "Generating avahi configuration can only be done when avahi-daemon and libavahi are installed on the machine.");
             exit(0);
+
+        case 'C':
+            if (!GenericAgentConfigParseColor(config, optarg))
+            {
+                exit(EXIT_FAILURE);
+            }
+            break;
 
         default:
             PrintHelp("cf-serverd", OPTIONS, HINTS, true);

@@ -47,6 +47,7 @@ typedef struct
     StringSet *heap_negated;
 
     bool tty_interactive; // agent is running interactively, via tty/terminal interface
+    bool color;
 
     // change to evaluation behavior from the policy itself
     bool ignore_missing_bundles;
@@ -108,6 +109,7 @@ void ReloadPromises(AgentType ag);
 
 bool GenericAgentConfigParseArguments(GenericAgentConfig *config, int argc, char **argv);
 bool GenericAgentConfigParseWarningOptions(GenericAgentConfig *config, const char *warning_options);
+bool GenericAgentConfigParseColor(GenericAgentConfig *config, const char *mode);
 
 GenericAgentConfig *GenericAgentConfigNewDefault(AgentType agent_type);
 void GenericAgentConfigDestroy(GenericAgentConfig *config);

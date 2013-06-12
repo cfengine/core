@@ -67,6 +67,7 @@ static const struct option OPTIONS[] =
     {"full-check", no_argument, 0, 'c'},
     {"warn", optional_argument, 0, 'W'},
     {"legacy-output", no_argument, 0, 'l'},
+    {"color", optional_argument, 0, 'C'},
     {NULL, 0, 0, '\0'}
 };
 
@@ -89,6 +90,7 @@ static const char *HINTS[] =
     "Ensure full policy integrity checks",
     "Pass comma-separated <warnings>|all to enable non-default warnings, or error=<warnings>|all",
     "Use legacy output format",
+    "Enable colorized output. Possible values: 'always', 'auto', 'never'. Default is 'never'",
     NULL
 };
 
@@ -302,6 +304,13 @@ GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
         case 'x':
             Log(LOG_LEVEL_ERR, "Self-diagnostic functionality is retired.");
             exit(0);
+
+        case 'C':
+            if (!GenericAgentConfigParseColor(config, optarg))
+            {
+                exit(EXIT_FAILURE);
+            }
+            break;
 
         default:
             PrintHelp("cf-promises", OPTIONS, HINTS, true);

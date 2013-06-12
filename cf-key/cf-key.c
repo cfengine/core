@@ -58,7 +58,7 @@ static const char *CF_KEY_SHORT_DESCRIPTION = "make private/public key-pairs for
 
 static const char *CF_KEY_MANPAGE_LONG_DESCRIPTION = "The CFEngine key generator makes key pairs for remote authentication.\n";
 
-static const struct option OPTIONS[17] =
+static const struct option OPTIONS[] =
 {
     {"help", no_argument, 0, 'h'},
     {"debug", no_argument, 0, 'd'},
@@ -70,10 +70,11 @@ static const struct option OPTIONS[17] =
     {"install-license", required_argument, 0, 'l'},
     {"print-digest", required_argument, 0, 'p'},
     {"trust-key", required_argument, 0, 't'},
+    {"color", optional_argument, 0, 'C'},
     {NULL, 0, 0, '\0'}
 };
 
-static const char *HINTS[17] =
+static const char *HINTS[] =
 {
     "Print the help message",
     "Enable debugging output",
@@ -85,6 +86,7 @@ static const char *HINTS[17] =
     "Install license without boostrapping (CFEngine Enterprise only)",
     "Print digest of the specified public key",
     "Make cf-serverd/cf-agent trust the specified public key",
+    "Enable colorized output. Possible values: 'always', 'auto', 'never'. Default is 'never'",
     NULL
 };
 
@@ -217,6 +219,13 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
                 FileWriterDetach(out);
                 exit(EXIT_SUCCESS);
             }
+
+        case 'C':
+            if (!GenericAgentConfigParseColor(config, optarg))
+            {
+                exit(EXIT_FAILURE);
+            }
+            break;
 
         default:
             PrintHelp("cf-key", OPTIONS, HINTS, false);

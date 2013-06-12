@@ -37,6 +37,7 @@ typedef struct
     LogLevel global_level;
     LogLevel log_level;
     LogLevel report_level;
+    bool color;
 
     LoggingPrivContext *pctx;
 } LoggingContext;
@@ -116,7 +117,32 @@ const char *LogLevelToString(LogLevel level)
     }
 }
 
-void LogToStdout(const char *msg, ARG_UNUSED LogLevel level)
+static const char *LogLevelToColor(LogLevel level)
+{
+
+    switch (level)
+    {
+    case LOG_LEVEL_CRIT:
+    case LOG_LEVEL_ERR:
+        return "\x1b[31m"; // red
+
+    case LOG_LEVEL_WARNING:
+        return "\x1b[33m"; // yellow
+
+    case LOG_LEVEL_NOTICE:
+    case LOG_LEVEL_INFO:
+        return "\x1b[32m"; // green
+
+    case LOG_LEVEL_VERBOSE:
+    case LOG_LEVEL_DEBUG:
+        return "\x1b[34m"; // blue
+
+    default:
+        ProgrammingError("Unknown log level passed to LogLevelToColor %d", level);
+    }
+}
+
+void LogToStdout(const char *msg, LogLevel level, bool color)
 {
     if (LEGACY_OUTPUT)
     {
@@ -144,7 +170,14 @@ void LogToStdout(const char *msg, ARG_UNUSED LogLevel level)
 
         const char *string_level = LogLevelToString(level);
 
-        printf("%-24s %8s: %s\n", formatted_timestamp, string_level, msg);
+        if (color)
+        {
+            printf("%s%-24s %8s: %s\x1b[0m\n", LogLevelToColor(level), formatted_timestamp, string_level, msg);
+        }
+        else
+        {
+            printf("%-24s %8s: %s\n", formatted_timestamp, string_level, msg);
+        }
     }
 }
 
@@ -194,7 +227,7 @@ void VLog(LogLevel level, const char *fmt, va_list ap)
 
     if (level <= lctx->report_level)
     {
-        LogToStdout(hooked_msg, level);
+        LogToStdout(hooked_msg, level, lctx->color);
     }
 
     if (level <= lctx->log_level)
@@ -223,4 +256,10 @@ LogLevel LogGetGlobalLevel(void)
 {
     const LoggingContext *lctx = GetCurrentThreadContext();
     return lctx->global_level;
+}
+
+void LoggingSetColor(bool enabled)
+{
+    LoggingContext *lctx = GetCurrentThreadContext();
+    lctx->color = enabled;
 }

@@ -1,3 +1,8 @@
+3.5.1
+
+       Bug fixes:
+       - fix recursive copying of files (Redmine #2965)
+
 3.5.0
 
        New features:

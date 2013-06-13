@@ -86,7 +86,7 @@ static const char *HINTS[] =
     "Install license without boostrapping (CFEngine Enterprise only)",
     "Print digest of the specified public key",
     "Make cf-serverd/cf-agent trust the specified public key",
-    "Enable colorized output. Possible values: 'always', 'auto', 'never'. Default is 'never'",
+    "Enable colorized output. Possible values: 'always', 'auto', 'never'. If option is used, the default value is 'auto'",
     NULL
 };
 
@@ -162,7 +162,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
     int c;
     GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_KEYGEN);
 
-    while ((c = getopt_long(argc, argv, "dvf:VMp:sr:t:hl:", OPTIONS, &optindex)) != EOF)
+    while ((c = getopt_long(argc, argv, "dvf:VMp:sr:t:hl:C::", OPTIONS, &optindex)) != EOF)
     {
         switch ((char) c)
         {

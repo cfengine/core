@@ -99,7 +99,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
     }
     snprintf(OUTPUT_FILE, CF_BUFSIZE, "%scf3-Reference.texinfo", SOURCE_DIR);
 
-    while ((c = getopt_long(argc, argv, "hxi:o:", OPTIONS, &optindex)) != EOF)
+    while ((c = getopt_long(argc, argv, "hxi:o:C::", OPTIONS, &optindex)) != EOF)
     {
         switch ((char) c)
         {

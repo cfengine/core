@@ -124,7 +124,7 @@ static const char *HINTS[] =
     "Enable interactive mode for key trust",
     "Connection timeout, seconds",
     "Use legacy output format",
-    "Enable colorized output. Possible values: 'always', 'auto', 'never'. Default is 'never'",
+    "Enable colorized output. Possible values: 'always', 'auto', 'never'. If option is used, the default value is 'auto'",
     NULL
 };
 
@@ -249,7 +249,7 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
     DEFINECLASSES[0] = '\0';
     SENDCLASSES[0] = '\0';
 
-    while ((c = getopt_long(argc, argv, "t:q:db:vnKhIif:D:VSxo:s:MH:l", OPTIONS, &optindex)) != EOF)
+    while ((c = getopt_long(argc, argv, "t:q:db:vnKhIif:D:VSxo:s:MH:lC::", OPTIONS, &optindex)) != EOF)
     {
         switch ((char) c)
         {

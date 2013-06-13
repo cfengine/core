@@ -90,7 +90,7 @@ static const char *HINTS[] =
     "Ensure full policy integrity checks",
     "Pass comma-separated <warnings>|all to enable non-default warnings, or error=<warnings>|all",
     "Use legacy output format",
-    "Enable colorized output. Possible values: 'always', 'auto', 'never'. Default is 'never'",
+    "Enable colorized output. Possible values: 'always', 'auto', 'never'. If option is used, the default value is 'auto'",
     NULL
 };
 
@@ -164,7 +164,7 @@ GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
     int c;
     GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_COMMON);
 
-    while ((c = getopt_long(argc, argv, "dvnIf:D:N:VSrxMb:i:p:s:cg:hW:l", OPTIONS, &optindex)) != EOF)
+    while ((c = getopt_long(argc, argv, "dvnIf:D:N:VSrxMb:i:p:s:cg:hW:lC::", OPTIONS, &optindex)) != EOF)
     {
         switch ((char) c)
         {

@@ -100,7 +100,7 @@ static const char *HINTS[] =
     "Ignored for backward compatibility",
     "Interface with tcpdump if available to collect data about network",
     "Use legacy output format",
-    "Enable colorized output. Possible values: 'always', 'auto', 'never'. Default is 'never'",
+    "Enable colorized output. Possible values: 'always', 'auto', 'never'. If option is used, the default value is 'auto'",
     NULL
 };
 
@@ -137,7 +137,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
     int c;
     GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_MONITOR);
 
-    while ((c = getopt_long(argc, argv, "dvnIf:VSxHTKMFhl", OPTIONS, &optindex)) != EOF)
+    while ((c = getopt_long(argc, argv, "dvnIf:VSxHTKMFhlC::", OPTIONS, &optindex)) != EOF)
     {
         switch ((char) c)
         {

@@ -1747,7 +1747,7 @@ bool GenericAgentConfigParseWarningOptions(GenericAgentConfig *config, const cha
 
 bool GenericAgentConfigParseColor(GenericAgentConfig *config, const char *mode)
 {
-    if (strcmp("auto", mode) == 0)
+    if (!mode || strcmp("auto", mode) == 0)
     {
         config->color = config->tty_interactive;
         return true;

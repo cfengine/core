@@ -2,6 +2,7 @@
 
        Bug fixes:
        - fix recursive copying of files (Redmine #2965)
+       - respect classes in templates (Redmine ##2928)
 
 3.5.0
 

@@ -1,0 +1,81 @@
+#######################################################
+#
+# Test basic classes for CFEngine templates.
+# Redmine #2928
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };
+  version => "1.0";
+
+}
+
+#######################################################
+
+bundle agent init
+{
+vars:
+      "origtestdir" string => concat("$(G.cwd)/",
+				     dirname("$(this.promise_filename)"));
+
+files:
+      "$(G.testfile)"
+      delete => init_delete;
+}
+
+body delete init_delete
+{
+      dirlinks => "delete";
+      rmdirs   => "true";
+}
+
+#######################################################
+
+bundle agent test
+{
+vars:
+      "template_file" string => "$(init.origtestdir)/basic_classes.template";
+
+classes:
+      "two" expression => "any";
+      "three" expression => "any";
+
+files:
+      "$(G.testfile)"
+      create => "true",
+      edit_template => "$(template_file)";
+
+reports:
+    DEBUG::
+      "Rendering template file $(template_file) to $(G.testfile)";
+}
+
+body copy_from sync_cp(from)
+{
+      source => "$(from)";
+}
+
+
+#######################################################
+
+bundle agent check
+{
+vars:
+        "expect" string => "one$(const.endl)$(const.endl)two$$(const.endl)three$(const.endl)";
+        "actual" string => readfile("$(G.testfile)", 1000);
+
+classes:
+        "ok" expression => regcmp("$(expect)", "$(actual)");
+
+reports:
+    DEBUG::
+        "expect: '$(expect)'";
+        "actual: '$(actual)'";
+    ok::
+        "$(this.promise_filename) Pass";
+    !ok::
+        "$(this.promise_filename) FAIL";
+}

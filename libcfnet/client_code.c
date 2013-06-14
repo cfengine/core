@@ -321,9 +321,9 @@ int cf_remote_stat(char *file, struct stat *buf, char *stattype, bool encrypt, A
 
     ret = CacheStat(file, buf, stattype, conn);
 
-    if (ret != 0)
+    if (ret != 1)
     {
-        return 0;
+        return ret;
     }
 
     if ((tloc = time((time_t *) NULL)) == -1)
@@ -1391,11 +1391,11 @@ static int CacheStat(const char *file, struct stat *statbuf, const char *stattyp
             statbuf->st_dev = sp->cf_dev;
             statbuf->st_nlink = sp->cf_nlink;
 
-            return true;
+            return 0;
         }
     }
 
-    return false;
+    return 1;
 }
 
 /*********************************************************************/

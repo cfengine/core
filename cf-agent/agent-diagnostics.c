@@ -32,6 +32,7 @@
 #include "dbm_api.h"
 #include "dbm_priv.h"
 #include "tokyo_check.h"
+#include "lastseen.h"
 
 #include <assert.h>
 
@@ -146,13 +147,21 @@ static AgentDiagnosticsResult AgentDiagnosticsCheckDB(const char *workdir, dbid 
     {
         int ret = CheckTokyoDBCoherence(dbpath);
         free(dbpath);
-        if(ret)
+        if (ret)
         {
             return AgentDiagnosticsResultNew(false, xstrdup("Internal DB coherence problem"));
-        } 
+        }
         else
         {
+            if (id == dbid_lastseen)
+            {
+                if (IsLastSeenCoherent() == false)
+                {
+                    return AgentDiagnosticsResultNew(false, xstrdup("Lastseen DB data coherence problem"));
+                }
+            }
             return AgentDiagnosticsResultNew(true, xstrdup("OK"));
+            
         }
     }
 }
@@ -213,7 +222,7 @@ const AgentDiagnosticCheck *AgentDiagnosticsAllChecks(void)
         { "Check file stats DB", &AgentDiagnosticsCheckDBFileStats },
         { "Check locks DB", &AgentDiagnosticsCheckDBLocks },
         { "Check performance DB", &AgentDiagnosticsCheckDBPerformance },
-
+        { "Check lastseen DB", &AgentDiagnosticsCheckDBLastSeen },
         { NULL, NULL }
     };
 

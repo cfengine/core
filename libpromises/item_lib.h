@@ -48,7 +48,6 @@ typedef enum
     ITEM_MATCH_TYPE_LITERAL_SOMEWHERE_NOT,
     ITEM_MATCH_TYPE_REGEX_COMPLETE_NOT
 } ItemMatchType;
-
 void PrintItemList(const Item *list, Writer *w);
 void PrependFullItem(Item **liststart, const char *itemstring, const char *classes, int counter, time_t t);
 Item *ReturnItemIn(Item *list, const char *item);
@@ -76,6 +75,7 @@ int DeleteItemNotContaining(Item **list, const char *string);
 int ListLen(const Item *list);
 int ByteSizeList(const Item *list);
 bool IsItemIn(const Item *list, const char *item);
+bool ListsCompare(const Item *list1, const Item *list2);
 int IsMatchItemIn(Item *list, const char *item);
 Item *ConcatLists(Item *list1, Item *list2);
 void CopyList(Item **dest, const Item *source);

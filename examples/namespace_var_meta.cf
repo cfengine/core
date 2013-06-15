@@ -19,9 +19,6 @@ methods:
  "bla "usebundle => fred.example;
 
 reports:
-
-  !sdf::
-
    "remote var: $(fred:example.bundle_version)";
 
 }

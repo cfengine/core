@@ -35,7 +35,5 @@ vars:
 
 reports:
 
- linux::
-
   "Go $(head)";
 }

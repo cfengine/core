@@ -38,9 +38,6 @@ vars:
 
 reports:
 
-  !sdfkjh::
-
     "ls: $(ls)";
-
 }
 

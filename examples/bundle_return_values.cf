@@ -15,8 +15,6 @@ methods:
 
 reports:
 
-  cfengine_3::
-
     "My return was: \"$(my_return_var[1])\" and \"$(my_return_var[2])\""; 
     
 }
@@ -24,8 +22,6 @@ reports:
 bundle agent child
 {
 reports:
-
- cfengine_3::
 
    # Map these indices into the useresult namespace
 

@@ -44,8 +44,6 @@ vars:
 
 reports:
 
- cfengine_3::
-
   "IP address $(ip)";
 
 }

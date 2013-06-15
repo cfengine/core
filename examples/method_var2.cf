@@ -26,7 +26,6 @@ methods:
 bundle agent login(x)
 {
 reports:
-cfengine_3::
   "Setup login for $(x)";
 }
 
@@ -35,7 +34,6 @@ cfengine_3::
 bundle agent ssh_keys(x)
 {
 reports:
-cfengine_3::
   "Setup ssh keys for $(x)";
 }
 
@@ -44,7 +42,6 @@ cfengine_3::
 bundle agent environment(x)
 {
 reports:
-cfengine_3::
   "Setup login environment for $(x)";
 }
 

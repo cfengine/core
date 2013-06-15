@@ -52,8 +52,6 @@ methods:
 
 reports:
 
- cfengine_3::
-
    "The default value of X is $(X)";
    "The default value of Y is $(Y)";
 }
@@ -76,8 +74,6 @@ defaults:
   "no_return" string => "no such file";
 
 reports:
-
-  cfengine_3::
 
      "The value of a is $(a)";
      "The value of b is $(b)";

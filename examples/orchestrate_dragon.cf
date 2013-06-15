@@ -171,9 +171,6 @@ files:
      ifvarclass => "send_the_dragon_back_from_$(satellite)";
 
 reports:
-
-  !xyz::
-
     "Done $(satellite)";
 
 }
@@ -189,8 +186,6 @@ files:
       edit_line => append_if_no_line("Switch new dragon's target $(name)");
 
 reports:
-
-  !xyz::
    " X Switching new dragon's target $(name)";
 }
 

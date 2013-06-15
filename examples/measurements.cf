@@ -49,9 +49,6 @@ histograms => "true";
 bundle agent report
 {
 reports:
-
- cfengine_3::
-
    "
    Free memory read at $(mon.av_free_memory_watch)
    cf_monitord read $(mon.value_monitor_self_watch)   

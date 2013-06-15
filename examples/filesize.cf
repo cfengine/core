@@ -38,9 +38,6 @@ vars:
   "nexists" int => filesize("/etc/passwdx");
 
 reports:
-
-  !xyz::
-
     "File size $(exists)";
     "Does not exist $(nexists)";
 

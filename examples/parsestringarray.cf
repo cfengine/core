@@ -33,6 +33,5 @@ three: c";
  "keys" slist => getindices("items");
 
 reports:
-  cfengine_3::
 	"$(keys)";
 }

@@ -61,8 +61,6 @@ vars:
 
 reports:
 
-  linux::
-
     "Receive value $(remote1), $(remote2), $(remote3)";
 
     "And an error gives: $(remote_error)";

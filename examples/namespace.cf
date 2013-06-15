@@ -35,8 +35,6 @@ methods:
 
 reports:
 
-  cfengine_3::
-
     "Foreign namespace index list: $(alien_list)";
     "Local index list: $(local_list)";
 }
@@ -57,8 +55,6 @@ vars:
   "array[three]" string => "text three";
 
 reports:
-
-   cfengine_3::
 
      "TEST OK in no namespace";
 }

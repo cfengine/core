@@ -61,8 +61,6 @@ defaults:
 
 reports:
 
-  cfengine_3::
-
      "The value of list is $(list)";
 
 }

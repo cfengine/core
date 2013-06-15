@@ -83,8 +83,6 @@ classes:
 
 reports:
 
-  linux::
-
     "Dimension of passwd array $(dim_array)";
 
     "Read item from list: $(yyy)";

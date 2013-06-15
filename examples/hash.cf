@@ -41,8 +41,6 @@ vars:
 
 reports:
 
-  cfengine_3::
-
     "Hashed to: md5 $(md5)";
     "Hashed to: sha256 $(sha256)";
     "Hashed to: sha384 $(sha384)";

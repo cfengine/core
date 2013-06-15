@@ -11,8 +11,8 @@ commands:
    classes => example;
 
 reports:
-wasrepaired::
-  "The command-promise got repaired!";
+  wasrepaired::
+    "The command-promise got repaired!";
 }
 
 

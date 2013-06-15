@@ -38,6 +38,5 @@ bundle agent example
 
 {
 	reports:
-		linux::
 		"This is a test bundle";
 }

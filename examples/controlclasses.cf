@@ -74,6 +74,5 @@ myclass2::
 bundle edit_line name
 {
  reports:
-  cfengine_3::
    "xxx";
 }

@@ -44,8 +44,6 @@ vars:
 
 reports:
 
- linux::
-
    "Global $(g.array[1]) and $(localarray[2])";
 }
 

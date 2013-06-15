@@ -39,9 +39,6 @@ vars:
   "last3" string => lastnode("$(path2)","/");
 
 reports:
-
-  Yr2009::
-
     "Last = $(last1),$(last2),$(last3)";
 
 }

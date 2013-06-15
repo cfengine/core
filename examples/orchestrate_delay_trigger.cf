@@ -45,7 +45,6 @@ bundle agent one
 {
 reports:
 
-  cfengine::
    "One = $(this.bundle) at $(sys.date)"
         classes => if_repaired_persist("$(this.bundle)", "$(orchestrate.reset_time)"),
          action => if_elapsed("0");
@@ -59,8 +58,6 @@ reports:
 bundle agent two
 {
 reports:
-
-  cfengine::
 
    "Two = $(this.bundle) at $(sys.date)"
         classes => if_repaired_persist("$(this.bundle)", "$(orchestrate.reset_time)"),

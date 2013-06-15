@@ -62,9 +62,7 @@ vars:
   "bundle"  slist => { @(g.bundle) };
 
 reports:
-
-	linux::
-		"$(bundle)";
+    "$(bundle)";
 }
 
 bundle agent bundle2
@@ -83,17 +81,11 @@ reports:
 bundle agent bundle3
 {
 reports:
-
- linux::
-
     "Success extra...";
 }
 
 bundle agent bundle4
 {
 reports:
-
- linux::
-
     "Success extra more...";
 }

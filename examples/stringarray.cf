@@ -42,8 +42,6 @@ vars:
 
 reports:
 
-  cfengine_3::
-
     "Index $(idx): [1]=$(array_name[$(idx)][1]),[2]=$(array_name[$(idx)][2])...[7]=$(array_name[$(idx)][6])";
 }
 

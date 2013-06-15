@@ -26,7 +26,6 @@ methods:
 bundle agent test_one
 {
 reports:
-cfengine_3::
   "in test_one";
 }
 
@@ -35,7 +34,6 @@ cfengine_3::
 bundle agent test_two
 {
 reports:
-cfengine_3::
   "in test_two";
 }
 
@@ -44,7 +42,6 @@ cfengine_3::
 bundle agent test_three
 {
 reports:
-cfengine_3::
   "in test_three";
 }
 

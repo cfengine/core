@@ -46,9 +46,6 @@ vars:
   "testvar" string => "x";
 
 reports:
-
- !xyz::
-
   "Not a local variable: $(bundle_version)";
   "Not a local variable: $(other_bundle.something)";
   "Meta data (variable): $(example_meta.bundle_version)";

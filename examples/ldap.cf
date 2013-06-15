@@ -54,8 +54,6 @@ classes:
 
 reports:
 
- linux::
-
    "LDAP VALUE $(value) found";
    "LDAP LIST VALUE $(list)";
 
@@ -73,8 +71,6 @@ bundle agent followup
 
 {
 reports:
-
- linux::
 
    "Different bundle  ...$(ldap.myarray[uid]),$(ldap.myarray[gecos]), etc";
 

@@ -39,9 +39,6 @@ vars:
   "all_leaders" slist => peerleaders("/tmp/hostlist","#.*",4);
 
 reports:
-
- linux::
-
    "mypeer *$(mygroup)*";
    "myleader *$(myleader)*";
    "another leader *$(all_leaders)*";

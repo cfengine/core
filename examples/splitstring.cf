@@ -43,9 +43,6 @@ vars:
   "split2" slist => splitstring("alpha:xyz:beta","xyz","10");
 
 reports:
-
- linux::
-
   "Found key $(split1)";
   "Found key $(split2)";
 

@@ -44,9 +44,6 @@ vars:
   "i" slist => getindices("array");
 
 reports:
-
-  cfengine_3::
-
     "Scalar $(scalar1)";
 
     "LIst $(list1)";

@@ -33,9 +33,6 @@ bundle agent report
 
 {     
 reports:
-
-  linux::
-
    "/etc/passwd except $(const.n)"
 
      printfile => pr("/etc/passwd","5"),

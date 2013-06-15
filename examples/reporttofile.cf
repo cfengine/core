@@ -31,9 +31,6 @@ bundlesequence => { "example" };
 bundle agent example
 {
 reports:
-
-  linux::
-
    "$(sys.date),This is a report"
      report_to_file => "/tmp/test_log";
 }

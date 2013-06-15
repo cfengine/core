@@ -91,27 +91,18 @@ files:
 bundle agent overture
 {
 reports:
-
-  !xyz::
-
     "Singing the overture...";
 }
 
 bundle agent first_movement
 {
 reports:
-
-  !xyz::
-
     "Singing the first adagio...";
 }
 
 bundle agent second_movement
 {
 reports:
-
-  !xyz::
-
     "Singing second allegro...";
 
 }
@@ -119,9 +110,6 @@ reports:
 bundle agent final_movement
 {
 reports:
-
-  !xyz::
-
     "Trumpets for the finale";
 
 }

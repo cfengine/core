@@ -38,8 +38,6 @@ vars:
 
 reports:
 
-  Yr2008::
-
     "Users gid is $(gid)";
 
 }

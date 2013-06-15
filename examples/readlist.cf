@@ -39,8 +39,6 @@ vars:
 
 reports:
 
-  cfengine_3::
-
     "List entry: $(mylist)";
 
 }

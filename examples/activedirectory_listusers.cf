@@ -33,7 +33,6 @@ vars:
                                     "subtree",
                                     "none");
 reports:
-Yr2010::
   "Username: \"$(userlist)\"";
 }
 

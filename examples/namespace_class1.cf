@@ -30,8 +30,5 @@ reports:
 
     "Local classes in the namespace work";
 
- linux::
-
-     "Hard classes work everywhere - like here";
-
+    "Hard classes work everywhere - like here";
 }

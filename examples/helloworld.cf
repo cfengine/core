@@ -33,7 +33,5 @@ bundle agent hello
 {
 reports:
 
- linux::
-
    "Hello world!";
 }

@@ -15,14 +15,14 @@ files:
   transformer => "/bin/grep -q lkajfo999999 $(this.promiser)";
 
 reports:
-wasfailed::
+hasfailed::
   "The files-promise failed!";
 }
 
 body classes example
 {
 failed_returncodes => { "1" };
-repair_failed => { "wasfailed" };
+repair_failed => { "hasfailed" };
 }
 
 body copy_from copy(file)

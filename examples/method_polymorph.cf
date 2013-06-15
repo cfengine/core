@@ -25,7 +25,6 @@ methods:
 bundle agent linux_fix
 {
 reports:
-cfengine_3::
   "Fixes for linux";
 }
 
@@ -34,7 +33,6 @@ cfengine_3::
 bundle agent solaris_android
 {
 reports:
-cfengine_3::
   "Fixes for android";
 }
 

@@ -24,8 +24,5 @@ defaults:
  "d" string => "default d", if_match_regex => "\$\([a-zA-Z0-9_.]+\)";
 
 reports:
-
-   !nothing::
-
    "a = '$(a)', b = '$(b)', c = '$(c)' d = '$(d)'";
 }

@@ -38,7 +38,5 @@ vars:
 
 reports:
 
-  cfengine_3::
-
     "Product result: $(prod) > $(sum)";
 }

@@ -23,7 +23,7 @@ files:
 
 reports:
 
-  cfengine_3::  "test $(one) in $(this.namespace)_$(this.bundle)";
+    "test $(one) in $(this.namespace)_$(this.bundle)";
 }
 
 
@@ -34,9 +34,6 @@ insert_lines:
    "THIS IS NAME1";
 
 reports:
-
-  cfengine_3::
-
     "makefile in name 1";
 }
 

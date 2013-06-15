@@ -16,12 +16,9 @@ files:
         perms => name1:settings;
 
 reports:
-
-  cfengine_3::  "test $(one) $(two) in $(this.namespace)_$(this.bundle)";
+  "test $(one) $(two) in $(this.namespace)_$(this.bundle)";
 
 }
-
-
 
 bundle edit_line makefile
 {
@@ -30,8 +27,6 @@ insert_lines:
    "THIS IS NAME2";
 
 reports:
-
-  cfengine_3::
 
     "makefile in name 2";
 }

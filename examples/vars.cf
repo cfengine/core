@@ -35,8 +35,5 @@ vars:
  
 reports:
 
-  Yr2009::
-
     "Test = $(var)";
-
 }

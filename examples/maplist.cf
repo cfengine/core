@@ -54,10 +54,6 @@ vars:
   "newlist2" slist => maplist("Element ($(this))",@(oldlist));
 
 reports:
-
- linux::
-
-  "Transform: $(newlist1)";
-  "Transform: $(newlist2)";
-
+    "Transform: $(newlist1)";
+    "Transform: $(newlist2)";
 }

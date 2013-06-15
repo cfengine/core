@@ -38,8 +38,6 @@ vars:
 
 reports:
 
-  cfengine_3::
-
     "Found $(no) lines matching";
 
     "Mark's handle = $(userdata[1])";

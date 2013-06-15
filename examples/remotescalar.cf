@@ -63,9 +63,6 @@ processes:
        classes => enumerate("count_getty");
 
 reports:
-
- !elsewhere::
-
     "GOT remote scalar $(remote)";
     "GOT knowedge scalar $(know)";
     "GOT persistent scalar $(xyz)";

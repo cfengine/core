@@ -23,13 +23,11 @@ service_bundle => $(this.promiser)("$(this.service_policy)");
 bundle agent foo(service_policy)
 {
 reports:
-cfengine_3::
  "we need to ensure $(service_policy) of foo";
 }
 
 bundle agent bar(service_policy)
 {
 reports:
-cfengine_3::
  "we need to ensure $(service_policy) of bar";
 }

@@ -44,9 +44,6 @@ vars:
   "sublist" slist => grep("T.*","mylist");
 
 reports:
-
- linux::
-
   "Item: $(sublist)";
 
 }

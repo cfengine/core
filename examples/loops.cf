@@ -42,9 +42,6 @@ vars:
   "array[cf-execd]" string => "The executor, not executioner";
 
 reports:
-
-  cfengine_3::
-
    "/bin/echo $(component) is $(array[$(component)])";
 
 }

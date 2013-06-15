@@ -43,8 +43,6 @@ vars:
 
 reports:
 
- cfengine_3::
-
   "Found $(number) classes matching cf.*";
 
 }

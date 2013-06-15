@@ -58,8 +58,8 @@ classes:
 
 reports:
 
-ok::
+  ok::
 
-  "MAC address is $(mac[1])";
+    "MAC address is $(mac[1])";
 
 }

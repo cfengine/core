@@ -30,6 +30,7 @@
 
 typedef enum
 {
+    LOG_LEVEL_NOTHING = -1,
     LOG_LEVEL_CRIT,
     LOG_LEVEL_ERR,
     LOG_LEVEL_WARNING,

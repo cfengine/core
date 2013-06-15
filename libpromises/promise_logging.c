@@ -91,7 +91,7 @@ static LogLevel CalculateLogLevel(const EvalContext *ctx, const Promise *pp)
     /* FIXME: do we really need it? */
     if (!IsPrivileged() || DONTDO)
     {
-        log_level = -1;
+        log_level = LOG_LEVEL_NOTHING;
     }
 
     return log_level;

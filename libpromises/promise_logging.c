@@ -87,11 +87,10 @@ static LogLevel CalculateLogLevel(const EvalContext *ctx, const Promise *pp)
         log_level = AdjustLogLevel(log_level, GetLevelForPromise(ctx, pp, "log_level"));
     }
 
-    /* Disable system log for dry-runs and for non-root agent */
-    /* FIXME: do we really need it? */
-    if (!IsPrivileged() || DONTDO)
+    /* Disable system log for dry-runs */
+    if (DONTDO)
     {
-        log_level = -1;
+        log_level = LOG_LEVEL_NOTHING;
     }
 
     return log_level;

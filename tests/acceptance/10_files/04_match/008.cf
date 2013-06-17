@@ -32,14 +32,16 @@ bundle agent test
 bundle agent check
 {
   classes:
-    "fail" expression => regcmp(".*chdir.*", $(test.agent));
+    "chdir" expression => regcmp(".*chdir.*", $(test.agent));
+    "checkpoint" expression => regcmp(".*CHECKPOINT.*", $(test.agent));
+    "ok" and => { "!chdir", "checkpoint" };
 
   reports:
     DEBUG::
       "This should only pass if $(this.promise_filename).sub does not output anything about failing to chdir";
       "Output from $(this.promise_filename).sub: $(test.agent)";
-    !fail::
+    ok::
       "$(this.promise_filename) Pass";
-    fail::
+    !ok::
       "$(this.promise_filename) FAIL";
 }

@@ -15,8 +15,8 @@ Top reasons pull-requests are rejected or delayed
 
 * Code does not follow style guidlines. (See section on Coding Style)
 
-* Pull request addresses several disperate issues. In general, smaller pull-requests are better
-because they are easier to review and stay mergable longer.
+* Pull request addresses several disparate issues. In general, smaller pull-requests are better
+because they are easier to review and stay mergeable longer.
 
 * Messy commit log. Tidy up the commit log by squashing commits. Write good commit messages:
 One line summary at the top, followed by an optional detailing paragraphs. Please reference

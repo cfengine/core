@@ -331,7 +331,7 @@ static int SelectProcTimeAbsRangeMatch(char *name1, char *name2, time_t min, tim
 
         if ((min <= value) && (value <= max))
         {
-            Log(LOG_LEVEL_VERBOSE, "Selection filter matched absolute '%s/%s' = '%s' in [%jd,%jd]", name1, name2, line[i],
+            Log(LOG_LEVEL_VERBOSE, "Selection filter matched absolute '%s/%s' = '%s(%jd)' in [%jd,%jd]", name1, name2, line[i], (intmax_t)value,
                   (intmax_t)min, (intmax_t)max);
             return true;
         }

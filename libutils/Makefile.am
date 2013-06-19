@@ -16,7 +16,8 @@ libutils_la_SOURCES = \
 	bool.h \
 	json.c json.h \
 	refcount.c refcount.h refcount_p.h \
-	list.c list.h list_p.h \
+	list.c list.h \
+	bufferlist.c bufferlist.h \
 	logging.c logging.h logging_priv.h\
 	buffer.c buffer.h \
     ip_address.c ip_address.h \

@@ -64,6 +64,7 @@ check_PROGRAMS = \
 	refcount_test \
 	list_test \
 	buffer_test \
+	bufferlist_test \
 	cf_key_functions_test \
 	connection_management_test \
 	expand_test \
@@ -114,6 +115,8 @@ list_test_SOURCES = list_test.c
 refcount_test_SOURCES = refcount_test.c ../../libutils/refcount.c
 
 buffer_test_SOURCES = buffer_test.c ../../libutils/buffer.c
+
+bufferlist_test_SOURCES = bufferlist_test.c ../../libutils/buffer.c ../../libutils/list.c
 
 cf_key_functions_test_SOURCES = cf_key_functions_test.c ../../cf-key/cf-key-functions.c
 

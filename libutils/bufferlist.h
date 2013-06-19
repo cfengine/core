@@ -22,89 +22,44 @@
   included file COSL.txt.
 */
 
-#ifndef CFENGINE_LIST_H
-#define CFENGINE_LIST_H
+#ifndef CFENGINE_BUFFERLIST_H
+#define CFENGINE_BUFFERLIST_H
 
 #include <stdlib.h>
 #include "refcount.h"
+#include "buffer.h"
+#include "list.h"
 
 /**
-  @brief Double linked list implementation.
+  @brief Buffer list implementation.
 
-  A linked list is to be used when data needs to be stored and then sequentially processed, not for quick
-  lookups. Prime examples of bad usage of a linked list is for instance having a list of files and then
-  iterating over the list to find a particular file based on the name. A Map will be much better for this type
-  of usage. A good usage for a linked list is to store a list of files that need to be changed sequentially.
-  For instance a list of files that need to change permissions.
-
-  A linked list should not be used when fast retrieval is important, for that it is better to use a Map.
-  The implementation of the list is kept intentionally opaque, so we can change it in the future. It provides a
-  reference counted list with copy on write. In order for this to work the user needs to provide at least a copy
-  function. The List is used at its full potential if the user provides three helper functions:
-  - copy(void *source, void **destination)
-  - compare(void *a, void *b)
-  - destroy(void *element)
-
-  It is highly recommend to at least implement the copy function, since that is the key for the copy on write implementation.
-  The destroy function is recommended to avoid leaking memory whenever an element is destroyed. Notice that the
-  list never copies the elements, so as long as the user still has access to the elements this function does not
-  need to be implemented and the user then needs to delete the elements afterwards.
-
-  The compare function is a nice to have function. It is used when the user wants to remove elements, in order to
-  find the right element to delete. If this function is not provided, then the list will try to match the pointer.
-  These three helper functions can assume that they will never be called with NULL pointers.
-
-  A special note on the copy function. The copy function is analog to the copy constructor in C++, it takes a properly
-  constructed element and produces a newly created element that is a copy of the previous one. The copy function
-  needs to allocate memory for the new element and then fill it with the proper data. It should be avoid moving
-  pointers around, it should copy the content to the new element so the new element is not tied to the previous
-  element.
-
-  The list can have many iterators, but only one mutable iterator at any given time. The difference between a normal
-  iterator and a mutable iterator is the fact that with normal iterators only additions can be performed to the list
-  without invalidating the iterator, while the mutable iterator allows any kind of change. Be aware that removing from
-  the list, either by using remove or via the mutable iterator will invalidate all the normal iterators.
-
-  Simple way to iterate over the list:
-
-  ListIterator *i = ListIteratorGet(list);
-  int r = 0;
-  for (r = ListIteratorFirst(i); r == 0; r = ListIteratorNext(i))
-  {
-      MyData = ListIteratorData(i);
-      ...
-      Do something with the data.
-      ...
-  }
+  This data structure is a specialization of List to be used only with Buffer structures.
+  Please consult the List documentation for more general information.
   */
-typedef struct List List;
-typedef struct ListMutableIterator ListMutableIterator;
-typedef struct ListIterator ListIterator;
+typedef struct BufferList BufferList;
+typedef struct BufferListMutableIterator BufferListMutableIterator;
+typedef struct BufferListIterator BufferListIterator;
 /**
-  @brief Initialization of a linked list.
-  @param compare Compare functions for the elements of the list. Same semantic as strcmp.
-  @param copy Copies one element into a new element.
-  @param destroy Destroys an element.
+  @brief Initialization of a buffer list.
   @return A fully initialized list ready to be used or -1 in case of error.
   */
-List *ListNew(int (*compare)(const void *, const void *), void (*copy)(const void *source, void **destination), void (*destroy)(void *));
+BufferList *BufferListNew();
 /**
-  @brief Destroy a linked list.
+  @brief Destroy a buffer list.
   @param list List to be destroyed. It can be a NULL pointer.
   @return 0 if destroyed, -1 otherwise.
   */
-int ListDestroy(List **list);
+int BufferListDestroy(BufferList **list);
 /**
-  @brief Performs a shallow copy of a linked list.
+  @brief Performs a shallow copy of a buffer list.
   A shallow copy is a copy that does not copy the elements but only the list structure.
   This is done by internal reference counting. If any of the lists is modified afterwards
   then a deep copy of the list is triggered and all the elements are copied.
   @param origin Original list to be copied.
   @param destination List to be copied to.
   @return 0 if copied, -1 otherwise.
-  @remark If no copy function is provided, then this function returns -1.
   */
-int ListCopy(List *origin, List **destination);
+int BufferListCopy(BufferList *origin, BufferList **destination);
 /**
   @brief Adds an element to the beginning of the list.
   Notice that we do not copy the element, so if the original element is free'd there will be
@@ -118,7 +73,7 @@ int ListCopy(List *origin, List **destination);
   @param payload Data to be added.
   @return 0 if prepended, -1 otherwise.
   */
-int ListPrepend(List *list, void *payload);
+int BufferListPrepend(BufferList *list, Buffer *payload);
 /**
   @brief Adds an element to the end of the list.
   Notice that we do not copy the element, so if the original element is free'd there will be
@@ -132,26 +87,26 @@ int ListPrepend(List *list, void *payload);
   @param payload Data to be added.
   @return 0 if appended, -1 otherwise.
   */
-int ListAppend(List *list, void *payload);
+int BufferListAppend(BufferList *list, Buffer *payload);
 /**
-  @brief Removes an element from the linked list.
+  @brief Removes an element from the buffer list.
   Removes the first element that matches the payload. It starts looking from the beginning of the list.
   Notice that this might trigger a deep copy of the list. This only happens if the list was
   copied before.
-  @param list Linked list.
+  @param list Buffer list.
   @param payload Data to be removed.
   @return 0 if removed, -1 otherwise.
   */
-int ListRemove(List *list, void *payload);
+int BufferListRemove(BufferList *list, Buffer *payload);
 /**
   @brief Returns the number of elements on a given linked list.
-  @param list Linked list.
+  @param list Buffer list.
   @return The number of elements on the list.
   */
-int ListCount(List *list);
+int BufferListCount(BufferList *list);
 
 /**
-  @brief Gets an iterator for a given linked list.
+  @brief Gets an iterator for a given buffer list.
 
   This iterator will be invalid if data is removed from the list. It will still be valid
   after a new addition though.
@@ -160,7 +115,7 @@ int ListCount(List *list);
   @param iterator Iterator.
   @return A fully initialized iterator or NULL in case of error.
   */
-ListIterator *ListIteratorGet(List *list);
+BufferListIterator *BufferListIteratorGet(BufferList *list);
 /**
   @brief Releases the memory associated with an iterator.
 
@@ -170,47 +125,47 @@ ListIterator *ListIteratorGet(List *list);
   @param iterator Iterator.
   @return 0 if released, -1 otherwise.
   */
-int ListIteratorDestroy(ListIterator **iterator);
+int BufferListIteratorDestroy(BufferListIterator **iterator);
 /**
   @brief Moves the iterator to the first element of the list.
   @param iterator Iterator.
   @return 0 if it was possible to move, -1 otherwise.
   */
-int ListIteratorFirst(ListIterator *iterator);
+int BufferListIteratorFirst(BufferListIterator *iterator);
 /**
   @brief Moves the iterator to the last element of the list.
   @param iterator Iterator.
   @return 0 if it was possible to move, -1 otherwise.
   */
-int ListIteratorLast(ListIterator *iterator);
+int BufferListIteratorLast(BufferListIterator *iterator);
 /**
   @brief Moves the iterator to the next element of the list.
   @param iterator Iterator.
   @return 0 if it was possible to move, -1 otherwise.
   */
-int ListIteratorNext(ListIterator *iterator);
+int BufferListIteratorNext(BufferListIterator *iterator);
 /**
   @brief Moves the iterator to the previous element of the list.
   @param iterator Iterator.
   @return 0 if it was possible to move, -1 otherwise.
   */
-int ListIteratorPrevious(ListIterator *iterator);
+int BufferListIteratorPrevious(BufferListIterator *iterator);
 /**
   @brief Returns the data associated with the current element.
   @param iterator Iterator.
   @return Pointer to the data or NULL if it was not possible.
   */
-void *ListIteratorData(const ListIterator *iterator);
+Buffer *BufferListIteratorData(const BufferListIterator *iterator);
 /**
   @brief Checks if the iterator has a next element
   @return True if it has a next element or False if not.
   */
-bool ListIteratorHasNext(const ListIterator *iterator);
+bool BufferListIteratorHasNext(const BufferListIterator *iterator);
 /**
   @brief Checks if the iterator has a previous element
   @return True if it has a previous element or False if not.
   */
-bool ListIteratorHasPrevious(const ListIterator *iterator);
+bool BufferListIteratorHasPrevious(const BufferListIterator *iterator);
 
 /**
   @brief Creates a new mutable iterator.
@@ -225,7 +180,7 @@ bool ListIteratorHasPrevious(const ListIterator *iterator);
   @param iterator Iterator to be initialized.
   @return A fully initialized iterator or NULL in case of error.
   */
-ListMutableIterator *ListMutableIteratorGet(List *list);
+BufferListMutableIterator *BufferListMutableIteratorGet(BufferList *list);
 /**
   @brief Releases the memory associated with an iterator.
 
@@ -235,37 +190,37 @@ ListMutableIterator *ListMutableIteratorGet(List *list);
   @param iterator Iterator.
   @return 0 if released, -1 otherwise.
   */
-int ListMutableIteratorRelease(ListMutableIterator **iterator);
+int BufferListMutableIteratorRelease(BufferListMutableIterator **iterator);
 /**
   @brief Moves the iterator to the first element of the list.
   @param iterator Iterator.
   @return 0 if it was possible to move, -1 otherwise.
   */
-int ListMutableIteratorFirst(ListMutableIterator *iterator);
+int BufferListMutableIteratorFirst(BufferListMutableIterator *iterator);
 /**
   @brief Moves the iterator to the last element of the list.
   @param iterator Iterator.
   @return 0 if it was possible to move, -1 otherwise.
   */
-int ListMutableIteratorLast(ListMutableIterator *iterator);
+int BufferListMutableIteratorLast(BufferListMutableIterator *iterator);
 /**
   @brief Moves the iterator to the next element of the list.
   @param iterator Iterator.
   @return 0 if it was possible to move, -1 otherwise.
   */
-int ListMutableIteratorNext(ListMutableIterator *iterator);
+int BufferListMutableIteratorNext(BufferListMutableIterator *iterator);
 /**
   @brief Moves the iterator to the previous element of the list.
   @param iterator Iterator.
   @return 0 if it was possible to move, -1 otherwise.
   */
-int ListMutableIteratorPrevious(ListMutableIterator *iterator);
+int BufferListMutableIteratorPrevious(BufferListMutableIterator *iterator);
 /**
   @brief Returns the data associated with the current element.
   @param iterator Iterator.
   @return Pointer to the data or NULL if it was not possible.
   */
-void *ListMutableIteratorData(const ListMutableIterator *iterator);
+Buffer *BufferListMutableIteratorData(const BufferListMutableIterator *iterator);
 /**
   @brief Removes the current element from the list.
 
@@ -278,7 +233,7 @@ void *ListMutableIteratorData(const ListMutableIterator *iterator);
   @param iterator Iterator
   @return 0 if removed, -1 otherwise.
   */
-int ListMutableIteratorRemove(ListMutableIterator *iterator);
+int BufferListMutableIteratorRemove(BufferListMutableIterator *iterator);
 /**
   @brief Prepends element on front of the element pointed by the iterator.
 
@@ -290,7 +245,7 @@ int ListMutableIteratorRemove(ListMutableIterator *iterator);
   @param payload Element to be prepended.
   @return 0 if prepended, -1 in case of error.
   */
-int ListMutableIteratorPrepend(ListMutableIterator *iterator, void *payload);
+int BufferListMutableIteratorPrepend(BufferListMutableIterator *iterator, Buffer *payload);
 /**
   @brief Appends element after the element pointed by the iterator.
 
@@ -302,16 +257,16 @@ int ListMutableIteratorPrepend(ListMutableIterator *iterator, void *payload);
   @param payload Element to be appended.
   @return 0 if appended, -1 in case of error.
   */
-int ListMutableIteratorAppend(ListMutableIterator *iterator, void *payload);
+int BufferListMutableIteratorAppend(BufferListMutableIterator *iterator, Buffer *payload);
 /**
   @brief Checks if the iterator has a next element
   @return True if it has a next element or False if not.
   */
-bool ListMutableIteratorHasNext(const ListMutableIterator *iterator);
+bool BufferListMutableIteratorHasNext(const BufferListMutableIterator *iterator);
 /**
   @brief Checks if the iterator has a previous element
   @return True if it has a previous element or False if not.
   */
-bool ListMutableIteratorHasPrevious(const ListMutableIterator *iterator);
+bool BufferListMutableIteratorHasPrevious(const BufferListMutableIterator *iterator);
 
-#endif // CFENGINE_LIST_H
+#endif // CFENGINE_BUFFERLIST_H

@@ -113,7 +113,7 @@ const char *LogLevelToString(LogLevel level)
     case LOG_LEVEL_DEBUG:
         return "debug";
     default:
-        ProgrammingError("Unknown log level passed to LogLevelToString: %d", level);
+        ProgrammingError("LogLevelToString: Unexpected log level %d", level);
     }
 }
 
@@ -138,7 +138,7 @@ static const char *LogLevelToColor(LogLevel level)
         return "\x1b[34m"; // blue
 
     default:
-        ProgrammingError("Unknown log level passed to LogLevelToColor %d", level);
+        ProgrammingError("LogLevelToColor: Unexpected log level %d", level);
     }
 }
 
@@ -193,9 +193,11 @@ static int LogLevelToSyslogPriority(LogLevel level)
     case LOG_LEVEL_INFO: return LOG_INFO;
     case LOG_LEVEL_VERBOSE: return LOG_DEBUG; /* FIXME: Do we really want to conflate those levels? */
     case LOG_LEVEL_DEBUG: return LOG_DEBUG;
+    default:
+        ProgrammingError("LogLevelToSyslogPriority: Unexpected log level %d",
+                         level);
     }
 
-    ProgrammingError("Unknown log level passed to LogLevelToSyslogPriority: %d", level);
 }
 
 void LogToSystemLog(const char *msg, LogLevel level)

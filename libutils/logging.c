@@ -135,8 +135,9 @@ void LogToStdout(const char *msg, ARG_UNUSED LogLevel level)
         time_t now_seconds = time(NULL);
         localtime_r(&now_seconds, &now);
 
-        char formatted_timestamp[25];
-        if (strftime(formatted_timestamp, 25, "%Y-%m-%dT%H:%M:%S%z", &now) == 0)
+        char formatted_timestamp[64];
+        if (strftime(formatted_timestamp, sizeof(formatted_timestamp),
+                     "%Y-%m-%dT%H:%M:%S%z", &now) == 0)
         {
             // There was some massacre formating the timestamp. Wow
             strlcpy(formatted_timestamp, "<unknown>", sizeof(formatted_timestamp));
@@ -144,7 +145,7 @@ void LogToStdout(const char *msg, ARG_UNUSED LogLevel level)
 
         const char *string_level = LogLevelToString(level);
 
-        printf("%-24s %8s: %s\n", formatted_timestamp, string_level, msg);
+        printf("%s %8s: %s\n", formatted_timestamp, string_level, msg);
     }
 }
 

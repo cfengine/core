@@ -161,8 +161,9 @@ void LogToStdout(const char *msg, LogLevel level, bool color)
         time_t now_seconds = time(NULL);
         localtime_r(&now_seconds, &now);
 
-        char formatted_timestamp[25];
-        if (strftime(formatted_timestamp, 25, "%Y-%m-%dT%H:%M:%S%z", &now) == 0)
+        char formatted_timestamp[64];
+        if (strftime(formatted_timestamp, sizeof(formatted_timestamp),
+                     "%Y-%m-%dT%H:%M:%S%z", &now) == 0)
         {
             // There was some massacre formating the timestamp. Wow
             strlcpy(formatted_timestamp, "<unknown>", sizeof(formatted_timestamp));
@@ -172,11 +173,12 @@ void LogToStdout(const char *msg, LogLevel level, bool color)
 
         if (color)
         {
-            printf("%s%-24s %8s: %s\x1b[0m\n", LogLevelToColor(level), formatted_timestamp, string_level, msg);
+            printf("%s%s %8s: %s\x1b[0m\n", LogLevelToColor(level),
+                   formatted_timestamp, string_level, msg);
         }
         else
         {
-            printf("%-24s %8s: %s\n", formatted_timestamp, string_level, msg);
+            printf("%s %8s: %s\n", formatted_timestamp, string_level, msg);
         }
     }
 }

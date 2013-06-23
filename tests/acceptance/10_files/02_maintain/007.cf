@@ -21,7 +21,7 @@ vars:
         "source" string => "/etc/group";
         "source_command" string => 'printf "%d", (stat("$(g.source)"))[7]';
         "source_size" string => execresult(
-            "/usr/bin/perl -le '$(g.source_command)'",
+            "$(G.perl) -le '$(g.source_command)'",
             "noshell");
 }
 
@@ -46,7 +46,7 @@ bundle agent test
 {
 vars:
     "mode" string => execresult(
-	"/usr/bin/perl -le 'printf \"%o\", (stat(\"$(g.source)\"))[2]&07777'",
+	"$(G.perl) -le 'printf \"%o\", (stat(\"$(g.source)\"))[2]&07777'",
     "noshell");
 
 files:
@@ -76,7 +76,7 @@ vars:
         "expect" string => "$(test.mode) 1 3 3 $(g.source_size)";
 
         "result" string => execresult(
-            "/usr/bin/perl -le '$(g.command)'",
+            "$(G.perl) -le '$(g.command)'",
             "noshell");
 
 classes:

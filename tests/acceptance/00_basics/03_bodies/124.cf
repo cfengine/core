@@ -32,10 +32,10 @@ classes:
 
 processes:
   set_bundle_class::
-    "/bin/true"
+    "$(G.true)"
       classes => bundle_class;
 
-    "/bin/true"
+    "$(G.true)"
       classes => namespace_class;
 }
 

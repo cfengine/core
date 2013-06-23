@@ -96,7 +96,7 @@ bundle agent check
 {
 classes:
 	"no_difference" expression => returnszero(
-	    "/usr/bin/diff -q $(G.testfile).actual $(G.testfile).expected",
+	    "$(G.diff) -q $(G.testfile).actual $(G.testfile).expected",
 	    "noshell");
 	"ok" and => { "pass", "!fail", "no_difference" };
 

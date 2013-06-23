@@ -22,7 +22,7 @@ files:
 # We can't use files promise here as it will remember we have created the file
 # and will not generate backup file which we are trying to get.
 commands:
-  "/bin/echo LimpBizkit > $(G.testdir)/destfile"
+  "$(G.echo) LimpBizkit > $(G.testdir)/destfile"
     contain => shell;
 }
 

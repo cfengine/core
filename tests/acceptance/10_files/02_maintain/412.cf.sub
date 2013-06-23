@@ -30,7 +30,7 @@ body edit_defaults rotate
 bundle edit_line append_nonsense
 {
 vars:
-  "ns" string => execresult("/bin/date +%N", "noshell");
+  "ns" string => execresult("$(G.date) +%N", "noshell");
 insert_lines:
         "$(ns)";
 }

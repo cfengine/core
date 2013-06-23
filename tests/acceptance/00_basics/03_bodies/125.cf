@@ -15,7 +15,7 @@ vars:
 
 processes:
   any::
-   "/bin/true"
+   "$(G.true)"
      classes => set_cancel_this;
 }
 
@@ -23,7 +23,7 @@ bundle agent test
 {
 processes:
   any::
-    "/bin/true"
+    "$(G.true)"
       classes => bundle_class;
 }
 

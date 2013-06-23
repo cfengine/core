@@ -68,6 +68,7 @@ static void Linux_Oracle_VM_Server_Version(EvalContext *ctx);
 static void Linux_Oracle_Version(EvalContext *ctx);
 static int Linux_Suse_Version(EvalContext *ctx);
 static int Linux_Slackware_Version(EvalContext *ctx, char *filename);
+static bool Linux_LSB_Release_Version(EvalContext *ctx);
 static int Linux_Debian_Version(EvalContext *ctx);
 static int Linux_Mandrake_Version(EvalContext *ctx);
 static int Linux_Mandriva_Version(EvalContext *ctx);
@@ -82,6 +83,10 @@ static void Xen_Cpuid(uint32_t idx, uint32_t *eax, uint32_t *ebx, uint32_t *ecx,
 static int Xen_Hv_Check(void);
 #endif
 
+char *StrToLower(char *str);
+static bool LookupKey(char *buf, char *lookup_key, char *val);
+
+static bool ReadLines(const char *filename, char *buf, int bufsize);
 static bool ReadLine(const char *filename, char *buf, int bufsize);
 static FILE *ReadFirstLine(const char *filename, char *buf, int bufsize);
 #endif
@@ -1751,81 +1756,330 @@ static int Linux_Slackware_Version(EvalContext *ctx, char *filename)
 
 /******************************************************************/
 
-static int Linux_Debian_Version(EvalContext *ctx)
+static bool Linux_LSB_Release_Version(EvalContext *ctx)
 {
-#define DEBIAN_VERSION_FILENAME "/etc/debian_version"
-#define DEBIAN_ISSUE_FILENAME "/etc/issue"
+    /* Only LinuxMint, LMDE, and Ubuntu define LSBRELEASE_FILENAME */
+    /* LinuxMint, LMDE, Ubuntu, and Debian define OSRELEASE_FILENAME */
+    /* Mon Jun 10 21:45:09 EDT 2013 */
+
+    #define LSBRELEASE_FILENAME "/etc/lsb-release"
+    #define OSRELEASE_FILENAME "/etc/os-release"
+
     int major = -1;
     int release = -1;
-    int result;
+    int result = 0;
+    struct stat statbuf;
+    char classname[CF_MAXVARSIZE], buffer[CF_MAXVARSIZE], os[CF_MAXVARSIZE], version[CF_MAXVARSIZE];
+    char key_buf[CF_MAXVARSIZE], val_buf[CF_MAXVARSIZE];
+
+    buffer[0] = classname[0] = os[0] = version[0] = key_buf[0] = val_buf[0] = '\0';
+
+    /* if true must be LinuxMint, LMDE, or Ubuntu going forward*/
+    if (stat(LSBRELEASE_FILENAME, &statbuf) == -1)
+    {
+        return false;
+    }
+
+    if (ReadLines(LSBRELEASE_FILENAME, buffer, sizeof(buffer)))
+    {
+        if (!LookupKey(buffer, "DISTRIB_ID", val_buf))
+        {
+            return false;
+        }
+
+        strncpy(os, StrToLower(val_buf), strlen(val_buf)+1);
+    }
+
+    /* lookup and store major and/or release */
+    if (LookupKey(buffer, "DISTRIB_RELEASE", val_buf))
+    {
+        result = sscanf(val_buf, "%d.%d", &major, &release);
+    }
+
+    /* if linuxmint is detected from LSBRELEASE_FILENAME */
+    if (strcmp(os, "linuxmint") == 0)
+    {
+        /* and OSRELEASE_FILENAME exists */
+        if (stat(OSRELEASE_FILENAME, &statbuf) == -1)
+        {
+            return false;
+        }
+
+        if (!ReadLines(OSRELEASE_FILENAME, buffer, sizeof(buffer)))
+        {
+            return false;
+        }
+
+        /* preform os-release ID lookup */
+        if (!LookupKey(buffer, "ID", val_buf))
+        {
+            return false;
+        }
+
+        StrToLower(val_buf);
+
+        /* lmde defines os-release ID as "linumint" */
+        if (strcmp(val_buf, "linuxmint") == 0)
+        {
+            #define MINT "LinuxMint"
+            strcpy(os, MINT);
+            Log(LOG_LEVEL_VERBOSE, "This appears to be a %s system.", os);
+            EvalContextHeapAddHard(ctx, StrToLower(os));
+
+            #define LMDE "LMDE"
+            strcpy(os, LMDE);
+            Log(LOG_LEVEL_VERBOSE, "also known as a %s system.", os);
+            SetFlavour(ctx, StrToLower(os));
+            
+            if (major != -1)
+            {
+                switch (result)
+                {
+                case 2:
+                    snprintf(version, CF_MAXVARSIZE, "%d_%d", major, release);
+
+                    snprintf(classname, CF_MAXVARSIZE, "%s_%d", os, major);
+                    SetFlavour(ctx, classname);
+
+                    snprintf(classname, CF_MAXVARSIZE, "%s_%s", os, version);
+                    SetFlavour(ctx, classname);
+                    break;
+
+                case 1:
+                    snprintf(version, CF_MAXVARSIZE, "%d", major);
+                    snprintf(classname, CF_MAXVARSIZE, "%s_%s", os, version);
+                    SetFlavour(ctx, classname);
+                    break;
+
+                /* default switch case should go here */
+                }
+            }
+
+            #define LMDE_DEBIAN_DERIVED "debian"
+            strcpy(os, LMDE_DEBIAN_DERIVED);
+            Log(LOG_LEVEL_VERBOSE, "Derived from a %s system.", os);
+            snprintf(classname, CF_MAXVARSIZE, "%s_derived", os);
+            SetFlavour(ctx, classname);
+        }
+        /* mint defines os-release ID as "ubuntu" */
+        else if (strcmp(val_buf, "ubuntu") == 0)
+        {
+            #define MINT "LinuxMint"
+            strcpy(os, MINT);
+            Log(LOG_LEVEL_VERBOSE, "This appears to be a %s system.", os);
+            EvalContextHeapAddHard(ctx, StrToLower(os));
+
+            if (major != -1)
+            {
+                switch (result)
+                {
+                case 2:
+                    snprintf(version, CF_MAXVARSIZE, "%d_%d", major, release);
+
+                    snprintf(classname, CF_MAXVARSIZE, "%s_%d", os, major);
+                    SetFlavour(ctx, classname);
+
+                    snprintf(classname, CF_MAXVARSIZE, "%s_%s", os, version);
+                    SetFlavour(ctx, classname);
+                    break;
+
+                case 1:
+                    snprintf(version, CF_MAXVARSIZE, "%d", major);
+                    snprintf(classname, CF_MAXVARSIZE, "%s_%s", os, version);
+                    SetFlavour(ctx, classname);
+                    break;
+
+                /* default switch case should go here */
+                }
+            }
+
+            Log(LOG_LEVEL_VERBOSE, "Derived from a %s system.", val_buf);
+            snprintf(classname, CF_MAXVARSIZE, "%s_derived", val_buf);
+            SetFlavour(ctx, classname);
+        }
+    }
+
+    /* if ubuntu os detected from lsb-release */
+    else if (strcmp(os, "ubuntu") == 0)
+    {
+        Log(LOG_LEVEL_VERBOSE, "This appears to be a %s system.", os);
+        EvalContextHeapAddHard(ctx, StrToLower(os));
+
+        if (major != -1)
+        {
+            switch (result)
+            {
+            case 2:
+                snprintf(version, CF_MAXVARSIZE, "%d_%d", major, release);
+
+                snprintf(classname, CF_MAXVARSIZE, "%s_%d", os, major);
+                SetFlavour(ctx, classname);
+
+                snprintf(classname, CF_MAXVARSIZE, "%s_%s", os, version);
+                SetFlavour(ctx, classname);
+                break;
+
+            case 1:
+                snprintf(version, CF_MAXVARSIZE, "%d", major);
+                snprintf(classname, CF_MAXVARSIZE, "%s_%s", os, version);
+                SetFlavour(ctx, classname);
+                break;
+
+            /* default switch case should go here */
+            }
+        }
+
+        /* OS_RELEASE exists */
+        if (stat(OSRELEASE_FILENAME, &statbuf) == -1)
+        {
+          return false;
+        }
+
+        if (!ReadLines(OSRELEASE_FILENAME, buffer, sizeof(buffer)))
+        {
+          return false;
+        }
+
+        if (!LookupKey(buffer, "ID_LIKE", val_buf))
+        {
+            return false;
+        }
+
+        Log(LOG_LEVEL_VERBOSE, "Derived from a %s system.", val_buf);
+        snprintf(classname, CF_MAXVARSIZE, "%s_derived", val_buf);
+        SetFlavour(ctx, classname);
+    }
+
+    /* more else ifs for other lsb-release linuxes */
+
+    return true;
+}
+
+//        /* detect version: major_release or major */
+//        if (strcmp(key_buf, "DISTRIB_RELEASE") == 0)
+//        {
+//            result = sscanf(val_buf, "%d.%d", &major, &release);
+//            switch (result)
+//            {
+//            case 2:
+//                if (version[0] == '\0')
+//                {
+//                    if (release >= 0)
+//                    {
+//                        snprintf(version, CF_MAXVARSIZE, "%d_%d", major, release);
+//
+//                        snprintf(classname, CF_MAXVARSIZE, "%s_%d", os, major);
+//                        SetFlavour(ctx, classname);
+//
+//                        snprintf(classname, CF_MAXVARSIZE, "%s_%s", os, version);
+//                        SetFlavour(ctx, classname);
+//                    }
+//                    else
+//                    {
+//                        snprintf(version, CF_MAXVARSIZE, "%d", major);
+//                        snprintf(classname, CF_MAXVARSIZE, "%s_%s", os, version);
+//                        SetFlavour(ctx, classname);
+//                    }
+//                }
+//                break;
+//
+//            case 1:
+//                if (version[0] == '\0')
+//                {
+//                    snprintf(version, CF_MAXVARSIZE, "%d", major);
+//                    snprintf(classname, CF_MAXVARSIZE, "%s_%s", os, version);
+//                    SetFlavour(ctx, classname);
+//                }
+//                break;
+//
+//            /* default switch case should go here */
+//            }
+//        }
+
+/******************************************************************/
+
+static int Linux_Debian_Version(EvalContext *ctx)
+{
+    #define DEBIAN_VERSION_FILENAME "/etc/debian_version"
+    #define DEBIAN_ISSUE_FILENAME "/etc/issue"
+
+    int major = -1;
+    int release = -1;
+    int result = 0;
     char classname[CF_MAXVARSIZE], buffer[CF_MAXVARSIZE], os[CF_MAXVARSIZE], version[CF_MAXVARSIZE];
 
-    Log(LOG_LEVEL_VERBOSE, "This appears to be a debian system.");
-    EvalContextHeapAddHard(ctx, "debian");
+    Log(LOG_LEVEL_VERBOSE, "This appears to be a debian (or debian-based) system.");
 
-    buffer[0] = classname[0] = '\0';
+    buffer[0] = classname[0] = os[0] = version[0] = '\0';
 
-    Log(LOG_LEVEL_VERBOSE, "Looking for Debian version...");
+    Log(LOG_LEVEL_VERBOSE, "Looking for debian version info...");
 
-    if (!ReadLine(DEBIAN_VERSION_FILENAME, buffer, sizeof(buffer)))
+    /* LSB_RELEASE does not exist; resort to original detection code */
+    if (!Linux_LSB_Release_Version(ctx))
     {
-        return 1;
-    }
 
-    result = sscanf(buffer, "%d.%d", &major, &release);
-
-    switch (result)
-    {
-    case 2:
-        Log(LOG_LEVEL_VERBOSE, "This appears to be a Debian %u.%u system.", major, release);
-        snprintf(classname, CF_MAXVARSIZE, "debian_%u_%u", major, release);
-        EvalContextHeapAddHard(ctx, classname);
-        snprintf(classname, CF_MAXVARSIZE, "debian_%u", major);
-        SetFlavour(ctx, classname);
-        break;
-        /* Fall-through */
-    case 1:
-        Log(LOG_LEVEL_VERBOSE, "This appears to be a Debian %u system.", major);
-        snprintf(classname, CF_MAXVARSIZE, "debian_%u", major);
-        SetFlavour(ctx, classname);
-        break;
-
-    default:
-        version[0] = '\0';
-        sscanf(buffer, "%25[^/]", version);
-        if (strlen(version) > 0)
-        {
-            snprintf(classname, CF_MAXVARSIZE, "debian_%s", version);
-            EvalContextHeapAddHard(ctx, classname);
-        }
-        break;
-    }
-
-    if (!ReadLine(DEBIAN_ISSUE_FILENAME, buffer, sizeof(buffer)))
-    {
-        return 1;
-    }
-
-    os[0] = '\0';
-    sscanf(buffer, "%250s", os);
-
-    if (strcmp(os, "Debian") == 0)
-    {
-        sscanf(buffer, "%*s %*s %[^./]", version);
-        snprintf(buffer, CF_MAXVARSIZE, "debian_%s", version);
         EvalContextHeapAddHard(ctx, "debian");
-        SetFlavour(ctx, buffer);
-    }
-    else if (strcmp(os, "Ubuntu") == 0)
-    {
-        sscanf(buffer, "%*s %[^.].%d", version, &release);
-        snprintf(buffer, CF_MAXVARSIZE, "ubuntu_%s", version);
-        SetFlavour(ctx, buffer);
-        EvalContextHeapAddHard(ctx, "ubuntu");
-        if (release >= 0)
+
+        if (!ReadLine(DEBIAN_VERSION_FILENAME, buffer, sizeof(buffer)))
         {
-            snprintf(buffer, CF_MAXVARSIZE, "ubuntu_%s_%d", version, release);
-            EvalContextHeapAddHard(ctx, buffer);
+            return 1;
+        }
+
+        result = sscanf(buffer, "%d.%d", &major, &release);
+
+        switch (result)
+        {
+        case 2:
+            Log(LOG_LEVEL_VERBOSE, "This appears to be a Debian %u.%u system.", major, release);
+            snprintf(classname, CF_MAXVARSIZE, "debian_%u_%u", major, release);
+            EvalContextHeapAddHard(ctx, classname);
+            snprintf(classname, CF_MAXVARSIZE, "debian_%u", major);
+            SetFlavour(ctx, classname);
+            break;
+            /* Fall-through */
+        case 1:
+            Log(LOG_LEVEL_VERBOSE, "This appears to be a Debian %u system.", major);
+            snprintf(classname, CF_MAXVARSIZE, "debian_%u", major);
+            SetFlavour(ctx, classname);
+            break;
+
+        default:
+            version[0] = '\0';
+            sscanf(buffer, "%25[^/]", version);
+            if (strlen(version) > 0)
+            {
+                snprintf(classname, CF_MAXVARSIZE, "debian_%s", version);
+                EvalContextHeapAddHard(ctx, classname);
+            }
+            break;
+        }
+
+        if (!ReadLine(DEBIAN_ISSUE_FILENAME, buffer, sizeof(buffer)))
+        {
+            return 1;
+        }
+
+        os[0] = '\0';
+        sscanf(buffer, "%250s", os);
+
+        if (strcmp(os, "Debian") == 0)
+        {
+            sscanf(buffer, "%*s %*s %[^./]", version);
+            snprintf(buffer, CF_MAXVARSIZE, "debian_%s", version);
+            EvalContextHeapAddHard(ctx, "debian");
+            SetFlavour(ctx, buffer);
+        }
+        else if (strcmp(os, "Ubuntu") == 0)
+        {
+            sscanf(buffer, "%*s %[^.].%d", version, &release);
+            snprintf(buffer, CF_MAXVARSIZE, "ubuntu_%s", version);
+            SetFlavour(ctx, buffer);
+            EvalContextHeapAddHard(ctx, "ubuntu");
+            if (release >= 0)
+            {
+                snprintf(buffer, CF_MAXVARSIZE, "ubuntu_%s_%d", version, release);
+                EvalContextHeapAddHard(ctx, buffer);
+            }
         }
     }
 
@@ -2167,6 +2421,86 @@ static int Xen_Hv_Check(void)
 #endif
 
 /******************************************************************/
+
+char *StrToLower(char *str)
+{
+    for (int i = 0; i < strlen(str); i++)
+    {
+        str[i]=tolower(str[i]);
+    }
+    return str;
+}
+
+static bool LookupKey(char *buf, char *lookup_key, char *val)
+{
+    char tmpbuf[CF_MAXVARSIZE], key[CF_MAXVARSIZE];
+    char *line = NULL;
+
+    strncpy(tmpbuf, buf, strlen(buf)+1);
+
+    line = strtok(tmpbuf, "\n");
+    if (line == NULL)
+    {
+        val[0] = '\0';
+        return false;
+    }
+
+    sscanf(line, "%[^=]=%s", key, val);
+    if (strcmp(key, lookup_key) == 0)
+    {
+        return true;
+    }
+
+    while ((line = strtok(NULL, "\n")) != NULL)
+    {
+        if(line == NULL)
+        {
+            val[0] = '\0';
+            return false;
+        }
+
+        sscanf(line, "%[^=]=%s", key, val);
+
+        if (strcmp(key, lookup_key) == 0)
+        {
+            return true;
+        }
+    }
+    /* should never get here but incase we do */
+    val[0] = '\0';
+    return false;
+}
+
+static bool ReadLines(const char *filename, char *buf, int bufsize)
+{
+    int bytes_read = 0;
+    FILE *fp = fopen(filename, "r");
+
+    if (fp == NULL)
+    {
+        return false;
+    }
+
+    bytes_read = fread(buf, bufsize, 1, fp);
+
+    if (bytes_read != (bufsize - 1))
+    {
+        if (ferror(fp))
+        {
+            fclose(fp);
+            buf[0] = '\0';
+            return false;
+        }
+        else if (feof(fp))
+        {
+            buf[bufsize+1] = '\0';
+        }
+    }
+
+    fclose(fp);
+    buf[bufsize] = '\0';
+    return true;
+}
 
 static bool ReadLine(const char *filename, char *buf, int bufsize)
 {

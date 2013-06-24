@@ -45,7 +45,6 @@
 
 #include "generic_agent.h" // HashControls
 
-#include <assert.h>
 
 typedef enum
 {

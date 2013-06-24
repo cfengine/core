@@ -60,7 +60,7 @@
 #include "buffer.h"
 
 #include <libgen.h>
-#include <assert.h>
+
 
 /*
  * This module contains numeruous functions which don't use all their parameters

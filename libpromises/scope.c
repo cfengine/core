@@ -38,7 +38,6 @@
 #include "env_context.h"
 #include "audit.h"
 
-#include <assert.h>
 
 Scope *SCOPE_CURRENT = NULL;
 

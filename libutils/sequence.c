@@ -22,12 +22,10 @@
   included file COSL.txt.
 */
 
-#include "sequence.h"
 
+#include "sequence.h"
 #include "alloc.h"
 
-#include <stdlib.h>
-#include <assert.h>
 
 static const size_t EXPAND_FACTOR = 2;
 

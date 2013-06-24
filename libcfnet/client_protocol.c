@@ -39,8 +39,6 @@ extern char VFQNAME[];
 #include "crypto.h"                            /* PublicKeyFile */
 #include "files_hashes.h" /* HashString,HashesMatch,HashPubKey,HashPrintSafe */
 
-#include <assert.h>
-
 
 static bool SetSessionKey(AgentConnection *conn);
 

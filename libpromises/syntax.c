@@ -39,7 +39,6 @@
 #include "vars.h"
 #include "env_context.h"
 
-#include <assert.h>
 
 static SyntaxTypeMatch CheckParseString(const char *lv, const char *s, const char *range);
 static SyntaxTypeMatch CheckParseInt(const char *lv, const char *s, const char *range);

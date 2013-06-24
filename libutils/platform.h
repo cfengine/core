@@ -68,6 +68,7 @@
 #include <math.h>
 #include <string.h>
 #include <ctype.h>
+#include <assert.h>
 
 /* POSIX but available in all platforms. */
 #include <strings.h>

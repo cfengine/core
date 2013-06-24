@@ -22,8 +22,6 @@
   included file COSL.txt.
 */
 
-#include <assert.h>
-
 #include "alloc.h"
 #include "refcount.h"
 

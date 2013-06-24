@@ -106,7 +106,6 @@ typedef enum
 
 #include "ornaments.h"
 
-#include <assert.h>
 
 extern int PR_KEPT;
 extern int PR_REPAIRED;

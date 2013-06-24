@@ -28,7 +28,6 @@
 #include "buffer.h"
 #include "misc_lib.h"
 
-#include <assert.h>
 
 #ifndef NDEBUG
 static bool IndexBracketsBalance(const char *var_string)

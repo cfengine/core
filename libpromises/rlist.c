@@ -36,7 +36,6 @@
 #include "assoc.h"
 #include "env_context.h"
 
-#include <assert.h>
 
 static Rlist *RlistPrependRval(Rlist **start, Rval rval);
 

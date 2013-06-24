@@ -38,8 +38,6 @@
 #include "rlist.h"
 #include "scope.h"
 
-#include <assert.h>
-
 #ifdef HAVE_SYS_UIO_H
 # include <sys/uio.h>
 #endif
@@ -73,10 +71,9 @@
 #  define SIZEOF_IFREQ(x) sizeof(struct ifreq)
 # endif
 
+
 static bool IsProcessRunning(pid_t pid);
-
 static void FindV6InterfacesInfo(EvalContext *ctx);
-
 static bool IgnoreJailInterface(int ifaceidx, struct sockaddr_in *inaddr);
 static bool IgnoreInterface(char *name);
 static void InitIgnoreInterfaces(void);

@@ -32,7 +32,6 @@
 #include "evalfunction.h"
 #include "policy.h"
 
-#include <assert.h>
 
 /*******************************************************************/
 

@@ -50,8 +50,6 @@
 # include "history.h"
 #endif
 
-#include <math.h>
-#include <assert.h>
 
 /*****************************************************************************/
 /* Globals                                                                   */

@@ -47,7 +47,6 @@
 #include "audit.h"
 #include "verify_vars.h"
 
-#include <assert.h>
 
 static void ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp, Rlist *listvars,
                                PromiseActuator *ActOnPromise, void *param);

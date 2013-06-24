@@ -42,9 +42,6 @@
 #include "audit.h"
 #include "logging.h"
 
-#include <assert.h>
-
-//************************************************************************
 
 static const char *POLICY_ERROR_POLICY_NOT_RUNNABLE = "Policy is not runnable (does not contain a body common control)";
 

@@ -22,13 +22,13 @@
   included file COSL.txt.
 */
 
-#include "json.h"
 
 #include "alloc.h"
 #include "sequence.h"
 #include "string_lib.h"
 
-#include <assert.h>
+#include "json.h"
+
 
 static const int SPACES_PER_INDENT = 2;
 static const int DEFAULT_CONTAINER_CAPACITY = 64;

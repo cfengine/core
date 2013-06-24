@@ -46,9 +46,6 @@
 # include "cf.nova.h"
 #endif
 
-#include <assert.h>
-
-/*****************************************************************************/
 
 static bool EvalContextStackFrameContainsNegated(const EvalContext *ctx, const char *context);
 

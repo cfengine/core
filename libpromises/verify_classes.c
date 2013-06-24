@@ -35,8 +35,6 @@
 #include "conversion.h"
 #include "logic_expressions.h"
 
-#include <assert.h>
-
 
 static int EvalClassExpression(EvalContext *ctx, Constraint *cp, Promise *pp);
 static bool ValidClassName(const char *str);

@@ -17,11 +17,11 @@ bundle agent test
 {
 processes:
   any::
-    "/bin/true"
+    "$(G.true)"
       classes => bundle_class;
 
   bundle_context::
-    "/bin/true"
+    "$(G.true)"
       classes => namespace_class;
 }
 

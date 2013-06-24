@@ -38,7 +38,7 @@ bundle agent check
 {
 vars:
   "expect" string => "dest";
-  "result" string => execresult("/usr/bin/perl -le 'printf(\"%s\", readlink(\"$(G.testdir)/b/link\"))'", "noshell");
+  "result" string => execresult("$(G.perl) -le 'printf(\"%s\", readlink(\"$(G.testdir)/b/link\"))'", "noshell");
 
 classes:
   "ok" expression => strcmp("$(result)", "$(expect)");

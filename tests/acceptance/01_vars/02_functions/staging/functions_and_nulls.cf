@@ -6,7 +6,8 @@
 
 body common control
 {
-  bundlesequence  => { test };
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };
   version => "1.0";
 }
 
@@ -14,10 +15,10 @@ bundle agent test
 {
 vars:
     # The nulls terminate the string here
-    "test1" string => execresult("/usr/bin/perl -e 'print \"Test of \0\1\2\n nulls in a string\";'", "noshell");
+    "test1" string => execresult("$(G.perl) -e 'print \"Test of \0\1\2\n nulls in a string\";'", "noshell");
 
     # Write the same string to a file and read it in again, they are converted
-    "test2" string => execresult("/usr/bin/perl -e 'print \"Test of \0\1\2\n nulls in a string\";' > $(G.testfile)", "useshell");
+    "test2" string => execresult("$(G.perl) -e 'print \"Test of \0\1\2\n nulls in a string\";' > $(G.testfile)", "useshell");
     "test3" string => readfile("$(G.testfile)","100");
 
     # They are converted here, too, so the split fails

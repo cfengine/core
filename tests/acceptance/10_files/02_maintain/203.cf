@@ -38,7 +38,7 @@ vars:
 
     pass2::
         "result" string => execresult(
-            "/usr/bin/perl -le '$(g.command)'",
+            "$(G.perl) -le '$(g.command)'",
             "noshell");
 
 files:
@@ -95,7 +95,7 @@ bundle agent check
 {
 vars:
         "result" string => execresult(
-            "/usr/bin/perl -le '$(g.command)'",
+            "$(G.perl) -le '$(g.command)'",
             "noshell");
 
 classes:

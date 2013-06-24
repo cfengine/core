@@ -46,7 +46,7 @@ body rename disable_file {
 bundle agent check
 {
 vars:
-  "result" string => execresult("/usr/bin/perl -le '$(g.command)'", "noshell");
+  "result" string => execresult("$(G.perl) -le '$(g.command)'", "noshell");
 
 classes:
   "ok" expression => strcmp("333 1", "$(result)");

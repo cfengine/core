@@ -81,7 +81,7 @@ vars:
         "expect" string => "1";
 
         "result" string => execresult(
-            "/usr/bin/perl -le '$(g.type_command)'", "noshell");
+            "$(G.perl) -le '$(g.type_command)'", "noshell");
 classes:
         "ok" expression => strcmp("$(expect)", "$(result)");
 

@@ -1391,8 +1391,8 @@ static void CheckControlPromises(EvalContext *ctx, GenericAgentConfig *config, c
     char scope[CF_BUFSIZE];
     snprintf(scope, CF_BUFSIZE, "%s_%s", control_body->name, control_body->type);
     Log(LOG_LEVEL_DEBUG, "Initiate control variable convergence for scope '%s'", scope);
-    ScopeClear(scope);
-    ScopeSetCurrent(scope);
+
+    EvalContextStackPushBodyFrame(ctx, control_body);
 
     for (size_t i = 0; i < SeqLength(control_body->conlist); i++)
     {
@@ -1456,6 +1456,8 @@ static void CheckControlPromises(EvalContext *ctx, GenericAgentConfig *config, c
         
         RvalDestroy(returnval);
     }
+
+    EvalContextStackPopFrame(ctx);
 }
 
 /*******************************************************************/

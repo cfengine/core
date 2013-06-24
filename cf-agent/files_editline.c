@@ -125,7 +125,6 @@ int ScheduleEditLineOperations(EvalContext *ctx, Bundle *bp, Attributes a, const
             }
 
             BannerSubPromiseType(ctx, bp->name, sp->name);
-            ScopeSetCurrent(bp->name);
 
             for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
             {
@@ -144,7 +143,6 @@ int ScheduleEditLineOperations(EvalContext *ctx, Bundle *bp, Attributes a, const
     }
 
     ScopeClear("edit");
-    ScopeSetCurrent(PromiseGetBundle(parentp)->name);
     YieldCurrentLock(thislock);
     return true;
 }

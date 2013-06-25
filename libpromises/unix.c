@@ -461,7 +461,8 @@ void GetInterfaceFlags(EvalContext *ctx, AgentType ag, struct ifreq *ifr, Rlist 
 
 void GetInterfacesInfo(EvalContext *ctx, AgentType ag)
 {
-    int fd, len, i, j, ipdefault = false;
+    bool address_set = false;
+    int fd, len, i, j;
     struct ifreq ifbuf[CF_IFREQ], ifr, *ifp;
     struct ifconf list;
     struct sockaddr_in *sin;
@@ -573,6 +574,8 @@ void GetInterfacesInfo(EvalContext *ctx, AgentType ag)
 
                 /* No DNS lookup, just convert IP address to string. */
                 char txtaddr[CF_MAX_IP_LEN] = "";
+                assert(sizeof(VIPADDRESS) >= sizeof(txtaddr));
+
                 getnameinfo((struct sockaddr *) sin, sizeof(*sin),
                             txtaddr, sizeof(txtaddr),
                             NULL, 0, NI_NUMERICHOST);
@@ -646,13 +649,18 @@ void GetInterfacesInfo(EvalContext *ctx, AgentType ag)
                 strcat(ip, txtaddr);
                 EvalContextHeapAddHard(ctx, ip);
 
-                if (!ipdefault)
+                /* VIPADDRESS has already been set to the DNS address of
+                 * VFQNAME by GetNameInfo3() during initialisation. Here we
+                 * reset VIPADDRESS to the address of the first non-loopback
+                 * interface. */
+                if (!address_set && !(ifr.ifr_flags & IFF_LOOPBACK))
                 {
-                    ipdefault = true;
                     ScopeNewSpecial(ctx, "sys", "ipv4", txtaddr, DATA_TYPE_STRING);
 
-                    assert(sizeof(VIPADDRESS) >= sizeof(txtaddr));
                     strcpy(VIPADDRESS, txtaddr);
+                    Log(LOG_LEVEL_VERBOSE, "IP address of host set to %s",
+                        VIPADDRESS);
+                    address_set = true;
                 }
 
                 AppendItem(&IPADDRESSES, txtaddr, "");

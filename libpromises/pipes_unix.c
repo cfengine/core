@@ -101,7 +101,7 @@ static pid_t CreatePipeAndFork(const char *type, int *pd)
 {
     pid_t pid = -1;
 
-    if (((*type != 'r') && (*type != 'w')) || (type[1] != '\0'))
+    if (!PipeTypeIsOk(type))
     {
         errno = EINVAL;
         return -1;

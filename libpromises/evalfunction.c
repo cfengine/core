@@ -4918,7 +4918,7 @@ static int ExecModule(EvalContext *ctx, char *command, const char *ns)
     char *sp, line[CF_BUFSIZE];
     int print = false;
 
-    if ((pp = cf_popen(command, "r", true)) == NULL)
+    if ((pp = cf_popen(command, "rt", true)) == NULL)
     {
         Log(LOG_LEVEL_ERR, "Couldn't open pipe from '%s'. (cf_popen: %s)", command, GetErrorStr());
         return false;

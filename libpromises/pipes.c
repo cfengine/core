@@ -22,23 +22,31 @@
   included file COSL.txt.
 */
 
-#ifndef CFENGINE_PIPES_H
-#define CFENGINE_PIPES_H
+#include "pipes.h"
 
-#include "cf3.defs.h"
-
-FILE *cf_popen(const char *command, const char *type, bool capture_stderr);
-FILE *cf_popensetuid(const char *command, const char *type, uid_t uid, gid_t gid, char *chdirv, char *chrootv, int background);
-FILE *cf_popen_sh(const char *command, const char *type);
-FILE *cf_popen_shsetuid(const char *command, const char *type, uid_t uid, gid_t gid, char *chdirv, char *chrootv, int background);
-int cf_pclose(FILE *pp);
-bool PipeToPid(pid_t *pid, FILE *pp);
-bool PipeTypeIsOk(const char *type);
-
-#ifdef __MINGW32__
-FILE *cf_popen_powershell(const char *command, const char *type);
-FILE *cf_popen_powershell_setuid(const char *command, const char *type, uid_t uid, gid_t gid, char *chdirv, char *chrootv,
-                              int background);
-#endif
-
-#endif
+bool PipeTypeIsOk(const char *type)
+{
+    if (type[0] != 'r' && type[0] != 'w')
+    {
+        return false;
+    }
+    else if (type[1] != 't')
+    {
+        if (type[1] == '\0')
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+    else if (type[2] == '\0')
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}

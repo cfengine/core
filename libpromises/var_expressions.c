@@ -168,7 +168,7 @@ void VarRefDestroy(VarRef ref)
     }
 }
 
-char *VarRefToString(VarRef ref, bool qualified)
+char *VarRefToString(const VarRef ref, bool qualified)
 {
     assert(ref.lval);
 

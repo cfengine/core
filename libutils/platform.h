@@ -63,8 +63,20 @@
 # include <objbase.h>           // for disphelper
 #endif
 
+/* Standard C. */
 #include <stdio.h>
 #include <math.h>
+#include <string.h>
+#include <ctype.h>
+
+/* POSIX but available in all platforms. */
+#include <strings.h>
+#include <limits.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+
+/* We now require a pthreads implementation. */
+#include <pthread.h>
 
 #ifndef _GETOPT_H
 # include "../libcompat/getopt.h"
@@ -73,10 +85,7 @@
 #ifdef HAVE_STDLIB_H
 # include <stdlib.h>
 #endif
-#include <strings.h>
-#include <string.h>
-#include <ctype.h>
-#include <limits.h>
+
 #ifdef HAVE_UNAME
 # include <sys/utsname.h>
 #else
@@ -92,9 +101,6 @@ struct utsname
 };
 
 #endif
-
-#include <sys/types.h>
-#include <sys/stat.h>
 
 #ifdef HAVE_STDINT_H
 # include <stdint.h>
@@ -345,20 +351,17 @@ typedef int clockid_t;
 typedef int socklen_t;
 #endif
 
-# define __USE_GNU 1
-
-# include <pthread.h>
 # ifndef _SC_THREAD_STACK_MIN
 #  define _SC_THREAD_STACK_MIN PTHREAD_STACK_MIN
-# endif
+#endif
 
-# ifndef PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP
+#ifndef PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP
 #  define PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP PTHREAD_MUTEX_INITIALIZER
-# endif
+#endif
 
-# if !HAVE_DECL_PTHREAD_ATTR_SETSTACKSIZE
+#if !HAVE_DECL_PTHREAD_ATTR_SETSTACKSIZE
 int pthread_attr_setstacksize(pthread_attr_t *attr, size_t stacksize);
-# endif
+#endif
 
 #ifdef HAVE_SCHED_H
 # include <sched.h>
@@ -783,9 +786,10 @@ struct timespec
 
 #if defined(__MINGW32__)
 /* _mkdir(3) */
-#include <direct.h>
+# include <direct.h>
 #endif
 
+/* Must be always the last one! */
 #include "config.post.h"
 
 #endif

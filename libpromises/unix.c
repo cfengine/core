@@ -461,7 +461,7 @@ void GetInterfaceFlags(EvalContext *ctx, AgentType ag, struct ifreq *ifr, Rlist 
 
 void GetInterfacesInfo(EvalContext *ctx, AgentType ag)
 {
-    int fd, len, i, j, first_address = false, ipdefault = false;
+    int fd, len, i, j, ipdefault = false;
     struct ifreq ifbuf[CF_IFREQ], ifr, *ifp;
     struct ifconf list;
     struct sockaddr_in *sin;
@@ -469,7 +469,6 @@ void GetInterfacesInfo(EvalContext *ctx, AgentType ag)
     char *sp, workbuf[CF_BUFSIZE];
     char ip[CF_MAXVARSIZE];
     char name[CF_MAXVARSIZE];
-    char last_name[CF_BUFSIZE];
     Rlist *interfaces = NULL, *hardware = NULL, *flags = NULL, *ips = NULL;
 
     /* This function may be called many times, while interfaces come and go */
@@ -480,8 +479,6 @@ void GetInterfacesInfo(EvalContext *ctx, AgentType ag)
     memset(ifbuf, 0, sizeof(ifbuf));
 
     InitIgnoreInterfaces();
-
-    last_name[0] = '\0';
 
     if ((fd = socket(AF_INET, SOCK_DGRAM, 0)) == -1)
     {
@@ -502,7 +499,7 @@ void GetInterfacesInfo(EvalContext *ctx, AgentType ag)
         exit(1);
     }
 
-    last_name[0] = '\0';
+    char last_name[sizeof(ifp->ifr_name)] = "";
 
     for (j = 0, len = 0, ifp = list.ifc_req; len < list.ifc_len;
          len += SIZEOF_IFREQ(*ifp), j++, ifp = (struct ifreq *) ((char *) ifp + SIZEOF_IFREQ(*ifp)))
@@ -524,7 +521,7 @@ void GetInterfacesInfo(EvalContext *ctx, AgentType ag)
         {
             continue;
         }
-        
+
         if (strstr(ifp->ifr_name, ":"))
         {
 #ifdef __linux__
@@ -537,24 +534,16 @@ void GetInterfacesInfo(EvalContext *ctx, AgentType ag)
             Log(LOG_LEVEL_VERBOSE, "Interface %d: %s", j + 1, ifp->ifr_name);
         }
 
-
-        if (strncmp(last_name, ifp->ifr_name, sizeof(ifp->ifr_name)) == 0)
+        /* If interface name appears a second time in a row then it has more
+           than one IP addresses (linux: ip addr add $IP dev $IF).
+           But the variable is already added so don't set it again. */
+        if (strcmp(last_name, ifp->ifr_name) != 0)
         {
-            first_address = false;
-        }
-        else
-        {
-            strncpy(last_name, ifp->ifr_name, sizeof(ifp->ifr_name));
-
-            if (!first_address)
-            {
-                ScopeNewSpecial(ctx, "sys", "interface", last_name, DATA_TYPE_STRING);
-                first_address = true;
-            }
+            strcpy(last_name, ifp->ifr_name);
+            ScopeNewSpecial(ctx, "sys", "interface", last_name, DATA_TYPE_STRING);
         }
 
         snprintf(workbuf, sizeof(workbuf), "net_iface_%s", CanonifyName(ifp->ifr_name));
-
         EvalContextHeapAddHard(ctx, workbuf);
 
         /* TODO IPv6 should be handled transparently */
@@ -619,6 +608,8 @@ void GetInterfacesInfo(EvalContext *ctx, AgentType ag)
 
                 if (strcmp(txtaddr, "0.0.0.0") == 0)
                 {
+                    /* TODO remove, interface address can't be 0.0.0.0 and
+                     * even then DNS is not a safe way to set a variable... */
                     Log(LOG_LEVEL_VERBOSE, "Cannot discover hardware IP, using DNS value");
                     assert(sizeof(ip) >= sizeof(VIPADDRESS) + sizeof("ipv4_"));
                     strcpy(ip, "ipv4_");

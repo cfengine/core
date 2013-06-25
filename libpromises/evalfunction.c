@@ -936,7 +936,7 @@ static FnCallResult FnCallUseModule(EvalContext *ctx, FnCall *fp, Rlist *finalar
     char *command = RlistScalarValue(finalargs);
     char *args = RlistScalarValue(finalargs->next);
 
-    snprintf(modulecmd, CF_BUFSIZE, "%s%cmodules%c%s", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR, command);
+    snprintf(modulecmd, CF_BUFSIZE, "\"%s%cmodules%c%s\"", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR, command);
 
     if (stat(CommandArg0(modulecmd), &statbuf) == -1)
     {
@@ -956,7 +956,7 @@ static FnCallResult FnCallUseModule(EvalContext *ctx, FnCall *fp, Rlist *finalar
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
-    snprintf(modulecmd, CF_BUFSIZE, "%s%cmodules%c%s %s", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR, command, args);
+    snprintf(modulecmd, CF_BUFSIZE, "\"%s%cmodules%c%s\" %s", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR, command, args);
     Log(LOG_LEVEL_VERBOSE, "Executing and using module [%s]", modulecmd);
 
     if (!ExecModule(ctx, modulecmd, PromiseGetNamespace(fp->caller)))

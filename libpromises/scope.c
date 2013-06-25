@@ -472,6 +472,9 @@ bool ScopeIsReserved(const char *scope)
             || strcmp("this", scope) == 0;
 }
 
+/**
+ * @WARNING Don't call ScopeDelete*() before this, it's unnecessary.
+ */
 void ScopeNewSpecial(EvalContext *ctx, const char *scope, const char *lval, const void *rval, DataType dt)
 {
     assert(ScopeIsReserved(scope));

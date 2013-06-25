@@ -580,7 +580,7 @@ int MatchRegion(char *chunk, Item *start, Item *begin, Item *end)
         }
         else                    // if the region runs out before the end
         {
-            if (++sp <= chunk + strlen(chunk))
+            if (sp <= chunk + strlen(chunk))
             {
                 return false;
             }

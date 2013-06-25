@@ -6,7 +6,6 @@ AM_CPPFLAGS = @CPPFLAGS@ -I$(srcdir)/../libpromises -I$(srcdir)/../libutils \
 	$(LIBVIRT_CPPFLAGS) \
 	$(POSTGRESQL_CPPFLAGS) \
 	$(MYSQL_CPPFLAGS) \
-	$(LIBACL_CPPFLAGS) \
 	$(LIBXML2_CPPFLAGS)
 
 if HAVE_NOVA
@@ -18,14 +17,12 @@ AM_CFLAGS = @CFLAGS@ \
 	$(LIBVIRT_CFLAGS) \
 	$(POSTGRESQL_CFLAGS) \
 	$(MYSQL_CFLAGS) \
-	$(LIBACL_CFLAGS) \
 	$(LIBXML2_CFLAGS)
 
 AM_LDFLAGS = \
 	$(LIBVIRT_LDFLAGS) \
 	$(POSTGRESQL_LDFLAGS) \
 	$(MYSQL_LDFLAGS) \
-	$(LIBACL_LDFLAGS) \
 	$(LIBXML2_LDFLAGS)
 
 if HAVE_AVAHI_COMMON
@@ -38,7 +35,6 @@ LDADD = ../libpromises/libpromises.la \
 	$(LIBVIRT_LIBS) \
 	$(POSTGRESQL_LIBS) \
 	$(MYSQL_LIBS) \
-	$(LIBACL_LIBS) \
 	$(LIBXML2_LIBS)
 if HAVE_NOVA
 LDADD += ../nova/libcfagent/libcfagent.la
@@ -49,12 +45,12 @@ cf_agent_SOURCES = \
         tokyo_check.c tokyo_check.h \
         abstract_dir.c abstract_dir.h \
         cf-agent.c \
-        cf_acl.c cf_acl.h \
         comparray.c comparray.h \
         acl_posix.c acl_posix.h \
         cf_sql.c cf_sql.h \
         promiser_regex_resolver.c promiser_regex_resolver.h \
         retcode.c retcode.h \
+        verify_acl.c verify_acl.h \
         verify_files.c verify_files.h \
         verify_files_utils.c verify_files_utils.h \
         verify_files_hashes.c verify_files_hashes.h \

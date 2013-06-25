@@ -24,7 +24,7 @@
 
 #include "files_operators.h"
 
-#include "cf_acl.h"
+#include "verify_acl.h"
 #include "env_context.h"
 #include "promises.h"
 #include "dir.h"
@@ -398,67 +398,4 @@ int CompareToFile(EvalContext *ctx, const Item *liststart, const char *file, Att
 
     DeleteItemList(cmplist);
     return (true);
-}
-
-bool CopyFilePermissionsDisk(const char *source, const char *destination)
-{
-    struct stat statbuf;
-
-    if (stat(source, &statbuf) == -1)
-    {
-        Log(LOG_LEVEL_INFO, "Can't copy permissions '%s'. (stat: %s)", source, GetErrorStr());
-        return false;
-    }
-
-    if (chmod(destination, statbuf.st_mode) != 0)
-    {
-        Log(LOG_LEVEL_INFO, "Can't copy permissions '%s'. (chmod: %s)", source, GetErrorStr());
-        return false;
-    }
-
-    if (chown(destination, statbuf.st_uid, statbuf.st_gid) != 0)
-    {
-        Log(LOG_LEVEL_INFO, "Can't copy permissions '%s'. (chown: %s)", source, GetErrorStr());
-        return false;
-    }
-
-    if (!CopyACLs(source, destination))
-    {
-        return false;
-    }
-
-#ifdef WITH_SELINUX
-    int selinux_enabled = 0;
-    security_context_t scontext = NULL;
-
-    selinux_enabled = (is_selinux_enabled() > 0);
-
-    if (selinux_enabled)
-    {
-        /* get current security context */
-        if (getfilecon(source, &scontext) != 0)
-        {
-            if (errno != ENOTSUP && errno != ENODATA)
-            {
-                Log(LOG_LEVEL_INFO, "Can't copy security context from '%s'. (getfilecon: %s)", source, GetErrorStr());
-                return false;
-            }
-        }
-        else
-        {
-            int ret = setfilecon(file, scontext);
-            freecon(scontext);
-            if (ret != 0)
-            {
-                if (errno != ENOTSUP)
-                {
-                    Log(LOG_LEVEL_INFO, "Can't copy security context to '%s'. (setfilecon: %s)", destination, GetErrorStr());
-                    return false;
-                }
-            }
-        }
-    }
-#endif
-
-    return true;
 }

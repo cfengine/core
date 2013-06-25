@@ -785,26 +785,27 @@ if test "$rtry" = ortentry; then
 fi
 AC_MSG_RESULT([$rtry])
 
+dnl #######################################################################
+dnl Enable extended attributes. Used for SELinux and ACLs
+dnl #######################################################################
+
+AC_CHECK_FUNCS(listxattr, [AC_DEFINE(WITH_XATTR, 1, [Define if you have a libc that supports extended attributes])])
+AC_CHECK_HEADERS([attr/xattr.h, sys/xattr.h])
+
 dnl ######################################################################
 dnl Give the chance to enable SELINUX
 dnl ######################################################################
 
-AC_ARG_ENABLE([selinux], [AS_HELP_STRING([--enable-selinux], [Enable SELinux support])])
-AS_IF([test "x$enable_selinux" = "xyes"], [
-    AC_DEFINE(WITH_SELINUX, 1, [Define if you want to use SELinux])
-    LIB_SELINUX="-lselinux"
-    LIBS="$LIBS $LIB_SELINUX"
-    AC_SUBST(LIB_SELINUX)
-])
+AC_ARG_ENABLE([selinux], [AS_HELP_STRING([--enable-selinux], [Deprecated. SELinux support is always enabled])])
 
 dnl ######################################################################
 dnl Collect all the options
 dnl ######################################################################
 
-CPPFLAGS="$CPPFLAGS $TOKYOCABINET_CPPFLAGS $QDBM_CPPFLAGS $PCRE_CPPFLAGS $OPENSSL_CPPFLAGS $MONGO_CPPFLAGS $SQLITE3_CPPFLAGS"
-CFLAGS="$CFLAGS $TOKYOCABINET_CFLAGS $QDBM_CFLAGS $PCRE_CFLAGS $OPENSSL_CFLAGS $MONGO_CFLAGS $SQLITE3_CFLAGS"
-LDFLAGS="$LDFLAGS $TOKYOCABINET_LDFLAGS $QDBM_LDFLAGS $PCRE_LDFLAGS $OPENSSL_LDFLAGS $MONGO_LDFLAGS $SQLITE3_LDFLAGS"
-LIBS="$LIBS $TOKYOCABINET_LIBS $QDBM_LIBS $PCRE_LIBS $OPENSSL_LIBS $MONGO_LIBS $SQLITE3_LIBS"
+CPPFLAGS="$CPPFLAGS $TOKYOCABINET_CPPFLAGS $QDBM_CPPFLAGS $PCRE_CPPFLAGS $OPENSSL_CPPFLAGS $MONGO_CPPFLAGS $SQLITE3_CPPFLAGS $LIBACL_CPPFLAGS"
+CFLAGS="$CFLAGS $TOKYOCABINET_CFLAGS $QDBM_CFLAGS $PCRE_CFLAGS $OPENSSL_CFLAGS $MONGO_CFLAGS $SQLITE3_CFLAGS $LIBACL_CFLAGS"
+LDFLAGS="$LDFLAGS $TOKYOCABINET_LDFLAGS $QDBM_LDFLAGS $PCRE_LDFLAGS $OPENSSL_LDFLAGS $MONGO_LDFLAGS $SQLITE3_LDFLAGS $LIBACL_LDFLAGS"
+LIBS="$LIBS $TOKYOCABINET_LIBS $QDBM_LIBS $PCRE_LIBS $OPENSSL_LIBS $MONGO_LIBS $SQLITE3_LIBS $LIBACL_LIBS"
 
 dnl ######################################################################
 dnl OS specific stuff

@@ -1,0 +1,99 @@
+######################################################
+#
+#  ACL tests for file editing.
+#
+#####################################################
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+  classes:
+    "cfengine_internal_getfacl" expression => fileexists("/var/cfengine/bin/getfacl");
+    "system_getfacl" expression => fileexists("/usr/bin/getfacl");
+
+  vars:
+    linux.cfengine_internal_getfacl::
+      "cmd" string => "/var/cfengine/bin/getfacl";
+    linux.!cfengine_internal_getfacl.system_getfacl::
+      "cmd" string => "/usr/bin/getfacl";
+    windows::
+      "cmd" string => "C:\windows\system32\cmd.exe /C cacls";
+
+  files:
+    "$(G.testdir)/file_plain"
+      create => "true";
+    "$(G.testdir)/basetest_ext"
+      create => "true",
+      acl => testacl;
+    "$(G.testdir)/file_ext"
+      create => "true",
+      acl => testacl;
+}
+
+body acl testacl
+{
+  !windows::
+    acl_method => "append";
+    aces => { "user:root:wx" };
+  windows::
+    acl_method => "overwrite";
+    aces => { "user:Administrator:r" };
+    acl_inherit => "false";
+}
+
+bundle agent test
+{
+  files:
+    "$(G.testdir)/file_plain"
+      edit_line => file_edit;
+  files:
+    "$(G.testdir)/file_ext"
+      edit_line => file_edit;
+}
+
+bundle edit_line file_edit
+{
+  insert_lines:
+    "New line!";
+}
+
+bundle agent check
+{
+  vars:
+    "file_ext_output" string => execresult("$(init.cmd) $(G.testdir)$(G.DS)file_ext", "noshell");
+
+    !windows::
+      "file_plain_output" string => execresult("/bin/ls -lZ $(G.testdir)$(G.DS)file_plain", "noshell");
+      "basetest_ext_output" string => execresult("$(init.cmd) $(G.testdir)$(G.DS)basetest_ext", "noshell");
+
+  classes:
+    !windows::
+      "file_plain_ok" not => regcmp(".*[-rwx]{10}\+.*", "$(file_plain_output)");
+      "basetest_ext_ok" expression => regcmp(".*user:root:-wx.*", "$(basetest_ext_output)");
+      "file_ext_ok" expression => regcmp(".*user:root:-wx.*", "$(file_ext_output)");
+      # The !basetest_ext_ok test is in case the underlying file system does not support ACLs.
+      "ext_ok" or => { "!basetest_ext_ok", "file_ext_ok" };
+      "ok" and => { "file_plain_ok", "ext_ok" };
+
+    windows::
+      "ok" expression => regcmp(".*Administrator:.*READ_CONTROL.*FILE_GENERIC_READ.*FILE_READ_DATA.*FILE_READ_EA.*FILE_READ_ATTRIBUTES.*", "$(file_ext_output)");
+
+  reports:
+    DEBUG.!windows::
+      "Destination file permissions (should not contain a '+'): $(file_plain_output)";
+      "Destination file permissions (should contain \"user:root:-wx\"): $(file_ext_output)";
+    DEBUG.windows::
+      "Destination file permissions (should contain read attributes): $(file_ext_output)";
+    ok::
+        "$(this.promise_filename) Pass";
+    !ok::
+        "$(this.promise_filename) FAIL";
+}

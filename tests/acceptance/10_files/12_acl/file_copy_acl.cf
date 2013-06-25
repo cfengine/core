@@ -1,0 +1,114 @@
+######################################################
+#
+#  ACL tests for file copying.
+#
+#####################################################
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+  classes:
+    "cfengine_internal_getfacl" expression => fileexists("/var/cfengine/bin/getfacl");
+    "system_getfacl" expression => fileexists("/usr/bin/getfacl");
+
+  vars:
+    linux.cfengine_internal_getfacl::
+      "cmd" string => "/var/cfengine/bin/getfacl";
+    linux.!cfengine_internal_getfacl.system_getfacl::
+      "cmd" string => "/usr/bin/getfacl";
+    windows::
+      "cmd" string => "C:\windows\system32\cmd.exe /C cacls";
+
+  files:
+    "$(G.testdir)/source_plain"
+      create => "true";
+    "$(G.testdir)/source_ext"
+      create => "true",
+      acl => testacl;
+}
+
+body acl testacl
+{
+  !windows::
+    acl_method => "append";
+    aces => { "user:root:wx" };
+  windows::
+    acl_method => "overwrite";
+    aces => { "user:Administrator:r" };
+    acl_inherit => "false";
+}
+
+bundle agent test
+{
+  files:
+    "$(G.testdir)/destination_plain"
+      copy_from => source_plain;
+    "$(G.testdir)/destination_ext_preserve"
+      copy_from => source_ext_preserve;
+    "$(G.testdir)/destination_ext_no_preserve"
+      copy_from => source_ext_no_preserve;
+}
+
+body copy_from source_plain
+{
+  source => "$(G.testdir)/source_plain";
+}
+
+body copy_from source_ext_preserve
+{
+  source => "$(G.testdir)/source_ext";
+  preserve => "yes";
+}
+
+body copy_from source_ext_no_preserve
+{
+  source => "$(G.testdir)/source_ext";
+  preserve => "no";
+}
+
+bundle agent check
+{
+  vars:
+    "destination_ext_preserve_output" string => execresult("$(init.cmd) $(G.testdir)$(G.DS)destination_ext_preserve", "noshell");
+    "destination_ext_no_preserve_output" string => execresult("$(init.cmd) $(G.testdir)$(G.DS)destination_ext_no_preserve", "noshell");
+
+    !windows::
+      "destination_plain_output" string => execresult("/bin/ls -lZ $(G.testdir)$(G.DS)destination_plain", "noshell");
+      "source_ext_output" string => execresult("$(init.cmd) $(G.testdir)$(G.DS)source_ext", "noshell");
+
+  classes:
+    !windows::
+      "destination_plain_ok" not => regcmp(".*[-rwx]{10}\+.*", "$(destination_plain_output)");
+      "source_ext_ok" expression => regcmp(".*user:root:-wx.*", "$(source_ext_output)");
+      "destination_ext_preserve_ok" expression => regcmp(".*user:root:-wx.*", "$(destination_ext_preserve_output)");
+      "destination_ext_no_preserve_ok" not => regcmp(".*user:root:-wx.*", "$(destination_ext_no_preserve_output)");
+      "targets_ok" and => { "destination_plain_ok", "destination_ext_preserve_ok", "destination_ext_no_preserve_ok" };
+      # The !source_ext_ok test is in case the underlying file system does not support ACLs.
+      "ok" or => { "!source_ext_ok", "targets_ok" };
+
+    windows::
+      "destination_ext_preserve_ok" expression => regcmp(".*Administrator:.*READ_CONTROL.*FILE_GENERIC_READ.*FILE_READ_DATA.*FILE_READ_EA.*FILE_READ_ATTRIBUTES.*", "$(destination_ext_preserve_output)");
+      "destination_ext_no_preserve_ok" not => regcmp(".*Administrator:.*READ_CONTROL.*FILE_GENERIC_READ.*FILE_READ_DATA.*FILE_READ_EA.*FILE_READ_ATTRIBUTES.*", "$(destination_ext_no_preserve_output)");
+      "ok" and => { "destination_ext_preserve_ok", "destination_ext_no_preserve_ok" };
+
+  reports:
+    DEBUG.!windows::
+      "Destination file permissions (should not contain a '+'): $(destination_plain_output)";
+      "Destination file permissions (should contain \"user:root:-wx\"): $(destination_ext_preserve_output)";
+      "Destination file permissions (should not contain \"user:root:-wx\"): $(destination_ext_no_preserve_output)";
+    DEBUG.windows::
+      "Destination file permissions (should contain read attributes): $(destination_ext_preserve_output)";
+      "Destination file permissions (should not contain read attributes): $(destination_ext_no_preserve_output)";
+    ok::
+        "$(this.promise_filename) Pass";
+    !ok::
+        "$(this.promise_filename) FAIL";
+}

@@ -15,6 +15,7 @@ libpromises_la_LIBADD = ../libutils/libutils.la ../libcfnet/libcfnet.la $(NOVA_L
 libpromises_la_SOURCES = \
         cf3parse.y cf3parse.h \
         cf3lex.l \
+        acl_tools.h acl_tools_posix.c \
         addr_lib.c addr_lib.h \
         args.c args.h \
         assoc.c assoc.h \

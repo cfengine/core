@@ -43,7 +43,7 @@
 #include "expand.h"
 #include "conversion.h"
 #include "pipes.h"
-#include "cf_acl.h"
+#include "verify_acl.h"
 #include "env_context.h"
 #include "vars.h"
 #include "exec_tools.h"
@@ -86,7 +86,7 @@ static int CompareForFileCopy(char *sourcefile, char *destfile, struct stat *ssb
 static void FileAutoDefine(EvalContext *ctx, char *destfile, const char *ns);
 static void TruncateFile(char *name);
 static void RegisterAHardLink(int i, char *value, Attributes attr, CompressedArray **inode_cache);
-static void VerifyCopiedFileAttributes(EvalContext *ctx, char *file, struct stat *dstat, struct stat *sstat, Attributes attr, Promise *pp);
+static void VerifyCopiedFileAttributes(EvalContext *ctx, const char *src, const char *dest, struct stat *sstat, struct stat *dstat, Attributes attr, Promise *pp);
 static int cf_stat(char *file, struct stat *buf, FileCopy fc, AgentConnection *conn);
 #ifndef __MINGW32__
 static int cf_readlink(EvalContext *ctx, char *sourcefile, char *linkbuf, int buffsize, Attributes attr, Promise *pp, AgentConnection *conn);
@@ -330,7 +330,7 @@ static void CfCopyFile(EvalContext *ctx, char *sourcefile, char *destfile, struc
                 }
                 else
                 {
-                    VerifyCopiedFileAttributes(ctx, destfile, &dsb, &ssb, attr, pp);
+                    VerifyCopiedFileAttributes(ctx, sourcefile, destfile, &ssb, &dsb, attr, pp);
                 }
 
                 if (server)
@@ -482,7 +482,7 @@ static void CfCopyFile(EvalContext *ctx, char *sourcefile, char *destfile, struc
                         cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, attr, "Updated '%s' from source '%s' on '%s'", destfile,
                              sourcefile, source_host);
 
-                        VerifyCopiedFileAttributes(ctx, destfile, &dsb, &ssb, attr, pp);
+                        VerifyCopiedFileAttributes(ctx, sourcefile, destfile, &ssb, &dsb, attr, pp);
                     }
 
                     if (RlistIsInListOfRegex(SINGLE_COPY_LIST, destfile))
@@ -505,7 +505,7 @@ static void CfCopyFile(EvalContext *ctx, char *sourcefile, char *destfile, struc
         }
         else
         {
-            VerifyCopiedFileAttributes(ctx, destfile, &dsb, &ssb, attr, pp);
+            VerifyCopiedFileAttributes(ctx, sourcefile, destfile, &ssb, &dsb, attr, pp);
 
             /* Now we have to check for single copy, even though nothing was copied
                otherwise we can get oscillations between multipe versions if type
@@ -809,7 +809,7 @@ static void SourceSearchAndCopy(EvalContext *ctx, char *from, char *to, int maxr
 
             if (!attr.copy.collapse)
             {
-                VerifyCopiedFileAttributes(ctx, newto, &dsb, &sb, attr, pp);
+                VerifyCopiedFileAttributes(ctx, newfrom, newto, &sb, &dsb, attr, pp);
             }
 
             SourceSearchAndCopy(ctx, newfrom, newto, maxrecurse - 1, attr, pp, rootdevice, inode_cache, conn);
@@ -884,7 +884,7 @@ static void VerifyCopy(EvalContext *ctx, char *source, char *destination, Attrib
         }
         else
         {
-            VerifyCopiedFileAttributes(ctx, destdir, &dsb, &ssb, attr, pp);
+            VerifyCopiedFileAttributes(ctx, sourcedir, destdir, &ssb, &dsb, attr, pp);
         }
 
         for (dirp = AbstractDirRead(dirh); dirp != NULL; dirp = AbstractDirRead(dirh))
@@ -1034,7 +1034,7 @@ static void LinkCopy(EvalContext *ctx, char *sourcefile, char *destfile, struct 
         }
         else
         {
-            VerifyCopiedFileAttributes(ctx, destfile, &dsb, sb, attr, pp);
+            VerifyCopiedFileAttributes(ctx, sourcefile, destfile, sb, &dsb, attr, pp);
         }
 
         if (status == PROMISE_RESULT_CHANGE)
@@ -1077,17 +1077,6 @@ int CopyRegularFile(EvalContext *ctx, char *source, char *dest, struct stat ssta
     int rsrcfork = 0;
 #endif
 
-#ifdef WITH_SELINUX
-    int selinux_enabled = 0;
-
-/* need to keep track of security context of destination file (if any) */
-    security_context_t scontext = NULL;
-    struct stat cur_dest;
-    int dest_exists;
-
-    selinux_enabled = (is_selinux_enabled() > 0);
-#endif
-
     discardbackup = ((attr.copy.backup == BACKUP_OPTION_NO_BACKUP) || (attr.copy.backup == BACKUP_OPTION_REPOSITORY_STORE));
 
     if (DONTDO)
@@ -1095,25 +1084,6 @@ int CopyRegularFile(EvalContext *ctx, char *source, char *dest, struct stat ssta
         Log(LOG_LEVEL_ERR, "Promise requires copy from '%s' to '%s'", source, dest);
         return false;
     }
-
-#ifdef WITH_SELINUX
-    if (selinux_enabled)
-    {
-        dest_exists = stat(dest, &cur_dest);
-
-        if (dest_exists == 0)
-        {
-            /* get current security context of destination file */
-            getfilecon(dest, &scontext);
-        }
-        else
-        {
-            /* use default security context when creating destination file */
-            matchpathcon(dest, 0, &scontext);
-            setfscreatecon(scontext);
-        }
-    }
-#endif
 
     /* Make an assoc array of inodes used to preserve hard links */
 
@@ -1426,23 +1396,6 @@ int CopyRegularFile(EvalContext *ctx, char *source, char *dest, struct stat ssta
         utime(dest, &timebuf);
 #endif
     }
-
-#ifdef WITH_SELINUX
-    if (selinux_enabled)
-    {
-        if (dest_exists == 0)
-        {
-            /* set dest context to whatever it was before copy */
-            setfilecon(dest, scontext);
-        }
-        else
-        {
-            /* set create context back to default */
-            setfscreatecon(NULL);
-        }
-        freecon(scontext);
-    }
-#endif
 
     return true;
 }
@@ -2249,8 +2202,8 @@ static bool CheckLinkSecurity(struct stat *sb, char *name)
     return true;
 }
 
-static void VerifyCopiedFileAttributes(EvalContext *ctx, char *file, struct stat *dstat, struct stat *sstat, Attributes attr,
-                                       Promise *pp)
+static void VerifyCopiedFileAttributes(EvalContext *ctx, const char *src, const char *dest, struct stat *sstat,
+                                       struct stat *dstat, Attributes attr, Promise *pp)
 {
 #ifndef __MINGW32__
     mode_t newplus, newminus;
@@ -2305,12 +2258,22 @@ static void VerifyCopiedFileAttributes(EvalContext *ctx, char *file, struct stat
         }
     }
 #endif
-    VerifyFileAttributes(ctx, file, dstat, attr, pp);
+    VerifyFileAttributes(ctx, dest, dstat, attr, pp);
 
 #ifndef __MINGW32__
     (attr.perms.owners)->uid = save_uid;
     (attr.perms.groups)->gid = save_gid;
 #endif
+
+    if (attr.copy.preserve && (attr.copy.servers == NULL
+        || strcmp(attr.copy.servers->item, "localhost") == 0))
+    {
+        if (!CopyFileExtendedAttributesDisk(src, dest))
+        {
+            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, attr, "Could not preserve extended attributes (ACLs and security contexts) on file '%s'", dest);
+            return NULL;
+        }
+    }
 }
 
 static void *CopyFileSources(EvalContext *ctx, char *destination, Attributes attr, Promise *pp, AgentConnection *conn)
@@ -2366,7 +2329,7 @@ static void *CopyFileSources(EvalContext *ctx, char *destination, Attributes att
         {
             if (attr.copy.check_root)
             {
-                VerifyCopiedFileAttributes(ctx, destination, &dsb, &ssb, attr, pp);
+                VerifyCopiedFileAttributes(ctx, source, destination, &ssb, &dsb, attr, pp);
             }
         }
     }

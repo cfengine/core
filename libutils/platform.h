@@ -364,8 +364,10 @@ int pthread_attr_setstacksize(pthread_attr_t *attr, size_t stacksize);
 # include <sched.h>
 #endif
 
-#ifdef WITH_SELINUX
-# include <selinux/selinux.h>
+#ifdef HAVE_ATTR_XATTR_H
+# include <attr/xattr.h>
+#elif defined(HAVE_SYS_XATTR_H)
+# include <sys/xattr.h>
 #endif
 
 #ifndef MIN

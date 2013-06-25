@@ -43,7 +43,7 @@
 #include "expand.h"
 #include "conversion.h"
 #include "pipes.h"
-#include "cf_acl.h"
+#include "verify_acl.h"
 #include "env_context.h"
 #include "vars.h"
 #include "exec_tools.h"
@@ -91,7 +91,6 @@ static int cf_stat(char *file, struct stat *buf, FileCopy fc, AgentConnection *c
 #ifndef __MINGW32__
 static int cf_readlink(EvalContext *ctx, char *sourcefile, char *linkbuf, int buffsize, Attributes attr, Promise *pp, AgentConnection *conn);
 #endif
-static bool CopyRegularFileDiskReport(EvalContext *ctx, char *source, char *destination, Attributes attr, Promise *pp);
 static int SkipDirLinks(char *path, const char *lastnode, Recursion r);
 static int DeviceBoundary(struct stat *sb, dev_t rootdevice);
 static void LinkCopy(EvalContext *ctx, char *sourcefile, char *destfile, struct stat *sb, Attributes attr, Promise *pp, CompressedArray **inode_cache, AgentConnection *conn);
@@ -1078,17 +1077,6 @@ int CopyRegularFile(EvalContext *ctx, char *source, char *dest, struct stat ssta
     int rsrcfork = 0;
 #endif
 
-#ifdef WITH_SELINUX
-    int selinux_enabled = 0;
-
-/* need to keep track of security context of destination file (if any) */
-    security_context_t scontext = NULL;
-    struct stat cur_dest;
-    int dest_exists;
-
-    selinux_enabled = (is_selinux_enabled() > 0);
-#endif
-
     discardbackup = ((attr.copy.backup == BACKUP_OPTION_NO_BACKUP) || (attr.copy.backup == BACKUP_OPTION_REPOSITORY_STORE));
 
     if (DONTDO)
@@ -1096,25 +1084,6 @@ int CopyRegularFile(EvalContext *ctx, char *source, char *dest, struct stat ssta
         Log(LOG_LEVEL_ERR, "Promise requires copy from '%s' to '%s'", source, dest);
         return false;
     }
-
-#ifdef WITH_SELINUX
-    if (selinux_enabled)
-    {
-        dest_exists = stat(dest, &cur_dest);
-
-        if (dest_exists == 0)
-        {
-            /* get current security context of destination file */
-            getfilecon(dest, &scontext);
-        }
-        else
-        {
-            /* use default security context when creating destination file */
-            matchpathcon(dest, 0, &scontext);
-            setfscreatecon(scontext);
-        }
-    }
-#endif
 
     /* Make an assoc array of inodes used to preserve hard links */
 
@@ -1190,8 +1159,9 @@ int CopyRegularFile(EvalContext *ctx, char *source, char *dest, struct stat ssta
     }
     else
     {
-        if (!CopyRegularFileDiskReport(ctx, source, new, attr, pp))
+        if (!CopyRegularFileDisk(source, new))
         {
+            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, attr, "Failed copying file '%s' to '%s'", source, new);
             return false;
         }
 
@@ -1426,23 +1396,6 @@ int CopyRegularFile(EvalContext *ctx, char *source, char *dest, struct stat ssta
         utime(dest, &timebuf);
 #endif
     }
-
-#ifdef WITH_SELINUX
-    if (selinux_enabled)
-    {
-        if (dest_exists == 0)
-        {
-            /* set dest context to whatever it was before copy */
-            setfilecon(dest, scontext);
-        }
-        else
-        {
-            /* set create context back to default */
-            setfscreatecon(NULL);
-        }
-        freecon(scontext);
-    }
-#endif
 
     return true;
 }
@@ -3001,19 +2954,6 @@ static int cf_readlink(EvalContext *ctx, char *sourcefile, char *linkbuf, int bu
 }
 
 #endif /* !__MINGW32__ */
-
-static bool CopyRegularFileDiskReport(EvalContext *ctx, char *source, char *destination, Attributes attr, Promise *pp)
-// TODO: return error codes in CopyRegularFileDisk and print them to cfPS here
-{
-    bool result = CopyRegularFileDisk(source, destination);
-
-    if(!result)
-    {
-        cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, attr, "Failed copying file '%s' to '%s'", source, destination);
-    }
-
-    return result;
-}
 
 static int SkipDirLinks(char *path, const char *lastnode, Recursion r)
 {

@@ -22,22 +22,9 @@
   included file COSL.txt.
 */
 
-#ifndef CFENGINE_ACL_H
-#define CFENGINE_ACL_H
+#ifndef ACL_TOOLS_H
+#define ACL_TOOLS_H
 
-#include "cf3.defs.h"
-
-// Valid generic permissions
-#define CF_VALID_GPERMS "rwx"
-
-// Native perms separators in mode
-#define CF_NATIVE_PERMS_SEP_START '('
-#define CF_NATIVE_PERMS_SEP_END ')'
-
-#define CF_VALID_NPERMS_POSIX "rwx"
-#define CF_VALID_NPERMS_NTFS "drtxTwabBpcoD"
-
-void VerifyACL(EvalContext *ctx, char *file, Attributes a, Promise *pp);
 int CopyACLs(const char *src, const char *dst);
 
-#endif
+#endif // ACL_TOOLS_H

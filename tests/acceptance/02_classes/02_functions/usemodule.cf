@@ -1,0 +1,104 @@
+#######################################################
+#
+# Test usemodule()
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+  vars:
+    "script_location" string => dirname("$(this.promise_filename)");
+  classes:
+    "ok_to_run" not => regcmp("/var/cfengine|.*\.cf-agent", "$(sys.workdir)");
+
+  files:
+    ok_to_run::
+      "$(sys.workdir)/modules/usemodule.cf.bat"
+        create => "true",
+        perms => usemodule_perms,
+        edit_line => usemodule_lines;
+}
+
+bundle edit_line usemodule_lines
+{
+  insert_lines:
+    windows::
+      "@echo off";
+      "\"$(G.cwd)\$(init.script_location)\usemodule.cf.bat\"";
+    !windows::
+      "#!/bin/sh";
+      ". \"$(G.cwd)/$(init.script_location)/usemodule.cf.bat\"";
+
+  delete_lines:
+    ".*";
+}
+
+body perms usemodule_perms
+{
+  mode => "755";
+}
+
+#######################################################
+
+bundle agent test
+{
+  classes:
+    "ok_to_run" not => regcmp("/var/cfengine|.*\.cf-agent", "$(sys.workdir)");
+
+  classes:
+    ok_to_run::
+      # Should be undefined by the following script.
+      "undefined_class" expression => "any";
+      "function_ok" expression => usemodule("usemodule.cf.bat", "");
+      "defined_variable" expression => strcmp("$(usemodule_cf_bat.defined_variable)", "yes");
+      "ok" and => { "function_ok", "defined_class", "!undefined_class", "defined_variable" };
+
+  vars:
+    ok::
+      "ok" string => "yes";
+
+  reports:
+    !ok_to_run::
+      "Must be run using testall script";
+    ok_to_run.DEBUG.!function_ok::
+      "usemodule did not execute correctly.";
+    ok_to_run.DEBUG.!defined_class::
+      "defined_class was not set, but should be.";
+    ok_to_run.DEBUG.undefined_class::
+      "undefined_class was set, but shouldn't be.";
+    ok_to_run.DEBUG.!defined_variable::
+      "defined_variable was not set, but should be.";
+
+    ok_to_run.DEBUG.function_ok::
+      "usemodule executed correctly.";
+    ok_to_run.DEBUG.defined_class::
+      "defined_class was set.";
+    ok_to_run.DEBUG.!undefined_class::
+      "undefined_class was not set.";
+    ok_to_run.DEBUG.defined_variable::
+      "defined_variable was set.";
+}
+
+#######################################################
+
+bundle agent check
+{
+  classes:
+    "ok" expression => strcmp("$(test.ok)", "yes");
+
+  reports:
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}
+

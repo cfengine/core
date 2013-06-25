@@ -22,6 +22,8 @@
   included file COSL.txt.
 */
 
+#include "platform.h"
+
 #include "files_copy.h"
 
 #include "files_names.h"
@@ -30,6 +32,7 @@
 #include "policy.h"
 #include "files_lib.h"
 #include "string_lib.h"
+#include "acl_tools.h"
 
 /*
  * Copy data jumping over areas filled by '\0', so files automatically become sparse if possible.
@@ -109,13 +112,15 @@ static bool CopyData(const char *source, int sd, const char *destination, int dd
 
 bool CopyRegularFileDisk(const char *source, const char *destination)
 {
-    int sd, dd;
+    int sd;
+    int dd = 0;
+    char *buf = 0;
+    bool result = false;
 
     if ((sd = open(source, O_RDONLY | O_BINARY)) == -1)
     {
         Log(LOG_LEVEL_INFO, "Can't copy '%s'. (open: %s)", source, GetErrorStr());
-        unlink(destination);
-        return false;
+        goto end;
     }
     /*
      * We need to stat the file in order to get the right source permissions.
@@ -125,8 +130,7 @@ bool CopyRegularFileDisk(const char *source, const char *destination)
     if (stat(source, &statbuf) == -1)
     {
         Log(LOG_LEVEL_INFO, "Can't copy '%s'. (stat: %s)", source, GetErrorStr());
-        unlink(destination);
-        return false;
+        goto end;
     }
 
     unlink(destination);                /* To avoid link attacks */
@@ -134,23 +138,132 @@ bool CopyRegularFileDisk(const char *source, const char *destination)
     if ((dd = open(destination, O_WRONLY | O_CREAT | O_TRUNC | O_EXCL | O_BINARY, statbuf.st_mode)) == -1)
     {
         Log(LOG_LEVEL_INFO, "Unable to open destination file while copying '%s' to '%s'. (open: %s)", source, destination, GetErrorStr());
-        close(sd);
-        unlink(destination);
-        return false;
+        goto end;
     }
 
     int buf_size = ST_BLKSIZE(dstat);
-    char *buf = xmalloc(buf_size);
+    buf = xmalloc(buf_size);
 
-    bool result = CopyData(source, sd, destination, dd, buf, buf_size);
+    result = CopyData(source, sd, destination, dd, buf, buf_size);
+    if (!result)
+    {
+        goto end;
+    }
 
+end:
+    if (buf)
+    {
+        free(buf);
+    }
+    if (dd)
+    {
+        close(dd);
+    }
     if (!result)
     {
         unlink(destination);
     }
-
     close(sd);
-    close(dd);
-    free(buf);
     return result;
+}
+
+bool CopyFilePermissionsDisk(const char *source, const char *destination)
+{
+    struct stat statbuf;
+
+    if (stat(source, &statbuf) == -1)
+    {
+        Log(LOG_LEVEL_INFO, "Can't copy permissions '%s'. (stat: %s)", source, GetErrorStr());
+        return false;
+    }
+
+    if (chmod(destination, statbuf.st_mode) != 0)
+    {
+        Log(LOG_LEVEL_INFO, "Can't copy permissions '%s'. (chmod: %s)", source, GetErrorStr());
+        return false;
+    }
+
+    if (chown(destination, statbuf.st_uid, statbuf.st_gid) != 0)
+    {
+        Log(LOG_LEVEL_INFO, "Can't copy permissions '%s'. (chown: %s)", source, GetErrorStr());
+        return false;
+    }
+
+    if (!CopyFileExtendedAttributesDisk(source, destination))
+    {
+        return false;
+    }
+
+    return true;
+}
+
+bool CopyFileExtendedAttributesDisk(const char *source, const char *destination)
+{
+#if defined(WITH_XATTR)
+    // Extended attributes include both POSIX ACLs and SELinux contexts.
+    ssize_t attr_raw_names_size;
+    char attr_raw_names[CF_BUFSIZE];
+
+    attr_raw_names_size = listxattr(source, attr_raw_names, sizeof(attr_raw_names));
+    if (attr_raw_names_size < 0)
+    {
+        if (errno == ENOTSUP || errno == ENODATA)
+        {
+            return true;
+        }
+        else
+        {
+            Log(LOG_LEVEL_INFO, "Can't copy extended attributes from '%s' to '%s'. (listxattr: %s)",
+                source, destination, GetErrorStr());
+            return false;
+        }
+    }
+
+    int pos;
+    for (pos = 0; pos < attr_raw_names_size;)
+    {
+        const char *current = attr_raw_names + pos;
+        pos += strlen(current) + 1;
+
+        char data[CF_BUFSIZE];
+        int datasize = getxattr(source, current, data, sizeof(data));
+        if (datasize < 0)
+        {
+            if (errno == ENOTSUP)
+            {
+                continue;
+            }
+            else
+            {
+                Log(LOG_LEVEL_INFO, "Can't copy extended attributes from '%s' to '%s'. (getxattr: %s: %s)",
+                    source, destination, GetErrorStr(), current);
+                return false;
+            }
+        }
+
+        int ret = setxattr(destination, current, data, datasize, 0);
+        if (ret < 0)
+        {
+            if (errno == ENOTSUP)
+            {
+                continue;
+            }
+            else
+            {
+                Log(LOG_LEVEL_INFO, "Can't copy extended attributes from '%s' to '%s'. (setxattr: %s: %s)",
+                    source, destination, GetErrorStr(), current);
+                return false;
+            }
+        }
+    }
+
+#else // !WITH_XATTR
+    // ACLs are included in extended attributes, but fall back to CopyACLs if xattr is not available.
+    if (!CopyACLs(source, destination))
+    {
+        return false;
+    }
+#endif
+
+    return true;
 }

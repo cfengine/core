@@ -1324,7 +1324,7 @@ static int InsertCompoundLineAtLocation(EvalContext *ctx, char *chunk, Item **st
     for (sp = chunk; sp <= chunk + strlen(chunk); sp++)
     {
         memset(buf, 0, CF_BUFSIZE);
-        sscanf(sp, "%2048[^\n]", buf);
+        StringScanfCapped(sp, CF_BUFSIZE, "\n", buf);
         sp += strlen(buf);
 
         if (!SelectLine(buf, a))

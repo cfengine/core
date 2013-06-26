@@ -1702,7 +1702,7 @@ static FnCallResult FnCallLsDir(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
     if (dirh == NULL)
     {
         Log(LOG_LEVEL_ERR, "Directory '%s' could not be accessed in lsdir(), (opendir: %s)", dirname, GetErrorStr());
-        RlistPrependScalar(&newlist, "cf_null");
+        RlistPrependScalar(&newlist, CF_NULL_VALUE);
         return (FnCallResult) { FNCALL_SUCCESS, { newlist, RVAL_TYPE_LIST } };
     }
 
@@ -1727,7 +1727,7 @@ static FnCallResult FnCallLsDir(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 
     if (newlist == NULL)
     {
-        RlistPrependScalar(&newlist, "cf_null");
+        RlistPrependScalar(&newlist, CF_NULL_VALUE);
     }
 
     return (FnCallResult) { FNCALL_SUCCESS, { newlist, RVAL_TYPE_LIST } };

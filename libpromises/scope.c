@@ -353,13 +353,14 @@ void ScopeClear(const char *name)
     Scope *scope = ScopeGet(name);
     if (!scope)
     {
-        Log(LOG_LEVEL_DEBUG, "No such scope to clear");
+        Log(LOG_LEVEL_DEBUG, "No scope '%s' to clear", name);
         ThreadUnlock(cft_vscope);
         return;
     }
 
     HashFree(scope->hashtable);
     scope->hashtable = HashInit();
+    Log(LOG_LEVEL_DEBUG, "Scope '%s' cleared", name);
 
     ThreadUnlock(cft_vscope);
 }

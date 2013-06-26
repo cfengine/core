@@ -120,13 +120,11 @@ static void test_attach_detach_RefCount(void)
     assert_true(refCount->last->previous == NULL);
     assert_true(refCount->last->user == (void *)&data2);
 
-    // Detach the second data, this is a NOP
-    assert_int_equal(-1, RefCountDetach(refCount, &data2));
-    // Check the result
-    assert_int_equal(1, refCount->user_count);
-    assert_true(refCount->last->next == NULL);
-    assert_true(refCount->last->previous == NULL);
-    assert_true(refCount->last->user == (void *)&data2);
+    /*
+     * We cannot detach the last element because that will assert.
+     * Whenever there is only one element the only thing is to destroy
+     * the refcount.
+     */
 
     // Destroy the refcount
     RefCountDestroy(&refCount);

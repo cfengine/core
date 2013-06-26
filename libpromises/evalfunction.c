@@ -1234,17 +1234,15 @@ static FnCallResult FnCallGetIndices(EvalContext *ctx, FnCall *fp, Rlist *finala
         if (strncmp(match, assoc->lval, strlen(match)) == 0)
         {
             char *sp;
+            sp  = strstr(assoc->lval + strlen(match), "\\[");
+            if (sp==NULL)
+            {
+                sp = assoc->lval + strlen(match);
+            }
+            size_t length = strcspn(sp, "\\]\n");
+            length = length < CF_MAXVARSIZE ? length : CF_MAXVARSIZE - 1;
 
-            index[0] = '\0';
-            sscanf(assoc->lval + strlen(match), "%127[^\n]", index);
-            if ((sp = strchr(index, ']')))
-            {
-                *sp = '\0';
-            }
-            else
-            {
-                index[strlen(index) - 1] = '\0';
-            }
+            strlcpy(index, sp, length + 1);
 
             if (strlen(index) > 0)
             {

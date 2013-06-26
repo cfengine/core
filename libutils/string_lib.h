@@ -136,5 +136,7 @@ void *MemSpan(const void *mem, char c, size_t n);
 void *MemSpanInverse(const void *mem, char c, size_t n);
 
 bool CompareStringOrRegex(const char *value, const char *compareTo, bool regex);
+bool StringNotMatchingSetCapped(const char *isp, int limit, 
+                      const char *exclude, char *obuf);
 
 #endif

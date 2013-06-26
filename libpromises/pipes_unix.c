@@ -97,11 +97,11 @@ static void SetChildFD(int fd, pid_t pid)
 
 /*****************************************************************************/
 
-static pid_t CreatePipeAndFork(char *type, int *pd)
+static pid_t CreatePipeAndFork(const char *type, int *pd)
 {
     pid_t pid = -1;
 
-    if (((*type != 'r') && (*type != 'w')) || (type[1] != '\0'))
+    if (!PipeTypeIsOk(type))
     {
         errno = EINVAL;
         return -1;
@@ -133,7 +133,7 @@ static pid_t CreatePipeAndFork(char *type, int *pd)
 
 /*****************************************************************************/
 
-FILE *cf_popen(const char *command, char *type, bool capture_stderr)
+FILE *cf_popen(const char *command, const char *type, bool capture_stderr)
 {
     int pd[2];
     char **argv;
@@ -230,7 +230,7 @@ FILE *cf_popen(const char *command, char *type, bool capture_stderr)
 
 /*****************************************************************************/
 
-FILE *cf_popensetuid(const char *command, char *type, uid_t uid, gid_t gid, char *chdirv, char *chrootv, ARG_UNUSED int background)
+FILE *cf_popensetuid(const char *command, const char *type, uid_t uid, gid_t gid, char *chdirv, char *chrootv, ARG_UNUSED int background)
 {
     int pd[2];
     char **argv;
@@ -343,7 +343,7 @@ FILE *cf_popensetuid(const char *command, char *type, uid_t uid, gid_t gid, char
 /* Shell versions of commands - not recommended for security reasons         */
 /*****************************************************************************/
 
-FILE *cf_popen_sh(const char *command, char *type)
+FILE *cf_popen_sh(const char *command, const char *type)
 {
     int pd[2];
     pid_t pid;
@@ -422,7 +422,7 @@ FILE *cf_popen_sh(const char *command, char *type)
 
 /******************************************************************************/
 
-FILE *cf_popen_shsetuid(const char *command, char *type, uid_t uid, gid_t gid, char *chdirv, char *chrootv, ARG_UNUSED int background)
+FILE *cf_popen_shsetuid(const char *command, const char *type, uid_t uid, gid_t gid, char *chdirv, char *chrootv, ARG_UNUSED int background)
 {
     int pd[2];
     pid_t pid;

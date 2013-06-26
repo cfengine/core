@@ -37,7 +37,6 @@ static void test_map_iterators_from_rval_naked_list_var(void)
 {
     EvalContext *ctx = EvalContextNew();
     ScopeDeleteAll();
-    ScopeSetCurrent("scope");
 
     Rlist *list = NULL;
     RlistAppend(&list, "jersey", RVAL_TYPE_SCALAR);

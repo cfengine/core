@@ -22,6 +22,7 @@
   included file COSL.txt.
 */
 
+#include <assert.h>
 #include "alloc.h"
 #include "list.h"
 
@@ -83,7 +84,7 @@ static void ListDetach(List *list)
          * 1. Perform a deep copy (expensive!)
          * 2. Detach
          */
-        ListNode *p = NULL, *q = NULL, *newList = NULL;
+        ListNode *p = NULL, *q = NULL, *newList = NULL, *first = NULL, *last = NULL;
         for (p = list->list; p; p = p->next)
         {
             if (newList)
@@ -92,6 +93,7 @@ static void ListDetach(List *list)
                 q->next->previous = q;
                 q->next->next = NULL;
                 q = q->next;
+                last = q;
                 if (p->payload)
                 {
                     if (list->copy)
@@ -110,6 +112,8 @@ static void ListDetach(List *list)
                 newList = (ListNode *)xmalloc(sizeof(ListNode));
                 newList->next = NULL;
                 newList->previous = NULL;
+                first = newList;
+                last = newList;
                 if (p->payload)
                 {
                     if (list->copy)
@@ -125,6 +129,8 @@ static void ListDetach(List *list)
             }
         }
         list->list = newList;
+        list->first = first;
+        list->last = last;
         // Ok, we have our own copy of the list. Now we detach.
         RefCountDetach(list->ref_count, list);
         list->ref_count = NULL;
@@ -158,25 +164,27 @@ int ListDestroy(List **list)
         return 0;
     }
     int shared = RefCountIsShared((*list)->ref_count);
-    if (!shared)
+    if (shared)
+    {
+        /*
+         * We just detach from the list.
+         */
+        RefCountDetach((*list)->ref_count, (*list));
+    }
+    else
     {
         // We are the only ones using the list, we can delete it.
         ListNode *node = NULL;
         ListNode *p = NULL;
-        for (node = (*list)->first; node; node = node->next)
+        for (node = (*list)->first; node; node = p)
         {
-            if (p)
-                free(p);
             if ((*list)->destroy)
                 (*list)->destroy(node->payload);
-            p = node;
+            p = node->next;
+            free(node);
         }
-        if (p)
-        {
-            free(p);
-        }
+        RefCountDestroy(&(*list)->ref_count);
     }
-    RefCountDetach((*list)->ref_count, (*list));
     free((*list));
     *list = NULL;
     return 0;
@@ -186,6 +194,14 @@ int ListCopy(List *origin, List **destination)
 {
     if (!origin || !destination)
         return -1;
+    /*
+     * The first thing we check is the presence of a copy function.
+     * Without that function we need to abort the operation.
+     */
+    if (!origin->copy)
+    {
+        return -1;
+    }
     *destination = (List *)xmalloc(sizeof(List));
     (*destination)->list = origin->list;
     (*destination)->first = origin->first;
@@ -195,6 +211,13 @@ int ListCopy(List *origin, List **destination)
     (*destination)->destroy = origin->destroy;
     (*destination)->copy = origin->copy;
     (*destination)->compare = origin->compare;
+    /*
+     * We do not copy iterators.
+     */
+    (*destination)->iterator = NULL;
+    /*
+     * We have a copy function, we can perform a shallow copy.
+     */
     int result = RefCountAttach(origin->ref_count, (*destination));
     if (result < 0)
     {
@@ -300,55 +323,6 @@ static int ListFindNode(List *list, void *payload)
     }
     return found;
 }
-static void ListRemoveNode(List *list, ListNode *node)
-{
-    if (node->next && node->previous) {
-        // Middle of the list
-        node->next->previous = node->previous;
-        node->previous->next = node->next;
-    }
-    else if (node->next)
-    {
-        // First element of the list
-        list->list = node->next;
-        list->first = node->next;
-        node->next->previous = NULL;
-    }
-    else if (node->previous)
-    {
-        // Last element
-        node->previous->next = NULL;
-        list->last = node->previous;
-    }
-    else
-    {
-        // Single element
-        list->list = NULL;
-        list->first = NULL;
-        list->last = NULL;
-    }
-}
-static void ListUpdateMutableIterator(List *list, ListNode *node)
-{
-    if (!list->iterator)
-        return;
-    if (list->iterator->current == node) {
-        /*
-         * So lucky, it is the same node!
-         * Move the iterator so it is not dangling.
-         * Rules for moving:
-         * 1. Move forward.
-         * 2. if not possible, move backward.
-         * 3. If not possible, then invalidate the iterator.
-         */
-        if (list->iterator->current->next)
-            list->iterator->current = list->iterator->current->next;
-        else if (list->iterator->current->previous)
-            list->iterator->current = list->iterator->current->previous;
-        else
-            list->iterator->valid = 0;
-    }
-}
 static void ListUpdateListState(List *list)
 {
     list->node_count--;
@@ -370,6 +344,7 @@ int ListRemove(List *list, void *payload)
     int found = ListFindNode(list, payload);
     if (!found)
         return -1;
+    found = 0;
     ListDetach(list);
     node = NULL;
     /*
@@ -398,15 +373,76 @@ int ListRemove(List *list, void *payload)
         }
     }
     /*
+     * This is nearly impossible, so we will only assert it.
+     */
+    assert(found == 1);
+    /*
      * Before deleting the node we have to update the mutable iterator.
      * We might need to advance it!
      */
-    ListUpdateMutableIterator(list, node);
-    ListRemoveNode(list, node);
+    if (list->iterator)
+    {
+        if (list->iterator->current == node) 
+        {
+            /*
+             * So lucky, it is the same node!
+             * Move the iterator so it is not dangling.
+             * Rules for moving:
+             * 1. Move forward.
+             * 2. if not possible, move backward.
+             * 3. If not possible, then invalidate the iterator.
+             */
+            if (list->iterator->current->next)
+            {
+                list->iterator->current = list->iterator->current->next;
+            }
+            else if (list->iterator->current->previous)
+            {
+                list->iterator->current = list->iterator->current->previous;
+            }
+            else
+            {
+                list->iterator->valid = 0;
+            }
+        }
+    }
+    /*
+     * Now, remove the node from the list and delete it.
+     */
+    if (node->next && node->previous) 
+    {
+        // Middle of the list
+        node->next->previous = node->previous;
+        node->previous->next = node->next;
+    }
+    else if (node->next)
+    {
+        // First element of the list
+        list->list = node->next;
+        list->first = node->next;
+        node->next->previous = NULL;
+    }
+    else if (node->previous)
+    {
+        // Last element
+        node->previous->next = NULL;
+        list->last = node->previous;
+    }
+    else
+    {
+        // Single element
+        list->list = NULL;
+        list->first = NULL;
+        list->last = NULL;
+    }
     if (list->destroy && node->payload) 
     {
         list->destroy(node->payload);
-	}
+    }
+    else
+    {
+        free (node->payload);
+    }
     free(node);
     ListUpdateListState(list);
     return 0;
@@ -705,10 +741,37 @@ int ListMutableIteratorRemove(ListMutableIterator *iterator)
         } else
             return -1;
     }
-    ListRemoveNode(iterator->origin, iterator->current);
-    if (iterator->origin->destroy)
-        iterator->origin->destroy(iterator->current->payload);
-    free (iterator->current);
+    /*
+     * Now, remove the node from the list and delete it.
+     */
+    if (iterator->current->next && iterator->current->previous)
+    {
+        // Middle of the list
+        iterator->current->next->previous = iterator->current->previous;
+        iterator->current->previous->next = iterator->current->next;
+    }
+    else if (iterator->current->next)
+    {
+        // First element of the list
+        iterator->origin->list = iterator->current->next;
+        iterator->origin->first = iterator->current->next;
+        iterator->current->next->previous = NULL;
+    }
+    else if (iterator->current->previous)
+    {
+        // Last element
+        iterator->current->previous->next = NULL;
+        iterator->origin->last = iterator->current->previous;
+    }
+    if (iterator->origin->destroy && iterator->current->payload)
+    {
+         iterator->origin->destroy(iterator->current->payload);
+    }
+    else
+    {
+        free (iterator->current->payload);
+    }
+    free(iterator->current);
     iterator->current = node;
     ListUpdateListState(iterator->origin);
     return 0;

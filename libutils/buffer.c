@@ -95,7 +95,7 @@ Buffer* BufferNewFrom(const char *data, unsigned int length)
     for (c = 0; c < length; ++c)
     {
         buffer->buffer[c] = data[c];
-        if ((data[c] == '\0') && (buffer->mode = BUFFER_BEHAVIOR_CSTRING))
+        if ((data[c] == '\0') && (buffer->mode == BUFFER_BEHAVIOR_CSTRING))
         {
             break;
         }
@@ -152,6 +152,13 @@ int BufferCopy(Buffer *source, Buffer **destination)
     {
         return -1;
     }
+    if (source == *destination)
+    {
+        /*
+         * We cannot copy a buffer to itself.
+         */
+        return -1;
+    }  
     *destination = (Buffer *)xmalloc(sizeof(Buffer));
     (*destination)->capacity = source->capacity;
     (*destination)->mode = source->mode;

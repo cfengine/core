@@ -3,24 +3,13 @@
 #include "refcount.h"
 
 // Simple initialization test
-static void test_initRefCount(void)
+static void test_init_destroy_RefCount(void)
 {
     RefCount *refCount = NULL;
     RefCountNew(&refCount);
     assert_int_equal(0, refCount->user_count);
     assert_true(refCount->last == NULL);
     assert_true(refCount->users == NULL);
-}
-
-// Simple deletion test
-static void test_destroyRefCount(void)
-{
-    RefCount *refCount = NULL;
-    RefCountNew(&refCount);
-    assert_int_equal(0, refCount->user_count);
-    assert_true(refCount->last == NULL);
-    assert_true(refCount->users == NULL);
-
     // Now we destroy the refcount.
     RefCountDestroy(&refCount);
     assert_true(refCount == NULL);
@@ -29,60 +18,7 @@ static void test_destroyRefCount(void)
     RefCountDestroy(&refCount);
 }
 
-static void test_attachRefCount(void)
-{
-    int data1 = 0xdeadbeef;
-    int data2 = 0xbad00bad;
-    RefCount *refCount = NULL;
-
-    // initialize the refcount
-    RefCountNew(&refCount);
-    assert_int_equal(0, refCount->user_count);
-    assert_true(refCount->last == NULL);
-    assert_true(refCount->users == NULL);
-
-    // attach it to the first data
-    assert_int_equal(1, RefCountAttach(refCount, &data1));
-    // Check the result
-    assert_int_equal(1, refCount->user_count);
-    assert_true(refCount->last->next == NULL);
-    assert_true(refCount->last->previous == NULL);
-    assert_true(refCount->last->user == (void *)&data1);
-
-    // Attach the second data
-    assert_int_equal(2, RefCountAttach(refCount, &data2));
-    // Check the result
-    assert_int_equal(2, refCount->user_count);
-    assert_true(refCount->last->next == NULL);
-    assert_true(refCount->last->previous != NULL);
-    assert_true(refCount->last->user == (void *)&data2);
-
-    // Try to attach to a NULL refCount
-    assert_int_equal(-1, RefCountAttach(NULL, &data2));
-    // Check the result
-    assert_int_equal(2, refCount->user_count);
-    assert_true(refCount->last->next == NULL);
-    assert_true(refCount->last->previous != NULL);
-    assert_true(refCount->last->user == (void *)&data2);
-
-    // Try to attach NULL data
-    assert_int_equal(-1, RefCountAttach(refCount, NULL));
-    // Check the result
-    assert_int_equal(2, refCount->user_count);
-    assert_true(refCount->last->next == NULL);
-    assert_true(refCount->last->previous != NULL);
-    assert_true(refCount->last->user == (void *)&data2);
-
-    // Try to attach with both NULL
-    assert_int_equal(-1, RefCountAttach(NULL, NULL));
-    // Check the result
-    assert_int_equal(2, refCount->user_count);
-    assert_true(refCount->last->next == NULL);
-    assert_true(refCount->last->previous != NULL);
-    assert_true(refCount->last->user == (void *)&data2);
-}
-
-static void test_detachRefCount(void)
+static void test_attach_detach_RefCount(void)
 {
     int data1 = 0xdeadbeef;
     int data2 = 0xbad00bad;
@@ -185,12 +121,15 @@ static void test_detachRefCount(void)
     assert_true(refCount->last->user == (void *)&data2);
 
     // Detach the second data, this is a NOP
-    assert_int_equal(0, RefCountDetach(refCount, &data2));
+    assert_int_equal(-1, RefCountDetach(refCount, &data2));
     // Check the result
     assert_int_equal(1, refCount->user_count);
     assert_true(refCount->last->next == NULL);
     assert_true(refCount->last->previous == NULL);
     assert_true(refCount->last->user == (void *)&data2);
+
+    // Destroy the refcount
+    RefCountDestroy(&refCount);
 }
 
 static void test_isSharedRefCount(void)
@@ -243,6 +182,9 @@ static void test_isSharedRefCount(void)
 
     // Try isShared with a NULL refCount
     assert_false(RefCountIsShared(NULL));
+
+    // Destroy the refcount
+    RefCountDestroy(&refCount);
 }
 
 static void test_isEqualRefCount(void)
@@ -284,15 +226,17 @@ static void test_isEqualRefCount(void)
 
     // Both NULL
     assert_true(RefCountIsEqual(NULL, NULL));
+
+    // Destroy both refcounts
+    RefCountDestroy(&refCount1);
+    RefCountDestroy(&refCount2);
 }
 
 int main()
 {
     const UnitTest tests[] = {
-        unit_test(test_initRefCount)
-        , unit_test(test_destroyRefCount)
-        , unit_test(test_attachRefCount)
-        , unit_test(test_detachRefCount)
+        unit_test(test_init_destroy_RefCount)
+        , unit_test(test_attach_detach_RefCount)
         , unit_test(test_isSharedRefCount)
         , unit_test(test_isEqualRefCount)
     };

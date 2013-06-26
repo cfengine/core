@@ -1,3 +1,7 @@
+3.5.3
+       Bug fixes:
+       - correctly populate sys.hardware_addresses variable (Redmine #2936)
+
 3.5.2
        Bug fixes:
        - fix delayed abortclasses checking (Redmine #2316, #3114, #3003)

@@ -1236,7 +1236,7 @@ static FnCallResult FnCallGetIndices(EvalContext *ctx, FnCall *fp, Rlist *finala
             char *sp;
 
             index[0] = '\0';
-            sscanf(assoc->lval + strlen(match), "%127[^\n]", index);
+            StringNotMatchingSetCapped(assoc->lval + strlen(match), CF_MAXVARSIZE, "\n", index);
             if ((sp = strchr(index, ']')))
             {
                 *sp = '\0';

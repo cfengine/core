@@ -1574,7 +1574,7 @@ static FnCallResult FnCallLsDir(FnCall *fp, Rlist *finalargs)
     if (dirh == NULL)
     {
         CfOut(cf_verbose, "opendir", " !! Directory \"%s\" could not be accessed in lsdir()", dirname);
-        PrependRScalar(&newlist, "cf_null", CF_SCALAR);
+        PrependRScalar(&newlist, CF_NULL_VALUE, CF_SCALAR);
         return (FnCallResult) { FNCALL_SUCCESS, { newlist, CF_LIST } };
     }
 
@@ -1599,7 +1599,7 @@ static FnCallResult FnCallLsDir(FnCall *fp, Rlist *finalargs)
 
     if (newlist == NULL)
     {
-        PrependRScalar(&newlist, "cf_null", CF_SCALAR);
+        PrependRScalar(&newlist, CF_NULL_VALUE, CF_SCALAR);
     }
 
     return (FnCallResult) { FNCALL_SUCCESS, { newlist, CF_LIST } };

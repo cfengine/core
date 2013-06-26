@@ -1686,7 +1686,7 @@ static FnCallResult FnCallCountLinesMatching(EvalContext *ctx, FnCall *fp, Rlist
 
 static FnCallResult FnCallLsDir(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
-    char line[CF_BUFSIZE], retval[CF_SMALLBUF];
+    char line[CF_BUFSIZE];
     Dir *dirh = NULL;
     const struct dirent *dirp;
     Rlist *newlist = NULL;
@@ -1702,8 +1702,8 @@ static FnCallResult FnCallLsDir(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
     if (dirh == NULL)
     {
         Log(LOG_LEVEL_ERR, "Directory '%s' could not be accessed in lsdir(), (opendir: %s)", dirname, GetErrorStr());
-        snprintf(retval, CF_SMALLBUF - 1, "0");
-        return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(retval), RVAL_TYPE_SCALAR } };
+        RlistPrependScalar(&newlist, "cf_null");
+        return (FnCallResult) { FNCALL_SUCCESS, { newlist, RVAL_TYPE_LIST } };
     }
 
     for (dirp = DirRead(dirh); dirp != NULL; dirp = DirRead(dirh))

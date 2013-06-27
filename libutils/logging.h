@@ -28,6 +28,9 @@
 #include "platform.h"
 #include "compiler.h"
 
+// Does not include timezone, since it is hard to match on Windows.
+#define LOGGING_TIMESTAMP_REGEX "^20[0-9][0-9]-[01][0-9]-[0-3][0-9]T[0-2][0-9]:[0-5][0-9]:[0-5][0-9]"
+
 typedef enum
 {
     LOG_LEVEL_NOTHING = -1,

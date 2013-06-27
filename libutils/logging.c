@@ -34,13 +34,14 @@ bool LEGACY_OUTPUT = false;
 
 typedef struct
 {
-    LogLevel global_level;
     LogLevel log_level;
     LogLevel report_level;
     bool color;
 
     LoggingPrivContext *pctx;
 } LoggingContext;
+
+static LogLevel global_level = LOG_LEVEL_NOTICE;
 
 void LogToSystemLog(const char *msg, LogLevel level);
 
@@ -67,9 +68,8 @@ static LoggingContext *GetCurrentThreadContext(void)
     if (lctx == NULL)
     {
         lctx = xcalloc(1, sizeof(LoggingContext));
-        lctx->global_level = LOG_LEVEL_NOTICE;
-        lctx->log_level = lctx->global_level;
-        lctx->report_level =lctx->global_level;
+        lctx->log_level = global_level;
+        lctx->report_level = global_level;
         pthread_setspecific(log_context_key, lctx);
     }
     return lctx;
@@ -251,15 +251,13 @@ void Log(LogLevel level, const char *fmt, ...)
 
 void LogSetGlobalLevel(LogLevel level)
 {
-    LoggingContext *lctx = GetCurrentThreadContext();
-    lctx->global_level = level;
+    global_level = level;
     LoggingPrivSetLevels(level, level);
 }
 
 LogLevel LogGetGlobalLevel(void)
 {
-    const LoggingContext *lctx = GetCurrentThreadContext();
-    return lctx->global_level;
+    return global_level;
 }
 
 void LoggingSetColor(bool enabled)

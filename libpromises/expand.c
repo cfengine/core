@@ -782,6 +782,7 @@ static void ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp, Rlist *listv
             ScopeNewSpecial(ctx, "this", "promise_linenumber", number, DATA_TYPE_STRING);
         }
 
+        ScopeNewSpecial(ctx, "this", "promiser", pp->promiser, DATA_TYPE_STRING);
         snprintf(v, CF_MAXVARSIZE, "%d", (int) getuid());
         ScopeNewSpecial(ctx, "this", "promiser_uid", v, DATA_TYPE_INT);
         snprintf(v, CF_MAXVARSIZE, "%d", (int) getgid());

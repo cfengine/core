@@ -67,6 +67,16 @@ body process_select days_older_than(d)
 
 ##
 
+body process_select by_owner(u)
+# Takes user as parameter and matches it against the given username
+# and the given username's uid in case only uid is visible in process list.
+{
+      process_owner => { "$(u)", canonify(getuid("$(u)")) };
+      process_result => "process_owner";
+}
+
+##
+
 body process_count any_count(cl)
 
 {

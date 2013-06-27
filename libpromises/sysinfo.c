@@ -1749,8 +1749,39 @@ static int Linux_Slackware_Version(EvalContext *ctx, char *filename)
     return 0;
 }
 
+/*
+ * @brief : /etc/issue on debian can include special characters
+ *          escaped with '/' or '@'. This function will get rid
+ *          them.
+ *
+ * @input[in,out] buffer: string to be sanitized
+ *
+ * @retval : true if everything went fine, false otherwise
+ */
+static bool Linux_Debian_Sanitize_Issue(char *buffer)
+{
+    bool escaped = false;
+    char *s2; s2 = buffer;
+    for(char *s = buffer; *s != '\0'; s++)
+    {
+  printf("%c",*s);
+        if (*s=='\\' || *s=='@')
+        {
+             if(escaped == false) escaped = true;
+             else escaped = false;
+        }
+        else
+        {
+             if(escaped == false) {*s2 = *s; s2++;}
+             else escaped=false;
+        }
+         
+    } 
+    *s2 = '\0'; s2--;
+    while(*s2==' ') {*s2='\0'; s2--;}
+    return 0;
+}
 /******************************************************************/
-
 static int Linux_Debian_Version(EvalContext *ctx)
 {
 #define DEBIAN_VERSION_FILENAME "/etc/debian_version"
@@ -1805,7 +1836,8 @@ static int Linux_Debian_Version(EvalContext *ctx)
     {
         return 1;
     }
-
+    Linux_Debian_Sanitize_Issue(buffer);
+    
     os[0] = '\0';
     sscanf(buffer, "%250s", os);
 

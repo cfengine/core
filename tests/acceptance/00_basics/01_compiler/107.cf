@@ -1,0 +1,52 @@
+######################################################
+#
+#  Test that $(this.promiser) is expanded inside of copy_from  
+#
+#####################################################
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+files:
+  "$(G.testdir)/testfile.dns"
+    comment => "A source file",
+    create => "true";
+}
+
+#######################################################
+
+bundle agent test
+{
+files:
+  "$(G.testdir)/testfile"
+    comment => "$(this.promiser)",
+    copy_from => mycopy("dns");    
+}
+
+body copy_from mycopy(suffix) {
+  source => "$(this.promiser).$(suffix)";
+  copy_backup => "false";
+}
+
+#######################################################
+
+bundle agent check
+{
+classes:
+  "ok" expression => fileexists("$(G.testdir)/testfile");
+
+reports:
+    ok::
+        "$(this.promise_filename) Pass";
+    !ok::
+        "$(this.promise_filename) FAIL";
+}
+

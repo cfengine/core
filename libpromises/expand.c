@@ -46,6 +46,7 @@
 #include "iteration.h"
 #include "audit.h"
 #include "verify_vars.h"
+#include "string_lib.h"
 
 #include <assert.h>
 
@@ -586,8 +587,7 @@ bool ExpandScalar(const EvalContext *ctx, const char *scopeid, const char *strin
         }
 
         currentitem[0] = '\0';
-
-        sscanf(sp, "%[^$]", currentitem);
+        StringNotMatchingSetCapped(sp,CF_EXPANDSIZE,"$",currentitem);
 
         if (ExpandOverflow(buffer, currentitem))
         {

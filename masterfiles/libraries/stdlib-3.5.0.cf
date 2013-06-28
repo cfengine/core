@@ -1,0 +1,212 @@
+############################################################################
+#  Copyright (C) Cfengine AS
+#
+#  This program is free software; you can redistribute it and/or modify it
+#  under the terms of the GNU Lesser General Public License LGPL as published by the
+#  Free Software Foundation; version 3.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  To the extent this program is licensed as part of the Enterprise
+#  versions of Cfengine, the applicable Commerical Open Source License
+#  (COSL) may apply to this file if you as a licensee so wish it. See
+#  included file COSL.txt.
+###########################################################################
+#
+# Cfengine Community Open Promise-Body Library
+#
+# This initiative started by Cfengine promotes a
+# standardized set of names and promise specifications
+# for template functionality within Cfengine 3.
+#
+# The aim is to promote an industry standard for
+# naming of configuration patterns, leading to a
+# de facto middleware of standardized syntax.
+#
+# Names should be intuitive and parameters should be
+# minimal to assist readability and comprehensibility.
+
+# Contributions to this file are voluntarily given to
+# the cfengine community, and are moderated by Cfengine.
+# No liability or warranty for misuse is implied.
+#
+# If you add to this file, please try to make the
+# contributions "self-documenting". Comments made
+# after the bundle/body statement are retained in
+# the online docs
+#
+
+# For Cfengine Core: 3.5.0 and later
+
+###################################################
+# If you find Cfengine useful, please consider    #
+# purchasing a commercial version of the software.#
+###################################################
+
+##
+
+body contain in_dir_shell(s)
+{
+chdir => "$(s)";
+useshell => "true";
+}
+
+##
+
+body contain in_shell
+{
+useshell => "true";
+}
+
+##
+
+body contain in_shell_bg
+{
+useshell => "true";
+}
+
+##
+
+body contain in_shell_and_silent
+{
+useshell => "true";
+no_output => "true";
+}
+
+##
+
+body contain in_dir_shell_and_silent(dir)
+{
+useshell => "true";
+no_output => "true";
+chdir => "$(dir)";
+}
+
+##
+
+body contain setuid(x)
+{
+exec_owner => "$(x)";
+useshell => "false";
+}
+
+##
+
+body contain setuid_sh(x)
+{
+exec_owner => "$(x)";
+useshell => "true";
+}
+
+##
+
+body contain setuidgid_sh(owner,group)
+{
+exec_owner => "$(owner)";
+exec_group => "$(group)";
+useshell => "true";
+}
+
+##
+
+body contain jail(owner,root,dir)
+{
+exec_owner => "$(owner)";
+useshell => "true";
+chdir => "$(dir)";
+chroot => "$(root)";
+}
+
+body classes scoped_classes_generic(scope, x)
+# Define x prefixed/suffixed with promise outcome
+{
+  scope => "$(scope)";
+  promise_repaired => { "promise_repaired_$(x)", "$(x)_repaired", "$(x)_ok", "$(x)_reached" };
+  repair_failed => { "repair_failed_$(x)", "$(x)_failed", "$(x)_not_ok", "$(x)_not_kept", "$(x)_not_repaired", "$(x)_reached" };
+  repair_denied => { "repair_denied_$(x)", "$(x)_denied", "$(x)_not_ok", "$(x)_not_kept", "$(x)_not_repaired", "$(x)_reached" };
+  repair_timeout => { "repair_timeout_$(x)", "$(x)_timeout", "$(x)_not_ok", "$(x)_not_kept", "$(x)_not_repaired", "$(x)_reached" };
+  promise_kept => { "promise_kept_$(x)", "$(x)_kept", "$(x)_ok", "$(x)_not_repaired", "$(x)_reached" };
+}
+
+bundle agent fileinfo(f)
+{
+  vars:
+      "fields" slist => splitstring("size,gid,uid,ino,nlink,ctime,atime,mtime,mode,modeoct,permstr,permoct,type,devno,dev_minor,dev_major,basename,dirname", ",", 999);
+
+      "stat[$(f)][$(fields)]" string => filestat($(f), $(fields));
+
+  reports:
+    verbose_mode::
+      "$(this.bundle): file $(f) has $(fields) = $(stat[$(f)][$(fields)])";
+}
+
+# Ignore aptitude because:
+#  1) aptitude will remove "unneeded" packages unexpectly
+#  2) aptitude return codes are useless
+#  3) aptitude is a high level interface
+#  4) aptitude provides little benefit
+#  5) have_aptitude is a hard class and thus cannot be unset
+body package_method apt_get
+{
+      package_changes => "bulk";
+      package_list_command => "$(debian_knowledge.call_dpkg) -l";
+      package_list_name_regex    => ".i\s+([^\s]+).*";
+      package_list_version_regex => ".i\s+[^\s]+\s+([^\s]+).*";
+      package_installed_regex => ".i.*"; # packages that have been uninstalled may be listed
+      package_name_convention => "$(name)";
+
+      # set it to "0" to avoid caching of list during upgrade
+      package_list_update_ifelapsed => "240";
+
+      # Target a specific release, such as backports
+      package_add_command => "$(debian_knowledge.call_apt_get) $(debian_knowledge.dpkg_options) --yes install";
+      package_list_update_command => "$(debian_knowledge.call_apt_get) update";
+      package_delete_command => "$(debian_knowledge.call_apt_get) $(debian_knowledge.dpkg_options) --yes -q remove";
+      package_update_command =>  "$(debian_knowledge.call_apt_get) $(debian_knowledge.dpkg_options) --yes install";
+      package_patch_command =>  "$(debian_knowledge.call_apt_get) $(debian_knowledge.dpkg_options) --yes install";
+      package_verify_command => "$(debian_knowledge.call_dpkg) -s";
+      package_noverify_returncode => "1";
+
+      package_patch_list_command => "$(debian_knowledge.call_apt_get) --just-print dist-upgrade";
+      package_patch_name_regex => "^Inst\s+(\S+)\s+.*";
+      package_patch_version_regex => "^Inst\s+\S+\s+\[?\(?([^\],\s]+).*";
+
+      # make correct version comparisons
+      package_version_less_command => "$(debian_knowledge.call_dpkg) --compare-versions $(v1) lt $(v2)";
+      package_version_equal_command => "$(debian_knowledge.call_dpkg) --compare-versions $(v1) eq $(v2)";
+
+}
+
+body package_method apt_get_release(release)
+{
+      package_changes => "bulk";
+      package_list_command => "$(debian_knowledge.call_dpkg) -l";
+      package_list_name_regex    => ".i\s+([^\s]+).*";
+      package_list_version_regex => ".i\s+[^\s]+\s+([^\s]+).*";
+      package_installed_regex => ".i.*"; # packages that have been uninstalled may be listed
+      package_name_convention => "$(name)";
+
+      # set it to "0" to avoid caching of list during upgrade
+      package_list_update_ifelapsed => "240";
+
+      # Target a specific release, such as backports
+      package_add_command => "$(debian_knowledge.call_apt_get) $(debian_knowledge.dpkg_options) --yes --target-release $(release) install";
+      package_list_update_command => "$(debian_knowledge.call_apt_get) update";
+      package_delete_command => "$(debian_knowledge.call_apt_get) $(debian_knowledge.dpkg_options) --yes -q remove";
+      package_update_command =>  "$(debian_knowledge.call_apt_get) $(debian_knowledge.dpkg_options) --yes --target-release $(release) install";
+      package_patch_command =>  "$(debian_knowledge.call_apt_get) $(debian_knowledge.dpkg_options) --yes --target-release $(release) install";
+      package_verify_command => "$(debian_knowledge.call_dpkg) -s";
+      package_noverify_returncode => "1";
+
+      package_patch_list_command => "$(debian_knowledge.call_apt_get) --just-print dist-upgrade";
+      package_patch_name_regex => "^Inst\s+(\S+)\s+.*";
+      package_patch_version_regex => "^Inst\s+\S+\s+\[?\(?([^\],\s]+).*";
+
+      # make correct version comparisons
+      package_version_less_command => "$(debian_knowledge.call_dpkg) --compare-versions $(v1) lt $(v2)";
+      package_version_equal_command => "$(debian_knowledge.call_dpkg) --compare-versions $(v1) eq $(v2)";
+
+}

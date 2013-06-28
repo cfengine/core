@@ -444,27 +444,27 @@ static void test_stringscanfcapped(void)
     char sp[30];
 
     strcpy(sp,"");
-    StringScanfCapped(sp,20,"\n",buf);
+    StringNotMatchingSetCapped(sp,20,"\n",buf);
     assert_string_equal(buf, "");
 
     strcpy(sp,"\n");
-    StringScanfCapped(sp,20,"\n",buf);
+    StringNotMatchingSetCapped(sp,20,"\n",buf);
     assert_string_equal(buf, "");
 
     strcpy(sp,"\n2345678901234567890abcdefghi");
-    StringScanfCapped(sp,20,"\n",buf);
+    StringNotMatchingSetCapped(sp,20,"\n",buf);
     assert_string_equal(buf, "");
 
     strcpy(sp,"12345678901234567890abcdefghi");
-    StringScanfCapped(sp,20,"\n",buf);
+    StringNotMatchingSetCapped(sp,20,"\n",buf);
     assert_string_equal(buf, "1234567890123456789");
 
     strcpy(sp,"12345678901234567890abcde\nghi");
-    StringScanfCapped(sp,20,"\n",buf);
+    StringNotMatchingSetCapped(sp,20,"\n",buf);
     assert_string_equal(buf, "1234567890123456789");
 
     strcpy(sp,"123456789012345\n7890abcdefghi");
-    StringScanfCapped(sp,20,"\n",buf);
+    StringNotMatchingSetCapped(sp,20,"\n",buf);
     assert_string_equal(buf, "123456789012345");
 }
 

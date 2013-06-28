@@ -1749,8 +1749,57 @@ static int Linux_Slackware_Version(EvalContext *ctx, char *filename)
     return 0;
 }
 
-/******************************************************************/
+/*
+ * @brief : /etc/issue on debian can include special characters
+ *          escaped with '/' or '@'. This function will get rid
+ *          them.
+ *
+ * @param[in,out] buffer: string to be sanitized
+ *
+ * @return : 0 if everything went fine, <>0 otherwise
+ */
+static int LinuxDebianSanitizeIssue(char *buffer)
+{
+    bool escaped = false;
+    char *s2, *s;
+    s2 = buffer;
+    for (s = buffer; *s != '\0'; s++)
+    {
+        if (*s=='\\' || *s=='@')
+        {
+             if (escaped == false)
+             {
+                 escaped = true;
+             }
+             else 
+             {
+                 escaped = false;
+             }
+        }
+        else
+        {
+             if (escaped == false)
+             {
+                 *s2 = *s;
+                 s2++;
+             }
+             else 
+             {
+                 escaped = false;
+             }
+        }
+    }
+    *s2 = '\0';
+    s2--;
+    while (*s2==' ')
+    {
+        *s2='\0'; 
+        s2--;
+    }
+    return 0;
+}
 
+/******************************************************************/
 static int Linux_Debian_Version(EvalContext *ctx)
 {
 #define DEBIAN_VERSION_FILENAME "/etc/debian_version"
@@ -1805,12 +1854,13 @@ static int Linux_Debian_Version(EvalContext *ctx)
     {
         return 1;
     }
-
+    
     os[0] = '\0';
     sscanf(buffer, "%250s", os);
 
     if (strcmp(os, "Debian") == 0)
     {
+        LinuxDebianSanitizeIssue(buffer);
         sscanf(buffer, "%*s %*s %[^./]", version);
         snprintf(buffer, CF_MAXVARSIZE, "debian_%s", version);
         EvalContextHeapAddHard(ctx, "debian");
@@ -1818,6 +1868,7 @@ static int Linux_Debian_Version(EvalContext *ctx)
     }
     else if (strcmp(os, "Ubuntu") == 0)
     {
+        LinuxDebianSanitizeIssue(buffer);
         sscanf(buffer, "%*s %[^.].%d", version, &release);
         snprintf(buffer, CF_MAXVARSIZE, "ubuntu_%s", version);
         SetFlavour(ctx, buffer);

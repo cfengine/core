@@ -859,4 +859,32 @@ bool CompareStringOrRegex(const char *value, const char *compareTo, bool regex)
     }
     return true;
 }
+/* 
+ * @brief extract info from input string given two types of constraints:
+ *        - length of the extracted string is bounded
+ *        - extracted string should stop at first element of an exclude list
+ *
+ * @param[in] isp     : the string to scan
+ * @param[in] limit   : size limit on the output string (including '\0')
+ * @param[in] exclude : characters to be excluded from output buffer
+ * @param[out] obuf   : the output buffer
+ * @retval    0 if everything was OK, <>0 : otherwise
+ */
+int StringScanfCapped(const char *isp, int limit, 
+                      const char *exclude, char *obuf)
+{
+    size_t l = strcspn(isp, exclude);
 
+    if (l < limit-1)
+    {
+        strncpy(obuf, isp, l);
+        obuf[l]='\0';
+    }
+    else
+    {
+        strncpy(obuf, isp, limit-1);
+        obuf[limit-1]='\0';
+    }
+
+    return 0;
+}

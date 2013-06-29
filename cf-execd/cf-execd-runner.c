@@ -33,6 +33,11 @@
 #include "unix.h"
 #include "mutex.h"
 #include "exec_tools.h"
+#include "crypto.h"
+#include "sysinfo.h"
+#include "bootstrap.h"
+#include "files_hashes.h"
+#include "item_lib.h"
 
 #ifdef HAVE_NOVA
 # if defined(__MINGW32__)
@@ -597,6 +602,39 @@ static void MailResult(const ExecConfig *config, const char *file)
     }
 
     send(sd, vbuff, strlen(vbuff), 0);
+
+    /* send X-CFEngine SMTP header if mailsubject set */
+    if (SafeStringLength(config->mail_subject) > 0)
+    {
+        unsigned char digest[EVP_MAX_MD_SIZE + 1];
+        char buffer[EVP_MAX_MD_SIZE * 4];
+
+        char *existing_policy_server = ReadPolicyServerFile(GetWorkDir());
+
+        HashPubKey(PUBKEY, digest, CF_DEFAULT_DIGEST);
+
+        char ipbuf[CF_MAXVARSIZE];
+        memset(ipbuf, '\0', sizeof(CF_MAXVARSIZE));
+
+        for (Item *iptr = IPADDRESSES; iptr != NULL; iptr = iptr->next)
+        {
+            if ((SafeStringLength(ipbuf) + SafeStringLength(iptr->name)) < sizeof(ipbuf))
+            {
+                strcat(ipbuf, iptr->name);
+                strcat(ipbuf, " ");
+            }
+            else
+            {
+                break;
+            }
+        }
+        Chop(ipbuf, sizeof(ipbuf));
+
+        sprintf(vbuff, "X-CFEngine: vfqhost=\"%s\";ip-addresses=\"%s\";policyhub=\"%s\";pkhash=\"%s\"\r\n", VFQNAME, ipbuf, existing_policy_server, HashPrintSafe(CF_DEFAULT_DIGEST, digest, buffer));
+
+        send(sd, vbuff, strlen(vbuff), 0);
+        free(existing_policy_server);
+    }
 
 #if defined __linux__ || defined __NetBSD__ || defined __FreeBSD__ || defined __OpenBSD__
     strftime(vbuff, CF_BUFSIZE, "Date: %a, %d %b %Y %H:%M:%S %z\r\n", localtime(&now));

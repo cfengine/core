@@ -167,44 +167,93 @@ void ShowLastSeenHosts()
 
     printf("Total Entries: %d\n", count);
 }
-
-
-int RemoveKeys(const char *host)
+/**
+ * @brief detects whether input is a host/ip name or a key digest
+ *
+ * @param[in] key digest (SHA/MD5 format) or free host name string
+ *            (character '=' is optional but recommended)
+ * @retval true if a key digest, false otherwise
+ */
+static bool IsDigestOrHost(const char *input)
 {
-    char digest[CF_BUFSIZE];
-    char ipaddr[CF_MAX_IP_LEN];
-
-    if (Hostname2IPString(ipaddr, host, sizeof(ipaddr)) == -1)
+    if (strncmp(input, "SHA=", 3) == 0)
     {
-        Log(LOG_LEVEL_ERR, 
-            "ERROR, could not resolve '%s', not removing", host);
-        return 255;
+        return true;
     }
-
-    Address2Hostkey(ipaddr, digest);
-    RemoveHostFromLastSeen(digest);
-
-    int removed_by_ip = RemovePublicKey(ipaddr);
-    int removed_by_digest = RemovePublicKey(digest);
-
-    if ((removed_by_ip == -1) || (removed_by_digest == -1))
+    else if (strncmp(input, "MD5=", 3) == 0)
     {
-        Log(LOG_LEVEL_ERR, "Unable to remove keys for the host '%s'", host);
-        return 255;
-    }
-    else if (removed_by_ip + removed_by_digest == 0)
-    {
-        Log(LOG_LEVEL_ERR, "No keys for host '%s' were found", host);
-        return 1;
+        return true;
     }
     else
     {
-        Log(LOG_LEVEL_INFO, "Removed %d key(s) for host '%s'",
-              removed_by_ip + removed_by_digest, host);
-        return 0;
+        return false;
     }
 }
 
+/**
+ * @brief removes all traces of entry 'input' from lastseen and filesystem
+ *
+ * @param[in] key digest (SHA/MD5 format) or free host name string
+ * @retval 0 if entry was deleted, >0 otherwise
+ */
+int RemoveKeys(const char *input)
+{
+    char equivalent[CF_BUFSIZE];
+    bool is_digest;
+
+    if (IsLastSeenCoherent() == true)
+    {
+        is_digest = IsDigestOrHost(input);
+        equivalent[0] = '\0';
+        if (is_digest == true)
+        {
+            Log(LOG_LEVEL_VERBOSE, "Removing digest '%s' from lastseen database\n", input);
+            if (DeleteDigestFromLastSeen(input, equivalent) == false)
+            {
+                Log(LOG_LEVEL_ERR, "Unable to remove digest from lastseen database.");
+                return 252;
+            }
+        }
+        else
+        {
+            Log(LOG_LEVEL_VERBOSE, "Removing host '%s' from lastseen database\n", input);
+            if (DeleteIpFromLastSeen(input, equivalent) == false)
+            {
+                Log(LOG_LEVEL_ERR, "Unable to remove host from lastseen database.");
+                return 253;
+            }
+        }
+
+        Log(LOG_LEVEL_INFO, "Removed corresponding entries from lastseen database.");
+
+        int removed_input      = RemovePublicKey(input);
+        int removed_equivalent = RemovePublicKey(equivalent);
+
+        if ((removed_input == -1) || (removed_equivalent == -1))
+        {
+            Log(LOG_LEVEL_ERR, "Unable to remove keys for the entry %s", input);
+            return 255;
+        }
+        else if (removed_input + removed_equivalent == 0)
+        {
+            Log(LOG_LEVEL_ERR, "No key file(s) for entry %s were found on the filesytem", input);
+            return 1;
+        }
+        else
+        {
+            Log(LOG_LEVEL_INFO, "Removed %d corresponding key file(s) from filesystem.",
+                  removed_input + removed_equivalent);
+            return 0;
+        }
+
+    }
+    else
+    {
+        Log(LOG_LEVEL_ERR, "Lastseen database is incoherent. Will not proceed to remove entries from it.");
+        return 254;
+    }
+    return -1;
+}
 
 void KeepKeyPromises(const char *public_key_file, const char *private_key_file)
 {

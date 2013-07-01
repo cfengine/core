@@ -1,0 +1,64 @@
+# Test that editing a symlink does not mangle it
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+bundle agent init
+{
+files:
+  "$(G.testdir)/file_dir/file"
+    create => "true",
+    edit_line => edit_init;
+  "$(G.testdir)/link_dir/."
+    create => "true";
+  "$(G.testdir)/link_dir/link"
+    link_from => link_init;
+}
+
+bundle edit_line edit_init
+{
+  insert_lines:
+    "Initial line";
+}
+
+body link_from link_init
+{
+  link_type => "symlink";
+  source => "../file_dir/file";
+}
+
+bundle agent test
+{
+  files:
+  "$(G.testdir)/link_dir/link"
+    edit_line => edit_test;
+}
+
+bundle edit_line edit_test
+{
+  insert_lines:
+    "Added line";
+}
+
+bundle agent check
+{
+  classes:
+    "link_ok" expression => islink("$(G.testdir)/link_dir/link");
+    "file_ok" not => islink("$(G.testdir)/file_dir/file");
+    "link_line_one_ok" expression => regline("Initial line", "$(G.testdir)/link_dir/link");
+    "file_line_one_ok" expression => regline("Initial line", "$(G.testdir)/file_dir/file");
+    "link_line_two_ok" expression => regline("Added line", "$(G.testdir)/link_dir/link");
+    "file_line_two_ok" expression => regline("Added line", "$(G.testdir)/file_dir/file");
+    "ok" and => { "link_ok", "file_ok", "link_line_one_ok", "file_line_one_ok", "link_line_two_ok", "file_line_two_ok" };
+
+reports:
+  ok::
+    "$(this.promise_filename) Pass";
+  !ok::
+    "$(this.promise_filename) FAIL";
+}
+

@@ -46,6 +46,7 @@
 #include "string_lib.h"
 #include "files_repository.h"
 #include "files_lib.h"
+#include "buffer.h"
 
 #include <assert.h>
 
@@ -140,19 +141,61 @@ int SaveAsFile(SaveCallbackFn callback, void *param, const char *file, Attribute
 {
     struct stat statbuf;
     char new[CF_BUFSIZE], backup[CF_BUFSIZE];
-    mode_t mask;
     char stamp[CF_BUFSIZE];
     time_t stamp_now;
+    Buffer *deref_file = BufferNewFrom(file, strlen(file));
+    Buffer *pretty_file = BufferNew();
+    int ret = false;
+
+    BufferPrintf(pretty_file, "'%s'", file);
 
     stamp_now = time((time_t *) NULL);
 
-    if (stat(file, &statbuf) == -1)
+    while (1)
     {
-        Log(LOG_LEVEL_ERR, "Can no longer access file '%s', which needed editing. (stat: %s)", file, GetErrorStr());
-        return false;
+        if (lstat(BufferData(deref_file), &statbuf) == -1)
+        {
+            Log(LOG_LEVEL_ERR, "Can no longer access file %s, which needed editing. (lstat: %s)", BufferData(pretty_file), GetErrorStr());
+            goto end;
+        }
+#ifndef __MINGW32__
+        if (S_ISLNK(statbuf.st_mode))
+        {
+            char buf[statbuf.st_size + 1];
+            // Careful. readlink() doesn't add '\0' byte.
+            ssize_t linksize = readlink(BufferData(deref_file), buf, statbuf.st_size);
+            if (linksize == 0)
+            {
+                Log(LOG_LEVEL_WARNING, "readlink() failed with 0 bytes. Should not happen (bug?).");
+                goto end;
+            }
+            else if (linksize < 0)
+            {
+                Log(LOG_LEVEL_ERR, "Could not read link %s. (readlink: %s)", BufferData(pretty_file), GetErrorStr());
+                goto end;
+            }
+            buf[linksize] = '\0';
+            if (!IsAbsPath(buf))
+            {
+                char dir[BufferSize(deref_file) + 1];
+                strcpy(dir, BufferData(deref_file));
+                ChopLastNode(dir);
+                BufferPrintf(deref_file, "%s/%s", dir, buf);
+            }
+            else
+            {
+                BufferSet(deref_file, buf, linksize);
+            }
+            BufferPrintf(pretty_file, "'%s' (from symlink '%s')", BufferData(deref_file), file);
+        }
+        else
+#endif
+        {
+            break;
+        }
     }
 
-    strcpy(backup, file);
+    strcpy(backup, BufferData(deref_file));
 
     if (a.edits.backup == BACKUP_OPTION_TIMESTAMP)
     {
@@ -162,43 +205,43 @@ int SaveAsFile(SaveCallbackFn callback, void *param, const char *file, Attribute
 
     strcat(backup, ".cf-before-edit");
 
-    strcpy(new, file);
+    strcpy(new, BufferData(deref_file));
     strcat(new, ".cf-after-edit");
     unlink(new);                /* Just in case of races */
 
     if ((*callback)(new, param) == false)
     {
-        return false;
+        goto end;
     }
 
-    if (!CopyFilePermissionsDisk(file, new))
+    if (!CopyFilePermissionsDisk(BufferData(deref_file), new))
     {
-        Log(LOG_LEVEL_ERR, "Can't copy file permissions from '%s' to '%s' - so promised edits could not be moved into place.",
-            file, new);
-        return false;
+        Log(LOG_LEVEL_ERR, "Can't copy file permissions from %s to '%s' - so promised edits could not be moved into place.",
+            BufferData(pretty_file), new);
+        goto end;
     }
 
     unlink(backup);
 #ifndef __MINGW32__
-    if (link(file, backup) == -1)
+    if (link(BufferData(deref_file), backup) == -1)
     {
-        Log(LOG_LEVEL_VERBOSE, "Can't link '%s' to '%s' - falling back to copy. (link: %s)",
-            file, backup, GetErrorStr());
+        Log(LOG_LEVEL_VERBOSE, "Can't link %s to '%s' - falling back to copy. (link: %s)",
+            BufferData(pretty_file), backup, GetErrorStr());
 #else
     /* No hardlinks on Windows, go straight to copying */
     {
 #endif
-        if (!CopyRegularFileDisk(file, backup))
+        if (!CopyRegularFileDisk(BufferData(deref_file), backup))
         {
-            Log(LOG_LEVEL_ERR, "Can't copy '%s' to '%s' - so promised edits could not be moved into place.",
-                file, backup);
-            return false;
+            Log(LOG_LEVEL_ERR, "Can't copy %s to '%s' - so promised edits could not be moved into place.",
+                BufferData(pretty_file), backup);
+            goto end;
         }
-        if (!CopyFilePermissionsDisk(file, backup))
+        if (!CopyFilePermissionsDisk(BufferData(deref_file), backup))
         {
-            Log(LOG_LEVEL_ERR, "Can't copy permissions '%s' to '%s' - so promised edits could not be moved into place.",
-                file, backup);
-            return false;
+            Log(LOG_LEVEL_ERR, "Can't copy permissions %s to '%s' - so promised edits could not be moved into place.",
+                BufferData(pretty_file), backup);
+            goto end;
         }
     }
 
@@ -221,14 +264,19 @@ int SaveAsFile(SaveCallbackFn callback, void *param, const char *file, Attribute
         unlink(backup);
     }
 
-    if (rename(new, file) == -1)
+    if (rename(new, BufferData(deref_file)) == -1)
     {
-        Log(LOG_LEVEL_ERR, "Can't rename '%s' to '%s' - so promised edits could not be moved into place. (rename: %s)",
-            new, file, GetErrorStr());
-        return false;
+        Log(LOG_LEVEL_ERR, "Can't rename '%s' to %s - so promised edits could not be moved into place. (rename: %s)",
+            new, BufferData(pretty_file), GetErrorStr());
+        goto end;
     }
 
-    return true;
+    ret = true;
+
+end:
+    BufferDestroy(&pretty_file);
+    BufferDestroy(&deref_file);
+    return ret;
 }
 
 /*********************************************************************/

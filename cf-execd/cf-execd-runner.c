@@ -33,6 +33,8 @@
 #include "unix.h"
 #include "mutex.h"
 #include "exec_tools.h"
+#include "misc_lib.h"
+#include "assert.h"
 
 #ifdef HAVE_NOVA
 # if defined(__MINGW32__)
@@ -351,37 +353,92 @@ static int CompareResult(const char *filename, const char *prev_file)
 
     int rtn = 0;
 
-    FILE *fp = fopen(prev_file, "r");
-    if (fp)
+    FILE *old_fp = fopen(prev_file, "r");
+    FILE *new_fp = fopen(filename, "r");
+    if (old_fp && new_fp)
     {
-        fclose(fp);
-
-        unsigned char digest1[EVP_MAX_MD_SIZE + 1];
-        int md_len1 = FileChecksum(prev_file, digest1);
-
-        unsigned char digest2[EVP_MAX_MD_SIZE + 1];
-        int md_len2 = FileChecksum(filename, digest2);
-
-        if (md_len1 != md_len2)
+        const char *errptr;
+        int erroffset;
+        pcre_extra *regex_extra = NULL;
+        // Match timestamps and remove them. Not Y21K safe! :-)
+        pcre *regex = pcre_compile(LOGGING_TIMESTAMP_REGEX, PCRE_MULTILINE, &errptr, &erroffset, NULL);
+        if (!regex)
         {
+            UnexpectedError("Compiling regular expression failed");
             rtn = 1;
         }
         else
         {
-            for (int i = 0; i < md_len1; i++)
+            regex_extra = pcre_study(regex, 0, &errptr);
+        }
+
+        while (regex)
+        {
+            char old_line[CF_BUFSIZE];
+            char new_line[CF_BUFSIZE];
+            char *old_msg = old_line;
+            char *new_msg = new_line;
+            if (CfReadLine(old_line, sizeof(old_line), old_fp) <= 0)
             {
-                if (digest1[i] != digest2[i])
+                old_msg = NULL;
+            }
+            if (CfReadLine(new_line, sizeof(new_line), new_fp) <= 0)
+            {
+                new_msg = NULL;
+            }
+            if (!old_msg || !new_msg)
+            {
+                if (old_msg != new_msg)
                 {
                     rtn = 1;
-                    break;
+                }
+                break;
+            }
+
+            char *index;
+            if (pcre_exec(regex, regex_extra, old_msg, strlen(old_msg), 0, 0, NULL, 0) >= 0)
+            {
+                index = strstr(old_msg, ": ");
+                if (index != NULL)
+                {
+                    old_msg = index + 2;
                 }
             }
+            if (pcre_exec(regex, regex_extra, new_msg, strlen(new_msg), 0, 0, NULL, 0) >= 0)
+            {
+                index = strstr(new_msg, ": ");
+                if (index != NULL)
+                {
+                    new_msg = index + 2;
+                }
+            }
+
+            if (strcmp(old_msg, new_msg) != 0)
+            {
+                rtn = 1;
+                break;
+            }
         }
+
+        if (regex_extra)
+        {
+            free(regex_extra);
+        }
+        free(regex);
     }
     else
     {
         /* no previous file */
         rtn = 1;
+    }
+
+    if (old_fp)
+    {
+        fclose(old_fp);
+    }
+    if (new_fp)
+    {
+        fclose(new_fp);
     }
 
     if (!ThreadLock(cft_count))

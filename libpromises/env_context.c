@@ -1341,46 +1341,20 @@ bool EvalContextVariableGet(const EvalContext *ctx, VarRef lval, Rval *rval_out,
         return false;
     }
 
-    char expanded_lval[CF_MAXVARSIZE] = "";
-    if (!IsExpandable(lval.lval))
-    {
-        strncpy(expanded_lval, lval.lval, CF_MAXVARSIZE - 1);
-    }
-    else
-    {
-        char buffer[CF_EXPANDSIZE] = "";
-        if (ExpandScalar(ctx, lval.scope, lval.lval, buffer))
-        {
-            strncpy(expanded_lval, buffer, CF_MAXVARSIZE - 1);
-        }
-        else
-        {
-            if (rval_out)
-            {
-                *rval_out = (Rval) {(char *) lval.lval, RVAL_TYPE_SCALAR };
-            }
-            if (type_out)
-            {
-                *type_out = DATA_TYPE_NONE;
-            }
-            return false;
-        }
-    }
-
     Scope *get_scope = NULL;
     char lookup_key[CF_MAXVARSIZE] = "";
     {
         char scopeid[CF_MAXVARSIZE] = "";
 
-        if (IsQualifiedVariable(expanded_lval))
+        if (IsQualifiedVariable(lval.lval))
         {
             scopeid[0] = '\0';
-            sscanf(expanded_lval, "%[^.].", scopeid);
-            strlcpy(lookup_key, expanded_lval + strlen(scopeid) + 1, sizeof(lookup_key));
+            sscanf(lval.lval, "%[^.].", scopeid);
+            strlcpy(lookup_key, lval.lval + strlen(scopeid) + 1, sizeof(lookup_key));
         }
         else
         {
-            strlcpy(lookup_key, expanded_lval, sizeof(lookup_key));
+            strlcpy(lookup_key, lval.lval, sizeof(lookup_key));
             strlcpy(scopeid, lval.scope, sizeof(scopeid));
         }
 

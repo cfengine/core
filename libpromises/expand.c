@@ -446,7 +446,7 @@ Rlist *ExpandList(EvalContext *ctx, const char *scopeid, const Rlist *list, int 
         {
             GetNaked(naked, rp->item);
 
-            if (EvalContextVariableGet(ctx, (VarRef) { NULL, scopeid, naked }, &returnval, NULL))
+            if (!IsExpandable(naked) && EvalContextVariableGet(ctx, (VarRef) { NULL, scopeid, naked }, &returnval, NULL))
             {
                 returnval = ExpandPrivateRval(ctx, scopeid, returnval);
             }
@@ -650,6 +650,11 @@ bool ExpandScalar(const EvalContext *ctx, const char *scopeid, const char *strin
         }
 
         increment = strlen(var) - 1;
+
+        if (IsExpandable(currentitem))
+        {
+            return false;
+        }
 
         DataType type = DATA_TYPE_NONE;
         if (EvalContextVariableGet(ctx, (VarRef) { NULL, scopeid, currentitem }, &rval, &type))

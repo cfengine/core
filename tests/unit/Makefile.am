@@ -186,7 +186,7 @@ connection_management_test_LDADD = ../../libpromises/libpromises.la libtest.la
 
 rlist_test_SOURCES = rlist_test.c \
        ../../libpromises/rlist.c ../../libutils/logging.c
-rlist_test_LDADD = libtest.la libstr.la
+rlist_test_LDADD = libtest.la libstr.la ../../libpromises/libpromises.la
 
 if LINUX
 

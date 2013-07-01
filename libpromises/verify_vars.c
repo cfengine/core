@@ -77,7 +77,11 @@ void VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates
 
     Rval existing_var_rval;
     DataType existing_var_type = DATA_TYPE_NONE;
-    EvalContextVariableGet(ctx, (VarRef) { NULL, scope, pp->promiser }, &existing_var_rval, &existing_var_type);
+
+    if (!IsExpandable(pp->promiser))
+    {
+        EvalContextVariableGet(ctx, (VarRef) { NULL, scope, pp->promiser }, &existing_var_rval, &existing_var_type);
+    }
     Buffer *qualified_scope = BufferNew();
     int result = 0;
     if (strcmp(PromiseGetNamespace(pp), "default") == 0)

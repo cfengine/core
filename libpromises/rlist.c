@@ -1421,7 +1421,7 @@ void RlistFlatten(EvalContext *ctx, Rlist **list)
             GetNaked(naked, rp->item);
 
             Rval rv;
-            if (EvalContextVariableGet(ctx, (VarRef) { NULL, ScopeGetCurrent()->scope, naked }, &rv, NULL))
+            if (!IsExpandable(naked) && EvalContextVariableGet(ctx, (VarRef) { NULL, ScopeGetCurrent()->scope, naked }, &rv, NULL))
             {
                 switch (rv.type)
                 {

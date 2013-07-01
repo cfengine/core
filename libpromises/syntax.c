@@ -426,7 +426,7 @@ vars:
     {
         if (ExtractInnerCf3VarString(string, var))
         {
-            if (EvalContextVariableGet(ctx, (VarRef) { NULL, scopeid, var }, &rval, &dtype))
+            if (!IsExpandable(var) && EvalContextVariableGet(ctx, (VarRef) { NULL, scopeid, var }, &rval, &dtype))
             {
                 if (rval.type == RVAL_TYPE_LIST)
                 {

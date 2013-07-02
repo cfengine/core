@@ -66,7 +66,7 @@ void VerifyClassPromise(EvalContext *ctx, Promise *pp, ARG_UNUSED void *param)
         return;
     }
 
-    bool global_class;
+    bool global_class = false;
     if (a.context.persistent > 0) /* Persistent classes are always global */
     {
         global_class = true;

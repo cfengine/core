@@ -1383,6 +1383,10 @@ static int VersionCheckSchedulePackage(EvalContext *ctx, Attributes a, Promise *
         {
             return true;
         }
+        else
+        {
+            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "Package to be deleted does not exist anywhere");
+        }
         break;
 
     case PACKAGE_ACTION_REINSTALL:

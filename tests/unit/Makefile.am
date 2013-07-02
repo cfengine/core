@@ -46,6 +46,7 @@ check_PROGRAMS = \
 	lastseen_migration_test \
 	dbm_migration_bundles_test \
 	misc_lib_test \
+	item_lib_test \
 	crypto_symmetric_test \
 	persistent_lock_test  \
 	thread_test \

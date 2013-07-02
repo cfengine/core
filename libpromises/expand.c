@@ -48,7 +48,6 @@
 #include "verify_vars.h"
 #include "string_lib.h"
 
-#include <assert.h>
 
 static void ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp, Rlist *listvars,
                                PromiseActuator *ActOnPromise, void *param);
@@ -1043,7 +1042,11 @@ int IsExpandable(const char *str)
         return false;
     }
 
-    Log(LOG_LEVEL_DEBUG, "Found %d variables in '%s'", vars, str);
+    if (vars > 0)
+    {
+        Log(LOG_LEVEL_DEBUG,
+            "Expanding variable '%s': found %d variables", str, vars);
+    }
     return vars;
 }
 

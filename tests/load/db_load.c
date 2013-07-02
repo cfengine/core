@@ -2,7 +2,6 @@
 
 #include "dbm_api.h"
 
-#include <assert.h>
 
 #define MAX_THREADS 10000
 #define DB_ID dbid_classes

@@ -43,7 +43,6 @@
 #include "ornaments.h"
 #include "verify_classes.h"
 
-#include <assert.h>
 
 /*****************************************************************************/
 

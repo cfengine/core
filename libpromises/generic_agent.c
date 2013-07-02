@@ -60,7 +60,6 @@
 # include "cf.nova.h"
 #endif
 
-#include <assert.h>
 
 static pthread_once_t pid_cleanup_once = PTHREAD_ONCE_INIT;
 

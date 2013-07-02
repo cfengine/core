@@ -25,6 +25,8 @@
 #ifndef CFENGINE_CF_SERVERD_FUNCTIONS_H
 #define CFENGINE_CF_SERVERD_FUNCTIONS_H
 
+#include "platform.h"
+
 #include "generic_agent.h"
 #include "server.h"
 

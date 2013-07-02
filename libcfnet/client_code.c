@@ -1011,7 +1011,7 @@ int ServerConnect(AgentConnection *conn, const char *host, FileCopy fc)
     char strport[CF_MAXVARSIZE] = { 0 };
     struct timeval tv = { 0 };
 
-    if (fc.portnumber == (short) CF_NOINT)
+    if (fc.portnumber == 0)
     {
         shortport = SHORT_CFENGINEPORT;
         strncpy(strport, STR_CFENGINEPORT, CF_MAXVARSIZE);

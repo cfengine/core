@@ -400,7 +400,7 @@ static int HailServer(EvalContext *ctx, char *host)
     char reply[8];
 
     FileCopy fc = {
-        .portnumber = (short) ParseHostname(host, peer),
+        .portnumber = (unsigned short) ParseHostname(host, peer),
     };
 
     char ipaddr[CF_MAX_IP_LEN];
@@ -591,8 +591,8 @@ static void KeepControlPromises(EvalContext *ctx, Policy *policy)
 
             if (strcmp(cp->lval, CFR_CONTROLBODY[RUNAGENT_CONTROL_PORT_NUMBER].lval) == 0)
             {
-                RUNATTR.copy.portnumber = (short) IntFromString(retval.item);
-                Log(LOG_LEVEL_VERBOSE, "SET default portnumber = %u", (int) RUNATTR.copy.portnumber);
+                RUNATTR.copy.portnumber = (unsigned short) IntFromString(retval.item);
+                Log(LOG_LEVEL_VERBOSE, "SET default portnumber = %u", RUNATTR.copy.portnumber);
                 continue;
             }
 

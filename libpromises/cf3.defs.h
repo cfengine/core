@@ -1155,7 +1155,7 @@ typedef struct
     int encrypt;
     int verify;
     int purge;
-    short portnumber;
+    unsigned short portnumber;
     short timeout;
 } FileCopy;
 

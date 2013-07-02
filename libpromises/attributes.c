@@ -842,6 +842,7 @@ FileCopy GetCopyConstraints(const EvalContext *ctx, const Promise *pp)
     FileCopy f;
     char *value;
     long min, max;
+    int pval;
 
     f.source = (char *) ConstraintGetRvalValue(ctx, "source", pp, RVAL_TYPE_SCALAR);
 
@@ -858,7 +859,15 @@ FileCopy GetCopyConstraints(const EvalContext *ctx, const Promise *pp)
 
     f.link_type = FileLinkTypeFromString(value);
     f.servers = PromiseGetConstraintAsList(ctx, "servers", pp);
-    f.portnumber = (short) PromiseGetConstraintAsInt(ctx, "portnumber", pp);
+    pval = PromiseGetConstraintAsInt(ctx, "portnumber", pp);
+    if (pval != CF_NOINT)
+    {
+        f.portnumber = (unsigned short) pval;
+    }
+    else
+    {
+        f.portnumber = 0;
+    }
     f.timeout = (short) PromiseGetConstraintAsInt(ctx, "timeout", pp);
     f.link_instead = PromiseGetConstraintAsList(ctx, "linkcopy_patterns", pp);
     f.copy_links = PromiseGetConstraintAsList(ctx, "copylink_patterns", pp);

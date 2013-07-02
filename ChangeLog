@@ -7,6 +7,7 @@
        - fix non-root cf-agent flooding syslog (Redmine #2980)
        - fix email flood from cf-execd due to timestamps in agent output (Redmine #3011)
        - Preserve security context when editing or copying local files (Redmine #2728)
+       - fix path for sys.crontab on redhat systems (Redmine #2553)
 
 3.5.0
 

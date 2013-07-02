@@ -27,7 +27,7 @@
 #include "process_unix_priv.h"
 #include "misc_lib.h"
 
-#define SLEEP_POLL_TIMEOUT_NS 10000
+#define SLEEP_POLL_TIMEOUT_NS 10000000
 
 /*
  * Wait until process specified by #pid is stopped due to SIGSTOP signal.

@@ -24,8 +24,7 @@
 
 #include "granules.h"
 #include "misc_lib.h"
-#include <math.h>
-#include <assert.h>
+
 
 char *GenTimeKey(time_t now)
 {

@@ -71,10 +71,9 @@
 #  define SIZEOF_IFREQ(x) sizeof(struct ifreq)
 # endif
 
+
 static bool IsProcessRunning(pid_t pid);
-
 static void FindV6InterfacesInfo(EvalContext *ctx);
-
 static bool IgnoreJailInterface(int ifaceidx, struct sockaddr_in *inaddr);
 static bool IgnoreInterface(char *name);
 static void InitIgnoreInterfaces(void);
@@ -462,7 +461,8 @@ void GetInterfaceFlags(EvalContext *ctx, AgentType ag, struct ifreq *ifr, Rlist 
 
 void GetInterfacesInfo(EvalContext *ctx, AgentType ag)
 {
-    int fd, len, i, j, first_address = false, ipdefault = false;
+    bool address_set = false;
+    int fd, len, i, j;
     struct ifreq ifbuf[CF_IFREQ], ifr, *ifp;
     struct ifconf list;
     struct sockaddr_in *sin;
@@ -470,18 +470,16 @@ void GetInterfacesInfo(EvalContext *ctx, AgentType ag)
     char *sp, workbuf[CF_BUFSIZE];
     char ip[CF_MAXVARSIZE];
     char name[CF_MAXVARSIZE];
-    char last_name[CF_BUFSIZE];
     Rlist *interfaces = NULL, *hardware = NULL, *flags = NULL, *ips = NULL;
 
-    // Long-running processes may call this many times
+    /* This function may be called many times, while interfaces come and go */
+    /* TODO cache results for non-daemon processes? */
     DeleteItemList(IPADDRESSES);
     IPADDRESSES = NULL;
 
     memset(ifbuf, 0, sizeof(ifbuf));
 
     InitIgnoreInterfaces();
-    
-    last_name[0] = '\0';
 
     if ((fd = socket(AF_INET, SOCK_DGRAM, 0)) == -1)
     {
@@ -502,7 +500,7 @@ void GetInterfacesInfo(EvalContext *ctx, AgentType ag)
         exit(1);
     }
 
-    last_name[0] = '\0';
+    char last_name[sizeof(ifp->ifr_name)] = "";
 
     for (j = 0, len = 0, ifp = list.ifc_req; len < list.ifc_len;
          len += SIZEOF_IFREQ(*ifp), j++, ifp = (struct ifreq *) ((char *) ifp + SIZEOF_IFREQ(*ifp)))
@@ -524,7 +522,7 @@ void GetInterfacesInfo(EvalContext *ctx, AgentType ag)
         {
             continue;
         }
-        
+
         if (strstr(ifp->ifr_name, ":"))
         {
 #ifdef __linux__
@@ -537,26 +535,19 @@ void GetInterfacesInfo(EvalContext *ctx, AgentType ag)
             Log(LOG_LEVEL_VERBOSE, "Interface %d: %s", j + 1, ifp->ifr_name);
         }
 
-
-        if (strncmp(last_name, ifp->ifr_name, sizeof(ifp->ifr_name)) == 0)
+        /* If interface name appears a second time in a row then it has more
+           than one IP addresses (linux: ip addr add $IP dev $IF).
+           But the variable is already added so don't set it again. */
+        if (strcmp(last_name, ifp->ifr_name) != 0)
         {
-            first_address = false;
-        }
-        else
-        {
-            strncpy(last_name, ifp->ifr_name, sizeof(ifp->ifr_name));
-
-            if (!first_address)
-            {
-                ScopeNewSpecial(ctx, "sys", "interface", last_name, DATA_TYPE_STRING);
-                first_address = true;
-            }
+            strcpy(last_name, ifp->ifr_name);
+            ScopeNewSpecial(ctx, "sys", "interface", last_name, DATA_TYPE_STRING);
         }
 
         snprintf(workbuf, sizeof(workbuf), "net_iface_%s", CanonifyName(ifp->ifr_name));
-
         EvalContextHeapAddHard(ctx, workbuf);
 
+        /* TODO IPv6 should be handled transparently */
         if (ifp->ifr_addr.sa_family == AF_INET)
         {
             strncpy(ifr.ifr_name, ifp->ifr_name, sizeof(ifp->ifr_name));
@@ -581,13 +572,23 @@ void GetInterfacesInfo(EvalContext *ctx, AgentType ag)
                     continue;
                 }
 
-                Log(LOG_LEVEL_DEBUG, "Adding hostip '%s'", inet_ntoa(sin->sin_addr));
-                EvalContextHeapAddHard(ctx, inet_ntoa(sin->sin_addr));
+                /* No DNS lookup, just convert IP address to string. */
+                char txtaddr[CF_MAX_IP_LEN] = "";
+                assert(sizeof(VIPADDRESS) >= sizeof(txtaddr));
 
-                if ((hp =
-                     gethostbyaddr((char *) &(sin->sin_addr.s_addr), sizeof(sin->sin_addr.s_addr), AF_INET)) == NULL)
+                getnameinfo((struct sockaddr *) sin, sizeof(*sin),
+                            txtaddr, sizeof(txtaddr),
+                            NULL, 0, NI_NUMERICHOST);
+
+                Log(LOG_LEVEL_DEBUG, "Adding hostip '%s'", txtaddr);
+                EvalContextHeapAddHard(ctx, txtaddr);
+
+                if ((hp = gethostbyaddr((char *) &(sin->sin_addr.s_addr),
+                                        sizeof(sin->sin_addr.s_addr), AF_INET))
+                    == NULL)
                 {
-                    Log(LOG_LEVEL_DEBUG, "No hostinformation for '%s' found", inet_ntoa(sin->sin_addr));
+                    Log(LOG_LEVEL_DEBUG, "No hostinformation for '%s' found",
+                        txtaddr);
                 }
                 else
                 {
@@ -600,17 +601,20 @@ void GetInterfacesInfo(EvalContext *ctx, AgentType ag)
                         {
                             for (i = 0; hp->h_aliases[i] != NULL; i++)
                             {
-                                Log(LOG_LEVEL_VERBOSE, "Adding alias '%s'", hp->h_aliases[i]);
+                                Log(LOG_LEVEL_DEBUG, "Adding alias '%s'",
+                                    hp->h_aliases[i]);
                                 EvalContextHeapAddHard(ctx, hp->h_aliases[i]);
                             }
                         }
                     }
                 }
 
-                if (strcmp(inet_ntoa(sin->sin_addr), "0.0.0.0") == 0)
+                if (strcmp(txtaddr, "0.0.0.0") == 0)
                 {
-                    // Maybe we need to do something windows specific here?
+                    /* TODO remove, interface address can't be 0.0.0.0 and
+                     * even then DNS is not a safe way to set a variable... */
                     Log(LOG_LEVEL_VERBOSE, "Cannot discover hardware IP, using DNS value");
+                    assert(sizeof(ip) >= sizeof(VIPADDRESS) + sizeof("ipv4_"));
                     strcpy(ip, "ipv4_");
                     strcat(ip, VIPADDRESS);
                     AppendItem(&IPADDRESSES, VIPADDRESS, "");
@@ -640,20 +644,27 @@ void GetInterfacesInfo(EvalContext *ctx, AgentType ag)
                     continue;
                 }
 
-                strncpy(ip, "ipv4_", CF_MAXVARSIZE);
-                strncat(ip, inet_ntoa(sin->sin_addr), CF_MAXVARSIZE - 6);
+                assert(sizeof(ip) >= sizeof(txtaddr) + sizeof("ipv4_"));
+                strcpy(ip, "ipv4_");
+                strcat(ip, txtaddr);
                 EvalContextHeapAddHard(ctx, ip);
 
-                if (!ipdefault)
+                /* VIPADDRESS has already been set to the DNS address of
+                 * VFQNAME by GetNameInfo3() during initialisation. Here we
+                 * reset VIPADDRESS to the address of the first non-loopback
+                 * interface. */
+                if (!address_set && !(ifr.ifr_flags & IFF_LOOPBACK))
                 {
-                    ipdefault = true;
-                    ScopeNewSpecial(ctx, "sys", "ipv4", inet_ntoa(sin->sin_addr), DATA_TYPE_STRING);
+                    ScopeNewSpecial(ctx, "sys", "ipv4", txtaddr, DATA_TYPE_STRING);
 
-                    strcpy(VIPADDRESS, inet_ntoa(sin->sin_addr));
+                    strcpy(VIPADDRESS, txtaddr);
+                    Log(LOG_LEVEL_VERBOSE, "IP address of host set to %s",
+                        VIPADDRESS);
+                    address_set = true;
                 }
 
-                AppendItem(&IPADDRESSES, inet_ntoa(sin->sin_addr), "");
-                RlistAppendScalar(&ips, inet_ntoa(sin->sin_addr));
+                AppendItem(&IPADDRESSES, txtaddr, "");
+                RlistAppendScalar(&ips, txtaddr);
 
                 for (sp = ip + strlen(ip) - 1; (sp > ip); sp--)
                 {
@@ -666,7 +677,7 @@ void GetInterfacesInfo(EvalContext *ctx, AgentType ag)
 
                 // Set the IPv4 on interface array
 
-                strcpy(ip, inet_ntoa(sin->sin_addr));
+                strcpy(ip, txtaddr);
 
                 if (ag != AGENT_TYPE_GENDOC)
                 {

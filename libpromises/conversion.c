@@ -32,7 +32,6 @@
 #include "logging.h"
 #include "rlist.h"
 
-#include <assert.h>
 
 static int IsSpace(char *remainder);
 

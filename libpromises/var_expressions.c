@@ -28,7 +28,6 @@
 #include "buffer.h"
 #include "misc_lib.h"
 
-#include <assert.h>
 
 #ifndef NDEBUG
 static bool IndexBracketsBalance(const char *var_string)
@@ -169,7 +168,7 @@ void VarRefDestroy(VarRef ref)
     }
 }
 
-char *VarRefToString(VarRef ref, bool qualified)
+char *VarRefToString(const VarRef ref, bool qualified)
 {
     assert(ref.lval);
 

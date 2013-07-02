@@ -35,7 +35,6 @@
 #include "unix.h"
 #include "man.h"
 
-#include <assert.h>
 
 static const size_t QUEUESIZE = 50;
 int NO_FORK = false;

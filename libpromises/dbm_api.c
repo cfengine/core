@@ -31,7 +31,6 @@
 #include "logging.h"
 #include "misc_lib.h"
 
-#include <assert.h>
 
 static int DBPathLock(const char *filename);
 static void DBPathUnLock(int fd);

@@ -46,9 +46,6 @@
 # include "cf.nova.h"
 #endif
 
-#include <assert.h>
-
-/*****************************************************************************/
 
 static bool EvalContextStackFrameContainsNegated(const EvalContext *ctx, const char *context);
 
@@ -1308,7 +1305,7 @@ bool EvalContextVariablePut(EvalContext *ctx, VarRef lval, Rval rval, DataType t
             /* Different value, bark and replace */
             if (!UnresolvedVariables(assoc, rval.type))
             {
-                Log(LOG_LEVEL_INFO, "Replaced value of variable '%s' in scope '%s'", lval.lval, put_scope->scope);
+                Log(LOG_LEVEL_DEBUG, "Replaced value of variable '%s' in scope '%s'", lval.lval, put_scope->scope);
             }
             RvalDestroy(assoc->rval);
             assoc->rval = RvalCopy(rval);
@@ -1321,6 +1318,8 @@ bool EvalContextVariablePut(EvalContext *ctx, VarRef lval, Rval rval, DataType t
         {
             ProgrammingError("Hash table is full");
         }
+        Log(LOG_LEVEL_DEBUG, "Inserted variable '%s' in scope '%s'",
+            lval.lval, put_scope->scope);
     }
 
     free(final_lval);

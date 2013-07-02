@@ -44,7 +44,6 @@
 #include "processes_select.h"
 #include "man.h"
 
-#include <assert.h>
 
 #ifdef HAVE_NOVA
 # include "cf.nova.h"

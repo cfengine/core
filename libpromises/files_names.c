@@ -29,13 +29,13 @@
 #include "cf3.defs.h"
 #include "dir.h"
 #include "item_lib.h"
-#include "assert.h"
 #include "files_interfaces.h"
 #include "string_lib.h"
 
 #ifdef HAVE_NOVA
 # include "cf.nova.h"
 #endif
+
 
 /*********************************************************************/
 

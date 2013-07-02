@@ -38,7 +38,6 @@
 #include "env_context.h"
 #include "audit.h"
 
-#include <assert.h>
 
 Scope *SCOPE_CURRENT = NULL;
 
@@ -473,6 +472,9 @@ bool ScopeIsReserved(const char *scope)
             || strcmp("this", scope) == 0;
 }
 
+/**
+ * @WARNING Don't call ScopeDelete*() before this, it's unnecessary.
+ */
 void ScopeNewSpecial(EvalContext *ctx, const char *scope, const char *lval, const void *rval, DataType dt)
 {
     assert(ScopeIsReserved(scope));
@@ -517,13 +519,22 @@ void ScopeDeleteSpecial(const char *scope, const char *lval)
 
     if (scope_ptr == NULL)
     {
+        Log(LOG_LEVEL_WARNING,
+            "Attempt to delete variable '%s' in non-existent scope '%s'",
+            lval, scope);
         return;
     }
 
     if (HashDeleteElement(scope_ptr->hashtable, lval) == false)
     {
-        Log(LOG_LEVEL_DEBUG, "Attempt to delete non-existent variable '%s' in scope '%s'", lval, scope);
+        Log(LOG_LEVEL_WARNING,
+            "Attempt to delete non-existent variable '%s' in scope '%s'",
+            lval, scope);
+        return;
     }
+
+    Log(LOG_LEVEL_DEBUG, "Deleted existent variable '%s' in scope '%s'",
+        lval, scope);
 }
 
 /*******************************************************************/

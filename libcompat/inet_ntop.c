@@ -17,7 +17,6 @@
 
 
 #include "platform.h"
-#include <assert.h>
 
 #if defined(_WIN32) && !defined(EAFNOSUPPORT)
   #define EAFNOSUPPORT WSAEAFNOSUPPORT

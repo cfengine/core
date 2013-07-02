@@ -30,7 +30,6 @@
 #include "string_lib.h"
 #include "env_context.h"
 
-#include <assert.h>
 
 typedef struct
 {

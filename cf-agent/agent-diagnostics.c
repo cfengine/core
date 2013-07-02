@@ -33,7 +33,6 @@
 #include "dbm_priv.h"
 #include "tokyo_check.h"
 
-#include <assert.h>
 
 AgentDiagnosticsResult AgentDiagnosticsResultNew(bool success, char *message)
 {

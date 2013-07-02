@@ -34,7 +34,6 @@
 #include "dir.h"
 #include "policy.h"
 
-#include <assert.h>
 
 static Item *ROTATED = NULL;
 

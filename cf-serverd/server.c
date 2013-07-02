@@ -2486,6 +2486,7 @@ static void CfGetFile(ServerFileGetState *args)
         RefuseAccess(args->connect, args->buf_size, "");
         snprintf(sendbuffer, CF_BUFSIZE, "%s", CF_FAILEDSTR);
         SendSocketStream(sd, sendbuffer, args->buf_size, 0);
+        return;
     }
 
 /* File transfer */

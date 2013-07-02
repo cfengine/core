@@ -41,6 +41,7 @@
 #include "files_hashes.h"
 #include "audit.h"
 #include "logging.h"
+#include "expand.h"
 
 
 static const char *POLICY_ERROR_POLICY_NOT_RUNNABLE = "Policy is not runnable (does not contain a body common control)";
@@ -2686,20 +2687,23 @@ void PromiseRecheckAllConstraints(EvalContext *ctx, Promise *pp)
 
         if ((sp = ConstraintGetRvalValue(ctx, "select_line_matching", pp, RVAL_TYPE_SCALAR)))
         {
-            const Item *ptr = NULL;
-            if ((ptr = ReturnItemIn(EDIT_ANCHORS, sp)))
+            if (!IsExpandable(sp))
             {
-                if (strcmp(ptr->classes, PromiseGetBundle(pp)->name) == 0)
+                const Item *ptr = NULL;
+                if ((ptr = ReturnItemIn(EDIT_ANCHORS, sp)))
                 {
-                    Log(LOG_LEVEL_INFO,
-                        "insert_lines promise uses the same select_line_matching anchor '%s' as another promise. This will lead to non-convergent behaviour unless 'empty_file_before_editing' is set",
-                          sp);
-                    PromiseRef(LOG_LEVEL_INFO, pp);
+                    if (strcmp(ptr->classes, PromiseGetBundle(pp)->name) == 0)
+                    {
+                        Log(LOG_LEVEL_INFO,
+                            "insert_lines promise uses the same select_line_matching anchor '%s' as another promise. This will lead to non-convergent behaviour unless 'empty_file_before_editing' is set",
+                              sp);
+                        PromiseRef(LOG_LEVEL_INFO, pp);
+                    }
                 }
-            }
-            else
-            {
-                PrependItem(&EDIT_ANCHORS, sp, PromiseGetBundle(pp)->name);
+                else
+                {
+                    PrependItem(&EDIT_ANCHORS, sp, PromiseGetBundle(pp)->name);
+                }
             }
         }
     }

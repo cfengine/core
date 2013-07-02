@@ -363,7 +363,7 @@ bool MakeParentDirectory(const char *parentandchild, bool force)
     rootlen = RootDirLength(parentandchild);
     strncpy(currentpath, parentandchild, rootlen);
 
-    for (sp = parentandchild + rootlen, spc = currentpath + rootlen; *sp != '\0'; sp++)
+    for (sp = (char*) parentandchild + rootlen, spc = currentpath + rootlen; *sp != '\0'; sp++)
     {
         if (!IsFileSep(*sp) && *sp != '\0')
         {

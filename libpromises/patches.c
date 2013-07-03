@@ -144,10 +144,16 @@ char *MapNameForward(char *s)
 /*********************************************************/
 
 #ifndef HAVE_SETNETGRENT
-
-int setnetgrent(const char *netgroup)
+#if SETNETGRENT_RETURNS_INT
+int
+#else
+void
+#endif
+setnetgrent(const char *netgroup)
 {
+#if SETNETGRENT_RETURNS_INT
     return 0;
+#endif
 }
 
 #endif
@@ -169,10 +175,16 @@ int getnetgrent(char **machinep, char **userp, char **domainp)
 /***********************************************************/
 
 #ifndef HAVE_ENDNETGRENT
-
-int endnetgrent(void)
+#if ENDNETGRENT_RETURNS_INT
+int
+#else
+void
+#endif
+endnetgrent(void)
 {
+#if ENDNETGRENT_RETURNS_INT
     return 1;
+#endif
 }
 
 #endif

@@ -383,9 +383,16 @@ static void VerifyFilePromise(EvalContext *ctx, char *path, Promise *pp)
 
 // Once more in case a file has been created as a result of editing or copying
 
-    if ((stat(path, &osb) != -1) && (S_ISREG(osb.st_mode)))
+    exists = (stat(path, &osb) != -1);
+
+    if (exists && (S_ISREG(osb.st_mode)))
     {
         VerifyFileLeaf(ctx, path, &osb, a, pp);
+    }
+
+    if (!exists && a.havechange)
+    {
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Promised to monitor '%s' for changes, but file does not exist", path);
     }
 
 exit:

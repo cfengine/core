@@ -329,7 +329,7 @@ char *strsep(char **stringp, const char *delim);
 #endif
 
 #ifdef __linux__
-# ifdef __GLIBC__
+# if defined(__GLIBC__) || defined(__BIONIC__)
 #  include <net/route.h>
 #  include <netinet/in.h>
 #  include <netinet/ip.h>

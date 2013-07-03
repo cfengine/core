@@ -114,7 +114,7 @@ int main(int argc, char *argv[])
 
     if (REMOVEKEYS)
     {
-        return RemoveKeys(remove_keys_host);
+        return RemoveKeys(remove_keys_host, true);
     }
 
     if(LICENSE_INSTALL)

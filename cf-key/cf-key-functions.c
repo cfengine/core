@@ -168,43 +168,50 @@ void ShowLastSeenHosts()
     printf("Total Entries: %d\n", count);
 }
 
-
-int RemoveKeys(const char *host)
+/**
+ * @brief removes all traces of entry 'input' from lastseen and filesystem
+ *
+ * @param[in] key digest (SHA/MD5 format) or free host name string
+ * @param[in] must_be_coherent. false : delete if lastseen is incoherent, 
+ *                              true :  don't if lastseen is incoherent
+ * @retval 0 if entry was deleted, >0 otherwise
+ */
+int RemoveKeys(const char *input, bool must_be_coherent)
 {
-    char digest[CF_BUFSIZE];
-    char ipaddr[CF_MAX_IP_LEN];
+    int res = 0;
+    char equivalent[CF_BUFSIZE];
+    equivalent[0] = '\0';
 
-    if (Hostname2IPString(ipaddr, host, sizeof(ipaddr)) == -1)
+    res = RemoveKeysFromLastSeen(input, must_be_coherent, equivalent);
+    if (res!=0)
     {
-        Log(LOG_LEVEL_ERR, 
-            "ERROR, could not resolve '%s', not removing", host);
-        return 255;
+        return res;
     }
 
-    Address2Hostkey(ipaddr, digest);
-    RemoveHostFromLastSeen(digest);
+    Log(LOG_LEVEL_INFO, "Removed corresponding entries from lastseen database.");
 
-    int removed_by_ip = RemovePublicKey(ipaddr);
-    int removed_by_digest = RemovePublicKey(digest);
+    int removed_input      = RemovePublicKey(input);
+    int removed_equivalent = RemovePublicKey(equivalent);
 
-    if ((removed_by_ip == -1) || (removed_by_digest == -1))
+    if ((removed_input == -1) || (removed_equivalent == -1))
     {
-        Log(LOG_LEVEL_ERR, "Unable to remove keys for the host '%s'", host);
+        Log(LOG_LEVEL_ERR, "Unable to remove keys for the entry %s", input);
         return 255;
     }
-    else if (removed_by_ip + removed_by_digest == 0)
+    else if (removed_input + removed_equivalent == 0)
     {
-        Log(LOG_LEVEL_ERR, "No keys for host '%s' were found", host);
+        Log(LOG_LEVEL_ERR, "No key file(s) for entry %s were found on the filesytem", input);
         return 1;
     }
     else
     {
-        Log(LOG_LEVEL_INFO, "Removed %d key(s) for host '%s'",
-              removed_by_ip + removed_by_digest, host);
+        Log(LOG_LEVEL_INFO, "Removed %d corresponding key file(s) from filesystem.",
+              removed_input + removed_equivalent);
         return 0;
     }
-}
 
+    return -1;
+}
 
 void KeepKeyPromises(const char *public_key_file, const char *private_key_file)
 {

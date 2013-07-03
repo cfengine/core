@@ -75,6 +75,31 @@ static void test_list_select_last_matching_not_found(void)
     DeleteItemList(list);
 }
 
+static void test_list_compare(void)
+{
+    Item *list1 = NULL, *list2 = NULL;
+    bool result;
+
+    result = ListsCompare(list1, list2);
+    assert_true(result);
+
+    AppendItem(&list1, "abc", NULL);
+    AppendItem(&list1, "def", NULL);
+
+    result = ListsCompare(list1, list2);
+    assert_false(result);
+
+    AppendItem(&list2, "def", NULL);
+    AppendItem(&list2, "abc", NULL);
+
+    result = ListsCompare(list1, list2);
+
+    assert_true(result);
+
+    DeleteItemList(list1);
+    DeleteItemList(list2);
+}
+
 int main()
 {
     PRINT_TEST_BANNER();
@@ -84,7 +109,8 @@ int main()
         unit_test(test_list_len),
         unit_test(test_list_select_last_matching_finds_first),
         unit_test(test_list_select_last_matching_finds_last),
-        unit_test(test_list_select_last_matching_not_found)
+        unit_test(test_list_select_last_matching_not_found),
+        unit_test(test_list_compare)
     };
 
     return run_tests(tests);

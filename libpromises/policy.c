@@ -1513,6 +1513,7 @@ static JsonElement *BundleToJson(const Bundle *bundle)
     }
     JsonObjectAppendInteger(json_bundle, "offset", bundle->offset.start);
     JsonObjectAppendInteger(json_bundle, "offsetEnd", bundle->offset.end);
+    JsonObjectAppendInteger(json_bundle, "sourceLine", bundle->offset.line);
 
     JsonObjectAppendString(json_bundle, "namespace", bundle->ns);
     JsonObjectAppendString(json_bundle, "name", bundle->name);
@@ -1558,8 +1559,13 @@ static JsonElement *BodyToJson(const Body *body)
 {
     JsonElement *json_body = JsonObjectCreate(10);
 
+    if (body->source_path)
+    {
+        JsonObjectAppendString(json_body, "sourcePath", body->source_path);
+    }
     JsonObjectAppendInteger(json_body, "offset", body->offset.start);
     JsonObjectAppendInteger(json_body, "offsetEnd", body->offset.end);
+    JsonObjectAppendInteger(json_body, "sourceLine", body->offset.line);
 
     JsonObjectAppendString(json_body, "namespace", body->ns);
     JsonObjectAppendString(json_body, "name", body->name);

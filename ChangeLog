@@ -13,7 +13,7 @@
        - prevent incorrect "insert_lines promise uses the same select_line_matching anchor" warning (Redmine #2778)
        - Fix regression of setting VIPADDRESS to 127.0.0.1 (Redmine #3010)
        - Fix missing "promise kept" status for the last line in a file (Redmine #2943)
-
+       - Fix "changes" promise not receiving status when file is missing (Redmine #2820)
 
 3.5.0
 

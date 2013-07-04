@@ -1,4 +1,6 @@
 3.5.1
+       Changes:
+       - file changes are logged with log level Notice, not Error
 
        Bug fixes:
        - fix recursive copying of files (Redmine #2965)

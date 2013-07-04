@@ -3218,7 +3218,7 @@ static void VerifyFileChanges(char *file, struct stat *sb, Attributes attr, Prom
     {
         snprintf(message, CF_BUFSIZE - 1, "Permissions for '%s' changed %04jo -> %04jo", file,
                  (uintmax_t)cmpsb.st_mode, (uintmax_t)sb->st_mode);
-        Log(LOG_LEVEL_ERR, "%s", message);
+        Log(LOG_LEVEL_NOTICE, "%s", message);
 
         char msg_temp[CF_MAXVARSIZE] = { 0 };
         snprintf(msg_temp, sizeof(msg_temp), "Permission: %04jo -> %04jo",
@@ -3231,7 +3231,7 @@ static void VerifyFileChanges(char *file, struct stat *sb, Attributes attr, Prom
     {
         snprintf(message, CF_BUFSIZE - 1, "Owner for '%s' changed %jd -> %jd", file, (uintmax_t) cmpsb.st_uid,
                  (uintmax_t) sb->st_uid);
-        Log(LOG_LEVEL_ERR, "%s", message);
+        Log(LOG_LEVEL_NOTICE, "%s", message);
 
         char msg_temp[CF_MAXVARSIZE] = { 0 };
         snprintf(msg_temp, sizeof(msg_temp), "Owner: %jd -> %jd",
@@ -3244,7 +3244,7 @@ static void VerifyFileChanges(char *file, struct stat *sb, Attributes attr, Prom
     {
         snprintf(message, CF_BUFSIZE - 1, "Group for '%s' changed %jd -> %jd", file, (uintmax_t) cmpsb.st_gid,
                  (uintmax_t) sb->st_gid);
-        Log(LOG_LEVEL_ERR, "%s", message);
+        Log(LOG_LEVEL_NOTICE, "%s", message);
 
         char msg_temp[CF_MAXVARSIZE] = { 0 };
         snprintf(msg_temp, sizeof(msg_temp), "Group: %jd -> %jd",
@@ -3255,13 +3255,13 @@ static void VerifyFileChanges(char *file, struct stat *sb, Attributes attr, Prom
 
     if (cmpsb.st_dev != sb->st_dev)
     {
-        Log(LOG_LEVEL_ERR, "Device for '%s' changed %jd -> %jd", file, (intmax_t) cmpsb.st_dev,
+        Log(LOG_LEVEL_NOTICE, "Device for '%s' changed %jd -> %jd", file, (intmax_t) cmpsb.st_dev,
               (intmax_t) sb->st_dev);
     }
 
     if (cmpsb.st_ino != sb->st_ino)
     {
-        Log(LOG_LEVEL_ERR, "inode for '%s' changed %ju -> %ju", file, (uintmax_t) cmpsb.st_ino,
+        Log(LOG_LEVEL_NOTICE, "inode for '%s' changed %ju -> %ju", file, (uintmax_t) cmpsb.st_ino,
               (uintmax_t) sb->st_ino);
     }
 
@@ -3274,12 +3274,12 @@ static void VerifyFileChanges(char *file, struct stat *sb, Attributes attr, Prom
         strcpy(to, ctime(&(sb->st_mtime)));
         Chop(from, CF_MAXVARSIZE);
         Chop(to, CF_MAXVARSIZE);
-        Log(LOG_LEVEL_ERR, "Last modified time for '%s' changed '%s' -> '%s'", file, from, to);
+        Log(LOG_LEVEL_NOTICE, "Last modified time for '%s' changed '%s' -> '%s'", file, from, to);
     }
 
     if (pp->comment)
     {
-        Log(LOG_LEVEL_ERR, "Preceding promise '%s'", pp->comment);
+        Log(LOG_LEVEL_NOTICE, "Preceding promise '%s'", pp->comment);
     }
 
     if (attr.change.update && !DONTDO)

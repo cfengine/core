@@ -2022,12 +2022,6 @@ int DepthSearch(EvalContext *ctx, char *name, struct stat *sb, int rlevel, Attri
         return false;
     }
 
-    if (rlevel > CF_RECURSION_LIMIT)
-    {
-        Log(LOG_LEVEL_WARNING, "Very deep nesting of directories (>%d deep) for '%s' (Aborting files)", rlevel, name);
-        return false;
-    }
-
     memset(path, 0, CF_BUFSIZE);
 
     if (!PushDirState(ctx, name, sb))

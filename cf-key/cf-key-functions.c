@@ -157,7 +157,7 @@ void ShowLastSeenHosts()
 {
     int count = 0;
 
-    printf("%-10.10s %-17.17s %-25.25s %-26.26s %-s\n", "Direction", "IP", "Name", "Last connection", "Key");
+    printf("%-10.10s %-40.40s %-25.25s %-26.26s %-s\n", "Direction", "IP", "Name", "Last connection", "Key");
 
     if (!ScanLastSeenQuality(ShowHost, &count))
     {

@@ -1,6 +1,10 @@
 3.5.1
        Changes:
        - file changes are logged with log level Notice, not Error
+       - the CFEngine Standard Library in masterfiles/libraries is now split into
+         promise-type specific policy files, and lives in a version-specific directory.
+         This should have no impact on current code, but allows more granular include of
+         needed stdlib elements (Redmine #3044)
 
        Bug fixes:
        - fix recursive copying of files (Redmine #2965)

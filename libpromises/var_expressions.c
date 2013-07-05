@@ -27,6 +27,7 @@
 #include "cf3.defs.h"
 #include "buffer.h"
 #include "misc_lib.h"
+#include "string_lib.h"
 
 
 #ifndef NDEBUG
@@ -63,11 +64,11 @@ static size_t IndexCount(const char *var_string)
     return count;
 }
 
-VarRef VarRefParseFromBundle(const char *qualified_name, const Bundle *bundle)
+VarRef VarRefParseFromNamespaceAndScope(const char *qualified_name, const char *_ns, const char *_scope, char ns_separator, char scope_separator)
 {
     char *ns = NULL;
 
-    const char *scope_start = strchr(qualified_name, CF_NS);
+    const char *scope_start = strchr(qualified_name, ns_separator);
     if (scope_start)
     {
         ns = xstrndup(qualified_name, scope_start - qualified_name);
@@ -80,7 +81,8 @@ VarRef VarRefParseFromBundle(const char *qualified_name, const Bundle *bundle)
 
     char *scope = NULL;
 
-    const char *lval_start = strchr(scope_start, '.');
+    const char *lval_start = strchr(scope_start, scope_separator);
+
     if (lval_start)
     {
         lval_start++;
@@ -133,14 +135,14 @@ VarRef VarRefParseFromBundle(const char *qualified_name, const Bundle *bundle)
 
     assert(lval);
 
-    if (!scope)
+    if (!scope && !_scope)
     {
         assert(ns == NULL && "A variable missing a scope should not have a namespace");
     }
 
     return (VarRef) {
-        .ns = scope ? ns : (bundle ? xstrdup(bundle->ns) : NULL),
-        .scope = scope ? scope : (bundle ? xstrdup(bundle->name) : NULL),
+        .ns = ns ? ns : (_ns ? xstrdup(_ns) : NULL),
+        .scope = scope ? scope : (_scope ? xstrdup(_scope) : NULL),
         .lval = lval,
         .indices = (const char *const *const)indices,
         .num_indices = num_indices,
@@ -150,7 +152,35 @@ VarRef VarRefParseFromBundle(const char *qualified_name, const Bundle *bundle)
 
 VarRef VarRefParse(const char *var_ref_string)
 {
-    return VarRefParseFromBundle(var_ref_string, NULL);
+    return VarRefParseFromNamespaceAndScope(var_ref_string, NULL, NULL, CF_NS, '.');
+}
+
+VarRef VarRefParseFromScope(const char *var_ref_string, const char *scope)
+{
+    const char *scope_start = strchr(scope, CF_NS);
+    if (scope_start)
+    {
+        char *ns = xstrndup(scope, scope_start - scope);
+        VarRef ref = VarRefParseFromNamespaceAndScope(var_ref_string, ns, scope_start + 1, CF_NS, '.');
+        free(ns);
+        return ref;
+    }
+    else
+    {
+        return VarRefParseFromNamespaceAndScope(var_ref_string, NULL, scope, CF_NS, '.');
+    }
+}
+
+VarRef VarRefParseFromBundle(const char *var_ref_string, const Bundle *bundle)
+{
+    if (bundle)
+    {
+        return VarRefParseFromNamespaceAndScope(var_ref_string, bundle->ns, bundle->name, CF_NS, '.');
+    }
+    else
+    {
+        return VarRefParse(var_ref_string);
+    }
 }
 
 void VarRefDestroy(VarRef ref)
@@ -162,9 +192,13 @@ void VarRefDestroy(VarRef ref)
     free((char *)ref.ns);
     free((char *)ref.scope);
     free((char *)ref.lval);
-    for (int i = 0; i < ref.num_indices; ++i)
+    if (ref.num_indices > 0)
     {
-        free((char *)ref.indices[i]);
+        for (int i = 0; i < ref.num_indices; ++i)
+        {
+            free((char *)ref.indices[i]);
+        }
+        free((char **)ref.indices);
     }
 }
 
@@ -199,4 +233,34 @@ char *VarRefToString(const VarRef ref, bool qualified)
     char *var_string = xstrdup(BufferData(buf));
     BufferDestroy(&buf);
     return var_string;
+}
+
+char *VarRefMangle(VarRef ref)
+{
+    char *suffix = VarRefToString(ref, false);
+
+    if (!ref.scope)
+    {
+        return suffix;
+    }
+    else
+    {
+        if (ref.ns)
+        {
+            char *mangled = StringFormat("%s*%s#%s", ref.ns, ref.scope, suffix);
+            free(suffix);
+            return mangled;
+        }
+        else
+        {
+            char *mangled = StringFormat("%s#%s", ref.scope, suffix);
+            free(suffix);
+            return mangled;
+        }
+    }
+}
+
+VarRef VarRefDeMangle(const char *mangled_var_ref)
+{
+    return VarRefParseFromNamespaceAndScope(mangled_var_ref, NULL, NULL, '*', '#');
 }

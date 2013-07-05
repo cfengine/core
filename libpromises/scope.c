@@ -47,7 +47,7 @@ Scope *SCOPE_MATCH = NULL;
 
 Scope *ScopeNew(const char *name)
 {
-    Scope *ptr;
+    assert(name);
 
     if (!ThreadLock(cft_vscope))
     {
@@ -55,7 +55,7 @@ Scope *ScopeNew(const char *name)
         return NULL;
     }
 
-    for (ptr = VSCOPE; ptr != NULL; ptr = ptr->next)
+    for (Scope *ptr = VSCOPE; ptr != NULL; ptr = ptr->next)
     {
         if (strcmp(ptr->scope, name) == 0)
         {
@@ -64,12 +64,16 @@ Scope *ScopeNew(const char *name)
         }
     }
 
-    ptr = xcalloc(1, sizeof(Scope));
+    Scope *ptr = xcalloc(1, sizeof(Scope));
 
-    ptr->next = VSCOPE;
-    ptr->scope = xstrdup(name);
     ptr->hashtable = HashInit();
+    ptr->scope = xstrdup(name);
+    assert(ptr->scope);
+    ptr->next = VSCOPE;
     VSCOPE = ptr;
+
+    assert(VSCOPE->scope);
+
     ThreadUnlock(cft_vscope);
 
     return ptr;
@@ -210,11 +214,15 @@ void ScopeAugment(EvalContext *ctx, const Bundle *bp, const Promise *pp, const R
             Rval retval;
             if (pbp != NULL)
             {
-                EvalContextVariableGet(ctx, (VarRef) { pbp->ns, pbp->name, naked }, &retval, &vtype);
+                VarRef ref = VarRefParseFromBundle(naked, pbp);
+                EvalContextVariableGet(ctx, ref, &retval, &vtype);
+                VarRefDestroy(ref);
             }
             else
             {
-                EvalContextVariableGet(ctx, (VarRef) { NULL, bp->name, naked }, &retval, &vtype);
+                VarRef ref = VarRefParseFromBundle(naked, bp);
+                EvalContextVariableGet(ctx, ref, &retval, &vtype);
+                VarRefDestroy(ref);
             }
 
             switch (vtype)

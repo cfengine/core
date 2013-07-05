@@ -47,9 +47,13 @@ VarRef VarRefParse(const char *var_ref_string);
  *        of the bundle if these are not specified explicitly in the string.
  */
 VarRef VarRefParseFromBundle(const char *var_ref_string, const Bundle *bundle);
+VarRef VarRefParseFromScope(const char *var_ref_string, const char *scope);
 
 void VarRefDestroy(VarRef ref);
 
 char *VarRefToString(const VarRef ref, bool qualified);
+
+char *VarRefMangle(VarRef ref);
+VarRef VarRefDeMangle(const char *mangled_var_ref);
 
 #endif

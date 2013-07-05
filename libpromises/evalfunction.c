@@ -852,13 +852,13 @@ static FnCallResult FnCallReturnsZero(EvalContext *ctx, FnCall *fp, Rlist *final
     }
     else if (shelltype == SHELL_TYPE_NONE)
     {
-        Log(LOG_LEVEL_ERR, "execresult '%s' does not have an absolute path", RlistScalarValue(finalargs));
+        Log(LOG_LEVEL_ERR, "returnszero '%s' does not have an absolute path", RlistScalarValue(finalargs));
         return (FnCallResult) { FNCALL_SUCCESS, { xstrdup("!any"), RVAL_TYPE_SCALAR } };
     }
 
     if (needExecutableCheck && !IsExecutable(CommandArg0(RlistScalarValue(finalargs))))
     {
-        Log(LOG_LEVEL_ERR, "execresult '%s' is assumed to be executable but isn't", RlistScalarValue(finalargs));
+        Log(LOG_LEVEL_ERR, "returnszero '%s' is assumed to be executable but isn't", RlistScalarValue(finalargs));
         return (FnCallResult) { FNCALL_SUCCESS, { xstrdup("!any"), RVAL_TYPE_SCALAR } };
     }
 
@@ -1085,30 +1085,25 @@ static FnCallResult FnCallReadTcp(EvalContext *ctx, FnCall *fp, Rlist *finalargs
 
 static FnCallResult FnCallRegList(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
-    Rlist *rp, *list;
-    char buffer[CF_BUFSIZE], naked[CF_MAXVARSIZE];
-    Rval retval;
+    const char *listvar = RlistScalarValue(finalargs);
+    const char *regex = RlistScalarValue(finalargs->next);
 
-    buffer[0] = '\0';
-
-/* begin fn specific content */
-
-    char *listvar = RlistScalarValue(finalargs);
-    char *regex = RlistScalarValue(finalargs->next);
-
-    if (IsVarList(listvar))
-    {
-        GetNaked(naked, listvar);
-    }
-    else
+    if (!IsVarList(listvar))
     {
         Log(LOG_LEVEL_VERBOSE, "Function reglist was promised a list called '%s' but this was not found", listvar);
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
-    if (!EvalContextVariableGet(ctx, (VarRef) { NULL, PromiseGetBundle(fp->caller)->name, naked }, &retval, NULL))
+    char naked[CF_MAXVARSIZE] = "";
+    GetNaked(naked, listvar);
+
+    VarRef ref = VarRefParseFromBundle(naked, PromiseGetBundle(fp->caller));
+
+    Rval retval;
+    if (!EvalContextVariableGet(ctx, ref, &retval, NULL))
     {
         Log(LOG_LEVEL_VERBOSE, "Function REGLIST was promised a list called '%s' but this was not found", listvar);
+        VarRefDestroy(ref);
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
@@ -1119,11 +1114,12 @@ static FnCallResult FnCallRegList(EvalContext *ctx, FnCall *fp, Rlist *finalargs
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
-    list = (Rlist *) retval.item;
+    const Rlist *list = retval.item;
 
+    char buffer[CF_BUFSIZE];
     strcpy(buffer, "!any");
 
-    for (rp = list; rp != NULL; rp = rp->next)
+    for (const Rlist *rp = list; rp != NULL; rp = rp->next)
     {
         if (strcmp(rp->item, CF_NULL_VALUE) == 0)
         {
@@ -1192,44 +1188,32 @@ static FnCallResult FnCallRegArray(EvalContext *ctx, FnCall *fp, Rlist *finalarg
 
 static FnCallResult FnCallGetIndices(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
-    char lval[CF_MAXVARSIZE], scopeid[CF_MAXVARSIZE];
     char index[CF_MAXVARSIZE], match[CF_MAXVARSIZE];
-    Scope *ptr;
     Rlist *returnlist = NULL;
     AssocHashTableIterator i;
     CfAssoc *assoc;
 
-/* begin fn specific content */
+    VarRef ref = VarRefParseFromBundle(RlistScalarValue(finalargs), PromiseGetBundle(fp->caller));
 
-    char *arrayname = RlistScalarValue(finalargs);
+    char *legacy_scope = ref.ns ? StringFormat("%s:%s", ref.ns, ref.scope) : xstrdup(ref.scope);
+    Scope *scope = ScopeGet(legacy_scope);
+    free(legacy_scope);
 
-/* Locate the array */
-
-    if (strstr(arrayname, "."))
-    {
-        scopeid[0] = '\0';
-        sscanf(arrayname, "%127[^.].%127s", scopeid, lval);
-    }
-    else
-    {
-        strcpy(lval, arrayname);
-        strcpy(scopeid, PromiseGetBundle(fp->caller)->name);
-    }
-
-    if ((ptr = ScopeGet(scopeid)) == NULL)
+    if (!scope)
     {
         Log(LOG_LEVEL_VERBOSE,
-            "Function getindices was promised an array called '%s' in scope '%s' but this was not found", lval,
-              scopeid);
+            "Function getindices was promised an array called '%s' in scope '%s' but this was not found", ref.lval,
+              ref.scope);
+        VarRefDestroy(ref);
         RlistAppendScalarIdemp(&returnlist, CF_NULL_VALUE);
         return (FnCallResult) { FNCALL_SUCCESS, { returnlist, RVAL_TYPE_LIST } };
     }
 
-    i = HashIteratorInit(ptr->hashtable);
+    i = HashIteratorInit(scope->hashtable);
 
     while ((assoc = HashIteratorNext(&i)))
     {
-        snprintf(match, CF_MAXVARSIZE - 1, "%.127s[", lval);
+        snprintf(match, CF_MAXVARSIZE - 1, "%.127s[", ref.lval);
 
         if (strncmp(match, assoc->lval, strlen(match)) == 0)
         {
@@ -1253,6 +1237,8 @@ static FnCallResult FnCallGetIndices(EvalContext *ctx, FnCall *fp, Rlist *finala
         }
     }
 
+    VarRefDestroy(ref);
+
     if (returnlist == NULL)
     {
         RlistAppendScalarIdemp(&returnlist, CF_NULL_VALUE);
@@ -1265,44 +1251,32 @@ static FnCallResult FnCallGetIndices(EvalContext *ctx, FnCall *fp, Rlist *finala
 
 static FnCallResult FnCallGetValues(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
-    char lval[CF_MAXVARSIZE], scopeid[CF_MAXVARSIZE];
     char match[CF_MAXVARSIZE];
-    Scope *ptr;
     Rlist *rp, *returnlist = NULL;
     AssocHashTableIterator i;
     CfAssoc *assoc;
 
-/* begin fn specific content */
+    VarRef ref = VarRefParseFromBundle(RlistScalarValue(finalargs), PromiseGetBundle(fp->caller));
 
-    char *arrayname = RlistScalarValue(finalargs);
+    char *legacy_scope = ref.ns ? StringFormat("%s:%s", ref.ns, ref.scope) : xstrdup(ref.scope);
+    Scope *scope = ScopeGet(legacy_scope);
+    free(legacy_scope);
 
-/* Locate the array */
-
-    if (strstr(arrayname, "."))
-    {
-        scopeid[0] = '\0';
-        sscanf(arrayname, "%127[^.].%127s", scopeid, lval);
-    }
-    else
-    {
-        strcpy(lval, arrayname);
-        strcpy(scopeid, PromiseGetBundle(fp->caller)->name);
-    }
-
-    if ((ptr = ScopeGet(scopeid)) == NULL)
+    if (!scope)
     {
         Log(LOG_LEVEL_VERBOSE,
-            "Function getvalues was promised an array called '%s' in scope '%s' but this was not found", lval,
-              scopeid);
+            "Function getvalues was promised an array called '%s' in scope '%s' but this was not found", ref.lval,
+              ref.scope);
+        VarRefDestroy(ref);
         RlistAppendScalarIdemp(&returnlist, CF_NULL_VALUE);
         return (FnCallResult) { FNCALL_SUCCESS, { returnlist, RVAL_TYPE_LIST } };
     }
 
-    i = HashIteratorInit(ptr->hashtable);
+    i = HashIteratorInit(scope->hashtable);
 
     while ((assoc = HashIteratorNext(&i)))
     {
-        snprintf(match, CF_MAXVARSIZE - 1, "%.127s[", lval);
+        snprintf(match, CF_MAXVARSIZE - 1, "%.127s[", ref.lval);
 
         if (strncmp(match, assoc->lval, strlen(match)) == 0)
         {
@@ -1324,6 +1298,8 @@ static FnCallResult FnCallGetValues(EvalContext *ctx, FnCall *fp, Rlist *finalar
             }
         }
     }
+
+    VarRefDestroy(ref);
 
     if (returnlist == NULL)
     {
@@ -3015,13 +2991,15 @@ static FnCallResult FnCallIsVariable(EvalContext *ctx, FnCall *fp, Rlist *finala
     Rval rval = { 0 };
     bool found = false;
 
-    if (lval == NULL)
+    if (!lval)
     {
         found = false;
     }
     else
     {
-        found = EvalContextVariableGet(ctx, (VarRef) { NULL, "this", lval }, &rval, NULL);
+        VarRef ref = VarRefParseFromScope(lval, "this");
+        found = EvalContextVariableGet(ctx, ref, &rval, NULL);
+        VarRefDestroy(ref);
     }
 
     if (found)

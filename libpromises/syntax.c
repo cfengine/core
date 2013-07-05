@@ -426,19 +426,26 @@ vars:
     {
         if (ExtractInnerCf3VarString(string, var))
         {
-            if (!IsExpandable(var) && EvalContextVariableGet(ctx, (VarRef) { NULL, scopeid, var }, &rval, &dtype))
+            if (!IsExpandable(var))
             {
-                if (rval.type == RVAL_TYPE_LIST)
+                VarRef ref = VarRefParseFromScope(var, scopeid);
+
+                if (EvalContextVariableGet(ctx, ref, &rval, &dtype))
                 {
-                    if (!islist)
+                    if (rval.type == RVAL_TYPE_LIST)
                     {
-                        islist = true;
-                    }
-                    else
-                    {
-                        islist = false;
+                        if (!islist)
+                        {
+                            islist = true;
+                        }
+                        else
+                        {
+                            islist = false;
+                        }
                     }
                 }
+
+                VarRefDestroy(ref);
             }
 
             if (strlen(var) == strlen(string))

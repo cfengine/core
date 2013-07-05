@@ -1262,6 +1262,8 @@ bool EvalContextVariablePut(EvalContext *ctx, VarRef lval, Rval rval, DataType t
         assert(STACK_FRAME_TYPE_BODY == LastStackFrame(ctx, 0)->type);
     }
 
+    assert(lval.scope);
+
     Scope *put_scope = ScopeGet(lval.scope);
     if (!put_scope)
     {
@@ -1341,32 +1343,11 @@ bool EvalContextVariableGet(const EvalContext *ctx, VarRef lval, Rval *rval_out,
         return false;
     }
 
-    Scope *get_scope = NULL;
-    char lookup_key[CF_MAXVARSIZE] = "";
-    {
-        char scopeid[CF_MAXVARSIZE] = "";
+    char *legacy_scope = lval.ns ? StringFormat("%s:%s", lval.ns, lval.scope) : xstrdup(lval.scope);
 
-        if (IsQualifiedVariable(lval.lval))
-        {
-            scopeid[0] = '\0';
-            sscanf(lval.lval, "%[^.].", scopeid);
-            strlcpy(lookup_key, lval.lval + strlen(scopeid) + 1, sizeof(lookup_key));
-        }
-        else
-        {
-            strlcpy(lookup_key, lval.lval, sizeof(lookup_key));
-            strlcpy(scopeid, lval.scope, sizeof(scopeid));
-        }
+    Scope *get_scope = ScopeGet(legacy_scope);
 
-        if (lval.ns != NULL && strchr(scopeid, CF_NS) == NULL && strcmp(lval.ns, "default") != 0)
-        {
-            char buffer[CF_EXPANDSIZE] = "";
-            sprintf(buffer, "%s%c%s", lval.ns, CF_NS, scopeid);
-            strlcpy(scopeid, buffer, sizeof(scopeid));
-        }
-
-        get_scope = ScopeGet(scopeid);
-    }
+    free(legacy_scope);
 
     if (!get_scope)
     {
@@ -1381,7 +1362,13 @@ bool EvalContextVariableGet(const EvalContext *ctx, VarRef lval, Rval *rval_out,
         return false;
     }
 
+    assert(!IsQualifiedVariable(lval.lval) && "lval is qualified");
+
+    char *lookup_key = VarRefToString(lval, false);
     CfAssoc *assoc = HashLookupElement(get_scope->hashtable, lookup_key);
+    free(lookup_key);
+
+
     if (!assoc)
     {
         if (rval_out)

@@ -86,9 +86,10 @@ static int IPV4_parser(const char *source, struct IPV4Address *address)
     int period_counter = 0;
     int port_counter = 0;
     int char_counter = 0;
-    bool is_period = 0;
-    bool is_digit = 0;
-    bool is_port = 0;
+    bool is_period = false;
+    bool is_digit = false;
+    bool is_port = false;
+    bool has_digit = false;
 
     /*
      * For simplicity sake we initialize address (if not NULL).
@@ -159,6 +160,7 @@ static int IPV4_parser(const char *source, struct IPV4Address *address)
             if (is_digit)
             {
                 octet = Char2Dec(octet, *p);
+                has_digit = true;
             }
             else if (is_period)
             {
@@ -183,6 +185,7 @@ static int IPV4_parser(const char *source, struct IPV4Address *address)
             if (is_digit)
             {
                 octet = Char2Dec(octet, *p);
+                has_digit = true;
             }
             else if (is_port)
             {
@@ -245,6 +248,13 @@ static int IPV4_parser(const char *source, struct IPV4Address *address)
         if (state_change)
         {
             /*
+             * Check that we have digits, otherwise the transition is wrong.
+             */
+            if (!has_digit)
+            {
+                return -1;
+            }
+            /*
              * Reset all the variables.
              */
             char_counter = 0;
@@ -255,6 +265,7 @@ static int IPV4_parser(const char *source, struct IPV4Address *address)
             is_period = false;
             is_digit = false;
             is_port = false;
+            has_digit = false;
             state_change = false;
         }
     }
@@ -881,6 +892,8 @@ IPAddress *IPAddressNew(Buffer *source)
         /*
          * It was not a valid IP address.
          */
+        free (ipv4);
+        free (ipv6);
         return NULL;
     }
     return address;
@@ -1042,3 +1055,66 @@ int IPAddressIsEqual(IPAddress *a, IPAddress *b)
      return -1;
 }
 
+bool IPAddress_IsIPAddress(Buffer *source, IPAddress **address)
+{
+    if (!source || !BufferData(source))
+    {
+        return false;
+    }
+    bool create_object = false;
+    if (address)
+    {
+        create_object = true;
+    }
+    const char *pad = BufferData(source);
+    struct IPV4Address *ipv4 = NULL;
+    struct IPV6Address *ipv6 = NULL;
+    ipv4 = (struct IPV4Address *)xmalloc(sizeof(struct IPV4Address));
+    ipv6 = (struct IPV6Address *)xmalloc(sizeof(struct IPV6Address));
+    if (IPV4_parser(pad, ipv4) == 0)
+    {
+        free (ipv6);
+        if (create_object)
+        {
+            *address = (IPAddress *)xmalloc(sizeof(IPAddress));
+            (*address)->type = IP_ADDRESS_TYPE_IPV4;
+            (*address)->address = (void *)ipv4;
+        }
+        else
+        {
+            /*
+             * We know it is a valid IPV4 address and we know we don't need the
+             * IPV4 structure.
+             */
+            free (ipv4);
+        }
+    }
+    else if (IPV6_parser(pad, ipv6) == 0)
+    {
+        free (ipv4);
+        if (create_object)
+        {
+            *address = (IPAddress *)xmalloc(sizeof(IPAddress));
+            (*address)->type = IP_ADDRESS_TYPE_IPV6;
+            (*address)->address = (void *)ipv6;
+        }
+        else
+        {
+            /*
+             * We know it is a valid IPV6 address and we know we don't need the
+             * IPV6 structure.
+             */
+            free (ipv6);
+        }
+    }
+    else
+    {
+        /*
+         * It was not a valid IP address.
+         */
+        free (ipv4);
+        free (ipv6);
+        return false;
+    }
+    return true;
+}

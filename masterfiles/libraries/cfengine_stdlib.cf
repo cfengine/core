@@ -262,9 +262,6 @@ bundle edit_line manage_variable_values_ini(tab, sectionName)
  # Based on set_variable_values_ini
  # Added delete lines section to empty out undefined variable values for INI section
 
- # CAUTION : for it to work nicely, you should use Cfengine with the commit n°3229
- # otherwise you may risk a segfault
-
  #
  # If you are running 3.2.1 or earlier or more specifically git commit # or
  # earlier you can use this to work around the segfault bug.
@@ -336,9 +333,6 @@ bundle edit_line set_variable_values_ini(tab, sectionName)
 
  # Based on set_variable_values from cfengine_stdlib.cf, modified to
  # use section to define were to write, and to handle commented-out lines.
-
- # CAUTION : for it to work nicely, you should use Cfengine with the commit n°3229
- # otherwise you may risk a segfault
 
  #
  # If you are running 3.2.1 or earlier or more specifically git commit # or

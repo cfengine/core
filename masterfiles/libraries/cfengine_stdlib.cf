@@ -39,7 +39,7 @@
 # the online docs
 #
 
-# For Cfengine Core: 3.5.0
+# For Cfengine Core: 3.5.0 and older
 
 ###################################################
 # If you find Cfengine useful, please consider    #
@@ -997,7 +997,7 @@ chdir => "$(s)";
 body contain in_dir_shell(s)
 {
 chdir => "$(s)";
-useshell => "useshell";
+useshell => "true"; # canonical "useshell" but this is backwards-compatible
 }
 
 ##
@@ -1012,21 +1012,21 @@ no_output => "true";
 
 body contain in_shell
 {
-useshell => "useshell";
+useshell => "true"; # canonical "useshell" but this is backwards-compatible
 }
 
 ##
 
 body contain in_shell_bg
 {
-useshell => "useshell";
+useshell => "true"; # canonical "useshell" but this is backwards-compatible
 }
 
 ##
 
 body contain in_shell_and_silent
 {
-useshell => "useshell";
+useshell => "true"; # canonical "useshell" but this is backwards-compatible
 no_output => "true";
 }
 
@@ -1034,7 +1034,7 @@ no_output => "true";
 
 body contain in_dir_shell_and_silent(dir)
 {
-useshell => "useshell";
+useshell => "true"; # canonical "useshell" but this is backwards-compatible
 no_output => "true";
 chdir => "$(dir)";
 }
@@ -1044,7 +1044,7 @@ chdir => "$(dir)";
 body contain setuid(x)
 {
 exec_owner => "$(x)";
-useshell => "noshell";
+useshell => "false"; # canonical "noshell" but this is backwards-compatible
 }
 
 ##
@@ -1052,7 +1052,7 @@ useshell => "noshell";
 body contain setuid_sh(x)
 {
 exec_owner => "$(x)";
-useshell => "useshell";
+useshell => "true"; # canonical "useshell" but this is backwards-compatible
 }
 
 ##
@@ -1061,7 +1061,7 @@ body contain setuidgid_sh(owner,group)
 {
 exec_owner => "$(owner)";
 exec_group => "$(group)";
-useshell => "useshell";
+useshell => "true"; # canonical "useshell" but this is backwards-compatible
 }
 
 ##
@@ -1069,7 +1069,7 @@ useshell => "useshell";
 body contain jail(owner,root,dir)
 {
 exec_owner => "$(owner)";
-useshell => "useshell";
+useshell => "true"; # canonical "useshell" but this is backwards-compatible
 chdir => "$(dir)";
 chroot => "$(root)";
 }
@@ -1165,17 +1165,6 @@ promise_repaired => { "$(cl)" };
 body classes classes_generic(x)
 # Define x prefixed/suffixed with promise outcome
 {
-  promise_repaired => { "promise_repaired_$(x)", "$(x)_repaired", "$(x)_ok", "$(x)_reached" };
-  repair_failed => { "repair_failed_$(x)", "$(x)_failed", "$(x)_not_ok", "$(x)_not_kept", "$(x)_not_repaired", "$(x)_reached" };
-  repair_denied => { "repair_denied_$(x)", "$(x)_denied", "$(x)_not_ok", "$(x)_not_kept", "$(x)_not_repaired", "$(x)_reached" };
-  repair_timeout => { "repair_timeout_$(x)", "$(x)_timeout", "$(x)_not_ok", "$(x)_not_kept", "$(x)_not_repaired", "$(x)_reached" };
-  promise_kept => { "promise_kept_$(x)", "$(x)_kept", "$(x)_ok", "$(x)_not_repaired", "$(x)_reached" };
-}
-
-body classes scoped_classes_generic(scope, x)
-# Define x prefixed/suffixed with promise outcome
-{
-  scope => "$(scope)";
   promise_repaired => { "promise_repaired_$(x)", "$(x)_repaired", "$(x)_ok", "$(x)_reached" };
   repair_failed => { "repair_failed_$(x)", "$(x)_failed", "$(x)_not_ok", "$(x)_not_kept", "$(x)_not_repaired", "$(x)_reached" };
   repair_denied => { "repair_denied_$(x)", "$(x)_denied", "$(x)_not_ok", "$(x)_not_kept", "$(x)_not_repaired", "$(x)_reached" };
@@ -1847,11 +1836,6 @@ body package_method apt_get
       package_patch_list_command => "$(debian_knowledge.call_apt_get) --just-print dist-upgrade";
       package_patch_name_regex => "^Inst\s+(\S+)\s+.*";
       package_patch_version_regex => "^Inst\s+\S+\s+\[?\(?([^\],\s]+).*";
-
-      # make correct version comparisons
-      package_version_less_command => "$(debian_knowledge.call_dpkg) --compare-versions $(v1) lt $(v2)";
-      package_version_equal_command => "$(debian_knowledge.call_dpkg) --compare-versions $(v1) eq $(v2)";
-
 }
 
 body package_method apt_get_release(release)
@@ -1878,11 +1862,6 @@ body package_method apt_get_release(release)
       package_patch_list_command => "$(debian_knowledge.call_apt_get) --just-print dist-upgrade";
       package_patch_name_regex => "^Inst\s+(\S+)\s+.*";
       package_patch_version_regex => "^Inst\s+\S+\s+\[?\(?([^\],\s]+).*";
-
-      # make correct version comparisons
-      package_version_less_command => "$(debian_knowledge.call_dpkg) --compare-versions $(v1) lt $(v2)";
-      package_version_equal_command => "$(debian_knowledge.call_dpkg) --compare-versions $(v1) eq $(v2)";
-
 }
 
 ##
@@ -2173,8 +2152,7 @@ body package_method yum_group
   package_update_command          =>  "/usr/bin/yum groupupdate";
 
   # grep -x to only get full line matching
-  package_verify_command          =>
-                                      "yum grouplist -v|awk '$0 ~ /^Done$/ {next} {sub(/.*\(/, \"\");sub(/\).*/, \"\")} /Available/ {h=\"a\";next} /Installed/ {h=\"i\";next} h==\"i\"|grep -qx";
+  package_verify_command          => "/usr/bin/yum grouplist -v|awk '$0 ~ /^Done$/ {next} {sub(/.*\(/, \"\");sub(/\).*/, \"\")} /Available/ {h=\"a\";next} /Installed/ {h=\"i\";next} h==\"i\"|grep -qx";
 }
 
 ##
@@ -2892,12 +2870,6 @@ vars:
   "stopcommand[sendmail]"    string => "/etc/init.d/sendmail stop";
   "pattern[sendmail]"        string => ".*sendmail.*";
 
-  "startcommand[ssh]"   string => "/etc/init.d/sshd start";
-  "restartcommand[ssh]" string => "/etc/init.d/sshd restart";
-  "reloadcommand[ssh]"  string => "/etc/init.d/sshd reload";
-  "stopcommand[ssh]"    string => "/etc/init.d/sshd stop";
-  "pattern[ssh]"        string => ".*sshd.*";
-
   "startcommand[tomcat5]"   string => "/etc/init.d/tomcat5 start";
   "restartcommand[tomcat5]" string => "/etc/init.d/tomcat5 restart";
   "reloadcommand[tomcat5]"  string => "/etc/init.d/tomcat5 reload";
@@ -2941,6 +2913,12 @@ vars:
   "reloadcommand[ntpd]"  string => "/etc/init.d/ntpd reload";
   "stopcommand[ntpd]"    string => "/etc/init.d/ntpd stop";
   "pattern[ntpd]"        string => ".*ntpd.*";
+
+  "startcommand[ssh]"   string => "/etc/init.d/sshd start";
+  "restartcommand[ssh]" string => "/etc/init.d/sshd restart";
+  "reloadcommand[ssh]"  string => "/etc/init.d/sshd reload";
+  "stopcommand[ssh]"    string => "/etc/init.d/sshd stop";
+  "pattern[ssh]"        string => ".*sshd.*";
 
  redhat::
 
@@ -3286,6 +3264,12 @@ vars:
   "stopcommand[yum-updatesd]"    string => "/etc/init.d/yum-updatesd stop";
   "pattern[yum-updatesd]"        string => ".*yum-updatesd.*";
 
+  "startcommand[ssh]"   string => "/etc/init.d/sshd start";
+  "restartcommand[ssh]" string => "/etc/init.d/sshd restart";
+  "reloadcommand[ssh]"  string => "/etc/init.d/sshd reload";
+  "stopcommand[ssh]"    string => "/etc/init.d/sshd stop";
+  "pattern[ssh]"        string => ".*sshd.*";
+
  debian|ubuntu::
 
   "startcommand[atd]"   string => "/etc/init.d/atd start";
@@ -3383,6 +3367,12 @@ vars:
   "reloadcommand[www]"  string => "/etc/init.d/apache2 reload";
   "stopcommand[www]"    string => "/etc/init.d/apache2 stop";
   "pattern[www]"        string => ".*apache2.*";
+
+  "startcommand[ssh]"   string => "/etc/init.d/ssh start";
+  "restartcommand[ssh]" string => "/etc/init.d/ssh restart";
+  "reloadcommand[ssh]"  string => "/etc/init.d/ssh reload";
+  "stopcommand[ssh]"    string => "/etc/init.d/ssh stop";
+  "pattern[ssh]"        string => ".*sshd.*";
 
 
  # METHODS that implement these ............................................
@@ -3771,16 +3761,4 @@ bundle common paths
     "_stdlib_path_exists_$(all_paths)"
       expression => fileexists("$(path[$(all_paths)])"),
       comment    => "It's useful to know if $(all_paths) exists on the filesystem as defined";
-}
-
-bundle agent fileinfo(f)
-{
-  vars:
-      "fields" slist => splitstring("size,gid,uid,ino,nlink,ctime,atime,mtime,mode,modeoct,permstr,permoct,type,devno,dev_minor,dev_major,basename,dirname", ",", 999);
-
-      "stat[$(f)][$(fields)]" string => filestat($(f), $(fields));
-
-  reports:
-    verbose_mode::
-      "$(this.bundle): file $(f) has $(fields) = $(stat[$(f)][$(fields)])";
 }

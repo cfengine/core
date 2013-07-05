@@ -585,71 +585,71 @@ static void test_isipaddress(void)
     assert_true (bufferAddress != NULL);
 
     BufferSet(bufferAddress, "1.2.3.4", strlen("1.2.3.4"));
-    assert_true(IPAddress_IsIPAddress(bufferAddress, NULL));
-    assert_true(IPAddress_IsIPAddress(bufferAddress, &address));
+    assert_true(IPAddressIsIPAddress(bufferAddress, NULL));
+    assert_true(IPAddressIsIPAddress(bufferAddress, &address));
     assert_true(address != NULL);
     assert_int_equal(IPAddressType(address), IP_ADDRESS_TYPE_IPV4);
     BufferZero(bufferAddress);
     assert_int_equal(IPAddressDestroy(&address), 0);
 
     BufferSet(bufferAddress, "1.2..3", strlen("1.2..3"));
-    assert_false(IPAddress_IsIPAddress(bufferAddress, NULL));
-    assert_false(IPAddress_IsIPAddress(bufferAddress, &address));
+    assert_false(IPAddressIsIPAddress(bufferAddress, NULL));
+    assert_false(IPAddressIsIPAddress(bufferAddress, &address));
     assert_true(address == NULL);
     BufferZero(bufferAddress);
 
     BufferSet(bufferAddress, "1.a.2.3", strlen("1.a.2.3"));
-    assert_false(IPAddress_IsIPAddress(bufferAddress, NULL));
-    assert_false(IPAddress_IsIPAddress(bufferAddress, &address));
+    assert_false(IPAddressIsIPAddress(bufferAddress, NULL));
+    assert_false(IPAddressIsIPAddress(bufferAddress, &address));
     assert_true(address == NULL);
     BufferZero(bufferAddress);
 
     BufferSet(bufferAddress, "256.255.255.255", strlen("256.255.255.255"));
-    assert_false(IPAddress_IsIPAddress(bufferAddress, NULL));
-    assert_false(IPAddress_IsIPAddress(bufferAddress, &address));
+    assert_false(IPAddressIsIPAddress(bufferAddress, NULL));
+    assert_false(IPAddressIsIPAddress(bufferAddress, &address));
     assert_true(address == NULL);
     BufferZero(bufferAddress);
 
     BufferSet(bufferAddress, "255.255.255.255", strlen("255.255.255.255"));
-    assert_true(IPAddress_IsIPAddress(bufferAddress, NULL));
-    assert_true(IPAddress_IsIPAddress(bufferAddress, &address));
+    assert_true(IPAddressIsIPAddress(bufferAddress, NULL));
+    assert_true(IPAddressIsIPAddress(bufferAddress, &address));
     assert_true(address != NULL);
     assert_int_equal(IPAddressType(address), IP_ADDRESS_TYPE_IPV4);
     BufferZero(bufferAddress);
     assert_int_equal(IPAddressDestroy(&address), 0);
 
     BufferSet(bufferAddress, "1:0:0:0:0:0:0:1", strlen("1:0:0:0:0:0:0:1"));
-    assert_true(IPAddress_IsIPAddress(bufferAddress, NULL));
-    assert_true(IPAddress_IsIPAddress(bufferAddress, &address));
+    assert_true(IPAddressIsIPAddress(bufferAddress, NULL));
+    assert_true(IPAddressIsIPAddress(bufferAddress, &address));
     assert_true(address != NULL);
     assert_int_equal(IPAddressType(address), IP_ADDRESS_TYPE_IPV6);
     BufferZero(bufferAddress);
     assert_int_equal(IPAddressDestroy(&address), 0);
 
     BufferSet(bufferAddress, "1:1:1:1:0:1:1:1", strlen("1:1:1:1:0:1:1:1"));
-    assert_true(IPAddress_IsIPAddress(bufferAddress, NULL));
-    assert_true(IPAddress_IsIPAddress(bufferAddress, &address));
+    assert_true(IPAddressIsIPAddress(bufferAddress, NULL));
+    assert_true(IPAddressIsIPAddress(bufferAddress, &address));
     assert_true(address != NULL);
     assert_int_equal(IPAddressType(address), IP_ADDRESS_TYPE_IPV6);
     BufferZero(bufferAddress);
     assert_int_equal(IPAddressDestroy(&address), 0);
 
     BufferSet(bufferAddress, "a:b:c:d:e:f:0:1", strlen("a:b:c:d:e:f:0:1"));
-    assert_true(IPAddress_IsIPAddress(bufferAddress, NULL));
-    assert_true(IPAddress_IsIPAddress(bufferAddress, &address));
+    assert_true(IPAddressIsIPAddress(bufferAddress, NULL));
+    assert_true(IPAddressIsIPAddress(bufferAddress, &address));
     assert_true(address != NULL);
     assert_int_equal(IPAddressType(address), IP_ADDRESS_TYPE_IPV6);
     BufferZero(bufferAddress);
     assert_int_equal(IPAddressDestroy(&address), 0);
 
     BufferSet(bufferAddress, "a:b:c:d:e:f:g:h", strlen("a:b:c:d:e:f:g:h"));
-    assert_false(IPAddress_IsIPAddress(bufferAddress, NULL));
-    assert_false(IPAddress_IsIPAddress(bufferAddress, &address));
+    assert_false(IPAddressIsIPAddress(bufferAddress, NULL));
+    assert_false(IPAddressIsIPAddress(bufferAddress, &address));
     BufferZero(bufferAddress);
 
     BufferSet(bufferAddress, "ffff:ffff:fffff:0:0:0:0:1", strlen("ffff:ffff:fffff:0:0:0:0:1"));
-    assert_false(IPAddress_IsIPAddress(bufferAddress, NULL));
-    assert_false(IPAddress_IsIPAddress(bufferAddress, &address));
+    assert_false(IPAddressIsIPAddress(bufferAddress, NULL));
+    assert_false(IPAddressIsIPAddress(bufferAddress, &address));
     BufferZero(bufferAddress);
 }
 

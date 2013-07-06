@@ -502,14 +502,14 @@ body package_method rpm_filebased(path)
 
 # Example of how to use it:
 #
-# {{{
+# ```cf3
 # packages:
 # "epel-release"
 # package_policy => "add",
 # package_version => "5-4",
 # package_architectures => { "noarch" },
 # package_method => rpm_filebased("/repo/RPMs");
-# }}}
+# ```
 
 {
   package_file_repositories => { "$(path)" };

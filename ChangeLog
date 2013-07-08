@@ -18,6 +18,7 @@
        - Fix regression of setting VIPADDRESS to 127.0.0.1 (Redmine #3010)
        - Fix "changes" promise not receiving status when file is missing (Redmine #2820)
        - Fix symlinks being destroyed when editing them (Redmine #2363)
+       - Fix missing "promise kept" status for the last line in a file (Redmine #2943)
 
 3.5.0
 

@@ -7,14 +7,15 @@
 void test_load_masterfiles(void)
 {
     EvalContext *ctx = EvalContextNew();
+    DiscoverVersion(ctx);
+
     GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_COMMON);
 
     GenericAgentConfigSetInputFile(config, NULL,
                                    ABS_TOP_SRCDIR "/masterfiles/promises.cf");
 
     Policy *masterfiles = GenericAgentLoadPolicy(ctx, config);
-    // ignoring test result for now - parsing promises.cf with empty context does not work
-    // assert_true(masterfiles);
+    assert_true(masterfiles);
 
     PolicyDestroy(masterfiles);
     GenericAgentConfigDestroy(config);

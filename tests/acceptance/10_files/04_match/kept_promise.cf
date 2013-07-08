@@ -1,0 +1,80 @@
+#######################################################
+#
+# Check that already inserted lines trigger promise
+# kept.
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };
+}
+
+bundle agent init
+{
+  vars:
+    "array[1]" string => "one";
+    "array[2]" string => "two";
+    "array[3]" string => "three";
+
+  files:
+    "$(G.testfile)"
+      create => "true",
+      edit_line => init_edit;
+}
+
+bundle agent test
+{
+  files:
+    "$(G.testfile)"
+      create => "true",
+      edit_line => test_edit;
+}
+
+bundle edit_line init_edit
+{
+  vars:
+    "index" slist => getindices("init.array");
+
+  insert_lines:
+    "${test.array[${index}]}";
+}
+
+bundle edit_line test_edit
+{
+  vars:
+    "index" slist => getindices("init.array");
+
+  insert_lines:
+    "${test.array[${index}]}"
+      classes => kept_if_else("line_${index}_kept", "line_${index}_added", "line_${index}_failed");
+}
+
+bundle agent check
+{
+  classes:
+    "ok" and => { "line_1_kept", "line_2_kept", "line_3_kept" };
+
+  reports:
+    DEBUG.!line_1_kept::
+      "Line 1 promise should have been kept, but was not.";
+    DEBUG.!line_2_kept::
+      "Line 2 promise should have been kept, but was not.";
+    DEBUG.!line_3_kept::
+      "Line 3 promise should have been kept, but was not.";
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}
+
+body classes kept_if_else(kept, yes, no)
+
+{
+  promise_kept     => { "${kept}" };
+  promise_repaired => { "${yes}" };
+  repair_failed    => { "${no}" };
+  repair_denied    => { "${no}" };
+  repair_timeout   => { "${no}" };
+}

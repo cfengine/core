@@ -13,10 +13,6 @@ body common control
 
 bundle agent init
 {
-}
-
-bundle agent test
-{
   vars:
     "array[1]" string => "one";
     "array[2]" string => "two";
@@ -25,13 +21,30 @@ bundle agent test
   files:
     "$(G.testfile)"
       create => "true",
+      edit_line => init_edit;
+}
+
+bundle agent test
+{
+  files:
+    "$(G.testfile)"
+      create => "true",
       edit_line => test_edit;
+}
+
+bundle edit_line init_edit
+{
+  vars:
+    "index" slist => getindices("init.array");
+
+  insert_lines:
+    "${test.array[${index}]}";
 }
 
 bundle edit_line test_edit
 {
   vars:
-    "index" slist => getindices("test.array");
+    "index" slist => getindices("init.array");
 
   insert_lines:
     "${test.array[${index}]}"
@@ -40,11 +53,6 @@ bundle edit_line test_edit
 
 bundle agent check
 {
-  files:
-    "$(G.testfile)"
-      create => "true",
-      edit_line => test_edit;
-
   classes:
     "ok" and => { "line_1_kept", "line_2_kept", "line_3_kept" };
 

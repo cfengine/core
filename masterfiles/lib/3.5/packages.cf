@@ -347,6 +347,9 @@ body package_method yum
       package_installed_regex => ".*(installed|\s+@).*";
       package_name_convention => "$(name)-$(version).$(arch)";
 
+      # just give the package name to rpm to delete, otherwise it gets "name.*" (from package_name_convention above)
+      package_delete_convention => "$(name)";
+
       # set it to "0" to avoid caching of list during upgrade
       package_list_update_command => "/usr/bin/yum --quiet check-update";
       package_list_update_ifelapsed => "240";

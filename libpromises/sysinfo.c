@@ -266,10 +266,34 @@ void DetectDomainName(EvalContext *ctx, const char *orig_nodename)
 
 /*******************************************************************/
 
+void DiscoverVersion(EvalContext *ctx)
+{
+    int major = 0;
+    int minor = 0;
+    int patch = 0;
+    if (3 == sscanf(Version(), "%d.%d.%d", &major, &minor, &patch))
+    {
+        char workbuf[CF_BUFSIZE];
+
+        snprintf(workbuf, CF_MAXVARSIZE, "%d", major);
+        ScopeNewSpecial(ctx, "sys", "cf_version_major", workbuf, DATA_TYPE_STRING);
+        snprintf(workbuf, CF_MAXVARSIZE, "%d", minor);
+        ScopeNewSpecial(ctx, "sys", "cf_version_minor", workbuf, DATA_TYPE_STRING);
+        snprintf(workbuf, CF_MAXVARSIZE, "%d", patch);
+        ScopeNewSpecial(ctx, "sys", "cf_version_patch", workbuf, DATA_TYPE_STRING);
+    }
+    else
+    {
+        ScopeNewSpecial(ctx, "sys", "cf_version_major", "BAD VERSION " VERSION, DATA_TYPE_STRING);
+        ScopeNewSpecial(ctx, "sys", "cf_version_minor", "BAD VERSION " VERSION, DATA_TYPE_STRING);
+        ScopeNewSpecial(ctx, "sys", "cf_version_patch", "BAD VERSION " VERSION, DATA_TYPE_STRING);
+    }
+}
+
 void GetNameInfo3(EvalContext *ctx, AgentType agent_type)
 {
     int i, found = false;
-    char *sp, workbuf[CF_BUFSIZE];
+    char *sp, *w, workbuf[CF_BUFSIZE];
     time_t tloc;
     struct hostent *hp;
     struct sockaddr_in cin;
@@ -408,6 +432,8 @@ void GetNameInfo3(EvalContext *ctx, AgentType agent_type)
     ScopeNewSpecial(ctx, "sys", "exports", VEXPORTS[VSYSTEMHARDCLASS], DATA_TYPE_STRING);
 /* FIXME: type conversion */
     ScopeNewSpecial(ctx, "sys", "cf_version", (char *) Version(), DATA_TYPE_STRING);
+
+    DiscoverVersion(ctx);
 
     if (PUBKEY)
     {

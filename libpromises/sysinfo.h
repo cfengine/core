@@ -40,4 +40,6 @@ void CreateHardClassesFromCanonification(EvalContext *ctx, const char *canonifie
 // FIX: win_proc.c?
 int GetCurrentUserName(char *userName, int userNameLen);
 
+int GetUptimeMinutes(time_t now);
+
 #endif

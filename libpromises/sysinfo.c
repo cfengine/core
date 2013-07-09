@@ -104,7 +104,6 @@ static time_t GetBootTimeFromUptimeCommand(time_t); // Last resort
 # include <pcre.h>
 #endif
 #endif
-static int GetUptimeMinutes(time_t);
 
 /*****************************************************/
 
@@ -2469,7 +2468,7 @@ static void GetCPUInfo(EvalContext *ctx)
 
 /******************************************************************/
 
-static int GetUptimeMinutes(time_t now)
+int GetUptimeMinutes(time_t now)
 // Return the number of minutes the system has been online given the current
 // time() as an argument, or return -1 if unavailable or unimplemented.
 {

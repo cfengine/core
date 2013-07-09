@@ -76,6 +76,7 @@ check_PROGRAMS = \
 	exec-config-test \
 	generic_agent_test \
 	syntax_test \
+	sysinfo_test \
        ipaddress_test \
 	hashes_test 
 
@@ -231,3 +232,5 @@ process_terminate_unix_test_LDADD = libtest.la ../../libutils/libutils.la
 exec_config_test_SOURCES = exec-config-test.c \
 	../../cf-execd/exec-config.c
 exec_config_test_LDADD = libtest.la ../../libpromises/libpromises.la
+
+sysinfo_test_LDADD = ../../libpromises/libpromises.la libtest.la

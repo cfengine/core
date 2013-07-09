@@ -1326,45 +1326,34 @@ static FnCallResult FnCallGrep(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 
 static FnCallResult FnCallSum(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
-    char lval[CF_MAXVARSIZE], buffer[CF_MAXVARSIZE];
-    char scopeid[CF_MAXVARSIZE];
+    char buffer[CF_MAXVARSIZE];
     Rval rval2;
     double sum = 0;
 
-/* begin fn specific content */
+    VarRef ref = VarRefParseFromBundle(RlistScalarValue(finalargs), PromiseGetBundle(fp->caller));
 
-    char *name = RlistScalarValue(finalargs);
-
-/* Locate the array */
-
-    if (strstr(name, "."))
+    if (!ScopeExists(ref.scope))
     {
-        scopeid[0] = '\0';
-        sscanf(name, "%127[^.].%127s", scopeid, lval);
-    }
-    else
-    {
-        strcpy(lval, name);
-        strcpy(scopeid, PromiseGetBundle(fp->caller)->name);
-    }
-
-    if (!ScopeExists(scopeid))
-    {
-        Log(LOG_LEVEL_VERBOSE, "Function sum was promised a list in scope '%s' but this was not found", scopeid);
+        Log(LOG_LEVEL_VERBOSE, "Function sum was promised a list in scope '%s' but this was not found", ref.scope);
+        VarRefDestroy(ref);
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
-    if (!EvalContextVariableGet(ctx, (VarRef) { NULL, scopeid, lval }, &rval2, NULL))
+    if (!EvalContextVariableGet(ctx, ref, &rval2, NULL))
     {
-        Log(LOG_LEVEL_VERBOSE, "Function sum was promised a list called '%s' but this was not found", name);
+        Log(LOG_LEVEL_VERBOSE, "Function sum was promised a list called '%s' but this was not found", ref.lval);
+        VarRefDestroy(ref);
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
     if (rval2.type != RVAL_TYPE_LIST)
     {
-        Log(LOG_LEVEL_VERBOSE, "Function sum was promised a list called '%s' but this was not found", name);
+        Log(LOG_LEVEL_VERBOSE, "Function sum was promised a list called '%s' but this was not found", ref.lval);
+        VarRefDestroy(ref);
         return (FnCallResult) { FNCALL_FAILURE };
     }
+
+    VarRefDestroy(ref);
 
     for (const Rlist *rp = (const Rlist *) rval2.item; rp != NULL; rp = rp->next)
     {
@@ -1388,46 +1377,34 @@ static FnCallResult FnCallSum(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 
 static FnCallResult FnCallProduct(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
-    char lval[CF_MAXVARSIZE], buffer[CF_MAXVARSIZE];
-    char scopeid[CF_MAXVARSIZE];
+    char buffer[CF_MAXVARSIZE];
     Rval rval2;
     double product = 1.0;
 
-/* begin fn specific content */
+    VarRef ref = VarRefParseFromBundle(RlistScalarValue(finalargs), PromiseGetBundle(fp->caller));
 
-    char *name = RlistScalarValue(finalargs);
-
-/* Locate the array */
-
-    if (strstr(name, "."))
+    if (!ScopeExists(ref.scope))
     {
-        scopeid[0] = '\0';
-        sscanf(name, "%127[^.].%127s", scopeid, lval);
-    }
-    else
-    {
-        strcpy(lval, name);
-        strcpy(scopeid, PromiseGetBundle(fp->caller)->name);
-    }
-
-    if (!ScopeExists(scopeid))
-    {
-        Log(LOG_LEVEL_VERBOSE, "Function 'product' was promised a list in scope '%s' but this was not found",
-              scopeid);
+        Log(LOG_LEVEL_VERBOSE, "Function 'product' was promised a list in scope '%s' but this was not found", ref.scope);
+        VarRefDestroy(ref);
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
-    if (!EvalContextVariableGet(ctx, (VarRef) { NULL, scopeid, lval }, &rval2, NULL))
+    if (!EvalContextVariableGet(ctx, ref, &rval2, NULL))
     {
-        Log(LOG_LEVEL_VERBOSE, "Function 'product' was promised a list called '%s' but this was not found", name);
+        Log(LOG_LEVEL_VERBOSE, "Function 'product' was promised a list called '%s' but this was not found", ref.lval);
+        VarRefDestroy(ref);
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
     if (rval2.type != RVAL_TYPE_LIST)
     {
-        Log(LOG_LEVEL_VERBOSE, "Function 'product' was promised a list called '%s' but this was not found", name);
+        Log(LOG_LEVEL_VERBOSE, "Function 'product' was promised a list called '%s' but this was not found", ref.lval);
+        VarRefDestroy(ref);
         return (FnCallResult) { FNCALL_FAILURE };
     }
+
+    VarRefDestroy(ref);
 
     for (const Rlist *rp = (const Rlist *) rval2.item; rp != NULL; rp = rp->next)
     {
@@ -1451,49 +1428,35 @@ static FnCallResult FnCallProduct(EvalContext *ctx, FnCall *fp, Rlist *finalargs
 
 static FnCallResult FnCallJoin(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
-    char lval[CF_MAXVARSIZE], *joined;
-    char scopeid[CF_MAXVARSIZE];
+    char *joined = NULL;
     Rval rval2;
     int size = 0;
 
-/* begin fn specific content */
+    const char *join = RlistScalarValue(finalargs);
+    VarRef ref = VarRefParseFromScope(RlistScalarValue(finalargs->next), "this");
 
-    char *join = RlistScalarValue(finalargs);
-    char *name = RlistScalarValue(finalargs->next);
-
-/* Locate the array */
-
-    if (strstr(name, "."))
+    if (!ScopeExists(ref.scope))
     {
-        scopeid[0] = '\0';
-        sscanf(name, "%[^.].%127s", scopeid, lval);
-    }
-    else
-    {
-        strcpy(lval, name);
-        strcpy(scopeid, "this");
-    }
-
-    if (!ScopeExists(scopeid))
-    {
-        Log(LOG_LEVEL_VERBOSE, "Function 'join' was promised an array in scope '%s' but this was not found",
-              scopeid);
+        Log(LOG_LEVEL_VERBOSE, "Function 'join' was promised an array in scope '%s' but this was not found", ref.scope);
+        VarRefDestroy(ref);
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
-    if (!EvalContextVariableGet(ctx, (VarRef) { NULL, scopeid, lval }, &rval2, NULL))
+    if (!EvalContextVariableGet(ctx, ref, &rval2, NULL))
     {
-        Log(LOG_LEVEL_VERBOSE, "Function 'join' was promised a list called '%s.%s' but this was not (yet) found",
-              scopeid, name);
+        Log(LOG_LEVEL_VERBOSE, "Function 'join' was promised a list called '%s.%s' but this was not (yet) found", ref.scope, ref.lval);
+        VarRefDestroy(ref);
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
     if (rval2.type != RVAL_TYPE_LIST)
     {
-        Log(LOG_LEVEL_VERBOSE, "Function 'join' was promised a list called '%s' but this was not (yet) found",
-              name);
+        Log(LOG_LEVEL_VERBOSE, "Function 'join' was promised a list called '%s' but this was not (yet) found", ref.lval);
+        VarRefDestroy(ref);
         return (FnCallResult) { FNCALL_FAILURE };
     }
+
+    VarRefDestroy(ref);
 
     for (const Rlist *rp = (const Rlist *) rval2.item; rp != NULL; rp = rp->next)
     {
@@ -1831,52 +1794,41 @@ static FnCallResult FnCallMapArray(EvalContext *ctx, FnCall *fp, Rlist *finalarg
 
 static FnCallResult FnCallMapList(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
-    char expbuf[CF_EXPANDSIZE], lval[CF_MAXVARSIZE], scopeid[CF_MAXVARSIZE];
+    char expbuf[CF_EXPANDSIZE];
     Rlist *newlist = NULL;
     Rval rval;
     DataType retype;
 
-/* begin fn specific content */
-
-    char *map = RlistScalarValue(finalargs);
+    const char *map = RlistScalarValue(finalargs);
     char *listvar = RlistScalarValue(finalargs->next);
 
-/* Locate the array */
-
-    if (*listvar == '@')        // Handle use of @(list) as well as raw name
+    char naked[CF_MAXVARSIZE] = "";
+    if (IsVarList(listvar))
     {
-        listvar += 2;
-    }
-
-    if (strstr(listvar, "."))
-    {
-        scopeid[0] = '\0';
-        sscanf(listvar, "%127[^.].%127[^)}]", scopeid, lval);
+        GetNaked(naked, listvar);
     }
     else
     {
-        strcpy(lval, listvar);
-
-        if (*(lval + strlen(lval) - 1) == ')' || *(lval + strlen(lval) - 1) == '}')
-        {
-            *(lval + strlen(lval) - 1) = '\0';
-        }
-
-        strcpy(scopeid, PromiseGetBundle(fp->caller)->name);
+        strncpy(naked, listvar, CF_MAXVARSIZE - 1);
     }
 
-    if (!ScopeExists(scopeid))
+    VarRef ref = VarRefParseFromBundle(naked, PromiseGetBundle(fp->caller));
+
+    if (!ScopeExists(ref.scope))
     {
-        Log(LOG_LEVEL_VERBOSE, "Function 'maplist' was promised an list in scope '%s' but this was not found",
-              scopeid);
+        Log(LOG_LEVEL_VERBOSE, "Function 'maplist' was promised an list in scope '%s' but this was not found", ref.scope);
+        VarRefDestroy(ref);
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
     retype = DATA_TYPE_NONE;
-    if (!EvalContextVariableGet(ctx, (VarRef) { NULL, scopeid, lval }, &rval, &retype))
+    if (!EvalContextVariableGet(ctx, ref, &rval, &retype))
     {
+        VarRefDestroy(ref);
         return (FnCallResult) { FNCALL_FAILURE };
     }
+
+    VarRefDestroy(ref);
 
     if (retype != DATA_TYPE_STRING_LIST && retype != DATA_TYPE_INT_LIST && retype != DATA_TYPE_REAL_LIST)
     {
@@ -1934,13 +1886,18 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx, FnCall *fp, Rlist *fin
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
-    if (!EvalContextVariableGet(ctx, (VarRef) { NULL, PromiseGetBundle(fp->caller)->name, naked }, &retval, NULL))
+    VarRef ref = VarRefParseFromBundle(naked, PromiseGetBundle(fp->caller));
+
+    if (!EvalContextVariableGet(ctx, ref, &retval, NULL))
     {
         Log(LOG_LEVEL_VERBOSE,
             "Function selectservers was promised a list called '%s' but this was not found from context '%s.%s'",
-              listvar, PromiseGetBundle(fp->caller)->name, naked);
+              listvar, ref.scope, naked);
+        VarRefDestroy(ref);
         return (FnCallResult) { FNCALL_FAILURE };
     }
+
+    VarRefDestroy(ref);
 
     if (retval.type != RVAL_TYPE_LIST)
     {
@@ -4399,12 +4356,16 @@ static FnCallResult FnCallFileSexist(EvalContext *ctx, FnCall *fp, Rlist *finala
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
-    if (!EvalContextVariableGet(ctx, (VarRef) { NULL, PromiseGetBundle(fp->caller)->name, naked }, &retval, NULL))
+    VarRef ref = VarRefParseFromBundle(naked, PromiseGetBundle(fp->caller));
+
+    if (!EvalContextVariableGet(ctx, ref, &retval, NULL))
     {
-        Log(LOG_LEVEL_VERBOSE, "Function filesexist was promised a list called '%s' but this was not found",
-              listvar);
+        Log(LOG_LEVEL_VERBOSE, "Function filesexist was promised a list called '%s' but this was not found", listvar);
+        VarRefDestroy(ref);
         return (FnCallResult) { FNCALL_FAILURE };
     }
+
+    VarRefDestroy(ref);
 
     if (retval.type != RVAL_TYPE_LIST)
     {

@@ -80,7 +80,9 @@ void VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates
 
     if (!IsExpandable(pp->promiser))
     {
-        EvalContextVariableGet(ctx, (VarRef) { NULL, scope, pp->promiser }, &existing_var_rval, &existing_var_type);
+        VarRef ref = VarRefParseFromBundle(pp->promiser, PromiseGetBundle(pp));
+        EvalContextVariableGet(ctx, ref, &existing_var_rval, &existing_var_type);
+        VarRefDestroy(ref);
     }
     Buffer *qualified_scope = BufferNew();
     int result = 0;

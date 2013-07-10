@@ -53,30 +53,30 @@
 
 body match_value scan_log(line)
 {
-select_line_matching => "$(line)";
-track_growing_file => "true";
+      select_line_matching => "$(line)";
+      track_growing_file => "true";
 }
 
 ##
 
 body match_value scan_changing_file(line)
 {
-select_line_matching => "$(line)";
-track_growing_file => "false";
+      select_line_matching => "$(line)";
+      track_growing_file => "false";
 }
 
 ##
 
 body match_value single_value(regex)
 {
-select_line_matching => "$(regex)";
-extraction_regex => "($(regex))";
+      select_line_matching => "$(regex)";
+      extraction_regex => "($(regex))";
 }
 
 ##
 
 body match_value line_match_value(line_match, extract_regex)
 {
-select_line_matching => "$(line_match)";
-extraction_regex => "$(extract_regex)";
+      select_line_matching => "$(line_match)";
+      extraction_regex => "$(extract_regex)";
 }

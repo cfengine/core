@@ -57,64 +57,64 @@
 
 body action if_elapsed(x)
 {
-ifelapsed => "$(x)";
-expireafter => "$(x)";
+      ifelapsed => "$(x)";
+      expireafter => "$(x)";
 }
 
 ##
 
 body action if_elapsed_day
 {
-ifelapsed => "1440";    # 60 x 24
-expireafter => "1400";
+      ifelapsed => "1440";    # 60 x 24
+      expireafter => "1400";
 }
 
 ##
 
 body action measure_performance(x)
 {
-measurement_class => "Detect changes in $(this.promiser)";
-ifelapsed => "$(x)";
-expireafter => "$(x)";
+      measurement_class => "Detect changes in $(this.promiser)";
+      ifelapsed => "$(x)";
+      expireafter => "$(x)";
 }
 
 ##
 
 body action warn_only
 {
-action_policy => "warn";
-ifelapsed => "60";
+      action_policy => "warn";
+      ifelapsed => "60";
 }
 
 ##
 
 body action bg(elapsed,expire)
 {
-ifelapsed   => "$(elapsed)";
-expireafter => "$(expire)";
-background  => "true";
+      ifelapsed   => "$(elapsed)";
+      expireafter => "$(expire)";
+      background  => "true";
 }
 
 ##
 
 body action ifwin_bg
 {
-windows::
-background => "true";
+    windows::
+      background => "true";
 }
 
 ##
 
 body action immediate
 {
-ifelapsed => "0";
+      ifelapsed => "0";
 }
 
 ##
 
 body action policy(p)
 {
-action_policy => "$(p)";
+      action_policy => "$(p)";
 }
 
 ##
@@ -123,23 +123,23 @@ action_policy => "$(p)";
 
 body action log_repaired(log,message)
 {
-log_string => "$(sys.date), $(message)";
-log_repaired => "$(log)";
+      log_string => "$(sys.date), $(message)";
+      log_repaired => "$(log)";
 }
 
 ###
 
 body action log_verbose
 {
-log_level => "verbose";
+      log_level => "verbose";
 }
 
 ##
 
 body action sample_rate(x)
 {
-ifelapsed => "$(x)";
-expireafter => "10";
+      ifelapsed => "$(x)";
+      expireafter => "10";
 }
 
 ##-------------------------------------------------------
@@ -149,7 +149,7 @@ expireafter => "10";
 
 body classes if_repaired(x)
 {
-promise_repaired => { "$(x)" };
+      promise_repaired => { "$(x)" };
 }
 
 ##
@@ -157,11 +157,11 @@ promise_repaired => { "$(x)" };
 body classes if_else(yes,no)
 
 {
-promise_kept     => { "$(yes)" };
-promise_repaired => { "$(yes)" };
-repair_failed    => { "$(no)" };
-repair_denied    => { "$(no)" };
-repair_timeout   => { "$(no)" };
+      promise_kept     => { "$(yes)" };
+      promise_repaired => { "$(yes)" };
+      repair_failed    => { "$(no)" };
+      repair_denied    => { "$(no)" };
+      repair_timeout   => { "$(no)" };
 }
 
 ##
@@ -171,64 +171,64 @@ body classes cf2_if_else(yes,no)
 # meant to match cf2 semantics
 
 {
-promise_repaired => { "$(yes)" };
-repair_failed    => { "$(no)" };
-repair_denied    => { "$(no)" };
-repair_timeout   => { "$(no)" };
+      promise_repaired => { "$(yes)" };
+      repair_failed    => { "$(no)" };
+      repair_denied    => { "$(no)" };
+      repair_timeout   => { "$(no)" };
 }
 
 ##
 
 body classes if_notkept(x)
 {
-repair_failed   => { "$(x)" };
-repair_denied   => { "$(x)" };
-repair_timeout  => { "$(x)" };
+      repair_failed   => { "$(x)" };
+      repair_denied   => { "$(x)" };
+      repair_timeout  => { "$(x)" };
 }
 
 ##
 
 body classes if_ok(x)
 {
-promise_repaired => { "$(x)" };
-promise_kept => { "$(x)" };
+      promise_repaired => { "$(x)" };
+      promise_kept => { "$(x)" };
 }
 
 ##
 
 body classes if_ok_cancel(x)
 {
-cancel_repaired => { "$(x)" };
-cancel_kept => { "$(x)" };
+      cancel_repaired => { "$(x)" };
+      cancel_kept => { "$(x)" };
 }
 
 ##
 
 body classes cmd_repair(code,cl)
 {
-repaired_returncodes => { "$(code)" };
-promise_repaired => { "$(cl)" };
+      repaired_returncodes => { "$(code)" };
+      promise_repaired => { "$(cl)" };
 }
 
 body classes classes_generic(x)
 # Define x prefixed/suffixed with promise outcome
 {
-  promise_repaired => { "promise_repaired_$(x)", "$(x)_repaired", "$(x)_ok", "$(x)_reached" };
-  repair_failed => { "repair_failed_$(x)", "$(x)_failed", "$(x)_not_ok", "$(x)_not_kept", "$(x)_not_repaired", "$(x)_reached" };
-  repair_denied => { "repair_denied_$(x)", "$(x)_denied", "$(x)_not_ok", "$(x)_not_kept", "$(x)_not_repaired", "$(x)_reached" };
-  repair_timeout => { "repair_timeout_$(x)", "$(x)_timeout", "$(x)_not_ok", "$(x)_not_kept", "$(x)_not_repaired", "$(x)_reached" };
-  promise_kept => { "promise_kept_$(x)", "$(x)_kept", "$(x)_ok", "$(x)_not_repaired", "$(x)_reached" };
+      promise_repaired => { "promise_repaired_$(x)", "$(x)_repaired", "$(x)_ok", "$(x)_reached" };
+      repair_failed => { "repair_failed_$(x)", "$(x)_failed", "$(x)_not_ok", "$(x)_not_kept", "$(x)_not_repaired", "$(x)_reached" };
+      repair_denied => { "repair_denied_$(x)", "$(x)_denied", "$(x)_not_ok", "$(x)_not_kept", "$(x)_not_repaired", "$(x)_reached" };
+      repair_timeout => { "repair_timeout_$(x)", "$(x)_timeout", "$(x)_not_ok", "$(x)_not_kept", "$(x)_not_repaired", "$(x)_reached" };
+      promise_kept => { "promise_kept_$(x)", "$(x)_kept", "$(x)_ok", "$(x)_not_repaired", "$(x)_reached" };
 }
 
 body classes scoped_classes_generic(scope, x)
 # Define x prefixed/suffixed with promise outcome
 {
-  scope => "$(scope)";
-  promise_repaired => { "promise_repaired_$(x)", "$(x)_repaired", "$(x)_ok", "$(x)_reached" };
-  repair_failed => { "repair_failed_$(x)", "$(x)_failed", "$(x)_not_ok", "$(x)_not_kept", "$(x)_not_repaired", "$(x)_reached" };
-  repair_denied => { "repair_denied_$(x)", "$(x)_denied", "$(x)_not_ok", "$(x)_not_kept", "$(x)_not_repaired", "$(x)_reached" };
-  repair_timeout => { "repair_timeout_$(x)", "$(x)_timeout", "$(x)_not_ok", "$(x)_not_kept", "$(x)_not_repaired", "$(x)_reached" };
-  promise_kept => { "promise_kept_$(x)", "$(x)_kept", "$(x)_ok", "$(x)_not_repaired", "$(x)_reached" };
+      scope => "$(scope)";
+      promise_repaired => { "promise_repaired_$(x)", "$(x)_repaired", "$(x)_ok", "$(x)_reached" };
+      repair_failed => { "repair_failed_$(x)", "$(x)_failed", "$(x)_not_ok", "$(x)_not_kept", "$(x)_not_repaired", "$(x)_reached" };
+      repair_denied => { "repair_denied_$(x)", "$(x)_denied", "$(x)_not_ok", "$(x)_not_kept", "$(x)_not_repaired", "$(x)_reached" };
+      repair_timeout => { "repair_timeout_$(x)", "$(x)_timeout", "$(x)_not_ok", "$(x)_not_kept", "$(x)_not_repaired", "$(x)_reached" };
+      promise_kept => { "promise_kept_$(x)", "$(x)_kept", "$(x)_ok", "$(x)_not_repaired", "$(x)_reached" };
 }
 
 ##-------------------------------------------------------
@@ -237,8 +237,8 @@ body classes scoped_classes_generic(scope, x)
 
 body classes state_repaired(x)
 {
-promise_repaired => { "$(x)" };
-persist_time => "10";
+      promise_repaired => { "$(x)" };
+      persist_time => "10";
 }
 
 ##
@@ -251,9 +251,9 @@ body classes enumerate(x)
 #
 
 {
-promise_repaired => { "mXC_$(x)" };
-promise_kept => { "mXC_$(x)" };
-persist_time => "15";
+      promise_repaired => { "mXC_$(x)" };
+      promise_kept => { "mXC_$(x)" };
+      persist_time => "15";
 }
 
 ##
@@ -263,10 +263,10 @@ body classes always(x)
 # Define a class no matter what the outcome of the promise is
 
 {
-  promise_repaired => { "$(x)" };
-  promise_kept => { "$(x)" };
-  repair_failed => { "$(x)" };
-  repair_denied => { "$(x)" };
-  repair_timeout => { "$(x)" };
+      promise_repaired => { "$(x)" };
+      promise_kept => { "$(x)" };
+      repair_failed => { "$(x)" };
+      repair_denied => { "$(x)" };
+      repair_timeout => { "$(x)" };
 }
 

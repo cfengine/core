@@ -9,21 +9,21 @@ body executor control
 
 {
 
- any::
+    any::
 
-  splaytime  => "1";
-  mailto     => "root@$(def.domain)";
-  mailfrom   => "root@$(sys.host)\.$(def.domain)";
-  smtpserver => "localhost";
+      splaytime  => "1";
+      mailto     => "root@$(def.domain)";
+      mailfrom   => "root@$(sys.host)\.$(def.domain)";
+      smtpserver => "localhost";
 
-# Default:
-#
-# schedule => { "Min00", "Min05", "Min10", "Min15", "Min20", 
-#               "Min25", "Min30", "Min35", "Min40", "Min45",
-#               "Min50", "Min55" };
+      # Default:
+      #
+      # schedule => { "Min00", "Min05", "Min10", "Min15", "Min20", 
+      #               "Min25", "Min30", "Min35", "Min40", "Min45",
+      #               "Min50", "Min55" };
 
- !windows::
+    !windows::
 
-  exec_command => "$(sys.cf_twin) -f $(sys.workdir)/inputs/update.cf ; $(sys.cf_agent)";
+      exec_command => "$(sys.cf_twin) -f $(sys.workdir)/inputs/update.cf ; $(sys.cf_agent)";
 
 }

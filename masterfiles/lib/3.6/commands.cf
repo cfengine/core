@@ -54,96 +54,96 @@
 
 body contain silent
 {
-no_output => "true";
+      no_output => "true";
 }
 
 ##
 
 body contain in_dir(s)
 {
-chdir => "$(s)";
+      chdir => "$(s)";
 }
 
 ##
 
 body contain in_dir_shell(s)
 {
-chdir => "$(s)";
-useshell => "true"; # canonical "useshell" but this is backwards-compatible
+      chdir => "$(s)";
+      useshell => "true"; # canonical "useshell" but this is backwards-compatible
 }
 
 ##
 
 body contain silent_in_dir(s)
 {
-chdir => "$(s)";
-no_output => "true";
+      chdir => "$(s)";
+      no_output => "true";
 }
 
 ##
 
 body contain in_shell
 {
-useshell => "true"; # canonical "useshell" but this is backwards-compatible
+      useshell => "true"; # canonical "useshell" but this is backwards-compatible
 }
 
 ##
 
 body contain in_shell_bg
 {
-useshell => "true"; # canonical "useshell" but this is backwards-compatible
+      useshell => "true"; # canonical "useshell" but this is backwards-compatible
 }
 
 ##
 
 body contain in_shell_and_silent
 {
-useshell => "true"; # canonical "useshell" but this is backwards-compatible
-no_output => "true";
+      useshell => "true"; # canonical "useshell" but this is backwards-compatible
+      no_output => "true";
 }
 
 ##
 
 body contain in_dir_shell_and_silent(dir)
 {
-useshell => "true"; # canonical "useshell" but this is backwards-compatible
-no_output => "true";
-chdir => "$(dir)";
+      useshell => "true"; # canonical "useshell" but this is backwards-compatible
+      no_output => "true";
+      chdir => "$(dir)";
 }
 
 ##
 
 body contain setuid(x)
 {
-exec_owner => "$(x)";
-useshell => "false"; # canonical "noshell" but this is backwards-compatible
+      exec_owner => "$(x)";
+      useshell => "false"; # canonical "noshell" but this is backwards-compatible
 }
 
 ##
 
 body contain setuid_sh(x)
 {
-exec_owner => "$(x)";
-useshell => "true"; # canonical "useshell" but this is backwards-compatible
+      exec_owner => "$(x)";
+      useshell => "true"; # canonical "useshell" but this is backwards-compatible
 }
 
 ##
 
 body contain setuidgid_sh(owner,group)
 {
-exec_owner => "$(owner)";
-exec_group => "$(group)";
-useshell => "true"; # canonical "useshell" but this is backwards-compatible
+      exec_owner => "$(owner)";
+      exec_group => "$(group)";
+      useshell => "true"; # canonical "useshell" but this is backwards-compatible
 }
 
 ##
 
 body contain jail(owner,root,dir)
 {
-exec_owner => "$(owner)";
-useshell => "true"; # canonical "useshell" but this is backwards-compatible
-chdir => "$(dir)";
-chroot => "$(root)";
+      exec_owner => "$(owner)";
+      useshell => "true"; # canonical "useshell" but this is backwards-compatible
+      chdir => "$(dir)";
+      chroot => "$(root)";
 }
 
 ##
@@ -161,8 +161,8 @@ body contain setuid_umask(uid, umask)
 # 077   | 600     (rw-------) | 700     (rwx------)
 # 277   | 400     (r--------) | 500     (r-x------)
 {
-exec_owner => "$(uid)";
-umask => "$(umask)";
+      exec_owner => "$(uid)";
+      umask => "$(umask)";
 }
 
 

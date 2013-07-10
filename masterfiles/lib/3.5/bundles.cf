@@ -53,38 +53,38 @@
 
 bundle agent cronjob(commands,user,hours,mins)
 
- # For adding lines to crontab for a user
- # methods:
- #  "cron" usebundle => cronjob("/bin/ls","mark","*","5,10");
+# For adding lines to crontab for a user
+# methods:
+#  "cron" usebundle => cronjob("/bin/ls","mark","*","5,10");
 
 {
-vars:
-  SuSE::
-   "crontab" string => "/var/spool/cron/tabs";
-  redhat|fedora::
-   "crontab" string => "/var/spool/cron";
-  freebsd::
-   "crontab" string => "/var/cron/tabs";
- !(SuSE|redhat|fedora|freebsd)::
-    "crontab" string => "/var/spool/cron/crontabs";
+  vars:
+    SuSE::
+      "crontab" string => "/var/spool/cron/tabs";
+    redhat|fedora::
+      "crontab" string => "/var/spool/cron";
+    freebsd::
+      "crontab" string => "/var/cron/tabs";
+    !(SuSE|redhat|fedora|freebsd)::
+      "crontab" string => "/var/spool/cron/crontabs";
 
-files:
+  files:
 
-!windows::
-  "$(crontab)/$(user)"
+    !windows::
+      "$(crontab)/$(user)"
 
-    comment => "A user's regular batch jobs are added to this file",
-     create => "true",
-  edit_line => append_if_no_line("$(mins) $(hours) * * * $(commands)"),
+      comment => "A user's regular batch jobs are added to this file",
+      create => "true",
+      edit_line => append_if_no_line("$(mins) $(hours) * * * $(commands)"),
       perms => mo("600","$(user)"),
-    classes => if_repaired("changed_crontab");
+      classes => if_repaired("changed_crontab");
 
-processes:
+  processes:
 
-changed_crontab::
-   "cron"
-         comment => "Most crons need to be huped after file changes",
-         signals => { "hup" };
+    changed_crontab::
+      "cron"
+      comment => "Most crons need to be huped after file changes",
+      signals => { "hup" };
 
 }
 

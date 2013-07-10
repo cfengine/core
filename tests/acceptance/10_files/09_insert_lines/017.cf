@@ -6,9 +6,9 @@
 
 body common control
 {
-      inputs => { "../../default.cf.sub" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
@@ -17,7 +17,7 @@ body common control
 bundle agent init
 {
   vars:
-      "dummy" string => "1";
+    "dummy" string => "1";
 }
 
 
@@ -25,22 +25,22 @@ bundle agent init
 
 bundle agent test {
   files:
-      "$(G.testfile)"
+    "$(G.testfile)"
       edit_line => insert_dir,
       create => "true";
 }
 
 bundle edit_line insert_dir {
   insert_lines:
-      "$(G.testroot)" insert_type => "file",
-      classes => if_notkept("fail");
+    "$(G.testroot)" insert_type => "file",
+    classes => if_notkept("fail");
 }
 
 body classes if_notkept(x)
 {
-      repair_failed   => { "$(x)" };
-      repair_denied   => { "$(x)" };
-      repair_timeout  => { "$(x)" };
+  repair_failed   => { "$(x)" };
+  repair_denied   => { "$(x)" };
+  repair_timeout  => { "$(x)" };
 }
 
 #######################################################

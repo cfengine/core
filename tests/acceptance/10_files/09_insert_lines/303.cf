@@ -6,59 +6,59 @@
 
 body common control
 {
-      inputs => { "../../default.cf.sub" };
-      bundlesequence => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.cf.sub" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 ########################################################
 
 bundle agent init
 {
-  vars:
-      "actual1qaz" string => "";
-      "actual2qaz" string => "";
-      "actual3qaz" string => "";
+vars:
+  "actual1qaz" string => "";
+  "actual2qaz" string => "";
+  "actual3qaz" string => "";
 
-      "expected1qaz" string => "AAAA";
-      "expected2qaz" string => "AAAA";
-      "expected3qaz" string => "AAAA";
+  "expected1qaz" string => "AAAA";
+  "expected2qaz" string => "AAAA";
+  "expected3qaz" string => "AAAA";
 
-      "files" slist => { "actual1qaz", "expected1qaz", "actual2qaz", "expected2qaz", 
-			 "actual3qaz", "expected3qaz" };
+  "files" slist => { "actual1qaz", "expected1qaz", "actual2qaz", "expected2qaz", 
+                     "actual3qaz", "expected3qaz" };
 
-      
-  files:
-      "$(G.testfile).actual1qaz" touch => "true";
-      "$(G.testfile).actual2qaz" touch => "true";
-      "$(G.testfile).actual3qaz" touch => "true";
+                    
+files:
+  "$(G.testfile).actual1qaz" touch => "true";
+  "$(G.testfile).actual2qaz" touch => "true";
+  "$(G.testfile).actual3qaz" touch => "true";
 
-      "$(G.testfile).expected1qaz" 
-      touch => "true",
-      edit_line => init_insert("$(expected1qaz)");
-      "$(G.testfile).expected2qaz" 
-      touch => "true",
-      edit_line => init_insert("$(expected1qaz)");
-      "$(G.testfile).expected3qaz"
-      touch => "true",
-      edit_line => init_insert("$(expected1qaz)");
+  "$(G.testfile).expected1qaz" 
+    touch => "true",
+    edit_line => init_insert("$(expected1qaz)");
+  "$(G.testfile).expected2qaz" 
+    touch => "true",
+    edit_line => init_insert("$(expected1qaz)");
+ "$(G.testfile).expected3qaz"
+    touch => "true",
+    edit_line => init_insert("$(expected1qaz)");
 }
 
 bundle edit_line init_insert(str)
 {
   insert_lines:
-      "$(str)";
+    "$(str)";
 }
 
 body edit_defaults init_empty
 {
-      empty_file_before_editing => "true";
+  empty_file_before_editing => "true";
 }
 
 bundle agent test
 {
   files:
-      "$(G.testfile).(actual)?\dq.*"
+    "$(G.testfile).(actual)?\dq.*"
       pathtype => "regex",
       edit_line => example_edit_line;
 }
@@ -66,19 +66,19 @@ bundle agent test
 bundle edit_line example_edit_line
 {
   insert_lines:
-      "AAAA";
+    "AAAA";
 }
 
 bundle agent check
 {
   methods:
-      "first" usebundle => default_check_diff("$(G.testfile).actual1qaz",
-                                              "$(G.testfile).expected1qaz",
-                                              "$(this.promise_filename)");
-      "second" usebundle => default_check_diff("$(G.testfile).actual2qaz",
-                                               "$(G.testfile).expected2qaz",
-                                               "$(this.promise_filename)");
-      "third" usebundle => default_check_diff("$(G.testfile).actual3qaz",
-                                              "$(G.testfile).expected3qaz",
-                                              "$(this.promise_filename)");
+    "first" usebundle => default_check_diff("$(G.testfile).actual1qaz",
+                                            "$(G.testfile).expected1qaz",
+                                            "$(this.promise_filename)");
+    "second" usebundle => default_check_diff("$(G.testfile).actual2qaz",
+                                            "$(G.testfile).expected2qaz",
+                                            "$(this.promise_filename)");
+    "third" usebundle => default_check_diff("$(G.testfile).actual3qaz",
+                                            "$(G.testfile).expected3qaz",
+                                            "$(this.promise_filename)");
 }

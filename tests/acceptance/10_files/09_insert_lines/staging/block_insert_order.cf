@@ -7,68 +7,68 @@
 
 body common control
 {
-      inputs => { "../../default.cf.sub" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
 
 bundle agent init
 {
-  files:
-      "$(G.testfile).expected"
-      create => "true",
-      edit_line => init_insert,
-      edit_defaults => init_empty;
+files:
+  "$(G.testfile).expected"
+  create => "true",
+  edit_line => init_insert,
+  edit_defaults => init_empty;
 }
 
 bundle edit_line init_insert
 {
-  insert_lines:
-      "line1
+insert_lines:
+  "line1
 line2";
 }
 
 body edit_defaults init_empty
 {
-      empty_file_before_editing => "true";
+    empty_file_before_editing => "true";
 }
 
 #######################################################
 
 bundle agent test
 {
-  files:
-      "$(G.testfile).actual"
-      create => "true",
-      edit_line => test_insert;
+files:
+  "$(G.testfile).actual"
+  create => "true",
+  edit_line => test_insert;
 }
 
 bundle edit_line test_insert
 {
-  delete_lines:
-      ".*";
+delete_lines:
+  ".*";
 
-  insert_lines:
-      "line1
+insert_lines:
+  "line1
 line2"
-      insert_type => "preserve_block",
-      location => start;
+  insert_type => "preserve_block",
+  location => start;
 }
 
 body location start
 {
-      before_after => "before";
+before_after => "before";
 }
 
 #######################################################
 
 bundle agent check
 {
-  methods:
-      "any" usebundle => default_check_diff("$(G.testfile).actual",
-                                            "$(G.testfile).expected",
-                                            "$(this.promise_filename)");
+methods:
+        "any" usebundle => default_check_diff("$(G.testfile).actual",
+                                              "$(G.testfile).expected",
+                                              "$(this.promise_filename)");
 }
 

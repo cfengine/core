@@ -7,43 +7,43 @@
 
 body common control
 {
-      inputs => { "../../default.cf.sub" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
 
 bundle agent init
 {
-  vars:
-      "actual" string => "[quux]
+vars:
+  "actual" string => "[quux]
 bar
 ";
 
-      "expected" string => "[quux]
+  "expected" string => "[quux]
 bar
 foo
 ";
 
-      "files" slist => { "actual", "expected" };
+  "files" slist => { "actual", "expected" };
 
-  files:
-      "$(G.testfile).$(files)"
-      create => "true",
-      edit_line => init_insert("$(init.$(files))"),
-      edit_defaults => init_empty;
+files:
+  "$(G.testfile).$(files)"
+    create => "true",
+    edit_line => init_insert("$(init.$(files))"),
+    edit_defaults => init_empty;
 }
 
 bundle edit_line init_insert(str)
 {
-  insert_lines:
-      "$(str)";
+insert_lines:
+  "$(str)";
 }
 
 body edit_defaults init_empty
 {
-      empty_file_before_editing => "true";
+  empty_file_before_editing => "true";
 }
 
 #######################################################
@@ -51,37 +51,37 @@ body edit_defaults init_empty
 bundle agent test
 {
   files:
-      "$(G.testfile).actual"
+    "$(G.testfile).actual"
       edit_line => example_edit_line;
 }
 
 bundle edit_line example_edit_line
 {
   insert_lines:
-      "foo"
+    "foo"
       select_region => example_select,
       location => example_location;
 }
 
 body select_region example_select
 {
-      select_start => "\[quux\]";
-      select_end => "\[.*\]";
+  select_start => "\[quux\]";
+  select_end => "\[.*\]";
 }
 
 body location example_location
 {
-      select_line_matching => "bar";
-      before_after => "after";
+  select_line_matching => "bar";
+  before_after => "after";
 }
 
 #######################################################
 
 bundle agent check
 {
-  methods:
-      "any" usebundle => default_check_diff("$(G.testfile).actual",
-                                            "$(G.testfile).expected",
-                                            "$(this.promise_filename)");
+methods:
+        "any" usebundle => default_check_diff("$(G.testfile).actual",
+                                              "$(G.testfile).expected",
+                                              "$(this.promise_filename)");
 }
 

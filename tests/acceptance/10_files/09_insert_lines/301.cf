@@ -6,61 +6,61 @@
 
 body common control
 {
-      inputs => { "../../default.cf.sub" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
 
 bundle agent init
 {
-  vars:
-      "expected" string => "*foobar*";
+vars:
+  "expected" string => "*foobar*";
 
-  files:
-      "$(G.testfile).expected"
-      create => "true",
-      edit_line => init_insert("$(init.expected)"),
-      edit_defaults => init_empty;
+files:
+  "$(G.testfile).expected"
+    create => "true",
+    edit_line => init_insert("$(init.expected)"),
+    edit_defaults => init_empty;
 }
 
 bundle edit_line init_insert(str)
 {
-  insert_lines:
-      "$(str)";
+insert_lines:
+  "$(str)";
 }
 
 body edit_defaults init_empty
 {
-      empty_file_before_editing => "true";
+  empty_file_before_editing => "true";
 }
 
 #######################################################
 
 bundle agent test
 {
-  files:
+files:
 
-      "$(G.testfile).actual"
-      edit_line => set_value_rev,
-      create => "true";
+  "$(G.testfile).actual"
+    edit_line => set_value_rev,
+    create => "true";
 }
 
 bundle edit_line set_value_rev
 {
-  insert_lines:
-      "*foobar*"
-      whitespace_policy => { "ignore_embedded" };
+insert_lines:
+  "*foobar*"
+    whitespace_policy => { "ignore_embedded" };
 }
 
 #######################################################
 
 bundle agent check
 {
-  methods:
-      "any" usebundle => default_check_diff("$(G.testfile).actual",
-                                            "$(G.testfile).expected",
-                                            "$(this.promise_filename)");
+methods:
+        "any" usebundle => default_check_diff("$(G.testfile).actual",
+                                              "$(G.testfile).expected",
+                                              "$(this.promise_filename)");
 }
 

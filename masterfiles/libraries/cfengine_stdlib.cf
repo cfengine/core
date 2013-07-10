@@ -3458,33 +3458,33 @@ body environment_resources kvm(name, arch, cpu_count, mem_kb, disk_file)
 {
       env_spec =>
       "<domain type='kvm'>
-<name>$(name)</name>
-<memory>$(mem_kb)</memory>
-<currentMemory>$(mem_kb)</currentMemory>
-<vcpu>$(cpu_count)</vcpu>
-<os>
-<type arch='$(arch)'>hvm</type>
-</os>
-<features>
-<acpi/>
-<apic/>
-<pae/>
-</features>
-<on_poweroff>destroy</on_poweroff>
-<on_reboot>restart</on_reboot>
-<on_crash>restart</on_crash>
-<devices>
-<emulator>/usr/bin/kvm</emulator>
-<disk type='file' device='disk'>
-<source file='$(disk_file)'/>
-<target dev='vda' bus='virtio'/>
-</disk>
-<interface type='network'>
-<source network='default'/>
-</interface>
-<input type='mouse' bus='ps2'/>
-<graphics type='vnc' port='-1' autoport='yes'/>
-</devices>
+  <name>$(name)</name>
+  <memory>$(mem_kb)</memory>
+  <currentMemory>$(mem_kb)</currentMemory>
+  <vcpu>$(cpu_count)</vcpu>
+  <os>
+    <type arch='$(arch)'>hvm</type>
+  </os>
+  <features>
+    <acpi/>
+    <apic/>
+    <pae/>
+  </features>
+  <on_poweroff>destroy</on_poweroff>
+  <on_reboot>restart</on_reboot>
+  <on_crash>restart</on_crash>
+  <devices>
+    <emulator>/usr/bin/kvm</emulator>
+    <disk type='file' device='disk'>
+      <source file='$(disk_file)'/>
+      <target dev='vda' bus='virtio'/>
+    </disk>
+    <interface type='network'>
+      <source network='default'/>
+    </interface>
+    <input type='mouse' bus='ps2'/>
+    <graphics type='vnc' port='-1' autoport='yes'/>
+  </devices>
 </domain>";
 }
 

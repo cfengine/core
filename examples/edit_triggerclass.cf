@@ -44,11 +44,11 @@ bundle agent insert
   vars:
 
       "v" string => "
-One potato
-Two potato
-Three potahto
-Four
-";
+                One potato
+                Two potato
+                Three potahto
+                Four
+                ";
       
   files:
 

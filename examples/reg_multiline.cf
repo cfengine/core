@@ -11,9 +11,9 @@ bundle agent example
 {
   vars:
       "data" string => "Something boring is
-written 
-up here. This is the interesting
-part: KWYDK (know what you don't know)";
+                    written 
+                    up here. This is the interesting
+                    part: KWYDK (know what you don't know)";
 
   classes:
 

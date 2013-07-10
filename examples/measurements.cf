@@ -50,9 +50,9 @@ bundle agent report
 {
   reports:
       "
-Free memory read at $(mon.av_free_memory_watch)
-cf_monitord read $(mon.value_monitor_self_watch)   
-";
+   Free memory read at $(mon.av_free_memory_watch)
+   cf_monitord read $(mon.value_monitor_self_watch)   
+   ";
 }
 
 #######################################################

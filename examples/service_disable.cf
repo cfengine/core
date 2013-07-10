@@ -21,7 +21,7 @@
 body common control
 
 {
-bundlesequence  => { "winservice" };
+      bundlesequence  => { "winservice" };
 }
 
 ###########################################################
@@ -29,16 +29,16 @@ bundlesequence  => { "winservice" };
 bundle agent winservice
 
 {
-vars:
+  vars:
 
-  "bad_services" slist => { "Alerter",  "ClipSrv" };
+      "bad_services" slist => { "Alerter",  "ClipSrv" };
 
-services:
+  services:
 
- windows::
+    windows::
 
-  "$(bad_services)"
+      "$(bad_services)"
 
-       service_policy => "disable",
-       comment => "Disable services that create security issues";
+      service_policy => "disable",
+      comment => "Disable services that create security issues";
 }

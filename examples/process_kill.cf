@@ -22,17 +22,17 @@
 
 body common control
 {
-bundlesequence => { "kill_process" };
+      bundlesequence => { "kill_process" };
 }
 
 
 
 bundle agent kill_process
 {
-processes:
+  processes:
 
- "sleep"
+      "sleep"
 
-   signals => { "term", "kill" };
+      signals => { "term", "kill" };
 
 }

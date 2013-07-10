@@ -29,7 +29,7 @@
 body common control
 
 {
-bundlesequence  => { "example" };
+      bundlesequence  => { "example" };
 }
 
 ########################################################
@@ -37,27 +37,27 @@ bundlesequence  => { "example" };
 bundle agent example
 
 {
-files:
+  files:
 
-  "/var/cfengine/inputs/.*"
+      "/var/cfengine/inputs/.*"
 
-       edit_line => DeleteLinesMatching(".*cfenvd.*"),
-       action => WarnOnly;
+      edit_line => DeleteLinesMatching(".*cfenvd.*"),
+      action => WarnOnly;
 }
 
 ########################################################
 
 bundle edit_line DeleteLinesMatching(regex)
-  {
+{
   delete_lines:
 
-    "$(regex)" action => WarnOnly;
+      "$(regex)" action => WarnOnly;
 
-  }
+}
 
 ########################################################
 
 body action WarnOnly
 {
-action_policy => "warn";
+      action_policy => "warn";
 }

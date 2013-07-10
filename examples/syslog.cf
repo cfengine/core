@@ -23,25 +23,25 @@
 
 body common control
 {
-bundlesequence => { "one" };
+      bundlesequence => { "one" };
 }
 
 
 
 bundle agent one
 {
-files:
+  files:
 
-  "/tmp/xyz"
+      "/tmp/xyz"
 
-       create => "true",
-       action => log;
+      create => "true",
+      action => log;
 
 }
 
 body action log
 {
-log_level => "inform";
+      log_level => "inform";
 }
 
 

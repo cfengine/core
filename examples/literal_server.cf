@@ -26,22 +26,22 @@
 #
 ########################################################
 
- #
- # run this as follows:
- #
- # cf-serverd -f runtest_1.cf [-d2]
- # cf-agent   -f runtest_2.cf
- #
- # Notice that the same file configures all parts of cfengine
+#
+# run this as follows:
+#
+# cf-serverd -f runtest_1.cf [-d2]
+# cf-agent   -f runtest_2.cf
+#
+# Notice that the same file configures all parts of cfengine
 
 ########################################################
 
 body common control
 
 {
-bundlesequence  => { "example"  };
+      bundlesequence  => { "example"  };
 
-version => "1.2.3";
+      version => "1.2.3";
 }
 
 ########################################################
@@ -49,21 +49,21 @@ version => "1.2.3";
 bundle agent example
 
 {
-vars:
+  vars:
 
- "encrypt" string => "yes";
+      "encrypt" string => "yes";
 
- "x" string => "scalar2";
- "remote1" string => remotescalar("test_scalar1","127.0.0.1","$(encrypt)");
- "remote2" string => remotescalar("test_scalar2","127.0.0.1","$(encrypt)");
- "remote3" string => remotescalar("test_scalar3","127.0.0.1","$(encrypt)");
- "remote_error" string => remotescalar("test_$(x)","127.0.0.2","$(encrypt)");
+      "x" string => "scalar2";
+      "remote1" string => remotescalar("test_scalar1","127.0.0.1","$(encrypt)");
+      "remote2" string => remotescalar("test_scalar2","127.0.0.1","$(encrypt)");
+      "remote3" string => remotescalar("test_scalar3","127.0.0.1","$(encrypt)");
+      "remote_error" string => remotescalar("test_$(x)","127.0.0.2","$(encrypt)");
 
-reports:
+  reports:
 
-    "Receive value $(remote1), $(remote2), $(remote3)";
+      "Receive value $(remote1), $(remote2), $(remote3)";
 
-    "And an error gives: $(remote_error)";
+      "And an error gives: $(remote_error)";
 }
 
 #########################################################
@@ -73,10 +73,10 @@ reports:
 body server control 
 
 {
-allowconnects         => { "127.0.0.1" , "::1" };
-allowallconnects      => { "127.0.0.1" , "::1" };
-trustkeysfrom         => { "127.0.0.1" , "::1" };
-allowusers            => { "mark" };
+      allowconnects         => { "127.0.0.1" , "::1" };
+      allowallconnects      => { "127.0.0.1" , "::1" };
+      trustkeysfrom         => { "127.0.0.1" , "::1" };
+      allowusers            => { "mark" };
 }
 
 #########################################################
@@ -84,26 +84,26 @@ allowusers            => { "mark" };
 bundle server access_rules()
 
 {
-vars:
+  vars:
 
-  "localvar" string => "literal string";
+      "localvar" string => "literal string";
 
-access:
+  access:
 
-  "Embed a $(localvar) for remote access"
- 
-        handle  => "test_scalar1",
-  resource_type => "literal",
-        admit   => { "127.0.0.1" };
+      "Embed a $(localvar) for remote access"
+      
+      handle  => "test_scalar1",
+      resource_type => "literal",
+      admit   => { "127.0.0.1" };
 
 
-  "Mary had a little lamb whose fleece was white as snow and everywhere that Mary went she wore it lovingly"
- 
-        handle  => "test_scalar2",
-  resource_type => "literal",
-        admit   => { "127.0.0.1" };
+      "Mary had a little lamb whose fleece was white as snow and everywhere that Mary went she wore it lovingly"
+      
+      handle  => "test_scalar2",
+      resource_type => "literal",
+      admit   => { "127.0.0.1" };
 
-  "/etc/passwd"
-        handle  => "test_scalar3",
-        admit   => { "127.0.0.1" };
+      "/etc/passwd"
+      handle  => "test_scalar3",
+      admit   => { "127.0.0.1" };
 }

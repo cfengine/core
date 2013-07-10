@@ -11,14 +11,14 @@
 
 body common control
 {
-bundlesequence => { "weak_dependency_symphony" };
-inputs => { "libraries/cfengine_stdlib.cf" };
+      bundlesequence => { "weak_dependency_symphony" };
+      inputs => { "libraries/cfengine_stdlib.cf" };
 }
 
 body server control
 {
-allowconnects         => { "127.0.0.1" , "::1", @(def.acl) };
-allowallconnects      => { "127.0.0.1" , "::1", @(def.acl) };
+      allowconnects         => { "127.0.0.1" , "::1", @(def.acl) };
+      allowallconnects      => { "127.0.0.1" , "::1", @(def.acl) };
 }
 
 
@@ -26,78 +26,78 @@ allowallconnects      => { "127.0.0.1" , "::1", @(def.acl) };
 
 bundle agent weak_dependency_symphony
 {
-methods:
+  methods:
 
-   # We have to seed the beginning by creating the tower
-   # /tmp/tower_localhost
+      # We have to seed the beginning by creating the tower
+      # /tmp/tower_localhost
 
-   host1::
-    "tower"  usebundle => tier1,
-               classes => publish_ok("ok_O");
+    host1::
+      "tower"  usebundle => tier1,
+      classes => publish_ok("ok_O");
 
-   host2::
-    "tower"  usebundle => tier2,
-               classes => publish_ok("ok_1");
+    host2::
+      "tower"  usebundle => tier2,
+      classes => publish_ok("ok_1");
 
-   host3::
-    "tower"  usebundle => tier3,
-               classes => publish_ok("ok_2");
+    host3::
+      "tower"  usebundle => tier3,
+      classes => publish_ok("ok_2");
 
-   host4::
-    "tower"  usebundle => tier4,
-               classes => publish_ok("ok_f");
+    host4::
+      "tower"  usebundle => tier4,
+      classes => publish_ok("ok_f");
 
-classes:
+  classes:
 
- ok_O:: # Wait for the methods, report on host1 only
+    ok_O:: # Wait for the methods, report on host1 only
 
-  "check1" expression => remoteclassesmatching("ok.*","host2","yes","a");
-  "check2" expression => remoteclassesmatching("ok.*","host3","yes","a");
-  "check3" expression => remoteclassesmatching("ok.*","host4","yes","a");
+      "check1" expression => remoteclassesmatching("ok.*","host2","yes","a");
+      "check2" expression => remoteclassesmatching("ok.*","host3","yes","a");
+      "check3" expression => remoteclassesmatching("ok.*","host4","yes","a");
 
-reports:
+  reports:
 
-  ok_O&a_ok_1&a_ok_2&a_ok_f::
+    ok_O&a_ok_1&a_ok_2&a_ok_f::
 
-   "The Tower is standing";
+      "The Tower is standing";
 
-  !(ok_O&a_ok_1&a_ok_2&a_ok_f)::
+    !(ok_O&a_ok_1&a_ok_2&a_ok_f)::
 
-   "The Tower is down";
+      "The Tower is down";
 }
 
 ############################################################
 
 bundle agent tier1
 {
-files:
+  files:
 
-  "/tmp/something_to_do_1"
+      "/tmp/something_to_do_1"
       create => "true";
 }
 
 bundle agent tier2
 {
-files:
+  files:
 
-  "/tmp/something_to_do_2"
+      "/tmp/something_to_do_2"
       create => "true";
 }
 
 bundle agent tier3
 {
-files:
+  files:
 
-  "/tmp/something_to_do_3"
+      "/tmp/something_to_do_3"
       create => "true";
 
 }
 
 bundle agent tier4
 {
-files:
+  files:
 
-  "/tmp/something_to_do_4"
+      "/tmp/something_to_do_4"
       create => "true";
 }
 
@@ -106,11 +106,11 @@ files:
 
 bundle server access_rules()
 {
-access:
+  access:
 
-  "ok.*"
-    resource_type => "context",
-    admit => { "127.0.0.1" };
+      "ok.*"
+      resource_type => "context",
+      admit => { "127.0.0.1" };
 
 }
 
@@ -118,9 +118,9 @@ access:
 
 body classes publish_ok(x)
 {
-promise_repaired => { "$(x)" };
-promise_kept => { "$(x)" };
-cancel_notkept => { "$(x)" };
-persist_time => "5";
+      promise_repaired => { "$(x)" };
+      promise_kept => { "$(x)" };
+      cancel_notkept => { "$(x)" };
+      persist_time => "5";
 }
 

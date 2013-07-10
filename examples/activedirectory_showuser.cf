@@ -25,17 +25,17 @@
 
 bundle agent ldap
 {
-classes:
-   "gotdata" expression => ldaparray(
-                                    "myarray",
-                                    "ldap://cf-win2003",
-                                    "CN=Test Pilot,CN=Users,DC=domain,DC=cf-win2003",
-                                    "(name=*)",
-                                    "subtree",
-                                    "none");
-reports:
-gotdata::
-  "Got user data";
-!gotdata::
-  "Did not get user data";
+  classes:
+      "gotdata" expression => ldaparray(
+					 "myarray",
+					 "ldap://cf-win2003",
+					 "CN=Test Pilot,CN=Users,DC=domain,DC=cf-win2003",
+					 "(name=*)",
+					 "subtree",
+					 "none");
+  reports:
+    gotdata::
+      "Got user data";
+    !gotdata::
+      "Did not get user data";
 }

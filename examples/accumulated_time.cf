@@ -29,7 +29,7 @@
 body common control
 
 {
-bundlesequence  => { "example"  };
+      bundlesequence  => { "example"  };
 }
 
 ########################################################
@@ -37,18 +37,18 @@ bundlesequence  => { "example"  };
 bundle agent example
 
 {
-processes:
+  processes:
 
- ".*"
+      ".*"
 
-    process_count   => anyprocs,
-    process_select  => proc_finder;
+      process_count   => anyprocs,
+      process_select  => proc_finder;
 
-reports:
+  reports:
 
- any_procs::
+    any_procs::
 
-   "Found processes in range";
+      "Found processes in range";
 }
 
 ########################################################
@@ -56,8 +56,8 @@ reports:
 body process_select proc_finder
 
 {
-ttime_range => irange(accumulated(0,0,0,0,2,0),accumulated(0,0,0,0,20,0));
-process_result => "ttime";
+      ttime_range => irange(accumulated(0,0,0,0,2,0),accumulated(0,0,0,0,20,0));
+      process_result => "ttime";
 }
 
 ########################################################
@@ -65,7 +65,7 @@ process_result => "ttime";
 body process_count anyprocs
 
 {
-match_range => "0,0";
-out_of_range_define => { "any_procs" };
+      match_range => "0,0";
+      out_of_range_define => { "any_procs" };
 }
 

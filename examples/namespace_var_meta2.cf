@@ -1,25 +1,25 @@
 
 body file control
 {
-namespace => "fred";
+      namespace => "fred";
 }
 
 
 bundle agent example
 
 {     
-vars:
+  vars:
 
-  "bundle_version" string => "4.5.6";
+      "bundle_version" string => "4.5.6";
 
-meta:
+  meta:
 
-  "bundle_version" string => "1.2.3";
-  "works_with_cfengine" string => "3.4.0";
+      "bundle_version" string => "1.2.3";
+      "works_with_cfengine" string => "3.4.0";
 
-reports:
-  "Not a local variable: $(bundle_version)";
-  "Meta data (variable): $(example_meta.bundle_version)";
+  reports:
+      "Not a local variable: $(bundle_version)";
+      "Meta data (variable): $(example_meta.bundle_version)";
 
 }
 

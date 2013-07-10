@@ -24,7 +24,7 @@
 body common control
 
 {
-bundlesequence  => { "example" };
+      bundlesequence  => { "example" };
 }
 
 ###########################################################
@@ -32,15 +32,15 @@ bundlesequence  => { "example" };
 bundle agent example
 
 {     
-classes:
+  classes:
 
-  "compute_nodes" expression => hostrange("cpu-","01-32");
+      "compute_nodes" expression => hostrange("cpu-","01-32");
 
-reports:
+  reports:
 
-  compute_nodes::
+    compute_nodes::
 
-    "No computer is a cluster";
+      "No computer is a cluster";
 
 }
 

@@ -29,7 +29,7 @@
 body common control
 
 {
-bundlesequence  => { "example"  };
+      bundlesequence  => { "example"  };
 }
 
 ########################################################
@@ -37,12 +37,12 @@ bundlesequence  => { "example"  };
 bundle agent example
 
 {
-processes:
+  processes:
 
- ".*"
+      ".*"
 
-    process_select  => proc_finder("a.*"),
-    process_count   => up("cfservd");
+      process_select  => proc_finder("a.*"),
+      process_count   => up("cfservd");
 }
 
 ########################################################
@@ -50,8 +50,8 @@ processes:
 body process_count up(s)
 
 {
-match_range => "1,10"; # or irange("1","10");
-out_of_range_define => { "$(s)_out_of_control" };
+      match_range => "1,10"; # or irange("1","10");
+      out_of_range_define => { "$(s)_out_of_control" };
 }
 
 ########################################################
@@ -59,8 +59,8 @@ out_of_range_define => { "$(s)_out_of_control" };
 body process_select proc_finder(p)
 
 {
-stime_range => irange(ago("0","0","0","2","0","0"),now);
-process_result => "stime";
+      stime_range => irange(ago("0","0","0","2","0","0"),now);
+      process_result => "stime";
 }
 
 

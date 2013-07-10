@@ -29,16 +29,16 @@
 body common control
 
 {
-bundlesequence  => { "example" };   
+      bundlesequence  => { "example" };   
 }
 
 #######################################################
 
 bundle common g
 {
-vars:
+  vars:
 
-  "otherlist" slist => { "x", "y", "z" };
+      "otherlist" slist => { "x", "y", "z" };
 }
 
 #######################################################
@@ -46,14 +46,14 @@ vars:
 bundle agent example
 
 {
-vars:
+  vars:
 
-  "oldlist" slist => { "a", "b", "c" };
+      "oldlist" slist => { "a", "b", "c" };
 
-  "newlist1" slist => maplist("Element ($(this))","@(g.otherlist)");
-  "newlist2" slist => maplist("Element ($(this))",@(oldlist));
+      "newlist1" slist => maplist("Element ($(this))","@(g.otherlist)");
+      "newlist2" slist => maplist("Element ($(this))",@(oldlist));
 
-reports:
-    "Transform: $(newlist1)";
-    "Transform: $(newlist2)";
+  reports:
+      "Transform: $(newlist1)";
+      "Transform: $(newlist2)";
 }

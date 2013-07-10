@@ -32,10 +32,10 @@ body common control
 
 {
 
-# Reads default 
-#   /var/cfengine/inputs/promises.cf
-#   /var/cfengine/inputs/failsafe.cf
-bundlesequence => { "cfengine3", "cfengine2" };
+      # Reads default 
+      #   /var/cfengine/inputs/promises.cf
+      #   /var/cfengine/inputs/failsafe.cf
+      bundlesequence => { "cfengine3", "cfengine2" };
 }
 
 ###########################################
@@ -43,9 +43,9 @@ bundlesequence => { "cfengine3", "cfengine2" };
 bundle agent cfengine2
 
 {
-commands:
+  commands:
 
- "/var/cfengine/bin/cfagent";
+      "/var/cfengine/bin/cfagent";
 
 }
 
@@ -55,8 +55,8 @@ bundle agent cfengine3
 
 {
 
-# Stuff
-commands:
+      # Stuff
+  commands:
 
-"/var/cfengine/bin/cf-agent";
+      "/var/cfengine/bin/cf-agent";
 }

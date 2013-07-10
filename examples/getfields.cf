@@ -24,7 +24,7 @@
 body common control
 
 {
-bundlesequence  => { "example" };
+      bundlesequence  => { "example" };
 }
 
 ###########################################################
@@ -32,20 +32,20 @@ bundlesequence  => { "example" };
 bundle agent example
 
 {     
-vars:
+  vars:
 
-  "no" int => getfields("mark.*","/tmp/passwd",":","userdata");
+      "no" int => getfields("mark.*","/tmp/passwd",":","userdata");
 
-reports:
+  reports:
 
-    "Found $(no) lines matching";
+      "Found $(no) lines matching";
 
-    "Mark's handle = $(userdata[1])";
-    "Mark's passwd = ... forget it!";
-    "Mark's uid = $(userdata[3])";
-    "Mark's gid = $(userdata[4])";
-    "Mark's name = $(userdata[5])";
-    "Mark's homedir = $(userdata[6])";
+      "Mark's handle = $(userdata[1])";
+      "Mark's passwd = ... forget it!";
+      "Mark's uid = $(userdata[3])";
+      "Mark's gid = $(userdata[4])";
+      "Mark's name = $(userdata[5])";
+      "Mark's homedir = $(userdata[6])";
 
 }
 

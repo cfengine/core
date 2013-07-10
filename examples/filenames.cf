@@ -27,21 +27,21 @@
 body common control
 
 {
-bundlesequence => { "example" };
+      bundlesequence => { "example" };
 }
 
 bundle agent example
 {
-files:
+  files:
 
 
-  "/etc/passwd"
+      "/etc/passwd"
 
-create => "true";
+      create => "true";
 
-  "C:\etc\passwd"
-create => "true";
+      "C:\etc\passwd"
+      create => "true";
 
-  "etc/passwd"
-create => "true";
+      "etc/passwd"
+      create => "true";
 }

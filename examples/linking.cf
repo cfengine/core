@@ -35,8 +35,8 @@
 body common control
 
 {
-version => "1.2.3";
-bundlesequence  => { "example"  };
+      version => "1.2.3";
+      bundlesequence  => { "example"  };
 }
 
 ########################################################
@@ -44,22 +44,22 @@ bundlesequence  => { "example"  };
 bundle agent example
 
 {
-files:
+  files:
 
-  # Make a copy of the password file
+      # Make a copy of the password file
 
-  "/home/mark/tmp/passwd"
+      "/home/mark/tmp/passwd"
 
-       link_from     => linkdetails("/etc/passwd"),
-       move_obstructions => "true";
-
-
-  "/home/mark/tmp/linktest"
-
-       link_from     => linkchildren("/usr/local/sbin");
+      link_from     => linkdetails("/etc/passwd"),
+      move_obstructions => "true";
 
 
-#child links
+      "/home/mark/tmp/linktest"
+
+      link_from     => linkchildren("/usr/local/sbin");
+
+
+      #child links
 }
 
 #########################################################
@@ -67,9 +67,9 @@ files:
 body link_from linkdetails(tofile)
 
 {
-source        => "$(tofile)";
-link_type     => "symlink";
-when_no_source  => "force";      # kill
+      source        => "$(tofile)";
+      link_type     => "symlink";
+      when_no_source  => "force";      # kill
 }
 
 #########################################################
@@ -77,10 +77,10 @@ when_no_source  => "force";      # kill
 body link_from linkchildren(tofile)
 
 {
-source        => "$(tofile)";
-link_type     => "symlink";
-when_no_source  => "force";      # kill
-link_children => "true";
-when_linking_children => "if_no_such_file"; # "override_file";
+      source        => "$(tofile)";
+      link_type     => "symlink";
+      when_no_source  => "force";      # kill
+      link_children => "true";
+      when_linking_children => "if_no_such_file"; # "override_file";
 }
 

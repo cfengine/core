@@ -23,25 +23,25 @@
 
 bundle common g
 {
-classes:
+  classes:
 
-  "softclass" expression => "any";
+      "softclass" expression => "any";
 
-vars:
+  vars:
 
-   "bundle" slist => { "bundle1", "bundle2", @(g.extra) };
+      "bundle" slist => { "bundle1", "bundle2", @(g.extra) };
 
-  any::
+    any::
 
-   # default extra
+      # default extra
 
-   "extra" slist => { "bundle3" },
-          policy => "overridable";
+      "extra" slist => { "bundle3" },
+      policy => "overridable";
 
-  softclass::
+    softclass::
 
-   "extra" slist => { "bundle3", "bundle4" },
-          policy => "overridable";
+      "extra" slist => { "bundle3", "bundle4" },
+      policy => "overridable";
 
 }
 
@@ -49,43 +49,43 @@ vars:
 
 body common control
 {
-bundlesequence  => { @(g.bundle) };
+      bundlesequence  => { @(g.bundle) };
 }
 
 ##############################################################
 
 bundle agent bundle1
 {
-vars:
+  vars:
 
-  "var1" string => "anything";
-  "bundle"  slist => { @(g.bundle) };
+      "var1" string => "anything";
+      "bundle"  slist => { @(g.bundle) };
 
-reports:
-    "$(bundle)";
+  reports:
+      "$(bundle)";
 }
 
 bundle agent bundle2
 {
-classes:
+  classes:
 
-  "ok" expression => isvariable("bundle1.var1");
+      "ok" expression => isvariable("bundle1.var1");
 
-reports:
+  reports:
 
-  ok::
+    ok::
 
-    "Success";
+      "Success";
 }
 
 bundle agent bundle3
 {
-reports:
-    "Success extra...";
+  reports:
+      "Success extra...";
 }
 
 bundle agent bundle4
 {
-reports:
-    "Success extra more...";
+  reports:
+      "Success extra more...";
 }

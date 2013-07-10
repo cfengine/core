@@ -41,7 +41,7 @@
 body common control
 
 {
-bundlesequence  => { "example" };
+      bundlesequence  => { "example" };
 }
 
 ########################################################
@@ -49,21 +49,21 @@ bundlesequence  => { "example" };
 bundle agent example
 
 {
-files:
+  files:
 
-  "/tmp/passwd_excerpt"
+      "/tmp/passwd_excerpt"
 
-       create    => "true",
-       edit_line => MarkNRoot;
+      create    => "true",
+      edit_line => MarkNRoot;
 }
 
 ########################################################
 
 bundle edit_line MarkNRoot
-  {
+{
   delete_lines:
 
-       "mark.*|root.*" not_matching => "true";
+      "mark.*|root.*" not_matching => "true";
 
-  }
+}
 

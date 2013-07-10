@@ -27,8 +27,8 @@
 body common control
 
 {
-version => "1.2.3";
-bundlesequence  => { "example" };
+      version => "1.2.3";
+      bundlesequence  => { "example" };
 }
 
 ########################################################
@@ -36,11 +36,11 @@ bundlesequence  => { "example" };
 bundle agent example
 
 {
-files:
+  files:
 
-  "/tmp/testfile"
+      "/tmp/testfile"
 
-   edit_line => test;
+      edit_line => test;
 
 }
 
@@ -48,15 +48,15 @@ files:
 
 bundle edit_line test
 {
-classes:
+  classes:
 
-    "ok" expression => regline(".*mark.*","$(edit.filename)");
+      "ok" expression => regline(".*mark.*","$(edit.filename)");
 
-reports:
+  reports:
 
- ok::
+    ok::
 
-   "File matched $(edit.filename)";
+      "File matched $(edit.filename)";
 
 }
 

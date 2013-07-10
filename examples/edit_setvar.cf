@@ -29,7 +29,7 @@
 body common control
 
 {
-bundlesequence  => { "example" };   
+      bundlesequence  => { "example" };   
 }
 
 
@@ -38,16 +38,16 @@ bundlesequence  => { "example" };
 bundle agent example
 
 {
-vars:
+  vars:
 
-  "v[variable_1]" string => "value_1";
-  "v[variable_2]" string => "value_2";
+      "v[variable_1]" string => "value_1";
+      "v[variable_2]" string => "value_2";
 
-files:
+  files:
 
-  "/tmp/test_setvar"
+      "/tmp/test_setvar"
 
-     edit_line => setvars_v1("testsetvar.v");
+      edit_line => setvars_v1("testsetvar.v");
 
 }
 
@@ -58,17 +58,17 @@ files:
 bundle edit_line setvars_v1(contexted_array_name)
 
 {
-vars:
+  vars:
 
-  "parameter_name"   slist => getindices("$(contexted_array_name)");
+      "parameter_name"   slist => getindices("$(contexted_array_name)");
 
-delete_lines: 
+  delete_lines: 
 
-  "$(parameter_name).*";
+      "$(parameter_name).*";
 
-insert_lines:
+  insert_lines:
 
-  "$(parameter_name) = $($(contexted_array_name)[$(parameter_name)])";
+      "$(parameter_name) = $($(contexted_array_name)[$(parameter_name)])";
 
 }
 

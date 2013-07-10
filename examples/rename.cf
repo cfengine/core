@@ -23,20 +23,20 @@
 
 body common control
 {
-bundlesequence => {"test"};
+      bundlesequence => {"test"};
 }
 
 bundle agent example
 {
   files:
 
-    "/tmp/foo"
- 
-       rename => moveit;
+      "/tmp/foo"
+      
+      rename => moveit;
 
 }
 
 body rename moveit 
 {
-newname => "/tmp/foo_moved";
+      newname => "/tmp/foo_moved";
 }

@@ -4,24 +4,24 @@
 
 body common control
 {
-bundlesequence => { "example" };
+      bundlesequence => { "example" };
 }
 
 ########################################################
 
 bundle agent example
 {
-files:
-  "c:/test/.*.xml"
-  edit_line => add_information();
+  files:
+      "c:/test/.*.xml"
+      edit_line => add_information();
 }
 
 ########################################################
 
 bundle edit_line add_information()
 {
-insert_lines:
-  "a line",
-   comment => "adding line";
+  insert_lines:
+      "a line",
+      comment => "adding line";
 }
 

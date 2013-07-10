@@ -30,9 +30,9 @@
 body common control
 
 {
-any::
+    any::
 
-  bundlesequence  => { "insert" };   
+      bundlesequence  => { "insert" };   
 }
 
 
@@ -41,16 +41,16 @@ any::
 bundle agent insert
 
 {
-vars:
+  vars:
 
-  "v" string => "  One potato";
- 
-files:
+      "v" string => "  One potato";
+      
+  files:
 
-  "/tmp/test_insert"
+      "/tmp/test_insert"
 
-            create => "true",
-         edit_line => Insert("$(insert.v)");
+      create => "true",
+      edit_line => Insert("$(insert.v)");
 
 }
 
@@ -61,9 +61,9 @@ files:
 bundle edit_line Insert(name)
 
 {
-insert_lines:
+  insert_lines:
 
-  "  $(name)"
+      "  $(name)"
 
       whitespace_policy => { "ignore_leading", "ignore_embedded" };
 
@@ -74,5 +74,5 @@ insert_lines:
 body edit_defaults empty
 
 {
-empty_file_before_editing => "true";
+      empty_file_before_editing => "true";
 }

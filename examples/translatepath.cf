@@ -1,21 +1,21 @@
 
 body common control
 {
-bundlesequence => { "example" };
+      bundlesequence => { "example" };
 }
 
 ##############################
 
 bundle agent example
 {
-vars:
-  "inputs_dir" string => translatepath("$(sys.workdir)/inputs");
+  vars:
+      "inputs_dir" string => translatepath("$(sys.workdir)/inputs");
 
-reports:
+  reports:
 
-  windows::
-    "The path has backslashes: $(inputs_dir)";
+    windows::
+      "The path has backslashes: $(inputs_dir)";
 
-  !windows::
-    "The path has slashes: $(inputs_dir)";
+    !windows::
+      "The path has slashes: $(inputs_dir)";
 }

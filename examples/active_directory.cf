@@ -30,44 +30,44 @@
 
 bundle agent active_directory
 {
-vars:
-# NOTE: Edit this to your domain, e.g. "corp", may also need more DC's after it
-  "domain_name" string => "cftesting";
-  "user_name"    string => "Guest";
+  vars:
+      # NOTE: Edit this to your domain, e.g. "corp", may also need more DC's after it
+      "domain_name" string => "cftesting";
+      "user_name"    string => "Guest";
 
-  
-# NOTE: We can also extract data from remote Domain Controllers
+      
+      # NOTE: We can also extract data from remote Domain Controllers
 
-dummy.DomainController::
-  "domain_controller"  string => "localhost";
+    dummy.DomainController::
+      "domain_controller"  string => "localhost";
 
-  "userlist"    slist => ldaplist(
-                                  "ldap://$(domain_controller)",
-                                  "CN=Users,DC=$(domain_name),DC=com",
-                                  "(objectClass=user)",
-                                  "sAMAccountName",
-                                  "subtree",
-                                  "none");
+      "userlist"    slist => ldaplist(
+                                       "ldap://$(domain_controller)",
+                                       "CN=Users,DC=$(domain_name),DC=com",
+                                       "(objectClass=user)",
+                                       "sAMAccountName",
+                                       "subtree",
+                                       "none");
 
-classes:
+  classes:
 
-dummy.DomainController::
+    dummy.DomainController::
 
-   "gotuser" expression => ldaparray(
-                                    "userinfo",
-                                    "ldap://$(domain_controller)",
-                                    "CN=$(user_name),CN=Users,DC=$(domain_name),DC=com",
-                                    "(name=*)",
-                                    "subtree",
-                                    "none");
+      "gotuser" expression => ldaparray(
+					 "userinfo",
+					 "ldap://$(domain_controller)",
+					 "CN=$(user_name),CN=Users,DC=$(domain_name),DC=com",
+					 "(name=*)",
+					 "subtree",
+					 "none");
 
-								  
-reports:
-dummy.DomainController::
-  "Username is \"$(userlist)\"";
+      
+  reports:
+    dummy.DomainController::
+      "Username is \"$(userlist)\"";
 
-dummy.gotuser::
-  "Got user data; $(userinfo[name]) has logged on $(userinfo[logonCount]) times";
+    dummy.gotuser::
+      "Got user data; $(userinfo[name]) has logged on $(userinfo[logonCount]) times";
 
 }
 

@@ -24,30 +24,30 @@
 body common control
 
 {
-bundlesequence  => { "example"  };
+      bundlesequence  => { "example"  };
 }
 
 ###########################################
 
 bundle agent example
 {
-vars:
+  vars:
 
- "userlist" slist => { "xyz", "mark", "jeang", "jonhenrik", "thomas", "eben" };
+      "userlist" slist => { "xyz", "mark", "jeang", "jonhenrik", "thomas", "eben" };
 
-classes:
+  classes:
 
-  "ok" expression => reglist("@(userlist)","j.*");
+      "ok" expression => reglist("@(userlist)","j.*");
 
-reports:
+  reports:
 
- ok::
+    ok::
 
-    "Found in list";
+      "Found in list";
 
- !ok::
+    !ok::
 
-    "Not found in list";
+      "Not found in list";
 
 }
 

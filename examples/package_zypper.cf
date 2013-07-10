@@ -27,30 +27,30 @@
 
 body common control
 {
-bundlesequence => { "packages" };
-inputs => { "libraries/cfengine_stdlib.cf" };
+      bundlesequence => { "packages" };
+      inputs => { "libraries/cfengine_stdlib.cf" };
 }
 
 #############################################
 
 bundle agent packages
 {
-vars:
+  vars:
 
- # Test the simplest case -- leave everything to the zypper smart manager
+      # Test the simplest case -- leave everything to the zypper smart manager
 
- "match_package" slist => { 
-                          "apache2", 
-                          "apache2-mod_php5",
-                          "apache2-prefork",
-                          "php5" 
-                          };
-packages:
+      "match_package" slist => { 
+				 "apache2", 
+				 "apache2-mod_php5",
+				 "apache2-prefork",
+				 "php5" 
+      };
+  packages:
 
-  "$(match_package)"
+      "$(match_package)"
 
-     package_policy => "add",
-     package_method => zypper;
+      package_policy => "add",
+      package_method => zypper;
 
 }
 

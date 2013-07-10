@@ -24,8 +24,8 @@
 body common control
 
 {
-version => "1.2.3";
-bundlesequence  => { "example"  };
+      version => "1.2.3";
+      bundlesequence  => { "example"  };
 }
 
 ########################################################
@@ -34,33 +34,33 @@ bundle agent example
 
 {
 
-files:
+  files:
 
-  "/tmp/testfile"
+      "/tmp/testfile"
 
-       create    => "true",
-       edit_line => myedit("second");
+      create    => "true",
+      edit_line => myedit("second");
 }
 
 ########################################################
 
 bundle edit_line myedit(parameter)
-  {
+{
   vars:
 
-   "edit_variable" string => "private edit variable is $(parameter)"; 
+      "edit_variable" string => "private edit variable is $(parameter)"; 
 
-  
+      
   replace_patterns:
 
-  # comment out lines after start
+      # comment out lines after start
 
-   "([^#].*)"
+      "([^#].*)"
 
       replace_with => comment,
-     select_region => ToEnd("Start.*");
+      select_region => ToEnd("Start.*");
 
-  }
+}
 
 ########################################
 # Bodies
@@ -69,8 +69,8 @@ bundle edit_line myedit(parameter)
 body replace_with comment
 
 {
-replace_value => "# $(match.1)"; # backreference 0
-occurrences => "all";  # first, last all
+      replace_value => "# $(match.1)"; # backreference 0
+      occurrences => "all";  # first, last all
 }
 
 ########################################################
@@ -78,5 +78,5 @@ occurrences => "all";  # first, last all
 body select_region ToEnd(x)
 
 {
-select_start => "$(x)";
+      select_start => "$(x)";
 }

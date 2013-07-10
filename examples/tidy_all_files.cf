@@ -29,9 +29,9 @@
 body common control
 
 {
- any::
+    any::
 
-  bundlesequence  => { "example" };   
+      bundlesequence  => { "example" };   
 }
 
 ############################################
@@ -39,18 +39,18 @@ body common control
 bundle agent example
 
 {
-files:
+  files:
 
-  "/home/mark/tmp/test_to" 
+      "/home/mark/tmp/test_to" 
 
-    delete => tidyfiles,
-    file_select => zero_age,
-    depth_search => recurse("inf");
+      delete => tidyfiles,
+      file_select => zero_age,
+      depth_search => recurse("inf");
 
-  # Now delete the parent.
+      # Now delete the parent.
 
-  "/home/mark/tmp/testcopy" 
-    delete => tidyfiles;
+      "/home/mark/tmp/testcopy" 
+      delete => tidyfiles;
 }
 
 #########################################################
@@ -58,8 +58,8 @@ files:
 body depth_search recurse(d)
 
 {
-#include_basedir => "true";
-depth => "$(d)";
+      #include_basedir => "true";
+      depth => "$(d)";
 }
 
 #########################################################
@@ -67,8 +67,8 @@ depth => "$(d)";
 body delete tidyfiles
 
 {
-dirlinks => "delete";
-rmdirs   => "true"; 
+      dirlinks => "delete";
+      rmdirs   => "true"; 
 }
 
 #########################################################
@@ -82,6 +82,6 @@ body file_select zero_age
 #
 
 {
-mtime     => irange(ago(1,0,0,0,0,0),now);  
-file_result => "mtime"; 
+      mtime     => irange(ago(1,0,0,0,0,0),now);  
+      file_result => "mtime"; 
 }

@@ -23,26 +23,26 @@
 
 body common control
 {
-bundlesequence => { "edit_passwd" };
+      bundlesequence => { "edit_passwd" };
 }
 
 bundle agent edit_passwd
 {
 
-vars:
+  vars:
 
- "userset" slist => { "user1", "user2", "user3" };
+      "userset" slist => { "user1", "user2", "user3" };
 
-files:
+  files:
 
-  "/etc/passwd"
-     edit_line => 
-        set_user_field("mark","7","/set/this/shell");
+      "/etc/passwd"
+      edit_line => 
+      set_user_field("mark","7","/set/this/shell");
 
 
-  "/etc/group"
-     edit_line => 
-        append_user_field("root","4","@(main.userset)");
+      "/etc/group"
+      edit_line => 
+      append_user_field("root","4","@(main.userset)");
 
 }
 

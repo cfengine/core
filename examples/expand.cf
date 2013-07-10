@@ -25,7 +25,7 @@
 body common control
 
 {
-bundlesequence  => { "example" };
+      bundlesequence  => { "example" };
 }
 
 ###########################################################
@@ -33,19 +33,19 @@ bundlesequence  => { "example" };
 bundle agent example
 
 {     
-vars:
+  vars:
 
-  "component" slist => { "cf-monitord", "cf-serverd", "cf-execd" };
+      "component" slist => { "cf-monitord", "cf-serverd", "cf-execd" };
 
-processes:
+  processes:
 
-  "$(component)" restart_class => canonify("start_$(component)");
+      "$(component)" restart_class => canonify("start_$(component)");
 
-commands:
+  commands:
 
-   "/bin/echo /var/cfengine/bin/$(component)"
+      "/bin/echo /var/cfengine/bin/$(component)"
 
-       ifvarclass => canonify("start_$(component)");
+      ifvarclass => canonify("start_$(component)");
 
 
 }

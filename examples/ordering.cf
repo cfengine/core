@@ -33,7 +33,7 @@
 body common control
 
 {
-bundlesequence => { "order" };
+      bundlesequence => { "order" };
 }
 
 ##################################################################
@@ -41,30 +41,30 @@ bundlesequence => { "order" };
 bundle agent order
 
 {
-vars:
+  vars:
 
- "list" slist => { "three", "four" };
+      "list" slist => { "three", "four" };
 
-commands:
+  commands:
 
- ok_later::
+    ok_later::
 
-   "/bin/echo five";
+      "/bin/echo five";
 
- otherthing::
+    otherthing::
 
-   "/bin/echo six";
+      "/bin/echo six";
 
- any::
+    any::
 
 
-  "/bin/echo one"     classes => d("ok_later","otherthing");
-  "/bin/echo two";
-  "/bin/echo $(list)";
+      "/bin/echo one"     classes => d("ok_later","otherthing");
+      "/bin/echo two";
+      "/bin/echo $(list)";
 
- preserved_class::
+    preserved_class::
 
-  "/bin/echo seven";
+      "/bin/echo seven";
 
 }
 
@@ -73,7 +73,7 @@ commands:
 body classes d(if,else)
 
 {
-promise_repaired => { "$(if)" };
-repair_failed => { "$(else)" };
-persist_time => "0";
+      promise_repaired => { "$(if)" };
+      repair_failed => { "$(else)" };
+      persist_time => "0";
 }

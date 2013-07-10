@@ -53,20 +53,20 @@
 
 body database_server local_mysql(username, password)
 {
-db_server_owner => "$(username)";
-db_server_password => "$(password)";
-db_server_host => "localhost";
-db_server_type => "mysql";
-db_server_connection_db => "mysql";
+      db_server_owner => "$(username)";
+      db_server_password => "$(password)";
+      db_server_host => "localhost";
+      db_server_type => "mysql";
+      db_server_connection_db => "mysql";
 }
 
 ##
 
 body database_server local_postgresql(username, password)
 {
-db_server_owner => "$(username)";
-db_server_password => "$(password)";
-db_server_host => "localhost";
-db_server_type => "postgres";
-db_server_connection_db => "postgres";
+      db_server_owner => "$(username)";
+      db_server_password => "$(password)";
+      db_server_host => "localhost";
+      db_server_type => "postgres";
+      db_server_connection_db => "postgres";
 }

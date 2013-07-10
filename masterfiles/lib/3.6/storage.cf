@@ -53,20 +53,20 @@
 
 body volume min_free_space(free)
 {
-check_foreign  => "false";
-freespace      => "$(free)";
-sensible_size  => "10000";
-sensible_count => "2";
+      check_foreign  => "false";
+      freespace      => "$(free)";
+      sensible_size  => "10000";
+      sensible_count => "2";
 }
 
 ##
 
 body mount nfs(server,source)
 {
-mount_type => "nfs";
-mount_source => "$(source)";
-mount_server => "$(server)";
-edit_fstab => "true";
+      mount_type => "nfs";
+      mount_source => "$(source)";
+      mount_server => "$(server)";
+      edit_fstab => "true";
 }
 
 
@@ -74,18 +74,18 @@ edit_fstab => "true";
 
 body mount nfs_p(server,source,perm)
 {
-mount_type => "nfs";
-mount_source => "$(source)";
-mount_server => "$(server)";
-mount_options => {"$(perm)"};
-edit_fstab => "true";
+      mount_type => "nfs";
+      mount_source => "$(source)";
+      mount_server => "$(server)";
+      mount_options => {"$(perm)"};
+      edit_fstab => "true";
 }
 
 ##
 
 body mount unmount
 {
-mount_type => "nfs";
-edit_fstab => "true";
-unmount => "true";
+      mount_type => "nfs";
+      edit_fstab => "true";
+      unmount => "true";
 }

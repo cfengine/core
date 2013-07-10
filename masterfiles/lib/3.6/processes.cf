@@ -53,16 +53,16 @@
 
 body process_select exclude_procs(x)
 {
-command => "$(x)";
-process_result => "!command";
+      command => "$(x)";
+      process_result => "!command";
 }
 
 ##
 
 body process_select days_older_than(d)
 {
-stime_range    => irange(ago(0,0,"$(d)",0,0,0),now);
-process_result => "stime";
+      stime_range    => irange(ago(0,0,"$(d)",0,0,0),now);
+      process_result => "stime";
 }
 
 ##
@@ -70,14 +70,14 @@ process_result => "stime";
 body process_count any_count(cl)
 
 {
-match_range => "0,0";
-out_of_range_define => { "$(cl)" };
+      match_range => "0,0";
+      out_of_range_define => { "$(cl)" };
 }
 
 ##
 
 body process_count check_range(name,lower,upper)
 {
-match_range => irange("$(lower)","$(upper)");
-out_of_range_define => { "$(name)_out_of_range" };
+      match_range => irange("$(lower)","$(upper)");
+      out_of_range_define => { "$(name)_out_of_range" };
 }

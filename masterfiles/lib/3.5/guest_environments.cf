@@ -53,8 +53,8 @@
 
 body environment_resources kvm(name, arch, cpu_count, mem_kb, disk_file)
 {
-env_spec =>
-"<domain type='kvm'>
+      env_spec =>
+      "<domain type='kvm'>
   <name>$(name)</name>
   <memory>$(mem_kb)</memory>
   <currentMemory>$(mem_kb)</currentMemory>

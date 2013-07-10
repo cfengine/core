@@ -2,34 +2,34 @@
 
 body common control
 {
-  inputs => { "../../default.cf.sub" };
-  bundlesequence  => { default("$(this.promise_filename)") };
-  version => "1.0";
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
 }
 
 bundle agent init
 {
-vars:
-  "dummy" string => "dummy";
+  vars:
+      "dummy" string => "dummy";
 }
 
 bundle agent test
 {
-files:
-  "$(G.testdir)/foo.txt"
-    create => "true",
-    action => log;
+  files:
+      "$(G.testdir)/foo.txt"
+      create => "true",
+      action => log;
 }
 
 body action log
 {
-  log_failed => "stdout";
-  log_string => "";
+      log_failed => "stdout";
+      log_string => "";
 }
 
 bundle agent check
 {
-reports:
-  cfengine_3::
-    "$(this.promise_filename) Pass";
+  reports:
+    cfengine_3::
+      "$(this.promise_filename) Pass";
 }

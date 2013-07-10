@@ -80,7 +80,7 @@ bundle agent test
                         "one", "two", "three",
                         "long string",
                         "one", "two", "three",
-                      };
+      };
 
       "test_head9999" slist => sublist("test", "head", 9999);
       "test_head1" slist => sublist("test", "head", 1);

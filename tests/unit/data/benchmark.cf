@@ -3,29 +3,29 @@
 
 body common control
 {
-  bundlesequence => { "main" };
+      bundlesequence => { "main" };
 }
 
 bundle agent main
 {
-reports:
-  cfengine::
-    "Hello, CFEngine"
+  reports:
+    cfengine::
+      "Hello, CFEngine"
       friend_pattern => hash("abc", "md5");
-  any::
-    "Hello, world"
+    any::
+      "Hello, world"
       friend_pattern => hash("abc", "md5");
 
-files:
-  "/tmp/stuff" -> { "stakeholder" }
-    create => "true",
-    perms => myperms;
+  files:
+      "/tmp/stuff" -> { "stakeholder" }
+      create => "true",
+      perms => myperms;
 
-processes:
-  "/bin/stuff" -> { "stakeholder" };
+  processes:
+      "/bin/stuff" -> { "stakeholder" };
 }
 
 body perms myperms
 {
-  mode => "555";
+      mode => "555";
 }

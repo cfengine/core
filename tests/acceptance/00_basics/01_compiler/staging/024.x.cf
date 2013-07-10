@@ -8,57 +8,57 @@
 
 body common control
 {
-  inputs => { "../../default.cf.sub" };
-  bundlesequence  => { init, test("banana"), check };   
-  version => "1.0";
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { init, test("banana"), check };   
+      version => "1.0";
 }
 
 bundle agent init
 {
-files:
-	"$(G.testfile)"
-	    delete => init_delete;
+  files:
+      "$(G.testfile)"
+      delete => init_delete;
 }
 
 body delete init_delete
 {
-	dirlinks => "delete";
-	rmdirs   => "true";
+      dirlinks => "delete";
+      rmdirs   => "true";
 }
 
 #######################################################
 
 bundle agent test(v)
 {
-methods:
-    "any" usebundle => do_test(v);
+  methods:
+      "any" usebundle => do_test(v);
 }
 
 bundle agent do_test(val)
 {
-files:
-	"$(G.testfile)"
-	    create => "true",
-	    action => test_action("$(val)");
+  files:
+      "$(G.testfile)"
+      create => "true",
+      action => test_action("$(val)");
 }
 
 body action test_action(type)
 {
-action_policy => "$(type)";
+      action_policy => "$(type)";
 }
 
 #######################################################
 
 bundle agent check
 {
-classes:
-    "ok" not => fileexists("$(G.testfile)");
+  classes:
+      "ok" not => fileexists("$(G.testfile)");
 
-reports:
+  reports:
     DEBUG::
-	"This test should fail";
+      "This test should fail";
     ok::
-	"$(this.promise_filename) Pass";
+      "$(this.promise_filename) Pass";
     !ok::
-	"$(this.promise_filename) FAIL";
+      "$(this.promise_filename) FAIL";
 }

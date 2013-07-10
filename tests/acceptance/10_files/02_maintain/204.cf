@@ -7,64 +7,64 @@
 
 body common control
 {
-  inputs => { "../../default.cf.sub" };
-  bundlesequence  => { default("$(this.promise_filename)") };
-  version => "1.0";
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
 }
 
 bundle common g
 {
-vars:
-        # This extracts the octal mode, and decimal nlink, uid, gid, size
-        "command" string => 'printf "%o" . " %d" x 4, (stat("$(G.testfile)"))[2]&07777, (stat(_))[3..5,7]';
+  vars:
+      # This extracts the octal mode, and decimal nlink, uid, gid, size
+      "command" string => 'printf "%o" . " %d" x 4, (stat("$(G.testfile)"))[2]&07777, (stat(_))[3..5,7]';
 }
 
 #######################################################
 
 bundle agent init
 {
-vars:
+  vars:
     any::
-        "mode" int => "01751";
+      "mode" int => "01751";
     linux::
-        "owner" string => "sys";
-        "group" string => "sys";
+      "owner" string => "sys";
+      "group" string => "sys";
     freebsd::
-        "owner" string => "bin";
-        "group" string => "sys";
+      "owner" string => "bin";
+      "group" string => "sys";
     !(linux|freebsd)::
-        "owner" string => "undefined-please-fix";
-        "group" string => "undefined-please-fix";
+      "owner" string => "undefined-please-fix";
+      "group" string => "undefined-please-fix";
 
     pass2::
-        "result" string => execresult(
-            "$(G.perl) -le '$(g.command)'",
-            "noshell");
+      "result" string => execresult(
+				     "$(G.perl) -le '$(g.command)'",
+				     "noshell");
 
-files:
-        "$(G.testfile)"
-            copy_from => init_copy("/etc/group"),
-            perms => init_perms("$(mode)", "$(owner)", "$(group)"),
-            classes => init_set_class("pass2");
+  files:
+      "$(G.testfile)"
+      copy_from => init_copy("/etc/group"),
+      perms => init_perms("$(mode)", "$(owner)", "$(group)"),
+      classes => init_set_class("pass2");
 }
 
 body copy_from init_copy(file)
 {
-        source => "$(file)";
+      source => "$(file)";
 }
 
 body perms init_perms(m, o, g)
 {
-mode => "$(m)";
-owners => { "$(o)" };
-groups => { "$(g)" };
+      mode => "$(m)";
+      owners => { "$(o)" };
+      groups => { "$(g)" };
 }
 
 
 body classes init_set_class(class)
 {
-promise_kept => { "$(class)" };
-promise_repaired => { "$(class)" };
+      promise_kept => { "$(class)" };
+      promise_repaired => { "$(class)" };
 }
 
 #######################################################
@@ -72,15 +72,15 @@ promise_repaired => { "$(class)" };
 bundle agent test
 {
 
-files:
-        "$(G.testfile)"
-            create => "true",
-            perms => test_perms("$(init.mode)");
+  files:
+      "$(G.testfile)"
+      create => "true",
+      perms => test_perms("$(init.mode)");
 }
 
 body perms test_perms(m)
 {
-mode => "$(m)";
+      mode => "$(m)";
 }
 
 
@@ -88,21 +88,21 @@ mode => "$(m)";
 
 bundle agent check
 {
-vars:
-        "result" string => execresult(
-            "$(G.perl) -le '$(g.command)'",
-            "noshell");
+  vars:
+      "result" string => execresult(
+				     "$(G.perl) -le '$(g.command)'",
+				     "noshell");
 
-classes:
-        "ok" expression => strcmp("$(init.result)", "$(result)");
+  classes:
+      "ok" expression => strcmp("$(init.result)", "$(result)");
 
-reports:
+  reports:
     DEBUG::
-        "init.result  is '$(init.result)'";
-        "check.result is '$(result)'";
+      "init.result  is '$(init.result)'";
+      "check.result is '$(result)'";
     ok::
-        "$(this.promise_filename) Pass";
+      "$(this.promise_filename) Pass";
     !ok::
-        "$(this.promise_filename) FAIL";
+      "$(this.promise_filename) FAIL";
 }
 

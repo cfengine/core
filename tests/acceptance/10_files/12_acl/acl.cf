@@ -5,9 +5,9 @@
 #####################################################
 body common control
 {
-  inputs => { "../../default.cf.sub" };
-  bundlesequence  => { default("$(this.promise_filename)") };
-  version => "1.0";
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
 }
 
 #######################################################
@@ -15,8 +15,8 @@ body common control
 bundle agent init
 {
   classes:
-    "cfengine_internal_getfacl" expression => fileexists("/var/cfengine/bin/getfacl");
-    "system_getfacl" expression => fileexists("/usr/bin/getfacl");
+      "cfengine_internal_getfacl" expression => fileexists("/var/cfengine/bin/getfacl");
+      "system_getfacl" expression => fileexists("/usr/bin/getfacl");
 
   vars:
     linux.cfengine_internal_getfacl::
@@ -25,15 +25,15 @@ bundle agent init
       "cmd" string => "/usr/bin/getfacl";
 
   files:
-    "$(G.testdir)$(G.DS)file"
+      "$(G.testdir)$(G.DS)file"
       create => "true",
       acl => acl_sanity_check;
 }
 
 body acl acl_sanity_check
 {
-  acl_method => "append";
-  aces => { "all:=rwx:allow" };
+      acl_method => "append";
+      aces => { "all:=rwx:allow" };
 }
 
 #######################################################
@@ -63,24 +63,24 @@ bundle agent test
 bundle agent check
 {
   classes:
-    "ok" not => regcmp(".*(error|failed).*", "$(test.result)");
+      "ok" not => regcmp(".*(error|failed).*", "$(test.result)");
   reports:
     DEBUG::
-        "Tests various ACL features";
+      "Tests various ACL features";
     DEBUG.!ok::
-        "Subtest(s) failing: $(test.result)";
+      "Subtest(s) failing: $(test.result)";
     ok::
-        "$(this.promise_filename) Pass";
+      "$(this.promise_filename) Pass";
     !ok::
-        "$(this.promise_filename) FAIL";
+      "$(this.promise_filename) FAIL";
 
   files:
-    "$(G.testdir)$(G.DS)file"
+      "$(G.testdir)$(G.DS)file"
       acl => acl_sanity_check_reset;
 }
 
 body acl acl_sanity_check_reset
 {
-  acl_method => "append";
-  aces => { "all:-rwx:allow" };
+      acl_method => "append";
+      aces => { "all:-rwx:allow" };
 }

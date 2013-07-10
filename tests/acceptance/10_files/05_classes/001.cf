@@ -6,74 +6,74 @@
 
 body common control
 {
-  inputs => { "../../default.cf.sub" };
-  bundlesequence  => { default("$(this.promise_filename)") };
-  version => "1.0";
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
 }
 
 #######################################################
 
 bundle agent init
 {
-vars:
-        "states" slist => { "actual", "expected" };
+  vars:
+      "states" slist => { "actual", "expected" };
 
-        "actual" string =>
-"keep this
+      "actual" string =>
+      "keep this
 and this
 but delete one line
 keep this too";
 
-        "expected" string =>
-"keep this
+      "expected" string =>
+      "keep this
 and this
 keep this too";
 
-files:
-        "$(G.testfile).$(states)"
-            create => "true",
-            edit_line => init_insert("$(init.$(states))"),
-            edit_defaults => init_empty;
+  files:
+      "$(G.testfile).$(states)"
+      create => "true",
+      edit_line => init_insert("$(init.$(states))"),
+      edit_defaults => init_empty;
 }
 
 bundle edit_line init_insert(str)
 {
-insert_lines:
-        "$(str)";
+  insert_lines:
+      "$(str)";
 }
 
 body edit_defaults init_empty
 {
-        empty_file_before_editing => "true";
+      empty_file_before_editing => "true";
 }
 
 #######################################################
 
 bundle agent test
 {
-vars:
+  vars:
       "tstr" string => ".*delete.*";
 
-files:
-        "$(G.testfile).actual"
-            edit_line => test_delete("$(test.tstr)");
+  files:
+      "$(G.testfile).actual"
+      edit_line => test_delete("$(test.tstr)");
 
 }
 
 bundle edit_line test_delete(str)
 {
-delete_lines:
-        "$(str)"
-            classes => full_set;
+  delete_lines:
+      "$(str)"
+      classes => full_set;
 }
 
 body classes full_set
 {
-promise_kept     => { "fail" };
-promise_repaired => { "pass" };
-repair_failed    => { "fail" };
-repair_denied    => { "fail" };
-repair_timeout   => { "fail" };
+      promise_kept     => { "fail" };
+      promise_repaired => { "pass" };
+      repair_failed    => { "fail" };
+      repair_denied    => { "fail" };
+      repair_timeout   => { "fail" };
 }
 
 
@@ -81,14 +81,14 @@ repair_timeout   => { "fail" };
 
 bundle agent check
 {
-methods:
-   pass.!fail::
-     "any" usebundle => default_check_diff("$(G.testfile).actual",
-                                           "$(G.testfile).expected",
-                                           "$(this.promise_filename)");
+  methods:
+    pass.!fail::
+      "any" usebundle => default_check_diff("$(G.testfile).actual",
+                                            "$(G.testfile).expected",
+                                            "$(this.promise_filename)");
 
-reports:
+  reports:
     !pass|fail::
-        "$(this.promise_filename) FAIL";
+      "$(this.promise_filename) FAIL";
 }
 

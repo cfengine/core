@@ -6,96 +6,96 @@
 
 body common control
 {
-  inputs => { "../../default.cf.sub" };
-  bundlesequence  => { default("$(this.promise_filename)") };   
-  version => "1.0";
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };   
+      version => "1.0";
 }
 
 bundle agent init
 {
-vars:
-	"dummy" string => "dummy";
+  vars:
+      "dummy" string => "dummy";
 }
 
 #######################################################
 
 bundle agent test
 {
-vars:
-    # Normal order
-    "r1" string => irange(10,20);
-    "r2" string => irange("10","20");
-    "r3" string => irange("1k","2K");
-    "r4" string => irange("1m","2M");
-    "r5" string => irange("1g","2G");
-    "r6" string => irange("-20",10);
+  vars:
+      # Normal order
+      "r1" string => irange(10,20);
+      "r2" string => irange("10","20");
+      "r3" string => irange("1k","2K");
+      "r4" string => irange("1m","2M");
+      "r5" string => irange("1g","2G");
+      "r6" string => irange("-20",10);
 
-    # Reverse order
-    "x1" string => irange(20,10);
-    "x2" string => irange("20","10");
-    "x3" string => irange("2K","1k");
-    "x4" string => irange("2M","1m");
-    "x5" string => irange("2G","1g");
-    "x6" string => irange(10,"-20");
+      # Reverse order
+      "x1" string => irange(20,10);
+      "x2" string => irange("20","10");
+      "x3" string => irange("2K","1k");
+      "x4" string => irange("2M","1m");
+      "x5" string => irange("2G","1g");
+      "x6" string => irange(10,"-20");
 
-    # String equivalent
-    "s1" string => "10,20";
-    "s2" string => "10,20";
-    "s3" string => "1000,2048";
-    "s4" string => "1000000,2097152";
-    "s5" string => "1000000000,2147483648";
-    "s6" string => "-20,10";
+      # String equivalent
+      "s1" string => "10,20";
+      "s2" string => "10,20";
+      "s3" string => "1000,2048";
+      "s4" string => "1000000,2097152";
+      "s5" string => "1000000000,2147483648";
+      "s6" string => "-20,10";
 }
 
 #######################################################
 
 bundle agent check
 {
-classes:
-	"ok1" and => {
-			strcmp("$(test.r1)", "$(test.x1)"),
-			strcmp("$(test.r1)", "$(test.s1)"),
-		    };
-	"ok2" and => {
-			strcmp("$(test.r2)", "$(test.x2)"),
-			strcmp("$(test.r2)", "$(test.s2)"),
-		    };
-	"ok3" and => {
-			strcmp("$(test.r3)", "$(test.x3)"),
-			strcmp("$(test.r3)", "$(test.s3)"),
-		    };
-	"ok4" and => {
-			strcmp("$(test.r4)", "$(test.x4)"),
-			strcmp("$(test.r4)", "$(test.s4)"),
-		    };
-	"ok5" and => {
-			strcmp("$(test.r5)", "$(test.x5)"),
-			strcmp("$(test.r5)", "$(test.s5)"),
-		    };
-	"ok6" and => {
-			strcmp("$(test.r6)", "$(test.x6)"),
-			strcmp("$(test.r6)", "$(test.s6)"),
-		    };
+  classes:
+      "ok1" and => {
+		     strcmp("$(test.r1)", "$(test.x1)"),
+		     strcmp("$(test.r1)", "$(test.s1)"),
+      };
+      "ok2" and => {
+		     strcmp("$(test.r2)", "$(test.x2)"),
+		     strcmp("$(test.r2)", "$(test.s2)"),
+      };
+      "ok3" and => {
+		     strcmp("$(test.r3)", "$(test.x3)"),
+		     strcmp("$(test.r3)", "$(test.s3)"),
+      };
+      "ok4" and => {
+		     strcmp("$(test.r4)", "$(test.x4)"),
+		     strcmp("$(test.r4)", "$(test.s4)"),
+      };
+      "ok5" and => {
+		     strcmp("$(test.r5)", "$(test.x5)"),
+		     strcmp("$(test.r5)", "$(test.s5)"),
+      };
+      "ok6" and => {
+		     strcmp("$(test.r6)", "$(test.x6)"),
+		     strcmp("$(test.r6)", "$(test.s6)"),
+      };
 
-	"ok" and => { "ok1", "ok2", "ok3", "ok4", "ok5", "ok6" };
+      "ok" and => { "ok1", "ok2", "ok3", "ok4", "ok5", "ok6" };
 
-reports:
+  reports:
     DEBUG.!ok1::
-	"Mismatch 1: '$(test.r1)' '$(test.x1)' '$(test.s1)'";
+      "Mismatch 1: '$(test.r1)' '$(test.x1)' '$(test.s1)'";
     DEBUG.!ok2::
-	"Mismatch 2: '$(test.r2)' '$(test.x2)' '$(test.s2)'";
+      "Mismatch 2: '$(test.r2)' '$(test.x2)' '$(test.s2)'";
     DEBUG.!ok3::
-	"Mismatch 3: '$(test.r3)' '$(test.x3)' '$(test.s3)'";
+      "Mismatch 3: '$(test.r3)' '$(test.x3)' '$(test.s3)'";
     DEBUG.!ok4::
-	"Mismatch 4: '$(test.r4)' '$(test.x4)' '$(test.s4)'";
+      "Mismatch 4: '$(test.r4)' '$(test.x4)' '$(test.s4)'";
     DEBUG.!ok5::
-	"Mismatch 5: '$(test.r5)' '$(test.x5)' '$(test.s5)'";
+      "Mismatch 5: '$(test.r5)' '$(test.x5)' '$(test.s5)'";
     DEBUG.!ok6::
-	"Mismatch 6: '$(test.r6)' '$(test.x6)' '$(test.s6)'";
+      "Mismatch 6: '$(test.r6)' '$(test.x6)' '$(test.s6)'";
     ok::
-	"$(this.promise_filename) Pass";
+      "$(this.promise_filename) Pass";
 
     !ok::
-	"$(this.promise_filename) FAIL";
+      "$(this.promise_filename) FAIL";
 
 }

@@ -7,25 +7,25 @@
 
 body common control
 {
-  inputs => { "../../default.cf.sub" };
-  bundlesequence  => { default("$(this.promise_filename)") };
-  version => "1.0";
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
 }
 
 #######################################################
 
 bundle agent init
 {
-vars:
-        "dummy" string => "dummy";
+  vars:
+      "dummy" string => "dummy";
 }
 
 #######################################################
 
 bundle agent test
 {
-vars:
-    "twice"
+  vars:
+      "twice"
       string => "plus ca change..",
       int => 42;
 }
@@ -34,10 +34,10 @@ vars:
 
 bundle agent check
 {
-reports:
+  reports:
     DEBUG::
-        "Assignment should fail";
-    cfengine_3:
-        "$(this.promise_filename) Pass";
+      "Assignment should fail";
+  cfengine_3:
+      "$(this.promise_filename) Pass";
 }
 

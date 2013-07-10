@@ -5,54 +5,54 @@
 #####################################################
 body common control
 {
-  inputs => { "../../default.cf.sub" };
-  bundlesequence  => { default("$(this.promise_filename)") };
-  version => "1.0";
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
 }
 
 #######################################################
 
 bundle agent init
 {
-files:
-        "$(G.testfile)"
-            delete => init_delete;
+  files:
+      "$(G.testfile)"
+      delete => init_delete;
 }
 
 body delete init_delete
 {
-        dirlinks => "delete";
-        rmdirs   => "true";
+      dirlinks => "delete";
+      rmdirs   => "true";
 }
 
 #######################################################
 
 bundle agent test
 {
-files:
-        "$(G.testfile)"
-            create => "true",
-            action => test_action;
+  files:
+      "$(G.testfile)"
+      create => "true",
+      action => test_action;
 }
 
 body action test_action
 {
-action_policy => "warn";
+      action_policy => "warn";
 }
 
 #######################################################
 
 bundle agent check
 {
-classes:
-    "ok" expression => fileexists("$(G.testfile)");
+  classes:
+      "ok" expression => fileexists("$(G.testfile)");
 
-reports:
+  reports:
     DEBUG::
-        "This test should pass as a precursor to a bunch of related failures";
-        "This test should not create $(G.testfile)";
+      "This test should pass as a precursor to a bunch of related failures";
+      "This test should not create $(G.testfile)";
     ok::
-        "$(this.promise_filename) FAIL";
+      "$(this.promise_filename) FAIL";
     !ok::
-        "$(this.promise_filename) Pass";
+      "$(this.promise_filename) Pass";
 }

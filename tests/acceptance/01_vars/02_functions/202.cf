@@ -6,65 +6,65 @@
 
 body common control
 {
-  inputs => { "../../default.cf.sub" };
-  bundlesequence  => { default("$(this.promise_filename)") };
-  version => "1.0";
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
 }
 
 #######################################################
 
 bundle agent init
 {
-vars:
-        "dummy" string => "dummy";
+  vars:
+      "dummy" string => "dummy";
 
-files:
-    "$(G.testfile).expected"
-        create => "true",
-        edit_line => init_insert;
+  files:
+      "$(G.testfile).expected"
+      create => "true",
+      edit_line => init_insert;
 }
 
 bundle edit_line init_insert
 {
-insert_lines:
-    "alpha";
+  insert_lines:
+      "alpha";
 }
 
 #######################################################
 
 bundle agent test
 {
-vars:
-    "array[alpha]" string => "zero";
+  vars:
+      "array[alpha]" string => "zero";
 
-    "keys" slist => getindices("array");
+      "keys" slist => getindices("array");
 
-files:
-    "$(G.testfile).actual"
-        create => "true",
-        edit_line => test_insert;
+  files:
+      "$(G.testfile).actual"
+      create => "true",
+      edit_line => test_insert;
 
-reports:
+  reports:
     DEBUG::
-        "Inserting line: $(keys)";
+      "Inserting line: $(keys)";
 }
 
 bundle edit_line test_insert
 {
-vars:
-    "keys" slist => { @{test.keys} };
+  vars:
+      "keys" slist => { @{test.keys} };
 
-insert_lines:
-    "$(keys)";
+  insert_lines:
+      "$(keys)";
 }
 
 #######################################################
 
 bundle agent check
 {
-methods:
-        "any" usebundle => sorted_check_diff("$(G.testfile).actual",
-                                              "$(G.testfile).expected",
-                                              "$(this.promise_filename)");
+  methods:
+      "any" usebundle => sorted_check_diff("$(G.testfile).actual",
+                                           "$(G.testfile).expected",
+                                           "$(this.promise_filename)");
 }
 

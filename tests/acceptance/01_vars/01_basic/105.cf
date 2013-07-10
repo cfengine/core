@@ -6,50 +6,50 @@
 
 body common control
 {
-  inputs => { "../../default.cf.sub" };
-  bundlesequence  => { default("$(this.promise_filename)") };
-  version => "1.0";
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
 }
 
 #######################################################
 
 bundle agent init
 {
-vars:
-        "dummy" string => "dummy";
+  vars:
+      "dummy" string => "dummy";
 }
 
 #######################################################
 
 bundle agent test
 {
-vars:
-        "dummy" string => "dummy";
+  vars:
+      "dummy" string => "dummy";
 }
 
 #######################################################
 
 bundle agent check
 {
-classes:
-        # $(this.promiser) is not available in this context
-        "not_valid"    not => strcmp("xyzzy", "$(this.promiser)");
-        "valid" expression => strcmp("xyzzy", "$(this.promiser)");
-        "any_promiser" and => { "not_valid", "valid" };
-        "ok" not => "any_promiser";
+  classes:
+      # $(this.promiser) is not available in this context
+      "not_valid"    not => strcmp("xyzzy", "$(this.promiser)");
+      "valid" expression => strcmp("xyzzy", "$(this.promiser)");
+      "any_promiser" and => { "not_valid", "valid" };
+      "ok" not => "any_promiser";
 
-reports:
+  reports:
     DEBUG.not_valid::
-        "not_valid IS set (and should not be)";
+      "not_valid IS set (and should not be)";
     DEBUG.!not_valid::
-        "not_valid is not set (and should not be)";
+      "not_valid is not set (and should not be)";
     DEBUG.valid::
-        "valid IS set (and should not be)";
+      "valid IS set (and should not be)";
     DEBUG.!valid::
-        "valid is not set (and should not be)";
+      "valid is not set (and should not be)";
     ok::
-        "$(this.promise_filename) Pass";
+      "$(this.promise_filename) Pass";
     !ok::
-        "$(this.promise_filename) FAIL";
+      "$(this.promise_filename) FAIL";
 }
 

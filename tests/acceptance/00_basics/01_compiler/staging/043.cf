@@ -5,49 +5,49 @@
 #####################################################
 body common control
 {
-  inputs => { "../../default.cf.sub" };
-  bundlesequence  => { default("$(this.promise_filename)") };   
-  version => "1.0";
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };   
+      version => "1.0";
 }
 
 bundle agent init
 {
-files:
-	"$(G.testfile)"
-	    delete => init_delete;
+  files:
+      "$(G.testfile)"
+      delete => init_delete;
 }
 
 body delete init_delete
 {
-	dirlinks => "delete";
-	rmdirs   => "true";
+      dirlinks => "delete";
+      rmdirs   => "true";
 }
 
 #######################################################
 
 bundle agent test
 {
-guest_environments:
-    "host1"
-	environment_host => "test",
-	classes => whatever("ok");
+  guest_environments:
+      "host1"
+      environment_host => "test",
+      classes => whatever("ok");
 }
 
 body classes whatever(c)
 {
-promise_kept => { "$(c)" };
-promise_repaired => { "$(c)" };
+      promise_kept => { "$(c)" };
+      promise_repaired => { "$(c)" };
 }
 
 #######################################################
 
 bundle agent check
 {
-reports:
+  reports:
     DEBUG::
-	"This test should pass as a precursor to a bunch of related failures";
+      "This test should pass as a precursor to a bunch of related failures";
     ok::
-	"$(this.promise_filename) Pass";
+      "$(this.promise_filename) Pass";
     !ok::
-	"$(this.promise_filename) FAIL";
+      "$(this.promise_filename) FAIL";
 }

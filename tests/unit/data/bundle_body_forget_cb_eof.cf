@@ -1,10 +1,10 @@
 bundle agent foo
 {
 
-vars:
+  vars:
 
     debian::
-        "bas"  string => "van der vlies",
-            comment => "lastname";
+      "bas"  string => "van der vlies",
+      comment => "lastname";
 
 

@@ -6,54 +6,54 @@
 
 body common control
 {
-  inputs => { "../../default.cf.sub" };
-  bundlesequence  => { default("$(this.promise_filename)") };
-  version => "1.0";
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
 }
 
 bundle common g
 {
-vars:
-  "testfile" string => "$(G.testdir)/testfile";
-  "command" string => 'printf "%o %d", (stat("$(G.testfile).cfdisabled"))[2]&07777, (stat(_))[3]';
+  vars:
+      "testfile" string => "$(G.testdir)/testfile";
+      "command" string => 'printf "%o %d", (stat("$(G.testfile).cfdisabled"))[2]&07777, (stat(_))[3]';
 }
 
 #######################################################
 
 bundle agent init
 {
-files:
-  "$(G.testfile)"
-    create => "true";
+  files:
+      "$(G.testfile)"
+      create => "true";
 }
 
 #######################################################
 
 bundle agent test
 {
-files:
-    "$(G.testfile)"
+  files:
+      "$(G.testfile)"
       rename => disable_file;
 }
 
 body rename disable_file {
-  disable_mode => "333";
-  disable => "true";
+      disable_mode => "333";
+      disable => "true";
 }
 
 #######################################################
 
 bundle agent check
 {
-vars:
-  "result" string => execresult("$(G.perl) -le '$(g.command)'", "noshell");
+  vars:
+      "result" string => execresult("$(G.perl) -le '$(g.command)'", "noshell");
 
-classes:
-  "ok" expression => strcmp("333 1", "$(result)");
+  classes:
+      "ok" expression => strcmp("333 1", "$(result)");
 
-reports:
-  ok::
-    "$(this.promise_filename) Pass";
-  !ok::
-    "$(this.promise_filename) FAIL";
+  reports:
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
 }

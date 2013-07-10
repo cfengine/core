@@ -21,23 +21,23 @@ bundle agent init
       "actual" string =>
       "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>
 <Potatoes>
-<Potato name=\"OnePotato\">
-</Potato>
-<Potato name=\"TwoPotato\">
-</Potato>
-<Potato name=\"ThreePotato\">
-</Potato>
+  <Potato name=\"OnePotato\">
+  </Potato>
+  <Potato name=\"TwoPotato\">
+  </Potato>
+  <Potato name=\"ThreePotato\">
+  </Potato>
 </Potatoes>";
 
       "expected" string =>
       "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>
 <Potatoes>
-<Potato name=\"OnePotato\">
-Hot Potatoes!!!</Potato>
-<Potato name=\"TwoPotato\">
-</Potato>
-<Potato name=\"ThreePotato\">
-</Potato>
+  <Potato name=\"OnePotato\">
+  Hot Potatoes!!!</Potato>
+  <Potato name=\"TwoPotato\">
+  </Potato>
+  <Potato name=\"ThreePotato\">
+  </Potato>
 </Potatoes>";
 
   files:

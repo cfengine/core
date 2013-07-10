@@ -21,71 +21,71 @@ bundle agent init
       "actual" string =>
       "<Server port=\"8005\" shutdown=\"SHUTDOWN\" debug=\"0\">
 
-<!-- Define the Tomcat Stand-Alone Service -->
-<Service name=\"Catalina\">
+  <!-- Define the Tomcat Stand-Alone Service -->
+  <Service name=\"Catalina\">
 
-<!-- Define a non-SSL Coyote HTTP/1.1 Connector on port 8080 -->
-<Connector port=\"80\"
-maxThreads=\"150\" minSpareThreads=\"25\" maxSpareThreads=\"75\"
-enableLookups=\"false\" redirectPort=\"8443\" acceptCount=\"100\"
-debug=\"0\" connectionTimeout=\"20000\" 
-disableUploadTimeout=\"true\" />
+        <!-- Define a non-SSL Coyote HTTP/1.1 Connector on port 8080 -->
+    <Connector port=\"80\"
+               maxThreads=\"150\" minSpareThreads=\"25\" maxSpareThreads=\"75\"
+               enableLookups=\"false\" redirectPort=\"8443\" acceptCount=\"100\"
+               debug=\"0\" connectionTimeout=\"20000\" 
+               disableUploadTimeout=\"true\" />
 
-<Engine name=\"Catalina\" defaultHost=\"localhost\" debug=\"0\">
+                <Engine name=\"Catalina\" defaultHost=\"localhost\" debug=\"0\">
 
-<!-- Define the default virtual host
-Note: XML Schema validation will not work with Xerces 2.2.
--->
+      <!-- Define the default virtual host
+           Note: XML Schema validation will not work with Xerces 2.2.
+       -->
 
-<Host name=\"localhost\" debug=\"0\" appBase=\"webapps/localhost\"
-unpackWARs=\"true\" autoDeploy=\"true\"
-xmlValidation=\"false\" xmlNamespaceAware=\"false\">
-<Logger className=\"org.apache.catalina.logger.FileLogger\"
-directory=\"logs\"  prefix=\"localhost_log.\" suffix=\".txt\"
-timestamp=\"true\"/>
-</Host>
+      <Host name=\"localhost\" debug=\"0\" appBase=\"webapps/localhost\"
+       unpackWARs=\"true\" autoDeploy=\"true\"
+       xmlValidation=\"false\" xmlNamespaceAware=\"false\">
+        <Logger className=\"org.apache.catalina.logger.FileLogger\"
+                 directory=\"logs\"  prefix=\"localhost_log.\" suffix=\".txt\"
+            timestamp=\"true\"/>
+      </Host>
 
-<!-- VIRTUAL HOST INJECTION POINT -->
+         <!-- VIRTUAL HOST INJECTION POINT -->
 
-</Engine>
+    </Engine>
 
-</Service>
+  </Service>
 
 </Server>";
 
       "expected" string =>
       "<?xml version=\"1.0\"?>
 <Server
-port=\"8005\"
-shutdown=\"SHUTDOWN\"
-debug=\"0\">
+    port=\"8005\"
+    shutdown=\"SHUTDOWN\"
+    debug=\"0\">
 
-<!-- Define the Tomcat Stand-Alone Service -->
-<Service name=\"Catalina\">
+  <!-- Define the Tomcat Stand-Alone Service -->
+  <Service name=\"Catalina\">
 
-<!-- Define a non-SSL Coyote HTTP/1.1 Connector on port 8080 -->
-<Connector port=\"80\" maxThreads=\"150\" minSpareThreads=\"25\" maxSpareThreads=\"75\" enableLookups=\"false\" redirectPort=\"8443\" acceptCount=\"100\" debug=\"0\" connectionTimeout=\"20000\" disableUploadTimeout=\"true\"/>
+        <!-- Define a non-SSL Coyote HTTP/1.1 Connector on port 8080 -->
+    <Connector port=\"80\" maxThreads=\"150\" minSpareThreads=\"25\" maxSpareThreads=\"75\" enableLookups=\"false\" redirectPort=\"8443\" acceptCount=\"100\" debug=\"0\" connectionTimeout=\"20000\" disableUploadTimeout=\"true\"/>
 
-<Engine name=\"Catalina\" defaultHost=\"localhost\" debug=\"0\">
+                <Engine name=\"Catalina\" defaultHost=\"localhost\" debug=\"0\">
 
-<!-- Define the default virtual host
-Note: XML Schema validation will not work with Xerces 2.2.
--->
+      <!-- Define the default virtual host
+           Note: XML Schema validation will not work with Xerces 2.2.
+       -->
 
-<Host name=\"localhost\" debug=\"0\" appBase=\"webapps/localhost\" unpackWARs=\"true\" autoDeploy=\"true\" xmlValidation=\"false\" xmlNamespaceAware=\"false\">
-<Logger className=\"org.apache.catalina.logger.FileLogger\" directory=\"logs\" prefix=\"localhost_log.\" suffix=\".txt\" timestamp=\"true\"/>
-</Host>
+      <Host name=\"localhost\" debug=\"0\" appBase=\"webapps/localhost\" unpackWARs=\"true\" autoDeploy=\"true\" xmlValidation=\"false\" xmlNamespaceAware=\"false\">
+        <Logger className=\"org.apache.catalina.logger.FileLogger\" directory=\"logs\" prefix=\"localhost_log.\" suffix=\".txt\" timestamp=\"true\"/>
+      </Host>
 
-<!-- VIRTUAL HOST INJECTION POINT -->
+         <!-- VIRTUAL HOST INJECTION POINT -->
 
-<Host name=\"cfe_host\" debug=\"0\" appBase=\"webapps/cfe_host\" unpackWARs=\"true\" autoDeploy=\"true\" xmlValidation=\"false\" xmlNamespaceAware=\"false\">
+    <Host name=\"cfe_host\" debug=\"0\" appBase=\"webapps/cfe_host\" unpackWARs=\"true\" autoDeploy=\"true\" xmlValidation=\"false\" xmlNamespaceAware=\"false\">
 
 <Logger className=\"org.apache.catalina.logger.FileLogger\" directory=\"logs\" prefix=\"cfe_host\_log.\" suffix=\".txt\" timestamp=\"true\"/>
 
 <Alias>cfe_alias</Alias>
 </Host></Engine>
 
-</Service>
+  </Service>
 
 </Server>";
 
@@ -113,8 +113,8 @@ bundle agent test
   vars:
       "host" string =>
       "<Host name=\"cfe_host\" debug=\"0\" appBase=\"webapps/cfe_host\"
-unpackWARs=\"true\" autoDeploy=\"true\"
-xmlValidation=\"false\" xmlNamespaceAware=\"false\">
+        unpackWARs=\"true\" autoDeploy=\"true\"
+    xmlValidation=\"false\" xmlNamespaceAware=\"false\">
 
 <Logger className=\"org.apache.catalina.logger.FileLogger\"
 directory=\"logs\"  prefix=\"cfe_host\_log.\" suffix=\".txt\" timestamp=\"true\"/>

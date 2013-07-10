@@ -18,10 +18,10 @@ bundle agent init
   vars:
       "body" string =>
       "BEGIN
-One potato
-Two potato
-Three potatoes
-Four
+    One potato
+    Two potato
+    Three potatoes
+    Four
 END";
 
   files:

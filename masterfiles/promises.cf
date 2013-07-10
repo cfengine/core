@@ -8,44 +8,44 @@ body common control
 
 {
 
- bundlesequence => {
-                   "libs",
-                 # Common bundles first for best practice 
-                    "def",
+      bundlesequence => {
+			  "libs",
+			  # Common bundles first for best practice 
+			  "def",
 
-                 # Design Center
-                    "cfsketch_run",
+			  # Design Center
+			  "cfsketch_run",
 
-                 # Agent bundles from here
-                    "main",
+			  # Agent bundles from here
+			  "main",
 
-                   };
+      };
 
- inputs => {
+      inputs => {
 
-         # Global common bundles
-            "def.cf",
+		  # Global common bundles
+		  "def.cf",
 
-         # Control body for all agents
-            "controls/cf_agent.cf",
-            "controls/cf_execd.cf",
-            "controls/cf_monitord.cf",
-            "controls/cf_runagent.cf",
-            "controls/cf_serverd.cf",
+		  # Control body for all agents
+		  "controls/cf_agent.cf",
+		  "controls/cf_execd.cf",
+		  "controls/cf_monitord.cf",
+		  "controls/cf_runagent.cf",
+		  "controls/cf_serverd.cf",
 
-         # COPBL/Custom libraries.  Eventually this should use wildcards.
-             @(cfengine_stdlib.inputs),
+		  # COPBL/Custom libraries.  Eventually this should use wildcards.
+		  @(cfengine_stdlib.inputs),
 
-         # Design Center
-             # MARKER FOR CF-SKETCH INPUT INSERTION
-             "cf-sketch-runfile.cf",
+		  # Design Center
+		  # MARKER FOR CF-SKETCH INPUT INSERTION
+		  "cf-sketch-runfile.cf",
 
-         # User services from here
-            "services/init_msg.cf",
+		  # User services from here
+		  "services/init_msg.cf",
 
-           };
+      };
 
- version => "Community Promises.cf 3.4.0";
+      version => "Community Promises.cf 3.4.0";
 
 }
 
@@ -93,13 +93,13 @@ bundle agent main
 
 {
 
- methods:
+  methods:
 
-  any::
+    any::
 
-   "INIT MSG" usebundle => init_msg,
-                comment => "Just a pre-defined policy bundled with the package",
-                 handle => "main_methods_any_init_msg";
+      "INIT MSG" usebundle => init_msg,
+      comment => "Just a pre-defined policy bundled with the package",
+      handle => "main_methods_any_init_msg";
 
 }
 

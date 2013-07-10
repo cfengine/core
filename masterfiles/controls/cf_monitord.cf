@@ -10,11 +10,11 @@ body monitor control
 
 {
 
- any::
+    any::
 
-  forgetrate => "0.7";
-  histograms => "true";
-#  tcpdump => "false";
-#  tcpdumpcommand => "/usr/sbin/tcpdump -t -n -v";
+      forgetrate => "0.7";
+      histograms => "true";
+      #  tcpdump => "false";
+      #  tcpdumpcommand => "/usr/sbin/tcpdump -t -n -v";
 
 }

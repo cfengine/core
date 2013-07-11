@@ -367,16 +367,13 @@ static void ExpandAndMapIteratorsFromScalar(EvalContext *ctx, const char *scopei
                             /* embedded iterators should be incremented fastest,
                                so order list -- and MUST return de-scoped name
                                else list expansion cannot map var to this.name */
-                            if (!ScopeIsReserved(absscope))
+                            if (level > 0)
                             {
-                                if (level > 0)
-                                {
-                                    RlistPrependScalarIdemp(list_vars_out, finalname);
-                                }
-                                else
-                                {
-                                    RlistAppendScalarIdemp(list_vars_out, finalname);
-                                }
+                                RlistPrependScalarIdemp(list_vars_out, finalname);
+                            }
+                            else
+                            {
+                                RlistAppendScalarIdemp(list_vars_out, finalname);
                             }
 
                             if (full_expansion)
@@ -390,10 +387,8 @@ static void ExpandAndMapIteratorsFromScalar(EvalContext *ctx, const char *scopei
                         }
                         else if (rval.type == RVAL_TYPE_SCALAR)
                         {
-                            if (!ScopeIsReserved(absscope))
-                            {
-                                RlistAppendScalarIdemp(scalar_vars_out, finalname);
-                            }
+                            RlistAppendScalarIdemp(scalar_vars_out, finalname);
+
                             if (full_expansion)
                             {
                                 // append the scalar value to each of full_expansion
@@ -412,12 +407,13 @@ static void ExpandAndMapIteratorsFromScalar(EvalContext *ctx, const char *scopei
                 }
 
                 // No need to map this.* even though it's technically qualified
-                if (success && base_qualified && !ScopeIsReserved(base_scope))
+                if (success && base_qualified &&
+                    strcmp(base_scope, "this") != 0)
                 {
                     char *dotpos = strchr(substring, '.');
                     if (dotpos)
                     {
-                        *dotpos = CF_MAPPEDLIST;
+                        *dotpos = CF_MAPPEDLIST;    // replace '.' with '#'
                     }
                 }
 
@@ -672,7 +668,17 @@ bool ExpandScalar(const EvalContext *ctx, const char *scopeid, const char *strin
             case DATA_TYPE_INT_LIST:
             case DATA_TYPE_REAL_LIST:
             case DATA_TYPE_NONE:
-                Log(LOG_LEVEL_DEBUG, "Currently non existent or list variable '%s'", currentitem);
+                if (type == DATA_TYPE_NONE)
+                {
+                    Log(LOG_LEVEL_DEBUG,
+                        "Can't expand inexistent variable '%s'", currentitem);
+                }
+                else
+                {
+                    Log(LOG_LEVEL_DEBUG,
+                        "Expecting scalar, can't expand list variable '%s'",
+                        currentitem);
+                }
 
                 if (varstring == '}')
                 {

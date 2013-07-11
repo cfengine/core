@@ -163,6 +163,18 @@ void ActAsDaemon(int preserve, const ReportContext *report_context)
 # endif
 #endif
 
+    if (!report_context)
+    {
+        for (fd = STDERR_FILENO + 1; fd < maxfd; ++fd)
+        {
+            if (fd != preserve)
+            {
+                close(fd);
+            }
+        }
+        return;
+    }
+
     // build an array of file descriptors we need to preserve
     for (size_t i = 0; i < REPORT_OUTPUT_TYPE_MAX; i++)
     {

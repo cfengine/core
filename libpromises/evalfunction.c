@@ -1097,7 +1097,7 @@ static FnCallResult FnCallRegList(EvalContext *ctx, FnCall *fp, Rlist *finalargs
     char naked[CF_MAXVARSIZE] = "";
     GetNaked(naked, listvar);
 
-    VarRef ref = VarRefParseFromBundle(naked, PromiseGetBundle(fp->caller));
+    VarRef ref = VarRefParse(naked);
 
     Rval retval;
     if (!EvalContextVariableGet(ctx, ref, &retval, NULL))
@@ -1330,14 +1330,7 @@ static FnCallResult FnCallSum(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
     Rval rval2;
     double sum = 0;
 
-    VarRef ref = VarRefParseFromBundle(RlistScalarValue(finalargs), PromiseGetBundle(fp->caller));
-
-    if (!ScopeExists(ref.scope))
-    {
-        Log(LOG_LEVEL_VERBOSE, "Function sum was promised a list in scope '%s' but this was not found", ref.scope);
-        VarRefDestroy(ref);
-        return (FnCallResult) { FNCALL_FAILURE };
-    }
+    VarRef ref = VarRefParse(RlistScalarValue(finalargs));
 
     if (!EvalContextVariableGet(ctx, ref, &rval2, NULL))
     {
@@ -1381,14 +1374,7 @@ static FnCallResult FnCallProduct(EvalContext *ctx, FnCall *fp, Rlist *finalargs
     Rval rval2;
     double product = 1.0;
 
-    VarRef ref = VarRefParseFromBundle(RlistScalarValue(finalargs), PromiseGetBundle(fp->caller));
-
-    if (!ScopeExists(ref.scope))
-    {
-        Log(LOG_LEVEL_VERBOSE, "Function 'product' was promised a list in scope '%s' but this was not found", ref.scope);
-        VarRefDestroy(ref);
-        return (FnCallResult) { FNCALL_FAILURE };
-    }
+    VarRef ref = VarRefParse(RlistScalarValue(finalargs));
 
     if (!EvalContextVariableGet(ctx, ref, &rval2, NULL))
     {
@@ -1803,14 +1789,7 @@ static FnCallResult FnCallMapList(EvalContext *ctx, FnCall *fp, Rlist *finalargs
         strncpy(naked, listvar, CF_MAXVARSIZE - 1);
     }
 
-    VarRef ref = VarRefParseFromBundle(naked, PromiseGetBundle(fp->caller));
-
-    if (!ScopeExists(ref.scope))
-    {
-        Log(LOG_LEVEL_VERBOSE, "Function 'maplist' was promised an list in scope '%s' but this was not found", ref.scope);
-        VarRefDestroy(ref);
-        return (FnCallResult) { FNCALL_FAILURE };
-    }
+    VarRef ref = VarRefParse(naked);
 
     retype = DATA_TYPE_NONE;
     if (!EvalContextVariableGet(ctx, ref, &rval, &retype))
@@ -1877,7 +1856,7 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx, FnCall *fp, Rlist *fin
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
-    VarRef ref = VarRefParseFromBundle(naked, PromiseGetBundle(fp->caller));
+    VarRef ref = VarRefParse(naked);
 
     if (!EvalContextVariableGet(ctx, ref, &retval, NULL))
     {
@@ -2348,7 +2327,7 @@ static FnCallResult FnCallFilter(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 
 static bool GetListReferenceArgument(const EvalContext *ctx, const FnCall *fp, const char *lval_str, Rval *rval_out, DataType *datatype_out)
 {
-    VarRef list_var_lval = VarRefParseFromBundle(lval_str, PromiseGetBundle(fp->caller));
+    VarRef list_var_lval = VarRefParse(lval_str);
 
     if (!EvalContextVariableGet(ctx, list_var_lval, rval_out, datatype_out))
     {
@@ -2635,7 +2614,7 @@ static FnCallResult FnCallEverySomeNone(EvalContext *ctx, FnCall *fp, Rlist *fin
 
 static FnCallResult FnCallSort(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
-    VarRef list_var_lval = VarRefParseFromBundle(RlistScalarValue(finalargs), PromiseGetBundle(fp->caller));
+    VarRef list_var_lval = VarRefParse(RlistScalarValue(finalargs));
     Rval list_var_rval;
     DataType list_var_dtype = DATA_TYPE_NONE;
 
@@ -4347,7 +4326,7 @@ static FnCallResult FnCallFileSexist(EvalContext *ctx, FnCall *fp, Rlist *finala
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
-    VarRef ref = VarRefParseFromBundle(naked, PromiseGetBundle(fp->caller));
+    VarRef ref = VarRefParse(naked);
 
     if (!EvalContextVariableGet(ctx, ref, &retval, NULL))
     {

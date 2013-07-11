@@ -1419,14 +1419,7 @@ static FnCallResult FnCallJoin(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
     int size = 0;
 
     const char *join = RlistScalarValue(finalargs);
-    VarRef ref = VarRefParseFromScope(RlistScalarValue(finalargs->next), "this");
-
-    if (!ScopeExists(ref.scope))
-    {
-        Log(LOG_LEVEL_VERBOSE, "Function 'join' was promised an array in scope '%s' but this was not found", ref.scope);
-        VarRefDestroy(ref);
-        return (FnCallResult) { FNCALL_FAILURE };
-    }
+    VarRef ref = VarRefParse(RlistScalarValue(finalargs->next));
 
     if (!EvalContextVariableGet(ctx, ref, &rval2, NULL))
     {

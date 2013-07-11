@@ -91,7 +91,7 @@
 #endif
 
 // For anything else except Windows, try {stat("/proc/1")}.st_ctime
-#if !defined(MINGW) && !defined(NT)
+#if !defined(__MINGW32__) && !defined(NT)
 #define BOOT_TIME_WITH_PROCFS
 #endif
 

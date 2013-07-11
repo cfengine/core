@@ -1423,7 +1423,7 @@ void RlistFlatten(EvalContext *ctx, Rlist **list)
             if (!IsExpandable(naked))
             {
                 Rval rv;
-                VarRef ref = VarRefParseFromScope(naked, ScopeGetCurrent()->scope);
+                VarRef ref = VarRefParse(naked);
 
                 bool var_found = EvalContextVariableGet(ctx, ref, &rv, NULL);
 

@@ -1676,37 +1676,26 @@ static FnCallResult FnCallLsDir(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 
 static FnCallResult FnCallMapArray(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
-    char expbuf[CF_EXPANDSIZE], lval[CF_MAXVARSIZE], scopeid[CF_MAXVARSIZE];
+    char expbuf[CF_EXPANDSIZE];
     char index[CF_MAXVARSIZE], match[CF_MAXVARSIZE];
     Scope *ptr;
     Rlist *rp, *returnlist = NULL;
     AssocHashTableIterator i;
     CfAssoc *assoc;
 
-/* begin fn specific content */
-
     char *map = RlistScalarValue(finalargs);
-    char *arrayname = RlistScalarValue(finalargs->next);
 
-/* Locate the array */
+    VarRef ref = VarRefParseFromBundle(RlistScalarValue(finalargs->next), PromiseGetBundle(fp->caller));
 
-    if (strstr(arrayname, "."))
-    {
-        scopeid[0] = '\0';
-        sscanf(arrayname, "%127[^.].%127s", scopeid, lval);
-    }
-    else
-    {
-        strcpy(lval, arrayname);
-        strcpy(scopeid, ScopeGetCurrent()->scope);
-    }
+    char *legacy_scope = ref.ns ? StringFormat("%s:%s", ref.ns, ref.scope) : xstrdup(ref.scope);
 
-    if ((ptr = ScopeGet(scopeid)) == NULL)
+    if ((ptr = ScopeGet(legacy_scope)) == NULL)
     {
         Log(LOG_LEVEL_VERBOSE,
-            "Function maparray was promised an array called '%s' in scope '%s' but this was not found", lval,
-              scopeid);
+            "Function maparray was promised an array called '%s' in scope '%s' but this was not found", ref.lval,
+              ref.scope);
         RlistAppendScalarIdemp(&returnlist, CF_NULL_VALUE);
+        VarRefDestroy(ref);
         return (FnCallResult) { FNCALL_FAILURE, { returnlist, RVAL_TYPE_LIST } };
     }
 
@@ -1714,7 +1703,7 @@ static FnCallResult FnCallMapArray(EvalContext *ctx, FnCall *fp, Rlist *finalarg
 
     while ((assoc = HashIteratorNext(&i)))
     {
-        snprintf(match, CF_MAXVARSIZE - 1, "%.127s[", lval);
+        snprintf(match, CF_MAXVARSIZE - 1, "%.127s[", ref.lval);
 
         if (strncmp(match, assoc->lval, strlen(match)) == 0)
         {
@@ -1781,6 +1770,8 @@ static FnCallResult FnCallMapArray(EvalContext *ctx, FnCall *fp, Rlist *finalarg
             }
         }
     }
+
+    VarRefDestroy(ref);
 
     if (returnlist == NULL)
     {

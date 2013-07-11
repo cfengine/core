@@ -157,6 +157,11 @@ VarRef VarRefParse(const char *var_ref_string)
 
 VarRef VarRefParseFromScope(const char *var_ref_string, const char *scope)
 {
+    if (!scope)
+    {
+        return VarRefParseFromNamespaceAndScope(var_ref_string, NULL, NULL, CF_NS, '.');
+    }
+
     const char *scope_start = strchr(scope, CF_NS);
     if (scope_start)
     {

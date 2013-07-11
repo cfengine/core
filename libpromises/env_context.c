@@ -1119,6 +1119,8 @@ void EvalContextStackPushBodyFrame(EvalContext *ctx, const Body *owner)
     assert((!LastStackFrame(ctx, 0) && strcmp("control", owner->name) == 0) || LastStackFrame(ctx, 0)->type == STACK_FRAME_TYPE_PROMISE);
 
     EvalContextStackPushFrame(ctx, StackFrameNewBody(owner));
+
+    ScopeSetCurrent("body");
 }
 
 void EvalContextStackPushPromiseFrame(EvalContext *ctx, const Promise *owner)
@@ -1210,7 +1212,7 @@ bool EvalContextVariablePut(EvalContext *ctx, VarRef lval, Rval rval, DataType t
 {
     assert(type != DATA_TYPE_NONE);
 
-    if (lval.lval == NULL || lval.scope == NULL)
+    if (lval.lval == NULL)
     {
         ProgrammingError("Bad variable or scope in a variable assignment. scope.value = %s.%s", lval.scope, lval.lval);
     }
@@ -1283,7 +1285,7 @@ bool EvalContextVariablePut(EvalContext *ctx, VarRef lval, Rval rval, DataType t
 
         if (ScopeGetCurrent() && strcmp(ScopeGetCurrent()->scope, "this") != 0)
         {
-            MapIteratorsFromRval(ctx, ScopeGetCurrent()->scope, &listvars, &scalars, rval);
+            MapIteratorsFromRval(ctx, NULL, &listvars, &scalars, rval);
 
             if (listvars != NULL)
             {
@@ -1343,7 +1345,22 @@ bool EvalContextVariableGet(const EvalContext *ctx, VarRef lval, Rval *rval_out,
         return false;
     }
 
-    char *legacy_scope = lval.ns ? StringFormat("%s:%s", lval.ns, lval.scope) : xstrdup(lval.scope);
+    char *legacy_scope = NULL;
+    if (lval.ns)
+    {
+        legacy_scope = StringFormat("%s:%s", lval.ns, lval.scope);
+    }
+    else
+    {
+        if (lval.scope)
+        {
+            legacy_scope = xstrdup(lval.scope);
+        }
+        else
+        {
+            legacy_scope = xstrdup(ScopeGetCurrent()->scope);
+        }
+    }
 
     Scope *get_scope = ScopeGet(legacy_scope);
 
@@ -1640,7 +1657,7 @@ static void SummarizeTransaction(EvalContext *ctx, TransactionContext tc, const 
     {
         char buffer[CF_EXPANDSIZE];
 
-        ExpandScalar(ctx, ScopeGetCurrent()->scope, tc.log_string, buffer);
+        ExpandScalar(ctx, NULL, tc.log_string, buffer);
 
         if (strcmp(logname, "udp_syslog") == 0)
         {

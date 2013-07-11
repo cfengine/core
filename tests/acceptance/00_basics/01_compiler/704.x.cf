@@ -6,50 +6,50 @@
 
 body common control
 {
-  inputs => { "../../default.cf.sub" };
-  bundlesequence  => { default("$(this.promise_filename)") };
-  version => "1.0";
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
 }
 
 #######################################################
 
 bundle agent init
 {
-vars:
-        "dummy" string => "dummy";
+  vars:
+      "dummy" string => "dummy";
 }
 
 #######################################################
 
 bundle agent test
 {
-processes:
-        ".*"
-            process_select => test_plain,
-            signals => { "child" };
+  processes:
+      ".*"
+      process_select => test_plain,
+      signals => { "child" };
 }
 
 body process_select test_plain
 {
-        command => "should-never-find-this";
-        process_result => "command|bfd.pms.wtf!";        # Illegal test names
+      command => "should-never-find-this";
+      process_result => "command|bfd.pms.wtf!";        # Illegal test names
 }
 
 #######################################################
 
 bundle agent check
 {
-vars:
-        "count" string => execresult("$(G.wc) $(test.counter)", "noshell");
+  vars:
+      "count" string => execresult("$(G.wc) $(test.counter)", "noshell");
 
-classes:
-        "ok" expression => regcmp("\s*3\s.*", "$(count)");
+  classes:
+      "ok" expression => regcmp("\s*3\s.*", "$(count)");
 
-reports:
+  reports:
     DEBUG::
-        "Expected to crash - illegal test names";
+      "Expected to crash - illegal test names";
     ok::
-        "$(this.promise_filename) Pass";
+      "$(this.promise_filename) Pass";
     !ok::
-        "$(this.promise_filename) FAIL";
+      "$(this.promise_filename) FAIL";
 }

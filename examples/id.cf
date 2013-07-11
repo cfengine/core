@@ -29,9 +29,9 @@
 body common control
 
 {
-bundlesequence  => { "example"  };
+      bundlesequence  => { "example"  };
 
-version => "1.2.3";
+      version => "1.2.3";
 }
 
 ########################################################
@@ -39,20 +39,20 @@ version => "1.2.3";
 bundle agent example
 
 {
-vars:
+  vars:
 
 
-classes:
+  classes:
 
 
-files:
+  files:
 
-  "/home/mark/tmp/testcopy" 
+      "/home/mark/tmp/testcopy" 
 
-    handle       => "update_rule",
-    copy_from    => mycopy("/home/mark/LapTop/words","127.0.0.1"),
-    perms        => system,
-    depth_search => recurse("inf");
+      handle       => "update_rule",
+      copy_from    => mycopy("/home/mark/LapTop/words","127.0.0.1"),
+      perms        => system,
+      depth_search => recurse("inf");
 
 }
 
@@ -61,7 +61,7 @@ files:
 body perms system
 
 {
-mode  => "0644";
+      mode  => "0644";
 }
 
 #########################################################
@@ -69,7 +69,7 @@ mode  => "0644";
 body depth_search recurse(d)
 
 {
-depth => "$(d)";
+      depth => "$(d)";
 }
 
 #########################################################
@@ -77,12 +77,12 @@ depth => "$(d)";
 body copy_from mycopy(from,server)
 
 {
-source      => "$(from)";
-servers     => { "$(server)" };
-copy_backup => "true";                  #/false/timestamp
-purge       => "false";
-type_check  => "true";
-force_ipv4  => "true";
+      source      => "$(from)";
+      servers     => { "$(server)" };
+      copy_backup => "true";                  #/false/timestamp
+      purge       => "false";
+      type_check  => "true";
+      force_ipv4  => "true";
 }
 
 #########################################################
@@ -92,9 +92,9 @@ force_ipv4  => "true";
 body server control 
 
 {
-allowconnects         => { "127.0.0.1" , "::1" };
-allowallconnects      => { "127.0.0.1" , "::1" };
-trustkeysfrom         => { "127.0.0.1" , "::1" };
+      allowconnects         => { "127.0.0.1" , "::1" };
+      allowallconnects      => { "127.0.0.1" , "::1" };
+      trustkeysfrom         => { "127.0.0.1" , "::1" };
 }
 
 #########################################################
@@ -102,10 +102,10 @@ trustkeysfrom         => { "127.0.0.1" , "::1" };
 bundle server access_rules()
 
 {
-access:
+  access:
 
-  "/home/mark/LapTop"
+      "/home/mark/LapTop"
 
-    handle  => "update_rule",
-    admit   => { "127.0.0.1" };
+      handle  => "update_rule",
+      admit   => { "127.0.0.1" };
 }

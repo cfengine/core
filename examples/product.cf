@@ -23,20 +23,20 @@
 
 body common control
 {
-bundlesequence => { "example" };
+      bundlesequence => { "example" };
 }
 
 bundle agent example
 
 {
-vars:
+  vars:
 
-  "series" rlist => { "1.1", "2.2", "3.3", "5.5", "7.7" };
+      "series" rlist => { "1.1", "2.2", "3.3", "5.5", "7.7" };
 
-  "prod" real => product("series");
-  "sum"  real => sum("series");
+      "prod" real => product("series");
+      "sum"  real => sum("series");
 
-reports:
+  reports:
 
-    "Product result: $(prod) > $(sum)";
+      "Product result: $(prod) > $(sum)";
 }

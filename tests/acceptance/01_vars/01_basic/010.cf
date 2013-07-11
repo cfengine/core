@@ -6,17 +6,17 @@
 
 body common control
 {
-  inputs => { "../../default.cf.sub" };
-  bundlesequence  => { default("$(this.promise_filename)") };
-  version => "1.0";
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
 }
 
 #######################################################
 
 bundle agent init
 {
-vars:
-        "dummy" string => "dummy";
+  vars:
+      "dummy" string => "dummy";
 }
 
 #######################################################
@@ -24,30 +24,30 @@ vars:
 bundle agent test
 {
   vars:
-    "oct2"          string => '20';
-    "oct4"          slist  => { '11', '12' };
-    "separator"     string => ",";
-    "prefix"        string => "10.${oct2}.20";
-    "temp_namelist" slist  => { " ", @(oct4) };
-    "foo"           slist => splitstring (
-        join("${separator}${prefix}", "temp_namelist"),
-        "$(separator)",
-        "99999999999"
-    );
-    "nameserv" slist  => grep ("^[^\s]+$", join(escape("${separator}${prefix}"), "temp_namelist") );
+      "oct2"          string => '20';
+      "oct4"          slist  => { '11', '12' };
+      "separator"     string => ",";
+      "prefix"        string => "10.${oct2}.20";
+      "temp_namelist" slist  => { " ", @(oct4) };
+      "foo"           slist => splitstring (
+					     join("${separator}${prefix}", "temp_namelist"),
+					     "$(separator)",
+					     "99999999999"
+      );
+      "nameserv" slist  => grep ("^[^\s]+$", join(escape("${separator}${prefix}"), "temp_namelist") );
 }
 
 #######################################################
 
 bundle agent check
 {
-classes:
-    "ok" expression => "any";
+  classes:
+      "ok" expression => "any";
 
-reports:
+  reports:
     ok::
-        "$(this.promise_filename) Pass";
+      "$(this.promise_filename) Pass";
     !ok::
-        "$(this.promise_filename) FAIL";
+      "$(this.promise_filename) FAIL";
 }
 

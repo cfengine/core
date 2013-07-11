@@ -19,7 +19,7 @@ bundle agent init
       "results" slist => { 1, "single string parameter",
                            "hardclass OK", "bundle class OK",
                            "5 parameters OK"
-     };
+      };
 
   files:
       "$(G.testfile).expected"

@@ -24,7 +24,7 @@
 body common control
 
 {
-bundlesequence  => { "example" };
+      bundlesequence  => { "example" };
 }
 
 ###########################################################
@@ -32,14 +32,14 @@ bundlesequence  => { "example" };
 bundle agent example
 
 {     
-vars:
+  vars:
 
-  "exists" int => filesize("/etc/passwd");
-  "nexists" int => filesize("/etc/passwdx");
+      "exists" int => filesize("/etc/passwd");
+      "nexists" int => filesize("/etc/passwdx");
 
-reports:
-    "File size $(exists)";
-    "Does not exist $(nexists)";
+  reports:
+      "File size $(exists)";
+      "Does not exist $(nexists)";
 
 }
 

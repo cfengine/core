@@ -23,7 +23,7 @@
 
 body common control
 {
-bundlesequence => { "acls" };
+      bundlesequence => { "acls" };
 }
 
 #########################################
@@ -31,12 +31,12 @@ bundlesequence => { "acls" };
 bundle agent acls
 
 {
-files:
+  files:
 
-  "/media/flash/acl/test_dir"
- 
-    depth_search => include_base,
-    acl => template;
+      "/media/flash/acl/test_dir"
+      
+      depth_search => include_base,
+      acl => template;
 }
 
 #########################################
@@ -44,10 +44,10 @@ files:
 body acl template
 
 {
-acl_method => "overwrite";
-acl_type => "posix";
-acl_default => "access";
-aces => { "user:*:r(wwx),-r:allow", "group:*:+rw:allow", "mask:x:allow", "all:r"};
+      acl_method => "overwrite";
+      acl_type => "posix";
+      acl_default => "access";
+      aces => { "user:*:r(wwx),-r:allow", "group:*:+rw:allow", "mask:x:allow", "all:r"};
 }
 
 #########################################
@@ -55,10 +55,10 @@ aces => { "user:*:r(wwx),-r:allow", "group:*:+rw:allow", "mask:x:allow", "all:r"
 body acl win
 
 {
-acl_method => "overwrite";
-acl_type => "ntfs";
-acl_default => "nochange";
-aces => { "user:Administrator:rw", "group:Bad:rwx(Dpo):deny" };
+      acl_method => "overwrite";
+      acl_type => "ntfs";
+      acl_default => "nochange";
+      aces => { "user:Administrator:rw", "group:Bad:rwx(Dpo):deny" };
 }
 
 #########################################
@@ -66,5 +66,5 @@ aces => { "user:Administrator:rw", "group:Bad:rwx(Dpo):deny" };
 body depth_search include_base
 
 {
-include_basedir => "true";
+      include_basedir => "true";
 }

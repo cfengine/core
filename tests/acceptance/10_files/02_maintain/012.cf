@@ -6,78 +6,78 @@
 
 body common control
 {
-  inputs => { "../../default.cf.sub" };
-  bundlesequence  => { default("$(this.promise_filename)") };
-  version => "1.0";
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
 }
 
 bundle common g
 {
-vars:
-        # This extracts the octal mode, and decimal nlink, uid, gid, size
-        "type_command" string => 'use Fcntl; print Fcntl::S_ISDIR((lstat("$(G.testdir)/destdir"))[2]);';
+  vars:
+      # This extracts the octal mode, and decimal nlink, uid, gid, size
+      "type_command" string => 'use Fcntl; print Fcntl::S_ISDIR((lstat("$(G.testdir)/destdir"))[2]);';
 }
 
 #######################################################
 
 bundle agent init
 {
-files:
-    "$(G.testdir)/srcdir/"
+  files:
+      "$(G.testdir)/srcdir/"
       create => "true";
-    "$(G.testdir)/srcdir/intermediate/"
+      "$(G.testdir)/srcdir/intermediate/"
       create => "true";
-    "$(G.testdir)/srcdir/intermediate/intermediate2/"
+      "$(G.testdir)/srcdir/intermediate/intermediate2/"
       create => "true";
-    "$(G.testdir)/srcdir/intermediate/intermediate2/foo"
+      "$(G.testdir)/srcdir/intermediate/intermediate2/foo"
       create => "true";
 
-    "$(G.testdir)/realdestdir/"
+      "$(G.testdir)/realdestdir/"
       create => "true";
-    "$(G.testdir)/destdir"
+      "$(G.testdir)/destdir"
       comment => "Create a relative link to the target.",
       link_from => ln_s("$(G.testdir)/realdestdir");
 }
 
 
 body link_from ln_s(x) {
-  link_type => "relative";
-  source => "$(x)";
-  when_no_source => "nop";
+      link_type => "relative";
+      source => "$(x)";
+      when_no_source => "nop";
 }
 
 #######################################################
 
 bundle agent test
 {
-files:
-  "$(G.testdir)/destdir/intermediate/intermediate2/foo"
-    copy_from => sync_cp("$(G.testdir)/srcdir/intermediate/intermediate2/foo");
+  files:
+      "$(G.testdir)/destdir/intermediate/intermediate2/foo"
+      copy_from => sync_cp("$(G.testdir)/srcdir/intermediate/intermediate2/foo");
 }
 
 body copy_from sync_cp(from)
 {
-source      => "$(from)";
+      source      => "$(from)";
 }
 
 #######################################################
 
 bundle agent check
 {
-vars:
-        "expect" string => "";
+  vars:
+      "expect" string => "";
 
-        "result" string => execresult(
-            "$(G.perl) -le '$(g.type_command)'", "noshell");
-classes:
-        "ok" expression => strcmp("$(expect)", "$(result)");
+      "result" string => execresult(
+				     "$(G.perl) -le '$(g.type_command)'", "noshell");
+  classes:
+      "ok" expression => strcmp("$(expect)", "$(result)");
 
-reports:
+  reports:
     DEBUG::
-        "expected: '$(expect)'";
-        "got:      '$(result)'";
+      "expected: '$(expect)'";
+      "got:      '$(result)'";
     ok::
-        "$(this.promise_filename) Pass";
+      "$(this.promise_filename) Pass";
     !ok::
-        "$(this.promise_filename) FAIL";
+      "$(this.promise_filename) FAIL";
 }

@@ -29,11 +29,11 @@
 body common control
 
 {
-any::
+    any::
 
-  bundlesequence  => {
-                     postfix
-                     };   
+      bundlesequence  => {
+			   postfix
+      };   
 }
 
 #######################################################
@@ -41,21 +41,21 @@ any::
 bundle agent postfix
 
 {
-vars:
+  vars:
 
- "prefix"     string => "/home/mark/tmp";
- "smtpserver" string => "mailx.domain.tld";
- "mailrelay"  string => "mailx.domain.tld";
+      "prefix"     string => "/home/mark/tmp";
+      "smtpserver" string => "mailx.domain.tld";
+      "mailrelay"  string => "mailx.domain.tld";
 
-files:
+  files:
 
-  "$(prefix)/main.cf"     
-          edit_line => prefix_postfix;
+      "$(prefix)/main.cf"     
+      edit_line => prefix_postfix;
 
-  "$(prefix)/sasl-passwd" 
-          create    => "true",
-          perms     => system("0600","root"),
-          edit_line => AppendIfNSL("$(smtpserver)	_$(fqhost):chmsxrcynz4etzefabj9frejizhs22");
+      "$(prefix)/sasl-passwd" 
+      create    => "true",
+      perms     => system("0600","root"),
+      edit_line => AppendIfNSL("$(smtpserver)	_$(fqhost):chmsxrcynz4etzefabj9frejizhs22");
 
 
 }
@@ -67,41 +67,41 @@ files:
 bundle edit_line prefix_postfix
 
 {
-#
-# Value have the form NAME = "quoted space separated list"
-#
-vars:
+      #
+      # Value have the form NAME = "quoted space separated list"
+      #
+  vars:
 
-  "ps[relayhost]"                  string => "[$(postfix.mailrelay)]:587";
-  "ps[mydomain]"                   string => "iu.hio.no";
-  "ps[smtp_sasl_auth_enable]"      string => "yes";
-  "ps[smtp_sasl_password_maps]"    string => "hash:/etc/postfix/sasl-passwd";
-  "ps[smtp_sasl_security_options]" string => "";
-  "ps[smtp_use_tls]"               string => "yes";
-  "ps[default_privs]"              string => "mailman";
-  "ps[inet_protocols]"             string => "all";
-  "ps[inet_interfaces]"            string => "127.0.0.1";
+      "ps[relayhost]"                  string => "[$(postfix.mailrelay)]:587";
+      "ps[mydomain]"                   string => "iu.hio.no";
+      "ps[smtp_sasl_auth_enable]"      string => "yes";
+      "ps[smtp_sasl_password_maps]"    string => "hash:/etc/postfix/sasl-passwd";
+      "ps[smtp_sasl_security_options]" string => "";
+      "ps[smtp_use_tls]"               string => "yes";
+      "ps[default_privs]"              string => "mailman";
+      "ps[inet_protocols]"             string => "all";
+      "ps[inet_interfaces]"            string => "127.0.0.1";
 
-  "parameter_name" slist => getindices("ps");
+      "parameter_name" slist => getindices("ps");
 
-delete_lines: 
+  delete_lines: 
 
-  "$(parameter_name).*";
+      "$(parameter_name).*";
 
-insert_lines:
+  insert_lines:
 
-  "$(parameter_name) = $(ps[$(parameter_name)])";
+      "$(parameter_name) = $(ps[$(parameter_name)])";
 
 }
 
 ########################################################
 
 bundle edit_line AppendIfNSL(parameter)
-  {
+{
   insert_lines:
 
-    "$(parameter)"; # This is default
-  }
+      "$(parameter)"; # This is default
+}
 
 ########################################
 # Library Bodies
@@ -110,8 +110,8 @@ bundle edit_line AppendIfNSL(parameter)
 body replace_with All(x)
 
 {
-replace_value => "$(x)";
-occurrences => "all";
+      replace_value => "$(x)";
+      occurrences => "all";
 }
 
 #########################################################
@@ -119,6 +119,6 @@ occurrences => "all";
 body perms system(x,owner)
 
 {
-mode  => "0640";
-owners => { "$(owner)", "root" };
+      mode  => "0640";
+      owners => { "$(owner)", "root" };
 }

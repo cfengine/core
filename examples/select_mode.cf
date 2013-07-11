@@ -29,7 +29,7 @@
 body common control
 
 {
-bundlesequence  => { "example" };
+      bundlesequence  => { "example" };
 }
 
 ############################################
@@ -37,13 +37,13 @@ bundlesequence  => { "example" };
 bundle agent example
 
 {
-files:
+  files:
 
-  "/home/mark/tmp/test_from" 
+      "/home/mark/tmp/test_from" 
 
-    file_select => by_modes,
-    transformer => "/bin/echo DETECTED $(this.promiser)",
-    depth_search => recurse("inf");
+      file_select => by_modes,
+      transformer => "/bin/echo DETECTED $(this.promiser)",
+      depth_search => recurse("inf");
 
 }
 
@@ -52,8 +52,8 @@ files:
 body file_select by_modes
 
 {
-search_mode => { "711" , "666" };
-file_result => "mode";
+      search_mode => { "711" , "666" };
+      file_result => "mode";
 }
 
 ############################################
@@ -61,6 +61,6 @@ file_result => "mode";
 body depth_search recurse(d)
 
 {
-depth => "$(d)";
+      depth => "$(d)";
 }
 

@@ -29,7 +29,7 @@
 body common control
 
 {
-bundlesequence  => { "example" };   
+      bundlesequence  => { "example" };   
 }
 
 #######################################################
@@ -37,6 +37,6 @@ bundlesequence  => { "example" };
 bundle agent example
 
 {
-	reports:
-		"This is a test bundle";
+  reports:
+      "This is a test bundle";
 }

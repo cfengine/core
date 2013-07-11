@@ -27,70 +27,70 @@
 
 body common control
 {
-bundlesequence => { "update" };
+      bundlesequence => { "update" };
 }
 
 bundle agent update
 {
-vars:
+  vars:
 
- "master_location" string => "$(sys.workdir)/masterfiles";
+      "master_location" string => "$(sys.workdir)/masterfiles";
 
- "policy_server"   string => readfile("$(sys.workdir)/policy_server.dat",40),
-                      comment => "IP address to locate your policy host.";
+      "policy_server"   string => readfile("$(sys.workdir)/policy_server.dat",40),
+      comment => "IP address to locate your policy host.";
 
-classes:
+  classes:
 
-  "policy_host" or => { 
-                      classmatch(canonify("ipv4_$(policy_server)")),
-                      classmatch(canonify("$(policy_server)"))
-                      },
+      "policy_host" or => { 
+			    classmatch(canonify("ipv4_$(policy_server)")),
+			    classmatch(canonify("$(policy_server)"))
+      },
 
-                   comment => "Define the ip identity of the policy source host";
+      comment => "Define the ip identity of the policy source host";
 
-  "have_ppkeys" expression => fileexists("$(sys.workdir)/ppkeys/localhost.pub");
+      "have_ppkeys" expression => fileexists("$(sys.workdir)/ppkeys/localhost.pub");
 
-  "nofile" expression => fileexists("$(sys.workdir)/policy_server.dat");
+      "nofile" expression => fileexists("$(sys.workdir)/policy_server.dat");
 
-commands:
+  commands:
 
- !have_ppkeys::
+    !have_ppkeys::
 
-   "/var/cfengine/bin/cf-key";
+      "/var/cfengine/bin/cf-key";
 
-files:
+  files:
 
-  "/var/cfengine/inputs" 
+      "/var/cfengine/inputs" 
 
-    handle => "update_policy",
-    perms => u_p("600"),
-    copy_from => u_scp("$(master_location)"),
-    depth_search => u_recurse("inf"),
-    action => immediate;
+      handle => "update_policy",
+      perms => u_p("600"),
+      copy_from => u_scp("$(master_location)"),
+      depth_search => u_recurse("inf"),
+      action => immediate;
 
-processes:
+  processes:
 
-  any::
+    any::
 
-    "cf-execd" restart_class => "start_exec";
+      "cf-execd" restart_class => "start_exec";
 
-  policy_host::
+    policy_host::
 
-    "cf-serverd" restart_class => "start_server";
+      "cf-serverd" restart_class => "start_server";
 
-commands:
+  commands:
 
- start_exec::
-  "$(sys.workdir)/bin/cf-execd",
-   action => logme("executor");
+    start_exec::
+      "$(sys.workdir)/bin/cf-execd",
+      action => logme("executor");
 
- start_server::
-  "$(sys.workdir)/bin/cf-serverd",
-   action => logme("server");
+    start_server::
+      "$(sys.workdir)/bin/cf-serverd",
+      action => logme("server");
 
-reports:
+  reports:
 
-  bootstrap_mode.policy_host::
+    bootstrap_mode.policy_host::
 
       "I am the policy host - i.e. with ipv4 address $(policy_server)";
 
@@ -100,8 +100,8 @@ reports:
 
 body action logme(x)
 {
-log_repaired => "stdout";
-log_string => " -> Started the $(x) (success)";
+      log_repaired => "stdout";
+      log_string => " -> Started the $(x) (success)";
 }
 
 ############################################
@@ -109,7 +109,7 @@ log_string => " -> Started the $(x) (success)";
 body perms u_p(p)
 
 {
-mode  => "$(p)";
+      mode  => "$(p)";
 }
 
 #############################################
@@ -117,20 +117,20 @@ mode  => "$(p)";
 body copy_from u_scp(from)
 
 {
-source      => "$(from)";
-compare     => "digest";
-trustkey    => "true";
+      source      => "$(from)";
+      compare     => "digest";
+      trustkey    => "true";
 
-!policy_host::
+    !policy_host::
 
-servers => { "$(policy_server)" };
+      servers => { "$(policy_server)" };
 }
 
 #########################################################
 
 body action immediate
 {
-ifelapsed => "1";
+      ifelapsed => "1";
 }
 
 ############################################
@@ -138,5 +138,5 @@ ifelapsed => "1";
 body depth_search u_recurse(d)
 
 {
-depth => "$(d)";
+      depth => "$(d)";
 }

@@ -25,7 +25,7 @@
 body common control
 
 {
-bundlesequence  => { "example" };
+      bundlesequence  => { "example" };
 }
 
 ###########################################################
@@ -33,16 +33,16 @@ bundlesequence  => { "example" };
 bundle agent example
 
 {     
-vars:
+  vars:
 
-  "component" slist => { "cf-monitord", "cf-serverd", "cf-execd" };
+      "component" slist => { "cf-monitord", "cf-serverd", "cf-execd" };
 
-  "array[cf-monitord]" string => "The monitor";
-  "array[cf-serverd]" string => "The server";
-  "array[cf-execd]" string => "The executor, not executioner";
+      "array[cf-monitord]" string => "The monitor";
+      "array[cf-serverd]" string => "The server";
+      "array[cf-execd]" string => "The executor, not executioner";
 
-reports:
-   "/bin/echo $(component) is $(array[$(component)])";
+  reports:
+      "/bin/echo $(component) is $(array[$(component)])";
 
 }
 

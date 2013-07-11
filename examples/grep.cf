@@ -29,7 +29,7 @@
 body common control
 
 {
-bundlesequence  => { "example" };   
+      bundlesequence  => { "example" };   
 }
 
 #######################################################
@@ -37,13 +37,13 @@ bundlesequence  => { "example" };
 bundle agent example
 
 {
-vars:
+  vars:
 
-  "mylist" slist => { "One", "Two", "Three", "Four", "Five" };
+      "mylist" slist => { "One", "Two", "Three", "Four", "Five" };
 
-  "sublist" slist => grep("T.*","mylist");
+      "sublist" slist => grep("T.*","mylist");
 
-reports:
-  "Item: $(sublist)";
+  reports:
+      "Item: $(sublist)";
 
 }

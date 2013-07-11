@@ -6,55 +6,55 @@
 
 body common control
 {
-  inputs => { "../../default.cf.sub" };
-  bundlesequence  => { default("$(this.promise_filename)") };
-  version => "1.0";
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
 }
 
 #######################################################
 
 bundle agent init
 {
-vars:
-  "script_name" string => "$(this.promise_filename).script";
+  vars:
+      "script_name" string => "$(this.promise_filename).script";
 }
 
 #######################################################
 
 bundle agent test
 {
-classes:
-  "matched" expression => regextract(".+/([^/]+)$",
-                                     "${init.script_name}",
-                                     "script_basename");
+  classes:
+      "matched" expression => regextract(".+/([^/]+)$",
+					 "${init.script_name}",
+					 "script_basename");
 
-commands:
-  "$(init.script_name)" module => "true";
+  commands:
+      "$(init.script_name)" module => "true";
 }
 
 #######################################################
 
 bundle agent check
 {
-vars:
-  "canonical_script_basename" string => canonify("${test.script_basename[1]}");
+  vars:
+      "canonical_script_basename" string => canonify("${test.script_basename[1]}");
 
-classes:
+  classes:
 
-  CLASSTOBEDEFINED.!UNDEFINEDCLASS::
-    "classok" expression => "any";
+    CLASSTOBEDEFINED.!UNDEFINEDCLASS::
+      "classok" expression => "any";
 
-  any::
-    "varok" expression => strcmp("${${canonical_script_basename}.answer}", "42");
+    any::
+      "varok" expression => strcmp("${${canonical_script_basename}.answer}", "42");
 
-    "ok" and => { "classok", "varok" };
+      "ok" and => { "classok", "varok" };
 
-reports:
+  reports:
     DEBUG::
-        "${${canonical_script_basename}.answer} =?= 42";
+      "${${canonical_script_basename}.answer} =?= 42";
     ok::
-        "$(this.promise_filename) Pass";
+      "$(this.promise_filename) Pass";
     !ok::
-        "$(this.promise_filename) FAIL";
+      "$(this.promise_filename) FAIL";
 }
 

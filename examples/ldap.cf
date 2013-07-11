@@ -25,7 +25,7 @@
 
 body common control
 {
-bundlesequence => { "ldap" , "followup"};
+      bundlesequence => { "ldap" , "followup"};
 }
 
 ###################################################################################################
@@ -36,42 +36,42 @@ bundlesequence => { "ldap" , "followup"};
 
 bundle agent ldap
 {
-vars:
+  vars:
 
-   # Get the first matching value for "uid"
+      # Get the first matching value for "uid"
 
-  "value" string => ldapvalue("ldap://eternity.iu.hio.no","dc=cfengine,dc=com","(sn=User)","uid","subtree","none");
+      "value" string => ldapvalue("ldap://eternity.iu.hio.no","dc=cfengine,dc=com","(sn=User)","uid","subtree","none");
 
-   # Geta all matching values for "uid" - should be a single record match
+      # Geta all matching values for "uid" - should be a single record match
 
-  "list" slist =>  ldaplist("ldap://eternity.iu.hio.no","dc=cfengine,dc=com","(sn=User)","uid","subtree","none");
+      "list" slist =>  ldaplist("ldap://eternity.iu.hio.no","dc=cfengine,dc=com","(sn=User)","uid","subtree","none");
 
-classes:
+  classes:
 
-   "gotdata" expression => ldaparray("myarray","ldap://eternity.iu.hio.no","dc=cfengine,dc=com","(uid=mark)","subtree","none");
+      "gotdata" expression => ldaparray("myarray","ldap://eternity.iu.hio.no","dc=cfengine,dc=com","(uid=mark)","subtree","none");
 
-   "found" expression => regldap("ldap://eternity.iu.hio.no","dc=cfengine,dc=com","(sn=User)","uid","subtree","jon.*","none");
+      "found" expression => regldap("ldap://eternity.iu.hio.no","dc=cfengine,dc=com","(sn=User)","uid","subtree","jon.*","none");
 
-reports:
+  reports:
 
-   "LDAP VALUE $(value) found";
-   "LDAP LIST VALUE $(list)";
+      "LDAP VALUE $(value) found";
+      "LDAP LIST VALUE $(list)";
 
- gotdata::
+    gotdata::
 
-   "Found specific entry data  ...$(ldap.myarray[uid]),$(ldap.myarray[gecos]), etc";
+      "Found specific entry data  ...$(ldap.myarray[uid]),$(ldap.myarray[gecos]), etc";
 
-  found::
+    found::
 
-    "Matched regex";
+      "Matched regex";
 
 }
 
 bundle agent followup
 
 {
-reports:
+  reports:
 
-   "Different bundle  ...$(ldap.myarray[uid]),$(ldap.myarray[gecos]), etc";
+      "Different bundle  ...$(ldap.myarray[uid]),$(ldap.myarray[gecos]), etc";
 
 }

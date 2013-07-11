@@ -22,21 +22,21 @@
 
 body common control 
 { 
-bundlesequence => { "main" }; 
+      bundlesequence => { "main" }; 
 }
 
 
 bundle agent main 
 {
-classes:
+  classes:
 
-    "testclass1" expression => returnszero("$(G.true)","noshell");
-    "testclass2" expression => returnszero("$(G.false)","noshell");
+      "testclass1" expression => returnszero("$(G.true)","noshell");
+      "testclass2" expression => returnszero("$(G.false)","noshell");
 
-reports:
+  reports:
     testclass1::
-        "true is defined";
+      "true is defined";
 
     testclass2::
-        "false is defined";
+      "false is defined";
 }

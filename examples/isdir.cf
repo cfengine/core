@@ -24,7 +24,7 @@
 body common control
 
 {
-bundlesequence  => { "example" };
+      bundlesequence  => { "example" };
 }
 
 ###########################################################
@@ -32,15 +32,15 @@ bundlesequence  => { "example" };
 bundle agent example
 
 {     
-classes:
+  classes:
 
-  "isdir" expression => isdir("/etc");
+      "isdir" expression => isdir("/etc");
 
-reports:
+  reports:
 
-  isdir::
+    isdir::
 
-    "Directory exists..";
+      "Directory exists..";
 
 }
 

@@ -35,8 +35,8 @@
 body common control
 
 {
-version => "1.2.3";
-bundlesequence  => { "bun"  };
+      version => "1.2.3";
+      bundlesequence  => { "bun"  };
 }
 
 ########################################################
@@ -44,56 +44,56 @@ bundlesequence  => { "bun"  };
 bundle agent bun
 
 {
-vars:
+  vars:
 
- "userset" slist => { "one", "two", "three" };
+      "userset" slist => { "one", "two", "three" };
 
-files:
+  files:
 
-  # Make a copy of the password file
+      # Make a copy of the password file
 
-  "/home/mark/tmp/passwd"
+      "/home/mark/tmp/passwd"
 
-       create    => "true",
-       edit_line => set_user_field("mark","6","/home/dir");
+      create    => "true",
+      edit_line => set_user_field("mark","6","/home/dir");
 
-  "/home/mark/tmp/group"
+      "/home/mark/tmp/group"
 
-       create    => "true",
-       edit_line => append_user_field("wheel","4","@(bun.userset)");
+      create    => "true",
+      edit_line => append_user_field("wheel","4","@(bun.userset)");
 
 }
 
 ########################################################
 
 bundle edit_line set_user_field(user,field,val)
-  {
+{
   field_edits:
 
-   "$(user).*"
+      "$(user).*"
 
       # Set field of the file to parameter
 
       edit_field => col(":","$(field)","$(val)","set");
-  }
+}
 
 ########################################################
 
 bundle edit_line append_user_field(user,field,allusers)
-  {
+{
   vars:
 
-    "val" slist => { @(allusers) };
+      "val" slist => { @(allusers) };
 
   field_edits:
 
-   "$(user).*"
+      "$(user).*"
 
       # Set field of the file to parameter
 
       edit_field => col(":","$(field)","$(val)","alphanum");
 
-  }
+}
 
 ########################################
 # Bodies
@@ -102,12 +102,12 @@ bundle edit_line append_user_field(user,field,allusers)
 body edit_field col(split,col,newval,method)
 
 {
-field_separator    => "$(split)";
-select_field       => "$(col)";
-value_separator    => ",";
-field_value        => "$(newval)";
-field_operation    => "$(method)";
-extend_fields      => "true";
-allow_blank_fields => "true";
+      field_separator    => "$(split)";
+      select_field       => "$(col)";
+      value_separator    => ",";
+      field_value        => "$(newval)";
+      field_operation    => "$(method)";
+      extend_fields      => "true";
+      allow_blank_fields => "true";
 }
 

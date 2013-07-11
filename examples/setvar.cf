@@ -23,34 +23,34 @@
 
 body common control
 {
-bundlesequence => { "setvars" };
-inputs => { "libraries/cfengine_stdlib.cf" };
+      bundlesequence => { "setvars" };
+      inputs => { "libraries/cfengine_stdlib.cf" };
 }
 
 bundle agent setvars
 {
-vars:
+  vars:
 
-  # want to set these values by the names of their array keys
+      # want to set these values by the names of their array keys
 
-  "rhs[lhs1]" string => " Mary had a little pig";
-  "rhs[lhs2]" string => "Whose Fleece was white as snow";
-  "rhs[lhs3]" string => "And everywhere that Mary went";
+      "rhs[lhs1]" string => " Mary had a little pig";
+      "rhs[lhs2]" string => "Whose Fleece was white as snow";
+      "rhs[lhs3]" string => "And everywhere that Mary went";
 
-  "rhs[net/ipv4/tcp_syncookies]" string => "1";
-  "rhs[net/ipv4/icmp_echo_ignore_broadcasts]" string => "1";
-  "rhs[net/ipv4/ip_forward]" string => "0";
+      "rhs[net/ipv4/tcp_syncookies]" string => "1";
+      "rhs[net/ipv4/icmp_echo_ignore_broadcasts]" string => "1";
+      "rhs[net/ipv4/ip_forward]" string => "0";
 
-  # oops, now change pig -> lamb
+      # oops, now change pig -> lamb
 
-files:
+  files:
 
 
-  "/tmp/system"
+      "/tmp/system"
 
-       comment => "Create a file of variable assignments and manage this file",
-        create => "true",
-     edit_line => set_variable_values("setvars.rhs");
+      comment => "Create a file of variable assignments and manage this file",
+      create => "true",
+      edit_line => set_variable_values("setvars.rhs");
 
 }
 

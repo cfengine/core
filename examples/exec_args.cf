@@ -27,22 +27,22 @@
 
 body common control
 {
-bundlesequence  => { "main" };
+      bundlesequence  => { "main" };
 }
 
 bundle agent main
 {
 
-vars:
+  vars:
 
-"testlist" slist => { "apple", "banana", "carrot" };
+      "testlist" slist => { "apple", "banana", "carrot" };
 
-commands:
+  commands:
 
-"/bin/echo test1 $(testlist)";
+      "/bin/echo test1 $(testlist)";
 
-"/bin/echo test1"
+      "/bin/echo test1"
 
-   args => "$(testlist)";
+      args => "$(testlist)";
 
 }

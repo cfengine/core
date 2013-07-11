@@ -27,21 +27,21 @@
 #
 ########################################################
 
- #
- # run this as follows:
- #
- # cf-serverd -f runtest_1.cf [-v] (on remote-host.example.org)
- # cf-agent   -f runtest_2.cf (on host 1.2.3.4)
- #
- # Notice that the same file configures all parts of cfengine
- # even though different parts are read by different hosts and agents
+#
+# run this as follows:
+#
+# cf-serverd -f runtest_1.cf [-v] (on remote-host.example.org)
+# cf-agent   -f runtest_2.cf (on host 1.2.3.4)
+#
+# Notice that the same file configures all parts of cfengine
+# even though different parts are read by different hosts and agents
 
 ########################################################
 
 body common control
 
 {
-bundlesequence  => { "example"  };
+      bundlesequence  => { "example"  };
 }
 
 ########################################################
@@ -49,13 +49,13 @@ bundlesequence  => { "example"  };
 bundle agent example
 
 {
-files:
+  files:
 
-  "/tmp/testcopy" 
+      "/tmp/testcopy" 
 
-    perms => system,
-    copy_from => mycopy("/src/document","remote-host.example.org"),
-    depth_search => recurse("inf");
+      perms => system,
+      copy_from => mycopy("/src/document","remote-host.example.org"),
+      depth_search => recurse("inf");
 
 }
 
@@ -64,7 +64,7 @@ files:
 body perms system
 
 {
-mode  => "0444";
+      mode  => "0444";
 }
 
 #########################################################
@@ -72,7 +72,7 @@ mode  => "0444";
 body depth_search recurse(d)
 
 {
-depth => "$(d)";
+      depth => "$(d)";
 }
 
 #########################################################
@@ -80,26 +80,26 @@ depth => "$(d)";
 body copy_from mycopy(from,server)
 
 {
-source      => "$(from)";
-#portnumber => "6789";
-servers     => { "$(server)" , "failover1" };
-copy_backup => "true";                   #/false/timestamp
-stealth     => "true";                   #/on/false/off
-preserve    => "true";
-linkcopy_patterns => { ".*fish.*" };
-copylink_patterns => { "non-local.*"};
-xdev        => "true";                   # /on/false/off
-compare     => "mtime";                  # ctime/mtime/checksum/sum/byte/binary/any
-link_type    => "absolute";              # /symbolic/relative/hard etc
-type_check   => "true";
-force_update => "false";
-force_ipv4   => "false";
-copy_size        => irange("0","50000");
-trustkey    => "true";
-encrypt     => "true";
-verify      => "true";
-purge       => "false";
-findertype  => "MacOSX";
+      source      => "$(from)";
+      #portnumber => "6789";
+      servers     => { "$(server)" , "failover1" };
+      copy_backup => "true";                   #/false/timestamp
+      stealth     => "true";                   #/on/false/off
+      preserve    => "true";
+      linkcopy_patterns => { ".*fish.*" };
+      copylink_patterns => { "non-local.*"};
+      xdev        => "true";                   # /on/false/off
+      compare     => "mtime";                  # ctime/mtime/checksum/sum/byte/binary/any
+      link_type    => "absolute";              # /symbolic/relative/hard etc
+      type_check   => "true";
+      force_update => "false";
+      force_ipv4   => "false";
+      copy_size        => irange("0","50000");
+      trustkey    => "true";
+      encrypt     => "true";
+      verify      => "true";
+      purge       => "false";
+      findertype  => "MacOSX";
 }
 
 #########################################################
@@ -109,10 +109,10 @@ findertype  => "MacOSX";
 body server control 
 
 {
-allowconnects         => { "1.2.3.4" , "::1" };
-allowallconnects      => { "1.2.3.4" , "::1" };
-trustkeysfrom         => { "1.2.3.4" , "::1" };
-# allowusers
+      allowconnects         => { "1.2.3.4" , "::1" };
+      allowallconnects      => { "1.2.3.4" , "::1" };
+      trustkeysfrom         => { "1.2.3.4" , "::1" };
+      # allowusers
 }
 
 #########################################################
@@ -121,11 +121,11 @@ bundle server access_rules()
 
 {
 
-access:
+  access:
 
-  # Grant access to the remote client to access the source docs
+      # Grant access to the remote client to access the source docs
 
-  "/src"   admit   => { "1.2.3.4" };
+      "/src"   admit   => { "1.2.3.4" };
 }
 
 

@@ -31,9 +31,9 @@
 body common control
 
 {
-bundlesequence  => { "example"  };
+      bundlesequence  => { "example"  };
 
-version => "1.2.3";
+      version => "1.2.3";
 }
 
 ########################################################
@@ -41,14 +41,14 @@ version => "1.2.3";
 bundle agent example
 
 {
-files:
+  files:
 
-  "/home/mark/tmp/test_to" 
+      "/home/mark/tmp/test_to" 
 
-    copy_from    => mycopy("/home/mark/tmp/test_from"),
-    perms        => system,
-    move_obstructions => "true",
-    depth_search => recurse("inf");
+      copy_from    => mycopy("/home/mark/tmp/test_from"),
+      perms        => system,
+      move_obstructions => "true",
+      depth_search => recurse("inf");
 
 }
 
@@ -57,7 +57,7 @@ files:
 body perms system
 
 {
-mode  => "0644";
+      mode  => "0644";
 }
 
 #########################################################
@@ -65,7 +65,7 @@ mode  => "0644";
 body depth_search recurse(d)
 
 {
-depth => "$(d)";
+      depth => "$(d)";
 }
 
 #########################################################
@@ -73,9 +73,9 @@ depth => "$(d)";
 body copy_from mycopy(from)
 
 {
-source      => "$(from)";
-#copylink_patterns => { ".*" }; # copy all links
-linkcopy_patterns => { ".*" }; # copy all links
-#copy_backup => "timestamp";
+      source      => "$(from)";
+      #copylink_patterns => { ".*" }; # copy all links
+      linkcopy_patterns => { ".*" }; # copy all links
+      #copy_backup => "timestamp";
 }
 

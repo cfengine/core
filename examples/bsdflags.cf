@@ -23,25 +23,25 @@
 
 body common control
 {
-bundlesequence => { "example" };
+      bundlesequence => { "example" };
 }
 
 bundle agent example
 {
-files:
+  files:
 
- freebsd::
+    freebsd::
 
-   "/tmp/newfile"
+      "/tmp/newfile"
 
-       create => "true",
-       perms => setbsd;
+      create => "true",
+      perms => setbsd;
 
 }
 
 
 body perms setbsd
 {
-bsdflags => { "+uappnd","+uchg", "+uunlnk", "-nodump" };
+      bsdflags => { "+uappnd","+uchg", "+uunlnk", "-nodump" };
 }
 

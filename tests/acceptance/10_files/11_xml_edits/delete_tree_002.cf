@@ -6,20 +6,20 @@
 
 body common control
 {
-  inputs => { "../../default.cf.sub" };
-  bundlesequence  => { default("$(this.promise_filename)") };
-  version => "1.0";
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
 }
 
 #######################################################
 
 bundle agent init
 {
-vars:
-        "states" slist => { "actual", "expected" };
+  vars:
+      "states" slist => { "actual", "expected" };
 
-        "actual" string =>
-"<?xml version=\"1.0\"?>
+      "actual" string =>
+      "<?xml version=\"1.0\"?>
 <Server><Service><Engine><Host name=\"cfe_host\" debug=\"0\" appBase=\"webapps/cfe_host\" unpackWARs=\"true\" autoDeploy=\"true\" xmlValidation=\"false\" xmlNamespaceAware=\"false\">
 
 <Logger className=\"org.apache.catalina.logger.FileLogger\" directory=\"logs\" prefix=\"cfe_host\_log.\" suffix=\".txt\" timestamp=\"true\"/>
@@ -27,34 +27,34 @@ vars:
 <Alias>cfe_alias</Alias>
 </Host></Engine></Service></Server>";
 
-        "expected" string =>
-"<?xml version=\"1.0\"?>
+      "expected" string =>
+      "<?xml version=\"1.0\"?>
 <Server><Service><Engine><OneFish><TwoFish><RedFish><BlueFish/></RedFish></TwoFish></OneFish></Engine></Service></Server>";
 
-files:
-        "$(G.testfile).$(states)"
-            create => "true",
-            edit_line => init_insert("$(init.$(states))"),
-            edit_defaults => init_empty;
+  files:
+      "$(G.testfile).$(states)"
+      create => "true",
+      edit_line => init_insert("$(init.$(states))"),
+      edit_defaults => init_empty;
 }
 
 bundle edit_line init_insert(str)
 {
-insert_lines:
-        "$(str)";
+  insert_lines:
+      "$(str)";
 }
 
 body edit_defaults init_empty
 {
-        empty_file_before_editing => "true";
+      empty_file_before_editing => "true";
 }
 
 #######################################################
 bundle agent test
 {
-vars:
+  vars:
       "tree" string =>
-"<Host name=\"cfe_host\" debug=\"0\" appBase=\"webapps/cfe_host\"
+      "<Host name=\"cfe_host\" debug=\"0\" appBase=\"webapps/cfe_host\"
         unpackWARs=\"true\" autoDeploy=\"true\"
     xmlValidation=\"false\" xmlNamespaceAware=\"false\">
 
@@ -64,26 +64,26 @@ directory=\"logs\"  prefix=\"cfe_host\_log.\" suffix=\".txt\" timestamp=\"true\"
 <Alias>cfe_alias</Alias>
 </Host>";
 
-files:
-        "$(G.testfile).actual"
-            create => "true",
-            edit_xml => test_delete("$(test.tree)");
+  files:
+      "$(G.testfile).actual"
+      create => "true",
+      edit_xml => test_delete("$(test.tree)");
 }
 
 bundle edit_xml test_delete(str)
 {
-delete_tree:
-        "$(str)"
-        build_xpath => "/Server/Service/Engine/OneFish/TwoFish/RedFish/BlueFish",
-        select_xpath => "/Server/Service/Engine";
+  delete_tree:
+      "$(str)"
+      build_xpath => "/Server/Service/Engine/OneFish/TwoFish/RedFish/BlueFish",
+      select_xpath => "/Server/Service/Engine";
 }
 
 #######################################################
 
 bundle agent check
 {
-methods:
-        "any" usebundle => xml_check_diff("$(G.testfile).actual",
-                                          "$(G.testfile).expected",
-                                          "$(this.promise_filename)", "no");
+  methods:
+      "any" usebundle => xml_check_diff("$(G.testfile).actual",
+                                        "$(G.testfile).expected",
+                                        "$(this.promise_filename)", "no");
 }

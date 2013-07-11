@@ -6,72 +6,72 @@
 
 body common control
 {
-  inputs => { "../../default.cf.sub" };
-  bundlesequence  => { default("$(this.promise_filename)") };   
-  version => "1.0";
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };   
+      version => "1.0";
 }
 
 bundle common g
 {
-vars:
-	"a[b]" string => "c";
-	"a[x][y]" string => "z";
+  vars:
+      "a[b]" string => "c";
+      "a[x][y]" string => "z";
 }
 
 #######################################################
 
 bundle agent init
 {
-vars:
-	"dummy" string => "dummy";
+  vars:
+      "dummy" string => "dummy";
 }
 
 #######################################################
 
 bundle agent test
 {
-vars:
-	"dummy" string => "dummy";
+  vars:
+      "dummy" string => "dummy";
 }
 
 #######################################################
 
 bundle agent check
 {
-vars:
-	"a[b]" string => "c";
-	"a[x][y]" string => "z";
+  vars:
+      "a[b]" string => "c";
+      "a[x][y]" string => "z";
 
-classes:
-	"should_fail" or => {
-		    isvariable("g.a"),
-		    isvariable("g.a[c]"),
-		    isvariable("g.a[x]"),
-		    isvariable("g.a[x][y][z]"),
-		    isvariable("a"),
-		    isvariable("a[c]"),
-		    isvariable("a[x]"),
-		    isvariable("a[x][y][z]"),
-		    };
-	"ok" and => {
+  classes:
+      "should_fail" or => {
+			    isvariable("g.a"),
+			    isvariable("g.a[c]"),
+			    isvariable("g.a[x]"),
+			    isvariable("g.a[x][y][z]"),
+			    isvariable("a"),
+			    isvariable("a[c]"),
+			    isvariable("a[x]"),
+			    isvariable("a[x][y][z]"),
+      };
+      "ok" and => {
 		    "!should_fail",
 		    isvariable("g.a[b]"),
 		    isvariable("g.a[x][y]"),
 		    isvariable("a[b]"),
 		    isvariable("a[x][y]"),
-		    };
+      };
 
-reports:
+  reports:
     ok::
-	"$(this.promise_filename) Pass";
+      "$(this.promise_filename) Pass";
     !ok::
-	"$(this.promise_filename) FAIL";
+      "$(this.promise_filename) FAIL";
 }
 
 #######################################################
 
 bundle agent fini
 {
-vars:
-	"dummy" string => "dummy";
+  vars:
+      "dummy" string => "dummy";
 }

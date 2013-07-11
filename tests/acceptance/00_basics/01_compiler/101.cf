@@ -6,25 +6,25 @@
 
 body common control
 {
-  inputs => { "../../default.cf.sub" };
-  bundlesequence  => { default("$(this.promise_filename)") };
-  version => "1.0";
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
 }
 
 #######################################################
 
 bundle agent init
 {
-vars:
-  "dummy" string => "dummy";
+  vars:
+      "dummy" string => "dummy";
 }
 
 #######################################################
 
 bundle agent test
 {
-vars:
-  "mystring" string => "some\
+  vars:
+      "mystring" string => "some\
 thing";
 }
 
@@ -32,15 +32,15 @@ thing";
 
 bundle agent check
 {
-classes:
-  "ok" expression => strcmp("$(test.mystring)", "something");
+  classes:
+      "ok" expression => strcmp("$(test.mystring)", "something");
 
-reports:
+  reports:
     ok::
-        "$(this.promise_filename) Pass";
+      "$(this.promise_filename) Pass";
     !ok::
-        "$(this.promise_filename) FAIL";
-  DEBUG::
-    "$(test.subout)";
+      "$(this.promise_filename) FAIL";
+    DEBUG::
+      "$(test.subout)";
 }
 

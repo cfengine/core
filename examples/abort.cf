@@ -24,13 +24,13 @@
 body common control
 
 {
-bundlesequence => { "example" };
+      bundlesequence => { "example" };
 }
 
 body agent control
 
 {
-abortbundleclasses => { "invalid" };
+      abortbundleclasses => { "invalid" };
 }
 #[%-]
 
@@ -40,20 +40,20 @@ abortbundleclasses => { "invalid" };
 bundle agent example
 
 {
-vars:
+  vars:
 
- #"userlist" slist => { "mark", "john" };           # contains all valid entries
- "userlist" slist => { "mark", "john", "thomas" };  # contains one invalid entry
+      #"userlist" slist => { "mark", "john" };           # contains all valid entries
+      "userlist" slist => { "mark", "john", "thomas" };  # contains one invalid entry
 
-classes:
+  classes:
 
-  "invalid" not => regcmp("[a-z][a-z][a-z][a-z]","$(userlist)"); # The class 'invalid' is set if the user name does not
-                                                                 # contain exactly four un-capitalized letters (bundle
-                                                                 # execution will be aborted if set)
+      "invalid" not => regcmp("[a-z][a-z][a-z][a-z]","$(userlist)"); # The class 'invalid' is set if the user name does not
+      # contain exactly four un-capitalized letters (bundle
+      # execution will be aborted if set)
 
-reports:
+  reports:
 
- !invalid::
+    !invalid::
 
-  "User name $(userlist) is valid at 4 letters";
+      "User name $(userlist) is valid at 4 letters";
 }

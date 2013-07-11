@@ -24,14 +24,14 @@
 
 body common control
 {
-bundlesequence => { "hello" };
+      bundlesequence => { "hello" };
 }
 
 # soft promises
 
 bundle agent hello
 {
-reports:
+  reports:
 
-   "Hello world!";
+      "Hello world!";
 }

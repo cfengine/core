@@ -1,26 +1,26 @@
 
 body common control
 {
-bundlesequence => { "example" };
+      bundlesequence => { "example" };
 }
 
 bundle agent example
 {
-files:
-  "/tmp/motd"
-    edit_line     => my_motd,
-    edit_defaults => empty,
-    create        => "true";
+  files:
+      "/tmp/motd"
+      edit_line     => my_motd,
+      edit_defaults => empty,
+      create        => "true";
 }
 
 bundle edit_line my_motd
 {
-vars:
-  "interfaces_str"  string => join(", ","sys.interfaces");
-  "ipaddresses_str" string => join(", ","sys.ip_addresses");
+  vars:
+      "interfaces_str"  string => join(", ","sys.interfaces");
+      "ipaddresses_str" string => join(", ","sys.ip_addresses");
 
-insert_lines:
-"Welcome to $(sys.fqhost)!
+  insert_lines:
+      "Welcome to $(sys.fqhost)!
 This system is managed by CFEngine.
 The policy was last updated on $(sys.last_policy_update).
 The system has $(sys.cpus) cpus.
@@ -32,5 +32,5 @@ and the ip-addresses assigned are $(ipaddresses_str).";
 
 body edit_defaults empty
 {
-empty_file_before_editing => "true";
+      empty_file_before_editing => "true";
 }

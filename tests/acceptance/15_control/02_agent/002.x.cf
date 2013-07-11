@@ -6,48 +6,48 @@
 
 body common control
 {
-  inputs => { "../../default.cf.sub" };
-  bundlesequence  => { default("$(this.promise_filename)") };
-  version => "1.0";
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
 }
 
 body agent control {
-  abortclasses => { "quitquit.*" };
+      abortclasses => { "quitquit.*" };
 }
 
 #######################################################
 
 bundle agent init
 {
-vars:
-        "dummy" string => "dummy";
+  vars:
+      "dummy" string => "dummy";
 }
 
 #######################################################
 
 bundle agent test
 {
-vars:
-        "dummy" string => "dummy";
+  vars:
+      "dummy" string => "dummy";
 
-classes:
-        "quitquit" expression => "any";
+  classes:
+      "quitquit" expression => "any";
 }
 
 #######################################################
 
 bundle agent check
 {
-vars:
-        "dummy" string => "dummy";
+  vars:
+      "dummy" string => "dummy";
 
-classes:
-        "ok" expression => "any";
+  classes:
+      "ok" expression => "any";
 
-reports:
+  reports:
     ok::
-        "$(this.promise_filename) FAIL";
+      "$(this.promise_filename) FAIL";
     !ok::
-        "$(this.promise_filename) Pass";
+      "$(this.promise_filename) Pass";
 }
 

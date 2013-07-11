@@ -24,7 +24,7 @@
 body common control
 
 {
-bundlesequence  => { "example" };
+      bundlesequence  => { "example" };
 }
 
 ###########################################################
@@ -32,13 +32,13 @@ bundlesequence  => { "example" };
 bundle agent example
 
 {     
-vars:
+  vars:
 
-  "gid" int => getgid("users");
+      "gid" int => getgid("users");
 
-reports:
+  reports:
 
-    "Users gid is $(gid)";
+      "Users gid is $(gid)";
 
 }
 

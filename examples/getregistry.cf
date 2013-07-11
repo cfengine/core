@@ -23,19 +23,19 @@
 
 body common control
 {
-bundlesequence => { "reg" };
+      bundlesequence => { "reg" };
 }
 
 bundle agent reg
 {
-vars:
+  vars:
 
-  windows::
+    windows::
 
-    "value" string => registryvalue("HKEY_LOCAL_MACHINE\SOFTWARE\Cfengine AS\Cfengine","value3");
+      "value" string => registryvalue("HKEY_LOCAL_MACHINE\SOFTWARE\Cfengine AS\Cfengine","value3");
 
-reports:
+  reports:
 
-   "Value extracted: $(value)";
+      "Value extracted: $(value)";
 
 }

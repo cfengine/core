@@ -2,36 +2,36 @@
 
 body common control 
 {
-bundlesequence => { test("/tmp/test.txt") };
+      bundlesequence => { test("/tmp/test.txt") };
 }
 
 bundle agent example(f) 
 {
-vars:
+  vars:
 
- #######################################
- # Define data inline for convenience
- #######################################
+      #######################################
+      # Define data inline for convenience
+      #######################################
 
-  "table"   string => 
+      "table"   string => 
 
-"one: a
+      "one: a
 two: b
 three: c";
 
-#######################################
+      #######################################
 
- "dim" int => parsestringarray(
-	                      "items",
-			      "$(table)",
-			      "\s*#[^\n]*",
-			      ":",
-			      "1000",
-			      "200000"
-			      );
+      "dim" int => parsestringarray(
+				     "items",
+				     "$(table)",
+				     "\s*#[^\n]*",
+				     ":",
+				     "1000",
+				     "200000"
+      );
 
- "keys" slist => getindices("items");
+      "keys" slist => getindices("items");
 
-reports:
-	"$(keys)";
+  reports:
+      "$(keys)";
 }

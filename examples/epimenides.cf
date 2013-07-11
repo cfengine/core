@@ -23,17 +23,17 @@
 
 body common control
 {
-bundlesequence => { "g" };
+      bundlesequence => { "g" };
 }
 
 bundle common g
 {
-vars:
+  vars:
 
-  "head" string => "Swallow my ${tail}";
-  "tail" string => "behind my ";
+      "head" string => "Swallow my ${tail}";
+      "tail" string => "behind my ";
 
-reports:
+  reports:
 
-  "Go $(head)";
+      "Go $(head)";
 }

@@ -2,17 +2,17 @@
 
 body common control
 {
-bundlesequence => { "one"  };
+      bundlesequence => { "one"  };
 }
 
 bundle agent one
 {
-reports:
+  reports:
 
-   "two"
-     depends_on => { "handle_one" };
+      "two"
+      depends_on => { "handle_one" };
 
-   "one"
-     handle => "handle_one";
+      "one"
+      handle => "handle_one";
 
 }

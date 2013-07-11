@@ -35,8 +35,8 @@
 body common control
 
 {
-version => "1.2.3";
-bundlesequence  => { "example"  };
+      version => "1.2.3";
+      bundlesequence  => { "example"  };
 }
 
 ########################################################
@@ -45,33 +45,33 @@ bundle agent example
 
 {
 
-files:
+  files:
 
-  "/home/mark/tmp/cf3_test"
+      "/home/mark/tmp/cf3_test"
 
-       create    => "true",
-       edit_line => myedit("second");
+      create    => "true",
+      edit_line => myedit("second");
 }
 
 ########################################################
 
 bundle edit_line myedit(parameter)
-  {
+{
   vars:
 
-   "edit_variable" string => "private edit variable is $(parameter)"; 
+      "edit_variable" string => "private edit variable is $(parameter)"; 
 
-  
+      
   replace_patterns:
 
-  # replace shell comments with C comments
+      # replace shell comments with C comments
 
-   "#(.*)"
+      "#(.*)"
 
       replace_with => C_comment,
-     select_region => MySection("New section");
+      select_region => MySection("New section");
 
-  }
+}
 
 ########################################
 # Bodies
@@ -80,8 +80,8 @@ bundle edit_line myedit(parameter)
 body replace_with C_comment
 
 {
-replace_value => "/* $(match.1) */"; # backreference 0
-occurrences => "all";  # first, last all
+      replace_value => "/* $(match.1) */"; # backreference 0
+      occurrences => "all";  # first, last all
 }
 
 ########################################################
@@ -89,6 +89,6 @@ occurrences => "all";  # first, last all
 body select_region MySection(x)
 
 {
-select_start => "\[$(x)\]";
-select_end => "\[.*\]";
+      select_start => "\[$(x)\]";
+      select_end => "\[.*\]";
 }

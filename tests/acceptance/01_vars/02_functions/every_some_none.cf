@@ -68,7 +68,7 @@ bundle common testaide
                         "long string",
                         "four", "fix", "six",
                         "one", "two", "three",
-                      };
+      };
 
   classes:
       "every1" expression => every(".*", "test");

@@ -22,21 +22,21 @@
 
 body common control
 {
-bundlesequence  => { "mycopy" };
-inputs => { "libraries/cfengine_stdlib.cf" };
+      bundlesequence  => { "mycopy" };
+      inputs => { "libraries/cfengine_stdlib.cf" };
 }
 
 bundle agent mycopy
 {
-files:
+  files:
 
-  "/home/mark/tmp/test_plain"
+      "/home/mark/tmp/test_plain"
 
-    copy_from => local_cp("$(sys.workdir)/bin/file");
+      copy_from => local_cp("$(sys.workdir)/bin/file");
 
-  "/home/mark/tmp/test_remote_plain"
+      "/home/mark/tmp/test_remote_plain"
 
-    copy_from => secure_cp("$(sys.workdir)/bin/file","serverhost");
+      copy_from => secure_cp("$(sys.workdir)/bin/file","serverhost");
 }
 
 

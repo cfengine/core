@@ -2,63 +2,63 @@
 
 body common control
 {
-bundlesequence => { "overture" };
-inputs => { "libraries/cfengine_stdlib.cf" };
+      bundlesequence => { "overture" };
+      inputs => { "libraries/cfengine_stdlib.cf" };
 }
 
 #######################################################
 
 bundle agent overture
 {
-classes:
-  "extended_context" 
-     expression => remoteclassesmatching(".*did.*","127.0.0.1","yes","got");
+  classes:
+      "extended_context" 
+      expression => remoteclassesmatching(".*did.*","127.0.0.1","yes","got");
 
-files:
+  files:
 
-   "/etc/passwd"
-     create => "true",
-    classes => set_outcome_classes;
+      "/etc/passwd"
+      create => "true",
+      classes => set_outcome_classes;
 
 
-reports:
+  reports:
 
- got_did_task_one::
-    "task 1 complete";
+    got_did_task_one::
+      "task 1 complete";
 
- extended_context.got_did_task_two::
-    "task 2 complete";
+    extended_context.got_did_task_two::
+      "task 2 complete";
 
- extended_context.got_did_task_three::
-    "task 3 complete";
+    extended_context.got_did_task_three::
+      "task 3 complete";
 
 }
 
 
 body classes set_outcome_classes
 {
-promise_kept => { "did_task_one","did_task_two", "did_task_three" };
-promise_repaired => { "did_task_one","did_task_two", "did_task_three" };
-#cancel_kept => { "did_task_one" };
-persist_time => "10";
+      promise_kept => { "did_task_one","did_task_two", "did_task_three" };
+      promise_repaired => { "did_task_one","did_task_two", "did_task_three" };
+      #cancel_kept => { "did_task_one" };
+      persist_time => "10";
 }
 
 body server control 
 
 {
-allowconnects         => { "127.0.0.1" , "::1",};
-allowallconnects      => { "127.0.0.1" , "::1", };
-trustkeysfrom         => { "127.0.0.1" , "::1",};
+      allowconnects         => { "127.0.0.1" , "::1",};
+      allowallconnects      => { "127.0.0.1" , "::1", };
+      trustkeysfrom         => { "127.0.0.1" , "::1",};
 }
 
 
 
 bundle server access_rules()
 {
-access:
+  access:
 
-  "did.*"
-    resource_type => "context",
-    admit => { "127.0.0.1" };
+      "did.*"
+      resource_type => "context",
+      admit => { "127.0.0.1" };
 
 }

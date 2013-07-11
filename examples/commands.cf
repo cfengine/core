@@ -23,22 +23,22 @@
 
 body common control
 {
-bundlesequence  => { "my_commands" };
-inputs => { "libraries/cfengine_stdlib.cf" };
+      bundlesequence  => { "my_commands" };
+      inputs => { "libraries/cfengine_stdlib.cf" };
 }
 
 
 bundle agent my_commands
 {
-commands:
+  commands:
 
- Sunday.Hr04.Min05_10.myhost::
+    Sunday.Hr04.Min05_10.myhost::
 
-  "/usr/bin/update_db";
+      "/usr/bin/update_db";
 
- any::
+    any::
 
-  "/etc/mysql/start"
+      "/etc/mysql/start"
 
       contain => setuid("mysql");
 

@@ -41,7 +41,7 @@
 body common control
 
 {
-bundlesequence  => { "example"  };
+      bundlesequence  => { "example"  };
 }
 
 ########################################################
@@ -49,16 +49,16 @@ bundlesequence  => { "example"  };
 bundle agent example
 
 {
-vars:
+  vars:
 
- "v1" string => "numerical backreference";
+      "v1" string => "numerical backreference";
 
-files:
+  files:
 
-  "/home/mark/tmp/cf3_test"
+      "/home/mark/tmp/cf3_test"
 
-       create    => "true",
-       edit_line => AppendIfNoLine("cfengine tcp 5308","second");
+      create    => "true",
+      edit_line => AppendIfNoLine("cfengine tcp 5308","second");
 
 
 }
@@ -66,39 +66,39 @@ files:
 ########################################################
 
 bundle edit_line AppendIfNoLine(parameter,two)
-  {
+{
   vars:
 
-    "list"        slist => { "1", "2", "3"  };
+      "list"        slist => { "1", "2", "3"  };
 
   insert_lines:
 
-   "$(parameter) and $(two)-$(list)" location => append;
+      "$(parameter) and $(two)-$(list)" location => append;
 
-   "NEW Special-insert!!!" select_region => MySection("New section");
-   "set variable = value" select_region => MySection("New section");
+      "NEW Special-insert!!!" select_region => MySection("New section");
+      "set variable = value" select_region => MySection("New section");
 
 
-   "/home/mark/tmp/insert"    insert_type => "file",
-                           expand_scalars => "true",
-                            select_region => MySection("New section");
+      "/home/mark/tmp/insert"    insert_type => "file",
+      expand_scalars => "true",
+      select_region => MySection("New section");
 
   delete_lines:
 
-   # "l.*";
-   # "NEW.*" select_region => MySection("New section");
+      # "l.*";
+      # "NEW.*" select_region => MySection("New section");
 
-   # Delete LinesStarting in file
+      # Delete LinesStarting in file
 
-  }
+}
 
 ########################################################
 
 body location append
 
 {
-# If not line to match, applies to whole text body
-before_after => "after";
+      # If not line to match, applies to whole text body
+      before_after => "after";
 }
 
 ########################################################
@@ -106,9 +106,9 @@ before_after => "after";
 body location after(x)
 
 {
-# If not line to match, applies to whole text body
-#select_line_matching => "$(x)";
-before_after => "after";
+      # If not line to match, applies to whole text body
+      #select_line_matching => "$(x)";
+      before_after => "after";
 }
 
 ########################################################
@@ -116,6 +116,6 @@ before_after => "after";
 body select_region MySection(x)
 
 {
-select_start => "\[$(x)\]";
-select_end => "\[.*\]";
+      select_start => "\[$(x)\]";
+      select_end => "\[.*\]";
 }

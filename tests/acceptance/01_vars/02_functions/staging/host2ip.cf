@@ -6,74 +6,74 @@
 
 body common control
 {
-  inputs => { "../../default.cf.sub" };
-  bundlesequence  => { default("$(this.promise_filename)") };   
-  version => "1.0";
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };   
+      version => "1.0";
 }
 
 bundle common g
 {
-vars:
-	"dummy" string => "dummy";
+  vars:
+      "dummy" string => "dummy";
 }
 
 #######################################################
 
 bundle agent init
 {
-vars:
-	"dummy" string => "dummy";
+  vars:
+      "dummy" string => "dummy";
 }
 
 #######################################################
 
 bundle agent test
 {
-vars:
-    # Neither of these are likely to change...
-    "localhost" string => ip2host("127.0.0.1");
-    "localhost_6" string => ip2host("::1");
-    "a" string => ip2host("198.41.0.4");
-    "a_6" string => ip2host("2001:503:ba3e::2:30");
+  vars:
+      # Neither of these are likely to change...
+      "localhost" string => ip2host("127.0.0.1");
+      "localhost_6" string => ip2host("::1");
+      "a" string => ip2host("198.41.0.4");
+      "a_6" string => ip2host("2001:503:ba3e::2:30");
 }
 
 #######################################################
 
 bundle agent check
 {
-vars:
-    "localhost" string => "localhost";
-    "a" string => "a.root-servers.net";
+  vars:
+      "localhost" string => "localhost";
+      "a" string => "a.root-servers.net";
 
-classes:
-	"ok_a" and => {
-		    strcmp("$(test.a)", "$(a)"),
-		    strcmp("$(test.a_6)", "$(a)"),
-		    };
-        "ok_localhost" and => {
-                    strcmp("$(test.localhost)", "$(localhost)"),
-                    strcmp("$(test.localhost_6)", "$(localhost)"),
-                    };
-	"ok" and => {
+  classes:
+      "ok_a" and => {
+		      strcmp("$(test.a)", "$(a)"),
+		      strcmp("$(test.a_6)", "$(a)"),
+      };
+      "ok_localhost" and => {
+			      strcmp("$(test.localhost)", "$(localhost)"),
+			      strcmp("$(test.localhost_6)", "$(localhost)"),
+      };
+      "ok" and => {
 		    "ok_a",
                     "ok_localhost",
-		    };
+      };
 
-reports:
+  reports:
     DEBUG::
-	"Expected ($(test.localhost) and $(test.localhost_6)) == $(localhost)";
-	"Expected ($(test.a) and $(test.a_6)) == $(a)";
+      "Expected ($(test.localhost) and $(test.localhost_6)) == $(localhost)";
+      "Expected ($(test.a) and $(test.a_6)) == $(a)";
     ok::
-	"$(this.promise_filename) Pass";
+      "$(this.promise_filename) Pass";
 
     !ok::
-	"$(this.promise_filename) FAIL";
+      "$(this.promise_filename) FAIL";
 }
 
 #######################################################
 
 bundle agent fini
 {
-vars:
-	"dummy" string => "dummy";
+  vars:
+      "dummy" string => "dummy";
 }

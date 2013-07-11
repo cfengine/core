@@ -25,7 +25,7 @@
 body common control
 
 {
-bundlesequence  => { "example" };
+      bundlesequence  => { "example" };
 }
 
 ###########################################################
@@ -33,13 +33,13 @@ bundlesequence  => { "example" };
 bundle agent example
 
 {     
-vars:
+  vars:
 
-  "mylist" ilist => { readintlist("/tmp/listofint","#.*","[\n]",10,400) };
+      "mylist" ilist => { readintlist("/tmp/listofint","#.*","[\n]",10,400) };
 
-reports:
+  reports:
 
-    "List entry: $(mylist)";
+      "List entry: $(mylist)";
 
 }
 

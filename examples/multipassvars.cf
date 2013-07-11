@@ -22,14 +22,14 @@
 
 body common control 
 {
-bundlesequence => { "example" };
+      bundlesequence => { "example" };
 }
 
 bundle agent example 
 {
-vars:
+  vars:
     any::
-        "tempdir" string => execresult("/bin/mktemp -d", "noshell");
-reports:
-        "tempdir: ${tempdir}";
+      "tempdir" string => execresult("/bin/mktemp -d", "noshell");
+  reports:
+      "tempdir: ${tempdir}";
 }

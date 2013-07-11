@@ -6,95 +6,95 @@
 
 body common control
 {
-  inputs => { "../../default.cf.sub" };
-  bundlesequence  => { default("$(this.promise_filename)") };   
-  version => "1.0";
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };   
+      version => "1.0";
 }
 
 bundle agent init
 {
-vars:
-	"dummy" string => "dummy";
+  vars:
+      "dummy" string => "dummy";
 }
 
 #######################################################
 
 bundle agent test
 {
-vars:
-    	"foo" int => "42";
-	"baz[a]" string => "alpha";
-	"gar" string => "$(missing)";
-	"bletch" string => "$(gar)";
+  vars:
+      "foo" int => "42";
+      "baz[a]" string => "alpha";
+      "gar" string => "$(missing)";
+      "bletch" string => "$(gar)";
 
-classes:
-	# Known values should test easily
-	"s_foo" expression => strcmp("$(foo)", "42");
-	"s_baz_a" expression => strcmp("$(baz[a])", "alpha");
-	# Missing variable names expand to $(varname) in reports and should
-	# expand to the same value in strcmp...
-	"s_missing" expression => strcmp("$(missing)", "$(const.dollar)(missing)");
-	"s_baz_b" expression => strcmp("$(baz[b])", "$(const.dollar)(baz[b])");
-	# We test the rest two ways because we assigned a missing variable to
-	# another variable - first the literal assigned value and then the
-	# expanded version testing for missing vars
-	"s_gar" expression => strcmp("$(gar)", "$(missing)");
-	"s_gar2" expression => strcmp("$(gar)", "$(const.dollar)(missing)");
-	"s_bletch" expression => strcmp("$(bletch)", "$(missing)");
-	"s_bletch2" expression => strcmp("$(bletch)", "$(const.dollar)(missing)");
+  classes:
+      # Known values should test easily
+      "s_foo" expression => strcmp("$(foo)", "42");
+      "s_baz_a" expression => strcmp("$(baz[a])", "alpha");
+      # Missing variable names expand to $(varname) in reports and should
+      # expand to the same value in strcmp...
+      "s_missing" expression => strcmp("$(missing)", "$(const.dollar)(missing)");
+      "s_baz_b" expression => strcmp("$(baz[b])", "$(const.dollar)(baz[b])");
+      # We test the rest two ways because we assigned a missing variable to
+      # another variable - first the literal assigned value and then the
+      # expanded version testing for missing vars
+      "s_gar" expression => strcmp("$(gar)", "$(missing)");
+      "s_gar2" expression => strcmp("$(gar)", "$(const.dollar)(missing)");
+      "s_bletch" expression => strcmp("$(bletch)", "$(missing)");
+      "s_bletch2" expression => strcmp("$(bletch)", "$(const.dollar)(missing)");
 
-	"good" and => {   
-		"s_foo",
-		"s_baz_a",
-		"s_gar",
-		"s_gar2",
-		"s_bletch",
-		"s_bletch2",
-		};
+      "good" and => {   
+		      "s_foo",
+		      "s_baz_a",
+		      "s_gar",
+		      "s_gar2",
+		      "s_bletch",
+		      "s_bletch2",
+      };
 
-	"v_missing" expression => isvariable("missing");
-	"v_baz" expression => isvariable("baz");
-	"v_baz_b" expression => isvariable("baz[b]");
+      "v_missing" expression => isvariable("missing");
+      "v_baz" expression => isvariable("baz");
+      "v_baz_b" expression => isvariable("baz[b]");
 
-	"bad" or => {
-		"v_missing",
-		"v_baz",
-		"v_baz_b",
-		"v_baz_x",
-		};
+      "bad" or => {
+		    "v_missing",
+		    "v_baz",
+		    "v_baz_b",
+		    "v_baz_x",
+      };
 
-	"ok" expression => "good&!bad";
+      "ok" expression => "good&!bad";
 
-reports:
+  reports:
     DEBUG.ok::
-	"Saw exactly what we expected";
+      "Saw exactly what we expected";
 
     DEBUG.!ok::
-	"Saw unexpected results!!";
+      "Saw unexpected results!!";
     DEBUG.v_missing::
-	"$(const.dollar)missing is a variable, and shouldn't be!";
+      "$(const.dollar)missing is a variable, and shouldn't be!";
     DEBUG.v_baz::
-	"$(const.dollar)baz is a variable, and shouldn't be!";
+      "$(const.dollar)baz is a variable, and shouldn't be!";
     DEBUG.v_baz_b::
-	"$(const.dollar)baz[b] is a variable, and shouldn't be!";
+      "$(const.dollar)baz[b] is a variable, and shouldn't be!";
 
     DEBUG.!s_foo::
-	"expected $(const.dollar)foo = '42', saw '$(foo)'";
+      "expected $(const.dollar)foo = '42', saw '$(foo)'";
     DEBUG.!s_baz_a::
-	"expected $(const.dollar)baz[a] = 'alpha', saw '$(baz[a])'";
+      "expected $(const.dollar)baz[a] = 'alpha', saw '$(baz[a])'";
     DEBUG.!(s_gar.s_gar2)::
-	"expected $(const.dollar)gar = '$(const.dollar)(missing)', saw '$(gar)'";
+      "expected $(const.dollar)gar = '$(const.dollar)(missing)', saw '$(gar)'";
     DEBUG.!(s_bletch.s_bletch2)::
-	"expected $(const.dollar)bletch = '$(const.dollar)(missing)', saw '$(bletch)'";
+      "expected $(const.dollar)bletch = '$(const.dollar)(missing)', saw '$(bletch)'";
 }
 
 bundle agent check
 {
-reports:
+  reports:
     ok::
-	"$(this.promise_filename) Pass";
+      "$(this.promise_filename) Pass";
 
     !ok::
-	"$(this.promise_filename) FAIL";
+      "$(this.promise_filename) FAIL";
 
 }

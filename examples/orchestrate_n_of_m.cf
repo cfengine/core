@@ -12,34 +12,34 @@
 
 body common control
 {
-bundlesequence => { "n_of_m_symphony" };
-inputs => { "libraries/cfengine_stdlib.cf" };
+      bundlesequence => { "n_of_m_symphony" };
+      inputs => { "libraries/cfengine_stdlib.cf" };
 }
 
 ############################################################
 
 bundle agent n_of_m_symphony
 {
-vars:
+  vars:
 
-  "count_compliant_hosts"  string => hubknowledge("running_myprocess");
+      "count_compliant_hosts"  string => hubknowledge("running_myprocess");
 
-classes:
+  classes:
 
-  "reboot" expression => isgreaterthan("$(count_compliant_hosts)","20");
+      "reboot" expression => isgreaterthan("$(count_compliant_hosts)","20");
 
-processes:
+  processes:
 
-  "myprocess" 
+      "myprocess" 
 
-       comment => "Count this host if a job is matched",
-       classes => enumerate("running_myprocess");
+      comment => "Count this host if a job is matched",
+      classes => enumerate("running_myprocess");
 
-commands:
+  commands:
 
-  reboot::
+    reboot::
 
-     "/bin/shutdown now";
+      "/bin/shutdown now";
 }
 
 
@@ -47,16 +47,16 @@ commands:
 
 bundle server access_rules()
 {
-access:
+  access:
 
-  "value of my test_scalar, can expand variables here - $(sys.host)"
-    handle => "test_scalar",
-    comment => "Grant access to contents of test_scalar VAR",
-    resource_type => "literal",
-    admit => { "127.0.0.1" };
+      "value of my test_scalar, can expand variables here - $(sys.host)"
+      handle => "test_scalar",
+      comment => "Grant access to contents of test_scalar VAR",
+      resource_type => "literal",
+      admit => { "127.0.0.1" };
 
-  "running_myprocess"
-    resource_type => "variable",
-    admit => { "127.0.0.1" };
+      "running_myprocess"
+      resource_type => "variable",
+      admit => { "127.0.0.1" };
 
 }

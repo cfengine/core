@@ -2479,6 +2479,7 @@ int GetUptimeMinutes(time_t now)
 {
 #ifdef CF_SYS_UPTIME_IMPLEMENTED
     time_t boot_time = 0;
+    errno = 0;
 #endif
 
 #if defined(BOOT_TIME_WITH_SYSINFO)         // Most GNU, Linux platforms
@@ -2582,8 +2583,10 @@ static time_t GetBootTimeFromUptimeCommand(time_t now)
     char uptime_output[CF_SMALLBUF] = { '\0' }, *backref;
     const char *uptimepath = "/usr/bin/uptime";
     time_t uptime = 0;
+    const char *errptr;
+    int erroffset;
     
-    rx = pcre_compile(UPTIME_REGEXP, PCRE_FIRSTLINE, NULL, NULL, NULL);
+    rx = pcre_compile(UPTIME_REGEXP, 0, &errptr, &erroffset, NULL);
     if (rx == NULL)
     {
         Log(LOG_LEVEL_DEBUG, "failed to compile regexp to parse uptime command"); 

@@ -1,4 +1,5 @@
 sbin_PROGRAMS = cf-monitord
+noinst_LIBRARIES = libcf-monitord.a
 
 AM_CPPFLAGS = @CPPFLAGS@ \
 	-I$(srcdir)/../libutils \
@@ -31,6 +32,8 @@ cf_monitord_SOURCES = \
         mon_processes.c \
         mon_temp.c \
         cf-monitord.c
+
+libcf_monitord_a_SOURCES = $(cf_monitord_SOURCES)
 
 if !HAVE_ENTERPRISE
 cf_monitord_SOURCES += \

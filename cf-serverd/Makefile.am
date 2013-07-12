@@ -1,4 +1,5 @@
 sbin_PROGRAMS = cf-serverd
+noinst_LIBRARIES = libcf-serverd.a
 
 AM_CPPFLAGS = @CPPFLAGS@ -I$(srcdir)/../libpromises -I$(srcdir)/../libutils \
 	-I$(srcdir)/../libcfnet \
@@ -23,6 +24,8 @@ if !HAVE_ENTERPRISE
 cf_serverd_SOURCES += \
 	cf-serverd-enterprise-stubs.c cf-serverd-enterprise-stubs.h
 endif
+
+libcf_serverd_a_SOURCES = $(cf_serverd_SOURCES)
 
 CLEANFILES = *.gcno *.gcda
 

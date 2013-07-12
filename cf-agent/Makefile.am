@@ -1,4 +1,5 @@
 sbin_PROGRAMS = cf-agent
+noinst_LIBRARIES = libcf-agent.a
 
 AM_CPPFLAGS = @CPPFLAGS@ -I$(srcdir)/../libpromises -I$(srcdir)/../libutils \
 	-I$(srcdir)/../libcfnet \
@@ -72,6 +73,8 @@ cf_agent_SOURCES = \
         vercmp_internal.c vercmp_internal.h \
         vercmp.c vercmp.h \
         verify_packages.c verify_packages.h
+
+libcf_agent_a_SOURCES = $(cf_agent_SOURCES)
 
 if !NT
 cf_agent_SOURCES += nfs.c nfs.h

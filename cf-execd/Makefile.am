@@ -1,4 +1,5 @@
 sbin_PROGRAMS = cf-execd
+noinst_LIBRARIES = libcf-execd.a
 
 AM_CPPFLAGS = @CPPFLAGS@ \
 	-I$(srcdir)/../libpromises \
@@ -22,6 +23,8 @@ cf_execd_SOURCES = \
         cf-execd.c cf-execd.h \
         cf-execd-runner.c cf-execd-runner.h \
         exec-config.c exec-config.h
+
+libcf_execd_a_SOURCES = $(cf_execd_SOURCES)
 
 CLEANFILES = *.gcno *.gcda
 

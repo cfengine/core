@@ -2917,7 +2917,7 @@ static FnCallResult FnCallIsVariable(EvalContext *ctx, FnCall *fp, Rlist *finala
     }
     else
     {
-        VarRef ref = VarRefParseFromScope(lval, "this");
+        VarRef ref = VarRefParse(lval);
         found = EvalContextVariableGet(ctx, ref, &rval, NULL);
         VarRefDestroy(ref);
     }

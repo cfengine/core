@@ -6,7 +6,7 @@ AM_CPPFLAGS = @CPPFLAGS@ \
 	-I$(srcdir)/../libpromises \
 	$(ENTERPRISE_CPPFLAGS)
 
-if HAVE_NOVA
+if HAVE_ENTERPRISE
 AM_CPPFLAGS += -I$(abs_top_srcdir)/enterprise/libcfmonitord
 endif
 
@@ -14,7 +14,7 @@ AM_CFLAGS = @CFLAGS@ \
 	$(ENTERPRISE_CFLAGS)
 
 cf_monitord_LDADD = ../libpromises/libpromises.la
-if HAVE_NOVA
+if HAVE_ENTERPRISE
 cf_monitord_LDADD += ../enterprise/libcfmonitord/libcfmonitord.la
 endif
 
@@ -32,7 +32,7 @@ cf_monitord_SOURCES = \
         mon_temp.c \
         cf-monitord.c
 
-if !HAVE_NOVA
+if !HAVE_ENTERPRISE
 cf_monitord_SOURCES += \
 	cf-monitord-enterprise-stubs.c cf-monitord-enterprise-stubs.h
 endif

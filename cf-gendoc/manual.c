@@ -39,7 +39,7 @@
 #include "rlist.h"
 #include "conversion.h"
 
-#ifdef HAVE_NOVA
+#ifdef HAVE_ENTERPRISE
 # include "cf.enterprise.h"
 #endif
 
@@ -298,7 +298,7 @@ static void TexinfoHeader(FILE *fout)
             "@c %%** end of header\n"
             "@titlepage\n"
             "@title CFEngine Reference Manual\n" "@subtitle Auto generated, self-healing knowledge\n" "@subtitle %s\n"
-#ifdef HAVE_NOVA
+#ifdef HAVE_ENTERPRISE
             "@subtitle %s\n"
 #endif
             "@author cfengine.com\n"
@@ -348,7 +348,7 @@ static void TexinfoHeader(FILE *fout)
             "<a href=\"#Contents\"><h1>COMPLETE TABLE OF CONTENTS</h1></a>\n"
             "<h2>Summary of contents</h2>\n"
             "@end html\n" "@end ifhtml\n" "@iftex\n" "@contents\n" "@end iftex\n", NameVersion()
-#ifdef HAVE_NOVA
+#ifdef HAVE_ENTERPRISE
             , Nova_NameVersion()
 #endif
         );
@@ -691,7 +691,7 @@ static bool GenerateStub(const char *filename)
         return false;
     }
 
-#ifdef HAVE_NOVA
+#ifdef HAVE_ENTERPRISE
     fprintf(fp, "\n@i{History}: Was introduced in %s, Enterprise %s (%d)\n\n", Version(), Nova_Version(), BUILD_YEAR);
 #else
     fprintf(fp, "\n@i{History}: Was introduced in %s (%d)\n\n", Version(), BUILD_YEAR);

@@ -82,7 +82,7 @@ uid_t Str2Uid(char *uidbuff, char *copy, const Promise *pp);
 gid_t Str2Gid(char *gidbuff, char *copy, const Promise *pp);
 #endif /* !__MINGW32__ */
 
-#ifdef HAVE_NOVA
+#ifdef HAVE_ENTERPRISE
 
 const char *Nova_LongArch(const char *arch);
 const char *Nova_ShortArch(const char *arch);

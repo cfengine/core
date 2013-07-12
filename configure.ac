@@ -238,7 +238,7 @@ AM_CONDITIONAL(MONGO, false)
 
 m4_indir(incstart[]incend, [enterprise/options.m4])
 m4_indir(incstart[]incend, [nova/options.m4])
-AM_CONDITIONAL([HAVE_NOVA], [test "x$with_nova" != xno && test -d ${srcdir}/nova])
+AM_CONDITIONAL([HAVE_ENTERPRISE], [test "x$with_nova" != xno && test -d ${srcdir}/nova])
 
 dnl
 dnl In-process databases

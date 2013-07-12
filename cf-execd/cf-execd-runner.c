@@ -36,7 +36,7 @@
 #include "misc_lib.h"
 #include "assert.h"
 
-#ifdef HAVE_NOVA
+#ifdef HAVE_ENTERPRISE
 # if defined(__MINGW32__)
 #  include "win_execd_pipe.h"
 # endif

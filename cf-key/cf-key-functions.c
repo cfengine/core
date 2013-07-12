@@ -38,11 +38,11 @@
 
 #include "cf-key-functions.h"
 
-#ifdef HAVE_NOVA
+#ifdef HAVE_ENTERPRISE
 #include "license.h"
 #endif
 
-#ifdef HAVE_NOVA
+#ifdef HAVE_ENTERPRISE
 static bool LicensePublicKeyPath(char path_public_key[MAX_FILENAME], char *path_license);
 #endif
 
@@ -319,7 +319,7 @@ void KeepKeyPromises(const char *public_key_file, const char *private_key_file)
 }
 
 
-#ifndef HAVE_NOVA
+#ifndef HAVE_ENTERPRISE
 bool LicenseInstall(ARG_UNUSED char *path_source)
 {
     Log(LOG_LEVEL_ERR, "License installation only applies to CFEngine Enterprise");
@@ -327,7 +327,7 @@ bool LicenseInstall(ARG_UNUSED char *path_source)
     return false;
 }
 
-#else  /* HAVE_NOVA */
+#else  /* HAVE_ENTERPRISE */
 bool LicenseInstall(char *path_source)
 {
     struct stat sb;
@@ -390,4 +390,4 @@ static bool LicensePublicKeyPath(char path_public_key[MAX_FILENAME], char *path_
 
     return true;
 }
-#endif  /* HAVE_NOVA */
+#endif  /* HAVE_ENTERPRISE */

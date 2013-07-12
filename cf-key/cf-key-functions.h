@@ -37,7 +37,7 @@
 #include "env_context.h"
 #include "crypto.h"
 
-#ifdef HAVE_NOVA
+#ifdef HAVE_ENTERPRISE
 #include "license.h"
 #endif
 

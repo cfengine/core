@@ -766,7 +766,7 @@ FileChange GetChangeMgtConstraints(const EvalContext *ctx, const Promise *pp)
 
     if (value && (strcmp(value, "best") == 0))
     {
-#ifdef HAVE_NOVA
+#ifdef HAVE_ENTERPRISE
         c.hash = HASH_METHOD_SHA512;
 #else
         c.hash = HASH_METHOD_BEST;

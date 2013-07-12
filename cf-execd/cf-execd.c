@@ -45,7 +45,7 @@
 #include "man.h"
 
 
-#ifdef HAVE_NOVA
+#ifdef HAVE_ENTERPRISE
 # include "cf.enterprise.h"
 #endif
 

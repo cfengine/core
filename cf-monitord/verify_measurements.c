@@ -32,7 +32,7 @@
 #include "env_context.h"
 #include "ornaments.h"
 
-#ifdef HAVE_NOVA
+#ifdef HAVE_ENTERPRISE
 #include "history.h"
 #endif
 

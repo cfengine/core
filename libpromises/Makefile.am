@@ -102,7 +102,7 @@ libpromises_la_SOURCES = \
         verify_reports.c \
         verify_vars.c verify_vars.h
 
-if !HAVE_NOVA
+if !HAVE_ENTERPRISE
 libpromises_la_SOURCES += \
 	enterprise_stubs.c
 endif

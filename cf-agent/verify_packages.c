@@ -46,7 +46,7 @@
 #include "env_context.h"
 #include "retcode.h"
 
-#ifdef HAVE_NOVA
+#ifdef HAVE_ENTERPRISE
 #include "agent_reports.h"
 #endif
 
@@ -74,7 +74,7 @@ static void DeletePackageManagers(PackageManager *newlist);
 
 static char *PrefixLocalRepository(Rlist *repositories, char *package);
 
-#ifndef HAVE_NOVA
+#ifndef HAVE_ENTERPRISE
 void ReportPatches(ARG_UNUSED PackageManager *list)
 {
     Log(LOG_LEVEL_VERBOSE, "Patch reporting feature is only available in the enterprise version");

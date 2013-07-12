@@ -8,7 +8,7 @@ AM_CFLAGS = @CFLAGS@ \
 	$(ENTERPRISE_CFLAGS)
 
 LDADD = ../libpromises/libpromises.la
-if HAVE_NOVA
+if HAVE_ENTERPRISE
 LDADD += ../enterprise/libcfserverd/libcfserverd.la
 endif
 
@@ -19,7 +19,7 @@ cf_serverd_SOURCES = \
         server.c server.h \
         server_transform.c server_transform.h
 
-if !HAVE_NOVA
+if !HAVE_ENTERPRISE
 cf_serverd_SOURCES += \
 	cf-serverd-enterprise-stubs.c cf-serverd-enterprise-stubs.h
 endif

@@ -56,7 +56,7 @@
 #include "verify_classes.h"
 #include "verify_vars.h"
 
-#ifdef HAVE_NOVA
+#ifdef HAVE_ENTERPRISE
 # include "cf.enterprise.h"
 #endif
 
@@ -115,7 +115,7 @@ void CheckForPolicyHub(EvalContext *ctx)
 
 void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
 {
-#ifdef HAVE_NOVA
+#ifdef HAVE_ENTERPRISE
     CF_DEFAULT_DIGEST = HASH_METHOD_SHA256;
     CF_DEFAULT_DIGEST_LEN = CF_SHA256_LEN;
 #else
@@ -610,7 +610,7 @@ void InitializeGA(EvalContext *ctx, GenericAgentConfig *config)
 
     EvalContextHeapAddHard(ctx, "any");
 
-#if defined HAVE_NOVA
+#if defined HAVE_ENTERPRISE
     EvalContextHeapAddHard(ctx, "nova_edition");
     EvalContextHeapAddHard(ctx, "enterprise_edition");
 #else
@@ -732,7 +732,7 @@ void InitializeGA(EvalContext *ctx, GenericAgentConfig *config)
     {
         snprintf(vbuff, CF_BUFSIZE, "%s%cinputs%cfailsafe.cf", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
 
-#ifndef HAVE_NOVA
+#ifndef HAVE_ENTERPRISE
         if (stat(vbuff, &statbuf) == -1)
         {
             GenericAgentConfigSetInputFile(config, GetWorkDir(), "failsafe.cf");
@@ -1486,7 +1486,7 @@ void PrintHelp(const char *component, const struct option options[], const char 
 void PrintVersion(void)
 {
     printf("%s\n", NameVersion());
-#ifdef HAVE_NOVA
+#ifdef HAVE_ENTERPRISE
     printf("%s\n", Nova_NameVersion());
 #endif
 }

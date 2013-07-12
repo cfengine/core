@@ -8,7 +8,7 @@ AM_CPPFLAGS = @CPPFLAGS@ -I$(srcdir)/../libpromises -I$(srcdir)/../libutils \
 	$(MYSQL_CPPFLAGS) \
 	$(LIBXML2_CPPFLAGS)
 
-if HAVE_NOVA
+if HAVE_ENTERPRISE
 AM_CPPFLAGS += -I$(abs_top_srcdir)/enterprise/libcfagent
 endif
 
@@ -36,7 +36,7 @@ LDADD = ../libpromises/libpromises.la \
 	$(POSTGRESQL_LIBS) \
 	$(MYSQL_LIBS) \
 	$(LIBXML2_LIBS)
-if HAVE_NOVA
+if HAVE_ENTERPRISE
 LDADD += ../enterprise/libcfagent/libcfagent.la
 endif
 
@@ -77,7 +77,7 @@ if !NT
 cf_agent_SOURCES += nfs.c nfs.h
 endif
 
-if !HAVE_NOVA
+if !HAVE_ENTERPRISE
 cf_agent_SOURCES += cf-agent-enterprise-stubs.c cf-agent-enterprise-stubs.h
 endif
 

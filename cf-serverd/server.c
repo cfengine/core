@@ -44,7 +44,7 @@
 #include "cf-serverd-enterprise-stubs.h"
 #include "audit.h"
 
-#ifdef HAVE_NOVA
+#ifdef HAVE_ENTERPRISE
 # include "cf.enterprise.h"
 #endif
 

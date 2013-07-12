@@ -99,7 +99,7 @@ typedef enum
 #endif
 #endif
 
-#ifdef HAVE_NOVA
+#ifdef HAVE_ENTERPRISE
 #include "agent_reports.h"
 #include "enterprise-agent-diagnostics.h"
 #endif
@@ -268,7 +268,7 @@ int main(int argc, char *argv[])
         StringSetIterator hard_iter = EvalContextHeapIteratorHard(ctx);
         NoteClassUsage(hard_iter, true);
     }
-#ifdef HAVE_NOVA
+#ifdef HAVE_ENTERPRISE
     Nova_NoteVarUsageDB();
     Nova_TrackExecution(config->input_file);
 #endif
@@ -454,7 +454,7 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
                 WriterWriteF(out, "self-diagnostics for agent using workdir '%s'\n", workdir);
 
                 AgentDiagnosticsRun(workdir, AgentDiagnosticsAllChecks(), out);
-#ifdef HAVE_NOVA
+#ifdef HAVE_ENTERPRISE
                 AgentDiagnosticsRun(workdir, AgentDiagnosticsAllChecksNova(), out);
 #endif
                 FileWriterDetach(out);
@@ -1020,7 +1020,7 @@ void KeepControlPromises(EvalContext *ctx, Policy *policy)
         }
     }
 
-#ifdef HAVE_NOVA
+#ifdef HAVE_ENTERPRISE
     Nova_Initialize(ctx);
 #endif
 }

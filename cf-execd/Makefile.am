@@ -6,7 +6,7 @@ AM_CPPFLAGS = @CPPFLAGS@ \
 	-I$(srcdir)/../libcfnet \
 	$(ENTERPRISE_CPPFLAGS)
 
-if HAVE_NOVA
+if HAVE_ENTERPRISE
 AM_CPPFLAGS += -I$(abs_top_srcdir)/enterprise/libcfexecd
 endif
 
@@ -14,7 +14,7 @@ AM_CFLAGS = @CFLAGS@ \
 	$(ENTERPRISE_CFLAGS)
 
 LDADD = ../libpromises/libpromises.la
-if HAVE_NOVA
+if HAVE_ENTERPRISE
 LDADD += ../enterprise/libcfexecd/libcfexecd.la
 endif
 

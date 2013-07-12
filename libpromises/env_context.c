@@ -42,7 +42,7 @@
 #include "rlist.h"
 #include "buffer.h"
 
-#ifdef HAVE_NOVA
+#ifdef HAVE_ENTERPRISE
 # include "cf.enterprise.h"
 #endif
 
@@ -1561,7 +1561,7 @@ static void DeleteAllClasses(EvalContext *ctx, const Rlist *list)
     }
 }
 
-#ifdef HAVE_NOVA
+#ifdef HAVE_ENTERPRISE
 static void TrackTotalCompliance(PromiseResult status, const Promise *pp)
 {
     char nova_status;
@@ -1762,7 +1762,7 @@ void ClassAuditLog(EvalContext *ctx, const Promise *pp, Attributes attr, Promise
 {
     if (IsPromiseValuableForStatus(pp))
     {
-#ifdef HAVE_NOVA
+#ifdef HAVE_ENTERPRISE
         TrackTotalCompliance(status, pp);
 #endif
         UpdatePromiseCounters(status, attr.transaction);

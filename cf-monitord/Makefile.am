@@ -4,18 +4,18 @@ AM_CPPFLAGS = @CPPFLAGS@ \
 	-I$(srcdir)/../libutils \
 	-I$(srcdir)/../libcfnet \
 	-I$(srcdir)/../libpromises \
-	$(NOVA_CPPFLAGS)
+	$(ENTERPRISE_CPPFLAGS)
 
 if HAVE_NOVA
-AM_CPPFLAGS += -I$(abs_top_srcdir)/nova/libcfmonitord
+AM_CPPFLAGS += -I$(abs_top_srcdir)/enterprise/libcfmonitord
 endif
 
 AM_CFLAGS = @CFLAGS@ \
-	$(NOVA_CFLAGS)
+	$(ENTERPRISE_CFLAGS)
 
 cf_monitord_LDADD = ../libpromises/libpromises.la
 if HAVE_NOVA
-cf_monitord_LDADD += ../nova/libcfmonitord/libcfmonitord.la
+cf_monitord_LDADD += ../enterprise/libcfmonitord/libcfmonitord.la
 endif
 
 cf_monitord_SOURCES = \

@@ -2,10 +2,10 @@ noinst_PROGRAMS = cf-gendoc
 
 AM_CPPFLAGS = @CPPFLAGS@ -I$(srcdir)/../libpromises -I$(srcdir)/../libutils \
 	-I$(srcdir)/../libcfnet \
-	$(NOVA_CPPFLAGS)
+	$(ENTERPRISE_CPPFLAGS)
 
 AM_CFLAGS = @CFLAGS@ \
-	$(NOVA_CFLAGS)
+	$(ENTERPRISE_CFLAGS)
 
 LDADD = ../libpromises/libpromises.la
 

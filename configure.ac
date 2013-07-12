@@ -236,6 +236,7 @@ dnl Enterprise extensions
 dnl Mongo is disabled unless overriden in subproject
 AM_CONDITIONAL(MONGO, false)
 
+m4_indir(incstart[]incend, [enterprise/options.m4])
 m4_indir(incstart[]incend, [nova/options.m4])
 AM_CONDITIONAL([HAVE_NOVA], [test "x$with_nova" != xno && test -d ${srcdir}/nova])
 
@@ -1127,6 +1128,7 @@ AC_CONFIG_FILES([Makefile
     tests/unit/Makefile
     tests/load/Makefile])
 
+m4_indir(incstart[]incend, [enterprise/output.m4])
 m4_indir(incstart[]incend, [nova/output.m4])
 
 AC_OUTPUT

@@ -40,7 +40,7 @@
 #include "conversion.h"
 
 #ifdef HAVE_NOVA
-# include "cf.nova.h"
+# include "cf.enterprise.h"
 #endif
 
 extern char BUILD_DIR[CF_BUFSIZE];

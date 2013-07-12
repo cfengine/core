@@ -61,7 +61,7 @@
 #include "cf-agent-enterprise-stubs.h"
 
 #ifdef HAVE_NOVA
-# include "cf.nova.h"
+# include "cf.enterprise.h"
 #endif
 
 #define CF_RECURSION_LIMIT 100

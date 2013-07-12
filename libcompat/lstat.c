@@ -26,5 +26,5 @@
 #include "compiler.h"
 
 #if defined(__MINGW32__)
-#include "../nova/libcompat-win32/lstat.c"
+#include "../enterprise/libcompat-win32/lstat.c"
 #endif

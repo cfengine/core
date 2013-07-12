@@ -46,7 +46,7 @@
 
 
 #ifdef HAVE_NOVA
-# include "cf.nova.h"
+# include "cf.enterprise.h"
 #endif
 
 #include "cf-execd.h"

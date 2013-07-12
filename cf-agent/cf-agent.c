@@ -101,7 +101,7 @@ typedef enum
 
 #ifdef HAVE_NOVA
 #include "agent_reports.h"
-#include "nova-agent-diagnostics.h"
+#include "enterprise-agent-diagnostics.h"
 #endif
 
 #include "ornaments.h"

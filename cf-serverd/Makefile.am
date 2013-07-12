@@ -2,14 +2,14 @@ sbin_PROGRAMS = cf-serverd
 
 AM_CPPFLAGS = @CPPFLAGS@ -I$(srcdir)/../libpromises -I$(srcdir)/../libutils \
 	-I$(srcdir)/../libcfnet \
-	$(NOVA_CPPFLAGS)
+	$(ENTERPRISE_CPPFLAGS)
 
 AM_CFLAGS = @CFLAGS@ \
-	$(NOVA_CFLAGS)
+	$(ENTERPRISE_CFLAGS)
 
 LDADD = ../libpromises/libpromises.la
 if HAVE_NOVA
-LDADD += ../nova/libcfserverd/libcfserverd.la
+LDADD += ../enterprise/libcfserverd/libcfserverd.la
 endif
 
 cf_serverd_SOURCES = \

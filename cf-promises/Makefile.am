@@ -1,10 +1,10 @@
 sbin_PROGRAMS = cf-promises
 
 AM_CPPFLAGS = @CPPFLAGS@ -I$(srcdir)/../libpromises -I$(srcdir)/../libutils \
-	$(NOVA_CPPFLAGS)
+	$(ENTERPRISE_CPPFLAGS)
 
 AM_CFLAGS = @CFLAGS@ -I$(srcdir) \
-	$(NOVA_CFLAGS)
+	$(ENTERPRISE_CFLAGS)
 
 LDADD = ../libpromises/libpromises.la
 

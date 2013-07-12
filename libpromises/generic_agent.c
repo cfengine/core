@@ -57,7 +57,7 @@
 #include "verify_vars.h"
 
 #ifdef HAVE_NOVA
-# include "cf.nova.h"
+# include "cf.enterprise.h"
 #endif
 
 

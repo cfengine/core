@@ -1,16 +1,16 @@
 projlib_LTLIBRARIES = libpromises.la
 
 AM_CPPFLAGS = @CPPFLAGS@ -I$(srcdir)/../libutils -I $(srcdir)/../libcfnet \
-	$(NOVA_CPPFLAGS)
+	$(ENTERPRISE_CPPFLAGS)
 
 AM_CFLAGS = @CFLAGS@ \
-	$(NOVA_CFLAGS)
+	$(ENTERPRISE_CFLAGS)
 
 AM_YFLAGS = -d
 
 AM_LDFLAGS = -version-info 3:5:0 -no-undefined
 
-libpromises_la_LIBADD = ../libutils/libutils.la ../libcfnet/libcfnet.la $(NOVA_LDADD)
+libpromises_la_LIBADD = ../libutils/libutils.la ../libcfnet/libcfnet.la $(ENTERPRISE_LDADD)
 
 libpromises_la_SOURCES = \
         cf3parse.y cf3parse.h \
@@ -160,7 +160,7 @@ MOSTLYCLEANFILES = *~ *.orig *.rej
 # libutils dependency
 
 # Automake need to be guided due to symlinking
-libpromises_la_DEPENDENCIES = ../libutils/libutils.la ../libcfnet/libcfnet.la $(NOVA_LDADD)
+libpromises_la_DEPENDENCIES = ../libutils/libutils.la ../libcfnet/libcfnet.la $(ENTERPRISE_LDADD)
 
 .PRECIOUS: ../libutils/libutils.la
 

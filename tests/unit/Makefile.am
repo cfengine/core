@@ -1,7 +1,7 @@
 # Just recursively include in dist tarball all data we need for unit tests
 EXTRA_DIST = data
 
-AM_CFLAGS = $(NOVA_CFLAGS) -I$(srcdir)/../../libcfnet -I$(srcdir)/../../libpromises -I$(srcdir)/../../libutils \
+AM_CFLAGS = $(ENTERPRISE_CFLAGS) -I$(srcdir)/../../libcfnet -I$(srcdir)/../../libpromises -I$(srcdir)/../../libutils \
 	-DTESTDATADIR='"$(srcdir)/data"' -I$(srcdir)/../../cf-serverd -I$(srcdir)/../../cf-agent -I$(srcdir)/../../cf-execd -I$(srcdir)/../../cf-key
 
 LDADD = ../../libpromises/libpromises.la libtest.la
@@ -168,7 +168,7 @@ package_versions_compare_test_SOURCES = package_versions_compare_test.c ../../cf
 package_versions_compare_test_CPPFLAGS = $(AM_CPPFLAGS)
 package_versions_compare_test_LDADD = ../../libpromises/libpromises.la libtest.la
 if HAVE_NOVA
-package_versions_compare_test_CPPFLAGS += -I$(abs_top_srcdir)/nova/libcfagent
+package_versions_compare_test_CPPFLAGS += -I$(abs_top_srcdir)/enterprise/libcfagent
 package_versions_compare_test_LDADD += ../../nova/libcfagent/libcfagent.la
 endif
 

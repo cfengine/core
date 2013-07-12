@@ -1234,13 +1234,9 @@ static void DoExec(EvalContext *ctx, ServerConnectionState *conn, char *args)
 static ProtocolCommand GetCommand(char *str)
 {
     int i;
-    char op[CF_BUFSIZE];
-
-    sscanf(str, "%4095s", op);
-
     for (i = 0; PROTOCOL[i] != NULL; i++)
     {
-        if (strcmp(op, PROTOCOL[i]) == 0)
+        if (strncmp(str, PROTOCOL[i], strlen(PROTOCOL[i])) == 0)
         {
             return i;
         }

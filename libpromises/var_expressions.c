@@ -68,8 +68,10 @@ VarRef VarRefParseFromNamespaceAndScope(const char *qualified_name, const char *
 {
     char *ns = NULL;
 
+    const char *indices_start = strchr(qualified_name, '[');
+
     const char *scope_start = strchr(qualified_name, ns_separator);
-    if (scope_start)
+    if (scope_start && (!indices_start || scope_start < indices_start))
     {
         ns = xstrndup(qualified_name, scope_start - qualified_name);
         scope_start++;
@@ -83,7 +85,7 @@ VarRef VarRefParseFromNamespaceAndScope(const char *qualified_name, const char *
 
     const char *lval_start = strchr(scope_start, scope_separator);
 
-    if (lval_start)
+    if (lval_start && (!indices_start || lval_start < indices_start))
     {
         lval_start++;
         scope = xstrndup(scope_start, lval_start - scope_start - 1);
@@ -97,7 +99,6 @@ VarRef VarRefParseFromNamespaceAndScope(const char *qualified_name, const char *
     char **indices = NULL;
     size_t num_indices = 0;
 
-    const char *indices_start = strchr(lval_start, '[');
     if (indices_start)
     {
         indices_start++;

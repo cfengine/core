@@ -977,7 +977,7 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
 
         memcpy(out, recvbuffer + CF_PROTO_OFFSET, len);
         plainlen = DecryptString(conn->encryption_type, out, recvbuffer, conn->session_key, len);
-        
+
         if (strncmp(recvbuffer, "CALL_ME_BACK collect_calls", strlen("CALL_ME_BACK collect_calls")) != 0)
         {
             Log(LOG_LEVEL_INFO, "CALL_ME_BACK protocol defect");
@@ -998,16 +998,13 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
             RefuseAccess(conn, 0, recvbuffer);
             return false;
         }
-        
-        if (ReceiveCollectCall(conn))
-        {
-            return true;
-        }
+        return ReceiveCollectCall(conn);
 
     case PROTOCOL_COMMAND_AUTH:
     case PROTOCOL_COMMAND_CONTEXTS:
     case PROTOCOL_COMMAND_BAD:
-        ProgrammingError("Unexpected protocol command");
+    default:
+        Log(LOG_LEVEL_WARNING, "Unexpected protocol command");
     }
 
     sprintf(sendbuffer, "BAD: Request denied\n");

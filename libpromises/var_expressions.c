@@ -270,3 +270,33 @@ VarRef VarRefDeMangle(const char *mangled_var_ref)
 {
     return VarRefParseFromNamespaceAndScope(mangled_var_ref, NULL, NULL, '*', '#');
 }
+
+static bool VarRefIsMeta(VarRef ref)
+{
+    return StringEndsWith(ref.scope, "_meta");
+}
+
+void VarRefSetMeta(VarRef ref, bool enabled)
+{
+    if (enabled)
+    {
+        if (!VarRefIsMeta(ref))
+        {
+            char *tmp = (char *)ref.scope;
+            memcpy((char *)ref.scope, StringConcatenate(2, ref.scope, "_meta"), sizeof(char*));
+            free(tmp);
+        }
+    }
+    else
+    {
+        if (VarRefIsMeta(ref))
+        {
+            char *tmp = (char *)ref.scope;
+            size_t len = strlen(ref.scope);
+            memcpy((char *)ref.scope, StringSubstring(ref.scope, len, 0, len - strlen("_meta")), sizeof(char*));
+            free(tmp);
+        }
+    }
+
+
+}

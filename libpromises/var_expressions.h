@@ -56,4 +56,6 @@ char *VarRefToString(const VarRef ref, bool qualified);
 char *VarRefMangle(VarRef ref);
 VarRef VarRefDeMangle(const char *mangled_var_ref);
 
+void VarRefSetMeta(VarRef ref, bool enabled);
+
 #endif

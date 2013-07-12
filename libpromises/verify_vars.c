@@ -60,79 +60,23 @@ void VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates
         return;
     }
 
-    char *scope = NULL;
-    if (strcmp("meta", pp->parent_promise_type->name) == 0)
-    {
-        scope = StringConcatenate(2, PromiseGetBundle(pp)->name, "_meta");
-    }
-    else
-    {
-        scope = xstrdup(PromiseGetBundle(pp)->name);
-    }
-
     //More consideration needs to be given to using these
     //a.transaction = GetTransactionConstraints(pp);
     Attributes a = { {0} };
     a.classes = GetClassDefinitionConstraints(ctx, pp);
+
+    VarRef ref = VarRefParseFromBundle(pp->promiser, PromiseGetBundle(pp));
+    if (strcmp("meta", pp->parent_promise_type->name) == 0)
+    {
+        VarRefSetMeta(ref, true);
+    }
 
     Rval existing_var_rval;
     DataType existing_var_type = DATA_TYPE_NONE;
 
     if (!IsExpandable(pp->promiser))
     {
-        VarRef ref = VarRefParseFromBundle(pp->promiser, PromiseGetBundle(pp));
         EvalContextVariableGet(ctx, ref, &existing_var_rval, &existing_var_type);
-        VarRefDestroy(ref);
-    }
-    Buffer *qualified_scope = BufferNew();
-    int result = 0;
-    if (strcmp(PromiseGetNamespace(pp), "default") == 0)
-    {
-        result = BufferSet(qualified_scope, scope, strlen(scope));
-        if (result < 0)
-        {
-            /*
-             * Even though there will be no problems with memory allocation, there
-             * might be other problems.
-             */
-            UnexpectedError("Problems writing to buffer");
-            free(scope);
-            BufferDestroy(&qualified_scope);
-            return;
-        }
-    }
-    else
-    {
-        if (strchr(scope, ':') == NULL)
-        {
-            result = BufferPrintf(qualified_scope, "%s:%s", PromiseGetNamespace(pp), scope);
-            if (result < 0)
-            {
-                /*
-                 * Even though there will be no problems with memory allocation, there
-                 * might be other problems.
-                 */
-                UnexpectedError("Problems writing to buffer");
-                free(scope);
-                BufferDestroy(&qualified_scope);
-                return;
-            }
-        }
-        else
-        {
-            result = BufferSet(qualified_scope, scope, strlen(scope));
-            if (result < 0)
-            {
-                /*
-                 * Even though there will be no problems with memory allocation, there
-                 * might be other problems.
-                 */
-                UnexpectedError("Problems writing to buffer");
-                free(scope);
-                BufferDestroy(&qualified_scope);
-                return;
-            }
-        }
     }
 
     PromiseResult promise_result;
@@ -148,8 +92,7 @@ void VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates
             if (existing_var_type != DATA_TYPE_NONE)
             {
                 // Already did this
-                free(scope);
-                BufferDestroy(&qualified_scope);
+                VarRefDestroy(ref);
                 return;
             }
 
@@ -159,8 +102,7 @@ void VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates
             {
                 /* We do not assign variables to failed fn calls */
                 RvalDestroy(res.rval);
-                free(scope);
-                BufferDestroy(&qualified_scope);
+                VarRefDestroy(ref);
                 return;
             }
             else
@@ -174,7 +116,7 @@ void VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates
 
             if (strcmp(opts.cp_save->lval, "int") == 0)
             {
-                result = BufferPrintf(conv, "%ld", IntFromString(opts.cp_save->rval.item));
+                int result = BufferPrintf(conv, "%ld", IntFromString(opts.cp_save->rval.item));
                 if (result < 0)
                 {
                     /*
@@ -182,8 +124,7 @@ void VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates
                      * might be other problems.
                      */
                     UnexpectedError("Problems writing to buffer");
-                    free(scope);
-                    BufferDestroy(&qualified_scope);
+                    VarRefDestroy(ref);
                     BufferDestroy(&conv);
                     return;
                 }
@@ -191,6 +132,7 @@ void VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates
             }
             else if (strcmp(opts.cp_save->lval, "real") == 0)
             {
+                int result = -1;
                 double real_value = 0.0;
                 if (DoubleFromString(opts.cp_save->rval.item, &real_value))
                 {
@@ -208,9 +150,8 @@ void VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates
                      * might be other problems.
                      */
                     UnexpectedError("Problems writing to buffer");
-                    free(scope);
+                    VarRefDestroy(ref);
                     BufferDestroy(&conv);
-                    BufferDestroy(&qualified_scope);
                     return;
                 }
                 rval = RvalCopy((Rval) {(char *)BufferData(conv), opts.cp_save->rval.type});
@@ -239,7 +180,9 @@ void VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates
         {
             /* See if the variable needs recursively expanding again */
 
-            Rval returnval = EvaluateFinalRval(ctx, BufferData(qualified_scope), rval, true, pp);
+            char *legacy_scope = ref.ns ? StringFormat("%s:%s", ref.ns, ref.scope) : xstrdup(ref.scope);
+            Rval returnval = EvaluateFinalRval(ctx, legacy_scope, rval, true, pp);
+            free(legacy_scope);
 
             RvalDestroy(rval);
 
@@ -251,7 +194,9 @@ void VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates
         {
             if (opts.ok_redefine)    /* only on second iteration, else we ignore broken promises */
             {
-                ScopeDeleteVariable(BufferData(qualified_scope), pp->promiser);
+                char *legacy_scope = ref.ns ? StringFormat("%s:%s", ref.ns, ref.scope) : xstrdup(ref.scope);
+                ScopeDeleteVariable(legacy_scope, pp->promiser);
+                free(legacy_scope);
             }
             else if ((THIS_AGENT_TYPE == AGENT_TYPE_COMMON) && (CompareRval(existing_var_rval, rval) == false))
             {
@@ -291,8 +236,7 @@ void VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates
         {
             // Unexpanded variables, we don't do anything with
             RvalDestroy(rval);
-            free(scope);
-            BufferDestroy(&qualified_scope);
+            VarRefDestroy(ref);
             return;
         }
 
@@ -301,8 +245,7 @@ void VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates
             Log(LOG_LEVEL_ERR, "Variable identifier contains illegal characters");
             PromiseRef(LOG_LEVEL_ERR, pp);
             RvalDestroy(rval);
-            free(scope);
-            BufferDestroy(&qualified_scope);
+            VarRefDestroy(ref);
             return;
         }
 
@@ -318,9 +261,9 @@ void VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates
             }
         }
 
-        if (!EvalContextVariablePut(ctx, (VarRef) { NULL, BufferData(qualified_scope), pp->promiser }, rval, DataTypeFromString(opts.cp_save->lval)))
+        if (!EvalContextVariablePut(ctx, ref, rval, DataTypeFromString(opts.cp_save->lval)))
         {
-            Log(LOG_LEVEL_VERBOSE, "Unable to converge %s.%s value (possibly empty or infinite regression)", BufferData(qualified_scope), pp->promiser);
+            Log(LOG_LEVEL_VERBOSE, "Unable to converge %s.%s value (possibly empty or infinite regression)", ref.scope, pp->promiser);
             PromiseRef(LOG_LEVEL_VERBOSE, pp);
             promise_result = PROMISE_RESULT_FAIL;
         }
@@ -347,8 +290,7 @@ void VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates
      */
     ClassAuditLog(ctx, pp, a, promise_result);
 
-    free(scope);
-    BufferDestroy(&qualified_scope);
+    VarRefDestroy(ref);
     RvalDestroy(rval);
 }
 

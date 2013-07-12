@@ -725,8 +725,8 @@ int ScopeMapBodyArgs(EvalContext *ctx, const char *scopeid, Rlist *give, const R
 
     for (rpg = give, rpt = take; rpg != NULL && rpt != NULL; rpg = rpg->next, rpt = rpt->next)
     {
-        dtg = StringDataType(ctx, scopeid, (char *) rpg->item);
-        dtt = StringDataType(ctx, scopeid, (char *) rpt->item);
+        dtg = StringDataType(ctx, (char *) rpg->item);
+        dtt = StringDataType(ctx, (char *) rpt->item);
 
         if (dtg != dtt)
         {

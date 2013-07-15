@@ -470,7 +470,7 @@ int ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes a, Promis
             BannerSubBundle(bp, params);
 
             EvalContextStackPushBundleFrame(ctx, bp, a.edits.inherit);
-            ScopeClear(bp->name);
+            ScopeClear(bp->ns, bp->name);
             BundleHashVariables(ctx, bp);
             ScopeAugment(ctx, bp, pp, params);
 
@@ -478,7 +478,7 @@ int ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes a, Promis
 
             EvalContextStackPopFrame(ctx);
 
-            ScopeClear(bp->name);
+            ScopeClear(bp->ns, bp->name);
         }
         else
         {
@@ -523,7 +523,7 @@ int ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes a, Promis
             BannerSubBundle(bp, params);
 
             EvalContextStackPushBundleFrame(ctx, bp, a.edits.inherit);
-            ScopeClear(bp->name);
+            ScopeClear(bp->ns, bp->name);
             BundleHashVariables(ctx, bp);
             ScopeAugment(ctx, bp, pp, params);
 
@@ -531,7 +531,7 @@ int ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes a, Promis
 
             EvalContextStackPopFrame(ctx);
 
-            ScopeClear(bp->name);
+            ScopeClear(bp->ns, bp->name);
         }
     }
 
@@ -547,14 +547,14 @@ int ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes a, Promis
             a.haveeditline = true;
 
             EvalContextStackPushBundleFrame(ctx, bp, a.edits.inherit);
-            ScopeClear(bp->name);
+            ScopeClear(bp->ns, bp->name);
             BundleHashVariables(ctx, bp);
 
             retval = ScheduleEditLineOperations(ctx, bp, a, pp, edcontext);
 
             EvalContextStackPopFrame(ctx);
 
-            ScopeClear(bp->name);
+            ScopeClear(bp->ns, bp->name);
         }
 
         PolicyDestroy(tmp_policy);

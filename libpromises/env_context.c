@@ -55,6 +55,26 @@ static bool ABORTBUNDLE = false;
 /* Level                                                                     */
 /*****************************************************************************/
 
+static const char *StackFrameOwnerNamespace(const StackFrame *frame)
+{
+    switch (frame->type)
+    {
+    case STACK_FRAME_TYPE_BUNDLE:
+        return frame->data.bundle.owner->ns;
+
+    case STACK_FRAME_TYPE_BODY:
+        return frame->data.body.owner->ns;
+
+    case STACK_FRAME_TYPE_PROMISE:
+    case STACK_FRAME_TYPE_PROMISE_ITERATION:
+        return NULL;
+
+    default:
+        ProgrammingError("Unhandled stack frame type");
+    }
+}
+
+
 static const char *StackFrameOwnerName(const StackFrame *frame)
 {
     switch (frame->type)
@@ -140,7 +160,7 @@ void EvalContextHeapAddSoft(EvalContext *ctx, const char *context, const char *n
         Log(LOG_LEVEL_ERR, "Chop was called on a string that seemed to have no terminator");
     }
     CanonifyNameInPlace(canonified_context);
-    
+
     if (ns && strcmp(ns, "default") != 0)
     {
         snprintf(context_copy, CF_MAXVARSIZE, "%s:%s", ns, canonified_context);
@@ -1111,7 +1131,7 @@ void EvalContextStackPushBundleFrame(EvalContext *ctx, const Bundle *owner, bool
     assert(!LastStackFrame(ctx, 0) || LastStackFrame(ctx, 0)->type == STACK_FRAME_TYPE_PROMISE_ITERATION);
 
     EvalContextStackPushFrame(ctx, StackFrameNewBundle(owner, inherits_previous));
-    ScopeSetCurrent(owner->name);
+    ScopeSetCurrent(owner->ns, owner->name);
 }
 
 void EvalContextStackPushBodyFrame(EvalContext *ctx, const Body *owner)
@@ -1120,7 +1140,7 @@ void EvalContextStackPushBodyFrame(EvalContext *ctx, const Body *owner)
 
     EvalContextStackPushFrame(ctx, StackFrameNewBody(owner));
 
-    ScopeSetCurrent("body");
+    ScopeSetCurrent(NULL, "body");
 }
 
 void EvalContextStackPushPromiseFrame(EvalContext *ctx, const Promise *owner)
@@ -1128,7 +1148,7 @@ void EvalContextStackPushPromiseFrame(EvalContext *ctx, const Promise *owner)
     assert(LastStackFrame(ctx, 0) && LastStackFrame(ctx, 0)->type == STACK_FRAME_TYPE_BUNDLE);
 
     EvalContextStackPushFrame(ctx, StackFrameNewPromise(owner));
-    ScopeSetCurrent("this");
+    ScopeSetCurrent(NULL, "this");
 }
 
 void EvalContextStackPushPromiseIterationFrame(EvalContext *ctx, const Promise *owner)
@@ -1136,7 +1156,7 @@ void EvalContextStackPushPromiseIterationFrame(EvalContext *ctx, const Promise *
     assert(LastStackFrame(ctx, 0) && LastStackFrame(ctx, 0)->type == STACK_FRAME_TYPE_PROMISE);
 
     EvalContextStackPushFrame(ctx, StackFrameNewPromiseIteration(owner));
-    ScopeSetCurrent("this");
+    ScopeSetCurrent(NULL, "this");
 }
 
 void EvalContextStackPopFrame(EvalContext *ctx)
@@ -1147,7 +1167,7 @@ void EvalContextStackPopFrame(EvalContext *ctx)
     StackFrame *last_frame = LastStackFrame(ctx, 0);
     if (last_frame)
     {
-        ScopeSetCurrent(StackFrameOwnerName(last_frame));
+        ScopeSetCurrent(StackFrameOwnerNamespace(last_frame), StackFrameOwnerName(last_frame));
     }
 }
 
@@ -1266,10 +1286,10 @@ bool EvalContextVariablePut(EvalContext *ctx, VarRef lval, Rval rval, DataType t
 
     assert(lval.scope);
 
-    Scope *put_scope = ScopeGet(lval.scope);
+    Scope *put_scope = ScopeGet(lval.ns, lval.scope);
     if (!put_scope)
     {
-        put_scope = ScopeNew(lval.scope);
+        put_scope = ScopeNew(lval.ns, lval.scope);
         if (!put_scope)
         {
             return false;
@@ -1345,26 +1365,16 @@ bool EvalContextVariableGet(const EvalContext *ctx, VarRef lval, Rval *rval_out,
         return false;
     }
 
-    char *legacy_scope = NULL;
-    if (lval.ns)
+
+    Scope *get_scope = NULL;
+    if (lval.scope)
     {
-        legacy_scope = StringFormat("%s:%s", lval.ns, lval.scope);
+        get_scope = ScopeGet(lval.ns, lval.scope);
     }
     else
     {
-        if (lval.scope)
-        {
-            legacy_scope = xstrdup(lval.scope);
-        }
-        else
-        {
-            legacy_scope = xstrdup(ScopeGetCurrent()->scope);
-        }
+        get_scope = ScopeGet(ScopeGetCurrent()->ns, ScopeGetCurrent()->scope);
     }
-
-    Scope *get_scope = ScopeGet(legacy_scope);
-
-    free(legacy_scope);
 
     if (!get_scope)
     {
@@ -1657,7 +1667,7 @@ static void SummarizeTransaction(EvalContext *ctx, TransactionContext tc, const 
     {
         char buffer[CF_EXPANDSIZE];
 
-        ExpandScalar(ctx, NULL, tc.log_string, buffer);
+        ExpandScalar(ctx, NULL, NULL, tc.log_string, buffer);
 
         if (strcmp(logname, "udp_syslog") == 0)
         {

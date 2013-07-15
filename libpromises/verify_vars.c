@@ -48,7 +48,7 @@ typedef struct
 
 
 static ConvergeVariableOptions CollectConvergeVariableOptions(EvalContext *ctx, const Promise *pp, bool allow_redefine);
-static bool Epimenides(EvalContext *ctx, const char *scope, const char *var, Rval rval, int level);
+static bool Epimenides(EvalContext *ctx, const char *ns, const char *scope, const char *var, Rval rval, int level);
 static int CompareRval(Rval rval1, Rval rval2);
 
 
@@ -171,7 +171,7 @@ void VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates
             BufferDestroy(&conv);
         }
 
-        if (Epimenides(ctx, PromiseGetBundle(pp)->name, pp->promiser, rval, 0))
+        if (Epimenides(ctx, PromiseGetBundle(pp)->ns, PromiseGetBundle(pp)->name, pp->promiser, rval, 0))
         {
             Log(LOG_LEVEL_ERR, "Variable '%s' contains itself indirectly - an unkeepable promise", pp->promiser);
             exit(1);
@@ -180,9 +180,7 @@ void VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates
         {
             /* See if the variable needs recursively expanding again */
 
-            char *legacy_scope = ref.ns ? StringFormat("%s:%s", ref.ns, ref.scope) : xstrdup(ref.scope);
-            Rval returnval = EvaluateFinalRval(ctx, legacy_scope, rval, true, pp);
-            free(legacy_scope);
+            Rval returnval = EvaluateFinalRval(ctx, ref.ns, ref.scope, rval, true, pp);
 
             RvalDestroy(rval);
 
@@ -194,9 +192,7 @@ void VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates
         {
             if (opts.ok_redefine)    /* only on second iteration, else we ignore broken promises */
             {
-                char *legacy_scope = ref.ns ? StringFormat("%s:%s", ref.ns, ref.scope) : xstrdup(ref.scope);
-                ScopeDeleteVariable(legacy_scope, pp->promiser);
-                free(legacy_scope);
+                ScopeDeleteVariable(ref.ns, ref.scope, pp->promiser);
             }
             else if ((THIS_AGENT_TYPE == AGENT_TYPE_COMMON) && (CompareRval(existing_var_rval, rval) == false))
             {
@@ -381,7 +377,7 @@ static int CompareRval(Rval rval1, Rval rval2)
     return true;
 }
 
-static bool Epimenides(EvalContext *ctx, const char *scope, const char *var, Rval rval, int level)
+static bool Epimenides(EvalContext *ctx, const char *ns, const char *scope, const char *var, Rval rval, int level)
 {
     Rlist *rp, *list;
     char exp[CF_EXPANDSIZE];
@@ -398,7 +394,7 @@ static bool Epimenides(EvalContext *ctx, const char *scope, const char *var, Rva
 
         if (IsCf3VarString(rval.item))
         {
-            ExpandScalar(ctx, scope, rval.item, exp);
+            ExpandScalar(ctx, ns, scope, rval.item, exp);
 
             if (strcmp(exp, (const char *) rval.item) == 0)
             {
@@ -410,7 +406,7 @@ static bool Epimenides(EvalContext *ctx, const char *scope, const char *var, Rva
                 return false;
             }
 
-            if (Epimenides(ctx, scope, var, (Rval) {exp, RVAL_TYPE_SCALAR}, level + 1))
+            if (Epimenides(ctx, ns, scope, var, (Rval) {exp, RVAL_TYPE_SCALAR}, level + 1))
             {
                 return true;
             }
@@ -423,7 +419,7 @@ static bool Epimenides(EvalContext *ctx, const char *scope, const char *var, Rva
 
         for (rp = list; rp != NULL; rp = rp->next)
         {
-            if (Epimenides(ctx, scope, var, (Rval) {rp->item, rp->type}, level))
+            if (Epimenides(ctx, ns, scope, var, (Rval) {rp->item, rp->type}, level))
             {
                 return true;
             }

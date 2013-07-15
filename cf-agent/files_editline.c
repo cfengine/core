@@ -133,7 +133,7 @@ int ScheduleEditLineOperations(EvalContext *ctx, Bundle *bp, Attributes a, const
 
                 if (Abort())
                 {
-                    ScopeClear("edit");
+                    ScopeClear(NULL, "edit");
                     YieldCurrentLock(thislock);
                     return false;
                 }
@@ -141,7 +141,7 @@ int ScheduleEditLineOperations(EvalContext *ctx, Bundle *bp, Attributes a, const
         }
     }
 
-    ScopeClear("edit");
+    ScopeClear(NULL, "edit");
     YieldCurrentLock(thislock);
     return true;
 }
@@ -543,7 +543,7 @@ static void VerifyPatterns(EvalContext *ctx, Promise *pp, EditContext *edcontext
         (edcontext->num_edits)++;
     }
 
-    ScopeClear("match");       // because this might pollute the parent promise in next iteration
+    ScopeClear(NULL, "match");       // because this might pollute the parent promise in next iteration
 
     YieldCurrentLock(thislock);
 }
@@ -952,7 +952,7 @@ static int ReplacePatterns(EvalContext *ctx, Item *file_start, Item *file_end, A
             }
 
             match_len = end_off - start_off;
-            ExpandScalar(ctx, PromiseGetBundle(pp)->name, a.replace.replace_value, replace);
+            ExpandScalar(ctx, PromiseGetBundle(pp)->ns, PromiseGetBundle(pp)->name, a.replace.replace_value, replace);
 
             Log(LOG_LEVEL_VERBOSE, "Verifying replacement of '%s' with '%s', cutoff %d", pp->promiser, replace,
                   cutoff);
@@ -1250,7 +1250,7 @@ static int InsertFileAtLocation(EvalContext *ctx, Item **start, Item *begin_ptr,
         
         if (a.expandvars)
         {
-            ExpandScalar(ctx, PromiseGetBundle(pp)->name, buf, exp);
+            ExpandScalar(ctx, PromiseGetBundle(pp)->ns, PromiseGetBundle(pp)->name, buf, exp);
         }
         else
         {

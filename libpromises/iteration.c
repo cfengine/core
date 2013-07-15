@@ -81,7 +81,7 @@ static Rlist *RlistAppendOrthog(Rlist **start, void *item, RvalType type)
     return rp;
 }
 
-Rlist *NewIterationContext(EvalContext *ctx, const Promise *pp, const char *scopeid, Rlist *namelist)
+Rlist *NewIterationContext(EvalContext *ctx, const Promise *pp, const char *ns, const char *scope, Rlist *namelist)
 {
     Rlist *rps, *deref_listoflists = NULL;
     Rval retval;
@@ -89,9 +89,9 @@ Rlist *NewIterationContext(EvalContext *ctx, const Promise *pp, const char *scop
     CfAssoc *new;
     Rval newret;
 
-    ScopeCopy("this", ScopeGet(scopeid));
+    ScopeCopy(NULL, "this", ScopeGet(ns, scope));
 
-    ScopeGet("this");
+    ScopeGet(NULL, "this");
 
     if (namelist == NULL)
     {
@@ -101,9 +101,9 @@ Rlist *NewIterationContext(EvalContext *ctx, const Promise *pp, const char *scop
     for (Rlist *rp = namelist; rp != NULL; rp = rp->next)
     {
         dtype = DATA_TYPE_NONE;
-        if (!EvalContextVariableGet(ctx, (VarRef) { NULL, scopeid, rp->item }, &retval, &dtype))
+        if (!EvalContextVariableGet(ctx, (VarRef) { ns, scope, rp->item }, &retval, &dtype))
         {
-            Log(LOG_LEVEL_ERR, "Couldn't locate variable %s apparently in %s", RlistScalarValue(rp), scopeid);
+            Log(LOG_LEVEL_ERR, "Couldn't locate variable %s apparently in %s", RlistScalarValue(rp), scope);
             Log(LOG_LEVEL_ERR,
                   "Could be incorrect use of a global iterator -- see reference manual on list substitution");
             continue;
@@ -151,7 +151,7 @@ Rlist *NewIterationContext(EvalContext *ctx, const Promise *pp, const char *scop
 
 void DeleteIterationContext(Rlist *deref)
 {
-    ScopeClear("this");
+    ScopeClear(NULL, "this");
 
     if (deref != NULL)
     {

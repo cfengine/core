@@ -72,7 +72,7 @@ static void test_expand_scalar_two_scalars_concat(void)
     }
 
     char res[CF_EXPANDSIZE] = { 0 };
-    ExpandScalar(ctx, "bundle", "a $(one) b $(two)c", res);
+    ExpandScalar(ctx, "default", "bundle", "a $(one) b $(two)c", res);
 
     assert_string_equal("a first b secondc", res);
 
@@ -94,7 +94,7 @@ static void test_expand_scalar_two_scalars_nested(void)
     }
 
     char res[CF_EXPANDSIZE] = { 0 };
-    ExpandScalar(ctx, "bundle", "a $($(two))b", res);
+    ExpandScalar(ctx, "default", "bundle", "a $($(two))b", res);
 
     assert_string_equal("a firstb", res);
 
@@ -116,7 +116,7 @@ static void test_expand_scalar_array_concat(void)
     }
 
     char res[CF_EXPANDSIZE] = { 0 };
-    ExpandScalar(ctx, "bundle", "a $(foo[one]) b $(foo[two])c", res);
+    ExpandScalar(ctx, "default", "bundle", "a $(foo[one]) b $(foo[two])c", res);
 
     assert_string_equal("a first b secondc", res);
 
@@ -138,7 +138,7 @@ static void test_expand_scalar_array_with_scalar_arg(void)
     }
 
     char res[CF_EXPANDSIZE] = { 0 };
-    ExpandScalar(ctx, "bundle", "a$(foo[$(bar)])b", res);
+    ExpandScalar(ctx, "default", "bundle", "a$(foo[$(bar)])b", res);
 
     assert_string_equal("afirstb", res);
 

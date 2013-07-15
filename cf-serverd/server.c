@@ -291,7 +291,7 @@ void PurgeOldConnections(Item **list, time_t now)
 static void SpawnConnection(EvalContext *ctx, int sd_reply, char *ipaddr)
 {
     ServerConnectionState *conn;
-
+    int ret;
     pthread_t tid;
     pthread_attr_t threadattrs;
 
@@ -303,22 +303,52 @@ static void SpawnConnection(EvalContext *ctx, int sd_reply, char *ipaddr)
     strncpy(conn->ipaddr, ipaddr, CF_MAX_IP_LEN - 1);
 
     Log(LOG_LEVEL_VERBOSE, "New connection...(from %s:sd %d)", conn->ipaddr, sd_reply);
-
     Log(LOG_LEVEL_VERBOSE, "Spawning new thread...");
 
-    pthread_attr_init(&threadattrs);
-    pthread_attr_setdetachstate(&threadattrs, PTHREAD_CREATE_DETACHED);
-    pthread_attr_setstacksize(&threadattrs, (size_t) 1024 * 1024);
+    ret = pthread_attr_init(&threadattrs);
+    if (ret != 0)
+    {
+        Log(LOG_LEVEL_ERR,
+            "SpawnConnection: Unable to initialize thread attributes (%s)",
+            GetErrorStr());
+        goto err2;
+    }
+    ret = pthread_attr_setdetachstate(&threadattrs, PTHREAD_CREATE_DETACHED);
+    if (ret != 0)
+    {
+        Log(LOG_LEVEL_ERR,
+            "SpawnConnection: Unable to set thread to detached state (%s).",
+            GetErrorStr());
+        goto err1;
+    }
+    ret = pthread_attr_setstacksize(&threadattrs, 1024 * 1024);
+    if (ret != 0)
+    {
+        Log(LOG_LEVEL_WARNING,
+            "SpawnConnection: Unable to set thread stack size (%s).",
+            GetErrorStr());
+        /* Continue with default thread stack size. */
+    }
 
-    int ret = pthread_create(&tid, &threadattrs, (void *) HandleConnection, (void *) conn);
+    ret = pthread_create(&tid, &threadattrs,
+                         (void *(*)(void *)) HandleConnection, conn);
     if (ret != 0)
     {
         errno = ret;
-        Log(LOG_LEVEL_ERR, "Unable to spawn worker thread. (pthread_create: %s)", GetErrorStr());
-        HandleConnection(conn);
+        Log(LOG_LEVEL_ERR,
+            "Unable to spawn worker thread. (pthread_create: %s)",
+            GetErrorStr());
+        goto err1;
     }
 
+  err1:
     pthread_attr_destroy(&threadattrs);
+  err2:
+    if (ret != 0)
+    {
+        Log(LOG_LEVEL_WARNING, "Thread is being handled from main loop!");
+        HandleConnection(conn);
+    }
 }
 
 /*********************************************************************/

@@ -253,19 +253,6 @@ void ScopeAugment(EvalContext *ctx, const Bundle *bp, const Promise *pp, const R
 
 /* Check that there are no danglers left to evaluate in the hash table itself */
 
-    {
-        Scope *ptr = ScopeGet(bp->ns, bp->name);
-        AssocHashTableIterator i = HashIteratorInit(ptr->hashtable);
-        CfAssoc *assoc = NULL;
-        while ((assoc = HashIteratorNext(&i)))
-        {
-            Rval retval = ExpandPrivateRval(ctx, bp->ns, bp->name, assoc->rval);
-            // Retain the assoc, just replace rval
-            RvalDestroy(assoc->rval);
-            assoc->rval = retval;
-        }
-    }
-
     return;
 }
 

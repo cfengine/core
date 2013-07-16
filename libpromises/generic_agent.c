@@ -1282,7 +1282,7 @@ static void VerifyPromises(EvalContext *ctx, Policy *policy, GenericAgentConfig 
     for (size_t i = 0; i < SeqLength(policy->bundles); i++)
     {
         Bundle *bp = SeqAt(policy->bundles, i);
-        EvalContextStackPushBundleFrame(ctx, bp, false);
+        EvalContextStackPushBundleFrame(ctx, bp, NULL, false);
 
         for (size_t j = 0; j < SeqLength(bp->promise_types); j++)
         {
@@ -1581,7 +1581,7 @@ void PolicyHashVariables(EvalContext *ctx, Policy *policy)
         Bundle *bundle = SeqAt(policy->bundles, i);
         if (strcmp("common", bundle->type) == 0)
         {
-            EvalContextStackPushBundleFrame(ctx, bundle, false);
+            EvalContextStackPushBundleFrame(ctx, bundle, NULL, false);
             BundleHashVariables(ctx, bundle);
             EvalContextStackPopFrame(ctx);
         }
@@ -1592,7 +1592,7 @@ void PolicyHashVariables(EvalContext *ctx, Policy *policy)
         Bundle *bundle = SeqAt(policy->bundles, i);
         if (strcmp("common", bundle->type) != 0)
         {
-            EvalContextStackPushBundleFrame(ctx, bundle, false);
+            EvalContextStackPushBundleFrame(ctx, bundle, NULL, false);
             BundleHashVariables(ctx, bundle);
             EvalContextStackPopFrame(ctx);
         }

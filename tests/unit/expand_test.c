@@ -169,7 +169,7 @@ static void test_expand_promise_array_with_scalar_arg(void)
     PromiseType *promise_type = BundleAppendPromiseType(bundle, "dummy");
     Promise *promise = PromiseTypeAppendPromise(promise_type, "$(foo[$(bar)])", (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, "any");
 
-    EvalContextStackPushBundleFrame(ctx, bundle, false);
+    EvalContextStackPushBundleFrame(ctx, bundle, NULL, false);
     ExpandPromise(ctx, promise, actuator_expand_promise_array_with_scalar_arg, NULL);
     EvalContextStackPopFrame(ctx);
 
@@ -221,7 +221,7 @@ static void test_expand_promise_slist(void)
     PromiseType *promise_type = BundleAppendPromiseType(bundle, "dummy");
     Promise *promise = PromiseTypeAppendPromise(promise_type, "$(foo)", (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, "any");
 
-    EvalContextStackPushBundleFrame(ctx, bundle, false);
+    EvalContextStackPushBundleFrame(ctx, bundle, NULL, false);
     ExpandPromise(ctx, promise, actuator_expand_promise_slist, NULL);
     EvalContextStackPopFrame(ctx);
 
@@ -286,7 +286,7 @@ static void test_expand_promise_array_with_slist_arg(void)
     PromiseType *promise_type = BundleAppendPromiseType(bundle, "dummy");
     Promise *promise = PromiseTypeAppendPromise(promise_type, "$(arr[$(keys)])", (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, "any");
 
-    EvalContextStackPushBundleFrame(ctx, bundle, false);
+    EvalContextStackPushBundleFrame(ctx, bundle, NULL, false);
     ExpandPromise(ctx, promise, actuator_expand_promise_array_with_slist_arg, NULL);
     EvalContextStackPopFrame(ctx);
 

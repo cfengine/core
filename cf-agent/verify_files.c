@@ -405,8 +405,8 @@ int ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes a, Promis
 {
     void *vp;
     FnCall *fp;
+    Rlist *args = NULL;
     char edit_bundle_name[CF_BUFSIZE], lockname[CF_BUFSIZE], qualified_edit[CF_BUFSIZE], *method_deref;
-    Rlist *params = { 0 };
     int retval = false;
     CfLock thislock;
 
@@ -435,12 +435,12 @@ int ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes a, Promis
         {
             fp = (FnCall *) vp;
             strcpy(edit_bundle_name, fp->name);
-            params = fp->args;
+            args = fp->args;
         }
         else if ((vp = ConstraintGetRvalValue(ctx, "edit_line", pp, RVAL_TYPE_SCALAR)))
         {
             strcpy(edit_bundle_name, (char *) vp);
-            params = NULL;
+            args = NULL;
         }             
         else
         {
@@ -467,12 +467,11 @@ int ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes a, Promis
         Bundle *bp = NULL;
         if ((bp = PolicyGetBundle(policy, NULL, "edit_line", method_deref)))
         {
-            BannerSubBundle(bp, params);
+            BannerSubBundle(bp, args);
 
-            EvalContextStackPushBundleFrame(ctx, bp, a.edits.inherit);
+            EvalContextStackPushBundleFrame(ctx, bp, args, a.edits.inherit);
 
             BundleHashVariables(ctx, bp);
-            ScopeAugment(ctx, bp, pp, params);
 
             retval = ScheduleEditLineOperations(ctx, bp, a, pp, edcontext);
 
@@ -491,12 +490,12 @@ int ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes a, Promis
         {
             fp = (FnCall *) vp;
             strcpy(edit_bundle_name, fp->name);
-            params = fp->args;
+            args = fp->args;
         }
         else if ((vp = ConstraintGetRvalValue(ctx, "edit_xml", pp, RVAL_TYPE_SCALAR)))
         {
             strcpy(edit_bundle_name, (char *) vp);
-            params = NULL;
+            args = NULL;
         }
         else
         {
@@ -518,12 +517,10 @@ int ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes a, Promis
         Bundle *bp = NULL;
         if ((bp = PolicyGetBundle(policy, NULL, "edit_xml", method_deref)))
         {
-            BannerSubBundle(bp, params);
+            BannerSubBundle(bp, args);
 
-            EvalContextStackPushBundleFrame(ctx, bp, a.edits.inherit);
-
+            EvalContextStackPushBundleFrame(ctx, bp, args, a.edits.inherit);
             BundleHashVariables(ctx, bp);
-            ScopeAugment(ctx, bp, pp, params);
 
             retval = ScheduleEditXmlOperations(ctx, bp, a, pp, edcontext);
 
@@ -539,10 +536,10 @@ int ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes a, Promis
         Bundle *bp = NULL;
         if ((bp = MakeTemporaryBundleFromTemplate(ctx, tmp_policy, a, pp)))
         {
-            BannerSubBundle(bp,params);
+            BannerSubBundle(bp, args);
             a.haveeditline = true;
 
-            EvalContextStackPushBundleFrame(ctx, bp, a.edits.inherit);
+            EvalContextStackPushBundleFrame(ctx, bp, args, a.edits.inherit);
             BundleHashVariables(ctx, bp);
 
             retval = ScheduleEditLineOperations(ctx, bp, a, pp, edcontext);

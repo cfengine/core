@@ -1034,7 +1034,7 @@ void KeepControlPromises(EvalContext *ctx, Policy *policy)
 static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, GenericAgentConfig *config)
 {
     Bundle *bp;
-    Rlist *rp, *params;
+    Rlist *rp, *args;
     FnCall *fp;
     char *name;
     Rval retval;
@@ -1057,7 +1057,7 @@ static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, GenericAgentCon
         {
         case RVAL_TYPE_SCALAR:
             name = (char *) rp->item;
-            params = NULL;
+            args = NULL;
 
             if (strcmp(name, CF_NULL_VALUE) == 0)
             {
@@ -1068,12 +1068,12 @@ static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, GenericAgentCon
         case RVAL_TYPE_FNCALL:
             fp = (FnCall *) rp->item;
             name = (char *) fp->name;
-            params = (Rlist *) fp->args;
+            args = (Rlist *) fp->args;
             break;
 
         default:
             name = NULL;
-            params = NULL;
+            args = NULL;
             {
                 Writer *w = StringWriter();
                 WriterWrite(w, "Illegal item found in bundlesequence: ");
@@ -1125,20 +1125,19 @@ static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, GenericAgentCon
         case RVAL_TYPE_FNCALL:
             fp = (FnCall *) rp->item;
             name = (char *) fp->name;
-            params = (Rlist *) fp->args;
+            args = (Rlist *) fp->args;
             break;
         default:
             name = (char *) rp->item;
-            params = NULL;
+            args = NULL;
             break;
         }
 
         if ((bp = PolicyGetBundle(policy, NULL, "agent", name)) || (bp = PolicyGetBundle(policy, NULL, "common", name)))
         {
-            BannerBundle(bp, params);
+            BannerBundle(bp, args);
 
-            EvalContextStackPushBundleFrame(ctx, bp, false);
-            ScopeAugment(ctx, bp, NULL, params);
+            EvalContextStackPushBundleFrame(ctx, bp, args, false);
 
             ScheduleAgentOperations(ctx, bp);
 

@@ -1106,7 +1106,7 @@ static void EvalContextStackPushFrame(EvalContext *ctx, StackFrame *frame)
     SeqAppend(ctx->stack, frame);
 }
 
-void EvalContextStackPushBundleFrame(EvalContext *ctx, const Bundle *owner, bool inherits_previous)
+void EvalContextStackPushBundleFrame(EvalContext *ctx, const Bundle *owner, const Rlist *args, bool inherits_previous)
 {
     assert(!LastStackFrame(ctx, 0) || LastStackFrame(ctx, 0)->type == STACK_FRAME_TYPE_PROMISE_ITERATION);
 
@@ -1121,6 +1121,30 @@ void EvalContextStackPushBundleFrame(EvalContext *ctx, const Bundle *owner, bool
         if (!ScopeGet(NULL, "edit"))
         {
             ScopeNew(NULL, "edit");
+        }
+    }
+
+    if (RlistLen(args) > 0)
+    {
+        const Promise *caller = EvalContextStackGetTopPromise(ctx);
+        if (caller)
+        {
+            ScopeClear(owner->ns, owner->name);
+        }
+
+        ScopeAugment(ctx, owner, caller, args);
+    }
+
+    {
+        Scope *ptr = ScopeGet(owner->ns, owner->name);
+        AssocHashTableIterator i = HashIteratorInit(ptr->hashtable);
+        CfAssoc *assoc = NULL;
+        while ((assoc = HashIteratorNext(&i)))
+        {
+            Rval retval = ExpandPrivateRval(ctx, owner->ns, owner->name, assoc->rval);
+            // Retain the assoc, just replace rval
+            RvalDestroy(assoc->rval);
+            assoc->rval = retval;
         }
     }
 }

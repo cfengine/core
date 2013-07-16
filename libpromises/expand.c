@@ -1280,7 +1280,7 @@ static void CheckRecursion(EvalContext *ctx, Promise *pp)
 
         if (bp)
         {
-            EvalContextStackPushBundleFrame(ctx, bp, false);
+            EvalContextStackPushBundleFrame(ctx, bp, NULL, false);
             for (size_t j = 0; j < SeqLength(bp->promise_types); j++)
             {
                 PromiseType *sbp = SeqAt(bp->promise_types, j);
@@ -1378,7 +1378,7 @@ static void ParseServices(EvalContext *ctx, Promise *pp)
 
     if (bp)
     {
-        EvalContextStackPushBundleFrame(ctx, bp, false);
+        EvalContextStackPushBundleFrame(ctx, bp, NULL, false);
         ScopeMapBodyArgs(ctx, bp->ns, bp->name, args, bp->args);
 
         for (size_t i = 0; i < SeqLength(bp->promise_types); i++)

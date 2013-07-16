@@ -61,7 +61,7 @@ int VerifyMethod(EvalContext *ctx, char *attrname, Attributes a, Promise *pp)
     void *vp;
     FnCall *fp;
     char method_name[CF_EXPANDSIZE];
-    Rlist *params = NULL;
+    Rlist *args = NULL;
     int retval = false;
     CfLock thislock;
     char lockname[CF_BUFSIZE];
@@ -72,12 +72,12 @@ int VerifyMethod(EvalContext *ctx, char *attrname, Attributes a, Promise *pp)
         {
             fp = (FnCall *) vp;
             ExpandScalar(ctx, PromiseGetBundle(pp)->ns, PromiseGetBundle(pp)->name, fp->name, method_name);
-            params = fp->args;
+            args = fp->args;
         }
         else if ((vp = ConstraintGetRvalValue(ctx, attrname, pp, RVAL_TYPE_SCALAR)))
         {
             ExpandScalar(ctx, PromiseGetBundle(pp)->ns, PromiseGetBundle(pp)->name, (char *) vp, method_name);
-            params = NULL;
+            args = NULL;
         }
         else
         {
@@ -85,7 +85,7 @@ int VerifyMethod(EvalContext *ctx, char *attrname, Attributes a, Promise *pp)
         }
     }
 
-    GetLockName(lockname, "method", pp->promiser, params);
+    GetLockName(lockname, "method", pp->promiser, args);
 
     thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a.transaction, pp, false);
 
@@ -108,14 +108,10 @@ int VerifyMethod(EvalContext *ctx, char *attrname, Attributes a, Promise *pp)
 
     if (bp)
     {
-        BannerSubBundle(bp, params);
+        BannerSubBundle(bp, args);
 
-        EvalContextStackPushBundleFrame(ctx, bp, a.inherit);
-
-        ScopeClear(bp->ns, bp->name);
+        EvalContextStackPushBundleFrame(ctx, bp, args, a.inherit);
         BundleHashVariables(ctx, bp);
-
-        ScopeAugment(ctx, bp, pp, params);
 
         retval = ScheduleAgentOperations(ctx, bp);
 

@@ -104,6 +104,8 @@ int ScheduleEditLineOperations(EvalContext *ctx, Bundle *bp, Attributes a, const
     CfLock thislock;
     int pass;
 
+    assert(strcmp(bp->type, "edit_line") == 0);
+
     snprintf(lockname, CF_BUFSIZE - 1, "masterfilelock-%s", edcontext->filename);
     thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a.transaction, parentp, true);
 
@@ -133,7 +135,6 @@ int ScheduleEditLineOperations(EvalContext *ctx, Bundle *bp, Attributes a, const
 
                 if (Abort())
                 {
-                    ScopeClear(NULL, "edit");
                     YieldCurrentLock(thislock);
                     return false;
                 }
@@ -141,7 +142,6 @@ int ScheduleEditLineOperations(EvalContext *ctx, Bundle *bp, Attributes a, const
         }
     }
 
-    ScopeClear(NULL, "edit");
     YieldCurrentLock(thislock);
     return true;
 }

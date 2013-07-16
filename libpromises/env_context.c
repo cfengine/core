@@ -1115,6 +1115,14 @@ void EvalContextStackPushBundleFrame(EvalContext *ctx, const Bundle *owner, bool
     {
         ScopeNew(owner->ns, owner->name);
     }
+
+    if (strcmp(owner->type, "edit_line") == 0 || strcmp(owner->type, "edit_xml") == 0)
+    {
+        if (!ScopeGet(NULL, "edit"))
+        {
+            ScopeNew(NULL, "edit");
+        }
+    }
 }
 
 void EvalContextStackPushBodyFrame(EvalContext *ctx, const Body *owner)
@@ -1153,6 +1161,25 @@ void EvalContextStackPushPromiseIterationFrame(EvalContext *ctx, const Promise *
 void EvalContextStackPopFrame(EvalContext *ctx)
 {
     assert(SeqLength(ctx->stack) > 0);
+
+    StackFrame *last_frame = LastStackFrame(ctx, 0);
+    switch (last_frame->type)
+    {
+    case STACK_FRAME_TYPE_BUNDLE:
+        {
+            const Bundle *bp = last_frame->data.bundle.owner;
+            if (strcmp(bp->type, "edit_line") == 0 || strcmp(bp->type, "edit_xml") == 0)
+            {
+                ScopeClear(NULL, "edit");
+                ScopeClear(bp->ns, bp->name);
+            }
+        }
+        break;
+
+    default:
+        break;
+    }
+
     SeqRemove(ctx->stack, SeqLength(ctx->stack) - 1);
 }
 

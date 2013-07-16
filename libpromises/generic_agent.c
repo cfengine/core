@@ -769,7 +769,7 @@ static Policy *Cf3ParseFiles(EvalContext *ctx, GenericAgentConfig *config, const
                 continue;
             }
 
-            returnval = EvaluateFinalRval(ctx, "sys", (Rval) {rp->item, rp->type}, true, NULL);
+            returnval = EvaluateFinalRval(ctx, NULL, "sys", (Rval) {rp->item, rp->type}, true, NULL);
 
             Policy *aux_policy = NULL;
             switch (returnval.type)
@@ -911,7 +911,7 @@ int NewPromiseProposals(EvalContext *ctx, const GenericAgentConfig *config, cons
         }
         else
         {
-            Rval returnval = EvaluateFinalRval(ctx, "sys", (Rval) { rp->item, rp->type }, true, NULL);
+            Rval returnval = EvaluateFinalRval(ctx, NULL, "sys", (Rval) { rp->item, rp->type }, true, NULL);
 
             switch (returnval.type)
             {
@@ -1404,14 +1404,14 @@ static void CheckControlPromises(EvalContext *ctx, GenericAgentConfig *config, c
 
         if (strcmp(cp->lval, CFG_CONTROLBODY[COMMON_CONTROL_BUNDLESEQUENCE].lval) == 0)
         {
-            returnval = ExpandPrivateRval(ctx, scope, cp->rval);
+            returnval = ExpandPrivateRval(ctx, NULL, scope, cp->rval);
         }
         else
         {
-            returnval = EvaluateFinalRval(ctx, scope, cp->rval, true, NULL);
+            returnval = EvaluateFinalRval(ctx, NULL, scope, cp->rval, true, NULL);
         }
 
-        ScopeDeleteVariable(scope, cp->lval);
+        ScopeDeleteVariable(NULL, scope, cp->lval);
 
         if (!EvalContextVariablePut(ctx, (VarRef) { NULL, scope, cp->lval }, returnval, ConstraintSyntaxGetDataType(body_syntax, cp->lval)))
         {

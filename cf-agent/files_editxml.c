@@ -181,7 +181,7 @@ int ScheduleEditXmlOperations(EvalContext *ctx, Bundle *bp, Attributes a, const 
 
                 if (Abort())
                 {
-                    ScopeClear("edit");
+                    ScopeClear(NULL, "edit");
                     YieldCurrentLock(thislock);
                     return false;
                 }
@@ -189,7 +189,7 @@ int ScheduleEditXmlOperations(EvalContext *ctx, Bundle *bp, Attributes a, const 
         }
     }
 
-    ScopeClear("edit");
+    ScopeClear(NULL, "edit");
     YieldCurrentLock(thislock);
     return true;
 }

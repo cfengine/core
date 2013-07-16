@@ -33,16 +33,16 @@ void CommonEvalPromise(EvalContext *ctx, Promise *pp, void *param);
 
 void ExpandPromise(EvalContext *ctx, Promise *pp, PromiseActuator *ActOnPromise, void *param);
 
-Rval ExpandDanglers(EvalContext *ctx, const char *scope, Rval rval, const Promise *pp);
+Rval ExpandDanglers(EvalContext *ctx, const char *ns, const char *scope, Rval rval, const Promise *pp);
 void MapIteratorsFromRval(EvalContext *ctx, const char *scope, Rlist **lol, Rlist **los, Rval rval);
 
 int IsExpandable(const char *str);
 
-bool ExpandScalar(const EvalContext *ctx, const char *scope, const char *string, char buffer[CF_EXPANDSIZE]);
-Rval ExpandBundleReference(EvalContext *ctx, const char *scopeid, Rval rval);
-Rval ExpandPrivateRval(EvalContext *ctx, const char *contextid, Rval rval);
-Rlist *ExpandList(EvalContext *ctx, const char *scopeid, const Rlist *list, int expandnaked);
-Rval EvaluateFinalRval(EvalContext *ctx, const char *scopeid, Rval rval, int forcelist, const Promise *pp);
+bool ExpandScalar(const EvalContext *ctx, const char *ns, const char *scope, const char *string, char buffer[CF_EXPANDSIZE]);
+Rval ExpandBundleReference(EvalContext *ctx, const char *ns, const char *scope, Rval rval);
+Rval ExpandPrivateRval(EvalContext *ctx, const char *ns, const char *scope, Rval rval);
+Rlist *ExpandList(EvalContext *ctx, const char *ns, const char *scope, const Rlist *list, int expandnaked);
+Rval EvaluateFinalRval(EvalContext *ctx, const char *ns, const char *scope, Rval rval, int forcelist, const Promise *pp);
 int IsNakedVar(const char *str, char vtype);
 /**
   @brief Takes a variable and removes decorations.

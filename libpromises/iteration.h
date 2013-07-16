@@ -28,7 +28,7 @@
 #include "cf3.defs.h"
 #include "rlist.h"
 
-Rlist *NewIterationContext(EvalContext *ctx, const char *scopeid, Rlist *listvars);
+Rlist *NewIterationContext(EvalContext *ctx, const Promise *pp, const char *ns, const char *scope, Rlist *listvars);
 void DeleteIterationContext(Rlist *lol);
 int IncrementIterationContext(Rlist *iterators);
 int EndOfIteration(Rlist *iterator);

@@ -37,8 +37,9 @@
 #include "fncall.h"
 #include "rlist.h"
 #include "ornaments.h"
+#include "string_lib.h"
 
-static void GetReturnValue(EvalContext *ctx, char *scope, Promise *pp);
+static void GetReturnValue(EvalContext *ctx, const char *ns, char *scope, Promise *pp);
 
 /*****************************************************************************/
 
@@ -59,7 +60,7 @@ int VerifyMethod(EvalContext *ctx, char *attrname, Attributes a, Promise *pp)
     Bundle *bp;
     void *vp;
     FnCall *fp;
-    char method_name[CF_EXPANDSIZE], qualified_method[CF_BUFSIZE], *method_deref;
+    char method_name[CF_EXPANDSIZE];
     Rlist *params = NULL;
     int retval = false;
     CfLock thislock;
@@ -70,12 +71,12 @@ int VerifyMethod(EvalContext *ctx, char *attrname, Attributes a, Promise *pp)
         if ((vp = ConstraintGetRvalValue(ctx, attrname, pp, RVAL_TYPE_FNCALL)))
         {
             fp = (FnCall *) vp;
-            ExpandScalar(ctx, PromiseGetBundle(pp)->name, fp->name, method_name);
+            ExpandScalar(ctx, PromiseGetBundle(pp)->ns, PromiseGetBundle(pp)->name, fp->name, method_name);
             params = fp->args;
         }
         else if ((vp = ConstraintGetRvalValue(ctx, attrname, pp, RVAL_TYPE_SCALAR)))
         {
-            ExpandScalar(ctx, PromiseGetBundle(pp)->name, (char *) vp, method_name);
+            ExpandScalar(ctx, PromiseGetBundle(pp)->ns, PromiseGetBundle(pp)->name, (char *) vp, method_name);
             params = NULL;
         }
         else
@@ -95,24 +96,14 @@ int VerifyMethod(EvalContext *ctx, char *attrname, Attributes a, Promise *pp)
 
     PromiseBanner(pp);
 
-    if (strncmp(method_name,"default:",strlen("default:")) == 0) // CF_NS == ':'
-    {
-        method_deref = strchr(method_name, CF_NS) + 1;
-    }
-    else if ((strchr(method_name, CF_NS) == NULL) && (strcmp(PromiseGetNamespace(pp), "default") != 0))
-    {
-        snprintf(qualified_method, CF_BUFSIZE, "%s%c%s", PromiseGetNamespace(pp), CF_NS, method_name);
-        method_deref = qualified_method;
-    }
-    else
-    {
-         method_deref = method_name;
-    }
+    char ns[CF_MAXVARSIZE] = "";
+    char bundle_name[CF_MAXVARSIZE] = "";
+    SplitScopeName(method_name, ns, bundle_name);
     
-    bp = PolicyGetBundle(PolicyFromPromise(pp), NULL, "agent", method_deref);
+    bp = PolicyGetBundle(PolicyFromPromise(pp), EmptyString(ns) ? NULL : ns, "agent", bundle_name);
     if (!bp)
     {
-        bp = PolicyGetBundle(PolicyFromPromise(pp), NULL, "common", method_deref);
+        bp = PolicyGetBundle(PolicyFromPromise(pp), EmptyString(ns) ? NULL : ns, "common", bundle_name);
     }
 
     if (bp)
@@ -121,14 +112,14 @@ int VerifyMethod(EvalContext *ctx, char *attrname, Attributes a, Promise *pp)
 
         EvalContextStackPushBundleFrame(ctx, bp, a.inherit);
 
-        ScopeClear(bp->name);
+        ScopeClear(bp->ns, bp->name);
         BundleHashVariables(ctx, bp);
 
         ScopeAugment(ctx, bp, pp, params);
 
         retval = ScheduleAgentOperations(ctx, bp);
 
-        GetReturnValue(ctx, bp->name, pp);
+        GetReturnValue(ctx, bp->ns, bp->name, pp);
 
         EvalContextStackPopFrame(ctx);
 
@@ -151,7 +142,7 @@ int VerifyMethod(EvalContext *ctx, char *attrname, Attributes a, Promise *pp)
         for (const Rlist *rp = bp->args; rp; rp = rp->next)
         {
             const char *lval = rp->item;
-            ScopeDeleteScalar((VarRef) { NULL, bp->name, lval });
+            ScopeDeleteScalar((VarRef) { bp->ns, bp->name, lval });
         }
     }
     else
@@ -179,7 +170,7 @@ int VerifyMethod(EvalContext *ctx, char *attrname, Attributes a, Promise *pp)
 
 /***********************************************************************/
 
-static void GetReturnValue(EvalContext *ctx, char *scope, Promise *pp)
+static void GetReturnValue(EvalContext *ctx, const char *ns, char *scope, Promise *pp)
 {
     char *result = ConstraintGetRvalValue(ctx, "useresult", pp, RVAL_TYPE_SCALAR);
 
@@ -191,7 +182,7 @@ static void GetReturnValue(EvalContext *ctx, char *scope, Promise *pp)
         Scope *ptr;
         char index[CF_MAXVARSIZE], match[CF_MAXVARSIZE];    
 
-        if ((ptr = ScopeGet(scope)) == NULL)
+        if ((ptr = ScopeGet(ns, scope)) == NULL)
         {
             Log(LOG_LEVEL_INFO, "useresult was specified but the method returned no data");
             return;
@@ -227,7 +218,7 @@ static void GetReturnValue(EvalContext *ctx, char *scope, Promise *pp)
                     snprintf(newname, CF_BUFSIZE, "%s", result);
                 }
 
-                EvalContextVariablePut(ctx, (VarRef) { NULL, PromiseGetBundle(pp)->name, newname }, assoc->rval, DATA_TYPE_STRING);
+                EvalContextVariablePut(ctx, (VarRef) { PromiseGetBundle(pp)->ns, PromiseGetBundle(pp)->name, newname }, assoc->rval, DATA_TYPE_STRING);
             }
         }
         

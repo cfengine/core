@@ -9,10 +9,6 @@ AM_CPPFLAGS = @CPPFLAGS@ -I$(srcdir)/../libpromises -I$(srcdir)/../libutils \
 	$(MYSQL_CPPFLAGS) \
 	$(LIBXML2_CPPFLAGS)
 
-if HAVE_ENTERPRISE
-AM_CPPFLAGS += -I$(abs_top_srcdir)/enterprise/libcfagent
-endif
-
 AM_CFLAGS = @CFLAGS@ \
 	$(ENTERPRISE_CFLAGS) \
 	$(LIBVIRT_CFLAGS) \
@@ -37,9 +33,6 @@ LDADD = ../libpromises/libpromises.la \
 	$(POSTGRESQL_LIBS) \
 	$(MYSQL_LIBS) \
 	$(LIBXML2_LIBS)
-if HAVE_ENTERPRISE
-LDADD += ../enterprise/libcfagent/libcfagent.la
-endif
 
 cf_agent_SOURCES = \
         agent-diagnostics.c agent-diagnostics.h \

@@ -9,9 +9,6 @@ AM_CFLAGS = @CFLAGS@ \
 	$(ENTERPRISE_CFLAGS)
 
 LDADD = ../libpromises/libpromises.la
-if HAVE_ENTERPRISE
-LDADD += ../enterprise/libcfserverd/libcfserverd.la
-endif
 
 cf_serverd_SOURCES = \
         cf-serverd.c \

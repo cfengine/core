@@ -7,17 +7,10 @@ AM_CPPFLAGS = @CPPFLAGS@ \
 	-I$(srcdir)/../libpromises \
 	$(ENTERPRISE_CPPFLAGS)
 
-if HAVE_ENTERPRISE
-AM_CPPFLAGS += -I$(abs_top_srcdir)/enterprise/libcfmonitord
-endif
-
 AM_CFLAGS = @CFLAGS@ \
 	$(ENTERPRISE_CFLAGS)
 
 cf_monitord_LDADD = ../libpromises/libpromises.la
-if HAVE_ENTERPRISE
-cf_monitord_LDADD += ../enterprise/libcfmonitord/libcfmonitord.la
-endif
 
 cf_monitord_SOURCES = \
         verify_measurements.c verify_measurements.h \

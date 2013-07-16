@@ -66,9 +66,9 @@ static VersionCmpResult RunCmpCommand(EvalContext *ctx, const char *command, con
     {
         EvalContextVariablePut(ctx, (VarRef) { NULL, "cf_pack_context", "v1" }, (Rval) { v1, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
         EvalContextVariablePut(ctx, (VarRef) { NULL, "cf_pack_context", "v2" }, (Rval) { v2, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
-        ExpandScalar(ctx, "cf_pack_context", command, expanded_command);
+        ExpandScalar(ctx, NULL, "cf_pack_context", command, expanded_command);
 
-        ScopeClear("cf_pack_context");
+        ScopeClear(NULL, "cf_pack_context");
     }
 
     FILE *pfp = a.packages.package_commands_useshell ? cf_popen_sh(expanded_command, "w") : cf_popen(expanded_command, "w", true);

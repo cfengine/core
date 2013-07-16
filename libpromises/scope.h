@@ -33,16 +33,16 @@
 /**
  * @deprecated
  */
-Scope *ScopeNew(const char *name);
+Scope *ScopeNew(const char *ns, const char *scope);
 
 void ScopePutMatch(int index, const char *value);
 
-bool ScopeExists(const char *name);
+bool ScopeExists(const char *ns, const char *name);
 
 /**
  * @deprecated
  */
-void ScopeSetCurrent(const char *name);
+void ScopeSetCurrent(const char *ns, const char *name);
 
 /**
  * @deprecated
@@ -53,21 +53,21 @@ Scope *ScopeGetCurrent(void);
  * @brief Clears all variables from a scope
  * @param name
  */
-void ScopeClear(const char *name);
+void ScopeClear(const char *ns, const char *name);
 
 /**
  * @brief find a Scope in VSCOPE
  * @param scope
  * @return
  */
-Scope *ScopeGet(const char *scope);
+Scope *ScopeGet(const char *ns, const char *scope);
 
 /**
  * @brief copy an existing Scope, prepend to VSCOPE with a new name
  * @param new_scopename
  * @param old_scopename
  */
-void ScopeCopy(const char *new_scopename, const Scope *old_scope);
+void ScopeCopy(const char *new_ns, const char *new_scopename, const Scope *old_scope);
 
 /**
  * @brief clear VSCOPE
@@ -98,11 +98,11 @@ void ScopeDeleteScalar(VarRef lval);
 void ScopeDeleteSpecial(const char *scope, const char *lval);
 bool ScopeIsReserved(const char *scope);
 
-void ScopeDeleteVariable(const char *scope, const char *id);
+void ScopeDeleteVariable(const char *ns, const char *scope, const char *id);
 
-void ScopeDeRefListsInHashtable(char *scope, Rlist *list, Rlist *reflist);
+void ScopeDeRefListsInHashtable(const char *ns, char *scope, Rlist *list, Rlist *reflist);
 
-int ScopeMapBodyArgs(EvalContext *ctx, const char *scopeid, Rlist *give, const Rlist *take);
+int ScopeMapBodyArgs(EvalContext *ctx, const char *ns, const char *scope, Rlist *give, const Rlist *take);
 
 int CompareVariableValue(Rval rval, CfAssoc *ap);
 bool UnresolvedVariables(const CfAssoc *ap, RvalType rtype);

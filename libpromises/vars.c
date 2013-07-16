@@ -425,7 +425,7 @@ const char *ExtractOuterCf3VarString(const char *str, char *substr)
 
 /*********************************************************************/
 
-int IsQualifiedVariable(char *var)
+bool IsQualifiedVariable(const char *var)
 {
     int isarraykey = false;
     char *sp;

@@ -1,34 +1,34 @@
 
 body file control
 {
-namespace => "xxx";
+      namespace => "xxx";
 }
 
 bundle common globalclass
 {
-classes:
+  classes:
 
-   "xclass_global" expression => "any";
+      "xclass_global" expression => "any";
 
-reports:
+  reports:
 
- xclass_global::
+    xclass_global::
 
-  "!!!!!!!!!!!!";
+      "!!!!!!!!!!!!";
 }
 
 
 bundle agent localclass
 {
-classes:
+  classes:
 
-   "xclass_local" expression => "any";
+      "xclass_local" expression => "any";
 
-reports:
+  reports:
 
- xclass_global::
+    xclass_global::
 
-    "Local classes in the namespace work";
+      "Local classes in the namespace work";
 
-    "Hard classes work everywhere - like here";
+      "Hard classes work everywhere - like here";
 }

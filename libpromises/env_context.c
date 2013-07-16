@@ -55,6 +55,26 @@ static bool ABORTBUNDLE = false;
 /* Level                                                                     */
 /*****************************************************************************/
 
+static const char *StackFrameOwnerNamespace(const StackFrame *frame)
+{
+    switch (frame->type)
+    {
+    case STACK_FRAME_TYPE_BUNDLE:
+        return frame->data.bundle.owner->ns;
+
+    case STACK_FRAME_TYPE_BODY:
+        return frame->data.body.owner->ns;
+
+    case STACK_FRAME_TYPE_PROMISE:
+    case STACK_FRAME_TYPE_PROMISE_ITERATION:
+        return NULL;
+
+    default:
+        ProgrammingError("Unhandled stack frame type");
+    }
+}
+
+
 static const char *StackFrameOwnerName(const StackFrame *frame)
 {
     switch (frame->type)
@@ -140,7 +160,7 @@ void EvalContextHeapAddSoft(EvalContext *ctx, const char *context, const char *n
         Log(LOG_LEVEL_ERR, "Chop was called on a string that seemed to have no terminator");
     }
     CanonifyNameInPlace(canonified_context);
-    
+
     if (ns && strcmp(ns, "default") != 0)
     {
         snprintf(context_copy, CF_MAXVARSIZE, "%s:%s", ns, canonified_context);
@@ -1111,7 +1131,7 @@ void EvalContextStackPushBundleFrame(EvalContext *ctx, const Bundle *owner, bool
     assert(!LastStackFrame(ctx, 0) || LastStackFrame(ctx, 0)->type == STACK_FRAME_TYPE_PROMISE_ITERATION);
 
     EvalContextStackPushFrame(ctx, StackFrameNewBundle(owner, inherits_previous));
-    ScopeSetCurrent(owner->name);
+    ScopeSetCurrent(owner->ns, owner->name);
 }
 
 void EvalContextStackPushBodyFrame(EvalContext *ctx, const Body *owner)
@@ -1119,6 +1139,8 @@ void EvalContextStackPushBodyFrame(EvalContext *ctx, const Body *owner)
     assert((!LastStackFrame(ctx, 0) && strcmp("control", owner->name) == 0) || LastStackFrame(ctx, 0)->type == STACK_FRAME_TYPE_PROMISE);
 
     EvalContextStackPushFrame(ctx, StackFrameNewBody(owner));
+
+    ScopeSetCurrent(NULL, "body");
 }
 
 void EvalContextStackPushPromiseFrame(EvalContext *ctx, const Promise *owner)
@@ -1126,7 +1148,7 @@ void EvalContextStackPushPromiseFrame(EvalContext *ctx, const Promise *owner)
     assert(LastStackFrame(ctx, 0) && LastStackFrame(ctx, 0)->type == STACK_FRAME_TYPE_BUNDLE);
 
     EvalContextStackPushFrame(ctx, StackFrameNewPromise(owner));
-    ScopeSetCurrent("this");
+    ScopeSetCurrent(NULL, "this");
 }
 
 void EvalContextStackPushPromiseIterationFrame(EvalContext *ctx, const Promise *owner)
@@ -1134,7 +1156,7 @@ void EvalContextStackPushPromiseIterationFrame(EvalContext *ctx, const Promise *
     assert(LastStackFrame(ctx, 0) && LastStackFrame(ctx, 0)->type == STACK_FRAME_TYPE_PROMISE);
 
     EvalContextStackPushFrame(ctx, StackFrameNewPromiseIteration(owner));
-    ScopeSetCurrent("this");
+    ScopeSetCurrent(NULL, "this");
 }
 
 void EvalContextStackPopFrame(EvalContext *ctx)
@@ -1145,7 +1167,7 @@ void EvalContextStackPopFrame(EvalContext *ctx)
     StackFrame *last_frame = LastStackFrame(ctx, 0);
     if (last_frame)
     {
-        ScopeSetCurrent(StackFrameOwnerName(last_frame));
+        ScopeSetCurrent(StackFrameOwnerNamespace(last_frame), StackFrameOwnerName(last_frame));
     }
 }
 
@@ -1210,7 +1232,7 @@ bool EvalContextVariablePut(EvalContext *ctx, VarRef lval, Rval rval, DataType t
 {
     assert(type != DATA_TYPE_NONE);
 
-    if (lval.lval == NULL || lval.scope == NULL)
+    if (lval.lval == NULL)
     {
         ProgrammingError("Bad variable or scope in a variable assignment. scope.value = %s.%s", lval.scope, lval.lval);
     }
@@ -1262,10 +1284,12 @@ bool EvalContextVariablePut(EvalContext *ctx, VarRef lval, Rval rval, DataType t
         assert(STACK_FRAME_TYPE_BODY == LastStackFrame(ctx, 0)->type);
     }
 
-    Scope *put_scope = ScopeGet(lval.scope);
+    assert(lval.scope);
+
+    Scope *put_scope = ScopeGet(lval.ns, lval.scope);
     if (!put_scope)
     {
-        put_scope = ScopeNew(lval.scope);
+        put_scope = ScopeNew(lval.ns, lval.scope);
         if (!put_scope)
         {
             return false;
@@ -1281,7 +1305,7 @@ bool EvalContextVariablePut(EvalContext *ctx, VarRef lval, Rval rval, DataType t
 
         if (ScopeGetCurrent() && strcmp(ScopeGetCurrent()->scope, "this") != 0)
         {
-            MapIteratorsFromRval(ctx, ScopeGetCurrent()->scope, &listvars, &scalars, rval);
+            MapIteratorsFromRval(ctx, NULL, &listvars, &scalars, rval);
 
             if (listvars != NULL)
             {
@@ -1341,57 +1365,15 @@ bool EvalContextVariableGet(const EvalContext *ctx, VarRef lval, Rval *rval_out,
         return false;
     }
 
-    char expanded_lval[CF_MAXVARSIZE] = "";
-    if (!IsExpandable(lval.lval))
+
+    Scope *get_scope = NULL;
+    if (lval.scope)
     {
-        strncpy(expanded_lval, lval.lval, CF_MAXVARSIZE - 1);
+        get_scope = ScopeGet(lval.ns, lval.scope);
     }
     else
     {
-        char buffer[CF_EXPANDSIZE] = "";
-        if (ExpandScalar(ctx, lval.scope, lval.lval, buffer))
-        {
-            strncpy(expanded_lval, buffer, CF_MAXVARSIZE - 1);
-        }
-        else
-        {
-            if (rval_out)
-            {
-                *rval_out = (Rval) {(char *) lval.lval, RVAL_TYPE_SCALAR };
-            }
-            if (type_out)
-            {
-                *type_out = DATA_TYPE_NONE;
-            }
-            return false;
-        }
-    }
-
-    Scope *get_scope = NULL;
-    char lookup_key[CF_MAXVARSIZE] = "";
-    {
-        char scopeid[CF_MAXVARSIZE] = "";
-
-        if (IsQualifiedVariable(expanded_lval))
-        {
-            scopeid[0] = '\0';
-            sscanf(expanded_lval, "%[^.].", scopeid);
-            strlcpy(lookup_key, expanded_lval + strlen(scopeid) + 1, sizeof(lookup_key));
-        }
-        else
-        {
-            strlcpy(lookup_key, expanded_lval, sizeof(lookup_key));
-            strlcpy(scopeid, lval.scope, sizeof(scopeid));
-        }
-
-        if (lval.ns != NULL && strchr(scopeid, CF_NS) == NULL && strcmp(lval.ns, "default") != 0)
-        {
-            char buffer[CF_EXPANDSIZE] = "";
-            sprintf(buffer, "%s%c%s", lval.ns, CF_NS, scopeid);
-            strlcpy(scopeid, buffer, sizeof(scopeid));
-        }
-
-        get_scope = ScopeGet(scopeid);
+        get_scope = ScopeGet(ScopeGetCurrent()->ns, ScopeGetCurrent()->scope);
     }
 
     if (!get_scope)
@@ -1407,7 +1389,13 @@ bool EvalContextVariableGet(const EvalContext *ctx, VarRef lval, Rval *rval_out,
         return false;
     }
 
+    assert(!IsQualifiedVariable(lval.lval) && "lval is qualified");
+
+    char *lookup_key = VarRefToString(lval, false);
     CfAssoc *assoc = HashLookupElement(get_scope->hashtable, lookup_key);
+    free(lookup_key);
+
+
     if (!assoc)
     {
         if (rval_out)
@@ -1679,7 +1667,7 @@ static void SummarizeTransaction(EvalContext *ctx, TransactionContext tc, const 
     {
         char buffer[CF_EXPANDSIZE];
 
-        ExpandScalar(ctx, ScopeGetCurrent()->scope, tc.log_string, buffer);
+        ExpandScalar(ctx, NULL, NULL, tc.log_string, buffer);
 
         if (strcmp(logname, "udp_syslog") == 0)
         {

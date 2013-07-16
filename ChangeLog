@@ -1,4 +1,34 @@
-	Introduced alias 'policy_server' for context 'am_policy_hub' (the latter will be deprecated)
+3.6.0
+
+       Changes:
+       - add process name and pid in syslog message (GitHub #789)
+
+       New features:
+       - support colorized output for agent binaries with command line option --color
+       - Introduced alias 'policy_server' for context 'am_policy_hub' (the latter will be deprecated)
+
+3.5.1
+
+       Changes:
+       - file changes are logged with log level Notice, not Error
+       - the CFEngine Standard Library in masterfiles/libraries is now split into
+         promise-type specific policy files, and lives in a version-specific directory.
+         This should have no impact on current code, but allows more granular include of
+         needed stdlib elements (Redmine #3044)
+
+       Bug fixes:
+       - fix recursive copying of files (Redmine #2965)
+       - respect classes in templates (Redmine ##2928)
+       - fix timestamps on Windows (Redmine #2933)
+       - fix non-root cf-agent flooding syslog (Redmine #2980)
+       - fix email flood from cf-execd due to timestamps in agent output (Redmine #3011)
+       - Preserve security context when editing or copying local files (Redmine #2728)
+       - fix path for sys.crontab on redhat systems (Redmine #2553)
+       - prevent incorrect "insert_lines promise uses the same select_line_matching anchor" warning (Redmine #2778)
+       - Fix regression of setting VIPADDRESS to 127.0.0.1 (Redmine #3010)
+       - Fix "changes" promise not receiving status when file is missing (Redmine #2820)
+       - Fix symlinks being destroyed when editing them (Redmine #2363)
+       - Fix missing "promise kept" status for the last line in a file (Redmine #2943)
 
 3.5.0
 

@@ -6,9 +6,9 @@
 
 body common control
 {
-  inputs => { "../../default.cf.sub" };
-  bundlesequence  => { default("$(this.promise_filename)") };
-  version => "1.0";
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
 }
 
 
@@ -16,35 +16,35 @@ body common control
 
 bundle agent init
 {
-commands:
-  "$(G.touch) $(G.testfile)";
+  commands:
+      "$(G.touch) $(G.testfile)";
 }
 
 #######################################################
 
 bundle agent test
 {
-vars:
-  "cmd" string => "$(sys.cf_agent) -Kf $(this.promise_filename).sub";
-commands:
-  "$(cmd)";
-  "$(cmd) -D superfluous";
+  vars:
+      "cmd" string => "$(sys.cf_agent) -Kf $(this.promise_filename).sub";
+  commands:
+      "$(cmd)";
+      "$(cmd) -D superfluous";
 }
 #######################################################
 
 bundle agent check
 {
-classes:
-  "filestillthere" expression => fileexists("$(G.testfile)");
-  "fileisrotated" expression => fileexists("$(G.testfile).cf-before-edit.1");
-  "nounnamedbackup" not => fileexists("$(G.testfile).cf-before-edit");
+  classes:
+      "filestillthere" expression => fileexists("$(G.testfile)");
+      "fileisrotated" expression => fileexists("$(G.testfile).cf-before-edit.1");
+      "nounnamedbackup" not => fileexists("$(G.testfile).cf-before-edit");
 
-    "ok" and => { "filestillthere", "fileisrotated", "nounnamedbackup" };
+      "ok" and => { "filestillthere", "fileisrotated", "nounnamedbackup" };
 
-reports:
+  reports:
     ok::
-        "$(this.promise_filename) Pass";
+      "$(this.promise_filename) Pass";
     !ok::
-        "$(this.promise_filename) FAIL";
+      "$(this.promise_filename) FAIL";
 }
 

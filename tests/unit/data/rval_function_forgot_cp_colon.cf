@@ -1,10 +1,10 @@
 bundle agent my_commands
 {
 
-vars:
+  vars:
 
     any::
-        "env" string => getenv("PATH", "20" ,
-            comment => 'get path";
+      "env" string => getenv("PATH", "20" ,
+			     comment => 'get path";
 
 }

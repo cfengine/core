@@ -29,7 +29,7 @@
 body common control
 
 {
-bundlesequence  => { "example" };
+      bundlesequence  => { "example" };
 }
 
 
@@ -38,14 +38,14 @@ bundlesequence  => { "example" };
 bundle agent example
 
 {
-files:
+  files:
 
-  "/home/mark/tmp/test_create" 
+      "/home/mark/tmp/test_create" 
 
       comment => "this rule does something",
       rename => disable;
 
-  "/home/mark/tmp/rotateme"
+      "/home/mark/tmp/rotateme"
 
       rename => rotate("4");
 }
@@ -55,8 +55,8 @@ files:
 body rename disable
 
 {
-disable => "true";
-disable_suffix => "_blownaway";
+      disable => "true";
+      disable_suffix => "_blownaway";
 }
 
 ############################################
@@ -64,5 +64,5 @@ disable_suffix => "_blownaway";
 body rename rotate(level)
 
 {
-rotate => "$(level)";
+      rotate => "$(level)";
 }

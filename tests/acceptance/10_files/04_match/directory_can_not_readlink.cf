@@ -6,9 +6,9 @@
 
 body common control
 {
-  inputs => { "../../default.cf.sub" };
-  bundlesequence  => { default("$(this.promise_filename)") };
-  version => "1.0";
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
 }
 
 #######################################################
@@ -27,7 +27,7 @@ bundle agent init
 bundle agent test
 {
   vars:
-    "agent" string => execresult("$(sys.cf_agent) -Kf $(G.cwd)/$(this.promise_filename).sub -D AUTO 2>&1", "useshell");
+      "agent" string => execresult("$(sys.cf_agent) -Kf $(G.cwd)/$(this.promise_filename).sub -D AUTO 2>&1", "useshell");
 }
 
 #######################################################

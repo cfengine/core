@@ -11,37 +11,37 @@
 
 body common control
 {
-bundlesequence => { "dominoes_symphony" };
-inputs => { "libraries/cfengine_stdlib.cf" };
+      bundlesequence => { "dominoes_symphony" };
+      inputs => { "libraries/cfengine_stdlib.cf" };
 }
 
 ############################################################
 
 bundle agent dominoes_symphony
 {
-methods:
+  methods:
 
-   # We have to seed the beginning by creating the dominoes
-   # /tmp/dominoes_localhost
+      # We have to seed the beginning by creating the dominoes
+      # /tmp/dominoes_localhost
 
-   host1::
-    "dominoes"  usebundle => hand_over("localhost","host1","overture");
+    host1::
+      "dominoes"  usebundle => hand_over("localhost","host1","overture");
 
-   host2::
-    "dominoes"  usebundle => hand_over("host1","host2","first_movement");
+    host2::
+      "dominoes"  usebundle => hand_over("host1","host2","first_movement");
 
-   host3::
-    "dominoes"  usebundle => hand_over("host2","host3","second_movement");
+    host3::
+      "dominoes"  usebundle => hand_over("host2","host3","second_movement");
 
-   host4::
-    "dominoes"  usebundle => hand_over("host3","host4","final_movement"),
-                classes => if_ok("finale");
+    host4::
+      "dominoes"  usebundle => hand_over("host3","host4","final_movement"),
+      classes => if_ok("finale");
 
-reports:
+  reports:
 
-  finale::
+    finale::
 
-   "The visitors book of the Dominoes method"
+      "The visitors book of the Dominoes method"
       printfile => visitors_book("/tmp/dominoes_host4");
 
 }
@@ -51,38 +51,38 @@ reports:
 bundle agent hand_over(predecessor,myalias,method)
 {
 
- # This is a wrapper for the orchestration
+      # This is a wrapper for the orchestration
 
-files:
+  files:
 
-  "/tmp/tip_the_dominoes"
+      "/tmp/tip_the_dominoes"
 
-        comment => "Wait for our cue or relay/conductor baton",
+      comment => "Wait for our cue or relay/conductor baton",
       copy_from => secure_cp("/tmp/dominoes_$(predecessor)","$(predecessor)"),
-        classes => if_repaired("cue_action");
+      classes => if_repaired("cue_action");
 
-methods:
+  methods:
 
-  cue_action::
+    cue_action::
 
-   "the music happens"
+      "the music happens"
 
-       comment => "One off activity",
-     usebundle => $(method),
-       classes => if_ok("pass_the_stick");
+      comment => "One off activity",
+      usebundle => $(method),
+      classes => if_ok("pass_the_stick");
 
-files:
+  files:
 
-  pass_the_stick::
+    pass_the_stick::
 
-   "/tmp/tip_the_dominoes"
-       comment => "Add our signature to the dominoes's tail",
-     edit_line => append_if_no_line("Knocked over $(myalias) and did: $(method)");
+      "/tmp/tip_the_dominoes"
+      comment => "Add our signature to the dominoes's tail",
+      edit_line => append_if_no_line("Knocked over $(myalias) and did: $(method)");
 
-   "/tmp/dominoes_$(myalias)"
+      "/tmp/dominoes_$(myalias)"
 
-    comment => "Dominoes in position to be beamed up by next agent",
-     copy_from => local_cp("/tmp/tip_the_dominoes");
+      comment => "Dominoes in position to be beamed up by next agent",
+      copy_from => local_cp("/tmp/tip_the_dominoes");
 
 }
 
@@ -90,27 +90,27 @@ files:
 
 bundle agent overture
 {
-reports:
-    "Singing the overture...";
+  reports:
+      "Singing the overture...";
 }
 
 bundle agent first_movement
 {
-reports:
-    "Singing the first adagio...";
+  reports:
+      "Singing the first adagio...";
 }
 
 bundle agent second_movement
 {
-reports:
-    "Singing second allegro...";
+  reports:
+      "Singing second allegro...";
 
 }
 
 bundle agent final_movement
 {
-reports:
-    "Trumpets for the finale";
+  reports:
+      "Trumpets for the finale";
 
 }
 
@@ -119,22 +119,22 @@ reports:
 
 bundle server access_rules()
 {
-access:
+  access:
 
-  "/tmp"
+      "/tmp"
 
-        admit => { "127.0.0.1" };
+      admit => { "127.0.0.1" };
 
-  "did.*"
-    resource_type => "context",
-    admit => { "127.0.0.1" };
+      "did.*"
+      resource_type => "context",
+      admit => { "127.0.0.1" };
 
 }
 
 
 body printfile visitors_book(file)
 {
-file_to_print   => "$(file)";
-number_of_lines => "10";
+      file_to_print   => "$(file)";
+      number_of_lines => "10";
 }
 

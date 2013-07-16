@@ -8,32 +8,32 @@
 body common control
 {
 
-  bundlesequence  => { check };
-  version => "1.0";
+      bundlesequence  => { check };
+      version => "1.0";
 }
 
 bundle agent check
 {
-reports:
-  any::
-# this was the only way I found to trigger the issue. Classifying
-# on join seems to resolve the variable.
-    "$(this.promise_filename) $(g_stuff.two)";
+  reports:
+    any::
+      # this was the only way I found to trigger the issue. Classifying
+      # on join seems to resolve the variable.
+      "$(this.promise_filename) $(g_stuff.two)";
 }
 
 # It is critical that the common bundle is declared after the agent bundles
 bundle common g_stuff
 {
-# promise type ordering here is critical
-    vars:
-        trigger::
-            "one"  string  => "Pas"; 
+      # promise type ordering here is critical
+  vars:
+    trigger::
+      "one"  string  => "Pas"; 
 
-        any::
-            "two" slist => { "$(one)s" };
+    any::
+      "two" slist => { "$(one)s" };
 
-    classes:
-        "trigger" expression => "any";
+  classes:
+      "trigger" expression => "any";
 
 }
 

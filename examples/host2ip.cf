@@ -30,7 +30,7 @@
 body common control
 
 {
-bundlesequence  => { "example" };   
+      bundlesequence  => { "example" };   
 }
 
 #######################################################
@@ -38,12 +38,12 @@ bundlesequence  => { "example" };
 bundle agent example
 
 {
-vars:
+  vars:
 
-  "ip" string => host2ip("www.google.com");
+      "ip" string => host2ip("www.google.com");
 
-reports:
+  reports:
 
-  "IP address $(ip)";
+      "IP address $(ip)";
 
 }

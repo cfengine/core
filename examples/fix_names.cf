@@ -35,8 +35,8 @@
 body common control
 
 {
-version => "1.2.3";
-bundlesequence  => { "example"  };
+      version => "1.2.3";
+      bundlesequence  => { "example"  };
 }
 
 ########################################################
@@ -45,24 +45,24 @@ bundle agent example
 
 {
 
-files:
+  files:
 
-  "/home/mark/LapTop/Cfengine3/trunk/src/.*\.[ch]"
+      "/home/mark/LapTop/Cfengine3/trunk/src/.*\.[ch]"
 
-       edit_line => change_name;
+      edit_line => change_name;
 }
 
 ########################################################
 
 bundle edit_line change_name
-  {
+{
   replace_patterns:
 
-   "Verbose\("
+      "Verbose\("
 
       replace_with => With("CfOut(cf_verbose,\"\",");
 
-  }
+}
 
 ########################################
 # Bodies
@@ -71,7 +71,7 @@ bundle edit_line change_name
 body replace_with With(x)
 
 {
-replace_value => "$(x)";
-occurrences => "all";
+      replace_value => "$(x)";
+      occurrences => "all";
 }
 

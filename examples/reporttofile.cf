@@ -23,14 +23,14 @@
 
 body common control
 {
-bundlesequence => { "example" };
+      bundlesequence => { "example" };
 }
 
 #
 
 bundle agent example
 {
-reports:
-   "$(sys.date),This is a report"
-     report_to_file => "/tmp/test_log";
+  reports:
+      "$(sys.date),This is a report"
+      report_to_file => "/tmp/test_log";
 }

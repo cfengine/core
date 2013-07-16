@@ -7,88 +7,88 @@
 
 body common control
 {
-  inputs => { "../../default.cf.sub" };
-  bundlesequence  => { default("$(this.promise_filename)") };
-  version => "1.0";
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
 }
 
 bundle common g
 {
-vars:
-        # This extracts the octal mode, and decimal nlink, uid, gid, size
-        "command" string => 'printf "%o" . " %d" x 4, (stat("$(G.testfile)"))[2]&07777, (stat(_))[3..5,7]';
+  vars:
+      # This extracts the octal mode, and decimal nlink, uid, gid, size
+      "command" string => 'printf "%o" . " %d" x 4, (stat("$(G.testfile)"))[2]&07777, (stat(_))[3..5,7]';
 
-        "source" string => "/etc/group";
-        "source_command" string => 'printf "%d", (stat("$(g.source)"))[7]';
-        "source_size" string => execresult(
-            "$(G.perl) -le '$(g.source_command)'",
-            "noshell");
+      "source" string => "/etc/group";
+      "source_command" string => 'printf "%d", (stat("$(g.source)"))[7]';
+      "source_size" string => execresult(
+					  "$(G.perl) -le '$(g.source_command)'",
+					  "noshell");
 }
 
 #######################################################
 
 bundle agent init
 {
-files:
-        "$(G.testfile)"
-            delete => init_delete;
+  files:
+      "$(G.testfile)"
+      delete => init_delete;
 }
 
 body delete init_delete
 {
-        dirlinks => "delete";
-        rmdirs   => "true";
+      dirlinks => "delete";
+      rmdirs   => "true";
 }
 
 #######################################################
 
 bundle agent test
 {
-vars:
-    "mode" string => execresult(
-	"$(G.perl) -le 'printf \"%o\", (stat(\"$(g.source)\"))[2]&07777'",
-    "noshell");
+  vars:
+      "mode" string => execresult(
+				   "$(G.perl) -le 'printf \"%o\", (stat(\"$(g.source)\"))[2]&07777'",
+				   "noshell");
 
-files:
-        "$(G.testfile)"
-            create => "true",
-            perms => test_og,
-            copy_from => test_copy;
+  files:
+      "$(G.testfile)"
+      create => "true",
+      perms => test_og,
+      copy_from => test_copy;
 }
 
 body perms test_og
 {
-    owners => { "3" };
-    groups => { "3" };
+      owners => { "3" };
+      groups => { "3" };
 }
 
 body copy_from test_copy
 {
-        source => "/etc/group";
-        compare => "hash";
+      source => "/etc/group";
+      compare => "hash";
 }
 
 #######################################################
 
 bundle agent check
 {
-vars:
-        "expect" string => "$(test.mode) 1 3 3 $(g.source_size)";
+  vars:
+      "expect" string => "$(test.mode) 1 3 3 $(g.source_size)";
 
-        "result" string => execresult(
-            "$(G.perl) -le '$(g.command)'",
-            "noshell");
+      "result" string => execresult(
+				     "$(G.perl) -le '$(g.command)'",
+				     "noshell");
 
-classes:
-        "ok" expression => strcmp("$(expect)", "$(result)");
+  classes:
+      "ok" expression => strcmp("$(expect)", "$(result)");
 
-reports:
+  reports:
     DEBUG::
-        "expected: '$(expect)'";
-        "got:      '$(result)'";
+      "expected: '$(expect)'";
+      "got:      '$(result)'";
     ok::
-        "$(this.promise_filename) Pass";
+      "$(this.promise_filename) Pass";
     !ok::
-        "$(this.promise_filename) FAIL";
+      "$(this.promise_filename) FAIL";
 }
 

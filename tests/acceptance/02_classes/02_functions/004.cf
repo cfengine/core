@@ -6,53 +6,53 @@
 
 body common control
 {
-  inputs => { "../../default.cf.sub" };
-  bundlesequence  => { default("$(this.promise_filename)") };
-  version => "1.0";
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
 }
 
 #######################################################
 
 bundle agent init
 {
-vars:
-        "dummy" string => "dummy";
+  vars:
+      "dummy" string => "dummy";
 }
 
 #######################################################
 
 bundle agent test
 {
-vars:
-        "dummy" string => "dummy";
+  vars:
+      "dummy" string => "dummy";
 }
 
 #######################################################
 
 bundle agent check
 {
-vars:
-        "null" string => "";
-        "one" int => "1";
+  vars:
+      "null" string => "";
+      "one" int => "1";
 
-classes:
-        "should_fail" or => {
-                    strcmp("$(null)", "$(one)"),
-                    strcmp("01", "$(one)"),
-                    strcmp("init.x", "$(init.x)")
-                    };
-        "should_pass" not => "should_fail";
-        "ok" and => {
+  classes:
+      "should_fail" or => {
+			    strcmp("$(null)", "$(one)"),
+			    strcmp("01", "$(one)"),
+			    strcmp("init.x", "$(init.x)")
+      };
+      "should_pass" not => "should_fail";
+      "ok" and => {
                     "should_pass",
                     strcmp("", "$(null)"),
                     strcmp("1", "$(one)"),
                     strcmp("dummy", "$(init.dummy)")
-                    };
+      };
 
-reports:
+  reports:
     ok::
-        "$(this.promise_filename) Pass";
+      "$(this.promise_filename) Pass";
     !ok::
-        "$(this.promise_filename) FAIL";
+      "$(this.promise_filename) FAIL";
 }
 

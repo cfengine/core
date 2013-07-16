@@ -6,56 +6,56 @@
 
 body common control
 {
-bundlesequence => { "kvm_create" };
+      bundlesequence => { "kvm_create" };
 }
 
 
 bundle agent kvm_create 
 {
 
-guest_environments:
- "my_host_machine"
-   environment_resources => mykvm("my_host_machine", "x86_64", "1", "1048576", "/var/lib/libvirt/images/ubuntu104-64-clone.img"),
-   environment_type      => "kvm",
-   environment_state     => "create",
-   environment_host      => "ubuntu";
+  guest_environments:
+      "my_host_machine"
+      environment_resources => mykvm("my_host_machine", "x86_64", "1", "1048576", "/var/lib/libvirt/images/ubuntu104-64-clone.img"),
+      environment_type      => "kvm",
+      environment_state     => "create",
+      environment_host      => "ubuntu";
 }
 
 
 bundle agent kvm_suspend
 {
-guest_environments:
- "my_host_machine"
-   environment_type      => "kvm",
-   environment_state     => "suspended",
-   environment_host      => "ubuntu";
+  guest_environments:
+      "my_host_machine"
+      environment_type      => "kvm",
+      environment_state     => "suspended",
+      environment_host      => "ubuntu";
 }
 
 
 bundle agent kvm_run
 {
-guest_environments:
- "my_host_machine"
-   environment_type      => "kvm",
-   environment_state     => "running",
-   environment_host      => "ubuntu";
+  guest_environments:
+      "my_host_machine"
+      environment_type      => "kvm",
+      environment_state     => "running",
+      environment_host      => "ubuntu";
 }
 
 
 bundle agent kvm_delete
 {
-guest_environments:
- "my_host_machine"
-   environment_type      => "kvm",
-   environment_state     => "delete",
-   environment_host      => "ubuntu";
+  guest_environments:
+      "my_host_machine"
+      environment_type      => "kvm",
+      environment_state     => "delete",
+      environment_host      => "ubuntu";
 }
 
 
 body environment_resources mykvm(name, arch, cpu_count, mem_kb, disk_file)
 {
-env_spec =>
-"<domain type='kvm'>
+      env_spec =>
+      "<domain type='kvm'>
   <name>$(name)</name>
   <memory>$(mem_kb)</memory>
   <currentMemory>$(mem_kb)</currentMemory>

@@ -27,6 +27,8 @@
 
 #include "cf3.defs.h"
 
+void DiscoverVersion(EvalContext *ctx);
+
 void GetNameInfo3(EvalContext *ctx, AgentType agent_type);
 void Get3Environment(EvalContext *ctx, AgentType agent_type);
 void BuiltinClasses(EvalContext *ctx);
@@ -39,5 +41,7 @@ void CreateHardClassesFromCanonification(EvalContext *ctx, const char *canonifie
 
 // FIX: win_proc.c?
 int GetCurrentUserName(char *userName, int userNameLen);
+
+int GetUptimeMinutes(time_t now);
 
 #endif

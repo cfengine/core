@@ -29,7 +29,7 @@
 body common control
 
 {
-bundlesequence  => { "example" };
+      bundlesequence  => { "example" };
 }
 
 
@@ -38,9 +38,9 @@ bundlesequence  => { "example" };
 bundle agent example
 
 {
-files:
+  files:
 
-  "/home/mark/tmp/test_to" -> "someone"
+      "/home/mark/tmp/test_to" -> "someone"
 
       depth_search => recurse("inf"),
       perms => modestuff,
@@ -53,8 +53,8 @@ files:
 body depth_search recurse(d)
 
 {
-rmdeadlinks => "true";
-depth => "$(d)";
+      rmdeadlinks => "true";
+      depth => "$(d)";
 }
 
 ############################################
@@ -62,7 +62,7 @@ depth => "$(d)";
 body perms modestuff
 
 {
-mode => "o-w";
+      mode => "o-w";
 }
 
 ############################################
@@ -70,5 +70,5 @@ mode => "o-w";
 body action tell_me
 
 {
-report_level => "inform";
+      report_level => "inform";
 }

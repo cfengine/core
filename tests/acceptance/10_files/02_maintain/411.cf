@@ -6,9 +6,9 @@
 
 body common control
 {
-  inputs => { "../../default.cf.sub" };
-  bundlesequence  => { default("$(this.promise_filename)") };
-  version => "1.0";
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
 }
 
 
@@ -16,58 +16,58 @@ body common control
 
 bundle agent init
 {
-vars:
-  "states" slist => { "actual", "expected" };
+  vars:
+      "states" slist => { "actual", "expected" };
 
-  "actual" string => "someline";
-  "expected" string => "someline";
+      "actual" string => "someline";
+      "expected" string => "someline";
 
-files:
-  "$(G.testfile).$(states)"
-    create => "true",
-    edit_line => init_insert("$(init.$(states))"),
-    edit_defaults => init_empty;
+  files:
+      "$(G.testfile).$(states)"
+      create => "true",
+      edit_line => init_insert("$(init.$(states))"),
+      edit_defaults => init_empty;
 }
 
 bundle edit_line init_insert(str)
 {
-insert_lines:
-  "$(str)";
+  insert_lines:
+      "$(str)";
 }
 
 body edit_defaults init_empty
 {
-  empty_file_before_editing => "true";
+      empty_file_before_editing => "true";
 }
 
 #######################################################
 
 bundle agent test
 {
-files:
-  "$(G.testfile).actual"
-    rename => rotate,
-    action => warn_only;
+  files:
+      "$(G.testfile).actual"
+      rename => rotate,
+      action => warn_only;
 }
 
 body rename rotate
 {
-rotate => "0";
+      rotate => "0";
 }
 
 body action warn_only
 {
-action_policy => "warn";
-ifelapsed => "60";
+      action_policy => "warn";
+      ifelapsed => "60";
 }
 
 #######################################################
 
 bundle agent check
 {
-methods:
-  "any" usebundle => default_check_diff("$(G.testfile).actual",
-                                        "$(G.testfile).expected",
-                                        "$(this.promise_filename)");
+  methods:
+      "any" usebundle => default_check_diff("$(G.testfile).actual",
+                                            "$(G.testfile).expected",
+                                            "$(this.promise_filename)");
 }
 

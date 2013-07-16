@@ -6,41 +6,41 @@
 
 body common control
 {
-  inputs => { "../../default.cf.sub" };
-  bundlesequence  => { default("$(this.promise_filename)") };
-  version => "1.0";
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
 }
 
 #######################################################
 
 bundle agent init
 {
-vars:
-        "dummy" string => "dummy";
+  vars:
+      "dummy" string => "dummy";
 }
 
 #######################################################
 
 bundle agent test
 {
-vars:
-    "six" ilist => { "1", "2", "3" };
-    "sum_six" real => sum("six");
+  vars:
+      "six" ilist => { "1", "2", "3" };
+      "sum_six" real => sum("six");
 
-    "minus_six" ilist => { "-1", "-2", "-3" };
-    "sum_minus_six" real => sum("minus_six");
+      "minus_six" ilist => { "-1", "-2", "-3" };
+      "sum_minus_six" real => sum("minus_six");
 
-    "zero" ilist => { "-1", "-2", "3" };
-    "sum_zero" real => sum("zero");
+      "zero" ilist => { "-1", "-2", "3" };
+      "sum_zero" real => sum("zero");
 
-    "sixpoint" rlist => { "1.", "2", "3e0" };
-    "sum_sixpoint" real => sum("sixpoint");
+      "sixpoint" rlist => { "1.", "2", "3e0" };
+      "sum_sixpoint" real => sum("sixpoint");
 
-    "minus_sixpoint" rlist => { "-1.", "-2", "-3e0" };
-    "sum_minus_sixpoint" real => sum("minus_sixpoint");
+      "minus_sixpoint" rlist => { "-1.", "-2", "-3e0" };
+      "sum_minus_sixpoint" real => sum("minus_sixpoint");
 
-    "zeropoint" rlist => { "-1.", "-2", "3e0" };
-    "sum_zeropoint" real => sum("zeropoint");
+      "zeropoint" rlist => { "-1.", "-2", "3e0" };
+      "sum_zeropoint" real => sum("zeropoint");
 
 }
 
@@ -48,8 +48,8 @@ vars:
 
 bundle agent check
 {
-classes:
-        "ok" and => {
+  classes:
+      "ok" and => {
                     isgreaterthan("$(test.sum_six)", "5.9999999"),
                     islessthan("$(test.sum_six)", "6.0000001"),
 
@@ -67,19 +67,19 @@ classes:
 
                     isgreaterthan("$(test.sum_zeropoint)", "-.0000001"),
                     islessthan("$(test.sum_zeropoint)", ".0000001"),
-                    };
+      };
 
-reports:
+  reports:
     DEBUG::
-        "test.sum_six = $(test.sum_six)";
-        "test.sum_minus_six = $(test.sum_minus_six)";
-        "test.sum_zero = $(test.sum_zero)";
-        "test.sum_sixpoint = $(test.sum_sixpoint)";
-        "test.sum_minus_sixpoint = $(test.sum_minus_sixpoint)";
-        "test.sum_zeropoint = $(test.sum_zeropoint)";
+      "test.sum_six = $(test.sum_six)";
+      "test.sum_minus_six = $(test.sum_minus_six)";
+      "test.sum_zero = $(test.sum_zero)";
+      "test.sum_sixpoint = $(test.sum_sixpoint)";
+      "test.sum_minus_sixpoint = $(test.sum_minus_sixpoint)";
+      "test.sum_zeropoint = $(test.sum_zeropoint)";
     ok::
-        "$(this.promise_filename) Pass";
+      "$(this.promise_filename) Pass";
     !ok::
-        "$(this.promise_filename) FAIL";
+      "$(this.promise_filename) FAIL";
 }
 

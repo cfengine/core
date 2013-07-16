@@ -6,71 +6,71 @@
 
 body common control
 {
-  inputs => { "../../default.cf.sub" };
-  bundlesequence  => { default("$(this.promise_filename)") };
-  version => "1.0";
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
 }
 
 
 bundle agent init
 {
-vars:
-  "dummy" string => "dummy";
+  vars:
+      "dummy" string => "dummy";
 }
 
 #######################################################
 
 bundle agent test
 {
-vars:
-  "p[root]" string => "/";
-  "d[root]" string => "/";
+  vars:
+      "p[root]" string => "/";
+      "d[root]" string => "/";
 
-  "p[simple]" string => "/foo/bar";
-  "d[simple]" string => "/foo";
+      "p[simple]" string => "/foo/bar";
+      "d[simple]" string => "/foo";
 
-  "p[slash]" string => "/foo/bar/";
-  "d[slash]" string => "/foo";
+      "p[slash]" string => "/foo/bar/";
+      "d[slash]" string => "/foo";
 
-  "p[sub]" string => "/foo";
-  "d[sub]" string => "/";
+      "p[sub]" string => "/foo";
+      "d[sub]" string => "/";
 
-  "p[subslash]" string => "/foo/";
-  "d[subslash]" string => "/";
+      "p[subslash]" string => "/foo/";
+      "d[subslash]" string => "/";
 
-  "p[multi]" string => "/foo/bar/baz";
-  "d[multi]" string => "/foo/bar";
+      "p[multi]" string => "/foo/bar/baz";
+      "d[multi]" string => "/foo/bar";
 
-  "p[multislash]" string => "/foo/bar/baz/";
-  "d[multislash]" string => "/foo/bar";
+      "p[multislash]" string => "/foo/bar/baz/";
+      "d[multislash]" string => "/foo/bar";
 
-  "p[more]" string => "/a/b/c/d/e/f/g/h/i";
-  "d[more]" string => "/a/b/c/d/e/f/g/h";
+      "p[more]" string => "/a/b/c/d/e/f/g/h/i";
+      "d[more]" string => "/a/b/c/d/e/f/g/h";
 
-  "keys" slist => getindices("p");
+      "keys" slist => getindices("p");
 
-  "b[$(keys)]" string => dirname("$(p[$(keys)])");
+      "b[$(keys)]" string => dirname("$(p[$(keys)])");
 }
 
 #######################################################
 
 bundle agent check
 {
-vars:
-  "keys" slist => { @(test.keys) };
+  vars:
+      "keys" slist => { @(test.keys) };
 
-classes:
-  "failed_cmp_$(keys)" not => strcmp(dirname("$(test.p[$(keys)])"), "$(test.d[$(keys)])");
-  "ok" not => classmatch("failed_cmp_.*");
+  classes:
+      "failed_cmp_$(keys)" not => strcmp(dirname("$(test.p[$(keys)])"), "$(test.d[$(keys)])");
+      "ok" not => classmatch("failed_cmp_.*");
 
-reports:
-  DEBUG::
-    "'dirname($(test.p[$(keys)]))' = '$(test.b[$(keys)])' =?= '$(test.d[$(keys)])'";
+  reports:
+    DEBUG::
+      "'dirname($(test.p[$(keys)]))' = '$(test.b[$(keys)])' =?= '$(test.d[$(keys)])'";
 
-  ok::
-    "$(this.promise_filename) Pass";
-  !ok::
-    "$(this.promise_filename) FAIL";
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
 }
 
 

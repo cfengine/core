@@ -30,17 +30,17 @@
 body common control
 
 {
-bundlesequence => { "example" };
+      bundlesequence => { "example" };
 }
 
 bundle agent example
 
 {
-report:
+  report:
 
-  # type report is a typo....
+      # type report is a typo....
 
-  linux::
+    linux::
 
-   "Goodbye cruel world...";
+      "Goodbye cruel world...";
 }

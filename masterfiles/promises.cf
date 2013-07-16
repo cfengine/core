@@ -8,45 +8,83 @@ body common control
 
 {
 
- bundlesequence => {
+      bundlesequence => {
+			  "libs",
+			  # Common bundles first for best practice 
+			  "def",
 
-                 # Common bundles first for best practice 
-                    "def",
+			  # Design Center
+			  "cfsketch_run",
 
-                 # Design Center
-                    "cfsketch_run",
+			  # Agent bundles from here
+			  "main",
 
-                 # Agent bundles from here
-                    "main",
+      };
 
-                   };
+      inputs => {
 
- inputs => {
+		  # Global common bundles
+		  "def.cf",
 
-         # Global common bundles
-            "def.cf",
+		  # Control body for all agents
+		  "controls/cf_agent.cf",
+		  "controls/cf_execd.cf",
+		  "controls/cf_monitord.cf",
+		  "controls/cf_runagent.cf",
+		  "controls/cf_serverd.cf",
 
-         # Control body for all agents
-            "controls/cf_agent.cf",
-            "controls/cf_execd.cf",
-            "controls/cf_monitord.cf",
-            "controls/cf_runagent.cf",
-            "controls/cf_serverd.cf",
+		  # COPBL/Custom libraries.  Eventually this should use wildcards.
+		  @(cfengine_stdlib.inputs),
 
-         # COPBL/Custom libraries
-            "libraries/cfengine_stdlib.cf",
+		  # Design Center
+		  # MARKER FOR CF-SKETCH INPUT INSERTION
+		  "cf-sketch-runfile.cf",
 
-         # Design Center
-             # MARKER FOR CF-SKETCH INPUT INSERTION
-             "cf-sketch-runfile.cf",
+		  # User services from here
+		  "services/init_msg.cf",
 
-         # User services from here
-            "services/init_msg.cf",
+      };
 
-           };
+      version => "Community Promises.cf 3.4.0";
 
- version => "Community Promises.cf 3.4.0";
+}
 
+bundle common cfengine_stdlib
+{
+  vars:
+    cfengine_3_4::
+      "inputs" slist => { "libraries/cfengine_stdlib.cf" };
+    cfengine_3_5::
+      "inputs" slist => {
+                          "lib/3.5/paths.cf",
+                          "lib/3.5/common.cf",
+                          "lib/3.5/commands.cf",
+                          "lib/3.5/packages.cf",
+                          "lib/3.5/files.cf",
+                          "lib/3.5/services.cf",
+                          "lib/3.5/processes.cf",
+                          "lib/3.5/storage.cf",
+                          "lib/3.5/databases.cf",
+                          "lib/3.5/monitor.cf",
+                          "lib/3.5/guest_environments.cf",
+                          "lib/3.5/bundles.cf",
+      };
+
+    !(cfengine_3_4||cfengine_3_5)::
+      "inputs" slist => {
+                          "lib/$(sys.cf_version_major).$(sys.cf_version_minor)/paths.cf",
+                          "lib/$(sys.cf_version_major).$(sys.cf_version_minor)/common.cf",
+                          "lib/$(sys.cf_version_major).$(sys.cf_version_minor)/commands.cf",
+                          "lib/$(sys.cf_version_major).$(sys.cf_version_minor)/packages.cf",
+                          "lib/$(sys.cf_version_major).$(sys.cf_version_minor)/files.cf",
+                          "lib/$(sys.cf_version_major).$(sys.cf_version_minor)/services.cf",
+                          "lib/$(sys.cf_version_major).$(sys.cf_version_minor)/processes.cf",
+                          "lib/$(sys.cf_version_major).$(sys.cf_version_minor)/storage.cf",
+                          "lib/$(sys.cf_version_major).$(sys.cf_version_minor)/databases.cf",
+                          "lib/$(sys.cf_version_major).$(sys.cf_version_minor)/monitor.cf",
+                          "lib/$(sys.cf_version_major).$(sys.cf_version_minor)/guest_environments.cf",
+                          "lib/$(sys.cf_version_major).$(sys.cf_version_minor)/bundles.cf",
+      };
 }
 
 ###############################################################################
@@ -55,13 +93,13 @@ bundle agent main
 
 {
 
- methods:
+  methods:
 
-  any::
+    any::
 
-   "INIT MSG" usebundle => init_msg,
-                comment => "Just a pre-defined policy bundled with the package",
-                 handle => "main_methods_any_init_msg";
+      "INIT MSG" usebundle => init_msg,
+      comment => "Just a pre-defined policy bundled with the package",
+      handle => "main_methods_any_init_msg";
 
 }
 

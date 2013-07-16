@@ -25,7 +25,7 @@
 body common control
 
 {
-bundlesequence  => { "example" };
+      bundlesequence  => { "example" };
 }
 
 ###########################################################
@@ -33,17 +33,17 @@ bundlesequence  => { "example" };
 bundle agent example
 
 {     
-classes:
+  classes:
 
-  "some" expression => "any";
+      "some" expression => "any";
 
-reports:
+  reports:
 
-  some::
+    some::
 
-   "The value of $(const.dollar)(const.dollar) is $(const.dollar)";
+      "The value of $(const.dollar)(const.dollar) is $(const.dollar)";
 
-   "But the value of \$(dollar) is \$(dollar)";
+      "But the value of \$(dollar) is \$(dollar)";
 
 }
 

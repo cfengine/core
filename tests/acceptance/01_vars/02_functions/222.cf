@@ -6,55 +6,55 @@
 
 body common control
 {
-  inputs => { "../../default.cf.sub" };
-  bundlesequence  => { default("$(this.promise_filename)") };   
-  version => "1.0";
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };   
+      version => "1.0";
 }
 
 bundle agent init
 {
-vars:
-	"dummy" string => "dummy";
+  vars:
+      "dummy" string => "dummy";
 
-files:
-    "$(G.testfile).expected"
-	create => "true";
+  files:
+      "$(G.testfile).expected"
+      create => "true";
 }
 
 #######################################################
 
 bundle agent test
 {
-vars:
-    "array" slist => { "One", "Two", "Three", "Four", "Five" };
+  vars:
+      "array" slist => { "One", "Two", "Three", "Four", "Five" };
 
-    "vals" slist => grep("Z.*", "test.array");
+      "vals" slist => grep("Z.*", "test.array");
 
-files:
-    "$(G.testfile).actual"
-	create => "true",
-	edit_line => test_insert;
+  files:
+      "$(G.testfile).actual"
+      create => "true",
+      edit_line => test_insert;
 
-reports:
+  reports:
     DEBUG::
-	"Inserting line: $(vals)";
+      "Inserting line: $(vals)";
 }
 
 bundle edit_line test_insert
 {
-vars:
-    "vals" slist => { @{test.vals} };
+  vars:
+      "vals" slist => { @{test.vals} };
 
-insert_lines:
-    "$(vals)";
+  insert_lines:
+      "$(vals)";
 }
 
 #######################################################
 
 bundle agent check
 {
-methods:
-	"any" usebundle => sorted_check_diff("$(G.testfile).actual",
-					      "$(G.testfile).expected",
-					      "$(this.promise_filename)");
+  methods:
+      "any" usebundle => sorted_check_diff("$(G.testfile).actual",
+					   "$(G.testfile).expected",
+					   "$(this.promise_filename)");
 }

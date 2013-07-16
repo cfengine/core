@@ -22,50 +22,50 @@
 
 bundle common categories
 {
-classes:
+  classes:
 
-   "myclass1" expression => "any";
-   "myclass2" expression => "any";
+      "myclass1" expression => "any";
+      "myclass2" expression => "any";
 
-vars:
-          
-  "common" slist => {
-                    "update.cf",
-                    };
+  vars:
+      
+      "common" slist => {
+			  "update.cf",
+      };
 
-  "extra1" slist => { 
-                    "reasons to be cheerful, part 1",
-                    };
+      "extra1" slist => { 
+			  "reasons to be cheerful, part 1",
+      };
 
-  "extra2" slist => { 
-                    "reasons to be cheerful, part 2",
-                    };
- 
-  "in_any" slist => { 
-                    "update.cf",
-                    };
+      "extra2" slist => { 
+			  "reasons to be cheerful, part 2",
+      };
+      
+      "in_any" slist => { 
+			  "update.cf",
+      };
 
-  "in1"    slist => { 
-                    "in1/in1.cf",
-                    };
+      "in1"    slist => { 
+			  "in1/in1.cf",
+      };
 
-  "in1"    slist => { 
-                    "in2/in1.cf",
-                    };
- }
+      "in1"    slist => { 
+			  "in2/in1.cf",
+      };
+}
 
 
 body common control
 {
-myclass1::
+    myclass1::
 
-    bundlesequence  => { @(categories.common), "extra1" };
-    inputs          => { @(categories.in1), @(categories.in_any) };
+      bundlesequence  => { @(categories.common), "extra1" };
+      inputs          => { @(categories.in1), @(categories.in_any) };
 
-myclass2::
+    myclass2::
 
-   bundlesequence  => { @(categories.common), "extra2" };
-   inputs          => { @(categories.in1), @(categories.in_any) };
+      bundlesequence  => { @(categories.common), "extra2" };
+      inputs          => { @(categories.in1), @(categories.in_any) };
 
 }
 
@@ -73,6 +73,6 @@ myclass2::
 
 bundle edit_line name
 {
- reports:
-   "xxx";
+  reports:
+      "xxx";
 }

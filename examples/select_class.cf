@@ -23,7 +23,7 @@
 
 body common control
 {
-bundlesequence => { "g" };
+      bundlesequence => { "g" };
 
 }
 
@@ -31,23 +31,23 @@ bundlesequence => { "g" };
 
 bundle common g
 {
-classes:
+  classes:
 
-  "selection" select_class => { "one", "two" };
+      "selection" select_class => { "one", "two" };
 
-reports:
+  reports:
 
-  one::
+    one::
 
-    "One was selected";
+      "One was selected";
 
-  two::
+    two::
 
-    "Two was selected";
+      "Two was selected";
 
-  selection::
+    selection::
 
-     "A selection was made";
-  
+      "A selection was made";
+      
 }
 

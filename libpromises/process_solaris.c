@@ -25,6 +25,7 @@
 #include "cf3.defs.h"
 #include "process_lib.h"
 #include "process_unix_priv.h"
+#include "file_lib.h"
 
 /*
  * procfs.h is not 64-bit off_t clean, but the only affected structure is

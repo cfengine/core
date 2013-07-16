@@ -9,12 +9,12 @@ body runagent control
 
 {
 
-# A list of hosts to contact when using cf-runagent
+      # A list of hosts to contact when using cf-runagent
 
- any::
+    any::
 
-  hosts => { "127.0.0.1" };
+      hosts => { "127.0.0.1" };
 
-# , "myhost.example.com:5308", ...
+      # , "myhost.example.com:5308", ...
 
 }

@@ -9,142 +9,142 @@
 
 body common control
 {
-  inputs => { "../../default.cf.sub" };
-  bundlesequence  => { "g", default("$(this.promise_filename)") };
-  version => "1.0";
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { "g", default("$(this.promise_filename)") };
+      version => "1.0";
 }
 
 bundle common g
 {
-# These must be global classes so they can be tested in another bundle
-# We set them here, so they can be (possibly) cleared later
-classes:
-    "cancel_kept" expression => "any";
-    "cancel_repaired" expression => "any";
-    "cancel_notkept" expression => "any";
+      # These must be global classes so they can be tested in another bundle
+      # We set them here, so they can be (possibly) cleared later
+  classes:
+      "cancel_kept" expression => "any";
+      "cancel_repaired" expression => "any";
+      "cancel_notkept" expression => "any";
 }
 
 #######################################################
 
 bundle agent init
 {
-vars:
-        "body" string =>
-"BEGIN
+  vars:
+      "body" string =>
+      "BEGIN
     One potato
     Two potato
     Three potatoes
     Four
 END";
 
-files:
-        "$(G.testfile)"
-            create => "true",
-            edit_line => init_insert("$(body)");
+  files:
+      "$(G.testfile)"
+      create => "true",
+      edit_line => init_insert("$(body)");
 }
 
 bundle edit_line init_insert(str)
 {
-insert_lines:
-        "$(str)";
+  insert_lines:
+      "$(str)";
 }
 
 body edit_defaults init_empty
 {
-        empty_file_before_editing => "true";
+      empty_file_before_editing => "true";
 }
 
 # These set/clear global classes, so they can be tested in another bundle
 body classes all_classes
 {
-promise_kept => { "promise_kept" };
-promise_repaired => { "promise_repaired" };
-repair_failed => { "repair_failed" };
-repair_denied => { "repair_denied" };
-repair_timeout => { "repair_timeout" };
-cancel_kept => { "cancel_kept" };
-cancel_repaired => { "cancel_repaired" };
-cancel_notkept => { "cancel_notkept" };
+      promise_kept => { "promise_kept" };
+      promise_repaired => { "promise_repaired" };
+      repair_failed => { "repair_failed" };
+      repair_denied => { "repair_denied" };
+      repair_timeout => { "repair_timeout" };
+      cancel_kept => { "cancel_kept" };
+      cancel_repaired => { "cancel_repaired" };
+      cancel_notkept => { "cancel_notkept" };
 }
 
 #######################################################
 
 bundle agent test
 {
-files:
-        "$(G.testfile)"
-            edit_line => init_insert("$(init.body)"),
-            edit_defaults => init_empty,
-            classes => all_classes;
+  files:
+      "$(G.testfile)"
+      edit_line => init_insert("$(init.body)"),
+      edit_defaults => init_empty,
+      classes => all_classes;
 }
 
 #######################################################
 
 bundle agent check
 {
-# These variables determine the conditions being tested
-vars:
-    "expect[promise_kept]" string        => "ON";
-    "expect[promise_repaired]" string        => "";
-    "expect[repair_failed]" string        => "";
-    "expect[repair_denied]" string        => "";
-    "expect[repair_timeout]" string        => "";
-    "expect[cancel_kept]" string        => "";
-    "expect[cancel_repaired]" string        => "ON";
-    "expect[cancel_notkept]" string        => "ON";
+      # These variables determine the conditions being tested
+  vars:
+      "expect[promise_kept]" string        => "ON";
+      "expect[promise_repaired]" string        => "";
+      "expect[repair_failed]" string        => "";
+      "expect[repair_denied]" string        => "";
+      "expect[repair_timeout]" string        => "";
+      "expect[cancel_kept]" string        => "";
+      "expect[cancel_repaired]" string        => "ON";
+      "expect[cancel_notkept]" string        => "ON";
 
-# Everything from here down is "boilerplate" to these 1xx.cf tests
-    "lookfor" slist => {
-        "promise_kept", "promise_repaired", "repair_failed", "repair_denied",
-        "repair_timeout", "cancel_kept", "cancel_repaired", "cancel_notkept",
-        };
+      # Everything from here down is "boilerplate" to these 1xx.cf tests
+      "lookfor" slist => {
+			   "promise_kept", "promise_repaired", "repair_failed", "repair_denied",
+			   "repair_timeout", "cancel_kept", "cancel_repaired", "cancel_notkept",
+      };
 
-classes:
-    "p1_$(lookfor)" and => {
-            strcmp("$(expect[$(lookfor)])", "ON"),
-            "$(lookfor)",
-            };
-    "p2_$(lookfor)" and => {
-            strcmp("$(expect[$(lookfor)])", ""),
-            "!$(lookfor)",
-            };
-    "pass_$(lookfor)" xor => { "p1_$(lookfor)", "p2_$(lookfor)" };
+  classes:
+      "p1_$(lookfor)" and => {
+			       strcmp("$(expect[$(lookfor)])", "ON"),
+			       "$(lookfor)",
+      };
+      "p2_$(lookfor)" and => {
+			       strcmp("$(expect[$(lookfor)])", ""),
+			       "!$(lookfor)",
+      };
+      "pass_$(lookfor)" xor => { "p1_$(lookfor)", "p2_$(lookfor)" };
 
-    "f1_$(lookfor)" and => {
-            strcmp("$(expect[$(lookfor)])", "ON"),
-            "!$(lookfor)",
-            };
-    "f2_$(lookfor)" and => {
-            strcmp("$(expect[$(lookfor)])", ""),
-            "$(lookfor)",
-            };
-    "f3_$(lookfor)" not => isvariable("expect[$(lookfor)]");
-    "fail_$(lookfor)" or => {"f1_$(lookfor)", "f2_$(lookfor)", "f3_$(lookfor)"};
+      "f1_$(lookfor)" and => {
+			       strcmp("$(expect[$(lookfor)])", "ON"),
+			       "!$(lookfor)",
+      };
+      "f2_$(lookfor)" and => {
+			       strcmp("$(expect[$(lookfor)])", ""),
+			       "$(lookfor)",
+      };
+      "f3_$(lookfor)" not => isvariable("expect[$(lookfor)]");
+      "fail_$(lookfor)" or => {"f1_$(lookfor)", "f2_$(lookfor)", "f3_$(lookfor)"};
 
-    "oops" expression => classmatch("fail.*");
-    "ok" and => { classmatch("pass.*"), "!oops" };
+      "oops" expression => classmatch("fail.*");
+      "ok" and => { classmatch("pass.*"), "!oops" };
 
-reports:
+  reports:
     DEBUG::
-        "ok: class '$(lookfor)' was set (should be)"
-            ifvarclass => "p1_$(lookfor)";
-        "ok: class '$(lookfor)' was not set (should not be)"
-            ifvarclass => "p2_$(lookfor)";
-        "ERROR: class '$(lookfor)' WAS NOT set (should be)"
-            ifvarclass => "f1_$(lookfor)";
-        "ERROR: class '$(lookfor)' was set (should NOT be)"
-            ifvarclass => "f2_$(lookfor)";
-        "ERROR: missing variable expect['$(lookfor)']"
-            ifvarclass => "f3_$(lookfor)";
+      "ok: class '$(lookfor)' was set (should be)"
+      ifvarclass => "p1_$(lookfor)";
+      "ok: class '$(lookfor)' was not set (should not be)"
+      ifvarclass => "p2_$(lookfor)";
+      "ERROR: class '$(lookfor)' WAS NOT set (should be)"
+      ifvarclass => "f1_$(lookfor)";
+      "ERROR: class '$(lookfor)' was set (should NOT be)"
+      ifvarclass => "f2_$(lookfor)";
+      "ERROR: missing variable expect['$(lookfor)']"
+      ifvarclass => "f3_$(lookfor)";
     ok::
-        "$(this.promise_filename) Pass";
+      "$(this.promise_filename) Pass";
     MAIN.ok::
-        "$(this.promise_filename) Pass"
-                report_to_file => "$(G.logfile)";
+      "$(this.promise_filename) Pass"
+      report_to_file => "$(G.logfile)";
     !ok::
-        "$(this.promise_filename) FAIL";
+      "$(this.promise_filename) FAIL";
     MAIN.!ok::
-        "$(this.promise_filename) FAIL"
-                report_to_file => "$(G.logfile)";
+      "$(this.promise_filename) FAIL"
+      report_to_file => "$(G.logfile)";
 }
 

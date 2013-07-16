@@ -22,19 +22,19 @@
 
 body common control
 {
-bundlesequence  => { "my_disable" };
-inputs => { "libraries/cfengine_stdlib.cf" };
+      bundlesequence  => { "my_disable" };
+      inputs => { "libraries/cfengine_stdlib.cf" };
 }
 
 bundle agent my_disable
 {
 
-files:
+  files:
 
-  "/home/mark/tmp/test_create"
+      "/home/mark/tmp/test_create"
       rename => disable;
- 
- "/home/mark/tmp/rotate_my_log"
+      
+      "/home/mark/tmp/rotate_my_log"
       rename => rotate("4");
 
 }

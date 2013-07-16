@@ -22,23 +22,23 @@
 
 body common control
 {
-bundlesequence  => { "my_recursive_copy" };
-inputs => { "libraries/cfengine_stdlib.cf" };
+      bundlesequence  => { "my_recursive_copy" };
+      inputs => { "libraries/cfengine_stdlib.cf" };
 }
 
 bundle agent my_recursive_copy
 {
-files:
+  files:
 
-  "/home/mark/tmp/test_dir"
+      "/home/mark/tmp/test_dir"
 
       copy_from => local_cp("$(sys.workdir)/bin/."),
-   depth_search => recurse("inf");
+      depth_search => recurse("inf");
 
-  "/home/mark/tmp/test_dir"
+      "/home/mark/tmp/test_dir"
 
       copy_from => secure_cp("$(sys.workdir)/bin","serverhost"),
-   depth_search => recurse("inf");
+      depth_search => recurse("inf");
 
 }
 

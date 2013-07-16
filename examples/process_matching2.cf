@@ -29,7 +29,7 @@
 body common control
 
 {
-bundlesequence  => { "example"  };
+      bundlesequence  => { "example"  };
 }
 
 ########################################################
@@ -37,17 +37,17 @@ bundlesequence  => { "example"  };
 bundle agent example
 
 {
-processes:
+  processes:
 
- "sleep"
+      "sleep"
 
-    process_count   => up("sleep");
+      process_count   => up("sleep");
 
-reports:
+  reports:
 
- sleep_out_of_control::
+    sleep_out_of_control::
 
-   "Out of control";
+      "Out of control";
 }
 
 ########################################################
@@ -55,7 +55,7 @@ reports:
 body process_count up(s)
 
 {
-match_range => "5,10"; # or irange("1","10");
-out_of_range_define => { "$(s)_out_of_control" };
+      match_range => "5,10"; # or irange("1","10");
+      out_of_range_define => { "$(s)_out_of_control" };
 }
 

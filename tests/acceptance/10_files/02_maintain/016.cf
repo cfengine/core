@@ -6,63 +6,63 @@
 
 body common control
 {
-  inputs => { "../../default.cf.sub" };
-  bundlesequence  => { default("$(this.promise_filename)") };
-  version => "1.0";
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
 }
 
 #######################################################
 
 bundle agent init
 {
-files:
-  "$(G.testdir)/afile"
-    create => "true";
+  files:
+      "$(G.testdir)/afile"
+      create => "true";
 
-# We can't use files promise here as it will remember we have created the file
-# and will not generate backup file which we are trying to get.
-commands:
-  "$(G.echo) LimpBizkit > $(G.testdir)/destfile"
-    contain => shell;
+      # We can't use files promise here as it will remember we have created the file
+      # and will not generate backup file which we are trying to get.
+  commands:
+      "$(G.echo) LimpBizkit > $(G.testdir)/destfile"
+      contain => shell;
 }
 
 body contain shell
 {
-  useshell => "true";
+      useshell => "true";
 }
 
 #######################################################
 
 bundle agent test
 {
-files:
-    "$(G.testdir)/destfile"
+  files:
+      "$(G.testdir)/destfile"
       copy_from => cp_2_file("$(G.testdir)/afile");
 }
 
 body copy_from cp_2_file(x) {
-  source => "$(x)";
-  copy_backup => "timestamp";
-  compare => "digest";
+      source => "$(x)";
+      copy_backup => "timestamp";
+      compare => "digest";
 }
 
 #######################################################
 
 bundle agent check
 {
-files:
-  "$(G.testdir)/destfile.*\.cfsaved"
-    touch => "true",
-    classes => ifrepaired("ok");
+  files:
+      "$(G.testdir)/destfile.*\.cfsaved"
+      touch => "true",
+      classes => ifrepaired("ok");
 
-reports:
+  reports:
     ok::
-        "$(this.promise_filename) Pass";
+      "$(this.promise_filename) Pass";
     !ok::
-        "$(this.promise_filename) FAIL";
+      "$(this.promise_filename) FAIL";
 }
 
 body classes ifrepaired(classname)
 {
-promise_repaired => { "$(classname)" };
+      promise_repaired => { "$(classname)" };
 }

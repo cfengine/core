@@ -401,7 +401,7 @@ SyntaxTypeMatch CheckConstraintTypeMatch(const char *lval, Rval rval, DataType d
 
 /****************************************************************************/
 
-DataType StringDataType(EvalContext *ctx, const char *scopeid, const char *string)
+DataType StringDataType(EvalContext *ctx, const char *string)
 {
     DataType dtype;
     Rval rval;
@@ -426,19 +426,26 @@ vars:
     {
         if (ExtractInnerCf3VarString(string, var))
         {
-            if (EvalContextVariableGet(ctx, (VarRef) { NULL, scopeid, var }, &rval, &dtype))
+            if (!IsExpandable(var))
             {
-                if (rval.type == RVAL_TYPE_LIST)
+                VarRef ref = VarRefParse(var);
+
+                if (EvalContextVariableGet(ctx, ref, &rval, &dtype))
                 {
-                    if (!islist)
+                    if (rval.type == RVAL_TYPE_LIST)
                     {
-                        islist = true;
-                    }
-                    else
-                    {
-                        islist = false;
+                        if (!islist)
+                        {
+                            islist = true;
+                        }
+                        else
+                        {
+                            islist = false;
+                        }
                     }
                 }
+
+                VarRefDestroy(ref);
             }
 
             if (strlen(var) == strlen(string))

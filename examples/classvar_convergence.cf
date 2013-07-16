@@ -23,37 +23,37 @@
 
 body common control
 {
-bundlesequence => { "tryclasses_1" };
+      bundlesequence => { "tryclasses_1" };
 }
 
 #################################
 
 bundle agent tryclasses_1
 {
-vars:
+  vars:
 
-  "x" string => "one";
+      "x" string => "one";
 
-  "y" slist => { "linux", "Friday" };
+      "y" slist => { "linux", "Friday" };
 
-classes:
+  classes:
 
- "three" and => { "$(x)", "two" };
+      "three" and => { "$(x)", "two" };
 
- "four"  or => { @(y) };
+      "four"  or => { @(y) };
 
- "one" expression => "any";
- "two" expression => "any";
+      "one" expression => "any";
+      "two" expression => "any";
 
-reports:
+  reports:
 
-  three::
+    three::
 
-    "Evaluated true";
+      "Evaluated true";
 
-  four::
+    four::
 
-    "List substitution works";
+      "List substitution works";
 
 }
 

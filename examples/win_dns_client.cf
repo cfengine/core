@@ -4,24 +4,24 @@
 
 body common control
 {
-bundlesequence => { "windows_dns" };
+      bundlesequence => { "windows_dns" };
 }
 
 bundle agent windows_dns
 {
-vars:
-  "dns_servers" string => "192.168.1.3 192.168.1.4";
-  
-  "keys" string => execresult("$(sys.winsysdir)\reg.exe query HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces", "noshell");
-  "key_list" slist => splitstring("$(keys)", "\r\n", 50);
-  
-  
-databases:
-  "$(key_list)"
-    comment            => "Ensure DNS client configuration is correct",
-    handle             => canonify("windows_dns_$(dns_servers)"),
-    database_operation => "create",
-    database_rows      => { "NameServer,REG_SZ,$(dns_servers)" },
-    database_type      => "ms_registry",
-    ifvarclass         => not( strcmp("$(key_list)", "" ));
+  vars:
+      "dns_servers" string => "192.168.1.3 192.168.1.4";
+      
+      "keys" string => execresult("$(sys.winsysdir)\reg.exe query HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces", "noshell");
+      "key_list" slist => splitstring("$(keys)", "\r\n", 50);
+      
+      
+  databases:
+      "$(key_list)"
+      comment            => "Ensure DNS client configuration is correct",
+      handle             => canonify("windows_dns_$(dns_servers)"),
+      database_operation => "create",
+      database_rows      => { "NameServer,REG_SZ,$(dns_servers)" },
+      database_type      => "ms_registry",
+      ifvarclass         => not( strcmp("$(key_list)", "" ));
 }

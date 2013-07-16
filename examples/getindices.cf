@@ -29,7 +29,7 @@
 body common control
 
 {
-bundlesequence  => { "example" };   
+      bundlesequence  => { "example" };   
 }
 
 #######################################################
@@ -37,22 +37,22 @@ bundlesequence  => { "example" };
 bundle agent example
 
 {
-vars:
+  vars:
 
-  "ps[relayhost]"                  string => "[$(mailrelay)]:587";
-  "ps[mydomain]"                   string => "iu.hio.no";
-  "ps[smtp_sasl_auth_enable]"      string => "yes";
-  "ps[smtp_sasl_password_maps]"    string => "hash:/etc/postfix/sasl-passwd";
-  "ps[smtp_sasl_security_options]" string => "";
-  "ps[smtp_use_tls]"               string => "yes";
-  "ps[default_privs]"              string => "mailman";
-  "ps[inet_protocols]"             string => "all";
-  "ps[inet_interfaces]"            string => "127.0.0.1";
+      "ps[relayhost]"                  string => "[$(mailrelay)]:587";
+      "ps[mydomain]"                   string => "iu.hio.no";
+      "ps[smtp_sasl_auth_enable]"      string => "yes";
+      "ps[smtp_sasl_password_maps]"    string => "hash:/etc/postfix/sasl-passwd";
+      "ps[smtp_sasl_security_options]" string => "";
+      "ps[smtp_use_tls]"               string => "yes";
+      "ps[default_privs]"              string => "mailman";
+      "ps[inet_protocols]"             string => "all";
+      "ps[inet_interfaces]"            string => "127.0.0.1";
 
-  "parameter_name" slist => getindices("ps");
+      "parameter_name" slist => getindices("ps");
 
-reports:
+  reports:
 
-  "Found key $(parameter_name)";
+      "Found key $(parameter_name)";
 
 }

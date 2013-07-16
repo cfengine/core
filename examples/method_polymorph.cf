@@ -4,35 +4,35 @@
 
 body common control
 {
-bundlesequence => { "example" };
+      bundlesequence => { "example" };
 }
 
 ###########################################
 
 bundle agent example
 {
-methods:
+  methods:
 
-  "Patch Group" 
+      "Patch Group" 
 
-         comment => "Apply OS specific patches and modifications",
-       usebundle => "$(sys.class)_fix";
-   
+      comment => "Apply OS specific patches and modifications",
+      usebundle => "$(sys.class)_fix";
+      
 }
 
 ###########################################
 
 bundle agent linux_fix
 {
-reports:
-  "Fixes for linux";
+  reports:
+      "Fixes for linux";
 }
 
 ###########################################
 
 bundle agent solaris_android
 {
-reports:
-  "Fixes for android";
+  reports:
+      "Fixes for android";
 }
 

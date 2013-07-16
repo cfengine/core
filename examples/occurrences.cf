@@ -23,31 +23,31 @@
 
 body common control
 {
-bundlesequence => { "example" };
+      bundlesequence => { "example" };
 }
 
 body knowledge control
 {
-query_engine => "123";
+      query_engine => "123";
 }
 
 bundle knowledge test
 
 {
-topics:
+  topics:
 
-  "test topic";
+      "test topic";
 
-occurrences:
+  occurrences:
 
-  test_topic::
+    test_topic::
 
-   "(.*)/help.html"
+      "(.*)/help.html"
 
-            represents => { "host $(match.1)" },
-            representation => "file",
-            path_root => "/home/mark/tmp",
-            web_root => "http://www.cfengine.com";
+      represents => { "host $(match.1)" },
+      representation => "file",
+      path_root => "/home/mark/tmp",
+      web_root => "http://www.cfengine.com";
 
 
 }

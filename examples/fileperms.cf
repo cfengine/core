@@ -24,9 +24,9 @@ body common control
 
 {
 
-bundlesequence  => {
-                   "main"
-                   };
+      bundlesequence  => {
+			   "main"
+      };
 
 }
 
@@ -36,9 +36,9 @@ bundle agent main
 
 {
 
-files:
+  files:
 
-  "/tmp/foo" perms  => p("at","0750");
+      "/tmp/foo" perms  => p("at","0750");
 
 }
 
@@ -47,6 +47,6 @@ files:
 body perms p(user,mode)
 
 {
-owners => { "$(user)" };
-mode   => "$(mode)";
+      owners => { "$(user)" };
+      mode   => "$(mode)";
 }

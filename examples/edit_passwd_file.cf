@@ -23,26 +23,26 @@
 
 body common control
 {
-bundlesequence => { "addpasswd" };
+      bundlesequence => { "addpasswd" };
 }
 
 bundle agent addpasswd
 {
-vars:
+  vars:
 
-  # want to set these values by the names of their array keys
+      # want to set these values by the names of their array keys
 
-  "pwd[mark]" string => "mark:x:1000:100:Mark Burgess:/home/mark:/bin/bash";
-  "pwd[fred]" string => "fred:x:1001:100:Right Said:/home/fred:/bin/bash";
-  "pwd[jane]" string => "jane:x:1002:100:Jane Doe:/home/jane:/bin/bash";
+      "pwd[mark]" string => "mark:x:1000:100:Mark Burgess:/home/mark:/bin/bash";
+      "pwd[fred]" string => "fred:x:1001:100:Right Said:/home/fred:/bin/bash";
+      "pwd[jane]" string => "jane:x:1002:100:Jane Doe:/home/jane:/bin/bash";
 
-files:
+  files:
 
 
-  "/tmp/passwd"
+      "/tmp/passwd"
 
-        create => "true",
-     edit_line => append_users_starting("addpasswd.pwd");
+      create => "true",
+      edit_line => append_users_starting("addpasswd.pwd");
 
 }
 
@@ -53,17 +53,17 @@ files:
 bundle edit_line append_users_starting(v)
 
 {
-vars:
+  vars:
 
-  "index"        slist => getindices("$(v)");
+      "index"        slist => getindices("$(v)");
 
-classes:
+  classes:
 
-  "add_$(index)" not => userexists("$(index)");
+      "add_$(index)" not => userexists("$(index)");
 
-insert_lines:
+  insert_lines:
 
-  "$($(v)[$(index)])",
+      "$($(v)[$(index)])",
 
       ifvarclass => "add_$(index)";
 
@@ -74,17 +74,17 @@ insert_lines:
 bundle edit_line append_groups_starting(v)
 
 {
-vars:
+  vars:
 
-  "index"        slist => getindices("$(v)");
+      "index"        slist => getindices("$(v)");
 
-classes:
+  classes:
 
-  "add_$(index)" not => groupexists("$(index)");
+      "add_$(index)" not => groupexists("$(index)");
 
-insert_lines:
+  insert_lines:
 
-  "$($(v)[$(index)])",
+      "$($(v)[$(index)])",
 
       ifvarclass => "add_$(index)";
 

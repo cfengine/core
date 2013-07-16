@@ -25,23 +25,23 @@
 
 body common control
 {
-bundlesequence => { "example" };
+      bundlesequence => { "example" };
 }
 
 bundle agent example
 {
-vars:
+  vars:
 
- "software" slist => { "gpg", "zip", "rsync" };
+      "software" slist => { "gpg", "zip", "rsync" };
 
-classes:
+  classes:
 
- "noreport"         expression => fileexists("/tmp/report.html");
- "have_$(software)" expression => fileexists("/usr/bin/$(software)");
+      "noreport"         expression => fileexists("/tmp/report.html");
+      "have_$(software)" expression => fileexists("/usr/bin/$(software)");
 
-reports:
+  reports:
 
-  no_report::
+    no_report::
 
       "
       <html>
@@ -49,7 +49,7 @@ reports:
       Type of this host is: $(sys.os)<br>
       "
 
-         report_to_file => "/tmp/report.html";
+      report_to_file => "/tmp/report.html";
 
       #
 
@@ -57,14 +57,14 @@ reports:
       Host has software $(software)<br>
       "
 
-        ifvarclass => "have_$(software)",
-         report_to_file => "/tmp/report.html";
+      ifvarclass => "have_$(software)",
+      report_to_file => "/tmp/report.html";
 
       #
 
       "
       </html>
       "
-         report_to_file => "/tmp/report.html";
+      report_to_file => "/tmp/report.html";
 
 }

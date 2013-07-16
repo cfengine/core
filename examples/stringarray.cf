@@ -24,7 +24,7 @@
 body common control
 
 {
-bundlesequence  => { "example" };
+      bundlesequence  => { "example" };
 }
 
 ###########################################################
@@ -32,16 +32,16 @@ bundlesequence  => { "example" };
 bundle agent example
 
 {     
-vars:
+  vars:
 
-  "dim_array" 
+      "dim_array" 
 
-     int =>  readstringarray("array_name","/etc/passwd","#[^\n]*",":",10,4000);
+      int =>  readstringarray("array_name","/etc/passwd","#[^\n]*",":",10,4000);
 
-     "idx" slist => getindices("array_name");
+      "idx" slist => getindices("array_name");
 
-reports:
+  reports:
 
-    "Index $(idx): [1]=$(array_name[$(idx)][1]),[2]=$(array_name[$(idx)][2])...[7]=$(array_name[$(idx)][6])";
+      "Index $(idx): [1]=$(array_name[$(idx)][1]),[2]=$(array_name[$(idx)][2])...[7]=$(array_name[$(idx)][6])";
 }
 

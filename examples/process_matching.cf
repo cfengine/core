@@ -29,7 +29,7 @@
 body common control
 
 {
-bundlesequence  => { "example"  };
+      bundlesequence  => { "example"  };
 }
 
 ########################################################
@@ -37,12 +37,12 @@ bundlesequence  => { "example"  };
 bundle agent example
 
 {
-processes:
+  processes:
 
- ".*"
+      ".*"
 
-    process_select  => proc_finder("a.*"),
-    process_count   => up("cfservd");
+      process_select  => proc_finder("a.*"),
+      process_count   => up("cfservd");
 }
 
 ########################################################
@@ -50,8 +50,8 @@ processes:
 body process_count up(s)
 
 {
-match_range => "1,10"; # or irange("1","10");
-out_of_range_define => { "$(s)_out_of_control" };
+      match_range => "1,10"; # or irange("1","10");
+      out_of_range_define => { "$(s)_out_of_control" };
 }
 
 ########################################################
@@ -59,11 +59,11 @@ out_of_range_define => { "$(s)_out_of_control" };
 body process_select proc_finder(p)
 
 {
-process_owner  => { "avahi", "bin" };
-command        => "$(p)";
-pid            => "100,199";
-vsize          => "0,1000";
-process_result => "command.(process_owner|vsize)";
+      process_owner  => { "avahi", "bin" };
+      command        => "$(p)";
+      pid            => "100,199";
+      vsize          => "0,1000";
+      process_result => "command.(process_owner|vsize)";
 }
 
 

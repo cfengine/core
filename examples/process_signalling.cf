@@ -29,7 +29,7 @@
 body common control
 
 {
-bundlesequence  => { "example"  };
+      bundlesequence  => { "example"  };
 }
 
 ########################################################
@@ -37,25 +37,25 @@ bundlesequence  => { "example"  };
 bundle agent example
 
 {
-processes:
+  processes:
 
- "cfservd"
+      "cfservd"
 
-        process_count   => up("cfservd");
+      process_count   => up("cfservd");
 
- cfservd_out_of_control::
+    cfservd_out_of_control::
 
-   "cfservd"
+      "cfservd"
 
-        signals         => { "stop" , "term" },
-        restart_class   => "start_cfserv";
+      signals         => { "stop" , "term" },
+      restart_class   => "start_cfserv";
 
 
-commands:
+  commands:
 
-  start_cfserv::
+    start_cfserv::
 
-    "/usr/local/sbin/cfservd";
+      "/usr/local/sbin/cfservd";
 
 }
 
@@ -64,6 +64,6 @@ commands:
 body process_count up(s)
 
 {
-match_range => "1,10"; # or irange("1","10");
-out_of_range_define => { "$(s)_out_of_control" };
+      match_range => "1,10"; # or irange("1","10");
+      out_of_range_define => { "$(s)_out_of_control" };
 }

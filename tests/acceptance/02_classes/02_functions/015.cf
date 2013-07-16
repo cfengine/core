@@ -6,79 +6,79 @@
 
 body common control
 {
-  inputs => { "../../default.cf.sub" };
-  bundlesequence  => { default("$(this.promise_filename)") };   
-  version => "1.0";
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };   
+      version => "1.0";
 }
 
 bundle common g
 {
-vars:
-	"testfile" string => "/tmp/TEST.cfengine";
+  vars:
+      "testfile" string => "/tmp/TEST.cfengine";
 }
 
 #######################################################
 
 bundle agent init
 {
-files:
-	"$(G.testfile)"
-	    create => "true";
+  files:
+      "$(G.testfile)"
+      create => "true";
 
-        "$(G.testfile).dir/."
-            create => "true";
+      "$(G.testfile).dir/."
+      create => "true";
 
-	"$(G.testfile).link"
-	    link_from => test_link("$(G.testfile)");
+      "$(G.testfile).link"
+      link_from => test_link("$(G.testfile)");
 }
 
 body link_from test_link(original)
 {
-	source => "$(original)";
-	link_type => "symlink";
+      source => "$(original)";
+      link_type => "symlink";
 }
 
 #######################################################
 
 bundle agent test
 {
-vars:
-	"dummy" string => "dummy";
+  vars:
+      "dummy" string => "dummy";
 }
 
 #######################################################
 
 bundle agent check
 {
-classes:
-	"good" and => {
-		    islink("$(G.testfile).link"),
-		    };
+  classes:
+      "good" and => {
+		      islink("$(G.testfile).link"),
+      };
 
-	"bad" or => {
+      "bad" or => {
 		    islink("$(G.testfile).dir"),
 		    islink("$(G.testfile).dir/"),
 		    islink("$(G.testfile)"),
 		    islink("$(G.testfile).does-not-exist"),
-		    };
+      };
 
-	"ok" expression => "good&!bad";
+      "ok" expression => "good&!bad";
 
-reports:
+  reports:
     DEBUG.good::
-	"As expected, $(G.testfile).link is a symlink to $(G.testfile)";
+      "As expected, $(G.testfile).link is a symlink to $(G.testfile)";
     DEBUG.bad::
-	"One of these is detected as a symlink: $(G.testfile).dir, $(G.testfile), $(G.testfile).does-not-exist";
+      "One of these is detected as a symlink: $(G.testfile).dir, $(G.testfile), $(G.testfile).does-not-exist";
     ok::
-	"$(this.promise_filename) Pass";
+      "$(this.promise_filename) Pass";
     !ok::
-	"$(this.promise_filename) FAIL";
+      "$(this.promise_filename) FAIL";
 }
 
 #######################################################
 
 bundle agent fini
 {
-methods:
-    "any" usebundle => default_fini("$(G.testfile)");
+  methods:
+      "any" usebundle => default_fini("$(G.testfile)");
 }

@@ -24,7 +24,7 @@
 body common control
 
 {
-bundlesequence  => { "report" };
+      bundlesequence  => { "report" };
 }
 
 ###########################################################
@@ -32,12 +32,12 @@ bundlesequence  => { "report" };
 bundle agent report
 
 {     
-reports:
-   "/etc/passwd except $(const.n)"
+  reports:
+      "/etc/passwd except $(const.n)"
 
-     printfile => pr("/etc/passwd","5"),
+      printfile => pr("/etc/passwd","5"),
 
-     showstate => { "otherprocs", "rootprocs" };
+      showstate => { "otherprocs", "rootprocs" };
 
 }
 
@@ -46,6 +46,6 @@ reports:
 body printfile pr(file,lines)
 
 {
-file_to_print => "$(file)";
-number_of_lines => "$(lines)";
+      file_to_print => "$(file)";
+      number_of_lines => "$(lines)";
 }

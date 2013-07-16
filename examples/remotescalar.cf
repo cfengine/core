@@ -29,43 +29,43 @@
 
 body common control
 {
-bundlesequence => { "overture" };
-inputs => { "libraries/cfengine_stdlib.cf" };
+      bundlesequence => { "overture" };
+      inputs => { "libraries/cfengine_stdlib.cf" };
 }
 
 body server control 
 
 {
-allowconnects         => { "127.0.0.1" , "::1",};
-allowallconnects      => { "127.0.0.1" , "::1", };
-trustkeysfrom         => { "127.0.0.1" , "::1",};
+      allowconnects         => { "127.0.0.1" , "::1",};
+      allowallconnects      => { "127.0.0.1" , "::1", };
+      trustkeysfrom         => { "127.0.0.1" , "::1",};
 }
 
 #######################################################
 
 bundle agent overture
 {
-vars:
+  vars:
 
-  "remote" string => remotescalar("test_scalar","127.0.0.1","yes");
+      "remote" string => remotescalar("test_scalar","127.0.0.1","yes");
 
-  "know" string => hubknowledge("test_scalar");
+      "know" string => hubknowledge("test_scalar");
 
-  "count_getty" string => hubknowledge("count_getty");
+      "count_getty" string => hubknowledge("count_getty");
 
-processes:
+  processes:
 
-  # Use the enumerated library body to count hosts running getty
+      # Use the enumerated library body to count hosts running getty
 
-  "getty" 
+      "getty" 
 
-       comment => "Count this host if a job is matched",
-       classes => enumerate("count_getty");
+      comment => "Count this host if a job is matched",
+      classes => enumerate("count_getty");
 
-reports:
-    "GOT remote scalar $(remote)";
-    "GOT knowedge scalar $(know)";
-    "GOT persistent scalar $(xyz)";
+  reports:
+      "GOT remote scalar $(remote)";
+      "GOT knowedge scalar $(know)";
+      "GOT persistent scalar $(xyz)";
 
 }
 
@@ -73,17 +73,17 @@ reports:
 
 bundle server access_rules()
 {
-access:
+  access:
 
-  "value of my test_scalar, can expand variables here - $(sys.host)"
-    handle => "test_scalar",
-    comment => "Grant access to contents of test_scalar VAR",
-    resource_type => "literal",
-    admit => { "127.0.0.1" };
+      "value of my test_scalar, can expand variables here - $(sys.host)"
+      handle => "test_scalar",
+      comment => "Grant access to contents of test_scalar VAR",
+      resource_type => "literal",
+      admit => { "127.0.0.1" };
 
-  "XYZ"
-    resource_type => "variable",
-    handle => "XYZ",
-    admit => { "127.0.0.1" };
+      "XYZ"
+      resource_type => "variable",
+      handle => "XYZ",
+      admit => { "127.0.0.1" };
 
 }

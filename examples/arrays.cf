@@ -23,27 +23,27 @@
 
 body common control
 {
-bundlesequence => { "array" };
+      bundlesequence => { "array" };
 }
 
 
 bundle common g
 {
-vars:
+  vars:
 
-  "array[1]" string => "one"; 
-  "array[2]" string => "two"; 
+      "array[1]" string => "one"; 
+      "array[2]" string => "two"; 
 }
 
 bundle agent array
 {
-vars:
+  vars:
 
-  "localarray[1]" string => "one"; 
-  "localarray[2]" string => "two"; 
+      "localarray[1]" string => "one"; 
+      "localarray[2]" string => "two"; 
 
-reports:
+  reports:
 
-   "Global $(g.array[1]) and $(localarray[2])";
+      "Global $(g.array[1]) and $(localarray[2])";
 }
 

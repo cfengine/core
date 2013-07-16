@@ -274,11 +274,16 @@ static void KeepControlPromises(EvalContext *ctx, Policy *policy, GenericAgentCo
                 continue;
             }
 
-            if (!EvalContextVariableGet(ctx, (VarRef) { NULL, "control_server", cp->lval }, &retval, NULL))
+            VarRef ref = VarRefParseFromScope(cp->lval, "control_server");
+
+            if (!EvalContextVariableGet(ctx, ref, &retval, NULL))
             {
                 Log(LOG_LEVEL_ERR, "Unknown lval '%s' in server control body", cp->lval);
+                VarRefDestroy(ref);
                 continue;
             }
+
+            VarRefDestroy(ref);
 
             if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_SERVER_FACILITY].lval) == 0)
             {

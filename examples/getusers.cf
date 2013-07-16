@@ -29,7 +29,7 @@
 body common control
 
 {
-bundlesequence  => { "example" };   
+      bundlesequence  => { "example" };   
 }
 
 #######################################################
@@ -37,11 +37,11 @@ bundlesequence  => { "example" };
 bundle agent example
 
 {
-vars:
+  vars:
 
-  "allusers" slist => getusers("zenoss,mysql,at","12,0");
+      "allusers" slist => getusers("zenoss,mysql,at","12,0");
 
-reports:
-  "Found user $(allusers)";
+  reports:
+      "Found user $(allusers)";
 
 }

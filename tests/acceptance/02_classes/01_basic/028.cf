@@ -6,49 +6,49 @@
 
 body common control
 {
-  inputs => { "../../default.cf.sub" };
-  bundlesequence  => { default("$(this.promise_filename)") };
-  version => "1.0";
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
 }
 
 #######################################################
 
 bundle agent init
 {
-vars:
-    "dummy" string => "dummy";
+  vars:
+      "dummy" string => "dummy";
 }
 
 #######################################################
 
 bundle agent test
 {
-vars:
-    "dummy" string => "dummy";
+  vars:
+      "dummy" string => "dummy";
 }
 
 #######################################################
 
 bundle agent check
 {
-classes:
+  classes:
 
-  any||something::
-    "oklhs" expression => "any";
-  something||any::
-    "okrhs" expression => "any";
-  any||any::
-    "okboth" expression => "any";
-  something||something::
-    "okno" expression => "any";
+    any||something::
+      "oklhs" expression => "any";
+    something||any::
+      "okrhs" expression => "any";
+    any||any::
+      "okboth" expression => "any";
+    something||something::
+      "okno" expression => "any";
 
-  any::
-    "ok" and => { "oklhs", "okrhs", "okboth", "!okno" };
+    any::
+      "ok" and => { "oklhs", "okrhs", "okboth", "!okno" };
 
-reports:
+  reports:
     ok::
-        "$(this.promise_filename) Pass";
+      "$(this.promise_filename) Pass";
     !ok::
-        "$(this.promise_filename) FAIL";
+      "$(this.promise_filename) FAIL";
 }
 

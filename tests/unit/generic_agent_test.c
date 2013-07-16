@@ -7,6 +7,8 @@
 void test_load_masterfiles(void)
 {
     EvalContext *ctx = EvalContextNew();
+    DiscoverVersion(ctx);
+
     GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_COMMON);
 
     GenericAgentConfigSetInputFile(config, NULL,

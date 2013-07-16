@@ -954,12 +954,12 @@ static void SchedulePackageOp(EvalContext *ctx, const char *name, const char *ve
 
         if ((a.packages.package_delete_convention) && (a.packages.package_policy == PACKAGE_ACTION_DELETE))
         {
-            ExpandScalar(ctx, "cf_pack_context", a.packages.package_delete_convention, reference);
+            ExpandScalar(ctx, NULL, "cf_pack_context", a.packages.package_delete_convention, reference);
             strlcpy(id, reference, CF_EXPANDSIZE);
         }
         else if (a.packages.package_name_convention)
         {
-            ExpandScalar(ctx, "cf_pack_context", a.packages.package_name_convention, reference);
+            ExpandScalar(ctx, NULL, "cf_pack_context", a.packages.package_name_convention, reference);
             strlcpy(id, reference, CF_EXPANDSIZE);
         }
         else
@@ -967,7 +967,7 @@ static void SchedulePackageOp(EvalContext *ctx, const char *name, const char *ve
             strlcpy(id, name, CF_EXPANDSIZE);
         }
 
-        ScopeClear("cf_pack_context");
+        ScopeClear(NULL, "cf_pack_context");
     }
     else
     {
@@ -1016,9 +1016,9 @@ static void SchedulePackageOp(EvalContext *ctx, const char *name, const char *ve
                     EvalContextVariablePut(ctx, (VarRef) { NULL, "cf_pack_context_anyver", "name" }, (Rval) { name, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
                     EvalContextVariablePut(ctx, (VarRef) { NULL, "cf_pack_context_anyver", "version" }, (Rval) { "(.*)", RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
                     EvalContextVariablePut(ctx, (VarRef) { NULL, "cf_pack_context_anyver", "arch" }, (Rval) { arch, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
-                    ExpandScalar(ctx, "cf_pack_context_anyver", a.packages.package_name_convention, refAnyVer);
+                    ExpandScalar(ctx, NULL, "cf_pack_context_anyver", a.packages.package_name_convention, refAnyVer);
 
-                    ScopeClear("cf_pack_context_anyver");
+                    ScopeClear(NULL, "cf_pack_context_anyver");
                 }
 
                 EscapeSpecialChars(refAnyVer, refAnyVerEsc, sizeof(refAnyVerEsc), "(.*)","");
@@ -1137,9 +1137,9 @@ static void SchedulePackageOp(EvalContext *ctx, const char *name, const char *ve
                 EvalContextVariablePut(ctx, (VarRef) { NULL, "cf_pack_context_anyver", "name" }, (Rval) { name, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
                 EvalContextVariablePut(ctx, (VarRef) { NULL, "cf_pack_context_anyver", "version" }, (Rval) { "(.*)", RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
                 EvalContextVariablePut(ctx, (VarRef) { NULL, "cf_pack_context_anyver", "arch" }, (Rval) { arch, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
-                ExpandScalar(ctx, "cf_pack_context_anyver", a.packages.package_name_convention, refAnyVer);
+                ExpandScalar(ctx, NULL, "cf_pack_context_anyver", a.packages.package_name_convention, refAnyVer);
 
-                ScopeClear("cf_pack_context_anyver");
+                ScopeClear(NULL, "cf_pack_context_anyver");
             }
 
             EscapeSpecialChars(refAnyVer, refAnyVerEsc, sizeof(refAnyVerEsc), "(.*)","");
@@ -1202,10 +1202,10 @@ static void SchedulePackageOp(EvalContext *ctx, const char *name, const char *ve
                         EvalContextVariablePut(ctx, (VarRef) { NULL, "cf_pack_context", "name" }, (Rval) { name, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
                         EvalContextVariablePut(ctx, (VarRef) { NULL, "cf_pack_context", "version" }, (Rval) { instVer, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
                         EvalContextVariablePut(ctx, (VarRef) { NULL, "cf_pack_context", "arch" }, (Rval) { instArch, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
-                        ExpandScalar(ctx, "cf_pack_context", a.packages.package_delete_convention, reference2);
+                        ExpandScalar(ctx, NULL, "cf_pack_context", a.packages.package_delete_convention, reference2);
                         id_del = reference2;
 
-                        ScopeClear("cf_pack_context");
+                        ScopeClear(NULL, "cf_pack_context");
                     }
                 }
                 else

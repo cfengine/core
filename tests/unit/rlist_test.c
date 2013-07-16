@@ -536,11 +536,6 @@ bool EvalContextVariableGet(const EvalContext *ctx, VarRef lval, Rval *rval_out,
     fail();
 }
 
-Scope *ScopeGetCurrent(void)
-{
-    fail();
-}
-
 pthread_mutex_t *cft_lock;
 int ThreadLock(pthread_mutex_t *name)
 {

@@ -31,7 +31,7 @@
 body common control
 
 {
-bundlesequence  => { "updateusers" };
+      bundlesequence  => { "updateusers" };
 }
 
 ########################################################
@@ -39,40 +39,40 @@ bundlesequence  => { "updateusers" };
 bundle agent updateusers
 
 {
-vars:
+  vars:
 
-  # Set $(testing) to "" for production
+      # Set $(testing) to "" for production
 
-  "testing"  string => "/home/mark/tmp";
-  "tmp"      string => "$(testing)/etc/passwd_tmp";
+      "testing"  string => "/home/mark/tmp";
+      "tmp"      string => "$(testing)/etc/passwd_tmp";
 
-  "extract_users" slist => { "mark", "root", "at", "www-run" };
+      "extract_users" slist => { "mark", "root", "at", "www-run" };
 
-files:
+  files:
 
-  #
-  # Take the passwed entries from source and add them to real_passwd
-  #
+      #
+      # Take the passwed entries from source and add them to real_passwd
+      #
 
-  "$(tmp)"
+      "$(tmp)"
 
-       create    => "true",
-       edit_line => SelectUsers("$(testing)/masterfiles/passwd","@(this.extract_users)");
+      create    => "true",
+      edit_line => SelectUsers("$(testing)/masterfiles/passwd","@(this.extract_users)");
 
-  #
-  # Intermediate file - should be secure - not in /tmp
-  #
+      #
+      # Intermediate file - should be secure - not in /tmp
+      #
 
-  "$(testing)/etc/passwd"
+      "$(testing)/etc/passwd"
 
-       edit_line => ReplaceUsers("$(tmp)","@(this.extract_users)");
+      edit_line => ReplaceUsers("$(tmp)","@(this.extract_users)");
 
-  #
+      #
 
-  "$(testing)/home/$(extract_users)/."
+      "$(testing)/home/$(extract_users)/."
 
-       create => "true",
-       perms => userdir("$(extract_users)");
+      create => "true",
+      perms => userdir("$(extract_users)");
 }
 
 
@@ -86,49 +86,49 @@ files:
 
 body perms userdir(u)
 {
-mode => "755";
-owners => { "$(u)" };
-groups => { "users" };
+      mode => "755";
+      owners => { "$(u)" };
+      groups => { "users" };
 }
 
 ########################################################
 
 bundle edit_line SelectUsers(f,l)
-  {
+{
   insert_lines:
 
-     "$(f)" 
+      "$(f)" 
 
-       insert_type => "file",
-       insert_select => keep("@(l)");
-  }
+      insert_type => "file",
+      insert_select => keep("@(l)");
+}
 
 ########################################################
 
 bundle edit_line ReplaceUsers(f,l)
-  {
+{
   delete_lines:
 
-     "$(f)" 
-       delete_select => discard("@(l)");
+      "$(f)" 
+      delete_select => discard("@(l)");
 
   insert_lines:
 
-     "$(f)" 
+      "$(f)" 
 
-       insert_type => "file";
-  }
+      insert_type => "file";
+}
 
 ########################################################
 
 body insert_select keep(s)
 {
-insert_if_startwith_from_list => { @(s) };
+      insert_if_startwith_from_list => { @(s) };
 }
 
 ########################################################
 
 body delete_select discard(s)
 {
-delete_if_not_startwith_from_list => { @(s) };
+      delete_if_not_startwith_from_list => { @(s) };
 }

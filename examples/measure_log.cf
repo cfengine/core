@@ -12,16 +12,16 @@
 
 bundle monitor watch
 {
-measurements:
+  measurements:
 
-   "/home/mark/tmp/file"
+      "/home/mark/tmp/file"
 
-         handle => "line_counter",
-    stream_type => "file",
+      handle => "line_counter",
+      stream_type => "file",
       data_type => "counter",
-    match_value => scan_log("MYLINE.*"),
-   history_type => "log",
-         action => sample_rate("0");
+      match_value => scan_log("MYLINE.*"),
+      history_type => "log",
+      action => sample_rate("0");
 
 }
 
@@ -29,12 +29,12 @@ measurements:
 
 body match_value scan_log(x)
 {
-select_line_matching => "^$(x)$";
-track_growing_file => "true";
+      select_line_matching => "^$(x)$";
+      track_growing_file => "true";
 }
 
 body action sample_rate(x)
 {
-ifelapsed => "$(x)";
-expireafter => "10";
+      ifelapsed => "$(x)";
+      expireafter => "10";
 }

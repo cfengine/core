@@ -24,7 +24,7 @@
 body common control
 
 {
-bundlesequence  => { "example" };
+      bundlesequence  => { "example" };
 }
 
 ###########################################################
@@ -32,19 +32,19 @@ bundlesequence  => { "example" };
 bundle agent example
 
 {     
-classes:
+  classes:
 
-  "exists" expression => fileexists("/etc/passwdx");
+      "exists" expression => fileexists("/etc/passwdx");
 
-reports:
+  reports:
 
-  exists::
+    exists::
 
-    "File exists";
+      "File exists";
 
-  !exists::
+    !exists::
 
-    "Does not exist";
+      "Does not exist";
 
 }
 

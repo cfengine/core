@@ -26,27 +26,27 @@
 #
 ########################################################
 
- #
- # run this as follows:
- #
- # cf-serverd -f runtest_1.cf [-d2]
- # cf-agent   -f runtest_2.cf
- #
- # Notice that the same file configures all parts of cfengine
+#
+# run this as follows:
+#
+# cf-serverd -f runtest_1.cf [-d2]
+# cf-agent   -f runtest_2.cf
+#
+# Notice that the same file configures all parts of cfengine
 
 ########################################################
 
 body common control
 {
-bundlesequence  => { "example" };
-version => "1.2.3";
+      bundlesequence  => { "example" };
+      version => "1.2.3";
 }
 
 # cf-runagent -q 
 
 bundle agent example
 {
-files:
+  files:
 }
 
 #########################################################
@@ -56,10 +56,10 @@ files:
 body server control 
 
 {
-allowconnects         => { "127.0.0.1" , "::1" };
-allowallconnects      => { "127.0.0.1" , "::1" };
-trustkeysfrom         => { "127.0.0.1" , "::1" };
-allowusers            => { "mark", "root" };
+      allowconnects         => { "127.0.0.1" , "::1" };
+      allowallconnects      => { "127.0.0.1" , "::1" };
+      trustkeysfrom         => { "127.0.0.1" , "::1" };
+      allowusers            => { "mark", "root" };
 }
 
 #########################################################
@@ -67,12 +67,12 @@ allowusers            => { "mark", "root" };
 bundle server access_rules()
 
 {
-access:
+  access:
 
-  "delta"
-    resource_type => "query",
-          admit   => { "127.0.0.1" };
-  "full"
-    resource_type => "query",
-          admit   => { "127.0.0.1" };
+      "delta"
+      resource_type => "query",
+      admit   => { "127.0.0.1" };
+      "full"
+      resource_type => "query",
+      admit   => { "127.0.0.1" };
 }

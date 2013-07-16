@@ -10,100 +10,100 @@
 
 body common control
 {
-  inputs => { "../default.cf.sub" };
-  bundlesequence  => { default("$(this.promise_filename)") };
-  version => "1.0";
+      inputs => { "../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
 }
 
 #######################################################
 
 bundle agent init
 {
-vars:
-  "dummy" string => "dummy";
+  vars:
+      "dummy" string => "dummy";
 }
 
 #######################################################
 
 bundle agent test
 {
-packages:
-  "bash-1.0-amd64"
-    package_policy => "add",
-    package_method => mock_no_verify_command_noverify_regex,
-    classes => test_set_class("no_verify_command_noverify_regex_succ",
-                              "no_verify_command_noverify_regex_fail");
+  packages:
+      "bash-1.0-amd64"
+      package_policy => "add",
+      package_method => mock_no_verify_command_noverify_regex,
+      classes => test_set_class("no_verify_command_noverify_regex_succ",
+				"no_verify_command_noverify_regex_fail");
 
-  "bash-1.0-i386"
-    package_policy => "add",
-    package_method => mock_no_verify_command_noverify_returncode,
-    classes => test_set_class("no_verify_command_noverify_returncode_succ",
-                              "no_verify_command_noverify_returncode_fail");
+      "bash-1.0-i386"
+      package_policy => "add",
+      package_method => mock_no_verify_command_noverify_returncode,
+      classes => test_set_class("no_verify_command_noverify_returncode_succ",
+				"no_verify_command_noverify_returncode_fail");
 }
 
 body package_method mock_no_verify_command_noverify_regex
 {
-  package_changes => "individual";
+      package_changes => "individual";
 
-  package_name_regex => "^([^-]+)";
-  package_version_regex => "^[^-]+-([^-]+)";
-  package_arch_regex => "^[^-]+-[^-]+-(.*)";
+      package_name_regex => "^([^-]+)";
+      package_version_regex => "^[^-]+-([^-]+)";
+      package_arch_regex => "^[^-]+-[^-]+-(.*)";
 
-  package_list_command => "$(G.printf) 'bash-1.0-amd64'";
-  package_installed_regex => ".*";
-  package_list_name_regex => "^([^-]+)";
-  package_list_version_regex => "^[^-]+-([^-]+)";
-  package_list_arch_regex => "^[^-]+-[^-]+-(.*)";
+      package_list_command => "$(G.printf) 'bash-1.0-amd64'";
+      package_installed_regex => ".*";
+      package_list_name_regex => "^([^-]+)";
+      package_list_version_regex => "^[^-]+-([^-]+)";
+      package_list_arch_regex => "^[^-]+-[^-]+-(.*)";
 
-  package_add_command => "$(G.true)";
-  package_update_command => "$(G.true)";
-  package_delete_command => "$(G.true)";
-#  package_verify_command => "$(G.true)";
-  
-  package_noverify_regex => ".";
+      package_add_command => "$(G.true)";
+      package_update_command => "$(G.true)";
+      package_delete_command => "$(G.true)";
+      #  package_verify_command => "$(G.true)";
+      
+      package_noverify_regex => ".";
 }
 
 body package_method mock_no_verify_command_noverify_returncode
 {
-  package_changes => "individual";
+      package_changes => "individual";
 
-  package_name_regex => "^([^-]+)";
-  package_version_regex => "^[^-]+-([^-]+)";
-  package_arch_regex => "^[^-]+-[^-]+-(.*)";
+      package_name_regex => "^([^-]+)";
+      package_version_regex => "^[^-]+-([^-]+)";
+      package_arch_regex => "^[^-]+-[^-]+-(.*)";
 
-  package_list_command => "$(G.printf) 'bash-1.0-amd64'";
-  package_installed_regex => ".*";
-  package_list_name_regex => "^([^-]+)";
-  package_list_version_regex => "^[^-]+-([^-]+)";
-  package_list_arch_regex => "^[^-]+-[^-]+-(.*)";
+      package_list_command => "$(G.printf) 'bash-1.0-amd64'";
+      package_installed_regex => ".*";
+      package_list_name_regex => "^([^-]+)";
+      package_list_version_regex => "^[^-]+-([^-]+)";
+      package_list_arch_regex => "^[^-]+-[^-]+-(.*)";
 
-  package_add_command => "$(G.true)";
-  package_update_command => "$(G.true)";
-  package_delete_command => "$(G.true)";
-#  package_verify_command => "$(G.true)";
-  
-  package_noverify_returncode => "-1";
+      package_add_command => "$(G.true)";
+      package_update_command => "$(G.true)";
+      package_delete_command => "$(G.true)";
+      #  package_verify_command => "$(G.true)";
+      
+      package_noverify_returncode => "-1";
 }
 
 body classes test_set_class(ok_class,notok_class)
 {
-promise_kept => { "$(ok_class)" };
-promise_repaired => { "$(ok_class)" };
-repair_failed => { "$(notok_class)" };
+      promise_kept => { "$(ok_class)" };
+      promise_repaired => { "$(ok_class)" };
+      repair_failed => { "$(notok_class)" };
 }
 
 #######################################################
 
 bundle agent check
 {
-classes:
-  "ok" and => { "!no_verify_command_noverify_regex_succ", "no_verify_command_noverify_regex_fail",
-                "!no_verify_command_noverify_returncode_succ", "no_verify_command_noverify_returncode_fail",
-                };
+  classes:
+      "ok" and => { "!no_verify_command_noverify_regex_succ", "no_verify_command_noverify_regex_fail",
+                    "!no_verify_command_noverify_returncode_succ", "no_verify_command_noverify_returncode_fail",
+      };
 
-reports:
-  ok::
-    "$(this.promise_filename) Pass";
-  !ok::
-    "$(this.promise_filename) FAIL";
+  reports:
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
 }

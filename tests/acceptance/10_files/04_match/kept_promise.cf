@@ -7,46 +7,54 @@
 
 body common control
 {
-  inputs => { "../../default.cf.sub" };
-  bundlesequence  => { default("$(this.promise_filename)") };
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
 }
 
 bundle agent init
 {
+  vars:
+      "array[1]" string => "one";
+      "array[2]" string => "two";
+      "array[3]" string => "three";
+
+  files:
+      "$(G.testfile)"
+      create => "true",
+      edit_line => init_edit;
 }
 
 bundle agent test
 {
-  vars:
-    "array[1]" string => "one";
-    "array[2]" string => "two";
-    "array[3]" string => "three";
-
   files:
-    "$(G.testfile)"
+      "$(G.testfile)"
       create => "true",
       edit_line => test_edit;
+}
+
+bundle edit_line init_edit
+{
+  vars:
+      "index" slist => getindices("init.array");
+
+  insert_lines:
+      "${test.array[${index}]}";
 }
 
 bundle edit_line test_edit
 {
   vars:
-    "index" slist => getindices("test.array");
+      "index" slist => getindices("init.array");
 
   insert_lines:
-    "${test.array[${index}]}"
+      "${test.array[${index}]}"
       classes => kept_if_else("line_${index}_kept", "line_${index}_added", "line_${index}_failed");
 }
 
 bundle agent check
 {
-  files:
-    "$(G.testfile)"
-      create => "true",
-      edit_line => test_edit;
-
   classes:
-    "ok" and => { "line_1_kept", "line_2_kept", "line_3_kept" };
+      "ok" and => { "line_1_kept", "line_2_kept", "line_3_kept" };
 
   reports:
     DEBUG.!line_1_kept::
@@ -64,9 +72,9 @@ bundle agent check
 body classes kept_if_else(kept, yes, no)
 
 {
-  promise_kept     => { "${kept}" };
-  promise_repaired => { "${yes}" };
-  repair_failed    => { "${no}" };
-  repair_denied    => { "${no}" };
-  repair_timeout   => { "${no}" };
+      promise_kept     => { "${kept}" };
+      promise_repaired => { "${yes}" };
+      repair_failed    => { "${no}" };
+      repair_denied    => { "${no}" };
+      repair_timeout   => { "${no}" };
 }

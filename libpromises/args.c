@@ -87,7 +87,7 @@ Rlist *NewExpArgs(EvalContext *ctx, const FnCall *fp, const Promise *pp)
             rval = FnCallEvaluate(ctx, subfp, pp).rval;
             break;
         default:
-            rval = ExpandPrivateRval(ctx, ScopeGetCurrent()->scope, (Rval) {rp->item, rp->type});
+            rval = ExpandPrivateRval(ctx, NULL, NULL, (Rval) {rp->item, rp->type});
             break;
         }
 

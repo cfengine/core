@@ -996,8 +996,12 @@ void PolicyErrorWrite(Writer *writer, const PolicyError *error)
     SourceOffset offset = PolicyElementSourceOffset(error->type, error->subject);
     const char *path = PolicyElementSourceFile(error->type, error->subject);
 
+#ifdef HAVE_SNPRINTF
     // FIX: need to track columns in SourceOffset
     WriterWriteF(writer, "%s:%zu:%zu: error: %s\n", path, offset.line, (size_t)0, error->message);
+#else
+   WriterWriteF(writer, "%s:%ul:%ul: error: %s\n", path, (unsigned long)offset.line, (unsigned long)0, error->message);
+#endif
 }
 
 static char *PolicyErrorToString(const PolicyError *error)
@@ -1030,17 +1034,7 @@ Bundle *PolicyAppendBundle(Policy *policy, const char *ns, const char *name, con
 
     SeqAppend(policy->bundles, bundle);
 
-    if (strcmp(ns, "default") == 0)
-    {
-        bundle->name = xstrdup(name);
-    }
-    else
-    {
-        char fqname[CF_BUFSIZE];
-        snprintf(fqname,CF_BUFSIZE-1, "%s:%s", ns, name);
-        bundle->name = xstrdup(fqname);
-    }
-
+    bundle->name = xstrdup(name);
     bundle->type = xstrdup(type);
     bundle->ns = xstrdup(ns);
     bundle->args = RlistCopy(args);
@@ -1059,17 +1053,7 @@ Body *PolicyAppendBody(Policy *policy, const char *ns, const char *name, const c
 
     SeqAppend(policy->bodies, body);
 
-    if (strcmp(ns, "default") == 0)
-    {
-        body->name = xstrdup(name);
-    }
-    else
-    {
-        char fqname[CF_BUFSIZE];
-        snprintf(fqname, CF_BUFSIZE-1, "%s:%s", ns, name);
-        body->name = xstrdup(fqname);
-    }
-
+    body->name = xstrdup(name);
     body->type = xstrdup(type);
     body->ns = xstrdup(ns);
     body->args = RlistCopy(args);

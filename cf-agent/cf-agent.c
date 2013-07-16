@@ -667,11 +667,15 @@ void KeepControlPromises(EvalContext *ctx, Policy *policy)
                 continue;
             }
 
-            if (!EvalContextVariableGet(ctx, (VarRef) { NULL, "control_agent", cp->lval }, &retval, NULL))
+            VarRef ref = VarRefParseFromScope(cp->lval, "control_agent");
+            if (!EvalContextVariableGet(ctx, ref, &retval, NULL))
             {
                 Log(LOG_LEVEL_ERR, "Unknown lval '%s' in agent control body", cp->lval);
+                VarRefDestroy(ref);
                 continue;
             }
+
+            VarRefDestroy(ref);
 
             if (strcmp(cp->lval, CFA_CONTROLBODY[AGENT_CONTROL_MAXCONNECTIONS].lval) == 0)
             {
@@ -1316,52 +1320,50 @@ static void DefaultVarPromise(EvalContext *ctx, const Promise *pp)
     Rlist *rp;
     bool okay = true;
 
-    EvalContextVariableGet(ctx, (VarRef) { NULL, "this", pp->promiser }, &rval, &dt);
+    VarRef ref = VarRefParseFromScope(pp->promiser, "this");
+    EvalContextVariableGet(ctx, ref, &rval, &dt);
+    VarRefDestroy(ref);
 
     switch (dt)
-       {
-       case DATA_TYPE_STRING:
-       case DATA_TYPE_INT:
-       case DATA_TYPE_REAL:
+    {
+    case DATA_TYPE_STRING:
+    case DATA_TYPE_INT:
+    case DATA_TYPE_REAL:
+        if (regex && !FullTextMatch(regex,rval.item))
+        {
+            return;
+        }
 
-           if (regex && !FullTextMatch(regex,rval.item))
-              {
-              return;
-              }
+        if (regex == NULL)
+        {
+            return;
+        }
+        break;
 
-           if (regex == NULL)
-              {
-              return;
-              }
-
-           break;
-
-       case DATA_TYPE_STRING_LIST:
-       case DATA_TYPE_INT_LIST:
-       case DATA_TYPE_REAL_LIST:
-
-           if (regex)
-              {
-              for (rp = (Rlist *) rval.item; rp != NULL; rp = rp->next)
-                 {
-                 if (FullTextMatch(regex,rp->item))
-                    {
+    case DATA_TYPE_STRING_LIST:
+    case DATA_TYPE_INT_LIST:
+    case DATA_TYPE_REAL_LIST:
+        if (regex)
+        {
+            for (rp = (Rlist *) rval.item; rp != NULL; rp = rp->next)
+            {
+                if (FullTextMatch(regex,rp->item))
+                {
                     okay = false;
                     break;
-                    }
-                 }
+                }
+            }
 
-              if (okay)
-                 {
-                 return;
-                 }
-              }
+            if (okay)
+            {
+                return;
+            }
+        }
+        break;
 
-       break;
-
-       default:
-           break;
-       }
+    default:
+        break;
+    }
 
     ScopeDeleteScalar((VarRef) { NULL, PromiseGetBundle(pp)->name, pp->promiser });
     VerifyVarPromise(ctx, pp, true);

@@ -24,15 +24,15 @@
 
 bundle agent ldap
 {
-vars:
-   "userlist" slist => ldaplist(
+  vars:
+      "userlist" slist => ldaplist(
                                     "ldap://cf-win2003",
                                     "CN=Users,DC=domain,DC=cf-win2003",
                                     "(objectClass=user)",
                                     "sAMAccountName",
                                     "subtree",
                                     "none");
-reports:
-  "Username: \"$(userlist)\"";
+  reports:
+      "Username: \"$(userlist)\"";
 }
 

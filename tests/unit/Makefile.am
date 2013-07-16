@@ -76,6 +76,7 @@ check_PROGRAMS = \
 	exec-config-test \
 	generic_agent_test \
 	syntax_test \
+	sysinfo_test \
        ipaddress_test \
 	hashes_test 
 
@@ -102,9 +103,8 @@ csv_writer_test_LDADD = libtest.la libstr.la
 
 conversion_test_SOURCES = conversion_test.c ../../libpromises/conversion.c
 
-set_domainname_test_SOURCES = set_domainname_test.c \
-	../../libpromises/sysinfo.c
-set_domainname_test_LDADD = libstr.la ../../libutils/libutils.la
+set_domainname_test_SOURCES = set_domainname_test.c
+set_domainname_test_LDADD = libstr.la ../../libpromises/libpromises.la
 
 str_test_SOURCES = str_test.c
 str_test_LDADD = libstr.la
@@ -186,7 +186,7 @@ connection_management_test_LDADD = ../../libpromises/libpromises.la libtest.la
 
 rlist_test_SOURCES = rlist_test.c \
        ../../libpromises/rlist.c ../../libutils/logging.c
-rlist_test_LDADD = libtest.la libstr.la
+rlist_test_LDADD = libtest.la libstr.la ../../libpromises/libpromises.la
 
 if LINUX
 
@@ -231,3 +231,5 @@ process_terminate_unix_test_LDADD = libtest.la ../../libutils/libutils.la
 exec_config_test_SOURCES = exec-config-test.c \
 	../../cf-execd/exec-config.c
 exec_config_test_LDADD = libtest.la ../../libpromises/libpromises.la
+
+sysinfo_test_LDADD = ../../libpromises/libpromises.la libtest.la

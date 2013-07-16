@@ -29,8 +29,8 @@
 body common control
 
 {
-version => "1.2.3";
-bundlesequence  => { "parent"  };
+      version => "1.2.3";
+      bundlesequence  => { "parent"  };
 }
 
 ########################################################
@@ -38,22 +38,22 @@ bundlesequence  => { "parent"  };
 bundle agent parent
 
 {
-classes:
+  classes:
 
-  "parent_private" expression => "any";
+      "parent_private" expression => "any";
 
-methods:
+  methods:
 
-  "any" usebundle => child,
-          inherit => "true";
+      "any" usebundle => child,
+      inherit => "true";
 
-files:
+  files:
 
-   "/tmp/bla"
+      "/tmp/bla"
 
-         create => "true",
+      create => "true",
       edit_line => edit_child,
-  edit_defaults => inherit_all;
+      edit_defaults => inherit_all;
 
 }
 
@@ -62,15 +62,15 @@ files:
 bundle agent child
 
 {
-reports:
+  reports:
 
-  parent_private::
+    parent_private::
 
-    "Parent class is inherited";
+      "Parent class is inherited";
 
-  !parent_private::
+    !parent_private::
 
-    "Parent class is not inherited";
+      "Parent class is not inherited";
 
 }
 
@@ -78,15 +78,15 @@ reports:
 
 bundle edit_line edit_child
 {
-reports:
+  reports:
 
-  parent_private::
+    parent_private::
 
-    "Parent editclass is inherited";
+      "Parent editclass is inherited";
 
-  !parent_private::
+    !parent_private::
 
-    "Parent editclass is not inherited";
+      "Parent editclass is not inherited";
 
 }
 
@@ -94,5 +94,5 @@ reports:
 
 body edit_defaults inherit_all
 {
-inherit => "true";
+      inherit => "true";
 }

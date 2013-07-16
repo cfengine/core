@@ -428,9 +428,8 @@ const char *ExtractOuterCf3VarString(const char *str, char *substr)
 bool IsQualifiedVariable(const char *var)
 {
     int isarraykey = false;
-    char *sp;
 
-    for (sp = var; *sp != '\0'; sp++)
+    for (const char *sp = var; *sp != '\0'; sp++)
     {
         if (*sp == '[')
         {

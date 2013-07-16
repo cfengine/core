@@ -95,7 +95,7 @@ void ScopeNewSpecial(EvalContext *ctx, const char *ns, const char *varname, cons
             return;
         }
     }
-    fprintf(stderr, "${%s.%s} <- %s (%c)\n", ns, varname, value, type);  /* LCOV_EXCL_LINE */
+    fprintf(stderr, "${%s.%s} <- %s (%c)\n", ns, varname, (const char *)value, type);  /* LCOV_EXCL_LINE */
     fail();
 }
 

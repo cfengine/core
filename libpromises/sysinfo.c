@@ -341,7 +341,7 @@ void DiscoverVersion(EvalContext *ctx)
 void GetNameInfo3(EvalContext *ctx, AgentType agent_type)
 {
     int i, found = false;
-    char *sp, *w, workbuf[CF_BUFSIZE];
+    char *sp, workbuf[CF_BUFSIZE];
     time_t tloc;
     struct hostent *hp;
     struct sockaddr_in cin;

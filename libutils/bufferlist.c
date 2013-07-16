@@ -49,15 +49,13 @@ static void copy(const void *o, void **d)
 {
     Buffer *origin = (Buffer *)o;
     Buffer **destination = (Buffer **)d;
-    int result = 0;
-    result = BufferCopy(origin, destination);	
+    BufferCopy(origin, destination);
 }
 
 static void destroy(void *e)
 {
     Buffer *element = (Buffer *)e;
-    int result = 0;
-    result = BufferDestroy(&element);
+    BufferDestroy(&element);
 }
 
 BufferList *BufferListNew()

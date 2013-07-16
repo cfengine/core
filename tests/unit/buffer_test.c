@@ -216,7 +216,6 @@ static void test_appendBuffer(void)
     const char *element1pointer = NULL;
     char *element2 = (char *)xmalloc(2 * DEFAULT_BUFFER_SIZE + 2);
     unsigned int element2size = 2 * DEFAULT_BUFFER_SIZE + 1;
-    const char *element2pointer = NULL;
     char *element3 = (char *)xmalloc(DEFAULT_MEMORY_CAP * 2);
     unsigned int element3size = 2 * DEFAULT_MEMORY_CAP;
 
@@ -263,7 +262,6 @@ static void test_appendBuffer(void)
         element2[i] = 'a';
     element2[element2size] = '\0';
     assert_int_equal(element0size + element2size, BufferAppend(buffer, element2, element2size));
-    element2pointer = buffer->buffer;
     assert_int_equal(buffer->used, element0size + element2size);
     assert_int_equal(BufferSize(buffer), element0size + element2size);
     char *longAppend = NULL;

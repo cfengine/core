@@ -297,6 +297,9 @@ void VarRefSetMeta(VarRef ref, bool enabled)
             free(tmp);
         }
     }
+}
 
-
+bool VarRefIsQualified(VarRef ref)
+{
+    return ref.scope != NULL;
 }

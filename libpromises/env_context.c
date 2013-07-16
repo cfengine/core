@@ -55,26 +55,6 @@ static bool ABORTBUNDLE = false;
 /* Level                                                                     */
 /*****************************************************************************/
 
-static const char *StackFrameOwnerNamespace(const StackFrame *frame)
-{
-    switch (frame->type)
-    {
-    case STACK_FRAME_TYPE_BUNDLE:
-        return frame->data.bundle.owner->ns;
-
-    case STACK_FRAME_TYPE_BODY:
-        return frame->data.body.owner->ns;
-
-    case STACK_FRAME_TYPE_PROMISE:
-    case STACK_FRAME_TYPE_PROMISE_ITERATION:
-        return NULL;
-
-    default:
-        ProgrammingError("Unhandled stack frame type");
-    }
-}
-
-
 static const char *StackFrameOwnerName(const StackFrame *frame)
 {
     switch (frame->type)
@@ -1131,7 +1111,10 @@ void EvalContextStackPushBundleFrame(EvalContext *ctx, const Bundle *owner, bool
     assert(!LastStackFrame(ctx, 0) || LastStackFrame(ctx, 0)->type == STACK_FRAME_TYPE_PROMISE_ITERATION);
 
     EvalContextStackPushFrame(ctx, StackFrameNewBundle(owner, inherits_previous));
-    ScopeSetCurrent(owner->ns, owner->name);
+    if (!ScopeGet(owner->ns, owner->name))
+    {
+        ScopeNew(owner->ns, owner->name);
+    }
 }
 
 void EvalContextStackPushBodyFrame(EvalContext *ctx, const Body *owner)
@@ -1139,8 +1122,10 @@ void EvalContextStackPushBodyFrame(EvalContext *ctx, const Body *owner)
     assert((!LastStackFrame(ctx, 0) && strcmp("control", owner->name) == 0) || LastStackFrame(ctx, 0)->type == STACK_FRAME_TYPE_PROMISE);
 
     EvalContextStackPushFrame(ctx, StackFrameNewBody(owner));
-
-    ScopeSetCurrent(NULL, "body");
+    if (!ScopeGet(NULL, "body"))
+    {
+        ScopeNew(NULL, "body");
+    }
 }
 
 void EvalContextStackPushPromiseFrame(EvalContext *ctx, const Promise *owner)
@@ -1148,7 +1133,10 @@ void EvalContextStackPushPromiseFrame(EvalContext *ctx, const Promise *owner)
     assert(LastStackFrame(ctx, 0) && LastStackFrame(ctx, 0)->type == STACK_FRAME_TYPE_BUNDLE);
 
     EvalContextStackPushFrame(ctx, StackFrameNewPromise(owner));
-    ScopeSetCurrent(NULL, "this");
+    if (!ScopeGet(NULL, "this"))
+    {
+        ScopeNew(NULL, "this");
+    }
 }
 
 void EvalContextStackPushPromiseIterationFrame(EvalContext *ctx, const Promise *owner)
@@ -1156,19 +1144,16 @@ void EvalContextStackPushPromiseIterationFrame(EvalContext *ctx, const Promise *
     assert(LastStackFrame(ctx, 0) && LastStackFrame(ctx, 0)->type == STACK_FRAME_TYPE_PROMISE);
 
     EvalContextStackPushFrame(ctx, StackFrameNewPromiseIteration(owner));
-    ScopeSetCurrent(NULL, "this");
+    if (!ScopeGet(NULL, "this"))
+    {
+        ScopeNew(NULL, "this");
+    }
 }
 
 void EvalContextStackPopFrame(EvalContext *ctx)
 {
     assert(SeqLength(ctx->stack) > 0);
     SeqRemove(ctx->stack, SeqLength(ctx->stack) - 1);
-
-    StackFrame *last_frame = LastStackFrame(ctx, 0);
-    if (last_frame)
-    {
-        ScopeSetCurrent(StackFrameOwnerNamespace(last_frame), StackFrameOwnerName(last_frame));
-    }
 }
 
 StringSetIterator EvalContextStackFrameIteratorSoft(const EvalContext *ctx)
@@ -1303,14 +1288,15 @@ bool EvalContextVariablePut(EvalContext *ctx, VarRef lval, Rval rval, DataType t
         Rlist *listvars = NULL;
         Rlist *scalars = NULL; // TODO what do we do with scalars?
 
-        if (ScopeGetCurrent() && strcmp(ScopeGetCurrent()->scope, "this") != 0)
+        StackFrame *last_frame = LastStackFrame(ctx, 0);
+
+        if (last_frame && (last_frame->type != STACK_FRAME_TYPE_PROMISE && last_frame->type != STACK_FRAME_TYPE_PROMISE_ITERATION))
         {
             MapIteratorsFromRval(ctx, NULL, &listvars, &scalars, rval);
 
             if (listvars != NULL)
             {
-                Log(LOG_LEVEL_ERR, "Redefinition of variable '%s' (embedded list in RHS) in context '%s'",
-                      lval.lval, ScopeGetCurrent()->scope);
+                Log(LOG_LEVEL_ERR, "Redefinition of variable '%s' (embedded list in RHS)", lval.lval);
             }
 
             RlistDestroy(listvars);
@@ -1365,15 +1351,34 @@ bool EvalContextVariableGet(const EvalContext *ctx, VarRef lval, Rval *rval_out,
         return false;
     }
 
-
     Scope *get_scope = NULL;
-    if (lval.scope)
+    if (VarRefIsQualified(lval))
     {
         get_scope = ScopeGet(lval.ns, lval.scope);
     }
     else
     {
-        get_scope = ScopeGet(ScopeGetCurrent()->ns, ScopeGetCurrent()->scope);
+        StackFrame *last_frame = LastStackFrame(ctx, 0);
+        assert(last_frame && "Attempted to push unqualified variable to empty stack");
+
+        switch (last_frame->type)
+        {
+        case STACK_FRAME_TYPE_BODY:
+            get_scope = ScopeGet(NULL, "body");
+            break;
+
+        case STACK_FRAME_TYPE_BUNDLE:
+            {
+                const Bundle *bp = last_frame->data.bundle.owner;
+                get_scope = ScopeGet(bp->ns, bp->name);
+            }
+            break;
+
+        case STACK_FRAME_TYPE_PROMISE:
+        case STACK_FRAME_TYPE_PROMISE_ITERATION:
+            get_scope = ScopeGet(NULL, "this");
+            break;
+        }
     }
 
     if (!get_scope)
@@ -1394,7 +1399,6 @@ bool EvalContextVariableGet(const EvalContext *ctx, VarRef lval, Rval *rval_out,
     char *lookup_key = VarRefToString(lval, false);
     CfAssoc *assoc = HashLookupElement(get_scope->hashtable, lookup_key);
     free(lookup_key);
-
 
     if (!assoc)
     {

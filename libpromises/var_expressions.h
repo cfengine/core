@@ -60,4 +60,6 @@ VarRef VarRefDeMangle(const char *mangled_var_ref);
 
 void VarRefSetMeta(VarRef ref, bool enabled);
 
+bool VarRefIsQualified(VarRef ref);
+
 #endif

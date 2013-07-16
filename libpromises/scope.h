@@ -40,16 +40,6 @@ void ScopePutMatch(int index, const char *value);
 bool ScopeExists(const char *ns, const char *name);
 
 /**
- * @deprecated
- */
-void ScopeSetCurrent(const char *ns, const char *name);
-
-/**
- * @deprecated
- */
-Scope *ScopeGetCurrent(void);
-
-/**
  * @brief Clears all variables from a scope
  * @param name
  */

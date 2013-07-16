@@ -38,9 +38,6 @@
 #include "env_context.h"
 #include "audit.h"
 
-
-Scope *SCOPE_CURRENT = NULL;
-
 Scope *SCOPE_MATCH = NULL;
 
 /*******************************************************************/
@@ -162,22 +159,6 @@ Scope *ScopeGet(const char *ns, const char *scope)
 bool ScopeExists(const char *ns, const char *name)
 {
     return ScopeGet(ns, name) != NULL;
-}
-
-void ScopeSetCurrent(const char *ns, const char *name)
-{
-    Scope *scope = ScopeGet(ns, name);
-    if (!scope)
-    {
-        scope = ScopeNew(ns, name);
-    }
-
-    SCOPE_CURRENT = scope;
-}
-
-Scope *ScopeGetCurrent(void)
-{
-    return SCOPE_CURRENT;
 }
 
 void ScopeAugment(EvalContext *ctx, const Bundle *bp, const Promise *pp, const Rlist *arguments)
@@ -347,7 +328,6 @@ void ScopeDeleteAll()
     }
 
     VSCOPE = NULL;
-    SCOPE_CURRENT = NULL;
 
     ThreadUnlock(cft_vscope);
 }

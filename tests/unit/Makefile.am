@@ -78,7 +78,8 @@ check_PROGRAMS = \
 	syntax_test \
 	sysinfo_test \
        ipaddress_test \
-	hashes_test 
+	hashes_test \
+	rb-tree-test
 
 if HAVE_AVAHI_CLIENT
 if HAVE_AVAHI_COMMON

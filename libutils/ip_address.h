@@ -70,5 +70,12 @@ int IPAddressGetPort(IPAddress *address);
   @return 1 if both addresses are equal, 0 if they are not and -1 in case of error.
   */
 int IPAddressIsEqual(IPAddress *a, IPAddress *b);
+/**
+  @brief Checks if a given string is a properly formed IP Address.
+  @param source Buffer containing the string.
+  @param address Optional parameter. If given and not NULL then an IPAdress structure will be created from the string.
+  @return Returns true if the string is a valid IP Address and false if not. The address parameter is populated accordingly.
+  */
+bool IPAddress_IsIPAddress(Buffer *source, IPAddress **address);
 
 #endif // CFENGINE_IP_ADDRESS_H

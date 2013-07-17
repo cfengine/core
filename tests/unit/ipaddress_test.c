@@ -561,6 +561,98 @@ static void test_ipv6_address_comparison(void)
     assert_int_equal(IPAddressIsEqual(a, b), -1);
 }
 
+static void test_isipaddress(void)
+{
+    /*
+     * This test is just a summary of the other tests.
+     * We just check that this interface works accordingly, most of the
+     * functionality has already been tested.
+     * 1.2.3.4         -> ok
+     * 1.2..3          -> not
+     * 1.a.2.3         -> not
+     * 256.255.255.255 -> not
+     * 255.255.255.255 -> ok
+     * 1:0:0:0:0:0:0:1 -> ok
+     * 1:1:1:1:0:1:1:1 -> ok
+     * a:b:c:d:e:f:0:1 -> ok
+     * a:b:c:d:e:f:g:h -> not
+     * ffff:ffff:fffff:0:0:0:0:1 -> not
+     */
+    IPAddress *address = NULL;
+    Buffer *bufferAddress = NULL;
+
+    bufferAddress = BufferNew();
+    assert_true (bufferAddress != NULL);
+
+    BufferSet(bufferAddress, "1.2.3.4", strlen("1.2.3.4"));
+    assert_true(IPAddress_IsIPAddress(bufferAddress, NULL));
+    assert_true(IPAddress_IsIPAddress(bufferAddress, &address));
+    assert_true(address != NULL);
+    assert_int_equal(IPAddressType(address), IP_ADDRESS_TYPE_IPV4);
+    BufferZero(bufferAddress);
+    assert_int_equal(IPAddressDestroy(&address), 0);
+
+    BufferSet(bufferAddress, "1.2..3", strlen("1.2..3"));
+    assert_false(IPAddress_IsIPAddress(bufferAddress, NULL));
+    assert_false(IPAddress_IsIPAddress(bufferAddress, &address));
+    assert_true(address == NULL);
+    BufferZero(bufferAddress);
+
+    BufferSet(bufferAddress, "1.a.2.3", strlen("1.a.2.3"));
+    assert_false(IPAddress_IsIPAddress(bufferAddress, NULL));
+    assert_false(IPAddress_IsIPAddress(bufferAddress, &address));
+    assert_true(address == NULL);
+    BufferZero(bufferAddress);
+
+    BufferSet(bufferAddress, "256.255.255.255", strlen("256.255.255.255"));
+    assert_false(IPAddress_IsIPAddress(bufferAddress, NULL));
+    assert_false(IPAddress_IsIPAddress(bufferAddress, &address));
+    assert_true(address == NULL);
+    BufferZero(bufferAddress);
+
+    BufferSet(bufferAddress, "255.255.255.255", strlen("255.255.255.255"));
+    assert_true(IPAddress_IsIPAddress(bufferAddress, NULL));
+    assert_true(IPAddress_IsIPAddress(bufferAddress, &address));
+    assert_true(address != NULL);
+    assert_int_equal(IPAddressType(address), IP_ADDRESS_TYPE_IPV4);
+    BufferZero(bufferAddress);
+    assert_int_equal(IPAddressDestroy(&address), 0);
+
+    BufferSet(bufferAddress, "1:0:0:0:0:0:0:1", strlen("1:0:0:0:0:0:0:1"));
+    assert_true(IPAddress_IsIPAddress(bufferAddress, NULL));
+    assert_true(IPAddress_IsIPAddress(bufferAddress, &address));
+    assert_true(address != NULL);
+    assert_int_equal(IPAddressType(address), IP_ADDRESS_TYPE_IPV6);
+    BufferZero(bufferAddress);
+    assert_int_equal(IPAddressDestroy(&address), 0);
+
+    BufferSet(bufferAddress, "1:1:1:1:0:1:1:1", strlen("1:1:1:1:0:1:1:1"));
+    assert_true(IPAddress_IsIPAddress(bufferAddress, NULL));
+    assert_true(IPAddress_IsIPAddress(bufferAddress, &address));
+    assert_true(address != NULL);
+    assert_int_equal(IPAddressType(address), IP_ADDRESS_TYPE_IPV6);
+    BufferZero(bufferAddress);
+    assert_int_equal(IPAddressDestroy(&address), 0);
+
+    BufferSet(bufferAddress, "a:b:c:d:e:f:0:1", strlen("a:b:c:d:e:f:0:1"));
+    assert_true(IPAddress_IsIPAddress(bufferAddress, NULL));
+    assert_true(IPAddress_IsIPAddress(bufferAddress, &address));
+    assert_true(address != NULL);
+    assert_int_equal(IPAddressType(address), IP_ADDRESS_TYPE_IPV6);
+    BufferZero(bufferAddress);
+    assert_int_equal(IPAddressDestroy(&address), 0);
+
+    BufferSet(bufferAddress, "a:b:c:d:e:f:g:h", strlen("a:b:c:d:e:f:g:h"));
+    assert_false(IPAddress_IsIPAddress(bufferAddress, NULL));
+    assert_false(IPAddress_IsIPAddress(bufferAddress, &address));
+    BufferZero(bufferAddress);
+
+    BufferSet(bufferAddress, "ffff:ffff:fffff:0:0:0:0:1", strlen("ffff:ffff:fffff:0:0:0:0:1"));
+    assert_false(IPAddress_IsIPAddress(bufferAddress, NULL));
+    assert_false(IPAddress_IsIPAddress(bufferAddress, &address));
+    BufferZero(bufferAddress);
+}
+
 int main()
 {
     PRINT_TEST_BANNER();
@@ -572,6 +664,7 @@ int main()
         , unit_test(test_generic_interface)
         , unit_test(test_ipv4_address_comparison)
         , unit_test(test_ipv6_address_comparison)
+        , unit_test(test_isipaddress)
     };
 
     return run_tests(tests);

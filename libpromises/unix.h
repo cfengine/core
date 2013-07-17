@@ -30,8 +30,8 @@
 
 #include "assoc.h"
 
-void GetInterfacesInfo(EvalContext *ctx, AgentType ag);
-void GetInterfaceFlags(EvalContext *ctx, AgentType ag, struct ifreq *ifr, Rlist **hw_flags);
+void GetInterfacesInfo(EvalContext *ctx);
+void GetInterfaceFlags(EvalContext *ctx, struct ifreq *ifr, Rlist **hw_flags);
 void ProcessSignalTerminate(pid_t pid);
 
 #endif

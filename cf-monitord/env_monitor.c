@@ -1139,7 +1139,7 @@ static void GatherPromisedMeasures(EvalContext *ctx, const Policy *policy)
 
     ScopeDeleteAll();
     GetNameInfo3(ctx, AGENT_TYPE_MONITOR);
-    GetInterfacesInfo(ctx, AGENT_TYPE_MONITOR);
+    GetInterfacesInfo(ctx);
     Get3Environment(ctx, AGENT_TYPE_MONITOR);
     OSClasses(ctx);
     BuiltinClasses(ctx);

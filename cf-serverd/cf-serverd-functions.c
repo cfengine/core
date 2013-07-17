@@ -593,7 +593,7 @@ void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *con
             }
 
             GetNameInfo3(ctx, AGENT_TYPE_SERVER);
-            GetInterfacesInfo(ctx, AGENT_TYPE_SERVER);
+            GetInterfacesInfo(ctx);
             Get3Environment(ctx, AGENT_TYPE_SERVER);
             BuiltinClasses(ctx);
             OSClasses(ctx);

@@ -1375,10 +1375,10 @@ bool EvalContextVariablePut(EvalContext *ctx, VarRef lval, Rval rval, DataType t
     CfAssoc *assoc = HashLookupElement(put_scope->hashtable, final_lval);
     if (assoc)
     {
-        if (CompareVariableValue(rval, assoc) != 0)
+        if (CompareVariableValue(rval, assoc->rval) != 0)
         {
             /* Different value, bark and replace */
-            if (!UnresolvedVariables(assoc, rval.type))
+            if (!UnresolvedVariables(assoc->rval, rval.type))
             {
                 Log(LOG_LEVEL_DEBUG, "Replaced value of variable '%s' in scope '%s'", lval.lval, put_scope->scope);
             }

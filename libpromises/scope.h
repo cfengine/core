@@ -28,7 +28,6 @@
 #include "cf3.defs.h"
 
 #include "var_expressions.h"
-#include "assoc.h"
 
 /**
  * @deprecated
@@ -92,8 +91,8 @@ void ScopeDeRefListsInHashtable(const char *ns, char *scope, Rlist *list, Rlist 
 
 int ScopeMapBodyArgs(EvalContext *ctx, const char *ns, const char *scope, Rlist *give, const Rlist *take);
 
-int CompareVariableValue(Rval rval, CfAssoc *ap);
-bool UnresolvedVariables(const CfAssoc *ap, RvalType rtype);
+int CompareVariableValue(Rval a, Rval b);
+bool UnresolvedVariables(Rval rval, RvalType rtype);
 
 // TODO: namespacing utility functions. there are probably a lot of these floating around, but probably best
 // leave them until we get a proper symbol table

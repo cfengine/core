@@ -99,14 +99,14 @@ void ScopePutMatch(int index, const char *value)
 
     if (assoc)
     {
-        if (CompareVariableValue(rval, assoc) == 0)
+        if (CompareVariableValue(rval, assoc->rval) == 0)
         {
             /* Identical value, keep as is */
         }
         else
         {
             /* Different value, bark and replace */
-            if (!UnresolvedVariables(assoc, RVAL_TYPE_SCALAR))
+            if (!UnresolvedVariables(assoc->rval, RVAL_TYPE_SCALAR))
             {
                 Log(LOG_LEVEL_INFO, "Duplicate selection of value for variable '%s' in scope '%s'", lval, ptr->scope);
             }
@@ -526,26 +526,26 @@ void ScopeDeleteVariable(const char *ns, const char *scope, const char *id)
 
 /*******************************************************************/
 
-int CompareVariableValue(Rval rval, CfAssoc *ap)
+int CompareVariableValue(Rval a, Rval b)
 {
     const Rlist *list, *rp;
 
-    if (ap == NULL || rval.item == NULL)
+    if (!a.item || !b.item)
     {
         return 1;
     }
 
-    switch (rval.type)
+    switch (a.type)
     {
     case RVAL_TYPE_SCALAR:
-        return strcmp(ap->rval.item, rval.item);
+        return strcmp(b.item, a.item);
 
     case RVAL_TYPE_LIST:
-        list = (const Rlist *) rval.item;
+        list = (const Rlist *) a.item;
 
         for (rp = list; rp != NULL; rp = rp->next)
         {
-            if (!CompareVariableValue((Rval) {rp->item, rp->type}, ap))
+            if (!CompareVariableValue((Rval) {rp->item, rp->type}, b))
             {
                 return -1;
             }
@@ -557,24 +557,19 @@ int CompareVariableValue(Rval rval, CfAssoc *ap)
         return 0;
     }
 
-    return strcmp(ap->rval.item, rval.item);
+    return strcmp(b.item, a.item);
 }
 
-bool UnresolvedVariables(const CfAssoc *ap, RvalType rtype)
+bool UnresolvedVariables(Rval rval, RvalType rtype)
 {
-    if (ap == NULL)
-    {
-        return false;
-    }
-
     switch (rtype)
     {
     case RVAL_TYPE_SCALAR:
-        return IsCf3VarString(ap->rval.item);
+        return IsCf3VarString(rval.item);
 
     case RVAL_TYPE_LIST:
         {
-            for (const Rlist *rp = ap->rval.item; rp != NULL; rp = rp->next)
+            for (const Rlist *rp = rval.item; rp != NULL; rp = rp->next)
             {
                 if (IsCf3VarString(rp->item))
                 {

@@ -146,9 +146,7 @@ void ExpandPromise(EvalContext *ctx, Promise *pp, PromiseActuator *ActOnPromise,
     CopyLocalizedIteratorsToBundleScope(ctx, PromiseGetBundle(pp), listvars);
     CopyLocalizedScalarsToBundleScope(ctx, PromiseGetBundle(pp), scalars);
 
-    ScopePushThis();
     ExpandPromiseAndDo(ctx, pcopy, listvars, ActOnPromise, param);
-    ScopePopThis();
 
     PromiseDestroy(pcopy);
     RlistDestroy(listvars);

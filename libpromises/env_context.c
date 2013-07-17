@@ -1169,6 +1169,8 @@ void EvalContextStackPushPromiseFrame(EvalContext *ctx, const Promise *owner)
     {
         ScopeNew(NULL, "this");
     }
+
+    ScopePushThis();
 }
 
 void EvalContextStackPushPromiseIterationFrame(EvalContext *ctx, const Promise *owner)
@@ -1199,6 +1201,9 @@ void EvalContextStackPopFrame(EvalContext *ctx)
             }
         }
         break;
+
+    case STACK_FRAME_TYPE_PROMISE:
+        ScopePopThis();
 
     default:
         break;

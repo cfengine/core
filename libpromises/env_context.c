@@ -1149,7 +1149,7 @@ void EvalContextStackPushBundleFrame(EvalContext *ctx, const Bundle *owner, cons
     }
 }
 
-void EvalContextStackPushBodyFrame(EvalContext *ctx, const Body *owner)
+void EvalContextStackPushBodyFrame(EvalContext *ctx, const Body *owner, Rlist *args)
 {
     assert((!LastStackFrame(ctx, 0) && strcmp("control", owner->name) == 0) || LastStackFrame(ctx, 0)->type == STACK_FRAME_TYPE_PROMISE);
 
@@ -1157,6 +1157,15 @@ void EvalContextStackPushBodyFrame(EvalContext *ctx, const Body *owner)
     if (!ScopeGet(NULL, "body"))
     {
         ScopeNew(NULL, "body");
+    }
+
+    if (!ScopeMapBodyArgs(ctx, NULL, "body", args, owner->args))
+    {
+        const Promise *caller = EvalContextStackGetTopPromise(ctx);
+
+        Log(LOG_LEVEL_ERR,
+            "Number of arguments does not match for body reference '%s' in promise at line %zu of file '%s'",
+              owner->name, caller->offset.line, PromiseGetBundle(caller)->source_path);
     }
 }
 

@@ -172,7 +172,7 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
 
         if (bp)
         {
-            EvalContextStackPushBodyFrame(ctx, bp);
+            EvalContextStackPushBodyFrame(ctx, bp, fp ? fp->args : NULL);
 
             if (strcmp(bp->type, cp->lval) != 0)
             {
@@ -195,13 +195,6 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
                 if (fp == NULL || fp->args == NULL)
                 {
                     Log(LOG_LEVEL_ERR, "Argument mismatch for body reference '%s' in promise at line %zu of file '%s'",
-                          body_name, pp->offset.line, PromiseGetBundle(pp)->source_path);
-                }
-
-                if (fp && bp && fp->args && bp->args && !ScopeMapBodyArgs(ctx, NULL, "body", fp->args, bp->args))
-                {
-                    Log(LOG_LEVEL_ERR,
-                        "Number of arguments does not match for body reference '%s' in promise at line %zu of file '%s'",
                           body_name, pp->offset.line, PromiseGetBundle(pp)->source_path);
                 }
 

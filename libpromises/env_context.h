@@ -136,7 +136,7 @@ StringSetIterator EvalContextHeapIteratorNegated(const EvalContext *ctx);
 StringSetIterator EvalContextStackFrameIteratorSoft(const EvalContext *ctx);
 
 void EvalContextStackPushBundleFrame(EvalContext *ctx, const Bundle *owner, const Rlist *args, bool inherits_previous);
-void EvalContextStackPushBodyFrame(EvalContext *ctx, const Body *owner);
+void EvalContextStackPushBodyFrame(EvalContext *ctx, const Body *owner, Rlist *args);
 void EvalContextStackPushPromiseFrame(EvalContext *ctx, const Promise *owner);
 void EvalContextStackPushPromiseIterationFrame(EvalContext *ctx, const Promise *owner);
 void EvalContextStackPopFrame(EvalContext *ctx);

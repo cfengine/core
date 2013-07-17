@@ -1114,7 +1114,6 @@ AC_CONFIG_FILES([Makefile
     cf-agent/Makefile
     cf-promises/Makefile
     cf-execd/Makefile
-    cf-gendoc/Makefile
     cf-key/Makefile
     cf-monitord/Makefile
     cf-runagent/Makefile

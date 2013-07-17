@@ -76,8 +76,6 @@ cf-runagent/cf-runagent
 cf-runagent/cf-runagent.exe
 cf-serverd/cf-serverd
 cf-serverd/cf-serverd.exe
-cf-gendoc/cf-gendoc
-cf-gendoc/cf-gendoc.exe
 ext/rpmvercmp
 
 # autogen

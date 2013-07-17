@@ -133,7 +133,7 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
     EvalContextHeapAddHard(ctx, CF_AGENTTYPES[config->agent_type]);
 
     GetNameInfo3(ctx, config->agent_type);
-    GetInterfacesInfo(ctx, config->agent_type);
+    GetInterfacesInfo(ctx);
 
     Get3Environment(ctx, config->agent_type);
     BuiltinClasses(ctx);
@@ -1304,10 +1304,9 @@ static void VerifyPromises(EvalContext *ctx, Policy *policy, GenericAgentConfig 
     // TODO: need to move this inside PolicyCheckRunnable eventually.
     if (!config->bundlesequence && config->check_runnable)
     {
-        // only verify policy-defined bundlesequence for cf-agent, cf-promises, cf-gendoc
+        // only verify policy-defined bundlesequence for cf-agent, cf-promises
         if ((config->agent_type == AGENT_TYPE_AGENT) ||
-            (config->agent_type == AGENT_TYPE_COMMON) ||
-            (config->agent_type == AGENT_TYPE_GENDOC))
+            (config->agent_type == AGENT_TYPE_COMMON))
         {
             if (!VerifyBundleSequence(ctx, policy, config))
             {

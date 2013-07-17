@@ -320,19 +320,12 @@ static bool IgnoreJailInterface(
 
 /******************************************************************/
 
-static void GetMacAddress(EvalContext *ctx, AgentType ag, int fd, struct ifreq *ifr, struct ifreq *ifp, Rlist **interfaces,
+static void GetMacAddress(EvalContext *ctx, int fd, struct ifreq *ifr, struct ifreq *ifp, Rlist **interfaces,
                           Rlist **hardware)
 {
     char name[CF_MAXVARSIZE];
 
-    if (ag != AGENT_TYPE_GENDOC)
-    {
-        snprintf(name, sizeof(name), "hardware_mac[%s]", ifp->ifr_name);
-    }
-    else
-    {
-        snprintf(name, sizeof(name), "hardware_mac[interface_name]");
-    }
+    snprintf(name, sizeof(name), "hardware_mac[%s]", ifp->ifr_name);
 
     // mac address on a loopback interface doesn't make sense
     if (ifr->ifr_flags & IFF_LOOPBACK)
@@ -416,20 +409,13 @@ static void GetMacAddress(EvalContext *ctx, AgentType ag, int fd, struct ifreq *
 
 /******************************************************************/
 
-void GetInterfaceFlags(EvalContext *ctx, AgentType ag, struct ifreq *ifr, Rlist **flags)
+void GetInterfaceFlags(EvalContext *ctx, struct ifreq *ifr, Rlist **flags)
 {
     char name[CF_MAXVARSIZE];
     char buffer[CF_BUFSIZE] = "";
     char *fp = NULL;
 
-    if (ag != AGENT_TYPE_GENDOC)
-    {
-        snprintf(name, sizeof(name), "interface_flags[%s]", ifr->ifr_name);
-    }
-    else
-    {
-        snprintf(name, sizeof(name), "interface_flags[interface_name]");
-    }
+    snprintf(name, sizeof(name), "interface_flags[%s]", ifr->ifr_name);
 
     if (ifr->ifr_flags & IFF_UP) strcat(buffer, " up");
     if (ifr->ifr_flags & IFF_BROADCAST) strcat(buffer, " broadcast");
@@ -459,7 +445,7 @@ void GetInterfaceFlags(EvalContext *ctx, AgentType ag, struct ifreq *ifr, Rlist 
 
 /******************************************************************/
 
-void GetInterfacesInfo(EvalContext *ctx, AgentType ag)
+void GetInterfacesInfo(EvalContext *ctx)
 {
     bool address_set = false;
     int fd, len, i, j;
@@ -559,7 +545,7 @@ void GetInterfacesInfo(EvalContext *ctx, AgentType ag)
             }
             else
             {
-              GetInterfaceFlags(ctx, ag, &ifr, &flags);
+              GetInterfaceFlags(ctx, &ifr, &flags);
             }
 
             if (ifr.ifr_flags & IFF_UP)
@@ -679,14 +665,7 @@ void GetInterfacesInfo(EvalContext *ctx, AgentType ag)
 
                 strcpy(ip, txtaddr);
 
-                if (ag != AGENT_TYPE_GENDOC)
-                {
-                    snprintf(name, sizeof(name), "ipv4[%s]", CanonifyName(ifp->ifr_name));
-                }
-                else
-                {
-                    snprintf(name, sizeof(name), "ipv4[interface_name]");
-                }
+                snprintf(name, sizeof(name), "ipv4[%s]", CanonifyName(ifp->ifr_name));
 
                 ScopeNewSpecial(ctx, "sys", name, ip, DATA_TYPE_STRING);
 
@@ -698,14 +677,7 @@ void GetInterfacesInfo(EvalContext *ctx, AgentType ag)
                     {
                         *sp = '\0';
 
-                        if (ag != AGENT_TYPE_GENDOC)
-                        {
-                            snprintf(name, sizeof(name), "ipv4_%d[%s]", i--, CanonifyName(ifp->ifr_name));
-                        }
-                        else
-                        {
-                            snprintf(name, sizeof(name), "ipv4_%d[interface_name]", i--);
-                        }
+                        snprintf(name, sizeof(name), "ipv4_%d[%s]", i--, CanonifyName(ifp->ifr_name));
 
                         ScopeNewSpecial(ctx, "sys", name, ip, DATA_TYPE_STRING);
                     }
@@ -713,7 +685,7 @@ void GetInterfacesInfo(EvalContext *ctx, AgentType ag)
             }
 
             // Set the hardware/mac address array
-            GetMacAddress(ctx, ag, fd, &ifr, ifp, &interfaces, &hardware);
+            GetMacAddress(ctx, fd, &ifr, ifp, &interfaces, &hardware);
         }
     }
 

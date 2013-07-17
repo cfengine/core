@@ -9,7 +9,6 @@ body common control
 {
 
       bundlesequence => {
-			  "libs",
 			  # Common bundles first for best practice 
 			  "def",
 

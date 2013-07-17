@@ -81,8 +81,6 @@ void ScopePushThis(void);
  */
 void ScopePopThis(void);
 
-
-void ScopeToList(Scope *sp, Rlist **list);
 void ScopeNewSpecial(EvalContext *ctx, const char *scope, const char *lval, const void *rval, DataType dt);
 void ScopeDeleteScalar(VarRef lval);
 void ScopeDeleteSpecial(const char *scope, const char *lval);

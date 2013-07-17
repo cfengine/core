@@ -58,10 +58,6 @@ void HashCopy(AssocHashTable *newhash, AssocHashTable *oldhash);
 /* Destroy hash table */
 void HashFree(AssocHashTable *hashtable);
 
-/* HashToList */
-void ScopeToList(Scope *sp, Rlist **list);
-
-
 /*
  * Disposable iterator over hash table. Does not require deinitialization.
  */

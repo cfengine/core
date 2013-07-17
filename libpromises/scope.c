@@ -432,22 +432,6 @@ void ScopePopThis()
     }
 }
 
-void ScopeToList(Scope *sp, Rlist **list)
-{
-    if (sp == NULL)
-    {
-        return;
-    }
-
-    AssocHashTableIterator i = HashIteratorInit(sp->hashtable);
-    CfAssoc *assoc;
-
-    while ((assoc = HashIteratorNext(&i)))
-    {
-        RlistPrependScalar(list, assoc->lval);
-    }
-}
-
 bool ScopeIsReserved(const char *scope)
 {
     return strcmp("const", scope) == 0

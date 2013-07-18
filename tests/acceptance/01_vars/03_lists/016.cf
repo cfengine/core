@@ -1,0 +1,56 @@
+##############################################################################
+#
+# Redmine #2936: Check that list variables under reserved scope expand
+# as they should. The initial bug report was for reports promises only,
+# but here we check it for files promises.
+#
+##############################################################################
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+
+bundle agent init
+{
+# TODO delete the testfile
+}
+
+
+bundle agent test
+{
+files:
+  "$(G.testfile).actual"
+    create => "true",
+    edit_defaults => init_empty,
+    edit_line => test_insert_macs;
+}
+
+body edit_defaults init_empty
+{
+        empty_file_before_editing => "true";
+}
+
+bundle edit_line test_insert_macs
+{
+insert_lines:
+  "$(sys.hardware_addresses)";
+}
+
+
+bundle agent check
+{
+# If the file contains the string "sys.hardware_addresses" then we
+# failed to expand the variable!
+classes:
+  "ok" not => regline(".*sys\.hardware_addresses.*", "$(G.testfile).actual");
+
+reports:
+  ok::
+    "$(this.promise_filename) Pass";
+  !ok::
+    "$(this.promise_filename) FAIL";
+}

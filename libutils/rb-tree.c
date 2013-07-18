@@ -76,6 +76,18 @@ static void NodeDestroy_(RBTree *tree, RBNode *node)
     }
 }
 
+static void Reset_(RBTree *tree)
+{
+    tree->nil->key = tree->nil->value = NULL;
+    tree->nil->red = false;
+    tree->nil->parent = tree->nil->left = tree->nil->right = tree->nil;
+
+    tree->root->key = tree->root->value = NULL;
+    tree->root->red = false;
+    tree->root->parent = tree->root->left = tree->root->right = tree->nil;
+
+    tree->size = 0;
+}
 
 RBTree *RBTreeNew(void *(*KeyCopy)(const void *key),
                   int (*KeyCompare)(const void *a, const void *b),
@@ -98,16 +110,9 @@ RBTree *RBTreeNew(void *(*KeyCopy)(const void *key),
     t->ValueDestroy = ValueDestroy ? ValueDestroy : NoopDestroy_;
 
     t->nil = xcalloc(1, sizeof(RBNode));
-    t->nil->key = t->nil->value = NULL;
-    t->nil->red = false;
-    t->nil->parent = t->nil->left = t->nil->right = t->nil;
-
     t->root = xcalloc(1, sizeof(RBNode));
-    t->root->key = t->root->value = NULL;
-    t->root->red = false;
-    t->root->parent = t->root->left = t->root->right = t->nil;
 
-    t->size = 0;
+    Reset_(t);
 
     return t;
 }
@@ -560,6 +565,9 @@ void RBTreeClear(RBTree *tree)
     assert(tree);
 
     ClearRecursive_(tree, tree->root);
+    tree->root = xcalloc(1, sizeof(RBNode));
+
+    Reset_(tree);
 }
 
 size_t RBTreeSize(const RBTree *tree)

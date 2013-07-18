@@ -153,6 +153,35 @@ static void test_put_remove_random(void)
     RBTreeDestroy(t);
 }
 
+static void test_clear(void)
+{
+    RBTree *t = IntTreeNew_();
+    for (int i = 0; i < 20000; i++)
+    {
+        RBTreePut(t, &i, &i);
+    }
+
+    int k = 5;
+
+    assert_true(RBTreeGet(t, &k) != NULL);
+    assert_int_equal(20000, RBTreeSize(t));
+
+    RBTreeClear(t);
+
+    assert_true(RBTreeGet(t, &k) == NULL);
+    assert_int_equal(0, RBTreeSize(t));
+
+    for (int i = 0; i < 20000; i++)
+    {
+        RBTreePut(t, &i, &i);
+    }
+
+    assert_true(RBTreeGet(t, &k) != NULL);
+    assert_int_equal(20000, RBTreeSize(t));
+
+    RBTreeDestroy(t);
+}
+
 
 int main()
 {
@@ -163,7 +192,8 @@ int main()
         unit_test(test_put_remove),
         unit_test(test_put_remove_inorder),
         unit_test(test_iterate),
-        unit_test(test_put_remove_random)
+        unit_test(test_put_remove_random),
+        unit_test(test_clear),
     };
 
     PRINT_TEST_BANNER();

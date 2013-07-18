@@ -39,6 +39,8 @@ typedef struct
     size_t num_indices;
 } VarRef;
 
+VarRef *VarRefCopy(const VarRef *ref);
+
 VarRef *VarRefParse(const char *var_ref_string);
 
 /**
@@ -60,5 +62,6 @@ VarRef *VarRefDeMangle(const char *mangled_var_ref);
 void VarRefSetMeta(VarRef *ref, bool enabled);
 
 bool VarRefIsQualified(const VarRef *ref);
+int VarRefCompare(const VarRef *a, const VarRef *b);
 
 #endif

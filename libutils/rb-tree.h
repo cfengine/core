@@ -6,12 +6,19 @@
 typedef struct RBTree_ RBTree;
 typedef struct RBTreeIterator_ RBTreeIterator;
 
-RBTree *RBTreeNew(void *(*KeyCopy)(const void *key),
-                   int (*KeyCompare)(const void *a, const void *b),
-                   void (*KeyDestroy)(void *key),
-                   void *(*ValueCopy)(const void *key),
-                   int (*ValueCompare)(const void *a, const void *b),
-                   void (*ValueDestroy)(void *key));
+typedef void *RBTreeKeyCopyFn(const void *key);
+typedef int RBTreeKeyCompareFn(const void *a, const void *b);
+typedef void RBTreeKeyDestroyFn(void *key);
+typedef void *RBTreeValueCopyFn(const void *key);
+typedef int RBTreeValueCompareFn(const void *a, const void *b);
+typedef void RBTreeValueDestroyFn(void *key);
+
+RBTree *RBTreeNew(RBTreeKeyCopyFn *key_copy,
+                  RBTreeKeyCompareFn *key_compare,
+                  RBTreeKeyDestroyFn *key_destroy,
+                  RBTreeValueCopyFn *value_copy,
+                  RBTreeValueCompareFn *value_compare,
+                  RBTreeValueDestroyFn *value_destroy);
 
 bool RBTreeEqual(const void *a, const void *b);
 

@@ -1412,10 +1412,14 @@ static void CheckControlPromises(EvalContext *ctx, GenericAgentConfig *config, c
 
         ScopeDeleteVariable(NULL, scope, cp->lval);
 
-        if (!EvalContextVariablePut(ctx, (VarRef) { NULL, scope, cp->lval }, returnval, ConstraintSyntaxGetDataType(body_syntax, cp->lval)))
+        VarRef *ref = VarRefParseFromScope(cp->lval, scope);
+
+        if (!EvalContextVariablePut(ctx, ref, returnval, ConstraintSyntaxGetDataType(body_syntax, cp->lval)))
         {
             Log(LOG_LEVEL_ERR, "Rule from %s at/before line %zu", control_body->source_path, cp->offset.line);
         }
+
+        VarRefDestroy(ref);
 
         if (strcmp(cp->lval, CFG_CONTROLBODY[COMMON_CONTROL_OUTPUT_PREFIX].lval) == 0)
         {

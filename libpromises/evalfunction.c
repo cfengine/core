@@ -1097,7 +1097,7 @@ static FnCallResult FnCallRegList(EvalContext *ctx, FnCall *fp, Rlist *finalargs
     char naked[CF_MAXVARSIZE] = "";
     GetNaked(naked, listvar);
 
-    VarRef ref = VarRefParse(naked);
+    VarRef *ref = VarRefParse(naked);
 
     Rval retval;
     if (!EvalContextVariableGet(ctx, ref, &retval, NULL))
@@ -1145,20 +1145,16 @@ static FnCallResult FnCallRegArray(EvalContext *ctx, FnCall *fp, Rlist *finalarg
     AssocHashTableIterator i;
     CfAssoc *assoc;
 
-/* begin fn specific content */
-
     char *arrayname = RlistScalarValue(finalargs);
     char *regex = RlistScalarValue(finalargs->next);
 
-/* Locate the array */
+    VarRef *ref = VarRefParse(arrayname);
 
-    VarRef var = VarRefParse(arrayname);
-
-    if ((ptr = ScopeGet(var.ns, var.scope)) == NULL)
+    if ((ptr = ScopeGet(ref->ns, ref->scope)) == NULL)
     {
         Log(LOG_LEVEL_VERBOSE, "Function regarray was promised an array called '%s' but this was not found",
               arrayname);
-        VarRefDestroy(var);
+        VarRefDestroy(ref);
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
@@ -1168,7 +1164,7 @@ static FnCallResult FnCallRegArray(EvalContext *ctx, FnCall *fp, Rlist *finalarg
 
     while ((assoc = HashIteratorNext(&i)))
     {
-        snprintf(match, CF_MAXVARSIZE, "%s[", var.lval);
+        snprintf(match, CF_MAXVARSIZE, "%s[", ref->lval);
         if (strncmp(match, assoc->lval, strlen(match)) == 0)
         {
             if (FullTextMatch(regex, assoc->rval.item))
@@ -1179,7 +1175,7 @@ static FnCallResult FnCallRegArray(EvalContext *ctx, FnCall *fp, Rlist *finalarg
         }
     }
 
-    VarRefDestroy(var);
+    VarRefDestroy(ref);
 
     return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), RVAL_TYPE_SCALAR } };
 }
@@ -1193,15 +1189,15 @@ static FnCallResult FnCallGetIndices(EvalContext *ctx, FnCall *fp, Rlist *finala
     AssocHashTableIterator i;
     CfAssoc *assoc;
 
-    VarRef ref = VarRefParseFromBundle(RlistScalarValue(finalargs), PromiseGetBundle(fp->caller));
+    VarRef *ref = VarRefParseFromBundle(RlistScalarValue(finalargs), PromiseGetBundle(fp->caller));
 
-    Scope *scope = ScopeGet(ref.ns, ref.scope);
+    Scope *scope = ScopeGet(ref->ns, ref->scope);
 
     if (!scope)
     {
         Log(LOG_LEVEL_VERBOSE,
-            "Function getindices was promised an array called '%s' in scope '%s' but this was not found", ref.lval,
-              ref.scope);
+            "Function getindices was promised an array called '%s' in scope '%s' but this was not found", ref->lval,
+              ref->scope);
         VarRefDestroy(ref);
         RlistAppendScalarIdemp(&returnlist, CF_NULL_VALUE);
         return (FnCallResult) { FNCALL_SUCCESS, { returnlist, RVAL_TYPE_LIST } };
@@ -1211,7 +1207,7 @@ static FnCallResult FnCallGetIndices(EvalContext *ctx, FnCall *fp, Rlist *finala
 
     while ((assoc = HashIteratorNext(&i)))
     {
-        snprintf(match, CF_MAXVARSIZE - 1, "%.127s[", ref.lval);
+        snprintf(match, CF_MAXVARSIZE - 1, "%.127s[", ref->lval);
 
         if (strncmp(match, assoc->lval, strlen(match)) == 0)
         {
@@ -1254,15 +1250,15 @@ static FnCallResult FnCallGetValues(EvalContext *ctx, FnCall *fp, Rlist *finalar
     AssocHashTableIterator i;
     CfAssoc *assoc;
 
-    VarRef ref = VarRefParseFromBundle(RlistScalarValue(finalargs), PromiseGetBundle(fp->caller));
+    VarRef *ref = VarRefParseFromBundle(RlistScalarValue(finalargs), PromiseGetBundle(fp->caller));
 
-    Scope *scope = ScopeGet(ref.ns, ref.scope);
+    Scope *scope = ScopeGet(ref->ns, ref->scope);
 
     if (!scope)
     {
         Log(LOG_LEVEL_VERBOSE,
-            "Function getvalues was promised an array called '%s' in scope '%s' but this was not found", ref.lval,
-              ref.scope);
+            "Function getvalues was promised an array called '%s' in scope '%s' but this was not found", ref->lval,
+              ref->scope);
         VarRefDestroy(ref);
         RlistAppendScalarIdemp(&returnlist, CF_NULL_VALUE);
         return (FnCallResult) { FNCALL_SUCCESS, { returnlist, RVAL_TYPE_LIST } };
@@ -1272,7 +1268,7 @@ static FnCallResult FnCallGetValues(EvalContext *ctx, FnCall *fp, Rlist *finalar
 
     while ((assoc = HashIteratorNext(&i)))
     {
-        snprintf(match, CF_MAXVARSIZE - 1, "%.127s[", ref.lval);
+        snprintf(match, CF_MAXVARSIZE - 1, "%.127s[", ref->lval);
 
         if (strncmp(match, assoc->lval, strlen(match)) == 0)
         {
@@ -1326,18 +1322,18 @@ static FnCallResult FnCallSum(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
     Rval rval2;
     double sum = 0;
 
-    VarRef ref = VarRefParse(RlistScalarValue(finalargs));
+    VarRef *ref = VarRefParse(RlistScalarValue(finalargs));
 
     if (!EvalContextVariableGet(ctx, ref, &rval2, NULL))
     {
-        Log(LOG_LEVEL_VERBOSE, "Function sum was promised a list called '%s' but this was not found", ref.lval);
+        Log(LOG_LEVEL_VERBOSE, "Function sum was promised a list called '%s' but this was not found", ref->lval);
         VarRefDestroy(ref);
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
     if (rval2.type != RVAL_TYPE_LIST)
     {
-        Log(LOG_LEVEL_VERBOSE, "Function sum was promised a list called '%s' but this was not found", ref.lval);
+        Log(LOG_LEVEL_VERBOSE, "Function sum was promised a list called '%s' but this was not found", ref->lval);
         VarRefDestroy(ref);
         return (FnCallResult) { FNCALL_FAILURE };
     }
@@ -1370,18 +1366,18 @@ static FnCallResult FnCallProduct(EvalContext *ctx, FnCall *fp, Rlist *finalargs
     Rval rval2;
     double product = 1.0;
 
-    VarRef ref = VarRefParse(RlistScalarValue(finalargs));
+    VarRef *ref = VarRefParse(RlistScalarValue(finalargs));
 
     if (!EvalContextVariableGet(ctx, ref, &rval2, NULL))
     {
-        Log(LOG_LEVEL_VERBOSE, "Function 'product' was promised a list called '%s' but this was not found", ref.lval);
+        Log(LOG_LEVEL_VERBOSE, "Function 'product' was promised a list called '%s' but this was not found", ref->lval);
         VarRefDestroy(ref);
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
     if (rval2.type != RVAL_TYPE_LIST)
     {
-        Log(LOG_LEVEL_VERBOSE, "Function 'product' was promised a list called '%s' but this was not found", ref.lval);
+        Log(LOG_LEVEL_VERBOSE, "Function 'product' was promised a list called '%s' but this was not found", ref->lval);
         VarRefDestroy(ref);
         return (FnCallResult) { FNCALL_FAILURE };
     }
@@ -1415,18 +1411,18 @@ static FnCallResult FnCallJoin(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
     int size = 0;
 
     const char *join = RlistScalarValue(finalargs);
-    VarRef ref = VarRefParse(RlistScalarValue(finalargs->next));
+    VarRef *ref = VarRefParse(RlistScalarValue(finalargs->next));
 
     if (!EvalContextVariableGet(ctx, ref, &rval2, NULL))
     {
-        Log(LOG_LEVEL_VERBOSE, "Function 'join' was promised a list called '%s.%s' but this was not (yet) found", ref.scope, ref.lval);
+        Log(LOG_LEVEL_VERBOSE, "Function 'join' was promised a list called '%s.%s' but this was not (yet) found", ref->scope, ref->lval);
         VarRefDestroy(ref);
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
     if (rval2.type != RVAL_TYPE_LIST)
     {
-        Log(LOG_LEVEL_VERBOSE, "Function 'join' was promised a list called '%s' but this was not (yet) found", ref.lval);
+        Log(LOG_LEVEL_VERBOSE, "Function 'join' was promised a list called '%s' but this was not (yet) found", ref->lval);
         VarRefDestroy(ref);
         return (FnCallResult) { FNCALL_FAILURE };
     }
@@ -1524,7 +1520,9 @@ static FnCallResult FnCallGetFields(EvalContext *ctx, FnCall *fp, Rlist *finalar
             for (rp = newlist; rp != NULL; rp = rp->next)
             {
                 snprintf(name, CF_MAXVARSIZE - 1, "%s[%d]", array_lval, vcount);
-                EvalContextVariablePut(ctx, (VarRef) { PromiseGetBundle(fp->caller)->ns, PromiseGetBundle(fp->caller)->name, name }, (Rval) { RlistScalarValue(rp), RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
+                VarRef *ref = VarRefParseFromBundle(name, PromiseGetBundle(fp->caller));
+                EvalContextVariablePut(ctx, ref, (Rval) { RlistScalarValue(rp), RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
+                VarRefDestroy(ref);
                 Log(LOG_LEVEL_VERBOSE, "getfields: defining '%s' => '%s'", name, RlistScalarValue(rp));
                 vcount++;
             }
@@ -1660,13 +1658,13 @@ static FnCallResult FnCallMapArray(EvalContext *ctx, FnCall *fp, Rlist *finalarg
 
     char *map = RlistScalarValue(finalargs);
 
-    VarRef ref = VarRefParseFromBundle(RlistScalarValue(finalargs->next), PromiseGetBundle(fp->caller));
+    VarRef *ref = VarRefParseFromBundle(RlistScalarValue(finalargs->next), PromiseGetBundle(fp->caller));
 
-    if ((ptr = ScopeGet(ref.ns, ref.scope)) == NULL)
+    if ((ptr = ScopeGet(ref->ns, ref->scope)) == NULL)
     {
         Log(LOG_LEVEL_VERBOSE,
-            "Function maparray was promised an array called '%s' in scope '%s' but this was not found", ref.lval,
-              ref.scope);
+            "Function maparray was promised an array called '%s' in scope '%s' but this was not found", ref->lval,
+              ref->scope);
         RlistAppendScalarIdemp(&returnlist, CF_NULL_VALUE);
         VarRefDestroy(ref);
         return (FnCallResult) { FNCALL_FAILURE, { returnlist, RVAL_TYPE_LIST } };
@@ -1676,7 +1674,7 @@ static FnCallResult FnCallMapArray(EvalContext *ctx, FnCall *fp, Rlist *finalarg
 
     while ((assoc = HashIteratorNext(&i)))
     {
-        snprintf(match, CF_MAXVARSIZE - 1, "%.127s[", ref.lval);
+        snprintf(match, CF_MAXVARSIZE - 1, "%.127s[", ref->lval);
 
         if (strncmp(match, assoc->lval, strlen(match)) == 0)
         {
@@ -1776,7 +1774,7 @@ static FnCallResult FnCallMapList(EvalContext *ctx, FnCall *fp, Rlist *finalargs
         strncpy(naked, listvar, CF_MAXVARSIZE - 1);
     }
 
-    VarRef ref = VarRefParse(naked);
+    VarRef *ref = VarRefParse(naked);
 
     retype = DATA_TYPE_NONE;
     if (!EvalContextVariableGet(ctx, ref, &rval, &retype))
@@ -1824,8 +1822,6 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx, FnCall *fp, Rlist *fin
     Rval retval;
     buffer[0] = '\0';
 
-/* begin fn specific content */
-
     char *listvar = RlistScalarValue(finalargs);
     char *port = RlistScalarValue(finalargs->next);
     char *sendstring = RlistScalarValue(finalargs->next->next);
@@ -1843,13 +1839,13 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx, FnCall *fp, Rlist *fin
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
-    VarRef ref = VarRefParse(naked);
+    VarRef *ref = VarRefParse(naked);
 
     if (!EvalContextVariableGet(ctx, ref, &retval, NULL))
     {
         Log(LOG_LEVEL_VERBOSE,
             "Function selectservers was promised a list called '%s' but this was not found from context '%s.%s'",
-              listvar, ref.scope, naked);
+              listvar, ref->scope, naked);
         VarRefDestroy(ref);
         return (FnCallResult) { FNCALL_FAILURE };
     }
@@ -1937,7 +1933,9 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx, FnCall *fp, Rlist *fin
             {
                 Log(LOG_LEVEL_VERBOSE, "Host '%s' is alive and responding correctly", RlistScalarValue(rp));
                 snprintf(buffer, CF_MAXVARSIZE - 1, "%s[%d]", array_lval, count);
-                EvalContextVariablePut(ctx, (VarRef) { PromiseGetBundle(fp->caller)->ns, PromiseGetBundle(fp->caller)->name, buffer }, (Rval) { rp->item, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
+                VarRef *ref = VarRefParseFromBundle(buffer, PromiseGetBundle(fp->caller));
+                EvalContextVariablePut(ctx, ref, (Rval) { rp->item, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
+                VarRefDestroy(ref);
                 count++;
             }
         }
@@ -1945,7 +1943,9 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx, FnCall *fp, Rlist *fin
         {
             Log(LOG_LEVEL_VERBOSE, "Host '%s' is alive", RlistScalarValue(rp));
             snprintf(buffer, CF_MAXVARSIZE - 1, "%s[%d]", array_lval, count);
-            EvalContextVariablePut(ctx, (VarRef) { PromiseGetBundle(fp->caller)->ns, PromiseGetBundle(fp->caller)->name, buffer }, (Rval) { rp->item, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
+            VarRef *ref = VarRefParseFromBundle(buffer, PromiseGetBundle(fp->caller));
+            EvalContextVariablePut(ctx, ref, (Rval) { rp->item, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
+            VarRefDestroy(ref);
 
             if (IsDefinedClass(ctx, CanonifyName(rp->item), PromiseGetNamespace(fp->caller)))
             {
@@ -2314,13 +2314,16 @@ static FnCallResult FnCallFilter(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 
 static bool GetListReferenceArgument(const EvalContext *ctx, const FnCall *fp, const char *lval_str, Rval *rval_out, DataType *datatype_out)
 {
-    VarRef list_var_lval = VarRefParse(lval_str);
+    VarRef *ref = VarRefParse(lval_str);
 
-    if (!EvalContextVariableGet(ctx, list_var_lval, rval_out, datatype_out))
+    if (!EvalContextVariableGet(ctx, ref, rval_out, datatype_out))
     {
         Log(LOG_LEVEL_ERR, "Could not resolve expected list variable '%s' in function '%s'", lval_str, fp->name);
+        VarRefDestroy(ref);
         return false;
     }
+
+    VarRefDestroy(ref);
 
     if (rval_out->type != RVAL_TYPE_LIST)
     {
@@ -2601,17 +2604,17 @@ static FnCallResult FnCallEverySomeNone(EvalContext *ctx, FnCall *fp, Rlist *fin
 
 static FnCallResult FnCallSort(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
-    VarRef list_var_lval = VarRefParse(RlistScalarValue(finalargs));
+    VarRef *ref = VarRefParse(RlistScalarValue(finalargs));
     Rval list_var_rval;
     DataType list_var_dtype = DATA_TYPE_NONE;
 
-    if (!EvalContextVariableGet(ctx, list_var_lval, &list_var_rval, &list_var_dtype))
+    if (!EvalContextVariableGet(ctx, ref, &list_var_rval, &list_var_dtype))
     {
-        VarRefDestroy(list_var_lval);
+        VarRefDestroy(ref);
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
-    VarRefDestroy(list_var_lval);
+    VarRefDestroy(ref);
 
     if (list_var_dtype != DATA_TYPE_STRING_LIST)
     {
@@ -2911,7 +2914,7 @@ static FnCallResult FnCallIsVariable(EvalContext *ctx, FnCall *fp, Rlist *finala
     }
     else
     {
-        VarRef ref = VarRefParse(lval);
+        VarRef *ref = VarRefParse(lval);
         found = EvalContextVariableGet(ctx, ref, &rval, NULL);
         VarRefDestroy(ref);
     }
@@ -3439,7 +3442,9 @@ static FnCallResult FnCallRegExtract(EvalContext *ctx, FnCall *fp, Rlist *finala
             else
             {
                 snprintf(var, CF_MAXVARSIZE - 1, "%s[%s]", arrayname, assoc->lval);
-                EvalContextVariablePut(ctx, (VarRef) { PromiseGetBundle(fp->caller)->ns, PromiseGetBundle(fp->caller)->name, var }, assoc->rval, DATA_TYPE_STRING);
+                VarRef *ref = VarRefParseFromBundle(var, PromiseGetBundle(fp->caller));
+                EvalContextVariablePut(ctx, ref, assoc->rval, DATA_TYPE_STRING);
+                VarRefDestroy(ref);
             }
         }
     }
@@ -4313,7 +4318,7 @@ static FnCallResult FnCallFileSexist(EvalContext *ctx, FnCall *fp, Rlist *finala
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
-    VarRef ref = VarRefParse(naked);
+    VarRef *ref = VarRefParse(naked);
 
     if (!EvalContextVariableGet(ctx, ref, &retval, NULL))
     {
@@ -4786,7 +4791,9 @@ static int BuildLineArray(EvalContext *ctx, const Bundle *bundle, char *array_lv
                 snprintf(name, CF_MAXVARSIZE, "%s[%s][%d]", array_lval, first_one, vcount);
             }
 
-            EvalContextVariablePut(ctx, (VarRef) { bundle->ns, bundle->name, name }, (Rval) { this_rval, RVAL_TYPE_SCALAR }, type);
+            VarRef *ref = VarRefParseFromBundle(name, bundle);
+            EvalContextVariablePut(ctx, ref, (Rval) { this_rval, RVAL_TYPE_SCALAR }, type);
+            VarRefDestroy(ref);
             vcount++;
         }
 
@@ -4922,7 +4929,9 @@ void ModuleProtocol(EvalContext *ctx, char *command, char *line, int print, cons
         if (CheckID(name))
         {
             Log(LOG_LEVEL_VERBOSE, "Defined variable '%s' in context '%s' with value '%s'", name, context, content);
-            EvalContextVariablePut(ctx, (VarRef) { NULL, context, name }, (Rval) { content, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
+            VarRef *ref = VarRefParseFromScope(name, context);
+            EvalContextVariablePut(ctx, ref, (Rval) { content, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
+            VarRefDestroy(ref);
         }
         break;
 
@@ -4937,7 +4946,9 @@ void ModuleProtocol(EvalContext *ctx, char *command, char *line, int print, cons
             list = RlistParseString(content);
             Log(LOG_LEVEL_VERBOSE, "Defined variable '%s' in context '%s' with value '%s'", name, context, content);
 
-            EvalContextVariablePut(ctx, (VarRef) { NULL, context, name }, (Rval) { list, RVAL_TYPE_LIST }, DATA_TYPE_STRING_LIST);
+            VarRef *ref = VarRefParseFromScope(name, context);
+            EvalContextVariablePut(ctx, ref, (Rval) { list, RVAL_TYPE_LIST }, DATA_TYPE_STRING_LIST);
+            VarRefDestroy(ref);
         }
         break;
 

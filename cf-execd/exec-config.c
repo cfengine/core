@@ -140,7 +140,7 @@ void ExecConfigUpdate(const EvalContext *ctx, const Policy *policy, ExecConfig *
                 continue;
             }
 
-            VarRef ref = VarRefParseFromScope(cp->lval, "control_executor");
+            VarRef *ref = VarRefParseFromScope(cp->lval, "control_executor");
 
             Rval retval;
             if (!EvalContextVariableGet(ctx, ref, &retval, NULL))

@@ -22,13 +22,13 @@ static RBTree *IntTreeNew_(void)
     return RBTreeNew(_IntCopy, _IntCompare, free, _IntCopy, _IntCompare, free);
 }
 
-static void test_new_destroy(void **state)
+static void test_new_destroy(void)
 {
     RBTree *t = IntTreeNew_();
     RBTreeDestroy(t);
 }
 
-static void test_put_overwrite(void **state)
+static void test_put_overwrite(void)
 {
     RBTree *t = IntTreeNew_();
 
@@ -44,7 +44,7 @@ static void test_put_overwrite(void **state)
     RBTreeDestroy(t);
 }
 
-static void test_put_remove(void **state)
+static void test_put_remove(void)
 {
     RBTree *t = IntTreeNew_();
 
@@ -64,7 +64,7 @@ static void test_put_remove(void **state)
     RBTreeDestroy(t);
 }
 
-static void test_put_remove_inorder(void **state)
+static void test_put_remove_inorder(void)
 {
     RBTree *t = IntTreeNew_();
     for (int i = 0; i < 20000; i++)
@@ -86,7 +86,7 @@ static void test_put_remove_inorder(void **state)
     RBTreeDestroy(t);
 }
 
-static void test_iterate()
+static void test_iterate(void)
 {
     Seq *nums = SeqNew(20, free);
     srand(0);
@@ -121,7 +121,7 @@ static void test_iterate()
     RBTreeDestroy(t);
 }
 
-static void test_put_remove_random(void **state)
+static void test_put_remove_random(void)
 {
     Seq *nums = SeqNew(20, free);
     srand(0);

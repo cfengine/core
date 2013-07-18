@@ -65,7 +65,7 @@ void VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates
     Attributes a = { {0} };
     a.classes = GetClassDefinitionConstraints(ctx, pp);
 
-    VarRef ref = VarRefParseFromBundle(pp->promiser, PromiseGetBundle(pp));
+    VarRef *ref = VarRefParseFromBundle(pp->promiser, PromiseGetBundle(pp));
     if (strcmp("meta", pp->parent_promise_type->name) == 0)
     {
         VarRefSetMeta(ref, true);
@@ -180,7 +180,7 @@ void VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates
         {
             /* See if the variable needs recursively expanding again */
 
-            Rval returnval = EvaluateFinalRval(ctx, ref.ns, ref.scope, rval, true, pp);
+            Rval returnval = EvaluateFinalRval(ctx, ref->ns, ref->scope, rval, true, pp);
 
             RvalDestroy(rval);
 
@@ -192,7 +192,7 @@ void VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates
         {
             if (opts.ok_redefine)    /* only on second iteration, else we ignore broken promises */
             {
-                ScopeDeleteVariable(ref.ns, ref.scope, pp->promiser);
+                ScopeDeleteVariable(ref->ns, ref->scope, pp->promiser);
             }
             else if ((THIS_AGENT_TYPE == AGENT_TYPE_COMMON) && (CompareRval(existing_var_rval, rval) == false))
             {
@@ -259,7 +259,7 @@ void VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates
 
         if (!EvalContextVariablePut(ctx, ref, rval, DataTypeFromString(opts.cp_save->lval)))
         {
-            Log(LOG_LEVEL_VERBOSE, "Unable to converge %s.%s value (possibly empty or infinite regression)", ref.scope, pp->promiser);
+            Log(LOG_LEVEL_VERBOSE, "Unable to converge %s.%s value (possibly empty or infinite regression)", ref->scope, pp->promiser);
             PromiseRef(LOG_LEVEL_VERBOSE, pp);
             promise_result = PROMISE_RESULT_FAIL;
         }

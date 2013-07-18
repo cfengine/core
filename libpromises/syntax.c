@@ -428,7 +428,7 @@ vars:
         {
             if (!IsExpandable(var))
             {
-                VarRef ref = VarRefParse(var);
+                VarRef *ref = VarRefParse(var);
 
                 if (EvalContextVariableGet(ctx, ref, &rval, &dtype))
                 {

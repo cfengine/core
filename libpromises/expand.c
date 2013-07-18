@@ -315,7 +315,7 @@ static void ExpandAndMapIteratorsFromScalar(EvalContext *ctx, const char *scopei
                 int success = 0;
                 int increment;
 
-                VarRef ref = VarRefParseFromScope(v, scopeid);
+                VarRef *ref = VarRefParseFromScope(v, scopeid);
 
                 increment = strlen(v) - 1 + 3;
 
@@ -334,7 +334,7 @@ static void ExpandAndMapIteratorsFromScalar(EvalContext *ctx, const char *scopei
                     //  varname => "test.somelist"; $($(varname)) also fails
                     // TODO Unless the consumer handles it?
 
-                    VarRef inner_ref = VarRefParseFromScope(exp->item, scopeid);
+                    VarRef *inner_ref = VarRefParseFromScope(exp->item, scopeid);
 
                     // var is the expanded name of the variable in its native context
                     // finalname will be the mapped name in the local context "this."
@@ -393,7 +393,7 @@ static void ExpandAndMapIteratorsFromScalar(EvalContext *ctx, const char *scopei
                 }
 
                 // No need to map this.* even though it's technically qualified
-                if (success && IsQualifiedVariable(v) && strcmp(ref.scope, "this") != 0)
+                if (success && IsQualifiedVariable(v) && strcmp(ref->scope, "this") != 0)
                 {
                     char *dotpos = strchr(substring, '.');
                     if (dotpos)
@@ -440,7 +440,7 @@ Rlist *ExpandList(EvalContext *ctx, const char *ns, const char *scope, const Rli
 
             if (!IsExpandable(naked))
             {
-                VarRef ref = VarRefParseFromScope(naked, scope);
+                VarRef *ref = VarRefParseFromScope(naked, scope);
 
                 if (EvalContextVariableGet(ctx, ref, &returnval, NULL))
                 {
@@ -662,7 +662,7 @@ bool ExpandScalar(const EvalContext *ctx, const char *ns, const char *scope, con
         DataType type = DATA_TYPE_NONE;
         bool variable_found = false;
         {
-            VarRef ref = VarRefParseFromNamespaceAndScope(currentitem, ns, scope, CF_NS, '.');
+            VarRef *ref = VarRefParseFromNamespaceAndScope(currentitem, ns, scope, CF_NS, '.');
             variable_found = EvalContextVariableGet(ctx, ref, &rval, &type);
             VarRefDestroy(ref);
         }
@@ -875,7 +875,7 @@ Rval EvaluateFinalRval(EvalContext *ctx, const char *ns, const char *scope, Rval
 
         if (!IsExpandable(naked))
         {
-            VarRef ref = VarRefParseFromScope(naked, scope);
+            VarRef *ref = VarRefParseFromScope(naked, scope);
 
             if (!EvalContextVariableGet(ctx, ref, &returnval, NULL) || returnval.type != RVAL_TYPE_LIST)
             {
@@ -974,7 +974,7 @@ static void CopyLocalizedIteratorsToBundleScope(EvalContext *ctx, const Bundle *
 
         if (strchr(rp->item, CF_MAPPEDLIST))
         {
-            VarRef demangled_ref = VarRefDeMangle(mangled);
+            VarRef *demangled_ref = VarRefDeMangle(mangled);
 
             Rval retval;
             if (EvalContextVariableGet(ctx, demangled_ref, &retval, NULL))
@@ -982,7 +982,7 @@ static void CopyLocalizedIteratorsToBundleScope(EvalContext *ctx, const Bundle *
                 Rlist *list = RvalCopy((Rval) {retval.item, RVAL_TYPE_LIST}).item;
                 RlistFlatten(ctx, &list);
 
-                VarRef mangled_ref = VarRefParseFromBundle(mangled, bundle);
+                VarRef *mangled_ref = VarRefParseFromBundle(mangled, bundle);
                 EvalContextVariablePut(ctx, mangled_ref, (Rval) { list, RVAL_TYPE_LIST }, DATA_TYPE_STRING_LIST);
                 VarRefDestroy(mangled_ref);
             }
@@ -1002,12 +1002,12 @@ static void CopyLocalizedScalarsToBundleScope(EvalContext *ctx, const Bundle *bu
 
         if (strchr(rp->item, CF_MAPPEDLIST))
         {
-            VarRef demangled_ref = VarRefDeMangle(mangled);
+            VarRef *demangled_ref = VarRefDeMangle(mangled);
 
             Rval retval;
             if (EvalContextVariableGet(ctx, demangled_ref, &retval, NULL))
             {
-                VarRef mangled_ref = VarRefParseFromBundle(mangled, bundle);
+                VarRef *mangled_ref = VarRefParseFromBundle(mangled, bundle);
                 EvalContextVariablePut(ctx, mangled_ref, (Rval) { retval.item, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
                 VarRefDestroy(mangled_ref);
             }

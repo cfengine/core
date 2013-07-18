@@ -147,8 +147,8 @@ char *EvalContextStackPath(const EvalContext *ctx);
  */
 const Promise *EvalContextStackGetTopPromise(const EvalContext *ctx);
 
-bool EvalContextVariablePut(EvalContext *ctx, VarRef lval, Rval rval, DataType type);
-bool EvalContextVariableGet(const EvalContext *ctx, VarRef lval, Rval *rval_out, DataType *type_out);
+bool EvalContextVariablePut(EvalContext *ctx, const VarRef *ref, Rval rval, DataType type);
+bool EvalContextVariableGet(const EvalContext *ctx, const VarRef *ref, Rval *rval_out, DataType *type_out);
 
 bool EvalContextVariableControlCommonGet(const EvalContext *ctx, CommonControl lval, Rval *rval_out);
 

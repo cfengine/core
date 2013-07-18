@@ -87,7 +87,7 @@ void EndAudit(const EvalContext *ctx, int background_tasks)
         Rval track_value_rval = { 0 };
         bool track_value = false;
 
-        VarRef ref = VarRefParseFromScope(CFA_CONTROLBODY[AGENT_CONTROL_TRACK_VALUE].lval, "control_agent");
+        VarRef *ref = VarRefParseFromScope(CFA_CONTROLBODY[AGENT_CONTROL_TRACK_VALUE].lval, "control_agent");
         if (EvalContextVariableGet(ctx, ref, &track_value_rval, NULL))
         {
             track_value = BooleanFromString(track_value_rval.item);

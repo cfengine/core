@@ -562,7 +562,7 @@ static void KeepControlPromises(EvalContext *ctx, Policy *policy)
                 continue;
             }
 
-            VarRef ref = VarRefParseFromScope(cp->lval, "control_runagent");
+            VarRef *ref = VarRefParseFromScope(cp->lval, "control_runagent");
 
             if (!EvalContextVariableGet(ctx, ref, &retval, NULL))
             {

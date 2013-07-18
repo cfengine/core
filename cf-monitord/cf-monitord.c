@@ -243,7 +243,7 @@ static void KeepPromises(EvalContext *ctx, Policy *policy)
                 continue;
             }
 
-            VarRef ref = VarRefParseFromScope(cp->lval, "control_monitor");
+            VarRef *ref = VarRefParseFromScope(cp->lval, "control_monitor");
 
             if (!EvalContextVariableGet(ctx, ref, &retval, NULL))
             {

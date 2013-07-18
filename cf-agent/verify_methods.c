@@ -138,7 +138,9 @@ int VerifyMethod(EvalContext *ctx, char *attrname, Attributes a, Promise *pp)
         for (const Rlist *rp = bp->args; rp; rp = rp->next)
         {
             const char *lval = rp->item;
-            ScopeDeleteScalar((VarRef) { bp->ns, bp->name, lval });
+            VarRef *ref = VarRefParseFromBundle(lval, bp);
+            ScopeDeleteScalar(ref);
+            VarRefDestroy(ref);
         }
     }
     else
@@ -214,7 +216,9 @@ static void GetReturnValue(EvalContext *ctx, const char *ns, char *scope, Promis
                     snprintf(newname, CF_BUFSIZE, "%s", result);
                 }
 
-                EvalContextVariablePut(ctx, (VarRef) { PromiseGetBundle(pp)->ns, PromiseGetBundle(pp)->name, newname }, assoc->rval, DATA_TYPE_STRING);
+                VarRef *ref = VarRefParseFromBundle(newname, PromiseGetBundle(pp));
+                EvalContextVariablePut(ctx, ref, assoc->rval, DATA_TYPE_STRING);
+                VarRefDestroy(ref);
             }
         }
         

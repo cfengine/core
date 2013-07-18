@@ -1278,37 +1278,34 @@ char *EvalContextStackPath(const EvalContext *ctx)
     return StringWriterClose(path);
 }
 
-bool EvalContextVariablePut(EvalContext *ctx, VarRef lval, Rval rval, DataType type)
+bool EvalContextVariablePut(EvalContext *ctx, const VarRef *ref, Rval rval, DataType type)
 {
     assert(type != DATA_TYPE_NONE);
-
-    if (lval.lval == NULL)
-    {
-        ProgrammingError("Bad variable or scope in a variable assignment. scope.value = %s.%s", lval.scope, lval.lval);
-    }
+    assert(ref);
+    assert(ref->lval);
 
     if (rval.item == NULL)
     {
         return false;
     }
 
-    if (strlen(lval.lval) > CF_MAXVARSIZE)
+    if (strlen(ref->lval) > CF_MAXVARSIZE)
     {
-        char *lval_str = VarRefToString(lval, true);
+        char *lval_str = VarRefToString(ref, true);
         Log(LOG_LEVEL_ERR, "Variable '%s'' cannot be added because its length exceeds the maximum length allowed '%d' characters", lval_str, CF_MAXVARSIZE);
         free(lval_str);
         return false;
     }
 
     // If we are not expanding a body template, check for recursive singularities
-    if (strcmp(lval.scope, "body") != 0)
+    if (strcmp(ref->scope, "body") != 0)
     {
         switch (rval.type)
         {
         case RVAL_TYPE_SCALAR:
-            if (StringContainsVar((char *) rval.item, lval.lval))
+            if (StringContainsVar((char *) rval.item, ref->lval))
             {
-                Log(LOG_LEVEL_ERR, "Scalar variable '%s.%s' contains itself (non-convergent), value '%s'", lval.scope, lval.lval,
+                Log(LOG_LEVEL_ERR, "Scalar variable '%s.%s' contains itself (non-convergent), value '%s'", ref->scope, ref->lval,
                       (char *) rval.item);
                 return false;
             }
@@ -1317,9 +1314,9 @@ bool EvalContextVariablePut(EvalContext *ctx, VarRef lval, Rval rval, DataType t
         case RVAL_TYPE_LIST:
             for (const Rlist *rp = rval.item; rp != NULL; rp = rp->next)
             {
-                if (StringContainsVar(rp->item, lval.lval))
+                if (StringContainsVar(rp->item, ref->lval))
                 {
-                    Log(LOG_LEVEL_ERR, "List variable '%s' contains itself (non-convergent)", lval.lval);
+                    Log(LOG_LEVEL_ERR, "List variable '%s' contains itself (non-convergent)", ref->lval);
                     return false;
                 }
             }
@@ -1334,12 +1331,12 @@ bool EvalContextVariablePut(EvalContext *ctx, VarRef lval, Rval rval, DataType t
         assert(STACK_FRAME_TYPE_BODY == LastStackFrame(ctx, 0)->type);
     }
 
-    assert(lval.scope);
+    assert(ref->scope);
 
-    Scope *put_scope = ScopeGet(lval.ns, lval.scope);
+    Scope *put_scope = ScopeGet(ref->ns, ref->scope);
     if (!put_scope)
     {
-        put_scope = ScopeNew(lval.ns, lval.scope);
+        put_scope = ScopeNew(ref->ns, ref->scope);
         if (!put_scope)
         {
             return false;
@@ -1361,7 +1358,7 @@ bool EvalContextVariablePut(EvalContext *ctx, VarRef lval, Rval rval, DataType t
 
             if (listvars != NULL)
             {
-                Log(LOG_LEVEL_ERR, "Redefinition of variable '%s' (embedded list in RHS)", lval.lval);
+                Log(LOG_LEVEL_ERR, "Redefinition of variable '%s' (embedded list in RHS)", ref->lval);
             }
 
             RlistDestroy(listvars);
@@ -1370,7 +1367,7 @@ bool EvalContextVariablePut(EvalContext *ctx, VarRef lval, Rval rval, DataType t
     }
 
     // FIX: lval is stored with array params as part of the lval for legacy reasons.
-    char *final_lval = VarRefToString(lval, false);
+    char *final_lval = VarRefToString(ref, false);
 
     CfAssoc *assoc = HashLookupElement(put_scope->hashtable, final_lval);
     if (assoc)
@@ -1380,7 +1377,7 @@ bool EvalContextVariablePut(EvalContext *ctx, VarRef lval, Rval rval, DataType t
             /* Different value, bark and replace */
             if (!UnresolvedVariables(assoc->rval, rval.type))
             {
-                Log(LOG_LEVEL_DEBUG, "Replaced value of variable '%s' in scope '%s'", lval.lval, put_scope->scope);
+                Log(LOG_LEVEL_DEBUG, "Replaced value of variable '%s' in scope '%s'", ref->lval, put_scope->scope);
             }
             RvalDestroy(assoc->rval);
             assoc->rval = RvalCopy(rval);
@@ -1394,16 +1391,18 @@ bool EvalContextVariablePut(EvalContext *ctx, VarRef lval, Rval rval, DataType t
             ProgrammingError("Hash table is full");
         }
         Log(LOG_LEVEL_DEBUG, "Inserted variable '%s' in scope '%s'",
-            lval.lval, put_scope->scope);
+            ref->lval, put_scope->scope);
     }
 
     free(final_lval);
     return true;
 }
 
-bool EvalContextVariableGet(const EvalContext *ctx, VarRef lval, Rval *rval_out, DataType *type_out)
+bool EvalContextVariableGet(const EvalContext *ctx, const VarRef *ref, Rval *rval_out, DataType *type_out)
 {
-    if (lval.lval == NULL)
+    assert(ref);
+
+    if (!ref->lval)
     {
         if (rval_out)
         {
@@ -1417,9 +1416,9 @@ bool EvalContextVariableGet(const EvalContext *ctx, VarRef lval, Rval *rval_out,
     }
 
     Scope *get_scope = NULL;
-    if (VarRefIsQualified(lval))
+    if (VarRefIsQualified(ref))
     {
-        get_scope = ScopeGet(lval.ns, lval.scope);
+        get_scope = ScopeGet(ref->ns, ref->scope);
     }
     else
     {
@@ -1450,7 +1449,7 @@ bool EvalContextVariableGet(const EvalContext *ctx, VarRef lval, Rval *rval_out,
     {
         if (rval_out)
         {
-            *rval_out = (Rval) {(char *) lval.lval, RVAL_TYPE_SCALAR };
+            *rval_out = (Rval) {(char *) ref->lval, RVAL_TYPE_SCALAR };
         }
         if (type_out)
         {
@@ -1459,9 +1458,9 @@ bool EvalContextVariableGet(const EvalContext *ctx, VarRef lval, Rval *rval_out,
         return false;
     }
 
-    assert(!IsQualifiedVariable(lval.lval) && "lval is qualified");
+    assert(!IsQualifiedVariable(ref->lval) && "lval is qualified");
 
-    char *lookup_key = VarRefToString(lval, false);
+    char *lookup_key = VarRefToString(ref, false);
     CfAssoc *assoc = HashLookupElement(get_scope->hashtable, lookup_key);
     free(lookup_key);
 
@@ -1469,7 +1468,7 @@ bool EvalContextVariableGet(const EvalContext *ctx, VarRef lval, Rval *rval_out,
     {
         if (rval_out)
         {
-            *rval_out = (Rval) {(char *) lval.lval, RVAL_TYPE_SCALAR };
+            *rval_out = (Rval) {(char *) ref->lval, RVAL_TYPE_SCALAR };
         }
         if (type_out)
         {
@@ -1493,7 +1492,15 @@ bool EvalContextVariableGet(const EvalContext *ctx, VarRef lval, Rval *rval_out,
 
 bool EvalContextVariableControlCommonGet(const EvalContext *ctx, CommonControl lval, Rval *rval_out)
 {
-    return EvalContextVariableGet(ctx, (VarRef) { NULL, "control_common", CFG_CONTROLBODY[lval].lval }, rval_out, NULL);
+    if (lval == COMMON_CONTROL_NONE)
+    {
+        return false;
+    }
+
+    VarRef *ref = VarRefParseFromScope(CFG_CONTROLBODY[lval].lval, "control_common");
+    bool ret = EvalContextVariableGet(ctx, ref, rval_out, NULL);
+    VarRefDestroy(ref);
+    return ret;
 }
 
 bool EvalContextPromiseIsDone(const EvalContext *ctx, const Promise *pp)

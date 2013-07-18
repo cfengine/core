@@ -199,13 +199,13 @@ void ScopeAugment(EvalContext *ctx, const Bundle *bp, const Promise *pp, const R
             Rval retval;
             if (pbp != NULL)
             {
-                VarRef ref = VarRefParseFromBundle(naked, pbp);
+                VarRef *ref = VarRefParseFromBundle(naked, pbp);
                 EvalContextVariableGet(ctx, ref, &retval, &vtype);
                 VarRefDestroy(ref);
             }
             else
             {
-                VarRef ref = VarRefParseFromBundle(naked, bp);
+                VarRef *ref = VarRefParseFromBundle(naked, bp);
                 EvalContextVariableGet(ctx, ref, &retval, &vtype);
                 VarRefDestroy(ref);
             }
@@ -215,11 +215,19 @@ void ScopeAugment(EvalContext *ctx, const Bundle *bp, const Promise *pp, const R
             case DATA_TYPE_STRING_LIST:
             case DATA_TYPE_INT_LIST:
             case DATA_TYPE_REAL_LIST:
-                EvalContextVariablePut(ctx, (VarRef) { bp->ns, bp->name, lval }, (Rval) { retval.item, RVAL_TYPE_LIST}, DATA_TYPE_STRING_LIST);
+                {
+                    VarRef *ref = VarRefParseFromBundle(lval, bp);
+                    EvalContextVariablePut(ctx, ref, (Rval) { retval.item, RVAL_TYPE_LIST}, DATA_TYPE_STRING_LIST);
+                    VarRefDestroy(ref);
+                }
                 break;
             default:
-                Log(LOG_LEVEL_ERR, "List parameter '%s' not found while constructing scope '%s' - use @(scope.variable) in calling reference", naked, bp->name);
-                EvalContextVariablePut(ctx, (VarRef) { bp->ns, bp->name, lval }, (Rval) { rpr->item, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
+                {
+                    Log(LOG_LEVEL_ERR, "List parameter '%s' not found while constructing scope '%s' - use @(scope.variable) in calling reference", naked, bp->name);
+                    VarRef *ref = VarRefParseFromBundle(lval, bp);
+                    EvalContextVariablePut(ctx, ref, (Rval) { rpr->item, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
+                    VarRefDestroy(ref);
+                }
                 break;
             }
         }
@@ -228,7 +236,11 @@ void ScopeAugment(EvalContext *ctx, const Bundle *bp, const Promise *pp, const R
             switch(rpr->type)
             {
             case RVAL_TYPE_SCALAR:
-                EvalContextVariablePut(ctx, (VarRef) { bp->ns, bp->name, lval }, (Rval) { rpr->item, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
+                {
+                    VarRef *ref = VarRefParseFromBundle(lval, bp);
+                    EvalContextVariablePut(ctx, ref, (Rval) { rpr->item, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
+                    VarRefDestroy(ref);
+                }
                 break;
 
             case RVAL_TYPE_FNCALL:
@@ -237,7 +249,9 @@ void ScopeAugment(EvalContext *ctx, const Bundle *bp, const Promise *pp, const R
                     Rval rval = FnCallEvaluate(ctx, subfp, pp).rval;
                     if (rval.type == RVAL_TYPE_SCALAR)
                     {
-                        EvalContextVariablePut(ctx, (VarRef) { bp->ns, bp->name, lval }, (Rval) { rval.item, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
+                        VarRef *ref = VarRefParseFromBundle(lval, bp);
+                        EvalContextVariablePut(ctx, ref, (Rval) { rval.item, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
+                        VarRefDestroy(ref);
                     }
                     else
                     {
@@ -451,34 +465,37 @@ void ScopeNewSpecial(EvalContext *ctx, const char *scope, const char *lval, cons
     assert(ScopeIsReserved(scope));
 
     Rval rvald;
-    if (EvalContextVariableGet(ctx, (VarRef) { NULL, scope, lval }, &rvald, NULL))
+    VarRef *ref = VarRefParseFromScope(lval, scope);
+    if (EvalContextVariableGet(ctx, ref, &rvald, NULL))
     {
         ScopeDeleteSpecial(scope, lval);
     }
 
-    EvalContextVariablePut(ctx, (VarRef) { NULL, scope, lval }, (Rval) { rval, DataTypeToRvalType(dt) }, dt);
+    EvalContextVariablePut(ctx, ref, (Rval) { rval, DataTypeToRvalType(dt) }, dt);
+
+    VarRefDestroy(ref);
 }
 
 /*******************************************************************/
 
-void ScopeDeleteScalar(VarRef lval)
+void ScopeDeleteScalar(const VarRef *ref)
 {
-    assert(!ScopeIsReserved(lval.scope));
-    if (ScopeIsReserved(lval.scope))
+    assert(!ScopeIsReserved(ref->scope));
+    if (ScopeIsReserved(ref->scope))
     {
-        ScopeDeleteSpecial(lval.scope, lval.lval);
+        ScopeDeleteSpecial(ref->scope, ref->lval);
     }
 
-    Scope *scope = ScopeGet(lval.ns, lval.scope);
+    Scope *scope = ScopeGet(ref->ns, ref->scope);
 
     if (scope == NULL)
     {
         return;
     }
 
-    if (HashDeleteElement(scope->hashtable, lval.lval) == false)
+    if (HashDeleteElement(scope->hashtable, ref->lval) == false)
     {
-        Log(LOG_LEVEL_DEBUG, "Attempt to delete non-existent variable '%s' in scope '%s'", lval.lval, lval.scope);
+        Log(LOG_LEVEL_DEBUG, "Attempt to delete non-existent variable '%s' in scope '%s'", ref->lval, ref->scope);
     }
 }
 
@@ -697,15 +714,22 @@ int ScopeMapBodyArgs(EvalContext *ctx, const char *ns, const char *scope, Rlist 
         switch (rpg->type)
         {
         case RVAL_TYPE_SCALAR:
-            lval = (char *) rpt->item;
-            rval = rpg->item;
-            EvalContextVariablePut(ctx, (VarRef) { ns, scope, lval }, (Rval) { rval, RVAL_TYPE_SCALAR }, dtg);
+            {
+                lval = (char *) rpt->item;
+                rval = rpg->item;
+                VarRef *ref = VarRefParseFromNamespaceAndScope(lval, ns, scope, CF_NS, '.');
+                EvalContextVariablePut(ctx, ref, (Rval) { rval, RVAL_TYPE_SCALAR }, dtg);
+            }
             break;
 
         case RVAL_TYPE_LIST:
-            lval = (char *) rpt->item;
-            rval = rpg->item;
-            EvalContextVariablePut(ctx, (VarRef) { ns, scope, lval }, (Rval) { rval, RVAL_TYPE_LIST }, dtg);
+            {
+                lval = (char *) rpt->item;
+                rval = rpg->item;
+                VarRef *ref = VarRefParseFromNamespaceAndScope(lval, ns, scope, CF_NS, '.');
+                EvalContextVariablePut(ctx, ref, (Rval) { rval, RVAL_TYPE_LIST }, dtg);
+                VarRefDestroy(ref);
+            }
             break;
 
         case RVAL_TYPE_FNCALL:
@@ -736,7 +760,9 @@ int ScopeMapBodyArgs(EvalContext *ctx, const char *ns, const char *scope, Rlist 
                 lval = (char *) rpt->item;
                 rval = rpg->item;
 
-                EvalContextVariablePut(ctx, (VarRef) { ns, scope, lval }, (Rval) {rval, RVAL_TYPE_SCALAR }, dtg);
+                VarRef *ref = VarRefParseFromNamespaceAndScope(lval, ns, scope, CF_NS, '.');
+                EvalContextVariablePut(ctx, ref, (Rval) {rval, RVAL_TYPE_SCALAR }, dtg);
+                VarRefDestroy(ref);
             }
 
             break;

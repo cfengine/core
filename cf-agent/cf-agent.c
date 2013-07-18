@@ -667,7 +667,7 @@ void KeepControlPromises(EvalContext *ctx, Policy *policy)
                 continue;
             }
 
-            VarRef ref = VarRefParseFromScope(cp->lval, "control_agent");
+            VarRef *ref = VarRefParseFromScope(cp->lval, "control_agent");
             if (!EvalContextVariableGet(ctx, ref, &retval, NULL))
             {
                 Log(LOG_LEVEL_ERR, "Unknown lval '%s' in agent control body", cp->lval);
@@ -1319,9 +1319,11 @@ static void DefaultVarPromise(EvalContext *ctx, const Promise *pp)
     Rlist *rp;
     bool okay = true;
 
-    VarRef ref = VarRefParseFromScope(pp->promiser, "this");
-    EvalContextVariableGet(ctx, ref, &rval, &dt);
-    VarRefDestroy(ref);
+    {
+        VarRef *ref = VarRefParseFromScope(pp->promiser, "this");
+        EvalContextVariableGet(ctx, ref, &rval, &dt);
+        VarRefDestroy(ref);
+    }
 
     switch (dt)
     {
@@ -1364,7 +1366,12 @@ static void DefaultVarPromise(EvalContext *ctx, const Promise *pp)
         break;
     }
 
-    ScopeDeleteScalar((VarRef) { NULL, PromiseGetBundle(pp)->name, pp->promiser });
+    {
+        VarRef *ref = VarRefParseFromBundle(pp->promiser, PromiseGetBundle(pp));
+        ScopeDeleteScalar(ref);
+        VarRefDestroy(ref);
+    }
+
     VerifyVarPromise(ctx, pp, true);
 }
 

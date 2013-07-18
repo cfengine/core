@@ -39,7 +39,7 @@ static void test_name_split(void)
 
 static void test_push_pop_this(void)
 {
-    VarRef lval = VarRefParse("this.lval");
+    VarRef *lval = VarRefParse("this.lval");
     Rval rval;
 
     EvalContext *ctx = EvalContextNew();

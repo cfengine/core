@@ -29,6 +29,30 @@
 #include "misc_lib.h"
 #include "string_lib.h"
 
+VarRef *VarRefCopy(const VarRef *ref)
+{
+    VarRef *copy = xmalloc(sizeof(VarRef));
+
+    copy->ns = ref->ns ? xstrdup(ref->ns) : NULL;
+    copy->scope = ref->scope ? xstrdup(ref->scope) : NULL;
+    copy->lval = ref->lval ? xstrdup(ref->lval) : NULL;
+
+    copy->num_indices = ref->num_indices;
+    if (ref->num_indices > 0)
+    {
+        copy->indices = xmalloc(ref->num_indices * sizeof(char*));
+        for (size_t i = 0; i < ref->num_indices; i++)
+        {
+            copy->indices[i] = xstrdup(ref->indices[i]);
+        }
+    }
+    else
+    {
+        copy->indices = NULL;
+    }
+
+    return copy;
+}
 
 #ifndef NDEBUG
 static bool IndexBracketsBalance(const char *var_string)
@@ -305,4 +329,45 @@ void VarRefSetMeta(VarRef *ref, bool enabled)
 bool VarRefIsQualified(const VarRef *ref)
 {
     return ref->scope != NULL;
+}
+
+int VarRefCompare(const VarRef *a, const VarRef *b)
+{
+    const char *a_ns = a->ns ? a->ns : "default";
+    const char *b_ns = b->ns ? b->ns : "default";
+
+    int ret = strcmp(a_ns, b_ns);
+    if (ret != 0)
+    {
+        return ret;
+    }
+
+    ret = strcmp(NULLStringToEmpty(a->scope), NULLStringToEmpty(b->scope));
+    if (ret != 0)
+    {
+        return ret;
+    }
+
+    ret = strcmp(NULLStringToEmpty(a->lval), NULLStringToEmpty(b->lval));
+    if (ret != 0)
+    {
+        return ret;
+    }
+
+    ret = a->num_indices - b->num_indices;
+    if (ret != 0)
+    {
+        return ret;
+    }
+
+    for (size_t i = 0; i < a->num_indices; i++)
+    {
+        ret = strcmp(a->indices[i], b->indices[i]);
+        if (ret != 0)
+        {
+            return ret;
+        }
+    }
+
+    return 0;
 }

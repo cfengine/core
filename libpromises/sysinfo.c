@@ -409,9 +409,9 @@ void GetNameInfo3(EvalContext *ctx, AgentType agent_type)
     }
     else
     {
-        snprintf(workbuf, CF_BUFSIZE, "%jd", tloc);
+        snprintf(workbuf, CF_BUFSIZE, "%jd", (intmax_t) tloc);
         ScopeNewSpecial(ctx, "sys", "systime", workbuf, DATA_TYPE_INT);
-        snprintf(workbuf, CF_BUFSIZE, "%jd", tloc / SECONDS_PER_DAY);
+        snprintf(workbuf, CF_BUFSIZE, "%jd", (intmax_t) tloc / SECONDS_PER_DAY);
         ScopeNewSpecial(ctx, "sys", "sysday", workbuf, DATA_TYPE_INT);
         i = GetUptimeMinutes(tloc);
         if (i != -1)

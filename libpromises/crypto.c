@@ -208,9 +208,17 @@ RSA *HavePublicKeyByIP(const char *username, const char *ipaddress)
 {
     char hash[CF_MAXVARSIZE];
 
-    Address2Hostkey(ipaddress, hash);
-
-    return HavePublicKey(username, ipaddress, hash);
+    bool found = Address2Hostkey(ipaddress, hash);
+    if (found)
+    {
+        return HavePublicKey(username, ipaddress, hash);
+    }
+    else
+    {
+        Log(LOG_LEVEL_VERBOSE, "Key for host '%s' not found in lastseen db",
+            ipaddress);
+        return HavePublicKey(username, ipaddress, "");
+    }
 }
 
 /*********************************************************************/
@@ -252,12 +260,14 @@ RSA *HavePublicKey(const char *username, const char *ipaddress, const char *dige
                 Log(LOG_LEVEL_ERR, "Could not rename from old key format '%s' to new '%s'. (rename: %s)", oldname, newname, GetErrorStr());
             }
         }
-        else                    // we don't know the digest (e.g. because we are a client and
-            // have no lastseen-map and/or root-SHA...pub of the server's key
-            // yet) Just using old file format (root-IP.pub) without renaming for now.
+        else
         {
-            Log(LOG_LEVEL_VERBOSE, "Could not map key file to new format - we have no digest yet (using %s)",
-                  oldname);
+            /* We don't know the digest (e.g. because we are a client and have
+               no lastseen-map yet), so we're using old file format
+               (root-IP.pub). */
+            Log(LOG_LEVEL_VERBOSE,
+                "We have no digest yet, using old keyfile name: %s",
+                oldname);
             snprintf(newname, sizeof(newname), "%s", oldname);
         }
     }

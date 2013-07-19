@@ -22,24 +22,22 @@
   included file COSL.txt.
 */
 
-#ifndef CFENGINE_CF_SERVERD_ENTERPRISE_STUBS_H
-#define CFENGINE_CF_SERVERD_ENTERPRISE_STUBS_H
 
-#include "cf3.defs.h"
+#ifndef CFENGINE_TLS_GENERIC_H
+#define CFENGINE_TLS_GENERIC_H
 
-struct ServerConnectionState;
 
-void RegisterLiteralServerData(EvalContext *ctx, const char *handle, Promise *pp);
-int ReturnLiteralData(EvalContext *ctx, char *handle, char *ret);
+#include "cfnet.h"
 
-int SetServerListenState(EvalContext *ctx, size_t queue_size);
+#include "logging.h"                                            /* LogLevel */
 
-void TryCollectCall(void);
-int ReceiveCollectCall(struct ServerConnectionState *conn);
 
-bool ReturnQueryData(struct ServerConnectionState *conn, char *menu, int encrypt);
+int TLSVerifyCallback(X509_STORE_CTX *ctx, void *arg);
+int TLSVerifyPeer(ConnectionInfo *conn_info, const char *remoteip, const char *username);
 
-void KeepReportDataSelectAccessPromise(Promise *pp);
-void CleanReportBookFilterSet(void);
+void TLSLogError(SSL *ssl, LogLevel level, const char *prepend, int code);
+int TLSSend(SSL *ssl, const char *buffer, int length);
+int TLSRecv(SSL *ssl, char *buffer, int length);
+int TLSRecvLines(SSL *ssl, char *buf, size_t buf_size);
 
 #endif

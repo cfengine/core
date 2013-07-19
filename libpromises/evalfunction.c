@@ -47,7 +47,7 @@
 #include "args.h"
 #include "client_code.h"
 #include "communication.h"
-#include "net.h"
+#include "classic.h"                                    /* SendSocketStream */
 #include "pipes.h"
 #include "exec_tools.h"
 #include "policy.h"
@@ -1047,6 +1047,8 @@ static FnCallResult FnCallReadTcp(EvalContext *ctx, FnCall *fp, Rlist *finalargs
         .portnumber = portnum,
     };
 
+    /* TODO don't use ServerConnect, this is only for CFEngine connections! */
+
     if (!ServerConnect(conn, hostnameip, fc))
     {
         Log(LOG_LEVEL_INFO, "Couldn't open a tcp socket. (socket: %s)", GetErrorStr());
@@ -1060,10 +1062,10 @@ static FnCallResult FnCallReadTcp(EvalContext *ctx, FnCall *fp, Rlist *finalargs
         int result = 0;
         size_t length = strlen(sendstring);
         do {
-            result = send(conn->connection.physical.sd, sendstring, length, 0);
+            result = send(conn->conn_info.sd, sendstring, length, 0);
             if (result < 0)
             {
-                cf_closesocket(conn->connection.physical.sd);
+                cf_closesocket(conn->conn_info.sd);
                 DeleteAgentConn(conn);
                 return (FnCallResult) { FNCALL_FAILURE };
             }
@@ -1074,18 +1076,18 @@ static FnCallResult FnCallReadTcp(EvalContext *ctx, FnCall *fp, Rlist *finalargs
         } while (sent < length);
     }
 
-    if ((n_read = recv(conn->connection.physical.sd, buffer, val, 0)) == -1)
+    if ((n_read = recv(conn->conn_info.sd, buffer, val, 0)) == -1)
     {
     }
 
     if (n_read == -1)
     {
-        cf_closesocket(conn->connection.physical.sd);
+        cf_closesocket(conn->conn_info.sd);
         DeleteAgentConn(conn);
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
-    cf_closesocket(conn->connection.physical.sd);
+    cf_closesocket(conn->conn_info.sd);
     DeleteAgentConn(conn);
 
     return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), RVAL_TYPE_SCALAR } };
@@ -1824,6 +1826,8 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx, FnCall *fp, Rlist *fin
             .portnumber = portnum,
         };
 
+        /* TODO don't use ServerConnect, this is only for CFEngine connections! */
+
         if (!ServerConnect(conn, rp->item, fc))
         {
             Log(LOG_LEVEL_INFO, "Couldn't open a tcp socket. (socket %s)", GetErrorStr());
@@ -1833,20 +1837,20 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx, FnCall *fp, Rlist *fin
 
         if (strlen(sendstring) > 0)
         {
-            if (SendSocketStream(conn->connection.physical.sd, sendstring, strlen(sendstring), 0) == -1)
+            if (SendSocketStream(conn->conn_info.sd, sendstring, strlen(sendstring)) == -1)
             {
-                cf_closesocket(conn->connection.physical.sd);
+                cf_closesocket(conn->conn_info.sd);
                 DeleteAgentConn(conn);
                 continue;
             }
 
-            if ((n_read = recv(conn->connection.physical.sd, buffer, val, 0)) == -1)
+            if ((n_read = recv(conn->conn_info.sd, buffer, val, 0)) == -1)
             {
             }
 
             if (n_read == -1)
             {
-                cf_closesocket(conn->connection.physical.sd);
+                cf_closesocket(conn->conn_info.sd);
                 DeleteAgentConn(conn);
                 continue;
             }
@@ -1879,7 +1883,7 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx, FnCall *fp, Rlist *fin
             count++;
         }
 
-        cf_closesocket(conn->connection.physical.sd);
+        cf_closesocket(conn->conn_info.sd);
         DeleteAgentConn(conn);
     }
 

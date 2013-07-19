@@ -3,16 +3,42 @@
 #include <string.h>
 #include "cmockery.h"
 #include "server.h"
+#include "server_common.h"
 
 /*
- * Need to declare some functions that are not available.
+ * Copied from server.c
  */
-ProtocolCommand GetCommand(char *str);
+typedef enum
+{
+    PROTOCOL_COMMAND_EXEC,
+    PROTOCOL_COMMAND_AUTH,
+    PROTOCOL_COMMAND_GET,
+    PROTOCOL_COMMAND_OPENDIR,
+    PROTOCOL_COMMAND_SYNC,
+    PROTOCOL_COMMAND_CONTEXTS,
+    PROTOCOL_COMMAND_MD5,
+    PROTOCOL_COMMAND_MD5_SECURE,
+    PROTOCOL_COMMAND_AUTH_CLEAR,
+    PROTOCOL_COMMAND_AUTH_SECURE,
+    PROTOCOL_COMMAND_SYNC_SECURE,
+    PROTOCOL_COMMAND_GET_SECURE,
+    PROTOCOL_COMMAND_VERSION,
+    PROTOCOL_COMMAND_OPENDIR_SECURE,
+    PROTOCOL_COMMAND_VAR,
+    PROTOCOL_COMMAND_VAR_SECURE,
+    PROTOCOL_COMMAND_CONTEXT,
+    PROTOCOL_COMMAND_CONTEXT_SECURE,
+    PROTOCOL_COMMAND_QUERY_SECURE,
+    PROTOCOL_COMMAND_CALL_ME_BACK,
+    PROTOCOL_COMMAND_BAD
+} ProtocolCommandClassic;
+
+ProtocolCommandClassic GetCommandClassic(char *str);
 
 /*
  * The protocol consists of the following commands:
  * "EXEC",
- * "AUTH",                     
+ * "AUTH",
  * "GET",
  * "OPENDIR",
  * "SYNCH",
@@ -31,427 +57,409 @@ ProtocolCommand GetCommand(char *str);
  * "SCONTEXT",
  * "SQUERY",
  * "SCALLBACK",
- * "STARTTLS",
  */
 
 static void test_command_parser(void)
 {
-    ProtocolCommand parsed = PROTOCOL_COMMAND_BAD;
-    ProtocolCommand expected = PROTOCOL_COMMAND_BAD;
+    ProtocolCommandClassic parsed = PROTOCOL_COMMAND_BAD;
+    ProtocolCommandClassic expected = PROTOCOL_COMMAND_BAD;
     /*
      * Test all the commands, one by one.
      */
     // EXEC
     expected = PROTOCOL_COMMAND_EXEC;
-    parsed = GetCommand("EXEC");
+    parsed = GetCommandClassic("EXEC");
     assert_int_equal(expected, parsed);
     // AUTH
     expected = PROTOCOL_COMMAND_AUTH;
-    parsed = GetCommand("AUTH");
+    parsed = GetCommandClassic("AUTH");
     assert_int_equal(expected, parsed);
     // GET
     expected = PROTOCOL_COMMAND_GET;
-    parsed = GetCommand("GET");
+    parsed = GetCommandClassic("GET");
     assert_int_equal(expected, parsed);
     // OPENDIR
     expected = PROTOCOL_COMMAND_OPENDIR;
-    parsed = GetCommand("OPENDIR");
+    parsed = GetCommandClassic("OPENDIR");
     assert_int_equal(expected, parsed);
     // SYNCH
     expected = PROTOCOL_COMMAND_SYNC;
-    parsed = GetCommand("SYNCH");
+    parsed = GetCommandClassic("SYNCH");
     assert_int_equal(expected, parsed);
     // CLASSES
     expected = PROTOCOL_COMMAND_CONTEXTS;
-    parsed = GetCommand("CLASSES");
+    parsed = GetCommandClassic("CLASSES");
     assert_int_equal(expected, parsed);
     // MD5
     expected = PROTOCOL_COMMAND_MD5;
-    parsed = GetCommand("MD5");
+    parsed = GetCommandClassic("MD5");
     assert_int_equal(expected, parsed);
     // SMD5
     expected = PROTOCOL_COMMAND_MD5_SECURE;
-    parsed = GetCommand("SMD5");
+    parsed = GetCommandClassic("SMD5");
     assert_int_equal(expected, parsed);
     // CAUTH
     expected = PROTOCOL_COMMAND_AUTH_CLEAR;
-    parsed = GetCommand("CAUTH");
+    parsed = GetCommandClassic("CAUTH");
     assert_int_equal(expected, parsed);
     // SAUTH
     expected = PROTOCOL_COMMAND_AUTH_SECURE;
-    parsed = GetCommand("SAUTH");
+    parsed = GetCommandClassic("SAUTH");
     assert_int_equal(expected, parsed);
     // SSYNCH
     expected = PROTOCOL_COMMAND_SYNC_SECURE;
-    parsed = GetCommand("SSYNCH");
+    parsed = GetCommandClassic("SSYNCH");
     assert_int_equal(expected, parsed);
     // SGET
     expected = PROTOCOL_COMMAND_GET_SECURE;
-    parsed = GetCommand("SGET");
+    parsed = GetCommandClassic("SGET");
     assert_int_equal(expected, parsed);
     // VERSION
     expected = PROTOCOL_COMMAND_VERSION;
-    parsed = GetCommand("VERSION");
+    parsed = GetCommandClassic("VERSION");
     assert_int_equal(expected, parsed);
     // SOPENDIR
     expected = PROTOCOL_COMMAND_OPENDIR_SECURE;
-    parsed = GetCommand("SOPENDIR");
+    parsed = GetCommandClassic("SOPENDIR");
     assert_int_equal(expected, parsed);
     // VAR
     expected = PROTOCOL_COMMAND_VAR;
-    parsed = GetCommand("VAR");
+    parsed = GetCommandClassic("VAR");
     assert_int_equal(expected, parsed);
     // SVAR
     expected = PROTOCOL_COMMAND_VAR_SECURE;
-    parsed = GetCommand("SVAR");
+    parsed = GetCommandClassic("SVAR");
     assert_int_equal(expected, parsed);
     // CONTEXT
     expected = PROTOCOL_COMMAND_CONTEXT;
-    parsed = GetCommand("CONTEXT");
+    parsed = GetCommandClassic("CONTEXT");
     assert_int_equal(expected, parsed);
     // SCONTEXT
     expected = PROTOCOL_COMMAND_CONTEXT_SECURE;
-    parsed = GetCommand("SCONTEXT");
+    parsed = GetCommandClassic("SCONTEXT");
     assert_int_equal(expected, parsed);
     // SQUERY
     expected = PROTOCOL_COMMAND_QUERY_SECURE;
-    parsed = GetCommand("SQUERY");
+    parsed = GetCommandClassic("SQUERY");
     assert_int_equal(expected, parsed);
     // SCALLBACK
     expected = PROTOCOL_COMMAND_CALL_ME_BACK;
-    parsed = GetCommand("SCALLBACK");
-    assert_int_equal(expected, parsed);
-    // STARTTLS
-    expected = PROTOCOL_COMMAND_STARTTLS;
-    parsed = GetCommand("STARTTLS");
+    parsed = GetCommandClassic("SCALLBACK");
     assert_int_equal(expected, parsed);
     /*
      * Try using lowercase
      */
     // EXEC
     expected = PROTOCOL_COMMAND_BAD;
-    parsed = GetCommand("exec");
+    parsed = GetCommandClassic("exec");
     assert_int_equal(expected, parsed);
     // AUTH
-    parsed = GetCommand("auth");
+    parsed = GetCommandClassic("auth");
     assert_int_equal(expected, parsed);
     // GET
-    parsed = GetCommand("get");
+    parsed = GetCommandClassic("get");
     assert_int_equal(expected, parsed);
     // OPENDIR
-    parsed = GetCommand("opendir");
+    parsed = GetCommandClassic("opendir");
     assert_int_equal(expected, parsed);
     // SYNCH
-    parsed = GetCommand("synch");
+    parsed = GetCommandClassic("synch");
     assert_int_equal(expected, parsed);
     // CLASSES
-    parsed = GetCommand("classes");
+    parsed = GetCommandClassic("classes");
     assert_int_equal(expected, parsed);
     // MD5
-    parsed = GetCommand("md5");
+    parsed = GetCommandClassic("md5");
     assert_int_equal(expected, parsed);
     // SMD5
-    parsed = GetCommand("smd5");
+    parsed = GetCommandClassic("smd5");
     assert_int_equal(expected, parsed);
     // CAUTH
-    parsed = GetCommand("cauth");
+    parsed = GetCommandClassic("cauth");
     assert_int_equal(expected, parsed);
     // SAUTH
-    parsed = GetCommand("sauth");
+    parsed = GetCommandClassic("sauth");
     assert_int_equal(expected, parsed);
     // SSYNCH
-    parsed = GetCommand("synch");
+    parsed = GetCommandClassic("synch");
     assert_int_equal(expected, parsed);
     // SGET
-    parsed = GetCommand("sget");
+    parsed = GetCommandClassic("sget");
     assert_int_equal(expected, parsed);
     // VERSION
-    parsed = GetCommand("version");
+    parsed = GetCommandClassic("version");
     assert_int_equal(expected, parsed);
     // SOPENDIR
-    parsed = GetCommand("sopendir");
+    parsed = GetCommandClassic("sopendir");
     assert_int_equal(expected, parsed);
     // VAR
-    parsed = GetCommand("var");
+    parsed = GetCommandClassic("var");
     assert_int_equal(expected, parsed);
     // SVAR
-    parsed = GetCommand("svar");
+    parsed = GetCommandClassic("svar");
     assert_int_equal(expected, parsed);
     // CONTEXT
-    parsed = GetCommand("context");
+    parsed = GetCommandClassic("context");
     assert_int_equal(expected, parsed);
     // SCONTEXT
-    parsed = GetCommand("scontext");
+    parsed = GetCommandClassic("scontext");
     assert_int_equal(expected, parsed);
     // SQUERY
-    parsed = GetCommand("squery");
+    parsed = GetCommandClassic("squery");
     assert_int_equal(expected, parsed);
     // SCALLBACK
-    parsed = GetCommand("scallback");
-    assert_int_equal(expected, parsed);
-    // STARTTLS
-    parsed = GetCommand("starttls");
+    parsed = GetCommandClassic("scallback");
     assert_int_equal(expected, parsed);
     /*
      * Try the commands with something in front
      */
     // EXEC
     expected = PROTOCOL_COMMAND_BAD;
-    parsed = GetCommand("eEXEC");
+    parsed = GetCommandClassic("eEXEC");
     assert_int_equal(expected, parsed);
     // AUTH
-    parsed = GetCommand("aAUTH");
+    parsed = GetCommandClassic("aAUTH");
     assert_int_equal(expected, parsed);
     // GET
-    parsed = GetCommand("gGET");
+    parsed = GetCommandClassic("gGET");
     assert_int_equal(expected, parsed);
     // OPENDIR
-    parsed = GetCommand("oOPENDIR");
+    parsed = GetCommandClassic("oOPENDIR");
     assert_int_equal(expected, parsed);
     // SYNCH
-    parsed = GetCommand("sSYNCH");
+    parsed = GetCommandClassic("sSYNCH");
     assert_int_equal(expected, parsed);
     // CLASSES
-    parsed = GetCommand("cCLASSES");
+    parsed = GetCommandClassic("cCLASSES");
     assert_int_equal(expected, parsed);
     // MD5
-    parsed = GetCommand("mMD5");
+    parsed = GetCommandClassic("mMD5");
     assert_int_equal(expected, parsed);
     // SMD5
-    parsed = GetCommand("sMD5");
+    parsed = GetCommandClassic("sMD5");
     assert_int_equal(expected, parsed);
     // CAUTH
-    parsed = GetCommand("cCAUTH");
+    parsed = GetCommandClassic("cCAUTH");
     assert_int_equal(expected, parsed);
     // SAUTH
-    parsed = GetCommand("sSAUTH");
+    parsed = GetCommandClassic("sSAUTH");
     assert_int_equal(expected, parsed);
     // SSYNCH
-    parsed = GetCommand("sSSYNCH");
+    parsed = GetCommandClassic("sSSYNCH");
     assert_int_equal(expected, parsed);
     // SGET
-    parsed = GetCommand("sSGET");
+    parsed = GetCommandClassic("sSGET");
     assert_int_equal(expected, parsed);
     // VERSION
-    parsed = GetCommand("vVERSION");
+    parsed = GetCommandClassic("vVERSION");
     assert_int_equal(expected, parsed);
     // SOPENDIR
-    parsed = GetCommand("sSOPENDIR");
+    parsed = GetCommandClassic("sSOPENDIR");
     assert_int_equal(expected, parsed);
     // VAR
-    parsed = GetCommand("vVAR");
+    parsed = GetCommandClassic("vVAR");
     assert_int_equal(expected, parsed);
     // SVAR
-    parsed = GetCommand("sSVAR");
+    parsed = GetCommandClassic("sSVAR");
     assert_int_equal(expected, parsed);
     // CONTEXT
-    parsed = GetCommand("cCONTEXT");
+    parsed = GetCommandClassic("cCONTEXT");
     assert_int_equal(expected, parsed);
     // SCONTEXT
-    parsed = GetCommand("sSCONTEXT");
+    parsed = GetCommandClassic("sSCONTEXT");
     assert_int_equal(expected, parsed);
     // SQUERY
-    parsed = GetCommand("sSQUERY");
+    parsed = GetCommandClassic("sSQUERY");
     assert_int_equal(expected, parsed);
     // SCALLBACK
-    parsed = GetCommand("sSCALLBACK");
-    assert_int_equal(expected, parsed);
-    // STARTTLS
-    parsed = GetCommand("sSTARTTLS");
+    parsed = GetCommandClassic("sSCALLBACK");
     assert_int_equal(expected, parsed);
     /*
      * Try the commands with something after them
      */
     // EXEC
     expected = PROTOCOL_COMMAND_BAD;
-    parsed = GetCommand("EXECx");
+    parsed = GetCommandClassic("EXECx");
     assert_int_equal(expected, parsed);
     // AUTH
-    parsed = GetCommand("AUTHx");
+    parsed = GetCommandClassic("AUTHx");
     assert_int_equal(expected, parsed);
     // GET
-    parsed = GetCommand("GETx");
+    parsed = GetCommandClassic("GETx");
     assert_int_equal(expected, parsed);
     // OPENDIR
-    parsed = GetCommand("OPENDIRx");
+    parsed = GetCommandClassic("OPENDIRx");
     assert_int_equal(expected, parsed);
     // SYNCH
-    parsed = GetCommand("SYNCHx");
+    parsed = GetCommandClassic("SYNCHx");
     assert_int_equal(expected, parsed);
     // CLASSES
-    parsed = GetCommand("CLASSESx");
+    parsed = GetCommandClassic("CLASSESx");
     assert_int_equal(expected, parsed);
     // MD5
-    parsed = GetCommand("MD5x");
+    parsed = GetCommandClassic("MD5x");
     assert_int_equal(expected, parsed);
-    // SMD5                                                                                 
-    parsed = GetCommand("SMD5x");
-    assert_int_equal(expected, parsed);                                                             
-    // CAUTH                                                                                            
-    parsed = GetCommand("CAUTHx");
-    assert_int_equal(expected, parsed);                                                                         
-    // SAUTH                                                                                                        
-    parsed = GetCommand("SAUTHx");
-    assert_int_equal(expected, parsed);                                                                                     
-    // SSYNCH                                                                                                                   
-    parsed = GetCommand("SSYNCHx");
-    assert_int_equal(expected, parsed);                                                                                                 
-    // SGET                                                                                                                                 
-    parsed = GetCommand("SGETx");
-    assert_int_equal(expected, parsed);                                                                                                             
-    // VERSION                                                                                                                                          
-    parsed = GetCommand("VERSIONx");
+    // SMD5
+    parsed = GetCommandClassic("SMD5x");
+    assert_int_equal(expected, parsed);
+    // CAUTH
+    parsed = GetCommandClassic("CAUTHx");
+    assert_int_equal(expected, parsed);
+    // SAUTH
+    parsed = GetCommandClassic("SAUTHx");
+    assert_int_equal(expected, parsed);
+    // SSYNCH
+    parsed = GetCommandClassic("SSYNCHx");
+    assert_int_equal(expected, parsed);
+    // SGET
+    parsed = GetCommandClassic("SGETx");
+    assert_int_equal(expected, parsed);
+    // VERSION
+    parsed = GetCommandClassic("VERSIONx");
     assert_int_equal(expected, parsed);
     // SOPENDIR
-    parsed = GetCommand("SOPENDIRx");
+    parsed = GetCommandClassic("SOPENDIRx");
     assert_int_equal(expected, parsed);
     // VAR
-    parsed = GetCommand("VARx");
+    parsed = GetCommandClassic("VARx");
     assert_int_equal(expected, parsed);
     // SVAR
-    parsed = GetCommand("SVARx");
+    parsed = GetCommandClassic("SVARx");
     assert_int_equal(expected, parsed);
     // CONTEXT
-    parsed = GetCommand("CONTEXTx");
+    parsed = GetCommandClassic("CONTEXTx");
     assert_int_equal(expected, parsed);
     // SCONTEXT
-    parsed = GetCommand("SCONTEXTx");
+    parsed = GetCommandClassic("SCONTEXTx");
     assert_int_equal(expected, parsed);
     // SQUERY
-    parsed = GetCommand("SQUERYx");
+    parsed = GetCommandClassic("SQUERYx");
     assert_int_equal(expected, parsed);
     // SCALLBACK
-    parsed = GetCommand("SCALLBACKx");
-    assert_int_equal(expected, parsed);
-    // STARTTLS
-    parsed = GetCommand("STARTTLSx");
+    parsed = GetCommandClassic("SCALLBACKx");
     assert_int_equal(expected, parsed);
     /*
      * Try some common mispellings.
      */
     // EXEC
     expected = PROTOCOL_COMMAND_BAD;
-    parsed = GetCommand("EXE");
+    parsed = GetCommandClassic("EXE");
     assert_int_equal(expected, parsed);
-    parsed = GetCommand("EXECUTE");
+    parsed = GetCommandClassic("EXECUTE");
     assert_int_equal(expected, parsed);
     // AUTH
-    parsed = GetCommand("AUTHORIZATION");
+    parsed = GetCommandClassic("AUTHORIZATION");
     assert_int_equal(expected, parsed);
     // SYNCH
-    parsed = GetCommand("SYNC");
+    parsed = GetCommandClassic("SYNC");
     assert_int_equal(expected, parsed);
-    parsed = GetCommand("SYNCHRONIZE");
+    parsed = GetCommandClassic("SYNCHRONIZE");
     assert_int_equal(expected, parsed);
     // CLASSES
-    parsed = GetCommand("CLASS");
+    parsed = GetCommandClassic("CLASS");
     assert_int_equal(expected, parsed);
     // CAUTH
-    parsed = GetCommand("CAUTHORIZATION");
+    parsed = GetCommandClassic("CAUTHORIZATION");
     assert_int_equal(expected, parsed);
     // SAUTH
-    parsed = GetCommand("SAUTHORIZATION");
+    parsed = GetCommandClassic("SAUTHORIZATION");
     assert_int_equal(expected, parsed);
     // SSYNCH
-    parsed = GetCommand("SSYNCHRONIZE");
+    parsed = GetCommandClassic("SSYNCHRONIZE");
     assert_int_equal(expected, parsed);
-    parsed = GetCommand("SSYNC");
+    parsed = GetCommandClassic("SSYNC");
     assert_int_equal(expected, parsed);
-    // VERSION                                                                                                                                          
-    parsed = GetCommand("V");
+    // VERSION
+    parsed = GetCommandClassic("V");
     assert_int_equal(expected, parsed);
     // VAR
-    parsed = GetCommand("VARIABLE");
+    parsed = GetCommandClassic("VARIABLE");
     assert_int_equal(expected, parsed);
     // SVAR
-    parsed = GetCommand("SVARIABLE");
+    parsed = GetCommandClassic("SVARIABLE");
     assert_int_equal(expected, parsed);
     /*
      * Finally, try the commands with a space and something else, they should be recognized"
      */
     // EXEC
     expected = PROTOCOL_COMMAND_EXEC;
-    parsed = GetCommand("EXEC 123");
+    parsed = GetCommandClassic("EXEC 123");
     assert_int_equal(expected, parsed);
     // AUTH
     expected = PROTOCOL_COMMAND_AUTH;
-    parsed = GetCommand("AUTH 123");
+    parsed = GetCommandClassic("AUTH 123");
     assert_int_equal(expected, parsed);
     // GET
     expected = PROTOCOL_COMMAND_GET;
-    parsed = GetCommand("GET 123");
+    parsed = GetCommandClassic("GET 123");
     assert_int_equal(expected, parsed);
     // OPENDIR
     expected = PROTOCOL_COMMAND_OPENDIR;
-    parsed = GetCommand("OPENDIR 123");
+    parsed = GetCommandClassic("OPENDIR 123");
     assert_int_equal(expected, parsed);
     // SYNCH
     expected = PROTOCOL_COMMAND_SYNC;
-    parsed = GetCommand("SYNCH 123");
+    parsed = GetCommandClassic("SYNCH 123");
     assert_int_equal(expected, parsed);
     // CLASSES
     expected = PROTOCOL_COMMAND_CONTEXTS;
-    parsed = GetCommand("CLASSES 123");
+    parsed = GetCommandClassic("CLASSES 123");
     assert_int_equal(expected, parsed);
     // MD5
     expected = PROTOCOL_COMMAND_MD5;
-    parsed = GetCommand("MD5 123");
+    parsed = GetCommandClassic("MD5 123");
     assert_int_equal(expected, parsed);
     // SMD5
     expected = PROTOCOL_COMMAND_MD5_SECURE;
-    parsed = GetCommand("SMD5 123");
+    parsed = GetCommandClassic("SMD5 123");
     assert_int_equal(expected, parsed);
     // CAUTH
     expected = PROTOCOL_COMMAND_AUTH_CLEAR;
-    parsed = GetCommand("CAUTH 123");
+    parsed = GetCommandClassic("CAUTH 123");
     assert_int_equal(expected, parsed);
     // SAUTH
     expected = PROTOCOL_COMMAND_AUTH_SECURE;
-    parsed = GetCommand("SAUTH 123");
+    parsed = GetCommandClassic("SAUTH 123");
     assert_int_equal(expected, parsed);
     // SSYNCH
     expected = PROTOCOL_COMMAND_SYNC_SECURE;
-    parsed = GetCommand("SSYNCH 123");
+    parsed = GetCommandClassic("SSYNCH 123");
     assert_int_equal(expected, parsed);
     // SGET
     expected = PROTOCOL_COMMAND_GET_SECURE;
-    parsed = GetCommand("SGET 123");
+    parsed = GetCommandClassic("SGET 123");
     assert_int_equal(expected, parsed);
     // VERSION
     expected = PROTOCOL_COMMAND_VERSION;
-    parsed = GetCommand("VERSION 123");
+    parsed = GetCommandClassic("VERSION 123");
     assert_int_equal(expected, parsed);
     // SOPENDIR
     expected = PROTOCOL_COMMAND_OPENDIR_SECURE;
-    parsed = GetCommand("SOPENDIR 123");
+    parsed = GetCommandClassic("SOPENDIR 123");
     assert_int_equal(expected, parsed);
     // VAR
     expected = PROTOCOL_COMMAND_VAR;
-    parsed = GetCommand("VAR 123");
+    parsed = GetCommandClassic("VAR 123");
     assert_int_equal(expected, parsed);
     // SVAR
     expected = PROTOCOL_COMMAND_VAR_SECURE;
-    parsed = GetCommand("SVAR 123");
+    parsed = GetCommandClassic("SVAR 123");
     assert_int_equal(expected, parsed);
     // CONTEXT
     expected = PROTOCOL_COMMAND_CONTEXT;
-    parsed = GetCommand("CONTEXT 123");
+    parsed = GetCommandClassic("CONTEXT 123");
     assert_int_equal(expected, parsed);
     // SCONTEXT
     expected = PROTOCOL_COMMAND_CONTEXT_SECURE;
-    parsed = GetCommand("SCONTEXT 123");
+    parsed = GetCommandClassic("SCONTEXT 123");
     assert_int_equal(expected, parsed);
     // SQUERY
     expected = PROTOCOL_COMMAND_QUERY_SECURE;
-    parsed = GetCommand("SQUERY 123");
+    parsed = GetCommandClassic("SQUERY 123");
     assert_int_equal(expected, parsed);
     // SCALLBACK
     expected = PROTOCOL_COMMAND_CALL_ME_BACK;
-    parsed = GetCommand("SCALLBACK 123");
-    assert_int_equal(expected, parsed);
-    // STARTTLS
-    expected = PROTOCOL_COMMAND_STARTTLS;
-    parsed = GetCommand("STARTTLS 123");
+    parsed = GetCommandClassic("SCALLBACK 123");
     assert_int_equal(expected, parsed);
 }
 

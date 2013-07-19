@@ -40,155 +40,6 @@ extern char VFQNAME[];
 #include "files_hashes.h" /* HashString,HashesMatch,HashPubKey,HashPrintSafe */
 
 
-static bool SetSessionKey(AgentConnection *conn);
-int TryTLS(ConnectionInfo *connection);
-
-/*
- * The tricky part about enabling TLS is that the server might disconnect us if
- * it does not support the STARTTLS command. Once disconnected we will need to
- * reconnect and make sure everything works again.
- */
-int TryTLS(ConnectionInfo *connection)
-{
-    Log (LOG_LEVEL_CRIT, "Trying to enable TLS");
-    char STARTTLS[] = "STARTTLS";
-    char ACK[] = "ACK";
-    char buffer[CF_BUFSIZE];
-    int result = 0;
-
-    /*
-     * Load OpenSSL in case it is not already loaded.
-     */
-    SSL_library_init();
-    SSL_load_error_strings();
-    /*
-     * Continue with the initialization.
-     */
-    if (CFEngine_TLS == connection->type)
-    {
-        Log(LOG_LEVEL_ERR, "We are already on TLS mode, skipping initialization");
-        return 0;
-    }
-    else
-    {
-        Log(LOG_LEVEL_CRIT, "Using classic mode, trying to start TLS");
-    }
-    result = SendTransaction(connection, STARTTLS, strlen(STARTTLS), CF_DONE);
-    if (result < 0)
-    {
-        Log(LOG_LEVEL_CRIT, "Failed to start TLS");
-        return -1;
-    }
-    result = ReceiveTransaction(connection, buffer, NULL);
-    Log(LOG_LEVEL_CRIT, "Received: [%s]", buffer);
-    if (strcmp(buffer, ACK) == 0)
-    {
-        Log(LOG_LEVEL_CRIT, "TLS negotiation accepted, starting TLS connection");
-        int sd = connection->physical.sd;
-        TLSInfo *tlsInfo = (TLSInfo *)xmalloc(sizeof(TLSInfo));
-        tlsInfo->method = TLSv1_client_method();
-        tlsInfo->context = SSL_CTX_new(tlsInfo->method);
-
-        if (!tlsInfo->context)
-        {
-            Log(LOG_LEVEL_INFO, "Unable to create the SSL context");
-            free (tlsInfo);
-            return -1;
-        }
-
-        tlsInfo->ssl = SSL_new(tlsInfo->context);
-
-        if (!tlsInfo->ssl)
-        {
-            Log(LOG_LEVEL_INFO, "Unable to create the SSL object");
-            SSL_CTX_free (tlsInfo->context);
-            free (tlsInfo);
-            return -1;
-        }
-        SSL_set_fd(tlsInfo->ssl, sd);
-
-        /*
-         * Now we send the TLS request to the server
-         */
-        int total_tries = 0;
-        do {
-            Log(LOG_LEVEL_CRIT, "Sending OpenSSL TLS request");
-            result = SSL_connect(tlsInfo->ssl);
-            if (result <= 0)
-            {
-                Log(LOG_LEVEL_CRIT, "Problems with TLS negotiation, trying again");
-                /*
-                 * Identify the problem and if possible try to fix it.
-                 */
-                int error = SSL_get_error(tlsInfo->ssl, result);
-                if ((SSL_ERROR_WANT_WRITE == error) || (SSL_ERROR_WANT_READ == error))
-                {
-                    Log(LOG_LEVEL_ERR, "Recoverable error in TLS handshake, trying to fix it");
-                    /*
-                     * We can try to fix this.
-                     * This error means that there was not enough data in the buffer, using select
-                     * to wait until we get more data.
-                     */
-                    fd_set wfds;
-                    struct timeval tv;
-                    int tries = 0;
-
-                    do {
-                        SET_DEFAULT_TLS_TIMEOUT(tv);
-                        FD_ZERO(&wfds);
-                        FD_SET(connection->physical.sd, &wfds);
-
-                        result = select(connection->physical.sd+1, NULL, &wfds, NULL, &tv);
-                        if (result > 0)
-                        {
-                            /*
-                             * Ready to send data
-                             */
-                            break;
-                        }
-                        else
-                        {
-                            Log(LOG_LEVEL_ERR, "select(2) timed out, retrying (tries: %d)", tries);
-                            ++tries;
-                        }
-                    } while (tries <= DEFAULT_TLS_TRIES);
-                }
-                else
-                {
-                    /*
-                     * Unrecoverable error
-                     */
-                    ERR_print_errors_fp(stderr);
-                    SSL_get_error(tlsInfo->ssl, error);
-                    Log(LOG_LEVEL_ERR, "Unrecoverable error in TLS handshake (error: %d)", error);
-                    SSL_free (tlsInfo->ssl);
-                    SSL_CTX_free (tlsInfo->context);
-                    free (tlsInfo);
-                    return -1;
-                }
-            }
-            else
-            {
-                /*
-                 * TLS channel established, start talking!
-                 */
-                Log (LOG_LEVEL_CRIT, "TLS connection established");
-                connection->type = CFEngine_TLS;
-                connection->physical.tls = tlsInfo;
-                break;
-            }
-            ++total_tries;
-        } while (total_tries <= DEFAULT_TLS_TRIES);
-    }
-    else
-    {
-        Log(LOG_LEVEL_CRIT, "Wrong server reply (%s)", buffer);
-        return -1;
-    }
-    Log(LOG_LEVEL_CRIT, "TLS enabled");
-    return 0;
-}
-
 /*********************************************************************/
 
 static int SKIPIDENTIFY;
@@ -202,7 +53,7 @@ void SetSkipIdentify(bool enabled)
 
 /*********************************************************************/
 
-int IdentifyAgent(ConnectionInfo *connection)
+int IdentifyAgent(ConnectionInfo *conn_info)
 {
     char uname[CF_BUFSIZE], sendbuff[CF_BUFSIZE];
     char dnsname[CF_MAXVARSIZE], localip[CF_MAX_IP_LEN];
@@ -224,7 +75,7 @@ int IdentifyAgent(ConnectionInfo *connection)
         struct sockaddr_storage myaddr = {0};
         socklen_t myaddr_len = sizeof(myaddr);
 
-        if (getsockname(connection->physical.sd, (struct sockaddr *) &myaddr, &myaddr_len) == -1)
+        if (getsockname(conn_info->sd, (struct sockaddr *) &myaddr, &myaddr_len) == -1)
         {
             Log(LOG_LEVEL_ERR, "Couldn't get socket address. (getsockname: %s)", GetErrorStr());
             return false;
@@ -292,13 +143,6 @@ int IdentifyAgent(ConnectionInfo *connection)
         }
     }
 
-    /*
-     * Try TLS
-     */
-    if (CFEngine_Classic == connection->type)
-    {
-        TryTLS(connection);
-    }
 /* client always identifies as root on windows */
 #ifdef __MINGW32__
     snprintf(uname, sizeof(uname), "%s", "root");
@@ -309,7 +153,7 @@ int IdentifyAgent(ConnectionInfo *connection)
     snprintf(sendbuff, sizeof(sendbuff), "CAUTH %s %s %s %d",
              localip, dnsname, uname, 0);
 
-    if (SendTransaction(connection, sendbuff, 0, CF_DONE) == -1)
+    if (SendTransaction(conn_info, sendbuff, 0, CF_DONE) == -1)
     {
         Log(LOG_LEVEL_ERR,
               "During identify agent, could not send auth response. (SendTransaction: %s)", GetErrorStr());
@@ -320,6 +164,31 @@ int IdentifyAgent(ConnectionInfo *connection)
 }
 
 /*********************************************************************/
+
+static bool SetSessionKey(AgentConnection *conn)
+{
+    BIGNUM *bp;
+    int session_size = CfSessionKeySize(conn->encryption_type);
+
+    bp = BN_new();
+
+    if (bp == NULL)
+    {
+        Log(LOG_LEVEL_ERR, "Could not allocate session key");
+        return false;
+    }
+
+    // session_size is in bytes
+    if (!BN_rand(bp, session_size * 8, -1, 0))
+    {
+        Log(LOG_LEVEL_ERR, "Can't generate cryptographic key");
+        BN_clear_free(bp);
+        return false;
+    }
+
+    conn->session_key = (unsigned char *) bp->d;
+    return true;
+}
 
 int AuthenticateAgent(AgentConnection *conn, bool trust_key)
 {
@@ -336,14 +205,6 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
     {
         Log(LOG_LEVEL_ERR, "No public/private key pair found at '%s'", PublicKeyFile(GetWorkDir()));
         return false;
-    }
-
-    /*
-     * Try TLS
-     */
-    if (CFEngine_Classic == conn->connection.type)
-    {
-        TryTLS(&conn->connection);
     }
 
     enterprise_field = CfEnterpriseOptions();
@@ -372,6 +233,7 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
 
 /* We assume that the server bound to the remote socket is the official one i.e. = root's */
 
+    /* Ask the server to send us the public key if we don't have it. */
     if ((server_pubkey = HavePublicKeyByIP(conn->username, conn->remoteip)))
     {
         implicitly_trust_server = false;
@@ -385,8 +247,9 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
 
 // Server pubkey is what we want to has as a unique ID
 
-    snprintf(sendbuffer, sizeof(sendbuffer), "SAUTH %c %d %d %c", implicitly_trust_server ? 'n': 'y', encrypted_len,
-             nonce_len, enterprise_field);
+    snprintf(sendbuffer, sizeof(sendbuffer), "SAUTH %c %d %d %c",
+             implicitly_trust_server ? 'n': 'y',
+             encrypted_len, nonce_len, enterprise_field);
 
     out = xmalloc(encrypted_len);
 
@@ -410,7 +273,7 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
 
 /* proposition C1 - Send challenge / nonce */
 
-    SendTransaction(&conn->connection, sendbuffer, CF_RSA_PROTO_OFFSET + encrypted_len, CF_DONE);
+    SendTransaction(&conn->conn_info, sendbuffer, CF_RSA_PROTO_OFFSET + encrypted_len, CF_DONE);
 
     BN_free(bn);
     BN_free(nonce_challenge);
@@ -421,19 +284,19 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
 
     memset(sendbuffer, 0, CF_EXPANDSIZE);
     len = BN_bn2mpi(PUBKEY->n, sendbuffer);
-    SendTransaction(&conn->connection, sendbuffer, len, CF_DONE);        /* No need to encrypt the public key ... */
+    SendTransaction(&conn->conn_info, sendbuffer, len, CF_DONE);        /* No need to encrypt the public key ... */
 
 /* proposition C3 */
     memset(sendbuffer, 0, CF_EXPANDSIZE);
     len = BN_bn2mpi(PUBKEY->e, sendbuffer);
-    SendTransaction(&conn->connection, sendbuffer, len, CF_DONE);
+    SendTransaction(&conn->conn_info, sendbuffer, len, CF_DONE);
 
-/* check reply about public key - server can break connection here */
+/* check reply about public key - server can break conn_info here */
 
 /* proposition S1 */
     memset(in, 0, CF_BUFSIZE);
 
-    if (ReceiveTransaction(&conn->connection, in, NULL) == -1)
+    if (ReceiveTransaction(&conn->conn_info, in, NULL) == -1)
     {
         Log(LOG_LEVEL_ERR, "Protocol transaction broken off (1). (ReceiveTransaction: %s)", GetErrorStr());
         RSA_free(server_pubkey);
@@ -452,7 +315,7 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
 /* proposition S2 */
     memset(in, 0, CF_BUFSIZE);
 
-    if (ReceiveTransaction(&conn->connection, in, NULL) == -1)
+    if (ReceiveTransaction(&conn->conn_info, in, NULL) == -1)
     {
         Log(LOG_LEVEL_ERR, "Protocol transaction broken off (2). (ReceiveTransaction: %s)", GetErrorStr());
         RSA_free(server_pubkey);
@@ -494,7 +357,7 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
 
 /* proposition S3 */
     memset(in, 0, CF_BUFSIZE);
-    encrypted_len = ReceiveTransaction(&conn->connection, in, NULL);
+    encrypted_len = ReceiveTransaction(&conn->conn_info, in, NULL);
 
     if (encrypted_len <= 0)
     {
@@ -526,11 +389,11 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
 
     if (FIPS_MODE)
     {
-        SendTransaction(&conn->connection, digest, CF_DEFAULT_DIGEST_LEN, CF_DONE);
+        SendTransaction(&conn->conn_info, digest, CF_DEFAULT_DIGEST_LEN, CF_DONE);
     }
     else
     {
-        SendTransaction(&conn->connection, digest, CF_MD5_LEN, CF_DONE);
+        SendTransaction(&conn->conn_info, digest, CF_MD5_LEN, CF_DONE);
     }
 
     free(decrypted_cchall);
@@ -544,7 +407,7 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
         Log(LOG_LEVEL_VERBOSE, "Collecting public key from server!");
 
         /* proposition S4 - conditional */
-        if ((len = ReceiveTransaction(&conn->connection, in, NULL)) <= 0)
+        if ((len = ReceiveTransaction(&conn->conn_info, in, NULL)) <= 0)
         {
             Log(LOG_LEVEL_ERR, "Protocol error in RSA authentation from IP '%s'", conn->this_server);
             return false;
@@ -560,7 +423,7 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
 
         /* proposition S5 - conditional */
 
-        if ((len = ReceiveTransaction(&conn->connection, in, NULL)) <= 0)
+        if ((len = ReceiveTransaction(&conn->conn_info, in, NULL)) <= 0)
         {
             Log(LOG_LEVEL_INFO, "Protocol error in RSA authentation from IP '%s'",
                  conn->this_server);
@@ -608,16 +471,16 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
         return false;
     }
 
-    SendTransaction(&conn->connection, out, encrypted_len, CF_DONE);
+    SendTransaction(&conn->conn_info, out, encrypted_len, CF_DONE);
 
     if (server_pubkey != NULL)
     {
         char buffer[EVP_MAX_MD_SIZE * 4];
-        HashPubKey(server_pubkey, conn->digest, CF_DEFAULT_DIGEST);
+        HashPubKey(server_pubkey, conn->conn_info.remote_keyhash, CF_DEFAULT_DIGEST);
         Log(LOG_LEVEL_VERBOSE, "Public key identity of host '%s' is '%s'", conn->remoteip,
-              HashPrintSafe(CF_DEFAULT_DIGEST, conn->digest, buffer));
+              HashPrintSafe(CF_DEFAULT_DIGEST, conn->conn_info.remote_keyhash, buffer));
         SavePublicKey(conn->username, buffer, server_pubkey);       // FIXME: username is local
-        LastSaw(conn->remoteip, conn->digest, LAST_SEEN_ROLE_CONNECT);
+        LastSaw(conn->remoteip, conn->conn_info.remote_keyhash, LAST_SEEN_ROLE_CONNECT);
     }
 
     free(out);
@@ -626,34 +489,6 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
     return true;
 }
 
-/*********************************************************************/
-/* Level                                                             */
-/*********************************************************************/
-
-static bool SetSessionKey(AgentConnection *conn)
-{
-    BIGNUM *bp;
-    int session_size = CfSessionKeySize(conn->encryption_type);
-
-    bp = BN_new();
-
-    if (bp == NULL)
-    {
-        Log(LOG_LEVEL_ERR, "Could not allocate session key");
-        return false;
-    }
-
-    // session_size is in bytes
-    if (!BN_rand(bp, session_size * 8, -1, 0))
-    {
-        Log(LOG_LEVEL_ERR, "Can't generate cryptographic key");
-        BN_clear_free(bp);
-        return false;
-    }
-
-    conn->session_key = (unsigned char *) bp->d;
-    return true;
-}
 
 /*********************************************************************/
 

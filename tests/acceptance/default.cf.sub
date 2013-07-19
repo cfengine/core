@@ -220,16 +220,19 @@ reports:
     "$(test) FAIL";
 
     DEBUG.!no_difference.!expected_difference::
-        "$(file1) and $(file2) differ:";
-        "$(file1): <$(file1r)>";
-        "$(file2): <$(file2r)>";
-        "dump $(file1):
-$(file1h)";
-        "dump $(file2):
-$(file2h)";
-        "$(diffu)";
+        "FILES DIFFER BUT SHOULD BE THE SAME";
+        "CONTENTS OF $(file1):
+$(file1r)";
+        "CONTENTS OF $(file2):
+$(file2r)";
+### Comment out hexdump to avoid cluttering output file
+#         "hexdump $(file1):
+# $(file1h)";
+#         "hexdump $(file2):
+# $(file2h)";
+#         "$(G.diffu)";
     DEBUG.no_difference.expected_difference::
-        "Contents of $(file1) and $(file) is the same.";
+        "Contents of $(file1) and $(file) are the same but should differ.";
 }
 
 body contain default_shell_command

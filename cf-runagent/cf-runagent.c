@@ -705,7 +705,7 @@ static void SendClassData(EvalContext *ctx, AgentConnection *conn)
 
     for (rp = classes; rp != NULL; rp = rp->next)
     {
-        if (SendTransaction(&conn->connection, rp->item, 0, CF_DONE) == -1)
+        if (SendTransaction(&conn->conn_info, rp->item, 0, CF_DONE) == -1)
         {
             Log(LOG_LEVEL_ERR, "Transaction failed. (send: %s)", GetErrorStr());
             return;
@@ -714,7 +714,7 @@ static void SendClassData(EvalContext *ctx, AgentConnection *conn)
 
     snprintf(sendbuffer, CF_MAXVARSIZE, "%s", CFD_TERMINATOR);
 
-    if (SendTransaction(&conn->connection, sendbuffer, 0, CF_DONE) == -1)
+    if (SendTransaction(&conn->conn_info, sendbuffer, 0, CF_DONE) == -1)
     {
         Log(LOG_LEVEL_ERR, "Transaction failed. (send: %s)", GetErrorStr());
         return;
@@ -738,7 +738,7 @@ static void HailExec(EvalContext *ctx, AgentConnection *conn, char *peer, char *
         snprintf(sendbuffer, CF_BUFSIZE, "EXEC %s", REMOTE_AGENT_OPTIONS);
     }
 
-    if (SendTransaction(&conn->connection, sendbuffer, 0, CF_DONE) == -1)
+    if (SendTransaction(&conn->conn_info, sendbuffer, 0, CF_DONE) == -1)
     {
         Log(LOG_LEVEL_ERR, "Transmission rejected. (send: %s)", GetErrorStr());
         DisconnectServer(conn);
@@ -752,7 +752,7 @@ static void HailExec(EvalContext *ctx, AgentConnection *conn, char *peer, char *
     {
         memset(recvbuffer, 0, CF_BUFSIZE);
 
-        if ((n_read = ReceiveTransaction(&conn->connection, recvbuffer, NULL)) == -1)
+        if ((n_read = ReceiveTransaction(&conn->conn_info, recvbuffer, NULL)) == -1)
         {
             return;
         }

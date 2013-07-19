@@ -1888,13 +1888,15 @@ ProtocolCommand GetCommand(char *str)
     int i;
     for (i = 0; PROTOCOL[i] != NULL; i++)
     {
-        if (strncmp(str, PROTOCOL[i], strlen(PROTOCOL[i])) == 0)
+        int cmdlen = strlen(PROTOCOL[i]);
+        if ((strncmp(str, PROTOCOL[i], cmdlen) == 0) &&
+            (str[cmdlen] == ' ' || str[cmdlen] == '\0'))
         {
             return i;
         }
     }
-
-    return -1;
+    assert (i == PROTOCOL_COMMAND_BAD);
+    return i;
 }
 
 /*********************************************************************/

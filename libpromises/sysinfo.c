@@ -332,6 +332,9 @@ void DiscoverVersion(EvalContext *ctx)
 
         snprintf(workbuf, CF_BUFSIZE, "%s%clib%c%d.%d", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR, major, minor);
         ScopeNewSpecial(ctx, "sys", "libdir", workbuf, DATA_TYPE_STRING);
+
+        snprintf(workbuf, CF_BUFSIZE, "lib%c%d.%d", FILE_SEPARATOR, major, minor);
+        ScopeNewSpecial(ctx, "sys", "local_libdir", workbuf, DATA_TYPE_STRING);
     }
     else
     {

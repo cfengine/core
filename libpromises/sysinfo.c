@@ -323,11 +323,11 @@ void DiscoverVersion(EvalContext *ctx)
     {
         char workbuf[CF_BUFSIZE];
 
-        snprintf(workbuf, CF_MAXVARSIZE, "%d", major);
+        snprintf(workbuf, CF_BUFSIZE, "%d", major);
         ScopeNewSpecial(ctx, "sys", "cf_version_major", workbuf, DATA_TYPE_STRING);
-        snprintf(workbuf, CF_MAXVARSIZE, "%d", minor);
+        snprintf(workbuf, CF_BUFSIZE, "%d", minor);
         ScopeNewSpecial(ctx, "sys", "cf_version_minor", workbuf, DATA_TYPE_STRING);
-        snprintf(workbuf, CF_MAXVARSIZE, "%d", patch);
+        snprintf(workbuf, CF_BUFSIZE, "%d", patch);
         ScopeNewSpecial(ctx, "sys", "cf_version_patch", workbuf, DATA_TYPE_STRING);
     }
     else

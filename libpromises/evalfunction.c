@@ -2244,17 +2244,17 @@ static FnCallResult FnCallFileStatDetails(EvalContext *ctx, FnCall *fp, Rlist *f
         else if (!strcmp(detail, "type"))
         {
         #if !defined(__MINGW32__)
-          switch (statbuf.st_mode & S_IFMT)
-          {
-          case S_IFBLK:  snprintf(buffer, CF_MAXVARSIZE, "%s", "block device");     break;
-          case S_IFCHR:  snprintf(buffer, CF_MAXVARSIZE, "%s", "character device"); break;
-          case S_IFDIR:  snprintf(buffer, CF_MAXVARSIZE, "%s", "directory");        break;
-          case S_IFIFO:  snprintf(buffer, CF_MAXVARSIZE, "%s", "FIFO/pipe");        break;
-          case S_IFLNK:  snprintf(buffer, CF_MAXVARSIZE, "%s", "symlink");          break;
-          case S_IFREG:  snprintf(buffer, CF_MAXVARSIZE, "%s", "regular file");     break;
-          case S_IFSOCK: snprintf(buffer, CF_MAXVARSIZE, "%s", "socket");           break;
-          default:       snprintf(buffer, CF_MAXVARSIZE, "%s", "unknown");          break;
-          }
+            switch (statbuf.st_mode & S_IFMT)
+            {
+            case S_IFBLK:  snprintf(buffer, CF_MAXVARSIZE, "%s", "block device");     break;
+            case S_IFCHR:  snprintf(buffer, CF_MAXVARSIZE, "%s", "character device"); break;
+            case S_IFDIR:  snprintf(buffer, CF_MAXVARSIZE, "%s", "directory");        break;
+            case S_IFIFO:  snprintf(buffer, CF_MAXVARSIZE, "%s", "FIFO/pipe");        break;
+            case S_IFLNK:  snprintf(buffer, CF_MAXVARSIZE, "%s", "symlink");          break;
+            case S_IFREG:  snprintf(buffer, CF_MAXVARSIZE, "%s", "regular file");     break;
+            case S_IFSOCK: snprintf(buffer, CF_MAXVARSIZE, "%s", "socket");           break;
+            default:       snprintf(buffer, CF_MAXVARSIZE, "%s", "unknown");          break;
+            }
         #else
             snprintf(buffer, CF_MAXVARSIZE, "Not available on Windows");
         #endif
@@ -2291,6 +2291,70 @@ static FnCallResult FnCallFileStatDetails(EvalContext *ctx, FnCall *fp, Rlist *f
         else if (!strcmp(detail, "basename"))
         {
             snprintf(buffer, CF_MAXVARSIZE, "%s", ReadLastNode(path));
+        }
+        else if (!strcmp(detail, "linktarget") || !strcmp(detail, "linktarget_shallow"))
+        {
+#if !defined(__MINGW32__)
+            char path_buffer[CF_BUFSIZE];
+            bool recurse = !strcmp(detail, "linktarget");
+            int cycles = 0;
+            int max_cycles = 30; // This allows for up to 31 levels of indirection.
+
+            snprintf(path_buffer, CF_MAXVARSIZE, "%s", path);
+
+            // Iterate while we're looking at a link.
+            while (S_ISLNK(statbuf.st_mode))
+            {
+                if (cycles > max_cycles)
+                {
+                    Log(LOG_LEVEL_INFO, "%s bailing on link '%s' (original '%s') because %d cycles were chased",
+                        fp->name, path_buffer, path, cycles+1);
+                    break;
+                }
+
+                Log(LOG_LEVEL_VERBOSE, "%s resolving link '%s', cycle %d", fp->name, path_buffer, cycles+1);
+                // Prep buffer because readlink() doesn't terminate the path.
+                memset(buffer, 0, CF_BUFSIZE);
+
+                /* Note we subtract 1 since we may need an extra char for NULL. */
+                if (readlink(path_buffer, buffer, CF_BUFSIZE-1) < 0)
+                {
+                    // An error happened.  Empty the buffer (don't keep the last target).
+                    Log(LOG_LEVEL_ERR, "%s could not readlink '%s'", fp->name, path_buffer);
+                    path_buffer[0] = '\0';
+                    break;
+                }
+
+                Log(LOG_LEVEL_VERBOSE, "%s resolved link '%s' to %s", fp->name, path_buffer, buffer);
+                // We got a good link target into buffer.  Copy it to path_buffer.
+                snprintf(path_buffer, CF_MAXVARSIZE, "%s", buffer);
+
+                if (!recurse || lstat(path_buffer, &statbuf) == -1)
+                {
+                    if (!recurse)
+                    {
+                        Log(LOG_LEVEL_VERBOSE, "%s bailing on link '%s' (original '%s') because linktarget_shallow was requested",
+                            fp->name, path_buffer, path);
+                    }
+                    else // error from lstat
+                    {
+                        Log(LOG_LEVEL_INFO, "%s bailing on link '%s' (original '%s') because it could not be read",
+                            fp->name, path_buffer, path);
+                    }
+                    break;
+                }
+
+                // At this point we haven't bailed, path_buffer has the link target
+                cycles++;
+            }
+
+            // Get the path_buffer back into buffer.
+            snprintf(buffer, CF_MAXVARSIZE, "%s", path_buffer);
+
+#else
+            // Always return the original path on W32.
+            snprintf(buffer, CF_MAXVARSIZE, "%s", path);
+#endif
         }
     }
 
@@ -5122,7 +5186,7 @@ FnCallArg FILESTAT_ARGS[] =
 FnCallArg FILESTAT_DETAIL_ARGS[] =
 {
     {CF_ABSPATHRANGE, DATA_TYPE_STRING, "File object name"},
-    {"size,gid,uid,ino,nlink,ctime,atime,mtime,mode,modeoct,permstr,permoct,type,devno,dev_minor,dev_major,basename,dirname", DATA_TYPE_OPTION, "stat() field to get"},
+    {"size,gid,uid,ino,nlink,ctime,atime,mtime,mode,modeoct,permstr,permoct,type,devno,dev_minor,dev_major,basename,dirname,linktarget,linktarget_shallow", DATA_TYPE_OPTION, "stat() field to get"},
     {NULL, DATA_TYPE_NONE, NULL}
 };
 

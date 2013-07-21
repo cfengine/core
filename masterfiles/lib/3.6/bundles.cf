@@ -108,7 +108,7 @@ bundle agent rm_rf(name)
 bundle agent fileinfo(f)
 {
   vars:
-      "fields" slist => splitstring("size,gid,uid,ino,nlink,ctime,atime,mtime,mode,modeoct,permstr,permoct,type,devno,dev_minor,dev_major,basename,dirname", ",", 999);
+      "fields" slist => splitstring("size,gid,uid,ino,nlink,ctime,atime,mtime,mode,modeoct,permstr,permoct,type,devno,dev_minor,dev_major,basename,dirname,linktarget,linktarget_shallow", ",", 999);
 
       "stat[$(f)][$(fields)]" string => filestat($(f), $(fields));
 

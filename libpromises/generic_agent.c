@@ -1416,9 +1416,8 @@ static void CheckControlPromises(EvalContext *ctx, GenericAgentConfig *config, c
             returnval = EvaluateFinalRval(ctx, NULL, scope, cp->rval, true, NULL);
         }
 
-        ScopeDeleteVariable(NULL, scope, cp->lval);
-
         VarRef *ref = VarRefParseFromScope(cp->lval, scope);
+        ScopeDeleteVariable(ref);
 
         if (!EvalContextVariablePut(ctx, ref, returnval, ConstraintSyntaxGetDataType(body_syntax, cp->lval)))
         {

@@ -139,7 +139,7 @@ int VerifyMethod(EvalContext *ctx, char *attrname, Attributes a, Promise *pp)
         {
             const char *lval = rp->item;
             VarRef *ref = VarRefParseFromBundle(lval, bp);
-            ScopeDeleteScalar(ref);
+            ScopeDeleteVariable(ref);
             VarRefDestroy(ref);
         }
     }

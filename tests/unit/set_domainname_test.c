@@ -243,7 +243,7 @@ char *Constellation_Version(void)
     fail();
 }
 
-void LoadSlowlyVaryingObservations(EvalContext *ctx)
+ENTERPRISE_VOID_FUNC_1ARG_DEFINE_STUB(void, LoadSlowlyVaryingObservations, EvalContext *, ctx)
 {
     fail();
 }
@@ -263,7 +263,7 @@ void Unix_GetInterfaceInfo(AgentType ag)
     fail();
 }
 
-void EnterpriseContext(EvalContext *ctx)
+ENTERPRISE_VOID_FUNC_1ARG_DEFINE_STUB(void, EnterpriseContext, EvalContext *, ctx)
 {
     fail();
 }

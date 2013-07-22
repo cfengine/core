@@ -6,6 +6,7 @@ libutils_la_SOURCES = \
 	alloc.c alloc.h \
 	atexit.c atexit.h \
 	compiler.h \
+	enterprise_extension.c enterprise_extension.h \
 	hashes.c hashes.h \
 	sequence.c sequence.h \
 	set.c set.h \

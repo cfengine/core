@@ -1368,7 +1368,7 @@ static void DefaultVarPromise(EvalContext *ctx, const Promise *pp)
 
     {
         VarRef *ref = VarRefParseFromBundle(pp->promiser, PromiseGetBundle(pp));
-        ScopeDeleteScalar(ref);
+        ScopeDeleteVariable(ref);
         VarRefDestroy(ref);
     }
 

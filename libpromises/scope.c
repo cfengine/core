@@ -523,7 +523,7 @@ void ScopeNewSpecial(EvalContext *ctx, SpecialScope scope, const char *lval, con
 
 /*******************************************************************/
 
-void ScopeDeleteScalar(const VarRef *ref)
+void ScopeDeleteVariable(const VarRef *ref)
 {
     assert(!ScopeIsReserved(ref->scope));
 
@@ -534,10 +534,14 @@ void ScopeDeleteScalar(const VarRef *ref)
         return;
     }
 
-    if (HashDeleteElement(scope->hashtable, ref->lval) == false)
+    char *legacy_lval = VarRefToString(ref, false);
+
+    if (HashDeleteElement(scope->hashtable, legacy_lval) == false)
     {
         Log(LOG_LEVEL_DEBUG, "Attempt to delete non-existent variable '%s' in scope '%s'", ref->lval, ref->scope);
     }
+
+    free(legacy_lval);
 }
 
 void ScopeDeleteSpecial(SpecialScope scope, const char *lval)
@@ -562,23 +566,6 @@ void ScopeDeleteSpecial(SpecialScope scope, const char *lval)
 
     Log(LOG_LEVEL_DEBUG, "Deleted existent variable '%s' in scope '%s'",
         lval, SpecialScopeToString(scope));
-}
-
-/*******************************************************************/
-
-void ScopeDeleteVariable(const char *ns, const char *scope, const char *id)
-{
-    Scope *ptr = ScopeGet(ns, scope);
-
-    if (ptr == NULL)
-    {
-        return;
-    }
-
-    if (HashDeleteElement(ptr->hashtable, id) == false)
-    {
-        Log(LOG_LEVEL_DEBUG, "No variable matched '%s' for removal", id);
-    }
 }
 
 /*******************************************************************/

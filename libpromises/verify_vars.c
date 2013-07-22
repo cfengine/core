@@ -192,7 +192,7 @@ void VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates
         {
             if (opts.ok_redefine)    /* only on second iteration, else we ignore broken promises */
             {
-                ScopeDeleteVariable(ref->ns, ref->scope, pp->promiser);
+                ScopeDeleteVariable(ref);
             }
             else if ((THIS_AGENT_TYPE == AGENT_TYPE_COMMON) && (CompareRval(existing_var_rval, rval) == false))
             {

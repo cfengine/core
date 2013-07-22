@@ -92,11 +92,10 @@ void ScopePushThis(void);
 void ScopePopThis(void);
 
 void ScopeNewSpecial(EvalContext *ctx, SpecialScope scope, const char *lval, const void *rval, DataType dt);
-void ScopeDeleteScalar(const VarRef *lval);
 void ScopeDeleteSpecial(SpecialScope scope, const char *lval);
-bool ScopeIsReserved(const char *scope);
 
-void ScopeDeleteVariable(const char *ns, const char *scope, const char *id);
+void ScopeDeleteVariable(const VarRef *lval);
+bool ScopeIsReserved(const char *scope);
 
 void ScopeDeRefListsInThisScope(const Rlist *reflist);
 

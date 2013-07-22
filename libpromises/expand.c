@@ -792,7 +792,20 @@ static void ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp, Rlist *listv
 
         /* Set scope "this" first to ensure list expansion ! */
         EvalContextStackPushPromiseIterationFrame(ctx, pp);
-        ScopeDeRefListsInHashtable(NULL, "this", listvars, lol);
+
+        {
+            int len = 0;
+            if ((len = RlistLen(listvars)) != RlistLen(lol))
+            {
+                Log(LOG_LEVEL_ERR, "Name list %d, dereflist %d", len, RlistLen(lol));
+                ProgrammingError("Software Error DeRefLists... correlated lists not same length");
+            }
+
+            if (len > 0)
+            {
+                ScopeDeRefListsInThisScope(lol);
+            }
+        }
 
         /* Allow $(this.handle) etc variables */
 

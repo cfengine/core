@@ -645,36 +645,19 @@ bool UnresolvedVariables(Rval rval, RvalType rtype)
 
 /*******************************************************************/
 
-void ScopeDeRefListsInHashtable(const char *ns, char *scope, Rlist *namelist, Rlist *dereflist)
+void ScopeDeRefListsInThisScope(const Rlist *dereflist)
 // Go through scope and for each variable in name-list, replace with a
 // value from the deref "lol" (list of lists) clock
 {
-    int len;
-    Scope *ptr;
-    Rlist *rp;
-    CfAssoc *cplist;
-    AssocHashTableIterator i;
-    CfAssoc *assoc;
+    Scope *ptr = ScopeGet(NULL, "this");
+    AssocHashTableIterator i = HashIteratorInit(ptr->hashtable);
 
-    if ((len = RlistLen(namelist)) != RlistLen(dereflist))
-    {
-        Log(LOG_LEVEL_ERR, "Name list %d, dereflist %d", len, RlistLen(dereflist));
-        ProgrammingError("Software Error DeRefLists... correlated lists not same length");
-    }
-
-    if (len == 0)
-    {
-        return;
-    }
-
-    ptr = ScopeGet(ns, scope);
-    i = HashIteratorInit(ptr->hashtable);
-
+    CfAssoc *assoc = NULL;
     while ((assoc = HashIteratorNext(&i)))
     {
-        for (rp = dereflist; rp != NULL; rp = rp->next)
+        for (const Rlist *rp = dereflist; rp != NULL; rp = rp->next)
         {
-            cplist = (CfAssoc *) rp->item;
+            CfAssoc *cplist = rp->item;
 
             if (strcmp(cplist->lval, assoc->lval) == 0)
             {

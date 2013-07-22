@@ -28,12 +28,11 @@
 #define CFENGINE_NET_H
 
 #include "cfnet.h"
+#include "classic.h"
+#include "tls.h"
 
-
-int SendTransaction(int sd, char *buffer, int len, char status);
-int ReceiveTransaction(int sd, char *buffer, int *more);
-int RecvSocketStream(int sd, char *buffer, int toget);
-int SendSocketStream(int sd, char *buffer, int toget, int flags);
+int SendTransaction(ConnectionInfo *connection, char *buffer, int len, char status);
+int ReceiveTransaction(ConnectionInfo *connection, char *buffer, int *more);
 
 int SetReceiveTimeout(int sd, const struct timeval *timeout);
 

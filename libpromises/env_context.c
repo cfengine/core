@@ -1692,6 +1692,20 @@ static void SummarizeTransaction(EvalContext *ctx, TransactionContext tc, const 
         }
         else
         {
+            struct stat dsb;
+
+            // Does the file exist already?
+            if (lstat(logname, &dsb) == -1)
+            {
+                mode_t filemode = 0600;     /* Mode for log file creation */
+                int fd = creat(logname, filemode);
+                if (fd >= 0)
+                {
+                    Log(LOG_LEVEL_VERBOSE, "Created log file '%s' with requested permissions %o", logname, filemode);
+                    close(fd);
+                }
+            }
+
             FILE *fout = fopen(logname, "a");
 
             if (fout == NULL)

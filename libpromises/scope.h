@@ -98,7 +98,7 @@ bool ScopeIsReserved(const char *scope);
 
 void ScopeDeleteVariable(const char *ns, const char *scope, const char *id);
 
-void ScopeDeRefListsInHashtable(const char *ns, char *scope, Rlist *list, Rlist *reflist);
+void ScopeDeRefListsInThisScope(const Rlist *reflist);
 
 int ScopeMapBodyArgs(EvalContext *ctx, const char *ns, const char *scope, Rlist *give, const Rlist *take);
 

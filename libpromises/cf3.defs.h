@@ -1609,7 +1609,9 @@ typedef struct
 
     Rlist *signals;
     char *process_stop;
+    char *process_start;
     char *restart_class;
+    char *stop_class;
     ProcessCount process_count;
     ProcessSelect process_select;
 

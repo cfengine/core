@@ -64,6 +64,10 @@ static const ConstraintSyntax processes_constraints[] =
     ConstraintSyntaxNewBody("process_count", &process_count_body, "Criteria for constraining the number of processes matching other criteria", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBody("process_select", &process_select_body, "Criteria for matching processes in the system process table", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("process_stop", CF_ABSPATHRANGE, "A command used to stop a running process", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewString("process_start", CF_ABSPATHRANGE, "A command used to start a process that is not running", SYNTAX_STATUS_NORMAL),
+
+    ConstraintSyntaxNewString("stop_class", CF_IDRANGE,
+     "A class to be defined globally if the process is running, so that a command: rule can be referred to stop the process", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("restart_class", CF_IDRANGE,
      "A class to be defined globally if the process is not running, so that a command: rule can be referred to restart the process", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewOptionList("signals", CF_SIGNALRANGE, "A list of menu options representing signals to be sent to a process", SYNTAX_STATUS_NORMAL),

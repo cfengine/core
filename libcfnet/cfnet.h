@@ -26,7 +26,7 @@
 #define CFENGINE_CFNET_H
 
 #include "platform.h"
-
+#include <openssl/ssl.h>
 
 /* ************************************************ */
 /* The following were copied from cf3.defs.h and still exist there, TODO */
@@ -59,6 +59,37 @@ typedef enum
     FILE_TYPE_SOCK
 } FileType;
 
+/*
+ * TLS support
+ */
+#define DEFAULT_TLS_TIMEOUT_SECONDS     5
+#define DEFAULT_TLS_TIMEOUT_USECONDS    0
+#define SET_DEFAULT_TLS_TIMEOUT(x) \
+    x.tv_sec = DEFAULT_TLS_TIMEOUT_SECONDS; \
+    x.tv_usec = DEFAULT_TLS_TIMEOUT_USECONDS
+#define DEFAULT_TLS_TRIES 5
+typedef struct {
+    SSL *ssl; // SSL structure
+    SSL_CTX *context; // SSL Context
+    SSL_METHOD *method; // SSL Method
+    struct timeval tv; // Timeout for TLS operations
+    int tries; // Number of tries for TLS operations
+} TLSInfo;
+
+typedef enum {
+    CFEngine_Classic,
+    CFEngine_TLS,
+    CFEngine_Unsupported
+} ConnectionType;
+
+typedef struct {
+    ConnectionType type;
+    union physical_ {
+        int sd;
+        TLSInfo *tls;
+    } physical;
+} ConnectionInfo;
+
 /* TODO Shouldn't this be in libutils? */
 typedef struct Stat_ Stat;
 struct Stat_
@@ -85,7 +116,7 @@ struct Stat_
 
 typedef struct
 {
-    int sd;
+    ConnectionInfo connection;
     int trust;                  /* true if key being accepted on trust */
     int authenticated;
     int protoversion;
@@ -101,7 +132,6 @@ typedef struct
     char *this_server;
     Stat *cache; /* Cache for network connection (READDIR result) */
 } AgentConnection;
-
 
 /* misc.c */
 

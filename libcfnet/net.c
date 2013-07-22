@@ -23,32 +23,15 @@
 */
 
 #include "net.h"
+#include "classic.h"
+#include "tls.h"
 
 #include "logging.h"
 #include "misc_lib.h"
 
 /*************************************************************************/
 
-static bool LastRecvTimedOut(void)
-{
-#ifndef __MINGW32__
-	if ((errno == EAGAIN) || (errno == EWOULDBLOCK))
-	{
-		return true;
-	}
-#else
-	int lasterror = GetLastError();
-
-	if (lasterror == EAGAIN || lasterror == WSAEWOULDBLOCK)
-	{
-		return true;
-	}
-#endif
-
-	return false;
-}
-
-int SendTransaction(int sd, char *buffer, int len, char status)
+int SendTransaction(ConnectionInfo *connection, char *buffer, int len, char status)
 {
     char work[CF_BUFSIZE];
     int wlen;
@@ -74,7 +57,21 @@ int SendTransaction(int sd, char *buffer, int len, char status)
 
     memcpy(work + CF_INBAND_OFFSET, buffer, wlen);
 
-    if (SendSocketStream(sd, work, wlen + CF_INBAND_OFFSET, 0) == -1)
+    if (CFEngine_Classic == connection->type)
+    {
+        if (SendSocketStream(connection->physical.sd, work, wlen + CF_INBAND_OFFSET, 0) == -1)
+        {
+            return -1;
+        }
+    }
+    else if (CFEngine_TLS == connection->type)
+    {
+        if (SendTLS(connection->physical.tls->ssl, work, wlen + CF_INBAND_OFFSET) == -1)
+        {
+            return -1;
+        }
+    }
+    else
     {
         return -1;
     }
@@ -84,15 +81,30 @@ int SendTransaction(int sd, char *buffer, int len, char status)
 
 /*************************************************************************/
 
-int ReceiveTransaction(int sd, char *buffer, int *more)
+int ReceiveTransaction(ConnectionInfo *connection, char *buffer, int *more)
 {
     char proto[CF_INBAND_OFFSET + 1];
     char status = 'x';
     unsigned int len = 0;
+    int result = 0;
 
     memset(proto, 0, CF_INBAND_OFFSET + 1);
 
-    if (RecvSocketStream(sd, proto, CF_INBAND_OFFSET) == -1) /* Get control channel */
+    if (CFEngine_Classic == connection->type)
+    {
+        if (RecvSocketStream(connection->physical.sd, proto, CF_INBAND_OFFSET) == -1) /* Get control channel */
+        {
+            return -1;
+        }
+    }
+    else if (CFEngine_TLS == connection->type)
+    {
+        if (ReceiveTLS(connection->physical.tls->ssl, proto, CF_INBAND_OFFSET) == -1)
+        {
+            return -1;
+        }
+    }
+    else
     {
         return -1;
     }
@@ -122,80 +134,23 @@ int ReceiveTransaction(int sd, char *buffer, int *more)
         }
     }
 
-    return RecvSocketStream(sd, buffer, len);
-}
-
-/*************************************************************************/
-
-int RecvSocketStream(int sd, char buffer[CF_BUFSIZE], int toget)
-{
-    int already, got;
-
-    if (toget > CF_BUFSIZE - 1)
+    if (CFEngine_Classic == connection->type)
     {
-        Log(LOG_LEVEL_ERR, "Bad software request for overfull buffer");
+        result = RecvSocketStream(connection->physical.sd, buffer, len);
+    }
+    else if (CFEngine_TLS == connection->type)
+    {
+        result = ReceiveTLS(connection->physical.tls->ssl, buffer, len);
+    }
+    else
+    {
         return -1;
     }
 
-    for (already = 0; already != toget; already += got)
-    {
-        got = recv(sd, buffer + already, toget - already, 0);
-
-        if ((got == -1) && (errno == EINTR))
-        {
-            continue;
-        }
-
-        if ((got == -1) && (LastRecvTimedOut()))
-        {
-            Log(LOG_LEVEL_ERR, "Timeout - remote end did not respond with the expected amount of data (received=%d, expecting=%d). (recv: %s)",
-                already, toget, GetErrorStr());
-            return -1;
-        }
-
-        if (got == -1)
-        {
-            Log(LOG_LEVEL_ERR, "Couldn't receceive. (recv: %s)", GetErrorStr());
-            return -1;
-        }
-
-        if (got == 0)           /* doesn't happen unless sock is closed */
-        {
-            break;
-        }
-    }
-
-    buffer[already] = '\0';
-    return already;
+    return result;
 }
 
 /*************************************************************************/
-
-int SendSocketStream(int sd, char buffer[CF_BUFSIZE], int tosend, int flags)
-{
-    int sent, already = 0;
-
-    do
-    {
-        sent = send(sd, buffer + already, tosend - already, flags);
-
-        if ((sent == -1) && (errno == EINTR))
-        {
-            continue;
-        }
-
-        if (sent == -1)
-        {
-            Log(LOG_LEVEL_VERBOSE, "Couldn't send. (send: %s)", GetErrorStr());
-            return -1;
-        }
-
-        already += sent;
-    }
-    while (already < tosend);
-
-    return already;
-}
 
 /*
   NB: recv() timeout interpretation differs under Windows: setting tv_sec to

@@ -41,6 +41,153 @@ extern char VFQNAME[];
 
 
 static bool SetSessionKey(AgentConnection *conn);
+int TryTLS(ConnectionInfo *connection);
+
+/*
+ * The tricky part about enabling TLS is that the server might disconnect us if
+ * it does not support the STARTTLS command. Once disconnected we will need to
+ * reconnect and make sure everything works again.
+ */
+int TryTLS(ConnectionInfo *connection)
+{
+    Log (LOG_LEVEL_CRIT, "Trying to enable TLS");
+    char STARTTLS[] = "STARTTLS";
+    char ACK[] = "ACK";
+    char buffer[CF_BUFSIZE];
+    int result = 0;
+
+    /*
+     * Load OpenSSL in case it is not already loaded.
+     */
+    SSL_library_init();
+    SSL_load_error_strings();
+    /*
+     * Continue with the initialization.
+     */
+    if (CFEngine_TLS == connection->type)
+    {
+        Log(LOG_LEVEL_ERR, "We are already on TLS mode, skipping initialization");
+        return 0;
+    }
+    else
+    {
+        Log(LOG_LEVEL_CRIT, "Using classic mode, trying to start TLS");
+    }
+    result = SendTransaction(connection, STARTTLS, strlen(STARTTLS), CF_DONE);
+    if (result < 0)
+    {
+        Log(LOG_LEVEL_CRIT, "Failed to start TLS");
+        return -1;
+    }
+    result = ReceiveTransaction(connection, buffer, NULL);
+    Log(LOG_LEVEL_CRIT, "Received: [%s]", buffer);
+    if (strcmp(buffer, ACK) == 0)
+    {
+        Log(LOG_LEVEL_CRIT, "TLS negotiation accepted, starting TLS connection");
+        int sd = connection->physical.sd;
+        TLSInfo *tlsInfo = (TLSInfo *)xmalloc(sizeof(TLSInfo));
+        tlsInfo->method = TLSv1_client_method();
+        tlsInfo->context = SSL_CTX_new(tlsInfo->method);
+
+        if (!tlsInfo->context)
+        {
+            Log(LOG_LEVEL_INFO, "Unable to create the SSL context");
+            free (tlsInfo);
+            return -1;
+        }
+
+        tlsInfo->ssl = SSL_new(tlsInfo->context);
+
+        if (!tlsInfo->ssl)
+        {
+            Log(LOG_LEVEL_INFO, "Unable to create the SSL object");
+            SSL_CTX_free (tlsInfo->context);
+            free (tlsInfo);
+            return -1;
+        }
+        SSL_set_fd(tlsInfo->ssl, sd);
+
+        /*
+         * Now we send the TLS request to the server
+         */
+        int total_tries = 0;
+        do {
+            Log(LOG_LEVEL_CRIT, "Sending OpenSSL TLS request");
+            result = SSL_connect(tlsInfo->ssl);
+            if (result <= 0)
+            {
+                Log(LOG_LEVEL_CRIT, "Problems with TLS negotiation, trying again");
+                /*
+                 * Identify the problem and if possible try to fix it.
+                 */
+                int error = SSL_get_error(tlsInfo->ssl, result);
+                if ((SSL_ERROR_WANT_WRITE == error) || (SSL_ERROR_WANT_READ == error))
+                {
+                    Log(LOG_LEVEL_ERR, "Recoverable error in TLS handshake, trying to fix it");
+                    /*
+                     * We can try to fix this.
+                     * This error means that there was not enough data in the buffer, using select
+                     * to wait until we get more data.
+                     */
+                    fd_set wfds;
+                    struct timeval tv;
+                    int tries = 0;
+
+                    do {
+                        SET_DEFAULT_TLS_TIMEOUT(tv);
+                        FD_ZERO(&wfds);
+                        FD_SET(connection->physical.sd, &wfds);
+
+                        result = select(connection->physical.sd+1, NULL, &wfds, NULL, &tv);
+                        if (result > 0)
+                        {
+                            /*
+                             * Ready to send data
+                             */
+                            break;
+                        }
+                        else
+                        {
+                            Log(LOG_LEVEL_ERR, "select(2) timed out, retrying (tries: %d)", tries);
+                            ++tries;
+                        }
+                    } while (tries <= DEFAULT_TLS_TRIES);
+                }
+                else
+                {
+                    /*
+                     * Unrecoverable error
+                     */
+                    ERR_print_errors_fp(stderr);
+                    SSL_get_error(tlsInfo->ssl, error);
+                    Log(LOG_LEVEL_ERR, "Unrecoverable error in TLS handshake (error: %d)", error);
+                    SSL_free (tlsInfo->ssl);
+                    SSL_CTX_free (tlsInfo->context);
+                    free (tlsInfo);
+                    return -1;
+                }
+            }
+            else
+            {
+                /*
+                 * TLS channel established, start talking!
+                 */
+                Log (LOG_LEVEL_CRIT, "TLS connection established");
+                connection->type = CFEngine_TLS;
+                connection->physical.tls = tlsInfo;
+                break;
+            }
+            ++total_tries;
+        } while (total_tries <= DEFAULT_TLS_TRIES);
+    }
+    else
+    {
+        Log(LOG_LEVEL_CRIT, "Wrong server reply (%s)", buffer);
+        return -1;
+    }
+    Log(LOG_LEVEL_CRIT, "TLS enabled");
+    return 0;
+}
 
 /*********************************************************************/
 
@@ -55,7 +202,7 @@ void SetSkipIdentify(bool enabled)
 
 /*********************************************************************/
 
-int IdentifyAgent(int sd)
+int IdentifyAgent(ConnectionInfo *connection)
 {
     char uname[CF_BUFSIZE], sendbuff[CF_BUFSIZE];
     char dnsname[CF_MAXVARSIZE], localip[CF_MAX_IP_LEN];
@@ -77,7 +224,7 @@ int IdentifyAgent(int sd)
         struct sockaddr_storage myaddr = {0};
         socklen_t myaddr_len = sizeof(myaddr);
 
-        if (getsockname(sd, (struct sockaddr *) &myaddr, &myaddr_len) == -1)
+        if (getsockname(connection->physical.sd, (struct sockaddr *) &myaddr, &myaddr_len) == -1)
         {
             Log(LOG_LEVEL_ERR, "Couldn't get socket address. (getsockname: %s)", GetErrorStr());
             return false;
@@ -145,6 +292,13 @@ int IdentifyAgent(int sd)
         }
     }
 
+    /*
+     * Try TLS
+     */
+    if (CFEngine_Classic == connection->type)
+    {
+        TryTLS(connection);
+    }
 /* client always identifies as root on windows */
 #ifdef __MINGW32__
     snprintf(uname, sizeof(uname), "%s", "root");
@@ -155,7 +309,7 @@ int IdentifyAgent(int sd)
     snprintf(sendbuff, sizeof(sendbuff), "CAUTH %s %s %s %d",
              localip, dnsname, uname, 0);
 
-    if (SendTransaction(sd, sendbuff, 0, CF_DONE) == -1)
+    if (SendTransaction(connection, sendbuff, 0, CF_DONE) == -1)
     {
         Log(LOG_LEVEL_ERR,
               "During identify agent, could not send auth response. (SendTransaction: %s)", GetErrorStr());
@@ -182,6 +336,14 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
     {
         Log(LOG_LEVEL_ERR, "No public/private key pair found at '%s'", PublicKeyFile(GetWorkDir()));
         return false;
+    }
+
+    /*
+     * Try TLS
+     */
+    if (CFEngine_Classic == conn->connection.type)
+    {
+        TryTLS(&conn->connection);
     }
 
     enterprise_field = CfEnterpriseOptions();
@@ -248,7 +410,7 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
 
 /* proposition C1 - Send challenge / nonce */
 
-    SendTransaction(conn->sd, sendbuffer, CF_RSA_PROTO_OFFSET + encrypted_len, CF_DONE);
+    SendTransaction(&conn->connection, sendbuffer, CF_RSA_PROTO_OFFSET + encrypted_len, CF_DONE);
 
     BN_free(bn);
     BN_free(nonce_challenge);
@@ -259,19 +421,19 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
 
     memset(sendbuffer, 0, CF_EXPANDSIZE);
     len = BN_bn2mpi(PUBKEY->n, sendbuffer);
-    SendTransaction(conn->sd, sendbuffer, len, CF_DONE);        /* No need to encrypt the public key ... */
+    SendTransaction(&conn->connection, sendbuffer, len, CF_DONE);        /* No need to encrypt the public key ... */
 
 /* proposition C3 */
     memset(sendbuffer, 0, CF_EXPANDSIZE);
     len = BN_bn2mpi(PUBKEY->e, sendbuffer);
-    SendTransaction(conn->sd, sendbuffer, len, CF_DONE);
+    SendTransaction(&conn->connection, sendbuffer, len, CF_DONE);
 
 /* check reply about public key - server can break connection here */
 
 /* proposition S1 */
     memset(in, 0, CF_BUFSIZE);
 
-    if (ReceiveTransaction(conn->sd, in, NULL) == -1)
+    if (ReceiveTransaction(&conn->connection, in, NULL) == -1)
     {
         Log(LOG_LEVEL_ERR, "Protocol transaction broken off (1). (ReceiveTransaction: %s)", GetErrorStr());
         RSA_free(server_pubkey);
@@ -290,7 +452,7 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
 /* proposition S2 */
     memset(in, 0, CF_BUFSIZE);
 
-    if (ReceiveTransaction(conn->sd, in, NULL) == -1)
+    if (ReceiveTransaction(&conn->connection, in, NULL) == -1)
     {
         Log(LOG_LEVEL_ERR, "Protocol transaction broken off (2). (ReceiveTransaction: %s)", GetErrorStr());
         RSA_free(server_pubkey);
@@ -332,7 +494,7 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
 
 /* proposition S3 */
     memset(in, 0, CF_BUFSIZE);
-    encrypted_len = ReceiveTransaction(conn->sd, in, NULL);
+    encrypted_len = ReceiveTransaction(&conn->connection, in, NULL);
 
     if (encrypted_len <= 0)
     {
@@ -364,11 +526,11 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
 
     if (FIPS_MODE)
     {
-        SendTransaction(conn->sd, digest, CF_DEFAULT_DIGEST_LEN, CF_DONE);
+        SendTransaction(&conn->connection, digest, CF_DEFAULT_DIGEST_LEN, CF_DONE);
     }
     else
     {
-        SendTransaction(conn->sd, digest, CF_MD5_LEN, CF_DONE);
+        SendTransaction(&conn->connection, digest, CF_MD5_LEN, CF_DONE);
     }
 
     free(decrypted_cchall);
@@ -382,7 +544,7 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
         Log(LOG_LEVEL_VERBOSE, "Collecting public key from server!");
 
         /* proposition S4 - conditional */
-        if ((len = ReceiveTransaction(conn->sd, in, NULL)) <= 0)
+        if ((len = ReceiveTransaction(&conn->connection, in, NULL)) <= 0)
         {
             Log(LOG_LEVEL_ERR, "Protocol error in RSA authentation from IP '%s'", conn->this_server);
             return false;
@@ -398,7 +560,7 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
 
         /* proposition S5 - conditional */
 
-        if ((len = ReceiveTransaction(conn->sd, in, NULL)) <= 0)
+        if ((len = ReceiveTransaction(&conn->connection, in, NULL)) <= 0)
         {
             Log(LOG_LEVEL_INFO, "Protocol error in RSA authentation from IP '%s'",
                  conn->this_server);
@@ -446,7 +608,7 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
         return false;
     }
 
-    SendTransaction(conn->sd, out, encrypted_len, CF_DONE);
+    SendTransaction(&conn->connection, out, encrypted_len, CF_DONE);
 
     if (server_pubkey != NULL)
     {

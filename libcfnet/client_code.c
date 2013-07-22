@@ -239,7 +239,7 @@ static AgentConnection *ServerConnection(const char *server, FileCopy fc, int *e
     GetCurrentUserName(conn->username, CF_SMALLBUF);
 #endif /* !__MINGW32__ */
 
-    if (conn->sd == SOCKET_INVALID)
+    if (conn->connection.physical.sd == SOCKET_INVALID)
     {
         if (!ServerConnect(conn, server, fc))
         {
@@ -251,15 +251,15 @@ static AgentConnection *ServerConnection(const char *server, FileCopy fc, int *e
             return NULL;
         }
 
-        if (conn->sd < 0)                      /* INVALID or OFFLINE socket */
+        if (conn->connection.physical.sd < 0)                      /* INVALID or OFFLINE socket */
         {
             UnexpectedError("ServerConnect() succeeded but socket descriptor is %d!",
-                            conn->sd);
+                            conn->connection.physical.sd);
             *err = -1;
             return NULL;
         }
 
-        if (!IdentifyAgent(conn->sd))
+        if (!IdentifyAgent(&conn->connection))
         {
             Log(LOG_LEVEL_ERR, "Id-authentication for '%s' failed", VFQNAME);
             errno = EPERM;
@@ -290,11 +290,17 @@ void DisconnectServer(AgentConnection *conn)
 {
     if (conn)
     {
-        if (conn->sd >= 0)                        /* Not INVALID or OFFLINE */
+        if (CFEngine_Classic == conn->connection.type)
         {
-            cf_closesocket(conn->sd);
-            conn->sd = SOCKET_INVALID;
+            if (conn->connection.physical.sd >= 0)                        /* Not INVALID or OFFLINE */
+            {
+                cf_closesocket(conn->connection.physical.sd);
+                conn->connection.physical.sd = SOCKET_INVALID;
+            }
         }
+        /*
+         * We need to handle the shutdown of the TLS connection.
+         */
         DeleteAgentConn(conn);
     }
 }
@@ -353,14 +359,14 @@ int cf_remote_stat(char *file, struct stat *buf, char *stattype, bool encrypt, A
         tosend = strlen(sendbuffer);
     }
 
-    if (SendTransaction(conn->sd, sendbuffer, tosend, CF_DONE) == -1)
+    if (SendTransaction(&conn->connection, sendbuffer, tosend, CF_DONE) == -1)
     {
         Log(LOG_LEVEL_INFO, "Transmission failed/refused talking to %.255s:%.255s. (stat: %s)",
             conn->this_server, file, GetErrorStr());
         return -1;
     }
 
-    if (ReceiveTransaction(conn->sd, recvbuffer, NULL) == -1)
+    if (ReceiveTransaction(&conn->connection, recvbuffer, NULL) == -1)
     {
         return -1;
     }
@@ -424,7 +430,7 @@ int cf_remote_stat(char *file, struct stat *buf, char *stattype, bool encrypt, A
 
         memset(recvbuffer, 0, CF_BUFSIZE);
 
-        if (ReceiveTransaction(conn->sd, recvbuffer, NULL) == -1)
+        if (ReceiveTransaction(&conn->connection, recvbuffer, NULL) == -1)
         {
             return -1;
         }
@@ -540,14 +546,14 @@ Item *RemoteDirList(const char *dirname, bool encrypt, AgentConnection *conn)
         tosend = strlen(sendbuffer);
     }
 
-    if (SendTransaction(conn->sd, sendbuffer, tosend, CF_DONE) == -1)
+    if (SendTransaction(&conn->connection, sendbuffer, tosend, CF_DONE) == -1)
     {
         return NULL;
     }
 
     while (true)
     {
-        if ((n = ReceiveTransaction(conn->sd, recvbuffer, NULL)) == -1)
+        if ((n = ReceiveTransaction(&conn->connection, recvbuffer, NULL)) == -1)
         {
             return NULL;
         }
@@ -671,13 +677,13 @@ int CompareHashNet(char *file1, char *file2, bool encrypt, AgentConnection *conn
         tosend = strlen(sendbuffer) + CF_SMALL_OFFSET + CF_DEFAULT_DIGEST_LEN;
     }
 
-    if (SendTransaction(conn->sd, sendbuffer, tosend, CF_DONE) == -1)
+    if (SendTransaction(&conn->connection, sendbuffer, tosend, CF_DONE) == -1)
     {
         Log(LOG_LEVEL_ERR, "Failed send. (SendTransaction: %s)", GetErrorStr());
         return false;
     }
 
-    if (ReceiveTransaction(conn->sd, recvbuffer, NULL) == -1)
+    if (ReceiveTransaction(&conn->connection, recvbuffer, NULL) == -1)
     {
         Log(LOG_LEVEL_ERR, "Failed receive. (ReceiveTransaction: %s)", GetErrorStr());
         Log(LOG_LEVEL_VERBOSE,  "No answer from host, assuming checksum ok to avoid remote copy for now...");
@@ -735,7 +741,7 @@ int CopyRegularFileNet(char *source, char *new, off_t size, AgentConnection *con
     snprintf(workbuf, CF_BUFSIZE, "GET %d %s", buf_size, source);
     tosend = strlen(workbuf);
 
-    if (SendTransaction(conn->sd, workbuf, tosend, CF_DONE) == -1)
+    if (SendTransaction(&conn->connection, workbuf, tosend, CF_DONE) == -1)
     {
         Log(LOG_LEVEL_ERR, "Couldn't send data");
         close(dd);
@@ -765,8 +771,16 @@ int CopyRegularFileNet(char *source, char *new, off_t size, AgentConnection *con
         }
 
         /* Stage C1 - receive */
+        if (CFEngine_Classic == conn->connection.type)
+        {
+            n_read = RecvSocketStream(conn->connection.physical.sd, buf, toget);
+        }
+        else if (CFEngine_TLS == conn->connection.type)
+        {
+            n_read = ReceiveTLS(conn->connection.physical.tls->ssl, buf, toget);
+        }
 
-        if ((n_read = RecvSocketStream(conn->sd, buf, toget)) == -1)
+        if (n_read == -1)
         {
             /* This may happen on race conditions,
              * where the file has shrunk since we asked for its size in SYNCH ... STAT source */
@@ -821,7 +835,7 @@ int CopyRegularFileNet(char *source, char *new, off_t size, AgentConnection *con
             free(buf);
             unlink(new);
             close(dd);
-            FlushFileStream(conn->sd, size - n_read_total);
+            FlushFileStream(conn->connection.physical.sd, size - n_read_total);
             EVP_CIPHER_CTX_cleanup(&crypto_ctx);
             return false;
         }
@@ -846,7 +860,7 @@ int CopyRegularFileNet(char *source, char *new, off_t size, AgentConnection *con
         free(buf);
         unlink(new);
         close(dd);
-        FlushFileStream(conn->sd, size - n_read_total);
+        FlushFileStream(conn->connection.physical.sd, size - n_read_total);
         return false;
     }
 
@@ -904,7 +918,7 @@ int EncryptCopyRegularFileNet(char *source, char *new, off_t size, AgentConnecti
 
 /* Send proposition C0 - query */
 
-    if (SendTransaction(conn->sd, workbuf, tosend, CF_DONE) == -1)
+    if (SendTransaction(&conn->connection, workbuf, tosend, CF_DONE) == -1)
     {
         Log(LOG_LEVEL_ERR, "Couldn't send data. (SendTransaction: %s)", GetErrorStr());
         close(dd);
@@ -917,7 +931,7 @@ int EncryptCopyRegularFileNet(char *source, char *new, off_t size, AgentConnecti
 
     while (more)
     {
-        if ((cipherlen = ReceiveTransaction(conn->sd, buf, &more)) == -1)
+        if ((cipherlen = ReceiveTransaction(&conn->connection, buf, &more)) == -1)
         {
             free(buf);
             return false;
@@ -1065,8 +1079,8 @@ int ServerConnect(AgentConnection *conn, const char *host, FileCopy fc)
         Log(LOG_LEVEL_VERBOSE, "Connect to '%s' = '%s' on port '%s'",
               host, txtaddr, strport);
 
-        conn->sd = socket(ap->ai_family, ap->ai_socktype, ap->ai_protocol);
-        if (conn->sd == -1)
+        conn->connection.physical.sd = socket(ap->ai_family, ap->ai_socktype, ap->ai_protocol);
+        if (conn->connection.physical.sd == -1)
         {
             Log(LOG_LEVEL_ERR, "Couldn't open a socket. (socket: %s)", GetErrorStr());
             continue;
@@ -1087,8 +1101,8 @@ int ServerConnect(AgentConnection *conn, const char *host, FileCopy fc)
                 Log(LOG_LEVEL_ERR,
                     "Unable to lookup interface '%s' to bind. (getaddrinfo: %s)",
                       BINDINTERFACE, gai_strerror(err));
-                cf_closesocket(conn->sd);
-                conn->sd = SOCKET_INVALID;
+                cf_closesocket(conn->connection.physical.sd);
+                conn->connection.physical.sd = SOCKET_INVALID;
                 freeaddrinfo(response2);
                 freeaddrinfo(response);
                 return false;
@@ -1096,7 +1110,7 @@ int ServerConnect(AgentConnection *conn, const char *host, FileCopy fc)
 
             for (ap2 = response2; ap2 != NULL; ap2 = ap2->ai_next)
             {
-                if (bind(conn->sd, ap2->ai_addr, ap2->ai_addrlen) == 0)
+                if (bind(conn->connection.physical.sd, ap2->ai_addr, ap2->ai_addrlen) == 0)
                 {
                     break;
                 }
@@ -1122,10 +1136,10 @@ int ServerConnect(AgentConnection *conn, const char *host, FileCopy fc)
     }
     else
     {
-        if (conn->sd >= 0)                 /* not INVALID or OFFLINE socket */
+        if (conn->connection.physical.sd >= 0)                 /* not INVALID or OFFLINE socket */
         {
-            cf_closesocket(conn->sd);
-            conn->sd = SOCKET_INVALID;
+            cf_closesocket(conn->connection.physical.sd);
+            conn->connection.physical.sd = SOCKET_INVALID;
         }
     }
 
@@ -1139,7 +1153,6 @@ int ServerConnect(AgentConnection *conn, const char *host, FileCopy fc)
         Log(LOG_LEVEL_VERBOSE, "Unable to connect to server %s: %s", host, GetErrorStr());
         return false;
     }
-
     return true;
 }
 
@@ -1179,7 +1192,7 @@ static bool ServerOffline(const char *server)
                                  ipaddr);
             }
 
-            if (svp->conn->sd == CF_COULD_NOT_CONNECT)
+            if (svp->conn->connection.physical.sd == CF_COULD_NOT_CONNECT)
                 return true;
             else
                 return false;
@@ -1228,13 +1241,13 @@ static AgentConnection *GetIdleConnectionToServer(const char *server)
                     " connection to '%s' seems to be active...",
                     ipaddr);
             }
-            else if (svp->conn->sd == CF_COULD_NOT_CONNECT)
+            else if (svp->conn->connection.physical.sd == CF_COULD_NOT_CONNECT)
             {
                 Log(LOG_LEVEL_VERBOSE, "GetIdleConnectionToServer:"
                     " connection to '%s' is marked as offline...",
                     ipaddr);
             }
-            else if (svp->conn->sd > 0)
+            else if (svp->conn->connection.physical.sd > 0)
             {
                 Log(LOG_LEVEL_VERBOSE, "GetIdleConnectionToServer:"
                     " found connection to %s already open and ready.",
@@ -1246,7 +1259,7 @@ static AgentConnection *GetIdleConnectionToServer(const char *server)
             {
                 Log(LOG_LEVEL_VERBOSE,
                     " connection to '%s' is in unknown state %d...",
-                    ipaddr, svp->conn->sd);
+                    ipaddr, svp->conn->connection.physical.sd);
             }
         }
     }
@@ -1315,7 +1328,7 @@ static void MarkServerOffline(const char *server)
         /* TODO assert conn->remoteip == svp->server? Why do we need both? */
         {
             /* Found it, mark offline */
-            conn->sd = CF_COULD_NOT_CONNECT;
+            conn->connection.physical.sd = CF_COULD_NOT_CONNECT;
             return;
         }
     }
@@ -1325,10 +1338,10 @@ static void MarkServerOffline(const char *server)
     svp->server = xstrdup(ipaddr);
     svp->busy = false;
     svp->conn = NewAgentConn(ipaddr);
-    svp->conn->sd = CF_COULD_NOT_CONNECT;
+    svp->conn->connection.physical.sd = CF_COULD_NOT_CONNECT;
 
     ThreadLock(&cft_serverlist);
-        rp = RlistPrependAlien(&SERVERLIST, svp);
+    rp = RlistPrependAlien(&SERVERLIST, svp);
     ThreadUnlock(&cft_serverlist);
 }
 
@@ -1494,14 +1507,14 @@ int TryConnect(AgentConnection *conn, struct timeval *tvp, struct sockaddr *cinp
     }
 
     /* set non-blocking socket */
-    arg = fcntl(conn->sd, F_GETFL, NULL);
+    arg = fcntl(conn->connection.physical.sd, F_GETFL, NULL);
 
-    if (fcntl(conn->sd, F_SETFL, arg | O_NONBLOCK) == -1)
+    if (fcntl(conn->connection.physical.sd, F_SETFL, arg | O_NONBLOCK) == -1)
     {
         Log(LOG_LEVEL_ERR, "Could not set socket to non-blocking mode. (fcntl: %s)", GetErrorStr());
     }
 
-    res = connect(conn->sd, cinp, (socklen_t) cinpSz);
+    res = connect(conn->connection.physical.sd, cinp, (socklen_t) cinpSz);
 
     if (res < 0)
     {
@@ -1513,11 +1526,11 @@ int TryConnect(AgentConnection *conn, struct timeval *tvp, struct sockaddr *cinp
 
             FD_ZERO(&myset);
 
-            FD_SET(conn->sd, &myset);
+            FD_SET(conn->connection.physical.sd, &myset);
 
             /* now wait for connect, but no more than tvp.sec */
-            res = select(conn->sd + 1, NULL, &myset, NULL, tvp);
-            if (getsockopt(conn->sd, SOL_SOCKET, SO_ERROR, (void *) (&valopt), &lon) != 0)
+            res = select(conn->connection.physical.sd + 1, NULL, &myset, NULL, tvp);
+            if (getsockopt(conn->connection.physical.sd, SOL_SOCKET, SO_ERROR, (void *) (&valopt), &lon) != 0)
             {
                 Log(LOG_LEVEL_ERR, "Could not check connection status. (getsockopt: %s)", GetErrorStr());
                 return false;
@@ -1538,12 +1551,12 @@ int TryConnect(AgentConnection *conn, struct timeval *tvp, struct sockaddr *cinp
 
     /* connection suceeded; return to blocking mode */
 
-    if (fcntl(conn->sd, F_SETFL, arg) == -1)
+    if (fcntl(conn->connection.physical.sd, F_SETFL, arg) == -1)
     {
         Log(LOG_LEVEL_ERR, "Could not set socket to blocking mode. (fcntl: %s)", GetErrorStr());
     }
 
-    if (SetReceiveTimeout(conn->sd, tvp) == -1)
+    if (SetReceiveTimeout(conn->connection.physical.sd, tvp) == -1)
     {
         Log(LOG_LEVEL_ERR, "Could not set socket timeout. (SetReceiveTimeout: %s)", GetErrorStr());
     }

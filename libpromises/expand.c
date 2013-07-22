@@ -762,7 +762,7 @@ static void ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp, Rlist *listv
     char v[CF_MAXVARSIZE];
     int cutoff = 0;
 
-    lol = NewIterationContext(ctx, pp, PromiseGetBundle(pp)->ns, PromiseGetBundle(pp)->name, listvars);
+    lol = NewIterationContext(ctx, pp, listvars);
 
     if (lol && EndOfIteration(lol))
     {

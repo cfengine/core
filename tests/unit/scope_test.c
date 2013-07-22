@@ -44,6 +44,15 @@ static void test_push_pop_this(void)
 
     EvalContext *ctx = EvalContextNew();
 
+    Policy *p = PolicyNew();
+    Bundle *bp = PolicyAppendBundle(p, "default", "bundle", "agent", NULL, NULL);
+    PromiseType *pt = BundleAppendPromiseType(bp, "reports");
+    Promise *pp = PromiseTypeAppendPromise(pt, "hello", (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, NULL);
+
+    EvalContextStackPushBundleFrame(ctx, bp, NULL, false);
+    EvalContextStackPushPromiseFrame(ctx, pp);
+    EvalContextStackPushPromiseIterationFrame(ctx, pp);
+
     ScopeNewSpecial(ctx, "this", "lval", "rval1", DATA_TYPE_STRING);
     assert_true(EvalContextVariableGet(ctx, lval, &rval, NULL));
     assert_string_equal("rval1", RvalScalarValue(rval));
@@ -74,6 +83,13 @@ static void test_push_pop_this(void)
     }
     assert_true(EvalContextVariableGet(ctx, lval, &rval, NULL));
     assert_string_equal("rval1", RvalScalarValue(rval));
+
+    EvalContextStackPopFrame(ctx);
+    EvalContextStackPopFrame(ctx);
+    EvalContextStackPopFrame(ctx);
+
+    PolicyDestroy(p);
+    EvalContextDestroy(ctx);
 }
 
 int main()

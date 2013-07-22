@@ -1326,25 +1326,8 @@ bool EvalContextVariablePut(EvalContext *ctx, const VarRef *ref, Rval rval, Data
             break;
         }
     }
-    else
-    {
-        assert(STACK_FRAME_TYPE_BODY == LastStackFrame(ctx, 0)->type);
-    }
 
-    assert(ref->scope);
-
-    Scope *put_scope = ScopeGet(ref->ns, ref->scope);
-    if (!put_scope)
-    {
-        put_scope = ScopeNew(ref->ns, ref->scope);
-        if (!put_scope)
-        {
-            return false;
-        }
-    }
-
-// Look for outstanding lists in variable rvals
-
+    // Look for outstanding lists in variable rvals
     if (THIS_AGENT_TYPE == AGENT_TYPE_COMMON)
     {
         Rlist *listvars = NULL;
@@ -1363,6 +1346,28 @@ bool EvalContextVariablePut(EvalContext *ctx, const VarRef *ref, Rval rval, Data
 
             RlistDestroy(listvars);
             RlistDestroy(scalars);
+        }
+    }
+
+    if (strcmp("this", ref->scope) == 0)
+    {
+        assert(!ref->ns);
+        assert(STACK_FRAME_TYPE_PROMISE_ITERATION == LastStackFrame(ctx, 0)->type);
+    }
+    else if (strcmp("body", ref->scope) == 0)
+    {
+        assert(!ref->ns);
+        assert(STACK_FRAME_TYPE_BODY == LastStackFrame(ctx, 0)->type);
+    }
+
+
+    Scope *put_scope = ScopeGet(ref->ns, ref->scope);
+    if (!put_scope)
+    {
+        put_scope = ScopeNew(ref->ns, ref->scope);
+        if (!put_scope)
+        {
+            return false;
         }
     }
 

@@ -1996,6 +1996,11 @@ body package_method msi_explicit(repo)
 
 ##
 
+# This package_method uses yum to install, update and list packages.
+#
+# It will use "rpm -e" to remove packages. Please note that if several packages
+# with the same name but varying versions or architectures are installed,
+# "rpm -e" will return an error and not delete any of them.
 body package_method yum
 {
       package_changes => "bulk";
@@ -2037,6 +2042,10 @@ body package_method yum_rpm
 # Contributed by Trond Hasle Amundsen
 # More efficient package method for RPM-based systems - uses rpm
 # instead of yum to list installed packages
+#
+# It will use "rpm -e" to remove packages. Please note that if several packages
+# with the same name but varying versions or architectures are installed,
+# "rpm -e" will return an error and not delete any of them.
 
 {
       package_changes => "bulk";
@@ -2049,6 +2058,9 @@ body package_method yum_rpm
 
       package_installed_regex => ".*";
       package_name_convention => "$(name)-$(version).$(arch)";
+
+      # just give the package name to rpm to delete, otherwise it gets "name-*.*" (from package_name_convention above)
+      package_delete_convention => "$(name)";
 
       # set it to "0" to avoid caching of list during upgrade
       package_list_update_command => "/usr/bin/yum --quiet check-update";

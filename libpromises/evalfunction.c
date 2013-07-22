@@ -1056,26 +1056,36 @@ static FnCallResult FnCallReadTcp(EvalContext *ctx, FnCall *fp, Rlist *finalargs
 
     if (strlen(sendstring) > 0)
     {
-        if (SendSocketStream(conn->sd, sendstring, strlen(sendstring), 0) == -1)
-        {
-            cf_closesocket(conn->sd);
-            DeleteAgentConn(conn);
-            return (FnCallResult) { FNCALL_FAILURE };
-        }
+        int sent = 0;
+        int result = 0;
+        size_t length = strlen(sendstring);
+        do {
+            result = send(conn->connection.physical.sd, sendstring, length, 0);
+            if (result < 0)
+            {
+                cf_closesocket(conn->connection.physical.sd);
+                DeleteAgentConn(conn);
+                return (FnCallResult) { FNCALL_FAILURE };
+            }
+            else
+            {
+                sent += result;
+            }
+        } while (sent < length);
     }
 
-    if ((n_read = recv(conn->sd, buffer, val, 0)) == -1)
+    if ((n_read = recv(conn->connection.physical.sd, buffer, val, 0)) == -1)
     {
     }
 
     if (n_read == -1)
     {
-        cf_closesocket(conn->sd);
+        cf_closesocket(conn->connection.physical.sd);
         DeleteAgentConn(conn);
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
-    cf_closesocket(conn->sd);
+    cf_closesocket(conn->connection.physical.sd);
     DeleteAgentConn(conn);
 
     return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), RVAL_TYPE_SCALAR } };
@@ -1825,20 +1835,20 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx, FnCall *fp, Rlist *fin
 
         if (strlen(sendstring) > 0)
         {
-            if (SendSocketStream(conn->sd, sendstring, strlen(sendstring), 0) == -1)
+            if (SendSocketStream(conn->connection.physical.sd, sendstring, strlen(sendstring), 0) == -1)
             {
-                cf_closesocket(conn->sd);
+                cf_closesocket(conn->connection.physical.sd);
                 DeleteAgentConn(conn);
                 continue;
             }
 
-            if ((n_read = recv(conn->sd, buffer, val, 0)) == -1)
+            if ((n_read = recv(conn->connection.physical.sd, buffer, val, 0)) == -1)
             {
             }
 
             if (n_read == -1)
             {
-                cf_closesocket(conn->sd);
+                cf_closesocket(conn->connection.physical.sd);
                 DeleteAgentConn(conn);
                 continue;
             }
@@ -1871,7 +1881,7 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx, FnCall *fp, Rlist *fin
             count++;
         }
 
-        cf_closesocket(conn->sd);
+        cf_closesocket(conn->connection.physical.sd);
         DeleteAgentConn(conn);
     }
 

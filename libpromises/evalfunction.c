@@ -61,6 +61,10 @@
 
 #include <libgen.h>
 
+#ifndef __MINGW32__
+#include <glob.h>
+#endif
+
 
 /*
  * This module contains numeruous functions which don't use all their parameters
@@ -2295,6 +2299,57 @@ static FnCallResult FnCallFileStatDetails(EvalContext *ctx, FnCall *fp, Rlist *f
     }
 
     return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), RVAL_TYPE_SCALAR } };
+}
+
+/*********************************************************************/
+
+static FnCallResult FnCallFindfiles(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
+{
+    Rlist *returnlist = NULL;
+    Rlist *arg = NULL;
+    int argcount = 0;
+    char id[CF_BUFSIZE];
+
+    snprintf(id, CF_BUFSIZE, "built-in FnCall findfiles-arg");
+
+    /* We need to check all the arguments, ArgTemplate does not check varadic functions */
+    for (arg = finalargs; arg; arg = arg->next)
+    {
+        SyntaxTypeMatch err = CheckConstraintTypeMatch(id, (Rval) {arg->item, arg->type}, DATA_TYPE_STRING, "", 1);
+        if (err != SYNTAX_TYPE_MATCH_OK && err != SYNTAX_TYPE_MATCH_ERROR_UNEXPANDED)
+        {
+            FatalError(ctx, "in %s: %s", id, SyntaxTypeMatchToString(err));
+        }
+        argcount++;
+    }
+
+    RlistAppendScalar(&returnlist, CF_NULL_VALUE);
+
+    for (arg = finalargs;  /* Start with arg set to finalargs. */
+         arg;              /* We must have arg to proceed. */
+         arg = arg->next)  /* arg steps forward every time. */
+    {
+        char *pattern = RlistScalarValue(arg);
+#ifdef __MINGW32__
+        RlistAppendScalarIdemp(&returnlist, xstrdup(pattern));
+#else /* !__MINGW32__ */
+        glob_t globbuf;
+        if (0 == glob(pattern, GLOB_NOSORT, NULL, &globbuf))
+        {
+            for (int i = 0; i < globbuf.gl_pathc; i++)
+            {
+                char* found = globbuf.gl_pathv[i];
+                char fname[CF_BUFSIZE];
+                snprintf(fname, CF_BUFSIZE, "%s", found);
+                Log(LOG_LEVEL_VERBOSE, "%s pattern '%s' found match '%s'", fp->name, pattern, fname);
+                RlistAppendScalarIdemp(&returnlist, xstrdup(fname));
+            }
+
+            globfree(&globbuf);
+        }
+#endif
+    }
+    return (FnCallResult) { FNCALL_SUCCESS, { returnlist, RVAL_TYPE_LIST } };
 }
 
 /*********************************************************************/
@@ -5132,6 +5187,11 @@ FnCallArg FILESEXIST_ARGS[] =
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
+FnCallArg FINDFILES_ARGS[] =
+{
+    {NULL, DATA_TYPE_NONE, NULL}
+};
+
 FnCallArg FILTER_ARGS[] =
 {
     {CF_ANYSTRING, DATA_TYPE_STRING, "Regular expression or string"},
@@ -5755,6 +5815,7 @@ const FnCallType CF_FNCALL_TYPES[] =
     FnCallTypeNew("filesize", DATA_TYPE_INT, FILESTAT_ARGS, &FnCallFileStat, "Returns the size in bytes of the file", false, FNCALL_CATEGORY_FILES, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("filestat", DATA_TYPE_STRING, FILESTAT_DETAIL_ARGS, &FnCallFileStatDetails, "Returns stat() details of the file", false, FNCALL_CATEGORY_FILES, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("filter", DATA_TYPE_STRING_LIST, FILTER_ARGS, &FnCallFilter, "Similarly to grep(), filter the list arg2 for matches to arg2.  The matching can be as a regular expression or exactly depending on arg3.  The matching can be inverted with arg4.  A maximum on the number of matches returned can be set with arg5.", false, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("findfiles", DATA_TYPE_STRING_LIST, FINDFILES_ARGS, &FnCallFindfiles, "Find files matching a shell glob pattern", true, FNCALL_CATEGORY_FILES, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("format", DATA_TYPE_STRING, FORMAT_ARGS, &FnCallFormat, "Applies a list of string values in arg2,arg3... to a string format in arg1 with sprintf() rules", true, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("getenv", DATA_TYPE_STRING, GETENV_ARGS, &FnCallGetEnv, "Return the environment variable named arg1, truncated at arg2 characters", false, FNCALL_CATEGORY_SYSTEM, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("getfields", DATA_TYPE_INT, GETFIELDS_ARGS, &FnCallGetFields, "Get an array of fields in the lines matching regex arg1 in file arg2, split on regex arg3 as array name arg4", false, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),

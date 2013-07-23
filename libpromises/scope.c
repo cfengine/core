@@ -688,90 +688,75 @@ void ScopeDeRefListsInThisScope(const Rlist *dereflist)
     }
 }
 
-int ScopeMapBodyArgs(EvalContext *ctx, const char *ns, const char *scope, Rlist *give, const Rlist *take)
+void ScopeMapBodyArgs(EvalContext *ctx, const Body *body, const Rlist *args)
 {
-    Rlist *rpg = NULL;
-    const Rlist *rpt = NULL;
-    FnCall *fp;
-    DataType dtg = DATA_TYPE_NONE, dtt = DATA_TYPE_NONE;
-    char *lval;
-    void *rval;
-    int len1, len2;
+    const Rlist *arg = NULL;
+    const Rlist *param = NULL;
 
-    len1 = RlistLen(give);
-    len2 = RlistLen(take);
-
-    if (len1 != len2)
+    for (arg = args, param = body->args; arg != NULL && param != NULL; arg = arg->next, param = param->next)
     {
-        Log(LOG_LEVEL_ERR, "Argument mismatch in body template give[+args] = %d, take[-args] = %d", len1, len2);
-        return false;
-    }
+        DataType arg_type = StringDataType(ctx, RlistScalarValue(arg));
+        DataType param_type = StringDataType(ctx, RlistScalarValue(param));
 
-    for (rpg = give, rpt = take; rpg != NULL && rpt != NULL; rpg = rpg->next, rpt = rpt->next)
-    {
-        dtg = StringDataType(ctx, (char *) rpg->item);
-        dtt = StringDataType(ctx, (char *) rpt->item);
-
-        if (dtg != dtt)
+        if (arg_type != param_type)
         {
-            Log(LOG_LEVEL_ERR, "Type mismatch between logical/formal parameters %s/%s", (char *) rpg->item,
-                  (char *) rpt->item);
-            Log(LOG_LEVEL_ERR, "%s is %s whereas %s is %s", (char *) rpg->item, DataTypeToString(dtg),
-                  (char *) rpt->item, DataTypeToString(dtt));
+            Log(LOG_LEVEL_ERR, "Type mismatch between logical/formal parameters %s/%s", (char *) arg->item,
+                  (char *) param->item);
+            Log(LOG_LEVEL_ERR, "%s is %s whereas %s is %s", (char *) arg->item, DataTypeToString(arg_type),
+                  (char *) param->item, DataTypeToString(param_type));
         }
 
-        switch (rpg->type)
+        switch (arg->type)
         {
         case RVAL_TYPE_SCALAR:
             {
-                lval = (char *) rpt->item;
-                rval = rpg->item;
-                VarRef *ref = VarRefParseFromNamespaceAndScope(lval, ns, scope, CF_NS, '.');
-                EvalContextVariablePut(ctx, ref, (Rval) { rval, RVAL_TYPE_SCALAR }, dtg);
+                const char *lval = RlistScalarValue(param);
+                void *rval = arg->item;
+                VarRef *ref = VarRefParseFromNamespaceAndScope(lval, NULL, "body", CF_NS, '.');
+                EvalContextVariablePut(ctx, ref, (Rval) { rval, RVAL_TYPE_SCALAR }, arg_type);
             }
             break;
 
         case RVAL_TYPE_LIST:
             {
-                lval = (char *) rpt->item;
-                rval = rpg->item;
-                VarRef *ref = VarRefParseFromNamespaceAndScope(lval, ns, scope, CF_NS, '.');
-                EvalContextVariablePut(ctx, ref, (Rval) { rval, RVAL_TYPE_LIST }, dtg);
+                const char *lval = RlistScalarValue(param->item);
+                void *rval = arg->item;
+                VarRef *ref = VarRefParseFromNamespaceAndScope(lval, NULL, "body", CF_NS, '.');
+                EvalContextVariablePut(ctx, ref, (Rval) { rval, RVAL_TYPE_LIST }, arg_type);
                 VarRefDestroy(ref);
             }
             break;
 
         case RVAL_TYPE_FNCALL:
-            fp = (FnCall *) rpg->item;
-            dtg = DATA_TYPE_NONE;
             {
-                const FnCallType *fncall_type = FnCallTypeGet(fp->name);
-                if (fncall_type)
+                FnCall *fp = arg->item;
+                arg_type = DATA_TYPE_NONE;
                 {
-                    dtg = fncall_type->dtype;
+                    const FnCallType *fncall_type = FnCallTypeGet(fp->name);
+                    if (fncall_type)
+                    {
+                        arg_type = fncall_type->dtype;
+                    }
                 }
-            }
 
-            FnCallResult res = FnCallEvaluate(ctx, fp, NULL);
+                FnCallResult res = FnCallEvaluate(ctx, fp, NULL);
 
-            if (res.status == FNCALL_FAILURE && THIS_AGENT_TYPE != AGENT_TYPE_COMMON)
-            {
-                Log(LOG_LEVEL_VERBOSE, "Embedded function argument does not resolve to a name - probably too many evaluation levels for '%s'",
-                    fp->name);
-            }
-            else
-            {
-                FnCallDestroy(fp);
+                if (res.status == FNCALL_FAILURE && THIS_AGENT_TYPE != AGENT_TYPE_COMMON)
+                {
+                    Log(LOG_LEVEL_VERBOSE, "Embedded function argument does not resolve to a name - probably too many evaluation levels for '%s'",
+                        fp->name);
+                }
+                else
+                {
+                    FnCallDestroy(fp);
 
-                rpg->item = res.rval.item;
-                rpg->type = res.rval.type;
+                    const char *lval = RlistScalarValue(param);
+                    void *rval = res.rval.item;
 
-                lval = (char *) rpt->item;
-                rval = rpg->item;
-
-                VarRef *ref = VarRefParseFromNamespaceAndScope(lval, ns, scope, CF_NS, '.');
-                EvalContextVariablePut(ctx, ref, (Rval) {rval, RVAL_TYPE_SCALAR }, dtg);
-                VarRefDestroy(ref);
+                    VarRef *ref = VarRefParseFromNamespaceAndScope(lval, NULL, "body", CF_NS, '.');
+                    EvalContextVariablePut(ctx, ref, (Rval) {rval, RVAL_TYPE_SCALAR }, res.rval.type);
+                    VarRefDestroy(ref);
+                }
             }
 
             break;
@@ -781,8 +766,6 @@ int ScopeMapBodyArgs(EvalContext *ctx, const char *ns, const char *scope, Rlist 
             ProgrammingError("Software error: something not a scalar/function in argument literal");
         }
     }
-
-    return true;
 }
 
 /*******************************************************************/

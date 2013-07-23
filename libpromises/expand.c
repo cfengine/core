@@ -118,7 +118,6 @@ void ExpandPromise(EvalContext *ctx, Promise *pp, PromiseActuator *ActOnPromise,
 {
     Rlist *listvars = NULL;
     Rlist *scalars = NULL;
-    Promise *pcopy;
 
     // Set a default for packages here...general defaults that need to come before
     //fix me wth a general function SetMissingDefaults
@@ -126,9 +125,8 @@ void ExpandPromise(EvalContext *ctx, Promise *pp, PromiseActuator *ActOnPromise,
 
     ScopeClearSpecial(SPECIAL_SCOPE_MATCH);       /* in case we expand something expired accidentially */
 
-    EvalContextStackPushPromiseFrame(ctx, pp);
-
-    pcopy = DeRefCopyPromise(ctx, pp);
+    Promise *pcopy = DeRefCopyPromise(ctx, pp);
+    EvalContextStackPushPromiseFrame(ctx, pcopy);
 
     MapIteratorsFromRval(ctx, PromiseGetBundle(pp)->name, &listvars, &scalars, (Rval) { pcopy->promiser, RVAL_TYPE_SCALAR });
 
@@ -791,9 +789,6 @@ static void ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp, Rlist *listv
     {
         char number[CF_SMALLBUF];
 
-        /* Set scope "this" first to ensure list expansion ! */
-        EvalContextStackPushPromiseIterationFrame(ctx, pp);
-
         {
             int len = 0;
             if ((len = RlistLen(listvars)) != RlistLen(lol))
@@ -852,6 +847,8 @@ static void ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp, Rlist *listv
         /* End special variables */
 
         pexp = ExpandDeRefPromise(ctx, NULL, "this", pp);
+
+        EvalContextStackPushPromiseIterationFrame(ctx, pexp);
 
         assert(ActOnPromise);
         ActOnPromise(ctx, pexp, param);

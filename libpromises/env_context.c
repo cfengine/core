@@ -41,6 +41,7 @@
 #include "promise_logging.h"
 #include "rlist.h"
 #include "buffer.h"
+#include "promises.h"
 
 #ifdef HAVE_NOVA
 # include "cf.nova.h"
@@ -1151,7 +1152,7 @@ void EvalContextStackPushBundleFrame(EvalContext *ctx, const Bundle *owner, cons
 
 void EvalContextStackPushBodyFrame(EvalContext *ctx, const Body *owner, Rlist *args)
 {
-    assert((!LastStackFrame(ctx, 0) && strcmp("control", owner->name) == 0) || LastStackFrame(ctx, 0)->type == STACK_FRAME_TYPE_PROMISE);
+    assert((!LastStackFrame(ctx, 0) && strcmp("control", owner->name) == 0) || LastStackFrame(ctx, 0)->type == STACK_FRAME_TYPE_BUNDLE);
 
     EvalContextStackPushFrame(ctx, StackFrameNewBody(owner));
     if (!ScopeGet(NULL, "body"))
@@ -1159,13 +1160,18 @@ void EvalContextStackPushBodyFrame(EvalContext *ctx, const Body *owner, Rlist *a
         ScopeNew(NULL, "body");
     }
 
-    if (!ScopeMapBodyArgs(ctx, NULL, "body", args, owner->args))
+    if (RlistLen(owner->args) != RlistLen(args))
     {
         const Promise *caller = EvalContextStackGetTopPromise(ctx);
+        assert(caller);
 
-        Log(LOG_LEVEL_ERR,
-            "Number of arguments does not match for body reference '%s' in promise at line %zu of file '%s'",
-              owner->name, caller->offset.line, PromiseGetBundle(caller)->source_path);
+        Log(LOG_LEVEL_ERR, "Argument arity mismatch in body '%s' at line %zu in file '%s', expected %d, got %d",
+            owner->name, caller->offset.line, PromiseGetBundle(caller)->source_path, RlistLen(owner->args), RlistLen(args));
+        return;
+    }
+    else
+    {
+        ScopeMapBodyArgs(ctx, owner, args);
     }
 }
 
@@ -1173,13 +1179,13 @@ void EvalContextStackPushPromiseFrame(EvalContext *ctx, const Promise *owner)
 {
     assert(LastStackFrame(ctx, 0) && LastStackFrame(ctx, 0)->type == STACK_FRAME_TYPE_BUNDLE);
 
-    EvalContextStackPushFrame(ctx, StackFrameNewPromise(owner));
     if (!ScopeGet(NULL, "this"))
     {
         ScopeNew(NULL, "this");
     }
 
     ScopePushThis();
+    EvalContextStackPushFrame(ctx, StackFrameNewPromise(owner));
 }
 
 void EvalContextStackPushPromiseIterationFrame(EvalContext *ctx, const Promise *owner)
@@ -1352,7 +1358,7 @@ bool EvalContextVariablePut(EvalContext *ctx, const VarRef *ref, Rval rval, Data
     if (strcmp("this", ref->scope) == 0)
     {
         assert(!ref->ns);
-        assert(STACK_FRAME_TYPE_PROMISE_ITERATION == LastStackFrame(ctx, 0)->type);
+        assert(STACK_FRAME_TYPE_PROMISE == LastStackFrame(ctx, 0)->type || STACK_FRAME_TYPE_PROMISE_ITERATION == LastStackFrame(ctx, 0)->type);
     }
     else if (strcmp("body", ref->scope) == 0)
     {

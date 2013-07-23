@@ -27,6 +27,7 @@ check_PROGRAMS = \
 	assoc_test \
 	atexit_test \
 	csv_writer_test \
+	enterprise_extension_test \
 	item_test \
 	rlist_test \
 	domainname_test \
@@ -103,6 +104,17 @@ csv_writer_test_LDADD = libtest.la libstr.la
 
 conversion_test_SOURCES = conversion_test.c ../../libpromises/conversion.c
 
+enterprise_extension_test_SOURCES = enterprise_extension_test.c
+
+check_LTLIBRARIES += cfengine-enterprise.la
+cfengine_enterprise_la_SOURCES = enterprise_extension_test_lib.c
+cfengine_enterprise_la_LDFLAGS = -avoid-version -module -shared -export-dynamic -rpath /
+
+cfengine-enterprise.so: cfengine-enterprise.la
+	$(RM) cfengine-enterprise.so
+	$(LN_S) .libs/cfengine-enterprise.so cfengine-enterprise.so
+EXTRA_enterprise_extension_test_DEPENDENCIES = cfengine-enterprise.so
+
 set_domainname_test_SOURCES = set_domainname_test.c
 set_domainname_test_LDADD = libstr.la ../../libpromises/libpromises.la
 
@@ -161,7 +173,7 @@ dbm_migration_bundles_test_SOURCES = dbm_migration_bundles_test.c
 dbm_migration_bundles_test_LDADD = libdb.la
 
 
-CLEANFILES = *.gcno *.gcda
+CLEANFILES = *.gcno *.gcda cfengine-enterprise.so
 
 package_versions_compare_test_SOURCES = package_versions_compare_test.c ../../cf-agent/verify_packages.c ../../cf-agent/vercmp.c ../../cf-agent/vercmp_internal.c ../../cf-agent/retcode.c
 

@@ -1,0 +1,92 @@
+#######################################################
+#
+# Test canonifyuniquely()
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+  vars:
+      "dummy" string => "dummy";
+}
+
+#######################################################
+
+bundle agent test
+{
+  vars:
+
+      "in1" string => "h?llo";
+      "expect1" string => "h_llo_ad3f6fcf7063483c9d23b4b83c0b65df72e9f5cc";
+      "out1" string => canonifyuniquely("$(in1)");
+
+      "in2" string => "h/llo";
+      "expect2" string => "h_llo_5d049ef5eaa0c5b4622eac3eee899132731bc034";
+      "out2" string => canonifyuniquely("$(in2)");
+
+      "in3" string => "/etc/passwd";
+      "expect3" string => "_etc_passwd_b5cc3f676d00dd320d85ef41a5209fa0a99891ea";
+      "out3" string => canonifyuniquely("$(in3)");
+
+      "in4" string => "hello@mumble.com";
+      "expect4" string => "hello_mumble_com_5050b0473d3e79adccfb885b8cbe3f44ed706987";
+      "out4" string => canonifyuniquely("$(in4)");
+
+      "in5" string => "!@#$%^&*()_-+={}[]\:;<>,?";
+      "expect5" string => "__________________________55a3d62a602f37917827cbe044fcbb5da58f8df5";
+      "out5" string => canonifyuniquely("$(in5)");
+
+      "in6" string => "Eystein Måløy Stenberg";
+      "expect6" string => "Eystein_M__l__y_Stenberg_f1d661c705209075cd873226cb131d2e27374357";
+      "out6" string => canonifyuniquely("$(in6)");
+
+      "in7" string => "$(in1) $(in1)";
+      "expect7" string => "h_llo_h_llo_53750186dbccd2f8a512345c4a92ccc34d75267d";
+      "out7" string => canonifyuniquely("$(in1) $(in1)");
+
+      "in8" string => "'\"hello\"'";
+      "expect8" string => "__hello___b2a2a0459a623c8e1cae32e88673ba4067106dc9";
+      "out8" string => canonifyuniquely("$(in8)");
+}
+
+#######################################################
+
+bundle agent check
+{
+  classes:
+      "ok" and => {
+                    strcmp("$(test.expect1)", "$(test.out1)"),
+                    strcmp("$(test.expect2)", "$(test.out2)"),
+                    strcmp("$(test.expect3)", "$(test.out3)"),
+                    strcmp("$(test.expect4)", "$(test.out4)"),
+                    strcmp("$(test.expect5)", "$(test.out5)"),
+                    strcmp("$(test.expect6)", "$(test.out6)"),
+                    strcmp("$(test.expect7)", "$(test.out7)"),
+                    strcmp("$(test.expect8)", "$(test.out8)"),
+      };
+
+  reports:
+    DEBUG::
+      "Expected canonifyuniquely('$(test.in1)') => $(test.out1) == $(test.expect1)";
+      "Expected canonifyuniquely('$(test.in2)') => $(test.out2) == $(test.expect2)";
+      "Expected canonifyuniquely('$(test.in3)') => $(test.out3) == $(test.expect3)";
+      "Expected canonifyuniquely('$(test.in4)') => $(test.out4) == $(test.expect4)";
+      "Expected canonifyuniquely('$(test.in5)') => $(test.out5) == $(test.expect5)";
+      "Expected canonifyuniquely('$(test.in6)') => $(test.out6) == $(test.expect6)";
+      "Expected canonifyuniquely('$(test.in7)') => $(test.out7) == $(test.expect7)";
+      "Expected canonifyuniquely('$(test.in8)') => $(test.out8) == $(test.expect8)";
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}
+

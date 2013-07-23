@@ -764,7 +764,27 @@ static FnCallResult FnCallClassesMatching(EvalContext *ctx, FnCall *fp, Rlist *f
 
 static FnCallResult FnCallCanonify(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
-    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(CanonifyName(RlistScalarValue(finalargs))), RVAL_TYPE_SCALAR } };
+    char buf[CF_BUFSIZE];
+    char *string = RlistScalarValue(finalargs);
+
+    buf[0] = '\0';
+    
+    if (!strcmp(fp->name, "canonifyuniquely"))
+    {
+        char hashbuffer[EVP_MAX_MD_SIZE * 4];
+        unsigned char digest[EVP_MAX_MD_SIZE + 1];
+        HashMethod type;
+
+        type = HashMethodFromString("sha1");
+        HashString(string, strlen(string), digest, type);
+        snprintf(buf, CF_BUFSIZE, "%s_%s", string, SkipHashType(HashPrintSafe(type, digest, hashbuffer)));
+    }
+    else
+    {
+        snprintf(buf, CF_BUFSIZE, "%s", string);
+    }
+
+    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(CanonifyName(buf)), RVAL_TYPE_SCALAR } };
 }
 
 /*********************************************************************/
@@ -5737,6 +5757,7 @@ const FnCallType CF_FNCALL_TYPES[] =
     FnCallTypeNew("ago", DATA_TYPE_INT, AGO_ARGS, &FnCallAgoDate, "Convert a time relative to now to an integer system representation", false, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("and", DATA_TYPE_STRING, AND_ARGS, &FnCallAnd, "Calculate whether all arguments evaluate to true", true, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("canonify", DATA_TYPE_STRING, CANONIFY_ARGS, &FnCallCanonify, "Convert an abitrary string into a legal class name", false, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("canonifyuniquely", DATA_TYPE_STRING, CANONIFY_ARGS, &FnCallCanonify, "Convert an abitrary string into a unique legal class name", false, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("concat", DATA_TYPE_STRING, CONCAT_ARGS, &FnCallConcat, "Concatenate all arguments into string", true, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("changedbefore", DATA_TYPE_CONTEXT, CHANGEDBEFORE_ARGS, &FnCallIsChangedBefore, "True if arg1 was changed before arg2 (ctime)", false, FNCALL_CATEGORY_FILES, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("classify", DATA_TYPE_CONTEXT, CLASSIFY_ARGS, &FnCallClassify, "True if the canonicalization of the argument is a currently defined class", false, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),

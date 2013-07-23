@@ -59,7 +59,8 @@ bundle common paths
       #
 
     any::
-      "path[getfacl]"  string => "/usr/bin/getfacl";
+      "path[getfacl]"   string => "/usr/bin/getfacl";
+      "path[dmidecode]" string => "/usr/sbin/dmidecode";
 
     aix::
 
@@ -226,7 +227,6 @@ bundle common paths
       "path[df]"            string => "/bin/df";
       "path[diff]"          string => "/usr/bin/diff";
       "path[dig]"           string => "/usr/bin/dig";
-      "path[dmidecode]"     string => "/usr/sbin/dmidecode";
       "path[domainname]"    string => "/bin/domainname";
       "path[echo]"          string => "/bin/echo";
       "path[egrep]"         string => "/bin/egrep";

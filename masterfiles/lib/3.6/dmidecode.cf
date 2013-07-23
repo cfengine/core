@@ -1,0 +1,91 @@
+body file control
+{
+      namespace => "dmidecode";
+}
+
+############################################################################
+#  Copyright (C) Cfengine AS
+#
+#  This program is free software; you can redistribute it and/or modify it
+#  under the terms of the GNU Lesser General Public License LGPL as published by the
+#  Free Software Foundation; version 3.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  To the extent this program is licensed as part of the Enterprise
+#  versions of Cfengine, the applicable Commerical Open Source License
+#  (COSL) may apply to this file if you as a licensee so wish it. See
+#  included file COSL.txt.
+###########################################################################
+
+bundle agent info
+# @brief Calls the `run` bundle to wrap dmidecode information
+#
+# **Example:**
+# ```cf3
+# methods:
+#  "dmidecode info" usebundle => dmidecode:info();
+# reports:
+#  "Got BIOS vendor: $(dmidecode:run.info[bios-vendor])";
+# ```
+{
+  methods:
+      "" usebundle => run("/usr/sbin/dmidecode");
+}
+
+bundle agent run(path)
+# @brief Calls `dmidecode` for each known keyword and stores the result.
+#
+# **Example:**
+# ```cf3
+# methods:
+#  "dmidecode info" usebundle => dmidecode:run("/usr/sbin/dmidecode");
+# reports:
+#  "Got BIOS vendor: $(dmidecode:run.info[bios-vendor])";
+# ```
+# @param commands the dmidecode path
+#
+# Note that this command should be provided as an absolute path
+# @return keywords the list of all the keywords as a space-separated string
+{
+  vars:
+      "keywords" slist =>
+      {
+        "baseboard-asset-tag",
+        "baseboard-manufacturer",
+        "baseboard-product-name",
+        "baseboard-serial-number",
+        "baseboard-version",
+        "bios-release-date",
+        "bios-vendor",
+        "bios-version",
+        "chassis-asset-tag",
+        "chassis-manufacturer",
+        "chassis-serial-number",
+        "chassis-type",
+        "chassis-version",
+        "processor-family",
+        "processor-frequency",
+        "processor-manufacturer",
+        "processor-version",
+        "system-manufacturer",
+        "system-product-name",
+        "system-serial-number",
+        "system-uuid",
+        "system-version",
+      };
+
+      "keywords_str" string => join(" ", "keywords");
+
+      "info[$(keywords)]" string => execresult("$(path) -s $(keywords)",
+                                               "noshell");
+
+  reports:
+      "$(keywords_str)" bundle_return_value_index => "keywords";
+
+    verbose_mode::
+      "$(this.bundle): Got dmidecode info $(keywords) = '$(info[$(keywords)])'";
+}

@@ -22,18 +22,18 @@
   included file COSL.txt.
 */
 
-#include "verify_classes.h"
+#include <verify_classes.h>
 
-#include "attributes.h"
-#include "matching.h"
-#include "files_names.h"
-#include "fncall.h"
-#include "rlist.h"
-#include "expand.h"
-#include "promises.h"
-#include "hashes.h"
-#include "conversion.h"
-#include "logic_expressions.h"
+#include <attributes.h>
+#include <matching.h>
+#include <files_names.h>
+#include <fncall.h>
+#include <rlist.h>
+#include <expand.h>
+#include <promises.h>
+#include <hashes.h>
+#include <conversion.h>
+#include <logic_expressions.h>
 
 
 static int EvalClassExpression(EvalContext *ctx, Constraint *cp, Promise *pp);

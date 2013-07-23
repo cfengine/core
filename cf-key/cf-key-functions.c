@@ -22,24 +22,24 @@
   included file COSL.txt.
 */
 
-#include "generic_agent.h"
+#include <generic_agent.h>
 
-#include "dbm_api.h"
-#include "lastseen.h"
-#include "dir.h"
-#include "scope.h"
-#include "files_copy.h"
-#include "files_interfaces.h"
-#include "files_hashes.h"
-#include "keyring.h"
-#include "communication.h"
-#include "env_context.h"
-#include "crypto.h"
+#include <dbm_api.h>
+#include <lastseen.h>
+#include <dir.h>
+#include <scope.h>
+#include <files_copy.h>
+#include <files_interfaces.h>
+#include <files_hashes.h>
+#include <keyring.h>
+#include <communication.h>
+#include <env_context.h>
+#include <crypto.h>
 
-#include "cf-key-functions.h"
+#include <cf-key-functions.h>
 
 #ifdef HAVE_ENTERPRISE
-#include "license.h"
+#include <license.h>
 #endif
 
 #ifdef HAVE_ENTERPRISE

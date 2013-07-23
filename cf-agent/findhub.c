@@ -22,12 +22,12 @@
   included file COSL.txt.
 */
 
-#include "findhub.h"
-#include "atexit.h"
-#include "string_lib.h"
-#include "misc_lib.h"
-#include "logging.h"
-#include "alloc.h"
+#include <findhub.h>
+#include <atexit.h>
+#include <string_lib.h>
+#include <misc_lib.h>
+#include <logging.h>
+#include <alloc.h>
 
 List *hublist = NULL; 
 

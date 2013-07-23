@@ -25,7 +25,7 @@
 #ifndef CFENGINE_CF_MONITORD_ENTERPRISE_STUBS_H
 #define CFENGINE_CF_MONITORD_ENTERPRISE_STUBS_H
 
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
 void GetObservable(int i, char *name, char *desc);
 void SetMeasurementPromises(Item **classlist);

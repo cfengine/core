@@ -25,9 +25,9 @@
 #ifndef CFENGINE_RLIST_H
 #define CFENGINE_RLIST_H
 
-#include "cf3.defs.h"
-#include "writer.h"
-#include "json.h"
+#include <cf3.defs.h>
+#include <writer.h>
+#include <json.h>
 
 struct Rlist_
 {

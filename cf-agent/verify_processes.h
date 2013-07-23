@@ -25,7 +25,7 @@
 #ifndef CFENGINE_VERIFY_PROCESSES_H
 #define CFENGINE_VERIFY_PROCESSES_H
 
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
 void VerifyProcessesPromise(EvalContext *ctx, Promise *pp);
 

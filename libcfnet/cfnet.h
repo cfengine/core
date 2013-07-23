@@ -25,7 +25,7 @@
 #ifndef CFENGINE_CFNET_H
 #define CFENGINE_CFNET_H
 
-#include "platform.h"
+#include <platform.h>
 
 
 /* ************************************************ */

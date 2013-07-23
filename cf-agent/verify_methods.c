@@ -22,21 +22,21 @@
   included file COSL.txt.
 */
 
-#include "verify_methods.h"
+#include <verify_methods.h>
 
-#include "env_context.h"
-#include "vars.h"
-#include "expand.h"
-#include "files_names.h"
-#include "scope.h"
-#include "hashes.h"
-#include "unix.h"
-#include "attributes.h"
-#include "locks.h"
-#include "generic_agent.h" // HashVariables
-#include "fncall.h"
-#include "rlist.h"
-#include "ornaments.h"
+#include <env_context.h>
+#include <vars.h>
+#include <expand.h>
+#include <files_names.h>
+#include <scope.h>
+#include <hashes.h>
+#include <unix.h>
+#include <attributes.h>
+#include <locks.h>
+#include <generic_agent.h> // HashVariables
+#include <fncall.h>
+#include <rlist.h>
+#include <ornaments.h>
 
 static void GetReturnValue(EvalContext *ctx, char *scope, Promise *pp);
 

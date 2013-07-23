@@ -22,26 +22,26 @@
   included file COSL.txt.
 */
 
-#include "policy.h"
+#include <policy.h>
 
-#include "syntax.h"
-#include "string_lib.h"
-#include "conversion.h"
-#include "mutex.h"
-#include "misc_lib.h"
-#include "mod_files.h"
-#include "vars.h"
-#include "fncall.h"
-#include "rlist.h"
-#include "set.h"
-#include "hashes.h"
-#include "env_context.h"
-#include "promises.h"
-#include "item_lib.h"
-#include "files_hashes.h"
-#include "audit.h"
-#include "logging.h"
-#include "expand.h"
+#include <syntax.h>
+#include <string_lib.h>
+#include <conversion.h>
+#include <mutex.h>
+#include <misc_lib.h>
+#include <mod_files.h>
+#include <vars.h>
+#include <fncall.h>
+#include <rlist.h>
+#include <set.h>
+#include <hashes.h>
+#include <env_context.h>
+#include <promises.h>
+#include <item_lib.h>
+#include <files_hashes.h>
+#include <audit.h>
+#include <logging.h>
+#include <expand.h>
 
 
 static const char *POLICY_ERROR_POLICY_NOT_RUNNABLE = "Policy is not runnable (does not contain a body common control)";

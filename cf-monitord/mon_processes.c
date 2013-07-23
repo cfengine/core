@@ -22,15 +22,15 @@
   included file COSL.txt.
 */
 
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
-#include "mon.h"
-#include "item_lib.h"
-#include "files_interfaces.h"
-#include "pipes.h"
+#include <mon.h>
+#include <item_lib.h>
+#include <files_interfaces.h>
+#include <pipes.h>
 
 #ifdef HAVE_ENTERPRISE
-# include "cf.enterprise.h"
+# include <cf.enterprise.h>
 #endif
 
 /* Prototypes */

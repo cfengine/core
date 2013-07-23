@@ -22,15 +22,15 @@
   included file COSL.txt.
 */
 
-#include "generic_agent.h"
+#include <generic_agent.h>
 
-#include "env_context.h"
-#include "conversion.h"
-#include "syntax.h"
-#include "rlist.h"
-#include "parser.h"
-#include "sysinfo.h"
-#include "man.h"
+#include <env_context.h>
+#include <conversion.h>
+#include <syntax.h>
+#include <rlist.h>
+#include <parser.h>
+#include <sysinfo.h>
+#include <man.h>
 
 #include <time.h>
 

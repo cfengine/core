@@ -22,23 +22,23 @@
   included file COSL.txt.
 */
 
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
-#include "dbm_api.h"
-#include "files_names.h"
-#include "files_interfaces.h"
-#include "item_lib.h"
-#include "vars.h"
-#include "sort.h"
-#include "attributes.h"
-#include "communication.h"
-#include "locks.h"
-#include "string_lib.h"
-#include "misc_lib.h"
-#include "policy.h"
-#include "scope.h"
-#include "ornaments.h"
-#include "env_context.h"
+#include <dbm_api.h>
+#include <files_names.h>
+#include <files_interfaces.h>
+#include <item_lib.h>
+#include <vars.h>
+#include <sort.h>
+#include <attributes.h>
+#include <communication.h>
+#include <locks.h>
+#include <string_lib.h>
+#include <misc_lib.h>
+#include <policy.h>
+#include <scope.h>
+#include <ornaments.h>
+#include <env_context.h>
 
 static void PrintFile(EvalContext *ctx, Attributes a, Promise *pp);
 static void ReportToFile(const char *logfile, const char *message);

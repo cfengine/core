@@ -25,8 +25,8 @@
 #ifndef CFENGINE_ALLOC_H
 #define CFENGINE_ALLOC_H
 
-#include "platform.h"
-#include "compiler.h"
+#include <platform.h>
+#include <compiler.h>
 
 void *xcalloc(size_t nmemb, size_t size);
 void *xmalloc(size_t size);

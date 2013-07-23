@@ -22,42 +22,42 @@
   included file COSL.txt.
 */
 
-#include "generic_agent.h"
+#include <generic_agent.h>
 
-#include "bootstrap.h"
-#include "sysinfo.h"
-#include "env_context.h"
-#include "policy.h"
-#include "promises.h"
-#include "files_lib.h"
-#include "files_names.h"
-#include "files_interfaces.h"
-#include "files_hashes.h"
-#include "parser.h"
-#include "dbm_api.h"
-#include "crypto.h"
-#include "vars.h"
-#include "syntax.h"
-#include "conversion.h"
-#include "expand.h"
-#include "locks.h"
-#include "scope.h"
-#include "atexit.h"
-#include "unix.h"
-#include "client_code.h"
-#include "string_lib.h"
-#include "exec_tools.h"
-#include "list.h"
-#include "misc_lib.h"
-#include "fncall.h"
-#include "rlist.h"
-#include "syslog_client.h"
-#include "audit.h"
-#include "verify_classes.h"
-#include "verify_vars.h"
+#include <bootstrap.h>
+#include <sysinfo.h>
+#include <env_context.h>
+#include <policy.h>
+#include <promises.h>
+#include <files_lib.h>
+#include <files_names.h>
+#include <files_interfaces.h>
+#include <files_hashes.h>
+#include <parser.h>
+#include <dbm_api.h>
+#include <crypto.h>
+#include <vars.h>
+#include <syntax.h>
+#include <conversion.h>
+#include <expand.h>
+#include <locks.h>
+#include <scope.h>
+#include <atexit.h>
+#include <unix.h>
+#include <client_code.h>
+#include <string_lib.h>
+#include <exec_tools.h>
+#include <list.h>
+#include <misc_lib.h>
+#include <fncall.h>
+#include <rlist.h>
+#include <syslog_client.h>
+#include <audit.h>
+#include <verify_classes.h>
+#include <verify_vars.h>
 
 #ifdef HAVE_ENTERPRISE
-# include "cf.enterprise.h"
+# include <cf.enterprise.h>
 #endif
 
 

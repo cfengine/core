@@ -22,8 +22,8 @@
   included file COSL.txt.
 */
 
-#include "load_avahi.h"
-#include "files_interfaces.h"
+#include <load_avahi.h>
+#include <files_interfaces.h>
 
 #include <stdlib.h>
 

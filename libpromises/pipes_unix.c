@@ -22,13 +22,13 @@
   included file COSL.txt.
 */
 
-#include "pipes.h"
+#include <pipes.h>
 
-#include "mutex.h"
-#include "exec_tools.h"
-#include "rlist.h"
-#include "policy.h"
-#include "env_context.h"
+#include <mutex.h>
+#include <exec_tools.h>
+#include <rlist.h>
+#include <policy.h>
+#include <env_context.h>
 
 static int CfSetuid(uid_t uid, gid_t gid);
 

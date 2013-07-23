@@ -22,17 +22,17 @@
   included file COSL.txt.
 */
 
-#include "agent-diagnostics.h"
+#include <agent-diagnostics.h>
 
-#include "alloc.h"
-#include "crypto.h"
-#include "files_interfaces.h"
-#include "string_lib.h"
-#include "bootstrap.h"
-#include "dbm_api.h"
-#include "dbm_priv.h"
-#include "tokyo_check.h"
-#include "lastseen.h"
+#include <alloc.h>
+#include <crypto.h>
+#include <files_interfaces.h>
+#include <string_lib.h>
+#include <bootstrap.h>
+#include <dbm_api.h>
+#include <dbm_priv.h>
+#include <tokyo_check.h>
+#include <lastseen.h>
 
 
 AgentDiagnosticsResult AgentDiagnosticsResultNew(bool success, char *message)

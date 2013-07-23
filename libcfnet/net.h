@@ -27,7 +27,7 @@
 #ifndef CFENGINE_NET_H
 #define CFENGINE_NET_H
 
-#include "cfnet.h"
+#include <cfnet.h>
 
 
 int SendTransaction(int sd, char *buffer, int len, char status);

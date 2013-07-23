@@ -22,28 +22,28 @@
   included file COSL.txt.
 */
 
-#include "env_context.h"
+#include <env_context.h>
 
-#include "files_names.h"
-#include "logic_expressions.h"
-#include "syntax.h"
-#include "item_lib.h"
-#include "ornaments.h"
-#include "expand.h"
-#include "matching.h"
-#include "string_lib.h"
-#include "misc_lib.h"
-#include "assoc.h"
-#include "scope.h"
-#include "vars.h"
-#include "syslog_client.h"
-#include "audit.h"
-#include "promise_logging.h"
-#include "rlist.h"
-#include "buffer.h"
+#include <files_names.h>
+#include <logic_expressions.h>
+#include <syntax.h>
+#include <item_lib.h>
+#include <ornaments.h>
+#include <expand.h>
+#include <matching.h>
+#include <string_lib.h>
+#include <misc_lib.h>
+#include <assoc.h>
+#include <scope.h>
+#include <vars.h>
+#include <syslog_client.h>
+#include <audit.h>
+#include <promise_logging.h>
+#include <rlist.h>
+#include <buffer.h>
 
 #ifdef HAVE_ENTERPRISE
-# include "cf.enterprise.h"
+# include <cf.enterprise.h>
 #endif
 
 

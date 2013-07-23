@@ -22,22 +22,22 @@
   included file COSL.txt.
 */
 
-#include "verify_processes.h"
+#include <verify_processes.h>
 
-#include "processes_select.h"
-#include "env_context.h"
-#include "promises.h"
-#include "vars.h"
-#include "item_lib.h"
-#include "conversion.h"
-#include "matching.h"
-#include "attributes.h"
-#include "locks.h"
-#include "exec_tools.h"
-#include "rlist.h"
-#include "policy.h"
-#include "scope.h"
-#include "ornaments.h"
+#include <processes_select.h>
+#include <env_context.h>
+#include <promises.h>
+#include <vars.h>
+#include <item_lib.h>
+#include <conversion.h>
+#include <matching.h>
+#include <attributes.h>
+#include <locks.h>
+#include <exec_tools.h>
+#include <rlist.h>
+#include <policy.h>
+#include <scope.h>
+#include <ornaments.h>
 
 static void VerifyProcesses(EvalContext *ctx, Attributes a, Promise *pp);
 static int ProcessSanityChecks(Attributes a, Promise *pp);

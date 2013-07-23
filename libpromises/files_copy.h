@@ -25,7 +25,7 @@
 #ifndef CFENGINE_FILES_COPY_H
 #define CFENGINE_FILES_COPY_H
 
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
 bool CopyRegularFileDisk(const char *source, const char *destination);
 bool CopyFilePermissionsDisk(const char *source, const char *destination);

@@ -22,10 +22,10 @@
   included file COSL.txt.
 */
 
-#include "cf-serverd-enterprise-stubs.h"
+#include <cf-serverd-enterprise-stubs.h>
 
-#include "server.h"
-#include "cf-serverd-functions.h"
+#include <server.h>
+#include <cf-serverd-functions.h>
 
 void RegisterLiteralServerData(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const char *handle, ARG_UNUSED Promise *pp)
 {

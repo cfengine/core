@@ -22,56 +22,56 @@
   included file COSL.txt.
 */
 
-#include "generic_agent.h"
+#include <generic_agent.h>
 
-#include "audit.h"
-#include "env_context.h"
-#include "verify_classes.h"
-#include "verify_databases.h"
-#include "verify_environments.h"
-#include "verify_exec.h"
-#include "verify_methods.h"
-#include "verify_processes.h"
-#include "verify_packages.h"
-#include "verify_services.h"
-#include "verify_storage.h"
-#include "verify_files.h"
-#include "verify_files_utils.h"
-#include "verify_vars.h"
-#include "addr_lib.h"
-#include "files_names.h"
-#include "files_interfaces.h"
-#include "files_repository.h"
-#include "files_edit.h"
-#include "files_properties.h"
-#include "item_lib.h"
-#include "vars.h"
-#include "conversion.h"
-#include "expand.h"
-#include "locks.h"
-#include "scope.h"
-#include "matching.h"
-#include "instrumentation.h"
-#include "promises.h"
-#include "unix.h"
-#include "attributes.h"
-#include "communication.h"
-#include "signals.h"
-#include "nfs.h"
-#include "processes_select.h"
-#include "list.h"
-#include "fncall.h"
-#include "rlist.h"
-#include "agent-diagnostics.h"
-#include "sysinfo.h"
-#include "cf-agent-enterprise-stubs.h"
-#include "syslog_client.h"
-#include "man.h"
-#include "bootstrap.h"
-#include "misc_lib.h"
-#include "buffer.h"
+#include <audit.h>
+#include <env_context.h>
+#include <verify_classes.h>
+#include <verify_databases.h>
+#include <verify_environments.h>
+#include <verify_exec.h>
+#include <verify_methods.h>
+#include <verify_processes.h>
+#include <verify_packages.h>
+#include <verify_services.h>
+#include <verify_storage.h>
+#include <verify_files.h>
+#include <verify_files_utils.h>
+#include <verify_vars.h>
+#include <addr_lib.h>
+#include <files_names.h>
+#include <files_interfaces.h>
+#include <files_repository.h>
+#include <files_edit.h>
+#include <files_properties.h>
+#include <item_lib.h>
+#include <vars.h>
+#include <conversion.h>
+#include <expand.h>
+#include <locks.h>
+#include <scope.h>
+#include <matching.h>
+#include <instrumentation.h>
+#include <promises.h>
+#include <unix.h>
+#include <attributes.h>
+#include <communication.h>
+#include <signals.h>
+#include <nfs.h>
+#include <processes_select.h>
+#include <list.h>
+#include <fncall.h>
+#include <rlist.h>
+#include <agent-diagnostics.h>
+#include <sysinfo.h>
+#include <cf-agent-enterprise-stubs.h>
+#include <syslog_client.h>
+#include <man.h>
+#include <bootstrap.h>
+#include <misc_lib.h>
+#include <buffer.h>
 
-#include "mod_common.h"
+#include <mod_common.h>
 
 typedef enum
 {
@@ -95,16 +95,16 @@ typedef enum
 
 #ifdef HAVE_AVAHI_CLIENT_CLIENT_H
 #ifdef HAVE_AVAHI_COMMON_ADDRESS_H
-#include "findhub.h"
+#include <findhub.h>
 #endif
 #endif
 
 #ifdef HAVE_ENTERPRISE
-#include "agent_reports.h"
-#include "enterprise-agent-diagnostics.h"
+#include <agent_reports.h>
+#include <enterprise-agent-diagnostics.h>
 #endif
 
-#include "ornaments.h"
+#include <ornaments.h>
 
 
 extern int PR_KEPT;

@@ -25,10 +25,10 @@
 #ifndef CFENGINE_GENERIC_AGENT_H
 #define CFENGINE_GENERIC_AGENT_H
 
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
-#include "policy.h"
-#include "set.h"
+#include <policy.h>
+#include <set.h>
 
 typedef struct
 {

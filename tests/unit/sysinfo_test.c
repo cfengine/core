@@ -1,6 +1,6 @@
-#include "test.h"
+#include <test.h>
 
-#include "sysinfo.h"
+#include <sysinfo.h>
 
 static void test_uptime(void)
 {

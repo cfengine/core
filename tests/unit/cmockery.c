@@ -40,7 +40,7 @@
 #endif // _WIN32
 #include <assert.h>
 #include <cmockery.h>
-#include "schema.h"
+#include <schema.h>
 
 #ifdef _WIN32
 # define vsnprintf _vsnprintf

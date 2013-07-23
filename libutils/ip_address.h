@@ -25,7 +25,7 @@
 #ifndef CFENGINE_IP_ADDRESS_H
 #define CFENGINE_IP_ADDRESS_H
 
-#include "buffer.h"
+#include <buffer.h>
 
 typedef struct IPAddress IPAddress;
 typedef enum

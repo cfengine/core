@@ -26,10 +26,10 @@
  * SOFTWARE.
  */
 
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
-#include "rlist.h"
-#include "item_lib.h"
+#include <rlist.h>
+#include <item_lib.h>
 
 typedef bool (*LessFn)(void *lhs, void *rhs, void *ctx);
 typedef void * (*GetNextElementFn)(void *element);

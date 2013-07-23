@@ -22,12 +22,12 @@
   included file COSL.txt.
 */
 
-#include "iteration.h"
+#include <iteration.h>
 
-#include "scope.h"
-#include "vars.h"
-#include "fncall.h"
-#include "env_context.h"
+#include <scope.h>
+#include <vars.h>
+#include <fncall.h>
+#include <env_context.h>
 
 static void DeleteReferenceRlist(Rlist *list);
 

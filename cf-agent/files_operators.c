@@ -22,31 +22,31 @@
   included file COSL.txt.
 */
 
-#include "files_operators.h"
+#include <files_operators.h>
 
-#include "verify_acl.h"
-#include "env_context.h"
-#include "promises.h"
-#include "dir.h"
-#include "dbm_api.h"
-#include "files_names.h"
-#include "files_interfaces.h"
-#include "files_hashes.h"
-#include "files_copy.h"
-#include "vars.h"
-#include "item_lib.h"
-#include "conversion.h"
-#include "expand.h"
-#include "scope.h"
-#include "matching.h"
-#include "attributes.h"
-#include "client_code.h"
-#include "pipes.h"
-#include "locks.h"
-#include "string_lib.h"
-#include "files_repository.h"
-#include "files_lib.h"
-#include "buffer.h"
+#include <verify_acl.h>
+#include <env_context.h>
+#include <promises.h>
+#include <dir.h>
+#include <dbm_api.h>
+#include <files_names.h>
+#include <files_interfaces.h>
+#include <files_hashes.h>
+#include <files_copy.h>
+#include <vars.h>
+#include <item_lib.h>
+#include <conversion.h>
+#include <expand.h>
+#include <scope.h>
+#include <matching.h>
+#include <attributes.h>
+#include <client_code.h>
+#include <pipes.h>
+#include <locks.h>
+#include <string_lib.h>
+#include <files_repository.h>
+#include <files_lib.h>
+#include <buffer.h>
 
 
 int MoveObstruction(EvalContext *ctx, char *from, Attributes attr, const Promise *pp)

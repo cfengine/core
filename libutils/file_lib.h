@@ -25,7 +25,7 @@
 #ifndef CFENGINE_FILE_LIB_H
 #define CFENGINE_FILE_LIB_H
 
-#include "platform.h"
+#include <platform.h>
 
 /* Write LEN bytes at PTR to descriptor DESC, retrying if interrupted.
    Return LEN upon success, write's (negative) error code otherwise.  */

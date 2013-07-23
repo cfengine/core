@@ -25,10 +25,10 @@
 #ifndef CFENGINE_SYNTAX_H
 #define CFENGINE_SYNTAX_H
 
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
-#include "sequence.h"
-#include "json.h"
+#include <sequence.h>
+#include <json.h>
 
 #include <stdio.h>
 

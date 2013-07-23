@@ -25,8 +25,8 @@
 #ifndef CFENGINE_FINDHUB_PRIV_H
 #define CFENGINE_FINDHUB_PRIV_H
 
-#include "load_avahi.h"
-#include "list.h"
+#include <load_avahi.h>
+#include <list.h>
 
 AvahiSimplePoll *spoll;
 

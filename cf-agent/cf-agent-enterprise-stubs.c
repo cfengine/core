@@ -22,7 +22,7 @@
   included file COSL.txt.
 */
 
-#include "cf-agent-enterprise-stubs.h"
+#include <cf-agent-enterprise-stubs.h>
 
 void VerifyWindowsService(ARG_UNUSED EvalContext *ctx, ARG_UNUSED Attributes a, ARG_UNUSED Promise *pp)
 {

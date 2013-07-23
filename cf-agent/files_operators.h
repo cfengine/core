@@ -25,7 +25,7 @@
 #ifndef CFENGINE_FILES_OPERATORS_H
 #define CFENGINE_FILES_OPERATORS_H
 
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
 int MoveObstruction(EvalContext *ctx, char *from, Attributes attr, const Promise *pp);
 

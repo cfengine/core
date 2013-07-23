@@ -22,7 +22,7 @@
   included file COSL.txt.
 */
 
-#include "cf_sql.h"
+#include <cf_sql.h>
 
 #ifdef HAVE_MYSQL_H
 # include <mysql.h>

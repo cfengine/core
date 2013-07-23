@@ -22,13 +22,13 @@
   included file COSL.txt.
 */
 
-#include "platform.h"
-#include "map.h"
-#include "alloc.h"
-#include "array_map_priv.h"
-#include "hash_map_priv.h"
-#include "string_lib.h"
-#include "hashes.h"
+#include <platform.h>
+#include <map.h>
+#include <alloc.h>
+#include <array_map_priv.h>
+#include <hash_map_priv.h>
+#include <string_lib.h>
+#include <hashes.h>
 
 /*
  * This associative array implementation uses array with linear search up to

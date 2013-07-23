@@ -22,10 +22,10 @@
   included file COSL.txt.
 */
 
-#include "dbm_migration.h"
+#include <dbm_migration.h>
 
-#include "lastseen.h"
-#include "logging.h"
+#include <lastseen.h>
+#include <logging.h>
 
 typedef struct
 {

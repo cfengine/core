@@ -23,11 +23,11 @@
 */
 
 
-#include "platform.h"
+#include <platform.h>
 
-#include "alloc.h"
-#include "writer.h"
-#include "misc_lib.h"
+#include <alloc.h>
+#include <writer.h>
+#include <misc_lib.h>
 
 
 #define STRING_MATCH_OVECCOUNT 30

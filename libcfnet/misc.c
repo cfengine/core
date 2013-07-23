@@ -22,9 +22,9 @@
   included file COSL.txt.
 */
 
-#include "cfnet.h"
+#include <cfnet.h>
 
-#include "misc_lib.h"
+#include <misc_lib.h>
 
 
 /* Convert IP address in src (which can be struct sockaddr_storage (best

@@ -1,7 +1,7 @@
-#include "test.h"
+#include <test.h>
 
-#include "policy.h"
-#include "parser.h"
+#include <policy.h>
+#include <parser.h>
 
 static Policy *LoadPolicy(const char *filename)
 {

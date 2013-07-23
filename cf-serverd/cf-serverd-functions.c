@@ -22,18 +22,18 @@
   included file COSL.txt.
 */
 
-#include "cf-serverd-functions.h"
+#include <cf-serverd-functions.h>
 
-#include "client_code.h"
-#include "server_transform.h"
-#include "bootstrap.h"
-#include "scope.h"
-#include "signals.h"
-#include "mutex.h"
-#include "locks.h"
-#include "exec_tools.h"
-#include "unix.h"
-#include "man.h"
+#include <client_code.h>
+#include <server_transform.h>
+#include <bootstrap.h>
+#include <scope.h>
+#include <signals.h>
+#include <mutex.h>
+#include <locks.h>
+#include <exec_tools.h>
+#include <unix.h>
+#include <man.h>
 
 
 static const size_t QUEUESIZE = 50;

@@ -25,8 +25,8 @@
 #ifndef CFENGINE_PROTOTYPES3_H
 #define CFENGINE_PROTOTYPES3_H
 
-#include "compiler.h"
-#include "enterprise_function_call.h"
+#include <compiler.h>
+#include <enterprise_extension.h>
 
 bool BootstrapAllowed(void);
 

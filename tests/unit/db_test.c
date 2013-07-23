@@ -1,7 +1,7 @@
-#include "test.h"
+#include <test.h>
 
-#include "cf3.defs.h"
-#include "dbm_api.h"
+#include <cf3.defs.h>
+#include <dbm_api.h>
 
 char CFWORKDIR[CF_BUFSIZE];
 

@@ -25,7 +25,7 @@
 #ifndef CFENGINE_AGENT_DIAGNOSTICS_H
 #define CFENGINE_AGENT_DIAGNOSTICS_H
 
-#include "writer.h"
+#include <writer.h>
 
 typedef struct
 {

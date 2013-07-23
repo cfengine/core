@@ -25,12 +25,12 @@
 #ifndef CFENGINE_ENV_CONTEXT_H
 #define CFENGINE_ENV_CONTEXT_H
 
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
-#include "writer.h"
-#include "set.h"
-#include "sequence.h"
-#include "var_expressions.h"
+#include <writer.h>
+#include <set.h>
+#include <sequence.h>
+#include <var_expressions.h>
 
 typedef enum
 {

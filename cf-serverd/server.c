@@ -22,30 +22,30 @@
   included file COSL.txt.
 */
 
-#include "server.h"
+#include <server.h>
 
-#include "item_lib.h"
-#include "crypto.h"
-#include "files_names.h"
-#include "files_interfaces.h"
-#include "files_hashes.h"
-#include "env_context.h"
-#include "lastseen.h"
-#include "dir.h"
-#include "conversion.h"
-#include "matching.h"
-#include "string_lib.h"
-#include "pipes.h"
-#include "signals.h"
-#include "mutex.h"
-#include "net.h"
-#include "rlist.h"
-#include "misc_lib.h"
-#include "cf-serverd-enterprise-stubs.h"
-#include "audit.h"
+#include <item_lib.h>
+#include <crypto.h>
+#include <files_names.h>
+#include <files_interfaces.h>
+#include <files_hashes.h>
+#include <env_context.h>
+#include <lastseen.h>
+#include <dir.h>
+#include <conversion.h>
+#include <matching.h>
+#include <string_lib.h>
+#include <pipes.h>
+#include <signals.h>
+#include <mutex.h>
+#include <net.h>
+#include <rlist.h>
+#include <misc_lib.h>
+#include <cf-serverd-enterprise-stubs.h>
+#include <audit.h>
 
 #ifdef HAVE_ENTERPRISE
-# include "cf.enterprise.h"
+# include <cf.enterprise.h>
 #endif
 
 typedef enum

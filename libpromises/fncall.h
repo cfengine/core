@@ -25,7 +25,7 @@
 #ifndef CFENGINE_FNCALL_H
 #define CFENGINE_FNCALL_H
 
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
 struct FnCall_
 {

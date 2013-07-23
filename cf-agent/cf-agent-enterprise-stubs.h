@@ -25,7 +25,7 @@
 #ifndef CFENGINE_CF_AGENT_ENTERPRISE_STUBS_H
 #define CFENGINE_CF_AGENT_ENTERPRISE_STUBS_H
 
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
 #if defined(__MINGW32__)
 void VerifyRegistryPromise(EvalContext *ctx, Attributes a, Promise *pp);

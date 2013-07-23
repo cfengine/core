@@ -22,17 +22,17 @@
   included file COSL.txt.
 */
 
-#include "files_links.h"
+#include <files_links.h>
 
-#include "promises.h"
-#include "files_names.h"
-#include "files_interfaces.h"
-#include "files_operators.h"
-#include "files_lib.h"
-#include "locks.h"
-#include "string_lib.h"
-#include "misc_lib.h"
-#include "env_context.h"
+#include <promises.h>
+#include <files_names.h>
+#include <files_interfaces.h>
+#include <files_operators.h>
+#include <files_lib.h>
+#include <locks.h>
+#include <string_lib.h>
+#include <misc_lib.h>
+#include <env_context.h>
 
 #define CF_MAXLINKLEVEL 4
 

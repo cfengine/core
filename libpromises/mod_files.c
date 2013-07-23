@@ -22,10 +22,10 @@
   included file COSL.txt.
 */
 
-#include "mod_files.h"
+#include <mod_files.h>
 
-#include "policy.h"
-#include "syntax.h"
+#include <policy.h>
+#include <syntax.h>
 
 static const ConstraintSyntax location_constraints[] =
 {

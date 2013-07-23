@@ -22,10 +22,10 @@
   included file COSL.txt.
 */
 
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
-#include "env_context.h"
-#include "process_lib.h"
+#include <env_context.h>
+#include <process_lib.h>
 
 /* Prototypes */
 

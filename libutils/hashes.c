@@ -22,7 +22,7 @@
   included file COSL.txt.
 */
 
-#include "hashes.h"
+#include <hashes.h>
 
 int OatHash(const char *key, unsigned int max)
 {

@@ -25,7 +25,7 @@
 #ifndef CFENGINE_HASHES_H
 #define CFENGINE_HASHES_H
 
-#include "platform.h"
+#include <platform.h>
 
 int OatHash(const char *key, unsigned int max);
 

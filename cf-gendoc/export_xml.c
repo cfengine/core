@@ -22,16 +22,16 @@
   included file COSL.txt.
 */
 
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
-#include "xml_writer.h"
-#include "manual.h"
-#include "files_names.h"
-#include "sort.h"
-#include "scope.h"
-#include "assoc.h"
-#include "rlist.h"
-#include "conversion.h"
+#include <xml_writer.h>
+#include <manual.h>
+#include <files_names.h>
+#include <sort.h>
+#include <scope.h>
+#include <assoc.h>
+#include <rlist.h>
+#include <conversion.h>
 
 static char *MANUAL_DIRECTORY;
 

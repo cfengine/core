@@ -22,20 +22,20 @@
   included file COSL.txt.
 */
 
-#include "verify_services.h"
+#include <verify_services.h>
 
-#include "verify_methods.h"
-#include "promises.h"
-#include "vars.h"
-#include "attributes.h"
-#include "fncall.h"
-#include "locks.h"
-#include "rlist.h"
-#include "policy.h"
-#include "scope.h"
-#include "cf-agent-enterprise-stubs.h"
-#include "ornaments.h"
-#include "env_context.h"
+#include <verify_methods.h>
+#include <promises.h>
+#include <vars.h>
+#include <attributes.h>
+#include <fncall.h>
+#include <locks.h>
+#include <rlist.h>
+#include <policy.h>
+#include <scope.h>
+#include <cf-agent-enterprise-stubs.h>
+#include <ornaments.h>
+#include <env_context.h>
 
 static int ServicesSanityChecks(Attributes a, Promise *pp);
 static void SetServiceDefaults(Attributes *a);

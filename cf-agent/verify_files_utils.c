@@ -22,46 +22,46 @@
   included file COSL.txt.
 */
 
-#include "verify_files_utils.h"
+#include <verify_files_utils.h>
 
-#include "dir.h"
-#include "files_names.h"
-#include "files_links.h"
-#include "files_copy.h"
-#include "files_properties.h"
-#include "locks.h"
-#include "instrumentation.h"
-#include "matching.h"
-#include "files_interfaces.h"
-#include "promises.h"
-#include "files_operators.h"
-#include "item_lib.h"
-#include "client_code.h"
-#include "files_hashes.h"
-#include "files_repository.h"
-#include "files_select.h"
-#include "expand.h"
-#include "conversion.h"
-#include "pipes.h"
-#include "verify_acl.h"
-#include "env_context.h"
-#include "vars.h"
-#include "exec_tools.h"
-#include "comparray.h"
-#include "string_lib.h"
-#include "files_lib.h"
-#include "rlist.h"
-#include "policy.h"
-#include "scope.h"
-#include "misc_lib.h"
-#include "abstract_dir.h"
-#include "verify_files_hashes.h"
-#include "audit.h"
-#include "retcode.h"
-#include "cf-agent-enterprise-stubs.h"
+#include <dir.h>
+#include <files_names.h>
+#include <files_links.h>
+#include <files_copy.h>
+#include <files_properties.h>
+#include <locks.h>
+#include <instrumentation.h>
+#include <matching.h>
+#include <files_interfaces.h>
+#include <promises.h>
+#include <files_operators.h>
+#include <item_lib.h>
+#include <client_code.h>
+#include <files_hashes.h>
+#include <files_repository.h>
+#include <files_select.h>
+#include <expand.h>
+#include <conversion.h>
+#include <pipes.h>
+#include <verify_acl.h>
+#include <env_context.h>
+#include <vars.h>
+#include <exec_tools.h>
+#include <comparray.h>
+#include <string_lib.h>
+#include <files_lib.h>
+#include <rlist.h>
+#include <policy.h>
+#include <scope.h>
+#include <misc_lib.h>
+#include <abstract_dir.h>
+#include <verify_files_hashes.h>
+#include <audit.h>
+#include <retcode.h>
+#include <cf-agent-enterprise-stubs.h>
 
 #ifdef HAVE_ENTERPRISE
-# include "cf.enterprise.h"
+# include <cf.enterprise.h>
 #endif
 
 #define CF_RECURSION_LIMIT 100

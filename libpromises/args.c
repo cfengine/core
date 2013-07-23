@@ -22,18 +22,18 @@
   included file COSL.txt.
 */
 
-#include "args.h"
+#include <args.h>
 
-#include "promises.h"
-#include "syntax.h"
-#include "expand.h"
-#include "vars.h"
-#include "logging.h"
-#include "fncall.h"
-#include "evalfunction.h"
-#include "misc_lib.h"
-#include "scope.h"
-#include "audit.h"
+#include <promises.h>
+#include <syntax.h>
+#include <expand.h>
+#include <vars.h>
+#include <logging.h>
+#include <fncall.h>
+#include <evalfunction.h>
+#include <misc_lib.h>
+#include <scope.h>
+#include <audit.h>
 
 /******************************************************************/
 /* Argument propagation                                           */

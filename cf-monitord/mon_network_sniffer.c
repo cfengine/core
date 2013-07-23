@@ -22,17 +22,17 @@
   included file COSL.txt.
 */
 
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
-#include "sysinfo.h"
-#include "files_names.h"
-#include "files_interfaces.h"
-#include "mon.h"
-#include "item_lib.h"
-#include "pipes.h"
-#include "signals.h"
-#include "string_lib.h"
-#include "misc_lib.h"
+#include <sysinfo.h>
+#include <files_names.h>
+#include <files_interfaces.h>
+#include <mon.h>
+#include <item_lib.h>
+#include <pipes.h>
+#include <signals.h>
+#include <string_lib.h>
+#include <misc_lib.h>
 
 typedef enum
 {

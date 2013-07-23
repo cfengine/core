@@ -25,8 +25,8 @@
 #ifndef CFENGINE_PARSER_STATE_H
 #define CFENGINE_PARSER_STATE_H
 
-#include "cf3.defs.h"
-#include "rlist.h"
+#include <cf3.defs.h>
+#include <rlist.h>
 
 
 typedef struct

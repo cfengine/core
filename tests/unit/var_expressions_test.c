@@ -1,6 +1,6 @@
-#include "test.h"
+#include <test.h>
 
-#include "var_expressions.h"
+#include <var_expressions.h>
 
 static void test_plain_variable_with_no_stuff_in_it(void)
 {

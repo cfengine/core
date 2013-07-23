@@ -25,7 +25,7 @@
 #ifndef CFENGINE_PIPES_H
 #define CFENGINE_PIPES_H
 
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
 FILE *cf_popen(const char *command, const char *type, bool capture_stderr);
 FILE *cf_popensetuid(const char *command, const char *type, uid_t uid, gid_t gid, char *chdirv, char *chrootv, int background);

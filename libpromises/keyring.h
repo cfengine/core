@@ -25,7 +25,7 @@
 #ifndef CFENGINE_KEYRING_H
 #define CFENGINE_KEYRING_H
 
-#include "platform.h"
+#include <platform.h>
 
 bool HostKeyAddressUnknown(const char *value);
 int RemovePublicKey(const char *id);

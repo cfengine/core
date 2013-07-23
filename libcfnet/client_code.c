@@ -22,25 +22,25 @@
   included file COSL.txt.
 */
 
-#include "client_code.h"
+#include <client_code.h>
 
-#include "communication.h"
-#include "net.h"
-#include "sysinfo.h"
-#include "dir.h"
-#include "dir_priv.h"
-#include "client_protocol.h"
-#include "crypto.h"
-#include "logging.h"
-#include "files_hashes.h"
-#include "files_copy.h"
-#include "mutex.h"
-#include "rlist.h"
-#include "policy.h"
-#include "item_lib.h"
-#include "files_lib.h"
-#include "string_lib.h"
-#include "misc_lib.h"                                   /* ProgrammingError */
+#include <communication.h>
+#include <net.h>
+#include <sysinfo.h>
+#include <dir.h>
+#include <dir_priv.h>
+#include <client_protocol.h>
+#include <crypto.h>
+#include <logging.h>
+#include <files_hashes.h>
+#include <files_copy.h>
+#include <mutex.h>
+#include <rlist.h>
+#include <policy.h>
+#include <item_lib.h>
+#include <files_lib.h>
+#include <string_lib.h>
+#include <misc_lib.h>                                   /* ProgrammingError */
 
 
 typedef struct

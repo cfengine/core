@@ -22,32 +22,32 @@
   included file COSL.txt.
 */
 
-#include "env_monitor.h"
+#include <env_monitor.h>
 
-#include "env_context.h"
-#include "mon.h"
-#include "granules.h"
-#include "dbm_api.h"
-#include "policy.h"
-#include "promises.h"
-#include "item_lib.h"
-#include "conversion.h"
-#include "ornaments.h"
-#include "expand.h"
-#include "scope.h"
-#include "sysinfo.h"
-#include "signals.h"
-#include "locks.h"
-#include "exec_tools.h"
-#include "generic_agent.h" // WritePID
-#include "files_lib.h"
-#include "unix.h"
-#include "verify_measurements.h"
-#include "verify_classes.h"
-#include "cf-monitord-enterprise-stubs.h"
+#include <env_context.h>
+#include <mon.h>
+#include <granules.h>
+#include <dbm_api.h>
+#include <policy.h>
+#include <promises.h>
+#include <item_lib.h>
+#include <conversion.h>
+#include <ornaments.h>
+#include <expand.h>
+#include <scope.h>
+#include <sysinfo.h>
+#include <signals.h>
+#include <locks.h>
+#include <exec_tools.h>
+#include <generic_agent.h> // WritePID
+#include <files_lib.h>
+#include <unix.h>
+#include <verify_measurements.h>
+#include <verify_classes.h>
+#include <cf-monitord-enterprise-stubs.h>
 
 #ifdef HAVE_ENTERPRISE
-# include "history.h"
+# include <history.h>
 #endif
 
 

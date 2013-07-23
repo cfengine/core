@@ -22,17 +22,17 @@
   included file COSL.txt.
 */
 
-#include "vars.h"
+#include <vars.h>
 
-#include "conversion.h"
-#include "expand.h"
-#include "scope.h"
-#include "matching.h"
-#include "hashes.h"
-#include "unix.h"
-#include "misc_lib.h"
-#include "rlist.h"
-#include "policy.h"
+#include <conversion.h>
+#include <expand.h>
+#include <scope.h>
+#include <matching.h>
+#include <hashes.h>
+#include <unix.h>
+#include <misc_lib.h>
+#include <rlist.h>
+#include <policy.h>
 
 static int IsCf3Scalar(char *str);
 

@@ -25,7 +25,7 @@
 #ifndef CFENGINE_CF_EXECD_RUNNER_H
 #define CFENGINE_CF_EXECD_RUNNER_H
 
-#include "exec-config.h"
+#include <exec-config.h>
 
 void LocalExec(const ExecConfig *config);
 

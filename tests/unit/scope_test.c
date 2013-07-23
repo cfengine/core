@@ -1,7 +1,7 @@
-#include "test.h"
-#include "scope.h"
-#include "env_context.h"
-#include "rlist.h"
+#include <test.h>
+#include <scope.h>
+#include <env_context.h>
+#include <rlist.h>
 
 static void test_name_join(void)
 {

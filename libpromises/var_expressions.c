@@ -22,11 +22,11 @@
   included file COSL.txt.
 */
 
-#include "var_expressions.h"
+#include <var_expressions.h>
 
-#include "cf3.defs.h"
-#include "buffer.h"
-#include "misc_lib.h"
+#include <cf3.defs.h>
+#include <buffer.h>
+#include <misc_lib.h>
 
 
 #ifndef NDEBUG

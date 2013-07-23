@@ -22,8 +22,8 @@
   included file COSL.txt.
 */
 
-#include "alloc.h"
-#include "bufferlist.h"
+#include <alloc.h>
+#include <bufferlist.h>
 
 struct BufferListMutableIterator {
     ListMutableIterator *iterator; 

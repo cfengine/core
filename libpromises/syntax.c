@@ -22,22 +22,22 @@
   included file COSL.txt.
 */
 
-#include "syntax.h"
+#include <syntax.h>
 
-#include "json.h"
-#include "files_names.h"
-#include "mod_files.h"
-#include "item_lib.h"
-#include "conversion.h"
-#include "expand.h"
-#include "matching.h"
-#include "scope.h"
-#include "fncall.h"
-#include "string_lib.h"
-#include "misc_lib.h"
-#include "rlist.h"
-#include "vars.h"
-#include "env_context.h"
+#include <json.h>
+#include <files_names.h>
+#include <mod_files.h>
+#include <item_lib.h>
+#include <conversion.h>
+#include <expand.h>
+#include <matching.h>
+#include <scope.h>
+#include <fncall.h>
+#include <string_lib.h>
+#include <misc_lib.h>
+#include <rlist.h>
+#include <vars.h>
+#include <env_context.h>
 
 
 static SyntaxTypeMatch CheckParseString(const char *lv, const char *s, const char *range);

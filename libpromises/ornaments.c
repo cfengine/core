@@ -22,8 +22,8 @@
   included file COSL.txt.
 */
 
-#include "ornaments.h"
-#include "rlist.h"
+#include <ornaments.h>
+#include <rlist.h>
 
 void PromiseBanner(const Promise *pp)
 {

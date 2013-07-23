@@ -22,14 +22,14 @@
   included file COSL.txt.
 */
 
-#include "attributes.h"
+#include <attributes.h>
 
-#include "promises.h"
-#include "policy.h"
-#include "conversion.h"
-#include "logging.h"
-#include "chflags.h"
-#include "audit.h"
+#include <promises.h>
+#include <policy.h>
+#include <conversion.h>
+#include <logging.h>
+#include <chflags.h>
+#include <audit.h>
 
 static int CHECKSUMUPDATES;
 

@@ -22,25 +22,25 @@
   included file COSL.txt.
 */
 
-#include "manual.h"
+#include <manual.h>
 
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
-#include "vars.h"
-#include "writer.h"
-#include "mod_measurement.h"
-#include "mod_exec.h"
-#include "mod_access.h"
-#include "item_lib.h"
-#include "sort.h"
-#include "scope.h"
-#include "files_interfaces.h"
-#include "assoc.h"
-#include "rlist.h"
-#include "conversion.h"
+#include <vars.h>
+#include <writer.h>
+#include <mod_measurement.h>
+#include <mod_exec.h>
+#include <mod_access.h>
+#include <item_lib.h>
+#include <sort.h>
+#include <scope.h>
+#include <files_interfaces.h>
+#include <assoc.h>
+#include <rlist.h>
+#include <conversion.h>
 
 #ifdef HAVE_ENTERPRISE
-# include "cf.enterprise.h"
+# include <cf.enterprise.h>
 #endif
 
 extern char BUILD_DIR[CF_BUFSIZE];

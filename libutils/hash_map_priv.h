@@ -25,7 +25,7 @@
 #ifndef CFENGINE_HASH_MAP_PRIV_H
 #define CFENGINE_HASH_MAP_PRIV_H
 
-#include "map_common.h"
+#include <map_common.h>
 
 typedef struct BucketListItem_
 {

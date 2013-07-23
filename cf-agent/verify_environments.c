@@ -22,18 +22,18 @@
   included file COSL.txt.
 */
 
-#include "cf3.defs.h"
-#include "files_lib.h"
+#include <cf3.defs.h>
+#include <files_lib.h>
 
-#include "env_context.h"
-#include "promises.h"
-#include "vars.h"
-#include "conversion.h"
-#include "attributes.h"
-#include "locks.h"
-#include "policy.h"
-#include "scope.h"
-#include "ornaments.h"
+#include <env_context.h>
+#include <promises.h>
+#include <vars.h>
+#include <conversion.h>
+#include <attributes.h>
+#include <locks.h>
+#include <policy.h>
+#include <scope.h>
+#include <ornaments.h>
 
 #ifdef HAVE_LIBVIRT
 /*****************************************************************************/

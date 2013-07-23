@@ -1,7 +1,7 @@
-#include "test.h"
+#include <test.h>
 
 #include <string.h>
-#include "findhub.h"
+#include <findhub.h>
 
 #include <avahi-client/client.h>
 #include <avahi-client/lookup.h>

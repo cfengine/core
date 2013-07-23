@@ -1,9 +1,9 @@
-#include "test.h"
-#include "alloc.h"
+#include <test.h>
+#include <alloc.h>
 #include <stdlib.h>
 #include <string.h>
-#include "cmockery.h"
-#include "buffer.h"
+#include <cmockery.h>
+#include <buffer.h>
 
 static void test_createBuffer(void)
 {

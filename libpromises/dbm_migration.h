@@ -25,7 +25,7 @@
 #ifndef CFENGINE_DB_MIGRATION_H
 #define CFENGINE_DB_MIGRATION_H
 
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
 typedef bool (*DBMigrationFunction)(DBHandle *db);
 

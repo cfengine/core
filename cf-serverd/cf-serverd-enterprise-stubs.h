@@ -25,7 +25,7 @@
 #ifndef CFENGINE_CF_SERVERD_ENTERPRISE_STUBS_H
 #define CFENGINE_CF_SERVERD_ENTERPRISE_STUBS_H
 
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
 struct ServerConnectionState;
 

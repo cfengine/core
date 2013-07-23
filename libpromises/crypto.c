@@ -22,18 +22,18 @@
   included file COSL.txt.
 */
 
-#include "crypto.h"
+#include <crypto.h>
 
-#include "cf3.defs.h"
-#include "lastseen.h"
-#include "files_interfaces.h"
-#include "files_hashes.h"
-#include "hashes.h"
-#include "logging.h"
-#include "pipes.h"
-#include "mutex.h"
-#include "sysinfo.h"
-#include "bootstrap.h"
+#include <cf3.defs.h>
+#include <lastseen.h>
+#include <files_interfaces.h>
+#include <files_hashes.h>
+#include <hashes.h>
+#include <logging.h>
+#include <pipes.h>
+#include <mutex.h>
+#include <sysinfo.h>
+#include <bootstrap.h>
 
 #ifdef DARWIN
 // On Mac OSX 10.7 and later, majority of functions in /usr/include/openssl/crypto.h

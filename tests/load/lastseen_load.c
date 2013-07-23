@@ -1,6 +1,6 @@
-#include "cf3.defs.h"
-#include "dbm_api.h"
-#include "lastseen.h"
+#include <cf3.defs.h>
+#include <dbm_api.h>
+#include <lastseen.h>
 
 char CFWORKDIR[CF_BUFSIZE] = "/tmp";
 

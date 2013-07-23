@@ -22,16 +22,16 @@
   included file COSL.txt.
 */
 
-#include "generic_agent.h"
+#include <generic_agent.h>
 
-#include "env_context.h"
-#include "files_names.h"
-#include "export_xml.h"
-#include "item_lib.h"
-#include "sort.h"
-#include "conversion.h"
-#include "expand.h"
-#include "misc_lib.h"
+#include <env_context.h>
+#include <files_names.h>
+#include <export_xml.h>
+#include <item_lib.h>
+#include <sort.h>
+#include <conversion.h>
+#include <expand.h>
+#include <misc_lib.h>
 
 static void GenerateManual(EvalContext *ctx);
 static void GenerateXml(void);

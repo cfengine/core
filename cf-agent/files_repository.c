@@ -22,15 +22,15 @@
   included file COSL.txt.
 */
 
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
-#include "files_names.h"
-#include "files_interfaces.h"
-#include "files_lib.h"
-#include "files_copy.h"
-#include "item_lib.h"
-#include "mutex.h"
-#include "policy.h"
+#include <files_names.h>
+#include <files_interfaces.h>
+#include <files_lib.h>
+#include <files_copy.h>
+#include <item_lib.h>
+#include <mutex.h>
+#include <policy.h>
 
 /*********************************************************************/
 

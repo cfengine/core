@@ -22,34 +22,34 @@
   included file COSL.txt.
 */
 
-#include "generic_agent.h"
-#include "cf-execd-runner.h"
+#include <generic_agent.h>
+#include <cf-execd-runner.h>
 
-#include "bootstrap.h"
-#include "sysinfo.h"
-#include "env_context.h"
-#include "promises.h"
-#include "vars.h"
-#include "item_lib.h"
-#include "conversion.h"
-#include "ornaments.h"
-#include "scope.h"
-#include "hashes.h"
-#include "unix.h"
-#include "string_lib.h"
-#include "signals.h"
-#include "locks.h"
-#include "exec_tools.h"
-#include "rlist.h"
-#include "processes_select.h"
-#include "man.h"
+#include <bootstrap.h>
+#include <sysinfo.h>
+#include <env_context.h>
+#include <promises.h>
+#include <vars.h>
+#include <item_lib.h>
+#include <conversion.h>
+#include <ornaments.h>
+#include <scope.h>
+#include <hashes.h>
+#include <unix.h>
+#include <string_lib.h>
+#include <signals.h>
+#include <locks.h>
+#include <exec_tools.h>
+#include <rlist.h>
+#include <processes_select.h>
+#include <man.h>
 
 
 #ifdef HAVE_ENTERPRISE
-# include "cf.enterprise.h"
+# include <cf.enterprise.h>
 #endif
 
-#include "cf-execd.h"
+#include <cf-execd.h>
 
 #define CF_EXEC_IFELAPSED 0
 #define CF_EXEC_EXPIREAFTER 1

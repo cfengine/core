@@ -22,9 +22,9 @@
   included file COSL.txt.
 */
 
-#include "syslog_client.h"
+#include <syslog_client.h>
 
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
 static char SYSLOG_HOST[MAXHOSTNAMELEN] = "localhost";
 static uint16_t SYSLOG_PORT = 514;

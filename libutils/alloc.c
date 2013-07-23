@@ -23,8 +23,8 @@
 */
 
 #define ALLOC_IMPL
-#include "platform.h"
-#include "alloc.h"
+#include <platform.h>
+#include <alloc.h>
 
 static void *CheckResult(void *ptr, const char *fn, bool check_result)
 {

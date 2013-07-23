@@ -25,10 +25,10 @@
 #ifndef CFENGINE_SERVER_H
 #define CFENGINE_SERVER_H
 
-#include "cf3.defs.h"
-#include "cfnet.h"                                       /* AgentConnection */
+#include <cf3.defs.h>
+#include <cfnet.h>                                       /* AgentConnection */
 
-#include "generic_agent.h"
+#include <generic_agent.h>
 
 //*******************************************************************
 // TYPES

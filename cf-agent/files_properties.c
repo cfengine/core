@@ -22,11 +22,11 @@
   included file COSL.txt.
 */
 
-#include "files_properties.h"
+#include <files_properties.h>
 
-#include "files_names.h"
-#include "files_interfaces.h"
-#include "item_lib.h"
+#include <files_names.h>
+#include <files_interfaces.h>
+#include <item_lib.h>
 
 static Item *SUSPICIOUSLIST = NULL;
 

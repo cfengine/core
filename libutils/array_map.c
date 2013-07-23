@@ -22,9 +22,9 @@
   included file COSL.txt.
 */
 
-#include "platform.h"
-#include "array_map_priv.h"
-#include "alloc.h"
+#include <platform.h>
+#include <array_map_priv.h>
+#include <alloc.h>
 
 /* FIXME: make configurable and move to map.c */
 #define TINY_LIMIT 14

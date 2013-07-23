@@ -22,10 +22,10 @@
   included file COSL.txt.
 */
 
-#include "dbm_migration.h"
+#include <dbm_migration.h>
 
-#include "lastseen.h"
-#include "string_lib.h"
+#include <lastseen.h>
+#include <string_lib.h>
 
 extern DBMigrationFunction dbm_migration_plan_bundles[];
 extern DBMigrationFunction dbm_migration_plan_lastseen[];

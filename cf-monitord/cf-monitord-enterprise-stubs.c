@@ -22,7 +22,7 @@
   included file COSL.txt.
 */
 
-#include "cf-monitord-enterprise-stubs.h"
+#include <cf-monitord-enterprise-stubs.h>
 
 void GetObservable(ARG_UNUSED int i, ARG_UNUSED char *name, ARG_UNUSED char *desc)
 {

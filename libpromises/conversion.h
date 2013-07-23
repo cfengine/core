@@ -25,7 +25,7 @@
 #ifndef CFENGINE_CONVERSION_H
 #define CFENGINE_CONVERSION_H
 
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
 // Type-String conversion
 MeasurePolicy MeasurePolicyFromString(const char *s);

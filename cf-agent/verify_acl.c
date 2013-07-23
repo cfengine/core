@@ -22,15 +22,15 @@
   included file COSL.txt.
 */
 
-#include "verify_acl.h"
+#include <verify_acl.h>
 
-#include "acl_posix.h"
-#include "files_names.h"
-#include "promises.h"
-#include "string_lib.h"
-#include "rlist.h"
-#include "env_context.h"
-#include "cf-agent-enterprise-stubs.h"
+#include <acl_posix.h>
+#include <files_names.h>
+#include <promises.h>
+#include <string_lib.h>
+#include <rlist.h>
+#include <env_context.h>
+#include <cf-agent-enterprise-stubs.h>
 
 // Valid operations (first char of mode)
 #define CF_VALID_OPS_METHOD_OVERWRITE "=+-"

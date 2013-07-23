@@ -22,12 +22,12 @@
   included file COSL.txt.
 */
 
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
-#include "prototypes3.h"
-#include "syntax.h"
+#include <prototypes3.h>
+#include <syntax.h>
 
-#include "enterprise_function_call.h"
+#include <enterprise_extension.h>
 
 /*
  * This module contains numeruous functions which don't use all their parameters

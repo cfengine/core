@@ -25,7 +25,7 @@
 #ifndef CFENGINE_PARSER_H
 #define CFENGINE_PARSER_H
 
-#include "policy.h"
+#include <policy.h>
 
 #define PARSER_WARNING_DEPRECATED       (1 << 0)
 #define PARSER_WARNING_REMOVED          (1 << 1)

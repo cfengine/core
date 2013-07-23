@@ -1,8 +1,8 @@
-#include "test.h"
+#include <test.h>
 
 #include <string.h>
-#include "cmockery.h"
-#include "cf-serverd-functions.c"
+#include <cmockery.h>
+#include <cf-serverd-functions.c>
 
 
 static void generateTestFile()

@@ -22,13 +22,13 @@
   included file COSL.txt.
 */
 
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
-#include "lastseen.h"
-#include "conversion.h"
-#include "files_hashes.h"
-#include "locks.h"
-#include "item_lib.h"
+#include <lastseen.h>
+#include <conversion.h>
+#include <files_hashes.h>
+#include <locks.h>
+#include <item_lib.h>
 
 void UpdateLastSawHost(const char *hostkey, const char *address,
                        bool incoming, time_t timestamp);

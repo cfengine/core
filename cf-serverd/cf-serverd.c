@@ -22,9 +22,9 @@
   included file COSL.txt.
 */
 
-#include "cf-serverd-functions.h"
+#include <cf-serverd-functions.h>
 
-#include "server_transform.h"
+#include <server_transform.h>
 
 int main(int argc, char *argv[])
 {

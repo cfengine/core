@@ -25,7 +25,7 @@
 #ifndef CFENGINE_STRING_LIB_H
 #define CFENGINE_STRING_LIB_H
 
-#include "compiler.h"
+#include <compiler.h>
 
 char ToLower(char ch);
 char ToUpper(char ch);

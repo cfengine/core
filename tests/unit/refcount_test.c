@@ -1,6 +1,6 @@
-#include "test.h"
+#include <test.h>
 
-#include "refcount.h"
+#include <refcount.h>
 
 // Simple initialization test
 static void test_init_destroy_RefCount(void)

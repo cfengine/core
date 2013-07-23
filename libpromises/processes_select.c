@@ -22,18 +22,18 @@
   included file COSL.txt.
 */
 
-#include "processes_select.h"
+#include <processes_select.h>
 
-#include "env_context.h"
-#include "files_names.h"
-#include "conversion.h"
-#include "matching.h"
-#include "string_lib.h"
-#include "item_lib.h"
-#include "pipes.h"
-#include "files_interfaces.h"
-#include "rlist.h"
-#include "policy.h"
+#include <env_context.h>
+#include <files_names.h>
+#include <conversion.h>
+#include <matching.h>
+#include <string_lib.h>
+#include <item_lib.h>
+#include <pipes.h>
+#include <files_interfaces.h>
+#include <rlist.h>
+#include <policy.h>
 
 #ifdef HAVE_ZONE_H
 # include <zone.h>

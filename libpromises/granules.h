@@ -25,7 +25,7 @@
 #ifndef CFENGINE_GRANULES_H
 #define CFENGINE_GRANULES_H
 
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
 char *GenTimeKey(time_t now);
 const char *ShiftSlotToString(int shift_slot);

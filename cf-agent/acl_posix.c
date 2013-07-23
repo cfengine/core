@@ -22,15 +22,15 @@
   included file COSL.txt.
 */
 
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
-#include "verify_acl.h"
-#include "acl_posix.h"
-#include "promises.h"
-#include "files_names.h"
-#include "misc_lib.h"
-#include "rlist.h"
-#include "env_context.h"
+#include <verify_acl.h>
+#include <acl_posix.h>
+#include <promises.h>
+#include <files_names.h>
+#include <misc_lib.h>
+#include <rlist.h>
+#include <env_context.h>
 
 #ifdef HAVE_ACL_H
 # include <acl.h>

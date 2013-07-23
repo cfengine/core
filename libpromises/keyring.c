@@ -22,10 +22,10 @@
   included file COSL.txt.
 */
 
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
-#include "keyring.h"
-#include "dir.h"
+#include <keyring.h>
+#include <dir.h>
 
 /***************************************************************/
 

@@ -22,12 +22,12 @@
   included file COSL.txt.
 */
 
-#include "cf3.defs.h"
-#include "client_code.h"
-#include "dir.h"
-#include "abstract_dir.h"
-#include "item_lib.h"
-#include "rlist.h"
+#include <cf3.defs.h>
+#include <client_code.h>
+#include <dir.h>
+#include <abstract_dir.h>
+#include <item_lib.h>
+#include <rlist.h>
 
 struct AbstractDir_
 {

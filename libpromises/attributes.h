@@ -25,7 +25,7 @@
 #ifndef CFENGINE_ATTRIBUTES_H
 #define CFENGINE_ATTRIBUTES_H
 
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
 Attributes GetClassContextAttributes(const EvalContext *ctx, const Promise *pp);
 Attributes GetColumnAttributes(const EvalContext *ctx, const Promise *pp);

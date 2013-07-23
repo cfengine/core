@@ -22,11 +22,11 @@
   included file COSL.txt.
 */
 
-#include "communication.h"
+#include <communication.h>
 
-#include "alloc.h"                                      /* xmalloc,... */
-#include "logging.h"                                    /* Log */
-#include "misc_lib.h"                                   /* ProgrammingError */
+#include <alloc.h>                                      /* xmalloc,... */
+#include <logging.h>                                    /* Log */
+#include <misc_lib.h>                                   /* ProgrammingError */
 
 AgentConnection *NewAgentConn(const char *server_name)
 {

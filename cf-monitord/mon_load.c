@@ -22,9 +22,9 @@
   included file COSL.txt.
 */
 
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
-#include "mon.h"
+#include <mon.h>
 
 #ifdef HAVE_SYS_LOADAVG_H
 # include <sys/loadavg.h>

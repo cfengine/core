@@ -25,7 +25,7 @@
 #ifndef CFENGINE_DIR_IMPL_H
 #define CFENGINE_DIR_IMPL_H
 
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
 struct dirent *AllocateDirentForFilename(const char *filename);
 

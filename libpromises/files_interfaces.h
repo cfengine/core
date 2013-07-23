@@ -25,8 +25,8 @@
 #ifndef CFENGINE_FILES_INTERFACES_H
 #define CFENGINE_FILES_INTERFACES_H
 
-#include "cf3.defs.h"
-#include "cfnet.h"                                       /* AgentConnection */
+#include <cf3.defs.h>
+#include <cfnet.h>                                       /* AgentConnection */
 
 int cf_lstat(char *file, struct stat *buf, FileCopy fc, AgentConnection *conn);
 

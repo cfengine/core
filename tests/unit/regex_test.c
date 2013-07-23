@@ -1,7 +1,7 @@
-#include "test.h"
+#include <test.h>
 
-#include "cf3.defs.h"
-#include "matching.h"
+#include <cf3.defs.h>
+#include <matching.h>
 
 static void test_full_text_match(void)
 {

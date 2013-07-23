@@ -441,6 +441,50 @@ void shlib_close(void *handle);
 #define ENTERPRISE_VOID_FUNC_9ARG_DEFINE_STUB(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9) \
     ENTERPRISE_FUNC_9ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9)
 
+#define ENTERPRISE_FUNC_DEFINE_REAL_INVALID In_core_code_you_need_to_use_DEFINE_STUB func()
+
+#define ENTERPRISE_FUNC_0ARG_DEFINE(__ret, __func) \
+    ENTERPRISE_FUNC_DEFINE_REAL_INVALID
+#define ENTERPRISE_FUNC_1ARG_DEFINE(__ret, __func, __t1, __p1) \
+    ENTERPRISE_FUNC_DEFINE_REAL_INVALID
+#define ENTERPRISE_FUNC_2ARG_DEFINE(__ret, __func, __t1, __p1, __t2, __p2) \
+    ENTERPRISE_FUNC_DEFINE_REAL_INVALID
+#define ENTERPRISE_FUNC_3ARG_DEFINE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3) \
+    ENTERPRISE_FUNC_DEFINE_REAL_INVALID
+#define ENTERPRISE_FUNC_4ARG_DEFINE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4) \
+    ENTERPRISE_FUNC_DEFINE_REAL_INVALID
+#define ENTERPRISE_FUNC_5ARG_DEFINE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5) \
+    ENTERPRISE_FUNC_DEFINE_REAL_INVALID
+#define ENTERPRISE_FUNC_6ARG_DEFINE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6) \
+    ENTERPRISE_FUNC_DEFINE_REAL_INVALID
+#define ENTERPRISE_FUNC_7ARG_DEFINE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7) \
+    ENTERPRISE_FUNC_DEFINE_REAL_INVALID
+#define ENTERPRISE_FUNC_8ARG_DEFINE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8) \
+    ENTERPRISE_FUNC_DEFINE_REAL_INVALID
+#define ENTERPRISE_FUNC_9ARG_DEFINE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9) \
+    ENTERPRISE_FUNC_DEFINE_REAL_INVALID
+
+#define ENTERPRISE_VOID_FUNC_0ARG_DEFINE(__ret, __func) \
+    ENTERPRISE_FUNC_DEFINE_REAL_INVALID
+#define ENTERPRISE_VOID_FUNC_1ARG_DEFINE(__ret, __func, __t1, __p1) \
+    ENTERPRISE_FUNC_DEFINE_REAL_INVALID
+#define ENTERPRISE_VOID_FUNC_2ARG_DEFINE(__ret, __func, __t1, __p1, __t2, __p2) \
+    ENTERPRISE_FUNC_DEFINE_REAL_INVALID
+#define ENTERPRISE_VOID_FUNC_3ARG_DEFINE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3) \
+    ENTERPRISE_FUNC_DEFINE_REAL_INVALID
+#define ENTERPRISE_VOID_FUNC_4ARG_DEFINE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4) \
+    ENTERPRISE_FUNC_DEFINE_REAL_INVALID
+#define ENTERPRISE_VOID_FUNC_5ARG_DEFINE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5) \
+    ENTERPRISE_FUNC_DEFINE_REAL_INVALID
+#define ENTERPRISE_VOID_FUNC_6ARG_DEFINE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6) \
+    ENTERPRISE_FUNC_DEFINE_REAL_INVALID
+#define ENTERPRISE_VOID_FUNC_7ARG_DEFINE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7) \
+    ENTERPRISE_FUNC_DEFINE_REAL_INVALID
+#define ENTERPRISE_VOID_FUNC_8ARG_DEFINE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8) \
+    ENTERPRISE_FUNC_DEFINE_REAL_INVALID
+#define ENTERPRISE_VOID_FUNC_9ARG_DEFINE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9) \
+    ENTERPRISE_FUNC_DEFINE_REAL_INVALID
+
 #else // !BUILDING_CORE
 
 #define ENTERPRISE_FUNC_DEFINE_IMPL(__ret, __func, __real__func__par) \
@@ -450,6 +494,7 @@ void shlib_close(void *handle);
             Log(LOG_LEVEL_ERR, "Function '%s %s%s' failed stack consistency check. Most likely this means the plugin containing the " \
                                "function is incompatible with this version of CFEngine.", #__ret, #__func, #__real__func__par); \
             __ret ret; \
+            (void)ret; \
             return ret; \
         } \
         *__successful = 1; \
@@ -515,6 +560,50 @@ void shlib_close(void *handle);
         ENTERPRISE_FUNC_DEFINE_IMPL(__ret, __func, \
                                    (__p1, __p2, __p3, __p4, __p5, __p6, __p7, __p8, __p9)) \
     ENTERPRISE_FUNC_9ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9)
+
+#define ENTERPRISE_FUNC_DEFINE_STUB_INVALID In_extension_code_you_cannot_define_a_STUB func()
+
+#define ENTERPRISE_FUNC_0ARG_DEFINE_STUB(__ret, __func)       \
+    ENTERPRISE_FUNC_DEFINE_STUB_INVALID
+#define ENTERPRISE_FUNC_1ARG_DEFINE_STUB(__ret, __func, __t1, __p1) \
+    ENTERPRISE_FUNC_DEFINE_STUB_INVALID
+#define ENTERPRISE_FUNC_2ARG_DEFINE_STUB(__ret, __func, __t1, __p1, __t2, __p2) \
+    ENTERPRISE_FUNC_DEFINE_STUB_INVALID
+#define ENTERPRISE_FUNC_3ARG_DEFINE_STUB(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3) \
+    ENTERPRISE_FUNC_DEFINE_STUB_INVALID
+#define ENTERPRISE_FUNC_4ARG_DEFINE_STUB(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4) \
+    ENTERPRISE_FUNC_DEFINE_STUB_INVALID
+#define ENTERPRISE_FUNC_5ARG_DEFINE_STUB(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5) \
+    ENTERPRISE_FUNC_DEFINE_STUB_INVALID
+#define ENTERPRISE_FUNC_6ARG_DEFINE_STUB(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6) \
+    ENTERPRISE_FUNC_DEFINE_STUB_INVALID
+#define ENTERPRISE_FUNC_7ARG_DEFINE_STUB(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7) \
+    ENTERPRISE_FUNC_DEFINE_STUB_INVALID
+#define ENTERPRISE_FUNC_8ARG_DEFINE_STUB(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8) \
+    ENTERPRISE_FUNC_DEFINE_STUB_INVALID
+#define ENTERPRISE_FUNC_9ARG_DEFINE_STUB(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9) \
+    ENTERPRISE_FUNC_DEFINE_STUB_INVALID
+
+#define ENTERPRISE_VOID_FUNC_0ARG_DEFINE_STUB(__ret, __func) \
+    ENTERPRISE_FUNC_DEFINE_STUB_INVALID
+#define ENTERPRISE_VOID_FUNC_1ARG_DEFINE_STUB(__ret, __func, __t1, __p1) \
+    ENTERPRISE_FUNC_DEFINE_STUB_INVALID
+#define ENTERPRISE_VOID_FUNC_2ARG_DEFINE_STUB(__ret, __func, __t1, __p1, __t2, __p2) \
+    ENTERPRISE_FUNC_DEFINE_STUB_INVALID
+#define ENTERPRISE_VOID_FUNC_3ARG_DEFINE_STUB(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3) \
+    ENTERPRISE_FUNC_DEFINE_STUB_INVALID
+#define ENTERPRISE_VOID_FUNC_4ARG_DEFINE_STUB(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4) \
+    ENTERPRISE_FUNC_DEFINE_STUB_INVALID
+#define ENTERPRISE_VOID_FUNC_5ARG_DEFINE_STUB(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5) \
+    ENTERPRISE_FUNC_DEFINE_STUB_INVALID
+#define ENTERPRISE_VOID_FUNC_6ARG_DEFINE_STUB(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6) \
+    ENTERPRISE_FUNC_DEFINE_STUB_INVALID
+#define ENTERPRISE_VOID_FUNC_7ARG_DEFINE_STUB(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7) \
+    ENTERPRISE_FUNC_DEFINE_STUB_INVALID
+#define ENTERPRISE_VOID_FUNC_8ARG_DEFINE_STUB(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8) \
+    ENTERPRISE_FUNC_DEFINE_STUB_INVALID
+#define ENTERPRISE_VOID_FUNC_9ARG_DEFINE_STUB(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9) \
+    ENTERPRISE_FUNC_DEFINE_STUB_INVALID
 
 #endif // !BUILDING_CORE
 

@@ -99,7 +99,7 @@ bool ScopeIsReserved(const char *scope);
 
 void ScopeDeRefListsInThisScope(const Rlist *reflist);
 
-int ScopeMapBodyArgs(EvalContext *ctx, const char *ns, const char *scope, Rlist *give, const Rlist *take);
+void ScopeMapBodyArgs(EvalContext *ctx, const Body *body, const Rlist *args);
 
 int CompareVariableValue(Rval a, Rval b);
 bool UnresolvedVariables(Rval rval, RvalType rtype);

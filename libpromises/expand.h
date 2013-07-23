@@ -43,6 +43,7 @@ Rval ExpandBundleReference(EvalContext *ctx, const char *ns, const char *scope, 
 Rval ExpandPrivateRval(EvalContext *ctx, const char *ns, const char *scope, Rval rval);
 Rlist *ExpandList(EvalContext *ctx, const char *ns, const char *scope, const Rlist *list, int expandnaked);
 Rval EvaluateFinalRval(EvalContext *ctx, const char *ns, const char *scope, Rval rval, int forcelist, const Promise *pp);
+
 int IsNakedVar(const char *str, char vtype);
 /**
   @brief Takes a variable and removes decorations.

@@ -29,6 +29,16 @@
 
 #include "var_expressions.h"
 
+typedef enum
+{
+    SPECIAL_SCOPE_CONST,
+    SPECIAL_SCOPE_EDIT,
+    SPECIAL_SCOPE_MATCH,
+    SPECIAL_SCOPE_MON,
+    SPECIAL_SCOPE_SYS,
+    SPECIAL_SCOPE_THIS
+} SpecialScope;
+
 /**
  * @deprecated
  */
@@ -80,9 +90,9 @@ void ScopePushThis(void);
  */
 void ScopePopThis(void);
 
-void ScopeNewSpecial(EvalContext *ctx, const char *scope, const char *lval, const void *rval, DataType dt);
+void ScopeNewSpecial(EvalContext *ctx, SpecialScope scope, const char *lval, const void *rval, DataType dt);
 void ScopeDeleteScalar(const VarRef *lval);
-void ScopeDeleteSpecial(const char *scope, const char *lval);
+void ScopeDeleteSpecial(SpecialScope scope, const char *lval);
 bool ScopeIsReserved(const char *scope);
 
 void ScopeDeleteVariable(const char *ns, const char *scope, const char *id);

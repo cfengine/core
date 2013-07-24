@@ -801,18 +801,18 @@ static void ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp, Rlist *listv
 
         if (PromiseGetBundle(pp)->source_path)
         {
-            ScopeNewSpecial(ctx, "this", "promise_filename",PromiseGetBundle(pp)->source_path, DATA_TYPE_STRING);
+            ScopeNewSpecial(ctx, SPECIAL_SCOPE_THIS, "promise_filename",PromiseGetBundle(pp)->source_path, DATA_TYPE_STRING);
             snprintf(number, CF_SMALLBUF, "%zu", pp->offset.line);
-            ScopeNewSpecial(ctx, "this", "promise_linenumber", number, DATA_TYPE_STRING);
+            ScopeNewSpecial(ctx, SPECIAL_SCOPE_THIS, "promise_linenumber", number, DATA_TYPE_STRING);
         }
 
         snprintf(v, CF_MAXVARSIZE, "%d", (int) getuid());
-        ScopeNewSpecial(ctx, "this", "promiser_uid", v, DATA_TYPE_INT);
+        ScopeNewSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser_uid", v, DATA_TYPE_INT);
         snprintf(v, CF_MAXVARSIZE, "%d", (int) getgid());
-        ScopeNewSpecial(ctx, "this", "promiser_gid", v, DATA_TYPE_INT);
+        ScopeNewSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser_gid", v, DATA_TYPE_INT);
 
-        ScopeNewSpecial(ctx, "this", "bundle", PromiseGetBundle(pp)->name, DATA_TYPE_STRING);
-        ScopeNewSpecial(ctx, "this", "namespace", PromiseGetNamespace(pp), DATA_TYPE_STRING);
+        ScopeNewSpecial(ctx, SPECIAL_SCOPE_THIS, "bundle", PromiseGetBundle(pp)->name, DATA_TYPE_STRING);
+        ScopeNewSpecial(ctx, SPECIAL_SCOPE_THIS, "namespace", PromiseGetNamespace(pp), DATA_TYPE_STRING);
 
         /* Must expand $(this.promiser) here for arg dereferencing in things
            like edit_line and methods, but we might have to
@@ -821,7 +821,7 @@ static void ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp, Rlist *listv
 
         if (pp->has_subbundles)
         {
-            ScopeNewSpecial(ctx, "this", "promiser", pp->promiser, DATA_TYPE_STRING);
+            ScopeNewSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser", pp->promiser, DATA_TYPE_STRING);
         }
 
         if (handle)
@@ -831,11 +831,11 @@ static void ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp, Rlist *listv
             ExpandScalar(ctx, NULL, "this", handle, tmp);
             CanonifyNameInPlace(tmp);
             Log(LOG_LEVEL_DEBUG, "Expanded handle to '%s'", tmp);
-            ScopeNewSpecial(ctx, "this", "handle", tmp, DATA_TYPE_STRING);
+            ScopeNewSpecial(ctx, SPECIAL_SCOPE_THIS, "handle", tmp, DATA_TYPE_STRING);
         }
         else
         {
-            ScopeNewSpecial(ctx, "this", "handle", PromiseID(pp), DATA_TYPE_STRING);
+            ScopeNewSpecial(ctx, SPECIAL_SCOPE_THIS, "handle", PromiseID(pp), DATA_TYPE_STRING);
         }
 
         /* End special variables */

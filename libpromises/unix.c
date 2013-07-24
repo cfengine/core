@@ -350,7 +350,7 @@ static void GetMacAddress(EvalContext *ctx, int fd, struct ifreq *ifr, struct if
              (unsigned char) ifr->ifr_hwaddr.sa_data[4], 
              (unsigned char) ifr->ifr_hwaddr.sa_data[5]);
 
-    ScopeNewSpecial(ctx, "sys", name, hw_mac, DATA_TYPE_STRING);
+    ScopeNewSpecial(ctx, SPECIAL_SCOPE_SYS, name, hw_mac, DATA_TYPE_STRING);
     RlistAppend(hardware, hw_mac, RVAL_TYPE_SCALAR);
     RlistAppend(interfaces, ifp->ifr_name, RVAL_TYPE_SCALAR);
 
@@ -368,7 +368,7 @@ static void GetMacAddress(EvalContext *ctx, int fd, struct ifreq *ifr, struct if
         Log(LOG_LEVEL_ERR, "getifaddrs", "!! Could not get interface %s addresses",
           ifp->ifr_name);
 
-        ScopeNewSpecial(ctx, "sys", name, "mac_unknown", DATA_TYPE_STRING);
+        ScopeNewSpecial(ctx, SPECIAL_SCOPE_SYS, name, "mac_unknown", DATA_TYPE_STRING);
         EvalContextHeapAddHard(ctx, "mac_unknown");
         return;
     }
@@ -389,7 +389,7 @@ static void GetMacAddress(EvalContext *ctx, int fd, struct ifreq *ifr, struct if
                     (unsigned char) m[4],
                     (unsigned char) m[5]);
 
-                ScopeNewSpecial(ctx, "sys", name, hw_mac, DATA_TYPE_STRING);
+                ScopeNewSpecial(ctx, SPECIAL_SCOPE_SYS, name, hw_mac, DATA_TYPE_STRING);
                 RlistAppend(hardware, hw_mac, RVAL_TYPE_SCALAR);
                 RlistAppend(interfaces, ifa->ifa_name, RVAL_TYPE_SCALAR);
 
@@ -402,7 +402,7 @@ static void GetMacAddress(EvalContext *ctx, int fd, struct ifreq *ifr, struct if
     freeifaddrs(ifaddr);
 
 # else
-    ScopeNewSpecial(ctx, "sys", name, "mac_unknown", DATA_TYPE_STRING);
+    ScopeNewSpecial(ctx, SPECIAL_SCOPE_SYS, name, "mac_unknown", DATA_TYPE_STRING);
     EvalContextHeapAddHard(ctx, "mac_unknown");
 # endif
 }
@@ -438,7 +438,7 @@ void GetInterfaceFlags(EvalContext *ctx, struct ifreq *ifr, Rlist **flags)
     {
       // Skip leading space
       fp = buffer + 1;
-      ScopeNewSpecial(ctx, "sys", name, fp, DATA_TYPE_STRING);
+      ScopeNewSpecial(ctx, SPECIAL_SCOPE_SYS, name, fp, DATA_TYPE_STRING);
       RlistAppend(flags, fp, RVAL_TYPE_SCALAR);
     }
 }
@@ -527,7 +527,7 @@ void GetInterfacesInfo(EvalContext *ctx)
         if (strcmp(last_name, ifp->ifr_name) != 0)
         {
             strcpy(last_name, ifp->ifr_name);
-            ScopeNewSpecial(ctx, "sys", "interface", last_name, DATA_TYPE_STRING);
+            ScopeNewSpecial(ctx, SPECIAL_SCOPE_SYS, "interface", last_name, DATA_TYPE_STRING);
         }
 
         snprintf(workbuf, sizeof(workbuf), "net_iface_%s", CanonifyName(ifp->ifr_name));
@@ -624,7 +624,7 @@ void GetInterfacesInfo(EvalContext *ctx)
                         {
                             *sp = '\0';
                             snprintf(name, sizeof(name), "ipv4_%d[%s]", i--, CanonifyName(VIPADDRESS));
-                            ScopeNewSpecial(ctx, "sys", name, ip, DATA_TYPE_STRING);
+                            ScopeNewSpecial(ctx, SPECIAL_SCOPE_SYS, name, ip, DATA_TYPE_STRING);
                         }
                     }
                     continue;
@@ -641,7 +641,7 @@ void GetInterfacesInfo(EvalContext *ctx)
                  * interface. */
                 if (!address_set && !(ifr.ifr_flags & IFF_LOOPBACK))
                 {
-                    ScopeNewSpecial(ctx, "sys", "ipv4", txtaddr, DATA_TYPE_STRING);
+                    ScopeNewSpecial(ctx, SPECIAL_SCOPE_SYS, "ipv4", txtaddr, DATA_TYPE_STRING);
 
                     strcpy(VIPADDRESS, txtaddr);
                     Log(LOG_LEVEL_VERBOSE, "IP address of host set to %s",
@@ -667,7 +667,7 @@ void GetInterfacesInfo(EvalContext *ctx)
 
                 snprintf(name, sizeof(name), "ipv4[%s]", CanonifyName(ifp->ifr_name));
 
-                ScopeNewSpecial(ctx, "sys", name, ip, DATA_TYPE_STRING);
+                ScopeNewSpecial(ctx, SPECIAL_SCOPE_SYS, name, ip, DATA_TYPE_STRING);
 
                 i = 3;
 
@@ -679,7 +679,7 @@ void GetInterfacesInfo(EvalContext *ctx)
 
                         snprintf(name, sizeof(name), "ipv4_%d[%s]", i--, CanonifyName(ifp->ifr_name));
 
-                        ScopeNewSpecial(ctx, "sys", name, ip, DATA_TYPE_STRING);
+                        ScopeNewSpecial(ctx, SPECIAL_SCOPE_SYS, name, ip, DATA_TYPE_STRING);
                     }
                 }
             }
@@ -691,10 +691,10 @@ void GetInterfacesInfo(EvalContext *ctx)
 
     close(fd);
 
-    ScopeNewSpecial(ctx, "sys", "interfaces", interfaces, DATA_TYPE_STRING_LIST);
-    ScopeNewSpecial(ctx, "sys", "hardware_addresses", hardware, DATA_TYPE_STRING_LIST);
-    ScopeNewSpecial(ctx, "sys", "hardware_flags", flags, DATA_TYPE_STRING_LIST);
-    ScopeNewSpecial(ctx, "sys", "ip_addresses", ips, DATA_TYPE_STRING_LIST);
+    ScopeNewSpecial(ctx, SPECIAL_SCOPE_SYS, "interfaces", interfaces, DATA_TYPE_STRING_LIST);
+    ScopeNewSpecial(ctx, SPECIAL_SCOPE_SYS, "hardware_addresses", hardware, DATA_TYPE_STRING_LIST);
+    ScopeNewSpecial(ctx, SPECIAL_SCOPE_SYS, "hardware_flags", flags, DATA_TYPE_STRING_LIST);
+    ScopeNewSpecial(ctx, SPECIAL_SCOPE_SYS, "ip_addresses", ips, DATA_TYPE_STRING_LIST);
 
     RlistDestroy(interfaces);
     RlistDestroy(hardware);

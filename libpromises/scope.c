@@ -457,15 +457,34 @@ bool ScopeIsReserved(const char *scope)
             || strcmp("this", scope) == 0;
 }
 
+static const char *SpecialScopeToString(SpecialScope scope)
+{
+    switch (scope)
+    {
+    case SPECIAL_SCOPE_CONST:
+        return "const";
+    case SPECIAL_SCOPE_EDIT:
+        return "edit";
+    case SPECIAL_SCOPE_MATCH:
+        return "match";
+    case SPECIAL_SCOPE_MON:
+        return "mon";
+    case SPECIAL_SCOPE_SYS:
+        return "sys";
+    case SPECIAL_SCOPE_THIS:
+        return "this";
+    default:
+        ProgrammingError("Unhandled special scope");
+    }
+}
+
 /**
  * @WARNING Don't call ScopeDelete*() before this, it's unnecessary.
  */
-void ScopeNewSpecial(EvalContext *ctx, const char *scope, const char *lval, const void *rval, DataType dt)
+void ScopeNewSpecial(EvalContext *ctx, SpecialScope scope, const char *lval, const void *rval, DataType dt)
 {
-    assert(ScopeIsReserved(scope));
-
     Rval rvald;
-    VarRef *ref = VarRefParseFromScope(lval, scope);
+    VarRef *ref = VarRefParseFromScope(lval, SpecialScopeToString(scope));
     if (EvalContextVariableGet(ctx, ref, &rvald, NULL))
     {
         ScopeDeleteSpecial(scope, lval);
@@ -481,10 +500,6 @@ void ScopeNewSpecial(EvalContext *ctx, const char *scope, const char *lval, cons
 void ScopeDeleteScalar(const VarRef *ref)
 {
     assert(!ScopeIsReserved(ref->scope));
-    if (ScopeIsReserved(ref->scope))
-    {
-        ScopeDeleteSpecial(ref->scope, ref->lval);
-    }
 
     Scope *scope = ScopeGet(ref->ns, ref->scope);
 
@@ -499,17 +514,15 @@ void ScopeDeleteScalar(const VarRef *ref)
     }
 }
 
-void ScopeDeleteSpecial(const char *scope, const char *lval)
+void ScopeDeleteSpecial(SpecialScope scope, const char *lval)
 {
-    assert(ScopeIsReserved(scope));
-
-    Scope *scope_ptr = ScopeGet(NULL, scope);
+    Scope *scope_ptr = ScopeGet(NULL, SpecialScopeToString(scope));
 
     if (scope_ptr == NULL)
     {
         Log(LOG_LEVEL_WARNING,
             "Attempt to delete variable '%s' in non-existent scope '%s'",
-            lval, scope);
+            lval, SpecialScopeToString(scope));
         return;
     }
 
@@ -517,12 +530,12 @@ void ScopeDeleteSpecial(const char *scope, const char *lval)
     {
         Log(LOG_LEVEL_WARNING,
             "Attempt to delete non-existent variable '%s' in scope '%s'",
-            lval, scope);
+            lval, SpecialScopeToString(scope));
         return;
     }
 
     Log(LOG_LEVEL_DEBUG, "Deleted existent variable '%s' in scope '%s'",
-        lval, scope);
+        lval, SpecialScopeToString(scope));
 }
 
 /*******************************************************************/

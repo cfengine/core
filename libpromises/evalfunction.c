@@ -1693,51 +1693,51 @@ static FnCallResult FnCallMapArray(EvalContext *ctx, FnCall *fp, Rlist *finalarg
 
             if (strlen(index) > 0)
             {
-                ScopeNewSpecial(ctx, "this", "k", index, DATA_TYPE_STRING);
+                ScopeNewSpecial(ctx, SPECIAL_SCOPE_THIS, "k", index, DATA_TYPE_STRING);
 
                 switch (assoc->rval.type)
                 {
                 case RVAL_TYPE_SCALAR:
-                    ScopeNewSpecial(ctx, "this", "v", assoc->rval.item, DATA_TYPE_STRING);
+                    ScopeNewSpecial(ctx, SPECIAL_SCOPE_THIS, "v", assoc->rval.item, DATA_TYPE_STRING);
                     ExpandScalar(ctx, PromiseGetBundle(fp->caller)->ns, PromiseGetBundle(fp->caller)->name, map, expbuf);
 
                     if (strstr(expbuf, "$(this.k)") || strstr(expbuf, "${this.k}") ||
                         strstr(expbuf, "$(this.v)") || strstr(expbuf, "${this.v}"))
                     {
                         RlistDestroy(returnlist);
-                        ScopeDeleteSpecial("this", "k");
-                        ScopeDeleteSpecial("this", "v");
+                        ScopeDeleteSpecial(SPECIAL_SCOPE_THIS, "k");
+                        ScopeDeleteSpecial(SPECIAL_SCOPE_THIS, "v");
                         return (FnCallResult) { FNCALL_FAILURE };
                     }
 
                     RlistAppendScalar(&returnlist, expbuf);
-                    ScopeDeleteSpecial("this", "v");
+                    ScopeDeleteSpecial(SPECIAL_SCOPE_THIS, "v");
                     break;
 
                 case RVAL_TYPE_LIST:
                     for (rp = assoc->rval.item; rp != NULL; rp = rp->next)
                     {
-                        ScopeNewSpecial(ctx, "this", "v", rp->item, DATA_TYPE_STRING);
+                        ScopeNewSpecial(ctx, SPECIAL_SCOPE_THIS, "v", rp->item, DATA_TYPE_STRING);
                         ExpandScalar(ctx, PromiseGetBundle(fp->caller)->ns, PromiseGetBundle(fp->caller)->name, map, expbuf);
 
                         if (strstr(expbuf, "$(this.k)") || strstr(expbuf, "${this.k}") ||
                             strstr(expbuf, "$(this.v)") || strstr(expbuf, "${this.v}"))
                         {
                             RlistDestroy(returnlist);
-                            ScopeDeleteSpecial("this", "k");
-                            ScopeDeleteSpecial("this", "v");
+                            ScopeDeleteSpecial(SPECIAL_SCOPE_THIS, "k");
+                            ScopeDeleteSpecial(SPECIAL_SCOPE_THIS, "v");
                             return (FnCallResult) { FNCALL_FAILURE };
                         }
 
                         RlistAppendScalarIdemp(&returnlist, expbuf);
-                        ScopeDeleteSpecial("this", "v");
+                        ScopeDeleteSpecial(SPECIAL_SCOPE_THIS, "v");
                     }
                     break;
 
                 default:
                     break;
                 }
-                ScopeDeleteSpecial("this", "k");
+                ScopeDeleteSpecial(SPECIAL_SCOPE_THIS, "k");
             }
         }
     }
@@ -1792,7 +1792,7 @@ static FnCallResult FnCallMapList(EvalContext *ctx, FnCall *fp, Rlist *finalargs
 
     for (const Rlist *rp = (const Rlist *) rval.item; rp != NULL; rp = rp->next)
     {
-        ScopeNewSpecial(ctx, "this", "this", (char *) rp->item, DATA_TYPE_STRING);
+        ScopeNewSpecial(ctx, SPECIAL_SCOPE_THIS, "this", (char *) rp->item, DATA_TYPE_STRING);
 
         ExpandScalar(ctx, PromiseGetBundle(fp->caller)->ns, PromiseGetBundle(fp->caller)->name, map, expbuf);
 
@@ -1803,7 +1803,7 @@ static FnCallResult FnCallMapList(EvalContext *ctx, FnCall *fp, Rlist *finalargs
         }
 
         RlistAppendScalar(&newlist, expbuf);
-        ScopeDeleteSpecial("this", "this");
+        ScopeDeleteSpecial(SPECIAL_SCOPE_THIS, "this");
     }
 
     return (FnCallResult) { FNCALL_SUCCESS, { newlist, RVAL_TYPE_LIST } };

@@ -64,19 +64,19 @@ void VerifyExecPromise(EvalContext *ctx, Promise *pp)
 
     a = GetExecAttributes(ctx, pp);
 
-    ScopeNewSpecial(ctx, "this", "promiser", pp->promiser, DATA_TYPE_STRING);
+    ScopeNewSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser", pp->promiser, DATA_TYPE_STRING);
 
     if (!SyntaxCheckExec(a, pp))
     {
         // cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "");
-        ScopeDeleteSpecial("this", "promiser");
+        ScopeDeleteSpecial(SPECIAL_SCOPE_THIS, "promiser");
         return;
     }
 
     if (PromiseKeptExec(a, pp))
     {
         // cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_NOOP, pp, a, "");
-        ScopeDeleteSpecial("this", "promiser");
+        ScopeDeleteSpecial(SPECIAL_SCOPE_THIS, "promiser");
         return;
     }
 
@@ -87,7 +87,7 @@ void VerifyExecPromise(EvalContext *ctx, Promise *pp)
     if (thislock.lock == NULL)
     {
         // cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, a, "");
-        ScopeDeleteSpecial("this", "promiser");
+        ScopeDeleteSpecial(SPECIAL_SCOPE_THIS, "promiser");
         return;
     }
 
@@ -112,7 +112,7 @@ void VerifyExecPromise(EvalContext *ctx, Promise *pp)
     }
 
     YieldCurrentLock(thislock);
-    ScopeDeleteSpecial("this", "promiser");
+    ScopeDeleteSpecial(SPECIAL_SCOPE_THIS, "promiser");
 }
 
 /*****************************************************************************/

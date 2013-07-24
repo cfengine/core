@@ -3,6 +3,7 @@
 #include "sysinfo.h"
 #include "env_context.h"
 #include "item_lib.h"
+#include "scope.h"
 
 #include "test.h"
 
@@ -79,23 +80,22 @@ ExpectedVars expected_vars[] =
     {"domain", "cfengine.com"},
 };
 
-void ScopeNewSpecial(EvalContext *ctx, const char *ns, const char *varname, const void *value, DataType type)
+void ScopeNewSpecial(EvalContext *ctx, SpecialScope scope, const char *lval, const void *value, DataType type)
 {
     int i;
 
-    assert_string_equal(ns, "sys");
     assert_int_equal(type, DATA_TYPE_STRING);
 
     for (i = 0; i < sizeof(expected_vars) / sizeof(expected_vars[0]); ++i)      /* LCOV_EXCL_LINE */
     {
-        if (!strcmp(varname, expected_vars[i].name))
+        if (!strcmp(lval, expected_vars[i].name))
         {
             assert_string_equal(value, expected_vars[i].value);
             expected_vars[i].found = true;
             return;
         }
     }
-    fprintf(stderr, "${%s.%s} <- %s (%c)\n", ns, varname, (const char *)value, type);  /* LCOV_EXCL_LINE */
+    fprintf(stderr, "${%s} <- %s (%c)\n", lval, (const char *)value, type);  /* LCOV_EXCL_LINE */
     fail();
 }
 
@@ -283,12 +283,12 @@ bool IsDefinedClass(const EvalContext *ctx, const char *class, const char *ns)
     fail();
 }
 
-void ScopeDeleteSpecial(const char *scope, const char *id)
+void ScopeDeleteSpecial(SpecialScope scope, const char *id)
 {
     fail();
 }
 
-void ScopeDeleteVariable(const char *scope, const char *id)
+void ScopeDeleteVariable(const char *ns, const char *scope, const char *id)
 {
     fail();
 }

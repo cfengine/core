@@ -276,7 +276,7 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
 
 /*****************************************************************************/
 
-Promise *ExpandDeRefPromise(EvalContext *ctx, const char *ns, const char *scope, const Promise *pp)
+Promise *ExpandDeRefPromise(EvalContext *ctx, const Promise *pp)
 {
     Promise *pcopy;
     Rval returnval, final;
@@ -288,7 +288,7 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const char *ns, const char *scope,
 
     if (pp->promisee.item)
     {
-        pcopy->promisee = EvaluateFinalRval(ctx, ns, scope, pp->promisee, true, pp);
+        pcopy->promisee = EvaluateFinalRval(ctx, NULL, "this", pp->promisee, true, pp);
     }
     else
     {
@@ -325,12 +325,12 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const char *ns, const char *scope,
 
         if (ExpectedDataType(cp->lval) == DATA_TYPE_BUNDLE)
         {
-            final = ExpandBundleReference(ctx, ns, scope, cp->rval);
+            final = ExpandBundleReference(ctx, NULL, "this", cp->rval);
         }
         else
         {
-            returnval = EvaluateFinalRval(ctx, ns, scope, cp->rval, false, pp);
-            final = ExpandDanglers(ctx, ns, scope, returnval, pp);
+            returnval = EvaluateFinalRval(ctx, NULL, "this", cp->rval, false, pp);
+            final = ExpandDanglers(ctx, NULL, "this", returnval, pp);
             RvalDestroy(returnval);
         }
 

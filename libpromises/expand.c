@@ -845,7 +845,7 @@ static void ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp, Rlist *listv
 
         /* End special variables */
 
-        pexp = ExpandDeRefPromise(ctx, NULL, "this", pp);
+        pexp = ExpandDeRefPromise(ctx, pp);
 
         EvalContextStackPushPromiseIterationFrame(ctx, pexp);
 

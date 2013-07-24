@@ -288,7 +288,7 @@ void ScopeDeleteSpecial(SpecialScope scope, const char *id)
     fail();
 }
 
-void ScopeDeleteVariable(const char *ns, const char *scope, const char *id)
+void ScopeDeleteVariable(const VarRef *ref)
 {
     fail();
 }

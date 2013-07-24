@@ -23,6 +23,7 @@
 */
 
 #include <cf-serverd-functions.h>
+#include <cf-serverd-enterprise-stubs.h>
 
 #include <client_code.h>
 #include <server_transform.h>

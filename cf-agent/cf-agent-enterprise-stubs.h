@@ -30,14 +30,14 @@
 #if defined(__MINGW32__)
 void VerifyRegistryPromise(EvalContext *ctx, Attributes a, Promise *pp);
 #endif
-void VerifyWindowsService(EvalContext *ctx, Attributes a, Promise *pp);
+ENTERPRISE_VOID_FUNC_3ARG_DECLARE(void, VerifyWindowsService, EvalContext *, ctx, Attributes, a, Promise *, pp);
 
-void LastSawBundle(const Bundle *bundle, double compliance);
+ENTERPRISE_VOID_FUNC_2ARG_DECLARE(void, LastSawBundle, const Bundle *, bundle, double, compliance);
 
-void LogFileChange(EvalContext *ctx, char *file,
-                   int change, Attributes a, Promise *pp);
+ENTERPRISE_VOID_FUNC_5ARG_DECLARE(void, LogFileChange, EvalContext *, ctx, char *, file,
+                   int, change, Attributes, a, Promise *, pp);
 
-void Nova_CheckNtACL(EvalContext *ctx, char *file_path, Acl acl, Attributes a, Promise *pp);
+ENTERPRISE_VOID_FUNC_5ARG_DECLARE(void, Nova_CheckNtACL, EvalContext *, ctx, char *, file_path, Acl, acl, Attributes, a, Promise *, pp);
 
 #endif
 

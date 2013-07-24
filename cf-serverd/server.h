@@ -113,8 +113,6 @@ typedef struct
 void KeepPromises(EvalContext *ctx, Policy *policy, GenericAgentConfig *config);
 
 void ServerEntryPoint(EvalContext *ctx, int sd_reply, char *ipaddr);
-void TryCollectCall(void);
-int SetServerListenState(EvalContext *ctx, size_t queue_size);
 void DeleteAuthList(Auth *ap);
 void PurgeOldConnections(Item **list, time_t now);
 

@@ -24,22 +24,22 @@
 
 #include <cf-agent-enterprise-stubs.h>
 
-void VerifyWindowsService(ARG_UNUSED EvalContext *ctx, ARG_UNUSED Attributes a, ARG_UNUSED Promise *pp)
+ENTERPRISE_VOID_FUNC_3ARG_DEFINE_STUB(void, VerifyWindowsService, ARG_UNUSED EvalContext *, ctx, ARG_UNUSED Attributes, a, ARG_UNUSED Promise *, pp)
 {
     Log(LOG_LEVEL_ERR, "Windows service management is only supported in CFEngine Enterprise");
 }
 
-void LastSawBundle(ARG_UNUSED const Bundle *bundle, ARG_UNUSED double comp)
+ENTERPRISE_VOID_FUNC_2ARG_DEFINE_STUB(void, LastSawBundle, ARG_UNUSED const Bundle *, bundle, ARG_UNUSED double, comp)
 {
 }
 
-void LogFileChange(ARG_UNUSED EvalContext *ctx, ARG_UNUSED char *file,
-                   ARG_UNUSED int change, ARG_UNUSED Attributes a, ARG_UNUSED Promise *pp)
+ENTERPRISE_VOID_FUNC_5ARG_DEFINE_STUB(void, LogFileChange, ARG_UNUSED EvalContext *, ctx, ARG_UNUSED char *, file,
+                   ARG_UNUSED int, change, ARG_UNUSED Attributes, a, ARG_UNUSED Promise *, pp)
 {
     Log(LOG_LEVEL_VERBOSE, "Logging file differences requires version Nova or above");
 }
 
-void Nova_CheckNtACL(ARG_UNUSED EvalContext *ctx, ARG_UNUSED char *file_path, ARG_UNUSED Acl acl, ARG_UNUSED Attributes a, ARG_UNUSED Promise *pp)
+ENTERPRISE_VOID_FUNC_5ARG_DEFINE_STUB(void, Nova_CheckNtACL, ARG_UNUSED EvalContext *, ctx, ARG_UNUSED char *, file_path, ARG_UNUSED Acl, acl, ARG_UNUSED Attributes, a, ARG_UNUSED Promise *, pp)
 {
     Log(LOG_LEVEL_INFO, "NTFS ACLs are only supported in CFEngine Enterprise");
 }

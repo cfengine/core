@@ -29,17 +29,17 @@
 
 struct ServerConnectionState;
 
-void RegisterLiteralServerData(EvalContext *ctx, const char *handle, Promise *pp);
-int ReturnLiteralData(EvalContext *ctx, char *handle, char *ret);
+ENTERPRISE_VOID_FUNC_3ARG_DECLARE(void, RegisterLiteralServerData, EvalContext *, ctx, const char *, handle, Promise *, pp);
+ENTERPRISE_FUNC_3ARG_DECLARE(int, ReturnLiteralData, EvalContext *, ctx, char *, handle, char *, ret);
 
-int SetServerListenState(EvalContext *ctx, size_t queue_size);
+ENTERPRISE_FUNC_2ARG_DECLARE(int, SetServerListenState, EvalContext *, ctx, size_t, queue_size);
 
-void TryCollectCall(void);
-int ReceiveCollectCall(struct ServerConnectionState *conn);
+ENTERPRISE_VOID_FUNC_0ARG_DECLARE(void, TryCollectCall);
+ENTERPRISE_FUNC_1ARG_DECLARE(int, ReceiveCollectCall, struct ServerConnectionState *, conn);
 
-bool ReturnQueryData(struct ServerConnectionState *conn, char *menu);
+ENTERPRISE_FUNC_2ARG_DECLARE(bool, ReturnQueryData, struct ServerConnectionState *, conn, char *, menu);
 
-void KeepReportDataSelectAccessPromise(Promise *pp);
-void CleanReportBookFilterSet(void);
+ENTERPRISE_VOID_FUNC_1ARG_DECLARE(void, KeepReportDataSelectAccessPromise, Promise *, pp);
+ENTERPRISE_VOID_FUNC_0ARG_DECLARE(void, CleanReportBookFilterSet);
 
 #endif

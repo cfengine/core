@@ -323,18 +323,25 @@ void DiscoverVersion(EvalContext *ctx)
     {
         char workbuf[CF_BUFSIZE];
 
-        snprintf(workbuf, CF_MAXVARSIZE, "%d", major);
+        snprintf(workbuf, CF_BUFSIZE, "%d", major);
         ScopeNewSpecial(ctx, "sys", "cf_version_major", workbuf, DATA_TYPE_STRING);
-        snprintf(workbuf, CF_MAXVARSIZE, "%d", minor);
+        snprintf(workbuf, CF_BUFSIZE, "%d", minor);
         ScopeNewSpecial(ctx, "sys", "cf_version_minor", workbuf, DATA_TYPE_STRING);
-        snprintf(workbuf, CF_MAXVARSIZE, "%d", patch);
+        snprintf(workbuf, CF_BUFSIZE, "%d", patch);
         ScopeNewSpecial(ctx, "sys", "cf_version_patch", workbuf, DATA_TYPE_STRING);
+
+        snprintf(workbuf, CF_BUFSIZE, "%s%clib%c%d.%d", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR, major, minor);
+        ScopeNewSpecial(ctx, "sys", "libdir", workbuf, DATA_TYPE_STRING);
+
+        snprintf(workbuf, CF_BUFSIZE, "lib%c%d.%d", FILE_SEPARATOR, major, minor);
+        ScopeNewSpecial(ctx, "sys", "local_libdir", workbuf, DATA_TYPE_STRING);
     }
     else
     {
         ScopeNewSpecial(ctx, "sys", "cf_version_major", "BAD VERSION " VERSION, DATA_TYPE_STRING);
         ScopeNewSpecial(ctx, "sys", "cf_version_minor", "BAD VERSION " VERSION, DATA_TYPE_STRING);
         ScopeNewSpecial(ctx, "sys", "cf_version_patch", "BAD VERSION " VERSION, DATA_TYPE_STRING);
+        ScopeNewSpecial(ctx, "sys", "libdir", CFWORKDIR, DATA_TYPE_STRING);
     }
 }
 
@@ -491,6 +498,22 @@ void GetNameInfo3(EvalContext *ctx, AgentType agent_type)
     ScopeNewSpecial(ctx, "sys", "resolv", VRESOLVCONF[VSYSTEMHARDCLASS], DATA_TYPE_STRING);
     ScopeNewSpecial(ctx, "sys", "maildir", VMAILDIR[VSYSTEMHARDCLASS], DATA_TYPE_STRING);
     ScopeNewSpecial(ctx, "sys", "exports", VEXPORTS[VSYSTEMHARDCLASS], DATA_TYPE_STRING);
+
+    snprintf(workbuf, CF_BUFSIZE, "%s%cbin", CFWORKDIR, FILE_SEPARATOR);
+    ScopeNewSpecial(ctx, "sys", "bindir", workbuf, DATA_TYPE_STRING);
+
+    snprintf(workbuf, CF_BUFSIZE, "%s%cinputs", CFWORKDIR, FILE_SEPARATOR);
+    ScopeNewSpecial(ctx, "sys", "inputdir", workbuf, DATA_TYPE_STRING);
+
+    snprintf(workbuf, CF_BUFSIZE, "%s%cmasterfiles", CFWORKDIR, FILE_SEPARATOR);
+    ScopeNewSpecial(ctx, "sys", "masterdir", workbuf, DATA_TYPE_STRING);
+
+    snprintf(workbuf, CF_BUFSIZE, "%s%cfailsafe.cf", CFWORKDIR, FILE_SEPARATOR);
+    ScopeNewSpecial(ctx, "sys", "failsafe", workbuf, DATA_TYPE_STRING);
+
+    snprintf(workbuf, CF_BUFSIZE, "%s%cupdate.cf", CFWORKDIR, FILE_SEPARATOR);
+    ScopeNewSpecial(ctx, "sys", "update", workbuf, DATA_TYPE_STRING);
+
 /* FIXME: type conversion */
     ScopeNewSpecial(ctx, "sys", "cf_version", (char *) Version(), DATA_TYPE_STRING);
 

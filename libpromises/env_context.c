@@ -1205,7 +1205,7 @@ void EvalContextStackPopFrame(EvalContext *ctx)
             const Bundle *bp = last_frame->data.bundle.owner;
             if (strcmp(bp->type, "edit_line") == 0 || strcmp(bp->type, "edit_xml") == 0)
             {
-                ScopeClear(NULL, "edit");
+                ScopeClearSpecial(SPECIAL_SCOPE_EDIT);
                 ScopeClear(bp->ns, bp->name);
             }
         }

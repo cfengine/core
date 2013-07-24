@@ -53,6 +53,7 @@ bool ScopeExists(const char *ns, const char *name);
  * @param name
  */
 void ScopeClear(const char *ns, const char *name);
+void ScopeClearSpecial(SpecialScope scope);
 
 /**
  * @brief find a Scope in VSCOPE

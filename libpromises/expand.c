@@ -124,7 +124,7 @@ void ExpandPromise(EvalContext *ctx, Promise *pp, PromiseActuator *ActOnPromise,
     //fix me wth a general function SetMissingDefaults
     SetAnyMissingDefaults(ctx, pp);
 
-    ScopeClear(NULL, "match");       /* in case we expand something expired accidentially */
+    ScopeClearSpecial(SPECIAL_SCOPE_MATCH);       /* in case we expand something expired accidentially */
 
     EvalContextStackPushPromiseFrame(ctx, pp);
 

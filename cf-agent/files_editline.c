@@ -543,7 +543,7 @@ static void VerifyPatterns(EvalContext *ctx, Promise *pp, EditContext *edcontext
         (edcontext->num_edits)++;
     }
 
-    ScopeClear(NULL, "match");       // because this might pollute the parent promise in next iteration
+    ScopeClearSpecial(SPECIAL_SCOPE_MATCH);       // because this might pollute the parent promise in next iteration
 
     YieldCurrentLock(thislock);
 }

@@ -42,6 +42,27 @@ Scope *SCOPE_MATCH = NULL;
 
 /*******************************************************************/
 
+static const char *SpecialScopeToString(SpecialScope scope)
+{
+    switch (scope)
+    {
+    case SPECIAL_SCOPE_CONST:
+        return "const";
+    case SPECIAL_SCOPE_EDIT:
+        return "edit";
+    case SPECIAL_SCOPE_MATCH:
+        return "match";
+    case SPECIAL_SCOPE_MON:
+        return "mon";
+    case SPECIAL_SCOPE_SYS:
+        return "sys";
+    case SPECIAL_SCOPE_THIS:
+        return "this";
+    default:
+        ProgrammingError("Unhandled special scope");
+    }
+}
+
 Scope *ScopeNew(const char *ns, const char *scope)
 {
     assert(scope);
@@ -337,6 +358,9 @@ void ScopeDeleteAll()
 
 void ScopeClear(const char *ns, const char *name)
 {
+    assert(name);
+    assert(!ScopeIsReserved(name));
+
     if (!ns)
     {
         ns = "default";
@@ -359,6 +383,29 @@ void ScopeClear(const char *ns, const char *name)
     HashFree(scope->hashtable);
     scope->hashtable = HashInit();
     Log(LOG_LEVEL_DEBUG, "Scope '%s' cleared", name);
+
+    ThreadUnlock(cft_vscope);
+}
+
+void ScopeClearSpecial(SpecialScope scope)
+{
+    if (!ThreadLock(cft_vscope))
+    {
+        Log(LOG_LEVEL_ERR, "Could not lock VSCOPE");
+        return;
+    }
+
+    Scope *ptr = ScopeGet(NULL, SpecialScopeToString(scope));
+    if (!ptr)
+    {
+        Log(LOG_LEVEL_DEBUG, "No special scope '%s' to clear", SpecialScopeToString(scope));
+        ThreadUnlock(cft_vscope);
+        return;
+    }
+
+    HashFree(ptr->hashtable);
+    ptr->hashtable = HashInit();
+    Log(LOG_LEVEL_DEBUG, "Special scope '%s' cleared", SpecialScopeToString(scope));
 
     ThreadUnlock(cft_vscope);
 }
@@ -455,27 +502,6 @@ bool ScopeIsReserved(const char *scope)
             || strcmp("mon", scope) == 0
             || strcmp("sys", scope) == 0
             || strcmp("this", scope) == 0;
-}
-
-static const char *SpecialScopeToString(SpecialScope scope)
-{
-    switch (scope)
-    {
-    case SPECIAL_SCOPE_CONST:
-        return "const";
-    case SPECIAL_SCOPE_EDIT:
-        return "edit";
-    case SPECIAL_SCOPE_MATCH:
-        return "match";
-    case SPECIAL_SCOPE_MON:
-        return "mon";
-    case SPECIAL_SCOPE_SYS:
-        return "sys";
-    case SPECIAL_SCOPE_THIS:
-        return "this";
-    default:
-        ProgrammingError("Unhandled special scope");
-    }
 }
 
 /**

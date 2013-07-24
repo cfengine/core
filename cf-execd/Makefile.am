@@ -1,4 +1,3 @@
-sbin_PROGRAMS = cf-execd
 noinst_LIBRARIES = libcf-execd.a
 
 AM_CPPFLAGS = @CPPFLAGS@ \
@@ -10,14 +9,17 @@ AM_CPPFLAGS = @CPPFLAGS@ \
 AM_CFLAGS = @CFLAGS@ \
 	$(ENTERPRISE_CFLAGS)
 
-LDADD = ../libpromises/libpromises.la
+LDADD = libcf-execd.a \
+	../libpromises/libpromises.la
 
-cf_execd_SOURCES = \
+libcf_execd_a_SOURCES = \
         cf-execd.c cf-execd.h \
         cf-execd-runner.c cf-execd-runner.h \
         exec-config.c exec-config.h
 
-libcf_execd_a_SOURCES = $(cf_execd_SOURCES)
+if !BUILTIN_EXTENSIONS
+ sbin_PROGRAMS = cf-execd
+endif
 
 CLEANFILES = *.gcno *.gcda
 

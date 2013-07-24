@@ -1,4 +1,3 @@
-sbin_PROGRAMS = cf-agent
 noinst_LIBRARIES = libcf-agent.a
 
 AM_CPPFLAGS = @CPPFLAGS@ -I$(srcdir)/../libpromises -I$(srcdir)/../libutils \
@@ -28,13 +27,14 @@ AM_LDFLAGS += -ldl
 endif
 endif
 
-LDADD = ../libpromises/libpromises.la \
+LDADD = libcf-agent.a \
+	../libpromises/libpromises.la \
 	$(LIBVIRT_LIBS) \
 	$(POSTGRESQL_LIBS) \
 	$(MYSQL_LIBS) \
 	$(LIBXML2_LIBS)
 
-cf_agent_SOURCES = \
+libcf_agent_a_SOURCES = \
         agent-diagnostics.c agent-diagnostics.h \
         tokyo_check.c tokyo_check.h \
         abstract_dir.c abstract_dir.h \
@@ -67,22 +67,24 @@ cf_agent_SOURCES = \
         vercmp.c vercmp.h \
         verify_packages.c verify_packages.h
 
-libcf_agent_a_SOURCES = $(cf_agent_SOURCES)
-
 if !NT
-cf_agent_SOURCES += nfs.c nfs.h
+libcf_agent_a_SOURCES += nfs.c nfs.h
 endif
 
 if !HAVE_ENTERPRISE
-cf_agent_SOURCES += cf-agent-enterprise-stubs.c cf-agent-enterprise-stubs.h
+libcf_agent_a_SOURCES += cf-agent-enterprise-stubs.c cf-agent-enterprise-stubs.h
 endif
 
 if HAVE_AVAHI_CLIENT
 if HAVE_AVAHI_COMMON
-cf_agent_SOURCES += \
+libcf_agent_a_SOURCES += \
 		findhub.c findhub_priv.h findhub.h \
 		load_avahi.c load_avahi.h
 endif
+endif
+
+if !BUILTIN_EXTENSIONS
+ sbin_PROGRAMS = cf-agent
 endif
 
 CLEANFILES = *.gcno *.gcda

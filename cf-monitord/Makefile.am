@@ -1,4 +1,3 @@
-sbin_PROGRAMS = cf-monitord
 noinst_LIBRARIES = libcf-monitord.a
 
 AM_CPPFLAGS = @CPPFLAGS@ \
@@ -10,9 +9,10 @@ AM_CPPFLAGS = @CPPFLAGS@ \
 AM_CFLAGS = @CFLAGS@ \
 	$(ENTERPRISE_CFLAGS)
 
-cf_monitord_LDADD = ../libpromises/libpromises.la
+LDADD = libcf-monitord.a \
+	../libpromises/libpromises.la
 
-cf_monitord_SOURCES = \
+libcf_monitord_a_SOURCES = \
         verify_measurements.c verify_measurements.h \
         env_monitor.c env_monitor.h \
         mon.h \
@@ -26,10 +26,12 @@ cf_monitord_SOURCES = \
         mon_temp.c \
         cf-monitord.c
 
-libcf_monitord_a_SOURCES = $(cf_monitord_SOURCES)
+if !BUILTIN_EXTENSIONS
+ sbin_PROGRAMS = cf-monitord
+endif
 
 if !HAVE_ENTERPRISE
-cf_monitord_SOURCES += \
+libcf_monitord_a_SOURCES += \
 	cf-monitord-enterprise-stubs.c cf-monitord-enterprise-stubs.h
 endif
 

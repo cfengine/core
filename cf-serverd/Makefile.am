@@ -1,4 +1,3 @@
-sbin_PROGRAMS = cf-serverd
 noinst_LIBRARIES = libcf-serverd.a
 
 AM_CPPFLAGS = @CPPFLAGS@ -I$(srcdir)/../libpromises -I$(srcdir)/../libutils \
@@ -8,9 +7,10 @@ AM_CPPFLAGS = @CPPFLAGS@ -I$(srcdir)/../libpromises -I$(srcdir)/../libutils \
 AM_CFLAGS = @CFLAGS@ \
 	$(ENTERPRISE_CFLAGS)
 
-LDADD = ../libpromises/libpromises.la
+LDADD = libcf-serverd.a \
+	../libpromises/libpromises.la
 
-cf_serverd_SOURCES = \
+libcf_serverd_a_SOURCES = \
         cf-serverd.c \
         cf-serverd-functions.c \
         cf-serverd-functions.h \
@@ -18,11 +18,13 @@ cf_serverd_SOURCES = \
         server_transform.c server_transform.h
 
 if !HAVE_ENTERPRISE
-cf_serverd_SOURCES += \
+libcf_serverd_a_SOURCES += \
 	cf-serverd-enterprise-stubs.c cf-serverd-enterprise-stubs.h
 endif
 
-libcf_serverd_a_SOURCES = $(cf_serverd_SOURCES)
+if !BUILTIN_EXTENSIONS
+ sbin_PROGRAMS = cf-serverd
+endif
 
 CLEANFILES = *.gcno *.gcda
 

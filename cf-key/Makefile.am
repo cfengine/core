@@ -1,4 +1,4 @@
-sbin_PROGRAMS = cf-key
+noinst_LIBRARIES = libcf-key.a
 
 AM_CPPFLAGS = @CPPFLAGS@ \
 	-I$(srcdir)/../libutils \
@@ -9,12 +9,17 @@ AM_CPPFLAGS = @CPPFLAGS@ \
 AM_CFLAGS = @CFLAGS@ \
 	$(ENTERPRISE_CFLAGS)
 
-cf_key_SOURCES = \
+libcf_key_a_SOURCES = \
 	cf-key.c \
         cf-key-functions.c cf-key-functions.h
 
 
-LDADD = ../libpromises/libpromises.la
+LDADD = libcf-key.a ../libpromises/libpromises.la
+
+if !BUILTIN_EXTENSIONS
+ sbin_PROGRAMS = cf-key
+ cf_key_SOURCES =
+endif
 
 CLEANFILES = *.gcno *.gcda
 

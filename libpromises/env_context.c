@@ -712,6 +712,8 @@ static void StackFrameBundleDestroy(StackFrameBundle frame)
 {
     StringSetDestroy(frame.contexts);
     StringSetDestroy(frame.contexts_negated);
+
+    VariableTableDestroy(frame.vars);
 }
 
 static void StackFrameBodyDestroy(ARG_UNUSED StackFrameBody frame)
@@ -1021,6 +1023,7 @@ static StackFrame *StackFrameNewBundle(const Bundle *owner, bool inherit_previou
     frame->data.bundle.owner = owner;
     frame->data.bundle.contexts = StringSetNew();
     frame->data.bundle.contexts_negated = StringSetNew();
+    frame->data.bundle.vars = VariableTableNew();
 
     return frame;
 }
@@ -1074,14 +1077,6 @@ void EvalContextStackPushBundleFrame(EvalContext *ctx, const Bundle *owner, cons
     if (!ScopeGet(owner->ns, owner->name))
     {
         ScopeNew(owner->ns, owner->name);
-    }
-
-    if (strcmp(owner->type, "edit_line") == 0 || strcmp(owner->type, "edit_xml") == 0)
-    {
-        if (!ScopeGet(NULL, "edit"))
-        {
-            ScopeNew(NULL, "edit");
-        }
     }
 
     if (RlistLen(args) > 0)
@@ -1248,6 +1243,23 @@ char *EvalContextStackPath(const EvalContext *ctx)
     return StringWriterClose(path);
 }
 
+bool EvalContextVariablePutSpecial(EvalContext *ctx, SpecialScope scope, const char *lval, const void *value, DataType type)
+{
+    switch (scope)
+    {
+    case SPECIAL_SCOPE_EDIT:
+        {
+            VarRef ref = (VarRef) { NULL, SpecialScopeToString(scope), lval };
+            Rval rval = (Rval) { value, DataTypeToRvalType(type) };
+            return EvalContextVariablePut(ctx, &ref, rval, type);
+        }
+
+    default:
+        ScopeNewSpecial(ctx, scope, lval, value, type);
+        return false;
+    }
+}
+
 bool EvalContextVariablePut(EvalContext *ctx, const VarRef *ref, Rval rval, DataType type)
 {
     assert(type != DATA_TYPE_NONE);
@@ -1329,7 +1341,14 @@ bool EvalContextVariablePut(EvalContext *ctx, const VarRef *ref, Rval rval, Data
         assert(!ref->ns);
         assert(STACK_FRAME_TYPE_BODY == LastStackFrame(ctx, 0)->type);
     }
+    else if (strcmp("edit", ref->scope) == 0)
+    {
+        assert(!ref->ns);
+        StackFrame *frame = LastStackFrameBundle(ctx);
+        assert(frame && "Attempted to add an edit variable outside of any bundle evaluation");
 
+        return VariableTablePut(frame->data.bundle.vars, ref, &rval, type);
+    }
 
     Scope *put_scope = ScopeGet(ref->ns, ref->scope);
     if (!put_scope)
@@ -1393,6 +1412,13 @@ bool EvalContextVariableGet(const EvalContext *ctx, const VarRef *ref, Rval *rva
     Scope *get_scope = NULL;
     if (VarRefIsQualified(ref))
     {
+        if (strcmp(ref->scope, "edit") == 0)
+        {
+            StackFrame *frame = LastStackFrameBundle(ctx);
+            assert(frame && "Attempted to get variable from edit scope while not in bundle evaluation");
+            return VariableTableGet(frame->data.bundle.vars, ref);
+        }
+
         get_scope = ScopeGet(ref->ns, ref->scope);
     }
     else

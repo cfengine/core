@@ -31,6 +31,8 @@
 #include "set.h"
 #include "sequence.h"
 #include "var_expressions.h"
+#include "scope.h"
+#include "variable.h"
 
 typedef enum
 {
@@ -46,6 +48,8 @@ typedef struct
 
     StringSet *contexts;
     StringSet *contexts_negated;
+
+    VariableTable *vars;
 } StackFrameBundle;
 
 typedef struct
@@ -148,6 +152,8 @@ char *EvalContextStackPath(const EvalContext *ctx);
 const Promise *EvalContextStackGetTopPromise(const EvalContext *ctx);
 
 bool EvalContextVariablePut(EvalContext *ctx, const VarRef *ref, Rval rval, DataType type);
+bool EvalContextVariablePutSpecial(EvalContext *ctx, SpecialScope scope, const char *lval, const void *value, DataType type);
+
 bool EvalContextVariableGet(const EvalContext *ctx, const VarRef *ref, Rval *rval_out, DataType *type_out);
 
 bool EvalContextVariableControlCommonGet(const EvalContext *ctx, CommonControl lval, Rval *rval_out);

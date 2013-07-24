@@ -42,7 +42,7 @@ Scope *SCOPE_MATCH = NULL;
 
 /*******************************************************************/
 
-static const char *SpecialScopeToString(SpecialScope scope)
+const char *SpecialScopeToString(SpecialScope scope)
 {
     switch (scope)
     {
@@ -66,6 +66,7 @@ static const char *SpecialScopeToString(SpecialScope scope)
 Scope *ScopeNew(const char *ns, const char *scope)
 {
     assert(scope);
+    assert(strcmp(scope, "edit") != 0);
 
     if (!ns)
     {

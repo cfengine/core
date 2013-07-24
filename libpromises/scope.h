@@ -39,6 +39,8 @@ typedef enum
     SPECIAL_SCOPE_THIS
 } SpecialScope;
 
+const char *SpecialScopeToString(SpecialScope scope);
+
 /**
  * @deprecated
  */

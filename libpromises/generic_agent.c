@@ -1438,8 +1438,8 @@ static void CheckControlPromises(EvalContext *ctx, GenericAgentConfig *config, c
             ScopeDeleteSpecial(SPECIAL_SCOPE_SYS, "domain");
             ScopeDeleteSpecial(SPECIAL_SCOPE_SYS, "fqhost");
             snprintf(VFQNAME, CF_MAXVARSIZE, "%s.%s", VUQNAME, VDOMAIN);
-            ScopeNewSpecial(ctx, SPECIAL_SCOPE_SYS, "fqhost", VFQNAME, DATA_TYPE_STRING);
-            ScopeNewSpecial(ctx, SPECIAL_SCOPE_SYS, "domain", VDOMAIN, DATA_TYPE_STRING);
+            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "fqhost", VFQNAME, DATA_TYPE_STRING);
+            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "domain", VDOMAIN, DATA_TYPE_STRING);
             EvalContextHeapAddHard(ctx, VDOMAIN);
         }
 

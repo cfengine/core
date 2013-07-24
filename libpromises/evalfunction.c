@@ -1693,12 +1693,12 @@ static FnCallResult FnCallMapArray(EvalContext *ctx, FnCall *fp, Rlist *finalarg
 
             if (strlen(index) > 0)
             {
-                ScopeNewSpecial(ctx, SPECIAL_SCOPE_THIS, "k", index, DATA_TYPE_STRING);
+                EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "k", index, DATA_TYPE_STRING);
 
                 switch (assoc->rval.type)
                 {
                 case RVAL_TYPE_SCALAR:
-                    ScopeNewSpecial(ctx, SPECIAL_SCOPE_THIS, "v", assoc->rval.item, DATA_TYPE_STRING);
+                    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "v", assoc->rval.item, DATA_TYPE_STRING);
                     ExpandScalar(ctx, PromiseGetBundle(fp->caller)->ns, PromiseGetBundle(fp->caller)->name, map, expbuf);
 
                     if (strstr(expbuf, "$(this.k)") || strstr(expbuf, "${this.k}") ||
@@ -1717,7 +1717,7 @@ static FnCallResult FnCallMapArray(EvalContext *ctx, FnCall *fp, Rlist *finalarg
                 case RVAL_TYPE_LIST:
                     for (rp = assoc->rval.item; rp != NULL; rp = rp->next)
                     {
-                        ScopeNewSpecial(ctx, SPECIAL_SCOPE_THIS, "v", rp->item, DATA_TYPE_STRING);
+                        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "v", rp->item, DATA_TYPE_STRING);
                         ExpandScalar(ctx, PromiseGetBundle(fp->caller)->ns, PromiseGetBundle(fp->caller)->name, map, expbuf);
 
                         if (strstr(expbuf, "$(this.k)") || strstr(expbuf, "${this.k}") ||
@@ -1792,7 +1792,7 @@ static FnCallResult FnCallMapList(EvalContext *ctx, FnCall *fp, Rlist *finalargs
 
     for (const Rlist *rp = (const Rlist *) rval.item; rp != NULL; rp = rp->next)
     {
-        ScopeNewSpecial(ctx, SPECIAL_SCOPE_THIS, "this", (char *) rp->item, DATA_TYPE_STRING);
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "this", (char *) rp->item, DATA_TYPE_STRING);
 
         ExpandScalar(ctx, PromiseGetBundle(fp->caller)->ns, PromiseGetBundle(fp->caller)->name, map, expbuf);
 

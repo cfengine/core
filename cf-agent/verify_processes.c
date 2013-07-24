@@ -123,7 +123,7 @@ static void VerifyProcesses(EvalContext *ctx, Attributes a, Promise *pp)
         return;
     }
 
-    ScopeNewSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser", pp->promiser, DATA_TYPE_STRING);
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser", pp->promiser, DATA_TYPE_STRING);
     PromiseBanner(pp);
     VerifyProcessOp(ctx, PROCESSTABLE, a, pp);
     ScopeDeleteSpecial(SPECIAL_SCOPE_THIS, "promiser");

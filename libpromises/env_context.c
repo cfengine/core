@@ -1286,6 +1286,7 @@ bool EvalContextVariablePutSpecial(EvalContext *ctx, SpecialScope scope, const c
     switch (scope)
     {
     case SPECIAL_SCOPE_SYS:
+    case SPECIAL_SCOPE_MON:
     case SPECIAL_SCOPE_CONST:
     case SPECIAL_SCOPE_EDIT:
         {
@@ -1305,6 +1306,7 @@ bool EvalContextVariableRemoveSpecial(const EvalContext *ctx, SpecialScope scope
     switch (scope)
     {
     case SPECIAL_SCOPE_SYS:
+    case SPECIAL_SCOPE_MON:
     case SPECIAL_SCOPE_CONST:
     case SPECIAL_SCOPE_EDIT:
         {
@@ -1323,6 +1325,7 @@ static VariableTable *GetVariableTableForVarRef(const EvalContext *ctx, const Va
     switch (SpecialScopeFromString(ref->scope))
     {
     case SPECIAL_SCOPE_SYS:
+    case SPECIAL_SCOPE_MON:
     case SPECIAL_SCOPE_CONST:
         return ctx->global_variables;
 
@@ -1435,7 +1438,7 @@ bool EvalContextVariablePut(EvalContext *ctx, const VarRef *ref, Rval rval, Data
         VariableTable *table = GetVariableTableForVarRef(ctx, ref);
         return VariableTablePut(table, ref, &rval, type);
     }
-    else if (strcmp("const", ref->scope) == 0 || strcmp("sys", ref->scope) == 0)
+    else if (strcmp("const", ref->scope) == 0 || strcmp("sys", ref->scope) == 0 || strcmp("mon", ref->scope) == 0)
     {
         assert(!ref->ns);
         VariableTable *table = GetVariableTableForVarRef(ctx, ref);
@@ -1504,7 +1507,8 @@ bool EvalContextVariableGet(const EvalContext *ctx, const VarRef *ref, Rval *rva
     Scope *get_scope = NULL;
     if (VarRefIsQualified(ref))
     {
-        if (strcmp(ref->scope, "edit") == 0 || strcmp(ref->scope, "const") == 0 || strcmp(ref->scope, "sys") == 0)
+        if (strcmp(ref->scope, "edit") == 0 || strcmp(ref->scope, "const") == 0 || strcmp(ref->scope, "sys") == 0
+            || strcmp(ref->scope, "mon") == 0)
         {
             VariableTable *table = GetVariableTableForVarRef(ctx, ref);
             Variable *var = VariableTableGet(table, ref);

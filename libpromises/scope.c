@@ -99,6 +99,7 @@ Scope *ScopeNew(const char *ns, const char *scope)
 {
     assert(scope);
     assert(strcmp(scope, "edit") != 0);
+    assert(strcmp(scope, "const") != 0);
 
     if (!ns)
     {

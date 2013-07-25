@@ -118,7 +118,7 @@ dnl ######################################################################
 
 AC_ARG_ENABLE([builtin-extensions], [AS_HELP_STRING([Build binaries with builtin extensions (default)])],
               [],
-              [enable_builtin_extensions=yes])
+              [])
 AM_CONDITIONAL([BUILTIN_EXTENSIONS], [test "x$enable_builtin_extensions" = "xyes"])
 AS_IF([test "x$enable_builtin_extensions" = "xyes"], [AC_DEFINE([BUILTIN_EXTENSIONS], [1], [Define if you want builtin extensions])])
 

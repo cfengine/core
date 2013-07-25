@@ -1064,6 +1064,86 @@ static FnCallResult FnCallBundlesmatching(EvalContext *ctx, FnCall *fp, Rlist *f
 
 /*********************************************************************/
 
+static FnCallResult FnCallPackagesMatching(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
+{
+    char *regex_package = RlistScalarValue(finalargs);
+    char *regex_version = RlistScalarValue(finalargs->next);
+    char *regex_arch = RlistScalarValue(finalargs->next->next);
+    char *regex_method = RlistScalarValue(finalargs->next->next->next);
+
+    JsonElement *json = JsonArrayCreate(50);
+    char filename[CF_MAXVARSIZE], line[CF_BUFSIZE], regex[CF_BUFSIZE];
+    FILE *fin;
+
+    GetSoftwareCacheFilename(filename);
+
+    if ((fin = fopen(filename, "r")) == NULL)
+    {
+        Log(LOG_LEVEL_ERR, "%s cannot open the package inventory '%s' - you need to run a package discovery promise to create it in cf-agent. (fopen: %s)",
+            fp->name, filename, GetErrorStr());
+        JsonDestroy(json);
+        return (FnCallResult) { FNCALL_FAILURE };
+    }
+    
+    int linenumber = 0;
+    for(;;)
+    {
+        ssize_t res = CfReadLine(line, sizeof(line), fin);
+
+        if (res == 0)
+        {
+            break;
+        }
+
+        if (res == -1)
+        {
+            Log(LOG_LEVEL_ERR, "Unable to read package inventory from '%s'. (fread: %s)", filename, GetErrorStr());
+            fclose(fin);
+            JsonDestroy(json);
+            return (FnCallResult) { FNCALL_FAILURE };
+        }
+
+        if (strlen(line) > CF_BUFSIZE - 80)
+        {
+            Log(LOG_LEVEL_ERR, "Line %d from package inventory '%s' is too long to be sensible", linenumber, filename);
+            break;
+        }
+
+        memset(regex, 0, sizeof(regex));
+        // Here we will truncate the regex if the parameters add up to over CF_BUFSIZE
+        snprintf(regex, sizeof(regex)-1, "^%s,%s,%s,%s$", regex_package, regex_version, regex_arch, regex_method);
+
+        if (StringMatchFull(regex, line))
+        {
+            char name[CF_MAXVARSIZE], version[CF_MAXVARSIZE], arch[CF_MAXVARSIZE], method[CF_MAXVARSIZE];
+            JsonElement *line_obj = JsonObjectCreate(4);
+            int scancount = sscanf(line, "%250[^,],%250[^,],%250[^,],%250[^\n]", name, version, arch, method);
+            if (scancount != 4)
+            {
+                Log(LOG_LEVEL_ERR, "Line %d from package inventory '%s' did not yield 4 elements", linenumber, filename);
+                JsonDestroy(line_obj);
+                ++linenumber;
+                continue;
+            }
+
+            JsonObjectAppendString(line_obj, "name", name);
+            JsonObjectAppendString(line_obj, "version", version);
+            JsonObjectAppendString(line_obj, "arch", arch);
+            JsonObjectAppendString(line_obj, "method", method);
+            JsonArrayAppendObject(json, line_obj);
+        }
+
+        ++linenumber;
+    }
+
+    fclose(fin);
+
+    return (FnCallResult) { FNCALL_SUCCESS, (Rval) { json, RVAL_TYPE_CONTAINER } };
+
+}
+
+/*********************************************************************/
+
 static FnCallResult FnCallCanonify(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
     char buf[CF_BUFSIZE];
@@ -6131,6 +6211,15 @@ static const FnCallArg DATE_ARGS[] =
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
+static const FnCallArg PACKAGESMATCHING_ARGS[] =
+{
+    {CF_ANYSTRING, DATA_TYPE_STRING, "Regular expression (unanchored) to match package name"},
+    {CF_ANYSTRING, DATA_TYPE_STRING, "Regular expression (unanchored) to match package version"},
+    {CF_ANYSTRING, DATA_TYPE_STRING, "Regular expression (unanchored) to match package architecture"},
+    {CF_ANYSTRING, DATA_TYPE_STRING, "Regular expression (unanchored) to match package method"},
+    {NULL, DATA_TYPE_NONE, NULL}
+};
+
 static const FnCallArg PEERS_ARGS[] =
 {
     {CF_ABSPATHRANGE, DATA_TYPE_STRING, "File name of host list"},
@@ -6655,6 +6744,8 @@ const FnCallType CF_FNCALL_TYPES[] =
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("or", DATA_TYPE_STRING, OR_ARGS, &FnCallOr, "Calculate whether any argument evaluates to true",
                   FNCALL_OPTION_VARARG, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("packagesmatching", DATA_TYPE_CONTAINER, PACKAGESMATCHING_ARGS, &FnCallPackagesMatching, "List the defined packages (\"name,version,arch,manager\") matching regex arg1=name,arg2=version,arg3=arch,arg4=method",
+                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_SYSTEM, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("parseintarray", DATA_TYPE_INT, PARSESTRINGARRAY_ARGS, &FnCallParseIntArray, "Read an array of integers from a file and assign the dimension to a variable",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("parsejson", DATA_TYPE_CONTAINER, PARSEJSON_ARGS, &FnCallParseJson, "",

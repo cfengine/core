@@ -125,7 +125,7 @@ bool EvalContextHeapRemoveSoft(EvalContext *ctx, const char *context);
 bool EvalContextHeapRemoveHard(EvalContext *ctx, const char *context);
 void EvalContextStackFrameRemoveSoft(EvalContext *ctx, const char *context);
 
-void EvalContextHeapClear(EvalContext *ctx);
+void EvalContextClear(EvalContext *ctx);
 
 size_t EvalContextHeapMatchCountSoft(const EvalContext *ctx, const char *context_regex);
 size_t EvalContextHeapMatchCountHard(const EvalContext *ctx, const char *context_regex);

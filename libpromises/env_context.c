@@ -950,11 +950,14 @@ bool EvalContextHeapRemoveHard(EvalContext *ctx, const char *context)
     return StringSetRemove(ctx->heap_hard, context);
 }
 
-void EvalContextHeapClear(EvalContext *ctx)
+void EvalContextClear(EvalContext *ctx)
 {
     StringSetClear(ctx->heap_soft);
     StringSetClear(ctx->heap_hard);
     StringSetClear(ctx->heap_negated);
+
+    VariableTableClear(ctx->global_variables, NULL, NULL, NULL);
+    SeqClear(ctx->stack);
 }
 
 static size_t StringSetMatchCount(StringSet *set, const char *regex)
@@ -1208,7 +1211,6 @@ void EvalContextStackPopFrame(EvalContext *ctx)
             const Bundle *bp = last_frame->data.bundle.owner;
             if (strcmp(bp->type, "edit_line") == 0 || strcmp(bp->type, "edit_xml") == 0)
             {
-                ScopeClearSpecial(SPECIAL_SCOPE_EDIT);
                 ScopeClear(bp->ns, bp->name);
             }
         }

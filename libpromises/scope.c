@@ -63,6 +63,38 @@ const char *SpecialScopeToString(SpecialScope scope)
     }
 }
 
+SpecialScope SpecialScopeFromString(const char *scope)
+{
+    if (strcmp("const", scope) == 0)
+    {
+        return SPECIAL_SCOPE_CONST;
+    }
+    else if (strcmp("edit", scope) == 0)
+    {
+        return SPECIAL_SCOPE_EDIT;
+    }
+    else if (strcmp("match", scope) == 0)
+    {
+        return SPECIAL_SCOPE_MATCH;
+    }
+    else if (strcmp("mon", scope) == 0)
+    {
+        return SPECIAL_SCOPE_MON;
+    }
+    else if (strcmp("sys", scope) == 0)
+    {
+        return SPECIAL_SCOPE_SYS;
+    }
+    else if (strcmp("this", scope) == 0)
+    {
+        return SPECIAL_SCOPE_THIS;
+    }
+    else
+    {
+        return SPECIAL_SCOPE_NONE;
+    }
+}
+
 Scope *ScopeNew(const char *ns, const char *scope)
 {
     assert(scope);

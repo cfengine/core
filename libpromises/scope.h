@@ -36,10 +36,13 @@ typedef enum
     SPECIAL_SCOPE_MATCH,
     SPECIAL_SCOPE_MON,
     SPECIAL_SCOPE_SYS,
-    SPECIAL_SCOPE_THIS
+    SPECIAL_SCOPE_THIS,
+
+    SPECIAL_SCOPE_NONE
 } SpecialScope;
 
 const char *SpecialScopeToString(SpecialScope scope);
+SpecialScope SpecialScopeFromString(const char *scope);
 
 /**
  * @deprecated

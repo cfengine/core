@@ -1435,8 +1435,8 @@ static void CheckControlPromises(EvalContext *ctx, GenericAgentConfig *config, c
         {
             strcpy(VDOMAIN, cp->rval.item);
             Log(LOG_LEVEL_VERBOSE, "SET domain = %s", VDOMAIN);
-            ScopeDeleteSpecial(SPECIAL_SCOPE_SYS, "domain");
-            ScopeDeleteSpecial(SPECIAL_SCOPE_SYS, "fqhost");
+            EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_SYS, "domain");
+            EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_SYS, "fqhost");
             snprintf(VFQNAME, CF_MAXVARSIZE, "%s.%s", VUQNAME, VDOMAIN);
             EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "fqhost", VFQNAME, DATA_TYPE_STRING);
             EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "domain", VDOMAIN, DATA_TYPE_STRING);

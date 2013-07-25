@@ -1260,6 +1260,45 @@ bool EvalContextVariablePutSpecial(EvalContext *ctx, SpecialScope scope, const c
     }
 }
 
+bool EvalContextVariableRemoveSpecial(const EvalContext *ctx, SpecialScope scope, const char *lval)
+{
+    switch (scope)
+    {
+    case SPECIAL_SCOPE_EDIT:
+        {
+            VarRef ref = (VarRef) { NULL, SpecialScopeToString(scope), lval };
+            return EvalContextVariableRemove(ctx, &ref);
+        }
+
+    default:
+        ScopeDeleteSpecial(scope, lval);
+        return false;
+    }
+}
+
+static VariableTable *GetVariableTableForVarRef(const EvalContext *ctx, const VarRef *ref)
+{
+    switch (SpecialScopeFromString(ref->scope))
+    {
+    case SPECIAL_SCOPE_EDIT:
+        {
+            assert(!ref->ns);
+            StackFrame *frame = LastStackFrameBundle(ctx);
+            assert(frame);
+            return frame->data.bundle.vars;
+        }
+
+    default:
+        return NULL;
+    }
+}
+
+bool EvalContextVariableRemove(const EvalContext *ctx, const VarRef *ref)
+{
+    VariableTable *table = GetVariableTableForVarRef(ctx, ref);
+    return VariableTableRemove(table, ref);
+}
+
 bool EvalContextVariablePut(EvalContext *ctx, const VarRef *ref, Rval rval, DataType type)
 {
     assert(type != DATA_TYPE_NONE);
@@ -1347,7 +1386,8 @@ bool EvalContextVariablePut(EvalContext *ctx, const VarRef *ref, Rval rval, Data
         StackFrame *frame = LastStackFrameBundle(ctx);
         assert(frame && "Attempted to add an edit variable outside of any bundle evaluation");
 
-        return VariableTablePut(frame->data.bundle.vars, ref, &rval, type);
+        VariableTable *table = GetVariableTableForVarRef(ctx, ref);
+        return VariableTablePut(table, ref, &rval, type);
     }
 
     Scope *put_scope = ScopeGet(ref->ns, ref->scope);

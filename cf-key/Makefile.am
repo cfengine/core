@@ -1,4 +1,4 @@
-noinst_LIBRARIES = libcf-key.a
+noinst_LTLIBRARIES = libcf-key.la
 
 AM_CPPFLAGS = @CPPFLAGS@ \
 	-I$(srcdir)/../libutils \
@@ -9,15 +9,16 @@ AM_CPPFLAGS = @CPPFLAGS@ \
 AM_CFLAGS = @CFLAGS@ \
 	$(ENTERPRISE_CFLAGS)
 
-libcf_key_a_SOURCES = \
+libcf_key_la_SOURCES = \
 	cf-key.c \
         cf-key-functions.c cf-key-functions.h
 
 
-LDADD = libcf-key.a ../libpromises/libpromises.la
+libcf_key_la_LIBADD = ../libpromises/libpromises.la
 
 if !BUILTIN_EXTENSIONS
  sbin_PROGRAMS = cf-key
+ cf_key_LDADD = libcf-key.la
  cf_key_SOURCES =
 endif
 

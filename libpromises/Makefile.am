@@ -1,4 +1,9 @@
-projlib_LTLIBRARIES = libpromises.la
+if !BUILTIN_EXTENSIONS
+ projlib_LTLIBRARIES = libpromises.la
+ libpromises_la_LDFLAGS = -version-info 3:5:0 -no-undefined
+else
+ noinst_LTLIBRARIES = libpromises.la
+endif
 
 AM_CPPFLAGS = @CPPFLAGS@ -I$(srcdir)/../libutils -I $(srcdir)/../libcfnet \
 	$(ENTERPRISE_CPPFLAGS)
@@ -7,8 +12,6 @@ AM_CFLAGS = @CFLAGS@ \
 	$(ENTERPRISE_CFLAGS)
 
 AM_YFLAGS = -d
-
-AM_LDFLAGS = -version-info 3:5:0 -no-undefined
 
 libpromises_la_LIBADD = ../libutils/libutils.la ../libcfnet/libcfnet.la $(ENTERPRISE_LDADD)
 

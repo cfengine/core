@@ -1,4 +1,4 @@
-noinst_LIBRARIES = libcf-monitord.a
+noinst_LTLIBRARIES = libcf-monitord.la
 
 AM_CPPFLAGS = @CPPFLAGS@ \
 	-I$(srcdir)/../libutils \
@@ -9,10 +9,9 @@ AM_CPPFLAGS = @CPPFLAGS@ \
 AM_CFLAGS = @CFLAGS@ \
 	$(ENTERPRISE_CFLAGS)
 
-LDADD = libcf-monitord.a \
-	../libpromises/libpromises.la
+LDADD = ../libpromises/libpromises.la
 
-libcf_monitord_a_SOURCES = \
+libcf_monitord_la_SOURCES = \
         verify_measurements.c verify_measurements.h \
         env_monitor.c env_monitor.h \
         mon.h \
@@ -28,10 +27,13 @@ libcf_monitord_a_SOURCES = \
 
 if !BUILTIN_EXTENSIONS
  sbin_PROGRAMS = cf-monitord
+ # Workaround for automake madness (try removing it if you want to know why).
+ cf_monitord_CFLAGS = $(AM_CFLAGS)
+ cf_monitord_LDADD = libcf-monitord.la
 endif
 
 if !HAVE_ENTERPRISE
-libcf_monitord_a_SOURCES += \
+libcf_monitord_la_SOURCES += \
 	cf-monitord-enterprise-stubs.c cf-monitord-enterprise-stubs.h
 endif
 

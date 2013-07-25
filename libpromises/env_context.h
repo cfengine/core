@@ -94,6 +94,7 @@ struct EvalContext_
     Item *heap_abort_current_bundle;
 
     Seq *stack;
+    VariableTable *global_variables;
 
     StringSet *dependency_handles;
 

@@ -784,6 +784,7 @@ EvalContext *EvalContextNew(void)
     ctx->heap_abort_current_bundle = NULL;
 
     ctx->stack = SeqNew(10, StackFrameDestroy);
+    ctx->global_variables = VariableTableNew();
 
     ctx->dependency_handles = StringSetNew();
 
@@ -803,6 +804,7 @@ void EvalContextDestroy(EvalContext *ctx)
         DeleteItemList(ctx->heap_abort_current_bundle);
 
         SeqDestroy(ctx->stack);
+        VariableTableDestroy(ctx->global_variables);
         ScopeDeleteAll();
 
         StringSetDestroy(ctx->dependency_handles);
@@ -1264,6 +1266,7 @@ bool EvalContextVariableRemoveSpecial(const EvalContext *ctx, SpecialScope scope
 {
     switch (scope)
     {
+    case SPECIAL_SCOPE_CONST:
     case SPECIAL_SCOPE_EDIT:
         {
             VarRef ref = (VarRef) { NULL, SpecialScopeToString(scope), lval };
@@ -1280,6 +1283,9 @@ static VariableTable *GetVariableTableForVarRef(const EvalContext *ctx, const Va
 {
     switch (SpecialScopeFromString(ref->scope))
     {
+    case SPECIAL_SCOPE_CONST:
+        return ctx->global_variables;
+
     case SPECIAL_SCOPE_EDIT:
         {
             assert(!ref->ns);
@@ -1389,6 +1395,12 @@ bool EvalContextVariablePut(EvalContext *ctx, const VarRef *ref, Rval rval, Data
         VariableTable *table = GetVariableTableForVarRef(ctx, ref);
         return VariableTablePut(table, ref, &rval, type);
     }
+    else if (strcmp("const", ref->scope) == 0)
+    {
+        assert(!ref->ns);
+        VariableTable *table = GetVariableTableForVarRef(ctx, ref);
+        return VariableTablePut(table, ref, &rval, type);
+    }
 
     Scope *put_scope = ScopeGet(ref->ns, ref->scope);
     if (!put_scope)
@@ -1452,11 +1464,34 @@ bool EvalContextVariableGet(const EvalContext *ctx, const VarRef *ref, Rval *rva
     Scope *get_scope = NULL;
     if (VarRefIsQualified(ref))
     {
-        if (strcmp(ref->scope, "edit") == 0)
+        if (strcmp(ref->scope, "edit") == 0 || strcmp(ref->scope, "const") == 0)
         {
-            StackFrame *frame = LastStackFrameBundle(ctx);
-            assert(frame && "Attempted to get variable from edit scope while not in bundle evaluation");
-            return VariableTableGet(frame->data.bundle.vars, ref);
+            VariableTable *table = GetVariableTableForVarRef(ctx, ref);
+            Variable *var = VariableTableGet(table, ref);
+            if (var)
+            {
+                if (rval_out)
+                {
+                    *rval_out = var->rval;
+                }
+                if (type_out)
+                {
+                    *type_out = var->type;
+                }
+                return true;
+            }
+            else
+            {
+                if (rval_out)
+                {
+                    *rval_out = (Rval) {NULL, RVAL_TYPE_SCALAR };
+                }
+                if (type_out)
+                {
+                    *type_out = DATA_TYPE_NONE;
+                }
+                return false;
+            }
         }
 
         get_scope = ScopeGet(ref->ns, ref->scope);

@@ -98,7 +98,7 @@
 #endif
 
 #define ENTERPRISE_CANARY_VALUE 0x10203040
-#define ENTERPRISE_LIBRARY_NAME "./cfengine-enterprise.so"
+#define ENTERPRISE_LIBRARY_NAME "/var/cfengine/lib/cfengine-enterprise.so"
 
 void *shlib_open(const char *lib_name);
 void *shlib_load(void *handle, const char *symbol_name);
@@ -242,37 +242,37 @@ void shlib_close(void *handle);
     __ret __func##__real(__t1 __p1, __t2 __p2, __t3 __p3, __t4 __p4, __t5 __p5, __t6 __p6, __t7 __p7, __t8 __p8, __t9 __p9, __t10 __p10, __t11 __p11, __t12 __p12, __t13 __p13, __t14 __p14, __t15 __p15)
 
 # define ENTERPRISE_FUNC_0ARG_INLINE_SIGNATURE(__ret, __func) \
-    inline __ret __func()
+    inline static __ret __func()
 # define ENTERPRISE_FUNC_1ARG_INLINE_SIGNATURE(__ret, __func, __t1, __p1) \
-    inline __ret __func(__t1 __p1)
+    inline static __ret __func(__t1 __p1)
 # define ENTERPRISE_FUNC_2ARG_INLINE_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2) \
-    inline __ret __func(__t1 __p1, __t2 __p2)
+    inline static __ret __func(__t1 __p1, __t2 __p2)
 # define ENTERPRISE_FUNC_3ARG_INLINE_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3) \
-    inline __ret __func(__t1 __p1, __t2 __p2, __t3 __p3)
+    inline static __ret __func(__t1 __p1, __t2 __p2, __t3 __p3)
 # define ENTERPRISE_FUNC_4ARG_INLINE_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4) \
-    inline __ret __func(__t1 __p1, __t2 __p2, __t3 __p3, __t4 __p4)
+    inline static __ret __func(__t1 __p1, __t2 __p2, __t3 __p3, __t4 __p4)
 # define ENTERPRISE_FUNC_5ARG_INLINE_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5) \
-    inline __ret __func(__t1 __p1, __t2 __p2, __t3 __p3, __t4 __p4, __t5 __p5)
+    inline static __ret __func(__t1 __p1, __t2 __p2, __t3 __p3, __t4 __p4, __t5 __p5)
 # define ENTERPRISE_FUNC_6ARG_INLINE_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6) \
-    inline __ret __func(__t1 __p1, __t2 __p2, __t3 __p3, __t4 __p4, __t5 __p5, __t6 __p6)
+    inline static __ret __func(__t1 __p1, __t2 __p2, __t3 __p3, __t4 __p4, __t5 __p5, __t6 __p6)
 # define ENTERPRISE_FUNC_7ARG_INLINE_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7) \
-    inline __ret __func(__t1 __p1, __t2 __p2, __t3 __p3, __t4 __p4, __t5 __p5, __t6 __p6, __t7 __p7)
+    inline static __ret __func(__t1 __p1, __t2 __p2, __t3 __p3, __t4 __p4, __t5 __p5, __t6 __p6, __t7 __p7)
 # define ENTERPRISE_FUNC_8ARG_INLINE_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8) \
-    inline __ret __func(__t1 __p1, __t2 __p2, __t3 __p3, __t4 __p4, __t5 __p5, __t6 __p6, __t7 __p7, __t8 __p8)
+    inline static __ret __func(__t1 __p1, __t2 __p2, __t3 __p3, __t4 __p4, __t5 __p5, __t6 __p6, __t7 __p7, __t8 __p8)
 # define ENTERPRISE_FUNC_9ARG_INLINE_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9) \
-    inline __ret __func(__t1 __p1, __t2 __p2, __t3 __p3, __t4 __p4, __t5 __p5, __t6 __p6, __t7 __p7, __t8 __p8, __t9 __p9)
+    inline static __ret __func(__t1 __p1, __t2 __p2, __t3 __p3, __t4 __p4, __t5 __p5, __t6 __p6, __t7 __p7, __t8 __p8, __t9 __p9)
 # define ENTERPRISE_FUNC_10ARG_INLINE_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10) \
-    inline __ret __func(__t1 __p1, __t2 __p2, __t3 __p3, __t4 __p4, __t5 __p5, __t6 __p6, __t7 __p7, __t8 __p8, __t9 __p9, __t10 __p10)
+    inline static __ret __func(__t1 __p1, __t2 __p2, __t3 __p3, __t4 __p4, __t5 __p5, __t6 __p6, __t7 __p7, __t8 __p8, __t9 __p9, __t10 __p10)
 # define ENTERPRISE_FUNC_11ARG_INLINE_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11) \
-    inline __ret __func(__t1 __p1, __t2 __p2, __t3 __p3, __t4 __p4, __t5 __p5, __t6 __p6, __t7 __p7, __t8 __p8, __t9 __p9, __t10 __p10, __t11 __p11)
+    inline static __ret __func(__t1 __p1, __t2 __p2, __t3 __p3, __t4 __p4, __t5 __p5, __t6 __p6, __t7 __p7, __t8 __p8, __t9 __p9, __t10 __p10, __t11 __p11)
 # define ENTERPRISE_FUNC_12ARG_INLINE_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12) \
-    inline __ret __func(__t1 __p1, __t2 __p2, __t3 __p3, __t4 __p4, __t5 __p5, __t6 __p6, __t7 __p7, __t8 __p8, __t9 __p9, __t10 __p10, __t11 __p11, __t12 __p12)
+    inline static __ret __func(__t1 __p1, __t2 __p2, __t3 __p3, __t4 __p4, __t5 __p5, __t6 __p6, __t7 __p7, __t8 __p8, __t9 __p9, __t10 __p10, __t11 __p11, __t12 __p12)
 # define ENTERPRISE_FUNC_13ARG_INLINE_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13) \
-    inline __ret __func(__t1 __p1, __t2 __p2, __t3 __p3, __t4 __p4, __t5 __p5, __t6 __p6, __t7 __p7, __t8 __p8, __t9 __p9, __t10 __p10, __t11 __p11, __t12 __p12, __t13 __p13)
+    inline static __ret __func(__t1 __p1, __t2 __p2, __t3 __p3, __t4 __p4, __t5 __p5, __t6 __p6, __t7 __p7, __t8 __p8, __t9 __p9, __t10 __p10, __t11 __p11, __t12 __p12, __t13 __p13)
 # define ENTERPRISE_FUNC_14ARG_INLINE_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13, __t14, __p14) \
-    inline __ret __func(__t1 __p1, __t2 __p2, __t3 __p3, __t4 __p4, __t5 __p5, __t6 __p6, __t7 __p7, __t8 __p8, __t9 __p9, __t10 __p10, __t11 __p11, __t12 __p12, __t13 __p13, __t14 __p14)
+    inline static __ret __func(__t1 __p1, __t2 __p2, __t3 __p3, __t4 __p4, __t5 __p5, __t6 __p6, __t7 __p7, __t8 __p8, __t9 __p9, __t10 __p10, __t11 __p11, __t12 __p12, __t13 __p13, __t14 __p14)
 # define ENTERPRISE_FUNC_15ARG_INLINE_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13, __t14, __p14, __t15, __p15) \
-    inline __ret __func(__t1 __p1, __t2 __p2, __t3 __p3, __t4 __p4, __t5 __p5, __t6 __p6, __t7 __p7, __t8 __p8, __t9 __p9, __t10 __p10, __t11 __p11, __t12 __p12, __t13 __p13, __t14 __p14, __t15 __p15)
+    inline static __ret __func(__t1 __p1, __t2 __p2, __t3 __p3, __t4 __p4, __t5 __p5, __t6 __p6, __t7 __p7, __t8 __p8, __t9 __p9, __t10 __p10, __t11 __p11, __t12 __p12, __t13 __p13, __t14 __p14, __t15 __p15)
 
 #endif // !BUILDING_CORE
 
@@ -303,7 +303,7 @@ void shlib_close(void *handle);
 # define ENTERPRISE_FUNC_0ARG_DECLARE_IMPL(__ret, __func, __ret__assign, __ret__ref) \
     typedef __ret (*__func##__type)(int32_t __start_canary, int *__successful, int32_t __end_canary); \
     ENTERPRISE_FUNC_0ARG_REAL_SIGNATURE(__ret, __func); \
-    inline ENTERPRISE_FUNC_0ARG_WRAPPER_SIGNATURE(__ret, __func) \
+    inline static ENTERPRISE_FUNC_0ARG_WRAPPER_SIGNATURE(__ret, __func) \
         ENTERPRISE_FUNC_IMPL_LOADER(__ret, __func, __ret__assign, __ret__ref, \
                                 (ENTERPRISE_CANARY_VALUE, &__successful, ENTERPRISE_CANARY_VALUE), \
                                 ()) \
@@ -312,7 +312,7 @@ void shlib_close(void *handle);
 # define ENTERPRISE_FUNC_1ARG_DECLARE_IMPL(__ret, __func, __ret__assign, __ret__ref, __t1, __p1) \
     typedef __ret (*__func##__type)(int32_t __start_canary, int *__successful, __t1 __p1, int32_t __end_canary); \
     ENTERPRISE_FUNC_1ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1); \
-    inline ENTERPRISE_FUNC_1ARG_WRAPPER_SIGNATURE(__ret, __func, __t1, __p1) \
+    inline static ENTERPRISE_FUNC_1ARG_WRAPPER_SIGNATURE(__ret, __func, __t1, __p1) \
         ENTERPRISE_FUNC_IMPL_LOADER(__ret, __func, __ret__assign, __ret__ref, \
                                 (ENTERPRISE_CANARY_VALUE, &__successful, __p1, ENTERPRISE_CANARY_VALUE), \
                                 (__p1)) \
@@ -321,7 +321,7 @@ void shlib_close(void *handle);
 # define ENTERPRISE_FUNC_2ARG_DECLARE_IMPL(__ret, __func, __ret__assign, __ret__ref, __t1, __p1, __t2, __p2) \
     typedef __ret (*__func##__type)(int32_t __start_canary, int *__successful, __t1 __p1, __t2 __p2, int32_t __end_canary); \
     ENTERPRISE_FUNC_2ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2); \
-    inline ENTERPRISE_FUNC_2ARG_WRAPPER_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2) \
+    inline static ENTERPRISE_FUNC_2ARG_WRAPPER_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2) \
         ENTERPRISE_FUNC_IMPL_LOADER(__ret, __func, __ret__assign, __ret__ref, \
                                 (ENTERPRISE_CANARY_VALUE, &__successful, __p1, __p2, ENTERPRISE_CANARY_VALUE), \
                                 (__p1, __p2)) \
@@ -330,7 +330,7 @@ void shlib_close(void *handle);
 # define ENTERPRISE_FUNC_3ARG_DECLARE_IMPL(__ret, __func, __ret__assign, __ret__ref, __t1, __p1, __t2, __p2, __t3, __p3) \
     typedef __ret (*__func##__type)(int32_t __start_canary, int *__successful, __t1 __p1, __t2 __p2, __t3 __p3, int32_t __end_canary); \
     ENTERPRISE_FUNC_3ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3); \
-    inline ENTERPRISE_FUNC_3ARG_WRAPPER_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3) \
+    inline static ENTERPRISE_FUNC_3ARG_WRAPPER_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3) \
         ENTERPRISE_FUNC_IMPL_LOADER(__ret, __func, __ret__assign, __ret__ref, \
                                 (ENTERPRISE_CANARY_VALUE, &__successful, __p1, __p2, __p3, ENTERPRISE_CANARY_VALUE), \
                                 (__p1, __p2, __p3)) \
@@ -339,7 +339,7 @@ void shlib_close(void *handle);
 # define ENTERPRISE_FUNC_4ARG_DECLARE_IMPL(__ret, __func, __ret__assign, __ret__ref, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4) \
     typedef __ret (*__func##__type)(int32_t __start_canary, int *__successful, __t1 __p1, __t2 __p2, __t3 __p3, __t4 __p4, int32_t __end_canary); \
     ENTERPRISE_FUNC_4ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4); \
-    inline ENTERPRISE_FUNC_4ARG_WRAPPER_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4) \
+    inline static ENTERPRISE_FUNC_4ARG_WRAPPER_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4) \
         ENTERPRISE_FUNC_IMPL_LOADER(__ret, __func, __ret__assign, __ret__ref, \
                                 (ENTERPRISE_CANARY_VALUE, &__successful, __p1, __p2, __p3, __p4, ENTERPRISE_CANARY_VALUE), \
                                 (__p1, __p2, __p3, __p4)) \
@@ -348,7 +348,7 @@ void shlib_close(void *handle);
 # define ENTERPRISE_FUNC_5ARG_DECLARE_IMPL(__ret, __func, __ret__assign, __ret__ref, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5) \
     typedef __ret (*__func##__type)(int32_t __start_canary, int *__successful, __t1 __p1, __t2 __p2, __t3 __p3, __t4 __p4, __t5 __p5, int32_t __end_canary); \
     ENTERPRISE_FUNC_5ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5); \
-    inline ENTERPRISE_FUNC_5ARG_WRAPPER_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5) \
+    inline static ENTERPRISE_FUNC_5ARG_WRAPPER_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5) \
         ENTERPRISE_FUNC_IMPL_LOADER(__ret, __func, __ret__assign, __ret__ref, \
                                 (ENTERPRISE_CANARY_VALUE, &__successful, __p1, __p2, __p3, __p4, __p5, ENTERPRISE_CANARY_VALUE), \
                                 (__p1, __p2, __p3, __p4, __p5)) \
@@ -357,7 +357,7 @@ void shlib_close(void *handle);
 # define ENTERPRISE_FUNC_6ARG_DECLARE_IMPL(__ret, __func, __ret__assign, __ret__ref, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6) \
     typedef __ret (*__func##__type)(int32_t __start_canary, int *__successful, __t1 __p1, __t2 __p2, __t3 __p3, __t4 __p4, __t5 __p5, __t6 __p6, int32_t __end_canary); \
     ENTERPRISE_FUNC_6ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6); \
-    inline ENTERPRISE_FUNC_6ARG_WRAPPER_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6) \
+    inline static ENTERPRISE_FUNC_6ARG_WRAPPER_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6) \
         ENTERPRISE_FUNC_IMPL_LOADER(__ret, __func, __ret__assign, __ret__ref, \
                                 (ENTERPRISE_CANARY_VALUE, &__successful, __p1, __p2, __p3, __p4, __p5, __p6, ENTERPRISE_CANARY_VALUE), \
                                 (__p1, __p2, __p3, __p4, __p5, __p6)) \
@@ -366,7 +366,7 @@ void shlib_close(void *handle);
 # define ENTERPRISE_FUNC_7ARG_DECLARE_IMPL(__ret, __func, __ret__assign, __ret__ref, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7) \
     typedef __ret (*__func##__type)(int32_t __start_canary, int *__successful, __t1 __p1, __t2 __p2, __t3 __p3, __t4 __p4, __t5 __p5, __t6 __p6, __t7 __p7, int32_t __end_canary); \
     ENTERPRISE_FUNC_7ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7); \
-    inline ENTERPRISE_FUNC_7ARG_WRAPPER_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7) \
+    inline static ENTERPRISE_FUNC_7ARG_WRAPPER_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7) \
         ENTERPRISE_FUNC_IMPL_LOADER(__ret, __func, __ret__assign, __ret__ref, \
                                 (ENTERPRISE_CANARY_VALUE, &__successful, __p1, __p2, __p3, __p4, __p5, __p6, __p7, ENTERPRISE_CANARY_VALUE), \
                                 (__p1, __p2, __p3, __p4, __p5, __p6, __p7)) \
@@ -375,7 +375,7 @@ void shlib_close(void *handle);
 # define ENTERPRISE_FUNC_8ARG_DECLARE_IMPL(__ret, __func, __ret__assign, __ret__ref, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8) \
     typedef __ret (*__func##__type)(int32_t __start_canary, int *__successful, __t1 __p1, __t2 __p2, __t3 __p3, __t4 __p4, __t5 __p5, __t6 __p6, __t7 __p7, __t8 __p8, int32_t __end_canary); \
     ENTERPRISE_FUNC_8ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8); \
-    inline ENTERPRISE_FUNC_8ARG_WRAPPER_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8) \
+    inline static ENTERPRISE_FUNC_8ARG_WRAPPER_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8) \
         ENTERPRISE_FUNC_IMPL_LOADER(__ret, __func, __ret__assign, __ret__ref, \
                                 (ENTERPRISE_CANARY_VALUE, &__successful, __p1, __p2, __p3, __p4, __p5, __p6, __p7, __p8, ENTERPRISE_CANARY_VALUE), \
                                 (__p1, __p2, __p3, __p4, __p5, __p6, __p7, __p8)) \
@@ -384,7 +384,7 @@ void shlib_close(void *handle);
 # define ENTERPRISE_FUNC_9ARG_DECLARE_IMPL(__ret, __func, __ret__assign, __ret__ref, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9) \
     typedef __ret (*__func##__type)(int32_t __start_canary, int *__successful, __t1 __p1, __t2 __p2, __t3 __p3, __t4 __p4, __t5 __p5, __t6 __p6, __t7 __p7, __t8 __p8, __t9 __p9, int32_t __end_canary); \
     ENTERPRISE_FUNC_9ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9); \
-    inline ENTERPRISE_FUNC_9ARG_WRAPPER_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9) \
+    inline static ENTERPRISE_FUNC_9ARG_WRAPPER_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9) \
         ENTERPRISE_FUNC_IMPL_LOADER(__ret, __func, __ret__assign, __ret__ref, \
                                 (ENTERPRISE_CANARY_VALUE, &__successful, __p1, __p2, __p3, __p4, __p5, __p6, __p7, __p8, __p9, ENTERPRISE_CANARY_VALUE), \
                                 (__p1, __p2, __p3, __p4, __p5, __p6, __p7, __p8, __p9)) \
@@ -392,7 +392,7 @@ void shlib_close(void *handle);
 # define ENTERPRISE_FUNC_10ARG_DECLARE_IMPL(__ret, __func, __ret__assign, __ret__ref, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10) \
     typedef __ret (*__func##__type)(int32_t __start_canary, int *__successful, __t1 __p1, __t2 __p2, __t3 __p3, __t4 __p4, __t5 __p5, __t6 __p6, __t7 __p7, __t8 __p8, __t9 __p9, __t10 __p10, int32_t __end_canary); \
     ENTERPRISE_FUNC_10ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10); \
-    inline ENTERPRISE_FUNC_10ARG_WRAPPER_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10) \
+    inline static ENTERPRISE_FUNC_10ARG_WRAPPER_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10) \
         ENTERPRISE_FUNC_IMPL_LOADER(__ret, __func, __ret__assign, __ret__ref, \
                                 (ENTERPRISE_CANARY_VALUE, &__successful, __p1, __p2, __p3, __p4, __p5, __p6, __p7, __p8, __p9, __p10, ENTERPRISE_CANARY_VALUE), \
                                 (__p1, __p2, __p3, __p4, __p5, __p6, __p7, __p8, __p9, __p10)) \
@@ -400,7 +400,7 @@ void shlib_close(void *handle);
 # define ENTERPRISE_FUNC_11ARG_DECLARE_IMPL(__ret, __func, __ret__assign, __ret__ref, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11) \
     typedef __ret (*__func##__type)(int32_t __start_canary, int *__successful, __t1 __p1, __t2 __p2, __t3 __p3, __t4 __p4, __t5 __p5, __t6 __p6, __t7 __p7, __t8 __p8, __t9 __p9, __t10 __p10, __t11 __p11, int32_t __end_canary); \
     ENTERPRISE_FUNC_11ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11); \
-    inline ENTERPRISE_FUNC_11ARG_WRAPPER_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11) \
+    inline static ENTERPRISE_FUNC_11ARG_WRAPPER_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11) \
         ENTERPRISE_FUNC_IMPL_LOADER(__ret, __func, __ret__assign, __ret__ref, \
                                 (ENTERPRISE_CANARY_VALUE, &__successful, __p1, __p2, __p3, __p4, __p5, __p6, __p7, __p8, __p9, __p10, __p11, ENTERPRISE_CANARY_VALUE), \
                                 (__p1, __p2, __p3, __p4, __p5, __p6, __p7, __p8, __p9, __p10, __p11)) \
@@ -408,7 +408,7 @@ void shlib_close(void *handle);
 # define ENTERPRISE_FUNC_12ARG_DECLARE_IMPL(__ret, __func, __ret__assign, __ret__ref, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12) \
     typedef __ret (*__func##__type)(int32_t __start_canary, int *__successful, __t1 __p1, __t2 __p2, __t3 __p3, __t4 __p4, __t5 __p5, __t6 __p6, __t7 __p7, __t8 __p8, __t9 __p9, __t10 __p10, __t11 __p11, __t12 __p12, int32_t __end_canary); \
     ENTERPRISE_FUNC_12ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12); \
-    inline ENTERPRISE_FUNC_12ARG_WRAPPER_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12) \
+    inline static ENTERPRISE_FUNC_12ARG_WRAPPER_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12) \
         ENTERPRISE_FUNC_IMPL_LOADER(__ret, __func, __ret__assign, __ret__ref, \
                                 (ENTERPRISE_CANARY_VALUE, &__successful, __p1, __p2, __p3, __p4, __p5, __p6, __p7, __p8, __p9, __p10, __p11, __p12, ENTERPRISE_CANARY_VALUE), \
                                 (__p1, __p2, __p3, __p4, __p5, __p6, __p7, __p8, __p9, __p10, __p11, __p12)) \
@@ -416,7 +416,7 @@ void shlib_close(void *handle);
 # define ENTERPRISE_FUNC_13ARG_DECLARE_IMPL(__ret, __func, __ret__assign, __ret__ref, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13) \
     typedef __ret (*__func##__type)(int32_t __start_canary, int *__successful, __t1 __p1, __t2 __p2, __t3 __p3, __t4 __p4, __t5 __p5, __t6 __p6, __t7 __p7, __t8 __p8, __t9 __p9, __t10 __p10, __t11 __p11, __t12 __p12, __t13 __p13, int32_t __end_canary); \
     ENTERPRISE_FUNC_13ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13); \
-    inline ENTERPRISE_FUNC_13ARG_WRAPPER_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13) \
+    inline static ENTERPRISE_FUNC_13ARG_WRAPPER_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13) \
         ENTERPRISE_FUNC_IMPL_LOADER(__ret, __func, __ret__assign, __ret__ref, \
                                 (ENTERPRISE_CANARY_VALUE, &__successful, __p1, __p2, __p3, __p4, __p5, __p6, __p7, __p8, __p9, __p10, __p11, __p12, __p13, ENTERPRISE_CANARY_VALUE), \
                                 (__p1, __p2, __p3, __p4, __p5, __p6, __p7, __p8, __p9, __p10, __p11, __p12, __p13)) \
@@ -424,7 +424,7 @@ void shlib_close(void *handle);
 # define ENTERPRISE_FUNC_14ARG_DECLARE_IMPL(__ret, __func, __ret__assign, __ret__ref, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13, __t14, __p14) \
     typedef __ret (*__func##__type)(int32_t __start_canary, int *__successful, __t1 __p1, __t2 __p2, __t3 __p3, __t4 __p4, __t5 __p5, __t6 __p6, __t7 __p7, __t8 __p8, __t9 __p9, __t10 __p10, __t11 __p11, __t12 __p12, __t13 __p13, __t14 __p14, int32_t __end_canary); \
     ENTERPRISE_FUNC_14ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13, __t14, __p14); \
-    inline ENTERPRISE_FUNC_14ARG_WRAPPER_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13, __t14, __p14) \
+    inline static ENTERPRISE_FUNC_14ARG_WRAPPER_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13, __t14, __p14) \
         ENTERPRISE_FUNC_IMPL_LOADER(__ret, __func, __ret__assign, __ret__ref, \
                                 (ENTERPRISE_CANARY_VALUE, &__successful, __p1, __p2, __p3, __p4, __p5, __p6, __p7, __p8, __p9, __p10, __p11, __p12, __p13, __p14, ENTERPRISE_CANARY_VALUE), \
                                 (__p1, __p2, __p3, __p4, __p5, __p6, __p7, __p8, __p9, __p10, __p11, __p12, __p13, __p14)) \
@@ -432,7 +432,7 @@ void shlib_close(void *handle);
 # define ENTERPRISE_FUNC_15ARG_DECLARE_IMPL(__ret, __func, __ret__assign, __ret__ref, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13, __t14, __p14, __t15, __p15) \
     typedef __ret (*__func##__type)(int32_t __start_canary, int *__successful, __t1 __p1, __t2 __p2, __t3 __p3, __t4 __p4, __t5 __p5, __t6 __p6, __t7 __p7, __t8 __p8, __t9 __p9, __t10 __p10, __t11 __p11, __t12 __p12, __t13 __p13, __t14 __p14, __t15 __p15, int32_t __end_canary); \
     ENTERPRISE_FUNC_15ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13, __t14, __p14, __t15, __p15); \
-    inline ENTERPRISE_FUNC_15ARG_WRAPPER_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13, __t14, __p14, __t15, __p15) \
+    inline static ENTERPRISE_FUNC_15ARG_WRAPPER_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13, __t14, __p14, __t15, __p15) \
         ENTERPRISE_FUNC_IMPL_LOADER(__ret, __func, __ret__assign, __ret__ref, \
                                 (ENTERPRISE_CANARY_VALUE, &__successful, __p1, __p2, __p3, __p4, __p5, __p6, __p7, __p8, __p9, __p10, __p11, __p12, __p13, __p14, __p15, ENTERPRISE_CANARY_VALUE), \
                                 (__p1, __p2, __p3, __p4, __p5, __p6, __p7, __p8, __p9, __p10, __p11, __p12, __p13, __p14, __p15)) \

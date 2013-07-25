@@ -45,10 +45,7 @@
 #include <ornaments.h>
 #include <env_context.h>
 #include <retcode.h>
-
-#ifdef HAVE_ENTERPRISE
-#include <agent_reports.h>
-#endif
+#include <cf-agent-enterprise-stubs.h>
 
 /** Entry points from VerifyPackagesPromise **/
 
@@ -74,12 +71,10 @@ static void DeletePackageManagers(PackageManager *newlist);
 
 static char *PrefixLocalRepository(Rlist *repositories, char *package);
 
-#ifndef HAVE_ENTERPRISE
-void ReportPatches(ARG_UNUSED PackageManager *list)
+ENTERPRISE_VOID_FUNC_1ARG_DEFINE_STUB(void, ReportPatches, ARG_UNUSED PackageManager *, list)
 {
     Log(LOG_LEVEL_VERBOSE, "Patch reporting feature is only available in the enterprise version");
 }
-#endif
 
 /*****************************************************************************/
 

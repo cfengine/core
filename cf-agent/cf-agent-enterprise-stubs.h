@@ -39,5 +39,7 @@ ENTERPRISE_VOID_FUNC_5ARG_DECLARE(void, LogFileChange, EvalContext *, ctx, char 
 
 ENTERPRISE_VOID_FUNC_5ARG_DECLARE(void, Nova_CheckNtACL, EvalContext *, ctx, char *, file_path, Acl, acl, Attributes, a, Promise *, pp);
 
+ENTERPRISE_VOID_FUNC_1ARG_DECLARE(void, ReportPatches, PackageManager *, list);
+
 #endif
 

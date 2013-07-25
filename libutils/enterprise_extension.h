@@ -89,21 +89,9 @@
 #ifndef ENTERPRISE_FUNCTION_CALL_H
 #define ENTERPRISE_FUNCTION_CALL_H
 
-// Enable this to detect extensions that aren't defined using the proper macros.
-// They will show up as multiple definitions.
-// Note that we don't care about void functions here, so you'll get lots of
-// warnings about missing return values.
-// Only works if --enable-builtin-extensions is given to configure.
-// Note that this does not produce working binaries.
-//#define ENTERPRISE_EXTENSION_DETECT_MISSING_MACROS
-
 #include <logging.h>
 
 #ifndef BUILTIN_EXTENSIONS
-
-#ifdef ENTERPRISE_EXTENSION_DETECT_MISSING_MACROS
-# error ENTERPRISE_EXTENSION_DETECT_MISSING_MACROS does not work unless --enable-builtin-extensions is passed to configure.
-#endif
 
 #if !defined(BUILDING_CORE) && !defined(BUILDING_CORE_EXTENSION)
 # error Neither BUILDING_CORE nor BUILDING_CORE_EXTENSION are defined. CPPFLAGS broken?
@@ -1182,25 +1170,6 @@ void shlib_close(void *handle);
 // In this case just map to real function calls.
 // BUILTIN_EXTENSIONS is for Windows binaries and debugging.
 
-#ifndef ENTERPRISE_EXTENSION_DETECT_MISSING_MACROS
-
-# define ENTERPRISE_FUNC_0ARG_DUMMY(__ret, __func)
-# define ENTERPRISE_FUNC_1ARG_DUMMY(__ret, __func, __t1, __p1)
-# define ENTERPRISE_FUNC_2ARG_DUMMY(__ret, __func, __t1, __p1, __t2, __p2)
-# define ENTERPRISE_FUNC_3ARG_DUMMY(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3)
-# define ENTERPRISE_FUNC_4ARG_DUMMY(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4)
-# define ENTERPRISE_FUNC_5ARG_DUMMY(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5)
-# define ENTERPRISE_FUNC_6ARG_DUMMY(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6)
-# define ENTERPRISE_FUNC_7ARG_DUMMY(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7)
-# define ENTERPRISE_FUNC_8ARG_DUMMY(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8)
-# define ENTERPRISE_FUNC_9ARG_DUMMY(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9)
-# define ENTERPRISE_FUNC_10ARG_DUMMY(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10)
-# define ENTERPRISE_FUNC_11ARG_DUMMY(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11)
-# define ENTERPRISE_FUNC_12ARG_DUMMY(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12)
-# define ENTERPRISE_FUNC_13ARG_DUMMY(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13)
-# define ENTERPRISE_FUNC_14ARG_DUMMY(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13, __t14, __p14)
-# define ENTERPRISE_FUNC_15ARG_DUMMY(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13, __t14, __p14, __t15, __p15)
-
 # define ENTERPRISE_FUNC_0ARG_STUB_SIGNATURE(__ret, __func) \
     __ret __func##__stub()
 # define ENTERPRISE_FUNC_1ARG_STUB_SIGNATURE(__ret, __func, __t1, __p1) \
@@ -1267,214 +1236,71 @@ void shlib_close(void *handle);
 # define ENTERPRISE_FUNC_15ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13, __t14, __p14, __t15, __p15) \
     __ret __func(__t1 __p1, __t2 __p2, __t3 __p3, __t4 __p4, __t5 __p5, __t6 __p6, __t7 __p7, __t8 __p8, __t9 __p9, __t10 __p10, __t11 __p11, __t12 __p12, __t13 __p13, __t14 __p14, __t15 __p15)
 
-#else // ENTERPRISE_EXTENSION_DETECT_MISSING_MACROS
-
-// The trick we use to detect enterprise extensions with missing macros is to
-// rename the macro version of the function (to function__decoy, below) and
-// then define our own version with the real name. This will conflict with any
-// definitions that are in the code.
-
-// Silence lots of useless warnings
-#pragma GCC diagnostic ignored "-Wunused-parameter"
-#pragma GCC diagnostic ignored "-Wreturn-type"
-
-# define ENTERPRISE_FUNC_0ARG_DUMMY(__ret, __func) \
-    inline __ret __func() {}
-# define ENTERPRISE_FUNC_1ARG_DUMMY(__ret, __func, __t1, __p1) \
-    inline __ret __func(__t1 __p1) {}
-# define ENTERPRISE_FUNC_2ARG_DUMMY(__ret, __func, __t1, __p1, __t2, __p2) \
-    inline __ret __func(__t1 __p1, __t2 __p2) {}
-# define ENTERPRISE_FUNC_3ARG_DUMMY(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3) \
-    inline __ret __func(__t1 __p1, __t2 __p2, __t3 __p3) {}
-# define ENTERPRISE_FUNC_4ARG_DUMMY(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4) \
-    inline __ret __func(__t1 __p1, __t2 __p2, __t3 __p3, __t4 __p4) {}
-# define ENTERPRISE_FUNC_5ARG_DUMMY(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5) \
-    inline __ret __func(__t1 __p1, __t2 __p2, __t3 __p3, __t4 __p4, __t5 __p5) {}
-# define ENTERPRISE_FUNC_6ARG_DUMMY(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6) \
-    inline __ret __func(__t1 __p1, __t2 __p2, __t3 __p3, __t4 __p4, __t5 __p5, __t6 __p6) {}
-# define ENTERPRISE_FUNC_7ARG_DUMMY(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7) \
-    inline __ret __func(__t1 __p1, __t2 __p2, __t3 __p3, __t4 __p4, __t5 __p5, __t6 __p6, __t7 __p7) {}
-# define ENTERPRISE_FUNC_8ARG_DUMMY(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8) \
-    inline __ret __func(__t1 __p1, __t2 __p2, __t3 __p3, __t4 __p4, __t5 __p5, __t6 __p6, __t7 __p7, __t8 __p8) {}
-# define ENTERPRISE_FUNC_9ARG_DUMMY(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9) \
-    inline __ret __func(__t1 __p1, __t2 __p2, __t3 __p3, __t4 __p4, __t5 __p5, __t6 __p6, __t7 __p7, __t8 __p8, __t9 __p9) {}
-# define ENTERPRISE_FUNC_10ARG_DUMMY(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10) \
-    inline __ret __func(__t1 __p1, __t2 __p2, __t3 __p3, __t4 __p4, __t5 __p5, __t6 __p6, __t7 __p7, __t8 __p8, __t9 __p9, __t10 __p10) {}
-# define ENTERPRISE_FUNC_11ARG_DUMMY(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11) \
-    inline __ret __func(__t1 __p1, __t2 __p2, __t3 __p3, __t4 __p4, __t5 __p5, __t6 __p6, __t7 __p7, __t8 __p8, __t9 __p9, __t10 __p10, __t11 __p11) {}
-# define ENTERPRISE_FUNC_12ARG_DUMMY(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12) \
-    inline __ret __func(__t1 __p1, __t2 __p2, __t3 __p3, __t4 __p4, __t5 __p5, __t6 __p6, __t7 __p7, __t8 __p8, __t9 __p9, __t10 __p10, __t11 __p11, __t12 __p12) {}
-# define ENTERPRISE_FUNC_13ARG_DUMMY(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13) \
-    inline __ret __func(__t1 __p1, __t2 __p2, __t3 __p3, __t4 __p4, __t5 __p5, __t6 __p6, __t7 __p7, __t8 __p8, __t9 __p9, __t10 __p10, __t11 __p11, __t12 __p12, __t13 __p13) {}
-# define ENTERPRISE_FUNC_14ARG_DUMMY(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13, __t14, __p14) \
-    inline __ret __func(__t1 __p1, __t2 __p2, __t3 __p3, __t4 __p4, __t5 __p5, __t6 __p6, __t7 __p7, __t8 __p8, __t9 __p9, __t10 __p10, __t11 __p11, __t12 __p12, __t13 __p13, __t14 __p14) {}
-# define ENTERPRISE_FUNC_15ARG_DUMMY(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13, __t14, __p14, __t15, __p15) \
-    inline __ret __func(__t1 __p1, __t2 __p2, __t3 __p3, __t4 __p4, __t5 __p5, __t6 __p6, __t7 __p7, __t8 __p8, __t9 __p9, __t10 __p10, __t11 __p11, __t12 __p12, __t13 __p13, __t14 __p14, __t15 __p15) {}
-
-# define ENTERPRISE_FUNC_0ARG_STUB_SIGNATURE(__ret, __func) \
-    __ret __func##__stub()
-# define ENTERPRISE_FUNC_1ARG_STUB_SIGNATURE(__ret, __func, __t1, __p1) \
-    __ret __func##__stub(__t1 __p1)
-# define ENTERPRISE_FUNC_2ARG_STUB_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2) \
-    __ret __func##__stub(__t1 __p1, __t2 __p2)
-# define ENTERPRISE_FUNC_3ARG_STUB_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3) \
-    __ret __func##__stub(__t1 __p1, __t2 __p2, __t3 __p3)
-# define ENTERPRISE_FUNC_4ARG_STUB_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4) \
-    __ret __func##__stub(__t1 __p1, __t2 __p2, __t3 __p3, __t4 __p4)
-# define ENTERPRISE_FUNC_5ARG_STUB_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5) \
-    __ret __func##__stub(__t1 __p1, __t2 __p2, __t3 __p3, __t4 __p4, __t5 __p5)
-# define ENTERPRISE_FUNC_6ARG_STUB_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6) \
-    __ret __func##__stub(__t1 __p1, __t2 __p2, __t3 __p3, __t4 __p4, __t5 __p5, __t6 __p6)
-# define ENTERPRISE_FUNC_7ARG_STUB_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7) \
-    __ret __func##__stub(__t1 __p1, __t2 __p2, __t3 __p3, __t4 __p4, __t5 __p5, __t6 __p6, __t7 __p7)
-# define ENTERPRISE_FUNC_8ARG_STUB_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8) \
-    __ret __func##__stub(__t1 __p1, __t2 __p2, __t3 __p3, __t4 __p4, __t5 __p5, __t6 __p6, __t7 __p7, __t8 __p8)
-# define ENTERPRISE_FUNC_9ARG_STUB_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9) \
-    __ret __func##__stub(__t1 __p1, __t2 __p2, __t3 __p3, __t4 __p4, __t5 __p5, __t6 __p6, __t7 __p7, __t8 __p8, __t9 __p9)
-# define ENTERPRISE_FUNC_10ARG_STUB_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10) \
-    __ret __func##__stub(__t1 __p1, __t2 __p2, __t3 __p3, __t4 __p4, __t5 __p5, __t6 __p6, __t7 __p7, __t8 __p8, __t9 __p9, __t10 __p10)
-# define ENTERPRISE_FUNC_11ARG_STUB_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11) \
-    __ret __func##__stub(__t1 __p1, __t2 __p2, __t3 __p3, __t4 __p4, __t5 __p5, __t6 __p6, __t7 __p7, __t8 __p8, __t9 __p9, __t10 __p10, __t11 __p11)
-# define ENTERPRISE_FUNC_12ARG_STUB_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12) \
-    __ret __func##__stub(__t1 __p1, __t2 __p2, __t3 __p3, __t4 __p4, __t5 __p5, __t6 __p6, __t7 __p7, __t8 __p8, __t9 __p9, __t10 __p10, __t11 __p11, __t12 __p12)
-# define ENTERPRISE_FUNC_13ARG_STUB_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13) \
-    __ret __func##__stub(__t1 __p1, __t2 __p2, __t3 __p3, __t4 __p4, __t5 __p5, __t6 __p6, __t7 __p7, __t8 __p8, __t9 __p9, __t10 __p10, __t11 __p11, __t12 __p12, __t13 __p13)
-# define ENTERPRISE_FUNC_14ARG_STUB_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13, __t14, __p14) \
-    __ret __func##__stub(__t1 __p1, __t2 __p2, __t3 __p3, __t4 __p4, __t5 __p5, __t6 __p6, __t7 __p7, __t8 __p8, __t9 __p9, __t10 __p10, __t11 __p11, __t12 __p12, __t13 __p13, __t14 __p14)
-# define ENTERPRISE_FUNC_15ARG_STUB_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13, __t14, __p14, __t15, __p15) \
-    __ret __func##__stub(__t1 __p1, __t2 __p2, __t3 __p3, __t4 __p4, __t5 __p5, __t6 __p6, __t7 __p7, __t8 __p8, __t9 __p9, __t10 __p10, __t11 __p11, __t12 __p12, __t13 __p13, __t14 __p14, __t15 __p15)
-
-# define ENTERPRISE_FUNC_0ARG_REAL_SIGNATURE(__ret, __func) \
-    __ret __func##__decoy()
-# define ENTERPRISE_FUNC_1ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1) \
-    __ret __func##__decoy(__t1 __p1)
-# define ENTERPRISE_FUNC_2ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2) \
-    __ret __func##__decoy(__t1 __p1, __t2 __p2)
-# define ENTERPRISE_FUNC_3ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3) \
-    __ret __func##__decoy(__t1 __p1, __t2 __p2, __t3 __p3)
-# define ENTERPRISE_FUNC_4ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4) \
-    __ret __func##__decoy(__t1 __p1, __t2 __p2, __t3 __p3, __t4 __p4)
-# define ENTERPRISE_FUNC_5ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5) \
-    __ret __func##__decoy(__t1 __p1, __t2 __p2, __t3 __p3, __t4 __p4, __t5 __p5)
-# define ENTERPRISE_FUNC_6ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6) \
-    __ret __func##__decoy(__t1 __p1, __t2 __p2, __t3 __p3, __t4 __p4, __t5 __p5, __t6 __p6)
-# define ENTERPRISE_FUNC_7ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7) \
-    __ret __func##__decoy(__t1 __p1, __t2 __p2, __t3 __p3, __t4 __p4, __t5 __p5, __t6 __p6, __t7 __p7)
-# define ENTERPRISE_FUNC_8ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8) \
-    __ret __func##__decoy(__t1 __p1, __t2 __p2, __t3 __p3, __t4 __p4, __t5 __p5, __t6 __p6, __t7 __p7, __t8 __p8)
-# define ENTERPRISE_FUNC_9ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9) \
-    __ret __func##__decoy(__t1 __p1, __t2 __p2, __t3 __p3, __t4 __p4, __t5 __p5, __t6 __p6, __t7 __p7, __t8 __p8, __t9 __p9)
-# define ENTERPRISE_FUNC_10ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10) \
-    __ret __func##__decoy(__t1 __p1, __t2 __p2, __t3 __p3, __t4 __p4, __t5 __p5, __t6 __p6, __t7 __p7, __t8 __p8, __t9 __p9, __t10 __p10)
-# define ENTERPRISE_FUNC_11ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11) \
-    __ret __func##__decoy(__t1 __p1, __t2 __p2, __t3 __p3, __t4 __p4, __t5 __p5, __t6 __p6, __t7 __p7, __t8 __p8, __t9 __p9, __t10 __p10, __t11 __p11)
-# define ENTERPRISE_FUNC_12ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12) \
-    __ret __func##__decoy(__t1 __p1, __t2 __p2, __t3 __p3, __t4 __p4, __t5 __p5, __t6 __p6, __t7 __p7, __t8 __p8, __t9 __p9, __t10 __p10, __t11 __p11, __t12 __p12)
-# define ENTERPRISE_FUNC_13ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13) \
-    __ret __func##__decoy(__t1 __p1, __t2 __p2, __t3 __p3, __t4 __p4, __t5 __p5, __t6 __p6, __t7 __p7, __t8 __p8, __t9 __p9, __t10 __p10, __t11 __p11, __t12 __p12, __t13 __p13)
-# define ENTERPRISE_FUNC_14ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13, __t14, __p14) \
-    __ret __func##__decoy(__t1 __p1, __t2 __p2, __t3 __p3, __t4 __p4, __t5 __p5, __t6 __p6, __t7 __p7, __t8 __p8, __t9 __p9, __t10 __p10, __t11 __p11, __t12 __p12, __t13 __p13, __t14 __p14)
-# define ENTERPRISE_FUNC_15ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13, __t14, __p14, __t15, __p15) \
-    __ret __func##__decoy(__t1 __p1, __t2 __p2, __t3 __p3, __t4 __p4, __t5 __p5, __t6 __p6, __t7 __p7, __t8 __p8, __t9 __p9, __t10 __p10, __t11 __p11, __t12 __p12, __t13 __p13, __t14 __p14, __t15 __p15)
-
-#endif // ENTERPRISE_EXTENSION_DETECT_MISSING_MACROS
 
 #define ENTERPRISE_FUNC_0ARG_DECLARE(__ret, __func) \
-    ENTERPRISE_FUNC_0ARG_DUMMY(__ret, __func) \
     ENTERPRISE_FUNC_0ARG_REAL_SIGNATURE(__ret, __func)
 #define ENTERPRISE_FUNC_1ARG_DECLARE(__ret, __func, __t1, __p1) \
-    ENTERPRISE_FUNC_1ARG_DUMMY(__ret, __func, __t1, __p1) \
     ENTERPRISE_FUNC_1ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1)
 #define ENTERPRISE_FUNC_2ARG_DECLARE(__ret, __func, __t1, __p1, __t2, __p2) \
-    ENTERPRISE_FUNC_2ARG_DUMMY(__ret, __func, __t1, __p1, __t2, __p2) \
     ENTERPRISE_FUNC_2ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2)
 #define ENTERPRISE_FUNC_3ARG_DECLARE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3) \
-    ENTERPRISE_FUNC_3ARG_DUMMY(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3) \
     ENTERPRISE_FUNC_3ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3)
 #define ENTERPRISE_FUNC_4ARG_DECLARE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4) \
-    ENTERPRISE_FUNC_4ARG_DUMMY(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4) \
     ENTERPRISE_FUNC_4ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4)
 #define ENTERPRISE_FUNC_5ARG_DECLARE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5) \
-    ENTERPRISE_FUNC_5ARG_DUMMY(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5) \
     ENTERPRISE_FUNC_5ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5)
 #define ENTERPRISE_FUNC_6ARG_DECLARE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6) \
-    ENTERPRISE_FUNC_6ARG_DUMMY(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6) \
     ENTERPRISE_FUNC_6ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6)
 #define ENTERPRISE_FUNC_7ARG_DECLARE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7) \
-    ENTERPRISE_FUNC_7ARG_DUMMY(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7) \
     ENTERPRISE_FUNC_7ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7)
 #define ENTERPRISE_FUNC_8ARG_DECLARE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8) \
-    ENTERPRISE_FUNC_8ARG_DUMMY(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8) \
     ENTERPRISE_FUNC_8ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8)
 #define ENTERPRISE_FUNC_9ARG_DECLARE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9) \
-    ENTERPRISE_FUNC_9ARG_DUMMY(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9) \
     ENTERPRISE_FUNC_9ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9)
 #define ENTERPRISE_FUNC_10ARG_DECLARE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10) \
-    ENTERPRISE_FUNC_10ARG_DUMMY(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10) \
     ENTERPRISE_FUNC_10ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10)
 #define ENTERPRISE_FUNC_11ARG_DECLARE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11) \
-    ENTERPRISE_FUNC_11ARG_DUMMY(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11) \
     ENTERPRISE_FUNC_11ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11)
 #define ENTERPRISE_FUNC_12ARG_DECLARE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12) \
-    ENTERPRISE_FUNC_12ARG_DUMMY(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12) \
     ENTERPRISE_FUNC_12ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12)
 #define ENTERPRISE_FUNC_13ARG_DECLARE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13) \
-    ENTERPRISE_FUNC_13ARG_DUMMY(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13) \
     ENTERPRISE_FUNC_13ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13)
 #define ENTERPRISE_FUNC_14ARG_DECLARE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13, __t14, __p14) \
-    ENTERPRISE_FUNC_14ARG_DUMMY(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13, __t14, __p14) \
     ENTERPRISE_FUNC_14ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13, __t14, __p14)
 #define ENTERPRISE_FUNC_15ARG_DECLARE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13, __t14, __p14, __t15, __p15) \
-    ENTERPRISE_FUNC_15ARG_DUMMY(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13, __t14, __p14, __t15, __p15) \
     ENTERPRISE_FUNC_15ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13, __t14, __p14, __t15, __p15)
 
 #define ENTERPRISE_VOID_FUNC_0ARG_DECLARE(__ret, __func) \
-    ENTERPRISE_FUNC_0ARG_DUMMY(__ret, __func) \
     ENTERPRISE_FUNC_0ARG_REAL_SIGNATURE(__ret, __func)
 #define ENTERPRISE_VOID_FUNC_1ARG_DECLARE(__ret, __func, __t1, __p1) \
-    ENTERPRISE_FUNC_1ARG_DUMMY(__ret, __func, __t1, __p1) \
     ENTERPRISE_FUNC_1ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1)
 #define ENTERPRISE_VOID_FUNC_2ARG_DECLARE(__ret, __func, __t1, __p1, __t2, __p2) \
-    ENTERPRISE_FUNC_2ARG_DUMMY(__ret, __func, __t1, __p1, __t2, __p2) \
     ENTERPRISE_FUNC_2ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2)
 #define ENTERPRISE_VOID_FUNC_3ARG_DECLARE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3) \
-    ENTERPRISE_FUNC_3ARG_DUMMY(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3) \
     ENTERPRISE_FUNC_3ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3)
 #define ENTERPRISE_VOID_FUNC_4ARG_DECLARE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4) \
-    ENTERPRISE_FUNC_4ARG_DUMMY(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4) \
     ENTERPRISE_FUNC_4ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4)
 #define ENTERPRISE_VOID_FUNC_5ARG_DECLARE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5) \
-    ENTERPRISE_FUNC_5ARG_DUMMY(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5) \
     ENTERPRISE_FUNC_5ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5)
 #define ENTERPRISE_VOID_FUNC_6ARG_DECLARE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6) \
-    ENTERPRISE_FUNC_6ARG_DUMMY(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6) \
     ENTERPRISE_FUNC_6ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6)
 #define ENTERPRISE_VOID_FUNC_7ARG_DECLARE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7) \
-    ENTERPRISE_FUNC_7ARG_DUMMY(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7) \
     ENTERPRISE_FUNC_7ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7)
 #define ENTERPRISE_VOID_FUNC_8ARG_DECLARE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8) \
-    ENTERPRISE_FUNC_8ARG_DUMMY(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8) \
     ENTERPRISE_FUNC_8ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8)
 #define ENTERPRISE_VOID_FUNC_9ARG_DECLARE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9) \
-    ENTERPRISE_FUNC_9ARG_DUMMY(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9) \
     ENTERPRISE_FUNC_9ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9)
 #define ENTERPRISE_VOID_FUNC_10ARG_DECLARE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10) \
-    ENTERPRISE_FUNC_10ARG_DUMMY(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10) \
     ENTERPRISE_FUNC_10ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10)
 #define ENTERPRISE_VOID_FUNC_11ARG_DECLARE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11) \
-    ENTERPRISE_FUNC_11ARG_DUMMY(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11) \
     ENTERPRISE_FUNC_11ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11)
 #define ENTERPRISE_VOID_FUNC_12ARG_DECLARE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12) \
-    ENTERPRISE_FUNC_12ARG_DUMMY(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12) \
     ENTERPRISE_FUNC_12ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12)
 #define ENTERPRISE_VOID_FUNC_13ARG_DECLARE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13) \
-    ENTERPRISE_FUNC_13ARG_DUMMY(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13) \
     ENTERPRISE_FUNC_13ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13)
 #define ENTERPRISE_VOID_FUNC_14ARG_DECLARE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13, __t14, __p14) \
-    ENTERPRISE_FUNC_14ARG_DUMMY(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13, __t14, __p14) \
     ENTERPRISE_FUNC_14ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13, __t14, __p14)
 #define ENTERPRISE_VOID_FUNC_15ARG_DECLARE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13, __t14, __p14, __t15, __p15) \
-    ENTERPRISE_FUNC_15ARG_DUMMY(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13, __t14, __p14, __t15, __p15) \
     ENTERPRISE_FUNC_15ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13, __t14, __p14, __t15, __p15)
 
 #define ENTERPRISE_FUNC_0ARG_DEFINE(__ret, __func) \

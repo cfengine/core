@@ -175,7 +175,7 @@ void VerifyServices(EvalContext *ctx, Attributes a, Promise *pp)
         DoVerifyServices(ctx, a, pp);
     }
 
-    ScopeDeleteSpecial(SPECIAL_SCOPE_THIS, "promiser");
+    EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser");
     YieldCurrentLock(thislock);
 }
 

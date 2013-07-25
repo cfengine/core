@@ -50,7 +50,7 @@ void VerifyMethodsPromise(EvalContext *ctx, Promise *pp)
     a = GetMethodAttributes(ctx, pp);
 
     VerifyMethod(ctx, "usebundle", a, pp);
-    ScopeDeleteSpecial(SPECIAL_SCOPE_THIS, "promiser");
+    EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser");
 }
 
 /*****************************************************************************/

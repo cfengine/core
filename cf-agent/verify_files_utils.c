@@ -163,7 +163,7 @@ int VerifyFileLeaf(EvalContext *ctx, char *path, struct stat *sb, Attributes att
         }
     }
 
-    ScopeDeleteSpecial(SPECIAL_SCOPE_THIS, "promiser");
+    EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser");
     return true;
 }
 

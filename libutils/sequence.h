@@ -160,4 +160,10 @@ void SeqReverse(Seq *seq);
  */
 void SeqShuffle(Seq *seq, unsigned int seed);
 
+/**
+ * @brief Remove all elements in sequence
+ * @param seq
+ */
+void SeqClear(Seq *seq);
+
 #endif

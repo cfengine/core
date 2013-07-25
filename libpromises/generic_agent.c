@@ -912,6 +912,7 @@ int NewPromiseProposals(EvalContext *ctx, const GenericAgentConfig *config, cons
         else
         {
             Rval returnval = EvaluateFinalRval(ctx, NULL, "sys", (Rval) { rp->item, rp->type }, true, NULL);
+            LogLevel missing_inputs_log_level = config->ignore_missing_inputs ? LOG_LEVEL_VERBOSE : LOG_LEVEL_ERR;
 
             switch (returnval.type)
             {
@@ -919,7 +920,8 @@ int NewPromiseProposals(EvalContext *ctx, const GenericAgentConfig *config, cons
 
                 if (stat(GenericAgentResolveInputPath(config, (char *) returnval.item), &sb) == -1)
                 {
-                    Log(LOG_LEVEL_ERR, "Unreadable promise proposals at '%s'. (stat: %s)", (char *) returnval.item, GetErrorStr());
+
+                    Log(missing_inputs_log_level, "Unreadable promise proposals at '%s'. (stat: %s)", (char *) returnval.item, GetErrorStr());
                     result = true;
                     break;
                 }
@@ -941,7 +943,7 @@ int NewPromiseProposals(EvalContext *ctx, const GenericAgentConfig *config, cons
 
                     if (stat(GenericAgentResolveInputPath(config, (char *) sl->item), &sb) == -1)
                     {
-                        Log(LOG_LEVEL_ERR, "Unreadable promise proposals at '%s'. (stat: %s)", (char *) sl->item, GetErrorStr());
+                        Log(missing_inputs_log_level, "Unreadable promise proposals at '%s'. (stat: %s)", (char *) sl->item, GetErrorStr());
                         result = true;
                         break;
                     }

@@ -836,6 +836,12 @@ LDFLAGS="$LDFLAGS $TOKYOCABINET_LDFLAGS $QDBM_LDFLAGS $PCRE_LDFLAGS $OPENSSL_LDF
 LIBS="$LIBS $TOKYOCABINET_LIBS $QDBM_LIBS $PCRE_LIBS $OPENSSL_LIBS $MONGO_LIBS $SQLITE3_LIBS $LIBACL_LIBS"
 
 dnl ######################################################################
+dnl Make them available to subprojects.
+dnl ######################################################################
+
+AC_CONFIG_FILES([configure_flags.env])
+
+dnl ######################################################################
 dnl OS specific stuff
 dnl ######################################################################
 

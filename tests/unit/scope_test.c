@@ -39,12 +39,21 @@ static void test_name_split(void)
 
 static void test_push_pop_this(void)
 {
-    VarRef lval = VarRefParse("this.lval");
+    VarRef *lval = VarRefParse("this.lval");
     Rval rval;
 
     EvalContext *ctx = EvalContextNew();
 
-    ScopeNewSpecial(ctx, "this", "lval", "rval1", DATA_TYPE_STRING);
+    Policy *p = PolicyNew();
+    Bundle *bp = PolicyAppendBundle(p, "default", "bundle", "agent", NULL, NULL);
+    PromiseType *pt = BundleAppendPromiseType(bp, "reports");
+    Promise *pp = PromiseTypeAppendPromise(pt, "hello", (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, NULL);
+
+    EvalContextStackPushBundleFrame(ctx, bp, NULL, false);
+    EvalContextStackPushPromiseFrame(ctx, pp);
+    EvalContextStackPushPromiseIterationFrame(ctx, pp);
+
+    ScopeNewSpecial(ctx, SPECIAL_SCOPE_THIS, "lval", "rval1", DATA_TYPE_STRING);
     assert_true(EvalContextVariableGet(ctx, lval, &rval, NULL));
     assert_string_equal("rval1", RvalScalarValue(rval));
     {
@@ -52,7 +61,7 @@ static void test_push_pop_this(void)
 
         assert_false(EvalContextVariableGet(ctx, lval, &rval, NULL));
 
-        ScopeNewSpecial(ctx, "this", "lval", "rval2", DATA_TYPE_STRING);
+        ScopeNewSpecial(ctx, SPECIAL_SCOPE_THIS, "lval", "rval2", DATA_TYPE_STRING);
         assert_true(EvalContextVariableGet(ctx, lval, &rval, NULL));
         assert_string_equal("rval2", RvalScalarValue(rval));
         {
@@ -60,7 +69,7 @@ static void test_push_pop_this(void)
 
             assert_false(EvalContextVariableGet(ctx, lval, &rval, NULL));
 
-            ScopeNewSpecial(ctx, "this", "lval", "rval3", DATA_TYPE_STRING);
+            ScopeNewSpecial(ctx, SPECIAL_SCOPE_THIS, "lval", "rval3", DATA_TYPE_STRING);
             assert_true(EvalContextVariableGet(ctx, lval, &rval, NULL));
             assert_string_equal("rval3", RvalScalarValue(rval));
             {
@@ -74,6 +83,13 @@ static void test_push_pop_this(void)
     }
     assert_true(EvalContextVariableGet(ctx, lval, &rval, NULL));
     assert_string_equal("rval1", RvalScalarValue(rval));
+
+    EvalContextStackPopFrame(ctx);
+    EvalContextStackPopFrame(ctx);
+    EvalContextStackPopFrame(ctx);
+
+    PolicyDestroy(p);
+    EvalContextDestroy(ctx);
 }
 
 int main()

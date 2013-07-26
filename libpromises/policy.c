@@ -1034,17 +1034,7 @@ Bundle *PolicyAppendBundle(Policy *policy, const char *ns, const char *name, con
 
     SeqAppend(policy->bundles, bundle);
 
-    if (strcmp(ns, "default") == 0)
-    {
-        bundle->name = xstrdup(name);
-    }
-    else
-    {
-        char fqname[CF_BUFSIZE];
-        snprintf(fqname,CF_BUFSIZE-1, "%s:%s", ns, name);
-        bundle->name = xstrdup(fqname);
-    }
-
+    bundle->name = xstrdup(name);
     bundle->type = xstrdup(type);
     bundle->ns = xstrdup(ns);
     bundle->args = RlistCopy(args);
@@ -1063,17 +1053,7 @@ Body *PolicyAppendBody(Policy *policy, const char *ns, const char *name, const c
 
     SeqAppend(policy->bodies, body);
 
-    if (strcmp(ns, "default") == 0)
-    {
-        body->name = xstrdup(name);
-    }
-    else
-    {
-        char fqname[CF_BUFSIZE];
-        snprintf(fqname, CF_BUFSIZE-1, "%s:%s", ns, name);
-        body->name = xstrdup(fqname);
-    }
-
+    body->name = xstrdup(name);
     body->type = xstrdup(type);
     body->ns = xstrdup(ns);
     body->args = RlistCopy(args);

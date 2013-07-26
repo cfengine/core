@@ -29,8 +29,8 @@
 body common control
 
 {
-bundlesequence  => { "example" };
-version => "1.2.3";
+      bundlesequence  => { "example" };
+      version => "1.2.3";
 }
 
 ########################################################
@@ -38,26 +38,26 @@ version => "1.2.3";
 bundle agent example
 
 {
-vars:
+  vars:
 
-  "source" string => "/tmp";
-  "dest"   string => "/tmp";
+      "source" string => "/tmp";
+      "dest"   string => "/tmp";
 
-files:
+  files:
 
-  "/$(dest)/staging-file" 
+      "/$(dest)/staging-file" 
 
-        comment  => "Copy from source to buffer",
-    copy_from    => cp("$(source)/source-template"),
-    classes      => satisfied("copy_ok");
+      comment  => "Copy from source to buffer",
+      copy_from    => cp("$(source)/source-template"),
+      classes      => satisfied("copy_ok");
 
- copy_ok::
+    copy_ok::
 
-  "/$(dest)/final-file" 
+      "/$(dest)/final-file" 
 
-           comment => "Build a file template and expand keys",
-         edit_line => myedits("/$(dest)/staging-file"),
-     edit_defaults => empty;
+      comment => "Build a file template and expand keys",
+      edit_line => myedits("/$(dest)/staging-file"),
+      edit_defaults => empty;
 
 }
 
@@ -66,9 +66,9 @@ files:
 body copy_from cp(from)
 
 {
-source      => "$(from)";
-compare     => "mtime";
-type_check  => "true";
+      source      => "$(from)";
+      compare     => "mtime";
+      type_check  => "true";
 }
 
 ########################################################
@@ -76,18 +76,18 @@ type_check  => "true";
 bundle edit_line myedits(f)
 
 {
-insert_lines:
+  insert_lines:
 
-  "$(f)"
+      "$(f)"
 
       comment     => "Populate empty file",
       insert_type => "file";
 
-replace_patterns:
+  replace_patterns:
 
- "TEMPLATE_HOST_KEY"
+      "TEMPLATE_HOST_KEY"
 
-           comment => "Replace a place-marker with the name of this host",
+      comment => "Replace a place-marker with the name of this host",
       replace_with => rp("$(sys.host)");
 
 }
@@ -97,16 +97,16 @@ replace_patterns:
 body replace_with rp(x)
 
 {
-replace_value => "$(x)";
-occurrences => "all";
+      replace_value => "$(x)";
+      occurrences => "all";
 }
 
 #########################################################
 
 body classes satisfied(x)
 {
-promise_repaired => { "$(x)" };
-persist_time => "0";
+      promise_repaired => { "$(x)" };
+      persist_time => "0";
 }
 
 #######################################################
@@ -114,5 +114,5 @@ persist_time => "0";
 body edit_defaults empty
 
 {
-empty_file_before_editing => "true";
+      empty_file_before_editing => "true";
 }

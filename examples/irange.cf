@@ -22,38 +22,38 @@
 
 body common control
 {
-  bundlesequence => { "cleanup" };
+      bundlesequence => { "cleanup" };
 }
 
 bundle agent cleanup
 {
-files:
-  # This will not delete the parent
+  files:
+      # This will not delete the parent
 
-  "/home/mark/tmp/testcopy"
-    delete => tidyfiles,
-    file_select => changed_within_1_year,
-    depth_search => recurse;
+      "/home/mark/tmp/testcopy"
+      delete => tidyfiles,
+      file_select => changed_within_1_year,
+      depth_search => recurse;
 
-  #Now delete the parent.
+      #Now delete the parent.
 
-  "/home/mark/tmp/testcopy"
-     delete => tidyfiles;
+      "/home/mark/tmp/testcopy"
+      delete => tidyfiles;
 }
 
 body delete tidyfiles
 {
-  dirlinks => "delete";
-  rmdirs => "true";
+      dirlinks => "delete";
+      rmdirs => "true";
 }
 
 body file_select changed_within_1_year
 {
-  mtime => irange(ago(1,0,0,0,0,0),now);
-  file_result => "mtime";
+      mtime => irange(ago(1,0,0,0,0,0),now);
+      file_result => "mtime";
 }
 
 body depth_search recurse
 {
-  depth => "inf";
+      depth => "inf";
 }

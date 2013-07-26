@@ -28,7 +28,7 @@
 body common control
 
 {
-bundlesequence  => { "example" };
+      bundlesequence  => { "example" };
 }
 
 ###########################################################
@@ -36,15 +36,15 @@ bundlesequence  => { "example" };
 bundle agent example
 
 {     
-vars:
+  vars:
 
-  "Y" slist => { "I am list item 1", "I am list item 2" };
+      "Y" slist => { "I am list item 1", "I am list item 2" };
 
-methods:
+  methods:
 
- # More useful, defaults if parameters are passed to a param bundle
+      # More useful, defaults if parameters are passed to a param bundle
 
- "example" usebundle => mymethod(@(example.Y));
+      "example" usebundle => mymethod(@(example.Y));
 
 }
 
@@ -53,15 +53,15 @@ methods:
 bundle agent mymethod(list)
 
 {
-defaults:
+  defaults:
 
-  "list" slist => { "1", "2", "3"}, if_match_regex => ".*list item.*";
-#  "list" string =>  "1" , if_match_regex => ".*list item.*";
- 
+      "list" slist => { "1", "2", "3"}, if_match_regex => ".*list item.*";
+      #  "list" string =>  "1" , if_match_regex => ".*list item.*";
+      
 
-reports:
+  reports:
 
-     "The value of list is $(list)";
+      "The value of list is $(list)";
 
 }
 

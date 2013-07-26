@@ -1,6 +1,6 @@
 bundle agent foo
 {
-reports:
-  "hello"
-    ifvarclass => "*";
+  reports:
+      "hello"
+      ifvarclass => "*";
 }

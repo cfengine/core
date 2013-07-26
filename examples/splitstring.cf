@@ -29,7 +29,7 @@
 body common control
 
 {
-bundlesequence  => { "example" };   
+      bundlesequence  => { "example" };   
 }
 
 #######################################################
@@ -37,13 +37,13 @@ bundlesequence  => { "example" };
 bundle agent example
 
 {
-vars:
+  vars:
 
-  "split1" slist => splitstring("one:two:three",":","10");
-  "split2" slist => splitstring("alpha:xyz:beta","xyz","10");
+      "split1" slist => splitstring("one:two:three",":","10");
+      "split2" slist => splitstring("alpha:xyz:beta","xyz","10");
 
-reports:
-  "Found key $(split1)";
-  "Found key $(split2)";
+  reports:
+      "Found key $(split1)";
+      "Found key $(split2)";
 
 }

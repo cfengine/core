@@ -28,25 +28,25 @@
 
 body common control
 {
-bundlesequence => { "example" };
+      bundlesequence => { "example" };
 }
 
 #
 
 bundle agent example
 {
-vars:
+  vars:
 
-  "mail" slist => { "milter", "spamassassin", "postfix" };
+      "mail" slist => { "milter", "spamassassin", "postfix" };
 
 
-services:
+  services:
 
-  "www" service_policy => "start",
-        service_method => service_test;
+      "www" service_policy => "start",
+      service_method => service_test;
 
-  "$(mail)" service_policy => "stop",
-        service_method => service_test;
+      "$(mail)" service_policy => "stop",
+      service_method => service_test;
 
 }
 
@@ -54,63 +54,63 @@ services:
 
 body service_method service_test
 {
-service_bundle => non_standard_services("$(this.promiser)","$(this.service_policy)");
+      service_bundle => non_standard_services("$(this.promiser)","$(this.service_policy)");
 }
 
 ####################################################################
 
 bundle agent standard_services(service,state)
 {
- # DATA, 
+      # DATA, 
 
-vars:
+  vars:
 
- suse|redhat::
+    suse|redhat::
 
-  "startcommand[www]"     string => "/etc/init.d/apache2 start";
-  "stopcommand[www]"      string => "/etc/init.d/apache2 stop";
+      "startcommand[www]"     string => "/etc/init.d/apache2 start";
+      "stopcommand[www]"      string => "/etc/init.d/apache2 stop";
 
- debian|ubuntu::
+    debian|ubuntu::
 
-  "startcommand[www]"     string => "/etc/init.d/httpd start";
-  "stopcommand[www]"      string => "/etc/init.d/httpd stop";
+      "startcommand[www]"     string => "/etc/init.d/httpd start";
+      "stopcommand[www]"      string => "/etc/init.d/httpd stop";
 
- linux::
+    linux::
 
-  "startcommand[postfix]" string => "/etc/init.d/postfix start";
-  "stopcommand[postfix]"  string => "/etc/init.d/postfix stop";
+      "startcommand[postfix]" string => "/etc/init.d/postfix start";
+      "stopcommand[postfix]"  string => "/etc/init.d/postfix stop";
 
 
- # METHODS
+      # METHODS
 
-classes:
+  classes:
 
-  "start" expression => strcmp("start","$(state)");
-  "stop"  expression => strcmp("stop","$(state)");
+      "start" expression => strcmp("start","$(state)");
+      "stop"  expression => strcmp("stop","$(state)");
 
-processes:
+  processes:
 
-  start::
+    start::
 
-    ".*$(service).*"
+      ".*$(service).*"
 
-             comment => "Verify that the service appears in the process table",
-       restart_class => "restart_$(service)";
+      comment => "Verify that the service appears in the process table",
+      restart_class => "restart_$(service)";
 
-  stop::
+    stop::
 
-    ".*$(service).*"
+      ".*$(service).*"
 
-            comment => "Verify that the service does not appear in the process",
-       process_stop => "$(stopcommand[$(service)])",
-            signals => { "term", "kill"};
+      comment => "Verify that the service does not appear in the process",
+      process_stop => "$(stopcommand[$(service)])",
+      signals => { "term", "kill"};
 
   commands:
 
-   "$(startcommand[$(service)])"
+      "$(startcommand[$(service)])"
 
-            comment => "Execute command to restart the $(service) service",
-         ifvarclass => "restart_$(service)";
+      comment => "Execute command to restart the $(service) service",
+      ifvarclass => "restart_$(service)";
 
 }
 
@@ -118,9 +118,9 @@ processes:
 
 bundle agent non_standard_services(service,state)
 {
-reports:
+  reports:
 
-  !done::
+    !done::
 
-    "Test service promise for \"$(service)\" -> $(state)";
+      "Test service promise for \"$(service)\" -> $(state)";
 }

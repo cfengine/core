@@ -6,9 +6,9 @@
 
 body common control
 {
-  inputs => { "../../default.cf.sub" };
-  bundlesequence  => { default("$(this.promise_filename)") };
-  version => "1.0";
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
 }
 
 
@@ -16,53 +16,53 @@ body common control
 
 bundle agent init
 {
-files:
-  "$(G.testfile)"
-    move_obstructions => "true",
-    copy_from => init_copy;
+  files:
+      "$(G.testfile)"
+      move_obstructions => "true",
+      copy_from => init_copy;
 }
 
 body copy_from init_copy
 {
-  source => "/dev/null";
-  compare => "digest";
+      source => "/dev/null";
+      compare => "digest";
 }
 
 #######################################################
 
 bundle agent test
 {
-files:
-  "$(G.testfile)"
-    rename => rotate,
-    action => warn_only;
+  files:
+      "$(G.testfile)"
+      rename => rotate,
+      action => warn_only;
 }
 
 body rename rotate
 {
-rotate => "1";
+      rotate => "1";
 }
 
 body action warn_only
 {
-action_policy => "warn";
-ifelapsed => "60";
+      action_policy => "warn";
+      ifelapsed => "60";
 }
 
 #######################################################
 
 bundle agent check
 {
-classes:
-  "filestillthere" expression => fileexists("$(G.testfile)");
-  "fileisnotrotated" not => fileexists("$(G.testfile).1");
+  classes:
+      "filestillthere" expression => fileexists("$(G.testfile)");
+      "fileisnotrotated" not => fileexists("$(G.testfile).1");
 
-    "ok" and => { "filestillthere", "fileisnotrotated" };
+      "ok" and => { "filestillthere", "fileisnotrotated" };
 
-reports:
+  reports:
     ok::
-        "$(this.promise_filename) Pass";
+      "$(this.promise_filename) Pass";
     !ok::
-        "$(this.promise_filename) FAIL";
+      "$(this.promise_filename) FAIL";
 }
 

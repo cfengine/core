@@ -2,48 +2,48 @@
 
 body common control
 {
-bundlesequence => { "main" };
+      bundlesequence => { "main" };
 }
 
 bundle agent main
 {
-methods:
+  methods:
 
-   "any"  usebundle => one;
+      "any"  usebundle => one;
 
-   "any"  usebundle => mars.two;
+      "any"  usebundle => mars.two;
 
 }
 
 bundle agent one
 {
-reports:
+  reports:
 
-   "two"
-     depends_on => { "handle_one" };
+      "two"
+      depends_on => { "handle_one" };
 
-   "one"
-     handle => "handle_one";
+      "one"
+      handle => "handle_one";
 
 }
 
 body file control
 {
-namespace => "mars";
+      namespace => "mars";
 }
 
 
 bundle agent two
 {
-reports:
+  reports:
 
-   "marstwo"
-         handle => "mars_two",
-     depends_on => { "handle_one" };
+      "marstwo"
+      handle => "mars_two",
+      depends_on => { "handle_one" };
 
-   "marsone"
-     handle => "handle_one";
+      "marsone"
+      handle => "handle_one";
 
-   "marsthree"
-     depends_on => { "default.handle_one", "mars_two" };
+      "marsthree"
+      depends_on => { "default.handle_one", "mars_two" };
 }

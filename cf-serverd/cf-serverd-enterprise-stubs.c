@@ -64,9 +64,12 @@ ENTERPRISE_FUNC_2ARG_DEFINE_STUB(bool, ReturnQueryData, ARG_UNUSED struct Server
     return false;
 }
 
-ENTERPRISE_VOID_FUNC_1ARG_DEFINE_STUB(void, KeepReportDataSelectAccessPromise, Promise *, pp)
+ENTERPRISE_VOID_FUNC_1ARG_DEFINE_STUB(void, KeepReportDataSelectAccessPromise, ARG_UNUSED Promise *, pp)
 {
     Log(LOG_LEVEL_ERR, "Report data select is only available in CFEngine Enterprise");
 }
 
-ENTERPRISE_VOID_FUNC_0ARG_DEFINE_STUB(void, CleanReportBookFilterSet){}
+ENTERPRISE_VOID_FUNC_0ARG_DEFINE_STUB(void, CleanReportBookFilterSet)
+{
+    return;
+}

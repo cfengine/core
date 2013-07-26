@@ -29,7 +29,7 @@
 body common control
 
 {
-bundlesequence  => { "test" };   
+      bundlesequence  => { "test" };   
 }
 
 #######################################################
@@ -37,12 +37,12 @@ bundlesequence  => { "test" };
 bundle agent example
 
 {
-vars:
+  vars:
 
-  "number" int => countclassesmatching("cf.*");
+      "number" int => countclassesmatching("cf.*");
 
-reports:
+  reports:
 
-  "Found $(number) classes matching cf.*";
+      "Found $(number) classes matching cf.*";
 
 }

@@ -3,8 +3,8 @@
 
 body common control
 {
-  inputs => { "../../default.cf.sub" };
-  bundlesequence => { default("$(this.promise_filename)") };
+      inputs => { "../../default.cf.sub" };
+      bundlesequence => { default("$(this.promise_filename)") };
 }
 
 bundle common init
@@ -13,16 +13,16 @@ bundle common init
 
 bundle agent test
 {
-classes:
-  "foo" expression => regline("foo", "/");
+  classes:
+      "foo" expression => regline("foo", "/");
 
-vars:
-  "bar" int => getfields(".*", "/", ":", "foo");
-  "baz" int => countlinesmatching(".*", "/");
+  vars:
+      "bar" int => getfields(".*", "/", ":", "foo");
+      "baz" int => countlinesmatching(".*", "/");
 }
 
 bundle agent check
 {
-reports:
-  "$(this.promise_filename) Pass";
+  reports:
+      "$(this.promise_filename) Pass";
 }

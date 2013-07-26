@@ -23,27 +23,27 @@
 
 body common control
 {
-bundlesequence => { "databases" };
+      bundlesequence => { "databases" };
 }
 
 bundle agent databases
 
 {
-databases:
+  databases:
 
-  "knowledge_bank/topics"
+      "knowledge_bank/topics"
 
-    database_operation => "create",
-    database_type => "sql",
-    database_columns => { 
-                        "demo_name,varchar,256",
-                        "demo_comment,varchar,1024",
-                        "demo_id,varchar,256",
-                        "demo_type,varchar,256",
-                        "demo_extra,varchar,26" 
-                        },
+      database_operation => "create",
+      database_type => "sql",
+      database_columns => { 
+                            "demo_name,varchar,256",
+                            "demo_comment,varchar,1024",
+                            "demo_id,varchar,256",
+                            "demo_type,varchar,256",
+                            "demo_extra,varchar,26" 
+      },
 
-    database_server => myserver;
+      database_server => myserver;
 }
 
 ################################################
@@ -51,17 +51,17 @@ databases:
 
 body database_server myserver
 {
-none::
- db_server_owner => "postgres";
- db_server_password => "";
- db_server_host => "localhost";
- db_server_type => "postgres";
- db_server_connection_db => "postgres";
-any::
- db_server_owner => "root";
- db_server_password => "";
- db_server_host => "localhost";
- db_server_type => "mysql";
- db_server_connection_db => "mysql";
+    none::
+      db_server_owner => "postgres";
+      db_server_password => "";
+      db_server_host => "localhost";
+      db_server_type => "postgres";
+      db_server_connection_db => "postgres";
+    any::
+      db_server_owner => "root";
+      db_server_password => "";
+      db_server_host => "localhost";
+      db_server_type => "mysql";
+      db_server_connection_db => "mysql";
 }
 

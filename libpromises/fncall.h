@@ -44,7 +44,7 @@ FnCallResult FnCallEvaluate(EvalContext *ctx, FnCall *fp, const Promise *caller)
 
 const FnCallType *FnCallTypeGet(const char *name);
 
-FnCall *ExpandFnCall(EvalContext *ctx, const char *contextid, FnCall *f);
+FnCall *ExpandFnCall(EvalContext *ctx, const char *ns, const char *scope, FnCall *f);
 
 // TODO: should probably demolish this eventually
 void FnCallShow(FILE *fout, const FnCall *fp);

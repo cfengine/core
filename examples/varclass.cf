@@ -25,7 +25,7 @@
 body common control
 
 {
-bundlesequence  => { "example" };
+      bundlesequence  => { "example" };
 }
 
 ###########################################################
@@ -33,16 +33,16 @@ bundlesequence  => { "example" };
 bundle agent example
 
 {     
-commands:
+  commands:
 
-    "/bin/echo This is linux"
+      "/bin/echo This is linux"
 
-       ifvarclass => "linux";
+      ifvarclass => "linux";
 
 
-    "/bin/echo This is solaris"
+      "/bin/echo This is solaris"
 
-       ifvarclass => "solaris";
+      ifvarclass => "solaris";
 
 }
 

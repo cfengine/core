@@ -6,9 +6,9 @@
 
 body common control
 {
-  inputs => { "../../default.cf.sub" };
-  bundlesequence  => { default("$(this.promise_filename)") };
-  version => "1.0";
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
 }
 
 
@@ -16,38 +16,38 @@ body common control
 
 bundle agent init
 {
-commands:
-  "$(G.touch) $(G.testfile)";
+  commands:
+      "$(G.touch) $(G.testfile)";
 }
 
 #######################################################
 
 bundle agent test
 {
-vars:
-  "cmd" string => "$(sys.cf_agent) -Kf $(this.promise_filename).sub";
-commands:
-  "$(cmd) -D useless0";
-  "$(cmd) -D useless1";
-  "$(cmd) -D useless2";
-  "$(cmd) -D useless3";
-  "$(cmd) -D useless4";
+  vars:
+      "cmd" string => "$(sys.cf_agent) -Kf $(this.promise_filename).sub";
+  commands:
+      "$(cmd) -D useless0";
+      "$(cmd) -D useless1";
+      "$(cmd) -D useless2";
+      "$(cmd) -D useless3";
+      "$(cmd) -D useless4";
 }
 #######################################################
 
 bundle agent check
 {
-classes:
-  "filestillthere" expression => fileexists("$(G.testfile)");
-  "fileisrotated" expression => fileexists("$(G.testfile).cf-before-edit.4");
-  "nooverflow" not => fileexists("$(G.testfile).cf-before-edit.5");
+  classes:
+      "filestillthere" expression => fileexists("$(G.testfile)");
+      "fileisrotated" expression => fileexists("$(G.testfile).cf-before-edit.4");
+      "nooverflow" not => fileexists("$(G.testfile).cf-before-edit.5");
 
-    "ok" and => { "filestillthere", "fileisrotated", "nooverflow" };
+      "ok" and => { "filestillthere", "fileisrotated", "nooverflow" };
 
-reports:
+  reports:
     ok::
-        "$(this.promise_filename) Pass";
+      "$(this.promise_filename) Pass";
     !ok::
-        "$(this.promise_filename) FAIL";
+      "$(this.promise_filename) FAIL";
 }
 

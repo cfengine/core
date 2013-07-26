@@ -6,31 +6,31 @@
 
 body common control
 {
-  inputs => { "../../default.cf.sub" };
-  bundlesequence  => { default("$(this.promise_filename)") };
-  version => "1.0";
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
 }
 
 bundle common g
 {
-vars:
-        # This extracts the octal mode, and decimal nlink, uid, gid, size
-        "command" string => 'printf "%o" . " %d" x 4, (stat("$(G.testdir)/copy_file"))[2]&07777, (stat(_))[3..5,7]';
+  vars:
+      # This extracts the octal mode, and decimal nlink, uid, gid, size
+      "command" string => 'printf "%o" . " %d" x 4, (stat("$(G.testdir)/copy_file"))[2]&07777, (stat(_))[3..5,7]';
 }
 
 #######################################################
 
 bundle agent init
 {
-files:
-    "$(G.testdir)/linkdir/"
+  files:
+      "$(G.testdir)/linkdir/"
       comment => "Create a directory.";
-    "$(G.testdir)/linkdir/another/"
+      "$(G.testdir)/linkdir/another/"
       comment => "Create another directory.";
-    "$(G.testdir)/linkdir/another/target"
+      "$(G.testdir)/linkdir/another/target"
       comment => "A target file.",
       create => "true";
-    "$(G.testdir)/linkdir/link"
+      "$(G.testdir)/linkdir/link"
       comment => "Create a relative link to the target.",
       link_from => ln_s("$(G.testdir)/linkdir/another/target");
 }
@@ -39,33 +39,33 @@ files:
 
 bundle agent test
 {
-vars:
-    "mode" int => "0600";
+  vars:
+      "mode" int => "0600";
 
-files:
-    "$(G.testdir)/copy_file"
+  files:
+      "$(G.testdir)/copy_file"
       comment => "Copy the file behind the link.",
       perms => test_perms($(mode)),
       copy_from => cp_2_file("$(G.testdir)/linkdir/link");
 }
 
 body link_from ln_s(x) {
-  link_type => "relative";
-  source => "$(x)";
-  when_no_source => "nop";
+      link_type => "relative";
+      source => "$(x)";
+      when_no_source => "nop";
 }
 
 body copy_from cp_2_file(x) {
-  source => "$(x)";
-  compare => "binary";
-  copy_backup => "false";
-  copylink_patterns => { ".*" };
+      source => "$(x)";
+      compare => "binary";
+      copy_backup => "false";
+      copylink_patterns => { ".*" };
 }
 
 body perms test_perms(m) {
-  mode => "$(m)";
-  owners => { "0" };
-  groups => { "0" };
+      mode => "$(m)";
+      owners => { "0" };
+      groups => { "0" };
 }
 
 
@@ -73,20 +73,20 @@ body perms test_perms(m) {
 
 bundle agent check
 {
-vars:
-        "expect" string => "$(test.mode) 1 0 0 0";
+  vars:
+      "expect" string => "$(test.mode) 1 0 0 0";
 
-        "result" string => execresult(
-            "$(G.perl) -le '$(g.command)'", "noshell");
-classes:
-        "ok" expression => strcmp("$(expect)", "$(result)");
+      "result" string => execresult(
+				     "$(G.perl) -le '$(g.command)'", "noshell");
+  classes:
+      "ok" expression => strcmp("$(expect)", "$(result)");
 
-reports:
+  reports:
     DEBUG::
-        "expected: '$(expect)'";
-        "got:      '$(result)'";
+      "expected: '$(expect)'";
+      "got:      '$(result)'";
     ok::
-        "$(this.promise_filename) Pass";
+      "$(this.promise_filename) Pass";
     !ok::
-        "$(this.promise_filename) FAIL";
+      "$(this.promise_filename) FAIL";
 }

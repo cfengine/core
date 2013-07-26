@@ -243,11 +243,16 @@ static void KeepPromises(EvalContext *ctx, Policy *policy)
                 continue;
             }
 
-            if (!EvalContextVariableGet(ctx, (VarRef) { NULL, "control_monitor", cp->lval }, &retval, NULL))
+            VarRef *ref = VarRefParseFromScope(cp->lval, "control_monitor");
+
+            if (!EvalContextVariableGet(ctx, ref, &retval, NULL))
             {
                 Log(LOG_LEVEL_ERR, "Unknown lval '%s' in monitor control body", cp->lval);
+                VarRefDestroy(ref);
                 continue;
             }
+
+            VarRefDestroy(ref);
 
             if (strcmp(cp->lval, CFM_CONTROLBODY[MONITOR_CONTROL_HISTOGRAMS].lval) == 0)
             {

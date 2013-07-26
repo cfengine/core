@@ -30,7 +30,7 @@
 body common control
 
 {
-bundlesequence  => { "test" };   
+      bundlesequence  => { "test" };   
 }
 
 #######################################################
@@ -38,12 +38,12 @@ bundlesequence  => { "test" };
 bundle agent example
 
 {
-vars:
+  vars:
 
-  "literal" string => escape("192.168.1.100");
+      "literal" string => escape("192.168.1.100");
 
-reports:
+  reports:
 
-  "Escaped $(literal)";
+      "Escaped $(literal)";
 
 }

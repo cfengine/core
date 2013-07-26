@@ -1,60 +1,60 @@
 
 body common control
 {
-bundlesequence => { "test1", "test2" };
+      bundlesequence => { "test1", "test2" };
 }
 
 ##################################################
 
 bundle agent test1
 {
-classes:
+  classes:
 
-  "default" expression => "any";
+      "default" expression => "any";
 
-reports:
+  reports:
 
-  linux::
+    linux::
 
-    "This is a linux box"
-       classes => exclusive;
+      "This is a linux box"
+      classes => exclusive;
 
-  solaris::
+    solaris::
 
 
-    "This is a solaris box"
-       classes => exclusive;
+      "This is a solaris box"
+      classes => exclusive;
 
-  default::
+    default::
 
-    "This is something not worth mentioning specifically"
-       classes => reset_default;
+      "This is something not worth mentioning specifically"
+      classes => reset_default;
 }
 
 ##################################################
 
 bundle agent test2
 {
-classes:
+  classes:
 
-  "default" expression => "any";
+      "default" expression => "any";
 
-reports:
+  reports:
 
-  linux::
+    linux::
 
-    "This is another linux box"
-       classes => exclusive;
+      "This is another linux box"
+      classes => exclusive;
 
-  solaris::
+    solaris::
 
-    "This is another solaris box"
-       classes => exclusive;
+      "This is another solaris box"
+      classes => exclusive;
 
-  default::
+    default::
 
-    "This is something else not worth mentioning specifically"
-       classes => reset_default;
+      "This is something else not worth mentioning specifically"
+      classes => reset_default;
 
 }
 
@@ -62,12 +62,12 @@ reports:
 
 body classes exclusive
 {
-cancel_kept     => { "default" };
-cancel_notkept  => { "default" };
-cancel_repaired => { "default" };
+      cancel_kept     => { "default" };
+      cancel_notkept  => { "default" };
+      cancel_repaired => { "default" };
 }
 
 body classes reset_default
 {
-promise_kept     => { "default" };
+      promise_kept     => { "default" };
 }

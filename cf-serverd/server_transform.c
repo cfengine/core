@@ -274,11 +274,16 @@ static void KeepControlPromises(EvalContext *ctx, Policy *policy, GenericAgentCo
                 continue;
             }
 
-            if (!EvalContextVariableGet(ctx, (VarRef) { NULL, "control_server", cp->lval }, &retval, NULL))
+            VarRef *ref = VarRefParseFromScope(cp->lval, "control_server");
+
+            if (!EvalContextVariableGet(ctx, ref, &retval, NULL))
             {
                 Log(LOG_LEVEL_ERR, "Unknown lval '%s' in server control body", cp->lval);
+                VarRefDestroy(ref);
                 continue;
             }
+
+            VarRefDestroy(ref);
 
             if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_SERVER_FACILITY].lval) == 0)
             {
@@ -529,8 +534,7 @@ static void KeepContextBundles(EvalContext *ctx, Policy *policy)
 
                 BannerPromiseType(bp->name, sp->name, 0);
 
-                EvalContextStackPushBundleFrame(ctx, bp, false);
-                ScopeAugment(ctx, bp, NULL, NULL);
+                EvalContextStackPushBundleFrame(ctx, bp, NULL, false);
 
                 for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
                 {
@@ -577,8 +581,7 @@ static void KeepPromiseBundles(EvalContext *ctx, Policy *policy)
 
                 BannerPromiseType(bp->name, sp->name, 0);
 
-                EvalContextStackPushBundleFrame(ctx, bp, false);
-                ScopeAugment(ctx, bp, NULL, NULL);
+                EvalContextStackPushBundleFrame(ctx, bp, NULL, false);
 
                 for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
                 {

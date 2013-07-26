@@ -456,7 +456,6 @@ typedef enum
 #define CF_RUNC     "runagent"
 #define CF_KEYGEN   "keygenerator"
 #define CF_HUBC     "hub"
-#define CF_GENDOC   "gendoc"
 
 typedef enum
 {
@@ -468,7 +467,6 @@ typedef enum
     AGENT_TYPE_RUNAGENT,
     AGENT_TYPE_KEYGEN,
     AGENT_TYPE_HUB,
-    AGENT_TYPE_GENDOC,
     AGENT_TYPE_NOAGENT
 } AgentType;
 
@@ -753,7 +751,8 @@ typedef struct AssocHashTable_ AssocHashTable;
 /* $(bundlevar) $(scope.name) */
 typedef struct Scope_
 {
-    char *scope;                /* Name of scope */
+    char *ns;
+    char *scope;
     AssocHashTable *hashtable;
     struct Scope_ *next;
 } Scope;

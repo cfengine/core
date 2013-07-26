@@ -6,36 +6,36 @@
 
 body common control
 {
-  inputs => { "../../default.cf.sub" };
-  bundlesequence  => { default("$(this.promise_filename)") };   
-  version => "1.0";
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };   
+      version => "1.0";
 }
 
 bundle common g
 {
-vars:
-	"dummy" string => "dummy";
+  vars:
+      "dummy" string => "dummy";
 }
 
 #######################################################
 
 bundle agent init
 {
-vars:
-	"dummy" string => "dummy";
+  vars:
+      "dummy" string => "dummy";
 }
 
 #######################################################
 
 bundle agent test
 {
-vars:
-    # NOTE: We need to make this test work on Windows by finding a good
-    # registry value to use (and we always expect it to fail on non-Windows
-    #
-    # Always execute this - the return value depends on the OS used, but
-    # we always expect registryvalue() to not crash
-    "regval" string => registryvalue("HKEY_LOCAL_MACHINE\SOFTWARE\...", "X");
+  vars:
+      # NOTE: We need to make this test work on Windows by finding a good
+      # registry value to use (and we always expect it to fail on non-Windows
+      #
+      # Always execute this - the return value depends on the OS used, but
+      # we always expect registryvalue() to not crash
+      "regval" string => registryvalue("HKEY_LOCAL_MACHINE\SOFTWARE\...", "X");
 }
 
 
@@ -43,28 +43,28 @@ vars:
 
 bundle agent check
 {
-classes:
+  classes:
     windows::
-	"ok" and => {
+      "ok" and => {
 		    strcmp("$(test.regval)", "expected value goes here"),
-		    };
+      };
     !windows::
-	"ok" not => isvariable("test.regval");
+      "ok" not => isvariable("test.regval");
 
-reports:
+  reports:
     DEBUG::
-	"Registry value is $(test.regval)";
+      "Registry value is $(test.regval)";
     ok::
-	"$(this.promise_filename) Pass";
+      "$(this.promise_filename) Pass";
 
     !ok::
-	"$(this.promise_filename) FAIL";
+      "$(this.promise_filename) FAIL";
 }
 
 #######################################################
 
 bundle agent fini
 {
-vars:
-	"dummy" string => "dummy";
+  vars:
+      "dummy" string => "dummy";
 }

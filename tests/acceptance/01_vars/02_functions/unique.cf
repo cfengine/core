@@ -51,7 +51,7 @@ bundle agent test
                         "long string",
                         "four", "fix", "six",
                         "one", "two", "three",
-                      };
+      };
       "test_str" string => join(",", "test");
 
       "test_unique" slist => unique("test");

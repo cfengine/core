@@ -29,12 +29,12 @@
 body common control
 
 {
-any::
+    any::
 
-  bundlesequence  => { "update", "main", "cfengine2" };   
+      bundlesequence  => { "update", "main", "cfengine2" };   
 
-  
-  inputs => { "update.cf" };
+      
+      inputs => { "update.cf" };
 }
 
 #######################################################
@@ -42,22 +42,22 @@ any::
 bundle agent main
 
 {
-# do something
-     vars:
-       "sys_files"    slist        => {
-                                      "/etc/passwd",
-                                      "/etc/services"
-                                      };
-     files:
-       "$(sys_files)" perms        => p("root","0644"),
-                      changes      => trip_wire;
-       "/etc/shadow"  perms        => p("root","0600"),
-                      changes      => trip_wire;
-       "/usr"         changes      => trip_wire,
-                      depth_search => recurse("inf");
-       "/tmp"         delete       => tidy,
-                      file_select  => days("2"),
-                      depth_search => recurse("inf");
+      # do something
+  vars:
+      "sys_files"    slist        => {
+                                       "/etc/passwd",
+                                       "/etc/services"
+      };
+  files:
+      "$(sys_files)" perms        => p("root","0644"),
+      changes      => trip_wire;
+      "/etc/shadow"  perms        => p("root","0600"),
+      changes      => trip_wire;
+      "/usr"         changes      => trip_wire,
+      depth_search => recurse("inf");
+      "/tmp"         delete       => tidy,
+      file_select  => days("2"),
+      depth_search => recurse("inf");
 }
 
 #######################################################
@@ -65,9 +65,9 @@ bundle agent main
 bundle agent cfengine2
 
 {
-commands:
+  commands:
 
- "/var/cfengine/bin/cfagent";
+      "/var/cfengine/bin/cfagent";
 
 
 }

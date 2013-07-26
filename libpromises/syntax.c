@@ -45,8 +45,8 @@ static SyntaxTypeMatch CheckParseInt(const char *lv, const char *s, const char *
 static SyntaxTypeMatch CheckParseReal(const char *lv, const char *s, const char *range);
 static SyntaxTypeMatch CheckParseRealRange(const char *lval, const char *s, const char *range);
 static SyntaxTypeMatch CheckParseIntRange(const char *lval, const char *s, const char *range);
-static SyntaxTypeMatch CheckParseOpts(const char *lv, const char *s, const char *range);
-static SyntaxTypeMatch CheckFnCallType(const char *lval, const char *s, DataType dtype, const char *range);
+static SyntaxTypeMatch CheckParseOpts(const char *s, const char *range);
+static SyntaxTypeMatch CheckFnCallType(const char *s, DataType dtype);
 
 /*********************************************************/
 
@@ -345,7 +345,7 @@ SyntaxTypeMatch CheckConstraintTypeMatch(const char *lval, Rval rval, DataType d
 
         if (!IsItemIn(checklist, lval))
         {
-            SyntaxTypeMatch err = CheckFnCallType(lval, ((FnCall *) rval.item)->name, dt, range);
+            SyntaxTypeMatch err = CheckFnCallType(RvalFnCallValue(rval)->name, dt);
             DeleteItemList(checklist);
             return err;
         }
@@ -379,7 +379,7 @@ SyntaxTypeMatch CheckConstraintTypeMatch(const char *lval, Rval rval, DataType d
 
     case DATA_TYPE_OPTION:
     case DATA_TYPE_OPTION_LIST:
-        return CheckParseOpts(lval, (const char *) rval.item, range);
+        return CheckParseOpts(RvalScalarValue(rval), range);
 
     case DATA_TYPE_CONTEXT:
     case DATA_TYPE_CONTEXT_LIST:
@@ -401,7 +401,7 @@ SyntaxTypeMatch CheckConstraintTypeMatch(const char *lval, Rval rval, DataType d
 
 /****************************************************************************/
 
-DataType StringDataType(EvalContext *ctx, const char *scopeid, const char *string)
+DataType StringDataType(EvalContext *ctx, const char *string)
 {
     DataType dtype;
     Rval rval;
@@ -426,19 +426,26 @@ vars:
     {
         if (ExtractInnerCf3VarString(string, var))
         {
-            if (EvalContextVariableGet(ctx, (VarRef) { NULL, scopeid, var }, &rval, &dtype))
+            if (!IsExpandable(var))
             {
-                if (rval.type == RVAL_TYPE_LIST)
+                VarRef *ref = VarRefParse(var);
+
+                if (EvalContextVariableGet(ctx, ref, &rval, &dtype))
                 {
-                    if (!islist)
+                    if (rval.type == RVAL_TYPE_LIST)
                     {
-                        islist = true;
-                    }
-                    else
-                    {
-                        islist = false;
+                        if (!islist)
+                        {
+                            islist = true;
+                        }
+                        else
+                        {
+                            islist = false;
+                        }
                     }
                 }
+
+                VarRefDestroy(ref);
             }
 
             if (strlen(var) == strlen(string))
@@ -761,7 +768,7 @@ static SyntaxTypeMatch CheckParseRealRange(const char *lval, const char *s, cons
 
 /****************************************************************************/
 
-static SyntaxTypeMatch CheckParseOpts(const char *lval, const char *s, const char *range)
+static SyntaxTypeMatch CheckParseOpts(const char *s, const char *range)
 {
     Item *split;
 
@@ -857,7 +864,7 @@ bool IsDataType(const char *s)
 
 /****************************************************************************/
 
-static SyntaxTypeMatch CheckFnCallType(const char *lval, const char *s, DataType dtype, const char *range)
+static SyntaxTypeMatch CheckFnCallType(const char *s, DataType dtype)
 {
     DataType dt;
     const FnCallType *fn;

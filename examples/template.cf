@@ -29,7 +29,7 @@
 body common control
 
 {
-bundlesequence  => { "example"  };
+      bundlesequence  => { "example"  };
 }
 
 ########################################################
@@ -37,12 +37,12 @@ bundlesequence  => { "example"  };
 bundle agent example
 
 {
-files:
+  files:
 
-  "/home/mark/tmp/file_based_on_template"
+      "/home/mark/tmp/file_based_on_template"
 
-       create    => "true",
-       edit_line => ExpandMeFrom("/tmp/source_template");
+      create    => "true",
+      edit_line => ExpandMeFrom("/tmp/source_template");
 
 
 }
@@ -51,15 +51,15 @@ files:
 
 bundle edit_line ExpandMeFrom(template)
 {
-vars:
+  vars:
 
-   "myvar" string => "[sub string]";
+      "myvar" string => "[sub string]";
 
-insert_lines:
+  insert_lines:
 
-   "$(template)"
+      "$(template)"
 
-          insert_type => "file",
-       expand_scalars => "true";
+      insert_type => "file",
+      expand_scalars => "true";
 }
 

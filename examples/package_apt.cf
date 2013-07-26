@@ -28,34 +28,34 @@
 
 body common control
 {
-bundlesequence => { "packages" };
+      bundlesequence => { "packages" };
 }
 
 body agent control
 {
-environment => { "DEBIAN_FRONTEND=noninteractive" };
+      environment => { "DEBIAN_FRONTEND=noninteractive" };
 }
 
 #############################################
 
 bundle agent packages
 {
-vars:
+  vars:
 
- # Test the simplest case -- leave everything to the yum smart manager
+      # Test the simplest case -- leave everything to the yum smart manager
 
- "match_package" slist => { 
-                          "apache2" 
-#                          "apache2-mod_php5",
-#                          "apache2-prefork",
-#                          "php5" 
-                          };
-packages:
+      "match_package" slist => { 
+				 "apache2" 
+				 #                          "apache2-mod_php5",
+				 #                          "apache2-prefork",
+				 #                          "php5" 
+      };
+  packages:
 
-  "$(match_package)"
+      "$(match_package)"
 
-     package_policy => "add",
-     package_method => apt;
+      package_policy => "add",
+      package_method => apt;
 
 }
 
@@ -64,31 +64,31 @@ packages:
 body package_method apt
 
 {
-any::
+    any::
 
-# ii  acpi      0.09-3ubuntu1     
+      # ii  acpi      0.09-3ubuntu1     
 
- package_changes => "bulk";
- package_list_command => "/usr/bin/dpkg -l";
+      package_changes => "bulk";
+      package_list_command => "/usr/bin/dpkg -l";
 
- package_list_name_regex    => "ii\s+([^\s]+).*";
- package_list_version_regex => "ii\s+[^\s]+\s+([^\s]+).*";
+      package_list_name_regex    => "ii\s+([^\s]+).*";
+      package_list_version_regex => "ii\s+[^\s]+\s+([^\s]+).*";
 
-# package_list_arch_regex    => "none";
+      # package_list_arch_regex    => "none";
 
- package_installed_regex => ".*"; # all reported are installed
+      package_installed_regex => ".*"; # all reported are installed
 
- #package_name_convention => "$(name)_$(version)_$(arch)";
- package_name_convention => "$(name)";
+      #package_name_convention => "$(name)_$(version)_$(arch)";
+      package_name_convention => "$(name)";
 
- # Use these only if not using a separate version/arch string
- # package_version_regex => "";
- # package_name_regex => "";
- # package_arch_regex => "";
+      # Use these only if not using a separate version/arch string
+      # package_version_regex => "";
+      # package_name_regex => "";
+      # package_arch_regex => "";
 
-package_add_command => "/usr/bin/apt-get --yes install";
-package_delete_command => "/usr/bin/apt-get --yes remove";
-package_update_command =>  "/usr/bin/apt-get --yes dist-upgrade";
-#package_verify_command => "/bin/rpm -V";
+      package_add_command => "/usr/bin/apt-get --yes install";
+      package_delete_command => "/usr/bin/apt-get --yes remove";
+      package_update_command =>  "/usr/bin/apt-get --yes dist-upgrade";
+      #package_verify_command => "/bin/rpm -V";
 }
 

@@ -2,8 +2,8 @@
 
 bundle agent test_in_last_file
 {
-reports:
+  reports:
 
-    "Final namespace is the default";
- 
+      "Final namespace is the default";
+      
 }

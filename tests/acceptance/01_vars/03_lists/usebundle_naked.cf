@@ -2,15 +2,15 @@
 
 body common control
 {
-    inputs => { "../../default.cf.sub" };
-    bundlesequence => { default("$(this.promise_filename)") };
-    version => "1.0";
+      inputs => { "../../default.cf.sub" };
+      bundlesequence => { default("$(this.promise_filename)") };
+      version => "1.0";
 }
 
 bundle agent init
 {
   vars:
-    "expected" string => "1,2,3";
+      "expected" string => "1,2,3";
 }
 
 bundle agent test

@@ -24,7 +24,7 @@
 body common control
 
 {
-bundlesequence  => { "example" };
+      bundlesequence  => { "example" };
 }
 
 ###########################################################
@@ -32,12 +32,12 @@ bundlesequence  => { "example" };
 bundle agent example
 
 {     
-vars:
+  vars:
 
-  "free" int => diskfree("/tmp"); 
+      "free" int => diskfree("/tmp"); 
 
-reports:
+  reports:
 
-    "Freedisk $(free)";
+      "Freedisk $(free)";
 
 }

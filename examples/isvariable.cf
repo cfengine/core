@@ -24,7 +24,7 @@
 body common control
 
 {
-bundlesequence  => { "example" };
+      bundlesequence  => { "example" };
 }
 
 ###########################################################
@@ -32,19 +32,19 @@ bundlesequence  => { "example" };
 bundle agent example
 
 {     
-vars:
+  vars:
 
-  "bla" string => "xyz..";
+      "bla" string => "xyz..";
 
-classes:
+  classes:
 
-  "exists" expression => isvariable("bla");
+      "exists" expression => isvariable("bla");
 
-reports:
+  reports:
 
-  exists::
+    exists::
 
-    "Variable exists: \"$(bla)\"..";
+      "Variable exists: \"$(bla)\"..";
 
 }
 

@@ -860,7 +860,7 @@ case "$target_os" in
    aix*)
         CPPFLAGS="$CPPFLAGS -w"
         ;;
-   linux*)
+   linux*|*bsd*gnu)
         AC_CHECK_LIB(nss_nis, yp_get_default_domain)
         ;;
    freebsd*|dragonfly*)
@@ -1076,7 +1076,6 @@ AC_CONFIG_FILES([Makefile
     cf-agent/Makefile
     cf-promises/Makefile
     cf-execd/Makefile
-    cf-gendoc/Makefile
     cf-key/Makefile
     cf-monitord/Makefile
     cf-runagent/Makefile

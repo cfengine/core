@@ -531,12 +531,7 @@ int FullTextMatch(const char *regptr, const char *cmpptr)
     fail();
 }
 
-bool EvalContextVariableGet(const EvalContext *ctx, VarRef lval, Rval *rval_out, DataType *type_out)
-{
-    fail();
-}
-
-Scope *ScopeGetCurrent(void)
+bool EvalContextVariableGet(const EvalContext *ctx, const VarRef *lval, Rval *rval_out, DataType *type_out)
 {
     fail();
 }

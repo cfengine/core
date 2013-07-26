@@ -320,19 +320,12 @@ static bool IgnoreJailInterface(
 
 /******************************************************************/
 
-static void GetMacAddress(EvalContext *ctx, AgentType ag, int fd, struct ifreq *ifr, struct ifreq *ifp, Rlist **interfaces,
+static void GetMacAddress(EvalContext *ctx, int fd, struct ifreq *ifr, struct ifreq *ifp, Rlist **interfaces,
                           Rlist **hardware)
 {
     char name[CF_MAXVARSIZE];
 
-    if (ag != AGENT_TYPE_GENDOC)
-    {
-        snprintf(name, sizeof(name), "hardware_mac[%s]", ifp->ifr_name);
-    }
-    else
-    {
-        snprintf(name, sizeof(name), "hardware_mac[interface_name]");
-    }
+    snprintf(name, sizeof(name), "hardware_mac[%s]", ifp->ifr_name);
 
     // mac address on a loopback interface doesn't make sense
     if (ifr->ifr_flags & IFF_LOOPBACK)
@@ -357,7 +350,7 @@ static void GetMacAddress(EvalContext *ctx, AgentType ag, int fd, struct ifreq *
              (unsigned char) ifr->ifr_hwaddr.sa_data[4], 
              (unsigned char) ifr->ifr_hwaddr.sa_data[5]);
 
-    ScopeNewSpecial(ctx, "sys", name, hw_mac, DATA_TYPE_STRING);
+    ScopeNewSpecial(ctx, SPECIAL_SCOPE_SYS, name, hw_mac, DATA_TYPE_STRING);
     RlistAppend(hardware, hw_mac, RVAL_TYPE_SCALAR);
     RlistAppend(interfaces, ifp->ifr_name, RVAL_TYPE_SCALAR);
 
@@ -375,7 +368,7 @@ static void GetMacAddress(EvalContext *ctx, AgentType ag, int fd, struct ifreq *
         Log(LOG_LEVEL_ERR, "getifaddrs", "!! Could not get interface %s addresses",
           ifp->ifr_name);
 
-        ScopeNewSpecial(ctx, "sys", name, "mac_unknown", DATA_TYPE_STRING);
+        ScopeNewSpecial(ctx, SPECIAL_SCOPE_SYS, name, "mac_unknown", DATA_TYPE_STRING);
         EvalContextHeapAddHard(ctx, "mac_unknown");
         return;
     }
@@ -396,7 +389,7 @@ static void GetMacAddress(EvalContext *ctx, AgentType ag, int fd, struct ifreq *
                     (unsigned char) m[4],
                     (unsigned char) m[5]);
 
-                ScopeNewSpecial(ctx, "sys", name, hw_mac, DATA_TYPE_STRING);
+                ScopeNewSpecial(ctx, SPECIAL_SCOPE_SYS, name, hw_mac, DATA_TYPE_STRING);
                 RlistAppend(hardware, hw_mac, RVAL_TYPE_SCALAR);
                 RlistAppend(interfaces, ifa->ifa_name, RVAL_TYPE_SCALAR);
 
@@ -409,27 +402,20 @@ static void GetMacAddress(EvalContext *ctx, AgentType ag, int fd, struct ifreq *
     freeifaddrs(ifaddr);
 
 # else
-    ScopeNewSpecial(ctx, "sys", name, "mac_unknown", DATA_TYPE_STRING);
+    ScopeNewSpecial(ctx, SPECIAL_SCOPE_SYS, name, "mac_unknown", DATA_TYPE_STRING);
     EvalContextHeapAddHard(ctx, "mac_unknown");
 # endif
 }
 
 /******************************************************************/
 
-void GetInterfaceFlags(EvalContext *ctx, AgentType ag, struct ifreq *ifr, Rlist **flags)
+void GetInterfaceFlags(EvalContext *ctx, struct ifreq *ifr, Rlist **flags)
 {
     char name[CF_MAXVARSIZE];
     char buffer[CF_BUFSIZE] = "";
     char *fp = NULL;
 
-    if (ag != AGENT_TYPE_GENDOC)
-    {
-        snprintf(name, sizeof(name), "interface_flags[%s]", ifr->ifr_name);
-    }
-    else
-    {
-        snprintf(name, sizeof(name), "interface_flags[interface_name]");
-    }
+    snprintf(name, sizeof(name), "interface_flags[%s]", ifr->ifr_name);
 
     if (ifr->ifr_flags & IFF_UP) strcat(buffer, " up");
     if (ifr->ifr_flags & IFF_BROADCAST) strcat(buffer, " broadcast");
@@ -452,14 +438,14 @@ void GetInterfaceFlags(EvalContext *ctx, AgentType ag, struct ifreq *ifr, Rlist 
     {
       // Skip leading space
       fp = buffer + 1;
-      ScopeNewSpecial(ctx, "sys", name, fp, DATA_TYPE_STRING);
+      ScopeNewSpecial(ctx, SPECIAL_SCOPE_SYS, name, fp, DATA_TYPE_STRING);
       RlistAppend(flags, fp, RVAL_TYPE_SCALAR);
     }
 }
 
 /******************************************************************/
 
-void GetInterfacesInfo(EvalContext *ctx, AgentType ag)
+void GetInterfacesInfo(EvalContext *ctx)
 {
     bool address_set = false;
     int fd, len, i, j;
@@ -541,7 +527,7 @@ void GetInterfacesInfo(EvalContext *ctx, AgentType ag)
         if (strcmp(last_name, ifp->ifr_name) != 0)
         {
             strcpy(last_name, ifp->ifr_name);
-            ScopeNewSpecial(ctx, "sys", "interface", last_name, DATA_TYPE_STRING);
+            ScopeNewSpecial(ctx, SPECIAL_SCOPE_SYS, "interface", last_name, DATA_TYPE_STRING);
         }
 
         snprintf(workbuf, sizeof(workbuf), "net_iface_%s", CanonifyName(ifp->ifr_name));
@@ -559,7 +545,7 @@ void GetInterfacesInfo(EvalContext *ctx, AgentType ag)
             }
             else
             {
-              GetInterfaceFlags(ctx, ag, &ifr, &flags);
+              GetInterfaceFlags(ctx, &ifr, &flags);
             }
 
             if (ifr.ifr_flags & IFF_UP)
@@ -638,7 +624,7 @@ void GetInterfacesInfo(EvalContext *ctx, AgentType ag)
                         {
                             *sp = '\0';
                             snprintf(name, sizeof(name), "ipv4_%d[%s]", i--, CanonifyName(VIPADDRESS));
-                            ScopeNewSpecial(ctx, "sys", name, ip, DATA_TYPE_STRING);
+                            ScopeNewSpecial(ctx, SPECIAL_SCOPE_SYS, name, ip, DATA_TYPE_STRING);
                         }
                     }
                     continue;
@@ -655,7 +641,7 @@ void GetInterfacesInfo(EvalContext *ctx, AgentType ag)
                  * interface. */
                 if (!address_set && !(ifr.ifr_flags & IFF_LOOPBACK))
                 {
-                    ScopeNewSpecial(ctx, "sys", "ipv4", txtaddr, DATA_TYPE_STRING);
+                    ScopeNewSpecial(ctx, SPECIAL_SCOPE_SYS, "ipv4", txtaddr, DATA_TYPE_STRING);
 
                     strcpy(VIPADDRESS, txtaddr);
                     Log(LOG_LEVEL_VERBOSE, "IP address of host set to %s",
@@ -679,16 +665,9 @@ void GetInterfacesInfo(EvalContext *ctx, AgentType ag)
 
                 strcpy(ip, txtaddr);
 
-                if (ag != AGENT_TYPE_GENDOC)
-                {
-                    snprintf(name, sizeof(name), "ipv4[%s]", CanonifyName(ifp->ifr_name));
-                }
-                else
-                {
-                    snprintf(name, sizeof(name), "ipv4[interface_name]");
-                }
+                snprintf(name, sizeof(name), "ipv4[%s]", CanonifyName(ifp->ifr_name));
 
-                ScopeNewSpecial(ctx, "sys", name, ip, DATA_TYPE_STRING);
+                ScopeNewSpecial(ctx, SPECIAL_SCOPE_SYS, name, ip, DATA_TYPE_STRING);
 
                 i = 3;
 
@@ -698,31 +677,24 @@ void GetInterfacesInfo(EvalContext *ctx, AgentType ag)
                     {
                         *sp = '\0';
 
-                        if (ag != AGENT_TYPE_GENDOC)
-                        {
-                            snprintf(name, sizeof(name), "ipv4_%d[%s]", i--, CanonifyName(ifp->ifr_name));
-                        }
-                        else
-                        {
-                            snprintf(name, sizeof(name), "ipv4_%d[interface_name]", i--);
-                        }
+                        snprintf(name, sizeof(name), "ipv4_%d[%s]", i--, CanonifyName(ifp->ifr_name));
 
-                        ScopeNewSpecial(ctx, "sys", name, ip, DATA_TYPE_STRING);
+                        ScopeNewSpecial(ctx, SPECIAL_SCOPE_SYS, name, ip, DATA_TYPE_STRING);
                     }
                 }
             }
 
             // Set the hardware/mac address array
-            GetMacAddress(ctx, ag, fd, &ifr, ifp, &interfaces, &hardware);
+            GetMacAddress(ctx, fd, &ifr, ifp, &interfaces, &hardware);
         }
     }
 
     close(fd);
 
-    ScopeNewSpecial(ctx, "sys", "interfaces", interfaces, DATA_TYPE_STRING_LIST);
-    ScopeNewSpecial(ctx, "sys", "hardware_addresses", hardware, DATA_TYPE_STRING_LIST);
-    ScopeNewSpecial(ctx, "sys", "hardware_flags", flags, DATA_TYPE_STRING_LIST);
-    ScopeNewSpecial(ctx, "sys", "ip_addresses", ips, DATA_TYPE_STRING_LIST);
+    ScopeNewSpecial(ctx, SPECIAL_SCOPE_SYS, "interfaces", interfaces, DATA_TYPE_STRING_LIST);
+    ScopeNewSpecial(ctx, SPECIAL_SCOPE_SYS, "hardware_addresses", hardware, DATA_TYPE_STRING_LIST);
+    ScopeNewSpecial(ctx, SPECIAL_SCOPE_SYS, "hardware_flags", flags, DATA_TYPE_STRING_LIST);
+    ScopeNewSpecial(ctx, SPECIAL_SCOPE_SYS, "ip_addresses", ips, DATA_TYPE_STRING_LIST);
 
     RlistDestroy(interfaces);
     RlistDestroy(hardware);

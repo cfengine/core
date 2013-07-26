@@ -24,7 +24,7 @@
 body common control
 
 {
-bundlesequence  => { "example" };
+      bundlesequence  => { "example" };
 }
 
 ###########################################################
@@ -32,13 +32,13 @@ bundlesequence  => { "example" };
 bundle agent example
 
 {     
-vars:
+  vars:
 
-  "no" int => countlinesmatching("m.*","/etc/passwd");
+      "no" int => countlinesmatching("m.*","/etc/passwd");
 
-reports:
+  reports:
 
-    "Found $(no) lines matching";
+      "Found $(no) lines matching";
 
 }
 

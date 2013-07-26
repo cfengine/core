@@ -23,7 +23,7 @@
 
 body common control
 {
-bundlesequence => { "g","tryclasses_1", "tryclasses_2" };
+      bundlesequence => { "g","tryclasses_1", "tryclasses_2" };
 
 }
 
@@ -31,35 +31,35 @@ bundlesequence => { "g","tryclasses_1", "tryclasses_2" };
 
 bundle common g
 {
-classes:
+  classes:
 
-  "one" expression => "any";
+      "one" expression => "any";
 
-  "client_network" expression => iprange("128.39.89.0/24");
+      "client_network" expression => iprange("128.39.89.0/24");
 }
 
 #################################
 
 bundle agent tryclasses_1
 {
-classes:
+  classes:
 
-  "two" expression => "any";
+      "two" expression => "any";
 }
 
 #################################
 
 bundle agent tryclasses_2
 {
-classes:
+  classes:
 
-  "three" expression => "any";
+      "three" expression => "any";
 
-reports:
+  reports:
 
-  one.three.!two::
+    one.three.!two::
 
-    "Success";
+      "Success";
 }
 
 

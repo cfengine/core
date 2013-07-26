@@ -24,34 +24,34 @@
 body common control
 
 {
-bundlesequence  => { "example"  };
+      bundlesequence  => { "example"  };
 }
 
 ###########################################
 
 bundle agent example
 {
-vars:
+  vars:
 
-  "myarray[0]" string => "bla1";
-  "myarray[1]" string => "bla2";
-  "myarray[3]" string => "bla";
-  "myarray"    string => "345";  
-  "not"        string => "345";  
+      "myarray[0]" string => "bla1";
+      "myarray[1]" string => "bla2";
+      "myarray[3]" string => "bla";
+      "myarray"    string => "345";  
+      "not"        string => "345";  
 
-classes:
+  classes:
 
-  "ok" expression => regarray("myarray","b.*2");
+      "ok" expression => regarray("myarray","b.*2");
 
-reports:
+  reports:
 
- ok::
+    ok::
 
-    "Found in list";
+      "Found in list";
 
- !ok::
+    !ok::
 
-    "Not found in list";
+      "Not found in list";
 
 }
 

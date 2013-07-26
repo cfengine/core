@@ -5,8 +5,8 @@
 body common control
 
 {
-version => "1.2.3";
-bundlesequence  => { "example" };
+      version => "1.2.3";
+      bundlesequence  => { "example" };
 }
 
 ########################################################
@@ -14,17 +14,17 @@ bundlesequence  => { "example" };
 bundle agent example
 
 {
-classes:
+  classes:
 
-    # Extract regular backreferences and put them in an array
+      # Extract regular backreferences and put them in an array
 
-    "ok" expression => regextract("xx ([^\s]+) ([^\s]+).* xx","xx one two three four xx","myarray");
+      "ok" expression => regextract("xx ([^\s]+) ([^\s]+).* xx","xx one two three four xx","myarray");
 
-reports:
+  reports:
 
- ok::
+    ok::
 
-   "ok - \"$(myarray[0])\" = xx + \"$(myarray[1])\" + \"$(myarray[2])\" + .. + xx";
+      "ok - \"$(myarray[0])\" = xx + \"$(myarray[1])\" + \"$(myarray[2])\" + .. + xx";
 
 
 }

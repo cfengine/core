@@ -38,16 +38,39 @@
 #include <env_context.h>
 #include <audit.h>
 
-
-Scope *SCOPE_CURRENT = NULL;
-
 Scope *SCOPE_MATCH = NULL;
 
 /*******************************************************************/
 
-Scope *ScopeNew(const char *name)
+static const char *SpecialScopeToString(SpecialScope scope)
 {
-    Scope *ptr;
+    switch (scope)
+    {
+    case SPECIAL_SCOPE_CONST:
+        return "const";
+    case SPECIAL_SCOPE_EDIT:
+        return "edit";
+    case SPECIAL_SCOPE_MATCH:
+        return "match";
+    case SPECIAL_SCOPE_MON:
+        return "mon";
+    case SPECIAL_SCOPE_SYS:
+        return "sys";
+    case SPECIAL_SCOPE_THIS:
+        return "this";
+    default:
+        ProgrammingError("Unhandled special scope");
+    }
+}
+
+Scope *ScopeNew(const char *ns, const char *scope)
+{
+    assert(scope);
+
+    if (!ns)
+    {
+        ns = "default";
+    }
 
     if (!ThreadLock(cft_vscope))
     {
@@ -55,21 +78,26 @@ Scope *ScopeNew(const char *name)
         return NULL;
     }
 
-    for (ptr = VSCOPE; ptr != NULL; ptr = ptr->next)
+    for (Scope *ptr = VSCOPE; ptr != NULL; ptr = ptr->next)
     {
-        if (strcmp(ptr->scope, name) == 0)
+        if (strcmp(ptr->ns, ns) == 0 && strcmp(ptr->scope, scope) == 0)
         {
             ThreadUnlock(cft_vscope);
             return NULL;
         }
     }
 
-    ptr = xcalloc(1, sizeof(Scope));
+    Scope *ptr = xcalloc(1, sizeof(Scope));
 
-    ptr->next = VSCOPE;
-    ptr->scope = xstrdup(name);
     ptr->hashtable = HashInit();
+    ptr->ns = xstrdup(ns);
+    ptr->scope = xstrdup(scope);
+    assert(ptr->scope);
+    ptr->next = VSCOPE;
     VSCOPE = ptr;
+
+    assert(VSCOPE->scope);
+
     ThreadUnlock(cft_vscope);
 
     return ptr;
@@ -79,7 +107,7 @@ void ScopePutMatch(int index, const char *value)
 {
     if (!SCOPE_MATCH)
     {
-        SCOPE_MATCH = ScopeNew("match");
+        SCOPE_MATCH = ScopeNew(NULL, "match");
     }
     Scope *ptr = SCOPE_MATCH;
 
@@ -92,14 +120,14 @@ void ScopePutMatch(int index, const char *value)
 
     if (assoc)
     {
-        if (CompareVariableValue(rval, assoc) == 0)
+        if (CompareVariableValue(rval, assoc->rval) == 0)
         {
             /* Identical value, keep as is */
         }
         else
         {
             /* Different value, bark and replace */
-            if (!UnresolvedVariables(assoc, RVAL_TYPE_SCALAR))
+            if (!UnresolvedVariables(assoc->rval, RVAL_TYPE_SCALAR))
             {
                 Log(LOG_LEVEL_INFO, "Duplicate selection of value for variable '%s' in scope '%s'", lval, ptr->scope);
             }
@@ -118,7 +146,7 @@ void ScopePutMatch(int index, const char *value)
     }
 }
 
-Scope *ScopeGet(const char *scope)
+Scope *ScopeGet(const char *ns, const char *scope)
 /* 
  * Not thread safe - returns pointer to global memory
  */
@@ -128,21 +156,19 @@ Scope *ScopeGet(const char *scope)
         return NULL;
     }
 
-    const char *name = scope;
-
-    if (strncmp(scope, "default:", strlen("default:")) == 0)  // CF_NS == ':'
+    if (!ns)
     {
-        name = scope + strlen("default:");
+        ns = "default";
     }
 
-    if (strcmp("match", name) == 0)
+    if (strcmp("match", scope) == 0)
     {
         return SCOPE_MATCH;
     }
 
     for (Scope *cp = VSCOPE; cp != NULL; cp = cp->next)
     {
-        if (strcmp(cp->scope, name) == 0)
+        if (strcmp(cp->ns, ns) == 0 && strcmp(cp->scope, scope) == 0)
         {
             return cp;
         }
@@ -151,25 +177,9 @@ Scope *ScopeGet(const char *scope)
     return NULL;
 }
 
-bool ScopeExists(const char *name)
+bool ScopeExists(const char *ns, const char *name)
 {
-    return ScopeGet(name) != NULL;
-}
-
-void ScopeSetCurrent(const char *name)
-{
-    Scope *scope = ScopeGet(name);
-    if (!scope)
-    {
-        scope = ScopeNew(name);
-    }
-
-    SCOPE_CURRENT = scope;
-}
-
-Scope *ScopeGetCurrent(void)
-{
-    return SCOPE_CURRENT;
+    return ScopeGet(ns, name) != NULL;
 }
 
 void ScopeAugment(EvalContext *ctx, const Bundle *bp, const Promise *pp, const Rlist *arguments)
@@ -210,11 +220,15 @@ void ScopeAugment(EvalContext *ctx, const Bundle *bp, const Promise *pp, const R
             Rval retval;
             if (pbp != NULL)
             {
-                EvalContextVariableGet(ctx, (VarRef) { pbp->ns, pbp->name, naked }, &retval, &vtype);
+                VarRef *ref = VarRefParseFromBundle(naked, pbp);
+                EvalContextVariableGet(ctx, ref, &retval, &vtype);
+                VarRefDestroy(ref);
             }
             else
             {
-                EvalContextVariableGet(ctx, (VarRef) { NULL, bp->name, naked }, &retval, &vtype);
+                VarRef *ref = VarRefParseFromBundle(naked, bp);
+                EvalContextVariableGet(ctx, ref, &retval, &vtype);
+                VarRefDestroy(ref);
             }
 
             switch (vtype)
@@ -222,11 +236,19 @@ void ScopeAugment(EvalContext *ctx, const Bundle *bp, const Promise *pp, const R
             case DATA_TYPE_STRING_LIST:
             case DATA_TYPE_INT_LIST:
             case DATA_TYPE_REAL_LIST:
-                EvalContextVariablePut(ctx, (VarRef) { NULL, bp->name, lval }, (Rval) { retval.item, RVAL_TYPE_LIST}, DATA_TYPE_STRING_LIST);
+                {
+                    VarRef *ref = VarRefParseFromBundle(lval, bp);
+                    EvalContextVariablePut(ctx, ref, (Rval) { retval.item, RVAL_TYPE_LIST}, DATA_TYPE_STRING_LIST);
+                    VarRefDestroy(ref);
+                }
                 break;
             default:
-                Log(LOG_LEVEL_ERR, "List parameter '%s' not found while constructing scope '%s' - use @(scope.variable) in calling reference", naked, bp->name);
-                EvalContextVariablePut(ctx, (VarRef) { NULL, bp->name, lval }, (Rval) { rpr->item, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
+                {
+                    Log(LOG_LEVEL_ERR, "List parameter '%s' not found while constructing scope '%s' - use @(scope.variable) in calling reference", naked, bp->name);
+                    VarRef *ref = VarRefParseFromBundle(lval, bp);
+                    EvalContextVariablePut(ctx, ref, (Rval) { rpr->item, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
+                    VarRefDestroy(ref);
+                }
                 break;
             }
         }
@@ -235,7 +257,11 @@ void ScopeAugment(EvalContext *ctx, const Bundle *bp, const Promise *pp, const R
             switch(rpr->type)
             {
             case RVAL_TYPE_SCALAR:
-                EvalContextVariablePut(ctx, (VarRef) { NULL, bp->name, lval }, (Rval) { rpr->item, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
+                {
+                    VarRef *ref = VarRefParseFromBundle(lval, bp);
+                    EvalContextVariablePut(ctx, ref, (Rval) { rpr->item, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
+                    VarRefDestroy(ref);
+                }
                 break;
 
             case RVAL_TYPE_FNCALL:
@@ -244,7 +270,9 @@ void ScopeAugment(EvalContext *ctx, const Bundle *bp, const Promise *pp, const R
                     Rval rval = FnCallEvaluate(ctx, subfp, pp).rval;
                     if (rval.type == RVAL_TYPE_SCALAR)
                     {
-                        EvalContextVariablePut(ctx, (VarRef) { NULL, bp->name, lval }, (Rval) { rval.item, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
+                        VarRef *ref = VarRefParseFromBundle(lval, bp);
+                        EvalContextVariablePut(ctx, ref, (Rval) { rval.item, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
+                        VarRefDestroy(ref);
                     }
                     else
                     {
@@ -259,19 +287,6 @@ void ScopeAugment(EvalContext *ctx, const Bundle *bp, const Promise *pp, const R
     }
 
 /* Check that there are no danglers left to evaluate in the hash table itself */
-
-    {
-        Scope *ptr = ScopeGet(bp->name);
-        AssocHashTableIterator i = HashIteratorInit(ptr->hashtable);
-        CfAssoc *assoc = NULL;
-        while ((assoc = HashIteratorNext(&i)))
-        {
-            Rval retval = ExpandPrivateRval(ctx, bp->name, assoc->rval);
-            // Retain the assoc, just replace rval
-            RvalDestroy(assoc->rval);
-            assoc->rval = retval;
-        }
-    }
 
     return;
 }
@@ -335,14 +350,44 @@ void ScopeDeleteAll()
     }
 
     VSCOPE = NULL;
-    SCOPE_CURRENT = NULL;
 
     ThreadUnlock(cft_vscope);
 }
 
 /*******************************************************************/
 
-void ScopeClear(const char *name)
+void ScopeClear(const char *ns, const char *name)
+{
+    assert(name);
+    assert(!ScopeIsReserved(name));
+
+    if (!ns)
+    {
+        ns = "default";
+    }
+
+    if (!ThreadLock(cft_vscope))
+    {
+        Log(LOG_LEVEL_ERR, "Could not lock VSCOPE");
+        return;
+    }
+
+    Scope *scope = ScopeGet(ns, name);
+    if (!scope)
+    {
+        Log(LOG_LEVEL_DEBUG, "No scope '%s' to clear", name);
+        ThreadUnlock(cft_vscope);
+        return;
+    }
+
+    HashFree(scope->hashtable);
+    scope->hashtable = HashInit();
+    Log(LOG_LEVEL_DEBUG, "Scope '%s' cleared", name);
+
+    ThreadUnlock(cft_vscope);
+}
+
+void ScopeClearSpecial(SpecialScope scope)
 {
     if (!ThreadLock(cft_vscope))
     {
@@ -350,28 +395,29 @@ void ScopeClear(const char *name)
         return;
     }
 
-    Scope *scope = ScopeGet(name);
-    if (!scope)
+    Scope *ptr = ScopeGet(NULL, SpecialScopeToString(scope));
+    if (!ptr)
     {
-        Log(LOG_LEVEL_DEBUG, "No such scope to clear");
+        Log(LOG_LEVEL_DEBUG, "No special scope '%s' to clear", SpecialScopeToString(scope));
         ThreadUnlock(cft_vscope);
         return;
     }
 
-    HashFree(scope->hashtable);
-    scope->hashtable = HashInit();
+    HashFree(ptr->hashtable);
+    ptr->hashtable = HashInit();
+    Log(LOG_LEVEL_DEBUG, "Special scope '%s' cleared", SpecialScopeToString(scope));
 
     ThreadUnlock(cft_vscope);
 }
 
 /*******************************************************************/
 
-void ScopeCopy(const char *new_scopename, const Scope *old_scope)
+void ScopeCopy(const char *new_ns, const char *new_scopename, const Scope *old_scope)
 /*
  * Thread safe
  */
 {
-    ScopeNew(new_scopename);
+    ScopeNew(new_ns, new_scopename);
 
     if (!ThreadLock(cft_vscope))
     {
@@ -381,7 +427,7 @@ void ScopeCopy(const char *new_scopename, const Scope *old_scope)
 
     if (old_scope)
     {
-        Scope *np = ScopeGet(new_scopename);
+        Scope *np = ScopeGet(new_ns, new_scopename);
         HashCopy(np->hashtable, old_scope->hashtable);
     }
 
@@ -396,7 +442,7 @@ void ScopePushThis()
 {
     static const char RVAL_TYPE_STACK = 'k';
 
-    Scope *op = ScopeGet("this");
+    Scope *op = ScopeGet(NULL, "this");
     if (!op)
     {
         return;
@@ -406,6 +452,7 @@ void ScopePushThis()
     char name[CF_MAXVARSIZE];
     snprintf(name, CF_MAXVARSIZE, "this_%d", frame_index + 1);
     free(op->scope);
+    free(op->ns);
     op->scope = xstrdup(name);
 
     Rlist *rp = xmalloc(sizeof(Rlist));
@@ -415,7 +462,7 @@ void ScopePushThis()
     rp->type = RVAL_TYPE_STACK;
     CF_STCK = rp;
 
-    ScopeNew("this");
+    ScopeNew(NULL, "this");
 }
 
 /*******************************************************************/
@@ -424,7 +471,7 @@ void ScopePopThis()
 {
     if (RlistLen(CF_STCK) > 0)
     {
-        Scope *current_this = ScopeGet("this");
+        Scope *current_this = ScopeGet(NULL, "this");
         if (current_this)
         {
 
@@ -437,28 +484,13 @@ void ScopePopThis()
         Scope *new_this = rp->item;
         free(new_this->scope);
         new_this->scope = xstrdup("this");
+        new_this->ns = xstrdup("default");
 
         free(rp);
     }
     else
     {
         ProgrammingError("Attempt to pop from empty stack");
-    }
-}
-
-void ScopeToList(Scope *sp, Rlist **list)
-{
-    if (sp == NULL)
-    {
-        return;
-    }
-
-    AssocHashTableIterator i = HashIteratorInit(sp->hashtable);
-    CfAssoc *assoc;
-
-    while ((assoc = HashIteratorNext(&i)))
-    {
-        RlistPrependScalar(list, assoc->lval);
     }
 }
 
@@ -475,53 +507,48 @@ bool ScopeIsReserved(const char *scope)
 /**
  * @WARNING Don't call ScopeDelete*() before this, it's unnecessary.
  */
-void ScopeNewSpecial(EvalContext *ctx, const char *scope, const char *lval, const void *rval, DataType dt)
+void ScopeNewSpecial(EvalContext *ctx, SpecialScope scope, const char *lval, const void *rval, DataType dt)
 {
-    assert(ScopeIsReserved(scope));
-
     Rval rvald;
-    if (EvalContextVariableGet(ctx, (VarRef) { NULL, scope, lval }, &rvald, NULL))
+    VarRef *ref = VarRefParseFromScope(lval, SpecialScopeToString(scope));
+    if (EvalContextVariableGet(ctx, ref, &rvald, NULL))
     {
         ScopeDeleteSpecial(scope, lval);
     }
 
-    EvalContextVariablePut(ctx, (VarRef) { NULL, scope, lval }, (Rval) { rval, DataTypeToRvalType(dt) }, dt);
+    EvalContextVariablePut(ctx, ref, (Rval) { rval, DataTypeToRvalType(dt) }, dt);
+
+    VarRefDestroy(ref);
 }
 
 /*******************************************************************/
 
-void ScopeDeleteScalar(VarRef lval)
+void ScopeDeleteScalar(const VarRef *ref)
 {
-    assert(!ScopeIsReserved(lval.scope));
-    if (ScopeIsReserved(lval.scope))
-    {
-        ScopeDeleteSpecial(lval.scope, lval.lval);
-    }
+    assert(!ScopeIsReserved(ref->scope));
 
-    Scope *scope = ScopeGet(lval.scope);
+    Scope *scope = ScopeGet(ref->ns, ref->scope);
 
     if (scope == NULL)
     {
         return;
     }
 
-    if (HashDeleteElement(scope->hashtable, lval.lval) == false)
+    if (HashDeleteElement(scope->hashtable, ref->lval) == false)
     {
-        Log(LOG_LEVEL_DEBUG, "Attempt to delete non-existent variable '%s' in scope '%s'", lval.lval, lval.scope);
+        Log(LOG_LEVEL_DEBUG, "Attempt to delete non-existent variable '%s' in scope '%s'", ref->lval, ref->scope);
     }
 }
 
-void ScopeDeleteSpecial(const char *scope, const char *lval)
+void ScopeDeleteSpecial(SpecialScope scope, const char *lval)
 {
-    assert(ScopeIsReserved(scope));
-
-    Scope *scope_ptr = ScopeGet(scope);
+    Scope *scope_ptr = ScopeGet(NULL, SpecialScopeToString(scope));
 
     if (scope_ptr == NULL)
     {
         Log(LOG_LEVEL_WARNING,
             "Attempt to delete variable '%s' in non-existent scope '%s'",
-            lval, scope);
+            lval, SpecialScopeToString(scope));
         return;
     }
 
@@ -529,19 +556,19 @@ void ScopeDeleteSpecial(const char *scope, const char *lval)
     {
         Log(LOG_LEVEL_WARNING,
             "Attempt to delete non-existent variable '%s' in scope '%s'",
-            lval, scope);
+            lval, SpecialScopeToString(scope));
         return;
     }
 
     Log(LOG_LEVEL_DEBUG, "Deleted existent variable '%s' in scope '%s'",
-        lval, scope);
+        lval, SpecialScopeToString(scope));
 }
 
 /*******************************************************************/
 
-void ScopeDeleteVariable(const char *scope, const char *id)
+void ScopeDeleteVariable(const char *ns, const char *scope, const char *id)
 {
-    Scope *ptr = ScopeGet(scope);
+    Scope *ptr = ScopeGet(ns, scope);
 
     if (ptr == NULL)
     {
@@ -556,26 +583,26 @@ void ScopeDeleteVariable(const char *scope, const char *id)
 
 /*******************************************************************/
 
-int CompareVariableValue(Rval rval, CfAssoc *ap)
+int CompareVariableValue(Rval a, Rval b)
 {
     const Rlist *list, *rp;
 
-    if (ap == NULL || rval.item == NULL)
+    if (!a.item || !b.item)
     {
         return 1;
     }
 
-    switch (rval.type)
+    switch (a.type)
     {
     case RVAL_TYPE_SCALAR:
-        return strcmp(ap->rval.item, rval.item);
+        return strcmp(b.item, a.item);
 
     case RVAL_TYPE_LIST:
-        list = (const Rlist *) rval.item;
+        list = (const Rlist *) a.item;
 
         for (rp = list; rp != NULL; rp = rp->next)
         {
-            if (!CompareVariableValue((Rval) {rp->item, rp->type}, ap))
+            if (!CompareVariableValue((Rval) {rp->item, rp->type}, b))
             {
                 return -1;
             }
@@ -587,24 +614,19 @@ int CompareVariableValue(Rval rval, CfAssoc *ap)
         return 0;
     }
 
-    return strcmp(ap->rval.item, rval.item);
+    return strcmp(b.item, a.item);
 }
 
-bool UnresolvedVariables(const CfAssoc *ap, RvalType rtype)
+bool UnresolvedVariables(Rval rval, RvalType rtype)
 {
-    if (ap == NULL)
-    {
-        return false;
-    }
-
     switch (rtype)
     {
     case RVAL_TYPE_SCALAR:
-        return IsCf3VarString(ap->rval.item);
+        return IsCf3VarString(rval.item);
 
     case RVAL_TYPE_LIST:
         {
-            for (const Rlist *rp = ap->rval.item; rp != NULL; rp = rp->next)
+            for (const Rlist *rp = rval.item; rp != NULL; rp = rp->next)
             {
                 if (IsCf3VarString(rp->item))
                 {
@@ -623,7 +645,7 @@ bool UnresolvedVariables(const CfAssoc *ap, RvalType rtype)
 
 /*******************************************************************/
 
-void ScopeDeRefListsInHashtable(char *scope, Rlist *namelist, Rlist *dereflist)
+void ScopeDeRefListsInHashtable(const char *ns, char *scope, Rlist *namelist, Rlist *dereflist)
 // Go through scope and for each variable in name-list, replace with a
 // value from the deref "lol" (list of lists) clock
 {
@@ -645,7 +667,7 @@ void ScopeDeRefListsInHashtable(char *scope, Rlist *namelist, Rlist *dereflist)
         return;
     }
 
-    ptr = ScopeGet(scope);
+    ptr = ScopeGet(ns, scope);
     i = HashIteratorInit(ptr->hashtable);
 
     while ((assoc = HashIteratorNext(&i)))
@@ -696,7 +718,7 @@ void ScopeDeRefListsInHashtable(char *scope, Rlist *namelist, Rlist *dereflist)
     }
 }
 
-int ScopeMapBodyArgs(EvalContext *ctx, const char *scopeid, Rlist *give, const Rlist *take)
+int ScopeMapBodyArgs(EvalContext *ctx, const char *ns, const char *scope, Rlist *give, const Rlist *take)
 {
     Rlist *rpg = NULL;
     const Rlist *rpt = NULL;
@@ -717,8 +739,8 @@ int ScopeMapBodyArgs(EvalContext *ctx, const char *scopeid, Rlist *give, const R
 
     for (rpg = give, rpt = take; rpg != NULL && rpt != NULL; rpg = rpg->next, rpt = rpt->next)
     {
-        dtg = StringDataType(ctx, scopeid, (char *) rpg->item);
-        dtt = StringDataType(ctx, scopeid, (char *) rpt->item);
+        dtg = StringDataType(ctx, (char *) rpg->item);
+        dtt = StringDataType(ctx, (char *) rpt->item);
 
         if (dtg != dtt)
         {
@@ -731,15 +753,22 @@ int ScopeMapBodyArgs(EvalContext *ctx, const char *scopeid, Rlist *give, const R
         switch (rpg->type)
         {
         case RVAL_TYPE_SCALAR:
-            lval = (char *) rpt->item;
-            rval = rpg->item;
-            EvalContextVariablePut(ctx, (VarRef) { NULL, scopeid, lval }, (Rval) { rval, RVAL_TYPE_SCALAR }, dtg);
+            {
+                lval = (char *) rpt->item;
+                rval = rpg->item;
+                VarRef *ref = VarRefParseFromNamespaceAndScope(lval, ns, scope, CF_NS, '.');
+                EvalContextVariablePut(ctx, ref, (Rval) { rval, RVAL_TYPE_SCALAR }, dtg);
+            }
             break;
 
         case RVAL_TYPE_LIST:
-            lval = (char *) rpt->item;
-            rval = rpg->item;
-            EvalContextVariablePut(ctx, (VarRef) { NULL, scopeid, lval }, (Rval) { rval, RVAL_TYPE_LIST }, dtg);
+            {
+                lval = (char *) rpt->item;
+                rval = rpg->item;
+                VarRef *ref = VarRefParseFromNamespaceAndScope(lval, ns, scope, CF_NS, '.');
+                EvalContextVariablePut(ctx, ref, (Rval) { rval, RVAL_TYPE_LIST }, dtg);
+                VarRefDestroy(ref);
+            }
             break;
 
         case RVAL_TYPE_FNCALL:
@@ -770,7 +799,9 @@ int ScopeMapBodyArgs(EvalContext *ctx, const char *scopeid, Rlist *give, const R
                 lval = (char *) rpt->item;
                 rval = rpg->item;
 
-                EvalContextVariablePut(ctx, (VarRef) { NULL, scopeid, lval }, (Rval) {rval, RVAL_TYPE_SCALAR }, dtg);
+                VarRef *ref = VarRefParseFromNamespaceAndScope(lval, ns, scope, CF_NS, '.');
+                EvalContextVariablePut(ctx, ref, (Rval) {rval, RVAL_TYPE_SCALAR }, dtg);
+                VarRefDestroy(ref);
             }
 
             break;
@@ -796,11 +827,11 @@ void SplitScopeName(const char *scope, char ns_out[CF_MAXVARSIZE], char bundle_o
     if (split_point)
     {
         strncpy(ns_out, scope, split_point - scope);
-        strncpy(bundle_out, split_point + 1, 100);
+        strncpy(bundle_out, split_point + 1, CF_MAXVARSIZE);
     }
     else
     {
-        strncpy(bundle_out, scope, 100);
+        strncpy(bundle_out, scope, CF_MAXVARSIZE);
     }
 }
 

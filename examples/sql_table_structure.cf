@@ -4,44 +4,44 @@
 
 body common control
 {
-bundlesequence => { "databases" };
+      bundlesequence => { "databases" };
 }
 
 
 bundle agent databases
 
 {
-databases:
+  databases:
 
-  "cfengine_db/users"
+      "cfengine_db/users"
 
-    database_operation => "create",
-    database_type => "sql",
-    database_columns => { 
-                        "username,varchar,50",
-                        "password,varchar,80",
-                        "email,varchar,20",
-                        },
-    database_server => local_mysql("root", "");
+      database_operation => "create",
+      database_type => "sql",
+      database_columns => { 
+                            "username,varchar,50",
+                            "password,varchar,80",
+                            "email,varchar,20",
+      },
+      database_server => local_mysql("root", "");
 }
 
 
 body database_server local_mysql(username, password) 
 {
-db_server_owner => "$(username)";
-db_server_password => "$(password)";
-db_server_host => "localhost";
-db_server_type => "mysql";
-db_server_connection_db => "mysql";
+      db_server_owner => "$(username)";
+      db_server_password => "$(password)";
+      db_server_host => "localhost";
+      db_server_type => "mysql";
+      db_server_connection_db => "mysql";
 }
 
 
 body database_server local_postgresql(username, password)
 {
-db_server_owner => "$(username)";
-db_server_password => "$(password)";
-db_server_host => "localhost";
-db_server_type => "postgres";
-db_server_connection_db => "postgres";
+      db_server_owner => "$(username)";
+      db_server_password => "$(password)";
+      db_server_host => "localhost";
+      db_server_type => "postgres";
+      db_server_connection_db => "postgres";
 }
 

@@ -25,45 +25,45 @@
 
 body common control
 {
-bundlesequence => { "users" };
+      bundlesequence => { "users" };
 }
 
 body agent control
 {
-abortbundleclasses => { "ldap_fail" };
+      abortbundleclasses => { "ldap_fail" };
 }
 
 ################################################################################
 
 bundle agent users
 {
-vars:
+  vars:
 
-   "users" slist => { "mark", "nakarin", "jonhenrik" };
+      "users" slist => { "mark", "nakarin", "jonhenrik" };
 
-files:
+  files:
 
-   "/tmp/passwd2"
+      "/tmp/passwd2"
 
-       create => "true",
-     edit_line => fix_passwd("$(users)");
+      create => "true",
+      edit_line => fix_passwd("$(users)");
 
-reports:
+  reports:
 
-  !ldap_fail::
+    !ldap_fail::
 
-     "Editing user $(users)";
+      "Editing user $(users)";
 }
 
 ###################################################################################################
 
 bundle edit_line fix_passwd(x)
 {
-classes:
+  classes:
 
-    "ldap_fail" not => ldaparray("dat","ldap://eternity.iu.hio.no","dc=cfengine,dc=com","(uid=$(x))","subtree","none");
+      "ldap_fail" not => ldaparray("dat","ldap://eternity.iu.hio.no","dc=cfengine,dc=com","(uid=$(x))","subtree","none");
 
-insert_lines:
+  insert_lines:
 
-   "Hello $(x),$(dat[uid]),$(dat[gecos])";
+      "Hello $(x),$(dat[uid]),$(dat[gecos])";
 }

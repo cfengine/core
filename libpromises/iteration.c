@@ -81,7 +81,7 @@ static Rlist *RlistAppendOrthog(Rlist **start, void *item, RvalType type)
     return rp;
 }
 
-Rlist *NewIterationContext(EvalContext *ctx, const char *scopeid, Rlist *namelist)
+Rlist *NewIterationContext(EvalContext *ctx, const Promise *pp, const char *ns, const char *scope, Rlist *namelist)
 {
     Rlist *rps, *deref_listoflists = NULL;
     Rval retval;
@@ -89,9 +89,9 @@ Rlist *NewIterationContext(EvalContext *ctx, const char *scopeid, Rlist *namelis
     CfAssoc *new;
     Rval newret;
 
-    ScopeCopy("this", ScopeGet(scopeid));
+    ScopeCopy(NULL, "this", ScopeGet(ns, scope));
 
-    ScopeGet("this");
+    ScopeGet(NULL, "this");
 
     if (namelist == NULL)
     {
@@ -101,13 +101,19 @@ Rlist *NewIterationContext(EvalContext *ctx, const char *scopeid, Rlist *namelis
     for (Rlist *rp = namelist; rp != NULL; rp = rp->next)
     {
         dtype = DATA_TYPE_NONE;
-        if (!EvalContextVariableGet(ctx, (VarRef) { NULL, scopeid, rp->item }, &retval, &dtype))
+
+        VarRef *ref = VarRefParseFromNamespaceAndScope(rp->item, ns, scope, CF_NS, '.');
+
+        if (!EvalContextVariableGet(ctx, ref, &retval, &dtype))
         {
-            Log(LOG_LEVEL_ERR, "Couldn't locate variable %s apparently in %s", RlistScalarValue(rp), scopeid);
+            Log(LOG_LEVEL_ERR, "Couldn't locate variable %s apparently in %s", RlistScalarValue(rp), scope);
             Log(LOG_LEVEL_ERR,
                   "Could be incorrect use of a global iterator -- see reference manual on list substitution");
+            VarRefDestroy(ref);
             continue;
         }
+
+        VarRefDestroy(ref);
 
         /* Make a copy of list references in scope only, without the names */
 
@@ -119,7 +125,7 @@ Rlist *NewIterationContext(EvalContext *ctx, const char *scopeid, Rlist *namelis
                 {
                     FnCall *fp = (FnCall *) rps->item;
 
-                    newret = FnCallEvaluate(ctx, fp, NULL).rval;
+                    newret = FnCallEvaluate(ctx, fp, pp).rval;
                     FnCallDestroy(fp);
                     rps->item = newret.item;
                     rps->type = newret.type;
@@ -151,7 +157,7 @@ Rlist *NewIterationContext(EvalContext *ctx, const char *scopeid, Rlist *namelis
 
 void DeleteIterationContext(Rlist *deref)
 {
-    ScopeClear("this");
+    ScopeClearSpecial(SPECIAL_SCOPE_THIS);
 
     if (deref != NULL)
     {

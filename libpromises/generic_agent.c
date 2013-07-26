@@ -133,7 +133,7 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
     EvalContextHeapAddHard(ctx, CF_AGENTTYPES[config->agent_type]);
 
     GetNameInfo3(ctx, config->agent_type);
-    GetInterfacesInfo(ctx, config->agent_type);
+    GetInterfacesInfo(ctx);
 
     Get3Environment(ctx, config->agent_type);
     BuiltinClasses(ctx);
@@ -769,7 +769,7 @@ static Policy *Cf3ParseFiles(EvalContext *ctx, GenericAgentConfig *config, const
                 continue;
             }
 
-            returnval = EvaluateFinalRval(ctx, "sys", (Rval) {rp->item, rp->type}, true, NULL);
+            returnval = EvaluateFinalRval(ctx, NULL, "sys", (Rval) {rp->item, rp->type}, true, NULL);
 
             Policy *aux_policy = NULL;
             switch (returnval.type)
@@ -911,7 +911,7 @@ int NewPromiseProposals(EvalContext *ctx, const GenericAgentConfig *config, cons
         }
         else
         {
-            Rval returnval = EvaluateFinalRval(ctx, "sys", (Rval) { rp->item, rp->type }, true, NULL);
+            Rval returnval = EvaluateFinalRval(ctx, NULL, "sys", (Rval) { rp->item, rp->type }, true, NULL);
 
             switch (returnval.type)
             {
@@ -1282,7 +1282,7 @@ static void VerifyPromises(EvalContext *ctx, Policy *policy, GenericAgentConfig 
     for (size_t i = 0; i < SeqLength(policy->bundles); i++)
     {
         Bundle *bp = SeqAt(policy->bundles, i);
-        EvalContextStackPushBundleFrame(ctx, bp, false);
+        EvalContextStackPushBundleFrame(ctx, bp, NULL, false);
 
         for (size_t j = 0; j < SeqLength(bp->promise_types); j++)
         {
@@ -1304,10 +1304,9 @@ static void VerifyPromises(EvalContext *ctx, Policy *policy, GenericAgentConfig 
     // TODO: need to move this inside PolicyCheckRunnable eventually.
     if (!config->bundlesequence && config->check_runnable)
     {
-        // only verify policy-defined bundlesequence for cf-agent, cf-promises, cf-gendoc
+        // only verify policy-defined bundlesequence for cf-agent, cf-promises
         if ((config->agent_type == AGENT_TYPE_AGENT) ||
-            (config->agent_type == AGENT_TYPE_COMMON) ||
-            (config->agent_type == AGENT_TYPE_GENDOC))
+            (config->agent_type == AGENT_TYPE_COMMON))
         {
             if (!VerifyBundleSequence(ctx, policy, config))
             {
@@ -1328,7 +1327,11 @@ static void CheckVariablePromises(EvalContext *ctx, Seq *var_promises)
     for (size_t i = 0; i < SeqLength(var_promises); i++)
     {
         Promise *pp = SeqAt(var_promises, i);
+        EvalContextStackPushPromiseFrame(ctx, pp);
+        EvalContextStackPushPromiseIterationFrame(ctx, pp);
         VerifyVarPromise(ctx, pp, allow_redefine);
+        EvalContextStackPopFrame(ctx);
+        EvalContextStackPopFrame(ctx);
     }
 }
 
@@ -1391,7 +1394,7 @@ static void CheckControlPromises(EvalContext *ctx, GenericAgentConfig *config, c
     snprintf(scope, CF_BUFSIZE, "%s_%s", control_body->name, control_body->type);
     Log(LOG_LEVEL_DEBUG, "Initiate control variable convergence for scope '%s'", scope);
 
-    EvalContextStackPushBodyFrame(ctx, control_body);
+    EvalContextStackPushBodyFrame(ctx, control_body, NULL);
 
     for (size_t i = 0; i < SeqLength(control_body->conlist); i++)
     {
@@ -1404,19 +1407,23 @@ static void CheckControlPromises(EvalContext *ctx, GenericAgentConfig *config, c
 
         if (strcmp(cp->lval, CFG_CONTROLBODY[COMMON_CONTROL_BUNDLESEQUENCE].lval) == 0)
         {
-            returnval = ExpandPrivateRval(ctx, scope, cp->rval);
+            returnval = ExpandPrivateRval(ctx, NULL, scope, cp->rval);
         }
         else
         {
-            returnval = EvaluateFinalRval(ctx, scope, cp->rval, true, NULL);
+            returnval = EvaluateFinalRval(ctx, NULL, scope, cp->rval, true, NULL);
         }
 
-        ScopeDeleteVariable(scope, cp->lval);
+        ScopeDeleteVariable(NULL, scope, cp->lval);
 
-        if (!EvalContextVariablePut(ctx, (VarRef) { NULL, scope, cp->lval }, returnval, ConstraintSyntaxGetDataType(body_syntax, cp->lval)))
+        VarRef *ref = VarRefParseFromScope(cp->lval, scope);
+
+        if (!EvalContextVariablePut(ctx, ref, returnval, ConstraintSyntaxGetDataType(body_syntax, cp->lval)))
         {
             Log(LOG_LEVEL_ERR, "Rule from %s at/before line %zu", control_body->source_path, cp->offset.line);
         }
+
+        VarRefDestroy(ref);
 
         if (strcmp(cp->lval, CFG_CONTROLBODY[COMMON_CONTROL_OUTPUT_PREFIX].lval) == 0)
         {
@@ -1427,11 +1434,11 @@ static void CheckControlPromises(EvalContext *ctx, GenericAgentConfig *config, c
         {
             strcpy(VDOMAIN, cp->rval.item);
             Log(LOG_LEVEL_VERBOSE, "SET domain = %s", VDOMAIN);
-            ScopeDeleteSpecial("sys", "domain");
-            ScopeDeleteSpecial("sys", "fqhost");
+            ScopeDeleteSpecial(SPECIAL_SCOPE_SYS, "domain");
+            ScopeDeleteSpecial(SPECIAL_SCOPE_SYS, "fqhost");
             snprintf(VFQNAME, CF_MAXVARSIZE, "%s.%s", VUQNAME, VDOMAIN);
-            ScopeNewSpecial(ctx, "sys", "fqhost", VFQNAME, DATA_TYPE_STRING);
-            ScopeNewSpecial(ctx, "sys", "domain", VDOMAIN, DATA_TYPE_STRING);
+            ScopeNewSpecial(ctx, SPECIAL_SCOPE_SYS, "fqhost", VFQNAME, DATA_TYPE_STRING);
+            ScopeNewSpecial(ctx, SPECIAL_SCOPE_SYS, "domain", VDOMAIN, DATA_TYPE_STRING);
             EvalContextHeapAddHard(ctx, VDOMAIN);
         }
 
@@ -1581,7 +1588,7 @@ void PolicyHashVariables(EvalContext *ctx, Policy *policy)
         Bundle *bundle = SeqAt(policy->bundles, i);
         if (strcmp("common", bundle->type) == 0)
         {
-            EvalContextStackPushBundleFrame(ctx, bundle, false);
+            EvalContextStackPushBundleFrame(ctx, bundle, NULL, false);
             BundleHashVariables(ctx, bundle);
             EvalContextStackPopFrame(ctx);
         }
@@ -1592,7 +1599,7 @@ void PolicyHashVariables(EvalContext *ctx, Policy *policy)
         Bundle *bundle = SeqAt(policy->bundles, i);
         if (strcmp("common", bundle->type) != 0)
         {
-            EvalContextStackPushBundleFrame(ctx, bundle, false);
+            EvalContextStackPushBundleFrame(ctx, bundle, NULL, false);
             BundleHashVariables(ctx, bundle);
             EvalContextStackPopFrame(ctx);
         }

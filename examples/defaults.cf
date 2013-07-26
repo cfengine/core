@@ -28,7 +28,7 @@
 body common control
 
 {
-bundlesequence  => { "example" };
+      bundlesequence  => { "example" };
 }
 
 ###########################################################
@@ -36,24 +36,24 @@ bundlesequence  => { "example" };
 bundle agent example
 
 {     
-defaults:
+  defaults:
 
-  # We can have default values even if variables are not defined at all.
-  # This is equivalent to a variable definition, so not particularly useful.
+      # We can have default values even if variables are not defined at all.
+      # This is equivalent to a variable definition, so not particularly useful.
 
-  "X" string => "I am a default value";
-  "Y" slist => { "I am a default list item 1", "I am a default list item 2" };
+      "X" string => "I am a default value";
+      "Y" slist => { "I am a default list item 1", "I am a default list item 2" };
 
-methods:
+  methods:
 
- # More useful, defaults if parameters are passed to a param bundle
+      # More useful, defaults if parameters are passed to a param bundle
 
- "example" usebundle => mymethod("","bbb");
+      "example" usebundle => mymethod("","bbb");
 
-reports:
+  reports:
 
-   "The default value of X is $(X)";
-   "The default value of Y is $(Y)";
+      "The default value of X is $(X)";
+      "The default value of Y is $(Y)";
 }
 
 ###########################################################
@@ -61,24 +61,24 @@ reports:
 bundle agent mymethod(a,b)
 
 {
-vars:
+  vars:
 
-  "no_return" string => "ok"; # readfile("/dont/exist","123");
+      "no_return" string => "ok"; # readfile("/dont/exist","123");
 
-defaults:
+  defaults:
 
-  "a" string => "AAAAAAAAA",   if_match_regex => "";
+      "a" string => "AAAAAAAAA",   if_match_regex => "";
 
-  "b" string => "BBBBBBBBB",   if_match_regex => "";
+      "b" string => "BBBBBBBBB",   if_match_regex => "";
 
-  "no_return" string => "no such file";
+      "no_return" string => "no such file";
 
-reports:
+  reports:
 
-     "The value of a is $(a)";
-     "The value of b is $(b)";
+      "The value of a is $(a)";
+      "The value of b is $(b)";
 
-     "The value of no_return is $(no_return)";
+      "The value of no_return is $(no_return)";
 
 }
 

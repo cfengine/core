@@ -27,17 +27,17 @@
 body common control
 {
 
-# Reads default 
-#   /var/cfengine/inputs/promises.cf
-#   /var/cfengine/inputs/failsafe.cf
+      # Reads default 
+      #   /var/cfengine/inputs/promises.cf
+      #   /var/cfengine/inputs/failsafe.cf
 
-bundlesequence => { "update" };
+      bundlesequence => { "update" };
 
-inputs => { 
-          "update.cf" 
+      inputs => { 
+		  "update.cf" 
 
-          # a simple recovery file too?
+		  # a simple recovery file too?
 
-          };
+      };
 }
 

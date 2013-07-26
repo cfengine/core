@@ -29,10 +29,10 @@
 ########################################################
 
 body common control
-   
+
 {
-bundlesequence  => { "virtualhosts" };
-version => "1.2.3";
+      bundlesequence  => { "virtualhosts" };
+      version => "1.2.3";
 }
 
 ########################################################
@@ -40,47 +40,47 @@ version => "1.2.3";
 bundle agent virtualhosts
 
 {
-vars:
+  vars:
 
 
- "vmbase"        string => "/home/mark/tmp/vm";
- "source_files"  string => "/home/mark/tmp/src";
+      "vmbase"        string => "/home/mark/tmp/vm";
+      "source_files"  string => "/home/mark/tmp/src";
 
- # list of hosts to create
+      # list of hosts to create
 
- "hostlist" slist => { 
-                     "host1", 
-                     "host2", 
-                     "host3", 
-                     "host4",
-                     "host5", 
-                     "host6", 
-                     "host7", 
-                     "host8", 
-                     "host9" 
-                     };
-
-
-
-
-
- ################### or just a new file to the dir ################
- #
- # "hostlist" slist => { SelectFilesIn("$(source_files)",".*")  }
- #
- ##################################################################
-
-files:
-
-  "$(vmbase)/$(hostlist)/config_for_$(hostlist).vm" 
-
-    copy_from => buildvm("$(source_files)/template_$(hostlist)");
+      "hostlist" slist => { 
+			    "host1", 
+			    "host2", 
+			    "host3", 
+			    "host4",
+			    "host5", 
+			    "host6", 
+			    "host7", 
+			    "host8", 
+			    "host9" 
+      };
 
 
 
- #
- # Now edit config .e.g. edit in  $(ipadr[$(hostlist)]) for each
- #
+
+
+      ################### or just a new file to the dir ################
+      #
+      # "hostlist" slist => { SelectFilesIn("$(source_files)",".*")  }
+      #
+      ##################################################################
+
+  files:
+
+      "$(vmbase)/$(hostlist)/config_for_$(hostlist).vm" 
+
+      copy_from => buildvm("$(source_files)/template_$(hostlist)");
+
+
+
+      #
+      # Now edit config .e.g. edit in  $(ipadr[$(hostlist)]) for each
+      #
 
 }
 
@@ -91,7 +91,7 @@ files:
 body copy_from buildvm(from)
 
 {
-source      => "$(from)";
-copy_backup => "true";                   #/false/timestamp
+      source      => "$(from)";
+      copy_backup => "true";                   #/false/timestamp
 }
 

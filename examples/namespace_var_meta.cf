@@ -1,24 +1,24 @@
 
 body common control
 {
-    bundlesequence => { "main" };
-    version => "0.1";
-    inputs => { "unit_namespace_var_meta2.cf"};
+      bundlesequence => { "main" };
+      version => "0.1";
+      inputs => { "unit_namespace_var_meta2.cf"};
 }
 
 bundle agent main
 {
 
-classes:
+  classes:
 
-  "abc" expression => "any";
+      "abc" expression => "any";
 
 
-methods:
+  methods:
 
- "bla "usebundle => fred.example;
+      "bla "usebundle => fred.example;
 
-reports:
-   "remote var: $(fred:example.bundle_version)";
+  reports:
+      "remote var: $(fred:example.bundle_version)";
 
 }

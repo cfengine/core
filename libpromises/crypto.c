@@ -446,7 +446,7 @@ unsigned long ThreadId_callback(void)
 }
 #endif
 
-static void OpenSSLLock_callback(int mode, int index, char *file, int line)
+static void OpenSSLLock_callback(int mode, int index, ARG_UNUSED char *file, ARG_UNUSED int line)
 {
     if (mode & CRYPTO_LOCK)
     {

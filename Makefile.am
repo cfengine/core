@@ -5,12 +5,12 @@ MAKEFLAGS = $(if $(filter-out 0,$(V)),,--no-print-directory --quiet)
 LCOV_FLAGS = $(if $(filter-out 0,$(V)),,-q)
 
 SUBDIRS = libcompat libutils libcfnet libpromises \
-	cf-agent cf-execd cf-gendoc cf-key cf-monitord \
+	cf-agent cf-execd cf-key cf-monitord \
 	cf-promises cf-runagent cf-serverd ext examples masterfiles \
 	tests
 
 DIST_SUBDIRS = libcompat libutils libcfnet libpromises cf-agent cf-execd	\
-	cf-gendoc cf-key cf-monitord cf-promises cf-runagent cf-serverd ext	\
+	cf-key cf-monitord cf-promises cf-runagent cf-serverd ext	        \
 	examples masterfiles tests
 
 # Set explicitly to avoid picking up {nova}/*.m4

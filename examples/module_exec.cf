@@ -27,7 +27,7 @@
 body common control
 
 {
-bundlesequence  => { "example" };
+      bundlesequence  => { "example" };
 }
 
 ###################################################################
@@ -35,11 +35,11 @@ bundlesequence  => { "example" };
 bundle agent example
 
 {
-classes:
+  classes:
 
-  "done" or => { usemodule("module:getusers","") };
+      "done" or => { usemodule("module:getusers","") };
 
-commands:
+  commands:
 
-  "/bin/echo promiser text" args => "test $(user)";
+      "/bin/echo promiser text" args => "test $(user)";
 }

@@ -291,7 +291,7 @@ void PurgeOldConnections(Item **list, time_t now)
 static void SpawnConnection(EvalContext *ctx, int sd_reply, char *ipaddr)
 {
     ServerConnectionState *conn;
-
+    int ret;
     pthread_t tid;
     pthread_attr_t threadattrs;
 
@@ -303,22 +303,52 @@ static void SpawnConnection(EvalContext *ctx, int sd_reply, char *ipaddr)
     strncpy(conn->ipaddr, ipaddr, CF_MAX_IP_LEN - 1);
 
     Log(LOG_LEVEL_VERBOSE, "New connection...(from %s:sd %d)", conn->ipaddr, sd_reply);
-
     Log(LOG_LEVEL_VERBOSE, "Spawning new thread...");
 
-    pthread_attr_init(&threadattrs);
-    pthread_attr_setdetachstate(&threadattrs, PTHREAD_CREATE_DETACHED);
-    pthread_attr_setstacksize(&threadattrs, (size_t) 1024 * 1024);
+    ret = pthread_attr_init(&threadattrs);
+    if (ret != 0)
+    {
+        Log(LOG_LEVEL_ERR,
+            "SpawnConnection: Unable to initialize thread attributes (%s)",
+            GetErrorStr());
+        goto err2;
+    }
+    ret = pthread_attr_setdetachstate(&threadattrs, PTHREAD_CREATE_DETACHED);
+    if (ret != 0)
+    {
+        Log(LOG_LEVEL_ERR,
+            "SpawnConnection: Unable to set thread to detached state (%s).",
+            GetErrorStr());
+        goto err1;
+    }
+    ret = pthread_attr_setstacksize(&threadattrs, 1024 * 1024);
+    if (ret != 0)
+    {
+        Log(LOG_LEVEL_WARNING,
+            "SpawnConnection: Unable to set thread stack size (%s).",
+            GetErrorStr());
+        /* Continue with default thread stack size. */
+    }
 
-    int ret = pthread_create(&tid, &threadattrs, (void *) HandleConnection, (void *) conn);
+    ret = pthread_create(&tid, &threadattrs,
+                         (void *(*)(void *)) HandleConnection, conn);
     if (ret != 0)
     {
         errno = ret;
-        Log(LOG_LEVEL_ERR, "Unable to spawn worker thread. (pthread_create: %s)", GetErrorStr());
-        HandleConnection(conn);
+        Log(LOG_LEVEL_ERR,
+            "Unable to spawn worker thread. (pthread_create: %s)",
+            GetErrorStr());
+        goto err1;
     }
 
+  err1:
     pthread_attr_destroy(&threadattrs);
+  err2:
+    if (ret != 0)
+    {
+        Log(LOG_LEVEL_WARNING, "Thread is being handled from main loop!");
+        HandleConnection(conn);
+    }
 }
 
 /*********************************************************************/
@@ -977,7 +1007,7 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
 
         memcpy(out, recvbuffer + CF_PROTO_OFFSET, len);
         plainlen = DecryptString(conn->encryption_type, out, recvbuffer, conn->session_key, len);
-        
+
         if (strncmp(recvbuffer, "CALL_ME_BACK collect_calls", strlen("CALL_ME_BACK collect_calls")) != 0)
         {
             Log(LOG_LEVEL_INFO, "CALL_ME_BACK protocol defect");
@@ -998,16 +1028,13 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
             RefuseAccess(conn, 0, recvbuffer);
             return false;
         }
-        
-        if (ReceiveCollectCall(conn))
-        {
-            return true;
-        }
+        return ReceiveCollectCall(conn);
 
     case PROTOCOL_COMMAND_AUTH:
     case PROTOCOL_COMMAND_CONTEXTS:
     case PROTOCOL_COMMAND_BAD:
-        ProgrammingError("Unexpected protocol command");
+    default:
+        Log(LOG_LEVEL_WARNING, "Unexpected protocol command");
     }
 
     sprintf(sendbuffer, "BAD: Request denied\n");
@@ -1237,13 +1264,9 @@ static void DoExec(EvalContext *ctx, ServerConnectionState *conn, char *args)
 static ProtocolCommand GetCommand(char *str)
 {
     int i;
-    char op[CF_BUFSIZE];
-
-    sscanf(str, "%4095s", op);
-
     for (i = 0; PROTOCOL[i] != NULL; i++)
     {
-        if (strcmp(op, PROTOCOL[i]) == 0)
+        if (strncmp(str, PROTOCOL[i], strlen(PROTOCOL[i])) == 0)
         {
             return i;
         }

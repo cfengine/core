@@ -27,7 +27,7 @@
 body common control
 
 {
-bundlesequence  => { "example" };
+      bundlesequence  => { "example" };
 }
 
 ###########################################################
@@ -35,17 +35,17 @@ bundlesequence  => { "example" };
 bundle agent example
 
 {     
-classes:
+  classes:
 
-  "do_it" and => {
-accessedbefore("/tmp/earlier","/tmp/later")
-}; 
+      "do_it" and => {
+		       accessedbefore("/tmp/earlier","/tmp/later")
+      }; 
 
-reports:
+  reports:
 
-  do_it::
+    do_it::
 
-    "The earlier file has been accessed before the later";
+      "The earlier file has been accessed before the later";
 
 }
 

@@ -1,13 +1,13 @@
 bundle agent foo(one, two)
 {
-reports:
-  cfengine3::
-   "$(one), $(two)";
+  reports:
+    cfengine3::
+      "$(one), $(two)";
 }
 
 bundle agent bar
 {
-methods:
-  "any"
-    usebundle => foo("snookie");
+  methods:
+      "any"
+      usebundle => foo("snookie");
 }

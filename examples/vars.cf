@@ -22,18 +22,18 @@
 
 body common control
 {
-bundlesequence => {"yes"};
+      bundlesequence => {"yes"};
 }
 
 
 bundle agent yes
 {
-vars:
+  vars:
 
-  "var" string => "/one/two/last1",
-         comment => "This is a comment";
- 
-reports:
+      "var" string => "/one/two/last1",
+      comment => "This is a comment";
+      
+  reports:
 
-    "Test = $(var)";
+      "Test = $(var)";
 }

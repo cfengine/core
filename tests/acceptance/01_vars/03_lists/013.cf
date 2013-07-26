@@ -25,37 +25,37 @@ first
 second
 last";
 
-     "actual" string => "";
+      "actual" string => "";
 
-     "states" slist => { "expected", "actual" };
+      "states" slist => { "expected", "actual" };
 
   files:
       "$(G.testfile).$(states)"
-        create => "true",
-        edit_line => init_insert("$($(states))"),
-        edit_defaults => init_empty;
+      create => "true",
+      edit_line => init_insert("$($(states))"),
+      edit_defaults => init_empty;
 }
 
 bundle agent test
 {
   files:
       "$(G.testfile).actual"
-            edit_line => test_insert;
-        
+      edit_line => test_insert;
+      
 }
 
 bundle edit_line init_insert(str) {
   insert_lines:
-    "$(str)";
+      "$(str)";
 }
 
 body edit_defaults init_empty {
-    empty_file_before_editing => "true";
+      empty_file_before_editing => "true";
 }
 
 bundle edit_line test_insert {
- insert_lines: 
-    "$(init.array[$(init.keys)])";
+  insert_lines: 
+      "$(init.array[$(init.keys)])";
 }
 
 bundle agent check

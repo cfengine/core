@@ -6,41 +6,41 @@
 
 body common control
 {
-  inputs => { "../../default.cf.sub" };
-  bundlesequence  => { default("$(this.promise_filename)") };
-  version => "1.0";
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
 }
 
 #######################################################
 
 bundle agent init
 {
-vars:
-        "dummy" string => "dummy";
+  vars:
+      "dummy" string => "dummy";
 }
 
 #######################################################
 
 bundle agent test
 {
-vars:
-    "six" ilist => { "1", "2", "3" };
-    "product_six" real => product("six");
+  vars:
+      "six" ilist => { "1", "2", "3" };
+      "product_six" real => product("six");
 
-    "minus_six" ilist => { "-1", "-2", "-3" };
-    "product_minus_six" real => product("minus_six");
+      "minus_six" ilist => { "-1", "-2", "-3" };
+      "product_minus_six" real => product("minus_six");
 
-    "zero" ilist => { "-1", "0", "3" };
-    "product_zero" real => product("zero");
+      "zero" ilist => { "-1", "0", "3" };
+      "product_zero" real => product("zero");
 
-    "sixpoint" rlist => { "1.", "2", "3" };
-    "product_sixpoint" real => product("sixpoint");
+      "sixpoint" rlist => { "1.", "2", "3" };
+      "product_sixpoint" real => product("sixpoint");
 
-    "minus_sixpoint" rlist => { "-1.", "-2", "-3" };
-    "product_minus_sixpoint" real => product("minus_sixpoint");
+      "minus_sixpoint" rlist => { "-1.", "-2", "-3" };
+      "product_minus_sixpoint" real => product("minus_sixpoint");
 
-    "zeropoint" rlist => { "-1.", "0", "3" };
-    "product_zeropoint" real => product("zeropoint");
+      "zeropoint" rlist => { "-1.", "0", "3" };
+      "product_zeropoint" real => product("zeropoint");
 
 }
 
@@ -48,8 +48,8 @@ vars:
 
 bundle agent check
 {
-classes:
-        "ok" and => {
+  classes:
+      "ok" and => {
                     isgreaterthan("$(test.product_six)", "5.9999999"),
                     islessthan("$(test.product_six)", "6.0000001"),
 
@@ -67,19 +67,19 @@ classes:
 
                     isgreaterthan("$(test.product_zeropoint)", "-.0000001"),
                     islessthan("$(test.product_zeropoint)", ".0000001"),
-                    };
+      };
 
-reports:
+  reports:
     DEBUG::
-        "test.product_six = $(test.product_six)";
-        "test.product_minus_six = $(test.product_minus_six)";
-        "test.product_zero = $(test.product_zero)";
-        "test.product_sixpoint = $(test.product_sixpoint)";
-        "test.product_minus_sixpoint = $(test.product_minus_sixpoint)";
-        "test.product_zeropoint = $(test.product_zeropoint)";
+      "test.product_six = $(test.product_six)";
+      "test.product_minus_six = $(test.product_minus_six)";
+      "test.product_zero = $(test.product_zero)";
+      "test.product_sixpoint = $(test.product_sixpoint)";
+      "test.product_minus_sixpoint = $(test.product_minus_sixpoint)";
+      "test.product_zeropoint = $(test.product_zeropoint)";
     ok::
-        "$(this.promise_filename) Pass";
+      "$(this.promise_filename) Pass";
     !ok::
-        "$(this.promise_filename) FAIL";
+      "$(this.promise_filename) FAIL";
 }
 

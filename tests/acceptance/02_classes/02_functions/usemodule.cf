@@ -6,9 +6,9 @@
 
 body common control
 {
-  inputs => { "../../default.cf.sub" };
-  bundlesequence  => { default("$(this.promise_filename)") };
-  version => "1.0";
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
 }
 
 #######################################################
@@ -16,16 +16,16 @@ body common control
 bundle agent init
 {
   vars:
-    "script_location" string => dirname("$(this.promise_filename)");
+      "script_location" string => dirname("$(this.promise_filename)");
   classes:
-    "ok_to_run" not => regcmp("/var/cfengine|.*\.cf-agent", "$(sys.workdir)");
+      "ok_to_run" not => regcmp("/var/cfengine|.*\.cf-agent", "$(sys.workdir)");
 
   files:
     ok_to_run::
       "$(sys.workdir)/modules/usemodule.cf.bat"
-        create => "true",
-        perms => usemodule_perms,
-        edit_line => usemodule_lines;
+      create => "true",
+      perms => usemodule_perms,
+      edit_line => usemodule_lines;
 }
 
 bundle edit_line usemodule_lines
@@ -39,12 +39,12 @@ bundle edit_line usemodule_lines
       ". \"$(G.cwd)/$(init.script_location)/usemodule.cf.bat\"";
 
   delete_lines:
-    ".*";
+      ".*";
 }
 
 body perms usemodule_perms
 {
-  mode => "755";
+      mode => "755";
 }
 
 #######################################################
@@ -52,7 +52,7 @@ body perms usemodule_perms
 bundle agent test
 {
   classes:
-    "ok_to_run" not => regcmp("/var/cfengine|.*\.cf-agent", "$(sys.workdir)");
+      "ok_to_run" not => regcmp("/var/cfengine|.*\.cf-agent", "$(sys.workdir)");
 
   classes:
     ok_to_run::
@@ -93,7 +93,7 @@ bundle agent test
 bundle agent check
 {
   classes:
-    "ok" expression => strcmp("$(test.ok)", "yes");
+      "ok" expression => strcmp("$(test.ok)", "yes");
 
   reports:
     ok::

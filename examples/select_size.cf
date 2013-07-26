@@ -23,22 +23,22 @@
 
 body common control
 {
-bundlesequence => { "example" };
+      bundlesequence => { "example" };
 }
 
 #
 
 bundle agent example
 {
-files:
+  files:
 
-    # Show files in range
+      # Show files in range
 
-    "/home/mark/tmp"
+      "/home/mark/tmp"
 
-        file_select => name_and_sizes(".*cf","100","300"),
-	depth_search => recurse("1"),
-        transformer => "/bin/ls -l $(this.promiser)";
+      file_select => name_and_sizes(".*cf","100","300"),
+      depth_search => recurse("1"),
+      transformer => "/bin/ls -l $(this.promiser)";
 
 }
 
@@ -46,12 +46,12 @@ files:
 
 body file_select name_and_sizes(n,x,y)
 {
-    leaf_name   => { "$(n)" };
-    search_size => irange("$(x)", "$(y)");
-    file_result => "leaf_name&size";
+      leaf_name   => { "$(n)" };
+      search_size => irange("$(x)", "$(y)");
+      file_result => "leaf_name&size";
 }
 
 body depth_search recurse(x)
 {
-    depth => "$(x)";
+      depth => "$(x)";
 }

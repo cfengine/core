@@ -1,6 +1,6 @@
 bundle agent foo
 {
 
-invalid::
+    invalid::
 
 }

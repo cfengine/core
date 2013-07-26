@@ -23,24 +23,24 @@
 
 body common control
 {
-bundlesequence => { "peers" };
+      bundlesequence => { "peers" };
 }
 
 #
 
 bundle agent peers
 {
-vars:
+  vars:
 
-  "mygroup" slist => peers("/tmp/hostlist","#.*",4);
+      "mygroup" slist => peers("/tmp/hostlist","#.*",4);
 
-  "myleader" string => peerleader("/tmp/hostlist","#.*",4);
+      "myleader" string => peerleader("/tmp/hostlist","#.*",4);
 
-  "all_leaders" slist => peerleaders("/tmp/hostlist","#.*",4);
+      "all_leaders" slist => peerleaders("/tmp/hostlist","#.*",4);
 
-reports:
-   "mypeer *$(mygroup)*";
-   "myleader *$(myleader)*";
-   "another leader *$(all_leaders)*";
+  reports:
+      "mypeer *$(mygroup)*";
+      "myleader *$(myleader)*";
+      "another leader *$(all_leaders)*";
 
 }

@@ -28,16 +28,16 @@
 
 body common control
 {
-bundlesequence => { hardening(@(va.tmpdirs)) };
+      bundlesequence => { hardening(@(va.tmpdirs)) };
 }
 
 #########################################################
 
 bundle common va 
 {
-vars:
- 
- "tmpdirs"  slist => { "/tmp", "/var/tmp", "/usr/tmp"  };
+  vars:
+      
+      "tmpdirs"  slist => { "/tmp", "/var/tmp", "/usr/tmp"  };
 
 } 
 
@@ -45,18 +45,18 @@ vars:
 
 bundle agent hardening(x)
 {
-classes:
+  classes:
 
-  "ok" expression => "any";
+      "ok" expression => "any";
 
-vars:
+  vars:
 
- "other"    slist => { "/tmp", "/var/tmp" };
+      "other"    slist => { "/tmp", "/var/tmp" };
 
-reports:
+  reports:
 
-  ok::
+    ok::
 
-    "Do $(x)";
-    "Other: $(other)";
+      "Do $(x)";
+      "Other: $(other)";
 } 

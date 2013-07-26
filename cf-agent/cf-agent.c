@@ -667,11 +667,15 @@ void KeepControlPromises(EvalContext *ctx, Policy *policy)
                 continue;
             }
 
-            if (!EvalContextVariableGet(ctx, (VarRef) { NULL, "control_agent", cp->lval }, &retval, NULL))
+            VarRef *ref = VarRefParseFromScope(cp->lval, "control_agent");
+            if (!EvalContextVariableGet(ctx, ref, &retval, NULL))
             {
                 Log(LOG_LEVEL_ERR, "Unknown lval '%s' in agent control body", cp->lval);
+                VarRefDestroy(ref);
                 continue;
             }
+
+            VarRefDestroy(ref);
 
             if (strcmp(cp->lval, CFA_CONTROLBODY[AGENT_CONTROL_MAXCONNECTIONS].lval) == 0)
             {
@@ -1030,7 +1034,7 @@ void KeepControlPromises(EvalContext *ctx, Policy *policy)
 static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, GenericAgentConfig *config)
 {
     Bundle *bp;
-    Rlist *rp, *params;
+    Rlist *rp, *args;
     FnCall *fp;
     char *name;
     Rval retval;
@@ -1053,7 +1057,7 @@ static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, GenericAgentCon
         {
         case RVAL_TYPE_SCALAR:
             name = (char *) rp->item;
-            params = NULL;
+            args = NULL;
 
             if (strcmp(name, CF_NULL_VALUE) == 0)
             {
@@ -1064,12 +1068,12 @@ static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, GenericAgentCon
         case RVAL_TYPE_FNCALL:
             fp = (FnCall *) rp->item;
             name = (char *) fp->name;
-            params = (Rlist *) fp->args;
+            args = (Rlist *) fp->args;
             break;
 
         default:
             name = NULL;
-            params = NULL;
+            args = NULL;
             {
                 Writer *w = StringWriter();
                 WriterWrite(w, "Illegal item found in bundlesequence: ");
@@ -1121,20 +1125,19 @@ static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, GenericAgentCon
         case RVAL_TYPE_FNCALL:
             fp = (FnCall *) rp->item;
             name = (char *) fp->name;
-            params = (Rlist *) fp->args;
+            args = (Rlist *) fp->args;
             break;
         default:
             name = (char *) rp->item;
-            params = NULL;
+            args = NULL;
             break;
         }
 
         if ((bp = PolicyGetBundle(policy, NULL, "agent", name)) || (bp = PolicyGetBundle(policy, NULL, "common", name)))
         {
-            BannerBundle(bp, params);
+            BannerBundle(bp, args);
 
-            EvalContextStackPushBundleFrame(ctx, bp, false);
-            ScopeAugment(ctx, bp, NULL, params);
+            EvalContextStackPushBundleFrame(ctx, bp, args, false);
 
             ScheduleAgentOperations(ctx, bp);
 
@@ -1316,54 +1319,59 @@ static void DefaultVarPromise(EvalContext *ctx, const Promise *pp)
     Rlist *rp;
     bool okay = true;
 
-    EvalContextVariableGet(ctx, (VarRef) { NULL, "this", pp->promiser }, &rval, &dt);
+    {
+        VarRef *ref = VarRefParseFromScope(pp->promiser, "this");
+        EvalContextVariableGet(ctx, ref, &rval, &dt);
+        VarRefDestroy(ref);
+    }
 
     switch (dt)
-       {
-       case DATA_TYPE_STRING:
-       case DATA_TYPE_INT:
-       case DATA_TYPE_REAL:
+    {
+    case DATA_TYPE_STRING:
+    case DATA_TYPE_INT:
+    case DATA_TYPE_REAL:
+        if (regex && !FullTextMatch(regex,rval.item))
+        {
+            return;
+        }
 
-           if (regex && !FullTextMatch(regex,rval.item))
-              {
-              return;
-              }
+        if (regex == NULL)
+        {
+            return;
+        }
+        break;
 
-           if (regex == NULL)
-              {
-              return;
-              }
-
-           break;
-
-       case DATA_TYPE_STRING_LIST:
-       case DATA_TYPE_INT_LIST:
-       case DATA_TYPE_REAL_LIST:
-
-           if (regex)
-              {
-              for (rp = (Rlist *) rval.item; rp != NULL; rp = rp->next)
-                 {
-                 if (FullTextMatch(regex,rp->item))
-                    {
+    case DATA_TYPE_STRING_LIST:
+    case DATA_TYPE_INT_LIST:
+    case DATA_TYPE_REAL_LIST:
+        if (regex)
+        {
+            for (rp = (Rlist *) rval.item; rp != NULL; rp = rp->next)
+            {
+                if (FullTextMatch(regex,rp->item))
+                {
                     okay = false;
                     break;
-                    }
-                 }
+                }
+            }
 
-              if (okay)
-                 {
-                 return;
-                 }
-              }
+            if (okay)
+            {
+                return;
+            }
+        }
+        break;
 
-       break;
+    default:
+        break;
+    }
 
-       default:
-           break;
-       }
+    {
+        VarRef *ref = VarRefParseFromBundle(pp->promiser, PromiseGetBundle(pp));
+        ScopeDeleteScalar(ref);
+        VarRefDestroy(ref);
+    }
 
-    ScopeDeleteScalar((VarRef) { NULL, PromiseGetBundle(pp)->name, pp->promiser });
     VerifyVarPromise(ctx, pp, true);
 }
 

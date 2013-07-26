@@ -24,22 +24,22 @@
 body common control
 
 {
-bundlesequence  => { "example"  };
+      bundlesequence  => { "example"  };
 
-version => "1.2.3";
+      version => "1.2.3";
 }
 
 ###########################################
 
 bundle agent example
 {
-vars:
+  vars:
 
- "userlist" slist => { "mark", "jeang", "jonhenrik", "thomas", "eben" };
+      "userlist" slist => { "mark", "jeang", "jonhenrik", "thomas", "eben" };
 
-methods:
+  methods:
 
- "any" usebundle => subtest("$(userlist)");
+      "any" usebundle => subtest("$(userlist)");
 
 }
 
@@ -48,12 +48,12 @@ methods:
 bundle agent subtest(user)
 
 {
-commands:
+  commands:
 
- "/bin/echo Fix $(user)";
+      "/bin/echo Fix $(user)";
 
-reports:
+  reports:
 
-  "Finished doing stuff for $(user)";
+      "Finished doing stuff for $(user)";
 }
 

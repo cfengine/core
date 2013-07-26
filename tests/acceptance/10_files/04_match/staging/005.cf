@@ -6,62 +6,62 @@
 
 body common control
 {
-  inputs => { "../../default.cf.sub" };
-  bundlesequence  => { default("$(this.promise_filename)") };   
-  version => "1.0";
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };   
+      version => "1.0";
 }
 
 bundle agent init
 {
-vars:
-	"find_this" string => "bibbetygargle";
-files:
-	"$(G.testfile)"
-	    create => "true",
-	    edit_line => init_data;
+  vars:
+      "find_this" string => "bibbetygargle";
+  files:
+      "$(G.testfile)"
+      create => "true",
+      edit_line => init_data;
 }
 
 bundle edit_line init_data
 {
-insert_lines:
-    	"Gabba gabba hey!";
-	"yibbity $(find_this) bletch";
-	"torchecol bum adder";
+  insert_lines:
+      "Gabba gabba hey!";
+      "yibbity $(find_this) bletch";
+      "torchecol bum adder";
 }
 
 #######################################################
 
 bundle agent test
 {
-files:
-	"/tmp"
-	    file_select => test_hunt,
-	    delete => test_delete;
+  files:
+      "/tmp"
+      file_select => test_hunt,
+      delete => test_delete;
 }
 
 body file_select test_hunt
 {
-exec_regex => ".*$(test.find_this).*";
-exec_program => "/bin/cat $(this.promiser)";
-file_result => "exec_program.exec_regex";
+      exec_regex => ".*$(test.find_this).*";
+      exec_program => "/bin/cat $(this.promiser)";
+      file_result => "exec_program.exec_regex";
 }
 
 body delete test_delete
 {
-	dirlinks => "delete";
-	rmdirs   => "true";
+      dirlinks => "delete";
+      rmdirs   => "true";
 }
 
 #######################################################
 
 bundle agent check
 {
-classes:
-	"ok" not => fileexists("$(G.testfile)");
+  classes:
+      "ok" not => fileexists("$(G.testfile)");
 
-reports:
+  reports:
     ok::
-	"$(this.promise_filename) Pass";
+      "$(this.promise_filename) Pass";
     !ok::
-	"$(this.promise_filename) FAIL";
+      "$(this.promise_filename) FAIL";
 }

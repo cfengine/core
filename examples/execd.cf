@@ -22,17 +22,17 @@
 
 body common control
 {
-	bundlesequence => { "cf_null" };
+      bundlesequence => { "cf_null" };
 }
 
 body executor control
 
 {
-mailto => "MARK@iu.hio.no";
-mailfrom => "cfengine@domain.tld";
-smtpserver => "MAIL-out.hio.no";
-mailmaxlines => "50";
-schedule => { "Min00_05", "Min30_35"  };
+      mailto => "MARK@iu.hio.no";
+      mailfrom => "cfengine@domain.tld";
+      smtpserver => "MAIL-out.hio.no";
+      mailmaxlines => "50";
+      schedule => { "Min00_05", "Min30_35"  };
 
-exec_command => "/var/cfengine/bin/cf-agent";
+      exec_command => "/var/cfengine/bin/cf-agent";
 }

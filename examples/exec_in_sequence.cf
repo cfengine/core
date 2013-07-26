@@ -29,7 +29,7 @@
 body common control
 
 {
-bundlesequence  => { "example"  };
+      bundlesequence  => { "example"  };
 }
 
 ########################################################
@@ -37,28 +37,28 @@ bundlesequence  => { "example"  };
 bundle agent example
 
 {
-vars:
+  vars:
 
-  "size" int => "46k";
-  "rand" int => randomint("33","$(size)");
+      "size" int => "46k";
+      "rand" int => randomint("33","$(size)");
 
-commands:
+  commands:
 
-  "/bin/echo" 
-     args => "Hello world - $(size)/$(rand)",
-     contain => standard,
-     classes => cdefine("followup","alert");
+      "/bin/echo" 
+      args => "Hello world - $(size)/$(rand)",
+      contain => standard,
+      classes => cdefine("followup","alert");
 
-  followup::
- 
-     "/bin/ls" 
-       contain => standard;
+    followup::
+      
+      "/bin/ls" 
+      contain => standard;
 
-reports:
+  reports:
 
-  alert::
+    alert::
 
-     "What happened?";
+      "What happened?";
 
 }
 
@@ -67,8 +67,8 @@ reports:
 body contain standard
 
 {
-exec_owner => "mark";
-useshell => "useshell";
+      exec_owner => "mark";
+      useshell => "useshell";
 }
 
 ######################################################################
@@ -76,6 +76,6 @@ useshell => "useshell";
 body classes cdefine(class,alert)
 
 {
-promise_repaired => { "$(class)" };
-repair_failed => { "$(alert)" };
+      promise_repaired => { "$(class)" };
+      repair_failed => { "$(alert)" };
 }

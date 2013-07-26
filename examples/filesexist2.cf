@@ -24,7 +24,7 @@
 body common control
 
 {
-bundlesequence  => { "example" };
+      bundlesequence  => { "example" };
 }
 
 ###########################################################
@@ -32,33 +32,33 @@ bundlesequence  => { "example" };
 bundle agent example
 
 {     
-vars:
+  vars:
 
-  "mylist" slist => { "/tmp/a", "/tmp/b", "/tmp/c" };
+      "mylist" slist => { "/tmp/a", "/tmp/b", "/tmp/c" };
 
 
-methods:
+  methods:
 
-  "any" usebundle => crystal_meth(@(example.mylist));
+      "any" usebundle => crystal_meth(@(example.mylist));
 
 }
 
 bundle agent crystal_meth(x)
 
 {
-classes:
+  classes:
 
-  "exists" expression => filesexist("@(x)");
+      "exists" expression => filesexist("@(x)");
 
-reports:
+  reports:
 
-  exists::
+    exists::
 
-    "File does exist";
+      "File does exist";
 
-  !exists::
+    !exists::
 
-    "Does not yet exist";
+      "Does not yet exist";
 
 }
 

@@ -24,7 +24,7 @@
 body common control
 
 {
-bundlesequence  => { "example" };
+      bundlesequence  => { "example" };
 }
 
 ###########################################################
@@ -32,15 +32,15 @@ bundlesequence  => { "example" };
 bundle agent example
 
 {     
-classes:
+  classes:
 
-  "islnk" expression => islink("/tmp/link");
+      "islnk" expression => islink("/tmp/link");
 
-reports:
+  reports:
 
-  islnk::
+    islnk::
 
-    "link exists..and is a link";
+      "link exists..and is a link";
 
 }
 

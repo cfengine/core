@@ -27,7 +27,7 @@
 body common control
 
 {
-bundlesequence  => { "def", "example" };
+      bundlesequence  => { "def", "example" };
 }
 
 ###################################################################
@@ -35,19 +35,19 @@ bundlesequence  => { "def", "example" };
 bundle agent def
 
 {
-commands:
+  commands:
 
-  "$(sys.workdir)/modules/module_name" module => "true";
+      "$(sys.workdir)/modules/module_name" module => "true";
 
-reports:
+  reports:
 
-  #
-  # Each module forms a private context with its name as id
-  #
+      #
+      # Each module forms a private context with its name as id
+      #
 
- module_class::
+    module_class::
 
-  "Module set variable $(module_name.myscalar)";
+      "Module set variable $(module_name.myscalar)";
 
 }
 
@@ -56,18 +56,18 @@ reports:
 bundle agent example
 
 {
-vars:
+  vars:
 
- "mylist" slist => { @(module_name.mylist) };
+      "mylist" slist => { @(module_name.mylist) };
 
-reports:
+  reports:
 
-  #
-  # Each module forms a private context with its name as id
-  #
+      #
+      # Each module forms a private context with its name as id
+      #
 
- module_class::
+    module_class::
 
-  "Module set variable $(mylist)";
+      "Module set variable $(mylist)";
 
 }

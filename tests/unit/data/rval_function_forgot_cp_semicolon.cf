@@ -1,8 +1,8 @@
 bundle agent my_commands
 {
 
-vars:
+  vars:
 
     any::
-        "env" string => getenv("PATH", "20" ;
-}
+      "env" string => getenv("PATH", "20" ;
+      }

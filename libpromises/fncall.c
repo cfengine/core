@@ -91,9 +91,9 @@ void FnCallDestroy(FnCall *fp)
 
 /*********************************************************************/
 
-FnCall *ExpandFnCall(EvalContext *ctx, const char *contextid, FnCall *f)
+FnCall *ExpandFnCall(EvalContext *ctx, const char *ns, const char *scope, FnCall *f)
 {
-    return FnCallNew(f->name, ExpandList(ctx, contextid, f->args, false));
+    return FnCallNew(f->name, ExpandList(ctx, ns, scope, f->args, false));
 }
 
 

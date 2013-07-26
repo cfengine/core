@@ -250,6 +250,28 @@ bundle edit_line resolvconf(search,list)
 
 ##
 
+bundle edit_line resolvconf_o(search,list,options)
+
+# search is the search domains with space
+# list is an slist of nameserver addresses
+# options is an slist of variables to modify the resolver
+
+{
+  delete_lines:
+
+      "search.*"     comment => "Reset search lines from resolver";
+      "nameserver.*" comment => "Reset nameservers in resolver";
+      "options.*"    comment => "Reset options in resolver";
+
+  insert_lines:
+
+      "search $(search)"    comment => "Add search domains to resolver";
+      "nameserver $(list)"  comment => "Add name servers to resolver";
+      "options $(options)"  comment => "Add options to resolver";
+}
+
+##
+
 bundle edit_line manage_variable_values_ini(tab, sectionName)
 
 # Sets the RHS of configuration items in the file of the form

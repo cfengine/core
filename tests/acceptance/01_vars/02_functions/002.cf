@@ -6,86 +6,86 @@
 
 body common control
 {
-  inputs => { "../../default.cf.sub" };
-  bundlesequence  => { default("$(this.promise_filename)") };
-  version => "1.0";
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
 }
 
 #######################################################
 
 bundle agent init
 {
-vars:
-        "dummy" string => "dummy";
+  vars:
+      "dummy" string => "dummy";
 }
 
 #######################################################
 
 bundle agent test
 {
-vars:
-  linux|freebsd|solaris|openbsd|hpux::
-    "gid_daemon" int => getgid("daemon");
-    "gid_sys" int => getgid("sys");
-  darwin::
-    "gid_daemon" int => getgid("daemon");
-  aix::
-    "gid_sys" int => getgid("sys");
-  !linux.!freebsd.!solaris.!darwin.!openbsd.!hpux.!aix::
-    "gid_daemon" string => "fixme";
-    "gid_sys" string => "fixme";
+  vars:
+    linux|freebsd|solaris|openbsd|hpux::
+      "gid_daemon" int => getgid("daemon");
+      "gid_sys" int => getgid("sys");
+    darwin::
+      "gid_daemon" int => getgid("daemon");
+    aix::
+      "gid_sys" int => getgid("sys");
+    !linux.!freebsd.!solaris.!darwin.!openbsd.!hpux.!aix::
+      "gid_daemon" string => "fixme";
+      "gid_sys" string => "fixme";
 
-  linux|solaris|hpux::
-    "gid_0" int => getgid("root");
-  freebsd|darwin|openbsd::
-    "gid_0" int => getgid("wheel");
-  aix::
-    "gid_0" int => getgid("system");
-  !linux.!freebsd.!solaris.!darwin.!openbsd.!hpux.!aix::
-    "gid_0" string => "fixme";
+    linux|solaris|hpux::
+      "gid_0" int => getgid("root");
+    freebsd|darwin|openbsd::
+      "gid_0" int => getgid("wheel");
+    aix::
+      "gid_0" int => getgid("system");
+    !linux.!freebsd.!solaris.!darwin.!openbsd.!hpux.!aix::
+      "gid_0" string => "fixme";
 
-  SuSE|redhat|gentoo::
-    "num_daemon" int => "2";
-  (linux.!SuSE.!redhat.!gentoo)|freebsd|darwin|openbsd::
-    "num_daemon" int => "1";
-  solaris::
-    "num_daemon" int => "12";
-  hpux::
-    "num_daemon" int => "5";
-  !linux.!freebsd.!solaris.!darwin.!openbsd.!hpux.!aix::
-    "num_daemon" string => "fixme";
+    SuSE|redhat|gentoo::
+      "num_daemon" int => "2";
+    (linux.!SuSE.!redhat.!gentoo)|freebsd|darwin|openbsd::
+      "num_daemon" int => "1";
+    solaris::
+      "num_daemon" int => "12";
+    hpux::
+      "num_daemon" int => "5";
+    !linux.!freebsd.!solaris.!darwin.!openbsd.!hpux.!aix::
+      "num_daemon" string => "fixme";
 
-  linux|freebsd|solaris|openbsd|hpux|aix::
-    "num_sys" int => "3";
-  !linux.!freebsd.!solaris.!darwin.!openbsd.!hpux.!aix::
-    "num_sys" string => "fixme";
+    linux|freebsd|solaris|openbsd|hpux|aix::
+      "num_sys" int => "3";
+    !linux.!freebsd.!solaris.!darwin.!openbsd.!hpux.!aix::
+      "num_sys" string => "fixme";
 }
 
 #######################################################
 
 bundle agent check
 {
-classes:
+  classes:
     darwin::
-        "ok_sys" expression => "any";
+      "ok_sys" expression => "any";
     !darwin::
-        "ok_sys" expression => strcmp("$(test.gid_sys)", "$(test.num_sys)");
+      "ok_sys" expression => strcmp("$(test.gid_sys)", "$(test.num_sys)");
 
     any::
-        "ok" and => {
+      "ok" and => {
                     strcmp("$(test.gid_0)", "0"),
                     strcmp("$(test.gid_daemon)", "$(test.num_daemon)"),
                     "ok_sys"
-                    };
+      };
 
-reports:
+  reports:
     DEBUG::
-        "root/wheel is GID $(test.gid_0), expected 0";
-        "daemon is GID $(test.gid_daemon), expected $(test.num_daemon)";
-        "sys is GID $(test.gid_sys), expected $(test.num_sys)";
+      "root/wheel is GID $(test.gid_0), expected 0";
+      "daemon is GID $(test.gid_daemon), expected $(test.num_daemon)";
+      "sys is GID $(test.gid_sys), expected $(test.num_sys)";
     ok::
-        "$(this.promise_filename) Pass";
+      "$(this.promise_filename) Pass";
     !ok::
-        "$(this.promise_filename) FAIL";
+      "$(this.promise_filename) FAIL";
 }
 

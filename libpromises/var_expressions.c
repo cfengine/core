@@ -27,6 +27,7 @@
 #include <cf3.defs.h>
 #include <buffer.h>
 #include <misc_lib.h>
+#include <string_lib.h>
 
 
 #ifndef NDEBUG
@@ -63,12 +64,14 @@ static size_t IndexCount(const char *var_string)
     return count;
 }
 
-VarRef VarRefParseFromBundle(const char *qualified_name, const Bundle *bundle)
+VarRef *VarRefParseFromNamespaceAndScope(const char *qualified_name, const char *_ns, const char *_scope, char ns_separator, char scope_separator)
 {
     char *ns = NULL;
 
-    const char *scope_start = strchr(qualified_name, CF_NS);
-    if (scope_start)
+    const char *indices_start = strchr(qualified_name, '[');
+
+    const char *scope_start = strchr(qualified_name, ns_separator);
+    if (scope_start && (!indices_start || scope_start < indices_start))
     {
         ns = xstrndup(qualified_name, scope_start - qualified_name);
         scope_start++;
@@ -80,8 +83,9 @@ VarRef VarRefParseFromBundle(const char *qualified_name, const Bundle *bundle)
 
     char *scope = NULL;
 
-    const char *lval_start = strchr(scope_start, '.');
-    if (lval_start)
+    const char *lval_start = strchr(scope_start, scope_separator);
+
+    if (lval_start && (!indices_start || lval_start < indices_start))
     {
         lval_start++;
         scope = xstrndup(scope_start, lval_start - scope_start - 1);
@@ -95,7 +99,6 @@ VarRef VarRefParseFromBundle(const char *qualified_name, const Bundle *bundle)
     char **indices = NULL;
     size_t num_indices = 0;
 
-    const char *indices_start = strchr(lval_start, '[');
     if (indices_start)
     {
         indices_start++;
@@ -133,70 +136,173 @@ VarRef VarRefParseFromBundle(const char *qualified_name, const Bundle *bundle)
 
     assert(lval);
 
-    if (!scope)
+    if (!scope && !_scope)
     {
         assert(ns == NULL && "A variable missing a scope should not have a namespace");
     }
 
-    return (VarRef) {
-        .ns = scope ? ns : (bundle ? xstrdup(bundle->ns) : NULL),
-        .scope = scope ? scope : (bundle ? xstrdup(bundle->name) : NULL),
-        .lval = lval,
-        .indices = (const char *const *const)indices,
-        .num_indices = num_indices,
-        .allocated = true,
-    };
+    VarRef *ref = xmalloc(sizeof(VarRef));
+
+    ref->ns = ns ? ns : (_ns ? xstrdup(_ns) : NULL);
+    ref->scope = scope ? scope : (_scope ? xstrdup(_scope) : NULL);
+    ref->lval = lval;
+    ref->indices = indices;
+    ref->num_indices = num_indices;
+
+    return ref;
 }
 
-VarRef VarRefParse(const char *var_ref_string)
+VarRef *VarRefParse(const char *var_ref_string)
 {
-    return VarRefParseFromBundle(var_ref_string, NULL);
+    return VarRefParseFromNamespaceAndScope(var_ref_string, NULL, NULL, CF_NS, '.');
 }
 
-void VarRefDestroy(VarRef ref)
+VarRef *VarRefParseFromScope(const char *var_ref_string, const char *scope)
 {
-    if (!ref.allocated)
+    if (!scope)
     {
-        ProgrammingError("Static VarRef has been passed to VarRefDestroy");
+        return VarRefParseFromNamespaceAndScope(var_ref_string, NULL, NULL, CF_NS, '.');
     }
-    free((char *)ref.ns);
-    free((char *)ref.scope);
-    free((char *)ref.lval);
-    for (int i = 0; i < ref.num_indices; ++i)
+
+    const char *scope_start = strchr(scope, CF_NS);
+    if (scope_start)
     {
-        free((char *)ref.indices[i]);
+        char *ns = xstrndup(scope, scope_start - scope);
+        VarRef *ref = VarRefParseFromNamespaceAndScope(var_ref_string, ns, scope_start + 1, CF_NS, '.');
+        free(ns);
+        return ref;
+    }
+    else
+    {
+        return VarRefParseFromNamespaceAndScope(var_ref_string, NULL, scope, CF_NS, '.');
     }
 }
 
-char *VarRefToString(const VarRef ref, bool qualified)
+VarRef *VarRefParseFromBundle(const char *var_ref_string, const Bundle *bundle)
 {
-    assert(ref.lval);
+    if (bundle)
+    {
+        return VarRefParseFromNamespaceAndScope(var_ref_string, bundle->ns, bundle->name, CF_NS, '.');
+    }
+    else
+    {
+        return VarRefParse(var_ref_string);
+    }
+}
+
+void VarRefDestroy(VarRef *ref)
+{
+    if (ref)
+    {
+        free(ref->ns);
+        free(ref->scope);
+        free(ref->lval);
+        if (ref->num_indices > 0)
+        {
+            for (int i = 0; i < ref->num_indices; ++i)
+            {
+                free(ref->indices[i]);
+            }
+            free(ref->indices);
+        }
+
+        free(ref);
+    }
+
+}
+
+char *VarRefToString(const VarRef *ref, bool qualified)
+{
+    assert(ref->lval);
 
     Buffer *buf = BufferNew();
     if (qualified)
     {
-        if (ref.ns)
+        if (ref->ns)
         {
-            BufferAppend(buf, ref.ns, strlen(ref.ns));
+            BufferAppend(buf, ref->ns, strlen(ref->ns));
             BufferAppend(buf, ":", sizeof(char));
         }
-        if (ref.scope)
+        if (ref->scope)
         {
-            BufferAppend(buf, ref.scope, strlen(ref.scope));
+            BufferAppend(buf, ref->scope, strlen(ref->scope));
             BufferAppend(buf, ".", sizeof(char));
         }
     }
 
-    BufferAppend(buf, ref.lval, strlen(ref.lval));
+    BufferAppend(buf, ref->lval, strlen(ref->lval));
 
-    for (size_t i = 0; i < ref.num_indices; i++)
+    for (size_t i = 0; i < ref->num_indices; i++)
     {
         BufferAppend(buf, "[", sizeof(char));
-        BufferAppend(buf, ref.indices[i], strlen(ref.indices[i]));
+        BufferAppend(buf, ref->indices[i], strlen(ref->indices[i]));
         BufferAppend(buf, "]", sizeof(char));
     }
 
     char *var_string = xstrdup(BufferData(buf));
     BufferDestroy(&buf);
     return var_string;
+}
+
+char *VarRefMangle(const VarRef *ref)
+{
+    char *suffix = VarRefToString(ref, false);
+
+    if (!ref->scope)
+    {
+        return suffix;
+    }
+    else
+    {
+        if (ref->ns)
+        {
+            char *mangled = StringFormat("%s*%s#%s", ref->ns, ref->scope, suffix);
+            free(suffix);
+            return mangled;
+        }
+        else
+        {
+            char *mangled = StringFormat("%s#%s", ref->scope, suffix);
+            free(suffix);
+            return mangled;
+        }
+    }
+}
+
+VarRef *VarRefDeMangle(const char *mangled_var_ref)
+{
+    return VarRefParseFromNamespaceAndScope(mangled_var_ref, NULL, NULL, '*', '#');
+}
+
+static bool VarRefIsMeta(VarRef *ref)
+{
+    return StringEndsWith(ref->scope, "_meta");
+}
+
+void VarRefSetMeta(VarRef *ref, bool enabled)
+{
+    if (enabled)
+    {
+        if (!VarRefIsMeta(ref))
+        {
+            char *tmp = ref->scope;
+            memcpy(ref->scope, StringConcatenate(2, ref->scope, "_meta"), sizeof(char*));
+            free(tmp);
+        }
+    }
+    else
+    {
+        if (VarRefIsMeta(ref))
+        {
+            char *tmp = ref->scope;
+            size_t len = strlen(ref->scope);
+            memcpy(ref->scope, StringSubstring(ref->scope, len, 0, len - strlen("_meta")), sizeof(char*));
+            free(tmp);
+        }
+    }
+}
+
+bool VarRefIsQualified(const VarRef *ref)
+{
+    return ref->scope != NULL;
 }

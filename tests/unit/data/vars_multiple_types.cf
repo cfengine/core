@@ -1,7 +1,7 @@
 bundle agent foo
 {
-vars:
-  "bar"
-    string => "snookie",
-    int => 42;
+  vars:
+      "bar"
+      string => "snookie",
+      int => 42;
 }

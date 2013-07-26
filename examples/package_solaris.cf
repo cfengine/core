@@ -27,34 +27,34 @@
 
 body common control
 {
-bundlesequence => { "packages" };
-inputs => { "cfengine_stdlb.cf" };
+      bundlesequence => { "packages" };
+      inputs => { "cfengine_stdlb.cf" };
 }
 
 #############################################
 
 bundle agent packages
 {
-vars:
+  vars:
 
-  "solaris_packages[SMCzlib]" string => "zlib-1.2.3-sol10-sparc-local";
-  "admin_file"                string => "cfengine_admin_file";
+      "solaris_packages[SMCzlib]" string => "zlib-1.2.3-sol10-sparc-local";
+      "admin_file"                string => "cfengine_admin_file";
 
-  "package_names"              slist => getindices("solaris_packages");
+      "package_names"              slist => getindices("solaris_packages");
 
-files:
+  files:
 
-  "/tmp/$(admin_file)"
-	create => "true",
-	edit_defaults => empty_file,
-	edit_line => create_solaris_admin_file;
+      "/tmp/$(admin_file)"
+      create => "true",
+      edit_defaults => empty_file,
+      edit_line => create_solaris_admin_file;
 
-packages:
+  packages:
 
-  "$(package_names)"
+      "$(package_names)"
 
-     package_policy => "add",
-     package_method => solaris("$(package_names)", "$(solaris_packages[$(package_names)])", "$(admin_file)");
+      package_policy => "add",
+      package_method => solaris("$(package_names)", "$(solaris_packages[$(package_names)])", "$(admin_file)");
 
 }
 

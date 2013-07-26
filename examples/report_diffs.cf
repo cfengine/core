@@ -29,7 +29,7 @@
 body common control
 
 {
-bundlesequence  => { "example"  };
+      bundlesequence  => { "example"  };
 }
 
 ########################################################
@@ -37,11 +37,11 @@ bundlesequence  => { "example"  };
 bundle agent example
 
 {
-files:
+  files:
 
-  "/tmp/testfile" -> "me"
+      "/tmp/testfile" -> "me"
 
-       changes      => report;
+      changes      => report;
 }
 
 
@@ -50,9 +50,9 @@ files:
 body changes report
 
 {
-report_changes => "all";  
-report_diffs => "true";
-update_hashes  => "true";
+      report_changes => "all";  
+      report_diffs => "true";
+      update_hashes  => "true";
 }
 
 
@@ -60,12 +60,12 @@ update_hashes  => "true";
 
 body reporter control
 {
-reports => { 
-           "file_changes", 
-           };
+      reports => { 
+		   "file_changes", 
+      };
 
 
-build_directory => "$(sys.workdir)/reports";
-report_output => "html";
-style_sheet => "cf_enterprise.css";
+      build_directory => "$(sys.workdir)/reports";
+      report_output => "html";
+      style_sheet => "cf_enterprise.css";
 }

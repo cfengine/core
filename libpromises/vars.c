@@ -38,11 +38,11 @@ static int IsCf3Scalar(char *str);
 
 void LoadSystemConstants(EvalContext *ctx)
 {
-    ScopeNewSpecial(ctx, "const", "dollar", "$", DATA_TYPE_STRING);
-    ScopeNewSpecial(ctx, "const", "n", "\n", DATA_TYPE_STRING);
-    ScopeNewSpecial(ctx, "const", "r", "\r", DATA_TYPE_STRING);
-    ScopeNewSpecial(ctx, "const", "t", "\t", DATA_TYPE_STRING);
-    ScopeNewSpecial(ctx, "const", "endl", "\n", DATA_TYPE_STRING);
+    ScopeNewSpecial(ctx, SPECIAL_SCOPE_CONST, "dollar", "$", DATA_TYPE_STRING);
+    ScopeNewSpecial(ctx, SPECIAL_SCOPE_CONST, "n", "\n", DATA_TYPE_STRING);
+    ScopeNewSpecial(ctx, SPECIAL_SCOPE_CONST, "r", "\r", DATA_TYPE_STRING);
+    ScopeNewSpecial(ctx, SPECIAL_SCOPE_CONST, "t", "\t", DATA_TYPE_STRING);
+    ScopeNewSpecial(ctx, SPECIAL_SCOPE_CONST, "endl", "\n", DATA_TYPE_STRING);
 /* NewScalar("const","0","\0",cf_str);  - this cannot work */
 
 }
@@ -425,12 +425,11 @@ const char *ExtractOuterCf3VarString(const char *str, char *substr)
 
 /*********************************************************************/
 
-int IsQualifiedVariable(char *var)
+bool IsQualifiedVariable(const char *var)
 {
     int isarraykey = false;
-    char *sp;
 
-    for (sp = var; *sp != '\0'; sp++)
+    for (const char *sp = var; *sp != '\0'; sp++)
     {
         if (*sp == '[')
         {

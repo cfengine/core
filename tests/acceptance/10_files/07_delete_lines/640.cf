@@ -8,20 +8,20 @@
 
 body common control
 {
-  inputs => { "../../default.cf.sub" };
-  bundlesequence  => { default("$(this.promise_filename)") };
-  version => "1.0";
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
 }
 
 #######################################################
 
 bundle agent init
 {
-vars:
-        "states" slist => { "actual", "expected" };
+  vars:
+      "states" slist => { "actual", "expected" };
 
-        "actual" string =>
-"header
+      "actual" string =>
+      "header
 header
 BEGIN
     One potato
@@ -40,8 +40,8 @@ END
 trailer
 trailer";
 
-        "expected" string =>
-"header
+      "expected" string =>
+      "header
 header
 BEGIN
     One potato
@@ -60,64 +60,64 @@ END
 trailer
 trailer";
 
-files:
-        "$(G.testfile).$(states)"
-            create => "true",
-            edit_line => init_insert("$(init.$(states))"),
-            edit_defaults => init_empty;
+  files:
+      "$(G.testfile).$(states)"
+      create => "true",
+      edit_line => init_insert("$(init.$(states))"),
+      edit_defaults => init_empty;
 }
 
 bundle edit_line init_insert(str)
 {
-insert_lines:
-        "$(str)";
+  insert_lines:
+      "$(str)";
 }
 
 body edit_defaults init_empty
 {
-        empty_file_before_editing => "true";
+      empty_file_before_editing => "true";
 }
 
 #######################################################
 
 bundle agent test
 {
-vars:
+  vars:
       "tstr" slist => { "eade", "EGI", "ND" };
 
-files:
-        "$(G.testfile).actual"
-            edit_line => test_delete(".*potat.*", "@(test.tstr)");
+  files:
+      "$(G.testfile).actual"
+      edit_line => test_delete(".*potat.*", "@(test.tstr)");
 
 }
 
 bundle edit_line test_delete(str, match)
 {
-delete_lines:
-        "$(str)"
-            delete_select => test_match(@{match}),
-            select_region => test_select;
+  delete_lines:
+      "$(str)"
+      delete_select => test_match(@{match}),
+      select_region => test_select;
 }
 
 body select_region test_select
 {
-select_start => "BEGIN";
-select_end => "END";
+      select_start => "BEGIN";
+      select_end => "END";
 }
 
 
 body delete_select test_match(m)
 {
-delete_if_contains_from_list => { @{m} };
+      delete_if_contains_from_list => { @{m} };
 }
 
 #######################################################
 
 bundle agent check
 {
-methods:
-        "any" usebundle => default_check_diff("$(G.testfile).actual",
-                                              "$(G.testfile).expected",
-                                              "$(this.promise_filename)");
+  methods:
+      "any" usebundle => default_check_diff("$(G.testfile).actual",
+                                            "$(G.testfile).expected",
+                                            "$(this.promise_filename)");
 }
 

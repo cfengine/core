@@ -26,22 +26,22 @@
 #
 ########################################################
 
- #
- # run this as follows:
- #
- # cf-serverd -f runtest_1.cf [-d2]
- # cf-agent   -f runtest_2.cf
- #
- # Notice that the same file configures all parts of cfengine
+#
+# run this as follows:
+#
+# cf-serverd -f runtest_1.cf [-d2]
+# cf-agent   -f runtest_2.cf
+#
+# Notice that the same file configures all parts of cfengine
 
 ########################################################
 
 body common control
 
 {
-bundlesequence  => { "example"  };
+      bundlesequence  => { "example"  };
 
-version => "1.2.3";
+      version => "1.2.3";
 }
 
 ########################################################
@@ -49,13 +49,13 @@ version => "1.2.3";
 bundle agent example
 
 {
-vars:
+  vars:
 
- "remote_value" string => hubknowledge("monitoring");
+      "remote_value" string => hubknowledge("monitoring");
 
-reports:
+  reports:
 
-    "Global knowledge: $(remote_value)";
+      "Global knowledge: $(remote_value)";
 }
 
 #########################################################
@@ -65,10 +65,10 @@ reports:
 body server control 
 
 {
-allowconnects         => { "127.0.0.1" , "::1" };
-allowallconnects      => { "127.0.0.1" , "::1" };
-trustkeysfrom         => { "127.0.0.1" , "::1" };
-allowusers            => { "mark" };
+      allowconnects         => { "127.0.0.1" , "::1" };
+      allowallconnects      => { "127.0.0.1" , "::1" };
+      trustkeysfrom         => { "127.0.0.1" , "::1" };
+      allowusers            => { "mark" };
 }
 
 #########################################################
@@ -76,12 +76,12 @@ allowusers            => { "mark" };
 bundle server access_rules()
 
 {
-access:
+  access:
 
-  "discovered value"
- 
-        handle  => "monitoring",
-  resource_type => "literal",
-        admit   => { "127.0.0.1" };
+      "discovered value"
+      
+      handle  => "monitoring",
+      resource_type => "literal",
+      admit   => { "127.0.0.1" };
 
 }

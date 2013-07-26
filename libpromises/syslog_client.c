@@ -96,10 +96,11 @@ void RemoteSysLog(int log_priority, const char *log_string)
         else
         {
             char timebuffer[26];
+            pid_t pid = getpid();
 
-            snprintf(message, rfc3164_len, "<%u>%.15s %s %s",
+            snprintf(message, rfc3164_len, "<%u>%.15s %s %s[%d]: %s",
                      pri, cf_strtimestamp_local(now, timebuffer) + 4,
-                     VFQNAME, log_string);
+                     VFQNAME, VPREFIX, pid, log_string);
             err = sendto(sd, message, strlen(message),
                          0, ap->ai_addr, ap->ai_addrlen);
             if (err == -1)

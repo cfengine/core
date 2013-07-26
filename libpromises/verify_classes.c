@@ -172,7 +172,7 @@ static int EvalClassExpression(EvalContext *ctx, Constraint *cp, Promise *pp)
     case RVAL_TYPE_LIST:
         for (rp = (Rlist *) cp->rval.item; rp != NULL; rp = rp->next)
         {
-            rval = EvaluateFinalRval(ctx, "this", (Rval) {rp->item, rp->type}, true, pp);
+            rval = EvaluateFinalRval(ctx, NULL, "this", (Rval) {rp->item, rp->type}, true, pp);
             RvalDestroy((Rval) {rp->item, rp->type});
             rp->item = rval.item;
             rp->type = rval.type;
@@ -181,7 +181,7 @@ static int EvalClassExpression(EvalContext *ctx, Constraint *cp, Promise *pp)
 
     default:
 
-        rval = ExpandPrivateRval(ctx, "this", cp->rval);
+        rval = ExpandPrivateRval(ctx, NULL, "this", cp->rval);
         RvalDestroy(cp->rval);
         cp->rval = rval;
         break;

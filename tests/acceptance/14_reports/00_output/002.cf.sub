@@ -1,0 +1,16 @@
+##############################################################################
+#
+# Redmine #2936: Check that list variables under reserved scope expand
+# as they should in reports promises.
+#
+##############################################################################
+
+
+body common control {
+  bundlesequence => {"example"};
+}
+
+bundle agent example {
+reports:
+  "$(sys.hardware_addresses)";
+}

@@ -78,8 +78,9 @@ check_PROGRAMS = \
 	generic_agent_test \
 	syntax_test \
 	sysinfo_test \
-       ipaddress_test \
-	hashes_test 
+	ipaddress_test \
+	hashes_test \
+	rb-tree-test
 
 if HAVE_AVAHI_CLIENT
 if HAVE_AVAHI_COMMON
@@ -134,7 +135,7 @@ bufferlist_test_SOURCES = bufferlist_test.c ../../libutils/buffer.c ../../libuti
 
 cf_key_functions_test_SOURCES = cf_key_functions_test.c ../../cf-key/cf-key-functions.c
 
-#ipaddress_test_SOURCES = ipaddress_test.c 
+ipaddress_test_SOURCES = ipaddress_test.c 
 
 if HAVE_AVAHI_CLIENT
 if HAVE_AVAHI_COMMON
@@ -198,7 +199,7 @@ connection_management_test_LDADD = ../../libpromises/libpromises.la libtest.la
 
 rlist_test_SOURCES = rlist_test.c \
        ../../libpromises/rlist.c ../../libutils/logging.c
-rlist_test_LDADD = libtest.la libstr.la
+rlist_test_LDADD = libtest.la libstr.la ../../libpromises/libpromises.la
 
 if LINUX
 

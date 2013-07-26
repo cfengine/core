@@ -30,7 +30,7 @@
 body common control
 
 {
-bundlesequence => { "storage" };
+      bundlesequence => { "storage" };
 }
 
 #
@@ -38,10 +38,10 @@ bundlesequence => { "storage" };
 bundle agent storage
 
 {
-storage:
+  storage:
 
-  "/usr" volume  => mycheck("11G");
-  "/" volume  => mycheck("60%");
+      "/usr" volume  => mycheck("11G");
+      "/" volume  => mycheck("60%");
 
 }
 
@@ -50,8 +50,8 @@ storage:
 body volume mycheck(free)   # reusable template
 
 {
-check_foreign  => "false";
-freespace      => "$(free)";
-sensible_size  => "10000";
-sensible_count => "2";
+      check_foreign  => "false";
+      freespace      => "$(free)";
+      sensible_size  => "10000";
+      sensible_count => "2";
 }

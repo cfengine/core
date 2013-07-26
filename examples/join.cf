@@ -29,7 +29,7 @@
 body common control
 
 {
-bundlesequence  => { "example" };   
+      bundlesequence  => { "example" };   
 }
 
 #######################################################
@@ -37,13 +37,13 @@ bundlesequence  => { "example" };
 bundle agent example
 
 {
-vars:
+  vars:
 
-  "mylist" slist => { "one", "two", "three", "four", "five" };
+      "mylist" slist => { "one", "two", "three", "four", "five" };
 
-  "scalar" string => join("<->","mylist");
+      "scalar" string => join("<->","mylist");
 
-reports:
-  "Concatenated $(scalar)";
+  reports:
+      "Concatenated $(scalar)";
 
 }

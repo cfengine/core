@@ -163,7 +163,7 @@ void VerifyServices(EvalContext *ctx, Attributes a, Promise *pp)
         return;
     }
 
-    ScopeNewSpecial(ctx, "this", "promiser", pp->promiser, DATA_TYPE_STRING);
+    ScopeNewSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser", pp->promiser, DATA_TYPE_STRING);
     PromiseBanner(pp);
 
     if (strcmp(a.service.service_type, "windows") == 0)
@@ -175,7 +175,7 @@ void VerifyServices(EvalContext *ctx, Attributes a, Promise *pp)
         DoVerifyServices(ctx, a, pp);
     }
 
-    ScopeDeleteSpecial("this", "promiser");
+    ScopeDeleteSpecial(SPECIAL_SCOPE_THIS, "promiser");
     YieldCurrentLock(thislock);
 }
 
@@ -229,21 +229,21 @@ static void DoVerifyServices(EvalContext *ctx, Attributes a, Promise *pp)
     switch (a.service.service_policy)
     {
     case SERVICE_POLICY_START:
-        ScopeNewSpecial(ctx, "this", "service_policy", "start", DATA_TYPE_STRING);
+        ScopeNewSpecial(ctx, SPECIAL_SCOPE_THIS, "service_policy", "start", DATA_TYPE_STRING);
         break;
 
     case SERVICE_POLICY_RESTART:
-        ScopeNewSpecial(ctx, "this", "service_policy", "restart", DATA_TYPE_STRING);
+        ScopeNewSpecial(ctx, SPECIAL_SCOPE_THIS, "service_policy", "restart", DATA_TYPE_STRING);
         break;
 
     case SERVICE_POLICY_RELOAD:
-        ScopeNewSpecial(ctx, "this", "service_policy", "reload", DATA_TYPE_STRING);
+        ScopeNewSpecial(ctx, SPECIAL_SCOPE_THIS, "service_policy", "reload", DATA_TYPE_STRING);
         break;
         
     case SERVICE_POLICY_STOP:
     case SERVICE_POLICY_DISABLE:
     default:
-        ScopeNewSpecial(ctx, "this", "service_policy", "stop", DATA_TYPE_STRING);
+        ScopeNewSpecial(ctx, SPECIAL_SCOPE_THIS, "service_policy", "stop", DATA_TYPE_STRING);
         break;
     }
 

@@ -48,7 +48,7 @@ static void test_load(void)
 
     EvalContext *ctx = EvalContextNew();
     {
-        VarRef lval = VarRefParse("g.host");
+        VarRef *lval = VarRefParse("g.host");
         EvalContextVariablePut(ctx, lval, (Rval) { "snookie", RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
         VarRefDestroy(lval);
     }

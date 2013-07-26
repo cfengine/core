@@ -1,9 +1,9 @@
 bundle agent foo
 {
-reports:
-  cfengine3::
-    "hello world"
+  reports:
+    cfengine3::
+      "hello world"
       handle => "stuff";
-    "quux"
+      "quux"
       handle => "stuff";
 }

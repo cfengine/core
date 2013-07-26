@@ -72,7 +72,6 @@ const char *CF_AGENTTYPES[] =   /* see enum cfagenttype */
     CF_RUNC,
     CF_KEYGEN,
     CF_HUBC,
-    CF_GENDOC,
     "<notype>",
 };
 

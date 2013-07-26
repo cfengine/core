@@ -48,7 +48,7 @@ typedef struct
 
 
 static ConvergeVariableOptions CollectConvergeVariableOptions(EvalContext *ctx, const Promise *pp, bool allow_redefine);
-static bool Epimenides(EvalContext *ctx, const char *scope, const char *var, Rval rval, int level);
+static bool Epimenides(EvalContext *ctx, const char *ns, const char *scope, const char *var, Rval rval, int level);
 static int CompareRval(Rval rval1, Rval rval2);
 
 
@@ -60,73 +60,23 @@ void VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates
         return;
     }
 
-    char *scope = NULL;
-    if (strcmp("meta", pp->parent_promise_type->name) == 0)
-    {
-        scope = StringConcatenate(2, PromiseGetBundle(pp)->name, "_meta");
-    }
-    else
-    {
-        scope = xstrdup(PromiseGetBundle(pp)->name);
-    }
-
     //More consideration needs to be given to using these
     //a.transaction = GetTransactionConstraints(pp);
     Attributes a = { {0} };
     a.classes = GetClassDefinitionConstraints(ctx, pp);
 
+    VarRef *ref = VarRefParseFromBundle(pp->promiser, PromiseGetBundle(pp));
+    if (strcmp("meta", pp->parent_promise_type->name) == 0)
+    {
+        VarRefSetMeta(ref, true);
+    }
+
     Rval existing_var_rval;
     DataType existing_var_type = DATA_TYPE_NONE;
-    EvalContextVariableGet(ctx, (VarRef) { NULL, scope, pp->promiser }, &existing_var_rval, &existing_var_type);
-    Buffer *qualified_scope = BufferNew();
-    int result = 0;
-    if (strcmp(PromiseGetNamespace(pp), "default") == 0)
+
+    if (!IsExpandable(pp->promiser))
     {
-        result = BufferSet(qualified_scope, scope, strlen(scope));
-        if (result < 0)
-        {
-            /*
-             * Even though there will be no problems with memory allocation, there
-             * might be other problems.
-             */
-            UnexpectedError("Problems writing to buffer");
-            free(scope);
-            BufferDestroy(&qualified_scope);
-            return;
-        }
-    }
-    else
-    {
-        if (strchr(scope, ':') == NULL)
-        {
-            result = BufferPrintf(qualified_scope, "%s:%s", PromiseGetNamespace(pp), scope);
-            if (result < 0)
-            {
-                /*
-                 * Even though there will be no problems with memory allocation, there
-                 * might be other problems.
-                 */
-                UnexpectedError("Problems writing to buffer");
-                free(scope);
-                BufferDestroy(&qualified_scope);
-                return;
-            }
-        }
-        else
-        {
-            result = BufferSet(qualified_scope, scope, strlen(scope));
-            if (result < 0)
-            {
-                /*
-                 * Even though there will be no problems with memory allocation, there
-                 * might be other problems.
-                 */
-                UnexpectedError("Problems writing to buffer");
-                free(scope);
-                BufferDestroy(&qualified_scope);
-                return;
-            }
-        }
+        EvalContextVariableGet(ctx, ref, &existing_var_rval, &existing_var_type);
     }
 
     PromiseResult promise_result;
@@ -142,8 +92,7 @@ void VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates
             if (existing_var_type != DATA_TYPE_NONE)
             {
                 // Already did this
-                free(scope);
-                BufferDestroy(&qualified_scope);
+                VarRefDestroy(ref);
                 return;
             }
 
@@ -153,8 +102,7 @@ void VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates
             {
                 /* We do not assign variables to failed fn calls */
                 RvalDestroy(res.rval);
-                free(scope);
-                BufferDestroy(&qualified_scope);
+                VarRefDestroy(ref);
                 return;
             }
             else
@@ -168,7 +116,7 @@ void VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates
 
             if (strcmp(opts.cp_save->lval, "int") == 0)
             {
-                result = BufferPrintf(conv, "%ld", IntFromString(opts.cp_save->rval.item));
+                int result = BufferPrintf(conv, "%ld", IntFromString(opts.cp_save->rval.item));
                 if (result < 0)
                 {
                     /*
@@ -176,8 +124,7 @@ void VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates
                      * might be other problems.
                      */
                     UnexpectedError("Problems writing to buffer");
-                    free(scope);
-                    BufferDestroy(&qualified_scope);
+                    VarRefDestroy(ref);
                     BufferDestroy(&conv);
                     return;
                 }
@@ -185,6 +132,7 @@ void VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates
             }
             else if (strcmp(opts.cp_save->lval, "real") == 0)
             {
+                int result = -1;
                 double real_value = 0.0;
                 if (DoubleFromString(opts.cp_save->rval.item, &real_value))
                 {
@@ -202,9 +150,8 @@ void VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates
                      * might be other problems.
                      */
                     UnexpectedError("Problems writing to buffer");
-                    free(scope);
+                    VarRefDestroy(ref);
                     BufferDestroy(&conv);
-                    BufferDestroy(&qualified_scope);
                     return;
                 }
                 rval = RvalCopy((Rval) {(char *)BufferData(conv), opts.cp_save->rval.type});
@@ -224,7 +171,7 @@ void VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates
             BufferDestroy(&conv);
         }
 
-        if (Epimenides(ctx, PromiseGetBundle(pp)->name, pp->promiser, rval, 0))
+        if (Epimenides(ctx, PromiseGetBundle(pp)->ns, PromiseGetBundle(pp)->name, pp->promiser, rval, 0))
         {
             Log(LOG_LEVEL_ERR, "Variable '%s' contains itself indirectly - an unkeepable promise", pp->promiser);
             exit(1);
@@ -233,7 +180,7 @@ void VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates
         {
             /* See if the variable needs recursively expanding again */
 
-            Rval returnval = EvaluateFinalRval(ctx, BufferData(qualified_scope), rval, true, pp);
+            Rval returnval = EvaluateFinalRval(ctx, ref->ns, ref->scope, rval, true, pp);
 
             RvalDestroy(rval);
 
@@ -245,7 +192,7 @@ void VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates
         {
             if (opts.ok_redefine)    /* only on second iteration, else we ignore broken promises */
             {
-                ScopeDeleteVariable(BufferData(qualified_scope), pp->promiser);
+                ScopeDeleteVariable(ref->ns, ref->scope, pp->promiser);
             }
             else if ((THIS_AGENT_TYPE == AGENT_TYPE_COMMON) && (CompareRval(existing_var_rval, rval) == false))
             {
@@ -285,8 +232,7 @@ void VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates
         {
             // Unexpanded variables, we don't do anything with
             RvalDestroy(rval);
-            free(scope);
-            BufferDestroy(&qualified_scope);
+            VarRefDestroy(ref);
             return;
         }
 
@@ -295,8 +241,7 @@ void VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates
             Log(LOG_LEVEL_ERR, "Variable identifier contains illegal characters");
             PromiseRef(LOG_LEVEL_ERR, pp);
             RvalDestroy(rval);
-            free(scope);
-            BufferDestroy(&qualified_scope);
+            VarRefDestroy(ref);
             return;
         }
 
@@ -312,9 +257,9 @@ void VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates
             }
         }
 
-        if (!EvalContextVariablePut(ctx, (VarRef) { NULL, BufferData(qualified_scope), pp->promiser }, rval, DataTypeFromString(opts.cp_save->lval)))
+        if (!EvalContextVariablePut(ctx, ref, rval, DataTypeFromString(opts.cp_save->lval)))
         {
-            Log(LOG_LEVEL_VERBOSE, "Unable to converge %s.%s value (possibly empty or infinite regression)", BufferData(qualified_scope), pp->promiser);
+            Log(LOG_LEVEL_VERBOSE, "Unable to converge %s.%s value (possibly empty or infinite regression)", ref->scope, pp->promiser);
             PromiseRef(LOG_LEVEL_VERBOSE, pp);
             promise_result = PROMISE_RESULT_FAIL;
         }
@@ -341,8 +286,7 @@ void VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates
      */
     ClassAuditLog(ctx, pp, a, promise_result);
 
-    free(scope);
-    BufferDestroy(&qualified_scope);
+    VarRefDestroy(ref);
     RvalDestroy(rval);
 }
 
@@ -433,7 +377,7 @@ static int CompareRval(Rval rval1, Rval rval2)
     return true;
 }
 
-static bool Epimenides(EvalContext *ctx, const char *scope, const char *var, Rval rval, int level)
+static bool Epimenides(EvalContext *ctx, const char *ns, const char *scope, const char *var, Rval rval, int level)
 {
     Rlist *rp, *list;
     char exp[CF_EXPANDSIZE];
@@ -450,7 +394,7 @@ static bool Epimenides(EvalContext *ctx, const char *scope, const char *var, Rva
 
         if (IsCf3VarString(rval.item))
         {
-            ExpandScalar(ctx, scope, rval.item, exp);
+            ExpandScalar(ctx, ns, scope, rval.item, exp);
 
             if (strcmp(exp, (const char *) rval.item) == 0)
             {
@@ -462,7 +406,7 @@ static bool Epimenides(EvalContext *ctx, const char *scope, const char *var, Rva
                 return false;
             }
 
-            if (Epimenides(ctx, scope, var, (Rval) {exp, RVAL_TYPE_SCALAR}, level + 1))
+            if (Epimenides(ctx, ns, scope, var, (Rval) {exp, RVAL_TYPE_SCALAR}, level + 1))
             {
                 return true;
             }
@@ -475,7 +419,7 @@ static bool Epimenides(EvalContext *ctx, const char *scope, const char *var, Rva
 
         for (rp = list; rp != NULL; rp = rp->next)
         {
-            if (Epimenides(ctx, scope, var, (Rval) {rp->item, rp->type}, level))
+            if (Epimenides(ctx, ns, scope, var, (Rval) {rp->item, rp->type}, level))
             {
                 return true;
             }

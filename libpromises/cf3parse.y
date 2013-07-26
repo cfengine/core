@@ -618,9 +618,12 @@ constraint_id:         IDSYNTAX                        /* BUNDLE ONLY */
                            ParserDebug("\tP:%s:%s:%s:%s:%s:%s attribute = %s\n", P.block, P.blocktype, P.blockid, P.currenttype, P.currentclasses ? P.currentclasses : "any", P.promiser, P.currentid);
 
                            const PromiseTypeSyntax *promise_type_syntax = PromiseTypeSyntaxGet(P.blocktype, P.currenttype);
-                           assert(promise_type_syntax);
-
-                           if (!PromiseTypeSyntaxGetConstraintSyntax(promise_type_syntax, P.currentid))
+                           if (!promise_type_syntax)
+                           {
+                               ParseError("Invalid promise type '%s' in bundle '%s' of type '%s'", P.currenttype, P.blockid, P.blocktype);
+                               INSTALL_SKIP = true;
+                           }
+                           else if (!PromiseTypeSyntaxGetConstraintSyntax(promise_type_syntax, P.currentid))
                            {
                                ParseError("Unknown attribute '%s' for promise type '%s' in bundle with type '%s'", P.currentid, P.currenttype, P.blocktype);
                                INSTALL_SKIP = true;

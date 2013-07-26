@@ -33,23 +33,23 @@
 
 body common control
 {
-bundlesequence => { "report" };
+      bundlesequence => { "report" };
 }
 
 #######################################################
 
 body monitor control
 {
-forgetrate => "0.7";
-histograms => "true";
+      forgetrate => "0.7";
+      histograms => "true";
 }
 
 #######################################################
 
 bundle agent report
 {
-reports:
-   "
+  reports:
+      "
    Free memory read at $(mon.av_free_memory_watch)
    cf_monitord read $(mon.value_monitor_self_watch)   
    ";
@@ -59,11 +59,11 @@ reports:
 
 bundle monitor watch
 {
-measurements:
+  measurements:
 
-  # Test 1 - extract string matching
+      # Test 1 - extract string matching
 
-  "/home/mark/tmp/testmeasure"
+      "/home/mark/tmp/testmeasure"
 
       handle => "blonk_watch",
       stream_type => "file",
@@ -73,10 +73,10 @@ measurements:
       match_value => find_blonks,
       action => sample_min("10");
 
-  # Test 2 - follow a special process over time
-  # using cfengine's process cache to avoid resampling
+      # Test 2 - follow a special process over time
+      # using cfengine's process cache to avoid resampling
 
-   "/var/cfengine/state/cf_rootprocs"
+      "/var/cfengine/state/cf_rootprocs"
 
       handle => "monitor_self_watch",
       stream_type => "file",
@@ -86,9 +86,9 @@ measurements:
       match_value => proc_value(".*cf-monitord.*",
                                 "root\s+[0-9.]+\s+[0-9.]+\s+[0-9.]+\s+[0-9.]+\s+([0-9]+).*");
 
-  # Test 3, discover disk device information
+      # Test 3, discover disk device information
 
-  "/bin/df"
+      "/bin/df"
 
       handle => "free_disk_watch",
       stream_type => "pipe",
@@ -98,15 +98,15 @@ measurements:
       match_value => file_system;
       # Update this as often as possible
 
-  # Test 4
+      # Test 4
 
-   "/tmp/file"
+      "/tmp/file"
 
-         handle => "line_counter",
-    stream_type => "file",
+      handle => "line_counter",
+      stream_type => "file",
       data_type => "counter",
-    match_value => scanlines("MYLINE.*"),
-   history_type => "log";
+      match_value => scanlines("MYLINE.*"),
+      history_type => "log";
 
 }
 
@@ -114,46 +114,46 @@ measurements:
 
 body match_value scanlines(x)
 {
-select_line_matching => "^$(x)$";
+      select_line_matching => "^$(x)$";
 }
 
 ##########################################################
 
 body action sample_min(x)
 {
-ifelapsed => "$(x)";
-expireafter => "$(x)";
+      ifelapsed => "$(x)";
+      expireafter => "$(x)";
 }
 
 ##########################################################
 
 body match_value find_blonks
 {
-select_line_number => "2";
-extraction_regex => "Blonk blonk ([blonk]+).*";
+      select_line_number => "2";
+      extraction_regex => "Blonk blonk ([blonk]+).*";
 }
 
 ##########################################################
 
 body match_value free_memory # not willy!
 {
-select_line_matching => "MemFree:.*";
-extraction_regex => "MemFree:\s+([0-9]+).*";
+      select_line_matching => "MemFree:.*";
+      extraction_regex => "MemFree:\s+([0-9]+).*";
 }
 
 ##########################################################
 
 body match_value proc_value(x,y)
 {
-select_line_matching => "$(x)";
-extraction_regex => "$(y)";
+      select_line_matching => "$(x)";
+      extraction_regex => "$(y)";
 }
 
 ##########################################################
 
 body match_value file_system
 {
-select_line_matching => "/.*";
-extraction_regex => "(.*)";
+      select_line_matching => "/.*";
+      extraction_regex => "(.*)";
 }
 

@@ -1420,25 +1420,34 @@ void RlistFlatten(EvalContext *ctx, Rlist **list)
         {
             GetNaked(naked, rp->item);
 
-            Rval rv;
-            if (EvalContextVariableGet(ctx, (VarRef) { NULL, ScopeGetCurrent()->scope, naked }, &rv, NULL))
+            if (!IsExpandable(naked))
             {
-                switch (rv.type)
-                {
-                case RVAL_TYPE_LIST:
-                    for (const Rlist *srp = rv.item; srp != NULL; srp = srp->next)
-                    {
-                        RlistAppend(list, srp->item, srp->type);
-                    }
-                    Rlist *next = rp->next;
-                    RlistDestroyEntry(list, rp);
-                    rp = next;
-                    continue;
+                Rval rv;
+                VarRef *ref = VarRefParse(naked);
 
-                default:
-                    ProgrammingError("List variable does not resolve to a list");
-                    RlistAppend(list, rp->item, rp->type);
-                    break;
+                bool var_found = EvalContextVariableGet(ctx, ref, &rv, NULL);
+
+                VarRefDestroy(ref);
+
+                if (var_found)
+                {
+                    switch (rv.type)
+                    {
+                    case RVAL_TYPE_LIST:
+                        for (const Rlist *srp = rv.item; srp != NULL; srp = srp->next)
+                        {
+                            RlistAppend(list, srp->item, srp->type);
+                        }
+                        Rlist *next = rp->next;
+                        RlistDestroyEntry(list, rp);
+                        rp = next;
+                        continue;
+
+                    default:
+                        ProgrammingError("List variable does not resolve to a list");
+                        RlistAppend(list, rp->item, rp->type);
+                        break;
+                    }
                 }
             }
         }

@@ -29,7 +29,7 @@
 body common control
 
 {
-bundlesequence  => { "example" };
+      bundlesequence  => { "example" };
 }
 
 ###########################################################
@@ -37,17 +37,17 @@ bundlesequence  => { "example" };
 bundle agent example
 
 {     
-dummy:
-  "help" -> "me";
+  dummy:
+      "help" -> "me";
 
-reports:
+  reports:
 
-  same::
+    same::
 
-    "Strings are equal";
+      "Strings are equal";
 
- !same::
+    !same::
 
-    "Strings are not equal";
+      "Strings are not equal";
 }
 

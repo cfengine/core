@@ -140,13 +140,18 @@ void ExecConfigUpdate(const EvalContext *ctx, const Policy *policy, ExecConfig *
                 continue;
             }
 
+            VarRef *ref = VarRefParseFromScope(cp->lval, "control_executor");
+
             Rval retval;
-            if (!EvalContextVariableGet(ctx, (VarRef) { NULL, "control_executor", cp->lval }, &retval, NULL))
+            if (!EvalContextVariableGet(ctx, ref, &retval, NULL))
             {
                 // TODO: should've been checked before this point. change to programming error
                 Log(LOG_LEVEL_ERR, "Unknown lval '%s' in exec control body", cp->lval);
+                VarRefDestroy(ref);
                 continue;
             }
+
+            VarRefDestroy(ref);
 
             if (strcmp(cp->lval, CFEX_CONTROLBODY[EXEC_CONTROL_MAILFROM].lval) == 0)
             {

@@ -32,24 +32,33 @@
 
 typedef struct
 {
-    const char *const ns;
-    const char *const scope;
-    const char *const lval;
-    const char *const *const indices;
-    const size_t num_indices;
-    const bool allocated; /* Mark that VarRef was allocated by VarRefParse */
+    char *ns;
+    char *scope;
+    char *lval;
+    char **indices;
+    size_t num_indices;
 } VarRef;
 
-VarRef VarRefParse(const char *var_ref_string);
+VarRef *VarRefParse(const char *var_ref_string);
 
 /**
  * @brief Parse the variable reference in the context of a bundle. This means that the VarRef will inherit scope and namespace
  *        of the bundle if these are not specified explicitly in the string.
  */
-VarRef VarRefParseFromBundle(const char *var_ref_string, const Bundle *bundle);
+VarRef *VarRefParseFromBundle(const char *var_ref_string, const Bundle *bundle);
+VarRef *VarRefParseFromScope(const char *var_ref_string, const char *scope);
+VarRef *VarRefParseFromNamespaceAndScope(const char *qualified_name, const char *_ns, const char *_scope, char ns_separator, char scope_separator);
 
-void VarRefDestroy(VarRef ref);
 
-char *VarRefToString(const VarRef ref, bool qualified);
+void VarRefDestroy(VarRef *ref);
+
+char *VarRefToString(const VarRef *ref, bool qualified);
+
+char *VarRefMangle(const VarRef *ref);
+VarRef *VarRefDeMangle(const char *mangled_var_ref);
+
+void VarRefSetMeta(VarRef *ref, bool enabled);
+
+bool VarRefIsQualified(const VarRef *ref);
 
 #endif

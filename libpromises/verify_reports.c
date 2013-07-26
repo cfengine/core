@@ -68,7 +68,9 @@ void VerifyReportPromise(EvalContext *ctx, Promise *pp)
             snprintf(unique_name, CF_BUFSIZE, "last-result");
         }
 
-        EvalContextVariablePut(ctx, (VarRef) { NULL, PromiseGetBundle(pp)->name, unique_name }, (Rval) { pp->promiser, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
+        VarRef *ref = VarRefParseFromBundle(unique_name, PromiseGetBundle(pp));
+        EvalContextVariablePut(ctx, ref, (Rval) { pp->promiser, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
+        VarRefDestroy(ref);
         return;
     }
        

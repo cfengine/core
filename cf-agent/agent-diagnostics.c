@@ -227,3 +227,10 @@ const AgentDiagnosticCheck *AgentDiagnosticsAllChecks(void)
 
     return checks;
 }
+
+ENTERPRISE_VOID_FUNC_4ARG_DEFINE_STUB(void, AgentDiagnosticsRunAllChecksNova,
+                                      ARG_UNUSED const char *, workdir, ARG_UNUSED Writer *, output,
+                                      ARG_UNUSED AgentDiagnosticsRunFunction, AgentDiagnosticsRunPtr,
+                                      ARG_UNUSED AgentDiagnosticsResultNewFunction, AgentDiagnosticsResultNewPtr)
+{
+}

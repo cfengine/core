@@ -26,15 +26,17 @@
 #define CFENGINE_CF_SERVERD_ENTERPRISE_STUBS_H
 
 #include <cf3.defs.h>
+#include <cf-serverd-functions.h>
 
 struct ServerConnectionState;
 
 ENTERPRISE_VOID_FUNC_3ARG_DECLARE(void, RegisterLiteralServerData, EvalContext *, ctx, const char *, handle, Promise *, pp);
 ENTERPRISE_FUNC_3ARG_DECLARE(int, ReturnLiteralData, EvalContext *, ctx, char *, handle, char *, ret);
 
-ENTERPRISE_FUNC_2ARG_DECLARE(int, SetServerListenState, EvalContext *, ctx, size_t, queue_size);
+ENTERPRISE_FUNC_4ARG_DECLARE(int, SetServerListenState, EvalContext *, ctx, size_t, queue_size, bool, server_listen,
+                             InitServerFunction, InitServerPtr);
 
-ENTERPRISE_VOID_FUNC_0ARG_DECLARE(void, TryCollectCall);
+ENTERPRISE_VOID_FUNC_1ARG_DECLARE(void, TryCollectCall, int, collect_window);
 ENTERPRISE_FUNC_1ARG_DECLARE(int, ReceiveCollectCall, struct ServerConnectionState *, conn);
 
 ENTERPRISE_FUNC_2ARG_DECLARE(bool, ReturnQueryData, struct ServerConnectionState *, conn, char *, menu);

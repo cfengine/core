@@ -454,9 +454,7 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
                 WriterWriteF(out, "self-diagnostics for agent using workdir '%s'\n", workdir);
 
                 AgentDiagnosticsRun(workdir, AgentDiagnosticsAllChecks(), out);
-#ifdef HAVE_ENTERPRISE
-                AgentDiagnosticsRun(workdir, AgentDiagnosticsAllChecksNova(), out);
-#endif
+                AgentDiagnosticsRunAllChecksNova(workdir, out, &AgentDiagnosticsRun, &AgentDiagnosticsResultNew);
                 FileWriterDetach(out);
             }
             exit(0);

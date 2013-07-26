@@ -2572,7 +2572,7 @@ static void VerifyFileIntegrity(EvalContext *ctx, char *file, Attributes attr, P
 
     if (attr.change.report_diffs)
     {
-        LogFileChange(ctx, file, changed, attr, pp);
+        LogFileChange(ctx, file, changed, attr, pp, &CopyRegularFile);
     }
 }
 

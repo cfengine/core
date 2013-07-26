@@ -267,6 +267,7 @@ void StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
     int ret_val;
     CfLock thislock;
     time_t starttime = time(NULL), last_collect = 0;
+    extern int COLLECT_WINDOW;
 
     struct sockaddr_storage cin;
     socklen_t addrlen = sizeof(cin);
@@ -278,7 +279,7 @@ void StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
     signal(SIGUSR1, HandleSignalsForDaemon);
     signal(SIGUSR2, HandleSignalsForDaemon);
 
-    sd = SetServerListenState(ctx, QUEUESIZE);
+    sd = SetServerListenState(ctx, QUEUESIZE, SERVER_LISTEN, &InitServer);
 
     TransactionContext tc = {
         .ifelapsed = 0,
@@ -358,7 +359,7 @@ void StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
 
         if ((COLLECT_INTERVAL > 0) && ((now - last_collect) > COLLECT_INTERVAL))
         {
-            TryCollectCall();
+            TryCollectCall(COLLECT_WINDOW);
             last_collect = now;
             continue;
         }

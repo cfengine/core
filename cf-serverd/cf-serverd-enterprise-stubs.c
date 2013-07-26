@@ -38,17 +38,18 @@ ENTERPRISE_FUNC_3ARG_DEFINE_STUB(int, ReturnLiteralData, ARG_UNUSED EvalContext 
     return 0;
 }
 
-ENTERPRISE_FUNC_2ARG_DEFINE_STUB(int, SetServerListenState, ARG_UNUSED EvalContext *, ctx, ARG_UNUSED size_t, queue_size)
+ENTERPRISE_FUNC_4ARG_DEFINE_STUB(int, SetServerListenState, ARG_UNUSED EvalContext *, ctx, ARG_UNUSED size_t, queue_size, ARG_UNUSED bool, server_listen,
+                                 InitServerFunction, InitServerPtr)
 {
-    if (!SERVER_LISTEN)
+    if (!server_listen)
     {
         Log(LOG_LEVEL_VERBOSE, "Disable listening on port is only supported in CFEngine Enterprise");
     }
 
-    return InitServer(queue_size);
+    return InitServerPtr(queue_size);
 }
 
-ENTERPRISE_VOID_FUNC_0ARG_DEFINE_STUB(void, TryCollectCall)
+ENTERPRISE_VOID_FUNC_1ARG_DEFINE_STUB(void, TryCollectCall, ARG_UNUSED int, collect_window)
 {
     Log(LOG_LEVEL_VERBOSE, "Collect calling is only supported in CFEngine Enterprise");
 }

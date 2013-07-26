@@ -33,8 +33,9 @@ ENTERPRISE_VOID_FUNC_2ARG_DEFINE_STUB(void, LastSawBundle, ARG_UNUSED const Bund
 {
 }
 
-ENTERPRISE_VOID_FUNC_5ARG_DEFINE_STUB(void, LogFileChange, ARG_UNUSED EvalContext *, ctx, ARG_UNUSED char *, file,
-                   ARG_UNUSED int, change, ARG_UNUSED Attributes, a, ARG_UNUSED Promise *, pp)
+ENTERPRISE_VOID_FUNC_6ARG_DEFINE_STUB(void, LogFileChange, ARG_UNUSED EvalContext *, ctx, ARG_UNUSED char *, file,
+                   ARG_UNUSED int, change, ARG_UNUSED Attributes, a, ARG_UNUSED Promise *, pp,
+                   CopyRegularFileFunction, CopyRegularFilePtr)
 {
     Log(LOG_LEVEL_VERBOSE, "Logging file differences requires version Nova or above");
 }

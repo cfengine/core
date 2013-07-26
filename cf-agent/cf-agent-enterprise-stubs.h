@@ -26,6 +26,7 @@
 #define CFENGINE_CF_AGENT_ENTERPRISE_STUBS_H
 
 #include <cf3.defs.h>
+#include <cfnet.h>
 
 #if defined(__MINGW32__)
 void VerifyRegistryPromise(EvalContext *ctx, Attributes a, Promise *pp);
@@ -34,8 +35,17 @@ ENTERPRISE_VOID_FUNC_3ARG_DECLARE(void, VerifyWindowsService, EvalContext *, ctx
 
 ENTERPRISE_VOID_FUNC_2ARG_DECLARE(void, LastSawBundle, const Bundle *, bundle, double, compliance);
 
-ENTERPRISE_VOID_FUNC_5ARG_DECLARE(void, LogFileChange, EvalContext *, ctx, char *, file,
-                   int, change, Attributes, a, Promise *, pp);
+typedef int (*CopyRegularFileFunction)(EvalContext *ctx,
+                                       char *source,
+                                       char *dest,
+                                       struct stat sstat,
+                                       struct stat dstat,
+                                       Attributes attr,
+                                       Promise *pp,
+                                       CompressedArray **inode_cache,
+                                       AgentConnection *conn);
+ENTERPRISE_VOID_FUNC_6ARG_DECLARE(void, LogFileChange, EvalContext *, ctx, char *, file,
+                   int, change, Attributes, a, Promise *, pp, CopyRegularFileFunction, CopyRegularFilePtr);
 
 ENTERPRISE_VOID_FUNC_5ARG_DECLARE(void, Nova_CheckNtACL, EvalContext *, ctx, char *, file_path, Acl, acl, Attributes, a, Promise *, pp);
 

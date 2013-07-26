@@ -61,50 +61,18 @@ static StackFrame *LastStackFrame(const EvalContext *ctx, size_t offset)
     return SeqAt(ctx->stack, SeqLength(ctx->stack) - 1 - offset);
 }
 
-static StackFrame *LastStackFrameBundle(const EvalContext *ctx)
+static StackFrame *LastStackFrameByType(const EvalContext *ctx, StackFrameType type)
 {
-    StackFrame *last_frame = LastStackFrame(ctx, 0);
-
-    switch (last_frame->type)
+    for (size_t i = 0; i < SeqLength(ctx->stack); i++)
     {
-    case STACK_FRAME_TYPE_BUNDLE:
-        return last_frame;
-
-    case STACK_FRAME_TYPE_BODY:
+        StackFrame *frame = LastStackFrame(ctx, i);
+        if (frame->type == type)
         {
-            assert(LastStackFrame(ctx, 1));
-            assert(LastStackFrame(ctx, 1)->type == STACK_FRAME_TYPE_PROMISE);
-            StackFrame *previous_frame = LastStackFrame(ctx, 2);
-            if (previous_frame)
-            {
-                assert(previous_frame->type == STACK_FRAME_TYPE_BUNDLE);
-                return previous_frame;
-            }
-            else
-            {
-                return NULL;
-            }
+            return frame;
         }
-
-    case STACK_FRAME_TYPE_PROMISE:
-        {
-            StackFrame *previous_frame = LastStackFrame(ctx, 1);
-            assert(previous_frame);
-            assert("Promise stack frame does not follow bundle stack frame" && previous_frame->type == STACK_FRAME_TYPE_BUNDLE);
-            return previous_frame;
-        }
-
-    case STACK_FRAME_TYPE_PROMISE_ITERATION:
-        {
-            StackFrame *previous_frame = LastStackFrame(ctx, 2);
-            assert(previous_frame);
-            assert("Promise stack frame does not follow bundle stack frame" && previous_frame->type == STACK_FRAME_TYPE_BUNDLE);
-            return previous_frame;
-        }
-
-    default:
-        ProgrammingError("Unhandled stack frame type");
     }
+
+    return NULL;
 }
 
 static const char *GetAgentAbortingContext(const EvalContext *ctx)
@@ -233,7 +201,7 @@ void EvalContextStackFrameAddSoft(EvalContext *ctx, const char *context)
 
     StackFrameBundle frame;
     {
-        StackFrame *last_frame = LastStackFrameBundle(ctx);
+        StackFrame *last_frame = LastStackFrameByType(ctx, STACK_FRAME_TYPE_BUNDLE);
         if (!last_frame)
         {
             ProgrammingError("Attempted to add a soft class on the stack, but stack had no bundle frame");
@@ -822,7 +790,7 @@ void EvalContextHeapAddNegated(EvalContext *ctx, const char *context)
 
 void EvalContextStackFrameAddNegated(EvalContext *ctx, const char *context)
 {
-    StackFrame *frame = LastStackFrameBundle(ctx);
+    StackFrame *frame = LastStackFrameByType(ctx, STACK_FRAME_TYPE_BUNDLE);
     assert(frame);
 
     StringSetAdd(frame->data.bundle.contexts_negated, xstrdup(context));
@@ -952,7 +920,7 @@ size_t EvalContextStackFrameMatchCountSoft(const EvalContext *ctx, const char *c
         return 0;
     }
 
-    const StackFrame *frame = LastStackFrameBundle(ctx);
+    const StackFrame *frame = LastStackFrameByType(ctx, STACK_FRAME_TYPE_BUNDLE);
     assert(frame);
 
     return StringSetMatchCount(frame->data.bundle.contexts, context_regex);
@@ -1052,18 +1020,18 @@ static StackFrame *StackFrameNewPromise(const Promise *owner)
     return frame;
 }
 
-static StackFrame *StackFrameNewPromiseIteration(const Promise *owner)
+static StackFrame *StackFrameNewPromiseIteration(const Rlist *iteration_context)
 {
     StackFrame *frame = StackFrameNew(STACK_FRAME_TYPE_PROMISE_ITERATION, true);
 
-    frame->data.promise_iteration.owner = owner;
+    frame->data.promise_iteration.iteration_context = iteration_context;
 
     return frame;
 }
 
 void EvalContextStackFrameRemoveSoft(EvalContext *ctx, const char *context)
 {
-    StackFrame *frame = LastStackFrameBundle(ctx);
+    StackFrame *frame = LastStackFrameByType(ctx, STACK_FRAME_TYPE_BUNDLE);
     assert(frame);
 
     StringSetRemove(frame->data.bundle.contexts, context);
@@ -1086,7 +1054,7 @@ void EvalContextStackPushBundleFrame(EvalContext *ctx, const Bundle *owner, cons
 
     if (RlistLen(args) > 0)
     {
-        const Promise *caller = EvalContextStackGetTopPromise(ctx);
+        const Promise *caller = EvalContextStackCurrentPromise(ctx);
         if (caller)
         {
             ScopeClear(owner->ns, owner->name);
@@ -1121,7 +1089,7 @@ void EvalContextStackPushBodyFrame(EvalContext *ctx, const Body *owner, Rlist *a
 
     if (RlistLen(owner->args) != RlistLen(args))
     {
-        const Promise *caller = EvalContextStackGetTopPromise(ctx);
+        const Promise *caller = EvalContextStackCurrentPromise(ctx);
         assert(caller);
 
         Log(LOG_LEVEL_ERR, "Argument arity mismatch in body '%s' at line %zu in file '%s', expected %d, got %d",
@@ -1145,16 +1113,19 @@ void EvalContextStackPushPromiseFrame(EvalContext *ctx, const Promise *owner)
 
     ScopePushThis();
     EvalContextStackPushFrame(ctx, StackFrameNewPromise(owner));
+
+    ScopeCopy(NULL, "this", ScopeGet(EvalContextStackCurrentBundle(ctx)->ns, EvalContextStackCurrentBundle(ctx)->name));
 }
 
-void EvalContextStackPushPromiseIterationFrame(EvalContext *ctx, const Promise *owner)
+void EvalContextStackPushPromiseIterationFrame(EvalContext *ctx, const Rlist *iteration_context)
 {
     assert(LastStackFrame(ctx, 0) && LastStackFrame(ctx, 0)->type == STACK_FRAME_TYPE_PROMISE);
 
-    EvalContextStackPushFrame(ctx, StackFrameNewPromiseIteration(owner));
-    if (!ScopeGet(NULL, "this"))
+    EvalContextStackPushFrame(ctx, StackFrameNewPromiseIteration(iteration_context));
+
+    if (RlistLen(iteration_context) > 0)
     {
-        ScopeNew(NULL, "this");
+        ScopeDeRefListsInThisScope(iteration_context);
     }
 }
 
@@ -1192,30 +1163,24 @@ void EvalContextStackPopFrame(EvalContext *ctx)
 
 StringSetIterator EvalContextStackFrameIteratorSoft(const EvalContext *ctx)
 {
-    StackFrame *frame = LastStackFrameBundle(ctx);
+    StackFrame *frame = LastStackFrameByType(ctx, STACK_FRAME_TYPE_BUNDLE);
     assert(frame);
 
     return StringSetIteratorInit(frame->data.bundle.contexts);
 }
 
-const Promise *EvalContextStackGetTopPromise(const EvalContext *ctx)
+const Promise *EvalContextStackCurrentPromise(const EvalContext *ctx)
 {
-    for (int i = SeqLength(ctx->stack) - 1; i >= 0; --i)
-    {
-        StackFrame *st = SeqAt(ctx->stack, i);
-        if (st->type == STACK_FRAME_TYPE_PROMISE)
-        {
-            return st->data.promise.owner;
-        }
-
-        if (st->type == STACK_FRAME_TYPE_PROMISE_ITERATION)
-        {
-            return st->data.promise_iteration.owner;
-        }
-    }
-
-    return NULL;
+    StackFrame *frame = LastStackFrameByType(ctx, STACK_FRAME_TYPE_PROMISE);
+    return frame ? frame->data.promise.owner : NULL;
 }
+
+const Bundle *EvalContextStackCurrentBundle(const EvalContext *ctx)
+{
+    StackFrame *frame = LastStackFrameByType(ctx, STACK_FRAME_TYPE_BUNDLE);
+    return frame ? frame->data.bundle.owner : NULL;
+}
+
 
 char *EvalContextStackPath(const EvalContext *ctx)
 {
@@ -1234,12 +1199,12 @@ char *EvalContextStackPath(const EvalContext *ctx)
             WriterWriteF(path, "/%s", frame->data.bundle.owner->name);
             break;
 
-        case STACK_FRAME_TYPE_PROMISE_ITERATION:
+        case STACK_FRAME_TYPE_PROMISE:
             WriterWriteF(path, "/%s", frame->data.promise.owner->parent_promise_type->name);
             WriterWriteF(path, "/'%s'", frame->data.promise.owner->promiser);
             break;
 
-        case STACK_FRAME_TYPE_PROMISE:
+        case STACK_FRAME_TYPE_PROMISE_ITERATION:
             break;
         }
     }
@@ -1298,7 +1263,7 @@ static VariableTable *GetVariableTableForVarRef(const EvalContext *ctx, const Va
     case SPECIAL_SCOPE_EDIT:
         {
             assert(!ref->ns);
-            StackFrame *frame = LastStackFrameBundle(ctx);
+            StackFrame *frame = LastStackFrameByType(ctx, STACK_FRAME_TYPE_BUNDLE);
             assert(frame);
             return frame->data.bundle.vars;
         }
@@ -1398,7 +1363,7 @@ bool EvalContextVariablePut(EvalContext *ctx, const VarRef *ref, Rval rval, Data
     else if (strcmp("edit", ref->scope) == 0)
     {
         assert(!ref->ns);
-        StackFrame *frame = LastStackFrameBundle(ctx);
+        StackFrame *frame = LastStackFrameByType(ctx, STACK_FRAME_TYPE_BUNDLE);
         assert(frame && "Attempted to add an edit variable outside of any bundle evaluation");
 
         VariableTable *table = GetVariableTableForVarRef(ctx, ref);

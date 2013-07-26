@@ -83,8 +83,6 @@ static Rlist *RlistAppendOrthog(Rlist **start, void *item, RvalType type)
 
 Rlist *NewIterationContext(EvalContext *ctx, const Promise *pp, Rlist *namelist)
 {
-    ScopeCopy(NULL, "this", ScopeGet(PromiseGetBundle(pp)->ns, PromiseGetBundle(pp)->name));
-
     if (namelist == NULL)
     {
         return NULL;

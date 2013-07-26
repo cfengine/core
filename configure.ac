@@ -246,9 +246,6 @@ fi
 
 dnl Enterprise extensions
 
-dnl Mongo is disabled unless overriden in subproject
-AM_CONDITIONAL(MONGO, false)
-
 m4_indir(incstart[]incend, [enterprise/options.m4])
 m4_indir(incstart[]incend, [nova/options.m4])
 AM_CONDITIONAL([HAVE_ENTERPRISE], [test "x$with_enterprise" != xno && test -d ${srcdir}/enterprise])

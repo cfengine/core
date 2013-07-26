@@ -27,6 +27,10 @@
 
 #include <cf3.defs.h>
 
+#ifdef HAVE_ENTERPRISE
+#include <enterprise_conversion.h>
+#endif
+
 // Type-String conversion
 MeasurePolicy MeasurePolicyFromString(const char *s);
 EnvironmentState EnvironmentStateFromString(const char *s);

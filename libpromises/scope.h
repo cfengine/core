@@ -69,13 +69,6 @@ void ScopeClearSpecial(SpecialScope scope);
 Scope *ScopeGet(const char *ns, const char *scope);
 
 /**
- * @brief copy an existing Scope, prepend to VSCOPE with a new name
- * @param new_scopename
- * @param old_scopename
- */
-void ScopeCopy(const char *new_ns, const char *new_scopename, const Scope *old_scope);
-
-/**
  * @brief clear VSCOPE
  */
 void ScopeDeleteAll(void);

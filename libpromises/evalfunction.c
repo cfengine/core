@@ -1140,96 +1140,133 @@ static FnCallResult FnCallRegList(EvalContext *ctx, FnCall *fp, Rlist *finalargs
 
 static FnCallResult FnCallRegArray(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
-    char match[CF_MAXVARSIZE], buffer[CF_BUFSIZE];
-    Scope *ptr;
-    AssocHashTableIterator i;
-    CfAssoc *assoc;
-
     char *arrayname = RlistScalarValue(finalargs);
     char *regex = RlistScalarValue(finalargs->next);
 
     VarRef *ref = VarRefParse(arrayname);
+    bool found = false;
 
-    if ((ptr = ScopeGet(ref->ns, ref->scope)) == NULL)
+    if (strcmp(ref->scope, "this") == 0 || strcmp(ref->scope, "match") == 0)
     {
-        Log(LOG_LEVEL_VERBOSE, "Function regarray was promised an array called '%s' but this was not found",
-              arrayname);
-        VarRefDestroy(ref);
-        return (FnCallResult) { FNCALL_FAILURE };
-    }
+        char match[CF_MAXVARSIZE] = "";
 
-    strcpy(buffer, "!any");
+        Scope *ptr = NULL;
 
-    i = HashIteratorInit(ptr->hashtable);
-
-    while ((assoc = HashIteratorNext(&i)))
-    {
-        snprintf(match, CF_MAXVARSIZE, "%s[", ref->lval);
-        if (strncmp(match, assoc->lval, strlen(match)) == 0)
+        if ((ptr = ScopeGet(ref->ns, ref->scope)) == NULL)
         {
-            if (FullTextMatch(regex, assoc->rval.item))
+            Log(LOG_LEVEL_VERBOSE, "Function regarray was promised an array called '%s' but this was not found",
+                  arrayname);
+            VarRefDestroy(ref);
+            return (FnCallResult) { FNCALL_FAILURE };
+        }
+
+        AssocHashTableIterator i = HashIteratorInit(ptr->hashtable);
+        CfAssoc *assoc = NULL;
+
+        while ((assoc = HashIteratorNext(&i)))
+        {
+            snprintf(match, CF_MAXVARSIZE, "%s[", ref->lval);
+            if (strncmp(match, assoc->lval, strlen(match)) == 0)
             {
-                strcpy(buffer, "any");
-                break;
+                if (FullTextMatch(regex, assoc->rval.item))
+                {
+                    found = true;
+                    break;
+                }
             }
         }
     }
+    else
+    {
+        VariableTableIterator *iter = EvalContextVariableTableIteratorNew(ctx, ref);
+        Variable *var = NULL;
+        while ((var = VariableTableIteratorNext(iter)))
+        {
+            if (FullTextMatch(regex, RvalScalarValue(var->rval)))
+            {
+                found = true;
+                break;
+            }
+        }
+        VariableTableIteratorDestroy(iter);
+    }
 
-    VarRefDestroy(ref);
-
-    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), RVAL_TYPE_SCALAR } };
+    if (found)
+    {
+        return (FnCallResult) { FNCALL_SUCCESS, { xstrdup("any"), RVAL_TYPE_SCALAR } };
+    }
+    else
+    {
+        return (FnCallResult) { FNCALL_SUCCESS, { xstrdup("!any"), RVAL_TYPE_SCALAR } };
+    }
 }
 
 /*********************************************************************/
 
 static FnCallResult FnCallGetIndices(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
-    char index[CF_MAXVARSIZE], match[CF_MAXVARSIZE];
     Rlist *returnlist = NULL;
-    AssocHashTableIterator i;
-    CfAssoc *assoc;
-
     VarRef *ref = VarRefParseFromBundle(RlistScalarValue(finalargs), PromiseGetBundle(fp->caller));
 
-    Scope *scope = ScopeGet(ref->ns, ref->scope);
-
-    if (!scope)
+    if (strcmp("match", ref->scope) == 0 || strcmp("this", ref->scope) == 0)
     {
-        Log(LOG_LEVEL_VERBOSE,
-            "Function getindices was promised an array called '%s' in scope '%s' but this was not found", ref->lval,
-              ref->scope);
-        VarRefDestroy(ref);
-        RlistAppendScalarIdemp(&returnlist, CF_NULL_VALUE);
-        return (FnCallResult) { FNCALL_SUCCESS, { returnlist, RVAL_TYPE_LIST } };
-    }
 
-    i = HashIteratorInit(scope->hashtable);
+        Scope *scope = ScopeGet(ref->ns, ref->scope);
 
-    while ((assoc = HashIteratorNext(&i)))
-    {
-        snprintf(match, CF_MAXVARSIZE - 1, "%.127s[", ref->lval);
-
-        if (strncmp(match, assoc->lval, strlen(match)) == 0)
+        if (!scope)
         {
-            char *sp;
+            Log(LOG_LEVEL_VERBOSE,
+                "Function getindices was promised an array called '%s' in scope '%s' but this was not found", ref->lval,
+                  ref->scope);
+            VarRefDestroy(ref);
+            RlistAppendScalarIdemp(&returnlist, CF_NULL_VALUE);
+            return (FnCallResult) { FNCALL_SUCCESS, { returnlist, RVAL_TYPE_LIST } };
+        }
 
-            index[0] = '\0';
-            StringNotMatchingSetCapped(assoc->lval + strlen(match), CF_MAXVARSIZE, "\n", index);
-            if ((sp = strchr(index, ']')))
-            {
-                *sp = '\0';
-            }
-            else
-            {
-                index[strlen(index) - 1] = '\0';
-            }
+        char index[CF_MAXVARSIZE], match[CF_MAXVARSIZE];
+        AssocHashTableIterator i = HashIteratorInit(scope->hashtable);
+        CfAssoc *assoc = NULL;
 
-            if (strlen(index) > 0)
+        while ((assoc = HashIteratorNext(&i)))
+        {
+            snprintf(match, CF_MAXVARSIZE - 1, "%.127s[", ref->lval);
+
+            if (strncmp(match, assoc->lval, strlen(match)) == 0)
             {
-                RlistAppendScalarIdemp(&returnlist, index);
+                char *sp;
+
+                index[0] = '\0';
+                StringNotMatchingSetCapped(assoc->lval + strlen(match), CF_MAXVARSIZE, "\n", index);
+                if ((sp = strchr(index, ']')))
+                {
+                    *sp = '\0';
+                }
+                else
+                {
+                    index[strlen(index) - 1] = '\0';
+                }
+
+                if (strlen(index) > 0)
+                {
+                    RlistAppendScalarIdemp(&returnlist, index);
+                }
             }
         }
     }
+    else
+    {
+        VariableTableIterator *iter = EvalContextVariableTableIteratorNew(ctx, ref);
+        Variable *var = NULL;
+        while ((var = VariableTableIteratorNext(iter)))
+        {
+            for (size_t i = 0; i < var->ref->num_indices; i++)
+            {
+                RlistAppendScalarIdemp(&returnlist, var->ref->indices[i]);
+            }
+        }
+        VariableTableIteratorDestroy(iter);
+    }
+
 
     VarRefDestroy(ref);
 
@@ -1245,41 +1282,71 @@ static FnCallResult FnCallGetIndices(EvalContext *ctx, FnCall *fp, Rlist *finala
 
 static FnCallResult FnCallGetValues(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
-    char match[CF_MAXVARSIZE];
-    Rlist *rp, *returnlist = NULL;
-    AssocHashTableIterator i;
-    CfAssoc *assoc;
-
+    Rlist *returnlist = NULL;
     VarRef *ref = VarRefParseFromBundle(RlistScalarValue(finalargs), PromiseGetBundle(fp->caller));
 
-    Scope *scope = ScopeGet(ref->ns, ref->scope);
-
-    if (!scope)
+    if (strcmp(ref->scope, "this") == 0 || strcmp(ref->scope, "match") == 0)
     {
-        Log(LOG_LEVEL_VERBOSE,
-            "Function getvalues was promised an array called '%s' in scope '%s' but this was not found", ref->lval,
-              ref->scope);
-        VarRefDestroy(ref);
-        RlistAppendScalarIdemp(&returnlist, CF_NULL_VALUE);
-        return (FnCallResult) { FNCALL_SUCCESS, { returnlist, RVAL_TYPE_LIST } };
-    }
+        Scope *scope = ScopeGet(ref->ns, ref->scope);
 
-    i = HashIteratorInit(scope->hashtable);
-
-    while ((assoc = HashIteratorNext(&i)))
-    {
-        snprintf(match, CF_MAXVARSIZE - 1, "%.127s[", ref->lval);
-
-        if (strncmp(match, assoc->lval, strlen(match)) == 0)
+        if (!scope)
         {
-            switch (assoc->rval.type)
+            Log(LOG_LEVEL_VERBOSE,
+                "Function getvalues was promised an array called '%s' in scope '%s' but this was not found", ref->lval,
+                  ref->scope);
+            VarRefDestroy(ref);
+            RlistAppendScalarIdemp(&returnlist, CF_NULL_VALUE);
+            return (FnCallResult) { FNCALL_SUCCESS, { returnlist, RVAL_TYPE_LIST } };
+        }
+
+        AssocHashTableIterator i = HashIteratorInit(scope->hashtable);
+        CfAssoc *assoc;
+
+        char match[CF_MAXVARSIZE] = "";
+        while ((assoc = HashIteratorNext(&i)))
+        {
+            snprintf(match, CF_MAXVARSIZE - 1, "%.127s[", ref->lval);
+
+            if (strncmp(match, assoc->lval, strlen(match)) == 0)
+            {
+                switch (assoc->rval.type)
+                {
+                case RVAL_TYPE_SCALAR:
+                    RlistAppendScalarIdemp(&returnlist, assoc->rval.item);
+                    break;
+
+                case RVAL_TYPE_LIST:
+                    for (const Rlist *rp = assoc->rval.item; rp != NULL; rp = rp->next)
+                    {
+                        RlistAppendScalarIdemp(&returnlist, rp->item);
+                    }
+                    break;
+
+                default:
+                    break;
+                }
+            }
+        }
+    }
+    else
+    {
+        VariableTableIterator *iter = EvalContextVariableTableIteratorNew(ctx, ref);
+        Variable *var = NULL;
+        while ((var = VariableTableIteratorNext(iter)))
+        {
+            if (var->ref->num_indices != 1)
+            {
+                continue;
+            }
+
+            switch (var->rval.type)
             {
             case RVAL_TYPE_SCALAR:
-                RlistAppendScalarIdemp(&returnlist, assoc->rval.item);
+                RlistAppendScalarIdemp(&returnlist, var->rval.item);
                 break;
 
             case RVAL_TYPE_LIST:
-                for (rp = assoc->rval.item; rp != NULL; rp = rp->next)
+                for (const Rlist *rp = var->rval.item; rp != NULL; rp = rp->next)
                 {
                     RlistAppendScalarIdemp(&returnlist, rp->item);
                 }
@@ -1650,74 +1717,56 @@ static FnCallResult FnCallLsDir(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 static FnCallResult FnCallMapArray(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
     char expbuf[CF_EXPANDSIZE];
-    char index[CF_MAXVARSIZE], match[CF_MAXVARSIZE];
-    Scope *ptr;
-    Rlist *rp, *returnlist = NULL;
-    AssocHashTableIterator i;
-    CfAssoc *assoc;
+    Rlist *returnlist = NULL;
 
     char *map = RlistScalarValue(finalargs);
 
     VarRef *ref = VarRefParseFromBundle(RlistScalarValue(finalargs->next), PromiseGetBundle(fp->caller));
 
-    if ((ptr = ScopeGet(ref->ns, ref->scope)) == NULL)
+    if (strcmp(ref->scope, "this") == 0 || strcmp(ref->scope, "match") == 0)
     {
-        Log(LOG_LEVEL_VERBOSE,
-            "Function maparray was promised an array called '%s' in scope '%s' but this was not found", ref->lval,
-              ref->scope);
-        RlistAppendScalarIdemp(&returnlist, CF_NULL_VALUE);
-        VarRefDestroy(ref);
-        return (FnCallResult) { FNCALL_FAILURE, { returnlist, RVAL_TYPE_LIST } };
-    }
-
-    i = HashIteratorInit(ptr->hashtable);
-
-    while ((assoc = HashIteratorNext(&i)))
-    {
-        snprintf(match, CF_MAXVARSIZE - 1, "%.127s[", ref->lval);
-
-        if (strncmp(match, assoc->lval, strlen(match)) == 0)
+        Scope *ptr;
+        if ((ptr = ScopeGet(ref->ns, ref->scope)) == NULL)
         {
-            char *sp;
+            Log(LOG_LEVEL_VERBOSE,
+                "Function maparray was promised an array called '%s' in scope '%s' but this was not found", ref->lval,
+                  ref->scope);
+            RlistAppendScalarIdemp(&returnlist, CF_NULL_VALUE);
+            VarRefDestroy(ref);
+            return (FnCallResult) { FNCALL_FAILURE, { returnlist, RVAL_TYPE_LIST } };
+        }
 
-            index[0] = '\0';
-            sscanf(assoc->lval + strlen(match), "%127[^\n]", index);
-            if ((sp = strchr(index, ']')))
-            {
-                *sp = '\0';
-            }
-            else
-            {
-                index[strlen(index) - 1] = '\0';
-            }
+        AssocHashTableIterator i = HashIteratorInit(ptr->hashtable);
+        CfAssoc *assoc = NULL;
+        char index[CF_MAXVARSIZE], match[CF_MAXVARSIZE];
 
-            if (strlen(index) > 0)
-            {
-                EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "k", index, DATA_TYPE_STRING);
+        while ((assoc = HashIteratorNext(&i)))
+        {
+            snprintf(match, CF_MAXVARSIZE - 1, "%.127s[", ref->lval);
 
-                switch (assoc->rval.type)
+            if (strncmp(match, assoc->lval, strlen(match)) == 0)
+            {
+                char *sp;
+
+                index[0] = '\0';
+                sscanf(assoc->lval + strlen(match), "%127[^\n]", index);
+                if ((sp = strchr(index, ']')))
                 {
-                case RVAL_TYPE_SCALAR:
-                    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "v", assoc->rval.item, DATA_TYPE_STRING);
-                    ExpandScalar(ctx, PromiseGetBundle(fp->caller)->ns, PromiseGetBundle(fp->caller)->name, map, expbuf);
+                    *sp = '\0';
+                }
+                else
+                {
+                    index[strlen(index) - 1] = '\0';
+                }
 
-                    if (strstr(expbuf, "$(this.k)") || strstr(expbuf, "${this.k}") ||
-                        strstr(expbuf, "$(this.v)") || strstr(expbuf, "${this.v}"))
+                if (strlen(index) > 0)
+                {
+                    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "k", index, DATA_TYPE_STRING);
+
+                    switch (assoc->rval.type)
                     {
-                        RlistDestroy(returnlist);
-                        EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_THIS, "k");
-                        EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_THIS, "v");
-                        return (FnCallResult) { FNCALL_FAILURE };
-                    }
-
-                    RlistAppendScalar(&returnlist, expbuf);
-                    EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_THIS, "v");
-                    break;
-
-                case RVAL_TYPE_LIST:
-                    for (rp = assoc->rval.item; rp != NULL; rp = rp->next)
-                    {
-                        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "v", rp->item, DATA_TYPE_STRING);
+                    case RVAL_TYPE_SCALAR:
+                        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "v", assoc->rval.item, DATA_TYPE_STRING);
                         ExpandScalar(ctx, PromiseGetBundle(fp->caller)->ns, PromiseGetBundle(fp->caller)->name, map, expbuf);
 
                         if (strstr(expbuf, "$(this.k)") || strstr(expbuf, "${this.k}") ||
@@ -1729,17 +1778,98 @@ static FnCallResult FnCallMapArray(EvalContext *ctx, FnCall *fp, Rlist *finalarg
                             return (FnCallResult) { FNCALL_FAILURE };
                         }
 
-                        RlistAppendScalarIdemp(&returnlist, expbuf);
+                        RlistAppendScalar(&returnlist, expbuf);
                         EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_THIS, "v");
-                    }
-                    break;
+                        break;
 
-                default:
-                    break;
+                    case RVAL_TYPE_LIST:
+                        for (const Rlist *rp = assoc->rval.item; rp != NULL; rp = rp->next)
+                        {
+                            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "v", rp->item, DATA_TYPE_STRING);
+                            ExpandScalar(ctx, PromiseGetBundle(fp->caller)->ns, PromiseGetBundle(fp->caller)->name, map, expbuf);
+
+                            if (strstr(expbuf, "$(this.k)") || strstr(expbuf, "${this.k}") ||
+                                strstr(expbuf, "$(this.v)") || strstr(expbuf, "${this.v}"))
+                            {
+                                RlistDestroy(returnlist);
+                                EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_THIS, "k");
+                                EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_THIS, "v");
+                                return (FnCallResult) { FNCALL_FAILURE };
+                            }
+
+                            RlistAppendScalarIdemp(&returnlist, expbuf);
+                            EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_THIS, "v");
+                        }
+                        break;
+
+                    default:
+                        break;
+                    }
+                    EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_THIS, "k");
                 }
-                EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_THIS, "k");
             }
         }
+    }
+    else
+    {
+        VariableTableIterator *iter = EvalContextVariableTableIteratorNew(ctx, ref);
+        Variable *var = NULL;
+
+        while ((var = VariableTableIteratorNext(iter)))
+        {
+            if (var->ref->num_indices != 1)
+            {
+                continue;
+            }
+
+            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "k", var->ref->indices[0], DATA_TYPE_STRING);
+
+            switch (var->rval.type)
+            {
+            case RVAL_TYPE_SCALAR:
+                EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "v", var->rval.item, DATA_TYPE_STRING);
+                ExpandScalar(ctx, PromiseGetBundle(fp->caller)->ns, PromiseGetBundle(fp->caller)->name, map, expbuf);
+
+                if (strstr(expbuf, "$(this.k)") || strstr(expbuf, "${this.k}") ||
+                    strstr(expbuf, "$(this.v)") || strstr(expbuf, "${this.v}"))
+                {
+                    RlistDestroy(returnlist);
+                    EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_THIS, "k");
+                    EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_THIS, "v");
+                    return (FnCallResult) { FNCALL_FAILURE };
+                }
+
+                RlistAppendScalar(&returnlist, expbuf);
+                EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_THIS, "v");
+                break;
+
+            case RVAL_TYPE_LIST:
+                for (const Rlist *rp = var->rval.item; rp != NULL; rp = rp->next)
+                {
+                    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "v", rp->item, DATA_TYPE_STRING);
+                    ExpandScalar(ctx, PromiseGetBundle(fp->caller)->ns, PromiseGetBundle(fp->caller)->name, map, expbuf);
+
+                    if (strstr(expbuf, "$(this.k)") || strstr(expbuf, "${this.k}") ||
+                        strstr(expbuf, "$(this.v)") || strstr(expbuf, "${this.v}"))
+                    {
+                        RlistDestroy(returnlist);
+                        EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_THIS, "k");
+                        EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_THIS, "v");
+                        return (FnCallResult) { FNCALL_FAILURE };
+                    }
+
+                    RlistAppendScalarIdemp(&returnlist, expbuf);
+                    EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_THIS, "v");
+                }
+                break;
+
+            default:
+                break;
+            }
+            EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_THIS, "k");
+        }
+
+        VariableTableIteratorDestroy(iter);
     }
 
     VarRefDestroy(ref);

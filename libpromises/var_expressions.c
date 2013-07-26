@@ -331,6 +331,32 @@ bool VarRefIsQualified(const VarRef *ref)
     return ref->scope != NULL;
 }
 
+void VarRefQualify(VarRef *ref, const char *ns, const char *scope)
+{
+    free(ref->scope);
+    free(ref->ns);
+
+    ref->ns = xstrdup(ns);
+    ref->scope = xstrdup(scope);
+}
+
+void VarRefAddIndex(VarRef *ref, const char *index)
+{
+    if (ref->indices)
+    {
+        assert(ref->num_indices > 0);
+        ref->indices = xrealloc(ref->indices, sizeof(char *) * (ref->num_indices + 1));
+    }
+    else
+    {
+        assert(ref->num_indices == 0);
+        ref->indices = xmalloc(sizeof(char *));
+    }
+
+    ref->indices[ref->num_indices] = xstrdup(index);
+    ref->num_indices++;
+}
+
 int VarRefCompare(const VarRef *a, const VarRef *b)
 {
     const char *a_ns = a->ns ? a->ns : "default";

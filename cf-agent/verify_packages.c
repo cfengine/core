@@ -948,23 +948,14 @@ static void SchedulePackageOp(EvalContext *ctx, const char *name, const char *ve
 
     if ((a.packages.package_name_convention) || (a.packages.package_delete_convention))
     {
-        {
-            VarRef *ref = VarRefParseFromScope("name", "cf_pack_context");
-            EvalContextVariablePut(ctx, ref, (Rval) { name, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
-            VarRefDestroy(ref);
-        }
+        VarRef *ref_name = VarRefParseFromScope("name", "cf_pack_context");
+        EvalContextVariablePut(ctx, ref_name, (Rval) { name, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
 
-        {
-            VarRef *ref = VarRefParseFromScope("version", "cf_pack_context");
-            EvalContextVariablePut(ctx, ref, (Rval) { version, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
-            VarRefDestroy(ref);
-        }
+        VarRef *ref_version = VarRefParseFromScope("version", "cf_pack_context");
+        EvalContextVariablePut(ctx, ref_version, (Rval) { version, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
 
-        {
-            VarRef *ref = VarRefParseFromScope("arch", "cf_pack_context");
-            EvalContextVariablePut(ctx, ref, (Rval) { arch, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
-            VarRefDestroy(ref);
-        }
+        VarRef *ref_arch = VarRefParseFromScope("arch", "cf_pack_context");
+        EvalContextVariablePut(ctx, ref_arch, (Rval) { arch, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
 
         if ((a.packages.package_delete_convention) && (a.packages.package_policy == PACKAGE_ACTION_DELETE))
         {
@@ -981,7 +972,14 @@ static void SchedulePackageOp(EvalContext *ctx, const char *name, const char *ve
             strlcpy(id, name, CF_EXPANDSIZE);
         }
 
-        ScopeClear(NULL, "cf_pack_context");
+        EvalContextVariableRemove(ctx, ref_name);
+        VarRefDestroy(ref_name);
+
+        EvalContextVariableRemove(ctx, ref_version);
+        VarRefDestroy(ref_version);
+
+        EvalContextVariableRemove(ctx, ref_arch);
+        VarRefDestroy(ref_arch);
     }
     else
     {
@@ -1027,26 +1025,26 @@ static void SchedulePackageOp(EvalContext *ctx, const char *name, const char *ve
                 ((a.packages.package_select == PACKAGE_VERSION_COMPARATOR_GT) || (a.packages.package_select == PACKAGE_VERSION_COMPARATOR_GE)))
             {
                 {
-                    VarRef *ref = VarRefParseFromScope("name", "cf_pack_context_anyver");
-                    EvalContextVariablePut(ctx, ref, (Rval) { name, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
-                    VarRefDestroy(ref);
+                    VarRef *ref_name = VarRefParseFromScope("name", "cf_pack_context_anyver");
+                    EvalContextVariablePut(ctx, ref_name, (Rval) { name, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
+
+                    VarRef *ref_version = VarRefParseFromScope("version", "cf_pack_context_anyver");
+                    EvalContextVariablePut(ctx, ref_version, (Rval) { "(.*)", RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
+
+                    VarRef *ref_arch = VarRefParseFromScope("arch", "cf_pack_context_anyver");
+                    EvalContextVariablePut(ctx, ref_arch, (Rval) { arch, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
+
+                    ExpandScalar(ctx, NULL, "cf_pack_context_anyver", a.packages.package_name_convention, refAnyVer);
+
+                    EvalContextVariableRemove(ctx, ref_name);
+                    VarRefDestroy(ref_name);
+
+                    EvalContextVariableRemove(ctx, ref_version);
+                    VarRefDestroy(ref_version);
+
+                    EvalContextVariableRemove(ctx, ref_arch);
+                    VarRefDestroy(ref_arch);
                 }
-
-                {
-                    VarRef *ref = VarRefParseFromScope("version", "cf_pack_context_anyver");
-                    EvalContextVariablePut(ctx, ref, (Rval) { "(.*)", RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
-                    VarRefDestroy(ref);
-                }
-
-                {
-                    VarRef *ref = VarRefParseFromScope("arch", "cf_pack_context_anyver");
-                    EvalContextVariablePut(ctx, ref, (Rval) { arch, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
-                    VarRefDestroy(ref);
-                }
-
-                ExpandScalar(ctx, NULL, "cf_pack_context_anyver", a.packages.package_name_convention, refAnyVer);
-
-                ScopeClear(NULL, "cf_pack_context_anyver");
 
                 EscapeSpecialChars(refAnyVer, refAnyVerEsc, sizeof(refAnyVerEsc), "(.*)","");
 
@@ -1161,25 +1159,27 @@ static void SchedulePackageOp(EvalContext *ctx, const char *name, const char *ve
             ((a.packages.package_select == PACKAGE_VERSION_COMPARATOR_GT) || (a.packages.package_select == PACKAGE_VERSION_COMPARATOR_GE)))
         {
             {
-                VarRef *ref = VarRefParseFromScope("name", "cf_pack_context_anyver");
-                EvalContextVariablePut(ctx, ref, (Rval) { name, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
-                VarRefDestroy(ref);
+                VarRef *ref_name = VarRefParseFromScope("name", "cf_pack_context_anyver");
+                EvalContextVariablePut(ctx, ref_name, (Rval) { name, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
+
+                VarRef *ref_version = VarRefParseFromScope("version", "cf_pack_context_anyver");
+                EvalContextVariablePut(ctx, ref_version, (Rval) { "(.*)", RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
+
+                VarRef *ref_arch = VarRefParseFromScope("arch", "cf_pack_context_anyver");
+                EvalContextVariablePut(ctx, ref_arch, (Rval) { arch, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
+
+                ExpandScalar(ctx, NULL, "cf_pack_context_anyver", a.packages.package_name_convention, refAnyVer);
+
+                EvalContextVariableRemove(ctx, ref_name);
+                VarRefDestroy(ref_name);
+
+                EvalContextVariableRemove(ctx, ref_version);
+                VarRefDestroy(ref_version);
+
+                EvalContextVariableRemove(ctx, ref_arch);
+                VarRefDestroy(ref_arch);
             }
 
-            {
-                VarRef *ref = VarRefParseFromScope("version", "cf_pack_context_anyver");
-                EvalContextVariablePut(ctx, ref, (Rval) { "(.*)", RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
-                VarRefDestroy(ref);
-            }
-
-            {
-                VarRef *ref = VarRefParseFromScope("arch", "cf_pack_context_anyver");
-                EvalContextVariablePut(ctx, ref, (Rval) { arch, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
-                VarRefDestroy(ref);
-            }
-
-            ExpandScalar(ctx, NULL, "cf_pack_context_anyver", a.packages.package_name_convention, refAnyVer);
-            ScopeClear(NULL, "cf_pack_context_anyver");
 
             EscapeSpecialChars(refAnyVer, refAnyVerEsc, sizeof(refAnyVerEsc), "(.*)","");
 
@@ -1237,27 +1237,26 @@ static void SchedulePackageOp(EvalContext *ctx, const char *name, const char *ve
                         instArch[1] = '\0';
                     }
 
-                    {
-                        VarRef *ref = VarRefParseFromScope("name", "cf_pack_context");
-                        EvalContextVariablePut(ctx, ref, (Rval) { name, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
-                        VarRefDestroy(ref);
-                    }
+                    VarRef *ref_name = VarRefParseFromScope("name", "cf_pack_context");
+                    EvalContextVariablePut(ctx, ref_name, (Rval) { name, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
 
-                    {
-                        VarRef *ref = VarRefParseFromScope("version", "cf_pack_context");
-                        EvalContextVariablePut(ctx, ref, (Rval) { instVer, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
-                        VarRefDestroy(ref);
-                    }
+                    VarRef *ref_version = VarRefParseFromScope("version", "cf_pack_context");
+                    EvalContextVariablePut(ctx, ref_version, (Rval) { instVer, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
 
-                    {
-                        VarRef *ref = VarRefParseFromScope("arch", "cf_pack_context");
-                        EvalContextVariablePut(ctx, ref, (Rval) { instArch, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
-                        VarRefDestroy(ref);
-                    }
+                    VarRef *ref_arch = VarRefParseFromScope("arch", "cf_pack_context");
+                    EvalContextVariablePut(ctx, ref_arch, (Rval) { instArch, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
 
                     ExpandScalar(ctx, NULL, "cf_pack_context", a.packages.package_delete_convention, reference2);
                     id_del = reference2;
-                    ScopeClear(NULL, "cf_pack_context");
+
+                    EvalContextVariableRemove(ctx, ref_name);
+                    VarRefDestroy(ref_name);
+
+                    EvalContextVariableRemove(ctx, ref_version);
+                    VarRefDestroy(ref_version);
+
+                    EvalContextVariableRemove(ctx, ref_arch);
+                    VarRefDestroy(ref_arch);
                 }
                 else
                 {

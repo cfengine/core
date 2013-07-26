@@ -22,11 +22,14 @@
   included file COSL.txt.
 */
 
+
 #ifndef CFENGINE_CFNET_H
 #define CFENGINE_CFNET_H
 
+
 #include "platform.h"
 #include <openssl/ssl.h>
+
 
 /* ************************************************ */
 /* The following were copied from cf3.defs.h and still exist there, TODO */
@@ -37,6 +40,8 @@
 #define CF_BUFSIZE 4096
 #define CF_SMALLBUF 128
 #define CF_MAX_IP_LEN 64        /* numerical ip length */
+#define CF_DONE 't'
+#define CF_MORE 'm'
 /* ************************************************ */
 
 
@@ -47,7 +52,7 @@
 #define CF_INBAND_OFFSET 8
 
 
-
+/* TODO Shouldn't this be in libutils? */
 typedef enum
 {
     FILE_TYPE_REGULAR,
@@ -58,39 +63,6 @@ typedef enum
     FILE_TYPE_CHAR_, /* Conflict with winbase.h */
     FILE_TYPE_SOCK
 } FileType;
-
-/*
- * TLS support
- */
-#define DEFAULT_TLS_TIMEOUT_SECONDS     5
-#define DEFAULT_TLS_TIMEOUT_USECONDS    0
-#define SET_DEFAULT_TLS_TIMEOUT(x) \
-    x.tv_sec = DEFAULT_TLS_TIMEOUT_SECONDS; \
-    x.tv_usec = DEFAULT_TLS_TIMEOUT_USECONDS
-#define DEFAULT_TLS_TRIES 5
-typedef struct {
-    SSL *ssl; // SSL structure
-    SSL_CTX *context; // SSL Context
-    SSL_METHOD *method; // SSL Method
-    struct timeval tv; // Timeout for TLS operations
-    int tries; // Number of tries for TLS operations
-} TLSInfo;
-
-typedef enum {
-    CFEngine_Classic,
-    CFEngine_TLS,
-    CFEngine_Unsupported
-} ConnectionType;
-
-typedef struct {
-    ConnectionType type;
-    union physical_ {
-        int sd;
-        TLSInfo *tls;
-    } physical;
-} ConnectionInfo;
-
-/* TODO Shouldn't this be in libutils? */
 typedef struct Stat_ Stat;
 struct Stat_
 {
@@ -114,13 +86,39 @@ struct Stat_
     Stat *next;
 };
 
+
+/*
+ * TLS support
+ */
+#define DEFAULT_TLS_TIMEOUT_SECONDS     5
+#define DEFAULT_TLS_TIMEOUT_USECONDS    0
+#define SET_DEFAULT_TLS_TIMEOUT(x) \
+    x.tv_sec = DEFAULT_TLS_TIMEOUT_SECONDS; \
+    x.tv_usec = DEFAULT_TLS_TIMEOUT_USECONDS
+#define DEFAULT_TLS_TRIES 5
+
+
+typedef enum
+{
+    /* When connection is initialised ProtocolVersion is 0, i.e. undefined. */
+    CF_PROTOCOL_UNDEFINED = 0,
+    CF_PROTOCOL_CLASSIC,
+    CF_PROTOCOL_TLS
+} ProtocolVersion;
+
 typedef struct
 {
-    ConnectionInfo connection;
+    ProtocolVersion type;
+    int sd;                                            /* Socket descriptor */
+    SSL *ssl;                         /* OpenSSL struct for TLS connections */
+} ConnectionInfo;
+
+typedef struct
+{
+    int family;                 /* AF_INET or AF_INET6 */
+    ConnectionInfo conn_info;
     int trust;                  /* true if key being accepted on trust */
     int authenticated;
-    int protoversion;
-    int family;                 /* AF_INET or AF_INET6 */
     char username[CF_SMALLBUF];
     /* Unused for now... */
     /* char localip[CF_MAX_IP_LEN]; */
@@ -132,6 +130,8 @@ typedef struct
     char *this_server;
     Stat *cache; /* Cache for network connection (READDIR result) */
 } AgentConnection;
+
+
 
 /* misc.c */
 

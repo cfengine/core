@@ -12,7 +12,7 @@ ProtocolCommand GetCommand(char *str);
 /*
  * The protocol consists of the following commands:
  * "EXEC",
- * "AUTH",                     
+ * "AUTH",
  * "GET",
  * "OPENDIR",
  * "SYNCH",
@@ -284,22 +284,22 @@ static void test_command_parser(void)
     // MD5
     parsed = GetCommand("MD5x");
     assert_int_equal(expected, parsed);
-    // SMD5                                                                                 
+    // SMD5
     parsed = GetCommand("SMD5x");
-    assert_int_equal(expected, parsed);                                                             
-    // CAUTH                                                                                            
+    assert_int_equal(expected, parsed);
+    // CAUTH
     parsed = GetCommand("CAUTHx");
-    assert_int_equal(expected, parsed);                                                                         
-    // SAUTH                                                                                                        
+    assert_int_equal(expected, parsed);
+    // SAUTH
     parsed = GetCommand("SAUTHx");
-    assert_int_equal(expected, parsed);                                                                                     
-    // SSYNCH                                                                                                                   
+    assert_int_equal(expected, parsed);
+    // SSYNCH
     parsed = GetCommand("SSYNCHx");
-    assert_int_equal(expected, parsed);                                                                                                 
-    // SGET                                                                                                                                 
+    assert_int_equal(expected, parsed);
+    // SGET
     parsed = GetCommand("SGETx");
-    assert_int_equal(expected, parsed);                                                                                                             
-    // VERSION                                                                                                                                          
+    assert_int_equal(expected, parsed);
+    // VERSION
     parsed = GetCommand("VERSIONx");
     assert_int_equal(expected, parsed);
     // SOPENDIR
@@ -357,7 +357,7 @@ static void test_command_parser(void)
     assert_int_equal(expected, parsed);
     parsed = GetCommand("SSYNC");
     assert_int_equal(expected, parsed);
-    // VERSION                                                                                                                                          
+    // VERSION
     parsed = GetCommand("V");
     assert_int_equal(expected, parsed);
     // VAR

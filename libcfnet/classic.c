@@ -22,8 +22,10 @@
   included file COSL.txt.
 */
 
+
 #include "classic.h"
 
+#include "cfnet.h"
 #include "logging.h"
 #include "misc_lib.h"
 
@@ -46,6 +48,9 @@ static bool LastRecvTimedOut(void)
     return false;
 }
 
+/**
+ * @return 0 if socket is closed.
+ */
 int RecvSocketStream(int sd, char buffer[CF_BUFSIZE], int toget)
 {
     int already, got;
@@ -90,13 +95,13 @@ int RecvSocketStream(int sd, char buffer[CF_BUFSIZE], int toget)
 
 /*************************************************************************/
 
-int SendSocketStream(int sd, char buffer[CF_BUFSIZE], int tosend, int flags)
+int SendSocketStream(int sd, char buffer[CF_BUFSIZE], int tosend)
 {
     int sent, already = 0;
 
     do
     {
-        sent = send(sd, buffer + already, tosend - already, flags);
+        sent = send(sd, buffer + already, tosend - already, 0);
 
         if ((sent == -1) && (errno == EINTR))
         {

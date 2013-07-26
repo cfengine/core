@@ -43,7 +43,7 @@ typedef struct
 
 static LogLevel global_level = LOG_LEVEL_NOTICE;
 
-void LogToSystemLog(const char *msg, LogLevel level);
+static void LogToSystemLog(const char *msg, LogLevel level);
 
 static pthread_once_t log_context_init_once = PTHREAD_ONCE_INIT;
 static pthread_key_t log_context_key;
@@ -142,7 +142,7 @@ static const char *LogLevelToColor(LogLevel level)
     }
 }
 
-void LogToStdout(const char *msg, LogLevel level, bool color)
+static void LogToStdout(const char *msg, LogLevel level, bool color)
 {
     if (LEGACY_OUTPUT)
     {
@@ -202,7 +202,7 @@ static int LogLevelToSyslogPriority(LogLevel level)
 
 }
 
-void LogToSystemLog(const char *msg, LogLevel level)
+static void LogToSystemLog(const char *msg, LogLevel level)
 {
     syslog(LogLevelToSyslogPriority(level), "%s", msg);
 }
@@ -239,6 +239,30 @@ void VLog(LogLevel level, const char *fmt, va_list ap)
         LogToSystemLog(hooked_msg, level);
     }
     free(msg);
+}
+
+/**
+ * @brief Logs binary data in #buf, with each byte translated to '.' if not
+ *        printable. Message is prefixed with #prefix.
+ */
+void LogRaw(LogLevel level, const char *prefix, void *buf, size_t buflen)
+{
+    /* Translate non printable characters to printable ones. */
+    char *src = (char *) buf;
+    char dst[buflen+1];
+    size_t i;
+
+    for (i = 0; i < buflen; i++)
+    {
+        if (isprint(src[i]))
+            dst[i] = src[i];
+        else
+            dst[i] = '.';
+    }
+    dst[i] = '\0';
+
+    /* And Log the translated buffer, which is now a valid string. */
+    Log(level, "%s%s", prefix, dst);
 }
 
 void Log(LogLevel level, const char *fmt, ...)

@@ -54,6 +54,11 @@ static char *CFPRIVKEYFILE;
 
 /**********************************************************************/
 
+
+/* TODO move crypto.[ch] to libutils. Will need to remove all manipulation of
+ * lastseen db. */
+
+
 static bool crypto_initialized = false;
 
 void CryptoInitialize()
@@ -123,17 +128,21 @@ bool LoadSecretKeys(const char *policy_server)
         FILE *fp = fopen(PrivateKeyFile(GetWorkDir()), "r");
         if (!fp)
         {
-            Log(LOG_LEVEL_INFO, "Couldn't find a private key at '%s', use cf-key to get one. (fopen: %s)", PrivateKeyFile(GetWorkDir()), GetErrorStr());
-            return true;
+            Log(LOG_LEVEL_ERR,
+                "Couldn't find a private key at '%s', use cf-key to get one. (fopen: %s)",
+                PrivateKeyFile(GetWorkDir()), GetErrorStr());
+            return false;
         }
 
         if ((PRIVKEY = PEM_read_RSAPrivateKey(fp, (RSA **) NULL, NULL, passphrase)) == NULL)
         {
             unsigned long err = ERR_get_error();
-            Log(LOG_LEVEL_ERR, "Error reading private key. (PEM_read_RSAPrivateKey: %s)", ERR_reason_error_string(err));
+            Log(LOG_LEVEL_ERR,
+                "Error reading private key. (PEM_read_RSAPrivateKey: %s)",
+                ERR_reason_error_string(err));
             PRIVKEY = NULL;
             fclose(fp);
-            return true;
+            return false;
         }
 
         fclose(fp);
@@ -144,17 +153,21 @@ bool LoadSecretKeys(const char *policy_server)
         FILE *fp = fopen(PublicKeyFile(GetWorkDir()), "r");
         if (!fp)
         {
-            Log(LOG_LEVEL_ERR, "Couldn't find a public key at '%s', use cf-key to get one (fopen: %s)", PublicKeyFile(GetWorkDir()), GetErrorStr());
-            return true;
+            Log(LOG_LEVEL_ERR,
+                "Couldn't find a public key at '%s', use cf-key to get one (fopen: %s)",
+                PublicKeyFile(GetWorkDir()), GetErrorStr());
+            return false;
         }
 
         if ((PUBKEY = PEM_read_RSAPublicKey(fp, NULL, NULL, passphrase)) == NULL)
         {
             unsigned long err = ERR_get_error();
-            Log(LOG_LEVEL_ERR, "Error reading public key at '%s'. (PEM_read_RSAPublicKey: %s)", PublicKeyFile(GetWorkDir()), ERR_reason_error_string(err));
+            Log(LOG_LEVEL_ERR,
+                "Error reading public key at '%s'. (PEM_read_RSAPublicKey: %s)",
+                PublicKeyFile(GetWorkDir()), ERR_reason_error_string(err));
             PUBKEY = NULL;
             fclose(fp);
-            return true;
+            return false;
         }
 
         Log(LOG_LEVEL_VERBOSE, "Loaded public key '%s'", PublicKeyFile(GetWorkDir()));

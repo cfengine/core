@@ -79,14 +79,9 @@ typedef struct
 typedef struct ServerConnectionState
 {
     EvalContext *ctx;
-    ConnectionInfo connection;
-    int id_verified;
-    int rsa_auth;
+    ConnectionInfo conn_info;
     int synchronized;
-    int maproot;
     int trust;
-    int sd_reply;
-    unsigned char *session_key;
     unsigned char digest[EVP_MAX_MD_SIZE + 1];
     char hostname[CF_MAXVARSIZE];
     char username[CF_MAXVARSIZE];
@@ -95,9 +90,14 @@ typedef struct ServerConnectionState
 #else
     uid_t uid;
 #endif
-    char encryption_type;
     char ipaddr[CF_MAX_IP_LEN];
     char output[CF_BUFSIZE * 2];        /* Threadsafe output channel */
+    /* TODO the following are useless with the new protocol */
+    int id_verified;
+    int rsa_auth;
+    int maproot;
+    unsigned char *session_key;
+    char encryption_type;
 } ServerConnectionState;
 
 typedef struct
@@ -110,8 +110,8 @@ typedef struct
 } ServerFileGetState;
 
 
+bool ServerTLSInitialize();
 void KeepPromises(EvalContext *ctx, Policy *policy, GenericAgentConfig *config);
-
 void ServerEntryPoint(EvalContext *ctx, int sd_reply, char *ipaddr);
 void TryCollectCall(void);
 int SetServerListenState(EvalContext *ctx, size_t queue_size);

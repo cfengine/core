@@ -62,6 +62,9 @@ VarRef *VarRefDeMangle(const char *mangled_var_ref);
 void VarRefSetMeta(VarRef *ref, bool enabled);
 
 bool VarRefIsQualified(const VarRef *ref);
+void VarRefQualify(VarRef *ref, const char *ns, const char *scope);
+void VarRefAddIndex(VarRef *ref, const char *index);
+
 int VarRefCompare(const VarRef *a, const VarRef *b);
 
 #endif

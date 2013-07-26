@@ -208,8 +208,6 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
                         scp_copy->offset = scp->offset;
                     }
                 }
-
-                ScopeClear(NULL, "body");
             }
             else
             {

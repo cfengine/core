@@ -104,11 +104,7 @@ SpecialScope SpecialScopeFromString(const char *scope)
 Scope *ScopeNew(const char *ns, const char *scope)
 {
     assert(scope);
-    assert(strcmp(scope, "edit") != 0);
-    assert(strcmp(scope, "const") != 0);
-    assert(strcmp(scope, "sys") != 0);
-    assert(strcmp(scope, "mon") != 0);
-    assert(strcmp(scope, "body") != 0);
+    assert(strcmp(scope, "match") == 0 || strcmp(scope, "this") == 0);
 
     if (!ns)
     {
@@ -198,6 +194,8 @@ Scope *ScopeGet(const char *ns, const char *scope)
     {
         return NULL;
     }
+
+    assert(strcmp(scope, "match") == 0 || strcmp(scope, "this") == 0);
 
     if (!ns)
     {
@@ -449,30 +447,6 @@ void ScopeClearSpecial(SpecialScope scope)
     HashFree(ptr->hashtable);
     ptr->hashtable = HashInit();
     Log(LOG_LEVEL_DEBUG, "Special scope '%s' cleared", SpecialScopeToString(scope));
-
-    ThreadUnlock(cft_vscope);
-}
-
-/*******************************************************************/
-
-void ScopeCopy(const char *new_ns, const char *new_scopename, const Scope *old_scope)
-/*
- * Thread safe
- */
-{
-    ScopeNew(new_ns, new_scopename);
-
-    if (!ThreadLock(cft_vscope))
-    {
-        Log(LOG_LEVEL_ERR, "Could not lock VSCOPE");
-        return;
-    }
-
-    if (old_scope)
-    {
-        Scope *np = ScopeGet(new_ns, new_scopename);
-        HashCopy(np->hashtable, old_scope->hashtable);
-    }
 
     ThreadUnlock(cft_vscope);
 }

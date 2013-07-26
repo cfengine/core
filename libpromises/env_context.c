@@ -1317,8 +1317,21 @@ static VariableTable *GetVariableTableForVarRef(const EvalContext *ctx, const Va
 
 bool EvalContextVariableRemove(const EvalContext *ctx, const VarRef *ref)
 {
-    VariableTable *table = GetVariableTableForVarRef(ctx, ref);
-    return VariableTableRemove(table, ref);
+    switch (SpecialScopeFromString(ref->scope))
+    {
+    case SPECIAL_SCOPE_SYS:
+    case SPECIAL_SCOPE_MON:
+    case SPECIAL_SCOPE_CONST:
+    case SPECIAL_SCOPE_EDIT:
+    case SPECIAL_SCOPE_BODY:
+        {
+            VariableTable *table = GetVariableTableForVarRef(ctx, ref);
+            return VariableTableRemove(table, ref);
+        }
+
+    default:
+        ScopeDeleteVariable(ref);
+    }
 }
 
 bool EvalContextVariablePut(EvalContext *ctx, const VarRef *ref, Rval rval, DataType type)

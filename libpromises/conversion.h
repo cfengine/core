@@ -82,17 +82,4 @@ uid_t Str2Uid(char *uidbuff, char *copy, const Promise *pp);
 gid_t Str2Gid(char *gidbuff, char *copy, const Promise *pp);
 #endif /* !__MINGW32__ */
 
-#ifdef HAVE_ENTERPRISE
-
-const char *Nova_LongArch(const char *arch);
-const char *Nova_ShortArch(const char *arch);
-int Nova_CoarseLaterThan(const char *key, const char *from);
-bool BundleQualifiedNameSplit(const char *qualified_bundle_name, char namespace_out[CF_MAXVARSIZE], char bundle_name_out[CF_MAXVARSIZE]);
-
-/* Timestamp-functions are not standardised across SQL databases - provide a standard layer for simple functions */
-char *SqlVariableExpand(const char *query);
-#endif
-
-
-
 #endif

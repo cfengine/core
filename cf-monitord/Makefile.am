@@ -9,7 +9,7 @@ AM_CPPFLAGS = @CPPFLAGS@ \
 AM_CFLAGS = @CFLAGS@ \
 	$(ENTERPRISE_CFLAGS)
 
-LDADD = ../libpromises/libpromises.la
+libcf_monitord_la_LIBADD = ../libpromises/libpromises.la
 
 libcf_monitord_la_SOURCES = \
         verify_measurements.c verify_measurements.h \

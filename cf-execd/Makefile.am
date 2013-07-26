@@ -9,8 +9,7 @@ AM_CPPFLAGS = @CPPFLAGS@ \
 AM_CFLAGS = @CFLAGS@ \
 	$(ENTERPRISE_CFLAGS)
 
-LDADD = libcf-execd.a \
-	../libpromises/libpromises.la
+libcf_execd_la_LIBADD = ../libpromises/libpromises.la
 
 libcf_execd_la_SOURCES = \
         cf-execd.c cf-execd.h \

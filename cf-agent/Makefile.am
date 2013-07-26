@@ -27,7 +27,7 @@ AM_LDFLAGS += -ldl
 endif
 endif
 
-LDADD = ../libpromises/libpromises.la \
+libcf_agent_la_LIBADD = ../libpromises/libpromises.la \
 	$(LIBVIRT_LIBS) \
 	$(POSTGRESQL_LIBS) \
 	$(MYSQL_LIBS) \

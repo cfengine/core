@@ -260,12 +260,12 @@ void ThisAgentInit(void)
 
 void StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
 {
-    int sd = -1, sd_reply;
+    int sd = -1;
     fd_set rset;
     struct timeval timeout;
     int ret_val;
     CfLock thislock;
-    time_t starttime = time(NULL), last_collect = 0;
+    time_t last_collect = 0;
 
     struct sockaddr_storage cin;
     socklen_t addrlen = sizeof(cin);
@@ -276,6 +276,8 @@ void StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
     signal(SIGPIPE, SIG_IGN);
     signal(SIGUSR1, HandleSignalsForDaemon);
     signal(SIGUSR2, HandleSignalsForDaemon);
+
+    ServerTLSInitialize();
 
     sd = SetServerListenState(ctx, QUEUESIZE);
 
@@ -301,8 +303,6 @@ void StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
         PolicyDestroy(server_cfengine_policy);
         return;
     }
-
-    Log(LOG_LEVEL_INFO, "cf-serverd starting %.24s", ctime(&starttime));
 
     if (sd != -1)
     {
@@ -398,7 +398,8 @@ void StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
 
             Log(LOG_LEVEL_VERBOSE, "Accepting a connection");
 
-            if ((sd_reply = accept(sd, (struct sockaddr *) &cin, &addrlen)) != -1)
+            int sd_accepted = accept(sd, (struct sockaddr *) &cin, &addrlen);
+            if (sd_accepted != -1)
             {
                 /* Just convert IP address to string, no DNS lookup. */
                 char ipaddr[CF_MAX_IP_LEN] = "";
@@ -406,7 +407,7 @@ void StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
                             ipaddr, sizeof(ipaddr),
                             NULL, 0, NI_NUMERICHOST);
 
-                ServerEntryPoint(ctx, sd_reply, ipaddr);
+                ServerEntryPoint(ctx, sd_accepted, ipaddr);
             }
         }
     }

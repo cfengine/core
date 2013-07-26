@@ -702,7 +702,6 @@ void InitializeGA(EvalContext *ctx, GenericAgentConfig *config)
     }
 
     OpenNetwork();
-
     CryptoInitialize();
 
     if (!LOOKUP)
@@ -711,9 +710,26 @@ void InitializeGA(EvalContext *ctx, GenericAgentConfig *config)
     }
 
     const char *bootstrapped_policy_server = ReadPolicyServerFile(CFWORKDIR);
-    if (!LoadSecretKeys(bootstrapped_policy_server))
+
+    /* Initialize keys and networking. cf-key, doesn't need keys. In fact it
+       must function properly even without them, so that it generates them! */
+    if (config->agent_type != AGENT_TYPE_KEYGEN)
     {
-        FatalError(ctx, "Could not load secret keys");
+        /* TODO
+         * So, with the new networking code keys are always needed else we
+         * quit here. What if the user is bootstrapping? (which means policy
+         * has to start executing so that cf-key generates keys). What if
+         * failsafe.cf is running, which is also supposed to generate keys if
+         * not there? Now failsafe.cf will just quit here!
+         */
+        if (!LoadSecretKeys(bootstrapped_policy_server))
+        {
+            FatalError(ctx, "Could not load secret keys");
+        }
+        if (!cfnet_init())
+        {
+            FatalError(ctx, "Could not initialize networking!");
+        }
     }
 
     if (!MINUSF)

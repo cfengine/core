@@ -25,9 +25,8 @@
 #ifndef CLASSIC_H
 #define CLASSIC_H
 
-#include "cfnet.h"
 
 int RecvSocketStream(int sd, char *buffer, int toget);
-int SendSocketStream(int sd, char *buffer, int toget, int flags);
+int SendSocketStream(int sd, char *buffer, int tosend);
 
 #endif // CLASSIC_H

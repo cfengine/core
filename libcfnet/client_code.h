@@ -32,6 +32,7 @@
 #include "attributes.h"
 #include "item_lib.h"
 
+bool cfnet_init(void);
 void DetermineCfenginePort(void);
 /**
   @param err Set to 0 on success, -1 no server responce, -2 authentication failure.

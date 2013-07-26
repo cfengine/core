@@ -22,18 +22,18 @@
   included file COSL.txt.
 */
 
-/* Low Level networking routines. */
 
-#ifndef CFENGINE_NET_H
-#define CFENGINE_NET_H
+#ifndef CFENGINE_TLS_GENERIC_H
+#define CFENGINE_TLS_GENERIC_H
 
 
 #include "cfnet.h"
 
 
-int SendTransaction(const ConnectionInfo *conn_info, const char *buffer, int len, char status);
-int ReceiveTransaction(const ConnectionInfo *conn_info, char *buffer, int *more);
+int TLSVerifyCallback(X509_STORE_CTX *ctx, void *arg);
+int TLSVerifyPeer(SSL *ssl, const char *remoteip, const char *username);
 
-int SetReceiveTimeout(int sd, const struct timeval *timeout);
+int TLSSend(SSL *ssl, const char *buffer, int length);
+int TLSRecv(SSL *ssl, char *buffer, int length);
 
 #endif

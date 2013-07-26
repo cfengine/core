@@ -727,7 +727,7 @@ static void StackFrameBundleDestroy(StackFrameBundle frame)
 
 static void StackFrameBodyDestroy(ARG_UNUSED StackFrameBody frame)
 {
-    return;
+    VariableTableDestroy(frame.vars);
 }
 
 static void StackFramePromiseDestroy(StackFramePromise frame)
@@ -1047,6 +1047,7 @@ static StackFrame *StackFrameNewBody(const Body *owner)
     StackFrame *frame = StackFrameNew(STACK_FRAME_TYPE_BODY, false);
 
     frame->data.body.owner = owner;
+    frame->data.body.vars = VariableTableNew();
 
     return frame;
 }
@@ -1123,10 +1124,6 @@ void EvalContextStackPushBodyFrame(EvalContext *ctx, const Body *owner, Rlist *a
     assert((!LastStackFrame(ctx, 0) && strcmp("control", owner->name) == 0) || LastStackFrame(ctx, 0)->type == STACK_FRAME_TYPE_BUNDLE);
 
     EvalContextStackPushFrame(ctx, StackFrameNewBody(owner));
-    if (!ScopeGet(NULL, "body"))
-    {
-        ScopeNew(NULL, "body");
-    }
 
     if (RlistLen(owner->args) != RlistLen(args))
     {
@@ -1256,6 +1253,7 @@ bool EvalContextVariablePutSpecial(EvalContext *ctx, SpecialScope scope, const c
     case SPECIAL_SCOPE_MON:
     case SPECIAL_SCOPE_CONST:
     case SPECIAL_SCOPE_EDIT:
+    case SPECIAL_SCOPE_BODY:
         {
             VarRef ref = (VarRef) { NULL, SpecialScopeToString(scope), lval };
             Rval rval = (Rval) { value, DataTypeToRvalType(type) };
@@ -1276,6 +1274,7 @@ bool EvalContextVariableRemoveSpecial(const EvalContext *ctx, SpecialScope scope
     case SPECIAL_SCOPE_MON:
     case SPECIAL_SCOPE_CONST:
     case SPECIAL_SCOPE_EDIT:
+    case SPECIAL_SCOPE_BODY:
         {
             VarRef ref = (VarRef) { NULL, SpecialScopeToString(scope), lval };
             return EvalContextVariableRemove(ctx, &ref);
@@ -1302,6 +1301,13 @@ static VariableTable *GetVariableTableForVarRef(const EvalContext *ctx, const Va
             StackFrame *frame = LastStackFrameByType(ctx, STACK_FRAME_TYPE_BUNDLE);
             assert(frame);
             return frame->data.bundle.vars;
+        }
+
+    case SPECIAL_SCOPE_BODY:
+        {
+            assert(!ref->ns);
+            StackFrame *frame = LastStackFrameByType(ctx, STACK_FRAME_TYPE_BODY);
+            return frame ? frame->data.body.vars : NULL;
         }
 
     default:
@@ -1395,6 +1401,9 @@ bool EvalContextVariablePut(EvalContext *ctx, const VarRef *ref, Rval rval, Data
     {
         assert(!ref->ns);
         assert(STACK_FRAME_TYPE_BODY == LastStackFrame(ctx, 0)->type);
+
+        VariableTable *table = GetVariableTableForVarRef(ctx, ref);
+        return VariableTablePut(table, ref, &rval, type);
     }
     else if (strcmp("edit", ref->scope) == 0)
     {
@@ -1475,7 +1484,7 @@ bool EvalContextVariableGet(const EvalContext *ctx, const VarRef *ref, Rval *rva
     if (VarRefIsQualified(ref))
     {
         if (strcmp(ref->scope, "edit") == 0 || strcmp(ref->scope, "const") == 0 || strcmp(ref->scope, "sys") == 0
-            || strcmp(ref->scope, "mon") == 0)
+            || strcmp(ref->scope, "mon") == 0 || strcmp(ref->scope, "body") == 0)
         {
             VariableTable *table = GetVariableTableForVarRef(ctx, ref);
             Variable *var = VariableTableGet(table, ref);

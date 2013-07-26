@@ -58,6 +58,8 @@ const char *SpecialScopeToString(SpecialScope scope)
         return "sys";
     case SPECIAL_SCOPE_THIS:
         return "this";
+    case SPECIAL_SCOPE_BODY:
+        return "body";
     default:
         ProgrammingError("Unhandled special scope");
     }
@@ -89,6 +91,10 @@ SpecialScope SpecialScopeFromString(const char *scope)
     {
         return SPECIAL_SCOPE_THIS;
     }
+    else if (strcmp("body", scope) == 0)
+    {
+        return SPECIAL_SCOPE_BODY;
+    }
     else
     {
         return SPECIAL_SCOPE_NONE;
@@ -102,6 +108,7 @@ Scope *ScopeNew(const char *ns, const char *scope)
     assert(strcmp(scope, "const") != 0);
     assert(strcmp(scope, "sys") != 0);
     assert(strcmp(scope, "mon") != 0);
+    assert(strcmp(scope, "body") != 0);
 
     if (!ns)
     {

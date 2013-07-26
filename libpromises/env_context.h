@@ -55,6 +55,8 @@ typedef struct
 typedef struct
 {
     const Body *owner;
+
+    VariableTable *vars;
 } StackFrameBody;
 
 typedef struct

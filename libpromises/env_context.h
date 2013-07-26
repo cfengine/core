@@ -66,7 +66,7 @@ typedef struct
 
 typedef struct
 {
-    const Promise *owner;
+    const Rlist *iteration_context;
 } StackFramePromiseIteration;
 
 typedef struct
@@ -143,14 +143,12 @@ StringSetIterator EvalContextStackFrameIteratorSoft(const EvalContext *ctx);
 void EvalContextStackPushBundleFrame(EvalContext *ctx, const Bundle *owner, const Rlist *args, bool inherits_previous);
 void EvalContextStackPushBodyFrame(EvalContext *ctx, const Body *owner, Rlist *args);
 void EvalContextStackPushPromiseFrame(EvalContext *ctx, const Promise *owner);
-void EvalContextStackPushPromiseIterationFrame(EvalContext *ctx, const Promise *owner);
+void EvalContextStackPushPromiseIterationFrame(EvalContext *ctx, const Rlist *iteration_context);
 void EvalContextStackPopFrame(EvalContext *ctx);
 char *EvalContextStackPath(const EvalContext *ctx);
 
-/**
- * @brief Returns the topmost promise from the stack, or NULL if no promises are pushed
- */
-const Promise *EvalContextStackGetTopPromise(const EvalContext *ctx);
+const Promise *EvalContextStackCurrentPromise(const EvalContext *ctx);
+const Bundle *EvalContextStackCurrentBundle(const EvalContext *ctx);
 
 bool EvalContextVariablePut(EvalContext *ctx, const VarRef *ref, Rval rval, DataType type);
 bool EvalContextVariablePutSpecial(EvalContext *ctx, SpecialScope scope, const char *lval, const void *value, DataType type);

@@ -51,7 +51,7 @@ static void test_push_pop_this(void)
 
     EvalContextStackPushBundleFrame(ctx, bp, NULL, false);
     EvalContextStackPushPromiseFrame(ctx, pp);
-    EvalContextStackPushPromiseIterationFrame(ctx, pp);
+    EvalContextStackPushPromiseIterationFrame(ctx, NULL);
 
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "lval", "rval1", DATA_TYPE_STRING);
     assert_true(EvalContextVariableGet(ctx, lval, &rval, NULL));

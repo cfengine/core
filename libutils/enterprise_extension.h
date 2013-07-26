@@ -98,7 +98,7 @@
 #endif
 
 #define ENTERPRISE_CANARY_VALUE 0x10203040
-#define ENTERPRISE_LIBRARY_NAME "/var/cfengine/lib/cfengine-enterprise.so"
+#define ENTERPRISE_LIBRARY_NAME "./cfengine-enterprise.so"
 
 void *shlib_open(const char *lib_name);
 void *shlib_load(void *handle, const char *symbol_name);

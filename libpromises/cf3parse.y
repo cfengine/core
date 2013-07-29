@@ -58,6 +58,8 @@ static void ParseWarning(unsigned int warning, const char *s, ...) FUNC_ATTR_PRI
 static void ValidateClassLiteral(const char *class_literal);
 
 static bool INSTALL_SKIP = false;
+static size_t CURRENT_BLOCKID_LINE = 0;
+static size_t CURRENT_PROMISER_LINE = 0;
 
 #define YYMALLOC xmalloc
 
@@ -128,6 +130,7 @@ bundletype_values:     typeid
 bundleid:              bundleid_values
                        {
                           ParserDebug("\tP:bundle:%s:%s\n", P.blocktype, P.blockid);
+                          CURRENT_BLOCKID_LINE = P.line_no;
                        }
 
 bundleid_values:       blockid
@@ -170,6 +173,7 @@ bodytype_values:       typeid
 bodyid:                bodyid_values
                        {
                           ParserDebug("\tP:body:%s:%s\n", P.blocktype, P.blockid);
+                          CURRENT_BLOCKID_LINE = P.line_no;
                        }
 
 bodyid_values:         blockid
@@ -253,7 +257,7 @@ bundlebody:            body_begin
                            if (!INSTALL_SKIP)
                            {
                                P.currentbundle = PolicyAppendBundle(P.policy, P.current_namespace, P.blockid, P.blocktype, P.useargs, P.filename);
-                               P.currentbundle->offset.line = P.line_no;
+                               P.currentbundle->offset.line = CURRENT_BLOCKID_LINE;
                                P.currentbundle->offset.start = P.offsets.last_block_id;
                            }
                            else
@@ -419,7 +423,7 @@ promisee_statement:    promiser
                                P.currentpromise = PromiseTypeAppendPromise(P.currentstype, P.promiser,
                                                                            RvalCopy(P.rval),
                                                                            P.currentclasses ? P.currentclasses : "any");
-                               P.currentpromise->offset.line = P.line_no;
+                               P.currentpromise->offset.line = CURRENT_PROMISER_LINE;
                                P.currentpromise->offset.start = P.offsets.last_string;
                                P.currentpromise->offset.context = P.offsets.last_class_id;
                            }
@@ -446,7 +450,7 @@ promiser_statement:    promiser
                                P.currentpromise = PromiseTypeAppendPromise(P.currentstype, P.promiser,
                                                                 (Rval) { NULL, RVAL_TYPE_NOPROMISEE },
                                                                 P.currentclasses ? P.currentclasses : "any");
-                               P.currentpromise->offset.line = P.line_no;
+                               P.currentpromise->offset.line = CURRENT_PROMISER_LINE;
                                P.currentpromise->offset.start = P.offsets.last_string;
                                P.currentpromise->offset.context = P.offsets.last_class_id;
                            }
@@ -468,6 +472,7 @@ promiser:              QSTRING
                            }
                            P.promiser = P.currentstring;
                            P.currentstring = NULL;
+                           CURRENT_PROMISER_LINE = P.line_no;
                            ParserDebug("\tP:%s:%s:%s:%s:%s promiser = %s\n", P.block, P.blocktype, P.blockid, P.currenttype, P.currentclasses ? P.currentclasses : "any", P.promiser);
                        }
                      | error
@@ -655,7 +660,7 @@ bodybody:              body_begin
                                    // intentional fall
                                case SYNTAX_STATUS_NORMAL:
                                    P.currentbody = PolicyAppendBody(P.policy, P.current_namespace, P.blockid, P.blocktype, P.useargs, P.filename);
-                                   P.currentbody->offset.line = P.line_no;
+                                   P.currentbody->offset.line = CURRENT_BLOCKID_LINE;
                                    P.currentbody->offset.start = P.offsets.last_block_id;
                                    break;
 

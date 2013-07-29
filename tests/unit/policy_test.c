@@ -259,6 +259,69 @@ static void test_policy_json_to_from(void)
     EvalContextDestroy(ctx);
 }
 
+static void test_policy_json_offsets(void)
+{
+    JsonElement *json = NULL;
+    {
+        Policy *original = LoadPolicy("benchmark.cf");
+        json = PolicyToJson(original);
+        PolicyDestroy(original);
+    }
+    assert_true(json);
+
+    JsonElement *json_bundles = JsonObjectGetAsArray(json, "bundles");
+    {
+        JsonElement *main_bundle = JsonArrayGetAsObject(json_bundles, 0);
+        int line = JsonPrimitiveGetAsInteger(JsonObjectGet(main_bundle, "line"));
+        assert_int_equal(9, line);
+
+        JsonElement *json_promise_types = JsonObjectGetAsArray(main_bundle, "promiseTypes");
+        {
+            JsonElement *json_reports_type = JsonArrayGetAsObject(json_promise_types, 0);
+            line = JsonPrimitiveGetAsInteger(JsonObjectGet(json_reports_type, "line"));
+            assert_int_equal(11, line);
+
+            JsonElement *json_contexts = JsonObjectGetAsArray(json_reports_type, "contexts");
+            JsonElement *cf_context = JsonArrayGetAsObject(json_contexts, 0);
+            JsonElement *cf_context_promises = JsonObjectGetAsArray(cf_context, "promises");
+            JsonElement *hello_cf_promise = JsonArrayGetAsObject(cf_context_promises, 0);
+
+            line = JsonPrimitiveGetAsInteger(JsonObjectGet(hello_cf_promise, "line"));
+            assert_int_equal(13, line);
+            JsonElement *hello_cf_attribs = JsonObjectGetAsArray(hello_cf_promise, "attributes");
+            {
+                JsonElement *friend_pattern_attrib = JsonArrayGetAsObject(hello_cf_attribs, 0);
+
+                line = JsonPrimitiveGetAsInteger(JsonObjectGet(friend_pattern_attrib, "line"));
+                assert_int_equal(14, line);
+            }
+        }
+    }
+
+    JsonElement *json_bodies = JsonObjectGetAsArray(json, "bodies");
+    {
+        JsonElement *control_body = JsonArrayGetAsObject(json_bodies, 0);
+        int line = JsonPrimitiveGetAsInteger(JsonObjectGet(control_body, "line"));
+        assert_int_equal(4, line);
+
+        JsonElement *myperms_body = JsonArrayGetAsObject(json_bodies, 1);
+        line = JsonPrimitiveGetAsInteger(JsonObjectGet(myperms_body, "line"));
+        assert_int_equal(28, line);
+
+        JsonElement *myperms_contexts = JsonObjectGetAsArray(myperms_body, "contexts");
+        JsonElement *any_context = JsonArrayGetAsObject(myperms_contexts, 0);
+        JsonElement *any_attribs = JsonObjectGetAsArray(any_context, "attributes");
+        {
+            JsonElement *mode_attrib = JsonArrayGetAsObject(any_attribs, 0);
+            line = JsonPrimitiveGetAsInteger(JsonObjectGet(mode_attrib, "line"));
+            assert_int_equal(30, line);
+        }
+    }
+
+    JsonElementDestroy(json);
+}
+
+
 static void test_util_bundle_qualified_name(void)
 {
     Bundle *b = xcalloc(1, sizeof(struct Bundle_));
@@ -393,6 +456,7 @@ int main()
         unit_test(test_promise_duplicate_handle),
 
         unit_test(test_policy_json_to_from),
+        unit_test(test_policy_json_offsets),
 
         unit_test(test_util_bundle_qualified_name),
         unit_test(test_util_qualified_name_components),

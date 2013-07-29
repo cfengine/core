@@ -654,50 +654,70 @@ bool ExpandScalar(const EvalContext *ctx, const char *ns, const char *scope, con
 
         increment = strlen(var) - 1;
 
-        if (IsExpandable(currentitem))
+        if (!IsExpandable(currentitem))
         {
-            return false;
-        }
-
-        DataType type = DATA_TYPE_NONE;
-        bool variable_found = false;
-        {
-            VarRef *ref = VarRefParseFromNamespaceAndScope(currentitem, ns, scope, CF_NS, '.');
-            variable_found = EvalContextVariableGet(ctx, ref, &rval, &type);
-            VarRefDestroy(ref);
-        }
-
-        if (variable_found)
-        {
-            switch (type)
+            DataType type = DATA_TYPE_NONE;
+            bool variable_found = false;
             {
-            case DATA_TYPE_STRING:
-            case DATA_TYPE_INT:
-            case DATA_TYPE_REAL:
+                VarRef *ref = VarRefParseFromNamespaceAndScope(currentitem, ns, scope, CF_NS, '.');
+                variable_found = EvalContextVariableGet(ctx, ref, &rval, &type);
+                VarRefDestroy(ref);
+            }
 
-                if (ExpandOverflow(buffer, (char *) rval.item))
+            if (variable_found)
+            {
+                switch (type)
                 {
-                    FatalError(ctx, "Can't expand varstring");
-                }
+                case DATA_TYPE_STRING:
+                case DATA_TYPE_INT:
+                case DATA_TYPE_REAL:
 
-                strlcat(buffer, (char *) rval.item, CF_EXPANDSIZE);
-                break;
+                    if (ExpandOverflow(buffer, (char *) rval.item))
+                    {
+                        FatalError(ctx, "Can't expand varstring");
+                    }
 
-            case DATA_TYPE_STRING_LIST:
-            case DATA_TYPE_INT_LIST:
-            case DATA_TYPE_REAL_LIST:
-            case DATA_TYPE_NONE:
-                if (type == DATA_TYPE_NONE)
-                {
-                    Log(LOG_LEVEL_DEBUG,
-                        "Can't expand inexistent variable '%s'", currentitem);
+                    strlcat(buffer, (char *) rval.item, CF_EXPANDSIZE);
+                    break;
+
+                case DATA_TYPE_STRING_LIST:
+                case DATA_TYPE_INT_LIST:
+                case DATA_TYPE_REAL_LIST:
+                case DATA_TYPE_NONE:
+                    if (type == DATA_TYPE_NONE)
+                    {
+                        Log(LOG_LEVEL_DEBUG,
+                            "Can't expand inexistent variable '%s'", currentitem);
+                    }
+                    else
+                    {
+                        Log(LOG_LEVEL_DEBUG,
+                            "Expecting scalar, can't expand list variable '%s'",
+                            currentitem);
+                    }
+
+                    if (varstring == '}')
+                    {
+                        snprintf(name, CF_MAXVARSIZE, "${%s}", currentitem);
+                    }
+                    else
+                    {
+                        snprintf(name, CF_MAXVARSIZE, "$(%s)", currentitem);
+                    }
+
+                    strlcat(buffer, name, CF_EXPANDSIZE);
+                    returnval = false;
+                    break;
+
+                default:
+                    Log(LOG_LEVEL_DEBUG, "Returning Unknown Scalar ('%s' => '%s')", string, buffer);
+                    return false;
+
                 }
-                else
-                {
-                    Log(LOG_LEVEL_DEBUG,
-                        "Expecting scalar, can't expand list variable '%s'",
-                        currentitem);
-                }
+            }
+            else
+            {
+                Log(LOG_LEVEL_DEBUG, "Currently non existent or list variable '%s'", currentitem);
 
                 if (varstring == '}')
                 {
@@ -710,29 +730,7 @@ bool ExpandScalar(const EvalContext *ctx, const char *ns, const char *scope, con
 
                 strlcat(buffer, name, CF_EXPANDSIZE);
                 returnval = false;
-                break;
-
-            default:
-                Log(LOG_LEVEL_DEBUG, "Returning Unknown Scalar ('%s' => '%s')", string, buffer);
-                return false;
-
             }
-        }
-        else
-        {
-            Log(LOG_LEVEL_DEBUG, "Currently non existent or list variable '%s'", currentitem);
-
-            if (varstring == '}')
-            {
-                snprintf(name, CF_MAXVARSIZE, "${%s}", currentitem);
-            }
-            else
-            {
-                snprintf(name, CF_MAXVARSIZE, "$(%s)", currentitem);
-            }
-
-            strlcat(buffer, name, CF_EXPANDSIZE);
-            returnval = false;
         }
 
         sp += increment;
@@ -1021,14 +1019,13 @@ static void CopyLocalizedScalarsToBundleScope(EvalContext *ctx, const Bundle *bu
 /* Tools                                                             */
 /*********************************************************************/
 
-int IsExpandable(const char *str)
+bool IsExpandable(const char *str)
 {
-    const char *sp;
     char left = 'x', right = 'x';
     int dollar = false;
     int bracks = 0, vars = 0;
 
-    for (sp = str; *sp != '\0'; sp++)   /* check for varitems */
+    for (const char *sp = str; *sp != '\0'; sp++)   /* check for varitems */
     {
         switch (*sp)
         {
@@ -1080,7 +1077,7 @@ int IsExpandable(const char *str)
         Log(LOG_LEVEL_DEBUG,
             "Expanding variable '%s': found %d variables", str, vars);
     }
-    return vars;
+    return (vars > 0);
 }
 
 /*********************************************************************/

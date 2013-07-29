@@ -36,7 +36,7 @@ void ExpandPromise(EvalContext *ctx, Promise *pp, PromiseActuator *ActOnPromise,
 Rval ExpandDanglers(EvalContext *ctx, const char *ns, const char *scope, Rval rval, const Promise *pp);
 void MapIteratorsFromRval(EvalContext *ctx, const char *scope, Rlist **lol, Rlist **los, Rval rval);
 
-int IsExpandable(const char *str);
+bool IsExpandable(const char *str);
 
 bool ExpandScalar(const EvalContext *ctx, const char *ns, const char *scope, const char *string, char buffer[CF_EXPANDSIZE]);
 Rval ExpandBundleReference(EvalContext *ctx, const char *ns, const char *scope, Rval rval);

@@ -546,7 +546,7 @@ static ConvergeVariableOptions CollectConvergeVariableOptions(EvalContext *ctx, 
 
                     /* eval it: e.g. ifvarclass => not("a_class") */
 
-                    res = FnCallEvaluate(ctx, cp->rval.item, NULL).rval;
+                    res = FnCallEvaluate(ctx, cp->rval.item, pp).rval;
 
                     /* Don't continue unless function was evaluated properly */
                     if (res.type != RVAL_TYPE_SCALAR)

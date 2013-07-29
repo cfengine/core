@@ -86,38 +86,46 @@ static void test_put_remove_inorder(void)
     RBTreeDestroy(t);
 }
 
-static void test_iterate(void)
+static void test_iterate_empty(void)
 {
-    Seq *nums = SeqNew(20, free);
-    srand(0);
-    for (int i = 0; i < 20; i++)
-    {
-        int k = rand() % 1000;
-        SeqAppend(nums, xmemdup(&k, sizeof(int)));
-    }
-
     RBTree *t = IntTreeNew_();
-    for (size_t i = 0; i < SeqLength(nums); i++)
-    {
-        RBTreePut(t, SeqAt(nums, i), SeqAt(nums, i));
-    }
 
     RBTreeIterator *it = RBTreeIteratorNew(t);
-    int last = -1;
-    void *_r = NULL;
-    int i = 0;
-    while (RBTreeIteratorNext(it, &_r, NULL))
+    void *r = NULL;
+    while (RBTreeIteratorNext(it, &r, NULL))
     {
-        int *r = _r;
-        assert_true(*r >= last);
-        last = *r;
-        i++;
+        fail();
     }
+    assert_true(r == NULL);
     RBTreeIteratorDestroy(it);
 
-    assert_int_equal(i, 20);
+    RBTreeDestroy(t);
+}
 
-    SeqDestroy(nums);
+static void test_iterate(void)
+{
+    RBTree *t = IntTreeNew_();
+
+    for (int i = 0; i < 20; i++)
+    {
+        RBTreePut(t, &i, &i);
+    }
+
+    assert_int_equal(20, RBTreeSize(t));
+
+    RBTreeIterator *it = RBTreeIteratorNew(t);
+    for (int i = 0; i < 20; i++)
+    {
+        int *k = xmalloc(sizeof(int)); *k = -1;
+        int *v = xmalloc(sizeof(int)); *v = -1;
+        assert_true(RBTreeIteratorNext(it, (void **)&k, (void **)&v));
+        assert_int_equal(i, *k);
+        assert_int_equal(i, *v);
+    }
+
+    assert_false(RBTreeIteratorNext(it, NULL, NULL));
+    RBTreeIteratorDestroy(it);
+
     RBTreeDestroy(t);
 }
 
@@ -191,6 +199,7 @@ int main()
         unit_test(test_put_overwrite),
         unit_test(test_put_remove),
         unit_test(test_put_remove_inorder),
+        unit_test(test_iterate_empty),
         unit_test(test_iterate),
         unit_test(test_put_remove_random),
         unit_test(test_clear),

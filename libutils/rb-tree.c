@@ -587,6 +587,11 @@ RBTreeIterator *RBTreeIteratorNew(const RBTree *tree)
 
 bool Peek_(RBTreeIterator *iter, void **key, void **value)
 {
+    if (iter->tree->size == 0)
+    {
+        return false;
+    }
+
     if (iter->curr == iter->tree->nil)
     {
         return false;

@@ -1520,6 +1520,10 @@ static JsonElement *BodyToJson(const Body *body)
 {
     JsonElement *json_body = JsonObjectCreate(10);
 
+    if (body->source_path)
+    {
+        JsonObjectAppendString(json_body, "sourcePath", body->source_path);
+    }
     JsonObjectAppendInteger(json_body, "line", body->offset.line);
 
     JsonObjectAppendString(json_body, "namespace", body->ns);

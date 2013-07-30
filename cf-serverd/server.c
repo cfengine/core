@@ -4070,7 +4070,9 @@ static int CheckStoreKey(ServerConnectionState *conn, RSA *key)
         }
     }
 
-/* Finally, if we're still here, we should consider trusting a new key ... */
+    /* Finally, if we're still here then the key is new (not in ppkeys
+     * directory): Allow access only if host is listed in "trustkeysfrom" body
+     * server control option. */
 
     if ((SV.trustkeylist != NULL) && (IsMatchItemIn(conn->ctx, SV.trustkeylist, MapAddress(conn->ipaddr))))
     {

@@ -50,12 +50,14 @@ struct Auth_
 
 typedef struct
 {
-    Item *nonattackerlist;
-    Item *attackerlist;
-    Item *connectionlist;
-    Item *allowuserlist;
-    Item *multiconnlist;
-    Item *trustkeylist;
+    Item *connectionlist;             /* List of currently open connections */
+
+    /* body server control options */
+    Item *nonattackerlist;                            /* "allowconnects" */
+    Item *attackerlist;                               /* "denyconnects" */
+    Item *allowuserlist;                              /* "allowusers" */
+    Item *multiconnlist;                              /* "allowallconnects" */
+    Item *trustkeylist;                               /* "trustkeysfrom" */
     Item *skipverify;
 
     Auth *admit;
@@ -76,6 +78,11 @@ typedef struct
     int logconns;
 } ServerAccess;
 
+/**
+ * @member trust Whether we'll blindly trust any key from the host, depends on
+ *               the "trustkeysfrom" option in body server control. Default
+ *               false, check for setting it is in CheckStoreKey().
+ */
 typedef struct ServerConnectionState
 {
     EvalContext *ctx;

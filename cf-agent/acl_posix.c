@@ -334,8 +334,8 @@ static int CheckPosixLinuxACEs(EvalContext *ctx, Rlist *aces, AclMethod method, 
             {
                 if ((retv = acl_set_file(file_path, acl_type, acl_new)) != 0)
                 {
-                    Log(LOG_LEVEL_ERR, "Error setting new %s ACL on file '%s' (are required ACEs present?)",
-                          acl_type_str, file_path);
+                    Log(LOG_LEVEL_ERR, "Error setting new %s ACL on file '%s' (acl_set_file: %s), are required ACEs present ?",
+                          acl_type_str, file_path, GetErrorStr());
                     acl_free((void *) acl_existing);
                     acl_free((void *) acl_tmp);
                     acl_free((void *) acl_new);

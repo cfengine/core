@@ -149,8 +149,6 @@ Rlist *NewIterationContext(EvalContext *ctx, const Promise *pp, Rlist *namelist)
 
 void DeleteIterationContext(Rlist *deref)
 {
-    ScopeClearSpecial(SPECIAL_SCOPE_THIS);
-
     if (deref != NULL)
     {
         DeleteReferenceRlist(deref);

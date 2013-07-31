@@ -37,68 +37,12 @@ static void test_name_split(void)
     }
 }
 
-static void test_push_pop_this(void)
-{
-    VarRef *lval = VarRefParse("this.lval");
-    Rval rval;
-
-    EvalContext *ctx = EvalContextNew();
-
-    Policy *p = PolicyNew();
-    Bundle *bp = PolicyAppendBundle(p, "default", "bundle", "agent", NULL, NULL);
-    PromiseType *pt = BundleAppendPromiseType(bp, "reports");
-    Promise *pp = PromiseTypeAppendPromise(pt, "hello", (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, NULL);
-
-    EvalContextStackPushBundleFrame(ctx, bp, NULL, false);
-    EvalContextStackPushPromiseFrame(ctx, pp);
-    EvalContextStackPushPromiseIterationFrame(ctx, NULL);
-
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "lval", "rval1", DATA_TYPE_STRING);
-    assert_true(EvalContextVariableGet(ctx, lval, &rval, NULL));
-    assert_string_equal("rval1", RvalScalarValue(rval));
-    {
-        ScopePushThis();
-
-        assert_false(EvalContextVariableGet(ctx, lval, &rval, NULL));
-
-        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "lval", "rval2", DATA_TYPE_STRING);
-        assert_true(EvalContextVariableGet(ctx, lval, &rval, NULL));
-        assert_string_equal("rval2", RvalScalarValue(rval));
-        {
-            ScopePushThis();
-
-            assert_false(EvalContextVariableGet(ctx, lval, &rval, NULL));
-
-            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "lval", "rval3", DATA_TYPE_STRING);
-            assert_true(EvalContextVariableGet(ctx, lval, &rval, NULL));
-            assert_string_equal("rval3", RvalScalarValue(rval));
-            {
-
-            }
-
-            ScopePopThis();
-        }
-
-        ScopePopThis();
-    }
-    assert_true(EvalContextVariableGet(ctx, lval, &rval, NULL));
-    assert_string_equal("rval1", RvalScalarValue(rval));
-
-    EvalContextStackPopFrame(ctx);
-    EvalContextStackPopFrame(ctx);
-    EvalContextStackPopFrame(ctx);
-
-    PolicyDestroy(p);
-    EvalContextDestroy(ctx);
-}
-
 int main()
 {
     const UnitTest tests[] =
 {
         unit_test(test_name_split),
         unit_test(test_name_join),
-        unit_test(test_push_pop_this),
     };
 
     PRINT_TEST_BANNER();

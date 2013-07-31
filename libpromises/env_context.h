@@ -63,7 +63,7 @@ typedef struct
 {
     const Promise *owner;
 
-    AssocHashTable *variables; // TODO: change to map
+    VariableTable *vars;
 } StackFramePromise;
 
 typedef struct

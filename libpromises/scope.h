@@ -50,14 +50,11 @@ SpecialScope SpecialScopeFromString(const char *scope);
  */
 Scope *ScopeNew(const char *ns, const char *scope);
 
-bool ScopeExists(const char *ns, const char *name);
-
 /**
  * @brief Clears all variables from a scope
  * @param name
  */
 void ScopeClear(const char *ns, const char *name);
-void ScopeClearSpecial(SpecialScope scope);
 
 /**
  * @brief find a Scope in VSCOPE
@@ -77,16 +74,6 @@ void ScopeDeleteAll(void);
  *        and evaluates function calls, and attempts expansion on senior scope members.
  */
 void ScopeAugment(EvalContext *ctx, const Bundle *bp, const Promise *pp, const Rlist *arguments);
-
-/**
- * @brief prepend GetScope("this") to CF_STCK
- */
-void ScopePushThis(void);
-
-/**
- * @brief pop a scope from CF_STCK, names the scope "this" by force, not sure why because the Scope is dealloced
- */
-void ScopePopThis(void);
 
 void ScopeNewSpecial(EvalContext *ctx, SpecialScope scope, const char *lval, const void *rval, DataType dt);
 void ScopeDeleteSpecial(SpecialScope scope, const char *lval);

@@ -333,10 +333,18 @@ bool VarRefIsQualified(const VarRef *ref)
 
 void VarRefQualify(VarRef *ref, const char *ns, const char *scope)
 {
-    free(ref->scope);
-    free(ref->ns);
+    assert(scope);
 
-    ref->ns = xstrdup(ns);
+    free(ref->ns);
+    ref->ns = NULL;
+
+    free(ref->scope);
+    ref->scope = NULL;
+
+    if (ns)
+    {
+        ref->ns = xstrdup(ns);
+    }
     ref->scope = xstrdup(scope);
 }
 

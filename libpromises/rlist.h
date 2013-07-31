@@ -63,7 +63,7 @@ bool RlistIsStringIn(const Rlist *list, const char *s);
 bool RlistIsIntIn(const Rlist *list, int i);
 Rlist *RlistKeyIn(Rlist *list, const char *key);
 int RlistLen(const Rlist *start);
-bool RlistIsInListOfRegex(const Rlist *list, const char *str);
+bool RlistIsInListOfRegex(EvalContext *ctx, const Rlist *list, const char *str);
 
 Rlist *RlistAppendAlien(Rlist **start, void *item);
 Rlist *RlistPrependAlien(Rlist **start, void *item);
@@ -80,7 +80,7 @@ Rlist *RlistAppend(Rlist **start, const void *item, RvalType type);
 Rlist *RlistAppendFnCall(Rlist **start, const FnCall *fn);
 
 Rlist *RlistFromSplitString(const char *string, char sep);
-Rlist *RlistFromSplitRegex(const char *string, const char *regex, int max, int purge);
+Rlist *RlistFromSplitRegex(EvalContext *ctx, const char *string, const char *regex, int max, int purge);
 void RlistShow(FILE *fp, const Rlist *list);
 void RlistWrite(Writer *writer, const Rlist *list);
 Rlist *RlistLast(Rlist *start);

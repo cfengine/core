@@ -215,7 +215,7 @@ bool RlistIsIntIn(const Rlist *list, int i)
 
 /*******************************************************************/
 
-bool RlistIsInListOfRegex(const Rlist *list, const char *str)
+bool RlistIsInListOfRegex(EvalContext *ctx, const Rlist *list, const char *str)
 {
     if (str == NULL || list == NULL)
     {
@@ -229,7 +229,7 @@ bool RlistIsInListOfRegex(const Rlist *list, const char *str)
             continue;
         }
 
-        if (FullTextMatch(rp->item, str))
+        if (FullTextMatch(ctx, rp->item, str))
         {
             return true;
         }
@@ -1095,7 +1095,7 @@ Rlist *RlistFromSplitString(const char *string, char sep)
 
 /*******************************************************************/
 
-Rlist *RlistFromSplitRegex(const char *string, const char *regex, int max, int blanks)
+Rlist *RlistFromSplitRegex(EvalContext *ctx, const char *string, const char *regex, int max, int blanks)
  /* Splits a string containing a separator like "," 
     into a linked list of separate items, */
 // NOTE: this has a bad side-effect of creating scope match and variables,
@@ -1113,7 +1113,7 @@ Rlist *RlistFromSplitRegex(const char *string, const char *regex, int max, int b
 
     const char *sp = string;
 
-    while ((count < max) && BlockTextMatch(regex, sp, &start, &end))
+    while ((count < max) && BlockTextMatch(ctx, regex, sp, &start, &end))
     {
         if (end == 0)
         {

@@ -96,7 +96,9 @@ struct EvalContext_
     Item *heap_abort_current_bundle;
 
     Seq *stack;
+
     VariableTable *global_variables;
+    VariableTable *match_variables;
 
     StringSet *dependency_handles;
 
@@ -154,13 +156,13 @@ const Bundle *EvalContextStackCurrentBundle(const EvalContext *ctx);
 
 bool EvalContextVariablePut(EvalContext *ctx, const VarRef *ref, Rval rval, DataType type);
 bool EvalContextVariablePutSpecial(EvalContext *ctx, SpecialScope scope, const char *lval, const void *value, DataType type);
-
 bool EvalContextVariableGet(const EvalContext *ctx, const VarRef *ref, Rval *rval_out, DataType *type_out);
+bool EvalContextVariableRemoveSpecial(const EvalContext *ctx, SpecialScope scope, const char *lval);
+bool EvalContextVariableRemove(const EvalContext *ctx, const VarRef *ref);
+bool EvalContextVariableClearMatch(EvalContext *ctx);
 
 VariableTableIterator *EvalContextVariableTableIteratorNew(const EvalContext *ctx, const VarRef *ref);
 
-bool EvalContextVariableRemoveSpecial(const EvalContext *ctx, SpecialScope scope, const char *lval);
-bool EvalContextVariableRemove(const EvalContext *ctx, const VarRef *ref);
 
 bool EvalContextVariableControlCommonGet(const EvalContext *ctx, CommonControl lval, Rval *rval_out);
 

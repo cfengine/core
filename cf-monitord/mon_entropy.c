@@ -117,10 +117,10 @@ void MonEntropyClassesSet(const char *service, const char *direction, double ent
 
 /****************************************************************************/
 
-void MonEntropyPurgeUnused(char *name)
+void MonEntropyPurgeUnused(EvalContext *ctx, char *name)
 {
 // Don't set setentropy is there is no corresponding class
-    DeleteItemMatching(&ENTROPIES, name);
+    DeleteItemMatching(ctx, &ENTROPIES, name);
 }
 
 /****************************************************************************/

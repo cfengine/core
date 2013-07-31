@@ -154,11 +154,11 @@ static void FreeStringArray(int size, char **array);
 static void CheckAgentAccess(Rlist *list, const Rlist *input_files);
 static void KeepControlPromises(EvalContext *ctx, Policy *policy);
 static void KeepAgentPromise(EvalContext *ctx, Promise *pp, void *param);
-static int NewTypeContext(TypeSequence type);
+static int NewTypeContext(EvalContext *ctx, TypeSequence type);
 static void DeleteTypeContext(EvalContext *ctx, Bundle *bp, TypeSequence type);
 static void ClassBanner(EvalContext *ctx, TypeSequence type);
 static void ParallelFindAndVerifyFilesPromises(EvalContext *ctx, Promise *pp);
-static bool VerifyBootstrap(void);
+static bool VerifyBootstrap(EvalContext *ctx);
 static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, GenericAgentConfig *config);
 static void KeepPromises(EvalContext *ctx, Policy *policy, GenericAgentConfig *config);
 static int NoteBundleCompliance(const Bundle *bundle, int save_pr_kept, int save_pr_repaired, int save_pr_notkept);
@@ -274,7 +274,7 @@ int main(int argc, char *argv[])
 #endif
     PurgeLocks();
 
-    if (config->agent_specific.agent.bootstrap_policy_server && !VerifyBootstrap())
+    if (config->agent_specific.agent.bootstrap_policy_server && !VerifyBootstrap(ctx))
     {
         RemovePolicyServerFile(GetWorkDir());
         WriteAmPolicyHubFile(GetWorkDir(), false);
@@ -1214,7 +1214,7 @@ int ScheduleAgentOperations(EvalContext *ctx, Bundle *bp)
 
             BannerPromiseType(bp->name, sp->name, pass);
 
-            if (!NewTypeContext(type))
+            if (!NewTypeContext(ctx, type))
             {
                 continue;
             }
@@ -1330,7 +1330,7 @@ static void DefaultVarPromise(EvalContext *ctx, const Promise *pp)
     case DATA_TYPE_STRING:
     case DATA_TYPE_INT:
     case DATA_TYPE_REAL:
-        if (regex && !FullTextMatch(regex,rval.item))
+        if (regex && !FullTextMatch(ctx, regex, rval.item))
         {
             return;
         }
@@ -1348,7 +1348,7 @@ static void DefaultVarPromise(EvalContext *ctx, const Promise *pp)
         {
             for (rp = (Rlist *) rval.item; rp != NULL; rp = rp->next)
             {
-                if (FullTextMatch(regex,rp->item))
+                if (FullTextMatch(ctx, regex, rp->item))
                 {
                     okay = false;
                     break;
@@ -1520,7 +1520,7 @@ static void KeepAgentPromise(EvalContext *ctx, Promise *pp, ARG_UNUSED void *par
 /* Type context                                                      */
 /*********************************************************************/
 
-static int NewTypeContext(TypeSequence type)
+static int NewTypeContext(EvalContext *ctx, TypeSequence type)
 {
 // get maxconnections
 
@@ -1537,7 +1537,7 @@ static int NewTypeContext(TypeSequence type)
 
     case TYPE_SEQUENCE_PROCESSES:
 
-        if (!LoadProcessTable(&PROCESSTABLE))
+        if (!LoadProcessTable(ctx, &PROCESSTABLE))
         {
             Log(LOG_LEVEL_ERR, "Unable to read the process table - cannot keep process promises");
             return false;
@@ -1747,7 +1747,7 @@ static void ParallelFindAndVerifyFilesPromises(EvalContext *ctx, Promise *pp)
 
 /**************************************************************/
 
-static bool VerifyBootstrap(void)
+static bool VerifyBootstrap(EvalContext *ctx)
 {
     if (NULL_OR_EMPTY(POLICY_SERVER))
     {
@@ -1772,9 +1772,9 @@ static bool VerifyBootstrap(void)
     // embedded failsafe.cf (bootstrap.c) contains a promise to start cf-execd (executed while running this cf-agent)
     DeleteItemList(PROCESSTABLE);
     PROCESSTABLE = NULL;
-    LoadProcessTable(&PROCESSTABLE);
+    LoadProcessTable(ctx, &PROCESSTABLE);
 
-    if (!IsProcessNameRunning(".*cf-execd.*"))
+    if (!IsProcessNameRunning(ctx, ".*cf-execd.*"))
     {
         Log(LOG_LEVEL_ERR, "Bootstrapping failed, cf-execd is not running");
         return false;

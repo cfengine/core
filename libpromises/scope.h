@@ -50,8 +50,6 @@ SpecialScope SpecialScopeFromString(const char *scope);
  */
 Scope *ScopeNew(const char *ns, const char *scope);
 
-void ScopePutMatch(int index, const char *value);
-
 bool ScopeExists(const char *ns, const char *name);
 
 /**

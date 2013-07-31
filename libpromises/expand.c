@@ -928,7 +928,7 @@ Rval EvaluateFinalRval(EvalContext *ctx, const char *ns, const char *scope, Rval
             }
             else
             {
-                if (ScopeExists(NULL, "this"))
+                if (EvalContextStackCurrentPromise(ctx))
                 {
                     if (IsCf3VarString(rp->item))
                     {

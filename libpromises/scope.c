@@ -101,6 +101,8 @@ SpecialScope SpecialScopeFromString(const char *scope)
 
 Scope *ScopeNew(const char *ns, const char *scope)
 {
+    assert(false);
+
     assert(scope);
     assert(strcmp(scope, "this") == 0);
 
@@ -145,6 +147,8 @@ Scope *ScopeGet(const char *ns, const char *scope)
  * Not thread safe - returns pointer to global memory
  */
 {
+    assert(false);
+
     if (!scope)
     {
         return NULL;
@@ -166,11 +170,6 @@ Scope *ScopeGet(const char *ns, const char *scope)
     }
 
     return NULL;
-}
-
-bool ScopeExists(const char *ns, const char *name)
-{
-    return ScopeGet(ns, name) != NULL;
 }
 
 void ScopeAugment(EvalContext *ctx, const Bundle *bp, const Promise *pp, const Rlist *arguments)
@@ -376,89 +375,6 @@ void ScopeClear(const char *ns, const char *name)
     Log(LOG_LEVEL_DEBUG, "Scope '%s' cleared", name);
 
     ThreadUnlock(cft_vscope);
-}
-
-void ScopeClearSpecial(SpecialScope scope)
-{
-    if (!ThreadLock(cft_vscope))
-    {
-        Log(LOG_LEVEL_ERR, "Could not lock VSCOPE");
-        return;
-    }
-
-    Scope *ptr = ScopeGet(NULL, SpecialScopeToString(scope));
-    if (!ptr)
-    {
-        Log(LOG_LEVEL_DEBUG, "No special scope '%s' to clear", SpecialScopeToString(scope));
-        ThreadUnlock(cft_vscope);
-        return;
-    }
-
-    HashFree(ptr->hashtable);
-    ptr->hashtable = HashInit();
-    Log(LOG_LEVEL_DEBUG, "Special scope '%s' cleared", SpecialScopeToString(scope));
-
-    ThreadUnlock(cft_vscope);
-}
-
-/*******************************************************************/
-/* Stack frames                                                    */
-/*******************************************************************/
-
-void ScopePushThis()
-{
-    static const char RVAL_TYPE_STACK = 'k';
-
-    Scope *op = ScopeGet(NULL, "this");
-    if (!op)
-    {
-        return;
-    }
-
-    int frame_index = RlistLen(CF_STCK);
-    char name[CF_MAXVARSIZE];
-    snprintf(name, CF_MAXVARSIZE, "this_%d", frame_index + 1);
-    free(op->scope);
-    free(op->ns);
-    op->scope = xstrdup(name);
-
-    Rlist *rp = xmalloc(sizeof(Rlist));
-
-    rp->next = CF_STCK;
-    rp->item = op;
-    rp->type = RVAL_TYPE_STACK;
-    CF_STCK = rp;
-
-    ScopeNew(NULL, "this");
-}
-
-/*******************************************************************/
-
-void ScopePopThis()
-{
-    if (RlistLen(CF_STCK) > 0)
-    {
-        Scope *current_this = ScopeGet(NULL, "this");
-        if (current_this)
-        {
-
-            ScopeDelete(current_this);
-        }
-
-        Rlist *rp = CF_STCK;
-        CF_STCK = CF_STCK->next;
-
-        Scope *new_this = rp->item;
-        free(new_this->scope);
-        new_this->scope = xstrdup("this");
-        new_this->ns = xstrdup("default");
-
-        free(rp);
-    }
-    else
-    {
-        ProgrammingError("Attempt to pop from empty stack");
-    }
 }
 
 bool ScopeIsReserved(const char *scope)

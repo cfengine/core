@@ -732,7 +732,7 @@ static void StackFrameBodyDestroy(ARG_UNUSED StackFrameBody frame)
 
 static void StackFramePromiseDestroy(StackFramePromise frame)
 {
-    HashFree(frame.variables);
+    VariableTableDestroy(frame.vars);
 }
 
 static void StackFramePromiseIterationDestroy(ARG_UNUSED StackFramePromiseIteration frame)
@@ -1060,7 +1060,7 @@ static StackFrame *StackFrameNewPromise(const Promise *owner)
     StackFrame *frame = StackFrameNew(STACK_FRAME_TYPE_PROMISE, true);
 
     frame->data.promise.owner = owner;
-    frame->data.promise.variables = HashInit();
+    frame->data.promise.vars = VariableTableNew();
 
     return frame;
 }
@@ -1144,12 +1144,6 @@ void EvalContextStackPushPromiseFrame(EvalContext *ctx, const Promise *owner)
 
     EvalContextVariableClearMatch(ctx);
 
-    if (!ScopeGet(NULL, "this"))
-    {
-        ScopeNew(NULL, "this");
-    }
-
-    ScopePushThis();
     EvalContextStackPushFrame(ctx, StackFrameNewPromise(owner));
 
     VariableTableIterator *iter = VariableTableIteratorNew(ctx->global_variables,
@@ -1159,8 +1153,9 @@ void EvalContextStackPushPromiseFrame(EvalContext *ctx, const Promise *owner)
     Variable *bundle_var = NULL;
     while ((bundle_var = VariableTableIteratorNext(iter)))
     {
-        char *legacy_lval = VarRefToString(bundle_var->ref, false);
-        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, legacy_lval, bundle_var->rval.item, bundle_var->type);
+        VarRef *local_ref = VarRefCopy(bundle_var->ref);
+        VarRefQualify(local_ref, NULL, SpecialScopeToString(SPECIAL_SCOPE_THIS));
+        EvalContextVariablePut(ctx, local_ref, bundle_var->rval, bundle_var->type);
     }
     VariableTableIteratorDestroy(iter);
 }
@@ -1173,7 +1168,60 @@ void EvalContextStackPushPromiseIterationFrame(EvalContext *ctx, const Rlist *it
 
     if (RlistLen(iteration_context) > 0)
     {
-        ScopeDeRefListsInThisScope(iteration_context);
+        StackFrame *promise_frame = LastStackFrameByType(ctx, STACK_FRAME_TYPE_PROMISE);
+        VariableTableIterator *iter = VariableTableIteratorNew(promise_frame->data.promise.vars, NULL, NULL, NULL);
+
+        Variable *var = NULL;
+        while ((var = VariableTableIteratorNext(iter)))
+        {
+            for (const Rlist *rp = iteration_context; rp != NULL; rp = rp->next)
+            {
+                CfAssoc *cplist = rp->item;
+
+                char *legacy_lval = VarRefToString(var->ref, false);
+
+                if (strcmp(cplist->lval, legacy_lval) == 0)
+                {
+                    /* Link up temp hash to variable lol */
+
+                    if (rp->state_ptr == NULL || rp->state_ptr->type == RVAL_TYPE_FNCALL)
+                    {
+                        /* Unexpanded function, or blank variable must be skipped. */
+                        return;
+                    }
+
+                    if (rp->state_ptr)
+                    {
+                        // must first free existing rval in scope, then allocate new (should always be string)
+                        RvalDestroy(var->rval);
+
+                        // avoids double free - borrowing value from lol (freed in DeleteScope())
+                        var->rval.item = xstrdup(rp->state_ptr->item);
+                    }
+
+                    switch (var->type)
+                    {
+                    case DATA_TYPE_STRING_LIST:
+                        var->type = DATA_TYPE_STRING;
+                        var->rval.type = RVAL_TYPE_SCALAR;
+                        break;
+                    case DATA_TYPE_INT_LIST:
+                        var->type = DATA_TYPE_INT;
+                        var->rval.type = RVAL_TYPE_SCALAR;
+                        break;
+                    case DATA_TYPE_REAL_LIST:
+                        var->type = DATA_TYPE_REAL;
+                        var->rval.type = RVAL_TYPE_SCALAR;
+                        break;
+                    default:
+                        /* Only lists need to be converted */
+                        break;
+                    }
+                }
+
+                free(legacy_lval);
+            }
+        }
     }
 }
 
@@ -1193,9 +1241,6 @@ void EvalContextStackPopFrame(EvalContext *ctx)
             }
         }
         break;
-
-    case STACK_FRAME_TYPE_PROMISE:
-        ScopePopThis();
 
     default:
         break;
@@ -1264,6 +1309,8 @@ bool EvalContextVariablePutSpecial(EvalContext *ctx, SpecialScope scope, const c
     case SPECIAL_SCOPE_CONST:
     case SPECIAL_SCOPE_EDIT:
     case SPECIAL_SCOPE_BODY:
+    case SPECIAL_SCOPE_THIS:
+    case SPECIAL_SCOPE_MATCH:
         {
             VarRef ref = (VarRef) { NULL, SpecialScopeToString(scope), lval };
             Rval rval = (Rval) { value, DataTypeToRvalType(type) };
@@ -1271,7 +1318,7 @@ bool EvalContextVariablePutSpecial(EvalContext *ctx, SpecialScope scope, const c
         }
 
     default:
-        ScopeNewSpecial(ctx, scope, lval, value, type);
+        assert(false);
         return false;
     }
 }
@@ -1285,6 +1332,7 @@ bool EvalContextVariableRemoveSpecial(const EvalContext *ctx, SpecialScope scope
     case SPECIAL_SCOPE_CONST:
     case SPECIAL_SCOPE_EDIT:
     case SPECIAL_SCOPE_BODY:
+    case SPECIAL_SCOPE_THIS:
         {
             VarRef ref = (VarRef) { NULL, SpecialScopeToString(scope), lval };
             return EvalContextVariableRemove(ctx, &ref);
@@ -1298,56 +1346,54 @@ bool EvalContextVariableRemoveSpecial(const EvalContext *ctx, SpecialScope scope
 
 static VariableTable *GetVariableTableForVarRef(const EvalContext *ctx, const VarRef *ref)
 {
+
     switch (SpecialScopeFromString(ref->scope))
     {
     case SPECIAL_SCOPE_SYS:
     case SPECIAL_SCOPE_MON:
     case SPECIAL_SCOPE_CONST:
-    case SPECIAL_SCOPE_NONE:
+        assert(!ref->ns || strcmp("default", ref->ns) == 0);
         return ctx->global_variables;
 
     case SPECIAL_SCOPE_MATCH:
+        assert(!ref->ns || strcmp("default", ref->ns) == 0);
         return ctx->match_variables;
 
     case SPECIAL_SCOPE_EDIT:
+        assert(!ref->ns || strcmp("default", ref->ns) == 0);
         {
-            assert(!ref->ns);
             StackFrame *frame = LastStackFrameByType(ctx, STACK_FRAME_TYPE_BUNDLE);
             assert(frame);
             return frame->data.bundle.vars;
         }
 
     case SPECIAL_SCOPE_BODY:
+        assert(!ref->ns || strcmp("default", ref->ns) == 0);
         {
-            assert(!ref->ns);
             StackFrame *frame = LastStackFrameByType(ctx, STACK_FRAME_TYPE_BODY);
             return frame ? frame->data.body.vars : NULL;
         }
 
+    case SPECIAL_SCOPE_THIS:
+        assert(!ref->ns || strcmp("default", ref->ns) == 0);
+        {
+            StackFrame *frame = LastStackFrameByType(ctx, STACK_FRAME_TYPE_PROMISE);
+            return frame ? frame->data.promise.vars : NULL;
+        }
+
+    case SPECIAL_SCOPE_NONE:
+        return ctx->global_variables;
+
     default:
+        assert(false && "Unhandled case in switch");
         return NULL;
     }
 }
 
 bool EvalContextVariableRemove(const EvalContext *ctx, const VarRef *ref)
 {
-    switch (SpecialScopeFromString(ref->scope))
-    {
-    case SPECIAL_SCOPE_SYS:
-    case SPECIAL_SCOPE_MON:
-    case SPECIAL_SCOPE_CONST:
-    case SPECIAL_SCOPE_EDIT:
-    case SPECIAL_SCOPE_BODY:
-    case SPECIAL_SCOPE_NONE:
-        {
-            VariableTable *table = GetVariableTableForVarRef(ctx, ref);
-            return VariableTableRemove(table, ref);
-        }
-
-    default:
-        ScopeDeleteVariable(ref);
-        return true;
-    }
+    VariableTable *table = GetVariableTableForVarRef(ctx, ref);
+    return VariableTableRemove(table, ref);
 }
 
 bool EvalContextVariablePut(EvalContext *ctx, const VarRef *ref, Rval rval, DataType type)
@@ -1425,6 +1471,9 @@ bool EvalContextVariablePut(EvalContext *ctx, const VarRef *ref, Rval rval, Data
     {
         assert(!ref->ns);
         assert(STACK_FRAME_TYPE_PROMISE == LastStackFrame(ctx, 0)->type || STACK_FRAME_TYPE_PROMISE_ITERATION == LastStackFrame(ctx, 0)->type);
+        VariableTable *table = GetVariableTableForVarRef(ctx, ref);
+        VariableTablePut(table, ref, &rval, type);
+        return true;
     }
     else if (strcmp("match", ref->scope) == 0)
     {
@@ -1466,46 +1515,8 @@ bool EvalContextVariablePut(EvalContext *ctx, const VarRef *ref, Rval rval, Data
         return true;
     }
 
-    Scope *put_scope = ScopeGet(ref->ns, ref->scope);
-    if (!put_scope)
-    {
-        put_scope = ScopeNew(ref->ns, ref->scope);
-        if (!put_scope)
-        {
-            return false;
-        }
-    }
-
-    // FIX: lval is stored with array params as part of the lval for legacy reasons.
-    char *final_lval = VarRefToString(ref, false);
-
-    CfAssoc *assoc = HashLookupElement(put_scope->hashtable, final_lval);
-    if (assoc)
-    {
-        if (CompareVariableValue(rval, assoc->rval) != 0)
-        {
-            /* Different value, bark and replace */
-            if (!UnresolvedVariables(assoc->rval, rval.type))
-            {
-                Log(LOG_LEVEL_DEBUG, "Replaced value of variable '%s' in scope '%s'", ref->lval, put_scope->scope);
-            }
-            RvalDestroy(assoc->rval);
-            assoc->rval = RvalCopy(rval);
-            assoc->dtype = type;
-        }
-    }
-    else
-    {
-        if (!HashInsertElement(put_scope->hashtable, final_lval, rval, type))
-        {
-            ProgrammingError("Hash table is full");
-        }
-        Log(LOG_LEVEL_DEBUG, "Inserted variable '%s' in scope '%s'",
-            ref->lval, put_scope->scope);
-    }
-
-    free(final_lval);
-    return true;
+    assert(false && "unknown scope");
+    return false;
 }
 
 bool EvalContextVariableGet(const EvalContext *ctx, const VarRef *ref, Rval *rval_out, DataType *type_out)
@@ -1528,37 +1539,45 @@ bool EvalContextVariableGet(const EvalContext *ctx, const VarRef *ref, Rval *rva
     Scope *get_scope = NULL;
     if (VarRefIsQualified(ref))
     {
-        if (strcmp(ref->scope, "this") != 0)
+        VariableTable *table = GetVariableTableForVarRef(ctx, ref);
+        if (!table)
         {
-            VariableTable *table = GetVariableTableForVarRef(ctx, ref);
-            Variable *var = VariableTableGet(table, ref);
-            if (var)
+            if (rval_out)
             {
-                if (rval_out)
-                {
-                    *rval_out = var->rval;
-                }
-                if (type_out)
-                {
-                    *type_out = var->type;
-                }
-                return true;
+                *rval_out = (Rval) {NULL, RVAL_TYPE_SCALAR };
             }
-            else
+            if (type_out)
             {
-                if (rval_out)
-                {
-                    *rval_out = (Rval) {NULL, RVAL_TYPE_SCALAR };
-                }
-                if (type_out)
-                {
-                    *type_out = DATA_TYPE_NONE;
-                }
-                return false;
+                *type_out = DATA_TYPE_NONE;
             }
+            return false;
         }
 
-        get_scope = ScopeGet(ref->ns, ref->scope);
+        Variable *var = VariableTableGet(table, ref);
+        if (var)
+        {
+            if (rval_out)
+            {
+                *rval_out = var->rval;
+            }
+            if (type_out)
+            {
+                *type_out = var->type;
+            }
+            return true;
+        }
+        else
+        {
+            if (rval_out)
+            {
+                *rval_out = (Rval) {NULL, RVAL_TYPE_SCALAR };
+            }
+            if (type_out)
+            {
+                *type_out = DATA_TYPE_NONE;
+            }
+            return false;
+        }
     }
     else
     {
@@ -1590,54 +1609,19 @@ bool EvalContextVariableGet(const EvalContext *ctx, const VarRef *ref, Rval *rva
 
         case STACK_FRAME_TYPE_PROMISE:
         case STACK_FRAME_TYPE_PROMISE_ITERATION:
-            get_scope = ScopeGet(NULL, "this");
+            {
+                VarRef *qref = VarRefCopy(ref);
+                VarRefQualify(qref, NULL, "this");
+                bool ret = EvalContextVariableGet(ctx, qref, rval_out, type_out);
+                VarRefDestroy(qref);
+                return ret;
+            }
             break;
         }
     }
 
-    if (!get_scope)
-    {
-        if (rval_out)
-        {
-            *rval_out = (Rval) {(char *) ref->lval, RVAL_TYPE_SCALAR };
-        }
-        if (type_out)
-        {
-            *type_out = DATA_TYPE_NONE;
-        }
-        return false;
-    }
-
-    assert(!IsQualifiedVariable(ref->lval) && "lval is qualified");
-
-    char *lookup_key = VarRefToString(ref, false);
-    CfAssoc *assoc = HashLookupElement(get_scope->hashtable, lookup_key);
-    free(lookup_key);
-
-    if (!assoc)
-    {
-        if (rval_out)
-        {
-            *rval_out = (Rval) {(char *) ref->lval, RVAL_TYPE_SCALAR };
-        }
-        if (type_out)
-        {
-            *type_out = DATA_TYPE_NONE;
-        }
-        return false;
-    }
-
-    if (rval_out)
-    {
-        *rval_out = assoc->rval;
-    }
-    if (type_out)
-    {
-        *type_out = assoc->dtype;
-        assert(*type_out != DATA_TYPE_NONE);
-    }
-
-    return true;
+    assert(false);
+    return false;
 }
 
 bool EvalContextVariableClearMatch(EvalContext *ctx)

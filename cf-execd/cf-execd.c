@@ -570,8 +570,6 @@ static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *c
         DeleteItemList(IPADDRESSES);
         IPADDRESSES = NULL;
 
-        ScopeClearSpecial(SPECIAL_SCOPE_THIS);
-
         GetInterfacesInfo(ctx);
         Get3Environment(ctx, AGENT_TYPE_EXECUTOR);
         BuiltinClasses(ctx);

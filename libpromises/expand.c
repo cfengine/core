@@ -123,8 +123,6 @@ void ExpandPromise(EvalContext *ctx, Promise *pp, PromiseActuator *ActOnPromise,
     //fix me wth a general function SetMissingDefaults
     SetAnyMissingDefaults(ctx, pp);
 
-    ScopeClearSpecial(SPECIAL_SCOPE_MATCH);       /* in case we expand something expired accidentially */
-
     Promise *pcopy = DeRefCopyPromise(ctx, pp);
 
     MapIteratorsFromRval(ctx, PromiseGetBundle(pp)->name, &listvars, &scalars, (Rval) { pcopy->promiser, RVAL_TYPE_SCALAR });

@@ -427,11 +427,11 @@ void GetNameInfo3(EvalContext *ctx, AgentType agent_type)
         strlcpy(sysname, VSYSNAME.sysname, CF_BUFSIZE);
         ToLowerStrInplace(sysname);
 
-        if (FullTextMatch(CLASSATTRIBUTES[i][0], sysname))
+        if (StringMatchFull(CLASSATTRIBUTES[i][0], sysname))
         {
-            if (FullTextMatch(CLASSATTRIBUTES[i][1], VSYSNAME.machine))
+            if (StringMatchFull(CLASSATTRIBUTES[i][1], VSYSNAME.machine))
             {
-                if (FullTextMatch(CLASSATTRIBUTES[i][2], VSYSNAME.release))
+                if (StringMatchFull(CLASSATTRIBUTES[i][2], VSYSNAME.release))
                 {
                     EvalContextHeapAddHard(ctx, CLASSTEXT[i]);
 

@@ -38,8 +38,6 @@
 #include "env_context.h"
 #include "audit.h"
 
-Scope *SCOPE_MATCH = NULL;
-
 /*******************************************************************/
 
 const char *SpecialScopeToString(SpecialScope scope)
@@ -104,7 +102,7 @@ SpecialScope SpecialScopeFromString(const char *scope)
 Scope *ScopeNew(const char *ns, const char *scope)
 {
     assert(scope);
-    assert(strcmp(scope, "match") == 0 || strcmp(scope, "this") == 0);
+    assert(strcmp(scope, "this") == 0);
 
     if (!ns)
     {
@@ -142,49 +140,6 @@ Scope *ScopeNew(const char *ns, const char *scope)
     return ptr;
 }
 
-void ScopePutMatch(int index, const char *value)
-{
-    if (!SCOPE_MATCH)
-    {
-        SCOPE_MATCH = ScopeNew(NULL, "match");
-    }
-    Scope *ptr = SCOPE_MATCH;
-
-    char lval[4] = { 0 };
-    snprintf(lval, 3, "%d", index);
-
-    Rval rval = (Rval) { value, RVAL_TYPE_SCALAR };
-
-    CfAssoc *assoc = HashLookupElement(ptr->hashtable, lval);
-
-    if (assoc)
-    {
-        if (CompareVariableValue(rval, assoc->rval) == 0)
-        {
-            /* Identical value, keep as is */
-        }
-        else
-        {
-            /* Different value, bark and replace */
-            if (!UnresolvedVariables(assoc->rval, RVAL_TYPE_SCALAR))
-            {
-                Log(LOG_LEVEL_INFO, "Duplicate selection of value for variable '%s' in scope '%s'", lval, ptr->scope);
-            }
-            RvalDestroy(assoc->rval);
-            assoc->rval = RvalCopy(rval);
-            assoc->dtype = DATA_TYPE_STRING;
-            Log(LOG_LEVEL_DEBUG, "Stored '%s' in context '%s'", lval, "match");
-        }
-    }
-    else
-    {
-        if (!HashInsertElement(ptr->hashtable, lval, rval, DATA_TYPE_STRING))
-        {
-            ProgrammingError("Hash table is full");
-        }
-    }
-}
-
 Scope *ScopeGet(const char *ns, const char *scope)
 /* 
  * Not thread safe - returns pointer to global memory
@@ -195,16 +150,11 @@ Scope *ScopeGet(const char *ns, const char *scope)
         return NULL;
     }
 
-    assert(strcmp(scope, "match") == 0 || strcmp(scope, "this") == 0);
+    assert(strcmp(scope, "this") == 0);
 
     if (!ns)
     {
         ns = "default";
-    }
-
-    if (strcmp("match", scope) == 0)
-    {
-        return SCOPE_MATCH;
     }
 
     for (Scope *cp = VSCOPE; cp != NULL; cp = cp->next)

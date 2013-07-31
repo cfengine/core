@@ -175,14 +175,14 @@ void ServerEntryPoint(EvalContext *ctx, int sd_reply, char *ipaddr)
     
     Log(LOG_LEVEL_VERBOSE, "Obtained IP address of '%s' on socket %d from accept", ipaddr, sd_reply);
     
-    if ((SV.nonattackerlist) && (!IsMatchItemIn(SV.nonattackerlist, MapAddress(ipaddr))))
+    if ((SV.nonattackerlist) && (!IsMatchItemIn(ctx, SV.nonattackerlist, MapAddress(ipaddr))))
     {
         Log(LOG_LEVEL_ERR, "Not allowing connection from non-authorized IP '%s'", ipaddr);
         cf_closesocket(sd_reply);
         return;
     }
     
-    if (IsMatchItemIn(SV.attackerlist, MapAddress(ipaddr)))
+    if (IsMatchItemIn(ctx, SV.attackerlist, MapAddress(ipaddr)))
     {
         Log(LOG_LEVEL_ERR, "Denying connection from non-authorized IP '%s'", ipaddr);
         cf_closesocket(sd_reply);
@@ -196,7 +196,7 @@ void ServerEntryPoint(EvalContext *ctx, int sd_reply, char *ipaddr)
     
     PurgeOldConnections(&SV.connectionlist, now);
     
-    if (!IsMatchItemIn(SV.multiconnlist, MapAddress(ipaddr)))
+    if (!IsMatchItemIn(ctx, SV.multiconnlist, MapAddress(ipaddr)))
     {
         if (!ThreadLock(cft_count))
         {
@@ -1307,7 +1307,7 @@ static int VerifyConnection(ServerConnectionState *conn, char buf[CF_BUFSIZE])
    We can save a lot of time by not looking this up ... */
 
     if ((conn->trust == false) ||
-        (IsMatchItemIn(SV.skipverify, MapAddress(conn->ipaddr))))
+        (IsMatchItemIn(conn->ctx, SV.skipverify, MapAddress(conn->ipaddr))))
     {
         Log(LOG_LEVEL_VERBOSE,
               "Allowing %s to connect without (re)checking ID\n", ip_assert);
@@ -1602,13 +1602,13 @@ static int AccessControl(EvalContext *ctx, const char *req_path, ServerConnectio
             {
                 Log(LOG_LEVEL_DEBUG, "Checking whether to map root privileges..");
 
-                if ((IsMatchItemIn(ap->maproot, MapAddress(conn->ipaddr))) || (IsRegexItemIn(ctx, ap->maproot, conn->hostname)))
+                if ((IsMatchItemIn(ctx, ap->maproot, MapAddress(conn->ipaddr))) || (IsRegexItemIn(ctx, ap->maproot, conn->hostname)))
                 {
                     conn->maproot = true;
                     Log(LOG_LEVEL_VERBOSE, "Mapping root privileges to access non-root files");
                 }
 
-                if ((IsMatchItemIn(ap->accesslist, MapAddress(conn->ipaddr)))
+                if ((IsMatchItemIn(ctx, ap->accesslist, MapAddress(conn->ipaddr)))
                     || (IsRegexItemIn(ctx, ap->accesslist, conn->hostname)))
                 {
                     access = true;
@@ -1715,7 +1715,7 @@ static int LiteralAccessControl(EvalContext *ctx, char *in, ServerConnectionStat
             {
                 Log(LOG_LEVEL_DEBUG, "Checking whether to map root privileges");
 
-                if ((IsMatchItemIn(ap->maproot, MapAddress(conn->ipaddr))) || (IsRegexItemIn(ctx, ap->maproot, conn->hostname)))
+                if ((IsMatchItemIn(ctx, ap->maproot, MapAddress(conn->ipaddr))) || (IsRegexItemIn(ctx, ap->maproot, conn->hostname)))
                 {
                     conn->maproot = true;
                     Log(LOG_LEVEL_VERBOSE, "Mapping root privileges");
@@ -1725,7 +1725,7 @@ static int LiteralAccessControl(EvalContext *ctx, char *in, ServerConnectionStat
                     Log(LOG_LEVEL_VERBOSE, "No root privileges granted");
                 }
 
-                if ((IsMatchItemIn(ap->accesslist, MapAddress(conn->ipaddr)))
+                if ((IsMatchItemIn(ctx, ap->accesslist, MapAddress(conn->ipaddr)))
                     || (IsRegexItemIn(ctx, ap->accesslist, conn->hostname)))
                 {
                     access = true;
@@ -1739,7 +1739,7 @@ static int LiteralAccessControl(EvalContext *ctx, char *in, ServerConnectionStat
     {
         if (strcmp(ap->path, name) == 0)
         {
-            if ((IsMatchItemIn(ap->accesslist, MapAddress(conn->ipaddr)))
+            if ((IsMatchItemIn(ctx, ap->accesslist, MapAddress(conn->ipaddr)))
                 || (IsRegexItemIn(ctx, ap->accesslist, conn->hostname)))
             {
                 access = false;
@@ -1814,7 +1814,7 @@ static Item *ContextAccessControl(EvalContext *ctx, char *in, ServerConnectionSt
         }
         else
         {
-            if (FullTextMatch(client_regex, key))
+            if (FullTextMatch(ctx, client_regex, key))
             {
                 Log(LOG_LEVEL_VERBOSE, " - Found key %s...", key);
                 AppendItem(&candidates, key, NULL);
@@ -1831,7 +1831,7 @@ static Item *ContextAccessControl(EvalContext *ctx, char *in, ServerConnectionSt
         {
             int res = false;
 
-            if (FullTextMatch(ap->path, ip->name))
+            if (FullTextMatch(ctx, ap->path, ip->name))
             {
                 res = true;
             }
@@ -1859,7 +1859,7 @@ static Item *ContextAccessControl(EvalContext *ctx, char *in, ServerConnectionSt
                 {
                     Log(LOG_LEVEL_DEBUG, "Checking whether to map root privileges");
 
-                    if ((IsMatchItemIn(ap->maproot, MapAddress(conn->ipaddr)))
+                    if ((IsMatchItemIn(ctx, ap->maproot, MapAddress(conn->ipaddr)))
                         || (IsRegexItemIn(ctx, ap->maproot, conn->hostname)))
                     {
                         conn->maproot = true;
@@ -1870,7 +1870,7 @@ static Item *ContextAccessControl(EvalContext *ctx, char *in, ServerConnectionSt
                         Log(LOG_LEVEL_VERBOSE, "No root privileges granted");
                     }
 
-                    if ((IsMatchItemIn(ap->accesslist, MapAddress(conn->ipaddr)))
+                    if ((IsMatchItemIn(ctx, ap->accesslist, MapAddress(conn->ipaddr)))
                         || (IsRegexItemIn(ctx, ap->accesslist, conn->hostname)))
                     {
                         access = true;
@@ -1884,7 +1884,7 @@ static Item *ContextAccessControl(EvalContext *ctx, char *in, ServerConnectionSt
         {
             if (strcmp(ap->path, ip->name) == 0)
             {
-                if ((IsMatchItemIn(ap->accesslist, MapAddress(conn->ipaddr)))
+                if ((IsMatchItemIn(ctx, ap->accesslist, MapAddress(conn->ipaddr)))
                     || (IsRegexItemIn(ctx, ap->accesslist, conn->hostname)))
                 {
                     access = false;
@@ -1944,7 +1944,7 @@ static int AuthorizeRoles(EvalContext *ctx, ServerConnectionState *conn, char *a
         sp++;
     }
 
-    defines = RlistFromSplitRegex(sp, "[,:;]", 99, false);
+    defines = RlistFromSplitRegex(ctx, sp, "[,:;]", 99, false);
 
 /* For each user-defined class attempt, check RBAC */
 
@@ -1954,10 +1954,10 @@ static int AuthorizeRoles(EvalContext *ctx, ServerConnectionState *conn, char *a
 
         for (ap = SV.roles; ap != NULL; ap = ap->next)
         {
-            if (FullTextMatch(ap->path, rp->item))
+            if (FullTextMatch(ctx, ap->path, rp->item))
             {
                 /* We have a pattern covering this class - so are we allowed to activate it? */
-                if ((IsMatchItemIn(ap->accesslist, MapAddress(conn->ipaddr))) ||
+                if ((IsMatchItemIn(ctx, ap->accesslist, MapAddress(conn->ipaddr))) ||
                     (IsRegexItemIn(ctx, ap->accesslist, conn->hostname)) ||
                     (IsRegexItemIn(ctx, ap->accesslist, userid1)) ||
                     (IsRegexItemIn(ctx, ap->accesslist, userid2)) ||
@@ -3241,7 +3241,7 @@ static int CheckStoreKey(ServerConnectionState *conn, RSA *key)
 
 /* Finally, if we're still here, we should consider trusting a new key ... */
 
-    if ((SV.trustkeylist != NULL) && (IsMatchItemIn(SV.trustkeylist, MapAddress(conn->ipaddr))))
+    if ((SV.trustkeylist != NULL) && (IsMatchItemIn(conn->ctx, SV.trustkeylist, MapAddress(conn->ipaddr))))
     {
         Log(LOG_LEVEL_VERBOSE, "Host %s/%s was found in the list of hosts to trust", conn->hostname, conn->ipaddr);
         conn->trust = true;
@@ -3311,7 +3311,7 @@ static void DeleteConn(ServerConnectionState *conn)
             return;
         }
 
-        DeleteItemMatching(&SV.connectionlist, MapAddress(conn->ipaddr));
+        DeleteItemMatching(conn->ctx, &SV.connectionlist, MapAddress(conn->ipaddr));
 
         if (!ThreadUnlock(cft_count))
         {

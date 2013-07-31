@@ -37,6 +37,7 @@
 #include "misc_lib.h"
 #include "rlist.h"
 #include "scope.h"
+#include "string_lib.h"
 
 #ifdef HAVE_SYS_UIO_H
 # include <sys/uio.h>
@@ -829,7 +830,7 @@ static bool IgnoreInterface(char *name)
 
     for (rp = IGNORE_INTERFACES; rp != NULL; rp=rp->next)
     {
-        if (FullTextMatch(rp->item,name))
+        if (StringMatchFull(rp->item, name))
         {
             Log(LOG_LEVEL_VERBOSE, "Ignoring interface '%s' because it matches '%s'",name,CF_IGNORE_INTERFACES);
             return true;

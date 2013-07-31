@@ -59,7 +59,7 @@ static void VerifyFilePromise(EvalContext *ctx, char *path, Promise *pp);
 
 /*****************************************************************************/
 
-static int FileSanityChecks(const EvalContext *ctx, char *path, Attributes a, Promise *pp)
+static int FileSanityChecks(EvalContext *ctx, char *path, Attributes a, Promise *pp)
 {
     if ((a.havelink) && (a.havecopy))
     {
@@ -80,7 +80,7 @@ static int FileSanityChecks(const EvalContext *ctx, char *path, Attributes a, Pr
  * so we can't distinguish between link and copy source. In post-verification
  * all bodies are already expanded, so we don't have the information either */
 
-    if ((a.havecopy) && (a.copy.source) && (!FullTextMatch(CF_ABSPATHRANGE, a.copy.source)))
+    if ((a.havecopy) && (a.copy.source) && (!FullTextMatch(ctx, CF_ABSPATHRANGE, a.copy.source)))
     {
         /* FIXME: somehow redo a PromiseRef to be able to embed it into a string */
         Log(LOG_LEVEL_ERR, "Non-absolute path in source attribute (have no invariant meaning) '%s'", a.copy.source);
@@ -616,7 +616,7 @@ static void SaveSetuid(EvalContext *ctx, Attributes a, Promise *pp)
     snprintf(filename, CF_BUFSIZE, "%s/cfagent.%s.log", CFWORKDIR, VSYSNAME.nodename);
     MapName(filename);
 
-    PurgeItemList(&VSETUIDLIST, "SETUID/SETGID");
+    PurgeItemList(ctx, &VSETUIDLIST, "SETUID/SETGID");
 
     if (!CompareToFile(ctx, VSETUIDLIST, filename, a, pp))
     {

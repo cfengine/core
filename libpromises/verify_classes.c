@@ -48,7 +48,7 @@ void VerifyClassPromise(EvalContext *ctx, Promise *pp, ARG_UNUSED void *param)
 
     a = GetClassContextAttributes(ctx, pp);
 
-    if (!FullTextMatch("[a-zA-Z0-9_]+", pp->promiser))
+    if (!FullTextMatch(ctx, "[a-zA-Z0-9_]+", pp->promiser))
     {
         Log(LOG_LEVEL_VERBOSE, "Class identifier '%s' contains illegal characters - canonifying", pp->promiser);
         snprintf(pp->promiser, strlen(pp->promiser) + 1, "%s", CanonifyName(pp->promiser));

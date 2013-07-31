@@ -793,7 +793,9 @@ EvalContext *EvalContextNew(void)
     ctx->heap_abort_current_bundle = NULL;
 
     ctx->stack = SeqNew(10, StackFrameDestroy);
+
     ctx->global_variables = VariableTableNew();
+    ctx->match_variables = VariableTableNew();
 
     ctx->dependency_handles = StringSetNew();
 
@@ -813,7 +815,9 @@ void EvalContextDestroy(EvalContext *ctx)
         DeleteItemList(ctx->heap_abort_current_bundle);
 
         SeqDestroy(ctx->stack);
+
         VariableTableDestroy(ctx->global_variables);
+        VariableTableDestroy(ctx->match_variables);
         ScopeDeleteAll();
 
         StringSetDestroy(ctx->dependency_handles);
@@ -935,8 +939,7 @@ static size_t StringSetMatchCount(StringSet *set, const char *regex)
     const char *context = NULL;
     while ((context = SetIteratorNext(&it)))
     {
-        // TODO: used FullTextMatch to avoid regressions, investigate whether StringMatch can be used
-        if (FullTextMatch(regex, context))
+        if (StringMatchFull(regex, context))
         {
             count++;
         }
@@ -1139,6 +1142,8 @@ void EvalContextStackPushPromiseFrame(EvalContext *ctx, const Promise *owner)
 {
     assert(LastStackFrame(ctx, 0) && LastStackFrame(ctx, 0)->type == STACK_FRAME_TYPE_BUNDLE);
 
+    EvalContextVariableClearMatch(ctx);
+
     if (!ScopeGet(NULL, "this"))
     {
         ScopeNew(NULL, "this");
@@ -1301,6 +1306,9 @@ static VariableTable *GetVariableTableForVarRef(const EvalContext *ctx, const Va
     case SPECIAL_SCOPE_NONE:
         return ctx->global_variables;
 
+    case SPECIAL_SCOPE_MATCH:
+        return ctx->match_variables;
+
     case SPECIAL_SCOPE_EDIT:
         {
             assert(!ref->ns);
@@ -1421,6 +1429,9 @@ bool EvalContextVariablePut(EvalContext *ctx, const VarRef *ref, Rval rval, Data
     else if (strcmp("match", ref->scope) == 0)
     {
         assert(!ref->ns);
+        VariableTable *table = GetVariableTableForVarRef(ctx, ref);
+        VariableTablePut(table, ref, &rval, type);
+        return true;
     }
     else if (strcmp("body", ref->scope) == 0)
     {
@@ -1517,7 +1528,7 @@ bool EvalContextVariableGet(const EvalContext *ctx, const VarRef *ref, Rval *rva
     Scope *get_scope = NULL;
     if (VarRefIsQualified(ref))
     {
-        if (strcmp(ref->scope, "match") != 0 && strcmp(ref->scope, "this") != 0)
+        if (strcmp(ref->scope, "this") != 0)
         {
             VariableTable *table = GetVariableTableForVarRef(ctx, ref);
             Variable *var = VariableTableGet(table, ref);
@@ -1627,6 +1638,11 @@ bool EvalContextVariableGet(const EvalContext *ctx, const VarRef *ref, Rval *rva
     }
 
     return true;
+}
+
+bool EvalContextVariableClearMatch(EvalContext *ctx)
+{
+    return VariableTableClear(ctx->match_variables, NULL, NULL, NULL);
 }
 
 VariableTableIterator *EvalContextVariableTableIteratorNew(const EvalContext *ctx, const VarRef *ref)

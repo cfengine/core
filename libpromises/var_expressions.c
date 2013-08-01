@@ -28,11 +28,69 @@
 #include "buffer.h"
 #include "misc_lib.h"
 #include "string_lib.h"
+#include "hashes.h"
+
+static size_t VarRefHash(const VarRef *ref)
+{
+    unsigned int h = 0;
+
+    if (VarRefIsQualified(ref))
+    {
+        const char *ns = "default";
+        int len = sizeof("default") - 1;
+        if (ref->ns)
+        {
+            ns = ref->ns;
+            len = strlen(ref->ns);
+        }
+
+        for (int i = 0; i < len; i++)
+        {
+            h += ns[i];
+            h += (h << 10);
+            h ^= (h >> 6);
+        }
+
+        len = strlen(ref->scope);
+        for (int i = 0; i < len; i++)
+        {
+            h += ref->scope[i];
+            h += (h << 10);
+            h ^= (h >> 6);
+        }
+    }
+
+    int len = strlen(ref->lval);
+    for (int i = 0; i < len; i++)
+    {
+        h += ref->lval[i];
+        h += (h << 10);
+        h ^= (h >> 6);
+    }
+
+    for (size_t k = 0; k < ref->num_indices; k++)
+    {
+        len = strlen(ref->indices[k]);
+        for (int i = 0; i < len; i++)
+        {
+            h += ref->indices[k][i];
+            h += (h << 10);
+            h ^= (h >> 6);
+        }
+    }
+
+    h += (h << 3);
+    h ^= (h >> 11);
+    h += (h << 15);
+
+    return (h & (INT_MAX - 1));
+}
 
 VarRef *VarRefCopy(const VarRef *ref)
 {
     VarRef *copy = xmalloc(sizeof(VarRef));
 
+    copy->hash = ref->hash;
     copy->ns = ref->ns ? xstrdup(ref->ns) : NULL;
     copy->scope = ref->scope ? xstrdup(ref->scope) : NULL;
     copy->lval = ref->lval ? xstrdup(ref->lval) : NULL;
@@ -53,6 +111,34 @@ VarRef *VarRefCopy(const VarRef *ref)
 
     return copy;
 }
+
+VarRef *VarRefCopyLocalized(const VarRef *ref)
+{
+    VarRef *copy = xmalloc(sizeof(VarRef));
+
+    copy->ns = NULL;
+    copy->scope = xstrdup("this");
+    copy->lval = ref->lval ? xstrdup(ref->lval) : NULL;
+
+    copy->num_indices = ref->num_indices;
+    if (ref->num_indices > 0)
+    {
+        copy->indices = xmalloc(ref->num_indices * sizeof(char*));
+        for (size_t i = 0; i < ref->num_indices; i++)
+        {
+            copy->indices[i] = xstrdup(ref->indices[i]);
+        }
+    }
+    else
+    {
+        copy->indices = NULL;
+    }
+
+    copy->hash = VarRefHash(copy);
+
+    return copy;
+}
+
 
 #ifndef NDEBUG
 static bool IndexBracketsBalance(const char *var_string)
@@ -173,6 +259,8 @@ VarRef *VarRefParseFromNamespaceAndScope(const char *qualified_name, const char 
     ref->indices = indices;
     ref->num_indices = num_indices;
 
+    ref->hash = VarRefHash(ref);
+
     return ref;
 }
 
@@ -240,18 +328,14 @@ char *VarRefToString(const VarRef *ref, bool qualified)
     assert(ref->lval);
 
     Buffer *buf = BufferNew();
-    if (qualified)
+    if (qualified && VarRefIsQualified(ref))
     {
-        if (ref->ns)
-        {
-            BufferAppend(buf, ref->ns, strlen(ref->ns));
-            BufferAppend(buf, ":", sizeof(char));
-        }
-        if (ref->scope)
-        {
-            BufferAppend(buf, ref->scope, strlen(ref->scope));
-            BufferAppend(buf, ".", sizeof(char));
-        }
+        const char *ns = ref->ns ? ref->ns : "default";
+
+        BufferAppend(buf, ns, strlen(ns));
+        BufferAppend(buf, ":", sizeof(char));
+        BufferAppend(buf, ref->scope, strlen(ref->scope));
+        BufferAppend(buf, ".", sizeof(char));
     }
 
     BufferAppend(buf, ref->lval, strlen(ref->lval));
@@ -324,6 +408,8 @@ void VarRefSetMeta(VarRef *ref, bool enabled)
             free(tmp);
         }
     }
+
+    ref->hash = VarRefHash(ref);
 }
 
 bool VarRefIsQualified(const VarRef *ref)
@@ -346,6 +432,8 @@ void VarRefQualify(VarRef *ref, const char *ns, const char *scope)
         ref->ns = xstrdup(ns);
     }
     ref->scope = xstrdup(scope);
+
+    ref->hash = VarRefHash(ref);
 }
 
 void VarRefAddIndex(VarRef *ref, const char *index)
@@ -363,14 +451,13 @@ void VarRefAddIndex(VarRef *ref, const char *index)
 
     ref->indices[ref->num_indices] = xstrdup(index);
     ref->num_indices++;
+
+    ref->hash = VarRefHash(ref);
 }
 
 int VarRefCompare(const VarRef *a, const VarRef *b)
 {
-    const char *a_ns = a->ns ? a->ns : "default";
-    const char *b_ns = b->ns ? b->ns : "default";
-
-    int ret = strcmp(a_ns, b_ns);
+    int ret = strcmp(a->lval, b->lval);
     if (ret != 0)
     {
         return ret;
@@ -382,7 +469,10 @@ int VarRefCompare(const VarRef *a, const VarRef *b)
         return ret;
     }
 
-    ret = strcmp(NULLStringToEmpty(a->lval), NULLStringToEmpty(b->lval));
+    const char *a_ns = a->ns ? a->ns : "default";
+    const char *b_ns = b->ns ? b->ns : "default";
+
+    ret = strcmp(a_ns, b_ns);
     if (ret != 0)
     {
         return ret;

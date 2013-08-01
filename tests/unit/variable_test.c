@@ -235,6 +235,12 @@ static void test_iterate_indices(void)
 
         Variable *v = VariableTableIteratorNext(iter);
         assert_true(v != NULL);
+        assert_int_equal(2, v->ref->num_indices);
+        assert_string_equal("two", v->ref->indices[0]);
+        assert_string_equal("three", v->ref->indices[1]);
+
+        v = VariableTableIteratorNext(iter);
+        assert_true(v != NULL);
         assert_int_equal(1, v->ref->num_indices);
         assert_string_equal("one", v->ref->indices[0]);
 
@@ -249,12 +255,6 @@ static void test_iterate_indices(void)
         assert_string_equal("two", v->ref->indices[0]);
         assert_string_equal("four", v->ref->indices[1]);
 
-        v = VariableTableIteratorNext(iter);
-        assert_true(v != NULL);
-        assert_int_equal(2, v->ref->num_indices);
-        assert_string_equal("two", v->ref->indices[0]);
-        assert_string_equal("three", v->ref->indices[1]);
-
         assert_false(VariableTableIteratorNext(iter) != NULL);
 
         VariableTableIteratorDestroy(iter);
@@ -267,6 +267,12 @@ static void test_iterate_indices(void)
 
         Variable *v = VariableTableIteratorNext(iter);
         assert_true(v != NULL);
+        assert_int_equal(2, v->ref->num_indices);
+        assert_string_equal("two", v->ref->indices[0]);
+        assert_string_equal("three", v->ref->indices[1]);
+
+        v = VariableTableIteratorNext(iter);
+        assert_true(v != NULL);
         assert_int_equal(1, v->ref->num_indices);
         assert_string_equal("two", v->ref->indices[0]);
 
@@ -275,12 +281,6 @@ static void test_iterate_indices(void)
         assert_int_equal(2, v->ref->num_indices);
         assert_string_equal("two", v->ref->indices[0]);
         assert_string_equal("four", v->ref->indices[1]);
-
-        v = VariableTableIteratorNext(iter);
-        assert_true(v != NULL);
-        assert_int_equal(2, v->ref->num_indices);
-        assert_string_equal("two", v->ref->indices[0]);
-        assert_string_equal("three", v->ref->indices[1]);
 
         assert_false(VariableTableIteratorNext(iter) != NULL);
 

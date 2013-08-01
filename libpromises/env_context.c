@@ -1097,26 +1097,26 @@ void EvalContextStackPushBodyFrame(EvalContext *ctx, const Body *owner, Rlist *a
     }
 }
 
-void EvalContextStackPushPromiseFrame(EvalContext *ctx, const Promise *owner)
+void EvalContextStackPushPromiseFrame(EvalContext *ctx, const Promise *owner, bool copy_bundle_context)
 {
     assert(LastStackFrame(ctx, 0) && LastStackFrame(ctx, 0)->type == STACK_FRAME_TYPE_BUNDLE);
 
     EvalContextVariableClearMatch(ctx);
 
-    EvalContextStackPushFrame(ctx, StackFrameNewPromise(owner));
+    StackFrame *frame = StackFrameNewPromise(owner);
 
-    VariableTableIterator *iter = VariableTableIteratorNew(ctx->global_variables,
-                                                           EvalContextStackCurrentBundle(ctx)->ns,
-                                                           EvalContextStackCurrentBundle(ctx)->name, NULL);
+    EvalContextStackPushFrame(ctx, frame);
 
-    Variable *bundle_var = NULL;
-    while ((bundle_var = VariableTableIteratorNext(iter)))
+    if (copy_bundle_context)
     {
-        VarRef *local_ref = VarRefCopy(bundle_var->ref);
-        VarRefQualify(local_ref, NULL, SpecialScopeToString(SPECIAL_SCOPE_THIS));
-        EvalContextVariablePut(ctx, local_ref, bundle_var->rval, bundle_var->type);
+        frame->data.promise.vars = VariableTableCopyLocalized(ctx->global_variables,
+                                                              EvalContextStackCurrentBundle(ctx)->ns,
+                                                              EvalContextStackCurrentBundle(ctx)->name);
     }
-    VariableTableIteratorDestroy(iter);
+    else
+    {
+        frame->data.promise.vars = VariableTableNew();
+    }
 }
 
 void EvalContextStackPushPromiseIterationFrame(EvalContext *ctx, const Rlist *iteration_context)
@@ -1276,9 +1276,11 @@ bool EvalContextVariablePutSpecial(EvalContext *ctx, SpecialScope scope, const c
     case SPECIAL_SCOPE_THIS:
     case SPECIAL_SCOPE_MATCH:
         {
-            VarRef ref = (VarRef) { NULL, SpecialScopeToString(scope), lval };
+            VarRef *ref = VarRefParseFromScope(lval, SpecialScopeToString(scope));
             Rval rval = (Rval) { value, DataTypeToRvalType(type) };
-            return EvalContextVariablePut(ctx, &ref, rval, type);
+            bool ret = EvalContextVariablePut(ctx, ref, rval, type);
+            VarRefDestroy(ref);
+            return ret;
         }
 
     default:
@@ -1298,8 +1300,10 @@ bool EvalContextVariableRemoveSpecial(const EvalContext *ctx, SpecialScope scope
     case SPECIAL_SCOPE_BODY:
     case SPECIAL_SCOPE_THIS:
         {
-            VarRef ref = (VarRef) { NULL, SpecialScopeToString(scope), lval };
-            return EvalContextVariableRemove(ctx, &ref);
+            VarRef *ref = VarRefParseFromScope(lval, SpecialScopeToString(scope));
+            bool ret = EvalContextVariableRemove(ctx, ref);
+            VarRefDestroy(ref);
+            return ret;
         }
 
     case SPECIAL_SCOPE_NONE:

@@ -30,4 +30,6 @@ VariableTableIterator *VariableTableIteratorNewFromVarRef(const VariableTable *t
 Variable *VariableTableIteratorNext(VariableTableIterator *iter);
 void VariableTableIteratorDestroy(VariableTableIterator *iter);
 
+VariableTable *VariableTableCopyLocalized(const VariableTable *table, const char *ns, const char *scope);
+
 #endif

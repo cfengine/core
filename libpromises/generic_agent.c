@@ -1329,7 +1329,7 @@ static void CheckVariablePromises(EvalContext *ctx, Seq *var_promises)
     for (size_t i = 0; i < SeqLength(var_promises); i++)
     {
         Promise *pp = SeqAt(var_promises, i);
-        EvalContextStackPushPromiseFrame(ctx, pp);
+        EvalContextStackPushPromiseFrame(ctx, pp, false);
         EvalContextStackPushPromiseIterationFrame(ctx, NULL);
         VerifyVarPromise(ctx, pp, allow_redefine);
         EvalContextStackPopFrame(ctx);

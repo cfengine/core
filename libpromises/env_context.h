@@ -146,7 +146,7 @@ StringSetIterator EvalContextStackFrameIteratorSoft(const EvalContext *ctx);
 
 void EvalContextStackPushBundleFrame(EvalContext *ctx, const Bundle *owner, const Rlist *args, bool inherits_previous);
 void EvalContextStackPushBodyFrame(EvalContext *ctx, const Body *owner, Rlist *args);
-void EvalContextStackPushPromiseFrame(EvalContext *ctx, const Promise *owner);
+void EvalContextStackPushPromiseFrame(EvalContext *ctx, const Promise *owner, bool copy_bundle_context);
 void EvalContextStackPushPromiseIterationFrame(EvalContext *ctx, const Rlist *iteration_context);
 void EvalContextStackPopFrame(EvalContext *ctx);
 char *EvalContextStackPath(const EvalContext *ctx);

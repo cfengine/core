@@ -529,8 +529,6 @@ static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *c
         DeleteItemList(IPADDRESSES);
         IPADDRESSES = NULL;
 
-        ScopeDeleteAll();
-
         strcpy(VDOMAIN, "undefined.domain");
 
         PolicyDestroy(*policy);

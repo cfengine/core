@@ -46,47 +46,13 @@ const char *SpecialScopeToString(SpecialScope scope);
 SpecialScope SpecialScopeFromString(const char *scope);
 
 /**
- * @deprecated
- */
-Scope *ScopeNew(const char *ns, const char *scope);
-
-/**
- * @brief Clears all variables from a scope
- * @param name
- */
-void ScopeClear(const char *ns, const char *name);
-
-/**
- * @brief find a Scope in VSCOPE
- * @param scope
- * @return
- */
-Scope *ScopeGet(const char *ns, const char *scope);
-
-/**
- * @brief clear VSCOPE
- */
-void ScopeDeleteAll(void);
-
-/**
  * @brief augments a scope, expecting corresponding lists of lvals and rvals (implying same length).
  *        in addition to copying them in, also attempts to do one-pass resolution of variables,
  *        and evaluates function calls, and attempts expansion on senior scope members.
  */
 void ScopeAugment(EvalContext *ctx, const Bundle *bp, const Promise *pp, const Rlist *arguments);
 
-void ScopeNewSpecial(EvalContext *ctx, SpecialScope scope, const char *lval, const void *rval, DataType dt);
-void ScopeDeleteSpecial(SpecialScope scope, const char *lval);
-
-void ScopeDeleteVariable(const VarRef *lval);
-bool ScopeIsReserved(const char *scope);
-
-void ScopeDeRefListsInThisScope(const Rlist *reflist);
-
 void ScopeMapBodyArgs(EvalContext *ctx, const Body *body, const Rlist *args);
-
-int CompareVariableValue(Rval a, Rval b);
-bool UnresolvedVariables(Rval rval, RvalType rtype);
 
 // TODO: namespacing utility functions. there are probably a lot of these floating around, but probably best
 // leave them until we get a proper symbol table

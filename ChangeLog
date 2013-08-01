@@ -1,3 +1,11 @@
+3.5.2
+       Bug fixes:
+       - fix segfaults in cf-pomises (Redmine #3173, 3194)
+       - fix build on Solaris 10/SmartOS (Redmine #3097)
+       - sanitize characters from /etc/issue in sys.flavor for Debian (Redmine #2988)
+       - Fix segfault when dealing with files or data > 4K (Redmine #2912, 2698)
+       - Don't truncate keys to 126 characters in getindices (Redmine #2626)
+
 3.5.1
        Changes:
        - file changes are logged with log level Notice, not Error

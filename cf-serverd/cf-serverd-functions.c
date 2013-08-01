@@ -555,10 +555,6 @@ void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *con
 
             DeleteAuthList(SV.roles);
 
-            //DeleteRlist(VINPUTLIST); This is just a pointer, cannot free it
-
-            ScopeDeleteAll();
-
             strcpy(VDOMAIN, "undefined.domain");
             POLICY_SERVER[0] = '\0';
 

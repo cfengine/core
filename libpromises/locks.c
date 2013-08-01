@@ -614,7 +614,7 @@ CfLock AcquireLock(EvalContext *ctx, char *operand, char *host, time_t now, Tran
         return this;
     }
 
-    if (RlistLen(CF_STCK) == 1)
+    if (EvalContextStackCurrentPromise(ctx))
     {
         /* Must not set promise to be done for editfiles etc */
         EvalContextMarkPromiseDone(ctx, pp);

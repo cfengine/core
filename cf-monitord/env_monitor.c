@@ -1137,7 +1137,7 @@ static void GatherPromisedMeasures(EvalContext *ctx, const Policy *policy)
         EvalContextStackPopFrame(ctx);
     }
 
-    ScopeDeleteAll();
+    EvalContextClear(ctx);
     GetNameInfo3(ctx, AGENT_TYPE_MONITOR);
     GetInterfacesInfo(ctx);
     Get3Environment(ctx, AGENT_TYPE_MONITOR);

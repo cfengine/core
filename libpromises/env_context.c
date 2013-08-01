@@ -777,7 +777,6 @@ void EvalContextDestroy(EvalContext *ctx)
 
         VariableTableDestroy(ctx->global_variables);
         VariableTableDestroy(ctx->match_variables);
-        ScopeDeleteAll();
 
         StringSetDestroy(ctx->dependency_handles);
 
@@ -888,6 +887,7 @@ void EvalContextClear(EvalContext *ctx)
     StringSetClear(ctx->heap_negated);
 
     VariableTableClear(ctx->global_variables, NULL, NULL, NULL);
+    VariableTableClear(ctx->match_variables, NULL, NULL, NULL);
     SeqClear(ctx->stack);
 }
 
@@ -1302,8 +1302,12 @@ bool EvalContextVariableRemoveSpecial(const EvalContext *ctx, SpecialScope scope
             return EvalContextVariableRemove(ctx, &ref);
         }
 
+    case SPECIAL_SCOPE_NONE:
+        assert(false && "Attempted to remove none-special variable");
+        return false;
+
     default:
-        ScopeDeleteSpecial(scope, lval);
+        assert(false && "Unhandled case in switch");
         return false;
     }
 }

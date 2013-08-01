@@ -29,7 +29,7 @@ VariableTable *VariableTableNew(void)
 {
     VariableTable *table = xmalloc(sizeof(VariableTable));
 
-    table->vars = RBTreeNew(NULL, (RBTreeKeyCompareFn*)VarRefCompare, NULL,
+    table->vars = RBTreeNew(NULL, NULL, NULL,
                             NULL, NULL, (RBTreeValueDestroyFn*)VariableDestroy);
 
     return table;
@@ -46,20 +46,20 @@ void VariableTableDestroy(VariableTable *table)
 
 Variable *VariableTableGet(const VariableTable *table, const VarRef *ref)
 {
-    return RBTreeGet(table->vars, ref);
+    return RBTreeGet(table->vars, (void *)ref->hash);
 }
 
 bool VariableTableRemove(VariableTable *table, const VarRef *ref)
 {
-    return RBTreeRemove(table->vars, ref);
+    return RBTreeRemove(table->vars, (void *)ref->hash);
 }
 
-static Variable *VariableNew(const VarRef *ref, const Rval *rval, DataType type)
+static Variable *VariableNew(VarRef *ref, Rval rval, DataType type)
 {
     Variable *var = xmalloc(sizeof(Variable));
 
-    var->ref = VarRefCopy(ref);
-    var->rval = RvalCopy(*rval);
+    var->ref = ref;
+    var->rval = rval;
     var->type = type;
 
     return var;
@@ -79,8 +79,8 @@ bool VariableTablePut(VariableTable *table, const VarRef *ref, const Rval *rval,
     }
     else
     {
-        var = VariableNew(ref, rval, type);
-        return RBTreePut(table->vars, var->ref, var);
+        var = VariableNew(VarRefCopy(ref), RvalCopy(*rval), type);
+        return RBTreePut(table->vars, (void *)var->ref->hash, var);
     }
 }
 
@@ -93,13 +93,13 @@ bool VariableTableClear(VariableTable *table, const char *ns, const char *scope,
         return has_vars;
     }
 
-    RBTree *remove_set = RBTreeNew(NULL, (RBTreeKeyCompareFn*)VarRefCompare, NULL, NULL, NULL, NULL);
+    RBTree *remove_set = RBTreeNew(NULL, NULL, NULL, NULL, NULL, NULL);
 
     {
         VariableTableIterator *iter = VariableTableIteratorNew(table, ns, scope, lval);
         for (Variable *v = VariableTableIteratorNext(iter); v; v = VariableTableIteratorNext(iter))
         {
-            RBTreePut(remove_set, v->ref, NULL);
+            RBTreePut(remove_set, (void *)v->ref->hash, v);
         }
         VariableTableIteratorDestroy(iter);
     }
@@ -115,11 +115,11 @@ bool VariableTableClear(VariableTable *table, const char *ns, const char *scope,
 
     {
         RBTreeIterator *iter = RBTreeIteratorNew(remove_set);
-        VarRef *ref_key = NULL;
-        void *dummy = NULL;
-        while (RBTreeIteratorNext(iter, (void **)&ref_key, &dummy))
+        void *ref_key = NULL;
+        Variable *var = NULL;
+        while (RBTreeIteratorNext(iter, &ref_key, (void **)&var))
         {
-            if (VariableTableRemove(table, ref_key))
+            if (VariableTableRemove(table, var->ref))
             {
                 removed++;
             }
@@ -171,31 +171,31 @@ VariableTableIterator *VariableTableIteratorNew(const VariableTable *table, cons
 
 Variable *VariableTableIteratorNext(VariableTableIterator *iter)
 {
-    VarRef *key_ref = NULL;
-    Variable *value_var = NULL;
+    void *key_ref = NULL;
+    Variable *var = NULL;
 
-    while (RBTreeIteratorNext(iter->iter, (void **)&key_ref, (void **)&value_var))
+    while (RBTreeIteratorNext(iter->iter, &key_ref, (void **)&var))
     {
-        const char *key_ns = key_ref->ns ? key_ref->ns : "default";
+        const char *key_ns = var->ref->ns ? var->ref->ns : "default";
 
         if (iter->ref->ns && strcmp(key_ns, iter->ref->ns) != 0)
         {
             continue;
         }
 
-        if (iter->ref->scope && strcmp(key_ref->scope, iter->ref->scope) != 0)
+        if (iter->ref->scope && strcmp(var->ref->scope, iter->ref->scope) != 0)
         {
             continue;
         }
 
-        if (iter->ref->lval && strcmp(key_ref->lval, iter->ref->lval) != 0)
+        if (iter->ref->lval && strcmp(var->ref->lval, iter->ref->lval) != 0)
         {
             continue;
         }
 
         if (iter->ref->num_indices > 0)
         {
-            if (iter->ref->num_indices > key_ref->num_indices)
+            if (iter->ref->num_indices > var->ref->num_indices)
             {
                 continue;
             }
@@ -203,7 +203,7 @@ Variable *VariableTableIteratorNext(VariableTableIterator *iter)
             bool match = true;
             for (size_t i = 0; i < iter->ref->num_indices; i++)
             {
-                if (strcmp(key_ref->indices[i], iter->ref->indices[i]) != 0)
+                if (strcmp(var->ref->indices[i], iter->ref->indices[i]) != 0)
                 {
                     match = false;
                     break;
@@ -216,7 +216,7 @@ Variable *VariableTableIteratorNext(VariableTableIterator *iter)
             }
         }
 
-        return value_var;
+        return var;
     }
 
     return NULL;
@@ -230,4 +230,20 @@ void VariableTableIteratorDestroy(VariableTableIterator *iter)
         RBTreeIteratorDestroy(iter->iter);
         free(iter);
     }
+}
+
+VariableTable *VariableTableCopyLocalized(const VariableTable *table, const char *ns, const char *scope)
+{
+    VariableTable *localized_copy = VariableTableNew();
+
+    VariableTableIterator *iter = VariableTableIteratorNew(table, ns, scope, NULL);
+    Variable *foreign_var = NULL;
+    while ((foreign_var = VariableTableIteratorNext(iter)))
+    {
+        Variable *localized_var = VariableNew(VarRefCopyLocalized(foreign_var->ref), RvalCopy(foreign_var->rval), foreign_var->type);
+        RBTreePut(localized_copy->vars, (void *)localized_var->ref->hash, localized_var);
+    }
+    VariableTableIteratorDestroy(iter);
+
+    return localized_copy;
 }

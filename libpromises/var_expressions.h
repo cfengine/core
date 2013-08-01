@@ -32,6 +32,7 @@
 
 typedef struct
 {
+    size_t hash;
     char *ns;
     char *scope;
     char *lval;
@@ -40,6 +41,7 @@ typedef struct
 } VarRef;
 
 VarRef *VarRefCopy(const VarRef *ref);
+VarRef *VarRefCopyLocalized(const VarRef *ref);
 
 VarRef *VarRefParse(const char *var_ref_string);
 

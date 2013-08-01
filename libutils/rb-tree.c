@@ -37,6 +37,10 @@ struct RBTreeIterator_
     RBNode *curr;
 };
 
+static void PutFix_(RBTree *tree, RBNode *z);
+static RBNode *Next_(const RBTree *tree, const RBNode *node);
+static void VerifyTree_(RBTree *tree);
+
 static int PointerCompare_(const void *a, const void *b)
 {
     return a - b;
@@ -125,6 +129,59 @@ static void TreeDestroy_(RBTree *tree, RBNode *x)
         TreeDestroy_(tree, x->right);
         NodeDestroy_(tree, x);
     }
+}
+
+RBTree *RBTreeCopy(const RBTree *tree, RBTreePredicate *filter, void *user_data)
+{
+    RBNode **nodes = xmalloc(tree->size * sizeof(RBNode *));
+    size_t node_count = 0;
+
+    {
+        RBTreeIterator *iter = NULL;
+        for (iter = RBTreeIteratorNew(tree); iter->curr != iter->tree->nil; iter->curr = Next_(iter->tree, iter->curr))
+        {
+            if (!filter || filter(iter->curr->key, iter->curr->value, user_data))
+            {
+                nodes[node_count] = iter->curr;
+                node_count++;
+            }
+        }
+        RBTreeIteratorDestroy(iter);
+    }
+
+    RBTree *copy = RBTreeNew(tree->KeyCopy, tree->KeyCompare, tree->KeyDestroy,
+                             tree->ValueCopy, tree->ValueCompare, tree->ValueDestroy);
+
+    RBNode *node = NULL;
+    // [0, 1, 2, 3, 4]
+    if ((node_count % 2) != 0)
+    {
+        node = nodes[node_count / 2];
+        RBTreePut(copy, node->key, node->value);
+        node_count--;
+    }
+    else
+    {
+        node = copy->root;
+    }
+
+    assert((node_count % 2) == 0);
+
+    // [0, 1, 2, 3]
+    for (size_t i = 0; i < (node_count / 2); i += 1)
+    {
+        node = nodes[(node_count / 2) + i];
+        RBTreePut(copy, node->key, node->value);
+
+        node = nodes[(node_count / 2) - i - 1];
+        RBTreePut(copy, node->key, node->value);
+    }
+
+    free(nodes);
+
+    VerifyTree_(copy);
+
+    return copy;
 }
 
 bool RBTreeEqual(const void *_a, const void *_b)
@@ -626,4 +683,49 @@ bool RBTreeIteratorNext(RBTreeIterator *iter, void **key, void **value)
 void RBTreeIteratorDestroy(void *_rb_iter)
 {
     free(_rb_iter);
+}
+
+static void VerifyNode_(RBTree *tree, RBNode *node, int black_count, int *path_black_count)
+{
+    if (node->red)
+    {
+        assert(!node->left->red);
+        assert(!node->right->red);
+    }
+    else
+    {
+        black_count++;
+    }
+
+    if (node == tree->nil)
+    {
+        assert(!node->red);
+        if ((*path_black_count) == -1)
+        {
+            *path_black_count = black_count;
+        }
+        else
+        {
+            assert(black_count == *path_black_count);
+        }
+    }
+    else
+    {
+        VerifyNode_(tree, node->left, black_count, path_black_count);
+        VerifyNode_(tree, node->right, black_count, path_black_count);
+    }
+}
+
+static void VerifyTree_(RBTree *tree)
+{
+    assert(!tree->root->red);
+    assert(!tree->root->key);
+    assert(!tree->root->value);
+
+    assert(!tree->nil->red);
+    assert(!tree->nil->key);
+    assert(!tree->nil->value);
+
+    int path_black_count = -1;
+    VerifyNode_(tree, tree->root->left, 0, &path_black_count);
 }

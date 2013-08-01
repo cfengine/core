@@ -13,6 +13,8 @@ typedef void *RBTreeValueCopyFn(const void *key);
 typedef int RBTreeValueCompareFn(const void *a, const void *b);
 typedef void RBTreeValueDestroyFn(void *key);
 
+typedef bool RBTreePredicate(const void *key, const void *value, void *user_data);
+
 RBTree *RBTreeNew(RBTreeKeyCopyFn *key_copy,
                   RBTreeKeyCompareFn *key_compare,
                   RBTreeKeyDestroyFn *key_destroy,
@@ -20,8 +22,9 @@ RBTree *RBTreeNew(RBTreeKeyCopyFn *key_copy,
                   RBTreeValueCompareFn *value_compare,
                   RBTreeValueDestroyFn *value_destroy);
 
-bool RBTreeEqual(const void *a, const void *b);
+RBTree *RBTreeCopy(const RBTree *tree, RBTreePredicate *filter, void *user_data);
 
+bool RBTreeEqual(const void *a, const void *b);
 void RBTreeDestroy(void *rb_tree);
 
 bool RBTreePut(RBTree *tree, const void *key, const void *value);

@@ -157,7 +157,7 @@ static void ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp, Rlist *listv
     char v[CF_MAXVARSIZE];
     int cutoff = 0;
 
-    EvalContextStackPushPromiseFrame(ctx, pp);
+    EvalContextStackPushPromiseFrame(ctx, pp, true);
 
     lol = NewIterationContext(ctx, pp, listvars);
 

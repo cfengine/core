@@ -89,7 +89,6 @@ typedef struct ServerConnectionState
     ConnectionInfo conn_info;
     int synchronized;
     int trust;
-    unsigned char digest[EVP_MAX_MD_SIZE + 1];
     char hostname[CF_MAXVARSIZE];
     char username[CF_MAXVARSIZE];
 #ifdef __MINGW32__

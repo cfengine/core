@@ -177,6 +177,10 @@ bool ServerTLSInitialize()
     SSL_CTX_set_options(SSLSERVERCONTEXT,
                         SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3);
 
+    /* Never bother with retransmissions, SSL_write() and SSL_read() should
+     * always either write/read the whole amount or fail. */
+    SSL_CTX_set_mode(SSLSERVERCONTEXT, SSL_MODE_AUTO_RETRY);
+
     /*
      * Create cert into memory and load it into SSL context.
      */
@@ -314,7 +318,8 @@ int ServerStartTLS(ConnectionInfo *conn_info)
             /*
              * TLS channel established, start talking!
              */
-            Log (LOG_LEVEL_INFO, "TLS session established, checking trust...");
+            Log (LOG_LEVEL_VERBOSE,
+                 "TLS session established, checking trust...");
             break;
         }
         ++total_tries;
@@ -598,6 +603,154 @@ static void *HandleConnection(ServerConnectionState *conn)
 
     DeleteConn(conn);
     return NULL;
+}
+
+
+/* The only protocol we support inside TLS, for now... */
+#define SERVER_PROTOCOL_VERSION 1
+
+/**
+ * @return >0: the version that was negotiated
+ *          0: no agreement on version was reached
+ *         -1: error
+ */
+int ServerNegotiateProtocol(const ConnectionInfo *conn_info)
+{
+    int ret;
+    char input[CF_SMALLBUF] = "";
+
+    /* Send "CFE_v%d cf-serverd version". */
+    char version_string[CF_MAXVARSIZE];
+    int len = snprintf(version_string, sizeof(version_string),
+                       "CFE_v%d cf-serverd %s\n",
+                       SERVER_PROTOCOL_VERSION, VERSION);
+
+    ret = TLSSend(conn_info->ssl, version_string, len);
+    if (ret != len)
+    {
+        Log(LOG_LEVEL_ERR, "Connection was hung up!");
+        return -1;
+    }
+
+    /* Receive CFE_v%d ... */
+    ret = TLSRecvLine(conn_info->ssl, input, sizeof(input));
+
+    int version_received = -1;
+    ret = sscanf(input, "CFE_v%d", &version_received);
+    if (ret != 1)
+    {
+        Log(LOG_LEVEL_ERR,
+            "Protocol version negotiation failed! Received: %s",
+            input);
+        return -1;
+    }
+
+    /* For now we support only one version, so just check they match... */
+    if (version_received == SERVER_PROTOCOL_VERSION)
+    {
+        char s[] = "OK\n";
+        TLSSend(conn_info->ssl, s, sizeof(s)-1);
+        return version_received;
+    }
+    else
+    {
+        char s[] = "BAD unsupported protocol version\n";
+        TLSSend(conn_info->ssl, s, sizeof(s)-1);
+        Log(LOG_LEVEL_ERR,
+            "Client advertises unsupported protocol version: %d", version_received);
+        return 0;
+    }
+}
+
+/**
+ * @brief Return the client's username into the #username variable
+ * @TODO More protocol identity: IDENTIFY USERNAME=xxx HOSTNAME=xxx CUSTOMNAME=xxx
+ * @return 1 if IDENTITY command was parsed correctly. Identity fields
+ *         (only #username for now) have the respective string values, or they are
+ *         empty if field was not on IDENTITY line.
+ * @return -1 in case of error.
+ */
+int ServerIdentifyClient(const ConnectionInfo *conn_info,
+                         char *username, size_t username_size)
+{
+    char line[1024], word1[1024], word2[1024];
+    int line_pos = 0, chars_read = 0;
+    int ret;
+
+    /* Reset all identity variables, we'll set them later according to fields
+     * on IDENTITY line. For now only "username" setting exists... */
+    username[0] = '\0';
+
+    ret = TLSRecvLine(conn_info->ssl, line, sizeof(line));
+    if (ret <= 0)
+    {
+        return -1;
+    }
+
+    /* Assert sscanf() is safe to use. */
+    assert(sizeof(word1)>=sizeof(line) && sizeof(word2)>=sizeof(line));
+
+    ret = sscanf(line, "IDENTITY %[^=]=%s %n", word1, word2, &chars_read);
+    while (ret >= 2)
+    {
+        /* Found USERNAME identity setting */
+        if (strcmp(word1, "USERNAME") == 0)
+        {
+            if (strlen(word2) < username_size)
+            {
+                strcpy(username, word2);
+            }
+            else
+            {
+                Log(LOG_LEVEL_ERR, "IDENTITY parameter too long: %s=%s",
+                    word1, word2);
+                return -1;
+            }
+            Log(LOG_LEVEL_VERBOSE, "Setting IDENTITY: %s=%s",
+                word1, word2);
+        }
+        else
+        {
+            Log(LOG_LEVEL_VERBOSE, "Received unknown IDENTITY parameter: %s=%s",
+                word1, word2);
+        }
+
+        line_pos += chars_read;
+        ret = sscanf(&line[line_pos], " %[^=]=%s %n", word1, word2, &chars_read);
+    }
+
+    return 1;
+}
+
+int ServerSendWelcome(const ServerConnectionState *conn)
+{
+    char s[1024] = "OK WELCOME";
+    size_t len = strlen(s);
+    int ret;
+
+    if (conn->username[0] != '\0')
+    {
+        ret = snprintf(&s[len], sizeof(s) - len, " %s=%s",
+                           "USERNAME", conn->username);
+        if (ret >= sizeof(s) - len)
+        {
+            Log(LOG_LEVEL_ERR, "Sending OK WELCOME message truncated: %s", s);
+            return -1;
+        }
+        len += ret;
+    }
+
+    /* Overwrite the terminating '\0', we don't need it anyway. */
+    s[len] = '\n';
+    len++;
+
+    ret = TLSSend(conn->conn_info.ssl, s, len);
+    if (ret == -1)
+    {
+        return -1;
+    }
+
+    return 1;
 }
 
 /*********************************************************************/
@@ -1164,33 +1317,78 @@ static int CFEngine_Classic_Protocol(EvalContext *ctx, ServerConnectionState *co
         }
         else
         {
-            /* TODO we need the public key hash in lastseen to be specified by both username+ip+hostname! */
-            /*
-             * TODO agent identity should be *KEY* and each on each connection a new username+ip+hostname
-             *      entry should be recorded in lastseen.
-             * By default a specific *KEY* is denied access if any of the other properties have changed.
-             * However they can be set as "flexible", e.g. flexible-IP would allow address to change.
-             */
-            /* TODO we need the username inside the certificate we receive, so that we extract and check with no CAUTH.  */
+            int ret;
 
-            int ret = TLSVerifyPeer(conn->conn_info.ssl, conn->ipaddr, "root");
-            if (ret == 1)
+            /* Send/Receive "CFE_v%d" version string and agree on version. */
+            ret = ServerNegotiateProtocol(&conn->conn_info);
+            if (ret <= 0)
             {
-                Log(LOG_LEVEL_INFO, "Client is TRUSTED, public key MATCHES stored one.");
-                /* skipping CAUTH */
-                conn->id_verified = 1;
-                /* skipping SAUTH, allow access to read-only files too */
-                conn->rsa_auth = 1;
-                return true;
-            }
-            else if (ret == 0)
-            {
-                Log(LOG_LEVEL_ERR, "Client's public key DIFFERS from the one stored!");
-                Log(LOG_LEVEL_ERR, "TRUST FAILED, WARNING: possible MAN IN THE MIDDLE attack!");
-                Log(LOG_LEVEL_ERR, "Open server's ACL if you really want to start trusting this new key.");
                 return false;
             }
-            return false;
+
+            /* Receive IDENTITY USER=asdf plain string. */
+            ret = ServerIdentifyClient(&conn->conn_info, conn->username,
+                                       sizeof(conn->username));
+            if (ret != 1)
+            {
+                return false;
+            }
+
+            /* We *now* (maybe a bit late) verify the key that the client sent
+             * us in the TLS handshake, since we need the username to do
+             * so. TODO in the future store keys irrelevant of username, so
+             * that we can match them before IDENTIFY. */
+            ret = TLSVerifyPeer(&conn->conn_info, conn->ipaddr, conn->username);
+            if (ret == -1)                                      /* error */
+            {
+                return false;
+            }
+
+            if (ret == 1)                                    /* trusted key */
+            {
+                Log(LOG_LEVEL_VERBOSE,
+                    "%s: Client is TRUSTED, public key MATCHES stored one.",
+                    conn->conn_info.remote_keyhash_str);
+            }
+
+            if (ret == 0)                                  /* untrusted key */
+            {
+                Log(LOG_LEVEL_WARNING,
+                    "%s: Client's public key is UNKNOWN!",
+                    conn->conn_info.remote_keyhash_str);
+
+                if ((SV.trustkeylist != NULL) &&
+                    (IsMatchItemIn(SV.trustkeylist, MapAddress(conn->ipaddr))))
+                {
+                    Log(LOG_LEVEL_VERBOSE,
+                        "Host %s was found in the \"trustkeysfrom\" list",
+                        conn->ipaddr);
+                    Log(LOG_LEVEL_WARNING,
+                        "%s: Explicitly trusting this key from now on.",
+                        conn->conn_info.remote_keyhash_str);
+
+                    conn->trust = true;
+                    SavePublicKey("root", conn->conn_info.remote_keyhash_str,
+                                  conn->conn_info.remote_key);
+                }
+                else
+                {
+                    Log(LOG_LEVEL_ERR, "TRUST FAILED, WARNING: possible MAN IN THE MIDDLE attack, dropping connection!");
+                    Log(LOG_LEVEL_ERR, "Open server's ACL if you really want to start trusting this new key.");
+                    return false;
+                }
+            }
+
+            /* skipping CAUTH */
+            conn->id_verified = 1;
+            /* skipping SAUTH, allow access to read-only files */
+            conn->rsa_auth = 1;
+            LastSaw1(conn->ipaddr, conn->conn_info.remote_keyhash_str,
+                     LAST_SEEN_ROLE_ACCEPT);
+
+            ServerSendWelcome(conn);
+
+            return true;
         }
         break;
 
@@ -2869,7 +3067,9 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
         {
             err = ERR_get_error();
 
-            Log(LOG_LEVEL_ERR, "Private decrypt failed = '%s'", ERR_reason_error_string(err));
+            Log(LOG_LEVEL_ERR,
+                "Private decrypt failed = '%s'. Probably the client has the wrong public key for this server",
+                ERR_reason_error_string(err));
             free(decrypted_nonce);
             return false;
         }
@@ -2942,15 +3142,16 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
         return false;
     }
 
-    HashPubKey(newkey, conn->digest, CF_DEFAULT_DIGEST);
+    /* Compute and store hash of the client's public key. */
+    HashPubKey(newkey, conn->conn_info.remote_keyhash, CF_DEFAULT_DIGEST);
+    HashPrintSafe(CF_DEFAULT_DIGEST, conn->conn_info.remote_keyhash,
+                  conn->conn_info.remote_keyhash_str);
 
-    {
-        char buffer[EVP_MAX_MD_SIZE * 4];
-        Log(LOG_LEVEL_VERBOSE, "Public key identity of host '%s' is '%s'", conn->ipaddr,
-              HashPrintSafe(CF_DEFAULT_DIGEST, conn->digest, buffer));
-    }
+    Log(LOG_LEVEL_VERBOSE, "Public key identity of host '%s' is '%s'",
+        conn->ipaddr, conn->conn_info.remote_keyhash_str);
 
-    LastSaw(conn->ipaddr, conn->digest, LAST_SEEN_ROLE_ACCEPT);
+    LastSaw1(conn->ipaddr, conn->conn_info.remote_keyhash_str,
+             LAST_SEEN_ROLE_ACCEPT);
 
     if (!CheckStoreKey(conn, newkey))   /* conceals proposition S1 */
     {
@@ -4049,9 +4250,9 @@ static int CheckStoreKey(ServerConnectionState *conn, RSA *key)
 {
     RSA *savedkey;
     char udigest[CF_MAXVARSIZE];
-    char buffer[EVP_MAX_MD_SIZE * 4];
 
-    snprintf(udigest, CF_MAXVARSIZE - 1, "%s", HashPrintSafe(CF_DEFAULT_DIGEST, conn->digest, buffer));
+    snprintf(udigest, CF_MAXVARSIZE - 1, "%s",
+             conn->conn_info.remote_keyhash_str);
 
     if ((savedkey = HavePublicKey(conn->username, MapAddress(conn->ipaddr), udigest)))
     {
@@ -4078,7 +4279,6 @@ static int CheckStoreKey(ServerConnectionState *conn, RSA *key)
     {
         Log(LOG_LEVEL_VERBOSE, "Host %s/%s was found in the list of hosts to trust", conn->hostname, conn->ipaddr);
         conn->trust = true;
-        /* conn->maproot = false; ?? */
         SendTransaction(&conn->conn_info, "OK: unknown key was accepted on trust", 0, CF_DONE);
         SavePublicKey(conn->username, udigest, key);
         return true;
@@ -4114,12 +4314,13 @@ static ServerConnectionState *NewConn(EvalContext *ctx, int sd)
        return NULL;
     }
 
-    conn = xmalloc(sizeof(ServerConnectionState));
+    conn = xcalloc(1, sizeof(*conn));
 
     conn->ctx = ctx;
     conn->conn_info.type = CF_PROTOCOL_CLASSIC;
     conn->conn_info.sd = sd;
     conn->conn_info.ssl = NULL;
+    conn->conn_info.remote_key = NULL;
     conn->id_verified = false;
     conn->rsa_auth = false;
     conn->trust = false;
@@ -4128,6 +4329,7 @@ static ServerConnectionState *NewConn(EvalContext *ctx, int sd)
     conn->username[0] = '\0';
     conn->session_key = NULL;
     conn->encryption_type = 'c';
+    conn->maproot = false;      /* Only public files (chmod o+r) accessible */
 
     Log(LOG_LEVEL_DEBUG, "New socket %d", sd);
 
@@ -4155,10 +4357,13 @@ static void DeleteConn(ServerConnectionState *conn)
                         conn->conn_info.type);
     }
 
-    if (conn->session_key != NULL)
+    free(conn->session_key);
+
+    if (conn->conn_info.remote_key != NULL)
     {
-        free(conn->session_key);
+        RSA_free(conn->conn_info.remote_key);
     }
+
     if (conn->ipaddr != NULL)
     {
         if (!ThreadLock(cft_count))

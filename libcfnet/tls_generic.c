@@ -30,9 +30,10 @@
 
 /* TODO move crypto.h to libutils */
 #include "crypto.h"                                    /* HavePublicKeyByIP */
+#include "files_hashes.h"                              /* HashPubKey */
 
 /**
- * This is an always succeeding callback for SSL_CTX_set_cert_verify_callback().
+ * this is an always succeeding callback for SSL_CTX_set_cert_verify_callback().
  *
  * Verifying with a callback is the best way, *but* OpenSSL does not provide a
  * thread-safe way to passing a pointer with custom data (connection info). So
@@ -50,12 +51,14 @@ int TLSVerifyCallback(X509_STORE_CTX *ctx ARG_UNUSED,
  *         to be the same with the stored one for that host.
  * @return 0 if the certificates differ.
  * @return -1 in case of other error (error will be Log()ed).
+ * @note When return value is != -1 (so no error occured) the #conn_info struct
+ *       should have been populated, with key received and its hash.
  */
-int TLSVerifyPeer(SSL *ssl, const char *remoteip, const char *username)
+int TLSVerifyPeer(ConnectionInfo *conn_info, const char *remoteip, const char *username)
 {
     int ret, retval;
 
-    X509 *received_cert = SSL_get_peer_certificate(ssl);
+    X509 *received_cert = SSL_get_peer_certificate(conn_info->ssl);
     if (received_cert == NULL)
     {
         Log(LOG_LEVEL_ERR,
@@ -72,15 +75,31 @@ int TLSVerifyPeer(SSL *ssl, const char *remoteip, const char *username)
         retval = -1;
         goto ret2;
     }
+    if (EVP_PKEY_type(received_pubkey->type) != EVP_PKEY_RSA)
+    {
+        Log(LOG_LEVEL_ERR,
+            "Received key of unknown type, only RSA currently supported!");
+        retval = -1;
+        goto ret2;
+    }
+
+    conn_info->remote_key = EVP_PKEY_get1_RSA(received_pubkey);
+
+    /* Store the hash, we need it for various stuff during connection. */
+    HashPubKey(conn_info->remote_key, conn_info->remote_keyhash,
+               CF_DEFAULT_DIGEST);
+    HashPrintSafe(CF_DEFAULT_DIGEST, conn_info->remote_keyhash,
+                  conn_info->remote_keyhash_str);
 
     /*
      * Compare the key received with the one stored.
      */
-    RSA *expected_rsa_key = HavePublicKeyByIP(username, remoteip);
+    RSA *expected_rsa_key = HavePublicKey(username, remoteip,
+                                          conn_info->remote_keyhash_str);
     if (expected_rsa_key == NULL)
     {
-        Log(LOG_LEVEL_ERR, "HavePublicKeyByIP err");
-        retval = -1;
+        /* Log(LOG_LEVEL_ERR, "HavePublicKeyByIP err"); */
+        retval = 0;                                        /* KEY NOT FOUND */
         goto ret3;
     }
 
@@ -217,6 +236,8 @@ int TLSSend(SSL *ssl, const char *buffer, int length)
     return sent;
 }
 
+/* TODO TLSRecvPersist(). */
+
 /**
  * @brief Receives data from the SSL session and stores it on the buffer.
  * @param ssl SSL information.
@@ -304,4 +325,47 @@ int TLSRecv(SSL *ssl, char *buffer, int length)
     } while (total_tries <= DEFAULT_TLS_TRIES);
     buffer[received] = '\0';
     return received;
+}
+
+/**
+ * @brief Repeat receiving until we get a full line (i.e. received buffer ends
+ *        with line terminator).
+ * @return Line is '\0'-terminated and put in #line. Return value is line
+ *         length (including '\0') or -1 in case of error.
+ */
+int TLSRecvLine(SSL *ssl, char *line, size_t line_size)
+{
+    int ret;
+    int got = 0;
+    line_size -= 1;               /* Reserve one space for terminating '\0' */
+
+    /* Repeat until we receive end of line. */
+    do
+    {
+        line[got] = '\0';
+        ret = TLSRecv(ssl, &line[got], line_size - got);
+        if (ret <= 0)
+        {
+            Log(LOG_LEVEL_ERR,
+                "Connection was hung up while receiving line: %s",
+                line);
+            return -1;
+        }
+        got += ret;
+    }
+    while ((line[got-1] != '\n') && (got < line_size));
+
+    /* Append terminating '\0', there is room because line_size is -1. */
+    line[got] = '\0';
+
+    if (got >= line_size)                   /* Can only be got == line_size */
+    {
+        Log(LOG_LEVEL_ERR,
+            "Received line too long, hanging up! Length %d, line: %s",
+            got, line);
+        return -1;
+    }
+
+    Log(LOG_LEVEL_DEBUG, "TLSRecvLine() %d bytes long: %s", got, line);
+    return got;
 }

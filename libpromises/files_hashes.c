@@ -204,10 +204,10 @@ char *HashPrintSafe(HashMethod type, unsigned char digest[EVP_MAX_MD_SIZE + 1], 
     switch (type)
     {
     case HASH_METHOD_MD5:
-        sprintf(buffer, "MD5=  ");
+        strcpy(buffer, "MD5=");
         break;
     default:
-        sprintf(buffer, "SHA=  ");
+        strcpy(buffer, "SHA=");
         break;
     }
 

@@ -217,6 +217,11 @@ bool LoadSecretKeys(const char *policy_server)
 
 /*********************************************************************/
 
+/**
+ * @brief Search for a key just like HavePublicKey(), but get the
+ *        hash value from lastseen db.
+ * @return NULL if the key was not found in any form.
+ */
 RSA *HavePublicKeyByIP(const char *username, const char *ipaddress)
 {
     char hash[CF_MAXVARSIZE];
@@ -236,6 +241,12 @@ RSA *HavePublicKeyByIP(const char *username, const char *ipaddress)
 
 /*********************************************************************/
 
+/**
+ * @brief Search for a key:
+ *        1. username-hash.pub
+ *        2. username-ip.pub
+ * @return NULL if key not found in any form
+ */
 RSA *HavePublicKey(const char *username, const char *ipaddress, const char *digest)
 {
     char keyname[CF_MAXVARSIZE], newname[CF_BUFSIZE], oldname[CF_BUFSIZE];

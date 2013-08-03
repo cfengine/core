@@ -64,6 +64,10 @@ bool TLSClientInitialize()
     SSL_CTX_set_options(SSLCLIENTCONTEXT,
                         SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3);
 
+    /* Never bother with retransmissions, SSL_write() and SSL_read() should
+     * always either write/read the whole amount or fail. */
+    SSL_CTX_set_mode(SSLCLIENTCONTEXT, SSL_MODE_AUTO_RETRY);
+
     /*
      * Create cert into memory and load it into context.
      */

@@ -233,6 +233,7 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
 
 /* We assume that the server bound to the remote socket is the official one i.e. = root's */
 
+    /* Ask the server to send us the public key if we don't have it. */
     if ((server_pubkey = HavePublicKeyByIP(conn->username, conn->remoteip)))
     {
         implicitly_trust_server = false;
@@ -246,8 +247,9 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
 
 // Server pubkey is what we want to has as a unique ID
 
-    snprintf(sendbuffer, sizeof(sendbuffer), "SAUTH %c %d %d %c", implicitly_trust_server ? 'n': 'y', encrypted_len,
-             nonce_len, enterprise_field);
+    snprintf(sendbuffer, sizeof(sendbuffer), "SAUTH %c %d %d %c",
+             implicitly_trust_server ? 'n': 'y',
+             encrypted_len, nonce_len, enterprise_field);
 
     out = xmalloc(encrypted_len);
 
@@ -474,11 +476,11 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
     if (server_pubkey != NULL)
     {
         char buffer[EVP_MAX_MD_SIZE * 4];
-        HashPubKey(server_pubkey, conn->digest, CF_DEFAULT_DIGEST);
+        HashPubKey(server_pubkey, conn->conn_info.remote_keyhash, CF_DEFAULT_DIGEST);
         Log(LOG_LEVEL_VERBOSE, "Public key identity of host '%s' is '%s'", conn->remoteip,
-              HashPrintSafe(CF_DEFAULT_DIGEST, conn->digest, buffer));
+              HashPrintSafe(CF_DEFAULT_DIGEST, conn->conn_info.remote_keyhash, buffer));
         SavePublicKey(conn->username, buffer, server_pubkey);       // FIXME: username is local
-        LastSaw(conn->remoteip, conn->digest, LAST_SEEN_ROLE_CONNECT);
+        LastSaw(conn->remoteip, conn->conn_info.remote_keyhash, LAST_SEEN_ROLE_CONNECT);
     }
 
     free(out);

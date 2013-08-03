@@ -35,6 +35,7 @@ AgentConnection *NewAgentConn(const char *server_name)
     conn->conn_info.type = CF_PROTOCOL_UNDEFINED;
     conn->conn_info.sd = SOCKET_INVALID;
     conn->conn_info.ssl = NULL;
+    conn->conn_info.remote_key = NULL;
     conn->family = AF_INET;
     conn->trust = false;
     conn->encryption_type = 'c';
@@ -53,10 +54,15 @@ void DeleteAgentConn(AgentConnection *conn)
         free(sps);
     }
 
-    if (conn->conn_info.type == CF_PROTOCOL_TLS)
+    if (conn->conn_info.remote_key != NULL)
+    {
+        RSA_free(conn->conn_info.remote_key);
+    }
+    if (conn->conn_info.ssl != NULL)
     {
         SSL_free(conn->conn_info.ssl);
     }
+
     free(conn->session_key);
     free(conn->this_server);
 

@@ -31,9 +31,10 @@
 
 
 int TLSVerifyCallback(X509_STORE_CTX *ctx, void *arg);
-int TLSVerifyPeer(SSL *ssl, const char *remoteip, const char *username);
+int TLSVerifyPeer(ConnectionInfo *conn_info, const char *remoteip, const char *username);
 
 int TLSSend(SSL *ssl, const char *buffer, int length);
 int TLSRecv(SSL *ssl, char *buffer, int length);
+int TLSRecvLine(SSL *ssl, char *line, size_t line_size);
 
 #endif

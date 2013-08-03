@@ -109,8 +109,11 @@ typedef enum
 typedef struct
 {
     ProtocolVersion type;
-    int sd;                                            /* Socket descriptor */
+    int sd;                           /* Socket descriptor */
     SSL *ssl;                         /* OpenSSL struct for TLS connections */
+    RSA *remote_key;
+    char remote_keyhash[EVP_MAX_MD_SIZE];       /* key hash */
+    char remote_keyhash_str[EVP_MAX_MD_SIZE*4]; /* key hash as a SHA=... string */
 } ConnectionInfo;
 
 typedef struct
@@ -123,7 +126,6 @@ typedef struct
     /* Unused for now... */
     /* char localip[CF_MAX_IP_LEN]; */
     char remoteip[CF_MAX_IP_LEN];
-    unsigned char digest[EVP_MAX_MD_SIZE + 1];
     unsigned char *session_key;
     char encryption_type;
     short error;

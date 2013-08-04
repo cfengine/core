@@ -25,10 +25,12 @@
 #ifndef CFENGINE_SERVER_H
 #define CFENGINE_SERVER_H
 
+
 #include "cf3.defs.h"
 #include "cfnet.h"                                       /* AgentConnection */
 
 #include "generic_agent.h"
+
 
 //*******************************************************************
 // TYPES
@@ -116,7 +118,6 @@ typedef struct
 } ServerFileGetState;
 
 
-bool ServerTLSInitialize();
 void KeepPromises(EvalContext *ctx, Policy *policy, GenericAgentConfig *config);
 void ServerEntryPoint(EvalContext *ctx, int sd_reply, char *ipaddr);
 void TryCollectCall(void);

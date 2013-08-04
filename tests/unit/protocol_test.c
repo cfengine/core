@@ -3,6 +3,7 @@
 #include <string.h>
 #include "cmockery.h"
 #include "server.h"
+#include "server_common.h"
 
 /*
  * Need to declare some functions that are not available.

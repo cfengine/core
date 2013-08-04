@@ -28,6 +28,7 @@
 #include "logging.h"
 #include "misc_lib.h"
 
+#include "tls_client.h"
 #include "tls_generic.h"
 #include "net.h"                     /* SendTransaction, ReceiveTransaction */
 
@@ -64,8 +65,8 @@ bool TLSClientInitialize()
     SSL_CTX_set_options(SSLCLIENTCONTEXT,
                         SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3);
 
-    /* Never bother with retransmissions, SSL_write() and SSL_read() should
-     * always either write/read the whole amount or fail. */
+    /* Never bother with retransmissions, SSL_write() should
+     * always either write the whole amount or fail. */
     SSL_CTX_set_mode(SSLCLIENTCONTEXT, SSL_MODE_AUTO_RETRY);
 
     /*
@@ -128,6 +129,71 @@ bool TLSClientInitialize()
 void TLSDeInitialize()
 {
     SSL_CTX_free(SSLCLIENTCONTEXT);
+}
+
+/**
+ * @return >0: the version that was negotiated
+ *          0: no agreement on version was reached
+ *         -1: error
+ */
+int TLSClientNegotiateProtocol(const ConnectionInfo *conn_info)
+{
+    int ret;
+    char input[CF_SMALLBUF] = "";
+
+    /* Receive CFE_v%d ... */
+    ret = TLSRecvLine(conn_info->ssl, input, sizeof(input));
+
+    /* Send "CFE_v%d cf-agent version". */
+    char version_string[128];
+    int len = snprintf(version_string, sizeof(version_string),
+                       "CFE_v%d %s %s\n",
+                       CFNET_PROTOCOL_VERSION, "cf-agent", VERSION);
+
+    ret = TLSSend(conn_info->ssl, version_string, len);
+    if (ret != len)
+    {
+        Log(LOG_LEVEL_ERR, "Connection was hung up!");
+        return -1;
+    }
+
+    /* Receive OK */
+    ret = TLSRecvLine(conn_info->ssl, input, sizeof(input));
+    if (strncmp(input, "OK", strlen("OK")) == 0)
+        return 1;
+    else
+        return 0;
+}
+
+int TLSClientSendIdentity(const ConnectionInfo *conn_info, const char *username)
+{
+    char line[1024] = "IDENTITY";
+    size_t line_len = strlen(line);
+    int ret;
+
+    if (username != NULL)
+    {
+        ret = snprintf(&line[line_len], sizeof(line) - line_len,
+                       " USERNAME=%s", username);
+        if (ret >= sizeof(line) - line_len)
+        {
+            Log(LOG_LEVEL_ERR, "Sending IDENTITY truncated: %s", line);
+            return -1;
+        }
+        line_len += ret;
+    }
+
+    /* Overwrite the terminating '\0', we don't need it anyway. */
+    line[line_len] = '\n';
+    line_len++;
+
+    ret = TLSSend(conn_info->ssl, line, line_len);
+    if (ret == -1)
+    {
+        return -1;
+    }
+
+    return 1;
 }
 
 /*

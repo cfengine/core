@@ -40,6 +40,7 @@ AgentConnection *NewAgentConn(const char *server_name)
     conn->trust = false;
     conn->encryption_type = 'c';
     conn->this_server = xstrdup(server_name);
+    conn->authenticated = false;
     return conn;
 };
 

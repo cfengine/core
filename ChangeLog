@@ -5,6 +5,7 @@
        - Fix segfault when dealing with files or data > 4K (Redmine #2912, 2698)
        - Don't truncate keys to 126 characters in getindices (Redmine #2626)
        - files created via log_* actions now have mode 600 (Redmine #1578)
+       - fix wrong log message when a promise is ignored due to 'ifvarclass' not matching
 
 3.5.1
        Changes:

@@ -32,7 +32,10 @@
 #include "tls_generic.h"
 #include "net.h"                     /* SendTransaction, ReceiveTransaction */
 
-extern RSA* PRIVKEY;                      /* TODO move crypto.h to libutils */
+/* TODO move crypto.h to libutils */
+#include "crypto.h"                        /* PRIVKEY,PUBKEY,LoadSecretKeys */
+#include "bootstrap.h"                     /* ReadPolicyServerFile */
+extern char CFWORKDIR[];
 
 
 /* Global SSL context for client connections over new TLS protocol. */
@@ -46,18 +49,23 @@ static X509 *SSLCLIENTCERT = NULL;
 bool TLSClientInitialize()
 {
     int ret;
+    static bool is_initialised = false;
+
+    if (is_initialised)
+    {
+        return true;
+    }
 
     /* OpenSSL is needed for our new protocol over TLS. */
     SSL_library_init();
     SSL_load_error_strings();
 
-    assert(SSLCLIENTCONTEXT == NULL);
     SSLCLIENTCONTEXT = SSL_CTX_new(SSLv23_client_method());
     if (SSLCLIENTCONTEXT == NULL)
     {
         Log(LOG_LEVEL_ERR, "SSL_CTX_new: %s",
             ERR_reason_error_string(ERR_get_error()));
-        return false;
+        goto err1;
     }
 
     /* Use only TLS v1 or later.
@@ -73,46 +81,56 @@ bool TLSClientInitialize()
      * Create cert into memory and load it into context.
      */
 
-    if (PRIVKEY == NULL)
+    if (PRIVKEY == NULL || PUBKEY == NULL)
     {
-        Log(LOG_LEVEL_ERR,
-            "No public/private key pair is loaded, create one with cf-key");
-        return false;
+        Log(LOG_LEVEL_WARNING,
+            "No public/private key pair is loaded, trying to reload");
+        LoadSecretKeys(ReadPolicyServerFile(CFWORKDIR));
+        if (PRIVKEY == NULL || PUBKEY == NULL)
+        {
+            Log(LOG_LEVEL_ERR,
+                "No public/private key pair found");
+            goto err2;
+        }
     }
 
     /* Generate self-signed cert valid from now to 100 years later. */
-    X509 *x509 = X509_new();
-    X509_gmtime_adj(X509_get_notBefore(x509), 0);
-    X509_time_adj_ex(X509_get_notAfter(x509), 365*100, 0, NULL);
-    EVP_PKEY *pkey = EVP_PKEY_new();
-    EVP_PKEY_assign_RSA(pkey, PRIVKEY);
-    X509_NAME *name = X509_get_subject_name(x509);
-    X509_NAME_add_entry_by_txt(name, "CN", MBSTRING_ASC,
-                               (const char *) "ouripaddress",   /* TODO */
-                               -1, -1, 0);
-    X509_set_issuer_name(x509, name);
-    X509_set_pubkey(x509, pkey);
-    X509_sign(x509, pkey, EVP_sha384());
+    {
+        X509 *x509 = X509_new();
+        X509_gmtime_adj(X509_get_notBefore(x509), 0);
+        X509_time_adj_ex(X509_get_notAfter(x509), 365*100, 0, NULL);
+        EVP_PKEY *pkey = EVP_PKEY_new();
+        EVP_PKEY_assign_RSA(pkey, PRIVKEY);
+        X509_NAME *name = X509_get_subject_name(x509);
+        X509_NAME_add_entry_by_txt(name, "CN", MBSTRING_ASC,
+                                   (const char *) "ouripaddress", /* TODO */
+                                   -1, -1, 0);
+        X509_set_issuer_name(x509, name);
+        X509_set_pubkey(x509, pkey);
+        X509_sign(x509, pkey, EVP_sha384());
 
+        SSLCLIENTCERT = x509;
+    }
     /* Log(LOG_LEVEL_ERR, "generate cert from priv key: %s", */
     /*     ERR_reason_error_string(ERR_get_error())); */
 
-    SSL_CTX_use_certificate(SSLCLIENTCONTEXT, x509);
-    SSLCLIENTCERT = x509;
+    SSL_CTX_use_certificate(SSLCLIENTCONTEXT, SSLCLIENTCERT);
 
     ret = SSL_CTX_use_RSAPrivateKey(SSLCLIENTCONTEXT, PRIVKEY);
     if (ret != 1)
     {
         Log(LOG_LEVEL_ERR, "Failed to use RSA private key: %s",
             ERR_reason_error_string(ERR_get_error()));
-        return false;
+        goto err3;
     }
-    ret = SSL_CTX_check_private_key(SSLCLIENTCONTEXT);    /* verify cert consistency */
+
+    /* Verify cert consistency. */
+    ret = SSL_CTX_check_private_key(SSLCLIENTCONTEXT);
     if (ret != 1)
     {
         Log(LOG_LEVEL_ERR, "Inconsistent key and TLS cert: %s",
             ERR_reason_error_string(ERR_get_error()));
-        return false;
+        goto err3;
     }
 
     /* Set options to always request a certificate from the peer, either we
@@ -123,12 +141,32 @@ bool TLSClientInitialize()
      * specific pointer to the callback (so we would have to lock).  */
     SSL_CTX_set_cert_verify_callback(SSLCLIENTCONTEXT, TLSVerifyCallback, NULL);
 
+    is_initialised = true;
     return true;
+
+  err3:
+    X509_free(SSLCLIENTCERT);
+    SSLCLIENTCERT = NULL;
+  err2:
+    SSL_CTX_free(SSLCLIENTCONTEXT);
+    SSLCLIENTCONTEXT = NULL;
+  err1:
+    return false;
 }
 
 void TLSDeInitialize()
 {
-    SSL_CTX_free(SSLCLIENTCONTEXT);
+    if (SSLCLIENTCERT != NULL)
+    {
+        X509_free(SSLCLIENTCERT);
+        SSLCLIENTCERT = NULL;
+    }
+
+    if (SSLCLIENTCONTEXT != NULL)
+    {
+        SSL_CTX_free(SSLCLIENTCONTEXT);
+        SSLCLIENTCONTEXT = NULL;
+    }
 }
 
 /**
@@ -206,7 +244,13 @@ int TLSTry(ConnectionInfo *conn_info)
     char buffer[CF_BUFSIZE] = "";
     int result = 0;
 
-    assert(SSLCLIENTCONTEXT != NULL);         /* TLSInitialize() has been called. */
+    /* SSL Context might not be initialised up to now due to lack of keys, as
+     * they might be generated as part of the policy (e.g. failsafe.cf). */
+    if (!TLSClientInitialize())
+    {
+        return -1;
+    }
+    assert(SSLCLIENTCONTEXT != NULL && PRIVKEY != NULL && PUBKEY != NULL);
 
     if (conn_info->type == CF_PROTOCOL_TLS)
     {

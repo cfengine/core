@@ -105,7 +105,9 @@ bool ServerTLSInitialize()
             ERR_reason_error_string(ERR_get_error()));
         return false;
     }
-    ret = SSL_CTX_check_private_key(SSLSERVERCONTEXT);    /* verify cert consistency */
+
+    /* Verify cert consistency. */
+    ret = SSL_CTX_check_private_key(SSLSERVERCONTEXT);
     if (ret != 1)
     {
         Log(LOG_LEVEL_ERR, "Inconsistent key and TLS cert: %s",

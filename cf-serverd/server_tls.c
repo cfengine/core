@@ -79,24 +79,27 @@ bool ServerTLSInitialize()
     }
     assert(SSLSERVERCERT == NULL);
     /* Generate self-signed cert valid from now to 100 years later. */
-    X509 *x509 = X509_new();
-    X509_gmtime_adj(X509_get_notBefore(x509), 0);
-    X509_time_adj_ex(X509_get_notAfter(x509), 365*100, 0, NULL);
-    EVP_PKEY *pkey = EVP_PKEY_new();
-    EVP_PKEY_assign_RSA(pkey, PRIVKEY);
-    X509_NAME *name = X509_get_subject_name(x509);
-    X509_NAME_add_entry_by_txt(name, "CN", MBSTRING_ASC,
-                               (const char *) "ouripaddress",   /* TODO */
-                               -1, -1, 0);
-    X509_set_issuer_name(x509, name);
-    X509_set_pubkey(x509, pkey);
-    X509_sign(x509, pkey, EVP_sha384());
+    {
+        X509 *x509 = X509_new();
+        X509_gmtime_adj(X509_get_notBefore(x509), 0);
+        X509_time_adj_ex(X509_get_notAfter(x509), 365*100, 0, NULL);
+        EVP_PKEY *pkey = EVP_PKEY_new();
+        EVP_PKEY_set1_RSA(pkey, PRIVKEY);
+        X509_NAME *name = X509_get_subject_name(x509);
+        X509_NAME_add_entry_by_txt(name, "CN", MBSTRING_ASC,
+                                   (const char *) "ouripaddress", /* TODO */
+                                   -1, -1, 0);
+        X509_set_issuer_name(x509, name);
+        X509_set_pubkey(x509, pkey);
+        X509_sign(x509, pkey, EVP_sha384());
+        EVP_PKEY_free(pkey);
 
+        SSLSERVERCERT = x509;
+    }
     /* Log(LOG_LEVEL_ERR, "generate cert from priv key: %s", */
     /*     ERR_reason_error_string(ERR_get_error())); */
 
-    SSL_CTX_use_certificate(SSLSERVERCONTEXT, x509);
-    SSLSERVERCERT = x509;
+    SSL_CTX_use_certificate(SSLSERVERCONTEXT, SSLSERVERCERT);
 
     ret = SSL_CTX_use_RSAPrivateKey(SSLSERVERCONTEXT, PRIVKEY);
     if (ret != 1)

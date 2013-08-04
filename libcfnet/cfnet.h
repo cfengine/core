@@ -52,6 +52,10 @@
 #define CF_INBAND_OFFSET 8
 
 
+/* The only protocol we support inside TLS, for now... */
+#define CFNET_PROTOCOL_VERSION 1
+
+
 /* TODO Shouldn't this be in libutils? */
 typedef enum
 {

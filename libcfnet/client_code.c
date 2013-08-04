@@ -222,79 +222,91 @@ AgentConnection *NewServerConnection(FileCopy fc, bool background, int *err)
     return NULL;
 }
 
-/*****************************************************************************/
-
-/* The only protocol we support inside TLS, for now... */
-#define CFNET_PROTOCOL_VERSION 1
-
 /**
- * @return >0: the version that was negotiated
- *          0: no agreement on version was reached
- *         -1: error
+ * @return 1 success, 0 auth/ID error, -1 other error
  */
-int ClientNegotiateProtocol(const ConnectionInfo *conn_info)
+int TLSConnect(ConnectionInfo *conn_info, bool trust_server,
+               const char *ipaddr, const char *username)
 {
     int ret;
-    char input[CF_SMALLBUF] = "";
 
-    /* Receive CFE_v%d ... */
-    ret = TLSRecvLine(conn_info->ssl, input, sizeof(input));
-
-    /* Send "CFE_v%d cf-agent version". */
-    char version_string[CF_MAXVARSIZE];
-    int len = snprintf(version_string, sizeof(version_string),
-                       "CFE_v%d %s %s\n",
-                       CFNET_PROTOCOL_VERSION, "cf-agent", VERSION);
-
-    ret = TLSSend(conn_info->ssl, version_string, len);
-    if (ret != len)
-    {
-        Log(LOG_LEVEL_ERR, "Connection was hung up!");
-        return -1;
-    }
-
-    /* Receive OK */
-    ret = TLSRecvLine(conn_info->ssl, input, sizeof(input));
-    if (strncmp(input, "OK", strlen("OK")) == 0)
-        return 1;
-    else
-        return 0;
-}
-
-int ClientSendIdentity(const ConnectionInfo *conn_info, const char *username)
-{
-    char line[1024] = "IDENTITY";
-    size_t line_len = strlen(line);
-    int ret;
-
-    if (username != NULL)
-    {
-        ret = snprintf(&line[line_len], sizeof(line) - line_len,
-                       " USERNAME=%s", username);
-        if (ret >= sizeof(line) - line_len)
-        {
-            Log(LOG_LEVEL_ERR, "Sending IDENTITY truncated: %s", line);
-            return -1;
-        }
-        line_len += ret;
-    }
-
-    /* Overwrite the terminating '\0', we don't need it anyway. */
-    line[line_len] = '\n';
-    line_len++;
-
-    ret = TLSSend(conn_info->ssl, line, line_len);
+    ret = TLSTry(conn_info);
     if (ret == -1)
     {
         return -1;
     }
 
+    /* TODO fix, we identify hub user with our own username, because
+     * we store key filenames as "user-key.pub" and we need a
+     * username. We might as well hard-code root... */
+    ret = TLSVerifyPeer(conn_info, ipaddr, username);
+
+    if (ret == -1)                                      /* error */
+    {
+        return -1;
+    }
+
+    if (ret == 1)
+    {
+        Log(LOG_LEVEL_INFO,
+            "Server is TRUSTED, received key %s MATCHES stored one.",
+            conn_info->remote_keyhash_str);
+    }
+    else                                                /* ret == 0 */
+    {
+        Log(LOG_LEVEL_WARNING, "%s: Server's public key is UNKNOWN!",
+            conn_info->remote_keyhash_str);
+
+        if (trust_server)             /* We're most probably bootstrapping. */
+        {
+            Log(LOG_LEVEL_WARNING,
+                "%s: Explicitly trusting this key from now on.",
+                conn_info->remote_keyhash_str);
+
+            SavePublicKey(username, conn_info->remote_keyhash_str,
+                          conn_info->remote_key);
+        }
+        else
+        {
+            Log(LOG_LEVEL_ERR, "TRUST FAILED, WARNING: possible MAN IN THE MIDDLE attack!");
+            Log(LOG_LEVEL_ERR, "Rebootstrap the client if you really want to start trusting this new key.");
+            return -1;
+        }
+    }
+
+    /* TLS CONNECTION IS ESTABLISHED, negotiate protocol version. */
+    ret = TLSClientNegotiateProtocol(conn_info);
+    if (ret <= 0)
+    {
+        return -1;
+    }
+
+    /* We continue by sending identification data. */
+    ret = TLSClientSendIdentity(conn_info, username);
+    if (ret == -1)
+    {
+        return -1;
+    }
+
+    /* Server might hang up here, after we sent identification! We
+     * must get the "OK WELCOME" message for everything to be OK. */
+    char line[1024] = "";
+    ret = TLSRecvLine(conn_info->ssl, line, sizeof(line));
+    if (ret <= 0 ||
+        (strncmp(line, "OK WELCOME", strlen("OK WELCOME")) != 0))
+    {
+        return 0;
+    }
+
     return 1;
 }
+
+/*****************************************************************************/
 
 static AgentConnection *ServerConnection(const char *server, FileCopy fc, int *err)
 {
     AgentConnection *conn;
+    int ret;
     *err = 0;
 
 #if !defined(__MINGW32__)
@@ -316,9 +328,8 @@ static AgentConnection *ServerConnection(const char *server, FileCopy fc, int *e
         return conn;
     }
 
-    /* We always start with plaintext, so that we send STARTTLS plain. */
+    /* We always start with plaintext, so that we send STARTTLS plain. TODO... */
     conn->conn_info.type = CF_PROTOCOL_CLASSIC;
-    conn->authenticated = false;
     conn->encryption_type = CfEnterpriseOptions();
 
 /* username of the client - say root from Windows */
@@ -355,17 +366,17 @@ static AgentConnection *ServerConnection(const char *server, FileCopy fc, int *e
         switch (SELECTED_PROTOCOL)
         {
         case CF_PROTOCOL_TLS:
-            if (TLSTry(&conn->conn_info) == -1)
+
+            ret = TLSConnect(&conn->conn_info, fc.trustkey,
+                             conn->remoteip, conn->username);
+
+            if (ret == -1)                                      /* Error */
             {
                 DisconnectServer(conn);
                 *err = -1;
                 return NULL;
             }
-
-            /* TODO fix, why do we identify hub user with our own username? */
-            int ret = TLSVerifyPeer(&conn->conn_info, conn->remoteip, conn->username);
-
-            if (ret == -1)                                      /* error */
+            else if (ret == 0)                             /* Auth/ID error */
             {
                     DisconnectServer(conn);
                     errno = EPERM;
@@ -373,75 +384,13 @@ static AgentConnection *ServerConnection(const char *server, FileCopy fc, int *e
                     return NULL;
             }
 
-            if (ret == 1)
-            {
-                Log(LOG_LEVEL_INFO,
-                    "Server is TRUSTED, received key %s MATCHES stored one.",
-                    conn->conn_info.remote_keyhash_str);
-            }
-            else                                                /* ret == 0 */
-            {
-                Log(LOG_LEVEL_WARNING, "%s: Server's public key is UNKNOWN!",
-                    conn->conn_info.remote_keyhash_str);
-
-                if (fc.trustkey)
-                {
-                    Log(LOG_LEVEL_WARNING,
-                        "%s: Explicitly trusting this key from now on.",
-                        conn->conn_info.remote_keyhash_str);
-
-                    SavePublicKey("root", conn->conn_info.remote_keyhash_str,
-                                  conn->conn_info.remote_key);
-                }
-                else                  /* We're most probably bootstrapping. */
-                {
-                    Log(LOG_LEVEL_ERR, "TRUST FAILED, WARNING: possible MAN IN THE MIDDLE attack!");
-                    Log(LOG_LEVEL_ERR, "Rebootstrap the client if you really want to start trusting this new key.");
-                    DisconnectServer(conn);
-                    errno = EPERM;
-                    *err = -2;
-                    return NULL;
-                }
-            }
-
-            /* TLS CONNECTION IS ESTABLISHED, negotiate protocol version. */
-            ret = ClientNegotiateProtocol(&conn->conn_info);
-            if (ret <= 0)
-            {
-                errno = EPERM;
-                DisconnectServer(conn);
-                *err = -2; // auth err
-                return NULL;
-            }
-
-            /* We continue by sending identification data */
-            ret = ClientSendIdentity(&conn->conn_info, conn->username);
-            if (ret == -1)
-            {
-                errno = EPERM;
-                DisconnectServer(conn);
-                *err = -2; // auth err
-                return NULL;
-            }
-
-            /* Server might hang up here, after we sent identification! We
-             * must get the "OK WELCOME" message for everything to be OK. */
-            char line[1024] = "";
-            ret = TLSRecvLine(conn->conn_info.ssl, line, sizeof(line));
-            if (ret <= 0 ||
-                (strncmp(line, "OK WELCOME", strlen("OK WELCOME")) != 0))
-            {
-                errno = EPERM;
-                DisconnectServer(conn);
-                *err = -2; // auth err
-                return NULL;
-            }
-
+            assert(ret == 1);
             LastSaw1(conn->remoteip, conn->conn_info.remote_keyhash_str,
                      LAST_SEEN_ROLE_CONNECT);
             break;
 
         case CF_PROTOCOL_CLASSIC:
+
             if (!IdentifyAgent(&conn->conn_info))
             {
                 Log(LOG_LEVEL_ERR, "Id-authentication for '%s' failed", VFQNAME);

@@ -1508,7 +1508,6 @@ bool EvalContextVariableGet(const EvalContext *ctx, const VarRef *ref, Rval *rva
         return false;
     }
 
-    Scope *get_scope = NULL;
     if (VarRefIsQualified(ref))
     {
         VariableTable *table = GetVariableTableForVarRef(ctx, ref);

@@ -34,6 +34,7 @@
 #include "mutex.h"
 #include "sysinfo.h"
 #include "bootstrap.h"
+#include "misc_lib.h"                   /* UnexpectedError,ProgrammingError */
 
 #ifdef DARWIN
 // On Mac OSX 10.7 and later, majority of functions in /usr/include/openssl/crypto.h
@@ -365,6 +366,9 @@ int EncryptString(char type, char *in, char *out, unsigned char *key, int plainl
         { 1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8 };
     EVP_CIPHER_CTX ctx;
 
+    if (key == NULL)
+        ProgrammingError("EncryptString: session key == NULL");
+
     EVP_CIPHER_CTX_init(&ctx);
     EVP_EncryptInit_ex(&ctx, CfengineCipher(type), NULL, key, iv);
 
@@ -393,6 +397,9 @@ int DecryptString(char type, char *in, char *out, unsigned char *key, int cipher
     unsigned char iv[32] =
         { 1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8 };
     EVP_CIPHER_CTX ctx;
+
+    if (key == NULL)
+        ProgrammingError("DecryptString: session key == NULL");
 
     EVP_CIPHER_CTX_init(&ctx);
     EVP_DecryptInit_ex(&ctx, CfengineCipher(type), NULL, key, iv);

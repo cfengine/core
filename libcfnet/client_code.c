@@ -799,6 +799,10 @@ int CompareHashNet(char *file1, char *file2, bool encrypt, AgentConnection *conn
 
     memset(recvbuffer, 0, CF_BUFSIZE);
 
+    /* We encrypt only for CLASSIC protocol. The TLS protocol is always over
+     * encrypted layer, so it does not special encrypted (S*) commands. */
+    encrypt = encrypt && (conn->conn_info.type == CF_PROTOCOL_CLASSIC);
+
     if (encrypt)
     {
         snprintf(in, CF_BUFSIZE, "MD5 %s", file1);

@@ -374,7 +374,6 @@ typedef enum
     PROTOCOL_COMMAND_OPENDIR,
     PROTOCOL_COMMAND_SYNC,
     PROTOCOL_COMMAND_MD5,
-    PROTOCOL_COMMAND_MD5_SECURE,
     PROTOCOL_COMMAND_VERSION,
     PROTOCOL_COMMAND_OPENDIR_SECURE,
     PROTOCOL_COMMAND_VAR,
@@ -393,7 +392,6 @@ static const char *PROTOCOL_NEW[PROTOCOL_COMMAND_BAD + 1] =
     "OPENDIR",
     "SYNCH",
     "MD5",
-    "SMD5",
     "VERSION",
     "SOPENDIR",
     "VAR",
@@ -676,29 +674,6 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
         }
 
         return true;
-
-    case PROTOCOL_COMMAND_MD5_SECURE:
-
-        sscanf(recvbuffer, "SMD5 %u", &len);
-
-        if ((len >= sizeof(out)) || (received != (len + CF_PROTO_OFFSET)))
-        {
-            Log(LOG_LEVEL_INFO, "Decryption error");
-            RefuseAccess(conn, 0, recvbuffer);
-            return true;
-        }
-
-        memcpy(out, recvbuffer + CF_PROTO_OFFSET, len);
-        plainlen = DecryptString(conn->encryption_type, out, recvbuffer, conn->session_key, len);
-
-        if (strncmp(recvbuffer, "MD5", 3) != 0)
-        {
-            Log(LOG_LEVEL_INFO, "MD5 protocol error");
-            RefuseAccess(conn, 0, recvbuffer);
-            return false;
-        }
-
-        /* roll through, no break */
 
     case PROTOCOL_COMMAND_MD5:
 

@@ -84,6 +84,9 @@ static AgentConnection *ServerConnection(const char *server, FileCopy fc, int *e
 int TryConnect(AgentConnection *conn, struct timeval *tvp, struct sockaddr *cinp, int cinpSz);
 
 
+ProtocolVersion SELECTED_PROTOCOL = CF_PROTOCOL_TLS; /* TODO command line / body common control policy option */
+
+
 /**
  * Initialize client's network library.
  */
@@ -361,8 +364,6 @@ static AgentConnection *ServerConnection(const char *server, FileCopy fc, int *e
             return NULL;
         }
 
-        ProtocolVersion SELECTED_PROTOCOL = CF_PROTOCOL_TLS; /* TODO command line / body common control policy option */
-
         switch (SELECTED_PROTOCOL)
         {
         case CF_PROTOCOL_TLS:
@@ -482,6 +483,10 @@ int cf_remote_stat(char *file, struct stat *buf, char *stattype, bool encrypt, A
     }
 
     sendbuffer[0] = '\0';
+
+    /* We encrypt only for CLASSIC protocol. The TLS protocol is always over
+     * encrypted layer, so it does not special encrypted (S*) commands. */
+    encrypt = encrypt && (conn->conn_info.type == CF_PROTOCOL_CLASSIC);
 
     if (encrypt)
     {
@@ -670,6 +675,10 @@ Item *RemoteDirList(const char *dirname, bool encrypt, AgentConnection *conn)
         return NULL;
     }
 
+    /* We encrypt only for CLASSIC protocol. The TLS protocol is always over
+     * encrypted layer, so it does not special encrypted (S*) commands. */
+    encrypt = encrypt && (conn->conn_info.type == CF_PROTOCOL_CLASSIC);
+
     if (encrypt)
     {
         if (conn->session_key == NULL)
@@ -848,7 +857,151 @@ int CompareHashNet(char *file1, char *file2, bool encrypt, AgentConnection *conn
 
 /*********************************************************************/
 
-int CopyRegularFileNet(char *source, char *new, off_t size, AgentConnection *conn)
+int EncryptCopyRegularFileNet(char *source, char *new, off_t size, AgentConnection *conn)
+{
+    int dd, blocksize = 2048, n_read = 0, towrite, plainlen, more = true, finlen, cnt = 0;
+    int tosend, cipherlen = 0;
+    char *buf, in[CF_BUFSIZE], out[CF_BUFSIZE], workbuf[CF_BUFSIZE], cfchangedstr[265];
+    unsigned char iv[32] =
+        { 1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8 };
+    long n_read_total = 0;
+    EVP_CIPHER_CTX crypto_ctx;
+
+    snprintf(cfchangedstr, 255, "%s%s", CF_CHANGEDSTR1, CF_CHANGEDSTR2);
+
+    if ((strlen(new) > CF_BUFSIZE - 20))
+    {
+        Log(LOG_LEVEL_ERR, "Filename too long");
+        return false;
+    }
+
+    unlink(new);                /* To avoid link attacks */
+
+    if ((dd = open(new, O_WRONLY | O_CREAT | O_TRUNC | O_EXCL | O_BINARY, 0600)) == -1)
+    {
+        Log(LOG_LEVEL_ERR,
+            "NetCopy to destination '%s:%s' security - failed attempt to exploit a race? (Not copied). (open: %s)",
+            conn->this_server, new, GetErrorStr());
+        unlink(new);
+        return false;
+    }
+
+    if (size == 0)
+    {
+        // No sense in copying an empty file
+        close(dd);
+        return true;
+    }
+
+    workbuf[0] = '\0';
+    EVP_CIPHER_CTX_init(&crypto_ctx);
+
+    snprintf(in, CF_BUFSIZE - CF_PROTO_OFFSET, "GET dummykey %s", source);
+    cipherlen = EncryptString(conn->encryption_type, in, out, conn->session_key, strlen(in) + 1);
+    snprintf(workbuf, CF_BUFSIZE, "SGET %4d %4d", cipherlen, blocksize);
+    memcpy(workbuf + CF_PROTO_OFFSET, out, cipherlen);
+    tosend = cipherlen + CF_PROTO_OFFSET;
+
+/* Send proposition C0 - query */
+
+    if (SendTransaction(&conn->conn_info, workbuf, tosend, CF_DONE) == -1)
+    {
+        Log(LOG_LEVEL_ERR, "Couldn't send data. (SendTransaction: %s)", GetErrorStr());
+        close(dd);
+        return false;
+    }
+
+    buf = xmalloc(CF_BUFSIZE + sizeof(int));
+
+    n_read_total = 0;
+
+    while (more)
+    {
+        if ((cipherlen = ReceiveTransaction(&conn->conn_info, buf, &more)) == -1)
+        {
+            free(buf);
+            return false;
+        }
+
+        cnt++;
+
+        /* If the first thing we get is an error message, break. */
+
+        if ((n_read_total == 0) && (strncmp(buf + CF_INBAND_OFFSET, CF_FAILEDSTR, strlen(CF_FAILEDSTR)) == 0))
+        {
+            Log(LOG_LEVEL_INFO, "Network access to '%s:%s' denied", conn->this_server, source);
+            close(dd);
+            free(buf);
+            return false;
+        }
+
+        if (strncmp(buf + CF_INBAND_OFFSET, cfchangedstr, strlen(cfchangedstr)) == 0)
+        {
+            Log(LOG_LEVEL_INFO, "Source '%s:%s' changed while copying", conn->this_server, source);
+            close(dd);
+            free(buf);
+            return false;
+        }
+
+        EVP_DecryptInit_ex(&crypto_ctx, CfengineCipher(CfEnterpriseOptions()), NULL, conn->session_key, iv);
+
+        if (!EVP_DecryptUpdate(&crypto_ctx, workbuf, &plainlen, buf, cipherlen))
+        {
+            close(dd);
+            free(buf);
+            return false;
+        }
+
+        if (!EVP_DecryptFinal_ex(&crypto_ctx, workbuf + plainlen, &finlen))
+        {
+            close(dd);
+            free(buf);
+            return false;
+        }
+
+        towrite = n_read = plainlen + finlen;
+
+        n_read_total += n_read;
+
+        if (!FSWrite(new, dd, workbuf, towrite))
+        {
+            Log(LOG_LEVEL_ERR, "Local disk write failed copying '%s:%s' to '%s:%s'",
+                conn->this_server, source, new, GetErrorStr());
+            if (conn)
+            {
+                conn->error = true;
+            }
+            free(buf);
+            unlink(new);
+            close(dd);
+            EVP_CIPHER_CTX_cleanup(&crypto_ctx);
+            return false;
+        }
+    }
+
+    /* If the file ends with a `hole', something needs to be written at
+       the end.  Otherwise the kernel would truncate the file at the end
+       of the last write operation. Write a null character and truncate
+       it again.  */
+
+    if (ftruncate(dd, n_read_total) < 0)
+    {
+        Log(LOG_LEVEL_ERR, "Copy failed (no space?) while copying '%s' from network '%s'",
+            new, GetErrorStr());
+        free(buf);
+        unlink(new);
+        close(dd);
+        EVP_CIPHER_CTX_cleanup(&crypto_ctx);
+        return false;
+    }
+
+    close(dd);
+    free(buf);
+    EVP_CIPHER_CTX_cleanup(&crypto_ctx);
+    return true;
+}
+
+int CopyRegularFileNet(char *source, char *new, off_t size, bool encrypt, AgentConnection *conn)
 {
     int dd, buf_size, n_read = 0, toget, towrite;
     int done = false, tosend, value;
@@ -856,6 +1009,15 @@ int CopyRegularFileNet(char *source, char *new, off_t size, AgentConnection *con
 
     off_t n_read_total = 0;
     EVP_CIPHER_CTX crypto_ctx;
+
+    /* We encrypt only for CLASSIC protocol. The TLS protocol is always over
+     * encrypted layer, so it does not special encrypted (S*) commands. */
+    encrypt = encrypt && (conn->conn_info.type == CF_PROTOCOL_CLASSIC);
+
+    if (encrypt)
+    {
+        return EncryptCopyRegularFileNet(source, new, size, conn);
+    }
 
     snprintf(cfchangedstr, 255, "%s%s", CF_CHANGEDSTR1, CF_CHANGEDSTR2);
 
@@ -1018,151 +1180,6 @@ int CopyRegularFileNet(char *source, char *new, off_t size, AgentConnection *con
     return true;
 }
 
-/*********************************************************************/
-
-int EncryptCopyRegularFileNet(char *source, char *new, off_t size, AgentConnection *conn)
-{
-    int dd, blocksize = 2048, n_read = 0, towrite, plainlen, more = true, finlen, cnt = 0;
-    int tosend, cipherlen = 0;
-    char *buf, in[CF_BUFSIZE], out[CF_BUFSIZE], workbuf[CF_BUFSIZE], cfchangedstr[265];
-    unsigned char iv[32] =
-        { 1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8 };
-    long n_read_total = 0;
-    EVP_CIPHER_CTX crypto_ctx;
-
-    snprintf(cfchangedstr, 255, "%s%s", CF_CHANGEDSTR1, CF_CHANGEDSTR2);
-
-    if ((strlen(new) > CF_BUFSIZE - 20))
-    {
-        Log(LOG_LEVEL_ERR, "Filename too long");
-        return false;
-    }
-
-    unlink(new);                /* To avoid link attacks */
-
-    if ((dd = open(new, O_WRONLY | O_CREAT | O_TRUNC | O_EXCL | O_BINARY, 0600)) == -1)
-    {
-        Log(LOG_LEVEL_ERR,
-            "NetCopy to destination '%s:%s' security - failed attempt to exploit a race? (Not copied). (open: %s)",
-            conn->this_server, new, GetErrorStr());
-        unlink(new);
-        return false;
-    }
-
-    if (size == 0)
-    {
-        // No sense in copying an empty file
-        close(dd);
-        return true;
-    }
-
-    workbuf[0] = '\0';
-    EVP_CIPHER_CTX_init(&crypto_ctx);
-
-    snprintf(in, CF_BUFSIZE - CF_PROTO_OFFSET, "GET dummykey %s", source);
-    cipherlen = EncryptString(conn->encryption_type, in, out, conn->session_key, strlen(in) + 1);
-    snprintf(workbuf, CF_BUFSIZE, "SGET %4d %4d", cipherlen, blocksize);
-    memcpy(workbuf + CF_PROTO_OFFSET, out, cipherlen);
-    tosend = cipherlen + CF_PROTO_OFFSET;
-
-/* Send proposition C0 - query */
-
-    if (SendTransaction(&conn->conn_info, workbuf, tosend, CF_DONE) == -1)
-    {
-        Log(LOG_LEVEL_ERR, "Couldn't send data. (SendTransaction: %s)", GetErrorStr());
-        close(dd);
-        return false;
-    }
-
-    buf = xmalloc(CF_BUFSIZE + sizeof(int));
-
-    n_read_total = 0;
-
-    while (more)
-    {
-        if ((cipherlen = ReceiveTransaction(&conn->conn_info, buf, &more)) == -1)
-        {
-            free(buf);
-            return false;
-        }
-
-        cnt++;
-
-        /* If the first thing we get is an error message, break. */
-
-        if ((n_read_total == 0) && (strncmp(buf + CF_INBAND_OFFSET, CF_FAILEDSTR, strlen(CF_FAILEDSTR)) == 0))
-        {
-            Log(LOG_LEVEL_INFO, "Network access to '%s:%s' denied", conn->this_server, source);
-            close(dd);
-            free(buf);
-            return false;
-        }
-
-        if (strncmp(buf + CF_INBAND_OFFSET, cfchangedstr, strlen(cfchangedstr)) == 0)
-        {
-            Log(LOG_LEVEL_INFO, "Source '%s:%s' changed while copying", conn->this_server, source);
-            close(dd);
-            free(buf);
-            return false;
-        }
-
-        EVP_DecryptInit_ex(&crypto_ctx, CfengineCipher(CfEnterpriseOptions()), NULL, conn->session_key, iv);
-
-        if (!EVP_DecryptUpdate(&crypto_ctx, workbuf, &plainlen, buf, cipherlen))
-        {
-            close(dd);
-            free(buf);
-            return false;
-        }
-
-        if (!EVP_DecryptFinal_ex(&crypto_ctx, workbuf + plainlen, &finlen))
-        {
-            close(dd);
-            free(buf);
-            return false;
-        }
-
-        towrite = n_read = plainlen + finlen;
-
-        n_read_total += n_read;
-
-        if (!FSWrite(new, dd, workbuf, towrite))
-        {
-            Log(LOG_LEVEL_ERR, "Local disk write failed copying '%s:%s' to '%s:%s'",
-                conn->this_server, source, new, GetErrorStr());
-            if (conn)
-            {
-                conn->error = true;
-            }
-            free(buf);
-            unlink(new);
-            close(dd);
-            EVP_CIPHER_CTX_cleanup(&crypto_ctx);
-            return false;
-        }
-    }
-
-    /* If the file ends with a `hole', something needs to be written at
-       the end.  Otherwise the kernel would truncate the file at the end
-       of the last write operation. Write a null character and truncate
-       it again.  */
-
-    if (ftruncate(dd, n_read_total) < 0)
-    {
-        Log(LOG_LEVEL_ERR, "Copy failed (no space?) while copying '%s' from network '%s'",
-            new, GetErrorStr());
-        free(buf);
-        unlink(new);
-        close(dd);
-        EVP_CIPHER_CTX_cleanup(&crypto_ctx);
-        return false;
-    }
-
-    close(dd);
-    free(buf);
-    EVP_CIPHER_CTX_cleanup(&crypto_ctx);
-    return true;
-}
 
 /*********************************************************************/
 /* Level 2                                                           */

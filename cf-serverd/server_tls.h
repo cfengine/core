@@ -44,7 +44,7 @@ int ServerNegotiateProtocol(const ConnectionInfo *conn_info);
 int ServerIdentifyClient(const ConnectionInfo *conn_info,
                          char *username, size_t username_size);
 int ServerSendWelcome(const ServerConnectionState *conn);
-int BusyWithTLSConnection(EvalContext *ctx, ServerConnectionState *conn);
+bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn);
 
 
 #endif  /* CFENGINE_SERVER_TLS_H */

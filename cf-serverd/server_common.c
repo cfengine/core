@@ -24,49 +24,6 @@ static const int CF_NOSIZE = -1;
 #endif
 
 
-const char *PROTOCOL[] =
-{
-    "EXEC",
-    "AUTH",                     /* old protocol */
-    "GET",
-    "OPENDIR",
-    "SYNCH",
-    "CLASSES",
-    "MD5",
-    "SMD5",
-    "CAUTH",
-    "SAUTH",
-    "SSYNCH",
-    "SGET",
-    "VERSION",
-    "SOPENDIR",
-    "VAR",
-    "SVAR",
-    "CONTEXT",
-    "SCONTEXT",
-    "SQUERY",
-    "SCALLBACK",
-    "STARTTLS",
-    NULL
-};
-
-
-ProtocolCommand GetCommand(char *str)
-{
-    int i;
-    for (i = 0; PROTOCOL[i] != NULL; i++)
-    {
-        int cmdlen = strlen(PROTOCOL[i]);
-        if ((strncmp(str, PROTOCOL[i], cmdlen) == 0) &&
-            (str[cmdlen] == ' ' || str[cmdlen] == '\0'))
-        {
-            return i;
-        }
-    }
-    assert (i == PROTOCOL_COMMAND_BAD);
-    return i;
-}
-
 void RefuseAccess(ServerConnectionState *conn, int size, char *errmesg)
 {
     char *hostname, *username, *ipaddr;

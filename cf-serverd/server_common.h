@@ -36,7 +36,6 @@
 #include "server.h"                                /* ServerConnectionState */
 
 
-ProtocolCommand GetCommand(char *str);
 void RefuseAccess(ServerConnectionState *conn, int size, char *errmesg);
 int AllowedUser(char *user);
 int AccessControl(EvalContext *ctx, const char *req_path, ServerConnectionState *conn, int encrypt);

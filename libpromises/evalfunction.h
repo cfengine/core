@@ -33,7 +33,7 @@ FnCallResult FnCallHostInNetgroup(EvalContext *ctx, FnCall *fp, Rlist *finalargs
 FnCallResult CallFunction(EvalContext *ctx, const FnCallType *function, FnCall *fp, Rlist *finalargs);
 int FnNumArgs(const FnCallType *call_type);
 
-void ModuleProtocol(EvalContext *ctx, char *command, char *line, int print, const char *ns);
+void ModuleProtocol(EvalContext *ctx, char *command, char *line, int print, const char *ns, char* context);
 
 /* Implemented in Nova for Win32 */
 FnCallResult FnCallGroupExists(EvalContext *ctx, FnCall *fp, Rlist *finalargs);

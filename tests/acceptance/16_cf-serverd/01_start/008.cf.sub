@@ -2,6 +2,8 @@
 #
 # Test cf-serverd related promises, mtime simple copy localhost
 #
+# Tests secure copy (SGET) and secure stat (SSYNCH).
+#
 #######################################################
 
 body common control

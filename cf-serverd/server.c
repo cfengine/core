@@ -89,6 +89,81 @@ static int TRIES = 0;
 /*******************************************************************/
 
 
+//*******************************************************************
+// COMMANDS
+//*******************************************************************
+
+typedef enum
+{
+    PROTOCOL_COMMAND_EXEC,
+    PROTOCOL_COMMAND_AUTH,
+    PROTOCOL_COMMAND_GET,
+    PROTOCOL_COMMAND_OPENDIR,
+    PROTOCOL_COMMAND_SYNC,
+    PROTOCOL_COMMAND_CONTEXTS,
+    PROTOCOL_COMMAND_MD5,
+    PROTOCOL_COMMAND_MD5_SECURE,
+    PROTOCOL_COMMAND_AUTH_CLEAR,
+    PROTOCOL_COMMAND_AUTH_SECURE,
+    PROTOCOL_COMMAND_SYNC_SECURE,
+    PROTOCOL_COMMAND_GET_SECURE,
+    PROTOCOL_COMMAND_VERSION,
+    PROTOCOL_COMMAND_OPENDIR_SECURE,
+    PROTOCOL_COMMAND_VAR,
+    PROTOCOL_COMMAND_VAR_SECURE,
+    PROTOCOL_COMMAND_CONTEXT,
+    PROTOCOL_COMMAND_CONTEXT_SECURE,
+    PROTOCOL_COMMAND_QUERY_SECURE,
+    PROTOCOL_COMMAND_CALL_ME_BACK,
+    PROTOCOL_COMMAND_STARTTLS,
+    PROTOCOL_COMMAND_BAD
+} ProtocolCommandClassic;
+
+static const char *PROTOCOL_CLASSIC[] =
+{
+    "EXEC",
+    "AUTH",                     /* old protocol */
+    "GET",
+    "OPENDIR",
+    "SYNCH",
+    "CLASSES",
+    "MD5",
+    "SMD5",
+    "CAUTH",
+    "SAUTH",
+    "SSYNCH",
+    "SGET",
+    "VERSION",
+    "SOPENDIR",
+    "VAR",
+    "SVAR",
+    "CONTEXT",
+    "SCONTEXT",
+    "SQUERY",
+    "SCALLBACK",
+    "STARTTLS",
+    NULL
+};
+
+ProtocolCommandClassic GetCommandClassic(char *str)
+{
+    int i;
+    for (i = 0; PROTOCOL_CLASSIC[i] != NULL; i++)
+    {
+        int cmdlen = strlen(PROTOCOL_CLASSIC[i]);
+        if ((strncmp(str, PROTOCOL_CLASSIC[i], cmdlen) == 0) &&
+            (str[cmdlen] == ' ' || str[cmdlen] == '\0'))
+        {
+            return i;
+        }
+    }
+    assert (i == PROTOCOL_COMMAND_BAD);
+    return i;
+}
+
+
+/****************************************************************************/
+
 void ServerEntryPoint(EvalContext *ctx, int sd_accepted, char *ipaddr)
 {
     char intime[64];
@@ -352,7 +427,7 @@ static void *HandleConnection(ServerConnectionState *conn)
         }
         break;
     case CF_PROTOCOL_TLS:
-        while (BusyWithTLSConnection(conn->ctx, conn))
+        while (BusyWithNewProtocol(conn->ctx, conn))
         {
         }
         break;
@@ -414,7 +489,7 @@ static int BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *co
         return false;
     }
 
-    switch (GetCommand(recvbuffer))
+    switch (GetCommandClassic(recvbuffer))
     {
     case PROTOCOL_COMMAND_EXEC:
         memset(args, 0, CF_BUFSIZE);

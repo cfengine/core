@@ -363,10 +363,70 @@ int ServerSendWelcome(const ServerConnectionState *conn)
 }
 
 
-int BusyWithTLSConnection(EvalContext *ctx, ServerConnectionState *conn)
+//*******************************************************************
+// COMMANDS
+//*******************************************************************
+
+typedef enum
+{
+    PROTOCOL_COMMAND_EXEC = 0,
+    PROTOCOL_COMMAND_GET,
+    PROTOCOL_COMMAND_OPENDIR,
+    PROTOCOL_COMMAND_SYNC,
+    PROTOCOL_COMMAND_MD5,
+    PROTOCOL_COMMAND_MD5_SECURE,
+    PROTOCOL_COMMAND_VERSION,
+    PROTOCOL_COMMAND_OPENDIR_SECURE,
+    PROTOCOL_COMMAND_VAR,
+    PROTOCOL_COMMAND_VAR_SECURE,
+    PROTOCOL_COMMAND_CONTEXT,
+    PROTOCOL_COMMAND_CONTEXT_SECURE,
+    PROTOCOL_COMMAND_QUERY_SECURE,
+    PROTOCOL_COMMAND_CALL_ME_BACK,
+    PROTOCOL_COMMAND_BAD
+} ProtocolCommandNew;
+
+static const char *PROTOCOL_NEW[PROTOCOL_COMMAND_BAD + 1] =
+{
+    "EXEC",
+    "GET",
+    "OPENDIR",
+    "SYNCH",
+    "MD5",
+    "SMD5",
+    "VERSION",
+    "SOPENDIR",
+    "VAR",
+    "SVAR",
+    "CONTEXT",
+    "SCONTEXT",
+    "SQUERY",
+    "SCALLBACK",
+    NULL
+};
+
+static ProtocolCommandNew GetCommandNew(char *str)
+{
+    int i;
+    for (i = 0; PROTOCOL_NEW[i] != NULL; i++)
+    {
+        int cmdlen = strlen(PROTOCOL_NEW[i]);
+        if ((strncmp(str, PROTOCOL_NEW[i], cmdlen) == 0) &&
+            (str[cmdlen] == ' ' || str[cmdlen] == '\0'))
+        {
+            return i;
+        }
+    }
+    assert (i == PROTOCOL_COMMAND_BAD);
+    return i;
+}
+
+
+/****************************************************************************/
+bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
 {
     time_t tloc, trem = 0;
-    char recvbuffer[CF_BUFSIZE + CF_BUFEXT], sendbuffer[CF_BUFSIZE], check[CF_BUFSIZE];
+    char recvbuffer[CF_BUFSIZE + CF_BUFEXT], sendbuffer[CF_BUFSIZE];
     char filename[CF_BUFSIZE], buffer[CF_BUFSIZE], args[CF_BUFSIZE], out[CF_BUFSIZE];
     long time_no_see = 0;
     unsigned int len = 0;
@@ -395,7 +455,7 @@ int BusyWithTLSConnection(EvalContext *ctx, ServerConnectionState *conn)
         return false;
     }
 
-    switch (GetCommand(recvbuffer))
+    switch (GetCommandNew(recvbuffer))
     {
     case PROTOCOL_COMMAND_EXEC:
         memset(args, 0, CF_BUFSIZE);
@@ -494,68 +554,6 @@ int BusyWithTLSConnection(EvalContext *ctx, ServerConnectionState *conn)
 
         return true;
 
-    case PROTOCOL_COMMAND_GET_SECURE:
-
-        memset(buffer, 0, CF_BUFSIZE);
-        sscanf(recvbuffer, "SGET %u %d", &len, &(get_args.buf_size));
-
-        if (received != len + CF_PROTO_OFFSET)
-        {
-            Log(LOG_LEVEL_VERBOSE, "Protocol error SGET");
-            RefuseAccess(conn, 0, recvbuffer);
-            return false;
-        }
-
-        plainlen = DecryptString(conn->encryption_type, recvbuffer + CF_PROTO_OFFSET, buffer, conn->session_key, len);
-
-        cfscanf(buffer, strlen("GET"), strlen("dummykey"), check, sendbuffer, filename);
-
-        if (strcmp(check, "GET") != 0)
-        {
-            Log(LOG_LEVEL_INFO, "SGET/GET problem");
-            RefuseAccess(conn, 0, recvbuffer);
-            return true;
-        }
-
-        if ((get_args.buf_size < 0) || (get_args.buf_size > 8192))
-        {
-            Log(LOG_LEVEL_INFO, "SGET bounding error");
-            RefuseAccess(conn, 0, recvbuffer);
-            return false;
-        }
-
-        if (get_args.buf_size >= CF_BUFSIZE)
-        {
-            get_args.buf_size = 2048;
-        }
-
-        Log(LOG_LEVEL_DEBUG, "Confirm decryption, and thus validity of caller");
-        Log(LOG_LEVEL_DEBUG, "SGET '%s' with blocksize %d", filename, get_args.buf_size);
-
-        if (!conn->id_verified)
-        {
-            Log(LOG_LEVEL_INFO, "ID not verified");
-            RefuseAccess(conn, 0, recvbuffer);
-            return false;
-        }
-
-        if (!AccessControl(ctx, filename, conn, true))
-        {
-            Log(LOG_LEVEL_INFO, "Access control error");
-            RefuseAccess(conn, 0, recvbuffer);
-            return false;
-        }
-
-        memset(sendbuffer, 0, CF_BUFSIZE);
-
-        get_args.connect = conn;
-        get_args.encrypt = true;
-        get_args.replybuff = sendbuffer;
-        get_args.replyfile = filename;
-
-        CfEncryptGetFile(&get_args);
-        return true;
-
     case PROTOCOL_COMMAND_OPENDIR_SECURE:
 
         memset(buffer, 0, CF_BUFSIZE);
@@ -627,44 +625,6 @@ int BusyWithTLSConnection(EvalContext *ctx, ServerConnectionState *conn)
 
         CfOpenDirectory(conn, sendbuffer, filename);
         return true;
-
-    case PROTOCOL_COMMAND_SYNC_SECURE:
-
-        memset(buffer, 0, CF_BUFSIZE);
-        sscanf(recvbuffer, "SSYNCH %u", &len);
-
-        if ((len >= sizeof(out)) || (received != (len + CF_PROTO_OFFSET)))
-        {
-            Log(LOG_LEVEL_VERBOSE, "Protocol error SSYNCH: %d", len);
-            RefuseAccess(conn, 0, recvbuffer);
-            return false;
-        }
-
-        if (conn->session_key == NULL)
-        {
-            Log(LOG_LEVEL_INFO, "Bad session key");
-            RefuseAccess(conn, 0, recvbuffer);
-            return false;
-        }
-
-        memcpy(out, recvbuffer + CF_PROTO_OFFSET, len);
-
-        plainlen = DecryptString(conn->encryption_type, out, recvbuffer, conn->session_key, len);
-
-        if (plainlen < 0)
-        {
-            DebugBinOut((char *) conn->session_key, 32, "Session key");
-            Log(LOG_LEVEL_ERR, "Bad decrypt (%d)", len);
-        }
-
-        if (strncmp(recvbuffer, "SYNCH", 5) != 0)
-        {
-            Log(LOG_LEVEL_INFO, "No synch");
-            RefuseAccess(conn, 0, recvbuffer);
-            return true;
-        }
-
-        /* roll through, no break */
 
     case PROTOCOL_COMMAND_SYNC:
 
@@ -916,16 +876,12 @@ int BusyWithTLSConnection(EvalContext *ctx, ServerConnectionState *conn)
         }
         return ReceiveCollectCall(conn);
 
-    case PROTOCOL_COMMAND_AUTH:
-    case PROTOCOL_COMMAND_CONTEXTS:
     case PROTOCOL_COMMAND_BAD:
-    default:
-        Log(LOG_LEVEL_WARNING, "Unexpected protocol command");
+        Log(LOG_LEVEL_WARNING, "Unexpected protocol command: %s", recvbuffer);
     }
 
     sprintf(sendbuffer, "BAD: Request denied\n");
     SendTransaction(&conn->conn_info, sendbuffer, 0, CF_DONE);
     Log(LOG_LEVEL_INFO, "Closing connection, due to request: '%s'", recvbuffer);
     return false;
-    return 0;
 }

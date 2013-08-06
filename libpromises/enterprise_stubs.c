@@ -178,7 +178,7 @@ void *CfLDAPArray(EvalContext *ctx, const Bundle *caller, char *array, char *uri
     return NULL;
 }
 
-void *CfRegLDAP(char *uri, char *dn, char *filter, char *name, char *scope, char *regex, char *sec)
+void *CfRegLDAP(EvalContext *ctx, char *uri, char *dn, char *filter, char *name, char *scope, char *regex, char *sec)
 {
     Log(LOG_LEVEL_ERR, "LDAP support only available in CFEngine Enterprise");
     return NULL;

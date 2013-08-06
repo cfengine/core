@@ -4392,7 +4392,7 @@ static FnCallResult FnCallRegLDAP(EvalContext *ctx, FnCall *fp, Rlist *finalargs
     char *regex = RlistScalarValue(finalargs->next->next->next->next->next);
     char *sec = RlistScalarValue(finalargs->next->next->next->next->next->next);
 
-    if ((newval = CfRegLDAP(uri, dn, filter, name, scope, regex, sec)))
+    if ((newval = CfRegLDAP(ctx, uri, dn, filter, name, scope, regex, sec)))
     {
         return (FnCallResult) { FNCALL_SUCCESS, { newval, RVAL_TYPE_SCALAR } };
     }

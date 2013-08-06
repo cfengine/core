@@ -269,7 +269,7 @@ int main(int argc, char *argv[])
         NoteClassUsage(hard_iter, true);
     }
 #ifdef HAVE_NOVA
-    Nova_NoteVarUsageDB();
+    Nova_NoteVarUsageDB(ctx);
     Nova_TrackExecution(config->input_file);
 #endif
     PurgeLocks();

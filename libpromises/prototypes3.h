@@ -68,7 +68,7 @@ int GetRegistryValue(char *key, char *name, char *buf, int bufSz);
 void *CfLDAPValue(char *uri, char *dn, char *filter, char *name, char *scope, char *sec);
 void *CfLDAPList(char *uri, char *dn, char *filter, char *name, char *scope, char *sec);
 void *CfLDAPArray(EvalContext *ctx, const Bundle *caller, char *array, char *uri, char *dn, char *filter, char *scope, char *sec);
-void *CfRegLDAP(char *uri, char *dn, char *filter, char *name, char *scope, char *regex, char *sec);
+void *CfRegLDAP(EvalContext *ctx, char *uri, char *dn, char *filter, char *name, char *scope, char *regex, char *sec);
 void CacheUnreliableValue(char *caller, char *handle, char *buffer);
 int RetrieveUnreliableValue(char *caller, char *handle, char *buffer);
 void TranslatePath(char *new, const char *old);

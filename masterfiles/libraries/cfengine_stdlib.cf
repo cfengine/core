@@ -39,7 +39,7 @@
 # the online docs
 #
 
-# For Cfengine Core: 3.5.0 and older
+# For Cfengine Core: 3.4.x (use lib/3.N for CFEngine 3.5.x and newer)
 
 ###################################################
 # If you find Cfengine useful, please consider    #

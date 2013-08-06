@@ -1828,6 +1828,10 @@ body package_method apt_get
       # set it to "0" to avoid caching of list during upgrade
       package_list_update_ifelapsed => "240";
 
+      # make correct version comparisons
+      package_version_less_command => "$(debian_knowledge.call_dpkg) --compare-versions $(v1) lt $(v2)";
+      package_version_equal_command => "$(debian_knowledge.call_dpkg) --compare-versions $(v1) eq $(v2)";
+
       # Target a specific release, such as backports
       package_add_command => "$(debian_knowledge.call_apt_get) $(debian_knowledge.dpkg_options) --yes install";
       package_list_update_command => "$(debian_knowledge.call_apt_get) update";
@@ -1853,6 +1857,10 @@ body package_method apt_get_release(release)
 
       # set it to "0" to avoid caching of list during upgrade
       package_list_update_ifelapsed => "240";
+
+      # make correct version comparisons
+      package_version_less_command => "$(debian_knowledge.call_dpkg) --compare-versions $(v1) lt $(v2)";
+      package_version_equal_command => "$(debian_knowledge.call_dpkg) --compare-versions $(v1) eq $(v2)";
 
       # Target a specific release, such as backports
       package_add_command => "$(debian_knowledge.call_apt_get) $(debian_knowledge.dpkg_options) --yes --target-release $(release) install";

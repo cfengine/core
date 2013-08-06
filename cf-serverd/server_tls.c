@@ -375,7 +375,6 @@ typedef enum
     PROTOCOL_COMMAND_SYNC,
     PROTOCOL_COMMAND_MD5,
     PROTOCOL_COMMAND_VERSION,
-    PROTOCOL_COMMAND_OPENDIR_SECURE,
     PROTOCOL_COMMAND_VAR,
     PROTOCOL_COMMAND_VAR_SECURE,
     PROTOCOL_COMMAND_CONTEXT,
@@ -393,7 +392,6 @@ static const char *PROTOCOL_NEW[PROTOCOL_COMMAND_BAD + 1] =
     "SYNCH",
     "MD5",
     "VERSION",
-    "SOPENDIR",
     "VAR",
     "SVAR",
     "CONTEXT",
@@ -550,56 +548,6 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
 
         CfGetFile(&get_args);
 
-        return true;
-
-    case PROTOCOL_COMMAND_OPENDIR_SECURE:
-
-        memset(buffer, 0, CF_BUFSIZE);
-        sscanf(recvbuffer, "SOPENDIR %u", &len);
-
-        if ((len >= sizeof(out)) || (received != (len + CF_PROTO_OFFSET)))
-        {
-            Log(LOG_LEVEL_VERBOSE, "Protocol error OPENDIR: %d", len);
-            RefuseAccess(conn, 0, recvbuffer);
-            return false;
-        }
-
-        if (conn->session_key == NULL)
-        {
-            Log(LOG_LEVEL_INFO, "No session key");
-            RefuseAccess(conn, 0, recvbuffer);
-            return false;
-        }
-
-        memcpy(out, recvbuffer + CF_PROTO_OFFSET, len);
-
-        plainlen = DecryptString(conn->encryption_type, out, recvbuffer, conn->session_key, len);
-
-        if (strncmp(recvbuffer, "OPENDIR", 7) != 0)
-        {
-            Log(LOG_LEVEL_INFO, "Opendir failed to decrypt");
-            RefuseAccess(conn, 0, recvbuffer);
-            return true;
-        }
-
-        memset(filename, 0, CF_BUFSIZE);
-        sscanf(recvbuffer, "OPENDIR %[^\n]", filename);
-
-        if (!conn->id_verified)
-        {
-            Log(LOG_LEVEL_INFO, "ID not verified");
-            RefuseAccess(conn, 0, recvbuffer);
-            return false;
-        }
-
-        if (!AccessControl(ctx, filename, conn, true))        /* opendir don't care about privacy */
-        {
-            Log(LOG_LEVEL_INFO, "Access error");
-            RefuseAccess(conn, 0, recvbuffer);
-            return false;
-        }
-
-        CfSecOpenDirectory(conn, sendbuffer, filename);
         return true;
 
     case PROTOCOL_COMMAND_OPENDIR:

@@ -1764,6 +1764,9 @@ bundle common debian_knowledge
       "call_apt_get" string => "$(apt_prefix) $(paths.path[apt_get])";
       "call_aptitude" string => "$(apt_prefix) $(paths.path[aptitude])";
       "dpkg_options" string => "-o Dpkg::Options::=--force-confold -o Dpkg::Options::=--force-confdef";
+
+      "dpkg_compare_equal" string => "$(call_dpkg) --compare-versions $(v1) eq $(v2)";
+      "dpkg_compare_less" string => "$(call_dpkg) --compare-versions $(v1) lt $(v2)";
 }
 
 body package_method apt
@@ -1779,8 +1782,8 @@ body package_method apt
       package_list_update_ifelapsed => "240";
 
       # make correct version comparisons
-      package_version_less_command => "$(debian_knowledge.call_dpkg) --compare-versions $(v1) lt $(v2)";
-      package_version_equal_command => "$(debian_knowledge.call_dpkg) --compare-versions $(v1) eq $(v2)";
+      package_version_less_command => "$(debian_knowledge.dpkg_compare_less)";
+      package_version_equal_command => "$(debian_knowledge.dpkg_compare_equal)";
 
     have_aptitude::
       package_add_command => "$(debian_knowledge.call_aptitude) $(debian_knowledge.dpkg_options) --assume-yes install";
@@ -1829,8 +1832,8 @@ body package_method apt_get
       package_list_update_ifelapsed => "240";
 
       # make correct version comparisons
-      package_version_less_command => "$(debian_knowledge.call_dpkg) --compare-versions $(v1) lt $(v2)";
-      package_version_equal_command => "$(debian_knowledge.call_dpkg) --compare-versions $(v1) eq $(v2)";
+      package_version_less_command => "$(debian_knowledge.dpkg_compare_less)";
+      package_version_equal_command => "$(debian_knowledge.dpkg_compare_equal)";
 
       # Target a specific release, such as backports
       package_add_command => "$(debian_knowledge.call_apt_get) $(debian_knowledge.dpkg_options) --yes install";
@@ -1859,8 +1862,8 @@ body package_method apt_get_release(release)
       package_list_update_ifelapsed => "240";
 
       # make correct version comparisons
-      package_version_less_command => "$(debian_knowledge.call_dpkg) --compare-versions $(v1) lt $(v2)";
-      package_version_equal_command => "$(debian_knowledge.call_dpkg) --compare-versions $(v1) eq $(v2)";
+      package_version_less_command => "$(debian_knowledge.dpkg_compare_less)";
+      package_version_equal_command => "$(debian_knowledge.dpkg_compare_equal)";
 
       # Target a specific release, such as backports
       package_add_command => "$(debian_knowledge.call_apt_get) $(debian_knowledge.dpkg_options) --yes --target-release $(release) install";
@@ -1916,8 +1919,8 @@ body package_method dpkg_version(repo)
       package_patch_command =>  "$(debian_knowledge.call_dpkg) --install";
 
       # make correct version comparisons
-      package_version_less_command => "$(debian_knowledge.call_dpkg) --compare-versions $(v1) lt $(v2)";
-      package_version_equal_command => "$(debian_knowledge.call_dpkg) --compare-versions $(v1) eq $(v2)";
+      package_version_less_command => "$(debian_knowledge.dpkg_compare_less)";
+      package_version_equal_command => "$(debian_knowledge.dpkg_compare_equal)";
 }
 
 ##
@@ -2623,8 +2626,8 @@ body package_method generic
       package_list_update_ifelapsed => "240";		# 4 hours
 
       # make correct version comparisons
-      package_version_less_command => "$(debian_knowledge.call_dpkg) --compare-versions $(v1) lt $(v2)";
-      package_version_equal_command => "$(debian_knowledge.call_dpkg) --compare-versions $(v1) eq $(v2)";
+      package_version_less_command => "$(debian_knowledge.dpkg_compare_less)";
+      package_version_equal_command => "$(debian_knowledge.dpkg_compare_equal)";
 
     debian.have_aptitude::
       package_add_command => "$(debian_knowledge.call_aptitude) $(debian_knowledge.dpkg_options) --assume-yes install";

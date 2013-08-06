@@ -1642,6 +1642,11 @@ VariableTableIterator *EvalContextVariableTableIteratorNew(const EvalContext *ct
     return table ? VariableTableIteratorNew(table, ref->ns, ref->scope, ref->lval) : NULL;
 }
 
+VariableTableIterator *EvalContextVariableTableIteratorNewGlobals(const EvalContext *ctx, const char *ns, const char *scope)
+{
+    return VariableTableIteratorNew(ctx->global_variables, ns, scope, NULL);
+}
+
 bool EvalContextVariableControlCommonGet(const EvalContext *ctx, CommonControl lval, Rval *rval_out)
 {
     if (lval == COMMON_CONTROL_NONE)

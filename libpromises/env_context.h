@@ -162,6 +162,7 @@ bool EvalContextVariableRemove(const EvalContext *ctx, const VarRef *ref);
 bool EvalContextVariableClearMatch(EvalContext *ctx);
 
 VariableTableIterator *EvalContextVariableTableIteratorNew(const EvalContext *ctx, const VarRef *ref);
+VariableTableIterator *EvalContextVariableTableIteratorNewGlobals(const EvalContext *ctx, const char *ns, const char *scope);
 
 
 bool EvalContextVariableControlCommonGet(const EvalContext *ctx, CommonControl lval, Rval *rval_out);

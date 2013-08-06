@@ -49,7 +49,7 @@ void ReplyServerContext(ServerConnectionState *conn, int encrypted, Item *classe
 int CfOpenDirectory(ServerConnectionState *conn, char *sendbuffer, char *oldDirname);
 int CfSecOpenDirectory(ServerConnectionState *conn, char *sendbuffer, char *dirname);
 void GetServerLiteral(EvalContext *ctx, ServerConnectionState *conn, char *sendbuffer, char *recvbuffer, int encrypted);
-int GetServerQuery(ServerConnectionState *conn, char *recvbuffer);
+int GetServerQuery(ServerConnectionState *conn, char *recvbuffer, int encrypted);
 int cfscanf(char *in, int len1, int len2, char *out1, char *out2, char *out3);
 void CompareLocalHash(ServerConnectionState *conn, char *sendbuffer, char *recvbuffer);
 int LiteralAccessControl(EvalContext *ctx, char *in, ServerConnectionState *conn, int encrypt);

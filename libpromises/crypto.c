@@ -359,7 +359,7 @@ void SavePublicKey(const char *user, const char *digest, const RSA *key)
     fclose(fp);
 }
 
-int EncryptString(char type, char *in, char *out, unsigned char *key, int plainlen)
+int EncryptString(char type, const char *in, char *out, unsigned char *key, int plainlen)
 {
     int cipherlen = 0, tmplen;
     unsigned char iv[32] =
@@ -391,7 +391,7 @@ int EncryptString(char type, char *in, char *out, unsigned char *key, int plainl
 
 /*********************************************************************/
 
-int DecryptString(char type, char *in, char *out, unsigned char *key, int cipherlen)
+int DecryptString(char type, const char *in, char *out, unsigned char *key, int cipherlen)
 {
     int plainlen = 0, tmplen;
     unsigned char iv[32] =

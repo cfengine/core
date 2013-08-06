@@ -376,10 +376,8 @@ typedef enum
     PROTOCOL_COMMAND_MD5,
     PROTOCOL_COMMAND_VERSION,
     PROTOCOL_COMMAND_VAR,
-    PROTOCOL_COMMAND_VAR_SECURE,
     PROTOCOL_COMMAND_CONTEXT,
-    PROTOCOL_COMMAND_CONTEXT_SECURE,
-    PROTOCOL_COMMAND_QUERY_SECURE,
+    PROTOCOL_COMMAND_QUERY,
     PROTOCOL_COMMAND_CALL_ME_BACK,
     PROTOCOL_COMMAND_BAD
 } ProtocolCommandNew;
@@ -393,10 +391,8 @@ static const char *PROTOCOL_NEW[PROTOCOL_COMMAND_BAD + 1] =
     "MD5",
     "VERSION",
     "VAR",
-    "SVAR",
     "CONTEXT",
-    "SCONTEXT",
-    "SQUERY",
+    "QUERY",
     "SCALLBACK",
     NULL
 };
@@ -423,12 +419,16 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
 {
     time_t tloc, trem = 0;
     char recvbuffer[CF_BUFSIZE + CF_BUFEXT], sendbuffer[CF_BUFSIZE];
-    char filename[CF_BUFSIZE], buffer[CF_BUFSIZE], args[CF_BUFSIZE], out[CF_BUFSIZE];
+    char filename[CF_BUFSIZE], args[CF_BUFSIZE], out[CF_BUFSIZE];
     long time_no_see = 0;
     unsigned int len = 0;
-    int drift, plainlen, received, encrypted = 0;
+    int drift, received;
     ServerFileGetState get_args;
     Item *classes;
+
+    /* We never double encrypt within the TLS layer */
+    const int encrypted = 0;
+
 
     memset(recvbuffer, 0, CF_BUFSIZE + CF_BUFEXT);
     memset(&get_args, 0, sizeof(get_args));
@@ -635,30 +635,6 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
         CompareLocalHash(conn, sendbuffer, recvbuffer);
         return true;
 
-    case PROTOCOL_COMMAND_VAR_SECURE:
-
-        sscanf(recvbuffer, "SVAR %u", &len);
-
-        if ((len >= sizeof(out)) || (received != (len + CF_PROTO_OFFSET)))
-        {
-            Log(LOG_LEVEL_INFO, "Decrypt error SVAR");
-            RefuseAccess(conn, 0, "decrypt error SVAR");
-            return true;
-        }
-
-        memcpy(out, recvbuffer + CF_PROTO_OFFSET, len);
-        plainlen = DecryptString(conn->encryption_type, out, recvbuffer, conn->session_key, len);
-        encrypted = true;
-
-        if (strncmp(recvbuffer, "VAR", 3) != 0)
-        {
-            Log(LOG_LEVEL_INFO, "VAR protocol defect");
-            RefuseAccess(conn, 0, "decryption failure");
-            return false;
-        }
-
-        /* roll through, no break */
-
     case PROTOCOL_COMMAND_VAR:
 
         if (!conn->id_verified)
@@ -677,30 +653,6 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
 
         GetServerLiteral(ctx, conn, sendbuffer, recvbuffer, encrypted);
         return true;
-
-    case PROTOCOL_COMMAND_CONTEXT_SECURE:
-
-        sscanf(recvbuffer, "SCONTEXT %u", &len);
-
-        if ((len >= sizeof(out)) || (received != (len + CF_PROTO_OFFSET)))
-        {
-            Log(LOG_LEVEL_INFO, "Decrypt error SCONTEXT, len,received = %d,%d", len, received);
-            RefuseAccess(conn, 0, "decrypt error SCONTEXT");
-            return true;
-        }
-
-        memcpy(out, recvbuffer + CF_PROTO_OFFSET, len);
-        plainlen = DecryptString(conn->encryption_type, out, recvbuffer, conn->session_key, len);
-        encrypted = true;
-
-        if (strncmp(recvbuffer, "CONTEXT", 7) != 0)
-        {
-            Log(LOG_LEVEL_INFO, "CONTEXT protocol defect...");
-            RefuseAccess(conn, 0, "Decryption failed?");
-            return false;
-        }
-
-        /* roll through, no break */
 
     case PROTOCOL_COMMAND_CONTEXT:
 
@@ -721,26 +673,7 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
         ReplyServerContext(conn, encrypted, classes);
         return true;
 
-    case PROTOCOL_COMMAND_QUERY_SECURE:
-
-        sscanf(recvbuffer, "SQUERY %u", &len);
-
-        if ((len >= sizeof(out)) || (received != (len + CF_PROTO_OFFSET)))
-        {
-            Log(LOG_LEVEL_INFO, "Decrypt error SQUERY");
-            RefuseAccess(conn, 0, "decrypt error SQUERY");
-            return true;
-        }
-
-        memcpy(out, recvbuffer + CF_PROTO_OFFSET, len);
-        plainlen = DecryptString(conn->encryption_type, out, recvbuffer, conn->session_key, len);
-
-        if (strncmp(recvbuffer, "QUERY", 5) != 0)
-        {
-            Log(LOG_LEVEL_INFO, "QUERY protocol defect");
-            RefuseAccess(conn, 0, "decryption failure");
-            return false;
-        }
+    case PROTOCOL_COMMAND_QUERY:
 
         if (!conn->id_verified)
         {
@@ -749,14 +682,14 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
             return true;
         }
 
-        if (!LiteralAccessControl(ctx, recvbuffer, conn, true))
+        if (!LiteralAccessControl(ctx, recvbuffer, conn, encrypted))
         {
             Log(LOG_LEVEL_INFO, "Query access failure");
             RefuseAccess(conn, 0, recvbuffer);
             return false;
         }
 
-        if (GetServerQuery(conn, recvbuffer))
+        if (GetServerQuery(conn, recvbuffer, encrypted))
         {
             return true;
         }
@@ -775,7 +708,7 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
         }
 
         memcpy(out, recvbuffer + CF_PROTO_OFFSET, len);
-        plainlen = DecryptString(conn->encryption_type, out, recvbuffer, conn->session_key, len);
+        DecryptString(conn->encryption_type, out, recvbuffer, conn->session_key, len);
 
         if (strncmp(recvbuffer, "CALL_ME_BACK collect_calls", strlen("CALL_ME_BACK collect_calls")) != 0)
         {

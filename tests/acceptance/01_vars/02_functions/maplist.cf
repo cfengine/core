@@ -1,0 +1,73 @@
+#######################################################
+#
+# Test maplist()
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+  vars:
+      "dummy" string => "dummy";
+
+  files:
+      "$(G.testfile).expected"
+      create => "true",
+      edit_line => init_insert;
+}
+
+bundle edit_line init_insert
+{
+  insert_lines:
+      "value=zero";
+      "value=two";
+      "value=three's";
+      "value=four-fore:quatre";
+      "value=last";
+}
+
+#######################################################
+
+bundle agent test
+{
+  vars:
+      "testlist" slist => { "zero", "two", "three's", "four-fore:quatre", "last" };
+
+      "mapped" slist => maplist("value=$(this)", "testlist");
+
+  files:
+      "$(G.testfile).actual"
+      create => "true",
+      edit_line => test_insert;
+
+  reports:
+    DEBUG::
+      "Inserting line: $(mapped)";
+}
+
+bundle edit_line test_insert
+{
+  vars:
+      "mapped" slist => { @{test.mapped} };
+
+  insert_lines:
+      "$(mapped)";
+}
+
+#######################################################
+
+bundle agent check
+{
+  methods:
+      "any" usebundle => sorted_check_diff("$(G.testfile).actual",
+                                           "$(G.testfile).expected",
+                                           "$(this.promise_filename)");
+}

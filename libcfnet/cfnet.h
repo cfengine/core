@@ -134,7 +134,7 @@ typedef struct
     char encryption_type;
     short error;
     char *this_server;
-    Stat *cache; /* Cache for network connection (READDIR result) */
+    Stat *cache;             /* Cache for network connection (SYNCH result) */
 } AgentConnection;
 
 

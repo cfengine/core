@@ -997,7 +997,7 @@ static int BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *co
             return false;
         }
 
-        if (GetServerQuery(conn, recvbuffer))
+        if (GetServerQuery(conn, recvbuffer, true))       /* always encrypt */
         {
             return true;
         }

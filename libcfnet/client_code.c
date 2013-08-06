@@ -485,7 +485,7 @@ int cf_remote_stat(char *file, struct stat *buf, char *stattype, bool encrypt, A
     sendbuffer[0] = '\0';
 
     /* We encrypt only for CLASSIC protocol. The TLS protocol is always over
-     * encrypted layer, so it does not special encrypted (S*) commands. */
+     * encrypted layer, so it does not support encrypted (S*) commands. */
     encrypt = encrypt && (conn->conn_info.type == CF_PROTOCOL_CLASSIC);
 
     if (encrypt)
@@ -676,7 +676,7 @@ Item *RemoteDirList(const char *dirname, bool encrypt, AgentConnection *conn)
     }
 
     /* We encrypt only for CLASSIC protocol. The TLS protocol is always over
-     * encrypted layer, so it does not special encrypted (S*) commands. */
+     * encrypted layer, so it does not support encrypted (S*) commands. */
     encrypt = encrypt && (conn->conn_info.type == CF_PROTOCOL_CLASSIC);
 
     if (encrypt)
@@ -800,7 +800,7 @@ int CompareHashNet(char *file1, char *file2, bool encrypt, AgentConnection *conn
     memset(recvbuffer, 0, CF_BUFSIZE);
 
     /* We encrypt only for CLASSIC protocol. The TLS protocol is always over
-     * encrypted layer, so it does not special encrypted (S*) commands. */
+     * encrypted layer, so it does not support encrypted (S*) commands. */
     encrypt = encrypt && (conn->conn_info.type == CF_PROTOCOL_CLASSIC);
 
     if (encrypt)
@@ -1015,7 +1015,7 @@ int CopyRegularFileNet(char *source, char *new, off_t size, bool encrypt, AgentC
     EVP_CIPHER_CTX crypto_ctx;
 
     /* We encrypt only for CLASSIC protocol. The TLS protocol is always over
-     * encrypted layer, so it does not special encrypted (S*) commands. */
+     * encrypted layer, so it does not support encrypted (S*) commands. */
     encrypt = encrypt && (conn->conn_info.type == CF_PROTOCOL_CLASSIC);
 
     if (encrypt)

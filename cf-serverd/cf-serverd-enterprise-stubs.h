@@ -37,7 +37,7 @@ int SetServerListenState(EvalContext *ctx, size_t queue_size);
 void TryCollectCall(void);
 int ReceiveCollectCall(struct ServerConnectionState *conn);
 
-bool ReturnQueryData(struct ServerConnectionState *conn, char *menu);
+bool ReturnQueryData(struct ServerConnectionState *conn, char *menu, int encrypt);
 
 void KeepReportDataSelectAccessPromise(Promise *pp);
 void CleanReportBookFilterSet(void);

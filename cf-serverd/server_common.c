@@ -1499,7 +1499,7 @@ void GetServerLiteral(EvalContext *ctx, ServerConnectionState *conn, char *sendb
     }
 }
 
-int GetServerQuery(ServerConnectionState *conn, char *recvbuffer)
+int GetServerQuery(ServerConnectionState *conn, char *recvbuffer, int encrypt)
 {
     char query[CF_BUFSIZE];
 
@@ -1511,7 +1511,7 @@ int GetServerQuery(ServerConnectionState *conn, char *recvbuffer)
         return false;
     }
 
-    return ReturnQueryData(conn, query);
+    return ReturnQueryData(conn, query, encrypt);
 }
 
 void ReplyServerContext(ServerConnectionState *conn, int encrypted, Item *classes)

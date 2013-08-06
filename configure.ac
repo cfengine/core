@@ -383,6 +383,21 @@ fi
 
 AM_CONDITIONAL([HAVE_LIBXML2], [test "x$with_libxml2" != "xno" && test "x$ac_cv_lib_xml2_xmlFirstElementChild" = xyes])
 
+dnl matheval
+
+AC_ARG_WITH([matheval],
+    [AS_HELP_STRING([--with-matheval[[=PATH]]], [support math expression evaluation])],
+    [], [with_matheval=check])
+
+if test "x$with_matheval" != xno; then
+   CF3_WITH_LIBRARY(matheval, [
+      AC_CHECK_LIB(matheval, evaluator_create, [], [if test "x$with_matheval" != xcheck; then AC_MSG_ERROR(Cannot find matheval library); fi])
+      AC_CHECK_HEADERS(matheval.h, [], [if test "x$with_matheval" != xcheck; then AC_MSG_ERROR(Cannot find matheval library headers); fi])
+   ])
+fi
+
+AM_CONDITIONAL([HAVE_LIBMATHEVAL], [test "x$with_matheval" != "xno" && test "x$ac_cv_lib_matheval_evaluator_create" = xyes])
+
 dnl avahi
 
 AC_CHECK_HEADERS(avahi-client/client.h, AM_CONDITIONAL(HAVE_AVAHI_CLIENT, true), AM_CONDITIONAL(HAVE_AVAHI_CLIENT, false), [])
@@ -818,10 +833,10 @@ dnl ######################################################################
 dnl Collect all the options
 dnl ######################################################################
 
-CPPFLAGS="$CPPFLAGS $TOKYOCABINET_CPPFLAGS $QDBM_CPPFLAGS $PCRE_CPPFLAGS $OPENSSL_CPPFLAGS $MONGO_CPPFLAGS $SQLITE3_CPPFLAGS $LIBACL_CPPFLAGS"
-CFLAGS="$CFLAGS $TOKYOCABINET_CFLAGS $QDBM_CFLAGS $PCRE_CFLAGS $OPENSSL_CFLAGS $MONGO_CFLAGS $SQLITE3_CFLAGS $LIBACL_CFLAGS"
-LDFLAGS="$LDFLAGS $TOKYOCABINET_LDFLAGS $QDBM_LDFLAGS $PCRE_LDFLAGS $OPENSSL_LDFLAGS $MONGO_LDFLAGS $SQLITE3_LDFLAGS $LIBACL_LDFLAGS"
-LIBS="$LIBS $TOKYOCABINET_LIBS $QDBM_LIBS $PCRE_LIBS $OPENSSL_LIBS $MONGO_LIBS $SQLITE3_LIBS $LIBACL_LIBS"
+CPPFLAGS="$CPPFLAGS $TOKYOCABINET_CPPFLAGS $QDBM_CPPFLAGS $PCRE_CPPFLAGS $OPENSSL_CPPFLAGS $MONGO_CPPFLAGS $SQLITE3_CPPFLAGS $LIBACL_CPPFLAGS $MATHEVAL_CPPFLAGS"
+CFLAGS="$CFLAGS $TOKYOCABINET_CFLAGS $QDBM_CFLAGS $PCRE_CFLAGS $OPENSSL_CFLAGS $MONGO_CFLAGS $SQLITE3_CFLAGS $LIBACL_CFLAGS $MATHEVAL_CFLAGS"
+LDFLAGS="$LDFLAGS $TOKYOCABINET_LDFLAGS $QDBM_LDFLAGS $PCRE_LDFLAGS $OPENSSL_LDFLAGS $MONGO_LDFLAGS $SQLITE3_LDFLAGS $LIBACL_LDFLAGS $MATHEVAL_LDFLAGS"
+LIBS="$LIBS $TOKYOCABINET_LIBS $QDBM_LIBS $PCRE_LIBS $OPENSSL_LIBS $MONGO_LIBS $SQLITE3_LIBS $LIBACL_LIBS $MATHEVAL_LIBS"
 
 dnl ######################################################################
 dnl OS specific stuff
@@ -1091,6 +1106,12 @@ if test "x$ac_cv_lib_xml2_xmlFirstElementChild" = xyes; then
   AC_MSG_RESULT([-> libxml2: $LIBXML2_PATH])
 else
   AC_MSG_RESULT([-> libxml2: disabled])
+fi
+
+if test "x$ac_cv_lib_matheval_evaluator_create" = xyes; then
+  AC_MSG_RESULT([-> matheval: $MATHEVAL_PATH])
+else
+  AC_MSG_RESULT([-> matheval: disabled])
 fi
 
 m4_indir(incstart[]incend, [nova/config.m4])

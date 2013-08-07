@@ -51,29 +51,6 @@ static bool EvalContextStackFrameContainsNegated(const EvalContext *ctx, const c
 
 static bool ABORTBUNDLE = false;
 
-/*****************************************************************************/
-/* Level                                                                     */
-/*****************************************************************************/
-
-static const char *StackFrameOwnerName(const StackFrame *frame)
-{
-    switch (frame->type)
-    {
-    case STACK_FRAME_TYPE_BUNDLE:
-        return frame->data.bundle.owner->name;
-
-    case STACK_FRAME_TYPE_BODY:
-        return frame->data.body.owner->name;
-
-    case STACK_FRAME_TYPE_PROMISE:
-    case STACK_FRAME_TYPE_PROMISE_ITERATION:
-        return "this";
-
-    default:
-        ProgrammingError("Unhandled stack frame type");
-    }
-}
-
 static StackFrame *LastStackFrame(const EvalContext *ctx, size_t offset)
 {
     if (SeqLength(ctx->stack) <= offset)
@@ -129,6 +106,18 @@ static StackFrame *LastStackFrameBundle(const EvalContext *ctx)
     }
 }
 
+static const char *GetAgentAbortingContext(const EvalContext *ctx)
+{
+    for (const Item *ip = ctx->heap_abort; ip != NULL; ip = ip->next)
+    {
+        if (IsDefinedClass(ctx, ip->name, NULL))
+        {
+            return ip->name;
+        }
+    }
+    return NULL;
+}
+
 void EvalContextHeapAddSoft(EvalContext *ctx, const char *context, const char *ns)
 {
     char context_copy[CF_MAXVARSIZE];
@@ -163,8 +152,7 @@ void EvalContextHeapAddSoft(EvalContext *ctx, const char *context, const char *n
 
     if (IsRegexItemIn(ctx, ctx->heap_abort, context_copy))
     {
-        Log(LOG_LEVEL_ERR, "cf-agent aborted on defined class '%s'", context_copy);
-        exit(1);
+        FatalError(ctx, "cf-agent aborted on defined class '%s'", context_copy);
     }
 
     if (EvalContextHeapContainsSoft(ctx, context_copy))
@@ -173,15 +161,6 @@ void EvalContextHeapAddSoft(EvalContext *ctx, const char *context, const char *n
     }
 
     StringSetAdd(ctx->heap_soft, xstrdup(context_copy));
-
-    for (const Item *ip = ctx->heap_abort; ip != NULL; ip = ip->next)
-    {
-        if (IsDefinedClass(ctx, ip->name, ns))
-        {
-            Log(LOG_LEVEL_ERR, "cf-agent aborted on defined class '%s' defined in bundle '%s'", ip->name, StackFrameOwnerName(LastStackFrame(ctx, 0)));
-            exit(1);
-        }
-    }
 
     if (!ABORTBUNDLE)
     {
@@ -223,8 +202,7 @@ void EvalContextHeapAddHard(EvalContext *ctx, const char *context)
 
     if (IsRegexItemIn(ctx, ctx->heap_abort, context_copy))
     {
-        Log(LOG_LEVEL_ERR, "cf-agent aborted on defined class '%s'", context_copy);
-        exit(1);
+        FatalError(ctx, "cf-agent aborted on defined class '%s'", context_copy);
     }
 
     if (EvalContextHeapContainsHard(ctx, context_copy))
@@ -233,15 +211,6 @@ void EvalContextHeapAddHard(EvalContext *ctx, const char *context)
     }
 
     StringSetAdd(ctx->heap_hard, xstrdup(context_copy));
-
-    for (const Item *ip = ctx->heap_abort; ip != NULL; ip = ip->next)
-    {
-        if (IsDefinedClass(ctx, ip->name, NULL))
-        {
-            Log(LOG_LEVEL_ERR, "cf-agent aborted on defined class '%s' defined in bundle '%s'", ip->name, StackFrameOwnerName(LastStackFrame(ctx, 0)));
-            exit(1);
-        }
-    }
 
     if (!ABORTBUNDLE)
     {
@@ -290,23 +259,22 @@ void EvalContextStackFrameAddSoft(EvalContext *ctx, const char *context)
     {
         return;
     }
-    
-    if (IsRegexItemIn(ctx, ctx->heap_abort_current_bundle, copy))
-    {
-        Log(LOG_LEVEL_ERR, "Bundle %s aborted on defined class '%s'", frame.owner->name, copy);
-        ABORTBUNDLE = true;
-    }
-
-    if (IsRegexItemIn(ctx, ctx->heap_abort, copy))
-    {
-        Log(LOG_LEVEL_ERR, "cf-agent aborted on defined class '%s' defined in bundle '%s'", copy, frame.owner->name);
-        exit(1);
-    }
 
     if (EvalContextHeapContainsSoft(ctx, copy))
     {
         Log(LOG_LEVEL_WARNING, "Private class '%s' in bundle '%s' shadows a global class - you should choose a different name to avoid conflicts",
               copy, frame.owner->name);
+    }
+
+    if (IsRegexItemIn(ctx, ctx->heap_abort_current_bundle, copy))
+    {
+        Log(LOG_LEVEL_ERR, "Bundle aborted on defined class '%s'", copy);
+        ABORTBUNDLE = true;
+    }
+
+    if (IsRegexItemIn(ctx, ctx->heap_abort, copy))
+    {
+        FatalError(ctx, "cf-agent aborted on defined class '%s'", copy);
     }
 
     if (EvalContextStackFrameContainsSoft(ctx, copy))
@@ -315,15 +283,6 @@ void EvalContextStackFrameAddSoft(EvalContext *ctx, const char *context)
     }
 
     StringSetAdd(frame.contexts, xstrdup(copy));
-
-    for (const Item *ip = ctx->heap_abort; ip != NULL; ip = ip->next)
-    {
-        if (IsDefinedClass(ctx, ip->name, frame.owner->ns))
-        {
-            Log(LOG_LEVEL_ERR, "cf-agent aborted on defined class '%s' defined in bundle '%s'", copy, frame.owner->name);
-            exit(1);
-        }
-    }
 
     if (!ABORTBUNDLE)
     {
@@ -1219,6 +1178,11 @@ void EvalContextStackPopFrame(EvalContext *ctx)
     }
 
     SeqRemove(ctx->stack, SeqLength(ctx->stack) - 1);
+
+    if (GetAgentAbortingContext(ctx))
+    {
+        FatalError(ctx, "cf-agent aborted on context '%s'", GetAgentAbortingContext(ctx));
+    }
 }
 
 StringSetIterator EvalContextStackFrameIteratorSoft(const EvalContext *ctx)

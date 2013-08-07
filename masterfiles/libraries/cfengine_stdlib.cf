@@ -3230,6 +3230,12 @@ bundle agent standard_services(service,state)
       "stopcommand[restorecond]"    string => "/etc/init.d/restorecond stop";
       "pattern[restorecond]"        string => ".*restorecond.*";
 
+      "startcommand[rhnsd]"   string => "/sbin/service rhnsd start";
+      "restartcommand[rhnsd]" string => "/sbin/service rhnsd restart";
+      "reloadcommand[rhnsd]"  string => "/sbin/service rhnsd reload";
+      "stopcommand[rhnsd]"    string => "/sbin/service rhnsd stop";
+      "pattern[rhnsd]"        string => "rhnsd";
+
       "startcommand[rpcgssd]"   string => "/etc/init.d/rpcgssd start";
       "restartcommand[rpcgssd]" string => "/etc/init.d/rpcgssd restart";
       "reloadcommand[rpcgssd]"  string => "/etc/init.d/rpcgssd reload";
@@ -3259,6 +3265,12 @@ bundle agent standard_services(service,state)
       "reloadcommand[smartd]"  string => "/etc/init.d/smartd reload";
       "stopcommand[smartd]"    string => "/etc/init.d/smartd stop";
       "pattern[smartd]"        string => ".*smartd.*";
+
+      "startcommand[snmpd]"   string => "/etc/init.d/snmpd start";
+      "restartcommand[snmpd]" string => "/sbin/service snmpd restart";
+      "reloadcommand[snmpd]"  string => "/sbin/service snmpd reload";
+      "stopcommand[snmpd]"    string => "/etc/init.d/snmpd stop";
+      "pattern[snmpd]"        string => "/usr/sbin/snmpd";
 
       "startcommand[svnserve]"   string => "/etc/init.d/svnserve start";
       "restartcommand[svnserve]" string => "/etc/init.d/svnserve restart";
@@ -3411,6 +3423,12 @@ bundle agent standard_services(service,state)
       "reloadcommand[ssh]"  string => "/etc/init.d/ssh reload";
       "stopcommand[ssh]"    string => "/etc/init.d/ssh stop";
       "pattern[ssh]"        string => ".*sshd.*";
+
+      "startcommand[snmpd]"   string => "/etc/init.d/snmpd start";
+      "restartcommand[snmpd]" string => "/etc/init.d/snmpd restart";
+      "reloadcommand[snmpd]"  string => "/etc/init.d/snmpd reload";
+      "stopcommand[snmpd]"    string => "/etc/init.d/snmpd stop";
+      "pattern[snmpd]"        string => "/usr/sbin/snmpd";
 
 
       # METHODS that implement these ............................................

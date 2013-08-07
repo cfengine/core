@@ -1559,7 +1559,7 @@ static bool IsPromiseValuableForLogging(const Promise *pp)
     return pp && (pp->parent_promise_type->name != NULL) && (!IsStrIn(pp->parent_promise_type->name, NO_LOG_TYPES));
 }
 
-static void AddAllClasses(EvalContext *ctx, const char *ns, const Rlist *list, bool persist, ContextStatePolicy policy, ContextScope context_scope)
+static void AddAllClasses(EvalContext *ctx, const char *ns, const Rlist *list, unsigned int persistence_ttl, ContextStatePolicy policy, ContextScope context_scope)
 {
     for (const Rlist *rp = list; rp != NULL; rp = rp->next)
     {
@@ -1573,7 +1573,7 @@ static void AddAllClasses(EvalContext *ctx, const char *ns, const Rlist *list, b
             // TODO: ok.. but should we take any action? continue; maybe?
         }
 
-        if (persist > 0)
+        if (persistence_ttl > 0)
         {
             if (context_scope != CONTEXT_SCOPE_NAMESPACE)
             {
@@ -1581,7 +1581,7 @@ static void AddAllClasses(EvalContext *ctx, const char *ns, const Rlist *list, b
             }
 
             Log(LOG_LEVEL_VERBOSE, "Defining persistent promise result class '%s'", classname);
-            EvalContextHeapPersistentSave(CanonifyName(rp->item), ns, persist, policy);
+            EvalContextHeapPersistentSave(CanonifyName(rp->item), ns, persistence_ttl, policy);
             EvalContextHeapAddSoft(ctx, classname, ns);
         }
         else

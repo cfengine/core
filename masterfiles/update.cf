@@ -25,7 +25,7 @@ bundle agent cfe_internal_update
   vars:
 
       "inputs_dir"         string => translatepath("$(sys.workdir)/inputs"),
-      comment => "Directory containing Cfengine policies",
+      comment => "Directory containing CFEngine policies",
       handle => "update_vars_inputs_dir";
 
       "modules_dir"        string => translatepath("$(sys.workdir)/modules"),

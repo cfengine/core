@@ -7,6 +7,7 @@
        - Don't truncate keys to 126 characters in getindices (Redmine #2626)
        - files created via log_* actions now have mode 600 (Redmine #1578)
        - fix wrong log message when a promise is ignored due to 'ifvarclass' not matching
+       - fix lifetime of persistent classes (Redmine #3259)
 
 3.5.1
        Changes:

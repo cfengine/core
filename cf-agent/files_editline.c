@@ -86,7 +86,7 @@ static int EditLineByColumn(EvalContext *ctx, Rlist **columns, Attributes a, Pro
 static int DoEditColumn(Rlist **columns, Attributes a, EditContext *edcontext);
 static int SanityCheckInsertions(Attributes a);
 static int SanityCheckDeletions(Attributes a, Promise *pp);
-static int SelectLine(char *line, Attributes a);
+static int SelectLine(EvalContext *ctx, char *line, Attributes a);
 static int NotAnchored(char *s);
 static int SelectRegion(EvalContext *ctx, Item *start, Item **begin_ptr, Item **end_ptr, Attributes a, Promise *pp, EditContext *edcontext);
 static int MultiLineString(char *s);
@@ -114,7 +114,7 @@ int ScheduleEditLineOperations(EvalContext *ctx, Bundle *bp, Attributes a, const
         return false;
     }
 
-    ScopeNewSpecial(ctx, SPECIAL_SCOPE_EDIT, "filename", edcontext->filename, DATA_TYPE_STRING);
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_EDIT, "filename", edcontext->filename, DATA_TYPE_STRING);
 
     for (pass = 1; pass < CF_DONEPASSES; pass++)
     {
@@ -543,7 +543,7 @@ static void VerifyPatterns(EvalContext *ctx, Promise *pp, EditContext *edcontext
         (edcontext->num_edits)++;
     }
 
-    ScopeClearSpecial(SPECIAL_SCOPE_MATCH);       // because this might pollute the parent promise in next iteration
+    EvalContextVariableClearMatch(ctx);
 
     YieldCurrentLock(thislock);
 }
@@ -602,7 +602,7 @@ static void VerifyLineInsertions(EvalContext *ctx, Promise *pp, EditContext *edc
     }
     else
     {
-        if (!SelectItemMatching(*start, a.location.line_matching, begin_ptr, end_ptr, &match, &prev, a.location.first_last))
+        if (!SelectItemMatching(ctx, *start, a.location.line_matching, begin_ptr, end_ptr, &match, &prev, a.location.first_last))
         {
             cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a, "The promised line insertion '%s' could not select a locator matching regex '%s' in '%s'", pp->promiser, a.location.line_matching, edcontext->filename);
             YieldCurrentLock(thislock);
@@ -639,7 +639,7 @@ If no such region matches, begin_ptr and end_ptr should point to CF_UNDEFINED_IT
     {
         if (a.region.select_start)
         {
-            if (beg == CF_UNDEFINED_ITEM && FullTextMatch(a.region.select_start, ip->name))
+            if (beg == CF_UNDEFINED_ITEM && FullTextMatch(ctx, a.region.select_start, ip->name))
             {
                 if (!a.region.include_start)
                 {
@@ -659,7 +659,7 @@ If no such region matches, begin_ptr and end_ptr should point to CF_UNDEFINED_IT
 
         if (a.region.select_end && beg != CF_UNDEFINED_ITEM)
         {
-            if (end == CF_UNDEFINED_ITEM && FullTextMatch(a.region.select_end, ip->name))
+            if (end == CF_UNDEFINED_ITEM && FullTextMatch(ctx, a.region.select_end, ip->name))
             {
                 end = ip;
                 break;
@@ -814,11 +814,11 @@ static int DeletePromisedLinesMatching(EvalContext *ctx, Item **start, Item *beg
     {
         if (a.not_matching)
         {
-            matches = !MatchRegion(pp->promiser, ip, terminator, true);
+            matches = !MatchRegion(ctx, pp->promiser, ip, terminator, true);
         }
         else
         {
-            matches = MatchRegion(pp->promiser, ip, terminator, true);
+            matches = MatchRegion(ctx, pp->promiser, ip, terminator, true);
         }
 
         if (matches)
@@ -830,7 +830,7 @@ static int DeletePromisedLinesMatching(EvalContext *ctx, Item **start, Item *beg
             Log(LOG_LEVEL_DEBUG, "Multi-line region didn't match text in the file");
         }
 
-        if (!SelectLine(ip->name, a))       // Start search from location
+        if (!SelectLine(ctx, ip->name, a))       // Start search from location
         {
             np = ip->next;
             continue;
@@ -937,7 +937,7 @@ static int ReplacePatterns(EvalContext *ctx, Item *file_start, Item *file_end, A
         replaced = false;
         match_len = 0;
 
-        while (BlockTextMatch(pp->promiser, line_buff, &start_off, &end_off))
+        while (BlockTextMatch(ctx, pp->promiser, line_buff, &start_off, &end_off))
         {
             if (match_len == strlen(line_buff))
             {
@@ -978,7 +978,7 @@ static int ReplacePatterns(EvalContext *ctx, Item *file_start, Item *file_end, A
             }
         }
 
-        if (NotAnchored(pp->promiser) && BlockTextMatch(pp->promiser, line_buff, &start_off, &end_off))
+        if (NotAnchored(pp->promiser) && BlockTextMatch(ctx, pp->promiser, line_buff, &start_off, &end_off))
         {
             cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a,
                  "Promised replacement '%s' on line '%s' for pattern '%s' is not convergent while editing '%s'",
@@ -1013,7 +1013,7 @@ static int ReplacePatterns(EvalContext *ctx, Item *file_start, Item *file_end, A
                 break;
             }
 
-            if (BlockTextMatch(pp->promiser, ip->name, &start_off, &end_off))
+            if (BlockTextMatch(ctx, pp->promiser, ip->name, &start_off, &end_off))
             {
                 cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_INTERRUPTED, pp, a,
                      "Promised replacement '%s' for pattern '%s' is not properly convergent while editing '%s'",
@@ -1055,7 +1055,7 @@ static int EditColumns(EvalContext *ctx, Item *file_start, Item *file_end, Attri
             continue;
         }
 
-        if (!FullTextMatch(pp->promiser, ip->name))
+        if (!FullTextMatch(ctx, pp->promiser, ip->name))
         {
             continue;
         }
@@ -1064,7 +1064,7 @@ static int EditColumns(EvalContext *ctx, Item *file_start, Item *file_end, Attri
             Log(LOG_LEVEL_VERBOSE, "Matched line '%s'", ip->name);
         }
 
-        if (!BlockTextMatch(a.column.column_separator, ip->name, &s, &e))
+        if (!BlockTextMatch(ctx, a.column.column_separator, ip->name, &s, &e))
         {
             cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_INTERRUPTED, pp, a, "Field edit, no fields found by promised pattern '%s' in '%s'",
                  a.column.column_separator, edcontext->filename);
@@ -1080,7 +1080,7 @@ static int EditColumns(EvalContext *ctx, Item *file_start, Item *file_end, Attri
         strncpy(separator, ip->name + s, e - s);
         separator[e - s] = '\0';
 
-        columns = RlistFromSplitRegex(ip->name, a.column.column_separator, CF_INFINITY, a.column.blanks_ok);
+        columns = RlistFromSplitRegex(ctx, ip->name, a.column.column_separator, CF_INFINITY, a.column.blanks_ok);
         retval = EditLineByColumn(ctx, &columns, a, pp, edcontext);
 
         if (retval)
@@ -1257,12 +1257,12 @@ static int InsertFileAtLocation(EvalContext *ctx, Item **start, Item *begin_ptr,
             strcpy(exp, buf);
         }
         
-        if (!SelectLine(exp, a))
+        if (!SelectLine(ctx, exp, a))
         {
             continue;
         }
         
-        if (!preserve_block && IsItemInRegion(exp, begin_ptr, end_ptr, a.insert_match, pp))
+        if (!preserve_block && IsItemInRegion(ctx, exp, begin_ptr, end_ptr, a.insert_match, pp))
         {
             cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a,
                  "Promised file line '%s' exists within file %s (promise kept)", exp, edcontext->filename);
@@ -1313,7 +1313,7 @@ static int InsertCompoundLineAtLocation(EvalContext *ctx, char *chunk, Item **st
     char *sp;
     int preserve_block = a.sourcetype && (strcmp(a.sourcetype, "preserve_block") == 0 || strcmp(a.sourcetype, "file_preserve_block") == 0);
 
-    if (MatchRegion(chunk, location, NULL, false))
+    if (MatchRegion(ctx, chunk, location, NULL, false))
     {
         cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "Promised chunk '%s' exists within selected region of %s (promise kept)", pp->promiser, edcontext->filename);
         return false;
@@ -1327,12 +1327,12 @@ static int InsertCompoundLineAtLocation(EvalContext *ctx, char *chunk, Item **st
         StringNotMatchingSetCapped(sp, CF_BUFSIZE, "\n", buf);
         sp += strlen(buf);
 
-        if (!SelectLine(buf, a))
+        if (!SelectLine(ctx, buf, a))
         {
             continue;
         }
 
-        if (!preserve_block && IsItemInRegion(buf, begin_ptr, end_ptr, a.insert_match, pp))
+        if (!preserve_block && IsItemInRegion(ctx, buf, begin_ptr, end_ptr, a.insert_match, pp))
         {
             cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "Promised chunk '%s' exists within selected region of %s (promise kept)", pp->promiser, edcontext->filename);
             continue;
@@ -1430,7 +1430,7 @@ static int InsertLineAtLocation(EvalContext *ctx, char *newline, Item **start, I
 
     if (a.location.before_after == EDIT_ORDER_BEFORE)
     {    
-        if (!preserve_block && NeighbourItemMatches(*start, location, newline, EDIT_ORDER_BEFORE, a.insert_match, pp))
+        if (!preserve_block && NeighbourItemMatches(ctx, *start, location, newline, EDIT_ORDER_BEFORE, a.insert_match, pp))
         {
             cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "Promised line '%s' exists before locator in (promise kept)",
                  newline);
@@ -1457,7 +1457,7 @@ static int InsertLineAtLocation(EvalContext *ctx, char *newline, Item **start, I
     }
     else
     {
-        if (!preserve_block && NeighbourItemMatches(*start, location, newline, EDIT_ORDER_AFTER, a.insert_match, pp))
+        if (!preserve_block && NeighbourItemMatches(ctx, *start, location, newline, EDIT_ORDER_AFTER, a.insert_match, pp))
         {
             cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "Promised line '%s' exists after locator (promise kept)",
                  newline);
@@ -1626,7 +1626,7 @@ static int EditLineByColumn(EvalContext *ctx, Rlist **columns, Attributes a, Pro
 
 /***************************************************************************/
 
-static int SelectLine(char *line, Attributes a)
+static int SelectLine(EvalContext *ctx, char *line, Attributes a)
 {
     Rlist *rp, *c;
     int s, e;
@@ -1668,7 +1668,7 @@ static int SelectLine(char *line, Attributes a)
         {
             selector = (char *) (rp->item);
 
-            if (FullTextMatch(selector, line))
+            if (FullTextMatch(ctx, selector, line))
             {
                 return true;
             }
@@ -1683,7 +1683,7 @@ static int SelectLine(char *line, Attributes a)
         {
             selector = (char *) (rp->item);
 
-            if (FullTextMatch(selector, line))
+            if (FullTextMatch(ctx, selector, line))
             {
                 return false;
             }
@@ -1698,7 +1698,7 @@ static int SelectLine(char *line, Attributes a)
         {
             selector = (char *) (rp->item);
 
-            if (BlockTextMatch(selector, line, &s, &e))
+            if (BlockTextMatch(ctx, selector, line, &s, &e))
             {
                 return true;
             }
@@ -1713,7 +1713,7 @@ static int SelectLine(char *line, Attributes a)
         {
             selector = (char *) (rp->item);
 
-            if (BlockTextMatch(selector, line, &s, &e))
+            if (BlockTextMatch(ctx, selector, line, &s, &e))
             {
                 return false;
             }

@@ -1,6 +1,7 @@
 #include "test.h"
 
 #include "item_lib.h"
+#include "env_context.h"
 
 static void test_prepend_item(void)
 {
@@ -26,6 +27,7 @@ static void test_list_len(void)
 
 static void test_list_select_last_matching_finds_first(void)
 {
+    EvalContext *ctx = EvalContextNew();
     Item *list = NULL, *match = NULL, *prev = NULL;
     bool result = false;
 
@@ -34,15 +36,17 @@ static void test_list_select_last_matching_finds_first(void)
     AppendItem(&list, "ghi", NULL);
     AppendItem(&list, "jkl", NULL);
 
-    result = SelectLastItemMatching("abc", list, NULL, &match, &prev);
+    result = SelectLastItemMatching(ctx, "abc", list, NULL, &match, &prev);
     assert_true(result);
     assert_int_equal(match, list);
     assert_int_equal(prev, CF_UNDEFINED_ITEM);
     DeleteItemList(list);
+    EvalContextDestroy(ctx);
 }
 
 static void test_list_select_last_matching_finds_last(void)
 {
+    EvalContext *ctx = EvalContextNew();
     Item *list = NULL, *match = NULL, *prev = NULL;
     bool result;
 
@@ -51,15 +55,17 @@ static void test_list_select_last_matching_finds_last(void)
     AppendItem(&list, "ghi", NULL);
     AppendItem(&list, "abc", NULL);
 
-    result = SelectLastItemMatching("abc", list, NULL, &match, &prev);
+    result = SelectLastItemMatching(ctx, "abc", list, NULL, &match, &prev);
     assert_true(result);
     assert_int_equal(match, list->next->next->next);
     assert_int_equal(prev, list->next->next);
     DeleteItemList(list);
+    EvalContextDestroy(ctx);
 }
 
 static void test_list_select_last_matching_not_found(void)
 {
+    EvalContext *ctx = EvalContextNew();
     Item *list = NULL, *match = NULL, *prev = NULL;
     bool result;
 
@@ -68,11 +74,12 @@ static void test_list_select_last_matching_not_found(void)
     AppendItem(&list, "ghi", NULL);
     AppendItem(&list, "abc", NULL);
 
-    result = SelectLastItemMatching("xyz", list, NULL, &match, &prev);
+    result = SelectLastItemMatching(ctx, "xyz", list, NULL, &match, &prev);
     assert_false(result);
     assert_int_equal(match, CF_UNDEFINED_ITEM);
     assert_int_equal(prev, CF_UNDEFINED_ITEM);
     DeleteItemList(list);
+    EvalContextDestroy(ctx);
 }
 
 static void test_list_compare(void)

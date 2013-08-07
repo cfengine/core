@@ -536,7 +536,7 @@ void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *con
 
             /* Free & reload -- lock this to avoid access errors during reload */
             
-            EvalContextHeapClear(ctx);
+            EvalContextClear(ctx);
 
             DeleteItemList(IPADDRESSES);
             IPADDRESSES = NULL;
@@ -554,10 +554,6 @@ void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *con
             DeleteAuthList(SV.vardeny);
 
             DeleteAuthList(SV.roles);
-
-            //DeleteRlist(VINPUTLIST); This is just a pointer, cannot free it
-
-            ScopeDeleteAll();
 
             strcpy(VDOMAIN, "undefined.domain");
             POLICY_SERVER[0] = '\0';

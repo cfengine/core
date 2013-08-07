@@ -118,17 +118,12 @@ void ExpandPromise(EvalContext *ctx, Promise *pp, PromiseActuator *ActOnPromise,
 {
     Rlist *listvars = NULL;
     Rlist *scalars = NULL;
-    Promise *pcopy;
 
     // Set a default for packages here...general defaults that need to come before
     //fix me wth a general function SetMissingDefaults
     SetAnyMissingDefaults(ctx, pp);
 
-    ScopeClearSpecial(SPECIAL_SCOPE_MATCH);       /* in case we expand something expired accidentially */
-
-    EvalContextStackPushPromiseFrame(ctx, pp);
-
-    pcopy = DeRefCopyPromise(ctx, pp);
+    Promise *pcopy = DeRefCopyPromise(ctx, pp);
 
     MapIteratorsFromRval(ctx, PromiseGetBundle(pp)->name, &listvars, &scalars, (Rval) { pcopy->promiser, RVAL_TYPE_SCALAR });
 
@@ -151,11 +146,120 @@ void ExpandPromise(EvalContext *ctx, Promise *pp, PromiseActuator *ActOnPromise,
     PromiseDestroy(pcopy);
     RlistDestroy(listvars);
     RlistDestroy(scalars);
+}
 
+static void ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp, Rlist *listvars, PromiseActuator *ActOnPromise, void *param)
+{
+    Rlist *lol = NULL;
+    Promise *pexp;
+    const int cf_null_cutoff = 5;
+    const char *handle = PromiseGetHandle(pp);
+    char v[CF_MAXVARSIZE];
+    int cutoff = 0;
+
+    EvalContextStackPushPromiseFrame(ctx, pp, true);
+
+    lol = NewIterationContext(ctx, pp, listvars);
+
+    if (lol && EndOfIteration(lol))
+    {
+        DeleteIterationContext(lol);
+        EvalContextStackPopFrame(ctx);
+        return;
+    }
+
+    while (NullIterators(lol))
+    {
+        IncrementIterationContext(lol);
+
+        // In case a list is completely blank
+        if (cutoff++ > cf_null_cutoff)
+        {
+            break;
+        }
+    }
+
+    if (lol && EndOfIteration(lol))
+    {
+        DeleteIterationContext(lol);
+        EvalContextStackPopFrame(ctx);
+        return;
+    }
+
+    do
+    {
+        if (RlistLen(listvars) != RlistLen(lol))
+        {
+            ProgrammingError("Name list %d, dereflist %d", RlistLen(listvars), RlistLen(lol));
+        }
+
+        EvalContextStackPushPromiseIterationFrame(ctx, lol);
+        char number[CF_SMALLBUF];
+
+        /* Allow $(this.handle) etc variables */
+
+        if (PromiseGetBundle(pp)->source_path)
+        {
+            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promise_filename",PromiseGetBundle(pp)->source_path, DATA_TYPE_STRING);
+            snprintf(number, CF_SMALLBUF, "%zu", pp->offset.line);
+            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promise_linenumber", number, DATA_TYPE_STRING);
+        }
+
+        snprintf(v, CF_MAXVARSIZE, "%d", (int) getuid());
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser_uid", v, DATA_TYPE_INT);
+        snprintf(v, CF_MAXVARSIZE, "%d", (int) getgid());
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser_gid", v, DATA_TYPE_INT);
+
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "bundle", PromiseGetBundle(pp)->name, DATA_TYPE_STRING);
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "namespace", PromiseGetNamespace(pp), DATA_TYPE_STRING);
+
+        /* Must expand $(this.promiser) here for arg dereferencing in things
+           like edit_line and methods, but we might have to
+           adjust again later if the value changes  -- need to qualify this
+           so we don't expand too early for some other promsies */
+
+        if (pp->has_subbundles)
+        {
+            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser", pp->promiser, DATA_TYPE_STRING);
+        }
+
+        if (handle)
+        {
+            char tmp[CF_EXPANDSIZE];
+            // This ordering is necessary to get automated canonification
+            ExpandScalar(ctx, NULL, "this", handle, tmp);
+            CanonifyNameInPlace(tmp);
+            Log(LOG_LEVEL_DEBUG, "Expanded handle to '%s'", tmp);
+            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "handle", tmp, DATA_TYPE_STRING);
+        }
+        else
+        {
+            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "handle", PromiseID(pp), DATA_TYPE_STRING);
+        }
+
+        /* End special variables */
+
+        pexp = ExpandDeRefPromise(ctx, pp);
+
+        assert(ActOnPromise);
+        ActOnPromise(ctx, pexp, param);
+
+        if (strcmp(pp->parent_promise_type->name, "vars") == 0 || strcmp(pp->parent_promise_type->name, "meta") == 0)
+        {
+            VerifyVarPromise(ctx, pexp, true);
+        }
+
+        PromiseDestroy(pexp);
+
+        EvalContextStackPopFrame(ctx);
+        /* End thread monitor */
+    }
+    while (IncrementIterationContext(lol));
+
+    DeleteIterationContext(lol);
     EvalContextStackPopFrame(ctx);
 }
 
-/*********************************************************************/
 
 Rval ExpandDanglers(EvalContext *ctx, const char *ns, const char *scope, Rval rval, const Promise *pp)
 {
@@ -753,112 +857,6 @@ bool ExpandScalar(const EvalContext *ctx, const char *ns, const char *scope, con
 
 /*********************************************************************/
 
-static void ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp, Rlist *listvars, PromiseActuator *ActOnPromise, void *param)
-{
-    Rlist *lol = NULL;
-    Promise *pexp;
-    const int cf_null_cutoff = 5;
-    const char *handle = PromiseGetHandle(pp);
-    char v[CF_MAXVARSIZE];
-    int cutoff = 0;
-
-    lol = NewIterationContext(ctx, pp, PromiseGetBundle(pp)->ns, PromiseGetBundle(pp)->name, listvars);
-
-    if (lol && EndOfIteration(lol))
-    {
-        DeleteIterationContext(lol);
-        return;
-    }
-
-    while (NullIterators(lol))
-    {
-        IncrementIterationContext(lol);
-
-        // In case a list is completely blank
-        if (cutoff++ > cf_null_cutoff)
-        {
-            break;
-        }
-    }
-
-    if (lol && EndOfIteration(lol))
-    {
-        DeleteIterationContext(lol);
-        return;
-    }
-
-    do
-    {
-        char number[CF_SMALLBUF];
-
-        /* Set scope "this" first to ensure list expansion ! */
-        EvalContextStackPushPromiseIterationFrame(ctx, pp);
-        ScopeDeRefListsInHashtable(NULL, "this", listvars, lol);
-
-        /* Allow $(this.handle) etc variables */
-
-        if (PromiseGetBundle(pp)->source_path)
-        {
-            ScopeNewSpecial(ctx, SPECIAL_SCOPE_THIS, "promise_filename",PromiseGetBundle(pp)->source_path, DATA_TYPE_STRING);
-            snprintf(number, CF_SMALLBUF, "%zu", pp->offset.line);
-            ScopeNewSpecial(ctx, SPECIAL_SCOPE_THIS, "promise_linenumber", number, DATA_TYPE_STRING);
-        }
-
-        snprintf(v, CF_MAXVARSIZE, "%d", (int) getuid());
-        ScopeNewSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser_uid", v, DATA_TYPE_INT);
-        snprintf(v, CF_MAXVARSIZE, "%d", (int) getgid());
-        ScopeNewSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser_gid", v, DATA_TYPE_INT);
-
-        ScopeNewSpecial(ctx, SPECIAL_SCOPE_THIS, "bundle", PromiseGetBundle(pp)->name, DATA_TYPE_STRING);
-        ScopeNewSpecial(ctx, SPECIAL_SCOPE_THIS, "namespace", PromiseGetNamespace(pp), DATA_TYPE_STRING);
-
-        /* Must expand $(this.promiser) here for arg dereferencing in things
-           like edit_line and methods, but we might have to
-           adjust again later if the value changes  -- need to qualify this
-           so we don't expand too early for some other promsies */
-
-        if (pp->has_subbundles)
-        {
-            ScopeNewSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser", pp->promiser, DATA_TYPE_STRING);
-        }
-
-        if (handle)
-        {
-            char tmp[CF_EXPANDSIZE];
-            // This ordering is necessary to get automated canonification
-            ExpandScalar(ctx, NULL, "this", handle, tmp);
-            CanonifyNameInPlace(tmp);
-            Log(LOG_LEVEL_DEBUG, "Expanded handle to '%s'", tmp);
-            ScopeNewSpecial(ctx, SPECIAL_SCOPE_THIS, "handle", tmp, DATA_TYPE_STRING);
-        }
-        else
-        {
-            ScopeNewSpecial(ctx, SPECIAL_SCOPE_THIS, "handle", PromiseID(pp), DATA_TYPE_STRING);
-        }
-
-        /* End special variables */
-
-        pexp = ExpandDeRefPromise(ctx, NULL, "this", pp);
-
-        assert(ActOnPromise);
-        ActOnPromise(ctx, pexp, param);
-
-        if (strcmp(pp->parent_promise_type->name, "vars") == 0 || strcmp(pp->parent_promise_type->name, "meta") == 0)
-        {
-            VerifyVarPromise(ctx, pexp, true);
-        }
-        
-        PromiseDestroy(pexp);
-
-        EvalContextStackPopFrame(ctx);
-        /* End thread monitor */
-    }
-    while (IncrementIterationContext(lol));
-
-    DeleteIterationContext(lol);
-}
-
-/*********************************************************************/
 
 Rval EvaluateFinalRval(EvalContext *ctx, const char *ns, const char *scope, Rval rval, int forcelist, const Promise *pp)
 {
@@ -930,7 +928,7 @@ Rval EvaluateFinalRval(EvalContext *ctx, const char *ns, const char *scope, Rval
             }
             else
             {
-                if (ScopeExists(NULL, "this"))
+                if (EvalContextStackCurrentPromise(ctx))
                 {
                     if (IsCf3VarString(rp->item))
                     {

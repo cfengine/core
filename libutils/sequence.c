@@ -218,6 +218,14 @@ void SeqSoftRemoveRange(Seq *seq, size_t start, size_t end)
     seq->length -= end - start + 1;
 }
 
+void SeqClear(Seq *seq)
+{
+    if (SeqLength(seq) > 0)
+    {
+        SeqRemoveRange(seq, 0, SeqLength(seq) - 1);
+    }
+}
+
 void SeqSoftRemove(Seq *seq, size_t index)
 {
     SeqSoftRemoveRange(seq, index, index);

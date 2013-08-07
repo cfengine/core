@@ -497,7 +497,7 @@ static SyntaxTypeMatch CheckParseString(const char *lval, const char *s, const c
         }
     }
 
-    if (FullTextMatch(range, s))
+    if (StringMatchFull(range, s))
     {
         return SYNTAX_TYPE_MATCH_OK;
     }
@@ -523,7 +523,7 @@ SyntaxTypeMatch CheckParseContext(const char *context, const char *range)
         return SYNTAX_TYPE_MATCH_OK;
     }
 
-    if (FullTextMatch(range, context))
+    if (StringMatchFull(range, context))
     {
         return SYNTAX_TYPE_MATCH_OK;
     }

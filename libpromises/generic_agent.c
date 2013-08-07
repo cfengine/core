@@ -1329,8 +1329,8 @@ static void CheckVariablePromises(EvalContext *ctx, Seq *var_promises)
     for (size_t i = 0; i < SeqLength(var_promises); i++)
     {
         Promise *pp = SeqAt(var_promises, i);
-        EvalContextStackPushPromiseFrame(ctx, pp);
-        EvalContextStackPushPromiseIterationFrame(ctx, pp);
+        EvalContextStackPushPromiseFrame(ctx, pp, false);
+        EvalContextStackPushPromiseIterationFrame(ctx, NULL);
         VerifyVarPromise(ctx, pp, allow_redefine);
         EvalContextStackPopFrame(ctx);
         EvalContextStackPopFrame(ctx);
@@ -1416,9 +1416,8 @@ static void CheckControlPromises(EvalContext *ctx, GenericAgentConfig *config, c
             returnval = EvaluateFinalRval(ctx, NULL, scope, cp->rval, true, NULL);
         }
 
-        ScopeDeleteVariable(NULL, scope, cp->lval);
-
         VarRef *ref = VarRefParseFromScope(cp->lval, scope);
+        EvalContextVariableRemove(ctx, ref);
 
         if (!EvalContextVariablePut(ctx, ref, returnval, ConstraintSyntaxGetDataType(body_syntax, cp->lval)))
         {
@@ -1436,11 +1435,11 @@ static void CheckControlPromises(EvalContext *ctx, GenericAgentConfig *config, c
         {
             strcpy(VDOMAIN, cp->rval.item);
             Log(LOG_LEVEL_VERBOSE, "SET domain = %s", VDOMAIN);
-            ScopeDeleteSpecial(SPECIAL_SCOPE_SYS, "domain");
-            ScopeDeleteSpecial(SPECIAL_SCOPE_SYS, "fqhost");
+            EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_SYS, "domain");
+            EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_SYS, "fqhost");
             snprintf(VFQNAME, CF_MAXVARSIZE, "%s.%s", VUQNAME, VDOMAIN);
-            ScopeNewSpecial(ctx, SPECIAL_SCOPE_SYS, "fqhost", VFQNAME, DATA_TYPE_STRING);
-            ScopeNewSpecial(ctx, SPECIAL_SCOPE_SYS, "domain", VDOMAIN, DATA_TYPE_STRING);
+            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "fqhost", VFQNAME, DATA_TYPE_STRING);
+            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "domain", VDOMAIN, DATA_TYPE_STRING);
             EvalContextHeapAddHard(ctx, VDOMAIN);
         }
 

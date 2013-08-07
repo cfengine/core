@@ -81,9 +81,6 @@ extern char POLICY_SERVER[CF_MAX_IP_LEN];
 extern HashMethod CF_DEFAULT_DIGEST;
 extern int CF_DEFAULT_DIGEST_LEN;
 
-extern Scope *VSCOPE;
-extern Rlist *CF_STCK;
-
 extern int CF_PERSISTENCE;
 extern int LOOKUP;
 

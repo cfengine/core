@@ -742,21 +742,6 @@ typedef struct
 
 } EditContext;
 
-/*******************************************************************/
-/* Variable processing                                             */
-/*******************************************************************/
-
-typedef struct AssocHashTable_ AssocHashTable;
-
-/* $(bundlevar) $(scope.name) */
-typedef struct Scope_
-{
-    char *ns;
-    char *scope;
-    AssocHashTable *hashtable;
-    struct Scope_ *next;
-} Scope;
-
 typedef enum
 {
     INTERVAL_HOURLY,

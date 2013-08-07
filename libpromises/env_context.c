@@ -1110,6 +1110,15 @@ void EvalContextStackPushBundleFrame(EvalContext *ctx, const Bundle *owner, cons
 {
     assert(!LastStackFrame(ctx, 0) || LastStackFrame(ctx, 0)->type == STACK_FRAME_TYPE_PROMISE_ITERATION);
 
+    for (const Item *ip = ctx->heap_abort; ip != NULL; ip = ip->next)
+    {
+        if (IsDefinedClass(ctx, ip->name, NULL))
+        {
+            Log(LOG_LEVEL_ERR, "cf-agent aborted on defined class '%s' defined before bundle frame", ip->name);
+            exit(1);
+        }
+    }
+
     EvalContextStackPushFrame(ctx, StackFrameNewBundle(owner, inherits_previous));
     if (!ScopeGet(owner->ns, owner->name))
     {

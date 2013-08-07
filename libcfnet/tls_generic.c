@@ -243,8 +243,9 @@ int TLSSend(SSL *ssl, const char *buffer, int length)
  * @param ssl SSL information.
  * @param buffer Buffer to store the received data.
  * @param length Length of the data to receive.
- * @return The length of the received data, which could be smaller than the requested
- *         or -1 in case of error or 0 if connection was closed.
+ * @return The length of the received data, which could be smaller or equal
+ *         than the requested or -1 in case of error or 0 if connection was 
+ *         closed.
  */
 int TLSRecv(SSL *ssl, char *buffer, int length)
 {
@@ -323,7 +324,7 @@ int TLSRecv(SSL *ssl, char *buffer, int length)
         }
         ++total_tries;
     } while (total_tries <= DEFAULT_TLS_TRIES);
-    buffer[received] = '\0';
+
     return received;
 }
 

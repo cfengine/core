@@ -181,7 +181,7 @@ int TLSClientNegotiateProtocol(const ConnectionInfo *conn_info)
     char input[CF_SMALLBUF] = "";
 
     /* Receive CFE_v%d ... */
-    ret = TLSRecvLine(conn_info->ssl, input, sizeof(input));
+    ret = TLSRecvLines(conn_info->ssl, input, sizeof(input));
 
     /* Send "CFE_v%d cf-agent version". */
     char version_string[128];
@@ -197,7 +197,7 @@ int TLSClientNegotiateProtocol(const ConnectionInfo *conn_info)
     }
 
     /* Receive OK */
-    ret = TLSRecvLine(conn_info->ssl, input, sizeof(input));
+    ret = TLSRecvLines(conn_info->ssl, input, sizeof(input));
     if (strncmp(input, "OK", strlen("OK")) == 0)
         return 1;
     else

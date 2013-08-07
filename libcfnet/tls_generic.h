@@ -35,6 +35,6 @@ int TLSVerifyPeer(ConnectionInfo *conn_info, const char *remoteip, const char *u
 
 int TLSSend(SSL *ssl, const char *buffer, int length);
 int TLSRecv(SSL *ssl, char *buffer, int length);
-int TLSRecvLine(SSL *ssl, char *line, size_t line_size);
+int TLSRecvLines(SSL *ssl, char *buf, size_t buf_size);
 
 #endif

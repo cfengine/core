@@ -39,10 +39,10 @@
 # the online docs
 #
 
-# For Cfengine Core: 3.5.0 and older
+# For CFEngine Core: 3.4.x (use lib/3.N for CFEngine 3.5.x and newer)
 
 ###################################################
-# If you find Cfengine useful, please consider    #
+# If you find CFEngine useful, please consider    #
 # purchasing a commercial version of the software.#
 ###################################################
 

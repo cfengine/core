@@ -115,7 +115,6 @@ typedef enum
     PROTOCOL_COMMAND_CONTEXT_SECURE,
     PROTOCOL_COMMAND_QUERY_SECURE,
     PROTOCOL_COMMAND_CALL_ME_BACK,
-    PROTOCOL_COMMAND_STARTTLS,
     PROTOCOL_COMMAND_BAD
 } ProtocolCommandClassic;
 
@@ -141,7 +140,6 @@ static const char *PROTOCOL_CLASSIC[] =
     "SCONTEXT",
     "SQUERY",
     "SCALLBACK",
-    "STARTTLS",
     NULL
 };
 
@@ -366,6 +364,7 @@ void DisableSendDelays(int sockfd)
 
 static void *HandleConnection(ServerConnectionState *conn)
 {
+    int ret;
     char output[CF_BUFSIZE];
 
 # ifdef HAVE_PTHREAD_SIGMASK
@@ -415,22 +414,42 @@ static void *HandleConnection(ServerConnectionState *conn)
     struct timeval tv = {
         .tv_sec = CONNTIMEOUT * 20,
     };
-
     SetReceiveTimeout(conn->conn_info.sd, &tv);
 
-    /* TODO different busy loops for the two protocol versions */
+    /* Decide the protocol used. */
+    ret = ServerTLSPeek(&conn->conn_info);
+    if (ret == -1)
+    {
+        DeleteConn(conn);
+        return NULL;
+    }
+
     switch (conn->conn_info.type)
     {
+
     case CF_PROTOCOL_CLASSIC:
+    {
         while (BusyWithClassicConnection(conn->ctx, conn))
         {
         }
         break;
+    }
+
     case CF_PROTOCOL_TLS:
+    {
+        ret = ServerTLSSessionEstablish(conn);
+        if (ret == -1)
+        {
+            DeleteConn(conn);
+            return NULL;
+        }
+
         while (BusyWithNewProtocol(conn->ctx, conn))
         {
         }
         break;
+    }
+
     default:
         UnexpectedError("HandleConnection: ProtocolVersion %d!",
                         conn->conn_info.type);
@@ -1002,89 +1021,6 @@ static int BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *co
             return true;
         }
 
-        break;
-    case PROTOCOL_COMMAND_STARTTLS:
-        /* TODO move out of ClassicProtocol protocol loop */
-        if (ServerStartTLS(&conn->conn_info) < 0)
-        {
-            Log(LOG_LEVEL_ERR, "Could not start TLS session as requested by client");
-            return false;
-        }
-        else
-        {
-            int ret;
-
-            /* Send/Receive "CFE_v%d" version string and agree on version. */
-            ret = ServerNegotiateProtocol(&conn->conn_info);
-            if (ret <= 0)
-            {
-                return false;
-            }
-
-            /* Receive IDENTITY USER=asdf plain string. */
-            ret = ServerIdentifyClient(&conn->conn_info, conn->username,
-                                       sizeof(conn->username));
-            if (ret != 1)
-            {
-                return false;
-            }
-
-            /* We *now* (maybe a bit late) verify the key that the client sent
-             * us in the TLS handshake, since we need the username to do
-             * so. TODO in the future store keys irrelevant of username, so
-             * that we can match them before IDENTIFY. */
-            ret = TLSVerifyPeer(&conn->conn_info, conn->ipaddr, conn->username);
-            if (ret == -1)                                      /* error */
-            {
-                return false;
-            }
-
-            if (ret == 1)                                    /* trusted key */
-            {
-                Log(LOG_LEVEL_VERBOSE,
-                    "%s: Client is TRUSTED, public key MATCHES stored one.",
-                    conn->conn_info.remote_keyhash_str);
-            }
-
-            if (ret == 0)                                  /* untrusted key */
-            {
-                Log(LOG_LEVEL_WARNING,
-                    "%s: Client's public key is UNKNOWN!",
-                    conn->conn_info.remote_keyhash_str);
-
-                if ((SV.trustkeylist != NULL) &&
-                    (IsMatchItemIn(SV.trustkeylist, MapAddress(conn->ipaddr))))
-                {
-                    Log(LOG_LEVEL_VERBOSE,
-                        "Host %s was found in the \"trustkeysfrom\" list",
-                        conn->ipaddr);
-                    Log(LOG_LEVEL_WARNING,
-                        "%s: Explicitly trusting this key from now on.",
-                        conn->conn_info.remote_keyhash_str);
-
-                    conn->trust = true;
-                    SavePublicKey("root", conn->conn_info.remote_keyhash_str,
-                                  conn->conn_info.remote_key);
-                }
-                else
-                {
-                    Log(LOG_LEVEL_ERR, "TRUST FAILED, WARNING: possible MAN IN THE MIDDLE attack, dropping connection!");
-                    Log(LOG_LEVEL_ERR, "Open server's ACL if you really want to start trusting this new key.");
-                    return false;
-                }
-            }
-
-            /* skipping CAUTH */
-            conn->id_verified = 1;
-            /* skipping SAUTH, allow access to read-only files */
-            conn->rsa_auth = 1;
-            LastSaw1(conn->ipaddr, conn->conn_info.remote_keyhash_str,
-                     LAST_SEEN_ROLE_ACCEPT);
-
-            ServerSendWelcome(conn);
-
-            return true;
-        }
         break;
 
     case PROTOCOL_COMMAND_CALL_ME_BACK:
@@ -1740,8 +1676,12 @@ static ServerConnectionState *NewConn(EvalContext *ctx, int sd)
 
     conn = xcalloc(1, sizeof(*conn));
 
+    /* Always start with UNDEFINED protocol. Its type will be determined by
+     * peeking the TCP stream in ServerTLSTry(). If we forget to peek, there
+     * are multiple asserts in the code that will catch it. */
+    conn->conn_info.type = CF_PROTOCOL_UNDEFINED;
+
     conn->ctx = ctx;
-    conn->conn_info.type = CF_PROTOCOL_CLASSIC;
     conn->conn_info.sd = sd;
     conn->conn_info.ssl = NULL;
     conn->conn_info.remote_key = NULL;
@@ -1766,20 +1706,16 @@ static void DeleteConn(ServerConnectionState *conn)
 {
     /* Sockets should have already been closed by the client, so we are just
      * making sure here in case an error occured. */
-    switch(conn->conn_info.type)
+    if (conn->conn_info.type == CF_PROTOCOL_TLS)
     {
-    case CF_PROTOCOL_CLASSIC:
-        cf_closesocket(conn->conn_info.sd);
-        break;
-    case CF_PROTOCOL_TLS:
-        SSL_shutdown(conn->conn_info.ssl);
-        SSL_free(conn->conn_info.ssl);
-        cf_closesocket(conn->conn_info.sd);
-        break;
-    default:
-        UnexpectedError("DeleteConn: ProtocolVersion %d!",
-                        conn->conn_info.type);
+        if (conn->conn_info.ssl != NULL)
+        {
+            SSL_shutdown(conn->conn_info.ssl);
+            SSL_free(conn->conn_info.ssl);
+        }
     }
+
+    cf_closesocket(conn->conn_info.sd);
 
     free(conn->session_key);
 

@@ -29,10 +29,13 @@
 
 #include "cfnet.h"
 
+#include "logging.h"                                            /* LogLevel */
+
 
 int TLSVerifyCallback(X509_STORE_CTX *ctx, void *arg);
 int TLSVerifyPeer(ConnectionInfo *conn_info, const char *remoteip, const char *username);
 
+void TLSLogError(SSL *ssl, LogLevel level, const char *prepend, int code);
 int TLSSend(SSL *ssl, const char *buffer, int length);
 int TLSRecv(SSL *ssl, char *buffer, int length);
 int TLSRecvLines(SSL *ssl, char *buf, size_t buf_size);

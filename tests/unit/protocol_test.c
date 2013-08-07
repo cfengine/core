@@ -30,7 +30,6 @@ typedef enum
     PROTOCOL_COMMAND_CONTEXT_SECURE,
     PROTOCOL_COMMAND_QUERY_SECURE,
     PROTOCOL_COMMAND_CALL_ME_BACK,
-    PROTOCOL_COMMAND_STARTTLS,
     PROTOCOL_COMMAND_BAD
 } ProtocolCommandClassic;
 
@@ -58,7 +57,6 @@ ProtocolCommandClassic GetCommandClassic(char *str);
  * "SCONTEXT",
  * "SQUERY",
  * "SCALLBACK",
- * "STARTTLS",
  */
 
 static void test_command_parser(void)
@@ -148,10 +146,6 @@ static void test_command_parser(void)
     expected = PROTOCOL_COMMAND_CALL_ME_BACK;
     parsed = GetCommandClassic("SCALLBACK");
     assert_int_equal(expected, parsed);
-    // STARTTLS
-    expected = PROTOCOL_COMMAND_STARTTLS;
-    parsed = GetCommandClassic("STARTTLS");
-    assert_int_equal(expected, parsed);
     /*
      * Try using lowercase
      */
@@ -215,9 +209,6 @@ static void test_command_parser(void)
     assert_int_equal(expected, parsed);
     // SCALLBACK
     parsed = GetCommandClassic("scallback");
-    assert_int_equal(expected, parsed);
-    // STARTTLS
-    parsed = GetCommandClassic("starttls");
     assert_int_equal(expected, parsed);
     /*
      * Try the commands with something in front
@@ -283,9 +274,6 @@ static void test_command_parser(void)
     // SCALLBACK
     parsed = GetCommandClassic("sSCALLBACK");
     assert_int_equal(expected, parsed);
-    // STARTTLS
-    parsed = GetCommandClassic("sSTARTTLS");
-    assert_int_equal(expected, parsed);
     /*
      * Try the commands with something after them
      */
@@ -349,9 +337,6 @@ static void test_command_parser(void)
     assert_int_equal(expected, parsed);
     // SCALLBACK
     parsed = GetCommandClassic("SCALLBACKx");
-    assert_int_equal(expected, parsed);
-    // STARTTLS
-    parsed = GetCommandClassic("STARTTLSx");
     assert_int_equal(expected, parsed);
     /*
      * Try some common mispellings.
@@ -475,10 +460,6 @@ static void test_command_parser(void)
     // SCALLBACK
     expected = PROTOCOL_COMMAND_CALL_ME_BACK;
     parsed = GetCommandClassic("SCALLBACK 123");
-    assert_int_equal(expected, parsed);
-    // STARTTLS
-    expected = PROTOCOL_COMMAND_STARTTLS;
-    parsed = GetCommandClassic("STARTTLS 123");
     assert_int_equal(expected, parsed);
 }
 

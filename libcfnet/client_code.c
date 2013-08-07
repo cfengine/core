@@ -331,10 +331,6 @@ static AgentConnection *ServerConnection(const char *server, FileCopy fc, int *e
         return conn;
     }
 
-    /* We always start with plaintext, so that we send STARTTLS plain. TODO... */
-    conn->conn_info.type = CF_PROTOCOL_CLASSIC;
-    conn->encryption_type = CfEnterpriseOptions();
-
 /* username of the client - say root from Windows */
 
 #ifdef __MINGW32__
@@ -391,6 +387,9 @@ static AgentConnection *ServerConnection(const char *server, FileCopy fc, int *e
             break;
 
         case CF_PROTOCOL_CLASSIC:
+
+            conn->conn_info.type = CF_PROTOCOL_CLASSIC;
+            conn->encryption_type = CfEnterpriseOptions();
 
             if (!IdentifyAgent(&conn->conn_info))
             {

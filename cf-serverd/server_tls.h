@@ -39,11 +39,12 @@
 
 
 bool ServerTLSInitialize();
-int ServerStartTLS(ConnectionInfo *conn_info);
+int ServerTLSPeek(ConnectionInfo *conn_info);
 int ServerNegotiateProtocol(const ConnectionInfo *conn_info);
 int ServerIdentifyClient(const ConnectionInfo *conn_info,
                          char *username, size_t username_size);
 int ServerSendWelcome(const ServerConnectionState *conn);
+int ServerTLSSessionEstablish(ServerConnectionState *conn);
 bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn);
 
 

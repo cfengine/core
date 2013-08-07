@@ -560,7 +560,6 @@ static bool ExpandOverflow(const char *str1, const char *str2)
 
 bool ExpandScalar(const EvalContext *ctx, const char *scopeid, const char *string, char buffer[CF_EXPANDSIZE])
 {
-    const char *sp;
     Rval rval;
     int varstring = false;
     char currentitem[CF_EXPANDSIZE], temp[CF_BUFSIZE], name[CF_MAXVARSIZE];
@@ -573,7 +572,7 @@ bool ExpandScalar(const EvalContext *ctx, const char *scopeid, const char *strin
         return false;
     }
 
-    for (sp = string; /* No exit */ ; sp++)     /* check for varitems */
+    for (const char *sp = string; /* No exit */ ; sp++)     /* check for varitems */
     {
         char var[CF_BUFSIZE];
 

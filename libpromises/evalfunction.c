@@ -1790,20 +1790,23 @@ static FnCallResult FnCallMapList(EvalContext *ctx, FnCall *fp, Rlist *finalargs
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
-    for (const Rlist *rp = (const Rlist *) rval.item; rp != NULL; rp = rp->next)
+    for (const Rlist *rp = RvalRlistValue(rval); rp != NULL; rp = rp->next)
     {
-        ScopeNewSpecial(ctx, SPECIAL_SCOPE_THIS, "this", (char *) rp->item, DATA_TYPE_STRING);
+        const char *current_value = RlistScalarValue(rp);
+        ScopeNewSpecial(ctx, SPECIAL_SCOPE_THIS, "this", current_value, DATA_TYPE_STRING);
 
-        ExpandScalar(ctx, PromiseGetBundle(fp->caller)->ns, PromiseGetBundle(fp->caller)->name, map, expbuf);
+        ExpandScalar(ctx, NULL, "this", map, expbuf);
 
         if (strstr(expbuf, "$(this)") || strstr(expbuf, "${this}"))
         {
             RlistDestroy(newlist);
+            ScopeDeleteSpecial(SPECIAL_SCOPE_THIS, "this");
             return (FnCallResult) { FNCALL_FAILURE };
         }
 
         RlistAppendScalar(&newlist, expbuf);
         ScopeDeleteSpecial(SPECIAL_SCOPE_THIS, "this");
+        expbuf[0] = '\0';
     }
 
     return (FnCallResult) { FNCALL_SUCCESS, { newlist, RVAL_TYPE_LIST } };

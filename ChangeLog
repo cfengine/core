@@ -1,5 +1,7 @@
 3.5.2
        Bug fixes:
+       - fix delayed abortclasses checking (Redmine #2316, #3114, #3003)
+       - fix maplist arguments bug (Redmine #3256)
        - fix segfaults in cf-pomises (Redmine #3173, 3194)
        - fix build on Solaris 10/SmartOS (Redmine #3097)
        - sanitize characters from /etc/issue in sys.flavor for Debian (Redmine #2988)

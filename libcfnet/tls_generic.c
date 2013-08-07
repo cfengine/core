@@ -329,44 +329,48 @@ int TLSRecv(SSL *ssl, char *buffer, int length)
 }
 
 /**
- * @brief Repeat receiving until we get a full line (i.e. received buffer ends
- *        with line terminator).
+ * @brief Repeat receiving until received buffer ends with '\n'.
  * @return Line is '\0'-terminated and put in #line. Return value is line
  *         length (including '\0') or -1 in case of error.
+ *
+ * @note This function is intended for line-oriented communication, this means
+ *       the peer sends us one line and waits for reply, so that '\n' is the
+ *       last character in the underlying SSL_read().
  */
-int TLSRecvLine(SSL *ssl, char *line, size_t line_size)
+int TLSRecvLines(SSL *ssl, char *buf, size_t buf_size)
 {
     int ret;
     int got = 0;
-    line_size -= 1;               /* Reserve one space for terminating '\0' */
+    buf_size -= 1;               /* Reserve one space for terminating '\0' */
 
     /* Repeat until we receive end of line. */
     do
     {
-        line[got] = '\0';
-        ret = TLSRecv(ssl, &line[got], line_size - got);
+        buf[got] = '\0';
+        ret = TLSRecv(ssl, &buf[got], buf_size - got);
         if (ret <= 0)
         {
             Log(LOG_LEVEL_ERR,
                 "Connection was hung up while receiving line: %s",
-                line);
+                buf);
             return -1;
         }
         got += ret;
     }
-    while ((line[got-1] != '\n') && (got < line_size));
+    while ((buf[got-1] != '\n') && (got != buf_size));
+    assert(got <= buf_size);
 
-    /* Append terminating '\0', there is room because line_size is -1. */
-    line[got] = '\0';
+    /* Append terminating '\0', there is room because buf_size is -1. */
+    buf[got] = '\0';
 
-    if (got >= line_size)                   /* Can only be got == line_size */
+    if ((got == buf_size) && (buf[got-1] != '\n'))
     {
         Log(LOG_LEVEL_ERR,
             "Received line too long, hanging up! Length %d, line: %s",
-            got, line);
+            got, buf);
         return -1;
     }
 
-    Log(LOG_LEVEL_DEBUG, "TLSRecvLine() %d bytes long: %s", got, line);
+    Log(LOG_LEVEL_DEBUG, "TLSRecvLines() %d bytes long: %s", got, buf);
     return got;
 }

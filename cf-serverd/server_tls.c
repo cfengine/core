@@ -242,7 +242,7 @@ int ServerNegotiateProtocol(const ConnectionInfo *conn_info)
     }
 
     /* Receive CFE_v%d ... */
-    ret = TLSRecvLine(conn_info->ssl, input, sizeof(input));
+    ret = TLSRecvLines(conn_info->ssl, input, sizeof(input));
 
     int version_received = -1;
     ret = sscanf(input, "CFE_v%d", &version_received);
@@ -290,7 +290,7 @@ int ServerIdentifyClient(const ConnectionInfo *conn_info,
      * on IDENTITY line. For now only "username" setting exists... */
     username[0] = '\0';
 
-    ret = TLSRecvLine(conn_info->ssl, line, sizeof(line));
+    ret = TLSRecvLines(conn_info->ssl, line, sizeof(line));
     if (ret <= 0)
     {
         return -1;

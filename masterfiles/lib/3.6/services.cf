@@ -234,7 +234,7 @@ bundle agent standard_services(service,state)
       "restartcommand[auditd]" string => "/etc/init.d/auditd restart";
       "reloadcommand[auditd]"  string => "/etc/init.d/auditd reload";
       "stopcommand[auditd]"    string => "/etc/init.d/auditd stop";
-      "pattern[auditd]"        string => ".*auditd.*";
+      "pattern[auditd]"        string => ".*auditd$";
 
       "startcommand[autofs]"   string => "/etc/init.d/autofs start";
       "restartcommand[autofs]" string => "/etc/init.d/autofs restart";

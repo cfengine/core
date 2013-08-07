@@ -25,7 +25,7 @@
 
 #include "cfnet.h"
 
-#include "logging.h"
+#include "logging.h"                                            /* LogLevel */
 #include "misc_lib.h"
 
 /* TODO move crypto.h to libutils */
@@ -148,6 +148,57 @@ int TLSVerifyPeer(ConnectionInfo *conn_info, const char *remoteip, const char *u
     X509_free(received_cert);
   ret1:
     return retval;
+}
+
+static const char *TLSPrimarySSLError(int code)
+{
+    switch (code)
+    {
+    case SSL_ERROR_NONE:
+        return "TLSGetSSLErrorString: No SSL error!";
+    case SSL_ERROR_ZERO_RETURN:
+        return "TLS session has been terminated (SSL_ERROR_ZERO_RETURN)";
+    case SSL_ERROR_WANT_READ:
+        return "SSL_ERROR_WANT_READ";
+    case SSL_ERROR_WANT_WRITE:
+        return "SSL_ERROR_WANT_WRITE";
+    case SSL_ERROR_WANT_CONNECT:
+        return "SSL_ERROR_WANT_CONNECT";
+    case SSL_ERROR_WANT_ACCEPT:
+        return "SSL_ERROR_WANT_ACCEPT";
+    case SSL_ERROR_WANT_X509_LOOKUP:
+        return "SSL_ERROR_WANT_X509_LOOKUP";
+    case SSL_ERROR_SYSCALL:
+        return "SSL_ERROR_WANT_X509_LOOKUP";
+    case SSL_ERROR_SSL:
+        return "SSL_ERROR_SSL";
+    }
+    return "Unknown OpenSSL error code!";
+}
+
+/* TODO ERR_get_error is only meaningful for some error codes, so check
+ * and return empty string otherwise. */
+static const char *TLSSecondarySSLError(int code)
+{
+    return ERR_reason_error_string(ERR_get_error());
+}
+
+/**
+ * @brief OpenSSL is missing an SSL_reason_error_string() like
+ *        ERR_reason_error_string().  Provide missing functionality here,
+ *        since it's kind of complicated.
+ * @param #prepend String to prepend to the SSL error.
+ * @param #code Return code from the OpenSSL function call.
+ * @warning Use only for SSL_connect(), SSL_accept(), SSL_do_handshake(),
+ *          SSL_read(), SSL_peek(), SSL_write(), see SSL_get_error man page.
+ */
+void TLSLogError(SSL *ssl, LogLevel level, const char *prepend, int code)
+{
+    assert(prepend != NULL);
+    Log(level, "%s: %d %s %s",
+        prepend, code,
+        TLSPrimarySSLError(SSL_get_error(ssl, code)),
+        TLSSecondarySSLError(code));
 }
 
 /**

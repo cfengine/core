@@ -29,6 +29,8 @@
 #include "crypto.h"                                        /* DecryptString */
 #include "conversion.h"
 #include "signals.h"
+#include "item_lib.h"                 /* IsMatchItemIn */
+#include "lastseen.h"                 /* LastSaw1 */
 #include "net.h"                      /* SendTransaction,ReceiveTransaction */
 #include "tls_generic.h"              /* TLSSend */
 #include "cf-serverd-enterprise-stubs.h"
@@ -129,93 +131,60 @@ bool ServerTLSInitialize()
     return true;
 }
 
-int ServerStartTLS(ConnectionInfo *conn_info)
+/**
+ * @brief Set the connection type to CLASSIC or TLS.
+
+ * It is performed by peeking into the TLS connection to read the first bytes,
+ * and if it's a CAUTH protocol command use the old protocol loop, else use
+ * the TLS protocol loop.
+ *
+ * @return -1 in case of error, 1 otherwise.
+ */
+int ServerTLSPeek(ConnectionInfo *conn_info)
 {
-    int result = 0;
+    assert(SSLSERVERCONTEXT != NULL && PRIVKEY != NULL && PUBKEY != NULL);
 
-    assert(SSLSERVERCONTEXT != NULL);
+    /* This must be the first thing we run on an accepted connection. */
+    assert(conn_info->type == CF_PROTOCOL_UNDEFINED);
 
-    /* Positive reply to client's STARTTLS. */
-    result = SendTransaction(conn_info, "ACK", 0, CF_DONE);
+    const int peek_size = CF_INBAND_OFFSET + sizeof("CAUTH");
 
-    /* Now we wait for the client to initiate TLS handshake, so we're letting
-     * OpenSSL take over. */
-    conn_info->type = CF_PROTOCOL_TLS;
-    conn_info->ssl = SSL_new(SSLSERVERCONTEXT);
-    if (conn_info->ssl == NULL)
+    char buf[peek_size];
+    ssize_t got = recv(conn_info->sd, buf, sizeof(buf), MSG_PEEK);
+    if (got == -1)
     {
-        Log(LOG_LEVEL_ERR, "SSL_new: %s",
-            ERR_reason_error_string(ERR_get_error()));
+        Log(LOG_LEVEL_ERR, "TCP connection: %s", GetErrorStr());
         return -1;
     }
+    else if (got == 0)
+    {
+        Log(LOG_LEVEL_ERR,
+            "Peer closed TCP connection without sending data!");
+        return -1;
+    }
+    else if (got < peek_size)
+    {
+        Log(LOG_LEVEL_WARNING,
+            "Peer sent only %zd bytes! Considering the protocol as Classic",
+            got);
+        conn_info->type = CF_PROTOCOL_CLASSIC;
+    }
+    else if (got == peek_size &&
+             memcmp(&buf[CF_INBAND_OFFSET], "CAUTH", strlen("CAUTH")) == 0)
+    {
+        Log(LOG_LEVEL_VERBOSE,
+            "Peeked CAUTH in TCP stream, considering the protocol as Classic");
+        conn_info->type = CF_PROTOCOL_CLASSIC;
+    }
+    else                                   /* got==peek_size && not "CAUTH" */
+    {
+        Log(LOG_LEVEL_VERBOSE,
+            "Peeked nothing important in TCP stream, considering the protocol as TLS");
+        LogRaw(LOG_LEVEL_DEBUG, "Peeked data: ", buf, sizeof(buf));
+        conn_info->type = CF_PROTOCOL_TLS;
+    }
 
-    /* Initiate the TLS handshake over the already open TCP socket. */
-    SSL_set_fd(conn_info->ssl, conn_info->sd);
-
-    int total_tries = 0;
-    do {
-        result = SSL_accept(conn_info->ssl);
-        if (result <= 0)
-        {
-            /*
-             * Identify the problem and if possible try to fix it.
-             */
-            int error = SSL_get_error(conn_info->ssl, result);
-            if ((SSL_ERROR_WANT_WRITE == error) || (SSL_ERROR_WANT_READ == error))
-            {
-                Log(LOG_LEVEL_DEBUG, "Recoverable error in TLS handshake, trying to fix it");
-                /*
-                 * We can try to fix this.
-                 * This error means that there was not enough data in the buffer, using select
-                 * to wait until we get more data.
-                 */
-                fd_set rfds;
-                struct timeval tv;
-                int tries = 0;
-
-                do {
-                    SET_DEFAULT_TLS_TIMEOUT(tv);
-                    FD_ZERO(&rfds);
-                    FD_SET(conn_info->sd, &rfds);
-
-                    result = select(conn_info->sd + 1, &rfds, NULL, NULL, &tv);
-                    if (result > 0)
-                    {
-                        /*
-                         * Ready to receive data
-                         */
-                        break;
-                    }
-                    else
-                    {
-                        Log(LOG_LEVEL_VERBOSE, "select(2) timed out, retrying (tries: %d)", tries);
-                        ++tries;
-                    }
-                } while (tries <= DEFAULT_TLS_TRIES);
-            }
-            else
-            {
-                /*
-                 * Unrecoverable error
-                 */
-                int e = ERR_get_error();
-                Log(LOG_LEVEL_ERR, "TLS handshake err %d %d: %s",
-                    error, e, ERR_reason_error_string(e));
-                return -1;
-            }
-        }
-        else
-        {
-            /*
-             * TLS channel established, start talking!
-             */
-            Log (LOG_LEVEL_VERBOSE,
-                 "TLS session established, checking trust...");
-            break;
-        }
-        ++total_tries;
-    } while (total_tries <= DEFAULT_TLS_TRIES);
-    return 0;
+    return 1;
 }
 
 /**
@@ -362,6 +331,107 @@ int ServerSendWelcome(const ServerConnectionState *conn)
     return 1;
 }
 
+
+/**
+ * @brief Accept a TLS connection and authenticate and identify.
+ * @note Various fields in #conn are set, like username and keyhash.
+ */
+int ServerTLSSessionEstablish(ServerConnectionState *conn)
+{
+    int ret;
+
+    conn->conn_info.ssl = SSL_new(SSLSERVERCONTEXT);
+    if (conn->conn_info.ssl == NULL)
+    {
+        Log(LOG_LEVEL_ERR, "SSL_new: %s",
+            ERR_reason_error_string(ERR_get_error()));
+        return -1;
+    }
+
+    /* Now we are letting OpenSSL take over the open socket. */
+    SSL_set_fd(conn->conn_info.ssl, conn->conn_info.sd);
+
+    ret = SSL_accept(conn->conn_info.ssl);
+    if (ret <= 0)
+    {
+        TLSLogError(conn->conn_info.ssl, LOG_LEVEL_ERR,
+                    "Connection handshake", ret);
+        return -1;
+    }
+
+    Log (LOG_LEVEL_VERBOSE, "TLS session established, checking trust...");
+
+    /* Send/Receive "CFE_v%d" version string and agree on version. */
+    ret = ServerNegotiateProtocol(&conn->conn_info);
+    if (ret <= 0)
+    {
+        return -1;
+    }
+
+    /* Receive IDENTITY USER=asdf plain string. */
+    ret = ServerIdentifyClient(&conn->conn_info, conn->username,
+                               sizeof(conn->username));
+    if (ret != 1)
+    {
+        return -1;
+    }
+
+    /* We *now* (maybe a bit late) verify the key that the client sent us in
+     * the TLS handshake, since we need the username to do so. TODO in the
+     * future store keys irrelevant of username, so that we can match them
+     * before IDENTIFY. */
+    ret = TLSVerifyPeer(&conn->conn_info, conn->ipaddr, conn->username);
+    if (ret == -1)                                      /* error */
+    {
+        return -1;
+    }
+
+    if (ret == 1)                                    /* trusted key */
+    {
+        Log(LOG_LEVEL_VERBOSE,
+            "%s: Client is TRUSTED, public key MATCHES stored one.",
+            conn->conn_info.remote_keyhash_str);
+    }
+
+    if (ret == 0)                                  /* untrusted key */
+    {
+        Log(LOG_LEVEL_WARNING,
+            "%s: Client's public key is UNKNOWN!",
+            conn->conn_info.remote_keyhash_str);
+
+        if ((SV.trustkeylist != NULL) &&
+            (IsMatchItemIn(SV.trustkeylist, MapAddress(conn->ipaddr))))
+        {
+            Log(LOG_LEVEL_VERBOSE,
+                "Host %s was found in the \"trustkeysfrom\" list",
+                conn->ipaddr);
+            Log(LOG_LEVEL_WARNING,
+                "%s: Explicitly trusting this key from now on.",
+                conn->conn_info.remote_keyhash_str);
+
+            conn->trust = true;
+            SavePublicKey("root", conn->conn_info.remote_keyhash_str,
+                          conn->conn_info.remote_key);
+        }
+        else
+        {
+            Log(LOG_LEVEL_ERR, "TRUST FAILED, WARNING: possible MAN IN THE MIDDLE attack, dropping connection!");
+            Log(LOG_LEVEL_ERR, "Open server's ACL if you really want to start trusting this new key.");
+            return -1;
+        }
+    }
+
+    /* skipping CAUTH */
+    conn->id_verified = 1;
+    /* skipping SAUTH, allow access to read-only files */
+    conn->rsa_auth = 1;
+    LastSaw1(conn->ipaddr, conn->conn_info.remote_keyhash_str,
+             LAST_SEEN_ROLE_ACCEPT);
+
+    ServerSendWelcome(conn);
+
+    return 1;
+}
 
 //*******************************************************************
 // COMMANDS

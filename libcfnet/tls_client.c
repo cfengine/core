@@ -235,16 +235,15 @@ int TLSClientSendIdentity(const ConnectionInfo *conn_info, const char *username)
     return 1;
 }
 
-/*
- * The tricky part about enabling TLS is that the server might disconnect us if
- * it does not support the STARTTLS command. Once disconnected we will need to
- * reconnect and make sure everything works again.
+/**
+ * We directly initiate a TLS handshake with the server. If the server is old
+ * version (does not speak TLS) the connection will be denied.
+ * @note the socket file descriptor in #conn_info must be connected and *not*
+ *       non-blocking
+ * @return -1 in case of error
  */
 int TLSTry(ConnectionInfo *conn_info)
 {
-    char buffer[CF_BUFSIZE] = "";
-    int result = 0;
-
     /* SSL Context might not be initialised up to now due to lack of keys, as
      * they might be generated as part of the policy (e.g. failsafe.cf). */
     if (!TLSClientInitialize())
@@ -255,102 +254,33 @@ int TLSTry(ConnectionInfo *conn_info)
 
     if (conn_info->type == CF_PROTOCOL_TLS)
     {
-        Log(LOG_LEVEL_ERR, "We are already on TLS mode, skipping initialization");
+        Log(LOG_LEVEL_WARNING,
+            "We are already on TLS mode, skipping initialization");
         return 0;
     }
 
-    result = SendTransaction(conn_info, "STARTTLS", 0, CF_DONE);
-    if (result < 0)
+    conn_info->type = CF_PROTOCOL_TLS;
+    conn_info->ssl = SSL_new(SSLCLIENTCONTEXT);
+    if (conn_info->ssl == NULL)
     {
-        Log(LOG_LEVEL_ERR, "Failed to start TLS");
+        Log(LOG_LEVEL_ERR, "SSL_new: %s",
+            ERR_reason_error_string(ERR_get_error()));
         return -1;
     }
 
-    result = ReceiveTransaction(conn_info, buffer, NULL);
-    if (strcmp(buffer, "ACK") == 0)
+    /* Initiate the TLS handshake over the already open TCP socket. */
+    SSL_set_fd(conn_info->ssl, conn_info->sd);
+
+    int ret = SSL_connect(conn_info->ssl);
+    if (ret <= 0)
     {
-        Log(LOG_LEVEL_VERBOSE,
-            "STARTTLS accepted by server, initiating TLS handshake");
-
-        /* Let OpenSSL take over existing connection. */
-        conn_info->type = CF_PROTOCOL_TLS;
-        conn_info->ssl = SSL_new(SSLCLIENTCONTEXT);
-        if (conn_info->ssl == NULL)
-        {
-            Log(LOG_LEVEL_ERR, "SSL_new: %s",
-                ERR_reason_error_string(ERR_get_error()));
-            return -1;
-        }
-
-        /* Initiate the TLS handshake over the already open TCP socket. */
-        SSL_set_fd(conn_info->ssl, conn_info->sd);
-
-        /* Now we send the TLS request to the server. */
-        int total_tries = 0;
-        do
-        {
-            result = SSL_connect(conn_info->ssl);
-            if (result <= 0)
-            {
-                Log(LOG_LEVEL_ERR, "Problems with TLS negotiation, trying again");
-                /*
-                 * Identify the problem and if possible try to fix it.
-                 */
-                int error = SSL_get_error(conn_info->ssl, result);
-                if ((SSL_ERROR_WANT_WRITE == error) || (SSL_ERROR_WANT_READ == error))
-                {
-                    Log(LOG_LEVEL_ERR, "Recoverable error in TLS handshake, trying to fix it");
-                    /*
-                     * We can try to fix this.
-                     * This error means that there was not enough data in the buffer, using select
-                     * to wait until we get more data.
-                     */
-                    fd_set wfds;
-                    struct timeval tv;
-                    int tries = 0;
-
-                    do {
-                        SET_DEFAULT_TLS_TIMEOUT(tv);
-                        FD_ZERO(&wfds);
-                        FD_SET(conn_info->sd, &wfds);
-
-                        result = select(conn_info->sd + 1, NULL, &wfds, NULL, &tv);
-                        if (result > 0)
-                        {
-                            Log (LOG_LEVEL_INFO, "TLS connection established");
-                            break;
-                        }
-                        else
-                        {
-                            Log(LOG_LEVEL_ERR, "select(2) timed out, retrying (tries: %d)", tries);
-                            ++tries;
-                        }
-                    } while (tries <= DEFAULT_TLS_TRIES);
-                }
-                else
-                {
-                    /*
-                     * Unrecoverable error
-                     */
-                    int e = ERR_get_error();
-                    Log(LOG_LEVEL_ERR, "TLS handshake err %d %d: %s",
-                        error, e, ERR_reason_error_string(e));
-                    return -1;
-                }
-            }
-            else
-            {
-                Log (LOG_LEVEL_VERBOSE, "TLS session established, checking trust...");
-                break;
-            }
-            ++total_tries;
-        }
-        while (total_tries <= DEFAULT_TLS_TRIES);
+        TLSLogError(conn_info->ssl, LOG_LEVEL_ERR,
+                    "Connection handshake", ret);
+        return -1;
     }
     else
     {
-        Log(LOG_LEVEL_WARNING, "Server rejected STARTTLS, reply: %s", buffer);
-        return -1;
+        Log(LOG_LEVEL_VERBOSE, "TLS session established, checking trust...");
     }
 
     return 0;

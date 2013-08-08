@@ -18,7 +18,7 @@ body executor control
 
       # Default:
       #
-      # schedule => { "Min00", "Min05", "Min10", "Min15", "Min20", 
+      # schedule => { "Min00", "Min05", "Min10", "Min15", "Min20",
       #               "Min25", "Min30", "Min35", "Min40", "Min45",
       #               "Min50", "Min55" };
 

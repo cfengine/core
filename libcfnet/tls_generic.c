@@ -47,9 +47,11 @@ int TLSVerifyCallback(X509_STORE_CTX *ctx ARG_UNUSED,
 }
 
 /**
- * @return 1 if the certificate received during the TLS handshake is verified
- *         to be the same with the stored one for that host.
- * @return 0 if the certificates differ.
+ * @return 1 if the certificate received during the TLS handshake is valid
+ *         signed and its public key is the same with the stored one for that
+ *         host.
+ * @return 0 if stored key for the host is missing or differs from the one
+ *         received.
  * @return -1 in case of other error (error will be Log()ed).
  * @note When return value is != -1 (so no error occured) the #conn_info struct
  *       should have been populated, with key received and its hash.
@@ -82,6 +84,16 @@ int TLSVerifyPeer(ConnectionInfo *conn_info, const char *remoteip, const char *u
         retval = -1;
         goto ret2;
     }
+    ret = X509_verify(received_cert, received_pubkey);
+    if (ret <= 0)
+    {
+        Log(LOG_LEVEL_ERR,
+            "Received public key is not properly signed: %s",
+            ERR_reason_error_string(ERR_get_error()));
+            retval = -1;
+            goto ret2;
+    }
+    Log(LOG_LEVEL_VERBOSE, "Received public key signature is valid");
 
     conn_info->remote_key = EVP_PKEY_get1_RSA(received_pubkey);
 

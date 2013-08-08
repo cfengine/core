@@ -57,7 +57,7 @@ bool ServerTLSInitialize()
     {
         Log(LOG_LEVEL_ERR, "SSL_CTX_new: %s",
             ERR_reason_error_string(ERR_get_error()));
-        return false;
+        goto err1;
     }
 
     /* Use only TLS v1 or later.
@@ -65,19 +65,19 @@ bool ServerTLSInitialize()
     SSL_CTX_set_options(SSLSERVERCONTEXT,
                         SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3);
 
-    /* Never bother with retransmissions, SSL_write() and SSL_read() should
-     * always either write/read the whole amount or fail. */
+    /* Never bother with retransmissions, SSL_write() should
+     * always either write the whole amount or fail. */
     SSL_CTX_set_mode(SSLSERVERCONTEXT, SSL_MODE_AUTO_RETRY);
 
     /*
      * Create cert into memory and load it into SSL context.
      */
 
-    if (PRIVKEY == NULL)
+    if (PRIVKEY == NULL || PUBKEY == NULL)
     {
         Log(LOG_LEVEL_ERR,
             "No public/private key pair is loaded, create one with cf-key");
-        return false;
+        goto err2;
     }
     assert(SSLSERVERCERT == NULL);
     /* Generate self-signed cert valid from now to 50 years later. */
@@ -111,7 +111,7 @@ bool ServerTLSInitialize()
             Log(LOG_LEVEL_ERR,
                 "Couldn't sign the public key for the TLS handshake: %s",
                 ERR_reason_error_string(ERR_get_error()));
-            return false;
+            goto err3;
         }
     }
     /* Log(LOG_LEVEL_ERR, "generate cert from priv key: %s", */
@@ -124,7 +124,7 @@ bool ServerTLSInitialize()
     {
         Log(LOG_LEVEL_ERR, "Failed to use RSA private key: %s",
             ERR_reason_error_string(ERR_get_error()));
-        return false;
+        goto err3;
     }
 
     /* Verify cert consistency. */
@@ -133,7 +133,7 @@ bool ServerTLSInitialize()
     {
         Log(LOG_LEVEL_ERR, "Inconsistent key and TLS cert: %s",
             ERR_reason_error_string(ERR_get_error()));
-        return false;
+        goto err3;
     }
 
     /* Set options to always request a certificate from the peer, either we
@@ -145,6 +145,15 @@ bool ServerTLSInitialize()
     SSL_CTX_set_cert_verify_callback(SSLSERVERCONTEXT, TLSVerifyCallback, NULL);
 
     return true;
+
+  err3:
+    X509_free(SSLSERVERCERT);
+    SSLSERVERCERT = NULL;
+  err2:
+    SSL_CTX_free(SSLSERVERCONTEXT);
+    SSLSERVERCONTEXT = NULL;
+  err1:
+    return false;
 }
 
 /**

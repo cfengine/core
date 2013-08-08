@@ -78,7 +78,7 @@ bool TLSClientInitialize()
     SSL_CTX_set_mode(SSLCLIENTCONTEXT, SSL_MODE_AUTO_RETRY);
 
     /*
-     * Create cert into memory and load it into context.
+     * Create cert into memory and load it into SSL context.
      */
 
     if (PRIVKEY == NULL || PUBKEY == NULL)

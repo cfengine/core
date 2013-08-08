@@ -1144,7 +1144,7 @@ void OSClasses(EvalContext *ctx)
 #endif
 
 #ifdef __sun
-    if (FullTextMatch("joyent.*", VSYSNAME.version))
+    if (FullTextMatch(ctx, "joyent.*", VSYSNAME.version))
     {
         EvalContextHeapAddHard(ctx, "smartos");
         EvalContextHeapAddHard(ctx, "smartmachine");

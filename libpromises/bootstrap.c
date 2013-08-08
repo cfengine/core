@@ -118,7 +118,7 @@ void SetPolicyServer(EvalContext *ctx, const char *new_policy_server)
     else
     {
         POLICY_SERVER[0] = '\0';
-        ScopeNewSpecial(ctx, "sys", "policy_hub", "undefined", DATA_TYPE_STRING);
+        ScopeNewSpecial(ctx, "sys", "policy_hub", "policy_hub_undefined", DATA_TYPE_STRING);
     }
 
     // Get the timestamp on policy update

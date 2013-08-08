@@ -416,7 +416,7 @@ bundle edit_line set_variable_values_ini(tab, sectionName)
 
 }
 
-bundle edit_line set_quoted_values(v) 
+bundle edit_line set_quoted_values(v)
 {
       # Sets the RHS of variables in shell-like files
       #   that is:
@@ -1116,7 +1116,7 @@ body depth_search include_base
       include_basedir => "true";
 }
 
-body depth_search recurse_with_base(d) 
+body depth_search recurse_with_base(d)
 {
       depth => "$(d)";
       xdev  => "true";

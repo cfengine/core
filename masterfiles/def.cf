@@ -1,7 +1,7 @@
 ###############################################################################
 #
 # common def
-#  - common/global variables and classes here  
+#  - common/global variables and classes here
 #
 ###############################################################################
 
@@ -21,10 +21,10 @@ bundle common def
 
       "acl" slist => {
                        # Assume /16 LAN clients to start with
-                       "$(sys.policy_hub)/16", 
+                       "$(sys.policy_hub)/16",
 
-                       #  "2001:700:700:3.*", 
-                       #  "217.77.34.18", 
+                       #  "2001:700:700:3.*",
+                       #  "217.77.34.18",
                        #  "217.77.34.19",
       },
       comment => "Define an acl for the machines to be granted accesses",

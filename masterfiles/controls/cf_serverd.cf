@@ -1,9 +1,9 @@
 ###############################################################################
 # This part is for cf-serverd
 #
-# Server controls are mainly about determining access policy for the connection 
-# protocol: i.e. access to the server itself. 
-# Access to specific files must be granted in addition. 
+# Server controls are mainly about determining access policy for the connection
+# protocol: i.e. access to the server itself.
+# Access to specific files must be granted in addition.
 ###############################################################################
 
 body server control
@@ -52,7 +52,7 @@ bundle server access_rules()
 
       # Uncomment the promise below to allow cf-runagent to
       # access cf-agent on Windows machines
-      #       
+      #
       #  "c:\program files\cfengine\bin\cf-agent.exe"
       #
       #    handle => "server_access_rule_grant_access_cfagent_windows",
@@ -62,7 +62,7 @@ bundle server access_rules()
   roles:
 
       # Use roles to allow specific remote cf-runagent users to
-      # define certain soft-classes when running cf-agent on this host        
+      # define certain soft-classes when running cf-agent on this host
 
     cfengine_3::
 

@@ -1,8 +1,8 @@
 ###############################################################################
 # This part is for cf-monitord
 #
-# The system defaults will be sufficient for most users. 
-# This configurability potential, however, will be a key to developing 
+# The system defaults will be sufficient for most users.
+# This configurability potential, however, will be a key to developing
 # the integrated monitoring capabilities of CFE.
 ###############################################################################
 

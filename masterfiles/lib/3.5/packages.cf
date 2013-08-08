@@ -493,7 +493,7 @@ body package_method yum_group
 #      package_method   =>   yum_group;
 #
 
-{ 
+{
       package_add_command             =>  "/usr/bin/yum groupinstall -y";
       package_changes                 =>  "bulk";
       package_delete_command          =>  "/usr/bin/yum groupremove -y";

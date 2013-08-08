@@ -1,7 +1,7 @@
 bundle agent init_msg
 {
   reports:
-     am_policy_hub::
+    am_policy_hub::
       "--> I'm a policy hub."
         comment => "Display message on screen/email",
          handle => "init_msg_reports_i_am_hub";

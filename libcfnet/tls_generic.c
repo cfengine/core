@@ -130,6 +130,8 @@ int TLSVerifyPeer(ConnectionInfo *conn_info, const char *remoteip, const char *u
     ret = EVP_PKEY_cmp(received_pubkey, &expected_pubkey);
     if (ret == 1)
     {
+        Log(LOG_LEVEL_VERBOSE,
+            "Received public key compares equal to the one we have stored");
         retval = 1;                                          /* TRUSTED KEY */
         goto ret5;
     }

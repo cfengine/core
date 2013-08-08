@@ -94,11 +94,11 @@ bool TLSClientInitialize()
         }
     }
 
-    /* Generate self-signed cert valid from now to 100 years later. */
+    /* Generate self-signed cert valid from now to 50 years later. */
     {
         X509 *x509 = X509_new();
         X509_gmtime_adj(X509_get_notBefore(x509), 0);
-        X509_time_adj_ex(X509_get_notAfter(x509), 365*100, 0, NULL);
+        X509_time_adj(X509_get_notAfter(x509), 60*60*24*365*50, NULL);
         EVP_PKEY *pkey = EVP_PKEY_new();
         EVP_PKEY_set1_RSA(pkey, PRIVKEY);
         X509_NAME *name = X509_get_subject_name(x509);

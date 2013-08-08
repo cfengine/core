@@ -43,12 +43,12 @@ bundle server access_rules()
       "$(def.dir_bin)"
       handle => "server_access_grant_access_binary",
       comment => "Grant access to binary for cf-runagent",
-      admit   => { ".*$(def.domain)", @(def.acl) };
+      admit   => { ".*\.$(def.domain)", @(def.acl) };
 
       "$(def.dir_modules)"
       handle => "server_access_grant_access_modules",
       comment => "Grant access to modules directory",
-      admit   => { ".*$(def.domain)", @(def.acl) };
+      admit   => { ".*\.$(def.domain)", @(def.acl) };
 
       # Uncomment the promise below to allow cf-runagent to
       # access cf-agent on Windows machines

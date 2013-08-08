@@ -191,7 +191,7 @@ bundle agent cfe_internal_update
 
 body perms u_m(p)
 {
-      mode  => "$(p)";
+      mode => "$(p)";
 }
 
 #########################################################

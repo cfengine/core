@@ -424,26 +424,20 @@ static AgentConnection *ServerConnection(const char *server, FileCopy fc, int *e
 
 void DisconnectServer(AgentConnection *conn)
 {
-    Log(LOG_LEVEL_INFO, "Connection to %s is closed",
-        conn->remoteip);
-
-    switch(conn->conn_info.type)
-    {
-    case CF_PROTOCOL_CLASSIC:
-        break;
-    case CF_PROTOCOL_TLS:
-        SSL_shutdown(conn->conn_info.ssl);
-        break;
-    default:
-        UnexpectedError("DisconnectServer: ProtocolVersion %d!",
-                        conn->conn_info.type);
-    }
-
     /* Socket needs to be closed even after SSL_shutdown. */
     if (conn->conn_info.sd >= 0)                  /* Not INVALID or OFFLINE */
     {
+        if (conn->conn_info.type == CF_PROTOCOL_TLS &&
+            conn->conn_info.ssl != NULL)
+        {
+            SSL_shutdown(conn->conn_info.ssl);
+        }
+
         cf_closesocket(conn->conn_info.sd);
         conn->conn_info.sd = SOCKET_INVALID;
+
+        Log(LOG_LEVEL_INFO, "Connection to %s is closed",
+            conn->remoteip);
     }
 
     DeleteAgentConn(conn);
@@ -1376,8 +1370,9 @@ static AgentConnection *GetIdleConnectionToServer(const char *server)
     char ipaddr[CF_MAX_IP_LEN];
     if (Hostname2IPString(ipaddr, server, sizeof(ipaddr)) == -1)
     {
-        Log(LOG_LEVEL_ERR,
+        Log(LOG_LEVEL_WARNING,
             "GetIdleConnectionToServer: could not resolve '%s'", server);
+        return NULL;
     }
 
     ThreadLock(&cft_serverlist);

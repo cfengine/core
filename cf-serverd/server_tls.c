@@ -228,6 +228,12 @@ int ServerNegotiateProtocol(const ConnectionInfo *conn_info)
 
     /* Receive CFE_v%d ... */
     ret = TLSRecvLines(conn_info->ssl, input, sizeof(input));
+    if (ret <= 0)
+    {
+        Log(LOG_LEVEL_ERR,
+            "Client closed connection early! He probably does not trust our key...");
+        return -1;
+    }
 
     int version_received = -1;
     ret = sscanf(input, "CFE_v%d", &version_received);

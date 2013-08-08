@@ -24,49 +24,56 @@ bundle agent cfe_internal_update
 {
   vars:
 
-      "inputs_dir"         string => translatepath("$(sys.workdir)/inputs"),
-      comment => "Directory containing CFEngine policies",
-      handle => "update_vars_inputs_dir";
+      "inputs_dir"
+         string => translatepath("$(sys.workdir)/inputs"),
+        comment => "Directory containing CFEngine policies",
+         handle => "update_vars_inputs_dir";
 
-      "modules_dir"        string => translatepath("$(sys.workdir)/modules"),
-      comment => "Directory containing CFEngine modules",
-      handle => "update_vars_modules_dir";
+      "modules_dir"
+         string => translatepath("$(sys.workdir)/modules"),
+        comment => "Directory containing CFEngine modules",
+         handle => "update_vars_modules_dir";
 
-      "ppkeys_file"        string => translatepath("$(sys.workdir)/ppkeys/localhost.pub"),
-      comment => "Path to public key file",
-      handle => "update_vars_ppkeys_file";
+      "ppkeys_file"
+         string => translatepath("$(sys.workdir)/ppkeys/localhost.pub"),
+        comment => "Path to public key file",
+         handle => "update_vars_ppkeys_file";
 
-      "file_check"         string => translatepath("$(inputs_dir)/promises.cf"),
-      comment => "Path to a policy file",
-      handle => "update_vars_file_check";
+      "file_check"
+         string => translatepath("$(inputs_dir)/promises.cf"),
+        comment => "Path to a policy file",
+         handle => "update_vars_file_check";
 
-      "master_location"    string => "/var/cfengine/masterfiles",
-      comment => "The master cfengine policy directory on the policy host",
-      handle => "update_vars_master_location";
+      "master_location"
+         string => "/var/cfengine/masterfiles",
+        comment => "The master cfengine policy directory on the policy host",
+         handle => "update_vars_master_location";
 
-      "agents" slist => {
-			  "cf-agent",
-			  "cf-execd",
-			  "cf-key",
-			  "cf-monitord",
-			  "cf-promises",
-			  "cf-runagent",
-			  "cf-serverd",
-      },
-      comment => "List of CFEngine binaries",
-      handle => "update_vars_agents";
+      "agents"
+         slist => { "cf-agent",
+            			  "cf-execd",
+            			  "cf-key",
+            			  "cf-monitord",
+            			  "cf-promises",
+            			  "cf-runagent",
+            			  "cf-serverd",
+         },
+        comment => "List of CFEngine binaries",
+         handle => "update_vars_agents";
 
       #
 
   classes:
 
-      "have_ppkeys"   expression => fileexists("$(ppkeys_file)"),
-      comment => "Check for /var/cfengine/ppkeys/localhost.pub",
-      handle => "update_classes_have_ppkeys";
+      "have_ppkeys"
+        expression => fileexists("$(ppkeys_file)"),
+           comment => "Check for /var/cfengine/ppkeys/localhost.pub",
+            handle => "update_classes_have_ppkeys";
 
-      "files_ok"      expression => fileexists("$(file_check)"),
-      comment => "Check for /var/cfengine/masterfiles/promises.cf",
-      handle => "update_classes_files_ok";
+      "files_ok"
+        expression => fileexists("$(file_check)"),
+           comment => "Check for /var/cfengine/masterfiles/promises.cf",
+            handle => "update_classes_files_ok";
 
       #
 
@@ -74,19 +81,22 @@ bundle agent cfe_internal_update
 
     files_ok::
 
-      "cf-serverd"  restart_class => "start_server",
-      comment => "Monitor cf-serverd process",
-      handle => "update_processes_cf_serverd";
+      "cf-serverd"
+        restart_class => "start_server",
+              comment => "Monitor cf-serverd process",
+               handle => "update_processes_cf_serverd";
 
-      "cf-monitord" restart_class => "start_monitor",
-      comment => "Monitor cf-monitord process",
-      handle => "update_processes_cf_monitord";
+      "cf-monitord"
+        restart_class => "start_monitor",
+              comment => "Monitor cf-monitord process",
+               handle => "update_processes_cf_monitord";
 
     files_ok.!windows::
 
-      "cf-execd"    restart_class => "start_exec",
-      comment => "Monitor cf-execd process",
-      handle => "update_processes_cf_execd";
+      "cf-execd"
+        restart_class => "start_exec",
+              comment => "Monitor cf-execd process",
+               handle => "update_processes_cf_execd";
 
       #
 
@@ -95,26 +105,26 @@ bundle agent cfe_internal_update
     start_server::
 
       "$(sys.cf_serverd)"
-      comment => "Start cf-serverd process",
-      handle => "update_commands_start_cf_serverd";
+        comment => "Start cf-serverd process",
+         handle => "update_commands_start_cf_serverd";
 
     start_monitor::
 
       "$(sys.cf_monitord)"
-      comment => "Start cf-monitord process",
-      handle => "update_commands_start_cf_monitord";
+        comment => "Start cf-monitord process",
+         handle => "update_commands_start_cf_monitord";
 
     !windows.start_exec::
 
       "$(sys.cf_execd)"
-      comment => "Start cf-execd process",
-      handle => "update_commands_start_cf_execd_not_windows";
+        comment => "Start cf-execd process",
+         handle => "update_commands_start_cf_execd_not_windows";
 
     !have_ppkeys::
 
       "$(sys.cf_key)"
-      comment => "Generate cfengine encryption keys if necessary",
-      handle => "update_commands_generate_keys";
+        comment => "Generate cfengine encryption keys if necessary",
+         handle => "update_commands_generate_keys";
 
       #
 
@@ -123,66 +133,66 @@ bundle agent cfe_internal_update
     !am_policy_hub::  # policy hub should not alter inputs/ uneccessary
 
       "$(inputs_dir)/cf_promises_validated"
-      comment => "Check whether a validation stamp is available for a new policy update to reduce the distributed load",
-      handle => "update_files_check_valid_update",
-      copy_from => u_rcp("$(master_location)/cf_promises_validated","$(sys.policy_hub)"),
-      action => u_immediate,
-      classes => u_if_repaired("validated_updates_ready");
+          comment => "Check whether a validation stamp is available for a new policy update to reduce the distributed load",
+           handle => "update_files_check_valid_update",
+        copy_from => u_rcp("$(master_location)/cf_promises_validated","$(sys.policy_hub)"),
+           action => u_immediate,
+          classes => u_if_repaired("validated_updates_ready");
 
       "$(modules_dir)"
-      comment => "Always update modules files on client side",
-      handle => "update_files_update_modules",
-      copy_from => u_rcp("$(modules_dir)","$(sys.policy_hub)"),
-      depth_search => u_recurse("inf"),
-      perms => u_m("755"),
-      action => u_immediate;
+             comment => "Always update modules files on client side",
+              handle => "update_files_update_modules",
+           copy_from => u_rcp("$(modules_dir)","$(sys.policy_hub)"),
+        depth_search => u_recurse("inf"),
+               perms => u_m("755"),
+              action => u_immediate;
 
     am_policy_hub|validated_updates_ready::  # policy hub should always put masterfiles in inputs in order to check new policy
 
       "$(inputs_dir)"
-      comment => "Copy policy updates from master source on policy server if a new validation was acquired",
-      handle => "update_files_inputs_dir",
-      copy_from => u_rcp("$(master_location)","$(sys.policy_hub)"),
-      depth_search => u_recurse("inf"),
-      file_select  => u_input_files,
-      action => u_immediate,
-      classes => u_if_repaired("update_report");
+             comment => "Copy policy updates from master source on policy server if a new validation was acquired",
+              handle => "update_files_inputs_dir",
+           copy_from => u_rcp("$(master_location)","$(sys.policy_hub)"),
+        depth_search => u_recurse("inf"),
+        file_select  => u_input_files,
+              action => u_immediate,
+             classes => u_if_repaired("update_report");
 
     !windows::
 
       "$(sys.workdir)/bin"
-      comment => "Make sure cfengine binaries have right file permissions",
-      handle => "update_files_sys_workdir_bin",
-      perms => u_m("755"),
-      depth_search => u_recurse_basedir("inf"),
-      action => u_immediate;
+             comment => "Make sure cfengine binaries have right file permissions",
+              handle => "update_files_sys_workdir_bin",
+               perms => u_m("755"),
+        depth_search => u_recurse_basedir("inf"),
+              action => u_immediate;
 
       "$(sys.workdir)/lib"
-      comment => "Make sure cfengine libraries have right file permissions",
-      handle => "update_files_sys_workdir_lib",
-      perms => u_shared_lib_perms,
-      depth_search => u_recurse_basedir("inf"),
-      action => u_immediate;
+             comment => "Make sure cfengine libraries have right file permissions",
+              handle => "update_files_sys_workdir_lib",
+               perms => u_shared_lib_perms,
+        depth_search => u_recurse_basedir("inf"),
+              action => u_immediate;
 
       "/usr/local/sbin/$(agents)"
-      comment => "Create symlinks of CFE binaries in /usr/local/sbin",
-      handle => canonify("update_files_sbin_$(agents)"),
-      move_obstructions => "true",
-      link_from => u_ln_s("$(sys.workdir)/bin/$(agents)");
+                  comment => "Create symlinks of CFE binaries in /usr/local/sbin",
+                   handle => canonify("update_files_sbin_$(agents)"),
+        move_obstructions => "true",
+                link_from => u_ln_s("$(sys.workdir)/bin/$(agents)");
 
       "/usr/local/sbin/$(agents).cfsaved"
-      comment => "Remove all .cfsaved file extension",
-      handle => canonify("update_files_remove_$(agent)_cfsaved"),
-      delete => u_tidy;
+        comment => "Remove all .cfsaved file extension",
+         handle => canonify("update_files_remove_$(agent)_cfsaved"),
+         delete => u_tidy;
 
     am_policy_hub::
 
       "$(master_location)/."
-      comment => "Make sure masterfiles folder has right file permissions",
-      handle => "update_files_sys_workdir_masterfiles",
-      perms => u_m("644"),
-      depth_search => u_recurse_basedir("inf"),
-      action => u_immediate;
+             comment => "Make sure masterfiles folder has right file permissions",
+              handle => "update_files_sys_workdir_masterfiles",
+               perms => u_m("644"),
+        depth_search => u_recurse_basedir("inf"),
+              action => u_immediate;
 }
 
 #########################################################

@@ -5,11 +5,9 @@
 ###############################################################################
 
 body common control
-
 {
-
       bundlesequence => {
-			  # Common bundles first for best practice 
+			  # Common bundles first for best practice
 			  "def",
 
 			  # Design Center
@@ -17,31 +15,28 @@ body common control
 
 			  # Agent bundles from here
 			  "main",
-
       };
 
       inputs => {
+  		  # Global common bundles
+  		  "def.cf",
 
-		  # Global common bundles
-		  "def.cf",
+  		  # Control body for all agents
+  		  "controls/cf_agent.cf",
+  		  "controls/cf_execd.cf",
+  		  "controls/cf_monitord.cf",
+  		  "controls/cf_runagent.cf",
+  		  "controls/cf_serverd.cf",
 
-		  # Control body for all agents
-		  "controls/cf_agent.cf",
-		  "controls/cf_execd.cf",
-		  "controls/cf_monitord.cf",
-		  "controls/cf_runagent.cf",
-		  "controls/cf_serverd.cf",
+  		  # COPBL/Custom libraries.  Eventually this should use wildcards.
+  		  @(cfengine_stdlib.inputs),
 
-		  # COPBL/Custom libraries.  Eventually this should use wildcards.
-		  @(cfengine_stdlib.inputs),
+  		  # Design Center
+  		  # MARKER FOR CF-SKETCH INPUT INSERTION
+  		  "cf-sketch-runfile.cf",
 
-		  # Design Center
-		  # MARKER FOR CF-SKETCH INPUT INSERTION
-		  "cf-sketch-runfile.cf",
-
-		  # User services from here
-		  "services/init_msg.cf",
-
+  		  # User services from here
+  		  "services/init_msg.cf",
       };
 
       version => "Community Promises.cf 3.4.0";
@@ -54,8 +49,7 @@ bundle common cfengine_stdlib
     cfengine_3_4::
       "inputs" slist => { "libraries/cfengine_stdlib.cf" };
     cfengine_3_5::
-      "inputs" slist => {
-                          "lib/3.5/paths.cf",
+      "inputs" slist => { "lib/3.5/paths.cf",
                           "lib/3.5/common.cf",
                           "lib/3.5/commands.cf",
                           "lib/3.5/packages.cf",
@@ -70,8 +64,7 @@ bundle common cfengine_stdlib
       };
 
     !(cfengine_3_4||cfengine_3_5)::
-      "inputs" slist => {
-                          "lib/$(sys.cf_version_major).$(sys.cf_version_minor)/paths.cf",
+      "inputs" slist => { "lib/$(sys.cf_version_major).$(sys.cf_version_minor)/paths.cf",
                           "lib/$(sys.cf_version_major).$(sys.cf_version_minor)/common.cf",
                           "lib/$(sys.cf_version_major).$(sys.cf_version_minor)/commands.cf",
                           "lib/$(sys.cf_version_major).$(sys.cf_version_minor)/packages.cf",
@@ -89,17 +82,15 @@ bundle common cfengine_stdlib
 ###############################################################################
 
 bundle agent main
-
 {
-
   methods:
 
     any::
 
-      "INIT MSG" usebundle => init_msg,
-      comment => "Just a pre-defined policy bundled with the package",
-      handle => "main_methods_any_init_msg";
-
+      "INIT MSG"
+        usebundle => init_msg,
+          comment => "Just a pre-defined policy bundled with the package",
+           handle => "main_methods_any_init_msg";
 }
 
 ###############################################################################

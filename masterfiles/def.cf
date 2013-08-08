@@ -13,7 +13,7 @@ bundle common def
 
       # Begin change # Your domain name, for use in access control
 
-      "domain"  string => "example.com",
+      "domain" string => "example.com",
       comment => "Define a global domain for all hosts",
       handle => "common_def_vars_domain";
 

@@ -566,6 +566,12 @@ bundle agent standard_services(service,state)
       "stopcommand[ssh]"    string => "/etc/init.d/sshd stop";
       "pattern[ssh]"        string => ".*sshd.*";
 
+      "startcommand[munin-node]"   string => "/etc/init.d/munin-node start";
+      "restartcommand[munin-node]" string => "/etc/init.d/munin-node restart";
+      "reloadcommand[munin-node]"  string => "/etc/init.d/munin-node reload";
+      "stopcommand[munin-node]"    string => "/etc/init.d/munin-node stop";
+      "pattern[munin-node]"        string => ".*munin-node.*";
+
     debian|ubuntu::
 
       "startcommand[atd]"   string => "/etc/init.d/atd start";
@@ -670,6 +676,43 @@ bundle agent standard_services(service,state)
       "stopcommand[ssh]"    string => "/etc/init.d/ssh stop";
       "pattern[ssh]"        string => ".*sshd.*";
 
+      "startcommand[pgbouncer]"   string => "/etc/init.d/pgbouncer start";
+      "restartcommand[pgbouncer]" string => "/etc/init.d/pgbouncer restart";
+      "reloadcommand[pgbouncer]"  string => "/etc/init.d/pgbouncer reload";
+      "stopcommand[pgbouncer]"    string => "/etc/init.d/pgbouncer stop";
+      "pattern[pgbouncer]"        string => ".*pgbouncer.*";
+
+      "startcommand[supervisor]"   string => "/etc/init.d/supervisor start";
+      "restartcommand[supervisor]" string => "/etc/init.d/supervisor restart";
+      "stopcommand[supervisor]"    string => "/etc/init.d/supervisor stop";
+      "pattern[supervisor]"        string => ".*supervisord.*";
+
+      "startcommand[nrpe]"   string => "/etc/init.d/nagios-nrpe-server start";
+      "restartcommand[nrpe]" string => "/etc/init.d/nagios-nrpe-server restart";
+      "reloadcommand[nrpe]"  string => "/etc/init.d/nagios-nrpe-server reload";
+      "stopcommand[nrpe]"    string => "/etc/init.d/nagios-nrpe-server stop";
+      "pattern[nrpe]"        string => ".*nrpe.*";
+
+      "startcommand[munin-node]"   string => "/etc/init.d/munin-node start";
+      "restartcommand[munin-node]" string => "/etc/init.d/munin-node restart";
+      "reloadcommand[munin-node]"  string => "/etc/init.d/munin-node reload";
+      "stopcommand[munin-node]"    string => "/etc/init.d/munin-node stop";
+      "pattern[munin-node]"        string => ".*munin-node.*";
+
+      "startcommand[carbon-cache]"   string => "/etc/init.d/carbon-cache start";
+      "restartcommand[carbon-cache]" string => "/etc/init.d/carbon-cache restart";
+      "stopcommand[carbon-cache]"    string => "/etc/init.d/carbon-cache stop";
+      "pattern[carbon-cache]"        string => ".*carbon-cache.*";
+
+      "startcommand[cassandra]"   string => "/etc/init.d/cassandra start";
+      "restartcommand[cassandra]" string => "/etc/init.d/cassandra restart";
+      "stopcommand[cassandra]"    string => "/etc/init.d/cassandra stop";
+      "pattern[cassandra]"        string => ".*jsvc\.exec.*apache-cassandra\.jar.*";
+
+      "startcommand[omsa-dataeng]"   string => "/etc/init.d/dataeng start";
+      "restartcommand[omsa-dataeng]" string => "/etc/init.d/dataeng restart";
+      "stopcommand[omsa-dataeng]"    string => "/etc/init.d/dataeng stop";
+      "pattern[omsa-dataeng]"        string => ".*dsm_sa_datamgr.*";
 
       # METHODS that implement these ............................................
 

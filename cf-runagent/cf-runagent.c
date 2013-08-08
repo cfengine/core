@@ -695,7 +695,7 @@ static void SendClassData(AgentConnection *conn)
 
     for (rp = classes; rp != NULL; rp = rp->next)
     {
-        if (SendTransaction(conn->sd, rp->item, 0, CF_DONE) == -1)
+        if (SendTransaction(&conn->conn_info, rp->item, 0, CF_DONE) == -1)
         {
             Log(LOG_LEVEL_ERR, "Transaction failed. (send: %s)", GetErrorStr());
             return;
@@ -704,7 +704,7 @@ static void SendClassData(AgentConnection *conn)
 
     snprintf(sendbuffer, CF_MAXVARSIZE, "%s", CFD_TERMINATOR);
 
-    if (SendTransaction(conn->sd, sendbuffer, 0, CF_DONE) == -1)
+    if (SendTransaction(&conn->conn_info, sendbuffer, 0, CF_DONE) == -1)
     {
         Log(LOG_LEVEL_ERR, "Transaction failed. (send: %s)", GetErrorStr());
         return;
@@ -728,7 +728,7 @@ static void HailExec(AgentConnection *conn, char *peer, char *recvbuffer, char *
         snprintf(sendbuffer, CF_BUFSIZE, "EXEC %s", REMOTE_AGENT_OPTIONS);
     }
 
-    if (SendTransaction(conn->sd, sendbuffer, 0, CF_DONE) == -1)
+    if (SendTransaction(&conn->conn_info, sendbuffer, 0, CF_DONE) == -1)
     {
         Log(LOG_LEVEL_ERR, "Transmission rejected. (send: %s)", GetErrorStr());
         DisconnectServer(conn);
@@ -742,7 +742,7 @@ static void HailExec(AgentConnection *conn, char *peer, char *recvbuffer, char *
     {
         memset(recvbuffer, 0, CF_BUFSIZE);
 
-        if ((n_read = ReceiveTransaction(conn->sd, recvbuffer, NULL)) == -1)
+        if ((n_read = ReceiveTransaction(&conn->conn_info, recvbuffer, NULL)) == -1)
         {
             return;
         }

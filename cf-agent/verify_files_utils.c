@@ -1141,19 +1141,9 @@ int CopyRegularFile(EvalContext *ctx, char *source, char *dest, struct stat ssta
             return false;
         }
 
-        if (attr.copy.encrypt)
+        if (!CopyRegularFileNet(source, new, sstat.st_size, attr.copy.encrypt, conn))
         {
-            if (!EncryptCopyRegularFileNet(source, new, sstat.st_size, conn))
-            {
-                return false;
-            }
-        }
-        else
-        {
-            if (!CopyRegularFileNet(source, new, sstat.st_size, conn))
-            {
-                return false;
-            }
+            return false;
         }
     }
     else

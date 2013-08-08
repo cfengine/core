@@ -387,7 +387,7 @@ bundle edit_line set_variable_values_ini(tab, sectionName)
 
 }
 
-bundle edit_line set_quoted_values(v) 
+bundle edit_line set_quoted_values(v)
 {
       # Sets the RHS of variables in shell-like files
       #   that is:
@@ -1476,7 +1476,7 @@ body depth_search include_base
       include_basedir => "true";
 }
 
-body depth_search recurse_with_base(d) 
+body depth_search recurse_with_base(d)
 {
       depth => "$(d)";
       xdev  => "true";
@@ -2165,7 +2165,7 @@ body package_method yum_group
 #      package_method   =>   yum_group;
 #
 
-{ 
+{
       package_add_command             =>  "/usr/bin/yum groupinstall -y";
       package_changes                 =>  "bulk";
       package_delete_command          =>  "/usr/bin/yum groupremove -y";

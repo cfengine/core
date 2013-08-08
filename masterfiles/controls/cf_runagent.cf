@@ -1,7 +1,7 @@
 ###############################################################################
 # This part is for cf-runagent
 #
-# The most important parameter here is the list of hosts that the agent will 
+# The most important parameter here is the list of hosts that the agent will
 # poll for connections.
 ###############################################################################
 

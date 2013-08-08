@@ -9,7 +9,7 @@ body common control
 {
 
       bundlesequence => {
-			  # Common bundles first for best practice 
+			  # Common bundles first for best practice
 			  "def",
 
 			  # Design Center

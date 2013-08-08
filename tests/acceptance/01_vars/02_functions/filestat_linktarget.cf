@@ -15,43 +15,12 @@ body common control
 
 bundle agent init
 {
-  files:
-      "$(G.testfile)"
-      create => "true",
-      perms => init_m(600),
-      edit_defaults => init_empty,
-      edit_line => init_fill_in;
+  commands:
+      "$(G.ln) -fs $(G.testfile) $(G.testfile)";
 
   reports:
     DEBUG::
-      "Created $(G.testfile)";
-}
-
-body edit_defaults init_empty
-{
-      empty_file_before_editing => "true";
-      edit_backup => "false";
-}
-
-body perms init_m(mode)
-{
-      mode   => "$(mode)";
-}
-
-bundle edit_line init_fill_in
-{
-  insert_lines:
-      "012345789";
-      "112345789";
-      "212345789";
-      "312345789";
-      "4";
-}
-
-body delete init_delete
-{
-      dirlinks => "delete";
-      rmdirs   => "true";
+      "Created $(G.testfile) linked to itself";
 }
 
 
@@ -60,7 +29,7 @@ body delete init_delete
 bundle agent test
 {
   vars:
-      "fields" slist => splitstring("size,gid,uid,ino,nlink,ctime,atime,mtime,mode,modeoct,permstr,permoct,type,devno,dev_minor,dev_major,basename,dirname,linktarget,linktarget_shallow", ",", 999);
+      "fields" slist => splitstring("linktarget,linktarget_shallow", ",", 999);
 
       "stat[$(fields)]" string => filestat($(G.testfile), $(fields));
 }
@@ -71,15 +40,7 @@ bundle agent test
 bundle agent check
 {
   vars:
-      "expected[size]" string => "42";
-      "expected[mode]" string => "33152";
-      "expected[type]" string => "regular file";
-      "expected[permoct]" string => "600";
-      "expected[modeoct]" string => "100600";
-      "expected[permstr]" string => "-rw-------";
-      "expected[nlink]" string => "1";
-      "expected[dirname]" string => dirname($(G.testfile));
-      "expected[basename]" string => lastnode($(G.testfile), "/");
+      # Note that on W32 the link target is the file itself
       "expected[linktarget]" string => $(G.testfile);
       "expected[linktarget_shallow]" string => $(G.testfile);
 

@@ -729,7 +729,7 @@ static void StackFrameDestroy(StackFrame *frame)
     }
 }
 
-static unsigned PointerHashFn(const void *p, unsigned int max)
+static unsigned PointerHashFn(const void *p, ARG_UNUSED unsigned int seed, unsigned int max)
 {
     return ((unsigned)(uintptr_t)p) % max;
 }

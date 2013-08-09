@@ -27,8 +27,6 @@
 
 #include "platform.h"
 
-int OatHash(const char *key, unsigned int max);
-
 int FileChecksum(const char *filename, unsigned char digest[EVP_MAX_MD_SIZE + 1]);
 
 #endif

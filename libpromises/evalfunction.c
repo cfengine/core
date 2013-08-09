@@ -980,13 +980,13 @@ static FnCallResult FnCallSplayClass(EvalContext *ctx, FnCall *fp, Rlist *finala
     if (policy == INTERVAL_HOURLY)
     {
         /* 12 5-minute slots in hour */
-        int slot = OatHash(RlistScalarValue(finalargs), CF_HASHTABLESIZE) * 12 / CF_HASHTABLESIZE;
+        int slot = StringHash(RlistScalarValue(finalargs), 0, CF_HASHTABLESIZE) * 12 / CF_HASHTABLESIZE;
         snprintf(class, CF_MAXVARSIZE, "Min%02d_%02d", slot * 5, ((slot + 1) * 5) % 60);
     }
     else
     {
         /* 12*24 5-minute slots in day */
-        int dayslot = OatHash(RlistScalarValue(finalargs), CF_HASHTABLESIZE) * 12 * 24 / CF_HASHTABLESIZE;
+        int dayslot = StringHash(RlistScalarValue(finalargs), 0, CF_HASHTABLESIZE) * 12 * 24 / CF_HASHTABLESIZE;
         int hour = dayslot / 12;
         int slot = dayslot % 12;
 
@@ -1703,8 +1703,6 @@ static FnCallResult FnCallMapList(EvalContext *ctx, FnCall *fp, Rlist *finalargs
 
     for (const Rlist *rp = RvalRlistValue(rval); rp != NULL; rp = rp->next)
     {
-        const char *current_value = RlistScalarValue(rp);
-
         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "this", (char *) rp->item, DATA_TYPE_STRING);
 
         ExpandScalar(ctx, NULL, "this", map, expbuf);
@@ -1911,7 +1909,7 @@ static FnCallResult FnCallShuffle(EvalContext *ctx, FnCall *fp, Rlist *finalargs
         SeqAppend(seq, rp->item);
     }
 
-    SeqShuffle(seq, OatHash(seed_str, RAND_MAX));
+    SeqShuffle(seq, StringHash(seed_str, 0, RAND_MAX));
 
     Rlist *shuffled = NULL;
     for (size_t i = 0; i < SeqLength(seq); i++)

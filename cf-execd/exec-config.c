@@ -25,7 +25,7 @@
 #include "exec-config.h"
 
 #include "alloc.h"
-#include "hashes.h"
+#include "string_lib.h"
 
 #include "rlist.h"
 #include "env_context.h"
@@ -121,7 +121,7 @@ static double GetSplay(void)
 {
     char splay[CF_BUFSIZE];
     snprintf(splay, CF_BUFSIZE, "%s+%s+%ju", VFQNAME, VIPADDRESS, (uintmax_t)getuid());
-    return ((double) OatHash(splay, CF_HASHTABLESIZE)) / CF_HASHTABLESIZE;
+    return ((double) StringHash(splay, 0, CF_HASHTABLESIZE)) / CF_HASHTABLESIZE;
 }
 
 void ExecConfigUpdate(const EvalContext *ctx, const Policy *policy, ExecConfig *exec_config)

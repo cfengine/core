@@ -31,9 +31,9 @@
 #include "rlist.h"
 #include "expand.h"
 #include "promises.h"
-#include "hashes.h"
 #include "conversion.h"
 #include "logic_expressions.h"
+#include "string_lib.h"
 
 
 static int EvalClassExpression(EvalContext *ctx, Constraint *cp, Promise *pp);
@@ -244,7 +244,7 @@ static int EvalClassExpression(EvalContext *ctx, Constraint *cp, Promise *pp)
         }
 
         snprintf(splay, CF_MAXVARSIZE, "%s+%s+%ju", VFQNAME, VIPADDRESS, (uintmax_t)getuid());
-        hash = (double) OatHash(splay, CF_HASHTABLESIZE);
+        hash = (double) StringHash(splay, 0, CF_HASHTABLESIZE);
         n = (int) (total * hash / (double) CF_HASHTABLESIZE);
 
         for (rp = (Rlist *) cp->rval.item, i = 0; rp != NULL; rp = rp->next, i++)

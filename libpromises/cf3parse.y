@@ -84,6 +84,11 @@ blocks:                block
 
 block:                 bundle
                      | body
+                     | error
+                       {
+                           ParseError("Expected 'bundle' or 'body' keyword, wrong input '%s'", yytext);
+                           YYABORT;
+                       }
 
 bundle:                BUNDLE bundletype bundleid arglist bundlebody
 

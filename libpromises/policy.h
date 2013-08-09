@@ -140,6 +140,7 @@ const char *NamespaceDefault(void);
 Policy *PolicyNew(void);
 int PolicyCompare(const void *a, const void *b);
 void PolicyDestroy(Policy *policy);
+unsigned PolicyHash(const Policy *policy);
 
 /**
  * @brief Merge two partial policy objects. The memory for the child objects of the original policies are transfered to the new parent.

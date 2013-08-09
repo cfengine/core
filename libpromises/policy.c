@@ -100,6 +100,97 @@ void PolicyDestroy(Policy *policy)
     }
 }
 
+static unsigned ConstraintHash(const Constraint *cp, unsigned seed, unsigned max)
+{
+    unsigned hash = seed;
+
+    hash = StringHash(cp->lval, hash, max);
+    hash = StringHash(cp->classes, hash, max);
+    hash = RvalHash(cp->rval, hash, max);
+
+    return hash;
+}
+
+static unsigned BodyHash(const Body *body, unsigned seed, unsigned max)
+{
+    unsigned hash = seed;
+    for (size_t i = 0; i < SeqLength(body->conlist); i++)
+    {
+        const Constraint *cp = SeqAt(body->conlist, i);
+        hash = ConstraintHash(cp, hash, max);
+    }
+
+    return hash;
+}
+
+static unsigned PromiseHash(const Promise *pp, unsigned seed, unsigned max)
+{
+    unsigned hash = seed;
+
+    hash = StringHash(pp->promiser, seed, max);
+    hash = RvalHash(pp->promisee, seed, max);
+
+    for (size_t i = 0; i < SeqLength(pp->conlist); i++)
+    {
+        const Constraint *cp = SeqAt(pp->conlist, i);
+        hash = ConstraintHash(cp, hash, max);
+    }
+
+    return hash;
+}
+
+static unsigned PromiseTypeHash(const PromiseType *pt, unsigned seed, unsigned max)
+{
+    unsigned hash = seed;
+
+    hash = StringHash(pt->name, hash, max);
+    for (size_t i = 0; i < SeqLength(pt->promises); i++)
+    {
+        const Promise *pp = SeqAt(pt->promises, i);
+        hash = PromiseHash(pp, hash, max);
+    }
+
+    return hash;
+}
+
+static unsigned BundleHash(const Bundle *bundle, unsigned seed, unsigned max)
+{
+    unsigned hash = seed;
+
+    hash = StringHash(bundle->type, hash, max);
+    hash = StringHash(bundle->ns, hash, max);
+    hash = StringHash(bundle->name, hash, max);
+    hash = RlistHash(bundle->args, hash, max);
+
+    for (size_t i = 0; i < SeqLength(bundle->promise_types); i++)
+    {
+        const PromiseType *pt = SeqAt(bundle->promise_types, i);
+        hash = PromiseTypeHash(pt, hash, max);
+    }
+
+    return hash;
+}
+
+unsigned PolicyHash(const Policy *policy)
+{
+    static const unsigned max = UINT_MAX;
+    unsigned hash = 0;
+
+    for (size_t i = 0; i < SeqLength(policy->bodies); i++)
+    {
+        const Body *body = SeqAt(policy->bodies, i);
+        hash = BodyHash(body, hash, max);
+    }
+
+    for (size_t i = 0; i < SeqLength(policy->bundles); i++)
+    {
+        const Bundle *bundle = SeqAt(policy->bundles, i);
+        hash = BundleHash(bundle, hash, max);
+    }
+
+    return hash;
+}
+
 static char *StripNamespace(const char *full_symbol)
 {
     char *sep = strchr(full_symbol, CF_NS);

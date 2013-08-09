@@ -31,6 +31,7 @@
 #include "args.h"
 #include "evalfunction.h"
 #include "policy.h"
+#include "string_lib.h"
 
 
 /*******************************************************************/
@@ -89,7 +90,18 @@ void FnCallDestroy(FnCall *fp)
     free(fp);
 }
 
-/*********************************************************************/
+unsigned FnCallHash(const FnCall *fp, unsigned seed, unsigned max)
+{
+    unsigned hash = StringHash(fp->name, seed, max);
+
+    for (const Rlist *rp = fp->args; rp; rp = rp->next)
+    {
+        hash = RvalHash((Rval) { rp->item, rp->type}, hash, max);
+    }
+
+    return hash;
+}
+
 
 FnCall *ExpandFnCall(EvalContext *ctx, const char *ns, const char *scope, FnCall *f)
 {

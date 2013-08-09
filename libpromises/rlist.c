@@ -1323,7 +1323,33 @@ void RvalShow(FILE *fp, Rval rval)
     FileWriterDetach(w);
 }
 
-/* JSON serialization */
+unsigned RvalHash(Rval rval, unsigned seed, unsigned max)
+{
+    switch (rval.type)
+    {
+    case RVAL_TYPE_SCALAR:
+        return StringHash(RvalScalarValue(rval), seed, max);
+    case RVAL_TYPE_FNCALL:
+        return FnCallHash(RvalFnCallValue(rval), seed, max);
+    case RVAL_TYPE_LIST:
+        return RlistHash(RvalRlistValue(rval), seed, max);
+    case RVAL_TYPE_NOPROMISEE:
+        return (seed + 1) % max;
+    default:
+        ProgrammingError("Unhandled case in switch: %d", rval.type);
+    }
+}
+
+unsigned RlistHash(const Rlist *list, unsigned seed, unsigned max)
+{
+    unsigned hash = seed;
+    for (const Rlist *rp = list; rp; rp = rp->next)
+    {
+        hash = RvalHash((Rval) { rp->item, rp->type }, hash, max);
+    }
+    return hash;
+}
+
 
 static JsonElement *FnCallToJson(const FnCall *fp)
 {

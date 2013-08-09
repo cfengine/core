@@ -555,7 +555,7 @@ static FnCallResult FnCallGetGid(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 
 /*********************************************************************/
 
-static FnCallResult FnCallHash(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
+static FnCallResult FnCallHandlerHash(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 /* Hash(string,md5|sha1|crypt) */
 {
     char buffer[CF_BUFSIZE];
@@ -5757,7 +5757,7 @@ const FnCallType CF_FNCALL_TYPES[] =
     FnCallTypeNew("getvalues", DATA_TYPE_STRING_LIST, GETINDICES_ARGS, &FnCallGetValues, "Get a list of values corresponding to the right hand sides in an array whose id is the argument and assign to variable", false, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("grep", DATA_TYPE_STRING_LIST, GREP_ARGS, &FnCallGrep, "Extract the sub-list if items matching the regular expression in arg1 of the list named in arg2", false, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("groupexists", DATA_TYPE_CONTEXT, GROUPEXISTS_ARGS, &FnCallGroupExists, "True if group or numerical id exists on this host", false, FNCALL_CATEGORY_SYSTEM, SYNTAX_STATUS_NORMAL),
-    FnCallTypeNew("hash", DATA_TYPE_STRING, HASH_ARGS, &FnCallHash, "Return the hash of arg1, type arg2 and assign to a variable", false, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("hash", DATA_TYPE_STRING, HASH_ARGS, &FnCallHandlerHash, "Return the hash of arg1, type arg2 and assign to a variable", false, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("hashmatch", DATA_TYPE_CONTEXT, HASHMATCH_ARGS, &FnCallHashMatch, "Compute the hash of arg1, of type arg2 and test if it matches the value in arg3", false, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("host2ip", DATA_TYPE_STRING, HOST2IP_ARGS, &FnCallHost2IP, "Returns the primary name-service IP address for the named host", false, FNCALL_CATEGORY_COMM, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("ip2host", DATA_TYPE_STRING, IP2HOST_ARGS, &FnCallIP2Host, "Returns the primary name-service host name for the IP address", false, FNCALL_CATEGORY_COMM, SYNTAX_STATUS_NORMAL),

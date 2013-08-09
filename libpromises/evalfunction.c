@@ -1703,8 +1703,6 @@ static FnCallResult FnCallMapList(EvalContext *ctx, FnCall *fp, Rlist *finalargs
 
     for (const Rlist *rp = RvalRlistValue(rval); rp != NULL; rp = rp->next)
     {
-        const char *current_value = RlistScalarValue(rp);
-
         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "this", (char *) rp->item, DATA_TYPE_STRING);
 
         ExpandScalar(ctx, NULL, "this", map, expbuf);
@@ -1804,6 +1802,7 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx, FnCall *fp, Rlist *fin
     }
 
     assert(pp);
+    (void)pp; // shut up compiler warning about unused variable
 
     for (Rlist *rp = hostnameip; rp != NULL; rp = rp->next)
     {

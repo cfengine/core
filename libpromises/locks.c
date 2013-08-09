@@ -113,7 +113,7 @@ bool AcquireLockByID(const char *lock_id, int acquire_after_minutes)
     return result;
 }
 
-time_t FindLockTime(char *name)
+time_t FindLockTime(const char *name)
 {
     CF_DB *dbp;
     LockData entry = {
@@ -453,7 +453,7 @@ static bool KillLockHolder(const char *lock)
 
 #endif
 
-static void PromiseHash(const Promise *pp, const char *salt, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMethod type)
+static void PromiseRuntimeHash(const Promise *pp, const char *salt, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMethod type)
 {
     static const char *PACK_UPIFELAPSED_SALT = "packageuplist";
 
@@ -581,7 +581,8 @@ static void PromiseHash(const Promise *pp, const char *salt, unsigned char diges
 /* Digest length stored in md_len */
 }
 
-CfLock AcquireLock(EvalContext *ctx, char *operand, char *host, time_t now, TransactionContext tc, const Promise *pp, int ignoreProcesses)
+CfLock AcquireLock(EvalContext *ctx, const char *operand, const char *host, time_t now,
+                   TransactionContext tc, const Promise *pp, bool ignoreProcesses)
 {
     int i, sum = 0;
     time_t lastcompleted = 0, elapsedtime;
@@ -620,7 +621,7 @@ CfLock AcquireLock(EvalContext *ctx, char *operand, char *host, time_t now, Tran
         EvalContextMarkPromiseDone(ctx, pp);
     }
 
-    PromiseHash(pp, operand, digest, CF_DEFAULT_DIGEST);
+    PromiseRuntimeHash(pp, operand, digest, CF_DEFAULT_DIGEST);
     HashPrintSafe(CF_DEFAULT_DIGEST, digest, str_digest);
 
 /* As a backup to "done" we need something immune to re-use */
@@ -757,36 +758,36 @@ CfLock AcquireLock(EvalContext *ctx, char *operand, char *host, time_t now, Tran
     return this;
 }
 
-void YieldCurrentLock(CfLock this)
+void YieldCurrentLock(CfLock lock)
 {
     if (IGNORELOCK)
     {
-        free(this.lock);        /* allocated in AquireLock as a special case */
+        free(lock.lock);        /* allocated in AquireLock as a special case */
         return;
     }
 
-    if (this.lock == (char *) CF_UNDEFINED)
+    if (lock.lock == (char *) CF_UNDEFINED)
     {
         return;
     }
 
-    Log(LOG_LEVEL_DEBUG, "Yielding lock '%s'", this.lock);
+    Log(LOG_LEVEL_DEBUG, "Yielding lock '%s'", lock.lock);
 
-    if (RemoveLock(this.lock) == -1)
+    if (RemoveLock(lock.lock) == -1)
     {
-        Log(LOG_LEVEL_VERBOSE, "Unable to remove lock %s", this.lock);
-        free(this.last);
-        free(this.lock);
-        free(this.log);
+        Log(LOG_LEVEL_VERBOSE, "Unable to remove lock %s", lock.lock);
+        free(lock.last);
+        free(lock.lock);
+        free(lock.log);
         return;
     }
 
-    if (WriteLock(this.last) == -1)
+    if (WriteLock(lock.last) == -1)
     {
-        Log(LOG_LEVEL_ERR, "Unable to create '%s'. (creat: %s)", this.last, GetErrorStr());
-        free(this.last);
-        free(this.lock);
-        free(this.log);
+        Log(LOG_LEVEL_ERR, "Unable to create '%s'. (creat: %s)", lock.last, GetErrorStr());
+        free(lock.last);
+        free(lock.lock);
+        free(lock.log);
         return;
     }
 
@@ -797,19 +798,18 @@ void YieldCurrentLock(CfLock this)
     strcpy(CFLAST, "");
     strcpy(CFLOG, "");
 
-    LogLockCompletion(this.log, getpid(), "Lock removed normally ", this.lock, "");
+    LogLockCompletion(lock.log, getpid(), "Lock removed normally ", lock.lock, "");
 
-    free(this.last);
-    free(this.lock);
-    free(this.log);
+    free(lock.last);
+    free(lock.lock);
+    free(lock.log);
 }
 
-void GetLockName(char *lockname, char *locktype, char *base, Rlist *params)
+void GetLockName(char *lockname, const char *locktype, const char *base, const Rlist *params)
 {
-    Rlist *rp;
     int max_sample, count = 0;
 
-    for (rp = params; rp != NULL; rp = rp->next)
+    for (const Rlist *rp = params; rp != NULL; rp = rp->next)
     {
         count++;
     }
@@ -828,7 +828,7 @@ void GetLockName(char *lockname, char *locktype, char *base, Rlist *params)
     strncat(lockname, base, CF_BUFSIZE / 10);
     strcat(lockname, "_");
 
-    for (rp = params; rp != NULL; rp = rp->next)
+    for (const Rlist *rp = params; rp != NULL; rp = rp->next)
     {
         strncat(lockname, (char *) rp->item, max_sample);
     }
@@ -891,7 +891,7 @@ void PurgeLocks(void)
     CloseLock(dbp);
 }
 
-int WriteLock(char *name)
+int WriteLock(const char *name)
 {
     CF_DB *dbp;
 

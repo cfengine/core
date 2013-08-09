@@ -415,6 +415,10 @@ static bool EvalWithTokenFromList(const char *expr, StringSet *token_set)
 
 bool EvalProcessResult(const char *process_result, StringSet *proc_attr)
 {
+    if (process_result == NULL || !strcmp(process_result, ""))
+    {
+        return false;
+    }
     return EvalWithTokenFromList(process_result, proc_attr);
 }
 

@@ -1114,7 +1114,7 @@ static int VerifyConnection(ServerConnectionState *conn, char buf[CF_BUFSIZE])
    We can save a lot of time by not looking this up ... */
 
     if ((conn->trust == false) ||
-        (IsMatchItemIn(SV.skipverify, MapAddress(conn->ipaddr))))
+        (IsMatchItemIn(conn->ctx, SV.skipverify, MapAddress(conn->ipaddr))))
     {
         Log(LOG_LEVEL_VERBOSE,
               "Allowing %s to connect without (re)checking ID\n", ip_assert);

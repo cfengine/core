@@ -431,7 +431,7 @@ int ServerTLSSessionEstablish(ServerConnectionState *conn)
             conn->conn_info.remote_keyhash_str);
 
         if ((SV.trustkeylist != NULL) &&
-            (IsMatchItemIn(SV.trustkeylist, MapAddress(conn->ipaddr))))
+            (IsMatchItemIn(conn->ctx, SV.trustkeylist, MapAddress(conn->ipaddr))))
         {
             Log(LOG_LEVEL_VERBOSE,
                 "Host %s was found in the \"trustkeysfrom\" list",

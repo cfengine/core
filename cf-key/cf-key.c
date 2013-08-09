@@ -175,7 +175,11 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             break;
 
         case 'V':
-            PrintVersion();
+            {
+                Writer *w = FileWriter(stdout);
+                GenericAgentWriteVersion(w);
+                FileWriterDetach(w);
+            }
             exit(0);
 
         case 'v':
@@ -205,7 +209,11 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             break;
 
         case 'h':
-            PrintHelp("cf-key", OPTIONS, HINTS, false);
+            {
+                Writer *w = FileWriter(stdout);
+                GenericAgentWriteHelp(w, "cf-key", OPTIONS, HINTS, false);
+                FileWriterDetach(w);
+            }
             exit(0);
 
         case 'M':
@@ -228,7 +236,11 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             break;
 
         default:
-            PrintHelp("cf-key", OPTIONS, HINTS, false);
+            {
+                Writer *w = FileWriter(stdout);
+                GenericAgentWriteHelp(w, "cf-key", OPTIONS, HINTS, false);
+                FileWriterDetach(w);
+            }
             exit(1);
 
         }

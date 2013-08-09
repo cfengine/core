@@ -45,12 +45,12 @@
 #include "string_lib.h"
 #include "verify_files_utils.h"
 #include "verify_files_hashes.h"
-#include "generic_agent.h" // HashVariables
 #include "misc_lib.h"
 #include "fncall.h"
 #include "promiser_regex_resolver.h"
 #include "ornaments.h"
 #include "audit.h"
+#include "expand.h"
 
 static void LoadSetuid(Attributes a);
 static void SaveSetuid(EvalContext *ctx, Attributes a, Promise *pp);
@@ -471,7 +471,7 @@ int ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes a, Promis
 
             EvalContextStackPushBundleFrame(ctx, bp, args, a.edits.inherit);
 
-            BundleHashVariables(ctx, bp);
+            BundleResolve(ctx, bp);
 
             retval = ScheduleEditLineOperations(ctx, bp, a, pp, edcontext);
 
@@ -520,7 +520,7 @@ int ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes a, Promis
             BannerSubBundle(bp, args);
 
             EvalContextStackPushBundleFrame(ctx, bp, args, a.edits.inherit);
-            BundleHashVariables(ctx, bp);
+            BundleResolve(ctx, bp);
 
             retval = ScheduleEditXmlOperations(ctx, bp, a, pp, edcontext);
 
@@ -540,7 +540,7 @@ int ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes a, Promis
             a.haveeditline = true;
 
             EvalContextStackPushBundleFrame(ctx, bp, args, a.edits.inherit);
-            BundleHashVariables(ctx, bp);
+            BundleResolve(ctx, bp);
 
             retval = ScheduleEditLineOperations(ctx, bp, a, pp, edcontext);
 

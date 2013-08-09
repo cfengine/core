@@ -111,7 +111,7 @@ int VerifyMethod(EvalContext *ctx, char *attrname, Attributes a, Promise *pp)
         BannerSubBundle(bp, args);
 
         EvalContextStackPushBundleFrame(ctx, bp, args, a.inherit);
-        BundleHashVariables(ctx, bp);
+        BundleResolve(ctx, bp);
 
         retval = ScheduleAgentOperations(ctx, bp);
 

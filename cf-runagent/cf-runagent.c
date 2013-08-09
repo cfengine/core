@@ -161,8 +161,6 @@ int main(int argc, char *argv[])
     GenericAgentDiscoverContext(ctx, config);
     Policy *policy = GenericAgentLoadPolicy(ctx, config);
 
-    CheckForPolicyHub(ctx);
-
     ThisAgentInit();
     KeepControlPromises(ctx, policy);      // Set RUNATTR using copy
 
@@ -329,11 +327,19 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             break;
 
         case 'V':
-            PrintVersion();
+            {
+                Writer *w = FileWriter(stdout);
+                GenericAgentWriteVersion(w);
+                FileWriterDetach(w);
+            }
             exit(0);
 
         case 'h':
-            PrintHelp("cf-runagent", OPTIONS, HINTS, true);
+            {
+                Writer *w = FileWriter(stdout);
+                GenericAgentWriteHelp(w, "cf-runagent", OPTIONS, HINTS, true);
+                FileWriterDetach(w);
+            }
             exit(0);
 
         case 'M':
@@ -360,7 +366,11 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             break;
 
         default:
-            PrintHelp("cf-runagent", OPTIONS, HINTS, true);
+            {
+                Writer *w = FileWriter(stdout);
+                GenericAgentWriteHelp(w, "cf-runagent", OPTIONS, HINTS, true);
+                FileWriterDetach(w);
+            }
             exit(1);
 
         }

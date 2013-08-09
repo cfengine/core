@@ -22,12 +22,6 @@
   included file COSL.txt.
 */
 
-/*********************************************************************/
-/*                                                                   */
-/*  Variable expansion in cf3                                        */
-/*                                                                   */
-/*********************************************************************/
-
 #include "expand.h"
 
 #include "misc_lib.h"
@@ -47,6 +41,8 @@
 #include "audit.h"
 #include "verify_vars.h"
 #include "string_lib.h"
+#include "conversion.h"
+#include "verify_classes.h"
 
 
 static void ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp, Rlist *listvars,
@@ -1012,9 +1008,208 @@ static void CopyLocalizedScalarsToBundleScope(EvalContext *ctx, const Bundle *bu
     }
 }
 
-/*********************************************************************/
-/* Tools                                                             */
-/*********************************************************************/
+static void ResolveCommonClassPromises(EvalContext *ctx, PromiseType *pt)
+{
+    assert(strcmp("classes", pt->name) == 0);
+    assert(strcmp(pt->parent_bundle->type, "common") == 0);
+
+    for (size_t i = 0; i < SeqLength(pt->promises); i++)
+    {
+        Promise *pp = SeqAt(pt->promises, i);
+
+        char *sp = NULL;
+        if (VarClassExcluded(ctx, pp, &sp))
+        {
+            if (LEGACY_OUTPUT)
+            {
+                Log(LOG_LEVEL_VERBOSE, "\n");
+                Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . ");
+                Log(LOG_LEVEL_VERBOSE, "Skipping whole next promise (%s), as var-context %s is not relevant", pp->promiser, sp);
+                Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . ");
+            }
+            else
+            {
+                Log(LOG_LEVEL_VERBOSE, "Skipping next promise '%s', as var-context '%s' is not relevant", pp->promiser, sp);
+            }
+            continue;
+        }
+
+        ExpandPromise(ctx, pp, VerifyClassPromise, NULL);
+    }
+}
+
+static void ResolveVariablesPromises(EvalContext *ctx, PromiseType *pt)
+{
+    assert(strcmp("vars", pt->name) == 0);
+
+    for (size_t i = 0; i < SeqLength(pt->promises); i++)
+    {
+        Promise *pp = SeqAt(pt->promises, i);
+        EvalContextStackPushPromiseFrame(ctx, pp, false);
+        EvalContextStackPushPromiseIterationFrame(ctx, NULL);
+        VerifyVarPromise(ctx, pp, false);
+        EvalContextStackPopFrame(ctx);
+        EvalContextStackPopFrame(ctx);
+    }
+}
+
+void BundleResolve(EvalContext *ctx, Bundle *bundle)
+{
+    Log(LOG_LEVEL_VERBOSE, "Resolving variables in bundle '%s' '%s'", bundle->type, bundle->name);
+
+    for (size_t j = 0; j < SeqLength(bundle->promise_types); j++)
+    {
+        PromiseType *sp = SeqAt(bundle->promise_types, j);
+
+        if (strcmp(bundle->type, "common") == 0 && strcmp(sp->name, "classes") == 0)
+        {
+            ResolveCommonClassPromises(ctx, sp);
+        }
+    }
+
+    for (size_t j = 0; j < SeqLength(bundle->promise_types); j++)
+    {
+        PromiseType *sp = SeqAt(bundle->promise_types, j);
+
+        if (strcmp(sp->name, "vars") == 0)
+        {
+            ResolveVariablesPromises(ctx, sp);
+        }
+    }
+
+}
+
+static void ResolveControlBody(EvalContext *ctx, GenericAgentConfig *config, const Body *control_body)
+{
+    const ConstraintSyntax *body_syntax = NULL;
+    Rval returnval;
+
+    assert(strcmp(control_body->name, "control") == 0);
+
+    for (int i = 0; CONTROL_BODIES[i].constraints != NULL; i++)
+    {
+        body_syntax = CONTROL_BODIES[i].constraints;
+
+        if (strcmp(control_body->type, CONTROL_BODIES[i].body_type) == 0)
+        {
+            break;
+        }
+    }
+
+    if (body_syntax == NULL)
+    {
+        FatalError(ctx, "Unknown agent");
+    }
+
+    char scope[CF_BUFSIZE];
+    snprintf(scope, CF_BUFSIZE, "%s_%s", control_body->name, control_body->type);
+    Log(LOG_LEVEL_DEBUG, "Initiate control variable convergence for scope '%s'", scope);
+
+    EvalContextStackPushBodyFrame(ctx, control_body, NULL);
+
+    for (size_t i = 0; i < SeqLength(control_body->conlist); i++)
+    {
+        Constraint *cp = SeqAt(control_body->conlist, i);
+
+        if (!IsDefinedClass(ctx, cp->classes, NULL))
+        {
+            continue;
+        }
+
+        if (strcmp(cp->lval, CFG_CONTROLBODY[COMMON_CONTROL_BUNDLESEQUENCE].lval) == 0)
+        {
+            returnval = ExpandPrivateRval(ctx, NULL, scope, cp->rval);
+        }
+        else
+        {
+            returnval = EvaluateFinalRval(ctx, NULL, scope, cp->rval, true, NULL);
+        }
+
+        VarRef *ref = VarRefParseFromScope(cp->lval, scope);
+        EvalContextVariableRemove(ctx, ref);
+
+        if (!EvalContextVariablePut(ctx, ref, returnval, ConstraintSyntaxGetDataType(body_syntax, cp->lval)))
+        {
+            Log(LOG_LEVEL_ERR, "Rule from %s at/before line %zu", control_body->source_path, cp->offset.line);
+        }
+
+        VarRefDestroy(ref);
+
+        if (strcmp(cp->lval, CFG_CONTROLBODY[COMMON_CONTROL_OUTPUT_PREFIX].lval) == 0)
+        {
+            strncpy(VPREFIX, returnval.item, CF_MAXVARSIZE);
+        }
+
+        if (strcmp(cp->lval, CFG_CONTROLBODY[COMMON_CONTROL_DOMAIN].lval) == 0)
+        {
+            strcpy(VDOMAIN, cp->rval.item);
+            Log(LOG_LEVEL_VERBOSE, "SET domain = %s", VDOMAIN);
+            EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_SYS, "domain");
+            EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_SYS, "fqhost");
+            snprintf(VFQNAME, CF_MAXVARSIZE, "%s.%s", VUQNAME, VDOMAIN);
+            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "fqhost", VFQNAME, DATA_TYPE_STRING);
+            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "domain", VDOMAIN, DATA_TYPE_STRING);
+            EvalContextHeapAddHard(ctx, VDOMAIN);
+        }
+
+        if (strcmp(cp->lval, CFG_CONTROLBODY[COMMON_CONTROL_IGNORE_MISSING_INPUTS].lval) == 0)
+        {
+            Log(LOG_LEVEL_VERBOSE, "SET ignore_missing_inputs %s", RvalScalarValue(cp->rval));
+            config->ignore_missing_inputs = BooleanFromString(cp->rval.item);
+        }
+
+        if (strcmp(cp->lval, CFG_CONTROLBODY[COMMON_CONTROL_IGNORE_MISSING_BUNDLES].lval) == 0)
+        {
+            Log(LOG_LEVEL_VERBOSE, "SET ignore_missing_bundles %s", RvalScalarValue(cp->rval));
+            config->ignore_missing_bundles = BooleanFromString(cp->rval.item);
+        }
+
+        if (strcmp(cp->lval, CFG_CONTROLBODY[COMMON_CONTROL_GOALPATTERNS].lval) == 0)
+        {
+            /* Ignored */
+            continue;
+        }
+
+        RvalDestroy(returnval);
+    }
+
+    EvalContextStackPopFrame(ctx);
+}
+
+void PolicyResolve(EvalContext *ctx, Policy *policy, GenericAgentConfig *config)
+{
+    for (size_t i = 0; i < SeqLength(policy->bundles); i++)
+    {
+        Bundle *bundle = SeqAt(policy->bundles, i);
+        if (strcmp("common", bundle->type) == 0)
+        {
+            EvalContextStackPushBundleFrame(ctx, bundle, NULL, false);
+            BundleResolve(ctx, bundle);
+            EvalContextStackPopFrame(ctx);
+        }
+    }
+
+    for (size_t i = 0; i < SeqLength(policy->bundles); i++)
+    {
+        Bundle *bundle = SeqAt(policy->bundles, i);
+        if (strcmp("common", bundle->type) != 0)
+        {
+            EvalContextStackPushBundleFrame(ctx, bundle, NULL, false);
+            BundleResolve(ctx, bundle);
+            EvalContextStackPopFrame(ctx);
+        }
+    }
+
+    for (size_t i = 0; i < SeqLength(policy->bodies); i++)
+    {
+        Body *bdp = SeqAt(policy->bodies, i);
+
+        if (strcmp(bdp->name, "control") == 0)
+        {
+            ResolveControlBody(ctx, config, bdp);
+        }
+    }
+}
 
 bool IsExpandable(const char *str)
 {

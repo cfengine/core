@@ -155,8 +155,6 @@ int main(int argc, char *argv[])
         policy = GenericAgentLoadPolicy(ctx, config);
     }
 
-    CheckForPolicyHub(ctx);
-
     ThisAgentInit();
 
     ExecConfig *exec_config = ExecConfigNewDefault(!ONCE, VFQNAME, VIPADDRESS);
@@ -264,11 +262,19 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             break;
 
         case 'V':
-            PrintVersion();
+            {
+                Writer *w = FileWriter(stdout);
+                GenericAgentWriteVersion(w);
+                FileWriterDetach(w);
+            }
             exit(0);
 
         case 'h':
-            PrintHelp("cf-execd", OPTIONS, HINTS, true);
+            {
+                Writer *w = FileWriter(stdout);
+                GenericAgentWriteHelp(w, "cf-execd", OPTIONS, HINTS, true);
+                FileWriterDetach(w);
+            }
             exit(0);
 
         case 'M':
@@ -295,7 +301,11 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             break;
 
         default:
-            PrintHelp("cf-execd", OPTIONS, HINTS, true);
+            {
+                Writer *w = FileWriter(stdout);
+                GenericAgentWriteHelp(w, "cf-execd", OPTIONS, HINTS, true);
+                FileWriterDetach(w);
+            }
             exit(1);
 
         }
@@ -487,11 +497,11 @@ typedef enum
 
 static Reload CheckNewPromises(EvalContext *ctx, const GenericAgentConfig *config, const Rlist *input_files)
 {
-    if (NewPromiseProposals(ctx, config, input_files))
+    if (GenericAgentIsPolicyReloadNeeded(ctx, config, input_files))
     {
         Log(LOG_LEVEL_VERBOSE, "New promises detected...");
 
-        if (CheckPromises(config))
+        if (GenericAgentCheckPromises(config))
         {
             return RELOAD_FULL;
         }

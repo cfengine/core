@@ -26,6 +26,7 @@
 #define CFENGINE_EXPAND_H
 
 #include "cf3.defs.h"
+#include "generic_agent.h"
 
 typedef void PromiseActuator(EvalContext *ctx, Promise *pp, void *param);
 
@@ -43,6 +44,15 @@ Rval ExpandBundleReference(EvalContext *ctx, const char *ns, const char *scope, 
 Rval ExpandPrivateRval(EvalContext *ctx, const char *ns, const char *scope, Rval rval);
 Rlist *ExpandList(EvalContext *ctx, const char *ns, const char *scope, const Rlist *list, int expandnaked);
 Rval EvaluateFinalRval(EvalContext *ctx, const char *ns, const char *scope, Rval rval, int forcelist, const Promise *pp);
+
+/**
+ * @brief BundleResolve
+ * @param ctx
+ * @param bundle
+ */
+void BundleResolve(EvalContext *ctx, Bundle *bundle);
+void PolicyResolve(EvalContext *ctx, Policy *policy, GenericAgentConfig *config);
+
 
 int IsNakedVar(const char *str, char vtype);
 /**

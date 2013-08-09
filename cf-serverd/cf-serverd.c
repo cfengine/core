@@ -51,8 +51,6 @@ int main(int argc, char *argv[])
         policy = GenericAgentLoadPolicy(ctx, config);
     }
 
-    CheckForPolicyHub(ctx);
-
     ThisAgentInit();
     KeepPromises(ctx, policy, config);
     Summarize();

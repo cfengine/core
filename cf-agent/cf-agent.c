@@ -248,8 +248,6 @@ int main(int argc, char *argv[])
         policy = GenericAgentLoadPolicy(ctx, config);
     }
 
-    CheckForPolicyHub(ctx);
-
     ThisAgentInit();
     BeginAudit();
     KeepPromises(ctx, policy, config);
@@ -427,11 +425,19 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             break;
 
         case 'V':
-            PrintVersion();
+            {
+                Writer *w = FileWriter(stdout);
+                GenericAgentWriteVersion(w);
+                FileWriterDetach(w);
+            }
             exit(0);
 
         case 'h':
-            PrintHelp("cf-agent", OPTIONS, HINTS, true);
+            {
+                Writer *w = FileWriter(stdout);
+                GenericAgentWriteHelp(w, "cf-agent", OPTIONS, HINTS, true);
+                FileWriterDetach(w);
+            }
             exit(0);
 
         case 'M':
@@ -469,7 +475,11 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             break;
 
         default:
-            PrintHelp("cf-agent", OPTIONS, HINTS, true);
+            {
+                Writer *w = FileWriter(stdout);
+                GenericAgentWriteHelp(w, "cf-agent", OPTIONS, HINTS, true);
+                FileWriterDetach(w);
+            }
             exit(1);
         }
     }
@@ -1571,7 +1581,7 @@ static void DeleteTypeContext(EvalContext *ctx, Bundle *bp, TypeSequence type)
     switch (type)
     {
     case TYPE_SEQUENCE_CONTEXTS:
-        BundleHashVariables(ctx, bp);
+        BundleResolve(ctx, bp);
         break;
 
     case TYPE_SEQUENCE_ENVIRONMENTS:

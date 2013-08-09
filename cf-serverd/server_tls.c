@@ -704,7 +704,7 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
 
         if (!AccessControl(ctx, filename, conn, true))
         {
-            Log(LOG_LEVEL_INFO, "Access control in sync");
+            Log(LOG_LEVEL_INFO, "Access control: permission denied!");
             RefuseAccess(conn, 0, recvbuffer);
             return true;
         }

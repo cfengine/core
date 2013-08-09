@@ -64,14 +64,7 @@ void RefuseAccess(ServerConnectionState *conn, int size, char *errmesg)
 
     if (strlen(errmesg) > 0)
     {
-        if (SV.logconns)
-        {
-            Log(LOG_LEVEL_INFO, "REFUSAL of request from connecting host: (%s)", errmesg);
-        }
-        else
-        {
-            Log(LOG_LEVEL_VERBOSE, "REFUSAL of request from connecting host: (%s)", errmesg);
-        }
+        Log(LOG_LEVEL_INFO, "REFUSAL of request from connecting host: (%s)", errmesg);
     }
 }
 
@@ -154,13 +147,13 @@ int AccessControl(EvalContext *ctx, const char *req_path, ServerConnectionState 
     }
     else
     {
-        Log(LOG_LEVEL_VERBOSE, "Couldn't resolve filename '%s' from host '%s'. (lstat: %s)",
+        Log(LOG_LEVEL_INFO, "Couldn't resolve filename '%s' from host '%s'. (lstat: %s)",
             translated_req_path, conn->hostname, GetErrorStr());
     }
 
     if (lstat(transrequest, &statbuf) == -1)
     {
-        Log(LOG_LEVEL_VERBOSE, "Couldn't stat filename '%s' requested by host '%s'. (lstat: %s)",
+        Log(LOG_LEVEL_INFO, "Couldn't stat filename '%s' requested by host '%s'. (lstat: %s)",
             transrequest, conn->hostname, GetErrorStr());
         return false;
     }
@@ -169,7 +162,7 @@ int AccessControl(EvalContext *ctx, const char *req_path, ServerConnectionState 
 
     if (SV.admit == NULL)
     {
-        Log(LOG_LEVEL_VERBOSE, "cf-serverd access list is empty, no files are visible");
+        Log(LOG_LEVEL_INFO, "cf-serverd access list is empty, no files are visible");
         return false;
     }
 
@@ -248,7 +241,7 @@ int AccessControl(EvalContext *ctx, const char *req_path, ServerConnectionState 
             if (IsRegexItemIn(ctx, ap->accesslist, conn->hostname))
             {
                 access = false;
-                Log(LOG_LEVEL_VERBOSE, "Host %s explicitly denied access to %s", conn->hostname, transrequest);
+                Log(LOG_LEVEL_INFO, "Host %s explicitly denied access to %s", conn->hostname, transrequest);
                 break;
             }
         }
@@ -266,12 +259,12 @@ int AccessControl(EvalContext *ctx, const char *req_path, ServerConnectionState 
     }
     else
     {
-        Log(LOG_LEVEL_VERBOSE, "Host %s denied access to %s", conn->hostname, req_path);
+        Log(LOG_LEVEL_INFO, "Host %s denied access to %s", conn->hostname, req_path);
     }
 
     if (!conn->rsa_auth)
     {
-        Log(LOG_LEVEL_VERBOSE, "Cannot map root access without RSA authentication");
+        Log(LOG_LEVEL_INFO, "Cannot map root access without RSA authentication");
         conn->maproot = false;  /* only public files accessible */
     }
 

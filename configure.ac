@@ -290,8 +290,8 @@ if test x"$with_openssl" = xno ; then
 fi
 
 CF3_WITH_LIBRARY(openssl, [
+   AC_CHECK_LIB(dl, dlopen, [], [])
    AC_CHECK_LIB(crypto, RSA_generate_key_ex, [], [])
-   AC_CHECK_LIB(crypto, RSA_generate_key, [], [])
    AC_CHECK_LIB(ssl, SSL_library_init, [], [])
    AC_CHECK_HEADERS([openssl/opensslv.h], [], [AC_MSG_ERROR(Cannot find OpenSSL)])
 

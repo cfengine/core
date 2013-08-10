@@ -71,15 +71,93 @@ body service_method force_deps
 ##
 
 bundle agent standard_services(service,state)
+
+ # There's multiple ways you can add new services to this list.
+ # Here's few examples:
+ #
+ # a) The zeroconf mode; If the new service matches these rules,
+ #    you don't need to add anything to the standard_services:
+ #
+ #  1. Your init script basename = $(service)
+ #  2. Your init script argument = $(state)
+ #  3. Your init script lives in /etc/init.d/
+ #  4. Your process regex pattern = \b$(service)\b
+ #  5. You call script via /etc/init.d/<init> <arg>
+ #
+ # b) If the 1st rule doesn't match, but rest does:
+ #
+ #   Use the "baseinit[$(service)]" array to point towards your
+ #   init script's basename. For example:
+ #
+ #    "baseinit[www]" string => "httpd";
+ #
+ #   This would fire up init script /etc/init.d/httpd, instead of
+ #   the default /etc/init.d/www
+ #
+ # c) If the 4th rule doesn't match, but rest does:
+ #
+ #   Use the "pattern[$(service)]" array to specify your own
+ #   regex match. It's advisable to use conservative regex so
+ #   there's less chance of getting a mismatch.
+ #
+ #    "pattern[www]" string => ".*httpd.*";
+ #
+ #   Instead of matching the default '\bwww\b', this now matches
+ #   your given string,
+ #
+ # d) 5th rule doesn't match.
+ #
+ #   If you can specify the init system used. 
+ #    Currently supported: sysvinitd, sysvservice, systemd
+ #   
+ #     "init[www]" string => "sysvservice";
+ #     "init[www]" string => "sysvinitd";
+ #     "init[www]" string => "systemd";
+ # 
+ #   ^^ not a valid syntax as you naturally can only use one per
+ #      service, but it shows all the currently supported ones.
+ #
+ #
+ # e) 2nd, 3rd and 5th rule matches, but rest doesn't.
+ #
+ #   Use a combination of the "pattern[]", "baseinit[]" and "init[]".
+ #
+ #     "baseinit[www]" string => "httpd";
+ #     "pattern[www]" string => ".*httpd.*";
+ #     "init[www]" string => "sysvservice";
+ #
+ # f) As a fallback, if none of the above rules match, you can also
+ #    define exactly what you need for each $(state).
+ #
+ #    "startcommand[rhnsd]"   string => "/sbin/service rhnsd start";
+ #    "restartcommand[rhnsd]" string => "/sbin/service rhnsd restart";
+ #    "reloadcommand[rhnsd]"  string => "/sbin/service rhnsd reload";
+ #    "stopcommand[rhnsd]"    string => "/sbin/service rhnsd stop";
+ #    "pattern[rhnsd]"        string => "rhnsd";
+ #
+
 {
       # DATA,
 
   vars:
 
     any::
+      "inits" slist => { "sysvinitd", "sysvservice", "systemd" },
+      comment => "Currently handled init systems";
 
-      "default[prefix]" string => "/etc/init.d";
-      "default[cmd]" string => "$(default[prefix])/$(service) $(state)";
+    debian::
+      "default[prefix][sysvservice]" string => "/usr/sbin/service ";
+    redhat::
+      "default[prefix][sysvservice]" string => "/sbin/service ";
+    any::
+      "default[prefix][systemd]" string => "/bin/systemctl ";
+      "default[prefix][sysvinitd]" string => "/etc/init.d/";
+
+      "default[cmd][sysvinitd]" string => "$(default[prefix][sysvinitd])$(service) $(state)";
+      "default[cmd][sysvservice]" string => "$(default[prefix][sysvservice])$(service) $(state)";
+      "default[cmd][systemd]" string => "$(default[prefix][systemd])$(service) $(state)";
+
+      "default[pattern]" string => "\b$(service)\b";
 
       "stakeholders[cfengine3]" slist => { "cfengine_in" };
       "stakeholders[acpid]" slist => { "cpu", "cpu0", "cpu1", "cpu2", "cpu3" };
@@ -97,44 +175,35 @@ bundle agent standard_services(service,state)
 
     linux::
 
-      "pattern[acpid]"          string => ".*acpid.*";
-      "pattern[cfengine3]"      string => ".*cf-execd.*";
-      "pattern[fancontrol]"     string => ".*fancontrol.*";
-      "pattern[hddtemp]"        string => ".*hddtemp.*";
-      "pattern[irqbalance]"     string => ".*irqbalance.*";
-      "pattern[lm-sensor]"      string => ".*psensor.*";
-      "pattern[mongod]"         string => ".*mongod.*";
-      "pattern[openvpn]"        string => ".*openvpn.*";
-      "pattern[postfix]"        string => ".*postfix.*";
-      "pattern[rsync]"          string => ".*rsync.*";
-      "pattern[rsyslog]"        string => ".*rsyslogd.*";
-      "pattern[sendmail]"       string => ".*sendmail.*";
-      "pattern[tomcat5]"        string => ".*tomcat5.*";
-      "pattern[tomcat6]"        string => ".*tomcat6.*";
-      "pattern[varnish]"        string => ".*varnish.*";
-      "pattern[wpa_supplicant]" string => ".*wpa_supplicant.*";
+      "pattern[acpid]"            string => ".*acpid.*";
+      "pattern[cfengine3]"        string => ".*cf-execd.*";
+      "pattern[fancontrol]"       string => ".*fancontrol.*";
+      "pattern[hddtemp]"          string => ".*hddtemp.*";
+      "pattern[irqbalance]"       string => ".*irqbalance.*";
+      "pattern[lm-sensor]"        string => ".*psensor.*";
+      "pattern[mongod]"           string => ".*mongod.*";
+      "pattern[openvpn]"          string => ".*openvpn.*";
+      "pattern[postfix]"          string => ".*postfix.*";
+      "pattern[rsync]"            string => ".*rsync.*";
+      "pattern[rsyslog]"          string => ".*rsyslogd.*";
+      "pattern[sendmail]"         string => ".*sendmail.*";
+      "pattern[tomcat5]"          string => ".*tomcat5.*";
+      "pattern[tomcat6]"          string => ".*tomcat6.*";
+      "pattern[varnish]"          string => ".*varnish.*";
+      "pattern[wpa_supplicant]"   string => ".*wpa_supplicant.*";
 
     SuSE|suse::
 
-      "startcommand[mysql]"   string => "/etc/init.d/mysqld start";
-      "restartcommand[mysql]" string => "/etc/init.d/mysqld restart";
-      "reloadcommand[mysql]"  string => "/etc/init.d/mysqld reload";
-      "stopcommand[mysql]"    string => "/etc/init.d/mysqld stop";
-      "pattern[mysql]"        string => ".*mysqld.*";
+      "baseinit[mysql]"           string => "mysqld";
+      "pattern[mysql]"            string => ".*mysqld.*";
 
-      "startcommand[www]"   string => "/etc/init.d/apache2 start";
-      "restartcommand[www]" string => "/etc/init.d/apache2 restart";
-      "reloadcommand[www]"  string => "/etc/init.d/apache2 reload";
-      "stopcommand[www]"    string => "/etc/init.d/apache2 stop";
-      "pattern[www]"        string => ".*apache2.*";
+      "baseinit[www]"             string => "apache2";
+      "pattern[www]"              string => ".*apache2.*";
 
-      "startcommand[ssh]"   string => "/etc/init.d/sshd start";
-      "restartcommand[ssh]" string => "/etc/init.d/sshd restart";
-      "reloadcommand[ssh]"  string => "/etc/init.d/sshd reload";
-      "stopcommand[ssh]"    string => "/etc/init.d/sshd stop";
-      "pattern[ssh]"        string => ".*sshd.*";
+      "baseinit[ssh]"             string => "sshd";
+      "pattern[ssh]"              string => ".*sshd.*";
 
-      "pattern[ntpd]"        string => ".*ntpd.*";
+      "pattern[ntpd]"             string => ".*ntpd.*";
 
     redhat::
 
@@ -191,11 +260,8 @@ bundle agent standard_services(service,state)
       "pattern[yum-updatesd]"     string => ".*yum-updatesd.*";
       "pattern[munin-node]"       string => ".*munin-node.*";
 
-      "startcommand[bluetoothd]"   string => "/etc/init.d/bluetooth start";
-      "restartcommand[bluetoothd]" string => "/etc/init.d/bluetooth restart";
-      "reloadcommand[bluetoothd]"  string => "/etc/init.d/bluetooth reload";
-      "stopcommand[bluetoothd]"    string => "/etc/init.d/bluetooth stop";
-      "pattern[bluetoothd]"        string => ".*hcid.*";
+      "baseinit[bluetoothd]"      string => "bluetooth";
+      "pattern[bluetoothd]"       string => ".*hcid.*";
 
       #  "startcommand[ip6tables]"   string => "/etc/init.d/ip6tables start";
       #  "restartcommand[ip6tables]" string => "/etc/init.d/ip6tables restart";
@@ -210,92 +276,60 @@ bundle agent standard_services(service,state)
       #  "pattern[iptables]"        string => ".*iptables.*";
 
 
-      "startcommand[mysql]"   string => "/etc/init.d/mysqld start";
-      "restartcommand[mysql]" string => "/etc/init.d/mysqld restart";
-      "reloadcommand[mysql]"  string => "/etc/init.d/mysqld reload";
-      "stopcommand[mysql]"    string => "/etc/init.d/mysqld stop";
-      "pattern[mysql]"        string => ".*mysqld.*";
+      "baseinit[mysql]"           string => "mysqld";
+      "pattern[mysql]"            string => ".*mysqld.*";
 
-      "startcommand[www]"   string => "/etc/init.d/httpd start";
-      "restartcommand[www]" string => "/etc/init.d/httpd restart";
-      "reloadcommand[www]"  string => "/etc/init.d/httpd reload";
-      "stopcommand[www]"    string => "/etc/init.d/httpd stop";
-      "pattern[www]"        string => ".*httpd.*";
+      "baseinit[www]"             string => "httpd";
+      "pattern[www]"              string => ".*httpd.*";
 
-      "startcommand[ssh]"   string => "/etc/init.d/sshd start";
-      "restartcommand[ssh]" string => "/etc/init.d/sshd restart";
-      "reloadcommand[ssh]"  string => "/etc/init.d/sshd reload";
-      "stopcommand[ssh]"    string => "/etc/init.d/sshd stop";
-      "pattern[ssh]"        string => ".*sshd.*";
+      "baseinit[ssh]"             string => "sshd";
+      "pattern[ssh]"              string => ".*sshd.*";
 
-      "startcommand[rhnsd]"   string => "/sbin/service rhnsd start";
-      "restartcommand[rhnsd]" string => "/sbin/service rhnsd restart";
-      "reloadcommand[rhnsd]"  string => "/sbin/service rhnsd reload";
-      "stopcommand[rhnsd]"    string => "/sbin/service rhnsd stop";
-      "pattern[rhnsd]"        string => "rhnsd";
+      "init[rhnsd]"               string => "sysvservice";
+      "pattern[rhnsd]"            string => "rhnsd";
 
-      "startcommand[snmpd]"   string => "/etc/init.d/snmpd start";
-      "restartcommand[snmpd]" string => "/sbin/service snmpd restart";
-      "reloadcommand[snmpd]"  string => "/sbin/service snmpd reload";
-      "stopcommand[snmpd]"    string => "/etc/init.d/snmpd stop";
-      "pattern[snmpd]"        string => "/usr/sbin/snmpd";
+      "baseinit[snmpd]"           string => "snmpd";
+      "pattern[snmpd]"            string => "/usr/sbin/snmpd";
 
     debian|ubuntu::
 
-      "pattern[atd]"            string => "atd.*";
-      "pattern[bluetoothd]"     string => ".*bluetoothd.*";
-      "pattern[bootlogd]"       string => ".*bootlogd.*";
-      "pattern[crond]"          string => ".*cron.*";
-      "pattern[kerneloops]"     string => ".*kerneloops.*";
-      "pattern[mysql]"          string => ".*mysqld.*";
-      "pattern[NetworkManager]" string => ".*NetworkManager.*";
-      "pattern[ondemand]"       string => ".*ondemand.*";
-      "pattern[plymouth]"       string => ".*plymouthd.*";
-      "pattern[saned]"          string => ".*saned.*";
-      "pattern[udev]"           string => ".*udev.*";
-      "pattern[udevmonitor]"    string => ".*udevadm.*monitor.*";
-      "pattern[snmpd]"          string => "/usr/sbin/snmpd";
-      "pattern[pgbouncer]"      string => ".*pgbouncer.*";
-      "pattern[supervisor]"     string => ".*supervisord.*";
-      "pattern[munin-node]"     string => ".*munin-node.*";
-      "pattern[carbon-cache]"   string => ".*carbon-cache.*";
-      "pattern[cassandra]"      string => ".*jsvc\.exec.*apache-cassandra\.jar.*";
-      "pattern[ssh]"            string => ".*sshd.*";
+      "pattern[atd]"              string => "atd.*";
+      "pattern[bluetoothd]"       string => ".*bluetoothd.*";
+      "pattern[bootlogd]"         string => ".*bootlogd.*";
+      "pattern[crond]"            string => ".*cron.*";
+      "pattern[kerneloops]"       string => ".*kerneloops.*";
+      "pattern[mysql]"            string => ".*mysqld.*";
+      "pattern[NetworkManager]"   string => ".*NetworkManager.*";
+      "pattern[ondemand]"         string => ".*ondemand.*";
+      "pattern[plymouth]"         string => ".*plymouthd.*";
+      "pattern[saned]"            string => ".*saned.*";
+      "pattern[udev]"             string => ".*udev.*";
+      "pattern[udevmonitor]"      string => ".*udevadm.*monitor.*";
+      "pattern[snmpd]"            string => "/usr/sbin/snmpd";
+      "pattern[pgbouncer]"        string => ".*pgbouncer.*";
+      "pattern[supervisor]"       string => ".*supervisord.*";
+      "pattern[munin-node]"       string => ".*munin-node.*";
+      "pattern[carbon-cache]"     string => ".*carbon-cache.*";
+      "pattern[cassandra]"        string => ".*jsvc\.exec.*apache-cassandra\.jar.*";
+      "pattern[ssh]"              string => ".*sshd.*";
 
-      "startcommand[ntpd]"   string => "/etc/init.d/ntp start";
-      "restartcommand[ntpd]" string => "/etc/init.d/ntp restart";
-      "reloadcommand[ntpd]"  string => "/etc/init.d/ntp reload";
-      "stopcommand[ntpd]"    string => "/etc/init.d/ntp stop";
-      "pattern[ntpd]"        string => ".*ntpd.*";
+      "baseinit[ntpd]"            string => "ntp";
+      "pattern[ntpd]"             string => ".*ntpd.*";
 
-      "startcommand[postgresql84]"   string => "/etc/init.d/postgresql-8.4 start";
-      "restartcommand[postgresql84]" string => "/etc/init.d/postgresql-8.4 restart";
-      "reloadcommand[postgresql84]"  string => "/etc/init.d/postgresql-8.4 reload";
-      "stopcommand[postgresql84]"    string => "/etc/init.d/postgresql-8.4 stop";
-      "pattern[postgresql84]"        string => ".*postgresql.*";
+      "baseinit[postgresql84]"    string => "postgresql-8.4";
+      "pattern[postgresql84]"     string => ".*postgresql.*";
 
-      "startcommand[postgresql91]"   string => "/etc/init.d/postgresql-9.1 start";
-      "restartcommand[postgresql91]" string => "/etc/init.d/postgresql-9.1 restart";
-      "reloadcommand[postgresql91]"  string => "/etc/init.d/postgresql-9.1 reload";
-      "stopcommand[postgresql91]"    string => "/etc/init.d/postgresql-9.1 stop";
-      "pattern[postgresql91]"        string => ".*postgresql.*";
+      "baseinit[postgresql91]"    string => "postgresql-9.1";
+      "pattern[postgresql91]"     string => ".*postgresql.*";
 
-      "startcommand[www]"   string => "/etc/init.d/apache2 start";
-      "restartcommand[www]" string => "/etc/init.d/apache2 restart";
-      "reloadcommand[www]"  string => "/etc/init.d/apache2 reload";
-      "stopcommand[www]"    string => "/etc/init.d/apache2 stop";
-      "pattern[www]"        string => ".*apache2.*";
+      "baseinit[www]"             string => "apache2";
+      "pattern[www]"              string => ".*apache2.*";
 
-      "startcommand[nrpe]"   string => "/etc/init.d/nagios-nrpe-server start";
-      "restartcommand[nrpe]" string => "/etc/init.d/nagios-nrpe-server restart";
-      "reloadcommand[nrpe]"  string => "/etc/init.d/nagios-nrpe-server reload";
-      "stopcommand[nrpe]"    string => "/etc/init.d/nagios-nrpe-server stop";
-      "pattern[nrpe]"        string => ".*nrpe.*";
+      "baseinit[nrpe]"            string => "nagios-nrpe-server";
+      "pattern[nrpe]"             string => ".*nrpe.*";
 
-      "startcommand[omsa-dataeng]"   string => "/etc/init.d/dataeng start";
-      "restartcommand[omsa-dataeng]" string => "/etc/init.d/dataeng restart";
-      "stopcommand[omsa-dataeng]"    string => "/etc/init.d/dataeng stop";
-      "pattern[omsa-dataeng]"        string => ".*dsm_sa_datamgr.*";
+      "baseinit[omsa-dataeng]"    string => "dataeng";
+      "pattern[omsa-dataeng]"     string => ".*dsm_sa_datamgr.*";
 
 
       # METHODS that implement these ............................................
@@ -312,7 +346,10 @@ bundle agent standard_services(service,state)
       "stop"  expression => strcmp("stop","$(state)"),
       comment => "Check if to stop a service";
 
-      # Do we want to include the packages here too?
+      "$(inits)_set" expression => strcmp("$(init[$(service)])","$(inits)"),
+      comment => "Check if init system is specified";
+      "no_inits_set" not => isvariable("init[$(service)]"),
+      comment => "Check if no init system is specified";
 
   processes:
 
@@ -321,7 +358,14 @@ bundle agent standard_services(service,state)
       "$(pattern[$(service)])" ->  { "@(stakeholders[$(service)])" }
 
       comment => "Verify that the service appears in the process table",
-      restart_class => "start_$(service)";
+      restart_class => "start_$(service)",
+      ifvarclass => and(isvariable("pattern[$(service)]"));
+
+      "$(default[pattern])" ->  { "@(stakeholders[$(service)])" }
+
+      comment => "Verify that the service appears in the process table",
+      restart_class => "start_$(service)",
+      ifvarclass => and(not(isvariable("pattern[$(service)]")));
 
     stop::
 
@@ -330,41 +374,189 @@ bundle agent standard_services(service,state)
       comment => "Verify that the service does not appear in the process",
       process_stop => "$(stopcommand[$(service)])",
       signals => { "term", "kill"},
-      ifvarclass => and(isvariable("stopcommand[$(service)]"));
+      ifvarclass => and(isvariable("stopcommand[$(service)]"),
+                        isvariable("pattern[$(service)]"));
+
+      "$(default[pattern])" -> { "@(stakeholders[$(service)])" }
+
+      comment => "Verify that the service does not appear in the process",
+      process_stop => "$(stopcommand[$(service)])",
+      signals => { "term", "kill"},
+      ifvarclass => and(isvariable("stopcommand[$(service)]"),
+                        not(isvariable("pattern[$(service)]")));
+##
+      "$(pattern[$(service)])" -> { "@(stakeholders[$(service)])" }
+
+      comment => "Verify that the service does not appear in the process",
+      process_stop => "$(default[prefix][sysvinitd])$(baseinit[$(service)]) $(state)",
+      signals => { "term", "kill"},
+      ifvarclass => and(not(isvariable("stopcommand[$(service)]")),
+                        isvariable("baseinit[$(service)]"),
+                        isvariable("pattern[$(service)]"),
+                        "no_inits_set");
 
       "$(pattern[$(service)])" -> { "@(stakeholders[$(service)])" }
 
       comment => "Verify that the service does not appear in the process",
-      process_stop => "$(default[cmd])",
+      process_stop => "$(default[prefix][$(inits)])$(baseinit[$(service)]) $(state)",
       signals => { "term", "kill"},
-      ifvarclass => not(isvariable("stopcommand[$(service)]"));
+      ifvarclass => and(not(isvariable("stopcommand[$(service)]")),
+                        isvariable("baseinit[$(service)]"),
+                        isvariable("pattern[$(service)]"),
+                        canonify("$(inits)_set"));
+##
+      "$(default[pattern])" -> { "@(stakeholders[$(service)])" }
+
+      comment => "Verify that the service does not appear in the process",
+      process_stop => "$(default[prefix][sysvinitd])$(baseinit[$(service)]) $(state)",
+      signals => { "term", "kill"},
+      ifvarclass => and(not(isvariable("stopcommand[$(service)]")),
+                        isvariable("baseinit[$(service)]"),
+                        not(isvariable("pattern[$(service)]")),
+                        "no_inits_set");
+
+      "$(default[pattern])" -> { "@(stakeholders[$(service)])" }
+
+      comment => "Verify that the service does not appear in the process",
+      process_stop => "$(default[prefix][$(inits)])$(baseinit[$(service)]) $(state)",
+      signals => { "term", "kill"},
+      ifvarclass => and(not(isvariable("stopcommand[$(service)]")),
+                        isvariable("baseinit[$(service)]"),
+                        not(isvariable("pattern[$(service)]")),
+                        canonify("$(inits)_set"));
+##
+      "$(pattern[$(service)])" -> { "@(stakeholders[$(service)])" }
+
+      comment => "Verify that the service does not appear in the process",
+      process_stop => "$(default[cmd][sysvinitd])",
+      signals => { "term", "kill"},
+      ifvarclass => and(not(isvariable("stopcommand[$(service)]")),
+                        not(isvariable("baseinit[$(service)]")),
+                        isvariable("pattern[$(service)]"),
+                        "no_inits_set");
+
+      "$(pattern[$(service)])" -> { "@(stakeholders[$(service)])" }
+
+      comment => "Verify that the service does not appear in the process",
+      process_stop => "$(default[cmd][$(inits)])",
+      signals => { "term", "kill"},
+      ifvarclass => and(not(isvariable("stopcommand[$(service)]")),
+                        not(isvariable("baseinit[$(service)]")),
+                        isvariable("pattern[$(service)]"),
+                        canonify("$(inits)_set"));
+
+##
+      "$(default[pattern])" -> { "@(stakeholders[$(service)])" }
+
+      comment => "Verify that the service does not appear in the process",
+      process_stop => "$(default[cmd][sysvinitd])",
+      signals => { "term", "kill"},
+      ifvarclass => and(not(isvariable("stopcommand[$(service)]")),
+                        not(isvariable("baseinit[$(service)]")),
+                        not(isvariable("pattern[$(service)]")),
+                        "no_inits_set");
+
+      "$(default[pattern])" -> { "@(stakeholders[$(service)])" }
+
+      comment => "Verify that the service does not appear in the process",
+      process_stop => "$(default[cmd][$(inits)])",
+      signals => { "term", "kill"},
+      ifvarclass => and(not(isvariable("stopcommand[$(service)]")),
+                        not(isvariable("baseinit[$(service)]")),
+                        not(isvariable("pattern[$(service)]")),
+                        canonify("$(inits)_set"));
 
   commands:
 
       "$(startcommand[$(service)])" -> { "@(stakeholders[$(service)])" }
       comment => "Execute command to start the $(service) service",
-      ifvarclass => and(isvariable("startcommand[$(service)]"),canonify("start_$(service)"));
+      ifvarclass => and(isvariable("startcommand[$(service)]"),
+                        canonify("start_$(service)"));
+##
+      "$(default[prefix][sysvinitd])$(baseinit[$(service)]) $(state)" -> { "@(stakeholders[$(service)])" }
+      comment => "Execute (baseinit init) command to start the $(service) service",
+      ifvarclass => and(not(isvariable("startcommand[$(service)]")),
+                        isvariable("baseinit[$(service)]"),
+                        canonify("start_$(service)"),
+                        "no_inits_set");
 
-      "$(default[cmd])" -> { "@(stakeholders[$(service)])" }
+      "$(default[prefix][$(inits)])$(baseinit[$(service)]) $(state)" -> { "@(stakeholders[$(service)])" }
+      comment => "Execute (baseinit init) command to start the $(service) service",
+      ifvarclass => and(not(isvariable("startcommand[$(service)]")),
+                        isvariable("baseinit[$(service)]"),
+                        canonify("start_$(service)"),
+                        canonify("$(inits)_set"));
+##
+      "$(default[cmd][sysvinitd])" -> { "@(stakeholders[$(service)])" }
       comment => "Execute (default) command to start the $(service) service",
-      ifvarclass => and(not(isvariable("startcommand[$(service)]")),canonify("start_$(service)"));
+      ifvarclass => and(not(isvariable("startcommand[$(service)]")),
+                        not(isvariable("baseinit[$(service)]")),
+                        canonify("start_$(service)"),
+                        "no_inits_set");
+
+      "$(default[cmd][$(inits)])" -> { "@(stakeholders[$(service)])" }
+      comment => "Execute (default) command to start the $(service) service",
+      ifvarclass => and(not(isvariable("startcommand[$(service)]")),
+                        not(isvariable("baseinit[$(service)]")),
+                        canonify("start_$(service)"),
+                        canonify("$(inits)_set"));
 
     restart::
       "$(restartcommand[$(service)])" -> { "@(stakeholders[$(service)])" }
       comment => "Execute command to restart the $(service) service",
       ifvarclass => and(isvariable("restartcommand[$(service)]"));
+##
 
-      "$(default[cmd])" -> { "@(stakeholders[$(service)])" }
+      "$(default[prefix][sysvinitd])$(baseinit[$(service)]) $(state)" -> { "@(stakeholders[$(service)])" }
+      comment => "Execute (baseinit init) command to restart the $(service) service",
+      ifvarclass => and(not(isvariable("restartcommand[$(service)]")),
+                        isvariable("baseinit[$(service)]"),
+                        "no_inits_set");
+
+      "$(default[prefix][$(inits)])$(baseinit[$(service)]) $(state)" -> { "@(stakeholders[$(service)])" }
+      comment => "Execute (baseinit init) command to restart the $(service) service",
+      ifvarclass => and(not(isvariable("restartcommand[$(service)]")),
+                        isvariable("baseinit[$(service)]"),
+                        canonify("$(inits)_set"));
+##
+      "$(default[cmd][sysvinitd])" -> { "@(stakeholders[$(service)])" }
       comment => "Execute (default) command to restart the $(service) service",
-      ifvarclass => not(isvariable("restartcommand[$(service)]"));
+      ifvarclass => and(not(isvariable("restartcommand[$(service)]")),
+                        not(isvariable("baseinit[$(service)]")),
+                        "no_inits_set");
+
+      "$(default[cmd][$(inits)])" -> { "@(stakeholders[$(service)])" }
+      comment => "Execute (default) command to restart the $(service) service",
+      ifvarclass => and(not(isvariable("restartcommand[$(service)]")),
+                        not(isvariable("baseinit[$(service)]")),
+                        canonify("$(inits)_set"));
 
     reload::
       "$(reloadcommand[$(service)])" -> { "@(stakeholders[$(service)])" }
       comment => "Execute command to reload the $(service) service",
       ifvarclass => and(isvariable("reloadcommand[$(service)]"));
+##
+      "$(default[prefix][sysvinitd])$(baseinit[$(service)]) $(state)" -> { "@(stakeholders[$(service)])" }
+      comment => "Execute (baseinit init) command to reload the $(service) service",
+      ifvarclass => and(not(isvariable("reloadcommand[$(service)]")),
+                        isvariable("baseinit[$(service)]"),
+                        "no_inits_set");
 
-      "$(reloadcommand[$(service)])" -> { "@(stakeholders[$(service)])" }
+      "$(default[prefix][$(inits)])$(baseinit[$(service)]) $(state)" -> { "@(stakeholders[$(service)])" }
+      comment => "Execute (baseinit init) command to reload the $(service) service",
+      ifvarclass => and(not(isvariable("reloadcommand[$(service)]")),
+                        isvariable("baseinit[$(service)]"),
+                        canonify("$(inits)_set"));
+##
+      "$(default[cmd][sysvinitd])" -> { "@(stakeholders[$(service)])" }
       comment => "Execute (default) command to reload the $(service) service",
-      ifvarclass => not(isvariable("reloadcommand[$(service)]"));
-}
+      ifvarclass => and(not(isvariable("reloadcommand[$(service)]")),
+                        not(isvariable("baseinit[$(service)]")),
+                        "no_inits_set");
 
+      "$(default[cmd][$(inits)])" -> { "@(stakeholders[$(service)])" }
+      comment => "Execute (default) command to reload the $(service) service",
+      ifvarclass => and(not(isvariable("reloadcommand[$(service)]")),
+                        not(isvariable("baseinit[$(service)]")),
+                        canonify("$(inits)_set"));
+}

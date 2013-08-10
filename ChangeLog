@@ -12,6 +12,8 @@
        - fix lifetime of persistent classes (Redmine #3259)
        - fix segfault when process_select body had no process_result attribute
          Default to AND'ed expression of all specified attributes (Redmine #3224)
+       - include system message in output when acl promises fail
+       - fix invocation of standard_services bundle and corresponding promise compliance (Redmine #2869) 
 
 
 3.5.1

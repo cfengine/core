@@ -325,12 +325,6 @@ static AgentConnection *ServerConnection(const char *server, FileCopy fc, int *e
 
     conn = NewAgentConn(server);
 
-    if (strcmp(server, "localhost") == 0)
-    {
-        conn->authenticated = true;
-        return conn;
-    }
-
 /* username of the client - say root from Windows */
 
 #ifdef __MINGW32__

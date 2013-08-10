@@ -82,7 +82,7 @@ bundle agent standard_services(service,state)
  #  2. Your init script argument = $(state)
  #  3. Your init script lives in /etc/init.d/
  #  4. Your process regex pattern = \b$(service)\b
- #  5. You call script via /etc/init.d/<init> <arg>
+ #  5. You call the init as /etc/init.d/<script> <arg>
  #
  # b) If the 1st rule doesn't match, but rest does:
  #
@@ -105,7 +105,7 @@ bundle agent standard_services(service,state)
  #   Instead of matching the default '\bwww\b', this now matches
  #   your given string,
  #
- # d) 5th rule doesn't match.
+ # d) 5th rule doesn't match:
  #
  #   If you can specify the init system used. 
  #    Currently supported: sysvinitd, sysvservice, systemd
@@ -114,17 +114,21 @@ bundle agent standard_services(service,state)
  #     "init[www]" string => "sysvinitd";
  #     "init[www]" string => "systemd";
  # 
- #   ^^ not a valid syntax as you naturally can only use one per
- #      service, but it shows all the currently supported ones.
+ #   ^^ The above is not a valid syntax as you can only use one per
+ #      init[] per service, but it shows all the currently supported ones.
  #
+ #     "sysvservice" == /(usr/)?sbin/service
+ #     "stsvinitd"   == /etc/init.d/
+ #     "systemd"     == /bin/systemctl
  #
- # e) 2nd, 3rd and 5th rule matches, but rest doesn't.
+ # e) 2nd and 3rd rule matches, but rest doesn't:
  #
- #   Use a combination of the "pattern[]", "baseinit[]" and "init[]".
+ #   Use a combination of the "pattern[]", "baseinit[]" and "init[]",
+ #   to fill your need.
  #
  #     "baseinit[www]" string => "httpd";
- #     "pattern[www]" string => ".*httpd.*";
- #     "init[www]" string => "sysvservice";
+ #     "pattern[www]"  string => ".*httpd.*";
+ #     "init[www]"     string => "sysvservice";
  #
  # f) As a fallback, if none of the above rules match, you can also
  #    define exactly what you need for each $(state).
@@ -134,6 +138,29 @@ bundle agent standard_services(service,state)
  #    "reloadcommand[rhnsd]"  string => "/sbin/service rhnsd reload";
  #    "stopcommand[rhnsd]"    string => "/sbin/service rhnsd stop";
  #    "pattern[rhnsd]"        string => "rhnsd";
+ # 
+ # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+ #
+ # If *any* of the "(re)?(start|load|stop)command" variables are set for
+ # your service, they take *priority* in case there's conflict of intent
+ # with other data.
+ # 
+ # Say you'd have the following service definition:
+ #
+ #    "startcommand[qwerty]"   string => "/sbin/service qwerty start";
+ #    "stopcommand[qwerty]"    string => "/sbin/service qwerty stop";
+ #    "pattern[qwerty]"        string => ".*qwerty.*";
+ #    "baseinit[qwerty]"       string => "asdfgh"
+ #    "init[qwerty]"           string => "systemd";
+ # 
+ # There's a conflict of intent now. As the ~command definitions takes
+ # priority, this kind of service config for "qwerty" would execute the
+ # following commands:
+ #
+ #   start:   "/sbin/service qwerty start"
+ #   stop:    "/sbin/service qwerty stop"
+ #   restart: "/bin/systemctl asdfgh restart"
+ #   reload:  "/bin/systemctl asdfgh reload"
  #
 
 {
@@ -146,18 +173,26 @@ bundle agent standard_services(service,state)
       comment => "Currently handled init systems";
 
     debian::
-      "default[prefix][sysvservice]" string => "/usr/sbin/service ";
+      "default[prefix][sysvservice]" string => "/usr/sbin/service ",
+      comment => "Set default prefix for executing sysv service script operations";
     redhat::
-      "default[prefix][sysvservice]" string => "/sbin/service ";
+      "default[prefix][sysvservice]" string => "/sbin/service ",
+      comment => "Set default prefix for executing sysv service script operations";
     any::
-      "default[prefix][systemd]" string => "/bin/systemctl ";
-      "default[prefix][sysvinitd]" string => "/etc/init.d/";
+      "default[prefix][systemd]" string => "/bin/systemctl ",
+      comment => "Set default prefix for executing systmctl operations";
+      "default[prefix][sysvinitd]" string => "/etc/init.d/",
+      comment => "Set default prefix for executing sysv init.d script operations";
 
-      "default[cmd][sysvinitd]" string => "$(default[prefix][sysvinitd])$(service) $(state)";
-      "default[cmd][sysvservice]" string => "$(default[prefix][sysvservice])$(service) $(state)";
-      "default[cmd][systemd]" string => "$(default[prefix][systemd])$(service) $(state)";
+      "default[cmd][sysvinitd]" string => "$(default[prefix][sysvinitd])$(service) $(state)",
+      comment => "Set default init command for sysv init.d script";
+      "default[cmd][sysvservice]" string => "$(default[prefix][sysvservice])$(service) $(state)",
+      comment => "Set default init command for sysv service script";
+      "default[cmd][systemd]" string => "$(default[prefix][systemd])$(service) $(state)",
+      comment => "Set default init command for systemctl";
 
-      "default[pattern]" string => "\b$(service)\b";
+      "default[pattern]" string => "\b$(service)\b",
+      comment => "Set default pattern for proc matching";
 
       "stakeholders[cfengine3]" slist => { "cfengine_in" };
       "stakeholders[acpid]" slist => { "cpu", "cpu0", "cpu1", "cpu2", "cpu3" };
@@ -262,19 +297,6 @@ bundle agent standard_services(service,state)
 
       "baseinit[bluetoothd]"      string => "bluetooth";
       "pattern[bluetoothd]"       string => ".*hcid.*";
-
-      #  "startcommand[ip6tables]"   string => "/etc/init.d/ip6tables start";
-      #  "restartcommand[ip6tables]" string => "/etc/init.d/ip6tables restart";
-      #  "reloadcommand[ip6tables]"  string => "/etc/init.d/ip6tables reload";
-      #  "stopcommand[ip6tables]"    string => "/etc/init.d/ip6tables stop";
-      #  "pattern[ip6tables]"        string => ".*ip6tables.*";
-
-      #  "startcommand[iptables]"   string => "/etc/init.d/iptables start";
-      #  "restartcommand[iptables]" string => "/etc/init.d/iptables restart";
-      #  "reloadcommand[iptables]"  string => "/etc/init.d/iptables reload";
-      #  "stopcommand[iptables]"    string => "/etc/init.d/iptables stop";
-      #  "pattern[iptables]"        string => ".*iptables.*";
-
 
       "baseinit[mysql]"           string => "mysqld";
       "pattern[mysql]"            string => ".*mysqld.*";

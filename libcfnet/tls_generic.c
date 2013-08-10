@@ -32,6 +32,9 @@
 #include "crypto.h"                                    /* HavePublicKeyByIP */
 #include "files_hashes.h"                              /* HashPubKey */
 
+#include <assert.h>
+
+
 /**
  * this is an always succeeding callback for SSL_CTX_set_cert_verify_callback().
  *
@@ -192,7 +195,7 @@ static const char *TLSPrimarySSLError(int code)
 
 /* TODO ERR_get_error is only meaningful for some error codes, so check
  * and return empty string otherwise. */
-static const char *TLSSecondarySSLError(int code)
+static const char *TLSSecondarySSLError(int code ARG_UNUSED)
 {
     return ERR_reason_error_string(ERR_get_error());
 }
@@ -220,88 +223,45 @@ void TLSLogError(SSL *ssl, LogLevel level, const char *prepend, int code)
  * @param ssl SSL information.
  * @param buffer Data to send.
  * @param length Length of the data to send.
- * @return The length of the data sent (which could be smaller than the requested length) or -1 in case of error.
+ * @return The length of the data sent (which could be smaller than the
+ *         requested length) or -1 in case of error.
+ * @note Use only for *blocking* sockets. Set
+ *       SSL_CTX_set_mode(SSL_MODE_AUTO_RETRY) to make sure that either
+ *       operation completed or an error occured.
  */
 int TLSSend(SSL *ssl, const char *buffer, int length)
 {
-    if (!ssl || !buffer || (length < 0))
+    assert(length >= 0);
+
+    if (length == 0)
     {
-        return -1;
+        UnexpectedError("TLSSend: Zero length buffer!");
+        return 0;
     }
 
-    /*
-     * Technically speaking, the buffer is either sent completely or not sent at all.
-     * Therefore it is not needed to count how many bytes we have sent, OpenSSL does that
-     * for us.
-     */
-    int total_tries = 0;
-    int sent = 0;
-    do {
-        sent = SSL_write(ssl, buffer, length);
-        if (sent <= 0)
+    int sent = SSL_write(ssl, buffer, length);
+    if (sent == 0)
+    {
+        if ((SSL_get_shutdown(ssl) & SSL_RECEIVED_SHUTDOWN) != 0)
         {
-            int error = SSL_get_error(ssl, sent);
-            Log(LOG_LEVEL_ERR, "SSL_write failed, retrying (tries: %d)", total_tries);
-            if ((SSL_ERROR_WANT_READ == error) || (SSL_ERROR_WANT_WRITE == error))
-            {
-                /*
-                 * We need to retry the operation using exactly the same arguments.
-                 * We will use select(2) to wait until the underlying socket is ready.
-                 */
-                int fd = SSL_get_fd(ssl);
-                if (fd < 0)
-                {
-                    Log(LOG_LEVEL_ERR, "Could not get fd from SSL");
-                    return -1;
-                }
-                fd_set wfds;
-                struct timeval tv;
-                int result = 0;
-                int tries = 0;
-
-                do {
-                    SET_DEFAULT_TLS_TIMEOUT(tv);
-                    FD_ZERO(&wfds);
-                    FD_SET(fd, &wfds);
-
-                    result = select(fd+1, NULL, &wfds, NULL, &tv);
-                    if (result > 0)
-                    {
-                        /*
-                         * Ready to send data
-                         */
-                        break;
-                    }
-                    else
-                    {
-                        Log(LOG_LEVEL_ERR, "select(2) timed out, retrying (tries: %d)", tries);
-                        ++tries;
-                    }
-                } while (tries <= DEFAULT_TLS_TRIES);
-            }
-            else
-            {
-                /*
-                 * Any other error is fatal.
-                 */
-                Log(LOG_LEVEL_ERR, "Fatal error on SSL_write (error: %d)", error);
-                return -1;
-            }
+            Log(LOG_LEVEL_VERBOSE, "Remote peer terminated TLS session");
+            return 0;
         }
         else
         {
-            /*
-             * We sent more than 0 bytes so we are done.
-             */
-            Log(LOG_LEVEL_DEBUG, "Sent %d bytes using TLS", sent);
-            break;
+            TLSLogError(ssl, LOG_LEVEL_ERR,
+                        "TLS session abruptly closed", sent);
+            return 0;
         }
-        ++total_tries;
-    } while (total_tries <= DEFAULT_TLS_TRIES);
+    }
+    if (sent < 0)
+    {
+        TLSLogError(ssl, LOG_LEVEL_ERR, "SSL_write", sent);
+        return -1;
+    }
+
     return sent;
 }
-
-/* TODO TLSRecvPersist(). */
 
 /**
  * @brief Receives data from the SSL session and stores it on the buffer.
@@ -311,84 +271,34 @@ int TLSSend(SSL *ssl, const char *buffer, int length)
  * @return The length of the received data, which could be smaller or equal
  *         than the requested or -1 in case of error or 0 if connection was 
  *         closed.
+ * @note Use only for *blocking* sockets. Set
+ *       SSL_CTX_set_mode(SSL_MODE_AUTO_RETRY) to make sure that either
+ *       operation completed or an error occured.
  */
 int TLSRecv(SSL *ssl, char *buffer, int length)
 {
-    if (!ssl || !buffer || (length < 0))
+    assert(length > 0);
+
+    int received = SSL_read(ssl, buffer, length);
+    if (received == 0)
     {
-        return -1;
-    }
-
-    int total_tries = 0;
-    int received = 0;
-    do {
-        received = SSL_read(ssl, buffer, length);
-        if (received == 0 &&
-            SSL_get_shutdown(ssl) & SSL_RECEIVED_SHUTDOWN)
+        if ((SSL_get_shutdown(ssl) & SSL_RECEIVED_SHUTDOWN) != 0)
         {
-            Log(LOG_LEVEL_VERBOSE, "Remote peer terminated TLS session.");
+            Log(LOG_LEVEL_VERBOSE, "Remote peer terminated TLS session");
             return 0;
-        }
-        if (received <= 0)
-        {
-            int error = SSL_get_error(ssl, received);
-            Log(LOG_LEVEL_ERR, "SSL_read failed, retrying (tries: %d)", total_tries);
-            if ((SSL_ERROR_WANT_READ == error) || (SSL_ERROR_WANT_WRITE == error))
-            {
-                /*
-                 * We need to retry the operation using exactly the same arguments.
-                 * We will use select(2) to wait until the underlying socket is ready.
-                 */
-                int fd = SSL_get_fd(ssl);
-                if (fd < 0)
-                {
-                    Log(LOG_LEVEL_ERR, "Could not get fd from SSL");
-                    return -1;
-                }
-                fd_set rfds;
-                struct timeval tv;
-                int result = 0;
-                int tries = 0;
-
-                do {
-                    SET_DEFAULT_TLS_TIMEOUT(tv);
-                    FD_ZERO(&rfds);
-                    FD_SET(fd, &rfds);
-
-                    result = select(fd+1, &rfds, NULL, NULL, &tv);
-                    if (result > 0)
-                    {
-                        /*
-                         * Ready to receive data
-                         */
-                        break;
-                    }
-                    else
-                    {
-                        Log(LOG_LEVEL_ERR, "select(2) timed out, retrying (tries: %d)", tries);
-                        ++tries;
-                    }
-                } while (tries <= DEFAULT_TLS_TRIES);
-            }
-            else
-            {
-                /*
-                 * Any other error is fatal.
-                 */
-                Log(LOG_LEVEL_ERR, "Fatal error on SSL_read (error: %d)", error);
-                return -1;
-            }
         }
         else
         {
-            /*
-             * We received more than 0 bytes so we are done.
-             */
-            Log(LOG_LEVEL_DEBUG, "Received %d bytes using TLS", received);
-            break;
+            TLSLogError(ssl, LOG_LEVEL_ERR,
+                        "TLS session abruptly closed", received);
+            return 0;
         }
-        ++total_tries;
-    } while (total_tries <= DEFAULT_TLS_TRIES);
+    }
+    if (received < 0)
+    {
+        TLSLogError(ssl, LOG_LEVEL_ERR, "SSL_read", received);
+        return -1;
+    }
 
     return received;
 }

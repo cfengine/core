@@ -171,6 +171,7 @@ bundle agent standard_services(service,state)
     any::
       "inits" slist => { "sysvinitd", "sysvservice", "systemd" },
       comment => "Currently handled init systems";
+
       "default[prefix][sysvservice]" string => "$(paths.path[service]) ",
       comment => "Set default prefix for executing sysv service script operations";
       "default[prefix][systemd]" string => "/bin/systemctl ",
@@ -187,6 +188,9 @@ bundle agent standard_services(service,state)
 
       "default[pattern]" string => "\b$(service)\b",
       comment => "Set default pattern for proc matching";
+
+      "default[init]" string => "sysvinitd",
+      comment => "Set the default init system used if one isn't defined";
 
       "stakeholders[cfengine3]" slist => { "cfengine_in" };
       "stakeholders[acpid]" slist => { "cpu", "cpu0", "cpu1", "cpu2", "cpu3" };
@@ -404,7 +408,7 @@ bundle agent standard_services(service,state)
       "$(pattern[$(service)])" -> { "@(stakeholders[$(service)])" }
 
       comment => "Verify that the service does not appear in the process",
-      process_stop => "$(default[prefix][sysvinitd])$(baseinit[$(service)]) $(state)",
+      process_stop => "$(default[prefix][$(default[init])])$(baseinit[$(service)]) $(state)",
       signals => { "term", "kill"},
       ifvarclass => and(not(isvariable("stopcommand[$(service)]")),
                         isvariable("baseinit[$(service)]"),
@@ -424,7 +428,7 @@ bundle agent standard_services(service,state)
       "$(default[pattern])" -> { "@(stakeholders[$(service)])" }
 
       comment => "Verify that the service does not appear in the process",
-      process_stop => "$(default[prefix][sysvinitd])$(baseinit[$(service)]) $(state)",
+      process_stop => "$(default[prefix][$(default[init])])$(baseinit[$(service)]) $(state)",
       signals => { "term", "kill"},
       ifvarclass => and(not(isvariable("stopcommand[$(service)]")),
                         isvariable("baseinit[$(service)]"),
@@ -444,7 +448,7 @@ bundle agent standard_services(service,state)
       "$(pattern[$(service)])" -> { "@(stakeholders[$(service)])" }
 
       comment => "Verify that the service does not appear in the process",
-      process_stop => "$(default[cmd][sysvinitd])",
+      process_stop => "$(default[cmd][$(default[init])])",
       signals => { "term", "kill"},
       ifvarclass => and(not(isvariable("stopcommand[$(service)]")),
                         not(isvariable("baseinit[$(service)]")),
@@ -465,7 +469,7 @@ bundle agent standard_services(service,state)
       "$(default[pattern])" -> { "@(stakeholders[$(service)])" }
 
       comment => "Verify that the service does not appear in the process",
-      process_stop => "$(default[cmd][sysvinitd])",
+      process_stop => "$(default[cmd][$(default[init])])",
       signals => { "term", "kill"},
       ifvarclass => and(not(isvariable("stopcommand[$(service)]")),
                         not(isvariable("baseinit[$(service)]")),
@@ -489,7 +493,7 @@ bundle agent standard_services(service,state)
       ifvarclass => and(isvariable("startcommand[$(service)]"),
                         canonify("start_$(service)"));
 ##
-      "$(default[prefix][sysvinitd])$(baseinit[$(service)]) $(state)" -> { "@(stakeholders[$(service)])" }
+      "$(default[prefix][$(default[init])])$(baseinit[$(service)]) $(state)" -> { "@(stakeholders[$(service)])" }
       comment => "Execute (baseinit init) command to start the $(service) service",
       ifvarclass => and(not(isvariable("startcommand[$(service)]")),
                         isvariable("baseinit[$(service)]"),
@@ -503,7 +507,7 @@ bundle agent standard_services(service,state)
                         canonify("start_$(service)"),
                         canonify("$(inits)_set"));
 ##
-      "$(default[cmd][sysvinitd])" -> { "@(stakeholders[$(service)])" }
+      "$(default[cmd][$(default[init])])" -> { "@(stakeholders[$(service)])" }
       comment => "Execute (default) command to start the $(service) service",
       ifvarclass => and(not(isvariable("startcommand[$(service)]")),
                         not(isvariable("baseinit[$(service)]")),
@@ -523,7 +527,7 @@ bundle agent standard_services(service,state)
       ifvarclass => and(isvariable("restartcommand[$(service)]"));
 ##
 
-      "$(default[prefix][sysvinitd])$(baseinit[$(service)]) $(state)" -> { "@(stakeholders[$(service)])" }
+      "$(default[prefix][$(default[init])])$(baseinit[$(service)]) $(state)" -> { "@(stakeholders[$(service)])" }
       comment => "Execute (baseinit init) command to restart the $(service) service",
       ifvarclass => and(not(isvariable("restartcommand[$(service)]")),
                         isvariable("baseinit[$(service)]"),
@@ -535,7 +539,7 @@ bundle agent standard_services(service,state)
                         isvariable("baseinit[$(service)]"),
                         canonify("$(inits)_set"));
 ##
-      "$(default[cmd][sysvinitd])" -> { "@(stakeholders[$(service)])" }
+      "$(default[cmd][$(default[init])])" -> { "@(stakeholders[$(service)])" }
       comment => "Execute (default) command to restart the $(service) service",
       ifvarclass => and(not(isvariable("restartcommand[$(service)]")),
                         not(isvariable("baseinit[$(service)]")),
@@ -552,7 +556,7 @@ bundle agent standard_services(service,state)
       comment => "Execute command to reload the $(service) service",
       ifvarclass => and(isvariable("reloadcommand[$(service)]"));
 ##
-      "$(default[prefix][sysvinitd])$(baseinit[$(service)]) $(state)" -> { "@(stakeholders[$(service)])" }
+      "$(default[prefix][$(default[init])])$(baseinit[$(service)]) $(state)" -> { "@(stakeholders[$(service)])" }
       comment => "Execute (baseinit init) command to reload the $(service) service",
       ifvarclass => and(not(isvariable("reloadcommand[$(service)]")),
                         isvariable("baseinit[$(service)]"),
@@ -564,7 +568,7 @@ bundle agent standard_services(service,state)
                         isvariable("baseinit[$(service)]"),
                         canonify("$(inits)_set"));
 ##
-      "$(default[cmd][sysvinitd])" -> { "@(stakeholders[$(service)])" }
+      "$(default[cmd][$(default[init])])" -> { "@(stakeholders[$(service)])" }
       comment => "Execute (default) command to reload the $(service) service",
       ifvarclass => and(not(isvariable("reloadcommand[$(service)]")),
                         not(isvariable("baseinit[$(service)]")),

@@ -171,14 +171,8 @@ bundle agent standard_services(service,state)
     any::
       "inits" slist => { "sysvinitd", "sysvservice", "systemd" },
       comment => "Currently handled init systems";
-
-    debian::
-      "default[prefix][sysvservice]" string => "/usr/sbin/service ",
+      "default[prefix][sysvservice]" string => "$(paths.path[service]) ",
       comment => "Set default prefix for executing sysv service script operations";
-    redhat::
-      "default[prefix][sysvservice]" string => "/sbin/service ",
-      comment => "Set default prefix for executing sysv service script operations";
-    any::
       "default[prefix][systemd]" string => "/bin/systemctl ",
       comment => "Set default prefix for executing systmctl operations";
       "default[prefix][sysvinitd]" string => "/etc/init.d/",
@@ -387,7 +381,7 @@ bundle agent standard_services(service,state)
 
       comment => "Verify that the service appears in the process table",
       restart_class => "start_$(service)",
-      ifvarclass => and(not(isvariable("pattern[$(service)]")));
+      ifvarclass => not(isvariable("pattern[$(service)]"));
 
     stop::
 

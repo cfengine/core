@@ -40,15 +40,20 @@ bundle agent example
   files:
 
       "/home/mark/tmp/test_plain" 
-
+#@ The promiser specifies the path and name of the file.
       perms => system,
       create => "true";
+
+#@ The `perms` attribute sets the file permissions as defined in the `system`
+#@ body below. The `create` attribute makes sure that the files exists. If it
+#@ doesn't, CFEngine will create it.
 
       "/home/mark/tmp/test_dir/." 
 
       perms => system,
       create => "true";
-
+#@ The trailing `/.` in the filename tells CFEngine that the promiser is a
+#@ directory.
 }
 
 #########################################################
@@ -58,6 +63,8 @@ body perms system
 {
       mode  => "0640";
 }
+#@ This body sets permissions to "0640"
+
 
 #########################################################
 

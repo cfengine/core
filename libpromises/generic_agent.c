@@ -67,8 +67,12 @@ static char PIDFILE[CF_BUFSIZE];
 
 static void VerifyPromises(EvalContext *ctx, Policy *policy, GenericAgentConfig *config);
 static void CheckWorkingDirectories(EvalContext *ctx);
+
 static Policy *Cf3ParseFile(const GenericAgentConfig *config, const char *input_path);
 static Policy *Cf3ParseFiles(EvalContext *ctx, GenericAgentConfig *config, const Rlist *inputs);
+
+Policy *LoadPolicyFile(EvalContext *ctx, GenericAgentConfig *config, const char *policy_file, StringSet *parsed_files, StringSet *failed_files);
+
 static bool MissingInputFile(const char *input_file);
 
 #if !defined(__MINGW32__)
@@ -514,45 +518,105 @@ static void ShowContext(EvalContext *ctx)
     }
 }
 
+static Policy *LoadPolicyInputFiles(EvalContext *ctx, GenericAgentConfig *config, const Rlist *inputs, StringSet *parsed_files, StringSet *failed_files)
+{
+    Policy *policy = PolicyNew();
+
+    for (const Rlist *rp = inputs; rp; rp = rp->next)
+    {
+        if (rp->type != RVAL_TYPE_SCALAR)
+        {
+            Log(LOG_LEVEL_ERR, "Non-file object in inputs list");
+            continue;
+        }
+
+        const char *unresolved_input = RlistScalarValue(rp);
+
+        if (strcmp(CF_NULL_VALUE, unresolved_input) == 0)
+        {
+            continue;
+        }
+
+        Rval resolved_input = EvaluateFinalRval(ctx, NULL, "sys", (Rval) { unresolved_input, RVAL_TYPE_SCALAR }, true, NULL);
+
+        Policy *aux_policy = NULL;
+        switch (resolved_input.type)
+        {
+        case RVAL_TYPE_SCALAR:
+            aux_policy = LoadPolicyFile(ctx, config, GenericAgentResolveInputPath(config, RvalScalarValue(resolved_input)), parsed_files, failed_files);
+            break;
+
+        case RVAL_TYPE_LIST:
+            aux_policy = LoadPolicyInputFiles(ctx, config, RvalRlistValue(resolved_input), parsed_files, failed_files);
+            break;
+
+        default:
+            ProgrammingError("Unknown type in input list for parsing: %d", resolved_input.type);
+            break;
+        }
+
+        if (aux_policy)
+        {
+            policy = PolicyMerge(policy, aux_policy);
+        }
+
+        RvalDestroy(resolved_input);
+
+        PolicyResolve(ctx, policy, config);
+    }
+
+    return policy;
+}
+
+Policy *LoadPolicyFile(EvalContext *ctx, GenericAgentConfig *config, const char *policy_file, StringSet *parsed_files, StringSet *failed_files)
+{
+    Policy *policy = Cf3ParseFile(config, policy_file);
+    StringSetAdd(parsed_files, xstrdup(policy_file));
+
+    if (!policy)
+    {
+        StringSetAdd(failed_files, xstrdup(policy_file));
+        return NULL;
+    }
+
+    PolicyResolve(ctx, policy, config);
+
+    Policy *aux_policy = LoadPolicyInputFiles(ctx, config, InputFiles(ctx, policy), parsed_files, failed_files);
+    if (aux_policy)
+    {
+        policy = PolicyMerge(policy, aux_policy);
+    }
+
+    return policy;
+}
+
 Policy *GenericAgentLoadPolicy(EvalContext *ctx, GenericAgentConfig *config)
 {
     config->policy_last_read_attempt = time(NULL);
 
-    Policy *main_policy = Cf3ParseFile(config, config->input_file);
+    StringSet *parsed_files = StringSetNew();
+    StringSet *failed_files = StringSetNew();
 
-    if (main_policy)
-    {
-        PolicyResolve(ctx, main_policy, config);
+    Policy *policy = LoadPolicyFile(ctx, config, config->input_file, parsed_files, failed_files);
 
-        if (PolicyIsRunnable(main_policy))
-        {
-            Policy *aux_policy = Cf3ParseFiles(ctx, config, InputFiles(ctx, main_policy));
-            if (aux_policy)
-            {
-                main_policy = PolicyMerge(main_policy, aux_policy);
-            }
-            else
-            {
-                Log(LOG_LEVEL_ERR, "Syntax errors were found in policy files included from the main policy");
-                exit(EXIT_FAILURE); // TODO: do not exit
-            }
-        }
-    }
-    else
+    if (StringSetSize(failed_files) > 0)
     {
-        Log(LOG_LEVEL_ERR, "Syntax errors were found in the main policy file");
-        exit(EXIT_FAILURE); // TODO: do not exit
+        Log(LOG_LEVEL_ERR, "There are syntax errors in policy files");
+        exit(EXIT_FAILURE);
     }
+
+    StringSetDestroy(parsed_files);
+    StringSetDestroy(failed_files);
 
     {
         Seq *errors = SeqNew(100, PolicyErrorDestroy);
 
-        if (PolicyCheckPartial(main_policy, errors))
+        if (PolicyCheckPartial(policy, errors))
         {
-            if (!config->bundlesequence && (PolicyIsRunnable(main_policy) || config->check_runnable))
+            if (!config->bundlesequence && (PolicyIsRunnable(policy) || config->check_runnable))
             {
                 Log(LOG_LEVEL_VERBOSE, "Running full policy integrity checks");
-                PolicyCheckRunnable(ctx, main_policy, errors, config->ignore_missing_bundles);
+                PolicyCheckRunnable(ctx, policy, errors, config->ignore_missing_bundles);
             }
         }
 
@@ -575,12 +639,12 @@ Policy *GenericAgentLoadPolicy(EvalContext *ctx, GenericAgentConfig *config)
         ShowContext(ctx);
     }
 
-    if (main_policy)
+    if (policy)
     {
-        VerifyPromises(ctx, main_policy, config);
+        VerifyPromises(ctx, policy, config);
     }
 
-    return main_policy;
+    return policy;
 }
 
 /*****************************************************************************/
@@ -1031,7 +1095,6 @@ const Rlist *InputFiles(EvalContext *ctx, Policy *policy)
     Body *body_common_control = PolicyGetBody(policy, NULL, "common", "control");
     if (!body_common_control)
     {
-        ProgrammingError("Attempted to get input files from policy without body common control");
         return NULL;
     }
 

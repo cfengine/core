@@ -186,7 +186,7 @@ static const char *TLSPrimarySSLError(int code)
     case SSL_ERROR_WANT_X509_LOOKUP:
         return "SSL_ERROR_WANT_X509_LOOKUP";
     case SSL_ERROR_SYSCALL:
-        return "SSL_ERROR_WANT_X509_LOOKUP";
+        return "SSL_ERROR_SYSCALL";
     case SSL_ERROR_SSL:
         return "SSL_ERROR_SSL";
     }
@@ -212,10 +212,13 @@ static const char *TLSSecondarySSLError(int code ARG_UNUSED)
 void TLSLogError(SSL *ssl, LogLevel level, const char *prepend, int code)
 {
     assert(prepend != NULL);
-    Log(level, "%s: %d %s %s",
+
+    const char *err2 = TLSSecondarySSLError(code);
+
+    Log(level, "%s: (%d %s) %s",
         prepend, code,
         TLSPrimarySSLError(SSL_get_error(ssl, code)),
-        TLSSecondarySSLError(code));
+        err2 == NULL ? "" : err2);
 }
 
 /**
@@ -250,7 +253,7 @@ int TLSSend(SSL *ssl, const char *buffer, int length)
         else
         {
             TLSLogError(ssl, LOG_LEVEL_ERR,
-                        "TLS session abruptly closed", sent);
+                        "TLS session abruptly closed. SSL_write", sent);
             return 0;
         }
     }
@@ -290,7 +293,7 @@ int TLSRecv(SSL *ssl, char *buffer, int length)
         else
         {
             TLSLogError(ssl, LOG_LEVEL_ERR,
-                        "TLS session abruptly closed", received);
+                        "TLS session abruptly closed. SSL_read", received);
             return 0;
         }
     }

@@ -26,17 +26,8 @@ static const int CF_NOSIZE = -1;
 
 void RefuseAccess(ServerConnectionState *conn, int size, char *errmesg)
 {
-    char *hostname, *username, *ipaddr;
+    char *username, *ipaddr;
     char *def = "?";
-
-    if (strlen(conn->hostname) == 0)
-    {
-        hostname = def;
-    }
-    else
-    {
-        hostname = conn->hostname;
-    }
 
     if (strlen(conn->username) == 0)
     {
@@ -60,12 +51,8 @@ void RefuseAccess(ServerConnectionState *conn, int size, char *errmesg)
     snprintf(sendbuffer, CF_BUFSIZE, "%s", CF_FAILEDSTR);
     SendTransaction(&conn->conn_info, sendbuffer, size, CF_DONE);
 
-    Log(LOG_LEVEL_INFO, "From (host=%s,user=%s,ip=%s)", hostname, username, ipaddr);
-
-    if (strlen(errmesg) > 0)
-    {
-        Log(LOG_LEVEL_INFO, "REFUSAL of request from connecting host: (%s)", errmesg);
-    }
+    Log(LOG_LEVEL_INFO, "REFUSAL to (user=%s,ip=%s) of request: %s",
+        username, ipaddr, errmesg);
 }
 
 int AllowedUser(char *user)
@@ -147,14 +134,14 @@ int AccessControl(EvalContext *ctx, const char *req_path, ServerConnectionState 
     }
     else
     {
-        Log(LOG_LEVEL_INFO, "Couldn't resolve filename '%s' from host '%s'. (lstat: %s)",
-            translated_req_path, conn->hostname, GetErrorStr());
+        Log(LOG_LEVEL_INFO, "Couldn't resolve (realpath: %s) filename: %s",
+            GetErrorStr(), translated_req_path);
     }
 
     if (lstat(transrequest, &statbuf) == -1)
     {
-        Log(LOG_LEVEL_INFO, "Couldn't stat filename '%s' requested by host '%s'. (lstat: %s)",
-            transrequest, conn->hostname, GetErrorStr());
+        Log(LOG_LEVEL_INFO, "Couldn't stat (lstat: %s) filename: %s",
+            GetErrorStr(), transrequest);
         return false;
     }
 

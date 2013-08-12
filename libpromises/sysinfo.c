@@ -508,10 +508,10 @@ void GetNameInfo3(EvalContext *ctx, AgentType agent_type)
     snprintf(workbuf, CF_BUFSIZE, "%s%cmasterfiles", CFWORKDIR, FILE_SEPARATOR);
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "masterdir", workbuf, DATA_TYPE_STRING);
 
-    snprintf(workbuf, CF_BUFSIZE, "%s%cfailsafe.cf", CFWORKDIR, FILE_SEPARATOR);
+    snprintf(workbuf, CF_BUFSIZE, "%s%cinputs%cfailsafe.cf", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "failsafe", workbuf, DATA_TYPE_STRING);
 
-    snprintf(workbuf, CF_BUFSIZE, "%s%cupdate.cf", CFWORKDIR, FILE_SEPARATOR);
+    snprintf(workbuf, CF_BUFSIZE, "%s%cinputs%cupdate.cf", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "update", workbuf, DATA_TYPE_STRING);
 
 /* FIXME: type conversion */

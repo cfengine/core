@@ -1,0 +1,76 @@
+#######################################################
+#
+# Replace a pattern and use match.0
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+  vars:
+      "states" slist => { "actual", "expected" };
+
+      "actual" string =>
+      "BEGIN
+END";
+
+      "expected" string =>
+      "BEGIN_REPLACED
+END";
+
+  files:
+      "$(G.testfile).$(states)"
+      create => "true",
+      edit_line => init_insert("$(init.$(states))"),
+      edit_defaults => init_empty;
+}
+
+bundle edit_line init_insert(str)
+{
+  insert_lines:
+      "$(str)";
+}
+
+body edit_defaults init_empty
+{
+      empty_file_before_editing => "true";
+}
+
+######################################################
+#
+bundle agent test
+{
+  files:
+      "$(G.testfile).actual"
+      edit_line => test_replace("$(init.parameters)");
+}
+
+bundle edit_line test_replace(parameters)
+{
+  replace_patterns:
+      "^BEGIN$" replace_with => value("BEGIN_REPLACED");
+}
+
+body replace_with value(x)
+{
+      replace_value => "$(x)";
+      occurrences => "all";
+}
+
+#######################################################
+
+bundle agent check
+{
+  methods:
+      "any" usebundle => default_check_diff("$(G.testfile).actual",
+                                            "$(G.testfile).expected",
+                                            "$(this.promise_filename)");
+}

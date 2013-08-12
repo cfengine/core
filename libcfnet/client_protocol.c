@@ -40,8 +40,6 @@ extern char VFQNAME[];
 #include "files_hashes.h" /* HashString,HashesMatch,HashPubKey,HashPrintSafe */
 
 
-static bool SetSessionKey(AgentConnection *conn);
-
 /*********************************************************************/
 
 static int SKIPIDENTIFY;
@@ -55,7 +53,7 @@ void SetSkipIdentify(bool enabled)
 
 /*********************************************************************/
 
-int IdentifyAgent(int sd)
+int IdentifyAgent(ConnectionInfo *conn_info)
 {
     char uname[CF_BUFSIZE], sendbuff[CF_BUFSIZE];
     char dnsname[CF_MAXVARSIZE], localip[CF_MAX_IP_LEN];
@@ -77,7 +75,7 @@ int IdentifyAgent(int sd)
         struct sockaddr_storage myaddr = {0};
         socklen_t myaddr_len = sizeof(myaddr);
 
-        if (getsockname(sd, (struct sockaddr *) &myaddr, &myaddr_len) == -1)
+        if (getsockname(conn_info->sd, (struct sockaddr *) &myaddr, &myaddr_len) == -1)
         {
             Log(LOG_LEVEL_ERR, "Couldn't get socket address. (getsockname: %s)", GetErrorStr());
             return false;
@@ -155,7 +153,7 @@ int IdentifyAgent(int sd)
     snprintf(sendbuff, sizeof(sendbuff), "CAUTH %s %s %s %d",
              localip, dnsname, uname, 0);
 
-    if (SendTransaction(sd, sendbuff, 0, CF_DONE) == -1)
+    if (SendTransaction(conn_info, sendbuff, 0, CF_DONE) == -1)
     {
         Log(LOG_LEVEL_ERR,
               "During identify agent, could not send auth response. (SendTransaction: %s)", GetErrorStr());
@@ -166,6 +164,31 @@ int IdentifyAgent(int sd)
 }
 
 /*********************************************************************/
+
+static bool SetSessionKey(AgentConnection *conn)
+{
+    BIGNUM *bp;
+    int session_size = CfSessionKeySize(conn->encryption_type);
+
+    bp = BN_new();
+
+    if (bp == NULL)
+    {
+        Log(LOG_LEVEL_ERR, "Could not allocate session key");
+        return false;
+    }
+
+    // session_size is in bytes
+    if (!BN_rand(bp, session_size * 8, -1, 0))
+    {
+        Log(LOG_LEVEL_ERR, "Can't generate cryptographic key");
+        BN_clear_free(bp);
+        return false;
+    }
+
+    conn->session_key = (unsigned char *) bp->d;
+    return true;
+}
 
 int AuthenticateAgent(AgentConnection *conn, bool trust_key)
 {
@@ -210,6 +233,7 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
 
 /* We assume that the server bound to the remote socket is the official one i.e. = root's */
 
+    /* Ask the server to send us the public key if we don't have it. */
     if ((server_pubkey = HavePublicKeyByIP(conn->username, conn->remoteip)))
     {
         implicitly_trust_server = false;
@@ -223,8 +247,9 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
 
 // Server pubkey is what we want to has as a unique ID
 
-    snprintf(sendbuffer, sizeof(sendbuffer), "SAUTH %c %d %d %c", implicitly_trust_server ? 'n': 'y', encrypted_len,
-             nonce_len, enterprise_field);
+    snprintf(sendbuffer, sizeof(sendbuffer), "SAUTH %c %d %d %c",
+             implicitly_trust_server ? 'n': 'y',
+             encrypted_len, nonce_len, enterprise_field);
 
     out = xmalloc(encrypted_len);
 
@@ -248,7 +273,7 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
 
 /* proposition C1 - Send challenge / nonce */
 
-    SendTransaction(conn->sd, sendbuffer, CF_RSA_PROTO_OFFSET + encrypted_len, CF_DONE);
+    SendTransaction(&conn->conn_info, sendbuffer, CF_RSA_PROTO_OFFSET + encrypted_len, CF_DONE);
 
     BN_free(bn);
     BN_free(nonce_challenge);
@@ -259,19 +284,19 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
 
     memset(sendbuffer, 0, CF_EXPANDSIZE);
     len = BN_bn2mpi(PUBKEY->n, sendbuffer);
-    SendTransaction(conn->sd, sendbuffer, len, CF_DONE);        /* No need to encrypt the public key ... */
+    SendTransaction(&conn->conn_info, sendbuffer, len, CF_DONE);        /* No need to encrypt the public key ... */
 
 /* proposition C3 */
     memset(sendbuffer, 0, CF_EXPANDSIZE);
     len = BN_bn2mpi(PUBKEY->e, sendbuffer);
-    SendTransaction(conn->sd, sendbuffer, len, CF_DONE);
+    SendTransaction(&conn->conn_info, sendbuffer, len, CF_DONE);
 
-/* check reply about public key - server can break connection here */
+/* check reply about public key - server can break conn_info here */
 
 /* proposition S1 */
     memset(in, 0, CF_BUFSIZE);
 
-    if (ReceiveTransaction(conn->sd, in, NULL) == -1)
+    if (ReceiveTransaction(&conn->conn_info, in, NULL) == -1)
     {
         Log(LOG_LEVEL_ERR, "Protocol transaction broken off (1). (ReceiveTransaction: %s)", GetErrorStr());
         RSA_free(server_pubkey);
@@ -290,7 +315,7 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
 /* proposition S2 */
     memset(in, 0, CF_BUFSIZE);
 
-    if (ReceiveTransaction(conn->sd, in, NULL) == -1)
+    if (ReceiveTransaction(&conn->conn_info, in, NULL) == -1)
     {
         Log(LOG_LEVEL_ERR, "Protocol transaction broken off (2). (ReceiveTransaction: %s)", GetErrorStr());
         RSA_free(server_pubkey);
@@ -332,7 +357,7 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
 
 /* proposition S3 */
     memset(in, 0, CF_BUFSIZE);
-    encrypted_len = ReceiveTransaction(conn->sd, in, NULL);
+    encrypted_len = ReceiveTransaction(&conn->conn_info, in, NULL);
 
     if (encrypted_len <= 0)
     {
@@ -364,11 +389,11 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
 
     if (FIPS_MODE)
     {
-        SendTransaction(conn->sd, digest, CF_DEFAULT_DIGEST_LEN, CF_DONE);
+        SendTransaction(&conn->conn_info, digest, CF_DEFAULT_DIGEST_LEN, CF_DONE);
     }
     else
     {
-        SendTransaction(conn->sd, digest, CF_MD5_LEN, CF_DONE);
+        SendTransaction(&conn->conn_info, digest, CF_MD5_LEN, CF_DONE);
     }
 
     free(decrypted_cchall);
@@ -382,7 +407,7 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
         Log(LOG_LEVEL_VERBOSE, "Collecting public key from server!");
 
         /* proposition S4 - conditional */
-        if ((len = ReceiveTransaction(conn->sd, in, NULL)) <= 0)
+        if ((len = ReceiveTransaction(&conn->conn_info, in, NULL)) <= 0)
         {
             Log(LOG_LEVEL_ERR, "Protocol error in RSA authentation from IP '%s'", conn->this_server);
             return false;
@@ -398,7 +423,7 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
 
         /* proposition S5 - conditional */
 
-        if ((len = ReceiveTransaction(conn->sd, in, NULL)) <= 0)
+        if ((len = ReceiveTransaction(&conn->conn_info, in, NULL)) <= 0)
         {
             Log(LOG_LEVEL_INFO, "Protocol error in RSA authentation from IP '%s'",
                  conn->this_server);
@@ -446,16 +471,16 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
         return false;
     }
 
-    SendTransaction(conn->sd, out, encrypted_len, CF_DONE);
+    SendTransaction(&conn->conn_info, out, encrypted_len, CF_DONE);
 
     if (server_pubkey != NULL)
     {
         char buffer[EVP_MAX_MD_SIZE * 4];
-        HashPubKey(server_pubkey, conn->digest, CF_DEFAULT_DIGEST);
+        HashPubKey(server_pubkey, conn->conn_info.remote_keyhash, CF_DEFAULT_DIGEST);
         Log(LOG_LEVEL_VERBOSE, "Public key identity of host '%s' is '%s'", conn->remoteip,
-              HashPrintSafe(CF_DEFAULT_DIGEST, conn->digest, buffer));
+              HashPrintSafe(CF_DEFAULT_DIGEST, conn->conn_info.remote_keyhash, buffer));
         SavePublicKey(conn->username, buffer, server_pubkey);       // FIXME: username is local
-        LastSaw(conn->remoteip, conn->digest, LAST_SEEN_ROLE_CONNECT);
+        LastSaw(conn->remoteip, conn->conn_info.remote_keyhash, LAST_SEEN_ROLE_CONNECT);
     }
 
     free(out);
@@ -464,34 +489,6 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
     return true;
 }
 
-/*********************************************************************/
-/* Level                                                             */
-/*********************************************************************/
-
-static bool SetSessionKey(AgentConnection *conn)
-{
-    BIGNUM *bp;
-    int session_size = CfSessionKeySize(conn->encryption_type);
-
-    bp = BN_new();
-
-    if (bp == NULL)
-    {
-        Log(LOG_LEVEL_ERR, "Could not allocate session key");
-        return false;
-    }
-
-    // session_size is in bytes
-    if (!BN_rand(bp, session_size * 8, -1, 0))
-    {
-        Log(LOG_LEVEL_ERR, "Can't generate cryptographic key");
-        BN_clear_free(bp);
-        return false;
-    }
-
-    conn->session_key = (unsigned char *) bp->d;
-    return true;
-}
 
 /*********************************************************************/
 

@@ -25,10 +25,12 @@
 #ifndef CFENGINE_SERVER_H
 #define CFENGINE_SERVER_H
 
+
 #include "cf3.defs.h"
 #include "cfnet.h"                                       /* AgentConnection */
 
 #include "generic_agent.h"
+
 
 //*******************************************************************
 // TYPES
@@ -50,12 +52,14 @@ struct Auth_
 
 typedef struct
 {
-    Item *nonattackerlist;
-    Item *attackerlist;
-    Item *connectionlist;
-    Item *allowuserlist;
-    Item *multiconnlist;
-    Item *trustkeylist;
+    Item *connectionlist;             /* List of currently open connections */
+
+    /* body server control options */
+    Item *nonattackerlist;                            /* "allowconnects" */
+    Item *attackerlist;                               /* "denyconnects" */
+    Item *allowuserlist;                              /* "allowusers" */
+    Item *multiconnlist;                              /* "allowallconnects" */
+    Item *trustkeylist;                               /* "trustkeysfrom" */
     Item *skipverify;
 
     Auth *admit;
@@ -76,18 +80,17 @@ typedef struct
     int logconns;
 } ServerAccess;
 
+/**
+ * @member trust Whether we'll blindly trust any key from the host, depends on
+ *               the "trustkeysfrom" option in body server control. Default
+ *               false, check for setting it is in CheckStoreKey().
+ */
 typedef struct ServerConnectionState
 {
     EvalContext *ctx;
-
-    int id_verified;
-    int rsa_auth;
+    ConnectionInfo conn_info;
     int synchronized;
-    int maproot;
     int trust;
-    int sd_reply;
-    unsigned char *session_key;
-    unsigned char digest[EVP_MAX_MD_SIZE + 1];
     char hostname[CF_MAXVARSIZE];
     char username[CF_MAXVARSIZE];
 #ifdef __MINGW32__
@@ -95,9 +98,14 @@ typedef struct ServerConnectionState
 #else
     uid_t uid;
 #endif
-    char encryption_type;
     char ipaddr[CF_MAX_IP_LEN];
     char output[CF_BUFSIZE * 2];        /* Threadsafe output channel */
+    /* TODO the following are useless with the new protocol */
+    int id_verified;
+    int rsa_auth;
+    int maproot;
+    unsigned char *session_key;
+    char encryption_type;
 } ServerConnectionState;
 
 typedef struct
@@ -111,7 +119,6 @@ typedef struct
 
 
 void KeepPromises(EvalContext *ctx, Policy *policy, GenericAgentConfig *config);
-
 void ServerEntryPoint(EvalContext *ctx, int sd_reply, char *ipaddr);
 void TryCollectCall(void);
 int SetServerListenState(EvalContext *ctx, size_t queue_size);
@@ -120,7 +127,6 @@ void PurgeOldConnections(Item **list, time_t now);
 
 
 AgentConnection *ExtractCallBackChannel(ServerConnectionState *conn);
-
 
 //*******************************************************************
 // STATE

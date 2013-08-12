@@ -59,7 +59,7 @@ int ReceiveCollectCall(ARG_UNUSED struct ServerConnectionState *conn)
     return false;
 }
 
-bool ReturnQueryData(ARG_UNUSED struct ServerConnectionState *conn, ARG_UNUSED char *menu)
+bool ReturnQueryData(ARG_UNUSED struct ServerConnectionState *conn, ARG_UNUSED char *menu, int encrypt)
 {
     return false;
 }

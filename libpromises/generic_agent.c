@@ -687,7 +687,6 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
     }
 
     OpenNetwork();
-
     CryptoInitialize();
 
     if (!LOOKUP)
@@ -696,9 +695,13 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
     }
 
     const char *bootstrapped_policy_server = ReadPolicyServerFile(CFWORKDIR);
-    if (!LoadSecretKeys(bootstrapped_policy_server))
+
+    /* Initialize keys and networking. cf-key, doesn't need keys. In fact it
+       must function properly even without them, so that it generates them! */
+    if (config->agent_type != AGENT_TYPE_KEYGEN)
     {
-        FatalError(ctx, "Could not load secret keys");
+        LoadSecretKeys(bootstrapped_policy_server);
+        cfnet_init();
     }
 
     if (!MINUSF)

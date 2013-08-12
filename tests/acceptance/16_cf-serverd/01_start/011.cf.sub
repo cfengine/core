@@ -1,8 +1,8 @@
 #######################################################
 #
-# Test cf-serverd related promises, mtime simple copy localhost
+# Test cf-serverd related promises
 #
-# Tests secure copy (SGET) and secure stat (SSYNCH).
+# Tests copy_from digest verify (MD5)
 #
 #######################################################
 
@@ -53,28 +53,38 @@ insert_lines:
 
 #######################################################
 
-bundle agent test
+body classes if_repair_failed(x)
+{
+repair_failed => { "$(x)" };
+}
 
+body classes if_satisfied(x)
+{
+promise_repaired => { "$(x)" };
+}
+
+bundle agent test
 {
 files:
-  "$(G.testdir)/destination_file" copy_from => copy_src_file;
+  "$(G.testdir)/destination_file"
+    copy_from => copy_src_file,
+     classes => if_satisfied("copy_ok");
 }
 
 #########################################################
 
 body copy_from copy_src_file
-
 {
 source      => "$(G.testdir)/source_file";
 servers     => { "127.0.0.1" };
-compare     => "mtime";
 copy_backup => "false";
 
 portnumber => "9876"; # localhost_open
 
-encrypt     => "true";
+encrypt     => "false";
+compare     => "digest";
+verify      => "true";
 
-#verify      => "true";
 #purge       => "false";
 #type_check  => "true";
 #force_ipv4  => "true";
@@ -85,10 +95,16 @@ trustkey => "true";
 
 bundle agent check
 {
+#TODO check that the two files are identical
+#methods:
+#  "any" usebundle => default_check_diff("$(G.testdir)/source_file","$(G.testdir)/destination_file","$(fn[1])");
+
 classes:
   "dummy" expression => regextract("(.*)\.sub", $(this.promise_filename), "fn");
 
-methods:
-  "any" usebundle => default_check_diff("$(G.testdir)/source_file","$(G.testdir)/destination_file","$(fn[1])");
+reports:
+  copy_ok::
+    "$(fn[1]) Pass";
+  !copy_ok::
+    "$(fn[1]) FAIL";
 }
-

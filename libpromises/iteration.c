@@ -81,32 +81,23 @@ static Rlist *RlistAppendOrthog(Rlist **start, void *item, RvalType type)
     return rp;
 }
 
-Rlist *NewIterationContext(EvalContext *ctx, const Promise *pp, const char *ns, const char *scope, Rlist *namelist)
+Rlist *NewIterationContext(EvalContext *ctx, const Promise *pp, Rlist *namelist)
 {
-    Rlist *rps, *deref_listoflists = NULL;
-    Rval retval;
-    DataType dtype;
-    CfAssoc *new;
-    Rval newret;
-
-    ScopeCopy(NULL, "this", ScopeGet(ns, scope));
-
-    ScopeGet(NULL, "this");
-
     if (namelist == NULL)
     {
         return NULL;
     }
 
+    Rlist *deref_listoflists = NULL;
     for (Rlist *rp = namelist; rp != NULL; rp = rp->next)
     {
-        dtype = DATA_TYPE_NONE;
+        VarRef *ref = VarRefParseFromBundle(rp->item, PromiseGetBundle(pp));
 
-        VarRef *ref = VarRefParseFromNamespaceAndScope(rp->item, ns, scope, CF_NS, '.');
-
+        Rval retval;
+        DataType dtype = DATA_TYPE_NONE;
         if (!EvalContextVariableGet(ctx, ref, &retval, &dtype))
         {
-            Log(LOG_LEVEL_ERR, "Couldn't locate variable %s apparently in %s", RlistScalarValue(rp), scope);
+            Log(LOG_LEVEL_ERR, "Couldn't locate variable %s apparently in %s", RlistScalarValue(rp), PromiseGetBundle(pp)->name);
             Log(LOG_LEVEL_ERR,
                   "Could be incorrect use of a global iterator -- see reference manual on list substitution");
             VarRefDestroy(ref);
@@ -119,13 +110,13 @@ Rlist *NewIterationContext(EvalContext *ctx, const Promise *pp, const char *ns, 
 
         if (retval.type == RVAL_TYPE_LIST)
         {
-            for (rps = (Rlist *) retval.item; rps != NULL; rps = rps->next)
+            for (Rlist *rps = RvalRlistValue(retval); rps; rps = rps->next)
             {
                 if (rps->type == RVAL_TYPE_FNCALL)
                 {
                     FnCall *fp = (FnCall *) rps->item;
 
-                    newret = FnCallEvaluate(ctx, fp, pp).rval;
+                    Rval newret = FnCallEvaluate(ctx, fp, pp).rval;
                     FnCallDestroy(fp);
                     rps->item = newret.item;
                     rps->type = newret.type;
@@ -133,10 +124,11 @@ Rlist *NewIterationContext(EvalContext *ctx, const Promise *pp, const char *ns, 
             }
         }
 
-        if ((new = NewAssoc(rp->item, retval, dtype)))
+        CfAssoc *new_var = NULL;
+        if ((new_var = NewAssoc(rp->item, retval, dtype)))
         {
-            RlistAppendOrthog(&deref_listoflists, new, RVAL_TYPE_LIST);
-            rp->state_ptr = new->rval.item;
+            RlistAppendOrthog(&deref_listoflists, new_var, RVAL_TYPE_LIST);
+            rp->state_ptr = new_var->rval.item;
 
             while ((rp->state_ptr) && (strcmp(rp->state_ptr->item, CF_NULL_VALUE) == 0))
             {
@@ -157,8 +149,6 @@ Rlist *NewIterationContext(EvalContext *ctx, const Promise *pp, const char *ns, 
 
 void DeleteIterationContext(Rlist *deref)
 {
-    ScopeClearSpecial(SPECIAL_SCOPE_THIS);
-
     if (deref != NULL)
     {
         DeleteReferenceRlist(deref);

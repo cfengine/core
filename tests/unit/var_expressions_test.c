@@ -92,22 +92,22 @@ static void test_array_with_dot_colon_in_index(void)
     VarRefDestroy(ref);
 }
 
-static void CheckToStringQualified(const char *str)
+static void CheckToStringQualified(const char *str, const char *expect)
 {
     VarRef *ref = VarRefParse(str);
     char *out = VarRefToString(ref, true);
-    assert_string_equal(str, out);
+    assert_string_equal(expect, out);
     free(out);
     VarRefDestroy(ref);
 }
 
 static void test_to_string_qualified(void)
 {
-    CheckToStringQualified("ns:scope.lval[x][y]");
-    CheckToStringQualified("ns:scope.lval[x]");
-    CheckToStringQualified("ns:scope.lval");
-    CheckToStringQualified("scope.lval");
-    CheckToStringQualified("lval");
+    CheckToStringQualified("ns:scope.lval[x][y]", "ns:scope.lval[x][y]");
+    CheckToStringQualified("ns:scope.lval[x]", "ns:scope.lval[x]");
+    CheckToStringQualified("ns:scope.lval", "ns:scope.lval");
+    CheckToStringQualified("scope.lval", "default:scope.lval");
+    CheckToStringQualified("lval", "lval");
 }
 
 static void test_to_string_unqualified(void)

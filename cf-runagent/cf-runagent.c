@@ -63,8 +63,8 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv);
 static void KeepControlPromises(EvalContext *ctx, Policy *policy);
 static int HailServer(EvalContext *ctx, char *host);
 static int ParseHostname(char *hostname, char *new_hostname);
-static void SendClassData(AgentConnection *conn);
-static void HailExec(AgentConnection *conn, char *peer, char *recvbuffer, char *sendbuffer);
+static void SendClassData(EvalContext *ctx, AgentConnection *conn);
+static void HailExec(EvalContext *ctx, AgentConnection *conn, char *peer, char *recvbuffer, char *sendbuffer);
 static FILE *NewStream(char *name);
 static void DeleteStream(FILE *fp);
 
@@ -160,8 +160,6 @@ int main(int argc, char *argv[])
 
     GenericAgentDiscoverContext(ctx, config);
     Policy *policy = GenericAgentLoadPolicy(ctx, config);
-
-    CheckForPolicyHub(ctx);
 
     ThisAgentInit();
     KeepControlPromises(ctx, policy);      // Set RUNATTR using copy
@@ -329,11 +327,19 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             break;
 
         case 'V':
-            PrintVersion();
+            {
+                Writer *w = FileWriter(stdout);
+                GenericAgentWriteVersion(w);
+                FileWriterDetach(w);
+            }
             exit(0);
 
         case 'h':
-            PrintHelp("cf-runagent", OPTIONS, HINTS, true);
+            {
+                Writer *w = FileWriter(stdout);
+                GenericAgentWriteHelp(w, "cf-runagent", OPTIONS, HINTS, true);
+                FileWriterDetach(w);
+            }
             exit(0);
 
         case 'M':
@@ -360,7 +366,11 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             break;
 
         default:
-            PrintHelp("cf-runagent", OPTIONS, HINTS, true);
+            {
+                Writer *w = FileWriter(stdout);
+                GenericAgentWriteHelp(w, "cf-runagent", OPTIONS, HINTS, true);
+                FileWriterDetach(w);
+            }
             exit(1);
 
         }
@@ -528,7 +538,7 @@ static int HailServer(EvalContext *ctx, char *host)
 
 /* Check trust interaction*/
 
-    HailExec(conn, peer, recvbuffer, sendbuffer);
+    HailExec(ctx, conn, peer, recvbuffer, sendbuffer);
 
     RlistDestroy(fc.servers);
 
@@ -686,12 +696,12 @@ static int ParseHostname(char *name, char *hostname)
 
 /********************************************************************/
 
-static void SendClassData(AgentConnection *conn)
+static void SendClassData(EvalContext *ctx, AgentConnection *conn)
 {
     Rlist *classes, *rp;
     char sendbuffer[CF_BUFSIZE];
 
-    classes = RlistFromSplitRegex(SENDCLASSES, "[,: ]", 99, false);
+    classes = RlistFromSplitRegex(ctx, SENDCLASSES, "[,: ]", 99, false);
 
     for (rp = classes; rp != NULL; rp = rp->next)
     {
@@ -713,7 +723,7 @@ static void SendClassData(AgentConnection *conn)
 
 /********************************************************************/
 
-static void HailExec(AgentConnection *conn, char *peer, char *recvbuffer, char *sendbuffer)
+static void HailExec(EvalContext *ctx, AgentConnection *conn, char *peer, char *recvbuffer, char *sendbuffer)
 {
     FILE *fp = stdout;
     char *sp;
@@ -736,7 +746,7 @@ static void HailExec(AgentConnection *conn, char *peer, char *recvbuffer, char *
     }
 
     fp = NewStream(peer);
-    SendClassData(conn);
+    SendClassData(ctx, conn);
 
     while (true)
     {

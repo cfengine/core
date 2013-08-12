@@ -258,7 +258,7 @@ static void KeepControlPromises(EvalContext *ctx, Policy *policy, GenericAgentCo
 
     Banner("Server control promises..");
 
-    HashControls(ctx, policy, config);
+    PolicyResolve(ctx, policy, config);
 
 /* Now expand */
 

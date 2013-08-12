@@ -183,7 +183,7 @@ ENTERPRISE_FUNC_8ARG_DEFINE_STUB(void *, CfLDAPArray, EvalContext *, ctx, const 
     return NULL;
 }
 
-ENTERPRISE_FUNC_7ARG_DEFINE_STUB(void *, CfRegLDAP, char *, uri, char *, dn, char *, filter, char *, name, char *, scope, char *, regex, char *, sec)
+ENTERPRISE_FUNC_8ARG_DEFINE_STUB(void *, CfRegLDAP, EvalContext *, ctx, char *, uri, char *, dn, char *, filter, char *, name, char *, scope, char *, regex, char *, sec)
 {
     Log(LOG_LEVEL_ERR, "LDAP support only available in CFEngine Enterprise");
     return NULL;

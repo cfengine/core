@@ -45,12 +45,12 @@
 #include <string_lib.h>
 #include <verify_files_utils.h>
 #include <verify_files_hashes.h>
-#include <generic_agent.h> // HashVariables
 #include <misc_lib.h>
 #include <fncall.h>
 #include <promiser_regex_resolver.h>
 #include <ornaments.h>
 #include <audit.h>
+#include <expand.h>
 
 static void LoadSetuid(Attributes a);
 static void SaveSetuid(EvalContext *ctx, Attributes a, Promise *pp);
@@ -59,7 +59,7 @@ static void VerifyFilePromise(EvalContext *ctx, char *path, Promise *pp);
 
 /*****************************************************************************/
 
-static int FileSanityChecks(const EvalContext *ctx, char *path, Attributes a, Promise *pp)
+static int FileSanityChecks(EvalContext *ctx, char *path, Attributes a, Promise *pp)
 {
     if ((a.havelink) && (a.havecopy))
     {
@@ -80,7 +80,7 @@ static int FileSanityChecks(const EvalContext *ctx, char *path, Attributes a, Pr
  * so we can't distinguish between link and copy source. In post-verification
  * all bodies are already expanded, so we don't have the information either */
 
-    if ((a.havecopy) && (a.copy.source) && (!FullTextMatch(CF_ABSPATHRANGE, a.copy.source)))
+    if ((a.havecopy) && (a.copy.source) && (!FullTextMatch(ctx, CF_ABSPATHRANGE, a.copy.source)))
     {
         /* FIXME: somehow redo a PromiseRef to be able to embed it into a string */
         Log(LOG_LEVEL_ERR, "Non-absolute path in source attribute (have no invariant meaning) '%s'", a.copy.source);
@@ -195,7 +195,7 @@ static void VerifyFilePromise(EvalContext *ctx, char *path, Promise *pp)
         return;
     }
 
-    ScopeNewSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser", path, DATA_TYPE_STRING);
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser", path, DATA_TYPE_STRING);
 
     thislock = AcquireLock(ctx, path, VUQNAME, CFSTARTTIME, a.transaction, pp, false);
 
@@ -471,7 +471,7 @@ int ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes a, Promis
 
             EvalContextStackPushBundleFrame(ctx, bp, args, a.edits.inherit);
 
-            BundleHashVariables(ctx, bp);
+            BundleResolve(ctx, bp);
 
             retval = ScheduleEditLineOperations(ctx, bp, a, pp, edcontext);
 
@@ -520,7 +520,7 @@ int ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes a, Promis
             BannerSubBundle(bp, args);
 
             EvalContextStackPushBundleFrame(ctx, bp, args, a.edits.inherit);
-            BundleHashVariables(ctx, bp);
+            BundleResolve(ctx, bp);
 
             retval = ScheduleEditXmlOperations(ctx, bp, a, pp, edcontext);
 
@@ -540,7 +540,7 @@ int ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes a, Promis
             a.haveeditline = true;
 
             EvalContextStackPushBundleFrame(ctx, bp, args, a.edits.inherit);
-            BundleHashVariables(ctx, bp);
+            BundleResolve(ctx, bp);
 
             retval = ScheduleEditLineOperations(ctx, bp, a, pp, edcontext);
 
@@ -577,7 +577,7 @@ static void FindFilePromiserObjects(EvalContext *ctx, Promise *pp)
     if (literal)
     {
         // Prime the promiser temporarily, may override later
-        ScopeNewSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser", pp->promiser, DATA_TYPE_STRING);
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser", pp->promiser, DATA_TYPE_STRING);
         VerifyFilePromise(ctx, pp->promiser, pp);
     }
     else                        // Default is to expand regex paths
@@ -616,7 +616,7 @@ static void SaveSetuid(EvalContext *ctx, Attributes a, Promise *pp)
     snprintf(filename, CF_BUFSIZE, "%s/cfagent.%s.log", CFWORKDIR, VSYSNAME.nodename);
     MapName(filename);
 
-    PurgeItemList(&VSETUIDLIST, "SETUID/SETGID");
+    PurgeItemList(ctx, &VSETUIDLIST, "SETUID/SETGID");
 
     if (!CompareToFile(ctx, VSETUIDLIST, filename, a, pp))
     {

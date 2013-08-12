@@ -438,7 +438,11 @@ int main(int argc, char *argv[])
             /*         break; */
 
         default:
-            PrintHelp("mock-package-manager - pretend that you are managing packages!", OPTIONS, HINTS, false);
+            {
+                Writer *w = FileWriter(stdout);
+                GenericAgentWriteHelp(w, "mock-package-manager - pretend that you are managing packages!", OPTIONS, HINTS, false);
+                FileWriterDetach(w);
+            }
             exit(1);
         }
 

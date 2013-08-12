@@ -482,7 +482,7 @@ int VerifyNotInFstab(EvalContext *ctx, char *name, Attributes a, Promise *pp)
 
             for (ip = FSTABLIST; ip != NULL; ip = ip->next)
             {
-                if (FullTextMatch(regex, ip->name))
+                if (FullTextMatch(ctx, regex, ip->name))
                 {
                     cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "Deleting file system mounted on '%s'", host);
                     // Check host name matches too?

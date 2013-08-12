@@ -22,12 +22,6 @@
   included file COSL.txt.
 */
 
-/*********************************************************************/
-/*                                                                   */
-/*  Variable expansion in cf3                                        */
-/*                                                                   */
-/*********************************************************************/
-
 #include <expand.h>
 
 #include <misc_lib.h>
@@ -47,6 +41,8 @@
 #include <audit.h>
 #include <verify_vars.h>
 #include <string_lib.h>
+#include <conversion.h>
+#include <verify_classes.h>
 
 
 static void ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp, Rlist *listvars,
@@ -118,17 +114,12 @@ void ExpandPromise(EvalContext *ctx, Promise *pp, PromiseActuator *ActOnPromise,
 {
     Rlist *listvars = NULL;
     Rlist *scalars = NULL;
-    Promise *pcopy;
 
     // Set a default for packages here...general defaults that need to come before
     //fix me wth a general function SetMissingDefaults
     SetAnyMissingDefaults(ctx, pp);
 
-    ScopeClearSpecial(SPECIAL_SCOPE_MATCH);       /* in case we expand something expired accidentially */
-
-    EvalContextStackPushPromiseFrame(ctx, pp);
-
-    pcopy = DeRefCopyPromise(ctx, pp);
+    Promise *pcopy = DeRefCopyPromise(ctx, pp);
 
     MapIteratorsFromRval(ctx, PromiseGetBundle(pp)->name, &listvars, &scalars, (Rval) { pcopy->promiser, RVAL_TYPE_SCALAR });
 
@@ -151,11 +142,120 @@ void ExpandPromise(EvalContext *ctx, Promise *pp, PromiseActuator *ActOnPromise,
     PromiseDestroy(pcopy);
     RlistDestroy(listvars);
     RlistDestroy(scalars);
+}
 
+static void ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp, Rlist *listvars, PromiseActuator *ActOnPromise, void *param)
+{
+    Rlist *lol = NULL;
+    Promise *pexp;
+    const int cf_null_cutoff = 5;
+    const char *handle = PromiseGetHandle(pp);
+    char v[CF_MAXVARSIZE];
+    int cutoff = 0;
+
+    EvalContextStackPushPromiseFrame(ctx, pp, true);
+
+    lol = NewIterationContext(ctx, pp, listvars);
+
+    if (lol && EndOfIteration(lol))
+    {
+        DeleteIterationContext(lol);
+        EvalContextStackPopFrame(ctx);
+        return;
+    }
+
+    while (NullIterators(lol))
+    {
+        IncrementIterationContext(lol);
+
+        // In case a list is completely blank
+        if (cutoff++ > cf_null_cutoff)
+        {
+            break;
+        }
+    }
+
+    if (lol && EndOfIteration(lol))
+    {
+        DeleteIterationContext(lol);
+        EvalContextStackPopFrame(ctx);
+        return;
+    }
+
+    do
+    {
+        if (RlistLen(listvars) != RlistLen(lol))
+        {
+            ProgrammingError("Name list %d, dereflist %d", RlistLen(listvars), RlistLen(lol));
+        }
+
+        EvalContextStackPushPromiseIterationFrame(ctx, lol);
+        char number[CF_SMALLBUF];
+
+        /* Allow $(this.handle) etc variables */
+
+        if (PromiseGetBundle(pp)->source_path)
+        {
+            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promise_filename",PromiseGetBundle(pp)->source_path, DATA_TYPE_STRING);
+            snprintf(number, CF_SMALLBUF, "%zu", pp->offset.line);
+            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promise_linenumber", number, DATA_TYPE_STRING);
+        }
+
+        snprintf(v, CF_MAXVARSIZE, "%d", (int) getuid());
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser_uid", v, DATA_TYPE_INT);
+        snprintf(v, CF_MAXVARSIZE, "%d", (int) getgid());
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser_gid", v, DATA_TYPE_INT);
+
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "bundle", PromiseGetBundle(pp)->name, DATA_TYPE_STRING);
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "namespace", PromiseGetNamespace(pp), DATA_TYPE_STRING);
+
+        /* Must expand $(this.promiser) here for arg dereferencing in things
+           like edit_line and methods, but we might have to
+           adjust again later if the value changes  -- need to qualify this
+           so we don't expand too early for some other promsies */
+
+        if (pp->has_subbundles)
+        {
+            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser", pp->promiser, DATA_TYPE_STRING);
+        }
+
+        if (handle)
+        {
+            char tmp[CF_EXPANDSIZE];
+            // This ordering is necessary to get automated canonification
+            ExpandScalar(ctx, NULL, "this", handle, tmp);
+            CanonifyNameInPlace(tmp);
+            Log(LOG_LEVEL_DEBUG, "Expanded handle to '%s'", tmp);
+            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "handle", tmp, DATA_TYPE_STRING);
+        }
+        else
+        {
+            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "handle", PromiseID(pp), DATA_TYPE_STRING);
+        }
+
+        /* End special variables */
+
+        pexp = ExpandDeRefPromise(ctx, pp);
+
+        assert(ActOnPromise);
+        ActOnPromise(ctx, pexp, param);
+
+        if (strcmp(pp->parent_promise_type->name, "vars") == 0 || strcmp(pp->parent_promise_type->name, "meta") == 0)
+        {
+            VerifyVarPromise(ctx, pexp, true);
+        }
+
+        PromiseDestroy(pexp);
+
+        EvalContextStackPopFrame(ctx);
+        /* End thread monitor */
+    }
+    while (IncrementIterationContext(lol));
+
+    DeleteIterationContext(lol);
     EvalContextStackPopFrame(ctx);
 }
 
-/*********************************************************************/
 
 Rval ExpandDanglers(EvalContext *ctx, const char *ns, const char *scope, Rval rval, const Promise *pp)
 {
@@ -562,7 +662,6 @@ static bool ExpandOverflow(const char *str1, const char *str2)
 
 bool ExpandScalar(const EvalContext *ctx, const char *ns, const char *scope, const char *string, char buffer[CF_EXPANDSIZE])
 {
-    const char *sp;
     Rval rval;
     int varstring = false;
     char currentitem[CF_EXPANDSIZE], temp[CF_BUFSIZE], name[CF_MAXVARSIZE];
@@ -575,7 +674,7 @@ bool ExpandScalar(const EvalContext *ctx, const char *ns, const char *scope, con
         return false;
     }
 
-    for (sp = string; /* No exit */ ; sp++)     /* check for varitems */
+    for (const char *sp = string; /* No exit */ ; sp++)     /* check for varitems */
     {
         char var[CF_BUFSIZE];
 
@@ -654,50 +753,70 @@ bool ExpandScalar(const EvalContext *ctx, const char *ns, const char *scope, con
 
         increment = strlen(var) - 1;
 
-        if (IsExpandable(currentitem))
+        if (!IsExpandable(currentitem))
         {
-            return false;
-        }
-
-        DataType type = DATA_TYPE_NONE;
-        bool variable_found = false;
-        {
-            VarRef *ref = VarRefParseFromNamespaceAndScope(currentitem, ns, scope, CF_NS, '.');
-            variable_found = EvalContextVariableGet(ctx, ref, &rval, &type);
-            VarRefDestroy(ref);
-        }
-
-        if (variable_found)
-        {
-            switch (type)
+            DataType type = DATA_TYPE_NONE;
+            bool variable_found = false;
             {
-            case DATA_TYPE_STRING:
-            case DATA_TYPE_INT:
-            case DATA_TYPE_REAL:
+                VarRef *ref = VarRefParseFromNamespaceAndScope(currentitem, ns, scope, CF_NS, '.');
+                variable_found = EvalContextVariableGet(ctx, ref, &rval, &type);
+                VarRefDestroy(ref);
+            }
 
-                if (ExpandOverflow(buffer, (char *) rval.item))
+            if (variable_found)
+            {
+                switch (type)
                 {
-                    FatalError(ctx, "Can't expand varstring");
-                }
+                case DATA_TYPE_STRING:
+                case DATA_TYPE_INT:
+                case DATA_TYPE_REAL:
 
-                strlcat(buffer, (char *) rval.item, CF_EXPANDSIZE);
-                break;
+                    if (ExpandOverflow(buffer, (char *) rval.item))
+                    {
+                        FatalError(ctx, "Can't expand varstring");
+                    }
 
-            case DATA_TYPE_STRING_LIST:
-            case DATA_TYPE_INT_LIST:
-            case DATA_TYPE_REAL_LIST:
-            case DATA_TYPE_NONE:
-                if (type == DATA_TYPE_NONE)
-                {
-                    Log(LOG_LEVEL_DEBUG,
-                        "Can't expand inexistent variable '%s'", currentitem);
+                    strlcat(buffer, (char *) rval.item, CF_EXPANDSIZE);
+                    break;
+
+                case DATA_TYPE_STRING_LIST:
+                case DATA_TYPE_INT_LIST:
+                case DATA_TYPE_REAL_LIST:
+                case DATA_TYPE_NONE:
+                    if (type == DATA_TYPE_NONE)
+                    {
+                        Log(LOG_LEVEL_DEBUG,
+                            "Can't expand inexistent variable '%s'", currentitem);
+                    }
+                    else
+                    {
+                        Log(LOG_LEVEL_DEBUG,
+                            "Expecting scalar, can't expand list variable '%s'",
+                            currentitem);
+                    }
+
+                    if (varstring == '}')
+                    {
+                        snprintf(name, CF_MAXVARSIZE, "${%s}", currentitem);
+                    }
+                    else
+                    {
+                        snprintf(name, CF_MAXVARSIZE, "$(%s)", currentitem);
+                    }
+
+                    strlcat(buffer, name, CF_EXPANDSIZE);
+                    returnval = false;
+                    break;
+
+                default:
+                    Log(LOG_LEVEL_DEBUG, "Returning Unknown Scalar ('%s' => '%s')", string, buffer);
+                    return false;
+
                 }
-                else
-                {
-                    Log(LOG_LEVEL_DEBUG,
-                        "Expecting scalar, can't expand list variable '%s'",
-                        currentitem);
-                }
+            }
+            else
+            {
+                Log(LOG_LEVEL_DEBUG, "Currently non existent or list variable '%s'", currentitem);
 
                 if (varstring == '}')
                 {
@@ -710,29 +829,7 @@ bool ExpandScalar(const EvalContext *ctx, const char *ns, const char *scope, con
 
                 strlcat(buffer, name, CF_EXPANDSIZE);
                 returnval = false;
-                break;
-
-            default:
-                Log(LOG_LEVEL_DEBUG, "Returning Unknown Scalar ('%s' => '%s')", string, buffer);
-                return false;
-
             }
-        }
-        else
-        {
-            Log(LOG_LEVEL_DEBUG, "Currently non existent or list variable '%s'", currentitem);
-
-            if (varstring == '}')
-            {
-                snprintf(name, CF_MAXVARSIZE, "${%s}", currentitem);
-            }
-            else
-            {
-                snprintf(name, CF_MAXVARSIZE, "$(%s)", currentitem);
-            }
-
-            strlcat(buffer, name, CF_EXPANDSIZE);
-            returnval = false;
         }
 
         sp += increment;
@@ -755,112 +852,6 @@ bool ExpandScalar(const EvalContext *ctx, const char *ns, const char *scope, con
 
 /*********************************************************************/
 
-static void ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp, Rlist *listvars, PromiseActuator *ActOnPromise, void *param)
-{
-    Rlist *lol = NULL;
-    Promise *pexp;
-    const int cf_null_cutoff = 5;
-    const char *handle = PromiseGetHandle(pp);
-    char v[CF_MAXVARSIZE];
-    int cutoff = 0;
-
-    lol = NewIterationContext(ctx, pp, PromiseGetBundle(pp)->ns, PromiseGetBundle(pp)->name, listvars);
-
-    if (lol && EndOfIteration(lol))
-    {
-        DeleteIterationContext(lol);
-        return;
-    }
-
-    while (NullIterators(lol))
-    {
-        IncrementIterationContext(lol);
-
-        // In case a list is completely blank
-        if (cutoff++ > cf_null_cutoff)
-        {
-            break;
-        }
-    }
-
-    if (lol && EndOfIteration(lol))
-    {
-        DeleteIterationContext(lol);
-        return;
-    }
-
-    do
-    {
-        char number[CF_SMALLBUF];
-
-        /* Set scope "this" first to ensure list expansion ! */
-        EvalContextStackPushPromiseIterationFrame(ctx, pp);
-        ScopeDeRefListsInHashtable(NULL, "this", listvars, lol);
-
-        /* Allow $(this.handle) etc variables */
-
-        if (PromiseGetBundle(pp)->source_path)
-        {
-            ScopeNewSpecial(ctx, SPECIAL_SCOPE_THIS, "promise_filename",PromiseGetBundle(pp)->source_path, DATA_TYPE_STRING);
-            snprintf(number, CF_SMALLBUF, "%zu", pp->offset.line);
-            ScopeNewSpecial(ctx, SPECIAL_SCOPE_THIS, "promise_linenumber", number, DATA_TYPE_STRING);
-        }
-
-        snprintf(v, CF_MAXVARSIZE, "%d", (int) getuid());
-        ScopeNewSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser_uid", v, DATA_TYPE_INT);
-        snprintf(v, CF_MAXVARSIZE, "%d", (int) getgid());
-        ScopeNewSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser_gid", v, DATA_TYPE_INT);
-
-        ScopeNewSpecial(ctx, SPECIAL_SCOPE_THIS, "bundle", PromiseGetBundle(pp)->name, DATA_TYPE_STRING);
-        ScopeNewSpecial(ctx, SPECIAL_SCOPE_THIS, "namespace", PromiseGetNamespace(pp), DATA_TYPE_STRING);
-
-        /* Must expand $(this.promiser) here for arg dereferencing in things
-           like edit_line and methods, but we might have to
-           adjust again later if the value changes  -- need to qualify this
-           so we don't expand too early for some other promsies */
-
-        if (pp->has_subbundles)
-        {
-            ScopeNewSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser", pp->promiser, DATA_TYPE_STRING);
-        }
-
-        if (handle)
-        {
-            char tmp[CF_EXPANDSIZE];
-            // This ordering is necessary to get automated canonification
-            ExpandScalar(ctx, NULL, "this", handle, tmp);
-            CanonifyNameInPlace(tmp);
-            Log(LOG_LEVEL_DEBUG, "Expanded handle to '%s'", tmp);
-            ScopeNewSpecial(ctx, SPECIAL_SCOPE_THIS, "handle", tmp, DATA_TYPE_STRING);
-        }
-        else
-        {
-            ScopeNewSpecial(ctx, SPECIAL_SCOPE_THIS, "handle", PromiseID(pp), DATA_TYPE_STRING);
-        }
-
-        /* End special variables */
-
-        pexp = ExpandDeRefPromise(ctx, NULL, "this", pp);
-
-        assert(ActOnPromise);
-        ActOnPromise(ctx, pexp, param);
-
-        if (strcmp(pp->parent_promise_type->name, "vars") == 0 || strcmp(pp->parent_promise_type->name, "meta") == 0)
-        {
-            VerifyVarPromise(ctx, pexp, true);
-        }
-        
-        PromiseDestroy(pexp);
-
-        EvalContextStackPopFrame(ctx);
-        /* End thread monitor */
-    }
-    while (IncrementIterationContext(lol));
-
-    DeleteIterationContext(lol);
-}
-
-/*********************************************************************/
 
 Rval EvaluateFinalRval(EvalContext *ctx, const char *ns, const char *scope, Rval rval, int forcelist, const Promise *pp)
 {
@@ -932,7 +923,7 @@ Rval EvaluateFinalRval(EvalContext *ctx, const char *ns, const char *scope, Rval
             }
             else
             {
-                if (ScopeExists(NULL, "this"))
+                if (EvalContextStackCurrentPromise(ctx))
                 {
                     if (IsCf3VarString(rp->item))
                     {
@@ -1017,18 +1008,216 @@ static void CopyLocalizedScalarsToBundleScope(EvalContext *ctx, const Bundle *bu
     }
 }
 
-/*********************************************************************/
-/* Tools                                                             */
-/*********************************************************************/
-
-int IsExpandable(const char *str)
+static void ResolveCommonClassPromises(EvalContext *ctx, PromiseType *pt)
 {
-    const char *sp;
+    assert(strcmp("classes", pt->name) == 0);
+    assert(strcmp(pt->parent_bundle->type, "common") == 0);
+
+    for (size_t i = 0; i < SeqLength(pt->promises); i++)
+    {
+        Promise *pp = SeqAt(pt->promises, i);
+
+        char *sp = NULL;
+        if (VarClassExcluded(ctx, pp, &sp))
+        {
+            if (LEGACY_OUTPUT)
+            {
+                Log(LOG_LEVEL_VERBOSE, "\n");
+                Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . ");
+                Log(LOG_LEVEL_VERBOSE, "Skipping whole next promise (%s), as var-context %s is not relevant", pp->promiser, sp);
+                Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . ");
+            }
+            else
+            {
+                Log(LOG_LEVEL_VERBOSE, "Skipping next promise '%s', as var-context '%s' is not relevant", pp->promiser, sp);
+            }
+            continue;
+        }
+
+        ExpandPromise(ctx, pp, VerifyClassPromise, NULL);
+    }
+}
+
+static void ResolveVariablesPromises(EvalContext *ctx, PromiseType *pt)
+{
+    assert(strcmp("vars", pt->name) == 0);
+
+    for (size_t i = 0; i < SeqLength(pt->promises); i++)
+    {
+        Promise *pp = SeqAt(pt->promises, i);
+        EvalContextStackPushPromiseFrame(ctx, pp, false);
+        EvalContextStackPushPromiseIterationFrame(ctx, NULL);
+        VerifyVarPromise(ctx, pp, false);
+        EvalContextStackPopFrame(ctx);
+        EvalContextStackPopFrame(ctx);
+    }
+}
+
+void BundleResolve(EvalContext *ctx, Bundle *bundle)
+{
+    Log(LOG_LEVEL_VERBOSE, "Resolving variables in bundle '%s' '%s'", bundle->type, bundle->name);
+
+    for (size_t j = 0; j < SeqLength(bundle->promise_types); j++)
+    {
+        PromiseType *sp = SeqAt(bundle->promise_types, j);
+
+        if (strcmp(bundle->type, "common") == 0 && strcmp(sp->name, "classes") == 0)
+        {
+            ResolveCommonClassPromises(ctx, sp);
+        }
+    }
+
+    for (size_t j = 0; j < SeqLength(bundle->promise_types); j++)
+    {
+        PromiseType *sp = SeqAt(bundle->promise_types, j);
+
+        if (strcmp(sp->name, "vars") == 0)
+        {
+            ResolveVariablesPromises(ctx, sp);
+        }
+    }
+
+}
+
+static void ResolveControlBody(EvalContext *ctx, GenericAgentConfig *config, const Body *control_body)
+{
+    const ConstraintSyntax *body_syntax = NULL;
+    Rval returnval;
+
+    assert(strcmp(control_body->name, "control") == 0);
+
+    for (int i = 0; CONTROL_BODIES[i].constraints != NULL; i++)
+    {
+        body_syntax = CONTROL_BODIES[i].constraints;
+
+        if (strcmp(control_body->type, CONTROL_BODIES[i].body_type) == 0)
+        {
+            break;
+        }
+    }
+
+    if (body_syntax == NULL)
+    {
+        FatalError(ctx, "Unknown agent");
+    }
+
+    char scope[CF_BUFSIZE];
+    snprintf(scope, CF_BUFSIZE, "%s_%s", control_body->name, control_body->type);
+    Log(LOG_LEVEL_DEBUG, "Initiate control variable convergence for scope '%s'", scope);
+
+    EvalContextStackPushBodyFrame(ctx, control_body, NULL);
+
+    for (size_t i = 0; i < SeqLength(control_body->conlist); i++)
+    {
+        Constraint *cp = SeqAt(control_body->conlist, i);
+
+        if (!IsDefinedClass(ctx, cp->classes, NULL))
+        {
+            continue;
+        }
+
+        if (strcmp(cp->lval, CFG_CONTROLBODY[COMMON_CONTROL_BUNDLESEQUENCE].lval) == 0)
+        {
+            returnval = ExpandPrivateRval(ctx, NULL, scope, cp->rval);
+        }
+        else
+        {
+            returnval = EvaluateFinalRval(ctx, NULL, scope, cp->rval, true, NULL);
+        }
+
+        VarRef *ref = VarRefParseFromScope(cp->lval, scope);
+        EvalContextVariableRemove(ctx, ref);
+
+        if (!EvalContextVariablePut(ctx, ref, returnval, ConstraintSyntaxGetDataType(body_syntax, cp->lval)))
+        {
+            Log(LOG_LEVEL_ERR, "Rule from %s at/before line %zu", control_body->source_path, cp->offset.line);
+        }
+
+        VarRefDestroy(ref);
+
+        if (strcmp(cp->lval, CFG_CONTROLBODY[COMMON_CONTROL_OUTPUT_PREFIX].lval) == 0)
+        {
+            strncpy(VPREFIX, returnval.item, CF_MAXVARSIZE);
+        }
+
+        if (strcmp(cp->lval, CFG_CONTROLBODY[COMMON_CONTROL_DOMAIN].lval) == 0)
+        {
+            strcpy(VDOMAIN, cp->rval.item);
+            Log(LOG_LEVEL_VERBOSE, "SET domain = %s", VDOMAIN);
+            EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_SYS, "domain");
+            EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_SYS, "fqhost");
+            snprintf(VFQNAME, CF_MAXVARSIZE, "%s.%s", VUQNAME, VDOMAIN);
+            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "fqhost", VFQNAME, DATA_TYPE_STRING);
+            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "domain", VDOMAIN, DATA_TYPE_STRING);
+            EvalContextHeapAddHard(ctx, VDOMAIN);
+        }
+
+        if (strcmp(cp->lval, CFG_CONTROLBODY[COMMON_CONTROL_IGNORE_MISSING_INPUTS].lval) == 0)
+        {
+            Log(LOG_LEVEL_VERBOSE, "SET ignore_missing_inputs %s", RvalScalarValue(cp->rval));
+            config->ignore_missing_inputs = BooleanFromString(cp->rval.item);
+        }
+
+        if (strcmp(cp->lval, CFG_CONTROLBODY[COMMON_CONTROL_IGNORE_MISSING_BUNDLES].lval) == 0)
+        {
+            Log(LOG_LEVEL_VERBOSE, "SET ignore_missing_bundles %s", RvalScalarValue(cp->rval));
+            config->ignore_missing_bundles = BooleanFromString(cp->rval.item);
+        }
+
+        if (strcmp(cp->lval, CFG_CONTROLBODY[COMMON_CONTROL_GOALPATTERNS].lval) == 0)
+        {
+            /* Ignored */
+            continue;
+        }
+
+        RvalDestroy(returnval);
+    }
+
+    EvalContextStackPopFrame(ctx);
+}
+
+void PolicyResolve(EvalContext *ctx, Policy *policy, GenericAgentConfig *config)
+{
+    for (size_t i = 0; i < SeqLength(policy->bundles); i++)
+    {
+        Bundle *bundle = SeqAt(policy->bundles, i);
+        if (strcmp("common", bundle->type) == 0)
+        {
+            EvalContextStackPushBundleFrame(ctx, bundle, NULL, false);
+            BundleResolve(ctx, bundle);
+            EvalContextStackPopFrame(ctx);
+        }
+    }
+
+    for (size_t i = 0; i < SeqLength(policy->bundles); i++)
+    {
+        Bundle *bundle = SeqAt(policy->bundles, i);
+        if (strcmp("common", bundle->type) != 0)
+        {
+            EvalContextStackPushBundleFrame(ctx, bundle, NULL, false);
+            BundleResolve(ctx, bundle);
+            EvalContextStackPopFrame(ctx);
+        }
+    }
+
+    for (size_t i = 0; i < SeqLength(policy->bodies); i++)
+    {
+        Body *bdp = SeqAt(policy->bodies, i);
+
+        if (strcmp(bdp->name, "control") == 0)
+        {
+            ResolveControlBody(ctx, config, bdp);
+        }
+    }
+}
+
+bool IsExpandable(const char *str)
+{
     char left = 'x', right = 'x';
     int dollar = false;
     int bracks = 0, vars = 0;
 
-    for (sp = str; *sp != '\0'; sp++)   /* check for varitems */
+    for (const char *sp = str; *sp != '\0'; sp++)   /* check for varitems */
     {
         switch (*sp)
         {
@@ -1080,7 +1269,7 @@ int IsExpandable(const char *str)
         Log(LOG_LEVEL_DEBUG,
             "Expanding variable '%s': found %d variables", str, vars);
     }
-    return vars;
+    return (vars > 0);
 }
 
 /*********************************************************************/

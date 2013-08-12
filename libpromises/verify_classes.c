@@ -31,9 +31,9 @@
 #include <rlist.h>
 #include <expand.h>
 #include <promises.h>
-#include <hashes.h>
 #include <conversion.h>
 #include <logic_expressions.h>
+#include <string_lib.h>
 
 
 static int EvalClassExpression(EvalContext *ctx, Constraint *cp, Promise *pp);
@@ -48,7 +48,7 @@ void VerifyClassPromise(EvalContext *ctx, Promise *pp, ARG_UNUSED void *param)
 
     a = GetClassContextAttributes(ctx, pp);
 
-    if (!FullTextMatch("[a-zA-Z0-9_]+", pp->promiser))
+    if (!FullTextMatch(ctx, "[a-zA-Z0-9_]+", pp->promiser))
     {
         Log(LOG_LEVEL_VERBOSE, "Class identifier '%s' contains illegal characters - canonifying", pp->promiser);
         snprintf(pp->promiser, strlen(pp->promiser) + 1, "%s", CanonifyName(pp->promiser));
@@ -244,7 +244,7 @@ static int EvalClassExpression(EvalContext *ctx, Constraint *cp, Promise *pp)
         }
 
         snprintf(splay, CF_MAXVARSIZE, "%s+%s+%ju", VFQNAME, VIPADDRESS, (uintmax_t)getuid());
-        hash = (double) OatHash(splay, CF_HASHTABLESIZE);
+        hash = (double) StringHash(splay, 0, CF_HASHTABLESIZE);
         n = (int) (total * hash / (double) CF_HASHTABLESIZE);
 
         for (rp = (Rlist *) cp->rval.item, i = 0; rp != NULL; rp = rp->next, i++)

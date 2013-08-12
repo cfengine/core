@@ -66,7 +66,7 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv);
 void ThisAgentInit(void);
 static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *config, ExecConfig *exec_config);
 #ifndef __MINGW32__
-static void Apoptosis(void);
+static void Apoptosis(EvalContext *ctx);
 #endif
 
 static bool LocalExecInThread(const ExecConfig *config);
@@ -154,8 +154,6 @@ int main(int argc, char *argv[])
         GenericAgentConfigSetInputFile(config, GetWorkDir(), "failsafe.cf");
         policy = GenericAgentLoadPolicy(ctx, config);
     }
-
-    CheckForPolicyHub(ctx);
 
     ThisAgentInit();
 
@@ -264,11 +262,19 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             break;
 
         case 'V':
-            PrintVersion();
+            {
+                Writer *w = FileWriter(stdout);
+                GenericAgentWriteVersion(w);
+                FileWriterDetach(w);
+            }
             exit(0);
 
         case 'h':
-            PrintHelp("cf-execd", OPTIONS, HINTS, true);
+            {
+                Writer *w = FileWriter(stdout);
+                GenericAgentWriteHelp(w, "cf-execd", OPTIONS, HINTS, true);
+                FileWriterDetach(w);
+            }
             exit(0);
 
         case 'M':
@@ -295,7 +301,11 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             break;
 
         default:
-            PrintHelp("cf-execd", OPTIONS, HINTS, true);
+            {
+                Writer *w = FileWriter(stdout);
+                GenericAgentWriteHelp(w, "cf-execd", OPTIONS, HINTS, true);
+                FileWriterDetach(w);
+            }
             exit(1);
 
         }
@@ -336,7 +346,7 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, E
     if (!ONCE)
     {
         /* Kill previous instances of cf-execd if those are still running */
-        Apoptosis();
+        Apoptosis(ctx);
     }
 #endif
 
@@ -433,12 +443,12 @@ static bool LocalExecInThread(const ExecConfig *config)
 
 #ifndef __MINGW32__
 
-static void Apoptosis(void)
+static void Apoptosis(EvalContext *ctx)
 {
     static char promiser_buf[CF_SMALLBUF];
     snprintf(promiser_buf, sizeof(promiser_buf), "%s/bin/cf-execd", CFWORKDIR);
 
-    if (LoadProcessTable(&PROCESSTABLE))
+    if (LoadProcessTable(ctx, &PROCESSTABLE))
     {
         char myuid[32];
         snprintf(myuid, 32, "%d", (int)getuid());
@@ -451,7 +461,7 @@ static void Apoptosis(void)
             .process_result = "process_owner",
         };
 
-        Item *killlist = SelectProcesses(PROCESSTABLE, promiser_buf, process_select, true);
+        Item *killlist = SelectProcesses(ctx, PROCESSTABLE, promiser_buf, process_select, true);
 
         for (Item *ip = killlist; ip != NULL; ip = ip->next)
         {
@@ -487,11 +497,11 @@ typedef enum
 
 static Reload CheckNewPromises(EvalContext *ctx, const GenericAgentConfig *config, const Rlist *input_files)
 {
-    if (NewPromiseProposals(ctx, config, input_files))
+    if (GenericAgentIsPolicyReloadNeeded(ctx, config, input_files))
     {
         Log(LOG_LEVEL_VERBOSE, "New promises detected...");
 
-        if (CheckPromises(config))
+        if (GenericAgentCheckPromises(config))
         {
             return RELOAD_FULL;
         }
@@ -524,12 +534,10 @@ static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *c
 
         Log(LOG_LEVEL_INFO, "Re-reading promise file '%s'", config->input_file);
 
-        EvalContextHeapClear(ctx);
+        EvalContextClear(ctx);
 
         DeleteItemList(IPADDRESSES);
         IPADDRESSES = NULL;
-
-        ScopeDeleteAll();
 
         strcpy(VDOMAIN, "undefined.domain");
 
@@ -542,7 +550,7 @@ static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *c
             free(existing_policy_server);
         }
 
-        ScopeNewSpecial(ctx, SPECIAL_SCOPE_SYS, "policy_hub", POLICY_SERVER, DATA_TYPE_STRING);
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "policy_hub", POLICY_SERVER, DATA_TYPE_STRING);
 
         GetNameInfo3(ctx, AGENT_TYPE_EXECUTOR);
         GetInterfacesInfo(ctx);
@@ -565,14 +573,10 @@ static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *c
     {
         /* Environment reload */
 
-        EvalContextHeapClear(ctx);
+        EvalContextClear(ctx);
 
         DeleteItemList(IPADDRESSES);
         IPADDRESSES = NULL;
-
-        ScopeClearSpecial(SPECIAL_SCOPE_THIS);
-        ScopeClearSpecial(SPECIAL_SCOPE_MON);
-        ScopeClearSpecial(SPECIAL_SCOPE_SYS);
 
         GetInterfacesInfo(ctx);
         Get3Environment(ctx, AGENT_TYPE_EXECUTOR);

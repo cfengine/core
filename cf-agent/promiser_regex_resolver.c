@@ -144,7 +144,7 @@ void LocateFilePromiserGroup(EvalContext *ctx, char *wildpath, Promise *pp, void
                     continue;
                 }
 
-                if (FullTextMatch(regex, dirp->d_name))
+                if (FullTextMatch(ctx, regex, dirp->d_name))
                 {
                     Log(LOG_LEVEL_DEBUG, "Link '%s' matched regex '%s'", dirp->d_name, regex);
                 }
@@ -182,14 +182,14 @@ void LocateFilePromiserGroup(EvalContext *ctx, char *wildpath, Promise *pp, void
                     snprintf(nextbufferOrig, sizeof(nextbufferOrig), "%s", nextbuffer);
                     MapNameForward(nextbuffer);
 
-                    if (!FullTextMatch(pp->promiser, nextbuffer))
+                    if (!FullTextMatch(ctx, pp->promiser, nextbuffer))
                     {
                         Log(LOG_LEVEL_DEBUG, "Error recomputing references for '%s' in '%s'", pp->promiser, nextbuffer);
                     }
 
                     /* If there were back references there could still be match.x vars to expand */
 
-                    pcopy = ExpandDeRefPromise(ctx, NULL, NULL, pp);
+                    pcopy = ExpandDeRefPromise(ctx, pp);
                     (*fnptr) (ctx, nextbufferOrig, pcopy);
                     PromiseDestroy(pcopy);
                 }

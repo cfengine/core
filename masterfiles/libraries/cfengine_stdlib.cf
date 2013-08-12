@@ -1,5 +1,5 @@
 ############################################################################
-#  Copyright (C) Cfengine AS
+#  Copyright (C) CFEngine AS
 #
 #  This program is free software; you can redistribute it and/or modify it
 #  under the terms of the GNU Lesser General Public License LGPL as published by the
@@ -11,16 +11,16 @@
 #  GNU General Public License for more details.
 #
 #  To the extent this program is licensed as part of the Enterprise
-#  versions of Cfengine, the applicable Commerical Open Source License
+#  versions of CFEngine, the applicable Commerical Open Source License
 #  (COSL) may apply to this file if you as a licensee so wish it. See
 #  included file COSL.txt.
 ###########################################################################
 #
-# Cfengine Community Open Promise-Body Library
+# CFEngine Community Open Promise-Body Library
 #
-# This initiative started by Cfengine promotes a
+# This initiative started by CFEngine promotes a
 # standardized set of names and promise specifications
-# for template functionality within Cfengine 3.
+# for template functionality within CFEngine 3.
 #
 # The aim is to promote an industry standard for
 # naming of configuration patterns, leading to a
@@ -30,7 +30,7 @@
 # minimal to assist readability and comprehensibility.
 
 # Contributions to this file are voluntarily given to
-# the cfengine community, and are moderated by Cfengine.
+# the cfengine community, and are moderated by CFEngine.
 # No liability or warranty for misuse is implied.
 #
 # If you add to this file, please try to make the
@@ -39,10 +39,10 @@
 # the online docs
 #
 
-# For Cfengine Core: 3.5.0 and older
+# For CFEngine Core: 3.4.x (use lib/3.N for CFEngine 3.5.x and newer)
 
 ###################################################
-# If you find Cfengine useful, please consider    #
+# If you find CFEngine useful, please consider    #
 # purchasing a commercial version of the software.#
 ###################################################
 
@@ -387,7 +387,7 @@ bundle edit_line set_variable_values_ini(tab, sectionName)
 
 }
 
-bundle edit_line set_quoted_values(v) 
+bundle edit_line set_quoted_values(v)
 {
       # Sets the RHS of variables in shell-like files
       #   that is:
@@ -1476,7 +1476,7 @@ body depth_search include_base
       include_basedir => "true";
 }
 
-body depth_search recurse_with_base(d) 
+body depth_search recurse_with_base(d)
 {
       depth => "$(d)";
       xdev  => "true";
@@ -1764,6 +1764,9 @@ bundle common debian_knowledge
       "call_apt_get" string => "$(apt_prefix) $(paths.path[apt_get])";
       "call_aptitude" string => "$(apt_prefix) $(paths.path[aptitude])";
       "dpkg_options" string => "-o Dpkg::Options::=--force-confold -o Dpkg::Options::=--force-confdef";
+
+      "dpkg_compare_equal" string => "$(call_dpkg) --compare-versions $(v1) eq $(v2)";
+      "dpkg_compare_less" string => "$(call_dpkg) --compare-versions $(v1) lt $(v2)";
 }
 
 body package_method apt
@@ -1777,6 +1780,10 @@ body package_method apt
 
       # set it to "0" to avoid caching of list during upgrade
       package_list_update_ifelapsed => "240";
+
+      # make correct version comparisons
+      package_version_less_command => "$(debian_knowledge.dpkg_compare_less)";
+      package_version_equal_command => "$(debian_knowledge.dpkg_compare_equal)";
 
     have_aptitude::
       package_add_command => "$(debian_knowledge.call_aptitude) $(debian_knowledge.dpkg_options) --assume-yes install";
@@ -1824,6 +1831,10 @@ body package_method apt_get
       # set it to "0" to avoid caching of list during upgrade
       package_list_update_ifelapsed => "240";
 
+      # make correct version comparisons
+      package_version_less_command => "$(debian_knowledge.dpkg_compare_less)";
+      package_version_equal_command => "$(debian_knowledge.dpkg_compare_equal)";
+
       # Target a specific release, such as backports
       package_add_command => "$(debian_knowledge.call_apt_get) $(debian_knowledge.dpkg_options) --yes install";
       package_list_update_command => "$(debian_knowledge.call_apt_get) update";
@@ -1849,6 +1860,10 @@ body package_method apt_get_release(release)
 
       # set it to "0" to avoid caching of list during upgrade
       package_list_update_ifelapsed => "240";
+
+      # make correct version comparisons
+      package_version_less_command => "$(debian_knowledge.dpkg_compare_less)";
+      package_version_equal_command => "$(debian_knowledge.dpkg_compare_equal)";
 
       # Target a specific release, such as backports
       package_add_command => "$(debian_knowledge.call_apt_get) $(debian_knowledge.dpkg_options) --yes --target-release $(release) install";
@@ -1902,6 +1917,10 @@ body package_method dpkg_version(repo)
       package_delete_command => "$(debian_knowledge.call_dpkg) --purge";
       package_update_command =>  "$(debian_knowledge.call_dpkg) --install";
       package_patch_command =>  "$(debian_knowledge.call_dpkg) --install";
+
+      # make correct version comparisons
+      package_version_less_command => "$(debian_knowledge.dpkg_compare_less)";
+      package_version_equal_command => "$(debian_knowledge.dpkg_compare_equal)";
 }
 
 ##
@@ -1996,6 +2015,11 @@ body package_method msi_explicit(repo)
 
 ##
 
+# This package_method uses yum to install, update and list packages.
+#
+# It will use "rpm -e" to remove packages. Please note that if several packages
+# with the same name but varying versions or architectures are installed,
+# "rpm -e" will return an error and not delete any of them.
 body package_method yum
 {
       package_changes => "bulk";
@@ -2010,6 +2034,9 @@ body package_method yum
 
       package_installed_regex => ".*(installed|\s+@).*";
       package_name_convention => "$(name)-$(version).$(arch)";
+
+      # just give the package name to rpm to delete, otherwise it gets "name.*" (from package_name_convention above)
+      package_delete_convention => "$(name)";
 
       # set it to "0" to avoid caching of list during upgrade
       package_list_update_command => "/usr/bin/yum --quiet check-update";
@@ -2034,6 +2061,10 @@ body package_method yum_rpm
 # Contributed by Trond Hasle Amundsen
 # More efficient package method for RPM-based systems - uses rpm
 # instead of yum to list installed packages
+#
+# It will use "rpm -e" to remove packages. Please note that if several packages
+# with the same name but varying versions or architectures are installed,
+# "rpm -e" will return an error and not delete any of them.
 
 {
       package_changes => "bulk";
@@ -2046,6 +2077,9 @@ body package_method yum_rpm
 
       package_installed_regex => ".*";
       package_name_convention => "$(name)-$(version).$(arch)";
+
+      # just give the package name to rpm to delete, otherwise it gets "name-*.*" (from package_name_convention above)
+      package_delete_convention => "$(name)";
 
       # set it to "0" to avoid caching of list during upgrade
       package_list_update_command => "/usr/bin/yum --quiet check-update";
@@ -2131,7 +2165,7 @@ body package_method yum_group
 #      package_method   =>   yum_group;
 #
 
-{ 
+{
       package_add_command             =>  "/usr/bin/yum groupinstall -y";
       package_changes                 =>  "bulk";
       package_delete_command          =>  "/usr/bin/yum groupremove -y";
@@ -2591,6 +2625,10 @@ body package_method generic
       package_name_convention => "$(name)";
       package_list_update_ifelapsed => "240";		# 4 hours
 
+      # make correct version comparisons
+      package_version_less_command => "$(debian_knowledge.dpkg_compare_less)";
+      package_version_equal_command => "$(debian_knowledge.dpkg_compare_equal)";
+
     debian.have_aptitude::
       package_add_command => "$(debian_knowledge.call_aptitude) $(debian_knowledge.dpkg_options) --assume-yes install";
       package_list_update_command => "/usr/bin/aptitude update";
@@ -2938,7 +2976,7 @@ bundle agent standard_services(service,state)
       "restartcommand[auditd]" string => "/etc/init.d/auditd restart";
       "reloadcommand[auditd]"  string => "/etc/init.d/auditd reload";
       "stopcommand[auditd]"    string => "/etc/init.d/auditd stop";
-      "pattern[auditd]"        string => ".*auditd.*";
+      "pattern[auditd]"        string => ".*auditd$";
 
       "startcommand[autofs]"   string => "/etc/init.d/autofs start";
       "restartcommand[autofs]" string => "/etc/init.d/autofs restart";
@@ -3192,6 +3230,12 @@ bundle agent standard_services(service,state)
       "stopcommand[restorecond]"    string => "/etc/init.d/restorecond stop";
       "pattern[restorecond]"        string => ".*restorecond.*";
 
+      "startcommand[rhnsd]"   string => "/sbin/service rhnsd start";
+      "restartcommand[rhnsd]" string => "/sbin/service rhnsd restart";
+      "reloadcommand[rhnsd]"  string => "/sbin/service rhnsd reload";
+      "stopcommand[rhnsd]"    string => "/sbin/service rhnsd stop";
+      "pattern[rhnsd]"        string => "rhnsd";
+
       "startcommand[rpcgssd]"   string => "/etc/init.d/rpcgssd start";
       "restartcommand[rpcgssd]" string => "/etc/init.d/rpcgssd restart";
       "reloadcommand[rpcgssd]"  string => "/etc/init.d/rpcgssd reload";
@@ -3221,6 +3265,12 @@ bundle agent standard_services(service,state)
       "reloadcommand[smartd]"  string => "/etc/init.d/smartd reload";
       "stopcommand[smartd]"    string => "/etc/init.d/smartd stop";
       "pattern[smartd]"        string => ".*smartd.*";
+
+      "startcommand[snmpd]"   string => "/etc/init.d/snmpd start";
+      "restartcommand[snmpd]" string => "/sbin/service snmpd restart";
+      "reloadcommand[snmpd]"  string => "/sbin/service snmpd reload";
+      "stopcommand[snmpd]"    string => "/etc/init.d/snmpd stop";
+      "pattern[snmpd]"        string => "/usr/sbin/snmpd";
 
       "startcommand[svnserve]"   string => "/etc/init.d/svnserve start";
       "restartcommand[svnserve]" string => "/etc/init.d/svnserve restart";
@@ -3373,6 +3423,12 @@ bundle agent standard_services(service,state)
       "reloadcommand[ssh]"  string => "/etc/init.d/ssh reload";
       "stopcommand[ssh]"    string => "/etc/init.d/ssh stop";
       "pattern[ssh]"        string => ".*sshd.*";
+
+      "startcommand[snmpd]"   string => "/etc/init.d/snmpd start";
+      "restartcommand[snmpd]" string => "/etc/init.d/snmpd restart";
+      "reloadcommand[snmpd]"  string => "/etc/init.d/snmpd reload";
+      "stopcommand[snmpd]"    string => "/etc/init.d/snmpd stop";
+      "pattern[snmpd]"        string => "/usr/sbin/snmpd";
 
 
       # METHODS that implement these ............................................

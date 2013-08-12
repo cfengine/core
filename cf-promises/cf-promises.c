@@ -31,6 +31,7 @@
 #include <parser.h>
 #include <sysinfo.h>
 #include <man.h>
+#include <bootstrap.h>
 
 #include <time.h>
 
@@ -116,8 +117,6 @@ int main(int argc, char *argv[])
     {
         ShowPromises(policy->bundles, policy->bodies);
     }
-
-    CheckForPolicyHub(ctx);
 
     switch (config->agent_specific.common.policy_output_format)
     {
@@ -270,11 +269,19 @@ GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             break;
 
         case 'V':
-            PrintVersion();
+            {
+                Writer *w = FileWriter(stdout);
+                GenericAgentWriteVersion(w);
+                FileWriterDetach(w);
+            }
             exit(0);
 
         case 'h':
-            PrintHelp("cf-promises", OPTIONS, HINTS, true);
+            {
+                Writer *w = FileWriter(stdout);
+                GenericAgentWriteHelp(w, "cf-promises", OPTIONS, HINTS, true);
+                FileWriterDetach(w);
+            }
             exit(0);
 
         case 'M':
@@ -313,7 +320,11 @@ GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             break;
 
         default:
-            PrintHelp("cf-promises", OPTIONS, HINTS, true);
+            {
+                Writer *w = FileWriter(stdout);
+                GenericAgentWriteHelp(w, "cf-promises", OPTIONS, HINTS, true);
+                FileWriterDetach(w);
+            }
             exit(1);
 
         }

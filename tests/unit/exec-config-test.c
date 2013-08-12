@@ -4,7 +4,7 @@
 
 #include <parser.h>
 #include <env_context.h>
-#include <generic_agent.h>
+#include <expand.h>
 
 static Policy *LoadPolicy(const char *filename)
 {
@@ -56,7 +56,7 @@ static void test_load(void)
     // provide a full body executor control and check that all options are collected
     {
         Policy *p = LoadPolicy("body_executor_control_full.cf");
-        HashControls(ctx, p, agent_config);
+        PolicyResolve(ctx, p, agent_config);
 
         ExecConfigUpdate(ctx, p, c);
 
@@ -85,7 +85,7 @@ static void test_load(void)
     {
         {
             Policy *p = LoadPolicy("body_executor_control_agent_expireafter_only.cf");
-            HashControls(ctx, p, agent_config);
+            PolicyResolve(ctx, p, agent_config);
 
             ExecConfigUpdate(ctx, p, c);
 

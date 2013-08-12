@@ -32,12 +32,16 @@
 
 typedef struct
 {
+    size_t hash;
     char *ns;
     char *scope;
     char *lval;
     char **indices;
     size_t num_indices;
 } VarRef;
+
+VarRef *VarRefCopy(const VarRef *ref);
+VarRef *VarRefCopyLocalized(const VarRef *ref);
 
 VarRef *VarRefParse(const char *var_ref_string);
 
@@ -60,5 +64,9 @@ VarRef *VarRefDeMangle(const char *mangled_var_ref);
 void VarRefSetMeta(VarRef *ref, bool enabled);
 
 bool VarRefIsQualified(const VarRef *ref);
+void VarRefQualify(VarRef *ref, const char *ns, const char *scope);
+void VarRefAddIndex(VarRef *ref, const char *index);
+
+int VarRefCompare(const VarRef *a, const VarRef *b);
 
 #endif

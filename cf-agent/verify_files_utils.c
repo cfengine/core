@@ -91,7 +91,7 @@ static int cf_stat(char *file, struct stat *buf, FileCopy fc, AgentConnection *c
 #ifndef __MINGW32__
 static int cf_readlink(EvalContext *ctx, char *sourcefile, char *linkbuf, int buffsize, Attributes attr, Promise *pp, AgentConnection *conn);
 #endif
-static int SkipDirLinks(char *path, const char *lastnode, Recursion r);
+static int SkipDirLinks(EvalContext *ctx, char *path, const char *lastnode, Recursion r);
 static int DeviceBoundary(struct stat *sb, dev_t rootdevice);
 static void LinkCopy(EvalContext *ctx, char *sourcefile, char *destfile, struct stat *sb, Attributes attr, Promise *pp, CompressedArray **inode_cache, AgentConnection *conn);
 
@@ -113,7 +113,7 @@ int VerifyFileLeaf(EvalContext *ctx, char *path, struct stat *sb, Attributes att
 {
 /* Here we can assume that we are in the parent directory of the leaf */
 
-    if (attr.haveselect && !SelectLeaf(path, sb, attr.select))
+    if (attr.haveselect && !SelectLeaf(ctx, path, sb, attr.select))
     {
         Log(LOG_LEVEL_DEBUG, "Skipping non-selected file '%s'", path);
         return false;
@@ -123,7 +123,7 @@ int VerifyFileLeaf(EvalContext *ctx, char *path, struct stat *sb, Attributes att
 
 /* We still need to augment the scope of context "this" for commands */
 
-    ScopeNewSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser", path, DATA_TYPE_STRING);        // Parameters may only be scalars
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser", path, DATA_TYPE_STRING);        // Parameters may only be scalars
 
     if (attr.transformer != NULL)
     {
@@ -163,7 +163,7 @@ int VerifyFileLeaf(EvalContext *ctx, char *path, struct stat *sb, Attributes att
         }
     }
 
-    ScopeDeleteSpecial(SPECIAL_SCOPE_THIS, "promiser");
+    EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser");
     return true;
 }
 
@@ -200,13 +200,13 @@ static void CfCopyFile(EvalContext *ctx, char *sourcefile, char *destfile, struc
         return;
     }
 
-    if (attr.haveselect && !SelectLeaf(sourcefile, &ssb, attr.select))
+    if (attr.haveselect && !SelectLeaf(ctx, sourcefile, &ssb, attr.select))
     {
         Log(LOG_LEVEL_DEBUG, "Skipping non-selected file '%s'", sourcefile);
         return;
     }
 
-    if (RlistIsInListOfRegex(SINGLE_COPY_CACHE, destfile))
+    if (RlistIsInListOfRegex(ctx, SINGLE_COPY_CACHE, destfile))
     {
         Log(LOG_LEVEL_INFO, "Skipping single-copied file '%s'", destfile);
         return;
@@ -216,9 +216,9 @@ static void CfCopyFile(EvalContext *ctx, char *sourcefile, char *destfile, struc
     {
         lastnode = ReadLastNode(sourcefile);
 
-        if (MatchRlistItem(attr.copy.link_instead, lastnode))
+        if (MatchRlistItem(ctx, attr.copy.link_instead, lastnode))
         {
-            if (MatchRlistItem(attr.copy.copy_links, lastnode))
+            if (MatchRlistItem(ctx, attr.copy.copy_links, lastnode))
             {
                 Log(LOG_LEVEL_INFO,
                       "File %s matches both copylink_patterns and linkcopy_patterns - promise loop (skipping)!",
@@ -346,7 +346,7 @@ static void CfCopyFile(EvalContext *ctx, char *sourcefile, char *destfile, struc
                     RlistPrependScalarIdemp(&SINGLE_COPY_CACHE, destfile);
                 }
 
-                if (MatchRlistItem(AUTO_DEFINE_LIST, destfile))
+                if (MatchRlistItem(ctx, AUTO_DEFINE_LIST, destfile))
                 {
                     FileAutoDefine(ctx, destfile, PromiseGetNamespace(pp));
                 }
@@ -462,7 +462,7 @@ static void CfCopyFile(EvalContext *ctx, char *sourcefile, char *destfile, struc
                     return;
                 }
 
-                if (MatchRlistItem(AUTO_DEFINE_LIST, destfile))
+                if (MatchRlistItem(ctx, AUTO_DEFINE_LIST, destfile))
                 {
                     FileAutoDefine(ctx, destfile, PromiseGetNamespace(pp));
                 }
@@ -484,7 +484,7 @@ static void CfCopyFile(EvalContext *ctx, char *sourcefile, char *destfile, struc
                         VerifyCopiedFileAttributes(ctx, sourcefile, destfile, &ssb, &dsb, attr, pp);
                     }
 
-                    if (RlistIsInListOfRegex(SINGLE_COPY_LIST, destfile))
+                    if (RlistIsInListOfRegex(ctx, SINGLE_COPY_LIST, destfile))
                     {
                         RlistPrependScalarIdemp(&SINGLE_COPY_CACHE, destfile);
                     }
@@ -510,7 +510,7 @@ static void CfCopyFile(EvalContext *ctx, char *sourcefile, char *destfile, struc
                otherwise we can get oscillations between multipe versions if type
                is based on a checksum */
 
-            if (RlistIsInListOfRegex(SINGLE_COPY_LIST, destfile))
+            if (RlistIsInListOfRegex(ctx, SINGLE_COPY_LIST, destfile))
             {
                 RlistPrependScalarIdemp(&SINGLE_COPY_CACHE, destfile);
             }
@@ -778,7 +778,7 @@ static void SourceSearchAndCopy(EvalContext *ctx, char *from, char *to, int maxr
                 continue;
             }
 
-            if (SkipDirLinks(newfrom, dirp->d_name, attr.recursion))
+            if (SkipDirLinks(ctx, newfrom, dirp->d_name, attr.recursion))
             {
                 continue;
             }
@@ -981,7 +981,7 @@ static void LinkCopy(EvalContext *ctx, char *sourcefile, char *destfile, struct 
 
     lastnode = ReadLastNode(sourcefile);
 
-    if (MatchRlistItem(attr.copy.copy_links, lastnode))
+    if (MatchRlistItem(ctx, attr.copy.copy_links, lastnode))
     {
         struct stat ssb;
 
@@ -2097,7 +2097,7 @@ int DepthSearch(EvalContext *ctx, char *name, struct stat *sb, int rlevel, Attri
 
         if (S_ISDIR(lsb.st_mode))
         {
-            if (SkipDirLinks(path, dirp->d_name, attr.recursion))
+            if (SkipDirLinks(ctx, path, dirp->d_name, attr.recursion))
             {
                 continue;
             }
@@ -2395,7 +2395,7 @@ int ScheduleLinkOperation(EvalContext *ctx, char *destination, char *source, Att
     lastnode = ReadLastNode(destination);
 
 
-    if (MatchRlistItem(attr.link.copy_patterns, lastnode))
+    if (MatchRlistItem(ctx, attr.link.copy_patterns, lastnode))
     {
         Log(LOG_LEVEL_VERBOSE, "Link '%s' matches copy_patterns", destination);
         CompressedArray *inode_cache = NULL;
@@ -2958,11 +2958,11 @@ static int cf_readlink(EvalContext *ctx, char *sourcefile, char *linkbuf, int bu
 
 #endif /* !__MINGW32__ */
 
-static int SkipDirLinks(char *path, const char *lastnode, Recursion r)
+static int SkipDirLinks(EvalContext *ctx, char *path, const char *lastnode, Recursion r)
 {
     if (r.exclude_dirs)
     {
-        if ((MatchRlistItem(r.exclude_dirs, path)) || (MatchRlistItem(r.exclude_dirs, lastnode)))
+        if ((MatchRlistItem(ctx, r.exclude_dirs, path)) || (MatchRlistItem(ctx, r.exclude_dirs, lastnode)))
         {
             Log(LOG_LEVEL_VERBOSE, "Skipping matched excluded directory '%s'", path);
             return true;
@@ -2971,7 +2971,7 @@ static int SkipDirLinks(char *path, const char *lastnode, Recursion r)
 
     if (r.include_dirs)
     {
-        if (!((MatchRlistItem(r.include_dirs, path)) || (MatchRlistItem(r.include_dirs, lastnode))))
+        if (!((MatchRlistItem(ctx, r.include_dirs, path)) || (MatchRlistItem(ctx, r.include_dirs, lastnode))))
         {
             Log(LOG_LEVEL_VERBOSE, "Skipping matched non-included directory '%s'", path);
             return true;

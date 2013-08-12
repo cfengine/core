@@ -91,7 +91,7 @@ typedef enum
 
 static FnCallResult FilterInternal(EvalContext *ctx, FnCall *fp, char *regex, char *name, int do_regex, int invert, long max);
 
-static char *StripPatterns(char *file_buffer, char *pattern, char *filename);
+static char *StripPatterns(EvalContext *ctx, char *file_buffer, char *pattern, char *filename);
 static void CloseStringHole(char *s, int start, int end);
 static int BuildLineArray(EvalContext *ctx, const Bundle *bundle, char *array_lval, char *file_buffer, char *split, int maxent, DataType type, int intIndex);
 static int ExecModule(EvalContext *ctx, char *command, const char *ns);
@@ -555,7 +555,7 @@ static FnCallResult FnCallGetGid(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 
 /*********************************************************************/
 
-static FnCallResult FnCallHash(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
+static FnCallResult FnCallHandlerHash(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 /* Hash(string,md5|sha1|crypt) */
 {
     char buffer[CF_BUFSIZE];
@@ -778,7 +778,7 @@ static FnCallResult FnCallLastNode(EvalContext *ctx, FnCall *fp, Rlist *finalarg
     char *name = RlistScalarValue(finalargs);
     char *split = RlistScalarValue(finalargs->next);
 
-    newlist = RlistFromSplitRegex(name, split, 100, true);
+    newlist = RlistFromSplitRegex(ctx, name, split, 100, true);
 
     for (rp = newlist; rp != NULL; rp = rp->next)
     {
@@ -980,13 +980,13 @@ static FnCallResult FnCallSplayClass(EvalContext *ctx, FnCall *fp, Rlist *finala
     if (policy == INTERVAL_HOURLY)
     {
         /* 12 5-minute slots in hour */
-        int slot = OatHash(RlistScalarValue(finalargs), CF_HASHTABLESIZE) * 12 / CF_HASHTABLESIZE;
+        int slot = StringHash(RlistScalarValue(finalargs), 0, CF_HASHTABLESIZE) * 12 / CF_HASHTABLESIZE;
         snprintf(class, CF_MAXVARSIZE, "Min%02d_%02d", slot * 5, ((slot + 1) * 5) % 60);
     }
     else
     {
         /* 12*24 5-minute slots in day */
-        int dayslot = OatHash(RlistScalarValue(finalargs), CF_HASHTABLESIZE) * 12 * 24 / CF_HASHTABLESIZE;
+        int dayslot = StringHash(RlistScalarValue(finalargs), 0, CF_HASHTABLESIZE) * 12 * 24 / CF_HASHTABLESIZE;
         int hour = dayslot / 12;
         int slot = dayslot % 12;
 
@@ -1126,7 +1126,7 @@ static FnCallResult FnCallRegList(EvalContext *ctx, FnCall *fp, Rlist *finalargs
             continue;
         }
 
-        if (FullTextMatch(regex, rp->item))
+        if (FullTextMatch(ctx, regex, rp->item))
         {
             strcpy(buffer, "any");
             break;
@@ -1140,96 +1140,51 @@ static FnCallResult FnCallRegList(EvalContext *ctx, FnCall *fp, Rlist *finalargs
 
 static FnCallResult FnCallRegArray(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
-    char match[CF_MAXVARSIZE], buffer[CF_BUFSIZE];
-    Scope *ptr;
-    AssocHashTableIterator i;
-    CfAssoc *assoc;
-
     char *arrayname = RlistScalarValue(finalargs);
     char *regex = RlistScalarValue(finalargs->next);
 
     VarRef *ref = VarRefParse(arrayname);
+    bool found = false;
 
-    if ((ptr = ScopeGet(ref->ns, ref->scope)) == NULL)
+    VariableTableIterator *iter = EvalContextVariableTableIteratorNew(ctx, ref);
+    Variable *var = NULL;
+    while ((var = VariableTableIteratorNext(iter)))
     {
-        Log(LOG_LEVEL_VERBOSE, "Function regarray was promised an array called '%s' but this was not found",
-              arrayname);
-        VarRefDestroy(ref);
-        return (FnCallResult) { FNCALL_FAILURE };
-    }
-
-    strcpy(buffer, "!any");
-
-    i = HashIteratorInit(ptr->hashtable);
-
-    while ((assoc = HashIteratorNext(&i)))
-    {
-        snprintf(match, CF_MAXVARSIZE, "%s[", ref->lval);
-        if (strncmp(match, assoc->lval, strlen(match)) == 0)
+        if (FullTextMatch(ctx, regex, RvalScalarValue(var->rval)))
         {
-            if (FullTextMatch(regex, assoc->rval.item))
-            {
-                strcpy(buffer, "any");
-                break;
-            }
+            found = true;
+            break;
         }
     }
+    VariableTableIteratorDestroy(iter);
 
-    VarRefDestroy(ref);
-
-    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), RVAL_TYPE_SCALAR } };
+    if (found)
+    {
+        return (FnCallResult) { FNCALL_SUCCESS, { xstrdup("any"), RVAL_TYPE_SCALAR } };
+    }
+    else
+    {
+        return (FnCallResult) { FNCALL_SUCCESS, { xstrdup("!any"), RVAL_TYPE_SCALAR } };
+    }
 }
 
 /*********************************************************************/
 
 static FnCallResult FnCallGetIndices(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
-    char index[CF_MAXVARSIZE], match[CF_MAXVARSIZE];
     Rlist *returnlist = NULL;
-    AssocHashTableIterator i;
-    CfAssoc *assoc;
-
     VarRef *ref = VarRefParseFromBundle(RlistScalarValue(finalargs), PromiseGetBundle(fp->caller));
 
-    Scope *scope = ScopeGet(ref->ns, ref->scope);
-
-    if (!scope)
+    VariableTableIterator *iter = EvalContextVariableTableIteratorNew(ctx, ref);
+    Variable *var = NULL;
+    while ((var = VariableTableIteratorNext(iter)))
     {
-        Log(LOG_LEVEL_VERBOSE,
-            "Function getindices was promised an array called '%s' in scope '%s' but this was not found", ref->lval,
-              ref->scope);
-        VarRefDestroy(ref);
-        RlistAppendScalarIdemp(&returnlist, CF_NULL_VALUE);
-        return (FnCallResult) { FNCALL_SUCCESS, { returnlist, RVAL_TYPE_LIST } };
-    }
-
-    i = HashIteratorInit(scope->hashtable);
-
-    while ((assoc = HashIteratorNext(&i)))
-    {
-        snprintf(match, CF_MAXVARSIZE - 1, "%.127s[", ref->lval);
-
-        if (strncmp(match, assoc->lval, strlen(match)) == 0)
+        for (size_t i = 0; i < var->ref->num_indices; i++)
         {
-            char *sp;
-
-            index[0] = '\0';
-            StringNotMatchingSetCapped(assoc->lval + strlen(match), CF_MAXVARSIZE, "\n", index);
-            if ((sp = strchr(index, ']')))
-            {
-                *sp = '\0';
-            }
-            else
-            {
-                index[strlen(index) - 1] = '\0';
-            }
-
-            if (strlen(index) > 0)
-            {
-                RlistAppendScalarIdemp(&returnlist, index);
-            }
+            RlistAppendScalarIdemp(&returnlist, var->ref->indices[i]);
         }
     }
+    VariableTableIteratorDestroy(iter);
 
     VarRefDestroy(ref);
 
@@ -1245,49 +1200,33 @@ static FnCallResult FnCallGetIndices(EvalContext *ctx, FnCall *fp, Rlist *finala
 
 static FnCallResult FnCallGetValues(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
-    char match[CF_MAXVARSIZE];
-    Rlist *rp, *returnlist = NULL;
-    AssocHashTableIterator i;
-    CfAssoc *assoc;
-
+    Rlist *returnlist = NULL;
     VarRef *ref = VarRefParseFromBundle(RlistScalarValue(finalargs), PromiseGetBundle(fp->caller));
 
-    Scope *scope = ScopeGet(ref->ns, ref->scope);
-
-    if (!scope)
+    VariableTableIterator *iter = EvalContextVariableTableIteratorNew(ctx, ref);
+    Variable *var = NULL;
+    while ((var = VariableTableIteratorNext(iter)))
     {
-        Log(LOG_LEVEL_VERBOSE,
-            "Function getvalues was promised an array called '%s' in scope '%s' but this was not found", ref->lval,
-              ref->scope);
-        VarRefDestroy(ref);
-        RlistAppendScalarIdemp(&returnlist, CF_NULL_VALUE);
-        return (FnCallResult) { FNCALL_SUCCESS, { returnlist, RVAL_TYPE_LIST } };
-    }
-
-    i = HashIteratorInit(scope->hashtable);
-
-    while ((assoc = HashIteratorNext(&i)))
-    {
-        snprintf(match, CF_MAXVARSIZE - 1, "%.127s[", ref->lval);
-
-        if (strncmp(match, assoc->lval, strlen(match)) == 0)
+        if (var->ref->num_indices != 1)
         {
-            switch (assoc->rval.type)
+            continue;
+        }
+
+        switch (var->rval.type)
+        {
+        case RVAL_TYPE_SCALAR:
+            RlistAppendScalarIdemp(&returnlist, var->rval.item);
+            break;
+
+        case RVAL_TYPE_LIST:
+            for (const Rlist *rp = var->rval.item; rp != NULL; rp = rp->next)
             {
-            case RVAL_TYPE_SCALAR:
-                RlistAppendScalarIdemp(&returnlist, assoc->rval.item);
-                break;
-
-            case RVAL_TYPE_LIST:
-                for (rp = assoc->rval.item; rp != NULL; rp = rp->next)
-                {
-                    RlistAppendScalarIdemp(&returnlist, rp->item);
-                }
-                break;
-
-            default:
-                break;
+                RlistAppendScalarIdemp(&returnlist, rp->item);
             }
+            break;
+
+        default:
+            break;
         }
     }
 
@@ -1506,14 +1445,14 @@ static FnCallResult FnCallGetFields(EvalContext *ctx, FnCall *fp, Rlist *finalar
             Log(LOG_LEVEL_ERR, "Chop was called on a string that seemed to have no terminator");
         }
 
-        if (!FullTextMatch(regex, line))
+        if (!FullTextMatch(ctx, regex, line))
         {
             continue;
         }
 
         if (lcount == 0)
         {
-            newlist = RlistFromSplitRegex(line, split, 31, nopurge);
+            newlist = RlistFromSplitRegex(ctx, line, split, 31, nopurge);
 
             vcount = 1;
 
@@ -1579,7 +1518,7 @@ static FnCallResult FnCallCountLinesMatching(EvalContext *ctx, FnCall *fp, Rlist
             Log(LOG_LEVEL_ERR, "Chop was called on a string that seemed to have no terminator");
         }
 
-        if (FullTextMatch(regex, line))
+        if (FullTextMatch(ctx, regex, line))
         {
             lcount++;
             Log(LOG_LEVEL_VERBOSE, "countlinesmatching: matched '%s'", line);
@@ -1620,7 +1559,7 @@ static FnCallResult FnCallLsDir(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 
     for (dirp = DirRead(dirh); dirp != NULL; dirp = DirRead(dirh))
     {
-        if (strlen(regex) == 0 || FullTextMatch(regex, dirp->d_name))
+        if (strlen(regex) == 0 || FullTextMatch(ctx, regex, dirp->d_name))
         {
             if (includepath)
             {
@@ -1650,98 +1589,70 @@ static FnCallResult FnCallLsDir(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 static FnCallResult FnCallMapArray(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
     char expbuf[CF_EXPANDSIZE];
-    char index[CF_MAXVARSIZE], match[CF_MAXVARSIZE];
-    Scope *ptr;
-    Rlist *rp, *returnlist = NULL;
-    AssocHashTableIterator i;
-    CfAssoc *assoc;
+    Rlist *returnlist = NULL;
 
     char *map = RlistScalarValue(finalargs);
 
     VarRef *ref = VarRefParseFromBundle(RlistScalarValue(finalargs->next), PromiseGetBundle(fp->caller));
 
-    if ((ptr = ScopeGet(ref->ns, ref->scope)) == NULL)
+    VariableTableIterator *iter = EvalContextVariableTableIteratorNew(ctx, ref);
+    Variable *var = NULL;
+
+    while ((var = VariableTableIteratorNext(iter)))
     {
-        Log(LOG_LEVEL_VERBOSE,
-            "Function maparray was promised an array called '%s' in scope '%s' but this was not found", ref->lval,
-              ref->scope);
-        RlistAppendScalarIdemp(&returnlist, CF_NULL_VALUE);
-        VarRefDestroy(ref);
-        return (FnCallResult) { FNCALL_FAILURE, { returnlist, RVAL_TYPE_LIST } };
-    }
-
-    i = HashIteratorInit(ptr->hashtable);
-
-    while ((assoc = HashIteratorNext(&i)))
-    {
-        snprintf(match, CF_MAXVARSIZE - 1, "%.127s[", ref->lval);
-
-        if (strncmp(match, assoc->lval, strlen(match)) == 0)
+        if (var->ref->num_indices != 1)
         {
-            char *sp;
-
-            index[0] = '\0';
-            sscanf(assoc->lval + strlen(match), "%127[^\n]", index);
-            if ((sp = strchr(index, ']')))
-            {
-                *sp = '\0';
-            }
-            else
-            {
-                index[strlen(index) - 1] = '\0';
-            }
-
-            if (strlen(index) > 0)
-            {
-                ScopeNewSpecial(ctx, SPECIAL_SCOPE_THIS, "k", index, DATA_TYPE_STRING);
-
-                switch (assoc->rval.type)
-                {
-                case RVAL_TYPE_SCALAR:
-                    ScopeNewSpecial(ctx, SPECIAL_SCOPE_THIS, "v", assoc->rval.item, DATA_TYPE_STRING);
-                    ExpandScalar(ctx, PromiseGetBundle(fp->caller)->ns, PromiseGetBundle(fp->caller)->name, map, expbuf);
-
-                    if (strstr(expbuf, "$(this.k)") || strstr(expbuf, "${this.k}") ||
-                        strstr(expbuf, "$(this.v)") || strstr(expbuf, "${this.v}"))
-                    {
-                        RlistDestroy(returnlist);
-                        ScopeDeleteSpecial(SPECIAL_SCOPE_THIS, "k");
-                        ScopeDeleteSpecial(SPECIAL_SCOPE_THIS, "v");
-                        return (FnCallResult) { FNCALL_FAILURE };
-                    }
-
-                    RlistAppendScalar(&returnlist, expbuf);
-                    ScopeDeleteSpecial(SPECIAL_SCOPE_THIS, "v");
-                    break;
-
-                case RVAL_TYPE_LIST:
-                    for (rp = assoc->rval.item; rp != NULL; rp = rp->next)
-                    {
-                        ScopeNewSpecial(ctx, SPECIAL_SCOPE_THIS, "v", rp->item, DATA_TYPE_STRING);
-                        ExpandScalar(ctx, PromiseGetBundle(fp->caller)->ns, PromiseGetBundle(fp->caller)->name, map, expbuf);
-
-                        if (strstr(expbuf, "$(this.k)") || strstr(expbuf, "${this.k}") ||
-                            strstr(expbuf, "$(this.v)") || strstr(expbuf, "${this.v}"))
-                        {
-                            RlistDestroy(returnlist);
-                            ScopeDeleteSpecial(SPECIAL_SCOPE_THIS, "k");
-                            ScopeDeleteSpecial(SPECIAL_SCOPE_THIS, "v");
-                            return (FnCallResult) { FNCALL_FAILURE };
-                        }
-
-                        RlistAppendScalarIdemp(&returnlist, expbuf);
-                        ScopeDeleteSpecial(SPECIAL_SCOPE_THIS, "v");
-                    }
-                    break;
-
-                default:
-                    break;
-                }
-                ScopeDeleteSpecial(SPECIAL_SCOPE_THIS, "k");
-            }
+            continue;
         }
+
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "k", var->ref->indices[0], DATA_TYPE_STRING);
+
+        switch (var->rval.type)
+        {
+        case RVAL_TYPE_SCALAR:
+            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "v", var->rval.item, DATA_TYPE_STRING);
+            ExpandScalar(ctx, PromiseGetBundle(fp->caller)->ns, PromiseGetBundle(fp->caller)->name, map, expbuf);
+
+            if (strstr(expbuf, "$(this.k)") || strstr(expbuf, "${this.k}") ||
+                strstr(expbuf, "$(this.v)") || strstr(expbuf, "${this.v}"))
+            {
+                RlistDestroy(returnlist);
+                EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_THIS, "k");
+                EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_THIS, "v");
+                return (FnCallResult) { FNCALL_FAILURE };
+            }
+
+            RlistAppendScalar(&returnlist, expbuf);
+            EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_THIS, "v");
+            break;
+
+        case RVAL_TYPE_LIST:
+            for (const Rlist *rp = var->rval.item; rp != NULL; rp = rp->next)
+            {
+                EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "v", rp->item, DATA_TYPE_STRING);
+                ExpandScalar(ctx, PromiseGetBundle(fp->caller)->ns, PromiseGetBundle(fp->caller)->name, map, expbuf);
+
+                if (strstr(expbuf, "$(this.k)") || strstr(expbuf, "${this.k}") ||
+                    strstr(expbuf, "$(this.v)") || strstr(expbuf, "${this.v}"))
+                {
+                    RlistDestroy(returnlist);
+                    EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_THIS, "k");
+                    EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_THIS, "v");
+                    return (FnCallResult) { FNCALL_FAILURE };
+                }
+
+                RlistAppendScalarIdemp(&returnlist, expbuf);
+                EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_THIS, "v");
+            }
+            break;
+
+        default:
+            break;
+        }
+        EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_THIS, "k");
     }
 
+    VariableTableIteratorDestroy(iter);
     VarRefDestroy(ref);
 
     if (returnlist == NULL)
@@ -1790,20 +1701,21 @@ static FnCallResult FnCallMapList(EvalContext *ctx, FnCall *fp, Rlist *finalargs
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
-    for (const Rlist *rp = (const Rlist *) rval.item; rp != NULL; rp = rp->next)
+    for (const Rlist *rp = RvalRlistValue(rval); rp != NULL; rp = rp->next)
     {
-        ScopeNewSpecial(ctx, SPECIAL_SCOPE_THIS, "this", (char *) rp->item, DATA_TYPE_STRING);
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "this", (char *) rp->item, DATA_TYPE_STRING);
 
-        ExpandScalar(ctx, PromiseGetBundle(fp->caller)->ns, PromiseGetBundle(fp->caller)->name, map, expbuf);
+        ExpandScalar(ctx, NULL, "this", map, expbuf);
 
         if (strstr(expbuf, "$(this)") || strstr(expbuf, "${this}"))
         {
             RlistDestroy(newlist);
+            EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_THIS, "this");
             return (FnCallResult) { FNCALL_FAILURE };
         }
 
         RlistAppendScalar(&newlist, expbuf);
-        ScopeDeleteSpecial(SPECIAL_SCOPE_THIS, "this");
+        EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_THIS, "this");
     }
 
     return (FnCallResult) { FNCALL_SUCCESS, { newlist, RVAL_TYPE_LIST } };
@@ -1929,7 +1841,7 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx, FnCall *fp, Rlist *fin
                 continue;
             }
 
-            if (strlen(regex) == 0 || FullTextMatch(regex, buffer))
+            if (strlen(regex) == 0 || FullTextMatch(ctx, regex, buffer))
             {
                 Log(LOG_LEVEL_VERBOSE, "Host '%s' is alive and responding correctly", RlistScalarValue(rp));
                 snprintf(buffer, CF_MAXVARSIZE - 1, "%s[%d]", array_lval, count);
@@ -1997,7 +1909,7 @@ static FnCallResult FnCallShuffle(EvalContext *ctx, FnCall *fp, Rlist *finalargs
         SeqAppend(seq, rp->item);
     }
 
-    SeqShuffle(seq, OatHash(seed_str, RAND_MAX));
+    SeqShuffle(seq, StringHash(seed_str, 0, RAND_MAX));
 
     Rlist *shuffled = NULL;
     for (size_t i = 0; i < SeqLength(seq); i++)
@@ -2244,17 +2156,17 @@ static FnCallResult FnCallFileStatDetails(EvalContext *ctx, FnCall *fp, Rlist *f
         else if (!strcmp(detail, "type"))
         {
         #if !defined(__MINGW32__)
-          switch (statbuf.st_mode & S_IFMT)
-          {
-          case S_IFBLK:  snprintf(buffer, CF_MAXVARSIZE, "%s", "block device");     break;
-          case S_IFCHR:  snprintf(buffer, CF_MAXVARSIZE, "%s", "character device"); break;
-          case S_IFDIR:  snprintf(buffer, CF_MAXVARSIZE, "%s", "directory");        break;
-          case S_IFIFO:  snprintf(buffer, CF_MAXVARSIZE, "%s", "FIFO/pipe");        break;
-          case S_IFLNK:  snprintf(buffer, CF_MAXVARSIZE, "%s", "symlink");          break;
-          case S_IFREG:  snprintf(buffer, CF_MAXVARSIZE, "%s", "regular file");     break;
-          case S_IFSOCK: snprintf(buffer, CF_MAXVARSIZE, "%s", "socket");           break;
-          default:       snprintf(buffer, CF_MAXVARSIZE, "%s", "unknown");          break;
-          }
+            switch (statbuf.st_mode & S_IFMT)
+            {
+            case S_IFBLK:  snprintf(buffer, CF_MAXVARSIZE, "%s", "block device");     break;
+            case S_IFCHR:  snprintf(buffer, CF_MAXVARSIZE, "%s", "character device"); break;
+            case S_IFDIR:  snprintf(buffer, CF_MAXVARSIZE, "%s", "directory");        break;
+            case S_IFIFO:  snprintf(buffer, CF_MAXVARSIZE, "%s", "FIFO/pipe");        break;
+            case S_IFLNK:  snprintf(buffer, CF_MAXVARSIZE, "%s", "symlink");          break;
+            case S_IFREG:  snprintf(buffer, CF_MAXVARSIZE, "%s", "regular file");     break;
+            case S_IFSOCK: snprintf(buffer, CF_MAXVARSIZE, "%s", "socket");           break;
+            default:       snprintf(buffer, CF_MAXVARSIZE, "%s", "unknown");          break;
+            }
         #else
             snprintf(buffer, CF_MAXVARSIZE, "Not available on Windows");
         #endif
@@ -2291,6 +2203,70 @@ static FnCallResult FnCallFileStatDetails(EvalContext *ctx, FnCall *fp, Rlist *f
         else if (!strcmp(detail, "basename"))
         {
             snprintf(buffer, CF_MAXVARSIZE, "%s", ReadLastNode(path));
+        }
+        else if (!strcmp(detail, "linktarget") || !strcmp(detail, "linktarget_shallow"))
+        {
+#if !defined(__MINGW32__)
+            char path_buffer[CF_BUFSIZE];
+            bool recurse = !strcmp(detail, "linktarget");
+            int cycles = 0;
+            int max_cycles = 30; // This allows for up to 31 levels of indirection.
+
+            snprintf(path_buffer, CF_MAXVARSIZE, "%s", path);
+
+            // Iterate while we're looking at a link.
+            while (S_ISLNK(statbuf.st_mode))
+            {
+                if (cycles > max_cycles)
+                {
+                    Log(LOG_LEVEL_INFO, "%s bailing on link '%s' (original '%s') because %d cycles were chased",
+                        fp->name, path_buffer, path, cycles+1);
+                    break;
+                }
+
+                Log(LOG_LEVEL_VERBOSE, "%s resolving link '%s', cycle %d", fp->name, path_buffer, cycles+1);
+                // Prep buffer because readlink() doesn't terminate the path.
+                memset(buffer, 0, CF_BUFSIZE);
+
+                /* Note we subtract 1 since we may need an extra char for NULL. */
+                if (readlink(path_buffer, buffer, CF_BUFSIZE-1) < 0)
+                {
+                    // An error happened.  Empty the buffer (don't keep the last target).
+                    Log(LOG_LEVEL_ERR, "%s could not readlink '%s'", fp->name, path_buffer);
+                    path_buffer[0] = '\0';
+                    break;
+                }
+
+                Log(LOG_LEVEL_VERBOSE, "%s resolved link '%s' to %s", fp->name, path_buffer, buffer);
+                // We got a good link target into buffer.  Copy it to path_buffer.
+                snprintf(path_buffer, CF_MAXVARSIZE, "%s", buffer);
+
+                if (!recurse || lstat(path_buffer, &statbuf) == -1)
+                {
+                    if (!recurse)
+                    {
+                        Log(LOG_LEVEL_VERBOSE, "%s bailing on link '%s' (original '%s') because linktarget_shallow was requested",
+                            fp->name, path_buffer, path);
+                    }
+                    else // error from lstat
+                    {
+                        Log(LOG_LEVEL_INFO, "%s bailing on link '%s' (original '%s') because it could not be read",
+                            fp->name, path_buffer, path);
+                    }
+                    break;
+                }
+
+                // At this point we haven't bailed, path_buffer has the link target
+                cycles++;
+            }
+
+            // Get the path_buffer back into buffer.
+            snprintf(buffer, CF_MAXVARSIZE, "%s", path_buffer);
+
+#else
+            // Always return the original path on W32.
+            snprintf(buffer, CF_MAXVARSIZE, "%s", path);
+#endif
         }
     }
 
@@ -2352,7 +2328,7 @@ static FnCallResult FilterInternal(EvalContext *ctx, FnCall *fp, char *regex, ch
     long total = 0;
     for (const Rlist *rp = (const Rlist *) rval2.item; rp != NULL && match_count < max; rp = rp->next)
     {
-        bool found = do_regex ? FullTextMatch(regex, rp->item) : (0==strcmp(regex, rp->item));
+        bool found = do_regex ? FullTextMatch(ctx, regex, rp->item) : (0==strcmp(regex, rp->item));
 
         if (invert ? !found : found)
         {
@@ -2667,117 +2643,126 @@ static FnCallResult FnCallFormat(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
     {
         BufferAppend(buf, format, (check - format));
 
-        while (check && FullTextMatch("(%%|%[^diouxXeEfFgGaAcsCSpnm%]*?[diouxXeEfFgGaAcsCSpnm])([^%]*)(.*)", check))
+        while (check && FullTextMatch(ctx, "(%%|%[^diouxXeEfFgGaAcsCSpnm%]*?[diouxXeEfFgGaAcsCSpnm])([^%]*)(.*)", check))
         {
-            Scope *ptr = ScopeGet(NULL, "match");
-
-            if (ptr && ptr->hashtable)
             {
-                AssocHashTableIterator i = HashIteratorInit(ptr->hashtable);
-                CfAssoc *assoc;
-
-                while ((assoc = HashIteratorNext(&i)))
+                VarRef *ref_1 = VarRefParseFromScope("1", "match");
+                Rval rval_1;
+                DataType type_1 = DATA_TYPE_NONE;
+                if (EvalContextVariableGet(ctx, ref_1, &rval_1, &type_1))
                 {
-                    if (assoc->rval.type != RVAL_TYPE_SCALAR)
+                    const char* format_piece = RvalScalarValue(rval_1);
+                    bool percent = (0 == strncmp(format_piece, "%%", 2));
+                    char *data = NULL;
+
+                    if (percent)
                     {
-                        ProgrammingError("Pattern match was non-scalar in regextract");
+                    }
+                    else if (rp)
+                    {
+                        data = RlistScalarValue(rp);
+                        rp = rp->next;
+                    }
+                    else // not %% and no data
+                    {
+                        Log(LOG_LEVEL_ERR, "format() didn't have enough parameters");
+                        BufferDestroy(&buf);
+                        return (FnCallResult) { FNCALL_FAILURE };
+                    }
+
+                    char piece[CF_BUFSIZE];
+                    memset(piece, 0, CF_BUFSIZE);
+
+                    // CfOut(OUTPUT_LEVEL_INFORM, "", "format: processing format piece = '%s' with data '%s'", format_piece, percent ? "%" : data);
+
+                    char bad_modifiers[] = "hLqjzt";
+                    for (int b = 0; b < strlen(bad_modifiers); b++)
+                    {
+                        if (NULL != strchr(format_piece, bad_modifiers[b]))
+                        {
+                            Log(LOG_LEVEL_ERR, "format() does not allow modifier character '%c' in format specifier '%s'.",
+                                  bad_modifiers[b],
+                                  format_piece);
+                            BufferDestroy(&buf);
+                            return (FnCallResult) { FNCALL_FAILURE };
+                        }
+                    }
+
+                    if (strrchr(format_piece, 'd') || strrchr(format_piece, 'o') || strrchr(format_piece, 'x'))
+                    {
+                        long x = 0;
+                        sscanf(data, "%ld%s", &x, piece); // we don't care about the remainder and will overwrite it
+                        snprintf(piece, CF_BUFSIZE, format_piece, x);
+                        BufferAppend(buf, piece, strlen(piece));
+                        // CfOut(OUTPUT_LEVEL_INFORM, "", "format: appending int format piece = '%s' with data '%s'", format_piece, data);
+                    }
+                    else if (percent)
+                    {
+                        BufferAppend(buf, "%", 1);
+                        // CfOut(OUTPUT_LEVEL_INFORM, "", "format: appending int format piece = '%s' with data '%s'", format_piece, data);
+                    }
+                    else if (strrchr(format_piece, 'f'))
+                    {
+                        double x = 0;
+                        sscanf(data, "%lf%s", &x, piece); // we don't care about the remainder and will overwrite it
+                        snprintf(piece, CF_BUFSIZE, format_piece, x);
+                        BufferAppend(buf, piece, strlen(piece));
+                        // CfOut(OUTPUT_LEVEL_INFORM, "", "format: appending float format piece = '%s' with data '%s'", format_piece, data);
+                    }
+                    else if (strrchr(format_piece, 's'))
+                    {
+                        snprintf(piece, CF_BUFSIZE, format_piece, data);
+                        BufferAppend(buf, piece, strlen(piece));
+                        // CfOut(OUTPUT_LEVEL_INFORM, "", "format: appending string format piece = '%s' with data '%s'", format_piece, data);
                     }
                     else
                     {
-                        // this is the whole match
-                        if (assoc->lval[0] == '0')
-                        {
-                        }
-                        else if (assoc->lval[0] == '3') // another format?  great!
-                        {
-                            strncpy(check_buffer, assoc->rval.item, CF_BUFSIZE);
-                            check = check_buffer;
-                        }
-                        else if (assoc->lval[0] == '1') // the format specifier
-                        {
-                            char* format_piece = assoc->rval.item;
-                            bool percent = (0 == strncmp(format_piece, "%%", 2));
-                            char *data = NULL;
-
-                            if (percent)
-                            {
-                            }
-                            else if (rp)
-                            {
-                                data = RlistScalarValue(rp);
-                                rp = rp->next;
-                            }
-                            else // not %% and no data
-                            {
-                                Log(LOG_LEVEL_ERR, "format() didn't have enough parameters");
-                                BufferDestroy(&buf);
-                                return (FnCallResult) { FNCALL_FAILURE };
-                            }
-
-                            char piece[CF_BUFSIZE];
-                            memset(piece, 0, CF_BUFSIZE);
-
-                            // CfOut(OUTPUT_LEVEL_INFORM, "", "format: processing format piece = '%s' with data '%s'", format_piece, percent ? "%" : data);
-
-                            char bad_modifiers[] = "hLqjzt";
-                            for (int b = 0; b < strlen(bad_modifiers); b++)
-                            {
-                                if (NULL != strchr(format_piece, bad_modifiers[b]))
-                                {
-                                    Log(LOG_LEVEL_ERR, "format() does not allow modifier character '%c' in format specifier '%s'.",
-                                          bad_modifiers[b],
-                                          format_piece);
-                                    BufferDestroy(&buf);
-                                    return (FnCallResult) { FNCALL_FAILURE };
-                                }
-                            }
-
-                            if (strrchr(format_piece, 'd') || strrchr(format_piece, 'o') || strrchr(format_piece, 'x'))
-                            {
-                                long x = 0;
-                                sscanf(data, "%ld%s", &x, piece); // we don't care about the remainder and will overwrite it
-                                snprintf(piece, CF_BUFSIZE, format_piece, x);
-                                BufferAppend(buf, piece, strlen(piece));
-                                // CfOut(OUTPUT_LEVEL_INFORM, "", "format: appending int format piece = '%s' with data '%s'", format_piece, data);
-                            }
-                            else if (percent)
-                            {
-                                BufferAppend(buf, "%", 1);
-                                // CfOut(OUTPUT_LEVEL_INFORM, "", "format: appending int format piece = '%s' with data '%s'", format_piece, data);
-                            }
-                            else if (strrchr(format_piece, 'f'))
-                            {
-                                double x = 0;
-                                sscanf(data, "%lf%s", &x, piece); // we don't care about the remainder and will overwrite it
-                                snprintf(piece, CF_BUFSIZE, format_piece, x);
-                                BufferAppend(buf, piece, strlen(piece));
-                                // CfOut(OUTPUT_LEVEL_INFORM, "", "format: appending float format piece = '%s' with data '%s'", format_piece, data);
-                            }
-                            else if (strrchr(format_piece, 's'))
-                            {
-                                snprintf(piece, CF_BUFSIZE, format_piece, data);
-                                BufferAppend(buf, piece, strlen(piece));
-                                // CfOut(OUTPUT_LEVEL_INFORM, "", "format: appending string format piece = '%s' with data '%s'", format_piece, data);
-                            }
-                            else
-                            {
-                                char error[] = "(unhandled format)";
-                                BufferAppend(buf, error, strlen(error));
-                                // CfOut(OUTPUT_LEVEL_INFORM, "", "format: error appending unhandled format piece = '%s' with data '%s'", format_piece, data);
-                            }
-                        }
-                        else if (assoc->lval[0] == '2') // the rest after the format specifier
-                        {
-                            char* static_piece = assoc->rval.item;
-                            BufferAppend(buf, static_piece, strlen(static_piece));
-                            // CfOut(OUTPUT_LEVEL_INFORM, "", "format: appending static piece = '%s'", static_piece);
-                        }
+                        char error[] = "(unhandled format)";
+                        BufferAppend(buf, error, strlen(error));
+                        // CfOut(OUTPUT_LEVEL_INFORM, "", "format: error appending unhandled format piece = '%s' with data '%s'", format_piece, data);
                     }
                 }
+                else
+                {
+                    check = NULL;
+                }
+
+                VarRefDestroy(ref_1);
             }
-            else
+
             {
-                check = NULL;
+                VarRef *ref_2 = VarRefParseFromScope("2", "match");
+                Rval rval_2;
+                DataType type_2 = DATA_TYPE_NONE;
+                if (EvalContextVariableGet(ctx, ref_2, &rval_2, &type_2))
+                {
+                    const char* static_piece = RvalScalarValue(rval_2);
+                    BufferAppend(buf, static_piece, strlen(static_piece));
+                    // CfOut(OUTPUT_LEVEL_INFORM, "", "format: appending static piece = '%s'", static_piece);
+                }
+                else
+                {
+                    check = NULL;
+                }
+
+                VarRefDestroy(ref_2);
+            }
+
+            {
+                VarRef *ref_3 = VarRefParseFromScope("3", "match");
+                Rval rval_3;
+                DataType type_3 = DATA_TYPE_NONE;
+                if (EvalContextVariableGet(ctx, ref_3, &rval_3, &type_3))
+                {
+                    strncpy(check_buffer, RvalScalarValue(rval_3), CF_BUFSIZE);
+                    check = check_buffer;
+                }
+                else
+                {
+                    check = NULL;
+                }
+
+                VarRefDestroy(ref_3);
             }
         }
     }
@@ -3135,7 +3120,7 @@ static FnCallResult FnCallPeers(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
-    file_buffer = StripPatterns(file_buffer, comment, filename);
+    file_buffer = StripPatterns(ctx, file_buffer, comment, filename);
 
     if (file_buffer == NULL)
     {
@@ -3143,7 +3128,7 @@ static FnCallResult FnCallPeers(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
     }
     else
     {
-        newlist = RlistFromSplitRegex(file_buffer, split, maxent, true);
+        newlist = RlistFromSplitRegex(ctx, file_buffer, split, maxent, true);
     }
 
 /* Slice up the list and discard everything except our slice */
@@ -3225,7 +3210,7 @@ static FnCallResult FnCallPeerLeader(EvalContext *ctx, FnCall *fp, Rlist *finala
     }
     else
     {
-        file_buffer = StripPatterns(file_buffer, comment, filename);
+        file_buffer = StripPatterns(ctx, file_buffer, comment, filename);
 
         if (file_buffer == NULL)
         {
@@ -3233,7 +3218,7 @@ static FnCallResult FnCallPeerLeader(EvalContext *ctx, FnCall *fp, Rlist *finala
         }
         else
         {
-            newlist = RlistFromSplitRegex(file_buffer, split, maxent, true);
+            newlist = RlistFromSplitRegex(ctx, file_buffer, split, maxent, true);
         }
     }
 
@@ -3315,14 +3300,14 @@ static FnCallResult FnCallPeerLeaders(EvalContext *ctx, FnCall *fp, Rlist *final
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
-    file_buffer = StripPatterns(file_buffer, comment, filename);
+    file_buffer = StripPatterns(ctx, file_buffer, comment, filename);
 
     if (file_buffer == NULL)
     {
         return (FnCallResult) { FNCALL_SUCCESS, { NULL, RVAL_TYPE_LIST } };
     }
 
-    newlist = RlistFromSplitRegex(file_buffer, split, maxent, true);
+    newlist = RlistFromSplitRegex(ctx, file_buffer, split, maxent, true);
 
 /* Slice up the list and discard everything except our slice */
 
@@ -3385,7 +3370,7 @@ static FnCallResult FnCallRegCmp(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
     char *argv0 = RlistScalarValue(finalargs);
     char *argv1 = RlistScalarValue(finalargs->next);
 
-    if (FullTextMatch(argv0, argv1))
+    if (FullTextMatch(ctx, argv0, argv1))
     {
         strcpy(buffer, "any");
     }
@@ -3402,7 +3387,6 @@ static FnCallResult FnCallRegCmp(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 static FnCallResult FnCallRegExtract(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
     char buffer[CF_BUFSIZE];
-    Scope *ptr;
 
     buffer[0] = '\0';
 
@@ -3413,7 +3397,7 @@ static FnCallResult FnCallRegExtract(EvalContext *ctx, FnCall *fp, Rlist *finala
     char *data = RlistScalarValue(finalargs->next);
     char *arrayname = RlistScalarValue(finalargs->next->next);
 
-    if (FullTextMatch(regex, data))
+    if (FullTextMatch(ctx, regex, data))
     {
         strcpy(buffer, "any");
     }
@@ -3422,33 +3406,41 @@ static FnCallResult FnCallRegExtract(EvalContext *ctx, FnCall *fp, Rlist *finala
         strcpy(buffer, "!any");
     }
 
-    ptr = ScopeGet(NULL, "match");
+    long i = 0;
 
-    if (ptr && ptr->hashtable)
+    while (true)
     {
-        AssocHashTableIterator i = HashIteratorInit(ptr->hashtable);
-        CfAssoc *assoc;
+        Rval rval;
+        DataType type;
 
-        while ((assoc = HashIteratorNext(&i)))
+        char *index = StringFromLong(i);
+        VarRef *ref = VarRefParseFromScope(index, "match");
+        free(index);
+
+        if (!EvalContextVariableGet(ctx, ref, &rval, &type))
         {
-            char var[CF_MAXVARSIZE];
-
-            if (assoc->rval.type != RVAL_TYPE_SCALAR)
-            {
-                Log(LOG_LEVEL_ERR,
-                      "Software error: pattern match was non-scalar in regextract (shouldn't happen)");
-                return (FnCallResult) { FNCALL_FAILURE };
-            }
-            else
-            {
-                snprintf(var, CF_MAXVARSIZE - 1, "%s[%s]", arrayname, assoc->lval);
-                VarRef *ref = VarRefParseFromBundle(var, PromiseGetBundle(fp->caller));
-                EvalContextVariablePut(ctx, ref, assoc->rval, DATA_TYPE_STRING);
-                VarRefDestroy(ref);
-            }
+            break;
         }
+
+        if (rval.type != RVAL_TYPE_SCALAR)
+        {
+            Log(LOG_LEVEL_ERR,
+                  "Software error: pattern match was non-scalar in regextract (shouldn't happen)");
+            return (FnCallResult) { FNCALL_FAILURE };
+        }
+        else
+        {
+            char var[CF_MAXVARSIZE] = "";
+            snprintf(var, CF_MAXVARSIZE - 1, "%s[%s]", arrayname, ref->lval);
+            VarRef *new_ref = VarRefParseFromBundle(var, PromiseGetBundle(fp->caller));
+            EvalContextVariablePut(ctx, new_ref, rval, DATA_TYPE_STRING);
+            VarRefDestroy(new_ref);
+        }
+
+        i++;
     }
-    else
+
+    if (i == 0)
     {
         strcpy(buffer, "!any");
     }
@@ -3497,7 +3489,7 @@ static FnCallResult FnCallRegLine(EvalContext *ctx, FnCall *fp, Rlist *finalargs
                 Log(LOG_LEVEL_ERR, "Chop was called on a string that seemed to have no terminator");
             }
 
-            if (FullTextMatch(argv0, line))
+            if (FullTextMatch(ctx, argv0, line))
             {
                 strcpy(buffer, "any");
                 break;
@@ -3997,7 +3989,7 @@ static FnCallResult ReadList(EvalContext *ctx, FnCall *fp, Rlist *finalargs, Dat
     }
     else
     {
-        file_buffer = StripPatterns(file_buffer, comment, filename);
+        file_buffer = StripPatterns(ctx, file_buffer, comment, filename);
 
         if (file_buffer == NULL)
         {
@@ -4005,7 +3997,7 @@ static FnCallResult ReadList(EvalContext *ctx, FnCall *fp, Rlist *finalargs, Dat
         }
         else
         {
-            newlist = RlistFromSplitRegex(file_buffer, split, maxent, blanks);
+            newlist = RlistFromSplitRegex(ctx, file_buffer, split, maxent, blanks);
         }
     }
 
@@ -4109,7 +4101,7 @@ static FnCallResult ReadArray(EvalContext *ctx, FnCall *fp, Rlist *finalargs, Da
     }
     else
     {
-        file_buffer = StripPatterns(file_buffer, comment, filename);
+        file_buffer = StripPatterns(ctx, file_buffer, comment, filename);
 
         if (file_buffer == NULL)
         {
@@ -4208,7 +4200,7 @@ static FnCallResult ParseArray(EvalContext *ctx, FnCall *fp, Rlist *finalargs, D
     }
     else
     {
-        instring = StripPatterns(instring, comment, "string argument 2");
+        instring = StripPatterns(ctx, instring, comment, "string argument 2");
 
         if (instring == NULL)
         {
@@ -4283,7 +4275,7 @@ static FnCallResult FnCallSplitString(EvalContext *ctx, FnCall *fp, Rlist *final
 
 // Read once to validate structure of file in itemlist
 
-    newlist = RlistFromSplitRegex(string, split, max, true);
+    newlist = RlistFromSplitRegex(ctx, string, split, max, true);
 
     if (newlist == NULL)
     {
@@ -4462,7 +4454,7 @@ static FnCallResult FnCallRegLDAP(EvalContext *ctx, FnCall *fp, Rlist *finalargs
     char *regex = RlistScalarValue(finalargs->next->next->next->next->next);
     char *sec = RlistScalarValue(finalargs->next->next->next->next->next->next);
 
-    if ((newval = CfRegLDAP(uri, dn, filter, name, scope, regex, sec)))
+    if ((newval = CfRegLDAP(ctx, uri, dn, filter, name, scope, regex, sec)))
     {
         return (FnCallResult) { FNCALL_SUCCESS, { newval, RVAL_TYPE_SCALAR } };
     }
@@ -4657,14 +4649,14 @@ static void *CfReadFile(char *filename, int maxsize)
 
 /*********************************************************************/
 
-static char *StripPatterns(char *file_buffer, char *pattern, char *filename)
+static char *StripPatterns(EvalContext *ctx, char *file_buffer, char *pattern, char *filename)
 {
     int start, end;
     int count = 0;
 
     if (!NULL_OR_EMPTY(pattern))
     {
-        while (BlockTextMatch(pattern, file_buffer, &start, &end))
+        while (BlockTextMatch(ctx, pattern, file_buffer, &start, &end))
         {
             CloseStringHole(file_buffer, start, end);
 
@@ -4741,7 +4733,7 @@ static int BuildLineArray(EvalContext *ctx, const Bundle *bundle, char *array_lv
             break;
         }
 
-        newlist = RlistFromSplitRegex(linebuf, split, maxent, allowblanks);
+        newlist = RlistFromSplitRegex(ctx, linebuf, split, maxent, allowblanks);
 
         vcount = 0;
         first_one[0] = '\0';
@@ -5122,7 +5114,7 @@ FnCallArg FILESTAT_ARGS[] =
 FnCallArg FILESTAT_DETAIL_ARGS[] =
 {
     {CF_ABSPATHRANGE, DATA_TYPE_STRING, "File object name"},
-    {"size,gid,uid,ino,nlink,ctime,atime,mtime,mode,modeoct,permstr,permoct,type,devno,dev_minor,dev_major,basename,dirname", DATA_TYPE_OPTION, "stat() field to get"},
+    {"size,gid,uid,ino,nlink,ctime,atime,mtime,mode,modeoct,permstr,permoct,type,devno,dev_minor,dev_major,basename,dirname,linktarget,linktarget_shallow", DATA_TYPE_OPTION, "stat() field to get"},
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
@@ -5765,7 +5757,7 @@ const FnCallType CF_FNCALL_TYPES[] =
     FnCallTypeNew("getvalues", DATA_TYPE_STRING_LIST, GETINDICES_ARGS, &FnCallGetValues, "Get a list of values corresponding to the right hand sides in an array whose id is the argument and assign to variable", false, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("grep", DATA_TYPE_STRING_LIST, GREP_ARGS, &FnCallGrep, "Extract the sub-list if items matching the regular expression in arg1 of the list named in arg2", false, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("groupexists", DATA_TYPE_CONTEXT, GROUPEXISTS_ARGS, &FnCallGroupExists, "True if group or numerical id exists on this host", false, FNCALL_CATEGORY_SYSTEM, SYNTAX_STATUS_NORMAL),
-    FnCallTypeNew("hash", DATA_TYPE_STRING, HASH_ARGS, &FnCallHash, "Return the hash of arg1, type arg2 and assign to a variable", false, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("hash", DATA_TYPE_STRING, HASH_ARGS, &FnCallHandlerHash, "Return the hash of arg1, type arg2 and assign to a variable", false, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("hashmatch", DATA_TYPE_CONTEXT, HASHMATCH_ARGS, &FnCallHashMatch, "Compute the hash of arg1, of type arg2 and test if it matches the value in arg3", false, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("host2ip", DATA_TYPE_STRING, HOST2IP_ARGS, &FnCallHost2IP, "Returns the primary name-service IP address for the named host", false, FNCALL_CATEGORY_COMM, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("ip2host", DATA_TYPE_STRING, IP2HOST_ARGS, &FnCallIP2Host, "Returns the primary name-service host name for the IP address", false, FNCALL_CATEGORY_COMM, SYNTAX_STATUS_NORMAL),

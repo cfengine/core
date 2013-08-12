@@ -27,6 +27,8 @@
 
 #include <compiler.h>
 
+unsigned int StringHash(const char *str, unsigned int seed, unsigned int max);
+
 char ToLower(char ch);
 char ToUpper(char ch);
 void ToUpperStrInplace(char *str);

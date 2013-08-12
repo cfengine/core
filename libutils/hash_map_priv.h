@@ -33,7 +33,7 @@ typedef struct BucketListItem_
     struct BucketListItem_ *next;
 } BucketListItem;
 
-typedef unsigned int (*MapHashFn) (const void *p, unsigned int max);
+typedef unsigned int (*MapHashFn) (const void *p, unsigned int seed, unsigned int max);
 
 typedef struct
 {

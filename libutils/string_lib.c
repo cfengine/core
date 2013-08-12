@@ -30,6 +30,27 @@
 #include <misc_lib.h>
 
 
+unsigned int StringHash(const char *str, unsigned int seed, unsigned int max)
+{
+    unsigned const char *p = str;
+    unsigned int h = seed;
+    size_t len = strlen(str);
+
+    for (size_t i = 0; i < len; i++)
+    {
+        h += p[i];
+        h += (h << 10);
+        h ^= (h >> 6);
+    }
+
+    h += (h << 3);
+    h ^= (h >> 11);
+    h += (h << 15);
+
+    return (h & (max - 1));
+}
+
+
 #define STRING_MATCH_OVECCOUNT 30
 #define NULL_OR_EMPTY(str) ((str == NULL) || (str[0] == '\0'))
 

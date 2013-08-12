@@ -426,7 +426,7 @@ static bool PackageListInstalledFromCommand(EvalContext *ctx, PackageItem **inst
 
         if (a.packages.package_multiline_start)
         {
-            if (FullTextMatch(a.packages.package_multiline_start, buf))
+            if (FullTextMatch(ctx, a.packages.package_multiline_start, buf))
             {
                 PrependMultiLinePackageItem(ctx, installed_list, buf, reset, default_arch, a, pp);
             }
@@ -437,7 +437,7 @@ static bool PackageListInstalledFromCommand(EvalContext *ctx, PackageItem **inst
         }
         else
         {
-            if (!FullTextMatch(a.packages.package_installed_regex, buf))
+            if (!FullTextMatch(ctx, a.packages.package_installed_regex, buf))
             {
                 continue;
             }
@@ -694,7 +694,7 @@ static int VerifyInstalledPackages(EvalContext *ctx, PackageManager **all_mgrs, 
 
             // assume patch_list_command lists available patches/updates by default
             if ((a.packages.package_patch_installed_regex == NULL)
-                || (!FullTextMatch(a.packages.package_patch_installed_regex, vbuff)))
+                || (!FullTextMatch(ctx, a.packages.package_patch_installed_regex, vbuff)))
             {
                 PrependPatchItem(ctx, &(manager->patch_avail), vbuff, manager->patch_list, default_arch, a, pp);
                 continue;
@@ -769,7 +769,7 @@ int FindLargestVersionAvail(EvalContext *ctx, char *matchName, char *matchVers, 
 
         for (dirp = DirRead(dirh); dirp != NULL; dirp = DirRead(dirh))
         {
-            if (FullTextMatch(refAnyVer, dirp->d_name))
+            if (FullTextMatch(ctx, refAnyVer, dirp->d_name))
             {
                 matchVer = ExtractFirstReference(refAnyVer, dirp->d_name);
 
@@ -943,23 +943,14 @@ static void SchedulePackageOp(EvalContext *ctx, const char *name, const char *ve
 
     if ((a.packages.package_name_convention) || (a.packages.package_delete_convention))
     {
-        {
-            VarRef *ref = VarRefParseFromScope("name", "cf_pack_context");
-            EvalContextVariablePut(ctx, ref, (Rval) { name, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
-            VarRefDestroy(ref);
-        }
+        VarRef *ref_name = VarRefParseFromScope("name", "cf_pack_context");
+        EvalContextVariablePut(ctx, ref_name, (Rval) { name, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
 
-        {
-            VarRef *ref = VarRefParseFromScope("version", "cf_pack_context");
-            EvalContextVariablePut(ctx, ref, (Rval) { version, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
-            VarRefDestroy(ref);
-        }
+        VarRef *ref_version = VarRefParseFromScope("version", "cf_pack_context");
+        EvalContextVariablePut(ctx, ref_version, (Rval) { version, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
 
-        {
-            VarRef *ref = VarRefParseFromScope("arch", "cf_pack_context");
-            EvalContextVariablePut(ctx, ref, (Rval) { arch, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
-            VarRefDestroy(ref);
-        }
+        VarRef *ref_arch = VarRefParseFromScope("arch", "cf_pack_context");
+        EvalContextVariablePut(ctx, ref_arch, (Rval) { arch, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
 
         if ((a.packages.package_delete_convention) && (a.packages.package_policy == PACKAGE_ACTION_DELETE))
         {
@@ -976,7 +967,14 @@ static void SchedulePackageOp(EvalContext *ctx, const char *name, const char *ve
             strlcpy(id, name, CF_EXPANDSIZE);
         }
 
-        ScopeClear(NULL, "cf_pack_context");
+        EvalContextVariableRemove(ctx, ref_name);
+        VarRefDestroy(ref_name);
+
+        EvalContextVariableRemove(ctx, ref_version);
+        VarRefDestroy(ref_version);
+
+        EvalContextVariableRemove(ctx, ref_arch);
+        VarRefDestroy(ref_arch);
     }
     else
     {
@@ -1022,26 +1020,26 @@ static void SchedulePackageOp(EvalContext *ctx, const char *name, const char *ve
                 ((a.packages.package_select == PACKAGE_VERSION_COMPARATOR_GT) || (a.packages.package_select == PACKAGE_VERSION_COMPARATOR_GE)))
             {
                 {
-                    VarRef *ref = VarRefParseFromScope("name", "cf_pack_context_anyver");
-                    EvalContextVariablePut(ctx, ref, (Rval) { name, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
-                    VarRefDestroy(ref);
+                    VarRef *ref_name = VarRefParseFromScope("name", "cf_pack_context_anyver");
+                    EvalContextVariablePut(ctx, ref_name, (Rval) { name, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
+
+                    VarRef *ref_version = VarRefParseFromScope("version", "cf_pack_context_anyver");
+                    EvalContextVariablePut(ctx, ref_version, (Rval) { "(.*)", RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
+
+                    VarRef *ref_arch = VarRefParseFromScope("arch", "cf_pack_context_anyver");
+                    EvalContextVariablePut(ctx, ref_arch, (Rval) { arch, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
+
+                    ExpandScalar(ctx, NULL, "cf_pack_context_anyver", a.packages.package_name_convention, refAnyVer);
+
+                    EvalContextVariableRemove(ctx, ref_name);
+                    VarRefDestroy(ref_name);
+
+                    EvalContextVariableRemove(ctx, ref_version);
+                    VarRefDestroy(ref_version);
+
+                    EvalContextVariableRemove(ctx, ref_arch);
+                    VarRefDestroy(ref_arch);
                 }
-
-                {
-                    VarRef *ref = VarRefParseFromScope("version", "cf_pack_context_anyver");
-                    EvalContextVariablePut(ctx, ref, (Rval) { "(.*)", RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
-                    VarRefDestroy(ref);
-                }
-
-                {
-                    VarRef *ref = VarRefParseFromScope("arch", "cf_pack_context_anyver");
-                    EvalContextVariablePut(ctx, ref, (Rval) { arch, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
-                    VarRefDestroy(ref);
-                }
-
-                ExpandScalar(ctx, NULL, "cf_pack_context_anyver", a.packages.package_name_convention, refAnyVer);
-
-                ScopeClear(NULL, "cf_pack_context_anyver");
 
                 EscapeSpecialChars(refAnyVer, refAnyVerEsc, sizeof(refAnyVerEsc), "(.*)","");
 
@@ -1156,25 +1154,27 @@ static void SchedulePackageOp(EvalContext *ctx, const char *name, const char *ve
             ((a.packages.package_select == PACKAGE_VERSION_COMPARATOR_GT) || (a.packages.package_select == PACKAGE_VERSION_COMPARATOR_GE)))
         {
             {
-                VarRef *ref = VarRefParseFromScope("name", "cf_pack_context_anyver");
-                EvalContextVariablePut(ctx, ref, (Rval) { name, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
-                VarRefDestroy(ref);
+                VarRef *ref_name = VarRefParseFromScope("name", "cf_pack_context_anyver");
+                EvalContextVariablePut(ctx, ref_name, (Rval) { name, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
+
+                VarRef *ref_version = VarRefParseFromScope("version", "cf_pack_context_anyver");
+                EvalContextVariablePut(ctx, ref_version, (Rval) { "(.*)", RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
+
+                VarRef *ref_arch = VarRefParseFromScope("arch", "cf_pack_context_anyver");
+                EvalContextVariablePut(ctx, ref_arch, (Rval) { arch, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
+
+                ExpandScalar(ctx, NULL, "cf_pack_context_anyver", a.packages.package_name_convention, refAnyVer);
+
+                EvalContextVariableRemove(ctx, ref_name);
+                VarRefDestroy(ref_name);
+
+                EvalContextVariableRemove(ctx, ref_version);
+                VarRefDestroy(ref_version);
+
+                EvalContextVariableRemove(ctx, ref_arch);
+                VarRefDestroy(ref_arch);
             }
 
-            {
-                VarRef *ref = VarRefParseFromScope("version", "cf_pack_context_anyver");
-                EvalContextVariablePut(ctx, ref, (Rval) { "(.*)", RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
-                VarRefDestroy(ref);
-            }
-
-            {
-                VarRef *ref = VarRefParseFromScope("arch", "cf_pack_context_anyver");
-                EvalContextVariablePut(ctx, ref, (Rval) { arch, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
-                VarRefDestroy(ref);
-            }
-
-            ExpandScalar(ctx, NULL, "cf_pack_context_anyver", a.packages.package_name_convention, refAnyVer);
-            ScopeClear(NULL, "cf_pack_context_anyver");
 
             EscapeSpecialChars(refAnyVer, refAnyVerEsc, sizeof(refAnyVerEsc), "(.*)","");
 
@@ -1232,27 +1232,26 @@ static void SchedulePackageOp(EvalContext *ctx, const char *name, const char *ve
                         instArch[1] = '\0';
                     }
 
-                    {
-                        VarRef *ref = VarRefParseFromScope("name", "cf_pack_context");
-                        EvalContextVariablePut(ctx, ref, (Rval) { name, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
-                        VarRefDestroy(ref);
-                    }
+                    VarRef *ref_name = VarRefParseFromScope("name", "cf_pack_context");
+                    EvalContextVariablePut(ctx, ref_name, (Rval) { name, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
 
-                    {
-                        VarRef *ref = VarRefParseFromScope("version", "cf_pack_context");
-                        EvalContextVariablePut(ctx, ref, (Rval) { instVer, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
-                        VarRefDestroy(ref);
-                    }
+                    VarRef *ref_version = VarRefParseFromScope("version", "cf_pack_context");
+                    EvalContextVariablePut(ctx, ref_version, (Rval) { instVer, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
 
-                    {
-                        VarRef *ref = VarRefParseFromScope("arch", "cf_pack_context");
-                        EvalContextVariablePut(ctx, ref, (Rval) { instArch, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
-                        VarRefDestroy(ref);
-                    }
+                    VarRef *ref_arch = VarRefParseFromScope("arch", "cf_pack_context");
+                    EvalContextVariablePut(ctx, ref_arch, (Rval) { instArch, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
 
                     ExpandScalar(ctx, NULL, "cf_pack_context", a.packages.package_delete_convention, reference2);
                     id_del = reference2;
-                    ScopeClear(NULL, "cf_pack_context");
+
+                    EvalContextVariableRemove(ctx, ref_name);
+                    VarRefDestroy(ref_name);
+
+                    EvalContextVariableRemove(ctx, ref_version);
+                    VarRefDestroy(ref_version);
+
+                    EvalContextVariableRemove(ctx, ref_arch);
+                    VarRefDestroy(ref_arch);
                 }
                 else
                 {
@@ -1367,7 +1366,7 @@ static VersionCmpResult PatchMatch(EvalContext *ctx, const char *n, const char *
 
     for (pi = mp->patch_list; pi != NULL; pi = pi->next)
     {
-        if (FullTextMatch(n, pi->name)) /* Check regexes */
+        if (FullTextMatch(ctx, n, pi->name)) /* Check regexes */
         {
             return VERCMP_MATCH;
         }
@@ -2319,7 +2318,7 @@ int ExecPackageCommand(EvalContext *ctx, char *command, int verify, int setCmdCl
         {
             if (a.packages.package_noverify_regex)
             {
-                if (FullTextMatch(a.packages.package_noverify_regex, line))
+                if (FullTextMatch(ctx, a.packages.package_noverify_regex, line))
                 {
                     cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, a, "Package verification error in %-.40s ... :%s", cmd, lineSafe);
                     retval = false;
@@ -2478,19 +2477,19 @@ static int PrependMultiLinePackageItem(EvalContext *ctx, PackageItem ** list, ch
         strcpy(arch, default_arch);
     }
 
-    if (FullTextMatch(a.packages.package_list_name_regex, item))
+    if (FullTextMatch(ctx, a.packages.package_list_name_regex, item))
     {
         strlcpy(vbuff, ExtractFirstReference(a.packages.package_list_name_regex, item), CF_MAXVARSIZE);
         sscanf(vbuff, "%s", name);      /* trim */
     }
 
-    if (FullTextMatch(a.packages.package_list_version_regex, item))
+    if (FullTextMatch(ctx, a.packages.package_list_version_regex, item))
     {
         strncpy(vbuff, ExtractFirstReference(a.packages.package_list_version_regex, item), CF_MAXVARSIZE - 1);
         sscanf(vbuff, "%s", version);   /* trim */
     }
 
-    if ((a.packages.package_list_arch_regex) && (FullTextMatch(a.packages.package_list_arch_regex, item)))
+    if ((a.packages.package_list_arch_regex) && (FullTextMatch(ctx, a.packages.package_list_arch_regex, item)))
     {
         if (a.packages.package_list_arch_regex)
         {

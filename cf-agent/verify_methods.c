@@ -39,7 +39,7 @@
 #include <ornaments.h>
 #include <string_lib.h>
 
-static void GetReturnValue(EvalContext *ctx, const char *ns, char *scope, Promise *pp);
+static void GetReturnValue(EvalContext *ctx, const Bundle *callee, Promise *caller);
 
 /*****************************************************************************/
 
@@ -50,7 +50,7 @@ void VerifyMethodsPromise(EvalContext *ctx, Promise *pp)
     a = GetMethodAttributes(ctx, pp);
 
     VerifyMethod(ctx, "usebundle", a, pp);
-    ScopeDeleteSpecial(SPECIAL_SCOPE_THIS, "promiser");
+    EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser");
 }
 
 /*****************************************************************************/
@@ -111,11 +111,11 @@ int VerifyMethod(EvalContext *ctx, char *attrname, Attributes a, Promise *pp)
         BannerSubBundle(bp, args);
 
         EvalContextStackPushBundleFrame(ctx, bp, args, a.inherit);
-        BundleHashVariables(ctx, bp);
+        BundleResolve(ctx, bp);
 
         retval = ScheduleAgentOperations(ctx, bp);
 
-        GetReturnValue(ctx, bp->ns, bp->name, pp);
+        GetReturnValue(ctx, bp, pp);
 
         EvalContextStackPopFrame(ctx);
 
@@ -139,7 +139,7 @@ int VerifyMethod(EvalContext *ctx, char *attrname, Attributes a, Promise *pp)
         {
             const char *lval = rp->item;
             VarRef *ref = VarRefParseFromBundle(lval, bp);
-            ScopeDeleteScalar(ref);
+            EvalContextVariableRemove(ctx, ref);
             VarRefDestroy(ref);
         }
     }
@@ -168,61 +168,34 @@ int VerifyMethod(EvalContext *ctx, char *attrname, Attributes a, Promise *pp)
 
 /***********************************************************************/
 
-static void GetReturnValue(EvalContext *ctx, const char *ns, char *scope, Promise *pp)
+static void GetReturnValue(EvalContext *ctx, const Bundle *callee, Promise *caller)
 {
-    char *result = ConstraintGetRvalValue(ctx, "useresult", pp, RVAL_TYPE_SCALAR);
+    char *result = ConstraintGetRvalValue(ctx, "useresult", caller, RVAL_TYPE_SCALAR);
 
     if (result)
     {
-        AssocHashTableIterator i;
-        CfAssoc *assoc;
-        char newname[CF_BUFSIZE];                 
-        Scope *ptr;
-        char index[CF_MAXVARSIZE], match[CF_MAXVARSIZE];    
-
-        if ((ptr = ScopeGet(ns, scope)) == NULL)
+        VarRef *ref = VarRefParseFromBundle("last-result", callee);
+        VariableTableIterator *iter = EvalContextVariableTableIteratorNew(ctx, ref);
+        Variable *result_var = NULL;
+        while ((result_var = VariableTableIteratorNext(iter)))
         {
-            Log(LOG_LEVEL_INFO, "useresult was specified but the method returned no data");
-            return;
-        }
-    
-        i = HashIteratorInit(ptr->hashtable);
-    
-        while ((assoc = HashIteratorNext(&i)))
-        {
-            snprintf(match, CF_MAXVARSIZE - 1, "last-result[");
-
-            if (strncmp(match, assoc->lval, strlen(match)) == 0)
+            assert(result_var->ref->num_indices == 1);
+            if (result_var->ref->num_indices != 1)
             {
-                char *sp;
-          
-                index[0] = '\0';
-                sscanf(assoc->lval + strlen(match), "%127[^\n]", index);
-                if ((sp = strchr(index, ']')))
-                {
-                    *sp = '\0';
-                }
-                else
-                {
-                    index[strlen(index) - 1] = '\0';
-                }
-          
-                if (strlen(index) > 0)
-                {
-                    snprintf(newname, CF_BUFSIZE, "%s[%s]", result, index);
-                }
-                else
-                {
-                    snprintf(newname, CF_BUFSIZE, "%s", result);
-                }
-
-                VarRef *ref = VarRefParseFromBundle(newname, PromiseGetBundle(pp));
-                EvalContextVariablePut(ctx, ref, assoc->rval, DATA_TYPE_STRING);
-                VarRefDestroy(ref);
+                continue;
             }
+
+            VarRef *new_ref = VarRefParseFromBundle(result, PromiseGetBundle(caller));
+            VarRefAddIndex(new_ref, result_var->ref->indices[0]);
+
+            EvalContextVariablePut(ctx, new_ref, result_var->rval, result_var->type);
+
+            VarRefDestroy(new_ref);
         }
-        
+
+        VarRefDestroy(ref);
+        VariableTableIteratorDestroy(iter);
     }
-    
+
 }
 

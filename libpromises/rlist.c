@@ -215,7 +215,7 @@ bool RlistIsIntIn(const Rlist *list, int i)
 
 /*******************************************************************/
 
-bool RlistIsInListOfRegex(const Rlist *list, const char *str)
+bool RlistIsInListOfRegex(EvalContext *ctx, const Rlist *list, const char *str)
 {
     if (str == NULL || list == NULL)
     {
@@ -229,7 +229,7 @@ bool RlistIsInListOfRegex(const Rlist *list, const char *str)
             continue;
         }
 
-        if (FullTextMatch(rp->item, str))
+        if (FullTextMatch(ctx, rp->item, str))
         {
             return true;
         }
@@ -1095,7 +1095,7 @@ Rlist *RlistFromSplitString(const char *string, char sep)
 
 /*******************************************************************/
 
-Rlist *RlistFromSplitRegex(const char *string, const char *regex, int max, int blanks)
+Rlist *RlistFromSplitRegex(EvalContext *ctx, const char *string, const char *regex, int max, int blanks)
  /* Splits a string containing a separator like "," 
     into a linked list of separate items, */
 // NOTE: this has a bad side-effect of creating scope match and variables,
@@ -1113,7 +1113,7 @@ Rlist *RlistFromSplitRegex(const char *string, const char *regex, int max, int b
 
     const char *sp = string;
 
-    while ((count < max) && BlockTextMatch(regex, sp, &start, &end))
+    while ((count < max) && BlockTextMatch(ctx, regex, sp, &start, &end))
     {
         if (end == 0)
         {
@@ -1323,7 +1323,33 @@ void RvalShow(FILE *fp, Rval rval)
     FileWriterDetach(w);
 }
 
-/* JSON serialization */
+unsigned RvalHash(Rval rval, unsigned seed, unsigned max)
+{
+    switch (rval.type)
+    {
+    case RVAL_TYPE_SCALAR:
+        return StringHash(RvalScalarValue(rval), seed, max);
+    case RVAL_TYPE_FNCALL:
+        return FnCallHash(RvalFnCallValue(rval), seed, max);
+    case RVAL_TYPE_LIST:
+        return RlistHash(RvalRlistValue(rval), seed, max);
+    case RVAL_TYPE_NOPROMISEE:
+        return (seed + 1) % max;
+    default:
+        ProgrammingError("Unhandled case in switch: %d", rval.type);
+    }
+}
+
+unsigned RlistHash(const Rlist *list, unsigned seed, unsigned max)
+{
+    unsigned hash = seed;
+    for (const Rlist *rp = list; rp; rp = rp->next)
+    {
+        hash = RvalHash((Rval) { rp->item, rp->type }, hash, max);
+    }
+    return hash;
+}
+
 
 static JsonElement *FnCallToJson(const FnCall *fp)
 {

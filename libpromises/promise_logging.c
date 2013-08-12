@@ -166,7 +166,7 @@ void PromiseLoggingPromiseEnter(const EvalContext *eval_context, const Promise *
         ProgrammingError("Promise logging: Unable to enter promise, bound to EvalContext different from passed one");
     }
 
-    if (EvalContextStackGetTopPromise(eval_context) != pp)
+    if (EvalContextStackCurrentPromise(eval_context) != pp)
     {
         /*
          * FIXME: There are still cases where promise passed here is not on top of stack
@@ -196,7 +196,7 @@ char *PromiseLoggingPromiseFinish(const EvalContext *eval_context, const Promise
         ProgrammingError("Promise logging: Unable to finish promise, bound to EvalContext different from passed one");
     }
 
-    if (EvalContextStackGetTopPromise(eval_context) != pp)
+    if (EvalContextStackCurrentPromise(eval_context) != pp)
     {
         /*
          * FIXME: There are still cases where promise passed here is not on top of stack

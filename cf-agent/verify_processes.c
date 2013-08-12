@@ -42,7 +42,7 @@
 static void VerifyProcesses(EvalContext *ctx, Attributes a, Promise *pp);
 static int ProcessSanityChecks(Attributes a, Promise *pp);
 static void VerifyProcessOp(EvalContext *ctx, Item *procdata, Attributes a, Promise *pp);
-static int FindPidMatches(Item *procdata, Item **killlist, Attributes a, const char *promiser);
+static int FindPidMatches(EvalContext *ctx, Item *procdata, Item **killlist, Attributes a, const char *promiser);
 
 void VerifyProcessesPromise(EvalContext *ctx, Promise *pp)
 {
@@ -123,10 +123,10 @@ static void VerifyProcesses(EvalContext *ctx, Attributes a, Promise *pp)
         return;
     }
 
-    ScopeNewSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser", pp->promiser, DATA_TYPE_STRING);
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser", pp->promiser, DATA_TYPE_STRING);
     PromiseBanner(pp);
     VerifyProcessOp(ctx, PROCESSTABLE, a, pp);
-    ScopeDeleteSpecial(SPECIAL_SCOPE_THIS, "promiser");
+    EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser");
 
     YieldCurrentLock(thislock);
 }
@@ -136,7 +136,7 @@ static void VerifyProcessOp(EvalContext *ctx, Item *procdata, Attributes a, Prom
     int matches = 0, do_signals = true, out_of_range, killed = 0, need_to_restart = true;
     Item *killlist = NULL;
 
-    matches = FindPidMatches(procdata, &killlist, a, pp->promiser);
+    matches = FindPidMatches(ctx, procdata, &killlist, a, pp->promiser);
 
 /* promise based on number of matches */
 
@@ -301,12 +301,12 @@ int DoAllSignals(EvalContext *ctx, Item *siglist, Attributes a, Promise *pp)
 }
 #endif
 
-static int FindPidMatches(Item *procdata, Item **killlist, Attributes a, const char *promiser)
+static int FindPidMatches(EvalContext *ctx, Item *procdata, Item **killlist, Attributes a, const char *promiser)
 {
     int matches = 0;
     pid_t cfengine_pid = getpid();
 
-    Item *matched = SelectProcesses(procdata, promiser, a.process_select, a.haveselect);
+    Item *matched = SelectProcesses(ctx, procdata, promiser, a.process_select, a.haveselect);
 
     for (Item *ip = matched; ip != NULL; ip = ip->next)
     {

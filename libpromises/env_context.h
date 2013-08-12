@@ -31,6 +31,8 @@
 #include <set.h>
 #include <sequence.h>
 #include <var_expressions.h>
+#include <scope.h>
+#include <variable.h>
 
 typedef enum
 {
@@ -46,23 +48,27 @@ typedef struct
 
     StringSet *contexts;
     StringSet *contexts_negated;
+
+    VariableTable *vars;
 } StackFrameBundle;
 
 typedef struct
 {
     const Body *owner;
+
+    VariableTable *vars;
 } StackFrameBody;
 
 typedef struct
 {
     const Promise *owner;
 
-    AssocHashTable *variables; // TODO: change to map
+    VariableTable *vars;
 } StackFramePromise;
 
 typedef struct
 {
-    const Promise *owner;
+    const Rlist *iteration_context;
 } StackFramePromiseIteration;
 
 typedef struct
@@ -90,6 +96,9 @@ struct EvalContext_
     Item *heap_abort_current_bundle;
 
     Seq *stack;
+
+    VariableTable *global_variables;
+    VariableTable *match_variables;
 
     StringSet *dependency_handles;
 
@@ -120,7 +129,7 @@ bool EvalContextHeapRemoveSoft(EvalContext *ctx, const char *context);
 bool EvalContextHeapRemoveHard(EvalContext *ctx, const char *context);
 void EvalContextStackFrameRemoveSoft(EvalContext *ctx, const char *context);
 
-void EvalContextHeapClear(EvalContext *ctx);
+void EvalContextClear(EvalContext *ctx);
 
 size_t EvalContextHeapMatchCountSoft(const EvalContext *ctx, const char *context_regex);
 size_t EvalContextHeapMatchCountHard(const EvalContext *ctx, const char *context_regex);
@@ -137,18 +146,24 @@ StringSetIterator EvalContextStackFrameIteratorSoft(const EvalContext *ctx);
 
 void EvalContextStackPushBundleFrame(EvalContext *ctx, const Bundle *owner, const Rlist *args, bool inherits_previous);
 void EvalContextStackPushBodyFrame(EvalContext *ctx, const Body *owner, Rlist *args);
-void EvalContextStackPushPromiseFrame(EvalContext *ctx, const Promise *owner);
-void EvalContextStackPushPromiseIterationFrame(EvalContext *ctx, const Promise *owner);
+void EvalContextStackPushPromiseFrame(EvalContext *ctx, const Promise *owner, bool copy_bundle_context);
+void EvalContextStackPushPromiseIterationFrame(EvalContext *ctx, const Rlist *iteration_context);
 void EvalContextStackPopFrame(EvalContext *ctx);
 char *EvalContextStackPath(const EvalContext *ctx);
 
-/**
- * @brief Returns the topmost promise from the stack, or NULL if no promises are pushed
- */
-const Promise *EvalContextStackGetTopPromise(const EvalContext *ctx);
+const Promise *EvalContextStackCurrentPromise(const EvalContext *ctx);
+const Bundle *EvalContextStackCurrentBundle(const EvalContext *ctx);
 
 bool EvalContextVariablePut(EvalContext *ctx, const VarRef *ref, Rval rval, DataType type);
+bool EvalContextVariablePutSpecial(EvalContext *ctx, SpecialScope scope, const char *lval, const void *value, DataType type);
 bool EvalContextVariableGet(const EvalContext *ctx, const VarRef *ref, Rval *rval_out, DataType *type_out);
+bool EvalContextVariableRemoveSpecial(const EvalContext *ctx, SpecialScope scope, const char *lval);
+bool EvalContextVariableRemove(const EvalContext *ctx, const VarRef *ref);
+bool EvalContextVariableClearMatch(EvalContext *ctx);
+
+VariableTableIterator *EvalContextVariableTableIteratorNew(const EvalContext *ctx, const VarRef *ref);
+VariableTableIterator *EvalContextVariableTableIteratorNewGlobals(const EvalContext *ctx, const char *ns, const char *scope);
+
 
 bool EvalContextVariableControlCommonGet(const EvalContext *ctx, CommonControl lval, Rval *rval_out);
 

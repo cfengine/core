@@ -79,17 +79,12 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config);
 bool GenericAgentCheckPolicy(EvalContext *ctx, GenericAgentConfig *config, bool force_validation);
 Policy *GenericAgentLoadPolicy(EvalContext *ctx, GenericAgentConfig *config);
 
-void InitializeGA(EvalContext *ctx, GenericAgentConfig *config);
-void PrintHelp(const char *comp, const struct option options[], const char *hints[], bool accepts_file_argument);
-void PrintVersion(void);
-int CheckPromises(const GenericAgentConfig *config);
-Policy *ReadPromises(AgentType agent_type, GenericAgentConfig *config);
-int NewPromiseProposals(EvalContext *ctx, const GenericAgentConfig *config, const Rlist *input_files);
+void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config);
+void GenericAgentWriteVersion(Writer *w);
+void GenericAgentWriteHelp(Writer *w, const char *comp, const struct option options[], const char *hints[], bool accepts_file_argument);
+bool GenericAgentCheckPromises(const GenericAgentConfig *config);
+bool GenericAgentIsPolicyReloadNeeded(EvalContext *ctx, const GenericAgentConfig *config, const Rlist *input_files);
 
-void BundleHashVariables(EvalContext *ctx, Bundle *bundle);
-void PolicyHashVariables(EvalContext *ctx, Policy *policy);
-
-void HashControls(EvalContext *ctx, const Policy *policy, GenericAgentConfig *config);
 void CloseLog(void);
 Seq *ControlBodyConstraints(const Policy *policy, AgentType agent);
 
@@ -100,12 +95,9 @@ Seq *ControlBodyConstraints(const Policy *policy, AgentType agent);
  */
 const Rlist *InputFiles(EvalContext *ctx, Policy *policy);
 
-
 void SetFacility(const char *retval);
 void CheckBundleParameters(char *scope, Rlist *args);
 void WritePID(char *filename);
-void CheckForPolicyHub(EvalContext *ctx);
-void ReloadPromises(AgentType ag);
 
 bool GenericAgentConfigParseArguments(GenericAgentConfig *config, int argc, char **argv);
 bool GenericAgentConfigParseWarningOptions(GenericAgentConfig *config, const char *warning_options);

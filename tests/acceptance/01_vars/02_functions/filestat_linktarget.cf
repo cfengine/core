@@ -1,0 +1,70 @@
+#######################################################
+#
+# Test filestat()
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+  commands:
+      "$(G.ln) -fs $(G.testfile) $(G.testfile)";
+
+  reports:
+    DEBUG::
+      "Created $(G.testfile) linked to itself";
+}
+
+
+#######################################################
+
+bundle agent test
+{
+  vars:
+      "fields" slist => splitstring("linktarget,linktarget_shallow", ",", 999);
+
+      "stat[$(fields)]" string => filestat($(G.testfile), $(fields));
+}
+
+
+#######################################################
+
+bundle agent check
+{
+  vars:
+      # Note that on W32 the link target is the file itself
+      "expected[linktarget]" string => $(G.testfile);
+      "expected[linktarget_shallow]" string => $(G.testfile);
+
+      "expects" slist => getindices("expected");
+
+      "fields" slist => getindices("test.stat");
+
+      "joint_condition" string => join(".", "expects");
+  classes:
+      "$(expects)" expression => strcmp("$(test.stat[$(expects)])", "$(expected[$(expects)])");
+      "ok" expression => "$(joint_condition)";
+
+  reports:
+    DEBUG::
+      "got $(G.testfile) field $(fields)=$(test.stat[$(fields)])";
+
+      "got $(G.testfile) field $(expects)=$(test.stat[$(expects)]) matches expected"
+      ifvarclass => "$(expects)";
+
+      "got $(G.testfile) field $(expects)=$(test.stat[$(expects)]) did NOT match expected $(expected[$(expects)])"
+      ifvarclass => "!$(expects)";
+
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

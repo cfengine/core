@@ -51,7 +51,7 @@ struct Map_
     };
 };
 
-static unsigned IdentityHashFn(const void *ptr, ARG_UNUSED unsigned int max)
+static unsigned IdentityHashFn(const void *ptr, ARG_UNUSED unsigned int seed, ARG_UNUSED unsigned int max)
 {
     return (unsigned)(uintptr_t)ptr;
 }
@@ -265,7 +265,7 @@ MapKeyValue *MapIteratorNext(MapIterator *i)
 }
 
 TYPED_MAP_DEFINE(String, char *, char *,
-                 (MapHashFn)&OatHash,
+                 (MapHashFn)&StringHash,
                  (MapKeyEqualFn)&StringSafeEqual,
                  &free,
                  &free)

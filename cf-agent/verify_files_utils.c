@@ -2572,7 +2572,12 @@ static void VerifyFileIntegrity(EvalContext *ctx, char *file, Attributes attr, P
 
     if (attr.change.report_diffs)
     {
-        LogFileChange(ctx, file, changed, attr, pp, &CopyRegularFile);
+        char destination[CF_BUFSIZE];
+        if (!GetRepositoryPath(file, attr, destination))
+        {
+            destination[0] = '\0';
+        }
+        LogFileChange(ctx, file, changed, attr, pp, &CopyRegularFile, destination, &DeleteCompressedArray);
     }
 }
 

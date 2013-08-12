@@ -371,7 +371,7 @@ void StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
 
         if ((COLLECT_INTERVAL > 0) && ((now - last_collect) > COLLECT_INTERVAL))
         {
-            TryCollectCall(COLLECT_WINDOW);
+            TryCollectCall(COLLECT_WINDOW, &ServerEntryPoint);
             last_collect = now;
             continue;
         }

@@ -49,7 +49,7 @@ ENTERPRISE_FUNC_4ARG_DEFINE_STUB(int, SetServerListenState, ARG_UNUSED EvalConte
     return InitServerPtr(queue_size);
 }
 
-ENTERPRISE_VOID_FUNC_1ARG_DEFINE_STUB(void, TryCollectCall, ARG_UNUSED int, collect_window)
+ENTERPRISE_VOID_FUNC_2ARG_DEFINE_STUB(void, TryCollectCall, ARG_UNUSED int, collect_window, ARG_UNUSED ServerEntryPointFunction, server_entry_point)
 {
     Log(LOG_LEVEL_VERBOSE, "Collect calling is only supported in CFEngine Enterprise");
 }

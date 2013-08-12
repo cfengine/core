@@ -809,6 +809,17 @@ dnl #######################################################################
 AC_CHECK_FUNCS(listxattr, [AC_DEFINE(WITH_XATTR, 1, [Define if you have a libc that supports extended attributes])])
 AC_CHECK_HEADERS([attr/xattr.h, sys/xattr.h])
 
+AC_MSG_CHECKING([whether xattr functions have extra arguments])
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([#include <sys/types.h>
+                                    #include <sys/xattr.h>],
+                                    [(void)listxattr("", 0, 0, 0);
+                                    (void)getxattr("", "", 0, 0, 0, 0);
+                                    (void)setxattr("", "", "", 0, 0, 0);
+                                    (void)removexattr("", "", 0);])],
+                  [AC_DEFINE(WITH_XATTR_EXTRA_ARGS, 1, [Define if your xattr implementation has extra arguments])]
+                  [AC_MSG_RESULT([yes])],
+                  [AC_MSG_RESULT([no])])
+
 dnl ######################################################################
 dnl Give the chance to enable SELINUX
 dnl ######################################################################

@@ -1,0 +1,47 @@
+# Test $(sys.inputdir), $(sys.masterdir), $(sys.libdir), $(sys.bindir), $(sys.failsafe_policy_path), $(sys.update_policy_path), $(sys.local_libdir)
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+}
+
+#######################################################
+
+bundle agent init
+{
+  vars:
+      "expected[bindir]" string => "$(sys.workdir)/bin";
+      "expected[failsafe_policy_path]" string => "$(sys.workdir)/inputs/failsafe.cf";
+      "expected[inputdir]" string => "$(sys.workdir)/inputs";
+      "expected[libdir]" string => "$(sys.workdir)/inputs/lib/$(sys.cf_version_major).$(sys.cf_version_minor)";
+      "expected[local_libdir]" string => "lib/$(sys.cf_version_major).$(sys.cf_version_minor)";
+      "expected[masterdir]" string => "$(sys.workdir)/masterfiles";
+      "expected[update_policy_path]" string => "$(sys.workdir)/inputs/update.cf";
+
+      "sysvars" slist => getindices("expected");
+}
+
+#######################################################
+
+bundle agent test
+{
+}
+
+#######################################################
+
+bundle agent check
+{
+  classes:
+      "$(init.sysvars)_ok" expression => regcmp("$(sys.$(init.sysvars))", "$(init.expected[$(init.sysvars)])");
+
+      "ok" and => { "inputdir_ok", "masterdir_ok", "libdir_ok", "bindir_ok", "failsafe_policy_path_ok", "update_policy_path_ok", "local_libdir_ok" };
+
+  reports:
+    DEBUG::
+      "$(init.sysvars) actual='$(sys.$(init.sysvars))', expected '$(init.expected[$(init.sysvars)])'";
+
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

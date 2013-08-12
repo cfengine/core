@@ -1194,8 +1194,8 @@ int ServerConnect(AgentConnection *conn, const char *host, FileCopy fc)
     }
 
     Log(LOG_LEVEL_VERBOSE,
-        "Set cfengine port number to '%s' = %u",
-          strport, (int) ntohs(shortport));
+        "Set cfengine port number to '%s' = %hu",
+          strport, ntohs(shortport));
 
     if ((fc.timeout == (short) CF_NOINT) || (fc.timeout <= 0))
     {

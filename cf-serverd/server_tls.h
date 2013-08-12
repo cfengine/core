@@ -22,24 +22,30 @@
   included file COSL.txt.
 */
 
-#ifndef CFENGINE_CF_SERVERD_ENTERPRISE_STUBS_H
-#define CFENGINE_CF_SERVERD_ENTERPRISE_STUBS_H
 
-#include "cf3.defs.h"
+#ifndef CFENGINE_SERVER_TLS_H
+#define CFENGINE_SERVER_TLS_H
 
-struct ServerConnectionState;
 
-void RegisterLiteralServerData(EvalContext *ctx, const char *handle, Promise *pp);
-int ReturnLiteralData(EvalContext *ctx, char *handle, char *ret);
+#include "platform.h"
 
-int SetServerListenState(EvalContext *ctx, size_t queue_size);
+#include "cf3.defs.h"                              /* EvalContext */
+#include "cfnet.h"                                 /* ConnectionInfo */
+#include "server.h"                                /* ServerConnectionState */
 
-void TryCollectCall(void);
-int ReceiveCollectCall(struct ServerConnectionState *conn);
 
-bool ReturnQueryData(struct ServerConnectionState *conn, char *menu, int encrypt);
+/* The only protocol we support inside TLS, for now... */
+#define SERVER_PROTOCOL_VERSION 1
 
-void KeepReportDataSelectAccessPromise(Promise *pp);
-void CleanReportBookFilterSet(void);
 
-#endif
+bool ServerTLSInitialize();
+int ServerTLSPeek(ConnectionInfo *conn_info);
+int ServerNegotiateProtocol(const ConnectionInfo *conn_info);
+int ServerIdentifyClient(const ConnectionInfo *conn_info,
+                         char *username, size_t username_size);
+int ServerSendWelcome(const ServerConnectionState *conn);
+int ServerTLSSessionEstablish(ServerConnectionState *conn);
+bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn);
+
+
+#endif  /* CFENGINE_SERVER_TLS_H */

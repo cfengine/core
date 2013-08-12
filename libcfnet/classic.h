@@ -22,24 +22,11 @@
   included file COSL.txt.
 */
 
-#ifndef CFENGINE_CF_SERVERD_ENTERPRISE_STUBS_H
-#define CFENGINE_CF_SERVERD_ENTERPRISE_STUBS_H
+#ifndef CLASSIC_H
+#define CLASSIC_H
 
-#include "cf3.defs.h"
 
-struct ServerConnectionState;
+int RecvSocketStream(int sd, char *buffer, int toget);
+int SendSocketStream(int sd, char *buffer, int tosend);
 
-void RegisterLiteralServerData(EvalContext *ctx, const char *handle, Promise *pp);
-int ReturnLiteralData(EvalContext *ctx, char *handle, char *ret);
-
-int SetServerListenState(EvalContext *ctx, size_t queue_size);
-
-void TryCollectCall(void);
-int ReceiveCollectCall(struct ServerConnectionState *conn);
-
-bool ReturnQueryData(struct ServerConnectionState *conn, char *menu, int encrypt);
-
-void KeepReportDataSelectAccessPromise(Promise *pp);
-void CleanReportBookFilterSet(void);
-
-#endif
+#endif // CLASSIC_H

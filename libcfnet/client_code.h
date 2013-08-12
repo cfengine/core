@@ -32,6 +32,7 @@
 #include "attributes.h"
 #include "item_lib.h"
 
+bool cfnet_init(void);
 void DetermineCfenginePort(void);
 /**
   @param err Set to 0 on success, -1 no server responce, -2 authentication failure.
@@ -40,8 +41,7 @@ AgentConnection *NewServerConnection(FileCopy fc, bool background, int *err);
 void DisconnectServer(AgentConnection *conn);
 int cf_remote_stat(char *file, struct stat *buf, char *stattype, bool encrypt, AgentConnection *conn);
 int CompareHashNet(char *file1, char *file2, bool encrypt, AgentConnection *conn);
-int CopyRegularFileNet(char *source, char *new, off_t size, AgentConnection *conn);
-int EncryptCopyRegularFileNet(char *source, char *new, off_t size, AgentConnection *conn);
+int CopyRegularFileNet(char *source, char *new, off_t size, bool encrypt, AgentConnection *conn);
 int ServerConnect(AgentConnection *conn, const char *host, FileCopy fc);
 
 Item *RemoteDirList(const char *dirname, bool encrypt, AgentConnection *conn);

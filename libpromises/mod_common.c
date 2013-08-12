@@ -320,6 +320,7 @@ const ConstraintSyntax CFS_CONTROLBODY[] =
     ConstraintSyntaxNewStringList("skipverify", "", "List of IPs or hostnames for which we expect no DNS binding and cannot verify", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewStringList("trustkeysfrom", "", "List of IPs from whom we accept public keys on trust", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBool("listen", "true/false enable server deamon to listen on defined port. Default value: true", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewString("allowciphers", "", "List of ciphers the server accepts. For Syntax help see man page for \"openssl ciphers\". Default is \"AES256-GCM-SHA384:AES256-SHA\"", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };
 

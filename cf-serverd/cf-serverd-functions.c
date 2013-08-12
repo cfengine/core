@@ -555,6 +555,9 @@ void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *con
             DeleteItemList(IPADDRESSES);
             IPADDRESSES = NULL;
 
+            free(SV.allowciphers);
+            SV.allowciphers = NULL;
+
             DeleteItemList(SV.trustkeylist);
             DeleteItemList(SV.skipverify);
             DeleteItemList(SV.attackerlist);

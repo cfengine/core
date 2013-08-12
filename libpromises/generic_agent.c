@@ -69,9 +69,8 @@ static void VerifyPromises(EvalContext *ctx, Policy *policy, GenericAgentConfig 
 static void CheckWorkingDirectories(EvalContext *ctx);
 
 static Policy *Cf3ParseFile(const GenericAgentConfig *config, const char *input_path);
-static Policy *Cf3ParseFiles(EvalContext *ctx, GenericAgentConfig *config, const Rlist *inputs);
 
-Policy *LoadPolicyFile(EvalContext *ctx, GenericAgentConfig *config, const char *policy_file, StringSet *parsed_files, StringSet *failed_files);
+static Policy *LoadPolicyFile(EvalContext *ctx, GenericAgentConfig *config, const char *policy_file, StringSet *parsed_files, StringSet *failed_files);
 
 static bool MissingInputFile(const char *input_file);
 
@@ -568,7 +567,7 @@ static Policy *LoadPolicyInputFiles(EvalContext *ctx, GenericAgentConfig *config
     return policy;
 }
 
-Policy *LoadPolicyFile(EvalContext *ctx, GenericAgentConfig *config, const char *policy_file, StringSet *parsed_files, StringSet *failed_files)
+static Policy *LoadPolicyFile(EvalContext *ctx, GenericAgentConfig *config, const char *policy_file, StringSet *parsed_files, StringSet *failed_files)
 {
     Policy *policy = Cf3ParseFile(config, policy_file);
     StringSetAdd(parsed_files, xstrdup(policy_file));
@@ -581,10 +580,41 @@ Policy *LoadPolicyFile(EvalContext *ctx, GenericAgentConfig *config, const char 
 
     PolicyResolve(ctx, policy, config);
 
-    Policy *aux_policy = LoadPolicyInputFiles(ctx, config, InputFiles(ctx, policy), parsed_files, failed_files);
-    if (aux_policy)
+    Body *body_common_control = PolicyGetBody(policy, NULL, "common", "control");
+    Body *body_file_control = PolicyGetBody(policy, NULL, "file", "control");
+
+    if (body_common_control)
     {
-        policy = PolicyMerge(policy, aux_policy);
+        Seq *potential_inputs = BodyGetConstraint(body_common_control, "inputs");
+        Constraint *cp = EffectiveConstraint(ctx, potential_inputs);
+        SeqDestroy(potential_inputs);
+
+        if (cp)
+        {
+            Policy *aux_policy = LoadPolicyInputFiles(ctx, config, RvalRlistValue(cp->rval), parsed_files, failed_files);
+            if (aux_policy)
+            {
+                policy = PolicyMerge(policy, aux_policy);
+            }
+        }
+    }
+
+    PolicyResolve(ctx, policy, config);
+
+    if (body_file_control)
+    {
+        Seq *potential_inputs = BodyGetConstraint(body_file_control, "inputs");
+        Constraint *cp = EffectiveConstraint(ctx, potential_inputs);
+        SeqDestroy(potential_inputs);
+
+        if (cp)
+        {
+            Policy *aux_policy = LoadPolicyInputFiles(ctx, config, RvalRlistValue(cp->rval), parsed_files, failed_files);
+            if (aux_policy)
+            {
+                policy = PolicyMerge(policy, aux_policy);
+            }
+        }
     }
 
     return policy;
@@ -819,78 +849,6 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
     }
 }
 
-/*******************************************************************/
-
-static Policy *Cf3ParseFiles(EvalContext *ctx, GenericAgentConfig *config, const Rlist *inputs)
-{
-    Policy *policy = PolicyNew();
-    bool contains_parse_errors = false;
-
-    for (const Rlist *rp = inputs; rp; rp = rp->next)
-    {
-        // TODO: ad-hoc validation, necessary?
-        if (rp->type != RVAL_TYPE_SCALAR)
-        {
-            Log(LOG_LEVEL_ERR, "Non-file object in inputs list");
-            continue;
-        }
-        else
-        {
-            Rval returnval;
-
-            if (strcmp(rp->item, CF_NULL_VALUE) == 0)
-            {
-                continue;
-            }
-
-            returnval = EvaluateFinalRval(ctx, NULL, "sys", (Rval) {rp->item, rp->type}, true, NULL);
-
-            Policy *aux_policy = NULL;
-            switch (returnval.type)
-            {
-            case RVAL_TYPE_SCALAR:
-                aux_policy = Cf3ParseFile(config, GenericAgentResolveInputPath(config, returnval.item));
-                break;
-
-            case RVAL_TYPE_LIST:
-                aux_policy = Cf3ParseFiles(ctx, config, returnval.item);
-                break;
-
-            default:
-                ProgrammingError("Unknown type in input list for parsing: %d", returnval.type);
-                break;
-            }
-
-            if (aux_policy)
-            {
-                policy = PolicyMerge(policy, aux_policy);
-            }
-            else
-            {
-                contains_parse_errors = true;
-            }
-
-            RvalDestroy(returnval);
-        }
-
-        PolicyResolve(ctx, policy, config);
-    }
-
-    PolicyResolve(ctx, policy, config);
-
-    if (contains_parse_errors)
-    {
-        PolicyDestroy(policy);
-        return NULL;
-    }
-    else
-    {
-        return policy;
-    }
-}
-
-/*******************************************************************/
-
 static bool MissingInputFile(const char *input_file)
 {
     struct stat sb;
@@ -1088,21 +1046,6 @@ Seq *ControlBodyConstraints(const Policy *policy, AgentType agent)
     }
 
     return NULL;
-}
-
-const Rlist *InputFiles(EvalContext *ctx, Policy *policy)
-{
-    Body *body_common_control = PolicyGetBody(policy, NULL, "common", "control");
-    if (!body_common_control)
-    {
-        return NULL;
-    }
-
-    Seq *potential_inputs = BodyGetConstraint(body_common_control, "inputs");
-    Constraint *cp = EffectiveConstraint(ctx, potential_inputs);
-    SeqDestroy(potential_inputs);
-
-    return cp ? cp->rval.item : NULL;
 }
 
 /*******************************************************************/

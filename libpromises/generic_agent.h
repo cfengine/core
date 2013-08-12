@@ -91,13 +91,6 @@ bool GenericAgentIsPolicyReloadNeeded(const GenericAgentConfig *config, const Po
 void CloseLog(void);
 Seq *ControlBodyConstraints(const Policy *policy, AgentType agent);
 
-/**
- * @brief Conventience function for getting the effective list of input_files from common body control.
- * @param policy Policy where inputs are specified
- * @return Pointer to the Rlist in the DOM
- */
-const Rlist *InputFiles(EvalContext *ctx, Policy *policy);
-
 void SetFacility(const char *retval);
 void CheckBundleParameters(char *scope, Rlist *args);
 void WritePID(char *filename);

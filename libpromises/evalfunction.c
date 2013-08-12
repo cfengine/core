@@ -2323,8 +2323,6 @@ static FnCallResult FnCallFindfiles(EvalContext *ctx, FnCall *fp, Rlist *finalar
         argcount++;
     }
 
-    RlistAppendScalar(&returnlist, CF_NULL_VALUE);
-
     for (arg = finalargs;  /* Start with arg set to finalargs. */
          arg;              /* We must have arg to proceed. */
          arg = arg->next)  /* arg steps forward every time. */
@@ -2334,7 +2332,7 @@ static FnCallResult FnCallFindfiles(EvalContext *ctx, FnCall *fp, Rlist *finalar
         RlistAppendScalarIdemp(&returnlist, xstrdup(pattern));
 #else /* !__MINGW32__ */
         glob_t globbuf;
-        if (0 == glob(pattern, GLOB_NOSORT, NULL, &globbuf))
+        if (0 == glob(pattern, 0, NULL, &globbuf))
         {
             for (int i = 0; i < globbuf.gl_pathc; i++)
             {
@@ -2349,6 +2347,13 @@ static FnCallResult FnCallFindfiles(EvalContext *ctx, FnCall *fp, Rlist *finalar
         }
 #endif
     }
+
+    // When no entries were found, mark the empty list
+    if (NULL == returnlist)
+    {
+        RlistAppendScalar(&returnlist, CF_NULL_VALUE);
+    }
+
     return (FnCallResult) { FNCALL_SUCCESS, { returnlist, RVAL_TYPE_LIST } };
 }
 

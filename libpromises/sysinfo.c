@@ -330,7 +330,7 @@ void DiscoverVersion(EvalContext *ctx)
         snprintf(workbuf, CF_MAXVARSIZE, "%d", patch);
         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "cf_version_patch", workbuf, DATA_TYPE_STRING);
 
-        snprintf(workbuf, CF_BUFSIZE, "%s%clib%c%d.%d", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR, major, minor);
+        snprintf(workbuf, CF_BUFSIZE, "%s%cinputs%clib%c%d.%d", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR, FILE_SEPARATOR, major, minor);
         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "libdir", workbuf, DATA_TYPE_STRING);
 
         snprintf(workbuf, CF_BUFSIZE, "lib%c%d.%d", FILE_SEPARATOR, major, minor);
@@ -508,11 +508,11 @@ void GetNameInfo3(EvalContext *ctx, AgentType agent_type)
     snprintf(workbuf, CF_BUFSIZE, "%s%cmasterfiles", CFWORKDIR, FILE_SEPARATOR);
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "masterdir", workbuf, DATA_TYPE_STRING);
 
-    snprintf(workbuf, CF_BUFSIZE, "%s%cfailsafe.cf", CFWORKDIR, FILE_SEPARATOR);
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "failsafe", workbuf, DATA_TYPE_STRING);
+    snprintf(workbuf, CF_BUFSIZE, "%s%cinputs%cfailsafe.cf", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "failsafe_policy_path", workbuf, DATA_TYPE_STRING);
 
-    snprintf(workbuf, CF_BUFSIZE, "%s%cupdate.cf", CFWORKDIR, FILE_SEPARATOR);
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "update", workbuf, DATA_TYPE_STRING);
+    snprintf(workbuf, CF_BUFSIZE, "%s%cinputs%cupdate.cf", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "update_policy_path", workbuf, DATA_TYPE_STRING);
 
 /* FIXME: type conversion */
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "cf_version", (char *) Version(), DATA_TYPE_STRING);

@@ -620,7 +620,7 @@ void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *con
         else
         {
             Log(LOG_LEVEL_INFO, "File changes contain errors -- ignoring");
-            PROMISETIME = time(NULL);
+            config->policy_last_read_attempt = time(NULL);
         }
     }
     else

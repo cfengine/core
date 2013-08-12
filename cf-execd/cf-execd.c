@@ -495,7 +495,7 @@ typedef enum
     RELOAD_FULL
 } Reload;
 
-static Reload CheckNewPromises(EvalContext *ctx, const GenericAgentConfig *config, const Rlist *input_files)
+static Reload CheckNewPromises(EvalContext *ctx, GenericAgentConfig *config, const Rlist *input_files)
 {
     if (GenericAgentIsPolicyReloadNeeded(ctx, config, input_files))
     {
@@ -508,7 +508,7 @@ static Reload CheckNewPromises(EvalContext *ctx, const GenericAgentConfig *confi
         else
         {
             Log(LOG_LEVEL_INFO, "New promises file contains syntax errors -- ignoring");
-            PROMISETIME = time(NULL);
+            config->policy_last_read_attempt = time(NULL);
         }
     }
     else

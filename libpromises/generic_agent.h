@@ -49,9 +49,10 @@ typedef struct
     bool tty_interactive; // agent is running interactively, via tty/terminal interface
     bool color;
 
-    // change to evaluation behavior from the policy itself
+    // agent state
     bool ignore_missing_bundles;
     bool ignore_missing_inputs;
+    time_t policy_last_read_attempt;
 
     struct
     {

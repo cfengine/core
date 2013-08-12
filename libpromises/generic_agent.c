@@ -494,7 +494,7 @@ static void ShowContext(EvalContext *ctx)
 
 Policy *GenericAgentLoadPolicy(EvalContext *ctx, GenericAgentConfig *config)
 {
-    PROMISETIME = time(NULL);
+    config->policy_last_read_attempt = time(NULL);
 
     Policy *main_policy = Cf3ParseFile(config, config->input_file);
 
@@ -871,7 +871,7 @@ bool GenericAgentIsPolicyReloadNeeded(EvalContext *ctx, const GenericAgentConfig
         return true;
     }
 
-    if (sb.st_mtime > validated_at || sb.st_mtime > PROMISETIME)
+    if (sb.st_mtime > validated_at || sb.st_mtime > config->policy_last_read_attempt)
     {
         Log(LOG_LEVEL_VERBOSE, "Promises seem to change");
         return true;
@@ -882,7 +882,7 @@ bool GenericAgentIsPolicyReloadNeeded(EvalContext *ctx, const GenericAgentConfig
     snprintf(filename, CF_MAXVARSIZE, "%s/inputs", CFWORKDIR);
     MapName(filename);
 
-    if (IsNewerFileTree(filename, PROMISETIME))
+    if (IsNewerFileTree(filename, config->policy_last_read_attempt))
     {
         Log(LOG_LEVEL_VERBOSE, "Quick search detected file changes");
         return true;
@@ -913,7 +913,7 @@ bool GenericAgentIsPolicyReloadNeeded(EvalContext *ctx, const GenericAgentConfig
                     break;
                 }
 
-                if (sb.st_mtime > PROMISETIME)
+                if (sb.st_mtime > config->policy_last_read_attempt)
                 {
                     result = true;
                 }
@@ -935,7 +935,7 @@ bool GenericAgentIsPolicyReloadNeeded(EvalContext *ctx, const GenericAgentConfig
                         break;
                     }
 
-                    if (sb.st_mtime > PROMISETIME)
+                    if (sb.st_mtime > config->policy_last_read_attempt)
                     {
                         result = true;
                         break;
@@ -960,7 +960,7 @@ bool GenericAgentIsPolicyReloadNeeded(EvalContext *ctx, const GenericAgentConfig
     snprintf(filename, CF_MAXVARSIZE, "%s/policy_server.dat", CFWORKDIR);
     MapName(filename);
 
-    if ((stat(filename, &sb) != -1) && (sb.st_mtime > PROMISETIME))
+    if ((stat(filename, &sb) != -1) && (sb.st_mtime > config->policy_last_read_attempt))
     {
         result = true;
     }
@@ -1562,6 +1562,7 @@ GenericAgentConfig *GenericAgentConfigNewDefault(AgentType agent_type)
     config->check_runnable = agent_type != AGENT_TYPE_COMMON;
     config->ignore_missing_bundles = false;
     config->ignore_missing_inputs = false;
+    config->policy_last_read_attempt = 0;
 
     config->heap_soft = NULL;
     config->heap_negated = NULL;

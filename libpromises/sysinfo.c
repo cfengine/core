@@ -329,12 +329,19 @@ void DiscoverVersion(EvalContext *ctx)
         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "cf_version_minor", workbuf, DATA_TYPE_STRING);
         snprintf(workbuf, CF_MAXVARSIZE, "%d", patch);
         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "cf_version_patch", workbuf, DATA_TYPE_STRING);
+
+        snprintf(workbuf, CF_BUFSIZE, "%s%clib%c%d.%d", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR, major, minor);
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "libdir", workbuf, DATA_TYPE_STRING);
+
+        snprintf(workbuf, CF_BUFSIZE, "lib%c%d.%d", FILE_SEPARATOR, major, minor);
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "local_libdir", workbuf, DATA_TYPE_STRING);
     }
     else
     {
         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "cf_version_major", "BAD VERSION " VERSION, DATA_TYPE_STRING);
         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "cf_version_minor", "BAD VERSION " VERSION, DATA_TYPE_STRING);
         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "cf_version_patch", "BAD VERSION " VERSION, DATA_TYPE_STRING);
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "libdir", CFWORKDIR, DATA_TYPE_STRING);
     }
 }
 
@@ -491,6 +498,22 @@ void GetNameInfo3(EvalContext *ctx, AgentType agent_type)
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "resolv", VRESOLVCONF[VSYSTEMHARDCLASS], DATA_TYPE_STRING);
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "maildir", VMAILDIR[VSYSTEMHARDCLASS], DATA_TYPE_STRING);
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "exports", VEXPORTS[VSYSTEMHARDCLASS], DATA_TYPE_STRING);
+
+    snprintf(workbuf, CF_BUFSIZE, "%s%cbin", CFWORKDIR, FILE_SEPARATOR);
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "bindir", workbuf, DATA_TYPE_STRING);
+
+    snprintf(workbuf, CF_BUFSIZE, "%s%cinputs", CFWORKDIR, FILE_SEPARATOR);
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "inputdir", workbuf, DATA_TYPE_STRING);
+
+    snprintf(workbuf, CF_BUFSIZE, "%s%cmasterfiles", CFWORKDIR, FILE_SEPARATOR);
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "masterdir", workbuf, DATA_TYPE_STRING);
+
+    snprintf(workbuf, CF_BUFSIZE, "%s%cfailsafe.cf", CFWORKDIR, FILE_SEPARATOR);
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "failsafe", workbuf, DATA_TYPE_STRING);
+
+    snprintf(workbuf, CF_BUFSIZE, "%s%cupdate.cf", CFWORKDIR, FILE_SEPARATOR);
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "update", workbuf, DATA_TYPE_STRING);
+
 /* FIXME: type conversion */
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "cf_version", (char *) Version(), DATA_TYPE_STRING);
 

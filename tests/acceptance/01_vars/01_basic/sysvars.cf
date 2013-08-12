@@ -1,4 +1,4 @@
-# Test $(sys.inputdir), $(sys.masterdir), $(sys.libdir), $(sys.bindir), $(sys.failsafe), $(sys.update), $(sys.local_libdir)
+# Test $(sys.inputdir), $(sys.masterdir), $(sys.libdir), $(sys.bindir), $(sys.failsafe_policy_path), $(sys.update_policy_path), $(sys.local_libdir)
 body common control
 {
       inputs => { "../../default.cf.sub" };
@@ -11,12 +11,12 @@ bundle agent init
 {
   vars:
       "expected[bindir]" string => "$(sys.workdir)/bin";
-      "expected[failsafe]" string => "$(sys.workdir)/inputs/failsafe.cf";
+      "expected[failsafe_policy_path]" string => "$(sys.workdir)/inputs/failsafe.cf";
       "expected[inputdir]" string => "$(sys.workdir)/inputs";
       "expected[libdir]" string => "$(sys.workdir)/inputs/lib/$(sys.cf_version_major).$(sys.cf_version_minor)";
       "expected[local_libdir]" string => "lib/$(sys.cf_version_major).$(sys.cf_version_minor)";
       "expected[masterdir]" string => "$(sys.workdir)/masterfiles";
-      "expected[update]" string => "$(sys.workdir)/inputs/update.cf";
+      "expected[update_policy_path]" string => "$(sys.workdir)/inputs/update.cf";
 
       "sysvars" slist => getindices("expected");
 }
@@ -34,7 +34,7 @@ bundle agent check
   classes:
       "$(init.sysvars)_ok" expression => regcmp("$(sys.$(init.sysvars))", "$(init.expected[$(init.sysvars)])");
 
-      "ok" and => { "inputdir_ok", "masterdir_ok", "libdir_ok", "bindir_ok", "failsafe_ok", "update_ok", "local_libdir_ok" };
+      "ok" and => { "inputdir_ok", "masterdir_ok", "libdir_ok", "bindir_ok", "failsafe_policy_path_ok", "update_policy_path_ok", "local_libdir_ok" };
 
   reports:
     DEBUG::

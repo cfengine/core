@@ -330,7 +330,7 @@ void DiscoverVersion(EvalContext *ctx)
         snprintf(workbuf, CF_MAXVARSIZE, "%d", patch);
         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "cf_version_patch", workbuf, DATA_TYPE_STRING);
 
-        snprintf(workbuf, CF_BUFSIZE, "%s%clib%c%d.%d", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR, major, minor);
+        snprintf(workbuf, CF_BUFSIZE, "%s%cinputs%clib%c%d.%d", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR, FILE_SEPARATOR, major, minor);
         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "libdir", workbuf, DATA_TYPE_STRING);
 
         snprintf(workbuf, CF_BUFSIZE, "lib%c%d.%d", FILE_SEPARATOR, major, minor);

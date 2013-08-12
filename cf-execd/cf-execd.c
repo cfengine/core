@@ -139,7 +139,7 @@ int main(int argc, char *argv[])
     GenericAgentDiscoverContext(ctx, config);
 
     Policy *policy = NULL;
-    if (GenericAgentCheckPolicy(ctx, config, false))
+    if (GenericAgentCheckPolicy(config, false))
     {
         policy = GenericAgentLoadPolicy(ctx, config);
     }
@@ -495,9 +495,9 @@ typedef enum
     RELOAD_FULL
 } Reload;
 
-static Reload CheckNewPromises(EvalContext *ctx, GenericAgentConfig *config, const Policy *existing_policy)
+static Reload CheckNewPromises(GenericAgentConfig *config, const Policy *existing_policy)
 {
-    if (GenericAgentIsPolicyReloadNeeded(ctx, config, existing_policy))
+    if (GenericAgentIsPolicyReloadNeeded(config, existing_policy))
     {
         Log(LOG_LEVEL_VERBOSE, "New promises detected...");
 
@@ -528,7 +528,7 @@ static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *c
      * FIXME: this logic duplicates the one from cf-serverd.c. Unify ASAP.
      */
 
-    if (CheckNewPromises(ctx, config, *policy) == RELOAD_FULL)
+    if (CheckNewPromises(config, *policy) == RELOAD_FULL)
     {
         /* Full reload */
 

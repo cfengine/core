@@ -540,7 +540,7 @@ void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *con
 {
     Log(LOG_LEVEL_DEBUG, "Checking file updates for input file '%s'", config->input_file);
 
-    if (GenericAgentIsPolicyReloadNeeded(ctx, config, *policy))
+    if (GenericAgentIsPolicyReloadNeeded(config, *policy))
     {
         Log(LOG_LEVEL_VERBOSE, "New promises detected...");
 

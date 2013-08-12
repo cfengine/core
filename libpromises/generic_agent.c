@@ -190,7 +190,7 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
     }
 }
 
-static bool IsPolicyPrecheckNeeded(EvalContext *ctx, GenericAgentConfig *config, bool force_validation)
+static bool IsPolicyPrecheckNeeded(GenericAgentConfig *config, bool force_validation)
 {
     bool check_policy = false;
 
@@ -199,7 +199,7 @@ static bool IsPolicyPrecheckNeeded(EvalContext *ctx, GenericAgentConfig *config,
         check_policy = true;
         Log(LOG_LEVEL_VERBOSE, "Input file is outside default repository, validating it");
     }
-    if (GenericAgentIsPolicyReloadNeeded(ctx, config, NULL))
+    if (GenericAgentIsPolicyReloadNeeded(config, NULL))
     {
         check_policy = true;
         Log(LOG_LEVEL_VERBOSE, "Input file is changed since last validation, validating it");
@@ -213,11 +213,11 @@ static bool IsPolicyPrecheckNeeded(EvalContext *ctx, GenericAgentConfig *config,
     return check_policy;
 }
 
-bool GenericAgentCheckPolicy(EvalContext *ctx, GenericAgentConfig *config, bool force_validation)
+bool GenericAgentCheckPolicy(GenericAgentConfig *config, bool force_validation)
 {
     if (!MissingInputFile(config->input_file))
     {
-        if (IsPolicyPrecheckNeeded(ctx, config, force_validation))
+        if (IsPolicyPrecheckNeeded(config, force_validation))
         {
             bool policy_check_ok = GenericAgentCheckPromises(config);
 
@@ -238,16 +238,51 @@ bool GenericAgentCheckPolicy(EvalContext *ctx, GenericAgentConfig *config, bool 
     return false;
 }
 
-/*****************************************************************************/
-/* Level                                                                     */
-/*****************************************************************************/
+static time_t ReadPolicyValidatedFileMTime(const GenericAgentConfig *config)
+{
+    char filename[CF_MAXVARSIZE];
+
+    if (MINUSF)
+    {
+        snprintf(filename, CF_MAXVARSIZE, "%s/state/validated_%s", CFWORKDIR, CanonifyName(config->original_input_file));
+        MapName(filename);
+    }
+    else
+    {
+        snprintf(filename, CF_MAXVARSIZE, "%s/masterfiles/cf_promises_validated", CFWORKDIR);
+        MapName(filename);
+    }
+
+    struct stat sb;
+    if (stat(filename, &sb) != -1)
+    {
+        return sb.st_mtime;
+    }
+    else
+    {
+        return 0;
+    }
+}
 
 /**
  * @brief Writes a file with a contained timestamp to mark a policy file as validated
  * @return True if successful.
  */
-static bool WritePolicyValidatedFile(const char *filename)
+static bool WritePolicyValidatedFile(const GenericAgentConfig *config)
 {
+    char filename[CF_MAXVARSIZE];
+
+    if (MINUSF)
+    {
+        snprintf(filename, CF_MAXVARSIZE, "%s/state/validated_%s", CFWORKDIR, CanonifyName(config->original_input_file));
+        MapName(filename);
+    }
+    else
+    {
+        snprintf(filename, CF_MAXVARSIZE, "%s/masterfiles/cf_promises_validated", CFWORKDIR);
+        MapName(filename);
+    }
+
     if (!MakeParentDirectory(filename, true))
     {
         Log(LOG_LEVEL_ERR, "While writing policy validated marker file '%s', could not create directory (MakeParentDirectory: %s)", filename, GetErrorStr());
@@ -336,20 +371,7 @@ bool GenericAgentCheckPromises(const GenericAgentConfig *config)
 
     if (!IsFileOutsideDefaultRepository(config->original_input_file))
     {
-        char validated_filename[CF_MAXVARSIZE];
-
-        if (MINUSF)
-        {
-            snprintf(validated_filename, CF_MAXVARSIZE, "%s/state/validated_%s", CFWORKDIR, CanonifyName(config->original_input_file));
-            MapName(validated_filename);
-        }
-        else
-        {
-            snprintf(validated_filename, CF_MAXVARSIZE, "%s/masterfiles/cf_promises_validated", CFWORKDIR);
-            MapName(validated_filename);
-        }
-
-        WritePolicyValidatedFile(validated_filename);
+        WritePolicyValidatedFile(config);
     }
 
     return true;
@@ -820,33 +842,11 @@ static bool MissingInputFile(const char *input_file)
 
 /*******************************************************************/
 
-bool GenericAgentIsPolicyReloadNeeded(EvalContext *ctx, const GenericAgentConfig *config, const Policy *policy)
+bool GenericAgentIsPolicyReloadNeeded(const GenericAgentConfig *config, const Policy *policy)
 {
     char filename[CF_MAXVARSIZE];
 
-    if (MINUSF)
-    {
-        snprintf(filename, CF_MAXVARSIZE, "%s/state/validated_%s", CFWORKDIR, CanonifyName(config->original_input_file));
-        MapName(filename);
-    }
-    else
-    {
-        snprintf(filename, CF_MAXVARSIZE, "%s/masterfiles/cf_promises_validated", CFWORKDIR);
-        MapName(filename);
-    }
-
-    time_t validated_at;
-    {
-        struct stat sb;
-        if (stat(filename, &sb) != -1)
-        {
-            validated_at = sb.st_mtime;
-        }
-        else
-        {
-            validated_at = 0;
-        }
-    }
+    time_t validated_at = ReadPolicyValidatedFileMTime(config);
 
     if (validated_at > time(NULL))
     {

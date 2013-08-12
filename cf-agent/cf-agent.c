@@ -232,7 +232,7 @@ int main(int argc, char *argv[])
     GenericAgentDiscoverContext(ctx, config);
 
     Policy *policy = NULL;
-    if (GenericAgentCheckPolicy(ctx, config, ALWAYS_VALIDATE))
+    if (GenericAgentCheckPolicy(config, ALWAYS_VALIDATE))
     {
         policy = GenericAgentLoadPolicy(ctx, config);
     }

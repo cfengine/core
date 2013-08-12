@@ -77,7 +77,7 @@ typedef struct
 
 const char *GenericAgentResolveInputPath(const GenericAgentConfig *config, const char *input_file);
 void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config);
-bool GenericAgentCheckPolicy(EvalContext *ctx, GenericAgentConfig *config, bool force_validation);
+bool GenericAgentCheckPolicy(GenericAgentConfig *config, bool force_validation);
 Policy *GenericAgentLoadPolicy(EvalContext *ctx, GenericAgentConfig *config);
 
 void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config);
@@ -86,7 +86,7 @@ void GenericAgentWriteHelp(Writer *w, const char *comp, const struct option opti
 bool GenericAgentCheckPromises(const GenericAgentConfig *config);
 
 
-bool GenericAgentIsPolicyReloadNeeded(EvalContext *ctx, const GenericAgentConfig *config, const Policy *policy);
+bool GenericAgentIsPolicyReloadNeeded(const GenericAgentConfig *config, const Policy *policy);
 
 void CloseLog(void);
 Seq *ControlBodyConstraints(const Policy *policy, AgentType agent);

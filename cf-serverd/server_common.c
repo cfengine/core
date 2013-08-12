@@ -4,6 +4,7 @@ static const int CF_NOSIZE = -1;
 #include "server_common.h"
 
 #include "item_lib.h"
+#include "string_lib.h"                                    /* ToLower */
 #include "crypto.h"                                        /* EncryptString */
 #include "files_names.h"
 #include "files_interfaces.h"

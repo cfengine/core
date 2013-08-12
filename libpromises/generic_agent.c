@@ -820,13 +820,9 @@ static bool MissingInputFile(const char *input_file)
 
 /*******************************************************************/
 
-bool GenericAgentIsPolicyReloadNeeded(EvalContext *ctx, const GenericAgentConfig *config, const Rlist *input_files)
+bool GenericAgentIsPolicyReloadNeeded(EvalContext *ctx, const GenericAgentConfig *config, const Policy *policy)
 {
-    Rlist *sl;
-    struct stat sb;
-    int result = false;
     char filename[CF_MAXVARSIZE];
-    time_t validated_at;
 
     if (MINUSF)
     {
@@ -839,42 +835,44 @@ bool GenericAgentIsPolicyReloadNeeded(EvalContext *ctx, const GenericAgentConfig
         MapName(filename);
     }
 
-    if (stat(filename, &sb) != -1)
+    time_t validated_at;
     {
-        validated_at = sb.st_mtime;
+        struct stat sb;
+        if (stat(filename, &sb) != -1)
+        {
+            validated_at = sb.st_mtime;
+        }
+        else
+        {
+            validated_at = 0;
+        }
     }
-    else
-    {
-        validated_at = 0;
-    }
-
-// sanity check
 
     if (validated_at > time(NULL))
     {
         Log(LOG_LEVEL_INFO,
-              "!! Clock seems to have jumped back in time - mtime of %s is newer than current time - touching it",
-              filename);
+            "Clock seems to have jumped back in time - mtime of '%s' is newer than current time - touching it",
+            filename);
 
         if (utime(filename, NULL) == -1)
         {
             Log(LOG_LEVEL_ERR, "Could not touch '%s'. (utime: %s)", filename, GetErrorStr());
         }
-
-        validated_at = 0;
         return true;
     }
 
-    if (stat(config->input_file, &sb) == -1)
     {
-        Log(LOG_LEVEL_VERBOSE, "There is no readable input file at '%s'. (stat: %s)", config->input_file, GetErrorStr());
-        return true;
-    }
-
-    if (sb.st_mtime > validated_at || sb.st_mtime > config->policy_last_read_attempt)
-    {
-        Log(LOG_LEVEL_VERBOSE, "Promises seem to change");
-        return true;
+        struct stat sb;
+        if (stat(config->input_file, &sb) == -1)
+        {
+            Log(LOG_LEVEL_VERBOSE, "There is no readable input file at '%s'. (stat: %s)", config->input_file, GetErrorStr());
+            return true;
+        }
+        else if (sb.st_mtime > validated_at || sb.st_mtime > config->policy_last_read_attempt)
+        {
+            Log(LOG_LEVEL_VERBOSE, "Input file '%s' has changed since the last policy read attempt", config->input_file);
+            return true;
+        }
     }
 
 // Check the directories first for speed and because non-input/data files should trigger an update
@@ -888,84 +886,51 @@ bool GenericAgentIsPolicyReloadNeeded(EvalContext *ctx, const GenericAgentConfig
         return true;
     }
 
-// Check files in case there are any abs paths
-
-    for (const Rlist *rp = input_files; rp != NULL; rp = rp->next)
+    if (policy)
     {
-        if (rp->type != RVAL_TYPE_SCALAR)
-        {
-            Log(LOG_LEVEL_ERR, "Non file object %s in list", (char *) rp->item);
-        }
-        else
-        {
-            Rval returnval = EvaluateFinalRval(ctx, NULL, "sys", (Rval) { rp->item, rp->type }, true, NULL);
-            LogLevel missing_inputs_log_level = config->ignore_missing_inputs ? LOG_LEVEL_VERBOSE : LOG_LEVEL_ERR;
+        const LogLevel missing_inputs_log_level = config->ignore_missing_inputs ? LOG_LEVEL_VERBOSE : LOG_LEVEL_ERR;
 
-            switch (returnval.type)
+        StringSet *input_files = PolicySourceFiles(policy);
+
+        StringSetIterator iter = StringSetIteratorInit(input_files);
+        const char *input_file = NULL;
+        bool reload_needed = false;
+
+        while ((input_file = StringSetIteratorNext(&iter)))
+        {
+            struct stat sb;
+            if (stat(input_file, &sb) == -1)
             {
-            case RVAL_TYPE_SCALAR:
-
-                if (stat(GenericAgentResolveInputPath(config, (char *) returnval.item), &sb) == -1)
-                {
-
-                    Log(missing_inputs_log_level, "Unreadable promise proposals at '%s'. (stat: %s)", (char *) returnval.item, GetErrorStr());
-                    result = true;
-                    break;
-                }
-
-                if (sb.st_mtime > config->policy_last_read_attempt)
-                {
-                    result = true;
-                }
-                break;
-
-            case RVAL_TYPE_LIST:
-
-                for (sl = (Rlist *) returnval.item; sl != NULL; sl = sl->next)
-                {
-                    if (strcmp((char *) sl->item, CF_NULL_VALUE) == 0)
-                    {
-                        continue;
-                    }
-
-                    if (stat(GenericAgentResolveInputPath(config, (char *) sl->item), &sb) == -1)
-                    {
-                        Log(missing_inputs_log_level, "Unreadable promise proposals at '%s'. (stat: %s)", (char *) sl->item, GetErrorStr());
-                        result = true;
-                        break;
-                    }
-
-                    if (sb.st_mtime > config->policy_last_read_attempt)
-                    {
-                        result = true;
-                        break;
-                    }
-                }
-                break;
-
-            default:
+                Log(missing_inputs_log_level, "Unreadable promise proposals at '%s'. (stat: %s)", input_file, GetErrorStr());
+                reload_needed = true;
                 break;
             }
-
-            RvalDestroy(returnval);
-
-            if (result)
+            else if (sb.st_mtime > config->policy_last_read_attempt)
             {
+                reload_needed = true;
                 break;
             }
         }
+
+        StringSetDestroy(input_files);
+        if (reload_needed)
+        {
+            return true;
+        }
     }
 
-// did policy server change (used in $(sys.policy_hub))?
-    snprintf(filename, CF_MAXVARSIZE, "%s/policy_server.dat", CFWORKDIR);
-    MapName(filename);
-
-    if ((stat(filename, &sb) != -1) && (sb.st_mtime > config->policy_last_read_attempt))
     {
-        result = true;
+        snprintf(filename, CF_MAXVARSIZE, "%s/policy_server.dat", CFWORKDIR);
+        MapName(filename);
+
+        struct stat sb;
+        if ((stat(filename, &sb) != -1) && (sb.st_mtime > config->policy_last_read_attempt))
+        {
+            return true;
+        }
     }
 
-    return result;
+    return false;
 }
 
 /*

@@ -495,9 +495,9 @@ typedef enum
     RELOAD_FULL
 } Reload;
 
-static Reload CheckNewPromises(EvalContext *ctx, GenericAgentConfig *config, const Rlist *input_files)
+static Reload CheckNewPromises(EvalContext *ctx, GenericAgentConfig *config, const Policy *existing_policy)
 {
-    if (GenericAgentIsPolicyReloadNeeded(ctx, config, input_files))
+    if (GenericAgentIsPolicyReloadNeeded(ctx, config, existing_policy))
     {
         Log(LOG_LEVEL_VERBOSE, "New promises detected...");
 
@@ -528,7 +528,7 @@ static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *c
      * FIXME: this logic duplicates the one from cf-serverd.c. Unify ASAP.
      */
 
-    if (CheckNewPromises(ctx, config, InputFiles(ctx, *policy)) == RELOAD_FULL)
+    if (CheckNewPromises(ctx, config, *policy) == RELOAD_FULL)
     {
         /* Full reload */
 

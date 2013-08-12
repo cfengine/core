@@ -191,6 +191,31 @@ unsigned PolicyHash(const Policy *policy)
     return hash;
 }
 
+StringSet *PolicySourceFiles(const Policy *policy)
+{
+    StringSet *files = StringSetNew();
+
+    for (size_t i = 0; i < SeqLength(policy->bundles); i++)
+    {
+        const Bundle *bp = SeqAt(policy->bundles, i);
+        if (bp->source_path)
+        {
+            StringSetAdd(files, bp->source_path);
+        }
+    }
+
+    for (size_t i = 0; i < SeqLength(policy->bodies); i++)
+    {
+        const Bundle *bp = SeqAt(policy->bodies, i);
+        if (bp->source_path)
+        {
+            StringSetAdd(files, bp->source_path);
+        }
+    }
+
+    return files;
+}
+
 static char *StripNamespace(const char *full_symbol)
 {
     char *sep = strchr(full_symbol, CF_NS);

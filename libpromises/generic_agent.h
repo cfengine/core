@@ -84,7 +84,9 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config);
 void GenericAgentWriteVersion(Writer *w);
 void GenericAgentWriteHelp(Writer *w, const char *comp, const struct option options[], const char *hints[], bool accepts_file_argument);
 bool GenericAgentCheckPromises(const GenericAgentConfig *config);
-bool GenericAgentIsPolicyReloadNeeded(EvalContext *ctx, const GenericAgentConfig *config, const Rlist *input_files);
+
+
+bool GenericAgentIsPolicyReloadNeeded(EvalContext *ctx, const GenericAgentConfig *config, const Policy *policy);
 
 void CloseLog(void);
 Seq *ControlBodyConstraints(const Policy *policy, AgentType agent);

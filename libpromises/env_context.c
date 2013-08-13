@@ -1020,11 +1020,11 @@ static StackFrame *StackFrameNewPromise(const Promise *owner)
     return frame;
 }
 
-static StackFrame *StackFrameNewPromiseIteration(const Rlist *iteration_context)
+static StackFrame *StackFrameNewPromiseIteration(const PromiseIterator *iter_ctx)
 {
     StackFrame *frame = StackFrameNew(STACK_FRAME_TYPE_PROMISE_ITERATION, true);
 
-    frame->data.promise_iteration.iteration_context = iteration_context;
+    frame->data.promise_iteration.iter_ctx = iter_ctx;
 
     return frame;
 }
@@ -1115,13 +1115,13 @@ void EvalContextStackPushPromiseFrame(EvalContext *ctx, const Promise *owner, bo
     }
 }
 
-void EvalContextStackPushPromiseIterationFrame(EvalContext *ctx, const Rlist *iteration_context)
+void EvalContextStackPushPromiseIterationFrame(EvalContext *ctx, const PromiseIterator *iter_ctx)
 {
     assert(LastStackFrame(ctx, 0) && LastStackFrame(ctx, 0)->type == STACK_FRAME_TYPE_PROMISE);
 
-    EvalContextStackPushFrame(ctx, StackFrameNewPromiseIteration(iteration_context));
+    EvalContextStackPushFrame(ctx, StackFrameNewPromiseIteration(iter_ctx));
 
-    if (RlistLen(iteration_context) > 0)
+    if (iter_ctx)
     {
         StackFrame *promise_frame = LastStackFrameByType(ctx, STACK_FRAME_TYPE_PROMISE);
         VariableTableIterator *iter = VariableTableIteratorNew(promise_frame->data.promise.vars, NULL, NULL, NULL);
@@ -1129,53 +1129,7 @@ void EvalContextStackPushPromiseIterationFrame(EvalContext *ctx, const Rlist *it
         Variable *var = NULL;
         while ((var = VariableTableIteratorNext(iter)))
         {
-            for (const Rlist *rp = iteration_context; rp != NULL; rp = rp->next)
-            {
-                CfAssoc *cplist = rp->item;
-
-                char *legacy_lval = VarRefToString(var->ref, false);
-
-                if (strcmp(cplist->lval, legacy_lval) == 0)
-                {
-                    /* Link up temp hash to variable lol */
-
-                    if (rp->state_ptr == NULL || rp->state_ptr->type == RVAL_TYPE_FNCALL)
-                    {
-                        /* Unexpanded function, or blank variable must be skipped. */
-                        return;
-                    }
-
-                    if (rp->state_ptr)
-                    {
-                        // must first free existing rval in scope, then allocate new (should always be string)
-                        RvalDestroy(var->rval);
-
-                        // avoids double free - borrowing value from lol (freed in DeleteScope())
-                        var->rval.item = xstrdup(rp->state_ptr->item);
-                    }
-
-                    switch (var->type)
-                    {
-                    case DATA_TYPE_STRING_LIST:
-                        var->type = DATA_TYPE_STRING;
-                        var->rval.type = RVAL_TYPE_SCALAR;
-                        break;
-                    case DATA_TYPE_INT_LIST:
-                        var->type = DATA_TYPE_INT;
-                        var->rval.type = RVAL_TYPE_SCALAR;
-                        break;
-                    case DATA_TYPE_REAL_LIST:
-                        var->type = DATA_TYPE_REAL;
-                        var->rval.type = RVAL_TYPE_SCALAR;
-                        break;
-                    default:
-                        /* Only lists need to be converted */
-                        break;
-                    }
-                }
-
-                free(legacy_lval);
-            }
+            PromiseIteratorUpdateVariable(iter_ctx, var);
         }
     }
 }

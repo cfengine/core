@@ -26,12 +26,20 @@
 #define CFENGINE_ITERATION_H
 
 #include <cf3.defs.h>
-#include <rlist.h>
 
-Rlist *NewIterationContext(EvalContext *ctx, const Promise *pp, Rlist *listvars);
-void DeleteIterationContext(Rlist *lol);
-int IncrementIterationContext(Rlist *iterators);
-int EndOfIteration(Rlist *iterator);
-int NullIterators(Rlist *iterator);
+#include <rlist.h>
+#include <variable.h>
+
+typedef struct PromiseIterator_ PromiseIterator;
+
+PromiseIterator *PromiseIteratorNew(EvalContext *ctx, const Promise *pp, const Rlist *listvars);
+void PromiseIteratorDestroy(PromiseIterator *iter_ctx);
+
+bool PromiseIteratorHasMore(const PromiseIterator *iter_ctx);
+bool PromiseIteratorNext(PromiseIterator *iter_ctx);
+
+bool NullIterators(const PromiseIterator *iter_ctx);
+
+void PromiseIteratorUpdateVariable(const PromiseIterator *iter_ctx, Variable *var);
 
 #endif

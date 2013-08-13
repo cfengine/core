@@ -146,50 +146,15 @@ void ExpandPromise(EvalContext *ctx, Promise *pp, PromiseActuator *ActOnPromise,
 
 static void ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp, Rlist *listvars, PromiseActuator *ActOnPromise, void *param)
 {
-    Rlist *lol = NULL;
-    Promise *pexp;
-    const int cf_null_cutoff = 5;
     const char *handle = PromiseGetHandle(pp);
     char v[CF_MAXVARSIZE];
-    int cutoff = 0;
 
     EvalContextStackPushPromiseFrame(ctx, pp, true);
 
-    lol = NewIterationContext(ctx, pp, listvars);
-
-    if (lol && EndOfIteration(lol))
+    PromiseIterator *iter_ctx = NULL;
+    for (iter_ctx = PromiseIteratorNew(ctx, pp, listvars); PromiseIteratorHasMore(iter_ctx); PromiseIteratorNext(iter_ctx))
     {
-        DeleteIterationContext(lol);
-        EvalContextStackPopFrame(ctx);
-        return;
-    }
-
-    while (NullIterators(lol))
-    {
-        IncrementIterationContext(lol);
-
-        // In case a list is completely blank
-        if (cutoff++ > cf_null_cutoff)
-        {
-            break;
-        }
-    }
-
-    if (lol && EndOfIteration(lol))
-    {
-        DeleteIterationContext(lol);
-        EvalContextStackPopFrame(ctx);
-        return;
-    }
-
-    do
-    {
-        if (RlistLen(listvars) != RlistLen(lol))
-        {
-            ProgrammingError("Name list %d, dereflist %d", RlistLen(listvars), RlistLen(lol));
-        }
-
-        EvalContextStackPushPromiseIterationFrame(ctx, lol);
+        EvalContextStackPushPromiseIterationFrame(ctx, iter_ctx);
         char number[CF_SMALLBUF];
 
         /* Allow $(this.handle) etc variables */
@@ -233,9 +198,7 @@ static void ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp, Rlist *listv
             EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "handle", PromiseID(pp), DATA_TYPE_STRING);
         }
 
-        /* End special variables */
-
-        pexp = ExpandDeRefPromise(ctx, pp);
+        Promise *pexp = ExpandDeRefPromise(ctx, pp);
 
         assert(ActOnPromise);
         ActOnPromise(ctx, pexp, param);
@@ -248,11 +211,9 @@ static void ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp, Rlist *listv
         PromiseDestroy(pexp);
 
         EvalContextStackPopFrame(ctx);
-        /* End thread monitor */
     }
-    while (IncrementIterationContext(lol));
 
-    DeleteIterationContext(lol);
+    PromiseIteratorDestroy(iter_ctx);
     EvalContextStackPopFrame(ctx);
 }
 

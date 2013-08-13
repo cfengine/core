@@ -28,28 +28,22 @@
 #include <vars.h>
 #include <fncall.h>
 #include <env_context.h>
+#include <misc_lib.h>
 
-static void DeleteReferenceRlist(Rlist *list);
+struct PromiseIterator_
+{
+    bool started;
+    Rlist *ctx;
+};
+
+static bool NullIteratorsInternal(const Rlist *iterator);
+static bool EndOfIterationInternal(const Rlist *iterator);
 
 /*****************************************************************************/
 
-static Rlist *RlistAppendOrthog(Rlist **start, void *item, RvalType type)
-   /* Allocates new memory for objects - careful, could leak!  */
+static Rlist *RlistAppendOrthog(Rlist **start, CfAssoc *assoc)
 {
-    Rlist *rp, *lp;
-    CfAssoc *cp;
-
-    switch (type)
-    {
-    case RVAL_TYPE_LIST:
-        Log(LOG_LEVEL_DEBUG, "Expanding and appending list object, orthogonally");
-        break;
-    default:
-        Log(LOG_LEVEL_DEBUG, "Cannot append %c to rval-list '%s'", type, (char *) item);
-        return NULL;
-    }
-
-    rp = xmalloc(sizeof(Rlist));
+    Rlist *rp = xmalloc(sizeof(Rlist));
 
     if (*start == NULL)
     {
@@ -57,6 +51,7 @@ static Rlist *RlistAppendOrthog(Rlist **start, void *item, RvalType type)
     }
     else
     {
+        Rlist *lp = NULL;
         for (lp = *start; lp->next != NULL; lp = lp->next)
         {
         }
@@ -64,32 +59,32 @@ static Rlist *RlistAppendOrthog(Rlist **start, void *item, RvalType type)
         lp->next = rp;
     }
 
-// This is item is in fact a CfAssoc pointing to a list
+    // Note, we pad all iterators will a blank so the ptr arithmetic works
+    // else EndOfIteration will not see lists with only one element
 
-    cp = (CfAssoc *) item;
-
-// Note, we pad all iterators will a blank so the ptr arithmetic works
-// else EndOfIteration will not see lists with only one element
-
-    lp = RlistPrependScalar((Rlist **) &(cp->rval), CF_NULL_VALUE);
+    Rlist *lp = RlistPrependScalar((Rlist **) &(assoc->rval), CF_NULL_VALUE);
     rp->state_ptr = lp->next;   // Always skip the null value
-    RlistAppendScalar((Rlist **) &(cp->rval), CF_NULL_VALUE);
+    RlistAppendScalar((Rlist **) &(assoc->rval), CF_NULL_VALUE);
 
-    rp->item = item;
+    rp->item = assoc;
     rp->type = RVAL_TYPE_LIST;
     rp->next = NULL;
     return rp;
 }
 
-Rlist *NewIterationContext(EvalContext *ctx, const Promise *pp, Rlist *namelist)
+PromiseIterator *PromiseIteratorNew(EvalContext *ctx, const Promise *pp, const Rlist *namelist)
 {
-    if (namelist == NULL)
+    PromiseIterator *iter_ctx = xmalloc(sizeof(PromiseIterator));
+
+    iter_ctx->ctx = NULL;
+    iter_ctx->started = false;
+
+    if (!namelist)
     {
-        return NULL;
+        return iter_ctx;
     }
 
-    Rlist *deref_listoflists = NULL;
-    for (Rlist *rp = namelist; rp != NULL; rp = rp->next)
+    for (const Rlist *rp = namelist; rp != NULL; rp = rp->next)
     {
         VarRef *ref = VarRefParseFromBundle(rp->item, PromiseGetBundle(pp));
 
@@ -97,67 +92,62 @@ Rlist *NewIterationContext(EvalContext *ctx, const Promise *pp, Rlist *namelist)
         DataType dtype = DATA_TYPE_NONE;
         if (!EvalContextVariableGet(ctx, ref, &retval, &dtype))
         {
-            Log(LOG_LEVEL_ERR, "Couldn't locate variable %s apparently in %s", RlistScalarValue(rp), PromiseGetBundle(pp)->name);
-            Log(LOG_LEVEL_ERR,
-                  "Could be incorrect use of a global iterator -- see reference manual on list substitution");
+            Log(LOG_LEVEL_ERR, "Couldn't locate variable '%s' apparently in '%s'", RlistScalarValue(rp), PromiseGetBundle(pp)->name);
             VarRefDestroy(ref);
             continue;
         }
 
         VarRefDestroy(ref);
 
-        /* Make a copy of list references in scope only, without the names */
-
-        if (retval.type == RVAL_TYPE_LIST)
+        for (Rlist *rps = RvalRlistValue(retval); rps; rps = rps->next)
         {
-            for (Rlist *rps = RvalRlistValue(retval); rps; rps = rps->next)
+            if (rps->type == RVAL_TYPE_FNCALL)
             {
-                if (rps->type == RVAL_TYPE_FNCALL)
-                {
-                    FnCall *fp = (FnCall *) rps->item;
+                FnCall *fp = (FnCall *) rps->item;
 
-                    Rval newret = FnCallEvaluate(ctx, fp, pp).rval;
-                    FnCallDestroy(fp);
-                    rps->item = newret.item;
-                    rps->type = newret.type;
-                }
+                Rval newret = FnCallEvaluate(ctx, fp, pp).rval;
+                FnCallDestroy(fp);
+                rps->item = newret.item;
+                rps->type = newret.type;
             }
         }
 
-        CfAssoc *new_var = NULL;
-        if ((new_var = NewAssoc(rp->item, retval, dtype)))
-        {
-            RlistAppendOrthog(&deref_listoflists, new_var, RVAL_TYPE_LIST);
-            rp->state_ptr = new_var->rval.item;
-
-            while ((rp->state_ptr) && (strcmp(rp->state_ptr->item, CF_NULL_VALUE) == 0))
-            {
-                if (rp->state_ptr)
-                {
-                    rp->state_ptr = rp->state_ptr->next;
-                }
-            }
-        }
+        CfAssoc *new_var = NewAssoc(rp->item, retval, dtype);
+        RlistAppendOrthog(&iter_ctx->ctx, new_var);
     }
 
-/* We now have a control list of list-variables, with internal state in state_ptr */
-
-    return deref_listoflists;
-}
-
-/*****************************************************************************/
-
-void DeleteIterationContext(Rlist *deref)
-{
-    if (deref != NULL)
+    for (size_t i = 0; i < 5 && NullIteratorsInternal(iter_ctx->ctx); i++)
     {
-        DeleteReferenceRlist(deref);
+        PromiseIteratorNext(iter_ctx);
+    }
+
+    // We now have a control list of list-variables, with internal state in state_ptr
+    return iter_ctx;
+}
+
+/*****************************************************************************/
+
+static void DeleteReferenceRlist(Rlist *list)
+{
+    if (list)
+    {
+        DeleteAssoc((CfAssoc *)list->item);
+        DeleteReferenceRlist(list->next);
+        free(list);
+    }
+}
+
+void PromiseIteratorDestroy(PromiseIterator *iter_ctx)
+{
+    if (iter_ctx)
+    {
+        DeleteReferenceRlist(iter_ctx->ctx);
     }
 }
 
 /*****************************************************************************/
 
-static bool IncrementIterationContextInternal(Rlist *iterator, int level)
+static bool IncrementIterationContextInternal(Rlist *iterator)
 {
     if (iterator == NULL)
     {
@@ -183,7 +173,7 @@ static bool IncrementIterationContextInternal(Rlist *iterator, int level)
         {
             /* Increment next wheel */
 
-            if (IncrementIterationContextInternal(iterator->next, level + 1))
+            if (IncrementIterationContextInternal(iterator->next))
             {
                 /* Not at end yet, so reset this wheel */
                 iterator->state_ptr = cp->rval.item;
@@ -207,9 +197,9 @@ static bool IncrementIterationContextInternal(Rlist *iterator, int level)
         /* Update the current wheel */
         iterator->state_ptr = state->next;
 
-        while (NullIterators(iterator))
+        while (NullIteratorsInternal(iterator))
         {
-            if (IncrementIterationContextInternal(iterator->next, level + 1))
+            if (IncrementIterationContextInternal(iterator->next))
             {
                 // If we are at the end of this wheel, we need to shift to next wheel
                 iterator->state_ptr = cp->rval.item;
@@ -224,7 +214,7 @@ static bool IncrementIterationContextInternal(Rlist *iterator, int level)
             }
         }
 
-        if (EndOfIteration(iterator))
+        if (EndOfIterationInternal(iterator))
         {
             return false;
         }
@@ -233,36 +223,30 @@ static bool IncrementIterationContextInternal(Rlist *iterator, int level)
     }
 }
 
-/*****************************************************************************/
-
-int IncrementIterationContext(Rlist *iterator)
+bool PromiseIteratorNext(PromiseIterator *iter_ctx)
 {
-    return IncrementIterationContextInternal(iterator, 1);
+    iter_ctx->started = true;
+    return IncrementIterationContextInternal(iter_ctx->ctx);
 }
 
-/*****************************************************************************/
-
-int EndOfIteration(Rlist *iterator)
+static bool EndOfIterationInternal(const Rlist *iterator)
 {
-    Rlist *rp, *state;
-
-    if (iterator == NULL)
+    if (!iterator)
     {
         return true;
     }
 
-/* When all the wheels are at NULL, we have reached the end*/
-
-    for (rp = iterator; rp != NULL; rp = rp->next)
+    // When all the wheels are at NULL, we have reached the end
+    for (const Rlist *rp = iterator; rp != NULL; rp = rp->next)
     {
-        state = rp->state_ptr;
+        const Rlist *state = rp->state_ptr;
 
         if (state == NULL)
         {
             continue;
         }
 
-        if (state && (state->next != NULL))
+        if (state && state->next)
         {
             return false;
         }
@@ -271,44 +255,110 @@ int EndOfIteration(Rlist *iterator)
     return true;
 }
 
+bool PromiseIteratorHasMore(const PromiseIterator *iter_ctx)
+{
+    if (iter_ctx->ctx)
+    {
+        return !EndOfIterationInternal(iter_ctx->ctx);
+    }
+    else
+    {
+        return !iter_ctx->started;
+    }
+
+    bool end = iter_ctx->ctx && EndOfIterationInternal(iter_ctx->ctx);
+    return !end;
+}
+
 /*****************************************************************************/
 
-int NullIterators(Rlist *iterator)
+static bool NullIteratorsInternal(const Rlist *iterator)
 {
-    Rlist *rp, *state;
-
-    if (iterator == NULL)
+    if (!iterator)
     {
         return false;
     }
 
-/* When all the wheels are at NULL, we have reached the end*/
-
-    for (rp = iterator; rp != NULL; rp = rp->next)
+    // When all the wheels are at NULL, we have reached the end
+    for (const Rlist *rp = iterator; rp != NULL; rp = rp->next)
     {
-        state = rp->state_ptr;
+        const Rlist *state = rp->state_ptr;
 
-        if (state && (strcmp(state->item, CF_NULL_VALUE) == 0))
+        if (state)
         {
-            return true;
+            switch (state->type)
+            {
+            case RVAL_TYPE_SCALAR:
+                if (strcmp(RlistScalarValue(state), CF_NULL_VALUE) == 0)
+                {
+                    return true;
+                }
+                break;
+            case RVAL_TYPE_FNCALL:
+                if (strcmp(RlistFnCallValue(state)->name, CF_NULL_VALUE) == 0)
+                {
+                    return true;
+                }
+                break;
+            default:
+                ProgrammingError("Unexpected rval type %d in iterator", state->type);
+            }
         }
     }
 
     return false;
 }
 
-/*******************************************************************/
-
-static void DeleteReferenceRlist(Rlist *list)
-/* Delete all contents, hash table in scope has own copy */
+bool NullIterators(const PromiseIterator *iter_ctx)
 {
-    if (list == NULL)
+    return NullIteratorsInternal(iter_ctx->ctx);
+}
+
+
+void PromiseIteratorUpdateVariable(const PromiseIterator *iter_ctx, Variable *var)
+{
+    for (const Rlist *rp = iter_ctx->ctx; rp; rp = rp->next)
     {
-        return;
+        CfAssoc *cplist = rp->item;
+
+        char *legacy_lval = VarRefToString(var->ref, false);
+
+        if (strcmp(cplist->lval, legacy_lval) == 0)
+        {
+            if (rp->state_ptr == NULL || rp->state_ptr->type == RVAL_TYPE_FNCALL)
+            {
+                free(legacy_lval);
+                return;
+            }
+
+            assert(rp->state_ptr->type == RVAL_TYPE_SCALAR);
+
+            if (rp->state_ptr)
+            {
+                RvalDestroy(var->rval);
+                var->rval.item = xstrdup(RlistScalarValue(rp->state_ptr));
+            }
+
+            switch (var->type)
+            {
+            case DATA_TYPE_STRING_LIST:
+                var->type = DATA_TYPE_STRING;
+                var->rval.type = RVAL_TYPE_SCALAR;
+                break;
+            case DATA_TYPE_INT_LIST:
+                var->type = DATA_TYPE_INT;
+                var->rval.type = RVAL_TYPE_SCALAR;
+                break;
+            case DATA_TYPE_REAL_LIST:
+                var->type = DATA_TYPE_REAL;
+                var->rval.type = RVAL_TYPE_SCALAR;
+                break;
+            default:
+                /* Only lists need to be converted */
+                break;
+            }
+        }
+
+        free(legacy_lval);
     }
-
-    DeleteAssoc((CfAssoc *) list->item);
-
-    DeleteReferenceRlist(list->next);
-    free((char *) list);
 }

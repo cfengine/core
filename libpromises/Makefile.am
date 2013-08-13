@@ -40,6 +40,7 @@ libpromises_la_SOURCES = \
         dbm_quick.c \
         dbm_tokyocab.c \
         dir.h dir_priv.h \
+        enterprise_extension.c enterprise_extension.h \
         env_context.c env_context.h \
         evalfunction.c evalfunction.h \
         exec_tools.c exec_tools.h \

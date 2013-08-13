@@ -94,7 +94,10 @@
 #ifndef BUILTIN_EXTENSIONS
 
 #define ENTERPRISE_CANARY_VALUE 0x10203040
-#define ENTERPRISE_LIBRARY_NAME "/var/cfengine/lib/cfengine-enterprise.so"
+#define ENTERPRISE_LIBRARY_NAME "cfengine-enterprise.so"
+
+void *enterprise_library_open();
+void enterprise_library_close(void *handle);
 
 void *shlib_open(const char *lib_name);
 void *shlib_load(void *handle, const char *symbol_name);
@@ -275,7 +278,7 @@ void shlib_close(void *handle);
 // The __ret__assign and __ret_ref parameters are to work around functions returning void.
 #define ENTERPRISE_FUNC_IMPL_LOADER(__ret, __func, __ret__assign, __ret__ref, __real__func__par, __stub__func__par) \
     { \
-        void *__handle = shlib_open(ENTERPRISE_LIBRARY_NAME); \
+        void *__handle = enterprise_library_open(); \
         if (__handle) \
         { \
             __func##__type func_ptr = shlib_load(__handle, #__func "__wrapper"); \
@@ -285,11 +288,11 @@ void shlib_close(void *handle);
                 __ret__assign func_ptr __real__func__par;     \
                 if (__successful) \
                 { \
-                    shlib_close(__handle); \
+                    enterprise_library_close(__handle); \
                     return __ret__ref; \
                 } \
             } \
-            shlib_close(__handle); \
+            enterprise_library_close(__handle); \
         } \
         return __func##__stub __stub__func__par;  \
     }

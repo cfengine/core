@@ -23,8 +23,65 @@
 */
 
 #include <enterprise_extension.h>
+#include <sysinfo.h>
 
 #include <dlfcn.h>
+#include <pthread.h>
+
+static pthread_once_t enterprise_library_once = PTHREAD_ONCE_INIT;
+static void *enterprise_library_handle = NULL;
+
+void enterprise_library_assign();
+void *enterprise_library_open_impl();
+
+void *enterprise_library_open()
+{
+    if (getenv("CFENGINE_TEST_OVERRIDE_ENTERPRISE_LIBRARY_DO_CLOSE") != NULL)
+    {
+        return enterprise_library_open_impl();
+    }
+
+    int ret = pthread_once(&enterprise_library_once, &enterprise_library_assign);
+    if (ret != 0)
+    {
+        Log(LOG_LEVEL_ERR, "Could not initialize Enterprise Library: %s", strerror(ret));
+        return NULL;
+    }
+    return enterprise_library_handle;
+}
+
+void enterprise_library_assign()
+{
+    enterprise_library_handle = enterprise_library_open_impl();
+}
+
+void *enterprise_library_open_impl()
+{
+    const char *dir = getenv("CFENGINE_TEST_OVERRIDE_ENTERPRISE_LIBRARY_DIR");
+    char lib[] = "/lib";
+    if (dir)
+    {
+        lib[0] = '\0';
+    }
+    else
+    {
+        dir = GetWorkDir();
+    }
+    char path[strlen(dir) + strlen(lib) + strlen(ENTERPRISE_LIBRARY_NAME) + 2];
+    sprintf(path, "%s%s/%s", dir, lib, ENTERPRISE_LIBRARY_NAME);
+    return shlib_open(path);
+}
+
+void enterprise_library_close(void *handle)
+{
+    if (getenv("CFENGINE_TEST_OVERRIDE_ENTERPRISE_LIBRARY_DO_CLOSE") != NULL)
+    {
+        return shlib_close(handle);
+    }
+
+    // Normally we don't ever close the enterprise library, because we may have
+    // pointer references to it.
+}
 
 void *shlib_open(const char *lib_name)
 {

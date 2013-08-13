@@ -36,6 +36,15 @@ void *enterprise_library_open_impl();
 
 void *enterprise_library_open()
 {
+    if (THIS_AGENT_TYPE == AGENT_TYPE_EXECUTOR)
+    {
+        // This is to protect the upgrade path. cf-execd should not be allowed
+        // to load the plugin because it may be the last daemon around when
+        // doing an upgrade.
+        Log(LOG_LEVEL_DEBUG, "Not loading Enterprise plugin for cf-execd");
+        return NULL;
+    }
+
     if (getenv("CFENGINE_TEST_OVERRIDE_ENTERPRISE_LIBRARY_DO_CLOSE") != NULL)
     {
         return enterprise_library_open_impl();

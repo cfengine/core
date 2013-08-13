@@ -35,6 +35,7 @@
 #include <exec_tools.h>
 #include <unix.h>
 #include <man.h>
+#include <server_tls.h>                              /* ServerTLSInitialize */
 
 
 static const size_t QUEUESIZE = 50;
@@ -273,12 +274,12 @@ void ThisAgentInit(void)
 
 void StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
 {
-    int sd = -1, sd_reply;
+    int sd = -1;
     fd_set rset;
     struct timeval timeout;
     int ret_val;
     CfLock thislock;
-    time_t starttime = time(NULL), last_collect = 0;
+    time_t last_collect = 0;
     extern int COLLECT_WINDOW;
 
     struct sockaddr_storage cin;
@@ -290,6 +291,8 @@ void StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
     signal(SIGPIPE, SIG_IGN);
     signal(SIGUSR1, HandleSignalsForDaemon);
     signal(SIGUSR2, HandleSignalsForDaemon);
+
+    ServerTLSInitialize();
 
     sd = SetServerListenState(ctx, QUEUESIZE, SERVER_LISTEN, &InitServer);
 
@@ -315,8 +318,6 @@ void StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
         PolicyDestroy(server_cfengine_policy);
         return;
     }
-
-    Log(LOG_LEVEL_INFO, "cf-serverd starting %.24s", ctime(&starttime));
 
     if (sd != -1)
     {
@@ -412,7 +413,8 @@ void StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
 
             Log(LOG_LEVEL_VERBOSE, "Accepting a connection");
 
-            if ((sd_reply = accept(sd, (struct sockaddr *) &cin, &addrlen)) != -1)
+            int sd_accepted = accept(sd, (struct sockaddr *) &cin, &addrlen);
+            if (sd_accepted != -1)
             {
                 /* Just convert IP address to string, no DNS lookup. */
                 char ipaddr[CF_MAX_IP_LEN] = "";
@@ -420,7 +422,7 @@ void StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
                             ipaddr, sizeof(ipaddr),
                             NULL, 0, NI_NUMERICHOST);
 
-                ServerEntryPoint(ctx, sd_reply, ipaddr);
+                ServerEntryPoint(ctx, sd_accepted, ipaddr);
             }
         }
     }
@@ -540,7 +542,7 @@ void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *con
 {
     Log(LOG_LEVEL_DEBUG, "Checking file updates for input file '%s'", config->input_file);
 
-    if (GenericAgentIsPolicyReloadNeeded(ctx, config, InputFiles(ctx, *policy)))
+    if (GenericAgentIsPolicyReloadNeeded(config, *policy))
     {
         Log(LOG_LEVEL_VERBOSE, "New promises detected...");
 
@@ -620,7 +622,7 @@ void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *con
         else
         {
             Log(LOG_LEVEL_INFO, "File changes contain errors -- ignoring");
-            PROMISETIME = time(NULL);
+            config->policy_last_read_attempt = time(NULL);
         }
     }
     else

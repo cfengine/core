@@ -1,0 +1,4 @@
+body file control
+{
+  inputs => { "file_inputs.sub2" };
+}

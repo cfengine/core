@@ -34,6 +34,7 @@
 #include <mutex.h>
 #include <sysinfo.h>
 #include <bootstrap.h>
+#include <misc_lib.h>                   /* UnexpectedError,ProgrammingError */
 
 #ifdef DARWIN
 // On Mac OSX 10.7 and later, majority of functions in /usr/include/openssl/crypto.h
@@ -53,6 +54,11 @@ static char *CFPUBKEYFILE;
 static char *CFPRIVKEYFILE;
 
 /**********************************************************************/
+
+
+/* TODO move crypto.[ch] to libutils. Will need to remove all manipulation of
+ * lastseen db. */
+
 
 static bool crypto_initialized = false;
 
@@ -123,17 +129,21 @@ bool LoadSecretKeys(const char *policy_server)
         FILE *fp = fopen(PrivateKeyFile(GetWorkDir()), "r");
         if (!fp)
         {
-            Log(LOG_LEVEL_INFO, "Couldn't find a private key at '%s', use cf-key to get one. (fopen: %s)", PrivateKeyFile(GetWorkDir()), GetErrorStr());
-            return true;
+            Log(LOG_LEVEL_ERR,
+                "Couldn't find a private key at '%s', use cf-key to get one. (fopen: %s)",
+                PrivateKeyFile(GetWorkDir()), GetErrorStr());
+            return false;
         }
 
         if ((PRIVKEY = PEM_read_RSAPrivateKey(fp, (RSA **) NULL, NULL, passphrase)) == NULL)
         {
             unsigned long err = ERR_get_error();
-            Log(LOG_LEVEL_ERR, "Error reading private key. (PEM_read_RSAPrivateKey: %s)", ERR_reason_error_string(err));
+            Log(LOG_LEVEL_ERR,
+                "Error reading private key. (PEM_read_RSAPrivateKey: %s)",
+                ERR_reason_error_string(err));
             PRIVKEY = NULL;
             fclose(fp);
-            return true;
+            return false;
         }
 
         fclose(fp);
@@ -144,17 +154,21 @@ bool LoadSecretKeys(const char *policy_server)
         FILE *fp = fopen(PublicKeyFile(GetWorkDir()), "r");
         if (!fp)
         {
-            Log(LOG_LEVEL_ERR, "Couldn't find a public key at '%s', use cf-key to get one (fopen: %s)", PublicKeyFile(GetWorkDir()), GetErrorStr());
-            return true;
+            Log(LOG_LEVEL_ERR,
+                "Couldn't find a public key at '%s', use cf-key to get one (fopen: %s)",
+                PublicKeyFile(GetWorkDir()), GetErrorStr());
+            return false;
         }
 
         if ((PUBKEY = PEM_read_RSAPublicKey(fp, NULL, NULL, passphrase)) == NULL)
         {
             unsigned long err = ERR_get_error();
-            Log(LOG_LEVEL_ERR, "Error reading public key at '%s'. (PEM_read_RSAPublicKey: %s)", PublicKeyFile(GetWorkDir()), ERR_reason_error_string(err));
+            Log(LOG_LEVEL_ERR,
+                "Error reading public key at '%s'. (PEM_read_RSAPublicKey: %s)",
+                PublicKeyFile(GetWorkDir()), ERR_reason_error_string(err));
             PUBKEY = NULL;
             fclose(fp);
-            return true;
+            return false;
         }
 
         Log(LOG_LEVEL_VERBOSE, "Loaded public key '%s'", PublicKeyFile(GetWorkDir()));
@@ -204,17 +218,36 @@ bool LoadSecretKeys(const char *policy_server)
 
 /*********************************************************************/
 
+/**
+ * @brief Search for a key just like HavePublicKey(), but get the
+ *        hash value from lastseen db.
+ * @return NULL if the key was not found in any form.
+ */
 RSA *HavePublicKeyByIP(const char *username, const char *ipaddress)
 {
     char hash[CF_MAXVARSIZE];
 
-    Address2Hostkey(ipaddress, hash);
-
-    return HavePublicKey(username, ipaddress, hash);
+    bool found = Address2Hostkey(ipaddress, hash);
+    if (found)
+    {
+        return HavePublicKey(username, ipaddress, hash);
+    }
+    else
+    {
+        Log(LOG_LEVEL_VERBOSE, "Key for host '%s' not found in lastseen db",
+            ipaddress);
+        return HavePublicKey(username, ipaddress, "");
+    }
 }
 
 /*********************************************************************/
 
+/**
+ * @brief Search for a key:
+ *        1. username-hash.pub
+ *        2. username-ip.pub
+ * @return NULL if key not found in any form
+ */
 RSA *HavePublicKey(const char *username, const char *ipaddress, const char *digest)
 {
     char keyname[CF_MAXVARSIZE], newname[CF_BUFSIZE], oldname[CF_BUFSIZE];
@@ -252,12 +285,14 @@ RSA *HavePublicKey(const char *username, const char *ipaddress, const char *dige
                 Log(LOG_LEVEL_ERR, "Could not rename from old key format '%s' to new '%s'. (rename: %s)", oldname, newname, GetErrorStr());
             }
         }
-        else                    // we don't know the digest (e.g. because we are a client and
-            // have no lastseen-map and/or root-SHA...pub of the server's key
-            // yet) Just using old file format (root-IP.pub) without renaming for now.
+        else
         {
-            Log(LOG_LEVEL_VERBOSE, "Could not map key file to new format - we have no digest yet (using %s)",
-                  oldname);
+            /* We don't know the digest (e.g. because we are a client and have
+               no lastseen-map yet), so we're using old file format
+               (root-IP.pub). */
+            Log(LOG_LEVEL_VERBOSE,
+                "We have no digest yet, using old keyfile name: %s",
+                oldname);
             snprintf(newname, sizeof(newname), "%s", oldname);
         }
     }
@@ -324,12 +359,15 @@ void SavePublicKey(const char *user, const char *digest, const RSA *key)
     fclose(fp);
 }
 
-int EncryptString(char type, char *in, char *out, unsigned char *key, int plainlen)
+int EncryptString(char type, const char *in, char *out, unsigned char *key, int plainlen)
 {
     int cipherlen = 0, tmplen;
     unsigned char iv[32] =
         { 1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8 };
     EVP_CIPHER_CTX ctx;
+
+    if (key == NULL)
+        ProgrammingError("EncryptString: session key == NULL");
 
     EVP_CIPHER_CTX_init(&ctx);
     EVP_EncryptInit_ex(&ctx, CfengineCipher(type), NULL, key, iv);
@@ -353,12 +391,15 @@ int EncryptString(char type, char *in, char *out, unsigned char *key, int plainl
 
 /*********************************************************************/
 
-int DecryptString(char type, char *in, char *out, unsigned char *key, int cipherlen)
+int DecryptString(char type, const char *in, char *out, unsigned char *key, int cipherlen)
 {
     int plainlen = 0, tmplen;
     unsigned char iv[32] =
         { 1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8 };
     EVP_CIPHER_CTX ctx;
+
+    if (key == NULL)
+        ProgrammingError("DecryptString: session key == NULL");
 
     EVP_CIPHER_CTX_init(&ctx);
     EVP_DecryptInit_ex(&ctx, CfengineCipher(type), NULL, key, iv);

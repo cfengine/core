@@ -40,7 +40,7 @@ typedef void (*ServerEntryPointFunction)(EvalContext *ctx, int sd_reply, char *i
 ENTERPRISE_VOID_FUNC_2ARG_DECLARE(void, TryCollectCall, int, collect_window, ServerEntryPointFunction, server_entry_point);
 ENTERPRISE_FUNC_1ARG_DECLARE(int, ReceiveCollectCall, struct ServerConnectionState *, conn);
 
-ENTERPRISE_FUNC_2ARG_DECLARE(bool, ReturnQueryData, struct ServerConnectionState *, conn, char *, menu);
+ENTERPRISE_FUNC_3ARG_DECLARE(bool, ReturnQueryData, struct ServerConnectionState *, conn, char *, menu, int, encrypt);
 
 ENTERPRISE_VOID_FUNC_1ARG_DECLARE(void, KeepReportDataSelectAccessPromise, Promise *, pp);
 ENTERPRISE_VOID_FUNC_0ARG_DECLARE(void, CleanReportBookFilterSet);

@@ -107,22 +107,37 @@ unix_seconds() {
   rm $BASE_WORKDIR/x
 }
 
-# We assume we're running this script from $objdir/tests/acceptance
-DEFAGENT=`pwd`/../../cf-agent/cf-agent
+# We assume we're running this script from $objdir or $objdir/tests/acceptance
+[ -x `pwd`/cf-agent/cf-agent ] && DEFAGENT=`pwd`/cf-agent/cf-agent
+[ -x `pwd`/../../cf-agent/cf-agent ] && DEFAGENT=`pwd`/../../cf-agent/cf-agent
 AGENT=${AGENT:-${DEFAGENT}}
-DEFCF_PROMISES=`pwd`/../../cf-promises/cf-promises
+
+[ -x `pwd`/cf-promises/cf-promises ] && DEFCF_PROMISES=`pwd`/cf-promises/cf-promises
+[ -x `pwd`/../../cf-promises/cf-promises ] && DEFCF_PROMISES=`pwd`/../../cf-promises/cf-promises
 CF_PROMISES=${CF_PROMISES:-${DEFCF_PROMISES}}
-DEFCF_SERVERD=`pwd`/../../cf-serverd/cf-serverd
+
+[ -x `pwd`/cf-serverd/cf-serverd ] && DEFCF_SERVERD=`pwd`/cf-serverd/cf-serverd
+[ -x `pwd`/../../cf-serverd/cf-serverd ] && DEFCF_SERVERD=`pwd`/../../cf-serverd/cf-serverd
 CF_SERVERD=${CF_SERVERD:-${DEFCF_SERVERD}}
-DEFCF_KEY=`pwd`/../../cf-key/cf-key
+
+[ -x `pwd`/cf-key/cf-key ] && DEFCF_KEY=`pwd`/cf-key/cf-key
+[ -x `pwd`/../../cf-key/cf-key ] && DEFCF_KEY=`pwd`/../../cf-key/cf-key
 CF_KEY=${CF_KEY:-${DEFCF_KEY}}
 
 if [ ! -x $AGENT -o ! -x $CF_PROMISES -o ! -x $CF_SERVERD -o ! -x $CF_KEY ]
 then
-	echo "ERROR can't find cf-agent or other binary. Are you sure you're running this from OBJDIR/tests/acceptance?"
+	echo "ERROR can't find cf-agent or other binary. Are you sure you're running this from OBJDIR or OBJDIR/tests/acceptance?"
 	exit 1
 fi
 
+# echo
+# echo === Test environment: ===
+# echo AGENT=$AGENT
+# echo CF_PROMISES=$CF_PROMISES
+# echo CF_SERVERD=$CF_SERVERD
+# echo CF_KEY=$CF_KEY
+# echo =========================
+# echo
 
 usage() {
   echo "testall [-q] [--gainroot=<command>] [--agent=<agent>] [--no-nova] [--staging] [--no-network] [<test> <test>...]"

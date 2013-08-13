@@ -81,7 +81,8 @@ check_PROGRAMS = \
 	ipaddress_test \
 	hashes_test \
 	rb-tree-test \
-	variable_test
+	variable_test \
+	protocol_test
 
 if HAVE_AVAHI_CLIENT
 if HAVE_AVAHI_COMMON
@@ -138,16 +139,29 @@ cf_key_functions_test_SOURCES = cf_key_functions_test.c ../../cf-key/cf-key-func
 
 ipaddress_test_SOURCES = ipaddress_test.c 
 
+protocol_test_SOURCES = protocol_test.c ../../cf-serverd/server_common.c ../../cf-serverd/server_tls.c ../../cf-serverd/server.c ../../cf-serverd/cf-serverd-enterprise-stubs.c ../../cf-serverd/server_transform.c ../../cf-serverd/cf-serverd-functions.c
+if HAVE_NOVA
+protocol_test_LDADD = libtest.la ../../nova/libcfserverd/libcfserverd.la
+else
+protocol_test_LDADD = ../../libpromises/libpromises.la libtest.la
+endif
+
 if HAVE_AVAHI_CLIENT
 if HAVE_AVAHI_COMMON
 
 findhub_test_SOURCES = findhub_test.c ../../cf-agent/findhub.c ../../cf-agent/load_avahi.c
 
 if HAVE_ENTERPRISE
-avahi_config_test_SOURCES = avahi_config_test.c ../../cf-serverd/server.c ../../cf-serverd/cf-serverd-enterprise-stubs.c ../../cf-serverd/server_transform.c
+avahi_config_test_SOURCES = avahi_config_test.c \
+	../../cf-serverd/server_common.c ../../cf-serverd/server_tls.c ../../cf-serverd/server.c \
+	../../cf-serverd/server_transform.c \
+	../../cf-serverd/cf-serverd-enterprise-stubs.c
 avahi_config_test_LDADD = libtest.la ../../nova/libcfserverd/libcfserverd.la
 else
-avahi_config_test_SOURCES = avahi_config_test.c ../../cf-serverd/server.c ../../cf-serverd/cf-serverd-enterprise-stubs.c ../../cf-serverd/server_transform.c
+avahi_config_test_SOURCES = avahi_config_test.c \
+	../../cf-serverd/server_common.c ../../cf-serverd/server_tls.c ../../cf-serverd/server.c \
+	../../cf-serverd/server_transform.c \
+	../../cf-serverd/cf-serverd-enterprise-stubs.c
 avahi_config_test_LDADD = ../../libpromises/libpromises.la libtest.la
 endif
 
@@ -195,7 +209,7 @@ logging_test_LDADD = libtest.la
 logging_timestamp_test_SOURCES = logging_timestamp_test.c ../../libutils/logging.h
 logging_timestamp_test_LDADD = libtest.la ../../libutils/libutils.la
 
-connection_management_test_SOURCES = connection_management_test.c ../../cf-serverd/server.c
+connection_management_test_SOURCES = connection_management_test.c ../../cf-serverd/server_common.c ../../cf-serverd/server_tls.c ../../cf-serverd/server.c
 connection_management_test_LDADD = ../../libpromises/libpromises.la libtest.la ../../cf-serverd/libcf-serverd.la
 
 rlist_test_SOURCES = rlist_test.c \

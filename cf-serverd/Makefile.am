@@ -10,11 +10,12 @@ AM_CFLAGS = @CFLAGS@ \
 libcf_serverd_la_LIBADD = ../libpromises/libpromises.la
 
 libcf_serverd_la_SOURCES = \
-        cf-serverd.c \
-        cf-serverd-functions.c \
-        cf-serverd-functions.h \
-        server.c server.h \
-        server_transform.c server_transform.h
+	cf-serverd.c \
+	cf-serverd-functions.c cf-serverd-functions.h \
+	server_common.c server_common.h \
+	server.c server.h \
+	server_transform.c server_transform.h \
+	server_tls.c server_tls.h
 
 if !HAVE_ENTERPRISE
 libcf_serverd_la_SOURCES += \

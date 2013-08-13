@@ -49,9 +49,10 @@ typedef struct
     bool tty_interactive; // agent is running interactively, via tty/terminal interface
     bool color;
 
-    // change to evaluation behavior from the policy itself
+    // agent state
     bool ignore_missing_bundles;
     bool ignore_missing_inputs;
+    time_t policy_last_read_attempt;
 
     struct
     {
@@ -76,24 +77,19 @@ typedef struct
 
 const char *GenericAgentResolveInputPath(const GenericAgentConfig *config, const char *input_file);
 void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config);
-bool GenericAgentCheckPolicy(EvalContext *ctx, GenericAgentConfig *config, bool force_validation);
+bool GenericAgentCheckPolicy(GenericAgentConfig *config, bool force_validation);
 Policy *GenericAgentLoadPolicy(EvalContext *ctx, GenericAgentConfig *config);
 
 void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config);
 void GenericAgentWriteVersion(Writer *w);
 void GenericAgentWriteHelp(Writer *w, const char *comp, const struct option options[], const char *hints[], bool accepts_file_argument);
 bool GenericAgentCheckPromises(const GenericAgentConfig *config);
-bool GenericAgentIsPolicyReloadNeeded(EvalContext *ctx, const GenericAgentConfig *config, const Rlist *input_files);
+
+
+bool GenericAgentIsPolicyReloadNeeded(const GenericAgentConfig *config, const Policy *policy);
 
 void CloseLog(void);
 Seq *ControlBodyConstraints(const Policy *policy, AgentType agent);
-
-/**
- * @brief Conventience function for getting the effective list of input_files from common body control.
- * @param policy Policy where inputs are specified
- * @return Pointer to the Rlist in the DOM
- */
-const Rlist *InputFiles(EvalContext *ctx, Policy *policy);
 
 void SetFacility(const char *retval);
 void CheckBundleParameters(char *scope, Rlist *args);

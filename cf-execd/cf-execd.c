@@ -139,7 +139,7 @@ int main(int argc, char *argv[])
     GenericAgentDiscoverContext(ctx, config);
 
     Policy *policy = NULL;
-    if (GenericAgentCheckPolicy(ctx, config, false))
+    if (GenericAgentCheckPolicy(config, false))
     {
         policy = GenericAgentLoadPolicy(ctx, config);
     }
@@ -495,9 +495,9 @@ typedef enum
     RELOAD_FULL
 } Reload;
 
-static Reload CheckNewPromises(EvalContext *ctx, const GenericAgentConfig *config, const Rlist *input_files)
+static Reload CheckNewPromises(GenericAgentConfig *config, const Policy *existing_policy)
 {
-    if (GenericAgentIsPolicyReloadNeeded(ctx, config, input_files))
+    if (GenericAgentIsPolicyReloadNeeded(config, existing_policy))
     {
         Log(LOG_LEVEL_VERBOSE, "New promises detected...");
 
@@ -508,7 +508,7 @@ static Reload CheckNewPromises(EvalContext *ctx, const GenericAgentConfig *confi
         else
         {
             Log(LOG_LEVEL_INFO, "New promises file contains syntax errors -- ignoring");
-            PROMISETIME = time(NULL);
+            config->policy_last_read_attempt = time(NULL);
         }
     }
     else
@@ -528,7 +528,7 @@ static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *c
      * FIXME: this logic duplicates the one from cf-serverd.c. Unify ASAP.
      */
 
-    if (CheckNewPromises(ctx, config, InputFiles(ctx, *policy)) == RELOAD_FULL)
+    if (CheckNewPromises(config, *policy) == RELOAD_FULL)
     {
         /* Full reload */
 

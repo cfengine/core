@@ -151,7 +151,7 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv);
 static char **TranslateOldBootstrapOptionsSeparate(int *argc_new, char **argv);
 static char **TranslateOldBootstrapOptionsConcatenated(int argc, char **argv);
 static void FreeStringArray(int size, char **array);
-static void CheckAgentAccess(Rlist *list, const Rlist *input_files);
+static void CheckAgentAccess(Rlist *list, const Policy *policy);
 static void KeepControlPromises(EvalContext *ctx, Policy *policy);
 static void KeepAgentPromise(EvalContext *ctx, Promise *pp, void *param);
 static int NewTypeContext(EvalContext *ctx, TypeSequence type);
@@ -232,7 +232,7 @@ int main(int argc, char *argv[])
     GenericAgentDiscoverContext(ctx, config);
 
     Policy *policy = NULL;
-    if (GenericAgentCheckPolicy(ctx, config, ALWAYS_VALIDATE))
+    if (GenericAgentCheckPolicy(config, ALWAYS_VALIDATE))
     {
         policy = GenericAgentLoadPolicy(ctx, config);
     }
@@ -708,7 +708,7 @@ void KeepControlPromises(EvalContext *ctx, Policy *policy)
             if (strcmp(cp->lval, CFA_CONTROLBODY[AGENT_CONTROL_AGENTACCESS].lval) == 0)
             {
                 ACCESSLIST = (Rlist *) retval.item;
-                CheckAgentAccess(ACCESSLIST, InputFiles(ctx, policy));
+                CheckAgentAccess(ACCESSLIST, policy);
                 continue;
             }
 
@@ -1255,19 +1255,15 @@ int ScheduleAgentOperations(EvalContext *ctx, Bundle *bp)
 
 #ifdef __MINGW32__
 
-static void CheckAgentAccess(Rlist *list, const Rlist *input_files)
+static void CheckAgentAccess(Rlist *list, const Policy *policy)
 {
 }
 
 #else
 
-static void CheckAgentAccess(Rlist *list, const Rlist *input_files)
+static void CheckAgentAccess(Rlist *list, const Policy *policy)
 {
-    struct stat sb;
-    uid_t uid;
-    int access = false;
-
-    uid = getuid();
+    uid_t uid = getuid();
 
     for (const Rlist *rp = list; rp != NULL; rp = rp->next)
     {
@@ -1277,37 +1273,45 @@ static void CheckAgentAccess(Rlist *list, const Rlist *input_files)
         }
     }
 
-    for (const Rlist *rp = input_files; rp != NULL; rp = rp->next)
     {
-        stat(rp->item, &sb);
-
-        if (ACCESSLIST)
+        StringSet *input_files = PolicySourceFiles(policy);
+        StringSetIterator iter = StringSetIteratorInit(input_files);
+        const char *input_file = NULL;
+        while ((input_file = StringSetIteratorNext(&iter)))
         {
-            for (const Rlist *rp2 = ACCESSLIST; rp2 != NULL; rp2 = rp2->next)
+            struct stat sb;
+            stat(input_file, &sb);
+
+            if (ACCESSLIST)
             {
-                if (Str2Uid(rp2->item, NULL, NULL) == sb.st_uid)
+                bool access = false;
+                for (const Rlist *rp2 = ACCESSLIST; rp2 != NULL; rp2 = rp2->next)
                 {
-                    access = true;
-                    break;
+                    if (Str2Uid(rp2->item, NULL, NULL) == sb.st_uid)
+                    {
+                        access = true;
+                        break;
+                    }
+                }
+
+                if (!access)
+                {
+                    Log(LOG_LEVEL_ERR, "File '%s' is not owned by an authorized user (security exception)", input_file);
+                    exit(1);
                 }
             }
+            else if (CFPARANOID && IsPrivileged())
+            {
+                if (sb.st_uid != getuid())
+                {
+                    Log(LOG_LEVEL_ERR, "File '%s' is not owned by uid %ju (security exception)", input_file,
+                          (uintmax_t)getuid());
+                    exit(1);
+                }
+            }
+        }
 
-            if (!access)
-            {
-                Log(LOG_LEVEL_ERR, "File '%s' is not owned by an authorized user (security exception)",
-                      RlistScalarValue(rp));
-                exit(1);
-            }
-        }
-        else if (CFPARANOID && IsPrivileged())
-        {
-            if (sb.st_uid != getuid())
-            {
-                Log(LOG_LEVEL_ERR, "File '%s' is not owned by uid %ju (security exception)", RlistScalarValue(rp),
-                      (uintmax_t)getuid());
-                exit(1);
-            }
-        }
+        StringSetDestroy(input_files);
     }
 
     Log(LOG_LEVEL_ERR, "You are denied access to run this policy");

@@ -1,0 +1,5 @@
+bundle agent check
+{
+reports:
+   "$(init.file) Pass";
+}

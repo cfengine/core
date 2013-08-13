@@ -46,6 +46,7 @@ typedef enum
 const char *LogLevelToString(LogLevel level);
 
 void Log(LogLevel level, const char *fmt, ...) FUNC_ATTR_PRINTF(2, 3);
+void LogRaw(LogLevel level, const char *prefix, void *buf, size_t buflen);
 void VLog(LogLevel level, const char *fmt, va_list ap);
 
 void LogSetGlobalLevel(LogLevel level);

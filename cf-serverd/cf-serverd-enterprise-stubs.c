@@ -60,7 +60,7 @@ ENTERPRISE_FUNC_1ARG_DEFINE_STUB(int, ReceiveCollectCall, ARG_UNUSED struct Serv
     return false;
 }
 
-ENTERPRISE_FUNC_2ARG_DEFINE_STUB(bool, ReturnQueryData, ARG_UNUSED struct ServerConnectionState *, conn, ARG_UNUSED char *, menu)
+ENTERPRISE_FUNC_3ARG_DEFINE_STUB(bool, ReturnQueryData, ARG_UNUSED struct ServerConnectionState *, conn, ARG_UNUSED char *, menu, int, encrypt)
 {
     return false;
 }

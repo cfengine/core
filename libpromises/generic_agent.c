@@ -67,8 +67,11 @@ static char PIDFILE[CF_BUFSIZE];
 
 static void VerifyPromises(EvalContext *ctx, Policy *policy, GenericAgentConfig *config);
 static void CheckWorkingDirectories(EvalContext *ctx);
+
 static Policy *Cf3ParseFile(const GenericAgentConfig *config, const char *input_path);
-static Policy *Cf3ParseFiles(EvalContext *ctx, GenericAgentConfig *config, const Rlist *inputs);
+
+static Policy *LoadPolicyFile(EvalContext *ctx, GenericAgentConfig *config, const char *policy_file, StringSet *parsed_files, StringSet *failed_files);
+
 static bool MissingInputFile(const char *input_file);
 
 #if !defined(__MINGW32__)
@@ -190,7 +193,7 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
     }
 }
 
-static bool IsPolicyPrecheckNeeded(EvalContext *ctx, GenericAgentConfig *config, bool force_validation)
+static bool IsPolicyPrecheckNeeded(GenericAgentConfig *config, bool force_validation)
 {
     bool check_policy = false;
 
@@ -199,7 +202,7 @@ static bool IsPolicyPrecheckNeeded(EvalContext *ctx, GenericAgentConfig *config,
         check_policy = true;
         Log(LOG_LEVEL_VERBOSE, "Input file is outside default repository, validating it");
     }
-    if (GenericAgentIsPolicyReloadNeeded(ctx, config, NULL))
+    if (GenericAgentIsPolicyReloadNeeded(config, NULL))
     {
         check_policy = true;
         Log(LOG_LEVEL_VERBOSE, "Input file is changed since last validation, validating it");
@@ -213,11 +216,11 @@ static bool IsPolicyPrecheckNeeded(EvalContext *ctx, GenericAgentConfig *config,
     return check_policy;
 }
 
-bool GenericAgentCheckPolicy(EvalContext *ctx, GenericAgentConfig *config, bool force_validation)
+bool GenericAgentCheckPolicy(GenericAgentConfig *config, bool force_validation)
 {
     if (!MissingInputFile(config->input_file))
     {
-        if (IsPolicyPrecheckNeeded(ctx, config, force_validation))
+        if (IsPolicyPrecheckNeeded(config, force_validation))
         {
             bool policy_check_ok = GenericAgentCheckPromises(config);
 
@@ -238,16 +241,51 @@ bool GenericAgentCheckPolicy(EvalContext *ctx, GenericAgentConfig *config, bool 
     return false;
 }
 
-/*****************************************************************************/
-/* Level                                                                     */
-/*****************************************************************************/
+static time_t ReadPolicyValidatedFileMTime(const GenericAgentConfig *config)
+{
+    char filename[CF_MAXVARSIZE];
+
+    if (MINUSF)
+    {
+        snprintf(filename, CF_MAXVARSIZE, "%s/state/validated_%s", CFWORKDIR, CanonifyName(config->original_input_file));
+        MapName(filename);
+    }
+    else
+    {
+        snprintf(filename, CF_MAXVARSIZE, "%s/masterfiles/cf_promises_validated", CFWORKDIR);
+        MapName(filename);
+    }
+
+    struct stat sb;
+    if (stat(filename, &sb) != -1)
+    {
+        return sb.st_mtime;
+    }
+    else
+    {
+        return 0;
+    }
+}
 
 /**
  * @brief Writes a file with a contained timestamp to mark a policy file as validated
  * @return True if successful.
  */
-static bool WritePolicyValidatedFile(const char *filename)
+static bool WritePolicyValidatedFile(const GenericAgentConfig *config)
 {
+    char filename[CF_MAXVARSIZE];
+
+    if (MINUSF)
+    {
+        snprintf(filename, CF_MAXVARSIZE, "%s/state/validated_%s", CFWORKDIR, CanonifyName(config->original_input_file));
+        MapName(filename);
+    }
+    else
+    {
+        snprintf(filename, CF_MAXVARSIZE, "%s/masterfiles/cf_promises_validated", CFWORKDIR);
+        MapName(filename);
+    }
+
     if (!MakeParentDirectory(filename, true))
     {
         Log(LOG_LEVEL_ERR, "While writing policy validated marker file '%s', could not create directory (MakeParentDirectory: %s)", filename, GetErrorStr());
@@ -336,20 +374,7 @@ bool GenericAgentCheckPromises(const GenericAgentConfig *config)
 
     if (!IsFileOutsideDefaultRepository(config->original_input_file))
     {
-        char validated_filename[CF_MAXVARSIZE];
-
-        if (MINUSF)
-        {
-            snprintf(validated_filename, CF_MAXVARSIZE, "%s/state/validated_%s", CFWORKDIR, CanonifyName(config->original_input_file));
-            MapName(validated_filename);
-        }
-        else
-        {
-            snprintf(validated_filename, CF_MAXVARSIZE, "%s/masterfiles/cf_promises_validated", CFWORKDIR);
-            MapName(validated_filename);
-        }
-
-        WritePolicyValidatedFile(validated_filename);
+        WritePolicyValidatedFile(config);
     }
 
     return true;
@@ -492,45 +517,136 @@ static void ShowContext(EvalContext *ctx)
     }
 }
 
-Policy *GenericAgentLoadPolicy(EvalContext *ctx, GenericAgentConfig *config)
+static Policy *LoadPolicyInputFiles(EvalContext *ctx, GenericAgentConfig *config, const Rlist *inputs, StringSet *parsed_files, StringSet *failed_files)
 {
-    PROMISETIME = time(NULL);
+    Policy *policy = PolicyNew();
 
-    Policy *main_policy = Cf3ParseFile(config, config->input_file);
-
-    if (main_policy)
+    for (const Rlist *rp = inputs; rp; rp = rp->next)
     {
-        PolicyResolve(ctx, main_policy, config);
-
-        if (PolicyIsRunnable(main_policy))
+        if (rp->type != RVAL_TYPE_SCALAR)
         {
-            Policy *aux_policy = Cf3ParseFiles(ctx, config, InputFiles(ctx, main_policy));
+            Log(LOG_LEVEL_ERR, "Non-file object in inputs list");
+            continue;
+        }
+
+        const char *unresolved_input = RlistScalarValue(rp);
+
+        if (strcmp(CF_NULL_VALUE, unresolved_input) == 0)
+        {
+            continue;
+        }
+
+        Rval resolved_input = EvaluateFinalRval(ctx, NULL, "sys", (Rval) { unresolved_input, RVAL_TYPE_SCALAR }, true, NULL);
+
+        Policy *aux_policy = NULL;
+        switch (resolved_input.type)
+        {
+        case RVAL_TYPE_SCALAR:
+            aux_policy = LoadPolicyFile(ctx, config, GenericAgentResolveInputPath(config, RvalScalarValue(resolved_input)), parsed_files, failed_files);
+            break;
+
+        case RVAL_TYPE_LIST:
+            aux_policy = LoadPolicyInputFiles(ctx, config, RvalRlistValue(resolved_input), parsed_files, failed_files);
+            break;
+
+        default:
+            ProgrammingError("Unknown type in input list for parsing: %d", resolved_input.type);
+            break;
+        }
+
+        if (aux_policy)
+        {
+            policy = PolicyMerge(policy, aux_policy);
+        }
+
+        RvalDestroy(resolved_input);
+
+        PolicyResolve(ctx, policy, config);
+    }
+
+    return policy;
+}
+
+static Policy *LoadPolicyFile(EvalContext *ctx, GenericAgentConfig *config, const char *policy_file, StringSet *parsed_files, StringSet *failed_files)
+{
+    Policy *policy = Cf3ParseFile(config, policy_file);
+    StringSetAdd(parsed_files, xstrdup(policy_file));
+
+    if (!policy)
+    {
+        StringSetAdd(failed_files, xstrdup(policy_file));
+        return NULL;
+    }
+
+    PolicyResolve(ctx, policy, config);
+
+    Body *body_common_control = PolicyGetBody(policy, NULL, "common", "control");
+    Body *body_file_control = PolicyGetBody(policy, NULL, "file", "control");
+
+    if (body_common_control)
+    {
+        Seq *potential_inputs = BodyGetConstraint(body_common_control, "inputs");
+        Constraint *cp = EffectiveConstraint(ctx, potential_inputs);
+        SeqDestroy(potential_inputs);
+
+        if (cp)
+        {
+            Policy *aux_policy = LoadPolicyInputFiles(ctx, config, RvalRlistValue(cp->rval), parsed_files, failed_files);
             if (aux_policy)
             {
-                main_policy = PolicyMerge(main_policy, aux_policy);
-            }
-            else
-            {
-                Log(LOG_LEVEL_ERR, "Syntax errors were found in policy files included from the main policy");
-                exit(EXIT_FAILURE); // TODO: do not exit
+                policy = PolicyMerge(policy, aux_policy);
             }
         }
     }
-    else
+
+    PolicyResolve(ctx, policy, config);
+
+    if (body_file_control)
     {
-        Log(LOG_LEVEL_ERR, "Syntax errors were found in the main policy file");
-        exit(EXIT_FAILURE); // TODO: do not exit
+        Seq *potential_inputs = BodyGetConstraint(body_file_control, "inputs");
+        Constraint *cp = EffectiveConstraint(ctx, potential_inputs);
+        SeqDestroy(potential_inputs);
+
+        if (cp)
+        {
+            Policy *aux_policy = LoadPolicyInputFiles(ctx, config, RvalRlistValue(cp->rval), parsed_files, failed_files);
+            if (aux_policy)
+            {
+                policy = PolicyMerge(policy, aux_policy);
+            }
+        }
     }
+
+    return policy;
+}
+
+Policy *GenericAgentLoadPolicy(EvalContext *ctx, GenericAgentConfig *config)
+{
+    config->policy_last_read_attempt = time(NULL);
+
+    StringSet *parsed_files = StringSetNew();
+    StringSet *failed_files = StringSetNew();
+
+    Policy *policy = LoadPolicyFile(ctx, config, config->input_file, parsed_files, failed_files);
+
+    if (StringSetSize(failed_files) > 0)
+    {
+        Log(LOG_LEVEL_ERR, "There are syntax errors in policy files");
+        exit(EXIT_FAILURE);
+    }
+
+    StringSetDestroy(parsed_files);
+    StringSetDestroy(failed_files);
 
     {
         Seq *errors = SeqNew(100, PolicyErrorDestroy);
 
-        if (PolicyCheckPartial(main_policy, errors))
+        if (PolicyCheckPartial(policy, errors))
         {
-            if (!config->bundlesequence && (PolicyIsRunnable(main_policy) || config->check_runnable))
+            if (!config->bundlesequence && (PolicyIsRunnable(policy) || config->check_runnable))
             {
                 Log(LOG_LEVEL_VERBOSE, "Running full policy integrity checks");
-                PolicyCheckRunnable(ctx, main_policy, errors, config->ignore_missing_bundles);
+                PolicyCheckRunnable(ctx, policy, errors, config->ignore_missing_bundles);
             }
         }
 
@@ -553,12 +669,12 @@ Policy *GenericAgentLoadPolicy(EvalContext *ctx, GenericAgentConfig *config)
         ShowContext(ctx);
     }
 
-    if (main_policy)
+    if (policy)
     {
-        VerifyPromises(ctx, main_policy, config);
+        VerifyPromises(ctx, policy, config);
     }
 
-    return main_policy;
+    return policy;
 }
 
 /*****************************************************************************/
@@ -687,7 +803,6 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
     }
 
     OpenNetwork();
-
     CryptoInitialize();
 
     if (!LOOKUP)
@@ -696,9 +811,13 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
     }
 
     const char *bootstrapped_policy_server = ReadPolicyServerFile(CFWORKDIR);
-    if (!LoadSecretKeys(bootstrapped_policy_server))
+
+    /* Initialize keys and networking. cf-key, doesn't need keys. In fact it
+       must function properly even without them, so that it generates them! */
+    if (config->agent_type != AGENT_TYPE_KEYGEN)
     {
-        FatalError(ctx, "Could not load secret keys");
+        LoadSecretKeys(bootstrapped_policy_server);
+        cfnet_init();
     }
 
     if (!MINUSF)
@@ -730,78 +849,6 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
     }
 }
 
-/*******************************************************************/
-
-static Policy *Cf3ParseFiles(EvalContext *ctx, GenericAgentConfig *config, const Rlist *inputs)
-{
-    Policy *policy = PolicyNew();
-    bool contains_parse_errors = false;
-
-    for (const Rlist *rp = inputs; rp; rp = rp->next)
-    {
-        // TODO: ad-hoc validation, necessary?
-        if (rp->type != RVAL_TYPE_SCALAR)
-        {
-            Log(LOG_LEVEL_ERR, "Non-file object in inputs list");
-            continue;
-        }
-        else
-        {
-            Rval returnval;
-
-            if (strcmp(rp->item, CF_NULL_VALUE) == 0)
-            {
-                continue;
-            }
-
-            returnval = EvaluateFinalRval(ctx, NULL, "sys", (Rval) {rp->item, rp->type}, true, NULL);
-
-            Policy *aux_policy = NULL;
-            switch (returnval.type)
-            {
-            case RVAL_TYPE_SCALAR:
-                aux_policy = Cf3ParseFile(config, GenericAgentResolveInputPath(config, returnval.item));
-                break;
-
-            case RVAL_TYPE_LIST:
-                aux_policy = Cf3ParseFiles(ctx, config, returnval.item);
-                break;
-
-            default:
-                ProgrammingError("Unknown type in input list for parsing: %d", returnval.type);
-                break;
-            }
-
-            if (aux_policy)
-            {
-                policy = PolicyMerge(policy, aux_policy);
-            }
-            else
-            {
-                contains_parse_errors = true;
-            }
-
-            RvalDestroy(returnval);
-        }
-
-        PolicyResolve(ctx, policy, config);
-    }
-
-    PolicyResolve(ctx, policy, config);
-
-    if (contains_parse_errors)
-    {
-        PolicyDestroy(policy);
-        return NULL;
-    }
-    else
-    {
-        return policy;
-    }
-}
-
-/*******************************************************************/
-
 static bool MissingInputFile(const char *input_file)
 {
     struct stat sb;
@@ -817,61 +864,37 @@ static bool MissingInputFile(const char *input_file)
 
 /*******************************************************************/
 
-bool GenericAgentIsPolicyReloadNeeded(EvalContext *ctx, const GenericAgentConfig *config, const Rlist *input_files)
+bool GenericAgentIsPolicyReloadNeeded(const GenericAgentConfig *config, const Policy *policy)
 {
-    Rlist *sl;
-    struct stat sb;
-    int result = false;
     char filename[CF_MAXVARSIZE];
-    time_t validated_at;
 
-    if (MINUSF)
-    {
-        snprintf(filename, CF_MAXVARSIZE, "%s/state/validated_%s", CFWORKDIR, CanonifyName(config->original_input_file));
-        MapName(filename);
-    }
-    else
-    {
-        snprintf(filename, CF_MAXVARSIZE, "%s/masterfiles/cf_promises_validated", CFWORKDIR);
-        MapName(filename);
-    }
-
-    if (stat(filename, &sb) != -1)
-    {
-        validated_at = sb.st_mtime;
-    }
-    else
-    {
-        validated_at = 0;
-    }
-
-// sanity check
+    time_t validated_at = ReadPolicyValidatedFileMTime(config);
 
     if (validated_at > time(NULL))
     {
         Log(LOG_LEVEL_INFO,
-              "!! Clock seems to have jumped back in time - mtime of %s is newer than current time - touching it",
-              filename);
+            "Clock seems to have jumped back in time - mtime of '%s' is newer than current time - touching it",
+            filename);
 
         if (utime(filename, NULL) == -1)
         {
             Log(LOG_LEVEL_ERR, "Could not touch '%s'. (utime: %s)", filename, GetErrorStr());
         }
-
-        validated_at = 0;
         return true;
     }
 
-    if (stat(config->input_file, &sb) == -1)
     {
-        Log(LOG_LEVEL_VERBOSE, "There is no readable input file at '%s'. (stat: %s)", config->input_file, GetErrorStr());
-        return true;
-    }
-
-    if (sb.st_mtime > validated_at || sb.st_mtime > PROMISETIME)
-    {
-        Log(LOG_LEVEL_VERBOSE, "Promises seem to change");
-        return true;
+        struct stat sb;
+        if (stat(config->input_file, &sb) == -1)
+        {
+            Log(LOG_LEVEL_VERBOSE, "There is no readable input file at '%s'. (stat: %s)", config->input_file, GetErrorStr());
+            return true;
+        }
+        else if (sb.st_mtime > validated_at || sb.st_mtime > config->policy_last_read_attempt)
+        {
+            Log(LOG_LEVEL_VERBOSE, "Input file '%s' has changed since the last policy read attempt", config->input_file);
+            return true;
+        }
     }
 
 // Check the directories first for speed and because non-input/data files should trigger an update
@@ -879,90 +902,57 @@ bool GenericAgentIsPolicyReloadNeeded(EvalContext *ctx, const GenericAgentConfig
     snprintf(filename, CF_MAXVARSIZE, "%s/inputs", CFWORKDIR);
     MapName(filename);
 
-    if (IsNewerFileTree(filename, PROMISETIME))
+    if (IsNewerFileTree(filename, config->policy_last_read_attempt))
     {
         Log(LOG_LEVEL_VERBOSE, "Quick search detected file changes");
         return true;
     }
 
-// Check files in case there are any abs paths
-
-    for (const Rlist *rp = input_files; rp != NULL; rp = rp->next)
+    if (policy)
     {
-        if (rp->type != RVAL_TYPE_SCALAR)
-        {
-            Log(LOG_LEVEL_ERR, "Non file object %s in list", (char *) rp->item);
-        }
-        else
-        {
-            Rval returnval = EvaluateFinalRval(ctx, NULL, "sys", (Rval) { rp->item, rp->type }, true, NULL);
-            LogLevel missing_inputs_log_level = config->ignore_missing_inputs ? LOG_LEVEL_VERBOSE : LOG_LEVEL_ERR;
+        const LogLevel missing_inputs_log_level = config->ignore_missing_inputs ? LOG_LEVEL_VERBOSE : LOG_LEVEL_ERR;
 
-            switch (returnval.type)
+        StringSet *input_files = PolicySourceFiles(policy);
+
+        StringSetIterator iter = StringSetIteratorInit(input_files);
+        const char *input_file = NULL;
+        bool reload_needed = false;
+
+        while ((input_file = StringSetIteratorNext(&iter)))
+        {
+            struct stat sb;
+            if (stat(input_file, &sb) == -1)
             {
-            case RVAL_TYPE_SCALAR:
-
-                if (stat(GenericAgentResolveInputPath(config, (char *) returnval.item), &sb) == -1)
-                {
-
-                    Log(missing_inputs_log_level, "Unreadable promise proposals at '%s'. (stat: %s)", (char *) returnval.item, GetErrorStr());
-                    result = true;
-                    break;
-                }
-
-                if (sb.st_mtime > PROMISETIME)
-                {
-                    result = true;
-                }
-                break;
-
-            case RVAL_TYPE_LIST:
-
-                for (sl = (Rlist *) returnval.item; sl != NULL; sl = sl->next)
-                {
-                    if (strcmp((char *) sl->item, CF_NULL_VALUE) == 0)
-                    {
-                        continue;
-                    }
-
-                    if (stat(GenericAgentResolveInputPath(config, (char *) sl->item), &sb) == -1)
-                    {
-                        Log(missing_inputs_log_level, "Unreadable promise proposals at '%s'. (stat: %s)", (char *) sl->item, GetErrorStr());
-                        result = true;
-                        break;
-                    }
-
-                    if (sb.st_mtime > PROMISETIME)
-                    {
-                        result = true;
-                        break;
-                    }
-                }
-                break;
-
-            default:
+                Log(missing_inputs_log_level, "Unreadable promise proposals at '%s'. (stat: %s)", input_file, GetErrorStr());
+                reload_needed = true;
                 break;
             }
-
-            RvalDestroy(returnval);
-
-            if (result)
+            else if (sb.st_mtime > config->policy_last_read_attempt)
             {
+                reload_needed = true;
                 break;
             }
         }
+
+        StringSetDestroy(input_files);
+        if (reload_needed)
+        {
+            return true;
+        }
     }
 
-// did policy server change (used in $(sys.policy_hub))?
-    snprintf(filename, CF_MAXVARSIZE, "%s/policy_server.dat", CFWORKDIR);
-    MapName(filename);
-
-    if ((stat(filename, &sb) != -1) && (sb.st_mtime > PROMISETIME))
     {
-        result = true;
+        snprintf(filename, CF_MAXVARSIZE, "%s/policy_server.dat", CFWORKDIR);
+        MapName(filename);
+
+        struct stat sb;
+        if ((stat(filename, &sb) != -1) && (sb.st_mtime > config->policy_last_read_attempt))
+        {
+            return true;
+        }
     }
 
-    return result;
+    return false;
 }
 
 /*
@@ -1056,22 +1046,6 @@ Seq *ControlBodyConstraints(const Policy *policy, AgentType agent)
     }
 
     return NULL;
-}
-
-const Rlist *InputFiles(EvalContext *ctx, Policy *policy)
-{
-    Body *body_common_control = PolicyGetBody(policy, NULL, "common", "control");
-    if (!body_common_control)
-    {
-        ProgrammingError("Attempted to get input files from policy without body common control");
-        return NULL;
-    }
-
-    Seq *potential_inputs = BodyGetConstraint(body_common_control, "inputs");
-    Constraint *cp = EffectiveConstraint(ctx, potential_inputs);
-    SeqDestroy(potential_inputs);
-
-    return cp ? cp->rval.item : NULL;
 }
 
 /*******************************************************************/
@@ -1559,6 +1533,7 @@ GenericAgentConfig *GenericAgentConfigNewDefault(AgentType agent_type)
     config->check_runnable = agent_type != AGENT_TYPE_COMMON;
     config->ignore_missing_bundles = false;
     config->ignore_missing_inputs = false;
+    config->policy_last_read_attempt = 0;
 
     config->heap_soft = NULL;
     config->heap_negated = NULL;

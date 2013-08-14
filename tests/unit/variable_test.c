@@ -1,7 +1,7 @@
-#include "test.h"
+#include <test.h>
 
-#include "variable.h"
-#include "rlist.h"
+#include <variable.h>
+#include <rlist.h>
 
 static bool PutVar(VariableTable *table, char *var_str)
 {

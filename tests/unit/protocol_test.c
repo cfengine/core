@@ -1,9 +1,9 @@
-#include "test.h"
+#include <test.h>
 
 #include <string.h>
-#include "cmockery.h"
-#include "server.h"
-#include "server_common.h"
+#include <cmockery.h>
+#include <server.h>
+#include <server_common.h>
 
 /*
  * Copied from server.c

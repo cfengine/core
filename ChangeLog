@@ -2,10 +2,20 @@
 
        Changes:
        - add process name and pid in syslog message (GitHub #789)
+       - process_results default to AND'ing of set attributes if not specified (Redmine #3224)
+       - #TODO# network protocol on top of TLS
 
        New features:
        - support colorized output for agent binaries with command line option --color
        - Introduced alias 'policy_server' for context 'am_policy_hub' (the latter will be deprecated)
+       - #TODO# new sys variables
+       - #TODO# new functions
+          - findfiles
+       - #TODO# replace_patterns changes
+
+       Bug fixes:
+       - #TODO# goodness from evaluator and variable table refactoring
+          - `this` and similar variables 
 
 3.5.1
 

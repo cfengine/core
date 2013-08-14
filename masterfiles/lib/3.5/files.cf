@@ -1186,6 +1186,14 @@ body file_select size_range(from,to)
 
 ##
 
+body file_select bigger_than(size)
+{
+      search_size => irange("0","$(size)");
+      file_result => "!size";
+}
+
+##
+
 body file_select exclude(name)
 {
       leaf_name  => { "$(name)"};

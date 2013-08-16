@@ -20,19 +20,16 @@ ENTERPRISE_FUNC_2ARG_DEFINE_STUB(int64_t, extension_function_broken, int32_t, sh
 
 static void test_extension_function_stub(void)
 {
-    setenv("CFENGINE_TEST_OVERRIDE_ENTERPRISE_LIBRARY_DIR", ".", 1);
+    setenv("CFENGINE_TEST_OVERRIDE_ENTERPRISE_LIBRARY_DIR", "nonexistingdir", 1);
 
-    // Crude way of reverting to the stub function. Rename the library to something else.
-    rename(ENTERPRISE_LIBRARY_NAME, ENTERPRISE_LIBRARY_NAME ".disabled");
     assert_int_equal(extension_function(2, 3), 5);
-    rename(ENTERPRISE_LIBRARY_NAME ".disabled", ENTERPRISE_LIBRARY_NAME);
 
     unsetenv("CFENGINE_TEST_OVERRIDE_ENTERPRISE_LIBRARY_DIR");
 }
 
 static void test_extension_function(void)
 {
-    setenv("CFENGINE_TEST_OVERRIDE_ENTERPRISE_LIBRARY_DIR", ".", 1);
+    setenv("CFENGINE_TEST_OVERRIDE_ENTERPRISE_LIBRARY_DIR", ".libs", 1);
 
     assert_int_equal(extension_function(2, 3), 6);
 
@@ -41,7 +38,7 @@ static void test_extension_function(void)
 
 static void test_extension_function_broken(void)
 {
-    setenv("CFENGINE_TEST_OVERRIDE_ENTERPRISE_LIBRARY_DIR", ".", 1);
+    setenv("CFENGINE_TEST_OVERRIDE_ENTERPRISE_LIBRARY_DIR", ".libs", 1);
 
     // This one should call the stub, even if the extension is available, because the
     // function signature is different.
@@ -52,9 +49,14 @@ static void test_extension_function_broken(void)
 
 static void test_extension_library()
 {
+    // This makes an assumption about your directory structure that may not always be correct.
+    setenv("CFENGINE_TEST_OVERRIDE_ENTERPRISE_LIBRARY_DIR", "../../../enterprise/enterprise-plugin/.libs", 1);
+
     void *handle = enterprise_library_open();
     assert_true(handle != NULL);
     enterprise_library_close(handle);
+
+    unsetenv("CFENGINE_TEST_OVERRIDE_ENTERPRISE_LIBRARY_DIR");
 }
 
 int main()

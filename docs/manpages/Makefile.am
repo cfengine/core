@@ -9,12 +9,6 @@ man_MANS = \
     cf-runagent.8 \
     cf-serverd.8
 
-#if HAVE_NOVA
-#if MONGO
-#  man_MANS += cf-hub.8
-#endif
-#endif
-
 endif
 
 .PRECIOUS: ../../%/%

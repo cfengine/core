@@ -140,11 +140,7 @@ cf_key_functions_test_SOURCES = cf_key_functions_test.c ../../cf-key/cf-key-func
 ipaddress_test_SOURCES = ipaddress_test.c 
 
 protocol_test_SOURCES = protocol_test.c ../../cf-serverd/server_common.c ../../cf-serverd/server_tls.c ../../cf-serverd/server.c ../../cf-serverd/cf-serverd-enterprise-stubs.c ../../cf-serverd/server_transform.c ../../cf-serverd/cf-serverd-functions.c
-if HAVE_NOVA
-protocol_test_LDADD = libtest.la ../../nova/libcfserverd/libcfserverd.la
-else
 protocol_test_LDADD = ../../libpromises/libpromises.la libtest.la
-endif
 
 if HAVE_AVAHI_CLIENT
 if HAVE_AVAHI_COMMON

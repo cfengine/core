@@ -99,11 +99,6 @@ typedef enum
 #endif
 #endif
 
-#ifdef HAVE_ENTERPRISE
-#include <agent_reports.h>
-#include <enterprise-agent-diagnostics.h>
-#endif
-
 #include <ornaments.h>
 
 
@@ -266,10 +261,8 @@ int main(int argc, char *argv[])
         StringSetIterator hard_iter = EvalContextHeapIteratorHard(ctx);
         NoteClassUsage(hard_iter, true);
     }
-#ifdef HAVE_ENTERPRISE
     Nova_NoteVarUsageDB(ctx);
     Nova_TrackExecution(config->input_file);
-#endif
     PurgeLocks();
 
     if (config->agent_specific.agent.bootstrap_policy_server && !VerifyBootstrap(ctx))
@@ -1032,9 +1025,7 @@ void KeepControlPromises(EvalContext *ctx, Policy *policy)
         }
     }
 
-#ifdef HAVE_ENTERPRISE
     Nova_Initialize(ctx);
-#endif
 }
 
 /*********************************************************************/

@@ -46,10 +46,6 @@
 #include <verify_classes.h>
 #include <cf-monitord-enterprise-stubs.h>
 
-#ifdef HAVE_ENTERPRISE
-# include <history.h>
-#endif
-
 
 /*****************************************************************************/
 /* Globals                                                                   */

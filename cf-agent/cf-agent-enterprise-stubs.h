@@ -53,5 +53,8 @@ ENTERPRISE_VOID_FUNC_5ARG_DECLARE(void, Nova_CheckNtACL, EvalContext *, ctx, cha
 
 ENTERPRISE_VOID_FUNC_1ARG_DECLARE(void, ReportPatches, PackageManager *, list);
 
+ENTERPRISE_VOID_FUNC_1ARG_DECLARE(void, Nova_NoteVarUsageDB, EvalContext *, ctx);
+ENTERPRISE_VOID_FUNC_1ARG_DECLARE(void, Nova_TrackExecution, const char *, input_file);
+
 #endif
 

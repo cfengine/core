@@ -151,19 +151,11 @@ if HAVE_AVAHI_COMMON
 
 findhub_test_SOURCES = findhub_test.c ../../cf-agent/findhub.c ../../cf-agent/load_avahi.c
 
-if HAVE_ENTERPRISE
-avahi_config_test_SOURCES = avahi_config_test.c \
-	../../cf-serverd/server_common.c ../../cf-serverd/server_tls.c ../../cf-serverd/server.c \
-	../../cf-serverd/server_transform.c \
-	../../cf-serverd/cf-serverd-enterprise-stubs.c
-avahi_config_test_LDADD = libtest.la ../../nova/libcfserverd/libcfserverd.la
-else
 avahi_config_test_SOURCES = avahi_config_test.c \
 	../../cf-serverd/server_common.c ../../cf-serverd/server_tls.c ../../cf-serverd/server.c \
 	../../cf-serverd/server_transform.c \
 	../../cf-serverd/cf-serverd-enterprise-stubs.c
 avahi_config_test_LDADD = ../../libpromises/libpromises.la libtest.la
-endif
 
 endif
 endif
@@ -195,10 +187,6 @@ package_versions_compare_test_SOURCES = package_versions_compare_test.c ../../cf
 
 package_versions_compare_test_CPPFLAGS = $(AM_CPPFLAGS)
 package_versions_compare_test_LDADD = ../../libpromises/libpromises.la libtest.la
-if HAVE_ENTERPRISE
-package_versions_compare_test_CPPFLAGS += -I$(abs_top_srcdir)/enterprise/libcfagent
-package_versions_compare_test_LDADD += ../../nova/libcfagent/libcfagent.la
-endif
 
 sort_test_SOURCES = sort_test.c ../../libpromises/sort.c
 sort_test_LDADD = libtest.la

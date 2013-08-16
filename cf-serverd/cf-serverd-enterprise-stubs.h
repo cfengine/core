@@ -45,4 +45,6 @@ ENTERPRISE_FUNC_3ARG_DECLARE(bool, ReturnQueryData, struct ServerConnectionState
 ENTERPRISE_VOID_FUNC_1ARG_DECLARE(void, KeepReportDataSelectAccessPromise, Promise *, pp);
 ENTERPRISE_VOID_FUNC_0ARG_DECLARE(void, CleanReportBookFilterSet);
 
+ENTERPRISE_VOID_FUNC_1ARG_DECLARE(void, FprintAvahiCfengineTag, FILE *, fp);
+
 #endif

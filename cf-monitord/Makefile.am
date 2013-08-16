@@ -13,6 +13,7 @@ libcf_monitord_la_LIBADD = ../libpromises/libpromises.la
 
 libcf_monitord_la_SOURCES = \
         verify_measurements.c verify_measurements.h \
+	cf-monitord-enterprise-stubs.c cf-monitord-enterprise-stubs.h \
         env_monitor.c env_monitor.h \
         mon.h \
         mon_cpu.c \
@@ -30,11 +31,6 @@ if !BUILTIN_EXTENSIONS
  # Workaround for automake madness (try removing it if you want to know why).
  cf_monitord_CFLAGS = $(AM_CFLAGS)
  cf_monitord_LDADD = libcf-monitord.la
-endif
-
-if !HAVE_ENTERPRISE
-libcf_monitord_la_SOURCES += \
-	cf-monitord-enterprise-stubs.c cf-monitord-enterprise-stubs.h
 endif
 
 CLEANFILES = *.gcno *.gcda

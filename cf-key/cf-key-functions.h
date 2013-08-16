@@ -37,10 +37,6 @@
 #include <env_context.h>
 #include <crypto.h>
 
-#ifdef HAVE_ENTERPRISE
-#include <license.h>
-#endif
-
 RSA* LoadPublicKey(const char* filename);
 char* GetPubkeyDigest(const char* pubkey);
 int PrintDigest(const char* pubkey);
@@ -49,8 +45,6 @@ bool ShowHost(const char *hostkey, const char *address, bool incoming, const Key
 void ShowLastSeenHosts();
 int RemoveKeys(const char *input, bool must_be_coherent);
 void KeepKeyPromises(const char *public_key_file, const char *private_key_file);
-
-bool LicenseInstall(char *path_source);
 
 
 #endif // CFKEYFUNCTIONS_H

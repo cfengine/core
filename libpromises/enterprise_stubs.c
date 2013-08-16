@@ -47,6 +47,10 @@ extern int PR_KEPT;
 extern int PR_REPAIRED;
 extern int PR_NOTKEPT;
 
+ENTERPRISE_VOID_FUNC_1ARG_DEFINE_STUB(void, Nova_Initialize, EvalContext *, ctx)
+{
+}
+
 /* all agents: generic_agent.c */
 
 ENTERPRISE_FUNC_0ARG_DEFINE_STUB(const char *, GetConsolePrefix)

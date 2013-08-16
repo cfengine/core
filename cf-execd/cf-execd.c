@@ -45,10 +45,6 @@
 #include <man.h>
 
 
-#ifdef HAVE_ENTERPRISE
-# include <cf.enterprise.h>
-#endif
-
 #include <cf-execd.h>
 
 #define CF_EXEC_IFELAPSED 0

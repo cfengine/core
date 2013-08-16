@@ -40,10 +40,6 @@
 #include <audit.h>
 #include <pipes.h>
 
-#ifdef HAVE_ENTERPRISE
-# include <cf.enterprise.h>
-#endif
-
 #include <inttypes.h>
 
 #ifdef HAVE_ZONE_H

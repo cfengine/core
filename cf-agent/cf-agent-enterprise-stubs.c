@@ -45,3 +45,11 @@ ENTERPRISE_VOID_FUNC_5ARG_DEFINE_STUB(void, Nova_CheckNtACL, ARG_UNUSED EvalCont
 {
     Log(LOG_LEVEL_INFO, "NTFS ACLs are only supported in CFEngine Enterprise");
 }
+
+ENTERPRISE_VOID_FUNC_1ARG_DEFINE_STUB(void, Nova_NoteVarUsageDB, ARG_UNUSED EvalContext *, ctx)
+{
+}
+
+ENTERPRISE_VOID_FUNC_1ARG_DEFINE_STUB(void, Nova_TrackExecution, ARG_UNUSED const char *, input_file)
+{
+}

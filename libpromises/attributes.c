@@ -757,6 +757,11 @@ FileRename GetRenameConstraints(const EvalContext *ctx, const Promise *pp)
 
 /*******************************************************************/
 
+ENTERPRISE_FUNC_0ARG_DEFINE_STUB(HashMethod, GetBestFileChangeHashMethod)
+{
+    return HASH_METHOD_BEST;
+}
+
 FileChange GetChangeMgtConstraints(const EvalContext *ctx, const Promise *pp)
 {
     FileChange c;
@@ -766,11 +771,7 @@ FileChange GetChangeMgtConstraints(const EvalContext *ctx, const Promise *pp)
 
     if (value && (strcmp(value, "best") == 0))
     {
-#ifdef HAVE_ENTERPRISE
-        c.hash = HASH_METHOD_SHA512;
-#else
-        c.hash = HASH_METHOD_BEST;
-#endif
+        c.hash = GetBestFileChangeHashMethod();
     }
     else if (value && (strcmp(value, "md5") == 0))
     {

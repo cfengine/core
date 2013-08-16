@@ -42,10 +42,6 @@
 #include <server_tls.h>
 #include <server_common.h>
 
-#ifdef HAVE_ENTERPRISE
-# include <cf.enterprise.h>
-#endif
-
 //******************************************************************
 // GLOBAL STATE
 //******************************************************************

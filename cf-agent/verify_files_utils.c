@@ -60,10 +60,6 @@
 #include <retcode.h>
 #include <cf-agent-enterprise-stubs.h>
 
-#ifdef HAVE_ENTERPRISE
-# include <cf.enterprise.h>
-#endif
-
 #define CF_RECURSION_LIMIT 100
 
 static Rlist *AUTO_DEFINE_LIST;

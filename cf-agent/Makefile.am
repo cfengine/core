@@ -38,6 +38,7 @@ libcf_agent_la_SOURCES = \
         tokyo_check.c tokyo_check.h \
         abstract_dir.c abstract_dir.h \
         cf-agent.c \
+	cf-agent-enterprise-stubs.c cf-agent-enterprise-stubs.h \
         comparray.c comparray.h \
         acl_posix.c acl_posix.h \
         cf_sql.c cf_sql.h \
@@ -68,10 +69,6 @@ libcf_agent_la_SOURCES = \
 
 if !NT
 libcf_agent_la_SOURCES += nfs.c nfs.h
-endif
-
-if !HAVE_ENTERPRISE
-libcf_agent_la_SOURCES += cf-agent-enterprise-stubs.c cf-agent-enterprise-stubs.h
 endif
 
 if HAVE_AVAHI_CLIENT

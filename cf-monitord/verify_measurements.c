@@ -32,10 +32,6 @@
 #include <env_context.h>
 #include <ornaments.h>
 
-#ifdef HAVE_ENTERPRISE
-#include <history.h>
-#endif
-
 static bool CheckMeasureSanity(Measurement m, Promise *pp);
 
 /*****************************************************************************/

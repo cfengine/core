@@ -113,10 +113,7 @@ check_LTLIBRARIES += cfengine-enterprise.la
 cfengine_enterprise_la_SOURCES = enterprise_extension_test_lib.c
 cfengine_enterprise_la_LDFLAGS = -avoid-version -module -shared -export-dynamic -rpath /
 
-cfengine-enterprise.so: cfengine-enterprise.la
-	$(RM) cfengine-enterprise.so
-	$(LN_S) .libs/cfengine-enterprise.so cfengine-enterprise.so
-EXTRA_enterprise_extension_test_DEPENDENCIES = cfengine-enterprise.so
+EXTRA_enterprise_extension_test_DEPENDENCIES = cfengine-enterprise.la
 
 set_domainname_test_SOURCES = set_domainname_test.c
 set_domainname_test_LDADD = libstr.la ../../libpromises/libpromises.la

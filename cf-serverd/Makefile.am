@@ -1,28 +1,28 @@
-sbin_PROGRAMS = cf-serverd
+noinst_LTLIBRARIES = libcf-serverd.la
 
 AM_CPPFLAGS = @CPPFLAGS@ -I$(srcdir)/../libpromises -I$(srcdir)/../libutils \
 	-I$(srcdir)/../libcfnet \
-	$(NOVA_CPPFLAGS)
+	$(ENTERPRISE_CPPFLAGS)
 
 AM_CFLAGS = @CFLAGS@ \
-	$(NOVA_CFLAGS)
+	$(ENTERPRISE_CFLAGS)
 
-LDADD = ../libpromises/libpromises.la
-if HAVE_NOVA
-LDADD += ../nova/libcfserverd/libcfserverd.la
-endif
+libcf_serverd_la_LIBADD = ../libpromises/libpromises.la
 
-cf_serverd_SOURCES = \
+libcf_serverd_la_SOURCES = \
 	cf-serverd.c \
+	cf-serverd-enterprise-stubs.c cf-serverd-enterprise-stubs.h \
 	cf-serverd-functions.c cf-serverd-functions.h \
 	server_common.c server_common.h \
 	server.c server.h \
 	server_transform.c server_transform.h \
 	server_tls.c server_tls.h
 
-if !HAVE_NOVA
-cf_serverd_SOURCES += \
-	cf-serverd-enterprise-stubs.c cf-serverd-enterprise-stubs.h
+if !BUILTIN_EXTENSIONS
+ sbin_PROGRAMS = cf-serverd
+ # Workaround for automake madness (try removing it if you want to know why).
+ cf_serverd_CFLAGS = $(AM_CFLAGS)
+ cf_serverd_LDADD = libcf-serverd.la
 endif
 
 CLEANFILES = *.gcno *.gcda

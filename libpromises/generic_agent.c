@@ -22,43 +22,39 @@
   included file COSL.txt.
 */
 
-#include "generic_agent.h"
+#include <generic_agent.h>
 
-#include "bootstrap.h"
-#include "sysinfo.h"
-#include "env_context.h"
-#include "policy.h"
-#include "promises.h"
-#include "files_lib.h"
-#include "files_names.h"
-#include "files_interfaces.h"
-#include "files_hashes.h"
-#include "parser.h"
-#include "dbm_api.h"
-#include "crypto.h"
-#include "vars.h"
-#include "syntax.h"
-#include "conversion.h"
-#include "expand.h"
-#include "locks.h"
-#include "scope.h"
-#include "atexit.h"
-#include "unix.h"
-#include "client_code.h"
-#include "string_lib.h"
-#include "exec_tools.h"
-#include "list.h"
-#include "misc_lib.h"
-#include "fncall.h"
-#include "rlist.h"
-#include "syslog_client.h"
-#include "audit.h"
-#include "verify_classes.h"
-#include "verify_vars.h"
-
-#ifdef HAVE_NOVA
-# include "cf.nova.h"
-#endif
+#include <bootstrap.h>
+#include <sysinfo.h>
+#include <env_context.h>
+#include <policy.h>
+#include <promises.h>
+#include <files_lib.h>
+#include <files_names.h>
+#include <files_interfaces.h>
+#include <files_hashes.h>
+#include <parser.h>
+#include <dbm_api.h>
+#include <crypto.h>
+#include <vars.h>
+#include <syntax.h>
+#include <conversion.h>
+#include <expand.h>
+#include <locks.h>
+#include <scope.h>
+#include <atexit.h>
+#include <unix.h>
+#include <client_code.h>
+#include <string_lib.h>
+#include <exec_tools.h>
+#include <list.h>
+#include <misc_lib.h>
+#include <fncall.h>
+#include <rlist.h>
+#include <syslog_client.h>
+#include <audit.h>
+#include <verify_classes.h>
+#include <verify_vars.h>
 
 
 static pthread_once_t pid_cleanup_once = PTHREAD_ONCE_INIT;
@@ -94,16 +90,14 @@ static void SanitizeEnvironment()
 
 /*****************************************************************************/
 
+ENTERPRISE_VOID_FUNC_2ARG_DEFINE_STUB(void, GenericAgentSetDefaultDigest, HashMethod *, digest, int *, digest_len)
+{
+    *digest = HASH_METHOD_MD5;
+    *digest_len = CF_MD5_LEN;
+}
+
 void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
 {
-#ifdef HAVE_NOVA
-    CF_DEFAULT_DIGEST = HASH_METHOD_SHA256;
-    CF_DEFAULT_DIGEST_LEN = CF_SHA256_LEN;
-#else
-    CF_DEFAULT_DIGEST = HASH_METHOD_MD5;
-    CF_DEFAULT_DIGEST_LEN = CF_MD5_LEN;
-#endif
-
     GenericAgentInitialize(ctx, config);
 
     SetReferenceTime(ctx, true);
@@ -112,6 +106,8 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
 
     THIS_AGENT_TYPE = config->agent_type;
     EvalContextHeapAddHard(ctx, CF_AGENTTYPES[config->agent_type]);
+
+    GenericAgentSetDefaultDigest(&CF_DEFAULT_DIGEST, &CF_DEFAULT_DIGEST_LEN);
 
     GetNameInfo3(ctx, config->agent_type);
     GetInterfacesInfo(ctx);
@@ -695,9 +691,10 @@ void CloseLog(void)
 }
 #endif
 
-/*******************************************************************/
-/* Level 1                                                         */
-/*******************************************************************/
+ENTERPRISE_VOID_FUNC_1ARG_DEFINE_STUB(void, GenericAgentAddEditionClasses, EvalContext *, ctx)
+{
+    EvalContextHeapAddHard(ctx, "community_edition");
+}
 
 void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
 {
@@ -710,13 +707,6 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
     snprintf(STR_CFENGINEPORT, 15, "5308");
 
     EvalContextHeapAddHard(ctx, "any");
-
-#if defined HAVE_NOVA
-    EvalContextHeapAddHard(ctx, "nova_edition");
-    EvalContextHeapAddHard(ctx, "enterprise_edition");
-#else
-    EvalContextHeapAddHard(ctx, "community_edition");
-#endif
 
     strcpy(VPREFIX, GetConsolePrefix());
 
@@ -836,7 +826,7 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
     {
         snprintf(vbuff, CF_BUFSIZE, "%s%cinputs%cfailsafe.cf", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
 
-#ifndef HAVE_NOVA
+#ifndef HAVE_ENTERPRISE
         if (stat(vbuff, &statbuf) == -1)
         {
             GenericAgentConfigSetInputFile(config, GetWorkDir(), "failsafe.cf");
@@ -1297,12 +1287,9 @@ void GenericAgentWriteHelp(Writer *w, const char *component, const struct option
     WriterWriteF(w, "This software is Copyright (C) 2008,2010-present CFEngine AS.\n");
 }
 
-void GenericAgentWriteVersion(Writer *w)
+ENTERPRISE_VOID_FUNC_1ARG_DEFINE_STUB(void, GenericAgentWriteVersion, Writer *, w)
 {
     WriterWriteF(w, "%s\n", NameVersion());
-#ifdef HAVE_NOVA
-    WriterWriteF(w, "%s\n", Nova_NameVersion());
-#endif
 }
 
 /*******************************************************************/

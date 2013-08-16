@@ -22,18 +22,18 @@
   included file COSL.txt.
 */
 
-#include "cf3.defs.h"
-#include "vercmp.h"
-#include "vercmp_internal.h"
+#include <cf3.defs.h>
+#include <vercmp.h>
+#include <vercmp_internal.h>
 
 /* SetNewScope / DeleteScope */
-#include "scope.h"
+#include <scope.h>
 /* ExpandScalar */
-#include "expand.h"
-#include "vars.h"
-#include "pipes.h"
-#include "misc_lib.h"
-#include "env_context.h"
+#include <expand.h>
+#include <vars.h>
+#include <pipes.h>
+#include <misc_lib.h>
+#include <env_context.h>
 
 static VersionCmpResult InvertResult(VersionCmpResult result)
 {

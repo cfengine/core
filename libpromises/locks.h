@@ -25,7 +25,7 @@
 #ifndef CFENGINE_LOCKS_H
 #define CFENGINE_LOCKS_H
 
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
 bool AcquireLockByID(const char *lock_id, int acquire_after_minutes);
 time_t FindLockTime(const char *name);

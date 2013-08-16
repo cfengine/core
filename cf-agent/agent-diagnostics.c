@@ -22,17 +22,17 @@
   included file COSL.txt.
 */
 
-#include "agent-diagnostics.h"
+#include <agent-diagnostics.h>
 
-#include "alloc.h"
-#include "crypto.h"
-#include "files_interfaces.h"
-#include "string_lib.h"
-#include "bootstrap.h"
-#include "dbm_api.h"
-#include "dbm_priv.h"
-#include "tokyo_check.h"
-#include "lastseen.h"
+#include <alloc.h>
+#include <crypto.h>
+#include <files_interfaces.h>
+#include <string_lib.h>
+#include <bootstrap.h>
+#include <dbm_api.h>
+#include <dbm_priv.h>
+#include <tokyo_check.h>
+#include <lastseen.h>
 
 
 AgentDiagnosticsResult AgentDiagnosticsResultNew(bool success, char *message)
@@ -226,4 +226,11 @@ const AgentDiagnosticCheck *AgentDiagnosticsAllChecks(void)
     };
 
     return checks;
+}
+
+ENTERPRISE_VOID_FUNC_4ARG_DEFINE_STUB(void, AgentDiagnosticsRunAllChecksNova,
+                                      ARG_UNUSED const char *, workdir, ARG_UNUSED Writer *, output,
+                                      ARG_UNUSED AgentDiagnosticsRunFunction, AgentDiagnosticsRunPtr,
+                                      ARG_UNUSED AgentDiagnosticsResultNewFunction, AgentDiagnosticsResultNewPtr)
+{
 }

@@ -22,9 +22,9 @@
   included file COSL.txt.
 */
 
-#include "platform.h"
-#include "compiler.h"
+#include <platform.h>
+#include <compiler.h>
 
 #if defined(__MINGW32__)
-#include "../nova/libcompat-win32/chmod.c"
+#include <../enterprise/libcompat-win32/chmod.c>
 #endif

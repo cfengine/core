@@ -4,11 +4,10 @@ MAKEFLAGS = $(if $(filter-out 0,$(V)),,--no-print-directory --quiet)
 
 LCOV_FLAGS = $(if $(filter-out 0,$(V)),,-q)
 
-SUBDIRS = libcompat libutils libcfnet $(NOVA_LIB_SUBDIRS) libpromises		\
-	$(NOVA_BIN_SUBDIRS) cf-agent cf-execd cf-key cf-monitord	        \
-	cf-promises cf-runagent cf-serverd ext examples masterfiles	        \
-	tests $(ENTERPRISE_API_SUBDIR) $(CFMOD_SUBDIR) $(NOVA_DOC_SUBDIR)	\
-	$(NOVA_SUBDIR)
+SUBDIRS = libcompat libutils libcfnet libpromises \
+	cf-agent cf-execd cf-key cf-monitord \
+	cf-promises cf-runagent cf-serverd ext examples masterfiles \
+	tests
 
 DIST_SUBDIRS = libcompat libutils libcfnet libpromises cf-agent cf-execd	\
 	cf-key cf-monitord cf-promises cf-runagent cf-serverd ext	        \

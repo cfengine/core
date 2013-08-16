@@ -22,13 +22,13 @@
   included file COSL.txt.
 */
 
-#include "var_expressions.h"
+#include <var_expressions.h>
 
-#include "cf3.defs.h"
-#include "buffer.h"
-#include "misc_lib.h"
-#include "string_lib.h"
-#include "hashes.h"
+#include <cf3.defs.h>
+#include <buffer.h>
+#include <misc_lib.h>
+#include <string_lib.h>
+#include <hashes.h>
 
 static size_t VarRefHash(const VarRef *ref)
 {

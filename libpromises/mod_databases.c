@@ -22,9 +22,9 @@
   included file COSL.txt.
 */
 
-#include "mod_databases.h"
+#include <mod_databases.h>
 
-#include "syntax.h"
+#include <syntax.h>
 
 static const ConstraintSyntax database_server_constraints[] =
 {

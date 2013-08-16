@@ -22,16 +22,16 @@
   included file COSL.txt.
 */
 
-#include "fncall.h"
+#include <fncall.h>
 
-#include "env_context.h"
-#include "files_names.h"
-#include "expand.h"
-#include "vars.h"
-#include "args.h"
-#include "evalfunction.h"
-#include "policy.h"
-#include "string_lib.h"
+#include <env_context.h>
+#include <files_names.h>
+#include <expand.h>
+#include <vars.h>
+#include <args.h>
+#include <evalfunction.h>
+#include <policy.h>
+#include <string_lib.h>
 
 
 /*******************************************************************/

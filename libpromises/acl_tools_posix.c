@@ -22,8 +22,8 @@
   included file COSL.txt.
 */
 
-#include "cf3.defs.h"
-#include "acl_tools.h"
+#include <cf3.defs.h>
+#include <acl_tools.h>
 
 #ifdef HAVE_ACL_H
 # include <acl.h>

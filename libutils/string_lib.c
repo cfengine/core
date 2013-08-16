@@ -23,11 +23,11 @@
 */
 
 
-#include "platform.h"
+#include <platform.h>
 
-#include "alloc.h"
-#include "writer.h"
-#include "misc_lib.h"
+#include <alloc.h>
+#include <writer.h>
+#include <misc_lib.h>
 
 
 unsigned int StringHash(const char *str, unsigned int seed, unsigned int max)

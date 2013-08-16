@@ -22,22 +22,22 @@
   included file COSL.txt.
 */
 
-#include "client_protocol.h"
+#include <client_protocol.h>
 
-#include "communication.h"
-#include "net.h"
+#include <communication.h>
+#include <net.h>
 
 /* libutils */
-#include "logging.h"                                            /* Log */
+#include <logging.h>                                            /* Log */
 
 /* TODO remove all includes from libpromises. */
 extern char VIPADDRESS[CF_MAX_IP_LEN];
 extern char VDOMAIN[];
 extern char VFQNAME[];
-#include "sysinfo.h"                           /* GetCurrentUsername */
-#include "lastseen.h"                          /* LastSaw */
-#include "crypto.h"                            /* PublicKeyFile */
-#include "files_hashes.h" /* HashString,HashesMatch,HashPubKey,HashPrintSafe */
+#include <sysinfo.h>                           /* GetCurrentUsername */
+#include <lastseen.h>                          /* LastSaw */
+#include <crypto.h>                            /* PublicKeyFile */
+#include <files_hashes.h> /* HashString,HashesMatch,HashPubKey,HashPrintSafe */
 
 
 /*********************************************************************/

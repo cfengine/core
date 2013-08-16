@@ -25,7 +25,7 @@
 #ifndef CFENGINE_MAP_COMMON_H
 #define CFENGINE_MAP_COMMON_H
 
-#include "bool.h"
+#include <bool.h>
 
 /*
  * Key/Value pair.

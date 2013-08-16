@@ -25,7 +25,7 @@
 #ifndef CFENGINE_FILES_LIB_H
 #define CFENGINE_FILES_LIB_H
 
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
 bool FileCanOpen(const char *path, const char *modes);
 void PurgeItemList(EvalContext *ctx, Item **list, char *name);
@@ -49,6 +49,6 @@ void CreateEmptyFile(char *name);
  */
 bool DeleteDirectoryTree(const char *path);
 
-#include "file_lib.h"
+#include <file_lib.h>
 
 #endif

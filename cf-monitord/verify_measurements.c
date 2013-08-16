@@ -22,19 +22,15 @@
   included file COSL.txt.
 */
 
-#include "verify_measurements.h"
+#include <verify_measurements.h>
 
-#include "promises.h"
-#include "files_names.h"
-#include "attributes.h"
-#include "policy.h"
-#include "cf-monitord-enterprise-stubs.h"
-#include "env_context.h"
-#include "ornaments.h"
-
-#ifdef HAVE_NOVA
-#include "history.h"
-#endif
+#include <promises.h>
+#include <files_names.h>
+#include <attributes.h>
+#include <policy.h>
+#include <cf-monitord-enterprise-stubs.h>
+#include <env_context.h>
+#include <ornaments.h>
 
 static bool CheckMeasureSanity(Measurement m, Promise *pp);
 

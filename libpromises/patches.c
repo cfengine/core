@@ -30,9 +30,9 @@
   FIXME: move to the libcompat/ directory or to the apropriate source file.
 */
 
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
-#include "audit.h"
+#include <audit.h>
 
 static char *cf_format_strtimestamp(struct tm *tm, char *buf);
 

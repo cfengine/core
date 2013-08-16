@@ -22,15 +22,15 @@
   included file COSL.txt.
 */
 
-#include "conversion.h"
+#include <conversion.h>
 
-#include "promises.h"
-#include "files_names.h"
-#include "dbm_api.h"
-#include "mod_access.h"
-#include "item_lib.h"
-#include "logging.h"
-#include "rlist.h"
+#include <promises.h>
+#include <files_names.h>
+#include <dbm_api.h>
+#include <mod_access.h>
+#include <item_lib.h>
+#include <logging.h>
+#include <rlist.h>
 
 
 static int IsSpace(char *remainder);

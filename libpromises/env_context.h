@@ -25,14 +25,14 @@
 #ifndef CFENGINE_ENV_CONTEXT_H
 #define CFENGINE_ENV_CONTEXT_H
 
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
-#include "writer.h"
-#include "set.h"
-#include "sequence.h"
-#include "var_expressions.h"
-#include "scope.h"
-#include "variable.h"
+#include <writer.h>
+#include <set.h>
+#include <sequence.h>
+#include <var_expressions.h>
+#include <scope.h>
+#include <variable.h>
 
 typedef enum
 {
@@ -196,5 +196,6 @@ void cfPS(EvalContext *ctx, LogLevel level, PromiseResult status, const Promise 
  * evaluator again, once variables promises are no longer specially handled */
 void ClassAuditLog(EvalContext *ctx, const Promise *pp, Attributes attr, PromiseResult status);
 
+ENTERPRISE_VOID_FUNC_2ARG_DECLARE(void, TrackTotalCompliance, ARG_UNUSED PromiseResult, status, ARG_UNUSED const Promise *, pp);
 
 #endif

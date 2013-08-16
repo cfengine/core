@@ -22,18 +22,18 @@
   included file COSL.txt.
 */
 
-#include "generic_agent.h"
-#include "mon.h"
+#include <generic_agent.h>
+#include <mon.h>
 
-#include "env_context.h"
-#include "env_monitor.h"
-#include "conversion.h"
-#include "vars.h"
-#include "signals.h"
-#include "scope.h"
-#include "sysinfo.h"
-#include "man.h"
-#include "bootstrap.h"
+#include <env_context.h>
+#include <env_monitor.h>
+#include <conversion.h>
+#include <vars.h>
+#include <signals.h>
+#include <scope.h>
+#include <sysinfo.h>
+#include <man.h>
+#include <bootstrap.h>
 
 typedef enum
 {

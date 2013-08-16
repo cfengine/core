@@ -22,30 +22,26 @@
   included file COSL.txt.
 */
 
-#include "env_context.h"
+#include <env_context.h>
 
-#include "files_names.h"
-#include "logic_expressions.h"
-#include "syntax.h"
-#include "item_lib.h"
-#include "ornaments.h"
-#include "expand.h"
-#include "matching.h"
-#include "string_lib.h"
-#include "misc_lib.h"
-#include "assoc.h"
-#include "scope.h"
-#include "vars.h"
-#include "syslog_client.h"
-#include "audit.h"
-#include "promise_logging.h"
-#include "rlist.h"
-#include "buffer.h"
-#include "promises.h"
-
-#ifdef HAVE_NOVA
-# include "cf.nova.h"
-#endif
+#include <files_names.h>
+#include <logic_expressions.h>
+#include <syntax.h>
+#include <item_lib.h>
+#include <ornaments.h>
+#include <expand.h>
+#include <matching.h>
+#include <string_lib.h>
+#include <misc_lib.h>
+#include <assoc.h>
+#include <scope.h>
+#include <vars.h>
+#include <syslog_client.h>
+#include <audit.h>
+#include <promise_logging.h>
+#include <rlist.h>
+#include <buffer.h>
+#include <promises.h>
 
 
 static bool EvalContextStackFrameContainsNegated(const EvalContext *ctx, const char *context);
@@ -1746,37 +1742,9 @@ static void DeleteAllClasses(EvalContext *ctx, const Rlist *list)
     }
 }
 
-#ifdef HAVE_NOVA
-static void TrackTotalCompliance(PromiseResult status, const Promise *pp)
+ENTERPRISE_VOID_FUNC_2ARG_DEFINE_STUB(void, TrackTotalCompliance, ARG_UNUSED PromiseResult, status, ARG_UNUSED const Promise *, pp)
 {
-    char nova_status;
-
-    switch (status)
-    {
-    case PROMISE_RESULT_CHANGE:
-        nova_status = 'r';
-        break;
-
-    case PROMISE_RESULT_WARN:
-    case PROMISE_RESULT_TIMEOUT:
-    case PROMISE_RESULT_FAIL:
-    case PROMISE_RESULT_DENIED:
-    case PROMISE_RESULT_INTERRUPTED:
-        nova_status = 'n';
-        break;
-
-    case PROMISE_RESULT_NOOP:
-        nova_status = 'c';
-        break;
-
-    default:
-        ProgrammingError("Unexpected status '%c' has been passed to TrackTotalCompliance", status);
-    }
-
-    EnterpriseTrackTotalCompliance(pp, nova_status);
 }
-#endif
-
 
 static void SetPromiseOutcomeClasses(PromiseResult status, EvalContext *ctx, const Promise *pp, DefineClasses dc)
 {
@@ -1961,9 +1929,7 @@ void ClassAuditLog(EvalContext *ctx, const Promise *pp, Attributes attr, Promise
 {
     if (IsPromiseValuableForStatus(pp))
     {
-#ifdef HAVE_NOVA
         TrackTotalCompliance(status, pp);
-#endif
         UpdatePromiseCounters(status, attr.transaction);
     }
 

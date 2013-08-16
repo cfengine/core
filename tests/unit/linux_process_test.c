@@ -1,9 +1,9 @@
-#include "platform.h"
+#include <platform.h>
 
-#include "compiler.h"
-#include "test.h"
-#include "process_lib.h"
-#include "process_unix_priv.h"
+#include <compiler.h>
+#include <test.h>
+#include <process_lib.h>
+#include <process_unix_priv.h>
 
 /* Stubs for /proc/<pid>/stat. */
 

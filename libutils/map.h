@@ -25,8 +25,8 @@
 #ifndef CFENGINE_MAP_H
 #define CFENGINE_MAP_H
 
-#include "hash_map_priv.h"
-#include "array_map_priv.h"
+#include <hash_map_priv.h>
+#include <array_map_priv.h>
 
 /*
  * Map structure. Details are encapsulated.

@@ -26,11 +26,11 @@
  * Implementation using Tokyo Cabinet hash API.
  */
 
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
-#include "dbm_priv.h"
-#include "logging.h"
-#include "string_lib.h"
+#include <dbm_priv.h>
+#include <logging.h>
+#include <string_lib.h>
 
 #ifdef TCDB
 

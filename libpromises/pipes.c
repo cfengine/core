@@ -22,7 +22,7 @@
   included file COSL.txt.
 */
 
-#include "pipes.h"
+#include <pipes.h>
 
 bool PipeTypeIsOk(const char *type)
 {

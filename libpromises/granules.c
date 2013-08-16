@@ -22,8 +22,8 @@
   included file COSL.txt.
 */
 
-#include "granules.h"
-#include "misc_lib.h"
+#include <granules.h>
+#include <misc_lib.h>
 
 
 char *GenTimeKey(time_t now)

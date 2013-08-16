@@ -22,18 +22,18 @@
   included file COSL.txt.
 */
 
-#include "files_select.h"
+#include <files_select.h>
 
-#include "env_context.h"
-#include "files_names.h"
-#include "files_interfaces.h"
-#include "promises.h"
-#include "matching.h"
-#include "string_lib.h"
-#include "pipes.h"
-#include "promises.h"
-#include "exec_tools.h"
-#include "chflags.h"
+#include <env_context.h>
+#include <files_names.h>
+#include <files_interfaces.h>
+#include <promises.h>
+#include <matching.h>
+#include <string_lib.h>
+#include <pipes.h>
+#include <promises.h>
+#include <exec_tools.h>
+#include <chflags.h>
 
 static int SelectTypeMatch(struct stat *lstatptr, Rlist *crit);
 static int SelectOwnerMatch(EvalContext *ctx, char *path, struct stat *lstatptr, Rlist *crit);

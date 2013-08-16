@@ -22,10 +22,10 @@
   included file COSL.txt.
 */
 
-#include "addr_lib.h"
+#include <addr_lib.h>
 
-#include "logging.h"
-#include "string_lib.h"
+#include <logging.h>
+#include <string_lib.h>
 
 #define CF_ADDRSIZE 128
 

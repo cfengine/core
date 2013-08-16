@@ -22,13 +22,13 @@
   included file COSL.txt.
 */
 
-#include "promise_logging.h"
+#include <promise_logging.h>
 
-#include "logging.h"
-#include "logging_priv.h"
-#include "misc_lib.h"
-#include "string_lib.h"
-#include "env_context.h"
+#include <logging.h>
+#include <logging_priv.h>
+#include <misc_lib.h>
+#include <string_lib.h>
+#include <env_context.h>
 
 
 typedef struct

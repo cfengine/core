@@ -22,27 +22,23 @@
   included file COSL.txt.
 */
 
-#include "sysinfo.h"
+#include <sysinfo.h>
 
-#include "cf3.extern.h"
+#include <cf3.extern.h>
 
-#include "env_context.h"
-#include "files_names.h"
-#include "files_interfaces.h"
-#include "files_hashes.h"
-#include "scope.h"
-#include "item_lib.h"
-#include "matching.h"
-#include "unix.h"
-#include "string_lib.h"
-#include "misc_lib.h"
-#include "rlist.h"
-#include "audit.h"
-#include "pipes.h"
-
-#ifdef HAVE_NOVA
-# include "cf.nova.h"
-#endif
+#include <env_context.h>
+#include <files_names.h>
+#include <files_interfaces.h>
+#include <files_hashes.h>
+#include <scope.h>
+#include <item_lib.h>
+#include <matching.h>
+#include <unix.h>
+#include <string_lib.h>
+#include <misc_lib.h>
+#include <rlist.h>
+#include <audit.h>
+#include <pipes.h>
 
 #include <inttypes.h>
 

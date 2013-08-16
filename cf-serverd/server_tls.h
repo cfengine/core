@@ -27,11 +27,11 @@
 #define CFENGINE_SERVER_TLS_H
 
 
-#include "platform.h"
+#include <platform.h>
 
-#include "cf3.defs.h"                              /* EvalContext */
-#include "cfnet.h"                                 /* ConnectionInfo */
-#include "server.h"                                /* ServerConnectionState */
+#include <cf3.defs.h>                              /* EvalContext */
+#include <cfnet.h>                                 /* ConnectionInfo */
+#include <server.h>                                /* ServerConnectionState */
 
 
 /* The only protocol we support inside TLS, for now... */

@@ -1,4 +1,4 @@
-#include "platform.h"
+#include <platform.h>
 
 #include <libxml/parser.h>
 #include <libxml/xpathInternals.h>

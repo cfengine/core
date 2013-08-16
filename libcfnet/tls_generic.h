@@ -27,9 +27,9 @@
 #define CFENGINE_TLS_GENERIC_H
 
 
-#include "cfnet.h"
+#include <cfnet.h>
 
-#include "logging.h"                                            /* LogLevel */
+#include <logging.h>                                            /* LogLevel */
 
 
 int TLSVerifyCallback(X509_STORE_CTX *ctx, void *arg);

@@ -22,8 +22,8 @@
   included file COSL.txt.
 */
 
-#include "platform.h"
-#include "compiler.h"
+#include <platform.h>
+#include <compiler.h>
 
 #define MAXTRY 999999
 

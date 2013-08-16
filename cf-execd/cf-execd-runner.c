@@ -22,25 +22,19 @@
   included file COSL.txt.
 */
 
-#include "cf3.defs.h"
-#include "cf-execd-runner.h"
+#include <cf3.defs.h>
+#include <cf-execd-runner.h>
 
-#include "files_names.h"
-#include "files_interfaces.h"
-#include "hashes.h"
-#include "string_lib.h"
-#include "pipes.h"
-#include "unix.h"
-#include "mutex.h"
-#include "exec_tools.h"
-#include "misc_lib.h"
-#include "assert.h"
-
-#ifdef HAVE_NOVA
-# if defined(__MINGW32__)
-#  include "win_execd_pipe.h"
-# endif
-#endif
+#include <files_names.h>
+#include <files_interfaces.h>
+#include <hashes.h>
+#include <string_lib.h>
+#include <pipes.h>
+#include <unix.h>
+#include <mutex.h>
+#include <exec_tools.h>
+#include <misc_lib.h>
+#include <assert.h>
 
 /*******************************************************************/
 

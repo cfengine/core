@@ -25,8 +25,8 @@
 #ifndef CFENGINE_RETCODE_H
 #define CFENGINE_RETCODE_H
 
-#include "env_context.h"
-#include "policy.h"
+#include <env_context.h>
+#include <policy.h>
 
 int VerifyCommandRetcode(EvalContext *ctx, int retcode, int fallback, Attributes a, Promise *pp);
 

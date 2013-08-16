@@ -1,8 +1,8 @@
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
-#include "locks.h"
+#include <locks.h>
 
-#include "test.h"
+#include <test.h>
 
 static void tests_setup(void)
 {

@@ -25,15 +25,15 @@
 #ifndef CFENGINE_CF_MONITORD_ENTERPRISE_STUBS_H
 #define CFENGINE_CF_MONITORD_ENTERPRISE_STUBS_H
 
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
-void GetObservable(int i, char *name, char *desc);
-void SetMeasurementPromises(Item **classlist);
+ENTERPRISE_VOID_FUNC_3ARG_DECLARE(void, GetObservable, int, i, char *, name, char *, desc);
+ENTERPRISE_VOID_FUNC_1ARG_DECLARE(void, SetMeasurementPromises, Item **, classlist);
 
-void MonOtherInit(void);
-void MonOtherGatherData(double *cf_this);
+ENTERPRISE_VOID_FUNC_0ARG_DECLARE(void, MonOtherInit);
+ENTERPRISE_VOID_FUNC_1ARG_DECLARE(void, MonOtherGatherData, double *, cf_this);
 
-void HistoryUpdate(EvalContext *ctx, Averages newvals);
-void VerifyMeasurement(EvalContext *ctx, double *this, Attributes a, Promise *pp);
+ENTERPRISE_VOID_FUNC_2ARG_DECLARE(void, HistoryUpdate, EvalContext *, ctx, Averages, newvals);
+ENTERPRISE_VOID_FUNC_4ARG_DECLARE(void, VerifyMeasurement, EvalContext *, ctx, double *, this, Attributes, a, Promise *, pp);
 
 #endif

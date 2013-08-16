@@ -22,24 +22,24 @@
   included file COSL.txt.
 */
 
-#include "verify_storage.h"
+#include <verify_storage.h>
 
-#include "dir.h"
-#include "conversion.h"
-#include "files_interfaces.h"
-#include "files_operators.h"
-#include "files_lib.h"
-#include "files_links.h"
-#include "files_properties.h"
-#include "attributes.h"
-#include "locks.h"
-#include "nfs.h"
-#include "rlist.h"
-#include "policy.h"
-#include "verify_files.h"
-#include "promiser_regex_resolver.h"
-#include "ornaments.h"
-#include "env_context.h"
+#include <dir.h>
+#include <conversion.h>
+#include <files_interfaces.h>
+#include <files_operators.h>
+#include <files_lib.h>
+#include <files_links.h>
+#include <files_properties.h>
+#include <attributes.h>
+#include <locks.h>
+#include <nfs.h>
+#include <rlist.h>
+#include <policy.h>
+#include <verify_files.h>
+#include <promiser_regex_resolver.h>
+#include <ornaments.h>
+#include <env_context.h>
 
 Rlist *MOUNTEDFSLIST;
 bool CF_MOUNTALL;

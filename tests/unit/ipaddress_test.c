@@ -1,10 +1,10 @@
-#include "test.h"
+#include <test.h>
 
 #include <string.h>
-#include "platform.h"
-#include "buffer.h"
-#include "ip_address.c"
-#include "ip_address.h"
+#include <platform.h>
+#include <buffer.h>
+#include <ip_address.c>
+#include <ip_address.h>
 
 static void test_ipv4(void)
 {

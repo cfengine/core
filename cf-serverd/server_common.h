@@ -30,10 +30,10 @@
 #define CF_BUFEXT 128
 
 
-#include "platform.h"
+#include <platform.h>
 
-#include "cf3.defs.h"                              /* EvalContext */
-#include "server.h"                                /* ServerConnectionState */
+#include <cf3.defs.h>                              /* EvalContext */
+#include <server.h>                                /* ServerConnectionState */
 
 
 void RefuseAccess(ServerConnectionState *conn, int size, char *errmesg);

@@ -22,17 +22,17 @@
   included file COSL.txt.
 */
 
-#include "matching.h"
+#include <matching.h>
 
-#include "env_context.h"
-#include "vars.h"
-#include "promises.h"
-#include "item_lib.h"
-#include "conversion.h"
-#include "scope.h"
-#include "misc_lib.h"
-#include "rlist.h"
-#include "string_lib.h"
+#include <env_context.h>
+#include <vars.h>
+#include <promises.h>
+#include <item_lib.h>
+#include <conversion.h>
+#include <scope.h>
+#include <misc_lib.h>
+#include <rlist.h>
+#include <string_lib.h>
 
 /* Pure */
 static pcre *CompileRegExp(const char *regexp)

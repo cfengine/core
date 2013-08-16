@@ -25,7 +25,7 @@
 #ifndef CFENGINE_MATCHING_H
 #define CFENGINE_MATCHING_H
 
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
 int FullTextMatch(EvalContext *ctx, const char *regptr, const char *cmpptr); /* Sets variables */
 int BlockTextMatch(EvalContext *ctx, const char *regexp, const char *teststring, int *s, int *e); /* Sets variables */

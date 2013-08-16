@@ -22,22 +22,22 @@
   included file COSL.txt.
 */
 
-#include "generic_agent.h"
+#include <generic_agent.h>
 
-#include "dbm_api.h"
-#include "lastseen.h"
-#include "dir.h"
-#include "scope.h"
-#include "files_copy.h"
-#include "files_interfaces.h"
-#include "files_hashes.h"
-#include "keyring.h"
-#include "env_context.h"
-#include "crypto.h"
-#include "sysinfo.h"
-#include "man.h"
+#include <dbm_api.h>
+#include <lastseen.h>
+#include <dir.h>
+#include <scope.h>
+#include <files_copy.h>
+#include <files_interfaces.h>
+#include <files_hashes.h>
+#include <keyring.h>
+#include <env_context.h>
+#include <crypto.h>
+#include <sysinfo.h>
+#include <man.h>
 
-#include "cf-key-functions.h"
+#include <cf-key-functions.h>
 
 int SHOWHOSTS = false;
 bool REMOVEKEYS = false;

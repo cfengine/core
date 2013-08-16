@@ -1,27 +1,27 @@
 static const int CF_NOSIZE = -1;
 
 
-#include "server_common.h"
+#include <server_common.h>
 
-#include "item_lib.h"
-#include "string_lib.h"                                    /* ToLower */
-#include "crypto.h"                                        /* EncryptString */
-#include "files_names.h"
-#include "files_interfaces.h"
-#include "files_hashes.h"
-#include "env_context.h"
-#include "dir.h"
-#include "conversion.h"
-#include "matching.h"                        /* IsRegexItemIn,FullTextMatch */
-#include "pipes.h"
-#include "classic.h"                  /* SendSocketStream */
-#include "net.h"                      /* SendTransaction,ReceiveTransaction */
-#include "tls_generic.h"              /* TLSSend */
-#include "rlist.h"
-#include "cf-serverd-enterprise-stubs.h"
+#include <item_lib.h>
+#include <string_lib.h>                                    /* ToLower */
+#include <crypto.h>                                        /* EncryptString */
+#include <files_names.h>
+#include <files_interfaces.h>
+#include <files_hashes.h>
+#include <env_context.h>
+#include <dir.h>
+#include <conversion.h>
+#include <matching.h>                        /* IsRegexItemIn,FullTextMatch */
+#include <pipes.h>
+#include <classic.h>                  /* SendSocketStream */
+#include <net.h>                      /* SendTransaction,ReceiveTransaction */
+#include <tls_generic.h>              /* TLSSend */
+#include <rlist.h>
+#include <cf-serverd-enterprise-stubs.h>
 
 #ifdef HAVE_NOVA
-# include "cf.nova.h"
+# include <cf.nova.h>
 #endif
 
 

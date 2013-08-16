@@ -22,9 +22,9 @@
   included file COSL.txt.
 */
 
-#include "cf3.defs.h"
-#include "mon.h"
-#include "item_lib.h"
+#include <cf3.defs.h>
+#include <mon.h>
+#include <item_lib.h>
 
 /* Globals */
 

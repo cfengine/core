@@ -26,7 +26,7 @@
 #define CFENGINE_TLS_CLIENT_H
 
 
-#include "cfnet.h"
+#include <cfnet.h>
 
 
 bool TLSClientInitialize(void);

@@ -22,29 +22,29 @@
   included file COSL.txt.
 */
 
-#include "cf-monitord-enterprise-stubs.h"
+#include <cf-monitord-enterprise-stubs.h>
 
-void GetObservable(ARG_UNUSED int i, ARG_UNUSED char *name, ARG_UNUSED char *desc)
+ENTERPRISE_VOID_FUNC_3ARG_DEFINE_STUB(void, GetObservable, ARG_UNUSED int, i, ARG_UNUSED char *, name, ARG_UNUSED char *, desc)
 {
     strcpy(name, OBS[i][0]);
 }
 
-void SetMeasurementPromises(ARG_UNUSED Item **classlist)
+ENTERPRISE_VOID_FUNC_1ARG_DEFINE_STUB(void, SetMeasurementPromises, ARG_UNUSED Item **, classlist)
 {
 }
 
-void MonOtherInit(void)
+ENTERPRISE_VOID_FUNC_0ARG_DEFINE_STUB(void, MonOtherInit)
 {
 }
 
-void MonOtherGatherData(ARG_UNUSED double *cf_this)
+ENTERPRISE_VOID_FUNC_1ARG_DEFINE_STUB(void, MonOtherGatherData, ARG_UNUSED double *, cf_this)
 {
 }
 
-void HistoryUpdate(ARG_UNUSED EvalContext *ctx, ARG_UNUSED Averages newvals)
+ENTERPRISE_VOID_FUNC_2ARG_DEFINE_STUB(void, HistoryUpdate, ARG_UNUSED EvalContext *, ctx, ARG_UNUSED Averages, newvals)
 {
 }
 
-void VerifyMeasurement(ARG_UNUSED EvalContext *ctx, ARG_UNUSED double *this, ARG_UNUSED Attributes a, ARG_UNUSED Promise *pp)
+ENTERPRISE_VOID_FUNC_4ARG_DEFINE_STUB(void, VerifyMeasurement, ARG_UNUSED EvalContext *, ctx, ARG_UNUSED double *, this, ARG_UNUSED Attributes, a, ARG_UNUSED Promise *, pp)
 {
 }

@@ -25,12 +25,12 @@
 #ifndef CFENGINE_CLIENT_CODE_H
 #define CFENGINE_CLIENT_CODE_H
 
-#include "platform.h"
-#include "communication.h"
+#include <platform.h>
+#include <communication.h>
 
 /* TODO: Remove dependency on libpromises */
-#include "attributes.h"
-#include "item_lib.h"
+#include <attributes.h>
+#include <item_lib.h>
 
 bool cfnet_init(void);
 void DetermineCfenginePort(void);

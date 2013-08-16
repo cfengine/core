@@ -26,6 +26,8 @@ stamp-h1
 ylwrap
 test-driver
 
+configure_flags.env
+
 # docs
 
 *.aux
@@ -77,6 +79,7 @@ cf-runagent/cf-runagent.exe
 cf-serverd/cf-serverd
 cf-serverd/cf-serverd.exe
 ext/rpmvercmp
+ext/rpmvercmp.exe
 
 # autogen
 

@@ -26,9 +26,9 @@
 #ifndef CFENGINE_UNIX_H
 #define CFENGINE_UNIX_H
 
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
-#include "assoc.h"
+#include <assoc.h>
 
 void GetInterfacesInfo(EvalContext *ctx);
 void GetInterfaceFlags(EvalContext *ctx, struct ifreq *ifr, Rlist **hw_flags);

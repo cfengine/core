@@ -25,7 +25,10 @@
 #ifndef CFENGINE_PROTOTYPES3_H
 #define CFENGINE_PROTOTYPES3_H
 
-#include "compiler.h"
+#include <compiler.h>
+#include <enterprise_extension.h>
+
+bool BootstrapAllowed(void);
 
 /* Versions */
 
@@ -51,32 +54,32 @@ void SetSkipIdentify(bool enabled);
 
 /* enterprise_stubs.c */
 
-bool BootstrapAllowed(void);
-int CfSessionKeySize(char c);
-char CfEnterpriseOptions(void);
-const EVP_CIPHER *CfengineCipher(char type);
-void EnterpriseContext(EvalContext *ctx);
-const char *GetConsolePrefix(void);
-void LoadSlowlyVaryingObservations(EvalContext *ctx);
-char *GetRemoteScalar(EvalContext *ctx, char *proto, char *handle, char *server, int encrypted, char *rcv);
-const char *PromiseID(const Promise *pp);     /* Not thread-safe */
-void NotePromiseCompliance(const Promise *pp, PromiseState state, const char *reason);
-void LogTotalCompliance(const char *version, int background_tasks);
+ENTERPRISE_VOID_FUNC_1ARG_DECLARE(void, Nova_Initialize, EvalContext *, ctx);
+ENTERPRISE_FUNC_1ARG_DECLARE(int, CfSessionKeySize, char, c);
+ENTERPRISE_FUNC_0ARG_DECLARE(char, CfEnterpriseOptions);
+ENTERPRISE_FUNC_1ARG_DECLARE(const EVP_CIPHER *, CfengineCipher, char, type);
+ENTERPRISE_VOID_FUNC_1ARG_DECLARE(void, EnterpriseContext, EvalContext *, ctx);
+ENTERPRISE_FUNC_0ARG_DECLARE(const char *, GetConsolePrefix);
+ENTERPRISE_VOID_FUNC_1ARG_DECLARE(void, LoadSlowlyVaryingObservations, EvalContext *, ctx);
+ENTERPRISE_FUNC_6ARG_DECLARE(char *, GetRemoteScalar, EvalContext *, ctx, char *, proto, char *, handle, char *, server, int, encrypted, char *, rcv);
+ENTERPRISE_FUNC_1ARG_DECLARE(const char *, PromiseID, const Promise *, pp);     /* Not thread-safe */
+ENTERPRISE_VOID_FUNC_3ARG_DECLARE(void, NotePromiseCompliance, const Promise *, pp, PromiseState, state, const char *, reason);
+ENTERPRISE_VOID_FUNC_2ARG_DECLARE(void, LogTotalCompliance, const char *, version, int, background_tasks);
 #if defined(__MINGW32__)
-int GetRegistryValue(char *key, char *name, char *buf, int bufSz);
+ENTERPRISE_FUNC_4ARG_DECLARE(int, GetRegistryValue, char *, key, char *, name, char *, buf, int, bufSz);
 #endif
-void *CfLDAPValue(char *uri, char *dn, char *filter, char *name, char *scope, char *sec);
-void *CfLDAPList(char *uri, char *dn, char *filter, char *name, char *scope, char *sec);
-void *CfLDAPArray(EvalContext *ctx, const Bundle *caller, char *array, char *uri, char *dn, char *filter, char *scope, char *sec);
-void *CfRegLDAP(EvalContext *ctx, char *uri, char *dn, char *filter, char *name, char *scope, char *regex, char *sec);
-void CacheUnreliableValue(char *caller, char *handle, char *buffer);
-int RetrieveUnreliableValue(char *caller, char *handle, char *buffer);
-void TranslatePath(char *new, const char *old);
-void TrackValue(char *date, double kept, double repaired, double notkept);
-bool CFDB_HostsWithClass(EvalContext *ctx, Rlist **return_list, char *class_name, char *return_format);
+ENTERPRISE_FUNC_6ARG_DECLARE(void *, CfLDAPValue, char *, uri, char *, dn, char *, filter, char *, name, char *, scope, char *, sec);
+ENTERPRISE_FUNC_6ARG_DECLARE(void *, CfLDAPList, char *, uri, char *, dn, char *, filter, char *, name, char *, scope, char *, sec);
+ENTERPRISE_FUNC_8ARG_DECLARE(void *, CfLDAPArray, EvalContext *, ctx, const Bundle *, caller, char *, array, char *, uri, char *, dn, char *, filter, char *, scope, char *, sec);
+ENTERPRISE_FUNC_8ARG_DECLARE(void *, CfRegLDAP, EvalContext *, ctx, char *, uri, char *, dn, char *, filter, char *, name, char *, scope, char *, regex, char *, sec);
+ENTERPRISE_VOID_FUNC_3ARG_DECLARE(void, CacheUnreliableValue, char *, caller, char *, handle, char *, buffer);
+ENTERPRISE_FUNC_3ARG_DECLARE(int, RetrieveUnreliableValue, char *, caller, char *, handle, char *, buffer);
+ENTERPRISE_VOID_FUNC_2ARG_DECLARE(void, TranslatePath, char *, new, const char *, old);
+ENTERPRISE_VOID_FUNC_4ARG_DECLARE(void, TrackValue, char *, date, double, kept, double, repaired, double, notkept);
+ENTERPRISE_FUNC_4ARG_DECLARE(bool, CFDB_HostsWithClass, EvalContext *, ctx, Rlist **, return_list, char *, class_name, char *, return_format);
 
-void ShowPromises(const Seq* bundles, const Seq *bodies);
-void ShowPromise(const Promise *pp);
+ENTERPRISE_VOID_FUNC_2ARG_DECLARE(void, ShowPromises, const Seq *, bundles, const Seq *, bodies);
+ENTERPRISE_VOID_FUNC_1ARG_DECLARE(void, ShowPromise, const Promise *, pp);
 
 /* manual.c */
 
@@ -122,5 +125,9 @@ void SetStartTime(void);
 /* verify_reports.c */
 
 void VerifyReportPromise(EvalContext *ctx, Promise *pp);
+
+/* cf-key */
+
+ENTERPRISE_FUNC_1ARG_DECLARE(bool, LicenseInstall, char *, path_source);
 
 #endif

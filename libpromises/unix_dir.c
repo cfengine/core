@@ -22,8 +22,8 @@
   included file COSL.txt.
 */
 
-#include "dir.h"
-#include "dir_priv.h"
+#include <dir.h>
+#include <dir_priv.h>
 
 
 struct Dir_

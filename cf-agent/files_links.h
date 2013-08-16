@@ -25,7 +25,7 @@
 #ifndef CFENGINE_FILES_LINKS_H
 #define CFENGINE_FILES_LINKS_H
 
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
 PromiseResult VerifyLink(EvalContext *ctx, char *destination, const char *source, Attributes attr, const Promise *pp);
 PromiseResult VerifyAbsoluteLink(EvalContext *ctx, char *destination, const char *source, Attributes attr, const Promise *pp);

@@ -1,8 +1,8 @@
-#include "variable.h"
+#include <variable.h>
 
-#include "alloc.h"
-#include "rb-tree.h"
-#include "rlist.h"
+#include <alloc.h>
+#include <rb-tree.h>
+#include <rlist.h>
 
 struct VariableTable_
 {

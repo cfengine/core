@@ -1,8 +1,8 @@
-#include "test.h"
+#include <test.h>
 
-#include "crypto.h"
-#include "hashes.h"
-#include "alloc.h"
+#include <crypto.h>
+#include <hashes.h>
+#include <alloc.h>
 
 char *MakeTempFileWithContent(const char *content)
 {

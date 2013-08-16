@@ -22,24 +22,24 @@
   included file COSL.txt.
 */
 
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
-#include "env_context.h"
-#include "promises.h"
-#include "files_names.h"
-#include "files_edit.h"
-#include "vars.h"
-#include "item_lib.h"
-#include "sort.h"
-#include "conversion.h"
-#include "expand.h"
-#include "scope.h"
-#include "files_interfaces.h"
-#include "attributes.h"
-#include "locks.h"
-#include "policy.h"
-#include "ornaments.h"
-#include "verify_classes.h"
+#include <env_context.h>
+#include <promises.h>
+#include <files_names.h>
+#include <files_edit.h>
+#include <vars.h>
+#include <item_lib.h>
+#include <sort.h>
+#include <conversion.h>
+#include <expand.h>
+#include <scope.h>
+#include <files_interfaces.h>
+#include <attributes.h>
+#include <locks.h>
+#include <policy.h>
+#include <ornaments.h>
+#include <verify_classes.h>
 
 enum editxmltypesequence
 {

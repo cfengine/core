@@ -22,16 +22,16 @@
   included file COSL.txt.
 */
 
-#include "files_edit.h"
+#include <files_edit.h>
 
-#include "env_context.h"
-#include "files_names.h"
-#include "files_interfaces.h"
-#include "files_operators.h"
-#include "files_lib.h"
-#include "files_editxml.h"
-#include "item_lib.h"
-#include "policy.h"
+#include <env_context.h>
+#include <files_names.h>
+#include <files_interfaces.h>
+#include <files_operators.h>
+#include <files_lib.h>
+#include <files_editxml.h>
+#include <item_lib.h>
+#include <policy.h>
 
 /*****************************************************************************/
 

@@ -26,7 +26,7 @@
 #ifndef CFENGINE_SQL_H
 #define CFENGINE_SQL_H
 
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
 typedef struct
 {

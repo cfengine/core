@@ -22,12 +22,12 @@
   included file COSL.txt.
 */
 
-#include "logging.h"
-#include "logging_priv.h"
+#include <logging.h>
+#include <logging_priv.h>
 
-#include "alloc.h"
-#include "string_lib.h"
-#include "misc_lib.h"
+#include <alloc.h>
+#include <string_lib.h>
+#include <misc_lib.h>
 
 char VPREFIX[1024];
 bool LEGACY_OUTPUT = false;

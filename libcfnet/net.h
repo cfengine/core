@@ -28,7 +28,7 @@
 #define CFENGINE_NET_H
 
 
-#include "cfnet.h"
+#include <cfnet.h>
 
 
 int SendTransaction(const ConnectionInfo *conn_info, const char *buffer, int len, char status);

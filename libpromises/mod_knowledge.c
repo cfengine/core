@@ -22,9 +22,9 @@
   included file COSL.txt.
 */
 
-#include "mod_knowledge.h"
+#include <mod_knowledge.h>
 
-#include "syntax.h"
+#include <syntax.h>
 
 static const ConstraintSyntax association_constraints[] =
 {

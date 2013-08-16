@@ -22,7 +22,7 @@
   included file COSL.txt.
 */
 
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
 #ifdef HAVE_SYS_STATFS_H
 # include <sys/statfs.h>

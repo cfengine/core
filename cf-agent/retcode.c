@@ -22,8 +22,8 @@
   included file COSL.txt.
 */
 
-#include "retcode.h"
-#include "rlist.h"
+#include <retcode.h>
+#include <rlist.h>
 
 int VerifyCommandRetcode(EvalContext *ctx, int retcode, int fallback, Attributes a, Promise *pp)
 {

@@ -25,7 +25,7 @@
 #ifndef CFENGINE_FILES_HASHES_H
 #define CFENGINE_FILES_HASHES_H
 
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
 void HashFile(char *filename, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMethod type);
 void HashString(const char *buffer, int len, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMethod type);

@@ -31,11 +31,11 @@
   and its array dimension, in mod_common, in the manner shown here.
 */
 
-#include "mod_access.h"
+#include <mod_access.h>
 
-#include "syntax.h"
-#include "string_lib.h"
-#include "policy.h"
+#include <syntax.h>
+#include <string_lib.h>
+#include <policy.h>
 
 /*
   Read this module file backwards, as dependencies have to be defined first -

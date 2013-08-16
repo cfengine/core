@@ -25,7 +25,7 @@
 #ifndef CFENGINE_COMMUNICATION_H
 #define CFENGINE_COMMUNICATION_H
 
-#include "cfnet.h"
+#include <cfnet.h>
 
 
 AgentConnection *NewAgentConn(const char *server_name);

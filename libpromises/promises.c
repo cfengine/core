@@ -22,20 +22,20 @@
   included file COSL.txt.
 */
 
-#include "promises.h"
+#include <promises.h>
 
-#include "policy.h"
-#include "syntax.h"
-#include "expand.h"
-#include "files_names.h"
-#include "scope.h"
-#include "vars.h"
-#include "args.h"
-#include "locks.h"
-#include "misc_lib.h"
-#include "fncall.h"
-#include "env_context.h"
-#include "string_lib.h"
+#include <policy.h>
+#include <syntax.h>
+#include <expand.h>
+#include <files_names.h>
+#include <scope.h>
+#include <vars.h>
+#include <args.h>
+#include <locks.h>
+#include <misc_lib.h>
+#include <fncall.h>
+#include <env_context.h>
+#include <string_lib.h>
 
 static void DereferenceComment(Promise *pp);
 

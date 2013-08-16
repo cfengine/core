@@ -22,30 +22,30 @@
   included file COSL.txt.
 */
 
-#include "cfnet.h"                                 /* struct ConnectionInfo */
-#include "client_code.h"
-#include "communication.h"
-#include "classic.h"                  /* RecvSocketStream */
-#include "net.h"                      /* SendTransaction,ReceiveTransaction */
-#include "tls_client.h"               /* TLSTry */
-#include "tls_generic.h"              /* TLSVerifyPeer */
-#include "sysinfo.h"
-#include "dir.h"
-#include "dir_priv.h"
-#include "client_protocol.h"
-#include "crypto.h"
-#include "logging.h"
-#include "files_hashes.h"
-#include "files_copy.h"
-#include "mutex.h"
-#include "rlist.h"
-#include "policy.h"
-#include "item_lib.h"
-#include "files_lib.h"
-#include "string_lib.h"
-#include "misc_lib.h"                                   /* ProgrammingError */
+#include <cfnet.h>                                 /* struct ConnectionInfo */
+#include <client_code.h>
+#include <communication.h>
+#include <classic.h>                  /* RecvSocketStream */
+#include <net.h>                      /* SendTransaction,ReceiveTransaction */
+#include <tls_client.h>               /* TLSTry */
+#include <tls_generic.h>              /* TLSVerifyPeer */
+#include <sysinfo.h>
+#include <dir.h>
+#include <dir_priv.h>
+#include <client_protocol.h>
+#include <crypto.h>
+#include <logging.h>
+#include <files_hashes.h>
+#include <files_copy.h>
+#include <mutex.h>
+#include <rlist.h>
+#include <policy.h>
+#include <item_lib.h>
+#include <files_lib.h>
+#include <string_lib.h>
+#include <misc_lib.h>                                   /* ProgrammingError */
 
-#include "lastseen.h"                                           /* LastSaw */
+#include <lastseen.h>                                           /* LastSaw */
 
 
 typedef struct

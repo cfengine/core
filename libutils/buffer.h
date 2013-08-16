@@ -26,8 +26,8 @@
 #define CFENGINE_BUFFER_H
 
 #include <stdarg.h>
-#include "refcount.h"
-#include "compiler.h"
+#include <refcount.h>
+#include <compiler.h>
 
 /**
   @brief Buffer implementation

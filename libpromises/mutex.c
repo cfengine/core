@@ -22,7 +22,7 @@
   included file COSL.txt.
 */
 
-#include "mutex.h"
+#include <mutex.h>
 
 static pthread_mutex_t MUTEXES[] =
 {

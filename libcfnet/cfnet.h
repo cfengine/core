@@ -27,7 +27,7 @@
 #define CFENGINE_CFNET_H
 
 
-#include "platform.h"
+#include <platform.h>
 #include <openssl/ssl.h>
 
 

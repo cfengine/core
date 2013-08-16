@@ -22,17 +22,17 @@
   included file COSL.txt.
 */
 
-#include "platform.h"
+#include <platform.h>
 
-#include "files_copy.h"
+#include <files_copy.h>
 
-#include "files_names.h"
-#include "files_interfaces.h"
-#include "instrumentation.h"
-#include "policy.h"
-#include "files_lib.h"
-#include "string_lib.h"
-#include "acl_tools.h"
+#include <files_names.h>
+#include <files_interfaces.h>
+#include <instrumentation.h>
+#include <policy.h>
+#include <files_lib.h>
+#include <string_lib.h>
+#include <acl_tools.h>
 
 /*
  * Copy data jumping over areas filled by '\0', so files automatically become sparse if possible.

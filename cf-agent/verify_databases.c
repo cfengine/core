@@ -22,20 +22,20 @@
   included file COSL.txt.
 */
 
-#include "verify_databases.h"
+#include <verify_databases.h>
 
-#include "promises.h"
-#include "files_names.h"
-#include "conversion.h"
-#include "attributes.h"
-#include "string_lib.h"
-#include "locks.h"
-#include "cf_sql.h"
-#include "rlist.h"
-#include "policy.h"
-#include "cf-agent-enterprise-stubs.h"
-#include "env_context.h"
-#include "ornaments.h"
+#include <promises.h>
+#include <files_names.h>
+#include <conversion.h>
+#include <attributes.h>
+#include <string_lib.h>
+#include <locks.h>
+#include <cf_sql.h>
+#include <rlist.h>
+#include <policy.h>
+#include <cf-agent-enterprise-stubs.h>
+#include <env_context.h>
+#include <ornaments.h>
 
 static int CheckDatabaseSanity(Attributes a, Promise *pp);
 static void VerifySQLPromise(EvalContext *ctx, Attributes a, Promise *pp);

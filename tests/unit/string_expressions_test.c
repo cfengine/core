@@ -1,9 +1,9 @@
-#include "test.h"
+#include <test.h>
 
-#include "platform.h"
-#include "alloc.h"
-#include "string_expressions.h"
-#include "string_lib.h"
+#include <platform.h>
+#include <alloc.h>
+#include <string_expressions.h>
+#include <string_lib.h>
 
 static char *ForbiddenVarRefEval(const char *varname, VarRefType type, void *param)
 {

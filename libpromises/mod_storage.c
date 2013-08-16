@@ -22,9 +22,9 @@
   included file COSL.txt.
 */
 
-#include "mod_storage.h"
+#include <mod_storage.h>
 
-#include "syntax.h"
+#include <syntax.h>
 
 static const ConstraintSyntax volume_constraints[] =
 {

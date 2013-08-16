@@ -1,6 +1,6 @@
-#include "test.h"
+#include <test.h>
 
-#include "granules.h"
+#include <granules.h>
 
 /*
 char *GenTimeKey(time_t now);

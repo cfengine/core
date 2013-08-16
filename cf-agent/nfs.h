@@ -25,7 +25,7 @@
 #ifndef CFENGINE_NFS_H
 #define CFENGINE_NFS_H
 
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
 bool LoadMountInfo(Rlist **list);
 void DeleteMountInfo(Rlist *list);

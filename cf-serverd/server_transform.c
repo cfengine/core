@@ -22,28 +22,28 @@
   included file COSL.txt.
 */
 
-#include "server_transform.h"
+#include <server_transform.h>
 
-#include "server.h"
+#include <server.h>
 
-#include "env_context.h"
-#include "files_names.h"
-#include "mod_access.h"
-#include "item_lib.h"
-#include "conversion.h"
-#include "ornaments.h"
-#include "expand.h"
-#include "scope.h"
-#include "vars.h"
-#include "attributes.h"
-#include "communication.h"
-#include "string_lib.h"
-#include "rlist.h"
-#include "cf-serverd-enterprise-stubs.h"
-#include "syslog_client.h"
-#include "verify_classes.h"
+#include <env_context.h>
+#include <files_names.h>
+#include <mod_access.h>
+#include <item_lib.h>
+#include <conversion.h>
+#include <ornaments.h>
+#include <expand.h>
+#include <scope.h>
+#include <vars.h>
+#include <attributes.h>
+#include <communication.h>
+#include <string_lib.h>
+#include <rlist.h>
+#include <cf-serverd-enterprise-stubs.h>
+#include <syslog_client.h>
+#include <verify_classes.h>
 
-#include "generic_agent.h" // HashControls
+#include <generic_agent.h> // HashControls
 
 
 typedef enum

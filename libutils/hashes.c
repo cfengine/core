@@ -22,7 +22,7 @@
   included file COSL.txt.
 */
 
-#include "hashes.h"
+#include <hashes.h>
 
 int FileChecksum(const char *filename, unsigned char digest[EVP_MAX_MD_SIZE + 1])
 {

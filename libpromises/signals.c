@@ -22,7 +22,7 @@
   included file COSL.txt.
 */
 
-#include "signals.h"
+#include <signals.h>
 
 static const char *SIGNALS[] =
 {

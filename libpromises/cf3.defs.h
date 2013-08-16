@@ -25,16 +25,16 @@
 #ifndef CFENGINE_CF3_DEFS_H
 #define CFENGINE_CF3_DEFS_H
 
-#include "platform.h"
-#include "compiler.h"
+#include <platform.h>
+#include <compiler.h>
 
 #ifdef HAVE_LIBXML2
 #include <libxml/parser.h>
 #include <libxml/xpathInternals.h>
 #endif
 
-#include "sequence.h"
-#include "logging.h"
+#include <sequence.h>
+#include <logging.h>
 
 /*******************************************************************/
 /* Preprocessor tricks                                             */
@@ -167,7 +167,7 @@ typedef enum
 #define CF_OBSERVABLES 100
 
 
-#include "statistics.h"
+#include <statistics.h>
 
 typedef struct
 {
@@ -1649,11 +1649,11 @@ typedef struct
 #define NULL_OR_EMPTY(str) ((str == NULL) || (str[0] == '\0'))
 #define BEGINSWITH(str,start) (strncmp(str,start,strlen(start)) == 0)
 
-#include "dbm_api.h"
-#include "sequence.h"
-#include "prototypes3.h"
-#include "alloc.h"
-#include "cf3.extern.h"
+#include <dbm_api.h>
+#include <sequence.h>
+#include <prototypes3.h>
+#include <alloc.h>
+#include <cf3.extern.h>
 
 extern const ConstraintSyntax CF_COMMON_BODIES[];
 extern const ConstraintSyntax CF_VARBODY[];

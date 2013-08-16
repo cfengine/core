@@ -80,7 +80,7 @@
 #include <pthread.h>
 
 #ifndef _GETOPT_H
-# include "../libcompat/getopt.h"
+# include <../libcompat/getopt.h>
 #endif
 
 #ifdef HAVE_STDLIB_H
@@ -139,7 +139,7 @@ struct utsname
 # define WTERMSIG(s) ((s) & 0)
 #endif
 
-#include "bool.h"
+#include <bool.h>
 
 #include <openssl/err.h>
 #include <openssl/pem.h>
@@ -793,6 +793,6 @@ struct timespec
 #endif
 
 /* Must be always the last one! */
-#include "config.post.h"
+#include <config.post.h>
 
 #endif

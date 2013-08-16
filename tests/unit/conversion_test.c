@@ -1,7 +1,7 @@
-#include "test.h"
+#include <test.h>
 
-#include "cmockery.h"
-#include "conversion.h"
+#include <cmockery.h>
+#include <conversion.h>
 
 static void test_str_to_service_policy(void)
 {

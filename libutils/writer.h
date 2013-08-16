@@ -35,8 +35,8 @@
 
 typedef struct Writer_ Writer;
 
-#include "platform.h"
-#include "compiler.h"
+#include <platform.h>
+#include <compiler.h>
 
 Writer *FileWriter(FILE *);
 Writer *StringWriter(void);

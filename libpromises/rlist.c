@@ -402,15 +402,6 @@ static Rlist *RlistAppendRval(Rlist **start, Rval rval)
 
     ThreadLock(cft_lock);
 
-    if (rval.type == RVAL_TYPE_LIST)
-    {
-        rp->state_ptr = rp->item;
-    }
-    else
-    {
-        rp->state_ptr = NULL;
-    }
-
     rp->next = NULL;
 
     ThreadUnlock(cft_lock);
@@ -497,15 +488,6 @@ Rlist *RlistAppend(Rlist **start, const void *item, RvalType type)
 
     ThreadLock(cft_lock);
 
-    if (type == RVAL_TYPE_LIST)
-    {
-        rp->state_ptr = rp->item;
-    }
-    else
-    {
-        rp->state_ptr = NULL;
-    }
-
     rp->next = NULL;
 
     ThreadUnlock(cft_lock);
@@ -522,15 +504,6 @@ static Rlist *RlistPrependRval(Rlist **start, Rval rval)
     rp->next = *start;
     rp->item = rval.item;
     rp->type = rval.type;
-
-    if (rval.type == RVAL_TYPE_LIST)
-    {
-        rp->state_ptr = rp->item;
-    }
-    else
-    {
-        rp->state_ptr = NULL;
-    }
 
     ThreadLock(cft_lock);
     *start = rp;
@@ -567,15 +540,6 @@ Rlist *RlistPrepend(Rlist **start, const void *item, RvalType type)
     rp->next = *start;
     rp->item = RvalCopy((Rval) { (void *)item, type}).item;
     rp->type = type;            /* scalar, builtin function */
-
-    if (type == RVAL_TYPE_LIST)
-    {
-        rp->state_ptr = rp->item;
-    }
-    else
-    {
-        rp->state_ptr = NULL;
-    }
 
     ThreadLock(cft_lock);
     *start = rp;

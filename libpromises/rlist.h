@@ -33,7 +33,6 @@ struct Rlist_
 {
     void *item;
     RvalType type;
-    Rlist *state_ptr;           /* Points to "current" state/element of sub-list */
     Rlist *next;
 };
 

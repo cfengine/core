@@ -87,6 +87,8 @@ void SeqSoftDestroy(Seq *seq);
   */
 typedef int (*SeqItemComparator) (const void *, const void *, void *user_data);
 
+void SeqSet(Seq *set, size_t index, void *item);
+
 /**
   @brief Append a new item to the Sequence
   @param seq [in] The Sequence to append to.

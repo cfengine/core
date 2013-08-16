@@ -218,7 +218,7 @@ static bool IncrementIterationContextInternal(PromiseIterator *iter, size_t inde
             if (IncrementIterationContextInternal(iter, index + 1))
             {
                 // If we are at the end of this wheel, we need to shift to next wheel
-                SeqSet(iter->var_states, index, RvalRlistValue(cp->rval)->next);
+                VariableStateReset(iter, index);
                 return true;
             }
             else

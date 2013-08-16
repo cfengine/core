@@ -20,10 +20,6 @@ static const int CF_NOSIZE = -1;
 #include <rlist.h>
 #include <cf-serverd-enterprise-stubs.h>
 
-#ifdef HAVE_NOVA
-# include <cf.nova.h>
-#endif
-
 
 void RefuseAccess(ServerConnectionState *conn, int size, char *errmesg)
 {

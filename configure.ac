@@ -242,11 +242,6 @@ if test "x$with_mysql" != "xno"; then
    ])
 fi
 
-dnl Enterprise extensions
-
-m4_indir(incstart[]incend, [nova/options.m4])
-AM_CONDITIONAL([HAVE_NOVA], [test "x$with_nova" != xno && test -d ${srcdir}/nova])
-
 dnl
 dnl In-process databases
 dnl

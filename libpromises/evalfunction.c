@@ -22,42 +22,42 @@
   included file COSL.txt.
 */
 
-#include "evalfunction.h"
+#include <evalfunction.h>
 
-#include "env_context.h"
-#include "promises.h"
-#include "dir.h"
-#include "dbm_api.h"
-#include "lastseen.h"
-#include "files_names.h"
-#include "files_interfaces.h"
-#include "files_hashes.h"
-#include "vars.h"
-#include "addr_lib.h"
-#include "syntax.h"
-#include "item_lib.h"
-#include "conversion.h"
-#include "expand.h"
-#include "scope.h"
-#include "keyring.h"
-#include "matching.h"
-#include "hashes.h"
-#include "unix.h"
-#include "string_lib.h"
-#include "args.h"
-#include "client_code.h"
-#include "communication.h"
-#include "classic.h"                                    /* SendSocketStream */
-#include "pipes.h"
-#include "exec_tools.h"
-#include "policy.h"
-#include "misc_lib.h"
-#include "fncall.h"
-#include "audit.h"
-#include "sort.h"
-#include "logging.h"
-#include "set.h"
-#include "buffer.h"
+#include <env_context.h>
+#include <promises.h>
+#include <dir.h>
+#include <dbm_api.h>
+#include <lastseen.h>
+#include <files_names.h>
+#include <files_interfaces.h>
+#include <files_hashes.h>
+#include <vars.h>
+#include <addr_lib.h>
+#include <syntax.h>
+#include <item_lib.h>
+#include <conversion.h>
+#include <expand.h>
+#include <scope.h>
+#include <keyring.h>
+#include <matching.h>
+#include <hashes.h>
+#include <unix.h>
+#include <string_lib.h>
+#include <args.h>
+#include <client_code.h>
+#include <communication.h>
+#include <classic.h>                                    /* SendSocketStream */
+#include <pipes.h>
+#include <exec_tools.h>
+#include <policy.h>
+#include <misc_lib.h>
+#include <fncall.h>
+#include <audit.h>
+#include <sort.h>
+#include <logging.h>
+#include <set.h>
+#include <buffer.h>
 
 #include <libgen.h>
 

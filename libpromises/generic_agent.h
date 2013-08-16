@@ -25,10 +25,10 @@
 #ifndef CFENGINE_GENERIC_AGENT_H
 #define CFENGINE_GENERIC_AGENT_H
 
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
-#include "policy.h"
-#include "set.h"
+#include <policy.h>
+#include <set.h>
 
 typedef struct
 {
@@ -75,13 +75,15 @@ typedef struct
 
 } GenericAgentConfig;
 
+ENTERPRISE_VOID_FUNC_2ARG_DECLARE(void, GenericAgentSetDefaultDigest, HashMethod *, digest, int *, digest_len);
 const char *GenericAgentResolveInputPath(const GenericAgentConfig *config, const char *input_file);
 void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config);
 bool GenericAgentCheckPolicy(GenericAgentConfig *config, bool force_validation);
 Policy *GenericAgentLoadPolicy(EvalContext *ctx, GenericAgentConfig *config);
 
+ENTERPRISE_VOID_FUNC_1ARG_DECLARE(void, GenericAgentAddEditionClasses, EvalContext *, ctx);
 void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config);
-void GenericAgentWriteVersion(Writer *w);
+ENTERPRISE_VOID_FUNC_1ARG_DECLARE(void, GenericAgentWriteVersion, Writer *, w);
 void GenericAgentWriteHelp(Writer *w, const char *comp, const struct option options[], const char *hints[], bool accepts_file_argument);
 bool GenericAgentCheckPromises(const GenericAgentConfig *config);
 

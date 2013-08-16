@@ -25,9 +25,9 @@
 #ifndef CFENGINE_SCOPE_H
 #define CFENGINE_SCOPE_H
 
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
-#include "var_expressions.h"
+#include <var_expressions.h>
 
 typedef enum
 {

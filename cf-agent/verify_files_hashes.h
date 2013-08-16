@@ -22,8 +22,8 @@
   included file COSL.txt.
 */
 
-#include "cf3.defs.h"
-#include "cfnet.h"                                       /* AgentConnection */
+#include <cf3.defs.h>
+#include <cfnet.h>                                       /* AgentConnection */
 
 #ifndef CFENGINE_VERIFY_FILES_HASHES_H
 #define CFENGINE_VERIFY_FILES_HASHES_H

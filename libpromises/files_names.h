@@ -25,7 +25,7 @@
 #ifndef CFENGINE_FILES_NAMES_H
 #define CFENGINE_FILES_NAMES_H
 
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
 typedef enum
 {

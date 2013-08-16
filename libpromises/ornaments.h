@@ -29,9 +29,9 @@
  * Various ornaments in output
  */
 
-#include "cf3.defs.h"
-#include "policy.h"
-#include "env_context.h"
+#include <cf3.defs.h>
+#include <policy.h>
+#include <env_context.h>
 
 void PromiseBanner(const Promise *pp);
 void BannerSubBundle(const Bundle *bp, const Rlist *params);

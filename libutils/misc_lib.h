@@ -25,7 +25,7 @@
 #ifndef CFENGINE_MISC_LIB_H
 #define CFENGINE_MISC_LIB_H
 
-#include "compiler.h"
+#include <compiler.h>
 
 /*
   In contrast to the standard C modulus operator (%), this gives

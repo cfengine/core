@@ -25,9 +25,9 @@
 #ifndef CFENGINE_INSTRUMENTATION_H
 #define CFENGINE_INSTRUMENTATION_H
 
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
-#include "set.h"
+#include <set.h>
 
 struct timespec BeginMeasure(void);
 void EndMeasure(char *eventname, struct timespec start);

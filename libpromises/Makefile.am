@@ -1,16 +1,19 @@
-projlib_LTLIBRARIES = libpromises.la
+if !BUILTIN_EXTENSIONS
+ projlib_LTLIBRARIES = libpromises.la
+ libpromises_la_LDFLAGS = -version-info 3:5:0 -no-undefined
+else
+ noinst_LTLIBRARIES = libpromises.la
+endif
 
 AM_CPPFLAGS = @CPPFLAGS@ -I$(srcdir)/../libutils -I $(srcdir)/../libcfnet \
-	$(NOVA_CPPFLAGS)
+	$(ENTERPRISE_CPPFLAGS)
 
 AM_CFLAGS = @CFLAGS@ \
-	$(NOVA_CFLAGS)
+	$(ENTERPRISE_CFLAGS)
 
 AM_YFLAGS = -d
 
-AM_LDFLAGS = -version-info 3:5:0 -no-undefined
-
-libpromises_la_LIBADD = ../libutils/libutils.la ../libcfnet/libcfnet.la $(NOVA_LDADD)
+libpromises_la_LIBADD = ../libutils/libutils.la ../libcfnet/libcfnet.la $(ENTERPRISE_LDADD)
 
 libpromises_la_SOURCES = \
         cf3parse.y cf3parse.h \
@@ -37,6 +40,8 @@ libpromises_la_SOURCES = \
         dbm_quick.c \
         dbm_tokyocab.c \
         dir.h dir_priv.h \
+        enterprise_extension.c enterprise_extension.h \
+	enterprise_stubs.c \
         env_context.c env_context.h \
         evalfunction.c evalfunction.h \
         exec_tools.c exec_tools.h \
@@ -103,11 +108,6 @@ libpromises_la_SOURCES = \
         verify_reports.c \
         verify_vars.c verify_vars.h
 
-if !HAVE_NOVA
-libpromises_la_SOURCES += \
-	enterprise_stubs.c
-endif
-
 if !NT
 
 libpromises_la_SOURCES += \
@@ -161,7 +161,7 @@ MOSTLYCLEANFILES = *~ *.orig *.rej
 # libutils dependency
 
 # Automake need to be guided due to symlinking
-libpromises_la_DEPENDENCIES = ../libutils/libutils.la ../libcfnet/libcfnet.la $(NOVA_LDADD)
+libpromises_la_DEPENDENCIES = ../libutils/libutils.la ../libcfnet/libcfnet.la $(ENTERPRISE_LDADD)
 
 .PRECIOUS: ../libutils/libutils.la
 

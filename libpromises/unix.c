@@ -22,22 +22,22 @@
   included file COSL.txt.
 */
 
-#include "unix.h"
+#include <unix.h>
 
-#include "env_context.h"
-#include "vars.h"
-#include "files_names.h"
-#include "files_interfaces.h"
-#include "item_lib.h"
-#include "conversion.h"
-#include "matching.h"
-#include "communication.h"
-#include "pipes.h"
-#include "exec_tools.h"
-#include "misc_lib.h"
-#include "rlist.h"
-#include "scope.h"
-#include "string_lib.h"
+#include <env_context.h>
+#include <vars.h>
+#include <files_names.h>
+#include <files_interfaces.h>
+#include <item_lib.h>
+#include <conversion.h>
+#include <matching.h>
+#include <communication.h>
+#include <pipes.h>
+#include <exec_tools.h>
+#include <misc_lib.h>
+#include <rlist.h>
+#include <scope.h>
+#include <string_lib.h>
 
 #ifdef HAVE_SYS_UIO_H
 # include <sys/uio.h>

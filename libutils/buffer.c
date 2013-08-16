@@ -22,9 +22,9 @@
   included file COSL.txt.
 */
 
-#include "alloc.h"
-#include "buffer.h"
-#include "refcount.h"
+#include <alloc.h>
+#include <buffer.h>
+#include <refcount.h>
 
 static unsigned int general_memory_cap = DEFAULT_MEMORY_CAP;
 unsigned int BufferGeneralMemoryCap()

@@ -22,11 +22,11 @@
   included file COSL.txt.
 */
 
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
-#include "bool.h"
-#include "string_expressions.h"
-#include "misc_lib.h"
+#include <bool.h>
+#include <string_expressions.h>
+#include <misc_lib.h>
 
 #include <stdlib.h>
 #include <string.h>

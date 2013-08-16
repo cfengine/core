@@ -22,12 +22,12 @@
   included file COSL.txt.
 */
 
-#include "net.h"
-#include "classic.h"
-#include "tls_generic.h"
+#include <net.h>
+#include <classic.h>
+#include <tls_generic.h>
 
-#include "logging.h"
-#include "misc_lib.h"
+#include <logging.h>
+#include <misc_lib.h>
 
 /*************************************************************************/
 

@@ -25,7 +25,7 @@
 #ifndef CFENGINE_MOD_ACCESS_H
 #define CFENGINE_MOD_ACCESS_H
 
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
 extern const PromiseTypeSyntax CF_REMACCESS_PROMISE_TYPES[];
 extern const ConstraintSyntax CF_REMACCESS_BODIES[];

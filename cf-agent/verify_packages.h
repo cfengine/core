@@ -25,7 +25,7 @@
 #ifndef CFENGINE_VERIFY_PACKAGES_H
 #define CFENGINE_VERIFY_PACKAGES_H
 
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
 void VerifyPackagesPromise(EvalContext *ctx, Promise *pp);
 void ExecuteScheduledPackages(EvalContext *ctx);

@@ -25,8 +25,8 @@
 #ifndef CFENGINE_ITERATION_H
 #define CFENGINE_ITERATION_H
 
-#include "cf3.defs.h"
-#include "rlist.h"
+#include <cf3.defs.h>
+#include <rlist.h>
 
 Rlist *NewIterationContext(EvalContext *ctx, const Promise *pp, Rlist *listvars);
 void DeleteIterationContext(Rlist *lol);

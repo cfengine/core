@@ -22,15 +22,15 @@
   included file COSL.txt.
 */
 
-#include "exec-config.h"
+#include <exec-config.h>
 
-#include "alloc.h"
-#include "string_lib.h"
+#include <alloc.h>
+#include <string_lib.h>
 
-#include "rlist.h"
-#include "env_context.h"
-#include "conversion.h"
-#include "generic_agent.h" // TODO: fix
+#include <rlist.h>
+#include <env_context.h>
+#include <conversion.h>
+#include <generic_agent.h> // TODO: fix
 
 static void ExecConfigResetDefault(ExecConfig *exec_config)
 {

@@ -22,17 +22,17 @@
   included file COSL.txt.
 */
 
-#include "files_lib.h"
+#include <files_lib.h>
 
-#include "files_interfaces.h"
-#include "files_names.h"
-#include "files_copy.h"
-#include "item_lib.h"
-#include "promises.h"
-#include "matching.h"
-#include "misc_lib.h"
-#include "dir.h"
-#include "policy.h"
+#include <files_interfaces.h>
+#include <files_names.h>
+#include <files_copy.h>
+#include <item_lib.h>
+#include <promises.h>
+#include <matching.h>
+#include <misc_lib.h>
+#include <dir.h>
+#include <policy.h>
 
 
 static Item *ROTATED = NULL;

@@ -25,12 +25,12 @@
 #ifndef CFENGINE_POLICY_H
 #define CFENGINE_POLICY_H
 
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
-#include "writer.h"
-#include "sequence.h"
-#include "json.h"
-#include "set.h"
+#include <writer.h>
+#include <sequence.h>
+#include <json.h>
+#include <set.h>
 
 typedef enum
 {

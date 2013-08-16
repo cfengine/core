@@ -25,7 +25,7 @@
 #ifndef CFENGINE_VERIFY_DATABASES_H
 #define CFENGINE_VERIFY_DATABASES_H
 
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
 void VerifyDatabasePromises(EvalContext *ctx, Promise *pp);
 

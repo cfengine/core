@@ -25,7 +25,7 @@
 #ifndef CFENGINE_SYSINFO_H
 #define CFENGINE_SYSINFO_H
 
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
 void DiscoverVersion(EvalContext *ctx);
 

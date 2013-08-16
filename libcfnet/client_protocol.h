@@ -25,7 +25,7 @@
 #ifndef CFENGINE_CLIENT_PROTOCOL_H
 #define CFENGINE_CLIENT_PROTOCOL_H
 
-#include "cfnet.h"
+#include <cfnet.h>
 
 
 int IdentifyAgent(ConnectionInfo *connection);

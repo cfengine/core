@@ -1,7 +1,7 @@
-#include "test.h"
+#include <test.h>
 
-#include "alloc.h"
-#include "writer.h"
+#include <alloc.h>
+#include <writer.h>
 
 static Writer *global_w;
 static bool global_w_closed;

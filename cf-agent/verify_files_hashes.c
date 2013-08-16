@@ -22,16 +22,16 @@
   included file COSL.txt.
 */
 
-#include "verify_files_hashes.h"
+#include <verify_files_hashes.h>
 
-#include "rlist.h"
-#include "policy.h"
-#include "client_code.h"
-#include "files_interfaces.h"
-#include "files_lib.h"
-#include "files_hashes.h"
-#include "misc_lib.h"
-#include "env_context.h"
+#include <rlist.h>
+#include <policy.h>
+#include <client_code.h>
+#include <files_interfaces.h>
+#include <files_lib.h>
+#include <files_hashes.h>
+#include <misc_lib.h>
+#include <env_context.h>
 
 /*
  * Key format:

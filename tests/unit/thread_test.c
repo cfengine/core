@@ -1,6 +1,6 @@
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
-#include "test.h"
+#include <test.h>
 
 #define NUM_THREADS 100
 

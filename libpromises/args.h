@@ -25,9 +25,9 @@
 #ifndef CFENGINE_ARGS_H
 #define CFENGINE_ARGS_H
 
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
-#include "rlist.h"
+#include <rlist.h>
 
 Rlist *NewExpArgs(EvalContext *ctx, const FnCall *fp, const Promise *pp);
 void ArgTemplate(EvalContext *ctx, FnCall *fp, const FnCallArg *argtemplate, Rlist *finalargs);

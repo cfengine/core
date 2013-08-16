@@ -25,7 +25,7 @@
 #ifndef CFENGINE_VERIFY_METHODS_H
 #define CFENGINE_VERIFY_METHODS_H
 
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
 void VerifyMethodsPromise(EvalContext *ctx, Promise *pp);
 int VerifyMethod(EvalContext *ctx, char *attrname, Attributes a, Promise *pp);

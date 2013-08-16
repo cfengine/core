@@ -22,20 +22,20 @@
   included file COSL.txt.
 */
 
-#include "locks.h"
-#include "mutex.h"
-#include "string_lib.h"
-#include "files_interfaces.h"
-#include "files_lib.h"
-#include "atexit.h"
-#include "policy.h"
-#include "files_hashes.h"
-#include "item_lib.h"
-#include "files_names.h"
-#include "rlist.h"
-#include "process_lib.h"
-#include "fncall.h"
-#include "env_context.h"
+#include <locks.h>
+#include <mutex.h>
+#include <string_lib.h>
+#include <files_interfaces.h>
+#include <files_lib.h>
+#include <atexit.h>
+#include <policy.h>
+#include <files_hashes.h>
+#include <item_lib.h>
+#include <files_names.h>
+#include <rlist.h>
+#include <process_lib.h>
+#include <fncall.h>
+#include <env_context.h>
 
 #define CFLOGSIZE 1048576       /* Size of lock-log before rotation */
 

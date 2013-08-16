@@ -1,7 +1,7 @@
-#include "test.h"
-#include "sequence.h"
+#include <test.h>
+#include <sequence.h>
 
-#include "alloc.h"
+#include <alloc.h>
 
 static Seq *SequenceCreateRange(size_t initialCapacity, size_t start, size_t end)
 {

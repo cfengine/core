@@ -24,26 +24,26 @@
 
 /* This is a root node in the syntax tree */
 
-#include "mod_common.h"
+#include <mod_common.h>
 
-#include "mod_environ.h"
-#include "mod_outputs.h"
-#include "mod_access.h"
-#include "mod_storage.h"
-#include "mod_databases.h"
-#include "mod_packages.h"
-#include "mod_report.h"
-#include "mod_files.h"
-#include "mod_exec.h"
-#include "mod_methods.h"
-#include "mod_process.h"
-#include "mod_services.h"
-#include "mod_measurement.h"
-#include "mod_knowledge.h"
+#include <mod_environ.h>
+#include <mod_outputs.h>
+#include <mod_access.h>
+#include <mod_storage.h>
+#include <mod_databases.h>
+#include <mod_packages.h>
+#include <mod_report.h>
+#include <mod_files.h>
+#include <mod_exec.h>
+#include <mod_methods.h>
+#include <mod_process.h>
+#include <mod_services.h>
+#include <mod_measurement.h>
+#include <mod_knowledge.h>
 
-#include "conversion.h"
-#include "policy.h"
-#include "syntax.h"
+#include <conversion.h>
+#include <policy.h>
+#include <syntax.h>
 
 static const char *POLICY_ERROR_VARS_CONSTRAINT_DUPLICATE_TYPE = "Variable contains existing data type contstraint %s, tried to redefine with %s";
 static const char *POLICY_ERROR_VARS_PROMISER_NUMERICAL = "Variable promises cannot have a purely numerical promiser (name)";

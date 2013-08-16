@@ -1,8 +1,8 @@
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
-#include "test.h"
+#include <test.h>
 
-#include "xml_writer.h"
+#include <xml_writer.h>
 
 /*
  * FIXME: Those unit tests need to be ajusted (or completely changed) if

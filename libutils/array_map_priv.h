@@ -25,7 +25,7 @@
 #ifndef CFENGINE_ARRAY_MAP_PRIV_H
 #define CFENGINE_ARRAY_MAP_PRIV_H
 
-#include "map_common.h"
+#include <map_common.h>
 
 typedef struct
 {

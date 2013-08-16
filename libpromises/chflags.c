@@ -24,7 +24,7 @@
 
 /* BSD flags */
 
-#include "chflags.h"
+#include <chflags.h>
 
 typedef struct
 {

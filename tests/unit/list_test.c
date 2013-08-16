@@ -1,7 +1,7 @@
-#include "test.h"
+#include <test.h>
 #include <string.h>
-#include "list.c"
-#include "list.h"
+#include <list.c>
+#include <list.h>
 
 // Simple initialization test
 static void test_initList(void)

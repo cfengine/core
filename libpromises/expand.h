@@ -25,8 +25,8 @@
 #ifndef CFENGINE_EXPAND_H
 #define CFENGINE_EXPAND_H
 
-#include "cf3.defs.h"
-#include "generic_agent.h"
+#include <cf3.defs.h>
+#include <generic_agent.h>
 
 typedef void PromiseActuator(EvalContext *ctx, Promise *pp, void *param);
 

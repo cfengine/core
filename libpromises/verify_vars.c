@@ -22,21 +22,21 @@
   included file COSL.txt.
 */
 
-#include "verify_vars.h"
+#include <verify_vars.h>
 
-#include "attributes.h"
-#include "string_lib.h"
-#include "buffer.h"
-#include "misc_lib.h"
-#include "fncall.h"
-#include "rlist.h"
-#include "conversion.h"
-#include "expand.h"
-#include "scope.h"
-#include "promises.h"
-#include "vars.h"
-#include "matching.h"
-#include "syntax.h"
+#include <attributes.h>
+#include <string_lib.h>
+#include <buffer.h>
+#include <misc_lib.h>
+#include <fncall.h>
+#include <rlist.h>
+#include <conversion.h>
+#include <expand.h>
+#include <scope.h>
+#include <promises.h>
+#include <vars.h>
+#include <matching.h>
+#include <syntax.h>
 
 typedef struct
 {

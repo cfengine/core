@@ -21,7 +21,7 @@ not, write to the Free Software Foundation, Inc., 675 Mass Ave,
 Cambridge, MA 02139, USA.  */
 
 
-#include "getopt.h"
+#include <getopt.h>
 
 #if !defined (__STDC__) || !__STDC__
 /* This is a separate conditional since some stdc systems

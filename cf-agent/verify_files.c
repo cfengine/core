@@ -22,35 +22,35 @@
   included file COSL.txt.
 */
 
-#include "verify_files.h"
+#include <verify_files.h>
 
-#include "promises.h"
-#include "vars.h"
-#include "dir.h"
-#include "scope.h"
-#include "env_context.h"
-#include "files_names.h"
-#include "files_interfaces.h"
-#include "files_lib.h"
-#include "files_operators.h"
-#include "files_hashes.h"
-#include "files_edit.h"
-#include "files_editxml.h"
-#include "files_editline.h"
-#include "files_properties.h"
-#include "item_lib.h"
-#include "matching.h"
-#include "attributes.h"
-#include "locks.h"
-#include "string_lib.h"
-#include "verify_files_utils.h"
-#include "verify_files_hashes.h"
-#include "misc_lib.h"
-#include "fncall.h"
-#include "promiser_regex_resolver.h"
-#include "ornaments.h"
-#include "audit.h"
-#include "expand.h"
+#include <promises.h>
+#include <vars.h>
+#include <dir.h>
+#include <scope.h>
+#include <env_context.h>
+#include <files_names.h>
+#include <files_interfaces.h>
+#include <files_lib.h>
+#include <files_operators.h>
+#include <files_hashes.h>
+#include <files_edit.h>
+#include <files_editxml.h>
+#include <files_editline.h>
+#include <files_properties.h>
+#include <item_lib.h>
+#include <matching.h>
+#include <attributes.h>
+#include <locks.h>
+#include <string_lib.h>
+#include <verify_files_utils.h>
+#include <verify_files_hashes.h>
+#include <misc_lib.h>
+#include <fncall.h>
+#include <promiser_regex_resolver.h>
+#include <ornaments.h>
+#include <audit.h>
+#include <expand.h>
 
 static void LoadSetuid(Attributes a);
 static void SaveSetuid(EvalContext *ctx, Attributes a, Promise *pp);

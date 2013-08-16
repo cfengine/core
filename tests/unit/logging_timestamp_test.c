@@ -1,7 +1,7 @@
-#include "test.h"
+#include <test.h>
 
-#include "cf3.defs.h"
-#include "logging.h"
+#include <cf3.defs.h>
+#include <logging.h>
 
 static void test_timestamp_regex(void)
 {

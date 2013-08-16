@@ -22,21 +22,21 @@
   included file COSL.txt.
 */
 
-#include "scope.h"
+#include <scope.h>
 
-#include "vars.h"
-#include "expand.h"
-#include "hashes.h"
-#include "unix.h"
-#include "fncall.h"
-#include "mutex.h"
-#include "misc_lib.h"
-#include "rlist.h"
-#include "conversion.h"
-#include "syntax.h"
-#include "policy.h"
-#include "env_context.h"
-#include "audit.h"
+#include <vars.h>
+#include <expand.h>
+#include <hashes.h>
+#include <unix.h>
+#include <fncall.h>
+#include <mutex.h>
+#include <misc_lib.h>
+#include <rlist.h>
+#include <conversion.h>
+#include <syntax.h>
+#include <policy.h>
+#include <env_context.h>
+#include <audit.h>
 
 /*******************************************************************/
 

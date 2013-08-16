@@ -110,6 +110,17 @@ if test "x$cross_compiling" = "xno"; then
 fi
 
 dnl ######################################################################
+dnl How to build extension binaries. Can be built as plugins (default)
+dnl or complete binaries (Windows and general debugging).
+dnl ######################################################################
+
+AC_ARG_ENABLE([builtin-extensions], [AS_HELP_STRING([Build binaries with builtin extensions (default)])],
+              [],
+              [])
+AM_CONDITIONAL([BUILTIN_EXTENSIONS], [test "x$enable_builtin_extensions" = "xyes"])
+AS_IF([test "x$enable_builtin_extensions" = "xyes"], [AC_DEFINE([BUILTIN_EXTENSIONS], [1], [Define if you want builtin extensions])])
+
+dnl ######################################################################
 dnl Configure files layout
 dnl ######################################################################
 
@@ -232,9 +243,6 @@ if test "x$with_mysql" != "xno"; then
 fi
 
 dnl Enterprise extensions
-
-dnl Mongo is disabled unless overriden in subproject
-AM_CONDITIONAL(MONGO, false)
 
 m4_indir(incstart[]incend, [nova/options.m4])
 AM_CONDITIONAL([HAVE_NOVA], [test "x$with_nova" != xno && test -d ${srcdir}/nova])
@@ -836,6 +844,12 @@ LDFLAGS="$LDFLAGS $TOKYOCABINET_LDFLAGS $QDBM_LDFLAGS $PCRE_LDFLAGS $OPENSSL_LDF
 LIBS="$LIBS $TOKYOCABINET_LIBS $QDBM_LIBS $PCRE_LIBS $OPENSSL_LIBS $MONGO_LIBS $SQLITE3_LIBS $LIBACL_LIBS"
 
 dnl ######################################################################
+dnl Make them available to subprojects.
+dnl ######################################################################
+
+AC_CONFIG_FILES([configure_flags.env])
+
+dnl ######################################################################
 dnl OS specific stuff
 dnl ######################################################################
 
@@ -886,23 +900,7 @@ case "$target_os" in
         ;;
 esac
 
-#
-# OS kernels conditionals. Don't use those unless it is really needed (if code
-# depends on the *kernel* feature, and even then -- some kernel features are
-# shared by different kernels).
-#
-# Good example: use LINUX to select code which uses inotify and netlink sockets.
-# Bad example: use LINUX to select code which parses output of coreutils' ps(1).
-#
-AM_CONDITIONAL([LINUX], [test -n "`echo ${target_os} | grep linux`"])
-AM_CONDITIONAL([SOLARIS], [test -n "`(echo ${target_os} | egrep 'solaris|sunos')`"])
-AM_CONDITIONAL([NT], [test -n "`(echo ${target_os} | egrep 'mingw|cygwin')`"])
-AM_CONDITIONAL([CYGWIN], [test -n "`(echo ${target_os} | egrep 'cygwin')`"])
-AM_CONDITIONAL([AIX], [test -n "`(echo ${target_os} | grep aix)`"])
-AM_CONDITIONAL([HPUX], [test -n "`(echo ${target_os} | egrep 'hpux|hp-ux')`"])
-AM_CONDITIONAL([FREEBSD], [test -n "`(echo ${target_os} | grep freebsd)`"])
-AM_CONDITIONAL([NETBSD], [test -n "`(echo ${target_os} | grep netbsd)`"])
-AM_CONDITIONAL([XNU], [test -n "`(echo ${target_os} | grep darwin)`"])
+m4_include([m4/cf3_platforms.m4])
 
 dnl #####################################################################
 dnl Configure LOCKDIR and LOGDIR
@@ -935,53 +933,6 @@ if test "x$with_shell" = "xno"; then
 fi
 AC_DEFINE_UNQUOTED(SHELL_PATH, "$with_shell", [Path to the POSIX-compatible shell])
 
-dnl ####################################################################
-dnl Set GCC CFLAGS only if using GCC.
-dnl ####################################################################
-
-AC_MSG_CHECKING(for HP-UX aC)
-AC_PREPROC_IFELSE([AC_LANG_SOURCE([[
-#if defined __HP_cc
-#This is HP-UX ANSI C
-#endif
-]])], [AC_MSG_RESULT(no)],[AC_MSG_RESULT(yes)
-CFLAGS="$CFLAGS -Agcc"
-CPPFLAGS="$CPPFLAGS -Agcc"
-HP_UX_AC=yes])
-
-AC_MSG_CHECKING(for GCC specific compile flags)
-if test x"$GCC" = "xyes" && test x"$HP_UX_AC" != x"yes"; then
-    CFLAGS="$CFLAGS -g -Wall"
-    CPPFLAGS="$CPPFLAGS -std=gnu99"
-    AC_MSG_RESULT(yes)
-
-    save_CFLAGS="$CFLAGS"
-    CFLAGS="$CFLAGS -Wno-pointer-sign"
-    AC_MSG_CHECKING(for -Wno-pointer-sign)
-    AC_COMPILE_IFELSE([AC_LANG_SOURCE([int main() {}])],
-     [AC_MSG_RESULT(yes)],
-     [AC_MSG_RESULT(no)
-     CFLAGS="$save_CFLAGS"])
-
-    save_CFLAGS="$CFLAGS"
-    CFLAGS="$CFLAGS -Werror=implicit-function-declaration"
-    AC_MSG_CHECKING(for -Werror=implicit-function-declaration)
-    AC_COMPILE_IFELSE([AC_LANG_SOURCE([int main() {}])],
-     [AC_MSG_RESULT(yes)],
-     [AC_MSG_RESULT(no)
-     CFLAGS="$save_CFLAGS"])
-
-    save_CFLAGS="$CFLAGS"
-    CFLAGS="$CFLAGS -Wunused-parameter"
-    AC_MSG_CHECKING(for -Wunused-parameter")
-    AC_COMPILE_IFELSE([AC_LANG_SOURCE([int main() {}])],
-     [AC_MSG_RESULT(yes)],
-     [AC_MSG_RESULT(no)
-     CFLAGS="$save_CFLAGS"])
-else 
-    AC_MSG_RESULT(no)
-fi
-
 dnl #####################################################################
 dnl Hostname and Version stuff
 dnl #####################################################################
@@ -990,6 +941,13 @@ AC_PATH_PROG(HOSTNAME, hostname, "", $PATH)
 
 AC_DEFINE_UNQUOTED(AUTOCONF_HOSTNAME, "`$HOSTNAME`", [Special CFEngine symbol])
 AC_DEFINE_UNQUOTED(AUTOCONF_SYSNAME, "$target_os", [Speial CFEngine symbol])
+
+
+dnl #####################################################################
+dnl GCC flags
+dnl #####################################################################
+
+m4_include([m4/cf3_gcc_flags.m4])
 
 
 dnl #####################################################################
@@ -1138,8 +1096,6 @@ AC_CONFIG_FILES([Makefile
     tests/unit/Makefile
     tests/load/Makefile])
 
-m4_indir(incstart[]incend, [nova/output.m4])
-
 AC_OUTPUT
 
-AC_MSG_RESULT(DONE: Configuration done. Run make/gmake to build CFEngine.)
+AC_MSG_RESULT(DONE: Configuration done. Run make/gmake to build CFEngine Community.)

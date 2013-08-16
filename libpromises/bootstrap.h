@@ -25,7 +25,7 @@
 #ifndef CFENGINE_BOOTSTRAP_H
 #define CFENGINE_BOOTSTRAP_H
 
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
 /**
  * @brief Sets classes and the POLICY_SERVER global.

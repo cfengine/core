@@ -22,27 +22,27 @@
   included file COSL.txt.
 */
 
-#include "expand.h"
+#include <expand.h>
 
-#include "misc_lib.h"
-#include "env_context.h"
-#include "policy.h"
-#include "promises.h"
-#include "vars.h"
-#include "syntax.h"
-#include "files_names.h"
-#include "scope.h"
-#include "matching.h"
-#include "unix.h"
-#include "attributes.h"
-#include "fncall.h"
-#include "args.h"
-#include "iteration.h"
-#include "audit.h"
-#include "verify_vars.h"
-#include "string_lib.h"
-#include "conversion.h"
-#include "verify_classes.h"
+#include <misc_lib.h>
+#include <env_context.h>
+#include <policy.h>
+#include <promises.h>
+#include <vars.h>
+#include <syntax.h>
+#include <files_names.h>
+#include <scope.h>
+#include <matching.h>
+#include <unix.h>
+#include <attributes.h>
+#include <fncall.h>
+#include <args.h>
+#include <iteration.h>
+#include <audit.h>
+#include <verify_vars.h>
+#include <string_lib.h>
+#include <conversion.h>
+#include <verify_classes.h>
 
 
 static void ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp, Rlist *listvars,

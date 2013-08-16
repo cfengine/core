@@ -23,8 +23,8 @@
 */
 
 
-#include "sequence.h"
-#include "alloc.h"
+#include <sequence.h>
+#include <alloc.h>
 
 
 static const size_t EXPAND_FACTOR = 2;

@@ -25,8 +25,8 @@
 #ifndef CFENGINE_VERIFY_FILES_UTILS_H
 #define CFENGINE_VERIFY_FILES_UTILS_H
 
-#include "cf3.defs.h"
-#include "cfnet.h"                                       /* AgentConnection */
+#include <cf3.defs.h>
+#include <cfnet.h>                                       /* AgentConnection */
 
 extern Item *VSETUIDLIST;
 extern Rlist *SINGLE_COPY_LIST;

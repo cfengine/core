@@ -1,12 +1,12 @@
-#include "test.h"
+#include <test.h>
 
-#include "policy.h"
-#include "parser.h"
-#include "rlist.h"
-#include "fncall.h"
-#include "env_context.h"
-#include "item_lib.h"
-#include "bootstrap.h"
+#include <policy.h>
+#include <parser.h>
+#include <rlist.h>
+#include <fncall.h>
+#include <env_context.h>
+#include <item_lib.h>
+#include <bootstrap.h>
 
 static Policy *LoadPolicy(const char *filename)
 {

@@ -25,7 +25,7 @@
 #ifndef CFENGINE_ASSOC_H
 #define CFENGINE_ASSOC_H
 
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
 /* variable reference linkage , with metatype*/
 typedef struct

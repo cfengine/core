@@ -28,17 +28,17 @@
  * type.
  */
 
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
-#include "policy.h"
-#include "matching.h"
-#include "files_names.h"
-#include "files_interfaces.h"
-#include "promises.h"
-#include "dir.h"
-#include "files_properties.h"
-#include "scope.h"
-#include "item_lib.h"
+#include <policy.h>
+#include <matching.h>
+#include <files_names.h>
+#include <files_interfaces.h>
+#include <promises.h>
+#include <dir.h>
+#include <files_properties.h>
+#include <scope.h>
+#include <item_lib.h>
 
 void LocateFilePromiserGroup(EvalContext *ctx, char *wildpath, Promise *pp, void (*fnptr) (EvalContext *ctx, char *path, Promise *ptr))
 {

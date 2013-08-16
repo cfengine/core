@@ -1,10 +1,12 @@
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
-#include "sysinfo.h"
-#include "env_context.h"
-#include "item_lib.h"
-#include "rlist.h"
-#include "test.h"
+#include <sysinfo.h>
+#include <env_context.h>
+#include <item_lib.h>
+#include <rlist.h>
+#include <enterprise_extension.h>
+
+#include <test.h>
 
 /* Global variables we care about */
 

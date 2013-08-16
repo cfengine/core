@@ -22,33 +22,30 @@
   included file COSL.txt.
 */
 
-#include "verify_packages.h"
+#include <verify_packages.h>
 
-#include "promises.h"
-#include "dir.h"
-#include "files_names.h"
-#include "files_interfaces.h"
-#include "vars.h"
-#include "conversion.h"
-#include "expand.h"
-#include "scope.h"
-#include "vercmp.h"
-#include "matching.h"
-#include "attributes.h"
-#include "string_lib.h"
-#include "pipes.h"
-#include "locks.h"
-#include "exec_tools.h"
-#include "policy.h"
-#include "misc_lib.h"
-#include "rlist.h"
-#include "ornaments.h"
-#include "env_context.h"
-#include "retcode.h"
-
-#ifdef HAVE_NOVA
-#include "agent_reports.h"
-#endif
+#include <promises.h>
+#include <dir.h>
+#include <files_names.h>
+#include <files_interfaces.h>
+#include <vars.h>
+#include <conversion.h>
+#include <expand.h>
+#include <scope.h>
+#include <vercmp.h>
+#include <matching.h>
+#include <attributes.h>
+#include <string_lib.h>
+#include <pipes.h>
+#include <locks.h>
+#include <exec_tools.h>
+#include <policy.h>
+#include <misc_lib.h>
+#include <rlist.h>
+#include <ornaments.h>
+#include <env_context.h>
+#include <retcode.h>
+#include <cf-agent-enterprise-stubs.h>
 
 /** Entry points from VerifyPackagesPromise **/
 
@@ -74,12 +71,10 @@ static void DeletePackageManagers(PackageManager *newlist);
 
 static char *PrefixLocalRepository(Rlist *repositories, char *package);
 
-#ifndef HAVE_NOVA
-void ReportPatches(ARG_UNUSED PackageManager *list)
+ENTERPRISE_VOID_FUNC_1ARG_DEFINE_STUB(void, ReportPatches, ARG_UNUSED PackageManager *, list)
 {
     Log(LOG_LEVEL_VERBOSE, "Patch reporting feature is only available in the enterprise version");
 }
-#endif
 
 /*****************************************************************************/
 

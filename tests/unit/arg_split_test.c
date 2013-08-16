@@ -1,10 +1,10 @@
-#include "test.h"
+#include <test.h>
 
 #include <setjmp.h>
 #include <cmockery.h>
 
-#include "conversion.h"
-#include "exec_tools.h"
+#include <conversion.h>
+#include <exec_tools.h>
 
 static void test_split_empty(void)
 {

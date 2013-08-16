@@ -25,8 +25,8 @@
 #ifndef CFENGINE_FINDHUB_H
 #define CFENGINE_FINDHUB_H
 
-#include "findhub_priv.h"
-#include "list.h"
+#include <findhub_priv.h>
+#include <list.h>
 
 int ListHubs(List **list);
 void PrintList(List *list);

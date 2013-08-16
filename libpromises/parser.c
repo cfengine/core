@@ -22,10 +22,10 @@
   included file COSL.txt.
 */
 
-#include "parser.h"
-#include "parser_state.h"
+#include <parser.h>
+#include <parser_state.h>
 
-#include "misc_lib.h"
+#include <misc_lib.h>
 
 #include <errno.h>
 

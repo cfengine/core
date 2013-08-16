@@ -25,7 +25,7 @@
 #ifndef CFENGINE_REFCOUNT_H
 #define CFENGINE_REFCOUNT_H
 
-#include "refcount_p.h"
+#include <refcount_p.h>
 
 /**
   @brief Simple reference count implementation.

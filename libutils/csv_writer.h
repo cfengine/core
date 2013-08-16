@@ -29,8 +29,8 @@
  * This writer implements CSV as in RFC 4180
  */
 
-#include "platform.h"
-#include "writer.h"
+#include <platform.h>
+#include <writer.h>
 
 typedef struct CsvWriter_ CsvWriter;
 

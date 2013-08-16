@@ -22,9 +22,9 @@
   included file COSL.txt.
 */
 
-#include "mod_outputs.h"
+#include <mod_outputs.h>
 
-#include "syntax.h"
+#include <syntax.h>
 
 static const ConstraintSyntax CF_OUTPUTS_BODIES[] =
 {

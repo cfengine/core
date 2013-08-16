@@ -22,26 +22,26 @@
   included file COSL.txt.
 */
 
-#include "files_editline.h"
+#include <files_editline.h>
 
-#include "env_context.h"
-#include "promises.h"
-#include "files_names.h"
-#include "vars.h"
-#include "item_lib.h"
-#include "sort.h"
-#include "conversion.h"
-#include "expand.h"
-#include "scope.h"
-#include "matching.h"
-#include "attributes.h"
-#include "locks.h"
-#include "string_lib.h"
-#include "misc_lib.h"
-#include "rlist.h"
-#include "policy.h"
-#include "ornaments.h"
-#include "verify_classes.h"
+#include <env_context.h>
+#include <promises.h>
+#include <files_names.h>
+#include <vars.h>
+#include <item_lib.h>
+#include <sort.h>
+#include <conversion.h>
+#include <expand.h>
+#include <scope.h>
+#include <matching.h>
+#include <attributes.h>
+#include <locks.h>
+#include <string_lib.h>
+#include <misc_lib.h>
+#include <rlist.h>
+#include <policy.h>
+#include <ornaments.h>
+#include <verify_classes.h>
 
 
 /*****************************************************************************/

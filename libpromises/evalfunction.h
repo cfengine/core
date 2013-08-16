@@ -25,8 +25,8 @@
 #ifndef CFENGINE_EVALFUNCTION_H
 #define CFENGINE_EVALFUNCTION_H
 
-#include "cf3.defs.h"
-#include "rlist.h"
+#include <cf3.defs.h>
+#include <rlist.h>
 
 FnCallResult FnCallHostInNetgroup(EvalContext *ctx, FnCall *fp, Rlist *finalargs);
 

@@ -24,9 +24,9 @@
 
 #include <stdint.h>
 #include <ctype.h>
-#include "platform.h"
-#include "ip_address.h"
-#include "alloc.h"
+#include <platform.h>
+#include <ip_address.h>
+#include <alloc.h>
 
 struct IPV4Address {
     uint8_t octets[4];

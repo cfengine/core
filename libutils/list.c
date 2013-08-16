@@ -23,8 +23,8 @@
 */
 
 #include <assert.h>
-#include "alloc.h"
-#include "list.h"
+#include <alloc.h>
+#include <list.h>
 
 struct ListNode {
     void *payload;

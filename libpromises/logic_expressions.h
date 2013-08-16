@@ -25,8 +25,8 @@
 #ifndef CFENGINE_LOGIC_EXPRESSIONS_H
 #define CFENGINE_LOGIC_EXPRESSIONS_H
 
-# include "bool.h"
-# include "string_expressions.h"
+# include <bool.h>
+# include <string_expressions.h>
 
 /*
    Logic expressions grammar:

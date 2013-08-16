@@ -25,7 +25,7 @@
 #ifndef CFENGINE_HASHES_H
 #define CFENGINE_HASHES_H
 
-#include "platform.h"
+#include <platform.h>
 
 int FileChecksum(const char *filename, unsigned char digest[EVP_MAX_MD_SIZE + 1]);
 

@@ -25,7 +25,7 @@
 #ifndef CFENGINE_FILES_EDITLINE_H
 #define CFENGINE_FILES_EDITLINE_H
 
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
 int ScheduleEditLineOperations(EvalContext *ctx, Bundle *bp, Attributes a, const Promise *pp, EditContext *edcontext);
 Bundle *MakeTemporaryBundleFromTemplate(EvalContext *ctx, Policy *policy, Attributes a, const Promise *pp);

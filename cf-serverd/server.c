@@ -22,29 +22,25 @@
   included file COSL.txt.
 */
 
-#include "server.h"
+#include <server.h>
 
-#include "item_lib.h"
-#include "crypto.h"
-#include "files_hashes.h"
-#include "env_context.h"
-#include "lastseen.h"
-#include "conversion.h"
-#include "string_lib.h"
-#include "signals.h"
-#include "mutex.h"
-#include "net.h"                      /* SendTransaction,ReceiveTransaction */
-#include "tls_generic.h"              /* TLSVerifyPeer */
-#include "rlist.h"
-#include "misc_lib.h"
-#include "cf-serverd-enterprise-stubs.h"
-#include "audit.h"
-#include "server_tls.h"
-#include "server_common.h"
-
-#ifdef HAVE_NOVA
-# include "cf.nova.h"
-#endif
+#include <item_lib.h>
+#include <crypto.h>
+#include <files_hashes.h>
+#include <env_context.h>
+#include <lastseen.h>
+#include <conversion.h>
+#include <string_lib.h>
+#include <signals.h>
+#include <mutex.h>
+#include <net.h>                      /* SendTransaction,ReceiveTransaction */
+#include <tls_generic.h>              /* TLSVerifyPeer */
+#include <rlist.h>
+#include <misc_lib.h>
+#include <cf-serverd-enterprise-stubs.h>
+#include <audit.h>
+#include <server_tls.h>
+#include <server_common.h>
 
 //******************************************************************
 // GLOBAL STATE

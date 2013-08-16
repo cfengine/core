@@ -25,7 +25,7 @@
 #ifndef CFENGINE_VERIFY_EXEC_H
 #define CFENGINE_VERIFY_EXEC_H
 
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
 void VerifyExecPromise(EvalContext *ctx, Promise *pp);
 

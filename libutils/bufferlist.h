@@ -26,9 +26,9 @@
 #define CFENGINE_BUFFERLIST_H
 
 #include <stdlib.h>
-#include "refcount.h"
-#include "buffer.h"
-#include "list.h"
+#include <refcount.h>
+#include <buffer.h>
+#include <list.h>
 
 /**
   @brief Buffer list implementation.

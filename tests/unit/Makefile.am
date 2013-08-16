@@ -1,7 +1,7 @@
 # Just recursively include in dist tarball all data we need for unit tests
 EXTRA_DIST = data
 
-AM_CFLAGS = $(NOVA_CFLAGS) -I$(srcdir)/../../libcfnet -I$(srcdir)/../../libpromises -I$(srcdir)/../../libutils \
+AM_CFLAGS = $(ENTERPRISE_CFLAGS) -I$(srcdir)/../../libcfnet -I$(srcdir)/../../libpromises -I$(srcdir)/../../libutils \
 	-DTESTDATADIR='"$(srcdir)/data"' -I$(srcdir)/../../cf-serverd -I$(srcdir)/../../cf-agent -I$(srcdir)/../../cf-execd -I$(srcdir)/../../cf-key
 
 LDADD = ../../libpromises/libpromises.la libtest.la
@@ -27,6 +27,7 @@ check_PROGRAMS = \
 	assoc_test \
 	atexit_test \
 	csv_writer_test \
+	enterprise_extension_test \
 	item_test \
 	rlist_test \
 	domainname_test \
@@ -106,6 +107,17 @@ csv_writer_test_LDADD = libtest.la libstr.la
 
 conversion_test_SOURCES = conversion_test.c ../../libpromises/conversion.c
 
+enterprise_extension_test_SOURCES = enterprise_extension_test.c
+
+check_LTLIBRARIES += cfengine-enterprise.la
+cfengine_enterprise_la_SOURCES = enterprise_extension_test_lib.c
+cfengine_enterprise_la_LDFLAGS = -avoid-version -module -shared -export-dynamic -rpath /
+
+cfengine-enterprise.so: cfengine-enterprise.la
+	$(RM) cfengine-enterprise.so
+	$(LN_S) .libs/cfengine-enterprise.so cfengine-enterprise.so
+EXTRA_enterprise_extension_test_DEPENDENCIES = cfengine-enterprise.so
+
 set_domainname_test_SOURCES = set_domainname_test.c
 set_domainname_test_LDADD = libstr.la ../../libpromises/libpromises.la
 
@@ -139,19 +151,11 @@ if HAVE_AVAHI_COMMON
 
 findhub_test_SOURCES = findhub_test.c ../../cf-agent/findhub.c ../../cf-agent/load_avahi.c
 
-if HAVE_NOVA
-avahi_config_test_SOURCES = avahi_config_test.c \
-	../../cf-serverd/server_common.c ../../cf-serverd/server_tls.c ../../cf-serverd/server.c \
-	../../cf-serverd/server_transform.c \
-	../../cf-serverd/cf-serverd-enterprise-stubs.c
-avahi_config_test_LDADD = libtest.la ../../nova/libcfserverd/libcfserverd.la
-else
 avahi_config_test_SOURCES = avahi_config_test.c \
 	../../cf-serverd/server_common.c ../../cf-serverd/server_tls.c ../../cf-serverd/server.c \
 	../../cf-serverd/server_transform.c \
 	../../cf-serverd/cf-serverd-enterprise-stubs.c
 avahi_config_test_LDADD = ../../libpromises/libpromises.la libtest.la
-endif
 
 endif
 endif
@@ -177,16 +181,12 @@ dbm_migration_bundles_test_SOURCES = dbm_migration_bundles_test.c
 dbm_migration_bundles_test_LDADD = libdb.la
 
 
-CLEANFILES = *.gcno *.gcda
+CLEANFILES = *.gcno *.gcda cfengine-enterprise.so
 
 package_versions_compare_test_SOURCES = package_versions_compare_test.c ../../cf-agent/verify_packages.c ../../cf-agent/vercmp.c ../../cf-agent/vercmp_internal.c ../../cf-agent/retcode.c
 
 package_versions_compare_test_CPPFLAGS = $(AM_CPPFLAGS)
 package_versions_compare_test_LDADD = ../../libpromises/libpromises.la libtest.la
-if HAVE_NOVA
-package_versions_compare_test_CPPFLAGS += -I$(abs_top_srcdir)/nova/libcfagent
-package_versions_compare_test_LDADD += ../../nova/libcfagent/libcfagent.la
-endif
 
 sort_test_SOURCES = sort_test.c ../../libpromises/sort.c
 sort_test_LDADD = libtest.la
@@ -198,7 +198,7 @@ logging_timestamp_test_SOURCES = logging_timestamp_test.c ../../libutils/logging
 logging_timestamp_test_LDADD = libtest.la ../../libutils/libutils.la
 
 connection_management_test_SOURCES = connection_management_test.c ../../cf-serverd/server_common.c ../../cf-serverd/server_tls.c ../../cf-serverd/server.c
-connection_management_test_LDADD = ../../libpromises/libpromises.la libtest.la
+connection_management_test_LDADD = ../../libpromises/libpromises.la libtest.la ../../cf-serverd/libcf-serverd.la
 
 rlist_test_SOURCES = rlist_test.c \
        ../../libpromises/rlist.c ../../libutils/logging.c

@@ -22,19 +22,15 @@
   included file COSL.txt.
 */
 
-#include "files_names.h"
+#include <files_names.h>
 
-#include "policy.h"
-#include "promises.h"
-#include "cf3.defs.h"
-#include "dir.h"
-#include "item_lib.h"
-#include "files_interfaces.h"
-#include "string_lib.h"
-
-#ifdef HAVE_NOVA
-# include "cf.nova.h"
-#endif
+#include <policy.h>
+#include <promises.h>
+#include <cf3.defs.h>
+#include <dir.h>
+#include <item_lib.h>
+#include <files_interfaces.h>
+#include <string_lib.h>
 
 
 /*********************************************************************/

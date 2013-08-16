@@ -25,7 +25,7 @@
 #ifndef CFENGINE_ENV_MONITOR_H
 #define CFENGINE_ENV_MONITOR_H
 
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
 extern double FORGETRATE;
 

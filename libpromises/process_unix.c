@@ -22,10 +22,10 @@
   included file COSL.txt.
 */
 
-#include "cf3.defs.h"
-#include "process_lib.h"
-#include "process_unix_priv.h"
-#include "misc_lib.h"
+#include <cf3.defs.h>
+#include <process_lib.h>
+#include <process_unix_priv.h>
+#include <misc_lib.h>
 
 #define SLEEP_POLL_TIMEOUT_NS 10000000
 

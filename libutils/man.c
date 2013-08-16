@@ -22,9 +22,9 @@
   included file COSL.txt.
 */
 
-#include "man.h"
+#include <man.h>
 
-#include "string_lib.h"
+#include <string_lib.h>
 
 #include <time.h>
 

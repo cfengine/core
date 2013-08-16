@@ -22,14 +22,14 @@
   included file COSL.txt.
 */
 
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
-#include "dbm_api.h"
-#include "dbm_priv.h"
-#include "dbm_migration.h"
-#include "atexit.h"
-#include "logging.h"
-#include "misc_lib.h"
+#include <dbm_api.h>
+#include <dbm_priv.h>
+#include <dbm_migration.h>
+#include <atexit.h>
+#include <logging.h>
+#include <misc_lib.h>
 
 
 static int DBPathLock(const char *filename);

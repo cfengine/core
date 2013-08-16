@@ -22,10 +22,10 @@
   included file COSL.txt.
 */
 
-#include "set.h"
+#include <set.h>
 
-#include "alloc.h"
-#include "string_lib.h"
+#include <alloc.h>
+#include <string_lib.h>
 
 TYPED_SET_DEFINE(String, char *, (MapHashFn)&StringHash, (MapKeyEqualFn)&StringSafeEqual, &free)
 

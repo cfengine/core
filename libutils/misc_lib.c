@@ -22,10 +22,10 @@
   included file COSL.txt.
 */
 
-#include "misc_lib.h"
+#include <misc_lib.h>
 
-#include "platform.h"
-#include "alloc.h"
+#include <platform.h>
+#include <alloc.h>
 
 #include <stdarg.h>
 

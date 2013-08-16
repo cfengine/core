@@ -1,8 +1,8 @@
-#include "test.h"
-#include "rb-tree.h"
+#include <test.h>
+#include <rb-tree.h>
 
-#include "alloc.h"
-#include "sequence.h"
+#include <alloc.h>
+#include <sequence.h>
 
 #include <stdlib.h>
 

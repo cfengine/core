@@ -25,7 +25,7 @@
 #ifndef CFENGINE_ADDR_LIB_H
 #define CFENGINE_ADDR_LIB_H
 
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
 bool IsLoopbackAddress(const char *address);
 int FuzzySetMatch(const char *s1, const char *s2);

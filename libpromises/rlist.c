@@ -22,19 +22,19 @@
   included file COSL.txt.
 */
 
-#include "rlist.h"
+#include <rlist.h>
 
-#include "files_names.h"
-#include "conversion.h"
-#include "expand.h"
-#include "matching.h"
-#include "scope.h"
-#include "fncall.h"
-#include "string_lib.h"
-#include "mutex.h"
-#include "misc_lib.h"
-#include "assoc.h"
-#include "env_context.h"
+#include <files_names.h>
+#include <conversion.h>
+#include <expand.h>
+#include <matching.h>
+#include <scope.h>
+#include <fncall.h>
+#include <string_lib.h>
+#include <mutex.h>
+#include <misc_lib.h>
+#include <assoc.h>
+#include <env_context.h>
 
 
 static Rlist *RlistPrependRval(Rlist **start, Rval rval);

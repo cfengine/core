@@ -1,9 +1,9 @@
 #ifndef CFENGINE_VARIABLE_H
 #define CFENGINE_VARIABLE_H
 
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
-#include "var_expressions.h"
+#include <var_expressions.h>
 
 typedef struct
 {

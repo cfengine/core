@@ -25,8 +25,8 @@
 #ifndef CFENGINE_EXEC_TOOLS_H
 #define CFENGINE_EXEC_TOOLS_H
 
-#include "platform.h"
-#include "cf3.defs.h"
+#include <platform.h>
+#include <cf3.defs.h>
 
 int IsExecutable(const char *file);
 bool ShellCommandReturnsZero(const char *command, ShellType shell);

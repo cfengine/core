@@ -27,7 +27,6 @@ check_PROGRAMS = \
 	assoc_test \
 	atexit_test \
 	csv_writer_test \
-	enterprise_extension_test \
 	item_test \
 	rlist_test \
 	domainname_test \

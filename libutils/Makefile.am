@@ -27,6 +27,7 @@ libutils_la_SOURCES = \
 	misc_lib.c misc_lib.h \
 	writer.c writer.h \
 	csv_writer.c csv_writer.h \
+	csv_parser.c csv_parser.h \
 	xml_writer.c xml_writer.h \
 	file_lib.c file_lib.h \
 	man.c man.h \

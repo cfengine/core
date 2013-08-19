@@ -135,6 +135,9 @@ JsonElement *JsonRealCreate(double value);
 JsonElement *JsonBoolCreate(bool value);
 JsonElement *JsonNullCreate();
 
+JsonElement *JsonCopy(const JsonElement *json);
+int JsonCompare(const JsonElement *a, const JsonElement *b);
+
 /**
   @brief Destroy a JSON element
   @param element [in] The JSON element to destroy.

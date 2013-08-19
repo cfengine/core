@@ -1,0 +1,186 @@
+{
+    "bundles": [
+        {
+            "sourcePath": "tests/unit/data/benchmark.cf",
+            "line": 9,
+            "namespace": "default",
+            "name": "main",
+            "bundleType": "agent",
+            "arguments": [],
+            "promiseTypes": [
+                {
+                    "line": 11,
+                    "name": "reports",
+                    "contexts": [
+                        {
+                            "name": "cfengine",
+                            "promises": [
+                                {
+                                    "line": 13,
+                                    "promiser": "Hello, CFEngine",
+                                    "attributes": [
+                                        {
+                                            "line": 14,
+                                            "lval": "friend_pattern",
+                                            "rval": {
+                                                "type": "functionCall",
+                                                "name": "hash",
+                                                "arguments": [
+                                                    {
+                                                        "type": "string",
+                                                        "value": "abc"
+                                                    },
+                                                    {
+                                                        "type": "string",
+                                                        "value": "md5"
+                                                    }
+                                                ]
+                                            }
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "name": "any",
+                            "promises": [
+                                {
+                                    "line": 16,
+                                    "promiser": "Hello, world",
+                                    "attributes": [
+                                        {
+                                            "line": 17,
+                                            "lval": "friend_pattern",
+                                            "rval": {
+                                                "type": "functionCall",
+                                                "name": "hash",
+                                                "arguments": [
+                                                    {
+                                                        "type": "string",
+                                                        "value": "abc"
+                                                    },
+                                                    {
+                                                        "type": "string",
+                                                        "value": "md5"
+                                                    }
+                                                ]
+                                            }
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "line": 19,
+                    "name": "files",
+                    "contexts": [
+                        {
+                            "name": "any",
+                            "promises": [
+                                {
+                                    "line": 20,
+                                    "promiser": "/tmp/stuff",
+                                    "promisee": [
+                                        "stakeholder"
+                                    ],
+                                    "attributes": [
+                                        {
+                                            "line": 21,
+                                            "lval": "create",
+                                            "rval": {
+                                                "type": "string",
+                                                "value": "true"
+                                            }
+                                        },
+                                        {
+                                            "line": 22,
+                                            "lval": "perms",
+                                            "rval": {
+                                                "type": "symbol",
+                                                "value": "myperms"
+                                            }
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "line": 24,
+                    "name": "processes",
+                    "contexts": [
+                        {
+                            "name": "any",
+                            "promises": [
+                                {
+                                    "line": 25,
+                                    "promiser": "/bin/stuff",
+                                    "promisee": [
+                                        "stakeholder"
+                                    ],
+                                    "attributes": []
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
+    "bodies": [
+        {
+            "sourcePath": "tests/unit/data/benchmark.cf",
+            "line": 4,
+            "namespace": "default",
+            "name": "control",
+            "bodyType": "common",
+            "arguments": [],
+            "contexts": [
+                {
+                    "name": "any",
+                    "attributes": [
+                        {
+                            "line": 6,
+                            "lval": "bundlesequence",
+                            "rval": {
+                                "type": "list",
+                                "value": [
+                                    {
+                                        "type": "string",
+                                        "value": "main"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "sourcePath": "tests/unit/data/benchmark.cf",
+            "line": 28,
+            "namespace": "default",
+            "name": "myperms",
+            "bodyType": "perms",
+            "arguments": [],
+            "contexts": [
+                {
+                    "name": "any",
+                    "attributes": [
+                        {
+                            "line": 30,
+                            "lval": "mode",
+                            "rval": {
+                                "type": "string",
+                                "value": "555"
+                            }
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

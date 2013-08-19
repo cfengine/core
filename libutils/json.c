@@ -104,6 +104,208 @@ static JsonElement *JsonElementCreatePrimitive(JsonPrimitiveType primitiveType,
     return element;
 }
 
+static JsonElement *JsonArrayCopy(const JsonElement *array)
+{
+    assert(array->type == JSON_ELEMENT_TYPE_CONTAINER);
+    assert(array->container.type == JSON_CONTAINER_TYPE_ARRAY);
+
+    JsonElement *copy = JsonArrayCreate(JsonElementLength(array));
+
+    JsonIterator iter = JsonIteratorInit(array);
+    const JsonElement *child = NULL;
+    while ((child = JsonIteratorNextValue(&iter)))
+    {
+        JsonArrayAppendElement(copy, JsonCopy(child));
+    }
+
+    return copy;
+}
+
+static JsonElement *JsonObjectCopy(const JsonElement *object)
+{
+    assert(object->type == JSON_ELEMENT_TYPE_CONTAINER);
+    assert(object->container.type == JSON_CONTAINER_TYPE_OBJECT);
+
+    JsonElement *copy = JsonObjectCreate(JsonElementLength(object));
+
+    JsonIterator iter = JsonIteratorInit(object);
+    const JsonElement *child = NULL;
+    while ((child = JsonIteratorNextValue(&iter)))
+    {
+        JsonObjectAppendElement(copy, JsonIteratorCurrentKey(&iter), JsonCopy(child));
+    }
+
+    return copy;
+}
+
+
+static JsonElement *JsonContainerCopy(const JsonElement *container)
+{
+    assert(container->type == JSON_ELEMENT_TYPE_CONTAINER);
+    switch (container->container.type)
+    {
+    case JSON_CONTAINER_TYPE_ARRAY:
+        return JsonArrayCopy(container);
+
+    case JSON_CONTAINER_TYPE_OBJECT:
+        return JsonObjectCopy(container);
+    }
+
+    assert(false);
+    return NULL;
+}
+
+static JsonElement *JsonPrimitiveCopy(const JsonElement *primitive)
+{
+    assert(primitive->type == JSON_ELEMENT_TYPE_PRIMITIVE);
+    switch (primitive->primitive.type)
+    {
+    case JSON_PRIMITIVE_TYPE_BOOL:
+        return JsonBoolCreate(JsonPrimitiveGetAsBool(primitive));
+
+    case JSON_PRIMITIVE_TYPE_INTEGER:
+        return JsonIntegerCreate(JsonPrimitiveGetAsInteger(primitive));
+
+    case JSON_PRIMITIVE_TYPE_NULL:
+        return JsonNullCreate();
+
+    case JSON_PRIMITIVE_TYPE_REAL:
+        return JsonRealCreate(JsonPrimitiveGetAsReal(primitive));
+
+    case JSON_PRIMITIVE_TYPE_STRING:
+        return JsonStringCreate(JsonPrimitiveGetAsString(primitive));
+    }
+
+    assert(false);
+    return NULL;
+}
+
+JsonElement *JsonCopy(const JsonElement *element)
+{
+    switch (element->type)
+    {
+    case JSON_ELEMENT_TYPE_CONTAINER:
+        return JsonContainerCopy(element);
+    case JSON_ELEMENT_TYPE_PRIMITIVE:
+        return JsonPrimitiveCopy(element);
+    }
+
+    assert(false);
+    return NULL;
+}
+
+static int JsonArrayCompare(const JsonElement *a, const JsonElement *b)
+{
+    assert(a->type == JSON_ELEMENT_TYPE_CONTAINER);
+    assert(a->container.type == JSON_CONTAINER_TYPE_ARRAY);
+    assert(b->type == JSON_ELEMENT_TYPE_CONTAINER);
+    assert(b->container.type == JSON_CONTAINER_TYPE_ARRAY);
+
+    int ret = JsonElementLength(a) - JsonElementLength(b);
+    if (ret != 0)
+    {
+        return ret;
+    }
+
+    JsonIterator iter_a = JsonIteratorInit(a);
+    JsonIterator iter_b = JsonIteratorInit(a);
+
+    for (size_t i = 0; i < JsonElementLength(a); i++)
+    {
+        const JsonElement *child_a = JsonIteratorNextValue(&iter_a);
+        const JsonElement *child_b = JsonIteratorNextValue(&iter_b);
+
+        ret = JsonCompare(child_a, child_b);
+        if (ret != 0)
+        {
+            return ret;
+        }
+    }
+
+    return ret;
+}
+
+static int JsonObjectCompare(const JsonElement *a, const JsonElement *b)
+{
+    assert(a->type == JSON_ELEMENT_TYPE_CONTAINER);
+    assert(a->container.type == JSON_CONTAINER_TYPE_OBJECT);
+    assert(b->type == JSON_ELEMENT_TYPE_CONTAINER);
+    assert(b->container.type == JSON_CONTAINER_TYPE_OBJECT);
+
+    int ret = JsonElementLength(a) - JsonElementLength(b);
+    if (ret != 0)
+    {
+        return ret;
+    }
+
+    JsonIterator iter_a = JsonIteratorInit(a);
+    JsonIterator iter_b = JsonIteratorInit(a);
+
+    for (size_t i = 0; i < JsonElementLength(a); i++)
+    {
+        const JsonElement *child_a = JsonIteratorNextValue(&iter_a);
+        const JsonElement *child_b = JsonIteratorNextValue(&iter_b);
+
+        ret = strcmp(JsonIteratorCurrentKey(&iter_a), JsonIteratorCurrentKey(&iter_b));
+        if (ret != 0)
+        {
+            return ret;
+        }
+
+        ret = JsonCompare(child_a, child_b);
+        if (ret != 0)
+        {
+            return ret;
+        }
+    }
+
+    return ret;
+}
+
+
+static int JsonContainerCompare(const JsonElement *a, const JsonElement *b)
+{
+    assert(a->type == JSON_ELEMENT_TYPE_CONTAINER);
+    assert(b->type == JSON_ELEMENT_TYPE_CONTAINER);
+
+    if (a->container.type != b->container.type)
+    {
+        return a->container.type - b->container.type;
+    }
+
+    switch (a->container.type)
+    {
+    case JSON_CONTAINER_TYPE_ARRAY:
+        return JsonArrayCompare(a, b);
+
+    case JSON_CONTAINER_TYPE_OBJECT:
+        return JsonObjectCompare(a, b);
+    }
+
+    assert(false);
+    return -1;
+}
+
+int JsonCompare(const JsonElement *a, const JsonElement *b)
+{
+    if (a->type != b->type)
+    {
+        return a->type - b->type;
+    }
+
+    switch (a->type)
+    {
+    case JSON_ELEMENT_TYPE_CONTAINER:
+        return JsonContainerCompare(a, b);
+    case JSON_ELEMENT_TYPE_PRIMITIVE:
+        return strcmp(a->primitive.value, b->primitive.value);
+    }
+
+    assert(false);
+    return -1;
+}
+
+
 void JsonElementDestroy(JsonElement *element)
 {
     assert(element);

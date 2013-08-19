@@ -1,5 +1,7 @@
 #include <test.h>
+
 #include <json.h>
+#include <files_lib.h>
 
 #include <float.h>
 
@@ -23,6 +25,28 @@ static const char *ARRAY_SIMPLE = "[\n" "  \"one\",\n" "  \"two\"\n" "]";
 static const char *ARRAY_NUMERIC = "[\n" "  123,\n" "  123.1234\n" "]";
 
 static const char *ARRAY_OBJECT = "[\n" "  {\n" "    \"first\": \"one\"\n" "  }\n" "]";
+
+static JsonElement *LoadTestFile(const char *filename)
+{
+    char path[1024];
+    sprintf(path, "%s/%s", TESTDATADIR, filename);
+
+    char *contents = NULL;
+    if (FileReadMax(&contents, path, SIZE_MAX) == -1)
+    {
+        free(contents);
+        return NULL;
+    }
+    JsonElement *json = NULL;
+    const char *data = contents; // TODO: need to fix JSON parser signature, just silly
+    if (JsonParse(&data, &json) != JSON_PARSE_OK)
+    {
+        free(contents);
+        return NULL;
+    }
+
+    return json;
+}
 
 static void test_new_delete(void)
 {
@@ -391,6 +415,20 @@ static void test_array_iterator(void)
     }
 
     JsonElementDestroy(arr);
+}
+
+static void test_copy_compare(void)
+{
+    JsonElement *bench = LoadTestFile("benchmark.json");
+    assert_true(bench != NULL);
+
+    JsonElement *copy = JsonCopy(bench);
+    assert_true(copy != NULL);
+
+    assert_int_equal(0, JsonCompare(copy, bench));
+
+    JsonElementDestroy(bench);
+    JsonElementDestroy(copy);
 }
 
 static void test_parse_object_simple(void)
@@ -929,6 +967,7 @@ int main()
         unit_test(test_iterator_current),
         unit_test(test_array_get_string),
         unit_test(test_array_iterator),
+        unit_test(test_copy_compare),
         unit_test(test_parse_object_simple),
         unit_test(test_parse_array_simple),
         unit_test(test_parse_object_compound),
@@ -948,7 +987,7 @@ int main()
         unit_test(test_array_remove_range),
         unit_test(test_remove_key_from_object),
         unit_test(test_detach_key_from_object),
-        unit_test(test_parse_object_escaped)
+        unit_test(test_parse_object_escaped),
     };
 
     return run_tests(tests);

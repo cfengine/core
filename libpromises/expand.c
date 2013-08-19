@@ -50,8 +50,8 @@ static void ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp, Rlist *listv
 static void ExpandAndMapIteratorsFromScalar(EvalContext *ctx, const char *scope, Rlist **list_vars_out, Rlist **scalar_vars_out,
                                             Rlist **full_expansion, const char *string, size_t length, int level);
 static void SetAnyMissingDefaults(EvalContext *ctx, Promise *pp);
-static void CopyLocalizedIteratorsToBundleScope(EvalContext *ctx, const Bundle *bundle, const Rlist *listvars);
-static void CopyLocalizedScalarsToBundleScope(EvalContext *ctx, const Bundle *bundle, const Rlist *scalars);
+static void CopyLocalizedReferencesToBundleScope(EvalContext *ctx, const Bundle *bundle, const Rlist *ref_names);
+
 /*
 
 Expanding variables is easy -- expanding lists automagically requires
@@ -134,8 +134,8 @@ void ExpandPromise(EvalContext *ctx, Promise *pp, PromiseActuator *ActOnPromise,
         MapIteratorsFromRval(ctx, PromiseGetBundle(pp)->name, &listvars, &scalars, cp->rval);
     }
 
-    CopyLocalizedIteratorsToBundleScope(ctx, PromiseGetBundle(pp), listvars);
-    CopyLocalizedScalarsToBundleScope(ctx, PromiseGetBundle(pp), scalars);
+    CopyLocalizedReferencesToBundleScope(ctx, PromiseGetBundle(pp), listvars);
+    CopyLocalizedReferencesToBundleScope(ctx, PromiseGetBundle(pp), scalars);
 
     ExpandPromiseAndDo(ctx, pcopy, listvars, ActOnPromise, param);
 
@@ -918,52 +918,47 @@ Rval EvaluateFinalRval(EvalContext *ctx, const char *ns, const char *scope, Rval
 
 /*********************************************************************/
 
-static void CopyLocalizedIteratorsToBundleScope(EvalContext *ctx, const Bundle *bundle, const Rlist *listvars)
+static void CopyLocalizedReferencesToBundleScope(EvalContext *ctx, const Bundle *bundle, const Rlist *ref_names)
 {
-    for (const Rlist *rp = listvars; rp != NULL; rp = rp->next)
+    for (const Rlist *rp = ref_names; rp != NULL; rp = rp->next)
     {
-        const char *mangled = rp->item;
+        const char *mangled = RlistScalarValue(rp);
 
         if (strchr(rp->item, CF_MAPPEDLIST))
         {
             VarRef *demangled_ref = VarRefDeMangle(mangled);
 
             Rval retval;
-            if (EvalContextVariableGet(ctx, demangled_ref, &retval, NULL))
+            DataType type;
+            if (!EvalContextVariableGet(ctx, demangled_ref, &retval, &type))
             {
-                Rlist *list = RvalCopy((Rval) {retval.item, RVAL_TYPE_LIST}).item;
-                RlistFlatten(ctx, &list);
-
-                VarRef *mangled_ref = VarRefParseFromBundle(mangled, bundle);
-                EvalContextVariablePut(ctx, mangled_ref, (Rval) { list, RVAL_TYPE_LIST }, DATA_TYPE_STRING_LIST);
-                VarRefDestroy(mangled_ref);
+                ProgrammingError("Couldn't find extracted variable '%s'", mangled);
             }
 
-            VarRefDestroy(demangled_ref);
-        }
-    }
-}
+            VarRef *mangled_ref = VarRefParseFromBundle(mangled, bundle);
 
-/*********************************************************************/
-
-static void CopyLocalizedScalarsToBundleScope(EvalContext *ctx, const Bundle *bundle, const Rlist *scalars)
-{
-    for (const Rlist *rp = scalars; rp != NULL; rp = rp->next)
-    {
-        const char *mangled = rp->item;
-
-        if (strchr(rp->item, CF_MAPPEDLIST))
-        {
-            VarRef *demangled_ref = VarRefDeMangle(mangled);
-
-            Rval retval;
-            if (EvalContextVariableGet(ctx, demangled_ref, &retval, NULL))
+            switch (retval.type)
             {
-                VarRef *mangled_ref = VarRefParseFromBundle(mangled, bundle);
-                EvalContextVariablePut(ctx, mangled_ref, (Rval) { retval.item, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
-                VarRefDestroy(mangled_ref);
+            case RVAL_TYPE_LIST:
+                {
+
+                    Rlist *list = RvalCopy((Rval) {retval.item, RVAL_TYPE_LIST}).item;
+                    RlistFlatten(ctx, &list);
+
+                    EvalContextVariablePut(ctx, mangled_ref, (Rval) { list, RVAL_TYPE_LIST }, type);
+                }
+                break;
+
+            case RVAL_TYPE_SCALAR:
+                EvalContextVariablePut(ctx, mangled_ref, retval, type);
+                break;
+
+            case RVAL_TYPE_FNCALL:
+            case RVAL_TYPE_NOPROMISEE:
+                ProgrammingError("Illegal rval type in switch %d", retval.type);
             }
 
+            VarRefDestroy(mangled_ref);
             VarRefDestroy(demangled_ref);
         }
     }

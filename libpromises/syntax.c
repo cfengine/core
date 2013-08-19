@@ -856,14 +856,6 @@ int CheckParseVariableName(const char *name)
 
 /****************************************************************************/
 
-bool IsDataType(const char *s)
-{
-    return strcmp(s, "string") == 0 || strcmp(s, "slist") == 0 ||
-        strcmp(s, "int") == 0 || strcmp(s, "ilist") == 0 || strcmp(s, "real") == 0 || strcmp(s, "rlist") == 0;
-}
-
-/****************************************************************************/
-
 static SyntaxTypeMatch CheckFnCallType(const char *s, DataType dtype)
 {
     DataType dt;

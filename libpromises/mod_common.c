@@ -168,7 +168,7 @@ static bool VarsParseTreeCheck(const Promise *pp, Seq *errors)
         {
             Constraint *cp = SeqAt(pp->conlist, i);
 
-            if (IsDataType(cp->lval))
+            if (DataTypeFromString(cp->lval) != DATA_TYPE_NONE)
             {
                 if (data_type != NULL)
                 {

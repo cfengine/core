@@ -13,6 +13,8 @@ AM_CFLAGS = @CFLAGS@ \
 
 AM_YFLAGS = -d
 
+if AIX AM_YFLAGS = -d -Wnone
+
 libpromises_la_LIBADD = ../libutils/libutils.la ../libcfnet/libcfnet.la $(ENTERPRISE_LDADD)
 
 libpromises_la_SOURCES = \

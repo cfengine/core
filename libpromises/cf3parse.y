@@ -872,7 +872,7 @@ class:                 CLASS
                            ParserDebug("\tP:%s:%s:%s:%s class = %s\n", P.block, P.blocktype, P.blockid, P.currenttype, yytext);
 
                            /* class literal includes terminating :: */
-                           char *literal = xstrndup(yytext, yylen - 2);
+                           char *literal = xstrndup(yytext, strlen(yytext) - 2);
 
                            ValidateClassLiteral(literal);
 

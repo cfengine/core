@@ -12,8 +12,6 @@ AM_LDFLAGS = -version-info 3:5:0 -no-undefined
 
 libpromises_la_LIBADD = ../libutils/libutils.la ../libcfnet/libcfnet.la $(NOVA_LDADD)
 
-if AIX AM_YFLAGS = -d -Wnone
-
 libpromises_la_SOURCES = \
         cf3parse.y cf3parse.h \
         cf3lex.l \

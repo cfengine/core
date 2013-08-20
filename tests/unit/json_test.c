@@ -364,22 +364,28 @@ static void test_object_iterator(void)
     {
         JsonIterator it = JsonIteratorInit(obj);
 
+        assert_true(JsonIteratorHasMore(&it));
         assert_string_equal("first", JsonIteratorNextKey(&it));
         assert_string_equal("second", JsonIteratorNextKey(&it));
         assert_string_equal("third", JsonIteratorNextKey(&it));
         assert_string_equal("fourth", JsonIteratorNextKey(&it));
+        assert_true(JsonIteratorHasMore(&it));
         assert_string_equal("fifth", JsonIteratorNextKey(&it));
+        assert_false(JsonIteratorHasMore(&it));
         assert_false(JsonIteratorNextKey(&it));
     }
 
     {
         JsonIterator it = JsonIteratorInit(obj);
 
+        assert_true(JsonIteratorHasMore(&it));
         assert_string_equal("one", JsonPrimitiveGetAsString(JsonIteratorNextValue(&it)));
         assert_string_equal("two", JsonPrimitiveGetAsString(JsonIteratorNextValue(&it)));
         assert_int_equal(3, JsonPrimitiveGetAsInteger(JsonIteratorNextValue(&it)));
         assert_true(JsonPrimitiveGetAsBool(JsonIteratorNextValue(&it)));
+        assert_true(JsonIteratorHasMore(&it));
         assert_false(JsonPrimitiveGetAsBool(JsonIteratorNextValue(&it)));
+        assert_false(JsonIteratorHasMore(&it));
         assert_false(JsonIteratorNextValue(&it));
     }
 
@@ -409,8 +415,11 @@ static void test_array_iterator(void)
     {
         JsonIterator it = JsonIteratorInit(arr);
 
+        assert_true(JsonIteratorHasMore(&it));
         assert_string_equal("first", JsonPrimitiveGetAsString(JsonIteratorNextValue(&it)));
+        assert_true(JsonIteratorHasMore(&it));
         assert_string_equal("second", JsonPrimitiveGetAsString(JsonIteratorNextValue(&it)));
+        assert_false(JsonIteratorHasMore(&it));
         assert_false(JsonIteratorNextValue(&it));
     }
 

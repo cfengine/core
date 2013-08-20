@@ -437,6 +437,13 @@ JsonPrimitiveType JsonIteratorCurrentPrimitiveType(JsonIterator *iter)
     return child->primitive.type;
 }
 
+bool JsonIteratorHasMore(const JsonIterator *iter)
+{
+    assert(iter);
+
+    return iter->index < JsonElementLength(iter->container);
+}
+
 JsonElementType JsonGetElementType(const JsonElement *element)
 {
     assert(element);

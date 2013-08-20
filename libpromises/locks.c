@@ -349,15 +349,6 @@ static void LogLockCompletion(char *cflog, int pid, char *str, char *operator, c
     fprintf(fp, "%s:%s:pid=%d:%s:%s\n", buffer, str, pid, operator, operand);
 
     fclose(fp);
-
-    if (stat(cflog, &statbuf) != -1)
-    {
-        if (statbuf.st_size > CFLOGSIZE)
-        {
-            Log(LOG_LEVEL_VERBOSE, "Rotating lock-runlog file");
-            RotateFiles(cflog, 2);
-        }
-    }
 }
 
 static void LocksCleanup(void)

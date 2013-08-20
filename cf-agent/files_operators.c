@@ -299,6 +299,7 @@ static bool SaveItemListCallback(const char *dest_filename, void *param)
         {
             Log(LOG_LEVEL_ERR, "Unable to write into destination file '%s'. (fprintf: %s)",
                 dest_filename, GetErrorStr());
+            fclose(fp);
             return false;
         }
     }

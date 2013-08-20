@@ -100,6 +100,15 @@ bundle agent main
       comment => "Just a pre-defined policy bundled with the package",
       handle => "main_methods_any_init_msg";
 
+      # CFEngine generates internal log files that need to be rotated.
+      # Uncomment the following lines to get a sane default rotation of these files
+      #
+      # "rotate_promise_summary" usebundle => logrotate("@(def.cfe_log_files)", "1m", "10"),
+      #                          comment   => "Rotate log files once their size reach 1MB, keep 10 versions";
+      #
+      # "rotate_outputs"         usebundle => prunedir("@(def.cfe_log_dirs)", "30"),
+      #                          comment   => "Delete outputs/* files older than 30 days";
+
 }
 
 ###############################################################################

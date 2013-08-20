@@ -42,4 +42,13 @@ bundle common def
       comment => "Define modules path",
       handle => "common_def_vars_dir_modules";
 
+      # CFEngine own log files
+      "cfe_log_files"    slist => {
+                                    "$(sys.workdir)/cf3.$(sys.host).runlog",
+                                    "$(sys.workdir)/promise_summary.log"
+                                  };
+
+      "cfe_log_dirs"     slist => {
+                                    "$(sys.workdir)/outputs"
+                                  };
 }

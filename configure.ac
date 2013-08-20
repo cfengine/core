@@ -191,7 +191,10 @@ if test "x$with_postgresql" != "xno"; then
    # pg_config is only for native builds
    if test "x$cross_compiling" = "xno"; then
       if test x`which $PG_CONFIG` != x ; then
-         CPPFLAGS="$CPPFLAGS -I`$PG_CONFIG --includedir`"
+         pg_include_dir=`$PG_CONFIG --includedir`
+         if test -n "$pg_include_dir"; then
+            CPPFLAGS="$CPPFLAGS -I$pg_include_dir"
+         fi
       fi
    fi
 
@@ -218,7 +221,10 @@ if test "x$with_mysql" != "xno"; then
    # mysql_config is only for native builds
    if test "x$cross_compiling" = "xno"; then
       if test x`which $MYSQL_CONFIG` != x ; then
-         CPPFLAGS="$CPPFLAGS `$MYSQL_CONFIG --include`"
+         mysql_include_dir=`$MYSQL_CONFIG --include`
+         if test -n "$mysql_include_dir"; then
+            CPPFLAGS="$CPPFLAGS $mysql_include_dir"
+         fi
       fi
    fi
 
@@ -371,7 +377,10 @@ if test "x$with_libxml2" != xno; then
    # xml2-config is only for native builds
    if test "x$cross_compiling" = "xno"; then
       if test x`which $XML2_CONFIG` != x ; then
-         CPPFLAGS="$CPPFLAGS `$XML2_CONFIG --cflags`"
+         xml2_include_dir=`$XML2_CONFIG --cflags`
+         if test -n "$xml2_include_dir"; then
+            CPPFLAGS="$CPPFLAGS $xml2_include_dir"
+         fi
       fi
    fi
 

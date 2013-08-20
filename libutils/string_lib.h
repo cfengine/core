@@ -37,6 +37,7 @@ void ToLowerStrInplace(char *str);
 long StringToLong(const char *str);
 char *StringFromLong(long number);
 double StringToDouble(const char *str);
+char *StringFromDouble(double number);
 char *NULLStringToEmpty(char *str);
 
 bool IsNumber(const char *name);

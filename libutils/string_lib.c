@@ -25,10 +25,33 @@
 
 #include <platform.h>
 
+
 #include <alloc.h>
 #include <writer.h>
 #include <misc_lib.h>
 
+char *StringVFormat(const char *fmt, va_list ap)
+{
+    char *value;
+    int ret = xvasprintf(&value, fmt, ap);
+    if (ret < 0)
+    {
+        return NULL;
+    }
+    else
+    {
+        return value;
+    }
+}
+
+char *StringFormat(const char *fmt, ...)
+{
+    va_list ap;
+    va_start(ap, fmt);
+    char *res = StringVFormat(fmt, ap);
+    va_end(ap);
+    return res;
+}
 
 unsigned int StringHash(const char *str, unsigned int seed, unsigned int max)
 {
@@ -337,6 +360,11 @@ double StringToDouble(const char *str)
     assert(!*end && "Failed to convert string to double");
 
     return result;
+}
+
+char *StringFromDouble(double number)
+{
+    return StringFormat("%.2f", number);
 }
 
 /*********************************************************************/
@@ -809,29 +837,6 @@ bool StringStartsWith(const char *str, const char *prefix)
         }
     }
     return true;
-}
-
-char *StringVFormat(const char *fmt, va_list ap)
-{
-    char *value;
-    int ret = xvasprintf(&value, fmt, ap);
-    if (ret < 0)
-    {
-        return NULL;
-    }
-    else
-    {
-        return value;
-    }
-}
-
-char *StringFormat(const char *fmt, ...)
-{
-    va_list ap;
-    va_start(ap, fmt);
-    char *res = StringVFormat(fmt, ap);
-    va_end(ap);
-    return res;
 }
 
 char *MemSpan(const char *mem, char c, size_t n)

@@ -254,6 +254,11 @@ static void test_string_to_double(void)
     assert_true(1234.1234 == StringToDouble("1234.1234"));
 }
 
+static void test_string_from_double(void)
+{
+    assert_string_equal("1234.12", StringFromDouble(1234.1234));
+}
+
 static void test_safe_compare(void)
 {
     assert_true(StringSafeCompare(NULL, NULL) == 0);
@@ -506,6 +511,7 @@ int main()
         unit_test(test_string_to_long),
         unit_test(test_string_from_long),
         unit_test(test_string_to_double),
+        unit_test(test_string_from_double),
 
         unit_test(test_safe_compare),
         unit_test(test_safe_equal),

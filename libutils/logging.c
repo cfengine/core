@@ -142,17 +142,19 @@ static const char *LogLevelToColor(LogLevel level)
     }
 }
 
-static void LogToStdout(const char *msg, LogLevel level, bool color)
+static void LogToConsole(const char *msg, LogLevel level, bool color)
 {
+    FILE *output_file = (level <= LOG_LEVEL_WARNING) ? stderr : stdout;
+
     if (LEGACY_OUTPUT)
     {
         if (level >= LOG_LEVEL_VERBOSE)
         {
-            printf("%s> %s\n", VPREFIX, msg);
+            fprintf(stdout, "%s> %s\n", VPREFIX, msg);
         }
         else
         {
-            printf("%s\n", msg);
+            fprintf(stdout, "%s\n", msg);
         }
     }
     else
@@ -173,12 +175,12 @@ static void LogToStdout(const char *msg, LogLevel level, bool color)
 
         if (color)
         {
-            printf("%s%s %8s: %s\x1b[0m\n", LogLevelToColor(level),
-                   formatted_timestamp, string_level, msg);
+            fprintf(output_file, "%s%s %8s: %s\x1b[0m\n", LogLevelToColor(level),
+                    formatted_timestamp, string_level, msg);
         }
         else
         {
-            printf("%s %8s: %s\n", formatted_timestamp, string_level, msg);
+            fprintf(output_file, "%s %8s: %s\n", formatted_timestamp, string_level, msg);
         }
     }
 }
@@ -231,7 +233,7 @@ void VLog(LogLevel level, const char *fmt, va_list ap)
 
     if (level <= lctx->report_level)
     {
-        LogToStdout(hooked_msg, level, lctx->color);
+        LogToConsole(hooked_msg, level, lctx->color);
     }
 
     if (level <= lctx->log_level)

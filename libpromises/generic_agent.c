@@ -1000,7 +1000,7 @@ static Policy *Cf3ParseFile(const GenericAgentConfig *config, const char *input_
 
         policy = PolicyFromJson(json_policy);
 
-        JsonElementDestroy(json_policy);
+        JsonDestroy(json_policy);
         free(contents);
     }
     else

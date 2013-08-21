@@ -156,7 +156,7 @@ static void test_policy_json_to_from(void)
         JsonElement *json = PolicyToJson(original);
         PolicyDestroy(original);
         policy = PolicyFromJson(json);
-        JsonElementDestroy(json);
+        JsonDestroy(json);
     }
     assert_true(policy);
 
@@ -318,7 +318,7 @@ static void test_policy_json_offsets(void)
         }
     }
 
-    JsonElementDestroy(json);
+    JsonDestroy(json);
 }
 
 

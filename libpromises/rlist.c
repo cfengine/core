@@ -905,7 +905,7 @@ void RvalDestroy(Rval rval)
         break;
 
     case RVAL_TYPE_CONTAINER:
-        JsonElementDestroy(RvalContainerValue(rval));
+        JsonDestroy(RvalContainerValue(rval));
         break;
 
     case RVAL_TYPE_NOPROMISEE:

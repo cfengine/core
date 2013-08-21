@@ -1878,7 +1878,7 @@ static Rval RvalFromJson(JsonElement *json_rval)
         JsonElement *json_list = JsonObjectGetAsArray(json_rval, "value");
         Rlist *rlist = NULL;
 
-        for (size_t i = 0; i < JsonElementLength(json_list); i++)
+        for (size_t i = 0; i < JsonLength(json_list); i++)
         {
             Rval list_value = RvalFromJson(JsonArrayGetAsObject(json_list, i));
             RlistAppend(&rlist, list_value.item, list_value.type);
@@ -1892,7 +1892,7 @@ static Rval RvalFromJson(JsonElement *json_rval)
         JsonElement *json_args = JsonObjectGetAsArray(json_rval, "arguments");
         Rlist *args = NULL;
 
-        for (size_t i = 0; i < JsonElementLength(json_args); i++)
+        for (size_t i = 0; i < JsonLength(json_args); i++)
         {
             JsonElement *json_arg = JsonArrayGetAsObject(json_args, i);
             Rval arg = RvalFromJson(json_arg);
@@ -1931,7 +1931,7 @@ static Promise *PromiseTypeAppendPromiseJson(PromiseType *promise_type, JsonElem
     Promise *promise = PromiseTypeAppendPromise(promise_type, promiser, (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, context);
 
     JsonElement *json_attributes = JsonObjectGetAsArray(json_promise, "attributes");
-    for (size_t i = 0; i < JsonElementLength(json_attributes); i++)
+    for (size_t i = 0; i < JsonLength(json_attributes); i++)
     {
         JsonElement *json_attribute = JsonArrayGetAsObject(json_attributes, i);
         PromiseAppendConstraintJson(promise, json_attribute, context);
@@ -1947,14 +1947,14 @@ static PromiseType *BundleAppendPromiseTypeJson(Bundle *bundle, JsonElement *jso
     PromiseType *promise_type = BundleAppendPromiseType(bundle, name);
 
     JsonElement *json_contexts = JsonObjectGetAsArray(json_promise_type, "contexts");
-    for (size_t i = 0; i < JsonElementLength(json_contexts); i++)
+    for (size_t i = 0; i < JsonLength(json_contexts); i++)
     {
         JsonElement *json_context = JsonArrayGetAsObject(json_contexts, i);
 
         const char *context = JsonObjectGetAsString(json_context, "name");
 
         JsonElement *json_context_promises = JsonObjectGetAsArray(json_context, "promises");
-        for (size_t j = 0; j < JsonElementLength(json_context_promises); j++)
+        for (size_t j = 0; j < JsonLength(json_context_promises); j++)
         {
             JsonElement *json_promise = JsonArrayGetAsObject(json_context_promises, j);
             PromiseTypeAppendPromiseJson(promise_type, json_promise, context);
@@ -1974,7 +1974,7 @@ static Bundle *PolicyAppendBundleJson(Policy *policy, JsonElement *json_bundle)
     Rlist *args = NULL;
     {
         JsonElement *json_args = JsonObjectGetAsArray(json_bundle, "arguments");
-        for (size_t i = 0; i < JsonElementLength(json_args); i++)
+        for (size_t i = 0; i < JsonLength(json_args); i++)
         {
             RlistAppendScalar(&args, JsonArrayGetAsString(json_args, i));
         }
@@ -1984,7 +1984,7 @@ static Bundle *PolicyAppendBundleJson(Policy *policy, JsonElement *json_bundle)
 
     {
         JsonElement *json_promise_types = JsonObjectGetAsArray(json_bundle, "promiseTypes");
-        for (size_t i = 0; i < JsonElementLength(json_promise_types); i++)
+        for (size_t i = 0; i < JsonLength(json_promise_types); i++)
         {
             JsonElement *json_promise_type = JsonArrayGetAsObject(json_promise_types, i);
             BundleAppendPromiseTypeJson(bundle, json_promise_type);
@@ -2018,7 +2018,7 @@ static Body *PolicyAppendBodyJson(Policy *policy, JsonElement *json_body)
     Rlist *args = NULL;
     {
         JsonElement *json_args = JsonObjectGetAsArray(json_body, "arguments");
-        for (size_t i = 0; i < JsonElementLength(json_args); i++)
+        for (size_t i = 0; i < JsonLength(json_args); i++)
         {
             RlistAppendScalar(&args, JsonArrayGetAsString(json_args, i));
         }
@@ -2028,14 +2028,14 @@ static Body *PolicyAppendBodyJson(Policy *policy, JsonElement *json_body)
 
     {
         JsonElement *json_contexts = JsonObjectGetAsArray(json_body, "contexts");
-        for (size_t i = 0; i < JsonElementLength(json_contexts); i++)
+        for (size_t i = 0; i < JsonLength(json_contexts); i++)
         {
             JsonElement *json_context = JsonArrayGetAsObject(json_contexts, i);
             const char *context = JsonObjectGetAsString(json_context, "name");
 
             {
                 JsonElement *json_attributes = JsonObjectGetAsArray(json_context, "attributes");
-                for (size_t j = 0; j < JsonElementLength(json_attributes); j++)
+                for (size_t j = 0; j < JsonLength(json_attributes); j++)
                 {
                     JsonElement *json_attribute = JsonArrayGetAsObject(json_attributes, j);
                     BodyAppendConstraintJson(body, json_attribute, context);
@@ -2054,7 +2054,7 @@ Policy *PolicyFromJson(JsonElement *json_policy)
 
     {
         JsonElement *json_bundles = JsonObjectGetAsArray(json_policy, "bundles");
-        for (size_t i = 0; i < JsonElementLength(json_bundles); i++)
+        for (size_t i = 0; i < JsonLength(json_bundles); i++)
         {
             JsonElement *json_bundle = JsonArrayGetAsObject(json_bundles, i);
             PolicyAppendBundleJson(policy, json_bundle);
@@ -2063,7 +2063,7 @@ Policy *PolicyFromJson(JsonElement *json_policy)
 
     {
         JsonElement *json_bodies = JsonObjectGetAsArray(json_policy, "bodies");
-        for (size_t i = 0; i < JsonElementLength(json_bodies); i++)
+        for (size_t i = 0; i < JsonLength(json_bodies); i++)
         {
             JsonElement *json_body = JsonArrayGetAsObject(json_bodies, i);
             PolicyAppendBodyJson(policy, json_body);

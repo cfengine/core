@@ -142,23 +142,13 @@ int JsonCompare(const JsonElement *a, const JsonElement *b);
   @brief Destroy a JSON element
   @param element [in] The JSON element to destroy.
   */
-void JsonElementDestroy(JsonElement *element);
+void JsonDestroy(JsonElement *element);
 
 /**
   @brief Get the length of a JsonElement. This is the number of elements or fields in an array or object respectively.
   @param element [in] The JSON element.
   */
-size_t JsonElementLength(const JsonElement *element);
-
-JsonIterator JsonIteratorInit(const JsonElement *container);
-const char *JsonIteratorNextKey(JsonIterator *iter);
-const JsonElement *JsonIteratorNextValue(JsonIterator *iter);
-const char *JsonIteratorCurrentKey(JsonIterator *iter);
-const JsonElement *JsonIteratorCurrentValue(JsonIterator *iter);
-JsonElementType JsonIteratorCurrentElementType(JsonIterator *iter);
-JsonContainerType JsonIteratorCurrentContainerType(JsonIterator *iter);
-JsonPrimitiveType JsonIteratorCurrentPrimitiveType(JsonIterator *iter);
-bool JsonIteratorHasMore(const JsonIterator *iter);
+size_t JsonLength(const JsonElement *element);
 
 JsonElementType JsonGetElementType(const JsonElement *element);
 
@@ -179,7 +169,7 @@ const char *JsonGetPropertyAsString(const JsonElement *element);
   @param indent_level [in] The nesting level with which the printing should be done. This is mainly to allow the
   function to be called recursively. Clients will normally want to set this to 0.
   */
-void JsonElementPrint(Writer *writer, JsonElement *element, size_t indent_level);
+void JsonWrite(Writer *writer, JsonElement *element, size_t indent_level);
 
 /**
   @brief Append a string field to an object.
@@ -374,5 +364,18 @@ typedef int JsonComparator(const JsonElement *, const JsonElement *, void *user_
 
 void JsonSort(JsonElement *container, JsonComparator *Compare, void *user_data);
 JsonElement *JsonAt(const JsonElement *container, size_t index);
+
+
+JsonIterator JsonIteratorInit(const JsonElement *container);
+const char *JsonIteratorNextKey(JsonIterator *iter);
+const JsonElement *JsonIteratorNextValue(JsonIterator *iter);
+const char *JsonIteratorCurrentKey(const JsonIterator *iter);
+const JsonElement *JsonIteratorCurrentValue(const JsonIterator *iter);
+JsonElementType JsonIteratorCurrentElementType(const JsonIterator *iter);
+JsonContainerType JsonIteratorCurrentContainerType(const JsonIterator *iter);
+JsonPrimitiveType JsonIteratorCurrentPrimitiveType(const JsonIterator *iter);
+bool JsonIteratorHasMore(const JsonIterator *iter);
+
+
 
 #endif

@@ -53,7 +53,7 @@ static void test_new_delete(void)
     JsonElement *json = JsonObjectCreate(10);
 
     JsonObjectAppendString(json, "first", "one");
-    JsonElementDestroy(json);
+    JsonDestroy(json);
 }
 
 static void test_show_string(void)
@@ -62,12 +62,12 @@ static void test_show_string(void)
 
     Writer *writer = StringWriter();
 
-    JsonElementPrint(writer, str, 0);
+    JsonWrite(writer, str, 0);
     char *output = StringWriterClose(writer);
 
     assert_string_equal("\"snookie\"", output);
 
-    JsonElementDestroy(str);
+    JsonDestroy(str);
     free(output);
 }
 
@@ -80,12 +80,12 @@ static void test_show_object_simple(void)
 
     Writer *writer = StringWriter();
 
-    JsonElementPrint(writer, json, 0);
+    JsonWrite(writer, json, 0);
     char *output = StringWriterClose(writer);
 
     assert_string_equal(OBJECT_SIMPLE, output);
 
-    JsonElementDestroy(json);
+    JsonDestroy(json);
     free(output);
 }
 
@@ -97,12 +97,12 @@ static void test_show_object_escaped(void)
 
     Writer *writer = StringWriter();
 
-    JsonElementPrint(writer, json, 0);
+    JsonWrite(writer, json, 0);
     char *output = StringWriterClose(writer);
 
     assert_string_equal(OBJECT_ESCAPED, output);
 
-    JsonElementDestroy(json);
+    JsonDestroy(json);
     free(output);
 }
 
@@ -115,12 +115,12 @@ static void test_show_object_numeric(void)
 
     Writer *writer = StringWriter();
 
-    JsonElementPrint(writer, json, 0);
+    JsonWrite(writer, json, 0);
     char *output = StringWriterClose(writer);
 
     assert_string_equal(OBJECT_NUMERIC, output);
 
-    JsonElementDestroy(json);
+    JsonDestroy(json);
     free(output);
 }
 
@@ -132,12 +132,12 @@ static void test_show_object_boolean(void)
 
     Writer *writer = StringWriter();
 
-    JsonElementPrint(writer, json, 0);
+    JsonWrite(writer, json, 0);
     char *output = StringWriterClose(writer);
 
     assert_string_equal(OBJECT_BOOLEAN, output);
 
-    JsonElementDestroy(json);
+    JsonDestroy(json);
     free(output);
 }
 
@@ -163,12 +163,12 @@ static void test_show_object_compound(void)
 
     Writer *writer = StringWriter();
 
-    JsonElementPrint(writer, json, 0);
+    JsonWrite(writer, json, 0);
     char *output = StringWriterClose(writer);
 
     assert_string_equal(OBJECT_COMPOUND, output);
 
-    JsonElementDestroy(json);
+    JsonDestroy(json);
     free(output);
 }
 
@@ -185,12 +185,12 @@ static void test_show_object_array(void)
 
     Writer *writer = StringWriter();
 
-    JsonElementPrint(writer, json, 0);
+    JsonWrite(writer, json, 0);
     char *output = StringWriterClose(writer);
 
     assert_string_equal(OBJECT_ARRAY, output);
 
-    JsonElementDestroy(json);
+    JsonDestroy(json);
     free(output);
 }
 
@@ -203,12 +203,12 @@ static void test_show_array(void)
 
     Writer *writer = StringWriter();
 
-    JsonElementPrint(writer, array, 0);
+    JsonWrite(writer, array, 0);
     char *output = StringWriterClose(writer);
 
     assert_string_equal(ARRAY_SIMPLE, output);
 
-    JsonElementDestroy(array);
+    JsonDestroy(array);
     free(output);
 }
 
@@ -221,12 +221,12 @@ static void test_show_array_boolean(void)
 
     Writer *writer = StringWriter();
 
-    JsonElementPrint(writer, array, 0);
+    JsonWrite(writer, array, 0);
     char *output = StringWriterClose(writer);
 
     assert_string_equal("[\n" "  true,\n" "  false\n" "]", output);
 
-    JsonElementDestroy(array);
+    JsonDestroy(array);
     free(output);
 }
 
@@ -239,12 +239,12 @@ static void test_show_array_numeric(void)
 
     Writer *writer = StringWriter();
 
-    JsonElementPrint(writer, array, 0);
+    JsonWrite(writer, array, 0);
     char *output = StringWriterClose(writer);
 
     assert_string_equal(ARRAY_NUMERIC, output);
 
-    JsonElementDestroy(array);
+    JsonDestroy(array);
     free(output);
 }
 
@@ -259,12 +259,12 @@ static void test_show_array_object(void)
 
     Writer *writer = StringWriter();
 
-    JsonElementPrint(writer, array, 0);
+    JsonWrite(writer, array, 0);
     char *output = StringWriterClose(writer);
 
     assert_string_equal(ARRAY_OBJECT, output);
 
-    JsonElementDestroy(array);
+    JsonDestroy(array);
     free(output);
 }
 
@@ -274,12 +274,12 @@ static void test_show_array_empty(void)
 
     Writer *writer = StringWriter();
 
-    JsonElementPrint(writer, array, 0);
+    JsonWrite(writer, array, 0);
     char *output = StringWriterClose(writer);
 
     assert_string_equal("[]", output);
 
-    JsonElementDestroy(array);
+    JsonDestroy(array);
     free(output);
 }
 
@@ -290,12 +290,12 @@ static void test_show_array_nan(void)
 
     Writer *writer = StringWriter();
 
-    JsonElementPrint(writer, array, 0);
+    JsonWrite(writer, array, 0);
     char *output = StringWriterClose(writer);
 
     assert_string_equal("[\n  0.0000\n]", output);
 
-    JsonElementDestroy(array);
+    JsonDestroy(array);
     free(output);
 }
 
@@ -310,12 +310,12 @@ static void test_show_array_infinity(void)
 
     Writer *writer = StringWriter();
 
-    JsonElementPrint(writer, array, 0);
+    JsonWrite(writer, array, 0);
     char *output = StringWriterClose(writer);
 
     assert_string_equal("[\n  0.0000\n]", output);
 
-    JsonElementDestroy(array);
+    JsonDestroy(array);
     free(output);
 }
 
@@ -329,7 +329,7 @@ static void test_object_get_string(void)
     assert_string_equal(JsonObjectGetAsString(obj, "second"), "two");
     assert_string_equal(JsonObjectGetAsString(obj, "first"), "one");
 
-    JsonElementDestroy(obj);
+    JsonDestroy(obj);
 }
 
 static void test_object_get_array(void)
@@ -347,7 +347,7 @@ static void test_object_get_array(void)
 
     assert_string_equal(JsonArrayGetAsString(arr2, 1), "two");
 
-    JsonElementDestroy(obj);
+    JsonDestroy(obj);
 }
 
 static void test_object_iterator(void)
@@ -389,7 +389,7 @@ static void test_object_iterator(void)
         assert_false(JsonIteratorNextValue(&it));
     }
 
-    JsonElementDestroy(obj);
+    JsonDestroy(obj);
 }
 
 static void test_array_get_string(void)
@@ -402,7 +402,7 @@ static void test_array_get_string(void)
     assert_string_equal(JsonArrayGetAsString(arr, 1), "second");
     assert_string_equal(JsonArrayGetAsString(arr, 0), "first");
 
-    JsonElementDestroy(arr);
+    JsonDestroy(arr);
 }
 
 static void test_array_iterator(void)
@@ -423,7 +423,7 @@ static void test_array_iterator(void)
         assert_false(JsonIteratorNextValue(&it));
     }
 
-    JsonElementDestroy(arr);
+    JsonDestroy(arr);
 }
 
 static void test_copy_compare(void)
@@ -436,8 +436,8 @@ static void test_copy_compare(void)
 
     assert_int_equal(0, JsonCompare(copy, bench));
 
-    JsonElementDestroy(bench);
-    JsonElementDestroy(copy);
+    JsonDestroy(bench);
+    JsonDestroy(copy);
 }
 
 static void test_parse_object_simple(void)
@@ -450,7 +450,7 @@ static void test_parse_object_simple(void)
     assert_string_equal(JsonObjectGetAsString(obj, "first"), "one");
     assert_int_equal(JsonObjectGetAsString(obj, "third"), NULL);
 
-    JsonElementDestroy(obj);
+    JsonDestroy(obj);
 }
 
 static void test_parse_object_escaped(void)
@@ -470,7 +470,7 @@ static void test_parse_object_escaped(void)
     assert_string_equal(JsonObjectGetAsString(obj, key), escaped_string);
 
     WriterClose(writer);
-    JsonElementDestroy(obj);
+    JsonDestroy(obj);
 }
 
 static void test_parse_array_simple(void)
@@ -482,7 +482,7 @@ static void test_parse_array_simple(void)
     assert_string_equal(JsonArrayGetAsString(arr, 1), "two");
     assert_string_equal(JsonArrayGetAsString(arr, 0), "one");
 
-    JsonElementDestroy(arr);
+    JsonDestroy(arr);
 }
 
 static void test_parse_object_compound(void)
@@ -501,7 +501,7 @@ static void test_parse_object_compound(void)
 
     assert_string_equal(JsonObjectGetAsString(fourth, "fifth"), "five");
 
-    JsonElementDestroy(obj);
+    JsonDestroy(obj);
 }
 
 static void test_parse_object_diverse(void)
@@ -511,7 +511,7 @@ static void test_parse_object_diverse(void)
         JsonElement *json = NULL;
         assert_int_equal(JSON_PARSE_OK, JsonParse(&data, &json));
         assert_true(json);
-        JsonElementDestroy(json);
+        JsonDestroy(json);
     }
 
     {
@@ -519,7 +519,7 @@ static void test_parse_object_diverse(void)
         JsonElement *json = NULL;
         assert_int_equal(JSON_PARSE_OK, JsonParse(&data, &json));
         assert_true(json);
-        JsonElementDestroy(json);
+        JsonDestroy(json);
     }
 }
 
@@ -533,7 +533,7 @@ static void test_parse_array_object(void)
 
     assert_string_equal(JsonObjectGetAsString(first, "first"), "one");
 
-    JsonElementDestroy(arr);
+    JsonDestroy(arr);
 }
 
 static void test_iterator_current(void)
@@ -555,7 +555,7 @@ static void test_iterator_current(void)
         assert_string_equal(JsonIteratorCurrentKey(&it), "array");
     }
 
-    JsonElementDestroy(json);
+    JsonDestroy(json);
 }
 
 static void test_parse_empty(void)
@@ -574,7 +574,7 @@ static void test_parse_good_numbers(void)
         JsonElement *json = NULL;
         assert_int_equal(JSON_PARSE_OK, JsonParse(&data, &json));
         assert_true(json);
-        JsonElementDestroy(json);
+        JsonDestroy(json);
     }
 
     {
@@ -582,7 +582,7 @@ static void test_parse_good_numbers(void)
         JsonElement *json = NULL;
         assert_int_equal(JSON_PARSE_OK, JsonParse(&data, &json));
         assert_true(json);
-        JsonElementDestroy(json);
+        JsonDestroy(json);
     }
 
     {
@@ -590,7 +590,7 @@ static void test_parse_good_numbers(void)
         JsonElement *json = NULL;
         assert_int_equal(JSON_PARSE_OK, JsonParse(&data, &json));
         assert_true(json);
-        JsonElementDestroy(json);
+        JsonDestroy(json);
     }
 
     {
@@ -598,7 +598,7 @@ static void test_parse_good_numbers(void)
         JsonElement *json = NULL;
         assert_int_equal(JSON_PARSE_OK, JsonParse(&data, &json));
         assert_true(json);
-        JsonElementDestroy(json);
+        JsonDestroy(json);
     }
 
     {
@@ -606,7 +606,7 @@ static void test_parse_good_numbers(void)
         JsonElement *json = NULL;
         assert_int_equal(JSON_PARSE_OK, JsonParse(&data, &json));
         assert_true(json);
-        JsonElementDestroy(json);
+        JsonDestroy(json);
     }
 
     {
@@ -614,7 +614,7 @@ static void test_parse_good_numbers(void)
         JsonElement *json = NULL;
         assert_int_equal(JSON_PARSE_OK, JsonParse(&data, &json));
         assert_true(json);
-        JsonElementDestroy(json);
+        JsonDestroy(json);
     }
 
     {
@@ -622,7 +622,7 @@ static void test_parse_good_numbers(void)
         JsonElement *json = NULL;
         assert_int_equal(JSON_PARSE_OK, JsonParse(&data, &json));
         assert_true(json);
-        JsonElementDestroy(json);
+        JsonDestroy(json);
     }
 
     {
@@ -630,7 +630,7 @@ static void test_parse_good_numbers(void)
         JsonElement *json = NULL;
         assert_int_equal(JSON_PARSE_OK, JsonParse(&data, &json));
         assert_true(json);
-        JsonElementDestroy(json);
+        JsonDestroy(json);
     }
 
     {
@@ -638,7 +638,7 @@ static void test_parse_good_numbers(void)
         JsonElement *json = NULL;
         assert_int_equal(JSON_PARSE_OK, JsonParse(&data, &json));
         assert_true(json);
-        JsonElementDestroy(json);
+        JsonDestroy(json);
     }
 
     {
@@ -646,7 +646,7 @@ static void test_parse_good_numbers(void)
         JsonElement *json = NULL;
         assert_int_equal(JSON_PARSE_OK, JsonParse(&data, &json));
         assert_true(json);
-        JsonElementDestroy(json);
+        JsonDestroy(json);
     }
 
     {
@@ -654,7 +654,7 @@ static void test_parse_good_numbers(void)
         JsonElement *json = NULL;
         assert_int_equal(JSON_PARSE_OK, JsonParse(&data, &json));
         assert_true(json);
-        JsonElementDestroy(json);
+        JsonDestroy(json);
     }
 }
 
@@ -717,7 +717,7 @@ static void test_parse_trim(void)
 
     assert_true(json);
 
-    JsonElementDestroy(json);
+    JsonDestroy(json);
 }
 
 static void test_parse_array_extra_closing(void)
@@ -728,7 +728,7 @@ static void test_parse_array_extra_closing(void)
 
     assert_true(json);
 
-    JsonElementDestroy(json);
+    JsonDestroy(json);
 }
 
 static void test_parse_array_diverse(void)
@@ -738,7 +738,7 @@ static void test_parse_array_diverse(void)
         JsonElement *json = NULL;
         assert_int_equal(JSON_PARSE_OK, JsonParse(&data, &json));
         assert_true(json);
-        JsonElementDestroy(json);
+        JsonDestroy(json);
     }
 
     {
@@ -746,7 +746,7 @@ static void test_parse_array_diverse(void)
         JsonElement *json = NULL;
         assert_int_equal(JSON_PARSE_OK, JsonParse(&data, &json));
         assert_true(json);
-        JsonElementDestroy(json);
+        JsonDestroy(json);
     }
 }
 
@@ -866,9 +866,9 @@ static void test_array_remove_range(void)
         JsonArrayAppendString(arr, "three");
         JsonArrayRemoveRange(arr, 0, 2);
 
-        assert_int_equal(JsonElementLength(arr), 0);
+        assert_int_equal(JsonLength(arr), 0);
 
-        JsonElementDestroy(arr);
+        JsonDestroy(arr);
     }
 
     {
@@ -880,11 +880,11 @@ static void test_array_remove_range(void)
         JsonArrayAppendString(arr, "three");
         JsonArrayRemoveRange(arr, 1, 1);
 
-        assert_int_equal(JsonElementLength(arr), 2);
+        assert_int_equal(JsonLength(arr), 2);
         assert_string_equal(JsonArrayGetAsString(arr, 0), "one");
         assert_string_equal(JsonArrayGetAsString(arr, 1), "three");
 
-        JsonElementDestroy(arr);
+        JsonDestroy(arr);
     }
 
     {
@@ -896,10 +896,10 @@ static void test_array_remove_range(void)
         JsonArrayAppendString(arr, "three");
         JsonArrayRemoveRange(arr, 1, 2);
 
-        assert_int_equal(JsonElementLength(arr), 1);
+        assert_int_equal(JsonLength(arr), 1);
         assert_string_equal(JsonArrayGetAsString(arr, 0), "one");
 
-        JsonElementDestroy(arr);
+        JsonDestroy(arr);
     }
 
     {
@@ -911,10 +911,10 @@ static void test_array_remove_range(void)
         JsonArrayAppendString(arr, "three");
         JsonArrayRemoveRange(arr, 0, 1);
 
-        assert_int_equal(JsonElementLength(arr), 1);
+        assert_int_equal(JsonLength(arr), 1);
         assert_string_equal(JsonArrayGetAsString(arr, 0), "three");
 
-        JsonElementDestroy(arr);
+        JsonDestroy(arr);
     }
 }
 
@@ -928,9 +928,9 @@ static void test_remove_key_from_object(void)
 
     JsonObjectRemoveKey(object, "two");
 
-    assert_int_equal(2, JsonElementLength(object));
+    assert_int_equal(2, JsonLength(object));
 
-    JsonElementDestroy(object);
+    JsonDestroy(object);
 }
 
 static void test_detach_key_from_object(void)
@@ -943,11 +943,11 @@ static void test_detach_key_from_object(void)
 
     JsonElement *detached = JsonObjectDetachKey(object, "two");
 
-    assert_int_equal(2, JsonElementLength(object));
-    JsonElementDestroy(object);
+    assert_int_equal(2, JsonLength(object));
+    JsonDestroy(object);
 
-    assert_int_equal(1, JsonElementLength(detached));
-    JsonElementDestroy(detached);
+    assert_int_equal(1, JsonLength(detached));
+    JsonDestroy(detached);
 }
 
 int main()

@@ -137,9 +137,9 @@ int main(int argc, char *argv[])
                                                     config->agent_specific.common.parser_warnings_error);
             JsonElement *json_policy = PolicyToJson(output_policy);
             Writer *writer = FileWriter(stdout);
-            JsonElementPrint(writer, json_policy, 2);
+            JsonWrite(writer, json_policy, 2);
             WriterClose(writer);
-            JsonElementDestroy(json_policy);
+            JsonDestroy(json_policy);
             PolicyDestroy(output_policy);
         }
         break;
@@ -229,9 +229,9 @@ GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             {
                 JsonElement *json_syntax = SyntaxToJson();
                 Writer *out = FileWriter(stdout);
-                JsonElementPrint(out, json_syntax, 0);
+                JsonWrite(out, json_syntax, 0);
                 FileWriterDetach(out);
-                JsonElementDestroy(json_syntax);
+                JsonDestroy(json_syntax);
                 exit(EXIT_SUCCESS);
             }
             else

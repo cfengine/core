@@ -86,7 +86,7 @@ static JsonElement *JsonElementCreateContainer(JsonContainerType containerType, 
     JsonElementSetPropertyName(element, propertyName);
 
     element->container.type = containerType;
-    element->container.children = SeqNew(initialCapacity, JsonElementDestroy);
+    element->container.children = SeqNew(initialCapacity, JsonDestroy);
 
     return element;
 }
@@ -109,7 +109,7 @@ static JsonElement *JsonArrayCopy(const JsonElement *array)
     assert(array->type == JSON_ELEMENT_TYPE_CONTAINER);
     assert(array->container.type == JSON_CONTAINER_TYPE_ARRAY);
 
-    JsonElement *copy = JsonArrayCreate(JsonElementLength(array));
+    JsonElement *copy = JsonArrayCreate(JsonLength(array));
 
     JsonIterator iter = JsonIteratorInit(array);
     const JsonElement *child = NULL;
@@ -126,7 +126,7 @@ static JsonElement *JsonObjectCopy(const JsonElement *object)
     assert(object->type == JSON_ELEMENT_TYPE_CONTAINER);
     assert(object->container.type == JSON_CONTAINER_TYPE_OBJECT);
 
-    JsonElement *copy = JsonObjectCreate(JsonElementLength(object));
+    JsonElement *copy = JsonObjectCreate(JsonLength(object));
 
     JsonIterator iter = JsonIteratorInit(object);
     const JsonElement *child = NULL;
@@ -201,7 +201,7 @@ static int JsonArrayCompare(const JsonElement *a, const JsonElement *b)
     assert(b->type == JSON_ELEMENT_TYPE_CONTAINER);
     assert(b->container.type == JSON_CONTAINER_TYPE_ARRAY);
 
-    int ret = JsonElementLength(a) - JsonElementLength(b);
+    int ret = JsonLength(a) - JsonLength(b);
     if (ret != 0)
     {
         return ret;
@@ -210,7 +210,7 @@ static int JsonArrayCompare(const JsonElement *a, const JsonElement *b)
     JsonIterator iter_a = JsonIteratorInit(a);
     JsonIterator iter_b = JsonIteratorInit(a);
 
-    for (size_t i = 0; i < JsonElementLength(a); i++)
+    for (size_t i = 0; i < JsonLength(a); i++)
     {
         const JsonElement *child_a = JsonIteratorNextValue(&iter_a);
         const JsonElement *child_b = JsonIteratorNextValue(&iter_b);
@@ -232,7 +232,7 @@ static int JsonObjectCompare(const JsonElement *a, const JsonElement *b)
     assert(b->type == JSON_ELEMENT_TYPE_CONTAINER);
     assert(b->container.type == JSON_CONTAINER_TYPE_OBJECT);
 
-    int ret = JsonElementLength(a) - JsonElementLength(b);
+    int ret = JsonLength(a) - JsonLength(b);
     if (ret != 0)
     {
         return ret;
@@ -241,7 +241,7 @@ static int JsonObjectCompare(const JsonElement *a, const JsonElement *b)
     JsonIterator iter_a = JsonIteratorInit(a);
     JsonIterator iter_b = JsonIteratorInit(a);
 
-    for (size_t i = 0; i < JsonElementLength(a); i++)
+    for (size_t i = 0; i < JsonLength(a); i++)
     {
         const JsonElement *child_a = JsonIteratorNextValue(&iter_a);
         const JsonElement *child_b = JsonIteratorNextValue(&iter_b);
@@ -306,7 +306,7 @@ int JsonCompare(const JsonElement *a, const JsonElement *b)
 }
 
 
-void JsonElementDestroy(JsonElement *element)
+void JsonDestroy(JsonElement *element)
 {
     assert(element);
 
@@ -338,7 +338,7 @@ void JsonElementDestroy(JsonElement *element)
     free(element);
 }
 
-size_t JsonElementLength(const JsonElement *element)
+size_t JsonLength(const JsonElement *element)
 {
     assert(element);
 
@@ -377,7 +377,7 @@ const JsonElement *JsonIteratorNextValue(JsonIterator *iter)
     assert(iter);
     assert(iter->container->type == JSON_ELEMENT_TYPE_CONTAINER);
 
-    if (iter->index >= JsonElementLength(iter->container))
+    if (iter->index >= JsonLength(iter->container))
     {
         return NULL;
     }
@@ -385,12 +385,12 @@ const JsonElement *JsonIteratorNextValue(JsonIterator *iter)
     return iter->container->container.children->data[iter->index++];
 }
 
-const JsonElement *JsonIteratorCurrentValue(JsonIterator *iter)
+const JsonElement *JsonIteratorCurrentValue(const JsonIterator *iter)
 {
     assert(iter);
     assert(iter->container->type == JSON_ELEMENT_TYPE_CONTAINER);
 
-    if (iter->index == 0 || iter->index > JsonElementLength(iter->container))
+    if (iter->index == 0 || iter->index > JsonLength(iter->container))
     {
         return NULL;
     }
@@ -398,7 +398,7 @@ const JsonElement *JsonIteratorCurrentValue(JsonIterator *iter)
     return iter->container->container.children->data[(iter->index) - 1];
 }
 
-const char *JsonIteratorCurrentKey(JsonIterator *iter)
+const char *JsonIteratorCurrentKey(const JsonIterator *iter)
 {
     assert(iter);
     assert(iter->container->type == JSON_ELEMENT_TYPE_CONTAINER);
@@ -409,7 +409,7 @@ const char *JsonIteratorCurrentKey(JsonIterator *iter)
     return child ? child->propertyName : NULL;
 }
 
-JsonElementType JsonIteratorCurrentElementType(JsonIterator *iter)
+JsonElementType JsonIteratorCurrentElementType(const JsonIterator *iter)
 {
     assert(iter);
 
@@ -417,7 +417,7 @@ JsonElementType JsonIteratorCurrentElementType(JsonIterator *iter)
     return child->type;
 }
 
-JsonContainerType JsonIteratorCurrentContainerType(JsonIterator *iter)
+JsonContainerType JsonIteratorCurrentContainerType(const JsonIterator *iter)
 {
     assert(iter);
 
@@ -427,7 +427,7 @@ JsonContainerType JsonIteratorCurrentContainerType(JsonIterator *iter)
     return child->container.type;
 }
 
-JsonPrimitiveType JsonIteratorCurrentPrimitiveType(JsonIterator *iter)
+JsonPrimitiveType JsonIteratorCurrentPrimitiveType(const JsonIterator *iter)
 {
     assert(iter);
 
@@ -441,7 +441,7 @@ bool JsonIteratorHasMore(const JsonIterator *iter)
 {
     assert(iter);
 
-    return iter->index < JsonElementLength(iter->container);
+    return iter->index < JsonLength(iter->container);
 }
 
 JsonElementType JsonGetElementType(const JsonElement *element)
@@ -520,7 +520,7 @@ JsonElement *JsonAt(const JsonElement *container, size_t index)
 {
     assert(container);
     assert(container->type == JSON_ELEMENT_TYPE_CONTAINER);
-    assert(index < JsonElementLength(container));
+    assert(index < JsonLength(container));
 
     return container->container.children->data[index];
 }
@@ -988,7 +988,7 @@ static void JsonArrayPrint(Writer *writer, JsonElement *array, size_t indent_lev
     assert(array->type == JSON_ELEMENT_TYPE_CONTAINER);
     assert(array->container.type == JSON_CONTAINER_TYPE_ARRAY);
 
-    if (JsonElementLength(array) == 0)
+    if (JsonLength(array) == 0)
     {
         WriterWrite(writer, "[]");
         return;
@@ -1078,7 +1078,7 @@ static void JsonContainerPrint(Writer *writer, JsonElement *container, size_t in
     }
 }
 
-void JsonElementPrint(Writer *writer, JsonElement *element, size_t indent_level)
+void JsonWrite(Writer *writer, JsonElement *element, size_t indent_level)
 {
     assert(writer);
     assert(element);
@@ -1370,7 +1370,7 @@ static JsonParseError JsonParseAsArray(const char **data, JsonElement **json_out
                 JsonParseError err = JsonParseAsArray(data, &child_array);
                 if (err != JSON_PARSE_OK)
                 {
-                    JsonElementDestroy(array);
+                    JsonDestroy(array);
                     return err;
                 }
                 assert(child_array);
@@ -1385,7 +1385,7 @@ static JsonParseError JsonParseAsArray(const char **data, JsonElement **json_out
                 JsonParseError err = JsonParseAsObject(data, &child_object);
                 if (err != JSON_PARSE_OK)
                 {
-                    JsonElementDestroy(array);
+                    JsonDestroy(array);
                     return err;
                 }
                 assert(child_object);
@@ -1408,7 +1408,7 @@ static JsonParseError JsonParseAsArray(const char **data, JsonElement **json_out
                 JsonParseError err = JsonParseAsNumber(data, &child);
                 if (err != JSON_PARSE_OK)
                 {
-                    JsonElementDestroy(array);
+                    JsonDestroy(array);
                     return err;
                 }
                 assert(child);
@@ -1432,13 +1432,13 @@ static JsonParseError JsonParseAsArray(const char **data, JsonElement **json_out
             }
 
             *json_out = NULL;
-            JsonElementDestroy(array);
+            JsonDestroy(array);
             return JSON_PARSE_ERROR_OBJECT_BAD_SYMBOL;
         }
     }
 
     *json_out = NULL;
-    JsonElementDestroy(array);
+    JsonDestroy(array);
     return JSON_PARSE_ERROR_ARRAY_END;
 }
 
@@ -1470,7 +1470,7 @@ static JsonParseError JsonParseAsObject(const char **data, JsonElement **json_ou
                 if (err != JSON_PARSE_OK)
                 {
                     free(property_name);
-                    JsonElementDestroy(object);
+                    JsonDestroy(object);
                     return err;
                 }
                 assert(property_value);
@@ -1486,7 +1486,7 @@ static JsonParseError JsonParseAsObject(const char **data, JsonElement **json_ou
                 JsonParseError err = JsonParseAsString(data, &property_name);
                 if (err != JSON_PARSE_OK)
                 {
-                    JsonElementDestroy(object);
+                    JsonDestroy(object);
                     return err;
                 }
                 assert(property_name);
@@ -1498,7 +1498,7 @@ static JsonParseError JsonParseAsObject(const char **data, JsonElement **json_ou
             {
                 json_out = NULL;
                 free(property_name);
-                JsonElementDestroy(object);
+                JsonDestroy(object);
                 return JSON_PARSE_ERROR_OBJECT_COLON;
             }
             break;
@@ -1507,7 +1507,7 @@ static JsonParseError JsonParseAsObject(const char **data, JsonElement **json_ou
             if (property_name != NULL)
             {
                 free(property_name);
-                JsonElementDestroy(object);
+                JsonDestroy(object);
                 return JSON_PARSE_ERROR_OBJECT_COMMA;
             }
             break;
@@ -1520,7 +1520,7 @@ static JsonParseError JsonParseAsObject(const char **data, JsonElement **json_ou
                 if (err != JSON_PARSE_OK)
                 {
                     free(property_name);
-                    JsonElementDestroy(object);
+                    JsonDestroy(object);
                     return err;
                 }
 
@@ -1531,7 +1531,7 @@ static JsonParseError JsonParseAsObject(const char **data, JsonElement **json_ou
             else
             {
                 free(property_name);
-                JsonElementDestroy(object);
+                JsonDestroy(object);
                 return JSON_PARSE_ERROR_OBJECT_ARRAY_LVAL;
             }
             break;
@@ -1544,7 +1544,7 @@ static JsonParseError JsonParseAsObject(const char **data, JsonElement **json_ou
                 if (err != JSON_PARSE_OK)
                 {
                     free(property_name);
-                    JsonElementDestroy(object);
+                    JsonDestroy(object);
                     return err;
                 }
 
@@ -1556,7 +1556,7 @@ static JsonParseError JsonParseAsObject(const char **data, JsonElement **json_ou
             {
                 *json_out = NULL;
                 free(property_name);
-                JsonElementDestroy(object);
+                JsonDestroy(object);
                 return JSON_PARSE_ERROR_OBJECT_OBJECT_LVAL;
             }
             break;
@@ -1566,7 +1566,7 @@ static JsonParseError JsonParseAsObject(const char **data, JsonElement **json_ou
             {
                 *json_out = NULL;
                 free(property_name);
-                JsonElementDestroy(object);
+                JsonDestroy(object);
                 return JSON_PARSE_ERROR_OBJECT_OPEN_LVAL;
             }
             free(property_name);
@@ -1583,7 +1583,7 @@ static JsonParseError JsonParseAsObject(const char **data, JsonElement **json_ou
                     if (err != JSON_PARSE_OK)
                     {
                         free(property_name);
-                        JsonElementDestroy(object);
+                        JsonDestroy(object);
                         return err;
                     }
                     JsonObjectAppendElement(object, property_name, child);
@@ -1613,14 +1613,14 @@ static JsonParseError JsonParseAsObject(const char **data, JsonElement **json_ou
 
             *json_out = NULL;
             free(property_name);
-            JsonElementDestroy(object);
+            JsonDestroy(object);
             return JSON_PARSE_ERROR_OBJECT_BAD_SYMBOL;
         }
     }
 
     *json_out = NULL;
     free(property_name);
-    JsonElementDestroy(object);
+    JsonDestroy(object);
     return JSON_PARSE_ERROR_OBJECT_END;
 }
 

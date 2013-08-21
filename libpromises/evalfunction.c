@@ -4150,7 +4150,7 @@ static FnCallResult FnCallReadJson(EvalContext *ctx, FnCall *fp, Rlist *args)
         return (FnCallResult) { FNCALL_FAILURE, };
     }
     JsonElement *json = NULL;
-    const char *data = contents; // TODO: need to fix JSON parser signature, just silly
+    const char *data = contents;
     if (JsonParse(&data, &json) != JSON_PARSE_OK)
     {
         Log(LOG_LEVEL_ERR, "Error parsing JSON file '%s'", input_path);
@@ -4159,6 +4159,19 @@ static FnCallResult FnCallReadJson(EvalContext *ctx, FnCall *fp, Rlist *args)
     }
 
     free(contents);
+
+    return (FnCallResult) { FNCALL_SUCCESS, (Rval) { json, RVAL_TYPE_CONTAINER } };
+}
+
+static FnCallResult FnCallParseJson(EvalContext *ctx, FnCall *fp, Rlist *args)
+{
+    const char *data = RlistScalarValue(args);
+    JsonElement *json = NULL;
+    if (JsonParse(&data, &json) != JSON_PARSE_OK)
+    {
+        Log(LOG_LEVEL_ERR, "Error parsing JSON expression '%s'", data);
+        return (FnCallResult) { FNCALL_FAILURE };
+    }
 
     return (FnCallResult) { FNCALL_SUCCESS, (Rval) { json, RVAL_TYPE_CONTAINER } };
 }
@@ -5600,6 +5613,12 @@ FnCallArg READJSON_ARGS[] =
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
+FnCallArg PARSEJSON_ARGS[] =
+{
+    {CF_ANYSTRING, DATA_TYPE_STRING, "JSON string to parse"},
+    {NULL, DATA_TYPE_NONE, NULL}
+};
+
 FnCallArg READTCP_ARGS[] =
 {
     {CF_ANYSTRING, DATA_TYPE_STRING, "Host name or IP address of server socket"},
@@ -5908,6 +5927,7 @@ const FnCallType CF_FNCALL_TYPES[] =
     FnCallTypeNew("on", DATA_TYPE_INT, DATE_ARGS, &FnCallOn, "Convert an exact date/time to an integer system representation", false, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("or", DATA_TYPE_STRING, OR_ARGS, &FnCallOr, "Calculate whether any argument evaluates to true", true, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("parseintarray", DATA_TYPE_INT, PARSESTRINGARRAY_ARGS, &FnCallParseIntArray, "Read an array of integers from a file and assign the dimension to a variable", false, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("parsejson", DATA_TYPE_CONTAINER, PARSEJSON_ARGS, &FnCallParseJson, "", false, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("parserealarray", DATA_TYPE_INT, PARSESTRINGARRAY_ARGS, &FnCallParseRealArray, "Read an array of real numbers from a file and assign the dimension to a variable", false, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("parsestringarray", DATA_TYPE_INT, PARSESTRINGARRAY_ARGS, &FnCallParseStringArray, "Read an array of strings from a file and assign the dimension to a variable", false, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("parsestringarrayidx", DATA_TYPE_INT, PARSESTRINGARRAYIDX_ARGS, &FnCallParseStringArrayIndex, "Read an array of strings from a file and assign the dimension to a variable with integer indeces", false, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),

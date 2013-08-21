@@ -1,0 +1,11 @@
+body file control
+{
+      namespace => "namespaced_bundles_2";
+}
+
+bundle agent unique
+{
+  reports:
+    DEBUG::
+      "$(this.bundle): run";
+}

@@ -45,10 +45,10 @@
 #include <verify_classes.h>
 
 
-static void ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp, Rlist *listvars,
+static void ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp, Rlist *lists, Rlist *containers,
                                PromiseActuator *ActOnPromise, void *param);
-static void ExpandAndMapIteratorsFromScalar(EvalContext *ctx, const char *scope, Rlist **list_vars_out, Rlist **scalar_vars_out,
-                                            Rlist **full_expansion, const char *string, size_t length, int level);
+static void ExpandAndMapIteratorsFromScalar(EvalContext *ctx, const char *scope, const char *string, size_t length, int level,
+                                            Rlist **scalars, Rlist **lists, Rlist **containers, Rlist **full_expansion);
 static void SetAnyMissingDefaults(EvalContext *ctx, Promise *pp);
 static void CopyLocalizedReferencesToBundleScope(EvalContext *ctx, const Bundle *bundle, const Rlist *ref_names);
 
@@ -112,8 +112,9 @@ since these cannot be mapped into "this" without some magic.
 
 void ExpandPromise(EvalContext *ctx, Promise *pp, PromiseActuator *ActOnPromise, void *param)
 {
-    Rlist *listvars = NULL;
+    Rlist *lists = NULL;
     Rlist *scalars = NULL;
+    Rlist *containers = NULL;
 
     // Set a default for packages here...general defaults that need to come before
     //fix me wth a general function SetMissingDefaults
@@ -121,30 +122,33 @@ void ExpandPromise(EvalContext *ctx, Promise *pp, PromiseActuator *ActOnPromise,
 
     Promise *pcopy = DeRefCopyPromise(ctx, pp);
 
-    MapIteratorsFromRval(ctx, PromiseGetBundle(pp)->name, &listvars, &scalars, (Rval) { pcopy->promiser, RVAL_TYPE_SCALAR });
+    MapIteratorsFromRval(ctx, PromiseGetBundle(pp)->name, (Rval) { pcopy->promiser, RVAL_TYPE_SCALAR }, &scalars, &lists, &containers);
 
     if (pcopy->promisee.item != NULL)
     {
-        MapIteratorsFromRval(ctx, PromiseGetBundle(pp)->name, &listvars, &scalars, pp->promisee);
+        MapIteratorsFromRval(ctx, PromiseGetBundle(pp)->name, pp->promisee, &scalars, &lists, &containers);
     }
 
     for (size_t i = 0; i < SeqLength(pcopy->conlist); i++)
     {
         Constraint *cp = SeqAt(pcopy->conlist, i);
-        MapIteratorsFromRval(ctx, PromiseGetBundle(pp)->name, &listvars, &scalars, cp->rval);
+        MapIteratorsFromRval(ctx, PromiseGetBundle(pp)->name, cp->rval,&scalars, &lists, &containers);
     }
 
-    CopyLocalizedReferencesToBundleScope(ctx, PromiseGetBundle(pp), listvars);
+    CopyLocalizedReferencesToBundleScope(ctx, PromiseGetBundle(pp), lists);
     CopyLocalizedReferencesToBundleScope(ctx, PromiseGetBundle(pp), scalars);
+    CopyLocalizedReferencesToBundleScope(ctx, PromiseGetBundle(pp), containers);
 
-    ExpandPromiseAndDo(ctx, pcopy, listvars, ActOnPromise, param);
+    ExpandPromiseAndDo(ctx, pcopy, lists, containers, ActOnPromise, param);
 
     PromiseDestroy(pcopy);
-    RlistDestroy(listvars);
+
+    RlistDestroy(lists);
     RlistDestroy(scalars);
+    RlistDestroy(containers);
 }
 
-static void ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp, Rlist *listvars, PromiseActuator *ActOnPromise, void *param)
+static void ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp, Rlist *lists, Rlist *containers, PromiseActuator *ActOnPromise, void *param)
 {
     const char *handle = PromiseGetHandle(pp);
     char v[CF_MAXVARSIZE];
@@ -152,7 +156,7 @@ static void ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp, Rlist *listv
     EvalContextStackPushPromiseFrame(ctx, pp, true);
 
     PromiseIterator *iter_ctx = NULL;
-    for (iter_ctx = PromiseIteratorNew(ctx, pp, listvars); PromiseIteratorHasMore(iter_ctx); PromiseIteratorNext(iter_ctx))
+    for (iter_ctx = PromiseIteratorNew(ctx, pp, lists, containers); PromiseIteratorHasMore(iter_ctx); PromiseIteratorNext(iter_ctx))
     {
         EvalContextStackPushPromiseIterationFrame(ctx, iter_ctx);
         char number[CF_SMALLBUF];
@@ -257,7 +261,7 @@ Rval ExpandDanglers(EvalContext *ctx, const char *ns, const char *scope, Rval rv
 
 /*********************************************************************/
 
-void MapIteratorsFromRval(EvalContext *ctx, const char *scopeid, Rlist **listvars, Rlist **scalars, Rval rval)
+void MapIteratorsFromRval(EvalContext *ctx, const char *scopeid, Rval rval, Rlist **scalars, Rlist **lists, Rlist **containers)
 {
     Rlist *rp;
     FnCall *fp;
@@ -272,14 +276,14 @@ void MapIteratorsFromRval(EvalContext *ctx, const char *scopeid, Rlist **listvar
     case RVAL_TYPE_SCALAR:
         {
             char *val = (char *)rval.item;
-            ExpandAndMapIteratorsFromScalar(ctx, scopeid, listvars, scalars, NULL, val, strlen(val), 0);
+            ExpandAndMapIteratorsFromScalar(ctx, scopeid, val, strlen(val), 0, scalars, lists, containers, NULL);
         }
         break;
 
     case RVAL_TYPE_LIST:
         for (rp = (Rlist *) rval.item; rp != NULL; rp = rp->next)
         {
-            MapIteratorsFromRval(ctx, scopeid, listvars, scalars, (Rval) {rp->item, rp->type});
+            MapIteratorsFromRval(ctx, scopeid, (Rval) {rp->item, rp->type}, scalars, lists, containers);
         }
         break;
 
@@ -289,7 +293,7 @@ void MapIteratorsFromRval(EvalContext *ctx, const char *scopeid, Rlist **listvar
         for (rp = (Rlist *) fp->args; rp != NULL; rp = rp->next)
         {
             Log(LOG_LEVEL_DEBUG, "Looking at arg for function-like object '%s'", fp->name);
-            MapIteratorsFromRval(ctx, scopeid, listvars, scalars, (Rval) {rp->item, rp->type});
+            MapIteratorsFromRval(ctx, scopeid, (Rval) {rp->item, rp->type}, scalars, lists, containers);
         }
         break;
 
@@ -325,8 +329,8 @@ static void RlistConcatInto(Rlist **dest, const Rlist *src, const char *extensio
     }
 }
 
-static void ExpandAndMapIteratorsFromScalar(EvalContext *ctx, const char *scopeid, Rlist **list_vars_out, Rlist **scalar_vars_out,
-                                            Rlist **full_expansion, const char *string, size_t length, int level)
+static void ExpandAndMapIteratorsFromScalar(EvalContext *ctx, const char *scopeid, const char *string, size_t length, int level, Rlist **scalars, Rlist **lists,
+                                            Rlist **containers, Rlist **full_expansion)
 {
     char *sp;
     Rval rval;
@@ -382,7 +386,7 @@ static void ExpandAndMapIteratorsFromScalar(EvalContext *ctx, const char *scopei
 
                 // Handle any embedded variables
                 const char *substring = string + (sp - buffer) + 2;
-                ExpandAndMapIteratorsFromScalar(ctx, scopeid, list_vars_out, scalar_vars_out, &inner_expansion, substring, strlen(v), level+1);
+                ExpandAndMapIteratorsFromScalar(ctx, scopeid, substring, strlen(v), level+1, scalars, lists, containers, &inner_expansion);
 
                 for (exp = inner_expansion; exp != NULL; exp = exp->next)
                 {
@@ -405,18 +409,16 @@ static void ExpandAndMapIteratorsFromScalar(EvalContext *ctx, const char *scopei
                         char *mangled_inner_ref = IsQualifiedVariable(exp->item) ? VarRefMangle(inner_ref) : xstrdup(exp->item);
 
                         success++;
-                        if (rval.type == RVAL_TYPE_LIST)
+                        switch (rval.type)
                         {
-                            /* embedded iterators should be incremented fastest,
-                               so order list -- and MUST return de-scoped name
-                               else list expansion cannot map var to this.name */
+                        case RVAL_TYPE_LIST:
                             if (level > 0)
                             {
-                                RlistPrependScalarIdemp(list_vars_out, mangled_inner_ref);
+                                RlistPrependScalarIdemp(lists, mangled_inner_ref);
                             }
                             else
                             {
-                                RlistAppendScalarIdemp(list_vars_out, mangled_inner_ref);
+                                RlistAppendScalarIdemp(lists, mangled_inner_ref);
                             }
 
                             if (full_expansion)
@@ -427,16 +429,31 @@ static void ExpandAndMapIteratorsFromScalar(EvalContext *ctx, const char *scopei
                                     RlistConcatInto(&tmp_list, *full_expansion, tmp->item);
                                 }
                             }
-                        }
-                        else if (rval.type == RVAL_TYPE_SCALAR)
-                        {
-                            RlistAppendScalarIdemp(scalar_vars_out, mangled_inner_ref);
+                            break;
+
+                        case RVAL_TYPE_SCALAR:
+                            RlistAppendScalarIdemp(scalars, mangled_inner_ref);
 
                             if (full_expansion)
                             {
                                 // append the scalar value to each of full_expansion
                                 RlistConcatInto(&tmp_list, *full_expansion, rval.item);
                             }
+                            break;
+
+                        case RVAL_TYPE_CONTAINER:
+                            if (level > 0)
+                            {
+                                RlistPrependScalarIdemp(containers, mangled_inner_ref);
+                            }
+                            else
+                            {
+                                RlistAppendScalarIdemp(containers, mangled_inner_ref);
+                            }
+                            break;
+
+                        default:
+                            break;
                         }
 
                         free(mangled_inner_ref);
@@ -565,6 +582,10 @@ Rval ExpandPrivateRval(EvalContext *ctx, const char *ns, const char *scope, Rval
         fpe = ExpandFnCall(ctx, ns, scope, fp);
         returnval.item = fpe;
         returnval.type = RVAL_TYPE_FNCALL;
+        break;
+
+    case RVAL_TYPE_CONTAINER:
+        returnval = RvalCopy(rval);
         break;
 
     default:
@@ -868,6 +889,7 @@ Rval EvaluateFinalRval(EvalContext *ctx, const char *ns, const char *scope, Rval
     switch (returnval.type)
     {
     case RVAL_TYPE_SCALAR:
+    case RVAL_TYPE_CONTAINER:
         break;
 
     case RVAL_TYPE_LIST:
@@ -949,6 +971,7 @@ static void CopyLocalizedReferencesToBundleScope(EvalContext *ctx, const Bundle 
                 }
                 break;
 
+            case RVAL_TYPE_CONTAINER:
             case RVAL_TYPE_SCALAR:
                 EvalContextVariablePut(ctx, mangled_ref, retval, type);
                 break;

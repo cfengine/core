@@ -390,7 +390,7 @@ const JsonElement *JsonIteratorCurrentValue(JsonIterator *iter)
     assert(iter);
     assert(iter->container->type == JSON_ELEMENT_TYPE_CONTAINER);
 
-    if (iter->index > JsonElementLength(iter->container))
+    if (iter->index == 0 || iter->index > JsonElementLength(iter->container))
     {
         return NULL;
     }

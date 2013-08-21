@@ -11,10 +11,12 @@ static void test_map_iterators_from_rval_empty(void)
 
     Rlist *lists = NULL;
     Rlist *scalars = NULL;
-    MapIteratorsFromRval(ctx, "none", &lists, &scalars, (Rval) { "", RVAL_TYPE_SCALAR });
+    Rlist *containers =  NULL;
+    MapIteratorsFromRval(ctx, "none", (Rval) { "", RVAL_TYPE_SCALAR }, &scalars, &lists, &containers);
 
     assert_int_equal(0, RlistLen(lists));
     assert_int_equal(0, RlistLen(scalars));
+    assert_int_equal(0, RlistLen(containers));
 
     EvalContextDestroy(ctx);
 }
@@ -25,10 +27,12 @@ static void test_map_iterators_from_rval_literal(void)
 
     Rlist *lists = NULL;
     Rlist *scalars = NULL;
-    MapIteratorsFromRval(ctx, "none", &lists, &scalars, (Rval) { "snookie", RVAL_TYPE_SCALAR });
+    Rlist *containers = NULL;
+    MapIteratorsFromRval(ctx, "none", (Rval) { "snookie", RVAL_TYPE_SCALAR }, &scalars, &lists, &containers);
 
     assert_int_equal(0, RlistLen(lists));
     assert_int_equal(0, RlistLen(scalars));
+    assert_int_equal(0, RlistLen(containers));
 
     EvalContextDestroy(ctx);
 }
@@ -46,11 +50,13 @@ static void test_map_iterators_from_rval_naked_list_var(void)
 
     Rlist *lists = NULL;
     Rlist *scalars = NULL;
-    MapIteratorsFromRval(ctx, "scope", &lists, &scalars, (Rval) { "${jwow}", RVAL_TYPE_SCALAR });
+    Rlist *containers = NULL;
+    MapIteratorsFromRval(ctx, "scope", (Rval) { "${jwow}", RVAL_TYPE_SCALAR }, &scalars, &lists, &containers);
 
     assert_int_equal(1, RlistLen(lists));
     assert_string_equal("jwow", lists->item);
     assert_int_equal(0, RlistLen(scalars));
+    assert_int_equal(0, RlistLen(containers));
 
     VarRefDestroy(lval);
     EvalContextDestroy(ctx);

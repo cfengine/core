@@ -35,7 +35,7 @@ void CommonEvalPromise(EvalContext *ctx, Promise *pp, void *param);
 void ExpandPromise(EvalContext *ctx, Promise *pp, PromiseActuator *ActOnPromise, void *param);
 
 Rval ExpandDanglers(EvalContext *ctx, const char *ns, const char *scope, Rval rval, const Promise *pp);
-void MapIteratorsFromRval(EvalContext *ctx, const char *scope, Rlist **lol, Rlist **los, Rval rval);
+void MapIteratorsFromRval(EvalContext *ctx, const char *scope, Rval rval, Rlist **scalars, Rlist **lists, Rlist **containers);
 
 bool IsExpandable(const char *str);
 

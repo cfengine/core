@@ -375,6 +375,7 @@ SyntaxTypeMatch CheckConstraintTypeMatch(const char *lval, Rval rval, DataType d
 
     case DATA_TYPE_BODY:
     case DATA_TYPE_BUNDLE:
+    case DATA_TYPE_CONTAINER:
         break;
 
     case DATA_TYPE_OPTION:

@@ -62,6 +62,9 @@ RvalType DataTypeToRvalType(DataType datatype)
     case DATA_TYPE_STRING_LIST:
         return RVAL_TYPE_LIST;
 
+    case DATA_TYPE_CONTAINER:
+        return RVAL_TYPE_CONTAINER;
+
     case DATA_TYPE_NONE:
         return RVAL_TYPE_NOPROMISEE;
     }
@@ -73,7 +76,7 @@ char *RlistScalarValue(const Rlist *rlist)
 {
     if (rlist->type != RVAL_TYPE_SCALAR)
     {
-        ProgrammingError("Internal error: Rlist value contains type %c instead of expected scalar", rlist->type);
+        ProgrammingError("Rlist value contains type %c instead of expected scalar", rlist->type);
     }
 
     return (char *) rlist->item;
@@ -85,7 +88,7 @@ FnCall *RlistFnCallValue(const Rlist *rlist)
 {
     if (rlist->type != RVAL_TYPE_FNCALL)
     {
-        ProgrammingError("Internal error: Rlist value contains type %c instead of expected FnCall", rlist->type);
+        ProgrammingError("Rlist value contains type %c instead of expected FnCall", rlist->type);
     }
 
     return (FnCall *) rlist->item;
@@ -97,7 +100,7 @@ Rlist *RlistRlistValue(const Rlist *rlist)
 {
     if (rlist->type != RVAL_TYPE_LIST)
     {
-        ProgrammingError("Internal error: Rlist value contains type %c instead of expected List", rlist->type);
+        ProgrammingError("Rlist value contains type %c instead of expected List", rlist->type);
     }
 
     return (Rlist *) rlist->item;
@@ -121,7 +124,7 @@ FnCall *RvalFnCallValue(Rval rval)
 {
     if (rval.type != RVAL_TYPE_FNCALL)
     {
-        ProgrammingError("Internal error: Rval contains type %c instead of expected FnCall", rval.type);
+        ProgrammingError("Rval contains type %c instead of expected FnCall", rval.type);
     }
 
     return rval.item;
@@ -133,7 +136,17 @@ Rlist *RvalRlistValue(Rval rval)
 {
     if (rval.type != RVAL_TYPE_LIST)
     {
-        ProgrammingError("Internal error: Rval contain type %c instead of expected List", rval.type);
+        ProgrammingError("Rval contain type %c instead of expected List", rval.type);
+    }
+
+    return rval.item;
+}
+
+JsonElement *RvalContainerValue(Rval rval)
+{
+    if (rval.type != RVAL_TYPE_CONTAINER)
+    {
+        ProgrammingError("Rval contain type %c instead of expected container", rval.type);
     }
 
     return rval.item;
@@ -278,6 +291,12 @@ static Rval RvalCopyFnCall(Rval rval)
     return (Rval) {FnCallCopy(rval.item), RVAL_TYPE_FNCALL};
 }
 
+static Rval RvalCopyContainer(Rval rval)
+{
+    assert(rval.type == RVAL_TYPE_CONTAINER);
+    return (Rval) { JsonCopy(rval.item), RVAL_TYPE_CONTAINER };
+}
+
 Rval RvalCopy(Rval rval)
 {
     switch (rval.type)
@@ -290,6 +309,9 @@ Rval RvalCopy(Rval rval)
 
     case RVAL_TYPE_LIST:
         return RvalCopyList(rval);
+
+    case RVAL_TYPE_CONTAINER:
+        return RvalCopyContainer(rval);
 
     default:
         Log(LOG_LEVEL_VERBOSE, "Unknown type %c in CopyRvalItem - should not happen", rval.type);

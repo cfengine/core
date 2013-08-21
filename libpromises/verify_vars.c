@@ -534,7 +534,7 @@ static ConvergeVariableOptions CollectConvergeVariableOptions(EvalContext *ctx, 
                 opts.ok_redefine |= true;
             }
         }
-        else if (IsDataType(cp->lval))
+        else if (DataTypeFromString(cp->lval) != DATA_TYPE_NONE)
         {
             num_values++;
             opts.cp_save = cp;

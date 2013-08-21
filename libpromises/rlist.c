@@ -876,7 +876,6 @@ void RvalDestroy(Rval rval)
     switch (rval.type)
     {
     case RVAL_TYPE_SCALAR:
-
         ThreadLock(cft_lock);
         free((char *) rval.item);
         ThreadUnlock(cft_lock);
@@ -902,11 +901,14 @@ void RvalDestroy(Rval rval)
         break;
 
     case RVAL_TYPE_FNCALL:
-
         FnCallDestroy((FnCall *) rval.item);
         break;
 
-    default:
+    case RVAL_TYPE_CONTAINER:
+        JsonElementDestroy(RvalContainerValue(rval));
+        break;
+
+    case RVAL_TYPE_NOPROMISEE:
         return;
     }
 }

@@ -32,7 +32,7 @@
 
 typedef struct PromiseIterator_ PromiseIterator;
 
-PromiseIterator *PromiseIteratorNew(EvalContext *ctx, const Promise *pp, const Rlist *listvars);
+PromiseIterator *PromiseIteratorNew(EvalContext *ctx, const Promise *pp, const Rlist *lists, const Rlist *containers);
 void PromiseIteratorDestroy(PromiseIterator *iter_ctx);
 
 bool PromiseIteratorHasMore(const PromiseIterator *iter_ctx);

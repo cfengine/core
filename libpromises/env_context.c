@@ -1371,13 +1371,14 @@ bool EvalContextVariablePut(EvalContext *ctx, const VarRef *ref, Rval rval, Data
     if (THIS_AGENT_TYPE == AGENT_TYPE_COMMON)
     {
         Rlist *listvars = NULL;
-        Rlist *scalars = NULL; // TODO what do we do with scalars?
+        Rlist *scalars = NULL;
+        Rlist *containers = NULL;
 
         StackFrame *last_frame = LastStackFrame(ctx, 0);
 
         if (last_frame && (last_frame->type != STACK_FRAME_TYPE_PROMISE && last_frame->type != STACK_FRAME_TYPE_PROMISE_ITERATION))
         {
-            MapIteratorsFromRval(ctx, NULL, &listvars, &scalars, rval);
+            MapIteratorsFromRval(ctx, NULL, rval, &scalars, &listvars, &containers);
 
             if (listvars != NULL)
             {
@@ -1386,6 +1387,7 @@ bool EvalContextVariablePut(EvalContext *ctx, const VarRef *ref, Rval rval, Data
 
             RlistDestroy(listvars);
             RlistDestroy(scalars);
+            RlistDestroy(containers);
         }
     }
 

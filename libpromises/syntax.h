@@ -74,7 +74,6 @@ SyntaxTypeMatch CheckConstraintTypeMatch(const char *lval, Rval rval, DataType d
 SyntaxTypeMatch CheckParseContext(const char *context, const char *range);
 DataType StringDataType(EvalContext *ctx, const char *string);
 DataType ExpectedDataType(const char *lvalname);
-bool IsDataType(const char *s);
 
 const PromiseTypeSyntax *PromiseTypeSyntaxGet(const char *bundle_type, const char *promise_type);
 const ConstraintSyntax *PromiseTypeSyntaxGetConstraintSyntax(const PromiseTypeSyntax *promise_type_syntax, const char *lval);
@@ -104,6 +103,8 @@ JsonElement *SyntaxToJson(void);
 
 #define ConstraintSyntaxNewContext(lval, description, status) { lval, DATA_TYPE_CONTEXT, .range.validation_string = CF_CLASSRANGE, description, status }
 #define ConstraintSyntaxNewContextList(lval, description, status) { lval, DATA_TYPE_CONTEXT_LIST, .range.validation_string = CF_CLASSRANGE, description, status }
+
+#define ConstraintSyntaxNewContainer(lval, description, status) { lval, DATA_TYPE_CONTAINER, .range.validation_string = "", description, status }
 
 #define ConstraintSyntaxNewBody(lval, body_syntax, description, status) { lval, DATA_TYPE_BODY, .range.body_type_syntax = body_syntax, description, status }
 #define ConstraintSyntaxNewBundle(lval, description, status) { lval, DATA_TYPE_BUNDLE, .range.validation_string = CF_BUNDLE, description, status }

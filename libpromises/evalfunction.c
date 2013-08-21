@@ -58,6 +58,7 @@
 #include <logging.h>
 #include <set.h>
 #include <buffer.h>
+#include <files_lib.h>
 
 #include <libgen.h>
 
@@ -4137,6 +4138,31 @@ static FnCallResult FnCallReadRealList(EvalContext *ctx, FnCall *fp, Rlist *args
     return ReadList(ctx, fp, args, DATA_TYPE_REAL);
 }
 
+static FnCallResult FnCallReadJson(EvalContext *ctx, FnCall *fp, Rlist *args)
+{
+    const char *input_path = RlistScalarValue(args);
+    size_t size_max = IntFromString(RlistScalarValue(args->next));
+
+    char *contents = NULL;
+    if (FileReadMax(&contents, input_path, size_max) == -1)
+    {
+        Log(LOG_LEVEL_ERR, "Error reading JSON input file '%s'", input_path);
+        return (FnCallResult) { FNCALL_FAILURE, };
+    }
+    JsonElement *json = NULL;
+    const char *data = contents; // TODO: need to fix JSON parser signature, just silly
+    if (JsonParse(&data, &json) != JSON_PARSE_OK)
+    {
+        Log(LOG_LEVEL_ERR, "Error parsing JSON file '%s'", input_path);
+        free(contents);
+        return (FnCallResult) { FNCALL_FAILURE };
+    }
+
+    free(contents);
+
+    return (FnCallResult) { FNCALL_SUCCESS, (Rval) { json, RVAL_TYPE_CONTAINER } };
+}
+
 /*********************************************************************/
 
 static FnCallResult ReadArray(EvalContext *ctx, FnCall *fp, Rlist *finalargs, DataType type, int intIndex)
@@ -5567,6 +5593,13 @@ FnCallArg READSTRINGLIST_ARGS[] =
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
+FnCallArg READJSON_ARGS[] =
+{
+    {CF_ABSPATHRANGE, DATA_TYPE_STRING, "File name to read"},
+    {CF_VALRANGE, DATA_TYPE_INT, "Maximum number of bytes to read"},
+    {NULL, DATA_TYPE_NONE, NULL}
+};
+
 FnCallArg READTCP_ARGS[] =
 {
     {CF_ANYSTRING, DATA_TYPE_STRING, "Host name or IP address of server socket"},
@@ -5886,6 +5919,7 @@ const FnCallType CF_FNCALL_TYPES[] =
     FnCallTypeNew("readfile", DATA_TYPE_STRING, READFILE_ARGS, &FnCallReadFile, "Read max number of bytes from named file and assign to variable", false, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("readintarray", DATA_TYPE_INT, READSTRINGARRAY_ARGS, &FnCallReadIntArray, "Read an array of integers from a file and assign the dimension to a variable", false, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("readintlist", DATA_TYPE_INT_LIST, READSTRINGLIST_ARGS, &FnCallReadIntList, "Read and assign a list variable from a file of separated ints", false, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("readjson", DATA_TYPE_CONTAINER, READJSON_ARGS, &FnCallReadJson, "", false, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("readrealarray", DATA_TYPE_INT, READSTRINGARRAY_ARGS, &FnCallReadRealArray, "Read an array of real numbers from a file and assign the dimension to a variable", false, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("readreallist", DATA_TYPE_REAL_LIST, READSTRINGLIST_ARGS, &FnCallReadRealList, "Read and assign a list variable from a file of separated real numbers", false, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("readstringarray", DATA_TYPE_INT, READSTRINGARRAY_ARGS, &FnCallReadStringArray, "Read an array of strings from a file and assign the dimension to a variable", false, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),

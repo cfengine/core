@@ -443,6 +443,7 @@ typedef enum
     DATA_TYPE_INT_RANGE,
     DATA_TYPE_REAL_RANGE,
     DATA_TYPE_COUNTER,
+    DATA_TYPE_CONTAINER,
     DATA_TYPE_NONE
 } DataType;
 
@@ -621,6 +622,7 @@ typedef enum
     RVAL_TYPE_SCALAR = 's',
     RVAL_TYPE_LIST = 'l',
     RVAL_TYPE_FNCALL = 'f',
+    RVAL_TYPE_CONTAINER = 'c',
     RVAL_TYPE_NOPROMISEE = 'X' // TODO: must be another hack
 } RvalType;
 

@@ -375,6 +375,7 @@ SyntaxTypeMatch CheckConstraintTypeMatch(const char *lval, Rval rval, DataType d
 
     case DATA_TYPE_BODY:
     case DATA_TYPE_BUNDLE:
+    case DATA_TYPE_CONTAINER:
         break;
 
     case DATA_TYPE_OPTION:
@@ -852,14 +853,6 @@ int CheckParseVariableName(const char *name)
     }
 
     return true;
-}
-
-/****************************************************************************/
-
-bool IsDataType(const char *s)
-{
-    return strcmp(s, "string") == 0 || strcmp(s, "slist") == 0 ||
-        strcmp(s, "int") == 0 || strcmp(s, "ilist") == 0 || strcmp(s, "real") == 0 || strcmp(s, "rlist") == 0;
 }
 
 /****************************************************************************/

@@ -41,6 +41,8 @@ RvalType DataTypeToRvalType(DataType datatype);
 char *RvalScalarValue(Rval rval);
 FnCall *RvalFnCallValue(Rval rval);
 Rlist *RvalRlistValue(Rval rval);
+JsonElement *RvalContainerValue(Rval rval);
+
 Rval RvalCopy(Rval rval);
 void RvalDestroy(Rval rval);
 JsonElement *RvalToJson(Rval rval);

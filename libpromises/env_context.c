@@ -1329,6 +1329,15 @@ bool EvalContextVariablePut(EvalContext *ctx, const VarRef *ref, Rval rval, Data
         return false;
     }
 
+    if (type == DATA_TYPE_CONTAINER && ref->num_indices > 0)
+    {
+        char *lval_str = VarRefToString(ref, true);
+        Log(LOG_LEVEL_ERR, "Cannot assign a container to an indexed variable name '%s'. Should be assigned to '%s' instead",
+            lval_str, ref->lval);
+        free(lval_str);
+        return false;
+    }
+
     if (strlen(ref->lval) > CF_MAXVARSIZE)
     {
         char *lval_str = VarRefToString(ref, true);

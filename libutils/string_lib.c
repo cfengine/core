@@ -299,7 +299,7 @@ char *StringSubstring(const char *source, size_t source_len, int start, int len)
 
 /*********************************************************************/
 
-bool IsNumber(const char *s)
+bool StringIsNumeric(const char *s)
 {
     for (; *s; s++)
     {

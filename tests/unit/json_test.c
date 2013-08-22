@@ -440,6 +440,49 @@ static void test_copy_compare(void)
     JsonDestroy(copy);
 }
 
+static void test_select(void)
+{
+    const char *data = OBJECT_ARRAY;
+    JsonElement *obj = NULL;
+    assert_int_equal(JSON_PARSE_OK, JsonParse(&data, &obj));
+
+    assert_true(obj == JsonSelect(obj, 0, NULL));
+
+    {
+        char *indices[] = { "first" };
+        assert_int_equal(JSON_CONTAINER_TYPE_ARRAY, JsonGetContrainerType(JsonSelect(obj, 1, indices)));
+    }
+    {
+        char *indices[] = { "first", "0" };
+        assert_string_equal("one", JsonPrimitiveGetAsString(JsonSelect(obj, 2, indices)));
+    }
+    {
+        char *indices[] = { "first", "1" };
+        assert_string_equal("two", JsonPrimitiveGetAsString(JsonSelect(obj, 2, indices)));
+    }
+    {
+        char *indices[] = { "first", "2" };
+        assert_true(JsonSelect(obj, 2, indices) == NULL);
+    }
+    {
+        char *indices[] = { "first", "x" };
+        assert_true(JsonSelect(obj, 2, indices) == NULL);
+    }
+
+    {
+        char *indices[] = { "first", "0", "x" };
+        assert_true(JsonSelect(obj, 3, indices) == NULL);
+    }
+
+    {
+        char *indices[] = { "second" };
+        assert_true(JsonSelect(obj, 1, indices) == NULL);
+    }
+
+    JsonDestroy(obj);
+
+}
+
 static void test_parse_object_simple(void)
 {
     const char *data = OBJECT_SIMPLE;
@@ -977,6 +1020,7 @@ int main()
         unit_test(test_array_get_string),
         unit_test(test_array_iterator),
         unit_test(test_copy_compare),
+        unit_test(test_select),
         unit_test(test_parse_object_simple),
         unit_test(test_parse_array_simple),
         unit_test(test_parse_object_compound),

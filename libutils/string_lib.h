@@ -40,7 +40,7 @@ double StringToDouble(const char *str);
 char *StringFromDouble(double number);
 char *NULLStringToEmpty(char *str);
 
-bool IsNumber(const char *name);
+bool StringIsNumeric(const char *name);
 bool EmptyString(const char *s);
 
 char *StringEncodeBase64(const char *str, size_t len);

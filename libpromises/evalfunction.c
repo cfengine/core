@@ -4617,7 +4617,7 @@ FnCallResult FnCallUserExists(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 
     strcpy(buffer, CF_ANYCLASS);
 
-    if (IsNumber(arg))
+    if (StringIsNumeric(arg))
     {
         uid = Str2Uid(arg, NULL, NULL);
 

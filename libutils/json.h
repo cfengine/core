@@ -336,6 +336,9 @@ const char *JsonArrayGetAsString(JsonElement *array, size_t index);
   */
 JsonElement *JsonArrayGetAsObject(JsonElement *array, size_t index);
 
+JsonElement *JsonArrayGet(JsonElement *array, size_t index);
+
+
 /**
   @brief Parse a string to create a JsonElement
   @param data [in, out] Pointer to the string to parse
@@ -364,6 +367,7 @@ typedef int JsonComparator(const JsonElement *, const JsonElement *, void *user_
 
 void JsonSort(JsonElement *container, JsonComparator *Compare, void *user_data);
 JsonElement *JsonAt(const JsonElement *container, size_t index);
+JsonElement *JsonSelect(JsonElement *element, size_t num_indices, char **indices);
 
 
 JsonIterator JsonIteratorInit(const JsonElement *container);

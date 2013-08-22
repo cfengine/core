@@ -525,6 +525,54 @@ JsonElement *JsonAt(const JsonElement *container, size_t index)
     return container->container.children->data[index];
 }
 
+JsonElement *JsonSelect(JsonElement *element, size_t num_indices, char **indices)
+{
+    if (num_indices == 0)
+    {
+        return element;
+    }
+    else
+    {
+        if (JsonGetElementType(element) != JSON_ELEMENT_TYPE_CONTAINER)
+        {
+            return NULL;
+        }
+
+        const char *index = indices[0];
+
+        switch (JsonGetContrainerType(element))
+        {
+        case JSON_CONTAINER_TYPE_OBJECT:
+            {
+                JsonElement *child = JsonObjectGet(element, index);
+                if (child)
+                {
+                    return JsonSelect(child, num_indices - 1, indices + 1);
+                }
+            }
+            return NULL;
+
+        case JSON_CONTAINER_TYPE_ARRAY:
+            if (StringIsNumeric(index))
+            {
+                size_t i = StringToLong(index);
+                if (i < JsonLength(element))
+                {
+                    JsonElement *child = JsonArrayGet(element, i);
+                    if (child)
+                    {
+                        return JsonSelect(child, num_indices - 1, indices + 1);
+                    }
+                }
+            }
+            return NULL;
+        }
+    }
+
+    assert(false);
+    return NULL;
+}
+
 // *******************************************************************************************
 // JsonObject Functions
 // *******************************************************************************************
@@ -881,6 +929,15 @@ JsonElement *JsonArrayGetAsObject(JsonElement *array, size_t index)
     }
 
     return NULL;
+}
+
+JsonElement *JsonArrayGet(JsonElement *array, size_t index)
+{
+    assert(array);
+    assert(array->type == JSON_ELEMENT_TYPE_CONTAINER);
+    assert(array->container.type == JSON_CONTAINER_TYPE_ARRAY);
+
+    return JsonAt(array, index);
 }
 
 void JsonContainerReverse(JsonElement *array)

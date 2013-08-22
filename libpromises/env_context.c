@@ -1329,13 +1329,32 @@ bool EvalContextVariablePut(EvalContext *ctx, const VarRef *ref, Rval rval, Data
         return false;
     }
 
-    if (type == DATA_TYPE_CONTAINER && ref->num_indices > 0)
+    if (ref->num_indices > 0)
     {
-        char *lval_str = VarRefToString(ref, true);
-        Log(LOG_LEVEL_ERR, "Cannot assign a container to an indexed variable name '%s'. Should be assigned to '%s' instead",
-            lval_str, ref->lval);
-        free(lval_str);
-        return false;
+        if (type == DATA_TYPE_CONTAINER)
+        {
+            char *lval_str = VarRefToString(ref, true);
+            Log(LOG_LEVEL_ERR, "Cannot assign a container to an indexed variable name '%s'. Should be assigned to '%s' instead",
+                lval_str, ref->lval);
+            free(lval_str);
+            return false;
+        }
+        else
+        {
+            DataType existing_type = DATA_TYPE_NONE;
+            VarRef *base_ref = VarRefCopyIndexless(ref);
+            if (EvalContextVariableGet(ctx, ref, NULL, &existing_type) && existing_type == DATA_TYPE_CONTAINER)
+            {
+                char *lval_str = VarRefToString(ref, true);
+                char *base_ref_str = VarRefToString(base_ref, true);
+                Log(LOG_LEVEL_ERR, "Cannot assign value to indexed variable name '%s', because a container is already assigned to the base name '%s'",
+                    lval_str, base_ref_str);
+                free(lval_str);
+                free(base_ref_str);
+                return false;
+            }
+            VarRefDestroy(base_ref);
+        }
     }
 
     if (strlen(ref->lval) > CF_MAXVARSIZE)

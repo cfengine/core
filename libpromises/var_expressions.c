@@ -139,6 +139,21 @@ VarRef *VarRefCopyLocalized(const VarRef *ref)
     return copy;
 }
 
+VarRef *VarRefCopyIndexless(const VarRef *ref)
+{
+    VarRef *copy = xmalloc(sizeof(VarRef));
+
+    copy->ns = ref->ns ? xstrdup(ref->ns) : NULL;
+    copy->scope = ref->scope ? xstrdup(ref->scope) : NULL;
+    copy->lval = ref->lval ? xstrdup(ref->lval) : NULL;
+    copy->num_indices = 0;
+    copy->indices = NULL;
+
+    copy->hash = VarRefHash(copy);
+
+    return copy;
+}
+
 
 #ifndef NDEBUG
 static bool IndexBracketsBalance(const char *var_string)

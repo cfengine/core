@@ -1123,14 +1123,7 @@ void EvalContextStackPushPromiseIterationFrame(EvalContext *ctx, const PromiseIt
 
     if (iter_ctx)
     {
-        StackFrame *promise_frame = LastStackFrameByType(ctx, STACK_FRAME_TYPE_PROMISE);
-        VariableTableIterator *iter = VariableTableIteratorNew(promise_frame->data.promise.vars, NULL, NULL, NULL);
-
-        Variable *var = NULL;
-        while ((var = VariableTableIteratorNext(iter)))
-        {
-            PromiseIteratorUpdateVariable(iter_ctx, var);
-        }
+        PromiseIteratorUpdateVariable(ctx, iter_ctx);
     }
 }
 
@@ -1392,34 +1385,6 @@ bool EvalContextVariablePut(EvalContext *ctx, const VarRef *ref, Rval rval, Data
         return false;
     }
 
-    if (ref->num_indices > 0)
-    {
-        if (type == DATA_TYPE_CONTAINER)
-        {
-            char *lval_str = VarRefToString(ref, true);
-            Log(LOG_LEVEL_ERR, "Cannot assign a container to an indexed variable name '%s'. Should be assigned to '%s' instead",
-                lval_str, ref->lval);
-            free(lval_str);
-            return false;
-        }
-        else
-        {
-            DataType existing_type = DATA_TYPE_NONE;
-            VarRef *base_ref = VarRefCopyIndexless(ref);
-            if (EvalContextVariableGet(ctx, ref, NULL, &existing_type) && existing_type == DATA_TYPE_CONTAINER)
-            {
-                char *lval_str = VarRefToString(ref, true);
-                char *base_ref_str = VarRefToString(base_ref, true);
-                Log(LOG_LEVEL_ERR, "Cannot assign value to indexed variable name '%s', because a container is already assigned to the base name '%s'",
-                    lval_str, base_ref_str);
-                free(lval_str);
-                free(base_ref_str);
-                return false;
-            }
-            VarRefDestroy(base_ref);
-        }
-    }
-
     if (strlen(ref->lval) > CF_MAXVARSIZE)
     {
         char *lval_str = VarRefToString(ref, true);
@@ -1491,6 +1456,33 @@ bool EvalContextVariableGet(const EvalContext *ctx, const VarRef *ref, Rval *rva
                 *type_out = var->type;
             }
             return true;
+        }
+        else if (ref->num_indices)
+        {
+            VarRef *base_ref = VarRefCopyIndexless(ref);
+
+            DataType type = DATA_TYPE_NONE;
+            Rval rval;
+            if (EvalContextVariableGet(ctx, base_ref, &rval, &type) && type == DATA_TYPE_CONTAINER)
+            {
+                JsonElement *child = JsonSelect(RvalContainerValue(rval), ref->num_indices, ref->indices);
+                if (child)
+                {
+                    if (rval_out)
+                    {
+                        rval_out->item = child;
+                        rval_out->type = RVAL_TYPE_CONTAINER;
+                    }
+                    if (type_out)
+                    {
+                        *type_out = DATA_TYPE_CONTAINER;
+                    }
+                    VarRefDestroy(base_ref);
+                    return true;
+                }
+            }
+
+            VarRefDestroy(base_ref);
         }
     }
 

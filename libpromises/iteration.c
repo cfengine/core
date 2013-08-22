@@ -41,46 +41,64 @@ struct PromiseIterator_
 static bool EndOfIterationInternal(const PromiseIterator *iter, size_t index);
 static bool NullIteratorsInternal(PromiseIterator *iter, size_t index);
 
+static void RlistAppendContainerPrimitive(Rlist **list, const JsonElement *primitive)
+{
+    assert(JsonGetElementType(primitive) == JSON_ELEMENT_TYPE_PRIMITIVE);
+
+    switch (JsonGetPrimitiveType(primitive))
+    {
+    case JSON_PRIMITIVE_TYPE_BOOL:
+        RlistAppendScalar(list, JsonPrimitiveGetAsBool(primitive) ? "true" : "false");
+        break;
+    case JSON_PRIMITIVE_TYPE_INTEGER:
+        {
+            char *str = StringFromLong(JsonPrimitiveGetAsInteger(primitive));
+            RlistAppendScalar(list, str);
+            free(str);
+        }
+        break;
+    case JSON_PRIMITIVE_TYPE_REAL:
+        {
+            char *str = StringFromDouble(JsonPrimitiveGetAsReal(primitive));
+            RlistAppendScalar(list, str);
+            free(str);
+        }
+        break;
+    case JSON_PRIMITIVE_TYPE_STRING:
+        RlistAppendScalar(list, JsonPrimitiveGetAsString(primitive));
+        break;
+
+    case JSON_PRIMITIVE_TYPE_NULL:
+        break;
+    }
+}
+
 static Rlist *ContainerToRlist(const JsonElement *container)
 {
     Rlist *list = NULL;
 
-    JsonIterator iter = JsonIteratorInit(container);
-    const JsonElement *child = NULL;
-
-    while ((child = JsonIteratorNextValue(&iter)))
+    switch (JsonGetElementType(container))
     {
-        if (JsonGetElementType(child) != JSON_ELEMENT_TYPE_PRIMITIVE)
-        {
-            continue;
-        }
+    case JSON_ELEMENT_TYPE_PRIMITIVE:
+        RlistAppendContainerPrimitive(&list, container);
+        break;
 
-        switch (JsonGetPrimitiveType(child))
+    case JSON_ELEMENT_TYPE_CONTAINER:
         {
-        case JSON_PRIMITIVE_TYPE_BOOL:
-            RlistAppendScalar(&list, JsonPrimitiveGetAsBool(child) ? "true" : "false");
-            break;
-        case JSON_PRIMITIVE_TYPE_INTEGER:
-            {
-                char *str = StringFromLong(JsonPrimitiveGetAsInteger(child));
-                RlistAppendScalar(&list, str);
-                free(str);
-            }
-            break;
-        case JSON_PRIMITIVE_TYPE_REAL:
-            {
-                char *str = StringFromDouble(JsonPrimitiveGetAsReal(child));
-                RlistAppendScalar(&list, str);
-                free(str);
-            }
-            break;
-        case JSON_PRIMITIVE_TYPE_STRING:
-            RlistAppendScalar(&list, JsonPrimitiveGetAsString(child));
-            break;
+            JsonIterator iter = JsonIteratorInit(container);
+            const JsonElement *child = NULL;
 
-        case JSON_PRIMITIVE_TYPE_NULL:
-            break;
+            while ((child = JsonIteratorNextValue(&iter)))
+            {
+                if (JsonGetElementType(child) != JSON_ELEMENT_TYPE_PRIMITIVE)
+                {
+                    continue;
+                }
+
+                RlistAppendContainerPrimitive(&list, child);
+            }
         }
+        break;
     }
 
     return list;
@@ -450,30 +468,35 @@ static void UpdateListVariable(const PromiseIterator *iter, Variable *var, size_
     }
 }
 
-void PromiseIteratorUpdateVariable(const PromiseIterator *iter, Variable *var)
+void PromiseIteratorUpdateVariable(EvalContext *ctx, const PromiseIterator *iter)
 {
     for (size_t i = 0; i < SeqLength(iter->vars); i++)
     {
         CfAssoc *iter_var = SeqAt(iter->vars, i);
 
-        char *legacy_lval = VarRefToString(var->ref, false);
+        const Rlist *state = SeqAt(iter->var_states, i);
 
-        if (strcmp(iter_var->lval, legacy_lval) == 0)
+        if (!state || state->type == RVAL_TYPE_FNCALL)
         {
-            switch (iter_var->rval.type)
-            {
-            case RVAL_TYPE_LIST:
-            case RVAL_TYPE_CONTAINER:
-                UpdateListVariable(iter, var, i);
-                break;
-
-            case RVAL_TYPE_SCALAR:
-            case RVAL_TYPE_FNCALL:
-            case RVAL_TYPE_NOPROMISEE:
-                ProgrammingError("Unhandled case in switch %d", iter_var->rval.type);
-            }
+            continue;
         }
 
-        free(legacy_lval);
+        assert(state->type == RVAL_TYPE_SCALAR);
+
+        switch (iter_var->dtype)
+        {
+        case DATA_TYPE_STRING_LIST:
+            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, iter_var->lval, RlistScalarValue(state), DATA_TYPE_STRING);
+            break;
+        case DATA_TYPE_INT_LIST:
+            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, iter_var->lval, RlistScalarValue(state), DATA_TYPE_INT);
+            break;
+        case DATA_TYPE_REAL_LIST:
+            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, iter_var->lval, RlistScalarValue(state), DATA_TYPE_REAL);
+            break;
+        default:
+            assert(false);
+            break;
+        }
     }
 }

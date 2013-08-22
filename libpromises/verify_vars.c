@@ -85,6 +85,8 @@ void VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates
 
     if (rval.item != NULL)
     {
+        DataType data_type = DataTypeFromString(opts.cp_save->lval);
+
         FnCall *fp = (FnCall *) rval.item;
 
         if (opts.cp_save->rval.type == RVAL_TYPE_FNCALL)
@@ -254,6 +256,39 @@ void VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates
                     free(rp->item);
                     rp->item = xstrdup(CF_NULL_VALUE);
                 }
+            }
+        }
+
+        if (ref->num_indices > 0)
+        {
+            if (data_type == DATA_TYPE_CONTAINER)
+            {
+                char *lval_str = VarRefToString(ref, true);
+                Log(LOG_LEVEL_ERR, "Cannot assign a container to an indexed variable name '%s'. Should be assigned to '%s' instead",
+                    lval_str, ref->lval);
+                free(lval_str);
+                VarRefDestroy(ref);
+                RvalDestroy(rval);
+                return;
+            }
+            else
+            {
+                DataType existing_type = DATA_TYPE_NONE;
+                VarRef *base_ref = VarRefCopyIndexless(ref);
+                if (EvalContextVariableGet(ctx, ref, NULL, &existing_type) && existing_type == DATA_TYPE_CONTAINER)
+                {
+                    char *lval_str = VarRefToString(ref, true);
+                    char *base_ref_str = VarRefToString(base_ref, true);
+                    Log(LOG_LEVEL_ERR, "Cannot assign value to indexed variable name '%s', because a container is already assigned to the base name '%s'",
+                        lval_str, base_ref_str);
+                    free(lval_str);
+                    free(base_ref_str);
+                    VarRefDestroy(base_ref);
+                    VarRefDestroy(ref);
+                    RvalDestroy(rval);
+                    return;
+                }
+                VarRefDestroy(base_ref);
             }
         }
 

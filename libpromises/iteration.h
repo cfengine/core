@@ -40,6 +40,6 @@ bool PromiseIteratorNext(PromiseIterator *iter_ctx);
 
 bool NullIterators(const PromiseIterator *iter_ctx);
 
-void PromiseIteratorUpdateVariable(const PromiseIterator *iter_ctx, Variable *var);
+void PromiseIteratorUpdateVariable(EvalContext *ctx, const PromiseIterator *iter_ctx);
 
 #endif

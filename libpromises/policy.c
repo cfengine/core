@@ -397,6 +397,9 @@ static bool RvalTypeCheckDataType(RvalType rval_type, DataType expected_datatype
     case DATA_TYPE_STRING_LIST:
         return (rval_type == RVAL_TYPE_SCALAR) || (rval_type == RVAL_TYPE_LIST);
 
+    case DATA_TYPE_CONTAINER:
+        return (rval_type == RVAL_TYPE_CONTAINER);
+
     default:
         ProgrammingError("Unhandled expected datatype in switch: %d", expected_datatype);
     }

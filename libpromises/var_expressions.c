@@ -442,10 +442,7 @@ void VarRefQualify(VarRef *ref, const char *ns, const char *scope)
     free(ref->scope);
     ref->scope = NULL;
 
-    if (ns)
-    {
-        ref->ns = xstrdup(ns);
-    }
+    ref->ns = ns ? xstrdup(ns) : NULL;
     ref->scope = xstrdup(scope);
 
     ref->hash = VarRefHash(ref);

@@ -1318,6 +1318,69 @@ bool EvalContextVariableRemove(const EvalContext *ctx, const VarRef *ref)
     return VariableTableRemove(table, ref);
 }
 
+static bool IsVariableSelfReferential(const VarRef *ref, const Rval rval)
+{
+    switch (rval.type)
+    {
+    case RVAL_TYPE_SCALAR:
+        if (StringContainsVar(RvalScalarValue(rval), ref->lval))
+        {
+            char *ref_str = VarRefToString(ref, true);
+            Log(LOG_LEVEL_ERR, "The value of variable '%s' contains a reference to itself, '%s'", ref_str, RvalScalarValue(rval));
+            free(ref_str);
+            return true;
+        }
+        break;
+
+    case RVAL_TYPE_LIST:
+        for (const Rlist *rp = RvalRlistValue(rval); rp != NULL; rp = rp->next)
+        {
+            if (rp->type != RVAL_TYPE_SCALAR)
+            {
+                continue;
+            }
+
+            if (StringContainsVar(RlistScalarValue(rp), ref->lval))
+            {
+                char *ref_str = VarRefToString(ref, true);
+                Log(LOG_LEVEL_ERR, "An item in list variable '%s' contains a reference to itself, '%s'", ref_str, RvalScalarValue(rval));
+                free(ref_str);
+                return true;
+            }
+        }
+        break;
+
+    case RVAL_TYPE_FNCALL:
+    case RVAL_TYPE_CONTAINER:
+    case RVAL_TYPE_NOPROMISEE:
+        break;
+    }
+
+    return false;
+}
+
+static void VarRefStackQualify(const EvalContext *ctx, VarRef *ref)
+{
+    StackFrame *last_frame = LastStackFrame(ctx, 0);
+    assert(last_frame);
+
+    switch (last_frame->type)
+    {
+    case STACK_FRAME_TYPE_BODY:
+        VarRefQualify(ref, NULL, SpecialScopeToString(SPECIAL_SCOPE_BODY));
+        break;
+
+    case STACK_FRAME_TYPE_BUNDLE:
+        VarRefQualify(ref, last_frame->data.bundle.owner->ns, last_frame->data.bundle.owner->name);
+        break;
+
+    case STACK_FRAME_TYPE_PROMISE:
+    case STACK_FRAME_TYPE_PROMISE_ITERATION:
+        VarRefQualify(ref, NULL, SpecialScopeToString(SPECIAL_SCOPE_THIS));
+        break;
+    }
+}
+
 bool EvalContextVariablePut(EvalContext *ctx, const VarRef *ref, Rval rval, DataType type)
 {
     assert(type != DATA_TYPE_NONE);
@@ -1365,34 +1428,9 @@ bool EvalContextVariablePut(EvalContext *ctx, const VarRef *ref, Rval rval, Data
         return false;
     }
 
-    // If we are not expanding a body template, check for recursive singularities
-    if (strcmp(ref->scope, "body") != 0)
+    if (strcmp(ref->scope, "body") != 0 && IsVariableSelfReferential(ref, rval))
     {
-        switch (rval.type)
-        {
-        case RVAL_TYPE_SCALAR:
-            if (StringContainsVar((char *) rval.item, ref->lval))
-            {
-                Log(LOG_LEVEL_ERR, "Scalar variable '%s.%s' contains itself (non-convergent), value '%s'", ref->scope, ref->lval,
-                      (char *) rval.item);
-                return false;
-            }
-            break;
-
-        case RVAL_TYPE_LIST:
-            for (const Rlist *rp = rval.item; rp != NULL; rp = rp->next)
-            {
-                if (StringContainsVar(rp->item, ref->lval))
-                {
-                    Log(LOG_LEVEL_ERR, "List variable '%s' contains itself (non-convergent)", ref->lval);
-                    return false;
-                }
-            }
-            break;
-
-        default:
-            break;
-        }
+        return false;
     }
 
     // Look for outstanding lists in variable rvals
@@ -1419,91 +1457,28 @@ bool EvalContextVariablePut(EvalContext *ctx, const VarRef *ref, Rval rval, Data
         }
     }
 
-    if (strcmp("this", ref->scope) == 0)
-    {
-        assert(!ref->ns);
-        assert(STACK_FRAME_TYPE_PROMISE == LastStackFrame(ctx, 0)->type || STACK_FRAME_TYPE_PROMISE_ITERATION == LastStackFrame(ctx, 0)->type);
-        VariableTable *table = GetVariableTableForVarRef(ctx, ref);
-        VariableTablePut(table, ref, &rval, type);
-        return true;
-    }
-    else if (strcmp("match", ref->scope) == 0)
-    {
-        assert(!ref->ns);
-        VariableTable *table = GetVariableTableForVarRef(ctx, ref);
-        VariableTablePut(table, ref, &rval, type);
-        return true;
-    }
-    else if (strcmp("body", ref->scope) == 0)
-    {
-        assert(!ref->ns);
-        assert(STACK_FRAME_TYPE_BODY == LastStackFrame(ctx, 0)->type);
-
-        VariableTable *table = GetVariableTableForVarRef(ctx, ref);
-        VariableTablePut(table, ref, &rval, type);
-        return true;
-    }
-    else if (strcmp("edit", ref->scope) == 0)
-    {
-        assert(!ref->ns);
-        StackFrame *frame = LastStackFrameByType(ctx, STACK_FRAME_TYPE_BUNDLE);
-        assert(frame && "Attempted to add an edit variable outside of any bundle evaluation");
-
-        VariableTable *table = GetVariableTableForVarRef(ctx, ref);
-        VariableTablePut(table, ref, &rval, type);
-        return true;
-    }
-    else if (strcmp("const", ref->scope) == 0 || strcmp("sys", ref->scope) == 0 || strcmp("mon", ref->scope) == 0)
-    {
-        assert(!ref->ns);
-        VariableTable *table = GetVariableTableForVarRef(ctx, ref);
-        VariableTablePut(table, ref, &rval, type);
-        return true;
-    }
-    else
-    {
-        VariableTable *table = GetVariableTableForVarRef(ctx, ref);
-        VariableTablePut(table, ref, &rval, type);
-        return true;
-    }
-
-    assert(false && "unknown scope");
-    return false;
+    VariableTable *table = GetVariableTableForVarRef(ctx, ref);
+    VariableTablePut(table, ref, &rval, type);
+    return true;
 }
 
 bool EvalContextVariableGet(const EvalContext *ctx, const VarRef *ref, Rval *rval_out, DataType *type_out)
 {
     assert(ref);
+    assert(ref->lval);
 
-    if (!ref->lval)
+    if (!VarRefIsQualified(ref))
     {
-        if (rval_out)
-        {
-            *rval_out = (Rval) {NULL, RVAL_TYPE_SCALAR };
-        }
-        if (type_out)
-        {
-            *type_out = DATA_TYPE_NONE;
-        }
-        return false;
+        VarRef *qref = VarRefCopy(ref);
+        VarRefStackQualify(ctx, qref);
+        bool ret = EvalContextVariableGet(ctx, qref, rval_out, type_out);
+        VarRefDestroy(qref);
+        return ret;
     }
 
-    if (VarRefIsQualified(ref))
+    VariableTable *table = GetVariableTableForVarRef(ctx, ref);
+    if (table)
     {
-        VariableTable *table = GetVariableTableForVarRef(ctx, ref);
-        if (!table)
-        {
-            if (rval_out)
-            {
-                *rval_out = (Rval) {NULL, RVAL_TYPE_SCALAR };
-            }
-            if (type_out)
-            {
-                *type_out = DATA_TYPE_NONE;
-            }
-            return false;
-        }
-
         Variable *var = VariableTableGet(table, ref);
         if (var)
         {
@@ -1517,61 +1492,16 @@ bool EvalContextVariableGet(const EvalContext *ctx, const VarRef *ref, Rval *rva
             }
             return true;
         }
-        else
-        {
-            if (rval_out)
-            {
-                *rval_out = (Rval) {NULL, RVAL_TYPE_SCALAR };
-            }
-            if (type_out)
-            {
-                *type_out = DATA_TYPE_NONE;
-            }
-            return false;
-        }
     }
-    else
+
+    if (rval_out)
     {
-        StackFrame *last_frame = LastStackFrame(ctx, 0);
-        assert(last_frame && "Attempted to push unqualified variable to empty stack");
-
-        switch (last_frame->type)
-        {
-        case STACK_FRAME_TYPE_BODY:
-            {
-                VarRef *qref = VarRefCopy(ref);
-                qref->scope = xstrdup("body");
-                bool ret = EvalContextVariableGet(ctx, qref, rval_out, type_out);
-                VarRefDestroy(qref);
-                return ret;
-            }
-            break;
-
-        case STACK_FRAME_TYPE_BUNDLE:
-            {
-                VarRef *qref = VarRefCopy(ref);
-                qref->ns = xstrdup(last_frame->data.bundle.owner->ns);
-                qref->scope = xstrdup(last_frame->data.bundle.owner->name);
-                bool ret = EvalContextVariableGet(ctx, qref, rval_out, type_out);
-                VarRefDestroy(qref);
-                return ret;
-            }
-            break;
-
-        case STACK_FRAME_TYPE_PROMISE:
-        case STACK_FRAME_TYPE_PROMISE_ITERATION:
-            {
-                VarRef *qref = VarRefCopy(ref);
-                VarRefQualify(qref, NULL, "this");
-                bool ret = EvalContextVariableGet(ctx, qref, rval_out, type_out);
-                VarRefDestroy(qref);
-                return ret;
-            }
-            break;
-        }
+        *rval_out = (Rval) {NULL, RVAL_TYPE_SCALAR };
     }
-
-    assert(false);
+    if (type_out)
+    {
+        *type_out = DATA_TYPE_NONE;
+    }
     return false;
 }
 

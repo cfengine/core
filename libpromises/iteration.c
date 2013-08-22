@@ -227,9 +227,6 @@ static bool NullIteratorsInternal(PromiseIterator *iter, size_t index)
                 }
                 break;
 
-            case RVAL_TYPE_CONTAINER:
-                return false;
-
             default:
                 ProgrammingError("Unexpected rval type %d in iterator", state->type);
             }
@@ -254,13 +251,6 @@ static void VariableStateIncrement(PromiseIterator *iter, size_t index)
         }
         break;
 
-    case RVAL_TYPE_CONTAINER:
-        {
-            JsonIterator *container_iter = SeqAt(iter->var_states, index);
-            JsonIteratorNextValue(container_iter);
-        }
-        break;
-
     default:
         ProgrammingError("Unhandled case in switch");
     }
@@ -282,14 +272,6 @@ static void VariableStateReset(PromiseIterator *iter, size_t index)
         }
         break;
 
-    case RVAL_TYPE_CONTAINER:
-        {
-            JsonIterator *container_iter = SeqAt(iter->var_states, index);
-            *container_iter = JsonIteratorInit(RvalContainerValue(var->rval));
-            JsonIteratorNextValue(container_iter);
-        }
-        break;
-
     default:
         ProgrammingError("Unhandled case in switch");
     }
@@ -307,11 +289,6 @@ static bool VariableStateHasMore(const PromiseIterator *iter, size_t index)
         }
 
     case RVAL_TYPE_CONTAINER:
-        {
-            const JsonIterator *state = SeqAt(iter->var_states, index);
-            return JsonIteratorHasMore(state);
-        }
-
     case RVAL_TYPE_FNCALL:
     case RVAL_TYPE_NOPROMISEE:
     case RVAL_TYPE_SCALAR:
@@ -416,10 +393,6 @@ static bool EndOfIterationInternal(const PromiseIterator *iter, size_t index)
             }
             break;
 
-        case RVAL_TYPE_CONTAINER:
-            assert(false);
-            break;
-
         default:
             ProgrammingError("Unhandled value in switch %d", var->rval.type);
         }
@@ -473,56 +446,6 @@ static void UpdateListVariable(const PromiseIterator *iter, Variable *var, size_
         var->rval.type = RVAL_TYPE_SCALAR;
         break;
     default:
-        break;
-    }
-}
-
-static void UpdateContainerVariable(const PromiseIterator *iter, Variable *var, size_t i)
-{
-    JsonIterator *state = SeqAt(iter->var_states, i);
-
-    const JsonElement *item = JsonIteratorCurrentValue(state);
-
-    if (JsonGetElementType(item) != JSON_ELEMENT_TYPE_PRIMITIVE)
-    {
-        return;
-    }
-
-    switch (JsonGetPrimitiveType(item))
-    {
-    case JSON_PRIMITIVE_TYPE_BOOL:
-        {
-            RvalDestroy(var->rval);
-            var->rval.item = xstrdup(JsonPrimitiveGetAsBool(item) ? "true" : "false");
-            var->rval.type = RVAL_TYPE_SCALAR;
-            var->type = DATA_TYPE_STRING;
-        }
-        break;
-    case JSON_PRIMITIVE_TYPE_INTEGER:
-        {
-            RvalDestroy(var->rval);
-            var->rval.item = StringFromLong(JsonPrimitiveGetAsInteger(item));
-            var->rval.type = RVAL_TYPE_SCALAR;
-            var->type = DATA_TYPE_STRING;
-        }
-        break;
-    case JSON_PRIMITIVE_TYPE_REAL:
-        {
-            RvalDestroy(var->rval);
-            var->rval.item = StringFromDouble(JsonPrimitiveGetAsReal(item));
-            var->rval.type = RVAL_TYPE_SCALAR;
-            var->type = DATA_TYPE_STRING;
-        }
-        break;
-    case JSON_PRIMITIVE_TYPE_STRING:
-        {
-            RvalDestroy(var->rval);
-            var->rval.item = xstrdup(JsonPrimitiveGetAsString(item));
-            var->rval.type = RVAL_TYPE_SCALAR;
-            var->type = DATA_TYPE_STRING;
-        }
-        break;
-    case JSON_PRIMITIVE_TYPE_NULL:
         break;
     }
 }

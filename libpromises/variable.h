@@ -14,7 +14,6 @@ typedef struct
 
 typedef struct VariableTable_ VariableTable;
 typedef struct VariableTableIterator_ VariableTableIterator;
-typedef struct VariableTablePermutation_ VariableTablePermutation;
 
 VariableTable *VariableTableNew(void);
 void VariableTableDestroy(VariableTable *table);

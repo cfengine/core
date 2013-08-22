@@ -861,6 +861,279 @@ Rlist *RlistParseString(char *string)
         return NULL;
     }
 }
+/*******************************************************************/
+
+typedef enum
+{
+    CSV_ST_NEW_LINE,
+    CSV_ST_PRE_START_SPACE,
+    CSV_ST_NO_QUOTE_MODE,
+    CSV_ST_SEPARATOR,
+    CSV_ST_LEADING_QUOTE,
+    CSV_ST_INTERNAL_QUOTE,
+    CSV_ST_WITH_QUOTE_MODE,
+    CSV_ST_SPACE_AFTER_QUOTE,
+    CSV_ST_ERROR,
+    CSV_ST_CLOSED
+} csv_state;
+
+#define CSVCL_BLANK(x)  (((x)==' ')||((x)=='\t'))
+#define CSVCL_QUOTE(x)  (((x)=='"'))
+#define CSVCL_SEP(x)    (((x)==','))
+#define CSVCL_EOL(x)    (((x)=='\0'))
+
+#define CSVCL_ANY1(x) ((!CSVCL_BLANK(x))&&(!CSVCL_QUOTE(x))&&(!CSVCL_SEP(x)))
+#define CSVCL_ANY2(x) ((!CSVCL_BLANK(x))&&(!CSVCL_QUOTE(x))&&(!CSVCL_SEP(x)))
+#define CSVCL_ANY3(x) ((!CSVCL_QUOTE(x))&&(!CSVCL_SEP(x)))
+#define CSVCL_ANY4(x) ((!CSVCL_BLANK(x))&&(!CSVCL_QUOTE(x))&&(!CSVCL_SEP(x)))
+#define CSVCL_ANY5(x) ((!CSVCL_QUOTE(x)))
+#define CSVCL_ANY6(x) ((!CSVCL_BLANK(x))&&(!CSVCL_QUOTE(x))&&(!CSVCL_SEP(x)))
+#define CSVCL_ANY7(x) ((!CSVCL_QUOTE(x)))
+#define CSVCL_ANY8(x) ((!CSVCL_BLANK(x))&&(!CSVCL_SEP(x)))
+
+/**
+ @brief parse CSV-formatted line and put its content in a list
+ 
+ @param[in] str: is the CSV string to parse
+ @param[out] newlist: rlist of elements found
+
+ @retval 0: successful, >0: failed
+ */
+static int LaunchCsvAutomata(char *str, Rlist **newlist)
+{
+    char *s = str;
+    csv_state current_state = CSV_ST_NEW_LINE;
+    int ret;
+
+    char snatched[CF_MAXVARSIZE];
+    snatched[0] = '\0';
+    char *sn = snatched ;
+    *sn = '\0';
+
+    while (*s)
+    {
+        switch(current_state) {
+            case CSV_ST_ERROR:
+                Log(LOG_LEVEL_ERR, "Parsing error : Malformed CSV string");
+                ret = 1;
+                goto clean;
+
+            case CSV_ST_NEW_LINE:
+                if (CSVCL_SEP(*s))
+                {
+                    *sn = '\0'; sn = NULL;
+                    current_state = CSV_ST_SEPARATOR;
+                }
+                else if (CSVCL_BLANK(*s)) 
+                {
+                    *sn = *s; sn++;
+                    current_state = CSV_ST_PRE_START_SPACE;
+                }
+                else if (CSVCL_QUOTE(*s)) 
+                {
+                    snatched[0] = '\0'; sn = NULL;
+                    current_state = CSV_ST_LEADING_QUOTE;
+                }
+                else if (CSVCL_ANY1(*s))
+                {
+                    *sn = *s; sn++;
+                    current_state = CSV_ST_NO_QUOTE_MODE;
+                }
+                s++;
+                break;
+
+            case CSV_ST_PRE_START_SPACE:
+                if (CSVCL_SEP(*s))
+                {
+                    *sn = '\0'; sn = NULL;
+                    RlistAppendScalar(newlist, snatched);
+                    snatched[0] = '\0';
+                    current_state = CSV_ST_SEPARATOR;
+                }
+                else if (CSVCL_BLANK(*s)) 
+                {
+                    *sn = *s; sn++;
+                    current_state = CSV_ST_PRE_START_SPACE;
+                }
+                else if (CSVCL_QUOTE(*s)) 
+                {
+                    snatched[0] = '\0'; sn = NULL;
+                    current_state = CSV_ST_LEADING_QUOTE;
+                }
+                else if (CSVCL_ANY2(*s))
+                {
+                    *sn = *s; sn++;
+                    current_state = CSV_ST_NO_QUOTE_MODE;
+                }
+                s++;
+                break;
+
+            case CSV_ST_NO_QUOTE_MODE:
+                if (CSVCL_SEP(*s))
+                {
+                    *sn = '\0'; sn = NULL;
+                    RlistAppendScalar(newlist, snatched);
+                    snatched[0] = '\0';
+                    current_state = CSV_ST_SEPARATOR;
+                }
+                else if (CSVCL_QUOTE(*s)) 
+                {
+                    snatched[0] = '\0'; sn = NULL;
+                    current_state = CSV_ST_ERROR;
+                }
+                else if (CSVCL_ANY3(*s))
+                {
+                    *sn = *s; sn++;
+                    current_state = CSV_ST_NO_QUOTE_MODE;
+                }
+                s++;
+                break;
+
+            case CSV_ST_SEPARATOR:
+                if (CSVCL_SEP(*s))
+                {
+                    snatched[0] = '\0'; sn = NULL;
+                    RlistAppendScalar(newlist, snatched);
+                    current_state = CSV_ST_SEPARATOR;
+                }
+                else if (CSVCL_BLANK(*s)) 
+                {
+                    sn = snatched; *sn = *s; sn++;
+                    current_state = CSV_ST_PRE_START_SPACE;
+                }
+                else if (CSVCL_QUOTE(*s)) 
+                {
+                    snatched[0] = '\0'; sn = NULL;
+                    current_state = CSV_ST_LEADING_QUOTE;
+                }
+                else if (CSVCL_ANY4(*s))
+                {
+                    sn = snatched; *sn = *s; sn++;
+                    current_state = CSV_ST_NO_QUOTE_MODE;
+                }
+                s++;
+                break;
+
+            case CSV_ST_LEADING_QUOTE:
+                if (CSVCL_QUOTE(*s)) 
+                {
+                    sn = snatched;
+                    current_state = CSV_ST_INTERNAL_QUOTE;
+                }
+                else if (CSVCL_ANY5(*s))
+                {
+                    sn = snatched;
+                    *sn = *s; sn++;
+                    current_state = CSV_ST_WITH_QUOTE_MODE;
+                }
+                s++;
+                break;
+
+            case CSV_ST_INTERNAL_QUOTE:
+                if (CSVCL_SEP(*s))
+                {
+                    *sn = '\0'; sn = NULL;
+                    RlistAppendScalar(newlist, snatched);
+                    current_state = CSV_ST_SEPARATOR;
+                }
+                else if (CSVCL_BLANK(*s)) 
+                {
+                    current_state = CSV_ST_SPACE_AFTER_QUOTE;
+                }
+                else if (CSVCL_QUOTE(*s)) 
+                {
+                    *sn = *s; sn++;
+                    current_state = CSV_ST_WITH_QUOTE_MODE;
+                }
+                else if (CSVCL_ANY6(*s))
+                {
+                    snatched[0] = '\0'; sn++;
+                    current_state = CSV_ST_ERROR;
+                }
+                s++;
+                break;
+
+            case CSV_ST_WITH_QUOTE_MODE:
+                if (CSVCL_QUOTE(*s)) 
+                {
+                    current_state = CSV_ST_INTERNAL_QUOTE;
+                }
+                else if (CSVCL_ANY7(*s))
+                {
+                    *sn = *s; sn++;
+                    current_state = CSV_ST_WITH_QUOTE_MODE;
+                }
+                s++;
+                break;
+
+            case CSV_ST_SPACE_AFTER_QUOTE:
+                if (CSVCL_SEP(*s))
+                {
+                    sn = NULL;
+                    RlistAppendScalar(newlist, snatched);
+                    current_state = CSV_ST_SEPARATOR;
+                }
+                else if (CSVCL_BLANK(*s)) 
+                {
+                    sn = NULL;
+                    current_state = CSV_ST_SPACE_AFTER_QUOTE;
+                }
+                else if (CSVCL_ANY8(*s))
+                {
+                    snatched[0] = '\0'; sn = NULL;
+                    current_state = CSV_ST_ERROR;
+                }
+                s++;
+                break;
+
+            default:
+                Log(LOG_LEVEL_ERR, "CSV automata error: unknown state");
+                ret = 2;
+                goto clean;
+                break;
+        }
+    }
+
+    if (current_state != CSV_ST_LEADING_QUOTE && current_state != CSV_ST_WITH_QUOTE_MODE )
+    {
+        *sn = *s; sn++;
+        *sn = '\0'; sn = NULL;
+        RlistAppendScalar(newlist, snatched);
+        snatched[0] = '\0';
+    }
+    else
+    {
+        Log(LOG_LEVEL_ERR, "Parsing error : Malformed CSV string (unexpected end of input)");
+        ret = 3;
+        goto clean;
+    }
+
+    return 0;
+
+clean:
+    if (newlist)
+    {
+        RlistDestroy(*newlist);
+    }
+    return ret;
+}
+
+Rlist *RlistParseCsvString(char *string)
+{
+    Rlist *newlist = NULL;
+    int ret;
+
+    ret = LaunchCsvAutomata(string, &newlist);
+
+    if (!ret)
+    {
+        return newlist;
+    }
+    else
+    {
+        return NULL;
+    }
+}
 
 /*******************************************************************/
 

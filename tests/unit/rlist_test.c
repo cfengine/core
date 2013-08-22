@@ -491,6 +491,44 @@ static void test_new_parser_failure()
     }
 }
 
+static void test_new_csv_reader_basic()
+{
+    Rlist *list = NULL;
+    char *lines[4] = {
+        "aaaa,bbb,ccccc",
+        "\"aaaa\",\"bbb\",\"ccccc\"",
+        "\"aaaa\",bbb,\"ccccc\"",
+        "aaaa,\"bbb\",ccccc"
+    };
+
+
+    for (int i=0; i<4; i++)
+    {
+        list = RlistParseCsvString(lines[i]);
+        assert_int_equal(3, RlistLen(list));
+        assert_string_equal("ccccc", list->next->next->item);
+        if (list != NULL)
+        {
+            RlistDestroy(list);
+        }
+    }
+}
+
+static void test_new_csv_reader()
+{
+    Rlist *list = NULL;
+    char line[]="  Type    ,\"walo1\",  \"walo2\"   ,  \"wal,o \"\" 3\",  \"  ab,cd  \", walo solo ,, \"walo\" ";
+
+
+    list = RlistParseCsvString(line);
+    assert_int_equal(8, RlistLen(list));
+    assert_string_equal("wal,o \" 3", list->next->next->next->item);
+    if (list != NULL)
+    {
+        RlistDestroy(list);
+    }
+}
+
 int main()
 {
     PRINT_TEST_BANNER();
@@ -512,6 +550,8 @@ int main()
         unit_test(test_reverse),
         unit_test(test_new_parser_success),
         unit_test(test_new_parser_failure),
+        unit_test(test_new_csv_reader_basic),
+        unit_test(test_new_csv_reader),
     };
 
     return run_tests(tests);

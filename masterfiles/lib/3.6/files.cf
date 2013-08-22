@@ -179,6 +179,46 @@ bundle edit_line append_if_no_lines(list)
 
 ##
 
+bundle edit_line replace_line_end_or_add(conf)
+#
+# Lines starting with LHS will get the ending given in RHS,
+# whitespaces will be left unmodified.
+#
+# For example
+#    conf["ftp"] string => "2121/tcp";
+#    replace_line_end("@(bundle.conf)") would replace
+#
+#    "ftp             21/tcp"
+#
+# with
+#
+#    "ftp             2121/tcp"
+#
+# if no line starting with "ftp" exists, it will be added.
+{
+  vars:
+
+      "idx" slist => getindices("${conf}");
+      "cidx[${idx}]" string => canonify("${idx}");
+
+  field_edits:
+
+      "\s*$(idx)\s.*"
+
+      comment => "Replace lines with $(idx) and ${${conf}[${idx}]}",
+      edit_field => line("(^|\s)$(idx)\s*", "2", "${${conf}[${idx}]}","set"),
+      classes => if_ok("${cidx[${idx}]}_in_file");
+
+  insert_lines:
+
+      "${idx} ${${conf}[${idx}]}"
+
+      comment => "insert definition for ${idx}",
+      ifvarclass => "!${cidx[${idx}]}_in_file";
+}
+
+##
+
 bundle edit_line replace_line_end(start,end)
 #
 # Lines starting with "$(start)" will get the ending given in "$(end)",

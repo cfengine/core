@@ -34,6 +34,7 @@ check_PROGRAMS = \
 	set_domainname_test \
 	str_test \
 	json_test \
+	csv_parser_test \
 	evalfunction_test \
 	regex_test \
 	alloc_test \
@@ -130,6 +131,9 @@ refcount_test_SOURCES = refcount_test.c ../../libutils/refcount.c
 buffer_test_SOURCES = buffer_test.c ../../libutils/buffer.c
 
 bufferlist_test_SOURCES = bufferlist_test.c ../../libutils/buffer.c ../../libutils/list.c
+
+csv_parser_test_SOURCES = csv_parser_test.c ../../libutils/csv_parser.c
+csv_parser_test_LDADD = libtest.la ../../libutils/libutils.la
 
 cf_key_functions_test_SOURCES = cf_key_functions_test.c ../../cf-key/cf-key-functions.c
 

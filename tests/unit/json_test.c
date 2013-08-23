@@ -516,6 +516,17 @@ static void test_parse_object_escaped(void)
     JsonDestroy(obj);
 }
 
+static void test_parse_tzz_evil_key(void)
+{
+    const char *data = "{ \"third key! can? be$ anything&\": [ \"a\", \"b\", \"c\" ]}";
+    JsonElement *obj = NULL;
+    assert_int_equal(JSON_PARSE_OK, JsonParse(&data, &obj));
+
+    assert_string_equal("b", JsonArrayGetAsString(JsonObjectGetAsArray(obj, "third key! can? be$ anything&"), 1));
+
+    JsonDestroy(obj);
+}
+
 static void test_parse_array_simple(void)
 {
     const char *data = ARRAY_SIMPLE;
@@ -1037,10 +1048,11 @@ int main()
         unit_test(test_parse_object_nested_garbage),
         unit_test(test_parse_array_garbage),
         unit_test(test_parse_array_nested_garbage),
+        unit_test(test_parse_object_escaped),
+        unit_test(test_parse_tzz_evil_key),
         unit_test(test_array_remove_range),
         unit_test(test_remove_key_from_object),
         unit_test(test_detach_key_from_object),
-        unit_test(test_parse_object_escaped),
     };
 
     return run_tests(tests);

@@ -29,6 +29,6 @@
 
 #include <sequence.h>
 
-Seq *SeqParseCsvString(char *string);
+Seq *SeqParseCsvString(const char *string);
 
 #endif

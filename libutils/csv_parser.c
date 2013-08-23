@@ -69,9 +69,9 @@ typedef enum {
 
  @retval 0: successful, <>0: failed
  */
-static csv_parser_error LaunchCsvAutomata(char *str, Seq **newlist)
+static csv_parser_error LaunchCsvAutomata(const char *str, Seq **newlist)
 {
-    char *s = str;
+    char *s = (char*)str;
     csv_state current_state = CSV_ST_NEW_LINE;
     csv_parser_error ret;
 
@@ -301,7 +301,7 @@ clean:
     return ret;
 }
 
-Seq *SeqParseCsvString(char *string)
+Seq *SeqParseCsvString(const char *string)
 {
     Seq *newlist = SeqNew(16, free);
     int ret;

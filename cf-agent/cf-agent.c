@@ -1881,7 +1881,13 @@ static int AutomaticBootstrap(GenericAgentConfig *config)
         ret = -1;
     };
 
-    dlclose(avahi_handle);
+	if (avahi_handle)
+	{
+		/*
+		 * This case happens when dlopen does not manage to open the library.
+		 */
+    	dlclose(avahi_handle);
+	}
     ListDestroy(&foundhubs);
 
     return ret;

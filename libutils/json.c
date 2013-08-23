@@ -338,6 +338,61 @@ void JsonDestroy(JsonElement *element)
     free(element);
 }
 
+JsonElement *JsonMerge(const JsonElement *a, const JsonElement *b)
+{
+    assert(JsonGetElementType(a) == JsonGetElementType(b));
+    assert(JsonGetElementType(a) == JSON_ELEMENT_TYPE_CONTAINER);
+    assert(JsonGetContrainerType(a) == JsonGetContrainerType(b));
+
+    switch (JsonGetContrainerType(a))
+    {
+    case JSON_CONTAINER_TYPE_ARRAY:
+        {
+            JsonElement *arr = JsonArrayCreate(JsonLength(a) + JsonLength(b));
+            for (size_t i = 0; i < JsonLength(a); i++)
+            {
+                JsonElement *child = JsonCopy(JsonArrayGet((JsonElement *)a, i));
+                JsonArrayAppendElement(arr, child);
+            }
+            for (size_t i = 0; i < JsonLength(b); i++)
+            {
+                JsonElement *child = JsonCopy(JsonArrayGet((JsonElement *)b, i));
+                JsonArrayAppendElement(arr, child);
+            }
+
+            return arr;
+        }
+        break;
+
+    case JSON_ELEMENT_TYPE_CONTAINER:
+        {
+            JsonElement *obj = JsonObjectCreate(JsonLength(a) + JsonLength(b));
+
+            JsonIterator iter = JsonIteratorInit(a);
+            const JsonElement *child = NULL;
+            while ((child = JsonIteratorNextValue(&iter)))
+            {
+                const char *key = JsonIteratorCurrentKey(&iter);
+                JsonObjectAppendElement(obj, key, JsonCopy(child));
+            }
+            iter = JsonIteratorInit(b);
+            child = NULL;
+            while ((child = JsonIteratorNextValue(&iter)))
+            {
+                const char *key = JsonIteratorCurrentKey(&iter);
+                JsonObjectAppendElement(obj, key, JsonCopy(child));
+            }
+
+            return obj;
+        }
+        break;
+    }
+
+    assert(false);
+    return NULL;
+}
+
+
 size_t JsonLength(const JsonElement *element)
 {
     assert(element);
@@ -681,6 +736,8 @@ void JsonObjectAppendElement(JsonElement *object, const char *key, JsonElement *
     assert(key);
     assert(element);
 
+    JsonObjectRemoveKey(object, key);
+
     JsonElementSetPropertyName(element, key);
     SeqAppend(object->container.children, element);
 }
@@ -715,7 +772,7 @@ static size_t JsonElementIndexInParentObject(JsonElement *parent, const char* ke
     return SeqIndexOf(parent->container.children, key, CompareKeyToPropertyName);
 }
 
-void JsonObjectRemoveKey(JsonElement *object, const char *key)
+bool JsonObjectRemoveKey(JsonElement *object, const char *key)
 {
     assert(object);
     assert(object->type == JSON_ELEMENT_TYPE_CONTAINER);
@@ -726,7 +783,9 @@ void JsonObjectRemoveKey(JsonElement *object, const char *key)
     if (index != -1)
     {
         SeqRemove(object->container.children, index);
+        return true;
     }
+    return false;
 }
 
 JsonElement *JsonObjectDetachKey(JsonElement *object, const char *key)

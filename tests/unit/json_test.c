@@ -45,6 +45,7 @@ static JsonElement *LoadTestFile(const char *filename)
         return NULL;
     }
 
+    free(contents);
     return json;
 }
 
@@ -54,6 +55,18 @@ static void test_new_delete(void)
 
     JsonObjectAppendString(json, "first", "one");
     JsonDestroy(json);
+}
+
+static void test_object_duplicate_key(void)
+{
+    JsonElement *a = JsonObjectCreate(1);
+
+    JsonObjectAppendString(a, "a", "a");
+    JsonObjectAppendString(a, "a", "a");
+
+    assert_int_equal(1, JsonLength(a));
+
+    JsonDestroy(a);
 }
 
 static void test_show_string(void)
@@ -480,7 +493,57 @@ static void test_select(void)
     }
 
     JsonDestroy(obj);
+}
 
+static void test_merge_array(void)
+{
+    JsonElement *a = JsonArrayCreate(2);
+    JsonArrayAppendString(a, "a");
+    JsonArrayAppendString(a, "b");
+
+    JsonElement *b = JsonArrayCreate(2);
+    JsonArrayAppendString(b, "c");
+    JsonArrayAppendString(b, "d");
+
+    JsonElement *c = JsonMerge(a, b);
+
+    assert_int_equal(2, JsonLength(a));
+    assert_int_equal(2, JsonLength(b));
+    assert_int_equal(4, JsonLength(c));
+
+    assert_string_equal("a", JsonArrayGetAsString(c, 0));
+    assert_string_equal("b", JsonArrayGetAsString(c, 1));
+    assert_string_equal("c", JsonArrayGetAsString(c, 2));
+    assert_string_equal("d", JsonArrayGetAsString(c, 3));
+
+    JsonDestroy(a);
+    JsonDestroy(b);
+    JsonDestroy(c);
+}
+
+static void test_merge_object(void)
+{
+    JsonElement *a = JsonObjectCreate(2);
+    JsonObjectAppendString(a, "a", "a");
+    JsonObjectAppendString(a, "b", "b");
+
+    JsonElement *b = JsonObjectCreate(2);
+    JsonObjectAppendString(b, "b", "b");
+    JsonObjectAppendString(b, "c", "c");
+
+    JsonElement *c = JsonMerge(a, b);
+
+    assert_int_equal(2, JsonLength(a));
+    assert_int_equal(2, JsonLength(b));
+    assert_int_equal(3, JsonLength(c));
+
+    assert_string_equal("a", JsonObjectGetAsString(c, "a"));
+    assert_string_equal("b", JsonObjectGetAsString(c, "b"));
+    assert_string_equal("c", JsonObjectGetAsString(c, "c"));
+
+    JsonDestroy(a);
+    JsonDestroy(b);
+    JsonDestroy(c);
 }
 
 static void test_parse_object_simple(void)
@@ -1010,6 +1073,7 @@ int main()
     const UnitTest tests[] =
     {
         unit_test(test_new_delete),
+        unit_test(test_object_duplicate_key),
         unit_test(test_show_string),
         unit_test(test_show_object_simple),
         unit_test(test_show_object_escaped),
@@ -1032,6 +1096,8 @@ int main()
         unit_test(test_array_iterator),
         unit_test(test_copy_compare),
         unit_test(test_select),
+        unit_test(test_merge_array),
+        unit_test(test_merge_object),
         unit_test(test_parse_object_simple),
         unit_test(test_parse_array_simple),
         unit_test(test_parse_object_compound),

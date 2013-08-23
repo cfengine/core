@@ -137,6 +137,7 @@ JsonElement *JsonNullCreate();
 
 JsonElement *JsonCopy(const JsonElement *json);
 int JsonCompare(const JsonElement *a, const JsonElement *b);
+JsonElement *JsonMerge(const JsonElement *a, const JsonElement *b);
 
 /**
   @brief Destroy a JSON element
@@ -353,8 +354,9 @@ const char* JsonParseErrorToString(JsonParseError error);
   @brief Remove key from the object
   @param object containing the key property
   @param property name to be removed
+  @return True if key was removed
   */
-void JsonObjectRemoveKey(JsonElement *object, const char *key);
+bool JsonObjectRemoveKey(JsonElement *object, const char *key);
 
 /**
   @brief Detach json element ownership from parent object;

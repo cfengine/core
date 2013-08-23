@@ -1680,8 +1680,6 @@ static FnCallResult FnCallMapArray(EvalContext *ctx, FnCall *fp, Rlist *finalarg
     return (FnCallResult) { FNCALL_SUCCESS, { returnlist, RVAL_TYPE_LIST } };
 }
 
-/*********************************************************************/
-
 static FnCallResult FnCallMapList(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
     char expbuf[CF_EXPANDSIZE];
@@ -1738,7 +1736,69 @@ static FnCallResult FnCallMapList(EvalContext *ctx, FnCall *fp, Rlist *finalargs
     return (FnCallResult) { FNCALL_SUCCESS, { newlist, RVAL_TYPE_LIST } };
 }
 
-/*********************************************************************/
+static FnCallResult FnCallMergeContainer(EvalContext *ctx, FnCall *fp, Rlist *args)
+{
+    if (RlistLen(args) == 0)
+    {
+        Log(LOG_LEVEL_ERR, "Function mergecontainer needs at least one argument, a reference to a container variable");
+        return (FnCallResult)  { FNCALL_FAILURE };
+    }
+
+    for (const Rlist *arg = args; arg; arg = arg->next)
+    {
+        if (args->type != RVAL_TYPE_SCALAR)
+        {
+            Log(LOG_LEVEL_ERR, "Function mergecontainer, argument '%s' is not a variable reference", RlistScalarValue(arg));
+            return (FnCallResult)  { FNCALL_FAILURE };
+        }
+    }
+
+    Seq *containers = SeqNew(10, NULL);
+    for (const Rlist *arg = args; arg; arg = arg->next)
+    {
+        VarRef *ref = VarRefParseFromBundle(RlistScalarValue(arg), PromiseGetBundle(fp->caller));
+
+        Rval rval;
+        if (!EvalContextVariableGet(ctx, ref, &rval, NULL))
+        {
+            Log(LOG_LEVEL_ERR, "Function mergecontainer, argument '%s' does not resolve to a container", RlistScalarValue(arg));
+            SeqDestroy(containers);
+            VarRefDestroy(ref);
+            return (FnCallResult)  { FNCALL_FAILURE };
+        }
+
+        SeqAppend(containers, RvalContainerValue(rval));
+
+        VarRefDestroy(ref);
+    }
+
+    if (SeqLength(containers) == 1)
+    {
+        JsonElement *first = SeqAt(containers, 0);
+        SeqDestroy(containers);
+        return  (FnCallResult) { FNCALL_SUCCESS, (Rval) { JsonCopy(first), RVAL_TYPE_CONTAINER } };
+    }
+    else
+    {
+        JsonElement *first = SeqAt(containers, 0);
+        JsonElement *second = SeqAt(containers, 1);
+        JsonElement *result = JsonMerge(first, second);
+
+        for (size_t i = 2; i < SeqLength(containers); i++)
+        {
+            JsonElement *cur = SeqAt(containers, i);
+            JsonElement *tmp = JsonMerge(result, cur);
+            JsonDestroy(result);
+            result = tmp;
+        }
+
+        SeqDestroy(containers);
+        return (FnCallResult) { FNCALL_SUCCESS, (Rval) { result, RVAL_TYPE_CONTAINER } };
+    }
+
+    assert(false);
+}
+
 
 static FnCallResult FnCallSelectServers(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
  /* ReadTCP(localhost,80,'GET index.html',1000) */
@@ -5475,6 +5535,11 @@ FnCallArg MAPARRAY_ARGS[] =
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
+FnCallArg MERGECONTAINER_ARGS[] =
+{
+    {NULL, DATA_TYPE_NONE, NULL}
+};
+
 FnCallArg NOT_ARGS[] =
 {
     {CF_ANYSTRING, DATA_TYPE_STRING, "Class value"},
@@ -5920,6 +5985,7 @@ const FnCallType CF_FNCALL_TYPES[] =
     FnCallTypeNew("lsdir", DATA_TYPE_STRING_LIST, LSDIRLIST_ARGS, &FnCallLsDir, "Return a list of files in a directory matching a regular expression", false, FNCALL_CATEGORY_FILES, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("maparray", DATA_TYPE_STRING_LIST, MAPARRAY_ARGS, &FnCallMapArray, "Return a list with each element modified by a pattern based $(this.k) and $(this.v)", false, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("maplist", DATA_TYPE_STRING_LIST, MAPLIST_ARGS, &FnCallMapList, "Return a list with each element modified by a pattern based $(this)", false, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("mergecontainer", DATA_TYPE_CONTAINER, MERGECONTAINER_ARGS, &FnCallMergeContainer, "", true, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("none", DATA_TYPE_CONTEXT, EVERY_SOME_NONE_ARGS, &FnCallEverySomeNone, "True if no element in the named list matches the given regular expression", false, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("not", DATA_TYPE_STRING, NOT_ARGS, &FnCallNot, "Calculate whether argument is false", false, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("now", DATA_TYPE_INT, NOW_ARGS, &FnCallNow, "Convert the current time into system representation", false, FNCALL_CATEGORY_SYSTEM, SYNTAX_STATUS_NORMAL),

@@ -1,0 +1,69 @@
+#######################################################
+#
+# Test mergejson() with mismatched containers
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+  files:
+      "$(G.testfile).expected"
+      create => "true",
+      edit_line => init_insert_lines;
+}
+
+bundle edit_line init_insert_lines
+{
+  insert_lines:
+      "$(const.dollar)(test.load[third])";
+}
+
+#######################################################
+
+bundle agent test
+{
+  vars:
+      "load1" container => parsejson('["x": "y", "third"]');
+
+      "load2" container => parsejson('
+{
+ "first": 1,
+ "seconds": 2,
+ "third": [ "a", "b", "c" ],
+ "fourth": null
+}
+');
+
+      # this should fail
+      "load" container => mergecontainer("load1", "load2");
+
+  files:
+      "$(G.testfile).actual"
+      create => "true",
+      edit_line => test_insert;
+}
+
+bundle edit_line test_insert
+{
+  insert_lines:
+      "$(test.load[third])";
+}
+
+#######################################################
+
+bundle agent check
+{
+  methods:
+      "any" usebundle => sorted_check_diff("$(G.testfile).actual",
+                                           "$(G.testfile).expected",
+                                           "$(this.promise_filename)");
+}

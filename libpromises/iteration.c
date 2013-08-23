@@ -431,43 +431,6 @@ bool PromiseIteratorHasMore(const PromiseIterator *iter)
     }
 }
 
-static void UpdateListVariable(const PromiseIterator *iter, Variable *var, size_t index)
-{
-    const Rlist *state = SeqAt(iter->var_states, index);
-
-    if (!state || state->type == RVAL_TYPE_FNCALL)
-    {
-        return;
-    }
-
-    assert(state->type == RVAL_TYPE_SCALAR);
-
-    if (state)
-    {
-        RvalDestroy(var->rval);
-        var->rval.item = xstrdup(RlistScalarValue(state));
-    }
-
-    switch (var->type)
-    {
-    case DATA_TYPE_CONTAINER:
-    case DATA_TYPE_STRING_LIST:
-        var->type = DATA_TYPE_STRING;
-        var->rval.type = RVAL_TYPE_SCALAR;
-        break;
-    case DATA_TYPE_INT_LIST:
-        var->type = DATA_TYPE_INT;
-        var->rval.type = RVAL_TYPE_SCALAR;
-        break;
-    case DATA_TYPE_REAL_LIST:
-        var->type = DATA_TYPE_REAL;
-        var->rval.type = RVAL_TYPE_SCALAR;
-        break;
-    default:
-        break;
-    }
-}
-
 void PromiseIteratorUpdateVariable(EvalContext *ctx, const PromiseIterator *iter)
 {
     for (size_t i = 0; i < SeqLength(iter->vars); i++)

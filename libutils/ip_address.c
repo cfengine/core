@@ -1055,7 +1055,7 @@ int IPAddressIsEqual(IPAddress *a, IPAddress *b)
      return -1;
 }
 
-bool IPAddress_IsIPAddress(Buffer *source, IPAddress **address)
+bool IPAddressIsIPAddress(Buffer *source, IPAddress **address)
 {
     if (!source || !BufferData(source))
     {
@@ -1118,3 +1118,4 @@ bool IPAddress_IsIPAddress(Buffer *source, IPAddress **address)
     }
     return true;
 }
+

@@ -69,6 +69,8 @@ P.offsets.current += yyleng;
 
 %}
 
+%x if_ignore_state
+
 space      [ \t]+
 
 newline    ([\n]|[\xd][\xa])
@@ -76,6 +78,9 @@ newline    ([\n]|[\xd][\xa])
 line       ^.*$
 
 comment    #[^\n]*
+
+macro_if    ^@if\ version_after\([0-9]{1,10}\.[0-9]{1,10}\)
+macro_endif ^@endif
 
 promises   bundle
 
@@ -132,6 +137,80 @@ promise_type   [a-zA-Z_]+:
                           P.line_no++;
                           P.line_pos = 0;
                       }
+
+{macro_if}            {
+                        const char* version_text = yytext+18;
+                        ParserDebug("\tL:macro @if %d:version=%s\n", P.line_pos, version_text);
+                        {
+                          int request_major = 0;
+                          int request_minor = 0;
+                          int major = 0;
+                          int minor = 0;
+                          int patch = 0;
+
+                          if (P.if_depth > 0)
+                          {
+                            yyerror("fatal: nested @if macros are not allowed");
+                            return 0;
+                          }
+
+                          P.if_depth++;
+
+                          if (3 == sscanf(Version(), "%d.%d.%d", &major, &minor, &patch))
+                          {
+                            if (2 == sscanf(version_text, "%d.%d", &request_major, &request_minor))
+                            {
+                            if ((request_major > major) ||
+                                (request_major == major && request_minor > minor))
+                              {
+                                /* ignore to the next @endif */
+                                ParserDebug("\tL:macro @if %d:ignoring to next @endif or EOF\n", P.line_pos);
+                                BEGIN(if_ignore_state);
+                              }
+                              else /* we're OK with the version */
+                              {
+                                ParserDebug("\tL:macro @if %d:accepted to next @endif\n", P.line_pos);
+                              }
+                            }
+                            else
+                            {
+                              yyerror("fatal: macro @if requested an unparseable version");
+                              return 0;
+                            }
+                          }
+                          else
+                          {
+                            yyerror("fatal: Version() was unparseable");
+                            return 0;
+                          }
+                        }
+                      }
+
+{macro_endif}         {
+                        ParserDebug("\tL:macro @endif %d\n", P.line_pos);
+                        BEGIN(INITIAL);
+                        if (P.if_depth <= 0)
+                        {
+                          yyerror("fatal: @endif macros without a matching @if are not allowed");
+                          return 0;
+                        }
+                        P.if_depth--;
+                      }
+
+<if_ignore_state>{macro_endif} {
+                                 ParserDebug("\tL:macro @endif %d\n", P.line_pos);
+                                 BEGIN(INITIAL);
+                                 if (P.if_depth <= 0)
+                                 {
+                                   yyerror("fatal: @endif macros without a matching @if are not allowed");
+                                   return 0;
+                                 }
+                                 P.if_depth--;
+                               }
+
+<if_ignore_state>.*          {
+                               ParserDebug("\tL:inside macro @if, ignoring text:%s\n", yytext);
+                             }
 
 {promises}            {
                           /* Note this has to come before "id" since it is a subset of id */
@@ -298,6 +377,21 @@ promise_type   [a-zA-Z_]+:
                           return yytext[0];
                       }
 
+<if_ignore_state><<EOF>>     {
+                               if (P.if_depth > 0)
+                               {
+                                 yyerror("EOF seen while @if was waiting for @endif");
+                                 return 0;
+                               }
+                             }
+
+<<EOF>>     {
+              if (P.if_depth > 0)
+              {
+                yyerror("EOF seen while @if was waiting for @endif");
+              }
+              return 0; // loops forever without this
+            }
 
 %%
 

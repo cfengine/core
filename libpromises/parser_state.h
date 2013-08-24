@@ -49,6 +49,8 @@ typedef struct
     int warnings; // bitfield of warnings not considered to be an error
     int warnings_error; // bitfield of warnings considered to be an error
 
+    int if_depth;
+
     int arg_nesting;
     int list_nesting;
 

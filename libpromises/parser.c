@@ -87,6 +87,8 @@ Policy *ParserParseFile(const char *path, unsigned int warnings, unsigned int wa
     P.warnings_error = warnings_error;
 
     strncpy(P.filename, path, CF_MAXVARSIZE);
+    // no include is active by default
+    P.include_filename[0] = '\0';
 
     yyin = fopen(path, "r");
     if (yyin == NULL)

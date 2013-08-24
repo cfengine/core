@@ -1,0 +1,44 @@
+######################################################
+#
+#  Test that @if works
+#
+#####################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle common test
+{
+@if version_after(3.7)
+  classes:
+      "expected" expression => "any";
+@endif
+@endif
+
+@if version_after(3.6)
+  classes:
+      "expected2" expression => "any";
+@endif
+
+@if version_after(300.700)
+  classes:
+      "not_expected" expression => "any";
+@endif
+}
+
+bundle agent check
+{
+  methods:
+      "" usebundle => dcs_passif_expected("expected,expected2",
+                                         "not_expected",
+                                         $(this.promise_filename));
+}
+
+@if version_after(300.600)
+
+This text should never be seen, it's completely ignored
+@endif

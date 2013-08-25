@@ -51,4 +51,11 @@ bundle common def
       "cfe_log_dirs"     slist => {
                                     "$(sys.workdir)/outputs"
                                   };
+
+  classes:
+
+    ### Enable special features policies. Set to "any" to enable.
+
+    # Internal CFEngine log files rotation
+    "cfengine_internal_rotate_logs" expression  =>  "!any";
 }

@@ -39,7 +39,7 @@
 #include <misc_lib.h>
 #include <cf-serverd-enterprise-stubs.h>
 #include <audit.h>
-#include <server_tls.h>
+#include <tls_server.h>
 #include <server_common.h>
 
 #include <cf-windows-functions.h>

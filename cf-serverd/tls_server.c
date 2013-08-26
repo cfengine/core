@@ -23,7 +23,7 @@
 */
 
 
-#include <server_tls.h>
+#include <tls_server.h>
 #include <server_common.h>
 
 #include <crypto.h>                                        /* DecryptString */

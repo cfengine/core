@@ -27,6 +27,8 @@
 #include <alloc.h>                                      /* xmalloc,... */
 #include <logging.h>                                    /* Log */
 #include <misc_lib.h>                                   /* ProgrammingError */
+#include <buffer.h>                                     /* Buffer */
+#include <ip_address.h>                                 /* IPAddress */
 
 AgentConnection *NewAgentConn(const char *server_name)
 {
@@ -73,57 +75,31 @@ void DeleteAgentConn(AgentConnection *conn)
 
 int IsIPV6Address(char *name)
 {
-    char *sp;
-    int count, max = 0;
-
-    if (name == NULL)
+    if (!name)
     {
         return false;
     }
-
-    count = 0;
-
-    for (sp = name; *sp != '\0'; sp++)
-    {
-        if (isalnum((int) *sp))
-        {
-            count++;
-        }
-        else if ((*sp != ':') && (*sp != '.'))
-        {
-            return false;
-        }
-
-        if (*sp == 'r')
-        {
-            return false;
-        }
-
-        if (count > max)
-        {
-            max = count;
-        }
-        else
-        {
-            count = 0;
-        }
-    }
-
-    if (max <= 2)
+    Buffer *buffer = BufferNewFrom(name, strlen(name));
+    if (!buffer)
     {
         return false;
     }
-
-    if (strstr(name, ":") == NULL)
+    IPAddress *ip_address = NULL;
+    bool is_ip = false;
+    is_ip = IPAddress_IsIPAddress(buffer, &ip_address);
+    if (!is_ip)
     {
+        BufferDestroy(&buffer);
         return false;
     }
-
-    if (strcasestr(name, "scope"))
+    if (IPAddressType(ip_address) != IP_ADDRESS_TYPE_IPV6)
     {
+        BufferDestroy(&buffer);
+        IPAddressDestroy(&ip_address);
         return false;
     }
-
+    BufferDestroy(&buffer);
+    IPAddressDestroy(&ip_address);
     return true;
 }
 
@@ -131,32 +107,31 @@ int IsIPV6Address(char *name)
 
 int IsIPV4Address(char *name)
 {
-    char *sp;
-    int count = 0;
-
-    if (name == NULL)
+    if (!name)
     {
         return false;
     }
-
-    for (sp = name; *sp != '\0'; sp++)
-    {
-        if ((!isdigit((int) *sp)) && (*sp != '.'))
-        {
-            return false;
-        }
-
-        if (*sp == '.')
-        {
-            count++;
-        }
-    }
-
-    if (count != 3)
+    Buffer *buffer = BufferNewFrom(name, strlen(name));
+    if (!buffer)
     {
         return false;
     }
-
+    IPAddress *ip_address = NULL;
+    bool is_ip = false;
+    is_ip = IPAddress_IsIPAddress(buffer, &ip_address);
+    if (!is_ip)
+    {
+        BufferDestroy(&buffer);
+        return false;
+    }
+    if (IPAddressType(ip_address) != IP_ADDRESS_TYPE_IPV4)
+    {
+        BufferDestroy(&buffer);
+        IPAddressDestroy(&ip_address);
+        return false;
+    }
+    BufferDestroy(&buffer);
+    IPAddressDestroy(&ip_address);
     return true;
 }
 

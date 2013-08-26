@@ -1,7 +1,7 @@
 # Just recursively include in dist tarball all data we need for unit tests
 EXTRA_DIST = data
 
-AM_CFLAGS = $(ENTERPRISE_CFLAGS) -I$(srcdir)/../../libcfnet -I$(srcdir)/../../libpromises -I$(srcdir)/../../libutils \
+AM_CFLAGS = $(ENTERPRISE_CFLAGS) -I$(srcdir)/../../libcfnet -I$(srcdir)/../../libpromises -I$(srcdir)/../../libutils -I$(srcdir)/../../cf-monitord \
 	-DTESTDATADIR='"$(srcdir)/data"' -I$(srcdir)/../../cf-serverd -I$(srcdir)/../../cf-agent -I$(srcdir)/../../cf-execd -I$(srcdir)/../../cf-key
 
 LDADD = ../../libpromises/libpromises.la libtest.la
@@ -82,7 +82,11 @@ check_PROGRAMS = \
 	hashes_test \
 	rb-tree-test \
 	variable_test \
-	protocol_test
+	protocol_test \
+	mon_cpu_test \
+	mon_load_test \
+	mon_processes_test
+
 
 if HAVE_AVAHI_CLIENT
 if HAVE_AVAHI_COMMON
@@ -245,3 +249,12 @@ exec_config_test_SOURCES = exec-config-test.c \
 exec_config_test_LDADD = libtest.la ../../libpromises/libpromises.la
 
 sysinfo_test_LDADD = ../../libpromises/libpromises.la libtest.la
+
+mon_cpu_test_SOURCES = mon_cpu_test.c ../../cf-monitord/mon.h ../../cf-monitord/mon_cpu.c
+mon_cpu_test_LDADD = ../../libpromises/libpromises.la libtest.la 
+
+mon_load_test_SOURCES = mon_load_test.c ../../cf-monitord/mon.h ../../cf-monitord/mon_load.c
+mon_load_test_LDADD = ../../libpromises/libpromises.la libtest.la
+
+mon_processes_test_SOURCES = mon_processes_test.c ../../cf-monitord/mon.h ../../cf-monitord/mon_processes.c
+mon_processes_test_LDADD = ../../libpromises/libpromises.la libtest.la

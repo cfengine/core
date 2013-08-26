@@ -561,21 +561,26 @@ static void test_parse_object_simple(void)
 
 static void test_parse_object_escaped(void)
 {
-    const char *escaped_string = "\\\"/var/cfenigne/bin/cf-know\\\" ";
-    const char *key = "json_element_key";
+    const char *decoded = "\"/var/cfenigne/bin/cf-know\" ";
 
-    Writer *writer = StringWriter();
-    WriterWriteF(writer, "{ \"%s\" : \"%s\" }", key, escaped_string);
-
-    const char *json_string = StringWriterData(writer);
+    const char *json_string =  "{\n  \"key\": \"\\\"/var/cfenigne/bin/cf-know\\\" \"\n}";
 
     JsonElement *obj = NULL;
-    assert_int_equal(JSON_PARSE_OK, JsonParse(&json_string, &obj));
+    const char *data = json_string;
+    assert_int_equal(JSON_PARSE_OK, JsonParse(&data, &obj));
 
     assert_int_not_equal(obj, NULL);
-    assert_string_equal(JsonObjectGetAsString(obj, key), escaped_string);
+    assert_string_equal(JsonObjectGetAsString(obj, "key"), decoded);
 
-    WriterClose(writer);
+    {
+        Writer *w = StringWriter();
+        JsonWrite(w, obj, 0);
+
+        assert_string_equal(json_string, StringWriterData(w));
+
+        WriterClose(w);
+    }
+
     JsonDestroy(obj);
 }
 

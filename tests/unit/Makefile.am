@@ -85,8 +85,8 @@ check_PROGRAMS = \
 	protocol_test \
 	mon_cpu_test \
 	mon_load_test \
-	mon_processes_test
-
+	mon_processes_test \
+	mustache_test
 
 if HAVE_AVAHI_CLIENT
 if HAVE_AVAHI_COMMON

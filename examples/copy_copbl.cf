@@ -29,14 +29,17 @@ body common control
 bundle agent mycopy
 {
   files:
+      "/tmp/test_plain"
 
-      "/home/mark/tmp/test_plain"
+#@ Path and name of the file we wish to copy to
 
+      comment => "/tmp/test_plain promises to be an up-to-date copy of /bin/echo to demonstrate copying a local file",
       copy_from => local_cp("$(sys.workdir)/bin/file");
 
-      "/home/mark/tmp/test_remote_plain"
+#@ Copy locally from path/filename
 
-      copy_from => secure_cp("$(sys.workdir)/bin/file","serverhost");
+      "/tmp/test_remote_plain"
+      comment => "/tmp/test_plain_remote promises to be a copy of cfengine://serverhost.example.org/repo/config-files/motd",
+      copy_from => secure_cp("/repo/config-files/motd", "serverhost.example.org");
 }
-
-
+#@ Copy remotely from path/filename and specified host

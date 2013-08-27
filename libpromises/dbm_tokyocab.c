@@ -395,6 +395,7 @@ char *DBPrivDiagnose(const char *dbpath)
     memcpy(&declared_size, hbuf+56, sizeof(uint64_t));
     if(declared_size == size)
     {
+        fclose(fp);
         return NULL; // all is well
     }
     else

@@ -89,6 +89,7 @@
 #ifndef ENTERPRISE_FUNCTION_CALL_H
 #define ENTERPRISE_FUNCTION_CALL_H
 
+#include <shared_lib.h>
 #include <logging.h>
 
 #ifndef BUILTIN_EXTENSIONS
@@ -98,10 +99,6 @@
 
 void *enterprise_library_open();
 void enterprise_library_close(void *handle);
-
-void *shlib_open(const char *lib_name);
-void *shlib_load(void *handle, const char *symbol_name);
-void shlib_close(void *handle);
 
 #ifndef BUILDING_CORE_EXTENSION
 # define ENTERPRISE_FUNC_0ARG_WRAPPER_SIGNATURE(__ret, __func) \

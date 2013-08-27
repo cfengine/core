@@ -25,7 +25,6 @@
 #include <enterprise_extension.h>
 #include <sysinfo.h>
 
-#include <dlfcn.h>
 #include <pthread.h>
 
 static pthread_once_t enterprise_library_once = PTHREAD_ONCE_INIT;
@@ -90,31 +89,4 @@ void enterprise_library_close(void *handle)
 
     // Normally we don't ever close the enterprise library, because we may have
     // pointer references to it.
-}
-
-void *shlib_open(const char *lib_name)
-{
-    struct stat statbuf;
-    if (stat(lib_name, &statbuf) == -1)
-    {
-        Log(LOG_LEVEL_DEBUG, "Could not open shared library: %s\n", GetErrorStr());
-        return NULL;
-    }
-
-    void * ret = dlopen(lib_name, RTLD_NOW);
-    if (!ret)
-    {
-        Log(LOG_LEVEL_ERR, "Could not open shared library: %s\n", dlerror());
-    }
-    return ret;
-}
-
-void *shlib_load(void *handle, const char *symbol_name)
-{
-    return dlsym(handle, symbol_name);
-}
-
-void shlib_close(void *handle)
-{
-    dlclose(handle);
 }

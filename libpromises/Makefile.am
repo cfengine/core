@@ -92,6 +92,7 @@ libpromises_la_SOURCES = \
         prototypes3.h \
         rlist.c rlist.h \
         scope.c scope.h \
+        shared_lib.c shared_lib.h \
         signals.c signals.h \
         sort.c sort.h \
         storage_tools.c \

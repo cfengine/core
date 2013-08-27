@@ -268,3 +268,22 @@ void SeqShuffle(Seq *seq, unsigned int seed)
     /* Restore previous random number state */
     srand(rand_state);
 }
+
+Seq *SeqGetRange(Seq *seq, size_t start, size_t end)
+{
+    assert (seq);
+
+    if ((start > end) || (seq->length < start) || (seq->length < end))
+    {
+        return NULL;
+    }
+
+    Seq *sub = SeqNew(end - start + 1, seq->ItemDestroy);
+
+    for (size_t i = start; i <= end; i++)
+    {
+        SeqAppend(sub, SeqAt(seq, i));
+    }
+
+    return sub;
+}

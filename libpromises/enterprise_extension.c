@@ -87,6 +87,6 @@ void enterprise_library_close(void *handle)
         return shlib_close(handle);
     }
 
-    // Normally we don't ever close the enterprise library, because we may have
+    // Normally we don't ever close the extension library, because we may have
     // pointer references to it.
 }

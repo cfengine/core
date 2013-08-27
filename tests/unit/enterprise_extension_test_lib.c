@@ -1,7 +1,7 @@
 #include <stdint.h>
 
 // Pretend we are an extension.
-#define BUILDING_CORE_EXTENSION
+#define BUILDING_ENTERPRISE_EXTENSION
 #include <enterprise_extension.h>
 
 ENTERPRISE_FUNC_2ARG_DECLARE(int64_t, extension_function, int32_t, short_int, int64_t, long_int);

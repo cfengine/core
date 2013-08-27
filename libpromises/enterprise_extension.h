@@ -92,7 +92,7 @@
 #include <shared_lib.h>
 #include <logging.h>
 
-#ifndef BUILTIN_EXTENSIONS
+#ifndef ENTERPRISE_BUILTIN_EXTENSIONS
 
 #define ENTERPRISE_CANARY_VALUE 0x10203040
 #define ENTERPRISE_LIBRARY_NAME "cfengine-enterprise.so"
@@ -100,7 +100,7 @@
 void *enterprise_library_open();
 void enterprise_library_close(void *handle);
 
-#ifndef BUILDING_CORE_EXTENSION
+#ifndef BUILDING_ENTERPRISE_EXTENSION
 # define ENTERPRISE_FUNC_0ARG_WRAPPER_SIGNATURE(__ret, __func) \
     __ret __func()
 # define ENTERPRISE_FUNC_1ARG_WRAPPER_SIGNATURE(__ret, __func, __t1, __p1) \
@@ -167,7 +167,7 @@ void enterprise_library_close(void *handle);
 # define ENTERPRISE_FUNC_15ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13, __t14, __p14, __t15, __p15) \
     __ret __func##__stub(__t1 __p1, __t2 __p2, __t3 __p3, __t4 __p4, __t5 __p5, __t6 __p6, __t7 __p7, __t8 __p8, __t9 __p9, __t10 __p10, __t11 __p11, __t12 __p12, __t13 __p13, __t14 __p14, __t15 __p15)
 
-#else // BUILDING_CORE_EXTENSION
+#else // BUILDING_ENTERPRISE_EXTENSION
 
 # define ENTERPRISE_FUNC_0ARG_WRAPPER_SIGNATURE(__ret, __func) \
     __ret __func##__wrapper(int32_t __start_canary, int *__successful, int32_t __end_canary)
@@ -268,9 +268,9 @@ void enterprise_library_close(void *handle);
 # define ENTERPRISE_FUNC_15ARG_INLINE_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13, __t14, __p14, __t15, __p15) \
     inline static __ret __func(__t1 __p1, __t2 __p2, __t3 __p3, __t4 __p4, __t5 __p5, __t6 __p6, __t7 __p7, __t8 __p8, __t9 __p9, __t10 __p10, __t11 __p11, __t12 __p12, __t13 __p13, __t14 __p14, __t15 __p15)
 
-#endif // BUILDING_CORE_EXTENSION
+#endif // BUILDING_ENTERPRISE_EXTENSION
 
-#ifndef BUILDING_CORE_EXTENSION
+#ifndef BUILDING_ENTERPRISE_EXTENSION
 
 // The __ret__assign and __ret_ref parameters are to work around functions returning void.
 #define ENTERPRISE_FUNC_IMPL_LOADER(__ret, __func, __ret__assign, __ret__ref, __real__func__par, __stub__func__par) \
@@ -499,7 +499,7 @@ void enterprise_library_close(void *handle);
 # define ENTERPRISE_VOID_FUNC_15ARG_DECLARE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13, __t14, __p14, __t15, __p15) \
     ENTERPRISE_FUNC_15ARG_DECLARE_IMPL(__ret, __func, , , __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13, __t14, __p14, __t15, __p15)
 
-#else // BUILDING_CORE_EXTENSION
+#else // BUILDING_ENTERPRISE_EXTENSION
 
 # define ENTERPRISE_FUNC_0ARG_DECLARE(__ret, __func) \
     ENTERPRISE_FUNC_0ARG_REAL_SIGNATURE(__ret, __func); \
@@ -728,10 +728,10 @@ void enterprise_library_close(void *handle);
     } \
     ENTERPRISE_FUNC_15ARG_REAL_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13, __t14, __p14, __t15, __p15)
 
-#endif // BUILDING_CORE_EXTENSION
+#endif // BUILDING_ENTERPRISE_EXTENSION
 
 
-#ifndef BUILDING_CORE_EXTENSION
+#ifndef BUILDING_ENTERPRISE_EXTENSION
 
 #define ENTERPRISE_FUNC_0ARG_DEFINE_STUB(__ret, __func) \
     ENTERPRISE_FUNC_0ARG_REAL_SIGNATURE(__ret, __func)
@@ -867,7 +867,7 @@ void enterprise_library_close(void *handle);
 #define ENTERPRISE_VOID_FUNC_15ARG_DEFINE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13, __t14, __p14, __t15, __p15) \
     ENTERPRISE_FUNC_DEFINE_REAL_INVALID
 
-#else // BUILDING_CORE_EXTENSION
+#else // BUILDING_ENTERPRISE_EXTENSION
 
 #define ENTERPRISE_FUNC_DEFINE_WRAPPER_IMPL_RET_VALUE(__ret, __func, __real__func__par, __ret__expr) \
     { \
@@ -1157,12 +1157,12 @@ void enterprise_library_close(void *handle);
 #define ENTERPRISE_VOID_FUNC_15ARG_DEFINE_STUB(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13, __t14, __p14, __t15, __p15) \
     ENTERPRISE_FUNC_DEFINE_STUB_INVALID
 
-#endif // BUILDING_CORE_EXTENSION
+#endif // BUILDING_ENTERPRISE_EXTENSION
 
 
-#else // BUILTIN_EXTENSIONS
+#else // ENTERPRISE_BUILTIN_EXTENSIONS
 // In this case just map to real function calls.
-// BUILTIN_EXTENSIONS is for Windows binaries and debugging.
+// ENTERPRISE_BUILTIN_EXTENSIONS is for Windows binaries and debugging.
 
 # define ENTERPRISE_FUNC_0ARG_STUB_SIGNATURE(__ret, __func) \
     __ret __func##__stub()
@@ -1429,6 +1429,6 @@ void enterprise_library_close(void *handle);
 #define ENTERPRISE_VOID_FUNC_15ARG_DEFINE_STUB(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13, __t14, __p14, __t15, __p15) \
     ENTERPRISE_FUNC_15ARG_STUB_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13, __t14, __p14, __t15, __p15)
 
-#endif // BUILTIN_EXTENSIONS
+#endif // ENTERPRISE_BUILTIN_EXTENSIONS
 
 #endif // ENTERPRISE_FUNCTION_CALL_H

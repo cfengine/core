@@ -280,6 +280,8 @@ int main(int argc, char *argv[])
     EvalContextDestroy(ctx);
     GenericAgentConfigDestroy(config);
 
+    GenerateDiffReports(config->input_file);
+
     return ret;
 }
 

@@ -59,7 +59,7 @@ ENTERPRISE_VOID_FUNC_1ARG_DECLARE(void, ReportPatches, PackageManager *, list);
 
 ENTERPRISE_VOID_FUNC_1ARG_DECLARE(void, Nova_NoteVarUsageDB, EvalContext *, ctx);
 ENTERPRISE_VOID_FUNC_1ARG_DECLARE(void, Nova_TrackExecution, const char *, input_file);
-ENTERPRISE_VOID_FUNC_0ARG_DECLARE(void, GenerateDiffReports);
+ENTERPRISE_VOID_FUNC_1ARG_DECLARE(void, GenerateDiffReports, const char *, input_file);
 
 #endif
 

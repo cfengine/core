@@ -430,11 +430,21 @@ int getnetgrent(char **host, char **user, char **domain);
 #endif
 
 #if !HAVE_DECL_SETNETGRENT
-int setnetgrent(const char *netgroup);
+#if SETNETGRENT_RETURNS_INT
+int
+#else
+void
+#endif
+setnetgrent(const char *netgroup);
 #endif
 
 #if !HAVE_DECL_ENDNETGRENT
-int endnetgrent(void);
+#if ENDNETGRENT_RETURNS_INT
+int
+#else
+void
+#endif
+endnetgrent(void);
 #endif
 
 #if !HAVE_DECL_STRSTR

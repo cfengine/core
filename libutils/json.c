@@ -704,7 +704,7 @@ static char *JsonDecodeString(const char *encoded_string)
                 WriterWriteChar(w, '\f');
                 break;
             case 'n':
-                WriterWriteChar(w, '\r');
+                WriterWriteChar(w, '\n');
                 break;
             case 'r':
                 WriterWriteChar(w, '\r');

@@ -546,6 +546,31 @@ static void test_merge_object(void)
     JsonDestroy(c);
 }
 
+static void test_parse_empty_containers(void)
+{
+    {
+        const char *data = "{}";
+        JsonElement *obj = NULL;
+        assert_int_equal(JSON_PARSE_OK, JsonParse(&data, &obj));
+        assert_true(obj != NULL);
+        assert_int_equal(JSON_ELEMENT_TYPE_CONTAINER, JsonGetElementType(obj));
+        assert_int_equal(JSON_CONTAINER_TYPE_OBJECT, JsonGetContrainerType(obj));
+        assert_int_equal(0, JsonLength(obj));
+        JsonDestroy(obj);
+    }
+
+    {
+        const char *data = "[]";
+        JsonElement *arr = NULL;
+        assert_int_equal(JSON_PARSE_OK, JsonParse(&data, &arr));
+        assert_true(arr != NULL);
+        assert_int_equal(JSON_ELEMENT_TYPE_CONTAINER, JsonGetElementType(arr));
+        assert_int_equal(JSON_CONTAINER_TYPE_ARRAY, JsonGetContrainerType(arr));
+        assert_int_equal(0, JsonLength(arr));
+        JsonDestroy(arr);
+    }
+}
+
 static void test_parse_object_simple(void)
 {
     const char *data = OBJECT_SIMPLE;
@@ -680,7 +705,7 @@ static void test_iterator_current(void)
     JsonDestroy(json);
 }
 
-static void test_parse_empty(void)
+static void test_parse_empty_string(void)
 {
     const char *data = "";
     JsonElement *json = NULL;
@@ -1103,12 +1128,13 @@ int main()
         unit_test(test_select),
         unit_test(test_merge_array),
         unit_test(test_merge_object),
+        unit_test(test_parse_empty_string),
+        unit_test(test_parse_empty_containers),
         unit_test(test_parse_object_simple),
         unit_test(test_parse_array_simple),
         unit_test(test_parse_object_compound),
         unit_test(test_parse_object_diverse),
         unit_test(test_parse_array_object),
-        unit_test(test_parse_empty),
         unit_test(test_parse_good_numbers),
         unit_test(test_parse_bad_numbers),
         unit_test(test_parse_trim),

@@ -45,6 +45,8 @@
 #include <man.h>
 
 
+#include <cf-windows-functions.h>
+
 #include <cf-execd.h>
 
 #define CF_EXEC_IFELAPSED 0

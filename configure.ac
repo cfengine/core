@@ -502,15 +502,6 @@ dnl ######################################################################
 dnl Check for special functions
 dnl ######################################################################
 
-AC_CHECK_DECLS(uname)
-AC_REPLACE_FUNCS(uname)
-
-AC_CHECK_DECLS(getuid)
-AC_REPLACE_FUNCS(getuid)
-
-AC_CHECK_DECLS(getgid)
-AC_REPLACE_FUNCS(getgid)
-
 AC_CHECK_DECLS(clock_gettime, [], [], [[#include <time.h>]])
 AC_REPLACE_FUNCS(clock_gettime)
 
@@ -536,17 +527,11 @@ AC_REPLACE_FUNCS(strlcpy)
 AC_CHECK_DECLS(realpath)
 AC_CHECK_FUNCS(realpath)
 
-AC_CHECK_DECLS(lstat)
-AC_REPLACE_FUNCS(lstat)
-
 AC_CHECK_DECLS(strdup)
 AC_REPLACE_FUNCS(strdup)
 
 AC_CHECK_DECLS(round, [], [], [[#include <math.h>]])
 AC_REPLACE_FUNCS(round)
-
-AC_CHECK_FUNCS(sleep)
-AC_REPLACE_FUNCS(sleep)
 
 AC_CHECK_DECLS(nanosleep)
 AC_REPLACE_FUNCS(nanosleep)
@@ -587,12 +572,6 @@ AC_REPLACE_FUNCS(gmtime_r)
 AC_CHECK_DECLS(localtime_r, [], [], [[#include <time.h>]])
 AC_REPLACE_FUNCS(localtime_r)
 
-AC_CHECK_DECLS(alarm)
-AC_REPLACE_FUNCS(alarm)
-
-AC_CHECK_DECLS(chmod)
-AC_REPLACE_FUNCS(chmod)
-
 AC_CHECK_FUNCS(getpwent setpwent endpwent)
 
 AC_CHECK_DECLS(getnetgrent, [], [], [[#include <netdb.h>]])
@@ -621,6 +600,12 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <sys/types.h>
     [AC_DEFINE([SENDTO_RETURNS_SSIZE_T], 1, [Whether sendto returns ssize_t])],
     [AC_DEFINE([SENDTO_RETURNS_SSIZE_T], 0, [Whether sendto does not returns ssize_t])])
 
+CF3_CHECK_PROPER_FUNC([ctime],
+  [],
+  [[#error ctime(3) may produce different results on different OSes. Let's have our POSIX-compliant implementation all the time]],
+  [#define ctime rpl_ctime])
+CF3_REPLACE_PROPER_FUNC([ctime])
+ 
 dnl Check whether mkdir accepts two parameters
 CF3_CHECK_PROPER_FUNC([mkdir],
   [[#include <sys/stat.h>
@@ -650,11 +635,6 @@ CF3_CHECK_PROPER_FUNC([rename],
     #endif]],
   [#define rename rpl_rename])
 
-CF3_CHECK_PROPER_FUNC([ctime],
-  [],
-  [[#error ctime(3) may produce different results on different OSes. Let's have our POSIX-compliant implementation all the time]],
-  [#define ctime rpl_ctime])
- 
 AC_CHECK_DECLS(mkdtemp)
 AC_REPLACE_FUNCS(mkdtemp)
 
@@ -756,17 +736,26 @@ AC_CHECK_FUNCS(getifaddrs)
 
 AC_CHECK_FUNC(lchown, AC_DEFINE(HAVE_LCHOWN, 1, [Whether to use lchown(3) to change ownerships]))
 
-AC_CHECK_DECLS(chown)
-AC_REPLACE_FUNCS(chown)
-
-AC_CHECK_FUNCS(fchmod)
-AC_REPLACE_FUNCS(fchmod)
-
 AC_CHECK_DECLS(pthread_attr_setstacksize, [], [], [[#include <pthread.h>]])
 AC_REPLACE_FUNCS(pthread_attr_setstacksize)
 
 AC_CHECK_DECLS(pthread_sigmask, [], [], [[#include <signal.h>]])
 AC_REPLACE_FUNCS(pthread_sigmask)
+
+dnl ######################################################################
+dnl These need declarations here, but will be defined in the
+dnl Enterprise Windows code.
+dnl ######################################################################
+
+AC_CHECK_DECLS(alarm)
+AC_CHECK_DECLS(chmod)
+AC_CHECK_DECLS(chown)
+AC_CHECK_FUNCS(fchmod)
+AC_CHECK_DECLS(uname)
+AC_CHECK_DECLS(getuid)
+AC_CHECK_DECLS(getgid)
+AC_CHECK_DECLS(lstat)
+AC_CHECK_FUNCS(sleep)
 
 dnl ######################################################################
 dnl Check for sa_len in struct sockaddr

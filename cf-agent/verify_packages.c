@@ -46,6 +46,7 @@
 #include <env_context.h>
 #include <retcode.h>
 #include <cf-agent-enterprise-stubs.h>
+#include <cf-windows-functions.h>
 
 /** Entry points from VerifyPackagesPromise **/
 

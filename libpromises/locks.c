@@ -30,7 +30,7 @@
 #include <atexit.h>
 #include <policy.h>
 #include <files_hashes.h>
-#include <item_lib.h>
+#include <rb-tree.h>
 #include <files_names.h>
 #include <rlist.h>
 #include <process_lib.h>
@@ -39,7 +39,6 @@
 
 #define CFLOGSIZE 1048576       /* Size of lock-log before rotation */
 
-static Item *DONELIST = NULL;
 static char CFLAST[CF_BUFSIZE] = { 0 };
 static char CFLOG[CF_BUFSIZE] = { 0 };
 
@@ -589,6 +588,8 @@ CfLock AcquireLock(EvalContext *ctx, const char *operand, const char *host, time
     char *promise, cc_operator[CF_BUFSIZE], cc_operand[CF_BUFSIZE];
     char cflock[CF_BUFSIZE], cflast[CF_BUFSIZE], cflog[CF_BUFSIZE];
     char str_digest[CF_BUFSIZE];
+    char *rbt_key = NULL;
+    static RBTree *rbt = NULL;
     CfLock this;
     unsigned char digest[EVP_MAX_MD_SIZE + 1];
 
@@ -604,6 +605,12 @@ CfLock AcquireLock(EvalContext *ctx, const char *operand, const char *host, time
     this.last = NULL;
     this.lock = NULL;
     this.log = NULL;
+
+    // rbt is static, allocate it the first time
+    if (rbt == NULL)
+    {
+      rbt = RBTreeNew(NULL, (RBTreeKeyCompareFn *) StringSafeCompare, NULL, NULL, NULL, NULL);
+    }
 
 /* Indicate as done if we tried ... as we have passed all class
    constraints now but we should only do this for level 0
@@ -628,13 +635,19 @@ CfLock AcquireLock(EvalContext *ctx, const char *operand, const char *host, time
 
     if (THIS_AGENT_TYPE == AGENT_TYPE_AGENT)
     {
-        if (IsItemIn(DONELIST, str_digest))
+        /* Avoid same prefix to have a better key for our Red Black Tree */
+        rbt_key = xcalloc(1, CF_BUFSIZE);
+        snprintf(rbt_key, CF_BUFSIZE, "%s", SkipHashType(str_digest));
+
+        if (RBTreeGet(rbt, (void *) rbt_key) != NULL)
         {
             Log(LOG_LEVEL_DEBUG, "This promise has already been verified");
+            free(rbt_key);
             return this;
         }
 
-        PrependItem(&DONELIST, str_digest, NULL);
+        /* Using &sum to avoid the declaration of a dedicated dummy variable */
+        RBTreePut(rbt, (void * ) rbt_key, &sum);
     }
 
 /* Finally if we're supposed to ignore locks ... do the remaining stuff */

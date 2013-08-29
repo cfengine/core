@@ -56,6 +56,7 @@
 #include <verify_classes.h>
 #include <verify_vars.h>
 
+#include <cf-windows-functions.h>
 
 static pthread_once_t pid_cleanup_once = PTHREAD_ONCE_INIT;
 

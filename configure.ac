@@ -114,9 +114,11 @@ dnl How to build extension binaries. Can be built as plugins (default)
 dnl or complete binaries (Windows and general debugging).
 dnl ######################################################################
 
-AC_ARG_ENABLE([builtin-extensions], [AS_HELP_STRING([Build binaries with builtin extensions (default)])],
+AC_ARG_ENABLE([builtin-extensions], [AS_HELP_STRING([Build binaries with builtin extensions])],
               [],
-              [])
+              [
+                  AS_CASE([${target_os}], [mingw*], [enable_builtin_extensions=yes], [enable_builtin_extensions=no])
+              ])
 AM_CONDITIONAL([BUILTIN_EXTENSIONS], [test "x$enable_builtin_extensions" = "xyes"])
 AS_IF([test "x$enable_builtin_extensions" = "xyes"], [AC_DEFINE([BUILTIN_EXTENSIONS], [1], [Define if you want builtin extensions])])
 
@@ -502,15 +504,6 @@ dnl ######################################################################
 dnl Check for special functions
 dnl ######################################################################
 
-AC_CHECK_DECLS(uname)
-AC_REPLACE_FUNCS(uname)
-
-AC_CHECK_DECLS(getuid)
-AC_REPLACE_FUNCS(getuid)
-
-AC_CHECK_DECLS(getgid)
-AC_REPLACE_FUNCS(getgid)
-
 AC_CHECK_DECLS(clock_gettime, [], [], [[#include <time.h>]])
 AC_REPLACE_FUNCS(clock_gettime)
 
@@ -536,17 +529,11 @@ AC_REPLACE_FUNCS(strlcpy)
 AC_CHECK_DECLS(realpath)
 AC_CHECK_FUNCS(realpath)
 
-AC_CHECK_DECLS(lstat)
-AC_REPLACE_FUNCS(lstat)
-
 AC_CHECK_DECLS(strdup)
 AC_REPLACE_FUNCS(strdup)
 
 AC_CHECK_DECLS(round, [], [], [[#include <math.h>]])
 AC_REPLACE_FUNCS(round)
-
-AC_CHECK_FUNCS(sleep)
-AC_REPLACE_FUNCS(sleep)
 
 AC_CHECK_DECLS(nanosleep)
 AC_REPLACE_FUNCS(nanosleep)
@@ -587,12 +574,6 @@ AC_REPLACE_FUNCS(gmtime_r)
 AC_CHECK_DECLS(localtime_r, [], [], [[#include <time.h>]])
 AC_REPLACE_FUNCS(localtime_r)
 
-AC_CHECK_DECLS(alarm)
-AC_REPLACE_FUNCS(alarm)
-
-AC_CHECK_DECLS(chmod)
-AC_REPLACE_FUNCS(chmod)
-
 AC_CHECK_FUNCS(getpwent setpwent endpwent)
 
 AC_CHECK_DECLS(getnetgrent, [], [], [[#include <netdb.h>]])
@@ -621,6 +602,12 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <sys/types.h>
     [AC_DEFINE([SENDTO_RETURNS_SSIZE_T], 1, [Whether sendto returns ssize_t])],
     [AC_DEFINE([SENDTO_RETURNS_SSIZE_T], 0, [Whether sendto does not returns ssize_t])])
 
+CF3_CHECK_PROPER_FUNC([ctime],
+  [],
+  [[#error ctime(3) may produce different results on different OSes. Let's have our POSIX-compliant implementation all the time]],
+  [#define ctime rpl_ctime])
+CF3_REPLACE_PROPER_FUNC([ctime])
+ 
 dnl Check whether mkdir accepts two parameters
 CF3_CHECK_PROPER_FUNC([mkdir],
   [[#include <sys/stat.h>
@@ -650,11 +637,6 @@ CF3_CHECK_PROPER_FUNC([rename],
     #endif]],
   [#define rename rpl_rename])
 
-CF3_CHECK_PROPER_FUNC([ctime],
-  [],
-  [[#error ctime(3) may produce different results on different OSes. Let's have our POSIX-compliant implementation all the time]],
-  [#define ctime rpl_ctime])
- 
 AC_CHECK_DECLS(mkdtemp)
 AC_REPLACE_FUNCS(mkdtemp)
 
@@ -756,17 +738,26 @@ AC_CHECK_FUNCS(getifaddrs)
 
 AC_CHECK_FUNC(lchown, AC_DEFINE(HAVE_LCHOWN, 1, [Whether to use lchown(3) to change ownerships]))
 
-AC_CHECK_DECLS(chown)
-AC_REPLACE_FUNCS(chown)
-
-AC_CHECK_FUNCS(fchmod)
-AC_REPLACE_FUNCS(fchmod)
-
 AC_CHECK_DECLS(pthread_attr_setstacksize, [], [], [[#include <pthread.h>]])
 AC_REPLACE_FUNCS(pthread_attr_setstacksize)
 
 AC_CHECK_DECLS(pthread_sigmask, [], [], [[#include <signal.h>]])
 AC_REPLACE_FUNCS(pthread_sigmask)
+
+dnl ######################################################################
+dnl These need declarations here, but will be defined in the
+dnl Enterprise Windows code.
+dnl ######################################################################
+
+AC_CHECK_DECLS(alarm)
+AC_CHECK_DECLS(chmod)
+AC_CHECK_DECLS(chown)
+AC_CHECK_FUNCS(fchmod)
+AC_CHECK_DECLS(uname)
+AC_CHECK_DECLS(getuid)
+AC_CHECK_DECLS(getgid)
+AC_CHECK_DECLS(lstat)
+AC_CHECK_FUNCS(sleep)
 
 dnl ######################################################################
 dnl Check for sa_len in struct sockaddr
@@ -847,16 +838,29 @@ dnl ######################################################################
 dnl Collect all the options
 dnl ######################################################################
 
-CPPFLAGS="$CPPFLAGS $TOKYOCABINET_CPPFLAGS $QDBM_CPPFLAGS $PCRE_CPPFLAGS $OPENSSL_CPPFLAGS $MONGO_CPPFLAGS $SQLITE3_CPPFLAGS $LIBACL_CPPFLAGS"
-CFLAGS="$CFLAGS $TOKYOCABINET_CFLAGS $QDBM_CFLAGS $PCRE_CFLAGS $OPENSSL_CFLAGS $MONGO_CFLAGS $SQLITE3_CFLAGS $LIBACL_CFLAGS"
-LDFLAGS="$LDFLAGS $TOKYOCABINET_LDFLAGS $QDBM_LDFLAGS $PCRE_LDFLAGS $OPENSSL_LDFLAGS $MONGO_LDFLAGS $SQLITE3_LDFLAGS $LIBACL_LDFLAGS"
-LIBS="$LIBS $TOKYOCABINET_LIBS $QDBM_LIBS $PCRE_LIBS $OPENSSL_LIBS $MONGO_LIBS $SQLITE3_LIBS $LIBACL_LIBS"
+CORE_CPPFLAGS="$CPPFLAGS $TOKYOCABINET_CPPFLAGS $QDBM_CPPFLAGS $PCRE_CPPFLAGS $OPENSSL_CPPFLAGS $MONGO_CPPFLAGS $SQLITE3_CPPFLAGS $LIBACL_CPPFLAGS"
+CORE_CFLAGS="$CFLAGS $TOKYOCABINET_CFLAGS $QDBM_CFLAGS $PCRE_CFLAGS $OPENSSL_CFLAGS $MONGO_CFLAGS $SQLITE3_CFLAGS $LIBACL_CFLAGS"
+CORE_LDFLAGS="$LDFLAGS $TOKYOCABINET_LDFLAGS $QDBM_LDFLAGS $PCRE_LDFLAGS $OPENSSL_LDFLAGS $MONGO_LDFLAGS $SQLITE3_LDFLAGS $LIBACL_LDFLAGS"
+CORE_LIBS="$LIBS $TOKYOCABINET_LIBS $QDBM_LIBS $PCRE_LIBS $OPENSSL_LIBS $MONGO_LIBS $SQLITE3_LIBS $LIBACL_LIBS"
 
 dnl ######################################################################
 dnl Make them available to subprojects.
 dnl ######################################################################
 
+AC_SUBST([CORE_CPPFLAGS])
+AC_SUBST([CORE_CFLAGS])
+AC_SUBST([CORE_LDFLAGS])
+AC_SUBST([CORE_LIBS])
 AC_CONFIG_FILES([configure_flags.env])
+
+dnl ######################################################################
+dnl And then use them.
+dnl ######################################################################
+
+CPPFLAGS="$CORE_CPPFLAGS"
+CFLAGS="$CORE_CFLAGS"
+LDFLAGS="$CORE_LDFLAGS"
+LIBS="$CORE_LIBS"
 
 dnl ######################################################################
 dnl OS specific stuff

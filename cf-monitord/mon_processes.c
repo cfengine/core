@@ -29,6 +29,8 @@
 #include <files_interfaces.h>
 #include <pipes.h>
 
+#include <cf-windows-functions.h>
+
 /* Prototypes */
 
 #ifndef __MINGW32__

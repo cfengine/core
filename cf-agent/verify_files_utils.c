@@ -60,6 +60,8 @@
 #include <retcode.h>
 #include <cf-agent-enterprise-stubs.h>
 
+#include <cf-windows-functions.h>
+
 #define CF_RECURSION_LIMIT 100
 
 static Rlist *AUTO_DEFINE_LIST;

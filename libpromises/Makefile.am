@@ -1,4 +1,4 @@
-if !BUILTIN_EXTENSIONS
+if !ENTERPRISE_BUILTIN_EXTENSIONS
  projlib_LTLIBRARIES = libpromises.la
  libpromises_la_LDFLAGS = -version-info 3:5:0 -no-undefined
 else
@@ -92,6 +92,7 @@ libpromises_la_SOURCES = \
         prototypes3.h \
         rlist.c rlist.h \
         scope.c scope.h \
+        shared_lib.c shared_lib.h \
         signals.c signals.h \
         sort.c sort.h \
         storage_tools.c \

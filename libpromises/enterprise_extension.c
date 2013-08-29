@@ -23,6 +23,9 @@
 */
 
 #include <enterprise_extension.h>
+
+#ifndef BUILTIN_EXTENSIONS
+
 #include <sysinfo.h>
 
 #include <dlfcn.h>
@@ -118,3 +121,5 @@ void shlib_close(void *handle)
 {
     dlclose(handle);
 }
+
+#endif // BUILTIN_EXTENSIONS

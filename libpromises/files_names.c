@@ -32,6 +32,7 @@
 #include <files_interfaces.h>
 #include <string_lib.h>
 
+#include <cf-windows-functions.h>
 
 /*********************************************************************/
 

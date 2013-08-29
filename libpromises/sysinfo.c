@@ -40,6 +40,8 @@
 #include <audit.h>
 #include <pipes.h>
 
+#include <cf-windows-functions.h>
+
 #include <inttypes.h>
 
 #ifdef HAVE_ZONE_H

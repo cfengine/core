@@ -42,6 +42,8 @@
 #include <server_tls.h>
 #include <server_common.h>
 
+#include <cf-windows-functions.h>
+
 //******************************************************************
 // GLOBAL STATE
 //******************************************************************

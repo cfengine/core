@@ -11,12 +11,14 @@ dnl compiled.
 dnl
 dnl If the code compiles successfully, it defines HAVE_$1_PROPER macro.
 dnl
-dnl If the code fails, it adds '$4' to $post_macros variable and sources
-dnl rpl_$1.c to be compiled as a replacement.
+dnl If the code fails, it adds '$4' to $post_macros variable. 
+dnl If you want rpl_$1.c to be compiled as a replacement, call
+dnl CF3_REPLACE_PROPER_FUNC with the same function name.
 dnl
 dnl  ** How to use **
 dnl
 dnl  CF3_CHECK_PROPER_FUNC(function, [#include <stdio.h>], [void function(FILE *);], [#define function rpl_function])
+dnl  CF3_REPLACE_PROPER_FUNC(function)
 dnl
 dnl  Then in libutils/platform.h:
 dnl
@@ -42,9 +44,17 @@ AC_DEFUN([CF3_CHECK_PROPER_FUNC],
       [hw_cv_func_$1_proper=yes],
       [hw_cv_func_$1_proper=no])])
 
+  AC_SUBST([hw_cv_func_$1_proper])
+
   AS_IF([test "$hw_cv_func_$1_proper" = yes],
     [AC_DEFINE([HAVE_$1_PROPER], [1], [Define to 1 if you have properly defined `$1' function])],
     [post_macros="$post_macros
-$4"
-     AC_LIBOBJ(rpl_$1)])
+$4"])
+])
+
+AC_DEFUN([CF3_REPLACE_PROPER_FUNC],
+[
+  AS_IF([test "$hw_cv_func_$1_proper" = "no"],
+    [AC_LIBOBJ(rpl_$1)]
+  )
 ])

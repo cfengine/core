@@ -36,6 +36,8 @@
 #include <misc_lib.h>
 #include <assert.h>
 
+#include <cf-windows-functions.h>
+
 /*******************************************************************/
 
 static const int INF_LINES = -2;

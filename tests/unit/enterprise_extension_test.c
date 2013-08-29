@@ -59,6 +59,18 @@ static void test_extension_library()
     unsetenv("CFENGINE_TEST_OVERRIDE_ENTERPRISE_LIBRARY_DIR");
 }
 
+static void test_disabled_extension_library()
+{
+    // This makes an assumption about your directory structure that may not always be correct.
+    setenv("CFENGINE_TEST_OVERRIDE_ENTERPRISE_LIBRARY_DIR", "../../../enterprise/enterprise-plugin/.libs", 1);
+
+    enterprise_library_disable();
+    void *handle = enterprise_library_open();
+    assert_true(handle == NULL);
+
+    unsetenv("CFENGINE_TEST_OVERRIDE_ENTERPRISE_LIBRARY_DIR");
+}
+
 int main()
 {
     setenv("CFENGINE_TEST_OVERRIDE_ENTERPRISE_LIBRARY_DO_CLOSE", "1", 1);
@@ -69,6 +81,7 @@ int main()
         unit_test(test_extension_function),
         unit_test(test_extension_function_broken),
         unit_test(test_extension_library),
+        unit_test(test_disabled_extension_library),
     };
 
     return run_tests(tests);

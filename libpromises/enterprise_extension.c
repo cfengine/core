@@ -27,6 +27,7 @@
 #ifndef BUILTIN_EXTENSIONS
 
 #include <sysinfo.h>
+#include <misc_lib.h>
 
 #include <dlfcn.h>
 #include <pthread.h>
@@ -59,18 +60,24 @@
 
 static pthread_once_t enterprise_library_once = PTHREAD_ONCE_INIT;
 static void *enterprise_library_handle = NULL;
+static bool enable_enterprise_library = true;
 
-void enterprise_library_assign();
-void *enterprise_library_open_impl();
+static void enterprise_library_assign();
+static void *enterprise_library_open_impl();
+
+void enterprise_library_disable()
+{
+    if (enterprise_library_handle)
+    {
+        ProgrammingError("enterprise_library_disable() MUST be called before any call to extension functions");
+    }
+    enable_enterprise_library = false;
+}
 
 void *enterprise_library_open()
 {
-    if (THIS_AGENT_TYPE == AGENT_TYPE_EXECUTOR)
+    if (!enable_enterprise_library)
     {
-        // This is to protect the upgrade path. cf-execd should not be allowed
-        // to load the plugin because it may be the last daemon around when
-        // doing an upgrade.
-        Log(LOG_LEVEL_DEBUG, "Not loading Enterprise plugin for cf-execd");
         return NULL;
     }
 
@@ -88,12 +95,12 @@ void *enterprise_library_open()
     return enterprise_library_handle;
 }
 
-void enterprise_library_assign()
+static void enterprise_library_assign()
 {
     enterprise_library_handle = enterprise_library_open_impl();
 }
 
-void *enterprise_library_open_impl()
+static void *enterprise_library_open_impl()
 {
     const char *dir = getenv("CFENGINE_TEST_OVERRIDE_ENTERPRISE_LIBRARY_DIR");
     char lib[] = "/lib";

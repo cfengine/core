@@ -278,9 +278,9 @@ int main(int argc, char *argv[])
 
     EndAudit(ctx, CFA_BACKGROUND);
     EvalContextDestroy(ctx);
-    GenericAgentConfigDestroy(config);
 
     GenerateDiffReports(config->input_file);
+    GenericAgentConfigDestroy(config);
 
     return ret;
 }

@@ -52,9 +52,30 @@ static void test_extension_library()
     // This makes an assumption about your directory structure that may not always be correct.
     setenv("CFENGINE_TEST_OVERRIDE_ENTERPRISE_LIBRARY_DIR", "../../../enterprise/enterprise-plugin/.libs", 1);
 
+    // Crude way to make the test pass if you built Community only. It assumes that if you ran autogen.sh, then
+    // you have built enterprise and the test should be attempted.
+    struct stat statbuf;
+    if (stat("../../../enterprise/configure", &statbuf) == -1)
+    {
+        printf("%s: Can't find enterprise build. Assuming you haven't built it and skipping test...\n", __FUNCTION__);
+        return;
+    }
+
     void *handle = enterprise_library_open();
     assert_true(handle != NULL);
     enterprise_library_close(handle);
+
+    unsetenv("CFENGINE_TEST_OVERRIDE_ENTERPRISE_LIBRARY_DIR");
+}
+
+static void test_disabled_extension_library()
+{
+    // This makes an assumption about your directory structure that may not always be correct.
+    setenv("CFENGINE_TEST_OVERRIDE_ENTERPRISE_LIBRARY_DIR", "../../../enterprise/enterprise-plugin/.libs", 1);
+
+    enterprise_library_disable();
+    void *handle = enterprise_library_open();
+    assert_true(handle == NULL);
 
     unsetenv("CFENGINE_TEST_OVERRIDE_ENTERPRISE_LIBRARY_DIR");
 }
@@ -69,6 +90,7 @@ int main()
         unit_test(test_extension_function),
         unit_test(test_extension_function_broken),
         unit_test(test_extension_library),
+        unit_test(test_disabled_extension_library),
     };
 
     return run_tests(tests);

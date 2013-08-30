@@ -96,6 +96,7 @@
 #define ENTERPRISE_CANARY_VALUE 0x10203040
 #define ENTERPRISE_LIBRARY_NAME "cfengine-enterprise.so"
 
+void enterprise_library_disable();
 void *enterprise_library_open();
 void enterprise_library_close(void *handle);
 
@@ -1166,6 +1167,11 @@ void shlib_close(void *handle);
 #else // BUILTIN_EXTENSIONS
 // In this case just map to real function calls.
 // BUILTIN_EXTENSIONS is for Windows binaries and debugging.
+
+// Has no effect when using builtin extensions.
+inline void enterprise_library_disable()
+{
+}
 
 # define ENTERPRISE_FUNC_0ARG_STUB_SIGNATURE(__ret, __func) \
     __ret __func##__stub()

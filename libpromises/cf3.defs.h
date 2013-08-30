@@ -1559,6 +1559,8 @@ typedef struct
 /* This is huge, but the simplification of logic is huge too
     so we leave it to the compiler to optimize */
 
+#include <json.h>
+
 typedef struct
 {
     Outputs output;
@@ -1580,7 +1582,9 @@ typedef struct
     char *transformer;
     char *pathtype;
     char *repository;
-    char *template;
+    char *edit_template;
+    char *template_method;
+    JsonElement *template_data;
     int touch;
     int create;
     int move_obstructions;

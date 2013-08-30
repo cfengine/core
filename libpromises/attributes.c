@@ -59,10 +59,13 @@ Attributes GetFilesAttributes(const EvalContext *ctx, const Promise *pp)
     attr.havecopy = PromiseGetConstraintAsBoolean(ctx, "copy_from", pp);
     attr.havelink = PromiseGetConstraintAsBoolean(ctx, "link_from", pp);
 
-    attr.template = (char *)ConstraintGetRvalValue(ctx, "edit_template", pp, RVAL_TYPE_SCALAR);
+    attr.edit_template = ConstraintGetRvalValue(ctx, "edit_template", pp, RVAL_TYPE_SCALAR);
+    attr.template_method = ConstraintGetRvalValue(ctx, "template_method", pp, RVAL_TYPE_SCALAR);
+    attr.template_data = ConstraintGetRvalValue(ctx, "template_data", pp, RVAL_TYPE_CONTAINER);
+
     attr.haveeditline = PromiseBundleConstraintExists(ctx, "edit_line", pp);
     attr.haveeditxml = PromiseBundleConstraintExists(ctx, "edit_xml", pp);
-    attr.haveedit = (attr.haveeditline) || (attr.haveeditxml) || (attr.template);
+    attr.haveedit = (attr.haveeditline) || (attr.haveeditxml) || (attr.edit_template);
 
 /* Files, specialist */
 
@@ -83,11 +86,11 @@ Attributes GetFilesAttributes(const EvalContext *ctx, const Promise *pp)
     attr.link = GetLinkConstraints(ctx, pp);
     attr.edits = GetEditDefaults(ctx, pp);
 
-    if (attr.template)
-       {
-       attr.edits.empty_before_use = true;
-       attr.edits.inherit = true;
-       }
+    if (attr.edit_template)
+    {
+        attr.edits.empty_before_use = true;
+        attr.edits.inherit = true;
+    }
 
 /* Files, multiple use */
 

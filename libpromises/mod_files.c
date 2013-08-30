@@ -334,6 +334,9 @@ static const ConstraintSyntax CF_FILES_BODIES[] =
     ConstraintSyntaxNewString("repository", CF_ABSPATHRANGE, "Name of a repository for versioning", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBool("touch", "true/false whether to touch time stamps on file", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("transformer", CF_ABSPATHRANGE, "Command (with full path) used to transform current file (no shell wrapper used)", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewOption("template_method", "cfengine,mustache", "", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewContainer("template_data", "", SYNTAX_STATUS_NORMAL),
+
     ConstraintSyntaxNewNull()
 };
 

@@ -114,7 +114,47 @@ static void *enterprise_library_open_impl()
     }
     char path[strlen(dir) + strlen(lib) + strlen(ENTERPRISE_LIBRARY_NAME) + 2];
     sprintf(path, "%s%s/%s", dir, lib, ENTERPRISE_LIBRARY_NAME);
-    return shlib_open(path);
+    void *handle = shlib_open(path);
+    if (!handle)
+    {
+        return handle;
+    }
+
+    // Version check, to avoid binary incompatible plugins.
+    const char * (*GetExtensionLibraryVersion)() = shlib_load(handle, "GetExtensionLibraryVersion");
+    if (!GetExtensionLibraryVersion)
+    {
+        Log(LOG_LEVEL_ERR, "Could not retreive version from Enterprise plugin. Not loading the plugin.");
+        goto close_and_fail;
+    }
+
+    const char *plugin_version = GetExtensionLibraryVersion();
+    unsigned int bin_major, bin_minor, bin_patch;
+    unsigned int plug_major, plug_minor, plug_patch;
+    if (sscanf(VERSION, "%u.%u.%u", &bin_major, &bin_minor, &bin_patch) != 3)
+    {
+        Log(LOG_LEVEL_ERR, "Not able to extract version number from binary. Not loading Enterprise plugin.");
+        goto close_and_fail;
+    }
+    if (sscanf(plugin_version, "%u.%u.%u", &plug_major, &plug_minor, &plug_patch) != 3)
+    {
+        Log(LOG_LEVEL_ERR, "Not able to extract version number from plugin. Not loading Enterprise plugin.");
+        goto close_and_fail;
+    }
+
+    if (bin_major != plug_major || bin_minor != plug_minor || bin_patch != plug_patch)
+    {
+        Log(LOG_LEVEL_ERR, "Enterprise plugin version does not match CFEngine Community version "
+            "(CFEngine Community v%u.%u.%u, Enterprise v%u.%u.%u). Refusing to load it.",
+            bin_major, bin_minor, bin_patch, plug_major, plug_minor, plug_patch);
+        goto close_and_fail;
+    }
+
+    return handle;
+
+close_and_fail:
+    shlib_close(handle);
+    return NULL;
 }
 
 void enterprise_library_close(void *handle)

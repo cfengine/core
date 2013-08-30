@@ -216,8 +216,7 @@ int TLSClientNegotiateProtocol(const ConnectionInfo *conn_info)
     ret = TLSRecvLines(conn_info->ssl, input, sizeof(input));
     if (strncmp(input, "OK", strlen("OK")) == 0)
         return 1;
-    else
-        return 0;
+    return 0;
 }
 
 int TLSClientSendIdentity(const ConnectionInfo *conn_info, const char *username)

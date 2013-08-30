@@ -827,13 +827,11 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
     {
         snprintf(vbuff, CF_BUFSIZE, "%s%cinputs%cfailsafe.cf", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
 
-#ifndef HAVE_ENTERPRISE
         if (stat(vbuff, &statbuf) == -1)
         {
             GenericAgentConfigSetInputFile(config, GetWorkDir(), "failsafe.cf");
         }
         else
-#endif
         {
             GenericAgentConfigSetInputFile(config, GetWorkDir(), vbuff);
         }

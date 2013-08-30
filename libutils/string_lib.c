@@ -691,7 +691,7 @@ static StringRef StringNextToken(const char *str, size_t len, const char *seps)
 
     if (found)
     {
-        return (StringRef) { .data = str + start, .len = len - start + 1 };
+        return (StringRef) { .data = str + start, .len = len - start };
     }
     else
     {
@@ -709,7 +709,7 @@ StringRef StringGetToken(const char *str, size_t len, size_t index, const char *
             return ref;
         }
 
-        len = ref.data - str + ref.len;
+        len = len - (ref.data - str + ref.len);
         str = ref.data + ref.len;
 
         ref = StringNextToken(str, len, seps);

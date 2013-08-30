@@ -696,21 +696,27 @@ static char *JsonDecodeString(const char *encoded_string)
             case '\"':
             case '\\':
                 WriterWriteChar(w, c[1]);
+                c++;
                 break;
             case 'b':
                 WriterWriteChar(w, '\b');
+                c++;
                 break;
             case 'f':
                 WriterWriteChar(w, '\f');
+                c++;
                 break;
             case 'n':
                 WriterWriteChar(w, '\n');
+                c++;
                 break;
             case 'r':
                 WriterWriteChar(w, '\r');
+                c++;
                 break;
             case 't':
                 WriterWriteChar(w, '\t');
+                c++;
                 break;
             default:
                 WriterWriteChar(w, *c);

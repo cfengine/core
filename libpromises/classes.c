@@ -73,15 +73,15 @@ const char *VPSOPTS[PLATFORM_CONTEXT_MAX] =
 {
     "",
     "-ef",                      /* hpux */
-    "-N -eo user,pid,ppid,pgid,pcpu,pmem,vsz,ni,stat,st=STIME,time,args",  /* aix */
-    "-eo user,pid,ppid,pgid,pcpu,pmem,vsz,ni,rss,nlwp,stime,time,args",        /* linux */
-    "-eo user,pid,ppid,pgid,pcpu,pmem,vsz,pri,rss,nlwp,stime,time,args",        /* solaris */
-    "auxw",                     /* freebsd */
-    "auxw",                     /* netbsd */
+    "-N -eo user,pid,ppid,pgid,pcpu,pmem,vsz,ni,stat,st=STIME,time,args", /* aix */
+    "-eo user,pid,ppid,pgid,pcpu,pmem,vsz,ni,rss,nlwp,stime,time,args",   /* linux */
+    "-eo user,pid,ppid,pgid,pcpu,pmem,vsz,pri,rss,nlwp,stime,time,args",  /* solaris */
+    "-axo user,pid,ppid,pgid,pcpu,pmem,vsz,ni,rss,nlwp,start,time,args",  /* freebsd */
+    "-axo user,pid,ppid,pgid,pcpu,pmem,vsz,ni,rss,nlwp,start,time,args",  /* netbsd */
     "-elyf",                    /* cray */
     "-aW",                      /* NT */
     "-ef",                      /* Unixware */
-    "auxw",                     /* openbsd */
+    "-axo user,pid,ppid,pgid,pcpu,pmem,vsz,ni,rss,start,time,args",       /* openbsd */
     "-ef",                      /* sco */
     "auxw",                     /* darwin */
     "-elyf",                    /* qnx */

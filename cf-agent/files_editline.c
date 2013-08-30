@@ -151,16 +151,16 @@ int ScheduleEditLineOperations(EvalContext *ctx, Bundle *bp, Attributes a, const
 Bundle *MakeTemporaryBundleFromTemplate(EvalContext *ctx, Policy *policy, Attributes a, const Promise *pp)
 {
     FILE *fp = NULL;
-    if ((fp = fopen(a.template, "r" )) == NULL)
+    if ((fp = fopen(a.edit_template, "r" )) == NULL)
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a, "Unable to open template file '%s' to make '%s'", a.template, pp->promiser);
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a, "Unable to open template file '%s' to make '%s'", a.edit_template, pp->promiser);
         return NULL;
     }
 
     Bundle *bp = NULL;
     {
         char bundlename[CF_MAXVARSIZE];
-        snprintf(bundlename, CF_MAXVARSIZE, "temp_cf_bundle_%s", CanonifyName(a.template));
+        snprintf(bundlename, CF_MAXVARSIZE, "temp_cf_bundle_%s", CanonifyName(a.edit_template));
 
         bp = PolicyAppendBundle(policy, "default", bundlename, "edit_line", NULL, NULL);
     }
@@ -202,7 +202,7 @@ Bundle *MakeTemporaryBundleFromTemplate(EvalContext *ctx, Policy *policy, Attrib
 
                 if (strcmp(brack, "%]") != 0)
                 {
-                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a, "Template file '%s' syntax error, missing close \"%%]\" at line %d", a.template, lineno);
+                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a, "Template file '%s' syntax error, missing close \"%%]\" at line %d", a.edit_template, lineno);
                     return NULL;
                 }
 
@@ -212,7 +212,7 @@ Bundle *MakeTemporaryBundleFromTemplate(EvalContext *ctx, Policy *policy, Attrib
 
                     if (++level > 1)
                     {
-                        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a, "Template file '%s' contains nested blocks which are not allowed, near line %d", a.template, lineno);
+                        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a, "Template file '%s' contains nested blocks which are not allowed, near line %d", a.edit_template, lineno);
                         return NULL;
                     }
 

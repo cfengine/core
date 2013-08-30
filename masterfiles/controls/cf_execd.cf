@@ -22,8 +22,14 @@ body executor control
       #               "Min25", "Min30", "Min35", "Min40", "Min45",
       #               "Min50", "Min55" };
 
-    !windows::
+    # Older than CFEngine 3.6
+    !windows.(cfengine_3_0|cfengine_3_1|cfengine_3_2|cfengine_3_3|cfengine_3_4|cfengine_3_5)::
 
       exec_command => "$(sys.cf_twin) -f $(sys.workdir)/inputs/update.cf ; $(sys.cf_agent)";
+
+    # Newer than CFEngine 3.6
+    !windows.!cfengine_3_0.!cfengine_3_1.!cfengine_3_2.!cfengine_3_3.!cfengine_3_4.!cfengine_3_5::
+
+      exec_command => "$(sys.cf_twin) -E -f $(sys.workdir)/inputs/update.cf ; $(sys.cf_agent)";
 
 }

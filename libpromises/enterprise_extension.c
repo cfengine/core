@@ -195,4 +195,11 @@ void shlib_close(void *handle)
     dlclose(handle);
 }
 
+#else // BUILTIN_EXTENSIONS
+
+// Has no effect when using builtin extensions.
+void enterprise_library_disable()
+{
+}
+
 #endif // BUILTIN_EXTENSIONS

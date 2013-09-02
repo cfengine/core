@@ -324,7 +324,7 @@ static FnCallResult FnCallHostsWithClass(EvalContext *ctx, FnCall *fp, Rlist *fi
     char *class_name = RlistScalarValue(finalargs);
     char *return_format = RlistScalarValue(finalargs->next);
     
-    if(!CFDB_HostsWithClass(ctx, &returnlist, class_name, return_format))
+    if(!ListHostsWithClass(ctx, &returnlist, class_name, return_format))
     {
         return (FnCallResult){ FNCALL_FAILURE };
     }

@@ -54,13 +54,13 @@ ENTERPRISE_VOID_FUNC_2ARG_DEFINE_STUB(void, TryCollectCall, ARG_UNUSED int, coll
     Log(LOG_LEVEL_VERBOSE, "Collect calling is only supported in CFEngine Enterprise");
 }
 
-ENTERPRISE_FUNC_1ARG_DEFINE_STUB(int, ReceiveCollectCall, ARG_UNUSED struct ServerConnectionState *, conn)
+ENTERPRISE_FUNC_1ARG_DEFINE_STUB(int, ReceiveCollectCall, ARG_UNUSED ServerConnectionState *, conn)
 {
     Log(LOG_LEVEL_VERBOSE, "  Collect Call only supported in the CFEngine Enterprise");
     return false;
 }
 
-ENTERPRISE_FUNC_3ARG_DEFINE_STUB(bool, ReturnQueryData, ARG_UNUSED struct ServerConnectionState *, conn, ARG_UNUSED char *, menu, int, encrypt)
+ENTERPRISE_FUNC_3ARG_DEFINE_STUB(bool, ReturnQueryData, ARG_UNUSED ServerConnectionState *, conn, ARG_UNUSED char *, menu, int, encrypt)
 {
     return false;
 }

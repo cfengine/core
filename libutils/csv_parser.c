@@ -273,6 +273,14 @@ static csv_parser_error LaunchCsvAutomata(char *str, Seq **newlist)
             *sn = *s; sn++;
             *sn = '\0'; sn = NULL;
         }
+        if(current_state == CSV_ST_NO_QUOTE_MODE || current_state == CSV_ST_PRE_START_SPACE)
+        {
+            int len = strlen(snatched);
+            if (len > 1 && snatched[len - 2] == '\r' && snatched[len - 1] == '\n')
+            {
+                snatched[len - 2] = '\0';
+            }
+        }
         SeqAppend(*newlist, (void *)xstrdup(snatched));
         snatched[0] = '\0';
     }

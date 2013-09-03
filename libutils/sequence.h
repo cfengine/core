@@ -168,4 +168,13 @@ void SeqShuffle(Seq *seq, unsigned int seed);
  */
 void SeqClear(Seq *seq);
 
+/**
+  @brief Get soft copy of sequence according to specified range
+  @param [in] seq Sequence select from
+  @param [in] start Start index of sub sequence.
+  @param [in] end End index which will be included into.
+  @return A pointer to sub sequence, NULL on error.
+  */
+Seq *SeqGetRange(Seq *seq, size_t start, size_t end);
+
 #endif

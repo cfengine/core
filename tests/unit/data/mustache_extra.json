@@ -1,0 +1,19 @@
+{
+    "tests": [
+        {
+            "name": "Demo",
+            "data": {
+                "header": "Colors",
+                "items": [
+                    {"name": "red", "first": true, "url": "#Red"},
+                    {"name": "green", "link": true, "url": "#Green"},
+                    {"name": "blue", "link": true, "url": "#Blue"}
+                ],
+                "empty": false
+            },
+            "expected": "<h1>Colors</h1>\n\n    <li><strong>red</strong></li>\n    <li><a href=\"#Green\">green</a></li>\n    <li><a href=\"#Blue\">blue</a></li>\n\n",
+            "template": "<h1>{{header}}</h1>\n{{#bug}}\n{{/bug}}\n\n{{#items}}\n  {{#first}}\n    <li><strong>{{name}}</strong></li>\n  {{/first}}\n  {{#link}}\n    <li><a href=\"{{url}}\">{{name}}</a></li>\n  {{/link}}\n{{/items}}\n\n{{#empty}}\n  <p>The list is empty.</p>\n{{/empty}}\n",
+            "desc": "Sections should not alter internal whitespace."
+        },
+    ]
+}

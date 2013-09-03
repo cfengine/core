@@ -214,6 +214,59 @@ static void test_len(void)
     SeqDestroy(seq);
 }
 
+static void test_get_range(void)
+{
+    Seq *seq = SeqNew(5, NULL);
+
+    size_t one = 1;
+    size_t two = 2;
+    size_t three = 3;
+    size_t four = 4;
+    size_t five = 5;
+
+    SeqAppend(seq, &three);
+    SeqAppend(seq, &two);
+    SeqAppend(seq, &five);
+    SeqAppend(seq, &one);
+    SeqAppend(seq, &four);
+
+    assert_int_equal(SeqLength(seq),5);
+
+    {
+        Seq *sub_1 = SeqGetRange(seq, 0, 4);
+        assert (sub_1);
+        assert_int_equal (sub_1->length, seq->length);
+        assert_int_equal (SeqAt(sub_1, 0), SeqAt(seq, 0));
+        assert_int_equal (SeqAt(sub_1, 1), SeqAt(seq, 1));
+        assert_int_equal (SeqAt(sub_1, 2), SeqAt(seq, 2));
+        assert_int_equal (SeqAt(sub_1, 3), SeqAt(seq, 3));
+        assert_int_equal (SeqAt(sub_1, 4), SeqAt(seq, 4));
+        SeqSoftDestroy(sub_1);
+    }
+
+    {
+        Seq *sub_1 = SeqGetRange(seq, 2, 4);
+        assert (sub_1);
+        assert_int_equal (sub_1->length, 4 - 2 + 1);
+        assert_int_equal (SeqAt(sub_1, 0), SeqAt(seq, 2));
+        assert_int_equal (SeqAt(sub_1, 1), SeqAt(seq, 3));
+        assert_int_equal (SeqAt(sub_1, 2), SeqAt(seq, 4));
+        SeqSoftDestroy(sub_1);
+    }
+
+    {
+        Seq *sub_1 = SeqGetRange(seq, 3, 6);
+        assert (!sub_1);
+    }
+
+    {
+        Seq *sub_1 = SeqGetRange(seq, 3, 2);
+        assert (!sub_1);
+    }
+
+    SeqDestroy(seq);
+}
+
 int main()
 {
     PRINT_TEST_BANNER();
@@ -227,7 +280,8 @@ int main()
         unit_test(test_remove_range),
         unit_test(test_remove),
         unit_test(test_reverse),
-        unit_test(test_len)
+        unit_test(test_len),
+        unit_test(test_get_range)
     };
 
     return run_tests(tests);

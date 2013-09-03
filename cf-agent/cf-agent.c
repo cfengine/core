@@ -190,6 +190,7 @@ static const struct option OPTIONS[] =
     {"version", no_argument, 0, 'V'},
     {"legacy-output", no_argument, 0, 'l'},
     {"color", optional_argument, 0, 'C'},
+    {"no-extensions", no_argument, 0, 'E'},
     {NULL, 0, 0, '\0'}
 };
 
@@ -210,6 +211,7 @@ static const char *HINTS[] =
     "Output the version of the software",
     "Use legacy output format",
     "Enable colorized output. Possible values: 'always', 'auto', 'never'. If option is used, the default value is 'auto'",
+    "Disable extension loading (used while upgrading)",
     NULL
 };
 
@@ -304,7 +306,7 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
     char **argv_new = TranslateOldBootstrapOptionsConcatenated(argc_new, argv_tmp);
     FreeStringArray(argc_new, argv_tmp);
 
-    while ((c = getopt_long(argc_new, argv_new, "dvnKIf:D:N:VxMB:b:hlC::", OPTIONS, NULL)) != EOF)
+    while ((c = getopt_long(argc_new, argv_new, "dvnKIf:D:N:VxMB:b:hlC::E", OPTIONS, NULL)) != EOF)
     {
         switch ((char) c)
         {
@@ -463,6 +465,10 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             {
                 exit(EXIT_FAILURE);
             }
+            break;
+
+        case 'E':
+            enterprise_library_disable();
             break;
 
         default:

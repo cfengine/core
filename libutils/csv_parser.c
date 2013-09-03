@@ -39,7 +39,7 @@ typedef enum
     CSV_ST_CLOSED
 } csv_state;
 
-#define CSVCL_BLANK(x)  (((x)==' ')||((x)=='\t'))
+#define CSVCL_BLANK(x)  (((x)==' ')||((x)=='\t')||((x)=='\n')||((x)=='\r'))
 #define CSVCL_QUOTE(x)  (((x)=='"'))
 #define CSVCL_SEP(x)    (((x)==','))
 #define CSVCL_EOL(x)    (((x)=='\0'))
@@ -91,6 +91,7 @@ static csv_parser_error LaunchCsvAutomata(char *str, Seq **newlist)
                 if (CSVCL_SEP(*s))
                 {
                     *sn = '\0'; sn = NULL;
+                    SeqAppend(*newlist, (void *)xstrdup(""));
                     current_state = CSV_ST_SEPARATOR;
                 }
                 else if (CSVCL_BLANK(*s)) 
@@ -244,6 +245,10 @@ static csv_parser_error LaunchCsvAutomata(char *str, Seq **newlist)
                 }
                 else if (CSVCL_BLANK(*s)) 
                 {
+                    if (sn != NULL)
+                    {
+                        *sn = '\0';
+                    }
                     sn = NULL;
                     current_state = CSV_ST_SPACE_AFTER_QUOTE;
                 }
@@ -264,8 +269,19 @@ static csv_parser_error LaunchCsvAutomata(char *str, Seq **newlist)
 
     if (current_state != CSV_ST_LEADING_QUOTE && current_state != CSV_ST_WITH_QUOTE_MODE )
     {
-        *sn = *s; sn++;
-        *sn = '\0'; sn = NULL;
+        if (sn != NULL)
+        {
+            *sn = *s; sn++;
+            *sn = '\0'; sn = NULL;
+        }
+        if(current_state == CSV_ST_NO_QUOTE_MODE || current_state == CSV_ST_PRE_START_SPACE)
+        {
+            int len = strlen(snatched);
+            if (len > 1 && snatched[len - 2] == '\r' && snatched[len - 1] == '\n')
+            {
+                snatched[len - 2] = '\0';
+            }
+        }
         SeqAppend(*newlist, (void *)xstrdup(snatched));
         snatched[0] = '\0';
     }

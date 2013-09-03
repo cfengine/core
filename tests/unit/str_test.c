@@ -8,6 +8,60 @@
 static const char *lo_alphabet = "abcdefghijklmnopqrstuvwxyz";
 static const char *hi_alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
+static void test_get_token(void)
+{
+    {
+        const char *str = "  abc def ,efg ";
+        size_t len = strlen(str);
+
+        assert_int_equal(3, StringCountTokens(str, len, ", "));
+
+        {
+            StringRef ref = StringGetToken(str, len, 0, ", ");
+            assert_int_equal(3, ref.len);
+            assert_memory_equal("abc", ref.data, 3);
+        }
+
+        {
+            StringRef ref = StringGetToken(str, len, 1, ", ");
+            assert_int_equal(3, ref.len);
+            assert_memory_equal("def", ref.data, 3);
+        }
+
+        {
+            StringRef ref = StringGetToken(str, len, 2, ", ");
+            assert_int_equal(3, ref.len);
+            assert_memory_equal("efg", ref.data, 3);
+        }
+    }
+
+    {
+        const char *str = "abc";
+        size_t len = strlen(str);
+
+        assert_int_equal(1, StringCountTokens(str, len, ", "));
+
+        {
+            StringRef ref = StringGetToken(str, len, 0, ", ");
+            assert_int_equal(3, ref.len);
+            assert_memory_equal("abc", ref.data, 3);
+        }
+    }
+
+    {
+        const char *str = "abc ";
+        size_t len = strlen(str);
+
+        assert_int_equal(1, StringCountTokens(str, len, ", "));
+
+        {
+            StringRef ref = StringGetToken(str, len, 0, ", ");
+            assert_int_equal(3, ref.len);
+            assert_memory_equal("abc", ref.data, 3);
+        }
+    }
+}
+
 static void test_mix_case_tolower(void)
 {
     char str[] = "aBcD";
@@ -478,6 +532,8 @@ int main()
     PRINT_TEST_BANNER();
     const UnitTest tests[] =
     {
+        unit_test(test_get_token),
+
         unit_test(test_mix_case_tolower),
         unit_test(test_empty_tolower),
         unit_test(test_weird_chars_tolower),

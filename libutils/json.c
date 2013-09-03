@@ -637,13 +637,13 @@ JsonElement *JsonObjectCreate(size_t initialCapacity)
     return JsonElementCreateContainer(JSON_CONTAINER_TYPE_OBJECT, NULL, initialCapacity);
 }
 
-static const char *EscapeJsonString(const char *unescapedString)
+static char *JsonEncodeString(const char *unescaped_string)
 {
-    assert(unescapedString);
+    assert(unescaped_string);
 
     Writer *writer = StringWriter();
 
-    for (const char *c = unescapedString; *c != '\0'; c++)
+    for (const char *c = unescaped_string; *c != '\0'; c++)
     {
         switch (*c)
         {
@@ -678,6 +678,58 @@ static const char *EscapeJsonString(const char *unescapedString)
     }
 
     return StringWriterClose(writer);
+}
+
+static char *JsonDecodeString(const char *encoded_string)
+{
+    assert(encoded_string);
+
+    Writer *w = StringWriter();
+
+    for (const char *c = encoded_string; *c != '\0'; c++)
+    {
+        switch (*c)
+        {
+        case '\\':
+            switch (c[1])
+            {
+            case '\"':
+            case '\\':
+                WriterWriteChar(w, c[1]);
+                c++;
+                break;
+            case 'b':
+                WriterWriteChar(w, '\b');
+                c++;
+                break;
+            case 'f':
+                WriterWriteChar(w, '\f');
+                c++;
+                break;
+            case 'n':
+                WriterWriteChar(w, '\n');
+                c++;
+                break;
+            case 'r':
+                WriterWriteChar(w, '\r');
+                c++;
+                break;
+            case 't':
+                WriterWriteChar(w, '\t');
+                c++;
+                break;
+            default:
+                WriterWriteChar(w, *c);
+                break;
+            }
+            break;
+        default:
+            WriterWriteChar(w, *c);
+            break;
+        }
+    }
+
+    return StringWriterClose(w);
 }
 
 void JsonObjectAppendString(JsonElement *object, const char *key, const char *value)
@@ -1015,7 +1067,7 @@ void JsonContainerReverse(JsonElement *array)
 JsonElement *JsonStringCreate(const char *value)
 {
     assert(value);
-    return JsonElementCreatePrimitive(JSON_PRIMITIVE_TYPE_STRING, EscapeJsonString(value));
+    return JsonElementCreatePrimitive(JSON_PRIMITIVE_TYPE_STRING, xstrdup(value));
 }
 
 JsonElement *JsonIntegerCreate(int value)
@@ -1053,7 +1105,7 @@ JsonElement *JsonNullCreate()
 // Printing
 // *******************************************************************************************
 
-static void JsonContainerPrint(Writer *writer, JsonElement *containerElement, size_t indent_level);
+static void JsonContainerWrite(Writer *writer, JsonElement *containerElement, size_t indent_level);
 
 static bool IsWhitespace(char ch)
 {
@@ -1081,7 +1133,7 @@ static void PrintIndent(Writer *writer, int num)
     }
 }
 
-static void JsonPrimitivePrint(Writer *writer, JsonElement *primitiveElement, size_t indent_level)
+static void JsonPrimitiveWrite(Writer *writer, JsonElement *primitiveElement, size_t indent_level)
 {
     assert(primitiveElement->type == JSON_ELEMENT_TYPE_PRIMITIVE);
 
@@ -1089,7 +1141,11 @@ static void JsonPrimitivePrint(Writer *writer, JsonElement *primitiveElement, si
     {
     case JSON_PRIMITIVE_TYPE_STRING:
         PrintIndent(writer, indent_level);
-        WriterWriteF(writer, "\"%s\"", primitiveElement->primitive.value);
+        {
+            char *encoded = JsonEncodeString(primitiveElement->primitive.value);
+            WriterWriteF(writer, "\"%s\"", encoded);
+            free(encoded);
+        }
         break;
 
     default:
@@ -1118,12 +1174,12 @@ static void JsonArrayPrint(Writer *writer, JsonElement *array, size_t indent_lev
         switch (child->type)
         {
         case JSON_ELEMENT_TYPE_PRIMITIVE:
-            JsonPrimitivePrint(writer, child, indent_level + 1);
+            JsonPrimitiveWrite(writer, child, indent_level + 1);
             break;
 
         case JSON_ELEMENT_TYPE_CONTAINER:
             PrintIndent(writer, indent_level + 1);
-            JsonContainerPrint(writer, child, indent_level + 1);
+            JsonContainerWrite(writer, child, indent_level + 1);
             break;
         }
 
@@ -1160,11 +1216,11 @@ void JsonObjectPrint(Writer *writer, JsonElement *object, size_t indent_level)
         switch (child->type)
         {
         case JSON_ELEMENT_TYPE_PRIMITIVE:
-            JsonPrimitivePrint(writer, child, 0);
+            JsonPrimitiveWrite(writer, child, 0);
             break;
 
         case JSON_ELEMENT_TYPE_CONTAINER:
-            JsonContainerPrint(writer, child, indent_level + 1);
+            JsonContainerWrite(writer, child, indent_level + 1);
             break;
         }
 
@@ -1179,7 +1235,7 @@ void JsonObjectPrint(Writer *writer, JsonElement *object, size_t indent_level)
     WriterWriteChar(writer, '}');
 }
 
-static void JsonContainerPrint(Writer *writer, JsonElement *container, size_t indent_level)
+static void JsonContainerWrite(Writer *writer, JsonElement *container, size_t indent_level)
 {
     assert(container->type == JSON_ELEMENT_TYPE_CONTAINER);
 
@@ -1202,11 +1258,11 @@ void JsonWrite(Writer *writer, JsonElement *element, size_t indent_level)
     switch (element->type)
     {
     case JSON_ELEMENT_TYPE_CONTAINER:
-        JsonContainerPrint(writer, element, indent_level);
+        JsonContainerWrite(writer, element, indent_level);
         break;
 
     case JSON_ELEMENT_TYPE_PRIMITIVE:
-        JsonPrimitivePrint(writer, element, indent_level);
+        JsonPrimitiveWrite(writer, element, indent_level);
         break;
     }
 }
@@ -1475,7 +1531,7 @@ static JsonParseError JsonParseAsArray(const char **data, JsonElement **json_out
                 {
                     return err;
                 }
-                JsonArrayAppendString(array, value);
+                JsonArrayAppendElement(array, JsonElementCreatePrimitive(JSON_PRIMITIVE_TYPE_STRING, JsonDecodeString(value)));
                 free(value);
             }
             break;
@@ -1591,7 +1647,7 @@ static JsonParseError JsonParseAsObject(const char **data, JsonElement **json_ou
                 }
                 assert(property_value);
 
-                JsonObjectAppendString(object, property_name, property_value);
+                JsonObjectAppendElement(object, property_name, JsonElementCreatePrimitive(JSON_PRIMITIVE_TYPE_STRING, JsonDecodeString(property_value)));
                 free(property_value);
                 free(property_name);
                 property_name = NULL;

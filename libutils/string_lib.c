@@ -22,10 +22,9 @@
   included file COSL.txt.
 */
 
+#include <string_lib.h>
 
 #include <platform.h>
-
-
 #include <alloc.h>
 #include <writer.h>
 #include <misc_lib.h>
@@ -637,6 +636,88 @@ void ReplaceTrailingChar(char *str, char from, char to)
     }
 }
 
+static StringRef StringRefNull(void)
+{
+    return (StringRef) { .data = NULL, .len = 0 };
+}
+
+size_t StringCountTokens(const char *str, size_t len, const char *seps)
+{
+    size_t num_tokens = 0;
+    bool in_token = false;
+
+    for (size_t i = 0; i < len; i++)
+    {
+        if (strchr(seps, str[i]))
+        {
+            in_token = false;
+        }
+        else
+        {
+            if (!in_token)
+            {
+                num_tokens++;
+            }
+            in_token = true;
+        }
+    }
+
+    return num_tokens;
+}
+
+static StringRef StringNextToken(const char *str, size_t len, const char *seps)
+{
+    size_t start = 0;
+    bool found = false;
+    for (size_t i = 0; i < len; i++)
+    {
+        if (strchr(seps, str[i]))
+        {
+            if (found)
+            {
+                assert(i > 0);
+                return (StringRef) { .data = str + start, .len = i - start };
+            }
+        }
+        else
+        {
+            if (!found)
+            {
+                found = true;
+                start = i;
+            }
+        }
+    }
+
+    if (found)
+    {
+        return (StringRef) { .data = str + start, .len = len - start };
+    }
+    else
+    {
+        return StringRefNull();
+    }
+}
+
+StringRef StringGetToken(const char *str, size_t len, size_t index, const char *seps)
+{
+    StringRef ref = StringNextToken(str, len, seps);
+    for (size_t i = 0; i < index; i++)
+    {
+        if (!ref.data)
+        {
+            return ref;
+        }
+
+        len = len - (ref.data - str + ref.len);
+        str = ref.data + ref.len;
+
+        ref = StringNextToken(str, len, seps);
+    }
+
+    return ref;
+}
+
 char **String2StringArray(char *str, char separator)
 /**
  * Parse CSVs into char **.
@@ -839,12 +920,12 @@ bool StringStartsWith(const char *str, const char *prefix)
     return true;
 }
 
-char *MemSpan(const char *mem, char c, size_t n)
+void *MemSpan(const void *mem, char c, size_t n)
 {
     const char *end = mem + n;
-    for (; mem < end; ++mem)
+    for (; (char*)mem < end; ++mem)
     {
-        if (*mem != c)
+        if (*((char *)mem) != c)
         {
             return (char *)mem;
         }
@@ -853,12 +934,12 @@ char *MemSpan(const char *mem, char c, size_t n)
     return (char *)mem;
 }
 
-char *MemSpanInverse(const char *mem, char c, size_t n)
+void *MemSpanInverse(const void *mem, char c, size_t n)
 {
     const char *end = mem + n;
-    for (; mem < end; ++mem)
+    for (; (char*)mem < end; ++mem)
     {
-        if (*mem == c)
+        if (*((char*)mem) == c)
         {
             return (char *)mem;
         }

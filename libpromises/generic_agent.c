@@ -56,6 +56,7 @@
 #include <verify_classes.h>
 #include <verify_vars.h>
 
+#include <cf-windows-functions.h>
 
 static pthread_once_t pid_cleanup_once = PTHREAD_ONCE_INIT;
 
@@ -826,13 +827,11 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
     {
         snprintf(vbuff, CF_BUFSIZE, "%s%cinputs%cfailsafe.cf", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
 
-#ifndef HAVE_ENTERPRISE
         if (stat(vbuff, &statbuf) == -1)
         {
             GenericAgentConfigSetInputFile(config, GetWorkDir(), "failsafe.cf");
         }
         else
-#endif
         {
             GenericAgentConfigSetInputFile(config, GetWorkDir(), vbuff);
         }

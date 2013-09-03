@@ -92,6 +92,8 @@
 #include <shared_lib.h>
 #include <logging.h>
 
+void enterprise_library_disable();
+
 #ifndef ENTERPRISE_BUILTIN_EXTENSIONS
 
 #define ENTERPRISE_CANARY_VALUE 0x10203040

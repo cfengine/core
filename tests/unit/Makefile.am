@@ -1,7 +1,7 @@
 # Just recursively include in dist tarball all data we need for unit tests
 EXTRA_DIST = data
 
-AM_CFLAGS = $(ENTERPRISE_CFLAGS) -I$(srcdir)/../../libcfnet -I$(srcdir)/../../libpromises -I$(srcdir)/../../libutils \
+AM_CFLAGS = $(ENTERPRISE_CFLAGS) -I$(srcdir)/../../libcfnet -I$(srcdir)/../../libpromises -I$(srcdir)/../../libutils -I$(srcdir)/../../cf-monitord \
 	-DTESTDATADIR='"$(srcdir)/data"' -I$(srcdir)/../../cf-serverd -I$(srcdir)/../../cf-agent -I$(srcdir)/../../cf-execd -I$(srcdir)/../../cf-key
 
 LDADD = ../../libpromises/libpromises.la libtest.la
@@ -27,7 +27,6 @@ check_PROGRAMS = \
 	assoc_test \
 	atexit_test \
 	csv_writer_test \
-	enterprise_extension_test \
 	item_test \
 	rlist_test \
 	domainname_test \
@@ -83,7 +82,11 @@ check_PROGRAMS = \
 	hashes_test \
 	rb-tree-test \
 	variable_test \
-	protocol_test
+	protocol_test \
+	mon_cpu_test \
+	mon_load_test \
+	mon_processes_test \
+	mustache_test
 
 if HAVE_AVAHI_CLIENT
 if HAVE_AVAHI_COMMON
@@ -108,13 +111,17 @@ csv_writer_test_LDADD = libtest.la libstr.la
 
 conversion_test_SOURCES = conversion_test.c ../../libpromises/conversion.c
 
-enterprise_extension_test_SOURCES = enterprise_extension_test.c
+if !BUILTIN_EXTENSIONS
+    check_PROGRAMS += enterprise_extension_test
 
-check_LTLIBRARIES += cfengine-enterprise.la
-cfengine_enterprise_la_SOURCES = enterprise_extension_test_lib.c
-cfengine_enterprise_la_LDFLAGS = -avoid-version -module -shared -export-dynamic -rpath /
+    enterprise_extension_test_SOURCES = enterprise_extension_test.c
 
-EXTRA_enterprise_extension_test_DEPENDENCIES = cfengine-enterprise.la
+    check_LTLIBRARIES += cfengine-enterprise.la
+    cfengine_enterprise_la_SOURCES = enterprise_extension_test_lib.c
+    cfengine_enterprise_la_LDFLAGS = -avoid-version -module -shared -export-dynamic -rpath /
+
+    EXTRA_enterprise_extension_test_DEPENDENCIES = cfengine-enterprise.la
+endif
 
 set_domainname_test_SOURCES = set_domainname_test.c
 set_domainname_test_LDADD = libstr.la ../../libpromises/libpromises.la
@@ -246,3 +253,12 @@ exec_config_test_SOURCES = exec-config-test.c \
 exec_config_test_LDADD = libtest.la ../../libpromises/libpromises.la
 
 sysinfo_test_LDADD = ../../libpromises/libpromises.la libtest.la
+
+mon_cpu_test_SOURCES = mon_cpu_test.c ../../cf-monitord/mon.h ../../cf-monitord/mon_cpu.c
+mon_cpu_test_LDADD = ../../libpromises/libpromises.la libtest.la 
+
+mon_load_test_SOURCES = mon_load_test.c ../../cf-monitord/mon.h ../../cf-monitord/mon_load.c
+mon_load_test_LDADD = ../../libpromises/libpromises.la libtest.la
+
+mon_processes_test_SOURCES = mon_processes_test.c ../../cf-monitord/mon.h ../../cf-monitord/mon_processes.c
+mon_processes_test_LDADD = ../../libpromises/libpromises.la libtest.la

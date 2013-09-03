@@ -329,7 +329,7 @@ char *strsep(char **stringp, const char *delim);
 #endif
 
 #ifdef __linux__
-# ifdef __GLIBC__
+# if defined(__GLIBC__) || defined(__BIONIC__)
 #  include <net/route.h>
 #  include <netinet/in.h>
 #  include <netinet/ip.h>
@@ -430,11 +430,21 @@ int getnetgrent(char **host, char **user, char **domain);
 #endif
 
 #if !HAVE_DECL_SETNETGRENT
-int setnetgrent(const char *netgroup);
+#if SETNETGRENT_RETURNS_INT
+int
+#else
+void
+#endif
+setnetgrent(const char *netgroup);
 #endif
 
 #if !HAVE_DECL_ENDNETGRENT
-int endnetgrent(void);
+#if ENDNETGRENT_RETURNS_INT
+int
+#else
+void
+#endif
+endnetgrent(void);
 #endif
 
 #if !HAVE_DECL_STRSTR

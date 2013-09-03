@@ -51,6 +51,7 @@
 #include <ornaments.h>
 #include <audit.h>
 #include <expand.h>
+#include <mustache.h>
 
 static void LoadSetuid(Attributes a);
 static void SaveSetuid(EvalContext *ctx, Attributes a, Promise *pp);
@@ -529,25 +530,79 @@ int ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes a, Promis
     }
 
     
-    if (a.template)
+    if (a.edit_template)
     {
-        Policy *tmp_policy = PolicyNew();
-
-        Bundle *bp = NULL;
-        if ((bp = MakeTemporaryBundleFromTemplate(ctx, tmp_policy, a, pp)))
+        if (!a.template_method || strcmp("cfengine", a.template_method) == 0)
         {
-            BannerSubBundle(bp, args);
-            a.haveeditline = true;
+            Policy *tmp_policy = PolicyNew();
+            Bundle *bp = NULL;
+            if ((bp = MakeTemporaryBundleFromTemplate(ctx, tmp_policy, a, pp)))
+            {
+                BannerSubBundle(bp, args);
+                a.haveeditline = true;
 
-            EvalContextStackPushBundleFrame(ctx, bp, args, a.edits.inherit);
-            BundleResolve(ctx, bp);
+                EvalContextStackPushBundleFrame(ctx, bp, args, a.edits.inherit);
+                BundleResolve(ctx, bp);
 
-            retval = ScheduleEditLineOperations(ctx, bp, a, pp, edcontext);
+                retval = ScheduleEditLineOperations(ctx, bp, a, pp, edcontext);
 
-            EvalContextStackPopFrame(ctx);
+                EvalContextStackPopFrame(ctx);
+            }
+
+            PolicyDestroy(tmp_policy);
         }
+        else if (strcmp("mustache", a.template_method) == 0)
+        {
+            if (!FileCanOpen(a.edit_template, "r"))
+            {
+                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Template file '%s' could not be opened for reading", a.edit_template);
+                retval = false;
+                goto exit;
+            }
 
-        PolicyDestroy(tmp_policy);
+            if (!a.template_data)
+            {
+                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Could not find template_data for Mustache template '%s'", a.edit_template);
+                retval = false;
+                goto exit;
+            }
+
+            Writer *ouput_writer = NULL;
+            {
+                FILE *output_file = fopen(pp->promiser, "w");
+                if (!output_file)
+                {
+                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Output file '%s' could not be opened for writing", pp->promiser);
+                    retval = false;
+                    goto exit;
+                }
+
+                ouput_writer = FileWriter(output_file);
+            }
+
+            char *template_contents = NULL;
+            if (FileReadMax(&template_contents, a.edit_template, SIZE_MAX) == -1)
+            {
+                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Could not read template file '%s'", a.edit_template);
+                retval = false;
+                free(template_contents);
+                WriterClose(ouput_writer);
+                goto exit;
+            }
+
+            if (!MustacheRender(ouput_writer, template_contents, a.template_data))
+            {
+                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Error rendering mustache template '%s'", a.edit_template);
+                retval = false;
+                free(template_contents);
+                WriterClose(ouput_writer);
+                goto exit;
+            }
+
+            free(template_contents);
+            WriterClose(ouput_writer);
+            retval = true;
+        }
     }
 
 exit:

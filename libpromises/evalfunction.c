@@ -2429,7 +2429,7 @@ static bool GetListReferenceArgument(const EvalContext *ctx, const FnCall *fp, c
 
     if (!EvalContextVariableGet(ctx, ref, rval_out, datatype_out))
     {
-        Log(LOG_LEVEL_ERR, "Could not resolve expected list variable '%s' in function '%s'", lval_str, fp->name);
+        Log(LOG_LEVEL_INFO, "Could not resolve expected list variable '%s' in function '%s'", lval_str, fp->name);
         VarRefDestroy(ref);
         return false;
     }

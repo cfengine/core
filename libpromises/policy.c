@@ -200,7 +200,7 @@ StringSet *PolicySourceFiles(const Policy *policy)
         const Bundle *bp = SeqAt(policy->bundles, i);
         if (bp->source_path)
         {
-            StringSetAdd(files, bp->source_path);
+            StringSetAdd(files, xstrdup(bp->source_path));
         }
     }
 
@@ -209,7 +209,7 @@ StringSet *PolicySourceFiles(const Policy *policy)
         const Bundle *bp = SeqAt(policy->bodies, i);
         if (bp->source_path)
         {
-            StringSetAdd(files, bp->source_path);
+            StringSetAdd(files, xstrdup(bp->source_path));
         }
     }
 

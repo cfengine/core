@@ -91,6 +91,7 @@ static csv_parser_error LaunchCsvAutomata(char *str, Seq **newlist)
                 if (CSVCL_SEP(*s))
                 {
                     *sn = '\0'; sn = NULL;
+                    SeqAppend(*newlist, (void *)xstrdup(""));
                     current_state = CSV_ST_SEPARATOR;
                 }
                 else if (CSVCL_BLANK(*s)) 

@@ -6,15 +6,16 @@
 static void test_new_csv_reader_basic()
 {
     Seq *list = NULL;
-    char *lines[4] = {
+    char *lines[5] = {
         "aaaa,bbb,ccccc",
         "\"aaaa\",\"bbb\",\"ccccc\"",
         "\"aaaa\",bbb,\"ccccc\"",
-        "aaaa,\"bbb\",ccccc"
+        "aaaa,\"bbb\",ccccc",
+        ",\"bbb\",ccccc",
     };
 
 
-    for (int i=0; i<4; i++)
+    for (int i=0; i<5; i++)
     {
         list = SeqParseCsvString(lines[i]);
         assert_int_equal(list->length, 3);

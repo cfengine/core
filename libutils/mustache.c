@@ -341,6 +341,13 @@ static bool RenderVariablePrimitive(Writer *out, const JsonElement *primitive, b
         }
         return true;
 
+    case JSON_PRIMITIVE_TYPE_BOOL:
+        WriterWrite(out, JsonPrimitiveGetAsBool(primitive) ? "true" : "false");
+        return true;
+
+    case JSON_PRIMITIVE_TYPE_NULL:
+        return true;
+
     default:
         assert(false);
     }
@@ -467,9 +474,17 @@ static bool Render(Writer *out, const char *start, const char *input, Seq *hash_
         case TAG_TYPE_VAR:
             if (!skip_content)
             {
-                if (!RenderVariable(out, tag.content, tag.content_len, tag.type == TAG_TYPE_VAR, hash_stack))
+                if (tag.content_len > 0)
                 {
-                    return false;
+                    if (!RenderVariable(out, tag.content, tag.content_len, tag.type == TAG_TYPE_VAR, hash_stack))
+                    {
+                        return false;
+                    }
+                }
+                else
+                {
+                    RenderContent(out, delim_start, *delim_start_len, false, false);
+                    RenderContent(out, delim_end, *delim_end_len, false, false);
                 }
             }
             continue;

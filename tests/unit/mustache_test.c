@@ -36,7 +36,7 @@ size_t TestSpecFile(const char *testfile)
 
         const char *templ = JsonObjectGetAsString(test_obj, "template");
         const char *expected = JsonObjectGetAsString(test_obj, "expected");
-        const JsonElement *data = JsonObjectGetAsObject(test_obj, "data");
+        const JsonElement *data = JsonObjectGet(test_obj, "data");
 
         if (!MustacheRender(out, templ, data) || strcmp(expected, StringWriterData(out)) != 0)
         {
@@ -70,13 +70,13 @@ static void test_spec(void)
     num_failures = comments_fail + interpolation_fail + sections_fail + delimiters_fail + inverted_fail + extra_fail;
     if (num_failures > 0)
     {
-        fprintf(stdout, "Failures in comments: %d\n", comments_fail);
-        fprintf(stdout, "Failures in interpolation: %d\n", interpolation_fail);
-        fprintf(stdout, "Failures in sections: %d\n", sections_fail);
-        fprintf(stdout, "Failures in delimiters: %d\n", delimiters_fail);
-        fprintf(stdout, "Failures in inverted: %d\n", inverted_fail);
-        fprintf(stdout, "Failures in extra: %d\n", inverted_fail);
-        fprintf(stdout, "TOTAL FAILURES: %d\n", num_failures);
+        fprintf(stdout, "Failures in comments: %zd\n", comments_fail);
+        fprintf(stdout, "Failures in interpolation: %zd\n", interpolation_fail);
+        fprintf(stdout, "Failures in sections: %zd\n", sections_fail);
+        fprintf(stdout, "Failures in delimiters: %zd\n", delimiters_fail);
+        fprintf(stdout, "Failures in inverted: %zd\n", inverted_fail);
+        fprintf(stdout, "Failures in extra: %zd\n", inverted_fail);
+        fprintf(stdout, "TOTAL FAILURES: %zd\n", num_failures);
 
         fail();
     }

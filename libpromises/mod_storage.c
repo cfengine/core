@@ -36,7 +36,7 @@ static const ConstraintSyntax volume_constraints[] =
     ConstraintSyntaxNewNull()
 };
 
-static const BodySyntax volume_body = BodySyntaxNew("volume_method", volume_constraints, NULL, SYNTAX_STATUS_NORMAL);
+static const BodySyntax volume_body = BodySyntaxNew("volume", volume_constraints, NULL, SYNTAX_STATUS_NORMAL);
 
 static const ConstraintSyntax mount_constraints[] =
 {

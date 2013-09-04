@@ -1020,10 +1020,11 @@ static StackFrame *StackFrameNewPromise(const Promise *owner)
     return frame;
 }
 
-static StackFrame *StackFrameNewPromiseIteration(const PromiseIterator *iter_ctx, unsigned index)
+static StackFrame *StackFrameNewPromiseIteration(const Promise *owner, const PromiseIterator *iter_ctx, unsigned index)
 {
     StackFrame *frame = StackFrameNew(STACK_FRAME_TYPE_PROMISE_ITERATION, true);
 
+    frame->data.promise_iteration.owner = owner;
     frame->data.promise_iteration.iter_ctx = iter_ctx;
     frame->data.promise_iteration.index = index;
 
@@ -1114,18 +1115,44 @@ void EvalContextStackPushPromiseFrame(EvalContext *ctx, const Promise *owner, bo
     {
         frame->data.promise.vars = VariableTableNew();
     }
+
+    if (PromiseGetBundle(owner)->source_path)
+    {
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promise_filename", PromiseGetBundle(owner)->source_path, DATA_TYPE_STRING);
+        char number[CF_SMALLBUF];
+        snprintf(number, CF_SMALLBUF, "%zu", owner->offset.line);
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promise_linenumber", number, DATA_TYPE_STRING);
+    }
+
+    char v[CF_MAXVARSIZE];
+    snprintf(v, CF_MAXVARSIZE, "%d", (int) getuid());
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser_uid", v, DATA_TYPE_INT);
+    snprintf(v, CF_MAXVARSIZE, "%d", (int) getgid());
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser_gid", v, DATA_TYPE_INT);
+
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "bundle", PromiseGetBundle(owner)->name, DATA_TYPE_STRING);
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "namespace", PromiseGetNamespace(owner), DATA_TYPE_STRING);
+
+    if (owner->has_subbundles)
+    {
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser", owner->promiser, DATA_TYPE_STRING);
+    }
 }
 
-void EvalContextStackPushPromiseIterationFrame(EvalContext *ctx, size_t iteration_index, const PromiseIterator *iter_ctx)
+Promise *EvalContextStackPushPromiseIterationFrame(EvalContext *ctx, size_t iteration_index, const PromiseIterator *iter_ctx)
 {
     assert(LastStackFrame(ctx, 0) && LastStackFrame(ctx, 0)->type == STACK_FRAME_TYPE_PROMISE);
-
-    EvalContextStackPushFrame(ctx, StackFrameNewPromiseIteration(iter_ctx, iteration_index));
 
     if (iter_ctx)
     {
         PromiseIteratorUpdateVariable(ctx, iter_ctx);
     }
+
+    Promise *pexp = ExpandDeRefPromise(ctx, LastStackFrame(ctx, 0)->data.promise.owner);
+
+    EvalContextStackPushFrame(ctx, StackFrameNewPromiseIteration(pexp, iter_ctx, iteration_index));
+
+    return pexp;
 }
 
 void EvalContextStackPopFrame(EvalContext *ctx)
@@ -1196,12 +1223,15 @@ char *EvalContextStackPath(const EvalContext *ctx)
             break;
 
         case STACK_FRAME_TYPE_PROMISE:
-            WriterWriteF(path, "/%s", frame->data.promise.owner->parent_promise_type->name);
-            WriterWriteF(path, "/'%s'", frame->data.promise.owner->promiser);
             break;
 
         case STACK_FRAME_TYPE_PROMISE_ITERATION:
-            WriterWriteF(path, " [%zd] ", frame->data.promise_iteration.index);
+            WriterWriteF(path, "/%s", frame->data.promise_iteration.owner->parent_promise_type->name);
+            WriterWriteF(path, "/'%s'", frame->data.promise_iteration.owner->promiser);
+            if (i == SeqLength(ctx->stack))
+            {
+                WriterWriteF(path, " [%zd] ", frame->data.promise_iteration.index);
+            }
             break;
         }
     }

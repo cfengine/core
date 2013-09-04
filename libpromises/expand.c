@@ -151,7 +151,6 @@ void ExpandPromise(EvalContext *ctx, Promise *pp, PromiseActuator *ActOnPromise,
 static void ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp, Rlist *lists, Rlist *containers, PromiseActuator *ActOnPromise, void *param)
 {
     const char *handle = PromiseGetHandle(pp);
-    char v[CF_MAXVARSIZE];
 
     EvalContextStackPushPromiseFrame(ctx, pp, true);
 
@@ -159,36 +158,6 @@ static void ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp, Rlist *lists
     size_t i = 0;
     for (iter_ctx = PromiseIteratorNew(ctx, pp, lists, containers); PromiseIteratorHasMore(iter_ctx); i++, PromiseIteratorNext(iter_ctx))
     {
-        EvalContextStackPushPromiseIterationFrame(ctx, i, iter_ctx);
-        char number[CF_SMALLBUF];
-
-        /* Allow $(this.handle) etc variables */
-
-        if (PromiseGetBundle(pp)->source_path)
-        {
-            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promise_filename",PromiseGetBundle(pp)->source_path, DATA_TYPE_STRING);
-            snprintf(number, CF_SMALLBUF, "%zu", pp->offset.line);
-            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promise_linenumber", number, DATA_TYPE_STRING);
-        }
-
-        snprintf(v, CF_MAXVARSIZE, "%d", (int) getuid());
-        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser_uid", v, DATA_TYPE_INT);
-        snprintf(v, CF_MAXVARSIZE, "%d", (int) getgid());
-        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser_gid", v, DATA_TYPE_INT);
-
-        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "bundle", PromiseGetBundle(pp)->name, DATA_TYPE_STRING);
-        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "namespace", PromiseGetNamespace(pp), DATA_TYPE_STRING);
-
-        /* Must expand $(this.promiser) here for arg dereferencing in things
-           like edit_line and methods, but we might have to
-           adjust again later if the value changes  -- need to qualify this
-           so we don't expand too early for some other promsies */
-
-        if (pp->has_subbundles)
-        {
-            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser", pp->promiser, DATA_TYPE_STRING);
-        }
-
         if (handle)
         {
             char tmp[CF_EXPANDSIZE];
@@ -203,7 +172,7 @@ static void ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp, Rlist *lists
             EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "handle", PromiseID(pp), DATA_TYPE_STRING);
         }
 
-        Promise *pexp = ExpandDeRefPromise(ctx, pp);
+        Promise *pexp = EvalContextStackPushPromiseIterationFrame(ctx, i, iter_ctx);
 
         assert(ActOnPromise);
         ActOnPromise(ctx, pexp, param);

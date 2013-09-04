@@ -69,6 +69,7 @@ typedef struct
 
 typedef struct
 {
+    const Promise *owner;
     const PromiseIterator *iter_ctx;
     size_t index;
 } StackFramePromiseIteration;
@@ -149,7 +150,7 @@ StringSetIterator EvalContextStackFrameIteratorSoft(const EvalContext *ctx);
 void EvalContextStackPushBundleFrame(EvalContext *ctx, const Bundle *owner, const Rlist *args, bool inherits_previous);
 void EvalContextStackPushBodyFrame(EvalContext *ctx, const Body *owner, Rlist *args);
 void EvalContextStackPushPromiseFrame(EvalContext *ctx, const Promise *owner, bool copy_bundle_context);
-void EvalContextStackPushPromiseIterationFrame(EvalContext *ctx, size_t iteration_index, const PromiseIterator *iter_ctx);
+Promise *EvalContextStackPushPromiseIterationFrame(EvalContext *ctx, size_t iteration_index, const PromiseIterator *iter_ctx);
 void EvalContextStackPopFrame(EvalContext *ctx);
 char *EvalContextStackPath(const EvalContext *ctx);
 

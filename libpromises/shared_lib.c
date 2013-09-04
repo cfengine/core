@@ -22,6 +22,8 @@
   included file COSL.txt.
 */
 
+#ifndef __MINGW32__
+
 #include <shared_lib.h>
 #include <logging.h>
 
@@ -53,3 +55,5 @@ void shlib_close(void *handle)
 {
     dlclose(handle);
 }
+
+#endif // !__MINGW32__

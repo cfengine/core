@@ -159,9 +159,16 @@ void ScopeAugment(EvalContext *ctx, const Bundle *bp, const Promise *pp, const R
                     VarRefDestroy(ref);
                 }
                 break;
+            case DATA_TYPE_CONTAINER:
+                {
+                    VarRef *ref = VarRefParseFromBundle(lval, bp);
+                    EvalContextVariablePut(ctx, ref, (Rval) { retval.item, RVAL_TYPE_CONTAINER}, DATA_TYPE_CONTAINER);
+                    VarRefDestroy(ref);
+                }
+                break;
             default:
                 {
-                    Log(LOG_LEVEL_ERR, "List parameter '%s' not found while constructing scope '%s' - use @(scope.variable) in calling reference", naked, bp->name);
+                    Log(LOG_LEVEL_ERR, "List or container parameter '%s' not found while constructing scope '%s' - use @(scope.variable) in calling reference", naked, bp->name);
                     VarRef *ref = VarRefParseFromBundle(lval, bp);
                     EvalContextVariablePut(ctx, ref, (Rval) { rpr->item, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
                     VarRefDestroy(ref);

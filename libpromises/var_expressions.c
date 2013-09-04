@@ -229,30 +229,35 @@ VarRef *VarRefParseFromNamespaceAndScope(const char *qualified_name, const char 
         indices_start++;
         lval = xstrndup(lval_start, indices_start - lval_start - 1);
 
-        assert("Index brackets in variable expression did not balance" && IndexBracketsBalance(indices_start - 1));
-
-        num_indices = IndexCount(indices_start - 1);
-        indices = xmalloc(num_indices * sizeof(char *));
-
-        Buffer *buf = BufferNew();
-        size_t cur_index = 0;
-        for (const char *c = indices_start; *c != '\0'; c++)
+        if (!IndexBracketsBalance(indices_start - 1))
         {
-            if (*c == '[')
-            {
-                cur_index++;
-            }
-            else if (*c == ']')
-            {
-                indices[cur_index] = xstrdup(BufferData(buf));
-                BufferZero(buf);
-            }
-            else
-            {
-                BufferAppend(buf, c, sizeof(char));
-            }
+            Log(LOG_LEVEL_ERR, "Broken variable expressoin, index brackets do not balance, in '%s'", qualified_name);
         }
-        BufferDestroy(&buf);
+        else
+        {
+            num_indices = IndexCount(indices_start - 1);
+            indices = xmalloc(num_indices * sizeof(char *));
+
+            Buffer *buf = BufferNew();
+            size_t cur_index = 0;
+            for (const char *c = indices_start; *c != '\0'; c++)
+            {
+                if (*c == '[')
+                {
+                    cur_index++;
+                }
+                else if (*c == ']')
+                {
+                    indices[cur_index] = xstrdup(BufferData(buf));
+                    BufferZero(buf);
+                }
+                else
+                {
+                    BufferAppend(buf, c, sizeof(char));
+                }
+            }
+            BufferDestroy(&buf);
+        }
     }
     else
     {

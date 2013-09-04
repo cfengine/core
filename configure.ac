@@ -121,6 +121,7 @@ AC_ARG_ENABLE([builtin-extensions], [AS_HELP_STRING([Build binaries with builtin
               ])
 AM_CONDITIONAL([ENTERPRISE_BUILTIN_EXTENSIONS], [test "x$enable_builtin_extensions" = "xyes"])
 AS_IF([test "x$enable_builtin_extensions" = "xyes"], [AC_DEFINE([ENTERPRISE_BUILTIN_EXTENSIONS], [1], [Define if you want builtin Enterprise extensions])])
+AC_SUBST([enable_builtin_extensions])
 
 dnl ######################################################################
 dnl Configure files layout

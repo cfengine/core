@@ -4984,7 +4984,10 @@ static int ExecModule(EvalContext *ctx, char *command, const char *ns)
 {
     FILE *pp;
     char *sp, line[CF_BUFSIZE];
+    char context[CF_BUFSIZE];
     int print = false;
+
+    context[0] = '\0';
 
     if ((pp = cf_popen(command, "rt", true)) == NULL)
     {
@@ -5025,7 +5028,7 @@ static int ExecModule(EvalContext *ctx, char *command, const char *ns)
             }
         }
 
-        ModuleProtocol(ctx, command, line, print, ns);
+        ModuleProtocol(ctx, command, line, print, ns, context);
     }
 
     cf_pclose(pp);
@@ -5036,28 +5039,42 @@ static int ExecModule(EvalContext *ctx, char *command, const char *ns)
 /* Level                                                             */
 /*********************************************************************/
 
-void ModuleProtocol(EvalContext *ctx, char *command, char *line, int print, const char *ns)
+void ModuleProtocol(EvalContext *ctx, char *command, char *line, int print, const char *ns, char* context)
 {
-    char name[CF_BUFSIZE], content[CF_BUFSIZE], context[CF_BUFSIZE];
+    char name[CF_BUFSIZE], content[CF_BUFSIZE];
     char arg0[CF_BUFSIZE];
     char *filename;
 
+    if (*context == '\0')
+    {
 /* Infer namespace from script name */
 
-    snprintf(arg0, CF_BUFSIZE, "%s", CommandArg0(command));
-    filename = basename(arg0);
+        snprintf(arg0, CF_BUFSIZE, "%s", CommandArg0(command));
+        filename = basename(arg0);
 
 /* Canonicalize filename into acceptable namespace name*/
 
-    CanonifyNameInPlace(filename);
-    strcpy(context, filename);
-    Log(LOG_LEVEL_VERBOSE, "Module context '%s'", context);
+        CanonifyNameInPlace(filename);
+        strcpy(context, filename);
+        Log(LOG_LEVEL_VERBOSE, "Module context '%s'", context);
+    }
 
     name[0] = '\0';
     content[0] = '\0';
 
     switch (*line)
     {
+    case '^':
+        content[0] = '\0';
+
+        // Allow modules to set their variable context (up to 50 characters)
+        if (1 == sscanf(line + 1, "context=%50[a-z]", content) && strlen(content) > 0)
+        {
+            Log(LOG_LEVEL_VERBOSE, "Module changed variable context from '%s' to '%s'", context, content);
+            strcpy(context, content);
+        }
+        break;
+
     case '+':
         Log(LOG_LEVEL_VERBOSE, "Activated classes '%s'", line + 1);
         if (CheckID(line + 1))

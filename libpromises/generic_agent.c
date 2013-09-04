@@ -709,6 +709,8 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
 
     EvalContextHeapAddHard(ctx, "any");
 
+    GenericAgentAddEditionClasses(ctx);
+
     strcpy(VPREFIX, GetConsolePrefix());
 
 /* Define trusted directories */

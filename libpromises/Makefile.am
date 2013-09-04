@@ -46,6 +46,7 @@ libpromises_la_SOURCES = \
         evalfunction.c evalfunction.h \
         exec_tools.c exec_tools.h \
         expand.c expand.h \
+        extensions.c extensions.h \
         files_copy.c files_copy.h \
         files_hashes.c files_hashes.h \
         files_interfaces.c files_interfaces.h \
@@ -150,9 +151,16 @@ libpromises_la_SOURCES += \
         unix_dir.c
 endif
 
-BUILT_SOURCES = cf3parse.h
+BUILT_SOURCES = cf3parse.h enterprise_extension.c enterprise_extension.h
 
-CLEANFILES = *.gcno *.gcda
+ENTERPRISE_EXTENSION_GENERATE = $(SED) -f enterprise_extension.sed $< > $@
+ENTERPRISE_EXTENSION_MAKE = @if test -z "$(V)"; then echo "  SED   " $@; else echo "$(ENTERPRISE_EXTENSION_GENERATE)"; fi; $(ENTERPRISE_EXTENSION_GENERATE)
+enterprise_extension.c: extensions_template.c enterprise_extension.sed
+	$(ENTERPRISE_EXTENSION_MAKE)
+enterprise_extension.h: extensions_template.h enterprise_extension.sed
+	$(ENTERPRISE_EXTENSION_MAKE)
+
+CLEANFILES = *.gcno *.gcda enterprise_extension.c enterprise_extension.h
 
 #
 # Some basic clean ups

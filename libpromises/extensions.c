@@ -24,18 +24,16 @@
 
 #include <enterprise_extension.h>
 
-#ifndef ENTERPRISE_BUILTIN_EXTENSIONS
-
 #include <sysinfo.h>
 #include <misc_lib.h>
 
 #include <pthread.h>
 
 /*
- * A note regarding the loading of the enterprise plugin:
+ * A note regarding the loading of the extension plugins:
  *
- * The enterprise plugin was originally statically linked into each agent,
- * but was then refactored into a plugin.
+ * The extension plugin was originally statically linked into each agent,
+ * but was then refactored into plugins.
  * Therefore, since it hasn't been written according to plugin guidelines,
  * it is not safe to assume that we can unload it once we have
  * loaded it, since it may allocate resources that are not freed. It is also
@@ -57,51 +55,32 @@
  * - The exception is for testing (see getenv below).
  */
 
-static pthread_once_t enterprise_library_once = PTHREAD_ONCE_INIT;
-static void *enterprise_library_handle = NULL;
-static bool enable_enterprise_library = true;
+static bool enable_extension_libraries = true;
+static bool attempted_loading = false;
 
-static void enterprise_library_assign();
-static void *enterprise_library_open_impl();
-
-void enterprise_library_disable()
+void extension_libraries_disable()
 {
-    if (enterprise_library_handle)
+    if (attempted_loading)
     {
-        ProgrammingError("enterprise_library_disable() MUST be called before any call to extension functions");
+        ProgrammingError("extension_libraries_disable() MUST be called before any call to extension functions");
     }
-    enable_enterprise_library = false;
+    enable_extension_libraries = false;
 }
 
-void *enterprise_library_open()
+void *extension_library_open(const char *name)
 {
-    if (!enable_enterprise_library)
+    if (!enable_extension_libraries)
     {
         return NULL;
     }
 
-    if (getenv("CFENGINE_TEST_OVERRIDE_ENTERPRISE_LIBRARY_DO_CLOSE") != NULL)
+    if (getenv("CFENGINE_TEST_OVERRIDE_EXTENSION_LIBRARY_DO_CLOSE") == NULL)
     {
-        return enterprise_library_open_impl();
+        // Only do loading checks if we are not doing tests.
+        attempted_loading = true;
     }
 
-    int ret = pthread_once(&enterprise_library_once, &enterprise_library_assign);
-    if (ret != 0)
-    {
-        Log(LOG_LEVEL_ERR, "Could not initialize Enterprise Library: %s", strerror(ret));
-        return NULL;
-    }
-    return enterprise_library_handle;
-}
-
-static void enterprise_library_assign()
-{
-    enterprise_library_handle = enterprise_library_open_impl();
-}
-
-static void *enterprise_library_open_impl()
-{
-    const char *dir = getenv("CFENGINE_TEST_OVERRIDE_ENTERPRISE_LIBRARY_DIR");
+    const char *dir = getenv("CFENGINE_TEST_OVERRIDE_EXTENSION_LIBRARY_DIR");
     char lib[] = "/lib";
     if (dir)
     {
@@ -111,8 +90,8 @@ static void *enterprise_library_open_impl()
     {
         dir = GetWorkDir();
     }
-    char path[strlen(dir) + strlen(lib) + strlen(ENTERPRISE_LIBRARY_NAME) + 2];
-    sprintf(path, "%s%s/%s", dir, lib, ENTERPRISE_LIBRARY_NAME);
+    char path[strlen(dir) + strlen(lib) + strlen(name) + 2];
+    sprintf(path, "%s%s/%s", dir, lib, name);
     void *handle = shlib_open(path);
     if (!handle)
     {
@@ -123,7 +102,7 @@ static void *enterprise_library_open_impl()
     const char * (*GetExtensionLibraryVersion)() = shlib_load(handle, "GetExtensionLibraryVersion");
     if (!GetExtensionLibraryVersion)
     {
-        Log(LOG_LEVEL_ERR, "Could not retreive version from Enterprise plugin. Not loading the plugin.");
+        Log(LOG_LEVEL_ERR, "Could not retreive version from extension plugin (%s). Not loading the plugin.", name);
         goto close_and_fail;
     }
 
@@ -132,20 +111,20 @@ static void *enterprise_library_open_impl()
     unsigned int plug_major, plug_minor, plug_patch;
     if (sscanf(VERSION, "%u.%u.%u", &bin_major, &bin_minor, &bin_patch) != 3)
     {
-        Log(LOG_LEVEL_ERR, "Not able to extract version number from binary. Not loading Enterprise plugin.");
+        Log(LOG_LEVEL_ERR, "Not able to extract version number from binary (%s). Not loading extension plugin.", name);
         goto close_and_fail;
     }
     if (sscanf(plugin_version, "%u.%u.%u", &plug_major, &plug_minor, &plug_patch) != 3)
     {
-        Log(LOG_LEVEL_ERR, "Not able to extract version number from plugin. Not loading Enterprise plugin.");
+        Log(LOG_LEVEL_ERR, "Not able to extract version number from plugin (%s). Not loading extension plugin.", name);
         goto close_and_fail;
     }
 
     if (bin_major != plug_major || bin_minor != plug_minor || bin_patch != plug_patch)
     {
-        Log(LOG_LEVEL_ERR, "Enterprise plugin version does not match CFEngine Community version "
-            "(CFEngine Community v%u.%u.%u, Enterprise v%u.%u.%u). Refusing to load it.",
-            bin_major, bin_minor, bin_patch, plug_major, plug_minor, plug_patch);
+        Log(LOG_LEVEL_ERR, "Extension plugin version does not match CFEngine Community version "
+            "(CFEngine Community v%u.%u.%u, Extension (%s) v%u.%u.%u). Refusing to load it.",
+            bin_major, bin_minor, bin_patch, name, plug_major, plug_minor, plug_patch);
         goto close_and_fail;
     }
 
@@ -156,22 +135,7 @@ close_and_fail:
     return NULL;
 }
 
-void enterprise_library_close(void *handle)
+void extension_library_close(void *handle)
 {
-    if (getenv("CFENGINE_TEST_OVERRIDE_ENTERPRISE_LIBRARY_DO_CLOSE") != NULL)
-    {
-        return shlib_close(handle);
-    }
-
-    // Normally we don't ever close the extension library, because we may have
-    // pointer references to it.
+    shlib_close(handle);
 }
-
-#else // ENTERPRISE_BUILTIN_EXTENSIONS
-
-// Has no effect when using builtin extensions.
-void enterprise_library_disable()
-{
-}
-
-#endif // ENTERPRISE_BUILTIN_EXTENSIONS

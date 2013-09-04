@@ -89,3 +89,17 @@ collect-coverage:
 	@echo
 
 coverage: clean-coverage run-coverage collect-coverage
+
+################################################################################
+# Identical to what is in libpromises/Makefile.am.
+# This is because there is a circular dependency libcfnet <-> libpromises
+# so we need to generate it before everything else.
+################################################################################
+BUILT_SOURCES = libpromises/enterprise_extension.c libpromises/enterprise_extension.h
+
+ENTERPRISE_EXTENSION_GENERATE = $(SED) -f libpromises/enterprise_extension.sed $< > $@
+ENTERPRISE_EXTENSION_MAKE = @if test -z "$(V)"; then echo "  SED   " $@; else echo "$(ENTERPRISE_EXTENSION_GENERATE)"; fi; $(ENTERPRISE_EXTENSION_GENERATE)
+libpromises/enterprise_extension.c: libpromises/extensions_template.c libpromises/enterprise_extension.sed
+	$(ENTERPRISE_EXTENSION_MAKE)
+libpromises/enterprise_extension.h: libpromises/extensions_template.h libpromises/enterprise_extension.sed
+	$(ENTERPRISE_EXTENSION_MAKE)

@@ -2252,7 +2252,6 @@ static void VerifyCopiedFileAttributes(EvalContext *ctx, const char *src, const 
         if (!CopyFileExtendedAttributesDisk(src, dest))
         {
             cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, attr, "Could not preserve extended attributes (ACLs and security contexts) on file '%s'", dest);
-            return NULL;
         }
     }
 }

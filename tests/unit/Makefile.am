@@ -192,8 +192,8 @@ package_versions_compare_test_SOURCES = package_versions_compare_test.c ../../cf
 package_versions_compare_test_CPPFLAGS = $(AM_CPPFLAGS)
 package_versions_compare_test_LDADD = ../../libpromises/libpromises.la libtest.la
 
-sort_test_SOURCES = sort_test.c ../../libpromises/sort.c
-sort_test_LDADD = libtest.la
+sort_test_SOURCES = sort_test.c
+sort_test_LDADD = libtest.la ../../libpromises/libpromises.la
 
 logging_test_SOURCES = logging_test.c ../../libpromises/syslog_client.c mock_logging.c
 logging_test_LDADD = libtest.la

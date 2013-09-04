@@ -156,9 +156,10 @@ static void ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp, Rlist *lists
     EvalContextStackPushPromiseFrame(ctx, pp, true);
 
     PromiseIterator *iter_ctx = NULL;
-    for (iter_ctx = PromiseIteratorNew(ctx, pp, lists, containers); PromiseIteratorHasMore(iter_ctx); PromiseIteratorNext(iter_ctx))
+    size_t i = 0;
+    for (iter_ctx = PromiseIteratorNew(ctx, pp, lists, containers); PromiseIteratorHasMore(iter_ctx); i++, PromiseIteratorNext(iter_ctx))
     {
-        EvalContextStackPushPromiseIterationFrame(ctx, iter_ctx);
+        EvalContextStackPushPromiseIterationFrame(ctx, i, iter_ctx);
         char number[CF_SMALLBUF];
 
         /* Allow $(this.handle) etc variables */
@@ -1025,7 +1026,7 @@ static void ResolveVariablesPromises(EvalContext *ctx, PromiseType *pt)
     {
         Promise *pp = SeqAt(pt->promises, i);
         EvalContextStackPushPromiseFrame(ctx, pp, false);
-        EvalContextStackPushPromiseIterationFrame(ctx, NULL);
+        EvalContextStackPushPromiseIterationFrame(ctx, 0, NULL);
         VerifyVarPromise(ctx, pp, false);
         EvalContextStackPopFrame(ctx);
         EvalContextStackPopFrame(ctx);

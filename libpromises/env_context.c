@@ -1020,11 +1020,12 @@ static StackFrame *StackFrameNewPromise(const Promise *owner)
     return frame;
 }
 
-static StackFrame *StackFrameNewPromiseIteration(const PromiseIterator *iter_ctx)
+static StackFrame *StackFrameNewPromiseIteration(const PromiseIterator *iter_ctx, unsigned index)
 {
     StackFrame *frame = StackFrameNew(STACK_FRAME_TYPE_PROMISE_ITERATION, true);
 
     frame->data.promise_iteration.iter_ctx = iter_ctx;
+    frame->data.promise_iteration.index = index;
 
     return frame;
 }
@@ -1115,11 +1116,11 @@ void EvalContextStackPushPromiseFrame(EvalContext *ctx, const Promise *owner, bo
     }
 }
 
-void EvalContextStackPushPromiseIterationFrame(EvalContext *ctx, const PromiseIterator *iter_ctx)
+void EvalContextStackPushPromiseIterationFrame(EvalContext *ctx, size_t iteration_index, const PromiseIterator *iter_ctx)
 {
     assert(LastStackFrame(ctx, 0) && LastStackFrame(ctx, 0)->type == STACK_FRAME_TYPE_PROMISE);
 
-    EvalContextStackPushFrame(ctx, StackFrameNewPromiseIteration(iter_ctx));
+    EvalContextStackPushFrame(ctx, StackFrameNewPromiseIteration(iter_ctx, iteration_index));
 
     if (iter_ctx)
     {
@@ -1200,6 +1201,7 @@ char *EvalContextStackPath(const EvalContext *ctx)
             break;
 
         case STACK_FRAME_TYPE_PROMISE_ITERATION:
+            WriterWriteF(path, " [%zd] ", frame->data.promise_iteration.index);
             break;
         }
     }

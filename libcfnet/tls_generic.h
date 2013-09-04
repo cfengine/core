@@ -80,7 +80,7 @@ int TLSSend(SSL *ssl, const char *buffer, int length);
  */
 int TLSRecv(SSL *ssl, char *buffer, int length);
 /**
- * @brief Repeat receiving until received buffer ends with '\n'.
+ * @brief Receives character until a new line is found.
  * @return Line is '\0'-terminated and put in #line. Return value is line
  *         length (including '\0') or -1 in case of error.
  *

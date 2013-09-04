@@ -87,7 +87,8 @@ check_PROGRAMS = \
 	mon_load_test \
 	mon_processes_test \
 	mustache_test \
-	class_test
+	class_test \
+	tls_generic_test
 
 if HAVE_AVAHI_CLIENT
 if HAVE_AVAHI_COMMON
@@ -263,3 +264,6 @@ mon_load_test_LDADD = ../../libpromises/libpromises.la libtest.la
 
 mon_processes_test_SOURCES = mon_processes_test.c ../../cf-monitord/mon.h ../../cf-monitord/mon_processes.c
 mon_processes_test_LDADD = ../../libpromises/libpromises.la libtest.la
+tls_generic_test_SOURCES = tls_generic_test.c 
+tls_generic_test_LDADD = libtest.la ../../libutils/libutils.la ../../libpromises/libpromises.la ../../libcfnet/libcfnet.la
+

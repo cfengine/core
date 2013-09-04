@@ -103,21 +103,13 @@ int TLSVerifyPeer(ConnectionInfo *conn_info, const char *remoteip, const char *u
                                           conn_info->remote_keyhash_str);
     if (expected_rsa_key == NULL)
     {
-        /* Log(LOG_LEVEL_ERR, "HavePublicKeyByIP err"); */
+        Log(LOG_LEVEL_ERR, "HavePublicKeyByIP err");
         retval = 0;                                        /* KEY NOT FOUND */
         goto ret3;
     }
 
     /* Avoid dynamic allocation... */
     EVP_PKEY expected_pubkey = { 0 };
-    /* EVP_PKEY *expected_pubkey = EVP_PKEY_new(); */
-    /* if (expected_pubkey == NULL) */
-    /* { */
-    /*     Log(LOG_LEVEL_ERR, "EVP_PKEY_new: %s", */
-    /*         ERR_reason_error_string(ERR_get_error())); */
-    /*     retval = 0; */
-    /*     goto ret4; */
-    /* } */
 
     ret = EVP_PKEY_assign_RSA(&expected_pubkey, expected_rsa_key);
     ret = EVP_PKEY_cmp(received_pubkey, &expected_pubkey);
@@ -146,8 +138,6 @@ int TLSVerifyPeer(ConnectionInfo *conn_info, const char *remoteip, const char *u
     return 0;
 
   ret5:
-  /*   EVP_PKEY_free(expected_pubkey); */
-  /* ret4: */
     RSA_free(expected_rsa_key);
   ret3:
     EVP_PKEY_free(received_pubkey);
@@ -264,11 +254,41 @@ int TLSRecv(SSL *ssl, char *buffer, int length)
     return received;
 }
 
+static bool find_newline(char *buffer, size_t *length)
+{
+    /*
+     * Look into the string until a new line is found.
+     * If found return true, if not found return false.
+     * The string will be truncated at the position of the first '\n'.
+     */
+    bool found = false;
+    if (buffer && (*length > 0))
+    {
+        size_t i = 0;
+        for (i = 0; i < *length; ++i)
+        {
+            if (buffer[i] == '\0')
+            {
+                break;
+            }
+            if (buffer[i] == '\n')
+            {
+                found = true;
+                buffer[i] = '\0';
+                *length = i;
+                break;
+            }
+        }
+    }
+    return found;
+}
+
 int TLSRecvLines(SSL *ssl, char *buf, size_t buf_size)
 {
     int ret;
     int got = 0;
     buf_size -= 1;               /* Reserve one space for terminating '\0' */
+    bool found = false;
 
     /* Repeat until we receive end of line. */
     do
@@ -283,21 +303,15 @@ int TLSRecvLines(SSL *ssl, char *buf, size_t buf_size)
             return -1;
         }
         got += ret;
+        found = find_newline(buf, &got);
     }
-    while ((buf[got-1] != '\n') && (got != buf_size));
+    while ((!found) && (got < buf_size));
     assert(got <= buf_size);
 
-    /* Append terminating '\0', there is room because buf_size is -1. */
-    buf[got] = '\0';
-
-    if ((got == buf_size) && (buf[got-1] != '\n'))
+    if (!found)
     {
-        Log(LOG_LEVEL_ERR,
-            "Received line too long, hanging up! Length %d, line: %s",
-            got, buf);
+        Log(LOG_LEVEL_ERR, "No new line found and the buffer is already full");
         return -1;
     }
-
-    Log(LOG_LEVEL_DEBUG, "TLSRecvLines() %d bytes long: %s", got, buf);
     return got;
 }

@@ -132,8 +132,6 @@ bool ServerTLSInitialize()
             goto err3;
         }
     }
-    /* Log(LOG_LEVEL_ERR, "generate cert from priv key: %s", */
-    /*     ERR_reason_error_string(ERR_get_error())); */
 
     SSL_CTX_use_certificate(SSLSERVERCONTEXT, SSLSERVERCERT);
 

@@ -194,6 +194,9 @@ static ActionResult RepairExec(EvalContext *ctx, Attributes a, Promise *pp)
     char cmdOutBuf[CF_BUFSIZE];
     int cmdOutBufPos = 0;
     int lineOutLen;
+    char module_context[CF_BUFSIZE];
+
+    module_context[0] = '\0';
 
     if (IsAbsoluteFileName(CommandArg0(pp->promiser)) || a.contain.shelltype == SHELL_TYPE_NONE)
     {
@@ -345,7 +348,7 @@ static ActionResult RepairExec(EvalContext *ctx, Attributes a, Promise *pp)
 
             if (a.module)
             {
-                ModuleProtocol(ctx, cmdline, line, !a.contain.nooutput, PromiseGetNamespace(pp));
+                ModuleProtocol(ctx, cmdline, line, !a.contain.nooutput, PromiseGetNamespace(pp), module_context);
             }
             else if ((!a.contain.nooutput) && (!EmptyString(line)))
             {

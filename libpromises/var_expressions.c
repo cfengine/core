@@ -178,11 +178,21 @@ static bool IndexBracketsBalance(const char *var_string)
 static size_t IndexCount(const char *var_string)
 {
     size_t count = 0;
+    size_t level = 0;
+
     for (const char *c = var_string; *c != '\0'; c++)
     {
         if (*c == '[')
         {
-            count++;
+            if (level == 0)
+            {
+                count++;
+            }
+            level++;
+        }
+        if (*c == ']')
+        {
+            level--;
         }
     }
 
@@ -240,21 +250,29 @@ VarRef *VarRefParseFromNamespaceAndScope(const char *qualified_name, const char 
 
             Buffer *buf = BufferNew();
             size_t cur_index = 0;
+            size_t open_count = 1;
+
             for (const char *c = indices_start; *c != '\0'; c++)
             {
                 if (*c == '[')
                 {
-                    cur_index++;
+                    if (open_count++ == 0)
+                    {
+                        cur_index++;
+                        continue;
+                    }
                 }
                 else if (*c == ']')
                 {
-                    indices[cur_index] = xstrdup(BufferData(buf));
-                    BufferZero(buf);
+                    if (open_count-- == 1)
+                    {
+                        indices[cur_index] = xstrdup(BufferData(buf));
+                        BufferZero(buf);
+                        continue;
+                    }
                 }
-                else
-                {
-                    BufferAppend(buf, c, sizeof(char));
-                }
+
+                BufferAppend(buf, c, sizeof(char));
             }
             BufferDestroy(&buf);
         }

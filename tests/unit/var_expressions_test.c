@@ -81,6 +81,17 @@ static void test_qualified_array(void)
     VarRefDestroy(ref);
 }
 
+static void test_nested_array(void)
+{
+    VarRef *ref = VarRefParse("scope.lval[$(other[x])]");
+    assert_false(ref->ns);
+    assert_string_equal("scope", ref->scope);
+    assert_string_equal("lval", ref->lval);
+    assert_int_equal(1, ref->num_indices);
+    assert_string_equal("$(other[x])", ref->indices[0]);
+    VarRefDestroy(ref);
+}
+
 static void test_array_with_dot_colon_in_index(void)
 {
     VarRef *ref = VarRefParse("lval[x-x.x:x]");
@@ -157,6 +168,7 @@ int main()
         unit_test(test_levels),
         unit_test(test_unqualified_array),
         unit_test(test_qualified_array),
+        unit_test(test_nested_array),
         unit_test(test_array_with_dot_colon_in_index),
         unit_test(test_to_string_qualified),
         unit_test(test_to_string_unqualified),

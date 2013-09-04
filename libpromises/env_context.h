@@ -69,7 +69,7 @@ typedef struct
 
 typedef struct
 {
-    const Promise *owner;
+    Promise *owner;
     const PromiseIterator *iter_ctx;
     size_t index;
 } StackFramePromiseIteration;

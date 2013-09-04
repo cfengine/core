@@ -1020,7 +1020,7 @@ static StackFrame *StackFrameNewPromise(const Promise *owner)
     return frame;
 }
 
-static StackFrame *StackFrameNewPromiseIteration(const Promise *owner, const PromiseIterator *iter_ctx, unsigned index)
+static StackFrame *StackFrameNewPromiseIteration(Promise *owner, const PromiseIterator *iter_ctx, unsigned index)
 {
     StackFrame *frame = StackFrameNew(STACK_FRAME_TYPE_PROMISE_ITERATION, true);
 
@@ -1172,6 +1172,10 @@ void EvalContextStackPopFrame(EvalContext *ctx)
         }
         break;
 
+    case STACK_FRAME_TYPE_PROMISE_ITERATION:
+        PromiseDestroy(last_frame->data.promise_iteration.owner);
+        break;
+
     default:
         break;
     }
@@ -1228,9 +1232,9 @@ char *EvalContextStackPath(const EvalContext *ctx)
         case STACK_FRAME_TYPE_PROMISE_ITERATION:
             WriterWriteF(path, "/%s", frame->data.promise_iteration.owner->parent_promise_type->name);
             WriterWriteF(path, "/'%s'", frame->data.promise_iteration.owner->promiser);
-            if (i == SeqLength(ctx->stack))
+            if (i == SeqLength(ctx->stack) - 1)
             {
-                WriterWriteF(path, " [%zd] ", frame->data.promise_iteration.index);
+                WriterWriteF(path, " [%zd]", frame->data.promise_iteration.index);
             }
             break;
         }

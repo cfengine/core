@@ -182,8 +182,6 @@ static void ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp, Rlist *lists
             VerifyVarPromise(ctx, pexp, true);
         }
 
-        PromiseDestroy(pexp);
-
         EvalContextStackPopFrame(ctx);
     }
 

@@ -921,13 +921,14 @@ bool PolicyCheckPartial(const Policy *policy, Seq *errors)
         {
             Bundle *bp2 = SeqAt(policy->bundles, j);
 
-            if (bp != bp2 &&
-                StringSafeEqual(bp->name, bp2->name) &&
-                StringSafeEqual(bp->type, bp2->type))
+            if (bp != bp2
+                && strcmp(bp->type, bp2->type) == 0
+                && strcmp(bp->ns, bp2->ns) == 0
+                && strcmp(bp->name, bp2->name) == 0)
             {
                 SeqAppend(errors, PolicyErrorNew(POLICY_ELEMENT_TYPE_BUNDLE, bp,
-                                                      POLICY_ERROR_BUNDLE_REDEFINITION,
-                                                      bp->name, bp->type));
+                                                 POLICY_ERROR_BUNDLE_REDEFINITION,
+                                                 bp->name, bp->type));
                 success = false;
             }
         }
@@ -949,9 +950,10 @@ bool PolicyCheckPartial(const Policy *policy, Seq *errors)
         {
             const Body *bp2 = SeqAt(policy->bodies, j);
 
-            if (bp != bp2 &&
-                StringSafeEqual(bp->name, bp2->name) &&
-                StringSafeEqual(bp->type, bp2->type))
+            if (bp != bp2
+                && strcmp(bp->type, bp2->type) == 0
+                && strcmp(bp->ns, bp2->ns) == 0
+                && strcmp(bp->name, bp2->name) == 0)
             {
                 if (strcmp(bp->type,"file") != 0)
                 {

@@ -66,7 +66,7 @@ static ParseResult ParsePrimary(const char *expr, int start, int end)
         {
             Expression *res = xcalloc(1, sizeof(Expression));
 
-            res->op = EVAL;
+            res->op = LOGICAL_OP_EVAL;
             res->val.eval.name = strres.result;
 
             return (ParseResult) {res, strres.position};
@@ -90,7 +90,7 @@ static ParseResult ParseNotExpression(const char *expr, int start, int end)
         {
             Expression *res = xcalloc(1, sizeof(Expression));
 
-            res->op = NOT;
+            res->op = LOGICAL_OP_NOT;
             res->val.not.arg = primres.result;
 
             return (ParseResult) {res, primres.position};
@@ -134,7 +134,7 @@ static ParseResult ParseAndExpression(const char *expr, int start, int end)
     }
 
     res = xcalloc(1, sizeof(Expression));
-    res->op = AND;
+    res->op = LOGICAL_OP_AND;
     res->val.andor.lhs = lhs.result;
     res->val.andor.rhs = rhs.result;
 
@@ -180,7 +180,7 @@ ParseResult ParseExpression(const char *expr, int start, int end)
     }
 
     res = xcalloc(1, sizeof(Expression));
-    res->op = OR;
+    res->op = LOGICAL_OP_OR;
     res->val.andor.lhs = lhs.result;
     res->val.andor.rhs = rhs.result;
 
@@ -194,25 +194,25 @@ ExpressionValue EvalExpression(const Expression *expr,
 {
     switch (expr->op)
     {
-    case OR:
-    case AND:
+    case LOGICAL_OP_OR:
+    case LOGICAL_OP_AND:
     {
-        ExpressionValue lhs = EXP_ERROR, rhs = EXP_ERROR;
+        ExpressionValue lhs = EXPRESSION_VALUE_ERROR, rhs = EXPRESSION_VALUE_ERROR;
 
         lhs = EvalExpression(expr->val.andor.lhs, nameevalfn, varrefevalfn, param);
-        if (lhs == EXP_ERROR)
+        if (lhs == EXPRESSION_VALUE_ERROR)
         {
-            return EXP_ERROR;
+            return EXPRESSION_VALUE_ERROR;
         }
 
         rhs = EvalExpression(expr->val.andor.rhs, nameevalfn, varrefevalfn, param);
 
-        if (rhs == EXP_ERROR)
+        if (rhs == EXPRESSION_VALUE_ERROR)
         {
-            return EXP_ERROR;
+            return EXPRESSION_VALUE_ERROR;
         }
 
-        if (expr->op == OR)
+        if (expr->op == LOGICAL_OP_OR)
         {
             return lhs || rhs;
         }
@@ -222,16 +222,16 @@ ExpressionValue EvalExpression(const Expression *expr,
         }
     }
 
-    case NOT:
+    case LOGICAL_OP_NOT:
     {
         ExpressionValue arg = EvalExpression(expr->val.not.arg,
                                              nameevalfn,
                                              varrefevalfn,
                                              param);
 
-        if (arg == EXP_ERROR)
+        if (arg == EXPRESSION_VALUE_ERROR)
         {
-            return EXP_ERROR;
+            return EXPRESSION_VALUE_ERROR;
         }
         else
         {
@@ -239,16 +239,16 @@ ExpressionValue EvalExpression(const Expression *expr,
         }
     }
 
-    case EVAL:
+    case LOGICAL_OP_EVAL:
     {
-        ExpressionValue ret = EXP_ERROR;
+        ExpressionValue ret = EXPRESSION_VALUE_ERROR;
         char *name = EvalStringExpression(expr->val.eval.name,
                                           varrefevalfn,
                                           param);
 
         if (name == NULL)
         {
-            return EXP_ERROR;
+            return EXPRESSION_VALUE_ERROR;
         }
 
         ret = (*nameevalfn) (name, param);
@@ -272,15 +272,15 @@ void FreeExpression(Expression *e)
 
     switch (e->op)
     {
-    case OR:
-    case AND:
+    case LOGICAL_OP_OR:
+    case LOGICAL_OP_AND:
         FreeExpression(e->val.andor.lhs);
         FreeExpression(e->val.andor.rhs);
         break;
-    case NOT:
+    case LOGICAL_OP_NOT:
         FreeExpression(e->val.not.arg);
         break;
-    case EVAL:
+    case LOGICAL_OP_EVAL:
         FreeStringExpression(e->val.eval.name);
         break;
     default:

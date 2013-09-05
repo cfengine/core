@@ -53,10 +53,10 @@
 
 typedef enum
 {
-    OR,
-    AND,
-    NOT,
-    EVAL,
+    LOGICAL_OP_OR,
+    LOGICAL_OP_AND,
+    LOGICAL_OP_NOT,
+    LOGICAL_OP_EVAL
 } LogicalOp;
 
 typedef struct Expression_ Expression;
@@ -105,9 +105,9 @@ ParseResult ParseExpression(const char *expr, int start, int end);
 
 typedef enum ExpressionValue
 {
-    EXP_ERROR = -1,
-    EXP_FALSE = false,
-    EXP_TRUE = true,
+    EXPRESSION_VALUE_ERROR = -1,
+    EXPRESSION_VALUE_FALSE = false,
+    EXPRESSION_VALUE_TRUE = true,
 } ExpressionValue;
 
 /*

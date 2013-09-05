@@ -185,7 +185,7 @@ static void CfCopyFile(EvalContext *ctx, char *sourcefile, char *destfile, struc
 
     if (attr.copy.servers)
     {
-        server = (char *) attr.copy.servers->item;
+        server = RlistScalarValue(attr.copy.servers);
     }
     else
     {
@@ -1096,9 +1096,9 @@ int CopyRegularFile(EvalContext *ctx, char *source, char *dest, struct stat ssta
         }
     }
 
-    if ((attr.copy.servers != NULL) && (strcmp(attr.copy.servers->item, "localhost") != 0))
+    if ((attr.copy.servers != NULL) && (strcmp(RlistScalarValue(attr.copy.servers), "localhost") != 0))
     {
-        Log(LOG_LEVEL_DEBUG, "This is a remote copy from server '%s'", (const char *) attr.copy.servers->item);
+        Log(LOG_LEVEL_DEBUG, "This is a remote copy from server '%s'", RlistScalarValue(attr.copy.servers));
         remote = true;
     }
 
@@ -2247,7 +2247,7 @@ static void VerifyCopiedFileAttributes(EvalContext *ctx, const char *src, const 
 #endif
 
     if (attr.copy.preserve && (attr.copy.servers == NULL
-        || strcmp(attr.copy.servers->item, "localhost") == 0))
+        || strcmp(RlistScalarValue(attr.copy.servers), "localhost") == 0))
     {
         if (!CopyFileExtendedAttributesDisk(src, dest))
         {
@@ -2339,7 +2339,7 @@ int ScheduleCopyOperation(EvalContext *ctx, char *destination, Attributes attr, 
         Log(LOG_LEVEL_VERBOSE, "Copy file '%s' from '%s' check", destination, attr.copy.source);
     }
 
-    if (attr.copy.servers == NULL || strcmp(attr.copy.servers->item, "localhost") == 0)
+    if (attr.copy.servers == NULL || strcmp(RlistScalarValue(attr.copy.servers), "localhost") == 0)
     {
     }
     else
@@ -2902,7 +2902,7 @@ static void RegisterAHardLink(int i, char *value, Attributes attr, CompressedArr
 
 static int cf_stat(char *file, struct stat *buf, FileCopy fc, AgentConnection *conn)
 {
-    if ((fc.servers == NULL) || (strcmp(fc.servers->item, "localhost") == 0))
+    if ((fc.servers == NULL) || (strcmp(RlistScalarValue(fc.servers), "localhost") == 0))
     {
         return stat(file, buf);
     }
@@ -2919,12 +2919,12 @@ static int cf_readlink(EvalContext *ctx, char *sourcefile, char *linkbuf, int bu
 {
     memset(linkbuf, 0, buffsize);
 
-    if ((attr.copy.servers == NULL) || (strcmp(attr.copy.servers->item, "localhost") == 0))
+    if ((attr.copy.servers == NULL) || (strcmp(RlistScalarValue(attr.copy.servers), "localhost") == 0))
     {
         return readlink(sourcefile, linkbuf, buffsize - 1);
     }
 
-    const Stat *sp = ClientCacheLookup(conn, attr.copy.servers->item, sourcefile);
+    const Stat *sp = ClientCacheLookup(conn, RlistScalarValue(attr.copy.servers), sourcefile);
 
     if (sp)
     {

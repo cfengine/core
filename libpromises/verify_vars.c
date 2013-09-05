@@ -251,10 +251,10 @@ void VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates
         {
             for (Rlist *rp = rval.item; rp != NULL; rp = rp->next)
             {
-                if (IsNakedVar(rp->item, '@'))
+                if (IsNakedVar(RlistScalarValue(rp), '@'))
                 {
-                    free(rp->item);
-                    rp->item = xstrdup(CF_NULL_VALUE);
+                    free(rp->val.item);
+                    rp->val.item = xstrdup(CF_NULL_VALUE);
                 }
             }
         }
@@ -333,11 +333,11 @@ static int CompareRlist(Rlist *list1, Rlist *list2)
 
     for (rp1 = list1, rp2 = list2; rp1 != NULL && rp2 != NULL; rp1 = rp1->next, rp2 = rp2->next)
     {
-        if (rp1->item && rp2->item)
+        if (rp1->val.item && rp2->val.item)
         {
             Rlist *rc1, *rc2;
 
-            if (rp1->type == RVAL_TYPE_FNCALL || rp2->type == RVAL_TYPE_FNCALL)
+            if (rp1->val.type == RVAL_TYPE_FNCALL || rp2->val.type == RVAL_TYPE_FNCALL)
             {
                 return -1;      // inconclusive
             }
@@ -347,22 +347,22 @@ static int CompareRlist(Rlist *list1, Rlist *list2)
 
             // Check for list nesting with { fncall(), "x" ... }
 
-            if (rp1->type == RVAL_TYPE_LIST)
+            if (rp1->val.type == RVAL_TYPE_LIST)
             {
-                rc1 = rp1->item;
+                rc1 = rp1->val.item;
             }
 
-            if (rp2->type == RVAL_TYPE_LIST)
+            if (rp2->val.type == RVAL_TYPE_LIST)
             {
-                rc2 = rp2->item;
+                rc2 = rp2->val.item;
             }
 
-            if (IsCf3VarString(rc1->item) || IsCf3VarString(rp2->item))
+            if (IsCf3VarString(rc1->val.item) || IsCf3VarString(rp2->val.item))
             {
                 return -1;      // inconclusive
             }
 
-            if (strcmp(rc1->item, rc2->item) != 0)
+            if (strcmp(rc1->val.item, rc2->val.item) != 0)
             {
                 return false;
             }
@@ -454,7 +454,7 @@ static bool Epimenides(EvalContext *ctx, const char *ns, const char *scope, cons
 
         for (rp = list; rp != NULL; rp = rp->next)
         {
-            if (Epimenides(ctx, ns, scope, var, (Rval) {rp->item, rp->type}, level))
+            if (Epimenides(ctx, ns, scope, var, rp->val, level))
             {
                 return true;
             }

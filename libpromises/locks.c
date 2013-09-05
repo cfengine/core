@@ -36,6 +36,7 @@
 #include <process_lib.h>
 #include <fncall.h>
 #include <env_context.h>
+#include <misc_lib.h>
 
 #define CFLOGSIZE 1048576       /* Size of lock-log before rotation */
 
@@ -553,7 +554,7 @@ static void PromiseRuntimeHash(const Promise *pp, const char *salt, unsigned cha
         case RVAL_TYPE_LIST:
             for (rp = cp->rval.item; rp != NULL; rp = rp->next)
             {
-                EVP_DigestUpdate(&context, rp->item, strlen(rp->item));
+                EVP_DigestUpdate(&context, RlistScalarValue(rp), strlen(RlistScalarValue(rp)));
             }
             break;
 
@@ -567,7 +568,20 @@ static void PromiseRuntimeHash(const Promise *pp, const char *salt, unsigned cha
 
             for (rp = fp->args; rp != NULL; rp = rp->next)
             {
-                EVP_DigestUpdate(&context, rp->item, strlen(rp->item));
+                switch (rp->val.type)
+                {
+                case RVAL_TYPE_SCALAR:
+                    EVP_DigestUpdate(&context, RlistScalarValue(rp), strlen(RlistScalarValue(rp)));
+                    break;
+
+                case RVAL_TYPE_FNCALL:
+                    EVP_DigestUpdate(&context, RlistFnCallValue(rp)->name, strlen(RlistFnCallValue(rp)->name));
+                    break;
+
+                default:
+                    ProgrammingError("Unhandled case in switch");
+                    break;
+                }
             }
             break;
 
@@ -830,7 +844,20 @@ void GetLockName(char *lockname, const char *locktype, const char *base, const R
 
     for (const Rlist *rp = params; rp != NULL; rp = rp->next)
     {
-        strncat(lockname, (char *) rp->item, max_sample);
+        switch (rp->val.type)
+        {
+        case RVAL_TYPE_SCALAR:
+            strncat(lockname, RlistScalarValue(rp), max_sample);
+            break;
+
+        case RVAL_TYPE_FNCALL:
+            strncat(lockname, RlistFnCallValue(rp)->name, max_sample);
+            break;
+
+        default:
+            ProgrammingError("Unhandled case in switch %d", rp->val.type);
+            break;
+        }
     }
 }
 

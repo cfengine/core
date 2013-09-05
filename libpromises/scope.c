@@ -120,19 +120,19 @@ void ScopeAugment(EvalContext *ctx, const Bundle *bp, const Promise *pp, const R
 
     for (const Rlist *rpl = bp->args, *rpr = arguments; rpl != NULL; rpl = rpl->next, rpr = rpr->next)
     {
-        const char *lval = rpl->item;
+        const char *lval = RlistScalarValue(rpl);
 
-        Log(LOG_LEVEL_VERBOSE, "Augment scope '%s' with variable '%s' (type: %c)", bp->name, lval, rpr->type);
+        Log(LOG_LEVEL_VERBOSE, "Augment scope '%s' with variable '%s' (type: %c)", bp->name, lval, rpr->val.type);
 
         // CheckBundleParameters() already checked that there is no namespace collision
         // By this stage all functions should have been expanded, so we only have scalars left
 
-        if (IsNakedVar(rpr->item, '@'))
+        if (rpr->val.type == RVAL_TYPE_SCALAR && IsNakedVar(RlistScalarValue(rpr), '@'))
         {
             DataType vtype;
             char naked[CF_BUFSIZE];
             
-            GetNaked(naked, rpr->item);
+            GetNaked(naked, RlistScalarValue(rpr));
 
             Rval retval;
             if (pbp != NULL)
@@ -155,14 +155,14 @@ void ScopeAugment(EvalContext *ctx, const Bundle *bp, const Promise *pp, const R
             case DATA_TYPE_REAL_LIST:
                 {
                     VarRef *ref = VarRefParseFromBundle(lval, bp);
-                    EvalContextVariablePut(ctx, ref, (Rval) { retval.item, RVAL_TYPE_LIST}, DATA_TYPE_STRING_LIST);
+                    EvalContextVariablePut(ctx, ref, retval, DATA_TYPE_STRING_LIST);
                     VarRefDestroy(ref);
                 }
                 break;
             case DATA_TYPE_CONTAINER:
                 {
                     VarRef *ref = VarRefParseFromBundle(lval, bp);
-                    EvalContextVariablePut(ctx, ref, (Rval) { retval.item, RVAL_TYPE_CONTAINER}, DATA_TYPE_CONTAINER);
+                    EvalContextVariablePut(ctx, ref, retval, DATA_TYPE_CONTAINER);
                     VarRefDestroy(ref);
                 }
                 break;
@@ -170,7 +170,7 @@ void ScopeAugment(EvalContext *ctx, const Bundle *bp, const Promise *pp, const R
                 {
                     Log(LOG_LEVEL_ERR, "List or container parameter '%s' not found while constructing scope '%s' - use @(scope.variable) in calling reference", naked, bp->name);
                     VarRef *ref = VarRefParseFromBundle(lval, bp);
-                    EvalContextVariablePut(ctx, ref, (Rval) { rpr->item, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
+                    EvalContextVariablePut(ctx, ref, (Rval) { RlistScalarValue(rpr), RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
                     VarRefDestroy(ref);
                 }
                 break;
@@ -178,24 +178,24 @@ void ScopeAugment(EvalContext *ctx, const Bundle *bp, const Promise *pp, const R
         }
         else
         {
-            switch(rpr->type)
+            switch(rpr->val.type)
             {
             case RVAL_TYPE_SCALAR:
                 {
                     VarRef *ref = VarRefParseFromBundle(lval, bp);
-                    EvalContextVariablePut(ctx, ref, (Rval) { rpr->item, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
+                    EvalContextVariablePut(ctx, ref, rpr->val, DATA_TYPE_STRING);
                     VarRefDestroy(ref);
                 }
                 break;
 
             case RVAL_TYPE_FNCALL:
                 {
-                    FnCall *subfp = rpr->item;
+                    FnCall *subfp = RlistFnCallValue(rpr);
                     Rval rval = FnCallEvaluate(ctx, subfp, pp).rval;
                     if (rval.type == RVAL_TYPE_SCALAR)
                     {
                         VarRef *ref = VarRefParseFromBundle(lval, bp);
-                        EvalContextVariablePut(ctx, ref, (Rval) { rval.item, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
+                        EvalContextVariablePut(ctx, ref, rval, DATA_TYPE_STRING);
                         VarRefDestroy(ref);
                     }
                     else
@@ -228,36 +228,32 @@ void ScopeMapBodyArgs(EvalContext *ctx, const Body *body, const Rlist *args)
 
         if (arg_type != param_type)
         {
-            Log(LOG_LEVEL_ERR, "Type mismatch between logical/formal parameters %s/%s", (char *) arg->item,
-                  (char *) param->item);
-            Log(LOG_LEVEL_ERR, "%s is %s whereas %s is %s", (char *) arg->item, DataTypeToString(arg_type),
-                  (char *) param->item, DataTypeToString(param_type));
+            Log(LOG_LEVEL_ERR, "Type mismatch between logical/formal parameters %s/%s", RlistScalarValue(arg), RlistScalarValue(param));
+            Log(LOG_LEVEL_ERR, "%s is %s whereas %s is %s", RlistScalarValue(arg), DataTypeToString(arg_type), RlistScalarValue(param), DataTypeToString(param_type));
         }
 
-        switch (arg->type)
+        switch (arg->val.type)
         {
         case RVAL_TYPE_SCALAR:
             {
                 const char *lval = RlistScalarValue(param);
-                void *rval = arg->item;
                 VarRef *ref = VarRefParseFromNamespaceAndScope(lval, NULL, "body", CF_NS, '.');
-                EvalContextVariablePut(ctx, ref, (Rval) { rval, RVAL_TYPE_SCALAR }, arg_type);
+                EvalContextVariablePut(ctx, ref, arg->val, arg_type);
             }
             break;
 
         case RVAL_TYPE_LIST:
             {
-                const char *lval = RlistScalarValue(param->item);
-                void *rval = arg->item;
+                const char *lval = RlistScalarValue(param);
                 VarRef *ref = VarRefParseFromNamespaceAndScope(lval, NULL, "body", CF_NS, '.');
-                EvalContextVariablePut(ctx, ref, (Rval) { rval, RVAL_TYPE_LIST }, arg_type);
+                EvalContextVariablePut(ctx, ref, arg->val, arg_type);
                 VarRefDestroy(ref);
             }
             break;
 
         case RVAL_TYPE_FNCALL:
             {
-                FnCall *fp = arg->item;
+                FnCall *fp = RlistFnCallValue(arg);
                 arg_type = DATA_TYPE_NONE;
                 {
                     const FnCallType *fncall_type = FnCallTypeGet(fp->name);

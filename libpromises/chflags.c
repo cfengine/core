@@ -57,16 +57,12 @@ static const BSDFlag CF_BSDFLAGS[] =
 
 /***************************************************************/
 
-static u_long ConvertBSDBits(char *s);
+static u_long ConvertBSDBits(const char *s);
 
 /***************************************************************/
 
 int ParseFlagString(Rlist *bitlist, u_long *plusmask, u_long *minusmask)
 {
-    char *flag;
-    Rlist *rp;
-    char operator;
-
     if (bitlist == NULL)
     {
         return true;
@@ -75,12 +71,12 @@ int ParseFlagString(Rlist *bitlist, u_long *plusmask, u_long *minusmask)
     *plusmask = 0;
     *minusmask = 0;
 
-    for (rp = bitlist; rp != NULL; rp = rp->next)
+    for (const Rlist *rp = bitlist; rp != NULL; rp = rp->next)
     {
-        flag = (char *) (rp->item);
-        operator = *(char *) (rp->item);
+        const char *flag = RlistScalarValue(rp);
+        char op = *RlistScalarValue(rp);
 
-        switch (operator)
+        switch (op)
         {
         case '-':
             *minusmask |= ConvertBSDBits(flag + 1);
@@ -103,7 +99,7 @@ int ParseFlagString(Rlist *bitlist, u_long *plusmask, u_long *minusmask)
 
 /***************************************************************/
 
-static u_long ConvertBSDBits(char *s)
+static u_long ConvertBSDBits(const char *s)
 {
     int i;
 

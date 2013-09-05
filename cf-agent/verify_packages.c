@@ -204,7 +204,7 @@ static int PackageSanityCheck(EvalContext *ctx, Attributes a, Promise *pp)
 
         for (rp = a.packages.package_file_repositories; rp != NULL; rp = rp->next)
         {
-            if (strlen(rp->item) > CF_MAXVARSIZE - 1)
+            if (strlen(RlistScalarValue(rp)) > CF_MAXVARSIZE - 1)
             {
                 cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "The repository path '%s' is too long", RlistScalarValue(rp));
                 return false;
@@ -1497,7 +1497,7 @@ static void VerifyPromisedPatch(EvalContext *ctx, Attributes a, Promise *pp)
         {
             strncpy(name, pp->promiser, CF_MAXVARSIZE - 1);
             strncpy(version, a.packages.package_version, CF_MAXVARSIZE - 1);
-            strncpy(arch, rp->item, CF_MAXVARSIZE - 1);
+            strncpy(arch, RlistScalarValue(rp), CF_MAXVARSIZE - 1);
             VersionCmpResult installed1 = PatchMatch(ctx, name, "*", "*", a, pp);
             VersionCmpResult matches1 = PatchMatch(ctx, name, version, arch, a, pp);
 
@@ -1549,7 +1549,7 @@ static void VerifyPromisedPatch(EvalContext *ctx, Attributes a, Promise *pp)
         {
             strncpy(name, pp->promiser, CF_MAXVARSIZE - 1);
             strncpy(version, "*", CF_MAXVARSIZE - 1);
-            strncpy(arch, rp->item, CF_MAXVARSIZE - 1);
+            strncpy(arch, RlistScalarValue(rp), CF_MAXVARSIZE - 1);
             VersionCmpResult installed1 = PatchMatch(ctx, name, "*", "*", a, pp);
             VersionCmpResult matches1 = PatchMatch(ctx, name, version, arch, a, pp);
 
@@ -1644,7 +1644,7 @@ static void VerifyPromisedPackage(EvalContext *ctx, Attributes a, Promise *pp)
             for (Rlist *rp = a.packages.package_architectures; rp != NULL; rp = rp->next)
             {
                 Log(LOG_LEVEL_VERBOSE, " ... trying listed arch '%s'", RlistScalarValue(rp));
-                CheckPackageState(ctx, a, pp, package, "*", rp->item, true);
+                CheckPackageState(ctx, a, pp, package, "*", RlistScalarValue(rp), true);
             }
         }
     }
@@ -2227,7 +2227,7 @@ char *PrefixLocalRepository(Rlist *repositories, char *package)
 
     for (rp = repositories; rp != NULL; rp = rp->next)
     {
-        strncpy(path, rp->item, CF_MAXVARSIZE);
+        strncpy(path, RlistScalarValue(rp), CF_MAXVARSIZE);
 
         AddSlash(path);
 

@@ -344,7 +344,7 @@ bool GenericAgentCheckPromises(const GenericAgentConfig *config)
         strlcat(cmd, " -b \"", CF_BUFSIZE);
         for (const Rlist *rp = config->bundlesequence; rp; rp = rp->next)
         {
-            const char *bundle_ref = rp->item;
+            const char *bundle_ref = RlistScalarValue(rp);
             strlcat(cmd, bundle_ref, CF_BUFSIZE);
 
             if (rp->next)
@@ -520,7 +520,7 @@ static Policy *LoadPolicyInputFiles(EvalContext *ctx, GenericAgentConfig *config
 
     for (const Rlist *rp = inputs; rp; rp = rp->next)
     {
-        if (rp->type != RVAL_TYPE_SCALAR)
+        if (rp->val.type != RVAL_TYPE_SCALAR)
         {
             Log(LOG_LEVEL_ERR, "Non-file object in inputs list");
             continue;
@@ -1348,7 +1348,6 @@ void WritePID(char *filename)
 
 static bool VerifyBundleSequence(EvalContext *ctx, const Policy *policy, const GenericAgentConfig *config)
 {
-    Rlist *rp;
     char *name;
     Rval retval;
     int ok = true;
@@ -1365,17 +1364,17 @@ static bool VerifyBundleSequence(EvalContext *ctx, const Policy *policy, const G
         FatalError(ctx, "Promised bundlesequence was not a list");
     }
 
-    for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
+    for (Rlist *rp = RvalRlistValue(retval); rp != NULL; rp = rp->next)
     {
-        switch (rp->type)
+        switch (rp->val.type)
         {
         case RVAL_TYPE_SCALAR:
-            name = (char *) rp->item;
+            name = RlistScalarValue(rp);
             break;
 
         case RVAL_TYPE_FNCALL:
-            fp = (FnCall *) rp->item;
-            name = (char *) fp->name;
+            fp = RlistFnCallValue(rp);
+            name = fp->name;
             break;
 
         default:
@@ -1384,7 +1383,7 @@ static bool VerifyBundleSequence(EvalContext *ctx, const Policy *policy, const G
             {
                 Writer *w = StringWriter();
                 WriterWrite(w, "Illegal item found in bundlesequence '");
-                RvalWrite(w, (Rval) {rp->item, rp->type});
+                RvalWrite(w, rp->val);
                 WriterWrite(w, "'");
                 Log(LOG_LEVEL_ERR, "%s", StringWriterData(w));
                 WriterClose(w);

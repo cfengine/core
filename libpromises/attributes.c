@@ -484,7 +484,7 @@ FileSelect GetSelectConstraints(const EvalContext *ctx, const Promise *pp)
     {
         plus = 0;
         minus = 0;
-        value = (char *) rp->item;
+        value = RlistScalarValue(rp);
 
         if (!ParseModeString(value, &plus, &minus))
         {

@@ -31,8 +31,7 @@
 
 struct Rlist_
 {
-    void *item;
-    RvalType type;
+    Rval val;
     Rlist *next;
 };
 

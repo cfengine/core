@@ -80,14 +80,14 @@ Rlist *NewExpArgs(EvalContext *ctx, const FnCall *fp, const Promise *pp)
 
     for (const Rlist *rp = fp->args; rp != NULL; rp = rp->next)
     {
-        switch (rp->type)
+        switch (rp->val.type)
         {
         case RVAL_TYPE_FNCALL:
-            subfp = (FnCall *) rp->item;
+            subfp = RlistFnCallValue(rp);
             rval = FnCallEvaluate(ctx, subfp, pp).rval;
             break;
         default:
-            rval = ExpandPrivateRval(ctx, NULL, NULL, (Rval) {rp->item, rp->type});
+            rval = ExpandPrivateRval(ctx, NULL, NULL, (Rval) { rp->val.item, rp->val.type});
             break;
         }
 
@@ -120,10 +120,10 @@ void ArgTemplate(EvalContext *ctx, FnCall *fp, const FnCallArg *argtemplate, Rli
 
     for (argnum = 0; rp != NULL && argtemplate[argnum].pattern != NULL; argnum++)
     {
-        if (rp->type != RVAL_TYPE_FNCALL)
+        if (rp->val.type != RVAL_TYPE_FNCALL)
         {
             /* Nested functions will not match to lval so don't bother checking */
-            SyntaxTypeMatch err = CheckConstraintTypeMatch(id, (Rval) {rp->item, rp->type}, argtemplate[argnum].dtype, argtemplate[argnum].pattern, 1);
+            SyntaxTypeMatch err = CheckConstraintTypeMatch(id, rp->val, argtemplate[argnum].dtype, argtemplate[argnum].pattern, 1);
             if (err != SYNTAX_TYPE_MATCH_OK && err != SYNTAX_TYPE_MATCH_ERROR_UNEXPANDED)
             {
                 FatalError(ctx, "in %s: %s", id, SyntaxTypeMatchToString(err));
@@ -144,7 +144,7 @@ void ArgTemplate(EvalContext *ctx, FnCall *fp, const FnCallArg *argtemplate, Rli
             printf("  arg[%d] range %s\t", i, argtemplate[i].pattern);
             if (rp != NULL)
             {
-                RvalShow(stdout, (Rval) {rp->item, rp->type});
+                RvalShow(stdout, rp->val);
                 rp = rp->next;
             }
             else

@@ -205,12 +205,12 @@ static bool RlistCustomItemLess(void *lhs_, void *rhs_, void *ctx)
     Rlist *rhs = rhs_;
     int (*cmp)() = ctx;
 
-    return (*cmp)(lhs->item, rhs->item);
+    return (*cmp)(lhs->val.item, rhs->val.item);
 }
 
 static bool RlistItemLess(void *lhs, void *rhs, ARG_UNUSED void *ctx)
 {
-    return strcmp(((Rlist*)lhs)->item, ((Rlist*)rhs)->item) < 0;
+    return strcmp(((Rlist*)lhs)->val.item, ((Rlist*)rhs)->val.item) < 0;
 }
 
 static bool RlistItemNumberLess(void *lhs, void *rhs, ARG_UNUSED void *ctx, bool int_mode)
@@ -219,17 +219,17 @@ static bool RlistItemNumberLess(void *lhs, void *rhs, ARG_UNUSED void *ctx, bool
     double left;
     double right;
 
-    int matched_left = sscanf(((Rlist*)lhs)->item, "%lf", &left);
-    int matched_right = sscanf(((Rlist*)rhs)->item, "%lf", &right);
+    int matched_left = sscanf(RlistScalarValue((Rlist*)lhs), "%lf", &left);
+    int matched_right = sscanf(RlistScalarValue((Rlist*)rhs), "%lf", &right);
 
     if (!matched_left)
     {
-        matched_left = sscanf(((Rlist*)lhs)->item, "%lf%s", &left, remainder);
+        matched_left = sscanf(RlistScalarValue((Rlist*)lhs), "%lf%s", &left, remainder);
     }
 
     if (!matched_right)
     {
-        matched_right = sscanf(((Rlist*)rhs)->item, "%lf%s", &right, remainder);
+        matched_right = sscanf(RlistScalarValue((Rlist*)rhs), "%lf%s", &right, remainder);
     }
 
     if (matched_left && matched_right)
@@ -270,8 +270,8 @@ static bool RlistItemRealLess(void *lhs, void *rhs, ARG_UNUSED void *ctx)
 
 static bool RlistItemIPLess(void *lhs, void *rhs, ARG_UNUSED void *ctx)
 {
-    char *left_item = ((Rlist*)lhs)->item;
-    char *right_item = ((Rlist*)rhs)->item;
+    const char *left_item = RlistScalarValue((Rlist*)lhs);
+    const char *right_item = RlistScalarValue((Rlist*)rhs);
 
     Buffer *left_buffer = BufferNewFrom(left_item, strlen(left_item));
     Buffer *right_buffer = BufferNewFrom(right_item, strlen(right_item));
@@ -326,8 +326,8 @@ static bool RlistItemMACLess(void *lhs, void *rhs, ARG_UNUSED void *ctx)
 {
     int bytes = 6;
     unsigned char left[bytes], right[bytes];
-    int matched_left = 6 == ParseEtherAddress(((Rlist*)lhs)->item, left);
-    int matched_right = 6 == ParseEtherAddress(((Rlist*)rhs)->item, right);
+    int matched_left = 6 == ParseEtherAddress(RlistScalarValue((Rlist*)lhs), left);
+    int matched_right = 6 == ParseEtherAddress(RlistScalarValue((Rlist*)rhs), right);
 
     if (matched_left && matched_right)
     {

@@ -137,7 +137,7 @@ int VerifyMethod(EvalContext *ctx, char *attrname, Attributes a, Promise *pp)
 
         for (const Rlist *rp = bp->args; rp; rp = rp->next)
         {
-            const char *lval = rp->item;
+            const char *lval = RlistScalarValue(rp);
             VarRef *ref = VarRefParseFromBundle(lval, bp);
             EvalContextVariableRemove(ctx, ref);
             VarRefDestroy(ref);

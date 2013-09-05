@@ -113,7 +113,7 @@ static void AppendIterationVariable(PromiseIterator *iter, CfAssoc *new_var)
         Rlist *state = new_var->rval.item = RlistPrependScalar(&list_value, CF_NULL_VALUE);
         RlistAppendScalar(&list_value, CF_NULL_VALUE);
 
-        while (state && (strcmp(state->item, CF_NULL_VALUE) == 0))
+        while (state && state->val.type == RVAL_TYPE_SCALAR && (strcmp(RlistScalarValue(state), CF_NULL_VALUE) == 0))
         {
             state = state->next;
         }
@@ -132,7 +132,7 @@ PromiseIterator *PromiseIteratorNew(EvalContext *ctx, const Promise *pp, const R
 
     for (const Rlist *rp = lists; rp != NULL; rp = rp->next)
     {
-        VarRef *ref = VarRefParseFromBundle(rp->item, PromiseGetBundle(pp));
+        VarRef *ref = VarRefParseFromBundle(RlistScalarValue(rp), PromiseGetBundle(pp));
 
         Rval rval;
         DataType dtype = DATA_TYPE_NONE;
@@ -147,14 +147,13 @@ PromiseIterator *PromiseIteratorNew(EvalContext *ctx, const Promise *pp, const R
 
         for (Rlist *rps = RvalRlistValue(rval); rps; rps = rps->next)
         {
-            if (rps->type == RVAL_TYPE_FNCALL)
+            if (rps->val.type == RVAL_TYPE_FNCALL)
             {
-                FnCall *fp = (FnCall *) rps->item;
+                FnCall *fp = RlistFnCallValue(rps);
 
                 Rval newret = FnCallEvaluate(ctx, fp, pp).rval;
                 FnCallDestroy(fp);
-                rps->item = newret.item;
-                rps->type = newret.type;
+                rps->val = newret;
             }
         }
 
@@ -164,7 +163,7 @@ PromiseIterator *PromiseIteratorNew(EvalContext *ctx, const Promise *pp, const R
 
     for (const Rlist *rp = containers; rp; rp = rp->next)
     {
-        VarRef *ref = VarRefParseFromBundle(rp->item, PromiseGetBundle(pp));
+        VarRef *ref = VarRefParseFromBundle(RlistScalarValue(rp), PromiseGetBundle(pp));
 
         Rval rval;
         DataType dtype = DATA_TYPE_NONE;
@@ -229,7 +228,7 @@ static bool NullIteratorsInternal(PromiseIterator *iter, size_t index)
         {
             const Rlist *state = SeqAt(iter->var_states, i);
 
-            switch (state->type)
+            switch (state->val.type)
             {
             case RVAL_TYPE_SCALAR:
                 if (strcmp(RlistScalarValue(state), CF_NULL_VALUE) == 0)
@@ -246,7 +245,7 @@ static bool NullIteratorsInternal(PromiseIterator *iter, size_t index)
                 break;
 
             default:
-                ProgrammingError("Unexpected rval type %d in iterator", state->type);
+                ProgrammingError("Unexpected rval type %d in iterator", state->val.type);
             }
         }
     }
@@ -439,12 +438,12 @@ void PromiseIteratorUpdateVariable(EvalContext *ctx, const PromiseIterator *iter
 
         const Rlist *state = SeqAt(iter->var_states, i);
 
-        if (!state || state->type == RVAL_TYPE_FNCALL)
+        if (!state || state->val.type == RVAL_TYPE_FNCALL)
         {
             continue;
         }
 
-        assert(state->type == RVAL_TYPE_SCALAR);
+        assert(state->val.type == RVAL_TYPE_SCALAR);
 
         switch (iter_var->dtype)
         {

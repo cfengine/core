@@ -295,7 +295,7 @@ void DeleteMountInfo(Rlist *list)
     for (rp = list; rp != NULL; rp = sp)
     {
         sp = rp->next;
-        entry = (Mount *) rp->item;
+        entry = (Mount *) rp->val.item; // TODO: Abuse of Rlist
 
         if (entry->host)
         {

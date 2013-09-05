@@ -830,7 +830,7 @@ static bool IgnoreInterface(char *name)
 
     for (rp = IGNORE_INTERFACES; rp != NULL; rp=rp->next)
     {
-        if (StringMatchFull(rp->item, name))
+        if (StringMatchFull(RlistScalarValue(rp), name))
         {
             Log(LOG_LEVEL_VERBOSE, "Ignoring interface '%s' because it matches '%s'",name,CF_IGNORE_INTERFACES);
             return true;

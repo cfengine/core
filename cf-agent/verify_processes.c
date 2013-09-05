@@ -147,9 +147,9 @@ static void VerifyProcessOp(EvalContext *ctx, Item *procdata, Attributes a, Prom
             cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, "Process count for '%s' was out of promised range (%d found)", pp->promiser, matches);
             for (const Rlist *rp = a.process_count.out_of_range_define; rp != NULL; rp = rp->next)
             {
-                if (!EvalContextHeapContainsSoft(ctx, rp->item))
+                if (!EvalContextHeapContainsSoft(ctx, RlistScalarValue(rp)))
                 {
-                    EvalContextHeapAddSoft(ctx, rp->item, PromiseGetNamespace(pp));
+                    EvalContextHeapAddSoft(ctx, RlistScalarValue(rp), PromiseGetNamespace(pp));
                 }
             }
             out_of_range = true;
@@ -158,9 +158,9 @@ static void VerifyProcessOp(EvalContext *ctx, Item *procdata, Attributes a, Prom
         {
             for (const Rlist *rp = a.process_count.in_range_define; rp != NULL; rp = rp->next)
             {
-                if (!EvalContextHeapContainsSoft(ctx, rp->item))
+                if (!EvalContextHeapContainsSoft(ctx, RlistScalarValue(rp)))
                 {
-                    EvalContextHeapAddSoft(ctx, rp->item, PromiseGetNamespace(pp));
+                    EvalContextHeapAddSoft(ctx, RlistScalarValue(rp), PromiseGetNamespace(pp));
                 }
             }
             cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "Process promise for '%s' is kept", pp->promiser);
@@ -268,7 +268,7 @@ int DoAllSignals(EvalContext *ctx, Item *siglist, Attributes a, Promise *pp)
 
         for (rp = a.signals; rp != NULL; rp = rp->next)
         {
-            int signal = SignalFromString(rp->item);
+            int signal = SignalFromString(RlistScalarValue(rp));
 
             if (!DONTDO)
             {

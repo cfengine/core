@@ -378,7 +378,7 @@ static int CheckDatabaseSanity(Attributes a, Promise *pp)
 
         for (rp = a.database.columns; rp != NULL; rp = rp->next)
         {
-            commas = CountChar(rp->item, ',');
+            commas = CountChar(RlistScalarValue(rp), ',');
 
             if ((commas > 2) && (commas < 1))
             {
@@ -453,7 +453,7 @@ static int CheckRegistrySanity(Attributes a, Promise *pp)
 
     for (Rlist *rp = a.database.columns; rp != NULL; rp = rp->next)
     {
-        if (CountChar(rp->item, ',') > 0)
+        if (CountChar(RlistScalarValue(rp), ',') > 0)
         {
             Log(LOG_LEVEL_ERR, "MS registry column format should be NAME only in deletion");
             retval = false;
@@ -703,7 +703,7 @@ static int TableExists(CfdbConn *cfdb, char *name)
 
     for (rp = list; rp != NULL; rp = rp->next)
     {
-        if (strcmp(name, rp->item) == 0)
+        if (strcmp(name, RlistScalarValue(rp)) == 0)
         {
             match = true;
         }
@@ -882,7 +882,7 @@ static int NewSQLColumns(char *table, Rlist *columns, char ***name_table, char *
     {
         (*done)[i] = 0;
 
-        cols = RlistFromSplitString((char *) rp->item, ',');
+        cols = RlistFromSplitString(RlistScalarValue(rp), ',');
 
         if (!cols)
         {
@@ -890,7 +890,7 @@ static int NewSQLColumns(char *table, Rlist *columns, char ***name_table, char *
             return false;
         }
 
-        if (cols->item == NULL)
+        if (cols->val.item == NULL)
         {
             Log(LOG_LEVEL_ERR, "Malformed column promise for table '%s' - found not even a name", table);
             free(*name_table);
@@ -900,7 +900,7 @@ static int NewSQLColumns(char *table, Rlist *columns, char ***name_table, char *
             return false;
         }
 
-        (*name_table)[i] = xstrdup((char *) cols->item);
+        (*name_table)[i] = xstrdup(RlistScalarValue(cols));
 
         if (cols->next == NULL)
         {
@@ -913,7 +913,7 @@ static int NewSQLColumns(char *table, Rlist *columns, char ***name_table, char *
             return false;
         }
 
-        (*type_table)[i] = xstrdup(cols->next->item);
+        (*type_table)[i] = xstrdup(RlistScalarValue(cols->next));
 
         if (cols->next->next == NULL)
         {
@@ -921,9 +921,9 @@ static int NewSQLColumns(char *table, Rlist *columns, char ***name_table, char *
         }
         else
         {
-            if (cols->next->next->item)
+            if (cols->next->next->val.item)
             {
-                (*size_table)[i] = IntFromString(cols->next->next->item);
+                (*size_table)[i] = IntFromString(RlistScalarValue(cols->next->next));
             }
             else
             {

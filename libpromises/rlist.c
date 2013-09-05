@@ -74,36 +74,36 @@ RvalType DataTypeToRvalType(DataType datatype)
 
 char *RlistScalarValue(const Rlist *rlist)
 {
-    if (rlist->type != RVAL_TYPE_SCALAR)
+    if (rlist->val.type != RVAL_TYPE_SCALAR)
     {
-        ProgrammingError("Rlist value contains type %c instead of expected scalar", rlist->type);
+        ProgrammingError("Rlist value contains type %c instead of expected scalar", rlist->val.type);
     }
 
-    return (char *) rlist->item;
+    return rlist->val.item;
 }
 
 /*******************************************************************/
 
 FnCall *RlistFnCallValue(const Rlist *rlist)
 {
-    if (rlist->type != RVAL_TYPE_FNCALL)
+    if (rlist->val.type != RVAL_TYPE_FNCALL)
     {
-        ProgrammingError("Rlist value contains type %c instead of expected FnCall", rlist->type);
+        ProgrammingError("Rlist value contains type %c instead of expected FnCall", rlist->val.type);
     }
 
-    return (FnCall *) rlist->item;
+    return rlist->val.item;
 }
 
 /*******************************************************************/
 
 Rlist *RlistRlistValue(const Rlist *rlist)
 {
-    if (rlist->type != RVAL_TYPE_LIST)
+    if (rlist->val.type != RVAL_TYPE_LIST)
     {
-        ProgrammingError("Rlist value contains type %c instead of expected List", rlist->type);
+        ProgrammingError("Rlist value contains type %c instead of expected List", rlist->val.type);
     }
 
-    return (Rlist *) rlist->item;
+    return rlist->val.item;
 }
 
 /*******************************************************************/
@@ -158,12 +158,12 @@ Rlist *RlistKeyIn(Rlist *list, const char *key)
 {
     for (Rlist *rp = list; rp != NULL; rp = rp->next)
     {
-        if (rp->type != RVAL_TYPE_SCALAR)
+        if (rp->val.type != RVAL_TYPE_SCALAR)
         {
             continue;
         }
 
-        if (strcmp((char *) rp->item, key) == 0)
+        if (strcmp(RlistScalarValue(rp), key) == 0)
         {
             return rp;
         }
@@ -183,12 +183,12 @@ bool RlistIsStringIn(const Rlist *list, const char *s)
 
     for (const Rlist *rp = list; rp != NULL; rp = rp->next)
     {
-        if (rp->type != RVAL_TYPE_SCALAR)
+        if (rp->val.type != RVAL_TYPE_SCALAR)
         {
             continue;
         }
 
-        if (strcmp(s, rp->item) == 0)
+        if (strcmp(s, RlistScalarValue(rp)) == 0)
         {
             return true;
         }
@@ -212,12 +212,12 @@ bool RlistIsIntIn(const Rlist *list, int i)
 
     for (const Rlist *rp = list; rp != NULL; rp = rp->next)
     {
-        if (rp->type != RVAL_TYPE_SCALAR)
+        if (rp->val.type != RVAL_TYPE_SCALAR)
         {
             continue;
         }
 
-        if (strcmp(s, rp->item) == 0)
+        if (strcmp(s, RlistScalarValue(rp)) == 0)
         {
             return true;
         }
@@ -237,12 +237,12 @@ bool RlistIsInListOfRegex(EvalContext *ctx, const Rlist *list, const char *str)
 
     for (const Rlist *rp = list; rp != NULL; rp = rp->next)
     {
-        if (rp->type != RVAL_TYPE_SCALAR)
+        if (rp->val.type != RVAL_TYPE_SCALAR)
         {
             continue;
         }
 
-        if (FullTextMatch(ctx, rp->item, str))
+        if (FullTextMatch(ctx, RlistScalarValue(rp), str))
         {
             return true;
         }
@@ -267,6 +267,35 @@ static Rval RvalCopyScalar(Rval rval)
     }
 }
 
+static Rlist *RlistAppendRval(Rlist **start, Rval rval)
+{
+    Rlist *rp = xmalloc(sizeof(Rlist));
+
+    if (*start == NULL)
+    {
+        *start = rp;
+    }
+    else
+    {
+        Rlist *lp = NULL;
+        for (lp = *start; lp->next != NULL; lp = lp->next)
+        {
+        }
+
+        lp->next = rp;
+    }
+
+    rp->val = rval;
+
+    ThreadLock(cft_lock);
+
+    rp->next = NULL;
+
+    ThreadUnlock(cft_lock);
+
+    return rp;
+}
+
 static Rval RvalCopyList(Rval rval)
 {
     assert(rval.type == RVAL_TYPE_LIST);
@@ -279,7 +308,7 @@ static Rval RvalCopyList(Rval rval)
     Rlist *start = NULL;
     for (const Rlist *rp = rval.item; rp != NULL; rp = rp->next)
     {
-        RlistAppend(&start, rp->item, rp->type);
+        RlistAppendRval(&start, RvalCopy(rp->val));
     }
 
     return (Rval) {start, RVAL_TYPE_LIST};
@@ -332,7 +361,7 @@ Rlist *RlistCopy(const Rlist *list)
 
     for (const Rlist *rp = list; rp != NULL; rp = rp->next)
     {
-        RlistAppend(&start, rp->item, rp->type);        // allocates memory for objects
+        RlistAppendRval(&start, RvalCopy(rp->val));
     }
 
     return start;
@@ -351,9 +380,9 @@ void RlistDestroy(Rlist *list)
         {
             next = rl->next;
 
-            if (rl->item != NULL)
+            if (rl->val.item)
             {
-                RvalDestroy((Rval) {rl->item, rl->type});
+                RvalDestroy(rl->val);
             }
 
             free(rl);
@@ -399,38 +428,6 @@ static Rlist *RlistPrependFnCall(Rlist **start, const FnCall *fn)
     return RlistPrependRval(start, RvalCopyFnCall((Rval) { (FnCall *)fn, RVAL_TYPE_FNCALL }));
 }
 
-/*******************************************************************/
-
-static Rlist *RlistAppendRval(Rlist **start, Rval rval)
-{
-    Rlist *rp = xmalloc(sizeof(Rlist));
-
-    if (*start == NULL)
-    {
-        *start = rp;
-    }
-    else
-    {
-        Rlist *lp = NULL;
-        for (lp = *start; lp->next != NULL; lp = lp->next)
-        {
-        }
-
-        lp->next = rp;
-    }
-
-    rp->item = rval.item;
-    rp->type = rval.type;
-
-    ThreadLock(cft_lock);
-
-    rp->next = NULL;
-
-    ThreadUnlock(cft_lock);
-
-    return rp;
-}
-
 Rlist *RlistAppendIdemp(Rlist **start, void *item, RvalType type)
 {
     Rlist *rp, *ins = NULL;
@@ -439,7 +436,7 @@ Rlist *RlistAppendIdemp(Rlist **start, void *item, RvalType type)
     {
         for (rp = (Rlist *) item; rp != NULL; rp = rp->next)
         {
-            ins = RlistAppendIdemp(start, rp->item, rp->type);
+            ins = RlistAppendIdemp(start, rp->val.item, rp->val.type);
         }
         return ins;
     }
@@ -480,7 +477,7 @@ Rlist *RlistAppend(Rlist **start, const void *item, RvalType type)
     case RVAL_TYPE_LIST:
         for (rp = (Rlist *) item; rp != NULL; rp = rp->next)
         {
-            lp = RlistAppend(start, rp->item, rp->type);
+            lp = RlistAppendRval(start, RvalCopy(rp->val));
         }
 
         return lp;
@@ -505,8 +502,7 @@ Rlist *RlistAppend(Rlist **start, const void *item, RvalType type)
         lp->next = rp;
     }
 
-    rp->item = RvalCopy((Rval) {(void *) item, type}).item;
-    rp->type = type;            /* scalar, builtin function */
+    rp->val = RvalCopy((Rval) {(void *) item, type});
 
     ThreadLock(cft_lock);
 
@@ -524,9 +520,7 @@ static Rlist *RlistPrependRval(Rlist **start, Rval rval)
     Rlist *rp = xmalloc(sizeof(Rlist));
 
     rp->next = *start;
-    rp->item = rval.item;
-    rp->type = rval.type;
-
+    rp->val = rval;
     ThreadLock(cft_lock);
     *start = rp;
     ThreadUnlock(cft_lock);
@@ -546,7 +540,7 @@ Rlist *RlistPrepend(Rlist **start, const void *item, RvalType type)
     case RVAL_TYPE_LIST:
         for (rp = (Rlist *) item; rp != NULL; rp = rp->next)
         {
-            lp = RlistPrepend(start, rp->item, rp->type);
+            lp = RlistPrependRval(start, RvalCopy(rp->val));
         }
         return lp;
 
@@ -560,8 +554,7 @@ Rlist *RlistPrepend(Rlist **start, const void *item, RvalType type)
     rp = xmalloc(sizeof(Rlist));
 
     rp->next = *start;
-    rp->item = RvalCopy((Rval) { (void *)item, type}).item;
-    rp->type = type;            /* scalar, builtin function */
+    rp->val = RvalCopy((Rval) { (void *)item, type});
 
     ThreadLock(cft_lock);
     *start = rp;
@@ -596,7 +589,7 @@ Rlist *RlistParseShown(char *string)
 
     for (rp = splitlist; rp != NULL; rp = rp->next)
     {
-        sscanf(rp->item, "%*[{ '\"]%255[^'\"]", value);
+        sscanf(RlistScalarValue(rp), "%*[{ '\"]%255[^'\"]", value);
         RlistAppendScalar(&newlist, value);
     }
 
@@ -890,9 +883,9 @@ void RvalDestroy(Rval rval)
 
             next = clist->next;
 
-            if (clist->item)
+            if (clist->val.item)
             {
-                RvalDestroy((Rval) {clist->item, clist->type});
+                RvalDestroy(clist->val);
             }
 
             free(clist);
@@ -921,9 +914,9 @@ void RlistDestroyEntry(Rlist **liststart, Rlist *entry)
 
     if (entry != NULL)
     {
-        if (entry->item != NULL)
+        if (entry->val.item)
         {
-            free(entry->item);
+            free(entry->val.item);
         }
 
         sp = entry->next;
@@ -967,8 +960,8 @@ Rlist *RlistAppendAlien(Rlist **start, void *item)
         lp->next = rp;
     }
 
-    rp->item = item;
-    rp->type = RVAL_TYPE_SCALAR;
+    rp->val.item = item;
+    rp->val.type = RVAL_TYPE_SCALAR;
 
     ThreadLock(cft_lock);
 
@@ -993,8 +986,8 @@ Rlist *RlistPrependAlien(Rlist **start, void *item)
     *start = rp;
     ThreadUnlock(cft_lock);
 
-    rp->item = item;
-    rp->type = RVAL_TYPE_SCALAR;
+    rp->val.item = item;
+    rp->val.type = RVAL_TYPE_SCALAR;
     return rp;
 }
 
@@ -1154,7 +1147,7 @@ void RlistFilter(Rlist **list, bool (*KeepPredicate)(void *, void *), void *pred
 
     for (Rlist *rp = start; rp;)
     {
-        if (!KeepPredicate(rp->item, predicate_user_data))
+        if (!KeepPredicate(RlistScalarValue(rp), predicate_user_data))
         {
             if (prev)
             {
@@ -1167,8 +1160,8 @@ void RlistFilter(Rlist **list, bool (*KeepPredicate)(void *, void *), void *pred
 
             if (DestroyItem)
             {
-                DestroyItem(rp->item);
-                rp->item = NULL;
+                DestroyItem(rp->val.item);
+                rp->val.item = NULL;
             }
 
             Rlist *next = rp->next;
@@ -1206,7 +1199,7 @@ static void FnCallWrite(Writer *writer, const FnCall *call)
 
     for (const Rlist *rp = call->args; rp != NULL; rp = rp->next)
     {
-        switch (rp->type)
+        switch (rp->val.type)
         {
         case RVAL_TYPE_SCALAR:
             WriterWrite(writer, RlistScalarValue(rp));
@@ -1237,7 +1230,7 @@ void RlistWrite(Writer *writer, const Rlist *list)
     for (const Rlist *rp = list; rp != NULL; rp = rp->next)
     {
         WriterWriteChar(writer, '\'');
-        RvalWrite(writer, (Rval) {rp->item, rp->type});
+        RvalWrite(writer, rp->val);
         WriterWriteChar(writer, '\'');
 
         if (rp->next != NULL)
@@ -1333,7 +1326,7 @@ unsigned RlistHash(const Rlist *list, unsigned seed, unsigned max)
     unsigned hash = seed;
     for (const Rlist *rp = list; rp; rp = rp->next)
     {
-        hash = RvalHash((Rval) { rp->item, rp->type }, hash, max);
+        hash = RvalHash(rp->val, hash, max);
     }
     return hash;
 }
@@ -1352,7 +1345,7 @@ static JsonElement *FnCallToJson(const FnCall *fp)
 
     for (Rlist *rp = fp->args; rp != NULL; rp = rp->next)
     {
-        switch (rp->type)
+        switch (rp->val.type)
         {
         case RVAL_TYPE_SCALAR:
             JsonArrayAppendString(argsArray, RlistScalarValue(rp));
@@ -1378,7 +1371,7 @@ static JsonElement *RlistToJson(Rlist *list)
 
     for (Rlist *rp = list; rp; rp = rp->next)
     {
-        switch (rp->type)
+        switch (rp->val.type)
         {
         case RVAL_TYPE_SCALAR:
             JsonArrayAppendString(array, RlistScalarValue(rp));
@@ -1423,16 +1416,16 @@ void RlistFlatten(EvalContext *ctx, Rlist **list)
 {
     for (Rlist *rp = *list; rp != NULL;)
     {
-        if (rp->type != RVAL_TYPE_SCALAR)
+        if (rp->val.type != RVAL_TYPE_SCALAR)
         {
             rp = rp->next;
             continue;
         }
 
         char naked[CF_BUFSIZE] = "";
-        if (IsNakedVar(rp->item, '@'))
+        if (IsNakedVar(RlistScalarValue(rp), '@'))
         {
-            GetNaked(naked, rp->item);
+            GetNaked(naked, RlistScalarValue(rp));
 
             if (!IsExpandable(naked))
             {
@@ -1450,7 +1443,7 @@ void RlistFlatten(EvalContext *ctx, Rlist **list)
                     case RVAL_TYPE_LIST:
                         for (const Rlist *srp = rv.item; srp != NULL; srp = srp->next)
                         {
-                            RlistAppend(list, srp->item, srp->type);
+                            RlistAppendRval(list, RvalCopy(srp->val));
                         }
                         Rlist *next = rp->next;
                         RlistDestroyEntry(list, rp);
@@ -1459,7 +1452,7 @@ void RlistFlatten(EvalContext *ctx, Rlist **list)
 
                     default:
                         ProgrammingError("List variable does not resolve to a list");
-                        RlistAppend(list, rp->item, rp->type);
+                        RlistAppendRval(list, RvalCopy(rp->val));
                         break;
                     }
                 }

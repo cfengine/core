@@ -52,7 +52,7 @@ bool ComparePackageVersionsInternal(const char *v1, const char *v2, PackageVersi
     for (rp_pr = separators_pr, rp_in = separators_in; (rp_pr != NULL) && (rp_in != NULL);
          rp_pr = rp_pr->next, rp_in = rp_in->next)
     {
-        if (strcmp(rp_pr->item, rp_in->item) != 0)
+        if (strcmp(RlistScalarValue(rp_pr), RlistScalarValue(rp_in)) != 0)
         {
             result = false;
             break;
@@ -81,7 +81,7 @@ bool ComparePackageVersionsInternal(const char *v1, const char *v2, PackageVersi
         for (rp_pr = numbers_pr, rp_in = numbers_in; (rp_pr != NULL) && (rp_in != NULL);
              rp_pr = rp_pr->next, rp_in = rp_in->next)
         {
-            cmp_result = strcmp(rp_pr->item, rp_in->item);
+            cmp_result = strcmp(RlistScalarValue(rp_pr), RlistScalarValue(rp_in));
 
             switch (cmp)
             {

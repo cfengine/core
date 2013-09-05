@@ -166,7 +166,7 @@ static int CheckACLSyntax(char *file, Acl acl, Promise *pp)
 
     for (rp = acl.acl_default_entries; rp != NULL; rp = rp->next)
     {
-        valid = CheckACESyntax(rp->item, valid_ops, valid_nperms, deny_support, mask_support, pp);
+        valid = CheckACESyntax(RlistScalarValue(rp), valid_ops, valid_nperms, deny_support, mask_support, pp);
 
         if (!valid)             // wrong syntax in this ace
         {

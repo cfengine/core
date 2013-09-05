@@ -192,7 +192,7 @@ int main(int argc, char *argv[])
                 {
                     if (fork() == 0)    /* child process */
                     {
-                        HailServer(ctx, rp->item);
+                        HailServer(ctx, RlistScalarValue(rp));
                         exit(0);
                     }
                     else        /* parent process */
@@ -211,7 +211,7 @@ int main(int argc, char *argv[])
             else                /* serial */
 #endif /* __MINGW32__ */
             {
-                HailServer(ctx, rp->item);
+                HailServer(ctx, RlistScalarValue(rp));
                 rp = rp->next;
             }
         }                       /* end while */
@@ -518,7 +518,7 @@ static int HailServer(EvalContext *ctx, char *host)
 
     fc.servers = RlistFromSplitString(peer, '*');
 
-    if (fc.servers == NULL || strcmp(fc.servers->item, "localhost") == 0)
+    if (fc.servers == NULL || strcmp(RlistScalarValue(fc.servers), "localhost") == 0)
     {
         Log(LOG_LEVEL_INFO, "No hosts are registered to connect to");
         return false;
@@ -705,7 +705,7 @@ static void SendClassData(EvalContext *ctx, AgentConnection *conn)
 
     for (rp = classes; rp != NULL; rp = rp->next)
     {
-        if (SendTransaction(&conn->conn_info, rp->item, 0, CF_DONE) == -1)
+        if (SendTransaction(&conn->conn_info, RlistScalarValue(rp), 0, CF_DONE) == -1)
         {
             Log(LOG_LEVEL_ERR, "Transaction failed. (send: %s)", GetErrorStr());
             return;

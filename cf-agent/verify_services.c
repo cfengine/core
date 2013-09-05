@@ -90,7 +90,7 @@ static int ServicesSanityChecks(Attributes a, Promise *pp)
 
     for (dep = a.service.service_depend; dep != NULL; dep = dep->next)
     {
-        if (strcmp(pp->promiser, dep->item) == 0)
+        if (strcmp(pp->promiser, RlistScalarValue(dep)) == 0)
         {
             Log(LOG_LEVEL_ERR, "Service promiser '%s' has itself as dependency", pp->promiser);
             PromiseRef(LOG_LEVEL_ERR, pp);

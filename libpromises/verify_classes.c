@@ -172,10 +172,9 @@ static int EvalClassExpression(EvalContext *ctx, Constraint *cp, Promise *pp)
     case RVAL_TYPE_LIST:
         for (rp = (Rlist *) cp->rval.item; rp != NULL; rp = rp->next)
         {
-            rval = EvaluateFinalRval(ctx, NULL, "this", (Rval) {rp->item, rp->type}, true, pp);
-            RvalDestroy((Rval) {rp->item, rp->type});
-            rp->item = rval.item;
-            rp->type = rval.type;
+            rval = EvaluateFinalRval(ctx, NULL, "this", rp->val, true, pp);
+            RvalDestroy(rp->val);
+            rp->val = rval;
         }
         break;
 
@@ -251,7 +250,7 @@ static int EvalClassExpression(EvalContext *ctx, Constraint *cp, Promise *pp)
         {
             if (i == n)
             {
-                EvalContextHeapAddSoft(ctx, rp->item, PromiseGetNamespace(pp));
+                EvalContextHeapAddSoft(ctx, RlistScalarValue(rp), PromiseGetNamespace(pp));
                 return true;
             }
         }
@@ -272,7 +271,7 @@ static int EvalClassExpression(EvalContext *ctx, Constraint *cp, Promise *pp)
     {
         for (rp = (Rlist *) cp->rval.item; rp != NULL; rp = rp->next)
         {
-            result = IntFromString(rp->item);
+            result = IntFromString(RlistScalarValue(rp));
 
             if (result < 0)
             {
@@ -296,7 +295,7 @@ static int EvalClassExpression(EvalContext *ctx, Constraint *cp, Promise *pp)
 
         for (rp = (Rlist *) cp->rval.item; rp != NULL; rp = rp->next)
         {
-            double prob = ((double) IntFromString(rp->item)) / ((double) total);
+            double prob = ((double) IntFromString(RlistScalarValue(rp))) / ((double) total);
             cum += prob;
 
             if (fluct < cum)
@@ -305,7 +304,7 @@ static int EvalClassExpression(EvalContext *ctx, Constraint *cp, Promise *pp)
             }
         }
 
-        snprintf(buffer, CF_MAXVARSIZE - 1, "%s_%s", pp->promiser, (char *) rp->item);
+        snprintf(buffer, CF_MAXVARSIZE - 1, "%s_%s", pp->promiser, RlistScalarValue(rp));
         /* FIXME: figure why explicit mark and get rid of it */
         EvalContextMarkPromiseDone(ctx, pp);
 
@@ -325,12 +324,12 @@ static int EvalClassExpression(EvalContext *ctx, Constraint *cp, Promise *pp)
 
     for (rp = (Rlist *) cp->rval.item; rp != NULL; rp = rp->next)
     {
-        if (rp->type != RVAL_TYPE_SCALAR)
+        if (rp->val.type != RVAL_TYPE_SCALAR)
         {
             return false;
         }
 
-        result = IsDefinedClass(ctx, (char *) (rp->item), PromiseGetNamespace(pp));
+        result = IsDefinedClass(ctx, RlistScalarValue(rp), PromiseGetNamespace(pp));
 
         result_and = result_and && result;
         result_or = result_or || result;

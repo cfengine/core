@@ -54,7 +54,7 @@ static void test_map_iterators_from_rval_naked_list_var(void)
     MapIteratorsFromRval(ctx, "scope", (Rval) { "${jwow}", RVAL_TYPE_SCALAR }, &scalars, &lists, &containers);
 
     assert_int_equal(1, RlistLen(lists));
-    assert_string_equal("jwow", lists->item);
+    assert_string_equal("jwow", RlistScalarValue(lists));
     assert_int_equal(0, RlistLen(scalars));
     assert_int_equal(0, RlistLen(containers));
 

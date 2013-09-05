@@ -428,7 +428,7 @@ int MatchPolicy(EvalContext *ctx, const char *camel, const char *haystack, Rlist
 
         for (rp = insert_match; rp != NULL; rp = rp->next)
         {
-            opt = InsertMatchTypeFromString(rp->item);
+            opt = InsertMatchTypeFromString(RlistScalarValue(rp));
 
             /* Exact match can be done immediately */
 
@@ -537,14 +537,14 @@ int MatchRlistItem(EvalContext *ctx, Rlist *listofregex, const char *teststring)
     {
         /* Avoid using regex if possible, due to memory leak */
 
-        if (strcmp(teststring, rp->item) == 0)
+        if (strcmp(teststring, RlistScalarValue(rp)) == 0)
         {
             return (true);
         }
 
         /* Make it commutative */
 
-        if (FullTextMatch(ctx, rp->item, teststring))
+        if (FullTextMatch(ctx, RlistScalarValue(rp), teststring))
         {
             return true;
         }

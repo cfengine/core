@@ -201,7 +201,7 @@ static int CheckPosixLinuxACEs(EvalContext *ctx, Rlist *aces, AclMethod method, 
 
     for (rp = aces; rp != NULL; rp = rp->next)
     {
-        cf_ace = (char *) rp->item;
+        cf_ace = RlistScalarValue(rp);
 
         if (!ParseEntityPosixLinux(&cf_ace, ace_parsed, &has_mask))
         {

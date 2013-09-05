@@ -25,7 +25,7 @@ static void test_prepend_scalar(void)
     RlistPrependScalar(&list, "stuff");
     RlistPrependScalar(&list, "more-stuff");
 
-    assert_string_equal(list->item, "more-stuff");
+    assert_string_equal(RlistScalarValue(list), "more-stuff");
 
     RlistDestroy(list);
 }
@@ -52,7 +52,7 @@ static void test_prepend_scalar_idempotent(void)
     RlistPrependScalarIdemp(&list, "stuff");
     RlistPrependScalarIdemp(&list, "stuff");
 
-    assert_string_equal(list->item, "stuff");
+    assert_string_equal(RlistScalarValue(list), "stuff");
     assert_int_equal(RlistLen(list), 1);
 
     RlistDestroy(list);
@@ -67,8 +67,8 @@ static void test_copy(void)
 
     copy = RlistCopy(list);
 
-    assert_string_equal(list->item, copy->item);
-    assert_string_equal(list->next->item, copy->next->item);
+    assert_string_equal(RlistScalarValue(list), RlistScalarValue(copy));
+    assert_string_equal(RlistScalarValue(list->next), RlistScalarValue(copy->next));
 
     RlistDestroy(list);
     RlistDestroy(copy);
@@ -146,11 +146,11 @@ static void test_filter(void)
     int i = 0;
     for (Rlist *rp = list; rp; rp = rp->next)
     {
-        int *k = rp->item;
+        int *k = rp->val.item;
         assert_int_equal(i, *k);
 
         free(k);
-        rp->item = NULL;
+        rp->val.item = NULL;
 
         i += 2;
     }
@@ -180,9 +180,9 @@ static void test_reverse(void)
     Rlist *list = RlistFromSplitString("a,b,c", ',');
 
     RlistReverse(&list);
-    assert_string_equal("c", list->item);
-    assert_string_equal("b", list->next->item);
-    assert_string_equal("a", list->next->next->item);
+    assert_string_equal("c", RlistScalarValue(list));
+    assert_string_equal("b", RlistScalarValue(list->next));
+    assert_string_equal("a", RlistScalarValue(list->next->next));
 
     RlistDestroy(list);
 }

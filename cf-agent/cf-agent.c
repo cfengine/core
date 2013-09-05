@@ -723,7 +723,7 @@ void KeepControlPromises(EvalContext *ctx, Policy *policy)
                     // original commit says 'optimization'.
                     if (LogGetGlobalLevel() >= LOG_LEVEL_VERBOSE)
                     {
-                        PrependItem(&PROCESSREFRESH, rp->item, NULL);
+                        PrependItem(&PROCESSREFRESH, RlistScalarValue(rp), NULL);
                     }
                 }
                 continue;
@@ -739,7 +739,7 @@ void KeepControlPromises(EvalContext *ctx, Policy *policy)
                 {
                     char name[CF_MAXVARSIZE] = "";
 
-                    strncpy(name, rp->item, CF_MAXVARSIZE - 1);
+                    strncpy(name, RlistScalarValue(rp), CF_MAXVARSIZE - 1);
 
                     EvalContextHeapAddAbort(ctx, name, cp->classes);
                 }
@@ -756,7 +756,7 @@ void KeepControlPromises(EvalContext *ctx, Policy *policy)
                 for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
                 {
                     char name[CF_MAXVARSIZE] = "";
-                    strncpy(name, rp->item, CF_MAXVARSIZE - 1);
+                    strncpy(name, RlistScalarValue(rp), CF_MAXVARSIZE - 1);
 
                     EvalContextHeapAddAbortCurrentBundle(ctx, name, cp->classes);
                 }
@@ -773,7 +773,7 @@ void KeepControlPromises(EvalContext *ctx, Policy *policy)
                 for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
                 {
                     Log(LOG_LEVEL_VERBOSE, "... %s", RlistScalarValue(rp));
-                    EvalContextHeapAddSoft(ctx, rp->item, NULL);
+                    EvalContextHeapAddSoft(ctx, RlistScalarValue(rp), NULL);
                 }
 
                 continue;
@@ -986,7 +986,7 @@ void KeepControlPromises(EvalContext *ctx, Policy *policy)
 
                 for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
                 {
-                    if (putenv(rp->item) != 0)
+                    if (putenv(RlistScalarValue(rp)) != 0)
                     {
                         Log(LOG_LEVEL_ERR, "Failed to set environment variable '%s'. (putenv: %s)",
                             RlistScalarValue(rp), GetErrorStr());
@@ -1058,10 +1058,10 @@ static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, GenericAgentCon
 
     for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
     {
-        switch (rp->type)
+        switch (rp->val.type)
         {
         case RVAL_TYPE_SCALAR:
-            name = (char *) rp->item;
+            name = RlistScalarValue(rp);
             args = NULL;
 
             if (strcmp(name, CF_NULL_VALUE) == 0)
@@ -1071,9 +1071,9 @@ static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, GenericAgentCon
 
             break;
         case RVAL_TYPE_FNCALL:
-            fp = (FnCall *) rp->item;
-            name = (char *) fp->name;
-            args = (Rlist *) fp->args;
+            fp = RlistFnCallValue(rp);
+            name = fp->name;
+            args = fp->args;
             break;
 
         default:
@@ -1082,7 +1082,7 @@ static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, GenericAgentCon
             {
                 Writer *w = StringWriter();
                 WriterWrite(w, "Illegal item found in bundlesequence: ");
-                RvalWrite(w, (Rval) {rp->item, rp->type});
+                RvalWrite(w, rp->val);
                 Log(LOG_LEVEL_ERR, "%s", StringWriterData(w));
                 WriterClose(w);
             }
@@ -1125,15 +1125,15 @@ static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, GenericAgentCon
 
     for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
     {
-        switch (rp->type)
+        switch (rp->val.type)
         {
         case RVAL_TYPE_FNCALL:
-            fp = (FnCall *) rp->item;
-            name = (char *) fp->name;
-            args = (Rlist *) fp->args;
+            fp = RlistFnCallValue(rp);
+            name = fp->name;
+            args = fp->args;
             break;
         default:
-            name = (char *) rp->item;
+            name = RlistScalarValue(rp);
             args = NULL;
             break;
         }
@@ -1264,7 +1264,7 @@ static void CheckAgentAccess(Rlist *list, const Policy *policy)
 
     for (const Rlist *rp = list; rp != NULL; rp = rp->next)
     {
-        if (Str2Uid(rp->item, NULL, NULL) == uid)
+        if (Str2Uid(RlistScalarValue(rp), NULL, NULL) == uid)
         {
             return;
         }
@@ -1284,7 +1284,7 @@ static void CheckAgentAccess(Rlist *list, const Policy *policy)
                 bool access = false;
                 for (const Rlist *rp2 = ACCESSLIST; rp2 != NULL; rp2 = rp2->next)
                 {
-                    if (Str2Uid(rp2->item, NULL, NULL) == sb.st_uid)
+                    if (Str2Uid(RlistScalarValue(rp2), NULL, NULL) == sb.st_uid)
                     {
                         access = true;
                         break;
@@ -1355,9 +1355,9 @@ static void DefaultVarPromise(EvalContext *ctx, const Promise *pp)
     case DATA_TYPE_REAL_LIST:
         if (regex)
         {
-            for (rp = (Rlist *) rval.item; rp != NULL; rp = rp->next)
+            for (rp = RvalRlistValue(rval); rp != NULL; rp = rp->next)
             {
-                if (FullTextMatch(ctx, regex, rp->item))
+                if (FullTextMatch(ctx, regex, RlistScalarValue(rp)))
                 {
                     okay = false;
                     break;

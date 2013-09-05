@@ -332,7 +332,7 @@ static int FileSystemMountedCorrectly(Rlist *list, char *name, Attributes a)
 
     for (rp = list; rp != NULL; rp = rp->next)
     {
-        mp = (Mount *) rp->item;
+        mp = (Mount *) rp->val.item; // TODO: Abuse of Rlist
 
         if (mp == NULL)
         {
@@ -410,7 +410,7 @@ static int IsForeignFileSystem(struct stat *childstat, char *dir)
 
         for (rp = MOUNTEDFSLIST; rp != NULL; rp = rp->next)
         {
-            entry = (Mount *) rp->item;
+            entry = (Mount *) rp->val.item; // TODO: Abuse of Rlist
 
             if (!strcmp(entry->mounton, dir))
             {

@@ -357,9 +357,9 @@ static void KeepControlPromises(EvalContext *ctx, Policy *policy, GenericAgentCo
 
                 for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
                 {
-                    if (!IsItemIn(SV.nonattackerlist, rp->item))
+                    if (!IsItemIn(SV.nonattackerlist, RlistScalarValue(rp)))
                     {
-                        AppendItem(&SV.nonattackerlist, rp->item, cp->classes);
+                        AppendItem(&SV.nonattackerlist, RlistScalarValue(rp), cp->classes);
                     }
                 }
 
@@ -374,9 +374,9 @@ static void KeepControlPromises(EvalContext *ctx, Policy *policy, GenericAgentCo
 
                 for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
                 {
-                    if (!IsItemIn(SV.attackerlist, rp->item))
+                    if (!IsItemIn(SV.attackerlist, RlistScalarValue(rp)))
                     {
-                        AppendItem(&SV.attackerlist, rp->item, cp->classes);
+                        AppendItem(&SV.attackerlist, RlistScalarValue(rp), cp->classes);
                     }
                 }
 
@@ -391,9 +391,9 @@ static void KeepControlPromises(EvalContext *ctx, Policy *policy, GenericAgentCo
 
                 for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
                 {
-                    if (!IsItemIn(SV.skipverify, rp->item))
+                    if (!IsItemIn(SV.skipverify, RlistScalarValue(rp)))
                     {
-                        AppendItem(&SV.skipverify, rp->item, cp->classes);
+                        AppendItem(&SV.skipverify, RlistScalarValue(rp), cp->classes);
                     }
                 }
 
@@ -409,9 +409,9 @@ static void KeepControlPromises(EvalContext *ctx, Policy *policy, GenericAgentCo
 
                 for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
                 {
-                    if (!IsItemIn(SV.multiconnlist, rp->item))
+                    if (!IsItemIn(SV.multiconnlist, RlistScalarValue(rp)))
                     {
-                        AppendItem(&SV.multiconnlist, rp->item, cp->classes);
+                        AppendItem(&SV.multiconnlist, RlistScalarValue(rp), cp->classes);
                     }
                 }
 
@@ -426,9 +426,9 @@ static void KeepControlPromises(EvalContext *ctx, Policy *policy, GenericAgentCo
 
                 for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
                 {
-                    if (!IsItemIn(SV.allowuserlist, rp->item))
+                    if (!IsItemIn(SV.allowuserlist, RlistScalarValue(rp)))
                     {
-                        AppendItem(&SV.allowuserlist, rp->item, cp->classes);
+                        AppendItem(&SV.allowuserlist, RlistScalarValue(rp), cp->classes);
                     }
                 }
 
@@ -443,9 +443,9 @@ static void KeepControlPromises(EvalContext *ctx, Policy *policy, GenericAgentCo
 
                 for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
                 {
-                    if (!IsItemIn(SV.trustkeylist, rp->item))
+                    if (!IsItemIn(SV.trustkeylist, RlistScalarValue(rp)))
                     {
-                        AppendItem(&SV.trustkeylist, rp->item, cp->classes);
+                        AppendItem(&SV.trustkeylist, RlistScalarValue(rp), cp->classes);
                     }
                 }
 
@@ -727,19 +727,19 @@ void KeepFileAccessPromise(EvalContext *ctx, Promise *pp)
             {
                 if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_ADMIT].lval) == 0)
                 {
-                    PrependItem(&(ap->accesslist), rp->item, NULL);
+                    PrependItem(&(ap->accesslist), RlistScalarValue(rp), NULL);
                     continue;
                 }
 
                 if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_DENY].lval) == 0)
                 {
-                    PrependItem(&(dp->accesslist), rp->item, NULL);
+                    PrependItem(&(dp->accesslist), RlistScalarValue(rp), NULL);
                     continue;
                 }
 
                 if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_MAPROOT].lval) == 0)
                 {
-                    PrependItem(&(ap->maproot), rp->item, NULL);
+                    PrependItem(&(ap->maproot), RlistScalarValue(rp), NULL);
                     continue;
                 }
             }
@@ -841,19 +841,19 @@ void KeepLiteralAccessPromise(EvalContext *ctx, Promise *pp, char *type)
             {
                 if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_ADMIT].lval) == 0)
                 {
-                    PrependItem(&(ap->accesslist), rp->item, NULL);
+                    PrependItem(&(ap->accesslist), RlistScalarValue(rp), NULL);
                     continue;
                 }
 
                 if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_DENY].lval) == 0)
                 {
-                    PrependItem(&(dp->accesslist), rp->item, NULL);
+                    PrependItem(&(dp->accesslist), RlistScalarValue(rp), NULL);
                     continue;
                 }
 
                 if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_MAPROOT].lval) == 0)
                 {
-                    PrependItem(&(ap->maproot), rp->item, NULL);
+                    PrependItem(&(ap->maproot), RlistScalarValue(rp), NULL);
                     continue;
                 }
             }
@@ -919,19 +919,19 @@ void KeepQueryAccessPromise(EvalContext *ctx, Promise *pp, char *type)
             {
                 if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_ADMIT].lval) == 0)
                 {
-                    PrependItem(&(ap->accesslist), rp->item, NULL);
+                    PrependItem(&(ap->accesslist), RlistScalarValue(rp), NULL);
                     continue;
                 }
 
                 if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_DENY].lval) == 0)
                 {
-                    PrependItem(&(dp->accesslist), rp->item, NULL);
+                    PrependItem(&(dp->accesslist), RlistScalarValue(rp), NULL);
                     continue;
                 }
 
                 if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_MAPROOT].lval) == 0)
                 {
-                    PrependItem(&(ap->maproot), rp->item, NULL);
+                    PrependItem(&(ap->maproot), RlistScalarValue(rp), NULL);
                     continue;
                 }
             }
@@ -975,7 +975,7 @@ static void KeepServerRolePromise(EvalContext *ctx, Promise *pp)
             {
                 if (strcmp(cp->lval, CF_REMROLE_BODIES[REMOTE_ROLE_AUTHORIZE].lval) == 0)
                 {
-                    PrependItem(&(ap->accesslist), rp->item, NULL);
+                    PrependItem(&(ap->accesslist), RlistScalarValue(rp), NULL);
                     continue;
                 }
             }

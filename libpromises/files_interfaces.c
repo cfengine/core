@@ -39,7 +39,7 @@
 
 int cf_lstat(char *file, struct stat *buf, FileCopy fc, AgentConnection *conn)
 {
-    if ((fc.servers == NULL) || (strcmp(fc.servers->item, "localhost") == 0))
+    if ((fc.servers == NULL) || (strcmp(fc.servers->val.item, "localhost") == 0))
     {
         return lstat(file, buf);
     }

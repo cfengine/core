@@ -648,7 +648,7 @@ static int AuthorizeRoles(EvalContext *ctx, ServerConnectionState *conn, char *a
 
         for (ap = SV.roles; ap != NULL; ap = ap->next)
         {
-            if (FullTextMatch(ctx, ap->path, rp->item))
+            if (FullTextMatch(ctx, ap->path, RlistScalarValue(rp)))
             {
                 /* We have a pattern covering this class - so are we allowed to activate it? */
                 if ((IsMatchItemIn(ctx, ap->accesslist, MapAddress(conn->ipaddr))) ||

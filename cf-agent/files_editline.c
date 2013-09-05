@@ -1153,7 +1153,7 @@ static int SanityCheckInsertions(Attributes a)
 
     for (rp = a.insert_match; rp != NULL; rp = rp->next)
     {
-        opt = InsertMatchTypeFromString(rp->item);
+        opt = InsertMatchTypeFromString(RlistScalarValue(rp));
 
         switch (opt)
         {
@@ -1538,13 +1538,13 @@ static int EditLineByColumn(EvalContext *ctx, Rlist **columns, Attributes a, Pro
     {
         /* internal separator, single char so split again */
 
-        if (strcmp(rp->item, a.column.column_value) == 0)
+        if (strcmp(RlistScalarValue(rp), a.column.column_value) == 0)
         {
             retval = false;
         }
         else
         {
-            this_column = RlistFromSplitString(rp->item, a.column.value_separator);
+            this_column = RlistFromSplitString(RlistScalarValue(rp), a.column.value_separator);
             retval = DoEditColumn(&this_column, a, edcontext);
         }
 
@@ -1560,10 +1560,10 @@ static int EditLineByColumn(EvalContext *ctx, Rlist **columns, Attributes a, Pro
             {
                 cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "Edited field inside file object %s", edcontext->filename);
                 (edcontext->num_edits)++;
-                free(rp->item);
+                free(RlistScalarValue(rp));
                 sep[0] = a.column.value_separator;
                 sep[1] = '\0';
-                rp->item = Rlist2String(this_column, sep);
+                rp->val.item = Rlist2String(this_column, sep);
             }
         }
         else
@@ -1592,8 +1592,8 @@ static int EditLineByColumn(EvalContext *ctx, Rlist **columns, Attributes a, Pro
                 cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "Deleting column field value %s in %s", RlistScalarValue(rp),
                      edcontext->filename);
                 (edcontext->num_edits)++;
-                free(rp->item);
-                rp->item = xstrdup("");
+                free(rp->val.item);
+                rp->val.item = xstrdup("");
                 return true;
             }
         }
@@ -1610,8 +1610,8 @@ static int EditLineByColumn(EvalContext *ctx, Rlist **columns, Attributes a, Pro
             {
                 cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "Setting whole column field value %s to %s in %s",
                      RlistScalarValue(rp), a.column.column_value, edcontext->filename);
-                free(rp->item);
-                rp->item = xstrdup(a.column.column_value);
+                free(rp->val.item);
+                rp->val.item = xstrdup(a.column.column_value);
                 (edcontext->num_edits)++;
                 return true;
             }
@@ -1636,7 +1636,7 @@ static int SelectLine(EvalContext *ctx, char *line, Attributes a)
     {
         for (rp = c; rp != NULL; rp = rp->next)
         {
-            selector = (char *) (rp->item);
+            selector = RlistScalarValue(rp);
 
             if (strncmp(selector, line, strlen(selector)) == 0)
             {
@@ -1651,7 +1651,7 @@ static int SelectLine(EvalContext *ctx, char *line, Attributes a)
     {
         for (rp = c; rp != NULL; rp = rp->next)
         {
-            selector = (char *) (rp->item);
+            selector = RlistScalarValue(rp);
 
             if (strncmp(selector, line, strlen(selector)) == 0)
             {
@@ -1666,7 +1666,7 @@ static int SelectLine(EvalContext *ctx, char *line, Attributes a)
     {
         for (rp = c; rp != NULL; rp = rp->next)
         {
-            selector = (char *) (rp->item);
+            selector = RlistScalarValue(rp);
 
             if (FullTextMatch(ctx, selector, line))
             {
@@ -1681,7 +1681,7 @@ static int SelectLine(EvalContext *ctx, char *line, Attributes a)
     {
         for (rp = c; rp != NULL; rp = rp->next)
         {
-            selector = (char *) (rp->item);
+            selector = RlistScalarValue(rp);
 
             if (FullTextMatch(ctx, selector, line))
             {
@@ -1696,7 +1696,7 @@ static int SelectLine(EvalContext *ctx, char *line, Attributes a)
     {
         for (rp = c; rp != NULL; rp = rp->next)
         {
-            selector = (char *) (rp->item);
+            selector = RlistScalarValue(rp);
 
             if (BlockTextMatch(ctx, selector, line, &s, &e))
             {
@@ -1711,7 +1711,7 @@ static int SelectLine(EvalContext *ctx, char *line, Attributes a)
     {
         for (rp = c; rp != NULL; rp = rp->next)
         {
-            selector = (char *) (rp->item);
+            selector = RlistScalarValue(rp);
 
             if (BlockTextMatch(ctx, selector, line, &s, &e))
             {
@@ -1753,7 +1753,7 @@ static int DoEditColumn(Rlist **columns, Attributes a, EditContext *edcontext)
     {
         if (RlistLen(*columns) == 1)
         {
-            if (strcmp((*columns)->item, a.column.column_value) == 0)
+            if (strcmp(RlistScalarValue(*columns), a.column.column_value) == 0)
             {
                 Log(LOG_LEVEL_VERBOSE, "Field sub-value set as promised");
                 return false;

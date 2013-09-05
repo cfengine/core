@@ -323,7 +323,7 @@ SyntaxTypeMatch CheckConstraintTypeMatch(const char *lval, Rval rval, DataType d
 
         for (rp = (Rlist *) rval.item; rp != NULL; rp = rp->next)
         {
-            SyntaxTypeMatch err = CheckConstraintTypeMatch(lval, (Rval) {rp->item, rp->type}, dt, range, 1);
+            SyntaxTypeMatch err = CheckConstraintTypeMatch(lval, rp->val, dt, range, 1);
             switch (err)
             {
             case SYNTAX_TYPE_MATCH_OK:

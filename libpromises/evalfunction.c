@@ -232,7 +232,7 @@ static FnCallResult FnCallAnd(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 /* We need to check all the arguments, ArgTemplate does not check varadic functions */
     for (arg = finalargs; arg; arg = arg->next)
     {
-        SyntaxTypeMatch err = CheckConstraintTypeMatch(id, (Rval) {arg->item, arg->type}, DATA_TYPE_STRING, "", 1);
+        SyntaxTypeMatch err = CheckConstraintTypeMatch(id, arg->val, DATA_TYPE_STRING, "", 1);
         if (err != SYNTAX_TYPE_MATCH_OK && err != SYNTAX_TYPE_MATCH_ERROR_UNEXPANDED)
         {
             FatalError(ctx, "in %s: %s", id, SyntaxTypeMatchToString(err));
@@ -299,7 +299,7 @@ static FnCallResult FnCallHostsSeen(EvalContext *ctx, FnCall *fp, Rlist *finalar
         WriterWrite(w, "hostsseen return values:");
         for (Rlist *rp = returnlist; rp; rp = rp->next)
         {
-            WriterWriteF(w, " '%s'", (const char *)rp->item);
+            WriterWriteF(w, " '%s'", RlistScalarValue(rp));
         }
         Log(LOG_LEVEL_DEBUG, "%s", StringWriterData(w));
         WriterClose(w);
@@ -639,7 +639,7 @@ static FnCallResult FnCallConcat(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 /* We need to check all the arguments, ArgTemplate does not check varadic functions */
     for (arg = finalargs; arg; arg = arg->next)
     {
-        SyntaxTypeMatch err = CheckConstraintTypeMatch(id, (Rval) {arg->item, arg->type}, DATA_TYPE_STRING, "", 1);
+        SyntaxTypeMatch err = CheckConstraintTypeMatch(id, arg->val, DATA_TYPE_STRING, "", 1);
         if (err != SYNTAX_TYPE_MATCH_OK && err != SYNTAX_TYPE_MATCH_ERROR_UNEXPANDED)
         {
             FatalError(ctx, "in %s: %s", id, SyntaxTypeMatchToString(err));
@@ -688,7 +688,7 @@ static FnCallResult FnCallIfElse(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
     /* We need to check all the arguments, ArgTemplate does not check varadic functions */
     for (arg = finalargs; arg; arg = arg->next)
     {
-        SyntaxTypeMatch err = CheckConstraintTypeMatch(id, (Rval) {arg->item, arg->type}, DATA_TYPE_STRING, "", 1);
+        SyntaxTypeMatch err = CheckConstraintTypeMatch(id, arg->val, DATA_TYPE_STRING, "", 1);
         if (err != SYNTAX_TYPE_MATCH_OK && err != SYNTAX_TYPE_MATCH_ERROR_UNEXPANDED)
         {
             FatalError(ctx, "in %s: %s", id, SyntaxTypeMatchToString(err));
@@ -793,9 +793,9 @@ static FnCallResult FnCallLastNode(EvalContext *ctx, FnCall *fp, Rlist *finalarg
         }
     }
 
-    if (rp && rp->item)
+    if (rp && rp->val.item)
     {
-        char *res = xstrdup(rp->item);
+        char *res = xstrdup(RlistScalarValue(rp));
 
         RlistDestroy(newlist);
         return (FnCallResult) { FNCALL_SUCCESS, { res, RVAL_TYPE_SCALAR } };
@@ -1138,12 +1138,12 @@ static FnCallResult FnCallRegList(EvalContext *ctx, FnCall *fp, Rlist *finalargs
 
     for (const Rlist *rp = list; rp != NULL; rp = rp->next)
     {
-        if (strcmp(rp->item, CF_NULL_VALUE) == 0)
+        if (strcmp(RlistScalarValue(rp), CF_NULL_VALUE) == 0)
         {
             continue;
         }
 
-        if (FullTextMatch(ctx, regex, rp->item))
+        if (FullTextMatch(ctx, regex, RlistScalarValue(rp)))
         {
             strcpy(buffer, "any");
             break;
@@ -1238,7 +1238,7 @@ static FnCallResult FnCallGetValues(EvalContext *ctx, FnCall *fp, Rlist *finalar
         case RVAL_TYPE_LIST:
             for (const Rlist *rp = var->rval.item; rp != NULL; rp = rp->next)
             {
-                RlistAppendScalarIdemp(&returnlist, rp->item);
+                RlistAppendScalarIdemp(&returnlist, RlistScalarValue(rp));
             }
             break;
 
@@ -1300,7 +1300,7 @@ static FnCallResult FnCallSum(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
     {
         double x;
 
-        if (!DoubleFromString(rp->item, &x))
+        if (!DoubleFromString(RlistScalarValue(rp), &x))
         {
             return (FnCallResult) { FNCALL_FAILURE };
         }
@@ -1343,7 +1343,7 @@ static FnCallResult FnCallProduct(EvalContext *ctx, FnCall *fp, Rlist *finalargs
     for (const Rlist *rp = (const Rlist *) rval2.item; rp != NULL; rp = rp->next)
     {
         double x;
-        if (!DoubleFromString(rp->item, &x))
+        if (!DoubleFromString(RlistScalarValue(rp), &x))
         {
             return (FnCallResult) { FNCALL_FAILURE };
         }
@@ -1385,14 +1385,14 @@ static FnCallResult FnCallJoin(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 
     VarRefDestroy(ref);
 
-    for (const Rlist *rp = (const Rlist *) rval2.item; rp != NULL; rp = rp->next)
+    for (const Rlist *rp = RvalRlistValue(rval2); rp != NULL; rp = rp->next)
     {
-        if (strcmp(rp->item, CF_NULL_VALUE) == 0)
+        if (strcmp(RlistScalarValue(rp), CF_NULL_VALUE) == 0)
         {
             continue;
         }
 
-        size += strlen(rp->item) + strlen(join);
+        size += strlen(RlistScalarValue(rp)) + strlen(join);
     }
 
     joined = xcalloc(1, size + 1);
@@ -1400,17 +1400,17 @@ static FnCallResult FnCallJoin(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 
     for (const Rlist *rp = (const Rlist *) rval2.item; rp != NULL; rp = rp->next)
     {
-        if (strcmp(rp->item, CF_NULL_VALUE) == 0)
+        if (strcmp(RlistScalarValue(rp), CF_NULL_VALUE) == 0)
         {
             continue;
         }
 
-        strcpy(joined + size, rp->item);
+        strcpy(joined + size, RlistScalarValue(rp));
 
         if (rp->next != NULL)
         {
-            strcpy(joined + size + strlen(rp->item), join);
-            size += strlen(rp->item) + strlen(join);
+            strcpy(joined + size + strlen(RlistScalarValue(rp)), join);
+            size += strlen(RlistScalarValue(rp)) + strlen(join);
         }
     }
 
@@ -1646,7 +1646,7 @@ static FnCallResult FnCallMapArray(EvalContext *ctx, FnCall *fp, Rlist *finalarg
         case RVAL_TYPE_LIST:
             for (const Rlist *rp = var->rval.item; rp != NULL; rp = rp->next)
             {
-                EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "v", rp->item, DATA_TYPE_STRING);
+                EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "v", RlistScalarValue(rp), DATA_TYPE_STRING);
                 ExpandScalar(ctx, PromiseGetBundle(fp->caller)->ns, PromiseGetBundle(fp->caller)->name, map, expbuf);
 
                 if (strstr(expbuf, "$(this.k)") || strstr(expbuf, "${this.k}") ||
@@ -1718,7 +1718,7 @@ static FnCallResult FnCallMapList(EvalContext *ctx, FnCall *fp, Rlist *finalargs
 
     for (const Rlist *rp = RvalRlistValue(rval); rp != NULL; rp = rp->next)
     {
-        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "this", (char *) rp->item, DATA_TYPE_STRING);
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "this", RlistScalarValue(rp), DATA_TYPE_STRING);
 
         ExpandScalar(ctx, NULL, "this", map, expbuf);
 
@@ -1746,7 +1746,7 @@ static FnCallResult FnCallMergeContainer(EvalContext *ctx, FnCall *fp, Rlist *ar
 
     for (const Rlist *arg = args; arg; arg = arg->next)
     {
-        if (args->type != RVAL_TYPE_SCALAR)
+        if (args->val.type != RVAL_TYPE_SCALAR)
         {
             Log(LOG_LEVEL_ERR, "Function mergecontainer, argument '%s' is not a variable reference", RlistScalarValue(arg));
             return (FnCallResult)  { FNCALL_FAILURE };
@@ -1882,7 +1882,7 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx, FnCall *fp, Rlist *fin
 
     for (Rlist *rp = hostnameip; rp != NULL; rp = rp->next)
     {
-        Log(LOG_LEVEL_DEBUG, "Want to read %d bytes from port %d at '%s'", val, portnum, (char *) rp->item);
+        Log(LOG_LEVEL_DEBUG, "Want to read %d bytes from port %d at '%s'", val, portnum, RlistScalarValue(rp));
 
         conn = NewAgentConn(RlistScalarValue(rp));
 
@@ -1893,7 +1893,7 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx, FnCall *fp, Rlist *fin
 
         /* TODO don't use ServerConnect, this is only for CFEngine connections! */
 
-        if (!ServerConnect(conn, rp->item, fc))
+        if (!ServerConnect(conn, RlistScalarValue(rp), fc))
         {
             Log(LOG_LEVEL_INFO, "Couldn't open a tcp socket. (socket %s)", GetErrorStr());
             DeleteAgentConn(conn);
@@ -1925,7 +1925,7 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx, FnCall *fp, Rlist *fin
                 Log(LOG_LEVEL_VERBOSE, "Host '%s' is alive and responding correctly", RlistScalarValue(rp));
                 snprintf(buffer, CF_MAXVARSIZE - 1, "%s[%d]", array_lval, count);
                 VarRef *ref = VarRefParseFromBundle(buffer, PromiseGetBundle(fp->caller));
-                EvalContextVariablePut(ctx, ref, (Rval) { rp->item, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
+                EvalContextVariablePut(ctx, ref, rp->val, DATA_TYPE_STRING);
                 VarRefDestroy(ref);
                 count++;
             }
@@ -1935,10 +1935,10 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx, FnCall *fp, Rlist *fin
             Log(LOG_LEVEL_VERBOSE, "Host '%s' is alive", RlistScalarValue(rp));
             snprintf(buffer, CF_MAXVARSIZE - 1, "%s[%d]", array_lval, count);
             VarRef *ref = VarRefParseFromBundle(buffer, PromiseGetBundle(fp->caller));
-            EvalContextVariablePut(ctx, ref, (Rval) { rp->item, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
+            EvalContextVariablePut(ctx, ref, rp->val, DATA_TYPE_STRING);
             VarRefDestroy(ref);
 
-            if (IsDefinedClass(ctx, CanonifyName(rp->item), PromiseGetNamespace(fp->caller)))
+            if (IsDefinedClass(ctx, CanonifyName(RlistScalarValue(rp)), PromiseGetNamespace(fp->caller)))
             {
                 Log(LOG_LEVEL_VERBOSE, "This host is in the list and has promised to join the class '%s' - joined",
                       array_lval);
@@ -1985,7 +1985,7 @@ static FnCallResult FnCallShuffle(EvalContext *ctx, FnCall *fp, Rlist *finalargs
     Seq *seq = SeqNew(1000, NULL);
     for (const Rlist *rp = list_rval.item; rp; rp = rp->next)
     {
-        SeqAppend(seq, rp->item);
+        SeqAppend(seq, RlistScalarValue(rp));
     }
 
     SeqShuffle(seq, StringHash(seed_str, 0, RAND_MAX));
@@ -2366,7 +2366,7 @@ static FnCallResult FnCallFindfiles(EvalContext *ctx, FnCall *fp, Rlist *finalar
     /* We need to check all the arguments, ArgTemplate does not check varadic functions */
     for (arg = finalargs; arg; arg = arg->next)
     {
-        SyntaxTypeMatch err = CheckConstraintTypeMatch(id, (Rval) {arg->item, arg->type}, DATA_TYPE_STRING, "", 1);
+        SyntaxTypeMatch err = CheckConstraintTypeMatch(id, arg->val, DATA_TYPE_STRING, "", 1);
         if (err != SYNTAX_TYPE_MATCH_OK && err != SYNTAX_TYPE_MATCH_ERROR_UNEXPANDED)
         {
             FatalError(ctx, "in %s: %s", id, SyntaxTypeMatchToString(err));
@@ -2463,11 +2463,11 @@ static FnCallResult FilterInternal(EvalContext *ctx, FnCall *fp, char *regex, ch
     long total = 0;
     for (const Rlist *rp = (const Rlist *) rval2.item; rp != NULL && match_count < max; rp = rp->next)
     {
-        bool found = do_regex ? FullTextMatch(ctx, regex, rp->item) : (0==strcmp(regex, rp->item));
+        bool found = do_regex ? FullTextMatch(ctx, regex, RlistScalarValue(rp)) : (0==strcmp(regex, RlistScalarValue(rp)));
 
         if (invert ? !found : found)
         {
-            RlistAppendScalar(&returnlist, rp->item);
+            RlistAppendScalar(&returnlist, RlistScalarValue(rp));
             match_count++;
 
             // exit early in case "some" is being called
@@ -2540,7 +2540,7 @@ static FnCallResult FnCallSublist(EvalContext *ctx, FnCall *fp, Rlist *finalargs
         long count = 0;
         for (const Rlist *rp = (const Rlist *) rval2.item; rp != NULL && count < max; rp = rp->next)
         {
-            RlistAppendScalar(&returnlist, rp->item);
+            RlistAppendScalar(&returnlist, RlistScalarValue(rp));
             count++;
         }
     }
@@ -2555,7 +2555,7 @@ static FnCallResult FnCallSublist(EvalContext *ctx, FnCall *fp, Rlist *finalargs
 
         for (; rp != NULL; rp = rp->next)
         {
-            RlistAppendScalar(&returnlist, rp->item);
+            RlistAppendScalar(&returnlist, RlistScalarValue(rp));
         }
 
     }
@@ -2590,28 +2590,28 @@ static FnCallResult FnCallSetop(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
     StringSet *set_b = StringSetNew();
     for (const Rlist *rp_b = rval_b.item; rp_b != NULL; rp_b = rp_b->next)
     {
-        StringSetAdd(set_b, xstrdup(rp_b->item));
+        StringSetAdd(set_b, xstrdup(RlistScalarValue(rp_b)));
     }
 
     for (const Rlist *rp_a = rval_a.item; rp_a != NULL; rp_a = rp_a->next)
     {
-        if (strcmp(rp_a->item, CF_NULL_VALUE) == 0)
+        if (strcmp(RlistScalarValue(rp_a), CF_NULL_VALUE) == 0)
         {
             continue;
         }
 
         // Yes, this is an XOR.  But it's more legible this way.
-        if (difference && StringSetContains(set_b, rp_a->item))
+        if (difference && StringSetContains(set_b, RlistScalarValue(rp_a)))
         {
             continue;
         }
 
-        if (!difference && !StringSetContains(set_b, rp_a->item))
+        if (!difference && !StringSetContains(set_b, RlistScalarValue(rp_a)))
         {
             continue;
         }
                 
-        RlistAppendScalarIdemp(&returnlist, rp_a->item);
+        RlistAppendScalarIdemp(&returnlist, RlistScalarValue(rp_a));
     }
 
     StringSetDestroy(set_b);
@@ -2635,9 +2635,9 @@ static FnCallResult FnCallLength(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
     }
 
     bool null_seen = false;
-    for (const Rlist *rp = (const Rlist *) rval2.item; rp != NULL; rp = rp->next)
+    for (const Rlist *rp = RvalRlistValue(rval2); rp != NULL; rp = rp->next)
     {
-        if (strcmp(rp->item, CF_NULL_VALUE) == 0)
+        if (strcmp(RlistScalarValue(rp), CF_NULL_VALUE) == 0)
         {
             null_seen = true;
         }
@@ -2672,7 +2672,7 @@ static FnCallResult FnCallUnique(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 
     for (const Rlist *rp = (const Rlist *) rval2.item; rp != NULL; rp = rp->next)
     {
-        RlistAppendScalarIdemp(&returnlist, rp->item);
+        RlistAppendScalarIdemp(&returnlist, RlistScalarValue(rp));
     }
 
     return (FnCallResult) { FNCALL_SUCCESS, { returnlist, RVAL_TYPE_LIST } };
@@ -2697,7 +2697,7 @@ static FnCallResult FnCallNth(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 
     if (NULL == rp) return (FnCallResult) { FNCALL_FAILURE };
 
-    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(rp->item), RVAL_TYPE_SCALAR } };
+    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(RlistScalarValue(rp)), RVAL_TYPE_SCALAR } };
 }
 
 /*********************************************************************/
@@ -2770,7 +2770,7 @@ static FnCallResult FnCallFormat(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 /* We need to check all the arguments, ArgTemplate does not check varadic functions */
     for (const Rlist *arg = finalargs; arg; arg = arg->next)
     {
-        SyntaxTypeMatch err = CheckConstraintTypeMatch(id, (Rval) {arg->item, arg->type}, DATA_TYPE_STRING, "", 1);
+        SyntaxTypeMatch err = CheckConstraintTypeMatch(id, arg->val, DATA_TYPE_STRING, "", 1);
         if (err != SYNTAX_TYPE_MATCH_OK && err != SYNTAX_TYPE_MATCH_ERROR_UNEXPANDED)
         {
             FatalError(ctx, "in %s: %s", id, SyntaxTypeMatchToString(err));
@@ -3245,7 +3245,7 @@ static FnCallResult FnCallRemoteClassesMatching(EvalContext *ctx, FnCall *fp, Rl
         {
             for (rp = classlist; rp != NULL; rp = rp->next)
             {
-                snprintf(class, CF_MAXVARSIZE - 1, "%s_%s", prefix, (char *) rp->item);
+                snprintf(class, CF_MAXVARSIZE - 1, "%s_%s", prefix, RlistScalarValue(rp));
                 EvalContextStackFrameAddSoft(ctx, class);
             }
             RlistDestroy(classlist);
@@ -3298,13 +3298,13 @@ static FnCallResult FnCallPeers(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
     {
         char s[CF_MAXVARSIZE];
 
-        if (EmptyString(rp->item))
+        if (EmptyString(RlistScalarValue(rp)))
         {
             continue;
         }
 
         s[0] = '\0';
-        sscanf(rp->item, "%s", s);
+        sscanf(RlistScalarValue(rp), "%s", s);
 
         if (strcmp(s, VFQNAME) == 0 || strcmp(s, VUQNAME) == 0)
         {
@@ -3389,13 +3389,13 @@ static FnCallResult FnCallPeerLeader(EvalContext *ctx, FnCall *fp, Rlist *finala
     {
         char s[CF_MAXVARSIZE];
 
-        if (EmptyString(rp->item))
+        if (EmptyString(RlistScalarValue(rp)))
         {
             continue;
         }
 
         s[0] = '\0';
-        sscanf(rp->item, "%s", s);
+        sscanf(RlistScalarValue(rp), "%s", s);
 
         if (strcmp(s, VFQNAME) == 0 || strcmp(s, VUQNAME) == 0)
         {
@@ -3475,13 +3475,13 @@ static FnCallResult FnCallPeerLeaders(EvalContext *ctx, FnCall *fp, Rlist *final
     {
         char s[CF_MAXVARSIZE];
 
-        if (EmptyString(rp->item))
+        if (EmptyString(RlistScalarValue(rp)))
         {
             continue;
         }
 
         s[0] = '\0';
-        sscanf(rp->item, "%s", s);
+        sscanf(RlistScalarValue(rp), "%s", s);
 
         if (i % groupsize == 0)
         {
@@ -3777,14 +3777,14 @@ static FnCallResult FnCallRRange(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
     double from = 0;
     if (!DoubleFromString(RlistScalarValue(finalargs), &from))
     {
-        Log(LOG_LEVEL_ERR, "Function rrange, error reading assumed real value '%s' => %lf", (char *) (finalargs->item), from);
+        Log(LOG_LEVEL_ERR, "Function rrange, error reading assumed real value '%s' => %lf", RlistScalarValue(finalargs), from);
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
     double to = 0;
     if (!DoubleFromString(RlistScalarValue(finalargs), &to))
     {
-        Log(LOG_LEVEL_ERR, "Function rrange, error reading assumed real value '%s' => %lf", (char *) (finalargs->next->item), from);
+        Log(LOG_LEVEL_ERR, "Function rrange, error reading assumed real value '%s' => %lf", RlistScalarValue(finalargs->next), from);
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
@@ -3880,7 +3880,7 @@ static FnCallResult FnCallOr(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 /* We need to check all the arguments, ArgTemplate does not check varadic functions */
     for (arg = finalargs; arg; arg = arg->next)
     {
-        SyntaxTypeMatch err = CheckConstraintTypeMatch(id, (Rval) {arg->item, arg->type}, DATA_TYPE_STRING, "", 1);
+        SyntaxTypeMatch err = CheckConstraintTypeMatch(id, arg->val, DATA_TYPE_STRING, "", 1);
         if (err != SYNTAX_TYPE_MATCH_OK && err != SYNTAX_TYPE_MATCH_ERROR_UNEXPANDED)
         {
             FatalError(ctx, "in %s: %s", id, SyntaxTypeMatchToString(err));
@@ -4529,7 +4529,7 @@ static FnCallResult FnCallFileSexist(EvalContext *ctx, FnCall *fp, Rlist *finala
 
     for (rp = files; rp != NULL; rp = rp->next)
     {
-        if (stat(rp->item, &sb) == -1)
+        if (stat(RlistScalarValue(rp), &sb) == -1)
         {
             strcpy(buffer, "!any");
             break;
@@ -4941,23 +4941,23 @@ static int BuildLineArray(EvalContext *ctx, const Bundle *bundle, char *array_lv
             switch (type)
             {
             case DATA_TYPE_STRING:
-                strncpy(this_rval, rp->item, CF_MAXVARSIZE - 1);
+                strncpy(this_rval, RlistScalarValue(rp), CF_MAXVARSIZE - 1);
                 break;
 
             case DATA_TYPE_INT:
-                ival = IntFromString(rp->item);
+                ival = IntFromString(RlistScalarValue(rp));
                 snprintf(this_rval, CF_MAXVARSIZE, "%d", (int) ival);
                 break;
 
             case DATA_TYPE_REAL:
                 {
                     double real_value = 0;
-                    if (!DoubleFromString(rp->item, &real_value))
+                    if (!DoubleFromString(RlistScalarValue(rp), &real_value))
                     {
                         FatalError(ctx, "Could not convert rval to double");
                     }
                 }
-                sscanf(rp->item, "%255s", this_rval);
+                sscanf(RlistScalarValue(rp), "%255s", this_rval);
                 break;
 
             default:

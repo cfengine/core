@@ -87,7 +87,7 @@ int SelectLeaf(EvalContext *ctx, char *path, struct stat *sb, FileSelect fs)
 
     for (rp = fs.name; rp != NULL; rp = rp->next)
     {
-        if (SelectNameRegexMatch(ctx, path, rp->item))
+        if (SelectNameRegexMatch(ctx, path, RlistScalarValue(rp)))
         {
             StringSetAdd(leaf_attr, xstrdup("leaf_name"));
             break;
@@ -101,7 +101,7 @@ int SelectLeaf(EvalContext *ctx, char *path, struct stat *sb, FileSelect fs)
 
     for (rp = fs.path; rp != NULL; rp = rp->next)
     {
-        if (SelectPathRegexMatch(ctx, path, rp->item))
+        if (SelectPathRegexMatch(ctx, path, RlistScalarValue(rp)))
         {
             StringSetAdd(leaf_attr, xstrdup("path_name"));
             break;
@@ -263,7 +263,7 @@ static int SelectTypeMatch(struct stat *lstatptr, Rlist *crit)
 
     for (rp = crit; rp != NULL; rp = rp->next)
     {
-        if (EvalFileResult((char *) rp->item, leafattrib))
+        if (EvalFileResult(RlistScalarValue(rp), leafattrib))
         {
             StringSetDestroy(leafattrib);
             return true;
@@ -301,7 +301,7 @@ static int SelectOwnerMatch(EvalContext *ctx, char *path, struct stat *lstatptr,
 
     for (rp = crit; rp != NULL; rp = rp->next)
     {
-        if (EvalFileResult((char *) rp->item, leafattrib))
+        if (EvalFileResult(RlistScalarValue(rp), leafattrib))
         {
             Log(LOG_LEVEL_DEBUG, "Select owner match");
             StringSetDestroy(leafattrib);
@@ -341,7 +341,7 @@ static int SelectModeMatch(struct stat *lstatptr, Rlist *list)
         plus = 0;
         minus = 0;
 
-        if (!ParseModeString(rp->item, &plus, &minus))
+        if (!ParseModeString(RlistScalarValue(rp), &plus, &minus))
         {
             Log(LOG_LEVEL_ERR, "Problem validating a mode string '%s' in search filter", RlistScalarValue(rp));
             continue;
@@ -496,7 +496,7 @@ static int SelectIsSymLinkTo(EvalContext *ctx, char *filename, Rlist *crit)
             return false;
         }
 
-        if (FullTextMatch(ctx, rp->item, buffer))
+        if (FullTextMatch(ctx, RlistScalarValue(rp), buffer))
         {
             return true;
         }
@@ -577,21 +577,21 @@ static int SelectGroupMatch(EvalContext *ctx, struct stat *lstatptr, Rlist *crit
 
     for (rp = crit; rp != NULL; rp = rp->next)
     {
-        if (EvalFileResult((char *) rp->item, leafattrib))
+        if (EvalFileResult(RlistScalarValue(rp), leafattrib))
         {
             Log(LOG_LEVEL_DEBUG, "Select group match");
             StringSetDestroy(leafattrib);
             return true;
         }
 
-        if (gr && (FullTextMatch(ctx, (char *) rp->item, gr->gr_name)))
+        if (gr && (FullTextMatch(ctx, RlistScalarValue(rp), gr->gr_name)))
         {
             Log(LOG_LEVEL_DEBUG, "Select group match");
             StringSetDestroy(leafattrib);
             return true;
         }
 
-        if (FullTextMatch(ctx, (char *) rp->item, buffer))
+        if (FullTextMatch(ctx, RlistScalarValue(rp), buffer))
         {
             Log(LOG_LEVEL_DEBUG, "Select group match");
             StringSetDestroy(leafattrib);

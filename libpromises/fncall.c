@@ -96,7 +96,7 @@ unsigned FnCallHash(const FnCall *fp, unsigned seed, unsigned max)
 
     for (const Rlist *rp = fp->args; rp; rp = rp->next)
     {
-        hash = RvalHash((Rval) { rp->item, rp->type}, hash, max);
+        hash = RvalHash(rp->val, hash, max);
     }
 
     return hash;
@@ -117,14 +117,14 @@ void FnCallShow(FILE *fout, const FnCall *fp)
 
     for (const Rlist *rp = fp->args; rp != NULL; rp = rp->next)
     {
-        switch (rp->type)
+        switch (rp->val.type)
         {
         case RVAL_TYPE_SCALAR:
-            fprintf(fout, "%s,", (char *) rp->item);
+            fprintf(fout, "%s,", RlistScalarValue(rp));
             break;
 
         case RVAL_TYPE_FNCALL:
-            FnCallShow(fout, (FnCall *) rp->item);
+            FnCallShow(fout, RlistFnCallValue(rp));
             break;
 
         default:

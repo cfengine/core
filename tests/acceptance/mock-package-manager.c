@@ -210,7 +210,7 @@ static void SavePackages(const char *database_filename, Rlist *package_entries)
 
     for (rp = package_entries; rp != NULL; rp = rp->next)
     {
-        fprintf(packages_file, "%s\n", SerializePackage((Package *) rp->item));
+        fprintf(packages_file, "%s\n", SerializePackage((Package *) rp->val.item));
     }
 
     fclose(packages_file);
@@ -250,7 +250,7 @@ static Rlist *FindPackages(const char *database_filename, PackagePattern *patter
 
     for (rp = db; rp != NULL; rp = rp->next)
     {
-        Package *package = (Package *) rp->item;
+        Package *package = (Package *) rp->val.item;
 
         if (MatchPackage(pattern, package))
         {
@@ -269,7 +269,7 @@ static void ShowPackages(FILE *out, Rlist *package_entries)
 
     for (rp = package_entries; rp != NULL; rp = rp->next)
     {
-        fprintf(out, "%s\n", SerializePackage((Package *) rp->item));
+        fprintf(out, "%s\n", SerializePackage((Package *) rp->val.item));
     }
 }
 
@@ -319,9 +319,9 @@ static void AddPackage(PackagePattern *pattern)
 
     for (rp = matching_available; rp; rp = rp->next)
     {
-        Package *p = (Package *) rp->item;
+        Package *p = (Package *) rp->val.item;
 
-        PackagePattern *pat = MatchAllVersions((Package *) rp->item);
+        PackagePattern *pat = MatchAllVersions((Package *) rp->val.item);
 
         if (FindPackages(INSTALLED_PACKAGES_FILE_NAME, pat) != NULL)
         {
@@ -334,7 +334,7 @@ static void AddPackage(PackagePattern *pattern)
 
     for (rp = matching_available; rp; rp = rp->next)
     {
-        Package *p = (Package *) rp->item;
+        Package *p = (Package *) rp->val.item;
 
         RlistAppendAlien(&installed_packages, p);
         fprintf(stderr, "Succesfully installed package %s\n", SerializePackage(p));

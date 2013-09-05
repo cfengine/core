@@ -1326,12 +1326,12 @@ static bool ServerOffline(const char *server)
     }
 
     ThreadLock(&cft_serverlist);
-        Rlist *srvlist_tmp = SERVERLIST;
+    Rlist *srvlist_tmp = SERVERLIST;
     ThreadUnlock(&cft_serverlist);
 
     for (rp = srvlist_tmp; rp != NULL; rp = rp->next)
     {
-        svp = (ServerItem *) rp->item;
+        svp = (ServerItem *) rp->val.item; // TODO: Abuse of Rlist, use something else!
         if (svp == NULL)
         {
             ProgrammingError("SERVERLIST had NULL ServerItem!");
@@ -1375,7 +1375,7 @@ static AgentConnection *GetIdleConnectionToServer(const char *server)
 
     for (rp = srvlist_tmp; rp != NULL; rp = rp->next)
     {
-        svp = (ServerItem *) rp->item;
+        svp = (ServerItem *) rp->val.item;
         if (svp == NULL)
         {
             ProgrammingError("SERVERLIST had NULL ServerItem!");
@@ -1437,7 +1437,7 @@ void ServerNotBusy(AgentConnection *conn)
 
     for (rp = srvlist_tmp; rp != NULL; rp = rp->next)
     {
-        svp = (ServerItem *) rp->item;
+        svp = (ServerItem *) rp->val.item;
 
         if (svp->conn == conn)
         {
@@ -1472,7 +1472,7 @@ static void MarkServerOffline(const char *server)
     ThreadUnlock(&cft_serverlist);
     for (rp = srvlist_tmp; rp != NULL; rp = rp->next)
     {
-        svp = (ServerItem *) rp->item;
+        svp = (ServerItem *) rp->val.item;
         if (svp == NULL)
         {
             ProgrammingError("SERVERLIST had NULL ServerItem!");
@@ -1605,7 +1605,7 @@ void ConnectionsCleanup(void)
 
     for (rp = srvlist_tmp; rp != NULL; rp = rp->next)
     {
-        svp = (ServerItem *) rp->item;
+        svp = (ServerItem *) rp->val.item;
         if (svp == NULL)
         {
             ProgrammingError("SERVERLIST had NULL ServerItem!");

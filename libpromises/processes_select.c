@@ -70,7 +70,7 @@ static int SelectProcess(EvalContext *ctx, char *procentry, char **names, int *s
 
     for (rp = a.owner; rp != NULL; rp = rp->next)
     {
-        if (SelectProcRegexMatch(ctx, "USER", "UID", (char *) rp->item, names, column))
+        if (SelectProcRegexMatch(ctx, "USER", "UID", RlistScalarValue(rp), names, column))
         {
             StringSetAdd(process_select_attributes, xstrdup("process_owner"));
             break;

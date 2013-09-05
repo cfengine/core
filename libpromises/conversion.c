@@ -183,7 +183,7 @@ char *Rlist2String(Rlist *list, char *sep)
 
     for (rp = list; rp != NULL; rp = rp->next)
     {
-        strcat(line, (char *) rp->item);
+        strcat(line, RlistScalarValue(rp));
 
         if (rp->next)
         {
@@ -1008,7 +1008,7 @@ UidList *Rlist2UidList(Rlist *uidnames, const Promise *pp)
     for (rp = uidnames; rp != NULL; rp = rp->next)
     {
         username[0] = '\0';
-        uid = Str2Uid(rp->item, username, pp);
+        uid = Str2Uid(RlistScalarValue(rp), username, pp);
         AddSimpleUidItem(&uidlist, uid, username);
     }
 
@@ -1058,7 +1058,7 @@ GidList *Rlist2GidList(Rlist *gidnames, const Promise *pp)
     for (rp = gidnames; rp != NULL; rp = rp->next)
     {
         groupname[0] = '\0';
-        gid = Str2Gid(rp->item, groupname, pp);
+        gid = Str2Gid(RlistScalarValue(rp), groupname, pp);
         AddSimpleGidItem(&gidlist, gid, groupname);
     }
 
@@ -1072,7 +1072,7 @@ GidList *Rlist2GidList(Rlist *gidnames, const Promise *pp)
 
 /*********************************************************************/
 
-uid_t Str2Uid(char *uidbuff, char *usercopy, const Promise *pp)
+uid_t Str2Uid(const char *uidbuff, char *usercopy, const Promise *pp)
 {
     Item *ip, *tmplist;
     struct passwd *pw;
@@ -1160,7 +1160,7 @@ uid_t Str2Uid(char *uidbuff, char *usercopy, const Promise *pp)
 
 /*********************************************************************/
 
-gid_t Str2Gid(char *gidbuff, char *groupcopy, const Promise *pp)
+gid_t Str2Gid(const char *gidbuff, char *groupcopy, const Promise *pp)
 {
     struct group *gr;
     int gid = -2, tmp = -2;

@@ -56,16 +56,16 @@ int UnresolvedArgs(Rlist *args)
 
     for (rp = args; rp != NULL; rp = rp->next)
     {
-        if (rp->type != RVAL_TYPE_SCALAR)
+        if (rp->val.type != RVAL_TYPE_SCALAR)
         {
             return true;
         }
 
-        if (IsCf3Scalar(rp->item))
+        if (IsCf3Scalar(RlistScalarValue(rp)))
         {
-            if (strstr(rp->item, "$(this)") || strstr(rp->item, "${this}") ||
-                strstr(rp->item, "$(this.k)") || strstr(rp->item, "${this.k}") ||
-                strstr(rp->item, "$(this.v)") || strstr(rp->item, "${this.v}"))
+            if (strstr(RlistScalarValue(rp), "$(this)") || strstr(RlistScalarValue(rp), "${this}") ||
+                strstr(RlistScalarValue(rp), "$(this.k)") || strstr(RlistScalarValue(rp), "${this.k}") ||
+                strstr(RlistScalarValue(rp), "$(this.v)") || strstr(RlistScalarValue(rp), "${this.v}"))
             {
                 // We should allow this in function args for substitution in maplist() etc
                 // We should allow this.k and this.v in function args for substitution in maparray() etc

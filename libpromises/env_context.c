@@ -641,13 +641,13 @@ int MissingDependencies(EvalContext *ctx, const Promise *pp)
     
     for (rp = deps; rp != NULL; rp = rp->next)
     {
-        if (strchr(rp->item, ':'))
+        if (strchr(RlistScalarValue(rp), ':'))
         {
-            d = (char *)rp->item;
+            d = RlistScalarValue(rp);
         }
         else
         {
-            snprintf(name, CF_BUFSIZE, "%s:%s", PromiseGetNamespace(pp), (char *)rp->item);
+            snprintf(name, CF_BUFSIZE, "%s:%s", PromiseGetNamespace(pp), RlistScalarValue(rp));
             d = name;
         }
 
@@ -1364,7 +1364,7 @@ static bool IsVariableSelfReferential(const VarRef *ref, const Rval rval)
     case RVAL_TYPE_LIST:
         for (const Rlist *rp = RvalRlistValue(rval); rp != NULL; rp = rp->next)
         {
-            if (rp->type != RVAL_TYPE_SCALAR)
+            if (rp->val.type != RVAL_TYPE_SCALAR)
             {
                 continue;
             }
@@ -1617,7 +1617,7 @@ static void AddAllClasses(EvalContext *ctx, const char *ns, const Rlist *list, u
 {
     for (const Rlist *rp = list; rp != NULL; rp = rp->next)
     {
-        char *classname = xstrdup(rp->item);
+        char *classname = xstrdup(RlistScalarValue(rp));
 
         CanonifyNameInPlace(classname);
 
@@ -1635,7 +1635,7 @@ static void AddAllClasses(EvalContext *ctx, const char *ns, const Rlist *list, u
             }
 
             Log(LOG_LEVEL_VERBOSE, "Defining persistent promise result class '%s'", classname);
-            EvalContextHeapPersistentSave(CanonifyName(rp->item), ns, persistence_ttl, policy);
+            EvalContextHeapPersistentSave(CanonifyName(RlistScalarValue(rp)), ns, persistence_ttl, policy);
             EvalContextHeapAddSoft(ctx, classname, ns);
         }
         else
@@ -1661,18 +1661,18 @@ static void DeleteAllClasses(EvalContext *ctx, const Rlist *list)
 {
     for (const Rlist *rp = list; rp != NULL; rp = rp->next)
     {
-        if (CheckParseContext((char *) rp->item, CF_IDRANGE) != SYNTAX_TYPE_MATCH_OK)
+        if (CheckParseContext(RlistScalarValue(rp), CF_IDRANGE) != SYNTAX_TYPE_MATCH_OK)
         {
             return; // TODO: interesting course of action, but why is the check there in the first place?
         }
 
-        if (EvalContextHeapContainsHard(ctx, (char *) rp->item))
+        if (EvalContextHeapContainsHard(ctx, RlistScalarValue(rp)))
         {
             Log(LOG_LEVEL_ERR, "You cannot cancel a reserved hard class '%s' in post-condition classes",
                   RlistScalarValue(rp));
         }
 
-        const char *string = (char *) (rp->item);
+        const char *string = RlistScalarValue(rp);
 
         Log(LOG_LEVEL_VERBOSE, "Cancelling class '%s'", string);
 

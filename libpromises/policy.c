@@ -1429,7 +1429,7 @@ static JsonElement *AttributeValueToJson(Rval rval, bool symbolic_reference)
 
             for (rp = (Rlist *) rval.item; rp != NULL; rp = rp->next)
             {
-                JsonArrayAppendObject(list, AttributeValueToJson((Rval) {rp->item, rp->type}, false));
+                JsonArrayAppendObject(list, AttributeValueToJson(rp->val, false));
             }
 
             JsonObjectAppendArray(json_attribute, "value", list);
@@ -1449,7 +1449,7 @@ static JsonElement *AttributeValueToJson(Rval rval, bool symbolic_reference)
 
                 for (argp = call->args; argp != NULL; argp = argp->next)
                 {
-                    JsonArrayAppendObject(arguments, AttributeValueToJson((Rval) {argp->item, argp->type}, false));
+                    JsonArrayAppendObject(arguments, AttributeValueToJson(argp->val, false));
                 }
 
                 JsonObjectAppendArray(json_attribute, "arguments", arguments);
@@ -1608,7 +1608,7 @@ static JsonElement *BundleToJson(const Bundle *bundle)
 
         for (argp = bundle->args; argp != NULL; argp = argp->next)
         {
-            JsonArrayAppendString(json_args, argp->item);
+            JsonArrayAppendString(json_args, RlistScalarValue(argp));
         }
 
         JsonObjectAppendArray(json_bundle, "arguments", json_args);
@@ -1657,7 +1657,7 @@ static JsonElement *BodyToJson(const Body *body)
 
         for (argp = body->args; argp != NULL; argp = argp->next)
         {
-            JsonArrayAppendString(json_args, argp->item);
+            JsonArrayAppendString(json_args, RlistScalarValue(argp));
         }
 
         JsonObjectAppendArray(json_body, "arguments", json_args);
@@ -1745,7 +1745,7 @@ static void ArgumentsToString(Writer *writer, Rlist *args)
     WriterWriteChar(writer, '(');
     for (argp = args; argp != NULL; argp = argp->next)
     {
-        WriterWriteF(writer, "%s", (char *) argp->item);
+        WriterWriteF(writer, "%s", RlistScalarValue(argp));
 
         if (argp->next != NULL)
         {

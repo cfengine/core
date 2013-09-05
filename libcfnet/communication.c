@@ -86,7 +86,7 @@ int IsIPV6Address(char *name)
     }
     IPAddress *ip_address = NULL;
     bool is_ip = false;
-    is_ip = IPAddress_IsIPAddress(buffer, &ip_address);
+    is_ip = IPAddressIsIPAddress(buffer, &ip_address);
     if (!is_ip)
     {
         BufferDestroy(&buffer);
@@ -118,7 +118,7 @@ int IsIPV4Address(char *name)
     }
     IPAddress *ip_address = NULL;
     bool is_ip = false;
-    is_ip = IPAddress_IsIPAddress(buffer, &ip_address);
+    is_ip = IPAddressIsIPAddress(buffer, &ip_address);
     if (!is_ip)
     {
         BufferDestroy(&buffer);

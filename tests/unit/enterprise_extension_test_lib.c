@@ -1,7 +1,7 @@
 #include <stdint.h>
 
 // Pretend we are an extension.
-#define BUILDING_CORE_EXTENSION
+#define BUILDING_ENTERPRISE_EXTENSION
 #include <enterprise_extension.h>
 #include <config.h>
 

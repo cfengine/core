@@ -148,7 +148,7 @@ int main()
 
 /* stubs */
 
-int ReceiveCollectCall(struct ServerConnectionState *conn)
+int ReceiveCollectCall(ServerConnectionState *conn)
 {
     return false;
 }

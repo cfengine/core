@@ -1,0 +1,72 @@
+/*
+   Copyright (C) CFEngine AS
+
+   This file is part of CFEngine 3 - written and maintained by CFEngine AS.
+
+   This program is free software; you can redistribute it and/or modify it
+   under the terms of the GNU General Public License as published by the
+   Free Software Foundation; version 3.
+
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
+
+  To the extent this program is licensed as part of the Enterprise
+  versions of CFEngine, the applicable Commerical Open Source License
+  (COSL) may apply to this file if you as a licensee so wish it. See
+  included file COSL.txt.
+*/
+
+BEGIN_MARKER // Do not include this file directly! Build process should replace XextensionX occurrences.
+
+#include <XextensionX_extension.h>
+
+#include <logging.h>
+
+#include <pthread.h>
+
+#ifndef xEXTENSIONx_BUILTIN_EXTENSIONS
+
+static pthread_once_t XextensionX_library_once = PTHREAD_ONCE_INIT;
+static void *XextensionX_library_handle = NULL;
+
+static void XextensionX_library_assign();
+
+void *XextensionX_library_open()
+{
+    if (getenv("CFENGINE_TEST_OVERRIDE_EXTENSION_LIBRARY_DO_CLOSE") != NULL)
+    {
+        return extension_library_open(xEXTENSIONx_LIBRARY_NAME);
+    }
+
+    int ret = pthread_once(&XextensionX_library_once, &XextensionX_library_assign);
+    if (ret != 0)
+    {
+        Log(LOG_LEVEL_ERR, "Could not initialize Extension Library: %s: %s", xEXTENSIONx_LIBRARY_NAME, strerror(ret));
+        return NULL;
+    }
+    return XextensionX_library_handle;
+}
+
+static void XextensionX_library_assign()
+{
+    XextensionX_library_handle = extension_library_open(xEXTENSIONx_LIBRARY_NAME);
+}
+
+void XextensionX_library_close(void *handle)
+{
+    if (getenv("CFENGINE_TEST_OVERRIDE_EXTENSION_LIBRARY_DO_CLOSE") != NULL)
+    {
+        return extension_library_close(handle);
+    }
+
+    // Normally we don't ever close the extension library, because we may have
+    // pointer references to it.
+}
+
+#endif // xEXTENSIONx_BUILTIN_EXTENSIONS

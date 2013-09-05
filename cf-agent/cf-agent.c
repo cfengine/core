@@ -468,7 +468,7 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             break;
 
         case 'E':
-            enterprise_library_disable();
+            extension_libraries_disable();
             break;
 
         default:

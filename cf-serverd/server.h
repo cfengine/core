@@ -85,7 +85,7 @@ typedef struct
  *               the "trustkeysfrom" option in body server control. Default
  *               false, check for setting it is in CheckStoreKey().
  */
-typedef struct ServerConnectionState
+struct ServerConnectionState_
 {
     EvalContext *ctx;
     ConnectionInfo conn_info;
@@ -106,7 +106,7 @@ typedef struct ServerConnectionState
     int maproot;
     unsigned char *session_key;
     char encryption_type;
-} ServerConnectionState;
+};
 
 typedef struct
 {

@@ -193,7 +193,7 @@ ENTERPRISE_FUNC_8ARG_DEFINE_STUB(void *, CfRegLDAP, EvalContext *, ctx, char *, 
     return NULL;
 }
 
-ENTERPRISE_FUNC_4ARG_DEFINE_STUB(bool, CFDB_HostsWithClass, EvalContext *, ctx, Rlist **, return_list, char *, class_name, char *, return_format)
+ENTERPRISE_FUNC_4ARG_DEFINE_STUB(bool, ListHostsWithClass, EvalContext *, ctx, Rlist **, return_list, char *, class_name, char *, return_format)
 {
     Log(LOG_LEVEL_ERR, "Host class counting is only available in CFEngine Enterprise");
     return false;

@@ -111,7 +111,7 @@ csv_writer_test_LDADD = libtest.la libstr.la
 
 conversion_test_SOURCES = conversion_test.c ../../libpromises/conversion.c
 
-if !BUILTIN_EXTENSIONS
+if !ENTERPRISE_BUILTIN_EXTENSIONS
     check_PROGRAMS += enterprise_extension_test
 
     enterprise_extension_test_SOURCES = enterprise_extension_test.c

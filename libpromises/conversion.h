@@ -73,6 +73,7 @@ const char *MapAddress(const char *addr);
 const char *CommandArg0(const char *execstr);
 void CommandPrefix(char *execstr, char *comm);
 const char *DataTypeShortToType(char *short_type);
+int CoarseLaterThan(const char *key, const char *from);
 int FindTypeInArray(const char **haystack, const char *needle, int default_value, int null_value);
 
 UidList *Rlist2UidList(Rlist *uidnames, const Promise *pp);

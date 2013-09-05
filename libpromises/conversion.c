@@ -806,6 +806,36 @@ const char *DataTypeShortToType(char *short_type)
     return "unknown type";
 }
 
+int CoarseLaterThan(const char *bigger, const char *smaller)
+{
+    char month_small[CF_SMALLBUF];
+    char month_big[CF_SMALLBUF];
+    int m_small, day_small, year_small, m_big, year_big, day_big;
+
+    sscanf(smaller, "%d %s %d", &day_small, month_small, &year_small);
+    sscanf(bigger, "%d %s %d", &day_big, month_big, &year_big);
+
+    if (year_big < year_small)
+    {
+        return false;
+    }
+
+    m_small = Month2Int(month_small);
+    m_big = Month2Int(month_big);
+
+    if (m_big < m_small)
+    {
+        return false;
+    }
+
+    if (day_big < day_small && m_big == m_small && year_big == year_small)
+    {
+        return false;
+    }
+
+    return true;
+}
+
 int Month2Int(const char *string)
 {
     int i;

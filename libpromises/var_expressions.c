@@ -155,7 +155,7 @@ VarRef *VarRefCopyIndexless(const VarRef *ref)
 }
 
 
-#ifndef NDEBUG
+
 static bool IndexBracketsBalance(const char *var_string)
 {
     int count = 0;
@@ -173,7 +173,7 @@ static bool IndexBracketsBalance(const char *var_string)
 
     return count == 0;
 }
-#endif
+
 
 static size_t IndexCount(const char *var_string)
 {

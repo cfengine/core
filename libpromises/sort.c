@@ -213,17 +213,35 @@ static bool RlistItemLess(void *lhs, void *rhs, ARG_UNUSED void *ctx)
     return strcmp(((Rlist*)lhs)->item, ((Rlist*)rhs)->item) < 0;
 }
 
-static bool RlistItemIntLess(void *lhs, void *rhs, ARG_UNUSED void *ctx)
+static bool RlistItemNumberLess(void *lhs, void *rhs, ARG_UNUSED void *ctx, bool int_mode)
 {
     char remainder[CF_BUFSIZE];
-    long left;
-    long right;
-    int matched_left = sscanf(((Rlist*)lhs)->item, "%ld%s", &left, remainder);
-    int matched_right = sscanf(((Rlist*)rhs)->item, "%ld%s", &right, remainder);
+    double left;
+    double right;
+
+    int matched_left = sscanf(((Rlist*)lhs)->item, "%lf", &left);
+    int matched_right = sscanf(((Rlist*)rhs)->item, "%lf", &right);
+
+    if (!matched_left)
+    {
+        matched_left = sscanf(((Rlist*)lhs)->item, "%lf%s", &left, remainder);
+    }
+
+    if (!matched_right)
+    {
+        matched_right = sscanf(((Rlist*)rhs)->item, "%lf%s", &right, remainder);
+    }
 
     if (matched_left && matched_right)
     {
-        return left - right < 0;
+        if (int_mode)
+        {
+            return ((long int)left) - ((long int)right) < 0;
+        }
+        else
+        {
+            return left - right < 0;
+        }
     }
 
     if (matched_left)
@@ -240,21 +258,14 @@ static bool RlistItemIntLess(void *lhs, void *rhs, ARG_UNUSED void *ctx)
     return RlistItemLess(lhs, rhs, ctx);
 }
 
+static bool RlistItemIntLess(void *lhs, void *rhs, ARG_UNUSED void *ctx)
+{
+    return RlistItemNumberLess(lhs, rhs, ctx, true);
+}
+
 static bool RlistItemRealLess(void *lhs, void *rhs, ARG_UNUSED void *ctx)
 {
-    char remainder[CF_BUFSIZE];
-    double left;
-    double right;
-    int matched_left = sscanf(((Rlist*)lhs)->item, "%lf%s", &left, remainder);
-    int matched_right = sscanf(((Rlist*)rhs)->item, "%lf%s", &right, remainder);
-
-    if (matched_left && matched_right)
-    {
-        return left - right < 0;
-    }
-
-    // drop back to integer comparison if either number could not be parsed as a double
-    return RlistItemIntLess(lhs, rhs, ctx);
+    return RlistItemNumberLess(lhs, rhs, ctx, false);
 }
 
 static bool RlistItemIPLess(void *lhs, void *rhs, ARG_UNUSED void *ctx)

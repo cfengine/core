@@ -24,12 +24,11 @@
 
 #include <enterprise_extension.h>
 
-#ifndef BUILTIN_EXTENSIONS
+#ifndef ENTERPRISE_BUILTIN_EXTENSIONS
 
 #include <sysinfo.h>
 #include <misc_lib.h>
 
-#include <dlfcn.h>
 #include <pthread.h>
 
 /*
@@ -164,42 +163,15 @@ void enterprise_library_close(void *handle)
         return shlib_close(handle);
     }
 
-    // Normally we don't ever close the enterprise library, because we may have
+    // Normally we don't ever close the extension library, because we may have
     // pointer references to it.
 }
 
-void *shlib_open(const char *lib_name)
-{
-    struct stat statbuf;
-    if (stat(lib_name, &statbuf) == -1)
-    {
-        Log(LOG_LEVEL_DEBUG, "Could not open shared library: %s\n", GetErrorStr());
-        return NULL;
-    }
-
-    void * ret = dlopen(lib_name, RTLD_NOW);
-    if (!ret)
-    {
-        Log(LOG_LEVEL_ERR, "Could not open shared library: %s\n", dlerror());
-    }
-    return ret;
-}
-
-void *shlib_load(void *handle, const char *symbol_name)
-{
-    return dlsym(handle, symbol_name);
-}
-
-void shlib_close(void *handle)
-{
-    dlclose(handle);
-}
-
-#else // BUILTIN_EXTENSIONS
+#else // ENTERPRISE_BUILTIN_EXTENSIONS
 
 // Has no effect when using builtin extensions.
 void enterprise_library_disable()
 {
 }
 
-#endif // BUILTIN_EXTENSIONS
+#endif // ENTERPRISE_BUILTIN_EXTENSIONS

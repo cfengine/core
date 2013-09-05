@@ -16,7 +16,7 @@ libcf_key_la_SOURCES = \
 
 libcf_key_la_LIBADD = ../libpromises/libpromises.la
 
-if !BUILTIN_EXTENSIONS
+if !ENTERPRISE_BUILTIN_EXTENSIONS
  sbin_PROGRAMS = cf-key
  cf_key_LDADD = libcf-key.la
  cf_key_SOURCES =

@@ -1673,5 +1673,7 @@ extern const ConstraintSyntax CF_CLASSBODY[];
 extern const ConstraintSyntax CFA_CONTROLBODY[];
 extern const ConstraintSyntax CFEX_CONTROLBODY[];
 
+typedef struct ServerConnectionState_ ServerConnectionState;
+
 #endif
 

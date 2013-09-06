@@ -16,7 +16,7 @@ libcf_execd_la_SOURCES = \
         cf-execd-runner.c cf-execd-runner.h \
         exec-config.c exec-config.h
 
-if !ENTERPRISE_BUILTIN_EXTENSIONS
+if !BUILTIN_EXTENSIONS
  sbin_PROGRAMS = cf-execd
  # Workaround for automake madness (try removing it if you want to know why).
  cf_execd_CFLAGS = $(AM_CFLAGS)

@@ -18,7 +18,7 @@ libcf_serverd_la_SOURCES = \
 	server_transform.c server_transform.h \
 	server_tls.c server_tls.h
 
-if !ENTERPRISE_BUILTIN_EXTENSIONS
+if !BUILTIN_EXTENSIONS
  sbin_PROGRAMS = cf-serverd
  # Workaround for automake madness (try removing it if you want to know why).
  cf_serverd_CFLAGS = $(AM_CFLAGS)

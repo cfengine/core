@@ -55,6 +55,8 @@
  * - The exception is for testing (see getenv below).
  */
 
+#ifndef BUILTIN_EXTENSIONS
+
 static bool enable_extension_libraries = true;
 static bool attempted_loading = false;
 
@@ -139,3 +141,5 @@ void extension_library_close(void *handle)
 {
     shlib_close(handle);
 }
+
+#endif // !BUILTIN_EXTENSIONS

@@ -24,6 +24,17 @@
 
 #include <shared_lib.h>
 
+#ifdef BUILTIN_EXTENSIONS
+
+// No effect if using builtin extensions.
+static inline void extension_libraries_disable()
+{
+}
+
+#else // !BUILTIN_EXTENSIONS
+
 void extension_libraries_disable();
 void *extension_library_open(const char *name);
 void extension_library_close(void *handle);
+
+#endif // !BUILTIN_EXTENSIONS

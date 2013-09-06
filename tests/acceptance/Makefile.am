@@ -2,12 +2,12 @@ AM_CFLAGS = $(ENTERPRISE_CFLAGS) -I$(top_srcdir)/libpromises -I$(srcdir)/../../l
 
 noinst_PROGRAMS =
 
-if !ENTERPRISE_BUILTIN_EXTENSIONS
+if !BUILTIN_EXTENSIONS
 noinst_PROGRAMS += mock-package-manager
 
 mock_package_manager_SOURCES = mock-package-manager.c
 mock_package_manager_LDADD = ../../libpromises/libpromises.la
-endif # !ENTERPRISE_BUILTIN_EXTENSIONS
+endif # !BUILTIN_EXTENSIONS
 
 if HAVE_LIBXML2
 noinst_PROGRAMS += xml-c14nize

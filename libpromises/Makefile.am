@@ -1,4 +1,4 @@
-if !ENTERPRISE_BUILTIN_EXTENSIONS
+if !BUILTIN_EXTENSIONS
  projlib_LTLIBRARIES = libpromises.la
  libpromises_la_LDFLAGS = -version-info 3:5:0 -no-undefined
 else

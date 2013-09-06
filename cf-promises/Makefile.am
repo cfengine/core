@@ -10,7 +10,7 @@ libcf_promises_la_LIBADD = ../libpromises/libpromises.la
 
 libcf_promises_la_SOURCES = cf-promises.c
 
-if !ENTERPRISE_BUILTIN_EXTENSIONS
+if !BUILTIN_EXTENSIONS
  sbin_PROGRAMS = cf-promises
  cf_promises_LDADD = libcf-promises.la
  cf_promises_SOURCES =

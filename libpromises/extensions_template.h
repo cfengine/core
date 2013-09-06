@@ -95,7 +95,7 @@ BEGIN_MARKER // Do not include this file directly! Build process should replace 
 
 #include <logging.h>
 
-#ifndef xEXTENSIONx_BUILTIN_EXTENSIONS
+#ifndef BUILTIN_EXTENSIONS
 
 #define xEXTENSIONx_CANARY_VALUE 0x10203040
 #define xEXTENSIONx_LIBRARY_NAME "cfengine-XextensionX.so"
@@ -1163,9 +1163,9 @@ void XextensionX_library_close(void *handle);
 #endif // BUILDING_xEXTENSIONx_EXTENSION
 
 
-#else // xEXTENSIONx_BUILTIN_EXTENSIONS
+#else // BUILTIN_EXTENSIONS
 // In this case just map to real function calls.
-// xEXTENSIONx_BUILTIN_EXTENSIONS is for Windows binaries and debugging.
+// BUILTIN_EXTENSIONS is for Windows binaries and debugging.
 
 # define xEXTENSIONx_FUNC_0ARG_STUB_SIGNATURE(__ret, __func) \
     __ret __func##__stub()
@@ -1432,6 +1432,6 @@ void XextensionX_library_close(void *handle);
 #define xEXTENSIONx_VOID_FUNC_15ARG_DEFINE_STUB(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13, __t14, __p14, __t15, __p15) \
     xEXTENSIONx_FUNC_15ARG_STUB_SIGNATURE(__ret, __func, __t1, __p1, __t2, __p2, __t3, __p3, __t4, __p4, __t5, __p5, __t6, __p6, __t7, __p7, __t8, __p8, __t9, __p9, __t10, __p10, __t11, __p11, __t12, __p12, __t13, __p13, __t14, __p14, __t15, __p15)
 
-#endif // xEXTENSIONx_BUILTIN_EXTENSIONS
+#endif // BUILTIN_EXTENSIONS
 
 #endif // xEXTENSIONx_EXTENSION_H

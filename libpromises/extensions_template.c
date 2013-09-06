@@ -30,7 +30,7 @@ BEGIN_MARKER // Do not include this file directly! Build process should replace 
 
 #include <pthread.h>
 
-#ifndef xEXTENSIONx_BUILTIN_EXTENSIONS
+#ifndef BUILTIN_EXTENSIONS
 
 static pthread_once_t XextensionX_library_once = PTHREAD_ONCE_INIT;
 static void *XextensionX_library_handle = NULL;
@@ -69,4 +69,4 @@ void XextensionX_library_close(void *handle)
     // pointer references to it.
 }
 
-#endif // xEXTENSIONx_BUILTIN_EXTENSIONS
+#endif // BUILTIN_EXTENSIONS

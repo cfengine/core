@@ -21,6 +21,8 @@ void VariableDestroy(Variable *var)
     {
         VarRefDestroy(var->ref);
         RvalDestroy(var->rval);
+        StringSetDestroy(var->tags);
+
         free(var);
     }
 }
@@ -61,6 +63,7 @@ static Variable *VariableNew(VarRef *ref, Rval rval, DataType type)
     var->ref = ref;
     var->rval = rval;
     var->type = type;
+    var->tags = NULL;
 
     return var;
 }

@@ -10,6 +10,7 @@ typedef struct
     VarRef *ref;
     Rval rval;
     DataType type;
+    StringSet *tags;
 } Variable;
 
 typedef struct VariableTable_ VariableTable;

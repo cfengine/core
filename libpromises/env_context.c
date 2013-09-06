@@ -1463,16 +1463,15 @@ bool EvalContextVariablePut(EvalContext *ctx, const VarRef *ref, Rval rval, Data
     return true;
 }
 
-bool EvalContextVariableGet(const EvalContext *ctx, const VarRef *ref, Rval *rval_out, DataType *type_out)
+static Variable *VariableResolve(const EvalContext *ctx, const VarRef *ref)
 {
-    assert(ref);
     assert(ref->lval);
 
     if (!VarRefIsQualified(ref))
     {
         VarRef *qref = VarRefCopy(ref);
         VarRefStackQualify(ctx, qref);
-        bool ret = EvalContextVariableGet(ctx, qref, rval_out, type_out);
+        Variable *ret = VariableResolve(ctx, qref);
         VarRefDestroy(qref);
         return ret;
     }
@@ -1483,6 +1482,48 @@ bool EvalContextVariableGet(const EvalContext *ctx, const VarRef *ref, Rval *rva
         Variable *var = VariableTableGet(table, ref);
         if (var)
         {
+            return var;
+        }
+        else if (ref->num_indices > 0)
+        {
+            VarRef *base_ref = VarRefCopyIndexless(ref);
+            var = VariableTableGet(table, base_ref);
+            VarRefDestroy(base_ref);
+
+            if (var && var->type == DATA_TYPE_CONTAINER)
+            {
+                return var;
+            }
+        }
+    }
+
+    return NULL;
+}
+
+bool EvalContextVariableGet(const EvalContext *ctx, const VarRef *ref, Rval *rval_out, DataType *type_out)
+{
+    Variable *var = VariableResolve(ctx, ref);
+    if (var)
+    {
+        if (var->ref->num_indices == 0 && ref->num_indices > 0 && var->type == DATA_TYPE_CONTAINER)
+        {
+            JsonElement *child = JsonSelect(RvalContainerValue(var->rval), ref->num_indices, ref->indices);
+            if (child)
+            {
+                if (rval_out)
+                {
+                    rval_out->item = child;
+                    rval_out->type = RVAL_TYPE_CONTAINER;
+                }
+                if (type_out)
+                {
+                    *type_out = DATA_TYPE_CONTAINER;
+                }
+                return true;
+            }
+        }
+        else
+        {
             if (rval_out)
             {
                 *rval_out = var->rval;
@@ -1492,33 +1533,6 @@ bool EvalContextVariableGet(const EvalContext *ctx, const VarRef *ref, Rval *rva
                 *type_out = var->type;
             }
             return true;
-        }
-        else if (ref->num_indices)
-        {
-            VarRef *base_ref = VarRefCopyIndexless(ref);
-
-            DataType type = DATA_TYPE_NONE;
-            Rval rval;
-            if (EvalContextVariableGet(ctx, base_ref, &rval, &type) && type == DATA_TYPE_CONTAINER)
-            {
-                JsonElement *child = JsonSelect(RvalContainerValue(rval), ref->num_indices, ref->indices);
-                if (child)
-                {
-                    if (rval_out)
-                    {
-                        rval_out->item = child;
-                        rval_out->type = RVAL_TYPE_CONTAINER;
-                    }
-                    if (type_out)
-                    {
-                        *type_out = DATA_TYPE_CONTAINER;
-                    }
-                    VarRefDestroy(base_ref);
-                    return true;
-                }
-            }
-
-            VarRefDestroy(base_ref);
         }
     }
 
@@ -1531,6 +1545,22 @@ bool EvalContextVariableGet(const EvalContext *ctx, const VarRef *ref, Rval *rva
         *type_out = DATA_TYPE_NONE;
     }
     return false;
+}
+
+StringSet *EvalContextVariableTags(const EvalContext *ctx, const VarRef *ref)
+{
+    Variable *var = VariableResolve(ctx, ref);
+    if (!var)
+    {
+        return NULL;
+    }
+
+    if (!var->tags)
+    {
+        var->tags = StringSetNew();
+    }
+
+    return var->tags;
 }
 
 bool EvalContextVariableClearMatch(EvalContext *ctx)

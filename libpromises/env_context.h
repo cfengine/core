@@ -48,7 +48,6 @@ typedef struct
     const Bundle *owner;
 
     StringSet *contexts;
-    StringSet *contexts_negated;
 
     VariableTable *vars;
 } StackFrameBundle;
@@ -94,7 +93,6 @@ struct EvalContext_
 {
     StringSet *heap_soft;
     StringSet *heap_hard;
-    StringSet *heap_negated;
     Item *heap_abort;
     Item *heap_abort_current_bundle;
 
@@ -113,11 +111,9 @@ void EvalContextDestroy(EvalContext *ctx);
 
 void EvalContextHeapAddSoft(EvalContext *ctx, const char *context, const char *ns);
 void EvalContextHeapAddHard(EvalContext *ctx, const char *context);
-void EvalContextHeapAddNegated(EvalContext *ctx, const char *context);
 void EvalContextHeapAddAbort(EvalContext *ctx, const char *context, const char *activated_on_context);
 void EvalContextHeapAddAbortCurrentBundle(EvalContext *ctx, const char *context, const char *activated_on_context);
 void EvalContextStackFrameAddSoft(EvalContext *ctx, const char *context);
-void EvalContextStackFrameAddNegated(EvalContext *ctx, const char *context);
 
 void EvalContextHeapPersistentSave(const char *context, const char *ns, unsigned int ttl_minutes, ContextStatePolicy policy);
 void EvalContextHeapPersistentRemove(const char *context);
@@ -125,7 +121,6 @@ void EvalContextHeapPersistentLoadAll(EvalContext *ctx);
 
 bool EvalContextHeapContainsSoft(const EvalContext *ctx, const char *context);
 bool EvalContextHeapContainsHard(const EvalContext *ctx, const char *context);
-bool EvalContextHeapContainsNegated(const EvalContext *ctx, const char *context);
 bool EvalContextStackFrameContainsSoft(const EvalContext *ctx, const char *context);
 
 bool EvalContextHeapRemoveSoft(EvalContext *ctx, const char *context);
@@ -144,7 +139,6 @@ StringSet* EvalContextStackFrameAddMatchingSoft(const EvalContext *ctx, StringSe
 
 StringSetIterator EvalContextHeapIteratorSoft(const EvalContext *ctx);
 StringSetIterator EvalContextHeapIteratorHard(const EvalContext *ctx);
-StringSetIterator EvalContextHeapIteratorNegated(const EvalContext *ctx);
 StringSetIterator EvalContextStackFrameIteratorSoft(const EvalContext *ctx);
 
 void EvalContextStackPushBundleFrame(EvalContext *ctx, const Bundle *owner, const Rlist *args, bool inherits_previous);

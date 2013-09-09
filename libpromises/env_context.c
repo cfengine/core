@@ -43,9 +43,6 @@
 #include <buffer.h>
 #include <promises.h>
 
-
-static bool EvalContextStackFrameContainsNegated(const EvalContext *ctx, const char *context);
-
 static bool ABORTBUNDLE = false;
 
 static StackFrame *LastStackFrame(const EvalContext *ctx, size_t offset)
@@ -301,14 +298,6 @@ static ExpressionValue EvalTokenAsClass(const char *classname, void *param)
         snprintf(qualified_class, CF_MAXVARSIZE, "%s", classname);
     }
 
-    if (EvalContextHeapContainsNegated(ctx, qualified_class))
-    {
-        return false;
-    }
-    if (EvalContextStackFrameContainsNegated(ctx, qualified_class))
-    {
-        return false;
-    }
     if (EvalContextHeapContainsHard(ctx, classname))  // Hard classes are always unqualified
     {
         return true;
@@ -675,7 +664,6 @@ int MissingDependencies(EvalContext *ctx, const Promise *pp)
 static void StackFrameBundleDestroy(StackFrameBundle frame)
 {
     StringSetDestroy(frame.contexts);
-    StringSetDestroy(frame.contexts_negated);
 
     VariableTableDestroy(frame.vars);
 }
@@ -743,7 +731,6 @@ EvalContext *EvalContextNew(void)
 
     ctx->heap_soft = StringSetNew();
     ctx->heap_hard = StringSetNew();
-    ctx->heap_negated = StringSetNew();
     ctx->heap_abort = NULL;
     ctx->heap_abort_current_bundle = NULL;
 
@@ -765,7 +752,6 @@ void EvalContextDestroy(EvalContext *ctx)
     {
         StringSetDestroy(ctx->heap_soft);
         StringSetDestroy(ctx->heap_hard);
-        StringSetDestroy(ctx->heap_negated);
         DeleteItemList(ctx->heap_abort);
         DeleteItemList(ctx->heap_abort_current_bundle);
 
@@ -782,19 +768,6 @@ void EvalContextDestroy(EvalContext *ctx)
     }
 }
 
-void EvalContextHeapAddNegated(EvalContext *ctx, const char *context)
-{
-    StringSetAdd(ctx->heap_negated, xstrdup(context));
-}
-
-void EvalContextStackFrameAddNegated(EvalContext *ctx, const char *context)
-{
-    StackFrame *frame = LastStackFrameByType(ctx, STACK_FRAME_TYPE_BUNDLE);
-    assert(frame);
-
-    StringSetAdd(frame->data.bundle.contexts_negated, xstrdup(context));
-}
-
 bool EvalContextHeapContainsSoft(const EvalContext *ctx, const char *context)
 {
     return StringSetContains(ctx->heap_soft, context);
@@ -803,11 +776,6 @@ bool EvalContextHeapContainsSoft(const EvalContext *ctx, const char *context)
 bool EvalContextHeapContainsHard(const EvalContext *ctx, const char *context)
 {
     return StringSetContains(ctx->heap_hard, context);
-}
-
-bool EvalContextHeapContainsNegated(const EvalContext *ctx, const char *context)
-{
-    return StringSetContains(ctx->heap_negated, context);
 }
 
 bool StackFrameContainsSoftRecursive(const EvalContext *ctx, const char *context, size_t stack_index)
@@ -838,34 +806,6 @@ bool EvalContextStackFrameContainsSoft(const EvalContext *ctx, const char *conte
     return StackFrameContainsSoftRecursive(ctx, context, stack_index);
 }
 
-bool StackFrameContainsNegatedRecursive(const EvalContext *ctx, const char *context, size_t stack_index)
-{
-    StackFrame *frame = SeqAt(ctx->stack, stack_index);
-    if (frame->type == STACK_FRAME_TYPE_BUNDLE && StringSetContains(frame->data.bundle.contexts_negated, context))
-    {
-        return true;
-    }
-    else if (stack_index > 0 && frame->inherits_previous)
-    {
-        return StackFrameContainsNegatedRecursive(ctx, context, stack_index - 1);
-    }
-    else
-    {
-        return false;
-    }
-}
-
-static bool EvalContextStackFrameContainsNegated(const EvalContext *ctx, const char *context)
-{
-    if (SeqLength(ctx->stack) == 0)
-    {
-        return false;
-    }
-
-    size_t stack_index = SeqLength(ctx->stack) - 1;
-    return StackFrameContainsNegatedRecursive(ctx, context, stack_index);
-}
-
 bool EvalContextHeapRemoveSoft(EvalContext *ctx, const char *context)
 {
     return StringSetRemove(ctx->heap_soft, context);
@@ -880,7 +820,6 @@ void EvalContextClear(EvalContext *ctx)
 {
     StringSetClear(ctx->heap_soft);
     StringSetClear(ctx->heap_hard);
-    StringSetClear(ctx->heap_negated);
 
     VariableTableClear(ctx->global_variables, NULL, NULL, NULL);
     VariableTableClear(ctx->match_variables, NULL, NULL, NULL);
@@ -973,11 +912,6 @@ StringSetIterator EvalContextHeapIteratorHard(const EvalContext *ctx)
     return StringSetIteratorInit(ctx->heap_hard);
 }
 
-StringSetIterator EvalContextHeapIteratorNegated(const EvalContext *ctx)
-{
-    return StringSetIteratorInit(ctx->heap_negated);
-}
-
 static StackFrame *StackFrameNew(StackFrameType type, bool inherit_previous)
 {
     StackFrame *frame = xmalloc(sizeof(StackFrame));
@@ -994,7 +928,6 @@ static StackFrame *StackFrameNewBundle(const Bundle *owner, bool inherit_previou
 
     frame->data.bundle.owner = owner;
     frame->data.bundle.contexts = StringSetNew();
-    frame->data.bundle.contexts_negated = StringSetNew();
     frame->data.bundle.vars = VariableTableNew();
 
     return frame;
@@ -1709,8 +1642,7 @@ static void DeleteAllClasses(EvalContext *ctx, const Rlist *list)
         EvalContextHeapPersistentRemove(string);
 
         EvalContextHeapRemoveSoft(ctx, CanonifyName(string));
-
-        EvalContextStackFrameAddNegated(ctx, CanonifyName(string));
+        EvalContextStackFrameRemoveSoft(ctx, CanonifyName(string));
     }
 }
 

@@ -398,10 +398,7 @@ static void ShowContext(EvalContext *ctx)
         char *context = NULL;
         while ((context = SetIteratorNext(&it)))
         {
-            if (!EvalContextHeapContainsNegated(ctx, context))
-            {
-                SeqAppend(hard_contexts, context);
-            }
+            SeqAppend(hard_contexts, context);
         }
 
         SeqSort(hard_contexts, (SeqItemComparator)strcmp, NULL);
@@ -446,10 +443,7 @@ static void ShowContext(EvalContext *ctx)
         char *context = NULL;
         while ((context = SetIteratorNext(&it)))
         {
-            if (!EvalContextHeapContainsNegated(ctx, context))
-            {
-                SeqAppend(soft_contexts, context);
-            }
+            SeqAppend(soft_contexts, context);
         }
 
         SeqSort(soft_contexts, (SeqItemComparator)strcmp, NULL);
@@ -474,43 +468,6 @@ static void ShowContext(EvalContext *ctx)
             WriterClose(w);
         }
         SeqDestroy(soft_contexts);
-    }
-
-    {
-        bool have_negated_classes = false;
-        Writer *w = NULL;
-        if (LEGACY_OUTPUT)
-        {
-            w = FileWriter(stdout);
-            WriterWriteF(w, "%s>  -> Negated classes = {", VPREFIX);
-        }
-        else
-        {
-            w = StringWriter();
-            WriterWrite(w, "Negated classes:");
-        }
-
-        StringSetIterator it = EvalContextHeapIteratorNegated(ctx);
-        const char *context = NULL;
-        while ((context = StringSetIteratorNext(&it)))
-        {
-            WriterWriteF(w, " %s", context);
-            have_negated_classes = true;
-        }
-
-        if (LEGACY_OUTPUT)
-        {
-            WriterWrite(w, "}\n");
-            FileWriterDetach(w);
-        }
-        else
-        {
-            if (have_negated_classes)
-            {
-                Log(LOG_LEVEL_VERBOSE, "%s", StringWriterData(w));
-            }
-            WriterClose(w);
-        }
     }
 }
 
@@ -1563,21 +1520,6 @@ void GenericAgentConfigApply(EvalContext *ctx, const GenericAgentConfig *config)
             }
 
             EvalContextHeapAddSoft(ctx, context, NULL);
-        }
-    }
-
-    if (config->heap_negated)
-    {
-        StringSetIterator it = StringSetIteratorInit(config->heap_negated);
-        const char *context = NULL;
-        while ((context = StringSetIteratorNext(&it)))
-        {
-            if (EvalContextHeapContainsHard(ctx, context))
-            {
-                FatalError(ctx, "Cannot negate the reserved class [%s]\n", context);
-            }
-
-            EvalContextHeapAddNegated(ctx, context);
         }
     }
 

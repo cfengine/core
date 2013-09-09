@@ -1157,19 +1157,13 @@ static void SaveClassEnvironment(const EvalContext *ctx, Writer *writer)
     const char *context;
     while ((context = SetIteratorNext(&it)))
     {
-        if (!EvalContextHeapContainsNegated(ctx, context))
-        {
-            WriterWriteF(writer, "%s\n", context);
-        }
+
     }
 
     it = EvalContextHeapIteratorSoft(ctx);
     while ((context = SetIteratorNext(&it)))
     {
-        if (!EvalContextHeapContainsNegated(ctx, context))
-        {
-            WriterWriteF(writer, "%s\n", context);
-        }
+        WriterWriteF(writer, "%s\n", context);
     }
 }
 
@@ -1641,42 +1635,6 @@ static void ClassBanner(EvalContext *ctx, TypeSequence type)
 
         WriterWrite(w, "Private classes augmented:");
         StringSetIterator it = EvalContextStackFrameIteratorSoft(ctx);
-        const char *context = NULL;
-        while ((context = StringSetIteratorNext(&it)))
-        {
-            WriterWriteChar(w, ' ');
-            WriterWrite(w, context);
-            have_classes = true;
-        }
-
-        if (have_classes)
-        {
-            Log(LOG_LEVEL_VERBOSE, "%s", StringWriterData(w));
-        }
-
-        WriterClose(w);
-    }
-
-    if (LEGACY_OUTPUT)
-    {
-        Log(LOG_LEVEL_VERBOSE, "     -  Private classes diminished:");
-
-        {
-            StringSetIterator it = EvalContextHeapIteratorNegated(ctx);
-            const char *context = NULL;
-            while ((context = StringSetIteratorNext(&it)))
-            {
-                Log(LOG_LEVEL_VERBOSE, "     -       %s", context);
-            }
-        }
-    }
-    else
-    {
-        bool have_classes = false;
-        Writer *w = StringWriter();
-
-        WriterWrite(w, "Private classes diminished:");
-        StringSetIterator it = EvalContextHeapIteratorNegated(ctx);
         const char *context = NULL;
         while ((context = StringSetIteratorNext(&it)))
         {

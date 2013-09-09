@@ -5120,7 +5120,8 @@ void ModuleProtocol(EvalContext *ctx, char *command, char *line, int print, cons
                         FatalError(ctx, "Cannot negate the reserved class '%s'", negated_context);
                     }
 
-                    EvalContextHeapAddNegated(ctx, negated_context);
+                    EvalContextHeapRemoveSoft(ctx, negated_context);
+                    EvalContextStackFrameRemoveSoft(ctx, negated_context);
                 }
                 StringSetDestroy(negated);
             }

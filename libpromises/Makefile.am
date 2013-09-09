@@ -29,6 +29,7 @@ libpromises_la_SOURCES = \
         cf3.extern.h \
         cf3globals.c \
         chflags.c chflags.h \
+        class.c class.h \
         classes.c \
         constants.c \
         conversion.c conversion.h \

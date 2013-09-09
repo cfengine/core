@@ -33,6 +33,7 @@
 #include <var_expressions.h>
 #include <scope.h>
 #include <variable.h>
+#include <class.h>
 #include <iteration.h>
 
 typedef enum
@@ -47,8 +48,7 @@ typedef struct
 {
     const Bundle *owner;
 
-    StringSet *contexts;
-
+    ClassTable *classes;
     VariableTable *vars;
 } StackFrameBundle;
 
@@ -91,14 +91,14 @@ TYPED_SET_DECLARE(Promise, const Promise *)
 
 struct EvalContext_
 {
-    StringSet *heap_soft;
-    StringSet *heap_hard;
     Item *heap_abort;
     Item *heap_abort_current_bundle;
 
     Seq *stack;
 
+    ClassTable *global_classes;
     VariableTable *global_variables;
+
     VariableTable *match_variables;
 
     StringSet *dependency_handles;
@@ -113,33 +113,24 @@ void EvalContextHeapAddSoft(EvalContext *ctx, const char *context, const char *n
 void EvalContextHeapAddHard(EvalContext *ctx, const char *context);
 void EvalContextHeapAddAbort(EvalContext *ctx, const char *context, const char *activated_on_context);
 void EvalContextHeapAddAbortCurrentBundle(EvalContext *ctx, const char *context, const char *activated_on_context);
+
 void EvalContextStackFrameAddSoft(EvalContext *ctx, const char *context);
 
 void EvalContextHeapPersistentSave(const char *context, const char *ns, unsigned int ttl_minutes, ContextStatePolicy policy);
 void EvalContextHeapPersistentRemove(const char *context);
 void EvalContextHeapPersistentLoadAll(EvalContext *ctx);
 
-bool EvalContextHeapContainsSoft(const EvalContext *ctx, const char *context);
+bool EvalContextHeapContainsSoft(const EvalContext *ctx, const char *ns, const char *context);
 bool EvalContextHeapContainsHard(const EvalContext *ctx, const char *context);
 bool EvalContextStackFrameContainsSoft(const EvalContext *ctx, const char *context);
 
-bool EvalContextHeapRemoveSoft(EvalContext *ctx, const char *context);
-bool EvalContextHeapRemoveHard(EvalContext *ctx, const char *context);
+bool EvalContextClassRemove(EvalContext *ctx, const char *ns, const char *name);
 void EvalContextStackFrameRemoveSoft(EvalContext *ctx, const char *context);
 
+ClassTableIterator *EvalContextClassTableIteratorNewGlobal(const EvalContext *ctx, const char *ns, bool is_hard, bool is_soft);
+ClassTableIterator *EvalContextClassTableIteratorNewLocal(const EvalContext *ctx);
+
 void EvalContextClear(EvalContext *ctx);
-
-size_t EvalContextHeapMatchCountSoft(const EvalContext *ctx, const char *context_regex);
-size_t EvalContextHeapMatchCountHard(const EvalContext *ctx, const char *context_regex);
-size_t EvalContextStackFrameMatchCountSoft(const EvalContext *ctx, const char *context_regex);
-
-StringSet* EvalContextHeapAddMatchingSoft(const EvalContext *ctx, StringSet* base, const char *context_regex);
-StringSet* EvalContextHeapAddMatchingHard(const EvalContext *ctx, StringSet* base, const char *context_regex);
-StringSet* EvalContextStackFrameAddMatchingSoft(const EvalContext *ctx, StringSet* base, const char *context_regex);
-
-StringSetIterator EvalContextHeapIteratorSoft(const EvalContext *ctx);
-StringSetIterator EvalContextHeapIteratorHard(const EvalContext *ctx);
-StringSetIterator EvalContextStackFrameIteratorSoft(const EvalContext *ctx);
 
 void EvalContextStackPushBundleFrame(EvalContext *ctx, const Bundle *owner, const Rlist *args, bool inherits_previous);
 void EvalContextStackPushBodyFrame(EvalContext *ctx, const Body *owner, Rlist *args);

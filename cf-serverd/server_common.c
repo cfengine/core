@@ -566,18 +566,22 @@ int MatchClasses(EvalContext *ctx, ServerConnectionState *conn)
                 return true;
             }
 
-            if (EvalContextHeapMatchCountSoft(ctx, ip->name) > 0)
             {
-                Log(LOG_LEVEL_DEBUG, "Class matched regular expression '%s', accepting...", ip->name);
-                DeleteItemList(classlist);
-                return true;
-            }
-
-            if (EvalContextHeapMatchCountHard(ctx, ip->name))
-            {
-                Log(LOG_LEVEL_DEBUG, "Class matched regular expression '%s', accepting...", ip->name);
-                DeleteItemList(classlist);
-                return true;
+                ClassTableIterator *iter = EvalContextClassTableIteratorNewGlobal(ctx, NULL, true, true);
+                Class *cls = NULL;
+                while ((cls = ClassTableIteratorNext(iter)))
+                {
+                    char *expr = ClassRefToString(cls->ns, cls->name);
+                    bool match = StringMatchFull(ip->name, expr);
+                    free(expr);
+                    if (match)
+                    {
+                        Log(LOG_LEVEL_DEBUG, "Class matched regular expression '%s', accepting...", ip->name);
+                        DeleteItemList(classlist);
+                        return true;
+                    }
+                }
+                ClassTableIteratorDestroy(iter);
             }
 
             if (strncmp(ip->name, CFD_TERMINATOR, strlen(CFD_TERMINATOR)) == 0)

@@ -181,7 +181,7 @@ static bool IsContextIgnorableForReporting(const char *context_name)
 }
 
 
-void NoteClassUsage(StringSetIterator context_iterator, int purge)
+void NoteClassUsage(ClassTableIterator *iter, int purge)
 {
     CF_DB *dbp;
     CF_DBC *dbcp;
@@ -204,16 +204,18 @@ void NoteClassUsage(StringSetIterator context_iterator, int purge)
 
     // TODO: stupid, please simplify
     {
-        char *context = NULL;
-        while ((context = StringSetIteratorNext(&context_iterator)))
+        Class *cls = NULL;
+        while ((cls = ClassTableIteratorNext(iter)))
         {
-            if ((IsContextIgnorableForReporting(context)))
+            if ((IsContextIgnorableForReporting(cls->name)))
             {
-                Log(LOG_LEVEL_DEBUG, "Ignoring class '%s' (not packing)", context);
+                Log(LOG_LEVEL_DEBUG, "Ignoring class '%s' (not packing)", cls->name);
                 continue;
             }
 
-            IdempPrependItem(&list, context, NULL);
+            char *expr = ClassRefToString(cls->ns, cls->name);
+            IdempPrependItem(&list, expr, NULL);
+            free(expr);
         }
     }
 

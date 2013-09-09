@@ -120,12 +120,13 @@ void BannerSubPromiseType(const EvalContext *ctx, const char *bundlename, const 
         {
             Log(LOG_LEVEL_VERBOSE, "     ??? Local class context: ");
 
-            StringSetIterator it = EvalContextStackFrameIteratorSoft(ctx);
-            const char *context = NULL;
-            while ((context = StringSetIteratorNext(&it)))
+            ClassTableIterator *iter = EvalContextClassTableIteratorNewLocal(ctx);
+            Class *cls = NULL;
+            while ((cls = ClassTableIteratorNext(iter)))
             {
-                Log(LOG_LEVEL_VERBOSE, "       %s", context);
+                Log(LOG_LEVEL_VERBOSE, "       %s", cls->name);
             }
+            ClassTableIteratorDestroy(iter);
 
             Log(LOG_LEVEL_VERBOSE, "\n");
         }

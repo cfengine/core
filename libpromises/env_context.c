@@ -117,12 +117,12 @@ void EvalContextHeapAddSoft(EvalContext *ctx, const char *context, const char *n
         FatalError(ctx, "cf-agent aborted on defined class '%s'", context_copy);
     }
 
-    if (EvalContextHeapContainsSoft(ctx, context_copy))
+    if (EvalContextHeapContainsSoft(ctx, ns, canonified_context))
     {
         return;
     }
 
-    StringSetAdd(ctx->heap_soft, xstrdup(context_copy));
+    ClassTablePut(ctx->global_classes, ns, canonified_context, true);
 
     if (!ABORTBUNDLE)
     {
@@ -172,7 +172,7 @@ void EvalContextHeapAddHard(EvalContext *ctx, const char *context)
         return;
     }
 
-    StringSetAdd(ctx->heap_hard, xstrdup(context_copy));
+    ClassTablePut(ctx->global_classes, NULL, context_copy, false);
 
     if (!ABORTBUNDLE)
     {
@@ -222,7 +222,7 @@ void EvalContextStackFrameAddSoft(EvalContext *ctx, const char *context)
         return;
     }
 
-    if (EvalContextHeapContainsSoft(ctx, copy))
+    if (EvalContextHeapContainsSoft(ctx, frame.owner->ns, context))
     {
         Log(LOG_LEVEL_WARNING, "Private class '%s' in bundle '%s' shadows a global class - you should choose a different name to avoid conflicts",
               copy, frame.owner->name);
@@ -244,7 +244,7 @@ void EvalContextStackFrameAddSoft(EvalContext *ctx, const char *context)
         return;
     }
 
-    StringSetAdd(frame.contexts, xstrdup(copy));
+    ClassTablePut(frame.classes, frame.owner->ns, context, true);
 
     if (!ABORTBUNDLE)
     {
@@ -269,47 +269,29 @@ typedef struct
 static ExpressionValue EvalTokenAsClass(const char *classname, void *param)
 {
     const EvalContext *ctx = ((EvalTokenAsClassContext *)param)->ctx;
-    const char *ns = ((EvalTokenAsClassContext *)param)->ns;
+    ClassRef ref = ClassRefParse(classname);
 
-    char qualified_class[CF_MAXVARSIZE];
-
-    if (strcmp(classname, "any") == 0)
-       {
-       return true;
-       }
-    
-    if (strchr(classname, ':'))
+    if (strcmp("any", ref.name) == 0)
     {
-        if (strncmp(classname, "default:", strlen("default:")) == 0)
-        {
-            snprintf(qualified_class, CF_MAXVARSIZE, "%s", classname + strlen("default:"));
-        }
-        else
-        {
-            snprintf(qualified_class, CF_MAXVARSIZE, "%s", classname);
-        }
-    }
-    else if (ns != NULL && strcmp(ns, "default") != 0)
-    {
-        snprintf(qualified_class, CF_MAXVARSIZE, "%s:%s", ns, (char *)classname);
-    }
-    else
-    {
-        snprintf(qualified_class, CF_MAXVARSIZE, "%s", classname);
-    }
-
-    if (EvalContextHeapContainsHard(ctx, classname))  // Hard classes are always unqualified
-    {
+        ClassRefDestroy(ref);
         return true;
     }
-    if (EvalContextHeapContainsSoft(ctx, qualified_class))
+    else if (!ref.ns && EvalContextHeapContainsHard(ctx, ref.name))
     {
+        ClassRefDestroy(ref);
         return true;
     }
-    if (EvalContextStackFrameContainsSoft(ctx, qualified_class))
+    else if (EvalContextHeapContainsSoft(ctx, ref.ns, ref.name))
     {
+        ClassRefDestroy(ref);
         return true;
     }
+    else if (EvalContextStackFrameContainsSoft(ctx, ref.name))
+    {
+        ClassRefDestroy(ref);
+        return true;
+    }
+
     return false;
 }
 
@@ -663,8 +645,7 @@ int MissingDependencies(EvalContext *ctx, const Promise *pp)
 
 static void StackFrameBundleDestroy(StackFrameBundle frame)
 {
-    StringSetDestroy(frame.contexts);
-
+    ClassTableDestroy(frame.classes);
     VariableTableDestroy(frame.vars);
 }
 
@@ -729,12 +710,12 @@ EvalContext *EvalContextNew(void)
 {
     EvalContext *ctx = xmalloc(sizeof(EvalContext));
 
-    ctx->heap_soft = StringSetNew();
-    ctx->heap_hard = StringSetNew();
     ctx->heap_abort = NULL;
     ctx->heap_abort_current_bundle = NULL;
 
     ctx->stack = SeqNew(10, StackFrameDestroy);
+
+    ctx->global_classes = ClassTableNew();
 
     ctx->global_variables = VariableTableNew();
     ctx->match_variables = VariableTableNew();
@@ -750,13 +731,12 @@ void EvalContextDestroy(EvalContext *ctx)
 {
     if (ctx)
     {
-        StringSetDestroy(ctx->heap_soft);
-        StringSetDestroy(ctx->heap_hard);
         DeleteItemList(ctx->heap_abort);
         DeleteItemList(ctx->heap_abort_current_bundle);
 
         SeqDestroy(ctx->stack);
 
+        ClassTableDestroy(ctx->global_classes);
         VariableTableDestroy(ctx->global_variables);
         VariableTableDestroy(ctx->match_variables);
 
@@ -768,20 +748,22 @@ void EvalContextDestroy(EvalContext *ctx)
     }
 }
 
-bool EvalContextHeapContainsSoft(const EvalContext *ctx, const char *context)
+bool EvalContextHeapContainsSoft(const EvalContext *ctx, const char *ns, const char *name)
 {
-    return StringSetContains(ctx->heap_soft, context);
+    const Class *cls = ClassTableGet(ctx->global_classes, ns, name);
+    return cls && cls->is_soft;
 }
 
-bool EvalContextHeapContainsHard(const EvalContext *ctx, const char *context)
+bool EvalContextHeapContainsHard(const EvalContext *ctx, const char *name)
 {
-    return StringSetContains(ctx->heap_hard, context);
+    const Class *cls = ClassTableGet(ctx->global_classes, NULL, name);
+    return cls && !cls->is_soft;
 }
 
 bool StackFrameContainsSoftRecursive(const EvalContext *ctx, const char *context, size_t stack_index)
 {
     StackFrame *frame = SeqAt(ctx->stack, stack_index);
-    if (frame->type == STACK_FRAME_TYPE_BUNDLE && StringSetContains(frame->data.bundle.contexts, context))
+    if (frame->type == STACK_FRAME_TYPE_BUNDLE && ClassTableGet(frame->data.bundle.classes, frame->data.bundle.owner->ns, context) != NULL)
     {
         return true;
     }
@@ -806,62 +788,23 @@ bool EvalContextStackFrameContainsSoft(const EvalContext *ctx, const char *conte
     return StackFrameContainsSoftRecursive(ctx, context, stack_index);
 }
 
-bool EvalContextHeapRemoveSoft(EvalContext *ctx, const char *context)
+bool EvalContextHeapRemoveSoft(EvalContext *ctx, const char *ns, const char *name)
 {
-    return StringSetRemove(ctx->heap_soft, context);
+    return ClassTableRemove(ctx->global_classes, ns, name);
 }
 
-bool EvalContextHeapRemoveHard(EvalContext *ctx, const char *context)
+bool EvalContextHeapRemoveHard(EvalContext *ctx, const char *name)
 {
-    return StringSetRemove(ctx->heap_hard, context);
+    return ClassTableRemove(ctx->global_classes, NULL, name);
 }
 
 void EvalContextClear(EvalContext *ctx)
 {
-    StringSetClear(ctx->heap_soft);
-    StringSetClear(ctx->heap_hard);
+    ClassTableClear(ctx->global_classes);
 
     VariableTableClear(ctx->global_variables, NULL, NULL, NULL);
     VariableTableClear(ctx->match_variables, NULL, NULL, NULL);
     SeqClear(ctx->stack);
-}
-
-static size_t StringSetMatchCount(StringSet *set, const char *regex)
-{
-    size_t count = 0;
-    StringSetIterator it = StringSetIteratorInit(set);
-    const char *context = NULL;
-    while ((context = SetIteratorNext(&it)))
-    {
-        if (StringMatchFull(regex, context))
-        {
-            count++;
-        }
-    }
-    return count;
-}
-
-size_t EvalContextHeapMatchCountSoft(const EvalContext *ctx, const char *context_regex)
-{
-    return StringSetMatchCount(ctx->heap_soft, context_regex);
-}
-
-size_t EvalContextHeapMatchCountHard(const EvalContext *ctx, const char *context_regex)
-{
-    return StringSetMatchCount(ctx->heap_hard, context_regex);
-}
-
-size_t EvalContextStackFrameMatchCountSoft(const EvalContext *ctx, const char *context_regex)
-{
-    if (SeqLength(ctx->stack) == 0)
-    {
-        return 0;
-    }
-
-    const StackFrame *frame = LastStackFrameByType(ctx, STACK_FRAME_TYPE_BUNDLE);
-    assert(frame);
-
-    return StringSetMatchCount(frame->data.bundle.contexts, context_regex);
 }
 
 StringSet *StringSetAddAllMatchingIterator(StringSet* base, StringSetIterator it, const char *filter_regex)
@@ -882,36 +825,6 @@ StringSet *StringSetAddAllMatching(StringSet* base, const StringSet* filtered, c
     return StringSetAddAllMatchingIterator(base, StringSetIteratorInit((StringSet*)filtered), filter_regex);
 }
 
-StringSet *EvalContextHeapAddMatchingSoft(const EvalContext *ctx, StringSet* base, const char *context_regex)
-{
-    return StringSetAddAllMatching(base, ctx->heap_soft, context_regex);
-}
-
-StringSet *EvalContextHeapAddMatchingHard(const EvalContext *ctx, StringSet* base, const char *context_regex)
-{
-    return StringSetAddAllMatching(base, ctx->heap_hard, context_regex);
-}
-
-StringSet *EvalContextStackFrameAddMatchingSoft(const EvalContext *ctx, StringSet* base, const char *context_regex)
-{
-    if (SeqLength(ctx->stack) == 0)
-    {
-        return base;
-    }
-
-    return StringSetAddAllMatchingIterator(base, EvalContextStackFrameIteratorSoft(ctx), context_regex);
-}
-
-StringSetIterator EvalContextHeapIteratorSoft(const EvalContext *ctx)
-{
-    return StringSetIteratorInit(ctx->heap_soft);
-}
-
-StringSetIterator EvalContextHeapIteratorHard(const EvalContext *ctx)
-{
-    return StringSetIteratorInit(ctx->heap_hard);
-}
-
 static StackFrame *StackFrameNew(StackFrameType type, bool inherit_previous)
 {
     StackFrame *frame = xmalloc(sizeof(StackFrame));
@@ -927,7 +840,7 @@ static StackFrame *StackFrameNewBundle(const Bundle *owner, bool inherit_previou
     StackFrame *frame = StackFrameNew(STACK_FRAME_TYPE_BUNDLE, inherit_previous);
 
     frame->data.bundle.owner = owner;
-    frame->data.bundle.contexts = StringSetNew();
+    frame->data.bundle.classes = ClassTableNew();
     frame->data.bundle.vars = VariableTableNew();
 
     return frame;
@@ -969,7 +882,7 @@ void EvalContextStackFrameRemoveSoft(EvalContext *ctx, const char *context)
     StackFrame *frame = LastStackFrameByType(ctx, STACK_FRAME_TYPE_BUNDLE);
     assert(frame);
 
-    StringSetRemove(frame->data.bundle.contexts, context);
+    ClassTableRemove(frame->data.bundle.classes, frame->data.bundle.owner->ns, context);
 }
 
 static void EvalContextStackPushFrame(EvalContext *ctx, StackFrame *frame)
@@ -1121,12 +1034,25 @@ void EvalContextStackPopFrame(EvalContext *ctx)
     }
 }
 
-StringSetIterator EvalContextStackFrameIteratorSoft(const EvalContext *ctx)
+bool EvalContextClassRemove(EvalContext *ctx, const char *ns, const char *name)
+{
+    return ClassTableRemove(ctx->global_classes, ns, name);
+}
+
+ClassTableIterator *EvalContextClassTableIteratorNewGlobal(const EvalContext *ctx, const char *ns, bool is_hard, bool is_soft)
+{
+    return ClassTableIteratorNew(ctx->global_classes, ns, is_hard, is_soft);
+}
+
+ClassTableIterator *EvalContextClassTableIteratorNewLocal(const EvalContext *ctx)
 {
     StackFrame *frame = LastStackFrameByType(ctx, STACK_FRAME_TYPE_BUNDLE);
-    assert(frame);
+    if (!frame)
+    {
+        return NULL;
+    }
 
-    return StringSetIteratorInit(frame->data.bundle.contexts);
+    return ClassTableIteratorNew(frame->data.bundle.classes, frame->data.bundle.owner->ns, false, true);
 }
 
 const Promise *EvalContextStackCurrentPromise(const EvalContext *ctx)
@@ -1581,6 +1507,10 @@ static void AddAllClasses(EvalContext *ctx, const char *ns, const Rlist *list, u
     for (const Rlist *rp = list; rp != NULL; rp = rp->next)
     {
         char *classname = xstrdup(RlistScalarValue(rp));
+        if (strcmp(classname, "a_class_global_from_command") == 0 || strcmp(classname, "xxx:a_class_global_from_command") == 0)
+        {
+            Log(LOG_LEVEL_ERR, "Hit '%s'", classname);
+        }
 
         CanonifyNameInPlace(classname);
 
@@ -1641,7 +1571,11 @@ static void DeleteAllClasses(EvalContext *ctx, const Rlist *list)
 
         EvalContextHeapPersistentRemove(string);
 
-        EvalContextHeapRemoveSoft(ctx, CanonifyName(string));
+        {
+            ClassRef ref = ClassRefParse(CanonifyName(string));
+            EvalContextClassRemove(ctx, ref.ns, ref.name);
+            ClassRefDestroy(ref);
+        }
         EvalContextStackFrameRemoveSoft(ctx, CanonifyName(string));
     }
 }

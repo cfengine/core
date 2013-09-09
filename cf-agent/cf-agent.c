@@ -257,11 +257,9 @@ int main(int argc, char *argv[])
     // only note class usage when default policy is run
     if (!MINUSF)
     {
-        StringSetIterator soft_iter = EvalContextHeapIteratorSoft(ctx);
-        NoteClassUsage(soft_iter, true);
-
-        StringSetIterator hard_iter = EvalContextHeapIteratorHard(ctx);
-        NoteClassUsage(hard_iter, true);
+        ClassTableIterator *iter = EvalContextClassTableIteratorNewGlobal(ctx, NULL, true, true);
+        NoteClassUsage(iter, true);
+        ClassTableIteratorDestroy(iter);
     }
     Nova_NoteVarUsageDB(ctx);
     Nova_TrackExecution(config->input_file);
@@ -1151,22 +1149,6 @@ static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, GenericAgentCon
     }
 }
 
-static void SaveClassEnvironment(const EvalContext *ctx, Writer *writer)
-{
-    SetIterator it = EvalContextHeapIteratorHard(ctx);
-    const char *context;
-    while ((context = SetIteratorNext(&it)))
-    {
-
-    }
-
-    it = EvalContextHeapIteratorSoft(ctx);
-    while ((context = SetIteratorNext(&it)))
-    {
-        WriterWriteF(writer, "%s\n", context);
-    }
-}
-
 static void AllClassesReport(const EvalContext *ctx)
 {
     char context_report_file[CF_BUFSIZE];
@@ -1180,7 +1162,15 @@ static void AllClassesReport(const EvalContext *ctx)
     else
     {
         Writer *writer = FileWriter(fp);
-        SaveClassEnvironment(ctx, writer);
+        ClassTableIterator *iter = EvalContextClassTableIteratorNewGlobal(ctx, NULL, true, true);
+        Class *cls = NULL;
+        while ((cls = ClassTableIteratorNext(iter)))
+        {
+            char *expr = ClassRefToString(cls->ns, cls->name);
+            WriterWriteF(writer, "%s\n", expr);
+            free(expr);
+        }
+        ClassTableIteratorDestroy(iter);
         WriterClose(writer);
     }
 }
@@ -1226,7 +1216,7 @@ int ScheduleAgentOperations(EvalContext *ctx, Bundle *bp)
 
                 if (Abort())
                 {
-                    NoteClassUsage(EvalContextStackFrameIteratorSoft(ctx) , false);
+                    //NoteClassUsage(EvalContextStackFrameIteratorSoft(ctx) , false);
                     DeleteTypeContext(ctx, bp, type);
                     NoteBundleCompliance(bp, save_pr_kept, save_pr_repaired, save_pr_notkept);
                     return false;
@@ -1237,7 +1227,8 @@ int ScheduleAgentOperations(EvalContext *ctx, Bundle *bp)
         }
     }
 
-    NoteClassUsage(EvalContextStackFrameIteratorSoft(ctx) , false);
+
+    //NoteClassUsage(EvalContextStackFrameIteratorSoft(ctx) , false);
 
     return NoteBundleCompliance(bp, save_pr_kept, save_pr_repaired, save_pr_notkept);
 }
@@ -1621,12 +1612,13 @@ static void ClassBanner(EvalContext *ctx, TypeSequence type)
     {
         Log(LOG_LEVEL_VERBOSE, "     +  Private classes augmented:");
 
-        StringSetIterator it = EvalContextStackFrameIteratorSoft(ctx);
-        const char *context = NULL;
-        while ((context = StringSetIteratorNext(&it)))
+        ClassTableIterator *iter = EvalContextClassTableIteratorNewLocal(ctx);
+        Class *cls = NULL;
+        while ((cls = ClassTableIteratorNext(iter)))
         {
-            Log(LOG_LEVEL_VERBOSE, "     +       %s", context);
+            Log(LOG_LEVEL_VERBOSE, "     +       %s", cls->name);
         }
+        ClassTableIteratorDestroy(iter);
     }
     else
     {
@@ -1634,14 +1626,15 @@ static void ClassBanner(EvalContext *ctx, TypeSequence type)
         Writer *w = StringWriter();
 
         WriterWrite(w, "Private classes augmented:");
-        StringSetIterator it = EvalContextStackFrameIteratorSoft(ctx);
-        const char *context = NULL;
-        while ((context = StringSetIteratorNext(&it)))
+        ClassTableIterator *iter = EvalContextClassTableIteratorNewLocal(ctx);
+        Class *cls = NULL;
+        while ((cls = ClassTableIteratorNext(iter)))
         {
             WriterWriteChar(w, ' ');
-            WriterWrite(w, context);
+            WriterWrite(w, cls->name);
             have_classes = true;
         }
+        ClassTableIteratorDestroy(iter);
 
         if (have_classes)
         {

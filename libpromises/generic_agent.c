@@ -380,6 +380,31 @@ bool GenericAgentCheckPromises(const GenericAgentConfig *config)
 
 static void ShowContext(EvalContext *ctx)
 {
+    Seq *hard_contexts = SeqNew(1000, NULL);
+    Seq *soft_contexts = SeqNew(1000, NULL);
+
+    {
+        ClassTableIterator *iter = EvalContextClassTableIteratorNewGlobal(ctx, NULL, true, true);
+        Class *cls = NULL;
+        while ((cls = ClassTableIteratorNext(iter)))
+        {
+            if (cls->is_soft)
+            {
+                SeqAppend(soft_contexts, cls->name);
+            }
+            else
+            {
+                SeqAppend(hard_contexts, cls->name);
+            }
+        }
+
+        ClassTableIteratorDestroy(iter);
+    }
+
+    SeqSort(soft_contexts, (SeqItemComparator)strcmp, NULL);
+    SeqSort(hard_contexts, (SeqItemComparator)strcmp, NULL);
+
+
     {
         Writer *w = NULL;
         if (LEGACY_OUTPUT)
@@ -393,20 +418,9 @@ static void ShowContext(EvalContext *ctx)
             WriterWrite(w, "Discovered hard classes:");
         }
 
-        Seq *hard_contexts = SeqNew(1000, NULL);
-        SetIterator it = EvalContextHeapIteratorHard(ctx);
-        char *context = NULL;
-        while ((context = SetIteratorNext(&it)))
-        {
-            SeqAppend(hard_contexts, context);
-        }
-
-        SeqSort(hard_contexts, (SeqItemComparator)strcmp, NULL);
-
         for (size_t i = 0; i < SeqLength(hard_contexts); i++)
         {
             const char *context = SeqAt(hard_contexts, i);
-
             WriterWriteF(w, " %s", context);
         }
 
@@ -420,9 +434,6 @@ static void ShowContext(EvalContext *ctx)
             Log(LOG_LEVEL_VERBOSE, "%s", StringWriterData(w));
             WriterClose(w);
         }
-
-
-        SeqDestroy(hard_contexts);
     }
 
     {
@@ -437,16 +448,6 @@ static void ShowContext(EvalContext *ctx)
             w = StringWriter();
             WriterWrite(w, "Additional classes:");
         }
-
-        Seq *soft_contexts = SeqNew(1000, NULL);
-        SetIterator it = EvalContextHeapIteratorSoft(ctx);
-        char *context = NULL;
-        while ((context = SetIteratorNext(&it)))
-        {
-            SeqAppend(soft_contexts, context);
-        }
-
-        SeqSort(soft_contexts, (SeqItemComparator)strcmp, NULL);
 
         for (size_t i = 0; i < SeqLength(soft_contexts); i++)
         {
@@ -467,8 +468,10 @@ static void ShowContext(EvalContext *ctx)
             }
             WriterClose(w);
         }
-        SeqDestroy(soft_contexts);
     }
+
+    SeqDestroy(hard_contexts);
+    SeqDestroy(soft_contexts);
 }
 
 static Policy *LoadPolicyInputFiles(EvalContext *ctx, GenericAgentConfig *config, const Rlist *inputs, StringSet *parsed_files, StringSet *failed_files)

@@ -665,16 +665,44 @@ static FnCallResult FnCallConcat(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 
 static FnCallResult FnCallClassMatch(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
-    if (EvalContextHeapMatchCountHard(ctx, RlistScalarValue(finalargs))
-        || EvalContextHeapMatchCountSoft(ctx, RlistScalarValue(finalargs))
-        || EvalContextStackFrameMatchCountSoft(ctx, RlistScalarValue(finalargs)))
+    const char *regex = RlistScalarValue(finalargs);
     {
-        return (FnCallResult) { FNCALL_SUCCESS, { xstrdup("any"), RVAL_TYPE_SCALAR } };
+        ClassTableIterator *iter = EvalContextClassTableIteratorNewGlobal(ctx, NULL, true, true);
+        Class *cls = NULL;
+        while ((cls = ClassTableIteratorNext(iter)))
+        {
+            char *expr = ClassRefToString(cls->ns, cls->name);
+
+            if (StringMatchFull(regex, expr))
+            {
+                free(expr);
+                return (FnCallResult) { FNCALL_SUCCESS, { xstrdup("any"), RVAL_TYPE_SCALAR } };
+            }
+
+            free(expr);
+        }
+        ClassTableIteratorDestroy(iter);
     }
-    else
+
     {
-        return (FnCallResult) { FNCALL_SUCCESS, { xstrdup("!any"), RVAL_TYPE_SCALAR } };
+        ClassTableIterator *iter = EvalContextClassTableIteratorNewLocal(ctx);
+        Class *cls = NULL;
+        while ((cls = ClassTableIteratorNext(iter)))
+        {
+            char *expr = ClassRefToString(cls->ns, cls->name);
+
+            if (StringMatchFull(regex, expr))
+            {
+                free(expr);
+                return (FnCallResult) { FNCALL_SUCCESS, { xstrdup("any"), RVAL_TYPE_SCALAR } };
+            }
+
+            free(expr);
+        }
+        ClassTableIteratorDestroy(iter);
     }
+
+    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup("!any"), RVAL_TYPE_SCALAR } };
 }
 
 /*********************************************************************/
@@ -726,31 +754,92 @@ static FnCallResult FnCallIfElse(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 
 static FnCallResult FnCallCountClassesMatching(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
-    char buffer[CF_BUFSIZE], *string = RlistScalarValue(finalargs);
-    int count = 0;
+    unsigned count = 0;
+    const char *regex = RlistScalarValue(finalargs);
+    {
+        ClassTableIterator *iter = EvalContextClassTableIteratorNewGlobal(ctx, NULL, true, true);
+        Class *cls = NULL;
+        while ((cls = ClassTableIteratorNext(iter)))
+        {
+            char *expr = ClassRefToString(cls->ns, cls->name);
 
-    count += EvalContextHeapMatchCountSoft(ctx, string);
-    count += EvalContextHeapMatchCountHard(ctx, string);
-    count += EvalContextStackFrameMatchCountSoft(ctx, string);
+            if (StringMatchFull(regex, expr))
+            {
+                count++;
+            }
 
-    snprintf(buffer, CF_MAXVARSIZE, "%d", count);
+            free(expr);
+        }
+        ClassTableIteratorDestroy(iter);
+    }
 
-    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), RVAL_TYPE_SCALAR } };
+    {
+        ClassTableIterator *iter = EvalContextClassTableIteratorNewLocal(ctx);
+        Class *cls = NULL;
+        while ((cls = ClassTableIteratorNext(iter)))
+        {
+            char *expr = ClassRefToString(cls->ns, cls->name);
+
+            if (StringMatchFull(regex, expr))
+            {
+                count++;
+            }
+
+            free(expr);
+        }
+        ClassTableIteratorDestroy(iter);
+    }
+
+    return (FnCallResult) { FNCALL_SUCCESS, { StringFromLong(count), RVAL_TYPE_SCALAR } };
 }
 
 /*********************************************************************/
 
 static FnCallResult FnCallClassesMatching(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
-    char *string = RlistScalarValue(finalargs);
-    StringSet* base = StringSetNew();
+    StringSet* matching = StringSetNew();
 
-    EvalContextHeapAddMatchingSoft(ctx, base, string);
-    EvalContextHeapAddMatchingHard(ctx, base, string);
-    EvalContextStackFrameAddMatchingSoft(ctx, base, string);
+    const char *regex = RlistScalarValue(finalargs);
+    {
+        ClassTableIterator *iter = EvalContextClassTableIteratorNewGlobal(ctx, NULL, true, true);
+        Class *cls = NULL;
+        while ((cls = ClassTableIteratorNext(iter)))
+        {
+            char *expr = ClassRefToString(cls->ns, cls->name);
+
+            if (StringMatchFull(regex, expr))
+            {
+                StringSetAdd(matching, expr);
+            }
+            else
+            {
+                free(expr);
+            }
+        }
+        ClassTableIteratorDestroy(iter);
+    }
+
+    {
+        ClassTableIterator *iter = EvalContextClassTableIteratorNewLocal(ctx);
+        Class *cls = NULL;
+        while ((cls = ClassTableIteratorNext(iter)))
+        {
+            char *expr = ClassRefToString(cls->ns, cls->name);
+
+            if (StringMatchFull(regex, expr))
+            {
+                StringSetAdd(matching, expr);
+            }
+            else
+            {
+                free(expr);
+            }
+        }
+        ClassTableIteratorDestroy(iter);
+    }
 
     Rlist *returnlist = NULL;
-    StringSetIterator it = StringSetIteratorInit(base);
+    StringSetIterator it = StringSetIteratorInit(matching);
     char *element = NULL;
     while ((element = StringSetIteratorNext(&it)))
     {
@@ -762,7 +851,7 @@ static FnCallResult FnCallClassesMatching(EvalContext *ctx, FnCall *fp, Rlist *f
         RlistAppendScalarIdemp(&returnlist, CF_NULL_VALUE);
     }
 
-    StringSetDestroy(base);
+    StringSetDestroy(matching);
 
     return (FnCallResult) { FNCALL_SUCCESS, { returnlist, RVAL_TYPE_LIST } };
 }
@@ -5156,7 +5245,9 @@ void ModuleProtocol(EvalContext *ctx, char *command, char *line, int print, cons
                         FatalError(ctx, "Cannot negate the reserved class '%s'", negated_context);
                     }
 
-                    EvalContextHeapRemoveSoft(ctx, negated_context);
+                    ClassRef ref = ClassRefParse(negated_context);
+                    EvalContextClassRemove(ctx, ref.ns, ref.name);
+                    ClassRefDestroy(ref);
                     EvalContextStackFrameRemoveSoft(ctx, negated_context);
                 }
                 StringSetDestroy(negated);

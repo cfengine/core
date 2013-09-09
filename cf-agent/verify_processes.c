@@ -27,7 +27,9 @@
 #include <processes_select.h>
 #include <env_context.h>
 #include <promises.h>
+#include <class.h>
 #include <vars.h>
+#include <class.h>
 #include <item_lib.h>
 #include <conversion.h>
 #include <matching.h>
@@ -147,10 +149,12 @@ static void VerifyProcessOp(EvalContext *ctx, Item *procdata, Attributes a, Prom
             cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, "Process count for '%s' was out of promised range (%d found)", pp->promiser, matches);
             for (const Rlist *rp = a.process_count.out_of_range_define; rp != NULL; rp = rp->next)
             {
-                if (!EvalContextHeapContainsSoft(ctx, RlistScalarValue(rp)))
+                ClassRef ref = ClassRefParse(RlistScalarValue(rp));
+                if (!EvalContextHeapContainsSoft(ctx, ref.ns, ref.name))
                 {
                     EvalContextHeapAddSoft(ctx, RlistScalarValue(rp), PromiseGetNamespace(pp));
                 }
+                ClassRefDestroy(ref);
             }
             out_of_range = true;
         }
@@ -158,10 +162,12 @@ static void VerifyProcessOp(EvalContext *ctx, Item *procdata, Attributes a, Prom
         {
             for (const Rlist *rp = a.process_count.in_range_define; rp != NULL; rp = rp->next)
             {
-                if (!EvalContextHeapContainsSoft(ctx, RlistScalarValue(rp)))
+                ClassRef ref = ClassRefParse(RlistScalarValue(rp));
+                if (!EvalContextHeapContainsSoft(ctx, ref.ns, ref.name))
                 {
                     EvalContextHeapAddSoft(ctx, RlistScalarValue(rp), PromiseGetNamespace(pp));
                 }
+                ClassRefDestroy(ref);
             }
             cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "Process promise for '%s' is kept", pp->promiser);
             out_of_range = false;

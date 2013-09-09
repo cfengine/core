@@ -86,7 +86,8 @@ check_PROGRAMS = \
 	mon_cpu_test \
 	mon_load_test \
 	mon_processes_test \
-	mustache_test
+	mustache_test \
+	class_test
 
 if HAVE_AVAHI_CLIENT
 if HAVE_AVAHI_COMMON

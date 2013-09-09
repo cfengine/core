@@ -118,28 +118,28 @@ static void RemoveTimeClass(EvalContext *ctx, time_t time)
     for( i = 0; i < 3; i++ )
     {
         snprintf(buf, CF_BUFSIZE, "Lcycle_%d", i);
-        EvalContextHeapRemoveHard(ctx, buf);
+        EvalContextClassRemove(ctx, NULL, buf);
     }
 
 /* Year */
 
     snprintf(buf, CF_BUFSIZE, "Yr%04d", parsed_time.tm_year - 1 + 1900);
-    EvalContextHeapRemoveHard(ctx, buf);
+    EvalContextClassRemove(ctx, NULL, buf);
     snprintf(buf, CF_BUFSIZE, "Yr%04d", parsed_time.tm_year + 1900);
-    EvalContextHeapRemoveHard(ctx, buf);
+    EvalContextClassRemove(ctx, NULL, buf);
 
 /* Month */
 
     for( i = 0; i < 12; i++ )
     {
-        EvalContextHeapRemoveHard(ctx, MONTH_TEXT[i]);
+        EvalContextClassRemove(ctx, NULL, MONTH_TEXT[i]);
     }
 
 /* Day of week */
 
     for( i = 0; i < 7; i++ )
     {
-        EvalContextHeapRemoveHard(ctx, DAY_TEXT[i]);
+        EvalContextClassRemove(ctx, NULL, DAY_TEXT[i]);
     }
 
 /* Day */
@@ -147,14 +147,14 @@ static void RemoveTimeClass(EvalContext *ctx, time_t time)
     for( i = 1; i < 32; i++ )
     {
         snprintf(buf, CF_BUFSIZE, "Day%d", i);
-        EvalContextHeapRemoveHard(ctx, buf);
+        EvalContextClassRemove(ctx, NULL, buf);
     }
 
 /* Shift */
 
     for( i = 0; i < 4; i++ )
     {
-        EvalContextHeapRemoveHard(ctx, SHIFT_TEXT[i]);
+        EvalContextClassRemove(ctx, NULL, SHIFT_TEXT[i]);
     }
 
 /* Hour */
@@ -162,7 +162,7 @@ static void RemoveTimeClass(EvalContext *ctx, time_t time)
     for( i = 0; i < 24; i++ )
     {
         snprintf(buf, CF_BUFSIZE, "Hr%02d", i);
-        EvalContextHeapRemoveHard(ctx, buf);
+        EvalContextClassRemove(ctx, NULL, buf);
     }
 
 /* GMT hour */
@@ -170,7 +170,7 @@ static void RemoveTimeClass(EvalContext *ctx, time_t time)
     for( i = 0; i < 24; i++ )
     {
         snprintf(buf, CF_BUFSIZE, "GMT_Hr%02d", i);
-        EvalContextHeapRemoveHard(ctx, buf);
+        EvalContextClassRemove(ctx, NULL, buf);
     }
 
 /* Quarter */
@@ -178,11 +178,11 @@ static void RemoveTimeClass(EvalContext *ctx, time_t time)
     for( i = 1; i <= 4; i++ )
     {
         snprintf(buf, CF_BUFSIZE, "Q%d", i);
-        EvalContextHeapRemoveHard(ctx, buf);
+        EvalContextClassRemove(ctx, NULL, buf);
         for( j = 0; j < 24; j++ )
         {
             snprintf(buf, CF_BUFSIZE, "Hr%02d_Q%d", j, i);
-            EvalContextHeapRemoveHard(ctx, buf);
+            EvalContextClassRemove(ctx, NULL, buf);
         }
     }
 
@@ -191,13 +191,13 @@ static void RemoveTimeClass(EvalContext *ctx, time_t time)
     for( i = 0; i < 60; i++ )
     {
         snprintf(buf, CF_BUFSIZE, "Min%02d", i);
-        EvalContextHeapRemoveHard(ctx, buf);
+        EvalContextClassRemove(ctx, NULL, buf);
     }
 
     for( i = 0; i < 60; i += 5 )
     {
         snprintf(buf, CF_BUFSIZE, "Min%02d_%02d", i, (i + 5) % 60);
-        EvalContextHeapRemoveHard(ctx, buf);
+        EvalContextClassRemove(ctx, NULL, buf);
     }
 }
 

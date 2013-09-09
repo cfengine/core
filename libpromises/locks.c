@@ -48,7 +48,8 @@ static pthread_once_t lock_cleanup_once = PTHREAD_ONCE_INIT;
 
 static void GenerateMd5Hash(const char *istring, char *ohash)
 {
-    if (!strcmp(istring, "CF_CRITICAL_SECTION"))
+    if (!strcmp(istring, "CF_CRITICAL_SECTION") ||
+        !strncmp(istring, "lock.track_license_bundle.track_license", 39))
     { 
         strcpy(ohash, istring);
         return;
@@ -70,7 +71,8 @@ static bool WriteLockData(CF_DB *dbp, const char *lock_id, LockData *lock_data)
 {
     unsigned char digest2[EVP_MAX_MD_SIZE*2 + 1];
 
-    if (!strcmp(lock_id, "CF_CRITICAL_SECTION"))
+    if (!strcmp(lock_id, "CF_CRITICAL_SECTION") ||
+        !strncmp(lock_id, "lock.track_license_bundle.track_license", 39))
     {
         strcpy(digest2, lock_id);
     }

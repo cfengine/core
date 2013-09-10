@@ -63,6 +63,7 @@ libpromises_la_SOURCES = \
         locks.c locks.h \
         logic_expressions.c logic_expressions.h \
         matching.c matching.h \
+        math_eval.c math_eval.h \
         mod_access.c mod_access.h \
         mod_common.c mod_common.h \
         mod_databases.c mod_databases.h \

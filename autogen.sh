@@ -19,7 +19,7 @@ fi
 # above.
 #
 set -e
-
+exit 1
 srcdir=`dirname $0`
 test -z "$srcdir" && srcdir=.
 

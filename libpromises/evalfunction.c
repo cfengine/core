@@ -60,6 +60,8 @@
 #include <buffer.h>
 #include <files_lib.h>
 
+#include <math_eval.h>
+
 #include <libgen.h>
 
 #ifndef __MINGW32__
@@ -4098,6 +4100,40 @@ static FnCallResult FnCallStrftime(EvalContext *ctx, FnCall *fp, Rlist *finalarg
 }
 
 /*********************************************************************/
+
+static FnCallResult FnCallEval(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
+{
+    char *input = RlistScalarValue(finalargs);
+    char *type = RlistScalarValue(finalargs->next);
+    char *options = RlistScalarValue(finalargs->next->next);
+    if (0 != strcmp(type, "math") || 0 != strcmp(options, "infix"))
+    {
+        Log(LOG_LEVEL_ERR, "Unknown %s evaluation type %s or options %s", fp->name, type, options);
+        return (FnCallResult) { FNCALL_FAILURE };
+    }
+
+    char failure[CF_BUFSIZE];
+    memset(failure, 0, sizeof(failure));
+
+    char out[CF_BUFSIZE];
+    memset(out, 0, sizeof(out));
+
+    double result = EvaluateMathInfix(ctx, input, failure);
+    if (strlen(failure) > 0)
+    {
+        Log(LOG_LEVEL_INFO, "%s error: %s (input '%s')", fp->name, failure, input);
+        //return (FnCallResult) { FNCALL_FAILURE };
+        memset(out, 0, sizeof(out));
+    }
+    else
+    {
+        sprintf(out, "%lf", result);
+    }
+
+    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(out), RVAL_TYPE_SCALAR } };
+}
+
+/*********************************************************************/
 /* Read functions                                                    */
 /*********************************************************************/
 
@@ -5952,6 +5988,14 @@ FnCallArg FORMAT_ARGS[] =
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
+FnCallArg EVAL_ARGS[] =
+{
+    {CF_ANYSTRING, DATA_TYPE_STRING, "Input string"},
+    {"math", DATA_TYPE_OPTION, "Evaluation type"},
+    {"infix", DATA_TYPE_OPTION, "Evaluation options"},
+    {NULL, DATA_TYPE_NONE, NULL}
+};
+
 /*********************************************************/
 /* FnCalls are rvalues in certain promise constraints    */
 /*********************************************************/
@@ -5976,6 +6020,7 @@ const FnCallType CF_FNCALL_TYPES[] =
     FnCallTypeNew("dirname", DATA_TYPE_STRING, DIRNAME_ARGS, &FnCallDirname, "Return the parent directory name for given path", false, FNCALL_CATEGORY_FILES, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("diskfree", DATA_TYPE_INT, DISKFREE_ARGS, &FnCallDiskFree, "Return the free space (in KB) available on the directory's current partition (0 if not found)", false, FNCALL_CATEGORY_FILES, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("escape", DATA_TYPE_STRING, ESCAPE_ARGS, &FnCallEscape, "Escape regular expression characters in a string", false, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("eval", DATA_TYPE_STRING, EVAL_ARGS, &FnCallEval, "Evaluate a mathematical expression", false, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("every", DATA_TYPE_CONTEXT, EVERY_SOME_NONE_ARGS, &FnCallEverySomeNone, "True if every element in the named list matches the given regular expression", false, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("execresult", DATA_TYPE_STRING, EXECRESULT_ARGS, &FnCallExecResult, "Execute named command and assign output to variable", false, FNCALL_CATEGORY_UTILS, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("fileexists", DATA_TYPE_CONTEXT, FILESTAT_ARGS, &FnCallFileStat, "True if the named file can be accessed", false, FNCALL_CATEGORY_FILES, SYNTAX_STATUS_NORMAL),

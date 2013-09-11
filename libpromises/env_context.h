@@ -121,7 +121,6 @@ void EvalContextHeapPersistentRemove(const char *context);
 void EvalContextHeapPersistentLoadAll(EvalContext *ctx);
 
 bool EvalContextHeapContainsHard(const EvalContext *ctx, const char *context);
-bool EvalContextStackFrameContainsSoft(const EvalContext *ctx, const char *context);
 
 bool EvalContextClassRemove(EvalContext *ctx, const char *ns, const char *name);
 void EvalContextStackFrameRemoveSoft(EvalContext *ctx, const char *context);

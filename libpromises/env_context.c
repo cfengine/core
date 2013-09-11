@@ -44,6 +44,8 @@
 #include <promises.h>
 
 static bool ABORTBUNDLE = false;
+static bool EvalContextStackFrameContainsSoft(const EvalContext *ctx, const char *context);
+static bool EvalContextHeapContainsSoft(const EvalContext *ctx, const char *ns, const char *name);
 
 static StackFrame *LastStackFrame(const EvalContext *ctx, size_t offset)
 {
@@ -777,7 +779,7 @@ bool StackFrameContainsSoftRecursive(const EvalContext *ctx, const char *context
     }
 }
 
-bool EvalContextStackFrameContainsSoft(const EvalContext *ctx, const char *context)
+static bool EvalContextStackFrameContainsSoft(const EvalContext *ctx, const char *context)
 {
     if (SeqLength(ctx->stack) == 0)
     {

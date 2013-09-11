@@ -120,7 +120,6 @@ bool EvalContextClassPut(EvalContext *ctx, const char *ns, const char *name, boo
 void EvalContextClassPutHard(EvalContext *ctx, const char *name);
 Class *EvalContextClassGet(EvalContext *ctx, const char *ns, const char *name);
 bool EvalContextClassRemove(EvalContext *ctx, const char *ns, const char *name);
-void EvalContextStackFrameRemoveSoft(EvalContext *ctx, const char *context);
 
 ClassTableIterator *EvalContextClassTableIteratorNewGlobal(const EvalContext *ctx, const char *ns, bool is_hard, bool is_soft);
 ClassTableIterator *EvalContextClassTableIteratorNewLocal(const EvalContext *ctx);

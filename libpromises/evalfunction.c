@@ -5249,7 +5249,6 @@ void ModuleProtocol(EvalContext *ctx, char *command, char *line, int print, cons
                     ClassRef ref = ClassRefParse(negated_context);
                     EvalContextClassRemove(ctx, ref.ns, ref.name);
                     ClassRefDestroy(ref);
-                    EvalContextStackFrameRemoveSoft(ctx, negated_context);
                 }
                 StringSetDestroy(negated);
             }

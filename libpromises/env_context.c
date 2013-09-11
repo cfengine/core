@@ -997,6 +997,17 @@ void EvalContextStackPopFrame(EvalContext *ctx)
 
 bool EvalContextClassRemove(EvalContext *ctx, const char *ns, const char *name)
 {
+    for (size_t i = 0; i < SeqLength(ctx->stack); i++)
+    {
+        StackFrame *frame = SeqAt(ctx->stack, i);
+        if (frame->type != STACK_FRAME_TYPE_BUNDLE)
+        {
+            continue;
+        }
+
+        ClassTableRemove(frame->data.bundle.classes, ns, name);
+    }
+
     return ClassTableRemove(ctx->global_classes, ns, name);
 }
 

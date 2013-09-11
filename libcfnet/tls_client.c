@@ -296,6 +296,9 @@ int TLSTry(ConnectionInfo *conn_info)
     }
     else
     {
+        Log(LOG_LEVEL_VERBOSE, "TLS cipher negotiated: %s, %s",
+            SSL_get_cipher_name(conn_info->ssl),
+            SSL_get_cipher_version(conn_info->ssl));
         Log(LOG_LEVEL_VERBOSE, "TLS session established, checking trust...");
     }
 

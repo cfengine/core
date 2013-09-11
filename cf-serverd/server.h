@@ -61,6 +61,7 @@ typedef struct
     Item *multiconnlist;                              /* "allowallconnects" */
     Item *trustkeylist;                               /* "trustkeysfrom" */
     Item *skipverify;
+    char *allowciphers;
 
     Auth *admit;
     Auth *admittop;

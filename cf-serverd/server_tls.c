@@ -65,6 +65,24 @@ bool ServerTLSInitialize()
     SSL_CTX_set_options(SSLSERVERCONTEXT,
                         SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3);
 
+    /*
+     * CFEngine is not a web server so we don't need many ciphers. We only
+     * allow a safe but very common subset by default, extensible via
+     * "allowciphers" in body server control. By default allow:
+     *     AES256-GCM-SHA384: most high-grade RSA-based cipher from TLSv1.2
+     *     AES256-SHA: most backwards compatible but high-grade, from SSLv3
+     */
+    const char *cipher_list = SV.allowciphers;
+    if (cipher_list == NULL)
+        cipher_list ="AES256-GCM-SHA384:AES256-SHA";
+    ret = SSL_CTX_set_cipher_list(SSLSERVERCONTEXT, cipher_list);
+    if (ret != 1)
+    {
+        Log(LOG_LEVEL_ERR,
+            "No valid ciphers in cipher list: %s",
+            cipher_list);
+    }
+
     /* Never bother with retransmissions, SSL_write() should
      * always either write the whole amount or fail. */
     SSL_CTX_set_mode(SSLSERVERCONTEXT, SSL_MODE_AUTO_RETRY);
@@ -390,7 +408,10 @@ int ServerTLSSessionEstablish(ServerConnectionState *conn)
         return -1;
     }
 
-    Log (LOG_LEVEL_VERBOSE, "TLS session established, checking trust...");
+    Log(LOG_LEVEL_VERBOSE, "TLS cipher negotiated: %s, %s",
+        SSL_get_cipher_name(conn->conn_info.ssl),
+        SSL_get_cipher_version(conn->conn_info.ssl));
+    Log(LOG_LEVEL_VERBOSE, "TLS session established, checking trust...");
 
     /* Send/Receive "CFE_v%d" version string and agree on version. */
     ret = ServerNegotiateProtocol(&conn->conn_info);

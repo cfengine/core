@@ -28,7 +28,7 @@ static size_t ClassRefHash(const char *ns, const char *name)
     return hash;
 }
 
-void ClassInit(Class *cls, const char *ns, const char *name, bool is_soft)
+void ClassInit(Class *cls, const char *ns, const char *name, bool is_soft, ContextScope scope)
 {
     if (ns)
     {
@@ -43,6 +43,7 @@ void ClassInit(Class *cls, const char *ns, const char *name, bool is_soft)
     CanonifyNameInPlace(cls->name);
 
     cls->is_soft = is_soft;
+    cls->scope = scope;
 
     cls->hash = ClassRefHash(cls->ns, cls->name);
 }
@@ -73,7 +74,7 @@ void ClassTableDestroy(ClassTable *table)
     }
 }
 
-bool ClassTablePut(ClassTable *table, const char *ns, const char *name, bool is_soft)
+bool ClassTablePut(ClassTable *table, const char *ns, const char *name, bool is_soft, ContextScope scope)
 {
     assert(name);
     assert(strchr(name, ':') == NULL);
@@ -87,13 +88,13 @@ bool ClassTablePut(ClassTable *table, const char *ns, const char *name, bool is_
     if (cls)
     {
         ClassDestroy(cls);
-        ClassInit(cls, ns, name, is_soft);
+        ClassInit(cls, ns, name, is_soft, scope);
         return true;
     }
     else
     {
         cls = xmalloc(sizeof(Class));
-        ClassInit(cls, ns, name, is_soft);
+        ClassInit(cls, ns, name, is_soft, scope);
         return RBTreePut(table->classes, (void *)cls->hash, cls);
     }
 }

@@ -65,11 +65,11 @@ static void test_set_names(void)
     EvalContext *ctx = EvalContextNew();
     DetectDomainName(ctx, "laptop.intra");
 
-    assert_true(EvalContextHeapContainsHard(ctx, "laptop_intra_cfengine_com"));
-    assert_true(EvalContextHeapContainsHard(ctx, "intra_cfengine_com"));
-    assert_true(EvalContextHeapContainsHard(ctx, "cfengine_com"));
-    assert_true(EvalContextHeapContainsHard(ctx, "com"));
-    assert_true(EvalContextHeapContainsHard(ctx, "laptop_intra"));
+    assert_true(!EvalContextClassGet(ctx, NULL, "laptop_intra_cfengine_com")->is_soft);
+    assert_true(!EvalContextClassGet(ctx, NULL, "intra_cfengine_com")->is_soft);
+    assert_true(!EvalContextClassGet(ctx, NULL, "cfengine_com")->is_soft);
+    assert_true(!EvalContextClassGet(ctx, NULL, "com")->is_soft);
+    assert_true(!EvalContextClassGet(ctx, NULL, "laptop_intra")->is_soft);
 
     TestSysVar(ctx, "host", "laptop.intra");
     TestSysVar(ctx, "fqhost", "laptop.intra.cfengine.com");

@@ -1,13 +1,15 @@
 #ifndef CFENGINE_CLASS_H
 #define CFENGINE_CLASS_H
 
-#include <platform.h>
+#include <cf3.defs.h>
 
 typedef struct
 {
     char *ns;
     char *name;
     size_t hash;
+
+    ContextScope scope;
     bool is_soft;
 } Class;
 
@@ -17,7 +19,7 @@ typedef struct ClassTableIterator_ ClassTableIterator;
 ClassTable *ClassTableNew(void);
 void ClassTableDestroy(ClassTable *table);
 
-bool ClassTablePut(ClassTable *table, const char *ns, const char *name, bool is_soft);
+bool ClassTablePut(ClassTable *table, const char *ns, const char *name, bool is_soft, ContextScope scope);
 Class *ClassTableGet(const ClassTable *table, const char *ns, const char *name);
 bool ClassTableRemove(ClassTable *table, const char *ns, const char *name);
 

@@ -126,7 +126,7 @@ void EvalContextHeapAddSoft(EvalContext *ctx, const char *context, const char *n
         return;
     }
 
-    ClassTablePut(ctx->global_classes, ns, canonified_context, true);
+    ClassTablePut(ctx->global_classes, ns, canonified_context, true, CONTEXT_SCOPE_NAMESPACE);
 
     if (!ABORTBUNDLE)
     {
@@ -176,7 +176,7 @@ void EvalContextHeapAddHard(EvalContext *ctx, const char *context)
         return;
     }
 
-    ClassTablePut(ctx->global_classes, NULL, context_copy, false);
+    ClassTablePut(ctx->global_classes, NULL, context_copy, false, CONTEXT_SCOPE_NAMESPACE);
 
     if (!ABORTBUNDLE)
     {
@@ -248,7 +248,7 @@ void EvalContextStackFrameAddSoft(EvalContext *ctx, const char *context)
         return;
     }
 
-    ClassTablePut(frame.classes, frame.owner->ns, context, true);
+    ClassTablePut(frame.classes, frame.owner->ns, context, true, CONTEXT_SCOPE_BUNDLE);
 
     if (!ABORTBUNDLE)
     {

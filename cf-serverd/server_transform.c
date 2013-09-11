@@ -84,6 +84,7 @@ typedef enum
     SERVER_CONTROL_SKIP_VERIFY,
     SERVER_CONTROL_TRUST_KEYS_FROM,
     SERVER_CONTROL_LISTEN,
+    SERVER_CONTROL_ALLOWCIPHERS,
     SERVER_CONTROL_NONE
 } ServerControl;
 
@@ -466,6 +467,14 @@ static void KeepControlPromises(EvalContext *ctx, Policy *policy, GenericAgentCo
             {
                 strncpy(BINDINTERFACE, retval.item, CF_BUFSIZE - 1);
                 Log(LOG_LEVEL_VERBOSE, "Setting bindtointerface to '%s'", BINDINTERFACE);
+                continue;
+            }
+
+            if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_ALLOWCIPHERS].lval) == 0)
+            {
+
+                SV.allowciphers = xstrdup(cp->lval);
+                Log(LOG_LEVEL_VERBOSE, "Setting allowciphers to '%s'", SV.allowciphers);
                 continue;
             }
         }

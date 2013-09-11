@@ -9,6 +9,10 @@
 body server control
 
 {
+      # List of ciphers the server accepts. For Syntax help see man page
+      # for "openssl ciphers". Default is "AES256-GCM-SHA384:AES256-SHA"
+      #allowciphers          => "AES256-GCM-SHA384:AES256-SHA";
+
       # Allow connections from nodes which are out-of-sync
       denybadclocks         => "false";
 

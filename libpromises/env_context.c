@@ -748,7 +748,7 @@ void EvalContextDestroy(EvalContext *ctx)
     }
 }
 
-bool EvalContextHeapContainsSoft(const EvalContext *ctx, const char *ns, const char *name)
+static bool EvalContextHeapContainsSoft(const EvalContext *ctx, const char *ns, const char *name)
 {
     const Class *cls = ClassTableGet(ctx->global_classes, ns, name);
     return cls && cls->is_soft;

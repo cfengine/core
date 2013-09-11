@@ -150,7 +150,7 @@ static void VerifyProcessOp(EvalContext *ctx, Item *procdata, Attributes a, Prom
             for (const Rlist *rp = a.process_count.out_of_range_define; rp != NULL; rp = rp->next)
             {
                 ClassRef ref = ClassRefParse(RlistScalarValue(rp));
-                if (!EvalContextHeapContainsSoft(ctx, ref.ns, ref.name))
+                if (!IsDefinedClass(ctx, ref.name, ref.ns))
                 {
                     EvalContextHeapAddSoft(ctx, RlistScalarValue(rp), PromiseGetNamespace(pp));
                 }
@@ -163,7 +163,7 @@ static void VerifyProcessOp(EvalContext *ctx, Item *procdata, Attributes a, Prom
             for (const Rlist *rp = a.process_count.in_range_define; rp != NULL; rp = rp->next)
             {
                 ClassRef ref = ClassRefParse(RlistScalarValue(rp));
-                if (!EvalContextHeapContainsSoft(ctx, ref.ns, ref.name))
+                if (!IsDefinedClass(ctx, ref.name, ref.ns))
                 {
                     EvalContextHeapAddSoft(ctx, RlistScalarValue(rp), PromiseGetNamespace(pp));
                 }

@@ -120,7 +120,6 @@ void EvalContextHeapPersistentSave(const char *context, const char *ns, unsigned
 void EvalContextHeapPersistentRemove(const char *context);
 void EvalContextHeapPersistentLoadAll(EvalContext *ctx);
 
-bool EvalContextHeapContainsSoft(const EvalContext *ctx, const char *ns, const char *context);
 bool EvalContextHeapContainsHard(const EvalContext *ctx, const char *context);
 bool EvalContextStackFrameContainsSoft(const EvalContext *ctx, const char *context);
 

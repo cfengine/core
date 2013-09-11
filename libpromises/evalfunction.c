@@ -5240,7 +5240,8 @@ void ModuleProtocol(EvalContext *ctx, char *command, char *line, int print, cons
                 const char *negated_context = NULL;
                 while ((negated_context = StringSetIteratorNext(&it)))
                 {
-                    if (EvalContextHeapContainsHard(ctx, negated_context))
+                    Class *cls = EvalContextClassGet(ctx, NULL, negated_context);
+                    if (cls && !cls->is_soft)
                     {
                         FatalError(ctx, "Cannot negate the reserved class '%s'", negated_context);
                     }

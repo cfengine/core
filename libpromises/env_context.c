@@ -46,6 +46,8 @@
 static bool ABORTBUNDLE = false;
 static bool EvalContextStackFrameContainsSoft(const EvalContext *ctx, const char *context);
 static bool EvalContextHeapContainsSoft(const EvalContext *ctx, const char *ns, const char *name);
+static bool EvalContextHeapContainsHard(const EvalContext *ctx, const char *name);
+
 
 static StackFrame *LastStackFrame(const EvalContext *ctx, size_t offset)
 {
@@ -756,7 +758,7 @@ static bool EvalContextHeapContainsSoft(const EvalContext *ctx, const char *ns, 
     return cls && cls->is_soft;
 }
 
-bool EvalContextHeapContainsHard(const EvalContext *ctx, const char *name)
+static bool EvalContextHeapContainsHard(const EvalContext *ctx, const char *name)
 {
     const Class *cls = ClassTableGet(ctx->global_classes, NULL, name);
     return cls && !cls->is_soft;
@@ -1039,6 +1041,21 @@ void EvalContextStackPopFrame(EvalContext *ctx)
 bool EvalContextClassRemove(EvalContext *ctx, const char *ns, const char *name)
 {
     return ClassTableRemove(ctx->global_classes, ns, name);
+}
+
+Class *EvalContextClassGet(EvalContext *ctx, const char *ns, const char *name)
+{
+    StackFrame *frame = LastStackFrameByType(ctx, STACK_FRAME_TYPE_BUNDLE);
+    if (frame)
+    {
+        Class *cls = ClassTableGet(frame->data.bundle.classes, ns, name);
+        if (cls)
+        {
+            return cls;
+        }
+    }
+
+    return ClassTableGet(ctx->global_classes, ns, name);
 }
 
 ClassTableIterator *EvalContextClassTableIteratorNewGlobal(const EvalContext *ctx, const char *ns, bool is_hard, bool is_soft)

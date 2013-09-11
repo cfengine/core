@@ -1517,9 +1517,10 @@ void GenericAgentConfigApply(EvalContext *ctx, const GenericAgentConfig *config)
         const char *context = NULL;
         while ((context = StringSetIteratorNext(&it)))
         {
-            if (EvalContextHeapContainsHard(ctx, context))
+            Class *cls = EvalContextClassGet(ctx, NULL, context);
+            if (cls && !cls->is_soft)
             {
-                FatalError(ctx, "cfengine: You cannot use -D to define a reserved class!");
+                FatalError(ctx, "You cannot use -D to define a reserved class");
             }
 
             EvalContextHeapAddSoft(ctx, context, NULL);

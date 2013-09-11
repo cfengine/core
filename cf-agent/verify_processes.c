@@ -196,6 +196,11 @@ static void VerifyProcessOp(EvalContext *ctx, Item *procdata, Attributes a, Prom
 
     if (do_signals && (matches > 0))
     {
+        if (a.stop_class != NULL)
+        {
+            EvalContextHeapAddSoft(ctx, a.stop_class, PromiseGetNamespace(pp));
+        }
+
         if (a.process_stop != NULL)
         {
             if (DONTDO)
@@ -225,7 +230,7 @@ static void VerifyProcessOp(EvalContext *ctx, Item *procdata, Attributes a, Prom
 
 /* delegated promise to restart killed or non-existent entries */
 
-    need_to_restart = (a.restart_class != NULL) && (killed || (matches == 0));
+    need_to_restart = ( (a.process_start != NULL) || (a.restart_class != NULL) ) && (killed || (matches == 0));
 
     DeleteItemList(killlist);
 
@@ -243,8 +248,34 @@ static void VerifyProcessOp(EvalContext *ctx, Item *procdata, Attributes a, Prom
         }
         else
         {
-            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "Making a one-time restart promise for '%s'", pp->promiser);
-            EvalContextHeapAddSoft(ctx, a.restart_class, PromiseGetNamespace(pp));
+            if (a.process_start != NULL)
+            {
+                if (DONTDO)
+                {
+                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, a,
+                         "Need to keep process-start promise for '%s', but only a warning is promised", pp->promiser);
+                }
+                else
+                {
+                    if (IsExecutable(CommandArg0(a.process_start)))
+                    {
+                        ShellCommandReturnsZero(a.process_start, SHELL_TYPE_NONE);
+                    }
+                    else
+                    {
+                        cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, pp, a,
+                             "Process promise to start '%s' could not be kept because '%s' the start operator failed",
+                             pp->promiser, a.process_start);
+                        return;
+                    }
+                }
+            }
+
+            if (a.restart_class != NULL)
+            {
+                cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "Making a one-time restart promise for '%s'", pp->promiser);
+                EvalContextHeapAddSoft(ctx, a.restart_class, PromiseGetNamespace(pp));
+            }
         }
     }
 }

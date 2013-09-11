@@ -228,9 +228,11 @@ Attributes GetProcessAttributes(const EvalContext *ctx, const Promise *pp)
 
     attr.signals = PromiseGetConstraintAsList(ctx, "signals", pp);
     attr.process_stop = (char *) ConstraintGetRvalValue(ctx, "process_stop", pp, RVAL_TYPE_SCALAR);
+    attr.process_start = (char *) ConstraintGetRvalValue(ctx, "process_start", pp, RVAL_TYPE_SCALAR);
     attr.haveprocess_count = PromiseGetConstraintAsBoolean(ctx, "process_count", pp);
     attr.haveselect = PromiseGetConstraintAsBoolean(ctx, "process_select", pp);
     attr.restart_class = (char *) ConstraintGetRvalValue(ctx, "restart_class", pp, RVAL_TYPE_SCALAR);
+    attr.stop_class = (char *) ConstraintGetRvalValue(ctx, "stop_class", pp, RVAL_TYPE_SCALAR);
 
     attr.process_count = GetMatchesConstraints(ctx, pp);
     attr.process_select = GetProcessFilterConstraints(ctx, pp);

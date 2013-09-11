@@ -46,6 +46,7 @@ static char CFLOG[CF_BUFSIZE] = { 0 };
 static pthread_once_t lock_cleanup_once = PTHREAD_ONCE_INIT;
 
 
+#ifdef LMDB
 static void GenerateMd5Hash(const char *istring, char *ohash)
 {
     if (!strcmp(istring, "CF_CRITICAL_SECTION") ||
@@ -66,6 +67,7 @@ static void GenerateMd5Hash(const char *istring, char *ohash)
     }
     ohash[16*2] = '\0';
 }
+#endif
 
 static bool WriteLockData(CF_DB *dbp, const char *lock_id, LockData *lock_data)
 {

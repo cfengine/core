@@ -732,6 +732,103 @@ bundle agent standard_services(service,state)
       "stopcommand[omsa-dataeng]"    string => "/etc/init.d/dataeng stop";
       "pattern[omsa-dataeng]"        string => ".*dsm_sa_datamgr.*";
 
+    freebsd::
+
+      "startcommand[ssh]"   string => "/etc/rc.d/sshd start";
+      "restartcommand[ssh]" string => "/etc/rc.d/sshd restart";
+      "reloadcommand[ssh]"  string => "/etc/rc.d/sshd reload";
+      "stopcommand[ssh]"    string => "/etc/rc.d/sshd stop";
+      "pattern[ssh]"        string => ".*sshd.*";
+
+      "startcommand[ntpd]"   string => "/etc/rc.d/ntpd start";
+      "restartcommand[ntpd]" string => "/etc/rc.d/ntpd restart";
+      "reloadcommand[ntpd]"  string => "/etc/rc.d/ntpd restart";
+      "stopcommand[ntpd]"    string => "/etc/rc.d/ntpd stop";
+      "pattern[ntpd]"        string => "*ntpd.*";
+
+      "startcommand[syslog]"   string => "/etc/rc.d/syslogd start";
+      "restartcommand[syslog]" string => "/etc/rc.d/syslogd restart";
+      "reloadcommand[syslog]"  string => "/etc/rc.d/syslogd reload";
+      "stopcommand[syslog]"    string => "/etc/rc.d/syslogd stop";
+      "pattern[syslog]"        string => "*syslogd.*";
+
+      "startcommand[hastd]"   string => "/etc/rc.d/hastd start";
+      "restartcommand[hastd]" string => "/etc/rc.d/hastd restart";
+      "reloadcommand[hastd]"  string => "/etc/rc.d/hastd reload";
+      "stopcommand[hastd]"    string => "/etc/rc.d/hastd stop";
+      "pattern[hastd]"        string => "*hastd.*";
+
+      "startcommand[snmpd]"   string => "/etc/rc.d/bsnmpd start";
+      "restartcommand[snmpd]" string => "/etc/rc.d/bsnmpd restart";
+      "reloadcommand[snmpd]"  string => "/etc/rc.d/bsnmpd restart";
+      "stopcommand[snmpd]"    string => "/etc/rc.d/bsnmpd stop";
+      "pattern[snmpd]"        string => "*bsnmpd.*";
+
+      "startcommand[sendmail]"   string => "/etc/rc.d/sendmail start";
+      "restartcommand[sendmail]" string => "/etc/rc.d/sendmail restart";
+      "reloadcommand[sendmail]"  string => "/etc/rc.d/sendmail restart";
+      "stopcommand[sendmail]"    string => "/etc/rc.d/sendmail stop";
+      "pattern[sendmail]"        string => "sendmail:.*";
+
+      "startcommand[named]"   string => "/etc/rc.d/named start";
+      "restartcommand[named]" string => "/etc/rc.d/named restart";
+      "reloadcommand[named]"  string => "/etc/rc.d/named restart";
+      "stopcommand[named]"    string => "/etc/rc.d/named stop";
+      "pattern[named]"        string => ".*named.*";
+
+      "startcommand[watchdogd]"   string => "/etc/rc.d/watchdogd start";
+      "restartcommand[watchdogd]" string => "/etc/rc.d/watchdogd restart";
+      "reloadcommand[watchdogd]"  string => "/etc/rc.d/watchdogd restart";
+      "stopcommand[watchdogd]"    string => "/etc/rc.d/watchdogd stop";
+      "pattern[watchdogd]"        string => ".*watchdogd.*";
+
+      "startcommand[crond]"   string => "/etc/rc.d/cron start";
+      "restartcommand[crond]" string => "/etc/rc.d/cron restart";
+      "reloadcommand[crond]"  string => "/etc/rc.d/cron restart";
+      "stopcommand[crond]"    string => "/etc/rc.d/cron stop";
+      "pattern[crond]"        string => ".*cron.*";
+
+      "startcommand[cfengine3]"   string => "/usr/local/etc/rc.d/cf-execd start";
+      "restartcommand[cfengine3]" string => "/usr/local/etc/rc.d/cf-execd restart";
+      "reloadcommand[cfengine3]"  string => "/usr/local/etc/rc.d/cf-execd restart";
+      "stopcommand[cfengine3]"    string => "/usr/local/etc/rc.d/cf-execd stop";
+      "pattern[cfengine3]"        string => ".*cf-execd.*";
+
+      "startcommand[haldaemon]"   string => "/usr/local/etc/rc.d/hald start";
+      "restartcommand[haldaemon]" string => "/usr/local/etc/rc.d/hald restart";
+      "reloadcommand[haldaemon]"  string => "/usr/local/etc/rc.d/hald restart";
+      "stopcommand[haldaemon]"    string => "/usr/local/etc/rc.d/hald stop";
+      "pattern[haldaemon]"        string => ".*hald.*";
+
+      "startcommand[nrpe]"   string => "/usr/local/etc/rc.d/nrpe2 start";
+      "restartcommand[nrpe]" string => "/usr/local/etc/rc.d/nrpe2 restart";
+      "reloadcommand[nrpe]"  string => "/usr/local/etc/rc.d/nrpe2 reload";
+      "stopcommand[nrpe]"    string => "/usr/local/etc/rc.d/nrpe2 stop";
+      "pattern[nrpe]"        string => ".*nrpe2.*";
+
+      "startcommand[mysql]"   string => "/usr/local/etc/rc.d/mysql-server start";
+      "restartcommand[mysql]" string => "/usr/local/etc/rc.d/mysql-server restart";
+      "reloadcommand[mysql]"  string => "/usr/local/etc/rc.d/mysql-server restart";
+      "stopcommand[mysql]"    string => "/usr/local/etc/rc.d/mysql-server stop";
+      "pattern[mysql]"        string => ".*mysqld.*";
+
+      "startcommand[rsync]"   string => "/usr/local/etc/rc.d/rsyncd start";
+      "restartcommand[rsync]" string => "/usr/local/etc/rc.d/rsyncd restart";
+      "reloadcommand[rsync]"  string => "/usr/local/etc/rc.d/rsyncd reload";
+      "stopcommand[rsync]"    string => "/usr/local/etc/rc.d/rsyncd stop";
+      "pattern[rsync]"        string => ".*rsync.*";
+
+      "startcommand[nscd]"   string => "/etc/rc.d/nscd start";
+      "restartcommand[nscd]" string => "/etc/rc.d/nscd restart";
+      "reloadcommand[nscd]"  string => "/etc/rc.d/nscd reload";
+      "stopcommand[nscd]"    string => "/etc/rc.d/nscd stop";
+      "pattern[nscd]"        string => ".*nscd.*";
+
+      "startcommand[www]"   string => "/usr/local/etc/rc.d/apache22 start";
+      "restartcommand[www]" string => "/usr/local/etc/rc.d/apache22 restart";
+      "reloadcommand[www]"  string => "/usr/local/etc/rc.d/apache22 reload";
+      "stopcommand[www]"    string => "/usr/local/etc/rc.d/apache22 stop";
+      "pattern[www]"        string => ".*httpd.*";
 
       # METHODS that implement these ............................................
 

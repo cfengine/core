@@ -1190,6 +1190,18 @@ int ScheduleAgentOperations(EvalContext *ctx, Bundle *bp)
 
     for (int pass = 1; pass < CF_DONEPASSES; pass++)
     {
+
+        /* Define a hard class for the current pass number */
+        char pass_name_buf[CF_MAXVARSIZE];
+
+        /* First, remove old pass name (this will remove pass_0 the first time, but that's OK) */
+        sprintf(pass_name_buf, "pass_%d", pass-1);
+        EvalContextHeapRemoveHard(ctx, pass_name_buf);
+
+        /* Then add this pass name as a hard class */
+        sprintf(pass_name_buf, "pass_%d", pass);
+        EvalContextHeapAddHard(ctx, pass_name_buf);
+
         for (TypeSequence type = 0; AGENT_TYPESEQUENCE[type] != NULL; type++)
         {
             ClassBanner(ctx, type);

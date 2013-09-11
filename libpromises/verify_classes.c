@@ -104,12 +104,12 @@ void VerifyClassPromise(EvalContext *ctx, Promise *pp, ARG_UNUSED void *param)
             if (global_class)
             {
                 Log(LOG_LEVEL_VERBOSE, "Adding global class '%s'", pp->promiser);
-                EvalContextHeapAddSoft(ctx, pp->promiser, PromiseGetNamespace(pp));
+                EvalContextClassPut(ctx, PromiseGetNamespace(pp), pp->promiser, true, CONTEXT_SCOPE_NAMESPACE);
             }
             else
             {
                 Log(LOG_LEVEL_VERBOSE, "Adding local bundle class '%s'", pp->promiser);
-                EvalContextStackFrameAddSoft(ctx, pp->promiser);
+                EvalContextClassPut(ctx, PromiseGetNamespace(pp), pp->promiser, true, CONTEXT_SCOPE_BUNDLE);
             }
 
             if (a.context.persistent > 0)
@@ -250,7 +250,7 @@ static int EvalClassExpression(EvalContext *ctx, Constraint *cp, Promise *pp)
         {
             if (i == n)
             {
-                EvalContextHeapAddSoft(ctx, RlistScalarValue(rp), PromiseGetNamespace(pp));
+                EvalContextClassPut(ctx, PromiseGetNamespace(pp), RlistScalarValue(rp), true, CONTEXT_SCOPE_NAMESPACE);
                 return true;
             }
         }
@@ -310,11 +310,11 @@ static int EvalClassExpression(EvalContext *ctx, Constraint *cp, Promise *pp)
 
         if (strcmp(PromiseGetBundle(pp)->type, "common") == 0)
         {
-            EvalContextHeapAddSoft(ctx, buffer, PromiseGetNamespace(pp));
+            EvalContextClassPut(ctx, PromiseGetNamespace(pp), buffer, true, CONTEXT_SCOPE_NAMESPACE);
         }
         else
         {
-            EvalContextStackFrameAddSoft(ctx, buffer);
+            EvalContextClassPut(ctx, PromiseGetNamespace(pp), buffer, true, CONTEXT_SCOPE_BUNDLE);
         }
 
         return true;

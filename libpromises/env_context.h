@@ -109,18 +109,15 @@ struct EvalContext_
 EvalContext *EvalContextNew(void);
 void EvalContextDestroy(EvalContext *ctx);
 
-void EvalContextHeapAddSoft(EvalContext *ctx, const char *context, const char *ns);
-void EvalContextHeapAddHard(EvalContext *ctx, const char *context);
 void EvalContextHeapAddAbort(EvalContext *ctx, const char *context, const char *activated_on_context);
 void EvalContextHeapAddAbortCurrentBundle(EvalContext *ctx, const char *context, const char *activated_on_context);
-
-void EvalContextStackFrameAddSoft(EvalContext *ctx, const char *context);
 
 void EvalContextHeapPersistentSave(const char *context, const char *ns, unsigned int ttl_minutes, ContextStatePolicy policy);
 void EvalContextHeapPersistentRemove(const char *context);
 void EvalContextHeapPersistentLoadAll(EvalContext *ctx);
 
-bool EvalContextClassPut(EvalContext *ctx, const char *ns, const char *name, ContextScope scope);
+bool EvalContextClassPut(EvalContext *ctx, const char *ns, const char *name, bool is_soft, ContextScope scope);
+void EvalContextClassPutHard(EvalContext *ctx, const char *name);
 Class *EvalContextClassGet(EvalContext *ctx, const char *ns, const char *name);
 bool EvalContextClassRemove(EvalContext *ctx, const char *ns, const char *name);
 void EvalContextStackFrameRemoveSoft(EvalContext *ctx, const char *context);

@@ -144,55 +144,12 @@ void EvalContextHeapAddSoft(EvalContext *ctx, const char *context, const char *n
 
 /*******************************************************************/
 
-void EvalContextHeapAddHard(EvalContext *ctx, const char *context)
+void EvalContextClassPutHard(EvalContext *ctx, const char *name)
 {
-    char context_copy[CF_MAXVARSIZE];
-
-    strcpy(context_copy, context);
-    if (Chop(context_copy, CF_EXPANDSIZE) == -1)
-    {
-        Log(LOG_LEVEL_ERR, "Chop was called on a string that seemed to have no terminator");
-    }
-    CanonifyNameInPlace(context_copy);
-
-    if (strlen(context_copy) == 0)
-    {
-        return;
-    }
-
-    if (IsRegexItemIn(ctx, ctx->heap_abort_current_bundle, context_copy))
-    {
-        Log(LOG_LEVEL_ERR, "Bundle aborted on defined class '%s'", context_copy);
-        ABORTBUNDLE = true;
-    }
-
-    if (IsRegexItemIn(ctx, ctx->heap_abort, context_copy))
-    {
-        FatalError(ctx, "cf-agent aborted on defined class '%s'", context_copy);
-    }
-
-    if (EvalContextHeapContainsHard(ctx, context_copy))
-    {
-        return;
-    }
-
-    ClassTablePut(ctx->global_classes, NULL, context_copy, false, CONTEXT_SCOPE_NAMESPACE);
-
-    if (!ABORTBUNDLE)
-    {
-        for (const Item *ip = ctx->heap_abort_current_bundle; ip != NULL; ip = ip->next)
-        {
-            if (IsDefinedClass(ctx, ip->name, NULL))
-            {
-                Log(LOG_LEVEL_ERR, "Setting abort for '%s' when setting '%s'", ip->name, context_copy);
-                ABORTBUNDLE = true;
-                break;
-            }
-        }
-    }
+    EvalContextClassPut(ctx, NULL, name, false, CONTEXT_SCOPE_NAMESPACE);
 }
 
-void EvalContextStackFrameAddSoft(EvalContext *ctx, const char *context)
+static void EvalContextStackFrameAddSoft(EvalContext *ctx, const char *context)
 {
     assert(SeqLength(ctx->stack) > 0);
 
@@ -1056,6 +1013,90 @@ Class *EvalContextClassGet(EvalContext *ctx, const char *ns, const char *name)
     }
 
     return ClassTableGet(ctx->global_classes, ns, name);
+}
+
+bool EvalContextClassPut(EvalContext *ctx, const char *ns, const char *name, bool is_soft, ContextScope scope)
+{
+    {
+        char context_copy[CF_MAXVARSIZE];
+        char canonified_context[CF_MAXVARSIZE];
+
+        strcpy(canonified_context, name);
+        if (Chop(canonified_context, CF_EXPANDSIZE) == -1)
+        {
+            Log(LOG_LEVEL_ERR, "Chop was called on a string that seemed to have no terminator");
+        }
+        CanonifyNameInPlace(canonified_context);
+
+        if (ns && strcmp(ns, "default") != 0)
+        {
+            snprintf(context_copy, CF_MAXVARSIZE, "%s:%s", ns, canonified_context);
+        }
+        else
+        {
+            strncpy(context_copy, canonified_context, CF_MAXVARSIZE);
+        }
+
+        if (strlen(context_copy) == 0)
+        {
+            return false;
+        }
+
+        if (IsRegexItemIn(ctx, ctx->heap_abort_current_bundle, context_copy))
+        {
+            Log(LOG_LEVEL_ERR, "Bundle aborted on defined class '%s'", context_copy);
+            ABORTBUNDLE = true;
+        }
+
+        if (IsRegexItemIn(ctx, ctx->heap_abort, context_copy))
+        {
+            FatalError(ctx, "cf-agent aborted on defined class '%s'", context_copy);
+        }
+    }
+
+    Class *existing_class = EvalContextClassGet(ctx, ns, name);
+    if (existing_class && existing_class->scope == scope)
+    {
+        return false;
+    }
+
+    switch (scope)
+    {
+    case CONTEXT_SCOPE_BUNDLE:
+        {
+            StackFrame *frame = LastStackFrameByType(ctx, STACK_FRAME_TYPE_BUNDLE);
+            if (!frame)
+            {
+                ProgrammingError("Attempted to add bundle class '%s' while not evaluating a bundle", name);
+            }
+            ClassTablePut(frame->data.bundle.classes, ns, name, is_soft, scope);
+        }
+        break;
+
+    case CONTEXT_SCOPE_NAMESPACE:
+        ClassTablePut(ctx->global_classes, ns, name, is_soft, scope);
+        break;
+
+    case CONTEXT_SCOPE_NONE:
+        ProgrammingError("Attempted to add a class without a set scope");
+    }
+
+    if (!ABORTBUNDLE)
+    {
+        for (const Item *ip = ctx->heap_abort_current_bundle; ip != NULL; ip = ip->next)
+        {
+            const char *class_expr = ip->name;
+
+            if (IsDefinedClass(ctx, class_expr, ns))
+            {
+                Log(LOG_LEVEL_ERR, "Setting abort for '%s' when setting class '%s'", ip->name, name);
+                ABORTBUNDLE = true;
+                break;
+            }
+        }
+    }
+
+    return true;
 }
 
 ClassTableIterator *EvalContextClassTableIteratorNewGlobal(const EvalContext *ctx, const char *ns, bool is_hard, bool is_soft)

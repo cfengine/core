@@ -20,12 +20,23 @@ struct ClassTableIterator_
 
 static size_t ClassRefHash(const char *ns, const char *name)
 {
-    unsigned hash = 0;
+    unsigned h = 0;
 
-    hash = StringHash(ns ? ns : "default", hash, INT_MAX);
-    hash = StringHash(name, hash, INT_MAX);
+    h = StringHash(ns ? ns : "default", h, INT_MAX);
 
-    return hash;
+    size_t len = strlen(name);
+    for (size_t i = 0; i < len; i++)
+    {
+        h += (!isalnum(name[i]) || (name[i] == '.')) ? '_' : name[i];
+        h += (h << 10);
+        h ^= (h >> 6);
+    }
+
+    h += (h << 3);
+    h ^= (h >> 11);
+    h += (h << 15);
+
+    return (h & (INT_MAX - 1));
 }
 
 void ClassInit(Class *cls, const char *ns, const char *name, bool is_soft, ContextScope scope)
@@ -77,7 +88,8 @@ void ClassTableDestroy(ClassTable *table)
 bool ClassTablePut(ClassTable *table, const char *ns, const char *name, bool is_soft, ContextScope scope)
 {
     assert(name);
-    assert(strchr(name, ':') == NULL);
+    assert(is_soft || (!ns || strcmp("default", ns) == 0)); // hard classes should have default namespace
+    assert(is_soft || scope == CONTEXT_SCOPE_NAMESPACE); // hard classes cannot be local
 
     if (ns && strcmp("default", ns) == 0)
     {

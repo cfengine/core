@@ -38,11 +38,11 @@ static void test_ns(void)
 {
     {
         ClassTable *t = ClassTableNew();
-        assert_false(ClassTablePut(t, "foo", "127.0.0.1", false, CONTEXT_SCOPE_NAMESPACE));
+        assert_false(ClassTablePut(t, "foo", "127.0.0.1", true, CONTEXT_SCOPE_BUNDLE));
         Class *cls = ClassTableGet(t, "foo", "127_0_0_1");
         assert_string_equal("foo", cls->ns);
         assert_string_equal("127_0_0_1", cls->name);
-        assert_false(cls->is_soft);
+        assert_true(cls->is_soft);
         ClassTableDestroy(t);
     }
 }

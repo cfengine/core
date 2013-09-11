@@ -106,7 +106,7 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
     SanitizeEnvironment();
 
     THIS_AGENT_TYPE = config->agent_type;
-    EvalContextHeapAddHard(ctx, CF_AGENTTYPES[config->agent_type]);
+    EvalContextClassPutHard(ctx, CF_AGENTTYPES[config->agent_type]);
 
     GenericAgentSetDefaultDigest(&CF_DEFAULT_DIGEST, &CF_DEFAULT_DIGEST_LEN);
 
@@ -147,7 +147,7 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
             if (am_policy_server)
             {
                 Log(LOG_LEVEL_INFO, "Assuming role as policy server, with policy distribution point at %s/masterfiles", GetWorkDir());
-                EvalContextHeapAddHard(ctx, "am_policy_hub");
+                EvalContextClassPutHard(ctx, "am_policy_hub");
 
                 if (!MasterfileExists(GetWorkDir()))
                 {
@@ -182,9 +182,9 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
 
         if (GetAmPolicyHub(GetWorkDir()))
         {
-            EvalContextHeapAddHard(ctx, "am_policy_hub");  // DEPRECATED: use policy_server instead
+            EvalContextClassPutHard(ctx, "am_policy_hub");  // DEPRECATED: use policy_server instead
             Log(LOG_LEVEL_VERBOSE, "Additional class defined: am_policy_hub");
-            EvalContextHeapAddHard(ctx, "policy_server");
+            EvalContextClassPutHard(ctx, "policy_server");
             Log(LOG_LEVEL_VERBOSE, "Additional class defined: policy_server");
         }
     }
@@ -654,7 +654,7 @@ void CloseLog(void)
 
 ENTERPRISE_VOID_FUNC_1ARG_DEFINE_STUB(void, GenericAgentAddEditionClasses, EvalContext *, ctx)
 {
-    EvalContextHeapAddHard(ctx, "community_edition");
+    EvalContextClassPutHard(ctx, "community_edition");
 }
 
 void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
@@ -667,7 +667,7 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
     SHORT_CFENGINEPORT = htons((unsigned short) 5308);
     snprintf(STR_CFENGINEPORT, 15, "5308");
 
-    EvalContextHeapAddHard(ctx, "any");
+    EvalContextClassPutHard(ctx, "any");
 
     strcpy(VPREFIX, GetConsolePrefix());
 
@@ -1523,21 +1523,21 @@ void GenericAgentConfigApply(EvalContext *ctx, const GenericAgentConfig *config)
                 FatalError(ctx, "You cannot use -D to define a reserved class");
             }
 
-            EvalContextHeapAddSoft(ctx, context, NULL);
+            EvalContextClassPut(ctx, NULL, context, true, CONTEXT_SCOPE_NAMESPACE);
         }
     }
 
     switch (LogGetGlobalLevel())
     {
     case LOG_LEVEL_DEBUG:
-        EvalContextHeapAddHard(ctx, "debug_mode");
-        EvalContextHeapAddHard(ctx, "opt_debug");
+        EvalContextClassPutHard(ctx, "debug_mode");
+        EvalContextClassPutHard(ctx, "opt_debug");
         // intentional fall
     case LOG_LEVEL_VERBOSE:
-        EvalContextHeapAddHard(ctx, "verbose_mode");
+        EvalContextClassPutHard(ctx, "verbose_mode");
         // intentional fall
     case LOG_LEVEL_INFO:
-        EvalContextHeapAddHard(ctx, "inform_mode");
+        EvalContextClassPutHard(ctx, "inform_mode");
         break;
     default:
         break;
@@ -1545,7 +1545,7 @@ void GenericAgentConfigApply(EvalContext *ctx, const GenericAgentConfig *config)
 
     if (config->agent_specific.agent.bootstrap_policy_server)
     {
-        EvalContextHeapAddHard(ctx, "bootstrap_mode");
+        EvalContextClassPutHard(ctx, "bootstrap_mode");
     }
 
     if (config->color)

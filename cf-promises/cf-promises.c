@@ -265,7 +265,7 @@ GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             DONTDO = true;
             IGNORELOCK = true;
             LOOKUP = true;
-            EvalContextHeapAddHard(ctx, "opt_dry_run");
+            EvalContextClassPutHard(ctx, "opt_dry_run");
             break;
 
         case 'V':

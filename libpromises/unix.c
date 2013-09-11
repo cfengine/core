@@ -356,7 +356,7 @@ static void GetMacAddress(EvalContext *ctx, int fd, struct ifreq *ifr, struct if
     RlistAppend(interfaces, ifp->ifr_name, RVAL_TYPE_SCALAR);
 
     snprintf(name, sizeof(name), "mac_%s", CanonifyName(hw_mac));
-    EvalContextHeapAddHard(ctx, name);
+    EvalContextClassPutHard(ctx, name);
 
 # elif defined(HAVE_GETIFADDRS)
     char hw_mac[CF_MAXVARSIZE];
@@ -370,7 +370,7 @@ static void GetMacAddress(EvalContext *ctx, int fd, struct ifreq *ifr, struct if
           ifp->ifr_name);
 
         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, name, "mac_unknown", DATA_TYPE_STRING);
-        EvalContextHeapAddHard(ctx, "mac_unknown");
+        EvalContextClassPutHard(ctx, "mac_unknown");
         return;
     }
     for (ifa = ifaddr; ifa != NULL; ifa=ifa->ifa_next)
@@ -395,7 +395,7 @@ static void GetMacAddress(EvalContext *ctx, int fd, struct ifreq *ifr, struct if
                 RlistAppend(interfaces, ifa->ifa_name, RVAL_TYPE_SCALAR);
 
                 snprintf(name, sizeof(name), "mac_%s", CanonifyName(hw_mac));
-                EvalContextHeapAddHard(ctx, name);
+                EvalContextClassPutHard(ctx, name);
             }
         }
 
@@ -404,7 +404,7 @@ static void GetMacAddress(EvalContext *ctx, int fd, struct ifreq *ifr, struct if
 
 # else
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, name, "mac_unknown", DATA_TYPE_STRING);
-    EvalContextHeapAddHard(ctx, "mac_unknown");
+    EvalContextClassPutHard(ctx, "mac_unknown");
 # endif
 }
 
@@ -532,7 +532,7 @@ void GetInterfacesInfo(EvalContext *ctx)
         }
 
         snprintf(workbuf, sizeof(workbuf), "net_iface_%s", CanonifyName(ifp->ifr_name));
-        EvalContextHeapAddHard(ctx, workbuf);
+        EvalContextClassPutHard(ctx, workbuf);
 
         /* TODO IPv6 should be handled transparently */
         if (ifp->ifr_addr.sa_family == AF_INET)
@@ -568,7 +568,7 @@ void GetInterfacesInfo(EvalContext *ctx)
                             NULL, 0, NI_NUMERICHOST);
 
                 Log(LOG_LEVEL_DEBUG, "Adding hostip '%s'", txtaddr);
-                EvalContextHeapAddHard(ctx, txtaddr);
+                EvalContextClassPutHard(ctx, txtaddr);
 
                 if ((hp = gethostbyaddr((char *) &(sin->sin_addr.s_addr),
                                         sizeof(sin->sin_addr.s_addr), AF_INET))
@@ -582,7 +582,7 @@ void GetInterfacesInfo(EvalContext *ctx)
                     if (hp->h_name != NULL)
                     {
                         Log(LOG_LEVEL_DEBUG, "Adding hostname '%s'", hp->h_name);
-                        EvalContextHeapAddHard(ctx, hp->h_name);
+                        EvalContextClassPutHard(ctx, hp->h_name);
 
                         if (hp->h_aliases != NULL)
                         {
@@ -590,7 +590,7 @@ void GetInterfacesInfo(EvalContext *ctx)
                             {
                                 Log(LOG_LEVEL_DEBUG, "Adding alias '%s'",
                                     hp->h_aliases[i]);
-                                EvalContextHeapAddHard(ctx, hp->h_aliases[i]);
+                                EvalContextClassPutHard(ctx, hp->h_aliases[i]);
                             }
                         }
                     }
@@ -612,7 +612,7 @@ void GetInterfacesInfo(EvalContext *ctx)
                         if (*sp == '.')
                         {
                             *sp = '\0';
-                            EvalContextHeapAddHard(ctx, ip);
+                            EvalContextClassPutHard(ctx, ip);
                         }
                     }
 
@@ -634,7 +634,7 @@ void GetInterfacesInfo(EvalContext *ctx)
                 assert(sizeof(ip) >= sizeof(txtaddr) + sizeof("ipv4_"));
                 strcpy(ip, "ipv4_");
                 strcat(ip, txtaddr);
-                EvalContextHeapAddHard(ctx, ip);
+                EvalContextClassPutHard(ctx, ip);
 
                 /* VIPADDRESS has already been set to the DNS address of
                  * VFQNAME by GetNameInfo3() during initialisation. Here we
@@ -658,7 +658,7 @@ void GetInterfacesInfo(EvalContext *ctx)
                     if (*sp == '.')
                     {
                         *sp = '\0';
-                        EvalContextHeapAddHard(ctx, ip);
+                        EvalContextClassPutHard(ctx, ip);
                     }
                 }
 
@@ -782,7 +782,7 @@ static void FindV6InterfacesInfo(EvalContext *ctx)
                 {
                     Log(LOG_LEVEL_VERBOSE, "Found IPv6 address %s", ip->name);
                     AppendItem(&IPADDRESSES, ip->name, "");
-                    EvalContextHeapAddHard(ctx, ip->name);
+                    EvalContextClassPutHard(ctx, ip->name);
                 }
             }
 

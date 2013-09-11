@@ -225,18 +225,18 @@ static void AddTimeClass(EvalContext *ctx, time_t time)
 /* Lifecycle */
 
     snprintf(buf, CF_BUFSIZE, "Lcycle_%d", ((parsed_time.tm_year + 1900) % 3));
-    EvalContextHeapAddHard(ctx, buf);
+    EvalContextClassPutHard(ctx, buf);
 
 /* Year */
 
     snprintf(VYEAR, CF_BUFSIZE, "%04d", parsed_time.tm_year + 1900);
     snprintf(buf, CF_BUFSIZE, "Yr%04d", parsed_time.tm_year + 1900);
-    EvalContextHeapAddHard(ctx, buf);
+    EvalContextClassPutHard(ctx, buf);
 
 /* Month */
 
     strlcpy(VMONTH, MONTH_TEXT[parsed_time.tm_mon], 4);
-    EvalContextHeapAddHard(ctx, MONTH_TEXT[parsed_time.tm_mon]);
+    EvalContextClassPutHard(ctx, MONTH_TEXT[parsed_time.tm_mon]);
 
 /* Day of week */
 
@@ -245,46 +245,46 @@ static void AddTimeClass(EvalContext *ctx, time_t time)
    ...
    Sunday  is 0 in tm_wday, 6 in DAY_TEXT */
     day_text_index = (parsed_time.tm_wday + 6) % 7;
-    EvalContextHeapAddHard(ctx, DAY_TEXT[day_text_index]);
+    EvalContextClassPutHard(ctx, DAY_TEXT[day_text_index]);
 
 /* Day */
 
     snprintf(VDAY, CF_BUFSIZE, "%d", parsed_time.tm_mday);
     snprintf(buf, CF_BUFSIZE, "Day%d", parsed_time.tm_mday);
-    EvalContextHeapAddHard(ctx, buf);
+    EvalContextClassPutHard(ctx, buf);
 
 /* Shift */
 
     strcpy(VSHIFT, SHIFT_TEXT[parsed_time.tm_hour / 6]);
-    EvalContextHeapAddHard(ctx, VSHIFT);
+    EvalContextClassPutHard(ctx, VSHIFT);
 
 /* Hour */
 
     snprintf(buf, CF_BUFSIZE, "Hr%02d", parsed_time.tm_hour);
-    EvalContextHeapAddHard(ctx, buf);
+    EvalContextClassPutHard(ctx, buf);
 
 /* GMT hour */
 
     snprintf(buf, CF_BUFSIZE, "GMT_Hr%d\n", gmt_parsed_time.tm_hour);
-    EvalContextHeapAddHard(ctx, buf);
+    EvalContextClassPutHard(ctx, buf);
 
 /* Quarter */
 
     quarter = parsed_time.tm_min / 15 + 1;
 
     snprintf(buf, CF_BUFSIZE, "Q%d", quarter);
-    EvalContextHeapAddHard(ctx, buf);
+    EvalContextClassPutHard(ctx, buf);
     snprintf(buf, CF_BUFSIZE, "Hr%02d_Q%d", parsed_time.tm_hour, quarter);
-    EvalContextHeapAddHard(ctx, buf);
+    EvalContextClassPutHard(ctx, buf);
 
 /* Minute */
 
     snprintf(buf, CF_BUFSIZE, "Min%02d", parsed_time.tm_min);
-    EvalContextHeapAddHard(ctx, buf);
+    EvalContextClassPutHard(ctx, buf);
 
     interval_start = (parsed_time.tm_min / 5) * 5;
     interval_end = (interval_start + 5) % 60;
 
     snprintf(buf, CF_BUFSIZE, "Min%02d_%02d", interval_start, interval_end);
-    EvalContextHeapAddHard(ctx, buf);
+    EvalContextClassPutHard(ctx, buf);
 }

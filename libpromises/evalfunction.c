@@ -2033,7 +2033,7 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx, FnCall *fp, Rlist *fin
             {
                 Log(LOG_LEVEL_VERBOSE, "This host is in the list and has promised to join the class '%s' - joined",
                       array_lval);
-                EvalContextHeapAddSoft(ctx, array_lval, PromiseGetNamespace(fp->caller));
+                EvalContextClassPut(ctx, PromiseGetNamespace(fp->caller), array_lval, true, CONTEXT_SCOPE_NAMESPACE);
             }
 
             count++;
@@ -3337,7 +3337,7 @@ static FnCallResult FnCallRemoteClassesMatching(EvalContext *ctx, FnCall *fp, Rl
             for (rp = classlist; rp != NULL; rp = rp->next)
             {
                 snprintf(class, CF_MAXVARSIZE - 1, "%s_%s", prefix, RlistScalarValue(rp));
-                EvalContextStackFrameAddSoft(ctx, class);
+                EvalContextClassPut(ctx, NULL, class, true, CONTEXT_SCOPE_BUNDLE);
             }
             RlistDestroy(classlist);
         }
@@ -5226,7 +5226,7 @@ void ModuleProtocol(EvalContext *ctx, char *command, char *line, int print, cons
         Log(LOG_LEVEL_VERBOSE, "Activated classes '%s'", line + 1);
         if (CheckID(line + 1))
         {
-             EvalContextHeapAddSoft(ctx, line + 1, ns);
+             EvalContextClassPut(ctx, ns, line + 1, true, CONTEXT_SCOPE_NAMESPACE);
         }
         break;
     case '-':

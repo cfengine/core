@@ -118,8 +118,9 @@ void EvalContextHeapPersistentLoadAll(EvalContext *ctx);
 
 bool EvalContextClassPut(EvalContext *ctx, const char *ns, const char *name, bool is_soft, ContextScope scope);
 void EvalContextClassPutHard(EvalContext *ctx, const char *name);
-Class *EvalContextClassGet(EvalContext *ctx, const char *ns, const char *name);
+Class *EvalContextClassGet(const EvalContext *ctx, const char *ns, const char *name);
 bool EvalContextClassRemove(EvalContext *ctx, const char *ns, const char *name);
+StringSet *EvalContextClassTags(const EvalContext *ctx, const char *ns, const char *name);
 
 ClassTableIterator *EvalContextClassTableIteratorNewGlobal(const EvalContext *ctx, const char *ns, bool is_hard, bool is_soft);
 ClassTableIterator *EvalContextClassTableIteratorNewLocal(const EvalContext *ctx);

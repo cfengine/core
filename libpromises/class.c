@@ -55,6 +55,7 @@ void ClassInit(Class *cls, const char *ns, const char *name, bool is_soft, Conte
 
     cls->is_soft = is_soft;
     cls->scope = scope;
+    cls->tags = NULL;
 
     cls->hash = ClassRefHash(cls->ns, cls->name);
 }
@@ -65,6 +66,7 @@ void ClassDestroy(Class *cls)
     {
         free(cls->ns);
         free(cls->name);
+        free(cls->tags);
     }
 }
 

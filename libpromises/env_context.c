@@ -1011,7 +1011,7 @@ bool EvalContextClassRemove(EvalContext *ctx, const char *ns, const char *name)
     return ClassTableRemove(ctx->global_classes, ns, name);
 }
 
-Class *EvalContextClassGet(EvalContext *ctx, const char *ns, const char *name)
+Class *EvalContextClassGet(const EvalContext *ctx, const char *ns, const char *name)
 {
     StackFrame *frame = LastStackFrameByType(ctx, STACK_FRAME_TYPE_BUNDLE);
     if (frame)
@@ -1475,6 +1475,22 @@ bool EvalContextVariableGet(const EvalContext *ctx, const VarRef *ref, Rval *rva
         *type_out = DATA_TYPE_NONE;
     }
     return false;
+}
+
+StringSet *EvalContextClassTags(const EvalContext *ctx, const char *ns, const char *name)
+{
+    Class *cls = EvalContextClassGet(ctx, ns, name);
+    if (!cls)
+    {
+        return NULL;
+    }
+
+    if (!cls->tags)
+    {
+        cls->tags = StringSetNew();
+    }
+
+    return cls->tags;
 }
 
 StringSet *EvalContextVariableTags(const EvalContext *ctx, const VarRef *ref)

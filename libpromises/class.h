@@ -2,6 +2,7 @@
 #define CFENGINE_CLASS_H
 
 #include <cf3.defs.h>
+#include <set.h>
 
 typedef struct
 {
@@ -11,6 +12,7 @@ typedef struct
 
     ContextScope scope;
     bool is_soft;
+    StringSet *tags;
 } Class;
 
 typedef struct ClassTable_ ClassTable;

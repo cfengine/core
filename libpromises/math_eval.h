@@ -29,16 +29,5 @@
 
 double EvaluateMathInfix(EvalContext *ctx, const char *input, char *failure);
 double EvaluateMathFunction(const char *f, double p);
-double _math_eval_step(double p);
 
-static char *math_eval_function_names[] = 
-{
-    "ceil", "floor", "log10", "log2", "log", "sqrt", "sin", "cos", "tan", "asin", "acos", "atan", "abs", "step"
-};
-
-static double (*math_eval_functions[]) (double) = 
-{
-    ceil, floor, log10, log2, log, sqrt, sin, cos, tan, asin, acos, atan, fabs, _math_eval_step
-};
-
-#endif // MATH_EVAL_H
+#endif

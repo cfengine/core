@@ -26,6 +26,22 @@
 
 #define MATH_EVAL_STACK_SIZE 1024
 
+const char *math_eval_function_names[] =
+{
+    "ceil", "floor", "log10", "log2", "log", "sqrt", "sin", "cos", "tan", "asin", "acos", "atan", "abs", "step"
+};
+
+static double _math_eval_step(double p)
+{
+    return ((p < 0) ? 0 : 1);
+}
+
+static double (*math_eval_functions[]) (double) =
+{
+    ceil, floor, log10, log2, log, sqrt, sin, cos, tan, asin, acos, atan, fabs, _math_eval_step
+};
+
+
 double math_eval_push(double n, double *stack, int *stackp)
 {
     if (*stackp > MATH_EVAL_STACK_SIZE)
@@ -110,9 +126,4 @@ double EvaluateMathFunction(const char *f, double p)
     }
 
     return p;
-}
-
-double _math_eval_step(double p)
-{
-    return ((p < 0) ? 0 : 1);
 }

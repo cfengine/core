@@ -939,7 +939,7 @@ static void CopyLocalizedReferencesToBundleScope(EvalContext *ctx, const Bundle 
 
             case RVAL_TYPE_CONTAINER:
             case RVAL_TYPE_SCALAR:
-                EvalContextVariablePut(ctx, mangled_ref, RvalScalarValue(retval), type);
+                EvalContextVariablePut(ctx, mangled_ref, retval.item, type);
                 break;
 
             case RVAL_TYPE_FNCALL:

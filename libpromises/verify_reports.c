@@ -69,7 +69,7 @@ void VerifyReportPromise(EvalContext *ctx, Promise *pp)
         }
 
         VarRef *ref = VarRefParseFromBundle(unique_name, PromiseGetBundle(pp));
-        EvalContextVariablePut(ctx, ref, (Rval) { pp->promiser, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
+        EvalContextVariablePut(ctx, ref, pp->promiser, DATA_TYPE_STRING);
         VarRefDestroy(ref);
         return;
     }

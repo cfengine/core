@@ -155,14 +155,14 @@ void ScopeAugment(EvalContext *ctx, const Bundle *bp, const Promise *pp, const R
             case DATA_TYPE_REAL_LIST:
                 {
                     VarRef *ref = VarRefParseFromBundle(lval, bp);
-                    EvalContextVariablePut(ctx, ref, retval, DATA_TYPE_STRING_LIST);
+                    EvalContextVariablePut(ctx, ref, retval.item, DATA_TYPE_STRING_LIST);
                     VarRefDestroy(ref);
                 }
                 break;
             case DATA_TYPE_CONTAINER:
                 {
                     VarRef *ref = VarRefParseFromBundle(lval, bp);
-                    EvalContextVariablePut(ctx, ref, retval, DATA_TYPE_CONTAINER);
+                    EvalContextVariablePut(ctx, ref, retval.item, DATA_TYPE_CONTAINER);
                     VarRefDestroy(ref);
                 }
                 break;
@@ -170,7 +170,7 @@ void ScopeAugment(EvalContext *ctx, const Bundle *bp, const Promise *pp, const R
                 {
                     Log(LOG_LEVEL_ERR, "List or container parameter '%s' not found while constructing scope '%s' - use @(scope.variable) in calling reference", naked, bp->name);
                     VarRef *ref = VarRefParseFromBundle(lval, bp);
-                    EvalContextVariablePut(ctx, ref, (Rval) { RlistScalarValue(rpr), RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
+                    EvalContextVariablePut(ctx, ref, RlistScalarValue(rpr), DATA_TYPE_STRING);
                     VarRefDestroy(ref);
                 }
                 break;
@@ -183,7 +183,7 @@ void ScopeAugment(EvalContext *ctx, const Bundle *bp, const Promise *pp, const R
             case RVAL_TYPE_SCALAR:
                 {
                     VarRef *ref = VarRefParseFromBundle(lval, bp);
-                    EvalContextVariablePut(ctx, ref, rpr->val, DATA_TYPE_STRING);
+                    EvalContextVariablePut(ctx, ref, RvalScalarValue(rpr->val), DATA_TYPE_STRING);
                     VarRefDestroy(ref);
                 }
                 break;
@@ -195,7 +195,7 @@ void ScopeAugment(EvalContext *ctx, const Bundle *bp, const Promise *pp, const R
                     if (rval.type == RVAL_TYPE_SCALAR)
                     {
                         VarRef *ref = VarRefParseFromBundle(lval, bp);
-                        EvalContextVariablePut(ctx, ref, rval, DATA_TYPE_STRING);
+                        EvalContextVariablePut(ctx, ref, RvalScalarValue(rval), DATA_TYPE_STRING);
                         VarRefDestroy(ref);
                     }
                     else
@@ -238,7 +238,7 @@ void ScopeMapBodyArgs(EvalContext *ctx, const Body *body, const Rlist *args)
             {
                 const char *lval = RlistScalarValue(param);
                 VarRef *ref = VarRefParseFromNamespaceAndScope(lval, NULL, "body", CF_NS, '.');
-                EvalContextVariablePut(ctx, ref, arg->val, arg_type);
+                EvalContextVariablePut(ctx, ref, RvalScalarValue(arg->val), arg_type);
             }
             break;
 
@@ -246,7 +246,7 @@ void ScopeMapBodyArgs(EvalContext *ctx, const Body *body, const Rlist *args)
             {
                 const char *lval = RlistScalarValue(param);
                 VarRef *ref = VarRefParseFromNamespaceAndScope(lval, NULL, "body", CF_NS, '.');
-                EvalContextVariablePut(ctx, ref, arg->val, arg_type);
+                EvalContextVariablePut(ctx, ref, RvalRlistValue(arg->val), arg_type);
                 VarRefDestroy(ref);
             }
             break;
@@ -278,7 +278,7 @@ void ScopeMapBodyArgs(EvalContext *ctx, const Body *body, const Rlist *args)
                     void *rval = res.rval.item;
 
                     VarRef *ref = VarRefParseFromNamespaceAndScope(lval, NULL, "body", CF_NS, '.');
-                    EvalContextVariablePut(ctx, ref, (Rval) {rval, RVAL_TYPE_SCALAR }, res.rval.type);
+                    EvalContextVariablePut(ctx, ref, rval, res.rval.type);
                     VarRefDestroy(ref);
                 }
             }

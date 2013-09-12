@@ -65,10 +65,10 @@ static VersionCmpResult RunCmpCommand(EvalContext *ctx, const char *command, con
 
     {
         VarRef *ref_v1 = VarRefParseFromScope("v1", "cf_pack_context");
-        EvalContextVariablePut(ctx, ref_v1, (Rval) { v1, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
+        EvalContextVariablePut(ctx, ref_v1, v1, DATA_TYPE_STRING);
 
         VarRef *ref_v2 = VarRefParseFromScope("v2", "cf_pack_context");
-        EvalContextVariablePut(ctx, ref_v2, (Rval) { v2, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
+        EvalContextVariablePut(ctx, ref_v2, v2, DATA_TYPE_STRING);
 
         ExpandScalar(ctx, NULL, "cf_pack_context", command, expanded_command);
 

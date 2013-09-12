@@ -933,13 +933,13 @@ static void CopyLocalizedReferencesToBundleScope(EvalContext *ctx, const Bundle 
                     Rlist *list = RvalCopy((Rval) {retval.item, RVAL_TYPE_LIST}).item;
                     RlistFlatten(ctx, &list);
 
-                    EvalContextVariablePut(ctx, mangled_ref, (Rval) { list, RVAL_TYPE_LIST }, type);
+                    EvalContextVariablePut(ctx, mangled_ref, list, type);
                 }
                 break;
 
             case RVAL_TYPE_CONTAINER:
             case RVAL_TYPE_SCALAR:
-                EvalContextVariablePut(ctx, mangled_ref, retval, type);
+                EvalContextVariablePut(ctx, mangled_ref, RvalScalarValue(retval), type);
                 break;
 
             case RVAL_TYPE_FNCALL:
@@ -1073,7 +1073,7 @@ static void ResolveControlBody(EvalContext *ctx, GenericAgentConfig *config, con
         VarRef *ref = VarRefParseFromScope(cp->lval, scope);
         EvalContextVariableRemove(ctx, ref);
 
-        if (!EvalContextVariablePut(ctx, ref, returnval, ConstraintSyntaxGetDataType(body_syntax, cp->lval)))
+        if (!EvalContextVariablePut(ctx, ref, returnval.item, ConstraintSyntaxGetDataType(body_syntax, cp->lval)))
         {
             Log(LOG_LEVEL_ERR, "Rule from %s at/before line %zu", control_body->source_path, cp->offset.line);
         }

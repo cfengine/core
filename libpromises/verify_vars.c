@@ -292,7 +292,7 @@ void VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates
             }
         }
 
-        if (!EvalContextVariablePut(ctx, ref, rval, DataTypeFromString(opts.cp_save->lval)))
+        if (!EvalContextVariablePut(ctx, ref, rval.item, DataTypeFromString(opts.cp_save->lval)))
         {
             Log(LOG_LEVEL_VERBOSE, "Unable to converge %s.%s value (possibly empty or infinite regression)", ref->scope, pp->promiser);
             PromiseRef(LOG_LEVEL_VERBOSE, pp);

@@ -188,7 +188,7 @@ static void GetReturnValue(EvalContext *ctx, const Bundle *callee, Promise *call
             VarRef *new_ref = VarRefParseFromBundle(result, PromiseGetBundle(caller));
             VarRefAddIndex(new_ref, result_var->ref->indices[0]);
 
-            EvalContextVariablePut(ctx, new_ref, result_var->rval, result_var->type);
+            EvalContextVariablePut(ctx, new_ref, result_var->rval.item, result_var->type);
 
             VarRefDestroy(new_ref);
         }

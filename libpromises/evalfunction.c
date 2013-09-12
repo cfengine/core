@@ -1568,7 +1568,7 @@ static FnCallResult FnCallGetFields(EvalContext *ctx, FnCall *fp, Rlist *finalar
             {
                 snprintf(name, CF_MAXVARSIZE - 1, "%s[%d]", array_lval, vcount);
                 VarRef *ref = VarRefParseFromBundle(name, PromiseGetBundle(fp->caller));
-                EvalContextVariablePut(ctx, ref, (Rval) { RlistScalarValue(rp), RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
+                EvalContextVariablePut(ctx, ref, RlistScalarValue(rp), DATA_TYPE_STRING);
                 VarRefDestroy(ref);
                 Log(LOG_LEVEL_VERBOSE, "getfields: defining '%s' => '%s'", name, RlistScalarValue(rp));
                 vcount++;
@@ -2016,7 +2016,7 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx, FnCall *fp, Rlist *fin
                 Log(LOG_LEVEL_VERBOSE, "Host '%s' is alive and responding correctly", RlistScalarValue(rp));
                 snprintf(buffer, CF_MAXVARSIZE - 1, "%s[%d]", array_lval, count);
                 VarRef *ref = VarRefParseFromBundle(buffer, PromiseGetBundle(fp->caller));
-                EvalContextVariablePut(ctx, ref, rp->val, DATA_TYPE_STRING);
+                EvalContextVariablePut(ctx, ref, RvalScalarValue(rp->val), DATA_TYPE_STRING);
                 VarRefDestroy(ref);
                 count++;
             }
@@ -2026,7 +2026,7 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx, FnCall *fp, Rlist *fin
             Log(LOG_LEVEL_VERBOSE, "Host '%s' is alive", RlistScalarValue(rp));
             snprintf(buffer, CF_MAXVARSIZE - 1, "%s[%d]", array_lval, count);
             VarRef *ref = VarRefParseFromBundle(buffer, PromiseGetBundle(fp->caller));
-            EvalContextVariablePut(ctx, ref, rp->val, DATA_TYPE_STRING);
+            EvalContextVariablePut(ctx, ref, RvalScalarValue(rp->val), DATA_TYPE_STRING);
             VarRefDestroy(ref);
 
             if (IsDefinedClass(ctx, CanonifyName(RlistScalarValue(rp)), PromiseGetNamespace(fp->caller)))
@@ -3681,7 +3681,7 @@ static FnCallResult FnCallRegExtract(EvalContext *ctx, FnCall *fp, Rlist *finala
             char var[CF_MAXVARSIZE] = "";
             snprintf(var, CF_MAXVARSIZE - 1, "%s[%s]", arrayname, ref->lval);
             VarRef *new_ref = VarRefParseFromBundle(var, PromiseGetBundle(fp->caller));
-            EvalContextVariablePut(ctx, new_ref, rval, DATA_TYPE_STRING);
+            EvalContextVariablePut(ctx, new_ref, RvalScalarValue(rval), DATA_TYPE_STRING);
             VarRefDestroy(new_ref);
         }
 
@@ -5104,7 +5104,7 @@ static int BuildLineArray(EvalContext *ctx, const Bundle *bundle, char *array_lv
             }
 
             VarRef *ref = VarRefParseFromBundle(name, bundle);
-            EvalContextVariablePut(ctx, ref, (Rval) { this_rval, RVAL_TYPE_SCALAR }, type);
+            EvalContextVariablePut(ctx, ref, this_rval, type);
             VarRefDestroy(ref);
             vcount++;
         }
@@ -5262,7 +5262,7 @@ void ModuleProtocol(EvalContext *ctx, char *command, char *line, int print, cons
         {
             Log(LOG_LEVEL_VERBOSE, "Defined variable '%s' in context '%s' with value '%s'", name, context, content);
             VarRef *ref = VarRefParseFromScope(name, context);
-            EvalContextVariablePut(ctx, ref, (Rval) { content, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
+            EvalContextVariablePut(ctx, ref, content, DATA_TYPE_STRING);
             VarRefDestroy(ref);
         }
         break;
@@ -5279,7 +5279,7 @@ void ModuleProtocol(EvalContext *ctx, char *command, char *line, int print, cons
             Log(LOG_LEVEL_VERBOSE, "Defined variable '%s' in context '%s' with value '%s'", name, context, content);
 
             VarRef *ref = VarRefParseFromScope(name, context);
-            EvalContextVariablePut(ctx, ref, (Rval) { list, RVAL_TYPE_LIST }, DATA_TYPE_STRING_LIST);
+            EvalContextVariablePut(ctx, ref, list, DATA_TYPE_STRING_LIST);
             VarRefDestroy(ref);
         }
         break;

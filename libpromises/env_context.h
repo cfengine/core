@@ -137,7 +137,7 @@ char *EvalContextStackPath(const EvalContext *ctx);
 const Promise *EvalContextStackCurrentPromise(const EvalContext *ctx);
 const Bundle *EvalContextStackCurrentBundle(const EvalContext *ctx);
 
-bool EvalContextVariablePut(EvalContext *ctx, const VarRef *ref, Rval rval, DataType type);
+bool EvalContextVariablePut(EvalContext *ctx, const VarRef *ref, const void *value, DataType type);
 bool EvalContextVariablePutSpecial(EvalContext *ctx, SpecialScope scope, const char *lval, const void *value, DataType type);
 bool EvalContextVariableGet(const EvalContext *ctx, const VarRef *ref, Rval *rval_out, DataType *type_out);
 bool EvalContextVariableRemoveSpecial(const EvalContext *ctx, SpecialScope scope, const char *lval);

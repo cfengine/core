@@ -1186,8 +1186,7 @@ bool EvalContextVariablePutSpecial(EvalContext *ctx, SpecialScope scope, const c
     case SPECIAL_SCOPE_MATCH:
         {
             VarRef *ref = VarRefParseFromScope(lval, SpecialScopeToString(scope));
-            Rval rval = (Rval) { value, DataTypeToRvalType(type) };
-            bool ret = EvalContextVariablePut(ctx, ref, rval, type);
+            bool ret = EvalContextVariablePut(ctx, ref, value, type);
             VarRefDestroy(ref);
             return ret;
         }
@@ -1277,22 +1276,22 @@ bool EvalContextVariableRemove(const EvalContext *ctx, const VarRef *ref)
     return VariableTableRemove(table, ref);
 }
 
-static bool IsVariableSelfReferential(const VarRef *ref, const Rval rval)
+static bool IsVariableSelfReferential(const VarRef *ref, const void *value, RvalType rval_type)
 {
-    switch (rval.type)
+    switch (rval_type)
     {
     case RVAL_TYPE_SCALAR:
-        if (StringContainsVar(RvalScalarValue(rval), ref->lval))
+        if (StringContainsVar(value, ref->lval))
         {
             char *ref_str = VarRefToString(ref, true);
-            Log(LOG_LEVEL_ERR, "The value of variable '%s' contains a reference to itself, '%s'", ref_str, RvalScalarValue(rval));
+            Log(LOG_LEVEL_ERR, "The value of variable '%s' contains a reference to itself, '%s'", ref_str, (char *)value);
             free(ref_str);
             return true;
         }
         break;
 
     case RVAL_TYPE_LIST:
-        for (const Rlist *rp = RvalRlistValue(rval); rp != NULL; rp = rp->next)
+        for (const Rlist *rp = value; rp != NULL; rp = rp->next)
         {
             if (rp->val.type != RVAL_TYPE_SCALAR)
             {
@@ -1302,7 +1301,7 @@ static bool IsVariableSelfReferential(const VarRef *ref, const Rval rval)
             if (StringContainsVar(RlistScalarValue(rp), ref->lval))
             {
                 char *ref_str = VarRefToString(ref, true);
-                Log(LOG_LEVEL_ERR, "An item in list variable '%s' contains a reference to itself, '%s'", ref_str, RvalScalarValue(rval));
+                Log(LOG_LEVEL_ERR, "An item in list variable '%s' contains a reference to itself", ref_str);
                 free(ref_str);
                 return true;
             }
@@ -1340,13 +1339,13 @@ static void VarRefStackQualify(const EvalContext *ctx, VarRef *ref)
     }
 }
 
-bool EvalContextVariablePut(EvalContext *ctx, const VarRef *ref, Rval rval, DataType type)
+bool EvalContextVariablePut(EvalContext *ctx, const VarRef *ref, const void *value, DataType type)
 {
     assert(type != DATA_TYPE_NONE);
     assert(ref);
     assert(ref->lval);
-
-    if (rval.item == NULL)
+    assert(value);
+    if (!value)
     {
         return false;
     }
@@ -1359,10 +1358,12 @@ bool EvalContextVariablePut(EvalContext *ctx, const VarRef *ref, Rval rval, Data
         return false;
     }
 
-    if (strcmp(ref->scope, "body") != 0 && IsVariableSelfReferential(ref, rval))
+    if (strcmp(ref->scope, "body") != 0 && IsVariableSelfReferential(ref, value, DataTypeToRvalType(type)))
     {
         return false;
     }
+
+    Rval rval = (Rval) { (void *)value, DataTypeToRvalType(type) };
 
     // Look for outstanding lists in variable rvals
     if (THIS_AGENT_TYPE == AGENT_TYPE_COMMON)

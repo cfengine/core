@@ -282,13 +282,13 @@ static void VerifyEnvironments(EvalContext *ctx, Attributes a, Promise *pp)
     {
     case cfv_virt_vbox:
     case cfv_virt_test:
-        VerifyVirtDomain(hyper_uri, envtype, a, pp);
+        VerifyVirtDomain(ctx, hyper_uri, envtype, a, pp);
         break;
     case cfv_virt_xen_net:
     case cfv_virt_kvm_net:
     case cfv_virt_esx_net:
     case cfv_virt_test_net:
-        VerifyVirtNetwork(hyper_uri, envtype, a, pp);
+        VerifyVirtNetwork(ctx, hyper_uri, envtype, a, pp);
         break;
     default:
         break;

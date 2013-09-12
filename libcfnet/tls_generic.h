@@ -88,6 +88,6 @@ int TLSRecv(SSL *ssl, char *buffer, int length);
  *       the peer sends us one line and waits for reply, so that '\n' is the
  *       last character in the underlying SSL_read().
  */
-int TLSRecvLines(SSL *ssl, char *buf, size_t buf_size);
+int TLSRecvLine(SSL *ssl, char *buf, size_t buf_size);
 
 #endif

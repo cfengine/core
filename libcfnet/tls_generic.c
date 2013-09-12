@@ -283,7 +283,7 @@ static bool find_newline(char *buffer, size_t *length)
     return found;
 }
 
-int TLSRecvLines(SSL *ssl, char *buf, size_t buf_size)
+int TLSRecvLine(SSL *ssl, char *buf, size_t buf_size)
 {
     int ret;
     int got = 0;

@@ -452,7 +452,7 @@ static void Apoptosis(EvalContext *ctx)
         snprintf(myuid, 32, "%d", (int)getuid());
 
         Rlist *owners = NULL;
-        RlistPrependScalar(&owners, myuid);
+        RlistPrepend(&owners, myuid, RVAL_TYPE_SCALAR);
 
         ProcessSelect process_select = {
             .owner = owners,

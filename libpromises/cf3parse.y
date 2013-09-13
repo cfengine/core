@@ -102,7 +102,7 @@ bundletype:            bundletype_values
                            ParserDebug("P:bundle:%s\n", P.blocktype);
                            P.block = "bundle";
                            RvalDestroy(P.rval);
-                           P.rval = (Rval) { NULL, '\0' };
+                           P.rval = RvalNew(NULL, RVAL_TYPE_NOPROMISEE);
                            RlistDestroy(P.currentRlist);
                            P.currentRlist = NULL;
                            if (P.currentstring)
@@ -139,7 +139,7 @@ bundleid:              bundleid_values
                           CURRENT_BLOCKID_LINE = P.line_no;
                        }
 
-bundleid_values:       blockid
+bundleid_values:       symbol
                      | error 
                        {
                            yyclearin;
@@ -182,7 +182,7 @@ bodyid:                bodyid_values
                           CURRENT_BLOCKID_LINE = P.line_no;
                        }
 
-bodyid_values:         blockid
+bodyid_values:         symbol
                      | error
                        {
                            yyclearin;
@@ -202,7 +202,7 @@ typeid:                IDSYNTAX
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-blockid:               IDSYNTAX
+symbol:                IDSYNTAX
                        {
                            strncpy(P.blockid,P.currentid,CF_MAXVARSIZE);
                            P.offsets.last_block_id = P.offsets.last_id;
@@ -610,7 +610,7 @@ constraint:            constraint_id                        /* BUNDLE ONLY */
                                }
 
                                RvalDestroy(P.rval);
-                               P.rval = (Rval) { NULL, '\0' };
+                               P.rval = RvalNew(NULL, RVAL_TYPE_NOPROMISEE);
                                strcpy(P.lval,"no lval");
                                RlistDestroy(P.currentRlist);
                                P.currentRlist = NULL;
@@ -618,7 +618,7 @@ constraint:            constraint_id                        /* BUNDLE ONLY */
                            else
                            {
                                RvalDestroy(P.rval);
-                               P.rval = (Rval) { NULL, '\0' };
+                               P.rval = RvalNew(NULL, RVAL_TYPE_NOPROMISEE);
                            }
                        }
 
@@ -776,7 +776,7 @@ selection:             selection_id                         /* BODY ONLY */
                            else
                            {
                                RvalDestroy(P.rval);
-                               P.rval = (Rval) { NULL, '\0' };
+                               P.rval = RvalNew(NULL, RVAL_TYPE_NOPROMISEE);
                            }
 
                            if (strcmp(P.blockid,"control") == 0 && strcmp(P.blocktype,"file") == 0)
@@ -796,7 +796,7 @@ selection:             selection_id                         /* BODY ONLY */
                            }
                            
                            RvalDestroy(P.rval);
-                           P.rval = (Rval) { NULL, '\0' };
+                           P.rval = RvalNew(NULL, RVAL_TYPE_NOPROMISEE);
                        }
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */

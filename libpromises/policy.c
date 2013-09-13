@@ -1458,10 +1458,14 @@ static JsonElement *AttributeValueToJson(Rval rval, bool symbolic_reference)
             return json_attribute;
         }
 
-    default:
+    case RVAL_TYPE_CONTAINER:
+    case RVAL_TYPE_NOPROMISEE:
         ProgrammingError("Attempted to export attribute of type: %c", rval.type);
         return NULL;
     }
+
+    assert(false);
+    return NULL;
 }
 
 static JsonElement *CreateContextAsJson(const char *name, const char *children_name, JsonElement *children)

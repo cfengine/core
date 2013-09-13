@@ -219,7 +219,9 @@ Rval ExpandDanglers(EvalContext *ctx, const char *ns, const char *scope, Rval rv
         }
         break;
 
-    default:
+    case RVAL_TYPE_CONTAINER:
+    case RVAL_TYPE_FNCALL:
+    case RVAL_TYPE_NOPROMISEE:
         final = RvalCopy(rval);
         break;
     }
@@ -265,7 +267,8 @@ void MapIteratorsFromRval(EvalContext *ctx, const char *scopeid, Rval rval, Rlis
         }
         break;
 
-    default:
+    case RVAL_TYPE_CONTAINER:
+    case RVAL_TYPE_NOPROMISEE:
         Log(LOG_LEVEL_DEBUG, "Unknown Rval type for scope '%s'", scopeid);
         break;
     }
@@ -419,7 +422,8 @@ static void ExpandAndMapIteratorsFromScalar(EvalContext *ctx, const char *scopei
                             }
                             break;
 
-                        default:
+                        case RVAL_TYPE_FNCALL:
+                        case RVAL_TYPE_NOPROMISEE:
                             break;
                         }
 
@@ -555,7 +559,7 @@ Rval ExpandPrivateRval(EvalContext *ctx, const char *ns, const char *scope, Rval
         returnval = RvalCopy(rval);
         break;
 
-    default:
+    case RVAL_TYPE_NOPROMISEE:
         break;
     }
 
@@ -570,24 +574,23 @@ Rval ExpandBundleReference(EvalContext *ctx, const char *ns, const char *scope, 
     switch (rval.type)
     {
     case RVAL_TYPE_SCALAR:
-    {
-        char buffer[CF_EXPANDSIZE];
-
-        ExpandScalar(ctx, ns, scope, (char *) rval.item, buffer);
-        return (Rval) {xstrdup(buffer), RVAL_TYPE_SCALAR};
-    }
+        {
+            char buffer[CF_EXPANDSIZE];
+            ExpandScalar(ctx, ns, scope, (char *) rval.item, buffer);
+            return RvalNew(buffer, RVAL_TYPE_SCALAR);
+        }
 
     case RVAL_TYPE_FNCALL:
-    {
-        /* Note expand function does not mean evaluate function, must preserve type */
-        FnCall *fp = (FnCall *) rval.item;
+        return (Rval) {ExpandFnCall(ctx, ns, scope, RvalFnCallValue(rval)), RVAL_TYPE_FNCALL};
 
-        return (Rval) {ExpandFnCall(ctx, ns, scope, fp), RVAL_TYPE_FNCALL};
+    case RVAL_TYPE_CONTAINER:
+    case RVAL_TYPE_LIST:
+    case RVAL_TYPE_NOPROMISEE:
+         return RvalNew(NULL, RVAL_TYPE_NOPROMISEE);
     }
 
-    default:
-        return (Rval) {NULL, RVAL_TYPE_NOPROMISEE };
-    }
+    assert(false);
+    return RvalNew(NULL, RVAL_TYPE_NOPROMISEE);
 }
 
 /*********************************************************************/

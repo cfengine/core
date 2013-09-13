@@ -42,6 +42,7 @@ FnCall *RvalFnCallValue(Rval rval);
 Rlist *RvalRlistValue(Rval rval);
 JsonElement *RvalContainerValue(Rval rval);
 
+Rval RvalNew(const void *item, RvalType type);
 Rval RvalCopy(Rval rval);
 void RvalDestroy(Rval rval);
 JsonElement *RvalToJson(Rval rval);
@@ -70,12 +71,12 @@ bool RlistIsInListOfRegex(EvalContext *ctx, const Rlist *list, const char *str);
 Rlist *RlistAppendAlien(Rlist **start, void *item);
 Rlist *RlistPrependAlien(Rlist **start, void *item);
 
+Rlist *RlistAppendRval(Rlist **start, Rval rval);
+
 Rlist *RlistPrependScalarIdemp(Rlist **start, const char *scalar);
-Rlist *RlistPrependScalar(Rlist **start, const char *scalar);
 Rlist *RlistAppendScalarIdemp(Rlist **start, const char *scalar);
 Rlist *RlistAppendScalar(Rlist **start, const char *scalar);
 
-Rlist *RlistAppendIdemp(Rlist **start, void *item, RvalType type);
 Rlist *RlistPrepend(Rlist **start, const void *item, RvalType type);
 Rlist *RlistAppend(Rlist **start, const void *item, RvalType type);
 

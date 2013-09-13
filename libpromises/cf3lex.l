@@ -84,7 +84,7 @@ nakedvar   [$@][(][a-zA-Z0-9_\[\]\200-\377.:]+[)]|[$@][{][a-zA-Z0-9_\[\]\200-\37
 
 id         [a-zA-Z0-9_\200-\377]+
 
-blockid    [a-zA-Z0-9_\200-\377]+[:][a-zA-Z0-9_\200-\377]+
+symbol     [a-zA-Z0-9_\200-\377]+[:][a-zA-Z0-9_\200-\377]+
 
 assign     =>
 
@@ -179,10 +179,10 @@ promise_type   [a-zA-Z_]+:
                       }
 
 
-{blockid}             {
+{symbol}              {
                           P.offsets.last_id = P.offsets.current - yyleng;
                           P.line_pos += yyleng;
-                          ParserDebug("\tL:blockid %s %d\n", yytext, P.line_pos);
+                          ParserDebug("\tL:symbol %s %d\n", yytext, P.line_pos);
                           if (yyleng > CF_MAXVARSIZE-1)
                           {
                               yyerror("qualified identifier too long");

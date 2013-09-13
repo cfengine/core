@@ -16,30 +16,16 @@ void FatalError(char *s, ...)
     abort();
 }
 
-/* Test cases */
-
-static void test_prepend_scalar(void)
-{
-    Rlist *list = NULL;
-
-    RlistPrependScalar(&list, "stuff");
-    RlistPrependScalar(&list, "more-stuff");
-
-    assert_string_equal(RlistScalarValue(list), "more-stuff");
-
-    RlistDestroy(list);
-}
-
 static void test_length(void)
 {
     Rlist *list = NULL;
 
     assert_int_equal(RlistLen(list), 0);
 
-    RlistPrependScalar(&list, "stuff");
+    RlistPrepend(&list, "stuff", RVAL_TYPE_SCALAR);
     assert_int_equal(RlistLen(list), 1);
 
-    RlistPrependScalar(&list, "more-stuff");
+    RlistPrepend(&list, "more-stuff", RVAL_TYPE_SCALAR);
     assert_int_equal(RlistLen(list), 2);
 
     RlistDestroy(list);
@@ -62,8 +48,8 @@ static void test_copy(void)
 {
     Rlist *list = NULL, *copy = NULL;
 
-    RlistPrependScalar(&list, "stuff");
-    RlistPrependScalar(&list, "more-stuff");
+    RlistPrepend(&list, "stuff", RVAL_TYPE_SCALAR);
+    RlistPrepend(&list, "more-stuff", RVAL_TYPE_SCALAR);
 
     copy = RlistCopy(list);
 
@@ -496,7 +482,6 @@ int main()
     PRINT_TEST_BANNER();
     const UnitTest tests[] =
     {
-        unit_test(test_prepend_scalar),
         unit_test(test_prepend_scalar_idempotent),
         unit_test(test_length),
         unit_test(test_copy),

@@ -267,7 +267,7 @@ static Rval RvalCopyScalar(Rval rval)
     }
 }
 
-static Rlist *RlistAppendRval(Rlist **start, Rval rval)
+Rlist *RlistAppendRval(Rlist **start, Rval rval)
 {
     Rlist *rp = xmalloc(sizeof(Rlist));
 
@@ -296,56 +296,33 @@ static Rlist *RlistAppendRval(Rlist **start, Rval rval)
     return rp;
 }
 
-static Rval RvalCopyList(Rval rval)
+Rval RvalNew(const void *item, RvalType type)
 {
-    assert(rval.type == RVAL_TYPE_LIST);
-
-    if (!rval.item)
+    switch (type)
     {
-        return ((Rval) {NULL, RVAL_TYPE_LIST});
+    case RVAL_TYPE_SCALAR:
+        return (Rval) { xstrdup(item), RVAL_TYPE_SCALAR };
+
+    case RVAL_TYPE_FNCALL:
+        return (Rval) { FnCallCopy(item), RVAL_TYPE_FNCALL };
+
+    case RVAL_TYPE_LIST:
+        return (Rval) { RlistCopy(item), RVAL_TYPE_LIST };
+
+    case RVAL_TYPE_CONTAINER:
+        return (Rval) { JsonCopy(item), RVAL_TYPE_CONTAINER };
+
+    case RVAL_TYPE_NOPROMISEE:
+        return ((Rval) {NULL, type});
     }
 
-    Rlist *start = NULL;
-    for (const Rlist *rp = rval.item; rp != NULL; rp = rp->next)
-    {
-        RlistAppendRval(&start, RvalCopy(rp->val));
-    }
-
-    return (Rval) {start, RVAL_TYPE_LIST};
-}
-
-static Rval RvalCopyFnCall(Rval rval)
-{
-    assert(rval.type == RVAL_TYPE_FNCALL);
-    return (Rval) {FnCallCopy(rval.item), RVAL_TYPE_FNCALL};
-}
-
-static Rval RvalCopyContainer(Rval rval)
-{
-    assert(rval.type == RVAL_TYPE_CONTAINER);
-    return (Rval) { JsonCopy(rval.item), RVAL_TYPE_CONTAINER };
+    assert(false);
+    return ((Rval) { NULL, RVAL_TYPE_NOPROMISEE });
 }
 
 Rval RvalCopy(Rval rval)
 {
-    switch (rval.type)
-    {
-    case RVAL_TYPE_SCALAR:
-        return RvalCopyScalar(rval);
-
-    case RVAL_TYPE_FNCALL:
-        return RvalCopyFnCall(rval);
-
-    case RVAL_TYPE_LIST:
-        return RvalCopyList(rval);
-
-    case RVAL_TYPE_CONTAINER:
-        return RvalCopyContainer(rval);
-
-    default:
-        Log(LOG_LEVEL_VERBOSE, "Unknown type %c in CopyRvalItem - should not happen", rval.type);
-        return ((Rval) {NULL, rval.type});
-    }
+    return RvalNew(rval.item, rval.type);
 }
 
 /*******************************************************************/
@@ -404,53 +381,17 @@ Rlist *RlistAppendScalarIdemp(Rlist **start, const char *scalar)
     }
 }
 
-/*******************************************************************/
-
-Rlist *RlistPrependScalar(Rlist **start, const char *scalar)
-{
-    return RlistPrependRval(start, RvalCopyScalar((Rval) { (char *)scalar, RVAL_TYPE_SCALAR }));
-}
-
 Rlist *RlistPrependScalarIdemp(Rlist **start, const char *scalar)
 {
     if (!RlistKeyIn(*start, scalar))
     {
-        return RlistPrependScalar(start, scalar);
+        return RlistPrepend(start, scalar, RVAL_TYPE_SCALAR);
     }
     else
     {
         return NULL;
     }
 }
-
-static Rlist *RlistPrependFnCall(Rlist **start, const FnCall *fn)
-{
-    return RlistPrependRval(start, RvalCopyFnCall((Rval) { (FnCall *)fn, RVAL_TYPE_FNCALL }));
-}
-
-Rlist *RlistAppendIdemp(Rlist **start, void *item, RvalType type)
-{
-    Rlist *rp, *ins = NULL;
-
-    if (type == RVAL_TYPE_LIST)
-    {
-        for (rp = (Rlist *) item; rp != NULL; rp = rp->next)
-        {
-            ins = RlistAppendIdemp(start, rp->val.item, rp->val.type);
-        }
-        return ins;
-    }
-
-    if (!RlistKeyIn(*start, (char *) item))
-    {
-        return RlistAppend(start, (char *) item, type);
-    }
-    else
-    {
-        return NULL;
-    }
-}
-
 
 Rlist *RlistAppendScalar(Rlist **start, const char *scalar)
 {
@@ -459,7 +400,7 @@ Rlist *RlistAppendScalar(Rlist **start, const char *scalar)
 
 Rlist *RlistAppendFnCall(Rlist **start, const FnCall *fn)
 {
-    return RlistAppendRval(start, RvalCopyFnCall((Rval) { (FnCall *)fn, RVAL_TYPE_FNCALL }));
+    return RlistAppendRval(start, RvalNew(fn, RVAL_TYPE_FNCALL));
 }
 
 Rlist *RlistAppend(Rlist **start, const void *item, RvalType type)
@@ -528,38 +469,28 @@ static Rlist *RlistPrependRval(Rlist **start, Rval rval)
 }
 
 Rlist *RlistPrepend(Rlist **start, const void *item, RvalType type)
-   /* heap memory for item must have already been allocated */
 {
-    Rlist *rp, *lp = *start;
-
     switch (type)
     {
-    case RVAL_TYPE_SCALAR:
-        return RlistPrependScalar(start, item);
-
     case RVAL_TYPE_LIST:
-        for (rp = (Rlist *) item; rp != NULL; rp = rp->next)
         {
-            lp = RlistPrependRval(start, RvalCopy(rp->val));
+            Rlist *lp = NULL;
+            for (const Rlist *rp = item; rp; rp = rp->next)
+            {
+                lp = RlistPrependRval(start, RvalCopy(rp->val));
+            }
+            return lp;
         }
-        return lp;
 
+    case RVAL_TYPE_SCALAR:
     case RVAL_TYPE_FNCALL:
-        return RlistPrependFnCall(start, item);
-    default:
-        Log(LOG_LEVEL_DEBUG, "Cannot prepend %c to rval-list '%s'", type, (char *) item);
-        return NULL;
+    case RVAL_TYPE_CONTAINER:
+    case RVAL_TYPE_NOPROMISEE:
+        return RlistPrependRval(start, RvalNew(item, type));
     }
 
-    rp = xmalloc(sizeof(Rlist));
-
-    rp->next = *start;
-    rp->val = RvalCopy((Rval) { (void *)item, type});
-
-    ThreadLock(cft_lock);
-    *start = rp;
-    ThreadUnlock(cft_lock);
-    return rp;
+    assert(false);
+    return NULL;
 }
 
 /*******************************************************************/
@@ -859,8 +790,6 @@ Rlist *RlistParseString(char *string)
 
 void RvalDestroy(Rval rval)
 {
-    Rlist *clist, *next = NULL;
-
     if (rval.item == NULL)
     {
         return;
@@ -870,31 +799,16 @@ void RvalDestroy(Rval rval)
     {
     case RVAL_TYPE_SCALAR:
         ThreadLock(cft_lock);
-        free((char *) rval.item);
+        free(RvalScalarValue(rval));
         ThreadUnlock(cft_lock);
-        break;
+        return;
 
     case RVAL_TYPE_LIST:
-
-        /* rval is now a list whose first item is clist->item */
-
-        for (clist = (Rlist *) rval.item; clist != NULL; clist = next)
-        {
-
-            next = clist->next;
-
-            if (clist->val.item)
-            {
-                RvalDestroy(clist->val);
-            }
-
-            free(clist);
-        }
-
-        break;
+        RlistDestroy(RvalRlistValue(rval));
+        return;
 
     case RVAL_TYPE_FNCALL:
-        FnCallDestroy((FnCall *) rval.item);
+        FnCallDestroy(RvalFnCallValue(rval));
         break;
 
     case RVAL_TYPE_CONTAINER:
@@ -1283,12 +1197,11 @@ void RvalWrite(Writer *writer, Rval rval)
         WriterWrite(writer, "(no-one)");
         break;
 
-    default:
-        ProgrammingError("Unknown rval type %c", rval.type);
+    case RVAL_TYPE_CONTAINER:
+        JsonWrite(writer, RvalContainerValue(rval), 0);
+        break;
     }
 }
-
-/* Human-readable serialization to FILE* */
 
 void RlistShow(FILE *fp, const Rlist *list)
 {
@@ -1406,10 +1319,15 @@ JsonElement *RvalToJson(Rval rval)
         return RlistToJson(RvalRlistValue(rval));
     case RVAL_TYPE_FNCALL:
         return FnCallToJson(RvalFnCallValue(rval));
-    default:
-        assert(false && "Invalid rval type");
-        return JsonStringCreate("");
+    case RVAL_TYPE_CONTAINER:
+        return JsonCopy(RvalContainerValue(rval));
+    case RVAL_TYPE_NOPROMISEE:
+        assert(false);
+        return JsonObjectCreate(1);
     }
+
+    assert(false);
+    return NULL;
 }
 
 void RlistFlatten(EvalContext *ctx, Rlist **list)

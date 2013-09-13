@@ -843,7 +843,7 @@ static FnCallResult FnCallClassesMatching(EvalContext *ctx, FnCall *fp, Rlist *f
     char *element = NULL;
     while ((element = StringSetIteratorNext(&it)))
     {
-        RlistPrependScalar(&returnlist, element);
+        RlistPrepend(&returnlist, element, RVAL_TYPE_SCALAR);
     }
 
     if (returnlist == NULL)
@@ -1661,7 +1661,7 @@ static FnCallResult FnCallLsDir(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
     if (dirh == NULL)
     {
         Log(LOG_LEVEL_ERR, "Directory '%s' could not be accessed in lsdir(), (opendir: %s)", dirname, GetErrorStr());
-        RlistPrependScalar(&newlist, CF_NULL_VALUE);
+        RlistPrepend(&newlist, CF_NULL_VALUE, RVAL_TYPE_SCALAR);
         return (FnCallResult) { FNCALL_SUCCESS, { newlist, RVAL_TYPE_LIST } };
     }
 
@@ -1673,11 +1673,11 @@ static FnCallResult FnCallLsDir(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
             {
                 snprintf(line, CF_BUFSIZE, "%s/%s", dirname, dirp->d_name);
                 MapName(line);
-                RlistPrependScalar(&newlist, line);
+                RlistPrepend(&newlist, line, RVAL_TYPE_SCALAR);
             }
             else
             {
-                RlistPrependScalar(&newlist, (char *) dirp->d_name);
+                RlistPrepend(&newlist, dirp->d_name, RVAL_TYPE_SCALAR);
             }
         }
     }
@@ -1686,7 +1686,7 @@ static FnCallResult FnCallLsDir(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 
     if (newlist == NULL)
     {
-        RlistPrependScalar(&newlist, CF_NULL_VALUE);
+        RlistPrepend(&newlist, CF_NULL_VALUE, RVAL_TYPE_SCALAR);
     }
 
     return (FnCallResult) { FNCALL_SUCCESS, { newlist, RVAL_TYPE_LIST } };
@@ -2084,7 +2084,7 @@ static FnCallResult FnCallShuffle(EvalContext *ctx, FnCall *fp, Rlist *finalargs
     Rlist *shuffled = NULL;
     for (size_t i = 0; i < SeqLength(seq); i++)
     {
-        RlistPrependScalar(&shuffled, xstrdup(SeqAt(seq, i)));
+        RlistPrepend(&shuffled, SeqAt(seq, i), RVAL_TYPE_SCALAR);
     }
 
     SeqDestroy(seq);
@@ -3403,7 +3403,7 @@ static FnCallResult FnCallPeers(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
         }
         else
         {
-            RlistPrependScalar(&pruned, s);
+            RlistPrepend(&pruned, s, RVAL_TYPE_SCALAR);
         }
 
         if (i++ % groupsize == groupsize - 1)
@@ -3578,11 +3578,11 @@ static FnCallResult FnCallPeerLeaders(EvalContext *ctx, FnCall *fp, Rlist *final
         {
             if (strcmp(s, VFQNAME) == 0 || strcmp(s, VUQNAME) == 0)
             {
-                RlistPrependScalar(&pruned, "localhost");
+                RlistPrepend(&pruned, "localhost", RVAL_TYPE_SCALAR);
             }
             else
             {
-                RlistPrependScalar(&pruned, s);
+                RlistPrepend(&pruned, s, RVAL_TYPE_SCALAR);
             }
         }
 
@@ -4599,7 +4599,7 @@ static FnCallResult FnCallSplitString(EvalContext *ctx, FnCall *fp, Rlist *final
 
     if (newlist == NULL)
     {
-        RlistPrependScalar(&newlist, "cf_null");
+        RlistPrepend(&newlist, CF_NULL_VALUE, RVAL_TYPE_SCALAR);
     }
 
     return (FnCallResult) { FNCALL_SUCCESS, { newlist, RVAL_TYPE_LIST } };

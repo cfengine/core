@@ -75,6 +75,7 @@ static void ParserStateReset(ParserState *p)
     p->promiser = NULL;
     p->blockid[0] = '\0';
     p->blocktype[0] = '\0';
+    p->rval = RvalNew(NULL, RVAL_TYPE_NOPROMISEE);
 }
 
 Policy *ParserParseFile(const char *path, unsigned int warnings, unsigned int warnings_error)

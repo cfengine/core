@@ -110,7 +110,7 @@ static void AppendIterationVariable(PromiseIterator *iter, CfAssoc *new_var)
 
     {
         Rlist *list_value = RvalRlistValue(new_var->rval);
-        Rlist *state = new_var->rval.item = RlistPrependScalar(&list_value, CF_NULL_VALUE);
+        Rlist *state = new_var->rval.item = RlistPrepend(&list_value, CF_NULL_VALUE, RVAL_TYPE_SCALAR);
         RlistAppendScalar(&list_value, CF_NULL_VALUE);
 
         while (state && state->val.type == RVAL_TYPE_SCALAR && (strcmp(RlistScalarValue(state), CF_NULL_VALUE) == 0))

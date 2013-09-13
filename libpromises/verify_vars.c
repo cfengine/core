@@ -224,7 +224,9 @@ void VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates
                     }
                     break;
 
-                default:
+                case RVAL_TYPE_CONTAINER:
+                case RVAL_TYPE_FNCALL:
+                case RVAL_TYPE_NOPROMISEE:
                     break;
                 }
             }
@@ -461,7 +463,9 @@ static bool Epimenides(EvalContext *ctx, const char *ns, const char *scope, cons
         }
         break;
 
-    default:
+    case RVAL_TYPE_CONTAINER:
+    case RVAL_TYPE_FNCALL:
+    case RVAL_TYPE_NOPROMISEE:
         return false;
     }
 

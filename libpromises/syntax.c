@@ -353,7 +353,8 @@ SyntaxTypeMatch CheckConstraintTypeMatch(const char *lval, Rval rval, DataType d
         DeleteItemList(checklist);
         return SYNTAX_TYPE_MATCH_OK;
 
-    default:
+    case RVAL_TYPE_CONTAINER:
+    case RVAL_TYPE_NOPROMISEE:
         break;
     }
 

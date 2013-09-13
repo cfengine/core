@@ -61,9 +61,6 @@ typedef struct
 
 #define CF_COULD_NOT_CONNECT -2
 
-/* Only ip address strings are stored in this list, so don't put any
- * hostnames. TODO convert to list of (sockaddr_storage *) to enforce this. */
-static Rlist *SERVERLIST = NULL;
 /* With this lock we ensure we read the list head atomically, but we don't
  * guarantee anything about the queue's contents. It should be OK since we
  * never remove elements from the queue, only prepend to the head.*/
@@ -100,8 +97,17 @@ bool cfnet_init()
         return false;
 }
 
-
-/*********************************************************************/
+static Seq *GetGlobalServerList(void)
+{
+    /* Only ip address strings are stored in this list, so don't put any
+     * hostnames. TODO convert to list of (sockaddr_storage *) to enforce this. */
+    static Seq *server_list = NULL;
+    if (!server_list)
+    {
+        server_list = SeqNew(100, free);
+    }
+    return server_list;
+}
 
 static int FSWrite(const char *destination, int dd, const char *buf, size_t n_write)
 {
@@ -184,12 +190,12 @@ AgentConnection *NewServerConnection(FileCopy fc, bool background, int *err)
         if (background)
         {
             ThreadLock(&cft_serverlist);
-                Rlist *srvlist_tmp = SERVERLIST;
+            Seq *srvlist_tmp = GetGlobalServerList();
             ThreadUnlock(&cft_serverlist);
 
             /* TODO not return NULL if >= CFA_MAXTREADS ? */
             /* TODO RlistLen is O(n) operation. */
-            if (RlistLen(srvlist_tmp) < CFA_MAXTHREADS)
+            if (SeqLength(srvlist_tmp) < CFA_MAXTHREADS)
             {
                 /* If background connection was requested, then don't cache it
                  * in SERVERLIST since it will be closed right afterwards. */
@@ -1314,9 +1320,6 @@ int ServerConnect(AgentConnection *conn, const char *host, FileCopy fc)
 
 static bool ServerOffline(const char *server)
 {
-    Rlist *rp;
-    ServerItem *svp;
-
     char ipaddr[CF_MAX_IP_LEN];
     if (Hostname2IPString(ipaddr, server, sizeof(ipaddr)) == -1)
     {
@@ -1326,12 +1329,13 @@ static bool ServerOffline(const char *server)
     }
 
     ThreadLock(&cft_serverlist);
-    Rlist *srvlist_tmp = SERVERLIST;
+    Seq *srvlist_tmp = GetGlobalServerList();
     ThreadUnlock(&cft_serverlist);
 
-    for (rp = srvlist_tmp; rp != NULL; rp = rp->next)
+    for (size_t i = 0; i < SeqLength(srvlist_tmp); i++)
     {
-        svp = (ServerItem *) rp->val.item; // TODO: Abuse of Rlist, use something else!
+        ServerItem *svp = SeqAt(srvlist_tmp, i);
+
         if (svp == NULL)
         {
             ProgrammingError("SERVERLIST had NULL ServerItem!");
@@ -1358,9 +1362,6 @@ static bool ServerOffline(const char *server)
 
 static AgentConnection *GetIdleConnectionToServer(const char *server)
 {
-    Rlist *rp;
-    ServerItem *svp;
-
     char ipaddr[CF_MAX_IP_LEN];
     if (Hostname2IPString(ipaddr, server, sizeof(ipaddr)) == -1)
     {
@@ -1369,13 +1370,15 @@ static AgentConnection *GetIdleConnectionToServer(const char *server)
         return NULL;
     }
 
+    // TODO: How does this locking help anything? This is not a copy
     ThreadLock(&cft_serverlist);
-        Rlist *srvlist_tmp = SERVERLIST;
+    Seq *srvlist_tmp = GetGlobalServerList();
     ThreadUnlock(&cft_serverlist);
 
-    for (rp = srvlist_tmp; rp != NULL; rp = rp->next)
+    for (size_t i = 0; i < SeqLength(srvlist_tmp); i++)
     {
-        svp = (ServerItem *) rp->val.item;
+        ServerItem *svp = SeqAt(srvlist_tmp, i);
+
         if (svp == NULL)
         {
             ProgrammingError("SERVERLIST had NULL ServerItem!");
@@ -1428,16 +1431,13 @@ static AgentConnection *GetIdleConnectionToServer(const char *server)
 
 void ServerNotBusy(AgentConnection *conn)
 {
-    Rlist *rp;
-    ServerItem *svp;
-
     ThreadLock(&cft_serverlist);
-        Rlist *srvlist_tmp = SERVERLIST;
+    Seq *srvlist_tmp = GetGlobalServerList();
     ThreadUnlock(&cft_serverlist);
 
-    for (rp = srvlist_tmp; rp != NULL; rp = rp->next)
+    for (size_t i = 0; i < SeqLength(srvlist_tmp); i++)
     {
-        svp = (ServerItem *) rp->val.item;
+        ServerItem *svp = SeqAt(srvlist_tmp, i);
 
         if (svp->conn == conn)
         {
@@ -1455,9 +1455,7 @@ static void MarkServerOffline(const char *server)
 /* Unable to contact the server so don't waste time trying for
    other connections, mark it offline */
 {
-    Rlist *rp;
     AgentConnection *conn = NULL;
-    ServerItem *svp;
 
     char ipaddr[CF_MAX_IP_LEN];
     if (Hostname2IPString(ipaddr, server, sizeof(ipaddr)) == -1)
@@ -1467,12 +1465,11 @@ static void MarkServerOffline(const char *server)
         return;
     }
 
-    ThreadLock(&cft_serverlist);
-        Rlist *srvlist_tmp = SERVERLIST;
-    ThreadUnlock(&cft_serverlist);
-    for (rp = srvlist_tmp; rp != NULL; rp = rp->next)
+    Seq *srvlist_tmp = GetGlobalServerList();
+
+    for (size_t i = 0; i < SeqLength(srvlist_tmp); i++)
     {
-        svp = (ServerItem *) rp->val.item;
+        ServerItem *svp = SeqAt(srvlist_tmp, i);
         if (svp == NULL)
         {
             ProgrammingError("SERVERLIST had NULL ServerItem!");
@@ -1489,7 +1486,7 @@ static void MarkServerOffline(const char *server)
     }
 
     /* If no existing connection, create one and mark it unconnectable. */
-    svp = xmalloc(sizeof(*svp));
+    ServerItem *svp = xmalloc(sizeof(*svp));
     svp->server = xstrdup(ipaddr);
     svp->busy = false;
     svp->conn = NewAgentConn(ipaddr);
@@ -1497,7 +1494,7 @@ static void MarkServerOffline(const char *server)
     svp->conn->conn_info.sd = CF_COULD_NOT_CONNECT;
 
     ThreadLock(&cft_serverlist);
-    rp = RlistPrependAlien(&SERVERLIST, svp);
+    SeqAppend(srvlist_tmp, svp);
     ThreadUnlock(&cft_serverlist);
 }
 
@@ -1506,8 +1503,6 @@ static void MarkServerOffline(const char *server)
 static void CacheServerConnection(AgentConnection *conn, const char *server)
 /* First time we open a connection, so store it */
 {
-    ServerItem *svp;
-
     char ipaddr[CF_MAX_IP_LEN];
     if (Hostname2IPString(ipaddr, server, sizeof(ipaddr)) == -1)
     {
@@ -1515,13 +1510,13 @@ static void CacheServerConnection(AgentConnection *conn, const char *server)
         return;
     }
 
-    svp = xmalloc(sizeof(*svp));
+    ServerItem *svp = xmalloc(sizeof(*svp));
     svp->server = xstrdup(ipaddr);
     svp->busy = true;
     svp->conn = conn;
 
     ThreadLock(&cft_serverlist);
-        RlistPrependAlien(&SERVERLIST, svp);
+    SeqAppend(GetGlobalServerList(), svp);
     ThreadUnlock(&cft_serverlist);
 }
 
@@ -1587,7 +1582,7 @@ static void FlushFileStream(int sd, int toget)
 void ConnectionsInit(void)
 {
     ThreadLock(&cft_serverlist);
-        SERVERLIST = NULL;
+    SeqClear(GetGlobalServerList());
     ThreadUnlock(&cft_serverlist);
 }
 
@@ -1597,15 +1592,11 @@ void ConnectionsInit(void)
  * before calling this one! */
 void ConnectionsCleanup(void)
 {
-    Rlist *rp;
-    ServerItem *svp;
+    Seq *srvlist_tmp = GetGlobalServerList();
 
-    Rlist *srvlist_tmp = SERVERLIST;
-    SERVERLIST = NULL;
-
-    for (rp = srvlist_tmp; rp != NULL; rp = rp->next)
+    for (size_t i = 0; i < SeqLength(srvlist_tmp); i++)
     {
-        svp = (ServerItem *) rp->val.item;
+        ServerItem *svp = SeqAt(srvlist_tmp, i);
         if (svp == NULL)
         {
             ProgrammingError("SERVERLIST had NULL ServerItem!");
@@ -1617,10 +1608,9 @@ void ConnectionsCleanup(void)
         }
 
         DisconnectServer(svp->conn);
-        free(svp->server);
     }
 
-    RlistDestroy(srvlist_tmp);
+    SeqClear(srvlist_tmp);
 }
 
 /*********************************************************************/

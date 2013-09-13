@@ -4,6 +4,7 @@
 #include <assert.h>
 
 #include <rlist.h>
+#include <string_lib.h>
 
 #include <assoc.h>
 #include <env_context.h>
@@ -109,10 +110,9 @@ static void test_last(void)
 
 static bool is_even(void *item, void *data)
 {
-    int *d = data;
-
-    int *i = item;
-    return *i % 2 == *d;
+    long d = StringToLong(data);
+    long i = StringToLong(item);
+    return i % 2 == d;
 }
 
 static void test_filter(void)
@@ -120,8 +120,8 @@ static void test_filter(void)
     Rlist *list = NULL;
     for (int i = 0; i < 10; i++)
     {
-        void *item = xmemdup(&i, sizeof(int));
-        RlistAppendAlien(&list, item);
+        char *item = StringFromLong(i);
+        RlistAppend(&list, item, RVAL_TYPE_SCALAR);
     }
 
     assert_int_equal(10, RlistLen(list));
@@ -132,11 +132,8 @@ static void test_filter(void)
     int i = 0;
     for (Rlist *rp = list; rp; rp = rp->next)
     {
-        int *k = rp->val.item;
-        assert_int_equal(i, *k);
-
-        free(k);
-        rp->val.item = NULL;
+        int k = StringToLong(rp->val.item);
+        assert_int_equal(i, k);
 
         i += 2;
     }
@@ -149,8 +146,8 @@ static void test_filter_everything(void)
     Rlist *list = NULL;
     for (int i = 1; i < 10; i += 2)
     {
-        void *item = xmemdup(&i, sizeof(int));
-        RlistAppendAlien(&list, item);
+        char *item = StringFromLong(i);
+        RlistAppend(&list, item, RVAL_TYPE_SCALAR);
     }
 
     assert_int_equal(5, RlistLen(list));

@@ -68,9 +68,6 @@ Rlist *RlistKeyIn(Rlist *list, const char *key);
 int RlistLen(const Rlist *start);
 bool RlistIsInListOfRegex(EvalContext *ctx, const Rlist *list, const char *str);
 
-Rlist *RlistAppendAlien(Rlist **start, void *item);
-Rlist *RlistPrependAlien(Rlist **start, void *item);
-
 Rlist *RlistAppendRval(Rlist **start, Rval rval);
 
 Rlist *RlistPrependScalarIdemp(Rlist **start, const char *scalar);

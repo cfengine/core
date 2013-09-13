@@ -44,7 +44,7 @@
 static int FSTAB_EDITS;
 static Item *FSTABLIST = NULL;
 
-static void AugmentMountInfo(Rlist **list, char *host, char *source, char *mounton, char *options);
+static void AugmentMountInfo(Seq *list, char *host, char *source, char *mounton, char *options);
 static int MatchFSInFstab(char *match);
 static void DeleteThisItem(Item **liststart, Item *entry);
 
@@ -111,7 +111,7 @@ static const char *VMOUNTOPTS[PLATFORM_CONTEXT_MAX] =
     "defaults",                 /* vmstate */
 };
 
-bool LoadMountInfo(Rlist **list)
+bool LoadMountInfo(Seq *list)
 /* This is, in fact, the most portable way to read the mount info! */
 /* Depressing, isn't it? */
 {
@@ -258,7 +258,7 @@ bool LoadMountInfo(Rlist **list)
 
 /*******************************************************************/
 
-static void AugmentMountInfo(Rlist **list, char *host, char *source, char *mounton, char *options)
+static void AugmentMountInfo(Seq *list, char *host, char *source, char *mounton, char *options)
 {
     Mount *entry = xcalloc(1, sizeof(Mount));
 
@@ -282,12 +282,12 @@ static void AugmentMountInfo(Rlist **list, char *host, char *source, char *mount
         entry->options = xstrdup(options);
     }
 
-    RlistAppendAlien(list, (void *) entry);
+    SeqAppend(list, entry);
 }
 
 /*******************************************************************/
 
-void DeleteMountInfo(Rlist *list)
+void DeleteMountInfo(Seq *list)
 {
     Rlist *rp, *sp;
     Mount *entry;

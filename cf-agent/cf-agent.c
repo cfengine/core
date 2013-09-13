@@ -1541,10 +1541,10 @@ static int NewTypeContext(EvalContext *ctx, TypeSequence type)
     case TYPE_SEQUENCE_STORAGE:
 
 #ifndef __MINGW32__                   // TODO: Run if implemented on Windows
-        if (MOUNTEDFSLIST != NULL)
+        if (SeqLength(GetGlobalMountedFSList()))
         {
-            DeleteMountInfo(MOUNTEDFSLIST);
-            MOUNTEDFSLIST = NULL;
+            DeleteMountInfo(GetGlobalMountedFSList());
+            SeqClear(GetGlobalMountedFSList());
         }
 #endif /* !__MINGW32__ */
         break;

@@ -854,59 +854,6 @@ void RlistDestroyEntry(Rlist **liststart, Rlist *entry)
 
 /*******************************************************************/
 
-Rlist *RlistAppendAlien(Rlist **start, void *item)
-   /* Allocates new memory for objects - careful, could leak!  */
-{
-    Rlist *rp, *lp = *start;
-
-    rp = xmalloc(sizeof(Rlist));
-
-    if (*start == NULL)
-    {
-        *start = rp;
-    }
-    else
-    {
-        for (lp = *start; lp->next != NULL; lp = lp->next)
-        {
-        }
-
-        lp->next = rp;
-    }
-
-    rp->val.item = item;
-    rp->val.type = RVAL_TYPE_SCALAR;
-
-    ThreadLock(cft_lock);
-
-    rp->next = NULL;
-
-    ThreadUnlock(cft_lock);
-    return rp;
-}
-
-/*******************************************************************/
-
-Rlist *RlistPrependAlien(Rlist **start, void *item)
-   /* Allocates new memory for objects - careful, could leak!  */
-{
-    Rlist *rp;
-
-    ThreadLock(cft_lock);
-
-    rp = xmalloc(sizeof(Rlist));
-
-    rp->next = *start;
-    *start = rp;
-    ThreadUnlock(cft_lock);
-
-    rp->val.item = item;
-    rp->val.type = RVAL_TYPE_SCALAR;
-    return rp;
-}
-
-/*******************************************************************/
-
 /*
  * Copies from <from> to <to>, reading up to <len> characters from <from>,
  * stopping at first <sep>.

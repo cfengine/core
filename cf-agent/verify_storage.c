@@ -41,7 +41,6 @@
 #include <ornaments.h>
 #include <env_context.h>
 
-Rlist *MOUNTEDFSLIST;
 bool CF_MOUNTALL;
 
 static void FindStoragePromiserObjects(EvalContext *ctx, Promise *pp);
@@ -49,7 +48,7 @@ static int VerifyFileSystem(EvalContext *ctx, char *name, Attributes a, Promise 
 static int VerifyFreeSpace(EvalContext *ctx, char *file, Attributes a, Promise *pp);
 static void VolumeScanArrivals(char *file, Attributes a, Promise *pp);
 #if !defined(__MINGW32__)
-static int FileSystemMountedCorrectly(Rlist *list, char *name, Attributes a);
+static int FileSystemMountedCorrectly(Seq *list, char *name, Attributes a);
 static int IsForeignFileSystem(struct stat *childstat, char *dir);
 #endif
 
@@ -57,7 +56,16 @@ static int IsForeignFileSystem(struct stat *childstat, char *dir);
 static int VerifyMountPromise(EvalContext *ctx, char *file, Attributes a, Promise *pp);
 #endif /* !__MINGW32__ */
 
-/*****************************************************************************/
+Seq *GetGlobalMountedFSList(void)
+{
+    static Seq *mounted_fs_list = NULL;
+    if (!mounted_fs_list)
+    {
+        mounted_fs_list = SeqNew(100, NULL);
+    }
+
+    return mounted_fs_list;
+}
 
 void *FindAndVerifyStoragePromises(EvalContext *ctx, Promise *pp)
 {
@@ -124,7 +132,7 @@ void VerifyStoragePromise(EvalContext *ctx, char *path, Promise *pp)
 /* Do mounts first */
 
 #ifndef __MINGW32__
-    if ((!MOUNTEDFSLIST) && (!LoadMountInfo(&MOUNTEDFSLIST)))
+    if ((SeqLength(GetGlobalMountedFSList())) && (!LoadMountInfo(GetGlobalMountedFSList())))
     {
         Log(LOG_LEVEL_ERR, "Couldn't obtain a list of mounted filesystems - aborting");
         YieldCurrentLock(thislock);
@@ -324,15 +332,13 @@ static void VolumeScanArrivals(ARG_UNUSED char *file, ARG_UNUSED Attributes a, A
 /*********************************************************************/
 
 #if !defined(__MINGW32__)
-static int FileSystemMountedCorrectly(Rlist *list, char *name, Attributes a)
+static int FileSystemMountedCorrectly(Seq *list, char *name, Attributes a)
 {
-    Rlist *rp;
-    Mount *mp;
     int found = false;
 
-    for (rp = list; rp != NULL; rp = rp->next)
+    for (size_t i = 0; i < SeqLength(list); i++)
     {
-        mp = (Mount *) rp->val.item; // TODO: Abuse of Rlist
+        Mount *mp = SeqAt(list, i);
 
         if (mp == NULL)
         {
@@ -403,14 +409,11 @@ static int IsForeignFileSystem(struct stat *childstat, char *dir)
 
     if (childstat->st_dev != parentstat.st_dev)
     {
-        Rlist *rp;
-        Mount *entry;
-
         Log(LOG_LEVEL_DEBUG, "'%s' is on a different file system, not descending", dir);
 
-        for (rp = MOUNTEDFSLIST; rp != NULL; rp = rp->next)
+        for (size_t i = 0; i < SeqLength(GetGlobalMountedFSList()); i++)
         {
-            entry = (Mount *) rp->val.item; // TODO: Abuse of Rlist
+            Mount *entry = SeqAt(GetGlobalMountedFSList(), i);
 
             if (!strcmp(entry->mounton, dir))
             {
@@ -443,7 +446,7 @@ static int VerifyMountPromise(EvalContext *ctx, char *name, Attributes a, Promis
 
     options = Rlist2String(a.mount.mount_options, ",");
 
-    if (!FileSystemMountedCorrectly(MOUNTEDFSLIST, name, a))
+    if (!FileSystemMountedCorrectly(GetGlobalMountedFSList(), name, a))
     {
         if (!a.mount.unmount)
         {

@@ -27,8 +27,8 @@
 
 #include <cf3.defs.h>
 
-bool LoadMountInfo(Rlist **list);
-void DeleteMountInfo(Rlist *list);
+bool LoadMountInfo(Seq *list);
+void DeleteMountInfo(Seq *list);
 int VerifyNotInFstab(EvalContext *ctx, char *name, Attributes a, Promise *pp);
 int VerifyInFstab(EvalContext *ctx, char *name, Attributes a, Promise *pp);
 int VerifyMount(EvalContext *ctx, char *name, Attributes a, Promise *pp);

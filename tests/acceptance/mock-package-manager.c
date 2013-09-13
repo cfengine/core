@@ -179,10 +179,10 @@ static PackagePattern *DeserializePackagePattern(const char *entry)
 
 /******************************************************************************/
 
-static Rlist *ReadPackageEntries(const char *database_filename)
+static Seq *ReadPackageEntries(const char *database_filename)
 {
     FILE *packages_file = fopen(database_filename, "r");
-    Rlist *packages = NULL;
+    Seq *packages = SeqNew(1000, NULL);
 
     if (packages_file != NULL)
     {
@@ -192,7 +192,7 @@ static Rlist *ReadPackageEntries(const char *database_filename)
         {
             Package *package = DeserializePackage(serialized_package);
 
-            RlistAppendAlien(&packages, package);
+            SeqAppend(packages, package);
         }
 
         fclose(packages_file);
@@ -203,14 +203,13 @@ static Rlist *ReadPackageEntries(const char *database_filename)
 
 /******************************************************************************/
 
-static void SavePackages(const char *database_filename, Rlist *package_entries)
+static void SavePackages(const char *database_filename, Seq *package_entries)
 {
-    Rlist *rp = NULL;
     FILE *packages_file = fopen(database_filename, "w");
 
-    for (rp = package_entries; rp != NULL; rp = rp->next)
+    for (size_t i = 0; i < SeqLength(package_entries); i++)
     {
-        fprintf(packages_file, "%s\n", SerializePackage((Package *) rp->val.item));
+        fprintf(packages_file, "%s\n", SerializePackage(SeqAt(package_entries, i)));
     }
 
     fclose(packages_file);
@@ -241,20 +240,18 @@ static bool MatchPackage(PackagePattern *a, Package *b)
 
 /******************************************************************************/
 
-static Rlist *FindPackages(const char *database_filename, PackagePattern *pattern)
+static Seq *FindPackages(const char *database_filename, PackagePattern *pattern)
 {
-    Rlist *db = ReadPackageEntries(database_filename);
-    Rlist *matching = NULL;
+    Seq *db = ReadPackageEntries(database_filename);
+    Seq *matching = SeqNew(1000, NULL);
 
-    Rlist *rp = NULL;
-
-    for (rp = db; rp != NULL; rp = rp->next)
+    for (size_t i = 0; i < SeqLength(db); i++)
     {
-        Package *package = (Package *) rp->val.item;
+        Package *package = SeqAt(db, i);
 
         if (MatchPackage(pattern, package))
         {
-            RlistAppendAlien(&matching, package);
+            SeqAppend(matching, package);
         }
     }
 
@@ -263,13 +260,11 @@ static Rlist *FindPackages(const char *database_filename, PackagePattern *patter
 
 /******************************************************************************/
 
-static void ShowPackages(FILE *out, Rlist *package_entries)
+static void ShowPackages(FILE *out, Seq *package_entries)
 {
-    Rlist *rp = NULL;
-
-    for (rp = package_entries; rp != NULL; rp = rp->next)
+    for (size_t i = 0; i < SeqLength(package_entries); i++)
     {
-        fprintf(out, "%s\n", SerializePackage((Package *) rp->val.item));
+        fprintf(out, "%s\n", SerializePackage(SeqAt(package_entries, i)));
     }
 }
 
@@ -307,36 +302,34 @@ static void AddPackage(PackagePattern *pattern)
 {
     fprintf(stderr, "Trying to install all packages matching pattern %s\n", SerializePackagePattern(pattern));
 
-    Rlist *matching_available = FindPackages(AVAILABLE_PACKAGES_FILE_NAME, pattern);
+    Seq *matching_available = FindPackages(AVAILABLE_PACKAGES_FILE_NAME, pattern);
 
-    if (matching_available == NULL)
+    if (SeqLength(matching_available) == 0)
     {
         fprintf(stderr, "Unable to find any package matching %s\n", SerializePackagePattern(pattern));
         exit(1);
     }
 
-    Rlist *rp;
-
-    for (rp = matching_available; rp; rp = rp->next)
+    for (size_t i = 0; i < SeqLength(matching_available); i++)
     {
-        Package *p = (Package *) rp->val.item;
+        Package *p = SeqAt(matching_available, i);
 
-        PackagePattern *pat = MatchAllVersions((Package *) rp->val.item);
+        PackagePattern *pat = MatchAllVersions(p);
 
-        if (FindPackages(INSTALLED_PACKAGES_FILE_NAME, pat) != NULL)
+        if (SeqLength(FindPackages(INSTALLED_PACKAGES_FILE_NAME, pat)) > 0)
         {
             fprintf(stderr, "Package %s is already installed.\n", SerializePackage(p));
             exit(1);
         }
     }
 
-    Rlist *installed_packages = ReadPackageEntries(INSTALLED_PACKAGES_FILE_NAME);
+    Seq *installed_packages = ReadPackageEntries(INSTALLED_PACKAGES_FILE_NAME);
 
-    for (rp = matching_available; rp; rp = rp->next)
+    for (size_t i = 0; i < SeqLength(matching_available); i++)
     {
-        Package *p = (Package *) rp->val.item;
+        Package *p = SeqAt(matching_available, i);
 
-        RlistAppendAlien(&installed_packages, p);
+        SeqAppend(installed_packages, p);
         fprintf(stderr, "Succesfully installed package %s\n", SerializePackage(p));
     }
 
@@ -351,15 +344,15 @@ static void PopulateAvailable(const char *arg)
     Package *p = DeserializePackage(arg);
     PackagePattern *pattern = MatchSame(p);
 
-    if (FindPackages(AVAILABLE_PACKAGES_FILE_NAME, pattern) != NULL)
+    if (SeqLength(FindPackages(AVAILABLE_PACKAGES_FILE_NAME, pattern)) > 0)
     {
         fprintf(stderr, "Skipping already available package %s\n", SerializePackage(p));
         return;
     }
 
-    Rlist *available_packages = ReadPackageEntries(AVAILABLE_PACKAGES_FILE_NAME);
+    Seq *available_packages = ReadPackageEntries(AVAILABLE_PACKAGES_FILE_NAME);
 
-    RlistAppendAlien(&available_packages, p);
+    SeqAppend(available_packages, p);
     SavePackages(AVAILABLE_PACKAGES_FILE_NAME, available_packages);
 }
 
@@ -393,19 +386,17 @@ int main(int argc, char *argv[])
             break;
 
         case 'l':
-        {
-            Rlist *installed_packages = ReadPackageEntries(INSTALLED_PACKAGES_FILE_NAME);
-
-            ShowPackages(stdout, installed_packages);
-        }
+            {
+                Seq *installed_packages = ReadPackageEntries(INSTALLED_PACKAGES_FILE_NAME);
+                ShowPackages(stdout, installed_packages);
+            }
             break;
 
         case 'L':
-        {
-            Rlist *available_packages = ReadPackageEntries(AVAILABLE_PACKAGES_FILE_NAME);
-
-            ShowPackages(stdout, available_packages);
-        }
+            {
+                Seq *available_packages = ReadPackageEntries(AVAILABLE_PACKAGES_FILE_NAME);
+                ShowPackages(stdout, available_packages);
+            }
             break;
 
         case 'a':

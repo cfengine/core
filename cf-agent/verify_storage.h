@@ -27,11 +27,11 @@
 
 #include <cf3.defs.h>
 
-extern Rlist *MOUNTEDFSLIST;
 extern bool CF_MOUNTALL;
 
 void *FindAndVerifyStoragePromises(EvalContext *ctx, Promise *pp);
 void VerifyStoragePromise(EvalContext *ctx, char *path, Promise *pp);
+Seq *GetGlobalMountedFSList(void);
 
 void DeleteStorageContext(void);
 

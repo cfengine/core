@@ -68,7 +68,7 @@ static int ProcessSanityChecks(Attributes a, Promise *pp)
 
     if (a.restart_class)
     {
-        if ((RlistIsStringIn(a.signals, "term")) || (RlistIsStringIn(a.signals, "kill")))
+        if ((RlistKeyIn(a.signals, "term")) || (RlistKeyIn(a.signals, "kill")))
         {
             Log(LOG_LEVEL_WARNING, "Promise '%s' kills then restarts - never strictly converges",
                   pp->promiser);
@@ -320,7 +320,7 @@ static int FindPidMatches(EvalContext *ctx, Item *procdata, Item **killlist, Att
 
         if (pid == 1)
         {
-            if ((RlistLen(a.signals) == 1) && (RlistIsStringIn(a.signals, "hup")))
+            if ((RlistLen(a.signals) == 1) && (RlistKeyIn(a.signals, "hup")))
             {
                 Log(LOG_LEVEL_VERBOSE, "Okay to send only HUP to init");
             }

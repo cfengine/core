@@ -61,7 +61,7 @@ Seq *GetGlobalMountedFSList(void)
     static Seq *mounted_fs_list = NULL;
     if (!mounted_fs_list)
     {
-        mounted_fs_list = SeqNew(100, NULL);
+        mounted_fs_list = SeqNew(100, free);
     }
 
     return mounted_fs_list;

@@ -289,13 +289,9 @@ static void AugmentMountInfo(Seq *list, char *host, char *source, char *mounton,
 
 void DeleteMountInfo(Seq *list)
 {
-    Rlist *rp, *sp;
-    Mount *entry;
-
-    for (rp = list; rp != NULL; rp = sp)
+    for (size_t i = 0; i < SeqLength(list); i++)
     {
-        sp = rp->next;
-        entry = (Mount *) rp->val.item; // TODO: Abuse of Rlist
+        Mount *entry = SeqAt(list, i);
 
         if (entry->host)
         {
@@ -316,9 +312,9 @@ void DeleteMountInfo(Seq *list)
         {
             free(entry->options);
         }
-
-        free((char *) entry);
     }
+
+    SeqClear(list);
 }
 
 /*******************************************************************/

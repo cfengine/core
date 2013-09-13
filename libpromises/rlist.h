@@ -62,7 +62,6 @@ FnCall *RlistFnCallValue(const Rlist *rlist);
 Rlist *RlistRlistValue(const Rlist *rlist);
 Rlist *RlistParseShown(char *string);
 Rlist *RlistParseString(char *string);
-bool RlistIsStringIn(const Rlist *list, const char *s);
 Rlist *RlistKeyIn(Rlist *list, const char *key);
 int RlistLen(const Rlist *start);
 bool RlistIsInListOfRegex(EvalContext *ctx, const Rlist *list, const char *str);

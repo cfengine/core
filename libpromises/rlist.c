@@ -174,31 +174,6 @@ Rlist *RlistKeyIn(Rlist *list, const char *key)
 
 /*******************************************************************/
 
-bool RlistIsStringIn(const Rlist *list, const char *s)
-{
-    if (s == NULL || list == NULL)
-    {
-        return false;
-    }
-
-    for (const Rlist *rp = list; rp != NULL; rp = rp->next)
-    {
-        if (rp->val.type != RVAL_TYPE_SCALAR)
-        {
-            continue;
-        }
-
-        if (strcmp(s, RlistScalarValue(rp)) == 0)
-        {
-            return true;
-        }
-    }
-
-    return false;
-}
-
-/*******************************************************************/
-
 bool RlistIsInListOfRegex(EvalContext *ctx, const Rlist *list, const char *str)
 {
     if (str == NULL || list == NULL)

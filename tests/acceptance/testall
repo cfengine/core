@@ -66,6 +66,7 @@ BASE_WORKDIR=$(pwd)/workdir
 QUIET=
 STAGING_TESTS=${STAGING_TESTS:-0}
 NETWORK_TESTS=${NETWORK_TESTS:-1}
+UNSAFE_TESTS=${UNSAFE_TESTS:-0}
 GAINROOT=${GAINROOT:-fakeroot}
 
 PASSED_TESTS=0
@@ -140,13 +141,15 @@ fi
 # echo
 
 usage() {
-  echo "testall [-q] [--gainroot=<command>] [--agent=<agent>] [--no-nova] [--staging] [--no-network] [<test> <test>...]"
+  echo "testall [-q] [--gainroot=<command>] [--agent=<agent>] [--no-nova] [--staging] [--unsafe] [--no-network] [<test> <test>...]"
   echo
   echo "If no test is given, all tests are run:"
   echo "  Tests with names of form <file>.cf are expected to run succesfully"
   echo "  Tests with names of form <file>.x.cf are expected to crash"
   echo "  Tests inside directories called 'staging' are not run"
   echo "    (unless --staging option is passed)"
+  echo "  Tests inside directories called 'unsafe' are not run"
+  echo "    (unless --unsafe option is passed)"
   echo "  Tests inside directories called 'network' are not run"
   echo "    if --no-network option is passed"
   echo
@@ -174,10 +177,13 @@ runtest() {
     EXPECTED_CRASH=
   fi
 
-  if [ "x$STAGING_TESTS" = "x0" ] && echo "$TEST" | grep -q -e 'staging'; then
+  if [ "x$STAGING_TESTS" = "x0" ] && echo "$TEST" | grep -q -e '/staging/'; then
     SKIP=1
     SKIPREASON="Staging tests are disabled"
-  elif [ "x$NETWORK_TESTS" = "x0" ] && echo "$TEST" | grep -q -e 'network'; then
+  elif [ "x$UNSAFE_TESTS" != "x1" ] && echo "$TEST" | grep -q -e '/unsafe/'; then
+    SKIP=1
+    SKIPREASON="Unsafe tests are disabled"
+  elif [ "x$NETWORK_TESTS" = "x0" ] && echo "$TEST" | grep -q -e '/network/'; then
     SKIP=1
     SKIPREASON="Network-dependent tests are disabled"
   else
@@ -321,6 +327,8 @@ while true; do
       GAINROOT=${1#--gainroot=};;
     --staging)
       STAGING_TESTS=1;;
+    --unsafe)
+      UNSAFE_TESTS=1;;
     --no-network)
       NETWORK_TESTS=0;;
     --agent=*)
@@ -335,7 +343,7 @@ while true; do
 done
 
 if [ $# -gt 0 ]; then
-  # We need to run all specified tests
+  # We need to run all specified tests, but not unsafe ones.
   STAGING_TESTS=1
   NETWORK_TESTS=1
   for test in "$@"; do

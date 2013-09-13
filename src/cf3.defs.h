@@ -323,6 +323,7 @@ enum statepolicy
 enum classes
 {
     hard_class_unknown,
+    virt_host_vz_vzps,
     hp,
     aix,
     linuxx,

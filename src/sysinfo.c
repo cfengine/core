@@ -49,6 +49,7 @@ static int Linux_Debian_Version(void);
 static int Linux_Mandrake_Version(void);
 static int Linux_Mandriva_Version(void);
 static int Linux_Mandriva_Version_Real(char *filename, char *relstring, char *vendor);
+static int OpenVZ_Detect(void);
 static int VM_Version(void);
 static int Xen_Domain(void);
 
@@ -66,6 +67,7 @@ static void GetCPUInfo(void);
 static const char *CLASSATTRIBUTES[HARD_CLASSES_MAX][3] =
 {
     {"-", "-", "-"},            /* as appear here are matched. The fields are sysname and machine */
+    {"virt_host_vz_vzps", ".*", ".*"},        /* virt_host_vz_vzps */
     {"hp-ux", ".*", ".*"},      /* hpux */
     {"aix", ".*", ".*"},        /* aix */
     {"linux", ".*", ".*"},      /* linux */
@@ -87,6 +89,7 @@ static const char *CLASSATTRIBUTES[HARD_CLASSES_MAX][3] =
 static const char *VRESOLVCONF[HARD_CLASSES_MAX] =
 {
     "-",
+    "/etc/resolv.conf",         /* virt_host_vz_vzps */
     "/etc/resolv.conf",         /* hpux */
     "/etc/resolv.conf",         /* aix */
     "/etc/resolv.conf",         /* linux */
@@ -108,6 +111,7 @@ static const char *VRESOLVCONF[HARD_CLASSES_MAX] =
 static const char *VMAILDIR[HARD_CLASSES_MAX] =
 {
     "-",
+    "/var/spool/mail",          /* virt_host_vz_vzps */
     "/var/mail",                /* hpux */
     "/var/spool/mail",          /* aix */
     "/var/spool/mail",          /* linux */
@@ -129,6 +133,7 @@ static const char *VMAILDIR[HARD_CLASSES_MAX] =
 static const char *VEXPORTS[HARD_CLASSES_MAX] =
 {
     "-",
+    "/etc/exports",             /* virt_host_vz_vzps */
     "/etc/exports",             /* hpux */
     "/etc/exports",             /* aix */
     "/etc/exports",             /* linux */
@@ -873,6 +878,11 @@ void OSClasses(void)
     SetFlavour(class);
 
 #endif
+
+    if (cfstat("/proc/self/status", &statbuf) != -1)
+    {
+        OpenVZ_Detect();
+    }
 
     GetCPUInfo();
 
@@ -1867,6 +1877,45 @@ static int Linux_Mandriva_Version_Real(char *filename, char *relstring, char *ve
 
     return 0;
 }
+/******************************************************************/
+static int OpenVZ_Detect(void)
+{
+#define OPENVZ_HOST_FILENAME "/proc/bc/0"
+#define OPENVZ_GUEST_FILENAME "/proc/vz"
+#define OPENVZ_VZPS_FILE "/bin/vzps"
+    FILE *fp;
+
+    CfOut(cf_verbose, "", "This appears to be an OpenVZ/Virtuozzo/Parallels Cloud Server system.\n");
+
+    /* The file /proc/bc/0 is present on host
+       The file /proc/vz is present on guest
+       If the host has /bin/vzps, we should use it for checking processes
+    */
+
+    if ((fp = fopen(OPENVZ_HOST_FILENAME, "r")) != NULL )
+    {
+        CfOut(cf_verbose, "", "This appears to be an OpenVZ/Virtuozzo/Parallels Cloud Server host system.\n");
+        HardClass("virt_host_openvz");
+        /* if the file /bin/vzps is there, it is safe to use the processes promise type */
+        if ((fp = fopen(OPENVZ_VZPS_FILE, "r")) != NULL )
+        {
+           HardClass("virt_host_vz_vzps");
+        }
+        else
+        {
+           CfOut(cf_inform, "", "This OpenVZ/Virtuozzo/Parallels Cloud Server host system does not have vzps installed; the processes promise type may not work as expected.\n");
+        }
+    }
+    else if ((fp = fopen(OPENVZ_GUEST_FILENAME, "r")) != NULL )
+    {
+        CfOut(cf_verbose, "", "This appears to be an OpenVZ/Virtuozzo/Parallels Cloud Server guest system.\n");
+        HardClass("virt_guest_openvz");
+    }
+    else
+    {
+        CfOut(cf_error, "", "!!! Could not get the type of OpenVZ/Virtuozzo/Parallels Cloud Server system.\n");
+    }
+}
 
 /******************************************************************/
 
@@ -1975,6 +2024,7 @@ static void Xen_Cpuid(uint32_t idx, uint32_t *eax, uint32_t *ebx, uint32_t *ecx,
 # endif
   : "=a"(*eax), "=r"(*ebx), "=c"(*ecx), "=d"(*edx):"0"(idx), "2"(0));
 }
+
 
 /******************************************************************/
 

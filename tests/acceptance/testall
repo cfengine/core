@@ -143,25 +143,29 @@ fi
 usage() {
   echo "testall [-q] [--gainroot=<command>] [--agent=<agent>] [--no-nova] [--staging] [--unsafe] [--no-network] [<test> <test>...]"
   echo
-  echo "If no test is given, all tests are run:"
+  echo "If no test is given, all standard tests are run:"
   echo "  Tests with names of form <file>.cf are expected to run succesfully"
   echo "  Tests with names of form <file>.x.cf are expected to crash"
-  echo "  Tests inside directories called 'staging' are not run"
-  echo "    (unless --staging option is passed)"
-  echo "  Tests inside directories called 'unsafe' are not run"
-  echo "    (unless --unsafe option is passed)"
-  echo "  Tests inside directories called 'network' are not run"
-  echo "    if --no-network option is passed"
   echo
   echo "If arguments are given, those are executed as tests"
   echo
   echo " -q makes script much quieter"
   echo
   echo " --gainroot=<command> forces use of command to gain root privileges,"
-  echo "                      otherwise fakeroot is used."
+  echo "           otherwise fakeroot is used."
   echo
-  echo " --agent provides a way to specify non-default cf-agent location,"
-  echo "         and defaults to $DEFAGENT."
+  echo " --agent   provides a way to specify non-default cf-agent location,"
+  echo "           and defaults to $DEFAGENT."
+  echo
+  echo " --staging enable tests in staging directories. They are not expected to pass."
+  echo
+  echo " --unsafe  enable tests in unsafe directories. WARNING! These tests modify the"
+  echo "           system they're running on and can DAMAGE YOUR SYSTEM! DO NOT use"
+  echo "           this option without a backup."
+  echo "           If you use this option you should also use --gainroot=sudo,"
+  echo "           otherwise you will get incorrect results."
+  echo
+  echo " --no-network disable tests in network directories."
 }
 
 runtest() {

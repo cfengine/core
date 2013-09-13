@@ -27,6 +27,7 @@
 const char *CLASSTEXT[HARD_CLASSES_MAX] =
 {
     "<unknown>",
+    "virt_host_vz_vzps",
     "hpux",
     "aix",
     "linux",
@@ -48,6 +49,7 @@ const char *CLASSTEXT[HARD_CLASSES_MAX] =
 const char *VPSCOMM[HARD_CLASSES_MAX] =
 {
     "",
+    "/bin/vzps -E 0",           /* vz with vzps */
     "/bin/ps",                  /* hpux */
     "/bin/ps",                  /* aix */
     "/bin/ps",                  /* linux */
@@ -72,6 +74,7 @@ const char *VPSCOMM[HARD_CLASSES_MAX] =
 const char *VPSOPTS[HARD_CLASSES_MAX] =
 {
     "",
+    "-eo user,pid,ppid,pgid,pcpu,pmem,vsz,pri,rss,nlwp,stime,time,args", /* vz with vzps */
     "-ef",                      /* hpux */
     "-N -eo user,pid,ppid,pgid,pcpu,pmem,vsz,ni,stat,st=STIME,time,args",  /* aix */
     "-eo user,pid,ppid,pgid,pcpu,pmem,vsz,pri,rss,nlwp,stime,time,args",        /* linux */
@@ -93,6 +96,7 @@ const char *VPSOPTS[HARD_CLASSES_MAX] =
 const char *VFSTAB[HARD_CLASSES_MAX] =
 {
     "-",
+    "/etc/fstab",               /* vz with vzps */
     "/etc/fstab",               /* hpux */
     "/etc/filesystems",         /* aix */
     "/etc/fstab",               /* linux */

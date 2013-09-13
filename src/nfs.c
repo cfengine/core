@@ -42,6 +42,7 @@ static void DeleteThisItem(Item **liststart, Item *entry);
 static const char *VMOUNTCOMM[HARD_CLASSES_MAX] =
 {
     "",
+    "/bin/mount -va",           /* virt_host_vz_vzps */
     "/sbin/mount -ea",          /* hpux */
     "/usr/sbin/mount -t nfs",   /* aix */
     "/bin/mount -va",           /* linux */
@@ -63,6 +64,7 @@ static const char *VMOUNTCOMM[HARD_CLASSES_MAX] =
 static const char *VUNMOUNTCOMM[HARD_CLASSES_MAX] =
 {
     "",
+    "/bin/umount",              /* virt_host_vz_vzps */
     "/sbin/umount",             /* hpux */
     "/usr/sbin/umount",         /* aix */
     "/bin/umount",              /* linux */
@@ -84,6 +86,7 @@ static const char *VUNMOUNTCOMM[HARD_CLASSES_MAX] =
 static const char *VMOUNTOPTS[HARD_CLASSES_MAX] =
 {
     "",
+    "defaults",                 /* virt_host_vz_vzps */
     "bg,hard,intr",             /* hpux */
     "bg,hard,intr",             /* aix */
     "defaults",                 /* linux */

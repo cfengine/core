@@ -411,10 +411,14 @@ static FnCallResult FnCallGetUsers(EvalContext *ctx, FnCall *fp, Rlist *finalarg
 
     while ((pw = getpwent()))
     {
-        if (!RlistIsStringIn(except_names, pw->pw_name) && !RlistIsIntIn(except_uids, (int) pw->pw_uid))
+        char *pw_uid_str = StringFromLong((int)pw->pw_uid);
+
+        if (!RlistIsStringIn(except_names, pw->pw_name) && !RlistIsStringIn(except_uids, pw_uid_str))
         {
             RlistAppendScalarIdemp(&newlist, pw->pw_name);
         }
+
+        free(pw_uid_str);
     }
 
     endpwent();

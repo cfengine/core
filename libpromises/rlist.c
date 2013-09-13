@@ -199,35 +199,6 @@ bool RlistIsStringIn(const Rlist *list, const char *s)
 
 /*******************************************************************/
 
-bool RlistIsIntIn(const Rlist *list, int i)
-{
-    char s[CF_SMALLBUF];
-
-    snprintf(s, CF_SMALLBUF - 1, "%d", i);
-
-    if (list == NULL)
-    {
-        return false;
-    }
-
-    for (const Rlist *rp = list; rp != NULL; rp = rp->next)
-    {
-        if (rp->val.type != RVAL_TYPE_SCALAR)
-        {
-            continue;
-        }
-
-        if (strcmp(s, RlistScalarValue(rp)) == 0)
-        {
-            return true;
-        }
-    }
-
-    return false;
-}
-
-/*******************************************************************/
-
 bool RlistIsInListOfRegex(EvalContext *ctx, const Rlist *list, const char *str)
 {
     if (str == NULL || list == NULL)

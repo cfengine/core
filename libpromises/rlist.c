@@ -344,11 +344,6 @@ Rlist *RlistAppendScalar(Rlist **start, const char *scalar)
     return RlistAppendRval(start, RvalCopyScalar((Rval) { (char *)scalar, RVAL_TYPE_SCALAR }));
 }
 
-Rlist *RlistAppendFnCall(Rlist **start, const FnCall *fn)
-{
-    return RlistAppendRval(start, RvalNew(fn, RVAL_TYPE_FNCALL));
-}
-
 Rlist *RlistAppend(Rlist **start, const void *item, RvalType type)
 {
     Rlist *rp, *lp = *start;
@@ -455,7 +450,7 @@ int RlistLen(const Rlist *start)
 
 /*******************************************************************/
 
-Rlist *RlistParseShown(char *string)
+Rlist *RlistParseShown(const char *string)
 {
     Rlist *newlist = NULL, *splitlist, *rp;
     char value[CF_MAXVARSIZE];
@@ -517,9 +512,9 @@ typedef enum
 
  @retval 0: successful >0: failed
  */
-static int LaunchParsingMachine(char *str, Rlist **newlist)
+static int LaunchParsingMachine(const char *str, Rlist **newlist)
 {
-    char *s = str;
+    const char *s = str;
     state current_state = ST_OPENED;
     int ret;
 
@@ -715,7 +710,7 @@ clean:
     return ret;
 }
 
-Rlist *RlistParseString(char *string)
+Rlist *RlistParseString(const char *string)
 {
     Rlist *newlist = NULL;
     int ret;

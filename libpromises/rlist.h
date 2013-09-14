@@ -60,8 +60,8 @@ void RlistDestroyEntry(Rlist **liststart, Rlist *entry);
 char *RlistScalarValue(const Rlist *rlist);
 FnCall *RlistFnCallValue(const Rlist *rlist);
 Rlist *RlistRlistValue(const Rlist *rlist);
-Rlist *RlistParseShown(char *string);
-Rlist *RlistParseString(char *string);
+Rlist *RlistParseShown(const char *string);
+Rlist *RlistParseString(const char *string);
 Rlist *RlistKeyIn(Rlist *list, const char *key);
 int RlistLen(const Rlist *start);
 bool RlistIsInListOfRegex(EvalContext *ctx, const Rlist *list, const char *str);
@@ -74,8 +74,6 @@ Rlist *RlistAppendScalar(Rlist **start, const char *scalar);
 
 Rlist *RlistPrepend(Rlist **start, const void *item, RvalType type);
 Rlist *RlistAppend(Rlist **start, const void *item, RvalType type);
-
-Rlist *RlistAppendFnCall(Rlist **start, const FnCall *fn);
 
 Rlist *RlistFromSplitString(const char *string, char sep);
 Rlist *RlistFromSplitRegex(EvalContext *ctx, const char *string, const char *regex, int max, int purge);

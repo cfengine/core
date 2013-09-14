@@ -49,6 +49,8 @@ bundle agent init
       "values[30]" string => "3**0";
       "values[31]" string => "step(10)";
       "values[32]" string => "step(-10)";
+      "values[33]" string => "100k";
+      "values[34]" string => "(200m - 100k) / (2t + 2t)";
 }
 
 
@@ -102,6 +104,8 @@ bundle agent check
       "verify[30]" string => '1.000000';
       "verify[31]" string => '1.000000';
       "verify[32]" string => '0.000000';
+      "verify[33]" string => '100000.000000';
+      "verify[34]" string => '0.000050';
 
       "indices" slist => getindices("verify");
 
@@ -112,7 +116,8 @@ bundle agent check
       "ok" and => { ok_0, ok_1, ok_3, ok_4, ok_5, ok_6, ok_7, ok_8,
                     ok_9, ok_10, ok_11, ok_13, ok_14, ok_15, ok_16,
                     ok_17, ok_18, ok_19, ok_20, ok_21, ok_23, ok_24,
-                    ok_25 };
+                    ok_25, ok_26, ok_27, ok_28, ok_29, ok_30, ok_31,
+                    ok_32, ok_33, ok_34 };
 
   reports:
     DEBUG::

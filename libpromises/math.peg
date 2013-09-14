@@ -36,7 +36,8 @@ Product	<- Value ( POW  Value		{ double r= math_eval_pop(yy->stack, &(yy->stackp
                  / MOD Value		{ double r= math_eval_pop(yy->stack, &(yy->stackp)), l= math_eval_pop(yy->stack, &(yy->stackp));  math_eval_push((long)l % (long)r, yy->stack, &(yy->stackp)); }
 		 )*
 
-Value	<- F_NUMBER			{ double scanned = 0; sscanf(yytext, "%lf", &scanned); math_eval_push(scanned, yy->stack, &(yy->stackp)); /*Log(LOG_LEVEL_ERR, "YY: read FP %lf", scanned);*/ }
+Value	<- F_NUMBER SI_Unit		{ double scanned = 0; sscanf(yytext, "%lf", &scanned); math_eval_push(math_eval_pop(yy->stack, &(yy->stackp)) * scanned, yy->stack, &(yy->stackp)); /* Log(LOG_LEVEL_ERR, "YY: read FP %lf", scanned); */ }
+         / F_NUMBER			{ double scanned = 0; sscanf(yytext, "%lf", &scanned); math_eval_push(scanned, yy->stack, &(yy->stackp)); /*Log(LOG_LEVEL_ERR, "YY: read FP %lf", scanned);*/ }
          / Constant
          / Funcall
 	 / OPEN Sum CLOSE
@@ -59,10 +60,17 @@ Constant <- "e" { math_eval_push(2.7182818284590452354, yy->stack, &(yy->stackp)
          / "sqrt2" { math_eval_push(1.41421356237309504880, yy->stack, &(yy->stackp)); }
          / "sqrt1_2" { math_eval_push(0.70710678118654752440, yy->stack, &(yy->stackp)); }
 
+SI_Unit  <- [kK] SPACE { math_eval_push(1000, yy->stack, &(yy->stackp)); }
+         /  [mM] SPACE { math_eval_push(1000000, yy->stack, &(yy->stackp)); }
+         /  [gG] SPACE { math_eval_push(1000000000, yy->stack, &(yy->stackp)); }
+         /  [tT] SPACE { math_eval_push(1000000000000, yy->stack, &(yy->stackp)); }
+         /  [pP] SPACE { math_eval_push(1000000000000000, yy->stack, &(yy->stackp)); }
+
 # Lexemes
 
 F_NUMBER <- < '-'? [0-9]+ '.'? [0-9]* > SPACE
 CLOSE_ENOUGH	<- '==' SPACE
+
 PLUS	<- '+' SPACE
 MINUS	<- '-' SPACE
 TIMES	<- '*' SPACE

@@ -27,6 +27,8 @@ bundle agent run
       "values[25]" string => "-3.400000 == -3.400001";
       "values[26]" string => "e";
       "values[27]" string => "pi";
+      "values[28]" string => "100m"; # 100 million
+      "values[29]" string => "100k"; # 100 thousand
 
       "indices" slist => getindices("values");
 

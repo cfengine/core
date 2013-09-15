@@ -473,7 +473,7 @@ static void KeepControlPromises(EvalContext *ctx, Policy *policy, GenericAgentCo
             if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_ALLOWCIPHERS].lval) == 0)
             {
 
-                SV.allowciphers = xstrdup(cp->lval);
+                SV.allowciphers = xstrdup(retval.item);
                 Log(LOG_LEVEL_VERBOSE, "Setting allowciphers to '%s'", SV.allowciphers);
                 continue;
             }

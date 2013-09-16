@@ -27,6 +27,7 @@
 const char *CLASSTEXT[PLATFORM_CONTEXT_MAX] =
 {
     "<unknown>",
+    "virt_host_vz_vzps",
     "hpux",
     "aix",
     "linux",
@@ -48,6 +49,7 @@ const char *CLASSTEXT[PLATFORM_CONTEXT_MAX] =
 const char *VPSCOMM[PLATFORM_CONTEXT_MAX] =
 {
     "",
+    "/bin/vzps",                /* virt_host_vz_vzps */
     "/bin/ps",                  /* hpux */
     "/bin/ps",                  /* aix */
     "/bin/ps",                  /* linux */
@@ -72,6 +74,7 @@ const char *VPSCOMM[PLATFORM_CONTEXT_MAX] =
 const char *VPSOPTS[PLATFORM_CONTEXT_MAX] =
 {
     "",
+    "-E 0 -o user,pid,ppid,pgid,pcpu,pmem,vsz,ni,rss,nlwp,stime,time,args",   /* virt_host_vz_vzps (with vzps, the -E 0 replace the -e) */
     "-ef",                      /* hpux */
     "-N -eo user,pid,ppid,pgid,pcpu,pmem,vsz,ni,stat,st=STIME,time,args", /* aix */
     "-eo user,pid,ppid,pgid,pcpu,pmem,vsz,ni,rss,nlwp,stime,time,args",   /* linux */
@@ -93,6 +96,7 @@ const char *VPSOPTS[PLATFORM_CONTEXT_MAX] =
 const char *VFSTAB[PLATFORM_CONTEXT_MAX] =
 {
     "-",
+    "/etc/fstab",               /* virt_host_vz_vzps */
     "/etc/fstab",               /* hpux */
     "/etc/filesystems",         /* aix */
     "/etc/fstab",               /* linux */

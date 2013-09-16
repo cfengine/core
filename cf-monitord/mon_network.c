@@ -75,6 +75,7 @@ static const Sock ECGSOCKS[ATTR] =     /* extended to map old to new using enum 
 static const char *VNETSTAT[PLATFORM_CONTEXT_MAX] =
 {
     "-",
+    "/bin/netstat -rn",         /* virt_host_vz_vzps */
     "/usr/bin/netstat -rn",     /* hpux */
     "/usr/bin/netstat -rn",     /* aix */
     "/bin/netstat -rn",         /* linux */

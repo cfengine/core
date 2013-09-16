@@ -32,7 +32,7 @@ files:
 }
 
 body copy_from mycopy(suffix) {
-  source => "$(this.promiser).$(suffix)";
+  source => "/$(this.promiser).$(suffix)";
   copy_backup => "false";
 }
 

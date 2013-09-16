@@ -326,7 +326,7 @@ static void GetMacAddress(EvalContext *ctx, int fd, struct ifreq *ifr, struct if
 {
     char name[CF_MAXVARSIZE];
 
-    snprintf(name, sizeof(name), "hardware_mac[%s]", ifp->ifr_name);
+    snprintf(name, sizeof(name), "hardware_mac[%s]", CanonifyName(ifp->ifr_name));
 
     // mac address on a loopback interface doesn't make sense
     if (ifr->ifr_flags & IFF_LOOPBACK)

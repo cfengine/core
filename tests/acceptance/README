@@ -25,14 +25,17 @@ Preparing for running tests
 
 * Install fakeroot(1). If this tool is not available for your operating system,
   you may any other "fake root" environment or even sudo(1). Alternative tools
-  are specified by --gainroot option of `testall' script.
+  are specified by --gainroot option of `testall' script. Note that if you use
+  the --unsafe option (can damage your system), you may have to use
+  --gainroot=sudo in order to get correct results.
 
 ------------------------------------------------------------------------------
 Running testsuite
 ------------------------------------------------------------------------------
 
 All tests ought only to create files and directories in /tmp, and ought not to
-modify other files.
+modify other files. The exception to this rule are so called unsafe tests, which
+reside in a special directory. More on unsafe tests below.
 
 Run
 
@@ -58,7 +61,7 @@ run will be additionally marked in output as "(UNEXPECTED FAILURE)".
 
 You might run a subset of tests by passing either filenames:
 
-  ./testall --agent=$workdir/bin/cf-agent 01_vars/01_basic/001.cf 01_vars/01_basic/002.x.cf
+  ./testall --agent=$workdir/bin/cf-agent 01_vars/01_basic/sysvars.cf
 
 or directories to 'testall':
 
@@ -76,14 +79,22 @@ Each test should be 100% standalone, and must contain at least 3 main bundles:
 Look in default.cf for some standard check bundles (for example, to compare
 files when testing file edits, or for cleaning up temporary files).
 
-Tests should be named with only digits (e.g., "001.cf") unless they are expected
-to crash (that is, if they contan syntax errors or other faults), in which case
-the filename should have an 'x' suffix (e.g., "001.x.cf").
+Tests should be named with short names describing what they test, using lower-
+case letters and underscores only. If the test is expected to generate a crash
+or error (that is, if they contan syntax errors or other faults), it should
+have an additional '.x' suffix before '.cf' (e.g. 'string_vars.x.cf').
 
 Tests which are not expected to pass yet (e.g. there is a bug in code which
 prevents tests from passing) should be placed in 'staging' subdirectory in the
 test directory where they belong. Such test cases will be only run if --staging
 argument to ./testall is passed.
+
+Tests which modify the system outside of /tmp are so called unsafe tests, and
+should be placed in the 'unsafe' subdirectory in the directory where they
+belong. Such test cases have the potential to damage the host system and will
+only be run if the --unsafe argument is given to ./testall. For the user's
+protection, this option is needed even if the test file name is specified
+directly on the command line.
 
 Tests which need network connectivity should be placed to 'network'
 subdirectories. Those tests may be disabled by passing --no-network option to

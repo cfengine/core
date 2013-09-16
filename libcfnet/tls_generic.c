@@ -103,7 +103,7 @@ int TLSVerifyPeer(ConnectionInfo *conn_info, const char *remoteip, const char *u
                                           conn_info->remote_keyhash_str);
     if (expected_rsa_key == NULL)
     {
-        Log(LOG_LEVEL_ERR, "HavePublicKeyByIP err");
+        Log(LOG_LEVEL_ERR, "Public key for host not found");
         retval = 0;                                        /* KEY NOT FOUND */
         goto ret3;
     }

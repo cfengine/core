@@ -71,7 +71,6 @@ static void GenerateMd5Hash(const char *istring, char *ohash)
 
 static bool WriteLockData(CF_DB *dbp, const char *lock_id, LockData *lock_data)
 {
-#ifdef LMDB
     unsigned char digest2[EVP_MAX_MD_SIZE*2 + 1];
 
     if (!strcmp(lock_id, "CF_CRITICAL_SECTION") ||
@@ -85,9 +84,6 @@ static bool WriteLockData(CF_DB *dbp, const char *lock_id, LockData *lock_data)
     }
 
     if(WriteDB(dbp, digest2, lock_data, sizeof(LockData)))
-#else
-    if(WriteDB(dbp, lock_id, lock_data, sizeof(LockData)))
-#endif
     {
         return true;
     }
@@ -132,14 +128,10 @@ bool AcquireLockByID(const char *lock_id, int acquire_after_minutes)
         .process_start_time = PROCESS_START_TIME_UNKNOWN,
     };
 
-#ifdef LMDB
     unsigned char ohash[EVP_MAX_MD_SIZE*2 + 1];
     GenerateMd5Hash(lock_id, ohash);
 
     if (ReadDB(dbp, ohash, &lock_data, sizeof(lock_data)))
-#else
-    if (ReadDB(dbp, lock_id, &lock_data, sizeof(lock_data)))
-#endif
     {
         if(lock_data.time + (acquire_after_minutes * SECONDS_PER_MINUTE) < time(NULL))
         {
@@ -172,14 +164,10 @@ time_t FindLockTime(const char *name)
         return -1;
     }
 
-#ifdef LMDB
     unsigned char ohash[EVP_MAX_MD_SIZE*2 + 1];
     GenerateMd5Hash(name, ohash);
 
     if (ReadDB(dbp, ohash, &entry, sizeof(entry)))
-#else
-    if (ReadDB(dbp, name, &entry, sizeof(entry)))
-#endif
     {
         CloseLock(dbp);
         return entry.time;
@@ -206,14 +194,10 @@ bool InvalidateLockTime(const char *lock_id)
         .process_start_time = PROCESS_START_TIME_UNKNOWN,
     };
 
-#ifdef LMDB
     unsigned char ohash[EVP_MAX_MD_SIZE*2 + 1];
     GenerateMd5Hash(lock_id, ohash);
 
     if(!ReadDB(dbp, ohash, &lock_data, sizeof(lock_data)))
-#else
-    if(!ReadDB(dbp, lock_id, &lock_data, sizeof(lock_data)))
-#endif
     {
         CloseLock(dbp);
         return true;  /* nothing to invalidate */
@@ -365,14 +349,10 @@ static pid_t FindLockPid(char *name)
         return -1;
     }
 
-#ifdef LMDB
     unsigned char ohash[EVP_MAX_MD_SIZE*2 + 1];
     GenerateMd5Hash(name, ohash);
 
     if (ReadDB(dbp, ohash, &entry, sizeof(entry)))
-#else
-    if (ReadDB(dbp, name, &entry, sizeof(entry)))
-#endif
     {
         CloseLock(dbp);
         return entry.pid;
@@ -507,14 +487,10 @@ static bool KillLockHolder(const char *lock)
         .process_start_time = PROCESS_START_TIME_UNKNOWN,
     };
 
-#ifdef LMDB
     unsigned char ohash[EVP_MAX_MD_SIZE*2 + 1];
     GenerateMd5Hash(lock, ohash);
 
     if (!ReadDB(dbp, ohash, &lock_data, sizeof(lock_data)))
-#else
-    if (!ReadDB(dbp, lock, &lock_data, sizeof(lock_data)))
-#endif
     {
         /* No lock found */
         CloseLock(dbp);
@@ -966,14 +942,10 @@ void PurgeLocks(void)
 
     memset(&entry, 0, sizeof(entry));
 
-#ifdef LMDB
     unsigned char ohash[EVP_MAX_MD_SIZE*2 + 1];
     GenerateMd5Hash("lock_horizon", ohash);
 
     if (ReadDB(dbp, ohash, &entry, sizeof(entry)))
-#else
-    if (ReadDB(dbp, "lock_horizon", &entry, sizeof(entry)))
-#endif
     {
         if (now - entry.time < SECONDS_PER_WEEK * 4)
         {

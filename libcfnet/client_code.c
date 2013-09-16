@@ -300,7 +300,7 @@ int TLSConnect(ConnectionInfo *conn_info, bool trust_server,
     /* Server might hang up here, after we sent identification! We
      * must get the "OK WELCOME" message for everything to be OK. */
     char line[1024] = "";
-    ret = TLSRecvLines(conn_info->ssl, line, sizeof(line));
+    ret = TLSRecvLine(conn_info->ssl, line, sizeof(line));
     if (ret <= 0 ||
         (strncmp(line, "OK WELCOME", strlen("OK WELCOME")) != 0))
     {

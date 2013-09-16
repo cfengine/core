@@ -23,7 +23,7 @@
 */
 
 
-#include <server_tls.h>
+#include <tls_server.h>
 #include <server_common.h>
 
 #include <crypto.h>                                        /* DecryptString */
@@ -132,8 +132,6 @@ bool ServerTLSInitialize()
             goto err3;
         }
     }
-    /* Log(LOG_LEVEL_ERR, "generate cert from priv key: %s", */
-    /*     ERR_reason_error_string(ERR_get_error())); */
 
     SSL_CTX_use_certificate(SSLSERVERCONTEXT, SSLSERVERCERT);
 
@@ -254,7 +252,7 @@ int ServerNegotiateProtocol(const ConnectionInfo *conn_info)
     }
 
     /* Receive CFE_v%d ... */
-    ret = TLSRecvLines(conn_info->ssl, input, sizeof(input));
+    ret = TLSRecvLine(conn_info->ssl, input, sizeof(input));
     if (ret <= 0)
     {
         Log(LOG_LEVEL_ERR,
@@ -277,7 +275,6 @@ int ServerNegotiateProtocol(const ConnectionInfo *conn_info)
     {
         char s[] = "OK\n";
         TLSSend(conn_info->ssl, s, sizeof(s)-1);
-        return version_received;
     }
     else
     {
@@ -285,8 +282,9 @@ int ServerNegotiateProtocol(const ConnectionInfo *conn_info)
         TLSSend(conn_info->ssl, s, sizeof(s)-1);
         Log(LOG_LEVEL_ERR,
             "Client advertises unsupported protocol version: %d", version_received);
-        return 0;
+        version_received = 0;
     }
+    return version_received;
 }
 
 /**
@@ -308,7 +306,7 @@ int ServerIdentifyClient(const ConnectionInfo *conn_info,
      * on IDENTITY line. For now only "username" setting exists... */
     username[0] = '\0';
 
-    ret = TLSRecvLines(conn_info->ssl, line, sizeof(line));
+    ret = TLSRecvLine(conn_info->ssl, line, sizeof(line));
     if (ret <= 0)
     {
         return -1;

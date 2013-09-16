@@ -35,7 +35,7 @@
 #include <exec_tools.h>
 #include <unix.h>
 #include <man.h>
-#include <server_tls.h>                              /* ServerTLSInitialize */
+#include <tls_server.h>                              /* ServerTLSInitialize */
 
 
 static const size_t QUEUESIZE = 50;

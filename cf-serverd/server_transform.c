@@ -800,7 +800,7 @@ void KeepLiteralAccessPromise(EvalContext *ctx, Promise *pp, char *type)
 
         if (!GetAuthPath(pp->promiser, SV.varadmit))
         {
-            InstallServerAuthPath(pp->promiser, &SV.varadmittop, &SV.varadmittop);
+            InstallServerAuthPath(pp->promiser, &SV.varadmit, &SV.varadmittop);
         }
 
         if (!GetAuthPath(pp->promiser, SV.vardeny))

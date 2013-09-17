@@ -103,101 +103,109 @@ void SetStartTime(void)
 
 static void RemoveTimeClass(EvalContext *ctx, time_t time)
 {
-    int i, j;
-    struct tm parsed_time;
-    char buf[CF_BUFSIZE];
+    // The first element is the local timezone
+    const char* tz_prefix[2] = { "", "GMT_" };
+    const char* tz_function[2] = { "localtime_r", "gmtime_r" };
+    struct tm tz_parsed_time[2];
+    const struct tm* tz_tm[2] = {
+        localtime_r(&time, &(tz_parsed_time[0])),
+        gmtime_r(&time, &(tz_parsed_time[1]))
+    };
 
-    if (localtime_r(&time, &parsed_time) == NULL)
+    for (int tz = 0; tz < 2; tz++)
     {
-        Log(LOG_LEVEL_ERR, "Unable to parse passed time. (localtime_r: %s)", GetErrorStr());
-        return;
-    }
+        int i, j;
+        char buf[CF_BUFSIZE];
+
+        if (tz_tm[tz] == NULL)
+        {
+            Log(LOG_LEVEL_ERR, "Unable to parse passed time. (%s: %s)", tz_function[tz], GetErrorStr());
+            return;
+        }
 
 /* Lifecycle */
 
-    for( i = 0; i < 3; i++ )
-    {
-        snprintf(buf, CF_BUFSIZE, "Lcycle_%d", i);
-        EvalContextClassRemove(ctx, NULL, buf);
-    }
+        for( i = 0; i < 3; i++ )
+        {
+            snprintf(buf, CF_BUFSIZE, "%sLcycle_%d", tz_prefix[tz], i);
+            EvalContextClassRemove(ctx, NULL, buf);
+        }
 
 /* Year */
 
-    snprintf(buf, CF_BUFSIZE, "Yr%04d", parsed_time.tm_year - 1 + 1900);
-    EvalContextClassRemove(ctx, NULL, buf);
-    snprintf(buf, CF_BUFSIZE, "Yr%04d", parsed_time.tm_year + 1900);
-    EvalContextClassRemove(ctx, NULL, buf);
+        snprintf(buf, CF_BUFSIZE, "%sYr%04d", tz_prefix[tz], tz_parsed_time[tz].tm_year - 1 + 1900);
+        EvalContextClassRemove(ctx, NULL, buf);
+        snprintf(buf, CF_BUFSIZE, "%sYr%04d", tz_prefix[tz], tz_parsed_time[tz].tm_year + 1900);
+        EvalContextClassRemove(ctx, NULL, buf);
 
 /* Month */
 
-    for( i = 0; i < 12; i++ )
-    {
-        EvalContextClassRemove(ctx, NULL, MONTH_TEXT[i]);
-    }
+        for( i = 0; i < 12; i++ )
+        {
+            snprintf(buf, CF_BUFSIZE, "%s%s", tz_prefix[tz], MONTH_TEXT[i]);
+            EvalContextClassRemove(ctx, NULL, buf);
+        }
 
 /* Day of week */
 
-    for( i = 0; i < 7; i++ )
-    {
-        EvalContextClassRemove(ctx, NULL, DAY_TEXT[i]);
-    }
+        for( i = 0; i < 7; i++ )
+        {
+            snprintf(buf, CF_BUFSIZE, "%s%s", tz_prefix[tz], DAY_TEXT[i]);
+            EvalContextClassRemove(ctx, NULL, buf);
+        }
 
 /* Day */
 
-    for( i = 1; i < 32; i++ )
-    {
-        snprintf(buf, CF_BUFSIZE, "Day%d", i);
-        EvalContextClassRemove(ctx, NULL, buf);
-    }
+        for( i = 1; i < 32; i++ )
+        {
+            snprintf(buf, CF_BUFSIZE, "%sDay%d", tz_prefix[tz], i);
+            EvalContextClassRemove(ctx, NULL, buf);
+        }
 
 /* Shift */
 
-    for( i = 0; i < 4; i++ )
-    {
-        EvalContextClassRemove(ctx, NULL, SHIFT_TEXT[i]);
-    }
+        for( i = 0; i < 4; i++ )
+        {
+            snprintf(buf, CF_BUFSIZE, "%s%s", tz_prefix[tz], SHIFT_TEXT[i]);
+            EvalContextClassRemove(ctx, NULL, buf);
+        }
 
 /* Hour */
 
-    for( i = 0; i < 24; i++ )
-    {
-        snprintf(buf, CF_BUFSIZE, "Hr%02d", i);
-        EvalContextClassRemove(ctx, NULL, buf);
-    }
-
-/* GMT hour */
-
-    for( i = 0; i < 24; i++ )
-    {
-        snprintf(buf, CF_BUFSIZE, "GMT_Hr%02d", i);
-        EvalContextClassRemove(ctx, NULL, buf);
-    }
+        for( i = 0; i < 24; i++ )
+        {
+            snprintf(buf, CF_BUFSIZE, "%sHr%02d", tz_prefix[tz], i);
+            EvalContextClassRemove(ctx, NULL, buf);
+            snprintf(buf, CF_BUFSIZE, "%sHr%d", tz_prefix[tz], i);
+            EvalContextClassRemove(ctx, NULL, buf);
+        }
 
 /* Quarter */
 
-    for( i = 1; i <= 4; i++ )
-    {
-        snprintf(buf, CF_BUFSIZE, "Q%d", i);
-        EvalContextClassRemove(ctx, NULL, buf);
-        for( j = 0; j < 24; j++ )
+        for( i = 1; i <= 4; i++ )
         {
-            snprintf(buf, CF_BUFSIZE, "Hr%02d_Q%d", j, i);
+            snprintf(buf, CF_BUFSIZE, "%sQ%d", tz_prefix[tz], i);
             EvalContextClassRemove(ctx, NULL, buf);
+            for( j = 0; j < 24; j++ )
+            {
+                snprintf(buf, CF_BUFSIZE, "%sHr%02d_Q%d", tz_prefix[tz], j, i);
+                EvalContextClassRemove(ctx, NULL, buf);
+            }
         }
-    }
 
 /* Minute */
 
-    for( i = 0; i < 60; i++ )
-    {
-        snprintf(buf, CF_BUFSIZE, "Min%02d", i);
-        EvalContextClassRemove(ctx, NULL, buf);
-    }
+        for( i = 0; i < 60; i++ )
+        {
+            snprintf(buf, CF_BUFSIZE, "%sMin%02d", tz_prefix[tz], i);
+            EvalContextClassRemove(ctx, NULL, buf);
+        }
 
-    for( i = 0; i < 60; i += 5 )
-    {
-        snprintf(buf, CF_BUFSIZE, "Min%02d_%02d", i, (i + 5) % 60);
-        EvalContextClassRemove(ctx, NULL, buf);
+        for( i = 0; i < 60; i += 5 )
+        {
+            snprintf(buf, CF_BUFSIZE, "%sMin%02d_%02d", tz_prefix[tz], i, (i + 5) % 60);
+            EvalContextClassRemove(ctx, NULL, buf);
+        }
     }
 }
 
@@ -205,38 +213,42 @@ static void RemoveTimeClass(EvalContext *ctx, time_t time)
 
 static void AddTimeClass(EvalContext *ctx, time_t time)
 {
-    struct tm parsed_time;
-    struct tm gmt_parsed_time;
-    char buf[CF_BUFSIZE];
-    int day_text_index, quarter, interval_start, interval_end;
+    // The first element is the local timezone
+    const char* tz_prefix[2] = { "", "GMT_" };
+    const char* tz_function[2] = { "localtime_r", "gmtime_r" };
+    struct tm tz_parsed_time[2];
+    const struct tm* tz_tm[2] = {
+        localtime_r(&time, &(tz_parsed_time[0])),
+        gmtime_r(&time, &(tz_parsed_time[1]))
+    };
 
-    if (localtime_r(&time, &parsed_time) == NULL)
+    for (int tz = 0; tz < 2; tz++)
     {
-        Log(LOG_LEVEL_ERR, "Unable to parse passed time. (localtime_r: %s)", GetErrorStr());
-        return;
-    }
+        char buf[CF_BUFSIZE];
+        int day_text_index, quarter, interval_start, interval_end;
 
-    if (gmtime_r(&time, &gmt_parsed_time) == NULL)
-    {
-        Log(LOG_LEVEL_ERR, "Unable to parse passed date. (gmtime_r: %s)", GetErrorStr());
-        return;
-    }
+        if (tz_tm[tz] == NULL)
+        {
+            Log(LOG_LEVEL_ERR, "Unable to parse passed time. (%s: %s)", tz_function[tz], GetErrorStr());
+            return;
+        }
 
 /* Lifecycle */
 
-    snprintf(buf, CF_BUFSIZE, "Lcycle_%d", ((parsed_time.tm_year + 1900) % 3));
-    EvalContextClassPutHard(ctx, buf);
+        snprintf(buf, CF_BUFSIZE, "%sLcycle_%d", tz_prefix[tz], ((tz_parsed_time[tz].tm_year + 1900) % 3));
+        EvalContextClassPutHard(ctx, buf);
 
 /* Year */
 
-    snprintf(VYEAR, CF_BUFSIZE, "%04d", parsed_time.tm_year + 1900);
-    snprintf(buf, CF_BUFSIZE, "Yr%04d", parsed_time.tm_year + 1900);
-    EvalContextClassPutHard(ctx, buf);
+        snprintf(VYEAR, CF_BUFSIZE, "%04d", tz_parsed_time[0].tm_year + 1900); // VYEAR has the local year
+        snprintf(buf, CF_BUFSIZE, "%sYr%04d", tz_prefix[tz], tz_parsed_time[tz].tm_year + 1900);
+        EvalContextClassPutHard(ctx, buf);
 
 /* Month */
 
-    strlcpy(VMONTH, MONTH_TEXT[parsed_time.tm_mon], 4);
-    EvalContextClassPutHard(ctx, MONTH_TEXT[parsed_time.tm_mon]);
+        strlcpy(VMONTH, MONTH_TEXT[tz_parsed_time[0].tm_mon], 4); // VMONTH has the local month
+        snprintf(buf, CF_BUFSIZE, "%s%s", tz_prefix[tz], MONTH_TEXT[tz_parsed_time[tz].tm_mon]);
+        EvalContextClassPutHard(ctx, buf);
 
 /* Day of week */
 
@@ -244,47 +256,47 @@ static void AddTimeClass(EvalContext *ctx, time_t time)
    Tuesday is 2 in tm_wday, 1 in DAY_TEXT
    ...
    Sunday  is 0 in tm_wday, 6 in DAY_TEXT */
-    day_text_index = (parsed_time.tm_wday + 6) % 7;
-    EvalContextClassPutHard(ctx, DAY_TEXT[day_text_index]);
+        day_text_index = (tz_parsed_time[tz].tm_wday + 6) % 7;
+        snprintf(buf, CF_BUFSIZE, "%s%s", tz_prefix[tz], DAY_TEXT[day_text_index]);
+        EvalContextClassPutHard(ctx, buf);
 
 /* Day */
 
-    snprintf(VDAY, CF_BUFSIZE, "%d", parsed_time.tm_mday);
-    snprintf(buf, CF_BUFSIZE, "Day%d", parsed_time.tm_mday);
-    EvalContextClassPutHard(ctx, buf);
+        snprintf(VDAY, CF_BUFSIZE, "%d", tz_parsed_time[tz].tm_mday); // VDAY has the local day
+        snprintf(buf, CF_BUFSIZE, "%sDay%d", tz_prefix[tz], tz_parsed_time[tz].tm_mday);
+        EvalContextClassPutHard(ctx, buf);
 
 /* Shift */
 
-    strcpy(VSHIFT, SHIFT_TEXT[parsed_time.tm_hour / 6]);
-    EvalContextClassPutHard(ctx, VSHIFT);
+        strcpy(VSHIFT, SHIFT_TEXT[tz_parsed_time[0].tm_hour / 6]); // VSHIFT has the local shift
+        snprintf(buf, CF_BUFSIZE, "%s%s", tz_prefix[tz], SHIFT_TEXT[tz_parsed_time[tz].tm_hour / 6]);
+        EvalContextClassPutHard(ctx, buf);
 
 /* Hour */
 
-    snprintf(buf, CF_BUFSIZE, "Hr%02d", parsed_time.tm_hour);
-    EvalContextClassPutHard(ctx, buf);
-
-/* GMT hour */
-
-    snprintf(buf, CF_BUFSIZE, "GMT_Hr%d\n", gmt_parsed_time.tm_hour);
-    EvalContextClassPutHard(ctx, buf);
+        snprintf(buf, CF_BUFSIZE, "%sHr%02d", tz_prefix[tz], tz_parsed_time[tz].tm_hour);
+        EvalContextClassPutHard(ctx, buf);
+        snprintf(buf, CF_BUFSIZE, "%sHr%d", tz_prefix[tz], tz_parsed_time[tz].tm_hour);
+        EvalContextClassPutHard(ctx, buf);
 
 /* Quarter */
 
-    quarter = parsed_time.tm_min / 15 + 1;
+        quarter = tz_parsed_time[tz].tm_min / 15 + 1;
 
-    snprintf(buf, CF_BUFSIZE, "Q%d", quarter);
-    EvalContextClassPutHard(ctx, buf);
-    snprintf(buf, CF_BUFSIZE, "Hr%02d_Q%d", parsed_time.tm_hour, quarter);
-    EvalContextClassPutHard(ctx, buf);
+        snprintf(buf, CF_BUFSIZE, "%sQ%d", tz_prefix[tz], quarter);
+        EvalContextClassPutHard(ctx, buf);
+        snprintf(buf, CF_BUFSIZE, "%sHr%02d_Q%d", tz_prefix[tz], tz_parsed_time[tz].tm_hour, quarter);
+        EvalContextClassPutHard(ctx, buf);
 
 /* Minute */
 
-    snprintf(buf, CF_BUFSIZE, "Min%02d", parsed_time.tm_min);
-    EvalContextClassPutHard(ctx, buf);
+        snprintf(buf, CF_BUFSIZE, "%sMin%02d", tz_prefix[tz], tz_parsed_time[tz].tm_min);
+        EvalContextClassPutHard(ctx, buf);
 
-    interval_start = (parsed_time.tm_min / 5) * 5;
-    interval_end = (interval_start + 5) % 60;
+        interval_start = (tz_parsed_time[tz].tm_min / 5) * 5;
+        interval_end = (interval_start + 5) % 60;
 
-    snprintf(buf, CF_BUFSIZE, "Min%02d_%02d", interval_start, interval_end);
-    EvalContextClassPutHard(ctx, buf);
+        snprintf(buf, CF_BUFSIZE, "%sMin%02d_%02d", tz_prefix[tz], interval_start, interval_end);
+        EvalContextClassPutHard(ctx, buf);
+    }
 }

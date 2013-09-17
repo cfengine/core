@@ -971,7 +971,7 @@ int SSL_write(SSL *ssl, const void *buf, int num)
 {
     if (USING(SSL_write))
         return original_SSL_write(ssl, buf, num);
-    return SSL_write_result;
+    return (SSL_write_result > num) ? num : SSL_write_result;
 }
 
 int SSL_read(SSL *ssl, void *buf, int num)
@@ -986,7 +986,7 @@ int SSL_read(SSL *ssl, void *buf, int num)
             temp[i] = SSL_read_buffer[i];
         return i;
     }
-    return SSL_read_result;
+    return (SSL_read_result > num) ? num : SSL_read_result;
 }
 int SSL_get_shutdown(const SSL *ssl)
 {

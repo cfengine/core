@@ -173,12 +173,13 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
         if (existing_policy_server)
         {
             Log(LOG_LEVEL_VERBOSE, "This agent is bootstrapped to '%s'", existing_policy_server);
+            SetPolicyServer(ctx, existing_policy_server);
         }
         else
         {
-            Log(LOG_LEVEL_VERBOSE, "This agent is not bootstrapped");
+            Log(LOG_LEVEL_WARNING, "This agent is not bootstrapped");
+            return;
         }
-        SetPolicyServer(ctx, existing_policy_server);
 
         if (GetAmPolicyHub(GetWorkDir()))
         {

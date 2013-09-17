@@ -768,7 +768,7 @@ int LoadProcessTable(EvalContext *ctx, Item **procdata)
 
     if (PROCESSTABLE)
     {
-        Log(LOG_LEVEL_VERBOSE, "Reusing cached process state");
+        Log(LOG_LEVEL_VERBOSE, "Reusing cached process table");
         return true;
     }
 

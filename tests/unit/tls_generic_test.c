@@ -1346,7 +1346,7 @@ static void test_TLSBasicIO(void)
     SSL_READ_RETURN(-1);
     assert_int_equal(-1, TLSRecvLine(ssl, input_buffer, output_buffer_length));
     SSL_READ_RETURN(5);
-    assert_int_equal(-1, TLSRecvLine(ssl, input_buffer, 5));
+    assert_int_equal(-1, TLSRecvLine(ssl, input_buffer, 10));
     SSL_READ_USE_BUFFER(output_line_buffer);
     assert_int_equal(5, TLSRecvLine(ssl, input_buffer, output_line_buffer_length));
     assert_string_equal(output_just_hello, input_buffer);

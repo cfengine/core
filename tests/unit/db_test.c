@@ -94,15 +94,16 @@ static void CreateGarbage(const char *filename)
 void test_recreate(void)
 {
     /* Test that recreating database works properly */
-
+#ifdef HAVE_LIBTOKYOCABINET
     char tcdb_db[CF_BUFSIZE];
     snprintf(tcdb_db, CF_BUFSIZE, "%s/cf_classes.tcdb", CFWORKDIR);
     CreateGarbage(tcdb_db);
-
+#endif
+#ifdef HAVE_LIBQDBM
     char qdbm_db[CF_BUFSIZE];
     snprintf(qdbm_db, CF_BUFSIZE, "%s/cf_classes.qdbm", CFWORKDIR);
     CreateGarbage(qdbm_db);
-
+#endif
     CF_DB *db;
     assert_int_equal(OpenDB(&db, dbid_classes), true);
     CloseDB(db);

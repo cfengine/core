@@ -24,6 +24,7 @@
 
 #include <verify_exec.h>
 
+#include <actuator.h>
 #include <promises.h>
 #include <files_names.h>
 #include <files_interfaces.h>
@@ -58,7 +59,7 @@ static ActionResult RepairExec(EvalContext *ctx, Attributes a, Promise *pp);
 
 static void PreviewProtocolLine(char *line, char *comm);
 
-void VerifyExecPromise(EvalContext *ctx, Promise *pp)
+PromiseResult VerifyExecPromise(EvalContext *ctx, Promise *pp)
 {
     Attributes a = { {0} };
 
@@ -68,16 +69,14 @@ void VerifyExecPromise(EvalContext *ctx, Promise *pp)
 
     if (!SyntaxCheckExec(a, pp))
     {
-        // cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "");
         EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser");
-        return;
+        return PROMISE_RESULT_FAIL;
     }
 
     if (PromiseKeptExec(a, pp))
     {
-        // cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_NOOP, pp, a, "");
         EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser");
-        return;
+        return PROMISE_RESULT_NOOP;
     }
 
     char *lock_name = GetLockNameExec(a, pp);
@@ -86,25 +85,25 @@ void VerifyExecPromise(EvalContext *ctx, Promise *pp)
 
     if (thislock.lock == NULL)
     {
-        // cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, a, "");
         EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser");
-        return;
+        return PROMISE_RESULT_NOOP;
     }
 
     PromiseBanner(pp);
 
+    PromiseResult result = PROMISE_RESULT_NOOP;
     switch (RepairExec(ctx, a, pp))
     {
     case ACTION_RESULT_OK:
-        // cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "");
+        result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
         break;
 
     case ACTION_RESULT_TIMEOUT:
-        // cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_TIMEOUT, pp, a, "");
+        result = PromiseResultUpdate(result, PROMISE_RESULT_TIMEOUT);
         break;
 
     case ACTION_RESULT_FAILED:
-        // cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, a, "");
+        result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
         break;
 
     default:
@@ -113,6 +112,8 @@ void VerifyExecPromise(EvalContext *ctx, Promise *pp)
 
     YieldCurrentLock(thislock);
     EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser");
+
+    return result;
 }
 
 /*****************************************************************************/

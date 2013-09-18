@@ -209,6 +209,11 @@ static void LogToSystemLog(const char *msg, LogLevel level)
     syslog(LogLevelToSyslogPriority(level), "%s", msg);
 }
 
+const char *GetErrorStrFromCode(int error_code)
+{
+    return strerror(error_code);
+}
+
 const char *GetErrorStr(void)
 {
     return strerror(errno);

@@ -24,6 +24,7 @@
 
 #include <verify_vars.h>
 
+#include <actuator.h>
 #include <attributes.h>
 #include <string_lib.h>
 #include <buffer.h>
@@ -52,12 +53,12 @@ static bool Epimenides(EvalContext *ctx, const char *ns, const char *scope, cons
 static int CompareRval(Rval rval1, Rval rval2);
 
 
-void VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates)
+PromiseResult VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates)
 {
     ConvergeVariableOptions opts = CollectConvergeVariableOptions(ctx, pp, allow_duplicates);
     if (!opts.should_converge)
     {
-        return;
+        return PROMISE_RESULT_NOOP;
     }
 
     //More consideration needs to be given to using these
@@ -79,7 +80,7 @@ void VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates
         EvalContextVariableGet(ctx, ref, &existing_var_rval, &existing_var_type);
     }
 
-    PromiseResult promise_result;
+    PromiseResult result = PROMISE_RESULT_NOOP;
 
     Rval rval = opts.cp_save->rval;
 
@@ -95,7 +96,7 @@ void VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates
             {
                 // Already did this
                 VarRefDestroy(ref);
-                return;
+                return result;
             }
 
             FnCallResult res = FnCallEvaluate(ctx, fp, pp);
@@ -105,7 +106,7 @@ void VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates
                 /* We do not assign variables to failed fn calls */
                 RvalDestroy(res.rval);
                 VarRefDestroy(ref);
-                return;
+                return result;
             }
             else
             {
@@ -128,9 +129,9 @@ void VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates
                     UnexpectedError("Problems writing to buffer");
                     VarRefDestroy(ref);
                     BufferDestroy(&conv);
-                    return;
+                    return result;
                 }
-                rval = RvalCopy((Rval) {(char *)BufferData(conv), opts.cp_save->rval.type});
+                rval = RvalNew(BufferData(conv), opts.cp_save->rval.type);
             }
             else if (strcmp(opts.cp_save->lval, "real") == 0)
             {
@@ -154,7 +155,7 @@ void VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates
                     UnexpectedError("Problems writing to buffer");
                     VarRefDestroy(ref);
                     BufferDestroy(&conv);
-                    return;
+                    return result;
                 }
                 rval = RvalCopy((Rval) {(char *)BufferData(conv), opts.cp_save->rval.type});
             }
@@ -237,7 +238,7 @@ void VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates
             // Unexpanded variables, we don't do anything with
             RvalDestroy(rval);
             VarRefDestroy(ref);
-            return;
+            return result;
         }
 
         if (!FullTextMatch(ctx, "[a-zA-Z0-9_\200-\377.]+(\\[.+\\])*", pp->promiser))
@@ -246,7 +247,7 @@ void VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates
             PromiseRef(LOG_LEVEL_ERR, pp);
             RvalDestroy(rval);
             VarRefDestroy(ref);
-            return;
+            return result;
         }
 
         if (opts.drop_undefined && rval.type == RVAL_TYPE_LIST)
@@ -271,7 +272,7 @@ void VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates
                 free(lval_str);
                 VarRefDestroy(ref);
                 RvalDestroy(rval);
-                return;
+                return result;
             }
             else
             {
@@ -288,7 +289,7 @@ void VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates
                     VarRefDestroy(base_ref);
                     VarRefDestroy(ref);
                     RvalDestroy(rval);
-                    return;
+                    return result;
                 }
                 VarRefDestroy(base_ref);
             }
@@ -298,18 +299,18 @@ void VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates
         {
             Log(LOG_LEVEL_VERBOSE, "Unable to converge %s.%s value (possibly empty or infinite regression)", ref->scope, pp->promiser);
             PromiseRef(LOG_LEVEL_VERBOSE, pp);
-            promise_result = PROMISE_RESULT_FAIL;
+            result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
         }
         else
         {
-            promise_result = PROMISE_RESULT_CHANGE;
+            result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
         }
     }
     else
     {
         Log(LOG_LEVEL_ERR, "Variable %s has no promised value", pp->promiser);
         Log(LOG_LEVEL_ERR, "Rule from %s at/before line %zu", PromiseGetBundle(pp)->source_path, opts.cp_save->offset.line);
-        promise_result = PROMISE_RESULT_FAIL;
+        result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
     }
 
     /*
@@ -321,10 +322,12 @@ void VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates
      * In order to support 'classes' body for variables as well, we call
      * ClassAuditLog explicitly.
      */
-    ClassAuditLog(ctx, pp, a, promise_result);
+    ClassAuditLog(ctx, pp, a, result);
 
     VarRefDestroy(ref);
     RvalDestroy(rval);
+
+    return result;
 }
 
 // FIX: this function is a mixture of Equal/Compare (boolean/diff).

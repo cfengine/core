@@ -124,7 +124,7 @@ void SetStartTime(void);
 
 /* verify_reports.c */
 
-void VerifyReportPromise(EvalContext *ctx, Promise *pp);
+PromiseResult VerifyReportPromise(EvalContext *ctx, Promise *pp);
 
 /* cf-key */
 

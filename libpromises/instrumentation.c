@@ -171,13 +171,20 @@ static void NotePerformance(char *eventname, time_t t, double value)
 
 static bool IsContextIgnorableForReporting(const char *context_name)
 {
-    return (strncmp(context_name,"Min",3) == 0 || strncmp(context_name,"Hr",2) == 0 || strcmp(context_name,"Q1") == 0
-     || strcmp(context_name,"Q2") == 0 || strcmp(context_name,"Q3") == 0 || strcmp(context_name,"Q4") == 0
-     || strncmp(context_name,"GMT_Hr",6) == 0  || strncmp(context_name,"Yr",2) == 0
-     || strncmp(context_name,"Day",3) == 0 || strcmp(context_name,"license_expired") == 0
-     || strcmp(context_name,"any") == 0 || strcmp(context_name,"from_cfexecd") == 0
-     || IsStrIn(context_name,MONTH_TEXT) || IsStrIn(context_name,DAY_TEXT)
-     || IsStrIn(context_name,SHIFT_TEXT)) || strncmp(context_name,"Lcycle",6) == 0;
+    char *ptr = context_name;
+    // contexts beginning with "GMT_" will have that prefix stripped
+    if (strncmp(ptr,"GMT_",4) == 0 && strlen(ptr) > 4)
+    {
+        ptr += 4;
+    }
+
+    return (strncmp(ptr,"Min",3) == 0 || strncmp(ptr,"Hr",2) == 0 || strcmp(ptr,"Q1") == 0
+     || strcmp(ptr,"Q2") == 0 || strcmp(ptr,"Q3") == 0 || strcmp(ptr,"Q4") == 0
+     || strncmp(ptr,"Yr",2) == 0
+     || strncmp(ptr,"Day",3) == 0 || strcmp(ptr,"license_expired") == 0
+     || strcmp(ptr,"any") == 0 || strcmp(ptr,"from_cfexecd") == 0
+     || IsStrIn(ptr,MONTH_TEXT) || IsStrIn(ptr,DAY_TEXT)
+     || IsStrIn(ptr,SHIFT_TEXT)) || strncmp(ptr,"Lcycle",6) == 0;
 }
 
 

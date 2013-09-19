@@ -14,9 +14,6 @@ int getprocs64(struct procentry64 *, int, struct fdsinfo64 *, int, pid_t *, int)
 
 int getprocs64(struct procentry64* pe, int process_size, struct fdsinfo64 *fi, int files_size, pid_t* pid, int count)
 {
-    assert(count == 1);
-    assert(fi == NULL);
-
     switch (*pid)
     {
     /* Normal process, running, started 1 jan 2000 00:00:00 */

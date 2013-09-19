@@ -48,3 +48,8 @@ PromiseResult PromiseResultUpdate(PromiseResult prior, PromiseResult evidence)
 
     ProgrammingError("Never reach");
 }
+
+bool PromiseResultIsOK(PromiseResult result)
+{
+    return (result == PROMISE_RESULT_CHANGE) || (result == PROMISE_RESULT_NOOP);
+}

@@ -31,7 +31,7 @@
 #if defined(__MINGW32__)
 void VerifyRegistryPromise(EvalContext *ctx, Attributes a, Promise *pp);
 #endif
-ENTERPRISE_VOID_FUNC_3ARG_DECLARE(void, VerifyWindowsService, EvalContext *, ctx, Attributes, a, Promise *, pp);
+ENTERPRISE_FUNC_3ARG_DECLARE(PromiseResult, VerifyWindowsService, EvalContext *, ctx, Attributes, a, Promise *, pp);
 
 ENTERPRISE_VOID_FUNC_2ARG_DECLARE(void, LastSawBundle, const Bundle *, bundle, double, compliance);
 

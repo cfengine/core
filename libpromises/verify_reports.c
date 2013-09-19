@@ -78,7 +78,7 @@ PromiseResult VerifyReportPromise(EvalContext *ctx, Promise *pp)
     
     if (thislock.lock == NULL)
     {
-        return;
+        return PROMISE_RESULT_NOOP;
     }
 
     PromiseBanner(pp);

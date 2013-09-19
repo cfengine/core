@@ -24,6 +24,7 @@
 
 #include <verify_acl.h>
 
+#include <actuator.h>
 #include <acl_posix.h>
 #include <files_names.h>
 #include <promises.h>
@@ -46,16 +47,18 @@ static int CheckPermTypeSyntax(char *permt, int deny_support, Promise *pp);
 static int CheckAclDefault(char *path, Acl *acl, Promise *pp);
 
 
-void VerifyACL(EvalContext *ctx, char *file, Attributes a, Promise *pp)
+PromiseResult VerifyACL(EvalContext *ctx, char *file, Attributes a, Promise *pp)
 {
     if (!CheckACLSyntax(file, a.acl, pp))
     {
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a, "Syntax error in access control list for '%s'", file);
         PromiseRef(LOG_LEVEL_ERR, pp);
-        return;
+        return PROMISE_RESULT_INTERRUPTED;
     }
 
     SetACLDefaults(file, &a.acl);
+
+    PromiseResult result = PROMISE_RESULT_NOOP;
 
 // decide which ACL API to use
     switch (a.acl.acl_type)
@@ -64,9 +67,9 @@ void VerifyACL(EvalContext *ctx, char *file, Attributes a, Promise *pp)
     case ACL_TYPE_GENERIC:
 
 #if defined(__linux__)
-        CheckPosixLinuxACL(ctx, file, a.acl, a, pp);
+        result = PromiseResultUpdate(result, CheckPosixLinuxACL(ctx, file, a.acl, a, pp));
 #elif defined(__MINGW32__)
-        Nova_CheckNtACL(ctx, file, a.acl, a, pp);
+        result = PromiseResultUpdate(result, Nova_CheckNtACL(ctx, file, a.acl, a, pp));
 #else
         Log(LOG_LEVEL_INFO, "ACLs are not yet supported on this system.");
 #endif
@@ -75,20 +78,22 @@ void VerifyACL(EvalContext *ctx, char *file, Attributes a, Promise *pp)
     case ACL_TYPE_POSIX:
 
 #if defined(__linux__)
-        CheckPosixLinuxACL(ctx, file, a.acl, a, pp);
+        result = PromiseResultUpdate(result, CheckPosixLinuxACL(ctx, file, a.acl, a, pp));
 #else
         Log(LOG_LEVEL_INFO, "Posix ACLs are not supported on this system");
 #endif
         break;
 
     case ACL_TYPE_NTFS_:
-        Nova_CheckNtACL(ctx, file, a.acl, a, pp);
+        result = PromiseResultUpdate(result, Nova_CheckNtACL(ctx, file, a.acl, a, pp));
         break;
 
     default:
         Log(LOG_LEVEL_ERR, "Unknown ACL type - software error");
         break;
     }
+
+    return result;
 }
 
 static int CheckACLSyntax(char *file, Acl acl, Promise *pp)

@@ -55,7 +55,7 @@ typedef enum
 static bool SyntaxCheckExec(Attributes a, Promise *pp);
 static bool PromiseKeptExec(Attributes a, Promise *pp);
 static char *GetLockNameExec(Attributes a, Promise *pp);
-static ActionResult RepairExec(EvalContext *ctx, Attributes a, Promise *pp);
+static ActionResult RepairExec(EvalContext *ctx, Attributes a, Promise *pp, PromiseResult *result);
 
 static void PreviewProtocolLine(char *line, char *comm);
 
@@ -92,7 +92,7 @@ PromiseResult VerifyExecPromise(EvalContext *ctx, Promise *pp)
     PromiseBanner(pp);
 
     PromiseResult result = PROMISE_RESULT_NOOP;
-    switch (RepairExec(ctx, a, pp))
+    switch (RepairExec(ctx, a, pp, &result))
     {
     case ACTION_RESULT_OK:
         result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
@@ -182,7 +182,7 @@ static char *GetLockNameExec(Attributes a, Promise *pp)
 
 /*****************************************************************************/
 
-static ActionResult RepairExec(EvalContext *ctx, Attributes a, Promise *pp)
+static ActionResult RepairExec(EvalContext *ctx, Attributes a, Promise *pp, PromiseResult *result)
 {
     char line[CF_BUFSIZE], eventname[CF_BUFSIZE];
     char cmdline[CF_BUFSIZE];
@@ -386,10 +386,11 @@ static ActionResult RepairExec(EvalContext *ctx, Attributes a, Promise *pp)
             if (ret == -1)
             {
                 cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, a, "Finished script '%s' - failed (abnormal termination)", pp->promiser);
+                *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
             }
             else
             {
-                VerifyCommandRetcode(ctx, ret, true, a, pp);
+                VerifyCommandRetcode(ctx, ret, true, a, pp, result);
             }
         }
     }

@@ -42,9 +42,10 @@ ENTERPRISE_VOID_FUNC_8ARG_DEFINE_STUB(void, LogFileChange, ARG_UNUSED EvalContex
     Log(LOG_LEVEL_VERBOSE, "Logging file differences requires version Nova or above");
 }
 
-ENTERPRISE_VOID_FUNC_5ARG_DEFINE_STUB(void, Nova_CheckNtACL, ARG_UNUSED EvalContext *, ctx, ARG_UNUSED char *, file_path, ARG_UNUSED Acl, acl, ARG_UNUSED Attributes, a, ARG_UNUSED Promise *, pp)
+ENTERPRISE_FUNC_5ARG_DEFINE_STUB(PromiseResult, Nova_CheckNtACL, ARG_UNUSED EvalContext *, ctx, ARG_UNUSED char *, file_path, ARG_UNUSED Acl, acl, ARG_UNUSED Attributes, a, ARG_UNUSED Promise *, pp)
 {
     Log(LOG_LEVEL_INFO, "NTFS ACLs are only supported in CFEngine Enterprise");
+    return PROMISE_RESULT_NOOP;
 }
 
 ENTERPRISE_VOID_FUNC_1ARG_DEFINE_STUB(void, Nova_NoteVarUsageDB, ARG_UNUSED EvalContext *, ctx)

@@ -27,6 +27,6 @@
 
 #include <cf3.defs.h>
 
-void *FindAndVerifyFilesPromises(EvalContext *ctx, Promise *pp);
+PromiseResult FindAndVerifyFilesPromises(EvalContext *ctx, Promise *pp);
 
 #endif

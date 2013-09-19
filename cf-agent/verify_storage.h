@@ -29,8 +29,8 @@
 
 extern bool CF_MOUNTALL;
 
-void *FindAndVerifyStoragePromises(EvalContext *ctx, Promise *pp);
-void VerifyStoragePromise(EvalContext *ctx, char *path, Promise *pp);
+PromiseResult FindAndVerifyStoragePromises(EvalContext *ctx, Promise *pp);
+PromiseResult VerifyStoragePromise(EvalContext *ctx, char *path, Promise *pp);
 Seq *GetGlobalMountedFSList(void);
 
 void DeleteStorageContext(void);

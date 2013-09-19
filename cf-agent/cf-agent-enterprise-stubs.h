@@ -35,7 +35,7 @@ ENTERPRISE_FUNC_3ARG_DECLARE(PromiseResult, VerifyWindowsService, EvalContext *,
 
 ENTERPRISE_VOID_FUNC_2ARG_DECLARE(void, LastSawBundle, const Bundle *, bundle, double, compliance);
 
-typedef int (*CopyRegularFileFunction)(EvalContext *ctx,
+typedef bool (*CopyRegularFileFunction)(EvalContext *ctx,
                                        char *source,
                                        char *dest,
                                        struct stat sstat,
@@ -43,13 +43,14 @@ typedef int (*CopyRegularFileFunction)(EvalContext *ctx,
                                        Attributes attr,
                                        Promise *pp,
                                        CompressedArray **inode_cache,
-                                       AgentConnection *conn);
+                                       AgentConnection *conn,
+                                       PromiseResult *result);
 typedef void (*DeleteCompressedArrayFunction)(CompressedArray *start);
 ENTERPRISE_VOID_FUNC_8ARG_DECLARE(void, LogFileChange, EvalContext *, ctx, char *, file,
                                   int, change, Attributes, a, Promise *, pp, CopyRegularFileFunction, CopyRegularFilePtr,
                                   const char *, destination, DeleteCompressedArrayFunction, DeleteCompressedArrayPtr);
 
-ENTERPRISE_VOID_FUNC_5ARG_DECLARE(void, Nova_CheckNtACL, EvalContext *, ctx, char *, file_path, Acl, acl, Attributes, a, Promise *, pp);
+ENTERPRISE_FUNC_5ARG_DECLARE(PromiseResult, Nova_CheckNtACL, EvalContext *, ctx, char *, file_path, Acl, acl, Attributes, a, Promise *, pp);
 
 ENTERPRISE_VOID_FUNC_1ARG_DECLARE(void, ReportPatches, PackageManager *, list);
 

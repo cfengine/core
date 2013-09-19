@@ -801,7 +801,26 @@ static FnCallResult FnCallCountClassesMatching(EvalContext *ctx, FnCall *fp, Rli
 
 static FnCallResult FnCallClassesMatching(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
+    Rlist *arg = NULL;
     StringSet* matching = StringSetNew();
+    char id[CF_BUFSIZE];
+
+    snprintf(id, CF_BUFSIZE, "built-in FnCall classesmatching-arg");
+
+    if (!finalargs)
+    {
+        FatalError(ctx, "in %s: requires at least one argument", id);
+    }
+
+    /* We need to check all the arguments, ArgTemplate does not check varadic functions */
+    for (arg = finalargs; arg; arg = arg->next)
+    {
+        SyntaxTypeMatch err = CheckConstraintTypeMatch(id, arg->val, DATA_TYPE_STRING, "", 1);
+        if (err != SYNTAX_TYPE_MATCH_OK && err != SYNTAX_TYPE_MATCH_ERROR_UNEXPANDED)
+        {
+            FatalError(ctx, "in %s: %s", id, SyntaxTypeMatchToString(err));
+        }
+    }
 
     const char *regex = RlistScalarValue(finalargs);
     {
@@ -813,7 +832,26 @@ static FnCallResult FnCallClassesMatching(EvalContext *ctx, FnCall *fp, Rlist *f
 
             if (StringMatchFull(regex, expr))
             {
-                StringSetAdd(matching, expr);
+                bool pass = true;
+                StringSet *tagset = EvalContextClassTags(ctx, cls->ns, cls->name);
+                for (arg = finalargs->next; (pass && arg); arg = arg->next)
+                {
+                    const char* tag_regex = RlistScalarValue(arg);
+                    const char *element = NULL;
+                    StringSetIterator it = StringSetIteratorInit(tagset);
+                    while ((element = SetIteratorNext(&it)))
+                    {
+                        if (!StringMatchFull(tag_regex, element))
+                        {
+                            pass = false;
+                        }
+                    }
+                }
+
+                if (pass)
+                {
+                    StringSetAdd(matching, expr);
+                }
             }
             else
             {
@@ -6129,7 +6167,7 @@ const FnCallType CF_FNCALL_TYPES[] =
     FnCallTypeNew("changedbefore", DATA_TYPE_CONTEXT, CHANGEDBEFORE_ARGS, &FnCallIsChangedBefore, "True if arg1 was changed before arg2 (ctime)", false, FNCALL_CATEGORY_FILES, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("classify", DATA_TYPE_CONTEXT, CLASSIFY_ARGS, &FnCallClassify, "True if the canonicalization of the argument is a currently defined class", false, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("classmatch", DATA_TYPE_CONTEXT, CLASSMATCH_ARGS, &FnCallClassMatch, "True if the regular expression matches any currently defined class", false, FNCALL_CATEGORY_UTILS, SYNTAX_STATUS_NORMAL),
-    FnCallTypeNew("classesmatching", DATA_TYPE_STRING_LIST, CLASSMATCH_ARGS, &FnCallClassesMatching, "List the defined classes matching regex arg1", false, FNCALL_CATEGORY_UTILS, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("classesmatching", DATA_TYPE_STRING_LIST, CLASSMATCH_ARGS, &FnCallClassesMatching, "List the defined classes matching regex arg1 and tag regexes arg2,arg3,...", true, FNCALL_CATEGORY_UTILS, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("countclassesmatching", DATA_TYPE_INT, COUNTCLASSESMATCHING_ARGS, &FnCallCountClassesMatching, "Count the number of defined classes matching regex arg1", false, FNCALL_CATEGORY_UTILS, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("countlinesmatching", DATA_TYPE_INT, COUNTLINESMATCHING_ARGS, &FnCallCountLinesMatching, "Count the number of lines matching regex arg1 in file arg2", false, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("difference", DATA_TYPE_STRING_LIST, SETOP_ARGS, &FnCallSetop, "Returns all the unique elements of list arg1 that are not in list arg2", false, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),

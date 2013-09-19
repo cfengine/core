@@ -1,0 +1,41 @@
+# Test that classesmatching works correctly
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence => { default("$(this.promise_filename)") };
+}
+
+bundle common init
+{
+  classes:
+      "test_fbeae67f3e347b5e0032302200141131" expression => "any", meta => { "x" };
+      "test_fbeae67f3e347b5e0032302200141131_1" expression => "any", meta => { "x" };
+      "test_fbeae67f3e347b5e0032302200141131_2" expression => "any", meta => { "y" };
+}
+
+bundle agent test
+{
+  vars:
+      "classes" slist => classesmatching("test_fbeae67f3e347b5e0032302200141131.*");
+      "x_classes" slist => classesmatching("test_fbeae67f3e347b5e0032302200141131.*", "x");
+
+      "count" int => length(classes);
+      "x_count" int => length(x_classes);
+}
+
+bundle agent check
+{
+  classes:
+      "ok" and => { strcmp("$(test.count)", "3"),
+                    strcmp("$(test.x_count)", "2") };
+
+  reports:
+    DEBUG::
+      "Found classes $(test.classes)";
+      "Found x classes $(test.x_classes)";
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

@@ -35,12 +35,6 @@ MOSTLYCLEANFILES = *~
 
 #
 # Get everything removed down to where rebuilding requires:
-# "make; make install"
-# 
-CLEANFILES = cfengine-lcov-base.info cfengine-lcov.info
-
-#
-# Get everything removed down to where rebuilding requires:
 # "configure; make; make install"
 #
 DISTCLEANFILES = 
@@ -95,11 +89,21 @@ coverage: clean-coverage run-coverage collect-coverage
 # This is because there is a circular dependency libcfnet <-> libpromises
 # so we need to generate it before everything else.
 ################################################################################
-BUILT_SOURCES = libpromises/enterprise_extension.c libpromises/enterprise_extension.h
+BUILT_SOURCES = \
+	$(srcdir)/libpromises/enterprise_extension.c \
+	$(srcdir)/libpromises/enterprise_extension.h
 
-ENTERPRISE_EXTENSION_GENERATE = $(SED) -f libpromises/enterprise_extension.sed $< > $@
+ENTERPRISE_EXTENSION_GENERATE = $(SED) -f $(srcdir)/libpromises/enterprise_extension.sed $< > $@
 ENTERPRISE_EXTENSION_MAKE = @if test -z "$(V)"; then echo "  SED   " $@; else echo "$(ENTERPRISE_EXTENSION_GENERATE)"; fi; $(ENTERPRISE_EXTENSION_GENERATE)
-libpromises/enterprise_extension.c: libpromises/extensions_template.c libpromises/enterprise_extension.sed
+$(srcdir)/libpromises/enterprise_extension.c: libpromises/extensions_template.c libpromises/enterprise_extension.sed
 	$(ENTERPRISE_EXTENSION_MAKE)
-libpromises/enterprise_extension.h: libpromises/extensions_template.h libpromises/enterprise_extension.sed
+$(srcdir)/libpromises/enterprise_extension.h: libpromises/extensions_template.h libpromises/enterprise_extension.sed
 	$(ENTERPRISE_EXTENSION_MAKE)
+
+
+#
+# Get everything removed down to where rebuilding requires:
+# "make; make install"
+#
+CLEANFILES = cfengine-lcov-base.info cfengine-lcov.info \
+	$(BUILT_SOURCES)

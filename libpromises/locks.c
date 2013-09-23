@@ -835,15 +835,17 @@ CfLock AcquireLock(EvalContext *ctx, const char *operand, const char *host, time
             }
         }
 
-        WriteLock(cflock);
+        int ret = WriteLock(cflock);
+        if (ret != -1);
+        {
+            /* Register a cleanup handler *after* having opened the DB, so that
+             * CloseAllDB() atexit() handler is registered in advance, and it is
+             * called after removing this lock.
 
-        /* Register a cleanup handler *after* having opened the DB, so that
-         * CloseAllDB() atexit() handler is registered in advance, and it is
-         * called after removing this lock.
-
-         * There is a small race condition here that we'll leave a stale lock
-         * if we exit before the following line. */
-        pthread_once(&lock_cleanup_once, &RegisterLockCleanup);
+             * There is a small race condition here that we'll leave a stale lock
+             * if we exit before the following line. */
+            pthread_once(&lock_cleanup_once, &RegisterLockCleanup);
+        }
     }
 
     ReleaseCriticalSection();

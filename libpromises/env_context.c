@@ -925,7 +925,16 @@ void EvalContextStackPushPromiseFrame(EvalContext *ctx, const Promise *owner, bo
 
     if (PromiseGetBundle(owner)->source_path)
     {
-        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promise_filename", PromiseGetBundle(owner)->source_path, DATA_TYPE_STRING);
+        char path[CF_BUFSIZE];
+        snprintf(path, CF_BUFSIZE, "%s", PromiseGetBundle(owner)->source_path);
+
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promise_filename", path, DATA_TYPE_STRING);
+
+        // We now make path just the directory name!
+        DeleteSlash(path);
+        ChopLastNode(path);
+
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promise_dirname", path, DATA_TYPE_STRING);
         char number[CF_SMALLBUF];
         snprintf(number, CF_SMALLBUF, "%zu", owner->offset.line);
         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promise_linenumber", number, DATA_TYPE_STRING);

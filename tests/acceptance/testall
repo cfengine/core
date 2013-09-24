@@ -196,6 +196,7 @@ runtest() {
     WORKDIR=$BASE_WORKDIR/$FLATNAME
     $GAINROOT rm -rf $WORKDIR
     mkdir -p $WORKDIR/bin $WORKDIR/tmp
+    chmod ugo+rwxt $WORKDIR/tmp
     ln -sf $AGENT $WORKDIR/bin
     ln -sf $CF_PROMISES $WORKDIR/bin
     ln -sf $CF_SERVERD $WORKDIR/bin

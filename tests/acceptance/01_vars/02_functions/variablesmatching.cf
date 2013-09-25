@@ -1,0 +1,41 @@
+# Test that variablesmatching works correctly
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence => { default("$(this.promise_filename)") };
+}
+
+bundle common init
+{
+  vars:
+      "test_fbeae67f3e347b5e0032302200141131" string => "abc", meta => { "x" };
+      "test_fbeae67f3e347b5e0032302200141131_1" string => "def", meta => { "x" };
+      "test_fbeae67f3e347b5e0032302200141131_2" string => "ghi", meta => { "y" };
+}
+
+bundle agent test
+{
+  vars:
+      "vars" slist => variablesmatching("test_fbeae67f3e347b5e0032302200141131.*");
+      "x_vars" slist => variablesmatching("test_fbeae67f3e347b5e0032302200141131.*", "x");
+
+      "count" int => length(vars);
+      "x_count" int => length(x_vars);
+}
+
+bundle agent check
+{
+  classes:
+      "ok" and => { strcmp("$(test.count)", "3"),
+                    strcmp("$(test.x_count)", "2") };
+
+  reports:
+    DEBUG::
+      "Found variables $(test.vars)";
+      "Found x variables $(test.x_vars)";
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

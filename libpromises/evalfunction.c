@@ -805,7 +805,7 @@ static FnCallResult FnCallClassesMatching(EvalContext *ctx, FnCall *fp, Rlist *f
     StringSet* matching = StringSetNew();
     char id[CF_BUFSIZE];
 
-    snprintf(id, CF_BUFSIZE, "built-in FnCall classesmatching-arg");
+    snprintf(id, CF_BUFSIZE, "built-in FnCall %s-arg", fp->name);
 
     if (!finalargs)
     {
@@ -870,7 +870,26 @@ static FnCallResult FnCallClassesMatching(EvalContext *ctx, FnCall *fp, Rlist *f
 
             if (StringMatchFull(regex, expr))
             {
-                StringSetAdd(matching, expr);
+                bool pass = true;
+                StringSet *tagset = EvalContextClassTags(ctx, cls->ns, cls->name);
+                for (arg = finalargs->next; (pass && arg); arg = arg->next)
+                {
+                    const char* tag_regex = RlistScalarValue(arg);
+                    const char *element = NULL;
+                    StringSetIterator it = StringSetIteratorInit(tagset);
+                    while ((element = SetIteratorNext(&it)))
+                    {
+                        if (!StringMatchFull(tag_regex, element))
+                        {
+                            pass = false;
+                        }
+                    }
+                }
+
+                if (pass)
+                {
+                    StringSetAdd(matching, expr);
+                }
             }
             else
             {
@@ -878,6 +897,127 @@ static FnCallResult FnCallClassesMatching(EvalContext *ctx, FnCall *fp, Rlist *f
             }
         }
         ClassTableIteratorDestroy(iter);
+    }
+
+    Rlist *returnlist = NULL;
+    StringSetIterator it = StringSetIteratorInit(matching);
+    char *element = NULL;
+    while ((element = StringSetIteratorNext(&it)))
+    {
+        RlistPrepend(&returnlist, element, RVAL_TYPE_SCALAR);
+    }
+
+    if (returnlist == NULL)
+    {
+        RlistAppendScalarIdemp(&returnlist, CF_NULL_VALUE);
+    }
+
+    StringSetDestroy(matching);
+
+    return (FnCallResult) { FNCALL_SUCCESS, { returnlist, RVAL_TYPE_LIST } };
+}
+
+/*********************************************************************/
+
+static FnCallResult FnCallVariablesMatching(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
+{
+    Rlist *arg = NULL;
+    StringSet* matching = StringSetNew();
+    char id[CF_BUFSIZE];
+
+    snprintf(id, CF_BUFSIZE, "built-in FnCall %s-arg", fp->name);
+
+    if (!finalargs)
+    {
+        FatalError(ctx, "in %s: requires at least one argument", id);
+    }
+
+    /* We need to check all the arguments, ArgTemplate does not check varadic functions */
+    for (arg = finalargs; arg; arg = arg->next)
+    {
+        SyntaxTypeMatch err = CheckConstraintTypeMatch(id, arg->val, DATA_TYPE_STRING, "", 1);
+        if (err != SYNTAX_TYPE_MATCH_OK && err != SYNTAX_TYPE_MATCH_ERROR_UNEXPANDED)
+        {
+            FatalError(ctx, "in %s: %s", id, SyntaxTypeMatchToString(err));
+        }
+    }
+
+    const char *regex = RlistScalarValue(finalargs);
+    {
+        VariableTableIterator *iter = EvalContextVariableTableIteratorNewGlobals(ctx, NULL, NULL);
+        Variable *v = NULL;
+        while ((v = VariableTableIteratorNext(iter)))
+        {
+            char *expr = VarRefToString(v->ref, true);
+
+            if (StringMatchFull(regex, expr))
+            {
+                bool pass = true;
+                StringSet *tagset = EvalContextVariableTags(ctx, v->ref);
+                for (arg = finalargs->next; (pass && arg); arg = arg->next)
+                {
+                    const char* tag_regex = RlistScalarValue(arg);
+                    const char *element = NULL;
+                    StringSetIterator it = StringSetIteratorInit(tagset);
+                    while ((element = SetIteratorNext(&it)))
+                    {
+                        if (!StringMatchFull(tag_regex, element))
+                        {
+                            pass = false;
+                        }
+                    }
+                }
+
+                if (pass)
+                {
+                    StringSetAdd(matching, expr);
+                }
+            }
+            else
+            {
+                free(expr);
+            }
+        }
+        VariableTableIteratorDestroy(iter);
+    }
+
+    {
+        VarRef *ref = VarRefParseFromScope(NULL, "this");
+        VariableTableIterator *iter = EvalContextVariableTableIteratorNew(ctx, ref);
+        Variable *v = NULL;
+        while ((v = VariableTableIteratorNext(iter)))
+        {
+            char *expr = VarRefToString(v->ref, true);
+
+            if (StringMatchFull(regex, expr))
+            {
+                bool pass = true;
+                StringSet *tagset = EvalContextVariableTags(ctx, v->ref);
+                for (arg = finalargs->next; (pass && arg); arg = arg->next)
+                {
+                    const char* tag_regex = RlistScalarValue(arg);
+                    const char *element = NULL;
+                    StringSetIterator it = StringSetIteratorInit(tagset);
+                    while ((element = SetIteratorNext(&it)))
+                    {
+                        if (!StringMatchFull(tag_regex, element))
+                        {
+                            pass = false;
+                        }
+                    }
+                }
+
+                if (pass)
+                {
+                    StringSetAdd(matching, expr);
+                }
+            }
+            else
+            {
+                free(expr);
+            }
+        }
+        VariableTableIteratorDestroy(iter);
     }
 
     Rlist *returnlist = NULL;
@@ -6355,5 +6495,6 @@ const FnCallType CF_FNCALL_TYPES[] =
     FnCallTypeNew("unique", DATA_TYPE_STRING_LIST, UNIQUE_ARGS, &FnCallUnique, "Returns all the unique elements of list arg1", false, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("usemodule", DATA_TYPE_CONTEXT, USEMODULE_ARGS, &FnCallUseModule, "Execute cfengine module script and set class if successful", false, FNCALL_CATEGORY_UTILS, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("userexists", DATA_TYPE_CONTEXT, USEREXISTS_ARGS, &FnCallUserExists, "True if user name or numerical id exists on this host", false, FNCALL_CATEGORY_SYSTEM, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("variablesmatching", DATA_TYPE_STRING_LIST, CLASSMATCH_ARGS, &FnCallVariablesMatching, "List the variables matching regex arg1 and tag regexes arg2,arg3,...", true, FNCALL_CATEGORY_UTILS, SYNTAX_STATUS_NORMAL),
     FnCallTypeNewNull()
 };

@@ -51,7 +51,8 @@ void VerifyReportPromise(EvalContext *ctx, Promise *pp)
 
     a = GetReportsAttributes(ctx, pp);
 
-    snprintf(unique_name, CF_EXPANDSIZE - 1, "%s_%zu", pp->promiser, pp->offset.line);
+    // We let AcquireLock worry about making a unique name
+    snprintf(unique_name, CF_EXPANDSIZE - 1, "%s", pp->promiser);
     thislock = AcquireLock(ctx, unique_name, VUQNAME, CFSTARTTIME, a.transaction, pp, false);
 
     // Handle return values before locks, as we always do this

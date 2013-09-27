@@ -1,0 +1,11 @@
+body common control
+{
+      bundlesequence => { run };
+}
+
+bundle agent run
+{
+  reports:
+      "should be printed just ONCE";
+      "should be printed just ONCE";
+}

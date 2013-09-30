@@ -43,7 +43,7 @@
 static void PrintFile(EvalContext *ctx, Attributes a, Promise *pp);
 static void ReportToFile(const char *logfile, const char *message);
 
-void VerifyReportPromise(EvalContext *ctx, Promise *pp)
+PromiseResult VerifyReportPromise(EvalContext *ctx, Promise *pp)
 {
     Attributes a = { {0} };
     CfLock thislock;
@@ -71,14 +71,14 @@ void VerifyReportPromise(EvalContext *ctx, Promise *pp)
         VarRef *ref = VarRefParseFromBundle(unique_name, PromiseGetBundle(pp));
         EvalContextVariablePut(ctx, ref, pp->promiser, DATA_TYPE_STRING);
         VarRefDestroy(ref);
-        return;
+        return PROMISE_RESULT_NOOP;
     }
        
     // Now do regular human reports
     
     if (thislock.lock == NULL)
     {
-        return;
+        return PROMISE_RESULT_NOOP;
     }
 
     PromiseBanner(pp);
@@ -87,7 +87,7 @@ void VerifyReportPromise(EvalContext *ctx, Promise *pp)
     {
         cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_WARN, pp, a, "Need to repair reports promise: %s", pp->promiser);
         YieldCurrentLock(thislock);
-        return;
+        return PROMISE_RESULT_WARN;
     }
 
     cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, "Report: %s", pp->promiser);
@@ -117,6 +117,8 @@ void VerifyReportPromise(EvalContext *ctx, Promise *pp)
     }
 
     YieldCurrentLock(thislock);
+
+    return PROMISE_RESULT_CHANGE;
 }
 
 static void ReportToFile(const char *logfile, const char *message)

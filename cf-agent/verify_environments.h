@@ -27,6 +27,6 @@
 
 void NewEnvironmentsContext(void);
 void DeleteEnvironmentsContext(void);
-void VerifyEnvironmentsPromise(Promise *pp);
+PromiseResult VerifyEnvironmentsPromise(Promise *pp);
 
 #endif

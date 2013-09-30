@@ -27,7 +27,7 @@
 
 #include <cf3.defs.h>
 
-void VerifyPackagesPromise(EvalContext *ctx, Promise *pp);
+PromiseResult VerifyPackagesPromise(EvalContext *ctx, Promise *pp);
 void ExecuteScheduledPackages(EvalContext *ctx);
 void CleanScheduledPackages(void);
 int PrependPackageItem(EvalContext *ctx, PackageItem ** list, const char *name, const char *version, const char *arch, Promise *pp);

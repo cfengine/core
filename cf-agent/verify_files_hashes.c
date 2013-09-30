@@ -24,6 +24,7 @@
 
 #include <verify_files_hashes.h>
 
+#include <actuator.h>
 #include <rlist.h>
 #include <policy.h>
 #include <client_code.h>
@@ -132,7 +133,7 @@ static void DeleteHash(CF_DB *dbp, HashMethod type, char *name)
    updates database to the new value */
 
 int FileHashChanged(EvalContext *ctx, char *filename, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMethod type,
-                    Attributes attr, Promise *pp)
+                    Attributes attr, Promise *pp, PromiseResult *result)
 {
     int i, size = 21;
     unsigned char dbdigest[EVP_MAX_MD_SIZE + 1];
@@ -144,6 +145,7 @@ int FileHashChanged(EvalContext *ctx, char *filename, unsigned char digest[EVP_M
     if (!OpenDB(&dbp, dbid_checksums))
     {
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Unable to open the hash database!");
+        *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
         return false;
     }
 
@@ -164,6 +166,7 @@ int FileHashChanged(EvalContext *ctx, char *filename, unsigned char digest[EVP_M
                 {
                     cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_CHANGE, pp, attr, "Updating hash for '%s' to '%s'", filename,
                          HashPrintSafe(type, digest, buffer));
+                    *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
 
                     DeleteHash(dbp, type, filename);
                     WriteHash(dbp, type, filename, digest);
@@ -171,6 +174,7 @@ int FileHashChanged(EvalContext *ctx, char *filename, unsigned char digest[EVP_M
                 else
                 {
                     cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Hash for file '%s' changed", filename);
+                    *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
                 }
 
                 CloseDB(dbp);
@@ -179,6 +183,7 @@ int FileHashChanged(EvalContext *ctx, char *filename, unsigned char digest[EVP_M
         }
 
         cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, attr, "File hash for %s is correct", filename);
+        *result = PromiseResultUpdate(*result, PROMISE_RESULT_NOOP);
         CloseDB(dbp);
         return false;
     }
@@ -187,6 +192,7 @@ int FileHashChanged(EvalContext *ctx, char *filename, unsigned char digest[EVP_M
         /* Key was not found, so install it */
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_CHANGE, pp, attr, "File '%s' was not in '%s' database - new file found", filename,
              FileHashName(type));
+        *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
         Log(LOG_LEVEL_DEBUG, "Storing checksum for '%s' in database '%s'", filename, HashPrintSafe(type, digest, buffer));
         WriteHash(dbp, type, filename, digest);
 

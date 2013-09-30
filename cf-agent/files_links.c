@@ -24,6 +24,7 @@
 
 #include <files_links.h>
 
+#include <actuator.h>
 #include <promises.h>
 #include <files_names.h>
 #include <files_interfaces.h>
@@ -119,13 +120,24 @@ PromiseResult VerifyLink(EvalContext *ctx, char *destination, const char *source
         }
         else
         {
-            if (!MoveObstruction(ctx, destination, attr, pp))
+            PromiseResult result = PROMISE_RESULT_NOOP;
+            if (!MoveObstruction(ctx, destination, attr, pp, &result))
             {
                 cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, pp, attr, "Unable to create link '%s' -> '%s'", destination, to);
-                return PROMISE_RESULT_FAIL;
+                result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
+                return result;
             }
 
-            return MakeLink(ctx, destination, source, attr, pp) ? PROMISE_RESULT_CHANGE : PROMISE_RESULT_FAIL;
+            if (MakeLink(ctx, destination, source, attr, pp))
+            {
+                result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
+            }
+            else
+            {
+                result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
+            }
+
+            return result;
         }
     }
     else
@@ -375,12 +387,23 @@ PromiseResult VerifyHardLink(EvalContext *ctx, char *destination, const char *so
 
     Log(LOG_LEVEL_INFO, "'%s' does not appear to be a hard link to '%s'", destination, to);
 
-    if (!MoveObstruction(ctx, destination, attr, pp))
+    PromiseResult result = PROMISE_RESULT_NOOP;
+    if (!MoveObstruction(ctx, destination, attr, pp, &result))
     {
-        return PROMISE_RESULT_FAIL;
+        result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
+        return result;
     }
 
-    return MakeHardLink(ctx, destination, to, attr, pp) ? PROMISE_RESULT_CHANGE : PROMISE_RESULT_FAIL;
+    if (MakeHardLink(ctx, destination, to, attr, pp))
+    {
+        result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
+    }
+    else
+    {
+        result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
+    }
+
+    return result;
 }
 
 /*****************************************************************************/

@@ -24,6 +24,7 @@
 
 #include <verify_processes.h>
 
+#include <actuator.h>
 #include <processes_select.h>
 #include <env_context.h>
 #include <promises.h>
@@ -41,26 +42,26 @@
 #include <scope.h>
 #include <ornaments.h>
 
-static void VerifyProcesses(EvalContext *ctx, Attributes a, Promise *pp);
-static int ProcessSanityChecks(Attributes a, Promise *pp);
-static void VerifyProcessOp(EvalContext *ctx, Item *procdata, Attributes a, Promise *pp);
+static PromiseResult VerifyProcesses(EvalContext *ctx, Attributes a, Promise *pp);
+static bool ProcessSanityChecks(Attributes a, Promise *pp);
+static PromiseResult VerifyProcessOp(EvalContext *ctx, Item *procdata, Attributes a, Promise *pp);
 static int FindPidMatches(EvalContext *ctx, Item *procdata, Item **killlist, Attributes a, const char *promiser);
 
-void VerifyProcessesPromise(EvalContext *ctx, Promise *pp)
+PromiseResult VerifyProcessesPromise(EvalContext *ctx, Promise *pp)
 {
     Attributes a = { {0} };
 
     a = GetProcessAttributes(ctx, pp);
     ProcessSanityChecks(a, pp);
 
-    VerifyProcesses(ctx, a, pp);
+    return VerifyProcesses(ctx, a, pp);
 }
 
 /*****************************************************************************/
 /* Level                                                                     */
 /*****************************************************************************/
 
-static int ProcessSanityChecks(Attributes a, Promise *pp)
+static bool ProcessSanityChecks(Attributes a, Promise *pp)
 {
     int promised_zero, ret = true;
 
@@ -104,7 +105,7 @@ static int ProcessSanityChecks(Attributes a, Promise *pp)
 
 /*****************************************************************************/
 
-static void VerifyProcesses(EvalContext *ctx, Attributes a, Promise *pp)
+static PromiseResult VerifyProcesses(EvalContext *ctx, Attributes a, Promise *pp)
 {
     CfLock thislock;
     char lockname[CF_BUFSIZE];
@@ -122,31 +123,38 @@ static void VerifyProcesses(EvalContext *ctx, Attributes a, Promise *pp)
 
     if (thislock.lock == NULL)
     {
-        return;
+        return PROMISE_RESULT_NOOP;
     }
 
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser", pp->promiser, DATA_TYPE_STRING);
     PromiseBanner(pp);
-    VerifyProcessOp(ctx, PROCESSTABLE, a, pp);
+    PromiseResult result = VerifyProcessOp(ctx, PROCESSTABLE, a, pp);
     EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser");
 
     YieldCurrentLock(thislock);
+
+    return result;
 }
 
-static void VerifyProcessOp(EvalContext *ctx, Item *procdata, Attributes a, Promise *pp)
+static PromiseResult VerifyProcessOp(EvalContext *ctx, Item *procdata, Attributes a, Promise *pp)
 {
-    int matches = 0, do_signals = true, out_of_range, killed = 0, need_to_restart = true;
+    bool do_signals = true;
+    int out_of_range;
+    int killed = 0;
+    bool need_to_restart = true;
     Item *killlist = NULL;
 
-    matches = FindPidMatches(ctx, procdata, &killlist, a, pp->promiser);
+    int matches = FindPidMatches(ctx, procdata, &killlist, a, pp->promiser);
 
 /* promise based on number of matches */
 
+    PromiseResult result = PROMISE_RESULT_NOOP;
     if (a.process_count.min_range != CF_NOINT)  /* if a range is specified */
     {
         if ((matches < a.process_count.min_range) || (matches > a.process_count.max_range))
         {
             cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, "Process count for '%s' was out of promised range (%d found)", pp->promiser, matches);
+            result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
             for (const Rlist *rp = a.process_count.out_of_range_define; rp != NULL; rp = rp->next)
             {
                 ClassRef ref = ClassRefParse(RlistScalarValue(rp));
@@ -180,7 +188,7 @@ static void VerifyProcessOp(EvalContext *ctx, Item *procdata, Attributes a, Prom
 
     if (!out_of_range)
     {
-        return;
+        return result;
     }
 
     if (a.transaction.action == cfa_warn)
@@ -202,6 +210,7 @@ static void VerifyProcessOp(EvalContext *ctx, Item *procdata, Attributes a, Prom
             {
                 cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, a,
                      "Need to keep process-stop promise for '%s', but only a warning is promised", pp->promiser);
+                result = PromiseResultUpdate(result, PROMISE_RESULT_WARN);
             }
             else
             {
@@ -214,8 +223,9 @@ static void VerifyProcessOp(EvalContext *ctx, Item *procdata, Attributes a, Prom
                     cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, pp, a,
                          "Process promise to stop '%s' could not be kept because '%s' the stop operator failed",
                          pp->promiser, a.process_stop);
+                    result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
                     DeleteItemList(killlist);
-                    return;
+                    return result;
                 }
             }
         }
@@ -232,7 +242,7 @@ static void VerifyProcessOp(EvalContext *ctx, Item *procdata, Attributes a, Prom
     if (!need_to_restart)
     {
         cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "No restart promised for %s", pp->promiser);
-        return;
+        return result;
     }
     else
     {
@@ -240,13 +250,17 @@ static void VerifyProcessOp(EvalContext *ctx, Item *procdata, Attributes a, Prom
         {
             cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, a,
                  "Need to keep restart promise for '%s', but only a warning is promised", pp->promiser);
+            result = PromiseResultUpdate(result, PROMISE_RESULT_WARN);
         }
         else
         {
             cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "Making a one-time restart promise for '%s'", pp->promiser);
+            result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
             EvalContextClassPut(ctx, PromiseGetNamespace(pp), a.restart_class, true, CONTEXT_SCOPE_NAMESPACE);
         }
     }
+
+    return result;
 }
 
 #ifndef __MINGW32__

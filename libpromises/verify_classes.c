@@ -40,7 +40,7 @@ static int EvalClassExpression(EvalContext *ctx, Constraint *cp, Promise *pp);
 static bool ValidClassName(const char *str);
 
 
-void VerifyClassPromise(EvalContext *ctx, Promise *pp, ARG_UNUSED void *param)
+PromiseResult VerifyClassPromise(EvalContext *ctx, Promise *pp, ARG_UNUSED void *param)
 {
     assert(param == NULL);
 
@@ -57,13 +57,13 @@ void VerifyClassPromise(EvalContext *ctx, Promise *pp, ARG_UNUSED void *param)
     if (a.context.nconstraints == 0)
     {
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "No constraints for class promise '%s'", pp->promiser);
-        return;
+        return PROMISE_RESULT_FAIL;
     }
 
     if (a.context.nconstraints > 1)
     {
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Irreconcilable constraints in classes for '%s'", pp->promiser);
-        return;
+        return PROMISE_RESULT_FAIL;
     }
 
     bool global_class = false;
@@ -98,6 +98,7 @@ void VerifyClassPromise(EvalContext *ctx, Promise *pp, ARG_UNUSED void *param)
         {
             cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a,
                  "Attempted to name a class '%s', which is an illegal class identifier", pp->promiser);
+            return PROMISE_RESULT_FAIL;
         }
         else
         {
@@ -118,8 +119,12 @@ void VerifyClassPromise(EvalContext *ctx, Promise *pp, ARG_UNUSED void *param)
                       a.context.persistent);
                 EvalContextHeapPersistentSave(pp->promiser, PromiseGetNamespace(pp), a.context.persistent, CONTEXT_STATE_POLICY_RESET);
             }
+
+            return PROMISE_RESULT_CHANGE;
         }
     }
+
+    return PROMISE_RESULT_NOOP;
 }
 
 static int EvalClassExpression(EvalContext *ctx, Constraint *cp, Promise *pp)

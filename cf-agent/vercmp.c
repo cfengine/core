@@ -26,7 +26,7 @@
 #include <vercmp.h>
 #include <vercmp_internal.h>
 
-/* SetNewScope / DeleteScope */
+#include <actuator.h>
 #include <scope.h>
 /* ExpandScalar */
 #include <expand.h>
@@ -59,7 +59,8 @@ static VersionCmpResult AndResults(VersionCmpResult lhs, VersionCmpResult rhs)
     }
 }
 
-static VersionCmpResult RunCmpCommand(EvalContext *ctx, const char *command, const char *v1, const char *v2, Attributes a, Promise *pp)
+static VersionCmpResult RunCmpCommand(EvalContext *ctx, const char *command, const char *v1, const char *v2, Attributes a,
+                                      Promise *pp, PromiseResult *result)
 {
     char expanded_command[CF_EXPANDSIZE];
 
@@ -85,6 +86,7 @@ static VersionCmpResult RunCmpCommand(EvalContext *ctx, const char *command, con
     {
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Can not start package version comparison command '%s'. (cf_popen: %s)",
              expanded_command, GetErrorStr());
+        *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
         return VERCMP_ERROR;
     }
 
@@ -96,17 +98,18 @@ static VersionCmpResult RunCmpCommand(EvalContext *ctx, const char *command, con
     {
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Error during package version comparison command execution '%s'. (cf_pclose: %s)",
             expanded_command, GetErrorStr());
+        *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
         return VERCMP_ERROR;
     }
 
     return retcode == 0;
 }
 
-static VersionCmpResult CompareVersionsLess(EvalContext *ctx, const char *v1, const char *v2, Attributes a, Promise *pp)
+static VersionCmpResult CompareVersionsLess(EvalContext *ctx, const char *v1, const char *v2, Attributes a, Promise *pp, PromiseResult *result)
 {
     if (a.packages.package_version_less_command)
     {
-        return RunCmpCommand(ctx, a.packages.package_version_less_command, v1, v2, a, pp);
+        return RunCmpCommand(ctx, a.packages.package_version_less_command, v1, v2, a, pp, result);
     }
     else
     {
@@ -114,17 +117,17 @@ static VersionCmpResult CompareVersionsLess(EvalContext *ctx, const char *v1, co
     }
 }
 
-static VersionCmpResult CompareVersionsEqual(EvalContext *ctx, const char *v1, const char *v2, Attributes a, Promise *pp)
+static VersionCmpResult CompareVersionsEqual(EvalContext *ctx, const char *v1, const char *v2, Attributes a, Promise *pp, PromiseResult *result)
 {
     if (a.packages.package_version_equal_command)
     {
-        return RunCmpCommand(ctx, a.packages.package_version_equal_command, v1, v2, a, pp);
+        return RunCmpCommand(ctx, a.packages.package_version_equal_command, v1, v2, a, pp, result);
     }
     else if (a.packages.package_version_less_command)
     {
         /* emulate v1 == v2 by !(v1 < v2) && !(v2 < v1)  */
-        return AndResults(InvertResult(CompareVersionsLess(ctx, v1, v2, a, pp)),
-                          InvertResult(CompareVersionsLess(ctx, v2, v1, a, pp)));
+        return AndResults(InvertResult(CompareVersionsLess(ctx, v1, v2, a, pp, result)),
+                          InvertResult(CompareVersionsLess(ctx, v2, v1, a, pp, result)));
     }
     else
     {
@@ -133,23 +136,23 @@ static VersionCmpResult CompareVersionsEqual(EvalContext *ctx, const char *v1, c
     }
 }
 
-VersionCmpResult CompareVersions(EvalContext *ctx, const char *v1, const char *v2, Attributes a, Promise *pp)
+VersionCmpResult CompareVersions(EvalContext *ctx, const char *v1, const char *v2, Attributes a, Promise *pp, PromiseResult *result)
 {
     switch (a.packages.package_select)
     {
     case PACKAGE_VERSION_COMPARATOR_EQ:
     case PACKAGE_VERSION_COMPARATOR_NONE:
-        return CompareVersionsEqual(ctx, v1, v2, a, pp);
+        return CompareVersionsEqual(ctx, v1, v2, a, pp, result);
     case PACKAGE_VERSION_COMPARATOR_NEQ:
-        return InvertResult(CompareVersionsEqual(ctx, v1, v2, a, pp));
+        return InvertResult(CompareVersionsEqual(ctx, v1, v2, a, pp, result));
     case PACKAGE_VERSION_COMPARATOR_LT:
-        return CompareVersionsLess(ctx, v1, v2, a, pp);
+        return CompareVersionsLess(ctx, v1, v2, a, pp, result);
     case PACKAGE_VERSION_COMPARATOR_GT:
-        return CompareVersionsLess(ctx, v2, v1, a, pp);
+        return CompareVersionsLess(ctx, v2, v1, a, pp, result);
     case PACKAGE_VERSION_COMPARATOR_GE:
-        return InvertResult(CompareVersionsLess(ctx, v1, v2, a, pp));
+        return InvertResult(CompareVersionsLess(ctx, v1, v2, a, pp, result));
     case PACKAGE_VERSION_COMPARATOR_LE:
-        return InvertResult(CompareVersionsLess(ctx, v2, v1, a, pp));
+        return InvertResult(CompareVersionsLess(ctx, v2, v1, a, pp, result));
     default:
         ProgrammingError("Unexpected comparison value: %d", a.packages.package_select);
     }

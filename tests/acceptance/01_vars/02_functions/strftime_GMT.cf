@@ -17,7 +17,9 @@ bundle agent init
 {
   vars:
       # These classes don't depend on the locale
-      "results" slist => classesmatching("^GMT_(Hr|Min|Yr)\d+$");
+      # we require two digits to filter out GMT_Hr0 through 9
+      # (note that %k has a leading space, so we can't use it below)
+      "results" slist => classesmatching("^GMT_(Hr|Min|Yr)\d\d+$");
 
   files:
       "$(G.testfile).expected"
@@ -37,6 +39,7 @@ bundle agent test
 {
   vars:
       "vals" slist => {
+                        # note that %k has a leading space, don't use it
                         strftime('gmtime', 'GMT_Hr%H', now()),
                         strftime('gmtime', 'GMT_Min%M', now()),
                         strftime('gmtime', 'GMT_Yr%Y', now()),

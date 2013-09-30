@@ -25,6 +25,7 @@
 #ifndef CFENGINE_PROMISER_REGEX_RESOLVER_H
 #define CFENGINE_PROMISER_REGEX_RESOLVER_H
 
-void LocateFilePromiserGroup(EvalContext *ctx, char *wildpath, Promise *pp, void (*fnptr) (EvalContext *ctx, char *path, Promise *ptr));
+PromiseResult LocateFilePromiserGroup(EvalContext *ctx, char *wildpath, Promise *pp,
+                             PromiseResult (*fnptr) (EvalContext *ctx, char *path, Promise *ptr));
 
 #endif

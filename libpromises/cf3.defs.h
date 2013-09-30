@@ -147,7 +147,7 @@ typedef enum
     PROMISE_RESULT_FAIL = 'f',
     PROMISE_RESULT_DENIED = 'd',
     PROMISE_RESULT_TIMEOUT = 't',
-    PROMISE_RESULT_INTERRUPTED = 'i',
+    PROMISE_RESULT_INTERRUPTED = 'i'
 } PromiseResult;
 
 /*****************************************************************************/

@@ -24,6 +24,7 @@
 
 #include <verify_services.h>
 
+#include <actuator.h>
 #include <verify_methods.h>
 #include <promises.h>
 #include <vars.h>
@@ -39,11 +40,13 @@
 
 static int ServicesSanityChecks(Attributes a, Promise *pp);
 static void SetServiceDefaults(Attributes *a);
-static void DoVerifyServices(EvalContext *ctx, Attributes a, Promise *pp);
+static PromiseResult DoVerifyServices(EvalContext *ctx, Attributes a, Promise *pp);
+static PromiseResult VerifyServices(EvalContext *ctx, Attributes a, Promise *pp);
+
 
 /*****************************************************************************/
 
-void VerifyServicesPromise(EvalContext *ctx, Promise *pp)
+PromiseResult VerifyServicesPromise(EvalContext *ctx, Promise *pp)
 {
     Attributes a = { {0} };
 
@@ -53,7 +56,11 @@ void VerifyServicesPromise(EvalContext *ctx, Promise *pp)
 
     if (ServicesSanityChecks(a, pp))
     {
-        VerifyServices(ctx, a, pp);
+        return VerifyServices(ctx, a, pp);
+    }
+    else
+    {
+        return PROMISE_RESULT_NOOP;
     }
 }
 
@@ -152,7 +159,7 @@ static void SetServiceDefaults(Attributes *a)
 /* Level                                                                     */
 /*****************************************************************************/
 
-void VerifyServices(EvalContext *ctx, Attributes a, Promise *pp)
+PromiseResult VerifyServices(EvalContext *ctx, Attributes a, Promise *pp)
 {
     CfLock thislock;
 
@@ -160,30 +167,33 @@ void VerifyServices(EvalContext *ctx, Attributes a, Promise *pp)
 
     if (thislock.lock == NULL)
     {
-        return;
+        return PROMISE_RESULT_NOOP;
     }
 
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser", pp->promiser, DATA_TYPE_STRING);
     PromiseBanner(pp);
 
+    PromiseResult result = PROMISE_RESULT_NOOP;
     if (strcmp(a.service.service_type, "windows") == 0)
     {
-        VerifyWindowsService(ctx, a, pp);
+        result = PromiseResultUpdate(result, VerifyWindowsService(ctx, a, pp));
     }
     else
     {
-        DoVerifyServices(ctx, a, pp);
+        result = PromiseResultUpdate(result, DoVerifyServices(ctx, a, pp));
     }
 
     EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser");
     YieldCurrentLock(thislock);
+
+    return result;
 }
 
 /*****************************************************************************/
 /* Level                                                                     */
 /*****************************************************************************/
 
-static void DoVerifyServices(EvalContext *ctx, Attributes a, Promise *pp)
+static PromiseResult DoVerifyServices(EvalContext *ctx, Attributes a, Promise *pp)
 {
     FnCall *default_bundle = NULL;
     Rlist *args = NULL;
@@ -253,14 +263,18 @@ static void DoVerifyServices(EvalContext *ctx, Attributes a, Promise *pp)
         bp = PolicyGetBundle(PolicyFromPromise(pp), NULL, "common", default_bundle->name);
     }
 
+    PromiseResult result = PROMISE_RESULT_NOOP;
     if (default_bundle && bp == NULL)
     {
         cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, a, "Service '%s' could not be invoked successfully", pp->promiser);
+        result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
     }
 
     if (!DONTDO)
     {
-        VerifyMethod(ctx, "service_bundle", a, pp);  // Send list of classes to set privately?
+        result = PromiseResultUpdate(result, VerifyMethod(ctx, "service_bundle", a, pp));  // Send list of classes to set privately?
     }
+
+    return result;
 }
 

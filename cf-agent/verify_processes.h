@@ -27,7 +27,7 @@
 
 #include <cf3.defs.h>
 
-void VerifyProcessesPromise(EvalContext *ctx, Promise *pp);
+PromiseResult VerifyProcessesPromise(EvalContext *ctx, Promise *pp);
 
 /* To be implemented in Nova for Win32 */
 

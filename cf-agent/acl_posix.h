@@ -27,6 +27,6 @@
 
 #include <cf3.defs.h>
 
-int CheckPosixLinuxACL(EvalContext *ctx, char *file_path, Acl acl, Attributes a, Promise *pp);
+PromiseResult CheckPosixLinuxACL(EvalContext *ctx, char *file_path, Acl acl, Attributes a, Promise *pp);
 
 #endif

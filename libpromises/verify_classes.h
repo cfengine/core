@@ -28,6 +28,6 @@
 #include <env_context.h>
 #include <policy.h>
 
-void VerifyClassPromise(EvalContext *ctx, Promise *pp, void *param);
+PromiseResult VerifyClassPromise(EvalContext *ctx, Promise *pp, void *param);
 
 #endif

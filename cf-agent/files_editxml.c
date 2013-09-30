@@ -345,7 +345,7 @@ static PromiseResult KeepEditXmlPromise(EvalContext *ctx, Promise *pp, void *par
         return result;
 #else
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Cannot edit XML files without LIBXML2");
-        return result;
+        return PROMISE_RESULT_FAIL;
 #endif
     }
     else if (strcmp("reports", pp->parent_promise_type->name) == 0)

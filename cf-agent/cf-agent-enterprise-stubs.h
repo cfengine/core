@@ -29,7 +29,7 @@
 #include <cfnet.h>
 
 #if defined(__MINGW32__)
-void VerifyRegistryPromise(EvalContext *ctx, Attributes a, Promise *pp);
+PromiseResult VerifyRegistryPromise(EvalContext *ctx, Attributes a, Promise *pp);
 #endif
 ENTERPRISE_FUNC_3ARG_DECLARE(PromiseResult, VerifyWindowsService, EvalContext *, ctx, Attributes, a, Promise *, pp);
 

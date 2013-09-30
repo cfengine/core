@@ -1858,6 +1858,8 @@ static PromiseResult TouchFile(EvalContext *ctx, char *path, Attributes attr, Pr
 
 PromiseResult VerifyFileAttributes(EvalContext *ctx, char *file, struct stat *dstat, Attributes attr, Promise *pp)
 {
+    PromiseResult result = PROMISE_RESULT_NOOP;
+
 #ifndef __MINGW32__
     mode_t newperm = dstat->st_mode, maskvalue;
 
@@ -1904,7 +1906,6 @@ PromiseResult VerifyFileAttributes(EvalContext *ctx, char *file, struct stat *ds
         }
     }
 
-    PromiseResult result = PROMISE_RESULT_NOOP;
     result = PromiseResultUpdate(result, VerifySetUidGid(ctx, file, dstat, newperm, pp, attr));
 
 # ifdef __APPLE__

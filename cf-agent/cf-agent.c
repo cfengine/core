@@ -1652,7 +1652,7 @@ static void ClassBanner(EvalContext *ctx, TypeSequence type)
 
 #ifdef __MINGW32__
 
-static void ParallelFindAndVerifyFilesPromises(EvalContext *ctx, Promise *pp)
+static PromiseResult ParallelFindAndVerifyFilesPromises(EvalContext *ctx, Promise *pp)
 {
     int background = PromiseGetConstraintAsBoolean(ctx, "background", pp);
 
@@ -1661,7 +1661,7 @@ static void ParallelFindAndVerifyFilesPromises(EvalContext *ctx, Promise *pp)
         Log(LOG_LEVEL_VERBOSE, "Background processing of files promises is not supported on Windows");
     }
 
-    FindAndVerifyFilesPromises(ctx, pp);
+    return FindAndVerifyFilesPromises(ctx, pp);
 }
 
 #else /* !__MINGW32__ */

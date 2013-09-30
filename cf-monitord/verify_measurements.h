@@ -27,6 +27,6 @@
 
 #include <cf3.defs.h>
 
-void VerifyMeasurementPromise(EvalContext *ctx, double *this, Promise *pp);
+PromiseResult VerifyMeasurementPromise(EvalContext *ctx, double *measurement, Promise *pp);
 
 #endif

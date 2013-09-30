@@ -135,92 +135,92 @@ static FILE *ReadFirstLine(const char *filename, char *buf, int bufsize);
 
 static void GetCPUInfo(EvalContext *ctx);
 
-static const char *CLASSATTRIBUTES[PLATFORM_CONTEXT_MAX][3] =
+static const char *CLASSATTRIBUTES[][3] =
 {
-    {"-", "-", "-"},            /* as appear here are matched. The fields are sysname and machine */
-    {"virt_host_vz_vzps", ".*", ".*"},      /* VZ Host with vzps installed (virt_host_vz_vzps) */
-    {"hp-ux", ".*", ".*"},      /* hpux */
-    {"aix", ".*", ".*"},        /* aix */
-    {"linux", ".*", ".*"},      /* linux */
-    {"sunos", ".*", "5.*"},     /* solaris */
-    {"freebsd", ".*", ".*"},    /* freebsd */
-    {"netbsd", ".*", ".*"},     /* NetBSD */
-    {"sn.*", "cray*", ".*"},    /* cray */
-    {"cygwin_nt.*", ".*", ".*"},        /* NT (cygwin) */
-    {"unix_sv", ".*", ".*"},    /* Unixware */
-    {"openbsd", ".*", ".*"},    /* OpenBSD */
-    {"sco_sv", ".*", ".*"},     /* SCO */
-    {"darwin", ".*", ".*"},     /* Darwin, aka MacOS X */
-    {"qnx", ".*", ".*"},        /* qnx  */
-    {"dragonfly", ".*", ".*"},  /* dragonfly */
-    {"windows_nt.*", ".*", ".*"},       /* NT (native) */
-    {"vmkernel", ".*", ".*"},   /* VMWARE / ESX */
+    [PLATFORM_CONTEXT_UNKNOWN] = {"-", "-", "-"},            /* as appear here are matched. The fields are sysname and machine */
+    [PLATFORM_CONTEXT_OPENVZ] = {"virt_host_vz_vzps", ".*", ".*"},      /* VZ Host with vzps installed (virt_host_vz_vzps) */
+    [PLATFORM_CONTEXT_HP] = {"hp-ux", ".*", ".*"},      /* hpux */
+    [PLATFORM_CONTEXT_AIX] = {"aix", ".*", ".*"},        /* aix */
+    [PLATFORM_CONTEXT_LINUX] = {"linux", ".*", ".*"},      /* linux */
+    [PLATFORM_CONTEXT_SOLARIS] = {"sunos", ".*", "5.*"},     /* solaris */
+    [PLATFORM_CONTEXT_FREEBSD] = {"freebsd", ".*", ".*"},    /* freebsd */
+    [PLATFORM_CONTEXT_NETBSD] = {"netbsd", ".*", ".*"},     /* NetBSD */
+    [PLATFORM_CONTEXT_CRAYOS] = {"sn.*", "cray*", ".*"},    /* cray */
+    [PLATFORM_CONTEXT_WINDOWS_NT] = {"cygwin_nt.*", ".*", ".*"},        /* NT (cygwin) */
+    [PLATFORM_CONTEXT_SYSTEMV] = {"unix_sv", ".*", ".*"},    /* Unixware */
+    [PLATFORM_CONTEXT_OPENBSD] = {"openbsd", ".*", ".*"},    /* OpenBSD */
+    [PLATFORM_CONTEXT_CFSCO] = {"sco_sv", ".*", ".*"},     /* SCO */
+    [PLATFORM_CONTEXT_DARWIN] = {"darwin", ".*", ".*"},     /* Darwin, aka MacOS X */
+    [PLATFORM_CONTEXT_QNX] = {"qnx", ".*", ".*"},        /* qnx  */
+    [PLATFORM_CONTEXT_DRAGONFLY] = {"dragonfly", ".*", ".*"},  /* dragonfly */
+    [PLATFORM_CONTEXT_MINGW] = {"windows_nt.*", ".*", ".*"},       /* NT (native) */
+    [PLATFORM_CONTEXT_VMWARE] = {"vmkernel", ".*", ".*"},   /* VMWARE / ESX */
 };
 
-static const char *VRESOLVCONF[PLATFORM_CONTEXT_MAX] =
+static const char *VRESOLVCONF[] =
 {
-    "-",
-    "/etc/resolv.conf",         /* virt_host_vz_vzps */
-    "/etc/resolv.conf",         /* hpux */
-    "/etc/resolv.conf",         /* aix */
-    "/etc/resolv.conf",         /* linux */
-    "/etc/resolv.conf",         /* solaris */
-    "/etc/resolv.conf",         /* freebsd */
-    "/etc/resolv.conf",         /* netbsd */
-    "/etc/resolv.conf",         /* cray */
-    "/etc/resolv.conf",         /* NT */
-    "/etc/resolv.conf",         /* Unixware */
-    "/etc/resolv.conf",         /* openbsd */
-    "/etc/resolv.conf",         /* sco */
-    "/etc/resolv.conf",         /* darwin */
-    "/etc/resolv.conf",         /* qnx */
-    "/etc/resolv.conf",         /* dragonfly */
-    "",                         /* mingw */
-    "/etc/resolv.conf",         /* vmware */
+    [PLATFORM_CONTEXT_UNKNOWN] = "-",
+    [PLATFORM_CONTEXT_OPENVZ] = "/etc/resolv.conf",         /* virt_host_vz_vzps */
+    [PLATFORM_CONTEXT_HP] = "/etc/resolv.conf",         /* hpux */
+    [PLATFORM_CONTEXT_AIX] = "/etc/resolv.conf",         /* aix */
+    [PLATFORM_CONTEXT_LINUX] = "/etc/resolv.conf",         /* linux */
+    [PLATFORM_CONTEXT_SOLARIS] = "/etc/resolv.conf",         /* solaris */
+    [PLATFORM_CONTEXT_FREEBSD] = "/etc/resolv.conf",         /* freebsd */
+    [PLATFORM_CONTEXT_NETBSD] = "/etc/resolv.conf",         /* netbsd */
+    [PLATFORM_CONTEXT_CRAYOS] = "/etc/resolv.conf",         /* cray */
+    [PLATFORM_CONTEXT_WINDOWS_NT] = "/etc/resolv.conf",         /* NT */
+    [PLATFORM_CONTEXT_SYSTEMV] = "/etc/resolv.conf",         /* Unixware */
+    [PLATFORM_CONTEXT_OPENBSD] = "/etc/resolv.conf",         /* openbsd */
+    [PLATFORM_CONTEXT_CFSCO] = "/etc/resolv.conf",         /* sco */
+    [PLATFORM_CONTEXT_DARWIN] = "/etc/resolv.conf",         /* darwin */
+    [PLATFORM_CONTEXT_QNX] = "/etc/resolv.conf",         /* qnx */
+    [PLATFORM_CONTEXT_DRAGONFLY] = "/etc/resolv.conf",         /* dragonfly */
+    [PLATFORM_CONTEXT_MINGW] = "",                         /* mingw */
+    [PLATFORM_CONTEXT_VMWARE] = "/etc/resolv.conf",         /* vmware */
 };
 
-static const char *VMAILDIR[PLATFORM_CONTEXT_MAX] =
+static const char *VMAILDIR[] =
 {
-    "-",
-    "/var/spool/mail",          /* virt_host_vz_vzps */
-    "/var/mail",                /* hpux */
-    "/var/spool/mail",          /* aix */
-    "/var/spool/mail",          /* linux */
-    "/var/mail",                /* solaris */
-    "/var/mail",                /* freebsd */
-    "/var/mail",                /* netbsd */
-    "/usr/mail",                /* cray */
-    "N/A",                      /* NT */
-    "/var/mail",                /* Unixware */
-    "/var/mail",                /* openbsd */
-    "/var/spool/mail",          /* sco */
-    "/var/mail",                /* darwin */
-    "/var/spool/mail",          /* qnx */
-    "/var/mail",                /* dragonfly */
-    "",                         /* mingw */
-    "/var/spool/mail",          /* vmware */
+    [PLATFORM_CONTEXT_UNKNOWN] = "-",
+    [PLATFORM_CONTEXT_OPENVZ] = "/var/spool/mail",          /* virt_host_vz_vzps */
+    [PLATFORM_CONTEXT_HP] = "/var/mail",                /* hpux */
+    [PLATFORM_CONTEXT_AIX] = "/var/spool/mail",          /* aix */
+    [PLATFORM_CONTEXT_LINUX] = "/var/spool/mail",          /* linux */
+    [PLATFORM_CONTEXT_SOLARIS] = "/var/mail",                /* solaris */
+    [PLATFORM_CONTEXT_FREEBSD] = "/var/mail",                /* freebsd */
+    [PLATFORM_CONTEXT_NETBSD] = "/var/mail",                /* netbsd */
+    [PLATFORM_CONTEXT_CRAYOS] = "/usr/mail",                /* cray */
+    [PLATFORM_CONTEXT_WINDOWS_NT] = "N/A",                      /* NT */
+    [PLATFORM_CONTEXT_SYSTEMV] = "/var/mail",                /* Unixware */
+    [PLATFORM_CONTEXT_OPENBSD] = "/var/mail",                /* openbsd */
+    [PLATFORM_CONTEXT_CFSCO] = "/var/spool/mail",          /* sco */
+    [PLATFORM_CONTEXT_DARWIN] = "/var/mail",                /* darwin */
+    [PLATFORM_CONTEXT_QNX] = "/var/spool/mail",          /* qnx */
+    [PLATFORM_CONTEXT_DRAGONFLY] = "/var/mail",                /* dragonfly */
+    [PLATFORM_CONTEXT_MINGW] = "",                         /* mingw */
+    [PLATFORM_CONTEXT_VMWARE] = "/var/spool/mail",          /* vmware */
 };
 
-static const char *VEXPORTS[PLATFORM_CONTEXT_MAX] =
+static const char *VEXPORTS[] =
 {
-    "-",
-    "/etc/exports",             /* virt_host_vz_vzps */
-    "/etc/exports",             /* hpux */
-    "/etc/exports",             /* aix */
-    "/etc/exports",             /* linux */
-    "/etc/dfs/dfstab",          /* solaris */
-    "/etc/exports",             /* freebsd */
-    "/etc/exports",             /* netbsd */
-    "/etc/exports",             /* cray */
-    "/etc/exports",             /* NT */
-    "/etc/dfs/dfstab",          /* Unixware */
-    "/etc/exports",             /* openbsd */
-    "/etc/dfs/dfstab",          /* sco */
-    "/etc/exports",             /* darwin */
-    "/etc/exports",             /* qnx */
-    "/etc/exports",             /* dragonfly */
-    "",                         /* mingw */
-    "none",                     /* vmware */
+    [PLATFORM_CONTEXT_UNKNOWN] = "-",
+    [PLATFORM_CONTEXT_OPENVZ] = "/etc/exports",             /* virt_host_vz_vzps */
+    [PLATFORM_CONTEXT_HP] = "/etc/exports",             /* hpux */
+    [PLATFORM_CONTEXT_AIX] = "/etc/exports",             /* aix */
+    [PLATFORM_CONTEXT_LINUX] = "/etc/exports",             /* linux */
+    [PLATFORM_CONTEXT_SOLARIS] = "/etc/dfs/dfstab",          /* solaris */
+    [PLATFORM_CONTEXT_FREEBSD] = "/etc/exports",             /* freebsd */
+    [PLATFORM_CONTEXT_NETBSD] = "/etc/exports",             /* netbsd */
+    [PLATFORM_CONTEXT_CRAYOS] = "/etc/exports",             /* cray */
+    [PLATFORM_CONTEXT_WINDOWS_NT] = "/etc/exports",             /* NT */
+    [PLATFORM_CONTEXT_SYSTEMV] = "/etc/dfs/dfstab",          /* Unixware */
+    [PLATFORM_CONTEXT_OPENBSD] = "/etc/exports",             /* openbsd */
+    [PLATFORM_CONTEXT_CFSCO] = "/etc/dfs/dfstab",          /* sco */
+    [PLATFORM_CONTEXT_DARWIN] = "/etc/exports",             /* darwin */
+    [PLATFORM_CONTEXT_QNX] = "/etc/exports",             /* qnx */
+    [PLATFORM_CONTEXT_DRAGONFLY] = "/etc/exports",             /* dragonfly */
+    [PLATFORM_CONTEXT_MINGW] = "",                         /* mingw */
+    [PLATFORM_CONTEXT_VMWARE] = "none",                     /* vmware */
 };
 
 

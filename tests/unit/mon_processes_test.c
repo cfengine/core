@@ -103,11 +103,11 @@ int main()
     strcpy(CFWORKDIR, "data");
 
 #if defined(__sun)
-    VSYSTEMHARDCLASS = 4;
+    VSYSTEMHARDCLASS = PLATFORM_CONTEXT_SOLARIS;
 #elif defined(_AIX)
-    VSYSTEMHARDCLASS = 2;
+    VSYSTEMHARDCLASS = PLATFORM_CONTEXT_AIX;
 #elif defined(__linux__)
-    VSYSTEMHARDCLASS = 3;
+    VSYSTEMHARDCLASS = PLATFORM_CONTEXT_LINUX;
 #endif
 
     PRINT_TEST_BANNER();

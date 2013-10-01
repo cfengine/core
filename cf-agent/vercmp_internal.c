@@ -30,7 +30,7 @@
 
 static void ParsePackageVersion(char *version, Rlist **num, Rlist **sep);
 
-bool ComparePackageVersionsInternal(const char *v1, const char *v2, PackageVersionComparator cmp)
+VersionCmpResult ComparePackageVersionsInternal(const char *v1, const char *v2, PackageVersionComparator cmp)
 {
     Rlist *rp_pr, *rp_in;
 
@@ -99,16 +99,6 @@ bool ComparePackageVersionsInternal(const char *v1, const char *v2, PackageVersi
                 }
                 break;
             case PACKAGE_VERSION_COMPARATOR_GT:
-                if (cmp_result < 0)
-                {
-                    version_matched = true;
-                }
-                else if (cmp_result > 0)
-                {
-                    break_loop = true;
-                }
-                break;
-            case PACKAGE_VERSION_COMPARATOR_LT:
                 if (cmp_result > 0)
                 {
                     version_matched = true;
@@ -118,8 +108,8 @@ bool ComparePackageVersionsInternal(const char *v1, const char *v2, PackageVersi
                     break_loop = true;
                 }
                 break;
-            case PACKAGE_VERSION_COMPARATOR_GE:
-                if ((cmp_result < 0) || version_equal)
+            case PACKAGE_VERSION_COMPARATOR_LT:
+                if (cmp_result < 0)
                 {
                     version_matched = true;
                 }
@@ -128,12 +118,22 @@ bool ComparePackageVersionsInternal(const char *v1, const char *v2, PackageVersi
                     break_loop = true;
                 }
                 break;
-            case PACKAGE_VERSION_COMPARATOR_LE:
+            case PACKAGE_VERSION_COMPARATOR_GE:
                 if ((cmp_result > 0) || version_equal)
                 {
                     version_matched = true;
                 }
                 else if (cmp_result < 0)
+                {
+                    break_loop = true;
+                }
+                break;
+            case PACKAGE_VERSION_COMPARATOR_LE:
+                if ((cmp_result < 0) || version_equal)
+                {
+                    version_matched = true;
+                }
+                else if (cmp_result > 0)
                 {
                     break_loop = true;
                 }
@@ -171,16 +171,7 @@ bool ComparePackageVersionsInternal(const char *v1, const char *v2, PackageVersi
     RlistDestroy(separators_pr);
     RlistDestroy(separators_in);
 
-    if (version_matched)
-    {
-        Log(LOG_LEVEL_VERBOSE, "Verified version constraint promise kept");
-    }
-    else
-    {
-        Log(LOG_LEVEL_VERBOSE, "Versions did not match");
-    }
-
-    return version_matched;
+    return version_matched ? VERCMP_MATCH : VERCMP_NO_MATCH;
 }
 
 static void ParsePackageVersion(char *version, Rlist **num, Rlist **sep)

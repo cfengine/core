@@ -113,7 +113,7 @@ static VersionCmpResult CompareVersionsLess(EvalContext *ctx, const char *v1, co
     }
     else
     {
-        return ComparePackageVersionsInternal(v1, v2, PACKAGE_VERSION_COMPARATOR_GT) ? VERCMP_MATCH : VERCMP_NO_MATCH;
+        return ComparePackageVersionsInternal(v1, v2, PACKAGE_VERSION_COMPARATOR_LT) ? VERCMP_MATCH : VERCMP_NO_MATCH;
     }
 }
 
@@ -138,22 +138,55 @@ static VersionCmpResult CompareVersionsEqual(EvalContext *ctx, const char *v1, c
 
 VersionCmpResult CompareVersions(EvalContext *ctx, const char *v1, const char *v2, Attributes a, Promise *pp, PromiseResult *result)
 {
+    VersionCmpResult cmp_result;
+    const char *cmp_operator = "";
     switch (a.packages.package_select)
     {
     case PACKAGE_VERSION_COMPARATOR_EQ:
     case PACKAGE_VERSION_COMPARATOR_NONE:
-        return CompareVersionsEqual(ctx, v1, v2, a, pp, result);
+        cmp_result = CompareVersionsEqual(ctx, v1, v2, a, pp, result);
+        cmp_operator = "==";
+        break;
     case PACKAGE_VERSION_COMPARATOR_NEQ:
-        return InvertResult(CompareVersionsEqual(ctx, v1, v2, a, pp, result));
+        cmp_result = InvertResult(CompareVersionsEqual(ctx, v1, v2, a, pp, result));
+        cmp_operator = "!=";
+        break;
     case PACKAGE_VERSION_COMPARATOR_LT:
-        return CompareVersionsLess(ctx, v1, v2, a, pp, result);
+        cmp_result = CompareVersionsLess(ctx, v1, v2, a, pp, result);
+        cmp_operator = "<";
+        break;
     case PACKAGE_VERSION_COMPARATOR_GT:
-        return CompareVersionsLess(ctx, v2, v1, a, pp, result);
+        cmp_result = CompareVersionsLess(ctx, v2, v1, a, pp, result);
+        cmp_operator = ">";
+        break;
     case PACKAGE_VERSION_COMPARATOR_GE:
-        return InvertResult(CompareVersionsLess(ctx, v1, v2, a, pp, result));
+        cmp_result = InvertResult(CompareVersionsLess(ctx, v1, v2, a, pp, result));
+        cmp_operator = ">=";
+        break;
     case PACKAGE_VERSION_COMPARATOR_LE:
-        return InvertResult(CompareVersionsLess(ctx, v2, v1, a, pp, result));
+        cmp_result = InvertResult(CompareVersionsLess(ctx, v2, v1, a, pp, result));
+        cmp_operator = "<=";
+        break;
     default:
         ProgrammingError("Unexpected comparison value: %d", a.packages.package_select);
+        break;
     }
+
+    const char *text_result;
+    switch (cmp_result)
+    {
+    case VERCMP_NO_MATCH:
+        text_result = "no";
+        break;
+    case VERCMP_MATCH:
+        text_result = "yes";
+        break;
+    default:
+        text_result = "Error!";
+        break;
+    }
+
+    Log(LOG_LEVEL_VERBOSE, "Checking whether package version %s %s %s: %s", v1, cmp_operator, v2, text_result);
+
+    return cmp_result;
 }

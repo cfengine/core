@@ -431,9 +431,9 @@ void VarRefSetMeta(VarRef *ref, bool enabled)
     {
         if (!VarRefIsMeta(ref))
         {
-            char *tmp = ref->scope;
-            memcpy(ref->scope, StringConcatenate(2, ref->scope, "_meta"), sizeof(char*));
-            free(tmp);
+            char *tmp = StringConcatenate(2, ref->scope, "_meta");
+            free(ref->scope);
+            ref->scope = tmp;
         }
     }
     else

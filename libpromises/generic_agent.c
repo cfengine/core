@@ -177,7 +177,7 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
         }
         else
         {
-            Log(LOG_LEVEL_WARNING, "This agent is not bootstrapped");
+            Log(LOG_LEVEL_VERBOSE, "This agent is not bootstrapped");
             return;
         }
 

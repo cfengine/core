@@ -36,7 +36,7 @@ static bool CheckMeasureSanity(Measurement m, Promise *pp);
 
 /*****************************************************************************/
 
-void VerifyMeasurementPromise(EvalContext *ctx, double *this, Promise *pp)
+PromiseResult VerifyMeasurementPromise(EvalContext *ctx, double *measurement, Promise *pp)
 {
     Attributes a = { {0} };
 
@@ -51,7 +51,7 @@ void VerifyMeasurementPromise(EvalContext *ctx, double *this, Promise *pp)
             Log(LOG_LEVEL_VERBOSE, "Skipping static observation '%s', already done", pp->promiser);
         }
 
-        return;
+        return PROMISE_RESULT_NOOP;
     }
 
     PromiseBanner(pp);
@@ -61,10 +61,10 @@ void VerifyMeasurementPromise(EvalContext *ctx, double *this, Promise *pp)
     if (!CheckMeasureSanity(a.measure, pp))
     {
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a, "Measurement promise is not valid");
-        return;
+        return PROMISE_RESULT_INTERRUPTED;
     }
 
-    VerifyMeasurement(ctx, this, a, pp);
+    return VerifyMeasurement(ctx, measurement, a, pp);
 }
 
 /*****************************************************************************/

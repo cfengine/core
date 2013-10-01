@@ -31,6 +31,7 @@
 #include <item_lib.h>
 #include <files_interfaces.h>
 #include <string_lib.h>
+#include <sysinfo.h>
 
 #include <cf-windows-functions.h>
 
@@ -597,7 +598,7 @@ FilePathType FilePathGetType(const char *file_path)
     {
         return FILE_PATH_TYPE_ABSOLUTE;
     }
-    else if (IsFileOutsideDefaultRepository(file_path))
+    else if (*file_path == '.')
     {
         return FILE_PATH_TYPE_RELATIVE;
     }
@@ -609,7 +610,7 @@ FilePathType FilePathGetType(const char *file_path)
 
 bool IsFileOutsideDefaultRepository(const char *f)
 {
-    return (*f == '.') || (IsAbsoluteFileName(f));
+    return !StringStartsWith(f, GetWorkDir());
 }
 
 /*******************************************************************/

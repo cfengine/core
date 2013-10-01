@@ -84,7 +84,7 @@ void test_iter_delete_entry(void)
 static void CreateGarbage(const char *filename)
 {
     FILE *fh = fopen(filename, "w");
-    for(int i = 0; i < 1000; ++i)
+    for(int i = 0; i < 2; ++i)
     {
         fwrite("some garbage!", 14, 1, fh);
     }

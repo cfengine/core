@@ -24,6 +24,7 @@
 
 #include <verify_databases.h>
 
+#include <actuator.h>
 #include <promises.h>
 #include <files_names.h>
 #include <conversion.h>
@@ -36,9 +37,10 @@
 #include <cf-agent-enterprise-stubs.h>
 #include <env_context.h>
 #include <ornaments.h>
+#include <misc_lib.h>
 
 static int CheckDatabaseSanity(Attributes a, Promise *pp);
-static void VerifySQLPromise(EvalContext *ctx, Attributes a, Promise *pp);
+static PromiseResult VerifySQLPromise(EvalContext *ctx, Attributes a, Promise *pp);
 static int VerifyDatabasePromise(CfdbConn *cfdb, char *database, Attributes a);
 
 static int ValidateSQLTableName(char *table_path, char *db, char *table);
@@ -59,13 +61,13 @@ static int CheckRegistrySanity(Attributes a, Promise *pp);
 
 /*****************************************************************************/
 
-void VerifyDatabasePromises(EvalContext *ctx, Promise *pp)
+PromiseResult VerifyDatabasePromises(EvalContext *ctx, Promise *pp)
 {
     Attributes a = { {0} };
 
     if (EvalContextPromiseIsDone(ctx, pp))
     {
-        return;
+        return PROMISE_RESULT_NOOP;
     }
 
     PromiseBanner(pp);
@@ -74,21 +76,23 @@ void VerifyDatabasePromises(EvalContext *ctx, Promise *pp)
 
     if (!CheckDatabaseSanity(a, pp))
     {
-        return;
+        return PROMISE_RESULT_FAIL;
     }
 
     if (strcmp(a.database.type, "sql") == 0)
     {
-        VerifySQLPromise(ctx, a, pp);
-        return;
+        return VerifySQLPromise(ctx, a, pp);
     }
-
-    if (strcmp(a.database.type, "ms_registry") == 0)
+    else if (strcmp(a.database.type, "ms_registry") == 0)
     {
 #if defined(__MINGW32__)
-        VerifyRegistryPromise(ctx, a, pp);
+        return VerifyRegistryPromise(ctx, a, pp);
 #endif
-        return;
+        return PROMISE_RESULT_NOOP;
+    }
+    else
+    {
+        ProgrammingError("Unknown database type '%s'", a.database.type);
     }
 }
 
@@ -96,7 +100,7 @@ void VerifyDatabasePromises(EvalContext *ctx, Promise *pp)
 /* Level                                                                     */
 /*****************************************************************************/
 
-static void VerifySQLPromise(EvalContext *ctx, Attributes a, Promise *pp)
+static PromiseResult VerifySQLPromise(EvalContext *ctx, Attributes a, Promise *pp)
 {
     char database[CF_MAXVARSIZE], table[CF_MAXVARSIZE], query[CF_BUFSIZE];
     char *sp;
@@ -111,7 +115,7 @@ static void VerifySQLPromise(EvalContext *ctx, Attributes a, Promise *pp)
 
     if (thislock.lock == NULL)
     {
-        return;
+        return PROMISE_RESULT_NOOP;
     }
 
     database[0] = '\0';
@@ -131,15 +135,17 @@ static void VerifySQLPromise(EvalContext *ctx, Attributes a, Promise *pp)
                      "SQL database promiser syntax should be of the form \"database.table\"");
                 PromiseRef(LOG_LEVEL_ERR, pp);
                 YieldCurrentLock(thislock);
-                return;
+                return PROMISE_RESULT_FAIL;
             }
         }
     }
 
+    PromiseResult result = PROMISE_RESULT_NOOP;
     if (count > 1)
     {
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "SQL database promiser syntax should be of the form \"database.table\"");
         PromiseRef(LOG_LEVEL_ERR, pp);
+        result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
     }
 
     if (strlen(database) == 0)
@@ -153,7 +159,7 @@ static void VerifySQLPromise(EvalContext *ctx, Attributes a, Promise *pp)
              "Missing database_operation in database promise");
         PromiseRef(LOG_LEVEL_ERR, pp);
         YieldCurrentLock(thislock);
-        return;
+        return PROMISE_RESULT_FAIL;
     }
 
     if (strcmp(a.database.operation, "delete") == 0)
@@ -177,7 +183,7 @@ static void VerifySQLPromise(EvalContext *ctx, Attributes a, Promise *pp)
             PromiseRef(LOG_LEVEL_ERR, pp);
             CfCloseDB(&cfdb);
             YieldCurrentLock(thislock);
-            return;
+            return PROMISE_RESULT_FAIL;
         }
     }
 
@@ -191,7 +197,7 @@ static void VerifySQLPromise(EvalContext *ctx, Attributes a, Promise *pp)
         if (!cfdb.connected)
         {
             Log(LOG_LEVEL_ERR, "Could not connect to the sql_db server for '%s'", database);
-            return;
+            return PROMISE_RESULT_FAIL;
         }
 
         /* Don't drop the db if we really want to drop a table */
@@ -211,7 +217,7 @@ static void VerifySQLPromise(EvalContext *ctx, Attributes a, Promise *pp)
     if (strlen(table) == 0)
     {
         YieldCurrentLock(thislock);
-        return;
+        return result;
     }
 
     CfConnectDB(&cfdb, a.database.db_server_type, a.database.db_server_host, a.database.db_server_owner,
@@ -232,6 +238,7 @@ static void VerifySQLPromise(EvalContext *ctx, Attributes a, Promise *pp)
         else
         {
             cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, a, "Table '%s' is not as promised", query);
+            result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
         }
 
 /* Finally check any row constraints on this table */
@@ -246,6 +253,8 @@ static void VerifySQLPromise(EvalContext *ctx, Attributes a, Promise *pp)
     }
 
     YieldCurrentLock(thislock);
+
+    return result;
 }
 
 static int VerifyDatabasePromise(CfdbConn *cfdb, char *database, Attributes a)

@@ -26,6 +26,7 @@
 
 #include <server.h>
 
+#include <misc_lib.h>
 #include <env_context.h>
 #include <files_names.h>
 #include <mod_access.h>
@@ -473,7 +474,7 @@ static void KeepControlPromises(EvalContext *ctx, Policy *policy, GenericAgentCo
             if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_ALLOWCIPHERS].lval) == 0)
             {
 
-                SV.allowciphers = xstrdup(cp->lval);
+                SV.allowciphers = xstrdup(retval.item);
                 Log(LOG_LEVEL_VERBOSE, "Setting allowciphers to '%s'", SV.allowciphers);
                 continue;
             }
@@ -755,7 +756,7 @@ void KeepFileAccessPromise(EvalContext *ctx, Promise *pp)
             break;
 
         default:
-            /* Shouldn't happen */
+            UnexpectedError("Unknown constraint type!");
             break;
         }
     }
@@ -869,7 +870,7 @@ void KeepLiteralAccessPromise(EvalContext *ctx, Promise *pp, char *type)
             break;
 
         default:
-            /* Shouldn't happen */
+            UnexpectedError("Unknown constraint type!");
             break;
         }
     }
@@ -947,7 +948,7 @@ void KeepQueryAccessPromise(EvalContext *ctx, Promise *pp, char *type)
             break;
 
         default:
-            /* Shouldn't happen */
+            UnexpectedError("Unknown constraint type!");
             break;
         }
     }
@@ -991,7 +992,7 @@ static void KeepServerRolePromise(EvalContext *ctx, Promise *pp)
             break;
 
         case RVAL_TYPE_FNCALL:
-            /* Shouldn't happen */
+            UnexpectedError("Constraint of type FNCALL is invalid in this context!");
             break;
 
         default:

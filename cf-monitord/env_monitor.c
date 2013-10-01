@@ -108,7 +108,7 @@ static double SetClasses(EvalContext *ctx, char *name, double variable, double a
 static void SetVariable(char *name, double now, double average, double stddev, Item **list);
 static double RejectAnomaly(double new, double av, double var, double av2, double var2);
 static void ZeroArrivals(void);
-static void KeepMonitorPromise(EvalContext *ctx, Promise *pp, void *param);
+static PromiseResult KeepMonitorPromise(EvalContext *ctx, Promise *pp, void *param);
 
 /****************************************************************/
 
@@ -1145,7 +1145,7 @@ static void GatherPromisedMeasures(EvalContext *ctx, const Policy *policy)
 /* Level                                                             */
 /*********************************************************************/
 
-static void KeepMonitorPromise(EvalContext *ctx, Promise *pp, ARG_UNUSED void *param)
+static PromiseResult KeepMonitorPromise(EvalContext *ctx, Promise *pp, ARG_UNUSED void *param)
 {
     assert(param == NULL);
 
@@ -1183,20 +1183,19 @@ static void KeepMonitorPromise(EvalContext *ctx, Promise *pp, ARG_UNUSED void *p
             Log(LOG_LEVEL_VERBOSE, "Skipping next promise '%s', as var-context '%s' is not relevant", pp->promiser,
                   sp);
         }
-        return;
+        return PROMISE_RESULT_NOOP;
     }
 
     if (strcmp("classes", pp->parent_promise_type->name) == 0)
     {
-        VerifyClassPromise(ctx, pp, NULL);
-        return;
+        return VerifyClassPromise(ctx, pp, NULL);
     }
 
     if (strcmp("measurements", pp->parent_promise_type->name) == 0)
     {
-        VerifyMeasurementPromise(ctx, CF_THIS, pp);
+        PromiseResult result = VerifyMeasurementPromise(ctx, CF_THIS, pp);
         /* FIXME: Verify why this explicit promise status change is done */
         EvalContextMarkPromiseNotDone(ctx, pp);
-        return;
+        return result;
     }
 }

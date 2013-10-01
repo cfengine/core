@@ -24,90 +24,94 @@
 
 #include <cf3.defs.h>
 
-const char *CLASSTEXT[PLATFORM_CONTEXT_MAX] =
+const char *CLASSTEXT[] =
 {
-    "<unknown>",
-    "hpux",
-    "aix",
-    "linux",
-    "solaris",
-    "freebsd",
-    "netbsd",
-    "cray",
-    "windows",
-    "unix_sv",
-    "openbsd",
-    "sco",
-    "darwin",
-    "qnx",
-    "dragonfly",
-    "windows",
-    "vmware",
+    [PLATFORM_CONTEXT_UNKNOWN] = "<unknown>",
+    [PLATFORM_CONTEXT_OPENVZ] = "virt_host_vz_vzps",
+    [PLATFORM_CONTEXT_HP] = "hpux",
+    [PLATFORM_CONTEXT_AIX] = "aix",
+    [PLATFORM_CONTEXT_LINUX] = "linux",
+    [PLATFORM_CONTEXT_SOLARIS] = "solaris",
+    [PLATFORM_CONTEXT_FREEBSD] = "freebsd",
+    [PLATFORM_CONTEXT_NETBSD] = "netbsd",
+    [PLATFORM_CONTEXT_CRAYOS] = "cray",
+    [PLATFORM_CONTEXT_WINDOWS_NT] = "windows",
+    [PLATFORM_CONTEXT_SYSTEMV] = "unix_sv",
+    [PLATFORM_CONTEXT_OPENBSD] = "openbsd",
+    [PLATFORM_CONTEXT_CFSCO] = "sco",
+    [PLATFORM_CONTEXT_DARWIN] = "darwin",
+    [PLATFORM_CONTEXT_QNX] = "qnx",
+    [PLATFORM_CONTEXT_DRAGONFLY] = "dragonfly",
+    [PLATFORM_CONTEXT_MINGW] = "windows",
+    [PLATFORM_CONTEXT_VMWARE] = "vmware",
 };
 
-const char *VPSCOMM[PLATFORM_CONTEXT_MAX] =
+const char *VPSCOMM[] =
 {
-    "",
-    "/bin/ps",                  /* hpux */
-    "/bin/ps",                  /* aix */
-    "/bin/ps",                  /* linux */
-    "/bin/ps",                  /* solaris */
-    "/bin/ps",                  /* freebsd */
-    "/bin/ps",                  /* netbsd */
-    "/bin/ps",                  /* cray */
-    "/bin/ps",                  /* NT - cygnus */
-    "/bin/ps",                  /* unixware */
-    "/bin/ps",                  /* openbsd */
-    "/bin/ps",                  /* sco */
-    "/bin/ps",                  /* darwin */
-    "/bin/ps",                  /* qnx  */
-    "/bin/ps",                  /* dragonfly */
-    "mingw-invalid",            /* mingw */
-    "/bin/ps",                  /* vmware */
+    [PLATFORM_CONTEXT_UNKNOWN] = "",
+    [PLATFORM_CONTEXT_OPENVZ] = "/bin/vzps",                /* virt_host_vz_vzps */
+    [PLATFORM_CONTEXT_HP] = "/bin/ps",                  /* hpux */
+    [PLATFORM_CONTEXT_AIX] = "/bin/ps",                  /* aix */
+    [PLATFORM_CONTEXT_LINUX] = "/bin/ps",                  /* linux */
+    [PLATFORM_CONTEXT_SOLARIS] = "/bin/ps",                  /* solaris */
+    [PLATFORM_CONTEXT_FREEBSD] = "/bin/ps",                  /* freebsd */
+    [PLATFORM_CONTEXT_NETBSD] = "/bin/ps",                  /* netbsd */
+    [PLATFORM_CONTEXT_CRAYOS] = "/bin/ps",                  /* cray */
+    [PLATFORM_CONTEXT_WINDOWS_NT] = "/bin/ps",                  /* NT - cygnus */
+    [PLATFORM_CONTEXT_SYSTEMV] = "/bin/ps",                  /* unixware */
+    [PLATFORM_CONTEXT_OPENBSD] = "/bin/ps",                  /* openbsd */
+    [PLATFORM_CONTEXT_CFSCO] = "/bin/ps",                  /* sco */
+    [PLATFORM_CONTEXT_DARWIN] = "/bin/ps",                  /* darwin */
+    [PLATFORM_CONTEXT_QNX] = "/bin/ps",                  /* qnx  */
+    [PLATFORM_CONTEXT_DRAGONFLY] = "/bin/ps",                  /* dragonfly */
+    [PLATFORM_CONTEXT_MINGW] = "mingw-invalid",            /* mingw */
+    [PLATFORM_CONTEXT_VMWARE] = "/bin/ps",                  /* vmware */
 };
 
 // linux after rhel 3: ps -eo user,pid,ppid,pgid,%cpu,%mem,vsize,ni,rss,stat,nlwp,stime,time,args
 // solaris: ps -eo user,pid,ppid,pgid,pcpu,pmem,vsz,pri,rss,nlwp,stime,time,args
 
-const char *VPSOPTS[PLATFORM_CONTEXT_MAX] =
+const char *VPSOPTS[] =
 {
-    "",
-    "-ef",                      /* hpux */
-    "-N -eo user,pid,ppid,pgid,pcpu,pmem,vsz,ni,stat,st=STIME,time,args", /* aix */
-    "-eo user,pid,ppid,pgid,pcpu,pmem,vsz,ni,rss,nlwp,stime,time,args",   /* linux */
-    "-eo user,pid,ppid,pgid,pcpu,pmem,vsz,pri,rss,nlwp,stime,time,args",  /* solaris */
-    "-axo user,pid,ppid,pgid,pcpu,pmem,vsz,ni,rss,nlwp,start,time,args",  /* freebsd */
-    "-axo user,pid,ppid,pgid,pcpu,pmem,vsz,ni,rss,nlwp,start,time,args",  /* netbsd */
-    "-elyf",                    /* cray */
-    "-aW",                      /* NT */
-    "-ef",                      /* Unixware */
-    "-axo user,pid,ppid,pgid,pcpu,pmem,vsz,ni,rss,start,time,args",       /* openbsd */
-    "-ef",                      /* sco */
-    "auxw",                     /* darwin */
-    "-elyf",                    /* qnx */
-    "auxw",                     /* dragonfly */
-    "mingw-invalid",            /* mingw */
-    "?",                        /* vmware */
+    [PLATFORM_CONTEXT_UNKNOWN] = "",
+    [PLATFORM_CONTEXT_OPENVZ] = "-E 0 -o user,pid,ppid,pgid,pcpu,pmem,vsz,ni,rss,nlwp,stime,time,args",   /* virt_host_vz_vzps (with vzps, the -E 0 replace the -e) */
+    [PLATFORM_CONTEXT_HP] = "-ef",                      /* hpux */
+    [PLATFORM_CONTEXT_AIX] =  "-N -eo user,pid,ppid,pgid,pcpu,pmem,vsz,ni,stat,st=STIME,time,args", /* aix */
+    [PLATFORM_CONTEXT_LINUX] = "-eo user,pid,ppid,pgid,pcpu,pmem,vsz,ni,rss,nlwp,stime,time,args",   /* linux */
+    [PLATFORM_CONTEXT_SOLARIS] = "-eo user,pid,ppid,pgid,pcpu,pmem,vsz,pri,rss,nlwp,stime,time,args",  /* solaris */
+    [PLATFORM_CONTEXT_FREEBSD] = "-axo user,pid,ppid,pgid,pcpu,pmem,vsz,ni,rss,nlwp,start,time,args",  /* freebsd */
+    [PLATFORM_CONTEXT_NETBSD] = "-axo user,pid,ppid,pgid,pcpu,pmem,vsz,ni,rss,nlwp,start,time,args",  /* netbsd */
+    [PLATFORM_CONTEXT_CRAYOS] = "-elyf",                    /* cray */
+    [PLATFORM_CONTEXT_WINDOWS_NT] = "-aW",                      /* NT */
+    [PLATFORM_CONTEXT_SYSTEMV] = "-ef",                      /* Unixware */
+    [PLATFORM_CONTEXT_OPENBSD] = "-axo user,pid,ppid,pgid,pcpu,pmem,vsz,ni,rss,start,time,args",       /* openbsd */
+    [PLATFORM_CONTEXT_CFSCO] = "-ef",                      /* sco */
+    [PLATFORM_CONTEXT_DARWIN] = "auxw",                     /* darwin */
+    [PLATFORM_CONTEXT_QNX] = "-elyf",                    /* qnx */
+    [PLATFORM_CONTEXT_DRAGONFLY] = "auxw",                     /* dragonfly */
+    [PLATFORM_CONTEXT_MINGW] = "mingw-invalid",            /* mingw */
+    [PLATFORM_CONTEXT_VMWARE] = "?",                        /* vmware */
 };
 
-const char *VFSTAB[PLATFORM_CONTEXT_MAX] =
+const char *VFSTAB[] =
 {
-    "-",
-    "/etc/fstab",               /* hpux */
-    "/etc/filesystems",         /* aix */
-    "/etc/fstab",               /* linux */
-    "/etc/vfstab",              /* solaris */
-    "/etc/fstab",               /* freebsd */
-    "/etc/fstab",               /* netbsd */
-    "/etc/fstab",               /* cray */
-    "/etc/fstab",               /* NT */
-    "/etc/vfstab",              /* Unixware */
-    "/etc/fstab",               /* openbsd */
-    "/etc/default/filesys",     /* sco */
-    "/etc/fstab",               /* darwin */
-    "/etc/fstab",               /* qnx */
-    "/etc/fstab",               /* dragonfly */
-    "",                         /* mingw */
-    "/etc/fstab",               /* vmware */
+    [PLATFORM_CONTEXT_UNKNOWN] = "-",
+    [PLATFORM_CONTEXT_OPENVZ] = "/etc/fstab",               /* virt_host_vz_vzps */
+    [PLATFORM_CONTEXT_HP] = "/etc/fstab",               /* hpux */
+    [PLATFORM_CONTEXT_AIX] = "/etc/filesystems",         /* aix */
+    [PLATFORM_CONTEXT_LINUX] = "/etc/fstab",               /* linux */
+    [PLATFORM_CONTEXT_SOLARIS] = "/etc/vfstab",              /* solaris */
+    [PLATFORM_CONTEXT_FREEBSD] = "/etc/fstab",               /* freebsd */
+    [PLATFORM_CONTEXT_NETBSD] = "/etc/fstab",               /* netbsd */
+    [PLATFORM_CONTEXT_CRAYOS] = "/etc/fstab",               /* cray */
+    [PLATFORM_CONTEXT_WINDOWS_NT] = "/etc/fstab",               /* NT */
+    [PLATFORM_CONTEXT_SYSTEMV] = "/etc/vfstab",              /* Unixware */
+    [PLATFORM_CONTEXT_OPENBSD] = "/etc/fstab",               /* openbsd */
+    [PLATFORM_CONTEXT_CFSCO] = "/etc/default/filesys",     /* sco */
+    [PLATFORM_CONTEXT_DARWIN] = "/etc/fstab",               /* darwin */
+    [PLATFORM_CONTEXT_QNX] = "/etc/fstab",               /* qnx */
+    [PLATFORM_CONTEXT_DRAGONFLY] = "/etc/fstab",               /* dragonfly */
+    [PLATFORM_CONTEXT_MINGW] = "",                         /* mingw */
+    [PLATFORM_CONTEXT_VMWARE] = "/etc/fstab",               /* vmware */
 };
 

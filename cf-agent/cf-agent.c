@@ -24,6 +24,7 @@
 
 #include <generic_agent.h>
 
+#include <actuator.h>
 #include <audit.h>
 #include <env_context.h>
 #include <verify_classes.h>
@@ -152,7 +153,7 @@ static void KeepAgentPromise(EvalContext *ctx, Promise *pp, void *param);
 static int NewTypeContext(EvalContext *ctx, TypeSequence type);
 static void DeleteTypeContext(EvalContext *ctx, Bundle *bp, TypeSequence type);
 static void ClassBanner(EvalContext *ctx, TypeSequence type);
-static void ParallelFindAndVerifyFilesPromises(EvalContext *ctx, Promise *pp);
+static PromiseResult ParallelFindAndVerifyFilesPromises(EvalContext *ctx, Promise *pp);
 static bool VerifyBootstrap(EvalContext *ctx);
 static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, GenericAgentConfig *config);
 static void KeepPromises(EvalContext *ctx, Policy *policy, GenericAgentConfig *config);
@@ -1305,7 +1306,7 @@ static void CheckAgentAccess(Rlist *list, const Policy *policy)
 
 /**************************************************************/
 
-static void DefaultVarPromise(EvalContext *ctx, const Promise *pp)
+static PromiseResult DefaultVarPromise(EvalContext *ctx, const Promise *pp)
 {
     char *regex = ConstraintGetRvalValue(ctx, "if_match_regex", pp, RVAL_TYPE_SCALAR);
     Rval rval;
@@ -1326,12 +1327,12 @@ static void DefaultVarPromise(EvalContext *ctx, const Promise *pp)
     case DATA_TYPE_REAL:
         if (regex && !FullTextMatch(ctx, regex, rval.item))
         {
-            return;
+            return PROMISE_RESULT_NOOP;
         }
 
         if (regex == NULL)
         {
-            return;
+            return PROMISE_RESULT_NOOP;
         }
         break;
 
@@ -1351,7 +1352,7 @@ static void DefaultVarPromise(EvalContext *ctx, const Promise *pp)
 
             if (okay)
             {
-                return;
+                return PROMISE_RESULT_NOOP;
             }
         }
         break;
@@ -1366,7 +1367,7 @@ static void DefaultVarPromise(EvalContext *ctx, const Promise *pp)
         VarRefDestroy(ref);
     }
 
-    VerifyVarPromise(ctx, pp, true);
+    return VerifyVarPromise(ctx, pp, true);
 }
 
 static void KeepAgentPromise(EvalContext *ctx, Promise *pp, ARG_UNUSED void *param)
@@ -1651,7 +1652,7 @@ static void ClassBanner(EvalContext *ctx, TypeSequence type)
 
 #ifdef __MINGW32__
 
-static void ParallelFindAndVerifyFilesPromises(EvalContext *ctx, Promise *pp)
+static PromiseResult ParallelFindAndVerifyFilesPromises(EvalContext *ctx, Promise *pp)
 {
     int background = PromiseGetConstraintAsBoolean(ctx, "background", pp);
 
@@ -1660,15 +1661,16 @@ static void ParallelFindAndVerifyFilesPromises(EvalContext *ctx, Promise *pp)
         Log(LOG_LEVEL_VERBOSE, "Background processing of files promises is not supported on Windows");
     }
 
-    FindAndVerifyFilesPromises(ctx, pp);
+    return FindAndVerifyFilesPromises(ctx, pp);
 }
 
 #else /* !__MINGW32__ */
 
-static void ParallelFindAndVerifyFilesPromises(EvalContext *ctx, Promise *pp)
+static PromiseResult ParallelFindAndVerifyFilesPromises(EvalContext *ctx, Promise *pp)
 {
     int background = PromiseGetConstraintAsBoolean(ctx, "background", pp);
     pid_t child = 1;
+    PromiseResult result = PROMISE_RESULT_NOOP;
 
     if (background)
     {
@@ -1682,25 +1684,26 @@ static void ParallelFindAndVerifyFilesPromises(EvalContext *ctx, Promise *pp)
             {
                 ALARM_PID = -1;
 
-                FindAndVerifyFilesPromises(ctx, pp);
+                result = PromiseResultUpdate(result, FindAndVerifyFilesPromises(ctx, pp));
 
                 Log(LOG_LEVEL_VERBOSE, "Exiting backgrounded promise");
                 PromiseRef(LOG_LEVEL_VERBOSE, pp);
                 _exit(0);
+                // TODO: need to solve this
             }
         }
         else
         {
-            Log(LOG_LEVEL_VERBOSE,
-                  " !> Promised parallel execution promised but exceeded the max number of promised background tasks, so serializing");
+            Log(LOG_LEVEL_VERBOSE, "Promised parallel execution promised but exceeded the max number of promised background tasks, so serializing");
             background = 0;
         }
     }
-
-    if (!background)
+    else
     {
-        FindAndVerifyFilesPromises(ctx, pp);
+        result = PromiseResultUpdate(result, FindAndVerifyFilesPromises(ctx, pp));
     }
+
+    return result;
 }
 
 #endif /* !__MINGW32__ */

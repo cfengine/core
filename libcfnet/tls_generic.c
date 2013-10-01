@@ -286,7 +286,7 @@ static bool find_newline(char *buffer, size_t *length)
 int TLSRecvLine(SSL *ssl, char *buf, size_t buf_size)
 {
     int ret;
-    int got = 0;
+    size_t got = 0;
     buf_size -= 1;               /* Reserve one space for terminating '\0' */
     bool found = false;
 
@@ -313,5 +313,5 @@ int TLSRecvLine(SSL *ssl, char *buf, size_t buf_size)
         Log(LOG_LEVEL_ERR, "No new line found and the buffer is already full");
         return -1;
     }
-    return got;
+    return (int)got;
 }

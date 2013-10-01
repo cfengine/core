@@ -16,7 +16,7 @@ libstr_la_LIBADD = libtest.la
 
 
 check_LTLIBRARIES += libdb.la
-libdb_la_SOURCES = ../../libpromises/dbm_api.c ../../libpromises/dbm_quick.c ../../libpromises/dbm_tokyocab.c ../../libpromises/dbm_migration.c ../../libpromises/dbm_migration_lastseen.c ../../libpromises/dbm_migration_bundles.c ../../libutils/atexit.c
+libdb_la_SOURCES = ../../libpromises/dbm_api.c ../../libpromises/dbm_quick.c ../../libpromises/dbm_tokyocab.c ../../libpromises/dbm_lmdb.c ../../libpromises/dbm_migration.c ../../libpromises/dbm_migration_lastseen.c ../../libpromises/dbm_migration_bundles.c ../../libutils/atexit.c
 if HPUX
 libdb_la_SOURCES += ../../libpromises/cf3globals.c
 endif
@@ -88,7 +88,8 @@ check_PROGRAMS = \
 	mon_processes_test \
 	mustache_test \
 	class_test \
-	tls_generic_test
+	tls_generic_test \
+	version_test
 
 if HAVE_AVAHI_CLIENT
 if HAVE_AVAHI_COMMON
@@ -266,4 +267,6 @@ mon_processes_test_SOURCES = mon_processes_test.c ../../cf-monitord/mon.h ../../
 mon_processes_test_LDADD = ../../libpromises/libpromises.la libtest.la
 tls_generic_test_SOURCES = tls_generic_test.c 
 tls_generic_test_LDADD = libtest.la ../../libutils/libutils.la ../../libpromises/libpromises.la ../../libcfnet/libcfnet.la
+
+version_test_SOURCES = version_test.c
 

@@ -19,6 +19,7 @@ libpromises_la_SOURCES = \
         cf3parse.y cf3parse.h \
         cf3lex.l \
         acl_tools.h acl_tools_posix.c \
+        actuator.c actuator.h \
         addr_lib.c addr_lib.h \
         args.c args.h \
         assoc.c assoc.h \
@@ -38,6 +39,7 @@ libpromises_la_SOURCES = \
         dbm_migration.c dbm_migration.h \
         dbm_migration_lastseen.c \
         dbm_migration_bundles.c \
+        dbm_lmdb.c \
         dbm_quick.c \
         dbm_tokyocab.c \
         dir.h dir_priv.h \
@@ -153,16 +155,18 @@ libpromises_la_SOURCES += \
         unix_dir.c
 endif
 
-BUILT_SOURCES = cf3parse.h enterprise_extension.c enterprise_extension.h
+BUILT_SOURCES = cf3lex.c cf3parse.h cf3parse.c \
+	$(srcdir)/enterprise_extension.c \
+	$(srcdir)/enterprise_extension.h
 
-ENTERPRISE_EXTENSION_GENERATE = $(SED) -f enterprise_extension.sed $< > $@
+ENTERPRISE_EXTENSION_GENERATE = $(SED) -f $(srcdir)/enterprise_extension.sed $< > $@
 ENTERPRISE_EXTENSION_MAKE = @if test -z "$(V)"; then echo "  SED   " $@; else echo "$(ENTERPRISE_EXTENSION_GENERATE)"; fi; $(ENTERPRISE_EXTENSION_GENERATE)
-enterprise_extension.c: extensions_template.c enterprise_extension.sed
+$(srcdir)/enterprise_extension.c: extensions_template.c enterprise_extension.sed
 	$(ENTERPRISE_EXTENSION_MAKE)
-enterprise_extension.h: extensions_template.h enterprise_extension.sed
+$(srcdir)/enterprise_extension.h: extensions_template.h enterprise_extension.sed
 	$(ENTERPRISE_EXTENSION_MAKE)
 
-CLEANFILES = *.gcno *.gcda enterprise_extension.c enterprise_extension.h
+CLEANFILES = *.gcno *.gcda $(BUILT_SOURCES)
 
 #
 # Some basic clean ups

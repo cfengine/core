@@ -6,6 +6,7 @@
 
 static void tests_setup(void)
 {
+    OpenSSL_add_all_digests();
     /* FIXME: get rid of hardcoded filenames */
     snprintf(CFWORKDIR, CF_BUFSIZE, "/tmp/persistent_lock_test.XXXXXX");
     mkdtemp(CFWORKDIR);
@@ -29,7 +30,6 @@ static void test_lock_acquire_by_id(void)
     
     result = AcquireLockByID(lock_id, 1);
     assert_true(result);
-    
     result = AcquireLockByID(lock_id, 1);
     assert_false(result);
 

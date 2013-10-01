@@ -45,9 +45,49 @@ static char CFLOG[CF_BUFSIZE] = { 0 };
 
 static pthread_once_t lock_cleanup_once = PTHREAD_ONCE_INIT;
 
+
+#ifdef LMDB
+static void GenerateMd5Hash(const char *istring, char *ohash)
+{
+    if (!strcmp(istring, "CF_CRITICAL_SECTION") ||
+        !strncmp(istring, "lock.track_license_bundle.track_license", 39))
+    { 
+        strcpy(ohash, istring);
+        return;
+    }
+
+    unsigned char digest[EVP_MAX_MD_SIZE + 1];
+    HashString(istring, strlen(istring), digest, HASH_METHOD_MD5);
+
+    const char lookup[]="0123456789abcdef";
+    for (int i=0; i<16; i++)
+    {
+        ohash[i*2]   = lookup[digest[i] >> 4];
+        ohash[i*2+1] = lookup[digest[i] & 0xf];
+    }
+    ohash[16*2] = '\0';
+}
+#endif
+
 static bool WriteLockData(CF_DB *dbp, const char *lock_id, LockData *lock_data)
 {
+#ifdef LMDB
+    unsigned char digest2[EVP_MAX_MD_SIZE*2 + 1];
+
+    if (!strcmp(lock_id, "CF_CRITICAL_SECTION") ||
+        !strncmp(lock_id, "lock.track_license_bundle.track_license", 39))
+    {
+        strcpy(digest2, lock_id);
+    }
+    else
+    {
+        GenerateMd5Hash(lock_id, digest2);
+    }
+
+    if(WriteDB(dbp, digest2, lock_data, sizeof(LockData)))
+#else
     if(WriteDB(dbp, lock_id, lock_data, sizeof(LockData)))
+#endif
     {
         return true;
     }
@@ -92,7 +132,14 @@ bool AcquireLockByID(const char *lock_id, int acquire_after_minutes)
         .process_start_time = PROCESS_START_TIME_UNKNOWN,
     };
 
+#ifdef LMDB
+    unsigned char ohash[EVP_MAX_MD_SIZE*2 + 1];
+    GenerateMd5Hash(lock_id, ohash);
+
+    if (ReadDB(dbp, ohash, &lock_data, sizeof(lock_data)))
+#else
     if (ReadDB(dbp, lock_id, &lock_data, sizeof(lock_data)))
+#endif
     {
         if(lock_data.time + (acquire_after_minutes * SECONDS_PER_MINUTE) < time(NULL))
         {
@@ -125,7 +172,14 @@ time_t FindLockTime(const char *name)
         return -1;
     }
 
+#ifdef LMDB
+    unsigned char ohash[EVP_MAX_MD_SIZE*2 + 1];
+    GenerateMd5Hash(name, ohash);
+
+    if (ReadDB(dbp, ohash, &entry, sizeof(entry)))
+#else
     if (ReadDB(dbp, name, &entry, sizeof(entry)))
+#endif
     {
         CloseLock(dbp);
         return entry.time;
@@ -152,7 +206,14 @@ bool InvalidateLockTime(const char *lock_id)
         .process_start_time = PROCESS_START_TIME_UNKNOWN,
     };
 
+#ifdef LMDB
+    unsigned char ohash[EVP_MAX_MD_SIZE*2 + 1];
+    GenerateMd5Hash(lock_id, ohash);
+
+    if(!ReadDB(dbp, ohash, &lock_data, sizeof(lock_data)))
+#else
     if(!ReadDB(dbp, lock_id, &lock_data, sizeof(lock_data)))
+#endif
     {
         CloseLock(dbp);
         return true;  /* nothing to invalidate */
@@ -304,7 +365,14 @@ static pid_t FindLockPid(char *name)
         return -1;
     }
 
+#ifdef LMDB
+    unsigned char ohash[EVP_MAX_MD_SIZE*2 + 1];
+    GenerateMd5Hash(name, ohash);
+
+    if (ReadDB(dbp, ohash, &entry, sizeof(entry)))
+#else
     if (ReadDB(dbp, name, &entry, sizeof(entry)))
+#endif
     {
         CloseLock(dbp);
         return entry.pid;
@@ -349,15 +417,6 @@ static void LogLockCompletion(char *cflog, int pid, char *str, char *operator, c
     fprintf(fp, "%s:%s:pid=%d:%s:%s\n", buffer, str, pid, operator, operand);
 
     fclose(fp);
-
-    if (stat(cflog, &statbuf) != -1)
-    {
-        if (statbuf.st_size > CFLOGSIZE)
-        {
-            Log(LOG_LEVEL_VERBOSE, "Rotating lock-runlog file");
-            RotateFiles(cflog, 2);
-        }
-    }
 }
 
 static void LocksCleanup(void)
@@ -439,7 +498,14 @@ static bool KillLockHolder(const char *lock)
         .process_start_time = PROCESS_START_TIME_UNKNOWN,
     };
 
+#ifdef LMDB
+    unsigned char ohash[EVP_MAX_MD_SIZE*2 + 1];
+    GenerateMd5Hash(lock, ohash);
+
+    if (!ReadDB(dbp, ohash, &lock_data, sizeof(lock_data)))
+#else
     if (!ReadDB(dbp, lock, &lock_data, sizeof(lock_data)))
+#endif
     {
         /* No lock found */
         CloseLock(dbp);
@@ -760,15 +826,17 @@ CfLock AcquireLock(EvalContext *ctx, const char *operand, const char *host, time
             }
         }
 
-        WriteLock(cflock);
+        int ret = WriteLock(cflock);
+        if (ret != -1);
+        {
+            /* Register a cleanup handler *after* having opened the DB, so that
+             * CloseAllDB() atexit() handler is registered in advance, and it is
+             * called after removing this lock.
 
-        /* Register a cleanup handler *after* having opened the DB, so that
-         * CloseAllDB() atexit() handler is registered in advance, and it is
-         * called after removing this lock.
-
-         * There is a small race condition here that we'll leave a stale lock
-         * if we exit before the following line. */
-        pthread_once(&lock_cleanup_once, &RegisterLockCleanup);
+             * There is a small race condition here that we'll leave a stale lock
+             * if we exit before the following line. */
+            pthread_once(&lock_cleanup_once, &RegisterLockCleanup);
+        }
     }
 
     ReleaseCriticalSection();
@@ -891,7 +959,14 @@ void PurgeLocks(void)
 
     memset(&entry, 0, sizeof(entry));
 
+#ifdef LMDB
+    unsigned char ohash[EVP_MAX_MD_SIZE*2 + 1];
+    GenerateMd5Hash("lock_horizon", ohash);
+
+    if (ReadDB(dbp, ohash, &entry, sizeof(entry)))
+#else
     if (ReadDB(dbp, "lock_horizon", &entry, sizeof(entry)))
+#endif
     {
         if (now - entry.time < SECONDS_PER_WEEK * 4)
         {

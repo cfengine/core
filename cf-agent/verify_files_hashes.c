@@ -41,7 +41,7 @@
  * 1 byte     \0
  * N bytes    filename
  */
-static char *NewIndexKey(char type, char *name, int *size)
+static char *NewIndexKey(char type, const char *name, int *size)
 {
     char *chk_key;
 
@@ -81,7 +81,7 @@ static void DeleteHashValue(ChecksumValue *chk_val)
     free((char *) chk_val);
 }
 
-static int ReadHash(CF_DB *dbp, HashMethod type, char *name, unsigned char digest[EVP_MAX_MD_SIZE + 1])
+static int ReadHash(CF_DB *dbp, HashMethod type, const char *name, unsigned char digest[EVP_MAX_MD_SIZE + 1])
 {
     char *key;
     int size;
@@ -103,7 +103,7 @@ static int ReadHash(CF_DB *dbp, HashMethod type, char *name, unsigned char diges
     }
 }
 
-static int WriteHash(CF_DB *dbp, HashMethod type, char *name, unsigned char digest[EVP_MAX_MD_SIZE + 1])
+static int WriteHash(CF_DB *dbp, HashMethod type, const char *name, unsigned char digest[EVP_MAX_MD_SIZE + 1])
 {
     char *key;
     ChecksumValue *value;
@@ -117,7 +117,7 @@ static int WriteHash(CF_DB *dbp, HashMethod type, char *name, unsigned char dige
     return ret;
 }
 
-static void DeleteHash(CF_DB *dbp, HashMethod type, char *name)
+static void DeleteHash(CF_DB *dbp, HashMethod type, const char *name)
 {
     int size;
     char *key;
@@ -132,7 +132,7 @@ static void DeleteHash(CF_DB *dbp, HashMethod type, char *name)
    to the database. Returns true if hashes do not match and also potentially
    updates database to the new value */
 
-int FileHashChanged(EvalContext *ctx, char *filename, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMethod type,
+int FileHashChanged(EvalContext *ctx, const char *filename, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMethod type,
                     Attributes attr, Promise *pp, PromiseResult *result)
 {
     int i, size = 21;
@@ -203,7 +203,7 @@ int FileHashChanged(EvalContext *ctx, char *filename, unsigned char digest[EVP_M
     }
 }
 
-int CompareFileHashes(char *file1, char *file2, struct stat *sstat, struct stat *dstat, FileCopy fc, AgentConnection *conn)
+int CompareFileHashes(const char *file1, const char *file2, struct stat *sstat, struct stat *dstat, FileCopy fc, AgentConnection *conn)
 {
     unsigned char digest1[EVP_MAX_MD_SIZE + 1] = { 0 }, digest2[EVP_MAX_MD_SIZE + 1] = { 0 };
     int i;
@@ -236,7 +236,7 @@ int CompareFileHashes(char *file1, char *file2, struct stat *sstat, struct stat 
     }
 }
 
-int CompareBinaryFiles(char *file1, char *file2, struct stat *sstat, struct stat *dstat, FileCopy fc, AgentConnection *conn)
+int CompareBinaryFiles(const char *file1, const char *file2, struct stat *sstat, struct stat *dstat, FileCopy fc, AgentConnection *conn)
 {
     int fd1, fd2, bytes1, bytes2;
     char buff1[BUFSIZ], buff2[BUFSIZ];
@@ -363,7 +363,7 @@ static char FileStateToChar(FileState status)
     }
 }
 
-void LogHashChange(char *file, FileState status, char *msg, Promise *pp)
+void LogHashChange(const char *file, FileState status, char *msg, Promise *pp)
 {
     FILE *fp;
     char fname[CF_BUFSIZE];

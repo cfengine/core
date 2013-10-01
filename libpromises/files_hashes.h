@@ -27,7 +27,7 @@
 
 #include <cf3.defs.h>
 
-void HashFile(char *filename, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMethod type);
+void HashFile(const char *filename, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMethod type);
 void HashString(const char *buffer, int len, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMethod type);
 int HashesMatch(unsigned char digest1[EVP_MAX_MD_SIZE + 1], unsigned char digest2[EVP_MAX_MD_SIZE + 1],
                 HashMethod type);

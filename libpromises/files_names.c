@@ -120,7 +120,7 @@ int IsNewerFileTree(char *dir, time_t reftime)
 
 /*********************************************************************/
 
-int IsDir(char *path)
+int IsDir(const char *path)
 /*
 Checks if the object pointed to by path exists and is a directory.
 Returns true if so, false otherwise.

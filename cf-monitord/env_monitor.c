@@ -95,7 +95,7 @@ static void GetDatabaseAge(void);
 static void LoadHistogram(void);
 static void GetQ(EvalContext *ctx, const Policy *policy);
 static Averages EvalAvQ(EvalContext *ctx, char *timekey);
-static void ArmClasses(EvalContext *ctx, Averages newvals, char *timekey);
+static void ArmClasses(EvalContext *ctx, Averages newvals);
 static void GatherPromisedMeasures(EvalContext *ctx, const Policy *policy);
 
 static void LeapDetection(void);
@@ -104,7 +104,7 @@ static void UpdateAverages(EvalContext *ctx, char *timekey, Averages newvals);
 static void UpdateDistributions(EvalContext *ctx, char *timekey, Averages *av);
 static double WAverage(double newvals, double oldvals, double age);
 static double SetClasses(EvalContext *ctx, char *name, double variable, double av_expect, double av_var, double localav_expect,
-                         double localav_var, Item **classlist, char *timekey);
+                         double localav_var, Item **classlist);
 static void SetVariable(char *name, double now, double average, double stddev, Item **list);
 static double RejectAnomaly(double new, double av, double var, double av2, double var2);
 static void ZeroArrivals(void);
@@ -317,7 +317,7 @@ void MonitorStartServer(EvalContext *ctx, const Policy *policy)
         snprintf(timekey, sizeof(timekey), "%s", GenTimeKey(time(NULL)));
         averages = EvalAvQ(ctx, timekey);
         LeapDetection();
-        ArmClasses(ctx, averages, timekey);
+        ArmClasses(ctx, averages);
 
         ZeroArrivals();
 
@@ -578,7 +578,7 @@ static void AddOpenPortsClasses(const char *name, const Item *value, Item **clas
     }
 }
 
-static void ArmClasses(EvalContext *ctx, Averages av, char *timekey)
+static void ArmClasses(EvalContext *ctx, Averages av)
 {
     double sigma;
     Item *ip,*classlist = NULL;
@@ -593,7 +593,7 @@ static void ArmClasses(EvalContext *ctx, Averages av, char *timekey)
         char desc[CF_BUFSIZE];
 
         GetObservable(i, name, desc);
-        sigma = SetClasses(ctx, name, CF_THIS[i], av.Q[i].expect, av.Q[i].var, LOCALAV.Q[i].expect, LOCALAV.Q[i].var, &classlist, timekey);
+        sigma = SetClasses(ctx, name, CF_THIS[i], av.Q[i].expect, av.Q[i].var, LOCALAV.Q[i].expect, LOCALAV.Q[i].var, &classlist);
         SetVariable(name, CF_THIS[i], av.Q[i].expect, sigma, &classlist);
 
         /* LDT */
@@ -897,7 +897,7 @@ static double WAverage(double anew, double aold, double age)
 /*****************************************************************************/
 
 static double SetClasses(EvalContext *ctx, char *name, double variable, double av_expect, double av_var, double localav_expect,
-                         double localav_var, Item **classlist, char *timekey)
+                         double localav_var, Item **classlist)
 {
     char buffer[CF_BUFSIZE], buffer2[CF_BUFSIZE];
     double dev, delta, sigma, ldelta, lsigma, sig;

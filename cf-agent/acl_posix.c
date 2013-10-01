@@ -47,14 +47,14 @@
 
 #ifdef HAVE_LIBACL
 
-static int CheckPosixLinuxAccessACEs(EvalContext *ctx, Rlist *aces, AclMethod method, char *file_path,
+static int CheckPosixLinuxAccessACEs(EvalContext *ctx, Rlist *aces, AclMethod method, const char *file_path,
                                      Attributes a, Promise *pp, PromiseResult *result);
 static int CheckPosixLinuxDefaultACEs(EvalContext *ctx, Rlist *aces, AclMethod method, AclDefault acl_default,
-                                      char *file_path, Attributes a, Promise *pp, PromiseResult *result);
-static int CheckPosixLinuxACEs(EvalContext *ctx, Rlist *aces, AclMethod method, char *file_path, acl_type_t acl_type, Attributes a,
+                                      const char *file_path, Attributes a, Promise *pp, PromiseResult *result);
+static int CheckPosixLinuxACEs(EvalContext *ctx, Rlist *aces, AclMethod method, const char *file_path, acl_type_t acl_type, Attributes a,
                              Promise *pp, PromiseResult *result);
-static int CheckDefaultEqualsAccessACL(EvalContext *ctx, char *file_path, Attributes a, Promise *pp, PromiseResult *result);
-static int CheckDefaultClearACL(EvalContext *ctx, char *file_path, Attributes a, Promise *pp, PromiseResult *result);
+static int CheckDefaultEqualsAccessACL(EvalContext *ctx, const char *file_path, Attributes a, Promise *pp, PromiseResult *result);
+static int CheckDefaultClearACL(EvalContext *ctx, const char *file_path, Attributes a, Promise *pp, PromiseResult *result);
 static int ParseEntityPosixLinux(char **str, acl_entry_t ace, int *is_mask);
 static int ParseModePosixLinux(char *mode, acl_permset_t old_perms);
 static acl_entry_t FindACE(acl_t acl, acl_entry_t ace_find);
@@ -63,7 +63,7 @@ static int ACECount(acl_t acl);
 static int PermsetEquals(acl_permset_t first, acl_permset_t second);
 
 
-PromiseResult CheckPosixLinuxACL(EvalContext *ctx, char *file_path, Acl acl, Attributes a, Promise *pp)
+PromiseResult CheckPosixLinuxACL(EvalContext *ctx, const char *file_path, Acl acl, Attributes a, Promise *pp)
 {
     PromiseResult result = PROMISE_RESULT_NOOP;
 
@@ -87,14 +87,14 @@ PromiseResult CheckPosixLinuxACL(EvalContext *ctx, char *file_path, Acl acl, Att
     return PROMISE_RESULT_NOOP;
 }
 
-static int CheckPosixLinuxAccessACEs(EvalContext *ctx, Rlist *aces, AclMethod method, char *file_path,
+static int CheckPosixLinuxAccessACEs(EvalContext *ctx, Rlist *aces, AclMethod method, const char *file_path,
                                      Attributes a, Promise *pp, PromiseResult *result)
 {
     return CheckPosixLinuxACEs(ctx, aces, method, file_path, ACL_TYPE_ACCESS, a, pp, result);
 }
 
 static int CheckPosixLinuxDefaultACEs(EvalContext *ctx, Rlist *aces, AclMethod method, AclDefault acl_default,
-                                      char *file_path, Attributes a, Promise *pp, PromiseResult *result)
+                                      const char *file_path, Attributes a, Promise *pp, PromiseResult *result)
 {
     int retval;
 
@@ -135,7 +135,7 @@ static int CheckPosixLinuxDefaultACEs(EvalContext *ctx, Rlist *aces, AclMethod m
    set on the given file. If it doesn't, the ACL on the file is updated.
 */
 
-static int CheckPosixLinuxACEs(EvalContext *ctx, Rlist *aces, AclMethod method, char *file_path, acl_type_t acl_type, Attributes a,
+static int CheckPosixLinuxACEs(EvalContext *ctx, Rlist *aces, AclMethod method, const char *file_path, acl_type_t acl_type, Attributes a,
                                Promise *pp, PromiseResult *result)
 {
     acl_t acl_existing;
@@ -377,7 +377,7 @@ static int CheckPosixLinuxACEs(EvalContext *ctx, Rlist *aces, AclMethod method, 
   Returns 0 on success and -1 on failure.
  */
 
-static int CheckDefaultEqualsAccessACL(EvalContext *ctx, char *file_path, Attributes a, Promise *pp, PromiseResult *result)
+static int CheckDefaultEqualsAccessACL(EvalContext *ctx, const char *file_path, Attributes a, Promise *pp, PromiseResult *result)
 {
     acl_t acl_access;
     acl_t acl_default;
@@ -463,7 +463,7 @@ static int CheckDefaultEqualsAccessACL(EvalContext *ctx, char *file_path, Attrib
   Checks if the default ACL is empty. If not, it is cleared.
 */
 
-int CheckDefaultClearACL(EvalContext *ctx, char *file_path, Attributes a, Promise *pp, PromiseResult *result)
+int CheckDefaultClearACL(EvalContext *ctx, const char *file_path, Attributes a, Promise *pp, PromiseResult *result)
 {
     acl_t acl_existing;
     acl_t acl_empty;

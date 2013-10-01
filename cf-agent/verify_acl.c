@@ -37,17 +37,17 @@
 #define CF_VALID_OPS_METHOD_OVERWRITE "=+-"
 #define CF_VALID_OPS_METHOD_APPEND "=+-"
 
-static int CheckACLSyntax(char *file, Acl acl, Promise *pp);
+static int CheckACLSyntax(const char *file, Acl acl, Promise *pp);
 
-static void SetACLDefaults(char *path, Acl *acl);
+static void SetACLDefaults(const char *path, Acl *acl);
 static int CheckACESyntax(char *ace, char *valid_nperms, char *valid_ops, int deny_support, int mask_support,
                         Promise *pp);
 static int CheckModeSyntax(char **mode_p, char *valid_nperms, char *valid_ops, Promise *pp);
 static int CheckPermTypeSyntax(char *permt, int deny_support, Promise *pp);
-static int CheckAclDefault(char *path, Acl *acl, Promise *pp);
+static int CheckAclDefault(const char *path, Acl *acl, Promise *pp);
 
 
-PromiseResult VerifyACL(EvalContext *ctx, char *file, Attributes a, Promise *pp)
+PromiseResult VerifyACL(EvalContext *ctx, const char *file, Attributes a, Promise *pp)
 {
     if (!CheckACLSyntax(file, a.acl, pp))
     {
@@ -96,7 +96,7 @@ PromiseResult VerifyACL(EvalContext *ctx, char *file, Attributes a, Promise *pp)
     return result;
 }
 
-static int CheckACLSyntax(char *file, Acl acl, Promise *pp)
+static int CheckACLSyntax(const char *file, Acl acl, Promise *pp)
 {
     int valid = true;
     int deny_support = false;
@@ -188,7 +188,7 @@ static int CheckACLSyntax(char *file, Acl acl, Promise *pp)
  * Set unset fields with documented defaults, to these defaults.
  **/
 
-static void SetACLDefaults(char *path, Acl *acl)
+static void SetACLDefaults(const char *path, Acl *acl)
 {
 // default: acl_method => append
 
@@ -212,7 +212,7 @@ static void SetACLDefaults(char *path, Acl *acl)
     }
 }
 
-static int CheckAclDefault(char *path, Acl *acl, Promise *pp)
+static int CheckAclDefault(const char *path, Acl *acl, Promise *pp)
 /*
   Checks that acl_default is set to a valid value for this acl type.
   Returns true if so, or false otherwise.

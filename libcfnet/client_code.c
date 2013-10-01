@@ -782,7 +782,7 @@ const Stat *ClientCacheLookup(AgentConnection *conn, const char *server_name, co
     return NULL;
 }
 
-int CompareHashNet(char *file1, char *file2, bool encrypt, AgentConnection *conn)
+int CompareHashNet(const char *file1, const char *file2, bool encrypt, AgentConnection *conn)
 {
     static unsigned char d[EVP_MAX_MD_SIZE + 1];
     char *sp, sendbuffer[CF_BUFSIZE], recvbuffer[CF_BUFSIZE], in[CF_BUFSIZE], out[CF_BUFSIZE];
@@ -854,7 +854,7 @@ int CompareHashNet(char *file1, char *file2, bool encrypt, AgentConnection *conn
 
 /*********************************************************************/
 
-int EncryptCopyRegularFileNet(char *source, char *new, off_t size, AgentConnection *conn)
+int EncryptCopyRegularFileNet(const char *source, const char *dest, off_t size, AgentConnection *conn)
 {
     int dd, blocksize = 2048, n_read = 0, towrite, plainlen, more = true, finlen, cnt = 0;
     int tosend, cipherlen = 0;
@@ -866,20 +866,20 @@ int EncryptCopyRegularFileNet(char *source, char *new, off_t size, AgentConnecti
 
     snprintf(cfchangedstr, 255, "%s%s", CF_CHANGEDSTR1, CF_CHANGEDSTR2);
 
-    if ((strlen(new) > CF_BUFSIZE - 20))
+    if ((strlen(dest) > CF_BUFSIZE - 20))
     {
         Log(LOG_LEVEL_ERR, "Filename too long");
         return false;
     }
 
-    unlink(new);                /* To avoid link attacks */
+    unlink(dest);                /* To avoid link attacks */
 
-    if ((dd = open(new, O_WRONLY | O_CREAT | O_TRUNC | O_EXCL | O_BINARY, 0600)) == -1)
+    if ((dd = open(dest, O_WRONLY | O_CREAT | O_TRUNC | O_EXCL | O_BINARY, 0600)) == -1)
     {
         Log(LOG_LEVEL_ERR,
             "NetCopy to destination '%s:%s' security - failed attempt to exploit a race? (Not copied). (open: %s)",
-            conn->this_server, new, GetErrorStr());
-        unlink(new);
+            conn->this_server, dest, GetErrorStr());
+        unlink(dest);
         return false;
     }
 
@@ -960,16 +960,16 @@ int EncryptCopyRegularFileNet(char *source, char *new, off_t size, AgentConnecti
 
         n_read_total += n_read;
 
-        if (!FSWrite(new, dd, workbuf, towrite))
+        if (!FSWrite(dest, dd, workbuf, towrite))
         {
             Log(LOG_LEVEL_ERR, "Local disk write failed copying '%s:%s' to '%s:%s'",
-                conn->this_server, source, new, GetErrorStr());
+                conn->this_server, source, dest, GetErrorStr());
             if (conn)
             {
                 conn->error = true;
             }
             free(buf);
-            unlink(new);
+            unlink(dest);
             close(dd);
             EVP_CIPHER_CTX_cleanup(&crypto_ctx);
             return false;
@@ -984,9 +984,9 @@ int EncryptCopyRegularFileNet(char *source, char *new, off_t size, AgentConnecti
     if (ftruncate(dd, n_read_total) < 0)
     {
         Log(LOG_LEVEL_ERR, "Copy failed (no space?) while copying '%s' from network '%s'",
-            new, GetErrorStr());
+            dest, GetErrorStr());
         free(buf);
-        unlink(new);
+        unlink(dest);
         close(dd);
         EVP_CIPHER_CTX_cleanup(&crypto_ctx);
         return false;
@@ -998,7 +998,7 @@ int EncryptCopyRegularFileNet(char *source, char *new, off_t size, AgentConnecti
     return true;
 }
 
-int CopyRegularFileNet(char *source, char *new, off_t size, bool encrypt, AgentConnection *conn)
+int CopyRegularFileNet(const char *source, const char *dest, off_t size, bool encrypt, AgentConnection *conn)
 {
     int dd, buf_size, n_read = 0, toget, towrite;
     int done = false, tosend, value;
@@ -1013,25 +1013,25 @@ int CopyRegularFileNet(char *source, char *new, off_t size, bool encrypt, AgentC
 
     if (encrypt)
     {
-        return EncryptCopyRegularFileNet(source, new, size, conn);
+        return EncryptCopyRegularFileNet(source, dest, size, conn);
     }
 
     snprintf(cfchangedstr, 255, "%s%s", CF_CHANGEDSTR1, CF_CHANGEDSTR2);
 
-    if ((strlen(new) > CF_BUFSIZE - 20))
+    if ((strlen(dest) > CF_BUFSIZE - 20))
     {
         Log(LOG_LEVEL_ERR, "Filename too long");
         return false;
     }
 
-    unlink(new);                /* To avoid link attacks */
+    unlink(dest);                /* To avoid link attacks */
 
-    if ((dd = open(new, O_WRONLY | O_CREAT | O_TRUNC | O_EXCL | O_BINARY, 0600)) == -1)
+    if ((dd = open(dest, O_WRONLY | O_CREAT | O_TRUNC | O_EXCL | O_BINARY, 0600)) == -1)
     {
         Log(LOG_LEVEL_ERR,
             "NetCopy to destination '%s:%s' security - failed attempt to exploit a race? (Not copied) (open: %s)",
-            conn->this_server, new, GetErrorStr());
-        unlink(new);
+            conn->this_server, dest, GetErrorStr());
+        unlink(dest);
         return false;
     }
 
@@ -1132,16 +1132,16 @@ int CopyRegularFileNet(char *source, char *new, off_t size, bool encrypt, AgentC
             return false;
         }
 
-        if (!FSWrite(new, dd, buf, n_read))
+        if (!FSWrite(dest, dd, buf, n_read))
         {
             Log(LOG_LEVEL_ERR, "Local disk write failed copying '%s:%s' to '%s'. (FSWrite: %s)",
-                conn->this_server, source, new, GetErrorStr());
+                conn->this_server, source, dest, GetErrorStr());
             if (conn)
             {
                 conn->error = true;
             }
             free(buf);
-            unlink(new);
+            unlink(dest);
             close(dd);
             FlushFileStream(conn->conn_info.sd, size - n_read_total);
             EVP_CIPHER_CTX_cleanup(&crypto_ctx);
@@ -1164,9 +1164,9 @@ int CopyRegularFileNet(char *source, char *new, off_t size, bool encrypt, AgentC
     if (ftruncate(dd, n_read_total) < 0)
     {
         Log(LOG_LEVEL_ERR, "Copy failed (no space?) while copying '%s' from network '%s'",
-            new, GetErrorStr());
+            dest, GetErrorStr());
         free(buf);
-        unlink(new);
+        unlink(dest);
         close(dd);
         FlushFileStream(conn->conn_info.sd, size - n_read_total);
         return false;

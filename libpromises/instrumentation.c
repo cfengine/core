@@ -171,9 +171,9 @@ static void NotePerformance(char *eventname, time_t t, double value)
 
 static bool IsContextIgnorableForReporting(const char *context_name)
 {
-    char *ptr = context_name;
+    const char *ptr = context_name;
     // contexts beginning with "GMT_" will have that prefix stripped
-    if (strncmp(ptr,"GMT_",4) == 0 && strlen(ptr) > 4)
+    if (strncmp(ptr,"GMT_", 4) == 0 && strlen(ptr) > 4)
     {
         ptr += 4;
     }

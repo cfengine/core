@@ -43,9 +43,10 @@ PromiseResult ScheduleLinkChildrenOperation(EvalContext *ctx, char *destination,
 PromiseResult ScheduleLinkOperation(EvalContext *ctx, char *destination, char *source, Attributes attr, Promise *pp);
 PromiseResult ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes attr, Promise *pp);
 
-bool CopyRegularFile(EvalContext *ctx, char *source, char *dest, struct stat sstat, struct stat dstat, Attributes attr, Promise *pp, CompressedArray **inode_cache, AgentConnection *conn, PromiseResult *result);
+bool CopyRegularFile(EvalContext *ctx, const char *source, const char *dest, struct stat sstat, struct stat dstat,
+                     Attributes attr, Promise *pp, CompressedArray **inode_cache, AgentConnection *conn, PromiseResult *result);
 
 /* To be implemented in Nova for Win32 */
-bool VerifyOwner(EvalContext *ctx, char *file, Promise *pp, Attributes attr, struct stat *sb, PromiseResult *result);
+bool VerifyOwner(EvalContext *ctx, const char *file, Promise *pp, Attributes attr, struct stat *sb, PromiseResult *result);
 
 #endif

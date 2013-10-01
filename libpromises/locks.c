@@ -384,11 +384,10 @@ static pid_t FindLockPid(char *name)
     }
 }
 
-static void LogLockCompletion(char *cflog, int pid, char *str, char *operator, char *operand)
+static void LogLockCompletion(char *cflog, int pid, char *str, char *op, char *operand)
 {
     FILE *fp;
     char buffer[CF_MAXVARSIZE];
-    struct stat statbuf;
     time_t tim;
 
     if (cflog == NULL)
@@ -414,7 +413,7 @@ static void LogLockCompletion(char *cflog, int pid, char *str, char *operator, c
         Log(LOG_LEVEL_ERR, "Chop was called on a string that seemed to have no terminator");
     }
 
-    fprintf(fp, "%s:%s:pid=%d:%s:%s\n", buffer, str, pid, operator, operand);
+    fprintf(fp, "%s:%s:pid=%d:%s:%s\n", buffer, str, pid, op, operand);
 
     fclose(fp);
 }

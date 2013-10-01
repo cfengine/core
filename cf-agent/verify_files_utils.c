@@ -77,7 +77,7 @@ static PromiseResult VerifyName(EvalContext *ctx, char *path, struct stat *sb, A
 static PromiseResult VerifyDelete(EvalContext *ctx, char *path, struct stat *sb, Attributes attr, Promise *pp);
 static PromiseResult VerifyCopy(EvalContext *ctx, char *source, char *destination, Attributes attr, Promise *pp, CompressedArray **inode_cache, AgentConnection *conn);
 static PromiseResult TouchFile(EvalContext *ctx, char *path, Attributes attr, Promise *pp);
-static PromiseResult VerifyFileAttributes(EvalContext *ctx, char *file, struct stat *dstat, Attributes attr, Promise *pp);
+static PromiseResult VerifyFileAttributes(EvalContext *ctx, const char *file, struct stat *dstat, Attributes attr, Promise *pp);
 static int PushDirState(EvalContext *ctx, char *name, struct stat *sb);
 static bool PopDirState(int goback, char *name, struct stat *sb, Recursion r);
 static bool CheckLinkSecurity(struct stat *sb, char *name);
@@ -95,13 +95,13 @@ static int DeviceBoundary(struct stat *sb, dev_t rootdevice);
 static PromiseResult LinkCopy(EvalContext *ctx, char *sourcefile, char *destfile, struct stat *sb, Attributes attr, Promise *pp, CompressedArray **inode_cache, AgentConnection *conn);
 
 #ifndef __MINGW32__
-static PromiseResult VerifySetUidGid(EvalContext *ctx, char *file, struct stat *dstat, mode_t newperm, Promise *pp, Attributes attr);
+static PromiseResult VerifySetUidGid(EvalContext *ctx, const char *file, struct stat *dstat, mode_t newperm, Promise *pp, Attributes attr);
 #endif
 #ifdef __APPLE__
 static int VerifyFinderType(EvalContext *ctx, char *file, Attributes a, Promise *pp);
 #endif
-static void VerifyFileChanges(char *file, struct stat *sb, Attributes attr, Promise *pp);
-static PromiseResult VerifyFileIntegrity(EvalContext *ctx, char *file, Attributes attr, Promise *pp);
+static void VerifyFileChanges(const char *file, struct stat *sb, Attributes attr, Promise *pp);
+static PromiseResult VerifyFileIntegrity(EvalContext *ctx, const char *file, Attributes attr, Promise *pp);
 
 void SetFileAutoDefineList(Rlist *auto_define_list)
 {
@@ -534,7 +534,8 @@ static PromiseResult CfCopyFile(EvalContext *ctx, char *sourcefile, char *destfi
     return result;
 }
 
-static PromiseResult PurgeLocalFiles(EvalContext *ctx, Item *filelist, char *localdir, Attributes attr, Promise *pp, AgentConnection *conn)
+static PromiseResult PurgeLocalFiles(EvalContext *ctx, Item *filelist, const char *localdir, Attributes attr,
+                                     Promise *pp, AgentConnection *conn)
 {
     Dir *dirh;
     struct stat sb;
@@ -1090,7 +1091,7 @@ static PromiseResult LinkCopy(EvalContext *ctx, char *sourcefile, char *destfile
 }
 #endif /* !__MINGW32__ */
 
-bool CopyRegularFile(EvalContext *ctx, char *source, char *dest, struct stat sstat, struct stat dstat,
+bool CopyRegularFile(EvalContext *ctx, const char *source, const char *dest, struct stat sstat, struct stat dstat,
                      Attributes attr, Promise *pp, CompressedArray **inode_cache,
                      AgentConnection *conn, PromiseResult *result)
 {
@@ -1856,7 +1857,7 @@ static PromiseResult TouchFile(EvalContext *ctx, char *path, Attributes attr, Pr
     return result;
 }
 
-PromiseResult VerifyFileAttributes(EvalContext *ctx, char *file, struct stat *dstat, Attributes attr, Promise *pp)
+PromiseResult VerifyFileAttributes(EvalContext *ctx, const char *file, struct stat *dstat, Attributes attr, Promise *pp)
 {
     PromiseResult result = PROMISE_RESULT_NOOP;
 
@@ -2608,7 +2609,7 @@ PromiseResult ScheduleLinkChildrenOperation(EvalContext *ctx, char *destination,
     return result;
 }
 
-static PromiseResult VerifyFileIntegrity(EvalContext *ctx, char *file, Attributes attr, Promise *pp)
+static PromiseResult VerifyFileIntegrity(EvalContext *ctx, const char *file, Attributes attr, Promise *pp)
 {
     unsigned char digest1[EVP_MAX_MD_SIZE + 1];
     unsigned char digest2[EVP_MAX_MD_SIZE + 1];
@@ -2765,7 +2766,7 @@ static void FileAutoDefine(EvalContext *ctx, char *destfile, const char *ns)
 }
 
 #ifndef __MINGW32__
-static PromiseResult VerifySetUidGid(EvalContext *ctx, char *file, struct stat *dstat, mode_t newperm, Promise *pp, Attributes attr)
+static PromiseResult VerifySetUidGid(EvalContext *ctx, const char *file, struct stat *dstat, mode_t newperm, Promise *pp, Attributes attr)
 {
     int amroot = true;
     PromiseResult result = PROMISE_RESULT_NOOP;
@@ -3092,7 +3093,7 @@ static int SkipDirLinks(EvalContext *ctx, char *path, const char *lastnode, Recu
 
 #ifndef __MINGW32__
 
-bool VerifyOwner(EvalContext *ctx, char *file, Promise *pp, Attributes attr, struct stat *sb, PromiseResult *result)
+bool VerifyOwner(EvalContext *ctx, const char *file, Promise *pp, Attributes attr, struct stat *sb, PromiseResult *result)
 {
     struct passwd *pw;
     struct group *gp;
@@ -3260,7 +3261,7 @@ bool VerifyOwner(EvalContext *ctx, char *file, Promise *pp, Attributes attr, str
 
 #endif /* !__MINGW32__ */
 
-static void VerifyFileChanges(char *file, struct stat *sb, Attributes attr, Promise *pp)
+static void VerifyFileChanges(const char *file, struct stat *sb, Attributes attr, Promise *pp)
 {
     struct stat cmpsb;
     CF_DB *dbp;

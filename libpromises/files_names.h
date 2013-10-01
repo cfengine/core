@@ -38,7 +38,7 @@ FilePathType FilePathGetType(const char *file_path);
 
 int IsNewerFileTree(char *dir, time_t reftime);
 int CompareCSVName(const char *s1, const char *s2);
-int IsDir(char *path);
+int IsDir(const char *path);
 char *JoinPath(char *path, const char *leaf);
 char *JoinSuffix(char *path, char *leaf);
 int IsAbsPath(char *path);

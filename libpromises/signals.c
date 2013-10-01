@@ -24,25 +24,6 @@
 
 #include <signals.h>
 
-static const char *SIGNALS[] =
-{
-    [SIGHUP] = "SIGHUP",
-    [SIGINT] = "SIGINT",
-    [SIGTRAP] = "SIGTRAP",
-    [SIGKILL] = "SIGKILL",
-    [SIGPIPE] = "SIGPIPE",
-    [SIGCONT] = "SIGCONT",
-    [SIGABRT] = "SIGABRT",
-    [SIGSTOP] = "SIGSTOP",
-    [SIGQUIT] = "SIGQUIT",
-    [SIGTERM] = "SIGTERM",
-    [SIGCHLD] = "SIGCHLD",
-    [SIGUSR1] = "SIGUSR1",
-    [SIGUSR2] = "SIGUSR2",
-    [SIGBUS] = "SIGBUS",
-    [SIGSEGV] = "SIGSEGV",
-};
-
 static bool PENDING_TERMINATION = false;
 
 /********************************************************************/

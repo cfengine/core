@@ -59,7 +59,7 @@ static const int CF_DIGEST_SIZES[10] =
     0
 };
 
-void HashFile(char *filename, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMethod type)
+void HashFile(const char *filename, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMethod type)
 {
     FILE *file;
     EVP_MD_CTX context;

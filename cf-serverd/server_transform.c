@@ -674,12 +674,13 @@ static PromiseResult KeepServerPromise(EvalContext *ctx, Promise *pp, ARG_UNUSED
         KeepFileAccessPromise(ctx, pp);
         return PROMISE_RESULT_NOOP;
     }
-
-    if (strcmp(pp->parent_promise_type->name, "roles") == 0)
+    else if (strcmp(pp->parent_promise_type->name, "roles") == 0)
     {
         KeepServerRolePromise(ctx, pp);
         return PROMISE_RESULT_NOOP;
     }
+
+    return PROMISE_RESULT_NOOP;
 }
 
 /*********************************************************************/

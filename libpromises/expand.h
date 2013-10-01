@@ -29,7 +29,7 @@
 #include <generic_agent.h>
 #include <actuator.h>
 
-void CommonEvalPromise(EvalContext *ctx, Promise *pp, void *param);
+PromiseResult CommonEvalPromise(EvalContext *ctx, Promise *pp, void *param);
 
 void ExpandPromise(EvalContext *ctx, Promise *pp, PromiseActuator *ActOnPromise, void *param);
 

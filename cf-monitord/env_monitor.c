@@ -1165,7 +1165,7 @@ static PromiseResult KeepMonitorPromise(EvalContext *ctx, Promise *pp, ARG_UNUSE
         {
             Log(LOG_LEVEL_VERBOSE, "Skipping next promise '%s', as context '%s' is not relevant", pp->promiser, pp->classes);
         }
-        return;
+        return PROMISE_RESULT_NOOP;
     }
 
     if (VarClassExcluded(ctx, pp, &sp))
@@ -1190,12 +1190,14 @@ static PromiseResult KeepMonitorPromise(EvalContext *ctx, Promise *pp, ARG_UNUSE
     {
         return VerifyClassPromise(ctx, pp, NULL);
     }
-
-    if (strcmp("measurements", pp->parent_promise_type->name) == 0)
+    else if (strcmp("measurements", pp->parent_promise_type->name) == 0)
     {
         PromiseResult result = VerifyMeasurementPromise(ctx, CF_THIS, pp);
         /* FIXME: Verify why this explicit promise status change is done */
         EvalContextMarkPromiseNotDone(ctx, pp);
         return result;
     }
+
+    assert(false && "Unknown promise type");
+    return PROMISE_RESULT_NOOP;
 }

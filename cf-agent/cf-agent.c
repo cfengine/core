@@ -149,7 +149,7 @@ static char **TranslateOldBootstrapOptionsConcatenated(int argc, char **argv);
 static void FreeStringArray(int size, char **array);
 static void CheckAgentAccess(Rlist *list, const Policy *policy);
 static void KeepControlPromises(EvalContext *ctx, Policy *policy);
-static void KeepAgentPromise(EvalContext *ctx, Promise *pp, void *param);
+static PromiseResult KeepAgentPromise(EvalContext *ctx, Promise *pp, void *param);
 static int NewTypeContext(EvalContext *ctx, TypeSequence type);
 static void DeleteTypeContext(EvalContext *ctx, Bundle *bp, TypeSequence type);
 static void ClassBanner(EvalContext *ctx, TypeSequence type);
@@ -1370,7 +1370,7 @@ static PromiseResult DefaultVarPromise(EvalContext *ctx, const Promise *pp)
     return VerifyVarPromise(ctx, pp, true);
 }
 
-static void KeepAgentPromise(EvalContext *ctx, Promise *pp, ARG_UNUSED void *param)
+static PromiseResult KeepAgentPromise(EvalContext *ctx, Promise *pp, ARG_UNUSED void *param)
 {
     assert(param == NULL);
 
@@ -1390,12 +1390,12 @@ static void KeepAgentPromise(EvalContext *ctx, Promise *pp, ARG_UNUSED void *par
         {
             Log(LOG_LEVEL_VERBOSE, "Skipping next promise '%s', as context '%s' is not relevant", pp->promiser, pp->classes);
         }
-        return;
+        return PROMISE_RESULT_NOOP;
     }
 
     if (EvalContextPromiseIsDone(ctx, pp))
     {
-        return;
+        return PROMISE_RESULT_NOOP;
     }
 
     if (VarClassExcluded(ctx, pp, &sp))
@@ -1411,104 +1411,87 @@ static void KeepAgentPromise(EvalContext *ctx, Promise *pp, ARG_UNUSED void *par
         {
             Log(LOG_LEVEL_VERBOSE, "Skipping next promise '%s', as var-context '%s' is not relevant", pp->promiser, sp);
         }
-        return;
+        return PROMISE_RESULT_NOOP;
     }
 
 
     if (MissingDependencies(ctx, pp))
     {
-        return;
+        return PROMISE_RESULT_NOOP;
     }
     
 // Record promises examined for efficiency calc
 
     if (strcmp("meta", pp->parent_promise_type->name) == 0 || strcmp("vars", pp->parent_promise_type->name) == 0)
     {
-        VerifyVarPromise(ctx, pp, true);
-        return;
+        return VerifyVarPromise(ctx, pp, true);
     }
-
-    if (strcmp("defaults", pp->parent_promise_type->name) == 0)
+    else if (strcmp("defaults", pp->parent_promise_type->name) == 0)
     {
-        DefaultVarPromise(ctx, pp);
-        return;
+        return DefaultVarPromise(ctx, pp);
     }
-
-    
-    if (strcmp("classes", pp->parent_promise_type->name) == 0)
+    else if (strcmp("classes", pp->parent_promise_type->name) == 0)
     {
-        VerifyClassPromise(ctx, pp, NULL);
-        return;
+        return VerifyClassPromise(ctx, pp, NULL);
     }
-
-    if (strcmp("processes", pp->parent_promise_type->name) == 0)
+    else if (strcmp("processes", pp->parent_promise_type->name) == 0)
     {
-        VerifyProcessesPromise(ctx, pp);
-        return;
+        return VerifyProcessesPromise(ctx, pp);
     }
-
-    if (strcmp("storage", pp->parent_promise_type->name) == 0)
+    else if (strcmp("storage", pp->parent_promise_type->name) == 0)
     {
-        FindAndVerifyStoragePromises(ctx, pp);
+        PromiseResult result = FindAndVerifyStoragePromises(ctx, pp);
         EndMeasurePromise(ctx, start, pp);
-        return;
+        return result;
     }
-
-    if (strcmp("packages", pp->parent_promise_type->name) == 0)
+    else if (strcmp("packages", pp->parent_promise_type->name) == 0)
     {
-        VerifyPackagesPromise(ctx, pp);
+        PromiseResult result = VerifyPackagesPromise(ctx, pp);
         EndMeasurePromise(ctx, start, pp);
-        return;
+        return result;
     }
-
-    if (strcmp("files", pp->parent_promise_type->name) == 0)
+    else if (strcmp("files", pp->parent_promise_type->name) == 0)
     {
-        ParallelFindAndVerifyFilesPromises(ctx, pp);
-
+        PromiseResult result = ParallelFindAndVerifyFilesPromises(ctx, pp);
         EndMeasurePromise(ctx, start, pp);
-        return;
+        return result;
     }
-
-    if (strcmp("commands", pp->parent_promise_type->name) == 0)
+    else if (strcmp("commands", pp->parent_promise_type->name) == 0)
     {
-        VerifyExecPromise(ctx, pp);
+        PromiseResult result = VerifyExecPromise(ctx, pp);
         EndMeasurePromise(ctx, start, pp);
-        return;
+        return result;
     }
-
-    if (strcmp("databases", pp->parent_promise_type->name) == 0)
+    else if (strcmp("databases", pp->parent_promise_type->name) == 0)
     {
-        VerifyDatabasePromises(ctx, pp);
+        PromiseResult result = VerifyDatabasePromises(ctx, pp);
         EndMeasurePromise(ctx, start, pp);
-        return;
+        return result;
     }
-
-    if (strcmp("methods", pp->parent_promise_type->name) == 0)
+    else if (strcmp("methods", pp->parent_promise_type->name) == 0)
     {
-        VerifyMethodsPromise(ctx, pp);
+        PromiseResult result = VerifyMethodsPromise(ctx, pp);
         EndMeasurePromise(ctx, start, pp);
-        return;
+        return result;
     }
-
-    if (strcmp("services", pp->parent_promise_type->name) == 0)
+    else if (strcmp("services", pp->parent_promise_type->name) == 0)
     {
-        VerifyServicesPromise(ctx, pp);
+        PromiseResult result = VerifyServicesPromise(ctx, pp);
         EndMeasurePromise(ctx, start, pp);
-        return;
+        return result;
     }
-
-    if (strcmp("guest_environments", pp->parent_promise_type->name) == 0)
+    else if (strcmp("guest_environments", pp->parent_promise_type->name) == 0)
     {
-        VerifyEnvironmentsPromise(pp);
+        PromiseResult result = VerifyEnvironmentsPromise(pp);
         EndMeasurePromise(ctx, start, pp);
-        return;
+        return result;
+    }
+    else if (strcmp("reports", pp->parent_promise_type->name) == 0)
+    {
+        return VerifyReportPromise(ctx, pp);
     }
 
-    if (strcmp("reports", pp->parent_promise_type->name) == 0)
-    {
-        VerifyReportPromise(ctx, pp);
-        return;
-    }
+    return PROMISE_RESULT_NOOP;
 }
 
 /*********************************************************************/

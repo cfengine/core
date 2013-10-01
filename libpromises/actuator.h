@@ -3,7 +3,7 @@
 
 #include <cf3.defs.h>
 
-typedef void PromiseActuator(EvalContext *ctx, Promise *pp, void *param);
+typedef PromiseResult PromiseActuator(EvalContext *ctx, Promise *pp, void *param);
 
 PromiseResult PromiseResultUpdate(PromiseResult prior, PromiseResult evidence);
 bool PromiseResultIsOK(PromiseResult result);

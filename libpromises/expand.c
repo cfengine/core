@@ -1346,10 +1346,12 @@ static void SetAnyMissingDefaults(EvalContext *ctx, Promise *pp)
     }
 }
 
-void CommonEvalPromise(EvalContext *ctx, Promise *pp, ARG_UNUSED void *param)
+PromiseResult CommonEvalPromise(EvalContext *ctx, Promise *pp, ARG_UNUSED void *param)
 {
     assert(param == NULL);
 
     ShowPromise(pp);
     PromiseRecheckAllConstraints(ctx, pp);
+
+    return PROMISE_RESULT_NOOP;
 }

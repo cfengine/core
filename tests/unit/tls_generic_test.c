@@ -7,6 +7,8 @@
 #include <openssl/rsa.h>
 #include <openssl/pem.h>
 #include <string.h>
+#include <stdlib.h>
+#include <dirent.h>
 #include <cmockery.h>
 #include <server_common.h>
 #include <crypto.h>
@@ -26,8 +28,9 @@ static bool correctly_initialized = false;
 static pid_t pid = -1;
 static int server_public_key_file = -1;
 static int certificate_file = -1;
-static char server_name_template_public[] = "ghijklXXXXXX";
-static char server_certificate_template_public[] = "certXXXXXX";
+static char server_name_template_public[] = "/tmp/tls_test/ghijklXXXXXX";
+static char server_certificate_template_public[] = "/tmp/tls_test/certXXXXXX";
+static char temporary_folder[] = "/tmp/tls_test";
 /*
  * Helper functions, used to start a server and a client.
  * Notice that the child is the server, not the other way around.
@@ -267,7 +270,7 @@ int ssl_server_init()
         correctly_initialized = false;
         return -1;
     }
-    char name_template_private[] = "abcdefXXXXXX";
+    char name_template_private[] = "/tmp/tls_test/abcdefXXXXXX";
     int private_key_file = 0;
     FILE *private_key_stream = NULL;
     int ret = 0;
@@ -468,8 +471,8 @@ void ssl_client_init()
         correctly_initialized = false;
         return;
     }
-    char name_template_private[] = "mnopqrXXXXXX";
-    char name_template_public[] = "stuvwxXXXXXX";
+    char name_template_private[] = "/tmp/tls_test/mnopqrXXXXXX";
+    char name_template_public[] = "/tmp/tls_test/stuvwxXXXXXX";
     int private_key_file = 0;
     FILE *private_key_stream = NULL;
     int ret = 0;
@@ -636,11 +639,23 @@ void ssl_client_init()
 
 void tests_setup(void)
 {
+    int ret = 0;
+
+    /*
+     * Create a temporary folder to store our files.
+     * We do not use mkdtemp to avoid putting our temporary files in the wrong place.
+     * In any case, mkdir fails if the folder already exists.
+     */
+    ret = mkdir(temporary_folder, S_IRUSR|S_IWUSR|S_IXUSR|S_IRGRP|S_IXGRP|S_IROTH|S_IXOTH);
+    if (ret < 0)
+    {
+        printf("could not create folder %s\n", temporary_folder);
+        correctly_initialized = false;
+        return;
+    }
     /* OpenSSL is needed for our new protocol over TLS. */
     SSL_library_init();
     SSL_load_error_strings();
-
-    int ret = 0;
 
     /*
      * First we start a new process to have a server for our tests.
@@ -694,6 +709,26 @@ void tests_teardown(void)
          * Kill child process
          */
         kill(pid, SIGKILL);
+    }
+    /* Delete temporary folder and files */
+    DIR *folder = opendir(temporary_folder);
+    if (folder)
+    {
+        struct dirent *entry = NULL;
+        for (entry = readdir(folder); entry; entry = readdir(folder))
+        {
+            if (entry->d_name[0] == '.')
+            {
+                /* Skip . and .. */
+                continue;
+            }
+            char *name = (char *)xmalloc (strlen(temporary_folder) + strlen(entry->d_name) + 2);
+            sprintf(name, "%s/%s", temporary_folder, entry->d_name);
+            unlink(name);
+            free (name);
+        }
+        closedir(folder);
+        rmdir(temporary_folder);
     }
 }
 

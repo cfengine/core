@@ -730,7 +730,7 @@ static int VerifyInstalledPackages(EvalContext *ctx, PackageManager **all_mgrs, 
 /** Evaluate what needs to be done **/
 
 int FindLargestVersionAvail(EvalContext *ctx, char *matchName, char *matchVers, const char *refAnyVer, const char *ver,
-                            PackageVersionComparator package_select, Rlist *repositories, Attributes a, Promise *pp)
+                            Rlist *repositories, Attributes a, Promise *pp)
 /* Returns true if a version gt/ge ver is found in local repos, false otherwise */
 {
     Rlist *rp;
@@ -751,11 +751,6 @@ int FindLargestVersionAvail(EvalContext *ctx, char *matchName, char *matchVers, 
     else
     {
         snprintf(largestVer, sizeof(largestVer), "%s", ver);
-
-        if (package_select == PACKAGE_VERSION_COMPARATOR_GT)   // either gt or ge
-        {
-            largestVer[strlen(largestVer) - 1]++;
-        }
     }
 
     for (rp = repositories; rp != NULL; rp = rp->next)
@@ -774,12 +769,8 @@ int FindLargestVersionAvail(EvalContext *ctx, char *matchName, char *matchVers, 
             {
                 matchVer = ExtractFirstReference(refAnyVer, dirp->d_name);
 
-                /* Horrible */
-                Attributes a2 = a;
-                a2.packages.package_select = PACKAGE_VERSION_COMPARATOR_GT;
-
                 // check if match is largest so far
-                if (CompareVersions(ctx, matchVer, largestVer, a2, pp) == VERCMP_MATCH)
+                if (CompareVersions(ctx, matchVer, largestVer, a, pp) == VERCMP_MATCH)
                 {
                     snprintf(largestVer, sizeof(largestVer), "%s", matchVer);
                     snprintf(largestVerName, sizeof(largestVerName), "%s", dirp->d_name);
@@ -1017,8 +1008,7 @@ static void SchedulePackageOp(EvalContext *ctx, const char *name, const char *ve
 
         if (installed == 0)
         {
-            if ((a.packages.package_file_repositories != NULL) &&
-                ((a.packages.package_select == PACKAGE_VERSION_COMPARATOR_GT) || (a.packages.package_select == PACKAGE_VERSION_COMPARATOR_GE)))
+            if ((a.packages.package_file_repositories != NULL))
             {
                 {
                     VarRef *ref_name = VarRefParseFromScope("name", "cf_pack_context_anyver");
@@ -1044,7 +1034,7 @@ static void SchedulePackageOp(EvalContext *ctx, const char *name, const char *ve
 
                 EscapeSpecialChars(refAnyVer, refAnyVerEsc, sizeof(refAnyVerEsc), "(.*)","");
 
-                if (FindLargestVersionAvail(ctx, largestPackAvail, largestVerAvail, refAnyVerEsc, version, a.packages.package_select,
+                if (FindLargestVersionAvail(ctx, largestPackAvail, largestVerAvail, refAnyVerEsc, version,
                                             a.packages.package_file_repositories, a, pp))
                 {
                     Log(LOG_LEVEL_VERBOSE, "Using latest version in file repositories; '%s'", largestPackAvail);
@@ -1151,8 +1141,7 @@ static void SchedulePackageOp(EvalContext *ctx, const char *name, const char *ve
         *inst_ver = '\0';
         *inst_arch = '\0';
 
-        if ((a.packages.package_file_repositories != NULL) &&
-            ((a.packages.package_select == PACKAGE_VERSION_COMPARATOR_GT) || (a.packages.package_select == PACKAGE_VERSION_COMPARATOR_GE)))
+        if ((a.packages.package_file_repositories != NULL))
         {
             {
                 VarRef *ref_name = VarRefParseFromScope("name", "cf_pack_context_anyver");
@@ -1179,7 +1168,7 @@ static void SchedulePackageOp(EvalContext *ctx, const char *name, const char *ve
 
             EscapeSpecialChars(refAnyVer, refAnyVerEsc, sizeof(refAnyVerEsc), "(.*)","");
 
-            if (FindLargestVersionAvail(ctx, largestPackAvail, largestVerAvail, refAnyVerEsc, version, a.packages.package_select,
+            if (FindLargestVersionAvail(ctx, largestPackAvail, largestVerAvail, refAnyVerEsc, version,
                                         a.packages.package_file_repositories, a, pp))
             {
                 Log(LOG_LEVEL_VERBOSE, "Using latest version in file repositories; '%s'", largestPackAvail);
@@ -1465,16 +1454,20 @@ static int VersionCheckSchedulePackage(EvalContext *ctx, Attributes a, Promise *
 
 static void CheckPackageState(EvalContext *ctx, Attributes a, Promise *pp, const char *name, const char *version, const char *arch, bool no_version)
 {
-    VersionCmpResult installed = PackageMatch(ctx, name, "*", arch, a, pp);
-    VersionCmpResult matches = PackageMatch(ctx, name, version, arch, a, pp);
+    /* Horrible */
+    Attributes a2 = a;
+    a2.packages.package_select = PACKAGE_VERSION_COMPARATOR_EQ;
+
+    VersionCmpResult installed = PackageMatch(ctx, name, "*", arch, a2, pp);
+    VersionCmpResult matches = PackageMatch(ctx, name, version, arch, a2, pp);
 
     if ((installed == VERCMP_ERROR) || (matches == VERCMP_ERROR))
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Failure trying to compare package versions");
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a2, "Failure trying to compare package versions");
         return;
     }
 
-    if (VersionCheckSchedulePackage(ctx, a, pp, matches, installed))
+    if (VersionCheckSchedulePackage(ctx, a2, pp, matches, installed))
     {
         SchedulePackageOp(ctx, name, version, arch, installed, matches, no_version, a, pp);
     }
@@ -1489,21 +1482,25 @@ static void VerifyPromisedPatch(EvalContext *ctx, Attributes a, Promise *pp)
     int matches = 0, installed = 0, no_version = false;
     Rlist *rp;
 
-    if (a.packages.package_version)
+    /* Horrible */
+    Attributes a2 = a;
+    a2.packages.package_select = PACKAGE_VERSION_COMPARATOR_EQ;
+
+    if (a2.packages.package_version)
     {
         /* The version is specified separately */
 
-        for (rp = a.packages.package_architectures; rp != NULL; rp = rp->next)
+        for (rp = a2.packages.package_architectures; rp != NULL; rp = rp->next)
         {
             strncpy(name, pp->promiser, CF_MAXVARSIZE - 1);
-            strncpy(version, a.packages.package_version, CF_MAXVARSIZE - 1);
+            strncpy(version, a2.packages.package_version, CF_MAXVARSIZE - 1);
             strncpy(arch, RlistScalarValue(rp), CF_MAXVARSIZE - 1);
-            VersionCmpResult installed1 = PatchMatch(ctx, name, "*", "*", a, pp);
-            VersionCmpResult matches1 = PatchMatch(ctx, name, version, arch, a, pp);
+            VersionCmpResult installed1 = PatchMatch(ctx, name, "*", "*", a2, pp);
+            VersionCmpResult matches1 = PatchMatch(ctx, name, version, arch, a2, pp);
 
             if ((installed1 == VERCMP_ERROR) || (matches1 == VERCMP_ERROR))
             {
-                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Failure trying to compare package versions");
+                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a2, "Failure trying to compare package versions");
                 return;
             }
 
@@ -1511,33 +1508,33 @@ static void VerifyPromisedPatch(EvalContext *ctx, Attributes a, Promise *pp)
             matches += matches1;
         }
 
-        if (a.packages.package_architectures == NULL)
+        if (a2.packages.package_architectures == NULL)
         {
             strncpy(name, pp->promiser, CF_MAXVARSIZE - 1);
-            strncpy(version, a.packages.package_version, CF_MAXVARSIZE - 1);
+            strncpy(version, a2.packages.package_version, CF_MAXVARSIZE - 1);
             strncpy(arch, "*", CF_MAXVARSIZE - 1);
-            installed = PatchMatch(ctx, name, "*", "*", a, pp);
-            matches = PatchMatch(ctx, name, version, arch, a, pp);
+            installed = PatchMatch(ctx, name, "*", "*", a2, pp);
+            matches = PatchMatch(ctx, name, version, arch, a2, pp);
 
             if ((installed == VERCMP_ERROR) || (matches == VERCMP_ERROR))
             {
-                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Failure trying to compare package versions");
+                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a2, "Failure trying to compare package versions");
                 return;
             }
         }
     }
-    else if (a.packages.package_version_regex)
+    else if (a2.packages.package_version_regex)
     {
         /* The name, version and arch are to be extracted from the promiser */
-        strncpy(version, ExtractFirstReference(a.packages.package_version_regex, package), CF_MAXVARSIZE - 1);
-        strncpy(name, ExtractFirstReference(a.packages.package_name_regex, package), CF_MAXVARSIZE - 1);
-        strncpy(arch, ExtractFirstReference(a.packages.package_arch_regex, package), CF_MAXVARSIZE - 1);
-        installed = PatchMatch(ctx, name, "*", "*", a, pp);
-        matches = PatchMatch(ctx, name, version, arch, a, pp);
+        strncpy(version, ExtractFirstReference(a2.packages.package_version_regex, package), CF_MAXVARSIZE - 1);
+        strncpy(name, ExtractFirstReference(a2.packages.package_name_regex, package), CF_MAXVARSIZE - 1);
+        strncpy(arch, ExtractFirstReference(a2.packages.package_arch_regex, package), CF_MAXVARSIZE - 1);
+        installed = PatchMatch(ctx, name, "*", "*", a2, pp);
+        matches = PatchMatch(ctx, name, version, arch, a2, pp);
 
         if ((installed == VERCMP_ERROR) || (matches == VERCMP_ERROR))
         {
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Failure trying to compare package versions");
+            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a2, "Failure trying to compare package versions");
             return;
         }
     }
@@ -1545,17 +1542,17 @@ static void VerifyPromisedPatch(EvalContext *ctx, Attributes a, Promise *pp)
     {
         no_version = true;
 
-        for (rp = a.packages.package_architectures; rp != NULL; rp = rp->next)
+        for (rp = a2.packages.package_architectures; rp != NULL; rp = rp->next)
         {
             strncpy(name, pp->promiser, CF_MAXVARSIZE - 1);
             strncpy(version, "*", CF_MAXVARSIZE - 1);
             strncpy(arch, RlistScalarValue(rp), CF_MAXVARSIZE - 1);
-            VersionCmpResult installed1 = PatchMatch(ctx, name, "*", "*", a, pp);
-            VersionCmpResult matches1 = PatchMatch(ctx, name, version, arch, a, pp);
+            VersionCmpResult installed1 = PatchMatch(ctx, name, "*", "*", a2, pp);
+            VersionCmpResult matches1 = PatchMatch(ctx, name, version, arch, a2, pp);
 
             if ((installed1 == VERCMP_ERROR) || (matches1 == VERCMP_ERROR))
             {
-                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Failure trying to compare package versions");
+                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a2, "Failure trying to compare package versions");
                 return;
             }
 
@@ -1563,17 +1560,17 @@ static void VerifyPromisedPatch(EvalContext *ctx, Attributes a, Promise *pp)
             matches += matches1;
         }
 
-        if (a.packages.package_architectures == NULL)
+        if (a2.packages.package_architectures == NULL)
         {
             strncpy(name, pp->promiser, CF_MAXVARSIZE - 1);
             strncpy(version, "*", CF_MAXVARSIZE - 1);
             strncpy(arch, "*", CF_MAXVARSIZE - 1);
-            installed = PatchMatch(ctx, name, "*", "*", a, pp);
-            matches = PatchMatch(ctx, name, version, arch, a, pp);
+            installed = PatchMatch(ctx, name, "*", "*", a2, pp);
+            matches = PatchMatch(ctx, name, version, arch, a2, pp);
 
             if ((installed == VERCMP_ERROR) || (matches == VERCMP_ERROR))
             {
-                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Failure trying to compare package versions");
+                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a2, "Failure trying to compare package versions");
                 return;
             }
         }
@@ -1831,7 +1828,7 @@ static int ExecuteSchedule(EvalContext *ctx, PackageManager *schedule, PackageAc
                         }
                         else
                         {
-                            break;
+                            continue;
                         }
                     }
                     else

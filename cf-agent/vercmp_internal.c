@@ -152,14 +152,14 @@ VersionCmpResult ComparePackageVersionsInternal(const char *v1, const char *v2, 
 
         if (rp_pr != NULL)
         {
-            if ((cmp == PACKAGE_VERSION_COMPARATOR_LT) || (cmp == PACKAGE_VERSION_COMPARATOR_LE))
+            if ((cmp == PACKAGE_VERSION_COMPARATOR_GT) || (cmp == PACKAGE_VERSION_COMPARATOR_GE))
             {
                 version_matched = true;
             }
         }
         if (rp_in != NULL)
         {
-            if ((cmp == PACKAGE_VERSION_COMPARATOR_GT) || (cmp == PACKAGE_VERSION_COMPARATOR_GE))
+            if ((cmp == PACKAGE_VERSION_COMPARATOR_LT) || (cmp == PACKAGE_VERSION_COMPARATOR_LE))
             {
                 version_matched = true;
             }

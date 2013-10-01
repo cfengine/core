@@ -27,8 +27,7 @@
 
 #include <cf3.defs.h>
 #include <generic_agent.h>
-
-typedef void PromiseActuator(EvalContext *ctx, Promise *pp, void *param);
+#include <actuator.h>
 
 void CommonEvalPromise(EvalContext *ctx, Promise *pp, void *param);
 

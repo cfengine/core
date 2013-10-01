@@ -90,7 +90,7 @@ typedef enum
 } ServerControl;
 
 static void KeepContextBundles(EvalContext *ctx, Policy *policy);
-static void KeepServerPromise(EvalContext *ctx, Promise *pp, void *param);
+static PromiseResult KeepServerPromise(EvalContext *ctx, Promise *pp, void *param);
 static void InstallServerAuthPath(const char *path, Auth **list, Auth **listtop);
 static void KeepServerRolePromise(EvalContext *ctx, Promise *pp);
 static void KeepPromiseBundles(EvalContext *ctx, Policy *policy);
@@ -609,80 +609,76 @@ static void KeepPromiseBundles(EvalContext *ctx, Policy *policy)
 /* Level                                                             */
 /*********************************************************************/
 
-static void KeepServerPromise(EvalContext *ctx, Promise *pp, ARG_UNUSED void *param)
+static PromiseResult KeepServerPromise(EvalContext *ctx, Promise *pp, ARG_UNUSED void *param)
 {
-    char *sp = NULL;
-
-    assert(param == NULL);
+    assert(!param);
 
     if (!IsDefinedClass(ctx, pp->classes, PromiseGetNamespace(pp)))
     {
         Log(LOG_LEVEL_VERBOSE, "Skipping whole promise, as context is %s", pp->classes);
-        return;
+        return PROMISE_RESULT_NOOP;
     }
 
-    if (VarClassExcluded(ctx, pp, &sp))
     {
-        if (LEGACY_OUTPUT)
+        char *cls = NULL;
+        if (VarClassExcluded(ctx, pp, &cls))
         {
-            Log(LOG_LEVEL_VERBOSE, "\n");
-            Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . ");
-            Log(LOG_LEVEL_VERBOSE, "Skipping whole next promise (%s), as var-context %s is not relevant", pp->promiser,
-                  sp);
-            Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . ");
+            if (LEGACY_OUTPUT)
+            {
+                Log(LOG_LEVEL_VERBOSE, "\n");
+                Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . ");
+                Log(LOG_LEVEL_VERBOSE, "Skipping whole next promise (%s), as var-context %s is not relevant", pp->promiser, cls);
+                Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . ");
+            }
+            else
+            {
+                Log(LOG_LEVEL_VERBOSE, "Skipping next promise '%s', as var-context '%s' is not relevant", pp->promiser, cls);
+            }
+            return PROMISE_RESULT_NOOP;
         }
-        else
-        {
-            Log(LOG_LEVEL_VERBOSE, "Skipping next promise '%s', as var-context '%s' is not relevant", pp->promiser, sp);
-        }
-        return;
     }
 
     if (strcmp(pp->parent_promise_type->name, "classes") == 0)
     {
-        VerifyClassPromise(ctx, pp, NULL);
-        return;
+        return VerifyClassPromise(ctx, pp, NULL);
     }
 
-    sp = (char *) ConstraintGetRvalValue(ctx, "resource_type", pp, RVAL_TYPE_SCALAR);
-
-    if ((strcmp(pp->parent_promise_type->name, "access") == 0) && sp && (strcmp(sp, "literal") == 0))
+    const char *resource_type = ConstraintGetRvalValue(ctx, "resource_type", pp, RVAL_TYPE_SCALAR);
+    if (resource_type && strcmp(pp->parent_promise_type->name, "access") == 0)
     {
-        KeepLiteralAccessPromise(ctx, pp, "literal");
-        return;
+        if (strcmp(resource_type, "literal") == 0)
+        {
+            KeepLiteralAccessPromise(ctx, pp, "literal");
+            return PROMISE_RESULT_NOOP;
+        }
+        else if (strcmp(resource_type, "variable") == 0)
+        {
+            KeepLiteralAccessPromise(ctx, pp, "variable");
+            return PROMISE_RESULT_NOOP;
+        }
+        else if (strcmp(resource_type, "query") == 0)
+        {
+            KeepQueryAccessPromise(ctx, pp, "query");
+            KeepReportDataSelectAccessPromise(pp);
+            return PROMISE_RESULT_NOOP;
+        }
+        else if (strcmp(resource_type, "context") == 0)
+        {
+            KeepLiteralAccessPromise(ctx, pp, "context");
+            return PROMISE_RESULT_NOOP;
+        }
     }
-
-    if ((strcmp(pp->parent_promise_type->name, "access") == 0) && sp && (strcmp(sp, "variable") == 0))
-    {
-        KeepLiteralAccessPromise(ctx, pp, "variable");
-        return;
-    }
-    
-    if ((strcmp(pp->parent_promise_type->name, "access") == 0) && sp && (strcmp(sp, "query") == 0))
-    {
-        KeepQueryAccessPromise(ctx, pp, "query");
-        KeepReportDataSelectAccessPromise(pp);
-        return;
-    }
-
-    if ((strcmp(pp->parent_promise_type->name, "access") == 0) && sp && (strcmp(sp, "context") == 0))
-    {
-        KeepLiteralAccessPromise(ctx, pp, "context");
-        return;
-    }
-
-/* Default behaviour is file access */
 
     if (strcmp(pp->parent_promise_type->name, "access") == 0)
     {
         KeepFileAccessPromise(ctx, pp);
-        return;
+        return PROMISE_RESULT_NOOP;
     }
 
     if (strcmp(pp->parent_promise_type->name, "roles") == 0)
     {
         KeepServerRolePromise(ctx, pp);
-        return;
+        return PROMISE_RESULT_NOOP;
     }
 }
 

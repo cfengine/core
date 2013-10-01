@@ -1,0 +1,290 @@
+# Tests that package upgrade works properly
+
+body common control
+{
+      inputs => { "../default.cf.sub" };
+      bundlesequence => { "init", "test" };
+      version => "1.0";
+
+}
+
+bundle agent init
+{
+  files:
+    "$(G.testfile)"
+      delete => init_delete;
+}
+
+body delete init_delete
+{
+  rmdirs => "true";
+}
+
+body package_method test_method(currentdir)
+{
+      package_changes => "individual";
+      package_list_command => "/bin/cat $(currentdir)/test_repository/installed.txt";
+      package_installed_regex => ".*";
+      package_list_name_regex    => "^(\S+?)\s\S+?\s\S+$";
+      package_list_version_regex => "^\S+?\s(\S+?)\s\S+$";
+      package_list_arch_regex    => "^\S+?\s\S+?\s(\S+)$";
+
+      package_add_command    => "$(G.echo) >>$(G.testfile) ADD";
+      package_update_command => "$(G.echo) >>$(G.testfile) UPDATE";
+      package_delete_command => "$(G.echo) >>$(G.testfile) DELETE";
+
+      package_file_repositories => { "$(currentdir)/test_repository" };
+      package_name_convention => "$(name)-$(version).$(arch).rpm";
+}
+
+body classes ifrepaired(repaired_class)
+{
+      promise_repaired => { "$(repaired_class)" };
+}
+
+bundle agent test
+{
+  vars:
+    "currentdir_cwd" string => "$(G.cwd)";
+    "currentdir_dirname" string => dirname("$(this.promise_filename)");
+    "currentdir" string => "$(currentdir_cwd)/$(currentdir_dirname)";
+
+  packages:
+    "install-exact-version"
+      package_policy => "addupdate",
+      package_select => "==",
+      package_version => "2.2.3",
+      package_architectures => { "i386" },
+      package_method => test_method("$(currentdir)");
+
+    "update-to-exact-version"
+      package_policy => "addupdate",
+      package_select => "==",
+      package_version => "2.2.3",
+      package_architectures => { "i386" },
+      package_method => test_method("$(currentdir)");
+
+    "delete-exact-version"
+      package_policy => "delete",
+      package_select => "==",
+      package_version => "2.2.3",
+      package_architectures => { "i386" },
+      package_method => test_method("$(currentdir)");
+
+    "install-lessorequal-version"
+      package_policy => "addupdate",
+      package_select => "<=",
+      package_version => "2.4.5",
+      package_architectures => { "i386" },
+      package_method => test_method("$(currentdir)");
+
+    "update-to-lessorequal-version"
+      package_policy => "addupdate",
+      package_select => "<=",
+      package_version => "2.4.5",
+      package_architectures => { "i386" },
+      package_method => test_method("$(currentdir)");
+
+    "install-lessthan-version"
+      package_policy => "addupdate",
+      package_select => "<",
+      package_version => "2.4.5",
+      package_architectures => { "i386" },
+      package_method => test_method("$(currentdir)");
+
+    "update-to-lessthan-version"
+      package_policy => "addupdate",
+      package_select => "<",
+      package_version => "2.4.5",
+      package_architectures => { "i386" },
+      package_method => test_method("$(currentdir)");
+
+    "install-greaterorequal-version"
+      package_policy => "addupdate",
+      package_select => ">=",
+      package_version => "2.0.1",
+      package_architectures => { "i386" },
+      package_method => test_method("$(currentdir)");
+
+    "update-to-greaterorequal-version"
+      package_policy => "addupdate",
+      package_select => ">=",
+      package_version => "2.0.1",
+      package_architectures => { "i386" },
+      package_method => test_method("$(currentdir)");
+
+    "update-to-greaterorequal-version-already-greater-installed"
+      package_policy => "addupdate",
+      package_select => ">=",
+      package_version => "2.0.1",
+      package_architectures => { "i386" },
+      package_method => test_method("$(currentdir)");
+
+    "install-greaterthan-version"
+      package_policy => "addupdate",
+      package_select => ">",
+      package_version => "2.0.1",
+      package_architectures => { "i386" },
+      package_method => test_method("$(currentdir)");
+
+    "update-to-greaterthan-version"
+      package_policy => "addupdate",
+      package_select => ">",
+      package_version => "2.0.1",
+      package_architectures => { "i386" },
+      package_method => test_method("$(currentdir)");
+
+    "update-to-greaterthan-version-already-greater-installed"
+      package_policy => "addupdate",
+      package_select => ">",
+      package_version => "2.0.1",
+      package_architectures => { "i386" },
+      package_method => test_method("$(currentdir)");
+
+    "mismatch-install-exact-version"
+      package_policy => "addupdate",
+      package_select => "==",
+      package_version => "2.1.3",
+      package_architectures => { "i386" },
+      package_method => test_method("$(currentdir)");
+
+    "mismatch-update-to-exact-version"
+      package_policy => "addupdate",
+      package_select => "==",
+      package_version => "2.1.3",
+      package_architectures => { "i386" },
+      package_method => test_method("$(currentdir)");
+
+    "mismatch-delete-exact-version"
+      package_policy => "delete",
+      package_select => "==",
+      package_version => "2.1.3",
+      package_architectures => { "i386" },
+      package_method => test_method("$(currentdir)");
+
+    "mismatch-install-lessorequal-version"
+      package_policy => "addupdate",
+      package_select => "<=",
+      package_version => "2.1.5",
+      package_architectures => { "i386" },
+      package_method => test_method("$(currentdir)");
+
+    "mismatch-update-to-lessorequal-version"
+      package_policy => "addupdate",
+      package_select => "<=",
+      package_version => "2.1.5",
+      package_architectures => { "i386" },
+      package_method => test_method("$(currentdir)");
+
+    "mismatch-install-lessthan-version"
+      package_policy => "addupdate",
+      package_select => "<",
+      package_version => "2.1.5",
+      package_architectures => { "i386" },
+      package_method => test_method("$(currentdir)");
+
+    "mismatch-update-to-lessthan-version"
+      package_policy => "addupdate",
+      package_select => "<",
+      package_version => "2.1.5",
+      package_architectures => { "i386" },
+      package_method => test_method("$(currentdir)");
+
+    "mismatch-install-greaterorequal-version"
+      package_policy => "addupdate",
+      package_select => ">=",
+      package_version => "2.4.1",
+      package_architectures => { "i386" },
+      package_method => test_method("$(currentdir)");
+
+    "mismatch-update-to-greaterorequal-version"
+      package_policy => "addupdate",
+      package_select => ">=",
+      package_version => "2.4.1",
+      package_architectures => { "i386" },
+      package_method => test_method("$(currentdir)");
+
+    "mismatch-install-greaterthan-version"
+      package_policy => "addupdate",
+      package_select => ">",
+      package_version => "2.4.1",
+      package_architectures => { "i386" },
+      package_method => test_method("$(currentdir)");
+
+    "mismatch-update-to-greaterthan-version"
+      package_policy => "addupdate",
+      package_select => ">",
+      package_version => "2.4.1",
+      package_architectures => { "i386" },
+      package_method => test_method("$(currentdir)");
+
+    "missing-install-exact-version"
+      package_policy => "addupdate",
+      package_select => "==",
+      package_version => "2.2.3",
+      package_architectures => { "i386" },
+      package_method => test_method("$(currentdir)");
+
+    "missing-update-to-exact-version"
+      package_policy => "addupdate",
+      package_select => "==",
+      package_version => "2.2.3",
+      package_architectures => { "i386" },
+      package_method => test_method("$(currentdir)");
+
+    "missing-install-lessorequal-version"
+      package_policy => "addupdate",
+      package_select => "<=",
+      package_version => "2.4.5",
+      package_architectures => { "i386" },
+      package_method => test_method("$(currentdir)");
+
+    "missing-update-to-lessorequal-version"
+      package_policy => "addupdate",
+      package_select => "<=",
+      package_version => "2.4.5",
+      package_architectures => { "i386" },
+      package_method => test_method("$(currentdir)");
+
+    "missing-install-lessthan-version"
+      package_policy => "addupdate",
+      package_select => "<",
+      package_version => "2.4.5",
+      package_architectures => { "i386" },
+      package_method => test_method("$(currentdir)");
+
+    "missing-update-to-lessthan-version"
+      package_policy => "addupdate",
+      package_select => "<",
+      package_version => "2.4.5",
+      package_architectures => { "i386" },
+      package_method => test_method("$(currentdir)");
+
+    "missing-install-greaterorequal-version"
+      package_policy => "addupdate",
+      package_select => ">=",
+      package_version => "2.0.1",
+      package_architectures => { "i386" },
+      package_method => test_method("$(currentdir)");
+
+    "missing-update-to-greaterorequal-version"
+      package_policy => "addupdate",
+      package_select => ">=",
+      package_version => "2.0.1",
+      package_architectures => { "i386" },
+      package_method => test_method("$(currentdir)");
+
+    "missing-install-greaterthan-version"
+      package_policy => "addupdate",
+      package_select => ">",
+      package_version => "2.0.1",
+      package_architectures => { "i386" },
+      package_method => test_method("$(currentdir)");
+
+    "missing-update-to-greaterthan-version"
+      package_policy => "addupdate",
+      package_select => ">",
+      package_version => "2.0.1",
+      package_architectures => { "i386" },
+      package_method => test_method("$(currentdir)");
+}

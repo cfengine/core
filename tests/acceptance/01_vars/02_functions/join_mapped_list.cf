@@ -1,0 +1,45 @@
+#######################################################
+#
+# Redmine #2614: join should iterate over all elements of a mapped list
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+  vars:
+      "elements" slist => { "a", "b", "c" };
+      "expected" string => "a_x:b_x:c_x";
+}
+
+#######################################################
+
+bundle agent test
+{
+  vars:
+      "map" slist => maplist("$(this)_x", "init.elements");
+      "join" string => join(":","map");
+}
+
+
+#######################################################
+
+bundle agent check
+{
+  classes:
+      "ok" expression => strcmp($(init.expected), $(test.join));
+
+  reports:
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

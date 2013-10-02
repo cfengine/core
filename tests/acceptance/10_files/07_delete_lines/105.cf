@@ -2,6 +2,8 @@
 #
 # Delete a number of lines via an slist
 # Region editing, include_start_delimiter and include_end_delimiter
+# Notice that this is a misinterpretation of our language, once the 
+# start_delimiter is deleted, the region will not be matched again.
 #
 #######################################################
 
@@ -34,7 +36,9 @@ trailer";
 header
     One potato
     Two potato
+    Three potatoe
     Four
+END
 trailer
 trailer";
       

@@ -2,6 +2,8 @@
 #
 # Delete a number of lines via an slist, different way, different patterns
 # select_region, only include_start_delimiter
+# As with 309.cf "END" will not be deleted because is not part of the
+# selected region.
 #
 #######################################################
 
@@ -36,6 +38,7 @@ BEGIN
     One potato
     Two potato
     Four
+END
 trailer
 trailer";
       

@@ -1,7 +1,9 @@
 #######################################################
 #
-# Delete a line using a list, all of which don't match
-# Double (nested) header/trailer
+# Delete a number of lines via an slist (different order than in original)
+# select_region, only include_start_delimiter
+# "END" is not going to be deleted, this time because "BEGIN" is deleted
+# before, therefore the region will not be selected when "END" is used.
 #
 #######################################################
 
@@ -19,7 +21,6 @@ bundle agent init
 
       "actual" string =>
       "header
-BEGIN
 header
 BEGIN
     One potato
@@ -28,20 +29,16 @@ BEGIN
     Four
 END
 trailer
-END
 trailer";
       
       "expected" string =>
       "header
-BEGIN
 header
-BEGIN
     One potato
-    Three potatoe
+    Two potato
     Four
 END
 trailer
-END
 trailer";
       
   files:
@@ -67,33 +64,28 @@ body edit_defaults init_empty
 bundle agent test
 {
   vars:
-      "tstr" slist => { "header", "    Two.*", "BEGIN", "END" };
+      "tstr" slist => { "    Three potatoe", "BEGIN", "END" };
       
   files:
       "$(G.testfile).actual"
-      edit_line => test_delete(".*potat.*", "@(test.tstr)");
+      edit_line => test_delete("$(test.tstr)");
 
 }
 
-bundle edit_line test_delete(str, match)
+bundle edit_line test_delete(str)
 {
   delete_lines:
       "$(str)"
-      delete_select => test_match(@{match}),
       select_region => test_select;
 }
 
 body select_region test_select
 {
-      select_start => "header";
-      select_end => "trailer";
+      select_start => "BEGIN";
+      select_end => "END";
+      include_start_delimiter => "true";
 }
 
-
-body delete_select test_match(m)
-{
-      delete_if_startwith_from_list => { @{m} };
-}
 
 #######################################################
 

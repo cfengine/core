@@ -1,7 +1,9 @@
 #######################################################
 #
-# Delete a number of lines via an slist
+# Delete a number of lines via an slist, different way, different patterns
 # select_region, only include_start_delimiter
+# As with 309.cf "END" will not be deleted because is not part of the
+# selected region.
 #
 #######################################################
 
@@ -32,6 +34,7 @@ trailer";
       "expected" string =>
       "header
 header
+BEGIN
     One potato
     Two potato
     Four
@@ -61,17 +64,17 @@ body edit_defaults init_empty
 
 bundle agent test
 {
-  vars:
-      "tstr" slist => { "BEGIN", "    Three potatoe", "END" };
-      
   files:
       "$(G.testfile).actual"
-      edit_line => test_delete("$(test.tstr)");
+      edit_line => test_delete;
 
 }
 
-bundle edit_line test_delete(str)
+bundle edit_line test_delete
 {
+  vars:
+      "str" slist => { ".*Three.*", ".*END.*" };
+      
   delete_lines:
       "$(str)"
       select_region => test_select;

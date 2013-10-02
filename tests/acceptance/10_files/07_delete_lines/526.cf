@@ -1,7 +1,8 @@
 #######################################################
 #
-# Delete a number of lines via an slist, original way, different patterns
-# select_region, only include_start_delimiter
+# Delete a line using a list, all of which don't match
+# Double (nested) header/trailer
+# No line will be removed.
 #
 #######################################################
 
@@ -19,6 +20,7 @@ bundle agent init
 
       "actual" string =>
       "header
+BEGIN
 header
 BEGIN
     One potato
@@ -27,16 +29,21 @@ BEGIN
     Four
 END
 trailer
+END
 trailer";
       
       "expected" string =>
       "header
+BEGIN
 header
 BEGIN
     One potato
-    Two potato
+	Two potato
+    Three potatoe
     Four
+END
 trailer
+END
 trailer";
       
   files:
@@ -62,28 +69,33 @@ body edit_defaults init_empty
 bundle agent test
 {
   vars:
-      "tstr" slist => { ".*Three.*", ".*END.*" };
+      "tstr" slist => { "header", "    Two.*", "BEGIN", "END" };
       
   files:
       "$(G.testfile).actual"
-      edit_line => test_delete("$(tstr)");
+      edit_line => test_delete(".*potat.*", "@(test.tstr)");
 
 }
 
-bundle edit_line test_delete(str)
+bundle edit_line test_delete(str, match)
 {
   delete_lines:
       "$(str)"
+      delete_select => test_match(@{match}),
       select_region => test_select;
 }
 
 body select_region test_select
 {
-      select_start => "BEGIN";
-      select_end => "END";
-      include_start_delimiter => "true";
+      select_start => "header";
+      select_end => "trailer";
 }
 
+
+body delete_select test_match(m)
+{
+      delete_if_startwith_from_list => { @{m} };
+}
 
 #######################################################
 

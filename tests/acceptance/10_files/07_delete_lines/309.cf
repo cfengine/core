@@ -1,8 +1,9 @@
 #######################################################
 #
-# Delete a number of lines via an slist, different way, different patterns (different order than original)
-# Region editing, include_start_delimiter and include_end_delimiter
-# Second edit destroys the region
+# Delete a number of lines via an slist, different way
+# select_region, only include_start_delimiter
+# Notice that deleting "END" will fail because the end
+# delimiter is not included in the region.
 #
 #######################################################
 
@@ -33,9 +34,11 @@ trailer";
       "expected" string =>
       "header
 header
+BEGIN
     One potato
     Two potato
     Four
+END
 trailer
 trailer";
       
@@ -70,10 +73,9 @@ bundle agent test
 bundle edit_line test_delete
 {
   vars:
-      "str" slist => { ".*Three.*", ".*BEGIN.*", ".*END.*" };
+      "str" slist => { "    Three potatoe", "END" };
       
   delete_lines:
-      # Second edit destroys the region
       "$(str)"
       select_region => test_select;
 }
@@ -83,7 +85,6 @@ body select_region test_select
       select_start => "BEGIN";
       select_end => "END";
       include_start_delimiter => "true";
-      include_end_delimiter => "true";
 }
 
 

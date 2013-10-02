@@ -1,7 +1,8 @@
 #######################################################
 #
-# Delete a number of lines, using regexes different way
-# select_region, only include_start_delimiter
+# Delete a number of lines via an slist, different way, different patterns (different order than original)
+# Region editing, include_start_delimiter and include_end_delimiter
+# Second edit destroys the region and therefore the third edit will not be possible.
 #
 #######################################################
 
@@ -32,10 +33,10 @@ trailer";
       "expected" string =>
       "header
 header
-BEGIN
     One potato
     Two potato
     Four
+END
 trailer
 trailer";
       
@@ -69,10 +70,12 @@ bundle agent test
 
 bundle edit_line test_delete
 {
+  vars:
+      "str" slist => { ".*Three.*", ".*BEGIN.*", ".*END.*" };
+      
   delete_lines:
-      "^\s+Three.*$"	# Anchors should make no difference
-      select_region => test_select;
-      "END"
+      # Second edit destroys the region
+      "$(str)"
       select_region => test_select;
 }
 
@@ -81,6 +84,7 @@ body select_region test_select
       select_start => "BEGIN";
       select_end => "END";
       include_start_delimiter => "true";
+      include_end_delimiter => "true";
 }
 
 

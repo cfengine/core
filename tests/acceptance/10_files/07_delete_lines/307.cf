@@ -1,7 +1,9 @@
 #######################################################
 #
-# Delete a number of lines via an slist
-# Region editing, include_start_delimiter and include_end_delimiter
+# Delete a number of lines as separate lines, using regexes
+# select_region, only include_start_delimiter
+# As with 306, this will not work since only the first line
+# will be selected.
 #
 #######################################################
 
@@ -32,9 +34,11 @@ trailer";
       "expected" string =>
       "header
 header
+BEGIN
     One potato
     Two potato
     Four
+END
 trailer
 trailer";
       
@@ -60,19 +64,18 @@ body edit_defaults init_empty
 
 bundle agent test
 {
-  vars:
-      "tstr" slist => { "BEGIN", "    Three potatoe", "END" };
-      
   files:
       "$(G.testfile).actual"
-      edit_line => test_delete("$(test.tstr)");
+      edit_line => test_delete;
 
 }
 
-bundle edit_line test_delete(str)
+bundle edit_line test_delete
 {
   delete_lines:
-      "$(str)"
+      "\s+Three.*"
+      select_region => test_select;
+      "END"
       select_region => test_select;
 }
 
@@ -81,7 +84,6 @@ body select_region test_select
       select_start => "BEGIN";
       select_end => "END";
       include_start_delimiter => "true";
-      include_end_delimiter => "true";
 }
 
 

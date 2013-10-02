@@ -1,7 +1,7 @@
 #######################################################
 #
 # Don't delete multiple lines if they are not in the exact order
-# Two matching regions - expect changes to occur in only one
+# Two matching regions - Only the first region is selected
 # select_region, doesn't include header or trailer
 #
 #######################################################
@@ -54,6 +54,8 @@ middle
 BEGIN
     One potato
     Two potato
+    Three potatoe
+    Four
 END
 trailer
 trailer";

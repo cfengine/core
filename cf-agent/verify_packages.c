@@ -106,6 +106,7 @@ PromiseResult VerifyPackagesPromise(EvalContext *ctx, Promise *pp)
 
     if (!PackageSanityCheck(ctx, a, pp))
     {
+        Log(LOG_LEVEL_VERBOSE, "Package promise %s failed sanity check", pp->promiser);
         return PROMISE_RESULT_FAIL;
     }
 
@@ -137,6 +138,7 @@ PromiseResult VerifyPackagesPromise(EvalContext *ctx, Promise *pp)
         return PROMISE_RESULT_FAIL;
     }
 
+    Log(LOG_LEVEL_VERBOSE, "Default package architecture for promise %s is '%s'", pp->promiser, default_arch);
     PromiseResult result = PROMISE_RESULT_NOOP;
     if (!VerifyInstalledPackages(ctx, &INSTALLED_PACKAGE_LISTS, default_arch, a, pp, &result))
     {
@@ -150,10 +152,12 @@ PromiseResult VerifyPackagesPromise(EvalContext *ctx, Promise *pp)
     switch (a.packages.package_policy)
     {
     case PACKAGE_ACTION_PATCH:
+        Log(LOG_LEVEL_VERBOSE, "Verifying patch action for promise %s", pp->promiser);
         result = PromiseResultUpdate(result, VerifyPromisedPatch(ctx, a, pp));
         break;
 
     default:
+        Log(LOG_LEVEL_VERBOSE, "Verifying action for promise %s", pp->promiser);
         result = PromiseResultUpdate(result, VerifyPromisedPackage(ctx, a, pp));
         break;
     }
@@ -817,13 +821,13 @@ static int IsNewerThanInstalled(EvalContext *ctx, const char *n, const char *v, 
         }
     }
 
-    Log(LOG_LEVEL_VERBOSE, "Looking for an installed package older than (%s,%s,%s)", n, v, a);
+    Log(LOG_LEVEL_VERBOSE, "Looking for an installed package older than (%s,%s,%s) [name,version,arch]", n, v, a);
 
     for (pi = mp->pack_list; pi != NULL; pi = pi->next)
     {
         if ((strcmp(n, pi->name) == 0) && (((strcmp(a, "*") == 0)) || (strcmp(a, pi->arch) == 0)))
         {
-            Log(LOG_LEVEL_VERBOSE, "Found installed package (%s,%s,%s)", pi->name, pi->version, pi->arch);
+            Log(LOG_LEVEL_VERBOSE, "Found installed package (%s,%s,%s) [name,version,arch]", pi->name, pi->version, pi->arch);
 
             snprintf(instV, CF_MAXVARSIZE, "%s", pi->version);
             snprintf(instA, CF_MAXVARSIZE, "%s", pi->arch);
@@ -843,7 +847,7 @@ static int IsNewerThanInstalled(EvalContext *ctx, const char *n, const char *v, 
         }
     }
 
-    Log(LOG_LEVEL_VERBOSE, "Package (%s,%s) is not installed", n, a);
+    Log(LOG_LEVEL_VERBOSE, "Package (%s,%s) [name,arch] is not installed", n, a);
     return false;
 }
 
@@ -934,7 +938,7 @@ static PromiseResult SchedulePackageOp(EvalContext *ctx, const char *name, const
     int package_select_in_range = false;
     PackageAction policy;
 
-    Log(LOG_LEVEL_VERBOSE, "Checking if package (%s,%s,%s) is at the desired state (installed=%d,matched=%d)",
+    Log(LOG_LEVEL_VERBOSE, "Checking if package (%s,%s,%s) [name,version,arch] is at the desired state (installed=%d,matched=%d)",
           name, version, arch, installed, matched);
 
 /* Now we need to know the name-convention expected by the package manager */
@@ -1207,7 +1211,7 @@ static PromiseResult SchedulePackageOp(EvalContext *ctx, const char *name, const
             if (IsNewerThanInstalled(ctx, name, largestVerAvail, arch, inst_ver, inst_arch, a, pp, &result))
             {
                 Log(LOG_LEVEL_VERBOSE,
-                      "Installed package (%s,%s,%s) is older than latest available (%s,%s,%s) - updating", name,
+                      "Installed package (%s,%s,%s) [name,version,arch] is older than latest available (%s,%s,%s) [name,version,arch] - updating", name,
                       inst_ver, inst_arch, name, largestVerAvail, arch);
             }
             else
@@ -1340,15 +1344,21 @@ static PromiseResult SchedulePackageOp(EvalContext *ctx, const char *name, const
     return result;
 }
 
-VersionCmpResult ComparePackages(EvalContext *ctx, const char *n, const char *v, const char *arch, PackageItem * pi, Attributes a,
-                                 Promise *pp, PromiseResult *result)
+VersionCmpResult ComparePackages(EvalContext *ctx,
+                                 const char *n, const char *v, const char *arch,
+                                 PackageItem *pi, Attributes a,
+                                 Promise *pp,
+                                 const char *mode,
+                                 PromiseResult *result)
 {
+    Log(LOG_LEVEL_VERBOSE, "Comparing %s package (%s,%s,%s) with given (%s,%s,%s) [name,version,arch]", mode, pi->name, pi->version, pi->arch, n, v, arch);
+
     if (CompareCSVName(n, pi->name) != 0)
     {
         return VERCMP_NO_MATCH;
     }
 
-    Log(LOG_LEVEL_VERBOSE, "Matched name '%s'", n);
+    Log(LOG_LEVEL_VERBOSE, "Matched %s name '%s'", mode, n);
 
     if (strcmp(arch, "*") != 0)
     {
@@ -1357,25 +1367,41 @@ VersionCmpResult ComparePackages(EvalContext *ctx, const char *n, const char *v,
             return VERCMP_NO_MATCH;
         }
 
-        Log(LOG_LEVEL_VERBOSE, "Matched arch '%s'", arch);
+        Log(LOG_LEVEL_VERBOSE, "Matched %s arch '%s'", mode, arch);
+    }
+    else
+    {
+        Log(LOG_LEVEL_VERBOSE, "Matched %s wildcard arch '%s'", mode, arch);
     }
 
     if (strcmp(v, "*") == 0)
     {
-        Log(LOG_LEVEL_VERBOSE, "Matched version *");
+        Log(LOG_LEVEL_VERBOSE, "Matched %s wildcard version '%s'", mode, v);
         return VERCMP_MATCH;
     }
 
-    return CompareVersions(ctx, pi->version, v, a, pp, result);
+    VersionCmpResult vc =  CompareVersions(ctx, pi->version, v, a, pp, result);
+    Log(LOG_LEVEL_VERBOSE,
+        "Version comparison returned %s for %s package (%s,%s,%s) against given (%s,%s,%s) [name,version,arch]",
+        vc == VERCMP_MATCH ? "MATCH" : "NOMATCH",
+        mode,
+        pi->name, pi->version, pi->arch,
+        n, v, arch);
+
+    return vc;
 
 }
 
-static VersionCmpResult PatchMatch(EvalContext *ctx, const char *n, const char *v, const char *a, Attributes attr,
-                                   Promise *pp, PromiseResult *result)
+static VersionCmpResult PatchMatch(EvalContext *ctx,
+                                   const char *n, const char *v, const char *a,
+                                   Attributes attr, Promise *pp,
+                                   const char* mode,
+                                   PromiseResult *result)
 {
     PackageManager *mp = NULL;
     PackageItem *pi;
 
+    // This REALLY needs some commenting
     for (mp = INSTALLED_PACKAGE_LISTS; mp != NULL; mp = mp->next)
     {
         if (strcmp(mp->manager, attr.packages.package_list_command) == 0)
@@ -1384,37 +1410,44 @@ static VersionCmpResult PatchMatch(EvalContext *ctx, const char *n, const char *
         }
     }
 
-    Log(LOG_LEVEL_VERBOSE, "Looking for (%s,%s,%s)", n, v, a);
+    Log(LOG_LEVEL_VERBOSE, "Looking for %s (%s,%s,%s) [name,version,arch] in package manager %s", mode, n, v, a, mp->manager);
 
     for (pi = mp->patch_list; pi != NULL; pi = pi->next)
     {
         if (FullTextMatch(ctx, n, pi->name)) /* Check regexes */
         {
+            Log(LOG_LEVEL_VERBOSE, "Regular expression match succeeded for %s against %s", n, pi->name);
             return VERCMP_MATCH;
         }
         else
         {
-            VersionCmpResult res = ComparePackages(ctx, n, v, a, pi, attr, pp, result);
+            VersionCmpResult res = ComparePackages(ctx, n, v, a, pi, attr, pp, mode, result);
             if (res != VERCMP_NO_MATCH)
             {
+                Log(LOG_LEVEL_VERBOSE, "Package comparison for %s was decisive: %s", pi->name, res == VERCMP_MATCH ? "MATCH" : "ERROR");
                 return res;
             }
         }
     }
 
-    Log(LOG_LEVEL_VERBOSE, "Unsatisfied constraints in promise (%s,%s,%s)", n, v, a);
+    Log(LOG_LEVEL_VERBOSE, "PatchMatch did not match the constraints of promise (%s,%s,%s) [name,version,arch]", n, v, a);
     return VERCMP_NO_MATCH;
 }
 
-static VersionCmpResult PackageMatch(EvalContext *ctx, const char *n, const char *v, const char *a, Attributes attr,
-                                     Promise *pp, PromiseResult *result)
+static VersionCmpResult PackageMatch(EvalContext *ctx,
+                                     const char *n, const char *v, const char *a,
+                                     Attributes attr, Promise *pp,
+                                     const char* mode,
+                                     PromiseResult *result)
 /*
  * Returns VERCMP_MATCH if any installed packages match (n,v,a), VERCMP_NO_MATCH otherwise, VERCMP_ERROR on error.
+ * The mode is informational
  */
 {
     PackageManager *mp = NULL;
     PackageItem *pi;
 
+    // This REALLY needs some commenting
     for (mp = INSTALLED_PACKAGE_LISTS; mp != NULL; mp = mp->next)
     {
         if (strcmp(mp->manager, attr.packages.package_list_command) == 0)
@@ -1423,19 +1456,20 @@ static VersionCmpResult PackageMatch(EvalContext *ctx, const char *n, const char
         }
     }
 
-    Log(LOG_LEVEL_VERBOSE, "Looking for (%s,%s,%s)", n, v, a);
+    Log(LOG_LEVEL_VERBOSE, "Looking for %s (%s,%s,%s) [name,version,arch] in package manager %s", mode, n, v, a, mp->manager);
 
     for (pi = mp->pack_list; pi != NULL; pi = pi->next)
     {
-        VersionCmpResult res = ComparePackages(ctx, n, v, a, pi, attr, pp, result);
+        VersionCmpResult res = ComparePackages(ctx, n, v, a, pi, attr, pp, mode, result);
 
         if (res != VERCMP_NO_MATCH)
         {
+            Log(LOG_LEVEL_VERBOSE, "Package comparison for %s %s was decisive: %s", mode, pi->name, res == VERCMP_MATCH ? "MATCH" : "ERROR");
             return res;
         }
     }
 
-    Log(LOG_LEVEL_VERBOSE, "No installed packages matched (%s,%s,%s)", n, v, a);
+    Log(LOG_LEVEL_VERBOSE, "PackageMatch did not find %s packages to match the constraints of promise (%s,%s,%s) [name,version,arch]", mode, n, v, a);
     return VERCMP_NO_MATCH;
 }
 
@@ -1449,17 +1483,20 @@ static int VersionCheckSchedulePackage(EvalContext *ctx, Attributes a, Promise *
     case PACKAGE_ACTION_DELETE:
         if (matches && installed)
         {
+            Log(LOG_LEVEL_VERBOSE, "VersionCheckSchedulePackage: Package %s to be deleted is installed.", pp->promiser);
             return true;
         }
         else
         {
-            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "Package to be deleted does not exist anywhere");
+            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "Package %s to be deleted does not exist anywhere",
+                 pp->promiser);
         }
         break;
 
     case PACKAGE_ACTION_REINSTALL:
         if (matches && installed)
         {
+            Log(LOG_LEVEL_VERBOSE, "VersionCheckSchedulePackage: Package %s to be reinstalled is already installed.", pp->promiser);
             return true;
         }
         else
@@ -1472,6 +1509,11 @@ static int VersionCheckSchedulePackage(EvalContext *ctx, Attributes a, Promise *
     default:
         if ((!installed) || (!matches))
         {
+            if (matches && !installed)
+            {
+                Log(LOG_LEVEL_VERBOSE, "VersionCheckSchedulePackage: Package %s is not installed.", pp->promiser);
+            }
+
             return true;
         }
         else
@@ -1493,8 +1535,13 @@ static PromiseResult CheckPackageState(EvalContext *ctx, Attributes a, Promise *
     Attributes a2 = a;
     a2.packages.package_select = PACKAGE_VERSION_COMPARATOR_EQ;
 
-    VersionCmpResult installed = PackageMatch(ctx, name, "*", arch, a2, pp, &result);
-    VersionCmpResult matches = PackageMatch(ctx, name, version, arch, a2, pp, &result);
+    VersionCmpResult installed = PackageMatch(ctx, name, "*", arch, a2, pp, "[installed]", &result);
+    Log(LOG_LEVEL_VERBOSE, "Installed package match for (%s,%s,%s) [name,version,arch] was decisive: %s",
+        name, "*", arch, installed == VERCMP_MATCH ? "MATCH" : "ERROR-OR-NOMATCH");
+
+    VersionCmpResult matches = PackageMatch(ctx, name, version, arch, a2, pp, "[available]", &result);
+    Log(LOG_LEVEL_VERBOSE, "Available package match for (%s,%s,%s) [name,version,arch] was decisive: %s",
+        name, version, arch, matches == VERCMP_MATCH ? "MATCH" : "ERROR-OR-NOMATCH");
 
     if ((installed == VERCMP_ERROR) || (matches == VERCMP_ERROR))
     {
@@ -1505,6 +1552,7 @@ static PromiseResult CheckPackageState(EvalContext *ctx, Attributes a, Promise *
 
     if (VersionCheckSchedulePackage(ctx, a2, pp, matches, installed))
     {
+        Log(LOG_LEVEL_VERBOSE, "CheckPackageState: matched package (%s,%s,%s) [name,version,arch]; scheduling operation", name, version, arch);
         return SchedulePackageOp(ctx, name, version, arch, installed, matches, no_version, a, pp);
     }
 
@@ -1534,8 +1582,8 @@ static PromiseResult VerifyPromisedPatch(EvalContext *ctx, Attributes a, Promise
             strncpy(name, pp->promiser, CF_MAXVARSIZE - 1);
             strncpy(version, a2.packages.package_version, CF_MAXVARSIZE - 1);
             strncpy(arch, RlistScalarValue(rp), CF_MAXVARSIZE - 1);
-            VersionCmpResult installed1 = PatchMatch(ctx, name, "*", "*", a2, pp, &result);
-            VersionCmpResult matches1 = PatchMatch(ctx, name, version, arch, a2, pp, &result);
+            VersionCmpResult installed1 = PatchMatch(ctx, name, "*", "*", a2, pp, "[installed1]", &result);
+            VersionCmpResult matches1 = PatchMatch(ctx, name, version, arch, a2, pp, "[available1]", &result);
 
             if ((installed1 == VERCMP_ERROR) || (matches1 == VERCMP_ERROR))
             {
@@ -1553,8 +1601,8 @@ static PromiseResult VerifyPromisedPatch(EvalContext *ctx, Attributes a, Promise
             strncpy(name, pp->promiser, CF_MAXVARSIZE - 1);
             strncpy(version, a2.packages.package_version, CF_MAXVARSIZE - 1);
             strncpy(arch, "*", CF_MAXVARSIZE - 1);
-            installed = PatchMatch(ctx, name, "*", "*", a2, pp, &result);
-            matches = PatchMatch(ctx, name, version, arch, a2, pp, &result);
+            installed = PatchMatch(ctx, name, "*", "*", a2, pp, "[installed]", &result);
+            matches = PatchMatch(ctx, name, version, arch, a2, pp, "[available]", &result);
 
             if ((installed == VERCMP_ERROR) || (matches == VERCMP_ERROR))
             {
@@ -1570,8 +1618,8 @@ static PromiseResult VerifyPromisedPatch(EvalContext *ctx, Attributes a, Promise
         strncpy(version, ExtractFirstReference(a2.packages.package_version_regex, package), CF_MAXVARSIZE - 1);
         strncpy(name, ExtractFirstReference(a2.packages.package_name_regex, package), CF_MAXVARSIZE - 1);
         strncpy(arch, ExtractFirstReference(a2.packages.package_arch_regex, package), CF_MAXVARSIZE - 1);
-        installed = PatchMatch(ctx, name, "*", "*", a2, pp, &result);
-        matches = PatchMatch(ctx, name, version, arch, a2, pp, &result);
+        installed = PatchMatch(ctx, name, "*", "*", a2, pp, "[installed]", &result);
+        matches = PatchMatch(ctx, name, version, arch, a2, pp, "[available]", &result);
 
         if ((installed == VERCMP_ERROR) || (matches == VERCMP_ERROR))
         {
@@ -1589,8 +1637,8 @@ static PromiseResult VerifyPromisedPatch(EvalContext *ctx, Attributes a, Promise
             strncpy(name, pp->promiser, CF_MAXVARSIZE - 1);
             strncpy(version, "*", CF_MAXVARSIZE - 1);
             strncpy(arch, RlistScalarValue(rp), CF_MAXVARSIZE - 1);
-            VersionCmpResult installed1 = PatchMatch(ctx, name, "*", "*", a2, pp, &result);
-            VersionCmpResult matches1 = PatchMatch(ctx, name, version, arch, a2, pp, &result);
+            VersionCmpResult installed1 = PatchMatch(ctx, name, "*", "*", a2, pp, "[installed1]", &result);
+            VersionCmpResult matches1 = PatchMatch(ctx, name, version, arch, a2, pp, "[available1]", &result);
 
             if ((installed1 == VERCMP_ERROR) || (matches1 == VERCMP_ERROR))
             {
@@ -1608,8 +1656,8 @@ static PromiseResult VerifyPromisedPatch(EvalContext *ctx, Attributes a, Promise
             strncpy(name, pp->promiser, CF_MAXVARSIZE - 1);
             strncpy(version, "*", CF_MAXVARSIZE - 1);
             strncpy(arch, "*", CF_MAXVARSIZE - 1);
-            installed = PatchMatch(ctx, name, "*", "*", a2, pp, &result);
-            matches = PatchMatch(ctx, name, version, arch, a2, pp, &result);
+            installed = PatchMatch(ctx, name, "*", "*", a2, pp, "[installed]", &result);
+            matches = PatchMatch(ctx, name, version, arch, a2, pp, "[available]", &result);
 
             if ((installed == VERCMP_ERROR) || (matches == VERCMP_ERROR))
             {
@@ -1636,10 +1684,11 @@ static PromiseResult VerifyPromisedPackage(EvalContext *ctx, Attributes a, Promi
     if (a.packages.package_version)
     {
         /* The version is specified separately */
-        Log(LOG_LEVEL_VERBOSE, "Package version specified explicitly in promise body");
+        Log(LOG_LEVEL_VERBOSE, "Package version %s specified explicitly in promise body", a.packages.package_version);
 
         if (a.packages.package_architectures == NULL)
         {
+            Log(LOG_LEVEL_VERBOSE, " ... trying any arch '*'");
             result = PromiseResultUpdate(result, CheckPackageState(ctx, a, pp, package, a.packages.package_version, "*", false));
         }
         else
@@ -1656,7 +1705,7 @@ static PromiseResult VerifyPromisedPackage(EvalContext *ctx, Attributes a, Promi
     else if (a.packages.package_version_regex)
     {
         /* The name, version and arch are to be extracted from the promiser */
-        Log(LOG_LEVEL_VERBOSE, "Package version specified implicitly in promiser's name");
+        Log(LOG_LEVEL_VERBOSE, "Package version %s specified implicitly in promiser's name", a.packages.package_version_regex);
 
         char version[CF_MAXVARSIZE];
         char name[CF_MAXVARSIZE];
@@ -1675,6 +1724,7 @@ static PromiseResult VerifyPromisedPackage(EvalContext *ctx, Attributes a, Promi
             strcpy(arch, "*");
         }
 
+        Log(LOG_LEVEL_VERBOSE, " ... trying arch '%s' and version '%s'", arch, version);
         result = PromiseResultUpdate(result, CheckPackageState(ctx, a, pp, name, version, arch, false));
     }
     else
@@ -1683,13 +1733,14 @@ static PromiseResult VerifyPromisedPackage(EvalContext *ctx, Attributes a, Promi
 
         if (a.packages.package_architectures == NULL)
         {
+            Log(LOG_LEVEL_VERBOSE, " ... trying any arch '*' and any version '*'");
             result = PromiseResultUpdate(result, CheckPackageState(ctx, a, pp, package, "*", "*", true));
         }
         else
         {
             for (Rlist *rp = a.packages.package_architectures; rp != NULL; rp = rp->next)
             {
-                Log(LOG_LEVEL_VERBOSE, " ... trying listed arch '%s'", RlistScalarValue(rp));
+                Log(LOG_LEVEL_VERBOSE, " ... trying listed arch '%s' and any version '*'", RlistScalarValue(rp));
                 result = PromiseResultUpdate(result, CheckPackageState(ctx, a, pp, package, "*", RlistScalarValue(rp), true));
             }
         }
@@ -2429,7 +2480,7 @@ int PrependPackageItem(EvalContext *ctx, PackageItem ** list, const char *name, 
         return false;
     }
 
-    Log(LOG_LEVEL_VERBOSE, "Package (%s,%s,%s) found", name, version, arch);
+    Log(LOG_LEVEL_VERBOSE, "Package (%s,%s,%s) [name,version,arch] found", name, version, arch);
 
     pi = xmalloc(sizeof(PackageItem));
 
@@ -2505,7 +2556,7 @@ static int PrependPatchItem(EvalContext *ctx, PackageItem ** list, char *item, P
 
     if (PackageInItemList(chklist, name, version, arch))
     {
-        Log(LOG_LEVEL_VERBOSE, "Patch for (%s,%s,%s) found, but it appears to be installed already", name, version,
+        Log(LOG_LEVEL_VERBOSE, "Patch for (%s,%s,%s) [name,version,arch] found, but it appears to be installed already", name, version,
               arch);
         return false;
     }

@@ -506,7 +506,6 @@ static Reload CheckNewPromises(GenericAgentConfig *config, const Policy *existin
         else
         {
             Log(LOG_LEVEL_INFO, "New promises file contains syntax errors -- ignoring");
-            config->policy_last_read_attempt = time(NULL);
         }
     }
     else

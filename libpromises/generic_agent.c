@@ -370,7 +370,7 @@ bool GenericAgentCheckPromises(const GenericAgentConfig *config)
         return false;
     }
 
-    if (!IsFileOutsideDefaultRepository(config->original_input_file))
+    if (!IsFileOutsideDefaultRepository(config->input_file))
     {
         WritePolicyValidatedFile(config);
     }
@@ -580,8 +580,6 @@ static Policy *LoadPolicyFile(EvalContext *ctx, GenericAgentConfig *config, cons
 
 Policy *GenericAgentLoadPolicy(EvalContext *ctx, GenericAgentConfig *config)
 {
-    config->policy_last_read_attempt = time(NULL);
-
     StringSet *parsed_files = StringSetNew();
     StringSet *failed_files = StringSetNew();
 
@@ -818,20 +816,15 @@ static bool MissingInputFile(const char *input_file)
 
 bool GenericAgentIsPolicyReloadNeeded(const GenericAgentConfig *config, const Policy *policy)
 {
-    char filename[CF_MAXVARSIZE];
-
     time_t validated_at = ReadPolicyValidatedFileMTime(config);
 
     if (validated_at > time(NULL))
     {
         Log(LOG_LEVEL_INFO,
-            "Clock seems to have jumped back in time - mtime of '%s' is newer than current time - touching it",
-            filename);
+            "Clock seems to have jumped back in time - mtime of %zd is newer than current time - touching it",
+            validated_at);
 
-        if (utime(filename, NULL) == -1)
-        {
-            Log(LOG_LEVEL_ERR, "Could not touch '%s'. (utime: %s)", filename, GetErrorStr());
-        }
+        WritePolicyValidatedFile(config);
         return true;
     }
 
@@ -842,22 +835,24 @@ bool GenericAgentIsPolicyReloadNeeded(const GenericAgentConfig *config, const Po
             Log(LOG_LEVEL_VERBOSE, "There is no readable input file at '%s'. (stat: %s)", config->input_file, GetErrorStr());
             return true;
         }
-        else if (sb.st_mtime > validated_at || sb.st_mtime > config->policy_last_read_attempt)
+        else if (sb.st_mtime > validated_at)
         {
             Log(LOG_LEVEL_VERBOSE, "Input file '%s' has changed since the last policy read attempt", config->input_file);
             return true;
         }
     }
 
-// Check the directories first for speed and because non-input/data files should trigger an update
-
-    snprintf(filename, CF_MAXVARSIZE, "%s/inputs", CFWORKDIR);
-    MapName(filename);
-
-    if (IsNewerFileTree(filename, config->policy_last_read_attempt))
+    // Check the directories first for speed and because non-input/data files should trigger an update
     {
-        Log(LOG_LEVEL_VERBOSE, "Quick search detected file changes");
-        return true;
+        char inputs_dir[MAX_FILENAME];
+        snprintf(inputs_dir, MAX_FILENAME, "%s/inputs", CFWORKDIR);
+        MapName(inputs_dir);
+
+        if (IsNewerFileTree(inputs_dir, validated_at))
+        {
+            Log(LOG_LEVEL_VERBOSE, "Quick search detected file changes");
+            return true;
+        }
     }
 
     if (policy)
@@ -879,7 +874,7 @@ bool GenericAgentIsPolicyReloadNeeded(const GenericAgentConfig *config, const Po
                 reload_needed = true;
                 break;
             }
-            else if (sb.st_mtime > config->policy_last_read_attempt)
+            else if (sb.st_mtime > validated_at)
             {
                 reload_needed = true;
                 break;
@@ -894,11 +889,12 @@ bool GenericAgentIsPolicyReloadNeeded(const GenericAgentConfig *config, const Po
     }
 
     {
-        snprintf(filename, CF_MAXVARSIZE, "%s/policy_server.dat", CFWORKDIR);
+        char filename[MAX_FILENAME];
+        snprintf(filename, MAX_FILENAME, "%s/policy_server.dat", CFWORKDIR);
         MapName(filename);
 
         struct stat sb;
-        if ((stat(filename, &sb) != -1) && (sb.st_mtime > config->policy_last_read_attempt))
+        if ((stat(filename, &sb) != -1) && (sb.st_mtime > validated_at))
         {
             return true;
         }
@@ -1481,7 +1477,6 @@ GenericAgentConfig *GenericAgentConfigNewDefault(AgentType agent_type)
     config->check_runnable = agent_type != AGENT_TYPE_COMMON;
     config->ignore_missing_bundles = false;
     config->ignore_missing_inputs = false;
-    config->policy_last_read_attempt = 0;
 
     config->heap_soft = NULL;
     config->heap_negated = NULL;

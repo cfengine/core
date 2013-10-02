@@ -52,7 +52,6 @@ typedef struct
     // agent state
     bool ignore_missing_bundles;
     bool ignore_missing_inputs;
-    time_t policy_last_read_attempt;
 
     struct
     {

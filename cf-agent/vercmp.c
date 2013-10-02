@@ -102,7 +102,7 @@ static VersionCmpResult CompareVersionsLess(EvalContext *ctx, const char *v1, co
     }
     else
     {
-        return ComparePackageVersionsInternal(v1, v2, PACKAGE_VERSION_COMPARATOR_LT) ? VERCMP_MATCH : VERCMP_NO_MATCH;
+        return ComparePackageVersionsInternal(v1, v2, PACKAGE_VERSION_COMPARATOR_LT);
     }
 }
 
@@ -171,7 +171,7 @@ VersionCmpResult CompareVersions(EvalContext *ctx, const char *v1, const char *v
         text_result = "yes";
         break;
     default:
-        text_result = "Error!";
+        text_result = "Incompatible version format. Can't decide";
         break;
     }
 

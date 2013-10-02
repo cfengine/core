@@ -37,7 +37,7 @@ VersionCmpResult ComparePackageVersionsInternal(const char *v1, const char *v2, 
     int result = true;
     int break_loop = false;
     int cmp_result;
-    int version_matched = false;
+    VersionCmpResult version_matched = VERCMP_NO_MATCH;
 
     Rlist *numbers_pr = NULL, *separators_pr = NULL;
     Rlist *numbers_in = NULL, *separators_in = NULL;
@@ -72,6 +72,7 @@ VersionCmpResult ComparePackageVersionsInternal(const char *v1, const char *v2, 
     else
     {
         Log(LOG_LEVEL_VERBOSE, "Versioning models for (%s,%s) were incompatible", v1, v2);
+        version_matched = VERCMP_ERROR;
     }
 
     int version_equal = (strcmp(v2, v1) == 0);
@@ -89,19 +90,19 @@ VersionCmpResult ComparePackageVersionsInternal(const char *v1, const char *v2, 
             case PACKAGE_VERSION_COMPARATOR_NONE:
                 if (version_equal)
                 {
-                    version_matched = true;
+                    version_matched = VERCMP_MATCH;
                 }
                 break;
             case PACKAGE_VERSION_COMPARATOR_NEQ:
                 if (!version_equal)
                 {
-                    version_matched = true;
+                    version_matched = VERCMP_MATCH;
                 }
                 break;
             case PACKAGE_VERSION_COMPARATOR_GT:
                 if (cmp_result > 0)
                 {
-                    version_matched = true;
+                    version_matched = VERCMP_MATCH;
                 }
                 else if (cmp_result < 0)
                 {
@@ -111,7 +112,7 @@ VersionCmpResult ComparePackageVersionsInternal(const char *v1, const char *v2, 
             case PACKAGE_VERSION_COMPARATOR_LT:
                 if (cmp_result < 0)
                 {
-                    version_matched = true;
+                    version_matched = VERCMP_MATCH;
                 }
                 else if (cmp_result > 0)
                 {
@@ -121,7 +122,7 @@ VersionCmpResult ComparePackageVersionsInternal(const char *v1, const char *v2, 
             case PACKAGE_VERSION_COMPARATOR_GE:
                 if ((cmp_result > 0) || version_equal)
                 {
-                    version_matched = true;
+                    version_matched = VERCMP_MATCH;
                 }
                 else if (cmp_result < 0)
                 {
@@ -131,7 +132,7 @@ VersionCmpResult ComparePackageVersionsInternal(const char *v1, const char *v2, 
             case PACKAGE_VERSION_COMPARATOR_LE:
                 if ((cmp_result < 0) || version_equal)
                 {
-                    version_matched = true;
+                    version_matched = VERCMP_MATCH;
                 }
                 else if (cmp_result > 0)
                 {
@@ -142,7 +143,7 @@ VersionCmpResult ComparePackageVersionsInternal(const char *v1, const char *v2, 
                 break;
             }
 
-            if ((version_matched == true) || break_loop)
+            if ((version_matched == VERCMP_MATCH) || break_loop)
             {
                 rp_pr = NULL;
                 rp_in = NULL;
@@ -154,14 +155,14 @@ VersionCmpResult ComparePackageVersionsInternal(const char *v1, const char *v2, 
         {
             if ((cmp == PACKAGE_VERSION_COMPARATOR_GT) || (cmp == PACKAGE_VERSION_COMPARATOR_GE))
             {
-                version_matched = true;
+                version_matched = VERCMP_MATCH;
             }
         }
         if (rp_in != NULL)
         {
             if ((cmp == PACKAGE_VERSION_COMPARATOR_LT) || (cmp == PACKAGE_VERSION_COMPARATOR_LE))
             {
-                version_matched = true;
+                version_matched = VERCMP_MATCH;
             }
         }
     }
@@ -171,7 +172,7 @@ VersionCmpResult ComparePackageVersionsInternal(const char *v1, const char *v2, 
     RlistDestroy(separators_pr);
     RlistDestroy(separators_in);
 
-    return version_matched ? VERCMP_MATCH : VERCMP_NO_MATCH;
+    return version_matched;
 }
 
 static void ParsePackageVersion(char *version, Rlist **num, Rlist **sep)

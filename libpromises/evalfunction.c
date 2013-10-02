@@ -1361,44 +1361,93 @@ static FnCallResult FnCallGetIndices(EvalContext *ctx, FnCall *fp, Rlist *finala
 
 static FnCallResult FnCallGetValues(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
-    Rlist *returnlist = NULL;
     VarRef *ref = VarRefParseFromBundle(RlistScalarValue(finalargs), PromiseGetBundle(fp->caller));
 
-    VariableTableIterator *iter = EvalContextVariableTableIteratorNew(ctx, ref);
-    Variable *var = NULL;
-    while ((var = VariableTableIteratorNext(iter)))
+    DataType type = DATA_TYPE_NONE;
+    Rval rval;
+    EvalContextVariableGet(ctx, ref, &rval, &type);
+
+    Rlist *values = NULL;
+    if (type == DATA_TYPE_CONTAINER)
     {
-        if (var->ref->num_indices != 1)
+        if (JsonGetElementType(RvalContainerValue(rval)) == JSON_ELEMENT_TYPE_CONTAINER)
         {
-            continue;
-        }
-
-        switch (var->rval.type)
-        {
-        case RVAL_TYPE_SCALAR:
-            RlistAppendScalarIdemp(&returnlist, var->rval.item);
-            break;
-
-        case RVAL_TYPE_LIST:
-            for (const Rlist *rp = var->rval.item; rp != NULL; rp = rp->next)
+            JsonIterator iter = JsonIteratorInit(RvalContainerValue(rval));
+            const JsonElement *el = NULL;
+            while ((el = JsonIteratorNextValue(&iter)))
             {
-                RlistAppendScalarIdemp(&returnlist, RlistScalarValue(rp));
-            }
-            break;
+                if (JsonGetElementType(el) != JSON_ELEMENT_TYPE_PRIMITIVE)
+                {
+                    continue;
+                }
 
-        default:
-            break;
+                switch (JsonGetPrimitiveType(el))
+                {
+                case JSON_PRIMITIVE_TYPE_BOOL:
+                    RlistAppendScalar(&values, JsonPrimitiveGetAsBool(el) ? "true" : "false");
+                    break;
+                case JSON_PRIMITIVE_TYPE_INTEGER:
+                    {
+                        char *str = StringFromLong(JsonPrimitiveGetAsInteger(el));
+                        RlistAppendScalar(&values, str);
+                        free(str);
+                    }
+                    break;
+                case JSON_PRIMITIVE_TYPE_REAL:
+                    {
+                        char *str = StringFromDouble(JsonPrimitiveGetAsReal(el));
+                        RlistAppendScalar(&values, str);
+                        free(str);
+                    }
+                    break;
+                case JSON_PRIMITIVE_TYPE_STRING:
+                    RlistAppendScalar(&values, JsonPrimitiveGetAsString(el));
+                    break;
+
+                case JSON_PRIMITIVE_TYPE_NULL:
+                    break;
+                }
+            }
+        }
+    }
+    else
+    {
+        VariableTableIterator *iter = EvalContextVariableTableIteratorNew(ctx, ref);
+        Variable *var = NULL;
+        while ((var = VariableTableIteratorNext(iter)))
+        {
+            if (var->ref->num_indices != 1)
+            {
+                continue;
+            }
+
+            switch (var->rval.type)
+            {
+            case RVAL_TYPE_SCALAR:
+                RlistAppendScalarIdemp(&values, var->rval.item);
+                break;
+
+            case RVAL_TYPE_LIST:
+                for (const Rlist *rp = var->rval.item; rp != NULL; rp = rp->next)
+                {
+                    RlistAppendScalarIdemp(&values, RlistScalarValue(rp));
+                }
+                break;
+
+            default:
+                break;
+            }
         }
     }
 
     VarRefDestroy(ref);
 
-    if (returnlist == NULL)
+    if (RlistLen(values) == 0)
     {
-        RlistAppendScalarIdemp(&returnlist, CF_NULL_VALUE);
+        RlistAppendScalarIdemp(&values, CF_NULL_VALUE);
     }
 
-    return (FnCallResult) { FNCALL_SUCCESS, { returnlist, RVAL_TYPE_LIST } };
+    return (FnCallResult) { FNCALL_SUCCESS, { values, RVAL_TYPE_LIST } };
 }
 
 /*********************************************************************/

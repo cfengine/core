@@ -2,6 +2,7 @@
 #
 # Delete a line using a list, all of which don't match
 # Double (nested) header/trailer
+# No line will be removed.
 #
 #######################################################
 
@@ -37,6 +38,7 @@ BEGIN
 header
 BEGIN
     One potato
+	Two potato
     Three potatoe
     Four
 END

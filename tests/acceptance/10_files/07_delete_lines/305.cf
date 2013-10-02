@@ -2,6 +2,8 @@
 #
 # Delete a number of lines via an slist
 # select_region, only include_start_delimiter
+# Notice that after the first iteration the region will never
+# be matched again because the start marker does not exist anymore.
 #
 #######################################################
 
@@ -34,6 +36,7 @@ trailer";
 header
     One potato
     Two potato
+	Three potatoe
     Four
 END
 trailer

@@ -2,6 +2,8 @@
 #
 # Delete a number of lines via an slist (different order than in original)
 # select_region, only include_start_delimiter
+# "END" is not going to be deleted, this time because "BEGIN" is deleted
+# before, therefore the region will not be selected when "END" is used.
 #
 #######################################################
 
@@ -32,10 +34,10 @@ trailer";
       "expected" string =>
       "header
 header
-BEGIN
     One potato
     Two potato
     Four
+END
 trailer
 trailer";
       

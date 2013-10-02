@@ -2,7 +2,7 @@
 #
 # Delete a number of lines via an slist, different way, different patterns (different order than original)
 # Region editing, include_start_delimiter and include_end_delimiter
-# Second edit destroys the region
+# Second edit destroys the region and therefore the third edit will not be possible.
 #
 #######################################################
 
@@ -36,6 +36,7 @@ header
     One potato
     Two potato
     Four
+END
 trailer
 trailer";
       

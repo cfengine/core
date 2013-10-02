@@ -1,8 +1,11 @@
 #######################################################
 #
 # Delete a number of lines via an slist
-# Two regions - expect changes to occur in both
+# Two regions - Only first region is selected
 # select_region, doesn't include header or trailer
+# Notice that neither "BEGIN" nor "END" are included in
+# the selected region, therefore only "Three potatoe" is
+# deleted.
 #
 #######################################################
 

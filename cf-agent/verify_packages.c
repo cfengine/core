@@ -1383,7 +1383,7 @@ VersionCmpResult ComparePackages(EvalContext *ctx,
     VersionCmpResult vc =  CompareVersions(ctx, pi->version, v, a, pp, result);
     Log(LOG_LEVEL_VERBOSE,
         "Version comparison returned %s for %s package (%s,%s,%s) against given (%s,%s,%s) [name,version,arch]",
-        vc == VERCMP_MATCH ? "MATCH" : "NOMATCH",
+        vc == VERCMP_MATCH ? "MATCH" : vc == VERCMP_NO_MATCH ? "NO_MATCH" : "ERROR",
         mode,
         pi->name, pi->version, pi->arch,
         n, v, arch);

@@ -1,22 +1,14 @@
 #include <cf3.defs.h>
 
 #include <env_context.h>
+#include <verify_packages.h>
 
 #include <test.h>
-
-
-typedef enum
-{
-    VERCMP_ERROR = -1,
-    VERCMP_NO_MATCH = 0,
-    VERCMP_MATCH = 1
-} VersionCmpResult;
-
-VersionCmpResult ComparePackages(EvalContext *ctx, const char *n, const char *v, const char *a, PackageItem * pi, Attributes attr, Promise *pp);
 
 void test_different_name(void)
 {
     EvalContext *ctx = EvalContextNew();
+    PromiseResult result;
 
     PackageItem pi = {
         .name = "pkgone",
@@ -29,7 +21,7 @@ void test_different_name(void)
         }
     };
 
-    assert_int_equal(ComparePackages(ctx, "pkgtwo", "1", "arch", &pi, attr, NULL), false);
+    assert_int_equal(ComparePackages(ctx, "pkgtwo", "1", "arch", &pi, attr, NULL, "test", &result), false);
 
     EvalContextDestroy(ctx);
 }
@@ -37,6 +29,7 @@ void test_different_name(void)
 void test_wildcard_arch(void)
 {
     EvalContext *ctx = EvalContextNew();
+    PromiseResult result;
 
     PackageItem pi = {
         .name = "foobar",
@@ -49,7 +42,7 @@ void test_wildcard_arch(void)
         }
     };
 
-    assert_int_equal(ComparePackages(ctx, "foobar", "1", "*", &pi, attr, NULL), true);
+    assert_int_equal(ComparePackages(ctx, "foobar", "1", "*", &pi, attr, NULL, "test", &result), true);
 
     EvalContextDestroy(ctx);
 }
@@ -57,6 +50,7 @@ void test_wildcard_arch(void)
 void test_non_matching_arch(void)
 {
     EvalContext *ctx = EvalContextNew();
+    PromiseResult result;
 
     PackageItem pi = {
         .name = "foobar",
@@ -69,7 +63,7 @@ void test_non_matching_arch(void)
         }
     };
 
-    assert_int_equal(ComparePackages(ctx, "foobar", "1", "s390", &pi, attr, NULL), false);
+    assert_int_equal(ComparePackages(ctx, "foobar", "1", "s390", &pi, attr, NULL, "test", &result), false);
 
     EvalContextDestroy(ctx);
 }
@@ -77,6 +71,7 @@ void test_non_matching_arch(void)
 bool DoCompare(const char *lhs, const char *rhs, PackageVersionComparator cmp)
 {
     EvalContext *ctx = EvalContextNew();
+    PromiseResult result;
 
     PackageItem pi = {
         .name = "foobar",
@@ -89,7 +84,7 @@ bool DoCompare(const char *lhs, const char *rhs, PackageVersionComparator cmp)
         }
     };
 
-    return ComparePackages(ctx, "foobar", rhs, "somearch", &pi, a, NULL);
+    return ComparePackages(ctx, "foobar", rhs, "somearch", &pi, a, NULL, "test", &result);
 
     EvalContextDestroy(ctx);
 }

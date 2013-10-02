@@ -99,6 +99,8 @@ ENTERPRISE_VOID_FUNC_2ARG_DEFINE_STUB(void, GenericAgentSetDefaultDigest, HashMe
 
 void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
 {
+    GenericAgentSetDefaultDigest(&CF_DEFAULT_DIGEST, &CF_DEFAULT_DIGEST_LEN);
+
     GenericAgentInitialize(ctx, config);
 
     SetReferenceTime(ctx, true);
@@ -107,8 +109,6 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
 
     THIS_AGENT_TYPE = config->agent_type;
     EvalContextClassPutHard(ctx, CF_AGENTTYPES[config->agent_type]);
-
-    GenericAgentSetDefaultDigest(&CF_DEFAULT_DIGEST, &CF_DEFAULT_DIGEST_LEN);
 
     GetNameInfo3(ctx, config->agent_type);
     GetInterfacesInfo(ctx);

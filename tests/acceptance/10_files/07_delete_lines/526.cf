@@ -38,7 +38,7 @@ BEGIN
 header
 BEGIN
     One potato
-	Two potato
+    Two potato
     Three potatoe
     Four
 END

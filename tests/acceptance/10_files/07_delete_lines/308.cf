@@ -1,7 +1,9 @@
 #######################################################
 #
-# Delete a number of lines as separate lines, using regexes
+# Delete a number of lines, using regexes different way
 # select_region, only include_start_delimiter
+# This will only work for the first match, the same reason
+# as 306 and 307.
 #
 #######################################################
 
@@ -36,6 +38,7 @@ BEGIN
     One potato
     Two potato
     Four
+END
 trailer
 trailer";
       
@@ -70,7 +73,7 @@ bundle agent test
 bundle edit_line test_delete
 {
   delete_lines:
-      "\s+Three.*"
+      "^\s+Three.*$"	# Anchors should make no difference
       select_region => test_select;
       "END"
       select_region => test_select;

@@ -2,6 +2,8 @@
 #
 # Delete a number of lines as separate lines, using regexes
 # select_region, only include_start_delimiter
+# As with 306, this will not work since only the first line
+# will be selected.
 #
 #######################################################
 
@@ -36,6 +38,7 @@ BEGIN
     One potato
     Two potato
     Four
+END
 trailer
 trailer";
       

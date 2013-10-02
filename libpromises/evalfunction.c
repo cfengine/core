@@ -1300,32 +1300,61 @@ static FnCallResult FnCallRegArray(EvalContext *ctx, FnCall *fp, Rlist *finalarg
     }
 }
 
-/*********************************************************************/
 
 static FnCallResult FnCallGetIndices(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
-    Rlist *returnlist = NULL;
     VarRef *ref = VarRefParseFromBundle(RlistScalarValue(finalargs), PromiseGetBundle(fp->caller));
 
-    VariableTableIterator *iter = EvalContextVariableTableIteratorNew(ctx, ref);
-    Variable *var = NULL;
-    while ((var = VariableTableIteratorNext(iter)))
+    DataType type = DATA_TYPE_NONE;
+    Rval rval;
+    EvalContextVariableGet(ctx, ref, &rval, &type);
+
+    Rlist *keys = NULL;
+    if (type == DATA_TYPE_CONTAINER)
     {
-        for (size_t i = 0; i < var->ref->num_indices; i++)
+        if (JsonGetElementType(RvalContainerValue(rval)) == JSON_ELEMENT_TYPE_CONTAINER)
         {
-            RlistAppendScalarIdemp(&returnlist, var->ref->indices[i]);
+            if (JsonGetContrainerType(RvalContainerValue(rval)) == JSON_CONTAINER_TYPE_OBJECT)
+            {
+                JsonIterator iter = JsonIteratorInit(RvalContainerValue(rval));
+                const char *key = NULL;
+                while ((key = JsonIteratorNextKey(&iter)))
+                {
+                    RlistAppendScalar(&keys, key);
+                }
+            }
+            else
+            {
+                for (size_t i = 0; i < JsonLength(RvalContainerValue(rval)); i++)
+                {
+                    Rval key = (Rval) { StringFromLong(i), RVAL_TYPE_SCALAR };
+                    RlistAppendRval(&keys, key);
+                }
+            }
         }
     }
-    VariableTableIteratorDestroy(iter);
+    else
+    {
+        VariableTableIterator *iter = EvalContextVariableTableIteratorNew(ctx, ref);
+        Variable *var = NULL;
+        while ((var = VariableTableIteratorNext(iter)))
+        {
+            for (size_t i = 0; i < var->ref->num_indices; i++)
+            {
+                RlistAppendScalarIdemp(&keys, var->ref->indices[i]);
+            }
+        }
+        VariableTableIteratorDestroy(iter);
+    }
 
     VarRefDestroy(ref);
 
-    if (returnlist == NULL)
+    if (RlistLen(keys) == 0)
     {
-        RlistAppendScalarIdemp(&returnlist, CF_NULL_VALUE);
+        RlistAppendScalarIdemp(&keys, CF_NULL_VALUE);
     }
 
-    return (FnCallResult) { FNCALL_SUCCESS, { returnlist, RVAL_TYPE_LIST } };
+    return (FnCallResult) { FNCALL_SUCCESS, { keys, RVAL_TYPE_LIST } };
 }
 
 /*********************************************************************/

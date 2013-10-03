@@ -1,7 +1,7 @@
 #######################################################
 #
 # Delete a line using a singleton list which matches
-# Two regions - expect changes to occur in both
+# Two regions - Only the first region is selected
 # select_region, doesn't include header or trailer
 #
 #######################################################
@@ -49,6 +49,7 @@ END
 middle
 middle
 BEGIN
+    One potato
     Two potato
     Three potatoe
     Four

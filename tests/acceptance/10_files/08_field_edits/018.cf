@@ -24,10 +24,10 @@ ampallang:: :dydoe:,:::::
 :blowfish:conger:dogfish:eel:flounder";
       
       "expected" string =>
-      "able:baker,booker,banker:charlie:delta:XXX,echo
+      "able:baker,booker,banker:charlie:delta:XXX+echo
 apple:banana:carrot:dogfood:XXX
 aardvark:baboon:colugo:dingo:XXX:fox
-ampallang:: :dydoe:XXX,,:::::
+ampallang:: :dydoe:XXX+,:::::
 :blowfish:conger:dogfish:eel:flounder";
       
   files:

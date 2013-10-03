@@ -302,7 +302,7 @@ static bool VariableStateHasMore(const PromiseIterator *iter, size_t index)
     case RVAL_TYPE_LIST:
         {
             const Rlist *state = SeqAt(iter->var_states, index);
-            return state->next;
+            return state && state->next;
         }
 
     case RVAL_TYPE_CONTAINER:

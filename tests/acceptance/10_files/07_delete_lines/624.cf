@@ -1,7 +1,7 @@
 #######################################################
 #
 # Delete a line using a list
-# Two regions - expect changes to occur in both
+# Two regions - Only the first one is selected
 # select_region, doesn't include header or trailer
 #
 #######################################################
@@ -51,6 +51,7 @@ middle
 BEGIN
     One potato
     Two potato
+    Three potatoe
     Four
 END
 trailer

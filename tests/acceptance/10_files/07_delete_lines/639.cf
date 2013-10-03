@@ -51,6 +51,7 @@ middle
 BEGIN
     One potato
     Two potato
+    Three potatoe
     Four
 END
 trailer
@@ -79,7 +80,7 @@ body edit_defaults init_empty
 bundle agent test
 {
   vars:
-      "tstr" slist => { "Three", "GI", "ND" };
+      "tstr" slist => { "hre", "GI", "ND" };
       
   files:
       "$(G.testfile).actual"

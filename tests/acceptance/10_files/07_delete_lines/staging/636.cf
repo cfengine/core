@@ -1,8 +1,14 @@
 #######################################################
 #
 # Delete a line using a list, some of which match
-# Two regions - expect changes to occur in both
+# Two regions - Only the first region is going to be selected
 # select_region, doesn't include header or trailer
+# The current result of this test contradicts our logic.
+# On the first iteration one value is deleted.
+# On the second iteration no values are deleted. The second
+# iteration should be independent from the first one, therefore
+# I'm not fixing this test until we get a definitive answer on
+# that.
 #
 #######################################################
 

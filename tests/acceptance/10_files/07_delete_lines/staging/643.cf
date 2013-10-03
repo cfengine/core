@@ -3,6 +3,9 @@
 # Delete a line using a list, some of which match
 # Two regions - expect changes to occur in both
 # select_region, doesn't include header or trailer
+# The result of this test goes against the notion of independent
+# iterations, therefore it is not being fixed since this
+# is a bug in our logic not on the test.
 #
 #######################################################
 

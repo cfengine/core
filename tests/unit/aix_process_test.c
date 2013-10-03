@@ -57,7 +57,7 @@ int getprocs64(struct procentry64* pe, int process_size, struct fdsinfo64 *fi, i
         return 0;
     }
 }
-#endif
+#endif //!HAVE_GETPROCS64
 
 static void test_get_start_time_process1(void)
 {

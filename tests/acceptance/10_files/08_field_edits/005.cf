@@ -24,12 +24,12 @@ ampallang:: :dydoe:,:::::
 :blowfish:conger:dogfish:eel:flounder";
       
       "expected" string =>
-      "able:XXX:charlie:delta:echo
-apple:XXX:carrot:dogfood
-aardvark:XXX:colugo:dingo::fox
-ampallang:XXX: :dydoe:,:::::
+      "able:baker,booker,banker:charlie:delta:echo
+apple:banana:carrot:dogfood
+aardvark:baboon:colugo:dingo::fox
+ampallang:: :dydoe:,:::::
 :blowfish:conger:dogfish:eel:flounder";
-      
+            
   files:
       "$(G.testfile).$(states)"
       create => "true",
@@ -72,7 +72,7 @@ body edit_field test_col
       field_operation => "set";
       field_separator => ":";
       field_value => "XXX";
-      select_field => "0";	# Must be greater than 1
+      select_field => "0";	# Must be greater than 1 to be legal
       start_fields_from_zero => "false";
       value_separator => ",";
 }

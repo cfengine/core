@@ -3,12 +3,8 @@
 # Delete a line using a list, some of which match
 # Two regions - Only the first region is going to be selected
 # select_region, doesn't include header or trailer
-# The current result of this test contradicts our logic.
-# On the first iteration one value is deleted.
-# On the second iteration no values are deleted. The second
-# iteration should be independent from the first one, therefore
-# I'm not fixing this test until we get a definitive answer on
-# that.
+# Notice that the list is expanded in one step, not iterated
+# over.
 #
 #######################################################
 
@@ -55,6 +51,7 @@ END
 middle
 middle
 BEGIN
+    One potato
     Two potato
     Three potatoe
     Four

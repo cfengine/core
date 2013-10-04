@@ -1,7 +1,6 @@
 #######################################################
 #
-# Delete fields, simple case
-# Bug, tracked on https://cfengine.com/dev/issues/3506
+# Replace fields, illegal select_field
 #
 #######################################################
 
@@ -18,10 +17,10 @@ bundle agent init
       "states" slist => { "actual", "expected" };
 
       "actual" string =>
-      "able:baker,booker,XXX,bonker:charlie:delta:echo
-apple:XXX,banana:carrot:dogfood
-aardvark:baboon,XXX:colugo:dingo::fox
-ampallang:XXX: :dydoe:,:::::
+      "able:baker,booker,banker:charlie:delta:echo
+apple:banana:carrot:dogfood
+aardvark:baboon:colugo:dingo::fox
+ampallang:: :dydoe:,:::::
 :blowfish:conger:dogfish:eel:flounder";
       
       "expected" string =>
@@ -30,7 +29,7 @@ apple:banana:carrot:dogfood
 aardvark:baboon:colugo:dingo::fox
 ampallang:: :dydoe:,:::::
 :blowfish:conger:dogfish:eel:flounder";
-      
+            
   files:
       "$(G.testfile).$(states)"
       create => "true",
@@ -70,10 +69,11 @@ body edit_field test_col
 {
       allow_blank_fields => "true";
       extend_fields => "true";
-      field_operation => "delete";
+      field_operation => "set";
       field_separator => ":";
       field_value => "XXX";
-      select_field => "2";
+      select_field => "0";	# Must be greater than 1 to be legal
+      start_fields_from_zero => "false";
       value_separator => ",";
 }
 

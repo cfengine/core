@@ -34,10 +34,7 @@
 #include <files_interfaces.h>
 #include <rlist.h>
 #include <policy.h>
-
-#ifdef HAVE_ZONE_H
-# include <zone.h>
-#endif
+#include <zones.h>
 
 static int SelectProcRangeMatch(char *name1, char *name2, int min, int max, char **names, char **line);
 static int SelectProcRegexMatch(EvalContext *ctx, char *name1, char *name2, char *regex, char **colNames, char **line);
@@ -645,20 +642,13 @@ static void GetProcessColumnNames(char *proc, char **names, int *start, int *end
 #ifndef __MINGW32__
 static const char *GetProcessOptions(void)
 {
-# ifdef HAVE_GETZONEID
-    zoneid_t zid;
-    char zone[ZONENAME_MAX];
     static char psopts[CF_BUFSIZE];
 
-    zid = getzoneid();
-    getzonenamebyid(zid, zone, ZONENAME_MAX);
-
-    if (strcmp(zone, "global") == 0)
+    if (IsGlobalZone())
     {
         snprintf(psopts, CF_BUFSIZE, "%s,zone", VPSOPTS[VSYSTEMHARDCLASS]);
         return psopts;
     }
-# endif
 
 # ifdef __linux__
     if (strncmp(VSYSNAME.release, "2.4", 3) == 0)
@@ -717,46 +707,6 @@ static int ExtractPid(char *psentry, char **names, int *end)
 
     return pid;
 }
-
-#ifndef __MINGW32__
-static int ForeignZone(char *s)
-{
-// We want to keep the banner
-
-    if (strstr(s, "%CPU"))
-    {
-        return false;
-    }
-
-# ifdef HAVE_GETZONEID
-    zoneid_t zid;
-    char *sp, zone[ZONENAME_MAX];
-
-    zid = getzoneid();
-    getzonenamebyid(zid, zone, ZONENAME_MAX);
-
-    if (strcmp(zone, "global") == 0)
-    {
-        if (strcmp(s + strlen(s) - 6, "global") == 0)
-        {
-            *(s + strlen(s) - 6) = '\0';
-
-            for (sp = s + strlen(s) - 1; isspace(*sp); sp--)
-            {
-                *sp = '\0';
-            }
-
-            return false;
-        }
-        else
-        {
-            return true;
-        }
-    }
-# endif
-    return false;
-}
-#endif
 
 #ifndef __MINGW32__
 int LoadProcessTable(EvalContext *ctx, Item **procdata)

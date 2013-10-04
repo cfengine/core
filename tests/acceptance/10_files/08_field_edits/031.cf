@@ -26,8 +26,8 @@ ampallang:: :dydoe:,:::::
       "expected" string =>
       "able:baker,booker,banker:charlie:delta:echo:XXX
 apple:banana:carrot:dogfood::XXX
-aardvark:baboon:colugo:dingo::XXX
-ampallang:: :dydoe:,:XXX
+aardvark:baboon:colugo:dingo:fox:XXX
+ampallang: :dydoe:,::XXX
 :blowfish:conger:dogfish:eel:flounder";
       
   files:

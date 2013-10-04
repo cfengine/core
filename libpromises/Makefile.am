@@ -101,7 +101,8 @@ libpromises_la_SOURCES = \
         verify_classes.c verify_classes.h \
         verify_reports.c \
         verify_vars.c verify_vars.h \
-        rpl_utsname.c rpl_utsname.h
+        rpl_utsname.c rpl_utsname.h \
+        zones.c zones.h
 
 if !HAVE_NOVA
 libpromises_la_SOURCES += \

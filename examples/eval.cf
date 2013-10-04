@@ -1,3 +1,4 @@
+#+begin_src cfengine3
 body common control
 {
       bundlesequence => { run };
@@ -37,3 +38,4 @@ bundle agent run
   reports:
       "math/infix eval('$(values[$(indices)])') = '$(eval[$(indices)])'";
 }
+#+end_src

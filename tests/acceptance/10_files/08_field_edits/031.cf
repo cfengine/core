@@ -1,7 +1,6 @@
 #######################################################
 #
-# Delete fields, simple case
-# Bug, tracked on https://cfengine.com/dev/issues/3506
+# Set field, not allowing blanks (test needs to be double-checked for accuracy)
 #
 #######################################################
 
@@ -18,17 +17,17 @@ bundle agent init
       "states" slist => { "actual", "expected" };
 
       "actual" string =>
-      "able:baker,booker,XXX,bonker:charlie:delta:echo
-apple:XXX,banana:carrot:dogfood
-aardvark:baboon,XXX:colugo:dingo::fox
-ampallang:XXX: :dydoe:,:::::
-:blowfish:conger:dogfish:eel:flounder";
-      
-      "expected" string =>
       "able:baker,booker,banker:charlie:delta:echo
 apple:banana:carrot:dogfood
 aardvark:baboon:colugo:dingo::fox
 ampallang:: :dydoe:,:::::
+:blowfish:conger:dogfish:eel:flounder";
+      
+      "expected" string =>
+      "able:baker,booker,banker:charlie:delta:echo:XXX
+apple:banana:carrot:dogfood::XXX
+aardvark:baboon:colugo:dingo:fox:XXX
+ampallang: :dydoe:,::XXX
 :blowfish:conger:dogfish:eel:flounder";
       
   files:
@@ -68,12 +67,12 @@ bundle edit_line test_edit
 
 body edit_field test_col
 {
-      allow_blank_fields => "true";
+      allow_blank_fields => "false";
       extend_fields => "true";
-      field_operation => "delete";
+      field_operation => "set";
       field_separator => ":";
       field_value => "XXX";
-      select_field => "2";
+      select_field => "6";
       value_separator => ",";
 }
 

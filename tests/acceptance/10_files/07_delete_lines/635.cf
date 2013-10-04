@@ -1,7 +1,8 @@
 #######################################################
 #
-# Delete fields, simple case
-# Bug, tracked on https://cfengine.com/dev/issues/3506
+# Delete a line using a singleton list which matches
+# Two regions - expect changes to occur in both
+# select_region, doesn't include header or trailer
 #
 #######################################################
 
@@ -18,18 +19,43 @@ bundle agent init
       "states" slist => { "actual", "expected" };
 
       "actual" string =>
-      "able:baker,booker,XXX,bonker:charlie:delta:echo
-apple:XXX,banana:carrot:dogfood
-aardvark:baboon,XXX:colugo:dingo::fox
-ampallang:XXX: :dydoe:,:::::
-:blowfish:conger:dogfish:eel:flounder";
+      "header
+header
+BEGIN
+    One potato
+    Two potato
+    Three potatoe
+    Four
+END
+middle
+middle
+BEGIN
+    One potato
+    Two potato
+    Three potatoe
+    Four
+END
+trailer
+trailer";
       
       "expected" string =>
-      "able:baker,booker,banker:charlie:delta:echo
-apple:banana:carrot:dogfood
-aardvark:baboon:colugo:dingo::fox
-ampallang:: :dydoe:,:::::
-:blowfish:conger:dogfish:eel:flounder";
+      "header
+header
+BEGIN
+    Two potato
+    Three potatoe
+    Four
+END
+middle
+middle
+BEGIN
+    One potato
+    Two potato
+    Three potatoe
+    Four
+END
+trailer
+trailer";
       
   files:
       "$(G.testfile).$(states)"
@@ -53,28 +79,33 @@ body edit_defaults init_empty
 
 bundle agent test
 {
+  vars:
+      "tstr" slist => { ".*T.*" };
+      
   files:
       "$(G.testfile).actual"
-      edit_line => test_edit;
+      edit_line => test_delete(".*potat.*", "@(test.tstr)");
 
 }
 
-bundle edit_line test_edit
+bundle edit_line test_delete(str, match)
 {
-  field_edits:
-      "a.*"
-      edit_field => test_col;
+  delete_lines:
+      "$(str)"
+      delete_select => test_match(@{match}),
+      select_region => test_select;
 }
 
-body edit_field test_col
+body select_region test_select
 {
-      allow_blank_fields => "true";
-      extend_fields => "true";
-      field_operation => "delete";
-      field_separator => ":";
-      field_value => "XXX";
-      select_field => "2";
-      value_separator => ",";
+      select_start => "BEGIN";
+      select_end => "END";
+}
+
+
+body delete_select test_match(m)
+{
+      delete_if_not_match_from_list => { @{m} };
 }
 
 #######################################################

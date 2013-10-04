@@ -27,9 +27,18 @@
 
 #include "cf3.defs.h"
 
+#include <vercmp.h>
+
 void VerifyPackagesPromise(EvalContext *ctx, Promise *pp);
 void ExecuteScheduledPackages(EvalContext *ctx);
 void CleanScheduledPackages(void);
 int PrependPackageItem(EvalContext *ctx, PackageItem ** list, const char *name, const char *version, const char *arch, Promise *pp);
+
+// For testing.
+VersionCmpResult ComparePackages(EvalContext *ctx,
+                                 const char *n, const char *v, const char *arch,
+                                 PackageItem *pi, Attributes a,
+                                 Promise *pp);
+
 
 #endif

@@ -54,7 +54,7 @@ int MoveObstruction(EvalContext *ctx, char *from, Attributes attr, const Promise
 {
     struct stat sb;
     char stamp[CF_BUFSIZE], saved[CF_BUFSIZE];
-    time_t now_stamp = time((time_t *) NULL);
+    time_t now_stamp = time(NULL);
 
     if (lstat(from, &sb) == 0)
     {
@@ -155,7 +155,7 @@ int SaveAsFile(SaveCallbackFn callback, void *param, const char *file, Attribute
 
     BufferPrintf(pretty_file, "'%s'", file);
 
-    stamp_now = time((time_t *) NULL);
+    stamp_now = time(NULL);
 
     while (1)
     {

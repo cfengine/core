@@ -711,7 +711,7 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
             break;
         }
 
-        if ((tloc = time((time_t *) NULL)) == -1)
+        if ((tloc = time(NULL)) == -1)
         {
             sprintf(conn->output, "Couldn't read system clock\n");
             Log(LOG_LEVEL_INFO, "Couldn't read system clock. (time: %s)", GetErrorStr());

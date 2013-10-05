@@ -65,7 +65,7 @@ void SetReferenceTime(EvalContext *ctx, int setclasses)
     time_t tloc;
     char vbuff[CF_BUFSIZE];
 
-    if ((tloc = time((time_t *) NULL)) == -1)
+    if ((tloc = time(NULL)) == -1)
     {
         Log(LOG_LEVEL_ERR, "Couldn't read system clock. (time: %s)", GetErrorStr());
     }
@@ -89,7 +89,7 @@ void SetStartTime(void)
 {
     time_t tloc;
 
-    if ((tloc = time((time_t *) NULL)) == -1)
+    if ((tloc = time(NULL)) == -1)
     {
         Log(LOG_LEVEL_ERR, "Couldn't read system clock. (time: %s)", GetErrorStr());
     }

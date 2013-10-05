@@ -51,7 +51,7 @@ static void GenerateMd5Hash(const char *istring, char *ohash)
 {
     if (!strcmp(istring, "CF_CRITICAL_SECTION") ||
         !strncmp(istring, "lock.track_license_bundle.track_license", 39))
-    { 
+    {
         strcpy(ohash, istring);
         return;
     }
@@ -401,7 +401,7 @@ static void LogLockCompletion(char *cflog, int pid, char *str, char *op, char *o
         exit(1);
     }
 
-    if ((tim = time((time_t *) NULL)) == -1)
+    if ((tim = time(NULL)) == -1)
     {
         Log(LOG_LEVEL_DEBUG, "Couldn't read system clock");
     }

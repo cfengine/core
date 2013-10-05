@@ -183,7 +183,7 @@ void ServerEntryPoint(EvalContext *ctx, int sd_accepted, char *ipaddr)
         return;
     }
 
-    if ((now = time((time_t *) NULL)) == -1)
+    if ((now = time(NULL)) == -1)
        {
        now = 0;
        }
@@ -826,7 +826,7 @@ static int BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *co
             break;
         }
 
-        if ((tloc = time((time_t *) NULL)) == -1)
+        if ((tloc = time(NULL)) == -1)
         {
             sprintf(conn->output, "Couldn't read system clock\n");
             Log(LOG_LEVEL_INFO, "Couldn't read system clock. (time: %s)", GetErrorStr());

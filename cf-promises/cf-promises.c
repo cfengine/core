@@ -22,15 +22,16 @@
   included file COSL.txt.
 */
 
-#include "generic_agent.h"
+#include <generic_agent.h>
 
-#include "env_context.h"
-#include "conversion.h"
-#include "syntax.h"
-#include "rlist.h"
-#include "parser.h"
-#include "sysinfo.h"
-#include "man.h"
+#include <env_context.h>
+#include <conversion.h>
+#include <syntax.h>
+#include <rlist.h>
+#include <parser.h>
+#include <sysinfo.h>
+#include <man.h>
+#include <bootstrap.h>
 
 #include <time.h>
 
@@ -67,6 +68,7 @@ static const struct option OPTIONS[] =
     {"full-check", no_argument, 0, 'c'},
     {"warn", optional_argument, 0, 'W'},
     {"legacy-output", no_argument, 0, 'l'},
+    {"color", optional_argument, 0, 'C'},
     {NULL, 0, 0, '\0'}
 };
 
@@ -89,6 +91,7 @@ static const char *HINTS[] =
     "Ensure full policy integrity checks",
     "Pass comma-separated <warnings>|all to enable non-default warnings, or error=<warnings>|all",
     "Use legacy output format",
+    "Enable colorized output. Possible values: 'always', 'auto', 'never'. If option is used, the default value is 'auto'",
     NULL
 };
 
@@ -115,8 +118,6 @@ int main(int argc, char *argv[])
         ShowPromises(policy->bundles, policy->bodies);
     }
 
-    CheckForPolicyHub(ctx);
-
     switch (config->agent_specific.common.policy_output_format)
     {
     case GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_CF:
@@ -136,9 +137,9 @@ int main(int argc, char *argv[])
                                                     config->agent_specific.common.parser_warnings_error);
             JsonElement *json_policy = PolicyToJson(output_policy);
             Writer *writer = FileWriter(stdout);
-            JsonElementPrint(writer, json_policy, 2);
+            JsonWrite(writer, json_policy, 2);
             WriterClose(writer);
-            JsonElementDestroy(json_policy);
+            JsonDestroy(json_policy);
             PolicyDestroy(output_policy);
         }
         break;
@@ -162,7 +163,7 @@ GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
     int c;
     GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_COMMON);
 
-    while ((c = getopt_long(argc, argv, "dvnIf:D:N:VSrxMb:i:p:s:cg:hW:l", OPTIONS, &optindex)) != EOF)
+    while ((c = getopt_long(argc, argv, "dvnIf:D:N:VSrxMb:i:p:s:cg:hW:lC::", OPTIONS, &optindex)) != EOF)
     {
         switch ((char) c)
         {
@@ -178,7 +179,7 @@ GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
 
             if (optarg && (strlen(optarg) < 5))
             {
-                Log(LOG_LEVEL_ERR, " -f used but argument \"%s\" incorrect", optarg);
+                Log(LOG_LEVEL_ERR, " -f used but argument '%s' incorrect", optarg);
                 exit(EXIT_FAILURE);
             }
 
@@ -187,7 +188,7 @@ GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             break;
 
         case 'd':
-            config->debug_mode = true;
+            LogSetGlobalLevel(LOG_LEVEL_DEBUG);
             break;
 
         case 'b':
@@ -228,9 +229,9 @@ GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             {
                 JsonElement *json_syntax = SyntaxToJson();
                 Writer *out = FileWriter(stdout);
-                JsonElementPrint(out, json_syntax, 0);
+                JsonWrite(out, json_syntax, 0);
                 FileWriterDetach(out);
-                JsonElementDestroy(json_syntax);
+                JsonDestroy(json_syntax);
                 exit(EXIT_SUCCESS);
             }
             else
@@ -253,26 +254,34 @@ GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             break;
 
         case 'I':
-            INFORM = true;
+            LogSetGlobalLevel(LOG_LEVEL_INFO);
             break;
 
         case 'v':
-            VERBOSE = true;
+            LogSetGlobalLevel(LOG_LEVEL_VERBOSE);
             break;
 
         case 'n':
             DONTDO = true;
             IGNORELOCK = true;
             LOOKUP = true;
-            EvalContextHeapAddHard(ctx, "opt_dry_run");
+            EvalContextClassPutHard(ctx, "opt_dry_run");
             break;
 
         case 'V':
-            PrintVersion();
+            {
+                Writer *w = FileWriter(stdout);
+                GenericAgentWriteVersion(w);
+                FileWriterDetach(w);
+            }
             exit(0);
 
         case 'h':
-            PrintHelp("cf-promises", OPTIONS, HINTS, true);
+            {
+                Writer *w = FileWriter(stdout);
+                GenericAgentWriteHelp(w, "cf-promises", OPTIONS, HINTS, true);
+                FileWriterDetach(w);
+            }
             exit(0);
 
         case 'M':
@@ -303,8 +312,19 @@ GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             Log(LOG_LEVEL_ERR, "Self-diagnostic functionality is retired.");
             exit(0);
 
+        case 'C':
+            if (!GenericAgentConfigParseColor(config, optarg))
+            {
+                exit(EXIT_FAILURE);
+            }
+            break;
+
         default:
-            PrintHelp("cf-promises", OPTIONS, HINTS, true);
+            {
+                Writer *w = FileWriter(stdout);
+                GenericAgentWriteHelp(w, "cf-promises", OPTIONS, HINTS, true);
+                FileWriterDetach(w);
+            }
             exit(1);
 
         }

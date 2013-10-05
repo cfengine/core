@@ -1,3 +1,0 @@
-
-In many cases the CIDR form of address will show the netmask as @samp{/23}, but
-this offers and `old style' alternative.

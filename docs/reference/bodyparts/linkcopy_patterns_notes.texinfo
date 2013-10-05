@@ -1,5 +1,0 @@
-
-The pattern matches the last node filename (i.e. without the absolute
-path). Windows only supports hard links, see @code{link_type}.
-
-

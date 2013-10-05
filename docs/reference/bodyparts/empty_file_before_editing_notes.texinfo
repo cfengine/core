@@ -1,4 +1,0 @@
-
-Emptying a file before reconstructing its contents according to a
-fixed recipe allows an ordered procedure to be convergent.
-

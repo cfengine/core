@@ -1,0 +1,6 @@
+#!/bin/sh
+
+echo "@mylist={\"abc\", \"def\", \"ghi\"}" 
+echo "@myalist={\"{{abc}}\", \"  ' def}\", \"ghi'''\"}" 
+echo "@myblist={'{{a,bc}}', '  \" de,f}', 'gh,,i\"\"\"'}" 
+echo "@myclist={\"{{a'bc',,}}\", '  \",, d\"ef}', \"ghi,},'''\"}" 

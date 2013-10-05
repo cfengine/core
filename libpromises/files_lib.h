@@ -25,17 +25,14 @@
 #ifndef CFENGINE_FILES_LIB_H
 #define CFENGINE_FILES_LIB_H
 
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
-bool FileCanOpen(const char *path, const char *modes);
-void PurgeItemList(Item **list, char *name);
-ssize_t FileRead(const char *filename, char *buffer, size_t bufsize);
-ssize_t FileReadMax(char **output, const char *filename, size_t size_max);
+void PurgeItemList(EvalContext *ctx, Item **list, char *name);
 bool FileWriteOver(char *filename, char *contents);
 
 int LoadFileAsItemList(Item **liststart, const char *file, EditDefaults edits);
 
-int MakeParentDirectory(char *parentandchild, int force);
+bool MakeParentDirectory(const char *parentandchild, bool force);
 int MakeParentDirectory2(char *parentandchild, int force, bool enforce_promise);
 
 void RotateFiles(char *name, int number);
@@ -49,6 +46,6 @@ void CreateEmptyFile(char *name);
  */
 bool DeleteDirectoryTree(const char *path);
 
-#include "file_lib.h"
+#include <file_lib.h>
 
 #endif

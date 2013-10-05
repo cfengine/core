@@ -1,2 +1,0 @@
-
-The function is true if the current host is a member of the named host-netgroup.

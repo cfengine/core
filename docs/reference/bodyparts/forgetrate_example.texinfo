@@ -1,9 +1,0 @@
-
-@verbatim
-
-body monitor control
-{
-forgetrate => "0.7";
-}
-
-@end verbatim

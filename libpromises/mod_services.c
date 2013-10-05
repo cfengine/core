@@ -22,9 +22,9 @@
   included file COSL.txt.
 */
 
-#include "mod_services.h"
+#include <mod_services.h>
 
-#include "syntax.h"
+#include <syntax.h>
 
 static const ConstraintSyntax service_method_constraints[] =
 {

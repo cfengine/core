@@ -6,44 +6,44 @@
 
 body common control
 {
-  inputs => { "../../default.cf.sub" };
-  bundlesequence  => { default("$(this.promise_filename)") };
-  version => "1.0";
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
 }
 
 #######################################################
 
 bundle agent init
 {
-vars:
-        "dummy" string => "dummy";
+  vars:
+      "dummy" string => "dummy";
 }
 
 #######################################################
 
 bundle agent test
 {
-vars:
-    "zero_regex" string => "impossible line";
+  vars:
+      "zero_regex" string => "impossible line";
 
-    "fail" int => countlinesmatching("$(zero_regex)", "/asd/fgh/qwertyio0p");
+      "fail" int => countlinesmatching("$(zero_regex)", "/asd/fgh/qwertyio0p");
 }
 
 #######################################################
 
 bundle agent check
 {
-classes:
-        "ok" and => {
+  classes:
+      "ok" and => {
                     strcmp("$(test.fail)", "0"),
-                    };
+      };
 
-reports:
+  reports:
     DEBUG::
-        "Expected 0 matches to '$(test.zero_regex)', found $(test.fail)";
+      "Expected 0 matches to '$(test.zero_regex)', found $(test.fail)";
     ok::
-        "$(this.promise_filename) Pass";
+      "$(this.promise_filename) Pass";
     !ok::
-        "$(this.promise_filename) FAIL";
+      "$(this.promise_filename) FAIL";
 }
 

@@ -1,7 +1,0 @@
-
-
-This may be used as a policy Quality Assurance measure, to remind
-policy makers to properly document their promises. When true,
-@code{cf-promises} will report loudly on promises that do not have
-comments. Variables promises are exempted from this
-rule, since they may be considered self-documenting. 

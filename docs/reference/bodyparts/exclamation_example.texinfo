@@ -1,9 +1,0 @@
-
-@verbatim
-
-body agent control
-{
-exclamation => "false";
-}
-
-@end verbatim

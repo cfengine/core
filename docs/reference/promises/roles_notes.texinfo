@@ -1,6 +1,0 @@
-
-In this example user @samp{mark} is granted permission to remotely
-activate classes matching the regular expression when @samp{Mark_.*} using the
-@code{cf-runagent} to activate CFEngine. In this way one can
-implement a form of Role Based Access Control (RBAC), provided
-users do not have privileged access on the host directly.

@@ -1,12 +1,12 @@
-#include "platform.h"
+#include <platform.h>
 
-#include "test.h"
-#include "array_map_priv.h"
-#include "hash_map_priv.h"
-#include "map.h"
-#include "string_lib.h"
+#include <test.h>
+#include <array_map_priv.h>
+#include <hash_map_priv.h>
+#include <map.h>
+#include <string_lib.h>
 
-#include "alloc.h"
+#include <alloc.h>
 
 static unsigned int ConstHash(const void *key, unsigned int max)
 {

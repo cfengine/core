@@ -1,4 +1,0 @@
-
-This should point to a standard port 25 server without encyption.
-If you are running secured or encrypted email then you should
-run a mail relay on localhost and point this to localhost.

@@ -1,6 +1,0 @@
-
-Whereas most promise types are specific to a particular kind of
-interpretation that requires a typed interpreter (the bundle type),
-a number of promises can be made in any kind of bundle since they
-are of a generic input/output nature. These are @code{vars}, @code{classes},
-and @code{reports} promises.  The specific promise attributes are listed below.

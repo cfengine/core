@@ -1,0 +1,35 @@
+# Demo on how to extract the first "model name" field from /proc/cpuinfo 
+# into a variable. 
+# Can be used for inventory information in CFEngine Nova and above.
+
+body common control
+{
+      bundlesequence => { "inventory" };
+}
+
+###
+
+bundle common inventory
+{
+  vars:
+      "cpuinfo"  string => execresult("/bin/grep \"model name\" /proc/cpuinfo", "noshell");
+      
+    got_model_name::
+      "cpu"      string => "$(myarray[1])";
+
+  classes:
+
+      "got_model_name" expression => regextract(
+						 "model\s+name\s+:\s+([^\n]*)\n?.*",
+						 "$(cpuinfo)",
+						 "myarray"
+      );
+
+  reports:
+    got_model_name::
+      "model name is \"$(myarray[1])\"";
+
+    !got_model_name::
+      "Did not match CPU model name";
+}
+

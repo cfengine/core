@@ -1,7 +1,0 @@
-
-The addresses or hostnames here are expected to have non-permanent
-address-name bindings, we must therefor work harder to determine
-whether hosts credentials are trusted by looking for existing public
-keys in files that do not match the current hostname or IP.
-
-@b{This feature has been deprecated since 3.1.0.} This is now handled transparently.

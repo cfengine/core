@@ -1,5 +1,0 @@
-
-
-The matches are performed on the last node of the filename, i.e.  the
-file without its path. As windows does not support symbolic links,
-this feature is not available there.

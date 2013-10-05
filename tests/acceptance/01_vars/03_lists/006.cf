@@ -2,35 +2,35 @@
 
 body common control
 {
-  inputs => { "../../default.cf.sub" };
-  bundlesequence  => { default("$(this.promise_filename)") };
-  version => "1.0";
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
 }
 
 bundle agent init
 {
-vars:
-  "dummy" string => "";
+  vars:
+      "dummy" string => "";
 }
 
 bundle agent test
 {
-vars:
-  "dummy" string => "";
+  vars:
+      "dummy" string => "";
 }
 
 bundle agent check
 {
-vars:
-  "emptylist" slist => { "cf_null" };
+  vars:
+      "emptylist" slist => { "cf_null" };
 
-classes:
-  "ok" not => reglist("@(emptylist)", ".+");
+  classes:
+      "ok" not => reglist("@(emptylist)", ".+");
 
-reports:
-  ok::
-    "$(this.promise_filename) Pass";
-  !ok::
-    "$(this.promise_filename) FAIL";
+  reports:
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
 }
 

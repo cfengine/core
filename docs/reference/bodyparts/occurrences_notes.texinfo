@@ -1,8 +1,0 @@
-
-A policy for string replacement.
-
-@noindent @b{Default value}:@*
-The default value is "all".  Using "first" is generally unwise, as it is
-possibly non-convergent (it will change a different matching string each time
-the promise is executed, and may not "catch up" with whatever external action
-is altering the text the promise applies to).

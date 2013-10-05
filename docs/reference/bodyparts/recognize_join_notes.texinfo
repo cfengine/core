@@ -1,7 +1,0 @@
-
-If set to true, this option allows CFEngine to process line based files
-with backslash continuation. The default is to not process continuation backslashes.
-
-Back slash lines will only be concatenated if the file requires editing,
-and will not be restored. Restoration of the backslashes is not
-possible in a meaningful and convergent fashion.

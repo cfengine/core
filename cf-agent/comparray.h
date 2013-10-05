@@ -25,7 +25,7 @@
 #ifndef CFENGINE_COMPARRAY_H
 #define CFENGINE_COMPARRAY_H
 
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
 struct CompressedArray_
 {

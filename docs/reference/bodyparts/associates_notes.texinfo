@@ -1,3 +1,0 @@
-
-An element of an association which is a list of topics to which the
-current topic is associated.

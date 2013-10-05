@@ -22,10 +22,10 @@
   included file COSL.txt.
 */
 
-#include "dbm_migration.h"
+#include <dbm_migration.h>
 
-#include "logging.h"
-#include "string_lib.h"
+#include <logging.h>
+#include <string_lib.h>
 
 static bool BundlesMigrationVersion0(DBHandle *db)
 {
@@ -57,14 +57,14 @@ static bool BundlesMigrationVersion0(DBHandle *db)
         char *fqname = StringConcatenate(3, "default", ".", key);
         if (!WriteDB(db, fqname, value, vsize))
         {
-            Log(LOG_LEVEL_INFO, "Unable to write version 1 bundle entry for %s", key);
+            Log(LOG_LEVEL_INFO, "Unable to write version 1 bundle entry for '%s'", key);
             errors = true;
             continue;
         }
 
         if (!DBCursorDeleteEntry(cursor))
         {
-            Log(LOG_LEVEL_INFO, "Unable to delete version 0 bundle entry for %s", key);
+            Log(LOG_LEVEL_INFO, "Unable to delete version 0 bundle entry for '%s'", key);
             errors = true;
         }
     }

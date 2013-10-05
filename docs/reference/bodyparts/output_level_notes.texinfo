@@ -1,2 +1,0 @@
-
-With no attribute, @code{verbose} output is assumed.

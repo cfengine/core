@@ -22,9 +22,9 @@
   included file COSL.txt.
 */
 
-#include "mod_report.h"
+#include <mod_report.h>
 
-#include "syntax.h"
+#include <syntax.h>
 
 static const ConstraintSyntax printfile_constraints[] =
 {

@@ -1,5 +1,0 @@
-
-Part of Role Based Access Control (RBAC) in CFEngine. The users listed
-in this section are granted access to set certain classes by using the
-remote @code{cf-runagent}. The user-names will refer to public key
-identities already trusted on the system.

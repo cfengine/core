@@ -1,5 +1,0 @@
-
-There is no standard, universal or reliable way of determining the
-DNS domain name of a host, so it can be set explicitly to simplify
-discovery and name-lookup.
-

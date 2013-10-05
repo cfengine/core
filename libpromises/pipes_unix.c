@@ -22,13 +22,13 @@
   included file COSL.txt.
 */
 
-#include "pipes.h"
+#include <pipes.h>
 
-#include "mutex.h"
-#include "exec_tools.h"
-#include "rlist.h"
-#include "policy.h"
-#include "env_context.h"
+#include <mutex.h>
+#include <exec_tools.h>
+#include <rlist.h>
+#include <policy.h>
+#include <env_context.h>
 
 static int CfSetuid(uid_t uid, gid_t gid);
 
@@ -97,11 +97,11 @@ static void SetChildFD(int fd, pid_t pid)
 
 /*****************************************************************************/
 
-static pid_t CreatePipeAndFork(char *type, int *pd)
+static pid_t CreatePipeAndFork(const char *type, int *pd)
 {
     pid_t pid = -1;
 
-    if (((*type != 'r') && (*type != 'w')) || (type[1] != '\0'))
+    if (!PipeTypeIsOk(type))
     {
         errno = EINVAL;
         return -1;
@@ -133,14 +133,12 @@ static pid_t CreatePipeAndFork(char *type, int *pd)
 
 /*****************************************************************************/
 
-FILE *cf_popen(const char *command, char *type, bool capture_stderr)
+FILE *cf_popen(const char *command, const char *type, bool capture_stderr)
 {
     int pd[2];
     char **argv;
     pid_t pid;
     FILE *pp = NULL;
-
-    Log(LOG_LEVEL_DEBUG, "cf_popen(%s)\n", command);
 
     pid = CreatePipeAndFork(type, pd);
     if (pid == -1) {
@@ -232,14 +230,12 @@ FILE *cf_popen(const char *command, char *type, bool capture_stderr)
 
 /*****************************************************************************/
 
-FILE *cf_popensetuid(const char *command, char *type, uid_t uid, gid_t gid, char *chdirv, char *chrootv, ARG_UNUSED int background)
+FILE *cf_popensetuid(const char *command, const char *type, uid_t uid, gid_t gid, char *chdirv, char *chrootv, ARG_UNUSED int background)
 {
     int pd[2];
     char **argv;
     pid_t pid;
     FILE *pp = NULL;
-
-    Log(LOG_LEVEL_DEBUG, "cf_popensetuid(%s,%s,%" PRIuMAX ",%" PRIuMAX ")\n", command, type, (uintmax_t)uid, (uintmax_t)gid);
 
     pid = CreatePipeAndFork(type, pd);
     if (pid == -1) {
@@ -347,13 +343,11 @@ FILE *cf_popensetuid(const char *command, char *type, uid_t uid, gid_t gid, char
 /* Shell versions of commands - not recommended for security reasons         */
 /*****************************************************************************/
 
-FILE *cf_popen_sh(const char *command, char *type)
+FILE *cf_popen_sh(const char *command, const char *type)
 {
     int pd[2];
     pid_t pid;
     FILE *pp = NULL;
-
-    Log(LOG_LEVEL_DEBUG, "cf_popen_sh(%s)\n", command);
 
     pid = CreatePipeAndFork(type, pd);
     if (pid == -1) {
@@ -428,13 +422,11 @@ FILE *cf_popen_sh(const char *command, char *type)
 
 /******************************************************************************/
 
-FILE *cf_popen_shsetuid(const char *command, char *type, uid_t uid, gid_t gid, char *chdirv, char *chrootv, ARG_UNUSED int background)
+FILE *cf_popen_shsetuid(const char *command, const char *type, uid_t uid, gid_t gid, char *chdirv, char *chrootv, ARG_UNUSED int background)
 {
     int pd[2];
     pid_t pid;
     FILE *pp = NULL;
-
-    Log(LOG_LEVEL_DEBUG, "cf_popen_shsetuid(%s,%s,%" PRIuMAX ",%" PRIuMAX ")\n", command, type, (uintmax_t)uid, (uintmax_t)gid);
 
     pid = CreatePipeAndFork(type, pd);
     if (pid == -1) {
@@ -534,7 +526,7 @@ static int cf_pwait(pid_t pid)
 {
     int status;
 
-    Log(LOG_LEVEL_DEBUG, "cf_pwait - Waiting for process %" PRIdMAX "\n", (intmax_t)pid);
+    Log(LOG_LEVEL_DEBUG, "cf_pwait - Waiting for process %" PRIdMAX, (intmax_t)pid);
 
     while (waitpid(pid, &status, 0) < 0)
     {
@@ -558,8 +550,6 @@ int cf_pclose(FILE *pp)
 {
     int fd;
     pid_t pid;
-
-    Log(LOG_LEVEL_DEBUG, "cf_pclose(pp)\n");
 
     if (!ThreadLock(cft_count))
     {

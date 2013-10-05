@@ -22,36 +22,30 @@
   included file COSL.txt.
 */
 
-#include "env_monitor.h"
+#include <env_monitor.h>
 
-#include "env_context.h"
-#include "mon.h"
-#include "granules.h"
-#include "dbm_api.h"
-#include "policy.h"
-#include "promises.h"
-#include "item_lib.h"
-#include "conversion.h"
-#include "ornaments.h"
-#include "expand.h"
-#include "scope.h"
-#include "sysinfo.h"
-#include "signals.h"
-#include "locks.h"
-#include "exec_tools.h"
-#include "generic_agent.h" // WritePID
-#include "files_lib.h"
-#include "unix.h"
-#include "verify_measurements.h"
-#include "verify_classes.h"
-#include "cf-monitord-enterprise-stubs.h"
+#include <env_context.h>
+#include <mon.h>
+#include <granules.h>
+#include <dbm_api.h>
+#include <policy.h>
+#include <promises.h>
+#include <item_lib.h>
+#include <conversion.h>
+#include <ornaments.h>
+#include <expand.h>
+#include <scope.h>
+#include <sysinfo.h>
+#include <signals.h>
+#include <locks.h>
+#include <exec_tools.h>
+#include <generic_agent.h> // WritePID
+#include <files_lib.h>
+#include <unix.h>
+#include <verify_measurements.h>
+#include <verify_classes.h>
+#include <cf-monitord-enterprise-stubs.h>
 
-#ifdef HAVE_NOVA
-# include "history.h"
-#endif
-
-#include <math.h>
-#include <assert.h>
 
 /*****************************************************************************/
 /* Globals                                                                   */
@@ -101,7 +95,7 @@ static void GetDatabaseAge(void);
 static void LoadHistogram(void);
 static void GetQ(EvalContext *ctx, const Policy *policy);
 static Averages EvalAvQ(EvalContext *ctx, char *timekey);
-static void ArmClasses(Averages newvals, char *timekey);
+static void ArmClasses(EvalContext *ctx, Averages newvals);
 static void GatherPromisedMeasures(EvalContext *ctx, const Policy *policy);
 
 static void LeapDetection(void);
@@ -109,12 +103,12 @@ static Averages *GetCurrentAverages(char *timekey);
 static void UpdateAverages(EvalContext *ctx, char *timekey, Averages newvals);
 static void UpdateDistributions(EvalContext *ctx, char *timekey, Averages *av);
 static double WAverage(double newvals, double oldvals, double age);
-static double SetClasses(char *name, double variable, double av_expect, double av_var, double localav_expect,
-                         double localav_var, Item **classlist, char *timekey);
+static double SetClasses(EvalContext *ctx, char *name, double variable, double av_expect, double av_var, double localav_expect,
+                         double localav_var, Item **classlist);
 static void SetVariable(char *name, double now, double average, double stddev, Item **list);
 static double RejectAnomaly(double new, double av, double var, double av2, double var2);
 static void ZeroArrivals(void);
-static void KeepMonitorPromise(EvalContext *ctx, Promise *pp, void *param);
+static PromiseResult KeepMonitorPromise(EvalContext *ctx, Promise *pp, void *param);
 
 /****************************************************************/
 
@@ -170,7 +164,7 @@ void MonitorInitialize(void)
     MonTempInit();
     MonOtherInit();
 
-    Log(LOG_LEVEL_DEBUG, "Finished with initialization.\n");
+    Log(LOG_LEVEL_DEBUG, "Finished with monitor initialization");
 }
 
 /*********************************************************************/
@@ -189,11 +183,11 @@ static void GetDatabaseAge()
     if (ReadDB(dbp, "DATABASE_AGE", &AGE, sizeof(double)))
     {
         WAGE = AGE / SECONDS_PER_WEEK * CF_MEASURE_INTERVAL;
-        Log(LOG_LEVEL_DEBUG, "\n\nPrevious DATABASE_AGE %f\n\n", AGE);
+        Log(LOG_LEVEL_DEBUG, "Previous DATABASE_AGE %f", AGE);
     }
     else
     {
-        Log(LOG_LEVEL_DEBUG, "No previous AGE\n");
+        Log(LOG_LEVEL_DEBUG, "No previous DATABASE_AGE");
         AGE = 0.0;
     }
 
@@ -323,7 +317,7 @@ void MonitorStartServer(EvalContext *ctx, const Policy *policy)
         snprintf(timekey, sizeof(timekey), "%s", GenTimeKey(time(NULL)));
         averages = EvalAvQ(ctx, timekey);
         LeapDetection();
-        ArmClasses(averages, timekey);
+        ArmClasses(ctx, averages);
 
         ZeroArrivals();
 
@@ -339,8 +333,6 @@ void MonitorStartServer(EvalContext *ctx, const Policy *policy)
 
 static void GetQ(EvalContext *ctx, const Policy *policy)
 {
-    Log(LOG_LEVEL_DEBUG, "========================= GET Q ==============================\n");
-
     MonEntropyClassesReset();
 
     ZeroArrivals();
@@ -415,12 +407,12 @@ static Averages EvalAvQ(EvalContext *ctx, char *t)
         
         LOCALAV.Q[i].q = This[i];
 
-        Log(LOG_LEVEL_DEBUG, "Previous week's %s.q %lf\n", name, lastweek_vals->Q[i].q);
-        Log(LOG_LEVEL_DEBUG, "Previous week's %s.var %lf\n", name, lastweek_vals->Q[i].var);
-        Log(LOG_LEVEL_DEBUG, "Previous week's %s.ex %lf\n", name, lastweek_vals->Q[i].expect);
+        Log(LOG_LEVEL_DEBUG, "Previous week's '%s.q' %lf", name, lastweek_vals->Q[i].q);
+        Log(LOG_LEVEL_DEBUG, "Previous week's '%s.var' %lf", name, lastweek_vals->Q[i].var);
+        Log(LOG_LEVEL_DEBUG, "Previous week's '%s.ex' %lf", name, lastweek_vals->Q[i].expect);
 
-        Log(LOG_LEVEL_DEBUG, "Just measured: CF_THIS[%s] = %lf\n", name, CF_THIS[i]);
-        Log(LOG_LEVEL_DEBUG, "Just sanitized: This[%s] = %lf\n", name, This[i]);
+        Log(LOG_LEVEL_DEBUG, "Just measured: CF_THIS[%s] = %lf", name, CF_THIS[i]);
+        Log(LOG_LEVEL_DEBUG, "Just sanitized: This[%s] = %lf", name, This[i]);
 
         newvals.Q[i].expect = WAverage(This[i], lastweek_vals->Q[i].expect, WAGE);
         LOCALAV.Q[i].expect = WAverage(newvals.Q[i].expect, LOCALAV.Q[i].expect, ITER);
@@ -485,7 +477,7 @@ static void LeapDetection(void)
 
         if (!LDT_FULL)
         {
-            Log(LOG_LEVEL_DEBUG, "LDT Buffer full at %d\n", LDT_BUFSIZE);
+            Log(LOG_LEVEL_DEBUG, "LDT Buffer full at %d", LDT_BUFSIZE);
             LDT_FULL = true;
         }
     }
@@ -586,7 +578,7 @@ static void AddOpenPortsClasses(const char *name, const Item *value, Item **clas
     }
 }
 
-static void ArmClasses(Averages av, char *timekey)
+static void ArmClasses(EvalContext *ctx, Averages av)
 {
     double sigma;
     Item *ip,*classlist = NULL;
@@ -596,14 +588,12 @@ static void ArmClasses(Averages av, char *timekey)
     extern Item *ALL_INCOMING;
     extern Item *MON_UDP4, *MON_UDP6, *MON_TCP4, *MON_TCP6;
 
-    Log(LOG_LEVEL_DEBUG, "Arm classes for %s\n", timekey);
-
     for (i = 0; i < CF_OBSERVABLES; i++)
     {
         char desc[CF_BUFSIZE];
 
         GetObservable(i, name, desc);
-        sigma = SetClasses(name, CF_THIS[i], av.Q[i].expect, av.Q[i].var, LOCALAV.Q[i].expect, LOCALAV.Q[i].var, &classlist, timekey);
+        sigma = SetClasses(ctx, name, CF_THIS[i], av.Q[i].expect, av.Q[i].var, LOCALAV.Q[i].expect, LOCALAV.Q[i].var, &classlist);
         SetVariable(name, CF_THIS[i], av.Q[i].expect, sigma, &classlist);
 
         /* LDT */
@@ -749,12 +739,12 @@ static Averages *GetCurrentAverages(char *timekey)
 
         for (i = 0; i < CF_OBSERVABLES; i++)
         {
-            Log(LOG_LEVEL_DEBUG, "Previous values (%lf,..) for time index %s\n\n", entry.Q[i].expect, timekey);
+            Log(LOG_LEVEL_DEBUG, "Previous values (%lf,..) for time index '%s'", entry.Q[i].expect, timekey);
         }
     }
     else
     {
-        Log(LOG_LEVEL_DEBUG, "No previous value for time index %s\n", timekey);
+        Log(LOG_LEVEL_DEBUG, "No previous value for time index '%s'", timekey);
     }
 
     CloseDB(dbp);
@@ -772,7 +762,7 @@ static void UpdateAverages(EvalContext *ctx, char *timekey, Averages newvals)
         return;
     }
 
-    Log(LOG_LEVEL_INFO, "Updated averages at %s", timekey);
+    Log(LOG_LEVEL_INFO, "Updated averages at '%s'", timekey);
 
     WriteDB(dbp, timekey, &newvals, sizeof(Averages));
     WriteDB(dbp, "DATABASE_AGE", &AGE, sizeof(double));
@@ -906,14 +896,11 @@ static double WAverage(double anew, double aold, double age)
 
 /*****************************************************************************/
 
-static double SetClasses(char *name, double variable, double av_expect, double av_var, double localav_expect,
-                         double localav_var, Item **classlist, char *timekey)
+static double SetClasses(EvalContext *ctx, char *name, double variable, double av_expect, double av_var, double localav_expect,
+                         double localav_var, Item **classlist)
 {
     char buffer[CF_BUFSIZE], buffer2[CF_BUFSIZE];
     double dev, delta, sigma, ldelta, lsigma, sig;
-
-    Log(LOG_LEVEL_DEBUG, "\n SetClasses(%s,X=%lf,avX=%lf,varX=%lf,lavX=%lf,lvarX=%lf,%s)\n", name, variable, av_expect, av_var,
-            localav_expect, localav_var, timekey);
 
     delta = variable - av_expect;
     sigma = sqrt(av_var);
@@ -921,23 +908,23 @@ static double SetClasses(char *name, double variable, double av_expect, double a
     lsigma = sqrt(localav_var);
     sig = sqrt(sigma * sigma + lsigma * lsigma);
 
-    Log(LOG_LEVEL_DEBUG, " delta = %lf,sigma = %lf, lsigma = %lf, sig = %lf\n", delta, sigma, lsigma, sig);
+    Log(LOG_LEVEL_DEBUG, "delta = %lf, sigma = %lf, lsigma = %lf, sig = %lf", delta, sigma, lsigma, sig);
 
     if ((sigma == 0.0) || (lsigma == 0.0))
     {
-        Log(LOG_LEVEL_DEBUG, " No sigma variation .. can't measure class\n");
+        Log(LOG_LEVEL_DEBUG, "No sigma variation .. can't measure class");
 
         snprintf(buffer, CF_MAXVARSIZE, "entropy_%s.*", name);
-        MonEntropyPurgeUnused(buffer);
+        MonEntropyPurgeUnused(ctx, buffer);
 
         return sig;
     }
 
-    Log(LOG_LEVEL_DEBUG, "Setting classes for %s...\n", name);
+    Log(LOG_LEVEL_DEBUG, "Setting classes for '%s'...", name);
 
     if (fabs(delta) < cf_noise_threshold)       /* Arbitrary limits on sensitivity  */
     {
-        Log(LOG_LEVEL_DEBUG, " Sensitivity too high ..\n");
+        Log(LOG_LEVEL_DEBUG, "Sensitivity too high");
 
         buffer[0] = '\0';
         strcpy(buffer, name);
@@ -1127,7 +1114,7 @@ static void GatherPromisedMeasures(EvalContext *ctx, const Policy *policy)
     for (size_t i = 0; i < SeqLength(policy->bundles); i++)
     {
         const Bundle *bp = SeqAt(policy->bundles, i);
-        EvalContextStackPushBundleFrame(ctx, bp, false);
+        EvalContextStackPushBundleFrame(ctx, bp, NULL, false);
 
         if ((strcmp(bp->type, CF_AGENTTYPES[AGENT_TYPE_MONITOR]) == 0) || (strcmp(bp->type, CF_AGENTTYPES[AGENT_TYPE_COMMON]) == 0))
         {
@@ -1146,9 +1133,9 @@ static void GatherPromisedMeasures(EvalContext *ctx, const Policy *policy)
         EvalContextStackPopFrame(ctx);
     }
 
-    ScopeDeleteAll();
+    EvalContextClear(ctx);
     GetNameInfo3(ctx, AGENT_TYPE_MONITOR);
-    GetInterfacesInfo(ctx, AGENT_TYPE_MONITOR);
+    GetInterfacesInfo(ctx);
     Get3Environment(ctx, AGENT_TYPE_MONITOR);
     OSClasses(ctx);
     BuiltinClasses(ctx);
@@ -1158,7 +1145,7 @@ static void GatherPromisedMeasures(EvalContext *ctx, const Policy *policy)
 /* Level                                                             */
 /*********************************************************************/
 
-static void KeepMonitorPromise(EvalContext *ctx, Promise *pp, ARG_UNUSED void *param)
+static PromiseResult KeepMonitorPromise(EvalContext *ctx, Promise *pp, ARG_UNUSED void *param)
 {
     assert(param == NULL);
 
@@ -1178,7 +1165,7 @@ static void KeepMonitorPromise(EvalContext *ctx, Promise *pp, ARG_UNUSED void *p
         {
             Log(LOG_LEVEL_VERBOSE, "Skipping next promise '%s', as context '%s' is not relevant", pp->promiser, pp->classes);
         }
-        return;
+        return PROMISE_RESULT_NOOP;
     }
 
     if (VarClassExcluded(ctx, pp, &sp))
@@ -1196,20 +1183,21 @@ static void KeepMonitorPromise(EvalContext *ctx, Promise *pp, ARG_UNUSED void *p
             Log(LOG_LEVEL_VERBOSE, "Skipping next promise '%s', as var-context '%s' is not relevant", pp->promiser,
                   sp);
         }
-        return;
+        return PROMISE_RESULT_NOOP;
     }
 
     if (strcmp("classes", pp->parent_promise_type->name) == 0)
     {
-        VerifyClassPromise(ctx, pp, NULL);
-        return;
+        return VerifyClassPromise(ctx, pp, NULL);
     }
-
-    if (strcmp("measurements", pp->parent_promise_type->name) == 0)
+    else if (strcmp("measurements", pp->parent_promise_type->name) == 0)
     {
-        VerifyMeasurementPromise(ctx, CF_THIS, pp);
+        PromiseResult result = VerifyMeasurementPromise(ctx, CF_THIS, pp);
         /* FIXME: Verify why this explicit promise status change is done */
         EvalContextMarkPromiseNotDone(ctx, pp);
-        return;
+        return result;
     }
+
+    assert(false && "Unknown promise type");
+    return PROMISE_RESULT_NOOP;
 }

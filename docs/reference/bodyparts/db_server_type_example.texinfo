@@ -1,6 +1,0 @@
-
-@verbatim
-
-db_server_type => "postgres";
-
-@end verbatim

@@ -22,32 +22,72 @@
   included file COSL.txt.
 */
 
-#include "locks.h"
-#include "mutex.h"
-#include "string_lib.h"
-#include "files_interfaces.h"
-#include "files_lib.h"
-#include "atexit.h"
-#include "policy.h"
-#include "files_hashes.h"
-#include "item_lib.h"
-#include "files_names.h"
-#include "rlist.h"
-#include "process_lib.h"
-#include "fncall.h"
-#include "env_context.h"
+#include <locks.h>
+#include <mutex.h>
+#include <string_lib.h>
+#include <files_interfaces.h>
+#include <files_lib.h>
+#include <atexit.h>
+#include <policy.h>
+#include <files_hashes.h>
+#include <rb-tree.h>
+#include <files_names.h>
+#include <rlist.h>
+#include <process_lib.h>
+#include <fncall.h>
+#include <env_context.h>
+#include <misc_lib.h>
 
 #define CFLOGSIZE 1048576       /* Size of lock-log before rotation */
 
-static Item *DONELIST = NULL;
 static char CFLAST[CF_BUFSIZE] = { 0 };
 static char CFLOG[CF_BUFSIZE] = { 0 };
 
 static pthread_once_t lock_cleanup_once = PTHREAD_ONCE_INIT;
 
+
+#ifdef LMDB
+static void GenerateMd5Hash(const char *istring, char *ohash)
+{
+    if (!strcmp(istring, "CF_CRITICAL_SECTION") ||
+        !strncmp(istring, "lock.track_license_bundle.track_license", 39))
+    { 
+        strcpy(ohash, istring);
+        return;
+    }
+
+    unsigned char digest[EVP_MAX_MD_SIZE + 1];
+    HashString(istring, strlen(istring), digest, HASH_METHOD_MD5);
+
+    const char lookup[]="0123456789abcdef";
+    for (int i=0; i<16; i++)
+    {
+        ohash[i*2]   = lookup[digest[i] >> 4];
+        ohash[i*2+1] = lookup[digest[i] & 0xf];
+    }
+    ohash[16*2] = '\0';
+}
+#endif
+
 static bool WriteLockData(CF_DB *dbp, const char *lock_id, LockData *lock_data)
 {
+#ifdef LMDB
+    unsigned char digest2[EVP_MAX_MD_SIZE*2 + 1];
+
+    if (!strcmp(lock_id, "CF_CRITICAL_SECTION") ||
+        !strncmp(lock_id, "lock.track_license_bundle.track_license", 39))
+    {
+        strcpy(digest2, lock_id);
+    }
+    else
+    {
+        GenerateMd5Hash(lock_id, digest2);
+    }
+
+    if(WriteDB(dbp, digest2, lock_data, sizeof(LockData)))
+#else
     if(WriteDB(dbp, lock_id, lock_data, sizeof(LockData)))
+#endif
     {
         return true;
     }
@@ -92,7 +132,14 @@ bool AcquireLockByID(const char *lock_id, int acquire_after_minutes)
         .process_start_time = PROCESS_START_TIME_UNKNOWN,
     };
 
+#ifdef LMDB
+    unsigned char ohash[EVP_MAX_MD_SIZE*2 + 1];
+    GenerateMd5Hash(lock_id, ohash);
+
+    if (ReadDB(dbp, ohash, &lock_data, sizeof(lock_data)))
+#else
     if (ReadDB(dbp, lock_id, &lock_data, sizeof(lock_data)))
+#endif
     {
         if(lock_data.time + (acquire_after_minutes * SECONDS_PER_MINUTE) < time(NULL))
         {
@@ -113,21 +160,26 @@ bool AcquireLockByID(const char *lock_id, int acquire_after_minutes)
     return result;
 }
 
-time_t FindLockTime(char *name)
+time_t FindLockTime(const char *name)
 {
     CF_DB *dbp;
     LockData entry = {
         .process_start_time = PROCESS_START_TIME_UNKNOWN,
     };
 
-    Log(LOG_LEVEL_DEBUG, "FindLockTime(%s)\n", name);
-
     if ((dbp = OpenLock()) == NULL)
     {
         return -1;
     }
 
+#ifdef LMDB
+    unsigned char ohash[EVP_MAX_MD_SIZE*2 + 1];
+    GenerateMd5Hash(name, ohash);
+
+    if (ReadDB(dbp, ohash, &entry, sizeof(entry)))
+#else
     if (ReadDB(dbp, name, &entry, sizeof(entry)))
+#endif
     {
         CloseLock(dbp);
         return entry.time;
@@ -154,7 +206,14 @@ bool InvalidateLockTime(const char *lock_id)
         .process_start_time = PROCESS_START_TIME_UNKNOWN,
     };
 
+#ifdef LMDB
+    unsigned char ohash[EVP_MAX_MD_SIZE*2 + 1];
+    GenerateMd5Hash(lock_id, ohash);
+
+    if(!ReadDB(dbp, ohash, &lock_data, sizeof(lock_data)))
+#else
     if(!ReadDB(dbp, lock_id, &lock_data, sizeof(lock_data)))
+#endif
     {
         CloseLock(dbp);
         return true;  /* nothing to invalidate */
@@ -306,7 +365,14 @@ static pid_t FindLockPid(char *name)
         return -1;
     }
 
+#ifdef LMDB
+    unsigned char ohash[EVP_MAX_MD_SIZE*2 + 1];
+    GenerateMd5Hash(name, ohash);
+
+    if (ReadDB(dbp, ohash, &entry, sizeof(entry)))
+#else
     if (ReadDB(dbp, name, &entry, sizeof(entry)))
+#endif
     {
         CloseLock(dbp);
         return entry.pid;
@@ -318,14 +384,11 @@ static pid_t FindLockPid(char *name)
     }
 }
 
-static void LogLockCompletion(char *cflog, int pid, char *str, char *operator, char *operand)
+static void LogLockCompletion(char *cflog, int pid, char *str, char *op, char *operand)
 {
     FILE *fp;
     char buffer[CF_MAXVARSIZE];
-    struct stat statbuf;
     time_t tim;
-
-    Log(LOG_LEVEL_DEBUG, "LockLogCompletion(%s)\n", str);
 
     if (cflog == NULL)
     {
@@ -340,7 +403,7 @@ static void LogLockCompletion(char *cflog, int pid, char *str, char *operator, c
 
     if ((tim = time((time_t *) NULL)) == -1)
     {
-        Log(LOG_LEVEL_DEBUG, "CFEngine: couldn't read system clock\n");
+        Log(LOG_LEVEL_DEBUG, "Couldn't read system clock");
     }
 
     sprintf(buffer, "%s", ctime(&tim));
@@ -350,18 +413,9 @@ static void LogLockCompletion(char *cflog, int pid, char *str, char *operator, c
         Log(LOG_LEVEL_ERR, "Chop was called on a string that seemed to have no terminator");
     }
 
-    fprintf(fp, "%s:%s:pid=%d:%s:%s\n", buffer, str, pid, operator, operand);
+    fprintf(fp, "%s:%s:pid=%d:%s:%s\n", buffer, str, pid, op, operand);
 
     fclose(fp);
-
-    if (stat(cflog, &statbuf) != -1)
-    {
-        if (statbuf.st_size > CFLOGSIZE)
-        {
-            Log(LOG_LEVEL_VERBOSE, "Rotating lock-runlog file");
-            RotateFiles(cflog, 2);
-        }
-    }
 }
 
 static void LocksCleanup(void)
@@ -424,7 +478,7 @@ static char *BodyName(const Promise *pp)
 static bool KillLockHolder(ARG_UNUSED const char *lock)
 {
     Log(LOG_LEVEL_VERBOSE,
-          "Process is not running - ignoring lock (Windows does not support graceful processes termination)\n");
+          "Process is not running - ignoring lock (Windows does not support graceful processes termination)");
     return true;
 }
 
@@ -443,7 +497,14 @@ static bool KillLockHolder(const char *lock)
         .process_start_time = PROCESS_START_TIME_UNKNOWN,
     };
 
+#ifdef LMDB
+    unsigned char ohash[EVP_MAX_MD_SIZE*2 + 1];
+    GenerateMd5Hash(lock, ohash);
+
+    if (!ReadDB(dbp, ohash, &lock_data, sizeof(lock_data)))
+#else
     if (!ReadDB(dbp, lock, &lock_data, sizeof(lock_data)))
+#endif
     {
         /* No lock found */
         CloseLock(dbp);
@@ -457,7 +518,7 @@ static bool KillLockHolder(const char *lock)
 
 #endif
 
-static void PromiseHash(const Promise *pp, const char *salt, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMethod type)
+static void PromiseRuntimeHash(const Promise *pp, const char *salt, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMethod type)
 {
     static const char *PACK_UPIFELAPSED_SALT = "packageuplist";
 
@@ -484,6 +545,21 @@ static void PromiseHash(const Promise *pp, const char *salt, unsigned char diges
     {
         EVP_DigestUpdate(&context, pp->comment, strlen(pp->comment));
     }
+
+    if (pp->parent_promise_type && pp->parent_promise_type->parent_bundle)
+    {
+        if (pp->parent_promise_type->parent_bundle->ns)
+        {
+            EVP_DigestUpdate(&context, pp->parent_promise_type->parent_bundle->ns, strlen(pp->parent_promise_type->parent_bundle->ns));
+        }
+
+        if (pp->parent_promise_type->parent_bundle->name)
+        {
+            EVP_DigestUpdate(&context, pp->parent_promise_type->parent_bundle->name, strlen(pp->parent_promise_type->parent_bundle->name));
+        }
+    }
+
+    // Unused: pp start, end, and line attributes (describing source position).
 
     if (salt)
     {
@@ -522,7 +598,7 @@ static void PromiseHash(const Promise *pp, const char *salt, unsigned char diges
         case RVAL_TYPE_LIST:
             for (rp = cp->rval.item; rp != NULL; rp = rp->next)
             {
-                EVP_DigestUpdate(&context, rp->item, strlen(rp->item));
+                EVP_DigestUpdate(&context, RlistScalarValue(rp), strlen(RlistScalarValue(rp)));
             }
             break;
 
@@ -536,7 +612,20 @@ static void PromiseHash(const Promise *pp, const char *salt, unsigned char diges
 
             for (rp = fp->args; rp != NULL; rp = rp->next)
             {
-                EVP_DigestUpdate(&context, rp->item, strlen(rp->item));
+                switch (rp->val.type)
+                {
+                case RVAL_TYPE_SCALAR:
+                    EVP_DigestUpdate(&context, RlistScalarValue(rp), strlen(RlistScalarValue(rp)));
+                    break;
+
+                case RVAL_TYPE_FNCALL:
+                    EVP_DigestUpdate(&context, RlistFnCallValue(rp)->name, strlen(RlistFnCallValue(rp)->name));
+                    break;
+
+                default:
+                    ProgrammingError("Unhandled case in switch");
+                    break;
+                }
             }
             break;
 
@@ -550,18 +639,18 @@ static void PromiseHash(const Promise *pp, const char *salt, unsigned char diges
 /* Digest length stored in md_len */
 }
 
-CfLock AcquireLock(EvalContext *ctx, char *operand, char *host, time_t now, TransactionContext tc, const Promise *pp, int ignoreProcesses)
+CfLock AcquireLock(EvalContext *ctx, const char *operand, const char *host, time_t now,
+                   TransactionContext tc, const Promise *pp, bool ignoreProcesses)
 {
     int i, sum = 0;
     time_t lastcompleted = 0, elapsedtime;
     char *promise, cc_operator[CF_BUFSIZE], cc_operand[CF_BUFSIZE];
     char cflock[CF_BUFSIZE], cflast[CF_BUFSIZE], cflog[CF_BUFSIZE];
     char str_digest[CF_BUFSIZE];
+    char *rbt_key = NULL;
+    static RBTree *rbt = NULL;
     CfLock this;
     unsigned char digest[EVP_MAX_MD_SIZE + 1];
-
-    /* Register a cleanup handler */
-    pthread_once(&lock_cleanup_once, &RegisterLockCleanup);
 
     this.last = (char *) CF_UNDEFINED;
     this.lock = (char *) CF_UNDEFINED;
@@ -576,6 +665,12 @@ CfLock AcquireLock(EvalContext *ctx, char *operand, char *host, time_t now, Tran
     this.lock = NULL;
     this.log = NULL;
 
+    // rbt is static, allocate it the first time
+    if (rbt == NULL)
+    {
+      rbt = RBTreeNew(NULL, (RBTreeKeyCompareFn *) StringSafeCompare, NULL, NULL, NULL, NULL);
+    }
+
 /* Indicate as done if we tried ... as we have passed all class
    constraints now but we should only do this for level 0
    promises. Sub routine bundles cannot be marked as done or it will
@@ -586,26 +681,32 @@ CfLock AcquireLock(EvalContext *ctx, char *operand, char *host, time_t now, Tran
         return this;
     }
 
-    if (RlistLen(CF_STCK) == 1)
+    if (EvalContextStackCurrentPromise(ctx))
     {
         /* Must not set promise to be done for editfiles etc */
         EvalContextMarkPromiseDone(ctx, pp);
     }
 
-    PromiseHash(pp, operand, digest, CF_DEFAULT_DIGEST);
+    PromiseRuntimeHash(pp, operand, digest, CF_DEFAULT_DIGEST);
     HashPrintSafe(CF_DEFAULT_DIGEST, digest, str_digest);
 
 /* As a backup to "done" we need something immune to re-use */
 
     if (THIS_AGENT_TYPE == AGENT_TYPE_AGENT)
     {
-        if (IsItemIn(DONELIST, str_digest))
+        /* Avoid same prefix to have a better key for our Red Black Tree */
+        rbt_key = xcalloc(1, CF_BUFSIZE);
+        snprintf(rbt_key, CF_BUFSIZE, "%s", SkipHashType(str_digest));
+
+        if (RBTreeGet(rbt, (void *) rbt_key) != NULL)
         {
-            Log(LOG_LEVEL_VERBOSE, "This promise has already been verified");
+            Log(LOG_LEVEL_DEBUG, "This promise has already been verified");
+            free(rbt_key);
             return this;
         }
 
-        PrependItem(&DONELIST, str_digest, NULL);
+        /* Using &sum to avoid the declaration of a dedicated dummy variable */
+        RBTreePut(rbt, (void * ) rbt_key, &sum);
     }
 
 /* Finally if we're supposed to ignore locks ... do the remaining stuff */
@@ -624,8 +725,8 @@ CfLock AcquireLock(EvalContext *ctx, char *operand, char *host, time_t now, Tran
 
     free(promise);
 
-    Log(LOG_LEVEL_DEBUG, "AcquireLock(%s,%s), ExpireAfter=%d, IfElapsed=%d\n", cc_operator, cc_operand, tc.expireafter,
-            tc.ifelapsed);
+    Log(LOG_LEVEL_DEBUG, "AcquireLock(%s,%s), ExpireAfter = %d, IfElapsed = %d", cc_operator, cc_operand, tc.expireafter,
+        tc.ifelapsed);
 
     for (i = 0; cc_operator[i] != '\0'; i++)
     {
@@ -641,7 +742,7 @@ CfLock AcquireLock(EvalContext *ctx, char *operand, char *host, time_t now, Tran
     snprintf(cflock, CF_BUFSIZE, "lock.%.100s.%s.%.100s_%d_%s", PromiseGetBundle(pp)->name, cc_operator, cc_operand, sum, str_digest);
     snprintf(cflast, CF_BUFSIZE, "last.%.100s.%s.%.100s_%d_%s", PromiseGetBundle(pp)->name, cc_operator, cc_operand, sum, str_digest);
 
-    Log(LOG_LEVEL_DEBUG, "LOCK(%s)[%s]\n", PromiseGetBundle(pp)->name, cflock);
+    Log(LOG_LEVEL_DEBUG, "Log for bundle '%s', '%s'", PromiseGetBundle(pp)->name, cflock);
 
 // Now see if we can get exclusivity to edit the locks
 
@@ -704,7 +805,17 @@ CfLock AcquireLock(EvalContext *ctx, char *operand, char *host, time_t now, Tran
             }
         }
 
-        WriteLock(cflock);
+        int ret = WriteLock(cflock);
+        if (ret != -1);
+        {
+            /* Register a cleanup handler *after* having opened the DB, so that
+             * CloseAllDB() atexit() handler is registered in advance, and it is
+             * called after removing this lock.
+
+             * There is a small race condition here that we'll leave a stale lock
+             * if we exit before the following line. */
+            pthread_once(&lock_cleanup_once, &RegisterLockCleanup);
+        }
     }
 
     ReleaseCriticalSection();
@@ -721,36 +832,36 @@ CfLock AcquireLock(EvalContext *ctx, char *operand, char *host, time_t now, Tran
     return this;
 }
 
-void YieldCurrentLock(CfLock this)
+void YieldCurrentLock(CfLock lock)
 {
     if (IGNORELOCK)
     {
-        free(this.lock);        /* allocated in AquireLock as a special case */
+        free(lock.lock);        /* allocated in AquireLock as a special case */
         return;
     }
 
-    if (this.lock == (char *) CF_UNDEFINED)
+    if (lock.lock == (char *) CF_UNDEFINED)
     {
         return;
     }
 
-    Log(LOG_LEVEL_DEBUG, "Yielding lock %s\n", this.lock);
+    Log(LOG_LEVEL_DEBUG, "Yielding lock '%s'", lock.lock);
 
-    if (RemoveLock(this.lock) == -1)
+    if (RemoveLock(lock.lock) == -1)
     {
-        Log(LOG_LEVEL_VERBOSE, "Unable to remove lock %s", this.lock);
-        free(this.last);
-        free(this.lock);
-        free(this.log);
+        Log(LOG_LEVEL_VERBOSE, "Unable to remove lock %s", lock.lock);
+        free(lock.last);
+        free(lock.lock);
+        free(lock.log);
         return;
     }
 
-    if (WriteLock(this.last) == -1)
+    if (WriteLock(lock.last) == -1)
     {
-        Log(LOG_LEVEL_ERR, "Unable to create '%s'. (creat: %s)", this.last, GetErrorStr());
-        free(this.last);
-        free(this.lock);
-        free(this.log);
+        Log(LOG_LEVEL_ERR, "Unable to create '%s'. (creat: %s)", lock.last, GetErrorStr());
+        free(lock.last);
+        free(lock.lock);
+        free(lock.log);
         return;
     }
 
@@ -761,19 +872,18 @@ void YieldCurrentLock(CfLock this)
     strcpy(CFLAST, "");
     strcpy(CFLOG, "");
 
-    LogLockCompletion(this.log, getpid(), "Lock removed normally ", this.lock, "");
+    LogLockCompletion(lock.log, getpid(), "Lock removed normally ", lock.lock, "");
 
-    free(this.last);
-    free(this.lock);
-    free(this.log);
+    free(lock.last);
+    free(lock.lock);
+    free(lock.log);
 }
 
-void GetLockName(char *lockname, char *locktype, char *base, Rlist *params)
+void GetLockName(char *lockname, const char *locktype, const char *base, const Rlist *params)
 {
-    Rlist *rp;
     int max_sample, count = 0;
 
-    for (rp = params; rp != NULL; rp = rp->next)
+    for (const Rlist *rp = params; rp != NULL; rp = rp->next)
     {
         count++;
     }
@@ -792,9 +902,22 @@ void GetLockName(char *lockname, char *locktype, char *base, Rlist *params)
     strncat(lockname, base, CF_BUFSIZE / 10);
     strcat(lockname, "_");
 
-    for (rp = params; rp != NULL; rp = rp->next)
+    for (const Rlist *rp = params; rp != NULL; rp = rp->next)
     {
-        strncat(lockname, (char *) rp->item, max_sample);
+        switch (rp->val.type)
+        {
+        case RVAL_TYPE_SCALAR:
+            strncat(lockname, RlistScalarValue(rp), max_sample);
+            break;
+
+        case RVAL_TYPE_FNCALL:
+            strncat(lockname, RlistFnCallValue(rp)->name, max_sample);
+            break;
+
+        default:
+            ProgrammingError("Unhandled case in switch %d", rp->val.type);
+            break;
+        }
     }
 }
 
@@ -815,7 +938,14 @@ void PurgeLocks(void)
 
     memset(&entry, 0, sizeof(entry));
 
+#ifdef LMDB
+    unsigned char ohash[EVP_MAX_MD_SIZE*2 + 1];
+    GenerateMd5Hash("lock_horizon", ohash);
+
+    if (ReadDB(dbp, ohash, &entry, sizeof(entry)))
+#else
     if (ReadDB(dbp, "lock_horizon", &entry, sizeof(entry)))
+#endif
     {
         if (now - entry.time < SECONDS_PER_WEEK * 4)
         {
@@ -855,11 +985,9 @@ void PurgeLocks(void)
     CloseLock(dbp);
 }
 
-int WriteLock(char *name)
+int WriteLock(const char *name)
 {
     CF_DB *dbp;
-
-    Log(LOG_LEVEL_DEBUG, "WriteLock(%s)\n", name);
 
     ThreadLock(cft_lock);
     if ((dbp = OpenLock()) == NULL)

@@ -6,51 +6,51 @@
 
 body common control
 {
-  inputs => { "../../default.cf.sub" };
-  bundlesequence  => { default("$(this.promise_filename)") };
-  version => "1.0";
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
 }
 
 #######################################################
 
 bundle agent init
 {
-vars:
-        "dummy" string => "dummy";
+  vars:
+      "dummy" string => "dummy";
 }
 
 body link_from ln_s(x) {
-  link_type => "relative";
-  source => "$(x)";
-  when_no_source => "nop";
+      link_type => "relative";
+      source => "$(x)";
+      when_no_source => "nop";
 }
 
 #######################################################
 
 bundle agent test
 {
-files:
-  "$(G.testdir)/destdir"
-    copy_from => sync_cp("./srcdirrr");
+  files:
+      "$(G.testdir)/destdir"
+      copy_from => sync_cp("./srcdirrr");
 }
 
 body copy_from sync_cp(from)
 {
-source      => "$(from)";
-purge       => "true";
-preserve    => "true";
+      source      => "$(from)";
+      purge       => "true";
+      preserve    => "true";
 }
 
 #######################################################
 
 bundle agent check
 {
-classes:
-        "ok" expression => "any";
+  classes:
+      "ok" expression => "any";
 
-reports:
+  reports:
     ok::
-        "$(this.promise_filename) Pass";
+      "$(this.promise_filename) Pass";
     !ok::
-        "$(this.promise_filename) FAIL";
+      "$(this.promise_filename) FAIL";
 }

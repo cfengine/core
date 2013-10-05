@@ -1,9 +1,0 @@
-
-@verbatim
-
-body field_edit example
-{
-value_separator => ",";
-}
-
-@end verbatim

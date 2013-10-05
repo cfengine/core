@@ -1,8 +1,0 @@
-
-If this is true, CFEngine generates a log in
-@file{WORKDIR/state/cf_value.log} of the estmated `business value' of
-the system automation as a running log, @code{value_kept}, etc.  The
-format of the file is
-@verbatim
-date,sum value kept,sum value repaired,sum value notkept
-@end verbatim

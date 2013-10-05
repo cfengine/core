@@ -1,10 +1,10 @@
-#include "test.h"
+#include <test.h>
 
-#include "exec-config.h"
+#include <exec-config.h>
 
-#include "parser.h"
-#include "env_context.h"
-#include "generic_agent.h"
+#include <parser.h>
+#include <env_context.h>
+#include <expand.h>
 
 static Policy *LoadPolicy(const char *filename)
 {
@@ -48,15 +48,15 @@ static void test_load(void)
 
     EvalContext *ctx = EvalContextNew();
     {
-        VarRef lval = VarRefParse("g.host");
-        EvalContextVariablePut(ctx, lval, (Rval) { "snookie", RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
+        VarRef *lval = VarRefParse("g.host");
+        EvalContextVariablePut(ctx, lval, "snookie", DATA_TYPE_STRING);
         VarRefDestroy(lval);
     }
 
     // provide a full body executor control and check that all options are collected
     {
         Policy *p = LoadPolicy("body_executor_control_full.cf");
-        HashControls(ctx, p, agent_config);
+        PolicyResolve(ctx, p, agent_config);
 
         ExecConfigUpdate(ctx, p, c);
 
@@ -85,7 +85,7 @@ static void test_load(void)
     {
         {
             Policy *p = LoadPolicy("body_executor_control_agent_expireafter_only.cf");
-            HashControls(ctx, p, agent_config);
+            PolicyResolve(ctx, p, agent_config);
 
             ExecConfigUpdate(ctx, p, c);
 

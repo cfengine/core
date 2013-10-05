@@ -1,6 +1,0 @@
-
-If true, CFEngine behaves like @samp{tail -f}, sampling the recent
-entries in the file relative to the last measurement. If the file size
-is less than the position remembered at the end of the last
-measurement, @code{cf-monitord} assumes that the file has been
-truncated and starts again from the beginning.

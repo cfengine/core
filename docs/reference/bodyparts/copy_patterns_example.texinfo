@@ -1,9 +1,0 @@
-
-@verbatim
-
-body link_from example
-{
-copy_patterns =>  { "special_node1", "/path/special_node2" };
-}
-
-@end verbatim

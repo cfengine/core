@@ -1,9 +1,0 @@
-
-@verbatim
-
-body agent control
-{
-inform => "true";
-}
-
-@end verbatim

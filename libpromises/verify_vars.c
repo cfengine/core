@@ -22,21 +22,22 @@
   included file COSL.txt.
 */
 
-#include "verify_vars.h"
+#include <verify_vars.h>
 
-#include "attributes.h"
-#include "string_lib.h"
-#include "buffer.h"
-#include "misc_lib.h"
-#include "fncall.h"
-#include "rlist.h"
-#include "conversion.h"
-#include "expand.h"
-#include "scope.h"
-#include "promises.h"
-#include "vars.h"
-#include "matching.h"
-#include "syntax.h"
+#include <actuator.h>
+#include <attributes.h>
+#include <string_lib.h>
+#include <buffer.h>
+#include <misc_lib.h>
+#include <fncall.h>
+#include <rlist.h>
+#include <conversion.h>
+#include <expand.h>
+#include <scope.h>
+#include <promises.h>
+#include <vars.h>
+#include <matching.h>
+#include <syntax.h>
 
 typedef struct
 {
@@ -48,26 +49,16 @@ typedef struct
 
 
 static ConvergeVariableOptions CollectConvergeVariableOptions(EvalContext *ctx, const Promise *pp, bool allow_redefine);
-static bool Epimenides(EvalContext *ctx, const char *scope, const char *var, Rval rval, int level);
+static bool Epimenides(EvalContext *ctx, const char *ns, const char *scope, const char *var, Rval rval, int level);
 static int CompareRval(Rval rval1, Rval rval2);
 
 
-void VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates)
+PromiseResult VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates)
 {
     ConvergeVariableOptions opts = CollectConvergeVariableOptions(ctx, pp, allow_duplicates);
     if (!opts.should_converge)
     {
-        return;
-    }
-
-    char *scope = NULL;
-    if (strcmp("meta", pp->parent_promise_type->name) == 0)
-    {
-        scope = StringConcatenate(2, PromiseGetBundle(pp)->name, "_meta");
-    }
-    else
-    {
-        scope = xstrdup(PromiseGetBundle(pp)->name);
+        return PROMISE_RESULT_NOOP;
     }
 
     //More consideration needs to be given to using these
@@ -75,66 +66,28 @@ void VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates
     Attributes a = { {0} };
     a.classes = GetClassDefinitionConstraints(ctx, pp);
 
-    Rval existing_var_rval;
-    DataType existing_var_type = DATA_TYPE_NONE;
-    EvalContextVariableGet(ctx, (VarRef) { NULL, scope, pp->promiser }, &existing_var_rval, &existing_var_type);
-    Buffer *qualified_scope = BufferNew();
-    int result = 0;
-    if (strcmp(PromiseGetNamespace(pp), "default") == 0)
+    VarRef *ref = VarRefParseFromBundle(pp->promiser, PromiseGetBundle(pp));
+    if (strcmp("meta", pp->parent_promise_type->name) == 0)
     {
-        result = BufferSet(qualified_scope, scope, strlen(scope));
-        if (result < 0)
-        {
-            /*
-             * Even though there will be no problems with memory allocation, there
-             * might be other problems.
-             */
-            UnexpectedError("Problems writing to buffer");
-            free(scope);
-            BufferDestroy(&qualified_scope);
-            return;
-        }
-    }
-    else
-    {
-        if (strchr(scope, ':') == NULL)
-        {
-            result = BufferPrintf(qualified_scope, "%s:%s", PromiseGetNamespace(pp), scope);
-            if (result < 0)
-            {
-                /*
-                 * Even though there will be no problems with memory allocation, there
-                 * might be other problems.
-                 */
-                UnexpectedError("Problems writing to buffer");
-                free(scope);
-                BufferDestroy(&qualified_scope);
-                return;
-            }
-        }
-        else
-        {
-            result = BufferSet(qualified_scope, scope, strlen(scope));
-            if (result < 0)
-            {
-                /*
-                 * Even though there will be no problems with memory allocation, there
-                 * might be other problems.
-                 */
-                UnexpectedError("Problems writing to buffer");
-                free(scope);
-                BufferDestroy(&qualified_scope);
-                return;
-            }
-        }
+        VarRefSetMeta(ref, true);
     }
 
-    PromiseResult promise_result;
+    Rval existing_var_rval;
+    DataType existing_var_type = DATA_TYPE_NONE;
+
+    if (!IsExpandable(pp->promiser))
+    {
+        EvalContextVariableGet(ctx, ref, &existing_var_rval, &existing_var_type);
+    }
+
+    PromiseResult result = PROMISE_RESULT_NOOP;
 
     Rval rval = opts.cp_save->rval;
 
     if (rval.item != NULL)
     {
+        DataType data_type = DataTypeFromString(opts.cp_save->lval);
+
         FnCall *fp = (FnCall *) rval.item;
 
         if (opts.cp_save->rval.type == RVAL_TYPE_FNCALL)
@@ -142,9 +95,8 @@ void VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates
             if (existing_var_type != DATA_TYPE_NONE)
             {
                 // Already did this
-                free(scope);
-                BufferDestroy(&qualified_scope);
-                return;
+                VarRefDestroy(ref);
+                return result;
             }
 
             FnCallResult res = FnCallEvaluate(ctx, fp, pp);
@@ -153,9 +105,8 @@ void VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates
             {
                 /* We do not assign variables to failed fn calls */
                 RvalDestroy(res.rval);
-                free(scope);
-                BufferDestroy(&qualified_scope);
-                return;
+                VarRefDestroy(ref);
+                return result;
             }
             else
             {
@@ -168,7 +119,7 @@ void VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates
 
             if (strcmp(opts.cp_save->lval, "int") == 0)
             {
-                result = BufferPrintf(conv, "%ld", IntFromString(opts.cp_save->rval.item));
+                int result = BufferPrintf(conv, "%ld", IntFromString(opts.cp_save->rval.item));
                 if (result < 0)
                 {
                     /*
@@ -176,15 +127,15 @@ void VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates
                      * might be other problems.
                      */
                     UnexpectedError("Problems writing to buffer");
-                    free(scope);
-                    BufferDestroy(&qualified_scope);
+                    VarRefDestroy(ref);
                     BufferDestroy(&conv);
-                    return;
+                    return result;
                 }
-                rval = RvalCopy((Rval) {(char *)BufferData(conv), opts.cp_save->rval.type});
+                rval = RvalNew(BufferData(conv), opts.cp_save->rval.type);
             }
             else if (strcmp(opts.cp_save->lval, "real") == 0)
             {
+                int result = -1;
                 double real_value = 0.0;
                 if (DoubleFromString(opts.cp_save->rval.item, &real_value))
                 {
@@ -202,10 +153,9 @@ void VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates
                      * might be other problems.
                      */
                     UnexpectedError("Problems writing to buffer");
-                    free(scope);
+                    VarRefDestroy(ref);
                     BufferDestroy(&conv);
-                    BufferDestroy(&qualified_scope);
-                    return;
+                    return result;
                 }
                 rval = RvalCopy((Rval) {(char *)BufferData(conv), opts.cp_save->rval.type});
             }
@@ -224,16 +174,16 @@ void VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates
             BufferDestroy(&conv);
         }
 
-        if (Epimenides(ctx, PromiseGetBundle(pp)->name, pp->promiser, rval, 0))
+        if (Epimenides(ctx, PromiseGetBundle(pp)->ns, PromiseGetBundle(pp)->name, pp->promiser, rval, 0))
         {
-            Log(LOG_LEVEL_ERR, "Variable \"%s\" contains itself indirectly - an unkeepable promise", pp->promiser);
+            Log(LOG_LEVEL_ERR, "Variable '%s' contains itself indirectly - an unkeepable promise", pp->promiser);
             exit(1);
         }
         else
         {
             /* See if the variable needs recursively expanding again */
 
-            Rval returnval = EvaluateFinalRval(ctx, BufferData(qualified_scope), rval, true, pp);
+            Rval returnval = EvaluateFinalRval(ctx, ref->ns, ref->scope, rval, true, pp);
 
             RvalDestroy(rval);
 
@@ -245,37 +195,39 @@ void VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates
         {
             if (opts.ok_redefine)    /* only on second iteration, else we ignore broken promises */
             {
-                ScopeDeleteVariable(BufferData(qualified_scope), pp->promiser);
+                EvalContextVariableRemove(ctx, ref);
             }
             else if ((THIS_AGENT_TYPE == AGENT_TYPE_COMMON) && (CompareRval(existing_var_rval, rval) == false))
             {
                 switch (rval.type)
                 {
                 case RVAL_TYPE_SCALAR:
-                    Log(LOG_LEVEL_VERBOSE, "Redefinition of a constant scalar \"%s\" (was %s now %s)",
+                    Log(LOG_LEVEL_VERBOSE, "Redefinition of a constant scalar '%s', was '%s' now '%s'",
                           pp->promiser, RvalScalarValue(existing_var_rval), RvalScalarValue(rval));
                     PromiseRef(LOG_LEVEL_VERBOSE, pp);
                     break;
 
                 case RVAL_TYPE_LIST:
                     {
-                        Log(LOG_LEVEL_VERBOSE, "Redefinition of a constant list \"%s\".", pp->promiser);
+                    Log(LOG_LEVEL_VERBOSE, "Redefinition of a constant list '%s'", pp->promiser);
                         Writer *w = StringWriter();
                         RlistWrite(w, existing_var_rval.item);
                         char *oldstr = StringWriterClose(w);
-                        Log(LOG_LEVEL_VERBOSE, "Old value: %s", oldstr);
+                        Log(LOG_LEVEL_VERBOSE, "Old value '%s'", oldstr);
                         free(oldstr);
 
                         w = StringWriter();
                         RlistWrite(w, rval.item);
                         char *newstr = StringWriterClose(w);
-                        Log(LOG_LEVEL_VERBOSE, " New value: %s", newstr);
+                        Log(LOG_LEVEL_VERBOSE, " New value '%s'", newstr);
                         free(newstr);
                         PromiseRef(LOG_LEVEL_VERBOSE, pp);
                     }
                     break;
 
-                default:
+                case RVAL_TYPE_CONTAINER:
+                case RVAL_TYPE_FNCALL:
+                case RVAL_TYPE_NOPROMISEE:
                     break;
                 }
             }
@@ -285,49 +237,80 @@ void VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates
         {
             // Unexpanded variables, we don't do anything with
             RvalDestroy(rval);
-            free(scope);
-            BufferDestroy(&qualified_scope);
-            return;
+            VarRefDestroy(ref);
+            return result;
         }
 
-        if (!FullTextMatch("[a-zA-Z0-9_\200-\377.]+(\\[.+\\])*", pp->promiser))
+        if (!FullTextMatch(ctx, "[a-zA-Z0-9_\200-\377.]+(\\[.+\\])*", pp->promiser))
         {
             Log(LOG_LEVEL_ERR, "Variable identifier contains illegal characters");
             PromiseRef(LOG_LEVEL_ERR, pp);
             RvalDestroy(rval);
-            free(scope);
-            BufferDestroy(&qualified_scope);
-            return;
+            VarRefDestroy(ref);
+            return result;
         }
 
         if (opts.drop_undefined && rval.type == RVAL_TYPE_LIST)
         {
             for (Rlist *rp = rval.item; rp != NULL; rp = rp->next)
             {
-                if (IsNakedVar(rp->item, '@'))
+                if (IsNakedVar(RlistScalarValue(rp), '@'))
                 {
-                    free(rp->item);
-                    rp->item = xstrdup(CF_NULL_VALUE);
+                    free(rp->val.item);
+                    rp->val.item = xstrdup(CF_NULL_VALUE);
                 }
             }
         }
 
-        if (!EvalContextVariablePut(ctx, (VarRef) { NULL, BufferData(qualified_scope), pp->promiser }, rval, DataTypeFromString(opts.cp_save->lval)))
+        if (ref->num_indices > 0)
         {
-            Log(LOG_LEVEL_VERBOSE, "Unable to converge %s.%s value (possibly empty or infinite regression)", BufferData(qualified_scope), pp->promiser);
+            if (data_type == DATA_TYPE_CONTAINER)
+            {
+                char *lval_str = VarRefToString(ref, true);
+                Log(LOG_LEVEL_ERR, "Cannot assign a container to an indexed variable name '%s'. Should be assigned to '%s' instead",
+                    lval_str, ref->lval);
+                free(lval_str);
+                VarRefDestroy(ref);
+                RvalDestroy(rval);
+                return result;
+            }
+            else
+            {
+                DataType existing_type = DATA_TYPE_NONE;
+                VarRef *base_ref = VarRefCopyIndexless(ref);
+                if (EvalContextVariableGet(ctx, ref, NULL, &existing_type) && existing_type == DATA_TYPE_CONTAINER)
+                {
+                    char *lval_str = VarRefToString(ref, true);
+                    char *base_ref_str = VarRefToString(base_ref, true);
+                    Log(LOG_LEVEL_ERR, "Cannot assign value to indexed variable name '%s', because a container is already assigned to the base name '%s'",
+                        lval_str, base_ref_str);
+                    free(lval_str);
+                    free(base_ref_str);
+                    VarRefDestroy(base_ref);
+                    VarRefDestroy(ref);
+                    RvalDestroy(rval);
+                    return result;
+                }
+                VarRefDestroy(base_ref);
+            }
+        }
+
+        if (!EvalContextVariablePut(ctx, ref, rval.item, DataTypeFromString(opts.cp_save->lval)))
+        {
+            Log(LOG_LEVEL_VERBOSE, "Unable to converge %s.%s value (possibly empty or infinite regression)", ref->scope, pp->promiser);
             PromiseRef(LOG_LEVEL_VERBOSE, pp);
-            promise_result = PROMISE_RESULT_FAIL;
+            result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
         }
         else
         {
-            promise_result = PROMISE_RESULT_CHANGE;
+            result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
         }
     }
     else
     {
         Log(LOG_LEVEL_ERR, "Variable %s has no promised value", pp->promiser);
         Log(LOG_LEVEL_ERR, "Rule from %s at/before line %zu", PromiseGetBundle(pp)->source_path, opts.cp_save->offset.line);
-        promise_result = PROMISE_RESULT_FAIL;
+        result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
     }
 
     /*
@@ -339,11 +322,12 @@ void VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates
      * In order to support 'classes' body for variables as well, we call
      * ClassAuditLog explicitly.
      */
-    ClassAuditLog(ctx, pp, a, promise_result);
+    ClassAuditLog(ctx, pp, a, result);
 
-    free(scope);
-    BufferDestroy(&qualified_scope);
+    VarRefDestroy(ref);
     RvalDestroy(rval);
+
+    return result;
 }
 
 // FIX: this function is a mixture of Equal/Compare (boolean/diff).
@@ -354,11 +338,11 @@ static int CompareRlist(Rlist *list1, Rlist *list2)
 
     for (rp1 = list1, rp2 = list2; rp1 != NULL && rp2 != NULL; rp1 = rp1->next, rp2 = rp2->next)
     {
-        if (rp1->item && rp2->item)
+        if (rp1->val.item && rp2->val.item)
         {
             Rlist *rc1, *rc2;
 
-            if (rp1->type == RVAL_TYPE_FNCALL || rp2->type == RVAL_TYPE_FNCALL)
+            if (rp1->val.type == RVAL_TYPE_FNCALL || rp2->val.type == RVAL_TYPE_FNCALL)
             {
                 return -1;      // inconclusive
             }
@@ -368,22 +352,22 @@ static int CompareRlist(Rlist *list1, Rlist *list2)
 
             // Check for list nesting with { fncall(), "x" ... }
 
-            if (rp1->type == RVAL_TYPE_LIST)
+            if (rp1->val.type == RVAL_TYPE_LIST)
             {
-                rc1 = rp1->item;
+                rc1 = rp1->val.item;
             }
 
-            if (rp2->type == RVAL_TYPE_LIST)
+            if (rp2->val.type == RVAL_TYPE_LIST)
             {
-                rc2 = rp2->item;
+                rc2 = rp2->val.item;
             }
 
-            if (IsCf3VarString(rc1->item) || IsCf3VarString(rp2->item))
+            if (IsCf3VarString(rc1->val.item) || IsCf3VarString(rp2->val.item))
             {
                 return -1;      // inconclusive
             }
 
-            if (strcmp(rc1->item, rc2->item) != 0)
+            if (strcmp(rc1->val.item, rc2->val.item) != 0)
             {
                 return false;
             }
@@ -433,7 +417,7 @@ static int CompareRval(Rval rval1, Rval rval2)
     return true;
 }
 
-static bool Epimenides(EvalContext *ctx, const char *scope, const char *var, Rval rval, int level)
+static bool Epimenides(EvalContext *ctx, const char *ns, const char *scope, const char *var, Rval rval, int level)
 {
     Rlist *rp, *list;
     char exp[CF_EXPANDSIZE];
@@ -444,28 +428,25 @@ static bool Epimenides(EvalContext *ctx, const char *scope, const char *var, Rva
 
         if (StringContainsVar(rval.item, var))
         {
-            Log(LOG_LEVEL_ERR, "Scalar variable \"%s\" contains itself (non-convergent): %s", var, (char *) rval.item);
+            Log(LOG_LEVEL_ERR, "Scalar variable '%s' contains itself (non-convergent) '%s'", var, (char *) rval.item);
             return true;
         }
 
         if (IsCf3VarString(rval.item))
         {
-            ExpandScalar(ctx, scope, rval.item, exp);
+            ExpandScalar(ctx, ns, scope, rval.item, exp);
 
             if (strcmp(exp, (const char *) rval.item) == 0)
             {
                 return false;
             }
 
-            Log(LOG_LEVEL_DEBUG, "bling %d-%s: (look for %s) in \"%s\" => %s \n", level, scope, var, (const char *) rval.item,
-                    exp);
-
             if (level > 3)
             {
                 return false;
             }
 
-            if (Epimenides(ctx, scope, var, (Rval) {exp, RVAL_TYPE_SCALAR}, level + 1))
+            if (Epimenides(ctx, ns, scope, var, (Rval) {exp, RVAL_TYPE_SCALAR}, level + 1))
             {
                 return true;
             }
@@ -478,14 +459,16 @@ static bool Epimenides(EvalContext *ctx, const char *scope, const char *var, Rva
 
         for (rp = list; rp != NULL; rp = rp->next)
         {
-            if (Epimenides(ctx, scope, var, (Rval) {rp->item, rp->type}, level))
+            if (Epimenides(ctx, ns, scope, var, rp->val, level))
             {
                 return true;
             }
         }
         break;
 
-    default:
+    case RVAL_TYPE_CONTAINER:
+    case RVAL_TYPE_FNCALL:
+    case RVAL_TYPE_NOPROMISEE:
         return false;
     }
 
@@ -549,7 +532,7 @@ static ConvergeVariableOptions CollectConvergeVariableOptions(EvalContext *ctx, 
 
                     /* eval it: e.g. ifvarclass => not("a_class") */
 
-                    res = FnCallEvaluate(ctx, cp->rval.item, NULL).rval;
+                    res = FnCallEvaluate(ctx, cp->rval.item, pp).rval;
 
                     /* Don't continue unless function was evaluated properly */
                     if (res.type != RVAL_TYPE_SCALAR)
@@ -593,7 +576,7 @@ static ConvergeVariableOptions CollectConvergeVariableOptions(EvalContext *ctx, 
                 opts.ok_redefine |= true;
             }
         }
-        else if (IsDataType(cp->lval))
+        else if (DataTypeFromString(cp->lval) != DATA_TYPE_NONE)
         {
             num_values++;
             opts.cp_save = cp;
@@ -602,14 +585,14 @@ static ConvergeVariableOptions CollectConvergeVariableOptions(EvalContext *ctx, 
 
     if (opts.cp_save == NULL)
     {
-        Log(LOG_LEVEL_INFO, "Warning: Variable body for \"%s\" seems incomplete", pp->promiser);
+        Log(LOG_LEVEL_WARNING, "Variable body for '%s' seems incomplete", pp->promiser);
         PromiseRef(LOG_LEVEL_INFO, pp);
         return opts;
     }
 
     if (num_values > 2)
     {
-        Log(LOG_LEVEL_ERR, "Variable \"%s\" breaks its own promise with multiple values (code %d)", pp->promiser, num_values);
+        Log(LOG_LEVEL_ERR, "Variable '%s' breaks its own promise with multiple values (code %d)", pp->promiser, num_values);
         PromiseRef(LOG_LEVEL_ERR, pp);
         return opts;
     }

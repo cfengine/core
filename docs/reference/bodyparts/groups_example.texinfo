@@ -1,9 +1,0 @@
-
-
-@verbatim
-body perms example
-{
-groups => { "users", "administrators" };
-}
-
-@end verbatim

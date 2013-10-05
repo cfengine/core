@@ -1,7 +1,7 @@
-#include "cf3.defs.h"
-#include "dbm_api.h"
-#include "test.h"
-#include "lastseen.h"
+#include <cf3.defs.h>
+#include <dbm_api.h>
+#include <test.h>
+#include <lastseen.h>
 
 #include <setjmp.h>
 #include <cmockery.h>
@@ -271,7 +271,6 @@ const char *SHIFT_TEXT[] = {};
 pthread_mutex_t *cft_output;
 char VIPADDRESS[CF_MAX_IP_LEN];
 RSA *PUBKEY;
-int DEBUG;
 bool MINUSF;
 
 char *MapAddress(char *addr)

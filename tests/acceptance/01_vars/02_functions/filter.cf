@@ -68,7 +68,7 @@ bundle agent test
                         "one", "two", "three",
                         "long string",
                         "one", "two", "three",
-                      };
+      };
 
       "test_grep" slist => filter("[0-9]", "test", "true", "false", 999);
       "test_exact1" slist => filter("one", "test", "false", "false", 999);

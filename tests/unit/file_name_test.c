@@ -1,6 +1,6 @@
-#include "test.h"
+#include <test.h>
 
-#include "files_names.h"
+#include <files_names.h>
 
 
 static void test_first_file_separator(void)

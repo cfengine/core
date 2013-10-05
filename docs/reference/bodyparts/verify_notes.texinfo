@@ -1,3 +1,0 @@
-
-This is a highly resource intensive option, not recommended
-for large file transfers.

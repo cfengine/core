@@ -1,2 +1,0 @@
-
-This is the location on the remote device, server, SAN etc.

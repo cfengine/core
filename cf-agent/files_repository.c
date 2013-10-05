@@ -22,15 +22,15 @@
   included file COSL.txt.
 */
 
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
-#include "files_names.h"
-#include "files_interfaces.h"
-#include "files_lib.h"
-#include "files_copy.h"
-#include "item_lib.h"
-#include "mutex.h"
-#include "policy.h"
+#include <files_names.h>
+#include <files_interfaces.h>
+#include <files_lib.h>
+#include <files_copy.h>
+#include <item_lib.h>
+#include <mutex.h>
+#include <policy.h>
 
 /*********************************************************************/
 
@@ -74,7 +74,7 @@ bool GetRepositoryPath(const char *file, Attributes attr, char *destination)
 
     if (!JoinPath(destination, file))
     {
-        Log(LOG_LEVEL_ERR, "Internal limit: Buffer ran out of space for long filename");
+        Log(LOG_LEVEL_ERR, "Internal limit, buffer ran out of space for long filename");
         return false;
     }
 
@@ -110,7 +110,7 @@ int ArchiveToRepository(const char *file, Attributes attr)
     if (IsItemIn(VREPOSLIST, file))
     {
         Log(LOG_LEVEL_INFO,
-              "The file %s has already been moved to the repository once. Multiple update will cause loss of backup.",
+            "The file '%s' has already been moved to the repository once. Multiple update will cause loss of backup.",
               file);
         return true;
     }
@@ -118,8 +118,6 @@ int ArchiveToRepository(const char *file, Attributes attr)
     ThreadLock(cft_getaddr);
     PrependItemList(&VREPOSLIST, file);
     ThreadUnlock(cft_getaddr);
-
-    Log(LOG_LEVEL_DEBUG, "Repository(%s)\n", file);
     
     JoinPath(destination, CanonifyName(file));
 
@@ -129,7 +127,7 @@ int ArchiveToRepository(const char *file, Attributes attr)
 
     if (stat(file, &sb) == -1)
     {
-        Log(LOG_LEVEL_DEBUG, "File %s promised to archive to the repository but it disappeared!\n", file);
+        Log(LOG_LEVEL_DEBUG, "File '%s' promised to archive to the repository but it disappeared!", file);
         return true;
     }
 
@@ -137,12 +135,12 @@ int ArchiveToRepository(const char *file, Attributes attr)
 
     if (CopyRegularFileDisk(file, destination))
     {
-        Log(LOG_LEVEL_INFO, "Moved %s to repository location %s", file, destination);
+        Log(LOG_LEVEL_INFO, "Moved '%s' to repository location '%s'", file, destination);
         return true;
     }
     else
     {
-        Log(LOG_LEVEL_INFO, "Failed to move %s to repository location %s", file, destination);
+        Log(LOG_LEVEL_INFO, "Failed to move '%s' to repository location '%s'", file, destination);
         return false;
     }
 }

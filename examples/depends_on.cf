@@ -1,0 +1,18 @@
+
+
+body common control
+{
+      bundlesequence => { "one"  };
+}
+
+bundle agent one
+{
+  reports:
+
+      "two"
+      depends_on => { "handle_one" };
+
+      "one"
+      handle => "handle_one";
+
+}

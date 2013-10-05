@@ -1,8 +1,0 @@
-@verbatim
-
-classes:
-
-  "class_name" expression => "solaris|(linux.specialclass)";
-  "has_toor"   expression => userexists("toor");
-
-@end verbatim

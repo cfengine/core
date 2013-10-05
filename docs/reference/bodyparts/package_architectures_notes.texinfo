@@ -1,4 +1,0 @@
-
-It is possible to specify a list of packages of different architectures if it is desirable to
-install multiple architectures on the host. If no value is specified, CFEngine makes no promise
-about the result; the package manager's behaviour prevails.

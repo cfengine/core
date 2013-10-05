@@ -1,10 +1,10 @@
-#include "cf3.defs.h"
-#include "sort.h"
+#include <cf3.defs.h>
+#include <sort.h>
 
-#include "rlist.h"
-#include "item_lib.h"
+#include <rlist.h>
+#include <item_lib.h>
 
-#include "test.h"
+#include <test.h>
 
 /*
  * Those testcases only perform smoke testing of sorting functionality.
@@ -86,36 +86,36 @@ int FirstItemShorter(const char *lhs, const char *rhs)
 
 void test_sort_rlist(void)
 {
-    Rlist *head = xcalloc(1, sizeof(Rlist));
-    head->item = "a";
-    head->next = xcalloc(1, sizeof(Rlist));
-    head->next->item = "bbb";
-    head->next->next = xcalloc(1, sizeof(Rlist));
-    head->next->next->item = "cc";
+    Rlist *list = NULL;
+    RlistAppendScalar(&list, "bbb");
+    RlistAppendScalar(&list, "cc");
+    RlistAppendScalar(&list, "a");
 
-    Rlist *sorted = SortRlist(head, &FirstItemShorter);
+    Rlist *sorted = SortRlist(list, &FirstItemShorter);
 
-    assert_string_equal(sorted->item, "a");
-    assert_string_equal(sorted->next->item, "cc");
-    assert_string_equal(sorted->next->next->item, "bbb");
+    assert_string_equal(RlistScalarValue(sorted), "a");
+    assert_string_equal(RlistScalarValue(sorted->next), "cc");
+    assert_string_equal(RlistScalarValue(sorted->next->next), "bbb");
     assert_int_equal(sorted->next->next->next, NULL);
+
+    RlistDestroy(sorted);
 }
 
 void test_alpha_sort_rlist_names(void)
 {
-    Rlist *head = xcalloc(1, sizeof(Rlist));
-    head->item = "c";
-    head->next = xcalloc(1, sizeof(Rlist));
-    head->next->item = "a";
-    head->next->next = xcalloc(1, sizeof(Rlist));
-    head->next->next->item = "b";
+    Rlist *list = NULL;
+    RlistAppendScalar(&list, "c");
+    RlistAppendScalar(&list, "a");
+    RlistAppendScalar(&list, "b");
 
-    Rlist *sorted = AlphaSortRListNames(head);
+    Rlist *sorted = AlphaSortRListNames(list);
 
-    assert_string_equal(sorted->item, "a");
-    assert_string_equal(sorted->next->item, "b");
-    assert_string_equal(sorted->next->next->item, "c");
+    assert_string_equal(RlistScalarValue(sorted), "a");
+    assert_string_equal(RlistScalarValue(sorted->next), "b");
+    assert_string_equal(RlistScalarValue(sorted->next->next), "c");
     assert_int_equal(sorted->next->next->next, NULL);
+
+    RlistDestroy(sorted);
 }
 
 int main()
@@ -136,6 +136,7 @@ int main()
 
 /* STUBS */
 
+/*
 void __ProgrammingError(const char *file, int lineno, const char *format, ...)
 {
     fail();
@@ -147,4 +148,4 @@ void FatalError(char *s, ...)
     fail();
     exit(42);
 }
-
+*/

@@ -1,8 +1,0 @@
-
-The name of the system email spool directory.
-
-@verbatim
-
-# maildir = /var/spool/mail
-
-@end verbatim

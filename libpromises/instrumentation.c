@@ -22,13 +22,13 @@
   included file COSL.txt.
 */
 
-#include "instrumentation.h"
+#include <instrumentation.h>
 
-#include "dbm_api.h"
-#include "files_names.h"
-#include "item_lib.h"
-#include "string_lib.h"
-#include "policy.h"
+#include <dbm_api.h>
+#include <files_names.h>
+#include <item_lib.h>
+#include <string_lib.h>
+#include <policy.h>
 
 #include <math.h>
 
@@ -125,8 +125,6 @@ static void NotePerformance(char *eventname, time_t t, double value)
     int lsea = SECONDS_PER_WEEK;
     time_t now = time(NULL);
 
-    Log(LOG_LEVEL_DEBUG, "PerformanceEvent(%s,%.1f s)\n", eventname, value);
-
     if (!OpenDB(&dbp, dbid_performance))
     {
         return;
@@ -158,13 +156,11 @@ static void NotePerformance(char *eventname, time_t t, double value)
 
     if (lastseen > (double) lsea)
     {
-        Log(LOG_LEVEL_DEBUG, "Performance record %s expired\n", eventname);
+        Log(LOG_LEVEL_DEBUG, "Performance record '%s' expired", eventname);
         DeleteDB(dbp, eventname);
     }
     else
     {
-        Log(LOG_LEVEL_VERBOSE, "Performance(%s): time=%.4lf secs, av=%.4lf +/- %.4lf", eventname, value, newe.Q.expect,
-              sqrt(newe.Q.var));
         WriteDB(dbp, eventname, &newe, sizeof(newe));
     }
 
@@ -175,17 +171,24 @@ static void NotePerformance(char *eventname, time_t t, double value)
 
 static bool IsContextIgnorableForReporting(const char *context_name)
 {
-    return (strncmp(context_name,"Min",3) == 0 || strncmp(context_name,"Hr",2) == 0 || strcmp(context_name,"Q1") == 0
-     || strcmp(context_name,"Q2") == 0 || strcmp(context_name,"Q3") == 0 || strcmp(context_name,"Q4") == 0
-     || strncmp(context_name,"GMT_Hr",6) == 0  || strncmp(context_name,"Yr",2) == 0
-     || strncmp(context_name,"Day",3) == 0 || strcmp(context_name,"license_expired") == 0
-     || strcmp(context_name,"any") == 0 || strcmp(context_name,"from_cfexecd") == 0
-     || IsStrIn(context_name,MONTH_TEXT) || IsStrIn(context_name,DAY_TEXT)
-     || IsStrIn(context_name,SHIFT_TEXT)) || strncmp(context_name,"Lcycle",6) == 0;
+    const char *ptr = context_name;
+    // contexts beginning with "GMT_" will have that prefix stripped
+    if (strncmp(ptr,"GMT_", 4) == 0 && strlen(ptr) > 4)
+    {
+        ptr += 4;
+    }
+
+    return (strncmp(ptr,"Min",3) == 0 || strncmp(ptr,"Hr",2) == 0 || strcmp(ptr,"Q1") == 0
+     || strcmp(ptr,"Q2") == 0 || strcmp(ptr,"Q3") == 0 || strcmp(ptr,"Q4") == 0
+     || strncmp(ptr,"Yr",2) == 0
+     || strncmp(ptr,"Day",3) == 0 || strcmp(ptr,"license_expired") == 0
+     || strcmp(ptr,"any") == 0 || strcmp(ptr,"from_cfexecd") == 0
+     || IsStrIn(ptr,MONTH_TEXT) || IsStrIn(ptr,DAY_TEXT)
+     || IsStrIn(ptr,SHIFT_TEXT)) || strncmp(ptr,"Lcycle",6) == 0;
 }
 
 
-void NoteClassUsage(StringSetIterator context_iterator, int purge)
+void NoteClassUsage(ClassTableIterator *iter, int purge)
 {
     CF_DB *dbp;
     CF_DBC *dbcp;
@@ -208,16 +211,18 @@ void NoteClassUsage(StringSetIterator context_iterator, int purge)
 
     // TODO: stupid, please simplify
     {
-        char *context = NULL;
-        while ((context = StringSetIteratorNext(&context_iterator)))
+        Class *cls = NULL;
+        while ((cls = ClassTableIteratorNext(iter)))
         {
-            if ((IsContextIgnorableForReporting(context)))
+            if ((IsContextIgnorableForReporting(cls->name)))
             {
-                Log(LOG_LEVEL_DEBUG, "Ignoring class %s (not packing)", context);
+                Log(LOG_LEVEL_DEBUG, "Ignoring class '%s' (not packing)", cls->name);
                 continue;
             }
 
-            IdempPrependItem(&list, context, NULL);
+            char *expr = ClassRefToString(cls->ns, cls->name);
+            IdempPrependItem(&list, expr, NULL);
+            free(expr);
         }
     }
 
@@ -232,7 +237,7 @@ void NoteClassUsage(StringSetIterator context_iterator, int purge)
     {
         if (ReadDB(dbp, ip->name, &e, sizeof(e)))
         {
-            Log(LOG_LEVEL_DEBUG, "FOUND %s with %lf\n", ip->name, e.Q.expect);
+            Log(LOG_LEVEL_DEBUG, "Found '%s' with %lf", ip->name, e.Q.expect);
             lastseen = now - e.t;
             newe.t = now;
 
@@ -248,7 +253,7 @@ void NoteClassUsage(StringSetIterator context_iterator, int purge)
 
         if (lastseen > lsea)
         {
-            Log(LOG_LEVEL_DEBUG, "Class usage record %s expired\n", ip->name);
+            Log(LOG_LEVEL_DEBUG, "Class usage record '%s' expired", ip->name);
             DeleteDB(dbp, ip->name);
         }
         else
@@ -298,7 +303,7 @@ void NoteClassUsage(StringSetIterator context_iterator, int purge)
 
                 if (lastseen > lsea)
                 {
-                    Log(LOG_LEVEL_DEBUG, "Class usage record %s expired\n", eventname);
+                    Log(LOG_LEVEL_DEBUG, "Class usage record '%s' expired", eventname);
                     DBCursorDeleteEntry(dbcp);
                 }
                 else if (!IsItemIn(list, eventname))
@@ -309,12 +314,12 @@ void NoteClassUsage(StringSetIterator context_iterator, int purge)
 
                     if (newe.Q.expect <= 0.0001)
                     {
-                        Log(LOG_LEVEL_DEBUG, "Deleting class %s as %lf is zero\n", eventname, newe.Q.expect);
+                        Log(LOG_LEVEL_DEBUG, "Deleting class '%s' as %lf is zero", eventname, newe.Q.expect);
                         DBCursorDeleteEntry(dbcp);
                     }
                     else
                     {
-                        Log(LOG_LEVEL_DEBUG, "Downgrading class %s from %lf to %lf\n", eventname, entry.Q.expect, newe.Q.expect);
+                        Log(LOG_LEVEL_DEBUG, "Downgrading class '%s' from %lf to %lf", eventname, entry.Q.expect, newe.Q.expect);
                         DBCursorWriteEntry(dbcp, &newe, sizeof(newe));
                     }
                 }

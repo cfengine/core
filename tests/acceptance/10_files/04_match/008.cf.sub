@@ -17,6 +17,9 @@ bundle agent delete
   files:
     "/abc/nofile"
       delete => test_delete;
+
+  reports:
+    "CHECKPOINT";
 }
 
 body delete test_delete

@@ -1,5 +1,0 @@
-
-Delete lines from the file which do not contain the sub-strings listed.
-Note that this determination is made only on promised lines (that is, this
-attribute modifies the selection criteria, it does not make the initial
-selection).

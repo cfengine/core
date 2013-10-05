@@ -1,7 +1,0 @@
-
-@verbatim
-body common control
-{
-goal_categories => { "goals", "targets", "milestones" };
-}
-@end verbatim

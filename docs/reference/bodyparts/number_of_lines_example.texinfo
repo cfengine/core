@@ -1,9 +1,0 @@
-
-@verbatim
-
-body printfile example
-{
-number_of_lines => "10";
-}
-
-@end verbatim

@@ -1,4 +1,0 @@
-
-During recursive Windows registry scanning, this option allows us to ignore keys of values matching a
-list of regular expressions. Some values in the registry are ephemeral and some should not be considered.
-This provdes a convenient way of avoiding names. It is analogous to @code{exclude_dirs} for files.

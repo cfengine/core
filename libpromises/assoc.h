@@ -25,7 +25,7 @@
 #ifndef CFENGINE_ASSOC_H
 #define CFENGINE_ASSOC_H
 
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
 /* variable reference linkage , with metatype*/
 typedef struct
@@ -37,50 +37,5 @@ typedef struct
 
 CfAssoc *NewAssoc(const char *lval, Rval rval, DataType dt);
 void DeleteAssoc(CfAssoc *ap);
-
-/* - hashtable operations - */
-
-AssocHashTable *HashInit(void);
-
-/* Insert element if it does not exist in hash table. Returns false if element
-   already exists in table or if table is full. */
-bool HashInsertElement(AssocHashTable *hashtable, const char *element, Rval rval, DataType dtype);
-
-/* Deletes element from hashtable, returning whether element was found */
-bool HashDeleteElement(AssocHashTable *hashtable, const char *element);
-
-/* Looks up element in hashtable, returns NULL if not found */
-CfAssoc *HashLookupElement(AssocHashTable *hashtable, const char *element);
-
-/* Copies all elements of old hash table to new one. */
-void HashCopy(AssocHashTable *newhash, AssocHashTable *oldhash);
-
-/* Destroy hash table */
-void HashFree(AssocHashTable *hashtable);
-
-/* HashToList */
-void ScopeToList(Scope *sp, Rlist **list);
-
-
-/*
- * Disposable iterator over hash table. Does not require deinitialization.
- */
-typedef struct
-{
-    AssocHashTable *hashtable;
-    int pos;
-} AssocHashTableIterator;
-
-/*
-HashIterator i = HashIteratorInit(hashtable);
-CfAssoc *assoc;
-while ((assoc = HashIteratorNext(&i)))
-   {
-   // do something with assoc;
-   }
-// No cleanup is required
-*/
-AssocHashTableIterator HashIteratorInit(AssocHashTable *hashtable);
-CfAssoc *HashIteratorNext(AssocHashTableIterator *iterator);
 
 #endif

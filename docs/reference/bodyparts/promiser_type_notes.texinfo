@@ -1,4 +1,0 @@
-
-Without this attribute, CFEngine assumes a list of promises to report on
-(because there may be a promise for a thing that has the same name as a bundle,
-you must explicitly specify when you want to report on a bundle of promises).

@@ -1,0 +1,73 @@
+
+body common control
+{
+      bundlesequence => { "test1", "test2" };
+}
+
+##################################################
+
+bundle agent test1
+{
+  classes:
+
+      "default" expression => "any";
+
+  reports:
+
+    linux::
+
+      "This is a linux box"
+      classes => exclusive;
+
+    solaris::
+
+
+      "This is a solaris box"
+      classes => exclusive;
+
+    default::
+
+      "This is something not worth mentioning specifically"
+      classes => reset_default;
+}
+
+##################################################
+
+bundle agent test2
+{
+  classes:
+
+      "default" expression => "any";
+
+  reports:
+
+    linux::
+
+      "This is another linux box"
+      classes => exclusive;
+
+    solaris::
+
+      "This is another solaris box"
+      classes => exclusive;
+
+    default::
+
+      "This is something else not worth mentioning specifically"
+      classes => reset_default;
+
+}
+
+##########################################################
+
+body classes exclusive
+{
+      cancel_kept     => { "default" };
+      cancel_notkept  => { "default" };
+      cancel_repaired => { "default" };
+}
+
+body classes reset_default
+{
+      promise_kept     => { "default" };
+}

@@ -1,7 +1,0 @@
-
-A promise could not be repaired because the corrective
-action failed for some reason.
-
-Note that any strings passed to this list are automatically
-canonified, so it is unecessary to call a canonify function on such inputs.
-

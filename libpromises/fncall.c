@@ -22,17 +22,17 @@
   included file COSL.txt.
 */
 
-#include "fncall.h"
+#include <fncall.h>
 
-#include "env_context.h"
-#include "files_names.h"
-#include "expand.h"
-#include "vars.h"
-#include "args.h"
-#include "evalfunction.h"
-#include "policy.h"
+#include <env_context.h>
+#include <files_names.h>
+#include <expand.h>
+#include <vars.h>
+#include <args.h>
+#include <evalfunction.h>
+#include <policy.h>
+#include <string_lib.h>
 
-#include <assert.h>
 
 /*******************************************************************/
 
@@ -49,7 +49,6 @@ bool FnCallIsBuiltIn(Rval rval)
 
     if (FnCallTypeGet(fp->name))
     {
-        Log(LOG_LEVEL_DEBUG, "%s is a builtin function\n", fp->name);
         return true;
     }
     else
@@ -64,19 +63,11 @@ FnCall *FnCallNew(const char *name, Rlist *args)
 {
     FnCall *fp;
 
-    Log(LOG_LEVEL_DEBUG, "Installing Function Call %s\n", name);
-
     fp = xmalloc(sizeof(FnCall));
 
     fp->name = xstrdup(name);
     fp->args = args;
 
-    Log(LOG_LEVEL_DEBUG, "Installed ");
-    if (DEBUG)
-    {
-        FnCallShow(stdout, fp);
-    }
-    Log(LOG_LEVEL_DEBUG, "\n\n");
     return fp;
 }
 
@@ -84,7 +75,6 @@ FnCall *FnCallNew(const char *name, Rlist *args)
 
 FnCall *FnCallCopy(const FnCall *f)
 {
-    Log(LOG_LEVEL_DEBUG, "CopyFnCall()\n");
     return FnCallNew(f->name, RlistCopy(f->args));
 }
 
@@ -100,12 +90,22 @@ void FnCallDestroy(FnCall *fp)
     free(fp);
 }
 
-/*********************************************************************/
-
-FnCall *ExpandFnCall(EvalContext *ctx, const char *contextid, FnCall *f)
+unsigned FnCallHash(const FnCall *fp, unsigned seed, unsigned max)
 {
-    Log(LOG_LEVEL_DEBUG, "ExpandFnCall()\n");
-    return FnCallNew(f->name, ExpandList(ctx, contextid, f->args, false));
+    unsigned hash = StringHash(fp->name, seed, max);
+
+    for (const Rlist *rp = fp->args; rp; rp = rp->next)
+    {
+        hash = RvalHash(rp->val, hash, max);
+    }
+
+    return hash;
+}
+
+
+FnCall *ExpandFnCall(EvalContext *ctx, const char *ns, const char *scope, FnCall *f)
+{
+    return FnCallNew(f->name, ExpandList(ctx, ns, scope, f->args, false));
 }
 
 
@@ -117,14 +117,14 @@ void FnCallShow(FILE *fout, const FnCall *fp)
 
     for (const Rlist *rp = fp->args; rp != NULL; rp = rp->next)
     {
-        switch (rp->type)
+        switch (rp->val.type)
         {
         case RVAL_TYPE_SCALAR:
-            fprintf(fout, "%s,", (char *) rp->item);
+            fprintf(fout, "%s,", RlistScalarValue(rp));
             break;
 
         case RVAL_TYPE_FNCALL:
-            FnCallShow(fout, (FnCall *) rp->item);
+            FnCallShow(fout, RlistFnCallValue(rp));
             break;
 
         default:
@@ -143,16 +143,7 @@ FnCallResult FnCallEvaluate(EvalContext *ctx, FnCall *fp, const Promise *caller)
     Rlist *expargs;
     const FnCallType *fp_type = FnCallTypeGet(fp->name);
 
-    if (fp_type)
-    {
-        if (DEBUG)
-        {
-            printf("EVALUATE FN CALL %s\n", fp->name);
-            FnCallShow(stdout, fp);
-            printf("\n");
-        }
-    }
-    else
+    if (!fp_type)
     {
         if (caller)
         {

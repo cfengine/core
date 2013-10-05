@@ -1,3 +1,0 @@
-
-
-For detailed notes, @xref{Function readintarray}.

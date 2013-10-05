@@ -1,4 +1,0 @@
-
-This negates the effect of the promiser-pattern regular
-expression.  The class in the LHS will only be defined if the class
-expression in the RHS is false.

@@ -1,6 +1,0 @@
-
-Settings describing the details of the fixed behavioural promises made by
-@code{cf-monitord}.
-The system defaults will be sufficient for most users. This
-configurability potential, however, will be a key to developing the
-integrated monitoring capabilities of CFEngine.

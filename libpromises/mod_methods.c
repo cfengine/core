@@ -22,13 +22,13 @@
   included file COSL.txt.
 */
 
-#include "mod_methods.h"
+#include <mod_methods.h>
 
-#include "syntax.h"
-#include "policy.h"
-#include "string_lib.h"
-#include "fncall.h"
-#include "rlist.h"
+#include <syntax.h>
+#include <policy.h>
+#include <string_lib.h>
+#include <fncall.h>
+#include <rlist.h>
 
 static const char *POLICY_ERROR_METHODS_BUNDLE_ARITY = "Conflicting arity in calling bundle %s, expected %d arguments, %d given";
 

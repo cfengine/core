@@ -22,30 +22,30 @@
   included file COSL.txt.
 */
 
-#include "server_transform.h"
+#include <server_transform.h>
 
-#include "server.h"
+#include <server.h>
 
-#include "env_context.h"
-#include "files_names.h"
-#include "mod_access.h"
-#include "item_lib.h"
-#include "conversion.h"
-#include "ornaments.h"
-#include "expand.h"
-#include "scope.h"
-#include "vars.h"
-#include "attributes.h"
-#include "communication.h"
-#include "string_lib.h"
-#include "rlist.h"
-#include "cf-serverd-enterprise-stubs.h"
-#include "syslog_client.h"
-#include "verify_classes.h"
+#include <misc_lib.h>
+#include <env_context.h>
+#include <files_names.h>
+#include <mod_access.h>
+#include <item_lib.h>
+#include <conversion.h>
+#include <ornaments.h>
+#include <expand.h>
+#include <scope.h>
+#include <vars.h>
+#include <attributes.h>
+#include <communication.h>
+#include <string_lib.h>
+#include <rlist.h>
+#include <cf-serverd-enterprise-stubs.h>
+#include <syslog_client.h>
+#include <verify_classes.h>
 
-#include "generic_agent.h" // HashControls
+#include <generic_agent.h> // HashControls
 
-#include <assert.h>
 
 typedef enum
 {
@@ -85,11 +85,12 @@ typedef enum
     SERVER_CONTROL_SKIP_VERIFY,
     SERVER_CONTROL_TRUST_KEYS_FROM,
     SERVER_CONTROL_LISTEN,
+    SERVER_CONTROL_ALLOWCIPHERS,
     SERVER_CONTROL_NONE
 } ServerControl;
 
 static void KeepContextBundles(EvalContext *ctx, Policy *policy);
-static void KeepServerPromise(EvalContext *ctx, Promise *pp, void *param);
+static PromiseResult KeepServerPromise(EvalContext *ctx, Promise *pp, void *param);
 static void InstallServerAuthPath(const char *path, Auth **list, Auth **listtop);
 static void KeepServerRolePromise(EvalContext *ctx, Promise *pp);
 static void KeepPromiseBundles(EvalContext *ctx, Policy *policy);
@@ -108,9 +109,9 @@ extern bool SERVER_LISTEN;
 
 extern int CFD_MAXPROCESSES;
 extern int NO_FORK;
-extern int DENYBADCLOCKS;
+extern bool DENYBADCLOCKS;
 extern int MAXTRIES;
-extern int LOGENCRYPT;
+extern bool LOGENCRYPT;
 extern Item *CONNECTIONLIST;
 
 /*******************************************************************/
@@ -144,11 +145,11 @@ void Summarize()
 
     for (ptr = SV.admit; ptr != NULL; ptr = ptr->next)
     {
-        Log(LOG_LEVEL_VERBOSE, "Path: %s (encrypt=%d)", ptr->path, ptr->encrypt);
+        Log(LOG_LEVEL_VERBOSE, "Path '%s' (encrypt=%d)", ptr->path, ptr->encrypt);
 
         for (ip = ptr->accesslist; ip != NULL; ip = ip->next)
         {
-            Log(LOG_LEVEL_VERBOSE, "   Admit: %s root=", ip->name);
+            Log(LOG_LEVEL_VERBOSE, "Admit: '%s' root=", ip->name);
             for (ipr = ptr->maproot; ipr != NULL; ipr = ipr->next)
             {
                 Log(LOG_LEVEL_VERBOSE, "%s,", ipr->name);
@@ -160,11 +161,11 @@ void Summarize()
 
     for (ptr = SV.deny; ptr != NULL; ptr = ptr->next)
     {
-        Log(LOG_LEVEL_VERBOSE, "Path: %s", ptr->path);
+        Log(LOG_LEVEL_VERBOSE, "Path '%s'", ptr->path);
 
         for (ip = ptr->accesslist; ip != NULL; ip = ip->next)
         {
-            Log(LOG_LEVEL_VERBOSE, "   Deny: %s", ip->name);
+            Log(LOG_LEVEL_VERBOSE, "Deny '%s'", ip->name);
         }
     }
 
@@ -172,11 +173,11 @@ void Summarize()
 
     for (ptr = SV.varadmit; ptr != NULL; ptr = ptr->next)
     {
-        Log(LOG_LEVEL_VERBOSE, "  Object: %s (encrypt=%d)", ptr->path, ptr->encrypt);
+        Log(LOG_LEVEL_VERBOSE, "Object: '%s' (encrypt=%d)", ptr->path, ptr->encrypt);
 
         for (ip = ptr->accesslist; ip != NULL; ip = ip->next)
         {
-            Log(LOG_LEVEL_VERBOSE, "   Admit: %s root=", ip->name);
+            Log(LOG_LEVEL_VERBOSE, "Admit '%s' root=", ip->name);
             for (ipr = ptr->maproot; ipr != NULL; ipr = ipr->next)
             {
                 Log(LOG_LEVEL_VERBOSE, "%s,", ipr->name);
@@ -184,59 +185,59 @@ void Summarize()
         }
     }
 
-    Log(LOG_LEVEL_VERBOSE, "Denied access to literal/variable/query data :");
+    Log(LOG_LEVEL_VERBOSE, "Denied access to literal/variable/query data:");
 
     for (ptr = SV.vardeny; ptr != NULL; ptr = ptr->next)
     {
-        Log(LOG_LEVEL_VERBOSE, "  Object: %s", ptr->path);
+        Log(LOG_LEVEL_VERBOSE, "Object '%s'", ptr->path);
 
         for (ip = ptr->accesslist; ip != NULL; ip = ip->next)
         {
-            Log(LOG_LEVEL_VERBOSE, "   Deny: %s", ip->name);
+            Log(LOG_LEVEL_VERBOSE, "Deny '%s'", ip->name);
         }
     }
 
     
-    Log(LOG_LEVEL_VERBOSE, "Host IPs allowed connection access :");
+    Log(LOG_LEVEL_VERBOSE, "Host IPs allowed connection access:");
 
     for (ip = SV.nonattackerlist; ip != NULL; ip = ip->next)
     {
-        Log(LOG_LEVEL_VERBOSE, " .... IP: %s", ip->name);
+        Log(LOG_LEVEL_VERBOSE, "IP '%s'", ip->name);
     }
 
-    Log(LOG_LEVEL_VERBOSE, "Host IPs denied connection access :");
+    Log(LOG_LEVEL_VERBOSE, "Host IPs denied connection access:");
 
     for (ip = SV.attackerlist; ip != NULL; ip = ip->next)
     {
-        Log(LOG_LEVEL_VERBOSE, " .... IP: %s", ip->name);
+        Log(LOG_LEVEL_VERBOSE, "IP '%s'", ip->name);
     }
 
-    Log(LOG_LEVEL_VERBOSE, "Host IPs allowed multiple connection access :");
+    Log(LOG_LEVEL_VERBOSE, "Host IPs allowed multiple connection access:");
 
     for (ip = SV.multiconnlist; ip != NULL; ip = ip->next)
     {
-        Log(LOG_LEVEL_VERBOSE, " .... IP: %s", ip->name);
+        Log(LOG_LEVEL_VERBOSE, "IP '%s'", ip->name);
     }
 
-    Log(LOG_LEVEL_VERBOSE, "Host IPs from whom we shall accept public keys on trust :");
+    Log(LOG_LEVEL_VERBOSE, "Host IPs from whom we shall accept public keys on trust:");
 
     for (ip = SV.trustkeylist; ip != NULL; ip = ip->next)
     {
-        Log(LOG_LEVEL_VERBOSE, " .... IP: %s", ip->name);
+        Log(LOG_LEVEL_VERBOSE, "IP '%s'", ip->name);
     }
 
-    Log(LOG_LEVEL_VERBOSE, "Users from whom we accept connections :");
+    Log(LOG_LEVEL_VERBOSE, "Users from whom we accept connections:");
 
     for (ip = SV.allowuserlist; ip != NULL; ip = ip->next)
     {
-        Log(LOG_LEVEL_VERBOSE, " .... USERS: %s", ip->name);
+        Log(LOG_LEVEL_VERBOSE, "USERS '%s'", ip->name);
     }
 
-    Log(LOG_LEVEL_VERBOSE, "Host IPs from NAT which we don't verify :");
+    Log(LOG_LEVEL_VERBOSE, "Host IPs from NAT which we don't verify:");
 
     for (ip = SV.skipverify; ip != NULL; ip = ip->next)
     {
-        Log(LOG_LEVEL_VERBOSE, " .... IP: %s", ip->name);
+        Log(LOG_LEVEL_VERBOSE, "IP '%s'", ip->name);
     }
 
 }
@@ -259,7 +260,7 @@ static void KeepControlPromises(EvalContext *ctx, Policy *policy, GenericAgentCo
 
     Banner("Server control promises..");
 
-    HashControls(ctx, policy, config);
+    PolicyResolve(ctx, policy, config);
 
 /* Now expand */
 
@@ -275,11 +276,16 @@ static void KeepControlPromises(EvalContext *ctx, Policy *policy, GenericAgentCo
                 continue;
             }
 
-            if (!EvalContextVariableGet(ctx, (VarRef) { NULL, "control_server", cp->lval }, &retval, NULL))
+            VarRef *ref = VarRefParseFromScope(cp->lval, "control_server");
+
+            if (!EvalContextVariableGet(ctx, ref, &retval, NULL))
             {
-                Log(LOG_LEVEL_ERR, "Unknown lval %s in server control body", cp->lval);
+                Log(LOG_LEVEL_ERR, "Unknown lval '%s' in server control body", cp->lval);
+                VarRefDestroy(ref);
                 continue;
             }
+
+            VarRefDestroy(ref);
 
             if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_SERVER_FACILITY].lval) == 0)
             {
@@ -290,21 +296,21 @@ static void KeepControlPromises(EvalContext *ctx, Policy *policy, GenericAgentCo
             if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_DENY_BAD_CLOCKS].lval) == 0)
             {
                 DENYBADCLOCKS = BooleanFromString(retval.item);
-                Log(LOG_LEVEL_VERBOSE, "SET denybadclocks = %d", DENYBADCLOCKS);
+                Log(LOG_LEVEL_VERBOSE, "Setting denybadclocks to '%s'", DENYBADCLOCKS ? "true" : "false");
                 continue;
             }
 
             if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_LOG_ENCRYPTED_TRANSFERS].lval) == 0)
             {
                 LOGENCRYPT = BooleanFromString(retval.item);
-                Log(LOG_LEVEL_VERBOSE, "SET LOGENCRYPT = %d", LOGENCRYPT);
+                Log(LOG_LEVEL_VERBOSE, "Setting logencrypt to '%s'", LOGENCRYPT ? "true" : "false");
                 continue;
             }
 
             if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_LOG_ALL_CONNECTIONS].lval) == 0)
             {
                 SV.logconns = BooleanFromString(retval.item);
-                Log(LOG_LEVEL_VERBOSE, "SET logconns = %d", SV.logconns);
+                Log(LOG_LEVEL_VERBOSE, "Setting logconns to %d", SV.logconns);
                 continue;
             }
 
@@ -312,21 +318,21 @@ static void KeepControlPromises(EvalContext *ctx, Policy *policy, GenericAgentCo
             {
                 CFD_MAXPROCESSES = (int) IntFromString(retval.item);
                 MAXTRIES = CFD_MAXPROCESSES / 3;
-                Log(LOG_LEVEL_VERBOSE, "SET maxconnections = %d", CFD_MAXPROCESSES);
+                Log(LOG_LEVEL_VERBOSE, "Setting maxconnections to %d", CFD_MAXPROCESSES);
                 continue;
             }
 
             if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_CALL_COLLECT_INTERVAL].lval) == 0)
             {
                 COLLECT_INTERVAL = (int) 60 * IntFromString(retval.item);
-                Log(LOG_LEVEL_VERBOSE, "SET call_collect_interval = %d (seconds)", COLLECT_INTERVAL);
+                Log(LOG_LEVEL_VERBOSE, "Setting call_collect_interval to %d (seconds)", COLLECT_INTERVAL);
                 continue;
             }
 
             if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_LISTEN].lval) == 0)
             {
                 SERVER_LISTEN = BooleanFromString(retval.item);
-                Log(LOG_LEVEL_VERBOSE, "SET server listen = %s ",
+                Log(LOG_LEVEL_VERBOSE, "Setting server listen to '%s' ",
                       (SERVER_LISTEN)? "true":"false");
                 continue;
             }
@@ -334,14 +340,14 @@ static void KeepControlPromises(EvalContext *ctx, Policy *policy, GenericAgentCo
             if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_CALL_COLLECT_WINDOW].lval) == 0)
             {
                 COLLECT_WINDOW = (int) IntFromString(retval.item);
-                Log(LOG_LEVEL_VERBOSE, "SET collect_window = %d (seconds)", COLLECT_INTERVAL);
+                Log(LOG_LEVEL_VERBOSE, "Setting collect_window to %d (seconds)", COLLECT_INTERVAL);
                 continue;
             }
 
             if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_CF_RUN_COMMAND].lval) == 0)
             {
                 strncpy(CFRUNCOMMAND, retval.item, CF_BUFSIZE - 1);
-                Log(LOG_LEVEL_VERBOSE, "SET cfruncommand = %s", CFRUNCOMMAND);
+                Log(LOG_LEVEL_VERBOSE, "Setting cfruncommand to '%s'", CFRUNCOMMAND);
                 continue;
             }
 
@@ -349,13 +355,13 @@ static void KeepControlPromises(EvalContext *ctx, Policy *policy, GenericAgentCo
             {
                 Rlist *rp;
 
-                Log(LOG_LEVEL_VERBOSE, "SET Allowing connections from ...");
+                Log(LOG_LEVEL_VERBOSE, "Setting allowing connections from ...");
 
                 for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
                 {
-                    if (!IsItemIn(SV.nonattackerlist, rp->item))
+                    if (!IsItemIn(SV.nonattackerlist, RlistScalarValue(rp)))
                     {
-                        AppendItem(&SV.nonattackerlist, rp->item, cp->classes);
+                        AppendItem(&SV.nonattackerlist, RlistScalarValue(rp), cp->classes);
                     }
                 }
 
@@ -366,13 +372,13 @@ static void KeepControlPromises(EvalContext *ctx, Policy *policy, GenericAgentCo
             {
                 Rlist *rp;
 
-                Log(LOG_LEVEL_VERBOSE, "SET Denying connections from ...");
+                Log(LOG_LEVEL_VERBOSE, "Setting denying connections from ...");
 
                 for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
                 {
-                    if (!IsItemIn(SV.attackerlist, rp->item))
+                    if (!IsItemIn(SV.attackerlist, RlistScalarValue(rp)))
                     {
-                        AppendItem(&SV.attackerlist, rp->item, cp->classes);
+                        AppendItem(&SV.attackerlist, RlistScalarValue(rp), cp->classes);
                     }
                 }
 
@@ -383,13 +389,13 @@ static void KeepControlPromises(EvalContext *ctx, Policy *policy, GenericAgentCo
             {
                 Rlist *rp;
 
-                Log(LOG_LEVEL_VERBOSE, "SET Skip verify connections from ...");
+                Log(LOG_LEVEL_VERBOSE, "Setting skip verify connections from ...");
 
                 for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
                 {
-                    if (!IsItemIn(SV.skipverify, rp->item))
+                    if (!IsItemIn(SV.skipverify, RlistScalarValue(rp)))
                     {
-                        AppendItem(&SV.skipverify, rp->item, cp->classes);
+                        AppendItem(&SV.skipverify, RlistScalarValue(rp), cp->classes);
                     }
                 }
 
@@ -401,13 +407,13 @@ static void KeepControlPromises(EvalContext *ctx, Policy *policy, GenericAgentCo
             {
                 Rlist *rp;
 
-                Log(LOG_LEVEL_VERBOSE, "SET Allowing multiple connections from ...");
+                Log(LOG_LEVEL_VERBOSE, "Setting allowing multiple connections from ...");
 
                 for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
                 {
-                    if (!IsItemIn(SV.multiconnlist, rp->item))
+                    if (!IsItemIn(SV.multiconnlist, RlistScalarValue(rp)))
                     {
-                        AppendItem(&SV.multiconnlist, rp->item, cp->classes);
+                        AppendItem(&SV.multiconnlist, RlistScalarValue(rp), cp->classes);
                     }
                 }
 
@@ -422,9 +428,9 @@ static void KeepControlPromises(EvalContext *ctx, Policy *policy, GenericAgentCo
 
                 for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
                 {
-                    if (!IsItemIn(SV.allowuserlist, rp->item))
+                    if (!IsItemIn(SV.allowuserlist, RlistScalarValue(rp)))
                     {
-                        AppendItem(&SV.allowuserlist, rp->item, cp->classes);
+                        AppendItem(&SV.allowuserlist, RlistScalarValue(rp), cp->classes);
                     }
                 }
 
@@ -435,13 +441,13 @@ static void KeepControlPromises(EvalContext *ctx, Policy *policy, GenericAgentCo
             {
                 Rlist *rp;
 
-                Log(LOG_LEVEL_VERBOSE, "SET Trust keys from ...");
+                Log(LOG_LEVEL_VERBOSE, "Setting trust keys from ...");
 
                 for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
                 {
-                    if (!IsItemIn(SV.trustkeylist, rp->item))
+                    if (!IsItemIn(SV.trustkeylist, RlistScalarValue(rp)))
                     {
-                        AppendItem(&SV.trustkeylist, rp->item, cp->classes);
+                        AppendItem(&SV.trustkeylist, RlistScalarValue(rp), cp->classes);
                     }
                 }
 
@@ -452,22 +458,24 @@ static void KeepControlPromises(EvalContext *ctx, Policy *policy, GenericAgentCo
             {
                 SHORT_CFENGINEPORT = (short) IntFromString(retval.item);
                 strncpy(STR_CFENGINEPORT, retval.item, 15);
-                Log(LOG_LEVEL_VERBOSE, "SET default portnumber = %u = %s = %s", (int) SHORT_CFENGINEPORT, STR_CFENGINEPORT,
+                Log(LOG_LEVEL_VERBOSE, "Setting default portnumber to %u = %s = %s", (int) SHORT_CFENGINEPORT, STR_CFENGINEPORT,
                       RvalScalarValue(retval));
                 SHORT_CFENGINEPORT = htons((short) IntFromString(retval.item));
-                continue;
-            }
-
-            if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_KEY_TTL].lval) == 0)
-            {
-                Log(LOG_LEVEL_VERBOSE, "Ignoring deprecated option keycacheTTL");
                 continue;
             }
 
             if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_BIND_TO_INTERFACE].lval) == 0)
             {
                 strncpy(BINDINTERFACE, retval.item, CF_BUFSIZE - 1);
-                Log(LOG_LEVEL_VERBOSE, "SET bindtointerface = %s", BINDINTERFACE);
+                Log(LOG_LEVEL_VERBOSE, "Setting bindtointerface to '%s'", BINDINTERFACE);
+                continue;
+            }
+
+            if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_ALLOWCIPHERS].lval) == 0)
+            {
+
+                SV.allowciphers = xstrdup(retval.item);
+                Log(LOG_LEVEL_VERBOSE, "Setting allowciphers to '%s'", SV.allowciphers);
                 continue;
             }
         }
@@ -478,13 +486,12 @@ static void KeepControlPromises(EvalContext *ctx, Policy *policy, GenericAgentCo
         /* Don't resolve syslog_host now, better do it per log request. */
         if (!SetSyslogHost(retval.item))
         {
-            Log(LOG_LEVEL_ERR,
-                  "FAILed to set syslog_host, ""\"%s\" too long",
+            Log(LOG_LEVEL_ERR, "Failed to set syslog_host, '%s' too long",
                   (char *) retval.item);
         }
         else
         {
-            Log(LOG_LEVEL_VERBOSE, "SET syslog_host to %s",
+            Log(LOG_LEVEL_VERBOSE, "Setting syslog_host to '%s'",
                   (char *) retval.item);
         }
     }
@@ -497,7 +504,7 @@ static void KeepControlPromises(EvalContext *ctx, Policy *policy, GenericAgentCo
     if (EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_FIPS_MODE, &retval))
     {
         FIPS_MODE = BooleanFromString(retval.item);
-        Log(LOG_LEVEL_VERBOSE, "SET FIPS_MODE = %d", FIPS_MODE);
+        Log(LOG_LEVEL_VERBOSE, "Setting FIPS mode to to '%s'", FIPS_MODE ? "true" : "false");
     }
 
     if (EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_LASTSEEN_EXPIRE_AFTER, &retval))
@@ -520,7 +527,7 @@ static void KeepContextBundles(EvalContext *ctx, Policy *policy)
         {
             if (RlistLen(bp->args) > 0)
             {
-                Log(LOG_LEVEL_ERR, "Cannot implicitly evaluate bundle %s %s, as this bundle takes arguments.", bp->type, bp->name);
+                Log(LOG_LEVEL_WARNING, "Cannot implicitly evaluate bundle '%s %s', as this bundle takes arguments.", bp->type, bp->name);
                 continue;
             }
 
@@ -537,8 +544,7 @@ static void KeepContextBundles(EvalContext *ctx, Policy *policy)
 
                 BannerPromiseType(bp->name, sp->name, 0);
 
-                EvalContextStackPushBundleFrame(ctx, bp, false);
-                ScopeAugment(ctx, bp, NULL, NULL);
+                EvalContextStackPushBundleFrame(ctx, bp, NULL, false);
 
                 for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
                 {
@@ -558,6 +564,8 @@ static void KeepPromiseBundles(EvalContext *ctx, Policy *policy)
 {
 /* Dial up the generic promise expansion with a callback */
 
+    CleanReportBookFilterSet();
+
     for (size_t i = 0; i < SeqLength(policy->bundles); i++)
     {
         Bundle *bp = SeqAt(policy->bundles, i);
@@ -566,7 +574,7 @@ static void KeepPromiseBundles(EvalContext *ctx, Policy *policy)
         {
             if (RlistLen(bp->args) > 0)
             {
-                Log(LOG_LEVEL_ERR, "Cannot implicitly evaluate bundle %s %s, as this bundle takes arguments.", bp->type, bp->name);
+                Log(LOG_LEVEL_WARNING, "Cannot implicitly evaluate bundle '%s %s', as this bundle takes arguments.", bp->type, bp->name);
                 continue;
             }
 
@@ -583,10 +591,7 @@ static void KeepPromiseBundles(EvalContext *ctx, Policy *policy)
 
                 BannerPromiseType(bp->name, sp->name, 0);
 
-                EvalContextStackPushBundleFrame(ctx, bp, false);
-                ScopeAugment(ctx, bp, NULL, NULL);
-
-                CleanReportBookFilterSet();
+                EvalContextStackPushBundleFrame(ctx, bp, NULL, false);
 
                 for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
                 {
@@ -604,81 +609,78 @@ static void KeepPromiseBundles(EvalContext *ctx, Policy *policy)
 /* Level                                                             */
 /*********************************************************************/
 
-static void KeepServerPromise(EvalContext *ctx, Promise *pp, ARG_UNUSED void *param)
+static PromiseResult KeepServerPromise(EvalContext *ctx, Promise *pp, ARG_UNUSED void *param)
 {
-    char *sp = NULL;
-
-    assert(param == NULL);
+    assert(!param);
 
     if (!IsDefinedClass(ctx, pp->classes, PromiseGetNamespace(pp)))
     {
         Log(LOG_LEVEL_VERBOSE, "Skipping whole promise, as context is %s", pp->classes);
-        return;
+        return PROMISE_RESULT_NOOP;
     }
 
-    if (VarClassExcluded(ctx, pp, &sp))
     {
-        if (LEGACY_OUTPUT)
+        char *cls = NULL;
+        if (VarClassExcluded(ctx, pp, &cls))
         {
-            Log(LOG_LEVEL_VERBOSE, "\n");
-            Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . ");
-            Log(LOG_LEVEL_VERBOSE, "Skipping whole next promise (%s), as var-context %s is not relevant", pp->promiser,
-                  sp);
-            Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . ");
+            if (LEGACY_OUTPUT)
+            {
+                Log(LOG_LEVEL_VERBOSE, "\n");
+                Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . ");
+                Log(LOG_LEVEL_VERBOSE, "Skipping whole next promise (%s), as var-context %s is not relevant", pp->promiser, cls);
+                Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . ");
+            }
+            else
+            {
+                Log(LOG_LEVEL_VERBOSE, "Skipping next promise '%s', as var-context '%s' is not relevant", pp->promiser, cls);
+            }
+            return PROMISE_RESULT_NOOP;
         }
-        else
-        {
-            Log(LOG_LEVEL_VERBOSE, "Skipping next promise '%s', as var-context '%s' is not relevant", pp->promiser, sp);
-        }
-        return;
     }
 
     if (strcmp(pp->parent_promise_type->name, "classes") == 0)
     {
-        VerifyClassPromise(ctx, pp, NULL);
-        return;
+        return VerifyClassPromise(ctx, pp, NULL);
     }
 
-    sp = (char *) ConstraintGetRvalValue(ctx, "resource_type", pp, RVAL_TYPE_SCALAR);
-
-    if ((strcmp(pp->parent_promise_type->name, "access") == 0) && sp && (strcmp(sp, "literal") == 0))
+    const char *resource_type = ConstraintGetRvalValue(ctx, "resource_type", pp, RVAL_TYPE_SCALAR);
+    if (resource_type && strcmp(pp->parent_promise_type->name, "access") == 0)
     {
-        KeepLiteralAccessPromise(ctx, pp, "literal");
-        return;
+        if (strcmp(resource_type, "literal") == 0)
+        {
+            KeepLiteralAccessPromise(ctx, pp, "literal");
+            return PROMISE_RESULT_NOOP;
+        }
+        else if (strcmp(resource_type, "variable") == 0)
+        {
+            KeepLiteralAccessPromise(ctx, pp, "variable");
+            return PROMISE_RESULT_NOOP;
+        }
+        else if (strcmp(resource_type, "query") == 0)
+        {
+            KeepQueryAccessPromise(ctx, pp, "query");
+            KeepReportDataSelectAccessPromise(pp);
+            return PROMISE_RESULT_NOOP;
+        }
+        else if (strcmp(resource_type, "context") == 0)
+        {
+            KeepLiteralAccessPromise(ctx, pp, "context");
+            return PROMISE_RESULT_NOOP;
+        }
     }
-
-    if ((strcmp(pp->parent_promise_type->name, "access") == 0) && sp && (strcmp(sp, "variable") == 0))
-    {
-        KeepLiteralAccessPromise(ctx, pp, "variable");
-        return;
-    }
-    
-    if ((strcmp(pp->parent_promise_type->name, "access") == 0) && sp && (strcmp(sp, "query") == 0))
-    {
-        KeepQueryAccessPromise(ctx, pp, "query");
-        KeepReportDataSelectAccessPromise(pp);
-        return;
-    }
-
-    if ((strcmp(pp->parent_promise_type->name, "access") == 0) && sp && (strcmp(sp, "context") == 0))
-    {
-        KeepLiteralAccessPromise(ctx, pp, "context");
-        return;
-    }
-
-/* Default behaviour is file access */
 
     if (strcmp(pp->parent_promise_type->name, "access") == 0)
     {
         KeepFileAccessPromise(ctx, pp);
-        return;
+        return PROMISE_RESULT_NOOP;
     }
-
-    if (strcmp(pp->parent_promise_type->name, "roles") == 0)
+    else if (strcmp(pp->parent_promise_type->name, "roles") == 0)
     {
         KeepServerRolePromise(ctx, pp);
-        return;
+        return PROMISE_RESULT_NOOP;
     }
+
+    return PROMISE_RESULT_NOOP;
 }
 
 /*********************************************************************/
@@ -732,26 +734,26 @@ void KeepFileAccessPromise(EvalContext *ctx, Promise *pp)
             {
                 if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_ADMIT].lval) == 0)
                 {
-                    PrependItem(&(ap->accesslist), rp->item, NULL);
+                    PrependItem(&(ap->accesslist), RlistScalarValue(rp), NULL);
                     continue;
                 }
 
                 if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_DENY].lval) == 0)
                 {
-                    PrependItem(&(dp->accesslist), rp->item, NULL);
+                    PrependItem(&(dp->accesslist), RlistScalarValue(rp), NULL);
                     continue;
                 }
 
                 if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_MAPROOT].lval) == 0)
                 {
-                    PrependItem(&(ap->maproot), rp->item, NULL);
+                    PrependItem(&(ap->maproot), RlistScalarValue(rp), NULL);
                     continue;
                 }
             }
             break;
 
         default:
-            /* Shouldn't happen */
+            UnexpectedError("Unknown constraint type!");
             break;
         }
     }
@@ -773,7 +775,7 @@ void KeepLiteralAccessPromise(EvalContext *ctx, Promise *pp, char *type)
     
     if (strcmp(type, "literal") == 0)
     {
-        Log(LOG_LEVEL_VERBOSE,"Looking at literal access promise \"%s\", type %s",pp->promiser, type);
+        Log(LOG_LEVEL_VERBOSE,"Looking at literal access promise '%s', type '%s'", pp->promiser, type);
 
         if (!GetAuthPath(handle, SV.varadmit))
         {
@@ -792,11 +794,11 @@ void KeepLiteralAccessPromise(EvalContext *ctx, Promise *pp, char *type)
     }
     else
     {
-        Log(LOG_LEVEL_VERBOSE,"Looking at context/var access promise \"%s\", type %s",pp->promiser, type);
+        Log(LOG_LEVEL_VERBOSE,"Looking at context/var access promise '%s', type '%s'", pp->promiser, type);
 
         if (!GetAuthPath(pp->promiser, SV.varadmit))
         {
-            InstallServerAuthPath(pp->promiser, &SV.varadmittop, &SV.varadmittop);
+            InstallServerAuthPath(pp->promiser, &SV.varadmit, &SV.varadmittop);
         }
 
         if (!GetAuthPath(pp->promiser, SV.vardeny))
@@ -846,26 +848,26 @@ void KeepLiteralAccessPromise(EvalContext *ctx, Promise *pp, char *type)
             {
                 if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_ADMIT].lval) == 0)
                 {
-                    PrependItem(&(ap->accesslist), rp->item, NULL);
+                    PrependItem(&(ap->accesslist), RlistScalarValue(rp), NULL);
                     continue;
                 }
 
                 if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_DENY].lval) == 0)
                 {
-                    PrependItem(&(dp->accesslist), rp->item, NULL);
+                    PrependItem(&(dp->accesslist), RlistScalarValue(rp), NULL);
                     continue;
                 }
 
                 if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_MAPROOT].lval) == 0)
                 {
-                    PrependItem(&(ap->maproot), rp->item, NULL);
+                    PrependItem(&(ap->maproot), RlistScalarValue(rp), NULL);
                     continue;
                 }
             }
             break;
 
         default:
-            /* Shouldn't happen */
+            UnexpectedError("Unknown constraint type!");
             break;
         }
     }
@@ -924,26 +926,26 @@ void KeepQueryAccessPromise(EvalContext *ctx, Promise *pp, char *type)
             {
                 if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_ADMIT].lval) == 0)
                 {
-                    PrependItem(&(ap->accesslist), rp->item, NULL);
+                    PrependItem(&(ap->accesslist), RlistScalarValue(rp), NULL);
                     continue;
                 }
 
                 if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_DENY].lval) == 0)
                 {
-                    PrependItem(&(dp->accesslist), rp->item, NULL);
+                    PrependItem(&(dp->accesslist), RlistScalarValue(rp), NULL);
                     continue;
                 }
 
                 if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_MAPROOT].lval) == 0)
                 {
-                    PrependItem(&(ap->maproot), rp->item, NULL);
+                    PrependItem(&(ap->maproot), RlistScalarValue(rp), NULL);
                     continue;
                 }
             }
             break;
 
         default:
-            /* Shouldn't happen */
+            UnexpectedError("Unknown constraint type!");
             break;
         }
     }
@@ -980,14 +982,14 @@ static void KeepServerRolePromise(EvalContext *ctx, Promise *pp)
             {
                 if (strcmp(cp->lval, CF_REMROLE_BODIES[REMOTE_ROLE_AUTHORIZE].lval) == 0)
                 {
-                    PrependItem(&(ap->accesslist), rp->item, NULL);
+                    PrependItem(&(ap->accesslist), RlistScalarValue(rp), NULL);
                     continue;
                 }
             }
             break;
 
         case RVAL_TYPE_FNCALL:
-            /* Shouldn't happen */
+            UnexpectedError("Constraint of type FNCALL is invalid in this context!");
             break;
 
         default:
@@ -997,7 +999,7 @@ static void KeepServerRolePromise(EvalContext *ctx, Promise *pp)
             }
             else
             {
-                Log(LOG_LEVEL_ERR, "RHS of authorize promise for %s should be a list", pp->promiser);
+                Log(LOG_LEVEL_ERR, "Right-hand side of authorize promise for '%s' should be a list", pp->promiser);
             }
             break;
         }

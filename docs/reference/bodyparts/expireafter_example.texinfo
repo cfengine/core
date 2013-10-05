@@ -1,8 +1,0 @@
-
-@verbatim
-body action example
-{
-ifelapsed   => "120";	# 2 hours
-expireafter => "240";	# 4 hours
-}
-@end verbatim

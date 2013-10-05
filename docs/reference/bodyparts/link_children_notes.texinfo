@@ -1,3 +1,0 @@
-
-If the promiser is a directory, instead of copying the children, link them to the
-source.

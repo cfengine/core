@@ -3,47 +3,47 @@
 
 body common control
 {
-  inputs => { "../../default.cf.sub" };
-  bundlesequence  => { default("$(this.promise_filename)") };
-  version => "1.0";
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
 }
 
 bundle agent init
 {
-vars:
-  "dummy" string => "dummy";
+  vars:
+      "dummy" string => "dummy";
 
-processes:
-  any::
-   "/bin/true"
-     classes => set_cancel_this;
+  processes:
+    any::
+      "$(G.true)"
+      classes => set_cancel_this;
 }
 
 bundle agent test
 {
-processes:
-  any::
-    "/bin/true"
+  processes:
+    any::
+      "$(G.true)"
       classes => bundle_class;
 }
 
 body classes set_cancel_this
 {
-  promise_kept => { "cancel_this" };
+      promise_kept => { "cancel_this" };
 }
 
 body classes bundle_class
 {
-  scope => "bundle";
-  promise_kept => { "bundle_class" };
-  cancel_kept => { "cancel_this" };
+      scope => "bundle";
+      promise_kept => { "bundle_class" };
+      cancel_kept => { "cancel_this" };
 }
 
 bundle agent check
 {
-reports:
-  !cancel_this::
-    "$(this.promise_filename) Pass";
-  cancel_this|bundle_class::
-    "$(this.promise_filename) FAIL";
+  reports:
+    !cancel_this::
+      "$(this.promise_filename) Pass";
+    cancel_this|bundle_class::
+      "$(this.promise_filename) FAIL";
 }

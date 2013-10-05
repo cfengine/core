@@ -22,8 +22,8 @@
   included file COSL.txt.
 */
 
-#include "platform.h"
-#include "compiler.h"
+#include <platform.h>
+#include <compiler.h>
 
 char *cf_strtimestamp_local(const time_t time, char *buf);
 

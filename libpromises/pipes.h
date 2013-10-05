@@ -25,13 +25,20 @@
 #ifndef CFENGINE_PIPES_H
 #define CFENGINE_PIPES_H
 
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
-FILE *cf_popen(const char *command, char *type, bool capture_stderr);
-FILE *cf_popensetuid(const char *command, char *type, uid_t uid, gid_t gid, char *chdirv, char *chrootv, int background);
-FILE *cf_popen_sh(const char *command, char *type);
-FILE *cf_popen_shsetuid(const char *command, char *type, uid_t uid, gid_t gid, char *chdirv, char *chrootv, int background);
+FILE *cf_popen(const char *command, const char *type, bool capture_stderr);
+FILE *cf_popensetuid(const char *command, const char *type, uid_t uid, gid_t gid, char *chdirv, char *chrootv, int background);
+FILE *cf_popen_sh(const char *command, const char *type);
+FILE *cf_popen_shsetuid(const char *command, const char *type, uid_t uid, gid_t gid, char *chdirv, char *chrootv, int background);
 int cf_pclose(FILE *pp);
 bool PipeToPid(pid_t *pid, FILE *pp);
+bool PipeTypeIsOk(const char *type);
+
+#ifdef __MINGW32__
+FILE *cf_popen_powershell(const char *command, const char *type);
+FILE *cf_popen_powershell_setuid(const char *command, const char *type, uid_t uid, gid_t gid, char *chdirv, char *chrootv,
+                              int background);
+#endif
 
 #endif

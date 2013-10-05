@@ -25,7 +25,7 @@
 #ifndef CFENGINE_ATTRIBUTES_H
 #define CFENGINE_ATTRIBUTES_H
 
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
 Attributes GetClassContextAttributes(const EvalContext *ctx, const Promise *pp);
 Attributes GetColumnAttributes(const EvalContext *ctx, const Promise *pp);
@@ -59,6 +59,7 @@ EditRegion GetRegionConstraints(const EvalContext *ctx, const Promise *pp);
 EditReplace GetReplaceConstraints(const EvalContext *ctx, const Promise *pp);
 Environments GetEnvironmentsConstraints(const EvalContext *ctx, const Promise *pp);
 ExecContain GetExecContainConstraints(const EvalContext *ctx, const Promise *pp);
+ENTERPRISE_FUNC_0ARG_DECLARE(HashMethod, GetBestFileChangeHashMethod);
 FileChange GetChangeMgtConstraints(const EvalContext *ctx, const Promise *pp);
 FileCopy GetCopyConstraints(const EvalContext *ctx, const Promise *pp);
 FileDelete GetDeleteConstraints(const EvalContext *ctx, const Promise *pp);

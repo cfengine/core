@@ -1,9 +1,0 @@
-
-@verbatim
-
-body contain example
-{
-umask => "077";
-}
-
-@end verbatim

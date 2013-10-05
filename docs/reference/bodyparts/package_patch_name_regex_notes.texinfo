@@ -1,5 +1,0 @@
-
-A few package managers keep a separate notion of patches, as opposed to package updates.
-OpenSuSE, for example, is one of these. This provide an analogous command struct to the
-packages for patch updates. The regular expression may match a partial string (that is,
-it is unanchored, @pxref{Anchored vs. unanchored regular expressions}).

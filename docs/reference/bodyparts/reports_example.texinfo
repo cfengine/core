@@ -1,9 +1,0 @@
-
-@verbatim
-
-body reporter control
-{
-reports => { "performance", "classes"  };
-}
-
-@end verbatim

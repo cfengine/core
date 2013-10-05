@@ -1,0 +1,65 @@
+
+body common control
+{
+      bundlesequence => { "get_mac_adr" };
+}
+
+##############################################################
+
+bundle agent get_mac_adr
+{
+  vars:
+
+    linux::
+      "interface" string => execresult("/sbin/ifconfig eth0","noshell");
+
+    solaris::
+      "interface" string => execresult("/usr/sbin/ifconfig bge0","noshell");
+
+    freebsd::
+      "interface" string => execresult("/sbin/ifconfig le0","noshell");
+
+    darwin::
+      "interface" string => execresult("/sbin/ifconfig en0","noshell");
+
+  classes:
+
+    linux::
+
+      "ok" expression => regextract(
+                                     ".*HWaddr ([^\s]+).*(\n.*)*",
+                                     "$(interface)",
+                                     "mac"
+      );
+
+    solaris::
+
+      "ok" expression => regextract(
+                                     ".*ether ([^\s]+).*(\n.*)*",
+                                     "$(interface)",
+                                     "mac"
+      );
+
+    freebsd::
+
+      "ok" expression => regextract(
+                                     ".*ether ([^\s]+).*(\n.*)*",
+                                     "$(interface)",
+                                     "mac"
+      );
+
+    darwin::
+
+      "ok" expression => regextract(
+                                     "(?s).*ether ([^\s]+).*(\n.*)*",
+                                     "$(interface)",
+                                     "mac"
+      );
+
+  reports:
+
+    ok::
+
+      "MAC address is $(mac[1])";
+
+}

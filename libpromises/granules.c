@@ -22,10 +22,9 @@
   included file COSL.txt.
 */
 
-#include "granules.h"
-#include "misc_lib.h"
-#include <math.h>
-#include <assert.h>
+#include <granules.h>
+#include <misc_lib.h>
+
 
 char *GenTimeKey(time_t now)
 {
@@ -36,7 +35,7 @@ char *GenTimeKey(time_t now)
 
     snprintf(buf, sizeof(buf), "%3.3s:Hr%02d:Min%02d_%02d",
              DAY_TEXT[tm.tm_wday ? (tm.tm_wday - 1) : 6],
-             tm.tm_hour, tm.tm_min / 5 * 5, ((tm.tm_min + 4) / 5 * 5) % 60);
+             tm.tm_hour, tm.tm_min / 5 * 5, ((tm.tm_min + 5) / 5 * 5) % 60);
 
     return buf;
 }

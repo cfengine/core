@@ -1,9 +1,0 @@
-
-@verbatim
-
-body process_count example
-{
-in_range_define => { "class1", "class2" };
-}
-
-@end verbatim

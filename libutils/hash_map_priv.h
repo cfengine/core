@@ -25,7 +25,7 @@
 #ifndef CFENGINE_HASH_MAP_PRIV_H
 #define CFENGINE_HASH_MAP_PRIV_H
 
-#include "map_common.h"
+#include <map_common.h>
 
 typedef struct BucketListItem_
 {
@@ -33,7 +33,7 @@ typedef struct BucketListItem_
     struct BucketListItem_ *next;
 } BucketListItem;
 
-typedef unsigned int (*MapHashFn) (const void *p, unsigned int max);
+typedef unsigned int (*MapHashFn) (const void *p, unsigned int seed, unsigned int max);
 
 typedef struct
 {

@@ -1,9 +1,0 @@
-
-@verbatim
-
-body process_select example
-{
-process_owner => { "wwwrun", "nobody" };
-}
-
-@end verbatim

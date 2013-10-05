@@ -1,0 +1,49 @@
+
+
+body common control
+{
+      bundlesequence => { "main" };
+}
+
+bundle agent main
+{
+  methods:
+
+      "any"  usebundle => one;
+
+      "any"  usebundle => mars.two;
+
+}
+
+bundle agent one
+{
+  reports:
+
+      "two"
+      depends_on => { "handle_one" };
+
+      "one"
+      handle => "handle_one";
+
+}
+
+body file control
+{
+      namespace => "mars";
+}
+
+
+bundle agent two
+{
+  reports:
+
+      "marstwo"
+      handle => "mars_two",
+      depends_on => { "handle_one" };
+
+      "marsone"
+      handle => "handle_one";
+
+      "marsthree"
+      depends_on => { "default.handle_one", "mars_two" };
+}

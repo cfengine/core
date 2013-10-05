@@ -22,34 +22,35 @@
   included file COSL.txt.
 */
 
-#include "files_operators.h"
+#include <files_operators.h>
 
-#include "cf_acl.h"
-#include "env_context.h"
-#include "promises.h"
-#include "dir.h"
-#include "dbm_api.h"
-#include "files_names.h"
-#include "files_interfaces.h"
-#include "files_hashes.h"
-#include "files_copy.h"
-#include "vars.h"
-#include "item_lib.h"
-#include "conversion.h"
-#include "expand.h"
-#include "scope.h"
-#include "matching.h"
-#include "attributes.h"
-#include "client_code.h"
-#include "pipes.h"
-#include "locks.h"
-#include "string_lib.h"
-#include "files_repository.h"
-#include "files_lib.h"
+#include <actuator.h>
+#include <verify_acl.h>
+#include <env_context.h>
+#include <promises.h>
+#include <dir.h>
+#include <dbm_api.h>
+#include <files_names.h>
+#include <files_interfaces.h>
+#include <files_hashes.h>
+#include <files_copy.h>
+#include <vars.h>
+#include <item_lib.h>
+#include <conversion.h>
+#include <expand.h>
+#include <scope.h>
+#include <matching.h>
+#include <attributes.h>
+#include <client_code.h>
+#include <pipes.h>
+#include <locks.h>
+#include <string_lib.h>
+#include <files_repository.h>
+#include <files_lib.h>
+#include <buffer.h>
 
-#include <assert.h>
 
-int MoveObstruction(EvalContext *ctx, char *from, Attributes attr, const Promise *pp)
+int MoveObstruction(EvalContext *ctx, char *from, Attributes attr, const Promise *pp, PromiseResult *result)
 {
     struct stat sb;
     char stamp[CF_BUFSIZE], saved[CF_BUFSIZE];
@@ -59,7 +60,8 @@ int MoveObstruction(EvalContext *ctx, char *from, Attributes attr, const Promise
     {
         if (!attr.move_obstructions)
         {
-            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, pp, attr, "Object %s exists and is obstructing our promise\n", from);
+            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, pp, attr, "Object '%s' exists and is obstructing our promise", from);
+            *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
             return false;
         }
 
@@ -81,11 +83,13 @@ int MoveObstruction(EvalContext *ctx, char *from, Attributes attr, const Promise
 
             strcat(saved, CF_SAVED);
 
-            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, attr, "Moving file object %s to %s\n", from, saved);
+            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, attr, "Moving file object '%s' to '%s'", from, saved);
+            *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
 
             if (rename(from, saved) == -1)
             {
                 cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Can't rename '%s' to '%s'. (rename: %s)", from, saved, GetErrorStr());
+                *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
                 return false;
             }
 
@@ -99,7 +103,8 @@ int MoveObstruction(EvalContext *ctx, char *from, Attributes attr, const Promise
 
         if (S_ISDIR(sb.st_mode))
         {
-            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, attr, "Moving directory %s to %s%s\n", from, from, CF_SAVED);
+            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, attr, "Moving directory '%s' to '%s%s'", from, from, CF_SAVED);
+            *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
 
             if (DONTDO)
             {
@@ -116,9 +121,10 @@ int MoveObstruction(EvalContext *ctx, char *from, Attributes attr, const Promise
 
             if (stat(saved, &sb) != -1)
             {
-                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Couldn't save directory %s, since %s exists already\n", from,
+                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Couldn't save directory '%s', since '%s' exists already", from,
                      saved);
-                Log(LOG_LEVEL_ERR, "Unable to force link to existing directory %s", from);
+                *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
+                Log(LOG_LEVEL_ERR, "Unable to force link to existing directory '%s'", from);
                 return false;
             }
 
@@ -126,6 +132,7 @@ int MoveObstruction(EvalContext *ctx, char *from, Attributes attr, const Promise
             {
                 cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Can't rename '%s' to '%s'. (rename: %s)",
                      from, saved, GetErrorStr());
+                *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
                 return false;
             }
         }
@@ -140,32 +147,61 @@ int SaveAsFile(SaveCallbackFn callback, void *param, const char *file, Attribute
 {
     struct stat statbuf;
     char new[CF_BUFSIZE], backup[CF_BUFSIZE];
-    mode_t mask;
     char stamp[CF_BUFSIZE];
     time_t stamp_now;
+    Buffer *deref_file = BufferNewFrom(file, strlen(file));
+    Buffer *pretty_file = BufferNew();
+    int ret = false;
 
-#ifdef WITH_SELINUX
-    int selinux_enabled = 0;
-    security_context_t scontext = NULL;
-
-    selinux_enabled = (is_selinux_enabled() > 0);
-
-    if (selinux_enabled)
-    {
-        /* get current security context */
-        getfilecon(file, &scontext);
-    }
-#endif
+    BufferPrintf(pretty_file, "'%s'", file);
 
     stamp_now = time((time_t *) NULL);
 
-    if (stat(file, &statbuf) == -1)
+    while (1)
     {
-        Log(LOG_LEVEL_ERR, "Can no longer access file '%s', which needed editing. (stat: %s)", file, GetErrorStr());
-        return false;
+        if (lstat(BufferData(deref_file), &statbuf) == -1)
+        {
+            Log(LOG_LEVEL_ERR, "Can no longer access file %s, which needed editing. (lstat: %s)", BufferData(pretty_file), GetErrorStr());
+            goto end;
+        }
+#ifndef __MINGW32__
+        if (S_ISLNK(statbuf.st_mode))
+        {
+            char buf[statbuf.st_size + 1];
+            // Careful. readlink() doesn't add '\0' byte.
+            ssize_t linksize = readlink(BufferData(deref_file), buf, statbuf.st_size);
+            if (linksize == 0)
+            {
+                Log(LOG_LEVEL_WARNING, "readlink() failed with 0 bytes. Should not happen (bug?).");
+                goto end;
+            }
+            else if (linksize < 0)
+            {
+                Log(LOG_LEVEL_ERR, "Could not read link %s. (readlink: %s)", BufferData(pretty_file), GetErrorStr());
+                goto end;
+            }
+            buf[linksize] = '\0';
+            if (!IsAbsPath(buf))
+            {
+                char dir[BufferSize(deref_file) + 1];
+                strcpy(dir, BufferData(deref_file));
+                ChopLastNode(dir);
+                BufferPrintf(deref_file, "%s/%s", dir, buf);
+            }
+            else
+            {
+                BufferSet(deref_file, buf, linksize);
+            }
+            BufferPrintf(pretty_file, "'%s' (from symlink '%s')", BufferData(deref_file), file);
+        }
+        else
+#endif
+        {
+            break;
+        }
     }
 
-    strcpy(backup, file);
+    strcpy(backup, BufferData(deref_file));
 
     if (a.edits.backup == BACKUP_OPTION_TIMESTAMP)
     {
@@ -175,20 +211,44 @@ int SaveAsFile(SaveCallbackFn callback, void *param, const char *file, Attribute
 
     strcat(backup, ".cf-before-edit");
 
-    strcpy(new, file);
+    strcpy(new, BufferData(deref_file));
     strcat(new, ".cf-after-edit");
     unlink(new);                /* Just in case of races */
 
     if ((*callback)(new, param) == false)
     {
-        return false;
+        goto end;
     }
 
-    if (rename(file, backup) == -1)
+    if (!CopyFilePermissionsDisk(BufferData(deref_file), new))
     {
-        Log(LOG_LEVEL_ERR, "Can't rename '%s' to '%s' - so promised edits could not be moved into place. (rename: %s)",
-            file, backup, GetErrorStr());
-        return false;
+        Log(LOG_LEVEL_ERR, "Can't copy file permissions from %s to '%s' - so promised edits could not be moved into place.",
+            BufferData(pretty_file), new);
+        goto end;
+    }
+
+    unlink(backup);
+#ifndef __MINGW32__
+    if (link(BufferData(deref_file), backup) == -1)
+    {
+        Log(LOG_LEVEL_VERBOSE, "Can't link %s to '%s' - falling back to copy. (link: %s)",
+            BufferData(pretty_file), backup, GetErrorStr());
+#else
+    /* No hardlinks on Windows, go straight to copying */
+    {
+#endif
+        if (!CopyRegularFileDisk(BufferData(deref_file), backup))
+        {
+            Log(LOG_LEVEL_ERR, "Can't copy %s to '%s' - so promised edits could not be moved into place.",
+                BufferData(pretty_file), backup);
+            goto end;
+        }
+        if (!CopyFilePermissionsDisk(BufferData(deref_file), backup))
+        {
+            Log(LOG_LEVEL_ERR, "Can't copy permissions %s to '%s' - so promised edits could not be moved into place.",
+                BufferData(pretty_file), backup);
+            goto end;
+        }
     }
 
     if (a.edits.backup == BACKUP_OPTION_ROTATE)
@@ -210,30 +270,19 @@ int SaveAsFile(SaveCallbackFn callback, void *param, const char *file, Attribute
         unlink(backup);
     }
 
-    if (rename(new, file) == -1)
+    if (rename(new, BufferData(deref_file)) == -1)
     {
-        Log(LOG_LEVEL_ERR, "Can't rename '%s' to '%s' - so promised edits could not be moved into place. (rename: %s)",
-            new, file, GetErrorStr());
-        return false;
+        Log(LOG_LEVEL_ERR, "Can't rename '%s' to %s - so promised edits could not be moved into place. (rename: %s)",
+            new, BufferData(pretty_file), GetErrorStr());
+        goto end;
     }
 
-    mask = umask(0);
-    chmod(file, statbuf.st_mode);    /* Restore file permissions etc */
-    if (chown(file, statbuf.st_uid, statbuf.st_gid) != 0)
-    {
-        Log(LOG_LEVEL_ERR, "Failed to restore file permissions for '%s'", file);
-    }
-    umask(mask);
+    ret = true;
 
-#ifdef WITH_SELINUX
-    if (selinux_enabled)
-    {
-        /* restore file context */
-        setfilecon(file, scontext);
-    }
-#endif
-
-    return true;
+end:
+    BufferDestroy(&pretty_file);
+    BufferDestroy(&deref_file);
+    return ret;
 }
 
 /*********************************************************************/
@@ -257,6 +306,7 @@ static bool SaveItemListCallback(const char *dest_filename, void *param)
         {
             Log(LOG_LEVEL_ERR, "Unable to write into destination file '%s'. (fprintf: %s)",
                 dest_filename, GetErrorStr());
+            fclose(fp);
             return false;
         }
     }
@@ -292,7 +342,8 @@ static Item *NextItem(const Item *ip)
     }
 }
 
-static int ItemListsEqual(EvalContext *ctx, const Item *list1, const Item *list2, int warnings, Attributes a, const Promise *pp)
+static int ItemListsEqual(EvalContext *ctx, const Item *list1, const Item *list2, int warnings,
+                          Attributes a, const Promise *pp, PromiseResult *result)
 {
     int retval = true;
 
@@ -312,8 +363,8 @@ static int ItemListsEqual(EvalContext *ctx, const Item *list1, const Item *list2
             {
                 if ((ip1 == list1) || (ip2 == list2))
                 {
-                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, a,
-                         " ! File content wants to change from from/to full/empty but only a warning promised");
+                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, a, "File content wants to change from from/to full/empty but only a warning promised");
+                    *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
                 }
                 else
                 {
@@ -321,11 +372,13 @@ static int ItemListsEqual(EvalContext *ctx, const Item *list1, const Item *list2
                     {
                         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, a, " ! edit_line change warning promised: (remove) %s",
                              ip1->name);
+                        *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
                     }
 
                     if (ip2 != NULL)
                     {
                         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, a, " ! edit_line change warning promised: (add) %s", ip2->name);
+                        *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
                     }
                 }
             }
@@ -355,8 +408,9 @@ static int ItemListsEqual(EvalContext *ctx, const Item *list1, const Item *list2
             {
                 // If we want to see warnings, we need to scan the whole file
 
-                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, a, " ! edit_line warning promised: - %s", ip1->name);
-                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, a, " ! edit_line warning promised: + %s", ip2->name);
+                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, a, "edit_line warning promised: - %s", ip1->name);
+                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, a, "edit_line warning promised: + %s", ip2->name);
+                *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
                 retval = false;
             }
         }
@@ -370,12 +424,11 @@ static int ItemListsEqual(EvalContext *ctx, const Item *list1, const Item *list2
 
 /* returns true if file on disk is identical to file in memory */
 
-int CompareToFile(EvalContext *ctx, const Item *liststart, const char *file, Attributes a, const Promise *pp)
+int CompareToFile(EvalContext *ctx, const Item *liststart, const char *file, Attributes a, const Promise *pp,
+                  PromiseResult *result)
 {
     struct stat statbuf;
     Item *cmplist = NULL;
-
-    Log(LOG_LEVEL_DEBUG, "CompareToFile(%s)\n", file);
 
     if (stat(file, &statbuf) == -1)
     {
@@ -397,7 +450,7 @@ int CompareToFile(EvalContext *ctx, const Item *liststart, const char *file, Att
         return false;
     }
 
-    if (!ItemListsEqual(ctx, cmplist, liststart, (a.transaction.action == cfa_warn), a, pp))
+    if (!ItemListsEqual(ctx, cmplist, liststart, (a.transaction.action == cfa_warn), a, pp, result))
     {
         DeleteItemList(cmplist);
         return false;

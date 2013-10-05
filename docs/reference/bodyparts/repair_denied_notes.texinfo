@@ -1,7 +1,0 @@
-
-A promise could not be kept because access to a key resource
-was denied.
-
-Note that any strings passed to this list are automatically
-canonified, so it is unecessary to call a canonify function on such inputs.
-

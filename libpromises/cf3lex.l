@@ -48,7 +48,7 @@
 #define malloc xmalloc
 #define realloc xrealloc
 
-#define ParserDebug if (DEBUG) printf
+#define ParserDebug if (LogGetGlobalLevel() >= LOG_LEVEL_DEBUG) printf
 
 static int DeEscapeQuotedString(const char *from, char *to);
 
@@ -84,7 +84,7 @@ nakedvar   [$@][(][a-zA-Z0-9_\[\]\200-\377.:]+[)]|[$@][{][a-zA-Z0-9_\[\]\200-\37
 
 id         [a-zA-Z0-9_\200-\377]+
 
-blockid    [a-zA-Z0-9_\200-\377]+[:][a-zA-Z0-9_\200-\377]+
+symbol     [a-zA-Z0-9_\200-\377]+[:][a-zA-Z0-9_\200-\377]+
 
 assign     =>
 
@@ -179,10 +179,10 @@ promise_type   [a-zA-Z_]+:
                       }
 
 
-{blockid}             {
+{symbol}              {
                           P.offsets.last_id = P.offsets.current - yyleng;
                           P.line_pos += yyleng;
-                          ParserDebug("\tL:blockid %s %d\n", yytext, P.line_pos);
+                          ParserDebug("\tL:symbol %s %d\n", yytext, P.line_pos);
                           if (yyleng > CF_MAXVARSIZE-1)
                           {
                               yyerror("qualified identifier too long");
@@ -207,8 +207,6 @@ promise_type   [a-zA-Z_]+:
 {class}               {
                           char *tmp = NULL;
                         
-                          tmp = xmalloc(yyleng + 1);
-
                           P.line_pos += yyleng;
                           ParserDebug("\tL:class %s %d\n", yytext, P.line_pos);
 
@@ -229,7 +227,6 @@ promise_type   [a-zA-Z_]+:
 {promise_type}        {
                           char *tmp = NULL;
 
-                          tmp = xmalloc(yyleng + 1);
                           P.line_pos += yyleng;
                           ParserDebug("\tL:promise_type %s %d\n", yytext, P.line_pos);
                           P.offsets.last_promise_type_id = P.offsets.current - yyleng;
@@ -287,6 +284,10 @@ promise_type   [a-zA-Z_]+:
 {nakedvar}            {
                           P.line_pos += yyleng;
                           ParserDebug("\tL: %s %d\n", yytext, P.line_pos);
+                          if (P.currentstring)
+                          {
+                              free(P.currentstring);
+                          }
                           P.currentstring = xstrdup(yytext);
                           return NAKEDVAR;
                       }

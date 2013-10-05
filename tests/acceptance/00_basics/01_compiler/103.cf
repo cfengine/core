@@ -2,22 +2,22 @@
 
 body common control
 {
-  inputs => { @(g.inputs) };
-  bundlesequence  => { check };
-  version => "1.0";
+      inputs => { @(g.inputs) };
+      bundlesequence  => { check };
+      version => "1.0";
 }
 
 bundle common g
 {
-vars:
-  "inputs" slist => { };
+  vars:
+      "inputs" slist => { };
 }
 
 bundle agent check
 {
-reports:
+  reports:
     DEBUG::
-        "This test should pass as a precursor to a bunch of related failures";
+      "This test should pass as a precursor to a bunch of related failures";
     any::
-        "$(this.promise_filename) Pass";
+      "$(this.promise_filename) Pass";
 }

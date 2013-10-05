@@ -6,52 +6,52 @@
 
 body common control
 {
-  inputs => { "../../default.cf.sub" };
-  bundlesequence  => { default("$(this.promise_filename)") };
-  version => "1.0";
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
 }
 
 #######################################################
 
 bundle agent init
 {
-vars:
-        "dummy" string => "dummy";
+  vars:
+      "dummy" string => "dummy";
 }
 
 #######################################################
 
 bundle agent test
 {
-vars:
-    "positive_disk" string => "/etc";
-    "p_disk" string => "/etc/passwd";
-    "zero_disk" string => "/lkjqeroiu";
+  vars:
+      "positive_disk" string => "/etc";
+      "p_disk" string => "/etc/passwd";
+      "zero_disk" string => "/lkjqeroiu";
 
-    "positive" int => diskfree("$(positive_disk)");
-    "p" int => diskfree("$(p_disk)");
-    "zero" int => diskfree("$(zero_disk)");
+      "positive" int => diskfree("$(positive_disk)");
+      "p" int => diskfree("$(p_disk)");
+      "zero" int => diskfree("$(zero_disk)");
 }
 
 #######################################################
 
 bundle agent check
 {
-classes:
-        "ok" and => {
+  classes:
+      "ok" and => {
                     strcmp("$(test.zero)", "0"),
                     isgreaterthan("$(test.p)", "0"),
                     isgreaterthan("$(test.positive)", "0"),
-                    };
+      };
 
-reports:
+  reports:
     DEBUG::
-        "Expected 0 size on $(test.zero_disk), found $(test.zero)";
-        "Expected >1 size on $(test.p_disk), found $(test.p)";
-        "Expected >1 size on $(test.positive_disk), found $(test.positive)";
+      "Expected 0 size on $(test.zero_disk), found $(test.zero)";
+      "Expected >1 size on $(test.p_disk), found $(test.p)";
+      "Expected >1 size on $(test.positive_disk), found $(test.positive)";
     ok::
-        "$(this.promise_filename) Pass";
+      "$(this.promise_filename) Pass";
     !ok::
-        "$(this.promise_filename) FAIL";
+      "$(this.promise_filename) FAIL";
 }
 

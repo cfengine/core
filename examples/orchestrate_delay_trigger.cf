@@ -1,0 +1,81 @@
+#
+# Time based orchestration
+#
+
+body common control
+{
+      bundlesequence => { "example" };
+      inputs => { "libraries/cfengine_stdlib.cf" };
+}
+
+###########################################
+
+bundle common orchestrate
+{
+  vars:
+
+      # Must have delay < reset_time
+
+      "reset_time" int => "2";
+      "delay"      int => "1";
+}
+
+###########################################
+
+bundle agent example
+{
+  methods:
+
+      "immediate" usebundle => one,
+      classes => if_repaired_persist("countdown", "$(orchestrate.delay)"),
+      ifvarclass => "!one";
+
+      "delayed"   usebundle => two,
+      ifvarclass => "one.!countdown";
+
+  reports:
+
+    countdown::
+      "Counting down ... $(sys.date)";
+}
+
+###########################################
+
+bundle agent one
+{
+  reports:
+
+      "One = $(this.bundle) at $(sys.date)"
+      classes => if_repaired_persist("$(this.bundle)", "$(orchestrate.reset_time)"),
+      action => if_elapsed("0");
+
+      "Set class $(this.bundle)"
+      ifvarclass => "$(this.bundle)";
+}
+
+##########################################
+
+bundle agent two
+{
+  reports:
+
+      "Two = $(this.bundle) at $(sys.date)"
+      classes => if_repaired_persist("$(this.bundle)", "$(orchestrate.reset_time)"),
+      action => if_elapsed("0");
+
+      "Set class $(this.bundle)"
+      ifvarclass => "$(this.bundle)";
+}
+
+###########################################
+
+body classes if_repaired_persist(x,t)
+{
+      promise_repaired => { "$(x)" };
+      persist_time => "$(t)";
+}
+
+body classes cancel_persist(x)
+{
+      cancel_repaired => { "$(x)" };
+}

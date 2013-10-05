@@ -1,9 +1,0 @@
-
-@verbatim
-
-body contain example
-{
-useshell => "true";
-}
-
-@end verbatim

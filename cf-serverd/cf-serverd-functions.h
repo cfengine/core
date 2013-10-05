@@ -25,28 +25,31 @@
 #ifndef CFENGINE_CF_SERVERD_FUNCTIONS_H
 #define CFENGINE_CF_SERVERD_FUNCTIONS_H
 
-#include "generic_agent.h"
-#include "server.h"
+#include <platform.h>
 
-#include "sysinfo.h"
-#include "env_context.h"
-#include "dir.h"
-#include "dbm_api.h"
-#include "lastseen.h"
-#include "crypto.h"
-#include "files_names.h"
-#include "vars.h"
-#include "promises.h"
-#include "item_lib.h"
-#include "conversion.h"
-#include "xml_writer.h"
-#include "pipes.h"
+#include <generic_agent.h>
+#include <server.h>
+
+#include <sysinfo.h>
+#include <env_context.h>
+#include <dir.h>
+#include <dbm_api.h>
+#include <lastseen.h>
+#include <crypto.h>
+#include <files_names.h>
+#include <vars.h>
+#include <promises.h>
+#include <item_lib.h>
+#include <conversion.h>
+#include <xml_writer.h>
+#include <pipes.h>
 
 void ThisAgentInit(void);
 GenericAgentConfig *CheckOpts(int argc, char **argv);
 int OpenReceiverChannel(void);
 void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *config);
+typedef int (*InitServerFunction)(size_t queue_size);
 int InitServer(size_t queue_size);
-void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config);
+void StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config);
 
 #endif // CFSERVERDFUNCTIONS_H

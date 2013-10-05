@@ -1,6 +1,0 @@
-
-@verbatim
-
-db_server_host => "sqlserv.example.org";
-
-@end verbatim

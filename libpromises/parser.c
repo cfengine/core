@@ -22,10 +22,10 @@
   included file COSL.txt.
 */
 
-#include "parser.h"
-#include "parser_state.h"
+#include <parser.h>
+#include <parser_state.h>
 
-#include "misc_lib.h"
+#include <misc_lib.h>
 
 #include <errno.h>
 
@@ -54,15 +54,28 @@ static void ParserStateReset(ParserState *p)
     p->current_namespace = xstrdup("default");
 
     p->currentid[0] = '\0';
+    if (p->currentstring)
+    {
+        free(p->currentstring);
+    }
     p->currentstring = NULL;
     p->currenttype[0] = '\0';
+    if (p->currentclasses)
+    {
+        free(p->currentclasses);
+    }
     p->currentclasses = NULL;
     p->currentRlist = NULL;
     p->currentpromise = NULL;
     p->currentbody = NULL;
+    if (p->promiser)
+    {
+        free(p->promiser);
+    }
     p->promiser = NULL;
     p->blockid[0] = '\0';
     p->blocktype[0] = '\0';
+    p->rval = RvalNew(NULL, RVAL_TYPE_NOPROMISEE);
 }
 
 Policy *ParserParseFile(const char *path, unsigned int warnings, unsigned int warnings_error)
@@ -78,8 +91,7 @@ Policy *ParserParseFile(const char *path, unsigned int warnings, unsigned int wa
     yyin = fopen(path, "r");
     if (yyin == NULL)
     {
-        fprintf(stderr, "Error opening file %s: %s\n",
-                path, strerror(errno));
+        Log(LOG_LEVEL_ERR, "While opening file '%s' for parsing. (fopen: %s)", path, GetErrorStr());
         exit(1);
     }
 
@@ -99,10 +111,13 @@ Policy *ParserParseFile(const char *path, unsigned int warnings, unsigned int wa
     if (P.error_count > 0)
     {
         PolicyDestroy(P.policy);
+        ParserStateReset(&P);
         return NULL;
     }
 
-    return P.policy;
+    Policy *policy = P.policy;
+    ParserStateReset(&P);
+    return policy;
 }
 
 int ParserWarningFromString(const char *warning_str)

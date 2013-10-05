@@ -1,9 +1,0 @@
-
-@verbatim
-
-body link_from example
-{
-when_no_source => "force";
-}
-
-@end verbatim

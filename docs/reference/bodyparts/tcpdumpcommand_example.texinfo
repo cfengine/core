@@ -1,9 +1,0 @@
-
-@verbatim
-
-body monitor control
-{
-tcpdumpcommand => "/usr/sbin/tcpdump -i eth1";
-}
-
-@end verbatim

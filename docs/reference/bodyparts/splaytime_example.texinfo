@@ -1,9 +1,0 @@
-
-@verbatim
-
-body executor control
-{
-splaytime => "2";
-}
-
-@end verbatim

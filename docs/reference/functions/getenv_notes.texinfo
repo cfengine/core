@@ -1,7 +1,0 @@
-
-Returns an empty string if the environment variable is not defined.
-Arg2 is used to avoid unexpectedly large return values, 
-which could lead to security issues. Choose a reasonable
-value based on the environment variable you are querying.
-
-@b{History}: This function was introduced in CFEngine version 3.0.4 (2010)

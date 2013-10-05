@@ -25,24 +25,34 @@
 #ifndef CFENGINE_EXPAND_H
 #define CFENGINE_EXPAND_H
 
-#include "cf3.defs.h"
+#include <cf3.defs.h>
+#include <generic_agent.h>
+#include <actuator.h>
 
-typedef void PromiseActuator(EvalContext *ctx, Promise *pp, void *param);
-
-void CommonEvalPromise(EvalContext *ctx, Promise *pp, void *param);
+PromiseResult CommonEvalPromise(EvalContext *ctx, Promise *pp, void *param);
 
 void ExpandPromise(EvalContext *ctx, Promise *pp, PromiseActuator *ActOnPromise, void *param);
 
-Rval ExpandDanglers(EvalContext *ctx, const char *scope, Rval rval, const Promise *pp);
-void MapIteratorsFromRval(EvalContext *ctx, const char *scope, Rlist **lol, Rlist **los, Rval rval);
+Rval ExpandDanglers(EvalContext *ctx, const char *ns, const char *scope, Rval rval, const Promise *pp);
+void MapIteratorsFromRval(EvalContext *ctx, const char *scope, Rval rval, Rlist **scalars, Rlist **lists, Rlist **containers);
 
-int IsExpandable(const char *str);
+bool IsExpandable(const char *str);
 
-bool ExpandScalar(const EvalContext *ctx, const char *scope, const char *string, char buffer[CF_EXPANDSIZE]);
-Rval ExpandBundleReference(EvalContext *ctx, const char *scopeid, Rval rval);
-Rval ExpandPrivateRval(EvalContext *ctx, const char *contextid, Rval rval);
-Rlist *ExpandList(EvalContext *ctx, const char *scopeid, const Rlist *list, int expandnaked);
-Rval EvaluateFinalRval(EvalContext *ctx, const char *scopeid, Rval rval, int forcelist, const Promise *pp);
+bool ExpandScalar(const EvalContext *ctx, const char *ns, const char *scope, const char *string, char buffer[CF_EXPANDSIZE]);
+Rval ExpandBundleReference(EvalContext *ctx, const char *ns, const char *scope, Rval rval);
+Rval ExpandPrivateRval(EvalContext *ctx, const char *ns, const char *scope, Rval rval);
+Rlist *ExpandList(EvalContext *ctx, const char *ns, const char *scope, const Rlist *list, int expandnaked);
+Rval EvaluateFinalRval(EvalContext *ctx, const char *ns, const char *scope, Rval rval, int forcelist, const Promise *pp);
+
+/**
+ * @brief BundleResolve
+ * @param ctx
+ * @param bundle
+ */
+void BundleResolve(EvalContext *ctx, Bundle *bundle);
+void PolicyResolve(EvalContext *ctx, Policy *policy, GenericAgentConfig *config);
+
+
 int IsNakedVar(const char *str, char vtype);
 /**
   @brief Takes a variable and removes decorations.

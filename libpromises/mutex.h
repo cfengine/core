@@ -25,7 +25,7 @@
 #ifndef CFENGINE_MUTEX_H
 #define CFENGINE_MUTEX_H
 
-#include "platform.h"
+#include <platform.h>
 
 extern pthread_mutex_t *cft_system;
 extern pthread_mutex_t *cft_count;

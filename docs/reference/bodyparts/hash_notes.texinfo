@@ -1,4 +1,0 @@
-
-The @code{best} option cross correlates the best two available
-algorithms known in the OpenSSL library.
-

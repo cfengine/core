@@ -1,12 +1,14 @@
-#include "test.h"
+#include <test.h>
 
-#include "generic_agent.h"
-#include "env_context.h"
-#include "sysinfo.h"
+#include <generic_agent.h>
+#include <env_context.h>
+#include <sysinfo.h>
 
 void test_load_masterfiles(void)
 {
     EvalContext *ctx = EvalContextNew();
+    DiscoverVersion(ctx);
+
     GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_COMMON);
 
     GenericAgentConfigSetInputFile(config, NULL,

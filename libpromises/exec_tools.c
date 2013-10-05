@@ -22,29 +22,36 @@
   included file COSL.txt.
 */
 
-#include "exec_tools.h"
+#include <exec_tools.h>
 
-#include "files_names.h"
-#include "files_interfaces.h"
-#include "pipes.h"
-#include "string_lib.h"
-#include "misc_lib.h"
-#include "generic_agent.h" // CloseLog
+#include <files_names.h>
+#include <files_interfaces.h>
+#include <pipes.h>
+#include <string_lib.h>
+#include <misc_lib.h>
+#include <generic_agent.h> // CloseLog
 
 /********************************************************************/
 
-bool GetExecOutput(const char *command, char *buffer, bool useshell)
+bool GetExecOutput(const char *command, char *buffer, ShellType shell)
 /* Buffer initially contains whole exec string */
 {
     int offset = 0;
     char line[CF_EXPANDSIZE];
     FILE *pp;
 
-    Log(LOG_LEVEL_DEBUG, "GetExecOutput(%s,%s) - use shell = %d\n", command, buffer, useshell);
-
-    if (useshell)
+    if (shell == SHELL_TYPE_USE)
     {
         pp = cf_popen_sh(command, "r");
+    }
+    else if (shell == SHELL_TYPE_POWERSHELL)
+    {
+#ifdef __MINGW32__
+        pp = cf_popen_powershell(command, "r");
+#else // !__MINGW32__
+        Log(LOG_LEVEL_ERR, "Powershell is only supported on Windows");
+        return false;
+#endif // __MINGW32__
     }
     else
     {
@@ -93,7 +100,7 @@ bool GetExecOutput(const char *command, char *buffer, bool useshell)
         }
     }
 
-    Log(LOG_LEVEL_DEBUG, "GetExecOutput got: [%s]\n", buffer);
+    Log(LOG_LEVEL_DEBUG, "GetExecOutput got '%s'", buffer);
 
     cf_pclose(pp);
     return true;

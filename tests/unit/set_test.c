@@ -1,7 +1,7 @@
-#include "test.h"
+#include <test.h>
 
-#include "set.h"
-#include "alloc.h"
+#include <set.h>
+#include <alloc.h>
 
 void test_stringset_from_string(void)
 {

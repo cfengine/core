@@ -22,7 +22,7 @@
   included file COSL.txt.
 */
 
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
 const char *DAY_TEXT[] =
 {
@@ -72,7 +72,6 @@ const char *CF_AGENTTYPES[] =   /* see enum cfagenttype */
     CF_RUNC,
     CF_KEYGEN,
     CF_HUBC,
-    CF_GENDOC,
     "<notype>",
 };
 

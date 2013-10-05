@@ -1,8 +1,0 @@
-
-@verbatim
-
-  "eth0"
-
-     ipv6_address => "2001:700:700:3:211:63ff:feeb:5d18/64";
-
-@end verbatim

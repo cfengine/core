@@ -1,8 +1,0 @@
-
-The name of the operating system according to the kernel.
-
-@verbatim
-
-# os = linux
-
-@end verbatim

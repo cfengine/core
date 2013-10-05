@@ -54,7 +54,7 @@ extern time_t CFSTARTTIME;
 extern time_t CFINITSTARTTIME;
 
 extern struct utsname VSYSNAME;
-extern char VIPADDRESS[];
+extern char VIPADDRESS[CF_MAX_IP_LEN];
 extern char VPREFIX[];
 
 extern char VDOMAIN[CF_MAXVARSIZE];
@@ -62,12 +62,7 @@ extern PlatformContext VSYSTEMHARDCLASS;
 extern char VFQNAME[];
 extern char VUQNAME[];
 
-extern int DEBUG;
-
-extern int VERBOSE;
-extern int INFORM;
-
-extern int DONTDO;
+extern bool DONTDO;
 extern int IGNORELOCK;
 extern bool MINUSF;
 
@@ -81,13 +76,10 @@ extern int VEXPIREAFTER;
 
 extern const char *OBS[CF_OBSERVABLES][2];
 
-extern int FIPS_MODE;
+extern bool FIPS_MODE;
 extern char POLICY_SERVER[CF_MAX_IP_LEN];
 extern HashMethod CF_DEFAULT_DIGEST;
 extern int CF_DEFAULT_DIGEST_LEN;
-
-extern Scope *VSCOPE;
-extern Rlist *CF_STCK;
 
 extern int CF_PERSISTENCE;
 extern int LOOKUP;
@@ -97,7 +89,6 @@ extern const char *CF_AGENTTYPES[];
 extern int CFA_MAXTHREADS;
 extern AgentType THIS_AGENT_TYPE;
 extern int SHOWREPORTS;
-extern time_t PROMISETIME;
 #define CF_LOCKHORIZON ((time_t)(SECONDS_PER_WEEK * 4))
 extern int LASTSEENEXPIREAFTER;
 extern char *DEFAULT_COPYTYPE;

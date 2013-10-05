@@ -25,13 +25,13 @@
 #ifndef CFENGINE_MATCHING_H
 #define CFENGINE_MATCHING_H
 
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
-int FullTextMatch(const char *regptr, const char *cmpptr); /* Sets variables */
-int BlockTextMatch(const char *regexp, const char *teststring, int *s, int *e); /* Sets variables */
-int IsRegexItemIn(const EvalContext *ctx, Item *list, char *regex); /* Uses context, sets variables */
-int MatchRlistItem(Rlist *listofregex, const char *teststring); /* Sets variables */
-int MatchPolicy(const char *needle, const char *haystack, Rlist *insert_match, const Promise *pp); /* Sets variables */
+int FullTextMatch(EvalContext *ctx, const char *regptr, const char *cmpptr); /* Sets variables */
+int BlockTextMatch(EvalContext *ctx, const char *regexp, const char *teststring, int *s, int *e); /* Sets variables */
+int IsRegexItemIn(EvalContext *ctx, Item *list, char *regex); /* Uses context, sets variables */
+int MatchRlistItem(EvalContext *ctx, Rlist *listofregex, const char *teststring); /* Sets variables */
+int MatchPolicy(EvalContext *ctx, const char *needle, const char *haystack, Rlist *insert_match, const Promise *pp); /* Sets variables */
 
 char *ExtractFirstReference(const char *regexp, const char *teststring); /* Pure, not thread-safe */
 

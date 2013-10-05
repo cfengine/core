@@ -1,9 +1,0 @@
-
-@verbatim
-
-body agent control
-{
-nonalphanumfiles => "true";
-}
-
-@end verbatim

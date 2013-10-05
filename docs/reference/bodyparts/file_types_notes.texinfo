@@ -1,4 +1,0 @@
-
-File types vary in details between operating systems. The main POSIX
-types are provided here as menu options, with @samp{reg} being a synonym for
-@samp{plain} (meaning, in both cases, not one of the "special" file types). 

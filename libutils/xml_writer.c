@@ -22,9 +22,9 @@
   included file COSL.txt.
 */
 
-#include "xml_writer.h"
+#include <xml_writer.h>
 
-#include "misc_lib.h"
+#include <misc_lib.h>
 
 static void WriteEscaped(Writer *writer, const char *source);
 

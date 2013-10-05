@@ -1,6 +1,0 @@
-
-The regular expression is matched against the current list of defined classes.
-The regular expression must match a complete class for the expression to
-be true, that is, the regex is anchored,
-@xref{Anchored vs. unanchored regular expressions}.
-

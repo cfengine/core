@@ -24,9 +24,9 @@
 
 #include <stdint.h>
 #include <ctype.h>
-#include "platform.h"
-#include "ip_address.h"
-#include "alloc.h"
+#include <platform.h>
+#include <ip_address.h>
+#include <alloc.h>
 
 struct IPV4Address {
     uint8_t octets[4];
@@ -86,9 +86,10 @@ static int IPV4_parser(const char *source, struct IPV4Address *address)
     int period_counter = 0;
     int port_counter = 0;
     int char_counter = 0;
-    bool is_period = 0;
-    bool is_digit = 0;
-    bool is_port = 0;
+    bool is_period = false;
+    bool is_digit = false;
+    bool is_port = false;
+    bool has_digit = false;
 
     /*
      * For simplicity sake we initialize address (if not NULL).
@@ -159,6 +160,7 @@ static int IPV4_parser(const char *source, struct IPV4Address *address)
             if (is_digit)
             {
                 octet = Char2Dec(octet, *p);
+                has_digit = true;
             }
             else if (is_period)
             {
@@ -183,6 +185,7 @@ static int IPV4_parser(const char *source, struct IPV4Address *address)
             if (is_digit)
             {
                 octet = Char2Dec(octet, *p);
+                has_digit = true;
             }
             else if (is_port)
             {
@@ -245,6 +248,13 @@ static int IPV4_parser(const char *source, struct IPV4Address *address)
         if (state_change)
         {
             /*
+             * Check that we have digits, otherwise the transition is wrong.
+             */
+            if (!has_digit)
+            {
+                return -1;
+            }
+            /*
              * Reset all the variables.
              */
             char_counter = 0;
@@ -255,6 +265,7 @@ static int IPV4_parser(const char *source, struct IPV4Address *address)
             is_period = false;
             is_digit = false;
             is_port = false;
+            has_digit = false;
             state_change = false;
         }
     }
@@ -881,6 +892,8 @@ IPAddress *IPAddressNew(Buffer *source)
         /*
          * It was not a valid IP address.
          */
+        free (ipv4);
+        free (ipv6);
         return NULL;
     }
     return address;
@@ -1040,5 +1053,147 @@ int IPAddressIsEqual(IPAddress *a, IPAddress *b)
          return IPV6Compare((struct IPV6Address *)a->address, (struct IPV6Address *)b->address);
      }
      return -1;
+}
+
+/*
+ * Sorting comparison for IPV4 addresses
+ */
+static int IPV4CompareLess(struct IPV4Address *a, struct IPV4Address *b)
+{
+    int i = 0;
+    for (i = 0; i < 4; ++i)
+    {
+        if (a->octets[i] > b->octets[i])
+        {
+            return 0;
+        }
+        else if (a->octets[i] < b->octets[i])
+        {
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+/*
+ * Sorting comparison for IPV6 addresses
+ */
+static int IPV6CompareLess(struct IPV6Address *a, struct IPV6Address *b)
+{
+    int i = 0;
+    for (i = 0; i < 8; ++i)
+    {
+        if (a->sixteen[i] > b->sixteen[i])
+        {
+            return 0;
+        }
+        else if (a->sixteen[i] < b->sixteen[i])
+        {
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+int IPAddressCompareLess(IPAddress *a, IPAddress *b)
+{
+    /*
+     * We do not support IPV4 versus IPV6 comparisons.
+     * This is trickier than what it seems, since even the IPV6 representation of an IPV6 address is not
+     * clear yet.
+     */
+     if (!a || !b)
+     {
+         return 1;
+     }
+
+     // Sort IPv4 BEFORE any other types
+     if (a->type == IP_ADDRESS_TYPE_IPV4 && a->type != b->type)
+     {
+         return 1;
+     }
+
+     if (b->type == IP_ADDRESS_TYPE_IPV4 && a->type != b->type)
+     {
+         return 0;
+     }
+
+     if (a->type == IP_ADDRESS_TYPE_IPV4 && b->type == IP_ADDRESS_TYPE_IPV4)
+     {
+         return IPV4CompareLess((struct IPV4Address *)a->address, (struct IPV4Address *)b->address);
+     }
+
+     if (a->type == IP_ADDRESS_TYPE_IPV6 && b->type == IP_ADDRESS_TYPE_IPV6)
+     {
+         return IPV6CompareLess((struct IPV6Address *)a->address, (struct IPV6Address *)b->address);
+     }
+
+     return -1;
+}
+
+bool IPAddressIsIPAddress(Buffer *source, IPAddress **address)
+{
+    if (!source || !BufferData(source))
+    {
+        return false;
+    }
+    bool create_object = false;
+    if (address)
+    {
+        create_object = true;
+    }
+    const char *pad = BufferData(source);
+    struct IPV4Address *ipv4 = NULL;
+    struct IPV6Address *ipv6 = NULL;
+    ipv4 = (struct IPV4Address *)xmalloc(sizeof(struct IPV4Address));
+    ipv6 = (struct IPV6Address *)xmalloc(sizeof(struct IPV6Address));
+    if (IPV4_parser(pad, ipv4) == 0)
+    {
+        free (ipv6);
+        if (create_object)
+        {
+            *address = (IPAddress *)xmalloc(sizeof(IPAddress));
+            (*address)->type = IP_ADDRESS_TYPE_IPV4;
+            (*address)->address = (void *)ipv4;
+        }
+        else
+        {
+            /*
+             * We know it is a valid IPV4 address and we know we don't need the
+             * IPV4 structure.
+             */
+            free (ipv4);
+        }
+    }
+    else if (IPV6_parser(pad, ipv6) == 0)
+    {
+        free (ipv4);
+        if (create_object)
+        {
+            *address = (IPAddress *)xmalloc(sizeof(IPAddress));
+            (*address)->type = IP_ADDRESS_TYPE_IPV6;
+            (*address)->address = (void *)ipv6;
+        }
+        else
+        {
+            /*
+             * We know it is a valid IPV6 address and we know we don't need the
+             * IPV6 structure.
+             */
+            free (ipv6);
+        }
+    }
+    else
+    {
+        /*
+         * It was not a valid IP address.
+         */
+        free (ipv4);
+        free (ipv6);
+        return false;
+    }
+    return true;
 }
 

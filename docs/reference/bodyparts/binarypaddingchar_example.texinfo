@@ -1,9 +1,0 @@
-
-@verbatim
-
-body agent control
-{
-binarypaddingchar => "#";
-}
-
-@end verbatim

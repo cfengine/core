@@ -1,5 +1,0 @@
-
-This expression should match the entire @code{COMMAND} field of the
-process table (not just a fragment). This field is usually the last
-field on the line and thus starts with the first non-space character
-and ends with the end of line.

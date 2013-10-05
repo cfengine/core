@@ -2,9 +2,9 @@
 
 body common control
 {
-  inputs => { "../../default.cf.sub" };
-  bundlesequence => { default("$(this.promise_filename)") };
-  version => "1.0";
+      inputs => { "../../default.cf.sub" };
+      bundlesequence => { default("$(this.promise_filename)") };
+      version => "1.0";
 }
 
 bundle agent init
@@ -17,6 +17,6 @@ bundle agent test
 
 bundle agent check
 {
-reports:
-  "$(this.promise_filename) Pass";
+  reports:
+      "$(this.promise_filename) Pass";
 }

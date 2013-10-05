@@ -66,7 +66,8 @@ BASE_WORKDIR=$(pwd)/workdir
 QUIET=
 STAGING_TESTS=${STAGING_TESTS:-0}
 NETWORK_TESTS=${NETWORK_TESTS:-1}
-GAINROOT=fakeroot
+UNSAFE_TESTS=${UNSAFE_TESTS:-0}
+GAINROOT=${GAINROOT:-fakeroot}
 
 PASSED_TESTS=0
 FAILED_TESTS=0
@@ -107,48 +108,64 @@ unix_seconds() {
   rm $BASE_WORKDIR/x
 }
 
-curdir() {
-  case $(dirname "$0") in
-    .)
-      echo $(pwd);;
-    *)
-      case "$0" in
-        /*) dirname "$0";;
-        *) echo $(pwd)/$(dirname "$0");;
-      esac
-      ;;
-  esac
-}
-
-DEFAGENT=$(dirname $(dirname $(curdir)))/cf-agent/cf-agent
+# We assume we're running this script from $objdir or $objdir/tests/acceptance
+[ -x `pwd`/cf-agent/cf-agent ] && DEFAGENT=`pwd`/cf-agent/cf-agent
+[ -x `pwd`/../../cf-agent/cf-agent ] && DEFAGENT=`pwd`/../../cf-agent/cf-agent
 AGENT=${AGENT:-${DEFAGENT}}
-DEFCF_PROMISES=$(dirname $(dirname $(curdir)))/cf-promises/cf-promises
+
+[ -x `pwd`/cf-promises/cf-promises ] && DEFCF_PROMISES=`pwd`/cf-promises/cf-promises
+[ -x `pwd`/../../cf-promises/cf-promises ] && DEFCF_PROMISES=`pwd`/../../cf-promises/cf-promises
 CF_PROMISES=${CF_PROMISES:-${DEFCF_PROMISES}}
-DEFCF_SERVERD=$(dirname $(dirname $(curdir)))/cf-serverd/cf-serverd
+
+[ -x `pwd`/cf-serverd/cf-serverd ] && DEFCF_SERVERD=`pwd`/cf-serverd/cf-serverd
+[ -x `pwd`/../../cf-serverd/cf-serverd ] && DEFCF_SERVERD=`pwd`/../../cf-serverd/cf-serverd
 CF_SERVERD=${CF_SERVERD:-${DEFCF_SERVERD}}
-DEFCF_KEY=$(dirname $(dirname $(curdir)))/cf-key/cf-key
+
+[ -x `pwd`/cf-key/cf-key ] && DEFCF_KEY=`pwd`/cf-key/cf-key
+[ -x `pwd`/../../cf-key/cf-key ] && DEFCF_KEY=`pwd`/../../cf-key/cf-key
 CF_KEY=${CF_KEY:-${DEFCF_KEY}}
 
+if [ ! -x $AGENT -o ! -x $CF_PROMISES -o ! -x $CF_SERVERD -o ! -x $CF_KEY ]
+then
+	echo "ERROR can't find cf-agent or other binary. Are you sure you're running this from OBJDIR or OBJDIR/tests/acceptance?"
+	exit 1
+fi
+
+# echo
+# echo === Test environment: ===
+# echo AGENT=$AGENT
+# echo CF_PROMISES=$CF_PROMISES
+# echo CF_SERVERD=$CF_SERVERD
+# echo CF_KEY=$CF_KEY
+# echo =========================
+# echo
+
 usage() {
-  echo "testall [-q] [--gainroot=<command>] [--agent=<agent>] [--no-nova] [--staging] [--no-network] [<test> <test>...]"
+  echo "testall [-q] [--gainroot=<command>] [--agent=<agent>] [--no-nova] [--staging] [--unsafe] [--no-network] [<test> <test>...]"
   echo
-  echo "If no test is given, all tests are run:"
+  echo "If no test is given, all standard tests are run:"
   echo "  Tests with names of form <file>.cf are expected to run succesfully"
   echo "  Tests with names of form <file>.x.cf are expected to crash"
-  echo "  Tests inside directories called 'staging' are not run"
-  echo "    (unless --staging option is passed)"
-  echo "  Tests inside directories called 'network' are not run"
-  echo "    if --no-network option is passed"
   echo
   echo "If arguments are given, those are executed as tests"
   echo
   echo " -q makes script much quieter"
   echo
   echo " --gainroot=<command> forces use of command to gain root privileges,"
-  echo "                      otherwise fakeroot is used."
+  echo "           otherwise fakeroot is used."
   echo
-  echo " --agent provides a way to specify non-default cf-agent location,"
-  echo "         and defaults to $DEFAGENT."
+  echo " --agent   provides a way to specify non-default cf-agent location,"
+  echo "           and defaults to $DEFAGENT."
+  echo
+  echo " --staging enable tests in staging directories. They are not expected to pass."
+  echo
+  echo " --unsafe  enable tests in unsafe directories. WARNING! These tests modify the"
+  echo "           system they're running on and can DAMAGE YOUR SYSTEM! DO NOT use"
+  echo "           this option without a backup."
+  echo "           If you use this option you should also use --gainroot=sudo,"
+  echo "           otherwise you will get incorrect results."
+  echo
+  echo " --no-network disable tests in network directories."
 }
 
 runtest() {
@@ -164,10 +181,13 @@ runtest() {
     EXPECTED_CRASH=
   fi
 
-  if [ "x$STAGING_TESTS" = "x0" ] && echo "$TEST" | grep -q -e 'staging'; then
+  if [ "x$STAGING_TESTS" = "x0" ] && echo "$TEST" | grep -q -e '/staging/'; then
     SKIP=1
     SKIPREASON="Staging tests are disabled"
-  elif [ "x$NETWORK_TESTS" = "x0" ] && echo "$TEST" | grep -q -e 'network'; then
+  elif [ "x$UNSAFE_TESTS" != "x1" ] && echo "$TEST" | grep -q -e '/unsafe/'; then
+    SKIP=1
+    SKIPREASON="Unsafe tests are disabled"
+  elif [ "x$NETWORK_TESTS" = "x0" ] && echo "$TEST" | grep -q -e '/network/'; then
     SKIP=1
     SKIPREASON="Network-dependent tests are disabled"
   else
@@ -311,6 +331,8 @@ while true; do
       GAINROOT=${1#--gainroot=};;
     --staging)
       STAGING_TESTS=1;;
+    --unsafe)
+      UNSAFE_TESTS=1;;
     --no-network)
       NETWORK_TESTS=0;;
     --agent=*)
@@ -325,7 +347,7 @@ while true; do
 done
 
 if [ $# -gt 0 ]; then
-  # We need to run all specified tests
+  # We need to run all specified tests, but not unsafe ones.
   STAGING_TESTS=1
   NETWORK_TESTS=1
   for test in "$@"; do
@@ -371,7 +393,7 @@ START_TIME=$(unix_seconds)
 
 
 ( echo \<\?xml version=\"1.0\" encoding=\"UTF-8\"\?\>
-  echo \<testsuite name=\"$(curdir)\"
+  echo \<testsuite name=\"$(pwd)\"
   echo "           "timestamp=\"$(date "+%F %T")\"
   echo "           hostname=\"localhost\""
   echo "           "tests=\"$TESTS_COUNT\"

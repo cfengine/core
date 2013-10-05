@@ -1,9 +1,0 @@
-
-@verbatim
-
-body classes example
-{
-repair_denied => { "permission_failure" };
-}
-
-@end verbatim

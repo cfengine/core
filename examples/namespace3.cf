@@ -1,0 +1,9 @@
+
+
+bundle agent test_in_last_file
+{
+  reports:
+
+      "Final namespace is the default";
+      
+}

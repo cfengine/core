@@ -1,7 +1,0 @@
-
-Denial is for special exceptions. A better strategy is always to grant
-on a need to know basis. A security policy based on exceptions is a
-weak one.
-
-Note that only regular expressions or exact matches are allowed in this
-list, as non-specific matches are too greedy for denial.

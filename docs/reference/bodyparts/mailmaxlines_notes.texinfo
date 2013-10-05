@@ -1,6 +1,0 @@
-
-This limit prevents anomalously large outputs from clogging up a
-system administrator's mailbox.  The output is truncated in the email
-report, but the complete original transcript is stored in
-@file{WORKDIR/outputs/*} where it can be viewed on demand.
-A reference to the appropriate file is given.

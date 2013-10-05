@@ -7,20 +7,20 @@
 
 body common control
 {
-  inputs => { "../../default.cf.sub" };
-  bundlesequence  => { default("$(this.promise_filename)") };
-  version => "1.0";
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
 }
 
 #######################################################
 
 bundle agent init
 {
-vars:
-        "states" slist => { "actual", "expected" };
+  vars:
+      "states" slist => { "actual", "expected" };
 
-        "actual" string =>
-"header
+      "actual" string =>
+      "header
 header
 BEGIN
     One potato
@@ -31,8 +31,8 @@ END
 trailer
 trailer";
 
-        "expected" string =>
-"header
+      "expected" string =>
+      "header
 header
 BEGIN
     One potato
@@ -42,56 +42,56 @@ END
 trailer
 trailer";
 
-files:
-        "$(G.testfile).$(states)"
-            create => "true",
-            edit_line => init_insert("$(init.$(states))"),
-            edit_defaults => init_empty;
+  files:
+      "$(G.testfile).$(states)"
+      create => "true",
+      edit_line => init_insert("$(init.$(states))"),
+      edit_defaults => init_empty;
 }
 
 bundle edit_line init_insert(str)
 {
-insert_lines:
-        "$(str)";
+  insert_lines:
+      "$(str)";
 }
 
 body edit_defaults init_empty
 {
-        empty_file_before_editing => "true";
+      empty_file_before_editing => "true";
 }
 
 #######################################################
 
 bundle agent test
 {
-vars:
+  vars:
       "tstr" string => "    Three potatoe";
 
-files:
-        "$(G.testfile).actual"
-            edit_line => test_delete("$(test.tstr)");
+  files:
+      "$(G.testfile).actual"
+      edit_line => test_delete("$(test.tstr)");
 
 }
 
 bundle edit_line test_delete(str)
 {
-delete_lines:
-        "$(str)"
-            classes => test_class("ok"),
-            select_region => test_select;
+  delete_lines:
+      "$(str)"
+      classes => test_class("ok"),
+      select_region => test_select;
 }
 
 body select_region test_select
 {
-select_start => "BEGIN";
-select_end => "END";
-include_end_delimiter => "true";
+      select_start => "BEGIN";
+      select_end => "END";
+      include_end_delimiter => "true";
 }
 
 
 body classes test_class(a)
 {
-promise_repaired => { "$(a)" };
+      promise_repaired => { "$(a)" };
 }
 
 
@@ -99,10 +99,10 @@ promise_repaired => { "$(a)" };
 
 bundle agent check
 {
-reports:
+  reports:
     ok::
-        "$(this.promise_filename) Pass";
+      "$(this.promise_filename) Pass";
     !ok::
-        "$(this.promise_filename) FAIL";
+      "$(this.promise_filename) FAIL";
 }
 

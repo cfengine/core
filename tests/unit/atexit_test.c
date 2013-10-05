@@ -1,7 +1,7 @@
-#include "test.h"
+#include <test.h>
 
-#include "cf3.defs.h"
-#include "atexit.h"
+#include <cf3.defs.h>
+#include <atexit.h>
 
 bool FN1;
 bool FN2;

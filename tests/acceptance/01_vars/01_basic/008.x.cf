@@ -6,35 +6,35 @@
 
 body common control
 {
-  inputs => { "../../default.cf.sub" };
-  bundlesequence  => { default("$(this.promise_filename)") };
-  version => "1.0";
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
 }
 
 #######################################################
 
 bundle agent init
 {
-vars:
-        "dummy" string => "dummy";
+  vars:
+      "dummy" string => "dummy";
 }
 
 #######################################################
 
 bundle agent test
 {
-vars:
-    "ten" real => "1e2345678"; # Exponent too big
+  vars:
+      "ten" real => "1e2345678"; # Exponent too big
 }
 
 #######################################################
 
 bundle agent check
 {
-reports:
+  reports:
     DEBUG::
-        "The real variable assignment should fail";
+      "The real variable assignment should fail";
     cfengine_3::
-        "$(this.promise_filename) FAIL";
+      "$(this.promise_filename) FAIL";
 }
 

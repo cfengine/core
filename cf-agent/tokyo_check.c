@@ -1,15 +1,15 @@
-#include "tokyo_check.h"
+#include <tokyo_check.h>
 
 #ifdef HAVE_CONFIG_H
 #include  <config.h>
 #endif
 
-#include "array_map_priv.h"
-#include "hash_map_priv.h"
-#include "map.h"
-#include "string_lib.h"
-#include "logging.h"
-#include "cf3.defs.h"
+#include <array_map_priv.h>
+#include <hash_map_priv.h>
+#include <map.h>
+#include <string_lib.h>
+#include <logging.h>
+#include <cf3.defs.h>
 
 #ifdef TCDB
 
@@ -63,17 +63,12 @@ static DBMeta *DBMetaNewDirect(const char *dbfilename)
     DBMeta *dbmeta;
 
     dbmeta = (DBMeta *) xcalloc(1, sizeof(DBMeta));
-    if (!dbmeta)
-    {
-        Log(LOG_LEVEL_ERR, "Error allocating memory : %s", strerror(errno));
-        return NULL;
-    }
 
     realpath(dbfilename, dbmeta->dbpath);
     if (-1 == (dbmeta->fd = open(dbmeta->dbpath, O_RDONLY)))
     {
-        Log(LOG_LEVEL_ERR, "Failure opening file [%s] : %s", dbmeta->dbpath,
-                strerror(errno));
+        Log(LOG_LEVEL_ERR, "Failure opening file '%s'. (open: %s)", dbmeta->dbpath,
+                GetErrorStr());
         if (dbmeta)
         {
             free(dbmeta);
@@ -83,8 +78,8 @@ static DBMeta *DBMetaNewDirect(const char *dbfilename)
 
     if (256 != read(dbmeta->fd, hbuf, 256))
     {
-        Log(LOG_LEVEL_ERR, "Failure reading from database [%s] : %s",
-                dbmeta->dbpath, strerror(errno));
+        Log(LOG_LEVEL_ERR, "Failure reading from database '%s'. (read: %s)",
+                dbmeta->dbpath, GetErrorStr());
         close(dbmeta->fd);
         if (dbmeta)
         {
@@ -146,13 +141,11 @@ static int AddOffsetToMapUnlessExists(StringMap ** tree, uint64_t offset,
     {
         xasprintf(&val, "%zu", bucket_index);
         StringMapInsert(*tree, tmp, val);
-        free(tmp);
-        free(val);
     }
     else
     {
         Log(LOG_LEVEL_ERR,
-            "Duplicate offset for value %llu at index %lld, other value %llu, other index %s\n",
+            "Duplicate offset for value %llu at index %lld, other value %llu, other index '%s'",
              (long long unsigned) offset, (long long) bucket_index,
              (long long unsigned) offset, (char *) StringMapGet(*tree, tmp));
         free(tmp);
@@ -167,7 +160,7 @@ static int DBMetaPopulateOffsetMap(DBMeta * dbmeta)
     if (lseek(dbmeta->fd, dbmeta->bucket_offset, SEEK_SET) == -1)
     {
         Log(LOG_LEVEL_ERR,
-            "Error traversing bucket section to find record offsets : %s\n",
+            "Error traversing bucket section to find record offsets '%s'",
              strerror(errno));
         return 1;
     }
@@ -246,13 +239,13 @@ static bool DBMetaReadOneRecord(DBMeta * dbmeta, TokyoCabinetRecord * rec)
         if (rec->offset == (off_t) - 1)
         {
             Log(LOG_LEVEL_ERR,
-                "Error traversing record section to find records : \n");
+                "Error traversing record section to find records");
         }
 
         if (1 != read(dbmeta->fd, &(rec->magic), 1))
         {
-            Log(LOG_LEVEL_ERR, "ERROR: Failure reading 1 byte, %s",
-                    strerror(errno));
+            Log(LOG_LEVEL_ERR, "Failure reading 1 byte, (read: %s)",
+                    GetErrorStr());
             return false;
         }
 
@@ -290,10 +283,10 @@ static bool DBMetaReadOneRecord(DBMeta * dbmeta, TokyoCabinetRecord * rec)
         }
         else
         {
-            Log(LOG_LEVEL_VERBOSE, "\nread a non-magic byt (skip it)");
+            Log(LOG_LEVEL_VERBOSE, "Read a non-magic byte (skip it)");
         }
     }
-    Log(LOG_LEVEL_ERR, "\nERROR : read loop reached here.");
+    Log(LOG_LEVEL_ERR, "Read loop reached here");
     return false;
 }
 
@@ -307,7 +300,7 @@ static int DBMetaPopulateRecordMap(DBMeta * dbmeta)
     offset = dbmeta->record_offset;
     if (fstat(dbmeta->fd, &st) == -1)
     {
-        Log(LOG_LEVEL_ERR, "Error getting file stats :%s", strerror(errno));
+        Log(LOG_LEVEL_ERR, "Error getting file stats. (fstat: %s)", GetErrorStr());
         return 1;
     }
 
@@ -352,22 +345,18 @@ static int DBMetaPopulateRecordMap(DBMeta * dbmeta)
                 }
                 else
                 {
-                    StringMapInsert(dbmeta->record_map, key, "0");
-                    if (key)
-                    {
-                        free(key);
-                    }
+                    StringMapInsert(dbmeta->record_map, key, xstrdup("0"));
                 }
             }
             else
             {
                 Log(LOG_LEVEL_ERR,
-                    "new_rec.offset cannot be <= 0 ???\n");
+                    "new_rec.offset cannot be <= 0 ???");
             }
 
             if (new_rec.left > 0)
             {
-                Log(LOG_LEVEL_VERBOSE, ">>> handle left %zu", new_rec.left);
+                Log(LOG_LEVEL_VERBOSE, "handle left %zu", new_rec.left);
                 if (AddOffsetToMapUnlessExists
                     (&(dbmeta->offset_map), new_rec.left, -1))
                 {
@@ -377,7 +366,7 @@ static int DBMetaPopulateRecordMap(DBMeta * dbmeta)
 
             if (new_rec.right > 0)
             {
-                Log(LOG_LEVEL_VERBOSE, ">>> handle right %zu", new_rec.right);
+                Log(LOG_LEVEL_VERBOSE, "handle right %zu", new_rec.right);
                 if (AddOffsetToMapUnlessExists
                     (&(dbmeta->offset_map), new_rec.right, -1))
                 {
@@ -414,10 +403,10 @@ static int DBMetaGetResults(DBMeta * dbmeta)
     int ret = 0;
 
     Log(LOG_LEVEL_VERBOSE,
-        "Found %zu offsets listed in buckets that do not have records\n",
+        "Found %zu offsets listed in buckets that do not have records",
          buckets_no_record);
     Log(LOG_LEVEL_VERBOSE,
-        "Found %zu records in data that do not have an offset pointing to them\n",
+        "Found %zu records in data that do not have an offset pointing to them",
          records_no_bucket);
 
     if (buckets_no_record > 0)

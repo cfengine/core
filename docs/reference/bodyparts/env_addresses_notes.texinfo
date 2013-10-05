@@ -1,2 +1,0 @@
-
-The IP addresses of the virtual machine can be overridden here at run time.

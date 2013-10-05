@@ -30,8 +30,8 @@
  * promises.
  */
 
-#include "cf3.defs.h"
-#include "policy.h"
+#include <cf3.defs.h>
+#include <policy.h>
 
 /**
  * @brief Binds logging in current thread to EvalContext.

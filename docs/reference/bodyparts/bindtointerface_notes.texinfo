@@ -1,4 +1,0 @@
-
-On multi-homed hosts, the server and client can bind
-to a specific interface for server traffic. The IP address
-of the interface must be given as the argument, not the device name.

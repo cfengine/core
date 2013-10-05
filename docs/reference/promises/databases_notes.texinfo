@@ -1,5 +1,0 @@
-
-The promiser in database promises is a concatenation of the database name and underlying tables.
-This presents a simple hierarchical model that looks like a file-system. This is the normal
-structure within the Windows registry for instance. Entity-Relation databases do not normally
-present tables in this way, but no harm is done in representing them as a hierarchy of depth 1.

@@ -22,9 +22,9 @@
   included file COSL.txt.
 */
 
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
-#include "mon.h"
+#include <mon.h>
 
 #ifdef HAVE_SYS_LOADAVG_H
 # include <sys/loadavg.h>
@@ -40,8 +40,6 @@ void MonLoadGatherData(double *cf_this)
 {
     double load[LOADAVG_5MIN], sum = 0.0;
     int i, n;
-
-    Log(LOG_LEVEL_DEBUG, "GatherLoadData\n\n");
 
     if ((n = getloadavg(load, LOADAVG_5MIN)) == -1)
     {
@@ -65,7 +63,7 @@ void MonLoadGatherData(double *cf_this)
 
 void MonLoadGatherData(double *cf_this)
 {
-    Log(LOG_LEVEL_DEBUG, "Average load data is not available.\n");
+    Log(LOG_LEVEL_DEBUG, "Average load data is not available.");
 }
 
 #endif

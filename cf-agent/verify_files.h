@@ -25,8 +25,8 @@
 #ifndef CFENGINE_VERIFY_FILES_H
 #define CFENGINE_VERIFY_FILES_H
 
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
-void *FindAndVerifyFilesPromises(EvalContext *ctx, Promise *pp);
+PromiseResult FindAndVerifyFilesPromises(EvalContext *ctx, Promise *pp);
 
 #endif

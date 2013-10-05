@@ -1,0 +1,50 @@
+# Test $(sys.uptime), $(sys.systime) and $(sys.sysday)
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+}
+
+#######################################################
+
+bundle agent init
+{
+  vars:
+      # Quite crude testing, only test that it is a number, and not zero.
+      "regexp" string => "^[0-9]+$";
+      "notregexp" string => "^0$";
+}
+
+#######################################################
+
+bundle agent test
+{
+}
+
+#######################################################
+
+bundle agent check
+{
+  classes:
+      "uptime_ok" expression => regcmp("$(init.regexp)", "$(sys.uptime)");
+      "systime_ok" expression => regcmp("$(init.regexp)", "$(sys.systime)");
+      "sysday_ok" expression => regcmp("$(init.regexp)", "$(sys.sysday)");
+      "uptime_ok_zero" not => regcmp("$(init.notregexp)", "$(sys.uptime)");
+      "systime_ok_zero" not => regcmp("$(init.notregexp)", "$(sys.systime)");
+      "sysday_ok_zero" not => regcmp("$(init.notregexp)", "$(sys.sysday)");
+
+      "ok" and => { "uptime_ok", "systime_ok", "sysday_ok",
+                    "uptime_ok_zero", "systime_ok_zero", "sysday_ok_zero"
+      };
+
+  reports:
+    DEBUG::
+      "sys.uptime: $(sys.uptime)";
+      "sys.systime: $(sys.systime)";
+      "sys.sysday: $(sys.sysday)";
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

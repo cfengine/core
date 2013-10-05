@@ -1,2 +1,0 @@
-
-Preserves file access and modification times on the promiser files.

@@ -1,7 +1,0 @@
-
-@verbatim
-body hub control
-{
-exclude_hosts => { "192.168.12.21", "10.10", "10.12.*" };
-}
-@end verbatim

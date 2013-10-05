@@ -25,7 +25,7 @@
 #ifndef CFENGINE_LOGGING_PRIV_H
 #define CFENGINE_LOGGING_PRIV_H
 
-#include "logging.h"
+#include <logging.h>
 
 /*
  * This interface is private and intended only for use by logging extensions (such as one defined in libpromises).
@@ -56,10 +56,5 @@ LoggingPrivContext *LoggingPrivGetContext(void);
  * @brief Set logging (syslog) and reporting (stdout) level for current thread
  */
 void LoggingPrivSetLevels(LogLevel log_level, LogLevel report_level);
-
-/**
- * @brief Return global logging level
- */
-LogLevel LoggingPrivGetGlobalLogLevel(void);
 
 #endif

@@ -1,9 +1,0 @@
-
-ACLs are supported on multiple platforms, which may have different
-sets of available permission flags. By using the constraint
-@code{acl_type}, we can specify which platform, or ACL API, we are
-targeting with the ACL. The default, @code{generic}, is designed to
-work on all supported platforms. However, if very specific permission
-flags are required, like ``Take Ownership'' on the NTFS platform, we
-must set @code{acl_type} to indicate the target platform. Currently,
-the supported values are @code{posix} and @code{ntfs}.

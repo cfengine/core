@@ -22,11 +22,11 @@
   included file COSL.txt.
 */
 
-#include "audit.h"
-#include "misc_lib.h"
-#include "conversion.h"
-#include "logging.h"
-#include "string_lib.h"
+#include <audit.h>
+#include <misc_lib.h>
+#include <conversion.h>
+#include <logging.h>
+#include <string_lib.h>
 
 int PR_KEPT;
 int PR_REPAIRED;
@@ -57,6 +57,7 @@ void UpdatePromiseCounters(PromiseResult status, TransactionContext tc)
     case PROMISE_RESULT_NOOP:
         PR_KEPT++;
         VAL_KEPT += tc.value_kept;
+        break;
 
     case PROMISE_RESULT_WARN:
     case PROMISE_RESULT_TIMEOUT:
@@ -85,10 +86,14 @@ void EndAudit(const EvalContext *ctx, int background_tasks)
     {
         Rval track_value_rval = { 0 };
         bool track_value = false;
-        if (EvalContextVariableGet(ctx, (VarRef) { NULL, "control_agent", CFA_CONTROLBODY[AGENT_CONTROL_TRACK_VALUE].lval }, &track_value_rval, NULL))
+
+        VarRef *ref = VarRefParseFromScope(CFA_CONTROLBODY[AGENT_CONTROL_TRACK_VALUE].lval, "control_agent");
+        if (EvalContextVariableGet(ctx, ref, &track_value_rval, NULL))
         {
             track_value = BooleanFromString(track_value_rval.item);
         }
+
+        VarRefDestroy(ref);
 
         if (track_value)
         {
@@ -103,7 +108,7 @@ void EndAudit(const EvalContext *ctx, int background_tasks)
 
             if ((fout = fopen(name, "a")) == NULL)
             {
-                Log(LOG_LEVEL_INFO, "Unable to write to the value log %s", name);
+                Log(LOG_LEVEL_INFO, "Unable to write to the value log '%s'", name);
                 return;
             }
 
@@ -131,7 +136,7 @@ void EndAudit(const EvalContext *ctx, int background_tasks)
     if (total == 0)
     {
         *string = '\0';
-        Log(LOG_LEVEL_VERBOSE, "Outcome of version %s: No checks were scheduled", sp);
+        Log(LOG_LEVEL_VERBOSE, "Outcome of version '%s', no checks were scheduled", sp);
         return;
     }
     else

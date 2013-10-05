@@ -1,4 +1,0 @@
-
-If this is set to true, CFEngine will not balk at missing input files,
-but will ignore them and continue. This allows one to authorize
-pluggable modules that can be called up as @code{methods}.

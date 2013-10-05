@@ -1,3 +1,0 @@
-
-Files must be readable by the agent, i.e. it is assumed that the agent has privileges
-on volumes being checked.

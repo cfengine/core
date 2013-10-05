@@ -1,5 +1,0 @@
-
-@verbatim
-vars:
-  "listfiles" slist => lsdir("/etc", "(passwd|shadow).*", "true");
-@end verbatim

@@ -22,27 +22,7 @@
   included file COSL.txt.
 */
 
-#include "hashes.h"
-
-int OatHash(const char *key, unsigned int max)
-{
-    unsigned const char *p = key;
-    unsigned h = 0;
-    int i, len = strlen(key);
-
-    for (i = 0; i < len; i++)
-    {
-        h += p[i];
-        h += (h << 10);
-        h ^= (h >> 6);
-    }
-
-    h += (h << 3);
-    h ^= (h >> 11);
-    h += (h << 15);
-
-    return (h & (max - 1));
-}
+#include <hashes.h>
 
 int FileChecksum(const char *filename, unsigned char digest[EVP_MAX_MD_SIZE + 1])
 {

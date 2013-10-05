@@ -1,5 +1,0 @@
-
-A regular expression to match output from a package verification command. If the
-output string matches this expression, the package is deemed broken.  The regex
-must match the entire line (that is, it is anchored,
-@pxref{Anchored vs. unanchored regular expressions})

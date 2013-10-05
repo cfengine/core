@@ -25,9 +25,10 @@
 #ifndef CFENGINE_INSTRUMENTATION_H
 #define CFENGINE_INSTRUMENTATION_H
 
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
-#include "set.h"
+#include <set.h>
+#include <class.h>
 
 struct timespec BeginMeasure(void);
 void EndMeasure(char *eventname, struct timespec start);
@@ -35,6 +36,6 @@ int EndMeasureValueMs(struct timespec start);
 void EndMeasurePromise(EvalContext *ctx, struct timespec start, Promise *pp);
 
 // TODO: temporary measure until all heaps are under EvalContext
-void NoteClassUsage(StringSetIterator context_iterator, int purge);
+void NoteClassUsage(ClassTableIterator *iter, int purge);
 
 #endif

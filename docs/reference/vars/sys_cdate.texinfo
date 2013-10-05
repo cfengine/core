@@ -1,8 +1,0 @@
-
-The date of the system in canonical form, i.e. in the form of a class.
-
-@verbatim
-
-# cdate = Sun_Dec__7_10_39_53_2008_
-
-@end verbatim

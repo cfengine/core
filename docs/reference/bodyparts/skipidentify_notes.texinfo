@@ -1,4 +1,0 @@
-
-Hosts that are not registered in DNS cannot supply reasonable credentials
-for a secondary confirmation of their identity to a CFEngine server. This
-causes the agent to ignore its missing DNS credentials.

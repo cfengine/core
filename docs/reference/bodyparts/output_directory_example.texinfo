@@ -1,9 +1,0 @@
-
-
-@verbatim
-
-body runagent control
-{
-output_directory => "/tmp/run_output";
-}
-@end verbatim

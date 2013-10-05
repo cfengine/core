@@ -1,4 +1,0 @@
-
-A list of regular expressions any of which must match the entire userid,
-(that is, it is anchored, @pxref{Anchored vs. unanchored regular expressions}).
-Note that windows does not have user ids, only names.

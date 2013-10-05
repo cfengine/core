@@ -25,7 +25,7 @@
 #ifndef CFENGINE_SYSLOG_CLIENT_H
 #define CFENGINE_SYSLOG_CLIENT_H
 
-#include "platform.h"
+#include <platform.h>
 
 /*
  * This module provides implementation of UDP syslog protocol

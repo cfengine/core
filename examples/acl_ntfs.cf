@@ -1,0 +1,29 @@
+body common control
+{
+      inputs => { "libraries/cfengine_stdlib.cf" };
+      bundlesequence => { "example" };
+}
+
+###
+
+bundle agent example
+{
+  vars:
+      "acl_secret_dir" slist => { "user:Administrator:rwx:allow", "group:Administrators:rx:allow" };
+      "acl_secret_file" slist => { "user:Administrator:rw:allow" };
+
+  files:
+
+    windows::
+      "C:\Secret",
+      acl => ntfs( "@(acl_secret_dir)" ),
+      depth_search => include_base,
+      perms => owner( "Administrator" );
+
+      "C:\Secret\file.txt",
+      acl => ntfs( "@(acl_secret_file)" ),
+      perms => owner( "Administrator" );
+}
+
+
+

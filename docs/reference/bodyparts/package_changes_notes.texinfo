@@ -1,7 +1,0 @@
-This indicate whether the package manager is capable of handling
-package operations in bulk, i.e. with by given multiple arguments. If
-this is set to @samp{bulk} then multiple arguments will be passed to
-the package commands. If set to @samp{individual} packages will be
-handled one by one. This might add a significant overhead to the
-operations, and also affect the ability of the operating system's
-package manager to handle dependencies.

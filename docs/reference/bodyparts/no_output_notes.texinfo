@@ -1,2 +1,0 @@
-
-This is equivalent to piping standard output and error to @file{/dev/null}.

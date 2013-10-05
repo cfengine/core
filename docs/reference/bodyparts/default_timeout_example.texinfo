@@ -1,9 +1,0 @@
-
-@verbatim
-
-body agent control
-{
-default_timeout => "10";
-}
-
-@end verbatim

@@ -1,3 +1,0 @@
-
-Checks whether the user is in the password database for the current host.
-The argument must be a user name or user id.

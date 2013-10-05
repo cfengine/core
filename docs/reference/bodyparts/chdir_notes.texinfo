@@ -1,3 +1,0 @@
-
-This command has the effect of placing the running command into a current working
-directory equal to the parameter given, i.e. it works like the @samp{cd} shell command. 

@@ -1,4 +1,0 @@
-
-Sets the internal umask for the process. Default value for the mask is
-@samp{077}. On windows, umask is not supported and is thus ignored by
-windows versions of CFEngine.

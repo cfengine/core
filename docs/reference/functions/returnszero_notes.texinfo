@@ -1,3 +1,0 @@
-
-This is the complement of @code{execresult}, but it returns a class
-result rather than the output of the command.

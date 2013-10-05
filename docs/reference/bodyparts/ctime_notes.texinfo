@@ -1,3 +1,0 @@
-
-The file's change time refers to both modification of content and attributes
-such as permissions. On windows, @code{ctime} refers to creation time.

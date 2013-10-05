@@ -1,9 +1,0 @@
-
-@verbatim 
-
-body volume example
-{
-scan_arrivals => "true";
-}
-
-@end verbatim

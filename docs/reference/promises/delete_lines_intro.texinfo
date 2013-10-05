@@ -1,6 +1,0 @@
-
-This promise assures that certain lines matching regular expression
-patterns exactly will not be present in a text file. If the lines are
-found, the default promise is to remove them (this behavior may be modified
-with further pattern matching in @code{delete_select} and/or changed with
-@code{not_matching}).

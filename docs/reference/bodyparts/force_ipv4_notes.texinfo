@@ -1,4 +1,0 @@
-
-IPv6 should be harmless to most users unless you have a partially
-or misconfigured setup.
-

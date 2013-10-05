@@ -16,8 +16,9 @@ libutils_la_SOURCES = \
 	bool.h \
 	json.c json.h \
 	refcount.c refcount.h refcount_p.h \
-	list.c list.h list_p.h \
-	logging.c logging.h \
+	list.c list.h \
+	bufferlist.c bufferlist.h \
+	logging.c logging.h logging_priv.h\
 	buffer.c buffer.h \
     ip_address.c ip_address.h \
 	map.c map.h map_common.h \
@@ -26,9 +27,13 @@ libutils_la_SOURCES = \
 	misc_lib.c misc_lib.h \
 	writer.c writer.h \
 	csv_writer.c csv_writer.h \
+	csv_parser.c csv_parser.h \
 	xml_writer.c xml_writer.h \
 	file_lib.c file_lib.h \
-	man.c man.h
+	man.c man.h \
+	rb-tree.c rb-tree.h \
+	mustache.c mustache.h \
+	cfversion.c cfversion.h
 
 CLEANFILES = *.gcno *.gcda
 

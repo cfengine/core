@@ -1,8 +1,0 @@
-
-
-If this is set, CFEngine will perform auditing on this specific 
-promise. This means that all details surrounding the verification of
-the current promise will be recorded in the audit database. The
-database may be inspected with @code{cf-report}, or @code{cfshow} in
-CFEngine 2.
-

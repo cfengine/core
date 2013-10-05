@@ -1,3 +1,0 @@
-
-The currently supported types are those supported by @i{libvirt}.
-More will be added as time goes on.

@@ -1,7 +1,7 @@
-#include "test.h"
+#include <test.h>
 
 #include <string.h>
-#include "findhub.h"
+#include <findhub.h>
 
 #include <avahi-client/client.h>
 #include <avahi-client/lookup.h>
@@ -185,7 +185,7 @@ AvahiClient *avahi_client_new(const AvahiPoll *poll, AvahiClientFlags cf, AvahiC
 int avahi_simple_poll_loop(AvahiSimplePoll *sp)
 {
     AvahiAddress *addr = calloc(1, sizeof(AvahiAddress));
-    AvahiServiceResolver *sr = { 0 };
+    AvahiServiceResolver *sr = { (AvahiServiceResolver*)1 };
     switch(hostcount)
     {
     case 0:

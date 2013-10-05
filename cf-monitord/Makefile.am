@@ -1,25 +1,19 @@
-sbin_PROGRAMS = cf-monitord
+noinst_LTLIBRARIES = libcf-monitord.la
 
 AM_CPPFLAGS = @CPPFLAGS@ \
 	-I$(srcdir)/../libutils \
 	-I$(srcdir)/../libcfnet \
 	-I$(srcdir)/../libpromises \
-	$(NOVA_CPPFLAGS)
-
-if HAVE_NOVA
-AM_CPPFLAGS += -I$(abs_top_srcdir)/nova/libcfmonitord
-endif
+	$(ENTERPRISE_CPPFLAGS)
 
 AM_CFLAGS = @CFLAGS@ \
-	$(NOVA_CFLAGS)
+	$(ENTERPRISE_CFLAGS)
 
-cf_monitord_LDADD = ../libpromises/libpromises.la
-if HAVE_NOVA
-cf_monitord_LDADD += ../nova/libcfmonitord/libcfmonitord.la
-endif
+libcf_monitord_la_LIBADD = ../libpromises/libpromises.la
 
-cf_monitord_SOURCES = \
+libcf_monitord_la_SOURCES = \
         verify_measurements.c verify_measurements.h \
+	cf-monitord-enterprise-stubs.c cf-monitord-enterprise-stubs.h \
         env_monitor.c env_monitor.h \
         mon.h \
         mon_cpu.c \
@@ -32,9 +26,11 @@ cf_monitord_SOURCES = \
         mon_temp.c \
         cf-monitord.c
 
-if !HAVE_NOVA
-cf_monitord_SOURCES += \
-	cf-monitord-enterprise-stubs.c cf-monitord-enterprise-stubs.h
+if !BUILTIN_EXTENSIONS
+ sbin_PROGRAMS = cf-monitord
+ # Workaround for automake madness (try removing it if you want to know why).
+ cf_monitord_CFLAGS = $(AM_CFLAGS)
+ cf_monitord_LDADD = libcf-monitord.la
 endif
 
 CLEANFILES = *.gcno *.gcda

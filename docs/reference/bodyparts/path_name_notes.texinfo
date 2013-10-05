@@ -1,3 +1,0 @@
-
-Path name and leaf name can be conveniently tested for separately by use
-of appropriate regular expressions.

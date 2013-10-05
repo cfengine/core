@@ -1,7 +1,0 @@
-
-@verbatim
-body acl template
-{
-specify_default_aces => {  "all:r" };
-}
-@end verbatim

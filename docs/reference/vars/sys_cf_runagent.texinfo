@@ -1,4 +1,0 @@
-
-This variable is used for completeness, but it is unlikely to be called from
-within CFEngine. It contains the full path to the interactive progam
-@code{cf-runagent}.

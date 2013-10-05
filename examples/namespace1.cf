@@ -1,0 +1,43 @@
+
+body file control
+{
+      namespace => "name1"; 
+}
+
+
+bundle agent mymethod(one)
+{
+  vars:
+
+      "array[one]" string => "text one";
+      "array[two]" string => "text two";
+      "array[three]" string => "text three";
+
+  files:
+
+      "/tmp/$(one)"
+
+      create => "true",
+      edit_line => makefile,
+      perms => name2:settings;
+
+  reports:
+
+      "test $(one) in $(this.namespace)_$(this.bundle)";
+}
+
+
+bundle edit_line makefile
+{
+  insert_lines:
+
+      "THIS IS NAME1";
+
+  reports:
+      "makefile in name 1";
+}
+
+body perms settings
+{
+      mode => "600";
+}

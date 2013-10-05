@@ -26,7 +26,7 @@
 #define CFENGINE_LIST_H
 
 #include <stdlib.h>
-#include "refcount.h"
+#include <refcount.h>
 
 /**
   @brief Double linked list implementation.
@@ -102,6 +102,7 @@ int ListDestroy(List **list);
   @param origin Original list to be copied.
   @param destination List to be copied to.
   @return 0 if copied, -1 otherwise.
+  @remark If no copy function is provided, then this function returns -1.
   */
 int ListCopy(List *origin, List **destination);
 /**

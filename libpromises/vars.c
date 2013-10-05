@@ -22,27 +22,28 @@
   included file COSL.txt.
 */
 
-#include "vars.h"
+#include <vars.h>
 
-#include "conversion.h"
-#include "expand.h"
-#include "scope.h"
-#include "matching.h"
-#include "hashes.h"
-#include "unix.h"
-#include "misc_lib.h"
-#include "rlist.h"
-#include "policy.h"
+#include <conversion.h>
+#include <expand.h>
+#include <scope.h>
+#include <matching.h>
+#include <hashes.h>
+#include <unix.h>
+#include <misc_lib.h>
+#include <rlist.h>
+#include <policy.h>
+#include <env_context.h>
 
 static int IsCf3Scalar(char *str);
 
 void LoadSystemConstants(EvalContext *ctx)
 {
-    ScopeNewSpecialScalar(ctx, "const", "dollar", "$", DATA_TYPE_STRING);
-    ScopeNewSpecialScalar(ctx, "const", "n", "\n", DATA_TYPE_STRING);
-    ScopeNewSpecialScalar(ctx, "const", "r", "\r", DATA_TYPE_STRING);
-    ScopeNewSpecialScalar(ctx, "const", "t", "\t", DATA_TYPE_STRING);
-    ScopeNewSpecialScalar(ctx, "const", "endl", "\n", DATA_TYPE_STRING);
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_CONST, "dollar", "$", DATA_TYPE_STRING);
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_CONST, "n", "\n", DATA_TYPE_STRING);
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_CONST, "r", "\r", DATA_TYPE_STRING);
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_CONST, "t", "\t", DATA_TYPE_STRING);
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_CONST, "endl", "\n", DATA_TYPE_STRING);
 /* NewScalar("const","0","\0",cf_str);  - this cannot work */
 
 }
@@ -55,16 +56,16 @@ int UnresolvedArgs(Rlist *args)
 
     for (rp = args; rp != NULL; rp = rp->next)
     {
-        if (rp->type != RVAL_TYPE_SCALAR)
+        if (rp->val.type != RVAL_TYPE_SCALAR)
         {
             return true;
         }
 
-        if (IsCf3Scalar(rp->item))
+        if (IsCf3Scalar(RlistScalarValue(rp)))
         {
-            if (strstr(rp->item, "$(this)") || strstr(rp->item, "${this}") ||
-                strstr(rp->item, "$(this.k)") || strstr(rp->item, "${this.k}") ||
-                strstr(rp->item, "$(this.v)") || strstr(rp->item, "${this.v}"))
+            if (strstr(RlistScalarValue(rp), "$(this)") || strstr(RlistScalarValue(rp), "${this}") ||
+                strstr(RlistScalarValue(rp), "$(this.k)") || strstr(RlistScalarValue(rp), "${this.k}") ||
+                strstr(RlistScalarValue(rp), "$(this.v)") || strstr(RlistScalarValue(rp), "${this.v}"))
             {
                 // We should allow this in function args for substitution in maplist() etc
                 // We should allow this.k and this.v in function args for substitution in maparray() etc
@@ -130,8 +131,6 @@ bool IsCf3VarString(const char *str)
     char left = 'x', right = 'x';
     int dollar = false;
     int bracks = 0, vars = 0;
-
-    Log(LOG_LEVEL_DEBUG, "IsCf3VarString(%s) - syntax verify\n", str);
 
     if (str == NULL)
     {
@@ -201,7 +200,6 @@ bool IsCf3VarString(const char *str)
         return false;
     }
 
-    Log(LOG_LEVEL_DEBUG, "Found %d variables in (%s)\n", vars, str);
     return vars;
 }
 
@@ -213,8 +211,6 @@ static int IsCf3Scalar(char *str)
     char left = 'x', right = 'x';
     int dollar = false;
     int bracks = 0, vars = 0;
-
-    Log(LOG_LEVEL_DEBUG, "IsCf3Scalar(%s) - syntax verify\n", str);
 
     if (str == NULL)
     {
@@ -278,12 +274,11 @@ static int IsCf3Scalar(char *str)
     {
         char output[CF_BUFSIZE];
 
-        snprintf(output, CF_BUFSIZE, "Broken scalar variable syntax or bracket mismatch in \"%s\"", str);
+        snprintf(output, CF_BUFSIZE, "Broken scalar variable syntax or bracket mismatch in '%s'", str);
         yyerror(output);
         return false;
     }
 
-    Log(LOG_LEVEL_DEBUG, "Found %d variables in (%s)\n", vars, str);
     return vars;
 }
 
@@ -293,8 +288,6 @@ const char *ExtractInnerCf3VarString(const char *str, char *substr)
 {
     const char *sp;
     int bracks = 1;
-
-    Log(LOG_LEVEL_DEBUG, "ExtractInnerVarString( %s ) - syntax verify\n", str);
 
     if (str == NULL || strlen(str) == 0)
     {
@@ -329,8 +322,8 @@ const char *ExtractInnerCf3VarString(const char *str, char *substr)
             }
             else
             {
-                Log(LOG_LEVEL_DEBUG, "Illegal character found: '%c'\n", *sp);
-                Log(LOG_LEVEL_DEBUG, "Illegal character somewhere in variable \"%s\" or nested expansion\n", str);
+                Log(LOG_LEVEL_DEBUG, "Illegal character found '%c'", *sp);
+                Log(LOG_LEVEL_DEBUG, "Illegal character somewhere in variable '%s' or nested expansion", str);
             }
         }
 
@@ -346,7 +339,7 @@ const char *ExtractInnerCf3VarString(const char *str, char *substr)
                 return NULL;
             }
 
-            Log(LOG_LEVEL_DEBUG, "Returning substring value %s\n", substr);
+            Log(LOG_LEVEL_DEBUG, "Returning substring value '%s'", substr);
             return substr;
         }
     }
@@ -357,7 +350,7 @@ const char *ExtractInnerCf3VarString(const char *str, char *substr)
 
         if (strlen(substr) > 0)
         {
-            snprintf(output, CF_BUFSIZE, "Broken variable syntax or bracket mismatch - inner (%s/%s)", str, substr);
+            snprintf(output, CF_BUFSIZE, "Broken variable syntax or bracket mismatch - inner '%s/%s'", str, substr);
             yyerror(output);
         }
         return NULL;
@@ -374,8 +367,6 @@ const char *ExtractOuterCf3VarString(const char *str, char *substr)
     const char *sp;
     int dollar = false;
     int bracks = 0, onebrack = false;
-
-    Log(LOG_LEVEL_DEBUG, "ExtractOuterVarString(\"%s\") - syntax verify\n", str);
 
     memset(substr, 0, CF_BUFSIZE);
 
@@ -409,7 +400,6 @@ const char *ExtractOuterCf3VarString(const char *str, char *substr)
         if (dollar && (bracks == 0) && onebrack)
         {
             strncpy(substr, str, sp - str + 1);
-            Log(LOG_LEVEL_DEBUG, "Extracted outer variable |%s|\n", substr);
             return substr;
         }
     }
@@ -436,12 +426,11 @@ const char *ExtractOuterCf3VarString(const char *str, char *substr)
 
 /*********************************************************************/
 
-int IsQualifiedVariable(char *var)
+bool IsQualifiedVariable(const char *var)
 {
     int isarraykey = false;
-    char *sp;
 
-    for (sp = var; *sp != '\0'; sp++)
+    for (const char *sp = var; *sp != '\0'; sp++)
     {
         if (*sp == '[')
         {

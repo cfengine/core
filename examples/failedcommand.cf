@@ -1,0 +1,31 @@
+body common control
+{
+      bundlesequence => { "cmdtest" };
+}
+
+bundle agent cmdtest
+{
+  files:
+      "/tmp/test"
+      copy_from => copy("/etc/passwd");
+
+
+      "/tmp/test"
+      classes => example,
+      transformer => "/bin/grep -q lkajfo999999 $(this.promiser)";
+
+  reports:
+    hasfailed::
+      "The files-promise failed!";
+}
+
+body classes example
+{
+      failed_returncodes => { "1" };
+      repair_failed => { "hasfailed" };
+}
+
+body copy_from copy(file)
+{
+      source => "$(file)";
+} 

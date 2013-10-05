@@ -1,9 +1,9 @@
-#include "platform.h"
-#include "compiler.h"
-#include "test.h"
+#include <platform.h>
+#include <compiler.h>
+#include <test.h>
 
-#include "process_lib.h"
-#include "process_unix_priv.h"
+#include <process_lib.h>
+#include <process_unix_priv.h>
 
 /* This mock implements single fake process with a several tunable parameters:
    - process' start time,

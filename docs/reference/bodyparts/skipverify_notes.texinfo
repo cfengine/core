@@ -1,4 +1,0 @@
-
-Server side decision to ignore requirements of DNS identity confirmation.
-
-See also the warning about regular expressions in @code{allowallconnects}.

@@ -1,5 +1,0 @@
-
-Behaves as the XOR operation on class expressions.
-It can be used to define a class if exactly one of the class expressions
-on the RHS matches.
-

@@ -22,18 +22,18 @@
   included file COSL.txt.
 */
 
-#include "args.h"
+#include <args.h>
 
-#include "promises.h"
-#include "syntax.h"
-#include "expand.h"
-#include "vars.h"
-#include "logging.h"
-#include "fncall.h"
-#include "evalfunction.h"
-#include "misc_lib.h"
-#include "scope.h"
-#include "audit.h"
+#include <promises.h>
+#include <syntax.h>
+#include <expand.h>
+#include <vars.h>
+#include <logging.h>
+#include <fncall.h>
+#include <evalfunction.h>
+#include <misc_lib.h>
+#include <scope.h>
+#include <audit.h>
 
 /******************************************************************/
 /* Argument propagation                                           */
@@ -80,18 +80,17 @@ Rlist *NewExpArgs(EvalContext *ctx, const FnCall *fp, const Promise *pp)
 
     for (const Rlist *rp = fp->args; rp != NULL; rp = rp->next)
     {
-        switch (rp->type)
+        switch (rp->val.type)
         {
         case RVAL_TYPE_FNCALL:
-            subfp = (FnCall *) rp->item;
+            subfp = RlistFnCallValue(rp);
             rval = FnCallEvaluate(ctx, subfp, pp).rval;
             break;
         default:
-            rval = ExpandPrivateRval(ctx, ScopeGetCurrent()->scope, (Rval) {rp->item, rp->type});
+            rval = ExpandPrivateRval(ctx, NULL, NULL, (Rval) { rp->val.item, rp->val.type});
             break;
         }
 
-        Log(LOG_LEVEL_DEBUG, "EXPARG: %s.%s\n", ScopeGetCurrent()->scope, (char *) rval.item);
         RlistAppend(&newargs, rval.item, rval.type);
         RvalDestroy(rval);
     }
@@ -121,10 +120,10 @@ void ArgTemplate(EvalContext *ctx, FnCall *fp, const FnCallArg *argtemplate, Rli
 
     for (argnum = 0; rp != NULL && argtemplate[argnum].pattern != NULL; argnum++)
     {
-        if (rp->type != RVAL_TYPE_FNCALL)
+        if (rp->val.type != RVAL_TYPE_FNCALL)
         {
             /* Nested functions will not match to lval so don't bother checking */
-            SyntaxTypeMatch err = CheckConstraintTypeMatch(id, (Rval) {rp->item, rp->type}, argtemplate[argnum].dtype, argtemplate[argnum].pattern, 1);
+            SyntaxTypeMatch err = CheckConstraintTypeMatch(id, rp->val, argtemplate[argnum].dtype, argtemplate[argnum].pattern, 1);
             if (err != SYNTAX_TYPE_MATCH_OK && err != SYNTAX_TYPE_MATCH_ERROR_UNEXPANDED)
             {
                 FatalError(ctx, "in %s: %s", id, SyntaxTypeMatchToString(err));
@@ -145,7 +144,7 @@ void ArgTemplate(EvalContext *ctx, FnCall *fp, const FnCallArg *argtemplate, Rli
             printf("  arg[%d] range %s\t", i, argtemplate[i].pattern);
             if (rp != NULL)
             {
-                RvalShow(stdout, (Rval) {rp->item, rp->type});
+                RvalShow(stdout, rp->val);
                 rp = rp->next;
             }
             else
@@ -157,11 +156,4 @@ void ArgTemplate(EvalContext *ctx, FnCall *fp, const FnCallArg *argtemplate, Rli
 
         FatalError(ctx, "Bad arguments");
     }
-
-    for (rp = realargs; rp != NULL; rp = rp->next)
-    {
-        Log(LOG_LEVEL_DEBUG, "finalarg: %s\n", (char *) rp->item);
-    }
-
-    Log(LOG_LEVEL_DEBUG, "End ArgTemplate\n");
 }

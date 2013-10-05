@@ -1,7 +1,8 @@
-#include "test.h"
+#include <test.h>
 
-#include "item_lib.h"
-#include "server.h"
+#include <item_lib.h>
+#include <server.h>
+#include <server_common.h>
 
 const int CONNECTION_MAX_AGE_SECONDS = SECONDS_PER_HOUR * 2;
 
@@ -147,7 +148,7 @@ int main()
 
 /* stubs */
 
-int ReceiveCollectCall(struct ServerConnectionState *conn)
+int ReceiveCollectCall(ServerConnectionState *conn)
 {
     return false;
 }

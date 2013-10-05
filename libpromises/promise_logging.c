@@ -22,15 +22,14 @@
   included file COSL.txt.
 */
 
-#include "promise_logging.h"
+#include <promise_logging.h>
 
-#include "logging.h"
-#include "logging_priv.h"
-#include "misc_lib.h"
-#include "string_lib.h"
-#include "env_context.h"
+#include <logging.h>
+#include <logging_priv.h>
+#include <misc_lib.h>
+#include <string_lib.h>
+#include <env_context.h>
 
-#include <assert.h>
 
 typedef struct
 {
@@ -80,18 +79,17 @@ static LogLevel GetLevelForPromise(const EvalContext *ctx, const Promise *pp, co
 
 static LogLevel CalculateLogLevel(const EvalContext *ctx, const Promise *pp)
 {
-    LogLevel log_level = LoggingPrivGetGlobalLogLevel();
+    LogLevel log_level = LogGetGlobalLevel();
 
     if (pp)
     {
         log_level = AdjustLogLevel(log_level, GetLevelForPromise(ctx, pp, "log_level"));
     }
 
-    /* Disable system log for dry-runs and for non-root agent */
-    /* FIXME: do we really need it? */
-    if (!IsPrivileged() || DONTDO)
+    /* Disable system log for dry-runs */
+    if (DONTDO)
     {
-        log_level = -1;
+        log_level = LOG_LEVEL_NOTHING;
     }
 
     return log_level;
@@ -99,7 +97,7 @@ static LogLevel CalculateLogLevel(const EvalContext *ctx, const Promise *pp)
 
 static LogLevel CalculateReportLevel(const EvalContext *ctx, const Promise *pp)
 {
-    LogLevel report_level = LoggingPrivGetGlobalLogLevel();
+    LogLevel report_level = LogGetGlobalLevel();
 
     if (pp)
     {
@@ -168,7 +166,7 @@ void PromiseLoggingPromiseEnter(const EvalContext *eval_context, const Promise *
         ProgrammingError("Promise logging: Unable to enter promise, bound to EvalContext different from passed one");
     }
 
-    if (EvalContextStackGetTopPromise(eval_context) != pp)
+    if (EvalContextStackCurrentPromise(eval_context) != pp)
     {
         /*
          * FIXME: There are still cases where promise passed here is not on top of stack
@@ -198,7 +196,7 @@ char *PromiseLoggingPromiseFinish(const EvalContext *eval_context, const Promise
         ProgrammingError("Promise logging: Unable to finish promise, bound to EvalContext different from passed one");
     }
 
-    if (EvalContextStackGetTopPromise(eval_context) != pp)
+    if (EvalContextStackCurrentPromise(eval_context) != pp)
     {
         /*
          * FIXME: There are still cases where promise passed here is not on top of stack
@@ -212,7 +210,7 @@ char *PromiseLoggingPromiseFinish(const EvalContext *eval_context, const Promise
     plctx->last_message = NULL;
     free(plctx->stack_path);
 
-    LoggingPrivSetLevels(LoggingPrivGetGlobalLogLevel(), LoggingPrivGetGlobalLogLevel());
+    LoggingPrivSetLevels(LogGetGlobalLevel(), LogGetGlobalLevel());
 
     return last_message;
 }

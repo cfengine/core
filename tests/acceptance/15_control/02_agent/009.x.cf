@@ -1,0 +1,22 @@
+body common control 
+{   
+   bundlesequence => { test };
+}
+
+bundle common g 
+{
+classes:
+  "foo" and => { "any" };
+}
+
+body agent control 
+{
+  abortclasses => { "foo" };
+}
+
+bundle agent test {
+
+reports:
+  foo::
+    "Aborting class defined";
+}

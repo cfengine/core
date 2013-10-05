@@ -1,4 +1,0 @@
-
-Disabling a file means making is impotent in the context in which it
-has an effect. For executables this means preventing execution, for an
-information file it means making the file unreadable.

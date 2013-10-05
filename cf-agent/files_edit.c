@@ -22,16 +22,17 @@
   included file COSL.txt.
 */
 
-#include "files_edit.h"
+#include <files_edit.h>
 
-#include "env_context.h"
-#include "files_names.h"
-#include "files_interfaces.h"
-#include "files_operators.h"
-#include "files_lib.h"
-#include "files_editxml.h"
-#include "item_lib.h"
-#include "policy.h"
+#include <actuator.h>
+#include <env_context.h>
+#include <files_names.h>
+#include <files_interfaces.h>
+#include <files_operators.h>
+#include <files_lib.h>
+#include <files_editxml.h>
+#include <item_lib.h>
+#include <policy.h>
 
 /*****************************************************************************/
 
@@ -41,7 +42,7 @@ EditContext *NewEditContext(char *filename, Attributes a)
 
     if (!IsAbsoluteFileName(filename))
     {
-        Log(LOG_LEVEL_ERR, "Relative file name %s was marked for editing but has no invariant meaning", filename);
+        Log(LOG_LEVEL_ERR, "Relative file name '%s' was marked for editing but has no invariant meaning", filename);
         return NULL;
     }
 
@@ -85,36 +86,43 @@ EditContext *NewEditContext(char *filename, Attributes a)
 
 /*****************************************************************************/
 
-void FinishEditContext(EvalContext *ctx, EditContext *ec, Attributes a, const Promise *pp)
+PromiseResult FinishEditContext(EvalContext *ctx, EditContext *ec, Attributes a, const Promise *pp)
 {
+    PromiseResult result = PROMISE_RESULT_NOOP;
     if (DONTDO || (a.transaction.action == cfa_warn))
     {
-        if (ec && (!CompareToFile(ctx, ec->file_start, ec->filename, a, pp)) && (ec->num_edits > 0))
+        if (ec && (!CompareToFile(ctx, ec->file_start, ec->filename, a, pp, &result)) && (ec->num_edits > 0))
         {
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, a, "Should edit file %s but only a warning promised", ec->filename);
+            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, a, "Should edit file '%s' but only a warning promised", ec->filename);
+            return PROMISE_RESULT_WARN;
         }
-        return;
+        else
+        {
+            return PROMISE_RESULT_NOOP;
+        }
     }
     else if (ec && (ec->num_edits > 0))
     {
         if (a.haveeditline)
         {
-            if (CompareToFile(ctx, ec->file_start, ec->filename, a, pp))
+            if (CompareToFile(ctx, ec->file_start, ec->filename, a, pp, &result))
             {
                 if (ec)
                 {
-                    cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "No edit changes to file %s need saving", ec->filename);
+                    cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "No edit changes to file '%s' need saving", ec->filename);
                 }
             }
             else
             {
                 if (SaveItemListAsFile(ec->file_start, ec->filename, a))
                 {
-                    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "Edit file %s", ec->filename);
+                    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "Edit file '%s'", ec->filename);
+                    result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
                 }
                 else
                 {
-                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Unable to save file %s after editing", ec->filename);
+                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Unable to save file '%s' after editing", ec->filename);
+                    result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
                 }
             }
         }
@@ -126,23 +134,26 @@ void FinishEditContext(EvalContext *ctx, EditContext *ec, Attributes a, const Pr
             {
                 if (ec)
                 {
-                    cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "No edit changes to xml file %s need saving", ec->filename);
+                    cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "No edit changes to xml file '%s' need saving", ec->filename);
                 }
             }
             else
             {
                 if (SaveXmlDocAsFile(ec->xmldoc, ec->filename, a))
                 {
-                    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "Edited xml file %s", ec->filename);
+                    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "Edited xml file '%s'", ec->filename);
+                    result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
                 }
                 else
                 {
-                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Failed to edit XML file %s", ec->filename);
+                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Failed to edit XML file '%s'", ec->filename);
+                    result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
                 }
             }
             xmlFreeDoc(ec->xmldoc);
 #else
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Cannot edit XML files without LIBXML2\n");
+            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Cannot edit XML files without LIBXML2");
+            result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
 #endif
         }
     }
@@ -150,7 +161,7 @@ void FinishEditContext(EvalContext *ctx, EditContext *ec, Attributes a, const Pr
     {
         if (ec)
         {
-            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "No edit changes to file %s need saving", ec->filename);
+            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "No edit changes to file '%s' need saving", ec->filename);
         }
     }
 
@@ -158,6 +169,8 @@ void FinishEditContext(EvalContext *ctx, EditContext *ec, Attributes a, const Pr
     {
         DeleteItemList(ec->file_start);
     }
+
+    return result;
 }
 
 /*********************************************************************/
@@ -194,13 +207,13 @@ int LoadFileAsXmlDoc(xmlDocPtr *doc, const char *file, EditDefaults edits)
     {
         if ((*doc = xmlNewDoc(BAD_CAST "1.0")) == NULL)
         {
-            Log(LOG_LEVEL_INFO, "Document %s not parsed successfully. (xmlNewDoc: %s)", file, GetErrorStr());
+            Log(LOG_LEVEL_INFO, "Document '%s' not parsed successfully. (xmlNewDoc: %s)", file, GetErrorStr());
             return false;
         }
     }
     else if ((*doc = xmlParseFile(file)) == NULL)
     {
-        Log(LOG_LEVEL_INFO, "Document %s not parsed successfully. (xmlParseFile: %s)", file, GetErrorStr());
+        Log(LOG_LEVEL_INFO, "Document '%s' not parsed successfully. (xmlParseFile: %s)", file, GetErrorStr());
         return false;
     }
 

@@ -1,9 +1,0 @@
-
-The global setting for the file-editing safety-net for binary files (this
-value may be overridden on a per-promise basis with @code{max_file_size},
-@xref{edit_defaults in files}. The default value for @code{editbinaryfilesize}
-is @code{100k}.  Note the use of special units is allowed,
-@xref{Datatypes in CFEngine 3}, for a list of permissible suffixes.
-
-When setting limits, the limit on editing binary files should generally be
-set higher than for text files. 

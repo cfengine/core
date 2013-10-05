@@ -26,11 +26,11 @@
  * Implementation using QDBM
  */
 
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
-#include "dbm_api.h"
-#include "dbm_priv.h"
-#include "string_lib.h"
+#include <dbm_api.h>
+#include <dbm_priv.h>
+#include <string_lib.h>
 
 #ifdef QDB
 # include <depot.h>
@@ -122,15 +122,15 @@ DBPriv *DBPrivOpenDB(const char *filename)
 
     if ((db->depot == NULL) && (dpecode == DP_EBROKEN))
     {
-        Log(LOG_LEVEL_ERR, "Database \"%s\" is broken, trying to repair...", filename);
+        Log(LOG_LEVEL_ERR, "Database '%s' is broken, trying to repair...", filename);
 
         if (dprepair(filename))
         {
-            Log(LOG_LEVEL_INFO, "Successfully repaired database \"%s\"", filename);
+            Log(LOG_LEVEL_INFO, "Successfully repaired database '%s'", filename);
         }
         else
         {
-            Log(LOG_LEVEL_ERR, "Failed to repair database %s, recreating...", filename);
+            Log(LOG_LEVEL_ERR, "Failed to repair database '%s', recreating...", filename);
             return DB_PRIV_DATABASE_BROKEN;
         }
 
@@ -139,7 +139,7 @@ DBPriv *DBPrivOpenDB(const char *filename)
 
     if (db->depot == NULL)
     {
-        Log(LOG_LEVEL_ERR, "dpopen: Opening database \"%s\" failed: %s",
+        Log(LOG_LEVEL_ERR, "dpopen: Opening database '%s' failed. (dpopen: %s)",
               filename, dperrmsg(dpecode));
         pthread_mutex_destroy(&db->cursor_lock);
         pthread_mutex_destroy(&db->lock);
@@ -168,7 +168,7 @@ void DBPrivCloseDB(DBPriv *db)
 
     if (!dpclose(db->depot))
     {
-        Log(LOG_LEVEL_ERR, "Unable to close QDBM database: %s", dperrmsg(dpecode));
+        Log(LOG_LEVEL_ERR, "Unable to close QDBM database. (dpclose: %s)", dperrmsg(dpecode));
     }
 
     free(db);
@@ -185,7 +185,7 @@ bool DBPrivRead(DBPriv *db, const void *key, int key_size, void *dest, int dest_
     {
         // FIXME: distinguish between "entry not found" and "failure to read"
 
-        Log(LOG_LEVEL_DEBUG, "QDBM_ReadComplexKeyDB(%s): Could not read: %s\n",
+        Log(LOG_LEVEL_DEBUG, "QDBM DBPrivRead: Could not read '%s', (dpgetwb: %s)",
                 (const char *)key, dperrmsg(dpecode));
 
         Unlock(db);
@@ -206,7 +206,7 @@ bool DBPrivWrite(DBPriv *db, const void *key, int key_size, const void *value, i
     if (!dpput(db->depot, key, key_size, value, value_size, DP_DOVER))
     {
         char *db_name = dpname(db->depot);
-        Log(LOG_LEVEL_ERR, "dpput: Could not write key to DB \"%s\": %s",
+        Log(LOG_LEVEL_ERR, "Could not write key to DB '%s'. (dpput: %s)",
               db_name, dperrmsg(dpecode));
         free(db_name);
         Unlock(db);
@@ -276,7 +276,7 @@ DBCursorPriv *DBPrivOpenCursor(DBPriv *db)
 
     if (!dpiterinit(db->depot))
     {
-        Log(LOG_LEVEL_ERR, "dpiterinit: Could not initialize iterator: %s", dperrmsg(dpecode));
+        Log(LOG_LEVEL_ERR, "Could not initialize QuickDB iterator. (dpiterinit: %s)", dperrmsg(dpecode));
         Unlock(db);
         UnlockCursor(db);
         return NULL;

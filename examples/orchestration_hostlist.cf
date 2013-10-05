@@ -1,0 +1,58 @@
+#
+# Make list of hosts available to all clients, and use it on clients
+# in order to configure a sample monitoring application that checks 
+# health of all clients.
+#
+# Sample application configuration file contents below, put this in 
+# /var/cfengine/masterfiles/template_monitoring on the hub.
+#
+# ---
+#
+#monitor_hosts = $(orchestration_hostlist_use.host_string)
+#
+# ---
+#
+# Note that your copy_from statement in failsafe.cf or update.cf must
+# copy this file also (e.g. not only copy *.cf files in any file_select)
+
+
+
+body common control
+{
+      inputs => { "libraries/cfengine_stdlib.cf" };
+      bundlesequence => { "orchestration_hostlist_update",  "orchestration_hostlist_use"};
+}
+
+
+bundle agent orchestration_hostlist_update
+{
+  vars:
+    am_policy_hub::
+      "host_list" slist => hostsseen("inf", "lastseen", "address");
+
+  files:
+
+    am_policy_hub::
+      "$(sys.workdir)/masterfiles/host_list"
+      comment       => "Write the addresses of all hosts to a file",
+      handle        => "orchestration_hostlit_update_files_host_list_write",
+      edit_line     => insert_lines( "@(orchestration_hostlist_update.host_list)" ),
+      create        => "true",
+      edit_defaults => empty;
+}
+
+
+bundle agent orchestration_hostlist_use
+{
+  vars:
+      "host_list"    slist => readstringlist("$(sys.workdir)/inputs/host_list", "#.*", "\n", 1000, 40000);
+      "host_string" string => join(", ", "host_list");
+
+  files:
+      "/tmp/monitoring"
+      comment       => "Update application configuration to reflect all hosts on this hub",
+      handle        => "orchestration_read_files_host_list_configuration",
+      edit_line     => expand_template("$(sys.workdir)/inputs/template_monitoring"),
+      create        => "true",
+      edit_defaults => empty;
+}

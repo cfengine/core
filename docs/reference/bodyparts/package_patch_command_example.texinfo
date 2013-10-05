@@ -1,8 +1,0 @@
-
-@verbatim
-body package_method zypper
-
-{
-package_patch_command => "/usr/bin/zypper -non-interactive patch";
-}
-@end verbatim

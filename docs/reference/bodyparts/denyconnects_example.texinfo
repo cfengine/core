@@ -1,8 +1,0 @@
-
-
-@verbatim
-body server control
-{
-denyconnects => { "badhost\.domain\.evil", "host3\.domain\.com" };
-}
-@end verbatim

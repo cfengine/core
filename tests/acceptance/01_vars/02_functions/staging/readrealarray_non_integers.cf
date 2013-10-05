@@ -9,27 +9,27 @@
 
 body common control
 {
-  inputs => { "../../default.cf.sub" };
-  bundlesequence  => { default("$(this.promise_filename)") };   
-  version => "1.0";
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };   
+      version => "1.0";
 }
 
 bundle agent init
 {
-files:
-	"$(G.testfile)"
-	    delete => init_delete;
-	
-	"$(G.testfile)"
-	    create => "true",
-	    edit_line => init_fill_in;
+  files:
+      "$(G.testfile)"
+      delete => init_delete;
+      
+      "$(G.testfile)"
+      create => "true",
+      edit_line => init_fill_in;
 }
 
 bundle edit_line init_fill_in
 {
-insert_lines:
+  insert_lines:
 
-"0:1:2
+      "0:1:2
 999.9::bogus:666.6
 1:2:3";
 
@@ -37,75 +37,75 @@ insert_lines:
 
 body delete init_delete
 {
-	dirlinks => "delete";
-	rmdirs   => "true";
+      dirlinks => "delete";
+      rmdirs   => "true";
 }
 
 #######################################################
 
 bundle agent test
 {
-vars:
-	"cnt" int => readrealarray("ary", "$(G.testfile)","NoComment",":",10,1000);
-	"num" int => "3";
+  vars:
+      "cnt" int => readrealarray("ary", "$(G.testfile)","NoComment",":",10,1000);
+      "num" int => "3";
 }
 
 #######################################################
 
 bundle agent check
 {
-vars:
-    	"idx" slist => getindices("test.ary");
+  vars:
+      "idx" slist => getindices("test.ary");
 
-classes:
-	"good" and => {   
-		strcmp("$(test.num)", "$(test.cnt)"),
+  classes:
+      "good" and => {   
+		      strcmp("$(test.num)", "$(test.cnt)"),
 
-		strcmp("$(test.ary[0][0])", "0"),
-		strcmp("$(test.ary[0][1])", "1"),
-		strcmp("$(test.ary[0][2])", "2"),
+		      strcmp("$(test.ary[0][0])", "0"),
+		      strcmp("$(test.ary[0][1])", "1"),
+		      strcmp("$(test.ary[0][2])", "2"),
 
-		strcmp("$(test.ary[999.9][0])", "999.9"),
-		strcmp("$(test.ary[999.9][1])", "0"),
-		strcmp("$(test.ary[999.9][2])", "0"),
-		strcmp("$(test.ary[999.9][3])", "666.6"),
+		      strcmp("$(test.ary[999.9][0])", "999.9"),
+		      strcmp("$(test.ary[999.9][1])", "0"),
+		      strcmp("$(test.ary[999.9][2])", "0"),
+		      strcmp("$(test.ary[999.9][3])", "666.6"),
 
-		strcmp("$(test.ary[1][0])", "1"),
-		strcmp("$(test.ary[1][1])", "2"),
-		strcmp("$(test.ary[1][2])", "3"),
-		};
+		      strcmp("$(test.ary[1][0])", "1"),
+		      strcmp("$(test.ary[1][1])", "2"),
+		      strcmp("$(test.ary[1][2])", "3"),
+      };
 
-	# Make sure there are no trailing elements
-	"bad" or => {
-		isvariable("test.ary[0][3]"),
-		isvariable("test.ary[999.9][4]"),
-		isvariable("test.ary[1][3]"),
-		};
+      # Make sure there are no trailing elements
+      "bad" or => {
+		    isvariable("test.ary[0][3]"),
+		    isvariable("test.ary[999.9][4]"),
+		    isvariable("test.ary[1][3]"),
+      };
 
-	"ok" expression => "good&!bad";
+      "ok" expression => "good&!bad";
 
-reports:
+  reports:
     DEBUG::
-	"expected $(test.num) entries, saw $(test.cnt)";
+      "expected $(test.num) entries, saw $(test.cnt)";
 
-	"saw array indices '$(idx)'";
+      "saw array indices '$(idx)'";
 
-	"expected test.ary[0][0] = '0', saw '$(test.ary[0][0])'";
-	"expected test.ary[0][1] = '1', saw '$(test.ary[0][1])'";
-	"expected test.ary[0][2] = '2', saw '$(test.ary[0][2])'";
+      "expected test.ary[0][0] = '0', saw '$(test.ary[0][0])'";
+      "expected test.ary[0][1] = '1', saw '$(test.ary[0][1])'";
+      "expected test.ary[0][2] = '2', saw '$(test.ary[0][2])'";
 
-	"expected test.ary[999.9][0] = '999.9', saw '$(test.ary[999.9][0])'";
-	"expected test.ary[999.9][1] = '0', saw '$(test.ary[999.9][1])'";
-	"expected test.ary[999.9][2] = '0', saw '$(test.ary[999.9][2])'";
-	"expected test.ary[999.9][3] = '666.6', saw '$(test.ary[999.9][3])'";
+      "expected test.ary[999.9][0] = '999.9', saw '$(test.ary[999.9][0])'";
+      "expected test.ary[999.9][1] = '0', saw '$(test.ary[999.9][1])'";
+      "expected test.ary[999.9][2] = '0', saw '$(test.ary[999.9][2])'";
+      "expected test.ary[999.9][3] = '666.6', saw '$(test.ary[999.9][3])'";
 
-	"expected test.ary[1][0] = '1', saw '$(test.ary[1][0])'";
-	"expected test.ary[1][1] = '2', saw '$(test.ary[1][1])'";
-	"expected test.ary[1][2] = '3', saw '$(test.ary[1][2])'";
+      "expected test.ary[1][0] = '1', saw '$(test.ary[1][0])'";
+      "expected test.ary[1][1] = '2', saw '$(test.ary[1][1])'";
+      "expected test.ary[1][2] = '3', saw '$(test.ary[1][2])'";
 
     ok::
-	"$(this.promise_filename) Pass";
+      "$(this.promise_filename) Pass";
 
     !ok::
-	"$(this.promise_filename) FAIL";
+      "$(this.promise_filename) FAIL";
 }

@@ -22,18 +22,18 @@
   included file COSL.txt.
 */
 
-#include "agent-diagnostics.h"
+#include <agent-diagnostics.h>
 
-#include "alloc.h"
-#include "crypto.h"
-#include "files_interfaces.h"
-#include "string_lib.h"
-#include "bootstrap.h"
-#include "dbm_api.h"
-#include "dbm_priv.h"
-#include "tokyo_check.h"
+#include <alloc.h>
+#include <crypto.h>
+#include <files_interfaces.h>
+#include <string_lib.h>
+#include <bootstrap.h>
+#include <dbm_api.h>
+#include <dbm_priv.h>
+#include <tokyo_check.h>
+#include <lastseen.h>
 
-#include <assert.h>
 
 AgentDiagnosticsResult AgentDiagnosticsResultNew(bool success, char *message)
 {
@@ -146,13 +146,21 @@ static AgentDiagnosticsResult AgentDiagnosticsCheckDB(const char *workdir, dbid 
     {
         int ret = CheckTokyoDBCoherence(dbpath);
         free(dbpath);
-        if(ret)
+        if (ret)
         {
             return AgentDiagnosticsResultNew(false, xstrdup("Internal DB coherence problem"));
-        } 
+        }
         else
         {
+            if (id == dbid_lastseen)
+            {
+                if (IsLastSeenCoherent() == false)
+                {
+                    return AgentDiagnosticsResultNew(false, xstrdup("Lastseen DB data coherence problem"));
+                }
+            }
             return AgentDiagnosticsResultNew(true, xstrdup("OK"));
+            
         }
     }
 }
@@ -213,9 +221,16 @@ const AgentDiagnosticCheck *AgentDiagnosticsAllChecks(void)
         { "Check file stats DB", &AgentDiagnosticsCheckDBFileStats },
         { "Check locks DB", &AgentDiagnosticsCheckDBLocks },
         { "Check performance DB", &AgentDiagnosticsCheckDBPerformance },
-
+        { "Check lastseen DB", &AgentDiagnosticsCheckDBLastSeen },
         { NULL, NULL }
     };
 
     return checks;
+}
+
+ENTERPRISE_VOID_FUNC_4ARG_DEFINE_STUB(void, AgentDiagnosticsRunAllChecksNova,
+                                      ARG_UNUSED const char *, workdir, ARG_UNUSED Writer *, output,
+                                      ARG_UNUSED AgentDiagnosticsRunFunction, AgentDiagnosticsRunPtr,
+                                      ARG_UNUSED AgentDiagnosticsResultNewFunction, AgentDiagnosticsResultNewPtr)
+{
 }

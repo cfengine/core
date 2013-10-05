@@ -8,63 +8,63 @@
 
 body common control
 {
-  inputs => { "../../default.cf.sub" };
-  bundlesequence  => { default("$(this.promise_filename)") };
-  version => "1.0";
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
 }
 
 #######################################################
 
 bundle agent init
 {
-vars:
-    "results" slist => { "one", "two", "red", "blue" };
+  vars:
+      "results" slist => { "one", "two", "red", "blue" };
 
-files:
-    "$(G.testfile).expected"
-        create => "true",
-        edit_line => init_insert;
+  files:
+      "$(G.testfile).expected"
+      create => "true",
+      edit_line => init_insert;
 }
 
 bundle edit_line init_insert
 {
-insert_lines:
-        "$(init.results)";
+  insert_lines:
+      "$(init.results)";
 }
 
 #######################################################
 
 bundle agent test
 {
-vars:
-    "sea[fish]" slist => { "one", "two" };
-    "sea[shark]" slist => { "red", "blue" };
+  vars:
+      "sea[fish]" slist => { "one", "two" };
+      "sea[shark]" slist => { "red", "blue" };
 
     secondpass::
-        "vals" slist => getvalues("sea");
+      "vals" slist => getvalues("sea");
 
-classes:
-    "secondpass" expression => "any";
+  classes:
+      "secondpass" expression => "any";
 
-files:
+  files:
     secondpass::
-    "$(G.testfile).actual"
-        create => "true",
-        edit_line => test_insert;
+      "$(G.testfile).actual"
+      create => "true",
+      edit_line => test_insert;
 }
 
 bundle edit_line test_insert
 {
-insert_lines:
-    "$(test.vals)";
+  insert_lines:
+      "$(test.vals)";
 }
 
 #######################################################
 
 bundle agent check
 {
-methods:
-        "any" usebundle => sorted_check_diff("$(G.testfile).actual",
-                                              "$(G.testfile).expected",
-                                              "$(this.promise_filename)");
+  methods:
+      "any" usebundle => sorted_check_diff("$(G.testfile).actual",
+                                           "$(G.testfile).expected",
+                                           "$(this.promise_filename)");
 }

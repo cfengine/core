@@ -1,5 +1,0 @@
-
-The version string is used in error messages and reports.
-
-This string should not contain the colon @samp{:} character, as this has a special
-meaning in the context of knowledge management. This restriction might be lifted later.

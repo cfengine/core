@@ -1,8 +1,0 @@
-
-Another name for the operating system.
-
-@verbatim
-
-# ostype = linux_x86_64
-
-@end verbatim

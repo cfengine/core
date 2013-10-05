@@ -22,15 +22,14 @@
   included file COSL.txt.
 */
 
-#include "item_lib.h"
+#include <item_lib.h>
 
-#include "files_names.h"
-#include "addr_lib.h"
-#include "matching.h"
-#include "misc_lib.h"
+#include <files_names.h>
+#include <addr_lib.h>
+#include <matching.h>
+#include <misc_lib.h>
 
 /*******************************************************************/
-
 void PrintItemList(const Item *list, Writer *w)
 {
     WriterWriteChar(w, '{');
@@ -154,6 +153,27 @@ bool IsItemIn(const Item *list, const char *item)
 
 /*********************************************************************/
 
+bool ListsCompare(const Item *list1, const Item *list2)
+{
+    if (ListLen(list1) != ListLen(list2))
+    {
+        return false;
+    }
+
+    for (const Item *ptr = list1; ptr != NULL; ptr = ptr->next)
+    {
+        if (IsItemIn(list2, ptr->name) == false)
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+
+/*********************************************************************/
+
 Item *EndOfList(Item *start)
 {
     Item *ip, *prev = CF_UNDEFINED_ITEM;
@@ -168,11 +188,11 @@ Item *EndOfList(Item *start)
 
 /*********************************************************************/
 
-int IsItemInRegion(const char *item, const Item *begin_ptr, const Item *end_ptr, Rlist *insert_match, const Promise *pp)
+int IsItemInRegion(EvalContext *ctx, const char *item, const Item *begin_ptr, const Item *end_ptr, Rlist *insert_match, const Promise *pp)
 {
     for (const Item *ip = begin_ptr; ((ip != end_ptr) && (ip != NULL)); ip = ip->next)
     {
-        if (MatchPolicy(item, ip->name, insert_match, pp))
+        if (MatchPolicy(ctx, item, ip->name, insert_match, pp))
         {
             return true;
         }
@@ -318,8 +338,6 @@ int ListLen(const Item *list)
 {
     int count = 0;
 
-    Log(LOG_LEVEL_DEBUG, "Check ListLen\n");
-
     for (const Item *ip = list; ip != NULL; ip = ip->next)
     {
         count++;
@@ -374,7 +392,7 @@ Item *ConcatLists(Item *list1, Item *list2)
 /* Search                                                                  */
 /***************************************************************************/
 
-int SelectItemMatching(Item *start, char *regex, Item *begin_ptr, Item *end_ptr, Item **match, Item **prev, char *fl)
+int SelectItemMatching(EvalContext *ctx, Item *start, char *regex, Item *begin_ptr, Item *end_ptr, Item **match, Item **prev, char *fl)
 {
     Item *ip;
     int ret = false;
@@ -389,14 +407,14 @@ int SelectItemMatching(Item *start, char *regex, Item *begin_ptr, Item *end_ptr,
 
     if (fl && (strcmp(fl, "first") == 0))
     {
-        if (SelectNextItemMatching(regex, begin_ptr, end_ptr, match, prev))
+        if (SelectNextItemMatching(ctx, regex, begin_ptr, end_ptr, match, prev))
         {
             ret = true;
         }
     }
     else
     {
-        if (SelectLastItemMatching(regex, begin_ptr, end_ptr, match, prev))
+        if (SelectLastItemMatching(ctx, regex, begin_ptr, end_ptr, match, prev))
         {
             ret = true;
         }
@@ -415,7 +433,7 @@ int SelectItemMatching(Item *start, char *regex, Item *begin_ptr, Item *end_ptr,
 
 /*********************************************************************/
 
-int SelectNextItemMatching(const char *regexp, Item *begin, Item *end, Item **match, Item **prev)
+int SelectNextItemMatching(EvalContext *ctx, const char *regexp, Item *begin, Item *end, Item **match, Item **prev)
 {
     Item *ip_prev = CF_UNDEFINED_ITEM;
 
@@ -429,7 +447,7 @@ int SelectNextItemMatching(const char *regexp, Item *begin, Item *end, Item **ma
             continue;
         }
 
-        if (FullTextMatch(regexp, ip->name))
+        if (FullTextMatch(ctx, regexp, ip->name))
         {
             *match = ip;
             *prev = ip_prev;
@@ -444,7 +462,7 @@ int SelectNextItemMatching(const char *regexp, Item *begin, Item *end, Item **ma
 
 /*********************************************************************/
 
-int SelectLastItemMatching(const char *regexp, Item *begin, Item *end, Item **match, Item **prev)
+int SelectLastItemMatching(EvalContext *ctx, const char *regexp, Item *begin, Item *end, Item **match, Item **prev)
 {
     Item *ip, *ip_last = NULL, *ip_prev = CF_UNDEFINED_ITEM;
 
@@ -458,7 +476,7 @@ int SelectLastItemMatching(const char *regexp, Item *begin, Item *end, Item **ma
             continue;
         }
 
-        if (FullTextMatch(regexp, ip->name))
+        if (FullTextMatch(ctx, regexp, ip->name))
         {
             *prev = ip_prev;
             ip_last = ip;
@@ -478,7 +496,7 @@ int SelectLastItemMatching(const char *regexp, Item *begin, Item *end, Item **ma
 
 /*********************************************************************/
 
-int MatchRegion(const char *chunk, const Item *begin, const Item *end, bool regex)
+int MatchRegion(EvalContext *ctx, const char *chunk, const Item *begin, const Item *end, bool regex)
 /*
   Match a region in between the selection delimiters. It is
   called after SelectRegion. The end delimiter will be visible
@@ -504,7 +522,7 @@ int MatchRegion(const char *chunk, const Item *begin, const Item *end, bool rege
         {
             return false;
         }
-        if (regex && !FullTextMatch(buf, ip->name))
+        if (regex && !FullTextMatch(ctx, buf, ip->name))
         {
             return false;
         }
@@ -568,7 +586,7 @@ void InsertAfter(Item **filestart, Item *ptr, const char *string)
 
 /*********************************************************************/
 
-int NeighbourItemMatches(const Item *file_start, const Item *location, const char *string, EditOrder pos, Rlist *insert_match,
+int NeighbourItemMatches(EvalContext *ctx, const Item *file_start, const Item *location, const char *string, EditOrder pos, Rlist *insert_match,
                          const Promise *pp)
 {
 /* Look for a line matching proposed insert before or after location */
@@ -579,7 +597,7 @@ int NeighbourItemMatches(const Item *file_start, const Item *location, const cha
         {
             if ((ip->next) && (ip->next == location))
             {
-                if (MatchPolicy(string, ip->name, insert_match, pp))
+                if (MatchPolicy(ctx, string, ip->name, insert_match, pp))
                 {
                     return true;
                 }
@@ -594,7 +612,7 @@ int NeighbourItemMatches(const Item *file_start, const Item *location, const cha
         {
             if (ip == location)
             {
-                if ((ip->next) && (MatchPolicy(string, ip->next->name, insert_match, pp)))
+                if ((ip->next) && (MatchPolicy(ctx, string, ip->next->name, insert_match, pp)))
                 {
                     return true;
                 }
@@ -619,8 +637,6 @@ Item *SplitString(const char *string, char sep)
     const char *sp;
     char before[CF_BUFSIZE];
     int i = 0;
-
-    Log(LOG_LEVEL_DEBUG, "SplitString([%s],%c=%d)\n", string, sep, sep);
 
     for (sp = string; (*sp != '\0'); sp++, i++)
     {
@@ -665,8 +681,6 @@ Item *SplitStringAsItemList(const char *string, char sep)
     Item *liststart = NULL;
     char format[9];
     char node[CF_MAXVARSIZE];
-
-    Log(LOG_LEVEL_DEBUG, "SplitStringAsItemList(%s,%c)\n", string, sep);
 
     sprintf(format, "%%255[^%c]", sep); /* set format string to search */
 
@@ -768,7 +782,7 @@ void SetItemListCounter(Item *list, const char *item, int value)
 
 /*********************************************************************/
 
-int IsMatchItemIn(Item *list, const char *item)
+int IsMatchItemIn(EvalContext *ctx, Item *list, const char *item)
 /* Solve for possible regex/fuzzy models unified */
 {
     Item *ptr;
@@ -787,7 +801,7 @@ int IsMatchItemIn(Item *list, const char *item)
 
         if (IsRegex(ptr->name))
         {
-            if (FullTextMatch(ptr->name, item))
+            if (FullTextMatch(ctx, ptr->name, item))
             {
                 return (true);
             }
@@ -878,7 +892,7 @@ void DeleteItem(Item **liststart, Item *item)
 
 /*********************************************************************/
 
-int DeleteItemGeneral(Item **list, const char *string, ItemMatchType type)
+int DeleteItemGeneral(EvalContext *ctx, Item **list, const char *string, ItemMatchType type)
 {
     Item *ip, *last = NULL;
     int match = 0;
@@ -918,7 +932,7 @@ int DeleteItemGeneral(Item **list, const char *string, ItemMatchType type)
         case ITEM_MATCH_TYPE_REGEX_COMPLETE_NOT:
         case ITEM_MATCH_TYPE_REGEX_COMPLETE:
             /* To fix a bug on some implementations where rx gets emptied */
-            match = FullTextMatch(string, ip->name);
+            match = FullTextMatch(ctx, string, ip->name);
 
             if (type == ITEM_MATCH_TYPE_REGEX_COMPLETE_NOT)
             {
@@ -969,51 +983,51 @@ int DeleteItemGeneral(Item **list, const char *string, ItemMatchType type)
 
 /*********************************************************************/
 
-int DeleteItemStarting(Item **list, const char *string)       /* delete 1st item starting with string */
+int DeleteItemStarting(EvalContext *ctx, Item **list, const char *string)       /* delete 1st item starting with string */
 {
-    return DeleteItemGeneral(list, string, ITEM_MATCH_TYPE_LITERAL_START);
+    return DeleteItemGeneral(ctx, list, string, ITEM_MATCH_TYPE_LITERAL_START);
 }
 
 /*********************************************************************/
 
-int DeleteItemNotStarting(Item **list, const char *string)    /* delete 1st item starting with string */
+int DeleteItemNotStarting(EvalContext *ctx, Item **list, const char *string)    /* delete 1st item starting with string */
 {
-    return DeleteItemGeneral(list, string, ITEM_MATCH_TYPE_LITERAL_START_NOT);
+    return DeleteItemGeneral(ctx, list, string, ITEM_MATCH_TYPE_LITERAL_START_NOT);
 }
 
 /*********************************************************************/
 
-int DeleteItemLiteral(Item **list, const char *string)  /* delete 1st item which is string */
+int DeleteItemLiteral(EvalContext *ctx, Item **list, const char *string)  /* delete 1st item which is string */
 {
-    return DeleteItemGeneral(list, string, ITEM_MATCH_TYPE_LITERAL_COMPLETE);
+    return DeleteItemGeneral(ctx, list, string, ITEM_MATCH_TYPE_LITERAL_COMPLETE);
 }
 
 /*********************************************************************/
 
-int DeleteItemMatching(Item **list, const char *string)       /* delete 1st item fully matching regex */
+int DeleteItemMatching(EvalContext *ctx, Item **list, const char *string)       /* delete 1st item fully matching regex */
 {
-    return DeleteItemGeneral(list, string, ITEM_MATCH_TYPE_REGEX_COMPLETE);
+    return DeleteItemGeneral(ctx, list, string, ITEM_MATCH_TYPE_REGEX_COMPLETE);
 }
 
 /*********************************************************************/
 
-int DeleteItemNotMatching(Item **list, const char *string)    /* delete 1st item fully matching regex */
+int DeleteItemNotMatching(EvalContext *ctx, Item **list, const char *string)    /* delete 1st item fully matching regex */
 {
-    return DeleteItemGeneral(list, string, ITEM_MATCH_TYPE_REGEX_COMPLETE_NOT);
+    return DeleteItemGeneral(ctx, list, string, ITEM_MATCH_TYPE_REGEX_COMPLETE_NOT);
 }
 
 /*********************************************************************/
 
-int DeleteItemContaining(Item **list, const char *string)     /* delete first item containing string */
+int DeleteItemContaining(EvalContext *ctx, Item **list, const char *string)     /* delete first item containing string */
 {
-    return DeleteItemGeneral(list, string, ITEM_MATCH_TYPE_LITERAL_SOMEWHERE);
+    return DeleteItemGeneral(ctx, list, string, ITEM_MATCH_TYPE_LITERAL_SOMEWHERE);
 }
 
 /*********************************************************************/
 
-int DeleteItemNotContaining(Item **list, const char *string)  /* delete first item containing string */
+int DeleteItemNotContaining(EvalContext *ctx, Item **list, const char *string)  /* delete first item containing string */
 {
-    return DeleteItemGeneral(list, string, ITEM_MATCH_TYPE_LITERAL_SOMEWHERE_NOT);
+    return DeleteItemGeneral(ctx, list, string, ITEM_MATCH_TYPE_LITERAL_SOMEWHERE_NOT);
 }
 
 /*********************************************************************/

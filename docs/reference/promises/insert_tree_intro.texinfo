@@ -1,8 +1,0 @@
-
-This promise is part of the XML-editing model. It assures that a
-balanced XML tree, containing the matching subtree, will be present
-in the specified node within the XML file. If the subtree is not
-found, the default promise is to insert the tree into the specified
-node. The specified node is determined by body-attributes. The
-promise object referred to is a literal string representation of a
-balanced XML tree.

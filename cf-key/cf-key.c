@@ -22,22 +22,22 @@
   included file COSL.txt.
 */
 
-#include "generic_agent.h"
+#include <generic_agent.h>
 
-#include "dbm_api.h"
-#include "lastseen.h"
-#include "dir.h"
-#include "scope.h"
-#include "files_copy.h"
-#include "files_interfaces.h"
-#include "files_hashes.h"
-#include "keyring.h"
-#include "env_context.h"
-#include "crypto.h"
-#include "sysinfo.h"
-#include "man.h"
+#include <dbm_api.h>
+#include <lastseen.h>
+#include <dir.h>
+#include <scope.h>
+#include <files_copy.h>
+#include <files_interfaces.h>
+#include <files_hashes.h>
+#include <keyring.h>
+#include <env_context.h>
+#include <crypto.h>
+#include <sysinfo.h>
+#include <man.h>
 
-#include "cf-key-functions.h"
+#include <cf-key-functions.h>
 
 int SHOWHOSTS = false;
 bool REMOVEKEYS = false;
@@ -58,7 +58,7 @@ static const char *CF_KEY_SHORT_DESCRIPTION = "make private/public key-pairs for
 
 static const char *CF_KEY_MANPAGE_LONG_DESCRIPTION = "The CFEngine key generator makes key pairs for remote authentication.\n";
 
-static const struct option OPTIONS[17] =
+static const struct option OPTIONS[] =
 {
     {"help", no_argument, 0, 'h'},
     {"debug", no_argument, 0, 'd'},
@@ -70,10 +70,11 @@ static const struct option OPTIONS[17] =
     {"install-license", required_argument, 0, 'l'},
     {"print-digest", required_argument, 0, 'p'},
     {"trust-key", required_argument, 0, 't'},
+    {"color", optional_argument, 0, 'C'},
     {NULL, 0, 0, '\0'}
 };
 
-static const char *HINTS[17] =
+static const char *HINTS[] =
 {
     "Print the help message",
     "Enable debugging output",
@@ -85,6 +86,7 @@ static const char *HINTS[17] =
     "Install license without boostrapping (CFEngine Enterprise only)",
     "Print digest of the specified public key",
     "Make cf-serverd/cf-agent trust the specified public key",
+    "Enable colorized output. Possible values: 'always', 'auto', 'never'. If option is used, the default value is 'auto'",
     NULL
 };
 
@@ -112,7 +114,7 @@ int main(int argc, char *argv[])
 
     if (REMOVEKEYS)
     {
-        return RemoveKeys(remove_keys_host);
+        return RemoveKeys(remove_keys_host, true);
     }
 
     if(LICENSE_INSTALL)
@@ -160,7 +162,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
     int c;
     GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_KEYGEN);
 
-    while ((c = getopt_long(argc, argv, "dvf:VMp:sr:t:hl:", OPTIONS, &optindex)) != EOF)
+    while ((c = getopt_long(argc, argv, "dvf:VMp:sr:t:hl:C::", OPTIONS, &optindex)) != EOF)
     {
         switch ((char) c)
         {
@@ -169,15 +171,19 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             break;
 
         case 'd':
-            DEBUG = true;
+            LogSetGlobalLevel(LOG_LEVEL_DEBUG);
             break;
 
         case 'V':
-            PrintVersion();
+            {
+                Writer *w = FileWriter(stdout);
+                GenericAgentWriteVersion(w);
+                FileWriterDetach(w);
+            }
             exit(0);
 
         case 'v':
-            VERBOSE = true;
+            LogSetGlobalLevel(LOG_LEVEL_VERBOSE);
             break;
 
         case 'p': /* print digest */
@@ -203,7 +209,11 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             break;
 
         case 'h':
-            PrintHelp("cf-key", OPTIONS, HINTS, false);
+            {
+                Writer *w = FileWriter(stdout);
+                GenericAgentWriteHelp(w, "cf-key", OPTIONS, HINTS, false);
+                FileWriterDetach(w);
+            }
             exit(0);
 
         case 'M':
@@ -218,8 +228,19 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
                 exit(EXIT_SUCCESS);
             }
 
+        case 'C':
+            if (!GenericAgentConfigParseColor(config, optarg))
+            {
+                exit(EXIT_FAILURE);
+            }
+            break;
+
         default:
-            PrintHelp("cf-key", OPTIONS, HINTS, false);
+            {
+                Writer *w = FileWriter(stdout);
+                GenericAgentWriteHelp(w, "cf-key", OPTIONS, HINTS, false);
+                FileWriterDetach(w);
+            }
             exit(1);
 
         }

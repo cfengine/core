@@ -28,19 +28,21 @@
  * type.
  */
 
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
-#include "policy.h"
-#include "matching.h"
-#include "files_names.h"
-#include "files_interfaces.h"
-#include "promises.h"
-#include "dir.h"
-#include "files_properties.h"
-#include "scope.h"
-#include "item_lib.h"
+#include <actuator.h>
+#include <policy.h>
+#include <matching.h>
+#include <files_names.h>
+#include <files_interfaces.h>
+#include <promises.h>
+#include <dir.h>
+#include <files_properties.h>
+#include <scope.h>
+#include <item_lib.h>
 
-void LocateFilePromiserGroup(EvalContext *ctx, char *wildpath, Promise *pp, void (*fnptr) (EvalContext *ctx, char *path, Promise *ptr))
+PromiseResult LocateFilePromiserGroup(EvalContext *ctx, char *wildpath, Promise *pp,
+                                      PromiseResult (*fnptr) (EvalContext *ctx, char *path, Promise *ptr))
 {
     Item *path, *ip, *remainder = NULL;
     char pbuffer[CF_BUFSIZE];
@@ -50,24 +52,22 @@ void LocateFilePromiserGroup(EvalContext *ctx, char *wildpath, Promise *pp, void
     int create = PromiseGetConstraintAsBoolean(ctx, "create", pp);
     char *pathtype = ConstraintGetRvalValue(ctx, "pathtype", pp, RVAL_TYPE_SCALAR);
 
-    Log(LOG_LEVEL_DEBUG, "LocateFilePromiserGroup(%s)\n", wildpath);
-
 /* Do a search for promiser objects matching wildpath */
 
     if ((!IsPathRegex(wildpath)) || (pathtype && (strcmp(pathtype, "literal") == 0)))
     {
-        Log(LOG_LEVEL_VERBOSE, "Using literal pathtype for %s", wildpath);
-        (*fnptr) (ctx, wildpath, pp);
-        return;
+        Log(LOG_LEVEL_VERBOSE, "Using literal pathtype for '%s'", wildpath);
+        return (*fnptr) (ctx, wildpath, pp);
     }
     else
     {
-        Log(LOG_LEVEL_VERBOSE, "Using regex pathtype for %s (see pathtype)", wildpath);
+        Log(LOG_LEVEL_VERBOSE, "Using regex pathtype for '%s' (see pathtype)", wildpath);
     }
 
     pbuffer[0] = '\0';
     path = SplitString(wildpath, '/');  // require forward slash in regex on all platforms
 
+    PromiseResult result = PROMISE_RESULT_NOOP;
     for (ip = path; ip != NULL; ip = ip->next)
     {
         if ((ip->name == NULL) || (strlen(ip->name) == 0))
@@ -96,7 +96,7 @@ void LocateFilePromiserGroup(EvalContext *ctx, char *wildpath, Promise *pp, void
         if (!JoinPath(pbuffer, ip->name))
         {
             Log(LOG_LEVEL_ERR, "Buffer has limited size in LocateFilePromiserGroup");
-            return;
+            return result;
         }
 
         if (stat(pbuffer, &statbuf) != -1)
@@ -104,7 +104,7 @@ void LocateFilePromiserGroup(EvalContext *ctx, char *wildpath, Promise *pp, void
             if ((S_ISDIR(statbuf.st_mode)) && ((statbuf.st_uid) != agentuid) && ((statbuf.st_uid) != 0))
             {
                 Log(LOG_LEVEL_INFO,
-                      "Directory %s in search path %s is controlled by another user (uid %ju) - trusting its content is potentially risky (possible race)\n",
+                    "Directory '%s' in search path '%s' is controlled by another user (uid %ju) - trusting its content is potentially risky (possible race condition)",
                       pbuffer, wildpath, (uintmax_t)statbuf.st_uid);
                 PromiseRef(LOG_LEVEL_INFO, pp);
             }
@@ -124,10 +124,10 @@ void LocateFilePromiserGroup(EvalContext *ctx, char *wildpath, Promise *pp, void
         if ((dirh = DirOpen(pbuffer)) == NULL)
         {
             // Could be a dummy directory to be created so this is not an error.
-            Log(LOG_LEVEL_VERBOSE, "Using best-effort expanded (but non-existent) file base path %s", wildpath);
-            (*fnptr) (ctx, wildpath, pp);
+            Log(LOG_LEVEL_VERBOSE, "Using best-effort expanded (but non-existent) file base path '%s'", wildpath);
+            result = PromiseResultUpdate(result, (*fnptr) (ctx, wildpath, pp));
             DeleteItemList(path);
-            return;
+            return result;
         }
         else
         {
@@ -142,13 +142,13 @@ void LocateFilePromiserGroup(EvalContext *ctx, char *wildpath, Promise *pp, void
 
                 if ((!lastnode) && (!S_ISDIR(statbuf.st_mode)))
                 {
-                    Log(LOG_LEVEL_DEBUG, "Skipping non-directory %s\n", dirp->d_name);
+                    Log(LOG_LEVEL_DEBUG, "Skipping non-directory '%s'", dirp->d_name);
                     continue;
                 }
 
-                if (FullTextMatch(regex, dirp->d_name))
+                if (FullTextMatch(ctx, regex, dirp->d_name))
                 {
-                    Log(LOG_LEVEL_DEBUG, "Link %s matched regex %s\n", dirp->d_name, regex);
+                    Log(LOG_LEVEL_DEBUG, "Link '%s' matched regex '%s'", dirp->d_name, regex);
                 }
                 else
                 {
@@ -171,28 +171,28 @@ void LocateFilePromiserGroup(EvalContext *ctx, char *wildpath, Promise *pp, void
 
                 if ((!lastnode) && (strcmp(nextbuffer, wildpath) != 0))
                 {
-                    LocateFilePromiserGroup(ctx, nextbuffer, pp, fnptr);
+                    result = PromiseResultUpdate(result, LocateFilePromiserGroup(ctx, nextbuffer, pp, fnptr));
                 }
                 else
                 {
                     Promise *pcopy;
 
-                    Log(LOG_LEVEL_VERBOSE, "Using expanded file base path %s", nextbuffer);
+                    Log(LOG_LEVEL_VERBOSE, "Using expanded file base path '%s'", nextbuffer);
 
                     /* Now need to recompute any back references to get the complete path */
 
                     snprintf(nextbufferOrig, sizeof(nextbufferOrig), "%s", nextbuffer);
                     MapNameForward(nextbuffer);
 
-                    if (!FullTextMatch(pp->promiser, nextbuffer))
+                    if (!FullTextMatch(ctx, pp->promiser, nextbuffer))
                     {
-                        Log(LOG_LEVEL_DEBUG, "Error recomputing references for \"%s\" in: %s", pp->promiser, nextbuffer);
+                        Log(LOG_LEVEL_DEBUG, "Error recomputing references for '%s' in '%s'", pp->promiser, nextbuffer);
                     }
 
                     /* If there were back references there could still be match.x vars to expand */
 
-                    pcopy = ExpandDeRefPromise(ctx, ScopeGetCurrent()->scope, pp);
-                    (*fnptr) (ctx, nextbufferOrig, pcopy);
+                    pcopy = ExpandDeRefPromise(ctx, pp);
+                    result = PromiseResultUpdate(result, (*fnptr) (ctx, nextbufferOrig, pcopy));
                     PromiseDestroy(pcopy);
                 }
             }
@@ -202,19 +202,21 @@ void LocateFilePromiserGroup(EvalContext *ctx, char *wildpath, Promise *pp, void
     }
     else
     {
-        Log(LOG_LEVEL_VERBOSE, "Using file base path %s", pbuffer);
-        (*fnptr) (ctx, pbuffer, pp);
+        Log(LOG_LEVEL_VERBOSE, "Using file base path '%s'", pbuffer);
+        result = PromiseResultUpdate(result, (*fnptr) (ctx, pbuffer, pp));
     }
 
     if (count == 0)
     {
-        Log(LOG_LEVEL_VERBOSE, "No promiser file objects matched as regular expression %s", wildpath);
+        Log(LOG_LEVEL_VERBOSE, "No promiser file objects matched as regular expression '%s'", wildpath);
 
         if (create)
         {
-            (*fnptr)(ctx, pp->promiser, pp);
+            result = PromiseResultUpdate(result, (*fnptr)(ctx, pp->promiser, pp));
         }
     }
 
     DeleteItemList(path);
+
+    return result;
 }

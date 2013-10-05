@@ -1,26 +1,29 @@
 
 body common control
 {
-bundlesequence => { "test" };
+      bundlesequence => { "edit_motd" };
 }
 
-bundle agent test
+bundle agent edit_motd
 {
-files:
-  "/tmp/motd"
-    edit_line     => my_motd,
-    edit_defaults => empty,
-    create        => "true";
+  files:
+      "/etc/motd"
+      edit_line     => my_motd,
+      edit_defaults => empty,
+      create        => "true";
 }
+
+#@ The bundle `my_motd` and body `empty` detail what content we want
+#@ in the file using CFEngine's built-in line-editor.
 
 bundle edit_line my_motd
 {
-vars:
-  "interfaces_str"  string => join(", ","sys.interfaces");
-  "ipaddresses_str" string => join(", ","sys.ip_addresses");
+  vars:
+      "interfaces_str"  string => join(", ","sys.interfaces");
+      "ipaddresses_str" string => join(", ","sys.ip_addresses");
 
-insert_lines:
-"Welcome to $(sys.fqhost)!
+  insert_lines:
+      "Welcome to $(sys.fqhost)!
 This system is managed by CFEngine.
 The policy was last updated on $(sys.last_policy_update).
 The system has $(sys.cpus) cpus.
@@ -28,9 +31,12 @@ Network interfaces on this system are $(interfaces_str),
 and the ip-addresses assigned are $(ipaddresses_str).";
 }
 
-
+#@ The `my_motd` bundle describes the content we want.
 
 body edit_defaults empty
 {
-empty_file_before_editing => "true";
+      empty_file_before_editing => "true";
 }
+
+#@ Baseline memory model of file to zero/empty before 
+#@ populating the model using edit_line my_motd

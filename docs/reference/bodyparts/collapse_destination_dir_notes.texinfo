@@ -1,8 +1,0 @@
-
-Under normal operations, recursive copies cause CFEngine to track subdirectories
-of files. So, for instance, if we copy recurively from @file{src} to @file{dest},
-then @file{src/subdir/file} will map to @file{dest/subdir/file}. 
-
-By setting this option to @samp{true}, the promiser destination
-directory promises to aggregate files searched from all subdirectories
-into itself, i.e. a single destination directory.

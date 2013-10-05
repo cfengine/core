@@ -1,0 +1,24 @@
+body common control
+{
+      bundlesequence => { "cmdtest" };
+}
+
+
+bundle agent cmdtest
+{
+  commands:
+      "/bin/false"
+      classes => example;
+
+  reports:
+    wasrepaired::
+      "The command-promise got repaired!";
+}
+
+
+
+body classes example
+{
+      repaired_returncodes => { "0", "1" };
+      promise_repaired => { "wasrepaired" };
+}

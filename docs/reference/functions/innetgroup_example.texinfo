@@ -1,8 +1,0 @@
-
-@verbatim
-
-classes:
-
- "class" or => { innetgroup("local_hosts"), innetgroup("global_host")  };  
-
-@end verbatim

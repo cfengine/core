@@ -1,9 +1,0 @@
-
-Delete lines from a file if the lines @i{completely} match any of
-the regular expressions listed (that is, the regular expression
-is anchored, @pxref{Anchored vs. unanchored regular expressions}).
-
-Note that the ``match'' determination is made only on promised lines (that is, this
-attribute modifies the selection criteria, it does not make the initial
-selection).
-

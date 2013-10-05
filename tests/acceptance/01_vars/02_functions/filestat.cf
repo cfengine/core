@@ -60,7 +60,7 @@ body delete init_delete
 bundle agent test
 {
   vars:
-      "fields" slist => splitstring("size,gid,uid,ino,nlink,ctime,atime,mtime,mode,modeoct,permstr,permoct,type,devno,dev_minor,dev_major,basename,dirname", ",", 999);
+      "fields" slist => splitstring("size,gid,uid,ino,nlink,ctime,atime,mtime,mode,modeoct,permstr,permoct,type,devno,dev_minor,dev_major,basename,dirname,linktarget,linktarget_shallow", ",", 999);
 
       "stat[$(fields)]" string => filestat($(G.testfile), $(fields));
 }
@@ -80,12 +80,14 @@ bundle agent check
       "expected[nlink]" string => "1";
       "expected[dirname]" string => dirname($(G.testfile));
       "expected[basename]" string => lastnode($(G.testfile), "/");
+      "expected[linktarget]" string => $(G.testfile);
+      "expected[linktarget_shallow]" string => $(G.testfile);
 
       "expects" slist => getindices("expected");
 
       "fields" slist => getindices("test.stat");
 
-      "joint_condition" string => join("|", "expects");
+      "joint_condition" string => join(".", "expects");
   classes:
       "$(expects)" expression => strcmp("$(test.stat[$(expects)])", "$(expected[$(expects)])");
       "ok" expression => "$(joint_condition)";

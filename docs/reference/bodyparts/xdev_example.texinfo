@@ -1,9 +1,0 @@
-
-@verbatim
-
-body depth_search example
-{
-xdev => "true";
-}
-
-@end verbatim

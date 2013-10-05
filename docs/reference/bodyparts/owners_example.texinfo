@@ -1,9 +1,0 @@
-
-@verbatim
-
-body perms example
-{
-owners => { "mark", "wwwrun", "jeang" };
-}
-
-@end verbatim

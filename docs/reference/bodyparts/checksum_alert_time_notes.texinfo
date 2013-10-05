@@ -1,3 +1,0 @@
-
-When checksum changes trigger an alert, this is registered as a persistent class.
-This value determines the longevity of that class.

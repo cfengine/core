@@ -25,11 +25,15 @@
 #ifndef CFENGINE_LOGGING_H
 #define CFENGINE_LOGGING_H
 
-#include "platform.h"
-#include "compiler.h"
+#include <platform.h>
+#include <compiler.h>
+
+// Does not include timezone, since it is hard to match on Windows.
+#define LOGGING_TIMESTAMP_REGEX "^20[0-9][0-9]-[01][0-9]-[0-3][0-9]T[0-2][0-9]:[0-5][0-9]:[0-5][0-9]"
 
 typedef enum
 {
+    LOG_LEVEL_NOTHING = -1,
     LOG_LEVEL_CRIT,
     LOG_LEVEL_ERR,
     LOG_LEVEL_WARNING,
@@ -39,8 +43,16 @@ typedef enum
     LOG_LEVEL_DEBUG
 } LogLevel;
 
+const char *LogLevelToString(LogLevel level);
+
 void Log(LogLevel level, const char *fmt, ...) FUNC_ATTR_PRINTF(2, 3);
+void LogRaw(LogLevel level, const char *prefix, void *buf, size_t buflen);
 void VLog(LogLevel level, const char *fmt, va_list ap);
+
+void LogSetGlobalLevel(LogLevel level);
+LogLevel LogGetGlobalLevel(void);
+
+void LoggingSetColor(bool enabled);
 
 /*
  * Portable strerror(errno)

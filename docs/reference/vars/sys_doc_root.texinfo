@@ -1,5 +1,0 @@
-
-@i{History}: Was introduced in 3.1.0, Nova 2.0.
-
-A scalar variable containing the default path for the document root of the standard
-web server package.

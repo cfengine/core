@@ -1,0 +1,38 @@
+
+body file control
+{
+      namespace => "name2"; 
+}
+
+
+bundle agent mymethod(one,two)
+{
+  files:
+
+      "/tmp/$(one)$(two)"
+
+      create => "true",
+      edit_line => makefile,
+      perms => name1:settings;
+
+  reports:
+      "test $(one) $(two) in $(this.namespace)_$(this.bundle)";
+
+}
+
+bundle edit_line makefile
+{
+  insert_lines:
+
+      "THIS IS NAME2";
+
+  reports:
+
+      "makefile in name 2";
+}
+
+
+body perms settings
+{
+      mode => "666";
+}

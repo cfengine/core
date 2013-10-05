@@ -25,9 +25,9 @@
 #ifndef CFENGINE_FILES_SELECT_H
 #define CFENGINE_FILES_SELECT_H
 
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
-int SelectLeaf(char *path, struct stat *sb, FileSelect fs);
+int SelectLeaf(EvalContext *ctx, char *path, struct stat *sb, FileSelect fs);
 
 /* For implementation in Nova */
 int GetOwnerName(char *path, struct stat *lstatptr, char *owner, int ownerSz);

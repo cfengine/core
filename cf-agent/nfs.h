@@ -25,14 +25,14 @@
 #ifndef CFENGINE_NFS_H
 #define CFENGINE_NFS_H
 
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
-bool LoadMountInfo(Rlist **list);
-void DeleteMountInfo(Rlist *list);
-int VerifyNotInFstab(EvalContext *ctx, char *name, Attributes a, Promise *pp);
-int VerifyInFstab(EvalContext *ctx, char *name, Attributes a, Promise *pp);
-int VerifyMount(EvalContext *ctx, char *name, Attributes a, Promise *pp);
-int VerifyUnmount(EvalContext *ctx, char *name, Attributes a, Promise *pp);
+bool LoadMountInfo(Seq *list);
+void DeleteMountInfo(Seq *list);
+int VerifyNotInFstab(EvalContext *ctx, char *name, Attributes a, Promise *pp, PromiseResult *result);
+int VerifyInFstab(EvalContext *ctx, char *name, Attributes a, Promise *pp, PromiseResult *result);
+PromiseResult VerifyMount(EvalContext *ctx, char *name, Attributes a, Promise *pp);
+PromiseResult VerifyUnmount(EvalContext *ctx, char *name, Attributes a, Promise *pp);
 void CleanupNFS(void);
 void MountAll(void);
 

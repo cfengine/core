@@ -1,0 +1,34 @@
+#
+# With Nova, log directly to a central server -- careful of scalability (UDP)
+#
+
+body common control
+{
+      bundlesequence => { "example" };
+      syslog_host => "loghost.example.org";
+}
+
+#
+
+bundle agent example
+{
+  vars:
+
+      "software" slist => { "/root/xyz", "/tmp/xyz" };
+
+  files:
+
+      "$(software)"
+
+      create => "true",
+      action => logme("$(software)");
+
+}
+
+#
+
+body action logme(x)
+{
+      log_repaired => "udp_syslog";
+      log_string => "cfengine repaired promise $(this.handle) - $(x)";
+}

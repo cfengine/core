@@ -22,32 +22,31 @@
   included file COSL.txt.
 */
 
-#include "syntax.h"
+#include <syntax.h>
 
-#include "json.h"
-#include "files_names.h"
-#include "mod_files.h"
-#include "item_lib.h"
-#include "conversion.h"
-#include "expand.h"
-#include "matching.h"
-#include "scope.h"
-#include "fncall.h"
-#include "string_lib.h"
-#include "misc_lib.h"
-#include "rlist.h"
-#include "vars.h"
-#include "env_context.h"
+#include <json.h>
+#include <files_names.h>
+#include <mod_files.h>
+#include <item_lib.h>
+#include <conversion.h>
+#include <expand.h>
+#include <matching.h>
+#include <scope.h>
+#include <fncall.h>
+#include <string_lib.h>
+#include <misc_lib.h>
+#include <rlist.h>
+#include <vars.h>
+#include <env_context.h>
 
-#include <assert.h>
 
 static SyntaxTypeMatch CheckParseString(const char *lv, const char *s, const char *range);
 static SyntaxTypeMatch CheckParseInt(const char *lv, const char *s, const char *range);
 static SyntaxTypeMatch CheckParseReal(const char *lv, const char *s, const char *range);
 static SyntaxTypeMatch CheckParseRealRange(const char *lval, const char *s, const char *range);
 static SyntaxTypeMatch CheckParseIntRange(const char *lval, const char *s, const char *range);
-static SyntaxTypeMatch CheckParseOpts(const char *lv, const char *s, const char *range);
-static SyntaxTypeMatch CheckFnCallType(const char *lval, const char *s, DataType dtype, const char *range);
+static SyntaxTypeMatch CheckParseOpts(const char *s, const char *range);
+static SyntaxTypeMatch CheckFnCallType(const char *s, DataType dtype);
 
 /*********************************************************/
 
@@ -324,7 +323,7 @@ SyntaxTypeMatch CheckConstraintTypeMatch(const char *lval, Rval rval, DataType d
 
         for (rp = (Rlist *) rval.item; rp != NULL; rp = rp->next)
         {
-            SyntaxTypeMatch err = CheckConstraintTypeMatch(lval, (Rval) {rp->item, rp->type}, dt, range, 1);
+            SyntaxTypeMatch err = CheckConstraintTypeMatch(lval, rp->val, dt, range, 1);
             switch (err)
             {
             case SYNTAX_TYPE_MATCH_OK:
@@ -346,7 +345,7 @@ SyntaxTypeMatch CheckConstraintTypeMatch(const char *lval, Rval rval, DataType d
 
         if (!IsItemIn(checklist, lval))
         {
-            SyntaxTypeMatch err = CheckFnCallType(lval, ((FnCall *) rval.item)->name, dt, range);
+            SyntaxTypeMatch err = CheckFnCallType(RvalFnCallValue(rval)->name, dt);
             DeleteItemList(checklist);
             return err;
         }
@@ -354,7 +353,8 @@ SyntaxTypeMatch CheckConstraintTypeMatch(const char *lval, Rval rval, DataType d
         DeleteItemList(checklist);
         return SYNTAX_TYPE_MATCH_OK;
 
-    default:
+    case RVAL_TYPE_CONTAINER:
+    case RVAL_TYPE_NOPROMISEE:
         break;
     }
 
@@ -376,12 +376,12 @@ SyntaxTypeMatch CheckConstraintTypeMatch(const char *lval, Rval rval, DataType d
 
     case DATA_TYPE_BODY:
     case DATA_TYPE_BUNDLE:
-        Log(LOG_LEVEL_DEBUG, "Nothing to check for body reference\n");
+    case DATA_TYPE_CONTAINER:
         break;
 
     case DATA_TYPE_OPTION:
     case DATA_TYPE_OPTION_LIST:
-        return CheckParseOpts(lval, (const char *) rval.item, range);
+        return CheckParseOpts(RvalScalarValue(rval), range);
 
     case DATA_TYPE_CONTEXT:
     case DATA_TYPE_CONTEXT_LIST:
@@ -398,20 +398,17 @@ SyntaxTypeMatch CheckConstraintTypeMatch(const char *lval, Rval rval, DataType d
         break;
     }
 
-    Log(LOG_LEVEL_DEBUG, "end CheckConstraintTypeMatch---------\n");
     return SYNTAX_TYPE_MATCH_OK;
 }
 
 /****************************************************************************/
 
-DataType StringDataType(EvalContext *ctx, const char *scopeid, const char *string)
+DataType StringDataType(EvalContext *ctx, const char *string)
 {
     DataType dtype;
     Rval rval;
     int islist = false;
     char var[CF_BUFSIZE];
-
-    Log(LOG_LEVEL_DEBUG, "StringDataType(%s)\n", string);
 
 /*-------------------------------------------------------
 What happens if we embed vars in a literal string
@@ -431,19 +428,26 @@ vars:
     {
         if (ExtractInnerCf3VarString(string, var))
         {
-            if (EvalContextVariableGet(ctx, (VarRef) { NULL, scopeid, var }, &rval, &dtype))
+            if (!IsExpandable(var))
             {
-                if (rval.type == RVAL_TYPE_LIST)
+                VarRef *ref = VarRefParse(var);
+
+                if (EvalContextVariableGet(ctx, ref, &rval, &dtype))
                 {
-                    if (!islist)
+                    if (rval.type == RVAL_TYPE_LIST)
                     {
-                        islist = true;
-                    }
-                    else
-                    {
-                        islist = false;
+                        if (!islist)
+                        {
+                            islist = true;
+                        }
+                        else
+                        {
+                            islist = false;
+                        }
                     }
                 }
+
+                VarRefDestroy(ref);
             }
 
             if (strlen(var) == strlen(string))
@@ -468,8 +472,6 @@ vars:
 
 static SyntaxTypeMatch CheckParseString(const char *lval, const char *s, const char *range)
 {
-    Log(LOG_LEVEL_DEBUG, "\nCheckParseString(%s => %s/%s)\n", lval, s, range);
-
     if (s == NULL)
     {
         return SYNTAX_TYPE_MATCH_OK;
@@ -497,7 +499,7 @@ static SyntaxTypeMatch CheckParseString(const char *lval, const char *s, const c
         }
     }
 
-    if (FullTextMatch(range, s))
+    if (StringMatchFull(range, s))
     {
         return SYNTAX_TYPE_MATCH_OK;
     }
@@ -523,7 +525,7 @@ SyntaxTypeMatch CheckParseContext(const char *context, const char *range)
         return SYNTAX_TYPE_MATCH_OK;
     }
 
-    if (FullTextMatch(range, context))
+    if (StringMatchFull(range, context))
     {
         return SYNTAX_TYPE_MATCH_OK;
     }
@@ -539,9 +541,7 @@ static SyntaxTypeMatch CheckParseInt(const char *lval, const char *s, const char
     int n;
     long max = CF_LOWINIT, min = CF_HIGHINIT, val;
 
-/* Numeric types are registered by range separated by comma str "min,max" */
-    Log(LOG_LEVEL_DEBUG, "\nCheckParseInt(%s => %s/%s)\n", lval, s, range);
-
+    // Numeric types are registered by range separated by comma str "min,max"
     split = SplitString(range, ',');
 
     if ((n = ListLen(split)) != 2)
@@ -584,8 +584,6 @@ static SyntaxTypeMatch CheckParseInt(const char *lval, const char *s, const char
         return SYNTAX_TYPE_MATCH_ERROR_INT_OUT_OF_RANGE;
     }
 
-    Log(LOG_LEVEL_DEBUG, "CheckParseInt - syntax verified\n\n");
-
     return SYNTAX_TYPE_MATCH_OK;
 }
 
@@ -597,9 +595,7 @@ static SyntaxTypeMatch CheckParseIntRange(const char *lval, const char *s, const
     int n;
     long max = CF_LOWINIT, min = CF_HIGHINIT, val;
 
-/* Numeric types are registered by range separated by comma str "min,max" */
-    Log(LOG_LEVEL_DEBUG, "\nCheckParseIntRange(%s => %s/%s)\n", lval, s, range);
-
+    // Numeric types are registered by range separated by comma str "min,max"
     if (*s == '[' || *s == '(')
     {
         return SYNTAX_TYPE_MATCH_ERROR_RANGE_BRACKETED;
@@ -665,8 +661,6 @@ static SyntaxTypeMatch CheckParseReal(const char *lval, const char *s, const cha
     double max = (double) CF_LOWINIT, min = (double) CF_HIGHINIT, val;
     int n;
 
-    Log(LOG_LEVEL_DEBUG, "\nCheckParseReal(%s => %s/%s)\n", lval, s, range);
-
     if (strcmp(s, "inf") == 0)
     {
         return SYNTAX_TYPE_MATCH_ERROR_REAL_INF;
@@ -715,8 +709,6 @@ static SyntaxTypeMatch CheckParseRealRange(const char *lval, const char *s, cons
     Item *split, *rangep, *ip;
     double max = (double) CF_LOWINIT, min = (double) CF_HIGHINIT, val;
     int n;
-
-    Log(LOG_LEVEL_DEBUG, "\nCheckParseRealRange(%s => %s/%s)\n", lval, s, range);
 
     if (*s == '[' || *s == '(')
     {
@@ -778,13 +770,11 @@ static SyntaxTypeMatch CheckParseRealRange(const char *lval, const char *s, cons
 
 /****************************************************************************/
 
-static SyntaxTypeMatch CheckParseOpts(const char *lval, const char *s, const char *range)
+static SyntaxTypeMatch CheckParseOpts(const char *s, const char *range)
 {
     Item *split;
 
 /* List/menu types are separated by comma str "a,b,c,..." */
-
-    Log(LOG_LEVEL_DEBUG, "\nCheckParseOpts(%s => %s/%s)\n", lval, s, range);
 
     if (IsNakedVar(s, '@') || IsNakedVar(s, '$'))
     {
@@ -808,7 +798,7 @@ static SyntaxTypeMatch CheckParseOpts(const char *lval, const char *s, const cha
 
 int CheckParseVariableName(const char *name)
 {
-    const char *reserved[] = { "promiser", "handle", "promise_filename", "promise_linenumber", "this", NULL };
+    const char *reserved[] = { "promiser", "handle", "promise_filename", "promise_dirname", "promise_linenumber", "this", NULL };
     char scopeid[CF_MAXVARSIZE], vlval[CF_MAXVARSIZE];
     int count = 0, level = 0;
 
@@ -868,20 +858,10 @@ int CheckParseVariableName(const char *name)
 
 /****************************************************************************/
 
-bool IsDataType(const char *s)
-{
-    return strcmp(s, "string") == 0 || strcmp(s, "slist") == 0 ||
-        strcmp(s, "int") == 0 || strcmp(s, "ilist") == 0 || strcmp(s, "real") == 0 || strcmp(s, "rlist") == 0;
-}
-
-/****************************************************************************/
-
-static SyntaxTypeMatch CheckFnCallType(const char *lval, const char *s, DataType dtype, const char *range)
+static SyntaxTypeMatch CheckFnCallType(const char *s, DataType dtype)
 {
     DataType dt;
     const FnCallType *fn;
-
-    Log(LOG_LEVEL_DEBUG, "CheckFnCallType(%s => %s/%s)\n", lval, s, range);
 
     fn = FnCallTypeGet(s);
 
@@ -1185,6 +1165,21 @@ static JsonElement *BodyTypesToJson(void)
     return body_types;
 }
 
+static const char *FnCallCategoryToString(FnCallCategory category)
+{
+    static const char *category_str[] =
+    {
+        [FNCALL_CATEGORY_COMM] = "communication",
+        [FNCALL_CATEGORY_DATA] = "data",
+        [FNCALL_CATEGORY_FILES] = "files",
+        [FNCALL_CATEGORY_IO] = "io",
+        [FNCALL_CATEGORY_SYSTEM] = "system",
+        [FNCALL_CATEGORY_UTILS] = "utils"
+    };
+
+    return category_str[category];
+}
+
 static JsonElement *FnCallTypeToJson(const FnCallType *fn_syntax)
 {
     JsonElement *json_fn = JsonObjectCreate(10);
@@ -1207,6 +1202,7 @@ static JsonElement *FnCallTypeToJson(const FnCallType *fn_syntax)
     }
 
     JsonObjectAppendBool(json_fn, "variadic", fn_syntax->varargs);
+    JsonObjectAppendString(json_fn, "category", FnCallCategoryToString(fn_syntax->category));
 
     return json_fn;
 }

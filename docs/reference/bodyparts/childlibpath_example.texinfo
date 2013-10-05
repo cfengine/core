@@ -1,9 +1,0 @@
-
-@verbatim
-
-body agent control
-{
-childlibpath => "/usr/local/lib:/usr/local/gnu/lib";
-}
-
-@end verbatim

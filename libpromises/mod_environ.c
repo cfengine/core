@@ -22,9 +22,9 @@
   included file COSL.txt.
 */
 
-#include "mod_environ.h"
+#include <mod_environ.h>
 
-#include "syntax.h"
+#include <syntax.h>
 
 static const ConstraintSyntax environment_resources_constraints[] =
 {

@@ -1,6 +1,0 @@
-
-@i{History}: Was introduced in 3.4.0, Enterprise 3.0.0 (2012)
-
-If a parameter or variable is already defined in the current context and
-the value matches this regular expression, it will be deemed invalid and
-replaced with the default value.

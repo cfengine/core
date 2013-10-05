@@ -1,4 +1,0 @@
-
-Looking for files that are not present relative to the change
-management database also provides warnings about file deletions.
-

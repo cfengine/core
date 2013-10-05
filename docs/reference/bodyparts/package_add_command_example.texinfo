@@ -1,9 +1,0 @@
-
-@verbatim
-
-body package_method rpm
-{
-package_add_command => "/bin/rpm -i ";
-}
-
-@end verbatim

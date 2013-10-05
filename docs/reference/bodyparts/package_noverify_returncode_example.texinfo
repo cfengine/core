@@ -1,8 +1,0 @@
-
-@verbatim
-body package_method xyz
-{
-package_noverify_returncode => "-1";
-package_verify_command => "/bin/rpm -V";
-}
-@end verbatim

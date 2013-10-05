@@ -1,8 +1,0 @@
-
-@verbatim
-
-classes:
-
-  "compound_class" and => { classmatch("host[0-9].*"), "Monday", "Hr02" };
-
-@end verbatim

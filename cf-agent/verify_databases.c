@@ -22,23 +22,25 @@
   included file COSL.txt.
 */
 
-#include "verify_databases.h"
+#include <verify_databases.h>
 
-#include "promises.h"
-#include "files_names.h"
-#include "conversion.h"
-#include "attributes.h"
-#include "string_lib.h"
-#include "locks.h"
-#include "cf_sql.h"
-#include "rlist.h"
-#include "policy.h"
-#include "cf-agent-enterprise-stubs.h"
-#include "env_context.h"
-#include "ornaments.h"
+#include <actuator.h>
+#include <promises.h>
+#include <files_names.h>
+#include <conversion.h>
+#include <attributes.h>
+#include <string_lib.h>
+#include <locks.h>
+#include <cf_sql.h>
+#include <rlist.h>
+#include <policy.h>
+#include <cf-agent-enterprise-stubs.h>
+#include <env_context.h>
+#include <ornaments.h>
+#include <misc_lib.h>
 
 static int CheckDatabaseSanity(Attributes a, Promise *pp);
-static void VerifySQLPromise(EvalContext *ctx, Attributes a, Promise *pp);
+static PromiseResult VerifySQLPromise(EvalContext *ctx, Attributes a, Promise *pp);
 static int VerifyDatabasePromise(CfdbConn *cfdb, char *database, Attributes a);
 
 static int ValidateSQLTableName(char *table_path, char *db, char *table);
@@ -59,13 +61,13 @@ static int CheckRegistrySanity(Attributes a, Promise *pp);
 
 /*****************************************************************************/
 
-void VerifyDatabasePromises(EvalContext *ctx, Promise *pp)
+PromiseResult VerifyDatabasePromises(EvalContext *ctx, Promise *pp)
 {
     Attributes a = { {0} };
 
     if (EvalContextPromiseIsDone(ctx, pp))
     {
-        return;
+        return PROMISE_RESULT_NOOP;
     }
 
     PromiseBanner(pp);
@@ -74,21 +76,23 @@ void VerifyDatabasePromises(EvalContext *ctx, Promise *pp)
 
     if (!CheckDatabaseSanity(a, pp))
     {
-        return;
+        return PROMISE_RESULT_FAIL;
     }
 
     if (strcmp(a.database.type, "sql") == 0)
     {
-        VerifySQLPromise(ctx, a, pp);
-        return;
+        return VerifySQLPromise(ctx, a, pp);
     }
-
-    if (strcmp(a.database.type, "ms_registry") == 0)
+    else if (strcmp(a.database.type, "ms_registry") == 0)
     {
 #if defined(__MINGW32__)
-        VerifyRegistryPromise(ctx, a, pp);
+        return VerifyRegistryPromise(ctx, a, pp);
 #endif
-        return;
+        return PROMISE_RESULT_NOOP;
+    }
+    else
+    {
+        ProgrammingError("Unknown database type '%s'", a.database.type);
     }
 }
 
@@ -96,7 +100,7 @@ void VerifyDatabasePromises(EvalContext *ctx, Promise *pp)
 /* Level                                                                     */
 /*****************************************************************************/
 
-static void VerifySQLPromise(EvalContext *ctx, Attributes a, Promise *pp)
+static PromiseResult VerifySQLPromise(EvalContext *ctx, Attributes a, Promise *pp)
 {
     char database[CF_MAXVARSIZE], table[CF_MAXVARSIZE], query[CF_BUFSIZE];
     char *sp;
@@ -111,7 +115,7 @@ static void VerifySQLPromise(EvalContext *ctx, Attributes a, Promise *pp)
 
     if (thislock.lock == NULL)
     {
-        return;
+        return PROMISE_RESULT_NOOP;
     }
 
     database[0] = '\0';
@@ -131,15 +135,17 @@ static void VerifySQLPromise(EvalContext *ctx, Attributes a, Promise *pp)
                      "SQL database promiser syntax should be of the form \"database.table\"");
                 PromiseRef(LOG_LEVEL_ERR, pp);
                 YieldCurrentLock(thislock);
-                return;
+                return PROMISE_RESULT_FAIL;
             }
         }
     }
 
+    PromiseResult result = PROMISE_RESULT_NOOP;
     if (count > 1)
     {
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "SQL database promiser syntax should be of the form \"database.table\"");
         PromiseRef(LOG_LEVEL_ERR, pp);
+        result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
     }
 
     if (strlen(database) == 0)
@@ -153,7 +159,7 @@ static void VerifySQLPromise(EvalContext *ctx, Attributes a, Promise *pp)
              "Missing database_operation in database promise");
         PromiseRef(LOG_LEVEL_ERR, pp);
         YieldCurrentLock(thislock);
-        return;
+        return PROMISE_RESULT_FAIL;
     }
 
     if (strcmp(a.database.operation, "delete") == 0)
@@ -173,11 +179,11 @@ static void VerifySQLPromise(EvalContext *ctx, Attributes a, Promise *pp)
 
         if ((a.database.operation) && (strcmp(a.database.operation, "create") != 0))
         {
-            Log(LOG_LEVEL_ERR, "Could not connect an existing database %s - check server configuration?", database);
+            Log(LOG_LEVEL_ERR, "Could not connect an existing database '%s' - check server configuration?", database);
             PromiseRef(LOG_LEVEL_ERR, pp);
             CfCloseDB(&cfdb);
             YieldCurrentLock(thislock);
-            return;
+            return PROMISE_RESULT_FAIL;
         }
     }
 
@@ -190,8 +196,8 @@ static void VerifySQLPromise(EvalContext *ctx, Attributes a, Promise *pp)
 
         if (!cfdb.connected)
         {
-            Log(LOG_LEVEL_ERR, "Could not connect to the sql_db server for %s", database);
-            return;
+            Log(LOG_LEVEL_ERR, "Could not connect to the sql_db server for '%s'", database);
+            return PROMISE_RESULT_FAIL;
         }
 
         /* Don't drop the db if we really want to drop a table */
@@ -211,7 +217,7 @@ static void VerifySQLPromise(EvalContext *ctx, Attributes a, Promise *pp)
     if (strlen(table) == 0)
     {
         YieldCurrentLock(thislock);
-        return;
+        return result;
     }
 
     CfConnectDB(&cfdb, a.database.db_server_type, a.database.db_server_host, a.database.db_server_owner,
@@ -219,7 +225,7 @@ static void VerifySQLPromise(EvalContext *ctx, Attributes a, Promise *pp)
 
     if (!cfdb.connected)
     {
-        Log(LOG_LEVEL_INFO, "Database %s is not connected", database);
+        Log(LOG_LEVEL_INFO, "Database '%s' is not connected", database);
     }
     else
     {
@@ -227,11 +233,12 @@ static void VerifySQLPromise(EvalContext *ctx, Attributes a, Promise *pp)
 
         if (VerifyTablePromise(ctx, &cfdb, query, a.database.columns, a, pp))
         {
-            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_NOOP, pp, a, "Table \"%s\" is as promised", query);
+            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_NOOP, pp, a, "Table '%s' is as promised", query);
         }
         else
         {
-            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, a, "Table \"%s\" is not as promised", query);
+            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, a, "Table '%s' is not as promised", query);
+            result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
         }
 
 /* Finally check any row constraints on this table */
@@ -246,6 +253,8 @@ static void VerifySQLPromise(EvalContext *ctx, Attributes a, Promise *pp)
     }
 
     YieldCurrentLock(thislock);
+
+    return result;
 }
 
 static int VerifyDatabasePromise(CfdbConn *cfdb, char *database, Attributes a)
@@ -257,7 +266,7 @@ static int VerifyDatabasePromise(CfdbConn *cfdb, char *database, Attributes a)
 
     if (!cfdb->connected)
     {
-        Log(LOG_LEVEL_INFO, "Database %s is not connected", database);
+        Log(LOG_LEVEL_INFO, "Database '%s' is not connected", database);
         return false;
     }
 
@@ -276,7 +285,7 @@ static int VerifyDatabasePromise(CfdbConn *cfdb, char *database, Attributes a)
     {
         strncpy(name, CfFetchColumn(cfdb, 0), CF_MAXVARSIZE - 1);
 
-        Log(LOG_LEVEL_VERBOSE, "      ? ... discovered a database called \"%s\"", name);
+        Log(LOG_LEVEL_VERBOSE, "Discovered a database called '%s'", name);
 
         if (strcmp(name, database) == 0)
         {
@@ -286,26 +295,26 @@ static int VerifyDatabasePromise(CfdbConn *cfdb, char *database, Attributes a)
 
     if (found)
     {
-        Log(LOG_LEVEL_VERBOSE, "Database \"%s\" exists on this connection", database);
+        Log(LOG_LEVEL_VERBOSE, "Database '%s' exists on this connection", database);
         return true;
     }
     else
     {
-        Log(LOG_LEVEL_VERBOSE, "Database \"%s\" does not seem to exist on this connection", database);
+        Log(LOG_LEVEL_VERBOSE, "Database '%s' does not seem to exist on this connection", database);
     }
 
     if ((a.database.operation) && (strcmp(a.database.operation, "drop") == 0))
     {
         if (((a.transaction.action) != cfa_warn) && (!DONTDO))
         {
-            Log(LOG_LEVEL_VERBOSE, "Attempting to delete the database %s", database);
+            Log(LOG_LEVEL_VERBOSE, "Attempting to delete the database '%s'", database);
             snprintf(query, CF_MAXVARSIZE - 1, "drop database %s", database);
             CfVoidQueryDB(cfdb, query);
             return cfdb->result;
         }
         else
         {
-            Log(LOG_LEVEL_ERR, "Need to delete the database %s but only a warning was promised", database);
+            Log(LOG_LEVEL_ERR, "Need to delete the database '%s' but only a warning was promised", database);
             return false;
         }
     }
@@ -314,14 +323,14 @@ static int VerifyDatabasePromise(CfdbConn *cfdb, char *database, Attributes a)
     {
         if (((a.transaction.action) != cfa_warn) && (!DONTDO))
         {
-            Log(LOG_LEVEL_VERBOSE, "Attempting to create the database %s", database);
+            Log(LOG_LEVEL_VERBOSE, "Attempting to create the database '%s'", database);
             snprintf(query, CF_MAXVARSIZE - 1, "create database %s", database);
             CfVoidQueryDB(cfdb, query);
             return cfdb->result;
         }
         else
         {
-            Log(LOG_LEVEL_ERR, "Need to create the database %s but only a warning was promised", database);
+            Log(LOG_LEVEL_ERR, "Need to create the database '%s' but only a warning was promised", database);
             return false;
         }
     }
@@ -378,7 +387,7 @@ static int CheckDatabaseSanity(Attributes a, Promise *pp)
 
         for (rp = a.database.columns; rp != NULL; rp = rp->next)
         {
-            commas = CountChar(rp->item, ',');
+            commas = CountChar(RlistScalarValue(rp), ',');
 
             if ((commas > 2) && (commas < 1))
             {
@@ -446,14 +455,14 @@ static int CheckRegistrySanity(Attributes a, Promise *pp)
     {
         if (CountChar(RlistScalarValue(rp), ',') != 2)
         {
-            Log(LOG_LEVEL_ERR, "Registry row format should be NAME,REG_SZ,VALUE, not \"%s\"", RlistScalarValue(rp));
+            Log(LOG_LEVEL_ERR, "Registry row format should be NAME,REG_SZ,VALUE, not '%s'", RlistScalarValue(rp));
             retval = false;
         }
     }
 
     for (Rlist *rp = a.database.columns; rp != NULL; rp = rp->next)
     {
-        if (CountChar(rp->item, ',') > 0)
+        if (CountChar(RlistScalarValue(rp), ',') > 0)
         {
             Log(LOG_LEVEL_ERR, "MS registry column format should be NAME only in deletion");
             retval = false;
@@ -486,7 +495,7 @@ static int ValidateRegistryPromiser(char *key, Promise *pp)
         }
     }
 
-    Log(LOG_LEVEL_ERR, "Non-editable registry prefix \"%s\"", root_key);
+    Log(LOG_LEVEL_ERR, "Non-editable registry prefix '%s'", root_key);
     PromiseRef(LOG_LEVEL_ERR, pp);
     return false;
 }
@@ -501,36 +510,36 @@ static int VerifyTablePromise(EvalContext *ctx, CfdbConn *cfdb, char *table_path
     int i, count, size, no_of_cols, *size_table, *done, identified, retval = true;
     char **name_table, **type_table;
 
-    Log(LOG_LEVEL_VERBOSE, "Verifying promised table structure for \"%s\"", table_path);
+    Log(LOG_LEVEL_VERBOSE, "Verifying promised table structure for '%s'", table_path);
 
     if (!ValidateSQLTableName(table_path, db, table))
     {
         Log(LOG_LEVEL_ERR,
-              "The structure of the promiser did not match that for an SQL table, i.e. \"database.table\"\n");
+            "The structure of the promiser did not match that for an SQL table, i.e. 'database.table'");
         return false;
     }
     else
     {
-        Log(LOG_LEVEL_VERBOSE, "Assuming database \"%s\" with table \"%s\"", db, table);
+        Log(LOG_LEVEL_VERBOSE, "Assuming database '%s' with table '%s'", db, table);
     }
 
 /* Verify the existence of the tables within the database */
 
     if (!TableExists(cfdb, table))
     {
-        Log(LOG_LEVEL_ERR, "The database did not contain the promised table \"%s\"", table_path);
+        Log(LOG_LEVEL_ERR, "The database did not contain the promised table '%s'", table_path);
 
         if ((a.database.operation) && (strcmp(a.database.operation, "create") == 0))
         {
             if ((!DONTDO) && ((a.transaction.action) != cfa_warn))
             {
-                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_CHANGE, pp, a, "Database.table %s doesn't seem to exist, creating\n",
+                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_CHANGE, pp, a, "Database.table '%s' doesn't seem to exist, creating",
                      table_path);
                 return CreateTableColumns(cfdb, table, columns);
             }
             else
             {
-                Log(LOG_LEVEL_ERR, "Database.table %s doesn't seem to exist, but only a warning was promised",
+                Log(LOG_LEVEL_ERR, "Database.table '%s' doesn't seem to exist, but only a warning was promised",
                       table_path);
             }
         }
@@ -581,7 +590,7 @@ static int VerifyTablePromise(EvalContext *ctx, CfdbConn *cfdb, char *table_path
             size = IntFromString(sizestr);
         }
 
-        Log(LOG_LEVEL_VERBOSE, "    ... discovered column (%s,%s,%d)", name, type, size);
+        Log(LOG_LEVEL_VERBOSE, "Discovered database column (%s,%s,%d)", name, type, size);
 
         if (sizestr && (size == CF_NOINT))
         {
@@ -608,12 +617,12 @@ static int VerifyTablePromise(EvalContext *ctx, CfdbConn *cfdb, char *table_path
                 if (size != size_table[i])
                 {
                     cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a,
-                         "Promised column \"%s\" in database.table \"%s\" has a non-matching array size (%d != %d)",
+                         "Promised column '%s' in database.table '%s' has a non-matching array size (%d != %d)",
                          name, table_path, size, size_table[i]);
                 }
                 else
                 {
-                    Log(LOG_LEVEL_VERBOSE, "Promised column \"%s\" in database.table \"%s\" is as promised", name,
+                    Log(LOG_LEVEL_VERBOSE, "Promised column '%s' in database.table '%s' is as promised", name,
                           table_path);
                 }
 
@@ -627,7 +636,7 @@ static int VerifyTablePromise(EvalContext *ctx, CfdbConn *cfdb, char *table_path
         if (!identified)
         {
             cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a,
-                 "Column \"%s\" found in database.table \"%s\" is not part of its promise.", name, table_path);
+                 "Column '%s' found in database.table '%s' is not part of its promise.", name, table_path);
 
             if ((a.database.operation) && (strcmp(a.database.operation, "drop") == 0))
             {
@@ -655,7 +664,7 @@ static int VerifyTablePromise(EvalContext *ctx, CfdbConn *cfdb, char *table_path
         {
             if (!done[i])
             {
-                Log(LOG_LEVEL_ERR, "Promised column \"%s\" missing from database table %s", name_table[i],
+                Log(LOG_LEVEL_ERR, "Promised column '%s' missing from database table '%s'", name_table[i],
                       pp->promiser);
 
                 if ((!DONTDO) && ((a.transaction.action) != cfa_warn))
@@ -672,14 +681,14 @@ static int VerifyTablePromise(EvalContext *ctx, CfdbConn *cfdb, char *table_path
                     }
 
                     CfVoidQueryDB(cfdb, query);
-                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_CHANGE, pp, a, "Adding promised column \"%s\" to database table %s",
+                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_CHANGE, pp, a, "Adding promised column '%s' to database table '%s'",
                          name_table[i], table);
                     retval = true;
                 }
                 else
                 {
                     cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, a,
-                         "Promised column \"%s\" missing from database table %s but only a warning was promised",
+                         "Promised column '%s' missing from database table '%s' but only a warning was promised",
                          name_table[i], table);
                     retval = false;
                 }
@@ -703,7 +712,7 @@ static int TableExists(CfdbConn *cfdb, char *name)
 
     for (rp = list; rp != NULL; rp = rp->next)
     {
-        if (strcmp(name, rp->item) == 0)
+        if (strcmp(name, RlistScalarValue(rp)) == 0)
         {
             match = true;
         }
@@ -723,7 +732,7 @@ static int CreateTableColumns(CfdbConn *cfdb, char *table, Rlist *columns)
     char **name_table, **type_table;
     int no_of_cols = RlistLen(columns);
 
-    Log(LOG_LEVEL_ERR, "Trying to create table %s", table);
+    Log(LOG_LEVEL_ERR, "Trying to create table '%s'", table);
 
     if (!NewSQLColumns(table, columns, &name_table, &type_table, &size_table, &done))
     {
@@ -786,7 +795,7 @@ static Rlist *GetSQLTables(CfdbConn *cfdb)
 
     while (CfFetchRow(cfdb))
     {
-        RlistPrependScalar(&list, CfFetchColumn(cfdb, 0));
+        RlistPrepend(&list, CfFetchColumn(cfdb, 0), RVAL_TYPE_SCALAR);
     }
 
     CfDeleteQuery(cfdb);
@@ -882,17 +891,17 @@ static int NewSQLColumns(char *table, Rlist *columns, char ***name_table, char *
     {
         (*done)[i] = 0;
 
-        cols = RlistFromSplitString((char *) rp->item, ',');
+        cols = RlistFromSplitString(RlistScalarValue(rp), ',');
 
         if (!cols)
         {
-            Log(LOG_LEVEL_ERR, "No columns promised for table \"%s\" - makes no sense", table);
+            Log(LOG_LEVEL_ERR, "No columns promised for table '%s' - makes no sense", table);
             return false;
         }
 
-        if (cols->item == NULL)
+        if (cols->val.item == NULL)
         {
-            Log(LOG_LEVEL_ERR, "Malformed column promise for table \"%s\" - found not even a name", table);
+            Log(LOG_LEVEL_ERR, "Malformed column promise for table '%s' - found not even a name", table);
             free(*name_table);
             free(*type_table);
             free(*size_table);
@@ -900,11 +909,11 @@ static int NewSQLColumns(char *table, Rlist *columns, char ***name_table, char *
             return false;
         }
 
-        (*name_table)[i] = xstrdup((char *) cols->item);
+        (*name_table)[i] = xstrdup(RlistScalarValue(cols));
 
         if (cols->next == NULL)
         {
-            Log(LOG_LEVEL_ERR, "Malformed column \"%s\" promised for table \"%s\" - missing a type", (*name_table)[i],
+            Log(LOG_LEVEL_ERR, "Malformed column '%s' promised for table '%s' - missing a type", (*name_table)[i],
                   table);
             free(*name_table);
             free(*type_table);
@@ -913,7 +922,7 @@ static int NewSQLColumns(char *table, Rlist *columns, char ***name_table, char *
             return false;
         }
 
-        (*type_table)[i] = xstrdup(cols->next->item);
+        (*type_table)[i] = xstrdup(RlistScalarValue(cols->next));
 
         if (cols->next->next == NULL)
         {
@@ -921,9 +930,9 @@ static int NewSQLColumns(char *table, Rlist *columns, char ***name_table, char *
         }
         else
         {
-            if (cols->next->next->item)
+            if (cols->next->next->val.item)
             {
-                (*size_table)[i] = IntFromString(cols->next->next->item);
+                (*size_table)[i] = IntFromString(RlistScalarValue(cols->next->next));
             }
             else
             {
@@ -987,7 +996,7 @@ static int CheckSQLDataType(char *type, char *ref_type, Promise *pp)
         {
             if ((strcmp(type, ref_type) != 0) && (strcmp(aliases[i][0], ref_type) != 0))
             {
-                Log(LOG_LEVEL_VERBOSE, "Promised column in database %s has a non-matching type (%s != %s)",
+                Log(LOG_LEVEL_VERBOSE, "Promised column in database '%s' has a non-matching type (%s != %s)",
                       pp->promiser, ref_type, type);
             }
         }
@@ -995,7 +1004,7 @@ static int CheckSQLDataType(char *type, char *ref_type, Promise *pp)
         {
             if (strcmp(type, ref_type) != 0)
             {
-                Log(LOG_LEVEL_VERBOSE, "Promised column in database %s has a non-matching type (%s != %s)",
+                Log(LOG_LEVEL_VERBOSE, "Promised column in database '%s' has a non-matching type (%s != %s)",
                       pp->promiser, ref_type, type);
             }
         }

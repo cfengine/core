@@ -1,5 +1,0 @@
-
-The time is in seconds. It is not a guaranteed number, since it
-depends on system behaviour. under Linux, the kernel version plays a
-role, since not all system calls seem to respect the signals.
-

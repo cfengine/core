@@ -25,9 +25,9 @@
 #ifndef CFENGINE_VERIFY_VARS_H
 #define CFENGINE_VERIFY_VARS_H
 
-#include "env_context.h"
-#include "policy.h"
+#include <env_context.h>
+#include <policy.h>
 
-void VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates);
+PromiseResult VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates);
 
 #endif

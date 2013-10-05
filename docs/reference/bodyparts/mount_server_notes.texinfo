@@ -1,2 +1,0 @@
-
-Hostname or IP address, this could be on a SAN.

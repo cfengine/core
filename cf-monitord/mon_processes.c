@@ -22,16 +22,14 @@
   included file COSL.txt.
 */
 
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
-#include "mon.h"
-#include "item_lib.h"
-#include "files_interfaces.h"
-#include "pipes.h"
+#include <mon.h>
+#include <item_lib.h>
+#include <files_interfaces.h>
+#include <pipes.h>
 
-#ifdef HAVE_NOVA
-# include "cf.nova.h"
-#endif
+#include <cf-windows-functions.h>
 
 /* Prototypes */
 

@@ -1,9 +1,0 @@
-
-@verbatim
-
-body agent control
-{
-syslog => "true";
-}
-
-@end verbatim

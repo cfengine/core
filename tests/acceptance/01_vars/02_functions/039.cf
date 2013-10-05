@@ -6,66 +6,66 @@
 
 body common control
 {
-  inputs => { "../../default.cf.sub" };
-  bundlesequence  => { default("$(this.promise_filename)") };   
-  version => "1.0";
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };   
+      version => "1.0";
 }
 
 bundle agent init
 {
-files:
-	"$(G.testfile)"
-	    delete => init_delete;
-	
-	"$(G.testfile)"
-	    create => "true",
-	    edit_line => init_fill_in;
+  files:
+      "$(G.testfile)"
+      delete => init_delete;
+      
+      "$(G.testfile)"
+      create => "true",
+      edit_line => init_fill_in;
 }
 
 bundle edit_line init_fill_in
 {
-insert_lines:
-	"123 456";
+  insert_lines:
+      "123 456";
 }
 
 body delete init_delete
 {
-	dirlinks => "delete";
-	rmdirs   => "true";
+      dirlinks => "delete";
+      rmdirs   => "true";
 }
 
 #######################################################
 
 bundle agent test
 {
-vars:
-	"nums" rlist => readreallist("$(G.testfile)","NoComment","\s+",5,100);
-	"sum" real => sum("nums");
+  vars:
+      "nums" rlist => readreallist("$(G.testfile)","NoComment","\s+",5,100);
+      "sum" real => sum("nums");
 }
 
 #######################################################
 
 bundle agent check
 {
-vars:
-	"nums" rlist => { @{test.nums} };
+  vars:
+      "nums" rlist => { @{test.nums} };
 
-classes:
-	"ok_list" not => strcmp("won't match", "$(nums)");
-	"ok123" expression => strcmp("123", "$(nums)");
-	"ok456" expression => strcmp("456", "$(nums)");
-	"ok" and => { "ok_list", "ok123", "ok456",
-			islessthan("$(test.sum)", "579.1"),
-			isgreaterthan("$(test.sum)", "578.9")
-			};
+  classes:
+      "ok_list" not => strcmp("won't match", "$(nums)");
+      "ok123" expression => strcmp("123", "$(nums)");
+      "ok456" expression => strcmp("456", "$(nums)");
+      "ok" and => { "ok_list", "ok123", "ok456",
+		    islessthan("$(test.sum)", "579.1"),
+		    isgreaterthan("$(test.sum)", "578.9")
+      };
 
-reports:
+  reports:
     DEBUG::
-	"nums: $(nums)";
-	"sum: $(test.sum)";
+      "nums: $(nums)";
+      "sum: $(test.sum)";
     ok::
-	"$(this.promise_filename) Pass";
+      "$(this.promise_filename) Pass";
 
     !ok::
-	"$(this.promise_filename) FAIL";
+      "$(this.promise_filename) FAIL";
 }

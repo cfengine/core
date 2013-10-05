@@ -1,6 +1,0 @@
-
-@verbatim
-
- "succeeded" expression => remoteclassesmatching("regex","server","yes","myprefix");
-
-@end verbatim

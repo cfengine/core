@@ -25,11 +25,11 @@
 #ifndef CFENGINE_PROCESSES_SELECT_H
 #define CFENGINE_PROCESSES_SELECT_H
 
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
-int LoadProcessTable(Item **procdata);
+int LoadProcessTable(EvalContext *ctx, Item **procdata);
 
-Item *SelectProcesses(const Item *processes, const char *process_name, ProcessSelect a, bool attrselect);
-bool IsProcessNameRunning(char *procNameRegex);
+Item *SelectProcesses(EvalContext *ctx, const Item *processes, const char *process_name, ProcessSelect a, bool attrselect);
+bool IsProcessNameRunning(EvalContext *ctx, char *procNameRegex);
 
 #endif

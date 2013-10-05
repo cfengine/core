@@ -22,21 +22,22 @@
   included file COSL.txt.
 */
 
-#include "unix.h"
+#include <unix.h>
 
-#include "env_context.h"
-#include "vars.h"
-#include "files_names.h"
-#include "files_interfaces.h"
-#include "item_lib.h"
-#include "conversion.h"
-#include "matching.h"
-#include "communication.h"
-#include "pipes.h"
-#include "exec_tools.h"
-#include "misc_lib.h"
-#include "rlist.h"
-#include "scope.h"
+#include <env_context.h>
+#include <vars.h>
+#include <files_names.h>
+#include <files_interfaces.h>
+#include <item_lib.h>
+#include <conversion.h>
+#include <matching.h>
+#include <communication.h>
+#include <pipes.h>
+#include <exec_tools.h>
+#include <misc_lib.h>
+#include <rlist.h>
+#include <scope.h>
+#include <string_lib.h>
 
 #ifdef HAVE_SYS_UIO_H
 # include <sys/uio.h>
@@ -71,10 +72,9 @@
 #  define SIZEOF_IFREQ(x) sizeof(struct ifreq)
 # endif
 
+
 static bool IsProcessRunning(pid_t pid);
-
 static void FindV6InterfacesInfo(EvalContext *ctx);
-
 static bool IgnoreJailInterface(int ifaceidx, struct sockaddr_in *inaddr);
 static bool IgnoreInterface(char *name);
 static void InitIgnoreInterfaces(void);
@@ -168,14 +168,14 @@ int IsExecutable(const char *file)
 
     if (stat(file, &sb) == -1)
     {
-        Log(LOG_LEVEL_ERR, "Proposed executable file \"%s\" doesn't exist", file);
+        Log(LOG_LEVEL_ERR, "Proposed executable file '%s' doesn't exist", file);
         return false;
     }
 
     if (sb.st_mode & 02)
     {
-        Log(LOG_LEVEL_ERR, "SECURITY ALERT: promised executable \"%s\" is world writable! ", file);
-        Log(LOG_LEVEL_ERR, "SECURITY ALERT: cfengine will not execute this - requires human inspection");
+        Log(LOG_LEVEL_ERR, "SECURITY ALERT: promised executable '%s' is world writable! ", file);
+        Log(LOG_LEVEL_ERR, "SECURITY ALERT: CFEngine will not execute this - requires human inspection");
         return false;
     }
 
@@ -220,10 +220,16 @@ int IsExecutable(const char *file)
     return false;
 }
 
-bool ShellCommandReturnsZero(const char *command, bool useshell)
+bool ShellCommandReturnsZero(const char *command, ShellType shell)
 {
     int status;
     pid_t pid;
+
+    if (shell == SHELL_TYPE_POWERSHELL)
+    {
+        Log(LOG_LEVEL_ERR, "Powershell is only supported on Windows");
+        return false;
+    }
 
     if ((pid = fork()) < 0)
     {
@@ -234,7 +240,7 @@ bool ShellCommandReturnsZero(const char *command, bool useshell)
     {
         ALARM_PID = -1;
 
-        if (useshell)
+        if (shell == SHELL_TYPE_USE)
         {
             if (execl(SHELL_PATH, "sh", "-c", command, NULL) == -1)
             {
@@ -315,19 +321,12 @@ static bool IgnoreJailInterface(
 
 /******************************************************************/
 
-static void GetMacAddress(EvalContext *ctx, AgentType ag, int fd, struct ifreq *ifr, struct ifreq *ifp, Rlist **interfaces,
+static void GetMacAddress(EvalContext *ctx, int fd, struct ifreq *ifr, struct ifreq *ifp, Rlist **interfaces,
                           Rlist **hardware)
 {
     char name[CF_MAXVARSIZE];
 
-    if (ag != AGENT_TYPE_GENDOC)
-    {
-        snprintf(name, sizeof(name), "hardware_mac[%s]", ifp->ifr_name);
-    }
-    else
-    {
-        snprintf(name, sizeof(name), "hardware_mac[interface_name]");
-    }
+    snprintf(name, sizeof(name), "hardware_mac[%s]", CanonifyName(ifp->ifr_name));
 
     // mac address on a loopback interface doesn't make sense
     if (ifr->ifr_flags & IFF_LOOPBACK)
@@ -352,12 +351,12 @@ static void GetMacAddress(EvalContext *ctx, AgentType ag, int fd, struct ifreq *
              (unsigned char) ifr->ifr_hwaddr.sa_data[4], 
              (unsigned char) ifr->ifr_hwaddr.sa_data[5]);
 
-    ScopeNewSpecialScalar(ctx, "sys", name, hw_mac, DATA_TYPE_STRING);
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, name, hw_mac, DATA_TYPE_STRING);
     RlistAppend(hardware, hw_mac, RVAL_TYPE_SCALAR);
     RlistAppend(interfaces, ifp->ifr_name, RVAL_TYPE_SCALAR);
 
     snprintf(name, sizeof(name), "mac_%s", CanonifyName(hw_mac));
-    EvalContextHeapAddHard(ctx, name);
+    EvalContextClassPutHard(ctx, name);
 
 # elif defined(HAVE_GETIFADDRS)
     char hw_mac[CF_MAXVARSIZE];
@@ -370,8 +369,8 @@ static void GetMacAddress(EvalContext *ctx, AgentType ag, int fd, struct ifreq *
         Log(LOG_LEVEL_ERR, "getifaddrs", "!! Could not get interface %s addresses",
           ifp->ifr_name);
 
-        ScopeNewSpecialScalar(ctx, "sys", name, "mac_unknown", DATA_TYPE_STRING);
-        EvalContextHeapAddHard(ctx, "mac_unknown");
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, name, "mac_unknown", DATA_TYPE_STRING);
+        EvalContextClassPutHard(ctx, "mac_unknown");
         return;
     }
     for (ifa = ifaddr; ifa != NULL; ifa=ifa->ifa_next)
@@ -391,12 +390,12 @@ static void GetMacAddress(EvalContext *ctx, AgentType ag, int fd, struct ifreq *
                     (unsigned char) m[4],
                     (unsigned char) m[5]);
 
-                ScopeNewSpecialScalar(ctx, "sys", name, hw_mac, DATA_TYPE_STRING);
+                EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, name, hw_mac, DATA_TYPE_STRING);
                 RlistAppend(hardware, hw_mac, RVAL_TYPE_SCALAR);
                 RlistAppend(interfaces, ifa->ifa_name, RVAL_TYPE_SCALAR);
 
                 snprintf(name, sizeof(name), "mac_%s", CanonifyName(hw_mac));
-                EvalContextHeapAddHard(ctx, name);
+                EvalContextClassPutHard(ctx, name);
             }
         }
 
@@ -404,27 +403,20 @@ static void GetMacAddress(EvalContext *ctx, AgentType ag, int fd, struct ifreq *
     freeifaddrs(ifaddr);
 
 # else
-    ScopeNewSpecialScalar(ctx, "sys", name, "mac_unknown", DATA_TYPE_STRING);
-    EvalContextHeapAddHard(ctx, "mac_unknown");
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, name, "mac_unknown", DATA_TYPE_STRING);
+    EvalContextClassPutHard(ctx, "mac_unknown");
 # endif
 }
 
 /******************************************************************/
 
-void GetInterfaceFlags(EvalContext *ctx, AgentType ag, struct ifreq *ifr, Rlist **flags)
+void GetInterfaceFlags(EvalContext *ctx, struct ifreq *ifr, Rlist **flags)
 {
     char name[CF_MAXVARSIZE];
     char buffer[CF_BUFSIZE] = "";
     char *fp = NULL;
 
-    if (ag != AGENT_TYPE_GENDOC)
-    {
-        snprintf(name, sizeof(name), "interface_flags[%s]", ifr->ifr_name);
-    }
-    else
-    {
-        snprintf(name, sizeof(name), "interface_flags[interface_name]");
-    }
+    snprintf(name, sizeof(name), "interface_flags[%s]", ifr->ifr_name);
 
     if (ifr->ifr_flags & IFF_UP) strcat(buffer, " up");
     if (ifr->ifr_flags & IFF_BROADCAST) strcat(buffer, " broadcast");
@@ -447,16 +439,17 @@ void GetInterfaceFlags(EvalContext *ctx, AgentType ag, struct ifreq *ifr, Rlist 
     {
       // Skip leading space
       fp = buffer + 1;
-      ScopeNewSpecialScalar(ctx, "sys", name, fp, DATA_TYPE_STRING);
+      EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, name, fp, DATA_TYPE_STRING);
       RlistAppend(flags, fp, RVAL_TYPE_SCALAR);
     }
 }
 
 /******************************************************************/
 
-void GetInterfacesInfo(EvalContext *ctx, AgentType ag)
+void GetInterfacesInfo(EvalContext *ctx)
 {
-    int fd, len, i, j, first_address = false, ipdefault = false;
+    bool address_set = false;
+    int fd, len, i, j;
     struct ifreq ifbuf[CF_IFREQ], ifr, *ifp;
     struct ifconf list;
     struct sockaddr_in *sin;
@@ -464,20 +457,16 @@ void GetInterfacesInfo(EvalContext *ctx, AgentType ag)
     char *sp, workbuf[CF_BUFSIZE];
     char ip[CF_MAXVARSIZE];
     char name[CF_MAXVARSIZE];
-    char last_name[CF_BUFSIZE];
     Rlist *interfaces = NULL, *hardware = NULL, *flags = NULL, *ips = NULL;
 
-    Log(LOG_LEVEL_DEBUG, "GetInterfacesInfo()\n");
-
-    // Long-running processes may call this many times
+    /* This function may be called many times, while interfaces come and go */
+    /* TODO cache results for non-daemon processes? */
     DeleteItemList(IPADDRESSES);
     IPADDRESSES = NULL;
 
     memset(ifbuf, 0, sizeof(ifbuf));
 
     InitIgnoreInterfaces();
-    
-    last_name[0] = '\0';
 
     if ((fd = socket(AF_INET, SOCK_DGRAM, 0)) == -1)
     {
@@ -498,7 +487,7 @@ void GetInterfacesInfo(EvalContext *ctx, AgentType ag)
         exit(1);
     }
 
-    last_name[0] = '\0';
+    char last_name[sizeof(ifp->ifr_name)] = "";
 
     for (j = 0, len = 0, ifp = list.ifc_req; len < list.ifc_len;
          len += SIZEOF_IFREQ(*ifp), j++, ifp = (struct ifreq *) ((char *) ifp + SIZEOF_IFREQ(*ifp)))
@@ -520,7 +509,7 @@ void GetInterfacesInfo(EvalContext *ctx, AgentType ag)
         {
             continue;
         }
-        
+
         if (strstr(ifp->ifr_name, ":"))
         {
 #ifdef __linux__
@@ -533,26 +522,19 @@ void GetInterfacesInfo(EvalContext *ctx, AgentType ag)
             Log(LOG_LEVEL_VERBOSE, "Interface %d: %s", j + 1, ifp->ifr_name);
         }
 
-
-        if (strncmp(last_name, ifp->ifr_name, sizeof(ifp->ifr_name)) == 0)
+        /* If interface name appears a second time in a row then it has more
+           than one IP addresses (linux: ip addr add $IP dev $IF).
+           But the variable is already added so don't set it again. */
+        if (strcmp(last_name, ifp->ifr_name) != 0)
         {
-            first_address = false;
-        }
-        else
-        {
-            strncpy(last_name, ifp->ifr_name, sizeof(ifp->ifr_name));
-
-            if (!first_address)
-            {
-                ScopeNewSpecialScalar(ctx, "sys", "interface", last_name, DATA_TYPE_STRING);
-                first_address = true;
-            }
+            strcpy(last_name, ifp->ifr_name);
+            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "interface", last_name, DATA_TYPE_STRING);
         }
 
         snprintf(workbuf, sizeof(workbuf), "net_iface_%s", CanonifyName(ifp->ifr_name));
+        EvalContextClassPutHard(ctx, workbuf);
 
-        EvalContextHeapAddHard(ctx, workbuf);
-
+        /* TODO IPv6 should be handled transparently */
         if (ifp->ifr_addr.sa_family == AF_INET)
         {
             strncpy(ifr.ifr_name, ifp->ifr_name, sizeof(ifp->ifr_name));
@@ -564,7 +546,7 @@ void GetInterfacesInfo(EvalContext *ctx, AgentType ag)
             }
             else
             {
-              GetInterfaceFlags(ctx, ag, &ifr, &flags);
+              GetInterfaceFlags(ctx, &ifr, &flags);
             }
 
             if (ifr.ifr_flags & IFF_UP)
@@ -577,36 +559,49 @@ void GetInterfacesInfo(EvalContext *ctx, AgentType ag)
                     continue;
                 }
 
-                Log(LOG_LEVEL_DEBUG, "Adding hostip %s..\n", inet_ntoa(sin->sin_addr));
-                EvalContextHeapAddHard(ctx, inet_ntoa(sin->sin_addr));
+                /* No DNS lookup, just convert IP address to string. */
+                char txtaddr[CF_MAX_IP_LEN] = "";
+                assert(sizeof(VIPADDRESS) >= sizeof(txtaddr));
 
-                if ((hp =
-                     gethostbyaddr((char *) &(sin->sin_addr.s_addr), sizeof(sin->sin_addr.s_addr), AF_INET)) == NULL)
+                getnameinfo((struct sockaddr *) sin, sizeof(*sin),
+                            txtaddr, sizeof(txtaddr),
+                            NULL, 0, NI_NUMERICHOST);
+
+                Log(LOG_LEVEL_DEBUG, "Adding hostip '%s'", txtaddr);
+                EvalContextClassPutHard(ctx, txtaddr);
+
+                if ((hp = gethostbyaddr((char *) &(sin->sin_addr.s_addr),
+                                        sizeof(sin->sin_addr.s_addr), AF_INET))
+                    == NULL)
                 {
-                    Log(LOG_LEVEL_DEBUG, "No hostinformation for %s found\n", inet_ntoa(sin->sin_addr));
+                    Log(LOG_LEVEL_DEBUG, "No hostinformation for '%s' found",
+                        txtaddr);
                 }
                 else
                 {
                     if (hp->h_name != NULL)
                     {
-                        Log(LOG_LEVEL_DEBUG, "Adding hostname %s..\n", hp->h_name);
-                        EvalContextHeapAddHard(ctx, hp->h_name);
+                        Log(LOG_LEVEL_DEBUG, "Adding hostname '%s'", hp->h_name);
+                        EvalContextClassPutHard(ctx, hp->h_name);
 
                         if (hp->h_aliases != NULL)
                         {
                             for (i = 0; hp->h_aliases[i] != NULL; i++)
                             {
-                                Log(LOG_LEVEL_VERBOSE, "Adding alias %s..", hp->h_aliases[i]);
-                                EvalContextHeapAddHard(ctx, hp->h_aliases[i]);
+                                Log(LOG_LEVEL_DEBUG, "Adding alias '%s'",
+                                    hp->h_aliases[i]);
+                                EvalContextClassPutHard(ctx, hp->h_aliases[i]);
                             }
                         }
                     }
                 }
 
-                if (strcmp(inet_ntoa(sin->sin_addr), "0.0.0.0") == 0)
+                if (strcmp(txtaddr, "0.0.0.0") == 0)
                 {
-                    // Maybe we need to do something windows specific here?
+                    /* TODO remove, interface address can't be 0.0.0.0 and
+                     * even then DNS is not a safe way to set a variable... */
                     Log(LOG_LEVEL_VERBOSE, "Cannot discover hardware IP, using DNS value");
+                    assert(sizeof(ip) >= sizeof(VIPADDRESS) + sizeof("ipv4_"));
                     strcpy(ip, "ipv4_");
                     strcat(ip, VIPADDRESS);
                     AppendItem(&IPADDRESSES, VIPADDRESS, "");
@@ -617,7 +612,7 @@ void GetInterfacesInfo(EvalContext *ctx, AgentType ag)
                         if (*sp == '.')
                         {
                             *sp = '\0';
-                            EvalContextHeapAddHard(ctx, ip);
+                            EvalContextClassPutHard(ctx, ip);
                         }
                     }
 
@@ -630,50 +625,50 @@ void GetInterfacesInfo(EvalContext *ctx, AgentType ag)
                         {
                             *sp = '\0';
                             snprintf(name, sizeof(name), "ipv4_%d[%s]", i--, CanonifyName(VIPADDRESS));
-                            ScopeNewSpecialScalar(ctx, "sys", name, ip, DATA_TYPE_STRING);
+                            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, name, ip, DATA_TYPE_STRING);
                         }
                     }
                     continue;
                 }
 
-                strncpy(ip, "ipv4_", CF_MAXVARSIZE);
-                strncat(ip, inet_ntoa(sin->sin_addr), CF_MAXVARSIZE - 6);
-                EvalContextHeapAddHard(ctx, ip);
+                assert(sizeof(ip) >= sizeof(txtaddr) + sizeof("ipv4_"));
+                strcpy(ip, "ipv4_");
+                strcat(ip, txtaddr);
+                EvalContextClassPutHard(ctx, ip);
 
-                if (!ipdefault)
+                /* VIPADDRESS has already been set to the DNS address of
+                 * VFQNAME by GetNameInfo3() during initialisation. Here we
+                 * reset VIPADDRESS to the address of the first non-loopback
+                 * interface. */
+                if (!address_set && !(ifr.ifr_flags & IFF_LOOPBACK))
                 {
-                    ipdefault = true;
-                    ScopeNewSpecialScalar(ctx, "sys", "ipv4", inet_ntoa(sin->sin_addr), DATA_TYPE_STRING);
+                    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "ipv4", txtaddr, DATA_TYPE_STRING);
 
-                    strcpy(VIPADDRESS, inet_ntoa(sin->sin_addr));
+                    strcpy(VIPADDRESS, txtaddr);
+                    Log(LOG_LEVEL_VERBOSE, "IP address of host set to %s",
+                        VIPADDRESS);
+                    address_set = true;
                 }
 
-                AppendItem(&IPADDRESSES, inet_ntoa(sin->sin_addr), "");
-                RlistAppendScalar(&ips, inet_ntoa(sin->sin_addr));
+                AppendItem(&IPADDRESSES, txtaddr, "");
+                RlistAppendScalar(&ips, txtaddr);
 
                 for (sp = ip + strlen(ip) - 1; (sp > ip); sp--)
                 {
                     if (*sp == '.')
                     {
                         *sp = '\0';
-                        EvalContextHeapAddHard(ctx, ip);
+                        EvalContextClassPutHard(ctx, ip);
                     }
                 }
 
                 // Set the IPv4 on interface array
 
-                strcpy(ip, inet_ntoa(sin->sin_addr));
+                strcpy(ip, txtaddr);
 
-                if (ag != AGENT_TYPE_GENDOC)
-                {
-                    snprintf(name, sizeof(name), "ipv4[%s]", CanonifyName(ifp->ifr_name));
-                }
-                else
-                {
-                    snprintf(name, sizeof(name), "ipv4[interface_name]");
-                }
+                snprintf(name, sizeof(name), "ipv4[%s]", CanonifyName(ifp->ifr_name));
 
-                ScopeNewSpecialScalar(ctx, "sys", name, ip, DATA_TYPE_STRING);
+                EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, name, ip, DATA_TYPE_STRING);
 
                 i = 3;
 
@@ -683,31 +678,24 @@ void GetInterfacesInfo(EvalContext *ctx, AgentType ag)
                     {
                         *sp = '\0';
 
-                        if (ag != AGENT_TYPE_GENDOC)
-                        {
-                            snprintf(name, sizeof(name), "ipv4_%d[%s]", i--, CanonifyName(ifp->ifr_name));
-                        }
-                        else
-                        {
-                            snprintf(name, sizeof(name), "ipv4_%d[interface_name]", i--);
-                        }
+                        snprintf(name, sizeof(name), "ipv4_%d[%s]", i--, CanonifyName(ifp->ifr_name));
 
-                        ScopeNewSpecialScalar(ctx, "sys", name, ip, DATA_TYPE_STRING);
+                        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, name, ip, DATA_TYPE_STRING);
                     }
                 }
             }
 
             // Set the hardware/mac address array
-            GetMacAddress(ctx, ag, fd, &ifr, ifp, &interfaces, &hardware);
+            GetMacAddress(ctx, fd, &ifr, ifp, &interfaces, &hardware);
         }
     }
 
     close(fd);
 
-    ScopeNewSpecialList(ctx, "sys", "interfaces", interfaces, DATA_TYPE_STRING_LIST);
-    ScopeNewSpecialList(ctx, "sys", "hardware_addresses", hardware, DATA_TYPE_STRING_LIST);
-    ScopeNewSpecialList(ctx, "sys", "hardware_flags", flags, DATA_TYPE_STRING_LIST);
-    ScopeNewSpecialList(ctx, "sys", "ip_addresses", ips, DATA_TYPE_STRING_LIST);
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "interfaces", interfaces, DATA_TYPE_STRING_LIST);
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "hardware_addresses", hardware, DATA_TYPE_STRING_LIST);
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "hardware_flags", flags, DATA_TYPE_STRING_LIST);
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "ip_addresses", ips, DATA_TYPE_STRING_LIST);
 
     RlistDestroy(interfaces);
     RlistDestroy(hardware);
@@ -794,7 +782,7 @@ static void FindV6InterfacesInfo(EvalContext *ctx)
                 {
                     Log(LOG_LEVEL_VERBOSE, "Found IPv6 address %s", ip->name);
                     AppendItem(&IPADDRESSES, ip->name, "");
-                    EvalContextHeapAddHard(ctx, ip->name);
+                    EvalContextClassPutHard(ctx, ip->name);
                 }
             }
 
@@ -842,9 +830,9 @@ static bool IgnoreInterface(char *name)
 
     for (rp = IGNORE_INTERFACES; rp != NULL; rp=rp->next)
     {
-        if (FullTextMatch(rp->item,name))
+        if (StringMatchFull(RlistScalarValue(rp), name))
         {
-            Log(LOG_LEVEL_VERBOSE, "Ignoring interface \"%s\" because it matches %s",name,CF_IGNORE_INTERFACES);
+            Log(LOG_LEVEL_VERBOSE, "Ignoring interface '%s' because it matches '%s'",name,CF_IGNORE_INTERFACES);
             return true;
         }    
     }

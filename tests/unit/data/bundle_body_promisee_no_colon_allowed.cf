@@ -1,11 +1,11 @@
 bundle agent foo
 {
 
-vars:
+  vars:
 
     debian::
-        "foo" -> "bar",
-            handle  => "foo"
-            comment => "test";
+      "foo" -> "bar",
+      handle  => "foo"
+      comment => "test";
 }
 

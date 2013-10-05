@@ -1,7 +1,7 @@
-#include "test.h"
+#include <test.h>
 
-#include "cf3.defs.h"
-#include "crypto.h"
+#include <cf3.defs.h>
+#include <crypto.h>
 
 #define PLAINTEXT "123456789012345678901234567890123"
 #define KEY "1234567890123456789012345678901234567890123456789012345678901234"  /* at least 512 bits long (to be sure) */

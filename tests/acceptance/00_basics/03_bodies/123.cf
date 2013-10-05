@@ -2,46 +2,46 @@
 
 body common control
 {
-  inputs => { "../../default.cf.sub" };
-  bundlesequence  => { default("$(this.promise_filename)") };
-  version => "1.0";
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
 }
 
 bundle agent init
 {
-vars:
-  "dummy" string => "dummy";
+  vars:
+      "dummy" string => "dummy";
 }
 
 bundle agent test
 {
-processes:
-  any::
-    "/bin/true"
+  processes:
+    any::
+      "$(G.true)"
       classes => bundle_class;
 
-  bundle_context::
-    "/bin/true"
+    bundle_context::
+      "$(G.true)"
       classes => namespace_class;
 }
 
 body classes namespace_class
 {
-# default to namespace scoping
-  promise_kept => { "namespace_context" };
+      # default to namespace scoping
+      promise_kept => { "namespace_context" };
 }
 
 body classes bundle_class
 {
-  scope => "bundle";
-  promise_kept => { "bundle_context" };
+      scope => "bundle";
+      promise_kept => { "bundle_context" };
 }
 
 bundle agent check
 {
-reports:
-  namespace_context.!bundle_context::
-    "$(this.promise_filename) Pass";
-  bundle_context::
-    "$(this.promise_filename) FAIL";
+  reports:
+    namespace_context.!bundle_context::
+      "$(this.promise_filename) Pass";
+    bundle_context::
+      "$(this.promise_filename) FAIL";
 }

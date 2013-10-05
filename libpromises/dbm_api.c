@@ -22,16 +22,15 @@
   included file COSL.txt.
 */
 
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
-#include "dbm_api.h"
-#include "dbm_priv.h"
-#include "dbm_migration.h"
-#include "atexit.h"
-#include "logging.h"
-#include "misc_lib.h"
+#include <dbm_api.h>
+#include <dbm_priv.h>
+#include <dbm_migration.h>
+#include <atexit.h>
+#include <logging.h>
+#include <misc_lib.h>
 
-#include <assert.h>
 
 static int DBPathLock(const char *filename);
 static void DBPathUnLock(int fd);
@@ -130,44 +129,56 @@ static DBHandle *DBHandleGet(int id)
     return &db_handles[id];
 }
 
-/* Closes all open DB handles */
-static void CloseAllDB(void)
+/**
+ * @brief Wait for all users of all databases to close the DBs. Then acquire
+ * the mutexes *AND KEEP THEM LOCKED* so that no background thread can open
+ * any database. So make sure you exit soon...
+
+ * @warning This is usually register with atexit(), however you have to make
+ * sure no other DB-cleaning exit hook was registered before, so that this is
+ * called last.
+ **/
+void CloseAllDBExit()
 {
     pthread_mutex_lock(&db_handles_lock);
 
-    for (int i = 0; i < dbid_max; ++i)
+    for (int i = 0; i < dbid_max; i++)
     {
-        if (db_handles[i].refcount != 0)
-        {
-            DBPrivCloseDB(db_handles[i].priv);
-        }
-
-        /*
-         * CloseAllDB is called just before exit(3), but clean up
-         * nevertheless.
-         */
-        db_handles[i].refcount = 0;
-
         if (db_handles[i].filename)
         {
-            free(db_handles[i].filename);
-            db_handles[i].filename = NULL;
-
-            int ret = pthread_mutex_destroy(&db_handles[i].lock);
-            if (ret != 0)
+            /* Wait until all DB users are served, or a threshold is reached */
+            int count = 0;
+            pthread_mutex_lock(&db_handles[i].lock);
+            while (db_handles[i].refcount > 0 && count < 1000)
             {
-                errno = ret;
-                Log(LOG_LEVEL_ERR, "Unable to close database '%s'. (pthread_mutex_destroy: %s)", DB_PATHS[i], GetErrorStr());
+                pthread_mutex_unlock(&db_handles[i].lock);
+
+                struct timespec sleeptime = {
+                    .tv_sec = 0,
+                    .tv_nsec = 10000000                         /* 10 ms */
+                };
+                nanosleep(&sleeptime, NULL);
+                count++;
+
+                pthread_mutex_lock(&db_handles[i].lock);
+            }
+            /* Keep mutex locked. */
+
+            /* If we exited because of timeout make sure we Log() it. */
+            if (db_handles[i].refcount != 0)
+            {
+                Log(LOG_LEVEL_ERR,
+                    "Database %s refcount is still not zero (%d), forcing CloseDB()!",
+                    db_handles[i].filename, db_handles[i].refcount);
+                DBPrivCloseDB(db_handles[i].priv);
             }
         }
     }
-
-    pthread_mutex_unlock(&db_handles_lock);
 }
 
 static void RegisterShutdownHandler(void)
 {
-    RegisterAtExitFunction(&CloseAllDB);
+    RegisterAtExitFunction(&CloseAllDBExit);
 }
 
 bool OpenDB(DBHandle **dbp, dbid id)

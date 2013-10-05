@@ -22,9 +22,9 @@
   included file COSL.txt.
 */
 
-#include "mod_process.h"
+#include <mod_process.h>
 
-#include "syntax.h"
+#include <syntax.h>
 
 static const ConstraintSyntax process_count_constraints[] =
 {

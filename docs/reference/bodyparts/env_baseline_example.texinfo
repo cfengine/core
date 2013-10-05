@@ -1,6 +1,0 @@
-
-@verbatim
-
-env_baseline => "/path/to/image";
-
-@end verbatim

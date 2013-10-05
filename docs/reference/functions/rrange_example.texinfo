@@ -1,6 +1,0 @@
-
-@verbatim
-
-?
-
-@end verbatim

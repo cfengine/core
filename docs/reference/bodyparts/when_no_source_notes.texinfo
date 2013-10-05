@@ -1,4 +1,0 @@
-
-If we try to create a link to a file that does not exist a link, how
-should CFEngine respond? The options are to force the creation to
-a file that does not (yet) exist, delete any existing link, or do nothing.

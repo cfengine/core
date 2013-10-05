@@ -1,4 +1,0 @@
-
-The mode string may be symbolic or numerical, like @code{chmod}. This
-is ignored on windows, as the permission model uses ACLs. ACLs are
-supported by CFEngine Nova.

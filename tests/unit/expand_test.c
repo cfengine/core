@@ -1,9 +1,9 @@
-#include "test.h"
+#include <test.h>
 
-#include "expand.h"
-#include "rlist.h"
-#include "scope.h"
-#include "env_context.h"
+#include <expand.h>
+#include <rlist.h>
+#include <scope.h>
+#include <env_context.h>
 
 static void test_map_iterators_from_rval_empty(void)
 {
@@ -11,10 +11,12 @@ static void test_map_iterators_from_rval_empty(void)
 
     Rlist *lists = NULL;
     Rlist *scalars = NULL;
-    MapIteratorsFromRval(ctx, "none", &lists, &scalars, (Rval) { "", RVAL_TYPE_SCALAR });
+    Rlist *containers =  NULL;
+    MapIteratorsFromRval(ctx, "none", (Rval) { "", RVAL_TYPE_SCALAR }, &scalars, &lists, &containers);
 
     assert_int_equal(0, RlistLen(lists));
     assert_int_equal(0, RlistLen(scalars));
+    assert_int_equal(0, RlistLen(containers));
 
     EvalContextDestroy(ctx);
 }
@@ -25,10 +27,12 @@ static void test_map_iterators_from_rval_literal(void)
 
     Rlist *lists = NULL;
     Rlist *scalars = NULL;
-    MapIteratorsFromRval(ctx, "none", &lists, &scalars, (Rval) { "snookie", RVAL_TYPE_SCALAR });
+    Rlist *containers = NULL;
+    MapIteratorsFromRval(ctx, "none", (Rval) { "snookie", RVAL_TYPE_SCALAR }, &scalars, &lists, &containers);
 
     assert_int_equal(0, RlistLen(lists));
     assert_int_equal(0, RlistLen(scalars));
+    assert_int_equal(0, RlistLen(containers));
 
     EvalContextDestroy(ctx);
 }
@@ -36,23 +40,23 @@ static void test_map_iterators_from_rval_literal(void)
 static void test_map_iterators_from_rval_naked_list_var(void)
 {
     EvalContext *ctx = EvalContextNew();
-    ScopeDeleteAll();
-    ScopeSetCurrent("scope");
 
     Rlist *list = NULL;
     RlistAppend(&list, "jersey", RVAL_TYPE_SCALAR);
 
-    VarRef lval = VarRefParse("scope.jwow");
+    VarRef *lval = VarRefParse("scope.jwow");
 
-    EvalContextVariablePut(ctx, lval, (Rval) { list, RVAL_TYPE_LIST }, DATA_TYPE_STRING_LIST);
+    EvalContextVariablePut(ctx, lval, list, DATA_TYPE_STRING_LIST);
 
     Rlist *lists = NULL;
     Rlist *scalars = NULL;
-    MapIteratorsFromRval(ctx, "scope", &lists, &scalars, (Rval) { "${jwow}", RVAL_TYPE_SCALAR });
+    Rlist *containers = NULL;
+    MapIteratorsFromRval(ctx, "scope", (Rval) { "${jwow}", RVAL_TYPE_SCALAR }, &scalars, &lists, &containers);
 
     assert_int_equal(1, RlistLen(lists));
-    assert_string_equal("jwow", lists->item);
+    assert_string_equal("jwow", RlistScalarValue(lists));
     assert_int_equal(0, RlistLen(scalars));
+    assert_int_equal(0, RlistLen(containers));
 
     VarRefDestroy(lval);
     EvalContextDestroy(ctx);
@@ -62,18 +66,18 @@ static void test_expand_scalar_two_scalars_concat(void)
 {
     EvalContext *ctx = EvalContextNew();
     {
-        VarRef lval = VarRefParse("default:bundle.one");
-        EvalContextVariablePut(ctx, lval, (Rval) { "first", RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
+        VarRef *lval = VarRefParse("default:bundle.one");
+        EvalContextVariablePut(ctx, lval, "first", DATA_TYPE_STRING);
         VarRefDestroy(lval);
     }
     {
-        VarRef lval = VarRefParse("default:bundle.two");
-        EvalContextVariablePut(ctx, lval, (Rval) { "second", RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
+        VarRef *lval = VarRefParse("default:bundle.two");
+        EvalContextVariablePut(ctx, lval, "second", DATA_TYPE_STRING);
         VarRefDestroy(lval);
     }
 
     char res[CF_EXPANDSIZE] = { 0 };
-    ExpandScalar(ctx, "bundle", "a $(one) b $(two)c", res);
+    ExpandScalar(ctx, "default", "bundle", "a $(one) b $(two)c", res);
 
     assert_string_equal("a first b secondc", res);
 
@@ -84,18 +88,18 @@ static void test_expand_scalar_two_scalars_nested(void)
 {
     EvalContext *ctx = EvalContextNew();
     {
-        VarRef lval = VarRefParse("default:bundle.one");
-        EvalContextVariablePut(ctx, lval, (Rval) { "first", RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
+        VarRef *lval = VarRefParse("default:bundle.one");
+        EvalContextVariablePut(ctx, lval, "first", DATA_TYPE_STRING);
         VarRefDestroy(lval);
     }
     {
-        VarRef lval = VarRefParse("default:bundle.two");
-        EvalContextVariablePut(ctx, lval, (Rval) { "one", RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
+        VarRef *lval = VarRefParse("default:bundle.two");
+        EvalContextVariablePut(ctx, lval, "one", DATA_TYPE_STRING);
         VarRefDestroy(lval);
     }
 
     char res[CF_EXPANDSIZE] = { 0 };
-    ExpandScalar(ctx, "bundle", "a $($(two))b", res);
+    ExpandScalar(ctx, "default", "bundle", "a $($(two))b", res);
 
     assert_string_equal("a firstb", res);
 
@@ -106,18 +110,18 @@ static void test_expand_scalar_array_concat(void)
 {
     EvalContext *ctx = EvalContextNew();
     {
-        VarRef lval = VarRefParse("default:bundle.foo[one]");
-        EvalContextVariablePut(ctx, lval, (Rval) { "first", RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
+        VarRef *lval = VarRefParse("default:bundle.foo[one]");
+        EvalContextVariablePut(ctx, lval, "first", DATA_TYPE_STRING);
         VarRefDestroy(lval);
     }
     {
-        VarRef lval = VarRefParse("default:bundle.foo[two]");
-        EvalContextVariablePut(ctx, lval, (Rval) { "second", RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
+        VarRef *lval = VarRefParse("default:bundle.foo[two]");
+        EvalContextVariablePut(ctx, lval, "second", DATA_TYPE_STRING);
         VarRefDestroy(lval);
     }
 
     char res[CF_EXPANDSIZE] = { 0 };
-    ExpandScalar(ctx, "bundle", "a $(foo[one]) b $(foo[two])c", res);
+    ExpandScalar(ctx, "default", "bundle", "a $(foo[one]) b $(foo[two])c", res);
 
     assert_string_equal("a first b secondc", res);
 
@@ -128,18 +132,18 @@ static void test_expand_scalar_array_with_scalar_arg(void)
 {
     EvalContext *ctx = EvalContextNew();
     {
-        VarRef lval = VarRefParse("default:bundle.foo[one]");
-        EvalContextVariablePut(ctx, lval, (Rval) { "first", RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
+        VarRef *lval = VarRefParse("default:bundle.foo[one]");
+        EvalContextVariablePut(ctx, lval, "first", DATA_TYPE_STRING);
         VarRefDestroy(lval);
     }
     {
-        VarRef lval = VarRefParse("default:bundle.bar");
-        EvalContextVariablePut(ctx, lval, (Rval) { "one", RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
+        VarRef *lval = VarRefParse("default:bundle.bar");
+        EvalContextVariablePut(ctx, lval, "one", DATA_TYPE_STRING);
         VarRefDestroy(lval);
     }
 
     char res[CF_EXPANDSIZE] = { 0 };
-    ExpandScalar(ctx, "bundle", "a$(foo[$(bar)])b", res);
+    ExpandScalar(ctx, "default", "bundle", "a$(foo[$(bar)])b", res);
 
     assert_string_equal("afirstb", res);
 
@@ -155,13 +159,13 @@ static void test_expand_promise_array_with_scalar_arg(void)
 {
     EvalContext *ctx = EvalContextNew();
     {
-        VarRef lval = VarRefParse("default:bundle.foo[one]");
-        EvalContextVariablePut(ctx, lval, (Rval) { "first", RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
+        VarRef *lval = VarRefParse("default:bundle.foo[one]");
+        EvalContextVariablePut(ctx, lval, "first", DATA_TYPE_STRING);
         VarRefDestroy(lval);
     }
     {
-        VarRef lval = VarRefParse("default:bundle.bar");
-        EvalContextVariablePut(ctx, lval, (Rval) { "one", RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
+        VarRef *lval = VarRefParse("default:bundle.bar");
+        EvalContextVariablePut(ctx, lval, "one", DATA_TYPE_STRING);
         VarRefDestroy(lval);
     }
 
@@ -170,7 +174,7 @@ static void test_expand_promise_array_with_scalar_arg(void)
     PromiseType *promise_type = BundleAppendPromiseType(bundle, "dummy");
     Promise *promise = PromiseTypeAppendPromise(promise_type, "$(foo[$(bar)])", (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, "any");
 
-    EvalContextStackPushBundleFrame(ctx, bundle, false);
+    EvalContextStackPushBundleFrame(ctx, bundle, NULL, false);
     ExpandPromise(ctx, promise, actuator_expand_promise_array_with_scalar_arg, NULL);
     EvalContextStackPopFrame(ctx);
 
@@ -205,12 +209,12 @@ static void test_expand_promise_slist(void)
 
     EvalContext *ctx = EvalContextNew();
     {
-        VarRef lval = VarRefParse("default:bundle.foo");
+        VarRef *lval = VarRefParse("default:bundle.foo");
         Rlist *list = NULL;
         RlistAppendScalar(&list, "a");
         RlistAppendScalar(&list, "b");
 
-        EvalContextVariablePut(ctx, lval, (Rval) { list, RVAL_TYPE_LIST }, DATA_TYPE_STRING_LIST);
+        EvalContextVariablePut(ctx, lval, list, DATA_TYPE_STRING_LIST);
 
         RlistDestroy(list);
         VarRefDestroy(lval);
@@ -222,7 +226,7 @@ static void test_expand_promise_slist(void)
     PromiseType *promise_type = BundleAppendPromiseType(bundle, "dummy");
     Promise *promise = PromiseTypeAppendPromise(promise_type, "$(foo)", (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, "any");
 
-    EvalContextStackPushBundleFrame(ctx, bundle, false);
+    EvalContextStackPushBundleFrame(ctx, bundle, NULL, false);
     ExpandPromise(ctx, promise, actuator_expand_promise_slist, NULL);
     EvalContextStackPopFrame(ctx);
 
@@ -258,26 +262,26 @@ static void test_expand_promise_array_with_slist_arg(void)
 
     EvalContext *ctx = EvalContextNew();
     {
-        VarRef lval = VarRefParse("default:bundle.keys");
+        VarRef *lval = VarRefParse("default:bundle.keys");
         Rlist *list = NULL;
         RlistAppendScalar(&list, "one");
         RlistAppendScalar(&list, "two");
 
-        EvalContextVariablePut(ctx, lval, (Rval) { list, RVAL_TYPE_LIST }, DATA_TYPE_STRING_LIST);
+        EvalContextVariablePut(ctx, lval, list, DATA_TYPE_STRING_LIST);
 
         RlistDestroy(list);
         VarRefDestroy(lval);
     }
 
     {
-        VarRef lval = VarRefParse("default:bundle.arr[one]");
-        EvalContextVariablePut(ctx, lval, (Rval) { "first", RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
+        VarRef *lval = VarRefParse("default:bundle.arr[one]");
+        EvalContextVariablePut(ctx, lval, "first", DATA_TYPE_STRING);
         VarRefDestroy(lval);
     }
 
     {
-        VarRef lval = VarRefParse("default:bundle.arr[two]");
-        EvalContextVariablePut(ctx, lval, (Rval) { "second", RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
+        VarRef *lval = VarRefParse("default:bundle.arr[two]");
+        EvalContextVariablePut(ctx, lval, "second", DATA_TYPE_STRING);
         VarRefDestroy(lval);
     }
 
@@ -287,7 +291,7 @@ static void test_expand_promise_array_with_slist_arg(void)
     PromiseType *promise_type = BundleAppendPromiseType(bundle, "dummy");
     Promise *promise = PromiseTypeAppendPromise(promise_type, "$(arr[$(keys)])", (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, "any");
 
-    EvalContextStackPushBundleFrame(ctx, bundle, false);
+    EvalContextStackPushBundleFrame(ctx, bundle, NULL, false);
     ExpandPromise(ctx, promise, actuator_expand_promise_array_with_slist_arg, NULL);
     EvalContextStackPopFrame(ctx);
 

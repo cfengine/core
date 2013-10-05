@@ -1,4 +1,0 @@
-
-A range of times during which a file was accessed can be specified in
-a @code{file_select} body. (Like file filters in CFEngine 2.)
-

@@ -1,8 +1,0 @@
-Real variables are strings that are expected to be used as real numbers. The
-typing in CFEngine is dynamic, so the variable types are interchangable, but
-when you declare a variable to be type @code{real}, CFEngine verifies that
-the value you assign to it looks like a real number (e.g., @samp{3}, 
-@samp{3.1415}, @samp{.17}, @samp{6.02e23}, @samp{-9.21e-17}, etc).
-
-Real numbers are not used in many places in CFEngine, but they are
-useful for representing probabilties and performance data.

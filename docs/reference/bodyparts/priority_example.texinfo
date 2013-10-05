@@ -1,9 +1,0 @@
-
-@verbatim
-
-body process_select example
-{
-priority => irange("-5","0");
-}
-
-@end verbatim

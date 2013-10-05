@@ -25,7 +25,7 @@
 #ifndef CFENGINE_SIGNALS_H
 #define CFENGINE_SIGNALS_H
 
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
 // check whether the running deamon should terminate after having received a signal.
 bool IsPendingTermination(void);

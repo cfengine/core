@@ -1,7 +1,0 @@
-
-@verbatim
-classes:
-
-  "yes" expression => isexecutable("/bin/ls");
-
-@end verbatim

@@ -1,9 +1,0 @@
-
-@verbatim
-
-body hub control
-{
-export_zenoss => "/var/www/reports/summary.z";
-}
-
-@end verbatim

@@ -1,9 +1,0 @@
-
-This variable contains the name of the hard-class category for this host, i.e. its
-top level operating system type classification.
-
-@verbatim
-
-# class = linux
-
-@end verbatim

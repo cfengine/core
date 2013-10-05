@@ -1,0 +1,47 @@
+#
+# Demonstrates the use of variables to call bundles.
+# We can then filter variables on classes, for example.
+#
+
+body common control
+{
+      bundlesequence => { "example" };
+}
+
+###########################################
+
+bundle agent test
+{
+  vars:
+      "run_bundles" slist    => { "test_one", "test_two" };
+      "run_a_bundle"  string => "test_three";
+
+  methods:
+      "any" usebundle        => "$(run_bundles)";
+      "any" usebundle        => "$(run_a_bundle)";
+}
+
+###########################################
+
+bundle agent test_one
+{
+  reports:
+      "in test_one";
+}
+
+###########################################
+
+bundle agent test_two
+{
+  reports:
+      "in test_two";
+}
+
+###########################################
+
+bundle agent test_three
+{
+  reports:
+      "in test_three";
+}
+

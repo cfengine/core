@@ -1,6 +1,0 @@
-
-If set to @code{start}, CFEngine Nova will keep the service in a running state,
-while @code{stop} means that the service is kept in a stopped state.
-@code{disable} implies @code{stop}, and ensures that the service can not be
-started directly, but needs to be enabled somehow first (e.g. by changing 
-file permissions).

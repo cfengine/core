@@ -1,9 +1,0 @@
-
-This option applies only to file based input streams. If this is
-@samp{true}, CFEngine treats the file as if it were a log file,
-growing continuously. Thus the monitor reads all new entries since the
-last sampling time on each invocation. In this way, the monitor does
-not count lines in the log file redundantly.
-
-This makes a log pattern promise equivalent to something like
-@samp{tail -f logfile | grep pattern} in Unix parlance.

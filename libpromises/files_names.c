@@ -22,20 +22,18 @@
   included file COSL.txt.
 */
 
-#include "files_names.h"
+#include <files_names.h>
 
-#include "policy.h"
-#include "promises.h"
-#include "cf3.defs.h"
-#include "dir.h"
-#include "item_lib.h"
-#include "assert.h"
-#include "files_interfaces.h"
-#include "string_lib.h"
+#include <policy.h>
+#include <promises.h>
+#include <cf3.defs.h>
+#include <dir.h>
+#include <item_lib.h>
+#include <files_interfaces.h>
+#include <string_lib.h>
+#include <sysinfo.h>
 
-#ifdef HAVE_NOVA
-# include "cf.nova.h"
-#endif
+#include <cf-windows-functions.h>
 
 /*********************************************************************/
 
@@ -122,7 +120,7 @@ int IsNewerFileTree(char *dir, time_t reftime)
 
 /*********************************************************************/
 
-int IsDir(char *path)
+int IsDir(const char *path)
 /*
 Checks if the object pointed to by path exists and is a directory.
 Returns true if so, false otherwise.
@@ -407,7 +405,7 @@ void CanonifyNameInPlace(char *s)
 {
     for (; *s != '\0'; s++)
     {
-        if ((!isalnum((int)*s)) || (*s == '.'))
+        if ((!isalnum((int)(unsigned char)*s)) || (*s == '.'))
         {
             *s = '_';
         }
@@ -508,8 +506,6 @@ int CompressPath(char *dest, const char *src)
     int nodelen;
     int rootlen;
 
-    Log(LOG_LEVEL_DEBUG, "CompressPath(%s,%s)\n", dest, src);
-
     memset(dest, 0, CF_BUFSIZE);
 
     rootlen = RootDirLength(src);
@@ -545,7 +541,7 @@ int CompressPath(char *dest, const char *src)
         {
             if (!ChopLastNode(dest))
             {
-                Log(LOG_LEVEL_DEBUG, "cfengine: used .. beyond top of filesystem!\n");
+                Log(LOG_LEVEL_DEBUG, "used .. beyond top of filesystem!");
                 return false;
             }
 
@@ -602,7 +598,7 @@ FilePathType FilePathGetType(const char *file_path)
     {
         return FILE_PATH_TYPE_ABSOLUTE;
     }
-    else if (IsFileOutsideDefaultRepository(file_path))
+    else if (*file_path == '.')
     {
         return FILE_PATH_TYPE_RELATIVE;
     }
@@ -614,7 +610,7 @@ FilePathType FilePathGetType(const char *file_path)
 
 bool IsFileOutsideDefaultRepository(const char *f)
 {
-    return (*f == '.') || (IsAbsoluteFileName(f));
+    return !StringStartsWith(f, GetWorkDir());
 }
 
 /*******************************************************************/

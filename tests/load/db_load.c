@@ -1,8 +1,7 @@
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
-#include "dbm_api.h"
+#include <dbm_api.h>
 
-#include <assert.h>
 
 #define MAX_THREADS 10000
 #define DB_ID dbid_classes
@@ -23,8 +22,6 @@
 #define VALUE_OFFSET1 10000
 #define VALUE_OFFSET2 100000
 
-
-int DEBUG = false;
 char CFWORKDIR[CF_BUFSIZE];
 
 static bool CoinFlip(void);

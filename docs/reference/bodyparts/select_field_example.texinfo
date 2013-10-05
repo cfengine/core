@@ -1,8 +1,0 @@
-
-@verbatim
-
-body field_edits example
-{
-select_field => "5";
-}
-@end verbatim

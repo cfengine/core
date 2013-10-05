@@ -1,5 +1,0 @@
-
-The maximum number of cores or processors in the physical environment will
-set a natural limit on this value. 
-
-This attribute conflicts with @code{env_spec}.

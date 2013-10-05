@@ -1,0 +1,84 @@
+#######################################################
+#
+# Test lsdir()
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle common files
+{
+  vars:
+      "names" slist => { "a", "bc", "d/e/f", "g/h/i/j", "klm/nop/qrs", "tu/*" };
+}
+
+#######################################################
+
+bundle agent init
+{
+  files:
+      "$(G.testdir)/$(files.names)"
+      create => "true";
+
+  reports:
+    DEBUG::
+      "Created $(G.testdir)/$(files.names)";
+}
+
+
+#######################################################
+
+bundle agent test
+{
+  vars:
+      "patterns[a]" string => "$(G.testdir)";
+      "patterns[b]" string => "$(G.testdir)/b"; # no such directory
+
+      "pnames" slist => getindices("patterns");
+
+      "found_unsorted[$(pnames)]" slist => lsdir("$(patterns[$(pnames)])", "[^.].*", "true");
+      "found[$(pnames)]" slist => sort("found_unsorted[$(pnames)]", "lex");
+      "found_string[$(pnames)]" string => join(",", "found[$(pnames)]");
+
+  reports:
+    DEBUG::
+      "found pattern $(pnames) '$(patterns[$(pnames)])' => '$(found_string[$(pnames)])'";
+}
+
+
+#######################################################
+
+bundle agent check
+{
+  vars:
+      "expected[a]" string => "$(G.testdir)/a,$(G.testdir)/bc,$(G.testdir)/d,$(G.testdir)/g,$(G.testdir)/klm,$(G.testdir)/tu";
+      "expected[b]" string => "";
+
+      "expects" slist => getindices("expected");
+
+      "fstring" slist => getindices("test.found_string");
+
+      "joint_condition" string => join(".", "expects");
+
+  classes:
+      "$(expects)" expression => strcmp("$(test.found_string[$(expects)])", "$(expected[$(expects)])");
+      "ok" expression => "$(joint_condition)";
+
+  reports:
+    DEBUG::
+      "pattern $(expects) matches as expected: '$(expected[$(expects)])'"
+      ifvarclass => "$(expects)";
+
+      "pattern $(expects) does NOT match expected: '$(test.found_string[$(expects)])' != '$(expected[$(expects)])'"
+      ifvarclass => "!$(expects)";
+
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

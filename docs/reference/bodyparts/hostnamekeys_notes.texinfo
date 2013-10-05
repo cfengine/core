@@ -1,7 +1,0 @@
-
-Client side choice to base key associations on host names rather than IP address.
-This is useful for hosts with dynamic addresses.
-
-@b{This feature has been deprecated since 3.1.0.} Host identification is now handled
-transparently.
-

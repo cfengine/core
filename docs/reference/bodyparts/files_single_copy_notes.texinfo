@@ -1,7 +1,0 @@
-
-This list of regular expressions will ensure that files matching the
-patterns of the list are never copied from more than one source during
-a single run of @code{cf-agent}. This may be considered a protection
-against accidential overlap of copies from diverse remote sources, or
-as a first-come-first-served disambiguation tool for lazy-evaluation
-of overlapping file-copy promises.

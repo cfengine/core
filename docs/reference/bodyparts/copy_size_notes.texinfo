@@ -1,3 +1,0 @@
-
-The use of the irange function is optional. Ranges may also be
-specified as a comma separated numbers.

@@ -25,7 +25,7 @@
 #ifndef CFENGINE_MOD_DATABASES_H
 #define CFENGINE_MOD_DATABASES_H
 
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
 extern const PromiseTypeSyntax CF_DATABASES_PROMISE_TYPES[];
 

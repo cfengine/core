@@ -24,26 +24,26 @@
 
 /* This is a root node in the syntax tree */
 
-#include "mod_common.h"
+#include <mod_common.h>
 
-#include "mod_environ.h"
-#include "mod_outputs.h"
-#include "mod_access.h"
-#include "mod_storage.h"
-#include "mod_databases.h"
-#include "mod_packages.h"
-#include "mod_report.h"
-#include "mod_files.h"
-#include "mod_exec.h"
-#include "mod_methods.h"
-#include "mod_process.h"
-#include "mod_services.h"
-#include "mod_measurement.h"
-#include "mod_knowledge.h"
+#include <mod_environ.h>
+#include <mod_outputs.h>
+#include <mod_access.h>
+#include <mod_storage.h>
+#include <mod_databases.h>
+#include <mod_packages.h>
+#include <mod_report.h>
+#include <mod_files.h>
+#include <mod_exec.h>
+#include <mod_methods.h>
+#include <mod_process.h>
+#include <mod_services.h>
+#include <mod_measurement.h>
+#include <mod_knowledge.h>
 
-#include "conversion.h"
-#include "policy.h"
-#include "syntax.h"
+#include <conversion.h>
+#include <policy.h>
+#include <syntax.h>
 
 static const char *POLICY_ERROR_VARS_CONSTRAINT_DUPLICATE_TYPE = "Variable contains existing data type contstraint %s, tried to redefine with %s";
 static const char *POLICY_ERROR_VARS_PROMISER_NUMERICAL = "Variable promises cannot have a purely numerical promiser (name)";
@@ -120,6 +120,7 @@ const ConstraintSyntax CF_VARBODY[] =
     ConstraintSyntaxNewStringList("slist", "", "A list of scalar strings", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewIntList("ilist", "A list of integers", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewRealList("rlist", "A list of real numbers", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewContainer("container", "A container", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewOption("policy", "free,overridable,constant,ifdefined", "The policy for (dis)allowing (re)definition of variables", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };
@@ -168,7 +169,7 @@ static bool VarsParseTreeCheck(const Promise *pp, Seq *errors)
         {
             Constraint *cp = SeqAt(pp->conlist, i);
 
-            if (IsDataType(cp->lval))
+            if (DataTypeFromString(cp->lval) != DATA_TYPE_NONE)
             {
                 if (data_type != NULL)
                 {
@@ -258,8 +259,8 @@ const ConstraintSyntax CFA_CONTROLBODY[] =
     ConstraintSyntaxNewOption("agentfacility", CF_FACILITY, "The syslog facility for cf-agent. Default value: LOG_USER", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBool("allclassesreport", "Generate allclasses.txt report", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBool("alwaysvalidate", "true/false flag to determine whether configurations will always be checked before executing, or only after updates", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewBool("auditing", "This option is deprecated, does nothing and is kept for backward compatibility. Default value: false", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewString("binarypaddingchar", "", "Character used to pad unequal replacements in binary editing. Default value: space (ASC=32)", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewBool("auditing", "This option is deprecated, does nothing and is kept for backward compatibility. Default value: false", SYNTAX_STATUS_REMOVED),
+    ConstraintSyntaxNewString("binarypaddingchar", "", "Character used to pad unequal replacements in binary editing. Default value: space (ASC=32)", SYNTAX_STATUS_REMOVED),
     ConstraintSyntaxNewString("bindtointerface", ".*", "Use this interface for outgoing connections", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBool("hashupdates", "true/false whether stored hashes are updated when change is detected in source. Default value: false", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("childlibpath", ".*", "LD_LIBRARY_PATH for child processes", SYNTAX_STATUS_NORMAL),
@@ -269,7 +270,7 @@ const ConstraintSyntax CFA_CONTROLBODY[] =
     ConstraintSyntaxNewInt("editbinaryfilesize", CF_VALRANGE, "Integer limit on maximum binary file size to be edited. Default value: 100000", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewInt("editfilesize", CF_VALRANGE, "Integer limit on maximum text file size to be edited. Default value: 100000", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewStringList("environment", "[A-Za-z0-9_]+=.*", "List of environment variables to be inherited by children", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewBool("exclamation", "true/false print exclamation marks during security warnings. Default value: true", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewBool("exclamation", "true/false print exclamation marks during security warnings. Default value: true", SYNTAX_STATUS_REMOVED),
     ConstraintSyntaxNewInt("expireafter", CF_VALRANGE, "Global default for time before on-going promise repairs are interrupted. Default value: 1 min", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewStringList("files_single_copy", "", "List of filenames to be watched for multiple-source conflicts", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewStringList("files_auto_define", "", "List of filenames to define classes if copied", SYNTAX_STATUS_NORMAL),
@@ -289,7 +290,7 @@ const ConstraintSyntax CFA_CONTROLBODY[] =
     ConstraintSyntaxNewInt("sensiblesize", CF_VALRANGE, "Minimum number of bytes a mounted filesystem is expected to have. Default value: 1000 bytes", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBool("skipidentify", "Do not send IP/name during server connection because address resolution is broken. Default value: false", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewStringList("suspiciousnames", "", "List of names to warn about if found during any file search", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewBool("syslog", "true/false switches on output to syslog at the inform level. Default value: false", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewBool("syslog", "true/false switches on output to syslog at the inform level. Default value: false", SYNTAX_STATUS_REMOVED),
     ConstraintSyntaxNewBool("track_value", "true/false switches on tracking of promise valuation. Default value: false", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewStringList("timezone", "", "List of allowed timezones this machine must comply with", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewInt("default_timeout", CF_VALRANGE, "Maximum time a network connection should attempt to connect. Default value: 10 seconds", SYNTAX_STATUS_NORMAL),
@@ -311,7 +312,7 @@ const ConstraintSyntax CFS_CONTROLBODY[] =
     ConstraintSyntaxNewStringList("denyconnects", "", "List of IPs or hostnames that may NOT connect to the server port", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewStringList("dynamicaddresses", "", "List of IPs or hostnames for which the IP/name binding is expected to change", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBool("hostnamekeys", "true/false store keys using hostname lookup instead of IP addresses. Default value: false", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewInt("keycacheTTL", CF_VALRANGE, "Maximum number of hours to hold public keys in the cache. Default value: 24", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewInt("keycacheTTL", CF_VALRANGE, "Maximum number of hours to hold public keys in the cache. Default value: 24", SYNTAX_STATUS_REMOVED),
     ConstraintSyntaxNewBool("logallconnections", "true/false causes the server to log all new connections to syslog. Default value: false", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBool("logencryptedtransfers", "true/false log all successful transfers required to be encrypted. Default value: false", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewInt("maxconnections", CF_VALRANGE, "Maximum number of connections that will be accepted by cf-serverd. Default value: 30 remote queries", SYNTAX_STATUS_NORMAL),
@@ -320,6 +321,7 @@ const ConstraintSyntax CFS_CONTROLBODY[] =
     ConstraintSyntaxNewStringList("skipverify", "", "List of IPs or hostnames for which we expect no DNS binding and cannot verify", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewStringList("trustkeysfrom", "", "List of IPs from whom we accept public keys on trust", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBool("listen", "true/false enable server deamon to listen on defined port. Default value: true", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewString("allowciphers", "", "List of ciphers the server accepts. For Syntax help see man page for \"openssl ciphers\". Default is \"AES256-GCM-SHA384:AES256-SHA\"", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };
 
@@ -371,9 +373,10 @@ const ConstraintSyntax CFH_CONTROLBODY[] =  /* enum cfh_control */
     ConstraintSyntaxNewNull()
 };
 
-const ConstraintSyntax CFFILE_CONTROLBODY[] =  /* enum cfh_control */
+const ConstraintSyntax file_control_constraints[] =  /* enum cfh_control */
 {
     ConstraintSyntaxNewString("namespace", CF_IDRANGE, "Switch to a private namespace to protect current file from duplicate definitions", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewStringList("inputs", ".*", "List of additional filenames to parse for promises", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };
 
@@ -432,7 +435,7 @@ const BodySyntax CONTROL_BODIES[] =
     BodySyntaxNew(CF_RUNC, CFR_CONTROLBODY, NULL, SYNTAX_STATUS_NORMAL),
     BodySyntaxNew(CF_EXECC, CFEX_CONTROLBODY, NULL, SYNTAX_STATUS_NORMAL),
     BodySyntaxNew(CF_HUBC, CFH_CONTROLBODY, NULL, SYNTAX_STATUS_NORMAL),
-    BodySyntaxNew("file", CFFILE_CONTROLBODY, NULL, SYNTAX_STATUS_NORMAL),
+    BodySyntaxNew("file", file_control_constraints, NULL, SYNTAX_STATUS_NORMAL),
 
     BodySyntaxNew("reporter", CFRE_CONTROLBODY, NULL, SYNTAX_STATUS_REMOVED),
     BodySyntaxNew("knowledge", CFK_CONTROLBODY, NULL, SYNTAX_STATUS_REMOVED),

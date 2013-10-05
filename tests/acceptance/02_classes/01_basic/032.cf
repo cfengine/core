@@ -24,11 +24,11 @@ bundle agent test
   methods:
       "call" usebundle => xxx:localclass;
 
-reports:
+  reports:
 
-  cfengine::
-        "testing classes" 
-                classes => xxx:always("another_class_global_from_command"); 
+    cfengine::
+      "testing class 1"
+      classes => xxx:always("another_class_global_from_command");
 
 }
 
@@ -44,25 +44,32 @@ bundle agent check
       "$(this.promise_filename) Pass";
     !ok::
       "$(this.promise_filename) FAIL";
+    DEBUG::
+      "xxx:a_class_global_from_command is set"
+      ifvarclass => "xxx:a_class_global_from_command";
+
+    DEBUG.another_class_global_from_command::
+      "another_class_global_from_command is set";
+
 }
 
 body file control
 {
-namespace => "xxx"; 
+      namespace => "xxx";
 }
 
 bundle agent localclass
 {
-reports:
+  reports:
 
-  cfengine::
-        "testing classes" 
-                classes => always("a_class_global_from_command"); 
+    cfengine::
+      "testing class 2"
+      classes => always("a_class_global_from_command");
 
- a_class_global_from_command::
-    "Global class from 'classes' attribute, accessed in the same namespace";
- default:a_class_global_from_command::
-    "Global class from 'classes' attribute, accessed in the default namespace";
+    a_class_global_from_command::
+      "Global class from 'classes' attribute, accessed in the same namespace";
+    default:a_class_global_from_command::
+      "Global class from 'classes' attribute, accessed in the default namespace";
 }
 
 body classes always(x)
@@ -70,10 +77,10 @@ body classes always(x)
 # Define a class no matter what the outcome of the promise is
 
 {
-  promise_repaired => { "$(x)" };
-  promise_kept => { "$(x)" };
-  repair_failed => { "$(x)" };
-  repair_denied => { "$(x)" };
-  repair_timeout => { "$(x)" };
-#  persist_time => "1"; 
+      promise_repaired => { "$(x)" };
+      promise_kept => { "$(x)" };
+      repair_failed => { "$(x)" };
+      repair_denied => { "$(x)" };
+      repair_timeout => { "$(x)" };
+      #  persist_time => "1";
 }

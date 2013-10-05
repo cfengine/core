@@ -1,3 +1,0 @@
-
-This list is concatenated in a form appropriate for the filesystem. The options must be
-legal options for the system mount commands.

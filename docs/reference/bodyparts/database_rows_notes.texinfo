@@ -1,7 +1,0 @@
-
-This constraint is used only in adding data to database columns. Rows are considered to be
-instances of individual columns. 
-
-In the case of the system registry on Windows, the rows represent data on data-value pairs.
-The currently supported types (the middle field) for the Windows registry are @code{REG_SZ} (string), 
-@code{REG_EXPAND_SZ} (expandable string) and @code{REG_DWORD} (double word).

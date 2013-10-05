@@ -1,5 +1,0 @@
-
-This variable points to the filename of the file currently making an edit
-promise. If the file has been arrived at through a search, this could be
-different from the @file{files} promiser.
-

@@ -1,6 +1,0 @@
-
-In CFEngine previously lists were represented (as in the shell) using
-separted scalars, e.g. like the PATH variable. This design feature
-turned out to be an error of judgement which has resulted in much
-trouble. This is no longer supported in CFEngine 3. By keeping lists
-an independent type many limitations have been removed.

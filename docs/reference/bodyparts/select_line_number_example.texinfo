@@ -1,9 +1,0 @@
-
-@verbatim
-
-body match_value find_line
-{
-select_line_number => "2";
-}
-
-@end verbatim

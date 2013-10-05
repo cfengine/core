@@ -22,17 +22,16 @@
   included file COSL.txt.
 */
 
-#include "conversion.h"
+#include <conversion.h>
 
-#include "promises.h"
-#include "files_names.h"
-#include "dbm_api.h"
-#include "mod_access.h"
-#include "item_lib.h"
-#include "logging.h"
-#include "rlist.h"
+#include <promises.h>
+#include <files_names.h>
+#include <dbm_api.h>
+#include <mod_access.h>
+#include <item_lib.h>
+#include <logging.h>
+#include <rlist.h>
 
-#include <assert.h>
 
 static int IsSpace(char *remainder);
 
@@ -99,6 +98,51 @@ int SyslogPriorityFromString(const char *s)
     return FindTypeInArray(SYSLOG_PRIORITY_TYPES, s, 3, 3);
 }
 
+ShellType ShellTypeFromString(const char *string)
+{
+    // For historical reasons, supports all CF_BOOL values (true/false/yes/no...),
+    // as well as "noshell,useshell,powershell".
+    char *start, *end;
+    char *options = "noshell,useshell,powershell," CF_BOOL;
+    int i;
+    int size;
+
+    if (string == NULL)
+    {
+        return SHELL_TYPE_NONE;
+    }
+
+    start = options;
+    size = strlen(string);
+    for (i = 0;; i++)
+    {
+        end = strchr(start, ',');
+        if (end == NULL)
+        {
+            break;
+        }
+        if (size == end - start && strncmp(string, start, end - start) == 0)
+        {
+            int cfBoolIndex;
+            switch (i)
+            {
+            case 0:
+                return SHELL_TYPE_NONE;
+            case 1:
+                return SHELL_TYPE_USE;
+            case 2:
+                return SHELL_TYPE_POWERSHELL;
+            default:
+                // Even cfBoolIndex is true, odd cfBoolIndex is false (from CF_BOOL).
+                cfBoolIndex = i-3;
+                return (cfBoolIndex & 1) ? SHELL_TYPE_NONE : SHELL_TYPE_USE;
+            }
+        }
+        start = end + 1;
+    }
+    return SHELL_TYPE_NONE;
+}
+
 DatabaseType DatabaseTypeFromString(const char *s)
 {
     static const char *DB_TYPES[] = { "mysql", "postgres", NULL };
@@ -139,7 +183,7 @@ char *Rlist2String(Rlist *list, char *sep)
 
     for (rp = list; rp != NULL; rp = rp->next)
     {
-        strcat(line, (char *) rp->item);
+        strcat(line, RlistScalarValue(rp));
 
         if (rp->next)
         {
@@ -244,6 +288,7 @@ static const char *datatype_strings[] =
     [DATA_TYPE_INT_RANGE] = "irange",
     [DATA_TYPE_REAL_RANGE] = "rrange",
     [DATA_TYPE_COUNTER] = "counter",
+    [DATA_TYPE_CONTAINER] = "container",
     [DATA_TYPE_NONE] = "none"
 };
 
@@ -343,8 +388,8 @@ long IntFromString(const char *s)
     {
         if (THIS_AGENT_TYPE == AGENT_TYPE_COMMON)
         {
-            Log(LOG_LEVEL_INFO, "Error reading assumed integer value \"%s\" => \"%s\" (found remainder \"%s\")",
-                  s, "non-value", remainder);
+            Log(LOG_LEVEL_INFO, "Error reading assumed integer value '%s' => 'non-value', found remainder '%s'",
+                  s, remainder);
             if (strchr(s, '$'))
             {
                 Log(LOG_LEVEL_INFO, "The variable might not yet be expandable - not necessarily an error");
@@ -403,10 +448,16 @@ static const long DAYS[] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
 
 static int GetMonthLength(int month, int year)
 {
-    /* FIXME: really? */
     if ((month == 1) && (year % 4 == 0))
     {
-        return 29;
+        if ((year % 100 == 0) && (year % 400 != 0))
+        {
+           return DAYS[month];
+        }
+        else
+        {
+           return 29;
+        }
     }
     else
     {
@@ -417,9 +468,9 @@ static int GetMonthLength(int month, int year)
 long TimeAbs2Int(const char *s)
 {
     time_t cftime;
-    int i;
     char mon[4], h[3], m[3];
     long month = 0, day = 0, hour = 0, min = 0, year = 0;
+    struct tm tm;
 
     if (s == NULL)
     {
@@ -435,6 +486,15 @@ long TimeAbs2Int(const char *s)
         day = IntFromString(VDAY);
         hour = IntFromString(h);
         min = IntFromString(m);
+
+        tm.tm_year = year - 1900;
+        tm.tm_mon = month - 1;
+        tm.tm_mday = day; 
+        tm.tm_hour = hour; 
+        tm.tm_min = min; 
+        tm.tm_sec = 0;
+        tm.tm_isdst = -1;
+        cftime = mktime(&tm);
     }
     else                        /* date Month */
     {
@@ -447,24 +507,16 @@ long TimeAbs2Int(const char *s)
             /* Wrapped around */
             year--;
         }
+        tm.tm_year = year - 1900;
+        tm.tm_mon = month - 1;
+        tm.tm_mday = day; 
+        tm.tm_hour = 0; 
+        tm.tm_min = 0; 
+        tm.tm_sec = 0;
+        tm.tm_isdst = -1;
+        cftime = mktime(&tm);
     }
 
-    Log(LOG_LEVEL_DEBUG, "(%s)\n%ld=%s,%ld=%s,%ld,%ld,%ld\n", s, year, VYEAR, month, VMONTH, day, hour, min);
-
-    cftime = 0;
-    cftime += min * 60;
-    cftime += hour * 3600;
-    cftime += (day - 1) * 24 * 3600;
-    cftime += 24 * 3600 * ((year - 1970) / 4);  /* Leap years */
-
-    for (i = 0; i < month - 1; i++)
-    {
-        cftime += GetMonthLength(i, year) * 24 * 3600;
-    }
-
-    cftime += (year - 1970) * 365 * 24 * 3600;
-
-    Log(LOG_LEVEL_DEBUG, "Time %s CORRESPONDS %s\n", s, ctime(&cftime));
     return (long) cftime;
 }
 
@@ -546,7 +598,7 @@ bool DoubleFromString(const char *s, double *value_out)
 
     if ((a == NO_DOUBLE) || (!IsSpace(remainder)))
     {
-        Log(LOG_LEVEL_ERR, "Error reading assumed real value %s (anomalous remainder %s)", s, remainder);
+        Log(LOG_LEVEL_ERR, "Reading assumed real value '%s', anomalous remainder '%s'", s, remainder);
         return false;
     }
     else
@@ -754,6 +806,36 @@ const char *DataTypeShortToType(char *short_type)
     return "unknown type";
 }
 
+int CoarseLaterThan(const char *bigger, const char *smaller)
+{
+    char month_small[CF_SMALLBUF];
+    char month_big[CF_SMALLBUF];
+    int m_small, day_small, year_small, m_big, year_big, day_big;
+
+    sscanf(smaller, "%d %s %d", &day_small, month_small, &year_small);
+    sscanf(bigger, "%d %s %d", &day_big, month_big, &year_big);
+
+    if (year_big < year_small)
+    {
+        return false;
+    }
+
+    m_small = Month2Int(month_small);
+    m_big = Month2Int(month_big);
+
+    if (m_big < m_small)
+    {
+        return false;
+    }
+
+    if (day_big < day_small && m_big == m_small && year_big == year_small)
+    {
+        return false;
+    }
+
+    return true;
+}
+
 int Month2Int(const char *string)
 {
     int i;
@@ -926,7 +1008,7 @@ UidList *Rlist2UidList(Rlist *uidnames, const Promise *pp)
     for (rp = uidnames; rp != NULL; rp = rp->next)
     {
         username[0] = '\0';
-        uid = Str2Uid(rp->item, username, pp);
+        uid = Str2Uid(RlistScalarValue(rp), username, pp);
         AddSimpleUidItem(&uidlist, uid, username);
     }
 
@@ -976,7 +1058,7 @@ GidList *Rlist2GidList(Rlist *gidnames, const Promise *pp)
     for (rp = gidnames; rp != NULL; rp = rp->next)
     {
         groupname[0] = '\0';
-        gid = Str2Gid(rp->item, groupname, pp);
+        gid = Str2Gid(RlistScalarValue(rp), groupname, pp);
         AddSimpleGidItem(&gidlist, gid, groupname);
     }
 
@@ -990,7 +1072,7 @@ GidList *Rlist2GidList(Rlist *gidnames, const Promise *pp)
 
 /*********************************************************************/
 
-uid_t Str2Uid(char *uidbuff, char *usercopy, const Promise *pp)
+uid_t Str2Uid(const char *uidbuff, char *usercopy, const Promise *pp)
 {
     Item *ip, *tmplist;
     struct passwd *pw;
@@ -1022,7 +1104,7 @@ uid_t Str2Uid(char *uidbuff, char *usercopy, const Promise *pp)
         {
             if ((pw = getpwnam(ip->name)) == NULL)
             {
-                Log(LOG_LEVEL_INFO, "Unknown user in promise \'%s\'", ip->name);
+                Log(LOG_LEVEL_INFO, "Unknown user in promise '%s'", ip->name);
 
                 if (pp != NULL)
                 {
@@ -1059,7 +1141,7 @@ uid_t Str2Uid(char *uidbuff, char *usercopy, const Promise *pp)
         }
         else if ((pw = getpwnam(uidbuff)) == NULL)
         {
-            Log(LOG_LEVEL_INFO, "Unknown user %s in promise", uidbuff);
+            Log(LOG_LEVEL_INFO, "Unknown user '%s' in promise", uidbuff);
             uid = CF_UNKNOWN_OWNER;     /* signal user not found */
 
             if (usercopy != NULL)
@@ -1078,7 +1160,7 @@ uid_t Str2Uid(char *uidbuff, char *usercopy, const Promise *pp)
 
 /*********************************************************************/
 
-gid_t Str2Gid(char *gidbuff, char *groupcopy, const Promise *pp)
+gid_t Str2Gid(const char *gidbuff, char *groupcopy, const Promise *pp)
 {
     struct group *gr;
     int gid = -2, tmp = -2;
@@ -1096,7 +1178,7 @@ gid_t Str2Gid(char *gidbuff, char *groupcopy, const Promise *pp)
         }
         else if ((gr = getgrnam(gidbuff)) == NULL)
         {
-            Log(LOG_LEVEL_INFO, "Unknown group \'%s\' in promise", gidbuff);
+            Log(LOG_LEVEL_INFO, "Unknown group '%s' in promise", gidbuff);
 
             if (pp)
             {

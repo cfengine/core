@@ -25,7 +25,7 @@ dnl The version in the next line is the only one to set
 dnl
 
 _AM_SET_OPTION([tar-ustar])
-AM_INIT_AUTOMAKE(cfengine, 3.5.0b2.revision)
+AM_INIT_AUTOMAKE(cfengine, 3.6.0a1.revision)
 AM_MAINTAINER_MODE([enable])
 
 AC_DEFINE(BUILD_YEAR, esyscmd([date +%Y | tr -d '\n']), "Software build year")
@@ -110,6 +110,20 @@ if test "x$cross_compiling" = "xno"; then
 fi
 
 dnl ######################################################################
+dnl How to build extension binaries. Can be built as plugins (default)
+dnl or complete binaries (Windows and general debugging).
+dnl ######################################################################
+
+AC_ARG_ENABLE([builtin-extensions], [AS_HELP_STRING([Build binaries with builtin extensions])],
+              [],
+              [
+                  AS_CASE([${target_os}], [mingw*], [enable_builtin_extensions=yes], [enable_builtin_extensions=no])
+              ])
+AM_CONDITIONAL([BUILTIN_EXTENSIONS], [test "x$enable_builtin_extensions" = "xyes"])
+AS_IF([test "x$enable_builtin_extensions" = "xyes"], [AC_DEFINE([BUILTIN_EXTENSIONS], [1], [Define if you want builtin Enterprise extensions])])
+AC_SUBST([enable_builtin_extensions])
+
+dnl ######################################################################
 dnl Configure files layout
 dnl ######################################################################
 
@@ -191,7 +205,10 @@ if test "x$with_postgresql" != "xno"; then
    # pg_config is only for native builds
    if test "x$cross_compiling" = "xno"; then
       if test x`which $PG_CONFIG` != x ; then
-         CPPFLAGS="$CPPFLAGS -I`$PG_CONFIG --includedir`"
+         pg_include_dir=`$PG_CONFIG --includedir`
+         if test -n "$pg_include_dir"; then
+            CPPFLAGS="$CPPFLAGS -I$pg_include_dir"
+         fi
       fi
    fi
 
@@ -218,7 +235,10 @@ if test "x$with_mysql" != "xno"; then
    # mysql_config is only for native builds
    if test "x$cross_compiling" = "xno"; then
       if test x`which $MYSQL_CONFIG` != x ; then
-         CPPFLAGS="$CPPFLAGS `$MYSQL_CONFIG --include`"
+         mysql_include_dir=`$MYSQL_CONFIG --include`
+         if test -n "$mysql_include_dir"; then
+            CPPFLAGS="$CPPFLAGS $mysql_include_dir"
+         fi
       fi
    fi
 
@@ -230,14 +250,6 @@ if test "x$with_mysql" != "xno"; then
                                [AC_MSG_ERROR([MySQL client library exports symbols clashing with OpenSSL. Get the update from distribution provider, recompile MySQL library or disable MySQL connector. See http://bugs.mysql.com/bug.php?id=65055 for details.])])
    ])
 fi
-
-dnl Enterprise extensions
-
-dnl Mongo is disabled unless overriden in subproject
-AM_CONDITIONAL(MONGO, false)
-
-m4_indir(incstart[]incend, [nova/options.m4])
-AM_CONDITIONAL([HAVE_NOVA], [test "x$with_nova" != xno && test -d ${srcdir}/nova])
 
 dnl
 dnl In-process databases
@@ -257,12 +269,26 @@ if test $WITH_QDBM = 1; then
   ])
 fi
 
+dnl OpenLDAP Lightning MDB
+
+AC_ARG_WITH([lmdb],
+    [AS_HELP_STRING([--with-lmdb[[=PATH]]], [use Lightning MDB to store runtime data])])
+AS_IF([test $WITH_QDBM -eq 0 && test -n "$with_lmdb" && test "x$with_lmdb" != "xno"], [WITH_LMDB=1], [WITH_LMDB=0])
+
+if test $WITH_LMDB = 1; then
+  CF3_WITH_LIBRARY(lmdb, [
+    AC_CHECK_LIB(lmdb, mdb_dbi_open, [], [AC_MSG_ERROR(Cannot find Lightning MDB)])
+    AC_CHECK_HEADERS(lmdb.h, [], [AC_MSG_ERROR(Cannot find Lightning MDB)])
+    AC_DEFINE(LMDB, 1, [Define if Lightning MDB is available])
+  ])
+fi
+
 dnl Tokyo Cabinet
 
 AC_ARG_WITH([tokyocabinet],
     [AS_HELP_STRING([--with-tokyocabinet[[=PATH]]], [use Tokyo Cabinet to store runtime data])])
 
-AS_IF([test $WITH_QDBM -eq 0 && (! test -n "$with_tokyocabinet" || test "x$with_tokyocabinet" != "xno")], [WITH_TOKYO=1], [WITH_TOKYO=0])
+AS_IF([test $WITH_LMDB -eq 0 && test $WITH_QDBM -eq 0 && (! test -n "$with_tokyocabinet" || test "x$with_tokyocabinet" != "xno")], [WITH_TOKYO=1], [WITH_TOKYO=0])
 
 if test $WITH_TOKYO = 1; then
   CF3_WITH_LIBRARY(tokyocabinet, [
@@ -273,8 +299,8 @@ if test $WITH_TOKYO = 1; then
   ])
 fi
 
-if test $WITH_QDBM -eq 0 && test $WITH_TOKYO -eq 0; then
-   AC_MSG_ERROR(Either Tokyo Cabinet or QDBM must be selected to compile CFEngine)
+if test $WITH_QDBM -eq 0 && test $WITH_TOKYO -eq 0 && test $WITH_LMDB -eq 0; then
+   AC_MSG_ERROR(Either Tokyo Cabinet, LMDB, or QDBM must be selected to compile CFEngine)
 fi
 
 dnl
@@ -290,8 +316,9 @@ if test x"$with_openssl" = xno ; then
 fi
 
 CF3_WITH_LIBRARY(openssl, [
+   AC_CHECK_LIB(dl, dlopen, [], [])
    AC_CHECK_LIB(crypto, RSA_generate_key_ex, [], [])
-   AC_CHECK_LIB(crypto, RSA_generate_key, [], [])
+   AC_CHECK_LIB(ssl, SSL_library_init, [], [])
    AC_CHECK_HEADERS([openssl/opensslv.h], [], [AC_MSG_ERROR(Cannot find OpenSSL)])
 
    AC_MSG_CHECKING(for OpenSSL version)
@@ -371,7 +398,10 @@ if test "x$with_libxml2" != xno; then
    # xml2-config is only for native builds
    if test "x$cross_compiling" = "xno"; then
       if test x`which $XML2_CONFIG` != x ; then
-         CPPFLAGS="$CPPFLAGS `$XML2_CONFIG --cflags`"
+         xml2_include_dir=`$XML2_CONFIG --cflags`
+         if test -n "$xml2_include_dir"; then
+            CPPFLAGS="$CPPFLAGS $xml2_include_dir"
+         fi
       fi
    fi
 
@@ -489,15 +519,6 @@ dnl ######################################################################
 dnl Check for special functions
 dnl ######################################################################
 
-AC_CHECK_DECLS(uname)
-AC_REPLACE_FUNCS(uname)
-
-AC_CHECK_DECLS(getuid)
-AC_REPLACE_FUNCS(getuid)
-
-AC_CHECK_DECLS(getgid)
-AC_REPLACE_FUNCS(getgid)
-
 AC_CHECK_DECLS(clock_gettime, [], [], [[#include <time.h>]])
 AC_REPLACE_FUNCS(clock_gettime)
 
@@ -523,17 +544,11 @@ AC_REPLACE_FUNCS(strlcpy)
 AC_CHECK_DECLS(realpath)
 AC_CHECK_FUNCS(realpath)
 
-AC_CHECK_DECLS(lstat)
-AC_REPLACE_FUNCS(lstat)
-
 AC_CHECK_DECLS(strdup)
 AC_REPLACE_FUNCS(strdup)
 
 AC_CHECK_DECLS(round, [], [], [[#include <math.h>]])
 AC_REPLACE_FUNCS(round)
-
-AC_CHECK_FUNCS(sleep)
-AC_REPLACE_FUNCS(sleep)
 
 AC_CHECK_DECLS(nanosleep)
 AC_REPLACE_FUNCS(nanosleep)
@@ -574,12 +589,6 @@ AC_REPLACE_FUNCS(gmtime_r)
 AC_CHECK_DECLS(localtime_r, [], [], [[#include <time.h>]])
 AC_REPLACE_FUNCS(localtime_r)
 
-AC_CHECK_DECLS(alarm)
-AC_REPLACE_FUNCS(alarm)
-
-AC_CHECK_DECLS(chmod)
-AC_REPLACE_FUNCS(chmod)
-
 AC_CHECK_FUNCS(getpwent setpwent endpwent)
 
 AC_CHECK_DECLS(getnetgrent, [], [], [[#include <netdb.h>]])
@@ -595,6 +604,11 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <netdb.h>]],
 
 AC_CHECK_DECLS(endnetgrent, [], [], [[#include <netdb.h>]])
 AC_CHECK_FUNCS(endnetgrent)
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <netdb.h>]],
+                                   [[extern int endnetgrent(const char *)]])],
+  [AC_DEFINE([ENDNETGRENT_RETURNS_INT], 1, [Whether endnetgrent returns int])],
+  [AC_DEFINE([ENDNETGRENT_RETURNS_INT], 0, [Whether endnetgrent returns int])])
+
 
 AC_CHECK_FUNCS(sendto)
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <sys/types.h>
@@ -603,6 +617,12 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <sys/types.h>
     [AC_DEFINE([SENDTO_RETURNS_SSIZE_T], 1, [Whether sendto returns ssize_t])],
     [AC_DEFINE([SENDTO_RETURNS_SSIZE_T], 0, [Whether sendto does not returns ssize_t])])
 
+CF3_CHECK_PROPER_FUNC([ctime],
+  [],
+  [[#error ctime(3) may produce different results on different OSes. Let's have our POSIX-compliant implementation all the time]],
+  [#define ctime rpl_ctime])
+CF3_REPLACE_PROPER_FUNC([ctime])
+ 
 dnl Check whether mkdir accepts two parameters
 CF3_CHECK_PROPER_FUNC([mkdir],
   [[#include <sys/stat.h>
@@ -632,11 +652,6 @@ CF3_CHECK_PROPER_FUNC([rename],
     #endif]],
   [#define rename rpl_rename])
 
-CF3_CHECK_PROPER_FUNC([ctime],
-  [],
-  [[#error ctime(3) may produce different results on different OSes. Let's have our POSIX-compliant implementation all the time]],
-  [#define ctime rpl_ctime])
- 
 AC_CHECK_DECLS(mkdtemp)
 AC_REPLACE_FUNCS(mkdtemp)
 
@@ -718,7 +733,8 @@ AC_CHECK_TYPES(struct sockaddr_storage, [], [], [[
     #include <sys/socket.h>
     #include <netdb.h>
 #endif]])
-AC_CHECK_DECLS(getaddrinfo, [], [], [[
+
+AC_CHECK_DECLS(getaddrinfo, [], [AC_LIBOBJ(getaddrinfo)], [[
 #if HAVE_WINSOCK2_H
     #include <winsock2.h>
 #endif
@@ -727,8 +743,8 @@ AC_CHECK_DECLS(getaddrinfo, [], [], [[
 #else
     #include <sys/socket.h>
     #include <netdb.h>
-#endif]])
-AC_REPLACE_FUNCS(getaddrinfo)
+#endif
+]])
 
 AC_CHECK_DECLS([[inet_ntop], [inet_pton]], [], [], [[#include <arpa/inet.h>]])
 AC_REPLACE_FUNCS(inet_ntop inet_pton)
@@ -737,17 +753,26 @@ AC_CHECK_FUNCS(getifaddrs)
 
 AC_CHECK_FUNC(lchown, AC_DEFINE(HAVE_LCHOWN, 1, [Whether to use lchown(3) to change ownerships]))
 
-AC_CHECK_DECLS(chown)
-AC_REPLACE_FUNCS(chown)
-
-AC_CHECK_FUNCS(fchmod)
-AC_REPLACE_FUNCS(fchmod)
-
 AC_CHECK_DECLS(pthread_attr_setstacksize, [], [], [[#include <pthread.h>]])
 AC_REPLACE_FUNCS(pthread_attr_setstacksize)
 
 AC_CHECK_DECLS(pthread_sigmask, [], [], [[#include <signal.h>]])
 AC_REPLACE_FUNCS(pthread_sigmask)
+
+dnl ######################################################################
+dnl These need declarations here, but will be defined in the
+dnl Enterprise Windows code.
+dnl ######################################################################
+
+AC_CHECK_DECLS(alarm)
+AC_CHECK_DECLS(chmod)
+AC_CHECK_DECLS(chown)
+AC_CHECK_FUNCS(fchmod)
+AC_CHECK_DECLS(uname)
+AC_CHECK_DECLS(getuid)
+AC_CHECK_DECLS(getgid)
+AC_CHECK_DECLS(lstat)
+AC_CHECK_FUNCS(sleep)
 
 dnl ######################################################################
 dnl Check for sa_len in struct sockaddr
@@ -768,6 +793,22 @@ AC_CHECK_HEADERS(sys/sysctl.h, [], [], [AC_INCLUDES_DEFAULT
 #endif
 ])
    
+dnl ######################################################################
+dnl Requirements for GetUptimeMinutes() to set $(sys.uptime)
+dnl ######################################################################
+dnl Linux sysinfo() call
+AC_CHECK_MEMBERS([struct sysinfo.uptime], , , [#include <sys/sysinfo.h>])
+
+dnl BSD uses sys/sysctl.h to get time-of-boot
+AC_CHECK_HEADERS(sys/sysctl.h, [], [], [AC_INCLUDES_DEFAULT
+#ifdef HAVE_SYS_PARAM_H
+# include <sys/param.h>
+#endif
+])
+
+dnl Solaris uses kstat.h to get time-of-boot
+AC_CHECK_HEADERS(kstat.h)
+
 dnl #######################################################################
 dnl Newer BSD systems don't have a compatible rtentry - use ortentry
 dnl #######################################################################
@@ -784,26 +825,57 @@ if test "$rtry" = ortentry; then
 fi
 AC_MSG_RESULT([$rtry])
 
+dnl #######################################################################
+dnl Enable extended attributes. Used for SELinux and ACLs
+dnl #######################################################################
+
+AC_CHECK_FUNCS(listxattr, [AC_DEFINE(WITH_XATTR, 1, [Define if you have a libc that supports extended attributes])])
+AC_CHECK_HEADERS([attr/xattr.h, sys/xattr.h])
+
+AC_MSG_CHECKING([whether xattr functions have extra arguments])
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([#include <sys/types.h>
+                                    #include <sys/xattr.h>],
+                                    [(void)listxattr("", 0, 0, 0);
+                                    (void)getxattr("", "", 0, 0, 0, 0);
+                                    (void)setxattr("", "", "", 0, 0, 0);
+                                    (void)removexattr("", "", 0);])],
+                  [AC_DEFINE(WITH_XATTR_EXTRA_ARGS, 1, [Define if your xattr implementation has extra arguments])]
+                  [AC_MSG_RESULT([yes])],
+                  [AC_MSG_RESULT([no])])
+
 dnl ######################################################################
 dnl Give the chance to enable SELINUX
 dnl ######################################################################
 
-AC_ARG_ENABLE([selinux], [AS_HELP_STRING([--enable-selinux], [Enable SELinux support])])
-AS_IF([test "x$enable_selinux" = "xyes"], [
-    AC_DEFINE(WITH_SELINUX, 1, [Define if you want to use SELinux])
-    LIB_SELINUX="-lselinux"
-    LIBS="$LIBS $LIB_SELINUX"
-    AC_SUBST(LIB_SELINUX)
-])
+AC_ARG_ENABLE([selinux], [AS_HELP_STRING([--enable-selinux], [Deprecated. SELinux support is always enabled])])
 
 dnl ######################################################################
 dnl Collect all the options
 dnl ######################################################################
 
-CPPFLAGS="$CPPFLAGS $TOKYOCABINET_CPPFLAGS $QDBM_CPPFLAGS $PCRE_CPPFLAGS $OPENSSL_CPPFLAGS $MONGO_CPPFLAGS $SQLITE3_CPPFLAGS"
-CFLAGS="$CFLAGS $TOKYOCABINET_CFLAGS $QDBM_CFLAGS $PCRE_CFLAGS $OPENSSL_CFLAGS $MONGO_CFLAGS $SQLITE3_CFLAGS"
-LDFLAGS="$LDFLAGS $TOKYOCABINET_LDFLAGS $QDBM_LDFLAGS $PCRE_LDFLAGS $OPENSSL_LDFLAGS $MONGO_LDFLAGS $SQLITE3_LDFLAGS"
-LIBS="$LIBS $TOKYOCABINET_LIBS $QDBM_LIBS $PCRE_LIBS $OPENSSL_LIBS $MONGO_LIBS $SQLITE3_LIBS"
+CORE_CPPFLAGS="$CPPFLAGS $LMDB_CPPFLAGS $TOKYOCABINET_CPPFLAGS $QDBM_CPPFLAGS $PCRE_CPPFLAGS $OPENSSL_CPPFLAGS $MONGO_CPPFLAGS $SQLITE3_CPPFLAGS $LIBACL_CPPFLAGS"
+CORE_CFLAGS="$CFLAGS $LMDB_CFLAGS $TOKYOCABINET_CFLAGS $QDBM_CFLAGS $PCRE_CFLAGS $OPENSSL_CFLAGS $MONGO_CFLAGS $SQLITE3_CFLAGS $LIBACL_CFLAGS"
+CORE_LDFLAGS="$LDFLAGS $LMDB_LDFLAGS $TOKYOCABINET_LDFLAGS $QDBM_LDFLAGS $PCRE_LDFLAGS $OPENSSL_LDFLAGS $MONGO_LDFLAGS $SQLITE3_LDFLAGS $LIBACL_LDFLAGS"
+CORE_LIBS="$LIBS $LMDB_LIBS $TOKYOCABINET_LIBS $QDBM_LIBS $PCRE_LIBS $OPENSSL_LIBS $MONGO_LIBS $SQLITE3_LIBS $LIBACL_LIBS"
+
+dnl ######################################################################
+dnl Make them available to subprojects.
+dnl ######################################################################
+
+AC_SUBST([CORE_CPPFLAGS])
+AC_SUBST([CORE_CFLAGS])
+AC_SUBST([CORE_LDFLAGS])
+AC_SUBST([CORE_LIBS])
+AC_CONFIG_FILES([configure_flags.env])
+
+dnl ######################################################################
+dnl And then use them.
+dnl ######################################################################
+
+CPPFLAGS="$CORE_CPPFLAGS"
+CFLAGS="$CORE_CFLAGS"
+LDFLAGS="$CORE_LDFLAGS"
+LIBS="$CORE_LIBS"
 
 dnl ######################################################################
 dnl OS specific stuff
@@ -824,7 +896,7 @@ case "$target_os" in
    aix*)
         CPPFLAGS="$CPPFLAGS -w"
         ;;
-   linux*)
+   linux*|*bsd*gnu)
         AC_CHECK_LIB(nss_nis, yp_get_default_domain)
         ;;
    freebsd*|dragonfly*)
@@ -856,23 +928,7 @@ case "$target_os" in
         ;;
 esac
 
-#
-# OS kernels conditionals. Don't use those unless it is really needed (if code
-# depends on the *kernel* feature, and even then -- some kernel features are
-# shared by different kernels).
-#
-# Good example: use LINUX to select code which uses inotify and netlink sockets.
-# Bad example: use LINUX to select code which parses output of coreutils' ps(1).
-#
-AM_CONDITIONAL([LINUX], [test -n "`echo ${target_os} | grep linux`"])
-AM_CONDITIONAL([SOLARIS], [test -n "`(echo ${target_os} | egrep 'solaris|sunos')`"])
-AM_CONDITIONAL([NT], [test -n "`(echo ${target_os} | egrep 'mingw|cygwin')`"])
-AM_CONDITIONAL([CYGWIN], [test -n "`(echo ${target_os} | egrep 'cygwin')`"])
-AM_CONDITIONAL([AIX], [test -n "`(echo ${target_os} | grep aix)`"])
-AM_CONDITIONAL([HPUX], [test -n "`(echo ${target_os} | egrep 'hpux|hp-ux')`"])
-AM_CONDITIONAL([FREEBSD], [test -n "`(echo ${target_os} | grep freebsd)`"])
-AM_CONDITIONAL([NETBSD], [test -n "`(echo ${target_os} | grep netbsd)`"])
-AM_CONDITIONAL([XNU], [test -n "`(echo ${target_os} | grep darwin)`"])
+m4_include([m4/cf3_platforms.m4])
 
 dnl #####################################################################
 dnl Configure LOCKDIR and LOGDIR
@@ -905,53 +961,6 @@ if test "x$with_shell" = "xno"; then
 fi
 AC_DEFINE_UNQUOTED(SHELL_PATH, "$with_shell", [Path to the POSIX-compatible shell])
 
-dnl ####################################################################
-dnl Set GCC CFLAGS only if using GCC.
-dnl ####################################################################
-
-AC_MSG_CHECKING(for HP-UX aC)
-AC_PREPROC_IFELSE([AC_LANG_SOURCE([[
-#if defined __HP_cc
-#This is HP-UX ANSI C
-#endif
-]])], [AC_MSG_RESULT(no)],[AC_MSG_RESULT(yes)
-CFLAGS="$CFLAGS -Agcc"
-CPPFLAGS="$CPPFLAGS -Agcc"
-HP_UX_AC=yes])
-
-AC_MSG_CHECKING(for GCC specific compile flags)
-if test x"$GCC" = "xyes" && test x"$HP_UX_AC" != x"yes"; then
-    CFLAGS="$CFLAGS -g -Wall"
-    CPPFLAGS="$CPPFLAGS -std=gnu99"
-    AC_MSG_RESULT(yes)
-
-    save_CFLAGS="$CFLAGS"
-    CFLAGS="$CFLAGS -Wno-pointer-sign"
-    AC_MSG_CHECKING(for -Wno-pointer-sign)
-    AC_COMPILE_IFELSE([AC_LANG_SOURCE([int main() {}])],
-     [AC_MSG_RESULT(yes)],
-     [AC_MSG_RESULT(no)
-     CFLAGS="$save_CFLAGS"])
-
-    save_CFLAGS="$CFLAGS"
-    CFLAGS="$CFLAGS -Werror=implicit-function-declaration"
-    AC_MSG_CHECKING(for -Werror=implicit-function-declaration)
-    AC_COMPILE_IFELSE([AC_LANG_SOURCE([int main() {}])],
-     [AC_MSG_RESULT(yes)],
-     [AC_MSG_RESULT(no)
-     CFLAGS="$save_CFLAGS"])
-
-    save_CFLAGS="$CFLAGS"
-    CFLAGS="$CFLAGS -Wunused-parameter"
-    AC_MSG_CHECKING(for -Wunused-parameter")
-    AC_COMPILE_IFELSE([AC_LANG_SOURCE([int main() {}])],
-     [AC_MSG_RESULT(yes)],
-     [AC_MSG_RESULT(no)
-     CFLAGS="$save_CFLAGS"])
-else 
-    AC_MSG_RESULT(no)
-fi
-
 dnl #####################################################################
 dnl Hostname and Version stuff
 dnl #####################################################################
@@ -960,6 +969,13 @@ AC_PATH_PROG(HOSTNAME, hostname, "", $PATH)
 
 AC_DEFINE_UNQUOTED(AUTOCONF_HOSTNAME, "`$HOSTNAME`", [Special CFEngine symbol])
 AC_DEFINE_UNQUOTED(AUTOCONF_SYSNAME, "$target_os", [Speial CFEngine symbol])
+
+
+dnl #####################################################################
+dnl GCC flags
+dnl #####################################################################
+
+m4_include([m4/cf3_gcc_flags.m4])
 
 
 dnl #####################################################################
@@ -1018,33 +1034,6 @@ if test "x$use_coverage" = "xyes"; then
   LDFLAGS="$LDFLAGS -lgcov"
 fi
 
-dnl
-dnl Documentation generation
-dnl
-
-AC_ARG_ENABLE(docs, AC_HELP_STRING([--enable-docs=html|pdf|all],
-                                   [Enable generation of documentation in specified formats]),
-                    [use_docs=$enableval], [use_docs=no])
-
-if test "x$use_docs" != "xno"; then
-   if test "x$use_docs" = "xhtml" || test "x$use_docs" = "xall"; then
-     if test "$MAKEINFO" = "${am_missing_run}makeinfo"; then
-      AC_MSG_ERROR([makeinfo tool is required for HTML documentation generation])
-     fi
-   fi
-
-   if test "x$use_docs" = "xpdf" || test "x$use_docs" = "xall"; then
-      AC_CHECK_PROG(TEXI2PDF, texi2pdf, texi2pdf)
-
-      if test -z "$TEXI2PDF"; then
-        AC_MSG_ERROR([texi2pdf tool is required for PDF documentation generation])
-      fi
-   fi
-fi
-
-AM_CONDITIONAL(HTML_DOCS, test "x$use_docs" = "xhtml" || test "x$use_docs" = "xall")
-AM_CONDITIONAL(PDF_DOCS, test "x$use_docs" = "xpdf" || test "x$use_docs" = "xall")
-
 #
 # Populate contents of config.post.h
 #
@@ -1082,6 +1071,14 @@ if test "x$ac_cv_lib_pq_PQconnectdb" = "xyes"; then
   AC_MSG_RESULT([-> PostgreSQL connector: $POSTGRESQL_PATH])
 else
   AC_MSG_RESULT([-> PostgreSQL connector: disabled])
+fi
+
+if test $WITH_LMDB = 1; then
+  AC_MSG_RESULT([-> DB: Lightning MDB: $LMDB_PATH])
+elif test $WITH_TOKYO = 1; then
+  AC_MSG_RESULT([-> DB: Tokyo Cabinet: $TOKYOCABINET_PATH])
+elif test $WITH_QDBM = 1; then
+  AC_MSG_RESULT([-> DB: QDBM: $QDBM_PATH])
 fi
 
 if test "x$ac_cv_lib_virt_virConnectOpen" = xyes; then
@@ -1123,18 +1120,11 @@ AC_CONFIG_FILES([Makefile
     cf-agent/Makefile
     cf-promises/Makefile
     cf-execd/Makefile
-    cf-gendoc/Makefile
     cf-key/Makefile
     cf-monitord/Makefile
     cf-runagent/Makefile
     cf-serverd/Makefile
     ext/Makefile
-    docs/Makefile
-    docs/guides/Makefile
-    docs/manpages/Makefile
-    docs/reference/Makefile
-    docs/tools/Makefile
-    docs/tex-include/Makefile
     examples/Makefile
     masterfiles/Makefile
     tests/Makefile
@@ -1142,8 +1132,6 @@ AC_CONFIG_FILES([Makefile
     tests/unit/Makefile
     tests/load/Makefile])
 
-m4_indir(incstart[]incend, [nova/output.m4])
-
 AC_OUTPUT
 
-AC_MSG_RESULT(DONE: Configuration done. Run make/gmake to build CFEngine.)
+AC_MSG_RESULT(DONE: Configuration done. Run make/gmake to build CFEngine Community.)

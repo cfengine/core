@@ -1,3 +1,0 @@
-
-This affects only the output format of warnings.
-

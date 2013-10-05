@@ -1,9 +1,0 @@
-
-@verbatim
-
-body delete_select example(s)
-{
-delete_if_startwith_from_list => { @(s) };
-}
-
-@end verbatim

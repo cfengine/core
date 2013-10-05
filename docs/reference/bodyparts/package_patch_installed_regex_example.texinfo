@@ -1,9 +1,0 @@
-
-@verbatim
-
-body package_method zypper
-{
-package_patch_installed_regex => ".*(Installed|Not Applicable).*";
-}
-
-@end verbatim

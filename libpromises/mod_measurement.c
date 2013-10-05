@@ -22,9 +22,9 @@
   included file COSL.txt.
 */
 
-#include "mod_measurement.h"
+#include <mod_measurement.h>
 
-#include "syntax.h"
+#include <syntax.h>
 
 static const ConstraintSyntax match_value_constraints[] =
 {

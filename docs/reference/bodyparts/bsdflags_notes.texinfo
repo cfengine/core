@@ -1,4 +1,0 @@
-
-The BSD Unices (FreeBSD, OpenBSD, NetBSD) and MacOSX have additional
-filesystem flags which can be set. Refer to the BSD @code{chflags}
-documentation for this.

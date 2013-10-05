@@ -1,6 +1,0 @@
-
-@verbatim
-
-database_type => "ms_registry";
-
-@end verbatim

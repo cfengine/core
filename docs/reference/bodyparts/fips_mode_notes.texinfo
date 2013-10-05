@@ -1,8 +1,0 @@
-
-Appears as of Nova 2.0.
-If CFEngine commercial editions this value may be set to avoid the use
-of old deprecated algorithms that are no longer FIPS 140-2 compliant. 
-If not set, there is some degree of compatibility with older versions and
-algorithms. During an upgrade, setting this parameter can cause a lot of
-recomputation of checksums etc. Government bodies starting with Nova 2.0
-or higher should set this to @samp{true} from the start.

@@ -1,9 +1,0 @@
-
-@verbatim
-
-body server control
-{
-trustkeysfrom => { "10\.0\.1\.1", "192\.168\..*"};
-}
-
-@end verbatim

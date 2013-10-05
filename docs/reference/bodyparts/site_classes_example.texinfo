@@ -1,8 +1,0 @@
-
-
-@verbatim
-body common control
-{
-site_classes => { "datacenters","datacentres"  }; # locations is by default
-}
-@end verbatim

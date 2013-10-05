@@ -22,24 +22,24 @@
   included file COSL.txt.
 */
 
-#include "files_interfaces.h"
+#include <files_interfaces.h>
 
-#include "env_context.h"
-#include "promises.h"
-#include "dir.h"
-#include "files_names.h"
-#include "files_hashes.h"
-#include "files_copy.h"
-#include "item_lib.h"
-#include "vars.h"
-#include "matching.h"
-#include "client_code.h"
-#include "string_lib.h"
-#include "rlist.h"
+#include <env_context.h>
+#include <promises.h>
+#include <dir.h>
+#include <files_names.h>
+#include <files_hashes.h>
+#include <files_copy.h>
+#include <item_lib.h>
+#include <vars.h>
+#include <matching.h>
+#include <client_code.h>
+#include <string_lib.h>
+#include <rlist.h>
 
 int cf_lstat(char *file, struct stat *buf, FileCopy fc, AgentConnection *conn)
 {
-    if ((fc.servers == NULL) || (strcmp(fc.servers->item, "localhost") == 0))
+    if ((fc.servers == NULL) || (strcmp(fc.servers->val.item, "localhost") == 0))
     {
         return lstat(file, buf);
     }

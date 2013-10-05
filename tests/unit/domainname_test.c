@@ -1,6 +1,6 @@
-#include "test.h"
+#include <test.h>
 
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
 char fqname[CF_BUFSIZE];
 char uqname[CF_BUFSIZE];

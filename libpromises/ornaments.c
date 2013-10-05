@@ -22,8 +22,8 @@
   included file COSL.txt.
 */
 
-#include "ornaments.h"
-#include "rlist.h"
+#include <ornaments.h>
+#include <rlist.h>
 
 void PromiseBanner(const Promise *pp)
 {
@@ -48,28 +48,9 @@ void PromiseBanner(const Promise *pp)
         strcpy(handle, "(enterprise only)");
     }
 
-    Log(LOG_LEVEL_VERBOSE, "\n");
     Log(LOG_LEVEL_VERBOSE, "    .........................................................");
-
-    if (VERBOSE || DEBUG)
-    {
-        printf("%s>     Promise's handle: %s\n", VPREFIX, handle);
-        printf("%s>     Promise made by: \"%s\"", VPREFIX, pp->promiser);
-    }
-
-    if (pp->promisee.item)
-    {
-        if (VERBOSE)
-        {
-            printf("\n%s>     Promise made to (stakeholders): ", VPREFIX);
-            RvalShow(stdout, pp->promisee);
-        }
-    }
-
-    if (VERBOSE)
-    {
-        printf("\n");
-    }
+    Log(LOG_LEVEL_VERBOSE, "     Promise's handle: '%s'", handle);
+    Log(LOG_LEVEL_VERBOSE, "     Promise made by: '%s'", pp->promiser);
 
     if (pp->comment)
     {
@@ -88,27 +69,17 @@ void BannerSubBundle(const Bundle *bp, const Rlist *params)
         return;
     }
 
-    Log(LOG_LEVEL_VERBOSE, "\n");
     Log(LOG_LEVEL_VERBOSE, "      * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *");
+    Log(LOG_LEVEL_VERBOSE, "       BUNDLE %s", bp->name);
 
-    if (VERBOSE || DEBUG)
+    if (params)
     {
-        printf("%s>       BUNDLE %s", VPREFIX, bp->name);
-    }
-
-    if (params && (VERBOSE || DEBUG))
-    {
-        printf("(");
-        RlistShow(stdout, params);
-        printf(" )\n");
-    }
-    else
-    {
-        if (VERBOSE || DEBUG)
-            printf("\n");
+        Writer *w = StringWriter();
+        RlistWrite(w, params);
+        Log(LOG_LEVEL_VERBOSE, "(%s)", StringWriterData(w));
+        WriterClose(w);
     }
     Log(LOG_LEVEL_VERBOSE, "      * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *");
-    Log(LOG_LEVEL_VERBOSE, "\n");
 }
 
 void Banner(const char *s)
@@ -149,12 +120,13 @@ void BannerSubPromiseType(const EvalContext *ctx, const char *bundlename, const 
         {
             Log(LOG_LEVEL_VERBOSE, "     ??? Local class context: ");
 
-            StringSetIterator it = EvalContextStackFrameIteratorSoft(ctx);
-            const char *context = NULL;
-            while ((context = StringSetIteratorNext(&it)))
+            ClassTableIterator *iter = EvalContextClassTableIteratorNewLocal(ctx);
+            Class *cls = NULL;
+            while ((cls = ClassTableIteratorNext(iter)))
             {
-                printf("       %s\n", context);
+                Log(LOG_LEVEL_VERBOSE, "       %s", cls->name);
             }
+            ClassTableIteratorDestroy(iter);
 
             Log(LOG_LEVEL_VERBOSE, "\n");
         }
@@ -174,27 +146,16 @@ void BannerBundle(Bundle *bp, Rlist *params)
         return;
     }
 
-    Log(LOG_LEVEL_VERBOSE, "\n");
     Log(LOG_LEVEL_VERBOSE, "*****************************************************************");
+    Log(LOG_LEVEL_VERBOSE, "BUNDLE %s", bp->name);
 
-    if (VERBOSE || DEBUG)
+    if (params)
     {
-        printf("%s> BUNDLE %s", VPREFIX, bp->name);
-    }
-
-    if (params && (VERBOSE || DEBUG))
-    {
-        printf("(");
-        RlistShow(stdout, params);
-        printf(" )\n");
-    }
-    else
-    {
-        if (VERBOSE || DEBUG)
-            printf("\n");
+        Writer *w = StringWriter();
+        RlistWrite(w, params);
+        Log(LOG_LEVEL_VERBOSE, "(%s)", StringWriterData(w));
+        WriterClose(w);
     }
 
     Log(LOG_LEVEL_VERBOSE, "*****************************************************************");
-    Log(LOG_LEVEL_VERBOSE, "\n");
-
 }

@@ -1,9 +1,0 @@
-
-
-@verbatim
-body agent control
-{
-hashupdates => "true";
-}
-
-@end verbatim

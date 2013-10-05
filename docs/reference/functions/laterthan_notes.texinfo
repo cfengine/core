@@ -1,2 +1,0 @@
-
-The arguments are standard time, @xref{Function on}.

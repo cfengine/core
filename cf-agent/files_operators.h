@@ -25,14 +25,14 @@
 #ifndef CFENGINE_FILES_OPERATORS_H
 #define CFENGINE_FILES_OPERATORS_H
 
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
-int MoveObstruction(EvalContext *ctx, char *from, Attributes attr, const Promise *pp);
+int MoveObstruction(EvalContext *ctx, char *from, Attributes attr, const Promise *pp, PromiseResult *result);
 
 typedef bool (*SaveCallbackFn)(const char *dest_filename, void *param);
 int SaveAsFile(SaveCallbackFn callback, void *param, const char *file, Attributes a);
 int SaveItemListAsFile(Item *liststart, const char *file, Attributes a);
 
-int CompareToFile(EvalContext *ctx, const Item *liststart, const char *file, Attributes a, const Promise *pp);
+int CompareToFile(EvalContext *ctx, const Item *liststart, const char *file, Attributes a, const Promise *pp, PromiseResult *result);
 
 #endif

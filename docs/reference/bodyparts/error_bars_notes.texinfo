@@ -1,6 +1,0 @@
-
-
-The default is to produce error bars. Without error bars from
-CFEngine's machine learning data there is no way to assess
-the significance of an observation about the system, i.e. whether
-it is normal or anomalous.

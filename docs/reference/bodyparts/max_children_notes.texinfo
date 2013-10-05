@@ -1,7 +1,0 @@
-
-For the run-agent this represents the maximum number of forked
-background processes allowed when parallelizing connections to
-servers. For the agent it represents the number of background jobs
-allowed concurrently. Background jobs often lead to contention of
-the disk resources slowing down tasks considerably; there is thus a law
-of diminishing returns.

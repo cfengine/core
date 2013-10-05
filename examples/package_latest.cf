@@ -1,0 +1,24 @@
+# 
+# Makes sure a package is installed at latest version.
+# Does not take any action if the package has already
+# reached the version given in package_version.
+#
+
+body common control
+{
+      inputs => { "libraries/cfengine_stdlib.cf" };
+      bundlesequence => { "example" };
+}
+
+
+bundle agent example
+{
+  packages:
+
+      "apache2"
+      package_method => generic,
+      package_version => "2.2.00",
+      package_select => ">=",
+      package_policy => "addupdate";
+}
+

@@ -1,0 +1,26 @@
+body common control
+{
+      bundlesequence => { "example" };
+}
+
+#############################################
+
+bundle agent example
+{
+  services:
+
+      "Themes"
+      service_policy => "start",
+      service_dependencies => { "Alerter" },
+      service_method => exmethod;
+}
+
+#############################################
+
+body service_method exmethod
+{
+      service_type => "windows";
+      service_args => "-f \"the file with spaces.cf\" --some-args";
+      service_autostart_policy => "boot_time";
+      service_dependence_chain => "start_parent_services";
+}

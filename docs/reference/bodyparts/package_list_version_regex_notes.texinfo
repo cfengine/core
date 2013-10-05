@@ -1,5 +1,0 @@
-
-This regular expression should containe exactly one parenthesized
-back-reference that marks the version string of packages listed as
-installed.  The regular expression may match a portion of the string
-(that is, it is unanchored, @pxref{Anchored vs. unanchored regular expressions})

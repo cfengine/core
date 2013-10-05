@@ -1,9 +1,0 @@
-
-Hosts or IP addresses that are explicitly denied access. This should
-only be used in special circumstances.  One should never grant generic
-access to everything and then deny special cases. Since the default
-server behaviour is to grant no access to anything, this list is
-unnecessary unless you have already granted access to some set of
-hosts using a generic pattern, to which you intend to make an exception.
-
-See also the warning about regular expressions in @code{allowallconnects}.

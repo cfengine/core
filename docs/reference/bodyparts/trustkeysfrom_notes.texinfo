@@ -1,7 +1,0 @@
-
-If connecting clients' public keys have not already been trusted, this
-allows us to say `yes' to accepting the keys on trust. Normally this
-should be an empty list except in controlled circumstances.
-
-See also the warning about regular expressions in @code{allowallconnects}.
-

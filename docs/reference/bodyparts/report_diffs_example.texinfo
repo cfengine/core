@@ -1,9 +1,0 @@
-
-@verbatim
-
-body changes example
-{
-report_diffs => "true";
-}
-
-@end verbatim

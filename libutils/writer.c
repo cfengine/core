@@ -22,10 +22,10 @@
   included file COSL.txt.
 */
 
-#include "writer.h"
+#include <writer.h>
 
-#include "misc_lib.h"
-#include "alloc.h"
+#include <misc_lib.h>
+#include <alloc.h>
 
 typedef enum
 {

@@ -1,0 +1,91 @@
+#######################################################
+#
+# Test findfiles()
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle common findfiles
+{
+  vars:
+      "names" slist => { "a", "bc", "d/e/f", "g/h/i/j", "klm/nop/qrs", "tu/*" };
+}
+
+#######################################################
+
+bundle agent init
+{
+  files:
+      "$(G.testdir)/$(findfiles.names)"
+      create => "true";
+
+  reports:
+    DEBUG::
+      "Created $(G.testdir)/$(findfiles.names)";
+}
+
+
+#######################################################
+
+bundle agent test
+{
+  vars:
+      "patterns[a]" string => "$(G.testdir)/?";
+      "patterns[b]" string => "$(G.testdir)/*";
+      "patterns[c]" string => "$(G.testdir)/?/*";
+      "patterns[d]" string => "$(G.testdir)/[ab]*";
+      "patterns[e]" string => "$(G.testdir)/nosuch/*";
+      "patterns[f]" string => "$(G.testdir)/tu/\\*";
+
+      "pnames" slist => getindices("patterns");
+
+      "found[$(pnames)]" slist => findfiles("$(patterns[$(pnames)])");
+      "found_string[$(pnames)]" string => join(",", "found[$(pnames)]");
+
+  reports:
+    DEBUG::
+      "findfiles pattern $(pnames) '$(patterns[$(pnames)])' => '$(found_string[$(pnames)])'";
+}
+
+
+#######################################################
+
+bundle agent check
+{
+  vars:
+      "expected[a]" string => "$(G.testdir)/a,$(G.testdir)/d,$(G.testdir)/g";
+      "expected[b]" string => "$(G.testdir)/a,$(G.testdir)/bc,$(G.testdir)/d,$(G.testdir)/g,$(G.testdir)/klm,$(G.testdir)/tu";
+      "expected[c]" string => "$(G.testdir)/d/e,$(G.testdir)/g/h";
+      "expected[d]" string => "$(G.testdir)/a,$(G.testdir)/bc";
+      "expected[e]" string => "";
+      "expected[f]" string => "$(G.testdir)/tu/*";
+
+      "expects" slist => getindices("expected");
+
+      "fstring" slist => getindices("test.found_string");
+
+      "joint_condition" string => join(".", "expects");
+
+  classes:
+      "$(expects)" expression => strcmp("$(test.found_string[$(expects)])", "$(expected[$(expects)])");
+      "ok" expression => "$(joint_condition)";
+
+  reports:
+    DEBUG::
+      "pattern $(expects) matches as expected: '$(expected[$(expects)])'"
+      ifvarclass => "$(expects)";
+
+      "pattern $(expects) does NOT match expected: '$(test.found_string[$(expects)])' != '$(expected[$(expects)])'"
+      ifvarclass => "!$(expects)";
+
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

@@ -1,2 +1,0 @@
-
-The servers are tried in order until one of them succeeds.

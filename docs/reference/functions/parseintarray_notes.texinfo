@@ -1,9 +1,0 @@
-
-@i{History}: Was introduced in version 3.1.5a1, Nova 2.1.0 (2011)
-
-This function mirrors the exact behaviour of @code{readintarray()},
-but reads data from a variable instead of a file @pxref{Function readintarray}.
-By making data
-readable from a variable, data driven policies can be kept inline.
-This means that they will be visible in the CFEngine Knowledge
-Management portal.

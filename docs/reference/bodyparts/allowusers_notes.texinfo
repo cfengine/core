@@ -1,5 +1,0 @@
-
-The usernames listed in this list are those asserted as public key
-identities during client-server connections. These may or may not
-correspond to system identities on the server-side system.
-

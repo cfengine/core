@@ -1,7 +1,0 @@
-
-This regular expression is only used when the @i{promiser} contains
-not only the name of the package, but its version and archiecture
-also. In that case, this expression should contain a single parenthesized
-back-reference to extract the name of the package from the string.  The
-regex may match a portion of the string (that is, it is unanchored,
-@pxref{Anchored vs. unanchored regular expressions})

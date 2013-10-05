@@ -1,6 +1,0 @@
-
-@verbatim
-
- package_patch_list_command => "/usr/bin/zypper patches";
-
-@end verbatim

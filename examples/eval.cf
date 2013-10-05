@@ -1,0 +1,41 @@
+#+begin_src cfengine3
+body common control
+{
+      bundlesequence => { run };
+}
+
+bundle agent run
+{
+  vars:
+      "values[0]" string => "x"; # bad
+      "values[1]" string => "+ 200"; # bad
+      "values[2]" string => "200 + 100";
+      "values[3]" string => "200 - 100";
+      "values[4]" string => "- - -"; # bad
+      "values[5]" string => "2 + 3 - 1";
+      "values[6]" string => ""; # 0
+      "values[7]" string => "3 / 0"; # inf but not an error
+      "values[8]" string => "3^3";
+      "values[9]" string => "-1^2.1"; # -nan but not an error
+      "values[10]" string => "sin(20)";
+      "values[11]" string => "cos(20)";
+      "values[19]" string => "20 % 3"; # remainder
+      "values[20]" string => "sqrt(0.2)";
+      "values[21]" string => "ceil(3.5)";
+      "values[22]" string => "floor(3.4)";
+      "values[23]" string => "abs(-3.4)";
+      "values[24]" string => "-3.4 == -3.4";
+      "values[25]" string => "-3.400000 == -3.400001";
+      "values[26]" string => "e";
+      "values[27]" string => "pi";
+      "values[28]" string => "100m"; # 100 million
+      "values[29]" string => "100k"; # 100 thousand
+
+      "indices" slist => getindices("values");
+
+      "eval[$(indices)]" string => eval("$(values[$(indices)])", "math", "infix");
+
+  reports:
+      "math/infix eval('$(values[$(indices)])') = '$(eval[$(indices)])'";
+}
+#+end_src

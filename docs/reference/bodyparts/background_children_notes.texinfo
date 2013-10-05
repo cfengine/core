@@ -1,2 +1,0 @@
-
-Causes the runagent to attempt parallelized connections to the servers.

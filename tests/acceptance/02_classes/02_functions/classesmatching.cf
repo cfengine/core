@@ -6,9 +6,9 @@
 
 body common control
 {
-  inputs => { "../../default.cf.sub" };
-  bundlesequence  => { default("$(this.promise_filename)") };
-  version => "1.0";
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
 }
 
 #######################################################
@@ -59,13 +59,13 @@ bundle agent test
 
 bundle agent check
 {
-classes:
-        "ok" expression => strcmp($(init.known_str), $(test.matched_str));
-reports:
+  classes:
+      "ok" expression => strcmp($(init.known_str), $(test.matched_str));
+  reports:
     ok::
-        "$(this.promise_filename) Pass";
+      "$(this.promise_filename) Pass";
     !ok::
-        "$(this.promise_filename) FAIL";
+      "$(this.promise_filename) FAIL";
     DEBUG.!ok::
-        "$(this.promise_filename) expected '$(init.known_str)', got '$(test.matched_str)'";
+      "$(this.promise_filename) expected '$(init.known_str)', got '$(test.matched_str)'";
 }

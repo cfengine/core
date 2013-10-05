@@ -1,6 +1,0 @@
-
-The regular expression must be used in conjunction with the @code{exec_program} test.
-In this way the program must both return exit status 0 and its
-output must match the regular expression.  The entire output must
-be matched (that is, as if the regex is anchored, @pxref{Anchored
-vs. unanchored regular expressions}).

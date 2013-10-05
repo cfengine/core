@@ -22,9 +22,9 @@
   included file COSL.txt.
 */
 
-#include "cf3.defs.h"
-#include "mon.h"
-#include "item_lib.h"
+#include <cf3.defs.h>
+#include <mon.h>
+#include <item_lib.h>
 
 /* Globals */
 
@@ -117,10 +117,10 @@ void MonEntropyClassesSet(const char *service, const char *direction, double ent
 
 /****************************************************************************/
 
-void MonEntropyPurgeUnused(char *name)
+void MonEntropyPurgeUnused(EvalContext *ctx, char *name)
 {
 // Don't set setentropy is there is no corresponding class
-    DeleteItemMatching(&ENTROPIES, name);
+    DeleteItemMatching(ctx, &ENTROPIES, name);
 }
 
 /****************************************************************************/

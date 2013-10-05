@@ -25,7 +25,7 @@
 #ifndef CFENGINE_CONVERSION_H
 #define CFENGINE_CONVERSION_H
 
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
 // Type-String conversion
 MeasurePolicy MeasurePolicyFromString(const char *s);
@@ -48,7 +48,7 @@ AclInherit AclInheritFromString(const char *string);
 ServicePolicy ServicePolicyFromString(const char *string);
 int SignalFromString(const char *s);
 int SyslogPriorityFromString(const char *s);
-
+ShellType ShellTypeFromString(const char *s);
 
 // Date/Time conversion
 long Months2Seconds(int m);
@@ -73,26 +73,14 @@ const char *MapAddress(const char *addr);
 const char *CommandArg0(const char *execstr);
 void CommandPrefix(char *execstr, char *comm);
 const char *DataTypeShortToType(char *short_type);
+int CoarseLaterThan(const char *key, const char *from);
 int FindTypeInArray(const char **haystack, const char *needle, int default_value, int null_value);
 
 UidList *Rlist2UidList(Rlist *uidnames, const Promise *pp);
 GidList *Rlist2GidList(Rlist *gidnames, const Promise *pp);
 #ifndef __MINGW32__
-uid_t Str2Uid(char *uidbuff, char *copy, const Promise *pp);
-gid_t Str2Gid(char *gidbuff, char *copy, const Promise *pp);
+uid_t Str2Uid(const char *uidbuff, char *copy, const Promise *pp);
+gid_t Str2Gid(const char *gidbuff, char *copy, const Promise *pp);
 #endif /* !__MINGW32__ */
-
-#ifdef HAVE_NOVA
-
-const char *Nova_LongArch(const char *arch);
-const char *Nova_ShortArch(const char *arch);
-int Nova_CoarseLaterThan(const char *key, const char *from);
-bool BundleQualifiedNameSplit(const char *qualified_bundle_name, char namespace_out[CF_MAXVARSIZE], char bundle_name_out[CF_MAXVARSIZE]);
-
-/* Timestamp-functions are not standardised across SQL databases - provide a standard layer for simple functions */
-char *SqlVariableExpand(const char *query);
-#endif
-
-
 
 #endif

@@ -6,50 +6,50 @@
 
 body common control
 {
-  inputs => { "../../default.cf.sub" };
-  bundlesequence  => { default("$(this.promise_filename)") };
-  version => "1.0";
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
 }
 
 #######################################################
 
 bundle agent init
 {
-vars:
-        "dummy" string => "dummy";
+  vars:
+      "dummy" string => "dummy";
 }
 
 #######################################################
 
 bundle agent test
 {
-vars:
-        "dummy" string => "dummy";
+  vars:
+      "dummy" string => "dummy";
 }
 
 #######################################################
 
 bundle agent check
 {
-vars:
-        "present" int => "1";
+  vars:
+      "present" int => "1";
 
-classes:
-        "should_fail" or => {
-                    isvariable("x"),
-                    isvariable("init.x")
-                    };
-        "should_pass" not => "should_fail";
-        "ok" and => {
+  classes:
+      "should_fail" or => {
+			    isvariable("x"),
+			    isvariable("init.x")
+      };
+      "should_pass" not => "should_fail";
+      "ok" and => {
                     "should_pass",
                     isvariable("present"),
                     isvariable("init.dummy")
-                    };
+      };
 
-reports:
+  reports:
     ok::
-        "$(this.promise_filename) Pass";
+      "$(this.promise_filename) Pass";
     !ok::
-        "$(this.promise_filename) FAIL";
+      "$(this.promise_filename) FAIL";
 }
 

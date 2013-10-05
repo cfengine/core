@@ -1,6 +1,0 @@
-
-A local, per-file sanity check to make sure the file editing is sensible.
-If this is set to zero, the check is disabled and any size may be edited.
-The default value of @code{max_file_size} is determined by the global
-control body setting, @xref{editfilesize in agent}, whose default value is
-@code{100k}.

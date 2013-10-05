@@ -1,0 +1,126 @@
+body common control 
+{
+      bundlesequence => { "copy_file"};
+
+      inputs => {"libraries/cfengine_stdlib.cf"};
+}
+
+######################################################
+
+bundle agent copy_file() 
+{
+  files:
+
+      "/tmp/non_existent"
+      copy_from => local_cp_compare("/non_existent"),
+      #	perms => m("777"),
+      action => warn_only,
+      classes => check_promises("NE_NE");
+
+
+      "/tmp/non_existent"
+      copy_from => local_cp_compare("/tmp/existent_file"),
+      #	perms => m("777"),
+      action => warn_only,
+      classes => check_promises("NE_E");
+
+
+      "/tmp/existent_file"
+      copy_from => local_cp_compare("/tmp/existent_file"),
+      #	perms => m("777"),
+      action => warn_only,
+      classes => check_promises("E_E");
+
+      "/tmp/existent_file"
+      copy_from => local_cp_compare("/tmp/different_file"),
+      #	perms => m("777"),
+      action => warn_only,
+      classes => check_promises("D_E");
+
+      "/tmp/existent_file"
+      copy_from => local_cp_compare("/non_existent"),
+      #	perms => m("777"),
+      action => warn_only,
+      classes => check_promises("E_NE");
+
+  reports:
+    NE_NE_kept::
+      "NE_NE_kept";
+    NE_NE_repaired::
+      "NE_NE_repaired";
+    NE_NE_failed::
+      "NE_NE_failed";
+    NE_NE_denied::
+      "NE_NE_denied";
+    NE_NE_timeout::
+      "NE_NE_timeout";
+
+    NE_E_kept::
+      "NE_E_kept";
+    NE_E_repaired::
+      "NE_E_repaired";
+    NE_E_failed::
+      "NE_E_failed";
+    NE_E_denied::
+      "NE_E_denied";
+    NE_E_timeout::
+      "NE_E_timeout";
+
+
+    E_E_kept::
+      "E_E_kept";
+    E_E_repaired::
+      "E_E_repaired";
+    E_E_failed::
+      "E_E_failed";
+    E_E_denied::
+      "E_E_denied";
+    E_E_timeout::
+      "E_E_timeout";
+
+
+    D_E_kept::
+      "D_E_kept";
+    D_E_repaired::
+      "D_E_repaired";
+    D_E_failed::
+      "D_E_failed";
+    D_E_denied::
+      "D_E_denied";
+    D_E_timeout::
+      "D_E_timeout";
+
+    E_NE_kept::
+      "E_NE_kept";
+    E_NE_repaired::
+      "E_NE_repaired";
+    E_NE_failed::
+      "E_NE_failed";
+    E_NE_denied::
+      "E_NE_denied";
+    E_NE_timeout::
+      "E_NE_timeout";
+}
+
+######################################################
+
+body classes check_promises(prom)
+{
+      promise_kept => { "$(prom)_kept" };
+      promise_repaired => { "$(prom)_repaired" };
+
+      repair_failed   => { "$(prom)_failed" };
+      repair_denied   => { "$(prom)_denied" };
+      repair_timeout  => { "$(prom)_timeout" };
+}
+
+######################################################
+
+body copy_from local_cp_compare(from)
+{
+      source      => "$(from)";
+      verify      => "true";
+      compare     => "hash";
+}
+
+

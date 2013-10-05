@@ -1,0 +1,55 @@
+#
+# Schedule software update for yum-based distributions (e.g. RedHat, CentOS)
+# Will only update to the given package_version assumed to be found in the yum repository.
+# If installed version is the same as package_version or newer, no action is taken.
+#
+
+body common control
+{
+      bundlesequence => { "system_software" };
+}
+
+
+bundle agent system_software
+{
+  classes:
+      "update_hosts"    expression => "host1|host2";
+      "update_schedule" expression => "Day27.Hr02.Min00_05";
+
+  packages:
+    update_hosts.update_schedule::
+      "bash"
+      comment               => "Make sure bash package is updated to right version",
+      handle                => "package_bash_update",
+      package_version       => "3.2-32.el5",
+      package_architectures => { "x86_64" },
+      package_policy        => "addupdate",
+      package_select        => ">=",
+      package_method        => yum_version;
+
+}
+
+
+body package_method yum_version
+{
+      package_changes => "bulk";
+      package_list_command => "/bin/rpm -qa --qf '%{name} %{version}-%{release} %{arch}\n'";
+      package_patch_list_command => "/usr/bin/yum check-update";
+
+      package_list_name_regex    => "^(\S+?)\s\S+?\s\S+$";
+      package_list_version_regex => "^\S+?\s(\S+?)\s\S+$";
+      package_list_arch_regex    => "^\S+?\s\S+?\s(\S+)$";
+
+      package_installed_regex => ".*";
+      package_name_convention => "$(name)-$(version).$(arch)";
+
+      package_patch_installed_regex => "^\s.*";
+      package_patch_name_regex    => "([^.]+).*";
+      package_patch_version_regex => "[^\s]\s+([^\s]+).*";
+      package_patch_arch_regex    => "[^.]+\.([^\s]+).*";
+
+      package_add_command    => "/usr/bin/yum -y install";
+      package_update_command => "/usr/bin/yum -y update";
+      package_delete_command => "/bin/rpm -e --nodeps --allmatches";
+      package_verify_command => "/bin/rpm -V";
+}

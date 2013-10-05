@@ -26,11 +26,11 @@
  * Implementation using Tokyo Cabinet hash API.
  */
 
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
-#include "dbm_priv.h"
-#include "logging.h"
-#include "string_lib.h"
+#include <dbm_priv.h>
+#include <logging.h>
+#include <string_lib.h>
 
 #ifdef TCDB
 
@@ -117,10 +117,45 @@ static bool OpenTokyoDatabase(const char *filename, TCHDB **hdb)
         return false;
     }
 
-    if (!tchdboptimize(*hdb, -1, -1, -1, false))
+    static int threshold = -1; 
+
+    if (threshold == -1)
     {
-        tchdbclose(*hdb);
-        return false;
+        /** 
+           Optimize always if TCDB_OPTIMIZE_PERCENT is equal to 100
+           Never optimize if  TCDB_OPTIMIZE_PERCENT is equal to 0
+         */
+        const char *perc = getenv("TCDB_OPTIMIZE_PERCENT");
+        if (perc != NULL)
+        {
+            /* Environment variable exists */
+            char *end;
+            long result = strtol(perc, &end, 10);
+ 
+            /* Environment variable is a number and in 0..100 range */
+            if (!*end && result >-1 && result < 101)
+            {
+               threshold = 100 - (int)result;
+            }
+            else
+            {
+                /* This corresponds to 1% */
+                threshold = 99; 
+            }
+        }
+        else
+        {
+            /* This corresponds to 1% */
+            threshold = 99; 
+        }
+    }
+    if ((threshold != 100) && (threshold == 0 || (int)(rand()%threshold) == 0))
+    {
+        if (!tchdboptimize(*hdb, -1, -1, -1, false))
+        {
+            tchdbclose(*hdb);
+            return false;
+        }
     }
 
     return true;
@@ -134,7 +169,7 @@ DBPriv *DBPrivOpenDB(const char *dbpath)
 
     if (!OpenTokyoDatabase(dbpath, &db->hdb))
     {
-        Log(LOG_LEVEL_ERR, "Could not open database %s: %s",
+        Log(LOG_LEVEL_ERR, "Could not open Tokyo database at path '%s'. (OpenTokyoDatabase: %s)",
               dbpath, ErrorMessage(db->hdb));
 
         int errcode = tchdbecode(db->hdb);
@@ -196,7 +231,7 @@ bool DBPrivRead(DBPriv *db, const void *key, int key_size, void *dest, int dest_
     {
         if (tchdbecode(db->hdb) != TCENOREC)
         {
-            Log(LOG_LEVEL_ERR, "ReadComplexKeyDB(%s): Could not read: %s", (const char *)key, ErrorMessage(db->hdb));
+            Log(LOG_LEVEL_ERR, "Could not read key '%s': (tchdbget3: %s)", (const char *)key, ErrorMessage(db->hdb));
         }
         return false;
     }
@@ -208,7 +243,7 @@ static bool Write(TCHDB *hdb, const void *key, int key_size, const void *value, 
 {
     if (!tchdbput(hdb, key, key_size, value, value_size))
     {
-        Log(LOG_LEVEL_ERR, "tchdbput: Could not write key to DB \"%s\": %s",
+        Log(LOG_LEVEL_ERR, "Could not write key to Tokyo path '%s'. (tchdbput: %s)",
               tchdbpath(hdb), ErrorMessage(hdb));
         return false;
     }
@@ -219,8 +254,8 @@ static bool Delete(TCHDB *hdb, const void *key, int key_size)
 {
     if (!tchdbout(hdb, key, key_size) && tchdbecode(hdb) != TCENOREC)
     {
-        Log(LOG_LEVEL_ERR, "tchdbout: Could not delete key: %s",
-              ErrorMessage(hdb));
+        Log(LOG_LEVEL_ERR, "Could not delete Tokyo key. (tchdbout: %s)",
+            ErrorMessage(hdb));
         return false;
     }
 
@@ -392,6 +427,7 @@ char *DBPrivDiagnose(const char *dbpath)
     memcpy(&declared_size, hbuf+56, sizeof(uint64_t));
     if(declared_size == size)
     {
+        fclose(fp);
         return NULL; // all is well
     }
     else

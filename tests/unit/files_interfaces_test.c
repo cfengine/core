@@ -1,5 +1,5 @@
-#include "test.h"
-#include "files_interfaces.h"
+#include <test.h>
+#include <files_interfaces.h>
 
 #define FILE_SIZE (sizeof(FILE_CONTENTS) - 1)
 #define FILE_LINE "some garbage!"

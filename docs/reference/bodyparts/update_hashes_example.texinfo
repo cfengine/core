@@ -1,9 +1,0 @@
-
-@verbatim
-
-body changes example
-{
-update_hashes => "true";
-}
-
-@end verbatim

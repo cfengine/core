@@ -1,4 +1,0 @@
-
-If nothing is specified, the default value is -1.0.
-However, nothing is logged unless the agent control body switched on
-@samp{track_value => "true"}.

@@ -25,7 +25,7 @@
 #ifndef CFENGINE_BOOL_H
 #define CFENGINE_BOOL_H
 
-#include "platform.h"
+#include <platform.h>
 
 #ifdef HAVE_STDBOOL_H
 # include <stdbool.h>

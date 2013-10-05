@@ -25,15 +25,15 @@
 #ifndef CFENGINE_VARS_H
 #define CFENGINE_VARS_H
 
-#include "cf3.defs.h"
-#include "assoc.h"
+#include <cf3.defs.h>
+#include <assoc.h>
 
 void LoadSystemConstants(EvalContext *ctx);
 
 const char *ExtractInnerCf3VarString(const char *str, char *substr);
 const char *ExtractOuterCf3VarString(const char *str, char *substr);
 int UnresolvedArgs(Rlist *args);
-int IsQualifiedVariable(char *var);
+bool IsQualifiedVariable(const char *var);
 
 bool StringContainsVar(const char *s, const char *v);
 bool IsCf3VarString(const char *str);

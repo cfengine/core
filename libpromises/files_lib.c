@@ -22,41 +22,25 @@
   included file COSL.txt.
 */
 
-#include "files_lib.h"
+#include <files_lib.h>
 
-#include "files_interfaces.h"
-#include "files_names.h"
-#include "files_copy.h"
-#include "item_lib.h"
-#include "promises.h"
-#include "matching.h"
-#include "misc_lib.h"
-#include "dir.h"
-#include "policy.h"
+#include <files_interfaces.h>
+#include <files_names.h>
+#include <files_copy.h>
+#include <item_lib.h>
+#include <promises.h>
+#include <matching.h>
+#include <misc_lib.h>
+#include <dir.h>
+#include <policy.h>
 
-#include <assert.h>
 
 static Item *ROTATED = NULL;
 
 
-bool FileCanOpen(const char *path, const char *modes)
-{
-    FILE *test = NULL;
-
-    if ((test = fopen(path, modes)) != NULL)
-    {
-        fclose(test);
-        return true;
-    }
-    else
-    {
-        return false;
-    }
-}
-
 /*********************************************************************/
 
-void PurgeItemList(Item **list, char *name)
+void PurgeItemList(EvalContext *ctx, Item **list, char *name)
 {
     Item *ip, *copy = NULL;
     struct stat sb;
@@ -67,8 +51,8 @@ void PurgeItemList(Item **list, char *name)
     {
         if (stat(ip->name, &sb) == -1)
         {
-            Log(LOG_LEVEL_VERBOSE, "Purging file \"%s\" from %s list as it no longer exists", ip->name, name);
-            DeleteItemLiteral(list, ip->name);
+            Log(LOG_LEVEL_VERBOSE, "Purging file '%s' from '%s' list as it no longer exists", ip->name, name);
+            DeleteItemLiteral(ctx, list, ip->name);
         }
     }
 
@@ -116,28 +100,6 @@ int RawSaveItemList(const Item *liststart, const char *file)
     return true;
 }
 
-
-/*********************************************************************/
-
-ssize_t FileRead(const char *filename, char *buffer, size_t bufsize)
-{
-    FILE *f = fopen(filename, "rb");
-
-    if (f == NULL)
-    {
-        return -1;
-    }
-    ssize_t ret = fread(buffer, bufsize, 1, f);
-
-    if (ferror(f))
-    {
-        fclose(f);
-        return -1;
-    }
-    fclose(f);
-    return ret;
-}
-
 /*********************************************************************/
 
 bool FileWriteOver(char *filename, char *contents)
@@ -171,46 +133,6 @@ bool FileWriteOver(char *filename, char *contents)
 
 /*********************************************************************/
 
-ssize_t FileReadMax(char **output, const char *filename, size_t size_max)
-// TODO: there is CfReadFile and FileRead with slightly different semantics, merge
-// free(output) should be called on positive return value
-{
-    assert(size_max > 0);
-
-    struct stat sb;
-    if (stat(filename, &sb) == -1)
-    {
-        return -1;
-    }
-
-    FILE *fin;
-
-    if ((fin = fopen(filename, "r")) == NULL)
-    {
-        return -1;
-    }
-
-    ssize_t bytes_to_read = MIN(sb.st_size, size_max);
-    *output = xcalloc(bytes_to_read + 1, 1);
-    ssize_t bytes_read = fread(*output, 1, bytes_to_read, fin);
-
-    if (ferror(fin))
-    {
-        Log(LOG_LEVEL_ERR, "FileContentsRead: Error while reading file '%s'. (ferror: %s)", filename, GetErrorStr());
-        fclose(fin);
-        free(*output);
-        *output = NULL;
-        return -1;
-    }
-
-    if (fclose(fin) != 0)
-    {
-        Log(LOG_LEVEL_ERR, "FileContentsRead: Could not close file '%s'. (fclose: %s)", filename, GetErrorStr());
-    }
-
-    return bytes_read;
-}
-
 /**
  * Like MakeParentDirectory, but honours warn-only and dry-run mode.
  * We should eventually migrate to this function to avoid making changes
@@ -242,7 +164,7 @@ int MakeParentDirectory2(char *parentandchild, int force, bool enforce_promise)
  * Please consider using MakeParentDirectory2() instead.
  **/
 
-int MakeParentDirectory(char *parentandchild, int force)
+bool MakeParentDirectory(const char *parentandchild, bool force)
 {
     char *spc, *sp;
     char currentpath[CF_BUFSIZE];
@@ -261,11 +183,11 @@ int MakeParentDirectory(char *parentandchild, int force)
     char *tmpstr;
 #endif
 
-    Log(LOG_LEVEL_DEBUG, "Trying to create a parent directory for %s%s\n", parentandchild, force ? " (force applied)" : "");
+    Log(LOG_LEVEL_DEBUG, "Trying to create a parent directory for '%s%s'", parentandchild, force ? " (force applied)" : "");
 
     if (!IsAbsoluteFileName(parentandchild))
     {
-        Log(LOG_LEVEL_ERR, "Will not create directories for a relative filename (%s). Has no invariant meaning",
+        Log(LOG_LEVEL_ERR, "Will not create directories for a relative filename '%s'. Has no invariant meaning",
               parentandchild);
         return false;
     }
@@ -342,7 +264,7 @@ int MakeParentDirectory(char *parentandchild, int force)
                 if (rename(pathbuf, currentpath) == -1)
                 {
                     Log(LOG_LEVEL_INFO, "Warning: The object '%s' is not a directory. (rename: %s)", pathbuf, GetErrorStr());
-                    return (false);
+                    return false;
                 }
             }
         }
@@ -352,7 +274,7 @@ int MakeParentDirectory(char *parentandchild, int force)
             {
                 Log(LOG_LEVEL_INFO,
                       "The object %s is not a directory. Cannot make a new directory without deleting it.", pathbuf);
-                return (false);
+                return false;
             }
         }
     }
@@ -364,7 +286,7 @@ int MakeParentDirectory(char *parentandchild, int force)
     rootlen = RootDirLength(parentandchild);
     strncpy(currentpath, parentandchild, rootlen);
 
-    for (sp = parentandchild + rootlen, spc = currentpath + rootlen; *sp != '\0'; sp++)
+    for (sp = (char*) parentandchild + rootlen, spc = currentpath + rootlen; *sp != '\0'; sp++)
     {
         if (!IsFileSep(*sp) && *sp != '\0')
         {
@@ -389,7 +311,7 @@ int MakeParentDirectory(char *parentandchild, int force)
                     {
                         Log(LOG_LEVEL_ERR, "Unable to make directories to '%s'. (mkdir: %s)", parentandchild, GetErrorStr());
                         umask(mask);
-                        return (false);
+                        return false;
                     }
                     umask(mask);
                 }
@@ -412,7 +334,7 @@ int MakeParentDirectory(char *parentandchild, int force)
                         if (strncmp(tmpstr, pathbuf, CF_BUFSIZE) == 0)
                         {
                             free(tmpstr);
-                            return (true);
+                            return true;
                         }
                         free(tmpstr);
                     }
@@ -420,7 +342,7 @@ int MakeParentDirectory(char *parentandchild, int force)
 
                     Log(LOG_LEVEL_ERR, "Cannot make %s - %s is not a directory! (use forcedirs=true)", pathbuf,
                           currentpath);
-                    return (false);
+                    return false;
                 }
             }
 
@@ -430,8 +352,8 @@ int MakeParentDirectory(char *parentandchild, int force)
         }
     }
 
-    Log(LOG_LEVEL_DEBUG, "Directory for %s exists. Okay\n", parentandchild);
-    return (true);
+    Log(LOG_LEVEL_DEBUG, "Directory for '%s' exists. Okay", parentandchild);
+    return true;
 }
 
 int LoadFileAsItemList(Item **liststart, const char *file, EditDefaults edits)
@@ -630,7 +552,7 @@ void RotateFiles(char *name, int number)
 
         if (rename(from, to) == -1)
         {
-            Log(LOG_LEVEL_DEBUG, "Rename failed in RotateFiles %s -> %s\n", name, from);
+            Log(LOG_LEVEL_DEBUG, "Rename failed in RotateFiles '%s' -> '%s'", name, from);
         }
 
         snprintf(from, CF_BUFSIZE, "%s.%d.gz", name, i);
@@ -638,7 +560,7 @@ void RotateFiles(char *name, int number)
 
         if (rename(from, to) == -1)
         {
-            Log(LOG_LEVEL_DEBUG, "Rename failed in RotateFiles %s -> %s\n", name, from);
+            Log(LOG_LEVEL_DEBUG, "Rename failed in RotateFiles '%s' -> '%s'", name, from);
         }
 
         snprintf(from, CF_BUFSIZE, "%s.%d.Z", name, i);
@@ -646,7 +568,7 @@ void RotateFiles(char *name, int number)
 
         if (rename(from, to) == -1)
         {
-            Log(LOG_LEVEL_DEBUG, "Rename failed in RotateFiles %s -> %s\n", name, from);
+            Log(LOG_LEVEL_DEBUG, "Rename failed in RotateFiles '%s' -> '%s'", name, from);
         }
 
         snprintf(from, CF_BUFSIZE, "%s.%d.bz", name, i);
@@ -654,7 +576,7 @@ void RotateFiles(char *name, int number)
 
         if (rename(from, to) == -1)
         {
-            Log(LOG_LEVEL_DEBUG, "Rename failed in RotateFiles %s -> %s\n", name, from);
+            Log(LOG_LEVEL_DEBUG, "Rename failed in RotateFiles '%s' -> '%s'", name, from);
         }
 
         snprintf(from, CF_BUFSIZE, "%s.%d.bz2", name, i);
@@ -662,7 +584,7 @@ void RotateFiles(char *name, int number)
 
         if (rename(from, to) == -1)
         {
-            Log(LOG_LEVEL_DEBUG, "Rename failed in RotateFiles %s -> %s\n", name, from);
+            Log(LOG_LEVEL_DEBUG, "Rename failed in RotateFiles '%s' -> '%s'", name, from);
         }
     }
 
@@ -670,7 +592,7 @@ void RotateFiles(char *name, int number)
 
     if (CopyRegularFileDisk(name, to) == false)
     {
-        Log(LOG_LEVEL_DEBUG, "cfengine: copy failed in RotateFiles %s -> %s\n", name, to);
+        Log(LOG_LEVEL_DEBUG, "Copy failed in RotateFiles '%s' -> '%s'", name, to);
         return;
     }
 
@@ -707,7 +629,7 @@ void CreateEmptyFile(char *name)
     {
         if (errno != ENOENT)
         {
-            Log(LOG_LEVEL_DEBUG, "Unable to remove existing file %s: %s\n", name, strerror(errno));
+            Log(LOG_LEVEL_DEBUG, "Unable to remove existing file '%s'. (unlink: %s)", name, GetErrorStr());
         }
     }
 

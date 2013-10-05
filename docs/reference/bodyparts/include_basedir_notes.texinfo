@@ -1,6 +1,0 @@
-
-When checking files recursively (with @code{depth_search}) the promiser
-is a directory. This parameter determines whether that initial directory
-should be considered part of the promise or simply a boundary which marks
-the edge of the search. If true, the promiser directory will also promise
-the same attributes as the files inside it.

@@ -1,4 +1,0 @@
-
-A list of regular expressions, any of which which must match the entire group,
-(that is, it is anchored, @pxref{Anchored vs. unanchored regular expressions}).
-Note that on windows, files do not have group associations.

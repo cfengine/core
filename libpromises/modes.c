@@ -22,7 +22,7 @@
   included file COSL.txt.
 */
 
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
 /***************************************************************/
 
@@ -62,8 +62,6 @@ int ParseModeString(const char *modestring, mode_t *plusmask, mode_t *minusmask)
     {
         return true;
     }
-
-    Log(LOG_LEVEL_DEBUG, "ParseModeString(%s)\n", modestring);
 
     gotaction = false;
 
@@ -212,7 +210,7 @@ int ParseModeString(const char *modestring, mode_t *plusmask, mode_t *minusmask)
                 Log(LOG_LEVEL_INFO, "Symbolic and numeric form for modes mixed");
             }
 
-            Log(LOG_LEVEL_DEBUG, "[PLUS=%" PRIoMAX "][MINUS=%" PRIoMAX "]\n", (uintmax_t)*plusmask, (uintmax_t)*minusmask);
+            Log(LOG_LEVEL_DEBUG, "Modestring [PLUS = %" PRIoMAX "] [MINUS = %" PRIoMAX "]", (uintmax_t)*plusmask, (uintmax_t)*minusmask);
             return true;
 
         default:
@@ -253,8 +251,6 @@ static int CheckModeState(enum modestate stateA, enum modestate stateB, enum mod
 
 static int SetModeMask(char action, int value, int affected, mode_t *p, mode_t *m)
 {
-    Log(LOG_LEVEL_DEBUG, "SetMask(%c%o,%o)\n", action, value, affected);
-
     switch (action)
     {
     case '+':

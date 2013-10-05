@@ -1,7 +1,0 @@
-
-The complement of @code{insert_if_contains_from_list}.  If the line is @i{not}
-found in the secondary file, it is inserted into the file being edited.
-
-@code{insert_if_not_contains_from_list} is ignored unless @code{insert_type} is @code{file}
-(@pxref{insert_type in insert_lines}),
-or the promiser is a multi-line block.

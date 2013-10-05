@@ -1,6 +1,0 @@
-
-@verbatim
-
-agentfacility => "LOG_USER";
-
-@end verbatim

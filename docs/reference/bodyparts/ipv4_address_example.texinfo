@@ -1,9 +1,0 @@
-
-@verbatim
-
-body tcp_ip example
-{
-ipv4_address => "123.456.789.001";
-}
-
-@end verbatim

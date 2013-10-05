@@ -1,9 +1,0 @@
-
-@verbatim
-
-body service_method example
-{
-  service_dependence_chain => "start_parent_services";
-}
-
-@end verbatim

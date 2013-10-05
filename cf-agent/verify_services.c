@@ -22,28 +22,31 @@
   included file COSL.txt.
 */
 
-#include "verify_services.h"
+#include <verify_services.h>
 
-#include "verify_methods.h"
-#include "promises.h"
-#include "vars.h"
-#include "attributes.h"
-#include "fncall.h"
-#include "locks.h"
-#include "rlist.h"
-#include "policy.h"
-#include "scope.h"
-#include "cf-agent-enterprise-stubs.h"
-#include "ornaments.h"
-#include "env_context.h"
+#include <actuator.h>
+#include <verify_methods.h>
+#include <promises.h>
+#include <vars.h>
+#include <attributes.h>
+#include <fncall.h>
+#include <locks.h>
+#include <rlist.h>
+#include <policy.h>
+#include <scope.h>
+#include <cf-agent-enterprise-stubs.h>
+#include <ornaments.h>
+#include <env_context.h>
 
 static int ServicesSanityChecks(Attributes a, Promise *pp);
 static void SetServiceDefaults(Attributes *a);
-static void DoVerifyServices(EvalContext *ctx, Attributes a, Promise *pp);
+static PromiseResult DoVerifyServices(EvalContext *ctx, Attributes a, Promise *pp);
+static PromiseResult VerifyServices(EvalContext *ctx, Attributes a, Promise *pp);
+
 
 /*****************************************************************************/
 
-void VerifyServicesPromise(EvalContext *ctx, Promise *pp)
+PromiseResult VerifyServicesPromise(EvalContext *ctx, Promise *pp)
 {
     Attributes a = { {0} };
 
@@ -53,7 +56,11 @@ void VerifyServicesPromise(EvalContext *ctx, Promise *pp)
 
     if (ServicesSanityChecks(a, pp))
     {
-        VerifyServices(ctx, a, pp);
+        return VerifyServices(ctx, a, pp);
+    }
+    else
+    {
+        return PROMISE_RESULT_NOOP;
     }
 }
 
@@ -75,7 +82,7 @@ static int ServicesSanityChecks(Attributes a, Promise *pp)
         if (strcmp(a.service.service_autostart_policy, "none") != 0)
         {
             Log(LOG_LEVEL_ERR,
-                  "!! Autostart policy of service promiser \"%s\" needs to be \"none\" when service policy is not \"start\", but is \"%s\"",
+                "!! Autostart policy of service promiser '%s' needs to be 'none' when service policy is not 'start', but is '%s'",
                   pp->promiser, a.service.service_autostart_policy);
             PromiseRef(LOG_LEVEL_ERR, pp);
             return false;
@@ -83,16 +90,16 @@ static int ServicesSanityChecks(Attributes a, Promise *pp)
         break;
 
     default:
-        Log(LOG_LEVEL_ERR, "Invalid service policy for service \"%s\"", pp->promiser);
+        Log(LOG_LEVEL_ERR, "Invalid service policy for service '%s'", pp->promiser);
         PromiseRef(LOG_LEVEL_ERR, pp);
         return false;
     }
 
     for (dep = a.service.service_depend; dep != NULL; dep = dep->next)
     {
-        if (strcmp(pp->promiser, dep->item) == 0)
+        if (strcmp(pp->promiser, RlistScalarValue(dep)) == 0)
         {
-            Log(LOG_LEVEL_ERR, "Service promiser \"%s\" has itself as dependency", pp->promiser);
+            Log(LOG_LEVEL_ERR, "Service promiser '%s' has itself as dependency", pp->promiser);
             PromiseRef(LOG_LEVEL_ERR, pp);
             return false;
         }
@@ -100,7 +107,7 @@ static int ServicesSanityChecks(Attributes a, Promise *pp)
 
     if (a.service.service_type == NULL)
     {
-        Log(LOG_LEVEL_ERR, "Service type for service \"%s\" is not known", pp->promiser);
+        Log(LOG_LEVEL_ERR, "Service type for service '%s' is not known", pp->promiser);
         PromiseRef(LOG_LEVEL_ERR, pp);
         return false;
     }
@@ -109,7 +116,7 @@ static int ServicesSanityChecks(Attributes a, Promise *pp)
 
     if (strcmp(a.service.service_type, "windows") != 0)
     {
-        Log(LOG_LEVEL_ERR, "Service type for promiser \"%s\" must be \"windows\" on this system, but is \"%s\"",
+        Log(LOG_LEVEL_ERR, "Service type for promiser '%s' must be 'windows' on this system, but is '%s'",
               pp->promiser, a.service.service_type);
         PromiseRef(LOG_LEVEL_ERR, pp);
         return false;
@@ -152,7 +159,7 @@ static void SetServiceDefaults(Attributes *a)
 /* Level                                                                     */
 /*****************************************************************************/
 
-void VerifyServices(EvalContext *ctx, Attributes a, Promise *pp)
+PromiseResult VerifyServices(EvalContext *ctx, Attributes a, Promise *pp)
 {
     CfLock thislock;
 
@@ -160,30 +167,33 @@ void VerifyServices(EvalContext *ctx, Attributes a, Promise *pp)
 
     if (thislock.lock == NULL)
     {
-        return;
+        return PROMISE_RESULT_NOOP;
     }
 
-    ScopeNewSpecialScalar(ctx, "this", "promiser", pp->promiser, DATA_TYPE_STRING);
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser", pp->promiser, DATA_TYPE_STRING);
     PromiseBanner(pp);
 
+    PromiseResult result = PROMISE_RESULT_NOOP;
     if (strcmp(a.service.service_type, "windows") == 0)
     {
-        VerifyWindowsService(ctx, a, pp);
+        result = PromiseResultUpdate(result, VerifyWindowsService(ctx, a, pp));
     }
     else
     {
-        DoVerifyServices(ctx, a, pp);
+        result = PromiseResultUpdate(result, DoVerifyServices(ctx, a, pp));
     }
 
-    ScopeDeleteSpecialScalar("this", "promiser");
+    EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser");
     YieldCurrentLock(thislock);
+
+    return result;
 }
 
 /*****************************************************************************/
 /* Level                                                                     */
 /*****************************************************************************/
 
-static void DoVerifyServices(EvalContext *ctx, Attributes a, Promise *pp)
+static PromiseResult DoVerifyServices(EvalContext *ctx, Attributes a, Promise *pp)
 {
     FnCall *default_bundle = NULL;
     Rlist *args = NULL;
@@ -218,7 +228,7 @@ static void DoVerifyServices(EvalContext *ctx, Attributes a, Promise *pp)
 
         }
 
-        default_bundle = FnCallNew("default:standard_services", args);
+        default_bundle = FnCallNew("standard_services", args);
 
         PromiseAppendConstraint(pp, "service_bundle", (Rval) {default_bundle, RVAL_TYPE_FNCALL }, "any", false);
         a.havebundle = true;
@@ -229,21 +239,21 @@ static void DoVerifyServices(EvalContext *ctx, Attributes a, Promise *pp)
     switch (a.service.service_policy)
     {
     case SERVICE_POLICY_START:
-        ScopeNewSpecialScalar(ctx, "this", "service_policy", "start", DATA_TYPE_STRING);
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "service_policy", "start", DATA_TYPE_STRING);
         break;
 
     case SERVICE_POLICY_RESTART:
-        ScopeNewSpecialScalar(ctx, "this", "service_policy", "restart", DATA_TYPE_STRING);
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "service_policy", "restart", DATA_TYPE_STRING);
         break;
 
     case SERVICE_POLICY_RELOAD:
-        ScopeNewSpecialScalar(ctx, "this", "service_policy", "reload", DATA_TYPE_STRING);
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "service_policy", "reload", DATA_TYPE_STRING);
         break;
         
     case SERVICE_POLICY_STOP:
     case SERVICE_POLICY_DISABLE:
     default:
-        ScopeNewSpecialScalar(ctx, "this", "service_policy", "stop", DATA_TYPE_STRING);
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "service_policy", "stop", DATA_TYPE_STRING);
         break;
     }
 
@@ -253,14 +263,18 @@ static void DoVerifyServices(EvalContext *ctx, Attributes a, Promise *pp)
         bp = PolicyGetBundle(PolicyFromPromise(pp), NULL, "common", default_bundle->name);
     }
 
+    PromiseResult result = PROMISE_RESULT_NOOP;
     if (default_bundle && bp == NULL)
     {
-        cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, a, "Service %s could not be invoked successfully\n", pp->promiser);
+        cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, a, "Service '%s' could not be invoked successfully", pp->promiser);
+        result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
     }
 
     if (!DONTDO)
     {
-        VerifyMethod(ctx, "service_bundle", a, pp);  // Send list of classes to set privately?
+        result = PromiseResultUpdate(result, VerifyMethod(ctx, "service_bundle", a, pp));  // Send list of classes to set privately?
     }
+
+    return result;
 }
 

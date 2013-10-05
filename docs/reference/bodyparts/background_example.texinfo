@@ -1,9 +1,0 @@
-
-@verbatim
-
-body action example
-{
-background => "true";
-}
-
-@end verbatim

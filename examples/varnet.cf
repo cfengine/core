@@ -1,0 +1,14 @@
+
+body common control
+{
+      bundlesequence => { "example" };
+}
+
+
+
+bundle agent example
+{
+  reports:
+      "My default interface and ip4 address is $(sys.interface) and $(sys.ipv4)";
+      "Can also extract $(sys.ipv4[Local_Area_Connection_3]), $(sys.ipv4_2[Wireless_Network_Connection])";
+}

@@ -1,11 +1,12 @@
-#include "test.h"
+#include <test.h>
 
-#include "cf3.defs.h"
-#include "cf3.extern.h"
+#include <cf3.defs.h>
+#include <cf3.extern.h>
 
-#include "syslog_client.h"
+#include <syslog_client.h>
 
 char VFQNAME[CF_MAXVARSIZE];
+char VPREFIX[CF_MAXVARSIZE];
 
 static struct sockaddr *got_address;
 
@@ -30,7 +31,7 @@ ssize_t __xnet_sendto(int sockfd, const void *buf, size_t len, int flags, const 
  * We might be naives by thinking that size_t, socklen_t and such are the same size as int.
  * Given that we are not using them here, we can live with that assumption.
  */
-int sendto(int s, const void *buf, int len, int flags, void sockaddr *dest_addr, int addrlen)
+int sendto(int s, const void *buf, int len, int flags, const void *dest_addr, int addrlen)
 {
     got_address = xmemdup(dest_addr, sizeof(struct sockaddr_in));
     return len;

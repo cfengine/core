@@ -1,4 +1,0 @@
-
-Note that typically, only a single value string, within a single selected
-node, is set in each @code{set_text} promise (you may of course
-have multiple promises that each set a value string).

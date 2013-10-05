@@ -1,3 +1,0 @@
-
-This string may be used to set the internal @code{LD_LIBRARY_PATH}
-environment of the agent.

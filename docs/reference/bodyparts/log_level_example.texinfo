@@ -1,9 +1,0 @@
-
-@verbatim
-
-body action example
-{
-log_level => "inform";
-}
-
-@end verbatim

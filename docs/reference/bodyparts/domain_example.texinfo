@@ -1,9 +1,0 @@
-
-@verbatim
-
-body common control
-{
-domain => "example.org";
-}
-
-@end verbatim

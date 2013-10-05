@@ -22,25 +22,21 @@
   included file COSL.txt.
 */
 
-#include "verify_measurements.h"
+#include <verify_measurements.h>
 
-#include "promises.h"
-#include "files_names.h"
-#include "attributes.h"
-#include "policy.h"
-#include "cf-monitord-enterprise-stubs.h"
-#include "env_context.h"
-#include "ornaments.h"
-
-#ifdef HAVE_NOVA
-#include "history.h"
-#endif
+#include <promises.h>
+#include <files_names.h>
+#include <attributes.h>
+#include <policy.h>
+#include <cf-monitord-enterprise-stubs.h>
+#include <env_context.h>
+#include <ornaments.h>
 
 static bool CheckMeasureSanity(Measurement m, Promise *pp);
 
 /*****************************************************************************/
 
-void VerifyMeasurementPromise(EvalContext *ctx, double *this, Promise *pp)
+PromiseResult VerifyMeasurementPromise(EvalContext *ctx, double *measurement, Promise *pp)
 {
     Attributes a = { {0} };
 
@@ -48,14 +44,14 @@ void VerifyMeasurementPromise(EvalContext *ctx, double *this, Promise *pp)
     {
         if (pp->comment)
         {
-            Log(LOG_LEVEL_VERBOSE, "Skipping static observation %s (%s), already done", pp->promiser, pp->comment);
+            Log(LOG_LEVEL_VERBOSE, "Skipping static observation '%s' (comment: %s), already done", pp->promiser, pp->comment);
         }
         else
         {
-            Log(LOG_LEVEL_VERBOSE, "Skipping static observation %s, already done", pp->promiser);
+            Log(LOG_LEVEL_VERBOSE, "Skipping static observation '%s', already done", pp->promiser);
         }
 
-        return;
+        return PROMISE_RESULT_NOOP;
     }
 
     PromiseBanner(pp);
@@ -65,10 +61,10 @@ void VerifyMeasurementPromise(EvalContext *ctx, double *this, Promise *pp)
     if (!CheckMeasureSanity(a.measure, pp))
     {
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a, "Measurement promise is not valid");
-        return;
+        return PROMISE_RESULT_INTERRUPTED;
     }
 
-    VerifyMeasurement(ctx, this, a, pp);
+    return VerifyMeasurement(ctx, measurement, a, pp);
 }
 
 /*****************************************************************************/
@@ -79,7 +75,7 @@ static bool CheckMeasureSanity(Measurement m, Promise *pp)
 
     if (!IsAbsPath(pp->promiser))
     {
-        Log(LOG_LEVEL_ERR, "The promiser \"%s\" of a measurement was not an absolute path",
+        Log(LOG_LEVEL_ERR, "The promiser '%s' of a measurement was not an absolute path",
              pp->promiser);
         PromiseRef(LOG_LEVEL_ERR, pp);
         retval = false;
@@ -87,7 +83,7 @@ static bool CheckMeasureSanity(Measurement m, Promise *pp)
 
     if (m.data_type == DATA_TYPE_NONE)
     {
-        Log(LOG_LEVEL_ERR, "The promiser \"%s\" did not specify a data type", pp->promiser);
+        Log(LOG_LEVEL_ERR, "The promiser '%s' did not specify a data type", pp->promiser);
         PromiseRef(LOG_LEVEL_ERR, pp);
         retval = false;
     }
@@ -104,7 +100,7 @@ static bool CheckMeasureSanity(Measurement m, Promise *pp)
                 break;
 
             default:
-                Log(LOG_LEVEL_ERR, "The promiser \"%s\" cannot have history type weekly as it is not a number", pp->promiser);
+                Log(LOG_LEVEL_ERR, "The promiser '%s' cannot have history type weekly as it is not a number", pp->promiser);
                 PromiseRef(LOG_LEVEL_ERR, pp);
                 retval = false;
                 break;
@@ -114,7 +110,7 @@ static bool CheckMeasureSanity(Measurement m, Promise *pp)
 
     if ((m.select_line_matching) && (m.select_line_number != CF_NOINT))
     {
-        Log(LOG_LEVEL_ERR, "The promiser \"%s\" cannot select both a line by pattern and by number", pp->promiser);
+        Log(LOG_LEVEL_ERR, "The promiser '%s' cannot select both a line by pattern and by number", pp->promiser);
         PromiseRef(LOG_LEVEL_ERR, pp);
         retval = false;
     }

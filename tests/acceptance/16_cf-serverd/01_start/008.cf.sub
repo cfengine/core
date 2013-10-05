@@ -2,6 +2,8 @@
 #
 # Test cf-serverd related promises, mtime simple copy localhost
 #
+# Tests secure copy (SGET) and secure stat (SSYNCH).
+#
 #######################################################
 
 body common control
@@ -51,13 +53,11 @@ insert_lines:
 
 #######################################################
 
-bundle agent test 
+bundle agent test
 
 {
 files:
-
-    "$(G.testdir)/destination_file" copy_from => copy_src_file;
- 
+  "$(G.testdir)/destination_file" copy_from => copy_src_file;
 }
 
 #########################################################
@@ -89,7 +89,6 @@ classes:
   "dummy" expression => regextract("(.*)\.sub", $(this.promise_filename), "fn");
 
 methods:
-
   "any" usebundle => default_check_diff("$(G.testdir)/source_file","$(G.testdir)/destination_file","$(fn[1])");
 }
 

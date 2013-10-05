@@ -1,9 +1,0 @@
-
-@verbatim
-
-body process_select example
-{
-status => "Z";
-}
-
-@end verbatim

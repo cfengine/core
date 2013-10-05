@@ -22,10 +22,10 @@
   included file COSL.txt.
 */
 
-#include "addr_lib.h"
+#include <addr_lib.h>
 
-#include "logging.h"
-#include "string_lib.h"
+#include <logging.h>
+#include <string_lib.h>
 
 #define CF_ADDRSIZE 128
 
@@ -85,13 +85,13 @@ int FuzzySetMatch(const char *s1, const char *s2)
 
     if (isCIDR && isrange)
     {
-        Log(LOG_LEVEL_ERR, "Cannot mix CIDR notation with xxx-yyy range notation: %s", s1);
+        Log(LOG_LEVEL_ERR, "Cannot mix CIDR notation with xxx-yyy range notation '%s'", s1);
         return -1;
     }
 
     if (!(isv6 || isv4))
     {
-        Log(LOG_LEVEL_ERR, "Not a valid address range - or not a fully qualified name: %s", s1);
+        Log(LOG_LEVEL_ERR, "Not a valid address range - or not a fully qualified name '%s'", s1);
         return -1;
     }
 
@@ -169,13 +169,13 @@ int FuzzySetMatch(const char *s1, const char *s2)
 
                     if ((from < 0) || (to < 0))
                     {
-                        Log(LOG_LEVEL_DEBUG, "Couldn't read range\n");
+                        Log(LOG_LEVEL_DEBUG, "Couldn't read range");
                         return -1;
                     }
 
                     if ((from > cmp) || (cmp > to))
                     {
-                        Log(LOG_LEVEL_DEBUG, "Out of range %ld > %ld > %ld (range %s)\n", from, cmp, to, buffer2);
+                        Log(LOG_LEVEL_DEBUG, "Out of range %ld > %ld > %ld, range '%s'", from, cmp, to, buffer2);
                         return -1;
                     }
                 }
@@ -186,15 +186,15 @@ int FuzzySetMatch(const char *s1, const char *s2)
 
                     if (from != cmp)
                     {
-                        Log(LOG_LEVEL_DEBUG, "Unequal\n");
+                        Log(LOG_LEVEL_DEBUG, "Unequal");
                         return -1;
                     }
                 }
 
-                Log(LOG_LEVEL_DEBUG, "Matched octet %s with %s\n", buffer1, buffer2);
+                Log(LOG_LEVEL_DEBUG, "Matched octet '%s' with '%s'", buffer1, buffer2);
             }
 
-            Log(LOG_LEVEL_DEBUG, "Matched IP range\n");
+            Log(LOG_LEVEL_DEBUG, "Matched IP range");
             return 0;
         }
     }
@@ -261,7 +261,7 @@ int FuzzySetMatch(const char *s1, const char *s2)
 
                     if ((from >= cmp) || (cmp > to))
                     {
-                        Log(LOG_LEVEL_DEBUG, "%lx < %lx < %lx\n", from, cmp, to);
+                        Log(LOG_LEVEL_DEBUG, "%lx < %lx < %lx", from, cmp, to);
                         return -1;
                     }
                 }
@@ -357,8 +357,6 @@ int FuzzyMatchParse(char *s)
     char address[CF_ADDRSIZE];
     int mask, count = 0;
 
-    Log(LOG_LEVEL_DEBUG, "Check ParsingIPRange(%s)\n", s);
-
     for (sp = s; *sp != '\0'; sp++)     /* Is this an address or hostname */
     {
         if (!isxdigit((int) *sp))
@@ -439,13 +437,13 @@ int FuzzyMatchParse(char *s)
 
         if (mask < 8)
         {
-            Log(LOG_LEVEL_ERR, "Mask value %d in %s is less than 8", mask, s);
+            Log(LOG_LEVEL_ERR, "Mask value %d in '%s' is less than 8", mask, s);
             return false;
         }
 
         if (mask > 30)
         {
-            Log(LOG_LEVEL_ERR, "Mask value %d in %s is silly (> 30)", mask, s);
+            Log(LOG_LEVEL_ERR, "Mask value %d in '%s' is silly (> 30)", mask, s);
             return false;
         }
     }

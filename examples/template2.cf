@@ -1,0 +1,47 @@
+
+body common control
+{
+      bundlesequence => { "example" };
+
+      inputs => { "libraries/cfengine_stdlib.cf" };
+}
+
+bundle agent example
+{
+  methods:
+
+      "any" usebundle => get_template("/tmp/sudoers","400");
+      "any" usebundle => get_template("/tmp/hosts","644");
+      
+}
+
+#############################################################
+
+bundle agent get_template(final_destination,mode)
+{
+  vars:
+
+      # This needs to ne preconfigured to your site
+
+      "masterfiles"   string => "/home/mark/tmp";
+      "this_template" string => lastnode("$(final_destination)","/");
+
+  files:
+
+      "$(final_destination).staging"
+
+      comment => "Get template and expand variables for this host",
+      perms => mo("400","root"),
+      copy_from => remote_cp("$(masterfiles)/templates/$(this_template)","$(policy_server)"),
+      action => if_elapsed("60");
+
+      "$(final_destination)"
+
+      comment => "Expand the template",
+      create => "true",
+      edit_line => expand_template("$(final_destination).staging"),
+      edit_defaults => empty,
+      perms => mo("$(mode)","root"),
+      action => if_elapsed("60");
+
+}

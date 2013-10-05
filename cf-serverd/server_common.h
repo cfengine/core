@@ -1,0 +1,59 @@
+/*
+   Copyright (C) CFEngine AS
+
+   This file is part of CFEngine 3 - written and maintained by CFEngine AS.
+
+   This program is free software; you can redistribute it and/or modify it
+   under the terms of the GNU General Public License as published by the
+   Free Software Foundation; version 3.
+
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
+
+  To the extent this program is licensed as part of the Enterprise
+  versions of CFEngine, the applicable Commerical Open Source License
+  (COSL) may apply to this file if you as a licensee so wish it. See
+  included file COSL.txt.
+*/
+
+
+#ifndef CFENGINE_SERVER_COMMON_H
+#define CFENGINE_SERVER_COMMON_H
+
+
+#define CF_BUFEXT 128
+
+
+#include <platform.h>
+
+#include <cf3.defs.h>                              /* EvalContext */
+#include <server.h>                                /* ServerConnectionState */
+
+
+void RefuseAccess(ServerConnectionState *conn, int size, char *errmesg);
+int AllowedUser(char *user);
+int AccessControl(EvalContext *ctx, const char *req_path, ServerConnectionState *conn, int encrypt);
+int MatchClasses(EvalContext *ctx, ServerConnectionState *conn);
+void Terminate(ConnectionInfo *connection);
+void DoExec(EvalContext *ctx, ServerConnectionState *conn, char *args);
+void CfGetFile(ServerFileGetState *args);
+void CfEncryptGetFile(ServerFileGetState *args);
+int StatFile(ServerConnectionState *conn, char *sendbuffer, char *ofilename);
+void ReplyServerContext(ServerConnectionState *conn, int encrypted, Item *classes);
+int CfOpenDirectory(ServerConnectionState *conn, char *sendbuffer, char *oldDirname);
+int CfSecOpenDirectory(ServerConnectionState *conn, char *sendbuffer, char *dirname);
+void GetServerLiteral(EvalContext *ctx, ServerConnectionState *conn, char *sendbuffer, char *recvbuffer, int encrypted);
+int GetServerQuery(ServerConnectionState *conn, char *recvbuffer, int encrypted);
+int cfscanf(char *in, int len1, int len2, char *out1, char *out2, char *out3);
+void CompareLocalHash(ServerConnectionState *conn, char *sendbuffer, char *recvbuffer);
+int LiteralAccessControl(EvalContext *ctx, char *in, ServerConnectionState *conn, int encrypt);
+Item *ContextAccessControl(EvalContext *ctx, char *in, ServerConnectionState *conn, int encrypt);
+
+
+#endif  /* CFENGINE_SERVER_COMMON_H */

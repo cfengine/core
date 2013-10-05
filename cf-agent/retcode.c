@@ -22,13 +22,15 @@
   included file COSL.txt.
 */
 
-#include "retcode.h"
-#include "rlist.h"
+#include <retcode.h>
 
-int VerifyCommandRetcode(EvalContext *ctx, int retcode, int fallback, Attributes a, Promise *pp)
+#include <actuator.h>
+#include <rlist.h>
+
+int VerifyCommandRetcode(EvalContext *ctx, int retcode, int fallback, Attributes a, Promise *pp, PromiseResult *result)
 {
     char retcodeStr[128] = { 0 };
-    int result = true;
+    bool result_retcode = true;
     int matched = false;
 
     if ((a.classes.retcode_kept) || (a.classes.retcode_repaired) || (a.classes.retcode_failed))
@@ -39,34 +41,36 @@ int VerifyCommandRetcode(EvalContext *ctx, int retcode, int fallback, Attributes
         if (RlistKeyIn(a.classes.retcode_kept, retcodeStr))
         {
             cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_NOOP, pp, a,
-                 "Command related to promiser \"%s\" returned code defined as promise kept (%d)", pp->promiser,
+                 "Command related to promiser '%s' returned code defined as promise kept %d", pp->promiser,
                  retcode);
-            result = true;
+            result_retcode = true;
             matched = true;
         }
 
         if (RlistKeyIn(a.classes.retcode_repaired, retcodeStr))
         {
             cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a,
-                 "Command related to promiser \"%s\" returned code defined as promise repaired (%d)", pp->promiser,
+                 "Command related to promiser '%s' returned code defined as promise repaired %d", pp->promiser,
                  retcode);
-            result = true;
+            *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
+            result_retcode = true;
             matched = true;
         }
 
         if (RlistKeyIn(a.classes.retcode_failed, retcodeStr))
         {
             cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, a,
-                 "!! Command related to promiser \"%s\" returned code defined as promise failed (%d)", pp->promiser,
+                 "Command related to promiser '%s' returned code defined as promise failed %d", pp->promiser,
                  retcode);
-            result = false;
+            *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
+            result_retcode = false;
             matched = true;
         }
 
         if (!matched)
         {
             Log(LOG_LEVEL_VERBOSE,
-                  "Command related to promiser \"%s\" returned code %d -- did not match any failed, repaired or kept lists",
+                "Command related to promiser '%s' returned code %d -- did not match any failed, repaired or kept lists",
                   pp->promiser, retcode);
         }
 
@@ -75,18 +79,20 @@ int VerifyCommandRetcode(EvalContext *ctx, int retcode, int fallback, Attributes
     {
         if (retcode == 0)
         {
-            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, "Finished command related to promiser \"%s\" -- succeeded",
+            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, "Finished command related to promiser '%s' -- succeeded",
                  pp->promiser);
-            result = true;
+            *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
+            result_retcode = true;
         }
         else
         {
             cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, a,
-                 "Finished command related to promiser \"%s\" -- an error occurred (returned %d)", pp->promiser,
+                 "Finished command related to promiser '%s' -- an error occurred, returned %d", pp->promiser,
                  retcode);
-            result = false;
+            *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
+            result_retcode = false;
         }
     }
 
-    return result;
+    return result_retcode;
 }

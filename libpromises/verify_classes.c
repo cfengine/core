@@ -22,27 +22,25 @@
   included file COSL.txt.
 */
 
-#include "verify_classes.h"
+#include <verify_classes.h>
 
-#include "attributes.h"
-#include "matching.h"
-#include "files_names.h"
-#include "fncall.h"
-#include "rlist.h"
-#include "expand.h"
-#include "promises.h"
-#include "hashes.h"
-#include "conversion.h"
-#include "logic_expressions.h"
-
-#include <assert.h>
+#include <attributes.h>
+#include <matching.h>
+#include <files_names.h>
+#include <fncall.h>
+#include <rlist.h>
+#include <expand.h>
+#include <promises.h>
+#include <conversion.h>
+#include <logic_expressions.h>
+#include <string_lib.h>
 
 
 static int EvalClassExpression(EvalContext *ctx, Constraint *cp, Promise *pp);
 static bool ValidClassName(const char *str);
 
 
-void VerifyClassPromise(EvalContext *ctx, Promise *pp, ARG_UNUSED void *param)
+PromiseResult VerifyClassPromise(EvalContext *ctx, Promise *pp, ARG_UNUSED void *param)
 {
     assert(param == NULL);
 
@@ -50,25 +48,25 @@ void VerifyClassPromise(EvalContext *ctx, Promise *pp, ARG_UNUSED void *param)
 
     a = GetClassContextAttributes(ctx, pp);
 
-    if (!FullTextMatch("[a-zA-Z0-9_]+", pp->promiser))
+    if (!FullTextMatch(ctx, "[a-zA-Z0-9_]+", pp->promiser))
     {
-        Log(LOG_LEVEL_VERBOSE, "Class identifier \"%s\" contains illegal characters - canonifying", pp->promiser);
+        Log(LOG_LEVEL_VERBOSE, "Class identifier '%s' contains illegal characters - canonifying", pp->promiser);
         snprintf(pp->promiser, strlen(pp->promiser) + 1, "%s", CanonifyName(pp->promiser));
     }
 
     if (a.context.nconstraints == 0)
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "No constraints for class promise %s", pp->promiser);
-        return;
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "No constraints for class promise '%s'", pp->promiser);
+        return PROMISE_RESULT_FAIL;
     }
 
     if (a.context.nconstraints > 1)
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Irreconcilable constraints in classes for %s", pp->promiser);
-        return;
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Irreconcilable constraints in classes for '%s'", pp->promiser);
+        return PROMISE_RESULT_FAIL;
     }
 
-    bool global_class;
+    bool global_class = false;
     if (a.context.persistent > 0) /* Persistent classes are always global */
     {
         global_class = true;
@@ -100,18 +98,19 @@ void VerifyClassPromise(EvalContext *ctx, Promise *pp, ARG_UNUSED void *param)
         {
             cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a,
                  "Attempted to name a class '%s', which is an illegal class identifier", pp->promiser);
+            return PROMISE_RESULT_FAIL;
         }
         else
         {
             if (global_class)
             {
                 Log(LOG_LEVEL_VERBOSE, "Adding global class '%s'", pp->promiser);
-                EvalContextHeapAddSoft(ctx, pp->promiser, PromiseGetNamespace(pp));
+                EvalContextClassPut(ctx, PromiseGetNamespace(pp), pp->promiser, true, CONTEXT_SCOPE_NAMESPACE);
             }
             else
             {
                 Log(LOG_LEVEL_VERBOSE, "Adding local bundle class '%s'", pp->promiser);
-                EvalContextStackFrameAddSoft(ctx, pp->promiser);
+                EvalContextClassPut(ctx, PromiseGetNamespace(pp), pp->promiser, true, CONTEXT_SCOPE_BUNDLE);
             }
 
             if (a.context.persistent > 0)
@@ -120,8 +119,12 @@ void VerifyClassPromise(EvalContext *ctx, Promise *pp, ARG_UNUSED void *param)
                       a.context.persistent);
                 EvalContextHeapPersistentSave(pp->promiser, PromiseGetNamespace(pp), a.context.persistent, CONTEXT_STATE_POLICY_RESET);
             }
+
+            return PROMISE_RESULT_CHANGE;
         }
     }
+
+    return PROMISE_RESULT_NOOP;
 }
 
 static int EvalClassExpression(EvalContext *ctx, Constraint *cp, Promise *pp)
@@ -174,16 +177,15 @@ static int EvalClassExpression(EvalContext *ctx, Constraint *cp, Promise *pp)
     case RVAL_TYPE_LIST:
         for (rp = (Rlist *) cp->rval.item; rp != NULL; rp = rp->next)
         {
-            rval = EvaluateFinalRval(ctx, "this", (Rval) {rp->item, rp->type}, true, pp);
-            RvalDestroy((Rval) {rp->item, rp->type});
-            rp->item = rval.item;
-            rp->type = rval.type;
+            rval = EvaluateFinalRval(ctx, NULL, "this", rp->val, true, pp);
+            RvalDestroy(rp->val);
+            rp->val = rval;
         }
         break;
 
     default:
 
-        rval = ExpandPrivateRval(ctx, "this", cp->rval);
+        rval = ExpandPrivateRval(ctx, NULL, "this", cp->rval);
         RvalDestroy(cp->rval);
         cp->rval = rval;
         break;
@@ -246,14 +248,14 @@ static int EvalClassExpression(EvalContext *ctx, Constraint *cp, Promise *pp)
         }
 
         snprintf(splay, CF_MAXVARSIZE, "%s+%s+%ju", VFQNAME, VIPADDRESS, (uintmax_t)getuid());
-        hash = (double) OatHash(splay, CF_HASHTABLESIZE);
+        hash = (double) StringHash(splay, 0, CF_HASHTABLESIZE);
         n = (int) (total * hash / (double) CF_HASHTABLESIZE);
 
         for (rp = (Rlist *) cp->rval.item, i = 0; rp != NULL; rp = rp->next, i++)
         {
             if (i == n)
             {
-                EvalContextHeapAddSoft(ctx, rp->item, PromiseGetNamespace(pp));
+                EvalContextClassPut(ctx, PromiseGetNamespace(pp), RlistScalarValue(rp), true, CONTEXT_SCOPE_NAMESPACE);
                 return true;
             }
         }
@@ -263,7 +265,7 @@ static int EvalClassExpression(EvalContext *ctx, Constraint *cp, Promise *pp)
 
     if (cp->rval.type != RVAL_TYPE_LIST)
     {
-        Log(LOG_LEVEL_ERR, "RHS of promise body attribute \"%s\" is not a list", cp->lval);
+        Log(LOG_LEVEL_ERR, "RHS of promise body attribute '%s' is not a list", cp->lval);
         PromiseRef(LOG_LEVEL_ERR, pp);
         return true;
     }
@@ -274,7 +276,7 @@ static int EvalClassExpression(EvalContext *ctx, Constraint *cp, Promise *pp)
     {
         for (rp = (Rlist *) cp->rval.item; rp != NULL; rp = rp->next)
         {
-            result = IntFromString(rp->item);
+            result = IntFromString(RlistScalarValue(rp));
 
             if (result < 0)
             {
@@ -298,7 +300,7 @@ static int EvalClassExpression(EvalContext *ctx, Constraint *cp, Promise *pp)
 
         for (rp = (Rlist *) cp->rval.item; rp != NULL; rp = rp->next)
         {
-            double prob = ((double) IntFromString(rp->item)) / ((double) total);
+            double prob = ((double) IntFromString(RlistScalarValue(rp))) / ((double) total);
             cum += prob;
 
             if (fluct < cum)
@@ -307,20 +309,19 @@ static int EvalClassExpression(EvalContext *ctx, Constraint *cp, Promise *pp)
             }
         }
 
-        snprintf(buffer, CF_MAXVARSIZE - 1, "%s_%s", pp->promiser, (char *) rp->item);
+        snprintf(buffer, CF_MAXVARSIZE - 1, "%s_%s", pp->promiser, RlistScalarValue(rp));
         /* FIXME: figure why explicit mark and get rid of it */
         EvalContextMarkPromiseDone(ctx, pp);
 
         if (strcmp(PromiseGetBundle(pp)->type, "common") == 0)
         {
-            EvalContextHeapAddSoft(ctx, buffer, PromiseGetNamespace(pp));
+            EvalContextClassPut(ctx, PromiseGetNamespace(pp), buffer, true, CONTEXT_SCOPE_NAMESPACE);
         }
         else
         {
-            EvalContextStackFrameAddSoft(ctx, buffer);
+            EvalContextClassPut(ctx, PromiseGetNamespace(pp), buffer, true, CONTEXT_SCOPE_BUNDLE);
         }
 
-        Log(LOG_LEVEL_DEBUG, " ?? \'Strategy\' distribution class interval -> %s\n", buffer);
         return true;
     }
 
@@ -328,12 +329,12 @@ static int EvalClassExpression(EvalContext *ctx, Constraint *cp, Promise *pp)
 
     for (rp = (Rlist *) cp->rval.item; rp != NULL; rp = rp->next)
     {
-        if (rp->type != RVAL_TYPE_SCALAR)
+        if (rp->val.type != RVAL_TYPE_SCALAR)
         {
             return false;
         }
 
-        result = IsDefinedClass(ctx, (char *) (rp->item), PromiseGetNamespace(pp));
+        result = IsDefinedClass(ctx, RlistScalarValue(rp), PromiseGetNamespace(pp));
 
         result_and = result_and && result;
         result_or = result_or || result;

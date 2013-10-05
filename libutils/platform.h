@@ -63,20 +63,30 @@
 # include <objbase.h>           // for disphelper
 #endif
 
+/* Standard C. */
 #include <stdio.h>
 #include <math.h>
+#include <string.h>
+#include <ctype.h>
+#include <assert.h>
+
+/* POSIX but available in all platforms. */
+#include <strings.h>
+#include <limits.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+
+/* We now require a pthreads implementation. */
+#include <pthread.h>
 
 #ifndef _GETOPT_H
-# include "../libcompat/getopt.h"
+# include <../libcompat/getopt.h>
 #endif
 
 #ifdef HAVE_STDLIB_H
 # include <stdlib.h>
 #endif
-#include <strings.h>
-#include <string.h>
-#include <ctype.h>
-#include <limits.h>
+
 #ifdef HAVE_UNAME
 # include <sys/utsname.h>
 #else
@@ -92,9 +102,6 @@ struct utsname
 };
 
 #endif
-
-#include <sys/types.h>
-#include <sys/stat.h>
 
 #ifdef HAVE_STDINT_H
 # include <stdint.h>
@@ -132,7 +139,7 @@ struct utsname
 # define WTERMSIG(s) ((s) & 0)
 #endif
 
-#include "bool.h"
+#include <bool.h>
 
 #include <openssl/err.h>
 #include <openssl/pem.h>
@@ -309,6 +316,7 @@ char *strsep(char **stringp, const char *delim);
 # include <sys/ioctl.h>
 # include <net/if.h>
 # include <netinet/in.h>
+# include <netinet/in_systm.h>
 # include <netinet/ip.h>
 # include <netinet/tcp.h>
 # include <arpa/inet.h>
@@ -321,7 +329,7 @@ char *strsep(char **stringp, const char *delim);
 #endif
 
 #ifdef __linux__
-# ifdef __GLIBC__
+# if defined(__GLIBC__) || defined(__BIONIC__)
 #  include <net/route.h>
 #  include <netinet/in.h>
 #  include <netinet/ip.h>
@@ -344,27 +352,26 @@ typedef int clockid_t;
 typedef int socklen_t;
 #endif
 
-# define __USE_GNU 1
-
-# include <pthread.h>
 # ifndef _SC_THREAD_STACK_MIN
 #  define _SC_THREAD_STACK_MIN PTHREAD_STACK_MIN
-# endif
+#endif
 
-# ifndef PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP
+#ifndef PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP
 #  define PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP PTHREAD_MUTEX_INITIALIZER
-# endif
+#endif
 
-# if !HAVE_DECL_PTHREAD_ATTR_SETSTACKSIZE
+#if !HAVE_DECL_PTHREAD_ATTR_SETSTACKSIZE
 int pthread_attr_setstacksize(pthread_attr_t *attr, size_t stacksize);
-# endif
+#endif
 
 #ifdef HAVE_SCHED_H
 # include <sched.h>
 #endif
 
-#ifdef WITH_SELINUX
-# include <selinux/selinux.h>
+#ifdef HAVE_ATTR_XATTR_H
+# include <attr/xattr.h>
+#elif defined(HAVE_SYS_XATTR_H)
+# include <sys/xattr.h>
 #endif
 
 #ifndef MIN
@@ -408,6 +415,9 @@ int lstat(const char *file_name, struct stat *buf);
 #if !HAVE_DECL_SLEEP
 unsigned int sleep(unsigned int seconds);
 #endif
+#if !HAVE_DECL_NANOSLEEP
+int nanosleep(const struct timespec *req, struct timespec *rem);
+#endif
 #if !HAVE_DECL_CHOWN
 int chown(const char *path, uid_t owner, gid_t group);
 #endif
@@ -420,11 +430,21 @@ int getnetgrent(char **host, char **user, char **domain);
 #endif
 
 #if !HAVE_DECL_SETNETGRENT
-int setnetgrent(const char *netgroup);
+#if SETNETGRENT_RETURNS_INT
+int
+#else
+void
+#endif
+setnetgrent(const char *netgroup);
 #endif
 
 #if !HAVE_DECL_ENDNETGRENT
-int endnetgrent(void);
+#if ENDNETGRENT_RETURNS_INT
+int
+#else
+void
+#endif
+endnetgrent(void);
 #endif
 
 #if !HAVE_DECL_STRSTR
@@ -779,9 +799,10 @@ struct timespec
 
 #if defined(__MINGW32__)
 /* _mkdir(3) */
-#include <direct.h>
+# include <direct.h>
 #endif
 
-#include "config.post.h"
+/* Must be always the last one! */
+#include <config.post.h>
 
 #endif

@@ -22,15 +22,17 @@
   included file COSL.txt.
 */
 
-#include "load_avahi.h"
-#include "files_interfaces.h"
+#include <load_avahi.h>
+#include <files_interfaces.h>
 
 #include <stdlib.h>
 
 static const char *paths[3] = {
     "/usr/lib/x86_64-linux-gnu/libavahi-client.so.3",
     "/usr/lib/libavahi-client.so.3",
-    "/usr/lib64/libavahi-client.so.3"
+    "/usr/lib64/libavahi-client.so.3",
+	/* 32 bits variants */
+	"/usr/lib/i386-linux-gnu/libavahi-client.so.3"
 };
 
 static const char *getavahipath();

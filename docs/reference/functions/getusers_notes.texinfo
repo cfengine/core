@@ -1,7 +1,0 @@
-
-@b{History}: Was introduced in version 3.1.0b1,Nova 2.0.0b1 (2010)
-This function is only available on Unix-like systems in the present version.
-
-The function has two arguments, both are comma separated lists. The first argument is a list
-of user names that should be excluded from the output. The second is a list of integrer UIDs
-that should be excluded.

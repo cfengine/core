@@ -1,9 +1,0 @@
-
-@verbatim
-
-body copy_from example
-{
-force_update => "true";
-}
-
-@end verbatim

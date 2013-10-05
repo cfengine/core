@@ -1,0 +1,88 @@
+
+######################################################################
+#
+# Zenoss integration template example
+# 
+######################################################################
+
+body common control
+{
+      bundlesequence  => { "zenoss_host", "zenoss_client"  };
+      syslog_host     => "zenoss_syslog.example.org";
+      syslog_port     => "514";
+      inputs => {"libraries/cfengine_stdlib.cf"};
+}
+
+########################################################
+
+bundle agent zenoss_host
+{
+  vars:
+
+      "cf_server_hosts"         string => "cfengine_policy.example.org";
+      "cf_doc_root"             string => "/srv/www/html";
+      "zCfengineComplianceFile" string => "/home/zenoss/compliance.zen";
+
+  files: 
+
+      # Assume Cfengine is running on the zenoss server to collect data
+
+    zenoss_syslog_example_org::
+
+      "$(zCfengineComplianceFile)"
+
+      comment => "Collect data from the Cfengine policy server",
+      perms => mo("644","zenoss"),
+      copy_from => secure_cp("$(cf_doc_root)/reports/summary.z","$(cf_server_host)");
+
+}
+
+########################################################
+
+bundle agent zenoss_client
+{
+  processes:
+
+      # On clients, we just pass any messages to the zenoss server
+      # for logging...
+
+      "bad_process" 
+      
+      comment => "Make sure that process X is not running, tell zenoss if it was",
+      signals => { "term", "kill" },
+      action => tell_zenoss_repaired("bad_process was killed");
+
+  files:
+
+      "/etc/passwd"
+
+      comment => "Check passwd security, tell zenoss if permissions were wrong",
+      perms => mog("644","root","root"),
+      action => tell_zenoss_repaired("passwd file had incorrect permissions");
+
+  commands:
+
+      "/my/important/script -xyz"
+
+      comment => "Run my mission critical batch process",
+      action => tell_zenoss_failed("myscript failed to execute or returned error");
+
+}
+
+#
+# Library stuff
+#
+
+body action tell_zenoss_repaired(x)
+{
+      log_repaired => "udp_syslog";
+      log_string   => "zenoss_cfengine_integration $(x) promise repaired";
+      ifelapsed    => "10"; # Every 10 mins
+}
+
+body action tell_zenoss_failed(x)
+{
+      log_failed => "udp_syslog";
+      log_string  => "zenoss_cfengine_integration $(x) persistent problem";
+      ifelapsed   => "10"; # Every 10 mins
+}

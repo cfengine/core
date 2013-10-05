@@ -1,0 +1,30 @@
+#############################################
+#  Matching multiple lines in regexp (PCRE)
+##############################################
+
+body common control
+{
+      bundlesequence => { "example" };
+}
+
+bundle agent example
+{
+  vars:
+      "data" string => "Something boring is
+                    written 
+                    up here. This is the interesting
+                    part: KWYDK (know what you don't know)";
+
+  classes:
+
+      # note the (?s) at the beginning of the pattern - this ensures newlines are matched by .
+
+      "matched" expression => regextract("(?s).*: (.*)", "$(data)", "interesting");
+
+  reports:
+    matched::
+      "This is interesting: \"$(interesting[1])\"";
+      
+    !matched::
+      "Nothing was interesting!";
+}

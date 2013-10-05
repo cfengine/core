@@ -1,0 +1,78 @@
+#######################################################
+#
+# Test command useshell parameters
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { "init", "test" };
+  version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+  vars:
+    "origtestdir" string => dirname("$(this.promise_filename)");
+}
+
+#######################################################
+
+bundle agent test
+{
+  classes:
+    "shelltype_noshell" or => { "useshell_noshell", "useshell_false", "useshell_no", "useshell_off" };
+    "shelltype_useshell" or => { "useshell_useshell", "useshell_true", "useshell_yes", "useshell_on" };
+    "shelltype_powershell" or => { "useshell_powershell" };
+
+  vars:
+    useshell_true::
+      "shelltype" string => "true";
+    useshell_false::
+      "shelltype" string => "false";
+    useshell_yes::
+      "shelltype" string => "yes";
+    useshell_no::
+      "shelltype" string => "no";
+    useshell_on::
+      "shelltype" string => "on";
+    useshell_off::
+      "shelltype" string => "off";
+    useshell_noshell::
+      "shelltype" string => "noshell";
+    useshell_useshell::
+      "shelltype" string => "useshell";
+    useshell_powershell::
+      "shelltype" string => "powershell";
+
+    shelltype_noshell.windows::
+      "shellcmd" string => "c:\windows\system32\cmd.exe /C type";
+    shelltype_noshell.!windows::
+      "shellcmd" string => "/bin/cat";
+    shelltype_useshell.windows::
+      "shellcmd" string => "type";
+    shelltype_useshell.!windows::
+      "shellcmd" string => "cat";
+    shelltype_powershell::
+      "shellcmd" string => "Get-Content";
+
+  classes:
+    "shell_specified" or => { "shelltype_noshell", "shelltype_useshell", "shelltype_powershell" };
+
+  commands:
+    shell_specified::
+      "$(shellcmd) $(init.origtestdir)$(G.DS)text.txt"
+        contain => shelltype;
+
+  reports:
+    !shell_specified::
+      "No shell type specified!";
+}
+
+body contain shelltype
+{
+  useshell => "$(test.shelltype)";
+}

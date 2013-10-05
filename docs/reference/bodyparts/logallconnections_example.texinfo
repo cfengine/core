@@ -1,9 +1,0 @@
-
-@verbatim
-
-body server control
-{
-logallconnections => "true";
-}
-
-@end verbatim

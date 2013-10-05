@@ -1,6 +1,0 @@
-
-The @code{action} settings allow general transaction control to be
-implemented on promise verification. Action bodies place limits on how
-often to verify the promise and what classes to raise in the case that
-the promise can or cannot be kept.
-

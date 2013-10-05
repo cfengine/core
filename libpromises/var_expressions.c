@@ -22,15 +22,140 @@
   included file COSL.txt.
 */
 
-#include "var_expressions.h"
+#include <var_expressions.h>
 
-#include "cf3.defs.h"
-#include "buffer.h"
-#include "misc_lib.h"
+#include <cf3.defs.h>
+#include <buffer.h>
+#include <misc_lib.h>
+#include <string_lib.h>
+#include <hashes.h>
 
-#include <assert.h>
+static size_t VarRefHash(const VarRef *ref)
+{
+    unsigned int h = 0;
 
-#ifndef NDEBUG
+    if (VarRefIsQualified(ref))
+    {
+        const char *ns = "default";
+        int len = sizeof("default") - 1;
+        if (ref->ns)
+        {
+            ns = ref->ns;
+            len = strlen(ref->ns);
+        }
+
+        for (int i = 0; i < len; i++)
+        {
+            h += ns[i];
+            h += (h << 10);
+            h ^= (h >> 6);
+        }
+
+        len = strlen(ref->scope);
+        for (int i = 0; i < len; i++)
+        {
+            h += ref->scope[i];
+            h += (h << 10);
+            h ^= (h >> 6);
+        }
+    }
+
+    int len = strlen(ref->lval);
+    for (int i = 0; i < len; i++)
+    {
+        h += ref->lval[i];
+        h += (h << 10);
+        h ^= (h >> 6);
+    }
+
+    for (size_t k = 0; k < ref->num_indices; k++)
+    {
+        len = strlen(ref->indices[k]);
+        for (int i = 0; i < len; i++)
+        {
+            h += ref->indices[k][i];
+            h += (h << 10);
+            h ^= (h >> 6);
+        }
+    }
+
+    h += (h << 3);
+    h ^= (h >> 11);
+    h += (h << 15);
+
+    return (h & (INT_MAX - 1));
+}
+
+VarRef *VarRefCopy(const VarRef *ref)
+{
+    VarRef *copy = xmalloc(sizeof(VarRef));
+
+    copy->hash = ref->hash;
+    copy->ns = ref->ns ? xstrdup(ref->ns) : NULL;
+    copy->scope = ref->scope ? xstrdup(ref->scope) : NULL;
+    copy->lval = ref->lval ? xstrdup(ref->lval) : NULL;
+
+    copy->num_indices = ref->num_indices;
+    if (ref->num_indices > 0)
+    {
+        copy->indices = xmalloc(ref->num_indices * sizeof(char*));
+        for (size_t i = 0; i < ref->num_indices; i++)
+        {
+            copy->indices[i] = xstrdup(ref->indices[i]);
+        }
+    }
+    else
+    {
+        copy->indices = NULL;
+    }
+
+    return copy;
+}
+
+VarRef *VarRefCopyLocalized(const VarRef *ref)
+{
+    VarRef *copy = xmalloc(sizeof(VarRef));
+
+    copy->ns = NULL;
+    copy->scope = xstrdup("this");
+    copy->lval = ref->lval ? xstrdup(ref->lval) : NULL;
+
+    copy->num_indices = ref->num_indices;
+    if (ref->num_indices > 0)
+    {
+        copy->indices = xmalloc(ref->num_indices * sizeof(char*));
+        for (size_t i = 0; i < ref->num_indices; i++)
+        {
+            copy->indices[i] = xstrdup(ref->indices[i]);
+        }
+    }
+    else
+    {
+        copy->indices = NULL;
+    }
+
+    copy->hash = VarRefHash(copy);
+
+    return copy;
+}
+
+VarRef *VarRefCopyIndexless(const VarRef *ref)
+{
+    VarRef *copy = xmalloc(sizeof(VarRef));
+
+    copy->ns = ref->ns ? xstrdup(ref->ns) : NULL;
+    copy->scope = ref->scope ? xstrdup(ref->scope) : NULL;
+    copy->lval = ref->lval ? xstrdup(ref->lval) : NULL;
+    copy->num_indices = 0;
+    copy->indices = NULL;
+
+    copy->hash = VarRefHash(copy);
+
+    return copy;
+}
+
+
+
 static bool IndexBracketsBalance(const char *var_string)
 {
     int count = 0;
@@ -48,28 +173,40 @@ static bool IndexBracketsBalance(const char *var_string)
 
     return count == 0;
 }
-#endif
+
 
 static size_t IndexCount(const char *var_string)
 {
     size_t count = 0;
+    size_t level = 0;
+
     for (const char *c = var_string; *c != '\0'; c++)
     {
         if (*c == '[')
         {
-            count++;
+            if (level == 0)
+            {
+                count++;
+            }
+            level++;
+        }
+        if (*c == ']')
+        {
+            level--;
         }
     }
 
     return count;
 }
 
-VarRef VarRefParseFromBundle(const char *qualified_name, const Bundle *bundle)
+VarRef *VarRefParseFromNamespaceAndScope(const char *qualified_name, const char *_ns, const char *_scope, char ns_separator, char scope_separator)
 {
     char *ns = NULL;
 
-    const char *scope_start = strchr(qualified_name, CF_NS);
-    if (scope_start)
+    const char *indices_start = strchr(qualified_name, '[');
+
+    const char *scope_start = strchr(qualified_name, ns_separator);
+    if (scope_start && (!indices_start || scope_start < indices_start))
     {
         ns = xstrndup(qualified_name, scope_start - qualified_name);
         scope_start++;
@@ -81,8 +218,9 @@ VarRef VarRefParseFromBundle(const char *qualified_name, const Bundle *bundle)
 
     char *scope = NULL;
 
-    const char *lval_start = strchr(scope_start, '.');
-    if (lval_start)
+    const char *lval_start = strchr(scope_start, scope_separator);
+
+    if (lval_start && (!indices_start || lval_start < indices_start))
     {
         lval_start++;
         scope = xstrndup(scope_start, lval_start - scope_start - 1);
@@ -96,36 +234,48 @@ VarRef VarRefParseFromBundle(const char *qualified_name, const Bundle *bundle)
     char **indices = NULL;
     size_t num_indices = 0;
 
-    const char *indices_start = strchr(lval_start, '[');
     if (indices_start)
     {
         indices_start++;
         lval = xstrndup(lval_start, indices_start - lval_start - 1);
 
-        assert("Index brackets in variable expression did not balance" && IndexBracketsBalance(indices_start - 1));
-
-        num_indices = IndexCount(indices_start - 1);
-        indices = xmalloc(num_indices * sizeof(char *));
-
-        Buffer *buf = BufferNew();
-        size_t cur_index = 0;
-        for (const char *c = indices_start; *c != '\0'; c++)
+        if (!IndexBracketsBalance(indices_start - 1))
         {
-            if (*c == '[')
+            Log(LOG_LEVEL_ERR, "Broken variable expressoin, index brackets do not balance, in '%s'", qualified_name);
+        }
+        else
+        {
+            num_indices = IndexCount(indices_start - 1);
+            indices = xmalloc(num_indices * sizeof(char *));
+
+            Buffer *buf = BufferNew();
+            size_t cur_index = 0;
+            size_t open_count = 1;
+
+            for (const char *c = indices_start; *c != '\0'; c++)
             {
-                cur_index++;
-            }
-            else if (*c == ']')
-            {
-                indices[cur_index] = xstrdup(BufferData(buf));
-                BufferZero(buf);
-            }
-            else
-            {
+                if (*c == '[')
+                {
+                    if (open_count++ == 0)
+                    {
+                        cur_index++;
+                        continue;
+                    }
+                }
+                else if (*c == ']')
+                {
+                    if (open_count-- == 1)
+                    {
+                        indices[cur_index] = xstrdup(BufferData(buf));
+                        BufferZero(buf);
+                        continue;
+                    }
+                }
+
                 BufferAppend(buf, c, sizeof(char));
             }
+            BufferDestroy(&buf);
         }
-        BufferDestroy(&buf);
     }
     else
     {
@@ -134,70 +284,249 @@ VarRef VarRefParseFromBundle(const char *qualified_name, const Bundle *bundle)
 
     assert(lval);
 
-    if (!scope)
+    if (!scope && !_scope)
     {
         assert(ns == NULL && "A variable missing a scope should not have a namespace");
     }
 
-    return (VarRef) {
-        .ns = scope ? ns : (bundle ? xstrdup(bundle->ns) : NULL),
-        .scope = scope ? scope : (bundle ? xstrdup(bundle->name) : NULL),
-        .lval = lval,
-        .indices = (const char *const *const)indices,
-        .num_indices = num_indices,
-        .allocated = true,
-    };
+    VarRef *ref = xmalloc(sizeof(VarRef));
+
+    ref->ns = ns ? ns : (_ns ? xstrdup(_ns) : NULL);
+    ref->scope = scope ? scope : (_scope ? xstrdup(_scope) : NULL);
+    ref->lval = lval;
+    ref->indices = indices;
+    ref->num_indices = num_indices;
+
+    ref->hash = VarRefHash(ref);
+
+    return ref;
 }
 
-VarRef VarRefParse(const char *var_ref_string)
+VarRef *VarRefParse(const char *var_ref_string)
 {
-    return VarRefParseFromBundle(var_ref_string, NULL);
+    return VarRefParseFromNamespaceAndScope(var_ref_string, NULL, NULL, CF_NS, '.');
 }
 
-void VarRefDestroy(VarRef ref)
+VarRef *VarRefParseFromScope(const char *var_ref_string, const char *scope)
 {
-    if (!ref.allocated)
+    if (!scope)
     {
-        ProgrammingError("Static VarRef has been passed to VarRefDestroy");
+        return VarRefParseFromNamespaceAndScope(var_ref_string, NULL, NULL, CF_NS, '.');
     }
-    free((char *)ref.ns);
-    free((char *)ref.scope);
-    free((char *)ref.lval);
-    for (int i = 0; i < ref.num_indices; ++i)
+
+    const char *scope_start = strchr(scope, CF_NS);
+    if (scope_start)
     {
-        free((char *)ref.indices[i]);
+        char *ns = xstrndup(scope, scope_start - scope);
+        VarRef *ref = VarRefParseFromNamespaceAndScope(var_ref_string, ns, scope_start + 1, CF_NS, '.');
+        free(ns);
+        return ref;
+    }
+    else
+    {
+        return VarRefParseFromNamespaceAndScope(var_ref_string, NULL, scope, CF_NS, '.');
     }
 }
 
-char *VarRefToString(VarRef ref, bool qualified)
+VarRef *VarRefParseFromBundle(const char *var_ref_string, const Bundle *bundle)
 {
-    assert(ref.lval);
+    if (bundle)
+    {
+        return VarRefParseFromNamespaceAndScope(var_ref_string, bundle->ns, bundle->name, CF_NS, '.');
+    }
+    else
+    {
+        return VarRefParse(var_ref_string);
+    }
+}
+
+void VarRefDestroy(VarRef *ref)
+{
+    if (ref)
+    {
+        free(ref->ns);
+        free(ref->scope);
+        free(ref->lval);
+        if (ref->num_indices > 0)
+        {
+            for (int i = 0; i < ref->num_indices; ++i)
+            {
+                free(ref->indices[i]);
+            }
+            free(ref->indices);
+        }
+
+        free(ref);
+    }
+
+}
+
+char *VarRefToString(const VarRef *ref, bool qualified)
+{
+    assert(ref->lval);
 
     Buffer *buf = BufferNew();
-    if (qualified)
+    if (qualified && VarRefIsQualified(ref))
     {
-        if (ref.ns)
-        {
-            BufferAppend(buf, ref.ns, strlen(ref.ns));
-            BufferAppend(buf, ":", sizeof(char));
-        }
-        if (ref.scope)
-        {
-            BufferAppend(buf, ref.scope, strlen(ref.scope));
-            BufferAppend(buf, ".", sizeof(char));
-        }
+        const char *ns = ref->ns ? ref->ns : "default";
+
+        BufferAppend(buf, ns, strlen(ns));
+        BufferAppend(buf, ":", sizeof(char));
+        BufferAppend(buf, ref->scope, strlen(ref->scope));
+        BufferAppend(buf, ".", sizeof(char));
     }
 
-    BufferAppend(buf, ref.lval, strlen(ref.lval));
+    BufferAppend(buf, ref->lval, strlen(ref->lval));
 
-    for (size_t i = 0; i < ref.num_indices; i++)
+    for (size_t i = 0; i < ref->num_indices; i++)
     {
         BufferAppend(buf, "[", sizeof(char));
-        BufferAppend(buf, ref.indices[i], strlen(ref.indices[i]));
+        BufferAppend(buf, ref->indices[i], strlen(ref->indices[i]));
         BufferAppend(buf, "]", sizeof(char));
     }
 
     char *var_string = xstrdup(BufferData(buf));
     BufferDestroy(&buf);
     return var_string;
+}
+
+char *VarRefMangle(const VarRef *ref)
+{
+    char *suffix = VarRefToString(ref, false);
+
+    if (!ref->scope)
+    {
+        return suffix;
+    }
+    else
+    {
+        if (ref->ns)
+        {
+            char *mangled = StringFormat("%s*%s#%s", ref->ns, ref->scope, suffix);
+            free(suffix);
+            return mangled;
+        }
+        else
+        {
+            char *mangled = StringFormat("%s#%s", ref->scope, suffix);
+            free(suffix);
+            return mangled;
+        }
+    }
+}
+
+VarRef *VarRefDeMangle(const char *mangled_var_ref)
+{
+    return VarRefParseFromNamespaceAndScope(mangled_var_ref, NULL, NULL, '*', '#');
+}
+
+static bool VarRefIsMeta(VarRef *ref)
+{
+    return StringEndsWith(ref->scope, "_meta");
+}
+
+void VarRefSetMeta(VarRef *ref, bool enabled)
+{
+    if (enabled)
+    {
+        if (!VarRefIsMeta(ref))
+        {
+            char *tmp = StringConcatenate(2, ref->scope, "_meta");
+            free(ref->scope);
+            ref->scope = tmp;
+        }
+    }
+    else
+    {
+        if (VarRefIsMeta(ref))
+        {
+            char *tmp = ref->scope;
+            size_t len = strlen(ref->scope);
+            memcpy(ref->scope, StringSubstring(ref->scope, len, 0, len - strlen("_meta")), sizeof(char*));
+            free(tmp);
+        }
+    }
+
+    ref->hash = VarRefHash(ref);
+}
+
+bool VarRefIsQualified(const VarRef *ref)
+{
+    return ref->scope != NULL;
+}
+
+void VarRefQualify(VarRef *ref, const char *ns, const char *scope)
+{
+    assert(scope);
+
+    free(ref->ns);
+    ref->ns = NULL;
+
+    free(ref->scope);
+    ref->scope = NULL;
+
+    ref->ns = ns ? xstrdup(ns) : NULL;
+    ref->scope = xstrdup(scope);
+
+    ref->hash = VarRefHash(ref);
+}
+
+void VarRefAddIndex(VarRef *ref, const char *index)
+{
+    if (ref->indices)
+    {
+        assert(ref->num_indices > 0);
+        ref->indices = xrealloc(ref->indices, sizeof(char *) * (ref->num_indices + 1));
+    }
+    else
+    {
+        assert(ref->num_indices == 0);
+        ref->indices = xmalloc(sizeof(char *));
+    }
+
+    ref->indices[ref->num_indices] = xstrdup(index);
+    ref->num_indices++;
+
+    ref->hash = VarRefHash(ref);
+}
+
+int VarRefCompare(const VarRef *a, const VarRef *b)
+{
+    int ret = strcmp(a->lval, b->lval);
+    if (ret != 0)
+    {
+        return ret;
+    }
+
+    ret = strcmp(NULLStringToEmpty(a->scope), NULLStringToEmpty(b->scope));
+    if (ret != 0)
+    {
+        return ret;
+    }
+
+    const char *a_ns = a->ns ? a->ns : "default";
+    const char *b_ns = b->ns ? b->ns : "default";
+
+    ret = strcmp(a_ns, b_ns);
+    if (ret != 0)
+    {
+        return ret;
+    }
+
+    ret = a->num_indices - b->num_indices;
+    if (ret != 0)
+    {
+        return ret;
+    }
+
+    for (size_t i = 0; i < a->num_indices; i++)
+    {
+        ret = strcmp(a->indices[i], b->indices[i]);
+        if (ret != 0)
+        {
+            return ret;
+        }
+    }
+
+    return 0;
 }

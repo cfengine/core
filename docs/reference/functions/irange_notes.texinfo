@@ -1,7 +1,0 @@
-
-Used for any scalar attribute which requires an integer range.  You can
-generally interchangeably say @samp{"1,10"} or @samp{irange("1","10")}
-(however, if you want to create a range of dates or times, you must use
-irange if you also use the functions @samp{ago}, @samp{now},
-@samp{accumulated}, etc).
-

@@ -22,60 +22,32 @@
   included file COSL.txt.
 */
 
-#include "env_context.h"
+#include <env_context.h>
 
-#include "files_names.h"
-#include "logic_expressions.h"
-#include "syntax.h"
-#include "item_lib.h"
-#include "ornaments.h"
-#include "expand.h"
-#include "matching.h"
-#include "string_lib.h"
-#include "misc_lib.h"
-#include "assoc.h"
-#include "scope.h"
-#include "vars.h"
-#include "syslog_client.h"
-#include "audit.h"
-#include "promise_logging.h"
-#include "rlist.h"
-#include "buffer.h"
-
-#ifdef HAVE_NOVA
-# include "cf.nova.h"
-#endif
-
-#include <assert.h>
-
-/*****************************************************************************/
-
-static bool EvalContextStackFrameContainsNegated(const EvalContext *ctx, const char *context);
+#include <files_names.h>
+#include <logic_expressions.h>
+#include <syntax.h>
+#include <item_lib.h>
+#include <ornaments.h>
+#include <expand.h>
+#include <matching.h>
+#include <string_lib.h>
+#include <misc_lib.h>
+#include <assoc.h>
+#include <scope.h>
+#include <vars.h>
+#include <syslog_client.h>
+#include <audit.h>
+#include <promise_logging.h>
+#include <rlist.h>
+#include <buffer.h>
+#include <promises.h>
 
 static bool ABORTBUNDLE = false;
+static bool EvalContextStackFrameContainsSoft(const EvalContext *ctx, const char *context);
+static bool EvalContextHeapContainsSoft(const EvalContext *ctx, const char *ns, const char *name);
+static bool EvalContextHeapContainsHard(const EvalContext *ctx, const char *name);
 
-/*****************************************************************************/
-/* Level                                                                     */
-/*****************************************************************************/
-
-static const char *StackFrameOwnerName(const StackFrame *frame)
-{
-    switch (frame->type)
-    {
-    case STACK_FRAME_TYPE_BUNDLE:
-        return frame->data.bundle.owner->name;
-
-    case STACK_FRAME_TYPE_BODY:
-        return frame->data.body.owner->name;
-
-    case STACK_FRAME_TYPE_PROMISE:
-    case STACK_FRAME_TYPE_PROMISE_ITERATION:
-        return "this";
-
-    default:
-        ProgrammingError("Unhandled stack frame type");
-    }
-}
 
 static StackFrame *LastStackFrame(const EvalContext *ctx, size_t offset)
 {
@@ -86,50 +58,30 @@ static StackFrame *LastStackFrame(const EvalContext *ctx, size_t offset)
     return SeqAt(ctx->stack, SeqLength(ctx->stack) - 1 - offset);
 }
 
-static StackFrame *LastStackFrameBundle(const EvalContext *ctx)
+static StackFrame *LastStackFrameByType(const EvalContext *ctx, StackFrameType type)
 {
-    StackFrame *last_frame = LastStackFrame(ctx, 0);
-
-    switch (last_frame->type)
+    for (size_t i = 0; i < SeqLength(ctx->stack); i++)
     {
-    case STACK_FRAME_TYPE_BUNDLE:
-        return last_frame;
-
-    case STACK_FRAME_TYPE_BODY:
+        StackFrame *frame = LastStackFrame(ctx, i);
+        if (frame->type == type)
         {
-            assert(LastStackFrame(ctx, 1));
-            assert(LastStackFrame(ctx, 1)->type == STACK_FRAME_TYPE_PROMISE);
-            StackFrame *previous_frame = LastStackFrame(ctx, 2);
-            if (previous_frame)
-            {
-                assert(previous_frame->type == STACK_FRAME_TYPE_BUNDLE);
-                return previous_frame;
-            }
-            else
-            {
-                return NULL;
-            }
+            return frame;
         }
-
-    case STACK_FRAME_TYPE_PROMISE:
-        {
-            StackFrame *previous_frame = LastStackFrame(ctx, 1);
-            assert(previous_frame);
-            assert("Promise stack frame does not follow bundle stack frame" && previous_frame->type == STACK_FRAME_TYPE_BUNDLE);
-            return previous_frame;
-        }
-
-    case STACK_FRAME_TYPE_PROMISE_ITERATION:
-        {
-            StackFrame *previous_frame = LastStackFrame(ctx, 2);
-            assert(previous_frame);
-            assert("Promise stack frame does not follow bundle stack frame" && previous_frame->type == STACK_FRAME_TYPE_BUNDLE);
-            return previous_frame;
-        }
-
-    default:
-        ProgrammingError("Unhandled stack frame type");
     }
+
+    return NULL;
+}
+
+static const char *GetAgentAbortingContext(const EvalContext *ctx)
+{
+    for (const Item *ip = ctx->heap_abort; ip != NULL; ip = ip->next)
+    {
+        if (IsDefinedClass(ctx, ip->name, NULL))
+        {
+            return ip->name;
+        }
+    }
+    return NULL;
 }
 
 void EvalContextHeapAddSoft(EvalContext *ctx, const char *context, const char *ns)
@@ -143,7 +95,7 @@ void EvalContextHeapAddSoft(EvalContext *ctx, const char *context, const char *n
         Log(LOG_LEVEL_ERR, "Chop was called on a string that seemed to have no terminator");
     }
     CanonifyNameInPlace(canonified_context);
-    
+
     if (ns && strcmp(ns, "default") != 0)
     {
         snprintf(context_copy, CF_MAXVARSIZE, "%s:%s", ns, canonified_context);
@@ -152,8 +104,6 @@ void EvalContextHeapAddSoft(EvalContext *ctx, const char *context, const char *n
     {
         strncpy(context_copy, canonified_context, CF_MAXVARSIZE);
     }
-    
-    Log(LOG_LEVEL_DEBUG, "EvalContextHeapAddSoft(%s)\n", context_copy);
 
     if (strlen(context_copy) == 0)
     {
@@ -162,31 +112,21 @@ void EvalContextHeapAddSoft(EvalContext *ctx, const char *context, const char *n
 
     if (IsRegexItemIn(ctx, ctx->heap_abort_current_bundle, context_copy))
     {
-        Log(LOG_LEVEL_ERR, "Bundle aborted on defined class \"%s\"", context_copy);
+        Log(LOG_LEVEL_ERR, "Bundle aborted on defined class '%s'", context_copy);
         ABORTBUNDLE = true;
     }
 
     if (IsRegexItemIn(ctx, ctx->heap_abort, context_copy))
     {
-        Log(LOG_LEVEL_ERR, "cf-agent aborted on defined class \"%s\"", context_copy);
-        exit(1);
+        FatalError(ctx, "cf-agent aborted on defined class '%s'", context_copy);
     }
 
-    if (EvalContextHeapContainsSoft(ctx, context_copy))
+    if (EvalContextHeapContainsSoft(ctx, ns, canonified_context))
     {
         return;
     }
 
-    StringSetAdd(ctx->heap_soft, xstrdup(context_copy));
-
-    for (const Item *ip = ctx->heap_abort; ip != NULL; ip = ip->next)
-    {
-        if (IsDefinedClass(ctx, ip->name, ns))
-        {
-            Log(LOG_LEVEL_ERR, "cf-agent aborted on defined class \"%s\" defined in bundle %s", ip->name, StackFrameOwnerName(LastStackFrame(ctx, 0)));
-            exit(1);
-        }
-    }
+    ClassTablePut(ctx->global_classes, ns, canonified_context, true, CONTEXT_SCOPE_NAMESPACE);
 
     if (!ABORTBUNDLE)
     {
@@ -194,7 +134,7 @@ void EvalContextHeapAddSoft(EvalContext *ctx, const char *context, const char *n
         {
             if (IsDefinedClass(ctx, ip->name, ns))
             {
-                Log(LOG_LEVEL_ERR, "Setting abort for \"%s\" when setting \"%s\"", ip->name, context_copy);
+                Log(LOG_LEVEL_ERR, "Setting abort for '%s' when setting '%s'", ip->name, context_copy);
                 ABORTBUNDLE = true;
                 break;
             }
@@ -204,73 +144,18 @@ void EvalContextHeapAddSoft(EvalContext *ctx, const char *context, const char *n
 
 /*******************************************************************/
 
-void EvalContextHeapAddHard(EvalContext *ctx, const char *context)
+void EvalContextClassPutHard(EvalContext *ctx, const char *name)
 {
-    char context_copy[CF_MAXVARSIZE];
-
-    strcpy(context_copy, context);
-    if (Chop(context_copy, CF_EXPANDSIZE) == -1)
-    {
-        Log(LOG_LEVEL_ERR, "Chop was called on a string that seemed to have no terminator");
-    }
-    CanonifyNameInPlace(context_copy);
-
-    Log(LOG_LEVEL_DEBUG, "EvalContextHeapAddHard(%s)\n", context_copy);
-
-    if (strlen(context_copy) == 0)
-    {
-        return;
-    }
-
-    if (IsRegexItemIn(ctx, ctx->heap_abort_current_bundle, context_copy))
-    {
-        Log(LOG_LEVEL_ERR, "Bundle aborted on defined class \"%s\"", context_copy);
-        ABORTBUNDLE = true;
-    }
-
-    if (IsRegexItemIn(ctx, ctx->heap_abort, context_copy))
-    {
-        Log(LOG_LEVEL_ERR, "cf-agent aborted on defined class \"%s\"", context_copy);
-        exit(1);
-    }
-
-    if (EvalContextHeapContainsHard(ctx, context_copy))
-    {
-        return;
-    }
-
-    StringSetAdd(ctx->heap_hard, xstrdup(context_copy));
-
-    for (const Item *ip = ctx->heap_abort; ip != NULL; ip = ip->next)
-    {
-        if (IsDefinedClass(ctx, ip->name, NULL))
-        {
-            Log(LOG_LEVEL_ERR, "cf-agent aborted on defined class \"%s\" defined in bundle %s", ip->name, StackFrameOwnerName(LastStackFrame(ctx, 0)));
-            exit(1);
-        }
-    }
-
-    if (!ABORTBUNDLE)
-    {
-        for (const Item *ip = ctx->heap_abort_current_bundle; ip != NULL; ip = ip->next)
-        {
-            if (IsDefinedClass(ctx, ip->name, NULL))
-            {
-                Log(LOG_LEVEL_ERR, "Setting abort for \"%s\" when setting \"%s\"", ip->name, context_copy);
-                ABORTBUNDLE = true;
-                break;
-            }
-        }
-    }
+    EvalContextClassPut(ctx, NULL, name, false, CONTEXT_SCOPE_NAMESPACE);
 }
 
-void EvalContextStackFrameAddSoft(EvalContext *ctx, const char *context)
+static void EvalContextStackFrameAddSoft(EvalContext *ctx, const char *context)
 {
     assert(SeqLength(ctx->stack) > 0);
 
     StackFrameBundle frame;
     {
-        StackFrame *last_frame = LastStackFrameBundle(ctx);
+        StackFrame *last_frame = LastStackFrameByType(ctx, STACK_FRAME_TYPE_BUNDLE);
         if (!last_frame)
         {
             ProgrammingError("Attempted to add a soft class on the stack, but stack had no bundle frame");
@@ -298,24 +183,21 @@ void EvalContextStackFrameAddSoft(EvalContext *ctx, const char *context)
         return;
     }
 
-    Log(LOG_LEVEL_DEBUG, "NewBundleClass(%s)\n", copy);
-    
+    if (EvalContextHeapContainsSoft(ctx, frame.owner->ns, context))
+    {
+        Log(LOG_LEVEL_WARNING, "Private class '%s' in bundle '%s' shadows a global class - you should choose a different name to avoid conflicts",
+              copy, frame.owner->name);
+    }
+
     if (IsRegexItemIn(ctx, ctx->heap_abort_current_bundle, copy))
     {
-        Log(LOG_LEVEL_ERR, "Bundle %s aborted on defined class \"%s\"", frame.owner->name, copy);
+        Log(LOG_LEVEL_ERR, "Bundle aborted on defined class '%s'", copy);
         ABORTBUNDLE = true;
     }
 
     if (IsRegexItemIn(ctx, ctx->heap_abort, copy))
     {
-        Log(LOG_LEVEL_ERR, "cf-agent aborted on defined class \"%s\" defined in bundle %s", copy, frame.owner->name);
-        exit(1);
-    }
-
-    if (EvalContextHeapContainsSoft(ctx, copy))
-    {
-        Log(LOG_LEVEL_ERR, "WARNING - private class \"%s\" in bundle \"%s\" shadows a global class - you should choose a different name to avoid conflicts",
-              copy, frame.owner->name);
+        FatalError(ctx, "cf-agent aborted on defined class '%s'", copy);
     }
 
     if (EvalContextStackFrameContainsSoft(ctx, copy))
@@ -323,16 +205,7 @@ void EvalContextStackFrameAddSoft(EvalContext *ctx, const char *context)
         return;
     }
 
-    StringSetAdd(frame.contexts, xstrdup(copy));
-
-    for (const Item *ip = ctx->heap_abort; ip != NULL; ip = ip->next)
-    {
-        if (IsDefinedClass(ctx, ip->name, frame.owner->ns))
-        {
-            Log(LOG_LEVEL_ERR, "cf-agent aborted on defined class \"%s\" defined in bundle %s", copy, frame.owner->name);
-            exit(1);
-        }
-    }
+    ClassTablePut(frame.classes, frame.owner->ns, context, true, CONTEXT_SCOPE_BUNDLE);
 
     if (!ABORTBUNDLE)
     {
@@ -340,7 +213,7 @@ void EvalContextStackFrameAddSoft(EvalContext *ctx, const char *context)
         {
             if (IsDefinedClass(ctx, ip->name, frame.owner->ns))
             {
-                Log(LOG_LEVEL_ERR, "Setting abort for \"%s\" when setting \"%s\"", ip->name, context);
+                Log(LOG_LEVEL_ERR, "Setting abort for '%s' when setting '%s'", ip->name, context);
                 ABORTBUNDLE = true;
                 break;
             }
@@ -357,55 +230,29 @@ typedef struct
 static ExpressionValue EvalTokenAsClass(const char *classname, void *param)
 {
     const EvalContext *ctx = ((EvalTokenAsClassContext *)param)->ctx;
-    const char *ns = ((EvalTokenAsClassContext *)param)->ns;
+    ClassRef ref = ClassRefParse(classname);
 
-    char qualified_class[CF_MAXVARSIZE];
-
-    if (strcmp(classname, "any") == 0)
-       {
-       return true;
-       }
-    
-    if (strchr(classname, ':'))
+    if (strcmp("any", ref.name) == 0)
     {
-        if (strncmp(classname, "default:", strlen("default:")) == 0)
-        {
-            snprintf(qualified_class, CF_MAXVARSIZE, "%s", classname + strlen("default:"));
-        }
-        else
-        {
-            snprintf(qualified_class, CF_MAXVARSIZE, "%s", classname);
-        }
-    }
-    else if (ns != NULL && strcmp(ns, "default") != 0)
-    {
-        snprintf(qualified_class, CF_MAXVARSIZE, "%s:%s", ns, (char *)classname);
-    }
-    else
-    {
-        snprintf(qualified_class, CF_MAXVARSIZE, "%s", classname);
-    }
-
-    if (EvalContextHeapContainsNegated(ctx, qualified_class))
-    {
-        return false;
-    }
-    if (EvalContextStackFrameContainsNegated(ctx, qualified_class))
-    {
-        return false;
-    }
-    if (EvalContextHeapContainsHard(ctx, classname))  // Hard classes are always unqualified
-    {
+        ClassRefDestroy(ref);
         return true;
     }
-    if (EvalContextHeapContainsSoft(ctx, qualified_class))
+    else if (!ref.ns && EvalContextHeapContainsHard(ctx, ref.name))
     {
+        ClassRefDestroy(ref);
         return true;
     }
-    if (EvalContextStackFrameContainsSoft(ctx, qualified_class))
+    else if (EvalContextHeapContainsSoft(ctx, ref.ns, ref.name))
     {
+        ClassRefDestroy(ref);
         return true;
     }
+    else if (EvalContextStackFrameContainsSoft(ctx, ref.name))
+    {
+        ClassRefDestroy(ref);
+        return true;
+    }
+
     return false;
 }
 
@@ -436,7 +283,7 @@ bool IsDefinedClass(const EvalContext *ctx, const char *context, const char *ns)
 
     if (!res.result)
     {
-        Log(LOG_LEVEL_ERR, "Unable to parse class expression: %s", context);
+        Log(LOG_LEVEL_ERR, "Unable to parse class expression '%s'", context);
         return false;
     }
     else
@@ -451,8 +298,6 @@ bool IsDefinedClass(const EvalContext *ctx, const char *context, const char *ns)
                                            &etacc);
 
         FreeExpression(res.result);
-
-        Log(LOG_LEVEL_DEBUG, "Evaluate(%s) -> %d\n", context, r);
 
         /* r is EvalResult which could be ERROR */
         return r == true;
@@ -475,7 +320,7 @@ static bool EvalWithTokenFromList(const char *expr, StringSet *token_set)
 
     if (!res.result)
     {
-        Log(LOG_LEVEL_ERR, "Syntax error in expression: %s", expr);
+        Log(LOG_LEVEL_ERR, "Syntax error in expression '%s'", expr);
         return false;           /* FIXME: return error */
     }
     else
@@ -532,7 +377,7 @@ void EvalContextHeapPersistentSave(const char *context, const char *ns, unsigned
         {
             if (now < state.expires)
             {
-                Log(LOG_LEVEL_VERBOSE, "Persisent state %s is already in a preserved state --  %jd minutes to go",
+                Log(LOG_LEVEL_VERBOSE, "Persisent state '%s' is already in a preserved state --  %jd minutes to go",
                       name, (intmax_t)((state.expires - now) / 60));
                 CloseDB(dbp);
                 return;
@@ -541,7 +386,7 @@ void EvalContextHeapPersistentSave(const char *context, const char *ns, unsigned
     }
     else
     {
-        Log(LOG_LEVEL_VERBOSE, "New persistent state %s", name);
+        Log(LOG_LEVEL_VERBOSE, "New persistent state '%s'", name);
     }
 
     state.expires = now + ttl_minutes * 60;
@@ -563,7 +408,7 @@ void EvalContextHeapPersistentRemove(const char *context)
     }
 
     DeleteDB(dbp, context);
-    Log(LOG_LEVEL_DEBUG, "Deleted any persistent state %s\n", context);
+    Log(LOG_LEVEL_DEBUG, "Deleted persistent class '%s'", context);
     CloseDB(dbp);
 }
 
@@ -603,17 +448,17 @@ void EvalContextHeapPersistentLoadAll(EvalContext *ctx)
     {
         memcpy((void *) &q, value, sizeof(CfState));
 
-        Log(LOG_LEVEL_DEBUG, " - Found key %s...\n", key);
+        Log(LOG_LEVEL_DEBUG, "Found key persistent class key '%s'", key);
 
         if (now > q.expires)
         {
-            Log(LOG_LEVEL_VERBOSE, " Persistent class %s expired", key);
+            Log(LOG_LEVEL_VERBOSE, "Persistent class '%s' expired", key);
             DBCursorDeleteEntry(dbcp);
         }
         else
         {
-            Log(LOG_LEVEL_VERBOSE, " Persistent class %s for %jd more minutes", key, (intmax_t)((q.expires - now) / 60));
-            Log(LOG_LEVEL_VERBOSE, " Adding persistent class %s to heap", key);
+            Log(LOG_LEVEL_VERBOSE, "Persistent class '%s' for %jd more minutes", key, (intmax_t)((q.expires - now) / 60));
+            Log(LOG_LEVEL_VERBOSE, "Adding persistent class '%s' to heap", key);
             if (strchr(key, CF_NS))
                {
                char ns[CF_MAXVARSIZE], name[CF_MAXVARSIZE];
@@ -728,13 +573,13 @@ int MissingDependencies(EvalContext *ctx, const Promise *pp)
     
     for (rp = deps; rp != NULL; rp = rp->next)
     {
-        if (strchr(rp->item, ':'))
+        if (strchr(RlistScalarValue(rp), ':'))
         {
-            d = (char *)rp->item;
+            d = RlistScalarValue(rp);
         }
         else
         {
-            snprintf(name, CF_BUFSIZE, "%s:%s", PromiseGetNamespace(pp), (char *)rp->item);
+            snprintf(name, CF_BUFSIZE, "%s:%s", PromiseGetNamespace(pp), RlistScalarValue(rp));
             d = name;
         }
 
@@ -761,18 +606,18 @@ int MissingDependencies(EvalContext *ctx, const Promise *pp)
 
 static void StackFrameBundleDestroy(StackFrameBundle frame)
 {
-    StringSetDestroy(frame.contexts);
-    StringSetDestroy(frame.contexts_negated);
+    ClassTableDestroy(frame.classes);
+    VariableTableDestroy(frame.vars);
 }
 
 static void StackFrameBodyDestroy(ARG_UNUSED StackFrameBody frame)
 {
-    return;
+    VariableTableDestroy(frame.vars);
 }
 
 static void StackFramePromiseDestroy(StackFramePromise frame)
 {
-    HashFree(frame.variables);
+    VariableTableDestroy(frame.vars);
 }
 
 static void StackFramePromiseIterationDestroy(ARG_UNUSED StackFramePromiseIteration frame)
@@ -806,11 +651,11 @@ static void StackFrameDestroy(StackFrame *frame)
             ProgrammingError("Unhandled stack frame type");
         }
 
-
+        free(frame);
     }
 }
 
-static unsigned PointerHashFn(const void *p, unsigned int max)
+static unsigned PointerHashFn(const void *p, ARG_UNUSED unsigned int seed, unsigned int max)
 {
     return ((unsigned)(uintptr_t)p) % max;
 }
@@ -826,13 +671,15 @@ EvalContext *EvalContextNew(void)
 {
     EvalContext *ctx = xmalloc(sizeof(EvalContext));
 
-    ctx->heap_soft = StringSetNew();
-    ctx->heap_hard = StringSetNew();
-    ctx->heap_negated = StringSetNew();
     ctx->heap_abort = NULL;
     ctx->heap_abort_current_bundle = NULL;
 
     ctx->stack = SeqNew(10, StackFrameDestroy);
+
+    ctx->global_classes = ClassTableNew();
+
+    ctx->global_variables = VariableTableNew();
+    ctx->match_variables = VariableTableNew();
 
     ctx->dependency_handles = StringSetNew();
 
@@ -845,53 +692,39 @@ void EvalContextDestroy(EvalContext *ctx)
 {
     if (ctx)
     {
-        StringSetDestroy(ctx->heap_soft);
-        StringSetDestroy(ctx->heap_hard);
-        StringSetDestroy(ctx->heap_negated);
         DeleteItemList(ctx->heap_abort);
         DeleteItemList(ctx->heap_abort_current_bundle);
 
         SeqDestroy(ctx->stack);
-        ScopeDeleteAll();
+
+        ClassTableDestroy(ctx->global_classes);
+        VariableTableDestroy(ctx->global_variables);
+        VariableTableDestroy(ctx->match_variables);
 
         StringSetDestroy(ctx->dependency_handles);
 
         PromiseSetDestroy(ctx->promises_done);
+
+        free(ctx);
     }
 }
 
-void EvalContextHeapAddNegated(EvalContext *ctx, const char *context)
+static bool EvalContextHeapContainsSoft(const EvalContext *ctx, const char *ns, const char *name)
 {
-    StringSetAdd(ctx->heap_negated, xstrdup(context));
+    const Class *cls = ClassTableGet(ctx->global_classes, ns, name);
+    return cls && cls->is_soft;
 }
 
-void EvalContextStackFrameAddNegated(EvalContext *ctx, const char *context)
+static bool EvalContextHeapContainsHard(const EvalContext *ctx, const char *name)
 {
-    StackFrame *frame = LastStackFrameBundle(ctx);
-    assert(frame);
-
-    StringSetAdd(frame->data.bundle.contexts_negated, xstrdup(context));
-}
-
-bool EvalContextHeapContainsSoft(const EvalContext *ctx, const char *context)
-{
-    return StringSetContains(ctx->heap_soft, context);
-}
-
-bool EvalContextHeapContainsHard(const EvalContext *ctx, const char *context)
-{
-    return StringSetContains(ctx->heap_hard, context);
-}
-
-bool EvalContextHeapContainsNegated(const EvalContext *ctx, const char *context)
-{
-    return StringSetContains(ctx->heap_negated, context);
+    const Class *cls = ClassTableGet(ctx->global_classes, NULL, name);
+    return cls && !cls->is_soft;
 }
 
 bool StackFrameContainsSoftRecursive(const EvalContext *ctx, const char *context, size_t stack_index)
 {
     StackFrame *frame = SeqAt(ctx->stack, stack_index);
-    if (frame->type == STACK_FRAME_TYPE_BUNDLE && StringSetContains(frame->data.bundle.contexts, context))
+    if (frame->type == STACK_FRAME_TYPE_BUNDLE && ClassTableGet(frame->data.bundle.classes, frame->data.bundle.owner->ns, context) != NULL)
     {
         return true;
     }
@@ -905,7 +738,7 @@ bool StackFrameContainsSoftRecursive(const EvalContext *ctx, const char *context
     }
 }
 
-bool EvalContextStackFrameContainsSoft(const EvalContext *ctx, const char *context)
+static bool EvalContextStackFrameContainsSoft(const EvalContext *ctx, const char *context)
 {
     if (SeqLength(ctx->stack) == 0)
     {
@@ -916,88 +749,23 @@ bool EvalContextStackFrameContainsSoft(const EvalContext *ctx, const char *conte
     return StackFrameContainsSoftRecursive(ctx, context, stack_index);
 }
 
-bool StackFrameContainsNegatedRecursive(const EvalContext *ctx, const char *context, size_t stack_index)
+bool EvalContextHeapRemoveSoft(EvalContext *ctx, const char *ns, const char *name)
 {
-    StackFrame *frame = SeqAt(ctx->stack, stack_index);
-    if (frame->type == STACK_FRAME_TYPE_BUNDLE && StringSetContains(frame->data.bundle.contexts_negated, context))
-    {
-        return true;
-    }
-    else if (stack_index > 0 && frame->inherits_previous)
-    {
-        return StackFrameContainsNegatedRecursive(ctx, context, stack_index - 1);
-    }
-    else
-    {
-        return false;
-    }
+    return ClassTableRemove(ctx->global_classes, ns, name);
 }
 
-static bool EvalContextStackFrameContainsNegated(const EvalContext *ctx, const char *context)
+bool EvalContextHeapRemoveHard(EvalContext *ctx, const char *name)
 {
-    if (SeqLength(ctx->stack) == 0)
-    {
-        return false;
-    }
-
-    size_t stack_index = SeqLength(ctx->stack) - 1;
-    return StackFrameContainsNegatedRecursive(ctx, context, stack_index);
+    return ClassTableRemove(ctx->global_classes, NULL, name);
 }
 
-bool EvalContextHeapRemoveSoft(EvalContext *ctx, const char *context)
+void EvalContextClear(EvalContext *ctx)
 {
-    return StringSetRemove(ctx->heap_soft, context);
-}
+    ClassTableClear(ctx->global_classes);
 
-bool EvalContextHeapRemoveHard(EvalContext *ctx, const char *context)
-{
-    return StringSetRemove(ctx->heap_hard, context);
-}
-
-void EvalContextHeapClear(EvalContext *ctx)
-{
-    StringSetClear(ctx->heap_soft);
-    StringSetClear(ctx->heap_hard);
-    StringSetClear(ctx->heap_negated);
-}
-
-static size_t StringSetMatchCount(StringSet *set, const char *regex)
-{
-    size_t count = 0;
-    StringSetIterator it = StringSetIteratorInit(set);
-    const char *context = NULL;
-    while ((context = SetIteratorNext(&it)))
-    {
-        // TODO: used FullTextMatch to avoid regressions, investigate whether StringMatch can be used
-        if (FullTextMatch(regex, context))
-        {
-            count++;
-        }
-    }
-    return count;
-}
-
-size_t EvalContextHeapMatchCountSoft(const EvalContext *ctx, const char *context_regex)
-{
-    return StringSetMatchCount(ctx->heap_soft, context_regex);
-}
-
-size_t EvalContextHeapMatchCountHard(const EvalContext *ctx, const char *context_regex)
-{
-    return StringSetMatchCount(ctx->heap_hard, context_regex);
-}
-
-size_t EvalContextStackFrameMatchCountSoft(const EvalContext *ctx, const char *context_regex)
-{
-    if (SeqLength(ctx->stack) == 0)
-    {
-        return 0;
-    }
-
-    const StackFrame *frame = LastStackFrameBundle(ctx);
-    assert(frame);
-
-    return StringSetMatchCount(frame->data.bundle.contexts, context_regex);
+    VariableTableClear(ctx->global_variables, NULL, NULL, NULL);
+    VariableTableClear(ctx->match_variables, NULL, NULL, NULL);
+    SeqClear(ctx->stack);
 }
 
 StringSet *StringSetAddAllMatchingIterator(StringSet* base, StringSetIterator it, const char *filter_regex)
@@ -1018,41 +786,6 @@ StringSet *StringSetAddAllMatching(StringSet* base, const StringSet* filtered, c
     return StringSetAddAllMatchingIterator(base, StringSetIteratorInit((StringSet*)filtered), filter_regex);
 }
 
-StringSet *EvalContextHeapAddMatchingSoft(const EvalContext *ctx, StringSet* base, const char *context_regex)
-{
-    return StringSetAddAllMatching(base, ctx->heap_soft, context_regex);
-}
-
-StringSet *EvalContextHeapAddMatchingHard(const EvalContext *ctx, StringSet* base, const char *context_regex)
-{
-    return StringSetAddAllMatching(base, ctx->heap_hard, context_regex);
-}
-
-StringSet *EvalContextStackFrameAddMatchingSoft(const EvalContext *ctx, StringSet* base, const char *context_regex)
-{
-    if (SeqLength(ctx->stack) == 0)
-    {
-        return base;
-    }
-
-    return StringSetAddAllMatchingIterator(base, EvalContextStackFrameIteratorSoft(ctx), context_regex);
-}
-
-StringSetIterator EvalContextHeapIteratorSoft(const EvalContext *ctx)
-{
-    return StringSetIteratorInit(ctx->heap_soft);
-}
-
-StringSetIterator EvalContextHeapIteratorHard(const EvalContext *ctx)
-{
-    return StringSetIteratorInit(ctx->heap_hard);
-}
-
-StringSetIterator EvalContextHeapIteratorNegated(const EvalContext *ctx)
-{
-    return StringSetIteratorInit(ctx->heap_negated);
-}
-
 static StackFrame *StackFrameNew(StackFrameType type, bool inherit_previous)
 {
     StackFrame *frame = xmalloc(sizeof(StackFrame));
@@ -1068,8 +801,8 @@ static StackFrame *StackFrameNewBundle(const Bundle *owner, bool inherit_previou
     StackFrame *frame = StackFrameNew(STACK_FRAME_TYPE_BUNDLE, inherit_previous);
 
     frame->data.bundle.owner = owner;
-    frame->data.bundle.contexts = StringSetNew();
-    frame->data.bundle.contexts_negated = StringSetNew();
+    frame->data.bundle.classes = ClassTableNew();
+    frame->data.bundle.vars = VariableTableNew();
 
     return frame;
 }
@@ -1079,6 +812,7 @@ static StackFrame *StackFrameNewBody(const Body *owner)
     StackFrame *frame = StackFrameNew(STACK_FRAME_TYPE_BODY, false);
 
     frame->data.body.owner = owner;
+    frame->data.body.vars = VariableTableNew();
 
     return frame;
 }
@@ -1088,26 +822,28 @@ static StackFrame *StackFrameNewPromise(const Promise *owner)
     StackFrame *frame = StackFrameNew(STACK_FRAME_TYPE_PROMISE, true);
 
     frame->data.promise.owner = owner;
-    frame->data.promise.variables = HashInit();
+    frame->data.promise.vars = VariableTableNew();
 
     return frame;
 }
 
-static StackFrame *StackFrameNewPromiseIteration(const Promise *owner)
+static StackFrame *StackFrameNewPromiseIteration(Promise *owner, const PromiseIterator *iter_ctx, unsigned index)
 {
     StackFrame *frame = StackFrameNew(STACK_FRAME_TYPE_PROMISE_ITERATION, true);
 
     frame->data.promise_iteration.owner = owner;
+    frame->data.promise_iteration.iter_ctx = iter_ctx;
+    frame->data.promise_iteration.index = index;
 
     return frame;
 }
 
 void EvalContextStackFrameRemoveSoft(EvalContext *ctx, const char *context)
 {
-    StackFrame *frame = LastStackFrameBundle(ctx);
+    StackFrame *frame = LastStackFrameByType(ctx, STACK_FRAME_TYPE_BUNDLE);
     assert(frame);
 
-    StringSetRemove(frame->data.bundle.contexts, context);
+    ClassTableRemove(frame->data.bundle.classes, frame->data.bundle.owner->ns, context);
 }
 
 static void EvalContextStackPushFrame(EvalContext *ctx, StackFrame *frame)
@@ -1115,75 +851,302 @@ static void EvalContextStackPushFrame(EvalContext *ctx, StackFrame *frame)
     SeqAppend(ctx->stack, frame);
 }
 
-void EvalContextStackPushBundleFrame(EvalContext *ctx, const Bundle *owner, bool inherits_previous)
+void EvalContextStackPushBundleFrame(EvalContext *ctx, const Bundle *owner, const Rlist *args, bool inherits_previous)
 {
     assert(!LastStackFrame(ctx, 0) || LastStackFrame(ctx, 0)->type == STACK_FRAME_TYPE_PROMISE_ITERATION);
 
     EvalContextStackPushFrame(ctx, StackFrameNewBundle(owner, inherits_previous));
-    ScopeSetCurrent(owner->name);
+
+    if (RlistLen(args) > 0)
+    {
+        const Promise *caller = EvalContextStackCurrentPromise(ctx);
+        if (caller)
+        {
+            VariableTable *table = LastStackFrameByType(ctx, STACK_FRAME_TYPE_BUNDLE)->data.bundle.vars;
+            VariableTableClear(table, NULL, NULL, NULL);
+        }
+
+        ScopeAugment(ctx, owner, caller, args);
+    }
+
+    {
+        VariableTableIterator *iter = VariableTableIteratorNew(ctx->global_variables, owner->ns, owner->name, NULL);
+        Variable *var = NULL;
+        while ((var = VariableTableIteratorNext(iter)))
+        {
+            Rval retval = ExpandPrivateRval(ctx, owner->ns, owner->name, var->rval);
+            RvalDestroy(var->rval);
+            var->rval = retval;
+        }
+    }
 }
 
-void EvalContextStackPushBodyFrame(EvalContext *ctx, const Body *owner)
+void EvalContextStackPushBodyFrame(EvalContext *ctx, const Body *owner, Rlist *args)
 {
-    assert((!LastStackFrame(ctx, 0) && strcmp("control", owner->name) == 0) || LastStackFrame(ctx, 0)->type == STACK_FRAME_TYPE_PROMISE);
+    assert((!LastStackFrame(ctx, 0) && strcmp("control", owner->name) == 0) || LastStackFrame(ctx, 0)->type == STACK_FRAME_TYPE_BUNDLE);
 
     EvalContextStackPushFrame(ctx, StackFrameNewBody(owner));
+
+    if (RlistLen(owner->args) != RlistLen(args))
+    {
+        const Promise *caller = EvalContextStackCurrentPromise(ctx);
+        assert(caller);
+
+        Log(LOG_LEVEL_ERR, "Argument arity mismatch in body '%s' at line %zu in file '%s', expected %d, got %d",
+            owner->name, caller->offset.line, PromiseGetBundle(caller)->source_path, RlistLen(owner->args), RlistLen(args));
+        return;
+    }
+    else
+    {
+        ScopeMapBodyArgs(ctx, owner, args);
+    }
 }
 
-void EvalContextStackPushPromiseFrame(EvalContext *ctx, const Promise *owner)
+void EvalContextStackPushPromiseFrame(EvalContext *ctx, const Promise *owner, bool copy_bundle_context)
 {
     assert(LastStackFrame(ctx, 0) && LastStackFrame(ctx, 0)->type == STACK_FRAME_TYPE_BUNDLE);
 
-    EvalContextStackPushFrame(ctx, StackFrameNewPromise(owner));
-    ScopeSetCurrent("this");
+    EvalContextVariableClearMatch(ctx);
+
+    StackFrame *frame = StackFrameNewPromise(owner);
+
+    EvalContextStackPushFrame(ctx, frame);
+
+    if (copy_bundle_context)
+    {
+        frame->data.promise.vars = VariableTableCopyLocalized(ctx->global_variables,
+                                                              EvalContextStackCurrentBundle(ctx)->ns,
+                                                              EvalContextStackCurrentBundle(ctx)->name);
+    }
+    else
+    {
+        frame->data.promise.vars = VariableTableNew();
+    }
+
+    if (PromiseGetBundle(owner)->source_path)
+    {
+        char path[CF_BUFSIZE];
+        snprintf(path, CF_BUFSIZE, "%s", PromiseGetBundle(owner)->source_path);
+
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promise_filename", path, DATA_TYPE_STRING);
+
+        // We now make path just the directory name!
+        DeleteSlash(path);
+        ChopLastNode(path);
+
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promise_dirname", path, DATA_TYPE_STRING);
+        char number[CF_SMALLBUF];
+        snprintf(number, CF_SMALLBUF, "%zu", owner->offset.line);
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promise_linenumber", number, DATA_TYPE_STRING);
+    }
+
+    char v[CF_MAXVARSIZE];
+    snprintf(v, CF_MAXVARSIZE, "%d", (int) getuid());
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser_uid", v, DATA_TYPE_INT);
+    snprintf(v, CF_MAXVARSIZE, "%d", (int) getgid());
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser_gid", v, DATA_TYPE_INT);
+
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "bundle", PromiseGetBundle(owner)->name, DATA_TYPE_STRING);
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "namespace", PromiseGetNamespace(owner), DATA_TYPE_STRING);
+
+    if (owner->has_subbundles)
+    {
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser", owner->promiser, DATA_TYPE_STRING);
+    }
 }
 
-void EvalContextStackPushPromiseIterationFrame(EvalContext *ctx, const Promise *owner)
+Promise *EvalContextStackPushPromiseIterationFrame(EvalContext *ctx, size_t iteration_index, const PromiseIterator *iter_ctx)
 {
     assert(LastStackFrame(ctx, 0) && LastStackFrame(ctx, 0)->type == STACK_FRAME_TYPE_PROMISE);
 
-    EvalContextStackPushFrame(ctx, StackFrameNewPromiseIteration(owner));
-    ScopeSetCurrent("this");
+    if (iter_ctx)
+    {
+        PromiseIteratorUpdateVariable(ctx, iter_ctx);
+    }
+
+    Promise *pexp = ExpandDeRefPromise(ctx, LastStackFrame(ctx, 0)->data.promise.owner);
+
+    EvalContextStackPushFrame(ctx, StackFrameNewPromiseIteration(pexp, iter_ctx, iteration_index));
+
+    return pexp;
 }
 
 void EvalContextStackPopFrame(EvalContext *ctx)
 {
     assert(SeqLength(ctx->stack) > 0);
-    SeqRemove(ctx->stack, SeqLength(ctx->stack) - 1);
 
     StackFrame *last_frame = LastStackFrame(ctx, 0);
-    if (last_frame)
+    switch (last_frame->type)
     {
-        ScopeSetCurrent(StackFrameOwnerName(last_frame));
+    case STACK_FRAME_TYPE_BUNDLE:
+        {
+            const Bundle *bp = last_frame->data.bundle.owner;
+            if (strcmp(bp->type, "edit_line") == 0 || strcmp(bp->type, "edit_xml") == 0)
+            {
+                VariableTableClear(last_frame->data.bundle.vars, "default", "edit", NULL);
+            }
+        }
+        break;
+
+    case STACK_FRAME_TYPE_PROMISE_ITERATION:
+        PromiseDestroy(last_frame->data.promise_iteration.owner);
+        break;
+
+    default:
+        break;
+    }
+
+    SeqRemove(ctx->stack, SeqLength(ctx->stack) - 1);
+
+    if (GetAgentAbortingContext(ctx))
+    {
+        FatalError(ctx, "cf-agent aborted on context '%s'", GetAgentAbortingContext(ctx));
     }
 }
 
-StringSetIterator EvalContextStackFrameIteratorSoft(const EvalContext *ctx)
+bool EvalContextClassRemove(EvalContext *ctx, const char *ns, const char *name)
 {
-    StackFrame *frame = LastStackFrameBundle(ctx);
-    assert(frame);
-
-    return StringSetIteratorInit(frame->data.bundle.contexts);
-}
-
-const Promise *EvalContextStackGetTopPromise(const EvalContext *ctx)
-{
-    for (int i = SeqLength(ctx->stack) - 1; i >= 0; --i)
+    for (size_t i = 0; i < SeqLength(ctx->stack); i++)
     {
-        StackFrame *st = SeqAt(ctx->stack, i);
-        if (st->type == STACK_FRAME_TYPE_PROMISE)
+        StackFrame *frame = SeqAt(ctx->stack, i);
+        if (frame->type != STACK_FRAME_TYPE_BUNDLE)
         {
-            return st->data.promise.owner;
+            continue;
         }
 
-        if (st->type == STACK_FRAME_TYPE_PROMISE_ITERATION)
+        ClassTableRemove(frame->data.bundle.classes, ns, name);
+    }
+
+    return ClassTableRemove(ctx->global_classes, ns, name);
+}
+
+Class *EvalContextClassGet(const EvalContext *ctx, const char *ns, const char *name)
+{
+    StackFrame *frame = LastStackFrameByType(ctx, STACK_FRAME_TYPE_BUNDLE);
+    if (frame)
+    {
+        Class *cls = ClassTableGet(frame->data.bundle.classes, ns, name);
+        if (cls)
         {
-            return st->data.promise_iteration.owner;
+            return cls;
         }
     }
 
-    return NULL;
+    return ClassTableGet(ctx->global_classes, ns, name);
 }
+
+bool EvalContextClassPut(EvalContext *ctx, const char *ns, const char *name, bool is_soft, ContextScope scope)
+{
+    {
+        char context_copy[CF_MAXVARSIZE];
+        char canonified_context[CF_MAXVARSIZE];
+
+        strcpy(canonified_context, name);
+        if (Chop(canonified_context, CF_EXPANDSIZE) == -1)
+        {
+            Log(LOG_LEVEL_ERR, "Chop was called on a string that seemed to have no terminator");
+        }
+        CanonifyNameInPlace(canonified_context);
+
+        if (ns && strcmp(ns, "default") != 0)
+        {
+            snprintf(context_copy, CF_MAXVARSIZE, "%s:%s", ns, canonified_context);
+        }
+        else
+        {
+            strncpy(context_copy, canonified_context, CF_MAXVARSIZE);
+        }
+
+        if (strlen(context_copy) == 0)
+        {
+            return false;
+        }
+
+        if (IsRegexItemIn(ctx, ctx->heap_abort_current_bundle, context_copy))
+        {
+            Log(LOG_LEVEL_ERR, "Bundle aborted on defined class '%s'", context_copy);
+            ABORTBUNDLE = true;
+        }
+
+        if (IsRegexItemIn(ctx, ctx->heap_abort, context_copy))
+        {
+            FatalError(ctx, "cf-agent aborted on defined class '%s'", context_copy);
+        }
+    }
+
+    Class *existing_class = EvalContextClassGet(ctx, ns, name);
+    if (existing_class && existing_class->scope == scope)
+    {
+        return false;
+    }
+
+    switch (scope)
+    {
+    case CONTEXT_SCOPE_BUNDLE:
+        {
+            StackFrame *frame = LastStackFrameByType(ctx, STACK_FRAME_TYPE_BUNDLE);
+            if (!frame)
+            {
+                ProgrammingError("Attempted to add bundle class '%s' while not evaluating a bundle", name);
+            }
+            ClassTablePut(frame->data.bundle.classes, ns, name, is_soft, scope);
+        }
+        break;
+
+    case CONTEXT_SCOPE_NAMESPACE:
+        ClassTablePut(ctx->global_classes, ns, name, is_soft, scope);
+        break;
+
+    case CONTEXT_SCOPE_NONE:
+        ProgrammingError("Attempted to add a class without a set scope");
+    }
+
+    if (!ABORTBUNDLE)
+    {
+        for (const Item *ip = ctx->heap_abort_current_bundle; ip != NULL; ip = ip->next)
+        {
+            const char *class_expr = ip->name;
+
+            if (IsDefinedClass(ctx, class_expr, ns))
+            {
+                Log(LOG_LEVEL_ERR, "Setting abort for '%s' when setting class '%s'", ip->name, name);
+                ABORTBUNDLE = true;
+                break;
+            }
+        }
+    }
+
+    return true;
+}
+
+ClassTableIterator *EvalContextClassTableIteratorNewGlobal(const EvalContext *ctx, const char *ns, bool is_hard, bool is_soft)
+{
+    return ClassTableIteratorNew(ctx->global_classes, ns, is_hard, is_soft);
+}
+
+ClassTableIterator *EvalContextClassTableIteratorNewLocal(const EvalContext *ctx)
+{
+    StackFrame *frame = LastStackFrameByType(ctx, STACK_FRAME_TYPE_BUNDLE);
+    if (!frame)
+    {
+        return NULL;
+    }
+
+    return ClassTableIteratorNew(frame->data.bundle.classes, frame->data.bundle.owner->ns, false, true);
+}
+
+const Promise *EvalContextStackCurrentPromise(const EvalContext *ctx)
+{
+    StackFrame *frame = LastStackFrameByType(ctx, STACK_FRAME_TYPE_PROMISE);
+    return frame ? frame->data.promise.owner : NULL;
+}
+
+const Bundle *EvalContextStackCurrentBundle(const EvalContext *ctx)
+{
+    StackFrame *frame = LastStackFrameByType(ctx, STACK_FRAME_TYPE_BUNDLE);
+    return frame ? frame->data.bundle.owner : NULL;
+}
+
 
 char *EvalContextStackPath(const EvalContext *ctx)
 {
@@ -1202,12 +1165,16 @@ char *EvalContextStackPath(const EvalContext *ctx)
             WriterWriteF(path, "/%s", frame->data.bundle.owner->name);
             break;
 
-        case STACK_FRAME_TYPE_PROMISE_ITERATION:
-            WriterWriteF(path, "/%s", frame->data.promise.owner->parent_promise_type->name);
-            WriterWriteF(path, "/'%s'", frame->data.promise.owner->promiser);
+        case STACK_FRAME_TYPE_PROMISE:
             break;
 
-        case STACK_FRAME_TYPE_PROMISE:
+        case STACK_FRAME_TYPE_PROMISE_ITERATION:
+            WriterWriteF(path, "/%s", frame->data.promise_iteration.owner->parent_promise_type->name);
+            WriterWriteF(path, "/'%s'", frame->data.promise_iteration.owner->promiser);
+            if (i == SeqLength(ctx->stack) - 1)
+            {
+                WriterWriteF(path, " [%zd]", frame->data.promise_iteration.index);
+            }
             break;
         }
     }
@@ -1215,235 +1182,370 @@ char *EvalContextStackPath(const EvalContext *ctx)
     return StringWriterClose(path);
 }
 
-bool EvalContextVariablePut(EvalContext *ctx, VarRef lval, Rval rval, DataType type)
+bool EvalContextVariablePutSpecial(EvalContext *ctx, SpecialScope scope, const char *lval, const void *value, DataType type)
 {
-    assert(type != DATA_TYPE_NONE);
-
-    if (lval.lval == NULL || lval.scope == NULL)
+    switch (scope)
     {
-        ProgrammingError("Bad variable or scope in a variable assignment. scope.value = %s.%s", lval.scope, lval.lval);
+    case SPECIAL_SCOPE_SYS:
+    case SPECIAL_SCOPE_MON:
+    case SPECIAL_SCOPE_CONST:
+    case SPECIAL_SCOPE_EDIT:
+    case SPECIAL_SCOPE_BODY:
+    case SPECIAL_SCOPE_THIS:
+    case SPECIAL_SCOPE_MATCH:
+        {
+            VarRef *ref = VarRefParseFromScope(lval, SpecialScopeToString(scope));
+            bool ret = EvalContextVariablePut(ctx, ref, value, type);
+            VarRefDestroy(ref);
+            return ret;
+        }
+
+    default:
+        assert(false);
+        return false;
+    }
+}
+
+bool EvalContextVariableRemoveSpecial(const EvalContext *ctx, SpecialScope scope, const char *lval)
+{
+    switch (scope)
+    {
+    case SPECIAL_SCOPE_SYS:
+    case SPECIAL_SCOPE_MON:
+    case SPECIAL_SCOPE_CONST:
+    case SPECIAL_SCOPE_EDIT:
+    case SPECIAL_SCOPE_BODY:
+    case SPECIAL_SCOPE_THIS:
+        {
+            VarRef *ref = VarRefParseFromScope(lval, SpecialScopeToString(scope));
+            bool ret = EvalContextVariableRemove(ctx, ref);
+            VarRefDestroy(ref);
+            return ret;
+        }
+
+    case SPECIAL_SCOPE_NONE:
+        assert(false && "Attempted to remove none-special variable");
+        return false;
+
+    default:
+        assert(false && "Unhandled case in switch");
+        return false;
+    }
+}
+
+static VariableTable *GetVariableTableForVarRef(const EvalContext *ctx, const VarRef *ref)
+{
+
+    switch (SpecialScopeFromString(ref->scope))
+    {
+    case SPECIAL_SCOPE_SYS:
+    case SPECIAL_SCOPE_MON:
+    case SPECIAL_SCOPE_CONST:
+        assert(!ref->ns || strcmp("default", ref->ns) == 0);
+        return ctx->global_variables;
+
+    case SPECIAL_SCOPE_MATCH:
+        assert(!ref->ns || strcmp("default", ref->ns) == 0);
+        return ctx->match_variables;
+
+    case SPECIAL_SCOPE_EDIT:
+        assert(!ref->ns || strcmp("default", ref->ns) == 0);
+        {
+            StackFrame *frame = LastStackFrameByType(ctx, STACK_FRAME_TYPE_BUNDLE);
+            assert(frame);
+            return frame->data.bundle.vars;
+        }
+
+    case SPECIAL_SCOPE_BODY:
+        assert(!ref->ns || strcmp("default", ref->ns) == 0);
+        {
+            StackFrame *frame = LastStackFrameByType(ctx, STACK_FRAME_TYPE_BODY);
+            return frame ? frame->data.body.vars : NULL;
+        }
+
+    case SPECIAL_SCOPE_THIS:
+        assert(!ref->ns || strcmp("default", ref->ns) == 0);
+        {
+            StackFrame *frame = LastStackFrameByType(ctx, STACK_FRAME_TYPE_PROMISE);
+            return frame ? frame->data.promise.vars : NULL;
+        }
+
+    case SPECIAL_SCOPE_NONE:
+        return ctx->global_variables;
+
+    default:
+        assert(false && "Unhandled case in switch");
+        return NULL;
+    }
+}
+
+bool EvalContextVariableRemove(const EvalContext *ctx, const VarRef *ref)
+{
+    VariableTable *table = GetVariableTableForVarRef(ctx, ref);
+    return VariableTableRemove(table, ref);
+}
+
+static bool IsVariableSelfReferential(const VarRef *ref, const void *value, RvalType rval_type)
+{
+    switch (rval_type)
+    {
+    case RVAL_TYPE_SCALAR:
+        if (StringContainsVar(value, ref->lval))
+        {
+            char *ref_str = VarRefToString(ref, true);
+            Log(LOG_LEVEL_ERR, "The value of variable '%s' contains a reference to itself, '%s'", ref_str, (char *)value);
+            free(ref_str);
+            return true;
+        }
+        break;
+
+    case RVAL_TYPE_LIST:
+        for (const Rlist *rp = value; rp != NULL; rp = rp->next)
+        {
+            if (rp->val.type != RVAL_TYPE_SCALAR)
+            {
+                continue;
+            }
+
+            if (StringContainsVar(RlistScalarValue(rp), ref->lval))
+            {
+                char *ref_str = VarRefToString(ref, true);
+                Log(LOG_LEVEL_ERR, "An item in list variable '%s' contains a reference to itself", ref_str);
+                free(ref_str);
+                return true;
+            }
+        }
+        break;
+
+    case RVAL_TYPE_FNCALL:
+    case RVAL_TYPE_CONTAINER:
+    case RVAL_TYPE_NOPROMISEE:
+        break;
     }
 
-    if (rval.item == NULL)
+    return false;
+}
+
+static void VarRefStackQualify(const EvalContext *ctx, VarRef *ref)
+{
+    StackFrame *last_frame = LastStackFrame(ctx, 0);
+    assert(last_frame);
+
+    switch (last_frame->type)
+    {
+    case STACK_FRAME_TYPE_BODY:
+        VarRefQualify(ref, NULL, SpecialScopeToString(SPECIAL_SCOPE_BODY));
+        break;
+
+    case STACK_FRAME_TYPE_BUNDLE:
+        VarRefQualify(ref, last_frame->data.bundle.owner->ns, last_frame->data.bundle.owner->name);
+        break;
+
+    case STACK_FRAME_TYPE_PROMISE:
+    case STACK_FRAME_TYPE_PROMISE_ITERATION:
+        VarRefQualify(ref, NULL, SpecialScopeToString(SPECIAL_SCOPE_THIS));
+        break;
+    }
+}
+
+bool EvalContextVariablePut(EvalContext *ctx, const VarRef *ref, const void *value, DataType type)
+{
+    assert(type != DATA_TYPE_NONE);
+    assert(ref);
+    assert(ref->lval);
+    assert(value);
+    if (!value)
     {
         return false;
     }
 
-    if (strlen(lval.lval) > CF_MAXVARSIZE)
+    if (strlen(ref->lval) > CF_MAXVARSIZE)
     {
-        char *lval_str = VarRefToString(lval, true);
+        char *lval_str = VarRefToString(ref, true);
         Log(LOG_LEVEL_ERR, "Variable '%s'' cannot be added because its length exceeds the maximum length allowed '%d' characters", lval_str, CF_MAXVARSIZE);
         free(lval_str);
         return false;
     }
 
-    // If we are not expanding a body template, check for recursive singularities
-    if (strcmp(lval.scope, "body") != 0)
+    if (strcmp(ref->scope, "body") != 0 && IsVariableSelfReferential(ref, value, DataTypeToRvalType(type)))
     {
-        switch (rval.type)
-        {
-        case RVAL_TYPE_SCALAR:
-            if (StringContainsVar((char *) rval.item, lval.lval))
-            {
-                Log(LOG_LEVEL_ERR, "Scalar variable %s.%s contains itself (non-convergent): %s", lval.scope, lval.lval,
-                      (char *) rval.item);
-                return false;
-            }
-            break;
-
-        case RVAL_TYPE_LIST:
-            for (const Rlist *rp = rval.item; rp != NULL; rp = rp->next)
-            {
-                if (StringContainsVar(rp->item, lval.lval))
-                {
-                    Log(LOG_LEVEL_ERR, "List variable %s contains itself (non-convergent)", lval.lval);
-                    return false;
-                }
-            }
-            break;
-
-        default:
-            break;
-        }
-    }
-    else
-    {
-        assert(STACK_FRAME_TYPE_BODY == LastStackFrame(ctx, 0)->type);
+        return false;
     }
 
-    Scope *put_scope = ScopeGet(lval.scope);
-    if (!put_scope)
-    {
-        put_scope = ScopeNew(lval.scope);
-        if (!put_scope)
-        {
-            return false;
-        }
-    }
+    Rval rval = (Rval) { (void *)value, DataTypeToRvalType(type) };
 
-// Look for outstanding lists in variable rvals
-
+    // Look for outstanding lists in variable rvals
     if (THIS_AGENT_TYPE == AGENT_TYPE_COMMON)
     {
         Rlist *listvars = NULL;
-        Rlist *scalars = NULL; // TODO what do we do with scalars?
+        Rlist *scalars = NULL;
+        Rlist *containers = NULL;
 
-        if (ScopeGetCurrent() && strcmp(ScopeGetCurrent()->scope, "this") != 0)
+        StackFrame *last_frame = LastStackFrame(ctx, 0);
+
+        if (last_frame && (last_frame->type != STACK_FRAME_TYPE_PROMISE && last_frame->type != STACK_FRAME_TYPE_PROMISE_ITERATION))
         {
-            MapIteratorsFromRval(ctx, ScopeGetCurrent()->scope, &listvars, &scalars, rval);
+            MapIteratorsFromRval(ctx, NULL, rval, &scalars, &listvars, &containers);
 
             if (listvars != NULL)
             {
-                Log(LOG_LEVEL_ERR, "Redefinition of variable \"%s\" (embedded list in RHS) in context \"%s\"",
-                      lval.lval, ScopeGetCurrent()->scope);
+                Log(LOG_LEVEL_ERR, "Redefinition of variable '%s' (embedded list in RHS)", ref->lval);
             }
 
             RlistDestroy(listvars);
             RlistDestroy(scalars);
+            RlistDestroy(containers);
         }
     }
 
-    // FIX: lval is stored with array params as part of the lval for legacy reasons.
-    char *final_lval = VarRefToString(lval, false);
-
-    CfAssoc *assoc = HashLookupElement(put_scope->hashtable, final_lval);
-    if (assoc)
-    {
-        if (CompareVariableValue(rval, assoc) != 0)
-        {
-            /* Different value, bark and replace */
-            if (!UnresolvedVariables(assoc, rval.type))
-            {
-                Log(LOG_LEVEL_INFO, "Replaced value of variable '%s' in scope '%s'", lval.lval, put_scope->scope);
-            }
-            RvalDestroy(assoc->rval);
-            assoc->rval = RvalCopy(rval);
-            assoc->dtype = type;
-        }
-    }
-    else
-    {
-        if (!HashInsertElement(put_scope->hashtable, final_lval, rval, type))
-        {
-            ProgrammingError("Hash table is full");
-        }
-    }
-
-    free(final_lval);
+    VariableTable *table = GetVariableTableForVarRef(ctx, ref);
+    VariableTablePut(table, ref, &rval, type);
     return true;
 }
 
-bool EvalContextVariableGet(const EvalContext *ctx, VarRef lval, Rval *rval_out, DataType *type_out)
+static Variable *VariableResolve(const EvalContext *ctx, const VarRef *ref)
 {
-    if (lval.lval == NULL)
+    assert(ref->lval);
+
+    if (!VarRefIsQualified(ref))
     {
-        if (rval_out)
-        {
-            *rval_out = (Rval) {NULL, RVAL_TYPE_SCALAR };
-        }
-        if (type_out)
-        {
-            *type_out = DATA_TYPE_NONE;
-        }
-        return false;
+        VarRef *qref = VarRefCopy(ref);
+        VarRefStackQualify(ctx, qref);
+        Variable *ret = VariableResolve(ctx, qref);
+        VarRefDestroy(qref);
+        return ret;
     }
 
-    char expanded_lval[CF_MAXVARSIZE] = "";
-    if (!IsExpandable(lval.lval))
+    VariableTable *table = GetVariableTableForVarRef(ctx, ref);
+    if (table)
     {
-        strncpy(expanded_lval, lval.lval, CF_MAXVARSIZE - 1);
-    }
-    else
-    {
-        char buffer[CF_EXPANDSIZE] = "";
-        if (ExpandScalar(ctx, lval.scope, lval.lval, buffer))
+        Variable *var = VariableTableGet(table, ref);
+        if (var)
         {
-            strncpy(expanded_lval, buffer, CF_MAXVARSIZE - 1);
+            return var;
+        }
+        else if (ref->num_indices > 0)
+        {
+            VarRef *base_ref = VarRefCopyIndexless(ref);
+            var = VariableTableGet(table, base_ref);
+            VarRefDestroy(base_ref);
+
+            if (var && var->type == DATA_TYPE_CONTAINER)
+            {
+                return var;
+            }
+        }
+    }
+
+    return NULL;
+}
+
+bool EvalContextVariableGet(const EvalContext *ctx, const VarRef *ref, Rval *rval_out, DataType *type_out)
+{
+    Variable *var = VariableResolve(ctx, ref);
+    if (var)
+    {
+        if (var->ref->num_indices == 0 && ref->num_indices > 0 && var->type == DATA_TYPE_CONTAINER)
+        {
+            JsonElement *child = JsonSelect(RvalContainerValue(var->rval), ref->num_indices, ref->indices);
+            if (child)
+            {
+                if (rval_out)
+                {
+                    rval_out->item = child;
+                    rval_out->type = RVAL_TYPE_CONTAINER;
+                }
+                if (type_out)
+                {
+                    *type_out = DATA_TYPE_CONTAINER;
+                }
+                return true;
+            }
         }
         else
         {
             if (rval_out)
             {
-                *rval_out = (Rval) {(char *) lval.lval, RVAL_TYPE_SCALAR };
+                *rval_out = var->rval;
             }
             if (type_out)
             {
-                *type_out = DATA_TYPE_NONE;
+                *type_out = var->type;
             }
-            return false;
+            return true;
         }
-    }
-
-    Scope *get_scope = NULL;
-    char lookup_key[CF_MAXVARSIZE] = "";
-    {
-        char scopeid[CF_MAXVARSIZE] = "";
-
-        if (IsQualifiedVariable(expanded_lval))
-        {
-            scopeid[0] = '\0';
-            sscanf(expanded_lval, "%[^.].", scopeid);
-            strlcpy(lookup_key, expanded_lval + strlen(scopeid) + 1, sizeof(lookup_key));
-        }
-        else
-        {
-            strlcpy(lookup_key, expanded_lval, sizeof(lookup_key));
-            strlcpy(scopeid, lval.scope, sizeof(scopeid));
-        }
-
-        if (lval.ns != NULL && strchr(scopeid, CF_NS) == NULL && strcmp(lval.ns, "default") != 0)
-        {
-            char buffer[CF_EXPANDSIZE] = "";
-            sprintf(buffer, "%s%c%s", lval.ns, CF_NS, scopeid);
-            strlcpy(scopeid, buffer, sizeof(scopeid));
-        }
-
-        get_scope = ScopeGet(scopeid);
-    }
-
-    if (!get_scope)
-    {
-        if (rval_out)
-        {
-            *rval_out = (Rval) {(char *) lval.lval, RVAL_TYPE_SCALAR };
-        }
-        if (type_out)
-        {
-            *type_out = DATA_TYPE_NONE;
-        }
-        return false;
-    }
-
-    CfAssoc *assoc = HashLookupElement(get_scope->hashtable, lookup_key);
-    if (!assoc)
-    {
-        if (rval_out)
-        {
-            *rval_out = (Rval) {(char *) lval.lval, RVAL_TYPE_SCALAR };
-        }
-        if (type_out)
-        {
-            *type_out = DATA_TYPE_NONE;
-        }
-        return false;
     }
 
     if (rval_out)
     {
-        *rval_out = assoc->rval;
+        *rval_out = (Rval) {NULL, RVAL_TYPE_SCALAR };
     }
     if (type_out)
     {
-        *type_out = assoc->dtype;
-        assert(*type_out != DATA_TYPE_NONE);
+        *type_out = DATA_TYPE_NONE;
+    }
+    return false;
+}
+
+StringSet *EvalContextClassTags(const EvalContext *ctx, const char *ns, const char *name)
+{
+    Class *cls = EvalContextClassGet(ctx, ns, name);
+    if (!cls)
+    {
+        return NULL;
     }
 
-    return true;
+    if (!cls->tags)
+    {
+        cls->tags = StringSetNew();
+    }
+
+    return cls->tags;
+}
+
+StringSet *EvalContextVariableTags(const EvalContext *ctx, const VarRef *ref)
+{
+    Variable *var = VariableResolve(ctx, ref);
+    if (!var)
+    {
+        return NULL;
+    }
+
+    if (!var->tags)
+    {
+        var->tags = StringSetNew();
+    }
+
+    return var->tags;
+}
+
+bool EvalContextVariableClearMatch(EvalContext *ctx)
+{
+    return VariableTableClear(ctx->match_variables, NULL, NULL, NULL);
+}
+
+VariableTableIterator *EvalContextVariableTableIteratorNew(const EvalContext *ctx, const VarRef *ref)
+{
+    VariableTable *table = GetVariableTableForVarRef(ctx, ref);
+    return table ? VariableTableIteratorNew(table, ref->ns, ref->scope, ref->lval) : NULL;
+}
+
+VariableTableIterator *EvalContextVariableTableIteratorNewGlobals(const EvalContext *ctx, const char *ns, const char *scope)
+{
+    return VariableTableIteratorNew(ctx->global_variables, ns, scope, NULL);
 }
 
 bool EvalContextVariableControlCommonGet(const EvalContext *ctx, CommonControl lval, Rval *rval_out)
 {
-    return EvalContextVariableGet(ctx, (VarRef) { NULL, "control_common", CFG_CONTROLBODY[lval].lval }, rval_out, NULL);
+    if (lval == COMMON_CONTROL_NONE)
+    {
+        return false;
+    }
+
+    VarRef *ref = VarRefParseFromScope(CFG_CONTROLBODY[lval].lval, "control_common");
+    bool ret = EvalContextVariableGet(ctx, ref, rval_out, NULL);
+    VarRefDestroy(ref);
+    return ret;
 }
 
 bool EvalContextPromiseIsDone(const EvalContext *ctx, const Promise *pp)
@@ -1497,34 +1599,38 @@ static bool IsPromiseValuableForLogging(const Promise *pp)
     return pp && (pp->parent_promise_type->name != NULL) && (!IsStrIn(pp->parent_promise_type->name, NO_LOG_TYPES));
 }
 
-static void AddAllClasses(EvalContext *ctx, const char *ns, const Rlist *list, bool persist, ContextStatePolicy policy, ContextScope context_scope)
+static void AddAllClasses(EvalContext *ctx, const char *ns, const Rlist *list, unsigned int persistence_ttl, ContextStatePolicy policy, ContextScope context_scope)
 {
     for (const Rlist *rp = list; rp != NULL; rp = rp->next)
     {
-        char *classname = xstrdup(rp->item);
+        char *classname = xstrdup(RlistScalarValue(rp));
+        if (strcmp(classname, "a_class_global_from_command") == 0 || strcmp(classname, "xxx:a_class_global_from_command") == 0)
+        {
+            Log(LOG_LEVEL_ERR, "Hit '%s'", classname);
+        }
 
         CanonifyNameInPlace(classname);
 
         if (EvalContextHeapContainsHard(ctx, classname))
         {
-            Log(LOG_LEVEL_ERR, "You cannot use reserved hard class \"%s\" as post-condition class", classname);
+            Log(LOG_LEVEL_ERR, "You cannot use reserved hard class '%s' as post-condition class", classname);
             // TODO: ok.. but should we take any action? continue; maybe?
         }
 
-        if (persist > 0)
+        if (persistence_ttl > 0)
         {
             if (context_scope != CONTEXT_SCOPE_NAMESPACE)
             {
                 Log(LOG_LEVEL_INFO, "Automatically promoting context scope for '%s' to namespace visibility, due to persistence", classname);
             }
 
-            Log(LOG_LEVEL_VERBOSE, " ?> defining persistent promise result class %s", classname);
-            EvalContextHeapPersistentSave(CanonifyName(rp->item), ns, persist, policy);
+            Log(LOG_LEVEL_VERBOSE, "Defining persistent promise result class '%s'", classname);
+            EvalContextHeapPersistentSave(CanonifyName(RlistScalarValue(rp)), ns, persistence_ttl, policy);
             EvalContextHeapAddSoft(ctx, classname, ns);
         }
         else
         {
-            Log(LOG_LEVEL_VERBOSE, " ?> defining promise result class %s", classname);
+            Log(LOG_LEVEL_VERBOSE, "Defining promise result class '%s'", classname);
 
             switch (context_scope)
             {
@@ -1545,60 +1651,35 @@ static void DeleteAllClasses(EvalContext *ctx, const Rlist *list)
 {
     for (const Rlist *rp = list; rp != NULL; rp = rp->next)
     {
-        if (CheckParseContext((char *) rp->item, CF_IDRANGE) != SYNTAX_TYPE_MATCH_OK)
+        if (CheckParseContext(RlistScalarValue(rp), CF_IDRANGE) != SYNTAX_TYPE_MATCH_OK)
         {
             return; // TODO: interesting course of action, but why is the check there in the first place?
         }
 
-        if (EvalContextHeapContainsHard(ctx, (char *) rp->item))
+        if (EvalContextHeapContainsHard(ctx, RlistScalarValue(rp)))
         {
-            Log(LOG_LEVEL_ERR, "You cannot cancel a reserved hard class \"%s\" in post-condition classes",
+            Log(LOG_LEVEL_ERR, "You cannot cancel a reserved hard class '%s' in post-condition classes",
                   RlistScalarValue(rp));
         }
 
-        const char *string = (char *) (rp->item);
+        const char *string = RlistScalarValue(rp);
 
-        Log(LOG_LEVEL_VERBOSE, "Cancelling class %s", string);
+        Log(LOG_LEVEL_VERBOSE, "Cancelling class '%s'", string);
 
         EvalContextHeapPersistentRemove(string);
 
-        EvalContextHeapRemoveSoft(ctx, CanonifyName(string));
-
-        EvalContextStackFrameAddNegated(ctx, CanonifyName(string));
+        {
+            ClassRef ref = ClassRefParse(CanonifyName(string));
+            EvalContextClassRemove(ctx, ref.ns, ref.name);
+            ClassRefDestroy(ref);
+        }
+        EvalContextStackFrameRemoveSoft(ctx, CanonifyName(string));
     }
 }
 
-#ifdef HAVE_NOVA
-static void TrackTotalCompliance(PromiseResult status, const Promise *pp)
+ENTERPRISE_VOID_FUNC_2ARG_DEFINE_STUB(void, TrackTotalCompliance, ARG_UNUSED PromiseResult, status, ARG_UNUSED const Promise *, pp)
 {
-    char nova_status;
-
-    switch (status)
-    {
-    case PROMISE_RESULT_CHANGE:
-        nova_status = 'r';
-        break;
-
-    case PROMISE_RESULT_WARN:
-    case PROMISE_RESULT_TIMEOUT:
-    case PROMISE_RESULT_FAIL:
-    case PROMISE_RESULT_DENIED:
-    case PROMISE_RESULT_INTERRUPTED:
-        nova_status = 'n';
-        break;
-
-    case PROMISE_RESULT_NOOP:
-        nova_status = 'c';
-        break;
-
-    default:
-        ProgrammingError("Unexpected status '%c' has been passed to TrackTotalCompliance", status);
-    }
-
-    EnterpriseTrackTotalCompliance(pp, nova_status);
 }
-#endif
-
 
 static void SetPromiseOutcomeClasses(PromiseResult status, EvalContext *ctx, const Promise *pp, DefineClasses dc)
 {
@@ -1686,7 +1767,7 @@ static void SummarizeTransaction(EvalContext *ctx, TransactionContext tc, const 
     {
         char buffer[CF_EXPANDSIZE];
 
-        ExpandScalar(ctx, ScopeGetCurrent()->scope, tc.log_string, buffer);
+        ExpandScalar(ctx, NULL, NULL, tc.log_string, buffer);
 
         if (strcmp(logname, "udp_syslog") == 0)
         {
@@ -1698,15 +1779,29 @@ static void SummarizeTransaction(EvalContext *ctx, TransactionContext tc, const 
         }
         else
         {
+            struct stat dsb;
+
+            // Does the file exist already?
+            if (lstat(logname, &dsb) == -1)
+            {
+                mode_t filemode = 0600;     /* Mode for log file creation */
+                int fd = creat(logname, filemode);
+                if (fd >= 0)
+                {
+                    Log(LOG_LEVEL_VERBOSE, "Created log file '%s' with requested permissions %o", logname, filemode);
+                    close(fd);
+                }
+            }
+
             FILE *fout = fopen(logname, "a");
 
             if (fout == NULL)
             {
-                Log(LOG_LEVEL_ERR, "Unable to open private log %s", logname);
+                Log(LOG_LEVEL_ERR, "Unable to open private log '%s'", logname);
                 return;
             }
 
-            Log(LOG_LEVEL_VERBOSE, "Logging string \"%s\" to %s", buffer, logname);
+            Log(LOG_LEVEL_VERBOSE, "Logging string '%s' to '%s'", buffer, logname);
             fprintf(fout, "%s\n", buffer);
 
             fclose(fout);
@@ -1767,11 +1862,9 @@ static void NotifyDependantPromises(PromiseResult status, EvalContext *ctx, cons
 
 void ClassAuditLog(EvalContext *ctx, const Promise *pp, Attributes attr, PromiseResult status)
 {
-    if (!IsPromiseValuableForStatus(pp))
+    if (IsPromiseValuableForStatus(pp))
     {
-#ifdef HAVE_NOVA
         TrackTotalCompliance(status, pp);
-#endif
         UpdatePromiseCounters(status, attr.transaction);
     }
 
@@ -1782,61 +1875,48 @@ void ClassAuditLog(EvalContext *ctx, const Promise *pp, Attributes attr, Promise
 
 static void LogPromiseContext(const EvalContext *ctx, const Promise *pp)
 {
-    Rval retval;
-    char *v;
-    if (EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_VERSION, &retval))
+    Writer *w = StringWriter();
+    WriterWrite(w, "Additional promise info:");
+    if (PromiseGetHandle(pp))
     {
-        v = (char *) retval.item;
-    }
-    else
-    {
-        v = "not specified";
+        WriterWriteF(w, " handle '%s'", PromiseGetHandle(pp));
     }
 
-    const char *sp = PromiseGetHandle(pp);
-    if (sp == NULL)
     {
-        sp = PromiseID(pp);
-    }
-    if (sp == NULL)
-    {
-        sp = "(unknown)";
-    }
 
-    Log(LOG_LEVEL_INFO, "I: Report relates to a promise with handle \"%s\"", sp);
+        Rval retval;
+        if (EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_VERSION, &retval))
+        {
+            WriterWriteF(w, " version '%s'", RvalScalarValue(retval));
+        }
+    }
 
     if (PromiseGetBundle(pp)->source_path)
     {
-        Log(LOG_LEVEL_INFO, "I: Made in version \'%s\' of \'%s\' near line %zu",
-            v, PromiseGetBundle(pp)->source_path, pp->offset.line);
-    }
-    else
-    {
-        Log(LOG_LEVEL_INFO, "I: Promise is made internally by cfengine");
+        WriterWriteF(w, " source path '%s' at line %zu", PromiseGetBundle(pp)->source_path, pp->offset.line);
     }
 
     switch (pp->promisee.type)
     {
     case RVAL_TYPE_SCALAR:
-        Log(LOG_LEVEL_INFO,"I: The promise was made to: \'%s\'", (char *) pp->promisee.item);
+        WriterWriteF(w, " promisee '%s'", RvalScalarValue(pp->promisee));
         break;
 
     case RVAL_TYPE_LIST:
-    {
-        Writer *w = StringWriter();
+        WriterWrite(w, " promisee ");
         RlistWrite(w, pp->promisee.item);
-        Log(LOG_LEVEL_INFO, "I: The promise was made to (stakeholders): %s", StringWriterData(w));
-        WriterClose(w);
         break;
-    }
     default:
         break;
     }
 
     if (pp->comment)
     {
-        Log(LOG_LEVEL_INFO, "I: Comment: %s", pp->comment);
+        WriterWriteF(w, " comment '%s'", pp->comment);
     }
+
+    Log(LOG_LEVEL_VERBOSE, "%s", StringWriterData(w));
+    WriterClose(w);
 }
 
 void cfPS(EvalContext *ctx, LogLevel level, PromiseResult status, const Promise *pp, Attributes attr, const char *fmt, ...)
@@ -1863,7 +1943,7 @@ void cfPS(EvalContext *ctx, LogLevel level, PromiseResult status, const Promise 
         PromiseLoggingInit(ctx);
         PromiseLoggingPromiseEnter(ctx, pp);
 
-        if (level == LOG_LEVEL_ERR)
+        if (level >= LOG_LEVEL_VERBOSE)
         {
             LogPromiseContext(ctx, pp);
         }

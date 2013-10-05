@@ -1,2 +1,0 @@
-
-Hostname or IP address of the server.

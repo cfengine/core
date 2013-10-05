@@ -1,9 +1,0 @@
-
-@verbatim
-
-body agent control
-{
-secureinput => "true";
-}
-
-@end verbatim

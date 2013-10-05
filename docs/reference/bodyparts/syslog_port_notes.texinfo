@@ -1,3 +1,0 @@
-
-The UDP port of a local syslog service to which all CFEngine's components
-may promise to send data. This feature is provided in CFEngine Nova and above.

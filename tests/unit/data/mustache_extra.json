@@ -1,0 +1,66 @@
+{
+    "tests": [
+        {
+            "name": "Demo",
+            "data": {
+                "header": "Colors",
+                "items": [
+                    {"name": "red", "first": true, "url": "#Red"},
+                    {"name": "green", "link": true, "url": "#Green"},
+                    {"name": "blue", "link": true, "url": "#Blue"}
+                ],
+                "empty": false
+            },
+            "expected": "<h1>Colors</h1>\n\n    <li><strong>red</strong></li>\n    <li><a href=\"#Green\">green</a></li>\n    <li><a href=\"#Blue\">blue</a></li>\n\n",
+            "template": "<h1>{{header}}</h1>\n{{#bug}}\n{{/bug}}\n\n{{#items}}\n  {{#first}}\n    <li><strong>{{name}}</strong></li>\n  {{/first}}\n  {{#link}}\n    <li><a href=\"{{url}}\">{{name}}</a></li>\n  {{/link}}\n{{/items}}\n\n{{#empty}}\n  <p>The list is empty.</p>\n{{/empty}}\n"
+        },
+        {
+            "name": "Ted's Abusive Test 1",
+            "data": { "x": 123 },
+            "template": "{{x}}",
+            "expected": "123"
+        },
+        {
+            "name": "Ted's Abusive Test 2",
+            "data": { "x": 123, "y": 456 },
+            "template": "{{x}} {{y}}",
+            "expected": "123 456"
+        },
+        {
+            "name": "Ted's Abusive Test 3",
+            "data": [ null ],
+            "template": "{{null}}",
+            "expected": ""
+        },
+        {
+            "name": "Ted's Abusive Test 4",
+            "data": { "x": 123, "y": 456 },
+            "template": "{{}}",
+            "expected": "{{}}"
+        },
+        {
+            "name": "Ted's Abusive Test 5",
+            "data": { "boolean": true},
+            "template": "{{#boolean}}IT IS TRUE{{/boolean}}",
+            "expected": "IT IS TRUE"
+        },
+        {
+            "name": "Ted's Abusive Test 6",
+            "data": { "boolean": false},
+            "template": "{{^boolean}}IT IS FALSE{{/boolean}}",
+            "expected": "IT IS FALSE"
+        },
+        {
+            "name": "Ted's Abusive Test 7",
+            "data": { "list":
+                [
+                    { "k": 789, "v": 0 },
+                    { "k": null, "v": true },
+                    { "k": -1, "v": -2 }
+                ]
+            },
+            "template": "{{#list}}{{k}}={{v}}, {{/list}}",
+            "expected": "789=0, =true, -1=-2, "
+        },
+    ]
+}

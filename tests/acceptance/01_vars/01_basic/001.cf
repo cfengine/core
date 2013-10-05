@@ -6,48 +6,48 @@
 
 body common control
 {
-  inputs => { "../../default.cf.sub" };
-  bundlesequence  => { default("$(this.promise_filename)") };
-  version => "1.0";
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
 }
 
 #######################################################
 
 bundle agent init
 {
-vars:
-        "dummy" string => "dummy";
+  vars:
+      "dummy" string => "dummy";
 }
 
 #######################################################
 
 bundle agent test
 {
-vars:
-    "ten" int => "10";
-    "ten[ten]" int => "11";
-    "nine" string => "hello",
-        policy => "free";
-    "nine" int => "9",
-        policy => "free";
+  vars:
+      "ten" int => "10";
+      "ten[ten]" int => "11";
+      "nine" string => "hello",
+      policy => "free";
+      "nine" int => "9",
+      policy => "free";
 }
 
 #######################################################
 
 bundle agent check
 {
-classes:
-        "ok_10" not => strcmp("$(test.ten)", "$(test.ten[ten])");
-        "ok" and => { "ok_10", strcmp("$(test.nine)", "9") };
+  classes:
+      "ok_10" not => strcmp("$(test.ten)", "$(test.ten[ten])");
+      "ok" and => { "ok_10", strcmp("$(test.nine)", "9") };
 
-reports:
+  reports:
     DEBUG::
-        "ten == $(test.ten)";
-        "ten[ten] == $(test.ten[ten])";
-        "nine == $(test.nine)";
+      "ten == $(test.ten)";
+      "ten[ten] == $(test.ten[ten])";
+      "nine == $(test.nine)";
     ok::
-        "$(this.promise_filename) Pass";
+      "$(this.promise_filename) Pass";
     !ok::
-        "$(this.promise_filename) FAIL";
+      "$(this.promise_filename) FAIL";
 }
 

@@ -1,4 +1,0 @@
-
-If this is positive, file hashes should be updated as soon as a change
-is registered so that multiple warnings are not given about a single
-change. This applies to addition and removal too.

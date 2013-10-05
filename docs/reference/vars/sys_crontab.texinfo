@@ -1,8 +1,0 @@
-
-The variable gives the location of the current users's master crontab directory.
-
-@verbatim
-
-# crontab = /var/spool/crontas/root 
-
-@end verbatim

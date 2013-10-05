@@ -22,14 +22,14 @@
   included file COSL.txt.
 */
 
-#include "files_hashes.h"
+#include <files_hashes.h>
 
-#include "dbm_api.h"
-#include "files_interfaces.h"
-#include "client_code.h"
-#include "files_lib.h"
-#include "rlist.h"
-#include "policy.h"
+#include <dbm_api.h>
+#include <files_interfaces.h>
+#include <client_code.h>
+#include <files_lib.h>
+#include <rlist.h>
+#include <policy.h>
 
 static const char *CF_DIGEST_TYPES[10][2] =
 {
@@ -59,15 +59,13 @@ static const int CF_DIGEST_SIZES[10] =
     0
 };
 
-void HashFile(char *filename, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMethod type)
+void HashFile(const char *filename, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMethod type)
 {
     FILE *file;
     EVP_MD_CTX context;
     int len, md_len;
     unsigned char buffer[1024];
     const EVP_MD *md = NULL;
-
-    Log(LOG_LEVEL_DEBUG, "HashFile(%d,%s)\n", type, filename);
 
     if ((file = fopen(filename, "rb")) == NULL)
     {
@@ -99,8 +97,6 @@ void HashString(const char *buffer, int len, unsigned char digest[EVP_MAX_MD_SIZ
     const EVP_MD *md = NULL;
     int md_len;
 
-    Log(LOG_LEVEL_DEBUG, "HashString(%c)\n", type);
-
     switch (type)
     {
     case HASH_METHOD_CRYPT:
@@ -131,8 +127,6 @@ void HashPubKey(RSA *key, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMethod 
     const EVP_MD *md = NULL;
     int md_len, i, buf_len, actlen;
     unsigned char *buffer;
-
-    Log(LOG_LEVEL_DEBUG, "HashPubKey(%d)\n", type);
 
     if (key->n)
     {
@@ -186,12 +180,8 @@ int HashesMatch(unsigned char digest1[EVP_MAX_MD_SIZE + 1], unsigned char digest
                 HashMethod type)
 {
     int i, size = EVP_MAX_MD_SIZE;
-    char buffer[EVP_MAX_MD_SIZE * 4];
 
     size = FileHashSize(type);
-
-    Log(LOG_LEVEL_DEBUG, "1. CHECKING DIGEST type %d - size %d (%s)\n", type, size, HashPrintSafe(type, digest1, buffer));
-    Log(LOG_LEVEL_DEBUG, "2. CHECKING DIGEST type %d - size %d (%s)\n", type, size, HashPrintSafe(type, digest2, buffer));
 
     for (i = 0; i < size; i++)
     {
@@ -214,10 +204,10 @@ char *HashPrintSafe(HashMethod type, unsigned char digest[EVP_MAX_MD_SIZE + 1], 
     switch (type)
     {
     case HASH_METHOD_MD5:
-        sprintf(buffer, "MD5=  ");
+        strcpy(buffer, "MD5=");
         break;
     default:
-        sprintf(buffer, "SHA=  ");
+        strcpy(buffer, "SHA=");
         break;
     }
 

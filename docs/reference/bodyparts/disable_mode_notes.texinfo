@@ -1,4 +1,0 @@
-
-To disable an executable it is not enough to rename it, you should also remove the
-executable flag.
-

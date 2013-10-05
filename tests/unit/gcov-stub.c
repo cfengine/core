@@ -1,4 +1,4 @@
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
 /*
  * Stubs which allow CFEngine compiled with gcov support to link against unit

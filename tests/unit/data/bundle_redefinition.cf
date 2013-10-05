@@ -1,13 +1,13 @@
 bundle agent foo
 {
-reports:
-  cfengine3::
-    "hello world";
+  reports:
+    cfengine3::
+      "hello world";
 }
 
 bundle agent foo
 {
-reports:
-  cfengine3::
-    "other stuff";
+  reports:
+    cfengine3::
+      "other stuff";
 }

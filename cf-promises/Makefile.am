@@ -1,12 +1,20 @@
-sbin_PROGRAMS = cf-promises
+noinst_LTLIBRARIES = libcf-promises.la
 
 AM_CPPFLAGS = @CPPFLAGS@ -I$(srcdir)/../libpromises -I$(srcdir)/../libutils \
-	$(NOVA_CPPFLAGS)
+	$(ENTERPRISE_CPPFLAGS)
 
 AM_CFLAGS = @CFLAGS@ -I$(srcdir) \
-	$(NOVA_CFLAGS)
+	$(ENTERPRISE_CFLAGS)
 
-LDADD = ../libpromises/libpromises.la
+libcf_promises_la_LIBADD = ../libpromises/libpromises.la
+
+libcf_promises_la_SOURCES = cf-promises.c
+
+if !BUILTIN_EXTENSIONS
+ sbin_PROGRAMS = cf-promises
+ cf_promises_LDADD = libcf-promises.la
+ cf_promises_SOURCES =
+endif
 
 CLEANFILES = *.gcno *.gcda
 

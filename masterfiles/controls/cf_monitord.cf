@@ -1,8 +1,8 @@
 ###############################################################################
 # This part is for cf-monitord
 #
-# The system defaults will be sufficient for most users. 
-# This configurability potential, however, will be a key to developing 
+# The system defaults will be sufficient for most users.
+# This configurability potential, however, will be a key to developing
 # the integrated monitoring capabilities of CFE.
 ###############################################################################
 
@@ -10,11 +10,11 @@ body monitor control
 
 {
 
- any::
+    any::
 
-  forgetrate => "0.7";
-  histograms => "true";
-#  tcpdump => "false";
-#  tcpdumpcommand => "/usr/sbin/tcpdump -t -n -v";
+      forgetrate => "0.7";
+      histograms => "true";
+      #  tcpdump => "false";
+      #  tcpdumpcommand => "/usr/sbin/tcpdump -t -n -v";
 
 }

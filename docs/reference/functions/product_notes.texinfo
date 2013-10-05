@@ -1,7 +1,0 @@
-Of course, you could easily combine @code{product} with @code{readstringarray}
-or @code{readreallist}, etc. to collect summary information from a source
-external to CFEngine.
-
-@b{History}: Was introduced in version 3.1.0b1,Nova 2.0.0b1 (2010)
-
-This function might be used for simple ring computation.

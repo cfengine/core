@@ -25,7 +25,8 @@
 #ifndef CFENGINE_AGENT_DIAGNOSTICS_H
 #define CFENGINE_AGENT_DIAGNOSTICS_H
 
-#include "writer.h"
+#include <writer.h>
+#include <enterprise_extension.h>
 
 typedef struct
 {
@@ -41,6 +42,7 @@ typedef struct
     AgentDiagnosticCheckFn *check;
 } AgentDiagnosticCheck;
 
+typedef void (*AgentDiagnosticsRunFunction)(const char *workdir, const AgentDiagnosticCheck checks[], Writer *output);
 void AgentDiagnosticsRun(const char *workdir, const AgentDiagnosticCheck checks[], Writer *output);
 
 // Checks
@@ -50,8 +52,13 @@ AgentDiagnosticsResult AgentDiagnosticsCheckIsBootstrapped(const char *workdir);
 AgentDiagnosticsResult AgentDiagnosticsCheckAmPolicyServer(const char *workdir);
 
 
+typedef AgentDiagnosticsResult (*AgentDiagnosticsResultNewFunction)(bool success, char *message);
 AgentDiagnosticsResult AgentDiagnosticsResultNew(bool success, char *message);
 
 const AgentDiagnosticCheck *AgentDiagnosticsAllChecks(void);
+ENTERPRISE_VOID_FUNC_4ARG_DECLARE(void, AgentDiagnosticsRunAllChecksNova,
+                                  const char *, workdir, Writer *, output,
+                                  AgentDiagnosticsRunFunction, AgentDiagnosticsRunPtr,
+                                  AgentDiagnosticsResultNewFunction, AgentDiagnosticsResultNewPtr);
 
 #endif

@@ -22,9 +22,9 @@
   included file COSL.txt.
 */
 
-#include "platform.h"
-#include "alloc.h"
-#include "atexit.h"
+#include <platform.h>
+#include <alloc.h>
+#include <atexit.h>
 
 #if defined(__MINGW32__)
 

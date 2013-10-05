@@ -22,18 +22,18 @@
   included file COSL.txt.
 */
 
-#include "cf3.defs.h"
-#include "cfnet.h"                                       /* AgentConnection */
+#include <cf3.defs.h>
+#include <cfnet.h>                                       /* AgentConnection */
 
 #ifndef CFENGINE_VERIFY_FILES_HASHES_H
 #define CFENGINE_VERIFY_FILES_HASHES_H
 
-int FileHashChanged(EvalContext *ctx, char *filename, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMethod type, Attributes attr, Promise *pp);
-int CompareFileHashes(char *file1, char *file2, struct stat *sstat, struct stat *dstat, FileCopy fc, AgentConnection *conn);
-int CompareBinaryFiles(char *file1, char *file2, struct stat *sstat, struct stat *dstat, FileCopy fc, AgentConnection *conn);
+int FileHashChanged(EvalContext *ctx, const char *filename, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMethod type, Attributes attr, Promise *pp, PromiseResult *result);
+int CompareFileHashes(const char *file1, const char *file2, struct stat *sstat, struct stat *dstat, FileCopy fc, AgentConnection *conn);
+int CompareBinaryFiles(const char *file1, const char *file2, struct stat *sstat, struct stat *dstat, FileCopy fc, AgentConnection *conn);
 
 void PurgeHashes(EvalContext *ctx, char *file, Attributes attr, Promise *pp);
 
-void LogHashChange(char *file, FileState status, char *msg, Promise *pp);
+void LogHashChange(const char *file, FileState status, char *msg, Promise *pp);
 
 #endif

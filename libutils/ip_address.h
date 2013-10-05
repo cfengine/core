@@ -25,7 +25,7 @@
 #ifndef CFENGINE_IP_ADDRESS_H
 #define CFENGINE_IP_ADDRESS_H
 
-#include "buffer.h"
+#include <buffer.h>
 
 typedef struct IPAddress IPAddress;
 typedef enum
@@ -64,11 +64,25 @@ Buffer *IPAddressGetAddress(IPAddress *address);
   */
 int IPAddressGetPort(IPAddress *address);
 /**
-  @brief Compares two ip addresses.
+  @brief Compares two IP addresses.
   @param a IP address of the first object.
   @param b IP address of the second object.
   @return 1 if both addresses are equal, 0 if they are not and -1 in case of error.
   */
 int IPAddressIsEqual(IPAddress *a, IPAddress *b);
+/**
+  @brief Checks if a given string is a properly formed IP Address.
+  @param source Buffer containing the string.
+  @param address Optional parameter. If given and not NULL then an IPAdress structure will be created from the string.
+  @return Returns true if the string is a valid IP Address and false if not. The address parameter is populated accordingly.
+  */
+bool IPAddressIsIPAddress(Buffer *source, IPAddress **address);
+/**
+  @brief Compares two IP addresses for sorting.
+  @param a IP address of the first object.
+  @param b IP address of the second object.
+  @return 1 if a < b, and 0 otherwise.
+  */
+int IPAddressCompareLess(IPAddress *a, IPAddress *b);
 
 #endif // CFENGINE_IP_ADDRESS_H

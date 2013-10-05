@@ -1,9 +1,0 @@
-
-@verbatim
-
-body reporter control
-{
-report_output => "html";
-}
-
-@end verbatim

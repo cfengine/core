@@ -1,12 +1,13 @@
-#include "test.h"
+#include <test.h>
 
 #include <stdlib.h>
 #include <assert.h>
 
-#include "rlist.h"
+#include <rlist.h>
+#include <string_lib.h>
 
-#include "assoc.h"
-#include "env_context.h"
+#include <assoc.h>
+#include <env_context.h>
 
 /* Stubs */
 
@@ -16,30 +17,16 @@ void FatalError(char *s, ...)
     abort();
 }
 
-/* Test cases */
-
-static void test_prepend_scalar(void)
-{
-    Rlist *list = NULL;
-
-    RlistPrependScalar(&list, "stuff");
-    RlistPrependScalar(&list, "more-stuff");
-
-    assert_string_equal(list->item, "more-stuff");
-
-    RlistDestroy(list);
-}
-
 static void test_length(void)
 {
     Rlist *list = NULL;
 
     assert_int_equal(RlistLen(list), 0);
 
-    RlistPrependScalar(&list, "stuff");
+    RlistPrepend(&list, "stuff", RVAL_TYPE_SCALAR);
     assert_int_equal(RlistLen(list), 1);
 
-    RlistPrependScalar(&list, "more-stuff");
+    RlistPrepend(&list, "more-stuff", RVAL_TYPE_SCALAR);
     assert_int_equal(RlistLen(list), 2);
 
     RlistDestroy(list);
@@ -52,7 +39,7 @@ static void test_prepend_scalar_idempotent(void)
     RlistPrependScalarIdemp(&list, "stuff");
     RlistPrependScalarIdemp(&list, "stuff");
 
-    assert_string_equal(list->item, "stuff");
+    assert_string_equal(RlistScalarValue(list), "stuff");
     assert_int_equal(RlistLen(list), 1);
 
     RlistDestroy(list);
@@ -62,13 +49,13 @@ static void test_copy(void)
 {
     Rlist *list = NULL, *copy = NULL;
 
-    RlistPrependScalar(&list, "stuff");
-    RlistPrependScalar(&list, "more-stuff");
+    RlistPrepend(&list, "stuff", RVAL_TYPE_SCALAR);
+    RlistPrepend(&list, "more-stuff", RVAL_TYPE_SCALAR);
 
     copy = RlistCopy(list);
 
-    assert_string_equal(list->item, copy->item);
-    assert_string_equal(list->next->item, copy->next->item);
+    assert_string_equal(RlistScalarValue(list), RlistScalarValue(copy));
+    assert_string_equal(RlistScalarValue(list->next), RlistScalarValue(copy->next));
 
     RlistDestroy(list);
     RlistDestroy(copy);
@@ -123,10 +110,9 @@ static void test_last(void)
 
 static bool is_even(void *item, void *data)
 {
-    int *d = data;
-
-    int *i = item;
-    return *i % 2 == *d;
+    long d = StringToLong(data);
+    long i = StringToLong(item);
+    return i % 2 == d;
 }
 
 static void test_filter(void)
@@ -134,8 +120,8 @@ static void test_filter(void)
     Rlist *list = NULL;
     for (int i = 0; i < 10; i++)
     {
-        void *item = xmemdup(&i, sizeof(int));
-        RlistAppendAlien(&list, item);
+        char *item = StringFromLong(i);
+        RlistAppend(&list, item, RVAL_TYPE_SCALAR);
     }
 
     assert_int_equal(10, RlistLen(list));
@@ -146,11 +132,8 @@ static void test_filter(void)
     int i = 0;
     for (Rlist *rp = list; rp; rp = rp->next)
     {
-        int *k = rp->item;
-        assert_int_equal(i, *k);
-
-        free(k);
-        rp->item = NULL;
+        int k = StringToLong(rp->val.item);
+        assert_int_equal(i, k);
 
         i += 2;
     }
@@ -163,8 +146,8 @@ static void test_filter_everything(void)
     Rlist *list = NULL;
     for (int i = 1; i < 10; i += 2)
     {
-        void *item = xmemdup(&i, sizeof(int));
-        RlistAppendAlien(&list, item);
+        char *item = StringFromLong(i);
+        RlistAppend(&list, item, RVAL_TYPE_SCALAR);
     }
 
     assert_int_equal(5, RlistLen(list));
@@ -180,9 +163,9 @@ static void test_reverse(void)
     Rlist *list = RlistFromSplitString("a,b,c", ',');
 
     RlistReverse(&list);
-    assert_string_equal("c", list->item);
-    assert_string_equal("b", list->next->item);
-    assert_string_equal("a", list->next->next->item);
+    assert_string_equal("c", RlistScalarValue(list));
+    assert_string_equal("b", RlistScalarValue(list->next));
+    assert_string_equal("a", RlistScalarValue(list->next->next));
 
     RlistDestroy(list);
 }
@@ -207,37 +190,74 @@ static struct ParseRoulette
     2, "{\"\",\"\"}"},
     {
     3, "{\"\",\"\",\"\"}"},
-        /*Single escaped */
+        /*Simple mixed kind of quotations */
     {
-    1, "{\"\\\"\"}"},
+    1, "{\"'\"}"},
+    {
+    1, "{'\"'}"},
     {
     1, "{\",\"}"},
     {
+    1, "{','}"},
+    {
     1, "{\"\\\\\"}"},
+    {
+    1, "{'\\\\'}"},
     {
     1, "{\"}\"}"},
     {
+    1, "{'}'}"},
+    {
     1, "{\"{\"}"},
     {
+    1, "{'{'}"},
+    {
     1, "{\"'\"}"},
-        /*Couple double-escaped */
     {
-    1, "{\"\\\",\"}"},          /*   [",]    */
+    1, "{'\"'}"},
     {
-    1, "{\",\\\"\"}"},          /*   [,"]    */
+    1, "{'\\\",'}"},          /*   [",]    */
+    {
+    1, "{\"\\',\"}"},          /*   [",]    */
+
+    {
+    1, "{',\\\"'}"},          /*   [,"]    */
+    {
+    1, "{\",\\'\"}"},          /*   [,"]    */
+
     {
     1, "{\",,\"}"},             /*   [\\]    */
     {
+    1, "{',,'}"},             /*   [\\]    */
+
+    {
     1, "{\"\\\\\\\\\"}"},       /*   [\\]    */
     {
-    1, "{\"\\\\\\\"\"}"},       /*   [\"]    */
+    1, "{'\\\\\\\\'}"},       /*   [\\]    */
+
     {
-    1, "{\"\\\"\\\\\"}"},       /*   ["\]    */
+    1, "{'\\\\\\\"'}"},       /*   [\"]    */
+    {
+    1, "{\"\\\\\\'\"}"},       /*   [\"]    */
+
+    {
+    1, "{'\\\"\\\\'}"},       /*   ["\]    */
+    {
+    1, "{\"\\'\\\\\"}"},       /*   ["\]    */
+
         /*Very long */
     {
     1, "{\"AaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaA\"}"},
     {
-    2, "{\"Aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\\\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaA\"  ,  \"Bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\\\\bbbbbbbbbbbbbbbbbbbbbbbb\\\\bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\\\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbB\" }"},
+    1, "{'AaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaA'}"},
+
+    {
+    2, "{\"Aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa''aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaA\"  ,  \"Bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\\\\bbbbbbbbbbbbbbbbbbbbbbbb\\\\bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb''bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbB\" }"},
+    {
+    2, "{'Aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\\\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaA'  ,  'Bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\\\\bbbbbbbbbbbbbbbbbbbbbbbb\\\\bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\\\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbB' }"},
+    {
+    2, "{\"Aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa''aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaA\"  ,  'Bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\\\\bbbbbbbbbbbbbbbbbbbbbbbb\\\\bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\\\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbB' }"},
+  
         /*Inner space (inside elements) */
     {
     1, "{\" \"}"},
@@ -266,9 +286,19 @@ static struct ParseRoulette
     2, "{    \"a\",    \"b\"}       "},
         /*Normal */
     {
-    4, "   { \" ab,c,d\\\\ \" ,  \" e,f\\\"g \" ,\"hi\\\\jk\", \"l''m \" }   "},
+    4, "   { \" ab,c,d\\\\ \" ,  ' e,f\\\"g ' ,\"hi\\\\jk\", \"l''m \" }   "},
     {
-    21, "   { \"A\\\"\\\\    \", \"    \\\\\",   \"}B\",   \"\\\\\\\\\"  ,   \"   \\\\C\\\"\"  ,   \"\\\",\"  ,   \",\\\"D\"  ,   \"   ,,    \", \"E\\\\\\\\F\", \"\", \"{\",   \"   G    '\"  ,   \"\\\\\\\"\", \" \\\"  H \\\\    \", \",   ,\"  ,   \"I\", \"  \",   \"\\\"    J  \",   \"\\\",\", \",\\\"\", \",\"  }   "},
+    21, "   { 'A\\\"\\\\    ', \"    \\\\\",   \"}B\",   \"\\\\\\\\\"  ,   \"   \\\\C\\'\"  ,   \"\\',\"  ,   ',\\\"D'  ,   \"   ,,    \", \"E\\\\\\\\F\", \"\", \"{\",   \"   G    '\"  ,   \"\\\\\\'\", ' \\\"  H \\\\    ', \",   ,\"  ,   \"I\", \"  \",   \"\\'    J  \",   '\\\",', \",\\'\", \",\"  }   "},
+    {
+    3,  "{   \"   aaa    \",    \"    bbbb       \"  ,   \"   cc    \"          }    "},
+    {
+    3,  "  {   \"   a'a    \",    \"    b''b       \"  ,   \"   c'c   \"          }    "},
+    {
+    3,  "  {   '   a\"a    ',    '    b\"\"b       '  ,   '   c\"c   '          }    "},
+    {
+    3,  "  {   '   a\"a    ',    \"    b''b       \"  ,   '   c\"c   '          }    "},
+    {
+    3,  "  {   '   a,\"a } { ',    \"  } b','b       \"  ,   ' {, c\"c } '          }    "},
     {
     -1, (char *)NULL}
 };
@@ -279,13 +309,20 @@ static char *PFR[] = {
     " ",
     "a",
     "\"",
+    "'",
     "\"\"",
+    "''",
+    "'\"",
+    "\"'",
     /* trim right failure */
     "{",
     "{ ",
     "{a",
     "{\"",
+    "{'",
     "{\"\"",
+    "{''",
+    "{\"'",
     /* parse failure */
     /* un-even number of quotation marks */
     "{\"\"\"}",
@@ -295,11 +332,34 @@ static char *PFR[] = {
     "{\"\",\"\"\"}",
     "{\"\"\"\",\"}",
     "{\"\",\"\",\"}",
+    "{'''}",
+    "{'','}",
+    "{''''}",
+    "{'''''}",
+    "{'','''}",
+    "{'''','}",
+    "{\"}",
+    "{'}",
+    "{'','','}",
+    "{\"\"'}",
+    "{\"\",'}",
+    "{\"'\"'}",
+    "{\"\"'\"\"}",
+    "{\"\",'\"\"}",
+    "{'\"\"\",\"}",
+    "{'',\"\",'}",
+
     /* Misplaced commas*/
     "{\"a\",}",
     "{,\"a\"}",
     "{,,\"a\"}",
     "{\"a\",,\"b\"}",
+    "{'a',}",
+    "{,'a'}",
+    "{,,'a'}",
+    "{'a',,'b'}",
+    "{\"a\",,'b'}",
+    "{'a',,\"b\"}",
     " {,}",
     " {,,}",
     " {,,,}",
@@ -312,6 +372,20 @@ static char *PFR[] = {
     " {\"\",\"\",}",
     " {\"\",\"\",,}",
     " {   \"\"  ,  \"\" ,  , }",
+    " {,''}",
+    " {'',}",
+    " {,'',}",
+    " {'',,}",
+    " {'',,,}",
+    " {,,'',,}",
+    " {'','',}",
+    " {'','',,}",
+    " {   ''  ,  '' ,  , }",
+    " {'',\"\",}",
+    " {\"\",'',,}",
+    " {   ''  ,  \"\" ,  , }",
+    " {   \"\"  ,  '' ,  , }",
+
     /*Ignore space's oddities */
     "\" {\"\"}",
     "{ {\"\"}",
@@ -332,7 +406,41 @@ static char *PFR[] = {
     "{a\"\"}b",
     "{\"\"a\"\"}",
     "{\"\",\"\"a\"\"}",
-    /*Incomplete */
+    "' {''}",
+    "{ {''}",
+    "{''}'",
+    "{''}\\",
+    "{''} } ",
+    "a{''}",
+    " a {''}",
+    "{a''}",
+    "{ a ''}",
+    "{''}a",
+    "{''}  a ",
+    "{''a}",
+    "{'' a }",
+    "a{''}b",
+    "{a''b}",
+    "a{''b}",
+    "{a''}b",
+    "{''a''}",
+    "{'',''a''}",
+    "{''a\"\"}",
+    "{\"\"a''}",
+    "{\"\",''a''}",
+    "{'',\"\"a''}",
+    "{'',''a\"\"}",
+    "{\"\",''a\"\"}",
+    /* Bad type of quotation inside an element */
+    "{'aa'aa'}",
+    "{\"aa\"aa\"}",
+    "{'aa\"''}",
+    "{'aa\"\"''}",
+    "{\"aa'\"\"}",
+    "{\"aa''\"\"}",
+    "{'aa\"'', 'aa\"\"'',\"aa'\"\"}",
+    "{\"aa\"aa\", 'aa\"'', 'aa\"\"''}",
+    "{ \"aa\"aa\"   ,'aa\"\"'',\"aa''\"\"   }",
     NULL
 };
 
@@ -343,7 +451,7 @@ static void test_new_parser_success()
     int i = 0;
     while (PR[i].nfields != -1)
     {
-        list = RlistParseString(PR[i].str, NULL);
+        list = RlistParseString(PR[i].str);
         assert_int_equal(PR[i].nfields, RlistLen(list));
         if (list != NULL)
         {
@@ -359,7 +467,7 @@ static void test_new_parser_failure()
     Rlist *list = NULL;
     while (PFR[i] != NULL)
     {
-        list = RlistParseString(PFR[i], NULL);
+        list = RlistParseString(PFR[i]);
         assert_true(RlistLast(list) == NULL);
         if(list) RlistDestroy(list);
         i++;
@@ -371,7 +479,6 @@ int main()
     PRINT_TEST_BANNER();
     const UnitTest tests[] =
     {
-        unit_test(test_prepend_scalar),
         unit_test(test_prepend_scalar_idempotent),
         unit_test(test_length),
         unit_test(test_copy),
@@ -394,7 +501,6 @@ int main()
 
 /* Stub out functionality we don't really use */
 
-int DEBUG;
 char CONTEXTID[32];
 
 void __ProgrammingError(const char *file, int lineno, const char *format, ...)
@@ -407,12 +513,7 @@ int FullTextMatch(const char *regptr, const char *cmpptr)
     fail();
 }
 
-bool EvalContextVariableGet(const EvalContext *ctx, VarRef lval, Rval *rval_out, DataType *type_out)
-{
-    fail();
-}
-
-Scope *ScopeGetCurrent(void)
+bool EvalContextVariableGet(const EvalContext *ctx, const VarRef *lval, Rval *rval_out, DataType *type_out)
 {
     fail();
 }

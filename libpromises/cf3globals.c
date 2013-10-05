@@ -22,7 +22,7 @@
   included file COSL.txt.
 */
 
-#include "cf3.defs.h"
+#include <cf3.defs.h>
 
 /*****************************************************************************/
 /* flags                                                                     */
@@ -35,7 +35,7 @@ int SHOWREPORTS = false;
 /*****************************************************************************/
 
 int LOOKUP = false;
-int FIPS_MODE = false;
+bool FIPS_MODE = false;
 
 struct utsname VSYSNAME;
 
@@ -43,7 +43,6 @@ int CFA_MAXTHREADS = 10;
 int CF_PERSISTENCE = 10;
 
 AgentType THIS_AGENT_TYPE;
-time_t PROMISETIME = 0;
 
 Item *PROCESSTABLE = NULL;
 Item *ROTATED = NULL;
@@ -51,10 +50,6 @@ Item *ROTATED = NULL;
 /*****************************************************************************/
 /* Internal data structures                                                  */
 /*****************************************************************************/
-
-Scope *VSCOPE = NULL;
-
-Rlist *CF_STCK = NULL; // TODO: consider renaming to something comprehesible
 
 int LASTSEENEXPIREAFTER = SECONDS_PER_WEEK;
 
@@ -65,7 +60,7 @@ char POLICY_SERVER[CF_MAX_IP_LEN] = { 0 };
 /*****************************************************************************/
 
 int IGNORELOCK = false;
-int DONTDO = false;
+bool DONTDO = false;
 
 char VFQNAME[CF_MAXVARSIZE] = { 0 };
 char VUQNAME[CF_MAXVARSIZE] = { 0 };

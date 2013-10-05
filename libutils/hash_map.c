@@ -22,9 +22,9 @@
   included file COSL.txt.
 */
 
-#include "platform.h"
-#include "hash_map_priv.h"
-#include "alloc.h"
+#include <platform.h>
+#include <hash_map_priv.h>
+#include <alloc.h>
 
 /* FIXME: make configurable and move to map.c */
 #define HASHMAP_BUCKETS 8192
@@ -42,9 +42,9 @@ HashMap *HashMapNew(MapHashFn hash_fn, MapKeyEqualFn equal_fn,
     return map;
 }
 
-static unsigned HashMapGetBucket(const HashMap *map, const void *key)
+static unsigned int HashMapGetBucket(const HashMap *map, const void *key)
 {
-    return map->hash_fn(key, HASHMAP_BUCKETS);
+    return map->hash_fn(key, 0, HASHMAP_BUCKETS);
 }
 
 bool HashMapInsert(HashMap *map, void *key, void *value)

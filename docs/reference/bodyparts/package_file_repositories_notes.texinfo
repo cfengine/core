@@ -1,4 +1,0 @@
-
-If specified, CFEngine will assume that the package installation occurs by filename and will
-search the named paths for a package matching the pattern @code{package_name_convention}.
-If found the name will be prefixed to the package name in the package commands.

@@ -7,20 +7,20 @@
 
 body common control
 {
-  inputs => { "../../default.cf.sub" };
-  bundlesequence  => { default("$(this.promise_filename)") };
-  version => "1.0";
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
 }
 
 #######################################################
 
 bundle agent init
 {
-vars:
-        "states" slist => { "actual", "expected" };
+  vars:
+      "states" slist => { "actual", "expected" };
 
-        "actual" string =>
-"header
+      "actual" string =>
+      "header
 BEGIN
 header
 BEGIN
@@ -33,8 +33,8 @@ trailer
 END
 trailer";
 
-        "expected" string =>
-"header
+      "expected" string =>
+      "header
 header
     One potato
     Two potato
@@ -43,48 +43,48 @@ trailer
 END
 trailer";
 
-files:
-        "$(G.testfile).$(states)"
-            create => "true",
-            edit_line => init_insert("$(init.$(states))"),
-            edit_defaults => init_empty;
+  files:
+      "$(G.testfile).$(states)"
+      create => "true",
+      edit_line => init_insert("$(init.$(states))"),
+      edit_defaults => init_empty;
 }
 
 bundle edit_line init_insert(str)
 {
-insert_lines:
-        "$(str)";
+  insert_lines:
+      "$(str)";
 }
 
 body edit_defaults init_empty
 {
-        empty_file_before_editing => "true";
+      empty_file_before_editing => "true";
 }
 
 #######################################################
 
 bundle agent test
 {
-files:
-        "$(G.testfile).actual"
-            edit_line => test_delete;
+  files:
+      "$(G.testfile).actual"
+      edit_line => test_delete;
 
 }
 
 bundle edit_line test_delete
 {
-vars:
+  vars:
       "str" slist => { ".*BEGIN.*", ".*Three.*", ".*END.*" };
 
-delete_lines:
-        "$(str)"
-            select_region => test_select;
+  delete_lines:
+      "$(str)"
+      select_region => test_select;
 }
 
 body select_region test_select
 {
-select_start => "header";
-select_end => "trailer";
+      select_start => "header";
+      select_end => "trailer";
 }
 
 
@@ -92,9 +92,9 @@ select_end => "trailer";
 
 bundle agent check
 {
-methods:
-        "any" usebundle => default_check_diff("$(G.testfile).actual",
-                                              "$(G.testfile).expected",
-                                              "$(this.promise_filename)");
+  methods:
+      "any" usebundle => default_check_diff("$(G.testfile).actual",
+                                            "$(G.testfile).expected",
+                                            "$(this.promise_filename)");
 }
 

@@ -1,7 +1,7 @@
-#include "test.h"
+#include <test.h>
 
-#include "cf3.defs.h"
-#include "dbm_api.h"
+#include <cf3.defs.h>
+#include <dbm_api.h>
 
 char CFWORKDIR[CF_BUFSIZE];
 
@@ -84,7 +84,7 @@ void test_iter_delete_entry(void)
 static void CreateGarbage(const char *filename)
 {
     FILE *fh = fopen(filename, "w");
-    for(int i = 0; i < 1000; ++i)
+    for(int i = 0; i < 2; ++i)
     {
         fwrite("some garbage!", 14, 1, fh);
     }
@@ -94,15 +94,16 @@ static void CreateGarbage(const char *filename)
 void test_recreate(void)
 {
     /* Test that recreating database works properly */
-
+#ifdef HAVE_LIBTOKYOCABINET
     char tcdb_db[CF_BUFSIZE];
     snprintf(tcdb_db, CF_BUFSIZE, "%s/cf_classes.tcdb", CFWORKDIR);
     CreateGarbage(tcdb_db);
-
+#endif
+#ifdef HAVE_LIBQDBM
     char qdbm_db[CF_BUFSIZE];
     snprintf(qdbm_db, CF_BUFSIZE, "%s/cf_classes.qdbm", CFWORKDIR);
     CreateGarbage(qdbm_db);
-
+#endif
     CF_DB *db;
     assert_int_equal(OpenDB(&db, dbid_classes), true);
     CloseDB(db);

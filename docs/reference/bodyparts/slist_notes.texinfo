@@ -1,4 +1,0 @@
-Some functions return @code{slist}s (@pxref{Introduction to functions}),
-and an @code{slist} may contain the values copied from another @code{slist},
-@code{rlist}, or @code{ilist} (@pxref{List variable substitution and expansion},
-@pxref{policy in vars}).

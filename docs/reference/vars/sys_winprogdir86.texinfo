@@ -1,9 +1,0 @@
-
-On 64 bit Windows versions of CFEngine Nova, this is the path to the
-32 bit (x86) program files directory of the system.
-
-@verbatim
-
-# winprogdir86 = C:\Program Files (x86)
-
-@end verbatim

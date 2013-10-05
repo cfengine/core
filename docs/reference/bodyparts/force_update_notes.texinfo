@@ -1,6 +1,0 @@
-
-Warning: this is a non-convergent operation. Although the end point
-might stabilize in content, the operation will never quiesce. Use of
-this feature is not recommended except in exceptional circumstances
-since it creates a busy-dependency. If the copy is a network copy,
-the system will be disturbed by network disruptions.

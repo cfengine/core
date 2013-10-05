@@ -1,0 +1,82 @@
+  #  Copyright (C) CFEngine AS
+
+  #  This file is part of CFEngine 3 - written and maintained by CFEngine AS.
+
+  #  This program is free software; you can redistribute it and/or modify it
+  #  under the terms of the GNU General Public License as published by the
+  #  Free Software Foundation; version 3.
+
+  #  This program is distributed in the hope that it will be useful,
+  #  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  #  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  #  GNU General Public License for more details.
+
+  # You should have received a copy of the GNU General Public License
+  # along with this program; if not, write to the Free Software
+  # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
+
+  # To the extent this program is licensed as part of the Enterprise
+  # versions of CFEngine, the applicable Commerical Open Source License
+  # (COSL) may apply to this file if you as a licensee so wish it. See
+  # included file COSL.txt.
+
+# Math Grammar
+
+Expr	<- SPACE Sum	        { yy->result = math_eval_pop(yy->stack, &(yy->stackp)); }
+	 / .		{ strcpy(yy->failure, "expression could not be parsed"); }
+
+Sum	<- Product ( PLUS  Product	{ double r= math_eval_pop(yy->stack, &(yy->stackp)), l= math_eval_pop(yy->stack, &(yy->stackp));  math_eval_push(l + r, yy->stack, &(yy->stackp)); }
+		   / MINUS Product	{ double r= math_eval_pop(yy->stack, &(yy->stackp)), l= math_eval_pop(yy->stack, &(yy->stackp));  math_eval_push(l - r, yy->stack, &(yy->stackp)); }
+		   / CLOSE_ENOUGH Product	{ double r= math_eval_pop(yy->stack, &(yy->stackp)), l= math_eval_pop(yy->stack, &(yy->stackp));  math_eval_push(fabs(l - r) < 0.00000000000000001, yy->stack, &(yy->stackp)); }
+		   )*
+
+Product	<- Value ( POW  Value		{ double r= math_eval_pop(yy->stack, &(yy->stackp)), l= math_eval_pop(yy->stack, &(yy->stackp));  math_eval_push(pow(l, r), yy->stack, &(yy->stackp)); }
+                 / TIMES  Value		{ double r= math_eval_pop(yy->stack, &(yy->stackp)), l= math_eval_pop(yy->stack, &(yy->stackp));  math_eval_push(l * r, yy->stack, &(yy->stackp)); }
+                 / DIVIDE Value		{ double r= math_eval_pop(yy->stack, &(yy->stackp)), l= math_eval_pop(yy->stack, &(yy->stackp));  math_eval_push(l / r, yy->stack, &(yy->stackp)); }
+                 / MOD Value		{ double r= math_eval_pop(yy->stack, &(yy->stackp)), l= math_eval_pop(yy->stack, &(yy->stackp));  math_eval_push((long)l % (long)r, yy->stack, &(yy->stackp)); }
+		 )*
+
+Value	<- F_NUMBER SI_Unit		{ double scanned = 0; sscanf(yytext, "%lf", &scanned); math_eval_push(math_eval_pop(yy->stack, &(yy->stackp)) * scanned, yy->stack, &(yy->stackp)); /* Log(LOG_LEVEL_ERR, "YY: read FP %lf", scanned); */ }
+         / F_NUMBER			{ double scanned = 0; sscanf(yytext, "%lf", &scanned); math_eval_push(scanned, yy->stack, &(yy->stackp)); /*Log(LOG_LEVEL_ERR, "YY: read FP %lf", scanned);*/ }
+         / Constant
+         / Funcall
+	 / OPEN Sum CLOSE
+
+Funcall <- Fname OPEN Value CLOSE { math_eval_push(EvaluateMathFunction(yy->fname, math_eval_pop(yy->stack, &(yy->stackp))), yy->stack, &(yy->stackp)); }
+
+Fname <- < ( "ceil" / "floor" / "log10" / "log2" / "log" / "sqrt" / "sin" / "cos" / "tan" / "asin" / "acos" / "atan" / "abs" / "step" ) > { strcpy(yy->fname, yytext); }
+
+Constant <- "e" { math_eval_push(2.7182818284590452354, yy->stack, &(yy->stackp)); }
+         / "log2e" { math_eval_push(1.4426950408889634074, yy->stack, &(yy->stackp)); }
+         / "log10e" { math_eval_push(0.43429448190325182765, yy->stack, &(yy->stackp)); }
+         / "ln2" { math_eval_push(0.69314718055994530942, yy->stack, &(yy->stackp)); }
+         / "ln10" { math_eval_push(2.30258509299404568402, yy->stack, &(yy->stackp)); }
+         / "pi" { math_eval_push(3.14159265358979323846, yy->stack, &(yy->stackp)); }
+         / "pi_2" { math_eval_push(1.57079632679489661923, yy->stack, &(yy->stackp)); }
+         / "pi_4" { math_eval_push(0.78539816339744830962, yy->stack, &(yy->stackp)); }
+         / "1_pi" { math_eval_push(0.31830988618379067154, yy->stack, &(yy->stackp)); }
+         / "2_pi" { math_eval_push(0.63661977236758134308, yy->stack, &(yy->stackp)); }
+         / "2_sqrtpi" { math_eval_push(1.12837916709551257390, yy->stack, &(yy->stackp)); }
+         / "sqrt2" { math_eval_push(1.41421356237309504880, yy->stack, &(yy->stackp)); }
+         / "sqrt1_2" { math_eval_push(0.70710678118654752440, yy->stack, &(yy->stackp)); }
+
+SI_Unit  <- [kK] SPACE { math_eval_push(1000, yy->stack, &(yy->stackp)); }
+         /  [mM] SPACE { math_eval_push(1000000, yy->stack, &(yy->stackp)); }
+         /  [gG] SPACE { math_eval_push(1000000000, yy->stack, &(yy->stackp)); }
+         /  [tT] SPACE { math_eval_push(1000000000000, yy->stack, &(yy->stackp)); }
+         /  [pP] SPACE { math_eval_push(1000000000000000, yy->stack, &(yy->stackp)); }
+
+# Lexemes
+
+F_NUMBER <- < '-'? [0-9]+ '.'? [0-9]* > SPACE
+CLOSE_ENOUGH	<- '==' SPACE
+
+PLUS	<- '+' SPACE
+MINUS	<- '-' SPACE
+TIMES	<- '*' SPACE
+DIVIDE	<- '/' SPACE
+MOD	<- '%' SPACE
+POW	<- '^' SPACE / '**' SPACE
+OPEN	<- '(' SPACE
+CLOSE	<- ')' SPACE
+SPACE	<- [ \t]*

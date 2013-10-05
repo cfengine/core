@@ -22,22 +22,27 @@
   included file COSL.txt.
 */
 
-#include "sysinfo.h"
+#include <sysinfo.h>
 
-#include "cf3.extern.h"
+#include <cf3.extern.h>
 
-#include "env_context.h"
-#include "files_names.h"
-#include "files_interfaces.h"
-#include "files_hashes.h"
-#include "scope.h"
-#include "item_lib.h"
-#include "matching.h"
-#include "unix.h"
-#include "string_lib.h"
-#include "misc_lib.h"
-#include "rlist.h"
-#include "audit.h"
+#include <env_context.h>
+#include <files_names.h>
+#include <files_interfaces.h>
+#include <files_hashes.h>
+#include <scope.h>
+#include <item_lib.h>
+#include <matching.h>
+#include <unix.h>
+#include <string_lib.h>
+#include <misc_lib.h>
+#include <rlist.h>
+#include <audit.h>
+#include <pipes.h>
+
+#include <cf-windows-functions.h>
+
+#include <inttypes.h>
 
 #ifdef HAVE_ZONE_H
 # include <zone.h>
@@ -48,16 +53,57 @@
 # include <sys/mpctl.h>
 #endif
 
+/*****************************************************/
+// Uptime calculation settings for GetUptimeMinutes() - Mantis #1134
+// HP-UX: pstat_getproc(2) on init (pid 1)
+#ifdef HPuUX
+#define _PSTAT64
+#include <sys/param.h>
+#include <sys/pstat.h>
+#define BOOT_TIME_WITH_PSTAT_GETPROC
+#endif
+
+// Solaris: kstat() for kernel statistics
+// See http://dsc.sun.com/solaris/articles/kstatc.html
+// BSD also has a kstat.h (albeit in sys), so check SOLARIS just to be paranoid
+#if defined(SOLARIS) && defined(HAVE_KSTAT_H)
+#include <kstat.h>
+#define BOOT_TIME_WITH_KSTAT
+#endif
+
 // BSD: sysctl(3) to get kern.boottime, CPU count, etc.
 // See http://www.unix.com/man-page/FreeBSD/3/sysctl/
+// Linux also has sys/sysctl.h, so we check KERN_BOOTTIME to make sure it's BSD
 #ifdef HAVE_SYS_SYSCTL_H
 #include <sys/param.h>
 #include <sys/sysctl.h>
+#ifdef KERN_BOOTTIME 
+#define BOOT_TIME_WITH_SYSCTL
+#endif
 #endif
 
-#ifdef HAVE_NOVA
-# include "cf.nova.h"
+// GNU/Linux: struct sysinfo.uptime
+#ifdef HAVE_STRUCT_SYSINFO_UPTIME
+#include <sys/sysinfo.h>
+#define BOOT_TIME_WITH_SYSINFO
 #endif
+
+// For anything else except Windows, try {stat("/proc/1")}.st_ctime
+#if !defined(__MINGW32__) && !defined(NT)
+#define BOOT_TIME_WITH_PROCFS
+#endif
+
+#if defined(BOOT_TIME_WITH_SYSINFO) || defined(BOOT_TIME_WITH_SYSCTL) || \
+    defined(BOOT_TIME_WITH_KSTAT) || defined(BOOT_TIME_WITH_PSTAT_GETPROC) || \
+    defined(BOOT_TIME_WITH_PROCFS)
+#define CF_SYS_UPTIME_IMPLEMENTED
+static time_t GetBootTimeFromUptimeCommand(time_t); // Last resort
+#ifdef HAVE_PCRE_H
+# include <pcre.h>
+#endif
+#endif
+
+/*****************************************************/
 
 void CalculateDomainName(const char *nodename, const char *dnsname, char *fqname, char *uqname, char *domain);
 
@@ -76,6 +122,7 @@ static int VM_Version(EvalContext *ctx);
 static int Xen_Domain(EvalContext *ctx);
 static int EOS_Version(EvalContext *ctx);
 static int MiscOS(EvalContext *ctx);
+static void OpenVZ_Detect(EvalContext *ctx);
 
 #ifdef XEN_CPUID_SUPPORT
 static void Xen_Cpuid(uint32_t idx, uint32_t *eax, uint32_t *ebx, uint32_t *ecx, uint32_t *edx);
@@ -88,88 +135,92 @@ static FILE *ReadFirstLine(const char *filename, char *buf, int bufsize);
 
 static void GetCPUInfo(EvalContext *ctx);
 
-static const char *CLASSATTRIBUTES[PLATFORM_CONTEXT_MAX][3] =
+static const char *CLASSATTRIBUTES[][3] =
 {
-    {"-", "-", "-"},            /* as appear here are matched. The fields are sysname and machine */
-    {"hp-ux", ".*", ".*"},      /* hpux */
-    {"aix", ".*", ".*"},        /* aix */
-    {"linux", ".*", ".*"},      /* linux */
-    {"sunos", ".*", "5.*"},     /* solaris */
-    {"freebsd", ".*", ".*"},    /* freebsd */
-    {"netbsd", ".*", ".*"},     /* NetBSD */
-    {"sn.*", "cray*", ".*"},    /* cray */
-    {"cygwin_nt.*", ".*", ".*"},        /* NT (cygwin) */
-    {"unix_sv", ".*", ".*"},    /* Unixware */
-    {"openbsd", ".*", ".*"},    /* OpenBSD */
-    {"sco_sv", ".*", ".*"},     /* SCO */
-    {"darwin", ".*", ".*"},     /* Darwin, aka MacOS X */
-    {"qnx", ".*", ".*"},        /* qnx  */
-    {"dragonfly", ".*", ".*"},  /* dragonfly */
-    {"windows_nt.*", ".*", ".*"},       /* NT (native) */
-    {"vmkernel", ".*", ".*"},   /* VMWARE / ESX */
+    [PLATFORM_CONTEXT_UNKNOWN] = {"-", "-", "-"},            /* as appear here are matched. The fields are sysname and machine */
+    [PLATFORM_CONTEXT_OPENVZ] = {"virt_host_vz_vzps", ".*", ".*"},      /* VZ Host with vzps installed (virt_host_vz_vzps) */
+    [PLATFORM_CONTEXT_HP] = {"hp-ux", ".*", ".*"},      /* hpux */
+    [PLATFORM_CONTEXT_AIX] = {"aix", ".*", ".*"},        /* aix */
+    [PLATFORM_CONTEXT_LINUX] = {"linux", ".*", ".*"},      /* linux */
+    [PLATFORM_CONTEXT_SOLARIS] = {"sunos", ".*", "5.*"},     /* solaris */
+    [PLATFORM_CONTEXT_FREEBSD] = {"freebsd", ".*", ".*"},    /* freebsd */
+    [PLATFORM_CONTEXT_NETBSD] = {"netbsd", ".*", ".*"},     /* NetBSD */
+    [PLATFORM_CONTEXT_CRAYOS] = {"sn.*", "cray*", ".*"},    /* cray */
+    [PLATFORM_CONTEXT_WINDOWS_NT] = {"cygwin_nt.*", ".*", ".*"},        /* NT (cygwin) */
+    [PLATFORM_CONTEXT_SYSTEMV] = {"unix_sv", ".*", ".*"},    /* Unixware */
+    [PLATFORM_CONTEXT_OPENBSD] = {"openbsd", ".*", ".*"},    /* OpenBSD */
+    [PLATFORM_CONTEXT_CFSCO] = {"sco_sv", ".*", ".*"},     /* SCO */
+    [PLATFORM_CONTEXT_DARWIN] = {"darwin", ".*", ".*"},     /* Darwin, aka MacOS X */
+    [PLATFORM_CONTEXT_QNX] = {"qnx", ".*", ".*"},        /* qnx  */
+    [PLATFORM_CONTEXT_DRAGONFLY] = {"dragonfly", ".*", ".*"},  /* dragonfly */
+    [PLATFORM_CONTEXT_MINGW] = {"windows_nt.*", ".*", ".*"},       /* NT (native) */
+    [PLATFORM_CONTEXT_VMWARE] = {"vmkernel", ".*", ".*"},   /* VMWARE / ESX */
 };
 
-static const char *VRESOLVCONF[PLATFORM_CONTEXT_MAX] =
+static const char *VRESOLVCONF[] =
 {
-    "-",
-    "/etc/resolv.conf",         /* hpux */
-    "/etc/resolv.conf",         /* aix */
-    "/etc/resolv.conf",         /* linux */
-    "/etc/resolv.conf",         /* solaris */
-    "/etc/resolv.conf",         /* freebsd */
-    "/etc/resolv.conf",         /* netbsd */
-    "/etc/resolv.conf",         /* cray */
-    "/etc/resolv.conf",         /* NT */
-    "/etc/resolv.conf",         /* Unixware */
-    "/etc/resolv.conf",         /* openbsd */
-    "/etc/resolv.conf",         /* sco */
-    "/etc/resolv.conf",         /* darwin */
-    "/etc/resolv.conf",         /* qnx */
-    "/etc/resolv.conf",         /* dragonfly */
-    "",                         /* mingw */
-    "/etc/resolv.conf",         /* vmware */
+    [PLATFORM_CONTEXT_UNKNOWN] = "-",
+    [PLATFORM_CONTEXT_OPENVZ] = "/etc/resolv.conf",         /* virt_host_vz_vzps */
+    [PLATFORM_CONTEXT_HP] = "/etc/resolv.conf",         /* hpux */
+    [PLATFORM_CONTEXT_AIX] = "/etc/resolv.conf",         /* aix */
+    [PLATFORM_CONTEXT_LINUX] = "/etc/resolv.conf",         /* linux */
+    [PLATFORM_CONTEXT_SOLARIS] = "/etc/resolv.conf",         /* solaris */
+    [PLATFORM_CONTEXT_FREEBSD] = "/etc/resolv.conf",         /* freebsd */
+    [PLATFORM_CONTEXT_NETBSD] = "/etc/resolv.conf",         /* netbsd */
+    [PLATFORM_CONTEXT_CRAYOS] = "/etc/resolv.conf",         /* cray */
+    [PLATFORM_CONTEXT_WINDOWS_NT] = "/etc/resolv.conf",         /* NT */
+    [PLATFORM_CONTEXT_SYSTEMV] = "/etc/resolv.conf",         /* Unixware */
+    [PLATFORM_CONTEXT_OPENBSD] = "/etc/resolv.conf",         /* openbsd */
+    [PLATFORM_CONTEXT_CFSCO] = "/etc/resolv.conf",         /* sco */
+    [PLATFORM_CONTEXT_DARWIN] = "/etc/resolv.conf",         /* darwin */
+    [PLATFORM_CONTEXT_QNX] = "/etc/resolv.conf",         /* qnx */
+    [PLATFORM_CONTEXT_DRAGONFLY] = "/etc/resolv.conf",         /* dragonfly */
+    [PLATFORM_CONTEXT_MINGW] = "",                         /* mingw */
+    [PLATFORM_CONTEXT_VMWARE] = "/etc/resolv.conf",         /* vmware */
 };
 
-static const char *VMAILDIR[PLATFORM_CONTEXT_MAX] =
+static const char *VMAILDIR[] =
 {
-    "-",
-    "/var/mail",                /* hpux */
-    "/var/spool/mail",          /* aix */
-    "/var/spool/mail",          /* linux */
-    "/var/mail",                /* solaris */
-    "/var/mail",                /* freebsd */
-    "/var/mail",                /* netbsd */
-    "/usr/mail",                /* cray */
-    "N/A",                      /* NT */
-    "/var/mail",                /* Unixware */
-    "/var/mail",                /* openbsd */
-    "/var/spool/mail",          /* sco */
-    "/var/mail",                /* darwin */
-    "/var/spool/mail",          /* qnx */
-    "/var/mail",                /* dragonfly */
-    "",                         /* mingw */
-    "/var/spool/mail",          /* vmware */
+    [PLATFORM_CONTEXT_UNKNOWN] = "-",
+    [PLATFORM_CONTEXT_OPENVZ] = "/var/spool/mail",          /* virt_host_vz_vzps */
+    [PLATFORM_CONTEXT_HP] = "/var/mail",                /* hpux */
+    [PLATFORM_CONTEXT_AIX] = "/var/spool/mail",          /* aix */
+    [PLATFORM_CONTEXT_LINUX] = "/var/spool/mail",          /* linux */
+    [PLATFORM_CONTEXT_SOLARIS] = "/var/mail",                /* solaris */
+    [PLATFORM_CONTEXT_FREEBSD] = "/var/mail",                /* freebsd */
+    [PLATFORM_CONTEXT_NETBSD] = "/var/mail",                /* netbsd */
+    [PLATFORM_CONTEXT_CRAYOS] = "/usr/mail",                /* cray */
+    [PLATFORM_CONTEXT_WINDOWS_NT] = "N/A",                      /* NT */
+    [PLATFORM_CONTEXT_SYSTEMV] = "/var/mail",                /* Unixware */
+    [PLATFORM_CONTEXT_OPENBSD] = "/var/mail",                /* openbsd */
+    [PLATFORM_CONTEXT_CFSCO] = "/var/spool/mail",          /* sco */
+    [PLATFORM_CONTEXT_DARWIN] = "/var/mail",                /* darwin */
+    [PLATFORM_CONTEXT_QNX] = "/var/spool/mail",          /* qnx */
+    [PLATFORM_CONTEXT_DRAGONFLY] = "/var/mail",                /* dragonfly */
+    [PLATFORM_CONTEXT_MINGW] = "",                         /* mingw */
+    [PLATFORM_CONTEXT_VMWARE] = "/var/spool/mail",          /* vmware */
 };
 
-static const char *VEXPORTS[PLATFORM_CONTEXT_MAX] =
+static const char *VEXPORTS[] =
 {
-    "-",
-    "/etc/exports",             /* hpux */
-    "/etc/exports",             /* aix */
-    "/etc/exports",             /* linux */
-    "/etc/dfs/dfstab",          /* solaris */
-    "/etc/exports",             /* freebsd */
-    "/etc/exports",             /* netbsd */
-    "/etc/exports",             /* cray */
-    "/etc/exports",             /* NT */
-    "/etc/dfs/dfstab",          /* Unixware */
-    "/etc/exports",             /* openbsd */
-    "/etc/dfs/dfstab",          /* sco */
-    "/etc/exports",             /* darwin */
-    "/etc/exports",             /* qnx */
-    "/etc/exports",             /* dragonfly */
-    "",                         /* mingw */
-    "none",                     /* vmware */
+    [PLATFORM_CONTEXT_UNKNOWN] = "-",
+    [PLATFORM_CONTEXT_OPENVZ] = "/etc/exports",             /* virt_host_vz_vzps */
+    [PLATFORM_CONTEXT_HP] = "/etc/exports",             /* hpux */
+    [PLATFORM_CONTEXT_AIX] = "/etc/exports",             /* aix */
+    [PLATFORM_CONTEXT_LINUX] = "/etc/exports",             /* linux */
+    [PLATFORM_CONTEXT_SOLARIS] = "/etc/dfs/dfstab",          /* solaris */
+    [PLATFORM_CONTEXT_FREEBSD] = "/etc/exports",             /* freebsd */
+    [PLATFORM_CONTEXT_NETBSD] = "/etc/exports",             /* netbsd */
+    [PLATFORM_CONTEXT_CRAYOS] = "/etc/exports",             /* cray */
+    [PLATFORM_CONTEXT_WINDOWS_NT] = "/etc/exports",             /* NT */
+    [PLATFORM_CONTEXT_SYSTEMV] = "/etc/dfs/dfstab",          /* Unixware */
+    [PLATFORM_CONTEXT_OPENBSD] = "/etc/exports",             /* openbsd */
+    [PLATFORM_CONTEXT_CFSCO] = "/etc/dfs/dfstab",          /* sco */
+    [PLATFORM_CONTEXT_DARWIN] = "/etc/exports",             /* darwin */
+    [PLATFORM_CONTEXT_QNX] = "/etc/exports",             /* qnx */
+    [PLATFORM_CONTEXT_DRAGONFLY] = "/etc/exports",             /* dragonfly */
+    [PLATFORM_CONTEXT_MINGW] = "",                         /* mingw */
+    [PLATFORM_CONTEXT_VMWARE] = "none",                     /* vmware */
 };
 
 
@@ -247,7 +298,7 @@ void DetectDomainName(EvalContext *ctx, const char *orig_nodename)
 
     do
     {
-        EvalContextHeapAddHard(ctx, ptr);
+        EvalContextClassPutHard(ctx, ptr);
 
         ptr = strchr(ptr, '.');
         if (ptr != NULL)
@@ -255,16 +306,47 @@ void DetectDomainName(EvalContext *ctx, const char *orig_nodename)
     }
     while (ptr != NULL);
 
-    EvalContextHeapAddHard(ctx, VUQNAME);
-    EvalContextHeapAddHard(ctx, VDOMAIN);
+    EvalContextClassPutHard(ctx, VUQNAME);
+    EvalContextClassPutHard(ctx, VDOMAIN);
 
-    ScopeNewSpecialScalar(ctx, "sys", "host", nodename, DATA_TYPE_STRING);
-    ScopeNewSpecialScalar(ctx, "sys", "uqhost", VUQNAME, DATA_TYPE_STRING);
-    ScopeNewSpecialScalar(ctx, "sys", "fqhost", VFQNAME, DATA_TYPE_STRING);
-    ScopeNewSpecialScalar(ctx, "sys", "domain", VDOMAIN, DATA_TYPE_STRING);
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "host", nodename, DATA_TYPE_STRING);
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "uqhost", VUQNAME, DATA_TYPE_STRING);
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "fqhost", VFQNAME, DATA_TYPE_STRING);
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "domain", VDOMAIN, DATA_TYPE_STRING);
 }
 
 /*******************************************************************/
+
+void DiscoverVersion(EvalContext *ctx)
+{
+    int major = 0;
+    int minor = 0;
+    int patch = 0;
+    if (3 == sscanf(Version(), "%d.%d.%d", &major, &minor, &patch))
+    {
+        char workbuf[CF_BUFSIZE];
+
+        snprintf(workbuf, CF_MAXVARSIZE, "%d", major);
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "cf_version_major", workbuf, DATA_TYPE_STRING);
+        snprintf(workbuf, CF_MAXVARSIZE, "%d", minor);
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "cf_version_minor", workbuf, DATA_TYPE_STRING);
+        snprintf(workbuf, CF_MAXVARSIZE, "%d", patch);
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "cf_version_patch", workbuf, DATA_TYPE_STRING);
+
+        snprintf(workbuf, CF_BUFSIZE, "%s%cinputs%clib%c%d.%d", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR, FILE_SEPARATOR, major, minor);
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "libdir", workbuf, DATA_TYPE_STRING);
+
+        snprintf(workbuf, CF_BUFSIZE, "lib%c%d.%d", FILE_SEPARATOR, major, minor);
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "local_libdir", workbuf, DATA_TYPE_STRING);
+    }
+    else
+    {
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "cf_version_major", "BAD VERSION " VERSION, DATA_TYPE_STRING);
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "cf_version_minor", "BAD VERSION " VERSION, DATA_TYPE_STRING);
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "cf_version_patch", "BAD VERSION " VERSION, DATA_TYPE_STRING);
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "libdir", CFWORKDIR, DATA_TYPE_STRING);
+    }
+}
 
 void GetNameInfo3(EvalContext *ctx, AgentType agent_type)
 {
@@ -288,8 +370,6 @@ void GetNameInfo3(EvalContext *ctx, AgentType agent_type)
     int have_component[11];
     struct stat sb;
     char name[CF_MAXVARSIZE], quoteName[CF_MAXVARSIZE], shortname[CF_MAXVARSIZE];
-
-    Log(LOG_LEVEL_DEBUG, "GetNameInfo()\n");
 
     if (uname(&VSYSNAME) == -1)
     {
@@ -320,30 +400,61 @@ void GetNameInfo3(EvalContext *ctx, AgentType agent_type)
     }
 #endif
 
+/*
+ * solarisx86 is a historically defined class for Solaris on x86. We have to
+ * define it manually now.
+ */
+#ifdef __sun
+    if (strcmp(VSYSNAME.machine, "i86pc") == 0)
+    {
+        EvalContextClassPutHard(ctx, "solarisx86");
+    }
+#endif
+
+    DetectDomainName(ctx, VSYSNAME.nodename);
+
+    if ((tloc = time((time_t *) NULL)) == -1)
+    {
+        Log(LOG_LEVEL_ERR, "Couldn't read system clock");
+    }
+    else
+    {
+        snprintf(workbuf, CF_BUFSIZE, "%jd", (intmax_t) tloc);
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "systime", workbuf, DATA_TYPE_INT);
+        snprintf(workbuf, CF_BUFSIZE, "%jd", (intmax_t) tloc / SECONDS_PER_DAY);
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "sysday", workbuf, DATA_TYPE_INT);
+        i = GetUptimeMinutes(tloc);
+        if (i != -1)
+        {
+            snprintf(workbuf, CF_BUFSIZE, "%d", i);
+            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "uptime", workbuf, DATA_TYPE_INT);
+        }
+    }
+
     for (i = 0; i < PLATFORM_CONTEXT_MAX; i++)
     {
         char sysname[CF_BUFSIZE];
         strlcpy(sysname, VSYSNAME.sysname, CF_BUFSIZE);
         ToLowerStrInplace(sysname);
 
-        if (FullTextMatch(CLASSATTRIBUTES[i][0], sysname))
+        if (StringMatchFull(CLASSATTRIBUTES[i][0], sysname))
         {
-            if (FullTextMatch(CLASSATTRIBUTES[i][1], VSYSNAME.machine))
+            if (StringMatchFull(CLASSATTRIBUTES[i][1], VSYSNAME.machine))
             {
-                if (FullTextMatch(CLASSATTRIBUTES[i][2], VSYSNAME.release))
+                if (StringMatchFull(CLASSATTRIBUTES[i][2], VSYSNAME.release))
                 {
-                    EvalContextHeapAddHard(ctx, CLASSTEXT[i]);
+                    EvalContextClassPutHard(ctx, CLASSTEXT[i]);
 
                     found = true;
 
                     VSYSTEMHARDCLASS = (PlatformContext) i;
-                    ScopeNewSpecialScalar(ctx, "sys", "class", CLASSTEXT[i], DATA_TYPE_STRING);
+                    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "class", CLASSTEXT[i], DATA_TYPE_STRING);
                     break;
                 }
             }
             else
             {
-                Log(LOG_LEVEL_DEBUG, "CFEngine: I recognize %s but not %s\n", VSYSNAME.sysname, VSYSNAME.machine);
+                Log(LOG_LEVEL_DEBUG, "I recognize '%s' but not '%s'", VSYSNAME.sysname, VSYSNAME.machine);
                 continue;
             }
         }
@@ -352,24 +463,6 @@ void GetNameInfo3(EvalContext *ctx, AgentType agent_type)
     if (!found)
     {
         i = 0;
-    }
-
-/*
- * solarisx86 is a historically defined class for Solaris on x86. We have to
- * define it manually now.
- */
-#ifdef __sun
-    if (strcmp(VSYSNAME.machine, "i86pc") == 0)
-    {
-        EvalContextHeapAddHard(ctx, "solarisx86");
-    }
-#endif
-
-    DetectDomainName(ctx, VSYSNAME.nodename);
-
-    if ((tloc = time((time_t *) NULL)) == -1)
-    {
-        printf("Couldn't read system clock\n");
     }
 
     snprintf(workbuf, CF_BUFSIZE, "%s", CLASSTEXT[i]);
@@ -397,19 +490,37 @@ void GetNameInfo3(EvalContext *ctx, AgentType agent_type)
         Log(LOG_LEVEL_ERR, "Chop was called on a string that seemed to have no terminator");
     }
 
-    ScopeNewSpecialScalar(ctx, "sys", "date", workbuf, DATA_TYPE_STRING);
-    ScopeNewSpecialScalar(ctx, "sys", "cdate", CanonifyName(workbuf), DATA_TYPE_STRING);
-    ScopeNewSpecialScalar(ctx, "sys", "os", VSYSNAME.sysname, DATA_TYPE_STRING);
-    ScopeNewSpecialScalar(ctx, "sys", "release", VSYSNAME.release, DATA_TYPE_STRING);
-    ScopeNewSpecialScalar(ctx, "sys", "version", VSYSNAME.version, DATA_TYPE_STRING);
-    ScopeNewSpecialScalar(ctx, "sys", "arch", VSYSNAME.machine, DATA_TYPE_STRING);
-    ScopeNewSpecialScalar(ctx, "sys", "workdir", CFWORKDIR, DATA_TYPE_STRING);
-    ScopeNewSpecialScalar(ctx, "sys", "fstab", VFSTAB[VSYSTEMHARDCLASS], DATA_TYPE_STRING);
-    ScopeNewSpecialScalar(ctx, "sys", "resolv", VRESOLVCONF[VSYSTEMHARDCLASS], DATA_TYPE_STRING);
-    ScopeNewSpecialScalar(ctx, "sys", "maildir", VMAILDIR[VSYSTEMHARDCLASS], DATA_TYPE_STRING);
-    ScopeNewSpecialScalar(ctx, "sys", "exports", VEXPORTS[VSYSTEMHARDCLASS], DATA_TYPE_STRING);
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "date", workbuf, DATA_TYPE_STRING);
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "cdate", CanonifyName(workbuf), DATA_TYPE_STRING);
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "os", VSYSNAME.sysname, DATA_TYPE_STRING);
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "release", VSYSNAME.release, DATA_TYPE_STRING);
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "version", VSYSNAME.version, DATA_TYPE_STRING);
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "arch", VSYSNAME.machine, DATA_TYPE_STRING);
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "workdir", CFWORKDIR, DATA_TYPE_STRING);
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "fstab", VFSTAB[VSYSTEMHARDCLASS], DATA_TYPE_STRING);
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "resolv", VRESOLVCONF[VSYSTEMHARDCLASS], DATA_TYPE_STRING);
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "maildir", VMAILDIR[VSYSTEMHARDCLASS], DATA_TYPE_STRING);
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "exports", VEXPORTS[VSYSTEMHARDCLASS], DATA_TYPE_STRING);
+
+    snprintf(workbuf, CF_BUFSIZE, "%s%cbin", CFWORKDIR, FILE_SEPARATOR);
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "bindir", workbuf, DATA_TYPE_STRING);
+
+    snprintf(workbuf, CF_BUFSIZE, "%s%cinputs", CFWORKDIR, FILE_SEPARATOR);
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "inputdir", workbuf, DATA_TYPE_STRING);
+
+    snprintf(workbuf, CF_BUFSIZE, "%s%cmasterfiles", CFWORKDIR, FILE_SEPARATOR);
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "masterdir", workbuf, DATA_TYPE_STRING);
+
+    snprintf(workbuf, CF_BUFSIZE, "%s%cinputs%cfailsafe.cf", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "failsafe_policy_path", workbuf, DATA_TYPE_STRING);
+
+    snprintf(workbuf, CF_BUFSIZE, "%s%cinputs%cupdate.cf", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "update_policy_path", workbuf, DATA_TYPE_STRING);
+
 /* FIXME: type conversion */
-    ScopeNewSpecialScalar(ctx, "sys", "cf_version", (char *) Version(), DATA_TYPE_STRING);
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "cf_version", (char *) Version(), DATA_TYPE_STRING);
+
+    DiscoverVersion(ctx);
 
     if (PUBKEY)
     {
@@ -418,11 +529,11 @@ void GetNameInfo3(EvalContext *ctx, AgentType agent_type)
         HashPubKey(PUBKEY, digest, CF_DEFAULT_DIGEST);
         HashPrintSafe(CF_DEFAULT_DIGEST, digest, pubkey_digest);
 
-        ScopeNewSpecialScalar(ctx, "sys", "key_digest", pubkey_digest, DATA_TYPE_STRING);
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "key_digest", pubkey_digest, DATA_TYPE_STRING);
 
         snprintf(workbuf, CF_MAXVARSIZE - 1, "PK_%s", pubkey_digest);
         CanonifyNameInPlace(workbuf);
-        EvalContextHeapAddHard(ctx, workbuf);
+        EvalContextClassPutHard(ctx, workbuf);
     }
 
     for (i = 0; components[i] != NULL; i++)
@@ -450,7 +561,7 @@ void GetNameInfo3(EvalContext *ctx, AgentType agent_type)
         if (stat(name, &sb) != -1)
         {
             snprintf(quoteName, sizeof(quoteName), "\"%s\"", name);
-            ScopeNewSpecialScalar(ctx, "sys", shortname, quoteName, DATA_TYPE_STRING);
+            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, shortname, quoteName, DATA_TYPE_STRING);
             have_component[i] = true;
         }
     }
@@ -471,38 +582,48 @@ void GetNameInfo3(EvalContext *ctx, AgentType agent_type)
         if (stat(name, &sb) != -1)
         {
             snprintf(quoteName, sizeof(quoteName), "\"%s\"", name);
-            ScopeNewSpecialScalar(ctx, "sys", shortname, quoteName, DATA_TYPE_STRING);
+            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, shortname, quoteName, DATA_TYPE_STRING);
         }
     }
 
-/* Windows special directories */
+/* Windows special directories and tools */
 
 #ifdef __MINGW32__
     if (NovaWin_GetWinDir(workbuf, sizeof(workbuf)))
     {
-        ScopeNewSpecialScalar(ctx, "sys", "windir", workbuf, DATA_TYPE_STRING);
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "windir", workbuf, DATA_TYPE_STRING);
     }
 
     if (NovaWin_GetSysDir(workbuf, sizeof(workbuf)))
     {
-        ScopeNewSpecialScalar(ctx, "sys", "winsysdir", workbuf, DATA_TYPE_STRING);
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "winsysdir", workbuf, DATA_TYPE_STRING);
+
+        char filename[CF_BUFSIZE];
+        if (snprintf(filename, sizeof(filename), "%s%s", workbuf, "\\WindowsPowerShell\\v1.0\\powershell.exe") < sizeof(filename))
+        {
+            if (NovaWin_FileExists(filename))
+            {
+                EvalContextClassPutHard(ctx, "powershell");
+                Log(LOG_LEVEL_VERBOSE, "Additional hard class defined as: %s", "powershell");
+            }
+        }
     }
 
     if (NovaWin_GetProgDir(workbuf, sizeof(workbuf)))
     {
-        ScopeNewSpecialScalar(ctx, "sys", "winprogdir", workbuf, DATA_TYPE_STRING);
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "winprogdir", workbuf, DATA_TYPE_STRING);
     }
 
 # ifdef _WIN64
 // only available on 64 bit windows systems
     if (NovaWin_GetEnv("PROGRAMFILES(x86)", workbuf, sizeof(workbuf)))
     {
-        ScopeNewSpecialScalar(ctx, "sys", "winprogdir86", workbuf, DATA_TYPE_STRING);
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "winprogdir86", workbuf, DATA_TYPE_STRING);
     }
 
 # else/* NOT _WIN64 */
 
-    ScopeNewSpecialScalar(ctx, "sys", "winprogdir86", "", DATA_TYPE_STRING);
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "winprogdir86", "", DATA_TYPE_STRING);
 
 # endif
 
@@ -510,10 +631,10 @@ void GetNameInfo3(EvalContext *ctx, AgentType agent_type)
 
 // defs on Unix for manual-building purposes
 
-    ScopeNewSpecialScalar(ctx, "sys", "windir", "/dev/null", DATA_TYPE_STRING);
-    ScopeNewSpecialScalar(ctx, "sys", "winsysdir", "/dev/null", DATA_TYPE_STRING);
-    ScopeNewSpecialScalar(ctx, "sys", "winprogdir", "/dev/null", DATA_TYPE_STRING);
-    ScopeNewSpecialScalar(ctx, "sys", "winprogdir86", "/dev/null", DATA_TYPE_STRING);
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "windir", "/dev/null", DATA_TYPE_STRING);
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "winsysdir", "/dev/null", DATA_TYPE_STRING);
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "winprogdir", "/dev/null", DATA_TYPE_STRING);
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "winprogdir86", "/dev/null", DATA_TYPE_STRING);
 
 #endif /* !__MINGW32__ */
 
@@ -525,21 +646,21 @@ void GetNameInfo3(EvalContext *ctx, AgentType agent_type)
     EnterpriseContext(ctx);
 
     sprintf(workbuf, "%u_bit", (unsigned) sizeof(void*) * 8);
-    EvalContextHeapAddHard(ctx, workbuf);
+    EvalContextClassPutHard(ctx, workbuf);
     Log(LOG_LEVEL_VERBOSE, "Additional hard class defined as: %s", CanonifyName(workbuf));
 
     snprintf(workbuf, CF_BUFSIZE, "%s_%s", VSYSNAME.sysname, VSYSNAME.release);
-    EvalContextHeapAddHard(ctx, workbuf);
+    EvalContextClassPutHard(ctx, workbuf);
 
-    EvalContextHeapAddHard(ctx, VSYSNAME.machine);
+    EvalContextClassPutHard(ctx, VSYSNAME.machine);
     Log(LOG_LEVEL_VERBOSE, "Additional hard class defined as: %s", CanonifyName(workbuf));
 
     snprintf(workbuf, CF_BUFSIZE, "%s_%s", VSYSNAME.sysname, VSYSNAME.machine);
-    EvalContextHeapAddHard(ctx, workbuf);
+    EvalContextClassPutHard(ctx, workbuf);
     Log(LOG_LEVEL_VERBOSE, "Additional hard class defined as: %s", CanonifyName(workbuf));
 
     snprintf(workbuf, CF_BUFSIZE, "%s_%s_%s", VSYSNAME.sysname, VSYSNAME.machine, VSYSNAME.release);
-    EvalContextHeapAddHard(ctx, workbuf);
+    EvalContextClassPutHard(ctx, workbuf);
     Log(LOG_LEVEL_VERBOSE, "Additional hard class defined as: %s", CanonifyName(workbuf));
 
 #ifdef HAVE_SYSINFO
@@ -551,7 +672,7 @@ void GetNameInfo3(EvalContext *ctx, AgentType agent_type)
     }
     else
     {
-        EvalContextHeapAddHard(ctx, workbuf);
+        EvalContextClassPutHard(ctx, workbuf);
         Log(LOG_LEVEL_VERBOSE, "Additional hard class defined as: %s", workbuf);
     }
 # endif
@@ -563,7 +684,7 @@ void GetNameInfo3(EvalContext *ctx, AgentType agent_type)
     }
     else
     {
-        EvalContextHeapAddHard(ctx, workbuf);
+        EvalContextClassPutHard(ctx, workbuf);
         Log(LOG_LEVEL_VERBOSE, "Additional hard class defined as: %s", workbuf);
     }
 # endif
@@ -578,31 +699,31 @@ void GetNameInfo3(EvalContext *ctx, AgentType agent_type)
     }
 
     sp = xstrdup(CanonifyName(workbuf));
-    ScopeNewSpecialScalar(ctx, "sys", "long_arch", sp, DATA_TYPE_STRING);
-    EvalContextHeapAddHard(ctx, sp);
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "long_arch", sp, DATA_TYPE_STRING);
+    EvalContextClassPutHard(ctx, sp);
     free(sp);
 
     snprintf(workbuf, CF_BUFSIZE, "%s_%s", VSYSNAME.sysname, VSYSNAME.machine);
     sp = xstrdup(CanonifyName(workbuf));
-    ScopeNewSpecialScalar(ctx, "sys", "ostype", sp, DATA_TYPE_STRING);
-    EvalContextHeapAddHard(ctx, sp);
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "ostype", sp, DATA_TYPE_STRING);
+    EvalContextClassPutHard(ctx, sp);
     free(sp);
 
     if (!found)
     {
-        Log(LOG_LEVEL_ERR, "CFEngine: I don't understand what architecture this is!");
+        Log(LOG_LEVEL_ERR, "I don't understand what architecture this is");
     }
 
     strcpy(workbuf, "compiled_on_");
     strcat(workbuf, CanonifyName(AUTOCONF_SYSNAME));
-    EvalContextHeapAddHard(ctx, workbuf);
+    EvalContextClassPutHard(ctx, workbuf);
     Log(LOG_LEVEL_VERBOSE, "GNU autoconf class from compile time: %s", workbuf);
 
 /* Get IP address from nameserver */
 
     if ((hp = gethostbyname(VFQNAME)) == NULL)
     {
-        Log(LOG_LEVEL_VERBOSE, "Hostname lookup failed on node name \"%s\"", VSYSNAME.nodename);
+        Log(LOG_LEVEL_VERBOSE, "Hostname lookup failed on node name '%s'", VSYSNAME.nodename);
         return;
     }
     else
@@ -614,8 +735,8 @@ void GetNameInfo3(EvalContext *ctx, AgentType agent_type)
 
         for (i = 0; hp->h_aliases[i] != NULL; i++)
         {
-            Log(LOG_LEVEL_DEBUG, "Adding alias %s..\n", hp->h_aliases[i]);
-            EvalContextHeapAddHard(ctx, hp->h_aliases[i]);
+            Log(LOG_LEVEL_DEBUG, "Adding alias '%s'", hp->h_aliases[i]);
+            EvalContextClassPutHard(ctx, hp->h_aliases[i]);
         }
     }
 
@@ -627,17 +748,17 @@ void GetNameInfo3(EvalContext *ctx, AgentType agent_type)
     zid = getzoneid();
     getzonenamebyid(zid, zone, ZONENAME_MAX);
 
-    ScopeNewSpecialScalar(ctx, "sys", "zone", zone, DATA_TYPE_STRING);
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "zone", zone, DATA_TYPE_STRING);
     snprintf(vbuff, CF_BUFSIZE - 1, "zone_%s", zone);
-    EvalContextHeapAddHard(ctx, vbuff);
+    EvalContextClassPutHard(ctx, vbuff);
 
     if (strcmp(zone, "global") == 0)
     {
-        Log(LOG_LEVEL_VERBOSE, "CFEngine seems to be running inside a global solaris zone of name \"%s\"", zone);
+        Log(LOG_LEVEL_VERBOSE, "CFEngine seems to be running inside a global solaris zone of name '%s'", zone);
     }
     else
     {
-        Log(LOG_LEVEL_VERBOSE, "CFEngine seems to be running inside a local solaris zone of name \"%s\"", zone);
+        Log(LOG_LEVEL_VERBOSE, "CFEngine seems to be running inside a local solaris zone of name '%s'", zone);
     }
 #endif
 }
@@ -675,8 +796,7 @@ void Get3Environment(EvalContext *ctx, AgentType agent_type)
         Log(LOG_LEVEL_ERR, "Chop was called on a string that seemed to have no terminator");
     }
 
-    ScopeDeleteSpecialScalar("mon", "env_time");
-    ScopeNewSpecialScalar(ctx, "mon", "env_time", value, DATA_TYPE_STRING);
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_MON, "env_time", value, DATA_TYPE_STRING);
 
     Log(LOG_LEVEL_VERBOSE, "Loading environment...");
 
@@ -710,9 +830,9 @@ void Get3Environment(EvalContext *ctx, AgentType agent_type)
             Rlist *list = NULL;
             sscanf(context + 1, "%[^=]=%[^\n]", name, value);
            
-            Log(LOG_LEVEL_DEBUG, "Setting new monitoring list %s => %s", name, value);
+            Log(LOG_LEVEL_DEBUG, "Setting new monitoring list '%s' => '%s'", name, value);
             list = RlistParseShown(value);
-            ScopeNewSpecialList(ctx, "mon", name, list, DATA_TYPE_STRING_LIST);
+            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_MON, name, list, DATA_TYPE_STRING_LIST);
 
             RlistDestroy(list);
         }
@@ -725,14 +845,13 @@ void Get3Environment(EvalContext *ctx, AgentType agent_type)
 
             if (agent_type != AGENT_TYPE_EXECUTOR)
             {
-                ScopeDeleteSpecialScalar("mon", name);
-                ScopeNewSpecialScalar(ctx, "mon", name, value, DATA_TYPE_STRING);
-                Log(LOG_LEVEL_DEBUG, "Setting new monitoring scalar %s => %s", name, value);
+                EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_MON, name, value, DATA_TYPE_STRING);
+                Log(LOG_LEVEL_DEBUG, "Setting new monitoring scalar '%s' => '%s'", name, value);
             }
         }
         else
         {
-            EvalContextHeapAddHard(ctx, context);
+            EvalContextClassPutHard(ctx, context);
         }
     }
 
@@ -751,12 +870,12 @@ _Bool IsInterfaceAddress(const char *adr)
     {
         if (strncasecmp(adr, ip->name, strlen(adr)) == 0)
         {
-            Log(LOG_LEVEL_DEBUG, "Identifying (%s) as one of my interfaces\n", adr);
+            Log(LOG_LEVEL_DEBUG, "Identifying '%s' as one of my interfaces", adr);
             return true;
         }
     }
 
-    Log(LOG_LEVEL_DEBUG, "(%s) is not one of my interfaces\n", adr);
+    Log(LOG_LEVEL_DEBUG, "'%s' is not one of my interfaces", adr);
     return false;
 }
 
@@ -766,7 +885,7 @@ void BuiltinClasses(EvalContext *ctx)
 {
     char vbuff[CF_BUFSIZE];
 
-    EvalContextHeapAddHard(ctx, "any");            /* This is a reserved word / wildcard */
+    EvalContextClassPutHard(ctx, "any");            /* This is a reserved word / wildcard */
 
     snprintf(vbuff, CF_BUFSIZE, "cfengine_%s", CanonifyName(Version()));
     CreateHardClassesFromCanonification(ctx, vbuff);
@@ -781,22 +900,22 @@ void CreateHardClassesFromCanonification(EvalContext *ctx, const char *canonifie
 
     strlcpy(buf, canonified, sizeof(buf));
 
-    EvalContextHeapAddHard(ctx, buf);
+    EvalContextClassPutHard(ctx, buf);
 
     char *sp;
 
     while ((sp = strrchr(buf, '_')))
     {
         *sp = 0;
-        EvalContextHeapAddHard(ctx, buf);
+        EvalContextClassPutHard(ctx, buf);
     }
 }
 
 static void SetFlavour(EvalContext *ctx, const char *flavour)
 {
-    EvalContextHeapAddHard(ctx, flavour);
-    ScopeNewSpecialScalar(ctx, "sys", "flavour", flavour, DATA_TYPE_STRING);
-    ScopeNewSpecialScalar(ctx, "sys", "flavor", flavour, DATA_TYPE_STRING);
+    EvalContextClassPutHard(ctx, flavour);
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "flavour", flavour, DATA_TYPE_STRING);
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "flavor", flavour, DATA_TYPE_STRING);
 }
 
 void OSClasses(EvalContext *ctx)
@@ -866,7 +985,7 @@ void OSClasses(EvalContext *ctx)
     if (stat("/usr/bin/aptitude", &statbuf) != -1)
     {
         Log(LOG_LEVEL_VERBOSE, "This system seems to have the aptitude package system");
-        EvalContextHeapAddHard(ctx, "have_aptitude");
+        EvalContextClassPutHard(ctx, "have_aptitude");
     }
 
     if (stat("/etc/UnitedLinux-release", &statbuf) != -1)
@@ -917,13 +1036,18 @@ void OSClasses(EvalContext *ctx)
     {
         MiscOS(ctx);
     }
+
+    if (stat("/proc/self/status", &statbuf) != -1)
+    {
+        OpenVZ_Detect(ctx);
+    }
     
 #ifdef XEN_CPUID_SUPPORT
     else if (Xen_Hv_Check())
     {
         Log(LOG_LEVEL_VERBOSE, "This appears to be a xen hv system.");
-        EvalContextHeapAddHard(ctx, "xen");
-        EvalContextHeapAddHard(ctx, "xen_domu_hv");
+        EvalContextClassPutHard(ctx, "xen");
+        EvalContextClassPutHard(ctx, "xen_domu_hv");
     }
 #endif
 
@@ -959,59 +1083,59 @@ void OSClasses(EvalContext *ctx)
             if (strncmp(sp, "5.0", 3) == 0)
             {
                 Log(LOG_LEVEL_VERBOSE, "This appears to be Windows 2000");
-                EvalContextHeapAddHard(ctx, "Win2000");
+                EvalContextClassPutHard(ctx, "Win2000");
             }
 
             if (strncmp(sp, "5.1", 3) == 0)
             {
                 Log(LOG_LEVEL_VERBOSE, "This appears to be Windows XP");
-                EvalContextHeapAddHard(ctx, "WinXP");
+                EvalContextClassPutHard(ctx, "WinXP");
             }
 
             if (strncmp(sp, "5.2", 3) == 0)
             {
                 Log(LOG_LEVEL_VERBOSE, "This appears to be Windows Server 2003");
-                EvalContextHeapAddHard(ctx, "WinServer2003");
+                EvalContextClassPutHard(ctx, "WinServer2003");
             }
 
             if (strncmp(sp, "6.1", 3) == 0)
             {
                 Log(LOG_LEVEL_VERBOSE, "This appears to be Windows Vista");
-                EvalContextHeapAddHard(ctx, "WinVista");
+                EvalContextClassPutHard(ctx, "WinVista");
             }
 
             if (strncmp(sp, "6.3", 3) == 0)
             {
                 Log(LOG_LEVEL_VERBOSE, "This appears to be Windows Server 2008");
-                EvalContextHeapAddHard(ctx, "WinServer2008");
+                EvalContextClassPutHard(ctx, "WinServer2008");
             }
         }
     }
 
-    ScopeNewSpecialScalar(ctx, "sys", "crontab", "", DATA_TYPE_STRING);
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "crontab", "", DATA_TYPE_STRING);
 
 #endif /* __CYGWIN__ */
 
 #ifdef __MINGW32__
-    EvalContextHeapAddHard(ctx, VSYSNAME.release); // code name - e.g. Windows Vista
-    EvalContextHeapAddHard(ctx, VSYSNAME.version); // service pack number - e.g. Service Pack 3
+    EvalContextClassPutHard(ctx, VSYSNAME.release); // code name - e.g. Windows Vista
+    EvalContextClassPutHard(ctx, VSYSNAME.version); // service pack number - e.g. Service Pack 3
 
     if (strstr(VSYSNAME.sysname, "workstation"))
     {
-        EvalContextHeapAddHard(ctx, "WinWorkstation");
+        EvalContextClassPutHard(ctx, "WinWorkstation");
     }
     else if (strstr(VSYSNAME.sysname, "server"))
     {
-        EvalContextHeapAddHard(ctx, "WinServer");
+        EvalContextClassPutHard(ctx, "WinServer");
     }
     else if (strstr(VSYSNAME.sysname, "domain controller"))
     {
-        EvalContextHeapAddHard(ctx, "DomainController");
-        EvalContextHeapAddHard(ctx, "WinServer");
+        EvalContextClassPutHard(ctx, "DomainController");
+        EvalContextClassPutHard(ctx, "WinServer");
     }
     else
     {
-        EvalContextHeapAddHard(ctx, "unknown_ostype");
+        EvalContextClassPutHard(ctx, "unknown_ostype");
     }
 
     SetFlavour(ctx, "windows");
@@ -1032,12 +1156,16 @@ void OSClasses(EvalContext *ctx)
         {
             snprintf(vbuff, CF_BUFSIZE, "/var/spool/cron/tabs/%s", pw->pw_name);
         }
+        else if (IsDefinedClass(ctx, "redhat", NULL))
+        {
+            snprintf(vbuff, CF_BUFSIZE, "/var/spool/cron/%s", pw->pw_name);
+        }
         else
         {
             snprintf(vbuff, CF_BUFSIZE, "/var/spool/cron/crontabs/%s", pw->pw_name);
         }
 
-        ScopeNewSpecialScalar(ctx, "sys", "crontab", vbuff, DATA_TYPE_STRING);
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "crontab", vbuff, DATA_TYPE_STRING);
     }
 
 #endif
@@ -1047,10 +1175,10 @@ void OSClasses(EvalContext *ctx)
 #endif
 
 #ifdef __sun
-    if (FullTextMatch("joyent.*", VSYSNAME.version))
+    if (FullTextMatch(ctx, "joyent.*", VSYSNAME.version))
     {
-        EvalContextHeapAddHard(ctx, "smartos");
-        EvalContextHeapAddHard(ctx, "smartmachine");
+        EvalContextClassPutHard(ctx, "smartos");
+        EvalContextClassPutHard(ctx, "smartmachine");
     }
 #endif
     
@@ -1059,17 +1187,17 @@ void OSClasses(EvalContext *ctx)
 
     if (IsDefinedClass(ctx, "redhat", NULL))
     {
-        ScopeNewSpecialScalar(ctx, "sys", "doc_root", "/var/www/html", DATA_TYPE_STRING);
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "doc_root", "/var/www/html", DATA_TYPE_STRING);
     }
 
     if (IsDefinedClass(ctx, "SuSE", NULL))
     {
-        ScopeNewSpecialScalar(ctx, "sys", "doc_root", "/srv/www/htdocs", DATA_TYPE_STRING);
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "doc_root", "/srv/www/htdocs", DATA_TYPE_STRING);
     }
 
     if (IsDefinedClass(ctx, "debian", NULL))
     {
-        ScopeNewSpecialScalar(ctx, "sys", "doc_root", "/var/www", DATA_TYPE_STRING);
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "doc_root", "/var/www", DATA_TYPE_STRING);
     }
 }
 
@@ -1087,8 +1215,8 @@ static void Linux_Oracle_VM_Server_Version(EvalContext *ctx)
 #define ORACLE_VM_SERVER_ID "Oracle VM server"
 
     Log(LOG_LEVEL_VERBOSE, "This appears to be Oracle VM Server");
-    EvalContextHeapAddHard(ctx, "redhat");
-    EvalContextHeapAddHard(ctx, "oraclevmserver");
+    EvalContextClassPutHard(ctx, "redhat");
+    EvalContextClassPutHard(ctx, "oraclevmserver");
 
     if (!ReadLine(ORACLE_VM_SERVER_REL_FILENAME, relstring, sizeof(relstring)))
     {
@@ -1122,7 +1250,7 @@ static void Linux_Oracle_VM_Server_Version(EvalContext *ctx)
         char buf[CF_BUFSIZE];
 
         snprintf(buf, CF_BUFSIZE, "oraclevmserver_%d_%d", major, minor);
-        EvalContextHeapAddHard(ctx, buf);
+        EvalContextClassPutHard(ctx, buf);
     }
 
     if (revcomps > 2)
@@ -1130,7 +1258,7 @@ static void Linux_Oracle_VM_Server_Version(EvalContext *ctx)
         char buf[CF_BUFSIZE];
 
         snprintf(buf, CF_BUFSIZE, "oraclevmserver_%d_%d_%d", major, minor, patch);
-        EvalContextHeapAddHard(ctx, buf);
+        EvalContextClassPutHard(ctx, buf);
     }
 }
 
@@ -1146,7 +1274,7 @@ static void Linux_Oracle_Version(EvalContext *ctx)
 #define ORACLE_ID "Oracle Linux Server"
 
     Log(LOG_LEVEL_VERBOSE, "This appears to be Oracle Linux");
-    EvalContextHeapAddHard(ctx, "oracle");
+    EvalContextClassPutHard(ctx, "oracle");
 
     if (!ReadLine(ORACLE_REL_FILENAME, relstring, sizeof(relstring)))
     {
@@ -1173,7 +1301,7 @@ static void Linux_Oracle_Version(EvalContext *ctx)
         SetFlavour(ctx, buf);
 
         snprintf(buf, CF_BUFSIZE, "oracle_%d_%d", major, minor);
-        EvalContextHeapAddHard(ctx, buf);
+        EvalContextClassPutHard(ctx, buf);
     }
 }
 
@@ -1201,8 +1329,8 @@ static int Linux_Fedora_Version(EvalContext *ctx)
     char strmajor[CF_MAXVARSIZE];
 
     Log(LOG_LEVEL_VERBOSE, "This appears to be a fedora system.");
-    EvalContextHeapAddHard(ctx, "redhat");
-    EvalContextHeapAddHard(ctx, "fedora");
+    EvalContextClassPutHard(ctx, "redhat");
+    EvalContextClassPutHard(ctx, "fedora");
 
 /* Grab the first line from the file and then close it. */
 
@@ -1248,7 +1376,7 @@ static int Linux_Fedora_Version(EvalContext *ctx)
     {
         classbuf[0] = '\0';
         strcat(classbuf, vendor);
-        EvalContextHeapAddHard(ctx,classbuf);
+        EvalContextClassPutHard(ctx,classbuf);
         strcat(classbuf, "_");
         strcat(classbuf, strmajor);
         SetFlavour(ctx, classbuf);
@@ -1315,7 +1443,7 @@ static int Linux_Redhat_Version(EvalContext *ctx)
     char strminor[CF_MAXVARSIZE];
 
     Log(LOG_LEVEL_VERBOSE, "This appears to be a redhat (or redhat-based) system.");
-    EvalContextHeapAddHard(ctx, "redhat");
+    EvalContextClassPutHard(ctx, "redhat");
 
 /* Grab the first line from the file and then close it. */
 
@@ -1324,7 +1452,7 @@ static int Linux_Redhat_Version(EvalContext *ctx)
         return 1;
     }
 
-    Log(LOG_LEVEL_VERBOSE, "Looking for redhat linux info in \"%s\"", relstring);
+    Log(LOG_LEVEL_VERBOSE, "Looking for redhat linux info in '%s'", relstring);
 
 /* First, try to grok the vendor and the edition (if any) */
     if (!strncmp(relstring, REDHAT_ES_ID, strlen(REDHAT_ES_ID)))
@@ -1448,24 +1576,24 @@ static int Linux_Redhat_Version(EvalContext *ctx)
     {
         classbuf[0] = '\0';
         strcat(classbuf, vendor);
-        EvalContextHeapAddHard(ctx, classbuf);
+        EvalContextClassPutHard(ctx, classbuf);
         strcat(classbuf, "_");
 
         if (strcmp(edition, "") != 0)
         {
             strcat(classbuf, edition);
-            EvalContextHeapAddHard(ctx, classbuf);
+            EvalContextClassPutHard(ctx, classbuf);
             strcat(classbuf, "_");
         }
 
         strcat(classbuf, strmajor);
-        EvalContextHeapAddHard(ctx, classbuf);
+        EvalContextClassPutHard(ctx, classbuf);
 
         if (minor != -2)
         {
             strcat(classbuf, "_");
             strcat(classbuf, strminor);
-            EvalContextHeapAddHard(ctx, classbuf);
+            EvalContextClassPutHard(ctx, classbuf);
         }
     }
 
@@ -1475,7 +1603,7 @@ static int Linux_Redhat_Version(EvalContext *ctx)
     {
         classbuf[0] = '\0';
         strcat(classbuf, vendor);
-        EvalContextHeapAddHard(ctx, classbuf);
+        EvalContextClassPutHard(ctx, classbuf);
         strcat(classbuf, "_");
 
         strcat(classbuf, strmajor);
@@ -1486,7 +1614,7 @@ static int Linux_Redhat_Version(EvalContext *ctx)
         {
             strcat(classbuf, "_");
             strcat(classbuf, strminor);
-            EvalContextHeapAddHard(ctx, classbuf);
+            EvalContextClassPutHard(ctx, classbuf);
         }
     }
 
@@ -1519,7 +1647,7 @@ static int Linux_Suse_Version(EvalContext *ctx)
     FILE *fp;
 
     Log(LOG_LEVEL_VERBOSE, "This appears to be a SuSE system.");
-    EvalContextHeapAddHard(ctx, "SuSE");
+    EvalContextClassPutHard(ctx, "SuSE");
 
 /* Grab the first line from the file and then close it. */
 
@@ -1564,7 +1692,7 @@ static int Linux_Suse_Version(EvalContext *ctx)
 
     /* Check if it's a SuSE Enterprise version  */
 
-    Log(LOG_LEVEL_VERBOSE, "Looking for SuSE enterprise info in \"%s\"", relstring);
+    Log(LOG_LEVEL_VERBOSE, "Looking for SuSE enterprise info in '%s'", relstring);
 
     /* Convert relstring to lowercase to handle rename of SuSE to
      * SUSE with SUSE 10.0.
@@ -1581,20 +1709,20 @@ static int Linux_Suse_Version(EvalContext *ctx)
     {
         classbuf[0] = '\0';
         strcat(classbuf, "SLES8");
-        EvalContextHeapAddHard(ctx, classbuf);
+        EvalContextClassPutHard(ctx, classbuf);
     }
     else if (strncmp(relstring, "sles", 4) == 0)
     {
         Item *list, *ip;
 
         sscanf(relstring, "%[-_a-zA-Z0-9]", vbuf);
-        EvalContextHeapAddHard(ctx, vbuf);
+        EvalContextClassPutHard(ctx, vbuf);
 
         list = SplitString(vbuf, '-');
 
         for (ip = list; ip != NULL; ip = ip->next)
         {
-            EvalContextHeapAddHard(ctx, ip->name);
+            EvalContextClassPutHard(ctx, ip->name);
         }
 
         DeleteItemList(list);
@@ -1604,22 +1732,22 @@ static int Linux_Suse_Version(EvalContext *ctx)
         for (version = 9; version < 13; version++)
         {
             snprintf(vbuf, CF_BUFSIZE, "%s %d ", SUSE_SLES_ID, version);
-            Log(LOG_LEVEL_DEBUG, "Checking for suse [%s]\n", vbuf);
+            Log(LOG_LEVEL_DEBUG, "Checking for SUSE [%s]", vbuf);
 
             if (!strncmp(relstring, vbuf, strlen(vbuf)))
             {
                 snprintf(classbuf, CF_MAXVARSIZE, "SLES%d", version);
-                EvalContextHeapAddHard(ctx, classbuf);
+                EvalContextClassPutHard(ctx, classbuf);
             }
             else
             {
                 snprintf(vbuf, CF_BUFSIZE, "%s %d ", SUSE_SLED_ID, version);
-                Log(LOG_LEVEL_DEBUG, "Checking for suse [%s]\n", vbuf);
+                Log(LOG_LEVEL_DEBUG, "Checking for SUSE [%s]", vbuf);
 
                 if (!strncmp(relstring, vbuf, strlen(vbuf)))
                 {
                     snprintf(classbuf, CF_MAXVARSIZE, "SLED%d", version);
-                    EvalContextHeapAddHard(ctx, classbuf);
+                    EvalContextClassPutHard(ctx, classbuf);
                 }
             }
         }
@@ -1657,13 +1785,13 @@ static int Linux_Suse_Version(EvalContext *ctx)
             if (major != -1 && minor != -1)
             {
                 strcpy(classbuf, "SuSE");
-                EvalContextHeapAddHard(ctx, classbuf);
+                EvalContextClassPutHard(ctx, classbuf);
                 strcat(classbuf, "_");
                 strcat(classbuf, strmajor);
                 SetFlavour(ctx, classbuf);
                 strcat(classbuf, "_");
                 strcat(classbuf, strminor);
-                EvalContextHeapAddHard(ctx, classbuf);
+                EvalContextClassPutHard(ctx, classbuf);
 
                 Log(LOG_LEVEL_VERBOSE, "Discovered SuSE version %s", classbuf);
                 return 0;
@@ -1677,13 +1805,13 @@ static int Linux_Suse_Version(EvalContext *ctx)
             if (major != -1 && minor != -1)
             {
                 strcpy(classbuf, "SLES");
-                EvalContextHeapAddHard(ctx, classbuf);
+                EvalContextClassPutHard(ctx, classbuf);
                 strcat(classbuf, "_");
                 strcat(classbuf, strmajor);
-                EvalContextHeapAddHard(ctx, classbuf);
+                EvalContextClassPutHard(ctx, classbuf);
                 strcat(classbuf, "_");
                 strcat(classbuf, strminor);
-                EvalContextHeapAddHard(ctx, classbuf);
+                EvalContextClassPutHard(ctx, classbuf);
                 snprintf(classbuf, CF_MAXVARSIZE, "SuSE_%d", major);
                 SetFlavour(ctx, classbuf);
 
@@ -1709,7 +1837,7 @@ static int Linux_Slackware_Version(EvalContext *ctx, char *filename)
     char buffer[CF_MAXVARSIZE];
 
     Log(LOG_LEVEL_VERBOSE, "This appears to be a slackware system.");
-    EvalContextHeapAddHard(ctx, "slackware");
+    EvalContextClassPutHard(ctx, "slackware");
 
     if (!ReadLine(filename, buffer, sizeof(buffer)))
     {
@@ -1722,17 +1850,17 @@ static int Linux_Slackware_Version(EvalContext *ctx, char *filename)
     case 3:
         Log(LOG_LEVEL_VERBOSE, "This appears to be a Slackware %u.%u.%u system.", major, minor, release);
         snprintf(classname, CF_MAXVARSIZE, "slackware_%u_%u_%u", major, minor, release);
-        EvalContextHeapAddHard(ctx, classname);
+        EvalContextClassPutHard(ctx, classname);
         /* Fall-through */
     case 2:
         Log(LOG_LEVEL_VERBOSE, "This appears to be a Slackware %u.%u system.", major, minor);
         snprintf(classname, CF_MAXVARSIZE, "slackware_%u_%u", major, minor);
-        EvalContextHeapAddHard(ctx, classname);
+        EvalContextClassPutHard(ctx, classname);
         /* Fall-through */
     case 1:
         Log(LOG_LEVEL_VERBOSE, "This appears to be a Slackware %u system.", major);
         snprintf(classname, CF_MAXVARSIZE, "slackware_%u", major);
-        EvalContextHeapAddHard(ctx, classname);
+        EvalContextClassPutHard(ctx, classname);
         break;
     case 0:
         Log(LOG_LEVEL_VERBOSE, "No Slackware version number found.");
@@ -1741,8 +1869,57 @@ static int Linux_Slackware_Version(EvalContext *ctx, char *filename)
     return 0;
 }
 
-/******************************************************************/
+/*
+ * @brief : /etc/issue on debian can include special characters
+ *          escaped with '/' or '@'. This function will get rid
+ *          them.
+ *
+ * @param[in,out] buffer: string to be sanitized
+ *
+ * @return : 0 if everything went fine, <>0 otherwise
+ */
+static int LinuxDebianSanitizeIssue(char *buffer)
+{
+    bool escaped = false;
+    char *s2, *s;
+    s2 = buffer;
+    for (s = buffer; *s != '\0'; s++)
+    {
+        if (*s=='\\' || *s=='@')
+        {
+             if (escaped == false)
+             {
+                 escaped = true;
+             }
+             else 
+             {
+                 escaped = false;
+             }
+        }
+        else
+        {
+             if (escaped == false)
+             {
+                 *s2 = *s;
+                 s2++;
+             }
+             else 
+             {
+                 escaped = false;
+             }
+        }
+    }
+    *s2 = '\0';
+    s2--;
+    while (*s2==' ')
+    {
+        *s2='\0'; 
+        s2--;
+    }
+    return 0;
+}
 
+/******************************************************************/
 static int Linux_Debian_Version(EvalContext *ctx)
 {
 #define DEBIAN_VERSION_FILENAME "/etc/debian_version"
@@ -1753,7 +1930,7 @@ static int Linux_Debian_Version(EvalContext *ctx)
     char classname[CF_MAXVARSIZE], buffer[CF_MAXVARSIZE], os[CF_MAXVARSIZE], version[CF_MAXVARSIZE];
 
     Log(LOG_LEVEL_VERBOSE, "This appears to be a debian system.");
-    EvalContextHeapAddHard(ctx, "debian");
+    EvalContextClassPutHard(ctx, "debian");
 
     buffer[0] = classname[0] = '\0';
 
@@ -1771,7 +1948,7 @@ static int Linux_Debian_Version(EvalContext *ctx)
     case 2:
         Log(LOG_LEVEL_VERBOSE, "This appears to be a Debian %u.%u system.", major, release);
         snprintf(classname, CF_MAXVARSIZE, "debian_%u_%u", major, release);
-        EvalContextHeapAddHard(ctx, classname);
+        EvalContextClassPutHard(ctx, classname);
         snprintf(classname, CF_MAXVARSIZE, "debian_%u", major);
         SetFlavour(ctx, classname);
         break;
@@ -1788,7 +1965,7 @@ static int Linux_Debian_Version(EvalContext *ctx)
         if (strlen(version) > 0)
         {
             snprintf(classname, CF_MAXVARSIZE, "debian_%s", version);
-            EvalContextHeapAddHard(ctx, classname);
+            EvalContextClassPutHard(ctx, classname);
         }
         break;
     }
@@ -1797,27 +1974,29 @@ static int Linux_Debian_Version(EvalContext *ctx)
     {
         return 1;
     }
-
+    
     os[0] = '\0';
     sscanf(buffer, "%250s", os);
 
     if (strcmp(os, "Debian") == 0)
     {
+        LinuxDebianSanitizeIssue(buffer);
         sscanf(buffer, "%*s %*s %[^./]", version);
         snprintf(buffer, CF_MAXVARSIZE, "debian_%s", version);
-        EvalContextHeapAddHard(ctx, "debian");
+        EvalContextClassPutHard(ctx, "debian");
         SetFlavour(ctx, buffer);
     }
     else if (strcmp(os, "Ubuntu") == 0)
     {
+        LinuxDebianSanitizeIssue(buffer);
         sscanf(buffer, "%*s %[^.].%d", version, &release);
         snprintf(buffer, CF_MAXVARSIZE, "ubuntu_%s", version);
         SetFlavour(ctx, buffer);
-        EvalContextHeapAddHard(ctx, "ubuntu");
+        EvalContextClassPutHard(ctx, "ubuntu");
         if (release >= 0)
         {
             snprintf(buffer, CF_MAXVARSIZE, "ubuntu_%s_%d", version, release);
-            EvalContextHeapAddHard(ctx, buffer);
+            EvalContextClassPutHard(ctx, buffer);
         }
     }
 
@@ -1839,14 +2018,14 @@ static int Linux_Mandrake_Version(EvalContext *ctx)
     char *vendor = NULL;
 
     Log(LOG_LEVEL_VERBOSE, "This appears to be a mandrake system.");
-    EvalContextHeapAddHard(ctx, "Mandrake");
+    EvalContextClassPutHard(ctx, "Mandrake");
 
     if (!ReadLine(MANDRAKE_REL_FILENAME, relstring, sizeof(relstring)))
     {
         return 1;
     }
 
-    Log(LOG_LEVEL_VERBOSE, "Looking for Mandrake linux info in \"%s\"", relstring);
+    Log(LOG_LEVEL_VERBOSE, "Looking for Mandrake linux info in '%s'", relstring);
 
 /* Older Mandrakes had the 'Mandrake Linux' string in reverse order */
 
@@ -1885,15 +2064,15 @@ static int Linux_Mandriva_Version(EvalContext *ctx)
     char *vendor = NULL;
 
     Log(LOG_LEVEL_VERBOSE, "This appears to be a mandriva system.");
-    EvalContextHeapAddHard(ctx, "Mandrake");
-    EvalContextHeapAddHard(ctx, "Mandriva");
+    EvalContextClassPutHard(ctx, "Mandrake");
+    EvalContextClassPutHard(ctx, "Mandriva");
 
     if (!ReadLine(MANDRIVA_REL_FILENAME, relstring, sizeof(relstring)))
     {
         return 1;
     }
 
-    Log(LOG_LEVEL_VERBOSE, "Looking for Mandriva linux info in \"%s\"", relstring);
+    Log(LOG_LEVEL_VERBOSE, "Looking for Mandriva linux info in '%s'", relstring);
 
     if (!strncmp(relstring, MANDRIVA_ID, strlen(MANDRIVA_ID)))
     {
@@ -1901,7 +2080,7 @@ static int Linux_Mandriva_Version(EvalContext *ctx)
     }
     else
     {
-        Log(LOG_LEVEL_VERBOSE, "Could not identify OS distro from %s", MANDRIVA_REL_FILENAME);
+        Log(LOG_LEVEL_VERBOSE, "Could not identify OS distro from '%s'", MANDRIVA_REL_FILENAME);
         return 2;
     }
 
@@ -1945,15 +2124,15 @@ static int Linux_Mandriva_Version_Real(EvalContext *ctx, char *filename, char *r
     {
         classbuf[0] = '\0';
         strcat(classbuf, vendor);
-        EvalContextHeapAddHard(ctx, classbuf);
+        EvalContextClassPutHard(ctx, classbuf);
         strcat(classbuf, "_");
         strcat(classbuf, strmajor);
-        EvalContextHeapAddHard(ctx, classbuf);
+        EvalContextClassPutHard(ctx, classbuf);
         if (minor != -2)
         {
             strcat(classbuf, "_");
             strcat(classbuf, strminor);
-            EvalContextHeapAddHard(ctx, classbuf);
+            EvalContextClassPutHard(ctx, classbuf);
         }
     }
 
@@ -1973,13 +2152,13 @@ static int EOS_Version(EvalContext *ctx)
         if (strstr(buffer, "EOS"))
         {
             char version[CF_MAXVARSIZE], class[CF_MAXVARSIZE];
-            EvalContextHeapAddHard(ctx, "eos");
-            EvalContextHeapAddHard(ctx, "arista");
+            EvalContextClassPutHard(ctx, "eos");
+            EvalContextClassPutHard(ctx, "arista");
             version[0] = '\0';
             sscanf(buffer, "%*s %*s %*s %s", version);
             CanonifyNameInPlace(version);
             snprintf(class, CF_MAXVARSIZE, "eos_%s", version);
-            EvalContextHeapAddHard(ctx, class);
+            EvalContextClassPutHard(ctx, class);
         }
     }
     
@@ -1999,14 +2178,14 @@ static int MiscOS(EvalContext *ctx)
        if (strstr(buffer, "BIG-IP"))
        {
            char version[CF_MAXVARSIZE], build[CF_MAXVARSIZE], class[CF_MAXVARSIZE];
-           EvalContextHeapAddHard(ctx, "big_ip");
+           EvalContextClassPutHard(ctx, "big_ip");
            sscanf(buffer, "%*s %s %*s %s", version, build);
            CanonifyNameInPlace(version);
            CanonifyNameInPlace(build);
            snprintf(class, CF_MAXVARSIZE, "big_ip_%s", version);
-           EvalContextHeapAddHard(ctx, class);
+           EvalContextClassPutHard(ctx, class);
            snprintf(class, CF_MAXVARSIZE, "big_ip_%s_%s", version, build);
-           EvalContextHeapAddHard(ctx, class);
+           EvalContextClassPutHard(ctx, class);
            SetFlavour(ctx, "BIG-IP");
        }
     }
@@ -2023,7 +2202,7 @@ static int VM_Version(EvalContext *ctx)
     int sufficient = 0;
 
     Log(LOG_LEVEL_VERBOSE, "This appears to be a VMware Server ESX/xSX system.");
-    EvalContextHeapAddHard(ctx, "VMware");
+    EvalContextClassPutHard(ctx, "VMware");
 
 /* VMware Server ESX >= 3 has version info in /proc */
     if (ReadLine("/proc/vmware/version", buffer, sizeof(buffer)))
@@ -2031,17 +2210,17 @@ static int VM_Version(EvalContext *ctx)
         if (sscanf(buffer, "VMware ESX Server %d.%d.%d", &major, &minor, &bug) > 0)
         {
             snprintf(classbuf, CF_BUFSIZE, "VMware ESX Server %d", major);
-            EvalContextHeapAddHard(ctx, classbuf);
+            EvalContextClassPutHard(ctx, classbuf);
             snprintf(classbuf, CF_BUFSIZE, "VMware ESX Server %d.%d", major, minor);
-            EvalContextHeapAddHard(ctx, classbuf);
+            EvalContextClassPutHard(ctx, classbuf);
             snprintf(classbuf, CF_BUFSIZE, "VMware ESX Server %d.%d.%d", major, minor, bug);
-            EvalContextHeapAddHard(ctx, classbuf);
+            EvalContextClassPutHard(ctx, classbuf);
             sufficient = 1;
         }
         else if (sscanf(buffer, "VMware ESX Server %s", version) > 0)
         {
             snprintf(classbuf, CF_BUFSIZE, "VMware ESX Server %s", version);
-            EvalContextHeapAddHard(ctx, classbuf);
+            EvalContextClassPutHard(ctx, classbuf);
             sufficient = 1;
         }
     }
@@ -2051,14 +2230,14 @@ static int VM_Version(EvalContext *ctx)
     if (sufficient < 1 && (ReadLine("/etc/vmware-release", buffer, sizeof(buffer))
                            || ReadLine("/etc/issue", buffer, sizeof(buffer))))
     {
-        EvalContextHeapAddHard(ctx, buffer);
+        EvalContextClassPutHard(ctx, buffer);
 
         /* Strip off the release code name e.g. "(Dali)" */
         if ((sp = strchr(buffer, '(')) != NULL)
         {
             *sp = 0;
             Chop(buffer, CF_EXPANDSIZE);
-            EvalContextHeapAddHard(ctx, buffer);
+            EvalContextClassPutHard(ctx, buffer);
         }
         sufficient = 1;
     }
@@ -2075,7 +2254,7 @@ static int Xen_Domain(EvalContext *ctx)
     int sufficient = 0;
 
     Log(LOG_LEVEL_VERBOSE, "This appears to be a xen pv system.");
-    EvalContextHeapAddHard(ctx, "xen");
+    EvalContextClassPutHard(ctx, "xen");
 
 /* xen host will have "control_d" in /proc/xen/capabilities, xen guest will not */
 
@@ -2098,14 +2277,14 @@ static int Xen_Domain(EvalContext *ctx)
 
             if (strstr(buffer, "control_d"))
             {
-                EvalContextHeapAddHard(ctx, "xen_dom0");
+                EvalContextClassPutHard(ctx, "xen_dom0");
                 sufficient = 1;
             }
         }
 
         if (!sufficient)
         {
-            EvalContextHeapAddHard(ctx, "xen_domu_pv");
+            EvalContextClassPutHard(ctx, "xen_domu_pv");
             sufficient = 1;
         }
 
@@ -2113,6 +2292,42 @@ static int Xen_Domain(EvalContext *ctx)
     }
 
     return sufficient < 1 ? 1 : 0;
+}
+
+/******************************************************************/
+static void OpenVZ_Detect(EvalContext *ctx)
+{
+/* paths to file defining the type of vm (guest or host) */
+#define OPENVZ_HOST_FILENAME "/proc/bc/0"
+#define OPENVZ_GUEST_FILENAME "/proc/vz"
+/* path to the vzps binary */
+#define OPENVZ_VZPS_FILE "/bin/vzps"
+    struct stat statbuf;
+
+    /* The file /proc/bc/0 is present on host
+       The file /proc/vz is present on guest
+       If the host has /bin/vzps, we should use it for checking processes
+    */
+
+    if (stat(OPENVZ_HOST_FILENAME, &statbuf) != -1)
+    {
+        Log(LOG_LEVEL_VERBOSE, "This appears to be an OpenVZ/Virtuozzo/Parallels Cloud Server host system.\n");
+        EvalContextClassPutHard(ctx, "virt_host_vz");
+        /* if the file /bin/vzps is there, it is safe to use the processes promise type */ 
+        if (stat(OPENVZ_VZPS_FILE, &statbuf) != -1)
+        {
+            EvalContextClassPutHard(ctx, "virt_host_vz_vzps");
+        }
+        else
+        {
+            Log(LOG_LEVEL_NOTICE, "This OpenVZ/Virtuozzo/Parallels Cloud Server host system does not have vzps installed; the processes promise type may not work as expected.\n");
+        }
+    }
+    else if (stat(OPENVZ_GUEST_FILENAME, &statbuf) != -1)
+    {
+        Log(LOG_LEVEL_VERBOSE, "This appears to be an OpenVZ/Virtuozzo/Parallels Cloud Server guest system.\n");
+        EvalContextClassPutHard(ctx, "virt_guest_vz");
+    }
 }
 
 /******************************************************************/
@@ -2313,12 +2528,187 @@ static void GetCPUInfo(EvalContext *ctx)
     Log(LOG_LEVEL_VERBOSE, "Found %d processor%s", count, count > 1 ? "s" : "");
 
     if (count == 1) {
-        EvalContextHeapAddHard(ctx, buf);  // "1_cpu" from init - change if buf is ever used above
-        ScopeNewSpecialScalar(ctx, "sys", "cpus", "1", DATA_TYPE_STRING);
+        EvalContextClassPutHard(ctx, buf);  // "1_cpu" from init - change if buf is ever used above
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "cpus", "1", DATA_TYPE_STRING);
     } else {
         snprintf(buf, CF_SMALLBUF, "%d_cpus", count);
-        EvalContextHeapAddHard(ctx, buf);
+        EvalContextClassPutHard(ctx, buf);
         snprintf(buf, CF_SMALLBUF, "%d", count);
-        ScopeNewSpecialScalar(ctx, "sys", "cpus", buf, DATA_TYPE_STRING);
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "cpus", buf, DATA_TYPE_STRING);
     }
 }
+
+/******************************************************************/
+
+int GetUptimeMinutes(time_t now)
+// Return the number of minutes the system has been online given the current
+// time() as an argument, or return -1 if unavailable or unimplemented.
+{
+#ifdef CF_SYS_UPTIME_IMPLEMENTED
+    time_t boot_time = 0;
+    errno = 0;
+#endif
+
+#if defined(BOOT_TIME_WITH_SYSINFO)         // Most GNU, Linux platforms
+    struct sysinfo s;
+
+    if (sysinfo(&s) == 0) 
+    {
+       // Don't return yet, sanity checking below
+       boot_time = now - s.uptime;
+    }
+
+#elif defined(BOOT_TIME_WITH_KSTAT)         // Solaris platform
+#define NANOSECONDS_PER_SECOND 1000000000
+    kstat_ctl_t *kc;
+    kstat_t *kp;
+
+    if(kc = kstat_open())
+    {
+        if(kp = kstat_lookup(kc, "unix", 0, "system_misc"))
+        {
+            boot_time = (time_t)(kp->ks_crtime / NANOSECONDS_PER_SECOND);
+        }
+        kstat_close(kc);
+    }
+
+#elif defined(BOOT_TIME_WITH_PSTAT_GETPROC) // HP-UX platform only
+    struct pst_status p;
+
+    if (pstat_getproc(&p, sizeof(p), 0, 1) == 1)
+    {
+        boot_time = (time_t)p.pst_start;
+    }
+
+#elif defined(BOOT_TIME_WITH_SYSCTL)        // BSD-derived platforms
+    int mib[2] = { CTL_KERN, KERN_BOOTTIME };
+    struct timeval boot;
+    size_t len;
+
+    len = sizeof(boot);
+    if (sysctl(mib, 2, &boot, &len, NULL, 0) == 0)
+    {
+        boot_time = boot.tv_sec;
+    }
+
+#elif defined(BOOT_TIME_WITH_PROCFS)        // Second-to-last resort: procfs
+    struct stat p;
+
+    if (stat("/proc/1", &p) == 0)
+    {
+        boot_time = p.st_ctime;
+    }
+
+#endif
+
+#ifdef CF_SYS_UPTIME_IMPLEMENTED
+    if(errno)
+    {
+        Log(LOG_LEVEL_ERR, "boot time discovery error: %s", GetErrorStr());
+    }
+
+    if(boot_time > now || boot_time <= 0)
+    {
+        Log(LOG_LEVEL_DEBUG, "invalid boot time found; trying uptime command");
+        boot_time = GetBootTimeFromUptimeCommand(now);
+    }
+
+    return(boot_time > 0 ? ((now - boot_time) / SECONDS_PER_MINUTE) : -1);
+#else
+// Native NT build: MINGW; NT build: NT
+// Maybe use "ULONGLONG WINAPI GetTickCount()" on Windows?
+    Log(LOG_LEVEL_VERBOSE, "$(sys.uptime) is not implemented on this platform");
+    return(-1);
+#endif
+}
+
+/******************************************************************/
+
+#ifdef CF_SYS_UPTIME_IMPLEMENTED
+// Last resort: parse the output of the uptime command with a PCRE regexp
+// and convert the uptime to boot time using "now" argument.
+//
+// The regexp needs to match all variants of the uptime command's output.
+// Solaris 8:     10:45am up 109 day(s), 19:56, 1 user, load average: 
+// HP-UX 11.11:   9:24am  up 1 min,  1 user,  load average:
+//                8:23am  up 23 hrs,  0 users,  load average:
+//                9:33am  up 2 days, 10 mins,  0 users,  load average:
+//                11:23am  up 2 days, 2 hrs,  0 users,  load average:
+// Red Hat Linux: 10:51:23 up 5 days, 19:54, 1 user, load average: 
+//
+// UPTIME_BACKREFS must be set to this regexp's maximum backreference
+// index number (i.e., the count of left-parentheses):
+#define UPTIME_REGEXP " up (\\d+ day[^,]*,|) *(\\d+( ho?u?r|:(\\d+))|(\\d+) min)"
+#define UPTIME_BACKREFS 5
+#define UPTIME_OVECTOR ((UPTIME_BACKREFS + 1) * 3)
+
+static time_t GetBootTimeFromUptimeCommand(time_t now)
+{
+    FILE *uptimecmd;
+    pcre *rx;
+    int ovector[UPTIME_OVECTOR], i, seconds;
+    char uptime_output[CF_SMALLBUF] = { '\0' }, *backref;
+    const char *uptimepath = "/usr/bin/uptime";
+    time_t uptime = 0;
+    const char *errptr;
+    int erroffset;
+    
+    rx = pcre_compile(UPTIME_REGEXP, 0, &errptr, &erroffset, NULL);
+    if (rx == NULL)
+    {
+        Log(LOG_LEVEL_DEBUG, "failed to compile regexp to parse uptime command"); 
+        return(-1);
+    }
+
+    // Try "/usr/bin/uptime" first, then "/bin/uptime"
+    uptimecmd = cf_popen(uptimepath, "r", false);
+    uptimecmd = uptimecmd ? uptimecmd : cf_popen((uptimepath + 4), "r", false);
+    if (!uptimecmd)
+    {
+        Log(LOG_LEVEL_ERR, "uptime failed: (cf_popen: %s)", GetErrorStr());
+        return -1;
+    }
+    i = CfReadLine(uptime_output, CF_SMALLBUF, uptimecmd);
+    cf_pclose(uptimecmd);
+    if (i < 0)
+    {
+        Log(LOG_LEVEL_ERR, "Reading uptime output failed. (CfReadLine: '%s')", GetErrorStr());
+        return -1;
+    }
+
+    if ((i != 0) && (pcre_exec(rx, NULL, (const char *)uptime_output, i, 0, 0, ovector, UPTIME_OVECTOR) > 1))
+    {
+        for (i = 1; i <= UPTIME_BACKREFS ; i++)
+        {
+            if (ovector[i * 2 + 1] - ovector[i * 2] == 0) // strlen(backref)
+            {
+                continue;
+            }
+            backref = uptime_output + ovector[i * 2];
+            // atoi() ignores non-digits, so no need to null-terminate backref
+            switch(i)
+            {
+                case 1: // Day
+                    seconds = SECONDS_PER_DAY;
+                    break;
+                case 2: // Hour
+                    seconds = SECONDS_PER_HOUR;
+                    break;
+                case 4: // Minute
+                case 5:
+                    seconds = SECONDS_PER_MINUTE;
+                    break;
+                default:
+                    seconds = 0;
+             }
+             uptime += atoi(backref) * seconds;
+        }
+    }
+    else
+    {
+        Log(LOG_LEVEL_ERR, "uptime PCRE match failed: regexp: '%s', uptime: '%s'", UPTIME_REGEXP, uptime_output);
+    }
+    pcre_free(rx);
+    return(uptime ? (now - uptime) : -1);
+}
+#endif

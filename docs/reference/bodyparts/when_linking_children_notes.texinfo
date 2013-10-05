@@ -1,9 +1,0 @@
-
-The options refer to what happens if the directory exists already and
-is already partially populated with files. If the directory being
-copied from contains a file with the same name as that of a link
-to be created, we must decide whether to override the existing
-destination object with a link or simply omit the automatic
-linkage for files that already exist. The latter case can
-be used to make a copy of one directory with certain fields
-overridden.

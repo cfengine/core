@@ -6,106 +6,106 @@
 
 body common control
 {
-  inputs => { "../../default.cf.sub" };
-  bundlesequence  => { default("$(this.promise_filename)") };   
-  version => "1.0";
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };   
+      version => "1.0";
 }
 
 bundle agent init
 {
-vars:
-	"dummy" string => "dummy";
+  vars:
+      "dummy" string => "dummy";
 }
 
 #######################################################
 
 bundle agent test
 {
-vars:
-    # Normal order
-    "r1" string => rrange(10,20);
-    "r2" string => rrange("10.1","20.2");
-    "r3" string => rrange("1.1k","2.2K");
-    "r4" string => rrange("1.1m","2.2M");
-    "r5" string => rrange("1.1g","2.2G");
-    "r6" string => rrange("-20.2",10);
-    "r7" string => rrange("10.1%","20.2%");
+  vars:
+      # Normal order
+      "r1" string => rrange(10,20);
+      "r2" string => rrange("10.1","20.2");
+      "r3" string => rrange("1.1k","2.2K");
+      "r4" string => rrange("1.1m","2.2M");
+      "r5" string => rrange("1.1g","2.2G");
+      "r6" string => rrange("-20.2",10);
+      "r7" string => rrange("10.1%","20.2%");
 
-    # Reverse order
-    "x1" string => rrange(20,10);
-    "x2" string => rrange("20.2","10.1");
-    "x3" string => rrange("2.2K","1.1k");
-    "x4" string => rrange("2.2M","1.1m");
-    "x5" string => rrange("2.2G","1.1g");
-    "x6" string => rrange("20.2",10);
-    "x7" string => rrange("20.2%","10.1%");
+      # Reverse order
+      "x1" string => rrange(20,10);
+      "x2" string => rrange("20.2","10.1");
+      "x3" string => rrange("2.2K","1.1k");
+      "x4" string => rrange("2.2M","1.1m");
+      "x5" string => rrange("2.2G","1.1g");
+      "x6" string => rrange("20.2",10);
+      "x7" string => rrange("20.2%","10.1%");
 
-    # String equivalent
-    "s1" string => "10.000000,20.000000";
-    "s2" string => "10.100000,20.200000";
-    "s3" string => "1100.000000,2252.800000";
-    "s4" string => "1100000.000000,2306867.200000";
-    "s5" string => "1100000000.000000,2362232012.800000";
-    "s6" string => "-20.200000,10.000000";
-    # Unsure that this is correct behavior... and it do this now anyway
-    "s7" string => "20.200000,10.100000";
+      # String equivalent
+      "s1" string => "10.000000,20.000000";
+      "s2" string => "10.100000,20.200000";
+      "s3" string => "1100.000000,2252.800000";
+      "s4" string => "1100000.000000,2306867.200000";
+      "s5" string => "1100000000.000000,2362232012.800000";
+      "s6" string => "-20.200000,10.000000";
+      # Unsure that this is correct behavior... and it do this now anyway
+      "s7" string => "20.200000,10.100000";
 }
 
 #######################################################
 
 bundle agent check
 {
-classes:
-	"ok1" and => {
-			strcmp("$(test.r1)", "$(test.x1)"),
-			strcmp("$(test.r1)", "$(test.s1)"),
-		    };
-	"ok2" and => {
-			strcmp("$(test.r2)", "$(test.x2)"),
-			strcmp("$(test.r2)", "$(test.s2)"),
-		    };
-	"ok3" and => {
-			strcmp("$(test.r3)", "$(test.x3)"),
-			strcmp("$(test.r3)", "$(test.s3)"),
-		    };
-	"ok4" and => {
-			strcmp("$(test.r4)", "$(test.x4)"),
-			strcmp("$(test.r4)", "$(test.s4)"),
-		    };
-	"ok5" and => {
-			strcmp("$(test.r5)", "$(test.x5)"),
-			strcmp("$(test.r5)", "$(test.s5)"),
-		    };
-	"ok6" and => {
-			strcmp("$(test.r6)", "$(test.x6)"),
-			strcmp("$(test.r6)", "$(test.s6)"),
-		    };
-	"ok7" and => {
-			strcmp("$(test.r7)", "$(test.x7)"),
-			strcmp("$(test.r7)", "$(test.s7)"),
-		    };
+  classes:
+      "ok1" and => {
+		     strcmp("$(test.r1)", "$(test.x1)"),
+		     strcmp("$(test.r1)", "$(test.s1)"),
+      };
+      "ok2" and => {
+		     strcmp("$(test.r2)", "$(test.x2)"),
+		     strcmp("$(test.r2)", "$(test.s2)"),
+      };
+      "ok3" and => {
+		     strcmp("$(test.r3)", "$(test.x3)"),
+		     strcmp("$(test.r3)", "$(test.s3)"),
+      };
+      "ok4" and => {
+		     strcmp("$(test.r4)", "$(test.x4)"),
+		     strcmp("$(test.r4)", "$(test.s4)"),
+      };
+      "ok5" and => {
+		     strcmp("$(test.r5)", "$(test.x5)"),
+		     strcmp("$(test.r5)", "$(test.s5)"),
+      };
+      "ok6" and => {
+		     strcmp("$(test.r6)", "$(test.x6)"),
+		     strcmp("$(test.r6)", "$(test.s6)"),
+      };
+      "ok7" and => {
+		     strcmp("$(test.r7)", "$(test.x7)"),
+		     strcmp("$(test.r7)", "$(test.s7)"),
+      };
 
-	"ok" and => { "ok1", "ok2", "ok3", "ok4", "ok5", "ok6", "ok7" };
+      "ok" and => { "ok1", "ok2", "ok3", "ok4", "ok5", "ok6", "ok7" };
 
-reports:
+  reports:
     DEBUG.!ok1::
-	"Mismatch 1: '$(test.r1)' '$(test.x1)' '$(test.s1)'";
+      "Mismatch 1: '$(test.r1)' '$(test.x1)' '$(test.s1)'";
     DEBUG.!ok2::
-	"Mismatch 2: '$(test.r2)' '$(test.x2)' '$(test.s2)'";
+      "Mismatch 2: '$(test.r2)' '$(test.x2)' '$(test.s2)'";
     DEBUG.!ok3::
-	"Mismatch 3: '$(test.r3)' '$(test.x3)' '$(test.s3)'";
+      "Mismatch 3: '$(test.r3)' '$(test.x3)' '$(test.s3)'";
     DEBUG.!ok4::
-	"Mismatch 4: '$(test.r4)' '$(test.x4)' '$(test.s4)'";
+      "Mismatch 4: '$(test.r4)' '$(test.x4)' '$(test.s4)'";
     DEBUG.!ok5::
-	"Mismatch 5: '$(test.r5)' '$(test.x5)' '$(test.s5)'";
+      "Mismatch 5: '$(test.r5)' '$(test.x5)' '$(test.s5)'";
     DEBUG.!ok6::
-	"Mismatch 6: '$(test.r6)' '$(test.x6)' '$(test.s6)'";
+      "Mismatch 6: '$(test.r6)' '$(test.x6)' '$(test.s6)'";
     DEBUG.!ok7::
-	"Mismatch 7: '$(test.r7)' '$(test.x7)' '$(test.s7)'";
+      "Mismatch 7: '$(test.r7)' '$(test.x7)' '$(test.s7)'";
     ok::
-	"$(this.promise_filename) Pass";
+      "$(this.promise_filename) Pass";
 
     !ok::
-	"$(this.promise_filename) FAIL";
+      "$(this.promise_filename) FAIL";
 
 }

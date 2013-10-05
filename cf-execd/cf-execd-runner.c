@@ -22,23 +22,21 @@
   included file COSL.txt.
 */
 
-#include "cf3.defs.h"
-#include "cf-execd-runner.h"
+#include <cf3.defs.h>
+#include <cf-execd-runner.h>
 
-#include "files_names.h"
-#include "files_interfaces.h"
-#include "hashes.h"
-#include "string_lib.h"
-#include "pipes.h"
-#include "unix.h"
-#include "mutex.h"
-#include "exec_tools.h"
+#include <files_names.h>
+#include <files_interfaces.h>
+#include <hashes.h>
+#include <string_lib.h>
+#include <pipes.h>
+#include <unix.h>
+#include <mutex.h>
+#include <exec_tools.h>
+#include <misc_lib.h>
+#include <assert.h>
 
-#ifdef HAVE_NOVA
-# if defined(__MINGW32__)
-#  include "win_execd_pipe.h"
-# endif
-#endif
+#include <cf-windows-functions.h>
 
 /*******************************************************************/
 
@@ -111,6 +109,11 @@ static void ConstructFailsafeCommand(bool scheduled_run, char *buffer)
 
 #ifndef __MINGW32__
 
+#if defined(__hpux) && defined(__GNUC__)
+#pragma GCC diagnostic ignored "-Wstrict-aliasing"
+// Avoid spurious HP-UX GCC type-pun warning on FD_SET() macro
+#endif
+
 static bool IsReadReady(int fd, int timeout_sec)
 {
     fd_set  rset;
@@ -145,6 +148,9 @@ static bool IsReadReady(int fd, int timeout_sec)
 
     return false;
 }
+#if defined(__hpux) && defined(__GNUC__)
+#pragma GCC diagnostic warning "-Wstrict-aliasing"
+#endif
 
 #endif  /* __MINGW32__ */
 
@@ -320,7 +326,7 @@ void LocalExec(const ExecConfig *config)
     }
 
     cf_pclose(pp);
-    Log(LOG_LEVEL_DEBUG, "Closing fp\n");
+    Log(LOG_LEVEL_DEBUG, "Closing fp");
     fclose(fp);
 
     Log(LOG_LEVEL_VERBOSE, "Command is complete");
@@ -343,37 +349,92 @@ static int CompareResult(const char *filename, const char *prev_file)
 
     int rtn = 0;
 
-    FILE *fp = fopen(prev_file, "r");
-    if (fp)
+    FILE *old_fp = fopen(prev_file, "r");
+    FILE *new_fp = fopen(filename, "r");
+    if (old_fp && new_fp)
     {
-        fclose(fp);
-
-        unsigned char digest1[EVP_MAX_MD_SIZE + 1];
-        int md_len1 = FileChecksum(prev_file, digest1);
-
-        unsigned char digest2[EVP_MAX_MD_SIZE + 1];
-        int md_len2 = FileChecksum(filename, digest2);
-
-        if (md_len1 != md_len2)
+        const char *errptr;
+        int erroffset;
+        pcre_extra *regex_extra = NULL;
+        // Match timestamps and remove them. Not Y21K safe! :-)
+        pcre *regex = pcre_compile(LOGGING_TIMESTAMP_REGEX, PCRE_MULTILINE, &errptr, &erroffset, NULL);
+        if (!regex)
         {
+            UnexpectedError("Compiling regular expression failed");
             rtn = 1;
         }
         else
         {
-            for (int i = 0; i < md_len1; i++)
+            regex_extra = pcre_study(regex, 0, &errptr);
+        }
+
+        while (regex)
+        {
+            char old_line[CF_BUFSIZE];
+            char new_line[CF_BUFSIZE];
+            char *old_msg = old_line;
+            char *new_msg = new_line;
+            if (CfReadLine(old_line, sizeof(old_line), old_fp) <= 0)
             {
-                if (digest1[i] != digest2[i])
+                old_msg = NULL;
+            }
+            if (CfReadLine(new_line, sizeof(new_line), new_fp) <= 0)
+            {
+                new_msg = NULL;
+            }
+            if (!old_msg || !new_msg)
+            {
+                if (old_msg != new_msg)
                 {
                     rtn = 1;
-                    break;
+                }
+                break;
+            }
+
+            char *index;
+            if (pcre_exec(regex, regex_extra, old_msg, strlen(old_msg), 0, 0, NULL, 0) >= 0)
+            {
+                index = strstr(old_msg, ": ");
+                if (index != NULL)
+                {
+                    old_msg = index + 2;
                 }
             }
+            if (pcre_exec(regex, regex_extra, new_msg, strlen(new_msg), 0, 0, NULL, 0) >= 0)
+            {
+                index = strstr(new_msg, ": ");
+                if (index != NULL)
+                {
+                    new_msg = index + 2;
+                }
+            }
+
+            if (strcmp(old_msg, new_msg) != 0)
+            {
+                rtn = 1;
+                break;
+            }
         }
+
+        if (regex_extra)
+        {
+            free(regex_extra);
+        }
+        free(regex);
     }
     else
     {
         /* no previous file */
         rtn = 1;
+    }
+
+    if (old_fp)
+    {
+        fclose(old_fp);
+    }
+    if (new_fp)
+    {
+        fclose(new_fp);
     }
 
     if (!ThreadLock(cft_count))
@@ -388,7 +449,7 @@ static int CompareResult(const char *filename, const char *prev_file)
 
     if (!LinkOrCopy(filename, prev_file, true))
     {
-        Log(LOG_LEVEL_INFO, "Could not symlink or copy %s to %s", filename, prev_file);
+        Log(LOG_LEVEL_INFO, "Could not symlink or copy '%s' to '%s'", filename, prev_file);
         rtn = 1;
     }
 
@@ -413,7 +474,7 @@ static void MailResult(const ExecConfig *config, const char *file)
         if (statbuf.st_size == 0)
         {
             unlink(file);
-            Log(LOG_LEVEL_DEBUG, "Nothing to report in %s\n", file);
+            Log(LOG_LEVEL_DEBUG, "Nothing to report in file '%s'", file);
             return;
         }
     }
@@ -439,11 +500,11 @@ static void MailResult(const ExecConfig *config, const char *file)
 
     if (config->mail_max_lines == 0)
     {
-        Log(LOG_LEVEL_DEBUG, "Not mailing: EmailMaxLines was zero\n");
+        Log(LOG_LEVEL_DEBUG, "Not mailing: EmailMaxLines was zero");
         return;
     }
 
-    Log(LOG_LEVEL_DEBUG, "Mailing results of (%s) to (%s)\n", file, config->mail_to_address);
+    Log(LOG_LEVEL_DEBUG, "Mailing results of '%s' to '%s'", file, config->mail_to_address);
 
 /* Check first for anomalies - for subject header */
 
@@ -483,8 +544,8 @@ static void MailResult(const ExecConfig *config, const char *file)
     struct hostent *hp = gethostbyname(config->mail_server);
     if (!hp)
     {
-        printf("Unknown host: %s\n", config->mail_server);
-        printf("Make sure that fully qualified names can be looked up at your site.\n");
+        Log(LOG_LEVEL_ERR, "While mailing agent output, unknown host '%s'. Make sure that fully qualified names can be looked up at your site.",
+            config->mail_server);
         fclose(fp);
         return;
     }
@@ -504,7 +565,7 @@ static void MailResult(const ExecConfig *config, const char *file)
     raddr.sin_addr.s_addr = ((struct in_addr *) (hp->h_addr))->s_addr;
     raddr.sin_family = AF_INET;
 
-    Log(LOG_LEVEL_DEBUG, "Connecting...\n");
+    Log(LOG_LEVEL_DEBUG, "Connecting...");
 
     int sd = socket(AF_INET, SOCK_STREAM, 0);
     if (sd == -1)
@@ -636,7 +697,7 @@ static void MailResult(const ExecConfig *config, const char *file)
     }
 
     Dialogue(sd, "QUIT\r\n");
-    Log(LOG_LEVEL_DEBUG, "Done sending mail\n");
+    Log(LOG_LEVEL_DEBUG, "Done sending mail");
     fclose(fp);
     cf_closesocket(sd);
     return;
@@ -653,11 +714,11 @@ static int Dialogue(int sd, const char *s)
     if ((s != NULL) && (*s != '\0'))
     {
         int sent = send(sd, s, strlen(s), 0);
-        Log(LOG_LEVEL_DEBUG, "SENT(%d)->%s", sent, s);
+        Log(LOG_LEVEL_DEBUG, "SENT(%d) -> '%s'", sent, s);
     }
     else
     {
-        Log(LOG_LEVEL_DEBUG, "Nothing to send .. waiting for opening\n");
+        Log(LOG_LEVEL_DEBUG, "Nothing to send .. waiting for opening");
     }
 
     int charpos = 0;
@@ -677,8 +738,6 @@ static int Dialogue(int sd, const char *s)
         {
             rfclinetype = ch;
         }
-
-        Log(LOG_LEVEL_DEBUG, "%c", ch);
 
         if ((ch == '\n') || (ch == '\0'))
         {

@@ -22,26 +22,7 @@
   included file COSL.txt.
 */
 
-#include "signals.h"
-
-static const char *SIGNALS[] =
-{
-    [SIGHUP] = "SIGHUP",
-    [SIGINT] = "SIGINT",
-    [SIGTRAP] = "SIGTRAP",
-    [SIGKILL] = "SIGKILL",
-    [SIGPIPE] = "SIGPIPE",
-    [SIGCONT] = "SIGCONT",
-    [SIGABRT] = "SIGABRT",
-    [SIGSTOP] = "SIGSTOP",
-    [SIGQUIT] = "SIGQUIT",
-    [SIGTERM] = "SIGTERM",
-    [SIGCHLD] = "SIGCHLD",
-    [SIGUSR1] = "SIGUSR1",
-    [SIGUSR2] = "SIGUSR2",
-    [SIGBUS] = "SIGBUS",
-    [SIGSEGV] = "SIGSEGV",
-};
+#include <signals.h>
 
 static bool PENDING_TERMINATION = false;
 
@@ -56,23 +37,19 @@ bool IsPendingTermination(void)
 
 void HandleSignalsForAgent(int signum)
 {
-    Log(LOG_LEVEL_ERR, "Received signal %d (%s) while doing [%s]", signum, SIGNALS[signum] ? SIGNALS[signum] : "NOSIG",
-          CFLOCK);
-    Log(LOG_LEVEL_ERR, "Logical start time %s ", ctime(&CFSTARTTIME));
-    Log(LOG_LEVEL_ERR, "This sub-task started really at %s", ctime(&CFINITSTARTTIME));
-    fflush(stdout);
-
     if ((signum == SIGTERM) || (signum == SIGINT))
     {
+        /* TODO don't exit from the signal handler, just set a flag. Reason is
+         * that all the atexit() hooks we register are not reentrant. */
         exit(0);
     }
     else if (signum == SIGUSR1)
     {
-        DEBUG = true;
+        LogSetGlobalLevel(LOG_LEVEL_DEBUG);
     }
     else if (signum == SIGUSR2)
     {
-        DEBUG = false;
+        LogSetGlobalLevel(LOG_LEVEL_NOTICE);
     }
 
 /* Reset the signal handler */
@@ -83,12 +60,6 @@ void HandleSignalsForAgent(int signum)
 
 void HandleSignalsForDaemon(int signum)
 {
-    Log(LOG_LEVEL_ERR, "Received signal %d (%s) while doing [%s]", signum, SIGNALS[signum] ? SIGNALS[signum] : "NOSIG",
-          CFLOCK);
-    Log(LOG_LEVEL_ERR, "Logical start time %s ", ctime(&CFSTARTTIME));
-    Log(LOG_LEVEL_ERR, "This sub-task started really at %s", ctime(&CFINITSTARTTIME));
-    fflush(stdout);
-
     if ((signum == SIGTERM) || (signum == SIGINT) || (signum == SIGHUP) || (signum == SIGSEGV) || (signum == SIGKILL)
         || (signum == SIGPIPE))
     {
@@ -96,11 +67,11 @@ void HandleSignalsForDaemon(int signum)
     }
     else if (signum == SIGUSR1)
     {
-        DEBUG = true;
+        LogSetGlobalLevel(LOG_LEVEL_DEBUG);
     }
     else if (signum == SIGUSR2)
     {
-        DEBUG = false;
+        LogSetGlobalLevel(LOG_LEVEL_NOTICE);
     }
 
 /* Reset the signal handler */

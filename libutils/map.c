@@ -22,13 +22,13 @@
   included file COSL.txt.
 */
 
-#include "platform.h"
-#include "map.h"
-#include "alloc.h"
-#include "array_map_priv.h"
-#include "hash_map_priv.h"
-#include "string_lib.h"
-#include "hashes.h"
+#include <platform.h>
+#include <map.h>
+#include <alloc.h>
+#include <array_map_priv.h>
+#include <hash_map_priv.h>
+#include <string_lib.h>
+#include <hashes.h>
 
 /*
  * This associative array implementation uses array with linear search up to
@@ -51,7 +51,7 @@ struct Map_
     };
 };
 
-static unsigned IdentityHashFn(const void *ptr, ARG_UNUSED unsigned int max)
+static unsigned IdentityHashFn(const void *ptr, ARG_UNUSED unsigned int seed, ARG_UNUSED unsigned int max)
 {
     return (unsigned)(uintptr_t)ptr;
 }
@@ -265,7 +265,7 @@ MapKeyValue *MapIteratorNext(MapIterator *i)
 }
 
 TYPED_MAP_DEFINE(String, char *, char *,
-                 (MapHashFn)&OatHash,
+                 (MapHashFn)&StringHash,
                  (MapKeyEqualFn)&StringSafeEqual,
                  &free,
                  &free)

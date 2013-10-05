@@ -1543,7 +1543,8 @@ static int EditLineByColumn(EvalContext *ctx, Rlist **columns, Attributes a, Pro
 
         if (strcmp(rp->item, a.column.column_value) == 0)
         {
-            retval = false;
+            RlistAppendScalar(&this_column, rp->item);
+            retval = DoEditColumn(&this_column, a, edcontext);
         }
         else
         {

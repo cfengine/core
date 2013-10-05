@@ -6,7 +6,7 @@
 
 body common control
 {
-  inputs => { "../../default.cf.sub" };
+  inputs => { "../../../default.cf.sub" };
   bundlesequence  => { default("$(this.promise_filename)") };   
   version => "1.0";
 }
@@ -17,7 +17,7 @@ vars:
 	"states" slist => { "actual", "expected" };
 
 	"actual" string =>
-"able:baker,booker,XXX,bonker:charlie:delta:echo
+"able:baker,booker,XXX,banker:charlie:delta:echo
 apple:XXX,banana:carrot:dogfood
 aardvark:baboon,XXX:colugo:dingo::fox
 ampallang:XXX: :dydoe:,:::::

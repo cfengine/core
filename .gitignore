@@ -143,6 +143,9 @@ cscope.*
 \#*#
 .dir-locals.el
 
+# vim
+.*.swp
+
 # eclipse
 
 .cproject

@@ -77,7 +77,7 @@
 #ifdef HAVE_SYS_SYSCTL_H
 #include <sys/param.h>
 #include <sys/sysctl.h>
-#ifdef KERN_BOOTTIME 
+#ifdef KERN_BOOTTIME
 #define BOOT_TIME_WITH_SYSCTL
 #endif
 #endif
@@ -413,7 +413,7 @@ void GetNameInfo3(EvalContext *ctx, AgentType agent_type)
 
     DetectDomainName(ctx, VSYSNAME.nodename);
 
-    if ((tloc = time((time_t *) NULL)) == -1)
+    if ((tloc = time(NULL)) == -1)
     {
         Log(LOG_LEVEL_ERR, "Couldn't read system clock");
     }
@@ -829,7 +829,7 @@ void Get3Environment(EvalContext *ctx, AgentType agent_type)
         {
             Rlist *list = NULL;
             sscanf(context + 1, "%[^=]=%[^\n]", name, value);
-           
+
             Log(LOG_LEVEL_DEBUG, "Setting new monitoring list '%s' => '%s'", name, value);
             list = RlistParseShown(value);
             EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_MON, name, list, DATA_TYPE_STRING_LIST);
@@ -1041,7 +1041,7 @@ void OSClasses(EvalContext *ctx)
     {
         OpenVZ_Detect(ctx);
     }
-    
+
 #ifdef XEN_CPUID_SUPPORT
     else if (Xen_Hv_Check())
     {
@@ -1181,7 +1181,7 @@ void OSClasses(EvalContext *ctx)
         EvalContextClassPutHard(ctx, "smartmachine");
     }
 #endif
-    
+
     /* FIXME: this variable needs redhat/SuSE/debian classes to be defined and
      * hence can't be initialized earlier */
 
@@ -1891,7 +1891,7 @@ static int LinuxDebianSanitizeIssue(char *buffer)
              {
                  escaped = true;
              }
-             else 
+             else
              {
                  escaped = false;
              }
@@ -1903,7 +1903,7 @@ static int LinuxDebianSanitizeIssue(char *buffer)
                  *s2 = *s;
                  s2++;
              }
-             else 
+             else
              {
                  escaped = false;
              }
@@ -1913,7 +1913,7 @@ static int LinuxDebianSanitizeIssue(char *buffer)
     s2--;
     while (*s2==' ')
     {
-        *s2='\0'; 
+        *s2='\0';
         s2--;
     }
     return 0;
@@ -1974,7 +1974,7 @@ static int Linux_Debian_Version(EvalContext *ctx)
     {
         return 1;
     }
-    
+
     os[0] = '\0';
     sscanf(buffer, "%250s", os);
 
@@ -2146,7 +2146,7 @@ static int EOS_Version(EvalContext *ctx)
 { char buffer[CF_BUFSIZE];
 
  // e.g. Arista Networks EOS 4.10.2
- 
+
     if (ReadLine("/etc/Eos-release", buffer, sizeof(buffer)))
     {
         if (strstr(buffer, "EOS"))
@@ -2161,7 +2161,7 @@ static int EOS_Version(EvalContext *ctx)
             EvalContextClassPutHard(ctx, class);
         }
     }
-    
+
     return 0;
 }
 
@@ -2172,7 +2172,7 @@ static int MiscOS(EvalContext *ctx)
 { char buffer[CF_BUFSIZE];
 
  // e.g. BIG-IP 10.1.0 Build 3341.1084
- 
+
     if (ReadLine("/etc/issue", buffer, sizeof(buffer)))
     {
        if (strstr(buffer, "BIG-IP"))
@@ -2189,7 +2189,7 @@ static int MiscOS(EvalContext *ctx)
            SetFlavour(ctx, "BIG-IP");
        }
     }
-    
+
     return 0;
 }
 
@@ -2313,7 +2313,7 @@ static void OpenVZ_Detect(EvalContext *ctx)
     {
         Log(LOG_LEVEL_VERBOSE, "This appears to be an OpenVZ/Virtuozzo/Parallels Cloud Server host system.\n");
         EvalContextClassPutHard(ctx, "virt_host_vz");
-        /* if the file /bin/vzps is there, it is safe to use the processes promise type */ 
+        /* if the file /bin/vzps is there, it is safe to use the processes promise type */
         if (stat(OPENVZ_VZPS_FILE, &statbuf) != -1)
         {
             EvalContextClassPutHard(ctx, "virt_host_vz_vzps");
@@ -2552,7 +2552,7 @@ int GetUptimeMinutes(time_t now)
 #if defined(BOOT_TIME_WITH_SYSINFO)         // Most GNU, Linux platforms
     struct sysinfo s;
 
-    if (sysinfo(&s) == 0) 
+    if (sysinfo(&s) == 0)
     {
        // Don't return yet, sanity checking below
        boot_time = now - s.uptime;
@@ -2629,12 +2629,12 @@ int GetUptimeMinutes(time_t now)
 // and convert the uptime to boot time using "now" argument.
 //
 // The regexp needs to match all variants of the uptime command's output.
-// Solaris 8:     10:45am up 109 day(s), 19:56, 1 user, load average: 
+// Solaris 8:     10:45am up 109 day(s), 19:56, 1 user, load average:
 // HP-UX 11.11:   9:24am  up 1 min,  1 user,  load average:
 //                8:23am  up 23 hrs,  0 users,  load average:
 //                9:33am  up 2 days, 10 mins,  0 users,  load average:
 //                11:23am  up 2 days, 2 hrs,  0 users,  load average:
-// Red Hat Linux: 10:51:23 up 5 days, 19:54, 1 user, load average: 
+// Red Hat Linux: 10:51:23 up 5 days, 19:54, 1 user, load average:
 //
 // UPTIME_BACKREFS must be set to this regexp's maximum backreference
 // index number (i.e., the count of left-parentheses):
@@ -2652,11 +2652,11 @@ static time_t GetBootTimeFromUptimeCommand(time_t now)
     time_t uptime = 0;
     const char *errptr;
     int erroffset;
-    
+
     rx = pcre_compile(UPTIME_REGEXP, 0, &errptr, &erroffset, NULL);
     if (rx == NULL)
     {
-        Log(LOG_LEVEL_DEBUG, "failed to compile regexp to parse uptime command"); 
+        Log(LOG_LEVEL_DEBUG, "failed to compile regexp to parse uptime command");
         return(-1);
     }
 

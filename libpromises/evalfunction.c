@@ -325,12 +325,12 @@ static FnCallResult FnCallHostsWithClass(EvalContext *ctx, FnCall *fp, Rlist *fi
 
     char *class_name = RlistScalarValue(finalargs);
     char *return_format = RlistScalarValue(finalargs->next);
-    
+
     if(!ListHostsWithClass(ctx, &returnlist, class_name, return_format))
     {
         return (FnCallResult){ FNCALL_FAILURE };
     }
-    
+
     return (FnCallResult) { FNCALL_SUCCESS, { returnlist, RVAL_TYPE_LIST } };
 }
 
@@ -868,7 +868,7 @@ static FnCallResult FnCallCanonify(EvalContext *ctx, FnCall *fp, Rlist *finalarg
     char *string = RlistScalarValue(finalargs);
 
     buf[0] = '\0';
-    
+
     if (!strcmp(fp->name, "canonifyuniquely"))
     {
         char hashbuffer[EVP_MAX_MD_SIZE * 4];
@@ -2672,7 +2672,7 @@ static FnCallResult FilterInternal(EvalContext *ctx, FnCall *fp, char *regex, ch
         // exit early in case "none" is being called
         else if (0 == strcmp(fp->name, "every"))
         {
-            total++; // we just 
+            total++; // we just
             break;
         }
 
@@ -2803,7 +2803,7 @@ static FnCallResult FnCallSetop(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
         {
             continue;
         }
-                
+
         RlistAppendScalarIdemp(&returnlist, RlistScalarValue(rp_a));
     }
 
@@ -4056,7 +4056,7 @@ static FnCallResult FnCallOn(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
         Log(LOG_LEVEL_INFO, "Illegal time value");
     }
 
-    snprintf(buffer, CF_BUFSIZE - 1, "%ld", cftime);
+    snprintf(buffer, CF_BUFSIZE - 1, "%lld", (long long)cftime);
 
     return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), RVAL_TYPE_SCALAR } };
 }
@@ -4179,7 +4179,7 @@ static FnCallResult FnCallAgoDate(EvalContext *ctx, FnCall *fp, Rlist *finalargs
     cftime -= Months2Seconds(d[DATE_TEMPLATE_MONTH]);
     cftime -= d[DATE_TEMPLATE_YEAR] * 365 * 24 * 3600;
 
-    snprintf(buffer, CF_BUFSIZE - 1, "%ld", cftime);
+    snprintf(buffer, CF_BUFSIZE - 1, "%lld", (long long)cftime);
 
     if (cftime < 0)
     {
@@ -4195,7 +4195,8 @@ static FnCallResult FnCallAccumulatedDate(EvalContext *ctx, FnCall *fp, Rlist *f
 {
     Rlist *rp;
     char buffer[CF_BUFSIZE];
-    long d[6], cftime;
+    long d[6];
+    timt_t cftime;
     DateTemplate i;
 
     buffer[0] = '\0';
@@ -4223,7 +4224,7 @@ static FnCallResult FnCallAccumulatedDate(EvalContext *ctx, FnCall *fp, Rlist *f
     cftime += d[DATE_TEMPLATE_MONTH] * 30 * 24 * 3600;
     cftime += d[DATE_TEMPLATE_YEAR] * 365 * 24 * 3600;
 
-    snprintf(buffer, CF_BUFSIZE - 1, "%ld", cftime);
+    snprintf(buffer, CF_BUFSIZE - 1, "%lld", (long long)cftime);
 
     return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), RVAL_TYPE_SCALAR } };
 }
@@ -4248,7 +4249,7 @@ static FnCallResult FnCallNow(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 
     cftime = CFSTARTTIME;
 
-    snprintf(buffer, CF_BUFSIZE - 1, "%ld", (long) cftime);
+    snprintf(buffer, CF_BUFSIZE - 1, "%lld", (long long)cftime);
 
     return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), RVAL_TYPE_SCALAR } };
 }
@@ -4284,7 +4285,7 @@ static FnCallResult FnCallStrftime(EvalContext *ctx, FnCall *fp, Rlist *finalarg
     }
     else
     {
-        Log(LOG_LEVEL_WARNING, "Function strftime, the given time stamp '%ld' was invalid. (strftime: %s)", when, GetErrorStr());
+        Log(LOG_LEVEL_WARNING, "Function strftime, the given time stamp '%lld' was invalid. (strftime: %s)", (long long)when, GetErrorStr());
     }
 
     return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), RVAL_TYPE_SCALAR } };

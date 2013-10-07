@@ -138,6 +138,11 @@ galaxy
 TAGS
 cscope.*
 
+# vim
+*~
+.*.swp
+.*.swo
+
 # emacs
 
 *~

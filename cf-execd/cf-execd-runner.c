@@ -640,17 +640,17 @@ static void MailResult(const ExecConfig *config, const char *file)
     }
     else
     {
-        sprintf(mailsubject_anomaly_prefix,"");
+        mailsubject_anomaly_prefix[0] = '\0';
     }
 
-    if (strlen(config->mail_subject) == 0)
+    if (SafeStringLength(config->mail_subject) == 0)
     {
-        sprintf(vbuff, "Subject: %s[%s/%s]\r\n", mailsubject_anomaly_prefix, config->fq_name, config->ip_address);
+        snprintf(vbuff, sizeof(vbuff), "Subject: %s[%s/%s]\r\n", mailsubject_anomaly_prefix, config->fq_name, config->ip_address);
         Log(LOG_LEVEL_DEBUG, "%s", vbuff);
     }
     else
     {
-        sprintf(vbuff, "Subject: %s%s\r\n", mailsubject_anomaly_prefix, config->mail_subject);
+        snprintf(vbuff, sizeof(vbuff), "Subject: %s%s\r\n", mailsubject_anomaly_prefix, config->mail_subject);
         Log(LOG_LEVEL_DEBUG, "%s", vbuff);
     }
 
@@ -683,7 +683,7 @@ static void MailResult(const ExecConfig *config, const char *file)
         }
         Chop(ipbuf, sizeof(ipbuf));
 
-        sprintf(vbuff, "X-CFEngine: vfqhost=\"%s\";ip-addresses=\"%s\";policyhub=\"%s\";pkhash=\"%s\"\r\n", VFQNAME, ipbuf, existing_policy_server, HashPrintSafe(CF_DEFAULT_DIGEST, digest, buffer));
+        snprintf(vbuff, sizeof(vbuff), "X-CFEngine: vfqhost=\"%s\";ip-addresses=\"%s\";policyhub=\"%s\";pkhash=\"%s\"\r\n", VFQNAME, ipbuf, existing_policy_server, HashPrintSafe(CF_DEFAULT_DIGEST, digest, buffer));
 
         send(sd, vbuff, strlen(vbuff), 0);
         free(existing_policy_server);

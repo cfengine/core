@@ -786,6 +786,9 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
 
         sprintf(ebuff, "%s%cstate%cdiff%c", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR, FILE_SEPARATOR);
         MakeParentDirectory(ebuff, force);
+
+        sprintf(ebuff, "%s%cstate%cuntracked%c", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR, FILE_SEPARATOR);
+        MakeParentDirectory(ebuff, force);
     }
 
     OpenNetwork();

@@ -112,7 +112,8 @@ libpromises_la_SOURCES = \
         variable.c variable.h \
         verify_classes.c verify_classes.h \
         verify_reports.c \
-        verify_vars.c verify_vars.h
+        verify_vars.c verify_vars.h \
+        zones.c zones.h
 
 if !NT
 

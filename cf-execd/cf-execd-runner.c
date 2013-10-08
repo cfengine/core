@@ -202,7 +202,7 @@ void LocalExec(const ExecConfig *config)
     strncpy(esc_command, MapName(cmd), CF_BUFSIZE - 1);
 
     char line[CF_BUFSIZE];
-    snprintf(line, CF_BUFSIZE - 1, "_%jd_%s", (intmax_t) starttime, CanonifyName(ctime(&starttime)));
+    snprintf(line, CF_BUFSIZE - 1, "_%lld_%s", (long long) starttime, CanonifyName(ctime(&starttime)));
 
     char filename[CF_BUFSIZE];
     {
@@ -800,4 +800,3 @@ static int Dialogue(int sd, const char *s)
 
     return ((f == '2') || (f == '3'));  /* return code 200 or 300 from smtp */
 }
-

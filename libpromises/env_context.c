@@ -370,15 +370,15 @@ void EvalContextHeapPersistentSave(const char *context, const char *ns, unsigned
     }
 
     snprintf(name, CF_BUFSIZE, "%s%c%s", ns, CF_NS, context);
-    
+
     if (ReadDB(dbp, name, &state, sizeof(state)))
     {
         if (state.policy == CONTEXT_STATE_POLICY_PRESERVE)
         {
             if (now < state.expires)
             {
-                Log(LOG_LEVEL_VERBOSE, "Persisent state '%s' is already in a preserved state --  %jd minutes to go",
-                      name, (intmax_t)((state.expires - now) / 60));
+                Log(LOG_LEVEL_VERBOSE, "Persisent state '%s' is already in a preserved state --  %lld minutes to go",
+                      name, (long long)((state.expires - now) / 60));
                 CloseDB(dbp);
                 return;
             }
@@ -457,20 +457,20 @@ void EvalContextHeapPersistentLoadAll(EvalContext *ctx)
         }
         else
         {
-            Log(LOG_LEVEL_VERBOSE, "Persistent class '%s' for %jd more minutes", key, (intmax_t)((q.expires - now) / 60));
+            Log(LOG_LEVEL_VERBOSE, "Persistent class '%s' for %lld more minutes", key, (long long)((q.expires - now) / 60));
             Log(LOG_LEVEL_VERBOSE, "Adding persistent class '%s' to heap", key);
             if (strchr(key, CF_NS))
-               {
-               char ns[CF_MAXVARSIZE], name[CF_MAXVARSIZE];
-               ns[0] = '\0';
-               name[0] = '\0';
-               sscanf(key, "%[^:]:%[^\n]", ns, name);
-               EvalContextHeapAddSoft(ctx, name, ns);
-               }
+	    {
+		char ns[CF_MAXVARSIZE], name[CF_MAXVARSIZE];
+		ns[0] = '\0';
+		name[0] = '\0';
+		sscanf(key, "%[^:]:%[^\n]", ns, name);
+		EvalContextHeapAddSoft(ctx, name, ns);
+	    }
             else
-               {
-               EvalContextHeapAddSoft(ctx, key, NULL);
-               }
+	    {
+		EvalContextHeapAddSoft(ctx, key, NULL);
+	    }
         }
     }
 
@@ -570,7 +570,7 @@ int MissingDependencies(EvalContext *ctx, const Promise *pp)
 
     char name[CF_BUFSIZE], *d;
     Rlist *rp, *deps = PromiseGetConstraintAsList(ctx, "depends_on", pp);
-    
+
     for (rp = deps; rp != NULL; rp = rp->next)
     {
         if (strchr(RlistScalarValue(rp), ':'))

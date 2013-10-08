@@ -761,7 +761,7 @@ void DoExec(EvalContext *ctx, ServerConnectionState *conn, char *args)
     int print = false, i;
     FILE *pp;
 
-    if ((CFSTARTTIME = time((time_t *) NULL)) == -1)
+    if ((CFSTARTTIME = time(NULL)) == -1)
     {
         Log(LOG_LEVEL_ERR, "Couldn't read system clock. (time: %s)", GetErrorStr());
     }
@@ -1683,4 +1683,3 @@ int cfscanf(char *in, int len1, int len2, char *out1, char *out2, char *out3)
 
     return (len1 + len2 + len3 + 2);
 }
-

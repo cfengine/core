@@ -470,7 +470,7 @@ int cf_remote_stat(char *file, struct stat *buf, char *stattype, bool encrypt, A
         return ret;
     }
 
-    if ((tloc = time((time_t *) NULL)) == -1)
+    if ((tloc = time(NULL)) == -1)
     {
         Log(LOG_LEVEL_ERR, "Couldn't read system clock");
     }
@@ -489,7 +489,7 @@ int cf_remote_stat(char *file, struct stat *buf, char *stattype, bool encrypt, A
             return -1;
         }
 
-        snprintf(in, CF_BUFSIZE - 1, "SYNCH %jd STAT %s", (intmax_t) tloc, file);
+        snprintf(in, CF_BUFSIZE - 1, "SYNCH %lld STAT %s", (long long) tloc, file);
         cipherlen = EncryptString(conn->encryption_type, in, out, conn->session_key, strlen(in) + 1);
         snprintf(sendbuffer, CF_BUFSIZE - 1, "SSYNCH %d", cipherlen);
         memcpy(sendbuffer + CF_PROTO_OFFSET, out, cipherlen);
@@ -497,7 +497,7 @@ int cf_remote_stat(char *file, struct stat *buf, char *stattype, bool encrypt, A
     }
     else
     {
-        snprintf(sendbuffer, CF_BUFSIZE, "SYNCH %jd STAT %s", (intmax_t) tloc, file);
+        snprintf(sendbuffer, CF_BUFSIZE, "SYNCH %lld STAT %s", (long long) tloc, file);
         tosend = strlen(sendbuffer);
     }
 
@@ -1636,7 +1636,7 @@ void ConnectionsCleanup(void)
 #endif
 
 int TryConnect(AgentConnection *conn, struct timeval *tvp, struct sockaddr *cinp, int cinpSz)
-/** 
+/**
  * Tries a nonblocking connect and then restores blocking if
  * successful. Returns true on success, false otherwise.
  * NB! Do not use recv() timeout - see note below.

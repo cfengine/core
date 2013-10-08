@@ -1221,8 +1221,8 @@ bool CopyRegularFile(EvalContext *ctx, const char *source, const char *dest, str
 
         if (attr.copy.backup == BACKUP_OPTION_TIMESTAMP)
         {
-            stampnow = time((time_t *) NULL);
-            snprintf(stamp, CF_BUFSIZE - 1, "_%lu_%s", CFSTARTTIME, CanonifyName(ctime(&stampnow)));
+            stampnow = time(NULL);
+            snprintf(stamp, CF_BUFSIZE - 1, "_%lld_%s", (long long)CFSTARTTIME, CanonifyName(ctime(&stampnow)));
 
             if (!JoinSuffix(backup, stamp))
             {

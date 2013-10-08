@@ -314,14 +314,14 @@ static int SelectProcTimeCounterRangeMatch(char *name1, char *name2, time_t min,
 
         if ((min <= value) && (value <= max))
         {
-            Log(LOG_LEVEL_VERBOSE, "Selection filter matched counter range '%s/%s' = '%s' in [%jd,%jd] (= %jd secs)",
-                  name1, name2, line[i], (intmax_t)min, (intmax_t)max, (intmax_t)value);
+            Log(LOG_LEVEL_VERBOSE, "Selection filter matched counter range '%s/%s' = '%s' in [%lld,%lld] (= %lld secs)",
+                  name1, name2, line[i], (long long)min, (long long)max, (long long)value);
             return true;
         }
         else
         {
-            Log(LOG_LEVEL_DEBUG, "Selection filter REJECTED counter range '%s/%s' = '%s' in [%" PRIdMAX ",%" PRIdMAX "] (= %" PRIdMAX " secs)", name1, name2,
-                    line[i], (intmax_t)min, (intmax_t)max, (intmax_t)value);
+            Log(LOG_LEVEL_DEBUG, "Selection filter REJECTED counter range '%s/%s' = '%s' in [%lld,%lld] (= %lld secs)", name1, name2,
+		line[i], (long long)min, (long long)max, (long long)value);
             return false;
         }
     }
@@ -354,8 +354,8 @@ static int SelectProcTimeAbsRangeMatch(char *name1, char *name2, time_t min, tim
 
         if ((min <= value) && (value <= max))
         {
-            Log(LOG_LEVEL_VERBOSE, "Selection filter matched absolute '%s/%s' = '%s(%jd)' in [%jd,%jd]", name1, name2, line[i], (intmax_t)value,
-                  (intmax_t)min, (intmax_t)max);
+            Log(LOG_LEVEL_VERBOSE, "Selection filter matched absolute '%s/%s' = '%s(%lld)' in [%lld,%lld]", name1, name2, line[i], (long long)value,
+                  (long long)min, (long long)max);
             return true;
         }
         else

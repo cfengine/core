@@ -403,7 +403,7 @@ void LogHashChange(const char *file, FileState status, char *msg, Promise *pp)
 
     const char *handle = PromiseID(pp);
 
-    fprintf(fp, "%ld,%s,%s,%c,%s\n", (long) now, handle, file, FileStateToChar(status), msg);
+    fprintf(fp, "%lld,%s,%s,%c,%s\n", (long long) now, handle, file, FileStateToChar(status), msg);
     fclose(fp);
 
     chmod(fname, perm);

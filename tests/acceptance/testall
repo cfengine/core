@@ -365,6 +365,12 @@ then
 	exit 1
 fi
 
+if [ "$UNSAFE_TESTS" = "1" -a "$GAINROOT" = "fakeroot" ]; then
+    echo "Unsafe tests do not play well together with fakeroot. Please use a different"
+    echo "--gainroot (like \"sudo\"), or you will get incorrect results."
+    exit 1
+fi
+
 if [ $# -gt 0 ]; then
   # We need to run all specified tests, but not unsafe ones.
   STAGING_TESTS=1

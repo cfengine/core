@@ -60,6 +60,11 @@
 #  define SIZEOF_IFREQ(x) sizeof(struct ifreq)
 # endif
 
+#ifdef AIX
+#include <sys/ndd_var.h>
+#include <sys/kinfo.h>
+static int aix_get_mac_addr(const char *device_name, uint8_t mac[6]);
+#endif
 
 static bool IgnoreJailInterface(int ifaceidx, struct sockaddr_in *inaddr);
 static bool IgnoreInterface(char *name);
@@ -584,10 +589,10 @@ static void Unix_GetMacAddress(enum cfagenttype ag, int fd, struct ifreq *ifr, s
     {
         snprintf(name, CF_MAXVARSIZE, "hardware_mac[interface_name]");
     }
-
-# if defined(SIOCGIFHWADDR) && defined(HAVE_STRUCT_IFREQ_IFR_HWADDR)
+    
     char hw_mac[CF_MAXVARSIZE];
 
+# if defined(SIOCGIFHWADDR) && defined(HAVE_STRUCT_IFREQ_IFR_HWADDR)
     
     ioctl(fd, SIOCGIFHWADDR, ifr);
     snprintf(hw_mac, CF_MAXVARSIZE - 1, "%.2x:%.2x:%.2x:%.2x:%.2x:%.2x",
@@ -603,9 +608,33 @@ static void Unix_GetMacAddress(enum cfagenttype ag, int fd, struct ifreq *ifr, s
 
     snprintf(name, CF_MAXVARSIZE, "mac_%s", CanonifyName(hw_mac));
     NewClass(name);
+    
+#elif !defined(HAVE_STRUCT_IFREQ_IFR_HWADDR) && !defined(SIOCGIFHWADDR) && defined(AIX) //AIX doesn't have HWADDR or SIOCGIFHWADDR
+    
+    char mac[CF_MAXVARSIZE];
+    if (aix_get_mac_addr(ifp->ifr_name, mac) == 0)
+    {
+        sprintf(hw_mac, "%.2x:%.2x:%.2x:%.2x:%.2x:%.2x\n", 
+	       mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+	
+        NewScalar("sys", name, hw_mac, cf_str);
+        AppendRlist(hardware, hw_mac, CF_SCALAR);
+        AppendRlist(interfaces, ifp->ifr_name, CF_SCALAR);
+
+        snprintf(name, CF_MAXVARSIZE, "mac_%s", CanonifyName(hw_mac));
+        NewClass(name);
+    }
+    else
+    {
+        NewScalar("sys", name, "mac_unknown", cf_str);
+        NewClass("mac_unknown");
+    }
+           
 # else
+    
     NewScalar("sys", name, "mac_unknown", cf_str);
     NewClass("mac_unknown");
+    
 # endif
 }
 
@@ -1027,6 +1056,50 @@ static bool IgnoreInterface(char *name)
     return false;
 }
 
+#ifdef AIX
+static int aix_get_mac_addr(const char *device_name, uint8_t mac[6])
+{
+    size_t ksize;
+    struct kinfo_ndd *ndd;
+    int count, i;
 
+    ksize = getkerninfo(KINFO_NDD, 0, 0, 0);
+    if (ksize == 0) 
+    {
+        errno = ENOSYS;
+	return -1;
+    }
 
+    ndd = (struct kinfo_ndd *)xmalloc(ksize);
+    if (ndd == NULL) 
+    {
+        errno = ENOMEM;
+        return -1;
+    }
+
+    if (getkerninfo(KINFO_NDD, ndd, &ksize, 0) == -1) 
+    {
+        errno = ENOSYS;
+        return -1;
+    }
+
+    count= ksize/sizeof(struct kinfo_ndd);
+    for (i=0;i<count;i++) 
+    {
+        if ((ndd[i].ndd_type == NDD_ETHER || 
+            ndd[i].ndd_type == NDD_ISO88023) &&
+            ndd[i].ndd_addrlen == 6 &&
+            (strcmp(ndd[i].ndd_alias, device_name) == 0 ||
+            strcmp(ndd[i].ndd_name, device_name == 0))) 
+	{
+            memcpy(mac, ndd[i].ndd_addr, 6);
+            free(ndd);
+            return 0;
+        }
+    }
+    free(ndd);
+    errno = ENOENT;
+    return -1;
+}
+#endif /* AIX */
 #endif /* NOT MINGW */

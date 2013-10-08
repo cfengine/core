@@ -401,7 +401,7 @@ static void LogLockCompletion(char *cflog, int pid, char *str, char *op, char *o
         exit(1);
     }
 
-    if ((tim = time((time_t *) NULL)) == -1)
+    if ((tim = time(NULL)) == -1)
     {
         Log(LOG_LEVEL_DEBUG, "Couldn't read system clock");
     }
@@ -757,16 +757,16 @@ CfLock AcquireLock(EvalContext *ctx, const char *operand, const char *host, time
 
     if (elapsedtime < 0)
     {
-        Log(LOG_LEVEL_VERBOSE, " XX Another cf-agent seems to have done this since I started (elapsed=%jd)",
-              (intmax_t) elapsedtime);
+        Log(LOG_LEVEL_VERBOSE, " XX Another cf-agent seems to have done this since I started (elapsed=%lld)",
+              (long long) elapsedtime);
         ReleaseCriticalSection();
         return this;
     }
 
     if (elapsedtime < tc.ifelapsed)
     {
-        Log(LOG_LEVEL_VERBOSE, " XX Nothing promised here [%.40s] (%jd/%u minutes elapsed)", cflast,
-              (intmax_t) elapsedtime, tc.ifelapsed);
+        Log(LOG_LEVEL_VERBOSE, " XX Nothing promised here [%.40s] (%lld/%u minutes elapsed)", cflast,
+              (long long) elapsedtime, tc.ifelapsed);
         ReleaseCriticalSection();
         return this;
     }
@@ -782,7 +782,7 @@ CfLock AcquireLock(EvalContext *ctx, const char *operand, const char *host, time
         {
             if (elapsedtime >= tc.expireafter)
             {
-                Log(LOG_LEVEL_INFO, "Lock %s expired (after %jd/%u minutes)", cflock, (intmax_t) elapsedtime,
+                Log(LOG_LEVEL_INFO, "Lock %s expired (after %lld/%u minutes)", cflock, (long long) elapsedtime,
                       tc.expireafter);
 
                 pid_t pid = FindLockPid(cflock);
@@ -973,7 +973,7 @@ void PurgeLocks(void)
 
         if (now - entry.time > (time_t) CF_LOCKHORIZON)
         {
-            Log(LOG_LEVEL_VERBOSE, " --> Purging lock (%jd) %s", (intmax_t)(now - entry.time), key);
+            Log(LOG_LEVEL_VERBOSE, " --> Purging lock (%lld) %s", (long long)(now - entry.time), key);
             DBCursorDeleteEntry(dbcp);
         }
     }

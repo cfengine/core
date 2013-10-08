@@ -413,15 +413,15 @@ void GetNameInfo3(EvalContext *ctx, AgentType agent_type)
 
     DetectDomainName(ctx, VSYSNAME.nodename);
 
-    if ((tloc = time((time_t *) NULL)) == -1)
+    if ((tloc = time(NULL)) == -1)
     {
         Log(LOG_LEVEL_ERR, "Couldn't read system clock");
     }
     else
     {
-        snprintf(workbuf, CF_BUFSIZE, "%jd", (intmax_t) tloc);
+        snprintf(workbuf, CF_BUFSIZE, "%lld", (long long) tloc);
         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "systime", workbuf, DATA_TYPE_INT);
-        snprintf(workbuf, CF_BUFSIZE, "%jd", (intmax_t) tloc / SECONDS_PER_DAY);
+        snprintf(workbuf, CF_BUFSIZE, "%lld", (long long) tloc / SECONDS_PER_DAY);
         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "sysday", workbuf, DATA_TYPE_INT);
         i = GetUptimeMinutes(tloc);
         if (i != -1)

@@ -4056,7 +4056,7 @@ static FnCallResult FnCallOn(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
         Log(LOG_LEVEL_INFO, "Illegal time value");
     }
 
-    snprintf(buffer, CF_BUFSIZE - 1, "%ld", cftime);
+    snprintf(buffer, CF_BUFSIZE - 1, "%lld", (long long) cftime);
 
     return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), RVAL_TYPE_SCALAR } };
 }
@@ -4179,7 +4179,7 @@ static FnCallResult FnCallAgoDate(EvalContext *ctx, FnCall *fp, Rlist *finalargs
     cftime -= Months2Seconds(d[DATE_TEMPLATE_MONTH]);
     cftime -= d[DATE_TEMPLATE_YEAR] * 365 * 24 * 3600;
 
-    snprintf(buffer, CF_BUFSIZE - 1, "%ld", cftime);
+    snprintf(buffer, CF_BUFSIZE - 1, "%lld", (long long)cftime);
 
     if (cftime < 0)
     {
@@ -4195,7 +4195,8 @@ static FnCallResult FnCallAccumulatedDate(EvalContext *ctx, FnCall *fp, Rlist *f
 {
     Rlist *rp;
     char buffer[CF_BUFSIZE];
-    long d[6], cftime;
+    long d[6];
+    time_t cftime;
     DateTemplate i;
 
     buffer[0] = '\0';
@@ -4223,7 +4224,7 @@ static FnCallResult FnCallAccumulatedDate(EvalContext *ctx, FnCall *fp, Rlist *f
     cftime += d[DATE_TEMPLATE_MONTH] * 30 * 24 * 3600;
     cftime += d[DATE_TEMPLATE_YEAR] * 365 * 24 * 3600;
 
-    snprintf(buffer, CF_BUFSIZE - 1, "%ld", cftime);
+    snprintf(buffer, CF_BUFSIZE - 1, "%lld", (long long)cftime);
 
     return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), RVAL_TYPE_SCALAR } };
 }
@@ -4248,7 +4249,7 @@ static FnCallResult FnCallNow(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 
     cftime = CFSTARTTIME;
 
-    snprintf(buffer, CF_BUFSIZE - 1, "%ld", (long) cftime);
+    snprintf(buffer, CF_BUFSIZE - 1, "%lld", (long long) cftime);
 
     return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), RVAL_TYPE_SCALAR } };
 }
@@ -4284,7 +4285,7 @@ static FnCallResult FnCallStrftime(EvalContext *ctx, FnCall *fp, Rlist *finalarg
     }
     else
     {
-        Log(LOG_LEVEL_WARNING, "Function strftime, the given time stamp '%ld' was invalid. (strftime: %s)", when, GetErrorStr());
+        Log(LOG_LEVEL_WARNING, "Function strftime, the given time stamp '%lld' was invalid. (strftime: %s)", (long long) when, GetErrorStr());
     }
 
     return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), RVAL_TYPE_SCALAR } };

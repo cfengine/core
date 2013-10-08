@@ -183,10 +183,10 @@ void ServerEntryPoint(EvalContext *ctx, int sd_accepted, char *ipaddr)
         return;
     }
 
-    if ((now = time((time_t *) NULL)) == -1)
-       {
-       now = 0;
-       }
+    if ((now = time(NULL)) == -1)
+    {
+	now = 0;
+    }
 
     PurgeOldConnections(&SV.connectionlist, now);
 
@@ -217,7 +217,7 @@ void ServerEntryPoint(EvalContext *ctx, int sd_accepted, char *ipaddr)
         Log(LOG_LEVEL_INFO, "Accepting connection from %s", ipaddr);
     }
 
-    snprintf(intime, 63, "%d", (int) now);
+    snprintf(intime, 63, "%lld", (long long) now);
 
     if (!ThreadLock(cft_count))
     {
@@ -826,7 +826,7 @@ static int BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *co
             break;
         }
 
-        if ((tloc = time((time_t *) NULL)) == -1)
+        if ((tloc = time(NULL)) == -1)
         {
             sprintf(conn->output, "Couldn't read system clock\n");
             Log(LOG_LEVEL_INFO, "Couldn't read system clock. (time: %s)", GetErrorStr());
@@ -845,14 +845,14 @@ static int BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *co
 
         if (DENYBADCLOCKS && (drift * drift > CLOCK_DRIFT * CLOCK_DRIFT))
         {
-            snprintf(conn->output, CF_BUFSIZE - 1, "BAD: Clocks are too far unsynchronized %ld/%ld\n", (long) tloc,
-                     (long) trem);
+            snprintf(conn->output, CF_BUFSIZE - 1, "BAD: Clocks are too far unsynchronized %lld/%lld\n", (long long) tloc,
+                     (long long) trem);
             SendTransaction(&conn->conn_info, conn->output, 0, CF_DONE);
             return true;
         }
         else
         {
-            Log(LOG_LEVEL_DEBUG, "Clocks were off by %ld", (long) tloc - (long) trem);
+            Log(LOG_LEVEL_DEBUG, "Clocks were off by %lld", (long long) tloc - (long long) trem);
             StatFile(conn, sendbuffer, filename);
         }
 

@@ -54,7 +54,7 @@ int MoveObstruction(EvalContext *ctx, char *from, Attributes attr, const Promise
 {
     struct stat sb;
     char stamp[CF_BUFSIZE], saved[CF_BUFSIZE];
-    time_t now_stamp = time((time_t *) NULL);
+    time_t now_stamp = time(NULL);
 
     if (lstat(from, &sb) == 0)
     {
@@ -77,7 +77,7 @@ int MoveObstruction(EvalContext *ctx, char *from, Attributes attr, const Promise
 
             if (attr.copy.backup == BACKUP_OPTION_TIMESTAMP || attr.edits.backup == BACKUP_OPTION_TIMESTAMP)
             {
-                snprintf(stamp, CF_BUFSIZE, "_%jd_%s", (intmax_t) CFSTARTTIME, CanonifyName(ctime(&now_stamp)));
+                snprintf(stamp, CF_BUFSIZE, "_%lld_%s", (long long) CFSTARTTIME, CanonifyName(ctime(&now_stamp)));
                 strcat(saved, stamp);
             }
 
@@ -114,7 +114,7 @@ int MoveObstruction(EvalContext *ctx, char *from, Attributes attr, const Promise
             saved[0] = '\0';
             strcpy(saved, from);
 
-            snprintf(stamp, CF_BUFSIZE, "_%jd_%s", (intmax_t) CFSTARTTIME, CanonifyName(ctime(&now_stamp)));
+            snprintf(stamp, CF_BUFSIZE, "_%lld_%s", (long long) CFSTARTTIME, CanonifyName(ctime(&now_stamp)));
             strcat(saved, stamp);
             strcat(saved, CF_SAVED);
             strcat(saved, ".dir");
@@ -155,7 +155,7 @@ int SaveAsFile(SaveCallbackFn callback, void *param, const char *file, Attribute
 
     BufferPrintf(pretty_file, "'%s'", file);
 
-    stamp_now = time((time_t *) NULL);
+    stamp_now = time(NULL);
 
     while (1)
     {
@@ -205,7 +205,7 @@ int SaveAsFile(SaveCallbackFn callback, void *param, const char *file, Attribute
 
     if (a.edits.backup == BACKUP_OPTION_TIMESTAMP)
     {
-        snprintf(stamp, CF_BUFSIZE, "_%jd_%s", (intmax_t) CFSTARTTIME, CanonifyName(ctime(&stamp_now)));
+        snprintf(stamp, CF_BUFSIZE, "_%lld_%s", (long long) CFSTARTTIME, CanonifyName(ctime(&stamp_now)));
         strcat(backup, stamp);
     }
 

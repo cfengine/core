@@ -760,6 +760,13 @@ AC_CHECK_DECLS(pthread_sigmask, [], [], [[#include <signal.h>]])
 AC_REPLACE_FUNCS(pthread_sigmask)
 
 dnl ######################################################################
+dnl Required by cf-upgrade. It cannot be implemented in libcompat because
+dnl cf-upgrade does not link to any libraries except libutils and only
+dnl statically.
+dnl ######################################################################
+AC_CHECK_FUNC(fexecve, AC_DEFINE(HAVE_FEXECVE, 1, [Whether to use fexecve(3) to execute a new process]))
+
+dnl ######################################################################
 dnl These need declarations here, but will be defined in the
 dnl Enterprise Windows code.
 dnl ######################################################################

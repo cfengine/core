@@ -72,6 +72,11 @@
 #  define SIZEOF_IFREQ(x) sizeof(struct ifreq)
 # endif
 
+#ifdef _AIX
+#include <sys/ndd_var.h>
+#include <sys/kinfo.h>
+static int aix_get_mac_addr(const char *device_name, uint8_t mac[6]);
+#endif
 
 static bool IsProcessRunning(pid_t pid);
 static void FindV6InterfacesInfo(EvalContext *ctx);
@@ -401,7 +406,28 @@ static void GetMacAddress(EvalContext *ctx, int fd, struct ifreq *ifr, struct if
 
     }
     freeifaddrs(ifaddr);
+    
+# elif defined(_AIX) && !defined(HAVE_GETIFADDRS)
+    char hw_mac[CF_MAXVARSIZE];
+    char mac[CF_MAXVARSIZE];
+    
+    if (aix_get_mac_addr(ifp->ifr_name, mac) == 0)
+    {
+        sprintf(hw_mac, "%.2x:%.2x:%.2x:%.2x:%.2x:%.2x\n", 
+	       mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+	
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, name, hw_mac, DATA_TYPE_STRING);
+        RlistAppend(hardware, hw_mac, RVAL_TYPE_SCALAR);
+        RlistAppend(interfaces, ifa->ifa_name, RVAL_TYPE_SCALAR);
 
+        snprintf(name, CF_MAXVARSIZE, "mac_%s", CanonifyName(hw_mac));
+        EvalContextClassPutHard(ctx, name);
+    }
+    else
+    {
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, name, "mac_unknown", DATA_TYPE_STRING);
+        EvalContextClassPutHard(ctx, "mac_unknown");
+    }
 # else
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, name, "mac_unknown", DATA_TYPE_STRING);
     EvalContextClassPutHard(ctx, "mac_unknown");
@@ -840,6 +866,51 @@ static bool IgnoreInterface(char *name)
     return false;
 }
 
+#ifdef _AIX
+static int aix_get_mac_addr(const char *device_name, uint8_t mac[6])
+{
+    size_t ksize;
+    struct kinfo_ndd *ndd;
+    int count, i;
 
+    ksize = getkerninfo(KINFO_NDD, 0, 0, 0);
+    if (ksize == 0) 
+    {
+        errno = ENOSYS;
+	return -1;
+    }
+
+    ndd = (struct kinfo_ndd *)xmalloc(ksize);
+    if (ndd == NULL) 
+    {
+        errno = ENOMEM;
+        return -1;
+    }
+
+    if (getkerninfo(KINFO_NDD, ndd, &ksize, 0) == -1) 
+    {
+        errno = ENOSYS;
+        return -1;
+    }
+
+    count= ksize/sizeof(struct kinfo_ndd);
+    for (i=0;i<count;i++) 
+    {
+        if ((ndd[i].ndd_type == NDD_ETHER || 
+            ndd[i].ndd_type == NDD_ISO88023) &&
+            ndd[i].ndd_addrlen == 6 &&
+            (strcmp(ndd[i].ndd_alias, device_name) == 0 ||
+            strcmp(ndd[i].ndd_name, device_name == 0))) 
+	{
+            memcpy(mac, ndd[i].ndd_addr, 6);
+            free(ndd);
+            return 0;
+        }
+    }
+    free(ndd);
+    errno = ENOENT;
+    return -1;
+}
+#endif /* _AIX */
 
 #endif /* !__MINGW32__ */

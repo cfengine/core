@@ -4195,7 +4195,8 @@ static FnCallResult FnCallAccumulatedDate(EvalContext *ctx, FnCall *fp, Rlist *f
 {
     Rlist *rp;
     char buffer[CF_BUFSIZE];
-    long d[6], cftime;
+    long d[6];
+    time_t cftime;
     DateTemplate i;
 
     buffer[0] = '\0';
@@ -4223,7 +4224,7 @@ static FnCallResult FnCallAccumulatedDate(EvalContext *ctx, FnCall *fp, Rlist *f
     cftime += d[DATE_TEMPLATE_MONTH] * 30 * 24 * 3600;
     cftime += d[DATE_TEMPLATE_YEAR] * 365 * 24 * 3600;
 
-    snprintf(buffer, CF_BUFSIZE - 1, "%ld", cftime);
+    snprintf(buffer, CF_BUFSIZE - 1, "%lld", (long long)cftime);
 
     return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), RVAL_TYPE_SCALAR } };
 }

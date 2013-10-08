@@ -877,7 +877,7 @@ static int aix_get_mac_addr(const char *device_name, uint8_t mac[6])
     if (ksize == 0) 
     {
         errno = ENOSYS;
-	return -1;
+        return -1;
     }
 
     ndd = (struct kinfo_ndd *)xmalloc(ksize);
@@ -901,7 +901,7 @@ static int aix_get_mac_addr(const char *device_name, uint8_t mac[6])
             ndd[i].ndd_addrlen == 6 &&
             (strcmp(ndd[i].ndd_alias, device_name) == 0 ||
             strcmp(ndd[i].ndd_name, device_name == 0))) 
-	{
+        {
             memcpy(mac, ndd[i].ndd_addr, 6);
             free(ndd);
             return 0;

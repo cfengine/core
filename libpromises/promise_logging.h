@@ -43,12 +43,14 @@ void PromiseLoggingInit(const EvalContext *ctx);
  */
 void PromiseLoggingPromiseEnter(const EvalContext *ctx, const Promise *pp);
 
+const char *PromiseLoggingLastMessage(const EvalContext *ctx);
+
 /**
  * @brief Finishes processing the promise and looks up the last error message associated with it.
  *
  * @return Last log message recorded for the promise, or NULL if there were none. Caller owns the memory.
  */
-char *PromiseLoggingPromiseFinish(const EvalContext *ctx, const Promise *pp);
+void PromiseLoggingPromiseFinish(const EvalContext *ctx, const Promise *pp);
 
 /**
  * @brief Unbinds logging from EvalContext.

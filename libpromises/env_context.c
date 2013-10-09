@@ -685,6 +685,8 @@ EvalContext *EvalContextNew(void)
 
     ctx->promises_done = PromiseSetNew();
 
+    PromiseLoggingInit(ctx);
+
     return ctx;
 }
 
@@ -692,6 +694,8 @@ void EvalContextDestroy(EvalContext *ctx)
 {
     if (ctx)
     {
+        PromiseLoggingFinish(ctx);
+
         DeleteItemList(ctx->heap_abort);
         DeleteItemList(ctx->heap_abort_current_bundle);
 
@@ -966,6 +970,13 @@ Promise *EvalContextStackPushPromiseIterationFrame(EvalContext *ctx, size_t iter
 
     Promise *pexp = ExpandDeRefPromise(ctx, LastStackFrame(ctx, 0)->data.promise.owner);
 
+    if (EvalContextStackCurrentPromise(ctx))
+    {
+        PromiseLoggingPromiseFinish(ctx, EvalContextStackCurrentPromise(ctx));
+    }
+
+    PromiseLoggingPromiseEnter(ctx, pexp);
+
     EvalContextStackPushFrame(ctx, StackFrameNewPromiseIteration(pexp, iter_ctx, iteration_index));
 
     return pexp;
@@ -976,7 +987,9 @@ void EvalContextStackPopFrame(EvalContext *ctx)
     assert(SeqLength(ctx->stack) > 0);
 
     StackFrame *last_frame = LastStackFrame(ctx, 0);
-    switch (last_frame->type)
+    StackFrameType last_frame_type = last_frame->type;
+
+    switch (last_frame_type)
     {
     case STACK_FRAME_TYPE_BUNDLE:
         {
@@ -989,6 +1002,7 @@ void EvalContextStackPopFrame(EvalContext *ctx)
         break;
 
     case STACK_FRAME_TYPE_PROMISE_ITERATION:
+        PromiseLoggingPromiseFinish(ctx, last_frame->data.promise_iteration.owner);
         PromiseDestroy(last_frame->data.promise_iteration.owner);
         break;
 
@@ -1001,6 +1015,11 @@ void EvalContextStackPopFrame(EvalContext *ctx)
     if (GetAgentAbortingContext(ctx))
     {
         FatalError(ctx, "cf-agent aborted on context '%s'", GetAgentAbortingContext(ctx));
+    }
+
+    if (last_frame_type == STACK_FRAME_TYPE_PROMISE_ITERATION && EvalContextStackCurrentPromise(ctx))
+    {
+        PromiseLoggingPromiseEnter(ctx, EvalContextStackCurrentPromise(ctx));
     }
 }
 
@@ -1137,8 +1156,8 @@ ClassTableIterator *EvalContextClassTableIteratorNewLocal(const EvalContext *ctx
 
 const Promise *EvalContextStackCurrentPromise(const EvalContext *ctx)
 {
-    StackFrame *frame = LastStackFrameByType(ctx, STACK_FRAME_TYPE_PROMISE);
-    return frame ? frame->data.promise.owner : NULL;
+    StackFrame *frame = LastStackFrameByType(ctx, STACK_FRAME_TYPE_PROMISE_ITERATION);
+    return frame ? frame->data.promise_iteration.owner : NULL;
 }
 
 const Bundle *EvalContextStackCurrentBundle(const EvalContext *ctx)
@@ -1727,7 +1746,7 @@ static void SetPromiseOutcomeClasses(PromiseResult status, EvalContext *ctx, con
     DeleteAllClasses(ctx, del_classes);
 }
 
-static void UpdatePromiseComplianceStatus(PromiseResult status, const Promise *pp, char *reason)
+static void UpdatePromiseComplianceStatus(PromiseResult status, const Promise *pp, const char *reason)
 {
     if (!IsPromiseValuableForLogging(pp))
     {
@@ -1938,15 +1957,11 @@ void cfPS(EvalContext *ctx, LogLevel level, PromiseResult status, const Promise 
 
     /* FIXME: Ensure that NULL pp is never passed into cfPS */
 
-    if (pp)
-    {
-        PromiseLoggingInit(ctx);
-        PromiseLoggingPromiseEnter(ctx, pp);
+    assert(pp);
 
-        if (level >= LOG_LEVEL_VERBOSE)
-        {
-            LogPromiseContext(ctx, pp);
-        }
+    if (level >= LOG_LEVEL_VERBOSE)
+    {
+        LogPromiseContext(ctx, pp);
     }
 
     va_list ap;
@@ -1954,16 +1969,10 @@ void cfPS(EvalContext *ctx, LogLevel level, PromiseResult status, const Promise 
     VLog(level, fmt, ap);
     va_end(ap);
 
-    if (pp)
-    {
-        char *last_msg = PromiseLoggingPromiseFinish(ctx, pp);
-        PromiseLoggingFinish(ctx);
+    const char *last_msg = PromiseLoggingLastMessage(ctx);
 
-        /* Now complete the exits status classes and auditing */
+    /* Now complete the exits status classes and auditing */
 
-        ClassAuditLog(ctx, pp, attr, status);
-        UpdatePromiseComplianceStatus(status, pp, last_msg);
-
-        free(last_msg);
-    }
+    ClassAuditLog(ctx, pp, attr, status);
+    UpdatePromiseComplianceStatus(status, pp, last_msg);
 }

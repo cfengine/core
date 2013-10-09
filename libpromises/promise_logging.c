@@ -175,12 +175,13 @@ void PromiseLoggingPromiseEnter(const EvalContext *eval_context, const Promise *
     }
 
     plctx->promise_level++;
+    assert(plctx->promise_level == 1);
     plctx->stack_path = EvalContextStackPath(eval_context);
 
     LoggingPrivSetLevels(CalculateLogLevel(eval_context, pp), CalculateReportLevel(eval_context, pp));
 }
 
-char *PromiseLoggingPromiseFinish(const EvalContext *eval_context, const Promise *pp)
+void PromiseLoggingPromiseFinish(const EvalContext *eval_context, const Promise *pp)
 {
     LoggingPrivContext *pctx = LoggingPrivGetContext();
 
@@ -204,15 +205,33 @@ char *PromiseLoggingPromiseFinish(const EvalContext *eval_context, const Promise
         /* ProgrammingError("Logging: Attempt to finish promise not on top of stack"); */
     }
 
-    char *last_message = plctx->last_message;
-
     plctx->promise_level--;
+    assert(plctx->promise_level == 0);
+    free(plctx->last_message);
     plctx->last_message = NULL;
     free(plctx->stack_path);
+    plctx->stack_path = NULL;
 
     LoggingPrivSetLevels(LogGetGlobalLevel(), LogGetGlobalLevel());
+}
 
-    return last_message;
+const char *PromiseLoggingLastMessage(const EvalContext *ctx)
+{
+    LoggingPrivContext *pctx = LoggingPrivGetContext();
+
+    if (pctx == NULL)
+    {
+        ProgrammingError("Promise logging: Unable to finish promise, not bound to EvalContext");
+    }
+
+    PromiseLoggingContext *plctx = pctx->param;
+
+    if (plctx->eval_context != ctx)
+    {
+        ProgrammingError("Promise logging: Unable to finish promise, bound to EvalContext different from passed one");
+    }
+
+    return plctx->last_message;
 }
 
 void PromiseLoggingFinish(const EvalContext *eval_context)

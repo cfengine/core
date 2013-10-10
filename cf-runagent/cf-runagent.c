@@ -620,7 +620,7 @@ static void KeepControlPromises(EvalContext *ctx, Policy *policy)
                 if (BACKGROUND || INTERACTIVE)
                 {
                     Log(LOG_LEVEL_WARNING,
-                          "'background_children' setting from 'body runagent control' is overriden by command-line option.");
+                          "'background_children' setting from 'body runagent control' is overridden by command-line option.");
                 }
                 else
                 {

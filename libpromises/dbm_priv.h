@@ -44,7 +44,7 @@ const char *DBPrivGetFileExtension(void);
  * - NULL in case of generic error
  * - DB_PRIV_DATABASE_BROKEN in case database file is broken, need to be moved
       away and attempt to open database again should be performed.
- * - valid pointer to DBPriv * in case database was opened succesfully.
+ * - valid pointer to DBPriv * in case database was opened successfully.
  */
 DBPriv *DBPrivOpenDB(const char *dbpath);
 void DBPrivCloseDB(DBPriv *hdbp);

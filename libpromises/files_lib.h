@@ -42,7 +42,7 @@ void CreateEmptyFile(char *name);
  * @brief Deletes directory path recursively. Symlinks are not followed.
  *        Note that this function only deletes the contents of the directory, not the directory itself.
  * @param path
- * @return true if directory was deleted succesfully, false if one or more files were not deleted.
+ * @return true if directory was deleted successfully, false if one or more files were not deleted.
  */
 bool DeleteDirectoryTree(const char *path);
 

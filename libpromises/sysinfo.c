@@ -177,6 +177,7 @@ static const char *VEXPORTS[PLATFORM_CONTEXT_MAX] =
 
 void CalculateDomainName(const char *nodename, const char *dnsname, char *fqname, char *uqname, char *domain)
 {
+      
     if (strstr(dnsname, "."))
     {
         strlcpy(fqname, dnsname, CF_BUFSIZE);
@@ -220,6 +221,7 @@ void DetectDomainName(EvalContext *ctx, const char *orig_nodename)
     strcpy(nodename, orig_nodename);
     ToLowerStrInplace(nodename);
 
+    
     char dnsname[CF_BUFSIZE] = "";
     char fqn[CF_BUFSIZE];
 
@@ -230,11 +232,25 @@ void DetectDomainName(EvalContext *ctx, const char *orig_nodename)
         if ((hp = gethostbyname(fqn)))
         {
             strncpy(dnsname, hp->h_name, CF_MAXVARSIZE);
+	    
+	// overwrite truncated nodename if it's shorter than the host part of qualified domain named
+	// as some operating systems (HP-UX) truncate the hostname to fewer characters for standards compliance
+	// with uname(2)
+	    if (sizeof(VSYSNAME.nodename) <= 9)
+	    {
+	        int hnlen = (int)((strchr(dnsname, '.')) - dnsname) + 1;
+                if (strlen(nodename) < hnlen && (strstr(dnsname, nodename)))
+                {
+                    strlcpy(nodename, dnsname, hnlen);
+                    strlcpy(VSYSNAME.nodename, dnsname, hnlen);
+                }
+	    }
             ToLowerStrInplace(dnsname);
         }
     }
-
+     
     CalculateDomainName(nodename, dnsname, VFQNAME, VUQNAME, VDOMAIN);
+   
 
 /*
  * VFQNAME = a.b.c.d ->

@@ -44,7 +44,7 @@ time_t GetProcessStartTime(pid_t pid);
  * #process_start_time may be PROCESS_START_TIME_UNKNOWN, which will disable
  * safety check for killing right process.
  *
- * @return true if process was killed succesfully, false otherwise.
+ * @return true if process was killed successfully, false otherwise.
  */
 int GracefulTerminate(pid_t pid, time_t process_start_time);
 

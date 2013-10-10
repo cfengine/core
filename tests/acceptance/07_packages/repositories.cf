@@ -1,0 +1,49 @@
+# Tests that package upgrade works properly
+
+body common control
+{
+      inputs => { "../default.cf.sub" };
+      bundlesequence => { default("$(this.promise_filename)") };
+      version => "1.0";
+
+}
+
+bundle agent init
+{
+  vars:
+      "dummy" string => "dummy";
+  files:
+    "$(G.testfile).expected"
+      create => "true",
+      edit_line => init_edit;
+}
+
+bundle edit_line init_edit
+{
+  insert_lines:
+    "DELETE delete-exact-version-2.2.3.i386.rpm";
+    "ADD $(G.cwd)/./07_packages/test_repository/install-greaterthan-version-2.2.3.i386.rpm";
+    "ADD $(G.cwd)/./07_packages/test_repository/install-greaterorequal-version-2.2.3.i386.rpm";
+    "ADD $(G.cwd)/./07_packages/test_repository/install-lessthan-version-2.2.3.i386.rpm";
+    "ADD $(G.cwd)/./07_packages/test_repository/install-lessorequal-version-2.2.3.i386.rpm";
+    "ADD $(G.cwd)/./07_packages/test_repository/install-exact-version-2.2.3.i386.rpm";
+    "UPDATE $(G.cwd)/./07_packages/test_repository/update-to-greaterthan-version-already-greater-installed-2.2.3.i386.rpm";
+    "UPDATE $(G.cwd)/./07_packages/test_repository/update-to-greaterthan-version-2.2.3.i386.rpm";
+    "UPDATE $(G.cwd)/./07_packages/test_repository/update-to-greaterorequal-version-already-greater-installed-2.2.3.i386.rpm";
+    "UPDATE $(G.cwd)/./07_packages/test_repository/update-to-greaterorequal-version-2.2.3.i386.rpm";
+    "UPDATE $(G.cwd)/./07_packages/test_repository/update-to-lessthan-version-2.2.3.i386.rpm";
+    "UPDATE $(G.cwd)/./07_packages/test_repository/update-to-lessorequal-version-2.2.3.i386.rpm";
+    "UPDATE $(G.cwd)/./07_packages/test_repository/update-to-exact-version-2.2.3.i386.rpm";
+}
+
+bundle agent test
+{
+  vars:
+    "result" string => execresult("$(sys.cf_agent) -Kf $(this.promise_filename).sub", "noshell");
+}
+
+bundle agent check
+{
+  methods:
+    "any" usebundle => sorted_check_diff("$(G.testfile)", "$(G.testfile).expected", "$(this.promise_filename)");
+}

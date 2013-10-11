@@ -449,7 +449,7 @@ int ListRemove(List *list, void *payload)
 }
 
 // Number of elements on the list
-int ListCount(List *list)
+int ListCount(const List *list)
 {
     if (!list)
     {
@@ -461,7 +461,7 @@ int ListCount(List *list)
 /*
  * Functions for iterators
  */
-ListIterator *ListIteratorGet(List *list)
+ListIterator *ListIteratorGet(const List *list)
 {
     if (!list)
     {
@@ -476,7 +476,7 @@ ListIterator *ListIteratorGet(List *list)
     iterator = (ListIterator *)xmalloc(sizeof(ListIterator));
     iterator->current = list->list;
     // Remaining only works in one direction, we need two variables for this.
-    iterator->origin = list;
+    iterator->origin = (List *)list;
     iterator->state = list->state;
     return iterator;
 }

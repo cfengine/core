@@ -15,7 +15,9 @@ AM_CFLAGS = @CFLAGS@ \
 
 LDADD = ../libpromises/libpromises.la
 if HAVE_NOVA
+if NT
 LDADD += ../nova/libcfexecd/libcfexecd.la
+endif
 endif
 
 cf_execd_SOURCES = \

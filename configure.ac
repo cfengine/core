@@ -952,6 +952,7 @@ AC_ARG_WITH(workdir,
     [
         if test x$withval != x ; then
             WORKDIR=$withval
+            LOGDIR=$withval
         fi
     ],
 )
@@ -1133,6 +1134,7 @@ fi
 m4_indir(incstart[]incend, [nova/config.m4])
 
 AC_MSG_RESULT([-> Workdir: $WORKDIR])
+AC_MSG_RESULT([-> Logdir: $LOGDIR])
 
 AC_MSG_RESULT( )
 

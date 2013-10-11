@@ -995,3 +995,19 @@ bool StringNotMatchingSetCapped(const char *isp, int limit,
         return true;
     }
 }
+
+bool StringAppend(char *dst, const char *src, size_t n)
+{
+    n--;
+    int i;
+    for (i = 0; i < n && dst[i]; i++)
+    {
+    }
+    int j;
+    for (j = 0; i < n && src[j]; i++, j++)
+    {
+        dst[i] = src[j];
+    }
+    dst[i] = '\0';
+    return (i < n || !src[j]) ? true : false;
+}

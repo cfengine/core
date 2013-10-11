@@ -77,10 +77,11 @@
 #include <string.h>
 #include <ctype.h>
 #include <limits.h>
-#ifdef HAVE_UNAME
+#if defined (HAVE_UNAME) && ! defined (__hpux)
 # include <sys/utsname.h>
 #else
-# define _SYS_NMLN       257
+
+# define _LOC_NMLN       257
 
 struct utsname
 {

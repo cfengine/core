@@ -1,6 +1,6 @@
 sbin_PROGRAMS = cf-agent
 
-AM_CPPFLAGS = @CPPFLAGS@ -I$(srcdir)/../libpromises -I$(srcdir)/../libutils \
+AM_CPPFLAGS = @CPPFLAGS@ -I$(srcdir)/../libpromises -I$(srcdir)/../libutils -I$(srcdir)/../libcompat \
 	-I$(srcdir)/../libcfnet \
 	$(NOVA_CPPFLAGS) \
 	$(LIBVIRT_CPPFLAGS) \
@@ -35,7 +35,8 @@ LDADD = ../libpromises/libpromises.la \
 	$(LIBVIRT_LIBS) \
 	$(POSTGRESQL_LIBS) \
 	$(MYSQL_LIBS) \
-	$(LIBXML2_LIBS)
+	$(LIBXML2_LIBS) \
+	../libcompat/libcompat.la
 if HAVE_NOVA
 LDADD += ../nova/libcfagent/libcfagent.la
 endif

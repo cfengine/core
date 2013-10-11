@@ -48,6 +48,8 @@
 # include <sys/mpctl.h>
 #endif
 
+# include "../libcompat/rpl_utsname.h"
+
 // BSD: sysctl(3) to get kern.boottime, CPU count, etc.
 // See http://www.unix.com/man-page/FreeBSD/3/sysctl/
 #ifdef HAVE_SYS_SYSCTL_H
@@ -233,18 +235,10 @@ void DetectDomainName(EvalContext *ctx, const char *orig_nodename)
         {
             strncpy(dnsname, hp->h_name, CF_MAXVARSIZE);
 	    
-	// overwrite truncated nodename if it's shorter than the host part of qualified domain named
-	// as some operating systems (HP-UX) truncate the hostname to fewer characters for standards compliance
-	// with uname(2)
-	    if (sizeof(VSYSNAME.nodename) <= 9)
-	    {
-	        int hnlen = (int)((strchr(dnsname, '.')) - dnsname) + 1;
-                if (strlen(nodename) < hnlen && (strstr(dnsname, nodename)))
-                {
-                    strlcpy(nodename, dnsname, hnlen);
-                    strlcpy(VSYSNAME.nodename, dnsname, hnlen);
-                }
-	    }
+	    // overwrite truncated nodename if it's shorter than the host part of qualified domain named
+	    // as some operating systems (HP-UX) truncate the hostname to fewer characters for standards compliance
+	    // with uname(2)
+	    
             ToLowerStrInplace(dnsname);
         }
     }
@@ -403,7 +397,7 @@ void GetNameInfo3(EvalContext *ctx, AgentType agent_type)
     }
 #endif
 
-    DetectDomainName(ctx, VSYSNAME.nodename);
+    DetectDomainName(ctx, get_utsname_nodename());
 
     if ((tloc = time((time_t *) NULL)) == -1)
     {
@@ -418,11 +412,11 @@ void GetNameInfo3(EvalContext *ctx, AgentType agent_type)
     {
         Log(LOG_LEVEL_VERBOSE, "------------------------------------------------------------------------");
     }
-    Log(LOG_LEVEL_VERBOSE, "Host name is: %s", VSYSNAME.nodename);
+    Log(LOG_LEVEL_VERBOSE, "Host name is: %s", get_utsname_nodename());
     Log(LOG_LEVEL_VERBOSE, "Operating System Type is %s", VSYSNAME.sysname);
     Log(LOG_LEVEL_VERBOSE, "Operating System Release is %s", VSYSNAME.release);
     Log(LOG_LEVEL_VERBOSE, "Architecture = %s", VSYSNAME.machine);
-    Log(LOG_LEVEL_VERBOSE, "Using internal soft-class %s for host %s", workbuf, VSYSNAME.nodename);
+    Log(LOG_LEVEL_VERBOSE, "Using internal soft-class %s for host %s", workbuf, get_utsname_nodename());
     Log(LOG_LEVEL_VERBOSE, "The time is now %s", ctime(&tloc));
     if (LEGACY_OUTPUT)
     {
@@ -652,7 +646,7 @@ void GetNameInfo3(EvalContext *ctx, AgentType agent_type)
 
     if ((hp = gethostbyname(VFQNAME)) == NULL)
     {
-        Log(LOG_LEVEL_VERBOSE, "Hostname lookup failed on node name '%s'", VSYSNAME.nodename);
+        Log(LOG_LEVEL_VERBOSE, "Hostname lookup failed on node name '%s'", get_utsname_nodename());
         return;
     }
     else

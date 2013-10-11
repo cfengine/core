@@ -23,6 +23,7 @@
 */
 
 #include <cf3.defs.h>
+#include <sysinfo.h>
 
 #include <prototypes3.h>
 #include <syntax.h>
@@ -107,7 +108,7 @@ ENTERPRISE_VOID_FUNC_2ARG_DEFINE_STUB(void, LogTotalCompliance, const char *, ve
     Log(LOG_LEVEL_VERBOSE, "Logging total compliance, total '%s'", string);
 
     char filename[CF_BUFSIZE];
-    snprintf(filename, CF_BUFSIZE, "%s/%s", CFWORKDIR, CF_PROMISE_LOG);
+    snprintf(filename, CF_BUFSIZE, "%s/%s", GetLogDir(), CF_PROMISE_LOG);
     MapName(filename);
 
     FILE *fout = fopen(filename, "a");

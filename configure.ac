@@ -139,17 +139,23 @@ AS_IF([test x"$enable_fhs" = xyes], [
   projdatadir='${exec_prefix}/share/cfengine'
   projdocdir='${exec_prefix}/share/doc/cfengine'
   WORKDIR='${localstatedir}/lib/cfengine'
+  LOGDIR='${localstatedir}/lib/cfengine'
 ], [
   if test x"$prefix" = xNONE || test x"$prefix" = x/var/cfengine; then
     prefix=/var/cfengine
     case "$target_os" in
       mingw*)
-        WORKDIR=$(cmd /c "echo %PROGRAMFILES%\\Cfengine" | sed 's/\\/\\\\/g');;
+        WORKDIR=$(cmd /c "echo %PROGRAMFILES%\\Cfengine" | sed 's/\\/\\\\/g')
+        LOGDIR=$(cmd /c "echo %PROGRAMFILES%\\Cfengine" | sed 's/\\/\\\\/g')
+      ;;
       *)
-        WORKDIR=/var/cfengine;;
+        WORKDIR=/var/cfengine
+        LOGDIR=/var/cfengine
+      ;;
     esac
   else
     WORKDIR="${localstatedir}/cfengine"
+    LOGDIR="${localstatedir}/cfengine"
   fi
 
   sbindir='${exec_prefix}/bin' # /var/cfengine/bin despite being sbin_?
@@ -946,6 +952,7 @@ AC_ARG_WITH(workdir,
     [
         if test x$withval != x ; then
             WORKDIR=$withval
+            LOGDIR=$withval
         fi
     ],
 )
@@ -956,6 +963,24 @@ adl_RECURSIVE_EVAL("${WORKDIR}", WORKDIR)
 
 AC_DEFINE_UNQUOTED(WORKDIR, "${WORKDIR}", [Workdir location])
 AC_SUBST(workdir, "${WORKDIR}")
+
+
+
+AC_ARG_WITH(logdir,
+    [  --with-logdir=LOGDIR  default internal for log directory ],
+    [
+        if test x$withval != x ; then
+            LOGDIR=$withval
+        fi
+    ],
+)
+
+dnl Expand ${prefix} and whatnot in LOGDIR
+
+adl_RECURSIVE_EVAL("${LOGDIR}", LOGDIR)
+
+AC_DEFINE_UNQUOTED(LOGDIR, "${LOGDIR}", [Logdir location])
+AC_SUBST(logdir, "${LOGDIR}")
 
 
 AC_ARG_WITH(shell, [AS_HELP_STRING([--with-shell=PATH],
@@ -1109,6 +1134,7 @@ fi
 m4_indir(incstart[]incend, [nova/config.m4])
 
 AC_MSG_RESULT([-> Workdir: $WORKDIR])
+AC_MSG_RESULT([-> Logdir: $LOGDIR])
 
 AC_MSG_RESULT( )
 

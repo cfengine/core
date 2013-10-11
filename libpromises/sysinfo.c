@@ -501,6 +501,7 @@ void GetNameInfo3(EvalContext *ctx, AgentType agent_type)
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "resolv", VRESOLVCONF[VSYSTEMHARDCLASS], DATA_TYPE_STRING);
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "maildir", VMAILDIR[VSYSTEMHARDCLASS], DATA_TYPE_STRING);
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "exports", VEXPORTS[VSYSTEMHARDCLASS], DATA_TYPE_STRING);
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "logdir", GetLogDir(), DATA_TYPE_STRING);
 
     snprintf(workbuf, CF_BUFSIZE, "%s%cbin", CFWORKDIR, FILE_SEPARATOR);
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "bindir", workbuf, DATA_TYPE_STRING);
@@ -2422,12 +2423,22 @@ static const char *GetDefaultWorkDir(void)
     return WORKDIR;
 }
 
+static const char *GetDefaultLogDir(void)
+{
+    return LOGDIR;
+}
+
 #elif defined(__ANDROID__)
 
 static const char *GetDefaultWorkDir(void)
 {
     /* getpwuid() on Android returns /data, so use compile-time default instead */
     return WORKDIR;
+}
+
+static const char *GetDefaultLogDir(void)
+{
+    return LOGDIR;
 }
 
 #elif !defined(__MINGW32__)
@@ -2457,6 +2468,29 @@ static const char *GetDefaultWorkDir(void)
     }
 }
 
+static const char *GetDefaultLogDir(void)
+{
+    if (getuid() > 0)
+    {
+        static char logdir[MAX_WORKDIR_LENGTH];
+
+        if (!*logdir)
+        {
+            struct passwd *mpw = getpwuid(getuid());
+
+            if (snprintf(logdir, MAX_WORKDIR_LENGTH, "%s/.cfagent/", mpw->pw_dir) >= MAX_WORKDIR_LENGTH)
+            {
+                return NULL;
+            }
+        }
+        return logdir;
+    }
+    else
+    {
+        return LOGDIR;
+    }
+}
+
 #endif
 
 /******************************************************************/
@@ -2466,6 +2500,15 @@ const char *GetWorkDir(void)
     const char *workdir = getenv("CFENGINE_TEST_OVERRIDE_WORKDIR");
 
     return workdir == NULL ? GetDefaultWorkDir() : workdir;
+}
+
+/******************************************************************/
+
+const char *GetLogDir(void)
+{
+    const char *logdir = getenv("CFENGINE_TEST_OVERRIDE_LOGDIR");
+
+    return logdir == NULL ? GetDefaultLogDir() : logdir;
 }
 
 /******************************************************************/

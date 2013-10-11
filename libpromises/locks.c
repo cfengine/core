@@ -37,6 +37,7 @@
 #include <fncall.h>
 #include <env_context.h>
 #include <misc_lib.h>
+#include <sysinfo.h>
 
 #define CFLOGSIZE 1048576       /* Size of lock-log before rotation */
 
@@ -738,7 +739,7 @@ CfLock AcquireLock(EvalContext *ctx, const char *operand, const char *host, time
         sum = (CF_MACROALPHABET * sum + cc_operand[i]) % CF_HASHTABLESIZE;
     }
 
-    snprintf(cflog, CF_BUFSIZE, "%s/cf3.%.40s.runlog", CFWORKDIR, host);
+    snprintf(cflog, CF_BUFSIZE, "%s/cf3.%.40s.runlog", GetLogDir(), host);
     snprintf(cflock, CF_BUFSIZE, "lock.%.100s.%s.%.100s_%d_%s", PromiseGetBundle(pp)->name, cc_operator, cc_operand, sum, str_digest);
     snprintf(cflast, CF_BUFSIZE, "last.%.100s.%s.%.100s_%d_%s", PromiseGetBundle(pp)->name, cc_operator, cc_operand, sum, str_digest);
 

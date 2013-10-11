@@ -53,6 +53,7 @@
 #include <audit.h>
 #include <expand.h>
 #include <mustache.h>
+#include <sysinfo.h>
 
 static void LoadSetuid(Attributes a);
 static PromiseResult SaveSetuid(EvalContext *ctx, Attributes a, Promise *pp);
@@ -653,7 +654,7 @@ static void LoadSetuid(Attributes a)
     edits.backup = BACKUP_OPTION_NO_BACKUP;
     edits.maxfilesize = 1000000;
 
-    snprintf(filename, CF_BUFSIZE, "%s/cfagent.%s.log", CFWORKDIR, VSYSNAME.nodename);
+    snprintf(filename, CF_BUFSIZE, "%s/cfagent.%s.log", GetLogDir(), VSYSNAME.nodename);
     MapName(filename);
 
     if (!LoadFileAsItemList(&VSETUIDLIST, filename, edits))
@@ -672,7 +673,7 @@ static PromiseResult SaveSetuid(EvalContext *ctx, Attributes a, Promise *pp)
     b.edits.maxfilesize = 1000000;
 
     char filename[CF_BUFSIZE];
-    snprintf(filename, CF_BUFSIZE, "%s/cfagent.%s.log", CFWORKDIR, VSYSNAME.nodename);
+    snprintf(filename, CF_BUFSIZE, "%s/cfagent.%s.log", GetLogDir(), VSYSNAME.nodename);
     MapName(filename);
 
     PurgeItemList(ctx, &VSETUIDLIST, "SETUID/SETGID");
@@ -688,4 +689,3 @@ static PromiseResult SaveSetuid(EvalContext *ctx, Attributes a, Promise *pp)
 
     return result;
 }
-

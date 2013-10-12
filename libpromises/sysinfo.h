@@ -37,6 +37,7 @@ bool IsInterfaceAddress(const char *adr);
 void DetectDomainName(EvalContext *ctx, const char *orig_nodename);
 const char *GetWorkDir(void);
 const char *GetLogDir(void);
+const char *GetPidDir(void);
 
 void CreateHardClassesFromCanonification(EvalContext *ctx, const char *canonified);
 

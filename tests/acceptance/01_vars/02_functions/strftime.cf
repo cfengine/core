@@ -35,7 +35,7 @@ bundle agent init
     Saturday::
       "dow" string => "6";
     Sunday::
-      "dow" string => "7";
+      "dow" string => "0";
 
   files:
       "$(G.testfile).expected"

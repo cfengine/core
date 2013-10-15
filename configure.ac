@@ -140,6 +140,7 @@ AS_IF([test x"$enable_fhs" = xyes], [
   projdocdir='${exec_prefix}/share/doc/cfengine'
   WORKDIR='${localstatedir}/lib/cfengine'
   LOGDIR='${localstatedir}/lib/cfengine'
+  PIDDIR=='${localstatedir}/lib/cfengine'
 ], [
   if test x"$prefix" = xNONE || test x"$prefix" = x/var/cfengine; then
     prefix=/var/cfengine
@@ -147,15 +148,18 @@ AS_IF([test x"$enable_fhs" = xyes], [
       mingw*)
         WORKDIR=$(cmd /c "echo %PROGRAMFILES%\\Cfengine" | sed 's/\\/\\\\/g')
         LOGDIR=$(cmd /c "echo %PROGRAMFILES%\\Cfengine" | sed 's/\\/\\\\/g')
+        PIDDIR=$(cmd /c "echo %PROGRAMFILES%\\Cfengine" | sed 's/\\/\\\\/g')
       ;;
       *)
         WORKDIR=/var/cfengine
         LOGDIR=/var/cfengine
+        PIDDIR=/var/cfengine
       ;;
     esac
   else
     WORKDIR="${localstatedir}/cfengine"
     LOGDIR="${localstatedir}/cfengine"
+    PIDDIR="${localstatedir}/cfengine"
   fi
 
   sbindir='${exec_prefix}/bin' # /var/cfengine/bin despite being sbin_?
@@ -953,6 +957,7 @@ AC_ARG_WITH(workdir,
         if test x$withval != x ; then
             WORKDIR=$withval
             LOGDIR=$withval
+            PIDDIR==$withval
         fi
     ],
 )
@@ -982,6 +987,21 @@ adl_RECURSIVE_EVAL("${LOGDIR}", LOGDIR)
 AC_DEFINE_UNQUOTED(LOGDIR, "${LOGDIR}", [Logdir location])
 AC_SUBST(logdir, "${LOGDIR}")
 
+AC_ARG_WITH(piddir,
+    [  --with-piddir=LOGDIR  default internal for pid directory ],
+    [
+        if test x$withval != x ; then
+            PIDDIR=$withval
+        fi
+    ],
+)
+
+dnl Expand ${prefix} and whatnot in PIDDIR
+
+adl_RECURSIVE_EVAL("${PIDDIR}", PIDDIR)
+
+AC_DEFINE_UNQUOTED(PIDDIR, "${PIDDIR}", [piddir location])
+AC_SUBST(piddir, "${PIDDIR}")
 
 AC_ARG_WITH(shell, [AS_HELP_STRING([--with-shell=PATH],
                    [Specify path to POSIX-compatible shell (if not /bin/sh)])],
@@ -1135,6 +1155,7 @@ m4_indir(incstart[]incend, [nova/config.m4])
 
 AC_MSG_RESULT([-> Workdir: $WORKDIR])
 AC_MSG_RESULT([-> Logdir: $LOGDIR])
+AC_MSG_RESULT([-> Piddir: $PIDDIR])
 
 AC_MSG_RESULT( )
 

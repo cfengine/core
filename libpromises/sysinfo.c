@@ -502,6 +502,7 @@ void GetNameInfo3(EvalContext *ctx, AgentType agent_type)
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "maildir", VMAILDIR[VSYSTEMHARDCLASS], DATA_TYPE_STRING);
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "exports", VEXPORTS[VSYSTEMHARDCLASS], DATA_TYPE_STRING);
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "logdir", GetLogDir(), DATA_TYPE_STRING);
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "piddir", GetPidDir(), DATA_TYPE_STRING);
 
     snprintf(workbuf, CF_BUFSIZE, "%s%cbin", CFWORKDIR, FILE_SEPARATOR);
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "bindir", workbuf, DATA_TYPE_STRING);
@@ -2428,6 +2429,11 @@ static const char *GetDefaultLogDir(void)
     return LOGDIR;
 }
 
+static const char *GetDefaultPidDir(void)
+{
+    return PIDDIR;
+}
+
 #elif defined(__ANDROID__)
 
 static const char *GetDefaultWorkDir(void)
@@ -2439,6 +2445,11 @@ static const char *GetDefaultWorkDir(void)
 static const char *GetDefaultLogDir(void)
 {
     return LOGDIR;
+}
+
+static const char *GetDefaultPidDir(void)
+{
+    return PIDDIR;
 }
 
 #elif !defined(__MINGW32__)
@@ -2491,6 +2502,29 @@ static const char *GetDefaultLogDir(void)
     }
 }
 
+static const char *GetDefaultPidDir(void)
+{
+    if (getuid() > 0)
+    {
+        static char piddir[MAX_WORKDIR_LENGTH];
+
+        if (!*piddir)
+        {
+            struct passwd *mpw = getpwuid(getuid());
+
+            if (snprintf(piddir, MAX_WORKDIR_LENGTH, "%s/.cfagent/", mpw->pw_dir) >= MAX_WORKDIR_LENGTH)
+            {
+                return NULL;
+            }
+        }
+        return piddir;
+    }
+    else
+    {
+        return PIDDIR;
+    }
+}
+
 #endif
 
 /******************************************************************/
@@ -2509,6 +2543,15 @@ const char *GetLogDir(void)
     const char *logdir = getenv("CFENGINE_TEST_OVERRIDE_LOGDIR");
 
     return logdir == NULL ? GetDefaultLogDir() : logdir;
+}
+
+/******************************************************************/
+
+const char *GetPidDir(void)
+{
+    const char *piddir = getenv("CFENGINE_TEST_OVERRIDE_PIDDIR");
+
+    return piddir == NULL ? GetDefaultPidDir() : piddir;
 }
 
 /******************************************************************/

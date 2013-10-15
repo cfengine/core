@@ -207,7 +207,7 @@ static bool IsPolicyPrecheckNeeded(EvalContext *ctx, GenericAgentConfig *config,
 {
     bool check_policy = false;
 
-    if (IsFileOutsideDefaultRepository(config->input_file))
+    if (IsFileOutsideDefaultRepository(config->original_input_file))
     {
         check_policy = true;
         Log(LOG_LEVEL_VERBOSE, "Input file is outside default repository, validating it");
@@ -507,8 +507,6 @@ static void ShowContext(EvalContext *ctx)
 
 Policy *GenericAgentLoadPolicy(EvalContext *ctx, GenericAgentConfig *config)
 {
-    PROMISETIME = time(NULL);
-
     Policy *main_policy = Cf3ParseFile(config, config->input_file);
 
     if (main_policy)
@@ -883,7 +881,7 @@ int NewPromiseProposals(EvalContext *ctx, const GenericAgentConfig *config, cons
         return true;
     }
 
-    if (sb.st_mtime > validated_at || sb.st_mtime > PROMISETIME)
+    if (sb.st_mtime > validated_at)
     {
         Log(LOG_LEVEL_VERBOSE, "Promises seem to change");
         return true;
@@ -894,7 +892,7 @@ int NewPromiseProposals(EvalContext *ctx, const GenericAgentConfig *config, cons
     snprintf(filename, CF_MAXVARSIZE, "%s/inputs", CFWORKDIR);
     MapName(filename);
 
-    if (IsNewerFileTree(filename, PROMISETIME))
+    if (IsNewerFileTree(filename, validated_at))
     {
         Log(LOG_LEVEL_VERBOSE, "Quick search detected file changes");
         return true;
@@ -923,7 +921,7 @@ int NewPromiseProposals(EvalContext *ctx, const GenericAgentConfig *config, cons
                     break;
                 }
 
-                if (sb.st_mtime > PROMISETIME)
+                if (sb.st_mtime > validated_at)
                 {
                     result = true;
                 }
@@ -945,7 +943,7 @@ int NewPromiseProposals(EvalContext *ctx, const GenericAgentConfig *config, cons
                         break;
                     }
 
-                    if (sb.st_mtime > PROMISETIME)
+                    if (sb.st_mtime > validated_at)
                     {
                         result = true;
                         break;
@@ -970,7 +968,7 @@ int NewPromiseProposals(EvalContext *ctx, const GenericAgentConfig *config, cons
     snprintf(filename, CF_MAXVARSIZE, "%s/policy_server.dat", CFWORKDIR);
     MapName(filename);
 
-    if ((stat(filename, &sb) != -1) && (sb.st_mtime > PROMISETIME))
+    if ((stat(filename, &sb) != -1) && (sb.st_mtime > validated_at))
     {
         result = true;
     }

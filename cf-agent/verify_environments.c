@@ -36,6 +36,8 @@
 #include <scope.h>
 #include <ornaments.h>
 
+#include <verify_environments.h>
+
 #ifdef HAVE_LIBVIRT
 /*****************************************************************************/
 
@@ -1067,7 +1069,7 @@ void DeleteEnvironmentsContext(void)
 {
 }
 
-void VerifyEnvironmentsPromise(ARG_UNUSED Promise *pp)
+void VerifyEnvironmentsPromise(ARG_UNUSED EvalContext *ctx, ARG_UNUSED Promise *pp)
 {
 }
 

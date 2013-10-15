@@ -1069,7 +1069,7 @@ void DeleteEnvironmentsContext(void)
 {
 }
 
-void VerifyEnvironmentsPromise(ARG_UNUSED EvalContext *ctx, ARG_UNUSED Promise *pp)
+PromiseResult VerifyEnvironmentsPromise(ARG_UNUSED EvalContext *ctx, ARG_UNUSED Promise *pp)
 {
 }
 

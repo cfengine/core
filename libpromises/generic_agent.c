@@ -1292,7 +1292,7 @@ void WritePID(char *filename)
 
     pthread_once(&pid_cleanup_once, RegisterPidCleanup);
 
-    snprintf(PIDFILE, CF_BUFSIZE - 1, "%s%c%s", CFWORKDIR, FILE_SEPARATOR, filename);
+    snprintf(PIDFILE, CF_BUFSIZE - 1, "%s%c%s", GetPidDir(), FILE_SEPARATOR, filename);
 
     if ((fp = fopen(PIDFILE, "w")) == NULL)
     {

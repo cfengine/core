@@ -1487,7 +1487,7 @@ static void KeepAgentPromise(EvalContext *ctx, Promise *pp, ARG_UNUSED void *par
 
     if (strcmp("guest_environments", pp->parent_promise_type->name) == 0)
     {
-        VerifyEnvironmentsPromise(pp);
+        VerifyEnvironmentsPromise(ctx, pp);
         EndMeasurePromise(ctx, start, pp);
         return;
     }

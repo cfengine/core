@@ -5,6 +5,7 @@
        - process_results default to AND'ing of set attributes if not specified (Redmine #3224)
        - interface is now canonified in sys.hardware_mac[interface] to align with sys.ipv4[interface] (Redmine #3418)
        - #TODO# network protocol on top of TLS
+       - #TODO# support for LMDB in local data storage
 
        New features:
        - support colorized output for agent binaries with command line option --color
@@ -12,7 +13,12 @@
        - #TODO# new sys variables
        - #TODO# new functions
           - findfiles
+          - eval
+       - #TODO# support for mustache templates
+       - #TODO# new datastruct data type for handling of structured data (ie JSON)
+          - including supporting functions
        - #TODO# replace_patterns changes
+       - #TODO# transitive inputs
 
        Bug fixes:
        - #TODO# goodness from evaluator and variable table refactoring

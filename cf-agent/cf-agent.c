@@ -1484,7 +1484,7 @@ static PromiseResult KeepAgentPromise(EvalContext *ctx, Promise *pp, ARG_UNUSED 
     }
     else if (strcmp("guest_environments", pp->parent_promise_type->name) == 0)
     {
-        PromiseResult result = VerifyEnvironmentsPromise(pp);
+        PromiseResult result = VerifyEnvironmentsPromise(ctx, pp);
         EndMeasurePromise(ctx, start, pp);
         return result;
     }

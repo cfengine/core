@@ -77,18 +77,18 @@
 #include <string.h>
 #include <ctype.h>
 #include <limits.h>
-#ifdef HAVE_UNAME
+#if defined (HAVE_UNAME) && !defined (__hpux)
 # include <sys/utsname.h>
 #else
-# define _SYS_NMLN       257
+# define _LOC_NMLN       257
 
 struct utsname
 {
-    char sysname[_SYS_NMLN];
-    char nodename[_SYS_NMLN];
-    char release[_SYS_NMLN];
-    char version[_SYS_NMLN];
-    char machine[_SYS_NMLN];
+    char sysname[_LOC_NMLN];
+    char nodename[_LOC_NMLN];
+    char release[_LOC_NMLN];
+    char version[_LOC_NMLN];
+    char machine[_LOC_NMLN];
 };
 
 #endif

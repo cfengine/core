@@ -38,6 +38,7 @@
 #include "misc_lib.h"
 #include "rlist.h"
 #include "audit.h"
+#include "rpl_utsname.h"
 
 #ifdef HAVE_ZONE_H
 # include <zone.h>
@@ -387,7 +388,7 @@ void GetNameInfo3(EvalContext *ctx, AgentType agent_type)
     }
 #endif
 
-    DetectDomainName(ctx, VSYSNAME.nodename);
+    DetectDomainName(ctx, get_utsname_nodename());
 
     if ((tloc = time((time_t *) NULL)) == -1)
     {
@@ -402,11 +403,11 @@ void GetNameInfo3(EvalContext *ctx, AgentType agent_type)
     {
         Log(LOG_LEVEL_VERBOSE, "------------------------------------------------------------------------");
     }
-    Log(LOG_LEVEL_VERBOSE, "Host name is: %s", VSYSNAME.nodename);
+    Log(LOG_LEVEL_VERBOSE, "Host name is: %s", get_utsname_nodename());
     Log(LOG_LEVEL_VERBOSE, "Operating System Type is %s", VSYSNAME.sysname);
     Log(LOG_LEVEL_VERBOSE, "Operating System Release is %s", VSYSNAME.release);
     Log(LOG_LEVEL_VERBOSE, "Architecture = %s", VSYSNAME.machine);
-    Log(LOG_LEVEL_VERBOSE, "Using internal soft-class %s for host %s", workbuf, VSYSNAME.nodename);
+    Log(LOG_LEVEL_VERBOSE, "Using internal soft-class %s for host %s", workbuf, get_utsname_nodename());
     Log(LOG_LEVEL_VERBOSE, "The time is now %s", ctime(&tloc));
     if (LEGACY_OUTPUT)
     {
@@ -636,7 +637,7 @@ void GetNameInfo3(EvalContext *ctx, AgentType agent_type)
 
     if ((hp = gethostbyname(VFQNAME)) == NULL)
     {
-        Log(LOG_LEVEL_VERBOSE, "Hostname lookup failed on node name '%s'", VSYSNAME.nodename);
+        Log(LOG_LEVEL_VERBOSE, "Hostname lookup failed on node name '%s'", get_utsname_nodename());
         return;
     }
     else

@@ -1,6 +1,6 @@
 #######################################################
 #
-# Test passing of containers with @(ref) notation
+# Test passing of datas with @(ref) notation
 #
 #######################################################
 
@@ -33,7 +33,7 @@ bundle edit_line init_insert_lines
 bundle agent test
 {
   vars:
-      "load" container => parsejson('
+      "load" data => parsejson('
 { "first": 1, "seconds": 2, "third": [ "a", "b", "c" ], "fourth": null}
 ');
 
@@ -43,10 +43,10 @@ bundle agent test
       edit_line => test_insert(@(load));
 }
 
-bundle edit_line test_insert(container)
+bundle edit_line test_insert(data)
 {
   insert_lines:
-      "$(container)";
+      "$(data)";
 }
 
 #######################################################

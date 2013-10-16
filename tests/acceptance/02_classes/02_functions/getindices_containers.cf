@@ -10,8 +10,8 @@ body common control
 bundle agent init
 {
   vars:
-      "obj" container => parsejson('{ "a": 1, "b": 2 }');
-      "arr" container => parsejson('["a", "b"]');
+      "obj" data => parsejson('{ "a": 1, "b": 2 }');
+      "arr" data => parsejson('["a", "b"]');
 }
 
 #######################################################

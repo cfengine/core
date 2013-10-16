@@ -288,7 +288,7 @@ static const char *datatype_strings[] =
     [DATA_TYPE_INT_RANGE] = "irange",
     [DATA_TYPE_REAL_RANGE] = "rrange",
     [DATA_TYPE_COUNTER] = "counter",
-    [DATA_TYPE_CONTAINER] = "container",
+    [DATA_TYPE_CONTAINER] = "data",
     [DATA_TYPE_NONE] = "none"
 };
 

@@ -34,9 +34,9 @@ bundle edit_line init_insert_lines
 bundle agent test
 {
   vars:
-      "load1" container => parsejson('{"x": "y", "third": 123}');
+      "load1" data => parsejson('{"x": "y", "third": 123}');
 
-      "load2" container => parsejson('
+      "load2" data => parsejson('
 {
  "first": 1,
  "seconds": 2,
@@ -45,7 +45,7 @@ bundle agent test
 }
 ');
 
-      "load" container => mergecontainer("load1", "load2");
+      "load" data => mergedata("load1", "load2");
 
   files:
       "$(G.testfile).actual"

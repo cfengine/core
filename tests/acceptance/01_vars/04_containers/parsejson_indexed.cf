@@ -34,7 +34,7 @@ bundle edit_line init_insert_lines
 bundle agent test
 {
   vars:
-      "load" container => parsejson('
+      "load" data => parsejson('
 {
  "first": 1,
  "seconds": 2,

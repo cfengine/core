@@ -120,7 +120,7 @@ const ConstraintSyntax CF_VARBODY[] =
     ConstraintSyntaxNewStringList("slist", "", "A list of scalar strings", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewIntList("ilist", "A list of integers", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewRealList("rlist", "A list of real numbers", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewContainer("container", "A container", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewContainer("data", "A data container", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewOption("policy", "free,overridable,constant,ifdefined", "The policy for (dis)allowing (re)definition of variables", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };

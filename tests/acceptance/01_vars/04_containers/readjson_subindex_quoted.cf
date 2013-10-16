@@ -1,6 +1,6 @@
 #######################################################
 #
-# Test subreferencing with quoted keys of containers loaded through readjson()
+# Test subreferencing with quoted keys of datas loaded through readjson()
 #
 #######################################################
 
@@ -44,7 +44,7 @@ bundle edit_line init_insert_lines
 bundle agent test
 {
   vars:
-      "load" container => readjson("$(G.testfile).json", 1024);
+      "load" data => readjson("$(G.testfile).json", 1024);
 
   files:
       "$(G.testfile).actual"

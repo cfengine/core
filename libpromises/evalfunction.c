@@ -1929,11 +1929,11 @@ static FnCallResult FnCallMapList(EvalContext *ctx, FnCall *fp, Rlist *finalargs
     return (FnCallResult) { FNCALL_SUCCESS, { newlist, RVAL_TYPE_LIST } };
 }
 
-static FnCallResult FnCallMergeContainer(EvalContext *ctx, FnCall *fp, Rlist *args)
+static FnCallResult FnCallMergeData(EvalContext *ctx, FnCall *fp, Rlist *args)
 {
     if (RlistLen(args) == 0)
     {
-        Log(LOG_LEVEL_ERR, "Function mergecontainer needs at least one argument, a reference to a container variable");
+        Log(LOG_LEVEL_ERR, "Function mergedata needs at least one argument, a reference to a container variable");
         return (FnCallResult)  { FNCALL_FAILURE };
     }
 
@@ -1941,7 +1941,7 @@ static FnCallResult FnCallMergeContainer(EvalContext *ctx, FnCall *fp, Rlist *ar
     {
         if (args->val.type != RVAL_TYPE_SCALAR)
         {
-            Log(LOG_LEVEL_ERR, "Function mergecontainer, argument '%s' is not a variable reference", RlistScalarValue(arg));
+            Log(LOG_LEVEL_ERR, "Function mergedata, argument '%s' is not a variable reference", RlistScalarValue(arg));
             return (FnCallResult)  { FNCALL_FAILURE };
         }
     }
@@ -1954,7 +1954,7 @@ static FnCallResult FnCallMergeContainer(EvalContext *ctx, FnCall *fp, Rlist *ar
         Rval rval;
         if (!EvalContextVariableGet(ctx, ref, &rval, NULL))
         {
-            Log(LOG_LEVEL_ERR, "Function mergecontainer, argument '%s' does not resolve to a container", RlistScalarValue(arg));
+            Log(LOG_LEVEL_ERR, "Function mergedata, argument '%s' does not resolve to a container", RlistScalarValue(arg));
             SeqDestroy(containers);
             VarRefDestroy(ref);
             return (FnCallResult)  { FNCALL_FAILURE };
@@ -5804,7 +5804,7 @@ FnCallArg MAPARRAY_ARGS[] =
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg MERGECONTAINER_ARGS[] =
+FnCallArg MERGEDATA_ARGS[] =
 {
     {NULL, DATA_TYPE_NONE, NULL}
 };
@@ -6264,7 +6264,7 @@ const FnCallType CF_FNCALL_TYPES[] =
     FnCallTypeNew("lsdir", DATA_TYPE_STRING_LIST, LSDIRLIST_ARGS, &FnCallLsDir, "Return a list of files in a directory matching a regular expression", false, FNCALL_CATEGORY_FILES, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("maparray", DATA_TYPE_STRING_LIST, MAPARRAY_ARGS, &FnCallMapArray, "Return a list with each element modified by a pattern based $(this.k) and $(this.v)", false, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("maplist", DATA_TYPE_STRING_LIST, MAPLIST_ARGS, &FnCallMapList, "Return a list with each element modified by a pattern based $(this)", false, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
-    FnCallTypeNew("mergecontainer", DATA_TYPE_CONTAINER, MERGECONTAINER_ARGS, &FnCallMergeContainer, "", true, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("mergedata", DATA_TYPE_CONTAINER, MERGEDATA_ARGS, &FnCallMergeData, "", true, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("none", DATA_TYPE_CONTEXT, EVERY_SOME_NONE_ARGS, &FnCallEverySomeNone, "True if no element in the named list matches the given regular expression", false, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("not", DATA_TYPE_STRING, NOT_ARGS, &FnCallNot, "Calculate whether argument is false", false, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("now", DATA_TYPE_INT, NOW_ARGS, &FnCallNow, "Convert the current time into system representation", false, FNCALL_CATEGORY_SYSTEM, SYNTAX_STATUS_NORMAL),

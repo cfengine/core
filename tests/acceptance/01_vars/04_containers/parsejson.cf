@@ -34,7 +34,7 @@ bundle edit_line init_insert_lines
 bundle agent test
 {
   vars:
-      "load" container => parsejson('["a", "b", "c"]');
+      "load" data => parsejson('["a", "b", "c"]');
 
   files:
       "$(G.testfile).actual"

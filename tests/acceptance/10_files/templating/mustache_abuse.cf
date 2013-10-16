@@ -18,7 +18,7 @@ bundle agent init
 {
   vars:
       "tests" slist => { "0", "1", "2", "3", "4", "5", "6" };
-      "templates" container => parsejson('
+      "templates" data => parsejson('
 [
  "{{x}}",
  "{{x}} {{y}}",
@@ -49,7 +49,7 @@ bundle edit_line init_insert_lines(lines)
 bundle agent test
 {
   vars:
-      "tdata" container => parsejson('
+      "tdata" data => parsejson('
 [
  "{ \\\"x\\\": 123 }",
  "{ \\\"x\\\": 123, \\\"y\\\": 456 }",
@@ -85,7 +85,7 @@ body edit_defaults test_empty
 bundle agent check
 {
   vars:
-      "expected" container => parsejson('
+      "expected" data => parsejson('
 [
  "123",
  "123 456",

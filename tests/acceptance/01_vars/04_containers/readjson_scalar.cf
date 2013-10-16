@@ -1,6 +1,6 @@
 #######################################################
 #
-# Test containers creation from a scalar through readjson()
+# Test datas creation from a scalar through readjson()
 #
 #######################################################
 
@@ -42,7 +42,7 @@ bundle edit_line init_insert_lines
 bundle agent test
 {
   vars:
-      "load" container => readjson("$(G.testfile).json", 1024);
+      "load" data => readjson("$(G.testfile).json", 1024);
 
   files:
       "$(G.testfile).actual"

@@ -2456,73 +2456,43 @@ static const char *GetDefaultPidDir(void)
 
 #define MAX_WORKDIR_LENGTH (CF_BUFSIZE / 2)
 
-static const char *GetDefaultWorkDir(void)
+static const char *GetDefaultDir_helper(char dir[MAX_WORKDIR_LENGTH], const char *root_dir)
 {
     if (getuid() > 0)
     {
-        static char workdir[MAX_WORKDIR_LENGTH];
-
-        if (!*workdir)
+        if (!*dir)
         {
             struct passwd *mpw = getpwuid(getuid());
 
-            if (snprintf(workdir, MAX_WORKDIR_LENGTH, "%s/.cfagent", mpw->pw_dir) >= MAX_WORKDIR_LENGTH)
+            if (snprintf(dir, MAX_WORKDIR_LENGTH, "%s/.cfagent", mpw->pw_dir) >= MAX_WORKDIR_LENGTH)
             {
                 return NULL;
             }
         }
-        return workdir;
+        return dir;
     }
     else
     {
-        return WORKDIR;
+        return root_dir;
     }
+}
+
+static const char *GetDefaultWorkDir(void)
+{
+    static char workdir[MAX_WORKDIR_LENGTH];
+    return GetDefaultDir_helper(workdir, WORKDIR);
 }
 
 static const char *GetDefaultLogDir(void)
 {
-    if (getuid() > 0)
-    {
-        static char logdir[MAX_WORKDIR_LENGTH];
-
-        if (!*logdir)
-        {
-            struct passwd *mpw = getpwuid(getuid());
-
-            if (snprintf(logdir, MAX_WORKDIR_LENGTH, "%s/.cfagent/", mpw->pw_dir) >= MAX_WORKDIR_LENGTH)
-            {
-                return NULL;
-            }
-        }
-        return logdir;
-    }
-    else
-    {
-        return LOGDIR;
-    }
+    static char logdir[MAX_WORKDIR_LENGTH];
+    return GetDefaultDir_helper(logdir, LOGDIR);
 }
 
 static const char *GetDefaultPidDir(void)
 {
-    if (getuid() > 0)
-    {
-        static char piddir[MAX_WORKDIR_LENGTH];
-
-        if (!*piddir)
-        {
-            struct passwd *mpw = getpwuid(getuid());
-
-            if (snprintf(piddir, MAX_WORKDIR_LENGTH, "%s/.cfagent/", mpw->pw_dir) >= MAX_WORKDIR_LENGTH)
-            {
-                return NULL;
-            }
-        }
-        return piddir;
-    }
-    else
-    {
-        return PIDDIR;
-    }
+    static char piddir[MAX_WORKDIR_LENGTH];
+    return GetDefaultDir_helper(piddir, PIDDIR);
 }
 
 #endif

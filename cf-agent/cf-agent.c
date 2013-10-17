@@ -70,7 +70,7 @@
 #include "bootstrap.h"
 #include "misc_lib.h"
 #include "buffer.h"
-
+#include "rpl_utsname.h"
 #include "mod_common.h"
 
 typedef enum
@@ -614,7 +614,7 @@ static void ThisAgentInit(void)
   status which we need for setting returns
 */
 
-    snprintf(filename, CF_BUFSIZE, "%s/cfagent.%s.log", CFWORKDIR, VSYSNAME.nodename);
+    snprintf(filename, CF_BUFSIZE, "%s/cfagent.%s.log", CFWORKDIR, get_utsname_nodename());
     MapName(filename);
 
     if ((fp = fopen(filename, "a")) != NULL)

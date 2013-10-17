@@ -51,6 +51,7 @@
 #include "promiser_regex_resolver.h"
 #include "ornaments.h"
 #include "audit.h"
+#include "rpl_utsname.h"
 
 static void LoadSetuid(Attributes a);
 static void SaveSetuid(EvalContext *ctx, Attributes a, Promise *pp);
@@ -605,7 +606,7 @@ static void LoadSetuid(Attributes a)
     edits.backup = BACKUP_OPTION_NO_BACKUP;
     edits.maxfilesize = 1000000;
 
-    snprintf(filename, CF_BUFSIZE, "%s/cfagent.%s.log", CFWORKDIR, VSYSNAME.nodename);
+    snprintf(filename, CF_BUFSIZE, "%s/cfagent.%s.log", CFWORKDIR, get_utsname_nodename());
     MapName(filename);
 
     if (!LoadFileAsItemList(&VSETUIDLIST, filename, edits))
@@ -624,7 +625,7 @@ static void SaveSetuid(EvalContext *ctx, Attributes a, Promise *pp)
     b.edits.maxfilesize = 1000000;
 
     char filename[CF_BUFSIZE];
-    snprintf(filename, CF_BUFSIZE, "%s/cfagent.%s.log", CFWORKDIR, VSYSNAME.nodename);
+    snprintf(filename, CF_BUFSIZE, "%s/cfagent.%s.log", CFWORKDIR, get_utsname_nodename());
     MapName(filename);
 
     PurgeItemList(&VSETUIDLIST, "SETUID/SETGID");

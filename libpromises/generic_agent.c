@@ -55,7 +55,7 @@
 #include "audit.h"
 #include "verify_classes.h"
 #include "verify_vars.h"
-
+#include "rpl_utsname.h"
 #ifdef HAVE_NOVA
 # include "cf.nova.h"
 #endif
@@ -1152,7 +1152,10 @@ static void CheckWorkingDirectories(EvalContext *ctx)
         Log(LOG_LEVEL_ERR, "Couldn't get kernel name info. (uname: %s)", GetErrorStr());
         memset(&VSYSNAME, 0, sizeof(VSYSNAME));
     }
-
+    if (init_utsname_nodename() == -1)
+    {
+      Log(LOG_LEVEL_ERR, "Unable to initialize vsysname_nodename.nodename in rpl_utsname.c");
+    }
     snprintf(vbuff, CF_BUFSIZE, "%s%c.", CFWORKDIR, FILE_SEPARATOR);
     MakeParentDirectory(vbuff, false);
 

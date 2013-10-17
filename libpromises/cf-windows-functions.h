@@ -71,6 +71,8 @@ int NovaWin_GetProgDir(char *progDir, int progDirSz);
 int NovaWin_GetEnv(char *varName, char *varContents, int varContentsSz);
 
 const char *GetDefaultWorkDir(void);
+const char *GetDefaultLogDir(void);
+const char *GetDefaultPidDir(void);
 
 /* win_user.c */
 

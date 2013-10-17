@@ -82,6 +82,10 @@
 #else
 # define _LOC_NMLN       257
 
+#ifdef __MINGW32__ 
+# define _SYS_NMLN _LOC_NMLN
+#endif
+
 struct utsname
 {
     char sysname[_LOC_NMLN];

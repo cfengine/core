@@ -2613,7 +2613,6 @@ int GetUptimeMinutes(time_t now)
        // Don't return yet, sanity checking below
        boot_time = now - s.uptime;
     }
-
 #elif defined(BOOT_TIME_WITH_KSTAT)         // Solaris platform
 #define NANOSECONDS_PER_SECOND 1000000000
     kstat_ctl_t *kc;
@@ -2626,8 +2625,7 @@ int GetUptimeMinutes(time_t now)
             boot_time = (time_t)(kp->ks_crtime / NANOSECONDS_PER_SECOND);
         }
         kstat_close(kc);
-    }
-
+    }  
 #elif defined(BOOT_TIME_WITH_PSTAT_GETPROC) // HP-UX platform only
     struct pst_status p;
 

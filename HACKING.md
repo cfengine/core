@@ -165,6 +165,23 @@ suitable for library writers.
 * http://en.wikipedia.org/wiki/Golden_Rule
 
 
+C Platform Macros
+-----------------
+
+It's important to have portability in a consistent way.  Use these platform macros in C code.
+
+* Any Windows system: Use `_WIN32`.  Don't use `NT`.
+* mingw-based Win32 build: Use `__MINGW32__`.  Don't use `MINGW`.
+* Cygwin-based Win32 build: Use `__CYGWIN__`.  Don't use `CFCYG`.
+* OS X: Use `__APPLE__`.  Don't use `DARWIN`.
+* FreeBSD: Use `__FreeBSD__`.  Don't use `FREEBSD`.
+* NetBSD: Use `__NetBSD__`.  Don't use `NETBSD`.
+* OpenBSD: Use `__OpenBSD__`.  Don't use `OPENBSD`.
+* AIX: Use `_AIX`.  Don't use `AIX`.
+* Solaris: Use `__sun`. Don't use `SOLARIS`.
+* Linux: Use `__linux__`.  Don't use `LINUX`.
+* HP/UX: Use `__hpux` (two underscores!).  Don't use `hpux`.
+
 Output Message Conventions
 --------------------------
 

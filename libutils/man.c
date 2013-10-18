@@ -80,7 +80,7 @@ static void WriteAvailability(Writer *out, const char *program)
         ".br\n"
         "Binary packages may be downloaded from http://cfengine.com/downloads/.\n"
         ".br\n"
-        "The source code is avaiable at http://github.com/cfengine/\n";
+        "The source code is available at http://github.com/cfengine/\n";
 
     WriterWriteF(out, availability, program);
 }

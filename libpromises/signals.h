@@ -27,7 +27,7 @@
 
 #include <cf3.defs.h>
 
-// check whether the running deamon should terminate after having received a signal.
+// check whether the running daemon should terminate after having received a signal.
 bool IsPendingTermination(void);
 
 void HandleSignalsForDaemon(int signum);

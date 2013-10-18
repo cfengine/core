@@ -136,6 +136,7 @@ galaxy
 # tags
 
 TAGS
+tags
 cscope.*
 
 # vim

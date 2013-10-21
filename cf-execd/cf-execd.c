@@ -408,12 +408,6 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, E
 
 static void *LocalExecThread(void *param)
 {
-#if !defined(__MINGW32__)
-    sigset_t sigmask;
-    sigemptyset(&sigmask);
-    pthread_sigmask(SIG_BLOCK, &sigmask, NULL);
-#endif
-
     ExecConfig *config = (ExecConfig *)param;
     LocalExec(config);
     ExecConfigDestroy(config);

@@ -4996,62 +4996,114 @@ static void *CfReadFile(char *filename, int maxsize)
     struct stat sb;
     char *result = NULL;
     FILE *fp;
-    size_t size;
+    size_t size, bytes_read;
     int i, newlines = 0;
+    size_t offset, buflen = 0;
 
-    if (stat(filename, &sb) == -1)
-    {
-        if (THIS_AGENT_TYPE == AGENT_TYPE_COMMON)
-        {
-            Log(LOG_LEVEL_DEBUG, "Could not examine file '%s' in CfReadFile", filename);
-        }
-        else
-        {
-            if (IsCf3VarString(filename))
-            {
-                Log(LOG_LEVEL_VERBOSE, "Cannot converge/reduce variable '%s' yet .. assuming it will resolve later",
-                      filename);
-            }
-            else
-            {
-                Log(LOG_LEVEL_INFO, "Could not examine file '%s' in readfile. (stat: %s)", filename, GetErrorStr());
-            }
-        }
-        return NULL;
-    }
-
-    if (sb.st_size > maxsize)
-    {
-        Log(LOG_LEVEL_INFO, "Truncating long file '%s' in readfile to max limit %d", filename, maxsize);
-        size = maxsize;
-    }
-    else
-    {
-        size = sb.st_size;
-    }
-
-    result = xmalloc(size + 1);
+    /* Two behaviors, depending on maxsize value:
+      - maxsize == S   : the file will we read up to S or stat.size bytes, whichever comes first
+      - maxsize == 0   : the file will be read sequentially until EOF
+    */
 
     if ((fp = fopen(filename, "r")) == NULL)
     {
-        Log(LOG_LEVEL_VERBOSE, "Could not open file '%s' in readfile. (fopen: %s)", filename, GetErrorStr());
-        free(result);
+        Log(LOG_LEVEL_VERBOSE, "readfile: Could not open file '%s' (fopen: %s)", filename, GetErrorStr());
         return NULL;
     }
 
-    result[size] = '\0';
-
-    if (size > 0)
+    if (maxsize != 0)
     {
-        if (fread(result, size, 1, fp) != 1)
+        if (stat(filename, &sb) == -1)
         {
-            Log(LOG_LEVEL_VERBOSE, "Could not read expected amount from file '%s' in readfile. (fread: %s)", filename, GetErrorStr());
+            if (THIS_AGENT_TYPE == AGENT_TYPE_COMMON)
+            {
+                Log(LOG_LEVEL_DEBUG, "readfile: Could not examine file '%s'", filename);
+            }
+            else
+            {
+                if (IsCf3VarString(filename))
+                {
+                    Log(LOG_LEVEL_VERBOSE, "readfile: Cannot converge/reduce variable '%s' yet .. assuming it will resolve later",
+                          filename);
+                }
+                else
+                {
+                    Log(LOG_LEVEL_INFO, "readfile: Could not examine file '%s' (stat: %s)",
+                          filename, GetErrorStr());
+                }
+            }
+            return NULL;
+        }
+
+        // If stat() reports an empty file, still trying to read it, because of broken /proc|/sys files semantics.
+        if (sb.st_size == 0)
+        {
+            buflen = maxsize;
+        }
+        else
+        {
+            buflen = sb.st_size;
+        }
+
+        if (sb.st_size > maxsize)
+        {
+            buflen = maxsize;
+            Log(LOG_LEVEL_INFO, "readfile: Truncating file '%s' to %d bytes, as requested by the maxsize parameter",
+                  filename, maxsize);
+        }
+
+        result = xmalloc(buflen + 1);  // Extra space for '\0'
+        bytes_read = fread(result, 1, buflen, fp);
+
+        if (bytes_read < buflen)
+        {
+            Log(LOG_LEVEL_INFO, "readfile: Could not read expected amount from file '%s' expected: %zu read: %zu (fread: %s)",
+                  filename, buflen, bytes_read, GetErrorStr());
             fclose(fp);
             free(result);
             return NULL;
         }
+    }
+    else
+    {
+        // We read the file sequentially until EOF
+        result = xmalloc(CF_BUFSIZE);
+        buflen = CF_BUFSIZE;
+        offset = 0;
 
-        for (i = 0; i < size - 1; i++)
+        while(1)
+        {
+            bytes_read = fread(result+offset, 1, buflen, fp);
+
+            if ( bytes_read < buflen)
+            {
+                buflen = buflen - CF_BUFSIZE + bytes_read;
+                result = xrealloc(result, buflen);
+                break;
+            }
+            else
+            {
+                buflen += CF_BUFSIZE;
+                offset += CF_BUFSIZE;
+                result = xrealloc(result, buflen);
+            }
+        }
+        result = xrealloc(result, buflen + 1);  // Extra space for '\0'
+    }
+
+    if (buflen == 0)
+    {
+        Log(LOG_LEVEL_INFO, "readfile: '%s' appears to be an empty file.", filename);
+        free(result);
+        return NULL;
+    }
+    else
+    {
+        result[buflen] = '\0';
+
+        size = buflen;
+
+        for (i = 0; i < size - 1 && result[i] != '\0' ; i++)
         {
             if (result[i] == '\n' || result[i] == '\r')
             {

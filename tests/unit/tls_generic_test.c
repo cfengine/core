@@ -15,6 +15,7 @@
 #include <tls_generic.h>
 #include <tls_server.h>
 #include <tls_client.h>
+#include <connection_info.h>
 
 /*
  * We create the appropriate SSL structures before starting the tests.
@@ -1122,8 +1123,7 @@ static void test_TLSVerifyPeer(void)
     RESET_STATUS;
 
     SSL *ssl = NULL;
-    ConnectionInfo conn_info;
-    memset(&conn_info, 0, sizeof(ConnectionInfo));
+    ConnectionInfo *conn_info = NULL;
 
     /*
      * Open a socket and establish a tcp connection.
@@ -1132,11 +1132,13 @@ static void test_TLSVerifyPeer(void)
     int server = 0;
     int result = 0;
 
+    conn_info = ConnectionInfoNew();
+
     memset(&server_addr, 0, sizeof(struct sockaddr_in));
     server = socket(AF_INET, SOCK_STREAM, 0);
     assert_int_not_equal(-1, server);
     server_addr.sin_family = AF_INET;
-    conn_info.sd = server;
+    ConnectionInfoSetSocket(conn_info, server);
     /* We should not use inet_addr, but it is easier for this particular case. */
     server_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
     server_addr.sin_port = htons(8035);
@@ -1159,8 +1161,8 @@ static void test_TLSVerifyPeer(void)
     /*
      * Fill the remaining fields on ConnectionInfo
      */
-    conn_info.ssl = ssl;
-    conn_info.type = CF_PROTOCOL_TLS;
+    ConnectionInfoSetProtocolVersion(conn_info, CF_PROTOCOL_TLS);
+    ConnectionInfoSetSSL(conn_info, ssl);
     /*
      * Fill in the structures we need for testing.
      */
@@ -1173,12 +1175,12 @@ static void test_TLSVerifyPeer(void)
      * Start testing
      */
     USE_MOCK(SSL_get_peer_certificate);
-    assert_int_equal(-1, TLSVerifyPeer(&conn_info, "127.0.0.1", "root"));
+    assert_int_equal(-1, TLSVerifyPeer(conn_info, "127.0.0.1", "root"));
     SSL_GET_PEER_CERTIFICATE_RETURN(certificate);
 
     USE_MOCK(X509_get_pubkey);
     X509_GET_PUBKEY_RETURN(NULL);
-    assert_int_equal(-1, TLSVerifyPeer(&conn_info, "127.0.0.1", "root"));
+    assert_int_equal(-1, TLSVerifyPeer(conn_info, "127.0.0.1", "root"));
 
     /*
      * Due to the cleaning up we do after failing, we need to re read the certificate after
@@ -1196,7 +1198,7 @@ static void test_TLSVerifyPeer(void)
 
     USE_MOCK(EVP_PKEY_type);
     EVP_PKEY_TYPE_RETURN(EVP_PKEY_DSA);
-    assert_int_equal(-1, TLSVerifyPeer(&conn_info, "127.0.0.1", "root"));
+    assert_int_equal(-1, TLSVerifyPeer(conn_info, "127.0.0.1", "root"));
     EVP_PKEY_TYPE_RETURN(EVP_PKEY_RSA);
 
     REREAD_CERTIFICATE(certificate_stream, certificate);
@@ -1205,13 +1207,13 @@ static void test_TLSVerifyPeer(void)
     X509_GET_PUBKEY_RETURN(server_pubkey);
     USE_MOCK(X509_verify);
     X509_VERIFY_RETURN(-1);
-    assert_int_equal(-1, TLSVerifyPeer(&conn_info, "127.0.0.1", "root"));
+    assert_int_equal(-1, TLSVerifyPeer(conn_info, "127.0.0.1", "root"));
     X509_VERIFY_RETURN(0);
     REREAD_CERTIFICATE(certificate_stream, certificate);
     SSL_GET_PEER_CERTIFICATE_RETURN(certificate);
     REREAD_PUBLIC_KEY(stream, pubkey, server_pubkey);
     X509_GET_PUBKEY_RETURN(server_pubkey);
-    assert_int_equal(-1, TLSVerifyPeer(&conn_info, "127.0.0.1", "root"));
+    assert_int_equal(-1, TLSVerifyPeer(conn_info, "127.0.0.1", "root"));
     X509_VERIFY_RETURN(1);
 
     USE_MOCK(HavePublicKey);
@@ -1220,7 +1222,7 @@ static void test_TLSVerifyPeer(void)
     SSL_GET_PEER_CERTIFICATE_RETURN(certificate);
     REREAD_PUBLIC_KEY(stream, pubkey, server_pubkey);
     X509_GET_PUBKEY_RETURN(server_pubkey);
-    assert_int_equal(0, TLSVerifyPeer(&conn_info, "127.0.0.1", "root"));
+    assert_int_equal(0, TLSVerifyPeer(conn_info, "127.0.0.1", "root"));
 
     USE_MOCK(EVP_PKEY_cmp);
     EVP_PKEY_CMP_RETURN(-1);
@@ -1229,28 +1231,28 @@ static void test_TLSVerifyPeer(void)
     REREAD_PUBLIC_KEY(stream, pubkey, server_pubkey);
     X509_GET_PUBKEY_RETURN(server_pubkey);
     HAVEPUBLICKEY_RETURN(pubkey);
-    assert_int_equal(0, TLSVerifyPeer(&conn_info, "127.0.0.1", "root"));
+    assert_int_equal(0, TLSVerifyPeer(conn_info, "127.0.0.1", "root"));
     EVP_PKEY_CMP_RETURN(0);
     REREAD_CERTIFICATE(certificate_stream, certificate);
     SSL_GET_PEER_CERTIFICATE_RETURN(certificate);
     REREAD_PUBLIC_KEY(stream, pubkey, server_pubkey);
     X509_GET_PUBKEY_RETURN(server_pubkey);
     HAVEPUBLICKEY_RETURN(pubkey);
-    assert_int_equal(0, TLSVerifyPeer(&conn_info, "127.0.0.1", "root"));
+    assert_int_equal(0, TLSVerifyPeer(conn_info, "127.0.0.1", "root"));
     EVP_PKEY_CMP_RETURN(-2);
     REREAD_CERTIFICATE(certificate_stream, certificate);
     SSL_GET_PEER_CERTIFICATE_RETURN(certificate);
     REREAD_PUBLIC_KEY(stream, pubkey, server_pubkey);
     X509_GET_PUBKEY_RETURN(server_pubkey);
     HAVEPUBLICKEY_RETURN(pubkey);
-    assert_int_equal(-1, TLSVerifyPeer(&conn_info, "127.0.0.1", "root"));
+    assert_int_equal(-1, TLSVerifyPeer(conn_info, "127.0.0.1", "root"));
     EVP_PKEY_CMP_RETURN(1);
     REREAD_CERTIFICATE(certificate_stream, certificate);
     SSL_GET_PEER_CERTIFICATE_RETURN(certificate);
     REREAD_PUBLIC_KEY(stream, pubkey, server_pubkey);
     X509_GET_PUBKEY_RETURN(server_pubkey);
     HAVEPUBLICKEY_RETURN(pubkey);
-    assert_int_equal(1, TLSVerifyPeer(&conn_info, "127.0.0.1", "root"));
+    assert_int_equal(1, TLSVerifyPeer(conn_info, "127.0.0.1", "root"));
 
     /*
      * Shutting down is not as easy as it seems.
@@ -1259,10 +1261,7 @@ static void test_TLSVerifyPeer(void)
         result = SSL_shutdown(ssl);
         assert_int_not_equal(-1, result);
     } while (result != 1);
-    if (ssl)
-    {
-        SSL_free(ssl);
-    }
+    ConnectionInfoDestroy(&conn_info);
     RESET_STATUS;
 }
 

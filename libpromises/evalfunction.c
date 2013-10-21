@@ -58,6 +58,7 @@
 #include <set.h>
 #include <buffer.h>
 #include <files_lib.h>
+#include <connection_info.h>
 
 #include <math_eval.h>
 
@@ -1411,7 +1412,7 @@ static FnCallResult FnCallReadTcp(EvalContext *ctx, FnCall *fp, Rlist *finalargs
 
     Log(LOG_LEVEL_DEBUG, "Want to read %d bytes from port %d at '%s'", val, portnum, hostnameip);
 
-    conn = NewAgentConn(hostnameip);
+    conn = NewAgentConn(hostnameip, false);
 
     FileCopy fc = {
         .force_ipv4 = false,
@@ -1423,7 +1424,7 @@ static FnCallResult FnCallReadTcp(EvalContext *ctx, FnCall *fp, Rlist *finalargs
     if (!ServerConnect(conn, hostnameip, fc))
     {
         Log(LOG_LEVEL_INFO, "Couldn't open a tcp socket. (socket: %s)", GetErrorStr());
-        DeleteAgentConn(conn);
+        DeleteAgentConn(conn, false);
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
@@ -1433,11 +1434,11 @@ static FnCallResult FnCallReadTcp(EvalContext *ctx, FnCall *fp, Rlist *finalargs
         int result = 0;
         size_t length = strlen(sendstring);
         do {
-            result = send(conn->conn_info.sd, sendstring, length, 0);
+            result = send(ConnectionInfoSocket(conn->conn_info), sendstring, length, 0);
             if (result < 0)
             {
-                cf_closesocket(conn->conn_info.sd);
-                DeleteAgentConn(conn);
+                cf_closesocket(ConnectionInfoSocket(conn->conn_info));
+                DeleteAgentConn(conn, false);
                 return (FnCallResult) { FNCALL_FAILURE };
             }
             else
@@ -1447,19 +1448,19 @@ static FnCallResult FnCallReadTcp(EvalContext *ctx, FnCall *fp, Rlist *finalargs
         } while (sent < length);
     }
 
-    if ((n_read = recv(conn->conn_info.sd, buffer, val, 0)) == -1)
+    if ((n_read = recv(ConnectionInfoSocket(conn->conn_info), buffer, val, 0)) == -1)
     {
     }
 
     if (n_read == -1)
     {
-        cf_closesocket(conn->conn_info.sd);
-        DeleteAgentConn(conn);
+        cf_closesocket(ConnectionInfoSocket(conn->conn_info));
+        DeleteAgentConn(conn, false);
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
-    cf_closesocket(conn->conn_info.sd);
-    DeleteAgentConn(conn);
+    cf_closesocket(ConnectionInfoSocket(conn->conn_info));
+    DeleteAgentConn(conn, false);
 
     return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), RVAL_TYPE_SCALAR } };
 }
@@ -2328,7 +2329,7 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx, FnCall *fp, Rlist *fin
     {
         Log(LOG_LEVEL_DEBUG, "Want to read %d bytes from port %d at '%s'", val, portnum, RlistScalarValue(rp));
 
-        conn = NewAgentConn(RlistScalarValue(rp));
+        conn = NewAgentConn(RlistScalarValue(rp), false);
 
         FileCopy fc = {
             .force_ipv4 = false,
@@ -2340,27 +2341,27 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx, FnCall *fp, Rlist *fin
         if (!ServerConnect(conn, RlistScalarValue(rp), fc))
         {
             Log(LOG_LEVEL_INFO, "Couldn't open a tcp socket. (socket %s)", GetErrorStr());
-            DeleteAgentConn(conn);
+            DeleteAgentConn(conn, false);
             continue;
         }
 
         if (strlen(sendstring) > 0)
         {
-            if (SendSocketStream(conn->conn_info.sd, sendstring, strlen(sendstring)) == -1)
+            if (SendSocketStream(ConnectionInfoSocket(conn->conn_info), sendstring, strlen(sendstring)) == -1)
             {
-                cf_closesocket(conn->conn_info.sd);
-                DeleteAgentConn(conn);
+                cf_closesocket(ConnectionInfoSocket(conn->conn_info));
+                DeleteAgentConn(conn, false);
                 continue;
             }
 
-            if ((n_read = recv(conn->conn_info.sd, buffer, val, 0)) == -1)
+            if ((n_read = recv(ConnectionInfoSocket(conn->conn_info), buffer, val, 0)) == -1)
             {
             }
 
             if (n_read == -1)
             {
-                cf_closesocket(conn->conn_info.sd);
-                DeleteAgentConn(conn);
+                cf_closesocket(ConnectionInfoSocket(conn->conn_info));
+                DeleteAgentConn(conn, false);
                 continue;
             }
 
@@ -2392,8 +2393,8 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx, FnCall *fp, Rlist *fin
             count++;
         }
 
-        cf_closesocket(conn->conn_info.sd);
-        DeleteAgentConn(conn);
+        cf_closesocket(ConnectionInfoSocket(conn->conn_info));
+        DeleteAgentConn(conn, false);
     }
 
     PolicyDestroy(select_server_policy);

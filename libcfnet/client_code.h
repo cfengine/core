@@ -35,10 +35,13 @@
 bool cfnet_init(void);
 void DetermineCfenginePort(void);
 /**
-  @param err Set to 0 on success, -1 no server responce, -2 authentication failure.
+  @param fc No idea
+  @param background Whether to cache the connection or not. Set to false to cache it.
+  @param err Set to 0 on success, -1 no server response, -2 authentication failure.
+  @param s Socket to use for the connection, only useful for call collect mode.
   */
-AgentConnection *NewServerConnection(FileCopy fc, bool background, int *err);
-void DisconnectServer(AgentConnection *conn);
+AgentConnection *NewServerConnection(FileCopy fc, bool background, int *err, int s);
+void DisconnectServer(AgentConnection *conn, int partial);
 int cf_remote_stat(char *file, struct stat *buf, char *stattype, bool encrypt, AgentConnection *conn);
 int CompareHashNet(const char *file1, const char *file2, bool encrypt, AgentConnection *conn);
 int CopyRegularFileNet(const char *source, const char *dest, off_t size, bool encrypt, AgentConnection *conn);
@@ -51,5 +54,5 @@ const Stat *ClientCacheLookup(AgentConnection *conn, const char *server_name, co
 /* Mark connection as free */
 void ServerNotBusy(AgentConnection *conn);
 
-
+int TLSConnectCallCollect(ConnectionInfo *conn_info, const char *username);
 #endif

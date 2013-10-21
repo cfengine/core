@@ -44,7 +44,7 @@ static const int CF_NOSIZE = -1;
 #include <tls_generic.h>              /* TLSSend */
 #include <rlist.h>
 #include <cf-serverd-enterprise-stubs.h>
-
+#include <connection_info.h>
 
 void RefuseAccess(ServerConnectionState *conn, int size, char *errmesg)
 {
@@ -71,7 +71,7 @@ void RefuseAccess(ServerConnectionState *conn, int size, char *errmesg)
 
     char sendbuffer[CF_BUFSIZE];
     snprintf(sendbuffer, CF_BUFSIZE, "%s", CF_FAILEDSTR);
-    SendTransaction(&conn->conn_info, sendbuffer, size, CF_DONE);
+    SendTransaction(conn->conn_info, sendbuffer, size, CF_DONE);
 
     Log(LOG_LEVEL_INFO, "REFUSAL to (user=%s,ip=%s) of request: %s",
         username, ipaddr, errmesg);
@@ -543,7 +543,7 @@ static void ReplyNothing(ServerConnectionState *conn)
 
     snprintf(buffer, CF_BUFSIZE, "Hello %s (%s), nothing relevant to do here...\n\n", conn->hostname, conn->ipaddr);
 
-    if (SendTransaction(&conn->conn_info, buffer, 0, CF_DONE) == -1)
+    if (SendTransaction(conn->conn_info, buffer, 0, CF_DONE) == -1)
     {
         Log(LOG_LEVEL_ERR, "Unable to send transaction. (send: %s)", GetErrorStr());
     }
@@ -559,7 +559,7 @@ int MatchClasses(EvalContext *ctx, ServerConnectionState *conn)
     {
         count++;
 
-        if (ReceiveTransaction(&conn->conn_info, recvbuffer, NULL) == -1)
+        if (ReceiveTransaction(conn->conn_info, recvbuffer, NULL) == -1)
         {
             Log(LOG_LEVEL_VERBOSE, "Unable to read data from network. (ReceiveTransaction: %s)", GetErrorStr());
             return false;
@@ -773,7 +773,7 @@ void DoExec(EvalContext *ctx, ServerConnectionState *conn, char *args)
         Log(LOG_LEVEL_VERBOSE, "cf-serverd exec request: no cfruncommand defined");
         char sendbuffer[CF_BUFSIZE];
         strlcpy(sendbuffer, "Exec request: no cfruncommand defined\n", CF_BUFSIZE);
-        SendTransaction(&conn->conn_info, sendbuffer, 0, CF_DONE);
+        SendTransaction(conn->conn_info, sendbuffer, 0, CF_DONE);
         return;
     }
 
@@ -785,7 +785,7 @@ void DoExec(EvalContext *ctx, ServerConnectionState *conn, char *args)
         {
             char sendbuffer[CF_BUFSIZE];
             snprintf(sendbuffer, CF_BUFSIZE, "You are not authorized to activate these classes/roles on host %s\n", VFQNAME);
-            SendTransaction(&conn->conn_info, sendbuffer, 0, CF_DONE);
+            SendTransaction(conn->conn_info, sendbuffer, 0, CF_DONE);
             return;
         }
 
@@ -816,7 +816,7 @@ void DoExec(EvalContext *ctx, ServerConnectionState *conn, char *args)
             {
                 char sendbuffer[CF_BUFSIZE];
                 snprintf(sendbuffer, CF_BUFSIZE, "You are not authorized to activate these classes/roles on host %s\n", VFQNAME);
-                SendTransaction(&conn->conn_info, sendbuffer, 0, CF_DONE);
+                SendTransaction(conn->conn_info, sendbuffer, 0, CF_DONE);
                 return;
             }
         }
@@ -828,7 +828,7 @@ void DoExec(EvalContext *ctx, ServerConnectionState *conn, char *args)
     {
         char sendbuffer[CF_BUFSIZE];
         snprintf(sendbuffer, CF_BUFSIZE, "Command line too long with args: %s\n", ebuff);
-        SendTransaction(&conn->conn_info, sendbuffer, 0, CF_DONE);
+        SendTransaction(conn->conn_info, sendbuffer, 0, CF_DONE);
         return;
     }
     else
@@ -839,7 +839,7 @@ void DoExec(EvalContext *ctx, ServerConnectionState *conn, char *args)
             strcat(ebuff, " ");
             strncat(ebuff, args, CF_BUFSIZE - strlen(ebuff));
             snprintf(sendbuffer, CF_BUFSIZE, "cf-serverd Executing %s\n", ebuff);
-            SendTransaction(&conn->conn_info, sendbuffer, 0, CF_DONE);
+            SendTransaction(conn->conn_info, sendbuffer, 0, CF_DONE);
         }
     }
 
@@ -850,7 +850,7 @@ void DoExec(EvalContext *ctx, ServerConnectionState *conn, char *args)
         Log(LOG_LEVEL_ERR, "Couldn't open pipe to command '%s'. (pipe: %s)", ebuff, GetErrorStr());
         char sendbuffer[CF_BUFSIZE];
         snprintf(sendbuffer, CF_BUFSIZE, "Unable to run %s\n", ebuff);
-        SendTransaction(&conn->conn_info, sendbuffer, 0, CF_DONE);
+        SendTransaction(conn->conn_info, sendbuffer, 0, CF_DONE);
         return;
     }
 
@@ -884,7 +884,7 @@ void DoExec(EvalContext *ctx, ServerConnectionState *conn, char *args)
         {
             char sendbuffer[CF_BUFSIZE];
             snprintf(sendbuffer, CF_BUFSIZE, "%s\n", line);
-            if (SendTransaction(&conn->conn_info, sendbuffer, 0, CF_DONE) == -1)
+            if (SendTransaction(conn->conn_info, sendbuffer, 0, CF_DONE) == -1)
             {
                 Log(LOG_LEVEL_ERR, "Sending failed, aborting. (send: %s)", GetErrorStr());
                 break;
@@ -1001,7 +1001,7 @@ void CfGetFile(ServerFileGetState *args)
     struct stat sb;
     int blocksize = 2048;
 
-    ConnectionInfo *conn_info = &(args->connect)->conn_info;
+    ConnectionInfo *conn_info = (args->connect)->conn_info;
 
     TranslatePath(filename, args->replyfile);
 
@@ -1015,13 +1015,13 @@ void CfGetFile(ServerFileGetState *args)
     {
         RefuseAccess(args->connect, args->buf_size, "");
         snprintf(sendbuffer, CF_BUFSIZE, "%s", CF_FAILEDSTR);
-        if (conn_info->type == CF_PROTOCOL_CLASSIC)
+        if (ConnectionInfoProtocolVersion(conn_info) == CF_PROTOCOL_CLASSIC)
         {
-            SendSocketStream(conn_info->sd, sendbuffer, args->buf_size);
+            SendSocketStream(ConnectionInfoSocket(conn_info), sendbuffer, args->buf_size);
         }
-        else if (conn_info->type == CF_PROTOCOL_TLS)
+        else if (ConnectionInfoProtocolVersion(conn_info) == CF_PROTOCOL_TLS)
         {
-            TLSSend(conn_info->ssl, sendbuffer, args->buf_size);
+            TLSSend(ConnectionInfoSSL(conn_info), sendbuffer, args->buf_size);
         }
         return;
     }
@@ -1033,13 +1033,13 @@ void CfGetFile(ServerFileGetState *args)
         Log(LOG_LEVEL_ERR, "Open error of file '%s'. (open: %s)",
             filename, GetErrorStr());
         snprintf(sendbuffer, CF_BUFSIZE, "%s", CF_FAILEDSTR);
-        if (conn_info->type == CF_PROTOCOL_CLASSIC)
+        if (ConnectionInfoProtocolVersion(conn_info) == CF_PROTOCOL_CLASSIC)
         {
-            SendSocketStream(conn_info->sd, sendbuffer, args->buf_size);
+            SendSocketStream(ConnectionInfoSocket(conn_info), sendbuffer, args->buf_size);
         }
-        else if (conn_info->type == CF_PROTOCOL_TLS)
+        else if (ConnectionInfoProtocolVersion(conn_info) == CF_PROTOCOL_TLS)
         {
-            TLSSend(conn_info->ssl, sendbuffer, args->buf_size);
+            TLSSend(ConnectionInfoSSL(conn_info), sendbuffer, args->buf_size);
         }
     }
     else
@@ -1087,16 +1087,16 @@ void CfGetFile(ServerFileGetState *args)
                 {
                     snprintf(sendbuffer, CF_BUFSIZE, "%s%s: %s", CF_CHANGEDSTR1, CF_CHANGEDSTR2, filename);
 
-                    if (conn_info->type == CF_PROTOCOL_CLASSIC)
+                    if (ConnectionInfoProtocolVersion(conn_info) == CF_PROTOCOL_CLASSIC)
                     {
-                        if (SendSocketStream(conn_info->sd, sendbuffer, blocksize) == -1)
+                        if (SendSocketStream(ConnectionInfoSocket(conn_info), sendbuffer, blocksize) == -1)
                         {
                             Log(LOG_LEVEL_VERBOSE, "Send failed in GetFile. (send: %s)", GetErrorStr());
                         }
                     }
-                    else if (conn_info->type == CF_PROTOCOL_TLS)
+                    else if (ConnectionInfoProtocolVersion(conn_info) == CF_PROTOCOL_TLS)
                     {
-                        if (TLSSend(conn_info->ssl, sendbuffer, blocksize) == -1)
+                        if (TLSSend(ConnectionInfoSSL(conn_info), sendbuffer, blocksize) == -1)
                         {
                             Log(LOG_LEVEL_VERBOSE, "Send failed in GetFile. (send: %s)", GetErrorStr());
                         }
@@ -1118,17 +1118,17 @@ void CfGetFile(ServerFileGetState *args)
 
             total += n_read;
 
-            if (conn_info->type == CF_PROTOCOL_CLASSIC)
+            if (ConnectionInfoProtocolVersion(conn_info) == CF_PROTOCOL_CLASSIC)
             {
-                if (SendSocketStream(conn_info->sd, sendbuffer, sendlen) == -1)
+                if (SendSocketStream(ConnectionInfoSocket(conn_info), sendbuffer, sendlen) == -1)
                 {
                     Log(LOG_LEVEL_VERBOSE, "Send failed in GetFile. (send: %s)", GetErrorStr());
                     break;
                 }
             }
-            else if (conn_info->type == CF_PROTOCOL_TLS)
+            else if (ConnectionInfoProtocolVersion(conn_info) == CF_PROTOCOL_TLS)
             {
-                if (TLSSend(conn_info->ssl, sendbuffer, sendlen) == -1)
+                if (TLSSend(ConnectionInfoSSL(conn_info), sendbuffer, sendlen) == -1)
                 {
                     Log(LOG_LEVEL_VERBOSE, "Send failed in GetFile. (send: %s)", GetErrorStr());
                     break;
@@ -1154,7 +1154,7 @@ void CfEncryptGetFile(ServerFileGetState *args)
     EVP_CIPHER_CTX ctx;
     char *key, enctype;
     struct stat sb;
-    ConnectionInfo *conn_info = &args->connect->conn_info;
+    ConnectionInfo *conn_info = args->connect->conn_info;
 
     key = (args->connect)->session_key;
     enctype = (args->connect)->encryption_type;
@@ -1287,7 +1287,7 @@ int StatFile(ServerConnectionState *conn, char *sendbuffer, char *ofilename)
     {
         snprintf(sendbuffer, CF_BUFSIZE, "BAD: Filename suspiciously long [%s]\n", filename);
         Log(LOG_LEVEL_ERR, "%s", sendbuffer);
-        SendTransaction(&conn->conn_info, sendbuffer, 0, CF_DONE);
+        SendTransaction(conn->conn_info, sendbuffer, 0, CF_DONE);
         return -1;
     }
 
@@ -1295,7 +1295,7 @@ int StatFile(ServerConnectionState *conn, char *sendbuffer, char *ofilename)
     {
         snprintf(sendbuffer, CF_BUFSIZE, "BAD: unable to stat file %s", filename);
         Log(LOG_LEVEL_VERBOSE, "%s. (lstat: %s)", sendbuffer, GetErrorStr());
-        SendTransaction(&conn->conn_info, sendbuffer, 0, CF_DONE);
+        SendTransaction(conn->conn_info, sendbuffer, 0, CF_DONE);
         return -1;
     }
 
@@ -1317,7 +1317,7 @@ int StatFile(ServerConnectionState *conn, char *sendbuffer, char *ofilename)
         {
             sprintf(sendbuffer, "BAD: unable to read link\n");
             Log(LOG_LEVEL_ERR, "%s. (readlink: %s)", sendbuffer, GetErrorStr());
-            SendTransaction(&conn->conn_info, sendbuffer, 0, CF_DONE);
+            SendTransaction(conn->conn_info, sendbuffer, 0, CF_DONE);
             return -1;
         }
 
@@ -1331,7 +1331,7 @@ int StatFile(ServerConnectionState *conn, char *sendbuffer, char *ofilename)
     {
         Log(LOG_LEVEL_VERBOSE, "BAD: unable to stat file '%s'. (stat: %s)",
             filename, GetErrorStr());
-        SendTransaction(&conn->conn_info, sendbuffer, 0, CF_DONE);
+        SendTransaction(conn->conn_info, sendbuffer, 0, CF_DONE);
         return -1;
     }
 
@@ -1424,7 +1424,7 @@ int StatFile(ServerConnectionState *conn, char *sendbuffer, char *ofilename)
              (intmax_t) cfst.cf_atime, (intmax_t) cfst.cf_mtime, (intmax_t) cfst.cf_ctime,
              cfst.cf_makeholes, cfst.cf_ino, cfst.cf_nlink, (intmax_t) cfst.cf_dev);
 
-    SendTransaction(&conn->conn_info, sendbuffer, 0, CF_DONE);
+    SendTransaction(conn->conn_info, sendbuffer, 0, CF_DONE);
 
     memset(sendbuffer, 0, CF_BUFSIZE);
 
@@ -1438,7 +1438,7 @@ int StatFile(ServerConnectionState *conn, char *sendbuffer, char *ofilename)
         sprintf(sendbuffer, "OK:");
     }
 
-    SendTransaction(&conn->conn_info, sendbuffer, 0, CF_DONE);
+    SendTransaction(conn->conn_info, sendbuffer, 0, CF_DONE);
     return 0;
 }
 
@@ -1470,13 +1470,13 @@ void CompareLocalHash(ServerConnectionState *conn, char *sendbuffer, char *recvb
     {
         sprintf(sendbuffer, "%s", CFD_FALSE);
         Log(LOG_LEVEL_DEBUG, "Hashes matched ok");
-        SendTransaction(&conn->conn_info, sendbuffer, 0, CF_DONE);
+        SendTransaction(conn->conn_info, sendbuffer, 0, CF_DONE);
     }
     else
     {
         sprintf(sendbuffer, "%s", CFD_TRUE);
         Log(LOG_LEVEL_DEBUG, "Hashes didn't match");
-        SendTransaction(&conn->conn_info, sendbuffer, 0, CF_DONE);
+        SendTransaction(conn->conn_info, sendbuffer, 0, CF_DONE);
     }
 }
 
@@ -1501,11 +1501,11 @@ void GetServerLiteral(EvalContext *ctx, ServerConnectionState *conn, char *sendb
     if (encrypted)
     {
         cipherlen = EncryptString(conn->encryption_type, sendbuffer, out, conn->session_key, strlen(sendbuffer) + 1);
-        SendTransaction(&conn->conn_info, out, cipherlen, CF_DONE);
+        SendTransaction(conn->conn_info, out, cipherlen, CF_DONE);
     }
     else
     {
-        SendTransaction(&conn->conn_info, sendbuffer, 0, CF_DONE);
+        SendTransaction(conn->conn_info, sendbuffer, 0, CF_DONE);
     }
 }
 
@@ -1552,11 +1552,11 @@ void ReplyServerContext(ServerConnectionState *conn, int encrypted, Item *classe
     if (encrypted)
     {
         cipherlen = EncryptString(conn->encryption_type, sendbuffer, out, conn->session_key, strlen(sendbuffer) + 1);
-        SendTransaction(&conn->conn_info, out, cipherlen, CF_DONE);
+        SendTransaction(conn->conn_info, out, cipherlen, CF_DONE);
     }
     else
     {
-        SendTransaction(&conn->conn_info, sendbuffer, 0, CF_DONE);
+        SendTransaction(conn->conn_info, sendbuffer, 0, CF_DONE);
     }
 }
 
@@ -1572,7 +1572,7 @@ int CfOpenDirectory(ServerConnectionState *conn, char *sendbuffer, char *oldDirn
     if (!IsAbsoluteFileName(dirname))
     {
         sprintf(sendbuffer, "BAD: request to access a non-absolute filename\n");
-        SendTransaction(&conn->conn_info, sendbuffer, 0, CF_DONE);
+        SendTransaction(conn->conn_info, sendbuffer, 0, CF_DONE);
         return -1;
     }
 
@@ -1580,7 +1580,7 @@ int CfOpenDirectory(ServerConnectionState *conn, char *sendbuffer, char *oldDirn
     {
         Log(LOG_LEVEL_DEBUG, "Couldn't open dir '%s'", dirname);
         snprintf(sendbuffer, CF_BUFSIZE, "BAD: cfengine, couldn't open dir %s\n", dirname);
-        SendTransaction(&conn->conn_info, sendbuffer, 0, CF_DONE);
+        SendTransaction(conn->conn_info, sendbuffer, 0, CF_DONE);
         return -1;
     }
 
@@ -1594,7 +1594,7 @@ int CfOpenDirectory(ServerConnectionState *conn, char *sendbuffer, char *oldDirn
     {
         if (strlen(dirp->d_name) + 1 + offset >= CF_BUFSIZE - CF_MAXLINKSIZE)
         {
-            SendTransaction(&conn->conn_info, sendbuffer, offset + 1, CF_MORE);
+            SendTransaction(conn->conn_info, sendbuffer, offset + 1, CF_MORE);
             offset = 0;
             memset(sendbuffer, 0, CF_BUFSIZE);
         }
@@ -1604,7 +1604,7 @@ int CfOpenDirectory(ServerConnectionState *conn, char *sendbuffer, char *oldDirn
     }
 
     strcpy(sendbuffer + offset, CFD_TERMINATOR);
-    SendTransaction(&conn->conn_info, sendbuffer, offset + 2 + strlen(CFD_TERMINATOR), CF_DONE);
+    SendTransaction(conn->conn_info, sendbuffer, offset + 2 + strlen(CFD_TERMINATOR), CF_DONE);
     DirClose(dirh);
     return 0;
 }
@@ -1622,7 +1622,7 @@ int CfSecOpenDirectory(ServerConnectionState *conn, char *sendbuffer, char *dirn
     {
         sprintf(sendbuffer, "BAD: request to access a non-absolute filename\n");
         cipherlen = EncryptString(conn->encryption_type, sendbuffer, out, conn->session_key, strlen(sendbuffer) + 1);
-        SendTransaction(&conn->conn_info, out, cipherlen, CF_DONE);
+        SendTransaction(conn->conn_info, out, cipherlen, CF_DONE);
         return -1;
     }
 
@@ -1631,7 +1631,7 @@ int CfSecOpenDirectory(ServerConnectionState *conn, char *sendbuffer, char *dirn
         Log(LOG_LEVEL_VERBOSE, "Couldn't open dir %s", dirname);
         snprintf(sendbuffer, CF_BUFSIZE, "BAD: cfengine, couldn't open dir %s\n", dirname);
         cipherlen = EncryptString(conn->encryption_type, sendbuffer, out, conn->session_key, strlen(sendbuffer) + 1);
-        SendTransaction(&conn->conn_info, out, cipherlen, CF_DONE);
+        SendTransaction(conn->conn_info, out, cipherlen, CF_DONE);
         return -1;
     }
 
@@ -1646,7 +1646,7 @@ int CfSecOpenDirectory(ServerConnectionState *conn, char *sendbuffer, char *dirn
         if (strlen(dirp->d_name) + 1 + offset >= CF_BUFSIZE - CF_MAXLINKSIZE)
         {
             cipherlen = EncryptString(conn->encryption_type, sendbuffer, out, conn->session_key, offset + 1);
-            SendTransaction(&conn->conn_info, out, cipherlen, CF_MORE);
+            SendTransaction(conn->conn_info, out, cipherlen, CF_MORE);
             offset = 0;
             memset(sendbuffer, 0, CF_BUFSIZE);
             memset(out, 0, CF_BUFSIZE);
@@ -1661,7 +1661,7 @@ int CfSecOpenDirectory(ServerConnectionState *conn, char *sendbuffer, char *dirn
 
     cipherlen =
         EncryptString(conn->encryption_type, sendbuffer, out, conn->session_key, offset + 2 + strlen(CFD_TERMINATOR));
-    SendTransaction(&conn->conn_info, out, cipherlen, CF_DONE);
+    SendTransaction(conn->conn_info, out, cipherlen, CF_DONE);
     DirClose(dirh);
     return 0;
 }

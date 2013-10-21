@@ -197,7 +197,7 @@ int TLSClientNegotiateProtocol(const ConnectionInfo *conn_info)
     char input[CF_SMALLBUF] = "";
 
     /* Receive CFE_v%d ... */
-    ret = TLSRecvLine(conn_info->ssl, input, sizeof(input));
+    ret = TLSRecvLine(ConnectionInfoSSL(conn_info), input, sizeof(input));
 
     /* Send "CFE_v%d cf-agent version". */
     char version_string[128];
@@ -205,7 +205,7 @@ int TLSClientNegotiateProtocol(const ConnectionInfo *conn_info)
                        "CFE_v%d %s %s\n",
                        CFNET_PROTOCOL_VERSION, "cf-agent", VERSION);
 
-    ret = TLSSend(conn_info->ssl, version_string, len);
+    ret = TLSSend(ConnectionInfoSSL(conn_info), version_string, len);
     if (ret != len)
     {
         Log(LOG_LEVEL_ERR, "Connection was hung up!");
@@ -213,7 +213,7 @@ int TLSClientNegotiateProtocol(const ConnectionInfo *conn_info)
     }
 
     /* Receive OK */
-    ret = TLSRecvLine(conn_info->ssl, input, sizeof(input));
+    ret = TLSRecvLine(ConnectionInfoSSL(conn_info), input, sizeof(input));
     if (strncmp(input, "OK", strlen("OK")) == 0)
         return 1;
     return 0;
@@ -241,7 +241,7 @@ int TLSClientSendIdentity(const ConnectionInfo *conn_info, const char *username)
     line[line_len] = '\n';
     line_len++;
 
-    ret = TLSSend(conn_info->ssl, line, line_len);
+    ret = TLSSend(ConnectionInfoSSL(conn_info), line, line_len);
     if (ret == -1)
     {
         return -1;
@@ -266,17 +266,17 @@ int TLSTry(ConnectionInfo *conn_info)
         return -1;
     }
     assert(SSLCLIENTCONTEXT != NULL && PRIVKEY != NULL && PUBKEY != NULL);
-
-    if (conn_info->type == CF_PROTOCOL_TLS)
+    if (ConnectionInfoProtocolVersion(conn_info) == CF_PROTOCOL_TLS)
     {
         Log(LOG_LEVEL_WARNING,
             "We are already on TLS mode, skipping initialization");
         return 0;
     }
 
-    conn_info->type = CF_PROTOCOL_TLS;
-    conn_info->ssl = SSL_new(SSLCLIENTCONTEXT);
-    if (conn_info->ssl == NULL)
+    ConnectionInfoSetProtocolVersion(conn_info, CF_PROTOCOL_TLS);
+    ConnectionInfoSetSSL(conn_info, SSL_new(SSLCLIENTCONTEXT));
+    SSL *ssl = ConnectionInfoSSL(conn_info);
+    if (ssl == NULL)
     {
         Log(LOG_LEVEL_ERR, "SSL_new: %s",
             ERR_reason_error_string(ERR_get_error()));
@@ -284,20 +284,20 @@ int TLSTry(ConnectionInfo *conn_info)
     }
 
     /* Initiate the TLS handshake over the already open TCP socket. */
-    SSL_set_fd(conn_info->ssl, conn_info->sd);
+    SSL_set_fd(ssl, ConnectionInfoSocket(conn_info));
 
-    int ret = SSL_connect(conn_info->ssl);
+    int ret = SSL_connect(ssl);
     if (ret <= 0)
     {
-        TLSLogError(conn_info->ssl, LOG_LEVEL_ERR,
+        TLSLogError(ssl, LOG_LEVEL_ERR,
                     "Connection handshake", ret);
         return -1;
     }
     else
     {
         Log(LOG_LEVEL_VERBOSE, "TLS cipher negotiated: %s, %s",
-            SSL_get_cipher_name(conn_info->ssl),
-            SSL_get_cipher_version(conn_info->ssl));
+            SSL_get_cipher_name(ssl),
+            SSL_get_cipher_version(ssl));
         Log(LOG_LEVEL_VERBOSE, "TLS session established, checking trust...");
     }
 

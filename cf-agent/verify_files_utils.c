@@ -2443,7 +2443,7 @@ PromiseResult ScheduleCopyOperation(EvalContext *ctx, char *destination, Attribu
     else
     {
         int err = 0;
-        conn = NewServerConnection(attr.copy, attr.transaction.background, &err);
+        conn = NewServerConnection(attr.copy, attr.transaction.background, &err, -1);
 
         if (conn == NULL)
         {
@@ -2462,7 +2462,7 @@ PromiseResult ScheduleCopyOperation(EvalContext *ctx, char *destination, Attribu
          * client_code.c:SERVERLIST, so just close it right after transaction. */
         if (attr.transaction.background)
         {
-            DisconnectServer(conn);
+            DisconnectServer(conn, false);
         }
         else
         {

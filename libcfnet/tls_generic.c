@@ -53,7 +53,7 @@ int TLSVerifyPeer(ConnectionInfo *conn_info, const char *remoteip, const char *u
 {
     int ret, retval;
 
-    X509 *received_cert = SSL_get_peer_certificate(conn_info->ssl);
+    X509 *received_cert = SSL_get_peer_certificate(ConnectionInfoSSL(conn_info));
     if (received_cert == NULL)
     {
         Log(LOG_LEVEL_ERR,
@@ -88,19 +88,14 @@ int TLSVerifyPeer(ConnectionInfo *conn_info, const char *remoteip, const char *u
     }
     Log(LOG_LEVEL_VERBOSE, "Received public key signature is valid");
 
-    conn_info->remote_key = EVP_PKEY_get1_RSA(received_pubkey);
-
-    /* Store the hash, we need it for various stuff during connection. */
-    HashPubKey(conn_info->remote_key, conn_info->remote_keyhash,
-               CF_DEFAULT_DIGEST);
-    HashPrintSafe(CF_DEFAULT_DIGEST, true, conn_info->remote_keyhash,
-                  conn_info->remote_keyhash_str);
+    Key *key = KeyNew(EVP_PKEY_get1_RSA(received_pubkey), CF_DEFAULT_DIGEST);
+    ConnectionInfoSetKey(conn_info, key);
 
     /*
      * Compare the key received with the one stored.
      */
     RSA *expected_rsa_key = HavePublicKey(username, remoteip,
-                                          conn_info->remote_keyhash_str);
+                                          KeyPrintableHash(key));
     if (expected_rsa_key == NULL)
     {
         Log(LOG_LEVEL_ERR, "Public key for host not found");

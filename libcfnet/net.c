@@ -25,7 +25,7 @@
 #include <net.h>
 #include <classic.h>
 #include <tls_generic.h>
-
+#include <connection_info.h>
 #include <logging.h>
 #include <misc_lib.h>
 
@@ -60,18 +60,18 @@ int SendTransaction(const ConnectionInfo *conn_info, const char *buffer, int len
     LogRaw(LOG_LEVEL_DEBUG, "SendTransaction data: ",
            work + CF_INBAND_OFFSET, len);
 
-    switch(conn_info->type)
+    switch(ConnectionInfoProtocolVersion(conn_info))
     {
     case CF_PROTOCOL_CLASSIC:
-        ret = SendSocketStream(conn_info->sd, work,
+        ret = SendSocketStream(ConnectionInfoSocket(conn_info), work,
                                len + CF_INBAND_OFFSET);
         break;
     case CF_PROTOCOL_TLS:
-        ret = TLSSend(conn_info->ssl, work, len + CF_INBAND_OFFSET);
+        ret = TLSSend(ConnectionInfoSSL(conn_info), work, len + CF_INBAND_OFFSET);
         break;
     default:
         UnexpectedError("SendTransaction: ProtocolVersion %d!",
-                        conn_info->type);
+                        ConnectionInfoProtocolVersion(conn_info));
         ret = -1;
     }
 
@@ -91,17 +91,17 @@ int ReceiveTransaction(const ConnectionInfo *conn_info, char *buffer, int *more)
     int ret;
 
     /* Get control channel. */
-    switch(conn_info->type)
+    switch(ConnectionInfoProtocolVersion(conn_info))
     {
     case CF_PROTOCOL_CLASSIC:
-        ret = RecvSocketStream(conn_info->sd, proto, CF_INBAND_OFFSET);
+        ret = RecvSocketStream(ConnectionInfoSocket(conn_info), proto, CF_INBAND_OFFSET);
         break;
     case CF_PROTOCOL_TLS:
-        ret = TLSRecv(conn_info->ssl, proto, CF_INBAND_OFFSET);
+        ret = TLSRecv(ConnectionInfoSSL(conn_info), proto, CF_INBAND_OFFSET);
         break;
     default:
         UnexpectedError("ReceiveTransaction: ProtocolVersion %d!",
-                        conn_info->type);
+                        ConnectionInfoProtocolVersion(conn_info));
         ret = -1;
     }
     if (ret == -1 || ret == 0)
@@ -134,17 +134,17 @@ int ReceiveTransaction(const ConnectionInfo *conn_info, char *buffer, int *more)
     }
 
     /* Get data. */
-    switch(conn_info->type)
+    switch(ConnectionInfoProtocolVersion(conn_info))
     {
     case CF_PROTOCOL_CLASSIC:
-        ret = RecvSocketStream(conn_info->sd, buffer, len);
+        ret = RecvSocketStream(ConnectionInfoSocket(conn_info), buffer, len);
         break;
     case CF_PROTOCOL_TLS:
-        ret = TLSRecv(conn_info->ssl, buffer, len);
+        ret = TLSRecv(ConnectionInfoSSL(conn_info), buffer, len);
         break;
     default:
         UnexpectedError("ReceiveTransaction: ProtocolVersion %d!",
-                        conn_info->type);
+                        ConnectionInfoProtocolVersion(conn_info));
         ret = -1;
     }
 

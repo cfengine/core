@@ -23,30 +23,34 @@
 */
 
 #include <communication.h>
-
+#include <connection_info.h>
 #include <alloc.h>                                      /* xmalloc,... */
 #include <logging.h>                                    /* Log */
 #include <misc_lib.h>                                   /* ProgrammingError */
 #include <buffer.h>                                     /* Buffer */
 #include <ip_address.h>                                 /* IPAddress */
 
-AgentConnection *NewAgentConn(const char *server_name)
+AgentConnection *NewAgentConn(const char *server_name, int partial)
 {
     AgentConnection *conn = xcalloc(1, sizeof(AgentConnection));
-
-    conn->conn_info.type = CF_PROTOCOL_UNDEFINED;
-    conn->conn_info.sd = SOCKET_INVALID;
-    conn->conn_info.ssl = NULL;
-    conn->conn_info.remote_key = NULL;
+    if (partial)
+    {
+        conn->conn_info = NULL;
+    }
+    else
+    {
+        ConnectionInfo *info = ConnectionInfoNew();
+        conn->conn_info = info;
+    }
     conn->family = AF_INET;
     conn->trust = false;
     conn->encryption_type = 'c';
     conn->this_server = xstrdup(server_name);
     conn->authenticated = false;
     return conn;
-};
+}
 
-void DeleteAgentConn(AgentConnection *conn)
+void DeleteAgentConn(AgentConnection *conn, int partial)
 {
     Stat *sp = conn->cache;
 
@@ -57,17 +61,19 @@ void DeleteAgentConn(AgentConnection *conn)
         free(sps);
     }
 
-    if (conn->conn_info.remote_key != NULL)
+    if (!partial)
     {
-        RSA_free(conn->conn_info.remote_key);
-    }
-    if (conn->conn_info.ssl != NULL)
-    {
-        SSL_free(conn->conn_info.ssl);
+        ConnectionInfoDestroy(&conn->conn_info);
     }
 
-    free(conn->session_key);
-    free(conn->this_server);
+    if (conn->session_key)
+    {
+        free(conn->session_key);
+    }
+    if (conn->this_server)
+    {
+        free(conn->this_server);
+    }
 
     *conn = (AgentConnection) {0};
     free(conn);

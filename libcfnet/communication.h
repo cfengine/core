@@ -27,9 +27,22 @@
 
 #include <cfnet.h>
 
+/**
+  @brief Creates a new connection from Agent to Server.
 
-AgentConnection *NewAgentConn(const char *server_name);
-void DeleteAgentConn(AgentConnection *ap);
+  If partial is set to false then a normal initialization happens, setting partial to true makes this a partial structure (without ConnectionInfo).
+  This is used in Call Collect mode.
+  @param server_name Server to connect to.
+  @param partial Whether to initialize the internal ConnectionInfo or not.
+  @return A fully initialized AgentConnection or NULL in case of error.
+  */
+AgentConnection *NewAgentConn(const char *server_name, int partial);
+/**
+  @brief Destroys an AgentConnection.
+  @param ap AgentConnection structure.
+  @param partial If true then only a partial destruction is performed, i.e. the ConnectionInfo structure is not destructed.
+  */
+void DeleteAgentConn(AgentConnection *ap, int partial);
 int IsIPV6Address(char *name);
 int IsIPV4Address(char *name);
 int Hostname2IPString(char *dst, const char *hostname, size_t dst_size);

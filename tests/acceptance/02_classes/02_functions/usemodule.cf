@@ -26,6 +26,23 @@ bundle agent init
       create => "true",
       perms => usemodule_perms,
       edit_line => usemodule_lines;
+
+      "$(sys.workdir)/modules/usemodule-neg.cf.bat"
+      create => "true",
+      perms => usemodule_perms,
+      edit_line => usemodule_lines_neg;
+}
+
+bundle edit_line usemodule_lines_neg
+{
+  insert_lines:
+    !windows::
+      "#!/bin/sh";
+      ". \"$(G.cwd)/$(init.script_location)/usemodule.cf.bat\"";
+      "exit 1";
+
+  delete_lines:
+      ".*";
 }
 
 bundle edit_line usemodule_lines
@@ -59,8 +76,11 @@ bundle agent test
       # Should be undefined by the following script.
       "undefined_class" expression => "any";
       "function_ok" expression => usemodule("usemodule.cf.bat", "");
+      "function_neg_ok"
+         comment => "Negative test. Class set if module returns non-zero",
+         not     => usemodule("usemodule-neg.cf.bat", "");
       "defined_variable" expression => strcmp("$(usemodule_cf_bat.defined_variable)", "yes");
-      "ok" and => { "function_ok", "defined_class", "!undefined_class", "defined_variable" };
+      "ok" and => { "function_neg_ok", "function_ok", "defined_class", "!undefined_class", "defined_variable" };
 
   vars:
     ok::
@@ -71,6 +91,8 @@ bundle agent test
       "Must be run using testall script";
     ok_to_run.DEBUG.!function_ok::
       "usemodule did not execute correctly.";
+    ok_to_run.DEBUG.!function_neg_ok::
+      "usemodule returned non-zero, class function_neg_ok was not set, but should be set.";
     ok_to_run.DEBUG.!defined_class::
       "defined_class was not set, but should be.";
     ok_to_run.DEBUG.undefined_class::
@@ -80,6 +102,8 @@ bundle agent test
 
     ok_to_run.DEBUG.function_ok::
       "usemodule executed correctly.";
+    ok_to_run.DEBUG.function_neg_ok::
+      "usemodule returned non-zero and class function_neg_ok was set.";
     ok_to_run.DEBUG.defined_class::
       "defined_class was set.";
     ok_to_run.DEBUG.!undefined_class::

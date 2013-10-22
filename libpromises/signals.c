@@ -35,6 +35,56 @@ bool IsPendingTermination(void)
 
 /********************************************************************/
 
+static int SIGNAL_PIPE[2] = { -1, -1 };
+
+/**
+ * Make a pipe that can be used to flag that a signal has arrived.
+ * Using a pipe avoids race conditions, since it saves its values until emptied.
+ * Use GetSignalPipe() to get the pipe.
+ * Note that we use a real socket as the pipe, because Windows only supports
+ * using select() with real sockets. This means also using send() and recv()
+ * instead of write() and read().
+ */
+void MakeSignalPipe()
+{
+    if (socketpair(AF_UNIX, SOCK_STREAM, 0, SIGNAL_PIPE) != 0)
+    {
+        Log(LOG_LEVEL_CRIT, "Could not create internal communication pipe. Cannot continue. (socketpair: '%s')",
+            GetErrorStr());
+        exit(1);
+    }
+
+    for (int c = 0; c < 2; c++)
+    {
+#ifndef __MINGW32__
+        if (fcntl(SIGNAL_PIPE[c], F_SETFL, O_NONBLOCK) != 0)
+        {
+            Log(LOG_LEVEL_CRIT, "Could not create internal communication pipe. Cannot continue. (fcntl: '%s')",
+                GetErrorStr());
+            exit(1);
+        }
+#else // __MINGW32__
+        u_long enable = 1;
+        if (ioctlsocket(SIGNAL_PIPE[c], FIONBIO, &enable) != 0)
+        {
+            Log(LOG_LEVEL_CRIT, "Could not create internal communication pipe. Cannot continue. (ioctlsocket: '%s')",
+                GetErrorStr());
+            exit(1);
+        }
+#endif // __MINGW32__
+    }
+}
+
+/**
+ * Gets the signal pipe, which is non-blocking.
+ * Each byte read corresponds to one arrived signal.
+ * Note: Use recv() to read from the pipe, not read().
+ */
+int GetSignalPipe()
+{
+    return SIGNAL_PIPE[0];
+}
+
 void HandleSignalsForAgent(int signum)
 {
     if ((signum == SIGTERM) || (signum == SIGINT))
@@ -50,6 +100,28 @@ void HandleSignalsForAgent(int signum)
     else if (signum == SIGUSR2)
     {
         LogSetGlobalLevel(LOG_LEVEL_NOTICE);
+    }
+
+    unsigned char sig = (unsigned char)signum;
+    if (SIGNAL_PIPE[1] >= 0)
+    {
+        // send() is async-safe, according to POSIX.
+        if (send(SIGNAL_PIPE[1], &sig, 1, 0) < 0)
+        {
+            // These signal contention. Everything else is an error.
+            if (errno != EAGAIN
+#ifndef __MINGW32__
+                && errno != EWOULDBLOCK
+#endif
+                )
+            {
+                // This is not async safe, but if we get in here there's something really weird
+                // going on.
+                Log(LOG_LEVEL_CRIT, "Could not write to signal pipe. Unsafe to continue. (write: '%s')",
+                    GetErrorStr());
+                _exit(1);
+            }
+        }
     }
 
 /* Reset the signal handler */
@@ -72,6 +144,28 @@ void HandleSignalsForDaemon(int signum)
     else if (signum == SIGUSR2)
     {
         LogSetGlobalLevel(LOG_LEVEL_NOTICE);
+    }
+
+    unsigned char sig = (unsigned char)signum;
+    if (SIGNAL_PIPE[1] >= 0)
+    {
+        // send() is async-safe, according to POSIX.
+        if (send(SIGNAL_PIPE[1], &sig, 1, 0) < 0)
+        {
+            // These signal contention. Everything else is an error.
+            if (errno != EAGAIN
+#ifndef __MINGW32__
+                && errno != EWOULDBLOCK
+#endif
+                )
+            {
+                // This is not async safe, but if we get in here there's something really weird
+                // going on.
+                Log(LOG_LEVEL_CRIT, "Could not write to signal pipe. Unsafe to continue. (write: '%s')",
+                    GetErrorStr());
+                _exit(1);
+            }
+        }
     }
 
 /* Reset the signal handler */

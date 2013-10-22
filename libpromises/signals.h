@@ -30,6 +30,8 @@
 // check whether the running daemon should terminate after having received a signal.
 bool IsPendingTermination(void);
 
+void MakeSignalPipe();
+int GetSignalPipe();
 void HandleSignalsForDaemon(int signum);
 void HandleSignalsForAgent(int signum);
 

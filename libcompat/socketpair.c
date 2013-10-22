@@ -1,7 +1,7 @@
 /*
-   Copyright (C) CFEngine AS
+   Copyright (C) Cfengine AS
 
-   This file is part of CFEngine 3 - written and maintained by CFEngine AS.
+   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -17,22 +17,14 @@
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
   To the extent this program is licensed as part of the Enterprise
-  versions of CFEngine, the applicable Commerical Open Source License
+  versions of Cfengine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
 */
 
-#ifndef CFENGINE_SIGNALS_H
-#define CFENGINE_SIGNALS_H
+#include "platform.h"
+#include "compiler.h"
 
-#include "cf3.defs.h"
-
-// check whether the running deamon should terminate after having received a signal.
-bool IsPendingTermination(void);
-
-void MakeSignalPipe();
-int GetSignalPipe();
-void HandleSignalsForDaemon(int signum);
-void HandleSignalsForAgent(int signum);
-
+#if defined(__MINGW32__)
+#include "../nova/libcompat-win32/socketpair.c"
 #endif

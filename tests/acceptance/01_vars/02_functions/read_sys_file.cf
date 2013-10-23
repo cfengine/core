@@ -14,26 +14,35 @@ bundle agent init
 bundle agent test
 {
   classes:
-      "have_sys" expression => fileexists("/sys/kernel/vmcoreinfo");
-      "have_proc" expression => fileexists("/proc/meminfo");
+      "have_sys"   expression => fileexists("/sys/kernel/vmcoreinfo");
+      "have_proc0" expression => fileexists("/proc/meminfo");
+      "have_proc1" expression => fileexists("/proc/kallsyms");
 
   vars:
     have_sys::
-      "sys_info" string => readfile("/sys/kernel/vmcoreinfo", 10000);
+      "sys_info" string => readfile("/sys/kernel/vmcoreinfo", 0);
     !have_sys::
-      "sys_info" string => "";
+      "sys_info" string => "42";
 
-    have_proc::
-      "proc_info" string => readfile("/proc/meminfo", 10000);
-    !have_proc::
-      "proc_info" string => "";
+    have_proc0::
+      "proc0_info" string => readfile("/proc/meminfo", 0);
+    !have_proc0::
+      "proc0_info" string => "42";
+
+    have_proc1::
+      "proc1_info" string => readfile("/proc/kallsyms", 0);
+    !have_proc1::
+      "proc1_info" string => "42";
+
 }
 
 bundle agent check
 {
   classes:
-      "ok_proc" expression => regcmp(".*\d+.*", $(test.proc_info));
-      "not_ok_proc" not => regcmp(".*\d+.*", $(test.proc_info));
+      "ok_proc0" expression => regcmp(".*\d+.*", $(test.proc0_info));
+      "ok_proc1" expression => regcmp(".*\d+.*", $(test.proc1_info));
+      "not_ok_proc0" not => regcmp(".*\d+.*", $(test.proc0_info));
+      "not_ok_proc1" not => regcmp(".*\d+.*", $(test.proc1_info));
       "ok_sys" expression => regcmp(".*\d+.*", $(test.sys_info));
       "not_ok_sys" not => regcmp(".*\d+.*", $(test.sys_info));
 
@@ -41,12 +50,15 @@ bundle agent check
 
   reports:
     DEBUG::
-      "/proc test OK" ifvarclass => "ok_proc";
+      "/proc0 test OK" ifvarclass => "ok_proc0";
+      "/proc1 test OK" ifvarclass => "ok_proc1";
       "/sys test OK" ifvarclass => "ok_sys";
-      "/proc test NOT OK: data '$(test.proc_info)' did not contain digits" ifvarclass => "not_ok_proc";
+      "/proc0 test NOT OK: data '$(test.proc0_info)' did not contain digits" ifvarclass => "not_ok_proc0";
+      "/proc1 test NOT OK: data '$(test.proc1_info)' did not contain digits" ifvarclass => "not_ok_proc1";
       "/sys test NOT OK: data '$(test.sys_info)' did not contain digits" ifvarclass => "not_ok_sys";
     DEBUG.inform_mode::
-      "/proc test got data '$(test.proc_info)'";
+      "/proc0 test got data '$(test.proc0_info)'";
+      "/proc1 test got data '$(test.proc1_info)'";
       "/sys test got data '$(test.sys_info)'";
     ok::
       "$(this.promise_filename) Pass";

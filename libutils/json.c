@@ -308,34 +308,35 @@ int JsonCompare(const JsonElement *a, const JsonElement *b)
 
 void JsonDestroy(JsonElement *element)
 {
-    assert(element);
-
-    switch (element->type)
+    if (element)
     {
-    case JSON_ELEMENT_TYPE_CONTAINER:
-        assert(element->container.children);
-        SeqDestroy(element->container.children);
-        element->container.children = NULL;
-        break;
-
-    case JSON_ELEMENT_TYPE_PRIMITIVE:
-        assert(element->primitive.value);
-
-        if (element->primitive.type != JSON_PRIMITIVE_TYPE_NULL &&
-            element->primitive.type != JSON_PRIMITIVE_TYPE_BOOL)
+        switch (element->type)
         {
-            free((void *) element->primitive.value);
+        case JSON_ELEMENT_TYPE_CONTAINER:
+            assert(element->container.children);
+            SeqDestroy(element->container.children);
+            element->container.children = NULL;
+            break;
+
+        case JSON_ELEMENT_TYPE_PRIMITIVE:
+            assert(element->primitive.value);
+
+            if (element->primitive.type != JSON_PRIMITIVE_TYPE_NULL &&
+                element->primitive.type != JSON_PRIMITIVE_TYPE_BOOL)
+            {
+                free((void *) element->primitive.value);
+            }
+            element->primitive.value = NULL;
+            break;
         }
-        element->primitive.value = NULL;
-        break;
-    }
 
-    if (element->propertyName)
-    {
-        free(element->propertyName);
-    }
+        if (element->propertyName)
+        {
+            free(element->propertyName);
+        }
 
-    free(element);
+        free(element);
+    }
 }
 
 JsonElement *JsonMerge(const JsonElement *a, const JsonElement *b)

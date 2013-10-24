@@ -408,6 +408,59 @@ exit:
 
 /*****************************************************************************/
 
+static JsonElement *DefaultTemplateData(const EvalContext *ctx)
+{
+    JsonElement *hash = JsonObjectCreate(10);
+
+    {
+        ClassTableIterator *it = EvalContextClassTableIteratorNewGlobal(ctx, NULL, true, true);
+        Class *cls = NULL;
+        while ((cls = ClassTableIteratorNext(it)))
+        {
+            char *key = ClassRefToString(cls->ns, cls->name);
+            JsonObjectAppendBool(hash, key, true);
+            free(key);
+        }
+        ClassTableIteratorDestroy(it);
+    }
+
+    {
+        ClassTableIterator *it = EvalContextClassTableIteratorNewLocal(ctx);
+        Class *cls = NULL;
+        while ((cls = ClassTableIteratorNext(it)))
+        {
+            char *key = ClassRefToString(cls->ns, cls->name);
+            JsonObjectAppendBool(hash, key, true);
+            free(key);
+        }
+        ClassTableIteratorDestroy(it);
+    }
+
+    {
+        VariableTableIterator *it = EvalContextVariableTableIteratorNew(ctx, NULL, NULL, NULL);
+        Variable *var = NULL;
+        while ((var = VariableTableIteratorNext(it)))
+        {
+            // TODO: need to get a CallRef, this is bad
+            char *scope_key = ClassRefToString(var->ref->ns, var->ref->scope);
+            JsonElement *scope_obj = JsonObjectGetAsObject(hash, scope_key);
+            if (!scope_obj)
+            {
+                scope_obj = JsonObjectCreate(50);
+                JsonObjectAppendObject(hash, scope_key, scope_obj);
+            }
+            free(scope_key);
+
+            char *lval_key = VarRefToString(var->ref, false);
+            JsonObjectAppendElement(scope_obj, lval_key, RvalToJson(var->rval));
+            free(lval_key);
+        }
+        VariableTableIteratorDestroy(it);
+    }
+
+    return hash;
+}
+
 PromiseResult ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes a, Promise *pp)
 {
     void *vp;
@@ -564,13 +617,6 @@ PromiseResult ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes
                 goto exit;
             }
 
-            if (!a.template_data)
-            {
-                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Could not find template_data for Mustache template '%s'", a.edit_template);
-                result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
-                goto exit;
-            }
-
             Writer *ouput_writer = NULL;
             {
                 FILE *output_file = fopen(pp->promiser, "w");
@@ -594,6 +640,12 @@ PromiseResult ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes
                 goto exit;
             }
 
+            JsonElement *default_template_data = NULL;
+            if (!a.template_data)
+            {
+                a.template_data = default_template_data = DefaultTemplateData(ctx);
+            }
+
             if (!MustacheRender(ouput_writer, template_contents, a.template_data))
             {
                 cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Error rendering mustache template '%s'", a.edit_template);
@@ -603,6 +655,7 @@ PromiseResult ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes
                 goto exit;
             }
 
+            JsonDestroy(default_template_data);
             free(template_contents);
             WriterClose(ouput_writer);
         }

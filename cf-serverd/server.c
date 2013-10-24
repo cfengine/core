@@ -365,13 +365,6 @@ static void *HandleConnection(ServerConnectionState *conn)
     int ret;
     char output[CF_BUFSIZE];
 
-# ifdef HAVE_PTHREAD_SIGMASK
-    sigset_t sigmask;
-
-    sigemptyset(&sigmask);
-    pthread_sigmask(SIG_BLOCK, &sigmask, NULL);
-# endif
-
     if (!ThreadLock(cft_server_children))
     {
         DeleteConn(conn);

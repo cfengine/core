@@ -280,6 +280,8 @@ void StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
     struct sockaddr_storage cin;
     socklen_t addrlen = sizeof(cin);
 
+    MakeSignalPipe();
+
     signal(SIGINT, HandleSignalsForDaemon);
     signal(SIGTERM, HandleSignalsForDaemon);
     signal(SIGHUP, SIG_IGN);
@@ -377,17 +379,24 @@ void StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
         {
             // Look for normal incoming service requests
 
+            int signal_pipe = GetSignalPipe();
             FD_ZERO(&rset);
             FD_SET(sd, &rset);
+            FD_SET(signal_pipe, &rset);
 
             /* Set 1 second timeout for select, so that signals are handled in
              * a timely manner */
-            timeout.tv_sec = 1;
+            timeout.tv_sec = 60;
             timeout.tv_usec = 0;
 
             Log(LOG_LEVEL_DEBUG, "Waiting at incoming select...");
 
-            ret_val = select((sd + 1), &rset, NULL, NULL, &timeout);
+            int max_fd = (sd > signal_pipe) ? (sd + 1) : (signal_pipe + 1);
+            ret_val = select(max_fd, &rset, NULL, NULL, &timeout);
+
+            // Empty the signal pipe. We don't need the values.
+            unsigned char buf;
+            while (recv(signal_pipe, &buf, 1, 0) > 0) {}
 
             if (ret_val == -1)      /* Error received from call to select */
             {
@@ -406,18 +415,21 @@ void StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
                 continue;
             }
 
-            Log(LOG_LEVEL_VERBOSE, "Accepting a connection");
-
-            int sd_accepted = accept(sd, (struct sockaddr *) &cin, &addrlen);
-            if (sd_accepted != -1)
+            if (FD_ISSET(sd, &rset))
             {
-                /* Just convert IP address to string, no DNS lookup. */
-                char ipaddr[CF_MAX_IP_LEN] = "";
-                getnameinfo((struct sockaddr *) &cin, addrlen,
-                            ipaddr, sizeof(ipaddr),
-                            NULL, 0, NI_NUMERICHOST);
+                Log(LOG_LEVEL_VERBOSE, "Accepting a connection");
 
-                ServerEntryPoint(ctx, sd_accepted, ipaddr);
+                int sd_accepted = accept(sd, (struct sockaddr *) &cin, &addrlen);
+                if (sd_accepted != -1)
+                {
+                    /* Just convert IP address to string, no DNS lookup. */
+                    char ipaddr[CF_MAX_IP_LEN] = "";
+                    getnameinfo((struct sockaddr *) &cin, addrlen,
+                                ipaddr, sizeof(ipaddr),
+                                NULL, 0, NI_NUMERICHOST);
+
+                    ServerEntryPoint(ctx, sd_accepted, ipaddr);
+                }
             }
         }
     }

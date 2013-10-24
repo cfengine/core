@@ -295,7 +295,7 @@ void MonitorStartServer(EvalContext *ctx, const Policy *policy)
 
     if (!NO_FORK)
     {
-        ActAsDaemon(0);
+        ActAsDaemon();
     }
 
 #endif /* !__MINGW32__ */

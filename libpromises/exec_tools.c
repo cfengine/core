@@ -108,9 +108,9 @@ bool GetExecOutput(const char *command, char *buffer, ShellType shell)
 
 /**********************************************************************/
 
-void ActAsDaemon(int preserve)
+void ActAsDaemon()
 {
-    int fd, maxfd;
+    int fd;
 
 #ifdef HAVE_SETSID
     setsid();
@@ -145,24 +145,6 @@ void ActAsDaemon(int preserve)
     if (chdir("/"))
     {
         UnexpectedError("Failed to chdir into '/'");
-    }
-
-#ifdef HAVE_SYSCONF
-    maxfd = sysconf(_SC_OPEN_MAX);
-#else
-# ifdef _POXIX_OPEN_MAX
-    maxfd = _POSIX_OPEN_MAX;
-# else
-    maxfd = 1024;
-# endif
-#endif
-
-    for (fd = STDERR_FILENO + 1; fd < maxfd; ++fd)
-    {
-        if (fd != preserve)
-        {
-            close(fd);
-        }
     }
 }
 

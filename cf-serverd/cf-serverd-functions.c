@@ -317,7 +317,7 @@ void StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
 
     if (!NO_FORK)
     {
-        ActAsDaemon(sd);
+        ActAsDaemon();
     }
 
 #endif /* !__MINGW32__ */

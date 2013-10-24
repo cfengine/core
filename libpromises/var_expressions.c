@@ -201,6 +201,7 @@ static size_t IndexCount(const char *var_string)
 
 VarRef *VarRefParseFromNamespaceAndScope(const char *qualified_name, const char *_ns, const char *_scope, char ns_separator, char scope_separator)
 {
+    assert(qualified_name);
     char *ns = NULL;
 
     const char *indices_start = strchr(qualified_name, '[');

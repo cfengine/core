@@ -799,7 +799,7 @@ static FnCallResult FnCallCountClassesMatching(EvalContext *ctx, FnCall *fp, Rli
 
 /*********************************************************************/
 
-static StringSet *ClassesMatching(EvalContext *ctx, ClassTableIterator *iter, const Rlist *args)
+static StringSet *ClassesMatching(const EvalContext *ctx, ClassTableIterator *iter, const Rlist *args)
 {
     StringSet *matching = StringSetNew();
 
@@ -897,125 +897,88 @@ static FnCallResult FnCallClassesMatching(EvalContext *ctx, FnCall *fp, Rlist *f
     return (FnCallResult) { FNCALL_SUCCESS, { matches, RVAL_TYPE_LIST } };
 }
 
-/*********************************************************************/
+
+static StringSet *VariablesMatching(const EvalContext *ctx, VariableTableIterator *iter, const Rlist *args)
+{
+    StringSet *matching = StringSetNew();
+
+    const char *regex = RlistScalarValue(args);
+    Variable *v = NULL;
+    while ((v = VariableTableIteratorNext(iter)))
+    {
+        char *expr = VarRefToString(v->ref, true);
+
+        if (StringMatchFull(regex, expr))
+        {
+            bool pass = true;
+            StringSet *tagset = EvalContextVariableTags(ctx, v->ref);
+            for (const Rlist *arg = args->next; (pass && arg); arg = arg->next)
+            {
+                const char* tag_regex = RlistScalarValue(arg);
+                const char *element = NULL;
+                StringSetIterator it = StringSetIteratorInit(tagset);
+                while ((element = SetIteratorNext(&it)))
+                {
+                    if (!StringMatchFull(tag_regex, element))
+                    {
+                        pass = false;
+                    }
+                }
+            }
+
+            if (pass)
+            {
+                StringSetAdd(matching, expr);
+            }
+        }
+        else
+        {
+            free(expr);
+        }
+    }
+
+    return matching;
+}
 
 static FnCallResult FnCallVariablesMatching(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
-    Rlist *arg = NULL;
-    StringSet* matching = StringSetNew();
-    char id[CF_BUFSIZE];
-
-    snprintf(id, CF_BUFSIZE, "built-in FnCall %s-arg", fp->name);
-
     if (!finalargs)
     {
-        FatalError(ctx, "in %s: requires at least one argument", id);
+        FatalError(ctx, "Function '%s' requires at least one argument", fp->name);
     }
 
-    /* We need to check all the arguments, ArgTemplate does not check varadic functions */
-    for (arg = finalargs; arg; arg = arg->next)
+    for (const Rlist *arg = finalargs; arg; arg = arg->next)
     {
-        SyntaxTypeMatch err = CheckConstraintTypeMatch(id, arg->val, DATA_TYPE_STRING, "", 1);
+        SyntaxTypeMatch err = CheckConstraintTypeMatch(fp->name, arg->val, DATA_TYPE_STRING, "", 1);
         if (err != SYNTAX_TYPE_MATCH_OK && err != SYNTAX_TYPE_MATCH_ERROR_UNEXPANDED)
         {
-            FatalError(ctx, "in %s: %s", id, SyntaxTypeMatchToString(err));
+            FatalError(ctx, "In function '%s', %s", fp->name, SyntaxTypeMatchToString(err));
         }
     }
 
-    const char *regex = RlistScalarValue(finalargs);
+    Rlist *matches = NULL;
+
     {
         VariableTableIterator *iter = EvalContextVariableTableIteratorNewGlobals(ctx, NULL, NULL);
-        Variable *v = NULL;
-        while ((v = VariableTableIteratorNext(iter)))
+        StringSet *global_matches = VariablesMatching(ctx, iter, finalargs);
+
+        StringSetIterator it = StringSetIteratorInit(global_matches);
+        const char *element = NULL;
+        while ((element = StringSetIteratorNext(&it)))
         {
-            char *expr = VarRefToString(v->ref, true);
-
-            if (StringMatchFull(regex, expr))
-            {
-                bool pass = true;
-                StringSet *tagset = EvalContextVariableTags(ctx, v->ref);
-                for (arg = finalargs->next; (pass && arg); arg = arg->next)
-                {
-                    const char* tag_regex = RlistScalarValue(arg);
-                    const char *element = NULL;
-                    StringSetIterator it = StringSetIteratorInit(tagset);
-                    while ((element = SetIteratorNext(&it)))
-                    {
-                        if (!StringMatchFull(tag_regex, element))
-                        {
-                            pass = false;
-                        }
-                    }
-                }
-
-                if (pass)
-                {
-                    StringSetAdd(matching, expr);
-                }
-            }
-            else
-            {
-                free(expr);
-            }
+            RlistPrepend(&matches, element, RVAL_TYPE_SCALAR);
         }
+
+        StringSetDestroy(global_matches);
         VariableTableIteratorDestroy(iter);
     }
 
+    if (!matches)
     {
-        VarRef *ref = VarRefParseFromScope(NULL, "this");
-        VariableTableIterator *iter = EvalContextVariableTableIteratorNew(ctx, ref);
-        Variable *v = NULL;
-        while ((v = VariableTableIteratorNext(iter)))
-        {
-            char *expr = VarRefToString(v->ref, true);
-
-            if (StringMatchFull(regex, expr))
-            {
-                bool pass = true;
-                StringSet *tagset = EvalContextVariableTags(ctx, v->ref);
-                for (arg = finalargs->next; (pass && arg); arg = arg->next)
-                {
-                    const char* tag_regex = RlistScalarValue(arg);
-                    const char *element = NULL;
-                    StringSetIterator it = StringSetIteratorInit(tagset);
-                    while ((element = SetIteratorNext(&it)))
-                    {
-                        if (!StringMatchFull(tag_regex, element))
-                        {
-                            pass = false;
-                        }
-                    }
-                }
-
-                if (pass)
-                {
-                    StringSetAdd(matching, expr);
-                }
-            }
-            else
-            {
-                free(expr);
-            }
-        }
-        VariableTableIteratorDestroy(iter);
+        RlistAppendScalarIdemp(&matches, CF_NULL_VALUE);
     }
 
-    Rlist *returnlist = NULL;
-    StringSetIterator it = StringSetIteratorInit(matching);
-    char *element = NULL;
-    while ((element = StringSetIteratorNext(&it)))
-    {
-        RlistPrepend(&returnlist, element, RVAL_TYPE_SCALAR);
-    }
-
-    if (returnlist == NULL)
-    {
-        RlistAppendScalarIdemp(&returnlist, CF_NULL_VALUE);
-    }
-
-    StringSetDestroy(matching);
-
-    return (FnCallResult) { FNCALL_SUCCESS, { returnlist, RVAL_TYPE_LIST } };
+    return (FnCallResult) { FNCALL_SUCCESS, { matches, RVAL_TYPE_LIST } };
 }
 
 /*********************************************************************/

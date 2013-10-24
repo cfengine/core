@@ -303,6 +303,17 @@ PromiseResult VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_d
         }
         else
         {
+            Rlist *promise_meta = PromiseGetConstraintAsList(ctx, "meta", pp);
+            if (promise_meta)
+            {
+                StringSet *class_meta = EvalContextVariableTags(ctx, ref);
+                for (const Rlist *rp = promise_meta; rp; rp = rp->next)
+                {
+                    StringSetAdd(class_meta, xstrdup(RlistScalarValue(rp)));
+                    Log(LOG_LEVEL_INFO, "Setting tag %s for class %s", RlistScalarValue(rp), pp->promiser);
+                }
+            }
+
             result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
         }
     }

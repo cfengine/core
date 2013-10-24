@@ -1,0 +1,69 @@
+# Ensure that one can iterate over non local mon lists
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle agent init
+{
+  files:
+    "$(G.testdir)/mon.listening_ports"
+      create => "true",
+      edit_defaults => init_empty,
+      edit_line => init_insert("");
+}
+
+bundle agent test
+{
+  files:
+  "$(G.testdir)/mon.listening_ports"
+    edit_line => append_if_no_lines("$(mon.listening_ports)");
+}
+
+bundle agent check
+{
+  vars:
+  "lines_matching_unexpanded_mon_listening_ports"
+    int => countlinesmatching("^\$\(mon\.listening_ports\)", "$(G.testdir)/mon.listening_ports");
+
+  classes:
+    "did_not_expand" expression => isgreaterthan("$(lines_matching_unexpanded_mon_listening_ports)", "0");
+
+  reports:
+    #"file: $(G.testdir)/mon.listening_ports";
+    #"lines matching: $(lines_matching_unexpanded_mon_listening_ports)";
+    !did_not_expand::
+      "PASS";
+    did_not_expand::
+      "FAIL";
+    
+}
+
+body edit_defaults init_empty
+{
+      empty_file_before_editing => "true";
+}
+
+bundle edit_line init_insert(str)
+{
+  insert_lines:
+      "$(str)";
+}
+
+body edit_defaults empty
+{
+      empty_file_before_editing => "true";
+      edit_backup => "false";
+      #max_file_size => "300000";
+}
+
+bundle edit_line append_if_no_lines(list)
+{
+  insert_lines:
+
+      "$(list)"
+
+      comment => "Append lines to the file if they don't already exist";
+}

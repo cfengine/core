@@ -790,7 +790,6 @@ AC_CHECK_DECLS(getuid)
 AC_CHECK_DECLS(getgid)
 AC_CHECK_DECLS(lstat)
 AC_CHECK_FUNCS(sleep)
-AC_CHECK_DECLS(socketpair, [], [], [[#include <sys/socket.h>]])
 
 dnl ######################################################################
 dnl Check for sa_len in struct sockaddr

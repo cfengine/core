@@ -49,6 +49,10 @@ if [ -f /usr/xpg4/bin/grep ]; then
   export PATH
 fi
 
+# Use only newline as token separator, not spaces.
+IFS='
+'
+
 #
 # Unset environment variables which might break runinng acceptance tests
 #
@@ -62,7 +66,7 @@ LOG=test.log
 SUMMARY=summary.log
 XML=test.xml
 XMLTMP=xml.tmp
-BASE_WORKDIR=$(pwd)/workdir
+BASE_WORKDIR="$(pwd)/workdir"
 QUIET=
 STAGING_TESTS=${STAGING_TESTS:-0}
 NETWORK_TESTS=${NETWORK_TESTS:-1}
@@ -185,40 +189,47 @@ runtest() {
   ( echo ----------------------------------------------------------------------
     echo "$TEST"${EXPECTED_CRASH:+ \(expected to crash\)}${SKIPREASON:+ \($SKIPREASON\)}
     echo ----------------------------------------------------------------------
-  ) >> $LOG
+  ) >> "$LOG"
 
   if [ -z "$SKIP" ]; then
     TEST_START_TIME=$(unix_seconds)
 
-    FLATNAME=$(echo "$TEST" | sed 's,[./],_,g')
+    FLATNAME="$(echo "$TEST" | sed 's,[./],_,g')"
 
     # Prepare workdir
-    WORKDIR=$BASE_WORKDIR/$FLATNAME
-    $GAINROOT rm -rf $WORKDIR
-    mkdir -p $WORKDIR/bin $WORKDIR/tmp
-    chmod ugo+rwxt $WORKDIR/tmp
-    ln -sf $AGENT $WORKDIR/bin
-    ln -sf $CF_PROMISES $WORKDIR/bin
-    ln -sf $CF_SERVERD $WORKDIR/bin
-    ln -sf $CF_KEY $WORKDIR/bin
+    WORKDIR="$BASE_WORKDIR/$FLATNAME"
+    $GAINROOT rm -rf "$WORKDIR"
+    mkdir -p "$WORKDIR/bin" "$WORKDIR/tmp"
+    chmod ugo+rwxt "$WORKDIR/tmp"
+    ln -sf "$AGENT" "$WORKDIR/bin"
+    ln -sf "$CF_PROMISES" "$WORKDIR/bin"
+    ln -sf "$CF_SERVERD" "$WORKDIR/bin"
+    ln -sf "$CF_KEY" "$WORKDIR/bin"
+    if uname | grep MINGW > /dev/null; then
+        PLATFORM_WORKDIR="$(echo $WORKDIR | sed -e 's%^/\([a-cA-Z]\)/%\1:/%' | sed -e 's%/%\\%g')"
+        DS="\\"
+    else
+        PLATFORM_WORKDIR="$WORKDIR"
+        DS="/"
+    fi
 
     echo "#!/bin/sh
-CFENGINE_TEST_OVERRIDE_WORKDIR=$WORKDIR
-TEMP=$WORKDIR/tmp
+CFENGINE_TEST_OVERRIDE_WORKDIR=\"$PLATFORM_WORKDIR\"
+TEMP=\"$PLATFORM_WORKDIR${DS}tmp\"
 export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP
 
-$AGENT $VERBOSE -Kf \"$TEST\" -D AUTO,DEBUG 2>&1
-" > $WORKDIR/runtest
-    chmod +x $WORKDIR/runtest
+\"$AGENT\" $VERBOSE -Kf \"$TEST\" -D AUTO,DEBUG 2>&1
+" > "$WORKDIR/runtest"
+    chmod +x "$WORKDIR/runtest"
 
-    OUT=$($GAINROOT $WORKDIR/runtest)
+    OUT=$($GAINROOT "$WORKDIR/runtest")
     RETVAL=$?
-    echo "$OUT" >> $LOG
-    echo >> $LOG
-    echo "Return code is $RETVAL." >> $LOG
+    echo "$OUT" >> "$LOG"
+    echo >> "$LOG"
+    echo "Return code is $RETVAL." >> "$LOG"
 
     TEST_END_TIME=$(unix_seconds)
-    echo "              "time=\"$(($TEST_END_TIME - $TEST_START_TIME)) seconds\"\> >> $XMLTMP
+    echo "              "time=\"$(($TEST_END_TIME - $TEST_START_TIME)) seconds\"\> >> "$XMLTMP"
 
     if [ -z "$EXPECTED_CRASH" ]; then
       if [ $RETVAL -eq 0 ] && echo "$OUT" | grep -q -F -e "R: $TEST Pass"; then
@@ -235,27 +246,27 @@ $AGENT $VERBOSE -Kf \"$TEST\" -D AUTO,DEBUG 2>&1
     fi
 
     if [ "$RESULT" = "Pass" ]; then
-      $GAINROOT rm -rf $WORKDIR
+      $GAINROOT rm -rf "$WORKDIR"
     fi
 
     if [ "$RESULT" != Pass ] && [ -e .succeeded/"$FLATNAME" ]; then
-      echo $RESULT $TEST '(UNEXPECTED FAILURE)' >> $SUMMARY
+      echo $RESULT $TEST '(UNEXPECTED FAILURE)' >> "$SUMMARY"
       ( echo "        "\<failure type=\"UNEXPECTED FAILURE\"
         echo "                 "message=\"$RESULT $TEST '(UNEXPECTED FAILURE)'\"\>
         echo "        "\<\/failure\>
-      ) >> $XMLTMP
+      ) >> "$XMLTMP"
     else
-      echo $RESULT $TEST >> $SUMMARY
+      echo $RESULT $TEST >> "$SUMMARY"
       if [ "$RESULT" = FAIL ]; then
         ( echo "        "\<failure type=\"FAIL\"
           echo "                 "message=\"$RESULT $TEST\"\>
           echo "        "\<\/failure\>
-        ) >> $XMLTMP
+        ) >> "$XMLTMP"
       elif [ "$RESULT" = "FAILed to crash" ]; then
         ( echo "        "\<failure type=\"FAILed to crash\"
           echo "                 "message=\"$RESULT $TEST\"\>
           echo "        "\<\/failure\>
-        ) >> $XMLTMP
+        ) >> "$XMLTMP"
       fi
     fi
 
@@ -281,7 +292,7 @@ $AGENT $VERBOSE -Kf \"$TEST\" -D AUTO,DEBUG 2>&1
       echo
       echo '  ==>' $RESULT
       echo
-    ) >> $LOG
+    ) >> "$LOG"
 
     if [ "$RESULT" = Pass ]; then
       PASSED_TESTS=$(($PASSED_TESTS + 1))
@@ -294,11 +305,11 @@ $AGENT $VERBOSE -Kf \"$TEST\" -D AUTO,DEBUG 2>&1
       FAILED_TO_CRASH_TESTS=$(($FAILED_TO_CRASH_TESTS + 1))
     fi
   else
-    echo "              "time=\"NULL\"\> >> $XMLTMP
-    echo Skip $TEST >> $SUMMARY
+    echo "              "time=\"NULL\"\> >> "$XMLTMP"
+    echo Skip $TEST >> "$SUMMARY"
     ( echo "        "\<skipped type=\"$SKIPREASON\"\>
       echo "        "\<\/skipped\>
-    ) >> $XMLTMP
+    ) >> "$XMLTMP"
     if [ -z "$QUIET" ]; then
       echo Skipped
     else
@@ -342,21 +353,26 @@ while true; do
   shift
 done
 
-# We assume we're running this script from $objdir or $objdir/tests/acceptance
-[ -x `pwd`/cf-agent/cf-agent ] && DEFAGENT=`pwd`/cf-agent/cf-agent
-[ -x `pwd`/../../cf-agent/cf-agent ] && DEFAGENT=`pwd`/../../cf-agent/cf-agent
+# We assume we're running this script from $objdir, $objdir/tests/acceptance,
+# or /var/cfengine/tests/acceptance.
+[ -x "`pwd`/cf-agent/cf-agent" ] && DEFAGENT="`pwd`/cf-agent/cf-agent"
+[ -x "`pwd`/../../cf-agent/cf-agent" ] && DEFAGENT="`pwd`/../../cf-agent/cf-agent"
+[ -x "`pwd`/../../bin/cf-agent" ] && DEFAGENT="`pwd`/../../bin/cf-agent"
 AGENT=${AGENT:-${DEFAGENT}}
 
-[ -x `pwd`/cf-promises/cf-promises ] && DEFCF_PROMISES=`pwd`/cf-promises/cf-promises
-[ -x `pwd`/../../cf-promises/cf-promises ] && DEFCF_PROMISES=`pwd`/../../cf-promises/cf-promises
+[ -x "`pwd`/cf-promises/cf-promises" ] && DEFCF_PROMISES="`pwd`/cf-promises/cf-promises"
+[ -x "`pwd`/../../cf-promises/cf-promises" ] && DEFCF_PROMISES="`pwd`/../../cf-promises/cf-promises"
+[ -x "`pwd`/../../bin/cf-promises" ] && DEFCF_PROMISES="`pwd`/../../bin/cf-promises"
 CF_PROMISES=${CF_PROMISES:-${DEFCF_PROMISES}}
 
-[ -x `pwd`/cf-serverd/cf-serverd ] && DEFCF_SERVERD=`pwd`/cf-serverd/cf-serverd
-[ -x `pwd`/../../cf-serverd/cf-serverd ] && DEFCF_SERVERD=`pwd`/../../cf-serverd/cf-serverd
+[ -x "`pwd`/cf-serverd/cf-serverd" ] && DEFCF_SERVERD="`pwd`/cf-serverd/cf-serverd"
+[ -x "`pwd`/../../cf-serverd/cf-serverd" ] && DEFCF_SERVERD="`pwd`/../../cf-serverd/cf-serverd"
+[ -x "`pwd`/../../bin/cf-serverd" ] && DEFCF_SERVERD="`pwd`/../../bin/cf-serverd"
 CF_SERVERD=${CF_SERVERD:-${DEFCF_SERVERD}}
 
-[ -x `pwd`/cf-key/cf-key ] && DEFCF_KEY=`pwd`/cf-key/cf-key
-[ -x `pwd`/../../cf-key/cf-key ] && DEFCF_KEY=`pwd`/../../cf-key/cf-key
+[ -x "`pwd`/cf-key/cf-key" ] && DEFCF_KEY="`pwd`/cf-key/cf-key"
+[ -x "`pwd`/../../cf-key/cf-key" ] && DEFCF_KEY="`pwd`/../../cf-key/cf-key"
+[ -x "`pwd`/../../bin/cf-key" ] && DEFCF_KEY="`pwd`/../../bin/cf-key"
 CF_KEY=${CF_KEY:-${DEFCF_KEY}}
 
 if [ ! -x "$AGENT" -o ! -x "$CF_PROMISES" -o ! -x "$CF_SERVERD" -o ! -x "$CF_KEY" ]
@@ -381,16 +397,16 @@ if [ $# -gt 0 ]; then
     fi
 
     if [ -f $test ]; then
-      TESTS="$TESTS $test"
+      TESTS="$TESTS${TESTS:+ }$test"
     elif [ -d $test ]; then
-      ADDTESTS=$(find $test -name '*.cf' | sort)
-      TESTS="$TESTS $ADDTESTS"
+      ADDTESTS=$(find "$test" -name '*.cf' | sort)
+      TESTS="$TESTS${TESTS:+ }$ADDTESTS"
     else
       echo "Unable to open test file/directory: $test"
     fi
   done
 else
-  TESTS=$(find $(dirname $0) -name '*.cf' | sort)
+  TESTS=$(find "$(dirname $0)" -name '*.cf' | sort)
 fi
 
 #
@@ -414,7 +430,7 @@ START_TIME=$(unix_seconds)
   echo ----------------------------------------------------------------------
   echo Total tests: $TESTS_COUNT
   echo
-) | tee $LOG | tee $SUMMARY >&7
+) | tee "$LOG" | tee "$SUMMARY" >&7
 
 
 ( echo \<\?xml version=\"1.0\" encoding=\"UTF-8\"\?\>
@@ -422,19 +438,19 @@ START_TIME=$(unix_seconds)
   echo "           "timestamp=\"$(date "+%F %T")\"
   echo "           hostname=\"localhost\""
   echo "           "tests=\"$TESTS_COUNT\"
-) > $XML
+) > "$XML"
 
-  echo -n "" > $XMLTMP
+  echo -n "" > "$XMLTMP"
 
 for test in $TESTS; do
-  echo "    "\<testcase name=\"$(basename $test)\" >> $XMLTMP
-  echo "              "classname=\"$test\" >> $XMLTMP
+  echo "    "\<testcase name=\"$(basename $test)\" >> "$XMLTMP"
+  echo "              "classname=\"$test\" >> "$XMLTMP"
   if [ -n "$USE_VALGRIND" ]; then
     runtest "valgrind --leak-check=full --show-reachable=yes $AGENT" "$test"
   else
     runtest $AGENT "$test"
   fi
-  echo "    "\<\/testcase\> >> $XMLTMP
+  echo "    "\<\/testcase\> >> "$XMLTMP"
 done
 
 END_TIME=$(unix_seconds)
@@ -442,26 +458,26 @@ END_TIME=$(unix_seconds)
 ( echo
   echo ======================================================================
   echo Testsuite finished at $(date  "+%F %T") \($(($END_TIME - $START_TIME)) seconds\)
-) | tee -a $LOG | tee -a $SUMMARY >&7
+) | tee -a "$LOG" | tee -a "$SUMMARY" >&7
 
 ( echo
   echo Passed tests: $PASSED_TESTS
   echo Failed tests: $FAILED_TESTS
   echo Failed to crash tests: $FAILED_TO_CRASH_TESTS
   echo Skipped tests: $SKIPPED_TESTS
-) | tee -a $LOG | tee -a $SUMMARY
+) | tee -a "$LOG" | tee -a "$SUMMARY"
 
 (  echo "           "failures=\"$FAILED_TESTS\"
    echo "           "skipped=\"$SKIPPED_TESTS\"
    echo "           "time=\"$(($END_TIME - $START_TIME)) seconds\"\>
-) >> $XML
+) >> "$XML"
 
-  cat $XMLTMP >> $XML
+  cat "$XMLTMP" >> "$XML"
 
-  echo \<\/testsuite\> >> $XML
+  echo \<\/testsuite\> >> "$XML"
 
 if [ -n "$PRINTLOG" ]; then
-  cat $LOG
+  cat "$LOG"
 fi
 
 if [ "$FAILED_TESTS" -ne 0 ] || [ "$FAILED_TO_CRASH_TESTS" -ne 0 ]; then

@@ -180,7 +180,7 @@ static void GetReturnValue(EvalContext *ctx, const Bundle *callee, Promise *call
     if (result)
     {
         VarRef *ref = VarRefParseFromBundle("last-result", callee);
-        VariableTableIterator *iter = EvalContextVariableTableIteratorNew(ctx, ref);
+        VariableTableIterator *iter = EvalContextVariableTableIteratorNew(ctx, ref->ns, ref->scope, ref->lval);
         Variable *result_var = NULL;
         while ((result_var = VariableTableIteratorNext(iter)))
         {

@@ -145,9 +145,7 @@ bool EvalContextVariableRemove(const EvalContext *ctx, const VarRef *ref);
 StringSet *EvalContextVariableTags(const EvalContext *ctx, const VarRef *ref);
 bool EvalContextVariableClearMatch(EvalContext *ctx);
 
-VariableTableIterator *EvalContextVariableTableIteratorNew(const EvalContext *ctx, const VarRef *ref);
-VariableTableIterator *EvalContextVariableTableIteratorNewGlobals(const EvalContext *ctx, const char *ns, const char *scope);
-
+VariableTableIterator *EvalContextVariableTableIteratorNew(const EvalContext *ctx, const char *ns, const char *scope, const char *lval);
 
 bool EvalContextVariableControlCommonGet(const EvalContext *ctx, CommonControl lval, Rval *rval_out);
 

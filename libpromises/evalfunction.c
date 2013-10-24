@@ -959,7 +959,7 @@ static FnCallResult FnCallVariablesMatching(EvalContext *ctx, FnCall *fp, Rlist 
     Rlist *matches = NULL;
 
     {
-        VariableTableIterator *iter = EvalContextVariableTableIteratorNewGlobals(ctx, NULL, NULL);
+        VariableTableIterator *iter = EvalContextVariableTableIteratorNew(ctx, NULL, NULL, NULL);
         StringSet *global_matches = VariablesMatching(ctx, iter, finalargs);
 
         StringSetIterator it = StringSetIteratorInit(global_matches);
@@ -1399,7 +1399,7 @@ static FnCallResult FnCallRegArray(EvalContext *ctx, FnCall *fp, Rlist *finalarg
     VarRef *ref = VarRefParse(arrayname);
     bool found = false;
 
-    VariableTableIterator *iter = EvalContextVariableTableIteratorNew(ctx, ref);
+    VariableTableIterator *iter = EvalContextVariableTableIteratorNew(ctx, ref->ns, ref->scope, ref->lval);
     Variable *var = NULL;
     while ((var = VariableTableIteratorNext(iter)))
     {
@@ -1456,7 +1456,7 @@ static FnCallResult FnCallGetIndices(EvalContext *ctx, FnCall *fp, Rlist *finala
     }
     else
     {
-        VariableTableIterator *iter = EvalContextVariableTableIteratorNew(ctx, ref);
+        VariableTableIterator *iter = EvalContextVariableTableIteratorNew(ctx, ref->ns, ref->scope, ref->lval);
         Variable *var = NULL;
         while ((var = VariableTableIteratorNext(iter)))
         {
@@ -1533,7 +1533,7 @@ static FnCallResult FnCallGetValues(EvalContext *ctx, FnCall *fp, Rlist *finalar
     }
     else
     {
-        VariableTableIterator *iter = EvalContextVariableTableIteratorNew(ctx, ref);
+        VariableTableIterator *iter = EvalContextVariableTableIteratorNew(ctx, ref->ns, ref->scope, ref->lval);
         Variable *var = NULL;
         while ((var = VariableTableIteratorNext(iter)))
         {
@@ -1926,7 +1926,7 @@ static FnCallResult FnCallMapArray(EvalContext *ctx, FnCall *fp, Rlist *finalarg
 
     VarRef *ref = VarRefParseFromBundle(RlistScalarValue(finalargs->next), PromiseGetBundle(fp->caller));
 
-    VariableTableIterator *iter = EvalContextVariableTableIteratorNew(ctx, ref);
+    VariableTableIterator *iter = EvalContextVariableTableIteratorNew(ctx, ref->ns, ref->scope, ref->lval);
     Variable *var = NULL;
 
     while ((var = VariableTableIteratorNext(iter)))

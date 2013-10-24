@@ -1252,23 +1252,22 @@ bool EvalContextVariableRemoveSpecial(const EvalContext *ctx, SpecialScope scope
     }
 }
 
-static VariableTable *GetVariableTableForVarRef(const EvalContext *ctx, const VarRef *ref)
+static VariableTable *GetVariableTableForScope(const EvalContext *ctx, const char *ns, const char *scope)
 {
-
-    switch (SpecialScopeFromString(ref->scope))
+    switch (SpecialScopeFromString(scope))
     {
     case SPECIAL_SCOPE_SYS:
     case SPECIAL_SCOPE_MON:
     case SPECIAL_SCOPE_CONST:
-        assert(!ref->ns || strcmp("default", ref->ns) == 0);
+        assert(!ns || strcmp("default", ns) == 0);
         return ctx->global_variables;
 
     case SPECIAL_SCOPE_MATCH:
-        assert(!ref->ns || strcmp("default", ref->ns) == 0);
+        assert(!ns || strcmp("default", ns) == 0);
         return ctx->match_variables;
 
     case SPECIAL_SCOPE_EDIT:
-        assert(!ref->ns || strcmp("default", ref->ns) == 0);
+        assert(!ns || strcmp("default", ns) == 0);
         {
             StackFrame *frame = LastStackFrameByType(ctx, STACK_FRAME_TYPE_BUNDLE);
             assert(frame);
@@ -1276,14 +1275,14 @@ static VariableTable *GetVariableTableForVarRef(const EvalContext *ctx, const Va
         }
 
     case SPECIAL_SCOPE_BODY:
-        assert(!ref->ns || strcmp("default", ref->ns) == 0);
+        assert(!ns || strcmp("default", ns) == 0);
         {
             StackFrame *frame = LastStackFrameByType(ctx, STACK_FRAME_TYPE_BODY);
             return frame ? frame->data.body.vars : NULL;
         }
 
     case SPECIAL_SCOPE_THIS:
-        assert(!ref->ns || strcmp("default", ref->ns) == 0);
+        assert(!ns || strcmp("default", ns) == 0);
         {
             StackFrame *frame = LastStackFrameByType(ctx, STACK_FRAME_TYPE_PROMISE);
             return frame ? frame->data.promise.vars : NULL;
@@ -1300,7 +1299,7 @@ static VariableTable *GetVariableTableForVarRef(const EvalContext *ctx, const Va
 
 bool EvalContextVariableRemove(const EvalContext *ctx, const VarRef *ref)
 {
-    VariableTable *table = GetVariableTableForVarRef(ctx, ref);
+    VariableTable *table = GetVariableTableForScope(ctx, ref->ns, ref->scope);
     return VariableTableRemove(table, ref);
 }
 
@@ -1417,7 +1416,7 @@ bool EvalContextVariablePut(EvalContext *ctx, const VarRef *ref, const void *val
         }
     }
 
-    VariableTable *table = GetVariableTableForVarRef(ctx, ref);
+    VariableTable *table = GetVariableTableForScope(ctx, ref->ns, ref->scope);
     VariableTablePut(table, ref, &rval, type);
     return true;
 }
@@ -1435,7 +1434,7 @@ static Variable *VariableResolve(const EvalContext *ctx, const VarRef *ref)
         return ret;
     }
 
-    VariableTable *table = GetVariableTableForVarRef(ctx, ref);
+    VariableTable *table = GetVariableTableForScope(ctx, ref->ns, ref->scope);
     if (table)
     {
         Variable *var = VariableTableGet(table, ref);
@@ -1543,15 +1542,10 @@ bool EvalContextVariableClearMatch(EvalContext *ctx)
     return VariableTableClear(ctx->match_variables, NULL, NULL, NULL);
 }
 
-VariableTableIterator *EvalContextVariableTableIteratorNew(const EvalContext *ctx, const VarRef *ref)
+VariableTableIterator *EvalContextVariableTableIteratorNew(const EvalContext *ctx, const char *ns, const char *scope, const char *lval)
 {
-    VariableTable *table = GetVariableTableForVarRef(ctx, ref);
-    return table ? VariableTableIteratorNew(table, ref->ns, ref->scope, ref->lval) : NULL;
-}
-
-VariableTableIterator *EvalContextVariableTableIteratorNewGlobals(const EvalContext *ctx, const char *ns, const char *scope)
-{
-    return VariableTableIteratorNew(ctx->global_variables, ns, scope, NULL);
+    VariableTable *table = scope ? GetVariableTableForScope(ctx, ns, scope) : ctx->global_variables;
+    return table ? VariableTableIteratorNew(table, ns, scope, lval) : NULL;
 }
 
 bool EvalContextVariableControlCommonGet(const EvalContext *ctx, CommonControl lval, Rval *rval_out)

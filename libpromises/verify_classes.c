@@ -120,6 +120,17 @@ PromiseResult VerifyClassPromise(EvalContext *ctx, Promise *pp, ARG_UNUSED void 
                 EvalContextHeapPersistentSave(pp->promiser, PromiseGetNamespace(pp), a.context.persistent, CONTEXT_STATE_POLICY_RESET);
             }
 
+            Rlist *promise_meta = PromiseGetConstraintAsList(ctx, "meta", pp);
+            if (promise_meta)
+            {
+                StringSet *class_meta = EvalContextClassTags(ctx, PromiseGetNamespace(pp), pp->promiser);
+                for (const Rlist *rp = promise_meta; rp; rp = rp->next)
+                {
+                    StringSetAdd(class_meta, xstrdup(RlistScalarValue(rp)));
+                    Log(LOG_LEVEL_INFO, "Setting tag %s for class %s", RlistScalarValue(rp), pp->promiser);
+                }
+            }
+
             return PROMISE_RESULT_CHANGE;
         }
     }

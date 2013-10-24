@@ -2609,6 +2609,7 @@ gid_t PromiseGetConstraintAsGid(const EvalContext *ctx, char *lval, const Promis
 
 /*****************************************************************************/
 
+// FIX: promise constrained classed?
 Rlist *PromiseGetConstraintAsList(const EvalContext *ctx, const char *lval, const Promise *pp)
 {
     Rlist *retval = NULL;

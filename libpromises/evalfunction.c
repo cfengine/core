@@ -799,122 +799,102 @@ static FnCallResult FnCallCountClassesMatching(EvalContext *ctx, FnCall *fp, Rli
 
 /*********************************************************************/
 
-static FnCallResult FnCallClassesMatching(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
+static StringSet *ClassesMatching(EvalContext *ctx, ClassTableIterator *iter, const Rlist *args)
 {
-    Rlist *arg = NULL;
-    StringSet* matching = StringSetNew();
-    char id[CF_BUFSIZE];
+    StringSet *matching = StringSetNew();
 
-    snprintf(id, CF_BUFSIZE, "built-in FnCall %s-arg", fp->name);
-
-    if (!finalargs)
+    const char *regex = RlistScalarValue(args);
+    Class *cls = NULL;
+    while ((cls = ClassTableIteratorNext(iter)))
     {
-        FatalError(ctx, "in %s: requires at least one argument", id);
-    }
+        char *expr = ClassRefToString(cls->ns, cls->name);
 
-    /* We need to check all the arguments, ArgTemplate does not check varadic functions */
-    for (arg = finalargs; arg; arg = arg->next)
-    {
-        SyntaxTypeMatch err = CheckConstraintTypeMatch(id, arg->val, DATA_TYPE_STRING, "", 1);
-        if (err != SYNTAX_TYPE_MATCH_OK && err != SYNTAX_TYPE_MATCH_ERROR_UNEXPANDED)
+        if (StringMatchFull(regex, expr))
         {
-            FatalError(ctx, "in %s: %s", id, SyntaxTypeMatchToString(err));
-        }
-    }
-
-    const char *regex = RlistScalarValue(finalargs);
-    {
-        ClassTableIterator *iter = EvalContextClassTableIteratorNewGlobal(ctx, NULL, true, true);
-        Class *cls = NULL;
-        while ((cls = ClassTableIteratorNext(iter)))
-        {
-            char *expr = ClassRefToString(cls->ns, cls->name);
-
-            if (StringMatchFull(regex, expr))
+            bool pass = true;
+            StringSet *tagset = EvalContextClassTags(ctx, cls->ns, cls->name);
+            for (const Rlist *arg = args->next; (pass && arg); arg = arg->next)
             {
-                bool pass = true;
-                StringSet *tagset = EvalContextClassTags(ctx, cls->ns, cls->name);
-                for (arg = finalargs->next; (pass && arg); arg = arg->next)
+                const char *tag_regex = RlistScalarValue(arg);
+                const char *element = NULL;
+                StringSetIterator it = StringSetIteratorInit(tagset);
+                while ((element = StringSetIteratorNext(&it)))
                 {
-                    const char* tag_regex = RlistScalarValue(arg);
-                    const char *element = NULL;
-                    StringSetIterator it = StringSetIteratorInit(tagset);
-                    while ((element = SetIteratorNext(&it)))
+                    if (!StringMatchFull(tag_regex, element))
                     {
-                        if (!StringMatchFull(tag_regex, element))
-                        {
-                            pass = false;
-                        }
+                        pass = false;
                     }
                 }
-
-                if (pass)
-                {
-                    StringSetAdd(matching, expr);
-                }
             }
-            else
+
+            if (pass)
             {
-                free(expr);
+                StringSetAdd(matching, expr);
             }
         }
+        else
+        {
+            free(expr);
+        }
+    }
+
+    return matching;
+}
+
+static FnCallResult FnCallClassesMatching(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
+{
+    if (!finalargs)
+    {
+        FatalError(ctx, "Function '%s' requires at least one argument", fp->name);
+    }
+
+    for (const Rlist *arg = finalargs; arg; arg = arg->next)
+    {
+        SyntaxTypeMatch err = CheckConstraintTypeMatch(fp->name, arg->val, DATA_TYPE_STRING, "", 1);
+        if (err != SYNTAX_TYPE_MATCH_OK && err != SYNTAX_TYPE_MATCH_ERROR_UNEXPANDED)
+        {
+            FatalError(ctx, "in function '%s', '%s'", fp->name, SyntaxTypeMatchToString(err));
+        }
+    }
+
+    Rlist *matches = NULL;
+
+    {
+        ClassTableIterator *iter = EvalContextClassTableIteratorNewGlobal(ctx, PromiseGetNamespace(fp->caller), true, true);
+        StringSet *global_matches = ClassesMatching(ctx, iter, finalargs);
+
+        StringSetIterator it = StringSetIteratorInit(global_matches);
+        const char *element = NULL;
+        while ((element = StringSetIteratorNext(&it)))
+        {
+            RlistPrepend(&matches, element, RVAL_TYPE_SCALAR);
+        }
+
+        StringSetDestroy(global_matches);
         ClassTableIteratorDestroy(iter);
     }
 
     {
         ClassTableIterator *iter = EvalContextClassTableIteratorNewLocal(ctx);
-        Class *cls = NULL;
-        while ((cls = ClassTableIteratorNext(iter)))
+        StringSet *local_matches = ClassesMatching(ctx, iter, finalargs);
+
+        StringSetIterator it = StringSetIteratorInit(local_matches);
+        const char *element = NULL;
+        while ((element = StringSetIteratorNext(&it)))
         {
-            char *expr = ClassRefToString(cls->ns, cls->name);
-
-            if (StringMatchFull(regex, expr))
-            {
-                bool pass = true;
-                StringSet *tagset = EvalContextClassTags(ctx, cls->ns, cls->name);
-                for (arg = finalargs->next; (pass && arg); arg = arg->next)
-                {
-                    const char* tag_regex = RlistScalarValue(arg);
-                    const char *element = NULL;
-                    StringSetIterator it = StringSetIteratorInit(tagset);
-                    while ((element = SetIteratorNext(&it)))
-                    {
-                        if (!StringMatchFull(tag_regex, element))
-                        {
-                            pass = false;
-                        }
-                    }
-                }
-
-                if (pass)
-                {
-                    StringSetAdd(matching, expr);
-                }
-            }
-            else
-            {
-                free(expr);
-            }
+            RlistPrepend(&matches, element, RVAL_TYPE_SCALAR);
         }
+
+        StringSetDestroy(local_matches);
         ClassTableIteratorDestroy(iter);
     }
 
-    Rlist *returnlist = NULL;
-    StringSetIterator it = StringSetIteratorInit(matching);
-    char *element = NULL;
-    while ((element = StringSetIteratorNext(&it)))
+    if (!matches)
     {
-        RlistPrepend(&returnlist, element, RVAL_TYPE_SCALAR);
+        RlistAppendScalarIdemp(&matches, CF_NULL_VALUE);
     }
 
-    if (returnlist == NULL)
-    {
-        RlistAppendScalarIdemp(&returnlist, CF_NULL_VALUE);
-    }
-
-    StringSetDestroy(matching);
-
-    return (FnCallResult) { FNCALL_SUCCESS, { returnlist, RVAL_TYPE_LIST } };
+    return (FnCallResult) { FNCALL_SUCCESS, { matches, RVAL_TYPE_LIST } };
 }
 
 /*********************************************************************/

@@ -1,0 +1,14 @@
+body common control
+{
+  bundlesequence => { runme };
+}
+
+bundle agent runme
+{
+  vars:
+      "x1" string => execresult("/bin/echo IMMANUEL_KANT", "noshell"),
+      ifvarclass => "!any";
+
+   !any::
+      "x2" string => execresult("/bin/echo BUT_KUBLAI_KHAN", "noshell");
+}

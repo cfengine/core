@@ -78,6 +78,10 @@
 static int aix_get_mac_addr(const char *device_name, uint8_t mac[6]);
 #endif
 
+#if defined (__sun) && !defined(HAVE_GETIFADDRS)
+#include <solaris_ifaddrs.h>
+#endif
+
 static bool IsProcessRunning(pid_t pid);
 static void FindV6InterfacesInfo(EvalContext *ctx);
 static bool IgnoreJailInterface(int ifaceidx, struct sockaddr_in *inaddr);
@@ -428,6 +432,41 @@ static void GetMacAddress(EvalContext *ctx, int fd, struct ifreq *ifr, struct if
         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, name, "mac_unknown", DATA_TYPE_STRING);
         EvalContextClassPutHard(ctx, "mac_unknown");
     }
+# elif defined(__sun) && !defined(HAVE_GETIFADDRS)
+
+    char hw_mac[CF_MAXVARSIZE];
+    
+    struct ifaddrs *ifaddr, *ifa;
+    struct sockaddr_dl *sdl;
+
+    if (solaris_getifaddrs(&ifaddr) == -1)
+    {
+        Log(LOG_LEVEL_ERR, "getifaddrs", "!! Could not get interface %s addresses",
+          ifp->ifr_name);
+
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, name, "mac_unknown", DATA_TYPE_STRING);
+        EvalContextClassPutHard(ctx, "mac_unknown");
+        return;
+    }
+    for (ifa = ifaddr; ifa != NULL; ifa=ifa->ifa_next)
+    {      
+        struct sockaddr * saddr = ifaddr->ifa_addr;
+        snprintf(hw_mac, sizeof(hw_mac), "%.2x:%.2x:%.2x:%.2x:%.2x:%.2x",
+        (unsigned char) saddr->sa_data[0],
+        (unsigned char) saddr->sa_data[1],
+        (unsigned char) saddr->sa_data[2],
+        (unsigned char) saddr->sa_data[3],
+        (unsigned char) saddr->sa_data[4],
+        (unsigned char) saddr->sa_data[5]);
+
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, name, hw_mac, DATA_TYPE_STRING);
+        RlistAppend(hardware, hw_mac, RVAL_TYPE_SCALAR);
+        RlistAppend(interfaces, ifa->ifa_name, RVAL_TYPE_SCALAR);
+
+        snprintf(name, sizeof(name), "mac_%s", CanonifyName(hw_mac));
+        EvalContextClassPutHard(ctx, name);
+    }
+    solaris_freeifaddrs(ifaddr);
 # else
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, name, "mac_unknown", DATA_TYPE_STRING);
     EvalContextClassPutHard(ctx, "mac_unknown");

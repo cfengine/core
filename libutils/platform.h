@@ -251,10 +251,6 @@ size_t strlcat(char *destination, const char *source, size_t size);
 char *strsep(char **stringp, const char *delim);
 #endif
 
-#if !HAVE_DECL_SOCKETPAIR
-int socketpair(int domain, int type, int protocol, int sv[2]);
-#endif
-
 #ifdef __APPLE__
 # include <sys/malloc.h>
 # include <sys/paths.h>

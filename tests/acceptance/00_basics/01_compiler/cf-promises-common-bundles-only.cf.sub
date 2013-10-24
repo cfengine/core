@@ -1,0 +1,10 @@
+body common control
+{
+  bundlesequence => { runme };
+}
+
+bundle agent runme
+{
+  vars:
+      "x" string => execresult("/bin/echo PURPLE_DINOSAUR", "noshell");
+}

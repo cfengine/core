@@ -983,6 +983,55 @@ static FnCallResult FnCallVariablesMatching(EvalContext *ctx, FnCall *fp, Rlist 
 
 /*********************************************************************/
 
+static FnCallResult FnCallBundlesmatching(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
+{
+    char buf[CF_BUFSIZE];
+    char *regex = RlistScalarValue(finalargs);
+    Rlist *matches = NULL;
+    Policy *policy;
+
+    if (!fp->caller)
+    {
+        FatalError(ctx, "Function '%s' had a null caller", fp->name);
+    }
+
+    policy = PolicyFromPromise(fp->caller);
+
+    if (!policy)
+    {
+        FatalError(ctx, "Function '%s' had a null policy", fp->name);
+    }
+
+    if (!policy->bundles)
+    {
+        FatalError(ctx, "Function '%s' had null policy bundles", fp->name);
+    }
+
+    for (size_t i = 0; i < SeqLength(policy->bundles); i++)
+    {
+        const Bundle *bp = SeqAt(policy->bundles, i);
+        if (!bp)
+        {
+            FatalError(ctx, "Function '%s' found null bundle at %ld", fp->name, i);
+        }
+
+        snprintf(buf, CF_BUFSIZE, "%s:%s", bp->ns, bp->name);
+        if (StringMatchFull(regex, buf))
+        {
+            RlistPrepend(&matches, xstrdup(buf), RVAL_TYPE_SCALAR);
+        }
+    }
+
+    if (!matches)
+    {
+        RlistAppendScalarIdemp(&matches, CF_NULL_VALUE);
+    }
+
+    return (FnCallResult) { FNCALL_SUCCESS, { matches, RVAL_TYPE_LIST } };
+}
+
+/*********************************************************************/
+
 static FnCallResult FnCallCanonify(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
     char buf[CF_BUFSIZE];
@@ -6310,6 +6359,12 @@ FnCallArg EVAL_ARGS[] =
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
+FnCallArg BUNDLESMATCHING_ARGS[] =
+{
+    {CF_ANYSTRING, DATA_TYPE_STRING, "Regular expression"},
+    {NULL, DATA_TYPE_NONE, NULL}
+};
+
 /*********************************************************/
 /* FnCalls are rvalues in certain promise constraints    */
 /*********************************************************/
@@ -6322,6 +6377,7 @@ const FnCallType CF_FNCALL_TYPES[] =
     FnCallTypeNew("accumulated", DATA_TYPE_INT, ACCUM_ARGS, &FnCallAccumulatedDate, "Convert an accumulated amount of time into a system representation", false, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("ago", DATA_TYPE_INT, AGO_ARGS, &FnCallAgoDate, "Convert a time relative to now to an integer system representation", false, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("and", DATA_TYPE_STRING, AND_ARGS, &FnCallAnd, "Calculate whether all arguments evaluate to true", true, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("bundlesmatching", DATA_TYPE_STRING_LIST, BUNDLESMATCHING_ARGS, &FnCallBundlesmatching, "Find all the bundles that match a regular expression", false, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("canonify", DATA_TYPE_STRING, CANONIFY_ARGS, &FnCallCanonify, "Convert an abitrary string into a legal class name", false, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("canonifyuniquely", DATA_TYPE_STRING, CANONIFY_ARGS, &FnCallCanonify, "Convert an abitrary string into a unique legal class name", false, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("concat", DATA_TYPE_STRING, CONCAT_ARGS, &FnCallConcat, "Concatenate all arguments into string", true, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),

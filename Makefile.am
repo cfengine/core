@@ -6,12 +6,12 @@ LCOV_FLAGS = $(if $(filter-out 0,$(V)),,-q)
 
 SUBDIRS = libcompat libutils libcfnet libpromises \
 	cf-agent cf-execd cf-key cf-monitord \
-	cf-promises cf-runagent cf-serverd ext examples masterfiles \
+	cf-promises cf-runagent cf-serverd ext examples \
 	tests
 
 DIST_SUBDIRS = libcompat libutils libcfnet libpromises cf-agent cf-execd	\
 	cf-key cf-monitord cf-promises cf-runagent cf-serverd ext	        \
-	examples masterfiles tests
+	examples tests
 
 # Set explicitly to avoid picking up {nova}/*.m4
 
@@ -55,7 +55,6 @@ ACLOCAL_AMFLAGS = -I m4
 
 install-data-local:
 	$(MKDIR_P) -m 700 $(DESTDIR)$(workdir)/inputs
-	$(MKDIR_P) $(DESTDIR)$(workdir)/masterfiles
 	$(MKDIR_P) -m 700 $(DESTDIR)$(workdir)/modules
 	$(MKDIR_P) -m 700 $(DESTDIR)$(workdir)/outputs
 	$(MKDIR_P) -m 700 $(DESTDIR)$(workdir)/ppkeys

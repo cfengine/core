@@ -1,0 +1,27 @@
+#!/usr/bin/perl
+# Author: Nick Anderson <nick@cmdln.org>
+# This is a nasty hacked up thing to locate and show bundles or bodies
+
+use strict;
+use warnings;
+use Term::ANSIColor;
+
+my $body_or_bundle=$ARGV[0];
+my $search_path=$ARGV[1];
+
+my (@results) = `find $search_path -name "*.cf" | xargs egrep -n "(body|bundle)\\s.*\\s$body_or_bundle"`;
+
+foreach my $result (@results) {
+    my (@file) = split(':', $result);
+    print color("red")."definition for $body_or_bundle found in $file[0] on line $file[1]\n\n".color("reset");
+
+    undef $/;               # Enable 'slurp' mode
+    open (FILE, '<', "$file[0]") or die "Could not open $file[0]: $!";
+    
+    my $filea = <FILE>;      # Whole file here now...
+    
+    my ($stuff_that_interests_me) = ($filea =~ m/((body|bundle)\s+\w+\s+$body_or_bundle.*?}(?=[^}]+(?:body|bundle)\s+))/s);
+    
+    print color("green")."$stuff_that_interests_me".color("reset")."\n";
+    close (FILE) or die "Could not close $file[0]: $!";
+}

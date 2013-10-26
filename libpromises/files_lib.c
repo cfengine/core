@@ -576,6 +576,11 @@ static bool DeleteDirectoryTreeInternal(const char *basepath, const char *path)
                 {
                     failed = true;
                 }
+
+                if (rmdir(subpath) == -1)
+                {
+                    failed = true;
+                }
             }
             else
             {

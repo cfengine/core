@@ -1,0 +1,106 @@
+#######################################################
+#
+# Redmine #3429: copy and purge files and directories should purge empty directories too
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle common g
+{
+}
+
+#######################################################
+
+bundle agent init
+{
+  methods:
+      "1" usebundle => init1;
+      "2" usebundle => init2;
+}
+
+bundle agent init1
+{
+  files:
+      "$(G.testfile)"
+      delete => init_delete;
+}
+
+bundle agent init2
+{
+  files:
+      "$(G.testfile)/source/1/2/3/."
+      create => "true";
+
+      "$(G.testfile)/dest/1/2/should-be-removed/3/."
+      create => "true";
+}
+
+body delete init_delete
+{
+      dirlinks => "delete";
+      rmdirs   => "true";
+}
+
+#######################################################
+
+bundle agent test
+{
+  files:
+      "$(G.testfile)/dest/."
+      create => "true",
+      depth_search => test_recurse("inf"),
+      action => test_immediate,
+      copy_from => test_sync("$(G.testfile)/source");
+}
+
+body depth_search test_recurse(d)
+
+{
+      depth => "$(d)";
+      xdev  => "true";
+}
+
+body action test_immediate
+{
+      ifelapsed => "0";
+}
+
+body copy_from test_sync(from)
+{
+      source => "$(from)";
+      purge => "true";
+      preserve => "false";
+      type_check => "false";
+      compare => "digest";
+}
+
+#######################################################
+
+bundle agent check
+{
+  classes:
+      "ok_copy" expression => fileexists("$(G.testfile)/dest/1/2/3");
+      "ok_purge" not => fileexists("$(G.testfile)/dest/1/2/should-be-removed");
+      "bad_copy" not => fileexists("$(G.testfile)/dest/1/2/3");
+      "bad_purge" expression => fileexists("$(G.testfile)/dest/1/2/should-be-removed");
+
+      "ok" and => { ok_copy, ok_purge };
+
+  reports:
+    DEBUG::
+      "The copy worked" ifvarclass => "ok_copy";
+      "The purge worked" ifvarclass => "ok_purge";
+      "The copy failed" ifvarclass => "bad_copy";
+      "The purge failed" ifvarclass => "bad_purge";
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}
+

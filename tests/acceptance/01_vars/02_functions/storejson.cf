@@ -1,0 +1,45 @@
+# Test that the storejson() function will convert a data container back to JSON
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle agent init
+{
+  vars:
+      "json" string => '{
+  "x": [
+    1,
+    2,
+    3
+  ]
+}';
+}
+
+bundle agent test
+{
+  vars:
+      "data" data => parsejson($(init.json));
+      "datas" string => storejson(data);
+}
+
+bundle agent check
+{
+  classes:
+      "ok" expression => strcmp($(test.datas), $(init.json));
+      "not_ok" not => strcmp($(test.datas), $(init.json));
+
+  reports:
+    DEBUG.ok::
+      "PASS: converted '$(test.datas)' == expected '$(init.json)'";
+    DEBUG.not_ok::
+      "FAIL: converted '$(test.datas)' != expected '$(init.json)'";
+
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

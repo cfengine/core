@@ -1,0 +1,52 @@
+# Test that bundlesmatching works correctly
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence => { default("$(this.promise_filename)") };
+}
+
+bundle common init
+{
+}
+
+bundle agent test
+{
+  vars:
+      "runs" slist => bundlesmatching("default:run.*");
+      "run_123s" slist => bundlesmatching("default:run_123.*");
+      "bundle_123" string => nth(run_123s, 0);
+
+      "count" int => length(runs);
+      "123_count" int => length(run_123s);
+}
+
+bundle agent check
+{
+  classes:
+      "ok" and => { strcmp("$(test.count)", "3"),
+                    strcmp("$(test.123_count)", "1"),
+                    strcmp("$(test.bundle_123)", "default:run_123_456") };
+
+  reports:
+    DEBUG::
+      "Found bundles $(test.runs)";
+      "Found 123 bundles $(test.run_123s)";
+      "Found 123 bundle $(test.bundle_123)";
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}
+
+bundle agent run_123_456
+{
+}
+
+bundle agent run_789_0ab
+{
+}
+
+bundle agent run_cde_fgh
+{
+}

@@ -1,0 +1,56 @@
+#!/usr/bin/perl
+# Author: Nick Anderson <nick@cmdln.org>, Ted Zlatanov <tzz@lifelogs.com>
+# locate and show bundles or bodies in a list of paths
+
+use strict;
+use warnings;
+use File::Find;
+use Term::ANSIColor;
+
+my $full = 0;
+my $regex = shift @ARGV;
+
+if ($regex eq '-f' || $regex eq '--full')
+{
+ $full = 1;
+ $regex = shift @ARGV;
+}
+
+die "Syntax: $0 [-f|--full] BODY-OR-BUNDLE-REGEX PATH1 PATH2 ...\n"
+ unless scalar @ARGV > 0;
+
+my @search = @ARGV;
+
+find(\&wanted, @search);
+
+sub wanted
+{
+ open my $f, '<', $_;
+ my $found = 0;
+
+ while (<$f>)
+ {
+  my $highlight = 0;
+
+  if (m/^\s*(body|bundle).*$regex/)
+  {
+   $found = 1;
+   $highlight = 1;
+   print color("green");
+   print "-> body or bundle matching '$regex' found in $File::Find::name:$.";
+   print color("reset"), "\n";
+  }
+
+  if ($found)
+  {
+   print color("red") if $highlight;
+   print;
+   print color("reset") if $highlight;
+  }
+
+  if (!$full || m/^\s*}\s*$/)
+  {
+   $found = 0;
+  }
+ }
+}

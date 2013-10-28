@@ -6,6 +6,19 @@ It takes an optional `-f` or `--full` flag first, then a pattern, then a list of
 
 With `-f` specified, the whole body or bundle will be displayed.
 
+With `-h` specified, help will be displayed and then the script will exit.
+
+With no directories specified, `/var/cfengine/masterfiles` will be searched.
+
+The `-c` flag lets you configure colors (it can be specified multiple
+times).  The defaults are:
+
+     info => 'green',
+     heading => 'red',
+     body => 'yellow',
+
+So for example, `-c body=magenta` will print the definition bodies in magenta.  We're not saying it's the *right* color, mind you.  We like black on black 'coz it's slimming.
+
 ## Example
 
 ```

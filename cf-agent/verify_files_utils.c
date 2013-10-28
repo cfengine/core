@@ -613,7 +613,7 @@ static PromiseResult PurgeLocalFiles(EvalContext *ctx, Item *filelist, const cha
                 {
                     if (!DeleteDirectoryTree(filename))
                     {
-                        cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, pp, attr, "Unable to purge directory '%s'", filename);
+                        cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, pp, attr, "Unable to purge directory tree '%s'", filename);
                         result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
                     }
                     else if (rmdir(filename) == -1)

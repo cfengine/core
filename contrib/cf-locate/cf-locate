@@ -5,9 +5,11 @@
 use strict;
 use warnings;
 use File::Find;
+use File::Basename;
 use Term::ANSIColor;
 
 my $full = 0;
+my $help;                               # note it's undefined
 my $regex = shift @ARGV;
 
 if ($regex eq '-f' || $regex eq '--full')
@@ -16,10 +18,36 @@ if ($regex eq '-f' || $regex eq '--full')
  $regex = shift @ARGV;
 }
 
-die "Syntax: $0 [-f|--full] BODY-OR-BUNDLE-REGEX PATH1 PATH2 ...\n"
- unless scalar @ARGV > 0;
+if ($regex eq '-h' || $regex eq '--help')
+{
+ $help = 0;                             # normal exit, no error
+ $regex = shift @ARGV;
+}
+
+# exit with error 1
+$help = 1 unless $regex;
+
+if (defined $help)
+{
+ print "Syntax: $0 [-f|--full] BODY-OR-BUNDLE-REGEX PATH1 PATH2 ...\n\n";
+
+ # try to open README.md
+ if (open my $doc, '<', sprintf('%s/%s', dirname($0), 'README.md'))
+ {
+  while (<$doc>)
+  {
+   print;
+  }
+ }
+
+ exit $help;
+}
 
 my @search = @ARGV;
+
+# default to this directory
+@search = ('/var/cfengine/masterfiles')
+ unless scalar @search;
 
 find(\&wanted, @search);
 

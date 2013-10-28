@@ -1,33 +1,36 @@
 # cf-locate
 
-This is a small perl script to help you locate and display bodies or bundles inside of your masterfiles.
+This is a small perl script to help you locate and display bodies or bundles inside of your masterfiles.  It uses ANSI color sequences.
 
+It takes an optional `-f` or `--full` flag first, then a pattern, then a list of directories.
+
+With `-f` specified, the whole body or bundle will be displayed.
 
 ## Example
 
-    cf-locate sync_cp /var/cfengine/masterfiles
-    definition for sync_cp found in /var/cfengine/masterfiles/libraries/cfengine_stdlib.cf on line 1219
+```
+cf-locate always /var/cfengine/masterfiles
+```
 
-    body copy_from sync_cp(from,server)
-    {
-    servers     => { "$(server)" };
-    source      => "$(from)";
-    purge       => "true";
-    preserve    => "true";
-    type_check  => "false";
-    }
+```
+-> body or bundle matching 'always' found in /var/cfengine/masterfiles/lib/3.6/common.cf:260
+body classes always(x)
+```
 
-    cf-locate u_rcp /var/cfengine/masterfiles
-    definition for u_rcp found in /var/cfengine/masterfiles/update.cf on line 226
+```
+cf-locate -f always /var/cfengine/masterfiles
+```
 
-    body copy_from u_rcp(from,server)
-    {
-     source      => "$(from)";
-     compare     => "digest";
-     trustkey    => "false";
+```
+-> body or bundle matching 'always' found in /var/cfengine/masterfiles/lib/3.6/common.cf:260
+body classes always(x)
+# Define a class no matter what the outcome of the promise is
 
-    !am_policy_hub::
-
-     servers => { "$(server)" };
-    }
-
+{
+      promise_repaired => { "$(x)" };
+      promise_kept => { "$(x)" };
+      repair_failed => { "$(x)" };
+      repair_denied => { "$(x)" };
+      repair_timeout => { "$(x)" };
+}
+```

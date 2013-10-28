@@ -27,25 +27,27 @@ sub wanted
 {
  open my $f, '<', $_;
  my $found = 0;
+ my $highlight = 0;
+ my $current = "green";
 
  while (<$f>)
  {
-  my $highlight = 0;
-
   if (m/^\s*(body|bundle).*$regex/)
   {
    $found = 1;
    $highlight = 1;
-   print color("green");
+   print color($current);
    print "-> body or bundle matching '$regex' found in $File::Find::name:$.";
    print color("reset"), "\n";
+
+   $current = "red";
   }
 
   if ($found)
   {
-   print color("red") if $highlight;
+   print color($current) if ($highlight);
    print;
-   print color("reset") if $highlight;
+   $current = "yellow";
   }
 
   if (!$full || m/^\s*}\s*$/)
@@ -53,4 +55,5 @@ sub wanted
    $found = 0;
   }
  }
+ print color("reset") if $highlight;
 }

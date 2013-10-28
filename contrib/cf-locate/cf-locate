@@ -7,29 +7,37 @@ use warnings;
 use File::Find;
 use File::Basename;
 use Term::ANSIColor;
+use Getopt::Long;
+
+my %options = (
+               full => 0,
+               help => 0,
+               color => {
+                         info => 'green',
+                         heading => 'red',
+                         body => 'yellow',
+                        },
+              );
+
+GetOptions(\%options,
+           "help|h!",
+           "full|f!",
+           "color|c=s%",
+    );
 
 my $full = 0;
-my $help;                               # note it's undefined
 my $regex = shift @ARGV;
+my $rc = 0;
 
-if ($regex eq '-f' || $regex eq '--full')
+unless (defined $regex)
 {
- $full = 1;
- $regex = shift @ARGV;
+ $rc = 1;
+ $options{help} = 1;
 }
 
-if ($regex eq '-h' || $regex eq '--help')
+if ($options{help})
 {
- $help = 0;                             # normal exit, no error
- $regex = shift @ARGV;
-}
-
-# exit with error 1
-$help = 1 unless $regex;
-
-if (defined $help)
-{
- print "Syntax: $0 [-f|--full] BODY-OR-BUNDLE-REGEX PATH1 PATH2 ...\n\n";
+ print "Syntax: $0 [-f|--full] [-h|--help] [-c|--color [info|heading|body]=color] BODY-OR-BUNDLE-REGEX PATH1 PATH2 ...\n\n";
 
  # try to open README.md
  if (open my $doc, '<', sprintf('%s/%s', dirname($0), 'README.md'))
@@ -40,7 +48,7 @@ if (defined $help)
   }
  }
 
- exit $help;
+ exit $rc;
 }
 
 my @search = @ARGV;
@@ -51,37 +59,47 @@ my @search = @ARGV;
 
 find(\&wanted, @search);
 
+sub find_color
+{
+ my $type = shift @_;
+ return unless defined $type;
+ return $options{color}->{$type};
+}
+
+sub wrap_color
+{
+ my $type = shift @_;
+ my $text = shift @_;
+
+ my $c = find_color($type);
+ return $text unless defined $c;
+ return color($c) . $text . color("reset");
+}
+
 sub wanted
 {
  open my $f, '<', $_;
  my $found = 0;
- my $highlight = 0;
- my $current = "green";
 
  while (<$f>)
  {
+ my $syntax = 'body';
   if (m/^\s*(body|bundle).*$regex/)
   {
+   print wrap_color('info',
+                    "-> body or bundle matching '$regex' found in $File::Find::name:$.\n");
    $found = 1;
-   $highlight = 1;
-   print color($current);
-   print "-> body or bundle matching '$regex' found in $File::Find::name:$.";
-   print color("reset"), "\n";
-
-   $current = "red";
+   $syntax = 'heading';
   }
 
   if ($found)
   {
-   print color($current) if ($highlight);
-   print;
-   $current = "yellow";
+   print wrap_color($syntax, $_);
   }
 
-  if (!$full || m/^\s*}\s*$/)
+  if (!$options{full} || m/^\s*}\s*$/)
   {
    $found = 0;
   }
  }
- print color("reset") if $highlight;
 }

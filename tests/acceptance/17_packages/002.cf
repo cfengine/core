@@ -1,0 +1,82 @@
+#######################################################
+#
+# Test remove named package
+#
+#######################################################
+
+body common control
+{
+    inputs => { 
+               "../default.cf.sub", 
+              };
+    bundlesequence  => { default("$(this.promise_filename)") };
+    version => "1.0";
+}
+
+
+
+#######################################################
+
+bundle agent init
+{
+  
+}
+
+#######################################################
+
+bundle agent test
+{
+    vars:
+        "name" slist => { "zip" };
+      
+    packages:
+  
+        debian::
+            "$(name)"
+            package_policy => "delete",
+            package_method => apt_get,
+            classes => test_set_class("pass","fail");
+      
+    redhat::
+        "$(name)"
+        package_policy => "delete",
+        package_method => yum_rpm,
+        classes => test_set_class("pass","fail");
+}
+
+
+
+body classes test_set_class(ok_class,notok_class)
+{
+    promise_kept => { "$(ok_class)" };
+    promise_repaired => { "$(ok_class)" };
+    repair_failed => { "$(notok_class)" };
+}
+
+#######################################################
+
+bundle agent check
+{
+
+    classes:
+        debian::
+            "has_pkg" expression => returnszero("/usr/bin/apt-cache policy $(test.name) | /bin/grep -q none", "useshell");
+        redhat::
+            "has_pkg" not => returnszero("/bin/rpm -qa | grep -qw $(test.name)", "useshell");
+
+        any::
+            "ok" expression => "pass.!fail.has_pkg";
+
+    reports:
+        ok::
+            "$(this.promise_filename) $(test.name)  Pass";
+        !ok::
+            "$(this.promise_filename) $(test.name) FAIL";
+}
+
+body classes succesfully_executed(class)
+{
+    kept_returncodes => { "0" };
+    promise_kept => { "$(class)" };
+}
+

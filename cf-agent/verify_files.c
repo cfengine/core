@@ -411,6 +411,7 @@ exit:
 static JsonElement *DefaultTemplateData(const EvalContext *ctx)
 {
     JsonElement *hash = JsonObjectCreate(10);
+    Writer *w;
 
     {
         ClassTableIterator *it = EvalContextClassTableIteratorNewGlobal(ctx, NULL, true, true);
@@ -457,6 +458,11 @@ static JsonElement *DefaultTemplateData(const EvalContext *ctx)
         }
         VariableTableIteratorDestroy(it);
     }
+
+    w = StringWriter();
+    JsonWrite(w, hash, 0);
+    Log(LOG_LEVEL_DEBUG, "Generated DefaultTemplateData '%s'", StringWriterData(w));
+    WriterClose(w);
 
     return hash;
 }

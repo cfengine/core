@@ -5166,75 +5166,105 @@ static void *CfReadFile(char *filename, int maxsize)
     struct stat sb;
     char *result = NULL;
     FILE *fp;
-    size_t size;
+    size_t size, bytes_read;
     int i, newlines = 0;
+    size_t buflen = 0;
+
+    /* Because of strings hard-coded limits read up to CF_BUFSIZE bytes */
+
+    if ((fp = fopen(filename, "r")) == NULL)
+    {
+        Log(LOG_LEVEL_INFO, "readfile: Could not open file '%s' (fopen: %s)", filename, GetErrorStr());
+        return NULL;
+    }
 
     if (stat(filename, &sb) == -1)
     {
         if (THIS_AGENT_TYPE == AGENT_TYPE_COMMON)
         {
-            Log(LOG_LEVEL_DEBUG, "Could not examine file '%s' in CfReadFile", filename);
+            Log(LOG_LEVEL_INFO, "readfile: Could not examine file '%s'", filename);
         }
         else
         {
             if (IsCf3VarString(filename))
             {
-                Log(LOG_LEVEL_VERBOSE, "Cannot converge/reduce variable '%s' yet .. assuming it will resolve later",
+                Log(LOG_LEVEL_VERBOSE, "readfile: Cannot converge/reduce variable '%s' yet .. assuming it will resolve later",
                       filename);
             }
             else
             {
-                Log(LOG_LEVEL_INFO, "Could not examine file '%s' in readfile. (stat: %s)", filename, GetErrorStr());
+                Log(LOG_LEVEL_INFO, "readfile: Could not examine file '%s' (stat: %s)",
+                      filename, GetErrorStr());
             }
         }
+        clearerr(fp);
+        fclose(fp);
         return NULL;
     }
 
-    if (sb.st_size > maxsize)
+    // If requested, force read because of broken /proc|/sys files semantics.
+    if (maxsize == 0)
     {
-        Log(LOG_LEVEL_INFO, "Truncating long file '%s' in readfile to max limit %d", filename, maxsize);
-        size = maxsize;
+        buflen = CF_BUFSIZE;
     }
     else
     {
-        size = sb.st_size;
+        buflen = MIN(CF_BUFSIZE, maxsize);
     }
 
-    result = xmalloc(size + 1);
-
-    if ((fp = fopen(filename, "r")) == NULL)
+    if (sb.st_size > maxsize && maxsize != 0)
     {
-        Log(LOG_LEVEL_VERBOSE, "Could not open file '%s' in readfile. (fopen: %s)", filename, GetErrorStr());
+        buflen = maxsize;
+        Log(LOG_LEVEL_INFO, "readfile: Truncating file '%s' to %d bytes, as requested by the maxsize parameter",
+              filename, maxsize);
+    }
+
+    if (sb.st_size > CF_BUFSIZE)
+    {
+        buflen = CF_BUFSIZE;
+        Log(LOG_LEVEL_INFO, "readfile: Truncating file '%s' to %d bytes, because of internal limits",
+              filename, CF_BUFSIZE);
+    }
+
+    result = xcalloc(1, buflen+1); // Extra space for '\0'
+    bytes_read = fread(result, 1, buflen, fp);
+
+    if (ferror(fp))
+    {
+        Log(LOG_LEVEL_INFO, "readfile: Error while reading file '%s' (fread: %s)",
+              filename, GetErrorStr());
+        clearerr(fp);
         free(result);
         return NULL;
     }
 
-    result[size] = '\0';
-
-    if (size > 0)
+    if (bytes_read < buflen)
     {
-        if (fread(result, size, 1, fp) != 1)
-        {
-            Log(LOG_LEVEL_VERBOSE, "Could not read expected amount from file '%s' in readfile. (fread: %s)", filename, GetErrorStr());
-            fclose(fp);
-            free(result);
-            return NULL;
-        }
-
-        for (i = 0; i < size - 1; i++)
-        {
-            if (result[i] == '\n' || result[i] == '\r')
-            {
-                newlines++;
-            }
-        }
-
-        if (newlines == 0 && (result[size - 1] == '\n' || result[size - 1] == '\r'))
-        {
-            result[size - 1] = '\0';
-        }
+        buflen = bytes_read;
+        result = xrealloc(result, buflen+1);
     }
 
+    result[buflen] = '\0';
+
+    size = buflen;
+
+    if ( buflen > 1)
+    {
+      for (i = 0; i < size - 1 && result[i] != '\0' ; i++)
+      {
+          if (result[i] == '\n' || result[i] == '\r')
+          {
+              newlines++;
+          }
+      }
+
+      if (newlines == 0 && (result[size - 1] == '\n' || result[size - 1] == '\r'))
+      {
+          result[size - 1] = '\0';
+      }
+    }
+
+    clearerr(fp);
     fclose(fp);
     return (void *) result;
 }

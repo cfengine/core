@@ -1,0 +1,67 @@
+# Redmine#1032: Test that /sys and /proc files with 0 length are succesfully read by readfile() function
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle agent init
+{
+}
+
+bundle agent test
+{
+  classes:
+      "have_sys"   expression => fileexists("/sys/kernel/vmcoreinfo");
+      "have_proc0" expression => fileexists("/proc/meminfo");
+      "have_proc1" expression => fileexists("/proc/kallsyms");
+
+  vars:
+    have_sys::
+      "sys_info" string => readfile("/sys/kernel/vmcoreinfo", 0);
+    !have_sys::
+      "sys_info" string => "42";
+
+    have_proc0::
+      "proc0_info" string => readfile("/proc/meminfo", 0);
+    !have_proc0::
+      "proc0_info" string => "42";
+
+    have_proc1::
+      "proc1_info" string => readfile("/proc/kallsyms", 0);
+    !have_proc1::
+      "proc1_info" string => "42";
+
+}
+
+bundle agent check
+{
+  classes:
+      "ok_proc0" expression => regcmp(".*\d+.*", $(test.proc0_info));
+      "ok_proc1" expression => regcmp(".*\d+.*", $(test.proc1_info));
+      "not_ok_proc0" not => regcmp(".*\d+.*", $(test.proc0_info));
+      "not_ok_proc1" not => regcmp(".*\d+.*", $(test.proc1_info));
+      "ok_sys" expression => regcmp(".*\d+.*", $(test.sys_info));
+      "not_ok_sys" not => regcmp(".*\d+.*", $(test.sys_info));
+
+      "ok" not => classmatch("not_ok_.+");
+
+  reports:
+    DEBUG::
+      "/proc0 test OK" ifvarclass => "ok_proc0";
+      "/proc1 test OK" ifvarclass => "ok_proc1";
+      "/sys test OK" ifvarclass => "ok_sys";
+      "/proc0 test NOT OK: data '$(test.proc0_info)' did not contain digits" ifvarclass => "not_ok_proc0";
+      "/proc1 test NOT OK: data '$(test.proc1_info)' did not contain digits" ifvarclass => "not_ok_proc1";
+      "/sys test NOT OK: data '$(test.sys_info)' did not contain digits" ifvarclass => "not_ok_sys";
+    DEBUG.inform_mode::
+      "/proc0 test got data '$(test.proc0_info)'";
+      "/proc1 test got data '$(test.proc1_info)'";
+      "/sys test got data '$(test.sys_info)'";
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

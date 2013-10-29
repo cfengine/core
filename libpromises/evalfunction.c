@@ -4657,6 +4657,45 @@ static FnCallResult FnCallParseJson(EvalContext *ctx, FnCall *fp, Rlist *args)
 
 /*********************************************************************/
 
+static FnCallResult FnCallStoreJson(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
+{
+    char buf[CF_BUFSIZE];
+    char *varname = RlistScalarValue(finalargs);
+    VarRef *ref = VarRefParseFromBundle(varname, PromiseGetBundle(fp->caller));
+
+    DataType type = DATA_TYPE_NONE;
+    Rval rval;
+    EvalContextVariableGet(ctx, ref, &rval, &type);
+
+    if (type == DATA_TYPE_CONTAINER)
+    {
+        Writer *w = StringWriter();
+        int length;
+
+        JsonWrite(w, RvalContainerValue(rval), 0);
+        Log(LOG_LEVEL_DEBUG, "%s: from data container %s, got JSON data '%s'", fp->name, varname, StringWriterData(w));
+
+        length = strlen(StringWriterData(w));
+        if (length >= CF_BUFSIZE)
+        {
+            Log(LOG_LEVEL_INFO, "%s: truncating data container %s JSON data from %d bytes to %d", fp->name, varname, length, CF_BUFSIZE);
+        }
+
+        snprintf(buf, CF_BUFSIZE, "%s", StringWriterData(w));
+        WriterClose(w);
+    }
+    else
+    {
+        Log(LOG_LEVEL_VERBOSE, "%s: data container %s could not be found or has an invalid type", fp->name, varname);
+        return (FnCallResult) { FNCALL_FAILURE };
+    }
+
+    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buf), RVAL_TYPE_SCALAR } };
+}
+
+
+/*********************************************************************/
+
 static FnCallResult ReadArray(EvalContext *ctx, FnCall *fp, Rlist *finalargs, DataType type, int intIndex)
 /* lval,filename,separator,comment,Max number of bytes  */
 {
@@ -6153,6 +6192,12 @@ FnCallArg PARSEJSON_ARGS[] =
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
+FnCallArg STOREJSON_ARGS[] =
+{
+    {CF_IDRANGE, DATA_TYPE_STRING, "CFEngine data container identifier"},
+    {NULL, DATA_TYPE_NONE, NULL}
+};
+
 FnCallArg READTCP_ARGS[] =
 {
     {CF_ANYSTRING, DATA_TYPE_STRING, "Host name or IP address of server socket"},
@@ -6516,6 +6561,7 @@ const FnCallType CF_FNCALL_TYPES[] =
     FnCallTypeNew("sort", DATA_TYPE_STRING_LIST, SORT_ARGS, &FnCallSort, "Sort a string list", false, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("splayclass", DATA_TYPE_CONTEXT, SPLAYCLASS_ARGS, &FnCallSplayClass, "True if the first argument's time-slot has arrived, according to a policy in arg2", false, FNCALL_CATEGORY_UTILS, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("splitstring", DATA_TYPE_STRING_LIST, SPLITSTRING_ARGS, &FnCallSplitString, "Convert a string in arg1 into a list of max arg3 strings by splitting on a regular expression in arg2", false, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("storejson", DATA_TYPE_STRING, STOREJSON_ARGS, &FnCallStoreJson, "Convert a data container to a JSON string", false, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("strcmp", DATA_TYPE_CONTEXT, STRCMP_ARGS, &FnCallStrCmp, "True if the two strings match exactly", false, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("strftime", DATA_TYPE_STRING, STRFTIME_ARGS, &FnCallStrftime, "Format a date and time string", false, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("sublist", DATA_TYPE_STRING_LIST, SUBLIST_ARGS, &FnCallSublist, "Returns arg3 element from either the head or the tail (according to arg2) of list arg1.", false, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),

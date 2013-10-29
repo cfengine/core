@@ -57,6 +57,7 @@ body copy_from sync_cp(from)
       source      => "$(from)";
       purge       => "true";
       preserve    => "true";
+      type_check  => "true";
 }
 
 body depth_search recurse(d)

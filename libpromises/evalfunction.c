@@ -5248,7 +5248,7 @@ static void *CfReadFile(char *filename, int maxsize)
 
     size = buflen;
 
-    if ( buflen > 1)
+    if ( size > 0)
     {
       for (i = 0; i < size - 1 && result[i] != '\0' ; i++)
       {

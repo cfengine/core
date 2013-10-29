@@ -17,17 +17,29 @@ bundle agent init
 bundle agent test
 {
   vars:
-      "value" string => readfile("$(G.testfile)", 10000);
+      "value1" string => readfile("$(G.testfile)", 10000);
+      "value2" string => readfile("$(G.testfile)", 0);
 }
 
 bundle agent check
 {
   classes:
-      "ok" expression => strcmp("$(test.value)", "");
+      "ok1" expression => strcmp("$(test.value1)", "");
+      "ok2" expression => strcmp("$(test.value2)", "");
+      "not_ok1" not => strcmp("$(test.value1)", "");
+      "not_ok2" not => strcmp("$(test.value2)", "");
+      "ok" and => { "ok1", "ok2" };
 
   reports:
-    DEBUG::
-      "$(test.value)";
+    DEBUG.ok1::
+      "passed1: '$(test.value1)' == ''";
+    DEBUG.ok2::
+      "passed2: '$(test.value1)' == ''";
+    DEBUG.not_ok1::
+      "failed1: '$(test.value1)' != ''";
+    DEBUG.not_ok2::
+      "failed2: '$(test.value2)' != ''";
+
     ok::
       "$(this.promise_filename) Pass";
     !ok::

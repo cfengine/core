@@ -68,6 +68,8 @@
 #include <glob.h>
 #endif
 
+#include <ctype.h>
+
 
 /*
  * This module contains numeruous functions which don't use all their parameters
@@ -1055,6 +1057,73 @@ static FnCallResult FnCallCanonify(EvalContext *ctx, FnCall *fp, Rlist *finalarg
     }
 
     return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(CanonifyName(buf)), RVAL_TYPE_SCALAR } };
+}
+
+/*********************************************************************/
+
+static FnCallResult FnCallTextXform(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
+{
+    char buf[CF_BUFSIZE];
+    char *string = RlistScalarValue(finalargs);
+    int len = 0;
+
+    memset(buf, 0, sizeof(buf));
+    strncpy(buf, string, sizeof(buf) - 1);
+    len = strlen(buf);
+
+    if (!strcmp(fp->name, "downcase"))
+    {
+        int pos = 0;
+        for (pos = 0; pos < len; pos++)
+        {
+            buf[pos] = tolower(buf[pos]);
+        }
+    }
+    else if (!strcmp(fp->name, "upcase"))
+    {
+        int pos = 0;
+        for (pos = 0; pos < len; pos++)
+        {
+            buf[pos] = toupper(buf[pos]);
+        }
+    }
+    else if (!strcmp(fp->name, "reversestring"))
+    {
+        int c, i, j;
+        for (i = 0, j = len - 1; i < j; i++, j--)
+        {
+            c = buf[i];
+            buf[i] = buf[j];
+            buf[j] = c;
+        }
+    }
+    else if (!strcmp(fp->name, "strlen"))
+    {
+        sprintf(buf, "%d", len);
+    }
+    else if (!strcmp(fp->name, "head"))
+    {
+        long max = IntFromString(RlistScalarValue(finalargs->next));
+        if (max < sizeof(buf))
+        {
+            buf[max] = '\0';
+        }
+    }
+    else if (!strcmp(fp->name, "tail"))
+    {
+        long max = IntFromString(RlistScalarValue(finalargs->next));
+        if (max < len)
+        {
+            strncpy(buf, string + len - max, sizeof(buf) - 1);
+        }
+    }
+    else
+    {
+        Log(LOG_LEVEL_ERR, "text xform with unknown call function %s, aborting", fp->name);
+        return (FnCallResult) { FNCALL_FAILURE };
+    }
+
+    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buf), RVAL_TYPE_SCALAR } };
 }
 
 /*********************************************************************/
@@ -6440,6 +6509,19 @@ FnCallArg BUNDLESMATCHING_ARGS[] =
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
+FnCallArg XFORM_ARGS[] =
+{
+    {CF_ANYSTRING, DATA_TYPE_STRING, "Input string"},
+    {NULL, DATA_TYPE_NONE, NULL}
+};
+
+FnCallArg XFORM_SUBSTR_ARGS[] =
+{
+    {CF_ANYSTRING, DATA_TYPE_STRING, "Input string"},
+    {CF_VALRANGE, DATA_TYPE_INT, "Maximum number of characters to return"},
+    {NULL, DATA_TYPE_NONE, NULL}
+};
+
 /*********************************************************/
 /* FnCalls are rvalues in certain promise constraints    */
 /*********************************************************/
@@ -6571,5 +6653,14 @@ const FnCallType CF_FNCALL_TYPES[] =
     FnCallTypeNew("usemodule", DATA_TYPE_CONTEXT, USEMODULE_ARGS, &FnCallUseModule, "Execute cfengine module script and set class if successful", false, FNCALL_CATEGORY_UTILS, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("userexists", DATA_TYPE_CONTEXT, USEREXISTS_ARGS, &FnCallUserExists, "True if user name or numerical id exists on this host", false, FNCALL_CATEGORY_SYSTEM, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("variablesmatching", DATA_TYPE_STRING_LIST, CLASSMATCH_ARGS, &FnCallVariablesMatching, "List the variables matching regex arg1 and tag regexes arg2,arg3,...", true, FNCALL_CATEGORY_UTILS, SYNTAX_STATUS_NORMAL),
+
+    // Text xform functions
+    FnCallTypeNew("downcase", DATA_TYPE_STRING, XFORM_ARGS, &FnCallTextXform, "Convert a string to lowercase", false, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("head", DATA_TYPE_STRING, XFORM_SUBSTR_ARGS, &FnCallTextXform, "Extract characters from the head of the string", false, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("reversestring", DATA_TYPE_STRING, XFORM_ARGS, &FnCallTextXform, "Reverse a string", false, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("strlen", DATA_TYPE_INT, XFORM_ARGS, &FnCallTextXform, "Return the length of a string", false, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("tail", DATA_TYPE_STRING, XFORM_SUBSTR_ARGS, &FnCallTextXform, "Extract characters from the tail of the string", false, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("upcase", DATA_TYPE_STRING, XFORM_ARGS, &FnCallTextXform, "Convert a string to UPPERCASE", false, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
+
     FnCallTypeNewNull()
 };

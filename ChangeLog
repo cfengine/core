@@ -1,8 +1,13 @@
 3.5.3
        Bug fixes:
        - fix cf-serverd stat()'ing the file tree every second (Redmine #3479)
+       - improve package comparison logic (Redmine ##3314)
        - correctly populate sys.hardware_addresses variable (Redmine #2936)
        - add support for Debian's GNU/kfreebsd to build system (Redmine #3500)
+       - fix possible stack corruption in guest_environments promises (Redmine #3552)
+       - work-around hostname trunctation in HP-UX's uname (Redmine #3517)
+       - make discovery and loading of avahi libraries more robust
+       - compile and packaging fixes for HP-UX, AIX and Solaris
 
 3.5.2
        Bug fixes:

@@ -2315,6 +2315,75 @@ static FnCallResult FnCallMergeData(EvalContext *ctx, FnCall *fp, Rlist *args)
     assert(false);
 }
 
+JsonElement *DefaultTemplateData(const EvalContext *ctx)
+{
+    JsonElement *hash = JsonObjectCreate(30);
+    JsonElement *classes = JsonObjectCreate(50);
+    JsonElement *bundles = JsonObjectCreate(50);
+    JsonObjectAppendObject(hash, "classes", classes);
+    JsonObjectAppendObject(hash, "vars", bundles);
+
+    {
+        ClassTableIterator *it = EvalContextClassTableIteratorNewGlobal(ctx, NULL, true, true);
+        Class *cls = NULL;
+        while ((cls = ClassTableIteratorNext(it)))
+        {
+            char *key = ClassRefToString(cls->ns, cls->name);
+            JsonObjectAppendBool(classes, key, true);
+            free(key);
+        }
+        ClassTableIteratorDestroy(it);
+    }
+
+    {
+        ClassTableIterator *it = EvalContextClassTableIteratorNewLocal(ctx);
+        Class *cls = NULL;
+        while ((cls = ClassTableIteratorNext(it)))
+        {
+            char *key = ClassRefToString(cls->ns, cls->name);
+            JsonObjectAppendBool(classes, key, true);
+            free(key);
+        }
+        ClassTableIteratorDestroy(it);
+    }
+
+    {
+        VariableTableIterator *it = EvalContextVariableTableIteratorNew(ctx, NULL, NULL, NULL);
+        Variable *var = NULL;
+        while ((var = VariableTableIteratorNext(it)))
+        {
+            // TODO: need to get a CallRef, this is bad
+            char *scope_key = ClassRefToString(var->ref->ns, var->ref->scope);
+            JsonElement *scope_obj = JsonObjectGetAsObject(bundles, scope_key);
+            if (!scope_obj)
+            {
+                scope_obj = JsonObjectCreate(50);
+                JsonObjectAppendObject(bundles, scope_key, scope_obj);
+            }
+            free(scope_key);
+
+            char *lval_key = VarRefToString(var->ref, false);
+            JsonObjectAppendElement(scope_obj, lval_key, RvalToJson(var->rval));
+            free(lval_key);
+        }
+        VariableTableIteratorDestroy(it);
+    }
+
+    Writer *w = StringWriter();
+    JsonWrite(w, hash, 0);
+    Log(LOG_LEVEL_DEBUG, "Generated DefaultTemplateData '%s'", StringWriterData(w));
+    WriterClose(w);
+
+    return hash;
+}
+
+static FnCallResult FnCallDatastate(EvalContext *ctx, FnCall *fp, Rlist *args)
+{
+    JsonElement *state = DefaultTemplateData(ctx);
+    return  (FnCallResult) { FNCALL_SUCCESS, (Rval) { state, RVAL_TYPE_CONTAINER } };
+}
+
+
 static FnCallResult FnCallSelectServers(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
  /* ReadTCP(localhost,80,'GET index.html',1000) */
 {
@@ -6616,6 +6685,11 @@ static const FnCallArg XFORM_SUBSTR_ARGS[] =
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
+FnCallArg DATASTATE_ARGS[] =
+{
+    {NULL, DATA_TYPE_NONE, NULL}
+};
+
 /*********************************************************/
 /* FnCalls are rvalues in certain promise constraints    */
 /*********************************************************/
@@ -6901,5 +6975,6 @@ const FnCallType CF_FNCALL_TYPES[] =
     FnCallTypeNew("variance", DATA_TYPE_REAL, STAT_FOLD_ARGS, &FnCallFold, "Return the variance of a list",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     
+    FnCallTypeNew("datastate", DATA_TYPE_CONTAINER, DATASTATE_ARGS, &FnCallDatastate, "Construct a container of the variable and class state", false, FNCALL_CATEGORY_UTILS, SYNTAX_STATUS_NORMAL),
     FnCallTypeNewNull()
 };

@@ -1,0 +1,17 @@
+body file control
+{
+      namespace => "visible_namespace";
+}
+
+bundle common included
+{
+  classes:
+      "foo" expression => "any";
+      "bar" expression => "any", scope => "bundle";
+
+  vars:
+      "i" int => "1";
+      "j" string => "two";
+      "k" slist => { "k2", "everest" };
+      "l" data => parsejson('[1, "l", "|"]'); # Night of the Bad Font
+}

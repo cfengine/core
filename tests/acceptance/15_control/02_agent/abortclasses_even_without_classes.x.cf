@@ -1,0 +1,36 @@
+body common control
+{
+      bundlesequence => { init, test };
+}
+
+body agent control
+{
+      abortclasses => { "foo", "bar", "foobar" };
+}
+
+bundle agent init
+{
+  reports:
+      "Defining class indirectly foo"
+      classes => always("foo");
+      "Defining class indirectly bar"
+      classes => always("bar");
+      "Defining class indirectly foobar"
+      classes => always("foobar");
+}
+
+bundle agent test
+{
+  reports:
+    foo::
+      "Aborting class defined";
+}
+
+body classes always(x)
+{
+      promise_repaired => { "$(x)" };
+      promise_kept => { "$(x)" };
+      repair_failed => { "$(x)" };
+      repair_denied => { "$(x)" };
+      repair_timeout => { "$(x)" };
+}

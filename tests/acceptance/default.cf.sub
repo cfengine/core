@@ -175,8 +175,19 @@ useshell => "true";
 
 body classes default_cf_sub_if_ok(x)
 {
-promise_repaired => { "$(x)" };
-promise_kept => { "$(x)" };
+  promise_repaired => { "$(x)" };
+  promise_kept => { "$(x)" };
+}
+
+# To set classes unconditionally. Useful when you need to set a class after a promise,
+# regardless of outcome.
+body classes default_cf_sub_set_class(x)
+{
+  promise_repaired => { "$(x)" };
+  promise_kept => { "$(x)" };
+  repair_failed => { "$(x)" };
+  repair_denied => { "$(x)" };
+  repair_timeout => { "$(x)" };
 }
 
 bundle agent check_diff(file1, file2, test, expected_difference)

@@ -139,7 +139,6 @@ AC_ARG_ENABLE([fhs],
 
 AS_IF([test x"$enable_fhs" = xyes], [
   projlibdir='${libdir}/cfengine'
-  projdatadir='${exec_prefix}/share/cfengine'
   WORKDIR='${localstatedir}/lib/cfengine'
   MASTERDIR='default'
   INPUTDIR='default'
@@ -174,12 +173,10 @@ AS_IF([test x"$enable_fhs" = xyes], [
 
   sbindir='${exec_prefix}/bin' # /var/cfengine/bin despite being sbin_?
   projlibdir='${exec_prefix}/lib'
-  projdatadir='${exec_prefix}/share'
   mandir='${exec_prefix}/share/man'
 ])
 
 AC_SUBST(projlibdir)
-AC_SUBST(projdatadir)
 
 dnl ######################################################################
 dnl Enable debugging

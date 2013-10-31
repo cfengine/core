@@ -92,3 +92,5 @@ bundle agent fini
       "any" usebundle => default_fini("$(G.testfile)");
       "any" usebundle => default_fini("$(g.repo)/$(g.repofile)");
 }
+### PROJECT_ID: core
+### CATEGORY_ID: 27

@@ -47,3 +47,5 @@ bundle agent check
   methods:
     "any" usebundle => sorted_check_diff("$(G.testfile)", "$(G.testfile).expected", "$(this.promise_filename)");
 }
+### PROJECT_ID: core
+### CATEGORY_ID: 29

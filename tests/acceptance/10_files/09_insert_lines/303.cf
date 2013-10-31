@@ -82,3 +82,5 @@ bundle agent check
                                               "$(G.testfile).expected3qaz",
                                               "$(this.promise_filename)");
 }
+### PROJECT_ID: core
+### CATEGORY_ID: 27

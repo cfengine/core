@@ -417,12 +417,12 @@ static void GetMacAddress(EvalContext *ctx, int fd, struct ifreq *ifr, struct if
     
     if (aix_get_mac_addr(ifp->ifr_name, mac) == 0)
     {
-        sprintf(hw_mac, "%.2x:%.2x:%.2x:%.2x:%.2x:%.2x\n", 
+        sprintf(hw_mac, "%.2x:%.2x:%.2x:%.2x:%.2x:%.2x",
 	       mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
 	
         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, name, hw_mac, DATA_TYPE_STRING);
         RlistAppend(hardware, hw_mac, RVAL_TYPE_SCALAR);
-        RlistAppend(interfaces, ifa->ifa_name, RVAL_TYPE_SCALAR);
+        RlistAppend(interfaces, ifp->ifr_name, RVAL_TYPE_SCALAR);
 
         snprintf(name, CF_MAXVARSIZE, "mac_%s", CanonifyName(hw_mac));
         EvalContextClassPutHard(ctx, name);

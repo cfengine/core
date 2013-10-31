@@ -1,5 +1,6 @@
 3.5.3
        Bug fixes:
+       - fix cf-monitord crash due to incorrect array initialization (Redmine #3180)
        - fix cf-serverd stat()'ing the file tree every second (Redmine #3479)
        - improve package comparison logic (Redmine ##3314)
        - correctly populate sys.hardware_addresses variable (Redmine #2936)

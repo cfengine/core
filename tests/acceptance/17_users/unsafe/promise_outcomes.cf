@@ -1,0 +1,193 @@
+#######################################################
+#
+# Test that promise outcomes are set correctly.
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub", "user_queries.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+}
+
+#######################################################
+
+bundle agent init
+{
+  users:
+    "absent_keep"
+      policy => "absent";
+    "absent_repair"
+      policy => "present";
+    "present_keep"
+      policy => "present";
+    "present_repair"
+      policy => "absent";
+    "attributes_keep"
+      policy => "present",
+      uid => "9878",
+      group_primary => "$(user_tests.group1)",
+      groups_secondary => { "$(user_tests.group2)" },
+      shell => "$(G.echo)",
+      description => "Description";
+    "attributes_repair"
+      policy => "present",
+      uid => "9877",
+      group_primary => "$(user_tests.group1)",
+      groups_secondary => { "$(user_tests.group2)" },
+      shell => "$(G.echo)",
+      description => "Description";
+    "password_keep"
+      policy => "present",
+      password => init_password;
+    "password_repair"
+      policy => "present",
+      password => init_password;
+    "locked_keep"
+      policy => "locked";
+    "locked_repair_by_add"
+      policy => "absent";
+    "locked_repair_by_mod"
+      policy => "present";
+}
+
+body password init_password
+{
+  format => "plaintext";
+  data => "InitPassword";
+}
+
+#######################################################
+
+bundle agent test
+{
+  users:
+   !ok::
+    "absent_keep"
+      classes => set_classes_kept_repaired("absent_keep", "not_absent_keep"),
+      policy => "absent";
+    "absent_repair"
+      classes => set_classes_kept_repaired("not_absent_repair", "absent_repair"),
+      policy => "absent";
+    "present_keep"
+      classes => set_classes_kept_repaired("present_keep", "not_present_keep"),
+      policy => "present";
+    "present_repair"
+      classes => set_classes_kept_repaired("not_present_repair", "present_repair"),
+      policy => "present";
+    "attributes_keep"
+      classes => set_classes_kept_repaired("attributes_keep", "not_attributes_keep"),
+      policy => "present",
+      uid => "9878",
+      group_primary => "$(user_tests.group1)",
+      groups_secondary => { "$(user_tests.group2)" },
+      shell => "$(G.echo)",
+      description => "Description";
+    "attributes_repair"
+      classes => set_classes_kept_repaired("not_attributes_repair", "attributes_repair"),
+      policy => "present",
+      uid => "9877",
+      group_primary => "$(user_tests.group1)",
+      groups_secondary => {  },
+      shell => "$(G.cat)",
+      description => "Description";
+    "password_keep"
+      classes => set_classes_kept_repaired("password_keep", "not_password_keep"),
+      policy => "present",
+      password => init_password;
+    "password_repair"
+      classes => set_classes_kept_repaired("not_password_repair", "password_repair"),
+      policy => "present",
+      password => test_password;
+    "locked_keep"
+      classes => set_classes_kept_repaired("locked_keep", "not_locked_keep"),
+      policy => "locked";
+    "locked_repair_by_add"
+      classes => set_classes_kept_repaired("not_locked_repair_by_add", "locked_repair_by_add"),
+      policy => "locked";
+    "locked_repair_by_mod"
+      classes => set_classes_kept_repaired("not_locked_repair_by_mod", "locked_repair_by_mod"),
+      policy => "locked";
+
+
+  classes:
+    "and_ok" and => { "absent_keep", "absent_repair", "present_keep", "present_repair",
+                  "attributes_keep", "attributes_repair", "password_keep", "password_repair",
+                  "locked_keep", "locked_repair_by_add", "locked_repair_by_mod"  };
+    "not_ok" or => { "not_absent_keep", "not_absent_repair", "not_present_keep", "not_present_repair",
+                  "not_attributes_keep", "not_attributes_repair", "not_password_keep", "not_password_repair",
+                  "not_locked_keep", "not_locked_repair_by_add", "not_locked_repair_by_mod"  };
+
+    "ok" and => { "and_ok", "!not_ok" };
+    "fail" or => { "!and_ok", "not_ok" };
+
+  reports:
+    !absent_keep.DEBUG::
+      "absent_keep is NOT set, but should be";
+    !absent_repair.DEBUG::
+      "absent_repair is NOT set, but should be";
+    !present_keep.DEBUG::
+      "present_keep is NOT set, but should be";
+    !present_repair.DEBUG::
+      "present_repair is NOT set, but should be";
+    !attributes_keep.DEBUG::
+      "attributes_keep is NOT set, but should be";
+    !attributes_repair.DEBUG::
+      "attributes_repair is NOT set, but should be";
+    !password_keep.DEBUG::
+      "password_keep is NOT set, but should be";
+    !password_repair.DEBUG::
+      "password_repair is NOT set, but should be";
+    !locked_keep.DEBUG::
+      "locked_keep is NOT set, but should be";
+    !locked_repair_by_add.DEBUG::
+      "locked_repair_by_add is NOT set, but should be";
+    !locked_repair_by_mod.DEBUG::
+      "locked_repair_by_mod is NOT set, but should be";
+
+    not_absent_keep.DEBUG::
+      "not_absent_keep is SET, but shouldn't be";
+    not_absent_repair.DEBUG::
+      "not_absent_repair is SET, but shouldn't be";
+    not_present_keep.DEBUG::
+      "not_present_keep is SET, but shouldn't be";
+    not_present_repair.DEBUG::
+      "not_present_repair is SET, but shouldn't be";
+    not_attributes_keep.DEBUG::
+      "not_attributes_keep is SET, but shouldn't be";
+    not_attributes_repair.DEBUG::
+      "not_attributes_repair is SET, but shouldn't be";
+    not_password_keep.DEBUG::
+      "not_password_keep is SET, but shouldn't be";
+    not_password_repair.DEBUG::
+      "not_password_repair is SET, but shouldn't be";
+    not_locked_keep.DEBUG::
+      "not_locked_keep is SET, but shouldn't be";
+    not_locked_repair_by_add.DEBUG::
+      "not_locked_repair_by_add is SET, but shouldn't be";
+    not_locked_repair_by_mod.DEBUG::
+      "not_locked_repair_by_mod is SET, but shouldn't be";
+
+    ok::
+      "$(this.promise_filename) Pass";
+    failasdasd::
+      "$(this.promise_filename) FAIL";
+}
+
+body password test_password
+{
+  format => "plaintext";
+  data => "TestPassword";
+}
+
+body classes set_classes_kept_repaired(x, y)
+{
+  promise_kept => { "$(x)" };
+  promise_repaired => { "$(y)" };
+}
+
+#######################################################
+
+bundle agent check
+{
+}

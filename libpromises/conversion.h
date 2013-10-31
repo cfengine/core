@@ -33,6 +33,8 @@ EnvironmentState EnvironmentStateFromString(const char *s);
 InsertMatchType InsertMatchTypeFromString(const char *s);
 Interval IntervalFromString(const char *s);
 DatabaseType DatabaseTypeFromString(const char *s);
+UserState UserStateFromString(const char *s);
+PasswordFormat PasswordFormatFromString(const char *s);
 ContextScope ContextScopeFromString(const char *scope_str);
 FileComparator FileComparatorFromString(const char *s);
 FileLinkType FileLinkTypeFromString(const char *s);

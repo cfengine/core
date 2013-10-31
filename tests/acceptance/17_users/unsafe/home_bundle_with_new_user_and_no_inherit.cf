@@ -1,0 +1,65 @@
+#######################################################
+#
+# Test home_bundle when adding a new user.
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub", "user_queries.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+}
+
+#######################################################
+
+bundle agent init
+{
+  # Remove him first, should he already be present.
+  users:
+    "johndoe"
+      policy => "absent";
+}
+
+#######################################################
+
+bundle agent test
+{
+  classes:
+    "should_not_prevent_edits" expression => "any";
+
+  users:
+    "johndoe"
+      policy => "present",
+      home_bundle => home_bundle("/home/johndoe"),
+      home_bundle_inherit => "false";
+}
+
+bundle agent home_bundle(x)
+{
+  files:
+    # Class selector should have no effect since we're not supposed to inherit classes.
+    !should_not_prevent_edits::
+      "$(G.testfile)"
+        create => "true",
+        edit_line => home_edit("$(x)");
+}
+
+bundle edit_line home_edit(x)
+{
+  insert_lines:
+    "$(x)";
+}
+
+#######################################################
+
+bundle agent check
+{
+  classes:
+    "ok" not => strcmp("0", countlinesmatching("/home/johndoe", "$(G.testfile)"));
+
+  reports:
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

@@ -150,6 +150,20 @@ DatabaseType DatabaseTypeFromString(const char *s)
     return FindTypeInArray(DB_TYPES, s, DATABASE_TYPE_NONE, DATABASE_TYPE_NONE);
 }
 
+UserState UserStateFromString(const char *s)
+{
+    static const char *U_TYPES[] = { "present", "absent", "locked", NULL };
+
+    return FindTypeInArray(U_TYPES, s, USER_STATE_NONE, USER_STATE_NONE);
+}
+
+PasswordFormat PasswordFormatFromString(const char *s)
+{
+    static const char *U_TYPES[] = { "plaintext", "hash", NULL };
+
+    return FindTypeInArray(U_TYPES, s, PASSWORD_FORMAT_NONE, PASSWORD_FORMAT_NONE);
+}
+
 PackageAction PackageActionFromString(const char *s)
 {
     static const char *PACKAGE_ACTION_TYPES[] =

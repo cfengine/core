@@ -40,6 +40,7 @@
 #include <mod_services.h>
 #include <mod_measurement.h>
 #include <mod_knowledge.h>
+#include <mod_users.h>
 
 #include <conversion.h>
 #include <policy.h>
@@ -506,6 +507,7 @@ const PromiseTypeSyntax *CF_ALL_PROMISE_TYPES[] =
     CF_REMACCESS_PROMISE_TYPES,      /* mod_access.c */
     CF_MEASUREMENT_PROMISE_TYPES,    /* mod_measurement.c */
     CF_KNOWLEDGE_PROMISE_TYPES,      /* mod_knowledge.c */
+    CF_USERS_PROMISE_TYPES,          /* mod_users.c */
 };
 
 const int CF3_MODULES = (sizeof(CF_ALL_PROMISE_TYPES) / sizeof(CF_ALL_PROMISE_TYPES[0]));

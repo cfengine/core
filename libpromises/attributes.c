@@ -174,6 +174,22 @@ Attributes GetPackageAttributes(const EvalContext *ctx, const Promise *pp)
 
 /*******************************************************************/
 
+Attributes GetUserAttributes(const EvalContext *ctx, const Promise *pp)
+{
+    Attributes attr = { {0} };
+
+    attr.havebundle = PromiseBundleConstraintExists(ctx, "home_bundle", pp);
+
+    attr.inherit = PromiseGetConstraintAsBoolean(ctx, "home_bundle_inherit", pp);
+
+    attr.transaction = GetTransactionConstraints(ctx, pp);
+    attr.classes = GetClassDefinitionConstraints(ctx, pp);
+    attr.users = GetUserConstraints(ctx, pp);
+    return attr;
+}
+
+/*******************************************************************/
+
 Attributes GetDatabaseAttributes(const EvalContext *ctx, const Promise *pp)
 {
     Attributes attr = { {0} };
@@ -1663,4 +1679,34 @@ Database GetDatabaseConstraints(const EvalContext *ctx, const Promise *pp)
     }
 
     return d;
+}
+/*******************************************************************/
+
+User GetUserConstraints(const EvalContext *ctx, const Promise *pp)
+{
+    User u;
+    char *value;
+
+    value = ConstraintGetRvalValue(ctx, "policy", pp, RVAL_TYPE_SCALAR);
+    u.policy = UserStateFromString(value);
+
+    u.uid = ConstraintGetRvalValue(ctx, "uid", pp, RVAL_TYPE_SCALAR);
+
+    value = ConstraintGetRvalValue(ctx, "format", pp, RVAL_TYPE_SCALAR);
+    u.password_format = PasswordFormatFromString(value);
+    u.password = ConstraintGetRvalValue(ctx, "data", pp, RVAL_TYPE_SCALAR);
+    u.description = ConstraintGetRvalValue(ctx, "description", pp, RVAL_TYPE_SCALAR);
+
+    u.group_primary = ConstraintGetRvalValue(ctx, "group_primary", pp, RVAL_TYPE_SCALAR);
+    u.groups_secondary = PromiseGetConstraintAsList(ctx, "groups_secondary", pp);
+    u.home_dir = ConstraintGetRvalValue(ctx, "home_dir", pp, RVAL_TYPE_SCALAR);
+    u.shell = ConstraintGetRvalValue(ctx, "shell", pp, RVAL_TYPE_SCALAR);
+
+    if (value && ((u.policy) == USER_STATE_NONE))
+    {
+        Log(LOG_LEVEL_ERR, "Unsupported user policy '%s' in users promise", value);
+        PromiseRef(LOG_LEVEL_ERR, pp);
+    }
+
+    return u;
 }

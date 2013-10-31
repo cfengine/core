@@ -593,7 +593,7 @@ constraint:            constraint_id                        /* BUNDLE ONLY */
                                            // Cache whether there are subbundles for later $(this.promiser) logic
 
                                            if (strcmp(P.lval,"usebundle") == 0 || strcmp(P.lval,"edit_line") == 0
-                                               || strcmp(P.lval,"edit_xml") == 0)
+                                               || strcmp(P.lval,"edit_xml") == 0 || strcmp(P.lval,"home_bundle") == 0)
                                            {
                                                P.currentpromise->has_subbundles = true;
                                            }

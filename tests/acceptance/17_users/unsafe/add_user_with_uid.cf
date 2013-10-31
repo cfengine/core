@@ -1,0 +1,77 @@
+#######################################################
+#
+# Test adding a user with a specific uid.
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub", "user_queries.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+}
+
+#######################################################
+
+bundle agent init
+{
+  # Remove him first, should he already be present.
+  users:
+    "johndoe"
+      policy => "absent";
+
+  files:
+    "$(G.testfile)"
+      delete => init_delete;
+}
+
+body delete init_delete
+{
+  rmdirs => "false";
+}
+
+#######################################################
+
+body perms test_perms_body
+{
+  owners => { "johndoe" };
+}
+
+bundle agent test
+{
+  users:
+    "johndoe"
+      policy => "present",
+      uid => "9999";
+
+  files:
+    "$(G.testfile)"
+      create => "true",
+      perms => test_perms_body;
+}
+
+#######################################################
+
+body perms check_perms_body
+{
+  owners => { "9999" };
+}
+
+body classes check_classes_body
+{
+  promise_repaired => { "not_ok" };
+  promise_kept => { "ok" };
+}
+
+bundle agent check
+{
+  files:
+    "$(G.testfile)"
+      perms => check_perms_body,
+      classes => check_classes_body;
+
+  reports:
+    (ok.!not_ok)|windows::
+      "$(this.promise_filename) Pass";
+    (!ok|not_ok).!windows::
+      "$(this.promise_filename) FAIL";
+}

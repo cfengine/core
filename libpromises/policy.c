@@ -752,7 +752,7 @@ static bool PolicyCheckUndefinedBundles(const Policy *policy, Seq *errors)
                         char *symbol = QualifiedNameScopeComponent(RvalFullSymbol(&constraint->rval));
 
                         const Bundle *referenced_bundle = NULL;
-                        if (strcmp(constraint->lval, "usebundle") == 0)
+                        if (strcmp(constraint->lval, "usebundle") == 0 || strcmp(constraint->lval, "home_bundle") == 0)
                         {
                             referenced_bundle = PolicyGetBundle(policy, ns, "agent", symbol);
                             if (!referenced_bundle)

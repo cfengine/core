@@ -78,3 +78,5 @@ body classes kept_if_else(kept, yes, no)
       repair_denied    => { "${no}" };
       repair_timeout   => { "${no}" };
 }
+### PROJECT_ID: core
+### CATEGORY_ID: 27

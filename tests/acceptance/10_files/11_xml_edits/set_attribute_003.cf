@@ -88,3 +88,5 @@ bundle agent check
                                         "$(this.promise_filename)", "no");
 }
 
+### PROJECT_ID: core
+### CATEGORY_ID: 27

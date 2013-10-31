@@ -65,3 +65,5 @@ bundle agent check
     !kept::
       "$(this.promise_filename) FAIL";
 }
+### PROJECT_ID: core
+### CATEGORY_ID: 29

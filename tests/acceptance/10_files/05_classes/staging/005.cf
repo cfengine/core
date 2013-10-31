@@ -114,3 +114,5 @@ bundle agent fini
   methods:
       "any" usebundle => default_fini("$(G.testfile).*");
 }
+### PROJECT_ID: core
+### CATEGORY_ID: 27

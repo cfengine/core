@@ -43,3 +43,5 @@ bundle agent check
     cfengine_3::
       "$(this.promise_filename) Pass";
 }
+### PROJECT_ID: core
+### CATEGORY_ID: 27

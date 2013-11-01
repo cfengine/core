@@ -319,6 +319,19 @@ export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP
   fi
 }
 
+# We assume we're running this script from $objdir, $objdir/tests/acceptance,
+# or /var/cfengine/tests/acceptance.
+find_default_binary()
+{
+    [ -x "`pwd`/$2/$2" ] && eval $1=\""`pwd`/$2/$2"\"
+    [ -x "`pwd`/../../$2/$2" ] && eval $1=\""`pwd`/../../$2/$2"\"
+    [ -x "`pwd`/../../bin/$2" ] && eval $1=\""`pwd`/../../bin/$2"\"
+}
+find_default_binary DEFAGENT cf-agent
+find_default_binary DEFCF_PROMISES cf-promises
+find_default_binary DEFCF_SERVERD cf-serverd
+find_default_binary DEFCF_KEY cf-key
+
 while true; do
   case "$1" in
     --help)
@@ -353,26 +366,9 @@ while true; do
   shift
 done
 
-# We assume we're running this script from $objdir, $objdir/tests/acceptance,
-# or /var/cfengine/tests/acceptance.
-[ -x "`pwd`/cf-agent/cf-agent" ] && DEFAGENT="`pwd`/cf-agent/cf-agent"
-[ -x "`pwd`/../../cf-agent/cf-agent" ] && DEFAGENT="`pwd`/../../cf-agent/cf-agent"
-[ -x "`pwd`/../../bin/cf-agent" ] && DEFAGENT="`pwd`/../../bin/cf-agent"
 AGENT=${AGENT:-${DEFAGENT}}
-
-[ -x "`pwd`/cf-promises/cf-promises" ] && DEFCF_PROMISES="`pwd`/cf-promises/cf-promises"
-[ -x "`pwd`/../../cf-promises/cf-promises" ] && DEFCF_PROMISES="`pwd`/../../cf-promises/cf-promises"
-[ -x "`pwd`/../../bin/cf-promises" ] && DEFCF_PROMISES="`pwd`/../../bin/cf-promises"
 CF_PROMISES=${CF_PROMISES:-${DEFCF_PROMISES}}
-
-[ -x "`pwd`/cf-serverd/cf-serverd" ] && DEFCF_SERVERD="`pwd`/cf-serverd/cf-serverd"
-[ -x "`pwd`/../../cf-serverd/cf-serverd" ] && DEFCF_SERVERD="`pwd`/../../cf-serverd/cf-serverd"
-[ -x "`pwd`/../../bin/cf-serverd" ] && DEFCF_SERVERD="`pwd`/../../bin/cf-serverd"
 CF_SERVERD=${CF_SERVERD:-${DEFCF_SERVERD}}
-
-[ -x "`pwd`/cf-key/cf-key" ] && DEFCF_KEY="`pwd`/cf-key/cf-key"
-[ -x "`pwd`/../../cf-key/cf-key" ] && DEFCF_KEY="`pwd`/../../cf-key/cf-key"
-[ -x "`pwd`/../../bin/cf-key" ] && DEFCF_KEY="`pwd`/../../bin/cf-key"
 CF_KEY=${CF_KEY:-${DEFCF_KEY}}
 
 if [ ! -x "$AGENT" -o ! -x "$CF_PROMISES" -o ! -x "$CF_SERVERD" -o ! -x "$CF_KEY" ]

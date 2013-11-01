@@ -549,7 +549,7 @@ static bool SetAccountLocked(const char *puser, const char *hash, bool lock)
     return true;
 }
 
-static bool GroupGetUserMembership (const char *user, BufferList *result)
+static bool GroupGetUserMembership (const char *user, StringSet *result)
 {
     bool ret = true;
     struct group *group_info;
@@ -572,7 +572,7 @@ static bool GroupGetUserMembership (const char *user, BufferList *result)
         {
             if (strcmp(user, group_info->gr_mem[i]) == 0)
             {
-                BufferListAppend(result, BufferNewFrom(group_info->gr_name, strlen(group_info->gr_name) + 1));
+                StringSetAdd(result, xstrdup(group_info->gr_name));
                 break;
             }
         }
@@ -582,15 +582,17 @@ static bool GroupGetUserMembership (const char *user, BufferList *result)
     return ret;
 }
 
-static void TransformGidsToGroups(BufferList *list)
+static void TransformGidsToGroups(StringSet **list)
 {
-    BufferListIterator *i;
-    for (i = BufferListIteratorGet(list); i; i = (BufferListIteratorNext(i) == 0) ? i : 0)
+    StringSet *new_list = StringSetNew();
+    StringSetIterator i = StringSetIteratorInit(*list);
+    const char *data;
+    for (data = StringSetIteratorNext(&i); data; data = StringSetIteratorNext(&i))
     {
-        const char *data = BufferData(BufferListIteratorData(i));
         if (strlen(data) != strspn(data, "0123456789"))
         {
             // Cannot possibly be a gid.
+            StringSetAdd(new_list, xstrdup(data));
             continue;
         }
         // In groups vs gids, groups take precedence. So check if it exists.
@@ -626,22 +628,30 @@ static void TransformGidsToGroups(BufferList *list)
                         break;
                     default:
                         Log(LOG_LEVEL_ERR, "Error while checking group name '%s'. (getgrgid: '%s')", data, GetErrorStr());
+                        StringSetDestroy(new_list);
                         return;
                     }
                 }
                 else
                 {
                     // Replace gid with group name.
-                    BufferSet(BufferListIteratorData(i), group_info->gr_name, strlen(group_info->gr_name) + 1);
+                    StringSetAdd(new_list, xstrdup(group_info->gr_name));
                 }
                 break;
             default:
                 Log(LOG_LEVEL_ERR, "Error while checking group name '%s'. (getgrnam: '%s')", data, GetErrorStr());
+                StringSetDestroy(new_list);
                 return;
             }
         }
+        else
+        {
+            StringSetAdd(new_list, xstrdup(data));
+        }
     }
-    BufferListIteratorDestroy(&i);
+    StringSet *old_list = *list;
+    *list = new_list;
+    StringSetDestroy(old_list);
 }
 
 static bool VerifyIfUserNeedsModifs (const char *puser, User u, const struct passwd *passwd_info,
@@ -719,26 +729,26 @@ static bool VerifyIfUserNeedsModifs (const char *puser, User u, const struct pas
     }
     if (u.groups_secondary != NULL)
     {
-        BufferList *wanted_groups = BufferListNew();
+        StringSet *wanted_groups = StringSetNew();
         for (Rlist *ptr = u.groups_secondary; ptr; ptr = ptr->next)
         {
             if (strcmp(RvalScalarValue(ptr->val), CF_NULL_VALUE) != 0)
             {
-                BufferListAppend(wanted_groups, BufferNewFrom(RvalScalarValue(ptr->val), strlen(RvalScalarValue(ptr->val)) + 1));
+                StringSetAdd(wanted_groups, xstrdup(RvalScalarValue(ptr->val)));
             }
         }
-        TransformGidsToGroups(wanted_groups);
-        BufferList *current_groups = BufferListNew();
+        TransformGidsToGroups(&wanted_groups);
+        StringSet *current_groups = StringSetNew();
         if (!GroupGetUserMembership (puser, current_groups))
         {
             CFUSR_SETBIT (*changemap, i_groups);
         }
-        else if (!AreListsOfGroupsEqual (current_groups, wanted_groups))
+        else if (!StringSetIsEqual (current_groups, wanted_groups))
         {
             CFUSR_SETBIT (*changemap, i_groups);
         }
-        BufferListDestroy(&current_groups);
-        BufferListDestroy(&wanted_groups);
+        StringSetDestroy(current_groups);
+        StringSetDestroy(wanted_groups);
     }
 
     ////////////////////////////////////////////

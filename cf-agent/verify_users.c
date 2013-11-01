@@ -110,35 +110,3 @@ static int UserSanityCheck(Attributes a, Promise *pp)
 
     return true;
 }
-
-bool AreListsOfGroupsEqual (const BufferList *groups1, const BufferList *groups2)
-{
-    if (BufferListCount(groups1) != BufferListCount(groups2))
-    {
-        return false;
-    }
-
-    // Dumb comparison. O(n^2), but number of groups is never that large anyway.
-    bool found = true;
-    BufferListIterator *i1;
-    for (i1 = BufferListIteratorGet(groups1); i1; i1 = (BufferListIteratorNext(i1) == 0) ? i1 : 0)
-    {
-        found = false;
-        BufferListIterator *i2;
-        for (i2 = BufferListIteratorGet(groups2); i2; i2 = (BufferListIteratorNext(i2) == 0) ? i2 : 0)
-        {
-            if (strcmp(BufferData(BufferListIteratorData(i1)), BufferData(BufferListIteratorData(i2))) == 0)
-            {
-                found = true;
-                break;
-            }
-        }
-        BufferListIteratorDestroy(&i2);
-        if (!found)
-        {
-            break;
-        }
-    }
-    BufferListIteratorDestroy(&i1);
-    return found;
-}

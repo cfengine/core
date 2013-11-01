@@ -44,8 +44,9 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv);
 static const char *CF_PROMISES_SHORT_DESCRIPTION = "validate and analyze CFEngine policy code";
 
 static const char *CF_PROMISES_MANPAGE_LONG_DESCRIPTION = "cf-promises is a tool for checking CFEngine policy code. "
-        "It operates by first parsing policy code checing for syntax errors. Second, it validates the integrity of "
-        "policy consisting of multiple files. Third, it checks for semantic errors, e.g. specific attribute set rules. "
+        "It operates by first parsing policy code, checking for syntax errors. Second (and only if --full-check is "
+        "specified), it validates the integrity of policy consisting of multiple files. "
+        "Third, it checks for semantic errors, e.g. specific attribute set rules. "
         "Finally, cf-promises attempts to expose errors by partially evaluating the policy, resolving as many variable and "
         "classes promise statements as possible. At no point does cf-promises make any changes to the system.";
 

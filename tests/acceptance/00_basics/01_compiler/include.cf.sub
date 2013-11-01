@@ -1,0 +1,7 @@
+body common control
+{
+      bundlesequence => { run };
+}
+
+@include "include.cf.sub.sub1"
+@include 'include.cf.sub.sub2'

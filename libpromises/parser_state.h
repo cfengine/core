@@ -28,6 +28,7 @@
 #include <cf3.defs.h>
 #include <rlist.h>
 
+#define CFE_PARSER_PATH_MAX PATH_MAX
 
 typedef struct
 {
@@ -35,7 +36,8 @@ typedef struct
     char blocktype[CF_MAXVARSIZE];
     char blockid[CF_MAXVARSIZE];
 
-    char filename[CF_MAXVARSIZE];
+    char filename[CFE_PARSER_PATH_MAX];
+    char include_filename[CFE_PARSER_PATH_MAX];
     char *current_line;
     int line_pos;
     int line_no;

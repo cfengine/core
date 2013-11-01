@@ -136,9 +136,9 @@ void MonitorInitialize(void)
         LOCALAV.Q[i] = QDefinite(0.0);
     }
 
-    for (i = 0; i < 7; i++)
+    for (i = 0; i < CF_OBSERVABLES; i++)
     {
-        for (j = 0; j < CF_OBSERVABLES; j++)
+        for (j = 0; j < 7; j++)
         {
             for (k = 0; k < CF_GRAINS; k++)
             {

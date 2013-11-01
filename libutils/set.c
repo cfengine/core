@@ -66,6 +66,11 @@ size_t SetSize(const Set *set)
     return MapSize(set);
 }
 
+bool SetIsEqual(const Set *set1, const Set *set2)
+{
+    return MapContainsSameKeys(set1, set2);
+}
+
 SetIterator SetIteratorInit(Set *set)
 {
     return MapIteratorInit(set);

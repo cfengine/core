@@ -88,7 +88,7 @@ static const char *HINTS[] =
     "Generate reports about configuration and insert into CFDB",
     "Output the parsed policy. Possible values: 'none', 'cf', 'json'. Default is 'none'. (experimental)",
     "Output a document describing the available syntax elements of CFEngine. Possible values: 'none', 'json'. Default is 'none'.",
-    "Ensure full policy integrity checks",
+    "Ensure full policy integrity checks. A partial policy check implies ignore_missing_inputs.",
     "Pass comma-separated <warnings>|all to enable non-default warnings, or error=<warnings>|all",
     "Use legacy output format",
     "Enable colorized output. Possible values: 'always', 'auto', 'never'. If option is used, the default value is 'auto'",
@@ -106,6 +106,10 @@ int main(int argc, char *argv[])
     GenericAgentConfigApply(ctx, config);
 
     GenericAgentDiscoverContext(ctx, config);
+    if (!config->check_runnable)
+    {
+       config->ignore_missing_inputs = true;
+    }
     Policy *policy = GenericAgentLoadPolicy(ctx, config);
     if (!policy)
     {

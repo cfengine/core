@@ -112,6 +112,8 @@ static bool GetPasswordHash(const char *puser, const struct passwd *passwd_info,
     // If the hash is very short, it's probably a stub. Try getting the shadow password instead.
     if (strlen(passwd_info->pw_passwd) <= 4)
     {
+        Log(LOG_LEVEL_VERBOSE, "Getting user '%s' password hash from shadow database.", puser);
+
         struct spwd *spwd_info;
         errno = 0;
         spwd_info = getspnam(puser);
@@ -135,6 +137,7 @@ static bool GetPasswordHash(const char *puser, const struct passwd *passwd_info,
         }
     }
 #endif // HAVE_GETSPNAM
+    Log(LOG_LEVEL_VERBOSE, "Getting user '%s' password hash from passwd database.", puser);
     *result = passwd_info->pw_passwd;
     return true;
 }
@@ -154,7 +157,9 @@ static bool IsPasswordCorrect(const char *puser, const char* password, PasswordF
         {
             return false;
         }
-        return (strcmp(password, system_hash) == 0);
+        bool result = (strcmp(password, system_hash) == 0);
+        Log(LOG_LEVEL_VERBOSE, "Verifying password hash for user '%s': %s.", puser, result ? "correct" : "incorrect");
+        return result;
     }
     else if (format != PASSWORD_FORMAT_PLAINTEXT)
     {
@@ -177,6 +182,7 @@ static bool IsPasswordCorrect(const char *puser, const char* password, PasswordF
     pam_end(handle, status);
     if (status == PAM_SUCCESS)
     {
+        Log(LOG_LEVEL_VERBOSE, "Verifying plaintext password for user '%s': correct.", puser);
         return true;
     }
     else if (status != PAM_AUTH_ERR)
@@ -186,6 +192,7 @@ static bool IsPasswordCorrect(const char *puser, const char* password, PasswordF
         return false;
     }
 
+    Log(LOG_LEVEL_VERBOSE, "Verifying plaintext password for user '%s': incorrect.", puser);
     return false;
 }
 
@@ -203,6 +210,7 @@ static bool ChangePlaintextPasswordUsingLibPam(const char *puser, const char *pa
         Log(LOG_LEVEL_ERR, "Could not initialize pam session. (pam_start: '%s')", pam_strerror(NULL, status));
         return false;
     }
+    Log(LOG_LEVEL_VERBOSE, "Changing password for user '%s'.", puser);
     status = pam_chauthtok(handle, PAM_SILENT);
     pam_end(handle, status);
     if (status == PAM_SUCCESS)
@@ -227,6 +235,8 @@ static bool ClearPasswordAdministrationFlags(const char *puser)
 
     sprintf(final_cmd, "%s%s", cmd_str, puser);
 
+    Log(LOG_LEVEL_VERBOSE, "Clearing password administration flags for user '%s'. (command: '%s')", puser, final_cmd);
+
     int status;
     status = system(final_cmd);
     if (!WIFEXITED(status) || WEXITSTATUS(status) != 0)
@@ -245,6 +255,7 @@ static bool ChangePasswordHashUsingChpasswd(const char *puser, const char *passw
 {
     int status;
     const char *cmd_str = CHPASSWD " -e";
+    Log(LOG_LEVEL_VERBOSE, "Changing password hash for user '%s'. (command: '%s')", puser, cmd_str);
     FILE *cmd = cf_popen_sh(cmd_str, "w");
     if (!cmd)
     {
@@ -294,6 +305,8 @@ static bool ChangePasswordHashUsingLckpwdf(const char *puser, const char *passwo
     {
         passwd_file = "/etc/passwd";
     }
+
+    Log(LOG_LEVEL_VERBOSE, "Changing password hash for user '%s' by editing '%s'.", puser, passwd_file);
 
     if (lckpwdf() != 0)
     {
@@ -536,6 +549,9 @@ static bool SetAccountLocked(const char *puser, const char *hash, bool lock)
 
     StringAppend(cmd, "\" ", sizeof(cmd));
     StringAppend(cmd, puser, sizeof(cmd));
+
+    Log(LOG_LEVEL_VERBOSE, "%s user '%s' by setting expiry date. (command: '%s')",
+        lock ? "Locking" : "Unlocking", puser, cmd);
 
     int status;
     status = system(cmd);
@@ -839,6 +855,8 @@ static bool DoCreateUser (const char *puser, User u, enum cfopaction action,
             return false;
         }
 
+        Log(LOG_LEVEL_VERBOSE, "Creating user '%s'. (command: '%s')", puser, cmd);
+
         int status;
         status = system(cmd);
         if (!WIFEXITED(status) || WEXITSTATUS(status) != 0)
@@ -903,6 +921,8 @@ static bool DoRemoveUser (const char *puser, enum cfopaction action)
             Log(LOG_LEVEL_ERR, "Command line too long while removing user '%s'", puser);
             return false;
         }
+
+        Log(LOG_LEVEL_VERBOSE, "Removing user '%s'. (command: '%s')", puser, cmd);
 
         int status;
         status = system(cmd);
@@ -1030,6 +1050,8 @@ static bool DoModifyUser (const char *puser, User u, const struct passwd *passwd
             Log(LOG_LEVEL_ERR, "Command line too long while modifying user '%s'", puser);
             return false;
         }
+
+        Log(LOG_LEVEL_VERBOSE, "Modifying user '%s'. (command: '%s')", puser, cmd);
 
         int status;
         status = system(cmd);

@@ -2550,7 +2550,7 @@ static void GetCPUInfo(EvalContext *ctx)
     len = sizeof(count);
     if(sysctl(mib, 2, &count, &len, NULL, 0) < 0)
     {
-        Log(LOG_LEVEL_ERR, "sysctl", "!! failed to get cpu count: %s", strerror(errno));
+        Log(LOG_LEVEL_ERR, "!! failed to get cpu count: %s", strerror(errno));
     }
 #endif
 

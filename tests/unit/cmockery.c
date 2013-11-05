@@ -191,10 +191,10 @@ static int check_for_leftover_values(const ListNode *const map_head, const char 
                                      const size_t number_of_symbol_names);
 // This must be called at the beginning of a test to initialize some data
 // structures.
-static void initialize_testing(const char *test_name);
+static void initialize_testing(void);
 
 // This must be called at the end of a test to free() allocated structures.
-static void teardown_testing(const char *test_name);
+static void teardown_testing(void);
 
 // Keeps track of the calling context returned by setenv() so that the fail()
 // method can jump out of a test.
@@ -336,7 +336,7 @@ static void set_source_location(SourceLocation *const location, const char *cons
 }
 
 // Create function results and expected parameter lists.
-void initialize_testing(const char *test_name)
+void initialize_testing(void)
 {
     list_initialize(&global_function_result_map_head);
     initialize_source_location(&global_last_mock_value_location);
@@ -375,7 +375,7 @@ static void fail_if_leftover_values(const char *test_name)
     }
 }
 
-void teardown_testing(const char *test_name)
+void teardown_testing(void)
 {
     list_free(&global_function_result_map_head, free_symbol_map_value, (void *) 0);
     initialize_source_location(&global_last_mock_value_location);
@@ -495,8 +495,14 @@ static int list_first(ListNode *const head, ListNode **output)
     return 1;
 }
 
+#if defined(__GNUC__) && ((__GNUC__ * 100 +  __GNUC_MINOR__ * 10) >= 240)
+# define ARG_UNUSED __attribute__((unused))
+#else
+# define ARG_UNUSED
+#endif
+
 // Deallocate a value referenced by a list.
-static void free_value(const void *value, void *cleanup_value_data)
+static void free_value(const void *value, ARG_UNUSED void *cleanup_value_data)
 {
     assert_true(value);
     free((void *) value);
@@ -1206,7 +1212,7 @@ void _expect_not_memory(const char *const function, const char *const parameter,
 }
 
 // CheckParameterValue callback that always returns 1.
-static int check_any(const LargestIntegralType value, const LargestIntegralType check_value_data)
+static int check_any(ARG_UNUSED const LargestIntegralType value, ARG_UNUSED const LargestIntegralType check_value_data)
 {
     return 1;
 }
@@ -1812,7 +1818,7 @@ int _run_test(const char *const function_name, const UnitTestFunction Function,
     {
         print_message("%s: Starting test\n", function_name);
     }
-    initialize_testing(function_name);
+    initialize_testing();
     global_running_test = 1;
     if (setjmp(global_run_test_env) == 0)
     {
@@ -1847,7 +1853,7 @@ int _run_test(const char *const function_name, const UnitTestFunction Function,
         global_running_test = 0;
         print_message("%s: Test failed.\n", function_name);
     }
-    teardown_testing(function_name);
+    teardown_testing();
 
     if (handle_exceptions)
     {

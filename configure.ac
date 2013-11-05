@@ -618,25 +618,21 @@ AC_PATH_PROG([USERADD], [useradd])
 AS_IF([test "x$USERADD" != "x"],
       [AC_DEFINE(HAVE_USERADD, 1, [Define if useradd tool is present])]
       [AC_DEFINE_UNQUOTED(USERADD, ["$USERADD"], [Path to useradd tool])]
-     ,
-      AC_MSG_ERROR([useradd not found anywhere in path])
      )
 
 AC_PATH_PROG([USERMOD], [usermod])
 AS_IF([test "x$USERMOD" != "x"],
       [AC_DEFINE(HAVE_USERMOD, 1, [Define if usermod tool is present])]
       [AC_DEFINE_UNQUOTED(USERMOD, ["$USERMOD"], [Path to usermod tool])]
-     ,
-      [AC_MSG_ERROR([usermod not found anywhere in path])]
      )
 
 AC_PATH_PROG([USERDEL], [userdel])
 AS_IF([test "x$USERDEL" != "x"],
       [AC_DEFINE(HAVE_USERDEL, 1, [Define if userdel tool is present])]
       [AC_DEFINE_UNQUOTED(USERDEL, ["$USERDEL"], [Path to userdel tool])]
-     ,
-      [AC_MSG_ERROR([userdel not found anywhere in path])]
      )
+AM_CONDITIONAL(HAVE_USERPROGS, [test "x$USERADD" != x && \
+    test "x$USERMOD" != x && test "x$USERDEL" != x])
 
 AC_CHECK_DECLS(getnetgrent, [], [], [[#include <netdb.h>]])
 AC_CHECK_FUNCS(getnetgrent)

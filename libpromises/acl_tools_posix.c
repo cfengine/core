@@ -103,7 +103,7 @@ int CopyACLs(const char *src, const char *dst)
 
 #elif !defined(__MINGW32__) /* !HAVE_LIBACL */
 
-int CopyACLs(const char *src, const char *dst)
+int CopyACLs(ARG_UNUSED const char *src, ARG_UNUSED const char *dst)
 {
     return true;
 }

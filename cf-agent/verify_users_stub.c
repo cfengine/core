@@ -22,17 +22,14 @@
   included file COSL.txt.
 */
 
-#ifndef CFENGINE_VERIFY_USERS_H
-#define CFENGINE_VERIFY_USERS_H
+#include <verify_users.h>
 
-#include <cf3.defs.h>
-#include <bufferlist.h>
-
-PromiseResult VerifyUsersPromise(EvalContext *ctx, Promise *pp);
-
-void VerifyOneUsersPromise (const char *puser, User u, PromiseResult *result, enum cfopaction action,
-                            EvalContext *ctx, const Attributes *a, Promise *pp);
-
-bool AreListsOfGroupsEqual (const BufferList *groups1, const BufferList *groups2);
-
-#endif
+void VerifyOneUsersPromise (ARG_UNUSED const char *puser, ARG_UNUSED User u,
+                            ARG_UNUSED PromiseResult *result,
+                            ARG_UNUSED enum cfopaction action,
+                            ARG_UNUSED EvalContext *ctx,
+                            ARG_UNUSED const Attributes *a,
+                            ARG_UNUSED Promise *pp)
+{
+    Log(LOG_LEVEL_ERR, "Users promise type is not supported on this OS");
+}

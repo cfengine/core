@@ -98,7 +98,7 @@ static PromiseResult LinkCopy(EvalContext *ctx, char *sourcefile, char *destfile
 static PromiseResult VerifySetUidGid(EvalContext *ctx, const char *file, struct stat *dstat, mode_t newperm, Promise *pp, Attributes attr);
 #endif
 #ifdef __APPLE__
-static int VerifyFinderType(EvalContext *ctx, char *file, Attributes a, Promise *pp);
+static int VerifyFinderType(EvalContext *ctx, char *file, Attributes a, Promise *pp, PromiseResult *result);
 #endif
 static void VerifyFileChanges(const char *file, struct stat *sb, Attributes attr, Promise *pp);
 static PromiseResult VerifyFileIntegrity(EvalContext *ctx, const char *file, Attributes attr, Promise *pp);
@@ -1400,7 +1400,7 @@ bool CopyRegularFile(EvalContext *ctx, const char *source, const char *dest, str
                     }
                     else
                     {
-                        Log(LOG_LEVEL_INFO, "Write of Darwin resource fork rsrcwd failed. (write: %s)");
+                        Log(LOG_LEVEL_INFO, "Write of Darwin resource fork rsrcwd failed.");
                         close(rsrcrd);
                         close(rsrcwd);
                         free(rsrcbuf);

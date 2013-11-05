@@ -171,7 +171,8 @@ static void CfDeleteMysqlQuery(ARG_UNUSED CfdbConn *c)
 
 #endif
 
-#ifdef HAVE_LIBPQ
+#if defined(HAVE_LIBPQ) &&\
+    (defined(HAVE_PGSQL_LIBPQ_FE_H) || defined(HAVE_LIBPQ_FE_H))
 
 typedef struct
 {

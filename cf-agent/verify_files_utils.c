@@ -1400,7 +1400,7 @@ bool CopyRegularFile(EvalContext *ctx, const char *source, const char *dest, str
                     }
                     else
                     {
-                        Log(LOG_LEVEL_INFO, "Write of Darwin resource fork rsrcwd failed. (write: %s)");
+                        Log(LOG_LEVEL_INFO, "Write of Darwin resource fork rsrcwd failed.");
                         close(rsrcrd);
                         close(rsrcwd);
                         free(rsrcbuf);

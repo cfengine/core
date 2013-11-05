@@ -41,6 +41,16 @@ if test x"$GCC" = "xyes" && test x"$HP_UX_AC" != x"yes"; then
      [AC_MSG_RESULT(yes)],
      [AC_MSG_RESULT(no)
      CFLAGS="$save_CFLAGS"])
+
+    dnl Clang does not like 'const const' construct arising from
+    dnl expansion of TYPED_SET_DECLARE macro
+    save_CFLAGS="$CFLAGS"
+    CFLAGS="$CFLAGS -Wno-duplicate-decl-specifier"
+    AC_MSG_CHECKING(for -Wno-duplicate-decl-specifier)
+    AC_COMPILE_IFELSE([AC_LANG_SOURCE([int main() {}])],
+     [AC_MSG_RESULT(yes)],
+     [AC_MSG_RESULT(no)
+     CFLAGS="$save_CFLAGS"])
 else 
     AC_MSG_RESULT(no)
 fi

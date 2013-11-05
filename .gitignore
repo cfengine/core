@@ -110,6 +110,7 @@ tests/*/*.trs
 
 tests/unit/*_test
 tests/unit/exec-config-test
+tests/unit/rb-tree-test
 
 # load tests
 

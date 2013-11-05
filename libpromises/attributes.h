@@ -41,6 +41,7 @@ Attributes GetMethodAttributes(const EvalContext *ctx, const Promise *pp);
 Attributes GetOccurrenceAttributes(const EvalContext *ctx, const Promise *pp);
 Attributes GetOutputsAttributes(const EvalContext *ctx, const Promise *pp);
 Attributes GetPackageAttributes(const EvalContext *ctx, const Promise *pp);
+Attributes GetUserAttributes(const EvalContext *ctx, const Promise *pp);
 Attributes GetProcessAttributes(const EvalContext *ctx, const Promise *pp);
 Attributes GetReplaceAttributes(const EvalContext *ctx, const Promise *pp);
 Attributes GetReportsAttributes(const EvalContext *ctx, const Promise *pp);
@@ -71,6 +72,7 @@ LineSelect GetDeleteSelectConstraints(const EvalContext *ctx, const Promise *pp)
 LineSelect GetInsertSelectConstraints(const EvalContext *ctx, const Promise *pp);
 Measurement GetMeasurementConstraint(const EvalContext *ctx, const Promise *pp);
 Packages GetPackageConstraints(const EvalContext *ctx, const Promise *pp);
+User GetUserConstraints(const EvalContext *ctx, const Promise *pp);
 ProcessCount GetMatchesConstraints(const EvalContext *ctx, const Promise *pp);
 ProcessSelect GetProcessFilterConstraints(const EvalContext *ctx, const Promise *pp);
 Recursion GetRecursionConstraints(const EvalContext *ctx, const Promise *pp);

@@ -1,0 +1,48 @@
+#######################################################
+#
+# Test locking a user.
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub", "user_queries.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+}
+
+#######################################################
+
+bundle agent init
+{
+  users:
+    "johndoe"
+      policy => "present";
+}
+
+#######################################################
+
+bundle agent test
+{
+  users:
+    "johndoe"
+      policy => "locked";
+}
+
+#######################################################
+
+bundle agent check
+{
+  methods:
+    "any" usebundle => user_is_locked("johndoe", "success", "failure"),
+      classes => default_cf_sub_set_class("methods_run");
+
+  classes:
+      "ready" expression => "methods_run";
+      "ok" and => { "success", "!failure" };
+
+  reports:
+    ok.ready::
+      "$(this.promise_filename) Pass";
+    !ok.ready::
+      "$(this.promise_filename) FAIL";
+}

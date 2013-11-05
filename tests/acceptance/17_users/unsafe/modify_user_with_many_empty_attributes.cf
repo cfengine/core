@@ -1,0 +1,68 @@
+#######################################################
+#
+# Test modifying a user with many empty attributes.
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub", "user_queries.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+}
+
+#######################################################
+
+bundle agent init
+{
+  # Remove him first, should he already be present.
+  users:
+    "johndoe"
+      policy => "present",
+      group_primary => "$(user_tests.group1)",
+      groups_secondary => { "$(user_tests.group2)" },
+      description => "Description";
+}
+
+#######################################################
+
+bundle agent test
+{
+  users:
+    "johndoe"
+      policy => "present",
+      group_primary => "",
+      groups_secondary => { },
+      description => "";
+}
+
+#######################################################
+
+bundle agent check
+{
+  methods:
+    windows::
+      "any" usebundle => user_is_in_primary_group("johndoe", "$(user_tests.group1)", "pgroup_failure", "pgroup_success"),
+        classes => default_cf_sub_set_class("pgroup_methods_run");
+    # Unix hosts cannot remove the primary group.
+    !windows::
+      "any" usebundle => user_is_in_primary_group("johndoe", "$(user_tests.group1)", "pgroup_success", "pgroup_failure"),
+        classes => default_cf_sub_set_class("pgroup_methods_run");
+
+    any::
+    "any" usebundle => user_is_in_any_secondary_group("johndoe", "sgroup_failure", "sgroup_success"),
+      classes => default_cf_sub_set_class("sgroup_methods_run");
+
+    "any" usebundle => user_has_description("johndoe", "", "desc_success", "desc_failure"),
+      classes => default_cf_sub_set_class("desc_methods_run");
+
+  classes:
+      "ready" and => { "pgroup_methods_run", "sgroup_methods_run", "desc_methods_run" };
+      "ok" and => { "pgroup_success", "!pgroup_failure", "sgroup_success", "!sgroup_failure",
+                    "desc_success", "!desc_failure",  };
+
+  reports:
+    ok.ready::
+      "$(this.promise_filename) Pass";
+    !ok.ready::
+      "$(this.promise_filename) FAIL";
+}

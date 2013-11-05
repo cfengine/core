@@ -463,6 +463,7 @@ AC_CHECK_HEADERS(zone.h)
 AC_CHECK_HEADERS(sys/uio.h)
 AC_CHECK_HEADERS(sys/types.h)
 AC_CHECK_HEADERS(sys/mpctl.h) dnl For HP-UX $(sys.cpus) - Mantis #1069
+AC_CHECK_HEADERS(shadow.h)
 AC_CHECK_HEADERS(sys/jail.h, [], [], [AC_INCLUDES_DEFAULT
 #ifdef HAVE_SYS_PARAM_H
 # include <sys/param.h>
@@ -597,6 +598,45 @@ AC_CHECK_DECLS(localtime_r, [], [], [[#include <time.h>]])
 AC_REPLACE_FUNCS(localtime_r)
 
 AC_CHECK_FUNCS(getpwent setpwent endpwent)
+
+AC_CHECK_FUNCS(getspnam lckpwdf ulckpwdf)
+
+AC_PATH_PROG([CHPASSWD], [chpasswd])
+AS_IF([test "x$CHPASSWD" != "x"],
+      [AC_DEFINE(HAVE_CHPASSWD, 1, [Define if chpasswd tool is present])]
+      [AC_DEFINE_UNQUOTED(CHPASSWD, ["$CHPASSWD"], [Path to chpasswd tool])]
+     )
+
+dnl AIX has this.
+AC_PATH_PROG([PWDADM], [pwdadm])
+AS_IF([test "x$PWDADM" != "x"],
+      [AC_DEFINE(HAVE_PWDADM, 1, [Define if pwdadm tool is present])]
+      [AC_DEFINE_UNQUOTED(PWDADM, ["$PWDADM"], [Path to pwdadm tool])]
+     )
+
+AC_PATH_PROG([USERADD], [useradd])
+AS_IF([test "x$USERADD" != "x"],
+      [AC_DEFINE(HAVE_USERADD, 1, [Define if useradd tool is present])]
+      [AC_DEFINE_UNQUOTED(USERADD, ["$USERADD"], [Path to useradd tool])]
+     ,
+      AC_MSG_ERROR([useradd not found anywhere in path])
+     )
+
+AC_PATH_PROG([USERMOD], [usermod])
+AS_IF([test "x$USERMOD" != "x"],
+      [AC_DEFINE(HAVE_USERMOD, 1, [Define if usermod tool is present])]
+      [AC_DEFINE_UNQUOTED(USERMOD, ["$USERMOD"], [Path to usermod tool])]
+     ,
+      [AC_MSG_ERROR([usermod not found anywhere in path])]
+     )
+
+AC_PATH_PROG([USERDEL], [userdel])
+AS_IF([test "x$USERDEL" != "x"],
+      [AC_DEFINE(HAVE_USERDEL, 1, [Define if userdel tool is present])]
+      [AC_DEFINE_UNQUOTED(USERDEL, ["$USERDEL"], [Path to userdel tool])]
+     ,
+      [AC_MSG_ERROR([userdel not found anywhere in path])]
+     )
 
 AC_CHECK_DECLS(getnetgrent, [], [], [[#include <netdb.h>]])
 AC_CHECK_FUNCS(getnetgrent)

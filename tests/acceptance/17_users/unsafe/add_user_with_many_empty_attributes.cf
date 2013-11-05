@@ -1,0 +1,58 @@
+#######################################################
+#
+# Test adding a user with many empty attributes.
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub", "user_queries.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+}
+
+#######################################################
+
+bundle agent init
+{
+  # Remove him first, should he already be present.
+  users:
+    "johndoe"
+      policy => "absent";
+}
+
+#######################################################
+
+bundle agent test
+{
+  users:
+    "johndoe"
+      policy => "present",
+      group_primary => "",
+      groups_secondary => { },
+      description => "",
+      classes => default_cf_sub_if_ok("promise_ok");
+}
+
+#######################################################
+
+bundle agent check
+{
+  methods:
+    any::
+    "any" usebundle => user_is_in_any_secondary_group("johndoe", "sgroup_failure", "sgroup_success"),
+      classes => default_cf_sub_set_class("sgroup_methods_run");
+
+    "any" usebundle => user_has_description("johndoe", "", "desc_success", "desc_failure"),
+      classes => default_cf_sub_set_class("desc_methods_run");
+
+  classes:
+      "ready" and => { "sgroup_methods_run", "desc_methods_run" };
+      "ok" and => { "sgroup_success", "!sgroup_failure",
+                    "desc_success", "!desc_failure", "promise_ok" };
+
+  reports:
+    ok.ready::
+      "$(this.promise_filename) Pass";
+    !ok.ready::
+      "$(this.promise_filename) FAIL";
+}

@@ -1,0 +1,49 @@
+#######################################################
+#
+# Test adding a user with a specific shell.
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub", "user_queries.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+}
+
+#######################################################
+
+bundle agent init
+{
+  # Remove him first, should he already be present.
+  users:
+    "johndoe"
+      policy => "absent";
+}
+
+#######################################################
+
+bundle agent test
+{
+  users:
+    "johndoe"
+      policy => "present",
+      shell => "$(G.cat)";
+}
+
+#######################################################
+
+bundle agent check
+{
+  vars:
+    "currentdir" string => dirname("$(this.promise_filename)");
+
+  classes:
+    !windows::
+      "ok" expression => regcmp(".*Succeeded.*", execresult("sudo su johndoe $(currentdir)$(G.DS)add_user_with_shell.txt", "useshell"));
+
+  reports:
+    ok|windows::
+      "$(this.promise_filename) Pass";
+    !ok.!windows::
+      "$(this.promise_filename) FAIL";
+}

@@ -66,7 +66,7 @@ ENTERPRISE_FUNC_1ARG_DECLARE(const char *, PromiseID, const Promise *, pp);     
 ENTERPRISE_VOID_FUNC_3ARG_DECLARE(void, NotePromiseCompliance, const Promise *, pp, PromiseState, state, const char *, reason);
 ENTERPRISE_VOID_FUNC_2ARG_DECLARE(void, LogTotalCompliance, const char *, version, int, background_tasks);
 #if defined(__MINGW32__)
-ENTERPRISE_FUNC_4ARG_DECLARE(int, GetRegistryValue, char *, key, char *, name, char *, buf, int, bufSz);
+ENTERPRISE_FUNC_4ARG_DECLARE(int, GetRegistryValue, const char *, key, char *, name, char *, buf, int, bufSz);
 #endif
 ENTERPRISE_FUNC_6ARG_DECLARE(void *, CfLDAPValue, char *, uri, char *, dn, char *, filter, char *, name, char *, scope, char *, sec);
 ENTERPRISE_FUNC_6ARG_DECLARE(void *, CfLDAPList, char *, uri, char *, dn, char *, filter, char *, name, char *, scope, char *, sec);

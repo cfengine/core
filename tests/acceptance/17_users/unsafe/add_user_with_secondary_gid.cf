@@ -1,0 +1,66 @@
+#######################################################
+#
+# Test adding a user with a secondary gid.
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub", "user_queries.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+}
+
+#######################################################
+
+body perms init_perms_body
+{
+  groups => { "$(user_tests.gid1)" };
+  mode => "664";
+}
+
+bundle agent init
+{
+  # Remove him first, should he already be present.
+  users:
+    "johndoe"
+      policy => "absent";
+
+  files:
+    "$(G.testfile)"
+      create => "true",
+      perms => init_perms_body;
+}
+
+#######################################################
+
+body contain test_contain_body
+{
+  useshell => "useshell";
+}
+
+bundle agent test
+{
+  users:
+    "johndoe"
+      policy => "present",
+      groups_secondary => { "$(user_tests.gid1)" };
+
+  commands:
+    !windows::
+      "sudo -u johndoe /bin/sh -c '$(G.echo) Succeeded > $(G.testfile)'"
+        contain => test_contain_body;
+}
+
+#######################################################
+
+bundle agent check
+{
+  classes:
+    "ok" not => strcmp("0", countlinesmatching("Succeeded", "$(G.testfile)"));
+
+  reports:
+    ok|windows::
+      "$(this.promise_filename) Pass";
+    !ok.!windows::
+      "$(this.promise_filename) FAIL";
+}

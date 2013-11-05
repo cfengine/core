@@ -47,9 +47,9 @@ bundle edit_line init_insert
       "key='real0200_00' value='0200.00'";
       "key='string0200_00' value='0200.00'";
       "key='stringabc' value='abc'";
-      "key='string06abc' value='   abc'";
-      "key='string-06abc' value='abc   '";
-      "key='2strings-06abc-06def' value='abc   def   '";
+      "key='string6abc' value='   abc'";
+      "key='string-6abc' value='abc   '";
+      "key='2strings-6abc-6def' value='abc   def   '";
       "key='badend' value='ends badly '";
       "key='escape' value='% should be a single percent'";
 }
@@ -70,9 +70,9 @@ bundle agent test
       "array[real0200_00]" string => format("%07.2f", 200);
       "array[string0200_00]" string => format("%07.2f", "200.00");
       "array[stringabc]" string => format("%s", "abc");
-      "array[string06abc]" string => format("%06s", "abc");
-      "array[string-06abc]" string => format("%-06s", "abc");
-      "array[2strings-06abc-06def]" string => format("%-06s%-06s", "abc", "def");
+      "array[string6abc]" string => format("%6s", "abc");
+      "array[string-6abc]" string => format("%-6s", "abc");
+      "array[2strings-6abc-6def]" string => format("%-6s%-6s", "abc", "def");
       "array[badend]" string => format("ends badly %");
       "array[escape]" string => format("%% should be a single percent");
 

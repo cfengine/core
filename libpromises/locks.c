@@ -807,7 +807,7 @@ CfLock AcquireLock(EvalContext *ctx, const char *operand, const char *host, time
         }
 
         int ret = WriteLock(cflock);
-        if (ret != -1);
+        if (ret != -1)
         {
             /* Register a cleanup handler *after* having opened the DB, so that
              * CloseAllDB() atexit() handler is registered in advance, and it is

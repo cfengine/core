@@ -51,7 +51,7 @@ const char *sockaddr_ntop(const void *src, char *dst, socklen_t size)
 #ifdef AF_LOCAL
     case AF_LOCAL:
         strlcpy(dst, "127.0.0.1", sizeof("127.0.0.1"));
-        break;
+        return dst;
 #endif
 
     default:

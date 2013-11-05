@@ -88,7 +88,6 @@ check_PROGRAMS = \
 	mon_processes_test \
 	mustache_test \
 	class_test \
-	tls_generic_test \
 	version_test
 
 if HAVE_AVAHI_CLIENT
@@ -265,8 +264,14 @@ mon_load_test_LDADD = ../../libpromises/libpromises.la libtest.la
 
 mon_processes_test_SOURCES = mon_processes_test.c ../../cf-monitord/mon.h ../../cf-monitord/mon_processes.c
 mon_processes_test_LDADD = ../../libpromises/libpromises.la libtest.la
+
+# tls_generic_test uses stub functions interposition which does not work (yet)
+# under OS X. Another way of stubbing functions from libpromises is needed.
+if !XNU
+check_PROGRAMS += tls_generic_test
 tls_generic_test_SOURCES = tls_generic_test.c 
 tls_generic_test_LDADD = libtest.la ../../libutils/libutils.la ../../libpromises/libpromises.la ../../libcfnet/libcfnet.la
+endif
 
 version_test_SOURCES = version_test.c
 

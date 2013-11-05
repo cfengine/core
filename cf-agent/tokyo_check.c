@@ -458,7 +458,7 @@ int CheckTokyoDBCoherence(const char *path)
 }
 
 #else
-int CheckTokyoDBCoherence( const char *path )
+int CheckTokyoDBCoherence(ARG_UNUSED const char *path)
 {
   return 0;
 }

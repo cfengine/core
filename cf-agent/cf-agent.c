@@ -1457,9 +1457,9 @@ static PromiseResult KeepAgentPromise(EvalContext *ctx, Promise *pp, ARG_UNUSED 
     }
     else if (strcmp("users", pp->parent_promise_type->name) == 0)
     {
-        VerifyUsersPromise(ctx, pp);
+        PromiseResult result = VerifyUsersPromise(ctx, pp);
         EndMeasurePromise(ctx, start, pp);
-        return;
+        return result;
     }
 
     else if (strcmp("files", pp->parent_promise_type->name) == 0)

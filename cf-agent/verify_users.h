@@ -28,7 +28,7 @@
 #include <cf3.defs.h>
 #include <bufferlist.h>
 
-void VerifyUsersPromise(EvalContext *ctx, Promise *pp);
+PromiseResult VerifyUsersPromise(EvalContext *ctx, Promise *pp);
 
 void VerifyOneUsersPromise (const char *puser, User u, PromiseResult *result, enum cfopaction action,
                             EvalContext *ctx, const Attributes *a, Promise *pp);

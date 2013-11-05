@@ -33,7 +33,7 @@
 
 static int UserSanityCheck(Attributes a, Promise *pp);
 
-void VerifyUsersPromise(EvalContext *ctx, Promise *pp)
+PromiseResult VerifyUsersPromise(EvalContext *ctx, Promise *pp)
 {
     Attributes a = { {0} };
     CfLock thislock;
@@ -43,7 +43,7 @@ void VerifyUsersPromise(EvalContext *ctx, Promise *pp)
 
     if (!UserSanityCheck(a, pp))
     {
-        return;
+        return PROMISE_RESULT_FAIL;
     }
 
     PromiseBanner(pp);
@@ -54,7 +54,7 @@ void VerifyUsersPromise(EvalContext *ctx, Promise *pp)
 
     if (thislock.lock == NULL)
     {
-        return;
+        return PROMISE_RESULT_FAIL;
     }
 
     PromiseResult result = PROMISE_RESULT_NOOP;
@@ -81,6 +81,7 @@ void VerifyUsersPromise(EvalContext *ctx, Promise *pp)
  
 
     YieldCurrentLock(thislock);
+    return result;
 }
 
 /** Pre-check of promise contents **/

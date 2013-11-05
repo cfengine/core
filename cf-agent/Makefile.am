@@ -68,15 +68,15 @@ libcf_agent_la_SOURCES = \
         verify_packages.c verify_packages.h \
         verify_users.c verify_users.h
 
-if HAVE_USERPROGS
-libcf_agent_la_SOURCES += verify_users_unix.c
-libcf_agent_la_LIBADD += -lpam
-else
-libcf_agent_la_SOURCES += verify_users_stub.c
-endif
-
 if !NT
 libcf_agent_la_SOURCES += nfs.c nfs.h
+
+ if HAVE_USERPROGS
+  libcf_agent_la_SOURCES += verify_users_unix.c
+  libcf_agent_la_LIBADD += -lpam
+ else
+  libcf_agent_la_SOURCES += verify_users_stub.c
+ endif
 endif
 
 if HAVE_AVAHI_CLIENT

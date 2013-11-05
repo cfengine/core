@@ -148,7 +148,7 @@ int ListRemove(List *list, void *payload);
   @param list Linked list.
   @return The number of elements on the list.
   */
-int ListCount(List *list);
+int ListCount(const List *list);
 
 /**
   @brief Gets an iterator for a given linked list.
@@ -160,7 +160,7 @@ int ListCount(List *list);
   @param iterator Iterator.
   @return A fully initialized iterator or NULL in case of error.
   */
-ListIterator *ListIteratorGet(List *list);
+ListIterator *ListIteratorGet(const List *list);
 /**
   @brief Releases the memory associated with an iterator.
 

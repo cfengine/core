@@ -103,7 +103,7 @@ int BufferListRemove(BufferList *list, Buffer *payload);
   @param list Buffer list.
   @return The number of elements on the list.
   */
-int BufferListCount(BufferList *list);
+int BufferListCount(const BufferList *list);
 
 /**
   @brief Gets an iterator for a given buffer list.
@@ -115,7 +115,7 @@ int BufferListCount(BufferList *list);
   @param iterator Iterator.
   @return A fully initialized iterator or NULL in case of error.
   */
-BufferListIterator *BufferListIteratorGet(BufferList *list);
+BufferListIterator *BufferListIteratorGet(const BufferList *list);
 /**
   @brief Releases the memory associated with an iterator.
 

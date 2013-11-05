@@ -41,7 +41,7 @@ bool SetRemove(Set *set, const void *element);
 void SetClear(Set *set);
 size_t SetSize(const Set *set);
 
-void SetUnion(Set *set, const Set *other);
+bool SetIsEqual(const Set *set1, const Set *set2);
 
 SetIterator SetIteratorInit(Set *set);
 void *SetIteratorNext(SetIterator *i);
@@ -60,6 +60,7 @@ void *SetIteratorNext(SetIterator *i);
     bool Prefix##SetRemove(const Prefix##Set *Set, const ElementType element);  \
     void Prefix##SetClear(Prefix##Set *set);                            \
     size_t Prefix##SetSize(const Prefix##Set *set);                     \
+    bool Prefix##SetIsEqual(const Prefix##Set *set1, const Prefix##Set *set2); \
     void Prefix##SetDestroy(Prefix##Set *set);                          \
     Prefix##SetIterator Prefix##SetIteratorInit(Prefix##Set *set);      \
     ElementType Prefix##SetIteratorNext(Prefix##SetIterator *iter);     \
@@ -96,6 +97,11 @@ void *SetIteratorNext(SetIterator *i);
     size_t Prefix##SetSize(const Prefix##Set *set)                      \
     {                                                                   \
         return SetSize(set->impl);                                      \
+    }                                                                   \
+                                                                        \
+    bool Prefix##SetIsEqual(const Prefix##Set *set1, const Prefix##Set *set2) \
+    {                                                                   \
+        return SetIsEqual(set1->impl, set2->impl);                      \
     }                                                                   \
                                                                         \
     void Prefix##SetDestroy(Prefix##Set *set)                           \

@@ -118,7 +118,7 @@ int BufferListRemove(BufferList *list, Buffer *payload)
 }
 
 // Number of elements on the list
-int BufferListCount(BufferList *list)
+int BufferListCount(const BufferList *list)
 {
     if (!list)
     {
@@ -130,7 +130,7 @@ int BufferListCount(BufferList *list)
 /*
  * Functions for iterators
  */
-BufferListIterator *BufferListIteratorGet(BufferList *list)
+BufferListIterator *BufferListIteratorGet(const BufferList *list)
 {
     if (!list)
     {

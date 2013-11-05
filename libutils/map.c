@@ -234,6 +234,22 @@ void MapDestroy(Map *map)
     }
 }
 
+bool MapContainsSameKeys(const Map *map1, const Map *map2)
+{
+    MapIterator i = MapIteratorInit((Map *)map1);
+    MapKeyValue *item;
+    size_t count = 0;
+    while ((item = MapIteratorNext(&i)))
+    {
+        count++;
+        if (!MapHasKey(map2, item->key))
+        {
+            return false;
+        }
+    }
+    return (count == MapSize(map2));
+}
+
 /******************************************************************************/
 
 MapIterator MapIteratorInit(Map *map)

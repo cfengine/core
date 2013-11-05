@@ -58,5 +58,6 @@ void LoggingSetColor(bool enabled);
  * Portable strerror(errno)
  */
 const char *GetErrorStr(void);
+const char *GetErrorStrFromCode(int error_code);
 
 #endif

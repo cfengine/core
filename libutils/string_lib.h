@@ -152,4 +152,13 @@ bool CompareStringOrRegex(const char *value, const char *compareTo, bool regex);
 bool StringNotMatchingSetCapped(const char *isp, int limit, 
                       const char *exclude, char *obuf);
 
+/**
+ * @brief Appends src to dst, but will not exceed n bytes in dst, including the terminating null.
+ * @param dst Destination string.
+ * @param src Source string.
+ * @param n Total size of dst buffer. The string will be truncated if this is exceeded.
+ * @return True if append was successful, false if the operation caused an overflow.
+ */
+bool StringAppend(char *dst, const char *src, size_t n);
+
 #endif

@@ -1325,6 +1325,8 @@ static void test_TLSBasicIO(void)
      */
     result = TLSRecv(ssl, input_buffer, output_buffer_length);
     assert_int_equal(output_buffer_length, result);
+
+    input_buffer[output_buffer_length] = '\0';
     assert_string_equal(output_buffer, input_buffer);
     /*
      * Brilliant! We transmitted and received data using simple communication.

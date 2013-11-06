@@ -602,6 +602,14 @@ AC_CHECK_FUNCS(getpwent setpwent endpwent)
 AC_CHECK_FUNCS(getspnam lckpwdf ulckpwdf)
 
 AC_PATH_PROG([CHPASSWD], [chpasswd])
+# Sometimes the chpasswd has execute permission for root only,
+# so the above test fails.
+AS_IF([test "x$CHPASSWD" = "x"],
+      AC_CHECK_FILE([/usr/bin/chpasswd],
+                    [CHPASSWD=/usr/bin/chpasswd],
+                    []
+                   )
+     )
 AS_IF([test "x$CHPASSWD" != "x"],
       [AC_DEFINE(HAVE_CHPASSWD, 1, [Define if chpasswd tool is present])]
       [AC_DEFINE_UNQUOTED(CHPASSWD, ["$CHPASSWD"], [Path to chpasswd tool])]

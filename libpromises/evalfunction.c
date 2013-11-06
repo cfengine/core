@@ -978,6 +978,54 @@ static FnCallResult FnCallVariablesMatching(EvalContext *ctx, FnCall *fp, Rlist 
 
 /*********************************************************************/
 
+static FnCallResult FnCallGetMetaTags(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
+{
+    Rlist *tags = NULL;
+    StringSet *tagset = NULL;
+
+    if (0 == strcmp(fp->name, "getvariablemetatags"))
+    {
+        VarRef *ref = VarRefParse(RlistScalarValue(finalargs));
+        if (NULL == ref)
+        {
+            Log(LOG_LEVEL_ERR, "%s called on unknown variable %s", fp->name, RlistScalarValue(finalargs));
+            return (FnCallResult) { FNCALL_FAILURE };
+        }
+        tagset = EvalContextVariableTags(ctx, ref);
+    }
+    else if (0 == strcmp(fp->name, "getclassmetatags"))
+    {
+        ClassRef ref = ClassRefParse(RlistScalarValue(finalargs));
+        tagset = EvalContextClassTags(ctx, ref.ns, ref.name);
+    }
+    else
+    {
+        FatalError(ctx, "FnCallGetMetaTags: got unknown function name '%s', aborting", fp->name);
+    }
+
+    if (NULL == tagset)
+    {
+        Log(LOG_LEVEL_VERBOSE, "%s found variable %s without a tagset", fp->name, RlistScalarValue(finalargs));
+        return (FnCallResult) { FNCALL_FAILURE };
+    }
+
+    char* element;
+    StringSetIterator it = StringSetIteratorInit(tagset);
+    while ((element = SetIteratorNext(&it)))
+    {
+        RlistAppendScalar(&tags, element);
+    }
+
+    if (!tags)
+    {
+        RlistAppendScalarIdemp(&tags, CF_NULL_VALUE);
+    }
+
+    return (FnCallResult) { FNCALL_SUCCESS, { tags, RVAL_TYPE_LIST } };
+}
+
+/*********************************************************************/
+
 static FnCallResult FnCallBundlesMatching(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
     if (!finalargs)
@@ -5687,6 +5735,7 @@ static int ExecModule(EvalContext *ctx, char *command, const char *ns)
     FILE *pp;
     char *sp = NULL;
     char context[CF_BUFSIZE];
+    StringSet *tags = NULL;
     int print = false;
 
     context[0] = '\0';
@@ -5735,7 +5784,7 @@ static int ExecModule(EvalContext *ctx, char *command, const char *ns)
             }
         }
 
-        ModuleProtocol(ctx, command, line, print, ns, context);
+        ModuleProtocol(ctx, command, line, print, ns, context, &tags);
     }
 
     cf_pclose(pp);
@@ -5747,11 +5796,16 @@ static int ExecModule(EvalContext *ctx, char *command, const char *ns)
 /* Level                                                             */
 /*********************************************************************/
 
-void ModuleProtocol(EvalContext *ctx, char *command, const char *line, int print, const char *ns, char* context)
+void ModuleProtocol(EvalContext *ctx, char *command, const char *line, int print, const char *ns, char* context, StringSet **tags)
 {
     char name[CF_BUFSIZE], content[CF_BUFSIZE];
     char arg0[CF_BUFSIZE];
     char *filename;
+
+    if (NULL == *tags)
+    {
+        *tags = StringSetNew();
+    }
 
     if (*context == '\0')
     {
@@ -5781,13 +5835,31 @@ void ModuleProtocol(EvalContext *ctx, char *command, const char *line, int print
             Log(LOG_LEVEL_VERBOSE, "Module changed variable context from '%s' to '%s'", context, content);
             strcpy(context, content);
         }
+        else if (1 == sscanf(line + 1, "meta=%[^\n]", content) && strlen(content) > 0)
+        {
+            Log(LOG_LEVEL_VERBOSE, "Module set meta tags to '%s'", content);
+            if (NULL != *tags)
+            {
+                StringSetDestroy(*tags);
+                *tags = NULL;
+            }
+
+            *tags = StringSetFromString(content, ',');
+            StringSetAdd(*tags, xstrdup("source=module"));
+        }
+        else
+        {
+            Log(LOG_LEVEL_INFO, "Unknown extended module command '%s'", line);
+        }
         break;
 
     case '+':
         Log(LOG_LEVEL_VERBOSE, "Activated classes '%s'", line + 1);
         if (CheckID(line + 1))
         {
-             EvalContextClassPut(ctx, ns, line + 1, true, CONTEXT_SCOPE_NAMESPACE, "source=module");
+            Buffer *tagbuf = StringSetToBuffer(*tags, ',');
+            EvalContextClassPut(ctx, ns, line + 1, true, CONTEXT_SCOPE_NAMESPACE, BufferData(tagbuf));
+            BufferDestroy(tagbuf);
         }
         break;
     case '-':
@@ -5823,7 +5895,11 @@ void ModuleProtocol(EvalContext *ctx, char *command, const char *line, int print
         {
             Log(LOG_LEVEL_VERBOSE, "Defined variable '%s' in context '%s' with value '%s'", name, context, content);
             VarRef *ref = VarRefParseFromScope(name, context);
-            EvalContextVariablePut(ctx, ref, content, DATA_TYPE_STRING, "source=module");
+
+            Buffer *tagbuf = StringSetToBuffer(*tags, ',');
+            EvalContextVariablePut(ctx, ref, content, DATA_TYPE_STRING, BufferData(tagbuf));
+            BufferDestroy(tagbuf);
+
             VarRefDestroy(ref);
         }
         break;
@@ -5840,7 +5916,11 @@ void ModuleProtocol(EvalContext *ctx, char *command, const char *line, int print
             Log(LOG_LEVEL_VERBOSE, "Defined variable '%s' in context '%s' with value '%s'", name, context, content);
 
             VarRef *ref = VarRefParseFromScope(name, context);
-            EvalContextVariablePut(ctx, ref, list, DATA_TYPE_STRING_LIST, "source=module");
+
+            Buffer *tagbuf = StringSetToBuffer(*tags, ',');
+            EvalContextVariablePut(ctx, ref, list, DATA_TYPE_STRING_LIST, BufferData(tagbuf));
+            BufferDestroy(tagbuf);
+
             VarRefDestroy(ref);
         }
         break;
@@ -6685,8 +6765,20 @@ static const FnCallArg XFORM_SUBSTR_ARGS[] =
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg DATASTATE_ARGS[] =
+static const FnCallArg DATASTATE_ARGS[] =
 {
+    {NULL, DATA_TYPE_NONE, NULL}
+};
+
+static const FnCallArg GETCLASSMETATAGS_ARGS[] =
+{
+    {CF_IDRANGE, DATA_TYPE_STRING, "Class identifier"},
+    {NULL, DATA_TYPE_NONE, NULL}
+};
+
+static const FnCallArg GETVARIABLEMETATAGS_ARGS[] =
+{
+    {CF_IDRANGE, DATA_TYPE_STRING, "Variable identifier"},
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
@@ -6754,6 +6846,8 @@ const FnCallType CF_FNCALL_TYPES[] =
                   FNCALL_OPTION_VARARG, FNCALL_CATEGORY_FILES, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("format", DATA_TYPE_STRING, FORMAT_ARGS, &FnCallFormat, "Applies a list of string values in arg2,arg3... to a string format in arg1 with sprintf() rules",
                   FNCALL_OPTION_VARARG, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("getclassmetatags", DATA_TYPE_STRING_LIST, GETCLASSMETATAGS_ARGS, &FnCallGetMetaTags, "Collect a class's meta tags into an slist",
+                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_UTILS, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("getenv", DATA_TYPE_STRING, GETENV_ARGS, &FnCallGetEnv, "Return the environment variable named arg1, truncated at arg2 characters",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_SYSTEM, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("getfields", DATA_TYPE_INT, GETFIELDS_ARGS, &FnCallGetFields, "Get an array of fields in the lines matching regex arg1 in file arg2, split on regex arg3 as array name arg4",
@@ -6768,6 +6862,8 @@ const FnCallType CF_FNCALL_TYPES[] =
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_SYSTEM, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("getvalues", DATA_TYPE_STRING_LIST, GETINDICES_ARGS, &FnCallGetValues, "Get a list of values corresponding to the right hand sides in an array whose id is the argument and assign to variable",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("getvariablemetatags", DATA_TYPE_STRING_LIST, GETVARIABLEMETATAGS_ARGS, &FnCallGetMetaTags, "Collect a variable's meta tags into an slist",
+                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_UTILS, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("grep", DATA_TYPE_STRING_LIST, GREP_ARGS, &FnCallGrep, "Extract the sub-list if items matching the regular expression in arg1 of the list named in arg2",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("groupexists", DATA_TYPE_CONTEXT, GROUPEXISTS_ARGS, &FnCallGroupExists, "True if group or numerical id exists on this host",

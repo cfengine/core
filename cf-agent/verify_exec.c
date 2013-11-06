@@ -194,6 +194,7 @@ static ActionResult RepairExec(EvalContext *ctx, Attributes a,
     char cmdOutBuf[CF_BUFSIZE];
     int cmdOutBufPos = 0;
     int lineOutLen;
+    StringSet *module_tags = NULL;
     char module_context[CF_BUFSIZE];
 
     module_context[0] = '\0';
@@ -353,7 +354,7 @@ static ActionResult RepairExec(EvalContext *ctx, Attributes a,
 
             if (a.module)
             {
-                ModuleProtocol(ctx, cmdline, line, !a.contain.nooutput, PromiseGetNamespace(pp), module_context);
+                ModuleProtocol(ctx, cmdline, line, !a.contain.nooutput, PromiseGetNamespace(pp), module_context, &module_tags);
             }
             else if ((!a.contain.nooutput) && (!EmptyString(line)))
             {

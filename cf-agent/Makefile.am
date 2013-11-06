@@ -71,12 +71,12 @@ libcf_agent_la_SOURCES = \
 if !NT
 libcf_agent_la_SOURCES += nfs.c nfs.h
 
- if HAVE_USERPROGS
+if HAVE_USERPROGS
   libcf_agent_la_SOURCES += verify_users_unix.c
   libcf_agent_la_LIBADD += -lpam
- else
+else
   libcf_agent_la_SOURCES += verify_users_stub.c
- endif
+endif
 endif
 
 if HAVE_AVAHI_CLIENT

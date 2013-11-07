@@ -31,7 +31,8 @@ libcf_agent_la_LIBADD = ../libpromises/libpromises.la \
 	$(LIBVIRT_LIBS) \
 	$(POSTGRESQL_LIBS) \
 	$(MYSQL_LIBS) \
-	$(LIBXML2_LIBS)
+	$(LIBXML2_LIBS) \
+	$(PAM_LIBS)
 
 libcf_agent_la_SOURCES = \
         agent-diagnostics.c agent-diagnostics.h \
@@ -71,9 +72,8 @@ libcf_agent_la_SOURCES = \
 if !NT
 libcf_agent_la_SOURCES += nfs.c nfs.h
 
-if HAVE_USERPROGS
-  libcf_agent_la_SOURCES += verify_users_unix.c
-  libcf_agent_la_LIBADD += -lpam
+if HAVE_PAM
+  libcf_agent_la_SOURCES += verify_users_pam.c
 else
   libcf_agent_la_SOURCES += verify_users_stub.c
 endif

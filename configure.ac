@@ -640,15 +640,37 @@ AS_IF([test "x$USERDEL" != "x"],
       [AC_DEFINE_UNQUOTED(USERDEL, ["$USERDEL"], [Path to userdel tool])]
      )
 
-dnl PAM is needed on systems where applicable
-if echo $target_os | grep -q 'gnu\|solaris\|aix\|hpux\|hp-ux'
-then
-  AC_CHECK_LIB(pam, pam_start, [], [AC_MSG_ERROR(Cannot find PAM library)])
-  AC_CHECK_HEADERS([security/pam_appl.h], [], [AC_MSG_ERROR(Cannot find PAM headers)])
-fi
+AS_IF([test "x$USERADD" != x && \
+       test "x$USERMOD" != x && test "x$USERDEL" != x],
+      [have_userprogs=yes],
+      [have_userprogs=no]
+)
 
-AM_CONDITIONAL(HAVE_USERPROGS, [test "x$USERADD" != x && \
-    test "x$USERMOD" != x && test "x$USERDEL" != x])
+
+CF3_WITH_LIBRARY(pam, [
+  AC_CHECK_LIB(pam, pam_start)
+  AC_CHECK_HEADERS([security/pam_appl.h])
+])
+dnl These platforms must have pam, others can have it, but not required.
+AS_CASE([$target_os],
+        [*gnu*|*solaris*|*aix*|*hpux*|*hp-ux*], [
+            AS_IF([test "x$ac_cv_lib_pam_pam_start" != "xyes"],
+                  [AC_MSG_ERROR(Cannot find PAM library)]
+            )
+            AS_IF([test "x$ac_cv_header_security_pam_appl_h" != "xyes"],
+                  [AC_MSG_ERROR(Cannot find PAM headers)]
+        )]
+)
+AS_IF([test "x$ac_cv_lib_pam_pam_start" = "xyes" && \
+       test "x$ac_cv_header_security_pam_appl_h" = "xyes"],
+      [have_pam=yes],
+      [have_pam=no]
+)
+AM_CONDITIONAL(HAVE_PAM, [test "x$have_pam" = "xyes"])
+
+AS_IF([test "x$have_pam" = "xyes" && test "x$have_userprogs" = "xno"],
+      [AC_MSG_ERROR([PAM library found, but useradd/usermod/userdel not found])]
+)
 
 AC_CHECK_DECLS(getnetgrent, [], [], [[#include <netdb.h>]])
 AC_CHECK_FUNCS(getnetgrent)

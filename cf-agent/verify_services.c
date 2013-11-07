@@ -159,7 +159,7 @@ static void SetServiceDefaults(Attributes *a)
 /* Level                                                                     */
 /*****************************************************************************/
 
-PromiseResult VerifyServices(EvalContext *ctx, Attributes a, Promise *pp)
+static PromiseResult VerifyServices(EvalContext *ctx, Attributes a, Promise *pp)
 {
     CfLock thislock;
 

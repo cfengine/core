@@ -601,7 +601,7 @@ AC_CHECK_FUNCS(getpwent setpwent endpwent)
 
 AC_CHECK_FUNCS(getspnam lckpwdf ulckpwdf)
 
-AC_PATH_PROG([CHPASSWD], [chpasswd])
+AC_PATH_PROG([CHPASSWD], [chpasswd], [], [/sbin:/usr/sbin:/bin:/usr/bin:$PATH])
 # Sometimes the chpasswd has execute permission for root only,
 # so the above test fails.
 AS_IF([test "x$CHPASSWD" = "x"],
@@ -616,25 +616,25 @@ AS_IF([test "x$CHPASSWD" != "x"],
      )
 
 dnl AIX has this.
-AC_PATH_PROG([PWDADM], [pwdadm])
+AC_PATH_PROG([PWDADM], [pwdadm], [], [/sbin:/usr/sbin:/bin:/usr/bin:$PATH])
 AS_IF([test "x$PWDADM" != "x"],
       [AC_DEFINE(HAVE_PWDADM, 1, [Define if pwdadm tool is present])]
       [AC_DEFINE_UNQUOTED(PWDADM, ["$PWDADM"], [Path to pwdadm tool])]
      )
 
-AC_PATH_PROG([USERADD], [useradd])
+AC_PATH_PROG([USERADD], [useradd], [], [/sbin:/usr/sbin:/bin:/usr/bin:$PATH])
 AS_IF([test "x$USERADD" != "x"],
       [AC_DEFINE(HAVE_USERADD, 1, [Define if useradd tool is present])]
       [AC_DEFINE_UNQUOTED(USERADD, ["$USERADD"], [Path to useradd tool])]
      )
 
-AC_PATH_PROG([USERMOD], [usermod])
+AC_PATH_PROG([USERMOD], [usermod], [], [/sbin:/usr/sbin:/bin:/usr/bin:$PATH])
 AS_IF([test "x$USERMOD" != "x"],
       [AC_DEFINE(HAVE_USERMOD, 1, [Define if usermod tool is present])]
       [AC_DEFINE_UNQUOTED(USERMOD, ["$USERMOD"], [Path to usermod tool])]
      )
 
-AC_PATH_PROG([USERDEL], [userdel])
+AC_PATH_PROG([USERDEL], [userdel], [], [/sbin:/usr/sbin:/bin:/usr/bin:$PATH])
 AS_IF([test "x$USERDEL" != "x"],
       [AC_DEFINE(HAVE_USERDEL, 1, [Define if userdel tool is present])]
       [AC_DEFINE_UNQUOTED(USERDEL, ["$USERDEL"], [Path to userdel tool])]

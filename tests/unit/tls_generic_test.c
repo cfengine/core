@@ -66,6 +66,10 @@ void child_cycle(int channel)
     my_addr.sin_family = AF_INET;
     my_addr.sin_addr.s_addr = INADDR_ANY;
     my_addr.sin_port = 8035;
+    /* Avoid spurious failures when rerunning the test due to socket not yet
+     * being released. */
+    int opt = 1;
+    setsockopt(local_socket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
     /*
      * Bind it
      */

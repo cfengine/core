@@ -639,6 +639,14 @@ AS_IF([test "x$USERDEL" != "x"],
       [AC_DEFINE(HAVE_USERDEL, 1, [Define if userdel tool is present])]
       [AC_DEFINE_UNQUOTED(USERDEL, ["$USERDEL"], [Path to userdel tool])]
      )
+
+dnl PAM is needed on systems where applicable
+if echo $target_os | grep -q 'gnu\|solaris\|aix\|hpux\|hp-ux'
+then
+  AC_CHECK_LIB(pam, pam_start, [], [AC_MSG_ERROR(Cannot find PAM library)])
+  AC_CHECK_HEADERS([security/pam_appl.h], [], [AC_MSG_ERROR(Cannot find PAM headers)])
+fi
+
 AM_CONDITIONAL(HAVE_USERPROGS, [test "x$USERADD" != x && \
     test "x$USERMOD" != x && test "x$USERDEL" != x])
 

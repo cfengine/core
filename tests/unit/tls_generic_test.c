@@ -65,7 +65,7 @@ void child_cycle(int channel)
     local_socket = socket(AF_INET, SOCK_STREAM, 0);
     my_addr.sin_family = AF_INET;
     my_addr.sin_addr.s_addr = INADDR_ANY;
-    my_addr.sin_port = 8035;
+    my_addr.sin_port = htons(8035);
     /* Avoid spurious failures when rerunning the test due to socket not yet
      * being released. */
     int opt = 1;
@@ -1139,7 +1139,7 @@ static void test_TLSVerifyPeer(void)
     conn_info.sd = server;
     /* We should not use inet_addr, but it is easier for this particular case. */
     server_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
-    server_addr.sin_port = 8035;
+    server_addr.sin_port = htons(8035);
     /*
      * Connect
      */
@@ -1300,7 +1300,7 @@ static void test_TLSBasicIO(void)
     server_addr.sin_family = AF_INET;
     /* We should not use inet_addr, but it is easier for this particular case. */
     server_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
-    server_addr.sin_port = 8035;
+    server_addr.sin_port = htons(8035);
 
     /*
      * Connect

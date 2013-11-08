@@ -601,40 +601,32 @@ AC_CHECK_FUNCS(getpwent setpwent endpwent)
 
 AC_CHECK_FUNCS(getspnam lckpwdf ulckpwdf)
 
-AC_PATH_PROG([CHPASSWD], [chpasswd], [], [/sbin:/usr/sbin:/bin:/usr/bin:$PATH])
-# Sometimes the chpasswd has execute permission for root only,
-# so the above test fails.
-AS_IF([test "x$CHPASSWD" = "x"],
-      AC_CHECK_FILE([/usr/bin/chpasswd],
-                    [CHPASSWD=/usr/bin/chpasswd],
-                    []
-                   )
-     )
+CF3_PATH_ROOT_PROG([CHPASSWD], [chpasswd], [], [/sbin:/usr/sbin:/bin:/usr/bin:$PATH])
 AS_IF([test "x$CHPASSWD" != "x"],
       [AC_DEFINE(HAVE_CHPASSWD, 1, [Define if chpasswd tool is present])]
       [AC_DEFINE_UNQUOTED(CHPASSWD, ["$CHPASSWD"], [Path to chpasswd tool])]
      )
 
 dnl AIX has this.
-AC_PATH_PROG([PWDADM], [pwdadm], [], [/sbin:/usr/sbin:/bin:/usr/bin:$PATH])
+CF3_PATH_ROOT_PROG([PWDADM], [pwdadm], [], [/sbin:/usr/sbin:/bin:/usr/bin:$PATH])
 AS_IF([test "x$PWDADM" != "x"],
       [AC_DEFINE(HAVE_PWDADM, 1, [Define if pwdadm tool is present])]
       [AC_DEFINE_UNQUOTED(PWDADM, ["$PWDADM"], [Path to pwdadm tool])]
      )
 
-AC_PATH_PROG([USERADD], [useradd], [], [/sbin:/usr/sbin:/bin:/usr/bin:$PATH])
+CF3_PATH_ROOT_PROG([USERADD], [useradd], [], [/sbin:/usr/sbin:/bin:/usr/bin:$PATH])
 AS_IF([test "x$USERADD" != "x"],
       [AC_DEFINE(HAVE_USERADD, 1, [Define if useradd tool is present])]
       [AC_DEFINE_UNQUOTED(USERADD, ["$USERADD"], [Path to useradd tool])]
      )
 
-AC_PATH_PROG([USERMOD], [usermod], [], [/sbin:/usr/sbin:/bin:/usr/bin:$PATH])
+CF3_PATH_ROOT_PROG([USERMOD], [usermod], [], [/sbin:/usr/sbin:/bin:/usr/bin:$PATH])
 AS_IF([test "x$USERMOD" != "x"],
       [AC_DEFINE(HAVE_USERMOD, 1, [Define if usermod tool is present])]
       [AC_DEFINE_UNQUOTED(USERMOD, ["$USERMOD"], [Path to usermod tool])]
      )
 
-AC_PATH_PROG([USERDEL], [userdel], [], [/sbin:/usr/sbin:/bin:/usr/bin:$PATH])
+CF3_PATH_ROOT_PROG([USERDEL], [userdel], [], [/sbin:/usr/sbin:/bin:/usr/bin:$PATH])
 AS_IF([test "x$USERDEL" != "x"],
       [AC_DEFINE(HAVE_USERDEL, 1, [Define if userdel tool is present])]
       [AC_DEFINE_UNQUOTED(USERDEL, ["$USERDEL"], [Path to userdel tool])]

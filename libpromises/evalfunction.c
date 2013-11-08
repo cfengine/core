@@ -5265,10 +5265,6 @@ FnCallResult FnCallGroupExists(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 
 #endif /* !defined(__MINGW32__) */
 
-/*********************************************************************/
-/* Level                                                             */
-/*********************************************************************/
-
 static void *CfReadFile(char *filename, int maxsize)
 {
     struct stat sb;

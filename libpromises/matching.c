@@ -661,3 +661,16 @@ void AnchorRegex(const char *regex, char *out, int outSz)
         snprintf(out, outSz, "^(%s)$", regex);
     }
 }
+
+char *AnchorRegexNew(const char *regex)
+{
+    if (NULL_OR_EMPTY(regex))
+    {
+        return NULL;
+    }
+
+    char *ret = NULL;
+    xasprintf(&ret, "^(%s)$", regex);
+
+    return ret;
+}

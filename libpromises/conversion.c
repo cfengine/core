@@ -400,14 +400,11 @@ long IntFromString(const char *s)
 
     if ((a == CF_NOINT) || (!IsSpace(remainder)))
     {
-        if (THIS_AGENT_TYPE == AGENT_TYPE_COMMON)
+        Log(LOG_LEVEL_INFO, "Error reading assumed integer value '%s' => 'non-value', found remainder '%s'",
+              s, remainder);
+        if (strchr(s, '$'))
         {
-            Log(LOG_LEVEL_INFO, "Error reading assumed integer value '%s' => 'non-value', found remainder '%s'",
-                  s, remainder);
-            if (strchr(s, '$'))
-            {
-                Log(LOG_LEVEL_INFO, "The variable might not yet be expandable - not necessarily an error");
-            }
+            Log(LOG_LEVEL_INFO, "The variable might not yet be expandable - not necessarily an error");
         }
     }
     else

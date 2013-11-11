@@ -43,4 +43,6 @@ void EscapeSpecialChars(char *str, char *strEsc, int strEscSz, char *noEscseq, c
 char *EscapeChar(char *str, int strSz, char esc); /* Pure */
 void AnchorRegex(const char *regex, char *out, int outSz); /* Pure */
 
+char *AnchorRegexNew(const char *regex);
+
 #endif // MATCHING_H

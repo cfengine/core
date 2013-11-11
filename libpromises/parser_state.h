@@ -32,6 +32,8 @@
 
 typedef struct
 {
+    AgentType agent_type;
+
     char *block;                // body/bundle
     char blocktype[CF_MAXVARSIZE];
     char blockid[CF_MAXVARSIZE];

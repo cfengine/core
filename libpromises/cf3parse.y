@@ -251,11 +251,11 @@ aitem:                 IDSYNTAX  /* recipient of argument is never a literal */
 
 bundlebody:            body_begin
                        {
-                           if (RelevantBundle(CF_AGENTTYPES[THIS_AGENT_TYPE], P.blocktype))
+                           if (RelevantBundle(CF_AGENTTYPES[P.agent_type], P.blocktype))
                            {
                                INSTALL_SKIP = false;
                            }
-                           else if (strcmp(CF_AGENTTYPES[THIS_AGENT_TYPE], P.blocktype) != 0)
+                           else if (strcmp(CF_AGENTTYPES[P.agent_type], P.blocktype) != 0)
                            {
                                INSTALL_SKIP = true;
                            }

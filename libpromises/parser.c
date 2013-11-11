@@ -37,6 +37,8 @@ extern FILE *yyin;
 
 static void ParserStateReset(ParserState *p)
 {
+    p->agent_type = AGENT_TYPE_COMMON;
+
     p->policy = NULL;
 
     p->warnings = PARSER_WARNING_ALL;
@@ -78,9 +80,11 @@ static void ParserStateReset(ParserState *p)
     p->rval = RvalNew(NULL, RVAL_TYPE_NOPROMISEE);
 }
 
-Policy *ParserParseFile(const char *path, unsigned int warnings, unsigned int warnings_error)
+Policy *ParserParseFile(AgentType agent_type, const char *path, unsigned int warnings, unsigned int warnings_error)
 {
     ParserStateReset(&P);
+
+    P.agent_type = agent_type;
     P.policy = PolicyNew();
 
     P.warnings = warnings;

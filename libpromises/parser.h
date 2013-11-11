@@ -40,11 +40,12 @@ const char *ParserWarningToString(unsigned int warning);
 
 /**
  * @brief Parse a CFEngine file to create a Policy DOM
+ * @param agent_type Which agent is parsing the file. The parser will ignore elements not pertitent to its type
  * @param path Path of file to parse
  * @param warnings Bitfield of which warnings should be recorded
  * @param warnings_error Bitfield of which warnings should be counted as errors
  * @return
  */
-Policy *ParserParseFile(const char *path, unsigned int warnings, unsigned int warnings_error);
+Policy *ParserParseFile(AgentType agent_type, const char *path, unsigned int warnings, unsigned int warnings_error);
 
 #endif

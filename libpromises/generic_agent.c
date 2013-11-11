@@ -965,11 +965,11 @@ static Policy *Cf3ParseFile(const GenericAgentConfig *config, const char *input_
     {
         if (config->agent_type == AGENT_TYPE_COMMON)
         {
-            policy = ParserParseFile(input_path, config->agent_specific.common.parser_warnings, config->agent_specific.common.parser_warnings_error);
+            policy = ParserParseFile(config->agent_type, input_path, config->agent_specific.common.parser_warnings, config->agent_specific.common.parser_warnings_error);
         }
         else
         {
-            policy = ParserParseFile(input_path, 0, 0);
+            policy = ParserParseFile(config->agent_type, input_path, 0, 0);
         }
     }
 

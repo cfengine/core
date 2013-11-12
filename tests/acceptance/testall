@@ -122,7 +122,7 @@ unix_seconds() {
 # echo
 
 usage() {
-  echo "testall [-q] [--gainroot=<command>] [--agent=<agent>] [--cfpromises=<cf-promises>] [--cfserverd=<cf-serverd>] [--cfkey=<cf-key>] [--no-nova] [--staging] [--unsafe] [--no-network] [--gdb] [<test> <test>...]"
+  echo "testall [-q] [--gainroot=<command>] [--agent=<agent>] [--cfpromises=<cf-promises>] [--cfserverd=<cf-serverd>] [--cfkey=<cf-key>] [--no-nova] [--staging] [--unsafe] [--no-network] [--gdb] [--printlog] [<test> <test>...]"
   echo
   echo "If no test is given, all standard tests are run:"
   echo "  Tests with names of form <file>.cf are expected to run succesfully"

@@ -1225,10 +1225,12 @@ static FnCallResult FnCallReturnsZero(EvalContext *ctx, FnCall *fp, Rlist *final
 
     if (ShellCommandReturnsZero(comm, shelltype))
     {
+        Log(LOG_LEVEL_VERBOSE, "%s ran '%s' successfully and it returned zero", fp->name, RlistScalarValue(finalargs));
         return (FnCallResult) { FNCALL_SUCCESS, { xstrdup("any"), RVAL_TYPE_SCALAR } };
     }
     else
     {
+        Log(LOG_LEVEL_VERBOSE, "%s ran '%s' successfully and it did not return zero", fp->name, RlistScalarValue(finalargs));
         return (FnCallResult) { FNCALL_SUCCESS, { xstrdup("!any"), RVAL_TYPE_SCALAR } };
     }
 }
@@ -1260,13 +1262,13 @@ static FnCallResult FnCallExecResult(EvalContext *ctx, FnCall *fp, Rlist *finala
     }
     else if (shelltype == SHELL_TYPE_NONE)
     {
-        Log(LOG_LEVEL_ERR, "execresult '%s' does not have an absolute path", RlistScalarValue(finalargs));
+        Log(LOG_LEVEL_ERR, "%s '%s' does not have an absolute path", fp->name, RlistScalarValue(finalargs));
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
     if (needExecutableCheck && !IsExecutable(CommandArg0(RlistScalarValue(finalargs))))
     {
-        Log(LOG_LEVEL_ERR, "execresult '%s' is assumed to be executable but isn't", RlistScalarValue(finalargs));
+        Log(LOG_LEVEL_ERR, "%s '%s' is assumed to be executable but isn't", fp->name, RlistScalarValue(finalargs));
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
@@ -1274,10 +1276,12 @@ static FnCallResult FnCallExecResult(EvalContext *ctx, FnCall *fp, Rlist *finala
 
     if (GetExecOutput(RlistScalarValue(finalargs), buffer, shelltype))
     {
+        Log(LOG_LEVEL_VERBOSE, "%s ran '%s' successfully", fp->name, RlistScalarValue(finalargs));
         return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), RVAL_TYPE_SCALAR } };
     }
     else
     {
+        Log(LOG_LEVEL_VERBOSE, "%s could not run '%s' successfully", fp->name, RlistScalarValue(finalargs));
         return (FnCallResult) { FNCALL_FAILURE };
     }
 }

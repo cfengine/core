@@ -28,11 +28,80 @@
 #include <files_names.h>
 #include <expand.h>
 #include <vars.h>
-#include <args.h>
 #include <evalfunction.h>
 #include <policy.h>
 #include <string_lib.h>
+#include <promises.h>
 
+/******************************************************************/
+/* Argument propagation                                           */
+/******************************************************************/
+
+/*
+
+When formal parameters are passed, they should be literal strings, i.e.
+values (check for this). But when the values are received the
+receiving body should state only variable names without literal quotes.
+That way we can feed in the received parameter name directly in as an lvalue
+
+e.g.
+       access => myaccess("$(person)"),
+
+       body files myaccess(user)
+
+leads to Hash Association (lval,rval) => (user,"$(person)")
+
+*/
+
+/******************************************************************/
+
+static Rlist *NewExpArgs(EvalContext *ctx, const FnCall *fp, const Promise *pp)
+{
+    int len;
+    Rval rval;
+    Rlist *newargs = NULL;
+    FnCall *subfp;
+    const FnCallType *fn = FnCallTypeGet(fp->name);
+
+    len = RlistLen(fp->args);
+
+    if (!fn->varargs)
+    {
+        if (len != FnNumArgs(fn))
+        {
+            Log(LOG_LEVEL_ERR, "Arguments to function %s(.) do not tally. Expect %d not %d",
+                  fp->name, FnNumArgs(fn), len);
+            PromiseRef(LOG_LEVEL_ERR, pp);
+            exit(1);
+        }
+    }
+
+    for (const Rlist *rp = fp->args; rp != NULL; rp = rp->next)
+    {
+        switch (rp->val.type)
+        {
+        case RVAL_TYPE_FNCALL:
+            subfp = RlistFnCallValue(rp);
+            rval = FnCallEvaluate(ctx, subfp, pp).rval;
+            break;
+        default:
+            rval = ExpandPrivateRval(ctx, NULL, NULL, (Rval) { rp->val.item, rp->val.type});
+            break;
+        }
+
+        RlistAppend(&newargs, rval.item, rval.type);
+        RvalDestroy(rval);
+    }
+
+    return newargs;
+}
+
+/******************************************************************/
+
+static void DeleteExpArgs(Rlist *args)
+{
+    RlistDestroy(args);
+}
 
 /*******************************************************************/
 
@@ -140,6 +209,11 @@ void FnCallShow(FILE *fout, const FnCall *fp)
 
 FnCallResult FnCallEvaluate(EvalContext *ctx, FnCall *fp, const Promise *caller)
 {
+    if (THIS_AGENT_TYPE == AGENT_TYPE_COMMON)
+    {
+        return (FnCallResult) { FNCALL_FAILURE, { FnCallCopy(fp), RVAL_TYPE_FNCALL } };
+    }
+
     Rlist *expargs;
     const FnCallType *fp_type = FnCallTypeGet(fp->name);
 
@@ -175,7 +249,7 @@ FnCallResult FnCallEvaluate(EvalContext *ctx, FnCall *fp, const Promise *caller)
 
     fp->caller = caller;
 
-    FnCallResult result = CallFunction(ctx, fp_type, fp, expargs);
+    FnCallResult result = CallFunction(ctx, fp, expargs);
 
     if (result.status == FNCALL_FAILURE)
     {

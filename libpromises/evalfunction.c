@@ -44,7 +44,6 @@
 #include <hashes.h>
 #include <unix.h>
 #include <string_lib.h>
-#include <args.h>
 #include <client_code.h>
 #include <communication.h>
 #include <classic.h>                                    /* SendSocketStream */
@@ -5730,10 +5729,57 @@ static int CheckID(char *id)
 
 /*********************************************************************/
 
-FnCallResult CallFunction(EvalContext *ctx, const FnCallType *function, FnCall *fp, Rlist *expargs)
+FnCallResult CallFunction(EvalContext *ctx, FnCall *fp, Rlist *expargs)
 {
-    ArgTemplate(ctx, fp, function->args, expargs);
-    return (*function->impl) (ctx, fp, expargs);
+    Rlist *rp = fp->args;
+    const FnCallType *fncall_type = FnCallTypeGet(fp->name);
+
+    int argnum = 0;
+    for (argnum = 0; rp != NULL && fncall_type->args[argnum].pattern != NULL; argnum++)
+    {
+        if (rp->val.type != RVAL_TYPE_FNCALL)
+        {
+            /* Nested functions will not match to lval so don't bother checking */
+            SyntaxTypeMatch err = CheckConstraintTypeMatch(fp->name, rp->val,
+                                                           fncall_type->args[argnum].dtype,
+                                                           fncall_type->args[argnum].pattern, 1);
+            if (err != SYNTAX_TYPE_MATCH_OK && err != SYNTAX_TYPE_MATCH_ERROR_UNEXPANDED)
+            {
+                FatalError(ctx, "In function '%s', '%s'", fp->name, SyntaxTypeMatchToString(err));
+            }
+        }
+
+        rp = rp->next;
+    }
+
+    char output[CF_BUFSIZE];
+    if (argnum != RlistLen(expargs) && !fncall_type->varargs)
+    {
+        snprintf(output, CF_BUFSIZE, "Argument template mismatch handling function %s(", fp->name);
+        RlistShow(stderr, expargs);
+        fprintf(stderr, ")\n");
+
+        rp = expargs;
+        for (int i = 0; i < argnum; i++)
+        {
+            printf("  arg[%d] range %s\t", i, fncall_type->args[i].pattern);
+            if (rp != NULL)
+            {
+                RvalShow(stdout, rp->val);
+                rp = rp->next;
+            }
+            else
+            {
+                printf(" ? ");
+            }
+            printf("\n");
+        }
+
+        FatalError(ctx, "Bad arguments");
+    }
+
+
+    return (*fncall_type->impl) (ctx, fp, expargs);
 }
 
 /*********************************************************/

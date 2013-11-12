@@ -21,7 +21,6 @@ libpromises_la_SOURCES = \
         acl_tools.h acl_tools_posix.c \
         actuator.c actuator.h \
         addr_lib.c addr_lib.h \
-        args.c args.h \
         assoc.c assoc.h \
         audit.c audit.h \
         attributes.c attributes.h \

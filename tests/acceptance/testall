@@ -122,7 +122,7 @@ unix_seconds() {
 # echo
 
 usage() {
-  echo "testall [-q] [--gainroot=<command>] [--agent=<agent>] [--cfpromises=<cf-promises>] [--cfserverd=<cf-serverd>] [--cfkey=<cf-key>] [--no-nova] [--staging] [--unsafe] [--no-network] [<test> <test>...]"
+  echo "testall [-q] [--gainroot=<command>] [--agent=<agent>] [--cfpromises=<cf-promises>] [--cfserverd=<cf-serverd>] [--cfkey=<cf-key>] [--no-nova] [--staging] [--unsafe] [--no-network] [--gdb] [<test> <test>...]"
   echo
   echo "If no test is given, all standard tests are run:"
   echo "  Tests with names of form <file>.cf are expected to run succesfully"
@@ -147,6 +147,9 @@ usage() {
   echo " --cfkey  provides a way to specify non-default cf-key location,"
   echo "               and defaults to $DEFCF_KEY."
   echo
+  echo " --libtool specify non-default libtool location (only needed for --gdb)."
+  echo "               defaults to $DEFLIBTOOL."
+  echo
   echo " --staging enable tests in staging directories. They are not expected to pass."
   echo
   echo " --unsafe  enable tests in unsafe directories. WARNING! These tests modify the"
@@ -157,6 +160,8 @@ usage() {
   echo
   echo " --no-network disable tests in network directories."
   echo " --printlog   print the full test.log output immediately."
+  echo
+  echo " --gdb   Run test under GDB"
 }
 
 runtest() {
@@ -218,11 +223,23 @@ CFENGINE_TEST_OVERRIDE_WORKDIR=\"$PLATFORM_WORKDIR\"
 TEMP=\"$PLATFORM_WORKDIR${DS}tmp\"
 export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP
 
-\"$AGENT\" $VERBOSE -Kf \"$TEST\" -D AUTO,DEBUG 2>&1
 " > "$WORKDIR/runtest"
+
+    if [ "$GDB" = 1 ]; then
+      if grep -q libtool < "$AGENT"; then
+        printf "\"$LIBTOOL\" --mode=execute " >> "$WORKDIR/runtest"
+      fi
+      printf "gdb --args " >> "$WORKDIR/runtest"
+    fi
+
+    printf "\"$AGENT\" $VERBOSE -Kf \"$TEST\" -D AUTO,DEBUG 2>&1\n" >> "$WORKDIR/runtest"
     chmod +x "$WORKDIR/runtest"
 
-    OUT=$($GAINROOT "$WORKDIR/runtest")
+    if [ "$GDB" = 1 ]; then
+      $GAINROOT "$WORKDIR/runtest"
+    else
+      OUT=$($GAINROOT "$WORKDIR/runtest")
+    fi
     RETVAL=$?
     echo "$OUT" >> "$LOG"
     echo >> "$LOG"
@@ -332,6 +349,9 @@ find_default_binary DEFCF_PROMISES cf-promises
 find_default_binary DEFCF_SERVERD cf-serverd
 find_default_binary DEFCF_KEY cf-key
 
+[ -x "`pwd`/libtool" ] && DEFLIBTOOL="`pwd`/libtool"
+[ -x "`pwd`/../../libtool" ] && DEFLIBTOOL="`pwd`/../../libtool"
+
 while true; do
   case "$1" in
     --help)
@@ -355,8 +375,12 @@ while true; do
       CF_SERVERD=${1#--cfserverd=};;
     --cfkey=*)
       CF_KEY=${1#--cfkey=};;
+    --libtool=*)
+      LIBTOOL=${1#--libtool=};;
     --printlog)
       PRINTLOG=1;;
+    --gdb)
+      GDB=1;;
     -*)
       echo "Unknown option: $1"
       exit 1;;
@@ -370,6 +394,7 @@ AGENT=${AGENT:-${DEFAGENT}}
 CF_PROMISES=${CF_PROMISES:-${DEFCF_PROMISES}}
 CF_SERVERD=${CF_SERVERD:-${DEFCF_SERVERD}}
 CF_KEY=${CF_KEY:-${DEFCF_KEY}}
+LIBTOOL=${LIBTOOL:-${DEFLIBTOOL}}
 
 if [ ! -x "$AGENT" -o ! -x "$CF_PROMISES" -o ! -x "$CF_SERVERD" -o ! -x "$CF_KEY" ]
 then

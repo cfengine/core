@@ -72,7 +72,7 @@ libcf_agent_la_SOURCES = \
 if !NT
 libcf_agent_la_SOURCES += nfs.c nfs.h
 
-if HAVE_PAM
+if HAVE_PAM_USERPROGS
   libcf_agent_la_SOURCES += verify_users_pam.c
 else
   libcf_agent_la_SOURCES += verify_users_stub.c

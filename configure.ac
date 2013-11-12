@@ -658,11 +658,8 @@ AS_IF([test "x$ac_cv_lib_pam_pam_start" = "xyes" && \
       [have_pam=yes],
       [have_pam=no]
 )
-AM_CONDITIONAL(HAVE_PAM, [test "x$have_pam" = "xyes"])
-
-AS_IF([test "x$have_pam" = "xyes" && test "x$have_userprogs" = "xno"],
-      [AC_MSG_ERROR([PAM library found, but useradd/usermod/userdel not found])]
-)
+AM_CONDITIONAL(HAVE_PAM_USERPROGS, [test "x$have_pam" = "xyes" && \
+    test "x$have_userprogs" = "xyes"])
 
 AC_CHECK_DECLS(getnetgrent, [], [], [[#include <netdb.h>]])
 AC_CHECK_FUNCS(getnetgrent)
@@ -1213,6 +1210,12 @@ if test "x$ac_cv_lib_xml2_xmlFirstElementChild" = xyes; then
   AC_MSG_RESULT([-> libxml2: $LIBXML2_PATH])
 else
   AC_MSG_RESULT([-> libxml2: disabled])
+fi
+
+if test "x$have_pam" = "xyes" && test "x$have_userprogs" = "xyes"; then
+  AC_MSG_RESULT([-> User promises: PAM/user* tools])
+else
+  AC_MSG_RESULT([-> User promises: disabled])
 fi
 
 m4_indir(incstart[]incend, [nova/config.m4])

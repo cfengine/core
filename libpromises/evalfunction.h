@@ -30,7 +30,6 @@
 
 FnCallResult FnCallHostInNetgroup(EvalContext *ctx, FnCall *fp, Rlist *finalargs);
 
-FnCallResult CallFunction(EvalContext *ctx, FnCall *fp, Rlist *finalargs);
 int FnNumArgs(const FnCallType *call_type);
 
 void ModuleProtocol(EvalContext *ctx, char *command, char *line, int print, const char *ns, char* context);

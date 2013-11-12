@@ -1486,6 +1486,7 @@ GenericAgentConfig *GenericAgentConfigNewDefault(AgentType agent_type)
     switch (agent_type)
     {
     case AGENT_TYPE_COMMON:
+        config->agent_specific.common.eval_functions = false;
         config->agent_specific.common.policy_output_format = GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_NONE;
         break;
 
@@ -1549,6 +1550,17 @@ void GenericAgentConfigApply(EvalContext *ctx, const GenericAgentConfig *config)
     if (config->color)
     {
         LoggingSetColor(config->color);
+    }
+
+    switch (config->agent_type)
+    {
+    case AGENT_TYPE_COMMON:
+        ctx->eval_options = EVAL_OPTION_NONE;
+        ctx->eval_options |= config->agent_specific.common.eval_functions;
+        break;
+
+    default:
+        break;
     }
 }
 

@@ -671,6 +671,8 @@ EvalContext *EvalContextNew(void)
 {
     EvalContext *ctx = xmalloc(sizeof(EvalContext));
 
+    ctx->eval_options = EVAL_OPTION_FULL;
+
     ctx->heap_abort = NULL;
     ctx->heap_abort_current_bundle = NULL;
 

@@ -49,8 +49,14 @@ static const char *CF_PROMISES_MANPAGE_LONG_DESCRIPTION = "cf-promises is a tool
         "Finally, cf-promises attempts to expose errors by partially evaluating the policy, resolving as many variable and "
         "classes promise statements as possible. At no point does cf-promises make any changes to the system.";
 
+typedef enum
+{
+    PROMISES_OPTION_EVAL_FUNCTIONS
+} PromisesOptions;
+
 static const struct option OPTIONS[] =
 {
+    [PROMISES_OPTION_EVAL_FUNCTIONS] = {"eval-functions", optional_argument, 0, 0 },
     {"help", no_argument, 0, 'h'},
     {"bundlesequence", required_argument, 0, 'b'},
     {"debug", no_argument, 0, 'd'},
@@ -74,6 +80,7 @@ static const struct option OPTIONS[] =
 
 static const char *HINTS[] =
 {
+    [PROMISES_OPTION_EVAL_FUNCTIONS] = "Evaluate functions during syntax checking (may catch more run-time errors). Possible values: 'yes', 'no'. Default is 'no'",
     "Print the help message",
     "Use the specified bundlesequence for verification",
     "Enable debugging output",
@@ -169,6 +176,20 @@ GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
     {
         switch ((char) c)
         {
+        case 0:
+            switch (optindex)
+            {
+            case PROMISES_OPTION_EVAL_FUNCTIONS:
+                if (!optarg)
+                {
+                    optarg = "yes";
+                }
+                config->agent_specific.common.eval_functions = strcmp("yes", optarg) == 0;
+                break;
+            default:
+                break;
+            }
+
         case 'l':
             LEGACY_OUTPUT = true;
             break;

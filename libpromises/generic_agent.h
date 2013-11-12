@@ -65,6 +65,7 @@ typedef struct
             } policy_output_format;
             unsigned int parser_warnings;
             unsigned int parser_warnings_error;
+            bool eval_functions;
         } common;
         struct
         {

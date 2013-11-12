@@ -89,8 +89,19 @@ typedef struct
 
 TYPED_SET_DECLARE(Promise, const Promise *)
 
+typedef enum
+{
+    EVAL_OPTION_NONE = 0,
+
+    EVAL_OPTION_EVAL_FUNCTIONS = 1 << 0,
+
+    EVAL_OPTION_FULL = 0x11111111
+} EvalContextOption;
+
 struct EvalContext_
 {
+    int eval_options;
+
     Item *heap_abort;
     Item *heap_abort_current_bundle;
 

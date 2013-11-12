@@ -7,21 +7,20 @@ size_t TestSpecFile(const char *testfile)
     char path[1024];
     sprintf(path, "%s/mustache_%s.json", TESTDATADIR, testfile);
 
-    char *contents = NULL;
-    if (FileReadMax(&contents, path, SIZE_MAX) == -1)
+    Writer *w = FileRead(path, SIZE_MAX, NULL);
+    if (w == NULL)
     {
         Log(LOG_LEVEL_ERR, "Error reading JSON input file '%s'", path);
         fail();
     }
     JsonElement *spec = NULL;
-    const char *data = contents;
+    const char *data = StringWriterData(w);
     if (JsonParse(&data, &spec) != JSON_PARSE_OK)
     {
         Log(LOG_LEVEL_ERR, "Error parsing JSON input file '%s'", path);
         fail();
     }
-
-    free(contents);
+    WriterClose(w);
 
     JsonElement *tests = JsonObjectGetAsArray(spec, "tests");
 

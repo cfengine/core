@@ -42,64 +42,45 @@ bool FileCanOpen(const char *path, const char *modes)
     }
 }
 
-ssize_t FileRead(const char *filename, char *buffer, size_t bufsize)
+#define READ_BUFSIZE 4096
+
+Writer *FileRead(const char *filename, size_t max_size, bool *truncated)
 {
-    FILE *f = fopen(filename, "rb");
+    int fd = open(filename, O_RDONLY);
+    if (fd == -1)
+        return NULL;
 
-    if (f == NULL)
+    Writer *w = StringWriter();
+    for (;;)
     {
-        return -1;
+        char buf[READ_BUFSIZE];
+        /* Reading more data than needed is deliberate. It is a truncation detection. */
+        ssize_t read_ = read(fd, buf, READ_BUFSIZE);
+        if (read_ == 0)
+        {
+            if (truncated)
+                *truncated = false;
+            close(fd);
+            return w;
+        }
+        if (read_ < 0)
+        {
+            if (errno == EINTR)
+                continue;
+            WriterClose(w);
+            close(fd);
+            return NULL;
+        }
+        if (read_ + StringWriterLength(w) > max_size)
+        {
+            WriterWriteLen(w, buf, max_size - StringWriterLength(w));
+            if (truncated)
+                *truncated = true;
+            close(fd);
+            return w;
+        }
+        WriterWriteLen(w, buf, read_);
     }
-    ssize_t ret = fread(buffer, bufsize, 1, f);
-
-    if (ferror(f))
-    {
-        fclose(f);
-        return -1;
-    }
-    fclose(f);
-    return ret;
-}
-
-
-ssize_t FileReadMax(char **output, const char *filename, size_t size_max)
-// TODO: there is CfReadFile and FileRead with slightly different semantics, merge
-// free(output) should be called on positive return value
-{
-    assert(size_max > 0);
-
-    struct stat sb;
-    if (stat(filename, &sb) == -1)
-    {
-        return -1;
-    }
-
-    FILE *fin;
-
-    if ((fin = fopen(filename, "r")) == NULL)
-    {
-        return -1;
-    }
-
-    ssize_t bytes_to_read = MIN(sb.st_size, size_max);
-    *output = xcalloc(bytes_to_read + 1, 1);
-    ssize_t bytes_read = fread(*output, 1, bytes_to_read, fin);
-
-    if (ferror(fin))
-    {
-        Log(LOG_LEVEL_ERR, "FileContentsRead: Error while reading file '%s'. (ferror: %s)", filename, GetErrorStr());
-        fclose(fin);
-        free(*output);
-        *output = NULL;
-        return -1;
-    }
-
-    if (fclose(fin) != 0)
-    {
-        Log(LOG_LEVEL_ERR, "FileContentsRead: Could not close file '%s'. (fclose: %s)", filename, GetErrorStr());
-    }
-
-    return bytes_read;
 }
 
 int FullWrite(int desc, const char *ptr, size_t len)

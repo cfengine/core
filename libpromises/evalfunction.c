@@ -4575,6 +4575,12 @@ static FnCallResult FnCallReadFile(EvalContext *ctx, FnCall *fp, Rlist *finalarg
     char *filename = RlistScalarValue(finalargs);
     int maxsize = IntFromString(RlistScalarValue(finalargs->next));
 
+    if (maxsize == 0 || maxsize > CF_BUFSIZE)
+    {
+        Log(LOG_LEVEL_INFO, "readfile(): max_size is more than internal limit " TOSTRING(CF_BUFSIZE));
+        maxsize = CF_BUFSIZE;
+    }
+
     // Read once to validate structure of file in itemlist
     contents = CfReadFile(filename, maxsize);
 
@@ -4692,23 +4698,23 @@ static FnCallResult FnCallReadJson(EvalContext *ctx, FnCall *fp, Rlist *args)
     const char *input_path = RlistScalarValue(args);
     size_t size_max = IntFromString(RlistScalarValue(args->next));
 
-    char *contents = NULL;
-    if (FileReadMax(&contents, input_path, size_max) == -1)
+    /* FIXME: fail if truncated? */
+    Writer *contents = FileRead(input_path, size_max, NULL);
+    if (!contents)
     {
         Log(LOG_LEVEL_ERR, "Error reading JSON input file '%s'", input_path);
         return (FnCallResult) { FNCALL_FAILURE, };
     }
     JsonElement *json = NULL;
-    const char *data = contents;
+    const char *data = StringWriterData(contents);
     if (JsonParse(&data, &json) != JSON_PARSE_OK)
     {
         Log(LOG_LEVEL_ERR, "Error parsing JSON file '%s'", input_path);
-        free(contents);
+        WriterClose(contents);
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
-    free(contents);
-
+    WriterClose(contents);
     return (FnCallResult) { FNCALL_SUCCESS, (Rval) { json, RVAL_TYPE_CONTAINER } };
 }
 
@@ -5266,23 +5272,16 @@ FnCallResult FnCallGroupExists(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 
 #endif /* !defined(__MINGW32__) */
 
+static bool SingleLine(const char *s)
+{
+    size_t length = strcspn(s, "\n\r");
+    /* [\n\r] followed by EOF */
+    return s[length] && !s[length+1];
+}
+
 static void *CfReadFile(char *filename, int maxsize)
 {
     struct stat sb;
-    char *result = NULL;
-    FILE *fp;
-    size_t size, bytes_read;
-    int i, newlines = 0;
-    size_t buflen = 0;
-
-    /* Because of strings hard-coded limits read up to CF_BUFSIZE bytes */
-
-    if ((fp = fopen(filename, "r")) == NULL)
-    {
-        Log(LOG_LEVEL_INFO, "readfile: Could not open file '%s' (fopen: %s)", filename, GetErrorStr());
-        return NULL;
-    }
-
     if (stat(filename, &sb) == -1)
     {
         if (THIS_AGENT_TYPE == AGENT_TYPE_COMMON)
@@ -5302,76 +5301,35 @@ static void *CfReadFile(char *filename, int maxsize)
                       filename, GetErrorStr());
             }
         }
-        clearerr(fp);
-        fclose(fp);
         return NULL;
     }
 
-    // If requested, force read because of broken /proc|/sys files semantics.
-    if (maxsize == 0)
-    {
-        buflen = CF_BUFSIZE;
-    }
-    else
-    {
-        buflen = MIN(CF_BUFSIZE, maxsize);
-    }
+    /* 0 means 'read until the end of file' */
+    size_t limit = maxsize ? maxsize : SIZE_MAX;
+    bool truncated = false;
+    Writer *w = FileRead(filename, limit, &truncated);
 
-    if (sb.st_size > maxsize && maxsize != 0)
+    if (!w)
     {
-        buflen = maxsize;
-        Log(LOG_LEVEL_INFO, "readfile: Truncating file '%s' to %d bytes, as requested by the maxsize parameter",
-              filename, maxsize);
-    }
-
-    if (sb.st_size > CF_BUFSIZE)
-    {
-        buflen = CF_BUFSIZE;
-        Log(LOG_LEVEL_INFO, "readfile: Truncating file '%s' to %d bytes, because of internal limits",
-              filename, CF_BUFSIZE);
-    }
-
-    result = xcalloc(1, buflen+1); // Extra space for '\0'
-    bytes_read = fread(result, 1, buflen, fp);
-
-    if (ferror(fp))
-    {
-        Log(LOG_LEVEL_INFO, "readfile: Error while reading file '%s' (fread: %s)",
-              filename, GetErrorStr());
-        clearerr(fp);
-        free(result);
+        Log(LOG_LEVEL_INFO, "CfReadFile: Error while reading file '%s' (%s)",
+            filename, GetErrorStr());
         return NULL;
     }
 
-    if (bytes_read < buflen)
+    if (truncated)
     {
-        buflen = bytes_read;
-        result = xrealloc(result, buflen+1);
+        Log(LOG_LEVEL_INFO, "CfReadFile: Truncating file '%s' to %d bytes as "
+            "requested by maxsize parameter", filename, maxsize);
     }
 
-    result[buflen] = '\0';
+    size_t size = StringWriterLength(w);
+    char *result = StringWriterClose(w);
 
-    size = buflen;
+    /* FIXME: Is it necessary here? Move to caller(s) */
+    if (SingleLine(result))
+        StripTrailingNewline(result, size);
 
-    if ( size > 0)
-    {
-      for (i = 0; i < size - 1 && result[i] != '\0' ; i++)
-      {
-          if (result[i] == '\n' || result[i] == '\r')
-          {
-              newlines++;
-          }
-      }
-
-      if (newlines == 0 && (result[size - 1] == '\n' || result[size - 1] == '\r'))
-      {
-          result[size - 1] = '\0';
-      }
-    }
-
-    clearerr(fp);
-    fclose(fp);
-    return (void *) result;
+    return result;
 }
 
 /*********************************************************************/

@@ -264,10 +264,20 @@ static FnCallResult CallFunction(EvalContext *ctx, FnCall *fp, Rlist *expargs)
 
 FnCallResult FnCallEvaluate(EvalContext *ctx, FnCall *fp, const Promise *caller)
 {
+    char *ifvarclass = NULL;
     if (!(ctx->eval_options & EVAL_OPTION_EVAL_FUNCTIONS))
     {
+        Log(LOG_LEVEL_VERBOSE, "Function '%s' was not evaluated because function evaluation was turned off in the evaluator",
+            fp->name);
         return (FnCallResult) { FNCALL_FAILURE, { FnCallCopy(fp), RVAL_TYPE_FNCALL } };
     }
+    else if (VarClassExcluded(ctx, caller, &ifvarclass))
+    {
+        Log(LOG_LEVEL_VERBOSE, "Function '%s' was not evaluated because it was excluded by ifvarclass '%s'",
+            fp->name, ifvarclass);
+        return (FnCallResult) { FNCALL_FAILURE, { FnCallCopy(fp), RVAL_TYPE_FNCALL } };
+    }
+
 
     Rlist *expargs;
     const FnCallType *fp_type = FnCallTypeGet(fp->name);

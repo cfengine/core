@@ -495,11 +495,15 @@ int Abort()
 
 /*****************************************************************************/
 
-int VarClassExcluded(EvalContext *ctx, Promise *pp, char **classes)
+int VarClassExcluded(const EvalContext *ctx, const Promise *pp, char **classes)
 {
     Constraint *cp = PromiseGetConstraint(ctx, pp, "ifvarclass");
+    if (!cp)
+    {
+        return false;
+    }
 
-    if (cp == NULL)
+    if (cp->rval.type == RVAL_TYPE_FNCALL)
     {
         return false;
     }
@@ -525,6 +529,24 @@ int VarClassExcluded(EvalContext *ctx, Promise *pp, char **classes)
     {
         return true;
     }
+}
+
+bool EvalContextPromiseIsActive(const EvalContext *ctx, const Promise *pp)
+{
+    if (!IsDefinedClass(ctx, pp->classes, PromiseGetNamespace(pp)))
+    {
+        return false;
+    }
+    else
+    {
+        char *classes = NULL;
+        if (VarClassExcluded(ctx, pp, &classes))
+        {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 void EvalContextHeapAddAbort(EvalContext *ctx, const char *context, const char *activated_on_context)

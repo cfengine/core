@@ -159,5 +159,9 @@ void FatalError(const EvalContext *ctx, char *s, ...)
     }
 
     EndAudit(ctx, 0);
+#ifdef NDEBUG
     exit(1);
+#else
+    abort();
+#endif
 }

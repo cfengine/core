@@ -179,8 +179,10 @@ void EvalContextMarkPromiseDone(EvalContext *ctx, const Promise *pp);
 void EvalContextMarkPromiseNotDone(EvalContext *ctx, const Promise *pp);
 
 /* - Rest - */
+bool EvalContextPromiseIsActive(const EvalContext *ctx, const Promise *pp);
+
 int Abort(void);
-int VarClassExcluded(EvalContext *ctx, Promise *pp, char **classes);
+int VarClassExcluded(const EvalContext *ctx, const Promise *pp, char **classes);
 void MarkPromiseHandleDone(EvalContext *ctx, const Promise *pp);
 int MissingDependencies(EvalContext *ctx, const Promise *pp);
 void cfPS(EvalContext *ctx, LogLevel level, PromiseResult status, const Promise *pp, Attributes attr, const char *fmt, ...) FUNC_ATTR_PRINTF(6, 7);

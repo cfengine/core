@@ -1,0 +1,50 @@
+##############################################################################
+#
+# Redmine #3577: evaluation should respect ifvarclass
+#
+##############################################################################
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+bundle agent init
+{
+
+}
+
+
+bundle agent test
+{
+vars:
+  "x" string => concat("a", "b"),
+      ifvarclass => "!any";
+  !any::
+  "y" string => concat("c", "d");
+}
+
+
+bundle agent check
+{
+# If the output contains the string, we fail
+classes:
+  "eval_x" expression => strcmp("ab", "$(test.x)");
+  "eval_y" expression => strcmp("cd", "$(test.y)");
+
+reports:
+  DEBUG::
+    "x $(test.x)";
+    "y $(test.y)";
+  DEBUG.eval_x::
+    "x evaluated";
+  DEBUG.ok2::
+    "y evaluated";
+
+  !(eval_x|eval_y)::
+    "$(this.promise_filename) Pass";
+  (eval_x|eval_y)::
+    "$(this.promise_filename) FAIL";
+}

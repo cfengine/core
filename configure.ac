@@ -1249,6 +1249,7 @@ AC_CONFIG_FILES([Makefile
     cf-execd/Makefile
     cf-key/Makefile
     cf-monitord/Makefile
+    cf-upgrade/Makefile
     cf-runagent/Makefile
     cf-serverd/Makefile
     ext/Makefile

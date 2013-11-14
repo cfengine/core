@@ -91,7 +91,8 @@ check_PROGRAMS = \
 	class_test \
 	version_test \
 	hash_test \
-	key_test
+	key_test \
+	cf_upgrade_test
 
 if HAVE_AVAHI_CLIENT
 if HAVE_AVAHI_COMMON
@@ -290,3 +291,10 @@ version_test_SOURCES = version_test.c
 hash_test_SOURCES = hash_test.c ../../libutils/libutils.la
 
 key_test_SOURCES = key_test.c ../../libutils/libutils.la
+
+CFUPGRADE=../../cf-upgrade
+cf_upgrade_test_SOURCES = cf_upgrade_test.c $(CFUPGRADE)/alloc-mini.c $(CFUPGRADE)/alloc-mini.h $(CFUPGRADE)/command_line.c \
+$(CFUPGRADE)/command_line.h $(CFUPGRADE)/configuration.c $(CFUPGRADE)/configuration.h $(CFUPGRADE)/log.c $(CFUPGRADE)/log.h \
+$(CFUPGRADE)/process.c $(CFUPGRADE)/process.h $(CFUPGRADE)/update.c $(CFUPGRADE)/update.h
+cf_upgrade_test_CFLAGS = -I$(CFUPGRADE)
+

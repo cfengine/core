@@ -292,6 +292,7 @@ FILE *cf_popensetuid(const char *command, const char *type, uid_t uid, gid_t gid
                 ArgFree(argv);
                 return NULL;
             }
+            Log(LOG_LEVEL_VERBOSE, "Directory changed to '%s'.", chdirv);
         }
 
         if (!CfSetuid(uid, gid))
@@ -479,6 +480,7 @@ FILE *cf_popen_shsetuid(const char *command, const char *type, uid_t uid, gid_t 
                 Log(LOG_LEVEL_ERR, "Couldn't chdir to '%s'. (chdir: %s)", chdirv, GetErrorStr());
                 return NULL;
             }
+            Log(LOG_LEVEL_VERBOSE, "Directory changed to '%s'.", chdirv);
         }
 
         if (!CfSetuid(uid, gid))
@@ -622,7 +624,7 @@ static int CfSetuid(uid_t uid, gid_t gid)
 
     if (gid != (gid_t) - 1)
     {
-        Log(LOG_LEVEL_VERBOSE, "Changing gid to %ju", (uintmax_t)gid);
+        Log(LOG_LEVEL_VERBOSE, "Changing gid to '%ju'", (uintmax_t)gid);
 
         if (setgid(gid) == -1)
         {

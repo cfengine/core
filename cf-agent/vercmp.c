@@ -80,7 +80,7 @@ static VersionCmpResult RunCmpCommand(EvalContext *ctx, const char *command, con
         VarRefDestroy(ref_v2);
     }
 
-    FILE *pfp = a.packages.package_commands_useshell ? cf_popen_sh(expanded_command, "w") : cf_popen(expanded_command, "w", true);
+    FILE *pfp = a.packages.contain.shelltype ? cf_popen_sh(expanded_command, "w") : cf_popen(expanded_command, "w", true);
 
     if (pfp == NULL)
     {

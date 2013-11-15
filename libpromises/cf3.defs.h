@@ -1416,11 +1416,13 @@ typedef struct
 {
     PackageAction package_policy;
     int have_package_methods;
+    int havepackagecontain;
     char *package_version;
     Rlist *package_architectures;
     PackageVersionComparator package_select;
     PackageActionPolicy package_changes;
     Rlist *package_file_repositories;
+    ExecContain contain;
 
     char *package_default_arch_command;
 

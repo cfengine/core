@@ -692,51 +692,31 @@ static PromiseResult SourceSearchAndCopy(EvalContext *ctx, char *from, char *to,
             char backup[CF_BUFSIZE];
             mode_t mask;
 
-            if (attr.copy.type_check)
+            if (!attr.move_obstructions)
             {
-                if (!attr.move_obstructions)
-                {
-                    Log(LOG_LEVEL_INFO, "Path '%s' is a symlink. Unable to move it aside without move_obstructions is set",
-                          to);
-                    return PROMISE_RESULT_NOOP;
-                }
+                Log(LOG_LEVEL_INFO, "Path '%s' is a symlink. Unable to move it aside without move_obstructions is set",
+                      to);
+                return PROMISE_RESULT_NOOP;
+            }
 
-                strcpy(backup, to);
-                DeleteSlash(to);
-                strcat(backup, ".cf-moved");
+            strcpy(backup, to);
+            DeleteSlash(to);
+            strcat(backup, ".cf-moved");
 
-                if (rename(to, backup) == -1)
-                {
-                    Log(LOG_LEVEL_INFO, "Unable to backup old '%s'", to);
-                    unlink(to);
-                }
+            if (rename(to, backup) == -1)
+            {
+                Log(LOG_LEVEL_INFO, "Unable to backup old '%s'", to);
+                unlink(to);
+            }
 
-                mask = umask(0);
-                if (mkdir(to, DEFAULTMODE) == -1)
-                {
-                    Log(LOG_LEVEL_ERR, "Unable to make directory '%s'. (mkdir: %s)", to, GetErrorStr());
-                    umask(mask);
-                    return PROMISE_RESULT_NOOP;
-                }
+            mask = umask(0);
+            if (mkdir(to, DEFAULTMODE) == -1)
+            {
+                Log(LOG_LEVEL_ERR, "Unable to make directory '%s'. (mkdir: %s)", to, GetErrorStr());
                 umask(mask);
+                return PROMISE_RESULT_NOOP;
             }
-            else
-            {
-                struct stat tmpstat;
-
-                if (stat(to, &tmpstat) != 0)
-                {
-                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, attr, "Unable to stat newly created directory '%s'. (stat: %s)",
-                         to, GetErrorStr());
-                    return PROMISE_RESULT_WARN;
-                }
-
-                if (!S_ISDIR(tmpstat.st_mode))
-                {
-                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, attr, "Symlink does not point to a directory: '%s'", to);
-                    return PROMISE_RESULT_WARN;
-                }
-            }
+            umask(mask);
         }
     }
 

@@ -3363,12 +3363,10 @@ static FnCallResult FnCallFormat(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
         BufferAppend(buf, format, strlen(format));
     }
 
-    char result[CF_BUFSIZE] = "";
-    memset(result, 0, CF_BUFSIZE);
-    strncpy(result, BufferData(buf), CF_BUFSIZE);
+    char *result = xstrdup(BufferData(buf));
     BufferDestroy(&buf);
 
-    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(result), RVAL_TYPE_SCALAR } };
+    return (FnCallResult) { FNCALL_SUCCESS, { result, RVAL_TYPE_SCALAR } };
 
 }
 

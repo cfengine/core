@@ -139,6 +139,7 @@ AC_ARG_ENABLE([fhs],
 
 AS_IF([test x"$enable_fhs" = xyes], [
   projlibdir='${libdir}/cfengine'
+  datadir='${exec_prefix}/share/cfengine'
   WORKDIR='${localstatedir}/lib/cfengine'
   MASTERDIR='default'
   INPUTDIR='default'

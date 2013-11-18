@@ -25,6 +25,7 @@ use Time::HiRes;
 use Data::Dumper;
 use Getopt::Std;
 
+my %opts = ();
 my %data = ();
 my $debug = 0;
 my $line = "";
@@ -36,10 +37,31 @@ my $parent_bundle = "";
 my @parent = ();
 my @parent_keys = ();
 my $is_edit_bundle = 0;
-$data{start} = Time::HiRes::gettimeofday();
 my @b_log = ();
-
+my $tabber = " " x 4;
+my $branch = "-" x 4;
 $line = <STDIN>;
+
+getopts("T:dhstva", \%opts);
+
+if(defined($opts{h})){
+	usage();
+}
+
+if(defined($opts{d})){
+	$debug = 1;
+}
+if(defined($opts{T})){
+	$tabber = " " x $opts{T};
+	$branch = "-" x $opts{T};
+}
+
+if(!defined($opts{a}) and !(defined($opts{t}) or defined($opts{c}) or defined($opts{s}))) {
+	print "ERROR: you need to specify at least one of -a, -t, -s or -c\n";
+	usage();
+}
+
+$data{start} = Time::HiRes::gettimeofday();
 
 if($line =~ /^.*> /) {
 	debug("Found output version < 3.5.0");
@@ -50,51 +72,81 @@ if($line =~ /^.*> /) {
 cfengine >= 3.5.0, try using the -l or --legacy-output switches for cf-agent.");
 }
 
-print "===============================================================================\n";
-print "Execution tree\n";
-print "===============================================================================\n";
-print "Start: $data{start} s\n";
-print "|\n";
-
-foreach my $b(@b_log){
-	my $elapsed = sprintf("%.5f", $data{bundles}{$b}{stop} - $data{bundles}{$b}{start});
-	my $rel_start = sprintf("%.5f", $data{bundles}{$b}{start} - $data{start});
-	my $rel_stop = sprintf("%.5f", $data{bundles}{$b}{stop} - $data{start});
-	my $tab = "      "x$data{bundles}{$b}{level};
-	my $header = "-----"x$data{bundles}{$b}{level};
-	print "|$header> $b\n";
-	print "|$tab"."$tab"."Start: $data{bundles}{$b}{start} s\n";
-	print "|$tab"."$tab"."Stop: $data{bundles}{$b}{stop} s\n";
-	print "|$tab"."$tab"."Elapsed: $elapsed s\n";
-	print "|$tab"."$tab"."Relative start: $rel_start s\n";
-	print "|$tab"."$tab"."Relative stop: $rel_stop s\n";
-
-	foreach my $p(@{$data{bundles}{$b}{prtype}}) {
-		my $t = ($data{bundles}{$b}{promise_types}{$p}{start})? $data{bundles}{$b}{promise_types}{$p}{start} : "NAN";
-		print "|$tab"."$tab"."$tab"."$p\n";
-		print "|$tab"."$tab"."$tab"."$tab"."Start: $t s\n";
-		if(defined($data{bundles}{$b}{promise_types}{$p}{classes})) {
-			print "|$tab"."$tab"."$tab"."$tab"."$tab".join("\n|$tab"."$tab"."$tab"."$tab"."$tab", @{$data{bundles}{$b}{promise_types}{$p}{classes}});
-			print "\n";
-		}
-	}
+if(defined($opts{t}) or defined($opts{a})){
+	print "===============================================================================\n";
+	print "Execution tree\n";
+	print "===============================================================================\n";
+	print "Start: $data{start} s\n";
 	print "|\n";
+
+	foreach my $b(@b_log){
+		my $elapsed = sprintf("%.5f", $data{bundles}{$b}{stop} - $data{bundles}{$b}{start});
+		my $rel_start = sprintf("%.5f", $data{bundles}{$b}{start} - $data{start});
+		my $rel_stop = sprintf("%.5f", $data{bundles}{$b}{stop} - $data{start});
+		my $tab = "$tabber"x$data{bundles}{$b}{level};
+	#	my $tab = "      "x$data{bundles}{$b}{level};
+		my $header = "$branch"x$data{bundles}{$b}{level};
+	#	my $header = "-----"x$data{bundles}{$b}{level};
+		print "|$header> $b\n";
+		print "|$tab"."$tab"."Start: $data{bundles}{$b}{start} s\n" if defined($opts{v});
+		print "|$tab"."$tab"."Stop: $data{bundles}{$b}{stop} s\n" if defined($opts{v});
+		print "|$tab"."$tab"."Elapsed: $elapsed s\n";
+		print "|$tab"."$tab"."Relative start: $rel_start s\n" if defined($opts{v});
+		print "|$tab"."$tab"."Relative stop: $rel_stop s\n" if defined($opts{v});
+		
+		if(defined($opts{v})){
+			foreach my $p(@{$data{bundles}{$b}{prtype}}) {
+				my $t = ($data{bundles}{$b}{promise_types}{$p}{start})? $data{bundles}{$b}{promise_types}{$p}{start} : "NAN";
+				print "|$tab"."$tab"."$tab"."$p\n";
+				print "|$tab"."$tab"."$tab"."$tab"."Start: $t s\n";
+				if(defined($data{bundles}{$b}{promise_types}{$p}{classes})) {
+					print "|$tab"."$tab"."$tab"."$tab"."$tab".join("\n|$tab"."$tab"."$tab"."$tab"."$tab", @{$data{bundles}{$b}{promise_types}{$p}{classes}});
+					print "\n";
+				}
+			}
+		}
+		print "|\n";
+	}
+
+	$data{stop} = Time::HiRes::gettimeofday();
+	print "|\n";
+	print "Stop: $data{stop} s\n";
+	print "===============================================================================\n";
+	print "\n";
 }
 
-$data{stop} = Time::HiRes::gettimeofday();
-print "|\n";
-print "Stop: $data{stop} s\n";
-print "===============================================================================\n";
-print "\n";
-
-print "===============================================================================\n";
-print "Summary\n";
-print "===============================================================================\n";
-print "Top 10 worst, bundles:\n";
-print "Top 10 worst, promise types:\n";
+if(defined($opts{s}) or defined($opts{a})){
+	print "===============================================================================\n";
+	print "Summary\n";
+	print "===============================================================================\n";
+	print "Top 10 worst, bundles:\n";
+	print "Top 10 worst, promise types:\n";
+}
 
 exit(0);
 
+sub usage {
+	print<<EOF;
+
+Usage: $0 [-T N] [-s|-t|-c|-a|-d|-v|-h]
+
+   -s         : Print only summary info
+   -t         : Print only eecution tree
+   -c         : Print only classes info
+   -a         : Print all (synonym to -s -t -c)
+   -T N       : Set the tabulator to N chars in execution tree
+   -d         : Set debug mode
+   -v         : Set verbose output
+   -h         : Print this help text
+
+EOF
+	exit(1);
+}
+
+sub debug {
+	my $msg = shift;
+	print "DEBUG: $msg\n" if $debug;
+}
 
 sub prelude_v1{
 	$line = <STDIN>;
@@ -160,9 +212,4 @@ sub bundles_v1 {
 			$data{bundles}{$cur_bundle_key}{promise_types}{$promise_type.":".$iter}{classes}[$#{$data{bundles}{$cur_bundle_key}{promise_types}{$promise_type.":".$iter}{classes}} + 1] = "+$2";
 		}
 	} while($line = <STDIN>)
-}
-
-sub debug {
-	my $msg = shift;
-	print "DEBUG: $msg\n" if $debug;
 }

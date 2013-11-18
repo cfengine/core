@@ -107,7 +107,7 @@ Things you should not use in *libpromises*
 
 - *cf3.extern.h*: Remaining global variables.
 - *prototypes3.h*: The original singular header file.
-- *item_lib.h*: Item is a special purpose list that has been absued for
+- *item_lib.h*: Item is a special purpose list that has been abused for
                 unintended purposes.
 - *assoc.h*: An lval-rval pair, deprecated in favor of *EvalContext*
              symbol table.
@@ -247,11 +247,11 @@ the following when writing output messages.
 * Use output sparingly, and use levels appropriately. Verbose logging tends to
   get very verbose.
 
-* Use platform indenpendent *GetErrorStr* when you want strerror(errno). Write
-  e.g.  Log(LOG_LEVEL_ERR, "Failed to open ... (fopen: %s)", GetErrorStr())
+* Use platform-independent *GetErrorStr* for strerror(errno).  Write
+  e.g. Log(LOG_LEVEL_ERR, "Failed to open ... (fopen: %s)", GetErrorStr())
 
-* Normally, try to keep it one line, don't a message using several
-  statements. Do not put newlines in the message.
+* Normally, try to keep each message to one line of output, produced
+  by one call to *Log*.
 
 * Normally, do not circumvent *Log* by writing to stdout or stderr.
 

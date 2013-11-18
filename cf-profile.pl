@@ -26,7 +26,7 @@ use Data::Dumper;
 use Getopt::Std;
 
 my %data = ();
-my $debug = 1;
+my $debug = 0;
 my $line = "";
 my $cur_bundle = "";
 my $cur_bundle_key = "";

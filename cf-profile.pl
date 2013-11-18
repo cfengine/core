@@ -46,7 +46,10 @@ if($line =~ /^[a-z]+>/) {
 	debug("Found version < 3.5.0");
 	prelude_v1();
 	bundles_v1();
+}else{
+	die("This program is currently working with cfengine < 3.5.0");
 }
+
 print "===============================================================================\n";
 print "Execution tree\n";
 print "===============================================================================\n";

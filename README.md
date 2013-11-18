@@ -6,11 +6,11 @@ part of your policy cf-agent is spending most time on.
 
 For version < 3.5.0:
 ```shell
-# cf-agent -v | ./cf-profile.pl
+# cf-agent -v | ./cf-profile.pl -a 
 ```
 
 For version >= 3.5.0:
 ```shell
-# cf-agent -v --legacy-output | ./cf-profile.pl
+# cf-agent -v --legacy-output | ./cf-profile.pl -a
 ```
 Requires Perl module Time::HiRes.

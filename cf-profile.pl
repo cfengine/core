@@ -21,13 +21,12 @@
 
 use strict;
 use POSIX;
-use lib './Time-HiRes-1.9725/lib';
 use Time::HiRes;
 use Data::Dumper;
 use Getopt::Std;
 
 my %data = ();
-my $debug = 0;
+my $debug = 1;
 my $line = "";
 my $cur_bundle = "";
 my $cur_bundle_key = "";
@@ -42,12 +41,13 @@ my @b_log = ();
 
 $line = <STDIN>;
 
-if($line =~ /^[a-z]+>/) {
-	debug("Found version < 3.5.0");
+if($line =~ /^.*> /) {
+	debug("Found output version < 3.5.0");
 	prelude_v1();
 	bundles_v1();
 }else{
-	die("This program is currently working with cfengine < 3.5.0");
+	die("This program is currently working with legacy output of cfengine < 3.5.0. If you are on
+cfengine >= 3.5.0, try using the -l or --legacy-output switches for cf-agent.");
 }
 
 print "===============================================================================\n";
@@ -55,6 +55,7 @@ print "Execution tree\n";
 print "===============================================================================\n";
 print "Start: $data{start} s\n";
 print "|\n";
+
 foreach my $b(@b_log){
 	my $elapsed = sprintf("%.5f", $data{bundles}{$b}{stop} - $data{bundles}{$b}{start});
 	my $rel_start = sprintf("%.5f", $data{bundles}{$b}{start} - $data{start});
@@ -94,11 +95,11 @@ print "Top 10 worst, promise types:\n";
 
 exit(0);
 
+
 sub prelude_v1{
 	$line = <STDIN>;
 	do {
-		
-		if($line =~ /(Defined|Hard)\s+classes\s+=\s\{\s+(.*)\s+\}/){
+		if($line =~ /(Defined|Hard)\s+classes\s+=\s+\{\s+(.*)\s*\}/){
 			$data{all_classes} = $2;
 			debug("Found classes: \"$2\"");
 			return 0;
@@ -141,7 +142,7 @@ sub bundles_v1 {
 				push(@parent_keys,$cur_bundle_key);
 			}
 			debug("Found $promise_type in bundle $cur_bundle iter $iter");
-		}elsif($line =~ /(Bundle\s+Accounting\s+Summary\s+for|Zero\s+promises\s+executed\s+for\s+bundle)\s+\"(\w+)\"/) {
+		}elsif($line =~ /(Bundle\s+Accounting\s+Summary\s+for|Zero\s+promises\s+executed\s+for\s+bundle)\s+\"*\'*(\w+)\"*\'*/) {
 			my $b = $2;
 			debug("End $b");
 			if($#parent >= 0 && $parent[$#parent] =~ /$b/) {

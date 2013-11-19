@@ -22,33 +22,16 @@
   included file COSL.txt.
 */
 
-#ifndef CFENGINE_CF_SERVERD_FUNCTIONS_H
-#define CFENGINE_CF_SERVERD_FUNCTIONS_H
-
-#include <platform.h>
-
-#include <generic_agent.h>
-#include <server.h>
+#include <constants.h>
 
 #include <env_context.h>
-#include <dir.h>
-#include <dbm_api.h>
-#include <lastseen.h>
-#include <crypto.h>
-#include <files_names.h>
-#include <vars.h>
-#include <promises.h>
-#include <item_lib.h>
-#include <conversion.h>
-#include <xml_writer.h>
-#include <pipes.h>
 
-void ThisAgentInit(void);
-GenericAgentConfig *CheckOpts(int argc, char **argv);
-int OpenReceiverChannel(void);
-void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *config);
-typedef int (*InitServerFunction)(size_t queue_size);
-int InitServer(size_t queue_size);
-void StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config);
-
-#endif // CFSERVERDFUNCTIONS_H
+void LoadSystemConstants(EvalContext *ctx)
+{
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_CONST, "dollar", "$", DATA_TYPE_STRING);
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_CONST, "n", "\n", DATA_TYPE_STRING);
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_CONST, "r", "\r", DATA_TYPE_STRING);
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_CONST, "t", "\t", DATA_TYPE_STRING);
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_CONST, "endl", "\n", DATA_TYPE_STRING);
+    /* NewScalar("const","0","\0",cf_str);  - this cannot work */
+}

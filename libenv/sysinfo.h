@@ -22,14 +22,21 @@
   included file COSL.txt.
 */
 
-#ifndef ZONES_H
-#define ZONES_H
+#ifndef CFENGINE_SYSINFO_H
+#define CFENGINE_SYSINFO_H
 
-#include <bool.h>
+#include <cf3.defs.h>
 
-#ifndef __MINGW32__
-bool IsGlobalZone();
-bool ForeignZone(char *s);
+void DiscoverVersion(EvalContext *ctx);
+
+void GetNameInfo3(EvalContext *ctx, AgentType agent_type);
+void Get3Environment(EvalContext *ctx, AgentType agent_type);
+void BuiltinClasses(EvalContext *ctx);
+void OSClasses(EvalContext *ctx);
+void DetectDomainName(EvalContext *ctx, const char *orig_nodename);
+
+void CreateHardClassesFromCanonification(EvalContext *ctx, const char *canonified);
+
+int GetUptimeMinutes(time_t now);
+
 #endif
-
-#endif // ZONES_H

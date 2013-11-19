@@ -30,6 +30,4 @@ void TimeOut(void);
 time_t SetReferenceTime(void);
 void SetStartTime(void);
 
-void UpdateTimeClasses(EvalContext *ctx, time_t t);
-
 #endif

@@ -36,7 +36,7 @@
 #include <misc_lib.h>
 #include <assert.h>
 #include <crypto.h>
-#include <sysinfo.h>
+#include <known_dirs.h>
 #include <bootstrap.h>
 #include <files_hashes.h>
 #include <item_lib.h>

@@ -1237,6 +1237,7 @@ AC_CONFIG_FILES([Makefile
     libutils/Makefile
     libutils/config.post.h
     libcfnet/Makefile
+    libenv/Makefile
     libpromises/Makefile
     cf-agent/Makefile
     cf-promises/Makefile

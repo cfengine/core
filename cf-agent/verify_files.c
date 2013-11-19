@@ -53,7 +53,7 @@
 #include <audit.h>
 #include <expand.h>
 #include <mustache.h>
-#include <sysinfo.h>
+#include <known_dirs.h>
 
 static void LoadSetuid(Attributes a);
 static PromiseResult SaveSetuid(EvalContext *ctx, Attributes a, Promise *pp);

@@ -26,6 +26,7 @@
 #include <cf-execd-runner.h>
 
 #include <bootstrap.h>
+#include <known_dirs.h>
 #include <sysinfo.h>
 #include <env_context.h>
 #include <promises.h>
@@ -44,6 +45,8 @@
 #include <processes_select.h>
 #include <man.h>
 #include <timeout.h>
+#include <unix_iface.h>
+#include <time_classes.h>
 
 #include <cf-windows-functions.h>
 

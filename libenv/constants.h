@@ -22,33 +22,11 @@
   included file COSL.txt.
 */
 
-#ifndef CFENGINE_CF_SERVERD_FUNCTIONS_H
-#define CFENGINE_CF_SERVERD_FUNCTIONS_H
+#ifndef CFENGINE_CONSTANTS_H
+#define CFENGINE_CONSTANTS_H
 
-#include <platform.h>
+#include <cf3.defs.h>
 
-#include <generic_agent.h>
-#include <server.h>
+void LoadSystemConstants(EvalContext *ctx);
 
-#include <env_context.h>
-#include <dir.h>
-#include <dbm_api.h>
-#include <lastseen.h>
-#include <crypto.h>
-#include <files_names.h>
-#include <vars.h>
-#include <promises.h>
-#include <item_lib.h>
-#include <conversion.h>
-#include <xml_writer.h>
-#include <pipes.h>
-
-void ThisAgentInit(void);
-GenericAgentConfig *CheckOpts(int argc, char **argv);
-int OpenReceiverChannel(void);
-void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *config);
-typedef int (*InitServerFunction)(size_t queue_size);
-int InitServer(size_t queue_size);
-void StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config);
-
-#endif // CFSERVERDFUNCTIONS_H
+#endif

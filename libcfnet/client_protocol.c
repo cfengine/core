@@ -34,10 +34,11 @@
 extern char VIPADDRESS[CF_MAX_IP_LEN];
 extern char VDOMAIN[];
 extern char VFQNAME[];
-#include <sysinfo.h>                           /* GetCurrentUsername */
+#include <unix.h>                           /* GetCurrentUsername */
 #include <lastseen.h>                          /* LastSaw */
 #include <crypto.h>                            /* PublicKeyFile */
 #include <files_hashes.h> /* HashString,HashesMatch,HashPubKey,HashPrintSafe */
+#include <known_dirs.h>
 
 
 /*********************************************************************/

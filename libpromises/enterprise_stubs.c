@@ -23,7 +23,7 @@
 */
 
 #include <cf3.defs.h>
-#include <sysinfo.h>
+#include <known_dirs.h>
 
 #include <prototypes3.h>
 #include <syntax.h>

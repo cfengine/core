@@ -31,7 +31,7 @@
 #include <vars.h>
 #include <signals.h>
 #include <scope.h>
-#include <sysinfo.h>
+#include <known_dirs.h>
 #include <man.h>
 #include <bootstrap.h>
 #include <timeout.h>

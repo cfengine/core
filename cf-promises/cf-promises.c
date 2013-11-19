@@ -29,7 +29,7 @@
 #include <syntax.h>
 #include <rlist.h>
 #include <parser.h>
-#include <sysinfo.h>
+#include <known_dirs.h>
 #include <man.h>
 #include <bootstrap.h>
 

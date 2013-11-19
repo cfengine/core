@@ -29,8 +29,8 @@
 #include <net.h>                      /* SendTransaction,ReceiveTransaction */
 #include <tls_client.h>               /* TLSTry */
 #include <tls_generic.h>              /* TLSVerifyPeer */
-#include <sysinfo.h>
 #include <dir.h>
+#include <unix.h>
 #include <dir_priv.h>
 #include <client_protocol.h>
 #include <crypto.h>

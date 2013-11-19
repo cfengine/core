@@ -65,7 +65,7 @@
 #include <fncall.h>
 #include <rlist.h>
 #include <agent-diagnostics.h>
-#include <sysinfo.h>
+#include <known_dirs.h>
 #include <cf-agent-enterprise-stubs.h>
 #include <syslog_client.h>
 #include <man.h>

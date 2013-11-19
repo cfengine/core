@@ -22,28 +22,14 @@
   included file COSL.txt.
 */
 
-#ifndef CFENGINE_SYSINFO_H
-#define CFENGINE_SYSINFO_H
+#ifndef CFENGINE_ZONES_H
+#define CFENGINE_ZONES_H
 
-#include <cf3.defs.h>
+#include <platform.h>
 
-void DiscoverVersion(EvalContext *ctx);
-
-void GetNameInfo3(EvalContext *ctx, AgentType agent_type);
-void Get3Environment(EvalContext *ctx, AgentType agent_type);
-void BuiltinClasses(EvalContext *ctx);
-void OSClasses(EvalContext *ctx);
-bool IsInterfaceAddress(const char *adr);
-void DetectDomainName(EvalContext *ctx, const char *orig_nodename);
-const char *GetWorkDir(void);
-const char *GetLogDir(void);
-const char *GetPidDir(void);
-
-void CreateHardClassesFromCanonification(EvalContext *ctx, const char *canonified);
-
-// FIX: win_proc.c?
-int GetCurrentUserName(char *userName, int userNameLen);
-
-int GetUptimeMinutes(time_t now);
-
+#ifndef __MINGW32__
+bool IsGlobalZone();
+bool ForeignZone(char *s);
 #endif
+
+#endif // ZONES_H

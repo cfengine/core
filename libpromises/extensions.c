@@ -24,7 +24,7 @@
 
 #include <enterprise_extension.h>
 
-#include <sysinfo.h>
+#include <known_dirs.h>
 #include <misc_lib.h>
 
 #include <pthread.h>

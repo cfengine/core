@@ -28,10 +28,7 @@
 
 #include <cf3.defs.h>
 
-#include <assoc.h>
-
-void GetInterfacesInfo(EvalContext *ctx);
-void GetInterfaceFlags(EvalContext *ctx, struct ifreq *ifr, Rlist **hw_flags);
 void ProcessSignalTerminate(pid_t pid);
+int GetCurrentUserName(char *userName, int userNameLen);
 
 #endif

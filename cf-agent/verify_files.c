@@ -630,12 +630,11 @@ PromiseResult ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes
                 ouput_writer = FileWriter(output_file);
             }
 
-            char *template_contents = NULL;
-            if (FileReadMax(&template_contents, a.edit_template, SIZE_MAX) == -1)
+            Writer *template_writer = FileRead(a.edit_template, SIZE_MAX, NULL);
+            if (!template_writer)
             {
                 cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Could not read template file '%s'", a.edit_template);
                 result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
-                free(template_contents);
                 WriterClose(ouput_writer);
                 goto exit;
             }
@@ -646,17 +645,17 @@ PromiseResult ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes
                 a.template_data = default_template_data = DefaultTemplateData(ctx);
             }
 
-            if (!MustacheRender(ouput_writer, template_contents, a.template_data))
+            if (!MustacheRender(ouput_writer, StringWriterData(template_writer), a.template_data))
             {
                 cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Error rendering mustache template '%s'", a.edit_template);
                 result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
-                free(template_contents);
+                WriterClose(template_writer);
                 WriterClose(ouput_writer);
                 goto exit;
             }
 
             JsonDestroy(default_template_data);
-            free(template_contents);
+            WriterClose(template_writer);
             WriterClose(ouput_writer);
         }
     }

@@ -35,48 +35,52 @@ void test_file_write(void)
 
 void test_file_read_all(void)
 {
-    char *output;
+    bool truncated;
+    Writer *w = FileRead(FILE_NAME, FILE_SIZE, &truncated);
+    assert_int_equal(StringWriterLength(w), FILE_SIZE);
+    assert_string_equal(StringWriterData(w), FILE_CONTENTS);
+    assert_int_equal(truncated, false);
+    WriterClose(w);
 
-    ssize_t bytes_read_exact_max = FileReadMax(&output, FILE_NAME, FILE_SIZE);
-    assert_int_equal(bytes_read_exact_max, FILE_SIZE);
-    assert_string_equal(output, FILE_CONTENTS);
+    Writer *w2 = FileRead(FILE_NAME, FILE_SIZE * 10, &truncated);
+    assert_int_equal(StringWriterLength(w2), FILE_SIZE);
+    assert_string_equal(StringWriterData(w2), FILE_CONTENTS);
+    assert_int_equal(truncated, false);
+    WriterClose(w2);
 
-    free(output);
-
-    char *output2;
-
-    ssize_t bytes_read_large_max = FileReadMax(&output2, FILE_NAME, FILE_SIZE * 10);
-    assert_int_equal(bytes_read_large_max, FILE_SIZE);
-    assert_string_equal(output2, FILE_CONTENTS);
-
-    free(output2);
+    Writer *w3 = FileRead(FILE_NAME, FILE_SIZE * 10, NULL);
+    assert_int_equal(StringWriterLength(w3), FILE_SIZE);
+    assert_string_equal(StringWriterData(w3), FILE_CONTENTS);
+    WriterClose(w3);
 }
 
 void test_file_read_truncate(void)
 {
     char expected_output[FILE_SIZE + 1];
-    char *output;
 
+    bool truncated = false;
+    Writer *w = FileRead(FILE_NAME, FILE_SIZE - 1, &truncated);
+    assert_int_equal(StringWriterLength(w), FILE_SIZE - 1);
     strlcpy(expected_output, FILE_CONTENTS, FILE_SIZE);
-    ssize_t bytes_read_corner_max = FileReadMax(&output, FILE_NAME, FILE_SIZE - 1);
-    assert_int_equal(bytes_read_corner_max, FILE_SIZE - 1);
-    assert_string_equal(output, expected_output);
+    assert_string_equal(StringWriterData(w), expected_output);
+    assert_int_equal(truncated, true);
+    WriterClose(w);
 
-    free(output);
-
-    char *output2;
+    bool truncated2 = false;
+    Writer *w2 = FileRead(FILE_NAME, 10, &truncated2);
+    assert_int_equal(StringWriterLength(w2), 10);
     strlcpy(expected_output, FILE_CONTENTS, 11);
-    ssize_t bytes_read_ten = FileReadMax(&output2, FILE_NAME, 10);
-    assert_int_equal(bytes_read_ten, 10);
-    assert_string_equal(output2, expected_output);
-    free(output2);
+    assert_string_equal(StringWriterData(w2), expected_output);
+    assert_int_equal(truncated2, true);
+    WriterClose(w2);
 
-    char *output3;
+    bool truncated3 = false;
+    Writer *w3 = FileRead(FILE_NAME, 1, &truncated3);
+    assert_int_equal(StringWriterLength(w3), 1);
     strlcpy(expected_output, FILE_CONTENTS, 2);
-    ssize_t bytes_read_one = FileReadMax(&output3, FILE_NAME, 1);
-    assert_int_equal(bytes_read_one, 1);
-    assert_string_equal(output3, expected_output);
-    free(output3);
+    assert_string_equal(StringWriterData(w3), expected_output);
+    assert_int_equal(truncated3, true);
+    WriterClose(w3);
 }
 
 void test_file_read_empty(void)
@@ -87,17 +91,17 @@ void test_file_read_empty(void)
     int close_res = close(creat_fd);
     assert_int_equal(close_res, 0);
 
-    char *output;
-    ssize_t bytes_read = FileReadMax(&output, FILE_NAME_EMPTY, 100);
-    assert_int_equal(bytes_read, 0);
-    assert_true(output);
+    bool truncated = true;
+    Writer *w = FileRead(FILE_NAME_EMPTY, 100, &truncated);
+    assert_int_equal(StringWriterLength(w), 0);
+    assert_string_equal(StringWriterData(w), "");
+    assert_int_equal(truncated, false);
 }
 
 void test_file_read_invalid(void)
 {
-    char *output;
-    ssize_t bytes_read = FileReadMax(&output, "nonexisting file", 100);
-    assert_true(bytes_read == -1);
+    Writer *w = FileRead("nonexisting file", 100, NULL);
+    assert_false(w);
 }
 
 int main()

@@ -36,7 +36,7 @@ if test x"$GCC" = "xyes" && test x"$HP_UX_AC" != x"yes"; then
 
     save_CFLAGS="$CFLAGS"
     CFLAGS="$CFLAGS -Wunused-parameter"
-    AC_MSG_CHECKING(for -Wunused-parameter")
+    AC_MSG_CHECKING(for -Wunused-parameter)
     AC_COMPILE_IFELSE([AC_LANG_SOURCE([int main() {}])],
      [AC_MSG_RESULT(yes)],
      [AC_MSG_RESULT(no)
@@ -44,13 +44,18 @@ if test x"$GCC" = "xyes" && test x"$HP_UX_AC" != x"yes"; then
 
     dnl Clang does not like 'const const' construct arising from
     dnl expansion of TYPED_SET_DECLARE macro
-    save_CFLAGS="$CFLAGS"
-    CFLAGS="$CFLAGS -Wno-duplicate-decl-specifier"
+    dnl
+    dnl This check is relying on explicit compilator detection due to
+    dnl GCC irregularities checking for -Wno-* command-line options
+    dnl (command line is not fully checked until actual warning occurs)
     AC_MSG_CHECKING(for -Wno-duplicate-decl-specifier)
-    AC_COMPILE_IFELSE([AC_LANG_SOURCE([int main() {}])],
-     [AC_MSG_RESULT(yes)],
-     [AC_MSG_RESULT(no)
-     CFLAGS="$save_CFLAGS"])
+    AC_COMPILE_IFELSE([AC_LANG_SOURCE([#ifndef __clang__
+# error Not a clang
+#endif
+int main() {}])],
+     [AC_MSG_RESULT(yes)
+     CFLAGS="$save_CFLAGS -Wno-duplicate-decl-specifier"],
+     [AC_MSG_RESULT(no)])
 else 
     AC_MSG_RESULT(no)
 fi

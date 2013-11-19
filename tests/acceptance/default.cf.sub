@@ -15,7 +15,7 @@ vars:
   any::
   "cmds" slist => { "date", "diff", "echo", "egrep", "false", "grep", "gzip", "hexdump",
                     "ln", "mkdir", "od", "perl", "printf", "pwd", "rm", "sort", "touch",
-                    "true", "wc", "cat", "sed", "psexec" };
+                    "true", "wc", "cat", "sed", "psexec", "seq" };
 
   !windows::
     "paths[bin]" string                    => "/bin";

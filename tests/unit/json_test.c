@@ -31,21 +31,20 @@ static JsonElement *LoadTestFile(const char *filename)
     char path[1024];
     sprintf(path, "%s/%s", TESTDATADIR, filename);
 
-    char *contents = NULL;
-    if (FileReadMax(&contents, path, SIZE_MAX) == -1)
+    Writer *w = FileRead(path, SIZE_MAX, NULL);
+    if (!w)
     {
-        free(contents);
         return NULL;
     }
     JsonElement *json = NULL;
-    const char *data = contents; // TODO: need to fix JSON parser signature, just silly
+    const char *data = StringWriterData(w);
     if (JsonParse(&data, &json) != JSON_PARSE_OK)
     {
-        free(contents);
+        WriterClose(w);
         return NULL;
     }
 
-    free(contents);
+    WriterClose(w);
     return json;
 }
 

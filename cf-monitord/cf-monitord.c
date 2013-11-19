@@ -34,6 +34,7 @@
 #include <sysinfo.h>
 #include <man.h>
 #include <bootstrap.h>
+#include <timeout.h>
 
 typedef enum
 {

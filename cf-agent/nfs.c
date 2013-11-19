@@ -38,6 +38,7 @@
 #include <misc_lib.h>
 #include <rlist.h>
 #include <env_context.h>
+#include <timeout.h>
 
 /* seconds */
 #define RPCTIMEOUT 60

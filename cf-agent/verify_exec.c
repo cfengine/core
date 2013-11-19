@@ -44,6 +44,7 @@
 #include <ornaments.h>
 #include <env_context.h>
 #include <retcode.h>
+#include <timeout.h>
 
 typedef enum
 {

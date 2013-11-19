@@ -55,6 +55,7 @@
 #include <audit.h>
 #include <verify_classes.h>
 #include <verify_vars.h>
+#include <timeout.h>
 
 #include <cf-windows-functions.h>
 

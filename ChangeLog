@@ -24,6 +24,8 @@
        Bug fixes:
        - #TODO# goodness from evaluator and variable table refactoring
           - `this` and similar variables 
+       - Improve performance of list iteration (Redmine #1875)
+
 
 3.5.1
 

@@ -26,6 +26,22 @@
           - `this` and similar variables 
        - Improve performance of list iteration (Redmine #1875)
 
+3.5.2
+       Bug fixes:
+       - fix delayed abortclasses checking (Redmine #2316, #3114, #3003)
+       - fix maplist arguments bug (Redmine #3256)
+       - fix segfaults in cf-pomises (Redmine #3173, 3194)
+       - fix build on Solaris 10/SmartOS (Redmine #3097)
+       - sanitize characters from /etc/issue in sys.flavor for Debian (Redmine #2988)
+       - Fix segfault when dealing with files or data > 4K (Redmine #2912, 2698)
+       - Don't truncate keys to 126 characters in getindices (Redmine #2626)
+       - files created via log_* actions now have mode 600 (Redmine #1578)
+       - fix wrong log message when a promise is ignored due to 'ifvarclass' not matching
+       - fix lifetime of persistent classes (Redmine #3259)
+       - fix segfault when process_select body had no process_result attribute
+         Default to AND'ed expression of all specified attributes (Redmine #3224)
+       - include system message in output when acl promises fail
+       - fix invocation of standard_services bundle and corresponding promise compliance (Redmine #2869)
 
 3.5.1
 

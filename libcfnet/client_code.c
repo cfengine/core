@@ -387,10 +387,10 @@ static AgentConnection *ServerConnection(const char *server, FileCopy fc, int *e
             }
             else if (ret == 0)                             /* Auth/ID error */
             {
-                    DisconnectServer(conn);
-                    errno = EPERM;
-                    *err = -2;
-                    return NULL;
+                DisconnectServer(conn);
+                errno = EPERM;
+                *err = -2;
+                return NULL;
             }
             assert(ret == 1);
             ConnectionInfoSetProtocolVersion(conn->conn_info, CF_PROTOCOL_TLS);

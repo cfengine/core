@@ -79,17 +79,6 @@ int TLSVerifyPeer(ConnectionInfo *conn_info, const char *remoteip, const char *u
         goto ret3;
     }
 
-    ret = X509_verify(received_cert, received_pubkey);
-    if (ret <= 0)
-    {
-        Log(LOG_LEVEL_ERR,
-            "Received public key is not properly signed: %s",
-            ERR_reason_error_string(ERR_get_error()));
-        retval = -1;
-        goto ret3;
-    }
-    Log(LOG_LEVEL_VERBOSE, "Received public key signature is valid");
-
     RSA *remote_key = EVP_PKEY_get1_RSA(received_pubkey);
     if (remote_key == NULL)
     {

@@ -759,7 +759,6 @@ static bool original_function_SSL_get_shutdown = true;
 static bool original_function_SSL_get_peer_certificate = true;
 static bool original_function_X509_get_pubkey = true;
 static bool original_function_EVP_PKEY_type = true;
-static bool original_function_X509_verify = true;
 static bool original_function_HavePublicKey = true;
 static bool original_function_EVP_PKEY_cmp = true;
 static int SSL_write_result = -1;
@@ -769,7 +768,6 @@ static int SSL_get_shutdown_result = -1;
 static X509 *SSL_get_peer_certificate_result = NULL;
 static EVP_PKEY *X509_get_pubkey_result = NULL;
 static int EVP_PKEY_type_result = -1;
-static int X509_verify_result = -1;
 static RSA *HavePublicKey_result = NULL;
 static int EVP_PKEY_cmp_result = -1;
 
@@ -780,7 +778,6 @@ static int EVP_PKEY_cmp_result = -1;
     original_function_SSL_get_peer_certificate = true; \
     original_function_X509_get_pubkey = true; \
     original_function_EVP_PKEY_type = true; \
-    original_function_X509_verify = true; \
     original_function_HavePublicKey = true; \
     original_function_EVP_PKEY_cmp = true; \
     SSL_write_result = -1; \
@@ -788,7 +785,6 @@ static int EVP_PKEY_cmp_result = -1;
     SSL_get_shutdown_result = -1; \
     X509_get_pubkey_result = NULL; \
     EVP_PKEY_type_result = -1; \
-    X509_verify_result = -1; \
     HavePublicKey_result = NULL; \
     EVP_PKEY_cmp_result = -1;
 /*
@@ -821,8 +817,6 @@ static int EVP_PKEY_cmp_result = -1;
     X509_get_pubkey_result = x
 #define EVP_PKEY_TYPE_RETURN(x) \
     EVP_PKEY_type_result = x
-#define X509_VERIFY_RETURN(x) \
-    X509_verify_result = x
 #define HAVEPUBLICKEY_RETURN(x)                 \
     if (x) ((RSA *) x)->references++;           \
     HavePublicKey_result = x
@@ -914,11 +908,6 @@ int original_EVP_PKEY_type(int type)
         return(NID_undef);
     }
     return(NID_undef);
-}
-int original_X509_verify(X509 *a, EVP_PKEY *r)
-{
-    return(ASN1_item_verify(ASN1_ITEM_rptr(X509_CINF),a->sig_alg,
-        a->signature,a->cert_info,r));
 }
 RSA *original_HavePublicKey(const char *username, const char *ipaddress, const char *digest)
 {
@@ -1070,14 +1059,6 @@ int EVP_PKEY_type(int type)
     }
     return EVP_PKEY_type_result;
 }
-int X509_verify(X509 *a, EVP_PKEY *r)
-{
-    if (USING(X509_verify))
-    {
-        return original_X509_verify(a, r);
-    }
-    return X509_verify_result;
-}
 RSA *HavePublicKey(const char *username, const char *ipaddress, const char *digest)
 {
     if (USING(HavePublicKey))
@@ -1214,25 +1195,7 @@ static void test_TLSVerifyPeer(void)
     EVP_PKEY_TYPE_RETURN(EVP_PKEY_DSA);
     assert_int_equal(-1, TLSVerifyPeer(conn_info, "127.0.0.1", "root"));
     EVP_PKEY_free(server_pubkey);
-
     EVP_PKEY_TYPE_RETURN(EVP_PKEY_RSA);
-    REREAD_CERTIFICATE(certificate_stream, certificate);
-    SSL_GET_PEER_CERTIFICATE_RETURN(certificate);
-    REREAD_PUBLIC_KEY(stream, pubkey, server_pubkey);
-    X509_GET_PUBKEY_RETURN(server_pubkey);
-    USE_MOCK(X509_verify);
-    X509_VERIFY_RETURN(-1);
-    assert_int_equal(-1, TLSVerifyPeer(conn_info, "127.0.0.1", "root"));
-    EVP_PKEY_free(server_pubkey);
-
-    X509_VERIFY_RETURN(0);
-    REREAD_CERTIFICATE(certificate_stream, certificate);
-    SSL_GET_PEER_CERTIFICATE_RETURN(certificate);
-    REREAD_PUBLIC_KEY(stream, pubkey, server_pubkey);
-    X509_GET_PUBKEY_RETURN(server_pubkey);
-    assert_int_equal(-1, TLSVerifyPeer(conn_info, "127.0.0.1", "root"));
-    X509_VERIFY_RETURN(1);
-    EVP_PKEY_free(server_pubkey);
 
     USE_MOCK(HavePublicKey);
     HAVEPUBLICKEY_RETURN(NULL);

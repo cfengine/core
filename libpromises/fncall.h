@@ -49,6 +49,6 @@ const FnCallType *FnCallTypeGet(const char *name);
 FnCall *ExpandFnCall(EvalContext *ctx, const char *ns, const char *scope, FnCall *f);
 
 // TODO: should probably demolish this eventually
-void FnCallShow(FILE *fout, const FnCall *fp);
+void FnCallShow(FILE *fout, const char *prefix, const FnCall *fp, const Rlist *args);
 
 #endif

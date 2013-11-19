@@ -1,0 +1,20 @@
+##############################################################################
+#
+# Redmine #2981: execresult and returnszero should not be run so much
+#
+##############################################################################
+
+
+body common control
+{
+  bundlesequence => {"example"};
+}
+
+bundle agent example
+{
+  classes:
+      "y" expression => returnszero("/bin/echo CLASSONCE", "noshell");
+
+  vars:
+      "x" string => execresult("/bin/echo RETONCE", "noshell");
+}

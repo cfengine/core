@@ -57,7 +57,7 @@ leads to Hash Association (lval,rval) => (user,"$(person)")
 
 /******************************************************************/
 
-static Rlist *NewExpArgs(EvalContext *ctx, const FnCall *fp, const Promise *pp)
+static Rlist *NewExpArgs(EvalContext *ctx, const FnCall *fp)
 {
     int len;
     Rval rval;
@@ -67,13 +67,13 @@ static Rlist *NewExpArgs(EvalContext *ctx, const FnCall *fp, const Promise *pp)
 
     len = RlistLen(fp->args);
 
-    if (!fn->varargs)
+    if (!(fn->options & FNCALL_OPTION_VARARG))
     {
         if (len != FnNumArgs(fn))
         {
-            Log(LOG_LEVEL_ERR, "Arguments to function %s(.) do not tally. Expect %d not %d",
+            Log(LOG_LEVEL_ERR, "Arguments to function '%s' do not tally. Expected %d not %d",
                   fp->name, FnNumArgs(fn), len);
-            PromiseRef(LOG_LEVEL_ERR, pp);
+            PromiseRef(LOG_LEVEL_ERR, fp->caller);
             exit(1);
         }
     }
@@ -84,15 +84,16 @@ static Rlist *NewExpArgs(EvalContext *ctx, const FnCall *fp, const Promise *pp)
         {
         case RVAL_TYPE_FNCALL:
             subfp = RlistFnCallValue(rp);
-            rval = FnCallEvaluate(ctx, subfp, pp).rval;
+            rval = FnCallEvaluate(ctx, subfp, fp->caller).rval;
+            assert(rval.item);
             break;
         default:
             rval = ExpandPrivateRval(ctx, NULL, NULL, (Rval) { rp->val.item, rp->val.type});
+            assert(rval.item);
             break;
         }
 
-        RlistAppend(&newargs, rval.item, rval.type);
-        RvalDestroy(rval);
+        RlistAppendRval(&newargs, rval);
     }
 
     return newargs;
@@ -164,13 +165,7 @@ void FnCallDestroy(FnCall *fp)
 unsigned FnCallHash(const FnCall *fp, unsigned seed, unsigned max)
 {
     unsigned hash = StringHash(fp->name, seed, max);
-
-    for (const Rlist *rp = fp->args; rp; rp = rp->next)
-    {
-        hash = RvalHash(rp->val, hash, max);
-    }
-
-    return hash;
+    return RlistHash(fp->args, hash, max);
 }
 
 
@@ -182,11 +177,11 @@ FnCall *ExpandFnCall(EvalContext *ctx, const char *ns, const char *scope, FnCall
 
 /*******************************************************************/
 
-void FnCallShow(FILE *fout, const FnCall *fp)
+void FnCallShow(FILE *fout, const char *prefix, const FnCall *fp, const Rlist *args)
 {
-    fprintf(fout, "%s(", fp->name);
+    fprintf(fout, "%s %s(", prefix, fp->name);
 
-    for (const Rlist *rp = fp->args; rp != NULL; rp = rp->next)
+    for (const Rlist *rp = args; rp != NULL; rp = rp->next)
     {
         switch (rp->val.type)
         {
@@ -195,7 +190,7 @@ void FnCallShow(FILE *fout, const FnCall *fp)
             break;
 
         case RVAL_TYPE_FNCALL:
-            FnCallShow(fout, RlistFnCallValue(rp));
+            FnCallShow(fout, prefix, RlistFnCallValue(rp), NULL);
             break;
 
         default:
@@ -204,7 +199,7 @@ void FnCallShow(FILE *fout, const FnCall *fp)
         }
     }
 
-    fprintf(fout, ")");
+    fprintf(fout, ") from %s\n", fp->caller->promiser);
 }
 
 /*******************************************************************/
@@ -233,7 +228,7 @@ static FnCallResult CallFunction(EvalContext *ctx, FnCall *fp, Rlist *expargs)
     }
 
     char output[CF_BUFSIZE];
-    if (argnum != RlistLen(expargs) && !fncall_type->varargs)
+    if (argnum != RlistLen(expargs) && !(fncall_type->options & FNCALL_OPTION_VARARG))
     {
         snprintf(output, CF_BUFSIZE, "Argument template mismatch handling function %s(", fp->name);
         RlistShow(stderr, expargs);
@@ -264,6 +259,8 @@ static FnCallResult CallFunction(EvalContext *ctx, FnCall *fp, Rlist *expargs)
 
 FnCallResult FnCallEvaluate(EvalContext *ctx, FnCall *fp, const Promise *caller)
 {
+    fp->caller = caller;
+
     if (!(ctx->eval_options & EVAL_OPTION_EVAL_FUNCTIONS))
     {
         Log(LOG_LEVEL_VERBOSE, "Skipping function '%s', because evaluation was turned off in the evaluator",
@@ -276,33 +273,24 @@ FnCallResult FnCallEvaluate(EvalContext *ctx, FnCall *fp, const Promise *caller)
         return (FnCallResult) { FNCALL_FAILURE, { FnCallCopy(fp), RVAL_TYPE_FNCALL } };
     }
 
-
-    Rlist *expargs;
     const FnCallType *fp_type = FnCallTypeGet(fp->name);
 
     if (!fp_type)
     {
         if (caller)
         {
-            Log(LOG_LEVEL_ERR, "No such FnCall \"%s()\" in promise @ %s near line %zd",
+            Log(LOG_LEVEL_ERR, "No such FnCall '%s' in promise '%s' near line %zd",
                   fp->name, PromiseGetBundle(caller)->source_path, caller->offset.line);
         }
         else
         {
-            Log(LOG_LEVEL_ERR, "No such FnCall \"%s()\" - context info unavailable", fp->name);
+            Log(LOG_LEVEL_ERR, "No such FnCall '%s', context info unavailable", fp->name);
         }
 
         return (FnCallResult) { FNCALL_FAILURE, { FnCallCopy(fp), RVAL_TYPE_FNCALL } };
     }
 
-/* If the container classes seem not to be defined at this stage, then don't try to expand the function */
-
-    if ((caller != NULL) && !IsDefinedClass(ctx, caller->classes, PromiseGetNamespace(caller)))
-    {
-        return (FnCallResult) { FNCALL_FAILURE, { FnCallCopy(fp), RVAL_TYPE_FNCALL } };
-    }
-
-    expargs = NewExpArgs(ctx, fp, caller);
+    Rlist *expargs = NewExpArgs(ctx, fp);
 
     if (UnresolvedArgs(expargs))
     {
@@ -310,18 +298,26 @@ FnCallResult FnCallEvaluate(EvalContext *ctx, FnCall *fp, const Promise *caller)
         return (FnCallResult) { FNCALL_FAILURE, { FnCallCopy(fp), RVAL_TYPE_FNCALL } };
     }
 
-    fp->caller = caller;
+    Rval cached_rval;
+    if ((fp_type->options & FNCALL_OPTION_CACHED) && EvalContextFunctionCacheGet(ctx, fp, expargs, &cached_rval))
+    {
+        return (FnCallResult) { FNCALL_SUCCESS, RvalCopy(cached_rval) };
+    }
 
     FnCallResult result = CallFunction(ctx, fp, expargs);
 
     if (result.status == FNCALL_FAILURE)
     {
-        /* We do not assign variables to failed function calls */
         DeleteExpArgs(expargs);
         return (FnCallResult) { FNCALL_FAILURE, { FnCallCopy(fp), RVAL_TYPE_FNCALL } };
     }
 
+    if (fp_type->options & FNCALL_OPTION_CACHED)
+    {
+        EvalContextFunctionCachePut(ctx, fp, expargs, &result.rval);
+    }
     DeleteExpArgs(expargs);
+
     return result;
 }
 

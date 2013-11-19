@@ -42,6 +42,7 @@
 #include <rlist.h>
 #include <buffer.h>
 #include <promises.h>
+#include <fncall.h>
 
 static bool ABORTBUNDLE = false;
 static bool EvalContextStackFrameContainsSoft(const EvalContext *ctx, const char *context);
@@ -708,6 +709,8 @@ EvalContext *EvalContextNew(void)
     ctx->dependency_handles = StringSetNew();
 
     ctx->promises_done = PromiseSetNew();
+    ctx->function_cache = RBTreeNew(NULL, NULL, NULL,
+                                    NULL, NULL, NULL);
 
     PromiseLoggingInit(ctx);
 
@@ -732,6 +735,16 @@ void EvalContextDestroy(EvalContext *ctx)
         StringSetDestroy(ctx->dependency_handles);
 
         PromiseSetDestroy(ctx->promises_done);
+
+        {
+            RBTreeIterator *it = RBTreeIteratorNew(ctx->function_cache);
+            Rval *rval = NULL;
+            while (RBTreeIteratorNext(it, NULL, (void **)&rval))
+            {
+                RvalDestroy(*rval);
+                free(rval);
+            }
+        }
 
         free(ctx);
     }
@@ -1602,7 +1615,41 @@ void EvalContextMarkPromiseNotDone(EvalContext *ctx, const Promise *pp)
     PromiseSetRemove(ctx->promises_done, pp->org_pp);
 }
 
+bool EvalContextFunctionCacheGet(const EvalContext *ctx, const FnCall *fp, const Rlist *args, Rval *rval_out)
+{
+    if (!(ctx->eval_options & EVAL_OPTION_CACHE_SYSTEM_FUNCTIONS))
+    {
+        return false;
+    }
 
+    size_t hash = RlistHash(args, FnCallHash(fp, 0, INT_MAX), INT_MAX);
+    Rval *rval = RBTreeGet(ctx->function_cache, (void*)hash);
+    if (rval)
+    {
+        if (rval_out)
+        {
+            *rval_out = *rval;
+        }
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+void EvalContextFunctionCachePut(EvalContext *ctx, const FnCall *fp, const Rlist *args, const Rval *rval)
+{
+    if (!(ctx->eval_options & EVAL_OPTION_CACHE_SYSTEM_FUNCTIONS))
+    {
+        return;
+    }
+
+    size_t hash = RlistHash(args, FnCallHash(fp, 0, INT_MAX), INT_MAX);
+    Rval *rval_copy = xmalloc(sizeof(Rval));
+    *rval_copy = RvalCopy(*rval);
+    RBTreePut(ctx->function_cache, (void*)hash, rval_copy);
+}
 
 /* cfPS and associated machinery */
 

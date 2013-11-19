@@ -1111,6 +1111,20 @@ static void ResolveControlBody(EvalContext *ctx, GenericAgentConfig *config, con
             config->ignore_missing_bundles = BooleanFromString(cp->rval.item);
         }
 
+        if (strcmp(cp->lval, CFG_CONTROLBODY[COMMON_CONTROL_CACHE_SYSTEM_FUNCTIONS].lval) == 0)
+        {
+            Log(LOG_LEVEL_VERBOSE, "SET cache_system_functions %s", RvalScalarValue(cp->rval));
+            bool cache_system_functions = BooleanFromString(RvalScalarValue(cp->rval));
+            if (cache_system_functions)
+            {
+                ctx->eval_options |= EVAL_OPTION_CACHE_SYSTEM_FUNCTIONS;
+            }
+            else
+            {
+                ctx->eval_options &= ~(EVAL_OPTION_CACHE_SYSTEM_FUNCTIONS);
+            }
+        }
+
         if (strcmp(cp->lval, CFG_CONTROLBODY[COMMON_CONTROL_GOALPATTERNS].lval) == 0)
         {
             /* Ignored */

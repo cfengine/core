@@ -1562,7 +1562,7 @@ void GenericAgentConfigApply(EvalContext *ctx, const GenericAgentConfig *config)
     {
     case AGENT_TYPE_COMMON:
         ctx->eval_options = EVAL_OPTION_NONE;
-        ctx->eval_options |= config->agent_specific.common.eval_functions;
+        ctx->eval_options |= config->agent_specific.common.eval_functions ? EVAL_OPTION_EVAL_FUNCTIONS : 0;
         break;
 
     default:

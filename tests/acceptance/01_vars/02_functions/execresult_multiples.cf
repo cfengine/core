@@ -1,0 +1,49 @@
+##############################################################################
+#
+# Redmine #2981: execresult and returnszero should not be run so much
+#
+##############################################################################
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+bundle agent init
+{
+
+}
+
+
+bundle agent test
+{
+vars:
+  "subout" string => execresult("$(sys.cf_agent) -Kv -f $(this.promise_filename).sub | $(G.grep) -E 'execresult|returnszero'", "useshell");
+}
+
+
+bundle agent check
+{
+# If the output contains CLASSONCE or RETONCE more than once, we fail
+classes:
+  "ok1" not => regcmp(".*CLASSONCE.*CLASSONCE.*", "$(test.subout)");
+  "ok2" not => regcmp(".*RETONCE.*RETONCE.*", "$(test.subout)");
+
+  "ok" and => { "ok1", "ok2" };
+
+reports:
+  DEBUG::
+    "agent output: $(test.subout)";
+
+    ok1.ok2::
+      "The duplicate output in cf-agent didn't happen";
+    !(ok1.ok2)::
+      "The duplicate output in cf-agent happened";
+
+  ok::
+    "$(this.promise_filename) Pass";
+  !ok::
+    "$(this.promise_filename) FAIL";
+}

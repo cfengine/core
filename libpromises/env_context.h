@@ -35,6 +35,7 @@
 #include <variable.h>
 #include <class.h>
 #include <iteration.h>
+#include <rb-tree.h>
 
 typedef enum
 {
@@ -94,8 +95,9 @@ typedef enum
     EVAL_OPTION_NONE = 0,
 
     EVAL_OPTION_EVAL_FUNCTIONS = 1 << 0,
+    EVAL_OPTION_CACHE_SYSTEM_FUNCTIONS = 1 << 1,
 
-    EVAL_OPTION_FULL = 0x11111111
+    EVAL_OPTION_FULL = 0xFFFFFFFF
 } EvalContextOption;
 
 struct EvalContext_
@@ -113,6 +115,7 @@ struct EvalContext_
     VariableTable *match_variables;
 
     StringSet *dependency_handles;
+    RBTree *function_cache;
 
     PromiseSet *promises_done;
 };
@@ -155,10 +158,13 @@ bool EvalContextVariableRemoveSpecial(const EvalContext *ctx, SpecialScope scope
 bool EvalContextVariableRemove(const EvalContext *ctx, const VarRef *ref);
 StringSet *EvalContextVariableTags(const EvalContext *ctx, const VarRef *ref);
 bool EvalContextVariableClearMatch(EvalContext *ctx);
-
 VariableTableIterator *EvalContextVariableTableIteratorNew(const EvalContext *ctx, const char *ns, const char *scope, const char *lval);
 
+bool EvalContextFunctionCacheGet(const EvalContext *ctx, const FnCall *fp, const Rlist *args, Rval *rval_out);
+void EvalContextFunctionCachePut(EvalContext *ctx, const FnCall *fp, const Rlist *args, const Rval *rval);
+
 bool EvalContextVariableControlCommonGet(const EvalContext *ctx, CommonControl lval, Rval *rval_out);
+
 
 /* - Parsing/evaluating expressions - */
 void ValidateClassSyntax(const char *str);

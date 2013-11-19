@@ -491,6 +491,7 @@ typedef enum
     COMMON_CONTROL_SYSLOG_HOST,
     COMMON_CONTROL_SYSLOG_PORT,
     COMMON_CONTROL_FIPS_MODE,
+    COMMON_CONTROL_CACHE_SYSTEM_FUNCTIONS,
     COMMON_CONTROL_NONE
 } CommonControl;
 
@@ -717,6 +718,13 @@ typedef struct
     const char *description;
 } FnCallArg;
 
+typedef enum
+{
+    FNCALL_OPTION_NONE = 0,
+    FNCALL_OPTION_VARARG = 1 << 0,
+    FNCALL_OPTION_CACHED = 1 << 1
+} FnCallOption;
+
 typedef struct
 {
     const char *name;
@@ -724,7 +732,7 @@ typedef struct
     const FnCallArg *args;
     FnCallResult (*impl)(EvalContext *ctx, FnCall *, Rlist *);
     const char *description;
-    bool varargs;
+    FnCallOption options;
     FnCallCategory category;
     SyntaxStatus status;
 } FnCallType;

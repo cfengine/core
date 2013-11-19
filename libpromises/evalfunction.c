@@ -922,20 +922,29 @@ static StringSet *VariablesMatching(const EvalContext *ctx, VariableTableIterato
         /* FIXME: review this strcmp. Moved out from StringMatch */
         if (!strcmp(regex, expr) || StringMatchFull(regex, expr))
         {
-            bool pass = true;
             StringSet *tagset = EvalContextVariableTags(ctx, v->ref);
-            for (const Rlist *arg = args->next; (pass && arg); arg = arg->next)
+            bool pass = false;
+
+            if (args->next)
             {
-                const char* tag_regex = RlistScalarValue(arg);
-                const char *element = NULL;
-                StringSetIterator it = StringSetIteratorInit(tagset);
-                while ((element = SetIteratorNext(&it)))
+                for (const Rlist *arg = args->next; arg; arg = arg->next)
                 {
-                    if (!StringMatchFull(tag_regex, element))
+                    const char* tag_regex = RlistScalarValue(arg);
+                    const char *element = NULL;
+                    StringSetIterator it = StringSetIteratorInit(tagset);
+                    while ((element = SetIteratorNext(&it)))
                     {
-                        pass = false;
+                        if (StringMatchFull(tag_regex, element))
+                        {
+                            pass = true;
+                            break;
+                        }
                     }
                 }
+            }
+            else                        // without any tags queried, accept variable
+            {
+                pass = true;
             }
 
             if (pass)

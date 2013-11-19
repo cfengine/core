@@ -63,7 +63,6 @@ void TimeOut()
 time_t SetReferenceTime(void)
 {
     time_t tloc;
-    char vbuff[CF_BUFSIZE];
 
     if ((tloc = time((time_t *) NULL)) == -1)
     {
@@ -71,9 +70,6 @@ time_t SetReferenceTime(void)
     }
 
     CFSTARTTIME = tloc;
-
-    snprintf(vbuff, CF_BUFSIZE, "%s", ctime(&tloc));
-
     Log(LOG_LEVEL_VERBOSE, "Reference time set to '%s'", ctime(&tloc));
 
     return tloc;

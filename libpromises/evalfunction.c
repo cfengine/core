@@ -5420,12 +5420,6 @@ static int BuildLineArray(EvalContext *ctx, const Bundle *bundle, char *array_lv
             linebuf[lineLen - 1] = '\0';
         }
 
-        if (lcount++ > CF_HASHTABLESIZE)
-        {
-            Log(LOG_LEVEL_ERR, "Array is too big to be read into CFEngine (max 4000)");
-            break;
-        }
-
         newlist = RlistFromSplitRegex(linebuf, split, maxent, allowblanks);
 
         vcount = 0;

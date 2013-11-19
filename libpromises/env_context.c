@@ -801,7 +801,7 @@ StringSet *StringSetAddAllMatchingIterator(StringSet* base, StringSetIterator it
     const char *element = NULL;
     while ((element = SetIteratorNext(&it)))
     {
-        if (StringMatch(filter_regex, element))
+        if (StringMatch(filter_regex, element, NULL, NULL))
         {
             StringSetAdd(base, xstrdup(element));
         }

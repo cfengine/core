@@ -8,8 +8,18 @@ bundle agent test_in_namespace(passed_list)
   vars:
       "mylist" slist => { @(passed_list) };
       "joined" string => join(",", "mylist");
+
+  classes:
+      "mylist_$(mylist)" expression => "any";
+
   reports:
     default:DEBUG::
+      "BUG: mylist___mylist_ was defined!" ifvarclass => "mylist___mylist_";
+      "BUG: mylist_1 not defined" ifvarclass => "!mylist_1";
+      "GOOD: mylist_1 was defined" ifvarclass => "mylist_1";
+      "mylist = $(b:test_in_namespace.mylist)";
+      "mylist without namespace = $(test_in_namespace.mylist)";
+      "mylist without qualifiers = $(mylist)";
       "Set joined to $(joined)";
 }
 

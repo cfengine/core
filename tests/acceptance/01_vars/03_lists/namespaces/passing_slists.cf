@@ -5,6 +5,11 @@ body common control
       version => "1.0";
 }
 
+body agent control
+{
+      abortclasses => { "mylist___mylist_" };
+}
+
 bundle common g
 {
   vars:
@@ -19,7 +24,7 @@ bundle agent init
 bundle agent test
 {
   methods:
-      "test_in_namespace"   usebundle => b:test_in_namespace("@(g.slist_pass)");
+      "test_in_namespace"   usebundle => b:test_in_namespace(@(g.slist_pass));
 }
 
 bundle agent check

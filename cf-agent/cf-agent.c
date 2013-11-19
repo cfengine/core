@@ -814,7 +814,7 @@ void KeepControlPromises(EvalContext *ctx, Policy *policy)
             {
                 bool enabled = BooleanFromString(retval.item);
 
-                SetChecksumUpdates(enabled);
+                SetChecksumUpdatesDefault(ctx, enabled);
                 Log(LOG_LEVEL_VERBOSE, "Setting checksum updates to '%s'", enabled ? "true" : "false");
                 continue;
             }

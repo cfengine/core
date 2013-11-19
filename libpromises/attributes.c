@@ -31,17 +31,6 @@
 #include <chflags.h>
 #include <audit.h>
 
-static int CHECKSUMUPDATES;
-
-/*******************************************************************/
-
-void SetChecksumUpdates(bool enabled)
-{
-    CHECKSUMUPDATES = enabled;
-}
-
-/*******************************************************************/
-
 Attributes GetFilesAttributes(const EvalContext *ctx, const Promise *pp)
 {
     Attributes attr = { {0} };
@@ -848,7 +837,7 @@ FileChange GetChangeMgtConstraints(const EvalContext *ctx, const Promise *pp)
     }
     else
     {
-        c.update = CHECKSUMUPDATES;
+        c.update = GetChecksumUpdatesDefault(ctx);
     }
 
     c.report_diffs = PromiseGetConstraintAsBoolean(ctx, "report_diffs", pp);

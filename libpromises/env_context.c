@@ -703,6 +703,7 @@ EvalContext *EvalContextNew(void)
 
     ctx->eval_options = EVAL_OPTION_FULL;
     ctx->bundle_aborted = false;
+    ctx->checksum_updates_default = false;
 
     ctx->heap_abort = NULL;
     ctx->heap_abort_current_bundle = NULL;
@@ -2004,4 +2005,14 @@ void cfPS(EvalContext *ctx, LogLevel level, PromiseResult status, const Promise 
 
     ClassAuditLog(ctx, pp, attr, status);
     UpdatePromiseComplianceStatus(status, pp, last_msg);
+}
+
+void SetChecksumUpdatesDefault(EvalContext *ctx, bool enabled)
+{
+    ctx->checksum_updates_default = enabled;
+}
+
+bool GetChecksumUpdatesDefault(const EvalContext *ctx)
+{
+    return ctx->checksum_updates_default;
 }

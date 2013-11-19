@@ -82,8 +82,4 @@ StorageMount GetMountConstraints(const EvalContext *ctx, const Promise *pp);
 StorageVolume GetVolumeConstraints(const EvalContext *ctx, const Promise *pp);
 TransactionContext GetTransactionConstraints(const EvalContext *ctx, const Promise *pp);
 
-/* Default values for attributes */
-
-void SetChecksumUpdates(bool enabled);
-
 #endif

@@ -21,7 +21,7 @@ typedef struct ClassTableIterator_ ClassTableIterator;
 ClassTable *ClassTableNew(void);
 void ClassTableDestroy(ClassTable *table);
 
-bool ClassTablePut(ClassTable *table, const char *ns, const char *name, bool is_soft, ContextScope scope);
+bool ClassTablePut(ClassTable *table, const char *ns, const char *name, bool is_soft, ContextScope scope, char *tags);
 Class *ClassTableGet(const ClassTable *table, const char *ns, const char *name);
 bool ClassTableRemove(ClassTable *table, const char *ns, const char *name);
 

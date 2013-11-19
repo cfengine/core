@@ -68,7 +68,7 @@ static Variable *VariableNew(VarRef *ref, Rval rval, DataType type)
     return var;
 }
 
-bool VariableTablePut(VariableTable *table, const VarRef *ref, const Rval *rval, DataType type)
+bool VariableTablePut(VariableTable *table, const VarRef *ref, const Rval *rval, DataType type, char *tags)
 {
     assert(VarRefIsQualified(ref));
 
@@ -83,6 +83,8 @@ bool VariableTablePut(VariableTable *table, const VarRef *ref, const Rval *rval,
     else
     {
         var = VariableNew(VarRefCopy(ref), RvalCopy(*rval), type);
+        // NULL tags are OK (but you want to give good tags, don't you?)
+        var->tags = StringSetFromString(tags, ',');
         return RBTreePut(table->vars, (void *)var->ref->hash, var);
     }
 }

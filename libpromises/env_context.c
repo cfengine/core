@@ -88,7 +88,7 @@ static const char *GetAgentAbortingContext(const EvalContext *ctx)
     return NULL;
 }
 
-void EvalContextHeapAddSoft(EvalContext *ctx, const char *context, const char *ns)
+void EvalContextHeapAddSoft(EvalContext *ctx, const char *context, const char *ns, char *tags)
 {
     char context_copy[CF_MAXVARSIZE];
     char canonified_context[CF_MAXVARSIZE];
@@ -130,7 +130,7 @@ void EvalContextHeapAddSoft(EvalContext *ctx, const char *context, const char *n
         return;
     }
 
-    ClassTablePut(ctx->global_classes, ns, canonified_context, true, CONTEXT_SCOPE_NAMESPACE);
+    ClassTablePut(ctx->global_classes, ns, canonified_context, true, CONTEXT_SCOPE_NAMESPACE, tags);
 
     if (!BundleAborted(ctx))
     {
@@ -148,12 +148,12 @@ void EvalContextHeapAddSoft(EvalContext *ctx, const char *context, const char *n
 
 /*******************************************************************/
 
-void EvalContextClassPutHard(EvalContext *ctx, const char *name)
+void EvalContextClassPutHard(EvalContext *ctx, const char *name, char *tags)
 {
-    EvalContextClassPut(ctx, NULL, name, false, CONTEXT_SCOPE_NAMESPACE);
+    EvalContextClassPut(ctx, NULL, name, false, CONTEXT_SCOPE_NAMESPACE, tags);
 }
 
-static void EvalContextStackFrameAddSoft(EvalContext *ctx, const char *context)
+static void EvalContextStackFrameAddSoft(EvalContext *ctx, const char *context, char *tags)
 {
     assert(SeqLength(ctx->stack) > 0);
 
@@ -209,7 +209,7 @@ static void EvalContextStackFrameAddSoft(EvalContext *ctx, const char *context)
         return;
     }
 
-    ClassTablePut(frame.classes, frame.owner->ns, context, true, CONTEXT_SCOPE_BUNDLE);
+    ClassTablePut(frame.classes, frame.owner->ns, context, true, CONTEXT_SCOPE_BUNDLE, tags);
 
     if (!BundleAborted(ctx))
     {
@@ -464,17 +464,17 @@ void EvalContextHeapPersistentLoadAll(EvalContext *ctx)
             Log(LOG_LEVEL_VERBOSE, "Persistent class '%s' for %jd more minutes", key, (intmax_t)((q.expires - now) / 60));
             Log(LOG_LEVEL_VERBOSE, "Adding persistent class '%s' to heap", key);
             if (strchr(key, CF_NS))
-               {
-               char ns[CF_MAXVARSIZE], name[CF_MAXVARSIZE];
-               ns[0] = '\0';
-               name[0] = '\0';
-               sscanf(key, "%[^:]:%[^\n]", ns, name);
-               EvalContextHeapAddSoft(ctx, name, ns);
-               }
+            {
+                char ns[CF_MAXVARSIZE], name[CF_MAXVARSIZE];
+                ns[0] = '\0';
+                name[0] = '\0';
+                sscanf(key, "%[^:]:%[^\n]", ns, name);
+                EvalContextHeapAddSoft(ctx, name, ns, "goal=context,source=persistent");
+            }
             else
-               {
-               EvalContextHeapAddSoft(ctx, key, NULL);
-               }
+            {
+                EvalContextHeapAddSoft(ctx, key, NULL, "goal=context,source=persistent");
+            }
         }
     }
 
@@ -982,30 +982,30 @@ void EvalContextStackPushPromiseFrame(EvalContext *ctx, const Promise *owner, bo
         char path[CF_BUFSIZE];
         snprintf(path, CF_BUFSIZE, "%s", PromiseGetBundle(owner)->source_path);
 
-        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promise_filename", path, DATA_TYPE_STRING);
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promise_filename", path, DATA_TYPE_STRING, "goal=state,source=promise");
 
         // We now make path just the directory name!
         DeleteSlash(path);
         ChopLastNode(path);
 
-        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promise_dirname", path, DATA_TYPE_STRING);
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promise_dirname", path, DATA_TYPE_STRING, "goal=state,source=promise");
         char number[CF_SMALLBUF];
         snprintf(number, CF_SMALLBUF, "%zu", owner->offset.line);
-        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promise_linenumber", number, DATA_TYPE_STRING);
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promise_linenumber", number, DATA_TYPE_STRING, "goal=state,source=promise");
     }
 
     char v[CF_MAXVARSIZE];
     snprintf(v, CF_MAXVARSIZE, "%d", (int) getuid());
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser_uid", v, DATA_TYPE_INT);
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser_uid", v, DATA_TYPE_INT, "goal=state,source=agent");
     snprintf(v, CF_MAXVARSIZE, "%d", (int) getgid());
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser_gid", v, DATA_TYPE_INT);
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser_gid", v, DATA_TYPE_INT, "goal=state,source=agent");
 
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "bundle", PromiseGetBundle(owner)->name, DATA_TYPE_STRING);
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "namespace", PromiseGetNamespace(owner), DATA_TYPE_STRING);
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "bundle", PromiseGetBundle(owner)->name, DATA_TYPE_STRING, "goal=state,source=promise");
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "namespace", PromiseGetNamespace(owner), DATA_TYPE_STRING, "goal=state,source=promise");
 
     if (owner->has_subbundles)
     {
-        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser", owner->promiser, DATA_TYPE_STRING);
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser", owner->promiser, DATA_TYPE_STRING, "goal=state,source=promise");
     }
 }
 
@@ -1104,7 +1104,7 @@ Class *EvalContextClassGet(const EvalContext *ctx, const char *ns, const char *n
     return ClassTableGet(ctx->global_classes, ns, name);
 }
 
-bool EvalContextClassPut(EvalContext *ctx, const char *ns, const char *name, bool is_soft, ContextScope scope)
+bool EvalContextClassPut(EvalContext *ctx, const char *ns, const char *name, bool is_soft, ContextScope scope, char *tags)
 {
     {
         char context_copy[CF_MAXVARSIZE];
@@ -1158,12 +1158,12 @@ bool EvalContextClassPut(EvalContext *ctx, const char *ns, const char *name, boo
             {
                 ProgrammingError("Attempted to add bundle class '%s' while not evaluating a bundle", name);
             }
-            ClassTablePut(frame->data.bundle.classes, ns, name, is_soft, scope);
+            ClassTablePut(frame->data.bundle.classes, ns, name, is_soft, scope, tags);
         }
         break;
 
     case CONTEXT_SCOPE_NAMESPACE:
-        ClassTablePut(ctx->global_classes, ns, name, is_soft, scope);
+        ClassTablePut(ctx->global_classes, ns, name, is_soft, scope, tags);
         break;
 
     case CONTEXT_SCOPE_NONE:
@@ -1251,7 +1251,7 @@ char *EvalContextStackPath(const EvalContext *ctx)
     return StringWriterClose(path);
 }
 
-bool EvalContextVariablePutSpecial(EvalContext *ctx, SpecialScope scope, const char *lval, const void *value, DataType type)
+bool EvalContextVariablePutSpecial(EvalContext *ctx, SpecialScope scope, const char *lval, const void *value, DataType type, char *tags)
 {
     switch (scope)
     {
@@ -1264,7 +1264,7 @@ bool EvalContextVariablePutSpecial(EvalContext *ctx, SpecialScope scope, const c
     case SPECIAL_SCOPE_MATCH:
         {
             VarRef *ref = VarRefParseFromScope(lval, SpecialScopeToString(scope));
-            bool ret = EvalContextVariablePut(ctx, ref, value, type);
+            bool ret = EvalContextVariablePut(ctx, ref, value, type, tags);
             VarRefDestroy(ref);
             return ret;
         }
@@ -1416,7 +1416,7 @@ static void VarRefStackQualify(const EvalContext *ctx, VarRef *ref)
     }
 }
 
-bool EvalContextVariablePut(EvalContext *ctx, const VarRef *ref, const void *value, DataType type)
+bool EvalContextVariablePut(EvalContext *ctx, const VarRef *ref, const void *value, DataType type, char *tags)
 {
     assert(type != DATA_TYPE_NONE);
     assert(ref);
@@ -1467,7 +1467,7 @@ bool EvalContextVariablePut(EvalContext *ctx, const VarRef *ref, const void *val
     }
 
     VariableTable *table = GetVariableTableForScope(ctx, ref->ns, ref->scope);
-    VariableTablePut(table, ref, &rval, type);
+    VariableTablePut(table, ref, &rval, type, tags);
     return true;
 }
 
@@ -1723,7 +1723,7 @@ static void AddAllClasses(EvalContext *ctx, const char *ns, const Rlist *list, u
 
             Log(LOG_LEVEL_VERBOSE, "Defining persistent promise result class '%s'", classname);
             EvalContextHeapPersistentSave(CanonifyName(RlistScalarValue(rp)), ns, persistence_ttl, policy);
-            EvalContextHeapAddSoft(ctx, classname, ns);
+            EvalContextHeapAddSoft(ctx, classname, ns, "");
         }
         else
         {
@@ -1732,12 +1732,12 @@ static void AddAllClasses(EvalContext *ctx, const char *ns, const Rlist *list, u
             switch (context_scope)
             {
             case CONTEXT_SCOPE_BUNDLE:
-                EvalContextStackFrameAddSoft(ctx, classname);
+                EvalContextStackFrameAddSoft(ctx, classname, "");
                 break;
 
             default:
             case CONTEXT_SCOPE_NAMESPACE:
-                EvalContextHeapAddSoft(ctx, classname, ns);
+                EvalContextHeapAddSoft(ctx, classname, ns, "");
                 break;
             }
         }

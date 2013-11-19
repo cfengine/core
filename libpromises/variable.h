@@ -19,7 +19,7 @@ typedef struct VariableTableIterator_ VariableTableIterator;
 VariableTable *VariableTableNew(void);
 void VariableTableDestroy(VariableTable *table);
 
-bool VariableTablePut(VariableTable *table, const VarRef *ref, const Rval *rval, DataType type);
+bool VariableTablePut(VariableTable *table, const VarRef *ref, const Rval *rval, DataType type, char *tags);
 Variable *VariableTableGet(const VariableTable *table, const VarRef *ref);
 bool VariableTableRemove(VariableTable *table, const VarRef *ref);
 

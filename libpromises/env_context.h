@@ -132,8 +132,8 @@ void EvalContextHeapPersistentSave(const char *context, const char *ns, unsigned
 void EvalContextHeapPersistentRemove(const char *context);
 void EvalContextHeapPersistentLoadAll(EvalContext *ctx);
 
-bool EvalContextClassPut(EvalContext *ctx, const char *ns, const char *name, bool is_soft, ContextScope scope);
-void EvalContextClassPutHard(EvalContext *ctx, const char *name);
+bool EvalContextClassPut(EvalContext *ctx, const char *ns, const char *name, bool is_soft, ContextScope scope, char *tags);
+void EvalContextClassPutHard(EvalContext *ctx, const char *name, char *tags);
 Class *EvalContextClassGet(const EvalContext *ctx, const char *ns, const char *name);
 bool EvalContextClassRemove(EvalContext *ctx, const char *ns, const char *name);
 StringSet *EvalContextClassTags(const EvalContext *ctx, const char *ns, const char *name);
@@ -153,8 +153,8 @@ char *EvalContextStackPath(const EvalContext *ctx);
 const Promise *EvalContextStackCurrentPromise(const EvalContext *ctx);
 const Bundle *EvalContextStackCurrentBundle(const EvalContext *ctx);
 
-bool EvalContextVariablePut(EvalContext *ctx, const VarRef *ref, const void *value, DataType type);
-bool EvalContextVariablePutSpecial(EvalContext *ctx, SpecialScope scope, const char *lval, const void *value, DataType type);
+bool EvalContextVariablePut(EvalContext *ctx, const VarRef *ref, const void *value, DataType type, char *tags);
+bool EvalContextVariablePutSpecial(EvalContext *ctx, SpecialScope scope, const char *lval, const void *value, DataType type, char *tags);
 bool EvalContextVariableGet(const EvalContext *ctx, const VarRef *ref, Rval *rval_out, DataType *type_out);
 bool EvalContextVariableRemoveSpecial(const EvalContext *ctx, SpecialScope scope, const char *lval);
 bool EvalContextVariableRemove(const EvalContext *ctx, const VarRef *ref);

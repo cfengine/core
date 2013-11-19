@@ -499,7 +499,8 @@ static SyntaxTypeMatch CheckParseString(const char *lval, const char *s, const c
         }
     }
 
-    if (StringMatchFull(range, s))
+    /* FIXME: review this strcmp. Moved out from StringMatch */
+    if (!strcmp(range, s) || StringMatchFull(range, s))
     {
         return SYNTAX_TYPE_MATCH_OK;
     }
@@ -525,7 +526,8 @@ SyntaxTypeMatch CheckParseContext(const char *context, const char *range)
         return SYNTAX_TYPE_MATCH_OK;
     }
 
-    if (StringMatchFull(range, context))
+    /* FIXME: review this strcmp. Moved out from StringMatch */
+    if (!strcmp(range, context) || StringMatchFull(range, context))
     {
         return SYNTAX_TYPE_MATCH_OK;
     }

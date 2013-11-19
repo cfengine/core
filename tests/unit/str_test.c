@@ -333,10 +333,10 @@ static void test_safe_equal(void)
 
 static void test_match(void)
 {
-    assert_true(StringMatch("^a.*$", "abc"));
-    assert_true(StringMatch("a", "a"));
-    assert_true(StringMatch("a", "ab"));
-    assert_false(StringMatch("^a.*$", "bac"));
+    assert_true(StringMatch("^a.*$", "abc", NULL, NULL));
+    assert_true(StringMatch("a", "a", NULL, NULL));
+    assert_true(StringMatch("a", "ab", NULL, NULL));
+    assert_false(StringMatch("^a.*$", "bac", NULL, NULL));
 }
 
 

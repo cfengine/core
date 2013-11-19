@@ -63,7 +63,7 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv);
 static void KeepControlPromises(EvalContext *ctx, Policy *policy);
 static int HailServer(EvalContext *ctx, char *host);
 static int ParseHostname(char *hostname, char *new_hostname);
-static void SendClassData(EvalContext *ctx, AgentConnection *conn);
+static void SendClassData(AgentConnection *conn);
 static void HailExec(EvalContext *ctx, AgentConnection *conn, char *peer, char *recvbuffer, char *sendbuffer);
 static FILE *NewStream(char *name);
 static void DeleteStream(FILE *fp);
@@ -696,12 +696,12 @@ static int ParseHostname(char *name, char *hostname)
 
 /********************************************************************/
 
-static void SendClassData(EvalContext *ctx, AgentConnection *conn)
+static void SendClassData(AgentConnection *conn)
 {
     Rlist *classes, *rp;
     char sendbuffer[CF_BUFSIZE];
 
-    classes = RlistFromSplitRegex(ctx, SENDCLASSES, "[,: ]", 99, false);
+    classes = RlistFromSplitRegex(SENDCLASSES, "[,: ]", 99, false);
 
     for (rp = classes; rp != NULL; rp = rp->next)
     {
@@ -746,7 +746,7 @@ static void HailExec(EvalContext *ctx, AgentConnection *conn, char *peer, char *
     }
 
     fp = NewStream(peer);
-    SendClassData(ctx, conn);
+    SendClassData(conn);
 
     while (true)
     {

@@ -63,7 +63,7 @@ char *StringSubstring(const char *source, size_t source_len, int start, int len)
 /* Allocates the result */
 char *SearchAndReplace(const char *source, const char *search, const char *replace);
 
-bool StringMatch(const char *regex, const char *str);
+bool StringMatch(const char *regex, const char *str, int *start, int *end);
 bool StringMatchFull(const char *regex, const char *str);
 
 int ReplaceStr(char *in, char *out, int outSz, char *from, char *to);

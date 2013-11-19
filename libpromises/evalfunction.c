@@ -99,7 +99,7 @@ typedef enum
 
 static FnCallResult FilterInternal(EvalContext *ctx, FnCall *fp, char *regex, char *name, int do_regex, int invert, long max);
 
-static char *StripPatterns(EvalContext *ctx, char *file_buffer, char *pattern, char *filename);
+static char *StripPatterns(char *file_buffer, char *pattern, char *filename);
 static void CloseStringHole(char *s, int start, int end);
 static int BuildLineArray(EvalContext *ctx, const Bundle *bundle, char *array_lval, char *file_buffer, char *split, int maxent, DataType type, int intIndex);
 static int ExecModule(EvalContext *ctx, char *command, const char *ns);
@@ -678,7 +678,8 @@ static FnCallResult FnCallClassMatch(EvalContext *ctx, FnCall *fp, Rlist *finala
         {
             char *expr = ClassRefToString(cls->ns, cls->name);
 
-            if (StringMatchFull(regex, expr))
+            /* FIXME: review this strcmp. Moved out from StringMatch */
+            if (!strcmp(regex, expr) || StringMatchFull(regex, expr))
             {
                 free(expr);
                 return (FnCallResult) { FNCALL_SUCCESS, { xstrdup("any"), RVAL_TYPE_SCALAR } };
@@ -696,7 +697,8 @@ static FnCallResult FnCallClassMatch(EvalContext *ctx, FnCall *fp, Rlist *finala
         {
             char *expr = ClassRefToString(cls->ns, cls->name);
 
-            if (StringMatchFull(regex, expr))
+            /* FIXME: review this strcmp. Moved out from StringMatch */
+            if (!strcmp(regex,expr) || StringMatchFull(regex, expr))
             {
                 free(expr);
                 return (FnCallResult) { FNCALL_SUCCESS, { xstrdup("any"), RVAL_TYPE_SCALAR } };
@@ -768,7 +770,8 @@ static FnCallResult FnCallCountClassesMatching(EvalContext *ctx, FnCall *fp, Rli
         {
             char *expr = ClassRefToString(cls->ns, cls->name);
 
-            if (StringMatchFull(regex, expr))
+            /* FIXME: review this strcmp. Moved out from StringMatch */
+            if (!strcmp(regex, expr) || StringMatchFull(regex, expr))
             {
                 count++;
             }
@@ -785,7 +788,8 @@ static FnCallResult FnCallCountClassesMatching(EvalContext *ctx, FnCall *fp, Rli
         {
             char *expr = ClassRefToString(cls->ns, cls->name);
 
-            if (StringMatchFull(regex, expr))
+            /* FIXME: review this strcmp. Moved out from StringMatch */
+            if (!strcmp(regex, expr) || StringMatchFull(regex, expr))
             {
                 count++;
             }
@@ -810,7 +814,8 @@ static StringSet *ClassesMatching(const EvalContext *ctx, ClassTableIterator *it
     {
         char *expr = ClassRefToString(cls->ns, cls->name);
 
-        if (StringMatchFull(regex, expr))
+        /* FIXME: review this strcmp. Moved out from StringMatch */
+        if (!strcmp(regex, expr) || StringMatchFull(regex, expr))
         {
             bool pass = true;
             StringSet *tagset = EvalContextClassTags(ctx, cls->ns, cls->name);
@@ -821,7 +826,9 @@ static StringSet *ClassesMatching(const EvalContext *ctx, ClassTableIterator *it
                 StringSetIterator it = StringSetIteratorInit(tagset);
                 while ((element = StringSetIteratorNext(&it)))
                 {
-                    if (!StringMatchFull(tag_regex, element))
+                    /* FIXME: review this strcmp. Moved out from StringMatch */
+                    if (strcmp(tag_regex, element) != 0 &&
+                        !StringMatchFull(tag_regex, element))
                     {
                         pass = false;
                     }
@@ -909,7 +916,8 @@ static StringSet *VariablesMatching(const EvalContext *ctx, VariableTableIterato
     {
         char *expr = VarRefToString(v->ref, true);
 
-        if (StringMatchFull(regex, expr))
+        /* FIXME: review this strcmp. Moved out from StringMatch */
+        if (!strcmp(regex, expr) || StringMatchFull(regex, expr))
         {
             bool pass = true;
             StringSet *tagset = EvalContextVariableTags(ctx, v->ref);
@@ -1136,7 +1144,7 @@ static FnCallResult FnCallLastNode(EvalContext *ctx, FnCall *fp, Rlist *finalarg
     char *name = RlistScalarValue(finalargs);
     char *split = RlistScalarValue(finalargs->next);
 
-    newlist = RlistFromSplitRegex(ctx, name, split, 100, true);
+    newlist = RlistFromSplitRegex(name, split, 100, true);
 
     for (rp = newlist; rp != NULL; rp = rp->next)
     {
@@ -1904,7 +1912,7 @@ static FnCallResult FnCallGetFields(EvalContext *ctx, FnCall *fp, Rlist *finalar
 
         if (lcount == 0)
         {
-            newlist = RlistFromSplitRegex(ctx, line, split, 31, nopurge);
+            newlist = RlistFromSplitRegex(line, split, 31, nopurge);
 
             vcount = 1;
 
@@ -3710,7 +3718,7 @@ static FnCallResult FnCallPeers(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
-    file_buffer = StripPatterns(ctx, file_buffer, comment, filename);
+    file_buffer = StripPatterns(file_buffer, comment, filename);
 
     if (file_buffer == NULL)
     {
@@ -3718,7 +3726,7 @@ static FnCallResult FnCallPeers(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
     }
     else
     {
-        newlist = RlistFromSplitRegex(ctx, file_buffer, split, maxent, true);
+        newlist = RlistFromSplitRegex(file_buffer, split, maxent, true);
     }
 
 /* Slice up the list and discard everything except our slice */
@@ -3800,7 +3808,7 @@ static FnCallResult FnCallPeerLeader(EvalContext *ctx, FnCall *fp, Rlist *finala
     }
     else
     {
-        file_buffer = StripPatterns(ctx, file_buffer, comment, filename);
+        file_buffer = StripPatterns(file_buffer, comment, filename);
 
         if (file_buffer == NULL)
         {
@@ -3808,7 +3816,7 @@ static FnCallResult FnCallPeerLeader(EvalContext *ctx, FnCall *fp, Rlist *finala
         }
         else
         {
-            newlist = RlistFromSplitRegex(ctx, file_buffer, split, maxent, true);
+            newlist = RlistFromSplitRegex(file_buffer, split, maxent, true);
         }
     }
 
@@ -3890,14 +3898,14 @@ static FnCallResult FnCallPeerLeaders(EvalContext *ctx, FnCall *fp, Rlist *final
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
-    file_buffer = StripPatterns(ctx, file_buffer, comment, filename);
+    file_buffer = StripPatterns(file_buffer, comment, filename);
 
     if (file_buffer == NULL)
     {
         return (FnCallResult) { FNCALL_SUCCESS, { NULL, RVAL_TYPE_LIST } };
     }
 
-    newlist = RlistFromSplitRegex(ctx, file_buffer, split, maxent, true);
+    newlist = RlistFromSplitRegex(file_buffer, split, maxent, true);
 
 /* Slice up the list and discard everything except our slice */
 
@@ -4619,7 +4627,7 @@ static FnCallResult ReadList(EvalContext *ctx, FnCall *fp, Rlist *finalargs, Dat
     }
     else
     {
-        file_buffer = StripPatterns(ctx, file_buffer, comment, filename);
+        file_buffer = StripPatterns(file_buffer, comment, filename);
 
         if (file_buffer == NULL)
         {
@@ -4627,7 +4635,7 @@ static FnCallResult ReadList(EvalContext *ctx, FnCall *fp, Rlist *finalargs, Dat
         }
         else
         {
-            newlist = RlistFromSplitRegex(ctx, file_buffer, split, maxent, blanks);
+            newlist = RlistFromSplitRegex(file_buffer, split, maxent, blanks);
         }
     }
 
@@ -4808,7 +4816,7 @@ static FnCallResult ReadArray(EvalContext *ctx, FnCall *fp, Rlist *finalargs, Da
     }
     else
     {
-        file_buffer = StripPatterns(ctx, file_buffer, comment, filename);
+        file_buffer = StripPatterns(file_buffer, comment, filename);
 
         if (file_buffer == NULL)
         {
@@ -4907,7 +4915,7 @@ static FnCallResult ParseArray(EvalContext *ctx, FnCall *fp, Rlist *finalargs, D
     }
     else
     {
-        instring = StripPatterns(ctx, instring, comment, "string argument 2");
+        instring = StripPatterns(instring, comment, "string argument 2");
 
         if (instring == NULL)
         {
@@ -4982,7 +4990,7 @@ static FnCallResult FnCallSplitString(EvalContext *ctx, FnCall *fp, Rlist *final
 
 // Read once to validate structure of file in itemlist
 
-    newlist = RlistFromSplitRegex(ctx, string, split, max, true);
+    newlist = RlistFromSplitRegex(string, split, max, true);
 
     if (newlist == NULL)
     {
@@ -5334,14 +5342,14 @@ static void *CfReadFile(char *filename, int maxsize)
 
 /*********************************************************************/
 
-static char *StripPatterns(EvalContext *ctx, char *file_buffer, char *pattern, char *filename)
+static char *StripPatterns(char *file_buffer, char *pattern, char *filename)
 {
     int start, end;
     int count = 0;
 
     if (!NULL_OR_EMPTY(pattern))
     {
-        while (BlockTextMatch(ctx, pattern, file_buffer, &start, &end))
+        while (StringMatch(pattern, file_buffer, &start, &end))
         {
             CloseStringHole(file_buffer, start, end);
 
@@ -5418,7 +5426,7 @@ static int BuildLineArray(EvalContext *ctx, const Bundle *bundle, char *array_lv
             break;
         }
 
-        newlist = RlistFromSplitRegex(ctx, linebuf, split, maxent, allowblanks);
+        newlist = RlistFromSplitRegex(linebuf, split, maxent, allowblanks);
 
         vcount = 0;
         first_one[0] = '\0';

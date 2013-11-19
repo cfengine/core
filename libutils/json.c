@@ -1276,7 +1276,7 @@ static JsonParseError JsonParseAsObject(const char **data, JsonElement **json_ou
 
 static JsonElement *JsonParseAsBoolean(const char **data)
 {
-    if (StringMatch("^true", *data))
+    if (StringMatch("^true", *data, NULL, NULL))
     {
         char next = *(*data + 4);
         if (IsSeparator(next) || next == '\0')
@@ -1285,7 +1285,7 @@ static JsonElement *JsonParseAsBoolean(const char **data)
             return JsonBoolCreate(true);
         }
     }
-    else if (StringMatch("^false", *data))
+    else if (StringMatch("^false", *data, NULL, NULL))
     {
         char next = *(*data + 5);
         if (IsSeparator(next) || next == '\0')
@@ -1300,7 +1300,7 @@ static JsonElement *JsonParseAsBoolean(const char **data)
 
 static JsonElement *JsonParseAsNull(const char **data)
 {
-    if (StringMatch("^null", *data))
+    if (StringMatch("^null", *data, NULL, NULL))
     {
         char next = *(*data + 4);
         if (IsSeparator(next) || next == '\0')

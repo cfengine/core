@@ -597,7 +597,9 @@ int MatchClasses(EvalContext *ctx, ServerConnectionState *conn)
                 while ((cls = ClassTableIteratorNext(iter)))
                 {
                     char *expr = ClassRefToString(cls->ns, cls->name);
-                    bool match = StringMatchFull(ip->name, expr);
+                    /* FIXME: review this strcmp. Moved out from StringMatch */
+                    bool match = !strcmp(ip->name, expr)
+                        || StringMatchFull(ip->name, expr);
                     free(expr);
                     if (match)
                     {
@@ -667,7 +669,7 @@ static int AuthorizeRoles(EvalContext *ctx, ServerConnectionState *conn, char *a
         sp++;
     }
 
-    defines = RlistFromSplitRegex(ctx, sp, "[,:;]", 99, false);
+    defines = RlistFromSplitRegex(sp, "[,:;]", 99, false);
 
 /* For each user-defined class attempt, check RBAC */
 

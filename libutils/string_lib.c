@@ -378,24 +378,10 @@ char *NULLStringToEmpty(char *str)
     return str;
 }
 
-static bool StringMatchInternal(const char *regex, const char *str, int *start, int *end)
+bool StringMatch(const char *regex, const char *str, int *start, int *end)
 {
     assert(regex);
     assert(str);
-
-    if (strcmp(regex, str) == 0)
-    {
-        if (start)
-        {
-            *start = 0;
-        }
-        if (end)
-        {
-            *end = strlen(str);
-        }
-
-        return true;
-    }
 
     pcre *pattern = NULL;
     {
@@ -441,16 +427,11 @@ static bool StringMatchInternal(const char *regex, const char *str, int *start, 
     return result >= 0;
 }
 
-bool StringMatch(const char *regex, const char *str)
-{
-    return StringMatchInternal(regex, str, NULL, NULL);
-}
-
 bool StringMatchFull(const char *regex, const char *str)
 {
     int start = 0, end = 0;
 
-    if (StringMatchInternal(regex, str, &start, &end))
+    if (StringMatch(regex, str, &start, &end))
     {
         return (start == 0) && (end == strlen(str));
     }

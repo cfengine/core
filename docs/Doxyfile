@@ -598,7 +598,7 @@ WARN_LOGFILE           =
 # directories like "/usr/src/myproject". Separate the files or directories
 # with spaces.
 
-INPUT                  = src nova/src
+INPUT                  = cf-agent cf-execd cf-key cf-monitord cf-promises cf-runagent cf-serverd libcfnet libenv libpromises libutils
 
 # This tag can be used to specify the character encoding of the source files
 # that doxygen parses. Internally doxygen uses the UTF-8 encoding, which is
@@ -628,7 +628,13 @@ RECURSIVE              = NO
 # excluded from the INPUT source files. This way you can easily exclude a
 # subdirectory from a directory tree whose root is specified with the INPUT tag.
 
-EXCLUDE                = src/cf3lex.c src/cf3parse.c src/cf3parse.h src/testinput.h src/testoutput.c
+EXCLUDE                = libpromises/cf3lex.c libpromises/cf3parse.c libpromises/cf3parse.h
+
+#
+# Those excludes are for filtering out global constants/constructs which are
+# misparsed as variables by Doxygen
+#
+# libpromises/evalfunction.c libpromises/extensions_template.c libpromises/mod_access.c libpromises/mod_common.c libpromises/mod_databases.c libpromises/mod_databases.h libpromises/mod_environ.c libpromises/mod_environ.h libpromises/mod_exec.c libpromises/mod_exec.h libpromises/mod_files.c libpromises/mod_files.h libpromises/mod_knowledge.c libpromises/mod_knowledge.h libpromises/mod_measurement.c libpromises/mod_measurement.h libpromises/mod_methods.c libpromises/mod_methods.h libpromises/mod_outputs.c libpromises/mod_outputs.h libpromises/mod_packages.c libpromises/mod_packages.h libpromises/mod_process.c libpromises/mod_process.h libpromises/mod_report.c libpromises/mod_services.c libpromises/mod_storage.c libpromises/mod_users.c libpromises/policy.c libutils/json.c libutils/misc_lib.h libutils/set.c cf-agent/load_avahi.h
 
 # The EXCLUDE_SYMLINKS tag can be used select whether or not files or
 # directories that are symbolic links (a Unix file system feature) are excluded
@@ -1586,7 +1592,7 @@ INCLUDED_BY_GRAPH      = YES
 # the time of a run. So in most cases it will be better to enable call graphs
 # for selected functions only using the \callgraph command.
 
-CALL_GRAPH             = YES
+CALL_GRAPH             = NO
 
 # If the CALLER_GRAPH and HAVE_DOT tags are set to YES then
 # doxygen will generate a caller dependency graph for every global function
@@ -1594,7 +1600,7 @@ CALL_GRAPH             = YES
 # the time of a run. So in most cases it will be better to enable caller
 # graphs for selected functions only using the \callergraph command.
 
-CALLER_GRAPH           = YES
+CALLER_GRAPH           = NO
 
 # If the GRAPHICAL_HIERARCHY and HAVE_DOT tags are set to YES then doxygen
 # will generate a graphical hierarchy of all classes instead of a textual one.

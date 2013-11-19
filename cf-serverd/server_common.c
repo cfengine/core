@@ -597,7 +597,9 @@ int MatchClasses(EvalContext *ctx, ServerConnectionState *conn)
                 while ((cls = ClassTableIteratorNext(iter)))
                 {
                     char *expr = ClassRefToString(cls->ns, cls->name);
-                    bool match = StringMatchFull(ip->name, expr);
+                    /* FIXME: review this strcmp. Moved out from StringMatch */
+                    bool match = !strcmp(ip->name, expr)
+                        || StringMatchFull(ip->name, expr);
                     free(expr);
                     if (match)
                     {

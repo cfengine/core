@@ -383,20 +383,6 @@ bool StringMatch(const char *regex, const char *str, int *start, int *end)
     assert(regex);
     assert(str);
 
-    if (strcmp(regex, str) == 0)
-    {
-        if (start)
-        {
-            *start = 0;
-        }
-        if (end)
-        {
-            *end = strlen(str);
-        }
-
-        return true;
-    }
-
     pcre *pattern = NULL;
     {
         const char *errorstr;

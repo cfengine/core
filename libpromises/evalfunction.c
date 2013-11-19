@@ -678,7 +678,8 @@ static FnCallResult FnCallClassMatch(EvalContext *ctx, FnCall *fp, Rlist *finala
         {
             char *expr = ClassRefToString(cls->ns, cls->name);
 
-            if (StringMatchFull(regex, expr))
+            /* FIXME: review this strcmp. Moved out from StringMatch */
+            if (!strcmp(regex, expr) || StringMatchFull(regex, expr))
             {
                 free(expr);
                 return (FnCallResult) { FNCALL_SUCCESS, { xstrdup("any"), RVAL_TYPE_SCALAR } };
@@ -696,7 +697,8 @@ static FnCallResult FnCallClassMatch(EvalContext *ctx, FnCall *fp, Rlist *finala
         {
             char *expr = ClassRefToString(cls->ns, cls->name);
 
-            if (StringMatchFull(regex, expr))
+            /* FIXME: review this strcmp. Moved out from StringMatch */
+            if (!strcmp(regex,expr) || StringMatchFull(regex, expr))
             {
                 free(expr);
                 return (FnCallResult) { FNCALL_SUCCESS, { xstrdup("any"), RVAL_TYPE_SCALAR } };
@@ -768,7 +770,8 @@ static FnCallResult FnCallCountClassesMatching(EvalContext *ctx, FnCall *fp, Rli
         {
             char *expr = ClassRefToString(cls->ns, cls->name);
 
-            if (StringMatchFull(regex, expr))
+            /* FIXME: review this strcmp. Moved out from StringMatch */
+            if (!strcmp(regex, expr) || StringMatchFull(regex, expr))
             {
                 count++;
             }
@@ -785,7 +788,8 @@ static FnCallResult FnCallCountClassesMatching(EvalContext *ctx, FnCall *fp, Rli
         {
             char *expr = ClassRefToString(cls->ns, cls->name);
 
-            if (StringMatchFull(regex, expr))
+            /* FIXME: review this strcmp. Moved out from StringMatch */
+            if (!strcmp(regex, expr) || StringMatchFull(regex, expr))
             {
                 count++;
             }
@@ -810,7 +814,8 @@ static StringSet *ClassesMatching(const EvalContext *ctx, ClassTableIterator *it
     {
         char *expr = ClassRefToString(cls->ns, cls->name);
 
-        if (StringMatchFull(regex, expr))
+        /* FIXME: review this strcmp. Moved out from StringMatch */
+        if (!strcmp(regex, expr) || StringMatchFull(regex, expr))
         {
             bool pass = true;
             StringSet *tagset = EvalContextClassTags(ctx, cls->ns, cls->name);
@@ -821,7 +826,9 @@ static StringSet *ClassesMatching(const EvalContext *ctx, ClassTableIterator *it
                 StringSetIterator it = StringSetIteratorInit(tagset);
                 while ((element = StringSetIteratorNext(&it)))
                 {
-                    if (!StringMatchFull(tag_regex, element))
+                    /* FIXME: review this strcmp. Moved out from StringMatch */
+                    if (strcmp(tag_regex, element) != 0 &&
+                        !StringMatchFull(tag_regex, element))
                     {
                         pass = false;
                     }
@@ -909,7 +916,8 @@ static StringSet *VariablesMatching(const EvalContext *ctx, VariableTableIterato
     {
         char *expr = VarRefToString(v->ref, true);
 
-        if (StringMatchFull(regex, expr))
+        /* FIXME: review this strcmp. Moved out from StringMatch */
+        if (!strcmp(regex, expr) || StringMatchFull(regex, expr))
         {
             bool pass = true;
             StringSet *tagset = EvalContextVariableTags(ctx, v->ref);

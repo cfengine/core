@@ -1187,10 +1187,13 @@ static void test_TLSVerifyPeer(void)
     /*
      * Start testing
      */
+
+    /* Certificate is mocked to return NULL. */
     USE_MOCK(SSL_get_peer_certificate);
     assert_int_equal(-1, TLSVerifyPeer(conn_info, "127.0.0.1", "root"));
-    SSL_GET_PEER_CERTIFICATE_RETURN(certificate);
 
+    /* Certificate is properly returned, but pubkey is mocked to NULL. */
+    SSL_GET_PEER_CERTIFICATE_RETURN(certificate);
     USE_MOCK(X509_get_pubkey);
     X509_GET_PUBKEY_RETURN(NULL);
     assert_int_equal(-1, TLSVerifyPeer(conn_info, "127.0.0.1", "root"));
@@ -1200,8 +1203,8 @@ static void test_TLSVerifyPeer(void)
     FILE *stream = fopen(server_name_template_public, "r");
 
     /*
-     * Due to the cleaning up we do after failing, we need to re read the certificate after
-     * very failure. The same is true for the public key.
+     * Due to the cleaning up we do after failing, we need to re read the
+     * certificate after very failure. The same is true for the public key.
      */
     REREAD_CERTIFICATE(certificate_stream, certificate);
     SSL_GET_PEER_CERTIFICATE_RETURN(certificate);
@@ -1240,7 +1243,7 @@ static void test_TLSVerifyPeer(void)
     assert_int_equal(0, TLSVerifyPeer(conn_info, "127.0.0.1", "root"));
     /* Since TLSVerifyPeer() returned 0 or 1 it has put a valid key in
      * conn_info, so we have to free it. */
-    RSA_free(KeyRSA(ConnectionInfoKey(conn_info)));
+//    RSA_free(KeyRSA(ConnectionInfoKey(conn_info)));
     EVP_PKEY_free(server_pubkey);
 
     USE_MOCK(EVP_PKEY_cmp);
@@ -1253,7 +1256,7 @@ static void test_TLSVerifyPeer(void)
     assert_int_equal(0, TLSVerifyPeer(conn_info, "127.0.0.1", "root"));
     /* Since TLSVerifyPeer() returned 0 or 1 it has put a valid key in
      * conn_info, so we have to free it. */
-    RSA_free(KeyRSA(ConnectionInfoKey(conn_info)));
+//    RSA_free(KeyRSA(ConnectionInfoKey(conn_info)));
     EVP_PKEY_free(server_pubkey);
 
     EVP_PKEY_CMP_RETURN(0);
@@ -1265,7 +1268,7 @@ static void test_TLSVerifyPeer(void)
     assert_int_equal(0, TLSVerifyPeer(conn_info, "127.0.0.1", "root"));
     /* Since TLSVerifyPeer() returned 0 or 1 it has put a valid key in
      * conn_info, so we have to free it. */
-    RSA_free(KeyRSA(ConnectionInfoKey(conn_info)));
+//    RSA_free(KeyRSA(ConnectionInfoKey(conn_info)));
     EVP_PKEY_free(server_pubkey);
 
     EVP_PKEY_CMP_RETURN(-2);
@@ -1286,7 +1289,7 @@ static void test_TLSVerifyPeer(void)
     assert_int_equal(1, TLSVerifyPeer(conn_info, "127.0.0.1", "root"));
     /* Since TLSVerifyPeer() returned 0 or 1 it has put a valid key in
      * conn_info, so we have to free it. */
-    RSA_free(KeyRSA(ConnectionInfoKey(conn_info)));
+//    RSA_free(KeyRSA(ConnectionInfoKey(conn_info)));
     EVP_PKEY_free(server_pubkey);
 
     /*

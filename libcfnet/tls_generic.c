@@ -62,6 +62,7 @@ int TLSVerifyPeer(ConnectionInfo *conn_info, const char *remoteip, const char *u
         retval = -1;
         goto ret1;
     }
+
     EVP_PKEY *received_pubkey = X509_get_pubkey(received_cert);
     if (received_pubkey == NULL)
     {
@@ -75,20 +76,29 @@ int TLSVerifyPeer(ConnectionInfo *conn_info, const char *remoteip, const char *u
         Log(LOG_LEVEL_ERR,
             "Received key of unknown type, only RSA currently supported!");
         retval = -1;
-        goto ret2;
+        goto ret3;
     }
+
     ret = X509_verify(received_cert, received_pubkey);
     if (ret <= 0)
     {
         Log(LOG_LEVEL_ERR,
             "Received public key is not properly signed: %s",
             ERR_reason_error_string(ERR_get_error()));
-            retval = -1;
-            goto ret2;
+        retval = -1;
+        goto ret3;
     }
     Log(LOG_LEVEL_VERBOSE, "Received public key signature is valid");
 
-    Key *key = KeyNew(EVP_PKEY_get1_RSA(received_pubkey), CF_DEFAULT_DIGEST);
+    RSA *remote_key = EVP_PKEY_get1_RSA(received_pubkey);
+    if (remote_key == NULL)
+    {
+        Log(LOG_LEVEL_ERR, "TLSVerifyPeer: EVP_PKEY_get1_RSA failed!");
+        retval = -1;
+        goto ret3;
+    }
+
+    Key *key = KeyNew(remote_key, CF_DEFAULT_DIGEST);
     ConnectionInfoSetKey(conn_info, key);
 
     /*
@@ -100,25 +110,37 @@ int TLSVerifyPeer(ConnectionInfo *conn_info, const char *remoteip, const char *u
     {
         Log(LOG_LEVEL_ERR, "Public key for host not found");
         retval = 0;                                        /* KEY NOT FOUND */
-        goto ret3;
+        goto ret4;
     }
 
-    /* Avoid dynamic allocation... */
-    EVP_PKEY expected_pubkey = { 0 };
+    EVP_PKEY *expected_pubkey = EVP_PKEY_new();
+    if (expected_pubkey == NULL)
+    {
+        Log(LOG_LEVEL_ERR, "TLSVerifyPeer: EVP_PKEY_new allocation failed!");
+        retval = -1;
+        goto ret5;
+    }
 
-    ret = EVP_PKEY_assign_RSA(&expected_pubkey, expected_rsa_key);
-    ret = EVP_PKEY_cmp(received_pubkey, &expected_pubkey);
+    ret = EVP_PKEY_set1_RSA(expected_pubkey, expected_rsa_key);
+    if (ret == 0)
+    {
+        Log(LOG_LEVEL_ERR, "TLSVerifyPeer: EVP_PKEY_set1_RSA failed!");
+        retval = -1;
+        goto ret6;
+    }
+
+    ret = EVP_PKEY_cmp(received_pubkey, expected_pubkey);
     if (ret == 1)
     {
         Log(LOG_LEVEL_VERBOSE,
             "Received public key compares equal to the one we have stored");
-        retval = 1;                                          /* TRUSTED KEY */
-        goto ret5;
+        retval = 1;               /* TRUSTED KEY, equal to the expected one */
+        goto ret6;
     }
     else if (ret == 0 || ret == -1)
     {
-        retval = 0;                                        /* UNTRUSTED KEY */
-        goto ret5;
+        retval = 0;       /* UNTRUSTED KEY, different from the expected one */
+        goto ret6;
     }
     else
     {
@@ -126,14 +148,23 @@ int TLSVerifyPeer(ConnectionInfo *conn_info, const char *remoteip, const char *u
         Log(LOG_LEVEL_ERR, "OpenSSL EVP_PKEY_cmp: %d %s",
             ret, errmsg ? errmsg : "");
         retval = -1;
-        goto ret5;
+        goto ret6;
     }
 
     UnexpectedError("Unreachable!");
     return 0;
 
+  ret6:
+    EVP_PKEY_free(expected_pubkey);
   ret5:
     RSA_free(expected_rsa_key);
+  ret4:
+    if (retval == -1)
+    {
+        /* We won't be needing conn_info->key */
+        KeyDestroy(&key);
+        ConnectionInfoSetKey(conn_info, NULL);
+    }
   ret3:
     EVP_PKEY_free(received_pubkey);
   ret2:

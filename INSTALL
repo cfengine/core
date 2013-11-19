@@ -14,6 +14,7 @@ In order to build CFEngine you need the following tools and libraries installed:
     - clang >= 2.6
 * GNU make
 
+* PAM library
 * OpenSSL library
 * PCRE library
 * POSIX threads (pthreads) library, if not provided by the operating system

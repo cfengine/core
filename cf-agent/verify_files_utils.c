@@ -122,7 +122,7 @@ bool VerifyFileLeaf(EvalContext *ctx, char *path, struct stat *sb, Attributes at
 
 /* We still need to augment the scope of context "this" for commands */
 
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser", path, DATA_TYPE_STRING);        // Parameters may only be scalars
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser", path, DATA_TYPE_STRING, "goal=state,source=promise");        // Parameters may only be scalars
 
     if (attr.transformer != NULL)
     {
@@ -2761,7 +2761,7 @@ static void FileAutoDefine(EvalContext *ctx, char *destfile, const char *ns)
     char context[CF_MAXVARSIZE];
 
     snprintf(context, CF_MAXVARSIZE, "auto_%s", CanonifyName(destfile));
-    EvalContextClassPut(ctx, ns, context, true, CONTEXT_SCOPE_NAMESPACE);
+    EvalContextClassPut(ctx, ns, context, true, CONTEXT_SCOPE_NAMESPACE, "goal=state,source=promise");
     Log(LOG_LEVEL_INFO, "Auto defining class '%s'", context);
 }
 

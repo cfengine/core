@@ -111,7 +111,7 @@ static void KeepHardClasses(EvalContext *ctx)
         {
             if (GetAmPolicyHub(CFWORKDIR))
             {
-                EvalContextClassPutHard(ctx, "am_policy_hub");
+                EvalContextClassPutHard(ctx, "am_policy_hub", "goal=state,source=bootstrap");
             }
             free(existing_policy_server);
         }
@@ -627,7 +627,7 @@ void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *con
             OSClasses(ctx);
             KeepHardClasses(ctx);
 
-            EvalContextClassPutHard(ctx, CF_AGENTTYPES[config->agent_type]);
+            EvalContextClassPutHard(ctx, CF_AGENTTYPES[config->agent_type], "goal=state,cfe_internal,source=agent");
 
             time_t t = SetReferenceTime();
             UpdateTimeClasses(ctx, t);

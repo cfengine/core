@@ -151,7 +151,7 @@ int main(int argc, char *argv[])
     else
     {
         Log(LOG_LEVEL_ERR, "CFEngine was not able to get confirmation of promises from cf-promises, so going to failsafe");
-        EvalContextClassPut(ctx, NULL, "failsafe_fallback", false, CONTEXT_SCOPE_NAMESPACE);
+        EvalContextClassPut(ctx, NULL, "failsafe_fallback", false, CONTEXT_SCOPE_NAMESPACE, "goal=update,source=agent");
         GenericAgentConfigSetInputFile(config, GetWorkDir(), "failsafe.cf");
         policy = GenericAgentLoadPolicy(ctx, config);
     }
@@ -239,7 +239,7 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
         case 'n':
             DONTDO = true;
             IGNORELOCK = true;
-            EvalContextClassPut(ctx, NULL, "opt_dry_run", false, CONTEXT_SCOPE_NAMESPACE);
+            EvalContextClassPut(ctx, NULL, "opt_dry_run", false, CONTEXT_SCOPE_NAMESPACE, "goal=state,cfe_internal,source=environment");
             break;
 
         case 'L':
@@ -544,7 +544,7 @@ static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *c
             free(existing_policy_server);
         }
 
-        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "policy_hub", POLICY_SERVER, DATA_TYPE_STRING);
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "policy_hub", POLICY_SERVER, DATA_TYPE_STRING, "goal=update,source=bootstrap");
 
         GetNameInfo3(ctx, AGENT_TYPE_EXECUTOR);
         GetInterfacesInfo(ctx);
@@ -552,7 +552,7 @@ static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *c
         BuiltinClasses(ctx);
         OSClasses(ctx);
 
-        EvalContextClassPutHard(ctx, CF_AGENTTYPES[AGENT_TYPE_EXECUTOR]);
+        EvalContextClassPutHard(ctx, CF_AGENTTYPES[AGENT_TYPE_EXECUTOR], "goal=state,cfe_internal,source=agent");
 
         time_t t = SetReferenceTime();
         UpdateTimeClasses(ctx, t);

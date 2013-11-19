@@ -295,7 +295,7 @@ PromiseResult VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_d
             }
         }
 
-        if (!EvalContextVariablePut(ctx, ref, rval.item, DataTypeFromString(opts.cp_save->lval)))
+        if (!EvalContextVariablePut(ctx, ref, rval.item, DataTypeFromString(opts.cp_save->lval), "goal=state,source=promise"))
         {
             Log(LOG_LEVEL_VERBOSE, "Unable to converge %s.%s value (possibly empty or infinite regression)", ref->scope, pp->promiser);
             PromiseRef(LOG_LEVEL_VERBOSE, pp);

@@ -51,7 +51,7 @@ void KeyDestroy(Key **key);
   @param key Key
   @return A pointer to the RSA structure.
   */
-const RSA *KeyRSA(const Key *key);
+RSA *KeyRSA(const Key *key);
 /**
   @brief Binary hash of the key
   @param key Key structure

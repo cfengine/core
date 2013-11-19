@@ -63,7 +63,7 @@ void KeyDestroy(Key **key)
     *key = NULL;
 }
 
-const RSA *KeyRSA(const Key *key)
+RSA *KeyRSA(const Key *key)
 {
     return key ? key->key : NULL;
 }

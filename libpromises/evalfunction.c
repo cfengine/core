@@ -99,7 +99,7 @@ typedef enum
 
 static FnCallResult FilterInternal(EvalContext *ctx, FnCall *fp, char *regex, char *name, int do_regex, int invert, long max);
 
-static char *StripPatterns(EvalContext *ctx, char *file_buffer, char *pattern, char *filename);
+static char *StripPatterns(char *file_buffer, char *pattern, char *filename);
 static void CloseStringHole(char *s, int start, int end);
 static int BuildLineArray(EvalContext *ctx, const Bundle *bundle, char *array_lval, char *file_buffer, char *split, int maxent, DataType type, int intIndex);
 static int ExecModule(EvalContext *ctx, char *command, const char *ns);
@@ -3718,7 +3718,7 @@ static FnCallResult FnCallPeers(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
-    file_buffer = StripPatterns(ctx, file_buffer, comment, filename);
+    file_buffer = StripPatterns(file_buffer, comment, filename);
 
     if (file_buffer == NULL)
     {
@@ -3808,7 +3808,7 @@ static FnCallResult FnCallPeerLeader(EvalContext *ctx, FnCall *fp, Rlist *finala
     }
     else
     {
-        file_buffer = StripPatterns(ctx, file_buffer, comment, filename);
+        file_buffer = StripPatterns(file_buffer, comment, filename);
 
         if (file_buffer == NULL)
         {
@@ -3898,7 +3898,7 @@ static FnCallResult FnCallPeerLeaders(EvalContext *ctx, FnCall *fp, Rlist *final
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
-    file_buffer = StripPatterns(ctx, file_buffer, comment, filename);
+    file_buffer = StripPatterns(file_buffer, comment, filename);
 
     if (file_buffer == NULL)
     {
@@ -4627,7 +4627,7 @@ static FnCallResult ReadList(EvalContext *ctx, FnCall *fp, Rlist *finalargs, Dat
     }
     else
     {
-        file_buffer = StripPatterns(ctx, file_buffer, comment, filename);
+        file_buffer = StripPatterns(file_buffer, comment, filename);
 
         if (file_buffer == NULL)
         {
@@ -4816,7 +4816,7 @@ static FnCallResult ReadArray(EvalContext *ctx, FnCall *fp, Rlist *finalargs, Da
     }
     else
     {
-        file_buffer = StripPatterns(ctx, file_buffer, comment, filename);
+        file_buffer = StripPatterns(file_buffer, comment, filename);
 
         if (file_buffer == NULL)
         {
@@ -4915,7 +4915,7 @@ static FnCallResult ParseArray(EvalContext *ctx, FnCall *fp, Rlist *finalargs, D
     }
     else
     {
-        instring = StripPatterns(ctx, instring, comment, "string argument 2");
+        instring = StripPatterns(instring, comment, "string argument 2");
 
         if (instring == NULL)
         {
@@ -5342,14 +5342,14 @@ static void *CfReadFile(char *filename, int maxsize)
 
 /*********************************************************************/
 
-static char *StripPatterns(EvalContext *ctx, char *file_buffer, char *pattern, char *filename)
+static char *StripPatterns(char *file_buffer, char *pattern, char *filename)
 {
     int start, end;
     int count = 0;
 
     if (!NULL_OR_EMPTY(pattern))
     {
-        while (BlockTextMatch(ctx, pattern, file_buffer, &start, &end))
+        while (StringMatch(pattern, file_buffer, &start, &end))
         {
             CloseStringHole(file_buffer, start, end);
 

@@ -1220,7 +1220,7 @@ int ScheduleAgentOperations(EvalContext *ctx, Bundle *bp)
 
                 ExpandPromise(ctx, pp, KeepAgentPromise, NULL);
 
-                if (Abort())
+                if (Abort(ctx))
                 {
                     //NoteClassUsage(EvalContextStackFrameIteratorSoft(ctx) , false);
                     DeleteTypeContext(ctx, bp, type);

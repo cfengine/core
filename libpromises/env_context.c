@@ -43,7 +43,9 @@
 #include <buffer.h>
 #include <promises.h>
 
-static bool ABORTBUNDLE = false;
+static bool BundleAborted(const EvalContext *ctx);
+static void SetBundleAborted(EvalContext *ctx);
+
 static bool EvalContextStackFrameContainsSoft(const EvalContext *ctx, const char *context);
 static bool EvalContextHeapContainsSoft(const EvalContext *ctx, const char *ns, const char *name);
 static bool EvalContextHeapContainsHard(const EvalContext *ctx, const char *name);
@@ -113,7 +115,7 @@ void EvalContextHeapAddSoft(EvalContext *ctx, const char *context, const char *n
     if (IsRegexItemIn(ctx, ctx->heap_abort_current_bundle, context_copy))
     {
         Log(LOG_LEVEL_ERR, "Bundle aborted on defined class '%s'", context_copy);
-        ABORTBUNDLE = true;
+        SetBundleAborted(ctx);
     }
 
     if (IsRegexItemIn(ctx, ctx->heap_abort, context_copy))
@@ -128,14 +130,14 @@ void EvalContextHeapAddSoft(EvalContext *ctx, const char *context, const char *n
 
     ClassTablePut(ctx->global_classes, ns, canonified_context, true, CONTEXT_SCOPE_NAMESPACE);
 
-    if (!ABORTBUNDLE)
+    if (!BundleAborted(ctx))
     {
         for (const Item *ip = ctx->heap_abort_current_bundle; ip != NULL; ip = ip->next)
         {
             if (IsDefinedClass(ctx, ip->name, ns))
             {
                 Log(LOG_LEVEL_ERR, "Setting abort for '%s' when setting '%s'", ip->name, context_copy);
-                ABORTBUNDLE = true;
+                SetBundleAborted(ctx);
                 break;
             }
         }
@@ -192,7 +194,7 @@ static void EvalContextStackFrameAddSoft(EvalContext *ctx, const char *context)
     if (IsRegexItemIn(ctx, ctx->heap_abort_current_bundle, copy))
     {
         Log(LOG_LEVEL_ERR, "Bundle aborted on defined class '%s'", copy);
-        ABORTBUNDLE = true;
+        SetBundleAborted(ctx);
     }
 
     if (IsRegexItemIn(ctx, ctx->heap_abort, copy))
@@ -207,14 +209,14 @@ static void EvalContextStackFrameAddSoft(EvalContext *ctx, const char *context)
 
     ClassTablePut(frame.classes, frame.owner->ns, context, true, CONTEXT_SCOPE_BUNDLE);
 
-    if (!ABORTBUNDLE)
+    if (!BundleAborted(ctx))
     {
         for (const Item *ip = ctx->heap_abort_current_bundle; ip != NULL; ip = ip->next)
         {
             if (IsDefinedClass(ctx, ip->name, frame.owner->ns))
             {
                 Log(LOG_LEVEL_ERR, "Setting abort for '%s' when setting '%s'", ip->name, context);
-                ABORTBUNDLE = true;
+                SetBundleAborted(ctx);
                 break;
             }
         }
@@ -480,20 +482,26 @@ void EvalContextHeapPersistentLoadAll(EvalContext *ctx)
     Banner("Loaded persistent memory");
 }
 
-/***************************************************************************/
-
-int Abort()
+bool Abort(EvalContext *ctx)
 {
-    if (ABORTBUNDLE)
+    if (ctx->bundle_aborted)
     {
-        ABORTBUNDLE = false;
+        ctx->bundle_aborted = false;
         return true;
     }
 
     return false;
 }
 
-/*****************************************************************************/
+bool BundleAborted(const EvalContext* ctx)
+{
+    return ctx->bundle_aborted;
+}
+
+void SetBundleAborted(EvalContext *ctx)
+{
+    ctx->bundle_aborted = true;
+}
 
 int VarClassExcluded(const EvalContext *ctx, const Promise *pp, char **classes)
 {
@@ -694,6 +702,7 @@ EvalContext *EvalContextNew(void)
     EvalContext *ctx = xmalloc(sizeof(EvalContext));
 
     ctx->eval_options = EVAL_OPTION_FULL;
+    ctx->bundle_aborted = false;
 
     ctx->heap_abort = NULL;
     ctx->heap_abort_current_bundle = NULL;
@@ -1110,7 +1119,7 @@ bool EvalContextClassPut(EvalContext *ctx, const char *ns, const char *name, boo
         if (IsRegexItemIn(ctx, ctx->heap_abort_current_bundle, context_copy))
         {
             Log(LOG_LEVEL_ERR, "Bundle aborted on defined class '%s'", context_copy);
-            ABORTBUNDLE = true;
+            SetBundleAborted(ctx);
         }
 
         if (IsRegexItemIn(ctx, ctx->heap_abort, context_copy))
@@ -1146,7 +1155,7 @@ bool EvalContextClassPut(EvalContext *ctx, const char *ns, const char *name, boo
         ProgrammingError("Attempted to add a class without a set scope");
     }
 
-    if (!ABORTBUNDLE)
+    if (!BundleAborted(ctx))
     {
         for (const Item *ip = ctx->heap_abort_current_bundle; ip != NULL; ip = ip->next)
         {
@@ -1155,7 +1164,7 @@ bool EvalContextClassPut(EvalContext *ctx, const char *ns, const char *name, boo
             if (IsDefinedClass(ctx, class_expr, ns))
             {
                 Log(LOG_LEVEL_ERR, "Setting abort for '%s' when setting class '%s'", ip->name, name);
-                ABORTBUNDLE = true;
+                SetBundleAborted(ctx);
                 break;
             }
         }

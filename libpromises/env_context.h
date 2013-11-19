@@ -101,6 +101,7 @@ typedef enum
 struct EvalContext_
 {
     int eval_options;
+    bool bundle_aborted;
 
     Item *heap_abort;
     Item *heap_abort_current_bundle;
@@ -181,7 +182,7 @@ void EvalContextMarkPromiseNotDone(EvalContext *ctx, const Promise *pp);
 /* - Rest - */
 bool EvalContextPromiseIsActive(const EvalContext *ctx, const Promise *pp);
 
-int Abort(void);
+bool Abort(EvalContext *ctx);
 int VarClassExcluded(const EvalContext *ctx, const Promise *pp, char **classes);
 void MarkPromiseHandleDone(EvalContext *ctx, const Promise *pp);
 int MissingDependencies(EvalContext *ctx, const Promise *pp);

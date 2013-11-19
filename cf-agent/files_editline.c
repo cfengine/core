@@ -134,7 +134,7 @@ int ScheduleEditLineOperations(EvalContext *ctx, Bundle *bp, Attributes a, const
 
                 ExpandPromise(ctx, pp, KeepEditLinePromise, edcontext);
 
-                if (Abort())
+                if (Abort(ctx))
                 {
                     YieldCurrentLock(thislock);
                     return false;

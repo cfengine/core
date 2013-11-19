@@ -1144,7 +1144,7 @@ static FnCallResult FnCallLastNode(EvalContext *ctx, FnCall *fp, Rlist *finalarg
     char *name = RlistScalarValue(finalargs);
     char *split = RlistScalarValue(finalargs->next);
 
-    newlist = RlistFromSplitRegex(ctx, name, split, 100, true);
+    newlist = RlistFromSplitRegex(name, split, 100, true);
 
     for (rp = newlist; rp != NULL; rp = rp->next)
     {
@@ -1912,7 +1912,7 @@ static FnCallResult FnCallGetFields(EvalContext *ctx, FnCall *fp, Rlist *finalar
 
         if (lcount == 0)
         {
-            newlist = RlistFromSplitRegex(ctx, line, split, 31, nopurge);
+            newlist = RlistFromSplitRegex(line, split, 31, nopurge);
 
             vcount = 1;
 
@@ -3726,7 +3726,7 @@ static FnCallResult FnCallPeers(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
     }
     else
     {
-        newlist = RlistFromSplitRegex(ctx, file_buffer, split, maxent, true);
+        newlist = RlistFromSplitRegex(file_buffer, split, maxent, true);
     }
 
 /* Slice up the list and discard everything except our slice */
@@ -3816,7 +3816,7 @@ static FnCallResult FnCallPeerLeader(EvalContext *ctx, FnCall *fp, Rlist *finala
         }
         else
         {
-            newlist = RlistFromSplitRegex(ctx, file_buffer, split, maxent, true);
+            newlist = RlistFromSplitRegex(file_buffer, split, maxent, true);
         }
     }
 
@@ -3905,7 +3905,7 @@ static FnCallResult FnCallPeerLeaders(EvalContext *ctx, FnCall *fp, Rlist *final
         return (FnCallResult) { FNCALL_SUCCESS, { NULL, RVAL_TYPE_LIST } };
     }
 
-    newlist = RlistFromSplitRegex(ctx, file_buffer, split, maxent, true);
+    newlist = RlistFromSplitRegex(file_buffer, split, maxent, true);
 
 /* Slice up the list and discard everything except our slice */
 
@@ -4635,7 +4635,7 @@ static FnCallResult ReadList(EvalContext *ctx, FnCall *fp, Rlist *finalargs, Dat
         }
         else
         {
-            newlist = RlistFromSplitRegex(ctx, file_buffer, split, maxent, blanks);
+            newlist = RlistFromSplitRegex(file_buffer, split, maxent, blanks);
         }
     }
 
@@ -4990,7 +4990,7 @@ static FnCallResult FnCallSplitString(EvalContext *ctx, FnCall *fp, Rlist *final
 
 // Read once to validate structure of file in itemlist
 
-    newlist = RlistFromSplitRegex(ctx, string, split, max, true);
+    newlist = RlistFromSplitRegex(string, split, max, true);
 
     if (newlist == NULL)
     {
@@ -5426,7 +5426,7 @@ static int BuildLineArray(EvalContext *ctx, const Bundle *bundle, char *array_lv
             break;
         }
 
-        newlist = RlistFromSplitRegex(ctx, linebuf, split, maxent, allowblanks);
+        newlist = RlistFromSplitRegex(linebuf, split, maxent, allowblanks);
 
         vcount = 0;
         first_one[0] = '\0';

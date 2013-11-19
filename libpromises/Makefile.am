@@ -6,14 +6,15 @@ else
 endif
 
 AM_CPPFLAGS = @CPPFLAGS@ -I$(srcdir)/../libutils -I $(srcdir)/../libcfnet \
-	$(ENTERPRISE_CPPFLAGS)
+	-I$(srcdir)/../libenv $(ENTERPRISE_CPPFLAGS)
 
 AM_CFLAGS = @CFLAGS@ \
 	$(ENTERPRISE_CFLAGS)
 
 AM_YFLAGS = -d
 
-libpromises_la_LIBADD = ../libutils/libutils.la ../libcfnet/libcfnet.la $(ENTERPRISE_LDADD)
+libpromises_la_LIBADD = ../libutils/libutils.la ../libcfnet/libcfnet.la \
+	../libenv/libenv.la $(ENTERPRISE_LDADD)
 
 libpromises_la_SOURCES = \
         cf3parse.y cf3parse.h \
@@ -61,6 +62,7 @@ libpromises_la_SOURCES = \
         item_lib.c item_lib.h \
         iteration.c iteration.h \
         keyring.c keyring.h\
+	known_dirs.c known_dirs.h \
         lastseen.c lastseen.h \
         locks.c locks.h \
         logic_expressions.c logic_expressions.h \
@@ -103,19 +105,16 @@ libpromises_la_SOURCES = \
         storage_tools.c \
         string_expressions.c string_expressions.h \
         syntax.c syntax.h \
-        sysinfo.c sysinfo.h \
         syslog_client.c syslog_client.h \
-        timeout.c \
+        timeout.c timeout.h \
         unix.c unix.h \
         var_expressions.c var_expressions.h \
         vars.c vars.h \
         variable.c variable.h \
         verify_classes.c verify_classes.h \
         verify_reports.c \
-        verify_vars.c verify_vars.h \
-        zones.c zones.h 
-      
-        
+        verify_vars.c verify_vars.h
+
 if !NT
 
 libpromises_la_SOURCES += \
@@ -179,7 +178,8 @@ MOSTLYCLEANFILES = *~ *.orig *.rej
 # libutils dependency
 
 # Automake need to be guided due to symlinking
-libpromises_la_DEPENDENCIES = ../libutils/libutils.la ../libcfnet/libcfnet.la $(ENTERPRISE_LDADD)
+libpromises_la_DEPENDENCIES = ../libutils/libutils.la ../libcfnet/libcfnet.la \
+	../libenv/libenv.la $(ENTERPRISE_LDADD)
 
 .PRECIOUS: ../libutils/libutils.la
 

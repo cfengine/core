@@ -4,6 +4,7 @@ AM_CPPFLAGS = @CPPFLAGS@ \
 	-I$(srcdir)/../libpromises \
 	-I$(srcdir)/../libutils \
 	-I$(srcdir)/../libcfnet \
+	-I$(srcdir)/../libenv \
 	$(ENTERPRISE_CPPFLAGS)
 
 AM_CFLAGS = @CFLAGS@ \

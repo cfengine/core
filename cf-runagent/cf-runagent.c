@@ -24,7 +24,8 @@
 
 #include <generic_agent.h>
 
-#include <sysinfo.h>
+#include <known_dirs.h>
+#include <unix.h>
 #include <env_context.h>
 #include <lastseen.h>
 #include <crypto.h>

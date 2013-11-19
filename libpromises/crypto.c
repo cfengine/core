@@ -32,7 +32,7 @@
 #include <logging.h>
 #include <pipes.h>
 #include <mutex.h>
-#include <sysinfo.h>
+#include <known_dirs.h>
 #include <bootstrap.h>
 #include <misc_lib.h>                   /* UnexpectedError,ProgrammingError */
 

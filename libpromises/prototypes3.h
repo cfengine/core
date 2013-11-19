@@ -115,13 +115,6 @@ int ExclusiveUnlockFile(int fd);
 
 off_t GetDiskUsage(char *file, enum cfsizes type);
 
-/* timeout.c */
-
-void SetTimeOut(int timeout);
-void TimeOut(void);
-void SetReferenceTime(EvalContext *ctx, int setclasses);
-void SetStartTime(void);
-
 /* verify_reports.c */
 
 PromiseResult VerifyReportPromise(EvalContext *ctx, Promise *pp);

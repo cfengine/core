@@ -45,7 +45,7 @@
 #include <verify_measurements.h>
 #include <verify_classes.h>
 #include <cf-monitord-enterprise-stubs.h>
-
+#include <unix_iface.h>
 
 /*****************************************************************************/
 /* Globals                                                                   */

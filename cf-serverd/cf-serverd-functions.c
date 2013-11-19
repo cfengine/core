@@ -36,7 +36,11 @@
 #include <unix.h>
 #include <man.h>
 #include <tls_server.h>                              /* ServerTLSInitialize */
-
+#include <timeout.h>
+#include <unix_iface.h>
+#include <known_dirs.h>
+#include <sysinfo.h>
+#include <time_classes.h>
 
 static const size_t QUEUESIZE = 50;
 int NO_FORK = false;
@@ -623,7 +627,8 @@ void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *con
 
             EvalContextClassPutHard(ctx, CF_AGENTTYPES[config->agent_type]);
 
-            SetReferenceTime(ctx, true);
+            time_t t = SetReferenceTime();
+            UpdateTimeClasses(ctx, t);
             *policy = GenericAgentLoadPolicy(ctx, config);
             KeepPromises(ctx, *policy, config);
             Summarize();

@@ -23,6 +23,7 @@
 */
 
 #include <cf-serverd-functions.h>
+#include <known_dirs.h>
 
 #include <server_transform.h>
 

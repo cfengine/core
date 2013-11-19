@@ -4,12 +4,12 @@ MAKEFLAGS = $(if $(filter-out 0,$(V)),,--no-print-directory --quiet)
 
 LCOV_FLAGS = $(if $(filter-out 0,$(V)),,-q)
 
-SUBDIRS = libcompat libutils libcfnet libpromises \
+SUBDIRS = libcompat libutils libcfnet libenv libpromises \
 	cf-agent cf-execd cf-key cf-monitord \
 	cf-promises cf-runagent cf-serverd ext examples masterfiles \
 	tests
 
-DIST_SUBDIRS = libcompat libutils libcfnet libpromises cf-agent cf-execd	\
+DIST_SUBDIRS = libcompat libutils libcfnet libenv libpromises cf-agent cf-execd	\
 	cf-key cf-monitord cf-promises cf-runagent cf-serverd ext	        \
 	examples masterfiles tests
 

@@ -26,6 +26,7 @@
 #include <cf-execd-runner.h>
 
 #include <bootstrap.h>
+#include <known_dirs.h>
 #include <sysinfo.h>
 #include <env_context.h>
 #include <promises.h>
@@ -43,7 +44,9 @@
 #include <rlist.h>
 #include <processes_select.h>
 #include <man.h>
-
+#include <timeout.h>
+#include <unix_iface.h>
+#include <time_classes.h>
 
 #include <cf-windows-functions.h>
 
@@ -551,7 +554,8 @@ static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *c
 
         EvalContextClassPutHard(ctx, CF_AGENTTYPES[AGENT_TYPE_EXECUTOR]);
 
-        SetReferenceTime(ctx, true);
+        time_t t = SetReferenceTime();
+        UpdateTimeClasses(ctx, t);
 
         GenericAgentConfigSetBundleSequence(config, NULL);
 
@@ -573,7 +577,9 @@ static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *c
         Get3Environment(ctx, AGENT_TYPE_EXECUTOR);
         BuiltinClasses(ctx);
         OSClasses(ctx);
-        SetReferenceTime(ctx, true);
+
+        time_t t = SetReferenceTime();
+        UpdateTimeClasses(ctx, t);
     }
 
     {

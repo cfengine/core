@@ -26,6 +26,7 @@
 
 #include <bootstrap.h>
 #include <sysinfo.h>
+#include <known_dirs.h>
 #include <env_context.h>
 #include <policy.h>
 #include <promises.h>
@@ -55,6 +56,10 @@
 #include <audit.h>
 #include <verify_classes.h>
 #include <verify_vars.h>
+#include <timeout.h>
+#include <time_classes.h>
+#include <unix_iface.h>
+#include <constants.h>
 
 #include <cf-windows-functions.h>
 
@@ -103,7 +108,8 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
 
     GenericAgentInitialize(ctx, config);
 
-    SetReferenceTime(ctx, true);
+    time_t t = SetReferenceTime();
+    UpdateTimeClasses(ctx, t);
     SetStartTime();
     SanitizeEnvironment();
 

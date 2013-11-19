@@ -28,8 +28,6 @@
 #include <cf3.defs.h>
 #include <assoc.h>
 
-void LoadSystemConstants(EvalContext *ctx);
-
 const char *ExtractInnerCf3VarString(const char *str, char *substr);
 const char *ExtractOuterCf3VarString(const char *str, char *substr);
 int UnresolvedArgs(Rlist *args);

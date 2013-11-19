@@ -31,7 +31,7 @@
 #include <item_lib.h>
 #include <files_interfaces.h>
 #include <string_lib.h>
-#include <sysinfo.h>
+#include <known_dirs.h>
 
 #include <cf-windows-functions.h>
 

@@ -37,7 +37,7 @@
 #include <fncall.h>
 #include <env_context.h>
 #include <misc_lib.h>
-#include <sysinfo.h>
+#include <known_dirs.h>
 
 #define CFLOGSIZE 1048576       /* Size of lock-log before rotation */
 

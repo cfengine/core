@@ -34,7 +34,7 @@
 #include <keyring.h>
 #include <env_context.h>
 #include <crypto.h>
-#include <sysinfo.h>
+#include <known_dirs.h>
 #include <man.h>
 
 #include <cf-key-functions.h>

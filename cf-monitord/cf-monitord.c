@@ -31,9 +31,10 @@
 #include <vars.h>
 #include <signals.h>
 #include <scope.h>
-#include <sysinfo.h>
+#include <known_dirs.h>
 #include <man.h>
 #include <bootstrap.h>
+#include <timeout.h>
 
 typedef enum
 {
@@ -44,7 +45,7 @@ typedef enum
     MONITOR_CONTROL_NONE
 } MonitorControl;
 
-static void ThisAgentInit(EvalContext *ctx);
+static void ThisAgentInit(void);
 static GenericAgentConfig *CheckOpts(int argc, char **argv);
 static void KeepPromises(EvalContext *ctx, Policy *policy);
 
@@ -117,7 +118,7 @@ int main(int argc, char *argv[])
     GenericAgentDiscoverContext(ctx, config);
     Policy *policy = GenericAgentLoadPolicy(ctx, config);
 
-    ThisAgentInit(ctx);
+    ThisAgentInit();
     KeepPromises(ctx, policy);
 
     MonitorStartServer(ctx, policy);
@@ -288,12 +289,12 @@ static void KeepPromises(EvalContext *ctx, Policy *policy)
 /* Level 1                                                                   */
 /*****************************************************************************/
 
-static void ThisAgentInit(EvalContext *ctx)
+static void ThisAgentInit(void)
 {
     umask(077);
     sprintf(VPREFIX, "cf-monitord");
 
-    SetReferenceTime(ctx, false);
+    SetReferenceTime();
     SetStartTime();
 
     signal(SIGINT, HandleSignalsForDaemon);

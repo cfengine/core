@@ -60,7 +60,7 @@ void TimeOut()
 
 /*************************************************************************/
 
-void SetReferenceTime(EvalContext *ctx, int setclasses)
+time_t SetReferenceTime(void)
 {
     time_t tloc;
     char vbuff[CF_BUFSIZE];
@@ -76,14 +76,14 @@ void SetReferenceTime(EvalContext *ctx, int setclasses)
 
     Log(LOG_LEVEL_VERBOSE, "Reference time set to '%s'", ctime(&tloc));
 
-    if (setclasses)
-    {
-        RemoveTimeClass(ctx, tloc);
-        AddTimeClass(ctx, tloc);
-    }
+    return tloc;
 }
 
-/*******************************************************************/
+void UpdateTimeClasses(EvalContext *ctx, time_t t)
+{
+    RemoveTimeClass(ctx, t);
+    AddTimeClass(ctx, t);
+}
 
 void SetStartTime(void)
 {

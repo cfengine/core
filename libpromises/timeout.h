@@ -27,7 +27,9 @@
 
 void SetTimeOut(int timeout);
 void TimeOut(void);
-void SetReferenceTime(EvalContext *ctx, int setclasses);
+time_t SetReferenceTime(void);
 void SetStartTime(void);
+
+void UpdateTimeClasses(EvalContext *ctx, time_t t);
 
 #endif

@@ -624,7 +624,8 @@ void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *con
 
             EvalContextClassPutHard(ctx, CF_AGENTTYPES[config->agent_type]);
 
-            SetReferenceTime(ctx, true);
+            time_t t = SetReferenceTime();
+            UpdateTimeClasses(ctx, t);
             *policy = GenericAgentLoadPolicy(ctx, config);
             KeepPromises(ctx, *policy, config);
             Summarize();

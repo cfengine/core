@@ -104,7 +104,8 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
 
     GenericAgentInitialize(ctx, config);
 
-    SetReferenceTime(ctx, true);
+    time_t t = SetReferenceTime();
+    UpdateTimeClasses(ctx, t);
     SetStartTime();
     SanitizeEnvironment();
 

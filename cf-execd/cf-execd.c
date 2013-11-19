@@ -551,7 +551,8 @@ static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *c
 
         EvalContextClassPutHard(ctx, CF_AGENTTYPES[AGENT_TYPE_EXECUTOR]);
 
-        SetReferenceTime(ctx, true);
+        time_t t = SetReferenceTime();
+        UpdateTimeClasses(ctx, t);
 
         GenericAgentConfigSetBundleSequence(config, NULL);
 
@@ -573,7 +574,9 @@ static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *c
         Get3Environment(ctx, AGENT_TYPE_EXECUTOR);
         BuiltinClasses(ctx);
         OSClasses(ctx);
-        SetReferenceTime(ctx, true);
+
+        time_t t = SetReferenceTime();
+        UpdateTimeClasses(ctx, t);
     }
 
     {

@@ -26,6 +26,7 @@
 
 #include <alloc.h>
 #include <string_lib.h>
+#include <buffer.h>
 
 TYPED_SET_DEFINE(String, char *, (MapHashFn)&StringHash, (MapKeyEqualFn)&StringSafeEqual, &free)
 
@@ -82,6 +83,29 @@ void *SetIteratorNext(SetIterator *i)
     return kv ? kv->key : NULL;
 }
 
+Buffer *StringSetToBuffer(StringSet *set, const char *delimiter)
+{
+    Buffer *buf = BufferNew();
+
+    StringSetIterator it = StringSetIteratorInit(set);
+    const char *element = NULL;
+    int pos = 0;
+    int size = StringSetSize(set);
+
+    while ((element = StringSetIteratorNext(&it)))
+    {
+        BufferAppend(buf, element, strlen(element));
+        if (pos < size-1)
+        {
+            BufferAppend(buf, delimiter, strlen(delimiter));
+        }
+
+        pos++;
+    }
+
+    return buf;
+}
+
 StringSet *StringSetFromString(const char *str, char delimiter)
 {
     StringSet *set = StringSetNew();
@@ -89,14 +113,18 @@ StringSet *StringSetFromString(const char *str, char delimiter)
     char delimiters[2] = { 0 };
     delimiters[0] = delimiter;
 
-    char *copy = xstrdup(str);
-    char *curr = NULL;
-
-    while ((curr = strsep(&copy, delimiters)))
+    if (NULL != str)
     {
-        StringSetAdd(set, xstrdup(curr));
+        char *copy = xstrdup(str);
+        char *curr = NULL;
+
+        while ((curr = strsep(&copy, delimiters)))
+        {
+            StringSetAdd(set, xstrdup(curr));
+        }
+
+        free(copy);
     }
 
-    free(copy);
     return set;
 }

@@ -26,6 +26,7 @@
 #define CFENGINE_SET_H
 
 #include <map.h>
+#include <buffer.h>
 
 typedef Map Set;
 typedef MapIterator SetIterator;
@@ -127,5 +128,6 @@ void *SetIteratorNext(SetIterator *i);
 TYPED_SET_DECLARE(String, char *)
 
 StringSet *StringSetFromString(const char *str, char delimiter);
+Buffer *StringSetToBuffer(StringSet *set, const char *delimiter);
 
 #endif

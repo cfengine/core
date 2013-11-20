@@ -254,7 +254,7 @@ static void KeepControlPromises(EvalContext *ctx, Policy *policy, GenericAgentCo
     MAXTRIES = 5;
     DENYBADCLOCKS = true;
     CFRUNCOMMAND[0] = '\0';
-    SetChecksumUpdates(true);
+    SetChecksumUpdatesDefault(ctx, true);
 
 /* Keep promised agent behaviour - control bodies */
 

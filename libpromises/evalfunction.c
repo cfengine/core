@@ -5693,14 +5693,14 @@ static int CheckID(char *id)
 /* Function prototypes                                   */
 /*********************************************************/
 
-FnCallArg ACCESSEDBEFORE_ARGS[] =
+static const FnCallArg ACCESSEDBEFORE_ARGS[] =
 {
     {CF_ABSPATHRANGE, DATA_TYPE_STRING, "Newer filename"},
     {CF_ABSPATHRANGE, DATA_TYPE_STRING, "Older filename"},
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg ACCUM_ARGS[] =
+static const FnCallArg ACCUM_ARGS[] =
 {
     {"0,1000", DATA_TYPE_INT, "Years"},
     {"0,1000", DATA_TYPE_INT, "Months"},
@@ -5711,23 +5711,12 @@ FnCallArg ACCUM_ARGS[] =
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg AND_ARGS[] =
+static const FnCallArg AND_ARGS[] =
 {
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg AGO_ARGS[] =
-{
-    {"0,1000", DATA_TYPE_INT, "Years"},
-    {"0,1000", DATA_TYPE_INT, "Months"},
-    {"0,1000", DATA_TYPE_INT, "Days"},
-    {"0,1000", DATA_TYPE_INT, "Hours"},
-    {"0,1000", DATA_TYPE_INT, "Minutes"},
-    {"0,40000", DATA_TYPE_INT, "Seconds"},
-    {NULL, DATA_TYPE_NONE, NULL}
-};
-
-FnCallArg LATERTHAN_ARGS[] =
+static const FnCallArg AGO_ARGS[] =
 {
     {"0,1000", DATA_TYPE_INT, "Years"},
     {"0,1000", DATA_TYPE_INT, "Months"},
@@ -5738,68 +5727,79 @@ FnCallArg LATERTHAN_ARGS[] =
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg CANONIFY_ARGS[] =
+static const FnCallArg LATERTHAN_ARGS[] =
+{
+    {"0,1000", DATA_TYPE_INT, "Years"},
+    {"0,1000", DATA_TYPE_INT, "Months"},
+    {"0,1000", DATA_TYPE_INT, "Days"},
+    {"0,1000", DATA_TYPE_INT, "Hours"},
+    {"0,1000", DATA_TYPE_INT, "Minutes"},
+    {"0,40000", DATA_TYPE_INT, "Seconds"},
+    {NULL, DATA_TYPE_NONE, NULL}
+};
+
+static const FnCallArg CANONIFY_ARGS[] =
 {
     {CF_ANYSTRING, DATA_TYPE_STRING, "String containing non-identifier characters"},
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg CHANGEDBEFORE_ARGS[] =
+static const FnCallArg CHANGEDBEFORE_ARGS[] =
 {
     {CF_ABSPATHRANGE, DATA_TYPE_STRING, "Newer filename"},
     {CF_ABSPATHRANGE, DATA_TYPE_STRING, "Older filename"},
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg CLASSIFY_ARGS[] =
+static const FnCallArg CLASSIFY_ARGS[] =
 {
     {CF_ANYSTRING, DATA_TYPE_STRING, "Input string"},
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg CLASSMATCH_ARGS[] =
+static const FnCallArg CLASSMATCH_ARGS[] =
 {
     {CF_ANYSTRING, DATA_TYPE_STRING, "Regular expression"},
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg CONCAT_ARGS[] =
+static const FnCallArg CONCAT_ARGS[] =
 {
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg COUNTCLASSESMATCHING_ARGS[] =
+static const FnCallArg COUNTCLASSESMATCHING_ARGS[] =
 {
     {CF_ANYSTRING, DATA_TYPE_STRING, "Regular expression"},
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg COUNTLINESMATCHING_ARGS[] =
+static const FnCallArg COUNTLINESMATCHING_ARGS[] =
 {
     {CF_ANYSTRING, DATA_TYPE_STRING, "Regular expression"},
     {CF_ABSPATHRANGE, DATA_TYPE_STRING, "Filename"},
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg DIRNAME_ARGS[] =
+static const FnCallArg DIRNAME_ARGS[] =
 {
     {CF_ANYSTRING, DATA_TYPE_STRING, "File path"},
     {NULL, DATA_TYPE_NONE, NULL},
 };
 
-FnCallArg DISKFREE_ARGS[] =
+static const FnCallArg DISKFREE_ARGS[] =
 {
     {CF_ABSPATHRANGE, DATA_TYPE_STRING, "File system directory"},
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg ESCAPE_ARGS[] =
+static const FnCallArg ESCAPE_ARGS[] =
 {
     {CF_ANYSTRING, DATA_TYPE_STRING, "IP address or string to escape"},
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg EXECRESULT_ARGS[] =
+static const FnCallArg EXECRESULT_ARGS[] =
 {
     {CF_PATHRANGE, DATA_TYPE_STRING, "Fully qualified command path"},
     {"noshell,useshell,powershell", DATA_TYPE_OPTION, "Shell encapsulation option"},
@@ -5808,31 +5808,31 @@ FnCallArg EXECRESULT_ARGS[] =
 
 // fileexists, isdir,isplain,islink
 
-FnCallArg FILESTAT_ARGS[] =
+static const FnCallArg FILESTAT_ARGS[] =
 {
     {CF_ABSPATHRANGE, DATA_TYPE_STRING, "File object name"},
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg FILESTAT_DETAIL_ARGS[] =
+static const FnCallArg FILESTAT_DETAIL_ARGS[] =
 {
     {CF_ABSPATHRANGE, DATA_TYPE_STRING, "File object name"},
     {"size,gid,uid,ino,nlink,ctime,atime,mtime,mode,modeoct,permstr,permoct,type,devno,dev_minor,dev_major,basename,dirname,linktarget,linktarget_shallow", DATA_TYPE_OPTION, "stat() field to get"},
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg FILESEXIST_ARGS[] =
+static const FnCallArg FILESEXIST_ARGS[] =
 {
     {CF_NAKEDLRANGE, DATA_TYPE_STRING, "Array identifier containing list"},
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg FINDFILES_ARGS[] =
+static const FnCallArg FINDFILES_ARGS[] =
 {
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg FILTER_ARGS[] =
+static const FnCallArg FILTER_ARGS[] =
 {
     {CF_ANYSTRING, DATA_TYPE_STRING, "Regular expression or string"},
     {CF_IDRANGE, DATA_TYPE_STRING, "CFEngine list identifier"},
@@ -5842,7 +5842,7 @@ FnCallArg FILTER_ARGS[] =
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg GETFIELDS_ARGS[] =
+static const FnCallArg GETFIELDS_ARGS[] =
 {
     {CF_ANYSTRING, DATA_TYPE_STRING, "Regular expression to match line"},
     {CF_ABSPATHRANGE, DATA_TYPE_STRING, "Filename to read"},
@@ -5851,59 +5851,59 @@ FnCallArg GETFIELDS_ARGS[] =
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg GETINDICES_ARGS[] =
+static const FnCallArg GETINDICES_ARGS[] =
 {
     {CF_IDRANGE, DATA_TYPE_STRING, "CFEngine array identifier"},
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg GETUSERS_ARGS[] =
+static const FnCallArg GETUSERS_ARGS[] =
 {
     {CF_ANYSTRING, DATA_TYPE_STRING, "Comma separated list of User names"},
     {CF_ANYSTRING, DATA_TYPE_STRING, "Comma separated list of UserID numbers"},
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg GETENV_ARGS[] =
+static const FnCallArg GETENV_ARGS[] =
 {
     {CF_IDRANGE, DATA_TYPE_STRING, "Name of environment variable"},
     {CF_VALRANGE, DATA_TYPE_INT, "Maximum number of characters to read "},
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg GETGID_ARGS[] =
+static const FnCallArg GETGID_ARGS[] =
 {
     {CF_ANYSTRING, DATA_TYPE_STRING, "Group name in text"},
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg GETUID_ARGS[] =
+static const FnCallArg GETUID_ARGS[] =
 {
     {CF_ANYSTRING, DATA_TYPE_STRING, "User name in text"},
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg GREP_ARGS[] =
+static const FnCallArg GREP_ARGS[] =
 {
     {CF_ANYSTRING, DATA_TYPE_STRING, "Regular expression"},
     {CF_IDRANGE, DATA_TYPE_STRING, "CFEngine list identifier"},
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg GROUPEXISTS_ARGS[] =
+static const FnCallArg GROUPEXISTS_ARGS[] =
 {
     {CF_ANYSTRING, DATA_TYPE_STRING, "Group name or identifier"},
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg HASH_ARGS[] =
+static const FnCallArg HASH_ARGS[] =
 {
     {CF_ANYSTRING, DATA_TYPE_STRING, "Input text"},
     {"md5,sha1,sha256,sha512,sha384,crypt", DATA_TYPE_OPTION, "Hash or digest algorithm"},
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg HASHMATCH_ARGS[] =
+static const FnCallArg HASHMATCH_ARGS[] =
 {
     {CF_ABSPATHRANGE, DATA_TYPE_STRING, "Filename to hash"},
     {"md5,sha1,crypt,cf_sha224,cf_sha256,cf_sha384,cf_sha512", DATA_TYPE_OPTION, "Hash or digest algorithm"},
@@ -5911,32 +5911,32 @@ FnCallArg HASHMATCH_ARGS[] =
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg HOST2IP_ARGS[] =
+static const FnCallArg HOST2IP_ARGS[] =
 {
     {CF_ANYSTRING, DATA_TYPE_STRING, "Host name in ascii"},
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg IP2HOST_ARGS[] =
+static const FnCallArg IP2HOST_ARGS[] =
 {
     {CF_ANYSTRING, DATA_TYPE_STRING, "IP address (IPv4 or IPv6)"},
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg HOSTINNETGROUP_ARGS[] =
+static const FnCallArg HOSTINNETGROUP_ARGS[] =
 {
     {CF_ANYSTRING, DATA_TYPE_STRING, "Netgroup name"},
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg HOSTRANGE_ARGS[] =
+static const FnCallArg HOSTRANGE_ARGS[] =
 {
     {CF_ANYSTRING, DATA_TYPE_STRING, "Hostname prefix"},
     {CF_ANYSTRING, DATA_TYPE_STRING, "Enumerated range"},
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg HOSTSSEEN_ARGS[] =
+static const FnCallArg HOSTSSEEN_ARGS[] =
 {
     {CF_VALRANGE, DATA_TYPE_INT, "Horizon since last seen in hours"},
     {"lastseen,notseen", DATA_TYPE_OPTION, "Complements for selection policy"},
@@ -5944,73 +5944,73 @@ FnCallArg HOSTSSEEN_ARGS[] =
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg HOSTSWITHCLASS_ARGS[] =
+static const FnCallArg HOSTSWITHCLASS_ARGS[] =
 {
     {"[a-zA-Z0-9_]+", DATA_TYPE_STRING, "Class name to look for"},
     {"name,address", DATA_TYPE_OPTION, "Type of return value desired"},
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg IFELSE_ARGS[] =
+static const FnCallArg IFELSE_ARGS[] =
 {
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg IPRANGE_ARGS[] =
+static const FnCallArg IPRANGE_ARGS[] =
 {
     {CF_ANYSTRING, DATA_TYPE_STRING, "IP address range syntax"},
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg IRANGE_ARGS[] =
+static const FnCallArg IRANGE_ARGS[] =
 {
     {CF_INTRANGE, DATA_TYPE_INT, "Integer"},
     {CF_INTRANGE, DATA_TYPE_INT, "Integer"},
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg ISGREATERTHAN_ARGS[] =
+static const FnCallArg ISGREATERTHAN_ARGS[] =
 {
     {CF_ANYSTRING, DATA_TYPE_STRING, "Larger string or value"},
     {CF_ANYSTRING, DATA_TYPE_STRING, "Smaller string or value"},
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg ISLESSTHAN_ARGS[] =
+static const FnCallArg ISLESSTHAN_ARGS[] =
 {
     {CF_ANYSTRING, DATA_TYPE_STRING, "Smaller string or value"},
     {CF_ANYSTRING, DATA_TYPE_STRING, "Larger string or value"},
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg ISNEWERTHAN_ARGS[] =
+static const FnCallArg ISNEWERTHAN_ARGS[] =
 {
     {CF_ABSPATHRANGE, DATA_TYPE_STRING, "Newer file name"},
     {CF_ABSPATHRANGE, DATA_TYPE_STRING, "Older file name"},
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg ISVARIABLE_ARGS[] =
+static const FnCallArg ISVARIABLE_ARGS[] =
 {
     {CF_IDRANGE, DATA_TYPE_STRING, "Variable identifier"},
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg JOIN_ARGS[] =
+static const FnCallArg JOIN_ARGS[] =
 {
     {CF_ANYSTRING, DATA_TYPE_STRING, "Join glue-string"},
     {CF_IDRANGE, DATA_TYPE_STRING, "CFEngine list identifier"},
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg LASTNODE_ARGS[] =
+static const FnCallArg LASTNODE_ARGS[] =
 {
     {CF_ANYSTRING, DATA_TYPE_STRING, "Input string"},
     {CF_ANYSTRING, DATA_TYPE_STRING, "Link separator, e.g. /,:"},
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg LDAPARRAY_ARGS[] =
+static const FnCallArg LDAPARRAY_ARGS[] =
 {
     {CF_ANYSTRING, DATA_TYPE_STRING, "Array name"},
     {CF_ANYSTRING, DATA_TYPE_STRING, "URI"},
@@ -6021,7 +6021,7 @@ FnCallArg LDAPARRAY_ARGS[] =
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg LDAPLIST_ARGS[] =
+static const FnCallArg LDAPLIST_ARGS[] =
 {
     {CF_ANYSTRING, DATA_TYPE_STRING, "URI"},
     {CF_ANYSTRING, DATA_TYPE_STRING, "Distinguished name"},
@@ -6032,7 +6032,7 @@ FnCallArg LDAPLIST_ARGS[] =
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg LDAPVALUE_ARGS[] =
+static const FnCallArg LDAPVALUE_ARGS[] =
 {
     {CF_ANYSTRING, DATA_TYPE_STRING, "URI"},
     {CF_ANYSTRING, DATA_TYPE_STRING, "Distinguished name"},
@@ -6043,7 +6043,7 @@ FnCallArg LDAPVALUE_ARGS[] =
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg LSDIRLIST_ARGS[] =
+static const FnCallArg LSDIRLIST_ARGS[] =
 {
     {CF_PATHRANGE, DATA_TYPE_STRING, "Path to base directory"},
     {CF_ANYSTRING, DATA_TYPE_STRING, "Regular expression to match files or blank"},
@@ -6051,54 +6051,54 @@ FnCallArg LSDIRLIST_ARGS[] =
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg MAPLIST_ARGS[] =
+static const FnCallArg MAPLIST_ARGS[] =
 {
     {CF_ANYSTRING, DATA_TYPE_STRING, "Pattern based on $(this) as original text"},
     {CF_IDRANGE, DATA_TYPE_STRING, "The name of the list variable to map"},
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg MAPARRAY_ARGS[] =
+static const FnCallArg MAPARRAY_ARGS[] =
 {
     {CF_ANYSTRING, DATA_TYPE_STRING, "Pattern based on $(this.k) and $(this.v) as original text"},
     {CF_IDRANGE, DATA_TYPE_STRING, "The name of the array variable to map"},
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg MERGEDATA_ARGS[] =
+static const FnCallArg MERGEDATA_ARGS[] =
 {
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg NOT_ARGS[] =
+static const FnCallArg NOT_ARGS[] =
 {
     {CF_ANYSTRING, DATA_TYPE_STRING, "Class value"},
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg NOW_ARGS[] =
+static const FnCallArg NOW_ARGS[] =
 {
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg OR_ARGS[] =
+static const FnCallArg OR_ARGS[] =
 {
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg SUM_ARGS[] =
-{
-    {CF_IDRANGE, DATA_TYPE_STRING, "A list of arbitrary real values"},
-    {NULL, DATA_TYPE_NONE, NULL}
-};
-
-FnCallArg PRODUCT_ARGS[] =
+static const FnCallArg SUM_ARGS[] =
 {
     {CF_IDRANGE, DATA_TYPE_STRING, "A list of arbitrary real values"},
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg DATE_ARGS[] =
+static const FnCallArg PRODUCT_ARGS[] =
+{
+    {CF_IDRANGE, DATA_TYPE_STRING, "A list of arbitrary real values"},
+    {NULL, DATA_TYPE_NONE, NULL}
+};
+
+static const FnCallArg DATE_ARGS[] =
 {
     {"1970,3000", DATA_TYPE_INT, "Year"},
     {"1,12", DATA_TYPE_INT, "Month"},
@@ -6109,7 +6109,7 @@ FnCallArg DATE_ARGS[] =
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg PEERS_ARGS[] =
+static const FnCallArg PEERS_ARGS[] =
 {
     {CF_ABSPATHRANGE, DATA_TYPE_STRING, "File name of host list"},
     {CF_ANYSTRING, DATA_TYPE_STRING, "Comment regex pattern"},
@@ -6117,7 +6117,7 @@ FnCallArg PEERS_ARGS[] =
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg PEERLEADER_ARGS[] =
+static const FnCallArg PEERLEADER_ARGS[] =
 {
     {CF_ABSPATHRANGE, DATA_TYPE_STRING, "File name of host list"},
     {CF_ANYSTRING, DATA_TYPE_STRING, "Comment regex pattern"},
@@ -6125,7 +6125,7 @@ FnCallArg PEERLEADER_ARGS[] =
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg PEERLEADERS_ARGS[] =
+static const FnCallArg PEERLEADERS_ARGS[] =
 {
     {CF_ABSPATHRANGE, DATA_TYPE_STRING, "File name of host list"},
     {CF_ANYSTRING, DATA_TYPE_STRING, "Comment regex pattern"},
@@ -6133,21 +6133,21 @@ FnCallArg PEERLEADERS_ARGS[] =
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg RANDOMINT_ARGS[] =
+static const FnCallArg RANDOMINT_ARGS[] =
 {
     {CF_INTRANGE, DATA_TYPE_INT, "Lower inclusive bound"},
     {CF_INTRANGE, DATA_TYPE_INT, "Upper inclusive bound"},
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg READFILE_ARGS[] =
+static const FnCallArg READFILE_ARGS[] =
 {
     {CF_ABSPATHRANGE, DATA_TYPE_STRING, "File name"},
     {CF_VALRANGE, DATA_TYPE_INT, "Maximum number of bytes to read"},
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg READSTRINGARRAY_ARGS[] =
+static const FnCallArg READSTRINGARRAY_ARGS[] =
 {
     {CF_IDRANGE, DATA_TYPE_STRING, "Array identifier to populate"},
     {CF_ABSPATHRANGE, DATA_TYPE_STRING, "File name to read"},
@@ -6158,7 +6158,7 @@ FnCallArg READSTRINGARRAY_ARGS[] =
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg PARSESTRINGARRAY_ARGS[] =
+static const FnCallArg PARSESTRINGARRAY_ARGS[] =
 {
     {CF_IDRANGE, DATA_TYPE_STRING, "Array identifier to populate"},
     {CF_ABSPATHRANGE, DATA_TYPE_STRING, "A string to parse for input data"},
@@ -6169,7 +6169,7 @@ FnCallArg PARSESTRINGARRAY_ARGS[] =
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg READSTRINGARRAYIDX_ARGS[] =
+static const FnCallArg READSTRINGARRAYIDX_ARGS[] =
 {
     {CF_IDRANGE, DATA_TYPE_STRING, "Array identifier to populate"},
     {CF_ABSPATHRANGE, DATA_TYPE_STRING, "A string to parse for input data"},
@@ -6180,7 +6180,7 @@ FnCallArg READSTRINGARRAYIDX_ARGS[] =
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg PARSESTRINGARRAYIDX_ARGS[] =
+static const FnCallArg PARSESTRINGARRAYIDX_ARGS[] =
 {
     {CF_IDRANGE, DATA_TYPE_STRING, "Array identifier to populate"},
     {CF_ABSPATHRANGE, DATA_TYPE_STRING, "A string to parse for input data"},
@@ -6191,7 +6191,7 @@ FnCallArg PARSESTRINGARRAYIDX_ARGS[] =
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg READSTRINGLIST_ARGS[] =
+static const FnCallArg READSTRINGLIST_ARGS[] =
 {
     {CF_ABSPATHRANGE, DATA_TYPE_STRING, "File name to read"},
     {CF_ANYSTRING, DATA_TYPE_STRING, "Regex matching comments"},
@@ -6201,26 +6201,26 @@ FnCallArg READSTRINGLIST_ARGS[] =
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg READJSON_ARGS[] =
+static const FnCallArg READJSON_ARGS[] =
 {
     {CF_ABSPATHRANGE, DATA_TYPE_STRING, "File name to read"},
     {CF_VALRANGE, DATA_TYPE_INT, "Maximum number of bytes to read"},
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg PARSEJSON_ARGS[] =
+static const FnCallArg PARSEJSON_ARGS[] =
 {
     {CF_ANYSTRING, DATA_TYPE_STRING, "JSON string to parse"},
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg STOREJSON_ARGS[] =
+static const FnCallArg STOREJSON_ARGS[] =
 {
     {CF_IDRANGE, DATA_TYPE_STRING, "CFEngine data container identifier"},
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg READTCP_ARGS[] =
+static const FnCallArg READTCP_ARGS[] =
 {
     {CF_ANYSTRING, DATA_TYPE_STRING, "Host name or IP address of server socket"},
     {CF_VALRANGE, DATA_TYPE_INT, "Port number"},
@@ -6229,21 +6229,21 @@ FnCallArg READTCP_ARGS[] =
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg REGARRAY_ARGS[] =
+static const FnCallArg REGARRAY_ARGS[] =
 {
     {CF_IDRANGE, DATA_TYPE_STRING, "CFEngine array identifier"},
     {CF_ANYSTRING, DATA_TYPE_STRING, "Regular expression"},
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg REGCMP_ARGS[] =
+static const FnCallArg REGCMP_ARGS[] =
 {
     {CF_ANYSTRING, DATA_TYPE_STRING, "Regular expression"},
     {CF_ANYSTRING, DATA_TYPE_STRING, "Match string"},
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg REGEXTRACT_ARGS[] =
+static const FnCallArg REGEXTRACT_ARGS[] =
 {
     {CF_ANYSTRING, DATA_TYPE_STRING, "Regular expression"},
     {CF_ANYSTRING, DATA_TYPE_STRING, "Match string"},
@@ -6251,28 +6251,28 @@ FnCallArg REGEXTRACT_ARGS[] =
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg REGISTRYVALUE_ARGS[] =
+static const FnCallArg REGISTRYVALUE_ARGS[] =
 {
     {CF_ANYSTRING, DATA_TYPE_STRING, "Windows registry key"},
     {CF_ANYSTRING, DATA_TYPE_STRING, "Windows registry value-id"},
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg REGLINE_ARGS[] =
+static const FnCallArg REGLINE_ARGS[] =
 {
     {CF_ANYSTRING, DATA_TYPE_STRING, "Regular expression"},
     {CF_ANYSTRING, DATA_TYPE_STRING, "Filename to search"},
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg REGLIST_ARGS[] =
+static const FnCallArg REGLIST_ARGS[] =
 {
     {CF_NAKEDLRANGE, DATA_TYPE_STRING, "CFEngine list identifier"},
     {CF_ANYSTRING, DATA_TYPE_STRING, "Regular expression"},
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg REGLDAP_ARGS[] =
+static const FnCallArg REGLDAP_ARGS[] =
 {
     {CF_ANYSTRING, DATA_TYPE_STRING, "URI"},
     {CF_ANYSTRING, DATA_TYPE_STRING, "Distinguished name"},
@@ -6284,7 +6284,7 @@ FnCallArg REGLDAP_ARGS[] =
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg REMOTESCALAR_ARGS[] =
+static const FnCallArg REMOTESCALAR_ARGS[] =
 {
     {CF_IDRANGE, DATA_TYPE_STRING, "Variable identifier"},
     {CF_ANYSTRING, DATA_TYPE_STRING, "Hostname or IP address of server"},
@@ -6292,13 +6292,13 @@ FnCallArg REMOTESCALAR_ARGS[] =
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg HUB_KNOWLEDGE_ARGS[] =
+static const FnCallArg HUB_KNOWLEDGE_ARGS[] =
 {
     {CF_IDRANGE, DATA_TYPE_STRING, "Variable identifier"},
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg REMOTECLASSESMATCHING_ARGS[] =
+static const FnCallArg REMOTECLASSESMATCHING_ARGS[] =
 {
     {CF_ANYSTRING, DATA_TYPE_STRING, "Regular expression"},
     {CF_ANYSTRING, DATA_TYPE_STRING, "Server name or address"},
@@ -6307,21 +6307,21 @@ FnCallArg REMOTECLASSESMATCHING_ARGS[] =
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg RETURNSZERO_ARGS[] =
+static const FnCallArg RETURNSZERO_ARGS[] =
 {
     {CF_ABSPATHRANGE, DATA_TYPE_STRING, "Fully qualified command path"},
     {"noshell,useshell,powershell", DATA_TYPE_OPTION, "Shell encapsulation option"},
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg RRANGE_ARGS[] =
+static const FnCallArg RRANGE_ARGS[] =
 {
     {CF_REALRANGE, DATA_TYPE_REAL, "Real number"},
     {CF_REALRANGE, DATA_TYPE_REAL, "Real number"},
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg SELECTSERVERS_ARGS[] =
+static const FnCallArg SELECTSERVERS_ARGS[] =
 {
     {CF_NAKEDLRANGE, DATA_TYPE_STRING, "The identifier of a cfengine list of hosts or addresses to contact"},
     {CF_VALRANGE, DATA_TYPE_INT, "The port number"},
@@ -6332,14 +6332,14 @@ FnCallArg SELECTSERVERS_ARGS[] =
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg SPLAYCLASS_ARGS[] =
+static const FnCallArg SPLAYCLASS_ARGS[] =
 {
     {CF_ANYSTRING, DATA_TYPE_STRING, "Input string for classification"},
     {"daily,hourly", DATA_TYPE_OPTION, "Splay time policy"},
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg SPLITSTRING_ARGS[] =
+static const FnCallArg SPLITSTRING_ARGS[] =
 {
     {CF_ANYSTRING, DATA_TYPE_STRING, "A data string"},
     {CF_ANYSTRING, DATA_TYPE_STRING, "Regex to split on"},
@@ -6347,14 +6347,14 @@ FnCallArg SPLITSTRING_ARGS[] =
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg STRCMP_ARGS[] =
+static const FnCallArg STRCMP_ARGS[] =
 {
     {CF_ANYSTRING, DATA_TYPE_STRING, "String"},
     {CF_ANYSTRING, DATA_TYPE_STRING, "String"},
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg STRFTIME_ARGS[] =
+static const FnCallArg STRFTIME_ARGS[] =
 {
     {"gmtime,localtime", DATA_TYPE_OPTION, "Use GMT or local time"},
     {CF_ANYSTRING, DATA_TYPE_STRING, "A format string"},
@@ -6362,7 +6362,7 @@ FnCallArg STRFTIME_ARGS[] =
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg SUBLIST_ARGS[] =
+static const FnCallArg SUBLIST_ARGS[] =
 {
     {CF_IDRANGE, DATA_TYPE_STRING, "CFEngine list identifier"},
     {"head,tail", DATA_TYPE_OPTION, "Whether to return elements from the head or from the tail of the list"},
@@ -6370,85 +6370,85 @@ FnCallArg SUBLIST_ARGS[] =
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg TRANSLATEPATH_ARGS[] =
+static const FnCallArg TRANSLATEPATH_ARGS[] =
 {
     {CF_ABSPATHRANGE, DATA_TYPE_STRING, "Unix style path"},
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg USEMODULE_ARGS[] =
+static const FnCallArg USEMODULE_ARGS[] =
 {
     {CF_ANYSTRING, DATA_TYPE_STRING, "Name of module command"},
     {CF_ANYSTRING, DATA_TYPE_STRING, "Argument string for the module"},
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg UNIQUE_ARGS[] =
+static const FnCallArg UNIQUE_ARGS[] =
 {
     {CF_IDRANGE, DATA_TYPE_STRING, "CFEngine list identifier"},
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg NTH_ARGS[] =
+static const FnCallArg NTH_ARGS[] =
 {
     {CF_IDRANGE, DATA_TYPE_STRING, "CFEngine list identifier"},
     {CF_VALRANGE, DATA_TYPE_INT, "Offset of element to return"},
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg EVERY_SOME_NONE_ARGS[] =
+static const FnCallArg EVERY_SOME_NONE_ARGS[] =
 {
     {CF_ANYSTRING, DATA_TYPE_STRING, "Regular expression or string"},
     {CF_IDRANGE, DATA_TYPE_STRING, "CFEngine list identifier"},
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg USEREXISTS_ARGS[] =
+static const FnCallArg USEREXISTS_ARGS[] =
 {
     {CF_ANYSTRING, DATA_TYPE_STRING, "User name or identifier"},
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg SORT_ARGS[] =
+static const FnCallArg SORT_ARGS[] =
 {
     {CF_IDRANGE, DATA_TYPE_STRING, "CFEngine list identifier"},
     {"lex,int,real,IP,ip,MAC,mac", DATA_TYPE_OPTION, "Sorting method: lex or int or real (floating point) or IPv4/IPv6 or MAC address"},
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg REVERSE_ARGS[] =
+static const FnCallArg REVERSE_ARGS[] =
 {
     {CF_IDRANGE, DATA_TYPE_STRING, "CFEngine list identifier"},
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg SHUFFLE_ARGS[] =
+static const FnCallArg SHUFFLE_ARGS[] =
 {
     {CF_IDRANGE, DATA_TYPE_STRING, "CFEngine list identifier"},
     {CF_ANYSTRING, DATA_TYPE_STRING, "Any seed string"},
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg LENGTH_ARGS[] =
+static const FnCallArg LENGTH_ARGS[] =
 {
     {CF_IDRANGE, DATA_TYPE_STRING, "CFEngine list identifier"},
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg SETOP_ARGS[] =
+static const FnCallArg SETOP_ARGS[] =
 {
     {CF_IDRANGE, DATA_TYPE_STRING, "CFEngine base list identifier"},
     {CF_IDRANGE, DATA_TYPE_STRING, "CFEngine filter list identifier"},
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg FORMAT_ARGS[] =
+static const FnCallArg FORMAT_ARGS[] =
 {
     {CF_ANYSTRING, DATA_TYPE_STRING, "CFEngine format string"},
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg EVAL_ARGS[] =
+static const FnCallArg EVAL_ARGS[] =
 {
     {CF_ANYSTRING, DATA_TYPE_STRING, "Input string"},
     {"math", DATA_TYPE_OPTION, "Evaluation type"},
@@ -6456,19 +6456,19 @@ FnCallArg EVAL_ARGS[] =
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg BUNDLESMATCHING_ARGS[] =
+static const FnCallArg BUNDLESMATCHING_ARGS[] =
 {
     {CF_ANYSTRING, DATA_TYPE_STRING, "Regular expression"},
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg XFORM_ARGS[] =
+static const FnCallArg XFORM_ARGS[] =
 {
     {CF_ANYSTRING, DATA_TYPE_STRING, "Input string"},
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-FnCallArg XFORM_SUBSTR_ARGS[] =
+static const FnCallArg XFORM_SUBSTR_ARGS[] =
 {
     {CF_ANYSTRING, DATA_TYPE_STRING, "Input string"},
     {CF_VALRANGE, DATA_TYPE_INT, "Maximum number of characters to return"},

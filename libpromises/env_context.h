@@ -103,6 +103,8 @@ typedef enum
 struct EvalContext_
 {
     int eval_options;
+    bool bundle_aborted;
+    bool checksum_updates_default;
 
     Item *heap_abort;
     Item *heap_abort_current_bundle;
@@ -184,10 +186,14 @@ bool EvalContextPromiseIsDone(const EvalContext *ctx, const Promise *pp);
 void EvalContextMarkPromiseDone(EvalContext *ctx, const Promise *pp);
 void EvalContextMarkPromiseNotDone(EvalContext *ctx, const Promise *pp);
 
+/* Various global options */
+void SetChecksumUpdatesDefault(EvalContext *ctx, bool enabled);
+bool GetChecksumUpdatesDefault(const EvalContext *ctx);
+
 /* - Rest - */
 bool EvalContextPromiseIsActive(const EvalContext *ctx, const Promise *pp);
 
-int Abort(void);
+bool Abort(EvalContext *ctx);
 int VarClassExcluded(const EvalContext *ctx, const Promise *pp, char **classes);
 void MarkPromiseHandleDone(EvalContext *ctx, const Promise *pp);
 int MissingDependencies(EvalContext *ctx, const Promise *pp);

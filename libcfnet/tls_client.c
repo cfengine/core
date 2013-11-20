@@ -82,10 +82,6 @@ bool TLSClientInitialize()
      * always either write the whole amount or fail. */
     SSL_CTX_set_mode(SSLCLIENTCONTEXT, SSL_MODE_AUTO_RETRY);
 
-    /*
-     * Create cert into memory and load it into SSL context.
-     */
-
     if (PRIVKEY == NULL || PUBKEY == NULL)
     {
         Log(LOG_LEVEL_WARNING,
@@ -99,42 +95,14 @@ bool TLSClientInitialize()
         }
     }
 
-    /* Generate self-signed cert valid from now to 50 years later. */
+    /* Create cert into memory and load it into SSL context. */
+    SSLCLIENTCERT = TLSGenerateCertFromPrivKey(PRIVKEY);
+    if (SSLCLIENTCERT == NULL)
     {
-        X509 *x509 = X509_new();
-        X509_gmtime_adj(X509_get_notBefore(x509), 0);
-        X509_time_adj(X509_get_notAfter(x509), 60*60*24*365*50, NULL);
-        EVP_PKEY *pkey = EVP_PKEY_new();
-        EVP_PKEY_set1_RSA(pkey, PRIVKEY);
-        X509_NAME *name = X509_get_subject_name(x509);
-        X509_NAME_add_entry_by_txt(name, "CN", MBSTRING_ASC,
-                                   (const char *) "",
-                                   -1, -1, 0);
-        X509_set_issuer_name(x509, name);
-        X509_set_pubkey(x509, pkey);
-
-        const EVP_MD *md = EVP_get_digestbyname("sha384");
-        if (md == NULL)
-        {
-            Log(LOG_LEVEL_ERR, "Uknown digest algorithm %s",
-                "sha384");
-            return false;
-        }
-        ret = X509_sign(x509, pkey, md);
-
-        EVP_PKEY_free(pkey);
-        SSLCLIENTCERT = x509;
-
-        if (ret <= 0)
-        {
-            Log(LOG_LEVEL_ERR,
-                "Couldn't sign the public key for the TLS handshake: %s",
-                ERR_reason_error_string(ERR_get_error()));
-            goto err3;
-        }
+        Log(LOG_LEVEL_ERR,
+            "Failed to generate in-memory-certificate from private key");
+        goto err2;
     }
-    /* Log(LOG_LEVEL_ERR, "generate cert from priv key: %s", */
-    /*     ERR_reason_error_string(ERR_get_error())); */
 
     SSL_CTX_use_certificate(SSLCLIENTCONTEXT, SSLCLIENTCERT);
 

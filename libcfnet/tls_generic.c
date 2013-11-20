@@ -162,6 +162,97 @@ int TLSVerifyPeer(ConnectionInfo *conn_info, const char *remoteip, const char *u
     return retval;
 }
 
+/* Generate in-memory self-signed cert valid from now to 50 years later. */
+X509 *TLSGenerateCertFromPrivKey(RSA *privkey)
+{
+    int ret;
+    X509 *x509 = X509_new();
+    if (x509 == NULL)
+    {
+        Log(LOG_LEVEL_ERR, "X509_new: %s",
+            ERR_reason_error_string(ERR_get_error()));
+        goto err1;
+    }
+
+    ASN1_TIME *t1 = X509_gmtime_adj(X509_get_notBefore(x509), 0);
+    ASN1_TIME *t2 = X509_gmtime_adj(X509_get_notAfter(x509), 60*60*24*365*50);
+    if (t1 == NULL || t2 == NULL)
+    {
+        Log(LOG_LEVEL_ERR, "X509_gmtime_adj: %s",
+            ERR_reason_error_string(ERR_get_error()));
+        goto err2;
+    }
+
+    EVP_PKEY *pkey = EVP_PKEY_new();
+    if (pkey == NULL)
+    {
+        Log(LOG_LEVEL_ERR, "EVP_PKEY_new: %s",
+            ERR_reason_error_string(ERR_get_error()));
+        goto err2;
+    }
+
+    ret = EVP_PKEY_set1_RSA(pkey, privkey);
+    if (ret != 1)
+    {
+        Log(LOG_LEVEL_ERR, "EVP_PKEY_set1_RSA: %s",
+            ERR_reason_error_string(ERR_get_error()));
+        goto err3;
+    }
+
+    X509_NAME *name = X509_get_subject_name(x509);
+    if (name == NULL)
+    {
+        Log(LOG_LEVEL_ERR, "X509_get_subject_name: %s",
+            ERR_reason_error_string(ERR_get_error()));
+        goto err3;
+    }
+
+    ret = 0;
+    ret += X509_NAME_add_entry_by_txt(name, "CN", MBSTRING_ASC,
+                                      (const char *) "a",
+                                      -1, -1, 0);
+    ret += X509_set_issuer_name(x509, name);
+    ret += X509_set_pubkey(x509, pkey);
+    if (ret < 3)
+    {
+        Log(LOG_LEVEL_ERR, "Failed to set certificate details: %s",
+            ERR_reason_error_string(ERR_get_error()));
+        goto err3;
+    }
+
+    const EVP_MD *md = EVP_get_digestbyname("sha384");
+    if (md == NULL)
+    {
+        Log(LOG_LEVEL_ERR, "OpenSSL: Uknown digest algorithm %s",
+            "sha384");
+        goto err3;
+    }
+
+    /* Not really needed since the other side does not
+       verify the signature. */
+    ret = X509_sign(x509, pkey, md);
+    /* X509_sign obscurely returns the length of the signature... */
+    if (ret == 0)
+    {
+        Log(LOG_LEVEL_ERR, "X509_sign: %s",
+            ERR_reason_error_string(ERR_get_error()));
+        goto err3;
+    }
+
+    EVP_PKEY_free(pkey);
+
+    assert (x509 != NULL);
+    return x509;
+
+
+  err3:
+    EVP_PKEY_free(pkey);
+  err2:
+    X509_free(x509);
+  err1:
+    return NULL;
+}
+
 static const char *TLSPrimarySSLError(int code)
 {
     switch (code)

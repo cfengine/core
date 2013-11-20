@@ -25,6 +25,8 @@
 #include <known_dirs.h>
 #include <cf3.defs.h>
 
+#include <cf-windows-functions.h>
+
 #if defined(__CYGWIN__)
 
 static const char *GetDefaultWorkDir(void)

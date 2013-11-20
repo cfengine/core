@@ -311,7 +311,7 @@ PromiseResult VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_d
                 for (const Rlist *rp = promise_meta; rp; rp = rp->next)
                 {
                     StringSetAdd(class_meta, xstrdup(RlistScalarValue(rp)));
-                    print = StringSetToBuffer(class_meta, ",");
+                    print = StringSetToBuffer(class_meta, ',');
                     Log(LOG_LEVEL_INFO, "Added tag %s to class %s, tags now [%s]", RlistScalarValue(rp), pp->promiser, BufferData(print));
                     BufferDestroy(&print);
                 }

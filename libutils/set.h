@@ -128,6 +128,6 @@ void *SetIteratorNext(SetIterator *i);
 TYPED_SET_DECLARE(String, char *)
 
 StringSet *StringSetFromString(const char *str, char delimiter);
-Buffer *StringSetToBuffer(StringSet *set, const char *delimiter);
+Buffer *StringSetToBuffer(StringSet *set, const char delimiter);
 
 #endif

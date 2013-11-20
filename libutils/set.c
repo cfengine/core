@@ -83,7 +83,7 @@ void *SetIteratorNext(SetIterator *i)
     return kv ? kv->key : NULL;
 }
 
-Buffer *StringSetToBuffer(StringSet *set, const char *delimiter)
+Buffer *StringSetToBuffer(StringSet *set, const char delimiter)
 {
     Buffer *buf = BufferNew();
 
@@ -91,13 +91,17 @@ Buffer *StringSetToBuffer(StringSet *set, const char *delimiter)
     const char *element = NULL;
     int pos = 0;
     int size = StringSetSize(set);
+    char minibuf[2];
+
+    minibuf[0] = delimiter;
+    minibuf[1] = '\0';
 
     while ((element = StringSetIteratorNext(&it)))
     {
         BufferAppend(buf, element, strlen(element));
         if (pos < size-1)
         {
-            BufferAppend(buf, delimiter, strlen(delimiter));
+            BufferAppend(buf, minibuf, sizeof(char));
         }
 
         pos++;

@@ -827,11 +827,14 @@ static StringSet *ClassesMatching(const EvalContext *ctx, ClassTableIterator *it
             {
                 for (const Rlist *arg = args->next; arg; arg = arg->next)
                 {
-                    /* FIXME: review this strcmp. Moved out from StringMatch */
-                    if (strcmp(tag_regex, element) != 0 &&
-                        !StringMatchFull(tag_regex, element))
+                    const char *tag_regex = RlistScalarValue(arg);
+                    const char *element;
+                    StringSetIterator it = StringSetIteratorInit(tagset);
+                    while ((element = StringSetIteratorNext(&it)))
                     {
-                        if (StringMatchFull(tag_regex, element))
+                        /* FIXME: review this strcmp. Moved out from StringMatch */
+                        if (strcmp(tag_regex, element) == 0 ||
+                            StringMatchFull(tag_regex, element))
                         {
                             pass = true;
                             break;
@@ -940,7 +943,9 @@ static StringSet *VariablesMatching(const EvalContext *ctx, VariableTableIterato
                     StringSetIterator it = StringSetIteratorInit(tagset);
                     while ((element = SetIteratorNext(&it)))
                     {
-                        if (StringMatchFull(tag_regex, element))
+                        /* FIXME: review this strcmp. Moved out from StringMatch */
+                        if (strcmp(tag_regex, element) == 0 ||
+                            StringMatchFull(tag_regex, element))
                         {
                             pass = true;
                             break;

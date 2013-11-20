@@ -29,6 +29,8 @@
 # include <sys/uio.h>
 #endif
 
+#ifndef __MINGW32__
+
 static bool IsProcessRunning(pid_t pid);
 
 void ProcessSignalTerminate(pid_t pid)
@@ -225,3 +227,5 @@ bool ShellCommandReturnsZero(const char *command, ShellType shell)
 
     return false;
 }
+
+#endif /* !__MINGW32__ */

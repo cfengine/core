@@ -1248,7 +1248,6 @@ AC_CONFIG_FILES([Makefile
     cf-serverd/Makefile
     ext/Makefile
     examples/Makefile
-    masterfiles/Makefile
     tests/Makefile
     tests/acceptance/Makefile
     tests/unit/Makefile

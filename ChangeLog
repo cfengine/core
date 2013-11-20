@@ -1,8 +1,17 @@
 3.5.3
+       Changes:
+       - Changed the way package versions are compared in package promises. (Redmine #3314)
+         In previous versions the comparison was inconsistent. This has been fixed, but may
+         also lead to behavior changes in certain cases. In CFEngine 3.5.3, the comparison
+         works as follows:
+           <package-being-considered> <package_select> <package_version>
+         For instance:
+                 apache-2.2.31              ">="            "2.2.0"
+         will result in the package being installed.
+
        Bug fixes:
        - fix cf-monitord crash due to incorrect array initialization (Redmine #3180)
        - fix cf-serverd stat()'ing the file tree every second (Redmine #3479)
-       - improve package comparison logic (Redmine ##3314)
        - correctly populate sys.hardware_addresses variable (Redmine #2936)
        - add support for Debian's GNU/kfreebsd to build system (Redmine #3500)
        - fix possible stack corruption in guest_environments promises (Redmine #3552)

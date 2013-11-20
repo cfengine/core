@@ -4,7 +4,9 @@
        - add process name and pid in syslog message (GitHub #789)
        - process_results default to AND'ing of set attributes if not specified (Redmine #3224)
        - interface is now canonified in sys.hardware_mac[interface] to align with sys.ipv4[interface] (Redmine #3418)
-       - #TODO# network protocol on top of TLS
+       - TLS is used now for authentication, after which all dialog happens
+         encrypted within the established TLS session. The hub is still able
+         to speak the legacy protocol with old agents.
        - #TODO# support for LMDB in local data storage
        - cf-promises will not call functions in policy now.  Use the --eval-functions option to retain the old behavior.
 

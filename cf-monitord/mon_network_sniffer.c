@@ -33,6 +33,7 @@
 #include <signals.h>
 #include <string_lib.h>
 #include <misc_lib.h>
+#include <unix_iface.h>
 
 typedef enum
 {
@@ -203,24 +204,6 @@ static void IncrementCounter(Item **list, char *name)
     }
 
     IncrementItemListCounter(*list, name);
-}
-
-static bool IsInterfaceAddress(const char *adr)
- /* Does this address belong to a local interface */
-{
-    Item *ip;
-
-    for (ip = IPADDRESSES; ip != NULL; ip = ip->next)
-    {
-        if (strncasecmp(adr, ip->name, strlen(adr)) == 0)
-        {
-            Log(LOG_LEVEL_DEBUG, "Identifying '%s' as one of my interfaces", adr);
-            return true;
-        }
-    }
-
-    Log(LOG_LEVEL_DEBUG, "'%s' is not one of my interfaces", adr);
-    return false;
 }
 
 /* This coarsely classifies TCP dump data */

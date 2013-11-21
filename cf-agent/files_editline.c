@@ -935,7 +935,7 @@ static int ReplacePatterns(EvalContext *ctx, Item *file_start, Item *file_end, A
                            Promise *pp, EditContext *edcontext, PromiseResult *result)
 {
     char replace[CF_EXPANDSIZE], line_buff[CF_EXPANDSIZE];
-    char before[CF_BUFSIZE], after[CF_BUFSIZE];
+    char after[CF_BUFSIZE];
     int match_len, start_off, end_off, once_only = false, retval = false;
     Item *ip;
     int notfound = true, cutoff = 1, replaced = false;
@@ -978,19 +978,17 @@ static int ReplacePatterns(EvalContext *ctx, Item *file_start, Item *file_end, A
             Log(LOG_LEVEL_VERBOSE, "Verifying replacement of '%s' with '%s', cutoff %d", pp->promiser, replace,
                   cutoff);
 
-            before[0] = after[0] = '\0';
+            after[0] = '\0';
 
             // Model the partial substitution in line_buff to check convergence
 
-            strncat(before, line_buff, start_off);
             strncat(after, line_buff + end_off, sizeof(after) - 1);
-            snprintf(line_buff, CF_EXPANDSIZE - 1, "%s%s", before, replace);
             notfound = false;
             replaced = true;
 
             // Model the full substitution in line_buff
 
-            snprintf(line_buff, CF_EXPANDSIZE - 1, "%s%s%s", before, replace, after);
+            snprintf(line_buff + start_off, CF_EXPANDSIZE - start_off, "%s%s", replace, after);
 
             if (once_only)
             {

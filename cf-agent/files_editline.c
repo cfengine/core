@@ -978,17 +978,17 @@ static int ReplacePatterns(EvalContext *ctx, Item *file_start, Item *file_end, A
             Log(LOG_LEVEL_VERBOSE, "Verifying replacement of '%s' with '%s', cutoff %d", pp->promiser, replace,
                   cutoff);
 
-            after[0] = '\0';
-
-            // Model the partial substitution in line_buff to check convergence
-
+            // Save portion of line after substitution:
+            after[0] = '\0'; // Do what strncpy() should, using strncat():
             strncat(after, line_buff + end_off, sizeof(after) - 1);
+            // TODO: gripe if that truncated !
+
+            // Substitute into line_buff:
+            snprintf(line_buff + start_off, sizeof(line_buff) - start_off,
+                     "%s%s", replace, after);
+            // TODO: gripe if that truncated or failed !
             notfound = false;
             replaced = true;
-
-            // Model the full substitution in line_buff
-
-            snprintf(line_buff + start_off, CF_EXPANDSIZE - start_off, "%s%s", replace, after);
 
             if (once_only)
             {

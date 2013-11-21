@@ -405,7 +405,6 @@ int VerifyNotInFstab(EvalContext *ctx, char *name, Attributes a, Promise *pp, Pr
     char regex[CF_BUFSIZE];
     char *host, *mountpt, *opts;
     Item *ip;
-    Item* next = NULL;
 
     if (!FSTABLIST)
     {
@@ -484,8 +483,9 @@ int VerifyNotInFstab(EvalContext *ctx, char *name, Attributes a, Promise *pp, Pr
 
             return 0;       /* ignore internal editing for aix , always returns 0 changes */
 #else
+            Item* next;
             snprintf(regex, CF_BUFSIZE, ".*[\\s]+%s[\\s]+.*", mountpt);
-            
+
             for (ip = FSTABLIST; ip != NULL; ip = next)
             {
                 next = ip->next;

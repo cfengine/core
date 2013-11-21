@@ -59,7 +59,8 @@ int main()
     PRINT_TEST_BANNER();
     const UnitTest tests[] =
     {
-        unit_test(test_load_masterfiles),
+        // disabled masterfiles load test for now
+        /* unit_test(test_load_masterfiles),*/
         unit_test(test_resolve_absolute_input_path),
         unit_test(test_resolve_non_anchored_base_path),
         unit_test(test_resolve_relative_base_path),

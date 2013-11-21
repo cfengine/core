@@ -954,7 +954,7 @@ static int ReplacePatterns(EvalContext *ctx, Item *file_start, Item *file_end, A
         }
 
         cutoff = 1;
-        strlcpy(line_buff, ip->name, CF_BUFSIZE);
+        strlcpy(line_buff, ip->name, sizeof(line_buff));
         replaced = false;
         match_len = 0;
 

@@ -1198,6 +1198,5 @@ static PromiseResult KeepMonitorPromise(EvalContext *ctx, Promise *pp, ARG_UNUSE
         return result;
     }
 
-    assert(false && "Unknown promise type");
     return PROMISE_RESULT_NOOP;
 }

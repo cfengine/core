@@ -534,7 +534,7 @@ void GetNameInfo3(EvalContext *ctx, AgentType agent_type)
         char pubkey_digest[CF_MAXVARSIZE] = { 0 };
 
         HashPubKey(PUBKEY, digest, CF_DEFAULT_DIGEST);
-        HashPrintSafe(CF_DEFAULT_DIGEST, digest, pubkey_digest);
+        HashPrintSafe(CF_DEFAULT_DIGEST, true, digest, pubkey_digest);
 
         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "key_digest", pubkey_digest, DATA_TYPE_STRING);
 

@@ -63,6 +63,8 @@
 
 #include <cf-windows-functions.h>
 
+#include <ftw.h>
+
 static pthread_once_t pid_cleanup_once = PTHREAD_ONCE_INIT;
 
 static char PIDFILE[CF_BUFSIZE];
@@ -296,6 +298,13 @@ static bool WritePolicyValidatedFile(const GenericAgentConfig *config)
         return false;
     }
 
+    char release_id[(2 * CF_SHA1_LEN) + 1];
+    bool have_release_id = false;
+    if (!MINUSF)
+    {
+        have_release_id = GeneratePolicyReleaseIDFromMasterfiles(release_id);
+    }
+
     int fd = creat(filename, 0600);
     if (fd == -1)
     {
@@ -303,13 +312,16 @@ static bool WritePolicyValidatedFile(const GenericAgentConfig *config)
         return false;
     }
 
-    FILE *fp = fdopen(fd, "w");
-    time_t now = time(NULL);
+    JsonElement *info = JsonObjectCreate(3);
+    JsonObjectAppendInteger(info, "timestamp", time(NULL));
+    if (have_release_id)
+    {
+        JsonObjectAppendString(info, "releaseId", release_id);
+    }
 
-    char timebuf[26];
-
-    fprintf(fp, "%s", cf_strtimestamp_local(now, timebuf));
-    fclose(fp);
+    Writer *w = FileWriter(fdopen(fd, "w"));
+    JsonWrite(w, info, 0);
+    WriterClose(w);
 
     return true;
 }
@@ -830,7 +842,65 @@ static bool MissingInputFile(const char *input_file)
     return false;
 }
 
-/*******************************************************************/
+bool GeneratePolicyReleaseIDFromMasterfiles(char release_id_out[(2 * CF_SHA1_LEN) + 1])
+{
+    char policy_dir[FILENAME_MAX + 1];
+    snprintf(policy_dir, FILENAME_MAX, "%s" FILE_SEPARATOR_STR "masterfiles", GetWorkDir());
+
+    {
+        char git_filename[FILENAME_MAX + 1];
+        snprintf(git_filename, FILENAME_MAX, "%s/.git/HEAD", policy_dir);
+        MapName(git_filename);
+
+        FILE *git_file = fopen(git_filename, "r");
+        if (git_file)
+        {
+            char git_head[128];
+            fscanf(git_file, "ref: %127s", git_head);
+            fclose(git_file);
+
+            snprintf(git_filename, FILENAME_MAX, "%s/.git/%s", policy_dir, git_head);
+            git_file = fopen(git_filename, "r");
+            if (git_file)
+            {
+                fscanf(git_file, "%40s", release_id_out);
+                fclose(git_file);
+                return true;
+            }
+            else
+            {
+                Log(LOG_LEVEL_DEBUG, "While generating policy release ID, found git head ref '%s', but unable to open (errno: %s)",
+                    policy_dir, GetErrorStr());
+            }
+        }
+        else
+        {
+            Log(LOG_LEVEL_DEBUG, "While generating policy release ID, directory is '%s' not a git repository",
+                policy_dir);
+        }
+    }
+
+    if (access(policy_dir, R_OK) != 0)
+    {
+        Log(LOG_LEVEL_ERR, "Cannot access policy directory '%s' to generate release ID", policy_dir);
+        return false;
+    }
+
+    // fallback, produce some pseudo sha1 hash
+    EVP_MD_CTX crypto_ctx;
+    EVP_DigestInit(&crypto_ctx, EVP_get_digestbyname(FileHashName(HASH_METHOD_SHA1)));
+
+    bool success = HashDirectoryTree(policy_dir,
+                                     (const char *[]) { ".cf", ".dat", ".txt", ".conf", NULL},
+                                     &crypto_ctx);
+
+    int md_len;
+    unsigned char digest[EVP_MAX_MD_SIZE + 1] = { 0 };
+    EVP_DigestFinal(&crypto_ctx, digest, &md_len);
+
+    HashPrintSafe(HASH_METHOD_SHA1, false, digest, release_id_out);
+    return success;
+}
 
 bool GenericAgentIsPolicyReloadNeeded(const GenericAgentConfig *config, const Policy *policy)
 {

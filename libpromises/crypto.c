@@ -189,7 +189,8 @@ bool LoadSecretKeys(const char *policy_server)
         {
             char buffer[EVP_MAX_MD_SIZE * 4];
             HashPubKey(PUBKEY, digest, CF_DEFAULT_DIGEST);
-            snprintf(dst_public_key_filename, CF_MAXVARSIZE, "%s/ppkeys/%s-%s.pub", CFWORKDIR, "root", HashPrintSafe(CF_DEFAULT_DIGEST, digest, buffer));
+            snprintf(dst_public_key_filename, CF_MAXVARSIZE, "%s/ppkeys/%s-%s.pub", CFWORKDIR, "root",
+                     HashPrintSafe(CF_DEFAULT_DIGEST, true, digest, buffer));
             MapName(dst_public_key_filename);
         }
 

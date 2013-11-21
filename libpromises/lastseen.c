@@ -91,7 +91,7 @@ void LastSaw(const char *ipaddress, unsigned char digest[EVP_MAX_MD_SIZE + 1], L
         return;
     }
 
-    HashPrintSafe(CF_DEFAULT_DIGEST, digest, databuf);
+    HashPrintSafe(CF_DEFAULT_DIGEST, true, digest, databuf);
 
     const char *mapip = MapAddress(ipaddress);
 
@@ -195,7 +195,7 @@ bool Address2Hostkey(const char *address, char *result)
         {
             unsigned char digest[EVP_MAX_MD_SIZE + 1];
             HashPubKey(PUBKEY, digest, CF_DEFAULT_DIGEST);
-            HashPrintSafe(CF_DEFAULT_DIGEST, digest, result);
+            HashPrintSafe(CF_DEFAULT_DIGEST, true, digest, result);
             return true;
         }
         else

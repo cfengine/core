@@ -46,6 +46,22 @@ void CreateEmptyFile(char *name);
  */
 bool DeleteDirectoryTree(const char *path);
 
+
+/**
+ * @brief This is a somewhat simpler version of nftw that support user_data.
+ *        Callback function must return 0 to indicate success, -1 for failure.
+ * @param path Path to traverse
+ * @param user_data User data carry
+ * @return True if successful
+ */
+bool TraverseDirectoryTree(const char *path,
+                           int (*callback)(const char *path, const struct stat *sb, void *user_data),
+                           void *user_data);
+
+bool HashDirectoryTree(const char *path,
+                       const char **extensions_filter,
+                       EVP_MD_CTX *crypto_context);
+
 #include <file_lib.h>
 
 #endif

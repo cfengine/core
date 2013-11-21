@@ -592,7 +592,8 @@ static FnCallResult FnCallHandlerHash(EvalContext *ctx, FnCall *fp, Rlist *final
 
     char hashbuffer[EVP_MAX_MD_SIZE * 4];
 
-    snprintf(buffer, CF_BUFSIZE - 1, "%s", HashPrintSafe(type, digest, hashbuffer));
+    snprintf(buffer, CF_BUFSIZE - 1, "%s",
+             HashPrintSafe(type, true, digest, hashbuffer));
 
     return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(SkipHashType(buffer)), RVAL_TYPE_SCALAR } };
 }
@@ -618,7 +619,8 @@ static FnCallResult FnCallHashMatch(EvalContext *ctx, FnCall *fp, Rlist *finalar
     HashFile(string, digest, type);
 
     char hashbuffer[EVP_MAX_MD_SIZE * 4];
-    snprintf(buffer, CF_BUFSIZE - 1, "%s", HashPrintSafe(type, digest, hashbuffer));
+    snprintf(buffer, CF_BUFSIZE - 1, "%s",
+             HashPrintSafe(type, true, digest, hashbuffer));
     Log(LOG_LEVEL_VERBOSE, "File '%s' hashes to '%s', compare to '%s'", string, buffer, compare);
 
     if (strcmp(buffer + 4, compare) == 0)
@@ -1056,7 +1058,8 @@ static FnCallResult FnCallCanonify(EvalContext *ctx, FnCall *fp, Rlist *finalarg
 
         type = HashMethodFromString("sha1");
         HashString(string, strlen(string), digest, type);
-        snprintf(buf, CF_BUFSIZE, "%s_%s", string, SkipHashType(HashPrintSafe(type, digest, hashbuffer)));
+        snprintf(buf, CF_BUFSIZE, "%s_%s", string,
+                 SkipHashType(HashPrintSafe(type, true, digest, hashbuffer)));
     }
     else
     {

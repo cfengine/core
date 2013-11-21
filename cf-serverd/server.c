@@ -1419,7 +1419,8 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
 
     /* Compute and store hash of the client's public key. */
     HashPubKey(newkey, conn->conn_info.remote_keyhash, CF_DEFAULT_DIGEST);
-    HashPrintSafe(CF_DEFAULT_DIGEST, conn->conn_info.remote_keyhash,
+    HashPrintSafe(CF_DEFAULT_DIGEST, true,
+                  conn->conn_info.remote_keyhash,
                   conn->conn_info.remote_keyhash_str);
 
     Log(LOG_LEVEL_VERBOSE, "Public key identity of host '%s' is '%s'",

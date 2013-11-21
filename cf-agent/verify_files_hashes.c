@@ -165,7 +165,7 @@ int FileHashChanged(EvalContext *ctx, const char *filename, unsigned char digest
                 if (attr.change.update)
                 {
                     cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_CHANGE, pp, attr, "Updating hash for '%s' to '%s'", filename,
-                         HashPrintSafe(type, digest, buffer));
+                         HashPrintSafe(type, true, digest, buffer));
                     *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
 
                     DeleteHash(dbp, type, filename);
@@ -193,7 +193,8 @@ int FileHashChanged(EvalContext *ctx, const char *filename, unsigned char digest
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_CHANGE, pp, attr, "File '%s' was not in '%s' database - new file found", filename,
              FileHashName(type));
         *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
-        Log(LOG_LEVEL_DEBUG, "Storing checksum for '%s' in database '%s'", filename, HashPrintSafe(type, digest, buffer));
+        Log(LOG_LEVEL_DEBUG, "Storing checksum for '%s' in database '%s'", filename,
+            HashPrintSafe(type, true, digest, buffer));
         WriteHash(dbp, type, filename, digest);
 
         LogHashChange(filename, FILE_STATE_NEW, "New file found", pp);

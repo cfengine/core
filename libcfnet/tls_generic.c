@@ -93,7 +93,7 @@ int TLSVerifyPeer(ConnectionInfo *conn_info, const char *remoteip, const char *u
     /* Store the hash, we need it for various stuff during connection. */
     HashPubKey(conn_info->remote_key, conn_info->remote_keyhash,
                CF_DEFAULT_DIGEST);
-    HashPrintSafe(CF_DEFAULT_DIGEST, conn_info->remote_keyhash,
+    HashPrintSafe(CF_DEFAULT_DIGEST, true, conn_info->remote_keyhash,
                   conn_info->remote_keyhash_str);
 
     /*

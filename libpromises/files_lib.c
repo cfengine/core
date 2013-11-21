@@ -33,6 +33,7 @@
 #include <misc_lib.h>
 #include <dir.h>
 #include <policy.h>
+#include <string_lib.h>
 
 
 static Item *ROTATED = NULL;
@@ -529,6 +530,134 @@ static bool DeleteDirectoryTreeInternal(const char *basepath, const char *path)
 bool DeleteDirectoryTree(const char *path)
 {
     return DeleteDirectoryTreeInternal(path, path);
+}
+
+bool TraverseDirectoryTreeInternal(const char *base_path,
+                                   const char *current_path,
+                                   int (*callback)(const char *, const struct stat *, void *),
+                                   void *user_data)
+{
+    Dir *dirh = DirOpen(base_path);
+    if (!dirh)
+    {
+        if (errno == ENOENT)
+        {
+            return true;
+        }
+
+        Log(LOG_LEVEL_INFO, "Unable to open directory '%s' during traversal of directory tree '%s' (opendir: %s)",
+            current_path, base_path, GetErrorStr());
+        return false;
+    }
+
+    bool failed = false;
+    for (const struct dirent *dirp = DirRead(dirh); dirp != NULL; dirp = DirRead(dirh))
+    {
+        if (!strcmp(dirp->d_name, ".") || !strcmp(dirp->d_name, ".."))
+        {
+            continue;
+        }
+
+        char sub_path[CF_BUFSIZE];
+        snprintf(sub_path, CF_BUFSIZE, "%s" FILE_SEPARATOR_STR "%s", current_path, dirp->d_name);
+
+        struct stat lsb;
+        if (lstat(sub_path, &lsb) == -1)
+        {
+            if (errno == ENOENT)
+            {
+                /* File disappeared on its own */
+                continue;
+            }
+
+            Log(LOG_LEVEL_VERBOSE, "Unable to stat file '%s' during traversal of directory tree '%s' (lstat: %s)",
+                current_path, base_path, GetErrorStr());
+            failed = true;
+        }
+        else
+        {
+            if (S_ISDIR(lsb.st_mode))
+            {
+                if (!TraverseDirectoryTreeInternal(base_path, sub_path, callback, user_data))
+                {
+                    failed = true;
+                }
+            }
+            else
+            {
+                if (callback(sub_path, &lsb, user_data) == -1)
+                {
+                    failed = true;
+                }
+            }
+        }
+    }
+
+    DirClose(dirh);
+    return !failed;
+}
+
+bool TraverseDirectoryTree(const char *path,
+                           int (*callback)(const char *, const struct stat *, void *),
+                           void *user_data)
+{
+    return TraverseDirectoryTreeInternal(path, path, callback, user_data);
+}
+
+typedef struct
+{
+    unsigned char buffer[1024];
+    const char **extensions_filter;
+    EVP_MD_CTX *crypto_context;
+    unsigned char **digest;
+} HashDirectoryTreeState;
+
+int HashDirectoryTreeCallback(const char *filename, ARG_UNUSED const struct stat *sb, void *user_data)
+{
+    HashDirectoryTreeState *state = user_data;
+    bool ignore = true;
+    for (size_t i = 0; state->extensions_filter[i]; i++)
+    {
+        if (StringEndsWith(filename, state->extensions_filter[i]))
+        {
+            ignore = false;
+            break;
+        }
+    }
+
+    if (ignore)
+    {
+        return 0;
+    }
+
+    FILE *file = fopen(filename, "rb");
+    if (!file)
+    {
+        Log(LOG_LEVEL_INFO, "Cannot open file for hashing '%s'. (fopen: %s)", filename, GetErrorStr());
+        return -1;
+    }
+
+    size_t len = 0;
+    char buffer[1024];
+    while ((len = fread(buffer, 1, 1024, file)))
+    {
+        EVP_DigestUpdate(state->crypto_context, state->buffer, len);
+    }
+
+    fclose(file);
+    return 0;
+}
+
+bool HashDirectoryTree(const char *path,
+                       const char **extensions_filter,
+                       EVP_MD_CTX *crypto_context)
+{
+    HashDirectoryTreeState state;
+    memset(state.buffer, 0, 1024);
+    state.extensions_filter = extensions_filter;
+    state.crypto_context = crypto_context;
+
+    return TraverseDirectoryTree(path, HashDirectoryTreeCallback, &state);
 }
 
 void RotateFiles(char *name, int number)

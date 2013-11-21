@@ -87,7 +87,7 @@ ENTERPRISE_VOID_FUNC_1ARG_DECLARE(void, GenericAgentWriteVersion, Writer *, w);
 void GenericAgentWriteHelp(Writer *w, const char *comp, const struct option options[], const char *hints[], bool accepts_file_argument);
 bool GenericAgentCheckPromises(const GenericAgentConfig *config);
 
-
+bool GeneratePolicyReleaseIDFromMasterfiles(char release_id_out[CF_SHA1_LEN + 1]);
 bool GenericAgentIsPolicyReloadNeeded(const GenericAgentConfig *config, const Policy *policy);
 
 void CloseLog(void);

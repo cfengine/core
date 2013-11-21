@@ -88,7 +88,7 @@ char* GetPubkeyDigest(const char* pubkey)
     }
 
     HashPubKey(key, digest, CF_DEFAULT_DIGEST);
-    HashPrintSafe(CF_DEFAULT_DIGEST, digest, buffer);
+    HashPrintSafe(CF_DEFAULT_DIGEST, true, digest, buffer);
     return buffer;
 }
 

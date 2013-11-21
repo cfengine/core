@@ -689,7 +689,7 @@ CfLock AcquireLock(EvalContext *ctx, const char *operand, const char *host, time
     }
 
     PromiseRuntimeHash(pp, operand, digest, CF_DEFAULT_DIGEST);
-    HashPrintSafe(CF_DEFAULT_DIGEST, digest, str_digest);
+    HashPrintSafe(CF_DEFAULT_DIGEST, true, digest, str_digest);
 
 /* As a backup to "done" we need something immune to re-use */
 

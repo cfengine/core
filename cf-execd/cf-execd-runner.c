@@ -683,7 +683,9 @@ static void MailResult(const ExecConfig *config, const char *file)
         }
         Chop(ipbuf, sizeof(ipbuf));
 
-        snprintf(vbuff, sizeof(vbuff), "X-CFEngine: vfqhost=\"%s\";ip-addresses=\"%s\";policyhub=\"%s\";pkhash=\"%s\"\r\n", VFQNAME, ipbuf, existing_policy_server, HashPrintSafe(CF_DEFAULT_DIGEST, digest, buffer));
+        snprintf(vbuff, sizeof(vbuff), "X-CFEngine: vfqhost=\"%s\";ip-addresses=\"%s\";policyhub=\"%s\";pkhash=\"%s\"\r\n",
+                 VFQNAME, ipbuf, existing_policy_server,
+                 HashPrintSafe(CF_DEFAULT_DIGEST, true, digest, buffer));
 
         send(sd, vbuff, strlen(vbuff), 0);
         free(existing_policy_server);

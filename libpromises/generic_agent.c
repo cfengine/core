@@ -533,7 +533,19 @@ static Policy *LoadPolicyInputFiles(EvalContext *ctx, GenericAgentConfig *config
 
 static Policy *LoadPolicyFile(EvalContext *ctx, GenericAgentConfig *config, const char *policy_file, StringSet *parsed_files, StringSet *failed_files)
 {
-    Policy *policy = Cf3ParseFile(config, policy_file);
+    Policy *policy = NULL;
+
+    if (StringSetContains(parsed_files, policy_file))
+    {
+        Log(LOG_LEVEL_VERBOSE, "Skipping loading of duplicate policy file %s", policy_file);
+        return NULL;
+    }
+    else
+    {
+        Log(LOG_LEVEL_DEBUG, "Loading policy file %s", policy_file);
+    }
+
+    policy = Cf3ParseFile(config, policy_file);
     StringSetAdd(parsed_files, xstrdup(policy_file));
 
     if (!policy)

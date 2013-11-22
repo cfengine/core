@@ -829,6 +829,10 @@ AC_REPLACE_FUNCS(pthread_attr_setstacksize)
 AC_CHECK_DECLS(pthread_sigmask, [], [], [[#include <signal.h>]])
 AC_REPLACE_FUNCS(pthread_sigmask)
 
+AC_CHECK_DECLS([openat], [], [], [[#include <fcntl.h>]])
+AC_CHECK_DECLS([fstatat], [], [], [[#include <sys/stat.h>]])
+AC_REPLACE_FUNCS(openat fstatat)
+
 dnl ######################################################################
 dnl Required by cf-upgrade. It cannot be implemented in libcompat because
 dnl cf-upgrade does not link to any libraries except libutils and only

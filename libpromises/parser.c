@@ -26,6 +26,7 @@
 #include <parser_state.h>
 
 #include <misc_lib.h>
+#include <file_lib.h>
 
 #include <errno.h>
 
@@ -94,7 +95,7 @@ Policy *ParserParseFile(AgentType agent_type, const char *path, unsigned int war
     // no include is active by default
     P.include_filename[0] = '\0';
 
-    yyin = fopen(path, "r");
+    yyin = safe_fopen(path, "r");
     if (yyin == NULL)
     {
         Log(LOG_LEVEL_ERR, "While opening file '%s' for parsing. (fopen: %s)", path, GetErrorStr());

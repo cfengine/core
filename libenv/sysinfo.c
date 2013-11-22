@@ -36,6 +36,7 @@
 #include <unix.h>
 #include <string_lib.h>
 #include <misc_lib.h>
+#include <file_lib.h>
 #include <rlist.h>
 #include <audit.h>
 #include <pipes.h>
@@ -2377,7 +2378,7 @@ static bool ReadLine(const char *filename, char *buf, int bufsize)
 
 static FILE *ReadFirstLine(const char *filename, char *buf, int bufsize)
 {
-    FILE *fp = fopen(filename, "r");
+    FILE *fp = safe_fopen(filename, "r");
 
     if (fp == NULL)
     {

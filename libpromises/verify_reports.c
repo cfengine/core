@@ -35,6 +35,7 @@
 #include <locks.h>
 #include <string_lib.h>
 #include <misc_lib.h>
+#include <file_lib.h>
 #include <policy.h>
 #include <scope.h>
 #include <ornaments.h>
@@ -124,7 +125,7 @@ PromiseResult VerifyReportPromise(EvalContext *ctx, Promise *pp)
 
 static void ReportToFile(const char *logfile, const char *message)
 {
-    FILE *fp = fopen(logfile, "a");
+    FILE *fp = safe_fopen(logfile, "a");
     if (fp == NULL)
     {
         Log(LOG_LEVEL_ERR, "Could not open log file '%s', message '%s'. (fopen: %s)", logfile, message, GetErrorStr());
@@ -148,7 +149,7 @@ static void PrintFile(EvalContext *ctx, Attributes a, Promise *pp)
         return;
     }
 
-    if ((fp = fopen(a.report.filename, "r")) == NULL)
+    if ((fp = safe_fopen(a.report.filename, "r")) == NULL)
     {
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a, "Printing of file '%s' was not possible. (fopen: %s)", a.report.filename, GetErrorStr());
         return;

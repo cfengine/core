@@ -564,7 +564,7 @@ static PromiseResult PurgeLocalFiles(EvalContext *ctx, Item *filelist, const cha
 
 /* chdir to minimize the risk of race exploits during copy (which is inherently dangerous) */
 
-    if (chdir(localdir) == -1)
+    if (safe_chdir(localdir) == -1)
     {
         Log(LOG_LEVEL_VERBOSE, "Can't chdir to local directory '%s'. (chdir: %s)", localdir, GetErrorStr());
         return PROMISE_RESULT_NOOP;
@@ -1319,8 +1319,8 @@ bool CopyRegularFile(EvalContext *ctx, const char *source, const char *dest, str
 #ifdef __APPLE__
     if (rsrcfork)
     {                           /* Can't just "mv" the resource fork, unfortunately */
-        rsrcrd = open(new, O_RDONLY | O_BINARY);
-        rsrcwd = open(dest, O_WRONLY | O_BINARY | O_CREAT | O_TRUNC, 0600);
+        rsrcrd = safe_open(new, O_RDONLY | O_BINARY);
+        rsrcwd = safe_open(dest, O_WRONLY | O_BINARY | O_CREAT | O_TRUNC, 0600);
 
         if (rsrcrd == -1 || rsrcwd == -1)
         {
@@ -2089,7 +2089,7 @@ int DepthSearch(EvalContext *ctx, char *name, struct stat *sb, int rlevel, Attri
         Log(LOG_LEVEL_DEBUG, "Direct file reference '%s', no search implied", name);
         snprintf(basedir, sizeof(basedir), "%s", name);
         ChopLastNode(basedir);
-        if (chdir(basedir))
+        if (safe_chdir(basedir))
         {
             Log(LOG_LEVEL_ERR, "Failed to chdir into '%s'", basedir);
             return false;
@@ -2203,7 +2203,7 @@ int DepthSearch(EvalContext *ctx, char *name, struct stat *sb, int rlevel, Attri
 
 static int PushDirState(EvalContext *ctx, char *name, struct stat *sb)
 {
-    if (chdir(name) == -1)
+    if (safe_chdir(name) == -1)
     {
         Log(LOG_LEVEL_INFO, "Could not change to directory '%s', mode '%04jo' in tidy. (chdir: %s)",
             name, (uintmax_t)(sb->st_mode & 07777), GetErrorStr());
@@ -2224,7 +2224,7 @@ static bool PopDirState(int goback, char *name, struct stat *sb, Recursion r)
 {
     if (goback && (r.travlinks))
     {
-        if (chdir(name) == -1)
+        if (safe_chdir(name) == -1)
         {
             Log(LOG_LEVEL_ERR, "Error in backing out of recursive travlink descent securely to '%s'. (chdir: %s)",
                 name, GetErrorStr());
@@ -2238,7 +2238,7 @@ static bool PopDirState(int goback, char *name, struct stat *sb, Recursion r)
     }
     else if (goback)
     {
-        if (chdir("..") == -1)
+        if (safe_chdir("..") == -1)
         {
             Log(LOG_LEVEL_ERR, "Error in backing out of recursive descent securely to '%s'. (chdir: %s)",
                 name, GetErrorStr());

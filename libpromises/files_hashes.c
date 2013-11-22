@@ -67,7 +67,7 @@ void HashFile(char *filename, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMet
     unsigned char buffer[1024];
     const EVP_MD *md = NULL;
 
-    if ((file = fopen(filename, "rb")) == NULL)
+    if ((file = safe_fopen(filename, "rb")) == NULL)
     {
         Log(LOG_LEVEL_INFO, "Cannot open file for hashing '%s'. (fopen: %s)", filename, GetErrorStr());
     }

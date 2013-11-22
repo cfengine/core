@@ -41,6 +41,7 @@
 #include "net.h"
 #include "rlist.h"
 #include "misc_lib.h"
+#include "file_lib.h"
 #include "cf-serverd-enterprise-stubs.h"
 #include "audit.h"
 
@@ -2491,7 +2492,7 @@ static void CfGetFile(ServerFileGetState *args)
 
 /* File transfer */
 
-    if ((fd = open(filename, O_RDONLY)) == -1)
+    if ((fd = safe_open(filename, O_RDONLY)) == -1)
     {
         Log(LOG_LEVEL_ERR, "Open error of file '%s'. (open: %s)",
             filename, GetErrorStr());
@@ -2612,7 +2613,7 @@ static void CfEncryptGetFile(ServerFileGetState *args)
 
     EVP_CIPHER_CTX_init(&ctx);
 
-    if ((fd = open(filename, O_RDONLY)) == -1)
+    if ((fd = safe_open(filename, O_RDONLY)) == -1)
     {
         Log(LOG_LEVEL_ERR, "Open error of file '%s'. (open: %s)", filename, GetErrorStr());
         FailedTransfer(sd);

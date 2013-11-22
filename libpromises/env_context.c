@@ -33,6 +33,7 @@
 #include "matching.h"
 #include "string_lib.h"
 #include "misc_lib.h"
+#include "file_lib.h"
 #include "assoc.h"
 #include "scope.h"
 #include "vars.h"
@@ -1689,7 +1690,7 @@ static void SummarizeTransaction(EvalContext *ctx, TransactionContext tc, const 
                 }
             }
 
-            FILE *fout = fopen(logname, "a");
+            FILE *fout = safe_fopen(logname, "a");
 
             if (fout == NULL)
             {

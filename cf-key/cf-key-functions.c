@@ -35,6 +35,7 @@
 #include "communication.h"
 #include "env_context.h"
 #include "crypto.h"
+#include "file_lib.h"
 
 #include "cf-key-functions.h"
 
@@ -53,7 +54,7 @@ RSA* LoadPublicKey(const char* filename)
     RSA* key;
     static char *passphrase = "Cfengine passphrase";
 
-    fp = fopen(filename, "r");
+    fp = safe_fopen(filename, "r");
     if (fp == NULL)
     {
         Log(LOG_LEVEL_ERR, "Cannot open file '%s'. (fopen: %s)", filename, GetErrorStr());
@@ -253,7 +254,7 @@ void KeepKeyPromises(const char *public_key_file, const char *private_key_file)
         return;
     }
 
-    fd = open(private_key_file, O_WRONLY | O_CREAT | O_TRUNC, 0600);
+    fd = safe_open(private_key_file, O_WRONLY | O_CREAT | O_TRUNC, 0600);
 
     if (fd < 0)
     {
@@ -279,7 +280,7 @@ void KeepKeyPromises(const char *public_key_file, const char *private_key_file)
 
     fclose(fp);
 
-    fd = open(public_key_file, O_WRONLY | O_CREAT | O_TRUNC, 0600);
+    fd = safe_open(public_key_file, O_WRONLY | O_CREAT | O_TRUNC, 0600);
 
     if (fd < 0)
     {

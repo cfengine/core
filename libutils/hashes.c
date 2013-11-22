@@ -23,6 +23,7 @@
 */
 
 #include "hashes.h"
+#include "file_lib.h"
 
 int OatHash(const char *key, unsigned int max)
 {
@@ -46,7 +47,7 @@ int OatHash(const char *key, unsigned int max)
 
 int FileChecksum(const char *filename, unsigned char digest[EVP_MAX_MD_SIZE + 1])
 {
-    FILE *file = fopen(filename, "rb");
+    FILE *file = safe_fopen(filename, "rb");
     if (!file)
     {
         printf("%s can't be opened\n", filename);

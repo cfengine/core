@@ -90,7 +90,7 @@ int RawSaveItemList(const Item *liststart, const char *file)
 
     unlink(new);                /* Just in case of races */
 
-    if ((fp = fopen(new, "w")) == NULL)
+    if ((fp = safe_fopen(new, "w")) == NULL)
     {
         Log(LOG_LEVEL_ERR, "Couldn't write file '%s'. (fopen: %s)", new, GetErrorStr());
         return false;
@@ -142,7 +142,7 @@ ssize_t FileRead(const char *filename, char *buffer, size_t bufsize)
 
 bool FileWriteOver(char *filename, char *contents)
 {
-    FILE *fp = fopen(filename, "w");
+    FILE *fp = safe_fopen(filename, "w");
 
     if(fp == NULL)
     {
@@ -460,7 +460,7 @@ int LoadFileAsItemList(Item **liststart, const char *file, EditDefaults edits)
         return false;
     }
 
-    if ((fp = fopen(file, "r")) == NULL)
+    if ((fp = safe_fopen(file, "r")) == NULL)
     {
         Log(LOG_LEVEL_INFO, "Couldn't read file '%s' for editing. (fopen: %s)", file, GetErrorStr());
         return false;
@@ -716,7 +716,7 @@ void CreateEmptyFile(char *name)
         }
     }
 
-    if ((tempfd = open(name, O_CREAT | O_EXCL | O_WRONLY, 0600)) < 0)
+    if ((tempfd = safe_open(name, O_CREAT | O_EXCL | O_WRONLY, 0600)) < 0)
     {
         Log(LOG_LEVEL_ERR, "Couldn't open a file '%s'. (open: %s)", name, GetErrorStr());
     }

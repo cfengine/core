@@ -717,7 +717,7 @@ int CopyRegularFileNet(char *source, char *new, off_t size, AgentConnection *con
 
     unlink(new);                /* To avoid link attacks */
 
-    if ((dd = open(new, O_WRONLY | O_CREAT | O_TRUNC | O_EXCL | O_BINARY, 0600)) == -1)
+    if ((dd = safe_open(new, O_WRONLY | O_CREAT | O_TRUNC | O_EXCL | O_BINARY, 0600)) == -1)
     {
         Log(LOG_LEVEL_ERR,
             "NetCopy to destination '%s:%s' security - failed attempt to exploit a race? (Not copied) (open: %s)",
@@ -877,7 +877,7 @@ int EncryptCopyRegularFileNet(char *source, char *new, off_t size, AgentConnecti
 
     unlink(new);                /* To avoid link attacks */
 
-    if ((dd = open(new, O_WRONLY | O_CREAT | O_TRUNC | O_EXCL | O_BINARY, 0600)) == -1)
+    if ((dd = safe_open(new, O_WRONLY | O_CREAT | O_TRUNC | O_EXCL | O_BINARY, 0600)) == -1)
     {
         Log(LOG_LEVEL_ERR,
             "NetCopy to destination '%s:%s' security - failed attempt to exploit a race? (Not copied). (open: %s)",

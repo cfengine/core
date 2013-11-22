@@ -51,6 +51,7 @@ check_PROGRAMS = \
 	thread_test \
 	package_versions_compare_test \
 	files_lib_test \
+	file_lib_test \
 	map_test \
 	parser_test \
 	policy_test \
@@ -166,6 +167,15 @@ if HAVE_NOVA
 package_versions_compare_test_CPPFLAGS += -I$(abs_top_srcdir)/nova/libcfagent
 package_versions_compare_test_LDADD += ../../nova/libcfagent/libcfagent.la
 endif
+
+file_lib_test_SOURCES = file_lib_test.c \
+	../../libutils/file_lib.c \
+	../../libutils/logging.c \
+	../../libutils/misc_lib.c \
+	../../libutils/string_lib.c \
+	../../libutils/writer.c
+file_lib_test_LDADD = libtest.la
+file_lib_test_CPPFLAGS = $(AM_CPPFLAGS) -DTEST_SYMLINK_ATOMICITY
 
 sort_test_SOURCES = sort_test.c ../../libpromises/sort.c
 sort_test_LDADD = libtest.la

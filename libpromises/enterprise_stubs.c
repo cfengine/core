@@ -99,7 +99,7 @@ ENTERPRISE_VOID_FUNC_2ARG_DEFINE_STUB(void, LogTotalCompliance, const char *, ve
     char string[CF_BUFSIZE] = { 0 };
 
     snprintf(string, CF_BUFSIZE,
-             "Outcome of version %s (" CF_AGENTC "-%d): Promises observed to be kept %.0f%%, Promises repaired %.0f%%, Promises not repaired %.0f\%%",
+             "Outcome of version %s (" CF_AGENTC "-%d): Promises observed to be kept %.0f%%, Promises repaired %.0f%%, Promises not repaired %.0f%%",
              version, background_tasks,
              (double) PR_KEPT / total,
              (double) PR_REPAIRED / total,

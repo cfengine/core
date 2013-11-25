@@ -41,6 +41,8 @@
 #include <known_dirs.h>
 #include <sysinfo.h>
 #include <time_classes.h>
+#include <connection_info.h>
+
 
 static const size_t QUEUESIZE = 50;
 int NO_FORK = false;
@@ -421,18 +423,18 @@ void StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
 
             if (FD_ISSET(sd, &rset))
             {
-                Log(LOG_LEVEL_VERBOSE, "Accepting a connection");
-
-                int sd_accepted = accept(sd, (struct sockaddr *) &cin, &addrlen);
-                if (sd_accepted != -1)
+                /* Just convert IP address to string, no DNS lookup. */
+                char ipaddr[CF_MAX_IP_LEN] = "";
+                getnameinfo((struct sockaddr *) &cin, addrlen,
+                            ipaddr, sizeof(ipaddr),
+                            NULL, 0, NI_NUMERICHOST);
+                ConnectionInfo *info = NULL;
+                info = ConnectionInfoNew();
+                if (info)
                 {
-                    /* Just convert IP address to string, no DNS lookup. */
-                    char ipaddr[CF_MAX_IP_LEN] = "";
-                    getnameinfo((struct sockaddr *) &cin, addrlen,
-                                ipaddr, sizeof(ipaddr),
-                                NULL, 0, NI_NUMERICHOST);
-
-                    ServerEntryPoint(ctx, sd_accepted, ipaddr);
+                    ConnectionInfoSetSocket(info, sd_accepted);
+                    ServerEntryPoint(ctx, ipaddr, info);
+                    ConnectionInfoDestroy(&info);
                 }
             }
         }

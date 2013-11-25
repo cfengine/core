@@ -88,7 +88,10 @@ check_PROGRAMS = \
 	mon_processes_test \
 	mustache_test \
 	class_test \
-	version_test
+	tls_generic_test \
+	version_test \
+	hash_test \
+	key_test
 
 if HAVE_AVAHI_CLIENT
 if HAVE_AVAHI_COMMON
@@ -275,3 +278,6 @@ endif
 
 version_test_SOURCES = version_test.c
 
+hash_test_SOURCES = hash_test.c ../../libutils/libutils.la
+
+key_test_SOURCES = key_test.c ../../libutils/libutils.la

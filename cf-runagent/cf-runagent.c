@@ -42,6 +42,7 @@
 #include <policy.h>
 #include <audit.h>
 #include <man.h>
+#include <connection_info.h>
 
 typedef enum
 {
@@ -527,7 +528,7 @@ static int HailServer(EvalContext *ctx, char *host)
     else
     {
         int err = 0;
-        conn = NewServerConnection(fc, false, &err);
+        conn = NewServerConnection(fc, false, &err, -1);
 
         if (conn == NULL)
         {
@@ -706,7 +707,7 @@ static void SendClassData(AgentConnection *conn)
 
     for (rp = classes; rp != NULL; rp = rp->next)
     {
-        if (SendTransaction(&conn->conn_info, RlistScalarValue(rp), 0, CF_DONE) == -1)
+        if (SendTransaction(conn->conn_info, RlistScalarValue(rp), 0, CF_DONE) == -1)
         {
             Log(LOG_LEVEL_ERR, "Transaction failed. (send: %s)", GetErrorStr());
             return;
@@ -715,7 +716,7 @@ static void SendClassData(AgentConnection *conn)
 
     snprintf(sendbuffer, CF_MAXVARSIZE, "%s", CFD_TERMINATOR);
 
-    if (SendTransaction(&conn->conn_info, sendbuffer, 0, CF_DONE) == -1)
+    if (SendTransaction(conn->conn_info, sendbuffer, 0, CF_DONE) == -1)
     {
         Log(LOG_LEVEL_ERR, "Transaction failed. (send: %s)", GetErrorStr());
         return;
@@ -739,10 +740,10 @@ static void HailExec(EvalContext *ctx, AgentConnection *conn, char *peer, char *
         snprintf(sendbuffer, CF_BUFSIZE, "EXEC %s", REMOTE_AGENT_OPTIONS);
     }
 
-    if (SendTransaction(&conn->conn_info, sendbuffer, 0, CF_DONE) == -1)
+    if (SendTransaction(conn->conn_info, sendbuffer, 0, CF_DONE) == -1)
     {
         Log(LOG_LEVEL_ERR, "Transmission rejected. (send: %s)", GetErrorStr());
-        DisconnectServer(conn);
+        DisconnectServer(conn, false);
         return;
     }
 
@@ -753,7 +754,7 @@ static void HailExec(EvalContext *ctx, AgentConnection *conn, char *peer, char *
     {
         memset(recvbuffer, 0, CF_BUFSIZE);
 
-        if ((n_read = ReceiveTransaction(&conn->conn_info, recvbuffer, NULL)) == -1)
+        if ((n_read = ReceiveTransaction(conn->conn_info, recvbuffer, NULL)) == -1)
         {
             return;
         }
@@ -789,7 +790,7 @@ static void HailExec(EvalContext *ctx, AgentConnection *conn, char *peer, char *
     }
 
     DeleteStream(fp);
-    DisconnectServer(conn);
+    DisconnectServer(conn, false);
 }
 
 /********************************************************************/

@@ -25,6 +25,7 @@
 #include <cfnet.h>                                 /* struct ConnectionInfo */
 #include <client_code.h>
 #include <communication.h>
+#include <connection_info.h>
 #include <classic.h>                  /* RecvSocketStream */
 #include <net.h>                      /* SendTransaction,ReceiveTransaction */
 #include <tls_client.h>               /* TLSTry */
@@ -76,7 +77,7 @@ static int CacheStat(const char *file, struct stat *statbuf, const char *stattyp
 /**
   @param err Set to 0 on success, -1 no server responce, -2 authentication failure.
   */
-static AgentConnection *ServerConnection(const char *server, FileCopy fc, int *err);
+static AgentConnection *ServerConnection(const char *server, FileCopy fc, int *err, int s);
 
 int TryConnect(AgentConnection *conn, struct timeval *tvp, struct sockaddr *cinp, int cinpSz);
 
@@ -173,10 +174,10 @@ void DetermineCfenginePort()
 
 /*********************************************************************/
 
-AgentConnection *NewServerConnection(FileCopy fc, bool background, int *err)
+AgentConnection *NewServerConnection(FileCopy fc, bool background, int *err, int s)
 {
-    AgentConnection *conn;
-    Rlist *rp;
+    AgentConnection *conn = NULL;
+    Rlist *rp = NULL;
 
     for (rp = fc.servers; rp != NULL; rp = rp->next)
     {
@@ -199,7 +200,7 @@ AgentConnection *NewServerConnection(FileCopy fc, bool background, int *err)
             {
                 /* If background connection was requested, then don't cache it
                  * in SERVERLIST since it will be closed right afterwards. */
-                conn = ServerConnection(servername, fc, err);
+                conn = ServerConnection(servername, fc, err, s);
                 return conn;
             }
         }
@@ -213,7 +214,7 @@ AgentConnection *NewServerConnection(FileCopy fc, bool background, int *err)
             }
 
             /* This is first usage, need to open */
-            conn = ServerConnection(servername, fc, err);
+            conn = ServerConnection(servername, fc, err, s);
             if (conn != NULL)
             {
                 CacheServerConnection(conn, servername);
@@ -259,21 +260,20 @@ int TLSConnect(ConnectionInfo *conn_info, bool trust_server,
     {
         Log(LOG_LEVEL_INFO,
             "Server is TRUSTED, received key %s MATCHES stored one.",
-            conn_info->remote_keyhash_str);
+            ConnectionInfoPrintableKeyHash(conn_info));
     }
-    else                                                /* ret == 0 */
+    else   /* ret == 0 */
     {
         Log(LOG_LEVEL_WARNING, "%s: Server's public key is UNKNOWN!",
-            conn_info->remote_keyhash_str);
+            ConnectionInfoPrintableKeyHash(conn_info));
 
         if (trust_server)             /* We're most probably bootstrapping. */
         {
             Log(LOG_LEVEL_WARNING,
                 "%s: Explicitly trusting this key from now on.",
-                conn_info->remote_keyhash_str);
-
-            SavePublicKey(username, conn_info->remote_keyhash_str,
-                          conn_info->remote_key);
+                ConnectionInfoPrintableKeyHash(conn_info));
+            SavePublicKey(username, ConnectionInfoPrintableKeyHash(conn_info),
+                          KeyRSA(ConnectionInfoKey(conn_info)));
         }
         else
         {
@@ -300,7 +300,7 @@ int TLSConnect(ConnectionInfo *conn_info, bool trust_server,
     /* Server might hang up here, after we sent identification! We
      * must get the "OK WELCOME" message for everything to be OK. */
     char line[1024] = "";
-    ret = TLSRecvLine(conn_info->ssl, line, sizeof(line));
+    ret = TLSRecvLine(ConnectionInfoSSL(conn_info), line, sizeof(line));
     if (ret <= 0 ||
         (strncmp(line, "OK WELCOME", strlen("OK WELCOME")) != 0))
     {
@@ -312,9 +312,9 @@ int TLSConnect(ConnectionInfo *conn_info, bool trust_server,
 
 /*****************************************************************************/
 
-static AgentConnection *ServerConnection(const char *server, FileCopy fc, int *err)
+static AgentConnection *ServerConnection(const char *server, FileCopy fc, int *err, int s)
 {
-    AgentConnection *conn;
+    AgentConnection *conn = NULL;
     int ret;
     *err = 0;
 
@@ -329,7 +329,7 @@ static AgentConnection *ServerConnection(const char *server, FileCopy fc, int *e
     pthread_sigmask(SIG_BLOCK, &signal_mask, NULL);
 #endif
 
-    conn = NewAgentConn(server);
+    conn = NewAgentConn(server, false);
 
 /* username of the client - say root from Windows */
 
@@ -342,60 +342,73 @@ static AgentConnection *ServerConnection(const char *server, FileCopy fc, int *e
 
     /* TODO fix, this was supposed to check if the connection is cached (open
      * or unreachable). However conn was just alloc'd so it's always INVALID */
-    if (conn->conn_info.sd == SOCKET_INVALID)
+    if (ConnectionInfoSocket(conn->conn_info) == SOCKET_INVALID)
     {
-        if (!ServerConnect(conn, server, fc))
+        if (-1 == s)
         {
-            Log(LOG_LEVEL_INFO, "No server is responding on this port");
-            DisconnectServer(conn);
-            *err = -1;
-            return NULL;
-        }
+            if (!ServerConnect(conn, server, fc))
+            {
+                Log(LOG_LEVEL_INFO, "No server is responding on this port");
+                DisconnectServer(conn, false);
+                *err = -1;
+                return NULL;
+            }
 
-        if (conn->conn_info.sd < 0)                      /* INVALID or OFFLINE socket */
+            if (ConnectionInfoSocket(conn->conn_info) < 0)                      /* INVALID or OFFLINE socket */
+            {
+                UnexpectedError("ServerConnect() succeeded but socket descriptor is %d!",
+                                ConnectionInfoSocket(conn->conn_info));
+                *err = -1;
+                return NULL;
+            }
+        }
+        else
         {
-            UnexpectedError("ServerConnect() succeeded but socket descriptor is %d!",
-                            conn->conn_info.sd);
-            *err = -1;
-            return NULL;
+            /*
+             * In this mode the connection is already opened, most likely
+             * because of Call Collect.
+             * We don't need to connect to the server, we just need to populate
+             * the required structures.
+             */
         }
 
         switch (SELECTED_PROTOCOL)
         {
         case CF_PROTOCOL_TLS:
 
-            ret = TLSConnect(&conn->conn_info, fc.trustkey,
+            ret = TLSConnect(conn->conn_info, fc.trustkey,
                              conn->remoteip, conn->username);
 
             if (ret == -1)                                      /* Error */
             {
-                DisconnectServer(conn);
+                DisconnectServer(conn, false);
                 *err = -1;
                 return NULL;
             }
             else if (ret == 0)                             /* Auth/ID error */
             {
-                    DisconnectServer(conn);
+                    DisconnectServer(conn, false);
                     errno = EPERM;
                     *err = -2;
                     return NULL;
             }
-
             assert(ret == 1);
-            LastSaw1(conn->remoteip, conn->conn_info.remote_keyhash_str,
+            ConnectionInfoSetProtocolVersion(conn->conn_info, CF_PROTOCOL_TLS);
+            ConnectionInfoSetConnectionStatus(conn->conn_info, CF_CONNECTION_ESTABLISHED);
+            LastSaw1(conn->remoteip, ConnectionInfoPrintableKeyHash(conn->conn_info),
                      LAST_SEEN_ROLE_CONNECT);
             break;
 
         case CF_PROTOCOL_CLASSIC:
 
-            conn->conn_info.type = CF_PROTOCOL_CLASSIC;
+            ConnectionInfoSetProtocolVersion(conn->conn_info, CF_PROTOCOL_CLASSIC);
             conn->encryption_type = CfEnterpriseOptions();
 
-            if (!IdentifyAgent(&conn->conn_info))
+            if (!IdentifyAgent(conn->conn_info))
             {
                 Log(LOG_LEVEL_ERR, "Id-authentication for '%s' failed", VFQNAME);
                 errno = EPERM;
-                DisconnectServer(conn);
+                DisconnectServer(conn, false);
                 *err = -2; // auth err
                 return NULL;
             }
@@ -404,10 +417,11 @@ static AgentConnection *ServerConnection(const char *server, FileCopy fc, int *e
             {
                 Log(LOG_LEVEL_ERR, "Authentication dialogue with '%s' failed", server);
                 errno = EPERM;
-                DisconnectServer(conn);
+                DisconnectServer(conn, false);
                 *err = -2; // auth err
                 return NULL;
             }
+            ConnectionInfoSetConnectionStatus(conn->conn_info, CF_CONNECTION_ESTABLISHED);
             break;
 
         default:
@@ -422,25 +436,24 @@ static AgentConnection *ServerConnection(const char *server, FileCopy fc, int *e
 
 /*********************************************************************/
 
-void DisconnectServer(AgentConnection *conn)
+void DisconnectServer(AgentConnection *conn, int partial)
 {
-    /* Socket needs to be closed even after SSL_shutdown. */
-    if (conn->conn_info.sd >= 0)                  /* Not INVALID or OFFLINE */
+    if (!partial)
     {
-        if (conn->conn_info.type == CF_PROTOCOL_TLS &&
-            conn->conn_info.ssl != NULL)
+        /* Socket needs to be closed even after SSL_shutdown. */
+        if (ConnectionInfoSocket(conn->conn_info) >= 0)                  /* Not INVALID or OFFLINE */
         {
-            SSL_shutdown(conn->conn_info.ssl);
+            if (ConnectionInfoProtocolVersion(conn->conn_info) == CF_PROTOCOL_TLS &&
+                ConnectionInfoSSL(conn->conn_info) != NULL)
+            {
+                SSL_shutdown(ConnectionInfoSSL(conn->conn_info));
+            }
+
+            cf_closesocket(ConnectionInfoSocket(conn->conn_info));
+            Log(LOG_LEVEL_INFO, "Connection to %s is closed", conn->remoteip);
         }
-
-        cf_closesocket(conn->conn_info.sd);
-        conn->conn_info.sd = SOCKET_INVALID;
-
-        Log(LOG_LEVEL_INFO, "Connection to %s is closed",
-            conn->remoteip);
     }
-
-    DeleteAgentConn(conn);
+    DeleteAgentConn(conn, partial);
 }
 
 /*********************************************************************/
@@ -479,7 +492,7 @@ int cf_remote_stat(char *file, struct stat *buf, char *stattype, bool encrypt, A
 
     /* We encrypt only for CLASSIC protocol. The TLS protocol is always over
      * encrypted layer, so it does not support encrypted (S*) commands. */
-    encrypt = encrypt && (conn->conn_info.type == CF_PROTOCOL_CLASSIC);
+    encrypt = encrypt && (ConnectionInfoProtocolVersion(conn->conn_info) == CF_PROTOCOL_CLASSIC);
 
     if (encrypt)
     {
@@ -501,14 +514,14 @@ int cf_remote_stat(char *file, struct stat *buf, char *stattype, bool encrypt, A
         tosend = strlen(sendbuffer);
     }
 
-    if (SendTransaction(&conn->conn_info, sendbuffer, tosend, CF_DONE) == -1)
+    if (SendTransaction(conn->conn_info, sendbuffer, tosend, CF_DONE) == -1)
     {
         Log(LOG_LEVEL_INFO, "Transmission failed/refused talking to %.255s:%.255s. (stat: %s)",
             conn->this_server, file, GetErrorStr());
         return -1;
     }
 
-    if (ReceiveTransaction(&conn->conn_info, recvbuffer, NULL) == -1)
+    if (ReceiveTransaction(conn->conn_info, recvbuffer, NULL) == -1)
     {
         return -1;
     }
@@ -572,7 +585,7 @@ int cf_remote_stat(char *file, struct stat *buf, char *stattype, bool encrypt, A
 
         memset(recvbuffer, 0, CF_BUFSIZE);
 
-        if (ReceiveTransaction(&conn->conn_info, recvbuffer, NULL) == -1)
+        if (ReceiveTransaction(conn->conn_info, recvbuffer, NULL) == -1)
         {
             return -1;
         }
@@ -670,7 +683,7 @@ Item *RemoteDirList(const char *dirname, bool encrypt, AgentConnection *conn)
 
     /* We encrypt only for CLASSIC protocol. The TLS protocol is always over
      * encrypted layer, so it does not support encrypted (S*) commands. */
-    encrypt = encrypt && (conn->conn_info.type == CF_PROTOCOL_CLASSIC);
+    encrypt = encrypt && (ConnectionInfoProtocolVersion(conn->conn_info) == CF_PROTOCOL_CLASSIC);
 
     if (encrypt)
     {
@@ -692,14 +705,14 @@ Item *RemoteDirList(const char *dirname, bool encrypt, AgentConnection *conn)
         tosend = strlen(sendbuffer);
     }
 
-    if (SendTransaction(&conn->conn_info, sendbuffer, tosend, CF_DONE) == -1)
+    if (SendTransaction(conn->conn_info, sendbuffer, tosend, CF_DONE) == -1)
     {
         return NULL;
     }
 
     while (true)
     {
-        if ((n = ReceiveTransaction(&conn->conn_info, recvbuffer, NULL)) == -1)
+        if ((n = ReceiveTransaction(conn->conn_info, recvbuffer, NULL)) == -1)
         {
             return NULL;
         }
@@ -794,7 +807,7 @@ int CompareHashNet(const char *file1, const char *file2, bool encrypt, AgentConn
 
     /* We encrypt only for CLASSIC protocol. The TLS protocol is always over
      * encrypted layer, so it does not support encrypted (S*) commands. */
-    encrypt = encrypt && (conn->conn_info.type == CF_PROTOCOL_CLASSIC);
+    encrypt = encrypt && (ConnectionInfoProtocolVersion(conn->conn_info) == CF_PROTOCOL_CLASSIC);
 
     if (encrypt)
     {
@@ -827,13 +840,13 @@ int CompareHashNet(const char *file1, const char *file2, bool encrypt, AgentConn
         tosend = strlen(sendbuffer) + CF_SMALL_OFFSET + CF_DEFAULT_DIGEST_LEN;
     }
 
-    if (SendTransaction(&conn->conn_info, sendbuffer, tosend, CF_DONE) == -1)
+    if (SendTransaction(conn->conn_info, sendbuffer, tosend, CF_DONE) == -1)
     {
         Log(LOG_LEVEL_ERR, "Failed send. (SendTransaction: %s)", GetErrorStr());
         return false;
     }
 
-    if (ReceiveTransaction(&conn->conn_info, recvbuffer, NULL) == -1)
+    if (ReceiveTransaction(conn->conn_info, recvbuffer, NULL) == -1)
     {
         Log(LOG_LEVEL_ERR, "Failed receive. (ReceiveTransaction: %s)", GetErrorStr());
         Log(LOG_LEVEL_VERBOSE,  "No answer from host, assuming checksum ok to avoid remote copy for now...");
@@ -901,7 +914,7 @@ int EncryptCopyRegularFileNet(const char *source, const char *dest, off_t size, 
 
 /* Send proposition C0 - query */
 
-    if (SendTransaction(&conn->conn_info, workbuf, tosend, CF_DONE) == -1)
+    if (SendTransaction(conn->conn_info, workbuf, tosend, CF_DONE) == -1)
     {
         Log(LOG_LEVEL_ERR, "Couldn't send data. (SendTransaction: %s)", GetErrorStr());
         close(dd);
@@ -914,7 +927,7 @@ int EncryptCopyRegularFileNet(const char *source, const char *dest, off_t size, 
 
     while (more)
     {
-        if ((cipherlen = ReceiveTransaction(&conn->conn_info, buf, &more)) == -1)
+        if ((cipherlen = ReceiveTransaction(conn->conn_info, buf, &more)) == -1)
         {
             free(buf);
             return false;
@@ -1009,7 +1022,7 @@ int CopyRegularFileNet(const char *source, const char *dest, off_t size, bool en
 
     /* We encrypt only for CLASSIC protocol. The TLS protocol is always over
      * encrypted layer, so it does not support encrypted (S*) commands. */
-    encrypt = encrypt && (conn->conn_info.type == CF_PROTOCOL_CLASSIC);
+    encrypt = encrypt && (ConnectionInfoProtocolVersion(conn->conn_info) == CF_PROTOCOL_CLASSIC);
 
     if (encrypt)
     {
@@ -1044,7 +1057,7 @@ int CopyRegularFileNet(const char *source, const char *dest, off_t size, bool en
     snprintf(workbuf, CF_BUFSIZE, "GET %d %s", buf_size, source);
     tosend = strlen(workbuf);
 
-    if (SendTransaction(&conn->conn_info, workbuf, tosend, CF_DONE) == -1)
+    if (SendTransaction(conn->conn_info, workbuf, tosend, CF_DONE) == -1)
     {
         Log(LOG_LEVEL_ERR, "Couldn't send data");
         close(dd);
@@ -1074,17 +1087,17 @@ int CopyRegularFileNet(const char *source, const char *dest, off_t size, bool en
         }
 
         /* Stage C1 - receive */
-        switch(conn->conn_info.type)
+        switch(ConnectionInfoProtocolVersion(conn->conn_info))
         {
         case CF_PROTOCOL_CLASSIC:
-            n_read = RecvSocketStream(conn->conn_info.sd, buf, toget);
+            n_read = RecvSocketStream(ConnectionInfoSocket(conn->conn_info), buf, toget);
             break;
         case CF_PROTOCOL_TLS:
-            n_read = TLSRecv(conn->conn_info.ssl, buf, toget);
+            n_read = TLSRecv(ConnectionInfoSSL(conn->conn_info), buf, toget);
             break;
         default:
             UnexpectedError("CopyRegularFileNet: ProtocolVersion %d!",
-                            conn->conn_info.type);
+                            ConnectionInfoProtocolVersion(conn->conn_info));
             n_read = -1;
         }
 
@@ -1143,7 +1156,7 @@ int CopyRegularFileNet(const char *source, const char *dest, off_t size, bool en
             free(buf);
             unlink(dest);
             close(dd);
-            FlushFileStream(conn->conn_info.sd, size - n_read_total);
+            FlushFileStream(ConnectionInfoSocket(conn->conn_info), size - n_read_total);
             EVP_CIPHER_CTX_cleanup(&crypto_ctx);
             return false;
         }
@@ -1168,7 +1181,7 @@ int CopyRegularFileNet(const char *source, const char *dest, off_t size, bool en
         free(buf);
         unlink(dest);
         close(dd);
-        FlushFileStream(conn->conn_info.sd, size - n_read_total);
+        FlushFileStream(ConnectionInfoSocket(conn->conn_info), size - n_read_total);
         return false;
     }
 
@@ -1242,8 +1255,8 @@ int ServerConnect(AgentConnection *conn, const char *host, FileCopy fc)
         Log(LOG_LEVEL_VERBOSE, "Connecting to host %s (address %s) on port %s",
               host, txtaddr, strport);
 
-        conn->conn_info.sd = socket(ap->ai_family, ap->ai_socktype, ap->ai_protocol);
-        if (conn->conn_info.sd == -1)
+        ConnectionInfoSetSocket(conn->conn_info, socket(ap->ai_family, ap->ai_socktype, ap->ai_protocol));
+        if (ConnectionInfoSocket(conn->conn_info) == -1)
         {
             Log(LOG_LEVEL_ERR, "Couldn't open a socket. (socket: %s)", GetErrorStr());
             continue;
@@ -1264,8 +1277,8 @@ int ServerConnect(AgentConnection *conn, const char *host, FileCopy fc)
                 Log(LOG_LEVEL_ERR,
                     "Unable to lookup interface '%s' to bind. (getaddrinfo: %s)",
                       BINDINTERFACE, gai_strerror(err));
-                cf_closesocket(conn->conn_info.sd);
-                conn->conn_info.sd = SOCKET_INVALID;
+                cf_closesocket(ConnectionInfoSocket(conn->conn_info));
+                ConnectionInfoSetSocket(conn->conn_info, SOCKET_INVALID);
                 freeaddrinfo(response2);
                 freeaddrinfo(response);
                 return false;
@@ -1273,7 +1286,7 @@ int ServerConnect(AgentConnection *conn, const char *host, FileCopy fc)
 
             for (ap2 = response2; ap2 != NULL; ap2 = ap2->ai_next)
             {
-                if (bind(conn->conn_info.sd, ap2->ai_addr, ap2->ai_addrlen) == 0)
+                if (bind(ConnectionInfoSocket(conn->conn_info), ap2->ai_addr, ap2->ai_addrlen) == 0)
                 {
                     break;
                 }
@@ -1296,10 +1309,10 @@ int ServerConnect(AgentConnection *conn, const char *host, FileCopy fc)
 
     if (!connected)
     {
-        if (conn->conn_info.sd >= 0)                 /* not INVALID or OFFLINE socket */
+        if (ConnectionInfoSocket(conn->conn_info) >= 0)                 /* not INVALID or OFFLINE socket */
         {
-            cf_closesocket(conn->conn_info.sd);
-            conn->conn_info.sd = SOCKET_INVALID;
+            cf_closesocket(ConnectionInfoSocket(conn->conn_info));
+            ConnectionInfoSetSocket(conn->conn_info, SOCKET_INVALID);
         }
     }
 
@@ -1350,7 +1363,7 @@ static bool ServerOffline(const char *server)
                                  ipaddr);
             }
 
-            if (svp->conn->conn_info.sd == CF_COULD_NOT_CONNECT)
+            if (ConnectionInfoSocket(svp->conn->conn_info) == CF_COULD_NOT_CONNECT)
                 return true;
             else
                 return false;
@@ -1399,13 +1412,13 @@ static AgentConnection *GetIdleConnectionToServer(const char *server)
                     " connection to '%s' seems to be active...",
                     ipaddr);
             }
-            else if (svp->conn->conn_info.sd == CF_COULD_NOT_CONNECT)
+            else if (ConnectionInfoSocket(svp->conn->conn_info) == CF_COULD_NOT_CONNECT)
             {
                 Log(LOG_LEVEL_VERBOSE, "GetIdleConnectionToServer:"
                     " connection to '%s' is marked as offline...",
                     ipaddr);
             }
-            else if (svp->conn->conn_info.sd > 0)
+            else if (ConnectionInfoSocket(svp->conn->conn_info) > 0)
             {
                 Log(LOG_LEVEL_VERBOSE, "GetIdleConnectionToServer:"
                     " found connection to %s already open and ready.",
@@ -1417,7 +1430,7 @@ static AgentConnection *GetIdleConnectionToServer(const char *server)
             {
                 Log(LOG_LEVEL_VERBOSE,
                     " connection to '%s' is in unknown state %d...",
-                    ipaddr, svp->conn->conn_info.sd);
+                    ipaddr, ConnectionInfoSocket(svp->conn->conn_info));
             }
         }
     }
@@ -1480,7 +1493,7 @@ static void MarkServerOffline(const char *server)
         /* TODO assert conn->remoteip == svp->server? Why do we need both? */
         {
             /* Found it, mark offline */
-            conn->conn_info.sd = CF_COULD_NOT_CONNECT;
+            ConnectionInfoSetSocket(conn->conn_info, CF_COULD_NOT_CONNECT);
             return;
         }
     }
@@ -1489,9 +1502,10 @@ static void MarkServerOffline(const char *server)
     ServerItem *svp = xmalloc(sizeof(*svp));
     svp->server = xstrdup(ipaddr);
     svp->busy = false;
-    svp->conn = NewAgentConn(ipaddr);
-    svp->conn->conn_info.type = CF_PROTOCOL_CLASSIC;
-    svp->conn->conn_info.sd = CF_COULD_NOT_CONNECT;
+    svp->conn = NewAgentConn(ipaddr, false);
+    ConnectionInfoSetProtocolVersion(svp->conn->conn_info, CF_PROTOCOL_CLASSIC);
+    ConnectionInfoSetConnectionStatus(svp->conn->conn_info, CF_CONNECTION_NOT_ESTABLISHED);
+    ConnectionInfoSetSocket(svp->conn->conn_info, CF_COULD_NOT_CONNECT);
 
     ThreadLock(&cft_serverlist);
     SeqAppend(srvlist_tmp, svp);
@@ -1607,7 +1621,7 @@ void ConnectionsCleanup(void)
                              "NULL connection in SERVERLIST!");
         }
 
-        DisconnectServer(svp->conn);
+        DisconnectServer(svp->conn, false);
     }
 
     SeqClear(srvlist_tmp);
@@ -1653,14 +1667,14 @@ int TryConnect(AgentConnection *conn, struct timeval *tvp, struct sockaddr *cinp
     }
 
     /* set non-blocking socket */
-    arg = fcntl(conn->conn_info.sd, F_GETFL, NULL);
+    arg = fcntl(ConnectionInfoSocket(conn->conn_info), F_GETFL, NULL);
 
-    if (fcntl(conn->conn_info.sd, F_SETFL, arg | O_NONBLOCK) == -1)
+    if (fcntl(ConnectionInfoSocket(conn->conn_info), F_SETFL, arg | O_NONBLOCK) == -1)
     {
         Log(LOG_LEVEL_ERR, "Could not set socket to non-blocking mode. (fcntl: %s)", GetErrorStr());
     }
 
-    res = connect(conn->conn_info.sd, cinp, (socklen_t) cinpSz);
+    res = connect(ConnectionInfoSocket(conn->conn_info), cinp, (socklen_t) cinpSz);
 
     if (res < 0)
     {
@@ -1672,11 +1686,11 @@ int TryConnect(AgentConnection *conn, struct timeval *tvp, struct sockaddr *cinp
 
             FD_ZERO(&myset);
 
-            FD_SET(conn->conn_info.sd, &myset);
+            FD_SET(ConnectionInfoSocket(conn->conn_info), &myset);
 
             /* now wait for connect, but no more than tvp.sec */
-            res = select(conn->conn_info.sd + 1, NULL, &myset, NULL, tvp);
-            if (getsockopt(conn->conn_info.sd, SOL_SOCKET, SO_ERROR, (void *) (&valopt), &lon) != 0)
+            res = select(ConnectionInfoSocket(conn->conn_info) + 1, NULL, &myset, NULL, tvp);
+            if (getsockopt(ConnectionInfoSocket(conn->conn_info), SOL_SOCKET, SO_ERROR, (void *) (&valopt), &lon) != 0)
             {
                 Log(LOG_LEVEL_ERR, "Could not check connection status. (getsockopt: %s)", GetErrorStr());
                 return false;
@@ -1697,12 +1711,12 @@ int TryConnect(AgentConnection *conn, struct timeval *tvp, struct sockaddr *cinp
 
     /* connection suceeded; return to blocking mode */
 
-    if (fcntl(conn->conn_info.sd, F_SETFL, arg) == -1)
+    if (fcntl(ConnectionInfoSocket(conn->conn_info), F_SETFL, arg) == -1)
     {
         Log(LOG_LEVEL_ERR, "Could not set socket to blocking mode. (fcntl: %s)", GetErrorStr());
     }
 
-    if (SetReceiveTimeout(conn->conn_info.sd, tvp) == -1)
+    if (SetReceiveTimeout(ConnectionInfoSocket(conn->conn_info), tvp) == -1)
     {
         Log(LOG_LEVEL_ERR, "Could not set socket timeout. (SetReceiveTimeout: %s)", GetErrorStr());
     }

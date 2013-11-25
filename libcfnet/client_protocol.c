@@ -39,6 +39,8 @@ extern char VFQNAME[];
 #include <crypto.h>                            /* PublicKeyFile */
 #include <files_hashes.h> /* HashString,HashesMatch,HashPubKey,HashPrintSafe */
 #include <known_dirs.h>
+#include <hash.h>
+#include <connection_info.h>
 
 
 /*********************************************************************/
@@ -76,7 +78,7 @@ int IdentifyAgent(ConnectionInfo *conn_info)
         struct sockaddr_storage myaddr = {0};
         socklen_t myaddr_len = sizeof(myaddr);
 
-        if (getsockname(conn_info->sd, (struct sockaddr *) &myaddr, &myaddr_len) == -1)
+        if (getsockname(ConnectionInfoSocket(conn_info), (struct sockaddr *) &myaddr, &myaddr_len) == -1)
         {
             Log(LOG_LEVEL_ERR, "Couldn't get socket address. (getsockname: %s)", GetErrorStr());
             return false;
@@ -279,7 +281,7 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
 
 /* proposition C1 - Send challenge / nonce */
 
-    SendTransaction(&conn->conn_info, sendbuffer, CF_RSA_PROTO_OFFSET + encrypted_len, CF_DONE);
+    SendTransaction(conn->conn_info, sendbuffer, CF_RSA_PROTO_OFFSET + encrypted_len, CF_DONE);
 
     BN_free(bn);
     BN_free(nonce_challenge);
@@ -290,19 +292,19 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
 
     memset(sendbuffer, 0, CF_EXPANDSIZE);
     len = BN_bn2mpi(PUBKEY->n, sendbuffer);
-    SendTransaction(&conn->conn_info, sendbuffer, len, CF_DONE);        /* No need to encrypt the public key ... */
+    SendTransaction(conn->conn_info, sendbuffer, len, CF_DONE);        /* No need to encrypt the public key ... */
 
 /* proposition C3 */
     memset(sendbuffer, 0, CF_EXPANDSIZE);
     len = BN_bn2mpi(PUBKEY->e, sendbuffer);
-    SendTransaction(&conn->conn_info, sendbuffer, len, CF_DONE);
+    SendTransaction(conn->conn_info, sendbuffer, len, CF_DONE);
 
 /* check reply about public key - server can break conn_info here */
 
 /* proposition S1 */
     memset(in, 0, CF_BUFSIZE);
 
-    if (ReceiveTransaction(&conn->conn_info, in, NULL) == -1)
+    if (ReceiveTransaction(conn->conn_info, in, NULL) == -1)
     {
         Log(LOG_LEVEL_ERR, "Protocol transaction broken off (1). (ReceiveTransaction: %s)", GetErrorStr());
         RSA_free(server_pubkey);
@@ -321,7 +323,7 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
 /* proposition S2 */
     memset(in, 0, CF_BUFSIZE);
 
-    if (ReceiveTransaction(&conn->conn_info, in, NULL) == -1)
+    if (ReceiveTransaction(conn->conn_info, in, NULL) == -1)
     {
         Log(LOG_LEVEL_ERR, "Protocol transaction broken off (2). (ReceiveTransaction: %s)", GetErrorStr());
         RSA_free(server_pubkey);
@@ -363,7 +365,7 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
 
 /* proposition S3 */
     memset(in, 0, CF_BUFSIZE);
-    encrypted_len = ReceiveTransaction(&conn->conn_info, in, NULL);
+    encrypted_len = ReceiveTransaction(conn->conn_info, in, NULL);
 
     if (encrypted_len <= 0)
     {
@@ -395,11 +397,11 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
 
     if (FIPS_MODE)
     {
-        SendTransaction(&conn->conn_info, digest, CF_DEFAULT_DIGEST_LEN, CF_DONE);
+        SendTransaction(conn->conn_info, digest, CF_DEFAULT_DIGEST_LEN, CF_DONE);
     }
     else
     {
-        SendTransaction(&conn->conn_info, digest, CF_MD5_LEN, CF_DONE);
+        SendTransaction(conn->conn_info, digest, CF_MD5_LEN, CF_DONE);
     }
 
     free(decrypted_cchall);
@@ -413,7 +415,7 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
         Log(LOG_LEVEL_VERBOSE, "Collecting public key from server!");
 
         /* proposition S4 - conditional */
-        if ((len = ReceiveTransaction(&conn->conn_info, in, NULL)) <= 0)
+        if ((len = ReceiveTransaction(conn->conn_info, in, NULL)) <= 0)
         {
             Log(LOG_LEVEL_ERR, "Protocol error in RSA authentation from IP '%s'", conn->this_server);
             return false;
@@ -429,7 +431,7 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
 
         /* proposition S5 - conditional */
 
-        if ((len = ReceiveTransaction(&conn->conn_info, in, NULL)) <= 0)
+        if ((len = ReceiveTransaction(conn->conn_info, in, NULL)) <= 0)
         {
             Log(LOG_LEVEL_INFO, "Protocol error in RSA authentation from IP '%s'",
                  conn->this_server);
@@ -446,6 +448,8 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
         }
 
         server_pubkey = RSAPublicKey_dup(newkey);
+        Key *key = KeyNew(server_pubkey, CF_DEFAULT_DIGEST);
+        ConnectionInfoSetKey(conn->conn_info, key);
         RSA_free(newkey);
     }
 
@@ -477,20 +481,19 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
         return false;
     }
 
-    SendTransaction(&conn->conn_info, out, encrypted_len, CF_DONE);
+    SendTransaction(conn->conn_info, out, encrypted_len, CF_DONE);
 
     if (server_pubkey != NULL)
     {
         char buffer[EVP_MAX_MD_SIZE * 4];
-        HashPubKey(server_pubkey, conn->conn_info.remote_keyhash, CF_DEFAULT_DIGEST);
+        unsigned int length = 0;
         Log(LOG_LEVEL_VERBOSE, "Public key identity of host '%s' is '%s'", conn->remoteip,
-              HashPrintSafe(CF_DEFAULT_DIGEST, true, conn->conn_info.remote_keyhash, buffer));
+              ConnectionInfoPrintableKeyHash(conn->conn_info));
         SavePublicKey(conn->username, buffer, server_pubkey);       // FIXME: username is local
-        LastSaw(conn->remoteip, conn->conn_info.remote_keyhash, LAST_SEEN_ROLE_CONNECT);
+        LastSaw(conn->remoteip, ConnectionInfoBinaryKeyHash(conn->conn_info, &length), LAST_SEEN_ROLE_CONNECT);
     }
 
     free(out);
-    RSA_free(server_pubkey);
 
     return true;
 }

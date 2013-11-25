@@ -28,8 +28,7 @@
 
 
 #include <platform.h>
-#include <openssl/ssl.h>
-
+#include <connection_info.h>
 
 /* ************************************************ */
 /* The following were copied from cf3.defs.h and still exist there, TODO */
@@ -101,29 +100,10 @@ struct Stat_
     x.tv_usec = DEFAULT_TLS_TIMEOUT_USECONDS
 #define DEFAULT_TLS_TRIES 5
 
-
-typedef enum
-{
-    /* When connection is initialised ProtocolVersion is 0, i.e. undefined. */
-    CF_PROTOCOL_UNDEFINED = 0,
-    CF_PROTOCOL_CLASSIC,
-    CF_PROTOCOL_TLS
-} ProtocolVersion;
-
-typedef struct
-{
-    ProtocolVersion type;
-    int sd;                           /* Socket descriptor */
-    SSL *ssl;                         /* OpenSSL struct for TLS connections */
-    RSA *remote_key;
-    char remote_keyhash[EVP_MAX_MD_SIZE];       /* key hash */
-    char remote_keyhash_str[EVP_MAX_MD_SIZE*4]; /* key hash as a SHA=... string */
-} ConnectionInfo;
-
 typedef struct
 {
     int family;                 /* AF_INET or AF_INET6 */
-    ConnectionInfo conn_info;
+    ConnectionInfo *conn_info;
     int trust;                  /* true if key being accepted on trust */
     int authenticated;
     char username[CF_SMALLBUF];

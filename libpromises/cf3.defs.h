@@ -33,6 +33,7 @@
 #include <libxml/xpathInternals.h>
 #endif
 
+#include <hash.h> /* Required for HashMethod */
 #include <sequence.h>
 #include <logging.h>
 
@@ -119,17 +120,6 @@
 #define CFD_FALSE "CFD_FALSE"
 #define CF_ANYCLASS "any"
 #define CF_SMALL_OFFSET 2
-
-/* digest sizes */
-#define CF_MD5_LEN 16
-#define CF_SHA_LEN 20
-#define CF_SHA1_LEN 20
-#define CF_BEST_LEN 0
-#define CF_CRYPT_LEN 64
-#define CF_SHA224_LEN 28
-#define CF_SHA256_LEN 32
-#define CF_SHA384_LEN 48
-#define CF_SHA512_LEN 64
 
 #define CF_DONE 't'
 #define CF_MORE 'm'
@@ -802,20 +792,6 @@ enum cftidylinks
     cfa_linkdelete,
     cfa_linkkeep
 };
-
-typedef enum
-{
-    HASH_METHOD_MD5,
-    HASH_METHOD_SHA224,
-    HASH_METHOD_SHA256,
-    HASH_METHOD_SHA384,
-    HASH_METHOD_SHA512,
-    HASH_METHOD_SHA1,
-    HASH_METHOD_SHA,
-    HASH_METHOD_BEST,
-    HASH_METHOD_CRYPT,
-    HASH_METHOD_NONE
-} HashMethod;
 
 enum cfnofile
 {

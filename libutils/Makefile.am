@@ -34,7 +34,8 @@ libutils_la_SOURCES = \
 	rb-tree.c rb-tree.h \
 	mustache.c mustache.h \
 	cfversion.c cfversion.h \
-	unicode.c unicode.h
+	unicode.c unicode.h \
+    hash.c hash.h
 
 CLEANFILES = *.gcno *.gcda
 

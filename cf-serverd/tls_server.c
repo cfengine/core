@@ -34,7 +34,7 @@
 #include <net.h>                      /* SendTransaction,ReceiveTransaction */
 #include <tls_generic.h>              /* TLSSend */
 #include <cf-serverd-enterprise-stubs.h>
-
+#include <connection_info.h>
 
 static SSL_CTX *SSLSERVERCONTEXT = NULL;
 static X509 *SSLSERVERCERT = NULL;
@@ -186,12 +186,12 @@ int ServerTLSPeek(ConnectionInfo *conn_info)
     assert(SSLSERVERCONTEXT != NULL && PRIVKEY != NULL && PUBKEY != NULL);
 
     /* This must be the first thing we run on an accepted connection. */
-    assert(conn_info->type == CF_PROTOCOL_UNDEFINED);
+    assert(ConnectionInfoProtocolVersion(conn_info) == CF_PROTOCOL_UNDEFINED);
 
     const int peek_size = CF_INBAND_OFFSET + sizeof("CAUTH");
 
     char buf[peek_size];
-    ssize_t got = recv(conn_info->sd, buf, sizeof(buf), MSG_PEEK);
+    ssize_t got = recv(ConnectionInfoSocket(conn_info), buf, sizeof(buf), MSG_PEEK);
     if (got == -1)
     {
         Log(LOG_LEVEL_ERR, "TCP connection: %s", GetErrorStr());
@@ -208,21 +208,21 @@ int ServerTLSPeek(ConnectionInfo *conn_info)
         Log(LOG_LEVEL_WARNING,
             "Peer sent only %zd bytes! Considering the protocol as Classic",
             got);
-        conn_info->type = CF_PROTOCOL_CLASSIC;
+        ConnectionInfoSetProtocolVersion(conn_info, CF_PROTOCOL_CLASSIC);
     }
     else if (got == peek_size &&
              memcmp(&buf[CF_INBAND_OFFSET], "CAUTH", strlen("CAUTH")) == 0)
     {
         Log(LOG_LEVEL_VERBOSE,
             "Peeked CAUTH in TCP stream, considering the protocol as Classic");
-        conn_info->type = CF_PROTOCOL_CLASSIC;
+        ConnectionInfoSetProtocolVersion(conn_info, CF_PROTOCOL_CLASSIC);
     }
     else                                   /* got==peek_size && not "CAUTH" */
     {
         Log(LOG_LEVEL_VERBOSE,
             "Peeked nothing important in TCP stream, considering the protocol as TLS");
         LogRaw(LOG_LEVEL_DEBUG, "Peeked data: ", buf, sizeof(buf));
-        conn_info->type = CF_PROTOCOL_TLS;
+        ConnectionInfoSetProtocolVersion(conn_info, CF_PROTOCOL_TLS);
     }
 
     return 1;
@@ -244,7 +244,7 @@ int ServerNegotiateProtocol(const ConnectionInfo *conn_info)
                        "CFE_v%d cf-serverd %s\n",
                        SERVER_PROTOCOL_VERSION, VERSION);
 
-    ret = TLSSend(conn_info->ssl, version_string, len);
+    ret = TLSSend(ConnectionInfoSSL(conn_info), version_string, len);
     if (ret != len)
     {
         Log(LOG_LEVEL_ERR, "Connection was hung up!");
@@ -252,7 +252,7 @@ int ServerNegotiateProtocol(const ConnectionInfo *conn_info)
     }
 
     /* Receive CFE_v%d ... */
-    ret = TLSRecvLine(conn_info->ssl, input, sizeof(input));
+    ret = TLSRecvLine(ConnectionInfoSSL(conn_info), input, sizeof(input));
     if (ret <= 0)
     {
         Log(LOG_LEVEL_ERR,
@@ -274,12 +274,12 @@ int ServerNegotiateProtocol(const ConnectionInfo *conn_info)
     if (version_received == SERVER_PROTOCOL_VERSION)
     {
         char s[] = "OK\n";
-        TLSSend(conn_info->ssl, s, sizeof(s)-1);
+        TLSSend(ConnectionInfoSSL(conn_info), s, sizeof(s)-1);
     }
     else
     {
         char s[] = "BAD unsupported protocol version\n";
-        TLSSend(conn_info->ssl, s, sizeof(s)-1);
+        TLSSend(ConnectionInfoSSL(conn_info), s, sizeof(s)-1);
         Log(LOG_LEVEL_ERR,
             "Client advertises unsupported protocol version: %d", version_received);
         version_received = 0;
@@ -306,7 +306,7 @@ int ServerIdentifyClient(const ConnectionInfo *conn_info,
      * on IDENTITY line. For now only "username" setting exists... */
     username[0] = '\0';
 
-    ret = TLSRecvLine(conn_info->ssl, line, sizeof(line));
+    ret = TLSRecvLine(ConnectionInfoSSL(conn_info), line, sizeof(line));
     if (ret <= 0)
     {
         return -1;
@@ -369,7 +369,7 @@ int ServerSendWelcome(const ServerConnectionState *conn)
     s[len] = '\n';
     len++;
 
-    ret = TLSSend(conn->conn_info.ssl, s, len);
+    ret = TLSSend(ConnectionInfoSSL(conn->conn_info), s, len);
     if (ret == -1)
     {
         return -1;
@@ -387,39 +387,125 @@ int ServerTLSSessionEstablish(ServerConnectionState *conn)
 {
     int ret;
 
-    conn->conn_info.ssl = SSL_new(SSLSERVERCONTEXT);
-    if (conn->conn_info.ssl == NULL)
+    if (ConnectionInfoConnectionStatus(conn->conn_info) != CF_CONNECTION_ESTABLISHED)
     {
-        Log(LOG_LEVEL_ERR, "SSL_new: %s",
-            ERR_reason_error_string(ERR_get_error()));
+        ConnectionInfoSetSSL(conn->conn_info, SSL_new(SSLSERVERCONTEXT));
+        if (ConnectionInfoSSL(conn->conn_info) == NULL)
+        {
+            Log(LOG_LEVEL_ERR, "SSL_new: %s",
+                ERR_reason_error_string(ERR_get_error()));
+            return -1;
+        }
+
+        /* Now we are letting OpenSSL take over the open socket. */
+        SSL_set_fd(ConnectionInfoSSL(conn->conn_info), ConnectionInfoSocket(conn->conn_info));
+
+        ret = SSL_accept(ConnectionInfoSSL(conn->conn_info));
+        if (ret <= 0)
+        {
+            TLSLogError(ConnectionInfoSSL(conn->conn_info), LOG_LEVEL_ERR,
+                        "Connection handshake", ret);
+            return -1;
+        }
+
+        Log(LOG_LEVEL_VERBOSE, "TLS cipher negotiated: %s, %s",
+            SSL_get_cipher_name(ConnectionInfoSSL(conn->conn_info)),
+            SSL_get_cipher_version(ConnectionInfoSSL(conn->conn_info)));
+        Log(LOG_LEVEL_VERBOSE, "TLS session established, checking trust...");
+
+        /* Send/Receive "CFE_v%d" version string and agree on version. */
+        ret = ServerNegotiateProtocol(conn->conn_info);
+        if (ret <= 0)
+        {
+            return -1;
+        }
+
+        /* Receive IDENTITY USER=asdf plain string. */
+        ret = ServerIdentifyClient(conn->conn_info, conn->username,
+                                   sizeof(conn->username));
+        if (ret != 1)
+        {
+            return -1;
+        }
+
+        /* We *now* (maybe a bit late) verify the key that the client sent us in
+         * the TLS handshake, since we need the username to do so. TODO in the
+         * future store keys irrelevant of username, so that we can match them
+         * before IDENTIFY. */
+        ret = TLSVerifyPeer(conn->conn_info, conn->ipaddr, conn->username);
+        if (ret == -1)                                      /* error */
+        {
+            return -1;
+        }
+
+        if (ret == 1)                                    /* trusted key */
+        {
+            Log(LOG_LEVEL_VERBOSE,
+                "%s: Client is TRUSTED, public key MATCHES stored one.",
+                KeyPrintableHash(ConnectionInfoKey(conn->conn_info)));
+        }
+
+        if (ret == 0)                                  /* untrusted key */
+        {
+            Log(LOG_LEVEL_WARNING,
+                "%s: Client's public key is UNKNOWN!",
+                KeyPrintableHash(ConnectionInfoKey(conn->conn_info)));
+
+            if ((SV.trustkeylist != NULL) &&
+                (IsMatchItemIn(conn->ctx, SV.trustkeylist, MapAddress(conn->ipaddr))))
+            {
+                Log(LOG_LEVEL_VERBOSE,
+                    "Host %s was found in the \"trustkeysfrom\" list",
+                    conn->ipaddr);
+                Log(LOG_LEVEL_WARNING,
+                    "%s: Explicitly trusting this key from now on.",
+                    KeyPrintableHash(ConnectionInfoKey(conn->conn_info)));
+
+                conn->trust = true;
+                SavePublicKey("root", KeyPrintableHash(ConnectionInfoKey(conn->conn_info)),
+                              KeyRSA(ConnectionInfoKey(conn->conn_info)));
+            }
+            else
+            {
+                Log(LOG_LEVEL_ERR, "TRUST FAILED, WARNING: possible MAN IN THE MIDDLE attack, dropping connection!");
+                Log(LOG_LEVEL_ERR, "Open server's ACL if you really want to start trusting this new key.");
+                return -1;
+            }
+        }
+
+        /* skipping CAUTH */
+        conn->id_verified = 1;
+        /* skipping SAUTH, allow access to read-only files */
+        conn->rsa_auth = 1;
+        LastSaw1(conn->ipaddr, KeyPrintableHash(ConnectionInfoKey(conn->conn_info)),
+                 LAST_SEEN_ROLE_ACCEPT);
+
+        ServerSendWelcome(conn);
+    }
+    return 1;
+}
+
+/**
+ * @brief Accept a TLS connection and authenticate and identify in call collect mode.
+ * @note Various fields in #conn are set, like username and keyhash.
+ */
+int ServerTLSSessionEstablishCallCollectMode(ServerConnectionState *conn)
+{
+    int ret;
+
+    if (ConnectionInfoConnectionStatus(conn->conn_info) != CF_CONNECTION_ESTABLISHED)
+    {
         return -1;
     }
-
-    /* Now we are letting OpenSSL take over the open socket. */
-    SSL_set_fd(conn->conn_info.ssl, conn->conn_info.sd);
-
-    ret = SSL_accept(conn->conn_info.ssl);
-    if (ret <= 0)
-    {
-        TLSLogError(conn->conn_info.ssl, LOG_LEVEL_ERR,
-                    "Connection handshake", ret);
-        return -1;
-    }
-
-    Log(LOG_LEVEL_VERBOSE, "TLS cipher negotiated: %s, %s",
-        SSL_get_cipher_name(conn->conn_info.ssl),
-        SSL_get_cipher_version(conn->conn_info.ssl));
-    Log(LOG_LEVEL_VERBOSE, "TLS session established, checking trust...");
-
     /* Send/Receive "CFE_v%d" version string and agree on version. */
-    ret = ServerNegotiateProtocol(&conn->conn_info);
+    ret = ServerNegotiateProtocol(conn->conn_info);
     if (ret <= 0)
     {
         return -1;
     }
 
     /* Receive IDENTITY USER=asdf plain string. */
-    ret = ServerIdentifyClient(&conn->conn_info, conn->username,
+    ret = ServerIdentifyClient(conn->conn_info, conn->username,
                                sizeof(conn->username));
     if (ret != 1)
     {
@@ -430,7 +516,7 @@ int ServerTLSSessionEstablish(ServerConnectionState *conn)
      * the TLS handshake, since we need the username to do so. TODO in the
      * future store keys irrelevant of username, so that we can match them
      * before IDENTIFY. */
-    ret = TLSVerifyPeer(&conn->conn_info, conn->ipaddr, conn->username);
+    ret = TLSVerifyPeer(conn->conn_info, conn->ipaddr, conn->username);
     if (ret == -1)                                      /* error */
     {
         return -1;
@@ -440,28 +526,28 @@ int ServerTLSSessionEstablish(ServerConnectionState *conn)
     {
         Log(LOG_LEVEL_VERBOSE,
             "%s: Client is TRUSTED, public key MATCHES stored one.",
-            conn->conn_info.remote_keyhash_str);
+            KeyPrintableHash(ConnectionInfoKey(conn->conn_info)));
     }
 
     if (ret == 0)                                  /* untrusted key */
     {
         Log(LOG_LEVEL_WARNING,
             "%s: Client's public key is UNKNOWN!",
-            conn->conn_info.remote_keyhash_str);
+            KeyPrintableHash(ConnectionInfoKey(conn->conn_info)));
 
         if ((SV.trustkeylist != NULL) &&
-            (IsMatchItemIn(conn->ctx, SV.trustkeylist, MapAddress(conn->ipaddr))))
+                (IsMatchItemIn(conn->ctx, SV.trustkeylist, MapAddress(conn->ipaddr))))
         {
             Log(LOG_LEVEL_VERBOSE,
                 "Host %s was found in the \"trustkeysfrom\" list",
                 conn->ipaddr);
             Log(LOG_LEVEL_WARNING,
                 "%s: Explicitly trusting this key from now on.",
-                conn->conn_info.remote_keyhash_str);
+                KeyPrintableHash(ConnectionInfoKey(conn->conn_info)));
 
             conn->trust = true;
-            SavePublicKey("root", conn->conn_info.remote_keyhash_str,
-                          conn->conn_info.remote_key);
+            SavePublicKey("root", KeyPrintableHash(ConnectionInfoKey(conn->conn_info)),
+                          KeyRSA(ConnectionInfoKey(conn->conn_info)));
         }
         else
         {
@@ -475,11 +561,10 @@ int ServerTLSSessionEstablish(ServerConnectionState *conn)
     conn->id_verified = 1;
     /* skipping SAUTH, allow access to read-only files */
     conn->rsa_auth = 1;
-    LastSaw1(conn->ipaddr, conn->conn_info.remote_keyhash_str,
+    LastSaw1(conn->ipaddr, KeyPrintableHash(ConnectionInfoKey(conn->conn_info)),
              LAST_SEEN_ROLE_ACCEPT);
 
     ServerSendWelcome(conn);
-
     return 1;
 }
 
@@ -539,9 +624,8 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
 {
     time_t tloc, trem = 0;
     char recvbuffer[CF_BUFSIZE + CF_BUFEXT], sendbuffer[CF_BUFSIZE];
-    char filename[CF_BUFSIZE], args[CF_BUFSIZE], out[CF_BUFSIZE];
+    char filename[CF_BUFSIZE], args[CF_BUFSIZE];
     long time_no_see = 0;
-    unsigned int len = 0;
     int drift, received;
     ServerFileGetState get_args;
     Item *classes;
@@ -553,7 +637,7 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
     memset(recvbuffer, 0, CF_BUFSIZE + CF_BUFEXT);
     memset(&get_args, 0, sizeof(get_args));
 
-    received = ReceiveTransaction(&conn->conn_info, recvbuffer, NULL);
+    received = ReceiveTransaction(conn->conn_info, recvbuffer, NULL);
     if (received == -1 || received == 0)
     {
         return false;
@@ -608,12 +692,12 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
         if (!MatchClasses(ctx, conn))
         {
             Log(LOG_LEVEL_INFO, "Server refusal due to failed class/context match");
-            Terminate(&conn->conn_info);
+            Terminate(conn->conn_info);
             return false;
         }
 
         DoExec(ctx, conn, args);
-        Terminate(&conn->conn_info);
+        Terminate(conn->conn_info);
         return false;
 
     case PROTOCOL_COMMAND_VERSION:
@@ -625,7 +709,7 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
         }
 
         snprintf(conn->output, CF_BUFSIZE, "OK: %s", Version());
-        SendTransaction(&conn->conn_info, conn->output, 0, CF_DONE);
+        SendTransaction(conn->conn_info, conn->output, 0, CF_DONE);
         return conn->id_verified;
 
     case PROTOCOL_COMMAND_GET:
@@ -715,7 +799,7 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
         {
             sprintf(conn->output, "Couldn't read system clock\n");
             Log(LOG_LEVEL_INFO, "Couldn't read system clock. (time: %s)", GetErrorStr());
-            SendTransaction(&conn->conn_info, "BAD: clocks out of synch", 0, CF_DONE);
+            SendTransaction(conn->conn_info, "BAD: clocks out of synch", 0, CF_DONE);
             return true;
         }
 
@@ -732,7 +816,7 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
         {
             snprintf(conn->output, CF_BUFSIZE - 1, "BAD: Clocks are too far unsynchronized %ld/%ld\n", (long) tloc,
                      (long) trem);
-            SendTransaction(&conn->conn_info, conn->output, 0, CF_DONE);
+            SendTransaction(conn->conn_info, conn->output, 0, CF_DONE);
             return true;
         }
         else
@@ -795,9 +879,13 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
 
     case PROTOCOL_COMMAND_QUERY:
 
+        /*
+         * TLS has no authentication, therefore we need to remove this.
+         * Or find another way to do this.
+         */
         if (!conn->id_verified)
         {
-            Log(LOG_LEVEL_INFO, "ID not verified");
+            Log(LOG_LEVEL_INFO, "ID not verified (here)");
             RefuseAccess(conn, 0, recvbuffer);
             return true;
         }
@@ -818,36 +906,26 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
 
     case PROTOCOL_COMMAND_CALL_ME_BACK:
 
-        sscanf(recvbuffer, "SCALLBACK %u", &len);
-
-        if ((len >= sizeof(out)) || (received != (len + CF_PROTO_OFFSET)))
-        {
-            Log(LOG_LEVEL_INFO, "Decrypt error CALL_ME_BACK");
-            RefuseAccess(conn, 0, "decrypt error CALL_ME_BACK");
-            return true;
-        }
-
-        memcpy(out, recvbuffer + CF_PROTO_OFFSET, len);
-        DecryptString(conn->encryption_type, out, recvbuffer, conn->session_key, len);
-
-        if (strncmp(recvbuffer, "CALL_ME_BACK collect_calls", strlen("CALL_ME_BACK collect_calls")) != 0)
+        memset(filename, 0, CF_BUFSIZE);
+        if (strncmp(recvbuffer, "SCALLBACK CALL_ME_BACK collect_calls", strlen("SCALLBACK CALL_ME_BACK collect_calls")) != 0)
         {
             Log(LOG_LEVEL_INFO, "CALL_ME_BACK protocol defect");
             RefuseAccess(conn, 0, "decryption failure");
             return false;
         }
+        strcpy(filename, "CALL_ME_BACK collect_calls");
 
         if (!conn->id_verified)
         {
             Log(LOG_LEVEL_INFO, "ID not verified");
             RefuseAccess(conn, 0, recvbuffer);
-            return true;
+            return false;
         }
 
-        if (!LiteralAccessControl(ctx, recvbuffer, conn, true))
+        if (!LiteralAccessControl(ctx, filename, conn, true))
         {
             Log(LOG_LEVEL_INFO, "Query access failure");
-            RefuseAccess(conn, 0, recvbuffer);
+            RefuseAccess(conn, 0, filename);
             return false;
         }
         return ReceiveCollectCall(conn);
@@ -857,7 +935,7 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
     }
 
     sprintf(sendbuffer, "BAD: Request denied\n");
-    SendTransaction(&conn->conn_info, sendbuffer, 0, CF_DONE);
+    SendTransaction(conn->conn_info, sendbuffer, 0, CF_DONE);
     Log(LOG_LEVEL_INFO, "Closing connection, due to request: '%s'", recvbuffer);
     return false;
 }

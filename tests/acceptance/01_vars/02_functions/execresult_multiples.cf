@@ -28,8 +28,8 @@ bundle agent check
 {
 # If the output contains CLASSONCE or RETONCE more than once, we fail
 classes:
-  "ok1" not => regcmp(".*CLASSONCE.*CLASSONCE.*", "$(test.subout)");
-  "ok2" not => regcmp(".*RETONCE.*RETONCE.*", "$(test.subout)");
+  "ok1" not => regcmp(".*ran.*CLASSONCE.*ran.*CLASSONCE.*", "$(test.subout)");
+  "ok2" not => regcmp(".*ran.*RETONCE.*ran.*RETONCE.*", "$(test.subout)");
 
   "ok" and => { "ok1", "ok2" };
 

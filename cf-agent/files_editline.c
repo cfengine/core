@@ -955,7 +955,7 @@ static int ReplacePatterns(EvalContext *ctx, Item *file_start, Item *file_end, A
         }
 
         cutoff = 1;
-        strncpy(line_buff, ip->name, CF_BUFSIZE);
+        strncpy(line_buff, ip->name, CF_BUFSIZE - 1);
         replaced = false;
         match_len = 0;
 
@@ -979,12 +979,9 @@ static int ReplacePatterns(EvalContext *ctx, Item *file_start, Item *file_end, A
             Log(LOG_LEVEL_VERBOSE, "Verifying replacement of '%s' with '%s', cutoff %d", pp->promiser, replace,
                   cutoff);
 
-            before[0] = after[0] = '\0';
-
             // Model the partial substitution in line_buff to check convergence
-
-            strncat(before, line_buff, start_off);
-            strncat(after, line_buff + end_off, sizeof(after) - 1);
+            strncpy(before, line_buff, start_off);
+            strncpy(after, line_buff + end_off, sizeof(after) - 1);
             snprintf(line_buff, CF_EXPANDSIZE - 1, "%s%s", before, replace);
             notfound = false;
             replaced = true;

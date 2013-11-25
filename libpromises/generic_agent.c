@@ -1435,7 +1435,7 @@ static bool VerifyBundleSequence(EvalContext *ctx, const Policy *policy, const G
                 Log(LOG_LEVEL_ERR, "%s", StringWriterData(w));
                 WriterClose(w);
             }
-            break;
+            continue;
         }
 
         if (strcmp(name, CF_NULL_VALUE) == 0)

@@ -27,7 +27,7 @@
 
 #include <stdlib.h>
 
-static const char *paths[3] = {
+static const char *paths[] = {
     "/usr/lib/x86_64-linux-gnu/libavahi-client.so.3",
     "/usr/lib/libavahi-client.so.3",
     "/usr/lib64/libavahi-client.so.3",
@@ -78,7 +78,7 @@ static const char *getavahipath()
         return env;
     }
 
-    for (int i = 0; i < 3; i++)
+    for (int i = 0; i < sizeof(paths)/sizeof(paths[0]); i++)
     {
         if (stat(paths[i], &sb) == 0)
         {

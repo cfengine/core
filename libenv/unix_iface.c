@@ -543,10 +543,22 @@ void GetInterfacesInfo(EvalContext *ctx)
 
     close(fd);
 
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "interfaces", interfaces, DATA_TYPE_STRING_LIST);
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "hardware_addresses", hardware, DATA_TYPE_STRING_LIST);
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "hardware_flags", flags, DATA_TYPE_STRING_LIST);
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "ip_addresses", ips, DATA_TYPE_STRING_LIST);
+    if (interfaces)
+    {
+      EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "interfaces", interfaces, DATA_TYPE_STRING_LIST);
+    }
+    if (hardware)
+    {
+      EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "hardware_addresses", hardware, DATA_TYPE_STRING_LIST);
+    }
+    if (flags)
+    {
+      EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "hardware_flags", flags, DATA_TYPE_STRING_LIST);
+    }
+    if (ips)
+    {
+      EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "ip_addresses", ips, DATA_TYPE_STRING_LIST);
+    }
 
     RlistDestroy(interfaces);
     RlistDestroy(hardware);

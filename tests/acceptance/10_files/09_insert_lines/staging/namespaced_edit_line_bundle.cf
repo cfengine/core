@@ -1,0 +1,63 @@
+#######################################################
+#
+# Call an edit_line bundle from another namespace
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub", "namespaced_edit_line_bundle.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+  vars:
+      "states" slist => { "actual", "expected" };
+
+      "actual" string => "";
+
+      "expected" string => "Hello";
+
+  files:
+      "$(G.testfile).$(states)"
+      create => "true",
+      edit_line => init_insert("$($(states))"),
+      edit_defaults => init_empty;
+}
+
+bundle edit_line init_insert(str)
+{
+  insert_lines:
+      "$(str)";
+}
+
+body edit_defaults init_empty
+{
+      empty_file_before_editing => "true";
+}
+
+#######################################################
+
+bundle agent test
+{
+  files:
+      "$(G.testfile).actual"
+      edit_line => testing_namespace:simple_insert();
+}
+
+#######################################################
+
+bundle agent check
+{
+  methods:
+      "any" usebundle => default_check_diff("$(G.testfile).actual",
+                                            "$(G.testfile).expected",
+                                            "$(this.promise_filename)");
+}
+
+### PROJECT_ID: core
+### CATEGORY_ID: 27

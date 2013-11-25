@@ -1,0 +1,10 @@
+body file control
+{
+    namespace => "testing_namespace";
+}
+
+bundle edit_line simple_insert
+{
+  insert_lines:
+      "hello";
+}

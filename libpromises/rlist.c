@@ -992,39 +992,6 @@ void RlistReverse(Rlist **list)
     *list = prev;
 }
 
-/* Human-readable serialization */
-
-static void FnCallWrite(Writer *writer, const FnCall *call)
-{
-    WriterWrite(writer, call->name);
-    WriterWriteChar(writer, '(');
-
-    for (const Rlist *rp = call->args; rp != NULL; rp = rp->next)
-    {
-        switch (rp->val.type)
-        {
-        case RVAL_TYPE_SCALAR:
-            WriterWrite(writer, RlistScalarValue(rp));
-            break;
-
-        case RVAL_TYPE_FNCALL:
-            FnCallWrite(writer, RlistFnCallValue(rp));
-            break;
-
-        default:
-            WriterWrite(writer, "(** Unknown argument **)\n");
-            break;
-        }
-
-        if (rp->next != NULL)
-        {
-            WriterWriteChar(writer, ',');
-        }
-    }
-
-    WriterWriteChar(writer, ')');
-}
-
 void RlistWrite(Writer *writer, const Rlist *list)
 {
     WriterWrite(writer, " {");

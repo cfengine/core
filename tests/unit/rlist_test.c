@@ -529,11 +529,6 @@ int ThreadUnlock(pthread_mutex_t *name)
     return true;
 }
 
-void FnCallShow(FILE *fout, const FnCall *fp)
-{
-    fail();
-}
-
 int IsNakedVar(const char *str, char vtype)
 {
     fail();

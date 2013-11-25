@@ -41,6 +41,8 @@ FnCall *FnCallNew(const char *name, Rlist *args);
 FnCall *FnCallCopy(const FnCall *f);
 void FnCallDestroy(FnCall *fp);
 unsigned FnCallHash(const FnCall *fp, unsigned seed, unsigned max);
+void FnCallWrite(Writer *writer, const FnCall *call);
+
 
 FnCallResult FnCallEvaluate(EvalContext *ctx, FnCall *fp, const Promise *caller);
 

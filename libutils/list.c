@@ -375,6 +375,7 @@ int ListRemove(List *list, void *payload)
     /*
      * This is nearly impossible, so we will only assert it.
      */
+    assert(node);
     assert(found == 1);
     /*
      * Before deleting the node we have to update the mutable iterator.

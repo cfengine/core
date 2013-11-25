@@ -35,12 +35,13 @@ char *strdup(const char *str);
 
 char *strdup(const char *str)
 {
-    char *sp = malloc(strlen(str) + 1);
+    const long len = strlen(str) + 1;
+    char *sp = malloc( len );
 
     if (sp == NULL)
     {
         return NULL;
     }
-    strcpy(sp, str);
+    memcpy(sp, str, len);
     return sp;
 }

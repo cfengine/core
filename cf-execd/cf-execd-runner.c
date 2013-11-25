@@ -637,7 +637,7 @@ static void MailResult(const ExecConfig *config, const char *file)
     char mailsubject_anomaly_prefix[8];
     if (anomaly)
     {
-        sprintf(mailsubject_anomaly_prefix,"**!! ");
+        strcpy(mailsubject_anomaly_prefix, "**!! ");
     }
     else
     {

@@ -1316,7 +1316,7 @@ int StatFile(ServerConnectionState *conn, char *sendbuffer, char *ofilename)
 
         if (readlink(filename, linkbuf, CF_BUFSIZE - 1) == -1)
         {
-            sprintf(sendbuffer, "BAD: unable to read link\n");
+            strcpy(sendbuffer, "BAD: unable to read link\n");
             Log(LOG_LEVEL_ERR, "%s. (readlink: %s)", sendbuffer, GetErrorStr());
             SendTransaction(conn->conn_info, sendbuffer, 0, CF_DONE);
             return -1;
@@ -1436,7 +1436,7 @@ int StatFile(ServerConnectionState *conn, char *sendbuffer, char *ofilename)
     }
     else
     {
-        sprintf(sendbuffer, "OK:");
+        strcpy(sendbuffer, "OK:");
     }
 
     SendTransaction(conn->conn_info, sendbuffer, 0, CF_DONE);
@@ -1572,7 +1572,7 @@ int CfOpenDirectory(ServerConnectionState *conn, char *sendbuffer, char *oldDirn
 
     if (!IsAbsoluteFileName(dirname))
     {
-        sprintf(sendbuffer, "BAD: request to access a non-absolute filename\n");
+        strcpy(sendbuffer, "BAD: request to access a non-absolute filename\n");
         SendTransaction(conn->conn_info, sendbuffer, 0, CF_DONE);
         return -1;
     }
@@ -1621,7 +1621,7 @@ int CfSecOpenDirectory(ServerConnectionState *conn, char *sendbuffer, char *dirn
 
     if (!IsAbsoluteFileName(dirname))
     {
-        sprintf(sendbuffer, "BAD: request to access a non-absolute filename\n");
+        strcpy(sendbuffer, "BAD: request to access a non-absolute filename\n");
         cipherlen = EncryptString(conn->encryption_type, sendbuffer, out, conn->session_key, strlen(sendbuffer) + 1);
         SendTransaction(conn->conn_info, out, cipherlen, CF_DONE);
         return -1;

@@ -367,7 +367,7 @@ static PromiseResult KeepEditLinePromise(EvalContext *ctx, Promise *pp, void *pa
 static PromiseResult VerifyLineDeletions(EvalContext *ctx, Promise *pp, EditContext *edcontext)
 {
     Item **start = &(edcontext->file_start);
-    Attributes a = { {0} };
+    Attributes a;
     Item *begin_ptr, *end_ptr;
     CfLock thislock;
     char lockname[CF_BUFSIZE];
@@ -430,7 +430,7 @@ static PromiseResult VerifyLineDeletions(EvalContext *ctx, Promise *pp, EditCont
 static PromiseResult VerifyColumnEdits(EvalContext *ctx, Promise *pp, EditContext *edcontext)
 {
     Item **start = &(edcontext->file_start);
-    Attributes a = { {0} };
+    Attributes a;
     Item *begin_ptr, *end_ptr;
     CfLock thislock;
     char lockname[CF_BUFSIZE];
@@ -499,7 +499,7 @@ static PromiseResult VerifyColumnEdits(EvalContext *ctx, Promise *pp, EditContex
 static PromiseResult VerifyPatterns(EvalContext *ctx, Promise *pp, EditContext *edcontext)
 {
     Item **start = &(edcontext->file_start);
-    Attributes a = { {0} };
+    Attributes a;
     Item *begin_ptr, *end_ptr;
     CfLock thislock;
     char lockname[CF_BUFSIZE];
@@ -561,7 +561,7 @@ static PromiseResult VerifyLineInsertions(EvalContext *ctx, Promise *pp, EditCon
 {
     Item **start = &(edcontext->file_start), *match, *prev;
     Item *begin_ptr, *end_ptr;
-    Attributes a = { {0} };
+    Attributes a;
     CfLock thislock;
     char lockname[CF_BUFSIZE];
 
@@ -954,7 +954,7 @@ static int ReplacePatterns(EvalContext *ctx, Item *file_start, Item *file_end, A
         }
 
         cutoff = 1;
-        strncpy(line_buff, ip->name, CF_BUFSIZE);
+        strlcpy(line_buff, ip->name, CF_BUFSIZE);
         replaced = false;
         match_len = 0;
 

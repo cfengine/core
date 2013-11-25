@@ -333,9 +333,6 @@ void PurgeHashes(EvalContext *ctx, char *path, Attributes attr, Promise *pp)
 
             LogHashChange(obj, FILE_STATE_REMOVED, "File removed", pp);
         }
-
-        memset(&key, 0, sizeof(key));
-        memset(&value, 0, sizeof(value));
     }
 
     DeleteDBCursor(dbcp);

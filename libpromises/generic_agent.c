@@ -63,8 +63,6 @@
 
 #include <cf-windows-functions.h>
 
-#include <ftw.h>
-
 static pthread_once_t pid_cleanup_once = PTHREAD_ONCE_INIT;
 
 static char PIDFILE[CF_BUFSIZE];

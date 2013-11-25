@@ -1399,7 +1399,7 @@ static SyntaxTypeMatch CheckSelection(const char *type, const char *name, const 
                         if (strcmp(promise_type_syntax[j].promise_type, type) == 0 && strcmp(promise_type_syntax[j].promise_type, "*") != 0)
                         {
                             char output[CF_BUFSIZE];
-                            snprintf(output, CF_BUFSIZE, "lval %s belongs to promise type \'%s:\' but this is '\%s\'\n",
+                            snprintf(output, CF_BUFSIZE, "lval %s belongs to promise type \'%s:\' but this is \'%s\'\n",
                                      lval, promise_type_syntax[j].promise_type, type);
                             yyerror(output);
                             return SYNTAX_TYPE_MATCH_OK;

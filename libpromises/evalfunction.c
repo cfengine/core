@@ -3949,7 +3949,6 @@ static FnCallResult FnCallPeerLeaders(EvalContext *ctx, FnCall *fp, Rlist *final
     }
     else
     {
-        free(file_buffer);
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
@@ -4275,6 +4274,13 @@ static FnCallResult FnCallOn(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
     struct tm tmv;
     DateTemplate i;
 
+    d[0] = 1900;
+    d[1] = 1;
+    d[2] = 0;
+    d[3] = 0;
+    d[4] = 0;
+    d[5] = 0;
+
     buffer[0] = '\0';
 
 /* begin fn specific content */
@@ -4351,6 +4357,13 @@ static FnCallResult FnCallLaterThan(EvalContext *ctx, FnCall *fp, Rlist *finalar
     struct tm tmv;
     DateTemplate i;
 
+    d[0] = 1900;
+    d[1] = 1;
+    d[2] = 0;
+    d[3] = 0;
+    d[4] = 0;
+    d[5] = 0;
+
     buffer[0] = '\0';
 
 /* begin fn specific content */
@@ -4403,6 +4416,12 @@ static FnCallResult FnCallAgoDate(EvalContext *ctx, FnCall *fp, Rlist *finalargs
     long d[6];
     DateTemplate i;
 
+    d[0] = 1900;
+    d[1] = 1;
+    d[2] = 0;
+    d[3] = 0;
+    d[4] = 0;
+    d[5] = 0;
     buffer[0] = '\0';
 
 /* begin fn specific content */
@@ -4447,6 +4466,12 @@ static FnCallResult FnCallAccumulatedDate(EvalContext *ctx, FnCall *fp, Rlist *f
     long d[6], cftime;
     DateTemplate i;
 
+    d[0] = 1900;
+    d[1] = 1;
+    d[2] = 0;
+    d[3] = 0;
+    d[4] = 0;
+    d[5] = 0;
     buffer[0] = '\0';
 
 /* begin fn specific content */

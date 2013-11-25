@@ -432,7 +432,7 @@ void StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
                 info = ConnectionInfoNew();
                 if (info)
                 {
-                    ConnectionInfoSetSocket(info, sd_accepted);
+                    ConnectionInfoSetSocket(info, sd);
                     ServerEntryPoint(ctx, ipaddr, info);
                     ConnectionInfoDestroy(&info);
                 }

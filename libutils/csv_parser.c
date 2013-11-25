@@ -346,5 +346,11 @@ char *GetCsvLineNext(FILE *fp)
         prev = current;
     }
 
+    if (StringWriterLength(buffer) <= 0)
+    {
+        WriterClose(buffer);
+        return NULL;
+    }
+
     return StringWriterClose(buffer);
 }

@@ -1145,7 +1145,7 @@ void CfEncryptGetFile(ServerFileGetState *args)
    exact number of bytes transmitted, which might change during
    encryption, hence we need to handle this with transactions */
 {
-    int fd, n_read, cipherlen, finlen;
+    int fd, n_read, cipherlen = 0, finlen = 0;
     off_t total = 0, count = 0;
     char sendbuffer[CF_BUFSIZE + 256], out[CF_BUFSIZE], filename[CF_BUFSIZE];
     unsigned char iv[32] =

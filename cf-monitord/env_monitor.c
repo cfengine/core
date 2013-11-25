@@ -361,6 +361,12 @@ static Averages EvalAvQ(EvalContext *ctx, char *t)
     time_t now = time(NULL);
     int i;
 
+    for (i = 0; i < CF_OBSERVABLES; i++)
+    {
+    last5_vals[i] = 0;
+    This[i] = 0;
+    }
+
     Banner("Evaluating and storing new weekly averages");
 
     if ((lastweek_vals = GetCurrentAverages(t)) == NULL)

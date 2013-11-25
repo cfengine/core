@@ -98,7 +98,7 @@ void RemoteSysLog(int log_priority, const char *log_string)
             char timebuffer[26];
             pid_t pid = getpid();
 
-            snprintf(message, rfc3164_len, "<%u>%.15s %s %s[%d]: %s",
+            snprintf(message, rfc3164_len, "<%i>%.15s %s %s[%d]: %s",
                      pri, cf_strtimestamp_local(now, timebuffer) + 4,
                      VFQNAME, VPREFIX, pid, log_string);
             err = sendto(sd, message, strlen(message),

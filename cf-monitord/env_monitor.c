@@ -355,10 +355,14 @@ static Averages EvalAvQ(EvalContext *ctx, char *t)
 {
     Averages *lastweek_vals, newvals;
     double last5_vals[CF_OBSERVABLES];
-    double This[CF_OBSERVABLES];
     char name[CF_MAXVARSIZE];
     time_t now = time(NULL);
     int i;
+
+    for (i = 0; i < CF_OBSERVABLES; i++)
+    {
+        last5_vals[i] = 0.0;
+    }
 
     Banner("Evaluating and storing new weekly averages");
 
@@ -374,7 +378,7 @@ static Averages EvalAvQ(EvalContext *ctx, char *t)
     {
         double delta2;
         char desc[CF_BUFSIZE];
-
+        double This;
         name[0] = '\0';
         GetObservable(i, name, desc);
 
@@ -397,23 +401,23 @@ static Averages EvalAvQ(EvalContext *ctx, char *t)
 
         // lastweek_vals is last week's stored data
         
-        This[i] =
+        This =
             RejectAnomaly(CF_THIS[i], lastweek_vals->Q[i].expect, lastweek_vals->Q[i].var, LOCALAV.Q[i].expect,
                           LOCALAV.Q[i].var);
 
-        newvals.Q[i].q = This[i];
+        newvals.Q[i].q = This;
         newvals.last_seen = now;  // Record the freshness of this slot
         
-        LOCALAV.Q[i].q = This[i];
+        LOCALAV.Q[i].q = This;
 
         Log(LOG_LEVEL_DEBUG, "Previous week's '%s.q' %lf", name, lastweek_vals->Q[i].q);
         Log(LOG_LEVEL_DEBUG, "Previous week's '%s.var' %lf", name, lastweek_vals->Q[i].var);
         Log(LOG_LEVEL_DEBUG, "Previous week's '%s.ex' %lf", name, lastweek_vals->Q[i].expect);
 
         Log(LOG_LEVEL_DEBUG, "Just measured: CF_THIS[%s] = %lf", name, CF_THIS[i]);
-        Log(LOG_LEVEL_DEBUG, "Just sanitized: This[%s] = %lf", name, This[i]);
+        Log(LOG_LEVEL_DEBUG, "Just sanitized: This[%s] = %lf", name, This);
 
-        newvals.Q[i].expect = WAverage(This[i], lastweek_vals->Q[i].expect, WAGE);
+        newvals.Q[i].expect = WAverage(This, lastweek_vals->Q[i].expect, WAGE);
         LOCALAV.Q[i].expect = WAverage(newvals.Q[i].expect, LOCALAV.Q[i].expect, ITER);
 
         if (last5_vals[i] > 0)
@@ -430,7 +434,7 @@ static Averages EvalAvQ(EvalContext *ctx, char *t)
         // Save the last measured value as the value "from five minutes ago" to get the gradient
         last5_vals[i] = newvals.Q[i].q;
 
-        delta2 = (This[i] - lastweek_vals->Q[i].expect) * (This[i] - lastweek_vals->Q[i].expect);
+        delta2 = (This - lastweek_vals->Q[i].expect) * (This - lastweek_vals->Q[i].expect);
 
         if (lastweek_vals->Q[i].var > delta2 * 2.0)
         {
@@ -447,12 +451,12 @@ static Averages EvalAvQ(EvalContext *ctx, char *t)
         Log(LOG_LEVEL_VERBOSE, "[%d] %s q=%lf, var=%lf, ex=%lf", i, name,
               newvals.Q[i].q, newvals.Q[i].var, newvals.Q[i].expect);
 
-        Log(LOG_LEVEL_VERBOSE, "[%d] = %lf -> (%lf#%lf) local [%lf#%lf]", i, This[i], newvals.Q[i].expect,
+        Log(LOG_LEVEL_VERBOSE, "[%d] = %lf -> (%lf#%lf) local [%lf#%lf]", i, This, newvals.Q[i].expect,
               sqrt(newvals.Q[i].var), LOCALAV.Q[i].expect, sqrt(LOCALAV.Q[i].var));
 
-        if (This[i] > 0)
+        if (This > 0)
         {
-            Log(LOG_LEVEL_VERBOSE, "Storing %.2lf in %s", This[i], name);
+            Log(LOG_LEVEL_VERBOSE, "Storing %.2lf in %s", This, name);
         }
     }
 

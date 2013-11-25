@@ -292,7 +292,7 @@ static void KeepPromises(EvalContext *ctx, Policy *policy)
 static void ThisAgentInit(void)
 {
     umask(077);
-    sprintf(VPREFIX, "cf-monitord");
+    strcpy(VPREFIX, "cf-monitord");
 
     SetReferenceTime();
     SetStartTime();

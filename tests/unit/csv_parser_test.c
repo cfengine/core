@@ -143,6 +143,13 @@ static void test_get_next_line()
         char *line = GetCsvLineNext(fp);
         assert_true(line);
         assert_string_equal(line, "field_1, field_2\r\n");
+
+        Seq *list = SeqParseCsvString(line);
+        assert_true(list);
+        assert_int_equal(SeqLength(list), 2);
+        assert_string_equal(SeqAt(list, 0), "field_1");
+        assert_string_equal(SeqAt(list, 1), " field_2");
+        SeqDestroy(list);
         free(line);
     }
 
@@ -150,6 +157,13 @@ static void test_get_next_line()
         char *line = GetCsvLineNext(fp);
         assert_true(line);
         assert_string_equal(line, "field_1, \"value1 \nvalue2 \nvalue3\"\r\n");
+
+        Seq *list = SeqParseCsvString(line);
+        assert_true(list);
+        assert_int_equal(SeqLength(list), 2);
+        assert_string_equal(SeqAt(list, 0), "field_1");
+        assert_string_equal(SeqAt(list, 1), "value1 \nvalue2 \nvalue3");
+        SeqDestroy(list);
         free(line);
     }
 
@@ -157,6 +171,12 @@ static void test_get_next_line()
         char *line = GetCsvLineNext(fp);
         assert_true(line);
         assert_string_equal(line, "field_1, \"field,2\"\r\n");
+        Seq *list = SeqParseCsvString(line);
+        assert_true(list);
+        assert_int_equal(SeqLength(list), 2);
+        assert_string_equal(SeqAt(list, 0), "field_1");
+        assert_string_equal(SeqAt(list, 1), "field,2");
+        SeqDestroy(list);
         free(line);
     }
 

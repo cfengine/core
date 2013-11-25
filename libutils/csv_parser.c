@@ -24,6 +24,7 @@
 
 #include <csv_parser.h>
 #include <alloc.h>
+#include <writer.h>
 
 typedef enum
 {
@@ -308,13 +309,42 @@ Seq *SeqParseCsvString(const char *string)
 
     ret = LaunchCsvAutomata(string, &newlist);
 
-    if (!ret)
+    if (ret == CSV_ERR_OK)
     {
         return newlist;
     }
-    else
+
+    return NULL;
+}
+
+char *GetCsvLineNext(FILE *fp)
+{
+    if (!fp)
     {
-        SeqDestroy(newlist);
         return NULL;
     }
+
+    Writer *buffer = StringWriter();
+
+    int prev = 0;
+
+    for (;;)
+    {
+        int current = 0;
+        if ((current = fgetc(fp)) == EOF)
+        {
+            break;
+        }
+
+        WriterWriteChar(buffer, (char)current);
+
+        if (((char)current == '\n') && ((char)prev) == '\r')
+        {
+            break;
+        }
+
+        prev = current;
+    }
+
+    return StringWriterClose(buffer);
 }

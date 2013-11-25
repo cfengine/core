@@ -30,5 +30,5 @@
 #include <sequence.h>
 
 Seq *SeqParseCsvString(const char *string);
-
+char *GetCsvLineNext(FILE *fp);
 #endif

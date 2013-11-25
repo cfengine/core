@@ -521,7 +521,7 @@ static bool KillLockHolder(const char *lock)
 
 void PromiseRuntimeHash(const Promise *pp, const char *salt, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMethod type)
 {
-    static const char *PACK_UPIFELAPSED_SALT = "packageuplist";
+    static const char PACK_UPIFELAPSED_SALT[] = "packageuplist";
 
     EVP_MD_CTX context;
     int md_len;
@@ -537,7 +537,7 @@ void PromiseRuntimeHash(const Promise *pp, const char *salt, unsigned char diges
     EVP_DigestInit(&context, md);
 
 // multiple packages (promisers) may share same package_list_update_ifelapsed lock
-    if (!(salt && (strncmp(salt, PACK_UPIFELAPSED_SALT, sizeof(PACK_UPIFELAPSED_SALT) - 1) == 0)))
+    if ( (!salt) || strcmp(salt, PACK_UPIFELAPSED_SALT) )
     {
         EVP_DigestUpdate(&context, pp->promiser, strlen(pp->promiser));
     }

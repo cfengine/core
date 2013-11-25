@@ -310,7 +310,7 @@ static void RenderContent(Writer *out, const char *content, size_t len, bool htm
     }
 }
 
-static bool RenderVariablePrimitive(Writer *out, const JsonElement *primitive, bool escaped)
+static bool RenderVariablePrimitive(Writer *out, const JsonElement *primitive, const bool escaped)
 {
     switch (JsonGetPrimitiveType(primitive))
     {
@@ -349,8 +349,9 @@ static bool RenderVariablePrimitive(Writer *out, const JsonElement *primitive, b
         return true;
 
     default:
-        assert(false);
+        assert(!"Unrecognised JSON primitive type");
     }
+    return false;
 }
 
 static bool RenderVariable(Writer *out,

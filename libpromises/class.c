@@ -87,7 +87,7 @@ void ClassTableDestroy(ClassTable *table)
     }
 }
 
-bool ClassTablePut(ClassTable *table, const char *ns, const char *name, bool is_soft, ContextScope scope, char *tags)
+bool ClassTablePut(ClassTable *table, const char *ns, const char *name, bool is_soft, ContextScope scope, const char *tags)
 {
     assert(name);
     assert(is_soft || (!ns || strcmp("default", ns) == 0)); // hard classes should have default namespace

@@ -88,7 +88,7 @@ static const char *GetAgentAbortingContext(const EvalContext *ctx)
     return NULL;
 }
 
-void EvalContextHeapAddSoft(EvalContext *ctx, const char *context, const char *ns, char *tags)
+void EvalContextHeapAddSoft(EvalContext *ctx, const char *context, const char *ns, const char *tags)
 {
     char context_copy[CF_MAXVARSIZE];
     char canonified_context[CF_MAXVARSIZE];
@@ -148,12 +148,12 @@ void EvalContextHeapAddSoft(EvalContext *ctx, const char *context, const char *n
 
 /*******************************************************************/
 
-void EvalContextClassPutHard(EvalContext *ctx, const char *name, char *tags)
+void EvalContextClassPutHard(EvalContext *ctx, const char *name, const char *tags)
 {
     EvalContextClassPut(ctx, NULL, name, false, CONTEXT_SCOPE_NAMESPACE, tags);
 }
 
-static void EvalContextStackFrameAddSoft(EvalContext *ctx, const char *context, char *tags)
+static void EvalContextStackFrameAddSoft(EvalContext *ctx, const char *context, const char *tags)
 {
     assert(SeqLength(ctx->stack) > 0);
 
@@ -1104,7 +1104,7 @@ Class *EvalContextClassGet(const EvalContext *ctx, const char *ns, const char *n
     return ClassTableGet(ctx->global_classes, ns, name);
 }
 
-bool EvalContextClassPut(EvalContext *ctx, const char *ns, const char *name, bool is_soft, ContextScope scope, char *tags)
+bool EvalContextClassPut(EvalContext *ctx, const char *ns, const char *name, bool is_soft, ContextScope scope, const char *tags)
 {
     {
         char context_copy[CF_MAXVARSIZE];
@@ -1251,7 +1251,7 @@ char *EvalContextStackPath(const EvalContext *ctx)
     return StringWriterClose(path);
 }
 
-bool EvalContextVariablePutSpecial(EvalContext *ctx, SpecialScope scope, const char *lval, const void *value, DataType type, char *tags)
+bool EvalContextVariablePutSpecial(EvalContext *ctx, SpecialScope scope, const char *lval, const void *value, DataType type, const char *tags)
 {
     switch (scope)
     {
@@ -1416,7 +1416,7 @@ static void VarRefStackQualify(const EvalContext *ctx, VarRef *ref)
     }
 }
 
-bool EvalContextVariablePut(EvalContext *ctx, const VarRef *ref, const void *value, DataType type, char *tags)
+bool EvalContextVariablePut(EvalContext *ctx, const VarRef *ref, const void *value, DataType type, const char *tags)
 {
     assert(type != DATA_TYPE_NONE);
     assert(ref);

@@ -50,7 +50,7 @@ int fstatat(int dirfd, const char *pathname, struct stat *buf, int flags)
                          GetErrorStrFromCode(mutex_err));
     }
 
-    cwd = open(".", O_RDONLY | O_DIRECTORY);
+    cwd = open(".", O_RDONLY);
     if (cwd < 0)
     {
         mutex_err = pthread_mutex_unlock(&CHDIR_LOCK);

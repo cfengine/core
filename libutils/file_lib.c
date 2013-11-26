@@ -160,7 +160,7 @@ int safe_open(const char *pathname, int flags, ...)
     {
         next_component = NULL;
     }
-    currentfd = open(first_dir, O_RDONLY | O_DIRECTORY);
+    currentfd = open(first_dir, O_RDONLY);
     if (currentfd < 0)
     {
         return -1;
@@ -219,7 +219,7 @@ int safe_open(const char *pathname, int flags, ...)
         }
         else
         {
-            int new_currentfd = openat(currentfd, component, O_RDONLY | O_DIRECTORY);
+            int new_currentfd = openat(currentfd, component, O_RDONLY);
             close(currentfd);
             if (new_currentfd < 0)
             {
@@ -334,7 +334,7 @@ int safe_chdir(const char *path)
 #ifdef __MINGW32__
     return chdir(path);
 #else
-    int fd = safe_open(path, O_RDONLY | O_DIRECTORY);
+    int fd = safe_open(path, O_RDONLY);
     if (fd < 0)
     {
         return -1;

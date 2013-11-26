@@ -41,7 +41,7 @@ Dir *DirOpen(const char *dirname)
     Dir *ret = xcalloc(1, sizeof(Dir));
     int safe_fd;
 
-    safe_fd = safe_open(dirname, O_RDONLY | O_DIRECTORY);
+    safe_fd = safe_open(dirname, O_RDONLY);
     if (safe_fd < 0)
     {
         free(ret);

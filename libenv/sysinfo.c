@@ -42,6 +42,7 @@
 #include <audit.h>
 #include <pipes.h>
 #include <known_dirs.h>
+#include <unix_iface.h>
 
 #include <cf-windows-functions.h>
 
@@ -351,7 +352,7 @@ void DiscoverVersion(EvalContext *ctx)
     }
 }
 
-void GetNameInfo3(EvalContext *ctx, AgentType agent_type)
+static void GetNameInfo3(EvalContext *ctx, bool use_monitoring_data)
 {
     int i, found = false;
     char *sp, workbuf[CF_BUFSIZE];
@@ -647,7 +648,7 @@ void GetNameInfo3(EvalContext *ctx, AgentType agent_type)
 
 #endif /* !__MINGW32__ */
 
-    if (agent_type != AGENT_TYPE_EXECUTOR && !LOOKUP)
+    if (use_monitoring_data)
     {
         LoadSlowlyVaryingObservations(ctx);
     }
@@ -774,7 +775,7 @@ void GetNameInfo3(EvalContext *ctx, AgentType agent_type)
 
 /*******************************************************************/
 
-void Get3Environment(EvalContext *ctx, AgentType agent_type)
+static void Get3Environment(EvalContext *ctx, bool use_monitoring_data)
 {
     char env[CF_BUFSIZE], context[CF_BUFSIZE], name[CF_MAXVARSIZE], value[CF_BUFSIZE];
     FILE *fp;
@@ -852,7 +853,7 @@ void Get3Environment(EvalContext *ctx, AgentType agent_type)
 
 /*****************************************************************************/
 
-            if (agent_type != AGENT_TYPE_EXECUTOR)
+            if (use_monitoring_data)
             {
                 EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_MON, name, value, DATA_TYPE_STRING);
                 Log(LOG_LEVEL_DEBUG, "Setting new monitoring scalar '%s' => '%s'", name, value);
@@ -868,7 +869,7 @@ void Get3Environment(EvalContext *ctx, AgentType agent_type)
     Log(LOG_LEVEL_VERBOSE, "Environment data loaded");
 }
 
-void BuiltinClasses(EvalContext *ctx)
+static void BuiltinClasses(EvalContext *ctx)
 {
     char vbuff[CF_BUFSIZE];
 
@@ -905,7 +906,7 @@ static void SetFlavour(EvalContext *ctx, const char *flavour)
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "flavor", flavour, DATA_TYPE_STRING);
 }
 
-void OSClasses(EvalContext *ctx)
+static void OSClasses(EvalContext *ctx)
 {
 #ifdef __linux__
     struct stat statbuf;
@@ -2638,3 +2639,13 @@ static time_t GetBootTimeFromUptimeCommand(time_t now)
     return(uptime ? (now - uptime) : -1);
 }
 #endif
+
+void DetectEnvironment(EvalContext *ctx, bool use_monitoring_data, bool use_name_info)
+{
+    if (use_name_info)
+        GetNameInfo3(ctx, use_monitoring_data);
+    GetInterfacesInfo(ctx);
+    Get3Environment(ctx, use_monitoring_data);
+    BuiltinClasses(ctx);
+    OSClasses(ctx);
+}

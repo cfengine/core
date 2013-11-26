@@ -27,10 +27,7 @@
 
 #include <cf3.defs.h>
 
-void GetNameInfo3(EvalContext *ctx, AgentType agent_type);
-void Get3Environment(EvalContext *ctx, AgentType agent_type);
-void BuiltinClasses(EvalContext *ctx);
-void OSClasses(EvalContext *ctx);
+void DetectEnvironment(EvalContext *ctx, bool use_monitoring_data, bool use_name_info);
 
 void CreateHardClassesFromCanonification(EvalContext *ctx, const char *canonified);
 

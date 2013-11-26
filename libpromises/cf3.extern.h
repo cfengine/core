@@ -79,7 +79,6 @@ extern HashMethod CF_DEFAULT_DIGEST;
 extern int CF_DEFAULT_DIGEST_LEN;
 
 extern int CF_PERSISTENCE;
-extern int LOOKUP;
 
 extern const char *CF_AGENTTYPES[];
 

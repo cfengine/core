@@ -34,7 +34,6 @@ int SHOWREPORTS = false;
 /* operational state                                                         */
 /*****************************************************************************/
 
-int LOOKUP = false;
 bool FIPS_MODE = false;
 
 struct utsname VSYSNAME;

@@ -428,11 +428,6 @@ void EvalContextHeapPersistentLoadAll(EvalContext *ctx)
     time_t now = time(NULL);
     CfState q;
 
-    if (LOOKUP)
-    {
-        return;
-    }
-
     Banner("Loading persistent classes");
 
     if (!OpenDB(&dbp, dbid_state))

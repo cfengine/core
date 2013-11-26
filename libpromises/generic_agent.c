@@ -760,73 +760,67 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
     OpenLog(LOG_USER);
     SetSyslogFacility(LOG_USER);
 
-    if (!LOOKUP)                /* cf-know should not do this in lookup mode */
+    Log(LOG_LEVEL_VERBOSE, "Work directory is %s", CFWORKDIR);
+
+    snprintf(vbuff, CF_BUFSIZE, "%s%cinputs%cupdate.conf", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
+    MakeParentDirectory(vbuff, force);
+    snprintf(vbuff, CF_BUFSIZE, "%s%cbin%ccf-agent -D from_cfexecd", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
+    MakeParentDirectory(vbuff, force);
+    snprintf(vbuff, CF_BUFSIZE, "%s%coutputs%cspooled_reports", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
+    MakeParentDirectory(vbuff, force);
+    snprintf(vbuff, CF_BUFSIZE, "%s%clastseen%cintermittencies", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
+    MakeParentDirectory(vbuff, force);
+    snprintf(vbuff, CF_BUFSIZE, "%s%creports%cvarious", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
+    MakeParentDirectory(vbuff, force);
+
+    snprintf(vbuff, CF_BUFSIZE, "%s%cinputs", CFWORKDIR, FILE_SEPARATOR);
+
+    if (stat(vbuff, &sb) == -1)
     {
-        Log(LOG_LEVEL_VERBOSE, "Work directory is %s", CFWORKDIR);
+        FatalError(ctx, " No access to WORKSPACE/inputs dir");
+    }
+    else
+    {
+        chmod(vbuff, sb.st_mode | 0700);
+    }
 
-        snprintf(vbuff, CF_BUFSIZE, "%s%cinputs%cupdate.conf", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
-        MakeParentDirectory(vbuff, force);
-        snprintf(vbuff, CF_BUFSIZE, "%s%cbin%ccf-agent -D from_cfexecd", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
-        MakeParentDirectory(vbuff, force);
-        snprintf(vbuff, CF_BUFSIZE, "%s%coutputs%cspooled_reports", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
-        MakeParentDirectory(vbuff, force);
-        snprintf(vbuff, CF_BUFSIZE, "%s%clastseen%cintermittencies", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
-        MakeParentDirectory(vbuff, force);
-        snprintf(vbuff, CF_BUFSIZE, "%s%creports%cvarious", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
-        MakeParentDirectory(vbuff, force);
+    snprintf(vbuff, CF_BUFSIZE, "%s%coutputs", CFWORKDIR, FILE_SEPARATOR);
 
-        snprintf(vbuff, CF_BUFSIZE, "%s%cinputs", CFWORKDIR, FILE_SEPARATOR);
+    if (stat(vbuff, &sb) == -1)
+    {
+        FatalError(ctx, " No access to WORKSPACE/outputs dir");
+    }
+    else
+    {
+        chmod(vbuff, sb.st_mode | 0700);
+    }
 
-        if (stat(vbuff, &sb) == -1)
-        {
-            FatalError(ctx, " No access to WORKSPACE/inputs dir");
-        }
-        else
-        {
-            chmod(vbuff, sb.st_mode | 0700);
-        }
+    sprintf(ebuff, "%s%cstate%ccf_procs", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
+    MakeParentDirectory(ebuff, force);
 
-        snprintf(vbuff, CF_BUFSIZE, "%s%coutputs", CFWORKDIR, FILE_SEPARATOR);
+    if (stat(ebuff, &statbuf) == -1)
+    {
+        CreateEmptyFile(ebuff);
+    }
 
-        if (stat(vbuff, &sb) == -1)
-        {
-            FatalError(ctx, " No access to WORKSPACE/outputs dir");
-        }
-        else
-        {
-            chmod(vbuff, sb.st_mode | 0700);
-        }
+    sprintf(ebuff, "%s%cstate%ccf_rootprocs", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
 
-        sprintf(ebuff, "%s%cstate%ccf_procs", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
-        MakeParentDirectory(ebuff, force);
+    if (stat(ebuff, &statbuf) == -1)
+    {
+        CreateEmptyFile(ebuff);
+    }
 
-        if (stat(ebuff, &statbuf) == -1)
-        {
-            CreateEmptyFile(ebuff);
-        }
+    sprintf(ebuff, "%s%cstate%ccf_otherprocs", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
 
-        sprintf(ebuff, "%s%cstate%ccf_rootprocs", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
-
-        if (stat(ebuff, &statbuf) == -1)
-        {
-            CreateEmptyFile(ebuff);
-        }
-
-        sprintf(ebuff, "%s%cstate%ccf_otherprocs", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
-
-        if (stat(ebuff, &statbuf) == -1)
-        {
-            CreateEmptyFile(ebuff);
-        }
+    if (stat(ebuff, &statbuf) == -1)
+    {
+        CreateEmptyFile(ebuff);
     }
 
     OpenNetwork();
     CryptoInitialize();
 
-    if (!LOOKUP)
-    {
-        CheckWorkingDirectories(ctx);
-    }
+    CheckWorkingDirectories(ctx);
 
     /* Initialize keys and networking. cf-key, doesn't need keys. In fact it
        must function properly even without them, so that it generates them! */

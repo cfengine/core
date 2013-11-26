@@ -580,6 +580,14 @@ char *rpl_ctime(const time_t *t);
 # define NGROUPS 20
 #endif
 
+#if !HAVE_DECL_OPENAT
+int openat(int dirfd, const char *pathname, int flags, ...);
+int fstatat(int dirfd, const char *pathname, struct stat *buf, int flags);
+#ifndef AT_SYMLINK_NOFOLLOW
+#define AT_SYMLINK_NOFOLLOW 0x1000
+#endif
+#endif
+
 /*******************************************************************/
 /*  Windows                                                        */
 /*******************************************************************/

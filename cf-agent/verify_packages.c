@@ -29,6 +29,7 @@
 #include <dir.h>
 #include <files_names.h>
 #include <files_interfaces.h>
+#include <file_lib.h>
 #include <vars.h>
 #include <conversion.h>
 #include <expand.h>
@@ -125,7 +126,7 @@ PromiseResult VerifyPackagesPromise(EvalContext *ctx, Promise *pp)
 
 // Start by reseting the root directory in case yum tries to glob regexs(!)
 
-    if (chdir("/") != 0)
+    if (safe_chdir("/") != 0)
     {
         Log(LOG_LEVEL_ERR, "Failed to chdir into '/'");
     }

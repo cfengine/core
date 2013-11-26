@@ -34,6 +34,7 @@
 #include <mutex.h>
 #include <exec_tools.h>
 #include <misc_lib.h>
+#include <file_lib.h>
 #include <assert.h>
 #include <crypto.h>
 #include <known_dirs.h>
@@ -354,8 +355,8 @@ static int CompareResult(const char *filename, const char *prev_file)
 
     int rtn = 0;
 
-    FILE *old_fp = fopen(prev_file, "r");
-    FILE *new_fp = fopen(filename, "r");
+    FILE *old_fp = safe_fopen(prev_file, "r");
+    FILE *new_fp = safe_fopen(filename, "r");
     if (old_fp && new_fp)
     {
         const char *errptr;

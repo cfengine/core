@@ -256,7 +256,7 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, Promise *pp
         }
 
         ChopLastNode(basedir);
-        if (chdir(basedir))
+        if (safe_chdir(basedir))
         {
             Log(LOG_LEVEL_ERR, "Failed to chdir into '%s'", basedir);
         }
@@ -619,7 +619,7 @@ PromiseResult ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes
 
             Writer *ouput_writer = NULL;
             {
-                FILE *output_file = fopen(pp->promiser, "w");
+                FILE *output_file = safe_fopen(pp->promiser, "w");
                 if (!output_file)
                 {
                     cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Output file '%s' could not be opened for writing", pp->promiser);

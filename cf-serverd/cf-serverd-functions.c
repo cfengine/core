@@ -657,7 +657,7 @@ static int GenerateAvahiConfig(const char *path)
 {
     FILE *fout;
     Writer *writer = NULL;
-    fout = fopen(path, "w+");
+    fout = safe_fopen(path, "w+");
     if (fout == NULL)
     {
         Log(LOG_LEVEL_ERR, "Unable to open '%s'", path);

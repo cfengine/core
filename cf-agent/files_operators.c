@@ -293,7 +293,7 @@ static bool SaveItemListCallback(const char *dest_filename, void *param)
     FILE *fp;
 
     //saving list to file
-    if ((fp = fopen(dest_filename, "w")) == NULL)
+    if ((fp = safe_fopen(dest_filename, "w")) == NULL)
     {
         Log(LOG_LEVEL_ERR, "Unable to open destination file '%s' for writing. (fopen: %s)",
             dest_filename, GetErrorStr());

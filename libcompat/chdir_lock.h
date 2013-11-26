@@ -22,41 +22,6 @@
   included file COSL.txt.
 */
 
-#include <hashes.h>
-#include <file_lib.h>
+#include <pthread.h>
 
-int FileChecksum(const char *filename, unsigned char digest[EVP_MAX_MD_SIZE + 1])
-{
-    FILE *file = safe_fopen(filename, "rb");
-    if (!file)
-    {
-        printf("%s can't be opened\n", filename);
-        return 0;
-    }
-    else
-    {
-        const EVP_MD *md = EVP_get_digestbyname("md5");
-
-        if (!md)
-        {
-            fclose(file);
-            return 0;
-        }
-
-        EVP_MD_CTX context;
-        EVP_DigestInit(&context, md);
-
-        int len = 0;
-        unsigned char buffer[1024];
-        while ((len = fread(buffer, 1, 1024, file)))
-        {
-            EVP_DigestUpdate(&context, buffer, len);
-        }
-
-        unsigned int md_len = 0;
-        EVP_DigestFinal(&context, digest, &md_len);
-        fclose(file);
-
-        return md_len;
-    }
-}
+extern pthread_mutex_t CHDIR_LOCK;

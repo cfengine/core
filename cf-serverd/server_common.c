@@ -34,6 +34,7 @@ static const int CF_NOSIZE = -1;
 #include <files_names.h>
 #include <files_interfaces.h>
 #include <files_hashes.h>
+#include <file_lib.h>
 #include <env_context.h>
 #include <dir.h>
 #include <conversion.h>
@@ -1028,7 +1029,7 @@ void CfGetFile(ServerFileGetState *args)
 
 /* File transfer */
 
-    if ((fd = open(filename, O_RDONLY)) == -1)
+    if ((fd = safe_open(filename, O_RDONLY)) == -1)
     {
         Log(LOG_LEVEL_ERR, "Open error of file '%s'. (open: %s)",
             filename, GetErrorStr());
@@ -1175,7 +1176,7 @@ void CfEncryptGetFile(ServerFileGetState *args)
 
     EVP_CIPHER_CTX_init(&ctx);
 
-    if ((fd = open(filename, O_RDONLY)) == -1)
+    if ((fd = safe_open(filename, O_RDONLY)) == -1)
     {
         Log(LOG_LEVEL_ERR, "Open error of file '%s'. (open: %s)", filename, GetErrorStr());
         FailedTransfer(conn_info);

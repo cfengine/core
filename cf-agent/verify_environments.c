@@ -1071,6 +1071,7 @@ void DeleteEnvironmentsContext(void)
 
 PromiseResult VerifyEnvironmentsPromise(ARG_UNUSED EvalContext *ctx, ARG_UNUSED Promise *pp)
 {
+    return PROMISE_RESULT_NOOP;
 }
 
 #endif

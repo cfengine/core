@@ -66,7 +66,7 @@ static void KeepControlPromises(EvalContext *ctx, Policy *policy);
 static int HailServer(EvalContext *ctx, char *host);
 static int ParseHostname(char *hostname, char *new_hostname);
 static void SendClassData(AgentConnection *conn);
-static void HailExec(EvalContext *ctx, AgentConnection *conn, char *peer, char *recvbuffer, char *sendbuffer);
+static void HailExec(AgentConnection *conn, char *peer, char *recvbuffer, char *sendbuffer);
 static FILE *NewStream(char *name);
 static void DeleteStream(FILE *fp);
 
@@ -540,7 +540,7 @@ static int HailServer(EvalContext *ctx, char *host)
 
 /* Check trust interaction*/
 
-    HailExec(ctx, conn, peer, recvbuffer, sendbuffer);
+    HailExec(conn, peer, recvbuffer, sendbuffer);
 
     RlistDestroy(fc.servers);
 
@@ -725,7 +725,7 @@ static void SendClassData(AgentConnection *conn)
 
 /********************************************************************/
 
-static void HailExec(EvalContext *ctx, AgentConnection *conn, char *peer, char *recvbuffer, char *sendbuffer)
+static void HailExec(AgentConnection *conn, char *peer, char *recvbuffer, char *sendbuffer)
 {
     FILE *fp = stdout;
     char *sp;

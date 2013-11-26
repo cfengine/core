@@ -475,6 +475,17 @@ char *StringEncodeBase64(const char *str, size_t len)
     return out;
 }
 
+void StringBytesToHex(const unsigned char *bytes, size_t num_bytes, char out[(num_bytes * 2) + 1])
+{
+    static const char *hex_chars = "0123456789abcdef";
+    for (size_t i = 0; i < num_bytes; i++)
+    {
+        out[(2 * i)] = hex_chars[(bytes[i] >> 4) & 0xf];
+        out[(2 * i) + 1] = hex_chars[bytes[i] & 0xf];
+    }
+    out[num_bytes * 2] = '\0';
+}
+
 bool IsStrIn(const char *str, const char **strs)
 {
     int i;

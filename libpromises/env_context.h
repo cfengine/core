@@ -118,8 +118,9 @@ struct EvalContext_
 
     StringSet *dependency_handles;
     RBTree *function_cache;
-
     PromiseSet *promises_done;
+
+    void *enterprise_state;
 };
 
 EvalContext *EvalContextNew(void);
@@ -204,5 +205,14 @@ void cfPS(EvalContext *ctx, LogLevel level, PromiseResult status, const Promise 
 void ClassAuditLog(EvalContext *ctx, const Promise *pp, Attributes attr, PromiseResult status);
 
 ENTERPRISE_VOID_FUNC_2ARG_DECLARE(void, TrackTotalCompliance, ARG_UNUSED PromiseResult, status, ARG_UNUSED const Promise *, pp);
+
+ENTERPRISE_FUNC_0ARG_DECLARE(void *, EvalContextEnterpriseStateNew);
+ENTERPRISE_VOID_FUNC_1ARG_DECLARE(void, EvalContextEnterpriseStateDestroy,
+                                  void *, estate);
+
+ENTERPRISE_VOID_FUNC_3ARG_DECLARE(void, EvalContextLogPromiseIterationOutcome,
+                                  EvalContext *, ctx,
+                                  const Promise *, pp,
+                                  PromiseResult, result);
 
 #endif

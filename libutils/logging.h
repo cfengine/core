@@ -45,6 +45,16 @@ typedef enum
 
 const char *LogLevelToString(LogLevel level);
 
+/**
+ * @brief Return the standard timestamp format used in logging.
+ * @param dest Output buffer
+ * @param n size of output buffer
+ * @param timestamp Timespec to format
+ * @return True if successful, otherwise "<unknown>" will be printed to buffer
+ */
+bool LoggingFormatTimestamp(char dest[64], size_t n, struct tm *timestamp);
+
+
 void Log(LogLevel level, const char *fmt, ...) FUNC_ATTR_PRINTF(2, 3);
 void LogRaw(LogLevel level, const char *prefix, void *buf, size_t buflen);
 void VLog(LogLevel level, const char *fmt, va_list ap);

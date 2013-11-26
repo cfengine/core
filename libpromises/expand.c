@@ -172,8 +172,6 @@ static void ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp, Rlist *lists
         }
 
         Promise *pexp = EvalContextStackPushPromiseIterationFrame(ctx, i, iter_ctx);
-
-        assert(ActOnPromise);
         ActOnPromise(ctx, pexp, param);
 
         if (strcmp(pp->parent_promise_type->name, "vars") == 0 || strcmp(pp->parent_promise_type->name, "meta") == 0)

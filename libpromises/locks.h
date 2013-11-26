@@ -37,6 +37,7 @@ void YieldCurrentLock(CfLock lock);
 void GetLockName(char *lockname, const char *locktype, const char *base, const Rlist *params);
 
 void PurgeLocks(void);
+void PromiseRuntimeHash(const Promise *pp, const char *salt, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMethod type);
 
 int WriteLock(const char *lock);
 CF_DB *OpenLock(void);

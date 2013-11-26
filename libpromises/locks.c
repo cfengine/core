@@ -519,7 +519,7 @@ static bool KillLockHolder(const char *lock)
 
 #endif
 
-static void PromiseRuntimeHash(const Promise *pp, const char *salt, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMethod type)
+void PromiseRuntimeHash(const Promise *pp, const char *salt, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMethod type)
 {
     static const char *PACK_UPIFELAPSED_SALT = "packageuplist";
 

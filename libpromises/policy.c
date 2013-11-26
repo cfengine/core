@@ -2350,6 +2350,29 @@ const Bundle *PromiseGetBundle(const Promise *pp)
     return pp->parent_promise_type->parent_bundle;
 }
 
+static void BundlePath(Writer *w, const Bundle *bp)
+{
+    WriterWrite(w, bp->ns);
+    WriterWriteChar(w, '/');
+    WriterWrite(w, bp->name);
+}
+
+static void PromiseTypePath(Writer *w, const PromiseType *pt)
+{
+    BundlePath(w, pt->parent_bundle);
+    WriterWriteChar(w, '/');
+    WriterWrite(w, pt->name);
+}
+
+void PromisePath(Writer *w, const Promise *pp)
+{
+    PromiseTypePath(w, pp->parent_promise_type);
+    WriterWriteChar(w, '/');
+    WriterWriteChar(w, '\'');
+    WriterWrite(w, pp->promiser);
+    WriterWriteChar(w, '\'');
+}
+
 const char *PromiseGetHandle(const Promise *pp)
 {
     return (const char *)PromiseGetImmediateRvalValue("handle", pp, RVAL_TYPE_SCALAR);

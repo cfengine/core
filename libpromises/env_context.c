@@ -722,8 +722,9 @@ EvalContext *EvalContextNew(void)
     ctx->promises_done = PromiseSetNew();
     ctx->function_cache = RBTreeNew(NULL, NULL, NULL,
                                     NULL, NULL, NULL);
-
     PromiseLoggingInit(ctx);
+
+    ctx->enterprise_state = EvalContextEnterpriseStateNew();
 
     return ctx;
 }
@@ -732,6 +733,8 @@ void EvalContextDestroy(EvalContext *ctx)
 {
     if (ctx)
     {
+        EvalContextEnterpriseStateDestroy(ctx->enterprise_state);
+
         PromiseLoggingFinish(ctx);
 
         DeleteItemList(ctx->heap_abort);

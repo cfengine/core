@@ -261,6 +261,11 @@ const char *PromiseGetNamespace(const Promise *pp);
 const Bundle *PromiseGetBundle(const Promise *pp);
 
 /**
+ * @brief Write a string describing the promise location in policy, e.g. /default/foo/packages/'emacs'
+ */
+void PromisePath(Writer *w, const Promise *pp);
+
+/**
  * @brief Return handle of the promise.
  * @param pp
  * @return Promise handle or NULL if no handle is provided

@@ -142,6 +142,16 @@ static const char *LogLevelToColor(LogLevel level)
     }
 }
 
+bool LoggingFormatTimestamp(char dest[64], size_t n, struct tm *timestamp)
+{
+    if (strftime(dest, n, "%Y-%m-%dT%H:%M:%S%z", timestamp) == 0)
+    {
+        strlcpy(dest, "<unknown>", n);
+        return false;
+    }
+    return true;
+}
+
 static void LogToConsole(const char *msg, LogLevel level, bool color)
 {
     FILE *output_file = (level <= LOG_LEVEL_WARNING) ? stderr : stdout;
@@ -164,12 +174,7 @@ static void LogToConsole(const char *msg, LogLevel level, bool color)
         localtime_r(&now_seconds, &now);
 
         char formatted_timestamp[64];
-        if (strftime(formatted_timestamp, sizeof(formatted_timestamp),
-                     "%Y-%m-%dT%H:%M:%S%z", &now) == 0)
-        {
-            // There was some massacre formating the timestamp. Wow
-            strlcpy(formatted_timestamp, "<unknown>", sizeof(formatted_timestamp));
-        }
+        LoggingFormatTimestamp(formatted_timestamp, 64, &now);
 
         const char *string_level = LogLevelToString(level);
 

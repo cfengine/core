@@ -426,7 +426,7 @@ void test_safe_open_root()
 {
     int fd;
     struct stat statbuf;
-    assert_true((fd = safe_open("/", O_RDONLY | O_DIRECTORY)) >= 0);
+    assert_true((fd = safe_open("/", O_RDONLY)) >= 0);
     assert_int_equal(fchdir(fd), 0);
     assert_int_equal(stat("etc", &statbuf), 0);
     close(fd);

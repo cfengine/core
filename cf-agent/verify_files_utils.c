@@ -2941,13 +2941,13 @@ static int VerifyFinderType(EvalContext *ctx, const char *file, Attributes a, Pr
             if (retval >= 0)
             {
                 cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "Setting Finder Type code of '%s' to '%s'", file, a.perms.findertype);
-                result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
+                *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
             }
             else
             {
                 cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Setting Finder Type code of '%s' to '%s' failed", file,
                      a.perms.findertype);
-                result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
+                *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
             }
 
             return retval;
@@ -2963,7 +2963,7 @@ static int VerifyFinderType(EvalContext *ctx, const char *file, Attributes a, Pr
     else
     {
         cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "Finder Type code of '%s' to '%s' is as promised", file, a.perms.findertype);
-        result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
+        *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
         return 0;
     }
 }

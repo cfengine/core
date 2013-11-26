@@ -205,4 +205,9 @@ void ClassAuditLog(EvalContext *ctx, const Promise *pp, Attributes attr, Promise
 
 ENTERPRISE_VOID_FUNC_2ARG_DECLARE(void, TrackTotalCompliance, ARG_UNUSED PromiseResult, status, ARG_UNUSED const Promise *, pp);
 
+ENTERPRISE_VOID_FUNC_3ARG_DECLARE(void, EvalContextLogPromiseIterationOutcome,
+                                  EvalContext *, ctx,
+                                  const Promise *, pp,
+                                  PromiseResult, result);
+
 #endif

@@ -144,8 +144,7 @@ static void test_remove(void)
     UpdateLastSawHost("SHA-12345", "127.0.0.64", false, 556);
 
     //RemoveHostFromLastSeen("SHA-12345");
-    int res;
-    res = DeleteDigestFromLastSeen("SHA-12345", NULL);
+    DeleteDigestFromLastSeen("SHA-12345", NULL);
 
     DBHandle *db;
     OpenDB(&db, dbid_lastseen);
@@ -165,9 +164,8 @@ static void test_remove_ip(void)
     UpdateLastSawHost("SHA-12345", "127.0.0.64", true, 555);
     UpdateLastSawHost("SHA-12345", "127.0.0.64", false, 556);
 
-    int res;
     char digest[CF_BUFSIZE];
-    res = DeleteIpFromLastSeen("127.0.0.64", digest);
+    DeleteIpFromLastSeen("127.0.0.64", digest);
 
     DBHandle *db;
     OpenDB(&db, dbid_lastseen);

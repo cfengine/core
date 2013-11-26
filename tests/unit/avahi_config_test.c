@@ -19,7 +19,7 @@ static void generateTestFile()
     fprintf(fp, "<service>\n");
     fprintf(fp, "<type>_cfenginehub._tcp</type>\n");
     DetermineCfenginePort();
-    fprintf(fp, "<port>%s</port>\n", STR_CFENGINEPORT);
+    fprintf(fp, "<port>5308</port>\n");
     fprintf(fp, "</service>\n");
     fprintf(fp, "</service-group>\n");
     fclose(fp);

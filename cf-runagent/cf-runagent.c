@@ -558,7 +558,7 @@ static void KeepControlPromises(EvalContext *ctx, Policy *policy)
     RUNATTR.copy.trustkey = false;
     RUNATTR.copy.encrypt = true;
     RUNATTR.copy.force_ipv4 = false;
-    RUNATTR.copy.portnumber = SHORT_CFENGINEPORT;
+    RUNATTR.copy.portnumber = CFENGINE_PORT;
 
 /* Keep promised agent behaviour - control bodies */
 
@@ -682,18 +682,14 @@ static void KeepControlPromises(EvalContext *ctx, Policy *policy)
 
 static int ParseHostname(char *name, char *hostname)
 {
-    int port = ntohs(SHORT_CFENGINEPORT);
-
-    if (strchr(name, ':'))
+    int port;
+    if (sscanf(name, "%250[^:]:%d", hostname, &port) != 2)
     {
-        sscanf(name, "%250[^:]:%d", hostname, &port);
-    }
-    else
-    {
-        strncpy(hostname, name, CF_MAXVARSIZE);
+        strlcpy(hostname, name, CF_MAXVARSIZE);
+        port = CFENGINE_PORT;
     }
 
-    return (port);
+    return port;
 }
 
 /********************************************************************/

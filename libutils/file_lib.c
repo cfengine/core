@@ -205,15 +205,16 @@ int safe_open(const char *pathname, int flags, ...)
         flags &= ~O_TRUNC;
     }
 
-    if (path[0] == '/')
+    next_component = path;
+    if (*next_component == '/')
     {
         first_dir = "/";
-        next_component = path + 1;
+        // Eliminate double slashes.
+        while (*(++next_component) == '/') { /*noop*/ }
     }
     else
     {
         first_dir = ".";
-        next_component = path;
     }
     if (!*next_component)
     {
@@ -231,7 +232,9 @@ int safe_open(const char *pathname, int flags, ...)
         next_component = strchr(component + 1, '/');
         if (next_component)
         {
-            *(next_component++) = '\0';
+            *next_component = '\0';
+            // Eliminate double slashes.
+            while (*(++next_component) == '/') { /*noop*/ }
         }
 
         struct stat stat_before, stat_after;

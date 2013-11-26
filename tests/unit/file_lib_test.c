@@ -214,6 +214,35 @@ void test_safe_open_generic_absolute_dir()
     return_to_test_dir();
 }
 
+void test_safe_open_double_slashes_relative()
+{
+    setup_tempfiles();
+
+    int fd;
+    assert_true((fd = safe_open(TEST_SUBSUBDIR "//..////" TEST_FILE, O_RDONLY)) >= 0);
+    check_contents(fd, TEST_SUBSTRING);
+    close(fd);
+
+    return_to_test_dir();
+}
+
+void test_safe_open_double_slashes_absolute()
+{
+    setup_tempfiles();
+
+    chdir_or_exit(TEST_SUBSUBDIR);
+
+    int fd;
+    assert_true((fd = safe_open("/" TEMP_DIR "/"
+                                TEST_SUBDIR "//..//"
+                                TEST_SUBSUBDIR "/..//"
+                                TEST_FILE, O_RDONLY)) >= 0);
+    check_contents(fd, TEST_SUBSTRING);
+    close(fd);
+
+    return_to_test_dir();
+}
+
 void test_safe_open_unsafe_symlink()
 {
     setup_tempfiles();
@@ -626,6 +655,8 @@ int main()
             unit_test(test_safe_open_upupdir),
             unit_test(test_safe_open_generic_relative_dir),
             unit_test(test_safe_open_generic_absolute_dir),
+            unit_test(test_safe_open_double_slashes_relative),
+            unit_test(test_safe_open_double_slashes_absolute),
             unit_test(test_safe_open_unsafe_symlink),
             unit_test(test_safe_open_safe_symlink),
             unit_test(test_safe_open_unsafe_inserted_symlink),

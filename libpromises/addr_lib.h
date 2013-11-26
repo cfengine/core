@@ -33,5 +33,6 @@ int FuzzyHostParse(char *arg2);
 int FuzzyHostMatch(char *arg0, char *arg1, char *basename);
 int FuzzyMatchParse(char *item);
 bool IsInterfaceAddress(const char *adr);
+int ParseHostname(char *hostname, char *new_hostname);
 
 #endif

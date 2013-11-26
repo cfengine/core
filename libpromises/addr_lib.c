@@ -556,3 +556,15 @@ bool IsInterfaceAddress(const char *adr)
     Log(LOG_LEVEL_DEBUG, "'%s' is not one of my interfaces", adr);
     return false;
 }
+
+int ParseHostname(char *name, char *hostname)
+{
+    int port;
+    if (sscanf(name, "%250[^:]:%d", hostname, &port) != 2)
+    {
+        strlcpy(hostname, name, CF_MAXVARSIZE);
+        port = CFENGINE_PORT;
+    }
+
+    return port;
+}

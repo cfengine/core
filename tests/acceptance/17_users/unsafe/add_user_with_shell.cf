@@ -8,6 +8,7 @@ body common control
 {
       inputs => { "../../default.cf.sub", "user_queries.cf.sub" };
       bundlesequence  => { default("$(this.promise_filename)") };
+      cache_system_functions => "no";
 }
 
 #######################################################

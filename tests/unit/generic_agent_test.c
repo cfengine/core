@@ -2,7 +2,7 @@
 
 #include <generic_agent.h>
 #include <env_context.h>
-#include <sysinfo.h>
+#include <sysinfo_priv.h>
 
 void test_load_masterfiles(void)
 {

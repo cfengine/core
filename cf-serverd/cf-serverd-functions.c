@@ -42,7 +42,7 @@
 #include <sysinfo.h>
 #include <time_classes.h>
 #include <connection_info.h>
-
+#include <file_lib.h>
 
 static const size_t QUEUESIZE = 50;
 int NO_FORK = false;

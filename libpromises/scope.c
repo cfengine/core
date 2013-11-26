@@ -278,7 +278,7 @@ void ScopeMapBodyArgs(EvalContext *ctx, const Body *body, const Rlist *args)
                     void *rval = res.rval.item;
 
                     VarRef *ref = VarRefParseFromNamespaceAndScope(lval, NULL, "body", CF_NS, '.');
-                    EvalContextVariablePut(ctx, ref, rval, res.rval.type);
+                    EvalContextVariablePut(ctx, ref, rval, arg_type);
                     VarRefDestroy(ref);
                 }
             }

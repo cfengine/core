@@ -23,6 +23,7 @@
 */
 
 #include <math_eval.h>
+#include <compiler.h>
 
 #define MATH_EVAL_STACK_SIZE 1024
 
@@ -96,6 +97,13 @@ double math_eval_pop(double *stack, int *stackp)
     char fname[50];                                                     \
     double stack[MATH_EVAL_STACK_SIZE];                                 \
     int stackp;
+
+/* Mark unused functions as such */
+struct _yycontext;
+static int yyAccept(struct _yycontext *yy, int tp0) FUNC_UNUSED;
+static void yyPush(struct _yycontext *yy, char *text, int count) FUNC_UNUSED;
+static void yyPop(struct _yycontext *yy, char *text, int count) FUNC_UNUSED;
+static void yySet(struct _yycontext *yy, char *text, int count) FUNC_UNUSED;
 
 #include <math.pc>
 

@@ -52,6 +52,12 @@
 #  define FUNC_DEPRECATED(warning_text)
 #endif
 
+#if defined(__GNUC__)
+#  define FUNC_UNUSED __attribute__((unused))
+#else
+#  define FUNC_UNUSED
+#endif
+
 #if defined(__GNUC__) && ((__GNUC__ * 100 +  __GNUC_MINOR__ * 10) >= 240)
 # define ARG_UNUSED __attribute__((unused))
 #else

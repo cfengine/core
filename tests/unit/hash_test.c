@@ -221,7 +221,8 @@ int main()
     {
         unit_test(test_HashString),
         unit_test(test_HashDescriptor),
-        unit_test(test_HashKey)
+        unit_test(test_HashKey),
+        unit_test(test_HashCopy)
     };
     int result = run_tests(tests);
     tests_teardown();

@@ -5,11 +5,11 @@
  * test code which has gcov disabled.
  */
 
-void __gcov_init(void *p)
+void __gcov_init(ARG_UNUSED void *p)
 {
 }
 
-void __gcov_merge_add(void *p, unsigned n_counters)
+void __gcov_merge_add(ARG_UNUSED void *p, ARG_UNUSED unsigned n_counters)
 {
 }
 

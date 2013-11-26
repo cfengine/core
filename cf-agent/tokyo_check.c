@@ -102,18 +102,18 @@ static DBMeta *DBMetaNewDirect(const char *dbfilename)
     dbmeta->record_map = StringMapNew();
 
     Log(LOG_LEVEL_VERBOSE, "Database            : %s", dbmeta->dbpath);
-    Log(LOG_LEVEL_VERBOSE, "  number of buckets : %llu",
-            (long long unsigned) dbmeta->bucket_count);
-    Log(LOG_LEVEL_VERBOSE, "  offset of buckets : %llu",
-            (long long unsigned) dbmeta->bucket_offset);
-    Log(LOG_LEVEL_VERBOSE, "  bytes per pointer : %llu",
-            (long long unsigned) dbmeta->bytes_per);
-    Log(LOG_LEVEL_VERBOSE, "  alignment power   : %llu",
-            (long long unsigned) dbmeta->alignment_pow);
-    Log(LOG_LEVEL_VERBOSE, "  number of records : %llu",
-            (long long unsigned) dbmeta->record_count);
-    Log(LOG_LEVEL_VERBOSE, "  offset of records : %llu",
-            (long long unsigned) dbmeta->record_offset);
+    Log(LOG_LEVEL_VERBOSE, "  number of buckets : %" PRIu64,
+            dbmeta->bucket_count);
+    Log(LOG_LEVEL_VERBOSE, "  offset of buckets : %" PRIu64,
+            dbmeta->bucket_offset);
+    Log(LOG_LEVEL_VERBOSE, "  bytes per pointer : %hd",
+            dbmeta->bytes_per);
+    Log(LOG_LEVEL_VERBOSE, "  alignment power   : %hd",
+            dbmeta->alignment_pow);
+    Log(LOG_LEVEL_VERBOSE, "  number of records : %" PRIu64,
+            dbmeta->record_count);
+    Log(LOG_LEVEL_VERBOSE, "  offset of records : %" PRIu64,
+            dbmeta->record_offset);
 
     return dbmeta;
 }
@@ -135,19 +135,19 @@ static int AddOffsetToMapUnlessExists(StringMap ** tree, uint64_t offset,
                                       int64_t bucket_index)
 {
     char *tmp;
-    xasprintf(&tmp, "%zu", offset);
+    xasprintf(&tmp, "%" PRIu64, offset);
     char *val;
     if (StringMapHasKey(*tree, tmp) == false)
     {
-        xasprintf(&val, "%zu", bucket_index);
+        xasprintf(&val, "%" PRIu64, bucket_index);
         StringMapInsert(*tree, tmp, val);
     }
     else
     {
         Log(LOG_LEVEL_ERR,
-            "Duplicate offset for value %llu at index %lld, other value %llu, other index '%s'",
-             (long long unsigned) offset, (long long) bucket_index,
-             (long long unsigned) offset, (char *) StringMapGet(*tree, tmp));
+            "Duplicate offset for value %" PRIu64 " at index %" PRId64 ", other value %" PRIu64 ", other index '%s'",
+             offset, bucket_index,
+             offset, (char *) StringMapGet(*tree, tmp));
         free(tmp);
     }
     return 0;
@@ -187,8 +187,8 @@ static int DBMetaPopulateOffsetMap(DBMeta * dbmeta)
         }
     }
 
-    Log(LOG_LEVEL_VERBOSE, "Found %llu buckets with offsets",
-            (long long unsigned) StringMapSize(dbmeta->offset_map));
+    Log(LOG_LEVEL_VERBOSE, "Found %zu buckets with offsets",
+            StringMapSize(dbmeta->offset_map));
     return 0;
 }
 
@@ -251,7 +251,7 @@ static bool DBMetaReadOneRecord(DBMeta * dbmeta, TokyoCabinetRecord * rec)
 
         if (MAGIC_DATA_BLOCK == rec->magic)
         {
-            Log(LOG_LEVEL_VERBOSE, "off=%zu[c8]", rec->offset);
+            Log(LOG_LEVEL_VERBOSE, "off=%" PRIu64 "[c8]", rec->offset);
             int length = 1;
 
             length += read(dbmeta->fd, &(rec->hash), 1);
@@ -273,7 +273,7 @@ static bool DBMetaReadOneRecord(DBMeta * dbmeta, TokyoCabinetRecord * rec)
         }
         else if (MAGIC_FREE_BLOCK == rec->magic)
         {
-            Log(LOG_LEVEL_VERBOSE, "off=%zu[b0]", rec->offset);
+            Log(LOG_LEVEL_VERBOSE, "off=%" PRIu64 "[b0]", rec->offset);
             uint32_t length;
             rec->length = 1;
             rec->length += read(dbmeta->fd, &length, sizeof(length));
@@ -335,7 +335,7 @@ static int DBMetaPopulateRecordMap(DBMeta * dbmeta)
             {
 
                 char *key;
-                xasprintf(&key, "%zu", new_rec.offset);
+                xasprintf(&key, "%" PRIu64, new_rec.offset);
                 if (StringMapHasKey(dbmeta->offset_map, key) == true)
                 {
                     if (key)
@@ -356,7 +356,7 @@ static int DBMetaPopulateRecordMap(DBMeta * dbmeta)
 
             if (new_rec.left > 0)
             {
-                Log(LOG_LEVEL_VERBOSE, "handle left %zu", new_rec.left);
+                Log(LOG_LEVEL_VERBOSE, "handle left %" PRIu64, new_rec.left);
                 if (AddOffsetToMapUnlessExists
                     (&(dbmeta->offset_map), new_rec.left, -1))
                 {
@@ -366,7 +366,7 @@ static int DBMetaPopulateRecordMap(DBMeta * dbmeta)
 
             if (new_rec.right > 0)
             {
-                Log(LOG_LEVEL_VERBOSE, "handle right %zu", new_rec.right);
+                Log(LOG_LEVEL_VERBOSE, "handle right %" PRIu64, new_rec.right);
                 if (AddOffsetToMapUnlessExists
                     (&(dbmeta->offset_map), new_rec.right, -1))
                 {
@@ -383,15 +383,15 @@ static int DBMetaPopulateRecordMap(DBMeta * dbmeta)
         }
         else
         {
-            Log(LOG_LEVEL_ERR, "NO record found at offset %llu",
-                    (long long unsigned) new_rec.offset);
+            Log(LOG_LEVEL_ERR, "NO record found at offset %" PRIu64,
+                    new_rec.offset);
         }
     }
 
     // if we are not at the end of the file, output the current file offset
     // with an appropriate message and return
-    Log(LOG_LEVEL_VERBOSE, "Found %zu data records and %zu free block records",
-            data_blocks, free_blocks);
+    Log(LOG_LEVEL_VERBOSE, "Found %" PRIu64 " data records and "
+        "%" PRIu64 " free block records", data_blocks, free_blocks);
 
     return 0;
 }
@@ -403,10 +403,10 @@ static int DBMetaGetResults(DBMeta * dbmeta)
     int ret = 0;
 
     Log(LOG_LEVEL_VERBOSE,
-        "Found %zu offsets listed in buckets that do not have records",
+        "Found %" PRIu64 " offsets listed in buckets that do not have records",
          buckets_no_record);
     Log(LOG_LEVEL_VERBOSE,
-        "Found %zu records in data that do not have an offset pointing to them",
+        "Found %" PRIu64 " records in data that do not have an offset pointing to them",
          records_no_bucket);
 
     if (buckets_no_record > 0)

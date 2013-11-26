@@ -350,6 +350,7 @@ static bool RenderVariablePrimitive(Writer *out, const JsonElement *primitive, b
 
     default:
         assert(false);
+        return false;
     }
 }
 

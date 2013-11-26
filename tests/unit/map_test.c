@@ -8,7 +8,8 @@
 
 #include <alloc.h>
 
-static unsigned int ConstHash(const void *key, unsigned int max)
+static unsigned int ConstHash(const void *key, unsigned int seed,
+                              unsigned int max)
 {
     return 0;
 }

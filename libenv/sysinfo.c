@@ -409,7 +409,7 @@ void GetNameInfo3(EvalContext *ctx, AgentType agent_type)
 #ifdef __sun
     if (strcmp(VSYSNAME.machine, "i86pc") == 0)
     {
-        EvalContextClassPutHard(ctx, "solarisx86");
+        EvalContextClassPutHard(ctx, "solarisx86", "goal=state,inventory,source=agent");
     }
 #endif
 
@@ -599,19 +599,19 @@ void GetNameInfo3(EvalContext *ctx, AgentType agent_type)
 #ifdef __MINGW32__
     if (NovaWin_GetWinDir(workbuf, sizeof(workbuf)))
     {
-        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "windir", workbuf, DATA_TYPE_STRING);
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "windir", workbuf, DATA_TYPE_STRING, "goal=state,source=agent");
     }
 
     if (NovaWin_GetSysDir(workbuf, sizeof(workbuf)))
     {
-        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "winsysdir", workbuf, DATA_TYPE_STRING);
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "winsysdir", workbuf, DATA_TYPE_STRING, "goal=state,source=agent");
 
         char filename[CF_BUFSIZE];
         if (snprintf(filename, sizeof(filename), "%s%s", workbuf, "\\WindowsPowerShell\\v1.0\\powershell.exe") < sizeof(filename))
         {
             if (NovaWin_FileExists(filename))
             {
-                EvalContextClassPutHard(ctx, "powershell");
+                EvalContextClassPutHard(ctx, "powershell", "goal=state,inventory,source=agent");
                 Log(LOG_LEVEL_VERBOSE, "Additional hard class defined as: %s", "powershell");
             }
         }
@@ -619,19 +619,19 @@ void GetNameInfo3(EvalContext *ctx, AgentType agent_type)
 
     if (NovaWin_GetProgDir(workbuf, sizeof(workbuf)))
     {
-        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "winprogdir", workbuf, DATA_TYPE_STRING);
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "winprogdir", workbuf, DATA_TYPE_STRING, "goal=state,source=agent");
     }
 
 # ifdef _WIN64
 // only available on 64 bit windows systems
     if (NovaWin_GetEnv("PROGRAMFILES(x86)", workbuf, sizeof(workbuf)))
     {
-        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "winprogdir86", workbuf, DATA_TYPE_STRING);
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "winprogdir86", workbuf, DATA_TYPE_STRING, "goal=state,source=agent");
     }
 
 # else/* NOT _WIN64 */
 
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "winprogdir86", "", DATA_TYPE_STRING);
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "winprogdir86", "", DATA_TYPE_STRING, "goal=state,source=agent");
 
 # endif
 
@@ -756,9 +756,9 @@ void GetNameInfo3(EvalContext *ctx, AgentType agent_type)
     zid = getzoneid();
     getzonenamebyid(zid, zone, ZONENAME_MAX);
 
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "zone", zone, DATA_TYPE_STRING);
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "zone", zone, DATA_TYPE_STRING, "goal=state,inventory,source=agent");
     snprintf(vbuff, CF_BUFSIZE - 1, "zone_%s", zone);
-    EvalContextClassPutHard(ctx, vbuff);
+    EvalContextClassPutHard(ctx, vbuff, "goal=state,inventory,source=agent");
 
     if (strcmp(zone, "global") == 0)
     {
@@ -1069,59 +1069,59 @@ void OSClasses(EvalContext *ctx)
             if (strncmp(sp, "5.0", 3) == 0)
             {
                 Log(LOG_LEVEL_VERBOSE, "This appears to be Windows 2000");
-                EvalContextClassPutHard(ctx, "Win2000");
+                EvalContextClassPutHard(ctx, "Win2000", "goal=state,inventory,source=agent");
             }
 
             if (strncmp(sp, "5.1", 3) == 0)
             {
                 Log(LOG_LEVEL_VERBOSE, "This appears to be Windows XP");
-                EvalContextClassPutHard(ctx, "WinXP");
+                EvalContextClassPutHard(ctx, "WinXP", "goal=state,inventory,source=agent");
             }
 
             if (strncmp(sp, "5.2", 3) == 0)
             {
                 Log(LOG_LEVEL_VERBOSE, "This appears to be Windows Server 2003");
-                EvalContextClassPutHard(ctx, "WinServer2003");
+                EvalContextClassPutHard(ctx, "WinServer2003", "goal=state,inventory,source=agent");
             }
 
             if (strncmp(sp, "6.1", 3) == 0)
             {
                 Log(LOG_LEVEL_VERBOSE, "This appears to be Windows Vista");
-                EvalContextClassPutHard(ctx, "WinVista");
+                EvalContextClassPutHard(ctx, "WinVista", "goal=state,inventory,source=agent");
             }
 
             if (strncmp(sp, "6.3", 3) == 0)
             {
                 Log(LOG_LEVEL_VERBOSE, "This appears to be Windows Server 2008");
-                EvalContextClassPutHard(ctx, "WinServer2008");
+                EvalContextClassPutHard(ctx, "WinServer2008", "goal=state,inventory,source=agent");
             }
         }
     }
 
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "crontab", "", DATA_TYPE_STRING);
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "crontab", "", DATA_TYPE_STRING, "goal=state,source=agent");
 
 #endif /* __CYGWIN__ */
 
 #ifdef __MINGW32__
-    EvalContextClassPutHard(ctx, VSYSNAME.release); // code name - e.g. Windows Vista
-    EvalContextClassPutHard(ctx, VSYSNAME.version); // service pack number - e.g. Service Pack 3
+    EvalContextClassPutHard(ctx, VSYSNAME.release, "goal=state,inventory,source=agent"); // code name - e.g. Windows Vista
+    EvalContextClassPutHard(ctx, VSYSNAME.version, "goal=state,inventory,source=agent"); // service pack number - e.g. Service Pack 3
 
     if (strstr(VSYSNAME.sysname, "workstation"))
     {
-        EvalContextClassPutHard(ctx, "WinWorkstation");
+        EvalContextClassPutHard(ctx, "WinWorkstation", "goal=state,inventory,source=agent");
     }
     else if (strstr(VSYSNAME.sysname, "server"))
     {
-        EvalContextClassPutHard(ctx, "WinServer");
+        EvalContextClassPutHard(ctx, "WinServer", "goal=state,inventory,source=agent");
     }
     else if (strstr(VSYSNAME.sysname, "domain controller"))
     {
-        EvalContextClassPutHard(ctx, "DomainController");
-        EvalContextClassPutHard(ctx, "WinServer");
+        EvalContextClassPutHard(ctx, "DomainController", "goal=state,inventory,source=agent");
+        EvalContextClassPutHard(ctx, "WinServer", "goal=state,inventory,source=agent");
     }
     else
     {
-        EvalContextClassPutHard(ctx, "unknown_ostype");
+        EvalContextClassPutHard(ctx, "unknown_ostype", "goal=state,inventory,source=agent");
     }
 
     SetFlavour(ctx, "windows");
@@ -1163,8 +1163,8 @@ void OSClasses(EvalContext *ctx)
 #ifdef __sun
     if (FullTextMatch(ctx, "joyent.*", VSYSNAME.version))
     {
-        EvalContextClassPutHard(ctx, "smartos");
-        EvalContextClassPutHard(ctx, "smartmachine");
+        EvalContextClassPutHard(ctx, "smartos", "goal=state,inventory,source=agent");
+        EvalContextClassPutHard(ctx, "smartmachine", "goal=state,inventory,source=agent");
     }
 #endif
     

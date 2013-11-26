@@ -89,7 +89,6 @@ check_PROGRAMS = \
 	mon_processes_test \
 	mustache_test \
 	class_test \
-	tls_generic_test \
 	version_test \
 	hash_test \
 	key_test

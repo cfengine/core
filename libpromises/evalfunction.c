@@ -52,6 +52,7 @@
 #include "exec_tools.h"
 #include "policy.h"
 #include "misc_lib.h"
+#include "file_lib.h"
 #include "fncall.h"
 #include "audit.h"
 #include "sort.h"
@@ -1567,7 +1568,7 @@ static FnCallResult FnCallGetFields(EvalContext *ctx, FnCall *fp, Rlist *finalar
     char *split = RlistScalarValue(finalargs->next->next);
     char *array_lval = RlistScalarValue(finalargs->next->next->next);
 
-    if ((fin = fopen(filename, "r")) == NULL)
+    if ((fin = safe_fopen(filename, "r")) == NULL)
     {
         Log(LOG_LEVEL_ERR, "File '%s' could not be read in getfields(). (fopen: %s)", filename, GetErrorStr());
         return (FnCallResult) { FNCALL_FAILURE };
@@ -1639,7 +1640,7 @@ static FnCallResult FnCallCountLinesMatching(EvalContext *ctx, FnCall *fp, Rlist
     char *regex = RlistScalarValue(finalargs);
     char *filename = RlistScalarValue(finalargs->next);
 
-    if ((fin = fopen(filename, "r")) == NULL)
+    if ((fin = safe_fopen(filename, "r")) == NULL)
     {
         Log(LOG_LEVEL_VERBOSE, "File '%s' could not be read in countlinesmatching(). (fopen: %s)", filename, GetErrorStr());
         snprintf(retval, CF_SMALLBUF - 1, "0");
@@ -3576,7 +3577,7 @@ static FnCallResult FnCallRegLine(EvalContext *ctx, FnCall *fp, Rlist *finalargs
 
     strcpy(buffer, "!any");
 
-    if ((fin = fopen(argv1, "r")) != NULL)
+    if ((fin = safe_fopen(argv1, "r")) != NULL)
     {
         for (;;)
         {

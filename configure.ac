@@ -752,6 +752,10 @@ AC_REPLACE_FUNCS(pthread_attr_setstacksize)
 AC_CHECK_DECLS(pthread_sigmask, [], [], [[#include <signal.h>]])
 AC_REPLACE_FUNCS(pthread_sigmask)
 
+AC_CHECK_DECLS([openat], [], [], [[#include <fcntl.h>]])
+AC_CHECK_DECLS([fstatat], [], [], [[#include <sys/stat.h>]])
+AC_REPLACE_FUNCS(openat fstatat)
+
 AC_CHECK_DECLS(socketpair, [], [], [[#include <sys/socket.h>]])
 
 dnl ######################################################################

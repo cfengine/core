@@ -17,27 +17,11 @@
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
   To the extent this program is licensed as part of the Enterprise
-  versions of CFEngine, the applicable Commerical Open Source License
+  versions of CFEngine, the applicable Commercial Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
 */
 
-#ifndef CFENGINE_FILE_LIB_H
-#define CFENGINE_FILE_LIB_H
+#include <pthread.h>
 
-#include "platform.h"
-
-/* Write LEN bytes at PTR to descriptor DESC, retrying if interrupted.
-   Return LEN upon success, write's (negative) error code otherwise.  */
-int FullWrite(int desc, const char *ptr, size_t len);
-
-/* Read up to LEN bytes (or EOF) to PTR from descriptor DESC, retrying if interrupted.
-   Return amount of bytes read upon success, -1 otherwise */
-int FullRead(int desc, char *ptr, size_t len);
-
-int safe_open(const char *pathname, int flags, ...);
-FILE *safe_fopen(const char *path, const char *mode);
-
-int safe_chdir(const char *path);
-
-#endif
+extern pthread_mutex_t CHDIR_LOCK;

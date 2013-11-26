@@ -26,6 +26,7 @@
 #include "parser_state.h"
 
 #include "misc_lib.h"
+#include "file_lib.h"
 
 #include <errno.h>
 
@@ -87,7 +88,7 @@ Policy *ParserParseFile(const char *path, unsigned int warnings, unsigned int wa
 
     strncpy(P.filename, path, CF_MAXVARSIZE);
 
-    yyin = fopen(path, "r");
+    yyin = safe_fopen(path, "r");
     if (yyin == NULL)
     {
         Log(LOG_LEVEL_ERR, "While opening file '%s' for parsing. (fopen: %s)", path, GetErrorStr());

@@ -254,7 +254,7 @@ static void VerifyFilePromise(EvalContext *ctx, char *path, Promise *pp)
         }
 
         ChopLastNode(basedir);
-        if (chdir(basedir))
+        if (safe_chdir(basedir))
         {
             Log(LOG_LEVEL_ERR, "Failed to chdir into '%s'", basedir);
         }

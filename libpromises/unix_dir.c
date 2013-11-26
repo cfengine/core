@@ -24,6 +24,7 @@
 
 #include "dir.h"
 #include "dir_priv.h"
+#include "file_lib.h"
 
 
 struct Dir_
@@ -38,10 +39,19 @@ static size_t GetDirentBufferSize(size_t path_len);
 Dir *DirOpen(const char *dirname)
 {
     Dir *ret = xcalloc(1, sizeof(Dir));
+    int dirfd;
 
-    ret->dirh = opendir(dirname);
+    dirfd = safe_open(dirname, O_RDONLY | O_DIRECTORY);
+    if (dirfd < 0)
+    {
+        free(ret);
+        return NULL;
+    }
+
+    ret->dirh = fdopendir(dirfd);
     if (ret->dirh == NULL)
     {
+        close(dirfd);
         free(ret);
         return NULL;
     }

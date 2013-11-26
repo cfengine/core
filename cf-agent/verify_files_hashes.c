@@ -243,8 +243,8 @@ int CompareBinaryFiles(char *file1, char *file2, struct stat *sstat, struct stat
 
     if ((fc.servers == NULL) || (strcmp(fc.servers->item, "localhost") == 0))
     {
-        fd1 = open(file1, O_RDONLY | O_BINARY, 0400);
-        fd2 = open(file2, O_RDONLY | O_BINARY, 0400);
+        fd1 = safe_open(file1, O_RDONLY | O_BINARY, 0400);
+        fd2 = safe_open(file2, O_RDONLY | O_BINARY, 0400);
 
         do
         {
@@ -389,7 +389,7 @@ void LogHashChange(char *file, FileState status, char *msg, Promise *pp)
     }
 #endif /* !__MINGW32__ */
 
-    if ((fp = fopen(fname, "a")) == NULL)
+    if ((fp = safe_fopen(fname, "a")) == NULL)
     {
         Log(LOG_LEVEL_ERR, "Could not write to the hash change log. (fopen: %s)", GetErrorStr());
         return;

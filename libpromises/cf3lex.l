@@ -29,10 +29,11 @@
 /*                                                                 */
 /*******************************************************************/
 
-#include "platform.h"
+#include <platform.h>
 
-#include "cf3parse.h"
-#include "parser_state.h"
+#include <cf3parse.h>
+#include <parser_state.h>
+#include <file_lib.h>
 
 /* yyinput/input are generated and unused */
 

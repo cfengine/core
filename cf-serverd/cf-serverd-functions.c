@@ -41,6 +41,7 @@
 #include <known_dirs.h>
 #include <sysinfo.h>
 #include <time_classes.h>
+#include <file_lib.h>
 
 static const size_t QUEUESIZE = 50;
 int NO_FORK = false;

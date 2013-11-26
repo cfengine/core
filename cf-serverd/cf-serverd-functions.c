@@ -623,11 +623,7 @@ void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *con
                 free(existing_policy_server);
             }
 
-            GetNameInfo3(ctx, AGENT_TYPE_SERVER);
-            GetInterfacesInfo(ctx);
-            Get3Environment(ctx, AGENT_TYPE_SERVER);
-            BuiltinClasses(ctx);
-            OSClasses(ctx);
+            DetectEnvironment(ctx, true, true);
             KeepHardClasses(ctx);
 
             EvalContextClassPutHard(ctx, CF_AGENTTYPES[config->agent_type], "goal=state,cfe_internal,source=agent");

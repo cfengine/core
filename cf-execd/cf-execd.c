@@ -546,11 +546,7 @@ static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *c
 
         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "policy_hub", POLICY_SERVER, DATA_TYPE_STRING, "goal=update,source=bootstrap");
 
-        GetNameInfo3(ctx, AGENT_TYPE_EXECUTOR);
-        GetInterfacesInfo(ctx);
-        Get3Environment(ctx, AGENT_TYPE_EXECUTOR);
-        BuiltinClasses(ctx);
-        OSClasses(ctx);
+        DetectEnvironment(ctx, false, true);
 
         EvalContextClassPutHard(ctx, CF_AGENTTYPES[AGENT_TYPE_EXECUTOR], "goal=state,cfe_internal,source=agent");
 
@@ -573,10 +569,7 @@ static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *c
         DeleteItemList(IPADDRESSES);
         IPADDRESSES = NULL;
 
-        GetInterfacesInfo(ctx);
-        Get3Environment(ctx, AGENT_TYPE_EXECUTOR);
-        BuiltinClasses(ctx);
-        OSClasses(ctx);
+        DetectEnvironment(ctx, false, false);
 
         time_t t = SetReferenceTime();
         UpdateTimeClasses(ctx, t);

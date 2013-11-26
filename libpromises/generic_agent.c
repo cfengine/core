@@ -116,12 +116,7 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
     THIS_AGENT_TYPE = config->agent_type;
     EvalContextClassPutHard(ctx, CF_AGENTTYPES[config->agent_type], "goal=state,cfe_internal,source=agent");
 
-    GetNameInfo3(ctx, config->agent_type);
-    GetInterfacesInfo(ctx);
-
-    Get3Environment(ctx, config->agent_type);
-    BuiltinClasses(ctx);
-    OSClasses(ctx);
+    DetectEnvironment(ctx, config->agent_type != AGENT_TYPE_EXECUTOR, true);
 
     EvalContextHeapPersistentLoadAll(ctx);
     LoadSystemConstants(ctx);

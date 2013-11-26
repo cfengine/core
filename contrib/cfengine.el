@@ -703,6 +703,9 @@ to the action header."
                  (when buffer-file-name
                    (shell-quote-argument buffer-file-name)))))
 
+  (set (make-local-variable 'flycheck-cfengine-executable)
+       cfengine-cf-promises)
+
   (set (make-local-variable 'eldoc-documentation-function)
        #'cfengine3-documentation-function)
 

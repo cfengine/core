@@ -34,6 +34,7 @@
 #include "exec_tools.h"
 #include "unix.h"
 #include "man.h"
+#include "file_lib.h"
 
 #include <assert.h>
 

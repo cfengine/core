@@ -207,7 +207,7 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
     if ((PUBKEY == NULL) || (PRIVKEY == NULL))
     {
         /* Try once more to load the keys, maybe the system is converging. */
-        LoadSecretKeys(NULL);
+        LoadSecretKeys();
         if ((PUBKEY == NULL) || (PRIVKEY == NULL))
         {
             Log(LOG_LEVEL_ERR, "No public/private key pair found at '%s'", PublicKeyFile(GetWorkDir()));

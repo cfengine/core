@@ -105,7 +105,12 @@ static void yyPush(struct _yycontext *yy, char *text, int count) FUNC_UNUSED;
 static void yyPop(struct _yycontext *yy, char *text, int count) FUNC_UNUSED;
 static void yySet(struct _yycontext *yy, char *text, int count) FUNC_UNUSED;
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+
 #include <math.pc>
+
+#pragma GCC diagnostic pop
 
 double EvaluateMathInfix(EvalContext *ctx, const char *input, char *failure)
 {

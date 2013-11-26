@@ -23,6 +23,7 @@
 */
 
 #include <sysinfo.h>
+#include <sysinfo_priv.h>
 
 #include <cf3.extern.h>
 

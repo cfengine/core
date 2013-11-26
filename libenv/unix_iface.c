@@ -267,7 +267,7 @@ static void GetMacAddress(EvalContext *ctx, int fd, struct ifreq *ifr, struct if
 
 /******************************************************************/
 
-void GetInterfaceFlags(EvalContext *ctx, struct ifreq *ifr, Rlist **flags)
+static void GetInterfaceFlags(EvalContext *ctx, struct ifreq *ifr, Rlist **flags)
 {
     char name[CF_MAXVARSIZE];
     char buffer[CF_BUFSIZE] = "";

@@ -22,6 +22,7 @@
   included file COSL.txt.
 */
 
+#include <platform.h>
 #include <chdir_lock.h>
 #include <misc_lib.h>
 #include <logging.h>

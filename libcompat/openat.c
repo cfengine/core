@@ -22,6 +22,7 @@
   included file COSL.txt.
 */
 
+#include <platform.h>
 #include <chdir_lock.h>
 #include <misc_lib.h>
 #include <logging.h>
@@ -64,7 +65,7 @@ int openat(int dirfd, const char *pathname, int flags, ...)
     {
         va_list ap;
         va_start(ap, flags);
-        mode = va_arg(ap, mode_t);
+        mode = va_arg(ap, int);
         va_end(ap);
     }
     else

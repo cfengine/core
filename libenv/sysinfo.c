@@ -1163,7 +1163,7 @@ static void OSClasses(EvalContext *ctx)
 #endif
 
 #ifdef __sun
-    if (FullTextMatch(ctx, "joyent.*", VSYSNAME.version))
+    if (StringMatchFull("joyent.*", VSYSNAME.version))
     {
         EvalContextClassPutHard(ctx, "smartos");
         EvalContextClassPutHard(ctx, "smartmachine");

@@ -886,7 +886,7 @@ void XextensionX_library_close(void *handle);
 
 #define xEXTENSIONx_FUNC_DEFINE_WRAPPER_IMPL(__ret, __func, __real__func__par) \
     xEXTENSIONx_FUNC_DEFINE_WRAPPER_IMPL_RET_VALUE(__ret, __func, __real__func__par, \
-        __ret __ret_value = __ret_value; \
+        __ret __ret_value = (__ret)0; \
         (void)__ret_value; \
         return __ret_value)
 

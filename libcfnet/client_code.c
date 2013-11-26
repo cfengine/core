@@ -150,7 +150,11 @@ void DetermineCfenginePort()
     struct servent *server;
 
     errno = 0;
-    if ((server = getservbyname(CFENGINE_SERVICE, "tcp")) == NULL)
+    if ((server = getservbyname(CFENGINE_SERVICE, "tcp")) != NULL)
+    {
+        CFENGINE_PORT = ntohs(server->s_port);
+    }
+    else
     {
         if (errno == 0)
         {
@@ -160,16 +164,10 @@ void DetermineCfenginePort()
         {
             Log(LOG_LEVEL_VERBOSE, "Unable to query services database, using default. (getservbyname: %s)", GetErrorStr());
         }
-        snprintf(STR_CFENGINEPORT, 15, "5308");
-        SHORT_CFENGINEPORT = htons((unsigned short) 5308);
-    }
-    else
-    {
-        snprintf(STR_CFENGINEPORT, 15, "%u", ntohs(server->s_port));
-        SHORT_CFENGINEPORT = server->s_port;
+        CFENGINE_PORT = 5308;
     }
 
-    Log(LOG_LEVEL_VERBOSE, "Setting cfengine default port to %u, '%s'", ntohs(SHORT_CFENGINEPORT), STR_CFENGINEPORT);
+    Log(LOG_LEVEL_VERBOSE, "Setting cfengine default port to %d", CFENGINE_PORT);
 }
 
 /*********************************************************************/
@@ -1197,24 +1195,13 @@ int CopyRegularFileNet(const char *source, const char *dest, off_t size, bool en
 
 int ServerConnect(AgentConnection *conn, const char *host, FileCopy fc)
 {
-    short shortport;
-    char strport[CF_MAXVARSIZE] = { 0 };
+    int port = fc.portnumber ? fc.portnumber : CFENGINE_PORT;
+    char servname[CF_MAXVARSIZE];
     struct timeval tv = { 0 };
 
-    if (fc.portnumber == 0)
-    {
-        shortport = SHORT_CFENGINEPORT;
-        strncpy(strport, STR_CFENGINEPORT, CF_MAXVARSIZE);
-    }
-    else
-    {
-        shortport = htons(fc.portnumber);
-        snprintf(strport, CF_MAXVARSIZE, "%u", (int) fc.portnumber);
-    }
+    snprintf(servname, CF_MAXVARSIZE, "%d", port);
 
-    Log(LOG_LEVEL_VERBOSE,
-        "Set cfengine port number to '%s' = %hu",
-          strport, ntohs(shortport));
+    Log(LOG_LEVEL_VERBOSE, "Set cfengine port number to %d", port);
 
     if ((fc.timeout == (short) CF_NOINT) || (fc.timeout <= 0))
     {
@@ -1237,11 +1224,11 @@ int ServerConnect(AgentConnection *conn, const char *host, FileCopy fc)
     query.ai_family = fc.force_ipv4 ? AF_INET : AF_UNSPEC;
     query.ai_socktype = SOCK_STREAM;
 
-    if ((err = getaddrinfo(host, strport, &query, &response)) != 0)
+    if ((err = getaddrinfo(host, servname, &query, &response)) != 0)
     {
         Log(LOG_LEVEL_INFO,
-              "Unable to find host or service: (%s/%s): %s",
-              host, strport, gai_strerror(err));
+              "Unable to find host or service: (%s/%d): %s",
+              host, port, gai_strerror(err));
         return false;
     }
 
@@ -1252,8 +1239,8 @@ int ServerConnect(AgentConnection *conn, const char *host, FileCopy fc)
         getnameinfo(ap->ai_addr, ap->ai_addrlen,
                     txtaddr, sizeof(txtaddr),
                     NULL, 0, NI_NUMERICHOST);
-        Log(LOG_LEVEL_VERBOSE, "Connecting to host %s (address %s) on port %s",
-              host, txtaddr, strport);
+        Log(LOG_LEVEL_VERBOSE, "Connecting to host %s (address %s) on port %d",
+              host, txtaddr, port);
 
         ConnectionInfoSetSocket(conn->conn_info, socket(ap->ai_family, ap->ai_socktype, ap->ai_protocol));
         if (ConnectionInfoSocket(conn->conn_info) == -1)
@@ -1296,8 +1283,7 @@ int ServerConnect(AgentConnection *conn, const char *host, FileCopy fc)
 
         if (TryConnect(conn, &tv, ap->ai_addr, ap->ai_addrlen))
         {
-            Log(LOG_LEVEL_INFO, "Connected to %s on port %s",
-                txtaddr, strport);
+            Log(LOG_LEVEL_INFO, "Connected to %s on port %d", txtaddr, port);
 
             assert(sizeof(conn->remoteip) >= sizeof(txtaddr));
             strcpy(conn->remoteip, txtaddr);

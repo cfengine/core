@@ -482,8 +482,11 @@ int OpenReceiverChannel(void)
         ptr = BINDINTERFACE;
     }
 
+    char servname[10];
+    snprintf(servname, 10, "%d", CFENGINE_PORT);
+
     /* Resolve listening interface. */
-    if (getaddrinfo(ptr, STR_CFENGINEPORT, &query, &response) != 0)
+    if (getaddrinfo(ptr, servname, &query, &response) != 0)
     {
         Log(LOG_LEVEL_ERR, "DNS/service lookup failure. (getaddrinfo: %s)", GetErrorStr());
         return -1;
@@ -668,7 +671,9 @@ static int GenerateAvahiConfig(const char *path)
     XmlStartTag(writer, "service", 0);
     XmlTag(writer, "type", "_cfenginehub._tcp",0);
     DetermineCfenginePort();
-    XmlTag(writer, "port", STR_CFENGINEPORT, 0);
+    XmlStartTag(writer, "port");
+    WriterWriteF(writer, "%d", CFENGINE_PORT);
+    XmlEndTag(writer, "port");
     XmlEndTag(writer, "service");
     XmlEndTag(writer, "service-group");
     fclose(fout);

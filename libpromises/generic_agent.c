@@ -686,8 +686,7 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
     char vbuff[CF_BUFSIZE];
     char ebuff[CF_EXPANDSIZE];
 
-    SHORT_CFENGINEPORT = htons((unsigned short) 5308);
-    snprintf(STR_CFENGINEPORT, 15, "5308");
+    DetermineCfenginePort();
 
     EvalContextClassPutHard(ctx, "any");
 
@@ -800,8 +799,6 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
     {
         GenericAgentConfigSetInputFile(config, GetWorkDir(), "promises.cf");
     }
-
-    DetermineCfenginePort();
 
     VIFELAPSED = 1;
     VEXPIREAFTER = 1;

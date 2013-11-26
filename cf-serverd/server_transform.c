@@ -456,11 +456,8 @@ static void KeepControlPromises(EvalContext *ctx, Policy *policy, GenericAgentCo
 
             if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_PORT_NUMBER].lval) == 0)
             {
-                SHORT_CFENGINEPORT = (short) IntFromString(retval.item);
-                strncpy(STR_CFENGINEPORT, retval.item, 15);
-                Log(LOG_LEVEL_VERBOSE, "Setting default portnumber to %u = %s = %s", (int) SHORT_CFENGINEPORT, STR_CFENGINEPORT,
-                      RvalScalarValue(retval));
-                SHORT_CFENGINEPORT = htons((short) IntFromString(retval.item));
+                CFENGINE_PORT = (short) IntFromString(retval.item);
+                Log(LOG_LEVEL_VERBOSE, "Setting default port number to %hd", CFENGINE_PORT);
                 continue;
             }
 

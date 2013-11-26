@@ -30,6 +30,7 @@
 #include <errno.h>
 #include <unistd.h>
 #include <stdarg.h>
+#include <string.h>
 
 #ifndef __MINGW32__
 
@@ -75,7 +76,7 @@ int openat(int dirfd, const char *pathname, int flags, ...)
     if (mutex_err)
     {
         ProgrammingError("Error when locking CHDIR_LOCK. Should never happen. (pthread_mutex_lock: '%s')",
-                         GetErrorStrFromCode(mutex_err));
+                         strerror(mutex_err));
     }
 
     cwd = open(".", O_RDONLY);
@@ -85,7 +86,7 @@ int openat(int dirfd, const char *pathname, int flags, ...)
         if (mutex_err)
         {
             ProgrammingError("Error when unlocking CHDIR_LOCK. Should never happen. (pthread_mutex_unlock: '%s')",
-                             GetErrorStrFromCode(mutex_err));
+                             strerror(mutex_err));
         }
         return -1;
     }
@@ -96,7 +97,7 @@ int openat(int dirfd, const char *pathname, int flags, ...)
         if (mutex_err)
         {
             ProgrammingError("Error when unlocking CHDIR_LOCK. Should never happen. (pthread_mutex_unlock: '%s')",
-                             GetErrorStrFromCode(mutex_err));
+                             strerror(mutex_err));
         }
 
         close(cwd);
@@ -113,7 +114,7 @@ int openat(int dirfd, const char *pathname, int flags, ...)
     if (mutex_err)
     {
         ProgrammingError("Error when unlocking CHDIR_LOCK. Should never happen. (pthread_mutex_unlock: '%s')",
-                         GetErrorStrFromCode(mutex_err));
+                         strerror(mutex_err));
     }
 
     if (fchdir_ret < 0)

@@ -46,6 +46,8 @@ const char *TEST_SYMLINK_NAME = "";
 const char *TEST_SYMLINK_TARGET = "";
 bool TEST_SYMLINK_NONROOT = false;
 
+static int ORIG_DIR = -1;
+
 void test_switch_symlink()
 {
     if (--TEST_SYMLINK_COUNTDOWN == 0) {
@@ -71,6 +73,17 @@ void chdir_or_exit(const char *path)
     }
 }
 
+void save_test_dir()
+{
+    ORIG_DIR = open(".", O_RDONLY);
+    assert_true(ORIG_DIR >= 0);
+}
+
+void close_test_dir()
+{
+    close(ORIG_DIR);
+}
+
 void setup_tempfiles()
 {
     chdir_or_exit(TEMP_DIR);
@@ -93,6 +106,15 @@ void setup_tempfiles()
     (void)write_result;
 }
 
+void return_to_test_dir()
+{
+    if (fchdir(ORIG_DIR) < 0)
+    {
+        // Don't risk writing into folders we shouldn't. Just bail.
+        exit(1);
+    }
+}
+
 void check_contents(int fd, const char *str)
 {
     char buf[strlen(str) + 1];
@@ -109,6 +131,8 @@ void test_safe_open_currentdir()
     assert_true((fd = safe_open(TEST_FILE, O_RDONLY)) >= 0);
     check_contents(fd, TEST_STRING);
     close(fd);
+
+    return_to_test_dir();
 }
 
 void test_safe_open_subdir()
@@ -119,6 +143,8 @@ void test_safe_open_subdir()
     assert_true((fd = safe_open(TEST_SUBDIR "/" TEST_FILE, O_RDONLY)) >= 0);
     check_contents(fd, TEST_SUBSTRING);
     close(fd);
+
+    return_to_test_dir();
 }
 
 void test_safe_open_subsubdir()
@@ -129,6 +155,8 @@ void test_safe_open_subsubdir()
     assert_true((fd = safe_open(TEST_SUBSUBDIR "/" TEST_FILE, O_RDONLY)) >= 0);
     check_contents(fd, TEST_SUBSUBSTRING);
     close(fd);
+
+    return_to_test_dir();
 }
 
 void test_safe_open_updir()
@@ -141,6 +169,8 @@ void test_safe_open_updir()
     assert_true((fd = safe_open("../" TEST_FILE, O_RDONLY)) >= 0);
     check_contents(fd, TEST_STRING);
     close(fd);
+
+    return_to_test_dir();
 }
 
 void test_safe_open_upupdir()
@@ -153,6 +183,8 @@ void test_safe_open_upupdir()
     assert_true((fd = safe_open("../../" TEST_FILE, O_RDONLY)) >= 0);
     check_contents(fd, TEST_STRING);
     close(fd);
+
+    return_to_test_dir();
 }
 
 void test_safe_open_generic_relative_dir()
@@ -163,6 +195,8 @@ void test_safe_open_generic_relative_dir()
     assert_true((fd = safe_open(TEST_SUBSUBDIR "/../" TEST_FILE, O_RDONLY)) >= 0);
     check_contents(fd, TEST_SUBSTRING);
     close(fd);
+
+    return_to_test_dir();
 }
 
 void test_safe_open_generic_absolute_dir()
@@ -176,6 +210,8 @@ void test_safe_open_generic_absolute_dir()
                                 TEST_FILE, O_RDONLY)) >= 0);
     check_contents(fd, TEST_SUBSTRING);
     close(fd);
+
+    return_to_test_dir();
 }
 
 void test_safe_open_unsafe_symlink()
@@ -190,6 +226,8 @@ void test_safe_open_unsafe_symlink()
 
     assert_true(safe_open(TEMP_DIR "/" TEST_LINK, O_RDONLY) < 0);
     assert_int_equal(errno, EACCES);
+
+    return_to_test_dir();
 }
 
 void test_safe_open_safe_symlink()
@@ -206,6 +244,8 @@ void test_safe_open_safe_symlink()
     assert_true((fd = safe_open(TEMP_DIR "/" TEST_LINK, O_RDONLY)) >= 0);
     check_contents(fd, TEST_STRING);
     close(fd);
+
+    return_to_test_dir();
 }
 
 void test_safe_open_unsafe_inserted_symlink()
@@ -222,6 +262,8 @@ void test_safe_open_unsafe_inserted_symlink()
 
     assert_true(safe_open(TEST_LINK, O_RDONLY) < 0);
     assert_int_equal(errno, ENOENT);
+
+    return_to_test_dir();
 }
 
 void test_safe_open_safe_inserted_symlink()
@@ -238,6 +280,8 @@ void test_safe_open_safe_inserted_symlink()
 
     assert_true(safe_open(TEST_LINK, O_RDONLY) < 0);
     assert_int_equal(errno, ENOENT);
+
+    return_to_test_dir();
 }
 
 void test_safe_open_unsafe_switched_symlink()
@@ -254,6 +298,8 @@ void test_safe_open_unsafe_switched_symlink()
 
     assert_true(safe_open(TEST_FILE, O_RDONLY) < 0);
     assert_int_equal(errno, EACCES);
+
+    return_to_test_dir();
 }
 
 void test_safe_open_safe_switched_symlink()
@@ -272,6 +318,8 @@ void test_safe_open_safe_switched_symlink()
     assert_true((fd = safe_open(TEMP_DIR "/" TEST_FILE, O_RDONLY)) >= 0);
     check_contents(fd, TEST_SUBSTRING);
     close(fd);
+
+    return_to_test_dir();
 }
 
 void test_safe_open_unsafe_dir_symlink()
@@ -286,6 +334,8 @@ void test_safe_open_unsafe_dir_symlink()
 
     assert_true(safe_open(TEMP_DIR "/" TEST_LINK "/passwd", O_RDONLY) < 0);
     assert_int_equal(errno, EACCES);
+
+    return_to_test_dir();
 }
 
 void test_safe_open_safe_dir_symlink()
@@ -302,6 +352,8 @@ void test_safe_open_safe_dir_symlink()
     assert_true((fd = safe_open(TEST_LINK "/" TEST_FILE, O_RDONLY)) >= 0);
     check_contents(fd, TEST_SUBSTRING);
     close(fd);
+
+    return_to_test_dir();
 }
 
 void test_safe_open_unsafe_inserted_dir_symlink()
@@ -318,6 +370,8 @@ void test_safe_open_unsafe_inserted_dir_symlink()
 
     assert_true(safe_open(TEST_LINK "/passwd", O_RDONLY) < 0);
     assert_int_equal(errno, ENOENT);
+
+    return_to_test_dir();
 }
 
 void test_safe_open_safe_inserted_dir_symlink()
@@ -334,6 +388,8 @@ void test_safe_open_safe_inserted_dir_symlink()
 
     assert_true(safe_open(TEST_LINK "/" TEST_FILE, O_RDONLY) < 0);
     assert_int_equal(errno, ENOENT);
+
+    return_to_test_dir();
 }
 
 void test_safe_open_unsafe_switched_dir_symlink()
@@ -352,6 +408,8 @@ void test_safe_open_unsafe_switched_dir_symlink()
 
     assert_true(safe_open(TEST_LINK "/passwd", O_RDONLY) < 0);
     assert_int_equal(errno, EACCES);
+
+    return_to_test_dir();
 }
 
 void test_safe_open_safe_switched_dir_symlink()
@@ -372,6 +430,8 @@ void test_safe_open_safe_switched_dir_symlink()
     assert_true((fd = safe_open(TEST_LINK "/" TEST_FILE, O_RDONLY)) >= 0);
     check_contents(fd, TEST_SUBSTRING);
     close(fd);
+
+    return_to_test_dir();
 }
 
 void test_safe_open_create_inserted_symlink()
@@ -388,6 +448,8 @@ void test_safe_open_create_inserted_symlink()
 
     assert_true(safe_open(TEST_LINK, O_RDONLY | O_CREAT, 0644) < 0);
     assert_int_equal(errno, EACCES);
+
+    return_to_test_dir();
 }
 
 void test_safe_open_create_switched_symlink()
@@ -404,6 +466,8 @@ void test_safe_open_create_switched_symlink()
 
     assert_true(safe_open(TEST_FILE, O_RDONLY | O_CREAT, 0644) < 0);
     assert_int_equal(errno, EACCES);
+
+    return_to_test_dir();
 }
 
 void test_safe_open_dangling_symlink()
@@ -420,6 +484,8 @@ void test_safe_open_dangling_symlink()
 
     assert_true(safe_open(TEST_FILE, O_RDONLY | O_CREAT, 0644) < 0);
     assert_int_equal(errno, EACCES);
+
+    return_to_test_dir();
 }
 
 void test_safe_open_root()
@@ -430,6 +496,8 @@ void test_safe_open_root()
     assert_int_equal(fchdir(fd), 0);
     assert_int_equal(stat("etc", &statbuf), 0);
     close(fd);
+
+    return_to_test_dir();
 }
 
 void test_safe_fopen()
@@ -539,6 +607,8 @@ void test_safe_fopen()
     assert_false(ferror(fptr));
     clearerr(fptr);
     fclose(fptr);
+
+    return_to_test_dir();
 }
 
 int main()
@@ -547,6 +617,8 @@ int main()
 
     const UnitTest tests[] =
         {
+            unit_test(save_test_dir),
+
             unit_test(test_safe_open_currentdir),
             unit_test(test_safe_open_subdir),
             unit_test(test_safe_open_subsubdir),
@@ -572,6 +644,8 @@ int main()
             unit_test(test_safe_open_root),
 
             unit_test(test_safe_fopen),
+
+            unit_test(close_test_dir),
         };
 
     int ret = run_tests(tests);

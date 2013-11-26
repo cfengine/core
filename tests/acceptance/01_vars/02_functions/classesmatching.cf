@@ -19,21 +19,25 @@ bundle agent test
   vars:
       "classes" slist => classesmatching("test_fbeae67f3e347b5e0032302200141131.*");
       "x_classes" slist => classesmatching("test_fbeae67f3e347b5e0032302200141131.*", "x");
+      "z_classes" slist => classesmatching("test_fbeae67f3e347b5e0032302200141131.*", "z");
 
       "count" int => length(classes);
       "x_count" int => length(x_classes);
+      "z_count" int => length(z_classes);
 }
 
 bundle agent check
 {
   classes:
       "ok" and => { strcmp("$(test.count)", "3"),
-                    strcmp("$(test.x_count)", "2") };
+                    strcmp("$(test.x_count)", "2"),
+                    strcmp("$(test.z_count)", "0") };
 
   reports:
     DEBUG::
       "Found classes $(test.classes)";
       "Found x classes $(test.x_classes)";
+      "Found z classes $(test.z_classes)";
     ok::
       "$(this.promise_filename) Pass";
     !ok::

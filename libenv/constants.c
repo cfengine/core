@@ -28,10 +28,10 @@
 
 void LoadSystemConstants(EvalContext *ctx)
 {
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_CONST, "dollar", "$", DATA_TYPE_STRING);
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_CONST, "n", "\n", DATA_TYPE_STRING);
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_CONST, "r", "\r", DATA_TYPE_STRING);
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_CONST, "t", "\t", DATA_TYPE_STRING);
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_CONST, "endl", "\n", DATA_TYPE_STRING);
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_CONST, "dollar", "$", DATA_TYPE_STRING, "goal=constants,source=agent");
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_CONST, "n", "\n", DATA_TYPE_STRING, "goal=constants,source=agent");
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_CONST, "r", "\r", DATA_TYPE_STRING, "goal=constants,source=agent");
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_CONST, "t", "\t", DATA_TYPE_STRING, "goal=constants,source=agent");
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_CONST, "endl", "\n", DATA_TYPE_STRING, "goal=constants,source=agent");
     /* NewScalar("const","0","\0",cf_str);  - this cannot work */
 }

@@ -105,12 +105,12 @@ PromiseResult VerifyClassPromise(EvalContext *ctx, Promise *pp, ARG_UNUSED void 
             if (global_class)
             {
                 Log(LOG_LEVEL_VERBOSE, "Adding global class '%s'", pp->promiser);
-                EvalContextClassPut(ctx, PromiseGetNamespace(pp), pp->promiser, true, CONTEXT_SCOPE_NAMESPACE);
+                EvalContextClassPut(ctx, PromiseGetNamespace(pp), pp->promiser, true, CONTEXT_SCOPE_NAMESPACE, "goal=state,source=promise");
             }
             else
             {
                 Log(LOG_LEVEL_VERBOSE, "Adding local bundle class '%s'", pp->promiser);
-                EvalContextClassPut(ctx, PromiseGetNamespace(pp), pp->promiser, true, CONTEXT_SCOPE_BUNDLE);
+                EvalContextClassPut(ctx, PromiseGetNamespace(pp), pp->promiser, true, CONTEXT_SCOPE_BUNDLE, "goal=state,source=promise");
             }
 
             if (a.context.persistent > 0)
@@ -265,7 +265,7 @@ static int EvalClassExpression(EvalContext *ctx, Constraint *cp, Promise *pp)
         {
             if (i == n)
             {
-                EvalContextClassPut(ctx, PromiseGetNamespace(pp), RlistScalarValue(rp), true, CONTEXT_SCOPE_NAMESPACE);
+                EvalContextClassPut(ctx, PromiseGetNamespace(pp), RlistScalarValue(rp), true, CONTEXT_SCOPE_NAMESPACE, "goal=select_servers,source=promise");
                 return true;
             }
         }
@@ -325,11 +325,11 @@ static int EvalClassExpression(EvalContext *ctx, Constraint *cp, Promise *pp)
 
         if (strcmp(PromiseGetBundle(pp)->type, "common") == 0)
         {
-            EvalContextClassPut(ctx, PromiseGetNamespace(pp), buffer, true, CONTEXT_SCOPE_NAMESPACE);
+            EvalContextClassPut(ctx, PromiseGetNamespace(pp), buffer, true, CONTEXT_SCOPE_NAMESPACE, "goal=state,source=promise");
         }
         else
         {
-            EvalContextClassPut(ctx, PromiseGetNamespace(pp), buffer, true, CONTEXT_SCOPE_BUNDLE);
+            EvalContextClassPut(ctx, PromiseGetNamespace(pp), buffer, true, CONTEXT_SCOPE_BUNDLE, "goal=state,source=promise");
         }
 
         return true;

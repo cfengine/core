@@ -56,19 +56,19 @@ bool VariableTableRemove(VariableTable *table, const VarRef *ref)
     return RBTreeRemove(table->vars, (void *)ref->hash);
 }
 
-static Variable *VariableNew(VarRef *ref, Rval rval, DataType type)
+static Variable *VariableNew(VarRef *ref, Rval rval, DataType type, StringSet *tags)
 {
     Variable *var = xmalloc(sizeof(Variable));
 
     var->ref = ref;
     var->rval = rval;
     var->type = type;
-    var->tags = NULL;
+    var->tags = tags;
 
     return var;
 }
 
-bool VariableTablePut(VariableTable *table, const VarRef *ref, const Rval *rval, DataType type)
+bool VariableTablePut(VariableTable *table, const VarRef *ref, const Rval *rval, DataType type, const char *tags)
 {
     assert(VarRefIsQualified(ref));
 
@@ -82,7 +82,7 @@ bool VariableTablePut(VariableTable *table, const VarRef *ref, const Rval *rval,
     }
     else
     {
-        var = VariableNew(VarRefCopy(ref), RvalCopy(*rval), type);
+        var = VariableNew(VarRefCopy(ref), RvalCopy(*rval), type, StringSetFromString(tags, ','));
         return RBTreePut(table->vars, (void *)var->ref->hash, var);
     }
 }
@@ -243,7 +243,7 @@ VariableTable *VariableTableCopyLocalized(const VariableTable *table, const char
     Variable *foreign_var = NULL;
     while ((foreign_var = VariableTableIteratorNext(iter)))
     {
-        Variable *localized_var = VariableNew(VarRefCopyLocalized(foreign_var->ref), RvalCopy(foreign_var->rval), foreign_var->type);
+        Variable *localized_var = VariableNew(VarRefCopyLocalized(foreign_var->ref), RvalCopy(foreign_var->rval), foreign_var->type, NULL);
         RBTreePut(localized_copy->vars, (void *)localized_var->ref->hash, localized_var);
     }
     VariableTableIteratorDestroy(iter);

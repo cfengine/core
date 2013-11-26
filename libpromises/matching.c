@@ -78,7 +78,7 @@ static int RegExMatchSubString(EvalContext *ctx, pcre *rx, const char *teststrin
                 if (THIS_AGENT_TYPE == AGENT_TYPE_AGENT)
                 {
                     char *index = StringFromLong(i);
-                    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_MATCH, index, substring, DATA_TYPE_STRING);
+                    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_MATCH, index, substring, DATA_TYPE_STRING, "goal=data,source=regex");
                     free(index);
                 }
             }

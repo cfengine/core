@@ -35,7 +35,7 @@ void BuiltinClasses(EvalContext *ctx);
 void OSClasses(EvalContext *ctx);
 void DetectDomainName(EvalContext *ctx, const char *orig_nodename);
 
-void CreateHardClassesFromCanonification(EvalContext *ctx, const char *canonified);
+void CreateHardClassesFromCanonification(EvalContext *ctx, const char *canonified, char *tags);
 
 int GetUptimeMinutes(time_t now);
 

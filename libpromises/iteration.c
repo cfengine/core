@@ -448,13 +448,13 @@ void PromiseIteratorUpdateVariable(EvalContext *ctx, const PromiseIterator *iter
         switch (iter_var->dtype)
         {
         case DATA_TYPE_STRING_LIST:
-            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, iter_var->lval, RlistScalarValue(state), DATA_TYPE_STRING);
+            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, iter_var->lval, RlistScalarValue(state), DATA_TYPE_STRING, "goal=data,source=promise");
             break;
         case DATA_TYPE_INT_LIST:
-            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, iter_var->lval, RlistScalarValue(state), DATA_TYPE_INT);
+            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, iter_var->lval, RlistScalarValue(state), DATA_TYPE_INT, "goal=data,source=promise");
             break;
         case DATA_TYPE_REAL_LIST:
-            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, iter_var->lval, RlistScalarValue(state), DATA_TYPE_REAL);
+            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, iter_var->lval, RlistScalarValue(state), DATA_TYPE_REAL, "goal=data,source=promise");
             break;
         default:
             assert(false);

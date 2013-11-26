@@ -161,7 +161,7 @@ int ScheduleEditXmlOperations(EvalContext *ctx, Bundle *bp, Attributes a, const 
         return false;
     }
 
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_EDIT, "filename", edcontext->filename, DATA_TYPE_STRING);
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_EDIT, "filename", edcontext->filename, DATA_TYPE_STRING, "goal=state,source=promise");
 
     for (pass = 1; pass < CF_DONEPASSES; pass++)
     {

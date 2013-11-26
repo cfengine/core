@@ -321,7 +321,7 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
         case 'n':
             DONTDO = true;
             IGNORELOCK = true;
-            EvalContextClassPutHard(ctx, "opt_dry_run");
+            EvalContextClassPutHard(ctx, "opt_dry_run", "goal=state,cfe_internal,source=environment");
             break;
 
         case 't':

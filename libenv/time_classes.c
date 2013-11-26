@@ -158,19 +158,19 @@ static void AddTimeClass(EvalContext *ctx, time_t time)
 /* Lifecycle */
 
         snprintf(buf, CF_BUFSIZE, "%sLcycle_%d", tz_prefix[tz], ((tz_parsed_time[tz].tm_year + 1900) % 3));
-        EvalContextClassPutHard(ctx, buf);
+        EvalContextClassPutHard(ctx, buf, "goal=state,time_based,source=agent");
 
 /* Year */
 
         snprintf(VYEAR, CF_BUFSIZE, "%04d", tz_parsed_time[0].tm_year + 1900); // VYEAR has the local year
         snprintf(buf, CF_BUFSIZE, "%sYr%04d", tz_prefix[tz], tz_parsed_time[tz].tm_year + 1900);
-        EvalContextClassPutHard(ctx, buf);
+        EvalContextClassPutHard(ctx, buf, "goal=state,time_based,source=agent");
 
 /* Month */
 
         strlcpy(VMONTH, MONTH_TEXT[tz_parsed_time[0].tm_mon], 4); // VMONTH has the local month
         snprintf(buf, CF_BUFSIZE, "%s%s", tz_prefix[tz], MONTH_TEXT[tz_parsed_time[tz].tm_mon]);
-        EvalContextClassPutHard(ctx, buf);
+        EvalContextClassPutHard(ctx, buf, "goal=state,time_based,source=agent");
 
 /* Day of week */
 
@@ -180,46 +180,46 @@ static void AddTimeClass(EvalContext *ctx, time_t time)
    Sunday  is 0 in tm_wday, 6 in DAY_TEXT */
         day_text_index = (tz_parsed_time[tz].tm_wday + 6) % 7;
         snprintf(buf, CF_BUFSIZE, "%s%s", tz_prefix[tz], DAY_TEXT[day_text_index]);
-        EvalContextClassPutHard(ctx, buf);
+        EvalContextClassPutHard(ctx, buf, "goal=state,time_based,source=agent");
 
 /* Day */
 
         snprintf(VDAY, CF_BUFSIZE, "%d", tz_parsed_time[tz].tm_mday); // VDAY has the local day
         snprintf(buf, CF_BUFSIZE, "%sDay%d", tz_prefix[tz], tz_parsed_time[tz].tm_mday);
-        EvalContextClassPutHard(ctx, buf);
+        EvalContextClassPutHard(ctx, buf, "goal=state,time_based,source=agent");
 
 /* Shift */
 
         strcpy(VSHIFT, SHIFT_TEXT[tz_parsed_time[0].tm_hour / 6]); // VSHIFT has the local shift
         snprintf(buf, CF_BUFSIZE, "%s%s", tz_prefix[tz], SHIFT_TEXT[tz_parsed_time[tz].tm_hour / 6]);
-        EvalContextClassPutHard(ctx, buf);
+        EvalContextClassPutHard(ctx, buf, "goal=state,time_based,source=agent");
 
 /* Hour */
 
         snprintf(buf, CF_BUFSIZE, "%sHr%02d", tz_prefix[tz], tz_parsed_time[tz].tm_hour);
-        EvalContextClassPutHard(ctx, buf);
+        EvalContextClassPutHard(ctx, buf, "goal=state,time_based,source=agent");
         snprintf(buf, CF_BUFSIZE, "%sHr%d", tz_prefix[tz], tz_parsed_time[tz].tm_hour);
-        EvalContextClassPutHard(ctx, buf);
+        EvalContextClassPutHard(ctx, buf, "goal=state,time_based,source=agent");
 
 /* Quarter */
 
         quarter = tz_parsed_time[tz].tm_min / 15 + 1;
 
         snprintf(buf, CF_BUFSIZE, "%sQ%d", tz_prefix[tz], quarter);
-        EvalContextClassPutHard(ctx, buf);
+        EvalContextClassPutHard(ctx, buf, "goal=state,time_based,source=agent");
         snprintf(buf, CF_BUFSIZE, "%sHr%02d_Q%d", tz_prefix[tz], tz_parsed_time[tz].tm_hour, quarter);
-        EvalContextClassPutHard(ctx, buf);
+        EvalContextClassPutHard(ctx, buf, "goal=state,time_based,source=agent");
 
 /* Minute */
 
         snprintf(buf, CF_BUFSIZE, "%sMin%02d", tz_prefix[tz], tz_parsed_time[tz].tm_min);
-        EvalContextClassPutHard(ctx, buf);
+        EvalContextClassPutHard(ctx, buf, "goal=state,time_based,source=agent");
 
         interval_start = (tz_parsed_time[tz].tm_min / 5) * 5;
         interval_end = (interval_start + 5) % 60;
 
         snprintf(buf, CF_BUFSIZE, "%sMin%02d_%02d", tz_prefix[tz], interval_start, interval_end);
-        EvalContextClassPutHard(ctx, buf);
+        EvalContextClassPutHard(ctx, buf, "goal=state,time_based,source=agent");
     }
 }
 

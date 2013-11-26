@@ -71,7 +71,7 @@ PromiseResult VerifyReportPromise(EvalContext *ctx, Promise *pp)
         }
 
         VarRef *ref = VarRefParseFromBundle(unique_name, PromiseGetBundle(pp));
-        EvalContextVariablePut(ctx, ref, pp->promiser, DATA_TYPE_STRING);
+        EvalContextVariablePut(ctx, ref, pp->promiser, DATA_TYPE_STRING, "goal=data,source=bundle");
         VarRefDestroy(ref);
         return PROMISE_RESULT_NOOP;
     }

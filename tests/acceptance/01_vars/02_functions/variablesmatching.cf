@@ -19,21 +19,25 @@ bundle agent test
   vars:
       "vars" slist => variablesmatching("default:init.test_fbeae67f3e347b5e0032302200141131.*");
       "x_vars" slist => variablesmatching("default:init.test_fbeae67f3e347b5e0032302200141131.*", "x");
+      "z_vars" slist => variablesmatching("default:init.test_fbeae67f3e347b5e0032302200141131.*", "z");
 
       "count" int => length(vars);
       "x_count" int => length(x_vars);
+      "z_count" int => length(z_vars);
 }
 
 bundle agent check
 {
   classes:
       "ok" and => { strcmp("$(test.count)", "3"),
-                    strcmp("$(test.x_count)", "2") };
+                    strcmp("$(test.x_count)", "2"),
+                    strcmp("$(test.z_count)", "0") };
 
   reports:
     DEBUG::
       "Found variables $(test.vars)";
       "Found x variables $(test.x_vars)";
+      "Found z variables $(test.z_vars)";
     ok::
       "$(this.promise_filename) Pass";
     !ok::

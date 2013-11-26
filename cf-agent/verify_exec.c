@@ -66,7 +66,7 @@ PromiseResult VerifyExecPromise(EvalContext *ctx, Promise *pp)
 
     a = GetExecAttributes(ctx, pp);
 
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser", pp->promiser, DATA_TYPE_STRING);
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser", pp->promiser, DATA_TYPE_STRING, "goal=state,source=promise");
 
     if (!SyntaxCheckExec(a, pp))
     {

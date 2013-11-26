@@ -2315,15 +2315,12 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx, FnCall *fp, Rlist *fin
     }
 
     Policy *select_server_policy = PolicyNew();
-    Promise *pp = NULL;
     {
         Bundle *bp = PolicyAppendBundle(select_server_policy, NamespaceDefault(), "select_server_bundle", "agent", NULL, NULL);
         PromiseType *tp = BundleAppendPromiseType(bp, "select_server");
 
-        pp = PromiseTypeAppendPromise(tp, "function", (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, NULL);
+        PromiseTypeAppendPromise(tp, "function", (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, NULL);
     }
-
-    assert(pp);
 
     for (Rlist *rp = hostnameip; rp != NULL; rp = rp->next)
     {

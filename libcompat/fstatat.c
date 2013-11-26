@@ -30,6 +30,7 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <errno.h>
+#include <string.h>
 
 #ifndef __MINGW32__
 
@@ -47,7 +48,7 @@ int fstatat(int dirfd, const char *pathname, struct stat *buf, int flags)
     if (mutex_err)
     {
         ProgrammingError("Error when locking CHDIR_LOCK. Should never happen. (pthread_mutex_lock: '%s')",
-                         GetErrorStrFromCode(mutex_err));
+                         strerror(mutex_err));
     }
 
     cwd = open(".", O_RDONLY);
@@ -57,7 +58,7 @@ int fstatat(int dirfd, const char *pathname, struct stat *buf, int flags)
         if (mutex_err)
         {
             ProgrammingError("Error when unlocking CHDIR_LOCK. Should never happen. (pthread_mutex_unlock: '%s')",
-                             GetErrorStrFromCode(mutex_err));
+                             strerror(mutex_err));
         }
 
         return -1;
@@ -69,7 +70,7 @@ int fstatat(int dirfd, const char *pathname, struct stat *buf, int flags)
         if (mutex_err)
         {
             ProgrammingError("Error when unlocking CHDIR_LOCK. Should never happen. (pthread_mutex_unlock: '%s')",
-                             GetErrorStrFromCode(mutex_err));
+                             strerror(mutex_err));
         }
 
         close(cwd);
@@ -92,7 +93,7 @@ int fstatat(int dirfd, const char *pathname, struct stat *buf, int flags)
     if (mutex_err)
     {
         ProgrammingError("Error when unlocking CHDIR_LOCK. Should never happen. (pthread_mutex_unlock: '%s')",
-                         GetErrorStrFromCode(mutex_err));
+                         strerror(mutex_err));
     }
 
     if (fchdir_ret < 0)

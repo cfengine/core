@@ -29,6 +29,5 @@
 #include <cf3.defs.h>
 
 void GetInterfacesInfo(EvalContext *ctx);
-bool IsInterfaceAddress(const char *adr);
 
 #endif

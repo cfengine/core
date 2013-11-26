@@ -741,21 +741,3 @@ static int aix_get_mac_addr(const char *device_name, uint8_t mac[6])
 #endif /* _AIX */
 
 #endif /* !__MINGW32__ */
-
-bool IsInterfaceAddress(const char *adr)
- /* Does this address belong to a local interface */
-{
-    Item *ip;
-
-    for (ip = IPADDRESSES; ip != NULL; ip = ip->next)
-    {
-        if (strncasecmp(adr, ip->name, strlen(adr)) == 0)
-        {
-            Log(LOG_LEVEL_DEBUG, "Identifying '%s' as one of my interfaces", adr);
-            return true;
-        }
-    }
-
-    Log(LOG_LEVEL_DEBUG, "'%s' is not one of my interfaces", adr);
-    return false;
-}

@@ -1937,6 +1937,9 @@ static void DoSummarizeTransaction(EvalContext *ctx, PromiseResult status, const
     case PROMISE_RESULT_NOOP:
         log_name = tc.log_kept;
         break;
+
+    default:
+        ProgrammingError("Unexpected promise result status: %d", status);
     }
 
     SummarizeTransaction(ctx, tc, log_name);

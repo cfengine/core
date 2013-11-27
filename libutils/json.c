@@ -816,7 +816,7 @@ static int CompareKeyToPropertyName(const void *a, const void *b, ARG_UNUSED voi
     return StringSafeCompare((char*)a, ((JsonElement*)b)->propertyName);
 }
 
-static size_t JsonElementIndexInParentObject(JsonElement *parent, const char* key)
+static ssize_t JsonElementIndexInParentObject(JsonElement *parent, const char* key)
 {
     assert(parent);
     assert(parent->type == JSON_ELEMENT_TYPE_CONTAINER);
@@ -833,7 +833,7 @@ bool JsonObjectRemoveKey(JsonElement *object, const char *key)
     assert(object->container.type == JSON_CONTAINER_TYPE_OBJECT);
     assert(key);
 
-    size_t index = JsonElementIndexInParentObject(object, key);
+    ssize_t index = JsonElementIndexInParentObject(object, key);
     if (index != -1)
     {
         SeqRemove(object->container.children, index);
@@ -851,7 +851,7 @@ JsonElement *JsonObjectDetachKey(JsonElement *object, const char *key)
 
     JsonElement *detached = NULL;
 
-    size_t index = JsonElementIndexInParentObject(object, key);
+    ssize_t index = JsonElementIndexInParentObject(object, key);
     if (index != -1)
     {
         detached = SeqLookup(object->container.children, key, JsonElementHasProperty);

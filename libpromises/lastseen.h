@@ -39,8 +39,8 @@ typedef enum
 
 bool Address2Hostkey(const char *address, char *hostkey);
 
-void LastSaw1(const char *ipaddress, const unsigned char hashstr[EVP_MAX_MD_SIZE * 4], LastSeenRole role);
-void LastSaw(const char *ipaddress, const unsigned char digest[EVP_MAX_MD_SIZE + 1], LastSeenRole role);
+void LastSaw1(const char *ipaddress, const char *hashstr, LastSeenRole role);
+void LastSaw(const char *ipaddress, const char *digest, LastSeenRole role);
 
 bool DeleteIpFromLastSeen(const char *ip, char *digest);
 bool DeleteDigestFromLastSeen(const char *key, char *ip);

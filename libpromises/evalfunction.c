@@ -6151,7 +6151,7 @@ static const FnCallArg PEERLEADERS_ARGS[] =
 static const FnCallArg RANDOMINT_ARGS[] =
 {
     {CF_INTRANGE, DATA_TYPE_INT, "Lower inclusive bound"},
-    {CF_INTRANGE, DATA_TYPE_INT, "Upper inclusive bound"},
+    {CF_INTRANGE, DATA_TYPE_INT, "Upper exclusive bound"},
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
@@ -6666,7 +6666,7 @@ const FnCallType CF_FNCALL_TYPES[] =
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_COMM, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("product", DATA_TYPE_REAL, PRODUCT_ARGS, &FnCallProduct, "Return the product of a list of reals",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
-    FnCallTypeNew("randomint", DATA_TYPE_INT, RANDOMINT_ARGS, &FnCallRandomInt, "Generate a random integer between the given limits",
+    FnCallTypeNew("randomint", DATA_TYPE_INT, RANDOMINT_ARGS, &FnCallRandomInt, "Generate a random integer between the given limits, excluding the upper",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("readfile", DATA_TYPE_STRING, READFILE_ARGS, &FnCallReadFile, "Read max number of bytes from named file and assign to variable",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),

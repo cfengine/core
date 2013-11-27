@@ -110,6 +110,11 @@ bool WriteAmPolicyHubFile(const char *workdir, bool am_policy_hub)
     return true;
 }
 
+/* NULL is an acceptable value for new_policy_server. Could happen when an
+ * already bootstrapped server re-parses its policies, and the
+ * policy_server.dat file has been removed. Then this function will be called
+ * with NULL as new_policy_server, and cf-serverd will keep running even
+ * without a policy server set." */
 void SetPolicyServer(EvalContext *ctx, const char *new_policy_server)
 {
     if (new_policy_server)

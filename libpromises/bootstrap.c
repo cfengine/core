@@ -112,8 +112,6 @@ bool WriteAmPolicyHubFile(const char *workdir, bool am_policy_hub)
 
 void SetPolicyServer(EvalContext *ctx, const char *new_policy_server)
 {
-    assert(new_policy_server != NULL);
-
     if (new_policy_server)
     {
         snprintf(POLICY_SERVER, CF_MAX_IP_LEN, "%s", new_policy_server);

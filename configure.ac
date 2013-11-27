@@ -287,26 +287,12 @@ if test $WITH_QDBM = 1; then
   ])
 fi
 
-dnl OpenLDAP Lightning MDB
-
-AC_ARG_WITH([lmdb],
-    [AS_HELP_STRING([--with-lmdb[[=PATH]]], [use Lightning MDB to store runtime data])])
-AS_IF([test $WITH_QDBM -eq 0 && test -n "$with_lmdb" && test "x$with_lmdb" != "xno"], [WITH_LMDB=1], [WITH_LMDB=0])
-
-if test $WITH_LMDB = 1; then
-  CF3_WITH_LIBRARY(lmdb, [
-    AC_CHECK_LIB(lmdb, mdb_dbi_open, [], [AC_MSG_ERROR(Cannot find Lightning MDB)])
-    AC_CHECK_HEADERS(lmdb.h, [], [AC_MSG_ERROR(Cannot find Lightning MDB)])
-    AC_DEFINE(LMDB, 1, [Define if Lightning MDB is available])
-  ])
-fi
-
 dnl Tokyo Cabinet
 
 AC_ARG_WITH([tokyocabinet],
     [AS_HELP_STRING([--with-tokyocabinet[[=PATH]]], [use Tokyo Cabinet to store runtime data])])
 
-AS_IF([test $WITH_LMDB -eq 0 && test $WITH_QDBM -eq 0 && (! test -n "$with_tokyocabinet" || test "x$with_tokyocabinet" != "xno")], [WITH_TOKYO=1], [WITH_TOKYO=0])
+AS_IF([test $WITH_QDBM -eq 0 && test -n "$with_tokyocabinet" && test "x$with_tokyocabinet" != "xno"], [WITH_TOKYO=1], [WITH_TOKYO=0])
 
 if test $WITH_TOKYO = 1; then
   CF3_WITH_LIBRARY(tokyocabinet, [
@@ -314,6 +300,21 @@ if test $WITH_TOKYO = 1; then
     AC_CHECK_HEADERS(tcutil.h, [], [AC_MSG_ERROR(Cannot find Tokyo Cabinet)])
     AC_CHECK_HEADERS(tchdb.h, [], [AC_MSG_ERROR(Cannot find Tokyo Cabinet)])
     AC_DEFINE(TCDB, 1, [Define if Tokyo Cabinet is available.])
+  ])
+fi
+
+dnl OpenLDAP Lightning MDB
+
+AC_ARG_WITH([lmdb],
+    [AS_HELP_STRING([--with-lmdb[[=PATH]]], [use Lightning MDB to store runtime data])])
+
+AS_IF([test $WITH_TOKYO -eq 0 && test $WITH_QDBM -eq 0 && (! test -n "$with_lmdb" || test "x$with_lmdb" != "xno")], [WITH_LMDB=1], [WITH_LMDB=0])
+
+if test $WITH_LMDB = 1; then
+  CF3_WITH_LIBRARY(lmdb, [
+    AC_CHECK_LIB(lmdb, mdb_dbi_open, [], [AC_MSG_ERROR(Cannot find Lightning MDB)])
+    AC_CHECK_HEADERS(lmdb.h, [], [AC_MSG_ERROR(Cannot find Lightning MDB)])
+    AC_DEFINE(LMDB, 1, [Define if Lightning MDB is available])
   ])
 fi
 

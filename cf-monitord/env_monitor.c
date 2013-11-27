@@ -361,7 +361,9 @@ static Averages EvalAvQ(EvalContext *ctx, char *t)
     int i;
 
     for (i = 0; i < CF_OBSERVABLES; i++)
+    {
         last5_vals[i] = 0.0;
+    }
 
     Banner("Evaluating and storing new weekly averages");
 

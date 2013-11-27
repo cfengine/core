@@ -175,6 +175,7 @@ void ServerEntryPoint(EvalContext *ctx, char *ipaddr, ConnectionInfo *info)
     {
         Log(LOG_LEVEL_ERR, "Not allowing connection from non-authorized IP '%s'", ipaddr);
         cf_closesocket(ConnectionInfoSocket(info));
+        ConnectionInfoDestroy(&info);
         return;
     }
 
@@ -182,6 +183,7 @@ void ServerEntryPoint(EvalContext *ctx, char *ipaddr, ConnectionInfo *info)
     {
         Log(LOG_LEVEL_ERR, "Denying connection from non-authorized IP '%s'", ipaddr);
         cf_closesocket(ConnectionInfoSocket(info));
+        ConnectionInfoDestroy(&info);
         return;
     }
 
@@ -204,6 +206,7 @@ void ServerEntryPoint(EvalContext *ctx, char *ipaddr, ConnectionInfo *info)
             ThreadUnlock(cft_count);
             Log(LOG_LEVEL_ERR, "Denying repeated connection from '%s'", ipaddr);
             cf_closesocket(ConnectionInfoSocket(info));
+            ConnectionInfoDestroy(&info);
             return;
         }
 
@@ -223,6 +226,7 @@ void ServerEntryPoint(EvalContext *ctx, char *ipaddr, ConnectionInfo *info)
 
     if (!ThreadLock(cft_count))
     {
+        ConnectionInfoDestroy(&info);
         return;
     }
 
@@ -230,7 +234,8 @@ void ServerEntryPoint(EvalContext *ctx, char *ipaddr, ConnectionInfo *info)
 
     if (!ThreadUnlock(cft_count))
     {
-       return;
+        ConnectionInfoDestroy(&info);
+        return;
     }
 
     SpawnConnection(ctx, ipaddr, info);

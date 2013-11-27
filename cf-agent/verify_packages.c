@@ -2532,19 +2532,19 @@ static int PrependPatchItem(EvalContext *ctx, PackageItem ** list, char *item, P
     char version[CF_MAXVARSIZE];
     char vbuff[CF_MAXVARSIZE];
 
-    strncpy(vbuff, ExtractFirstReference(a.packages.package_patch_name_regex, item), CF_MAXVARSIZE - 1);
+    strlcpy(vbuff, ExtractFirstReference(a.packages.package_patch_name_regex, item), CF_MAXVARSIZE);
     sscanf(vbuff, "%s", name);  /* trim */
-    strncpy(vbuff, ExtractFirstReference(a.packages.package_patch_version_regex, item), CF_MAXVARSIZE - 1);
+    strlcpy(vbuff, ExtractFirstReference(a.packages.package_patch_version_regex, item), CF_MAXVARSIZE);
     sscanf(vbuff, "%s", version);       /* trim */
 
     if (a.packages.package_patch_arch_regex)
     {
-        strncpy(vbuff, ExtractFirstReference(a.packages.package_patch_arch_regex, item), CF_MAXVARSIZE - 1);
+        strlcpy(vbuff, ExtractFirstReference(a.packages.package_patch_arch_regex, item), CF_MAXVARSIZE );
         sscanf(vbuff, "%s", arch);      /* trim */
     }
     else
     {
-        strncpy(arch, default_arch, CF_MAXVARSIZE - 1);
+        strlcpy(arch, default_arch, CF_MAXVARSIZE );
     }
 
     if ((strcmp(name, "CF_NOMATCH") == 0) || (strcmp(version, "CF_NOMATCH") == 0) || (strcmp(arch, "CF_NOMATCH") == 0))
@@ -2598,7 +2598,7 @@ static int PrependMultiLinePackageItem(EvalContext *ctx, PackageItem ** list, ch
 
     if (FullTextMatch(ctx, a.packages.package_list_version_regex, item))
     {
-        strncpy(vbuff, ExtractFirstReference(a.packages.package_list_version_regex, item), CF_MAXVARSIZE - 1);
+        strlcpy(vbuff, ExtractFirstReference(a.packages.package_list_version_regex, item), CF_MAXVARSIZE );
         sscanf(vbuff, "%s", version);   /* trim */
     }
 
@@ -2606,7 +2606,7 @@ static int PrependMultiLinePackageItem(EvalContext *ctx, PackageItem ** list, ch
     {
         if (a.packages.package_list_arch_regex)
         {
-            strncpy(vbuff, ExtractFirstReference(a.packages.package_list_arch_regex, item), CF_MAXVARSIZE - 1);
+            strlcpy(vbuff, ExtractFirstReference(a.packages.package_list_arch_regex, item), CF_MAXVARSIZE);
             sscanf(vbuff, "%s", arch);  /* trim */
         }
     }
@@ -2621,15 +2621,15 @@ static int PrependListPackageItem(EvalContext *ctx, PackageItem ** list, char *i
     char version[CF_MAXVARSIZE];
     char vbuff[CF_MAXVARSIZE];
 
-    strncpy(vbuff, ExtractFirstReference(a.packages.package_list_name_regex, item), CF_MAXVARSIZE - 1);
+    strlcpy(vbuff, ExtractFirstReference(a.packages.package_list_name_regex, item), CF_MAXVARSIZE);
     sscanf(vbuff, "%s", name);  /* trim */
 
-    strncpy(vbuff, ExtractFirstReference(a.packages.package_list_version_regex, item), CF_MAXVARSIZE - 1);
+    strlcpy(vbuff, ExtractFirstReference(a.packages.package_list_version_regex, item), CF_MAXVARSIZE);
     sscanf(vbuff, "%s", version);       /* trim */
 
     if (a.packages.package_list_arch_regex)
     {
-        strncpy(vbuff, ExtractFirstReference(a.packages.package_list_arch_regex, item), CF_MAXVARSIZE - 1);
+        strlcpy(vbuff, ExtractFirstReference(a.packages.package_list_arch_regex, item), CF_MAXVARSIZE);
         sscanf(vbuff, "%s", arch);      /* trim */
     }
     else

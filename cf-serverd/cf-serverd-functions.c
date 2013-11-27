@@ -423,18 +423,21 @@ void StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
 
             if (FD_ISSET(sd, &rset))
             {
+                int new_client = accept(sd, (struct sockaddr *)&cin, &addrlen);
+                if (new_client == -1)
+                {
+                    continue;
+                }
                 /* Just convert IP address to string, no DNS lookup. */
                 char ipaddr[CF_MAX_IP_LEN] = "";
                 getnameinfo((struct sockaddr *) &cin, addrlen,
                             ipaddr, sizeof(ipaddr),
                             NULL, 0, NI_NUMERICHOST);
-                ConnectionInfo *info = NULL;
-                info = ConnectionInfoNew();
+                ConnectionInfo *info = ConnectionInfoNew();
                 if (info)
                 {
-                    ConnectionInfoSetSocket(info, sd);
+                    ConnectionInfoSetSocket(info, new_client);
                     ServerEntryPoint(ctx, ipaddr, info);
-                    ConnectionInfoDestroy(&info);
                 }
             }
         }

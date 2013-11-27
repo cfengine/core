@@ -4274,12 +4274,12 @@ static FnCallResult FnCallOn(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
     struct tm tmv;
     DateTemplate i;
 
-    d[0] = 1900;
-    d[1] = 1;
-    d[2] = 0;
-    d[3] = 0;
-    d[4] = 0;
-    d[5] = 0;
+    d[DATE_TEMPLATE_YEAR] = 1900;
+    d[DATE_TEMPLATE_MONTH] = 1;
+    d[DATE_TEMPLATE_DAY] = 0;
+    d[DATE_TEMPLATE_HOUR] = 0;
+    d[DATE_TEMPLATE_MIN] = 0;
+    d[DATE_TEMPLATE_SEC] = 0;
 
     buffer[0] = '\0';
 
@@ -4357,12 +4357,12 @@ static FnCallResult FnCallLaterThan(EvalContext *ctx, FnCall *fp, Rlist *finalar
     struct tm tmv;
     DateTemplate i;
 
-    d[0] = 1900;
-    d[1] = 1;
-    d[2] = 0;
-    d[3] = 0;
-    d[4] = 0;
-    d[5] = 0;
+    d[DATE_TEMPLATE_YEAR] = 1900;
+    d[DATE_TEMPLATE_MONTH] = 1;
+    d[DATE_TEMPLATE_DAY] = 0;
+    d[DATE_TEMPLATE_HOUR] = 0;
+    d[DATE_TEMPLATE_MIN] = 0;
+    d[DATE_TEMPLATE_SEC] = 0;
 
     buffer[0] = '\0';
 
@@ -4416,12 +4416,12 @@ static FnCallResult FnCallAgoDate(EvalContext *ctx, FnCall *fp, Rlist *finalargs
     long d[6];
     DateTemplate i;
 
-    d[0] = 1900;
-    d[1] = 1;
-    d[2] = 0;
-    d[3] = 0;
-    d[4] = 0;
-    d[5] = 0;
+    d[DATE_TEMPLATE_YEAR] = 1900;
+    d[DATE_TEMPLATE_MONTH] = 1;
+    d[DATE_TEMPLATE_DAY] = 0;
+    d[DATE_TEMPLATE_HOUR] = 0;
+    d[DATE_TEMPLATE_MIN] = 0;
+    d[DATE_TEMPLATE_SEC] = 0;
     buffer[0] = '\0';
 
 /* begin fn specific content */
@@ -4466,12 +4466,12 @@ static FnCallResult FnCallAccumulatedDate(EvalContext *ctx, FnCall *fp, Rlist *f
     long d[6], cftime;
     DateTemplate i;
 
-    d[0] = 1900;
-    d[1] = 1;
-    d[2] = 0;
-    d[3] = 0;
-    d[4] = 0;
-    d[5] = 0;
+    d[DATE_TEMPLATE_YEAR] = 1900;
+    d[DATE_TEMPLATE_MONTH] = 1;
+    d[DATE_TEMPLATE_DAY] = 0;
+    d[DATE_TEMPLATE_HOUR] = 0;
+    d[DATE_TEMPLATE_MIN] = 0;
+    d[DATE_TEMPLATE_SEC] = 0;
     buffer[0] = '\0';
 
 /* begin fn specific content */

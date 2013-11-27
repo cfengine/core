@@ -392,7 +392,7 @@ static int IsForeignFileSystem(struct stat *childstat, char *dir)
     struct stat parentstat;
     char vbuff[CF_BUFSIZE];
 
-    strncpy(vbuff, dir, CF_BUFSIZE - 1);
+    strlcpy(vbuff, dir, CF_BUFSIZE);
 
     if (vbuff[strlen(vbuff) - 1] == FILE_SEPARATOR)
     {

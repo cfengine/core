@@ -43,6 +43,7 @@
 #include <conversion.h>
 #include <verify_classes.h>
 
+
 static void ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp, Rlist *lists, Rlist *containers,
                                PromiseActuator *ActOnPromise, void *param);
 static void ExpandAndMapIteratorsFromScalar(EvalContext *ctx, const char *scope, const char *string, size_t length, int level,
@@ -171,8 +172,9 @@ static void ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp, Rlist *lists
         }
 
         Promise *pexp = EvalContextStackPushPromiseIterationFrame(ctx, i, iter_ctx);
-        PromiseResult result = ActOnPromise(ctx, pexp, param);
-        EvalContextLogPromiseIterationOutcome(ctx, pp, result);
+
+        assert(ActOnPromise);
+        ActOnPromise(ctx, pexp, param);
 
         if (strcmp(pp->parent_promise_type->name, "vars") == 0 || strcmp(pp->parent_promise_type->name, "meta") == 0)
         {
@@ -180,7 +182,6 @@ static void ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp, Rlist *lists
         }
 
         EvalContextStackPopFrame(ctx);
-
     }
 
     PromiseIteratorDestroy(iter_ctx);

@@ -72,8 +72,8 @@ void RemoteSysLog(int log_priority, const char *log_string)
     if ((err = getaddrinfo(SYSLOG_HOST, strport, &query, &response)) != 0)
     {
         Log(LOG_LEVEL_INFO,
-              "Unable to find syslog_host or service: (%s/%s) %s",
-              SYSLOG_HOST, strport, gai_strerror(err));
+            "Unable to find syslog_host or service: (%s/%s) %s",
+            SYSLOG_HOST, strport, gai_strerror(err));
         return;
     }
 
@@ -86,7 +86,7 @@ void RemoteSysLog(int log_priority, const char *log_string)
                     NULL, 0, NI_NUMERICHOST);
         Log(LOG_LEVEL_VERBOSE,
             "Connect to syslog '%s' = '%s' on port '%s'",
-              SYSLOG_HOST, txtaddr, strport);
+            SYSLOG_HOST, txtaddr, strport);
 
         if ((sd = socket(ap->ai_family, ap->ai_socktype, IPPROTO_UDP)) == -1)
         {
@@ -106,7 +106,7 @@ void RemoteSysLog(int log_priority, const char *log_string)
             if (err == -1)
             {
                 Log(LOG_LEVEL_VERBOSE, "Couldn't send '%s' to syslog server '%s'. (sendto: %s)",
-                      message, SYSLOG_HOST, GetErrorStr());
+                    message, SYSLOG_HOST, GetErrorStr());
             }
             else
             {

@@ -713,14 +713,14 @@ static int InsertMultipleLinesToRegion(EvalContext *ctx, Item **start, Item *beg
     Item *ip, *prev = CF_UNDEFINED_ITEM;
 
     // Insert at the start of the file
-    
+
     if (*start == NULL)
     {
         return InsertMultipleLinesAtLocation(ctx, start, begin_ptr, end_ptr, *start, prev, a, pp, edcontext, result);
     }
 
     // Insert at the start of the region
-    
+
     if (a.location.before_after == EDIT_ORDER_BEFORE)
     {
         for (ip = *start; ip != NULL; ip = ip->next)
@@ -1243,7 +1243,7 @@ static int InsertFileAtLocation(EvalContext *ctx, Item **start, Item *begin_ptr,
         *result = PromiseResultUpdate(*result, PROMISE_RESULT_INTERRUPTED);
         return false;
     }
-    
+
     loc = location;
 
     for(;;)
@@ -1272,12 +1272,12 @@ static int InsertFileAtLocation(EvalContext *ctx, Item **start, Item *begin_ptr,
         {
             Log(LOG_LEVEL_ERR, "StripTrailingNewline was called on an overlong string");
         }
-        
+
         if (feof(fin) && strlen(buf) == 0)
         {
             break;
         }
-        
+
         if (a.expandvars)
         {
             ExpandScalar(ctx, PromiseGetBundle(pp)->ns, PromiseGetBundle(pp)->name, buf, exp);
@@ -1286,21 +1286,21 @@ static int InsertFileAtLocation(EvalContext *ctx, Item **start, Item *begin_ptr,
         {
             strcpy(exp, buf);
         }
-        
+
         if (!SelectLine(ctx, exp, a))
         {
             continue;
         }
-        
+
         if (!preserve_block && IsItemInRegion(ctx, exp, begin_ptr, end_ptr, a.insert_match, pp))
         {
             cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a,
                  "Promised file line '%s' exists within file %s (promise kept)", exp, edcontext->filename);
             continue;
         }
-        
+
         // Need to call CompoundLine here in case ExpandScalar has inserted \n into a string
-        
+
         retval |= InsertCompoundLineAtLocation(ctx, exp, start, begin_ptr, end_ptr, loc, prev, a, pp, edcontext, result);
 
         if (preserve_block && prev == CF_UNDEFINED_ITEM)
@@ -1309,7 +1309,7 @@ static int InsertFileAtLocation(EvalContext *ctx, Item **start, Item *begin_ptr,
            // to get the order of the block right
            //a.location.before_after = cfe_after;
            }
-        
+
         if (prev && prev != CF_UNDEFINED_ITEM)
         {
             prev = prev->next;
@@ -1318,7 +1318,7 @@ static int InsertFileAtLocation(EvalContext *ctx, Item **start, Item *begin_ptr,
         {
             prev = *start;
         }
-        
+
         if (loc)
         {
             loc = loc->next;
@@ -1328,14 +1328,14 @@ static int InsertFileAtLocation(EvalContext *ctx, Item **start, Item *begin_ptr,
             location = *start;
         }
     }
-    
+
     fclose(fin);
     return retval;
-    
+
 }
 
 /***************************************************************************/
-    
+
 static int InsertCompoundLineAtLocation(EvalContext *ctx, char *chunk, Item **start, Item *begin_ptr, Item *end_ptr,
                                         Item *location, Item *prev, Attributes a, Promise *pp, EditContext *edcontext,
                                         PromiseResult *result)
@@ -1379,7 +1379,7 @@ static int InsertCompoundLineAtLocation(EvalContext *ctx, char *chunk, Item **st
             // a.location.before_after = cfe_after;
             location = *start;
         }
-        
+
         if (prev && prev != CF_UNDEFINED_ITEM)
         {
             prev = prev->next;
@@ -1388,7 +1388,7 @@ static int InsertCompoundLineAtLocation(EvalContext *ctx, char *chunk, Item **st
         {
             prev = *start;
         }
-        
+
         if (location)
         {
             location = location->next;
@@ -1398,7 +1398,7 @@ static int InsertCompoundLineAtLocation(EvalContext *ctx, char *chunk, Item **st
             location = *start;
         }
     }
-    
+
     return retval;
 }
 
@@ -1466,7 +1466,7 @@ static int InsertLineAtLocation(EvalContext *ctx, char *newline, Item **start, I
     }
 
     if (a.location.before_after == EDIT_ORDER_BEFORE)
-    {    
+    {
         if (!preserve_block && NeighbourItemMatches(ctx, *start, location, newline, EDIT_ORDER_BEFORE, a.insert_match, pp))
         {
             cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "Promised line '%s' exists before locator in (promise kept)",

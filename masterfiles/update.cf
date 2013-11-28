@@ -7,7 +7,7 @@
 body common control
 {
  bundlesequence => { "cfe_internal_update" };
- version => "Community Update.cf 3.4.1";
+ version => "Community Update.cf 3.5.3";
 }
 
 #############################################################################

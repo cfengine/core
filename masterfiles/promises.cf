@@ -44,7 +44,7 @@ body common control
 
            };
 
- version => "Community Promises.cf 3.4.0";
+ version => "Community Promises.cf 3.5.3";
 
 }
 

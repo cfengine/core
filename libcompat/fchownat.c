@@ -29,55 +29,44 @@
 
 #include <fcntl.h>
 #include <unistd.h>
-#include <stdarg.h>
+#include <errno.h>
 
 #ifndef __MINGW32__
 
 typedef struct
 {
     const char *pathname;
+    uid_t owner;
+    gid_t group;
     int flags;
-    mode_t mode;
-    int fd;
-} openat_data;
+} fchownat_data;
 
-static int openat_inner(void *generic_data)
+static int fchownat_inner(void *generic_data)
 {
-    openat_data *data = generic_data;
-    data->fd = open(data->pathname, data->flags, data->mode);
-    return data->fd;
-}
-
-static void cleanup(void *generic_data)
-{
-    openat_data *data = generic_data;
-    if (data->fd >= 0)
+    fchownat_data *data = generic_data;
+    if (data->flags & AT_SYMLINK_NOFOLLOW)
     {
-        close(data->fd);
-    }
-}
-
-int openat(int dirfd, const char *pathname, int flags, ...)
-{
-    openat_data data;
-    int fd;
-
-    data.pathname = pathname;
-    data.flags = flags;
-    if (flags & O_CREAT)
-    {
-        va_list ap;
-        va_start(ap, flags);
-        data.mode = va_arg(ap, int);
-        va_end(ap);
+        return lchown(data->pathname, data->owner, data->group);
     }
     else
     {
-        data.mode = 0;
+        return chown(data->pathname, data->owner, data->group);
     }
-    data.fd = -1;
+}
 
-    return generic_at_function(dirfd, &openat_inner, &cleanup, &data);
+static void cleanup(ARG_UNUSED void *generic_data)
+{
+}
+
+int fchownat(int dirfd, const char *pathname, uid_t owner, gid_t group, int flags)
+{
+    fchownat_data data;
+    data.pathname = pathname;
+    data.owner = owner;
+    data.group = group;
+    data.flags = flags;
+
+    return generic_at_function(dirfd, &fchownat_inner, &cleanup, &data);
 }
 
 #endif // !__MINGW32__

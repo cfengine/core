@@ -1620,7 +1620,7 @@ static void VerifyName(EvalContext *ctx, char *path, struct stat *sb, Attributes
         }
         else
         {
-            chmod(path, newperm);
+            safe_chmod(path, newperm);
 
             if (!FileInRepository(newname))
             {
@@ -1905,7 +1905,7 @@ void VerifyFileAttributes(EvalContext *ctx, char *file, struct stat *dstat, Attr
 
             if (!DONTDO)
             {
-                if (chmod(file, newperm & 07777) == -1)
+                if (safe_chmod(file, newperm & 07777) == -1)
                 {
                     Log(LOG_LEVEL_ERR, "chmod failed on '%s'. (chmod: %s)", file, GetErrorStr());
                     break;
@@ -2880,7 +2880,7 @@ static void TruncateFile(char *name)
     }
     else
     {
-        if ((fd = creat(name, 000)) == -1)      /* dummy mode ignored */
+        if ((fd = safe_creat(name, 000)) == -1)      /* dummy mode ignored */
         {
             Log(LOG_LEVEL_ERR, "Failed to create or truncate file '%s'. (creat: %s)", name, GetErrorStr());
         }
@@ -3085,7 +3085,7 @@ int VerifyOwner(EvalContext *ctx, char *file, Promise *pp, Attributes attr, stru
             {
 # ifdef HAVE_LCHOWN
                 Log(LOG_LEVEL_DEBUG, "Using lchown function");
-                if (lchown(file, uid, gid) == -1)
+                if (safe_lchown(file, uid, gid) == -1)
                 {
                     Log(LOG_LEVEL_INFO, "Cannot set ownership on link '%s'. (lchown: %s)", file, GetErrorStr());
                 }
@@ -3111,7 +3111,7 @@ int VerifyOwner(EvalContext *ctx, char *file, Promise *pp, Attributes attr, stru
 
                 if (!S_ISLNK(sb->st_mode))
                 {
-                    if (chown(file, uid, gid) == -1)
+                    if (safe_chown(file, uid, gid) == -1)
                     {
                         cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_DENIED, pp, attr, "Cannot set ownership on file '%s'. (chown: %s)",
                              file, GetErrorStr());
@@ -3347,7 +3347,7 @@ int CfCreateFile(EvalContext *ctx, char *file, Promise *pp, Attributes attr)
 
             MakeParentDirectory(file, attr.move_obstructions);
 
-            if ((fd = creat(file, filemode)) == -1)
+            if ((fd = safe_creat(file, filemode)) == -1)
             {
                 cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, attr, "Error creating file '%s', mode '%04jo'. (creat: %s)",
                      file, (uintmax_t)filemode, GetErrorStr());

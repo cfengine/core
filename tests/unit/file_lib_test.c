@@ -27,9 +27,10 @@
 
 #include <bool.h>
 
-#define TEMP_DIR "/tmp"
+#define TEMP_DIR "/tmp/file_lib_test"
 #define TEST_FILE "file_lib_test.txt"
 #define TEST_LINK "file_lib_test.link"
+#define TEST_DIR "file_lib_test.dir"
 #define TEST_SUBDIR "file_lib_test.sub"
 #define TEST_SUBSUBDIR "file_lib_test.sub/sub"
 #define TEST_STRING "BLUE balloon"
@@ -44,11 +45,10 @@
 int TEST_SYMLINK_COUNTDOWN = 0;
 const char *TEST_SYMLINK_NAME = "";
 const char *TEST_SYMLINK_TARGET = "";
-bool TEST_SYMLINK_NONROOT = false;
 
 static int ORIG_DIR = -1;
 
-void test_switch_symlink()
+void test_switch_symlink(void)
 {
     if (--TEST_SYMLINK_COUNTDOWN == 0) {
         rmdir(TEST_SYMLINK_NAME);
@@ -56,7 +56,7 @@ void test_switch_symlink()
         assert_int_equal(symlink(TEST_SYMLINK_TARGET, TEST_SYMLINK_NAME), 0);
         // If we already are root, we must force the link to be non-root,
         // otherwise the test may have no purpose.
-        if (TEST_SYMLINK_NONROOT && getuid() == 0)
+        if (getuid() == 0)
         {
             // 100 exists in most installations, but it doesn't really matter.
             assert_int_equal(lchown(TEST_SYMLINK_NAME, 100, 100), 0);
@@ -64,7 +64,13 @@ void test_switch_symlink()
     }
 }
 
-void chdir_or_exit(const char *path)
+static void complain_missing_sudo(const char *function)
+{
+    printf("WARNING!!! %s will not run without root privileges.\n"
+           "Tried using sudo with no luck.\n", function);
+}
+
+static void chdir_or_exit(const char *path)
 {
     if (chdir(path) < 0)
     {
@@ -73,40 +79,60 @@ void chdir_or_exit(const char *path)
     }
 }
 
-void save_test_dir()
+static void save_test_dir(void)
 {
     ORIG_DIR = open(".", O_RDONLY);
     assert_true(ORIG_DIR >= 0);
 }
 
-void close_test_dir()
+static void close_test_dir(void)
 {
     close(ORIG_DIR);
 }
 
-void setup_tempfiles()
+static void clear_tempfiles(void)
 {
+    unlink(TEMP_DIR "/" TEST_FILE);
+    unlink(TEMP_DIR "/" TEST_LINK);
+    unlink(TEMP_DIR "/" TEST_SUBSUBDIR "/" TEST_FILE);
+    unlink(TEMP_DIR "/" TEST_SUBDIR "/" TEST_FILE);
+    rmdir(TEMP_DIR "/" TEST_SUBSUBDIR);
+    rmdir(TEMP_DIR "/" TEST_SUBDIR);
+    rmdir(TEMP_DIR);
+}
+
+static void setup_tempfiles(void)
+{
+    clear_tempfiles();
+
+    mkdir(TEMP_DIR, 0755);
     chdir_or_exit(TEMP_DIR);
     mkdir(TEST_SUBDIR, 0755);
     mkdir(TEST_SUBSUBDIR, 0755);
-    unlink(TEST_FILE);
-    unlink(TEST_LINK);
-    unlink(TEST_SUBSUBDIR "/" TEST_FILE);
-    unlink(TEST_SUBDIR "/" TEST_FILE);
     int fd = open(TEMP_DIR "/" TEST_FILE, O_WRONLY | O_CREAT | O_TRUNC, 0644);
-    int write_result = write(fd, TEST_STRING, strlen(TEST_STRING));
+    int result = write(fd, TEST_STRING, strlen(TEST_STRING));
     close(fd);
     fd = open(TEMP_DIR "/" TEST_SUBDIR "/" TEST_FILE, O_WRONLY | O_CREAT | O_TRUNC, 0644);
-    write_result = write(fd, TEST_SUBSTRING, strlen(TEST_SUBSTRING));
+    result = write(fd, TEST_SUBSTRING, strlen(TEST_SUBSTRING));
     close(fd);
     fd = open(TEMP_DIR "/" TEST_SUBSUBDIR "/" TEST_FILE, O_WRONLY | O_CREAT | O_TRUNC, 0644);
-    write_result = write(fd, TEST_SUBSUBSTRING, strlen(TEST_SUBSUBSTRING));
+    result = write(fd, TEST_SUBSUBSTRING, strlen(TEST_SUBSUBSTRING));
     close(fd);
 
-    (void)write_result;
+    if (getuid() == 0)
+    {
+        // 100 exists in most installations, but it doesn't really matter.
+        result = chown(TEMP_DIR "/" TEST_FILE, 100, 100);
+        result = chown(TEMP_DIR "/" TEST_SUBDIR "/" TEST_FILE, 100, 100);
+        result = chown(TEMP_DIR "/" TEST_SUBSUBDIR "/" TEST_FILE, 100, 100);
+        result = chown(TEMP_DIR "/" TEST_SUBDIR, 100, 100);
+        result = chown(TEMP_DIR "/" TEST_SUBSUBDIR, 100, 100);
+    }
+
+    (void)result;
 }
 
-void return_to_test_dir()
+static void return_to_test_dir(void)
 {
     if (fchdir(ORIG_DIR) < 0)
     {
@@ -115,7 +141,7 @@ void return_to_test_dir()
     }
 }
 
-void check_contents(int fd, const char *str)
+static void check_contents(int fd, const char *str)
 {
     char buf[strlen(str) + 1];
     assert_int_equal(read(fd, buf, strlen(str)), strlen(str));
@@ -123,7 +149,7 @@ void check_contents(int fd, const char *str)
     assert_string_equal(buf, str);
 }
 
-void test_safe_open_currentdir()
+static void test_safe_open_currentdir(void)
 {
     setup_tempfiles();
 
@@ -135,7 +161,7 @@ void test_safe_open_currentdir()
     return_to_test_dir();
 }
 
-void test_safe_open_subdir()
+static void test_safe_open_subdir(void)
 {
     setup_tempfiles();
 
@@ -147,7 +173,7 @@ void test_safe_open_subdir()
     return_to_test_dir();
 }
 
-void test_safe_open_subsubdir()
+static void test_safe_open_subsubdir(void)
 {
     setup_tempfiles();
 
@@ -159,7 +185,7 @@ void test_safe_open_subsubdir()
     return_to_test_dir();
 }
 
-void test_safe_open_updir()
+static void test_safe_open_updir(void)
 {
     setup_tempfiles();
 
@@ -173,7 +199,7 @@ void test_safe_open_updir()
     return_to_test_dir();
 }
 
-void test_safe_open_upupdir()
+static void test_safe_open_upupdir(void)
 {
     setup_tempfiles();
 
@@ -187,7 +213,7 @@ void test_safe_open_upupdir()
     return_to_test_dir();
 }
 
-void test_safe_open_generic_relative_dir()
+static void test_safe_open_generic_relative_dir(void)
 {
     setup_tempfiles();
 
@@ -199,7 +225,7 @@ void test_safe_open_generic_relative_dir()
     return_to_test_dir();
 }
 
-void test_safe_open_generic_absolute_dir()
+static void test_safe_open_generic_absolute_dir(void)
 {
     setup_tempfiles();
 
@@ -214,7 +240,7 @@ void test_safe_open_generic_absolute_dir()
     return_to_test_dir();
 }
 
-void test_safe_open_double_slashes_relative()
+static void test_safe_open_extra_slashes_relative(void)
 {
     setup_tempfiles();
 
@@ -226,7 +252,7 @@ void test_safe_open_double_slashes_relative()
     return_to_test_dir();
 }
 
-void test_safe_open_double_slashes_absolute()
+static void test_safe_open_extra_slashes_absolute(void)
 {
     setup_tempfiles();
 
@@ -243,14 +269,13 @@ void test_safe_open_double_slashes_absolute()
     return_to_test_dir();
 }
 
-void test_safe_open_unsafe_symlink()
+static void test_safe_open_unsafe_symlink(void)
 {
     setup_tempfiles();
 
     TEST_SYMLINK_COUNTDOWN = 1;
     TEST_SYMLINK_NAME = TEMP_DIR "/" TEST_LINK;
     TEST_SYMLINK_TARGET = "/etc/passwd";
-    TEST_SYMLINK_NONROOT = true;
     test_switch_symlink();
 
     assert_true(safe_open(TEMP_DIR "/" TEST_LINK, O_RDONLY) < 0);
@@ -259,14 +284,13 @@ void test_safe_open_unsafe_symlink()
     return_to_test_dir();
 }
 
-void test_safe_open_safe_symlink()
+static void test_safe_open_safe_symlink(void)
 {
     setup_tempfiles();
 
     TEST_SYMLINK_COUNTDOWN = 1;
     TEST_SYMLINK_NAME = TEMP_DIR "/" TEST_LINK;
     TEST_SYMLINK_TARGET = TEMP_DIR "/" TEST_FILE;
-    TEST_SYMLINK_NONROOT = false;
     test_switch_symlink();
 
     int fd;
@@ -277,14 +301,13 @@ void test_safe_open_safe_symlink()
     return_to_test_dir();
 }
 
-void test_safe_open_unsafe_inserted_symlink()
+static void test_safe_open_unsafe_inserted_symlink(void)
 {
     setup_tempfiles();
 
     TEST_SYMLINK_COUNTDOWN = 1;
     TEST_SYMLINK_NAME = TEMP_DIR "/" TEST_LINK;
     TEST_SYMLINK_TARGET = "/etc/passwd";
-    TEST_SYMLINK_NONROOT = true;
     // Not calling this function will call it right in the middle of the
     // safe_open() instead.
     //test_switch_symlink();
@@ -295,14 +318,13 @@ void test_safe_open_unsafe_inserted_symlink()
     return_to_test_dir();
 }
 
-void test_safe_open_safe_inserted_symlink()
+static void test_safe_open_safe_inserted_symlink(void)
 {
     setup_tempfiles();
 
     TEST_SYMLINK_COUNTDOWN = 1;
     TEST_SYMLINK_NAME = TEMP_DIR "/" TEST_LINK;
     TEST_SYMLINK_TARGET = TEMP_DIR "/" TEST_FILE;
-    TEST_SYMLINK_NONROOT = false;
     // Not calling this function will call it right in the middle of the
     // safe_open() instead.
     //test_switch_symlink();
@@ -313,14 +335,13 @@ void test_safe_open_safe_inserted_symlink()
     return_to_test_dir();
 }
 
-void test_safe_open_unsafe_switched_symlink()
+static void test_safe_open_unsafe_switched_symlink(void)
 {
     setup_tempfiles();
 
     TEST_SYMLINK_COUNTDOWN = 1;
     TEST_SYMLINK_NAME = TEMP_DIR "/" TEST_FILE;
     TEST_SYMLINK_TARGET = "/etc/passwd";
-    TEST_SYMLINK_NONROOT = true;
     // Not calling this function will call it right in the middle of the
     // safe_open() instead.
     //test_switch_symlink();
@@ -331,14 +352,13 @@ void test_safe_open_unsafe_switched_symlink()
     return_to_test_dir();
 }
 
-void test_safe_open_safe_switched_symlink()
+static void test_safe_open_safe_switched_symlink(void)
 {
     setup_tempfiles();
 
-    TEST_SYMLINK_COUNTDOWN = 2;
+    TEST_SYMLINK_COUNTDOWN = 3;
     TEST_SYMLINK_NAME = TEMP_DIR "/" TEST_FILE;
     TEST_SYMLINK_TARGET = TEMP_DIR "/" TEST_SUBDIR "/" TEST_FILE;
-    TEST_SYMLINK_NONROOT = false;
     // Not calling this function will call it right in the middle of the
     // safe_open() instead.
     //test_switch_symlink();
@@ -351,14 +371,13 @@ void test_safe_open_safe_switched_symlink()
     return_to_test_dir();
 }
 
-void test_safe_open_unsafe_dir_symlink()
+static void test_safe_open_unsafe_dir_symlink(void)
 {
     setup_tempfiles();
 
     TEST_SYMLINK_COUNTDOWN = 1;
     TEST_SYMLINK_NAME = TEMP_DIR "/" TEST_LINK;
     TEST_SYMLINK_TARGET = "/etc";
-    TEST_SYMLINK_NONROOT = true;
     test_switch_symlink();
 
     assert_true(safe_open(TEMP_DIR "/" TEST_LINK "/passwd", O_RDONLY) < 0);
@@ -367,14 +386,13 @@ void test_safe_open_unsafe_dir_symlink()
     return_to_test_dir();
 }
 
-void test_safe_open_safe_dir_symlink()
+static void test_safe_open_safe_dir_symlink(void)
 {
     setup_tempfiles();
 
     TEST_SYMLINK_COUNTDOWN = 1;
     TEST_SYMLINK_NAME = TEMP_DIR "/" TEST_LINK;
     TEST_SYMLINK_TARGET = TEST_SUBDIR;
-    TEST_SYMLINK_NONROOT = false;
     test_switch_symlink();
 
     int fd;
@@ -385,14 +403,13 @@ void test_safe_open_safe_dir_symlink()
     return_to_test_dir();
 }
 
-void test_safe_open_unsafe_inserted_dir_symlink()
+static void test_safe_open_unsafe_inserted_dir_symlink(void)
 {
     setup_tempfiles();
 
     TEST_SYMLINK_COUNTDOWN = 1;
     TEST_SYMLINK_NAME = TEMP_DIR "/" TEST_LINK;
     TEST_SYMLINK_TARGET = "/etc";
-    TEST_SYMLINK_NONROOT = true;
     // Not calling this function will call it right in the middle of the
     // safe_open() instead.
     //test_switch_symlink();
@@ -403,14 +420,13 @@ void test_safe_open_unsafe_inserted_dir_symlink()
     return_to_test_dir();
 }
 
-void test_safe_open_safe_inserted_dir_symlink()
+static void test_safe_open_safe_inserted_dir_symlink(void)
 {
     setup_tempfiles();
 
     TEST_SYMLINK_COUNTDOWN = 1;
     TEST_SYMLINK_NAME = TEMP_DIR "/" TEST_LINK;
     TEST_SYMLINK_TARGET = TEST_SUBDIR;
-    TEST_SYMLINK_NONROOT = false;
     // Not calling this function will call it right in the middle of the
     // safe_open() instead.
     //test_switch_symlink();
@@ -421,16 +437,19 @@ void test_safe_open_safe_inserted_dir_symlink()
     return_to_test_dir();
 }
 
-void test_safe_open_unsafe_switched_dir_symlink()
+static void test_safe_open_unsafe_switched_dir_symlink(void)
 {
     setup_tempfiles();
 
     assert_int_equal(mkdir(TEMP_DIR "/" TEST_LINK, 0755), 0);
+    if (getuid() == 0)
+    {
+        assert_int_equal(chown(TEMP_DIR "/" TEST_LINK, 100, 100), 0);
+    }
 
     TEST_SYMLINK_COUNTDOWN = 1;
     TEST_SYMLINK_NAME = TEMP_DIR "/" TEST_LINK;
     TEST_SYMLINK_TARGET = "/etc";
-    TEST_SYMLINK_NONROOT = true;
     // Not calling this function will call it right in the middle of the
     // safe_open() instead.
     //test_switch_symlink();
@@ -441,16 +460,19 @@ void test_safe_open_unsafe_switched_dir_symlink()
     return_to_test_dir();
 }
 
-void test_safe_open_safe_switched_dir_symlink()
+static void test_safe_open_safe_switched_dir_symlink(void)
 {
     setup_tempfiles();
 
     assert_int_equal(mkdir(TEMP_DIR "/" TEST_LINK, 0755), 0);
+    if (getuid() == 0)
+    {
+        assert_int_equal(chown(TEMP_DIR "/" TEST_LINK, 100, 100), 0);
+    }
 
     TEST_SYMLINK_COUNTDOWN = 1;
     TEST_SYMLINK_NAME = TEMP_DIR "/" TEST_LINK;
     TEST_SYMLINK_TARGET = TEST_SUBDIR;
-    TEST_SYMLINK_NONROOT = false;
     // Not calling this function will call it right in the middle of the
     // safe_open() instead.
     //test_switch_symlink();
@@ -463,14 +485,13 @@ void test_safe_open_safe_switched_dir_symlink()
     return_to_test_dir();
 }
 
-void test_safe_open_create_inserted_symlink()
+static void test_safe_open_create_inserted_symlink(void)
 {
     setup_tempfiles();
 
     TEST_SYMLINK_COUNTDOWN = 1;
     TEST_SYMLINK_NAME = TEMP_DIR "/" TEST_LINK;
     TEST_SYMLINK_TARGET = TEMP_DIR "/" TEST_FILE;
-    TEST_SYMLINK_NONROOT = true;
     // Not calling this function will call it right in the middle of the
     // safe_open() instead.
     //test_switch_symlink();
@@ -481,14 +502,13 @@ void test_safe_open_create_inserted_symlink()
     return_to_test_dir();
 }
 
-void test_safe_open_create_switched_symlink()
+static void test_safe_open_create_switched_symlink(void)
 {
     setup_tempfiles();
 
     TEST_SYMLINK_COUNTDOWN = 1;
     TEST_SYMLINK_NAME = TEMP_DIR "/" TEST_FILE;
     TEST_SYMLINK_TARGET = "/etc/passwd";
-    TEST_SYMLINK_NONROOT = true;
     // Not calling this function will call it right in the middle of the
     // safe_open() instead.
     //test_switch_symlink();
@@ -499,14 +519,13 @@ void test_safe_open_create_switched_symlink()
     return_to_test_dir();
 }
 
-void test_safe_open_dangling_symlink()
+static void test_safe_open_dangling_symlink(void)
 {
     setup_tempfiles();
 
     TEST_SYMLINK_COUNTDOWN = 1;
     TEST_SYMLINK_NAME = TEMP_DIR "/" TEST_FILE;
     TEST_SYMLINK_TARGET = "/etc/file-that-for-sure-does-not-exist";
-    TEST_SYMLINK_NONROOT = true;
     // Not calling this function will call it right in the middle of the
     // safe_open() instead.
     //test_switch_symlink();
@@ -517,7 +536,7 @@ void test_safe_open_dangling_symlink()
     return_to_test_dir();
 }
 
-void test_safe_open_root()
+static void test_safe_open_root(void)
 {
     int fd;
     struct stat statbuf;
@@ -529,7 +548,7 @@ void test_safe_open_root()
     return_to_test_dir();
 }
 
-void test_safe_fopen()
+static void test_safe_fopen(void)
 {
     setup_tempfiles();
 
@@ -640,8 +659,495 @@ void test_safe_fopen()
     return_to_test_dir();
 }
 
-int main()
+static void test_safe_chown_plain_file(void)
 {
+    if (getuid() != 0)
+    {
+        complain_missing_sudo(__FUNCTION__);
+        return;
+    }
+
+    setup_tempfiles();
+
+    struct stat statbuf;
+
+    assert_int_equal(chown(TEST_FILE, 100, 100), 0);
+    assert_int_equal(stat(TEST_FILE, &statbuf), 0);
+    assert_int_equal(statbuf.st_uid, 100);
+    assert_int_equal(statbuf.st_gid, 100);
+    assert_int_equal(safe_chown(TEST_FILE, 0, 0), 0);
+    assert_int_equal(stat(TEST_FILE, &statbuf), 0);
+    assert_int_equal(statbuf.st_uid, 0);
+    assert_int_equal(statbuf.st_gid, 0);
+
+    return_to_test_dir();
+}
+
+static void test_safe_chown_relative_file(void)
+{
+    if (getuid() != 0)
+    {
+        complain_missing_sudo(__FUNCTION__);
+        return;
+    }
+
+    setup_tempfiles();
+
+    struct stat statbuf;
+
+    assert_int_equal(chown(TEST_SUBSUBDIR "/" TEST_FILE, 100, 100), 0);
+    assert_int_equal(stat(TEST_SUBSUBDIR "/" TEST_FILE, &statbuf), 0);
+    assert_int_equal(statbuf.st_uid, 100);
+    assert_int_equal(statbuf.st_gid, 100);
+    assert_int_equal(safe_chown(TEST_SUBSUBDIR "/" TEST_FILE, 0, 0), 0);
+    assert_int_equal(stat(TEST_SUBSUBDIR "/" TEST_FILE, &statbuf), 0);
+    assert_int_equal(statbuf.st_uid, 0);
+    assert_int_equal(statbuf.st_gid, 0);
+
+    return_to_test_dir();
+}
+
+static void test_safe_chown_absolute_file(void)
+{
+    if (getuid() != 0)
+    {
+        complain_missing_sudo(__FUNCTION__);
+        return;
+    }
+
+    setup_tempfiles();
+
+    struct stat statbuf;
+
+    assert_int_equal(chown(TEMP_DIR "/" TEST_SUBSUBDIR "/" TEST_FILE, 100, 100), 0);
+    assert_int_equal(stat(TEMP_DIR "/" TEST_SUBSUBDIR "/" TEST_FILE, &statbuf), 0);
+    assert_int_equal(statbuf.st_uid, 100);
+    assert_int_equal(statbuf.st_gid, 100);
+    assert_int_equal(safe_chown(TEMP_DIR "/" TEST_SUBSUBDIR "/" TEST_FILE, 0, 0), 0);
+    assert_int_equal(stat(TEMP_DIR "/" TEST_SUBSUBDIR "/" TEST_FILE, &statbuf), 0);
+    assert_int_equal(statbuf.st_uid, 0);
+    assert_int_equal(statbuf.st_gid, 0);
+
+    return_to_test_dir();
+}
+
+static void test_safe_chown_file_extra_slashes(void)
+{
+    if (getuid() != 0)
+    {
+        complain_missing_sudo(__FUNCTION__);
+        return;
+    }
+
+    setup_tempfiles();
+
+    struct stat statbuf;
+
+    assert_int_equal(chown("/" TEMP_DIR "////" TEST_SUBSUBDIR "//" TEST_FILE, 100, 100), 0);
+    assert_int_equal(stat("/" TEMP_DIR "////" TEST_SUBSUBDIR "//" TEST_FILE, &statbuf), 0);
+    assert_int_equal(statbuf.st_uid, 100);
+    assert_int_equal(statbuf.st_gid, 100);
+    assert_int_equal(safe_chown("/" TEMP_DIR "////" TEST_SUBSUBDIR "//" TEST_FILE, 0, 0), 0);
+    assert_int_equal(stat("/" TEMP_DIR "////" TEST_SUBSUBDIR "//" TEST_FILE, &statbuf), 0);
+    assert_int_equal(statbuf.st_uid, 0);
+    assert_int_equal(statbuf.st_gid, 0);
+
+    return_to_test_dir();
+}
+
+static void test_safe_chown_plain_directory(void)
+{
+    if (getuid() != 0)
+    {
+        complain_missing_sudo(__FUNCTION__);
+        return;
+    }
+
+    setup_tempfiles();
+
+    struct stat statbuf;
+
+    assert_int_equal(chown(TEST_SUBDIR, 100, 100), 0);
+    assert_int_equal(stat(TEST_SUBDIR, &statbuf), 0);
+    assert_int_equal(statbuf.st_uid, 100);
+    assert_int_equal(statbuf.st_gid, 100);
+    assert_int_equal(safe_chown(TEST_SUBDIR, 0, 0), 0);
+    assert_int_equal(stat(TEST_SUBDIR, &statbuf), 0);
+    assert_int_equal(statbuf.st_uid, 0);
+    assert_int_equal(statbuf.st_gid, 0);
+
+    return_to_test_dir();
+}
+
+static void test_safe_chown_unsafe_link(void)
+{
+    if (getuid() != 0)
+    {
+        complain_missing_sudo(__FUNCTION__);
+        return;
+    }
+
+    setup_tempfiles();
+
+    struct stat statbuf;
+
+    TEST_SYMLINK_COUNTDOWN = 1;
+    TEST_SYMLINK_NAME = TEMP_DIR "/" TEST_FILE;
+    TEST_SYMLINK_TARGET = TEMP_DIR "/" TEST_SUBDIR "/" TEST_FILE;
+    // Not calling this function will call it right in the middle of the
+    // safe_open() instead.
+    //test_switch_symlink();
+
+    assert_int_equal(chown(TEST_SUBDIR "/" TEST_FILE, 0, 0), 0);
+    assert_int_equal(stat(TEST_SUBDIR "/" TEST_FILE, &statbuf), 0);
+    assert_int_equal(statbuf.st_uid, 0);
+    assert_int_equal(statbuf.st_gid, 0);
+    assert_int_equal(safe_chown(TEST_FILE, 100, 100), -1);
+    assert_int_equal(errno, EACCES);
+    assert_int_equal(stat(TEST_SUBDIR "/" TEST_FILE, &statbuf), 0);
+    assert_int_equal(statbuf.st_uid, 0);
+    assert_int_equal(statbuf.st_gid, 0);
+
+    return_to_test_dir();
+}
+
+static void test_safe_lchown_plain_file(void)
+{
+    if (getuid() != 0)
+    {
+        complain_missing_sudo(__FUNCTION__);
+        return;
+    }
+
+    setup_tempfiles();
+
+    struct stat statbuf;
+
+    assert_int_equal(lchown(TEST_FILE, 100, 100), 0);
+    assert_int_equal(stat(TEST_FILE, &statbuf), 0);
+    assert_int_equal(statbuf.st_uid, 100);
+    assert_int_equal(statbuf.st_gid, 100);
+    assert_int_equal(safe_lchown(TEST_FILE, 0, 0), 0);
+    assert_int_equal(stat(TEST_FILE, &statbuf), 0);
+    assert_int_equal(statbuf.st_uid, 0);
+    assert_int_equal(statbuf.st_gid, 0);
+
+    return_to_test_dir();
+}
+
+static void test_safe_lchown_relative_file(void)
+{
+    if (getuid() != 0)
+    {
+        complain_missing_sudo(__FUNCTION__);
+        return;
+    }
+
+    setup_tempfiles();
+
+    struct stat statbuf;
+
+    assert_int_equal(lchown(TEST_SUBSUBDIR "/" TEST_FILE, 100, 100), 0);
+    assert_int_equal(stat(TEST_SUBSUBDIR "/" TEST_FILE, &statbuf), 0);
+    assert_int_equal(statbuf.st_uid, 100);
+    assert_int_equal(statbuf.st_gid, 100);
+    assert_int_equal(safe_lchown(TEST_SUBSUBDIR "/" TEST_FILE, 0, 0), 0);
+    assert_int_equal(stat(TEST_SUBSUBDIR "/" TEST_FILE, &statbuf), 0);
+    assert_int_equal(statbuf.st_uid, 0);
+    assert_int_equal(statbuf.st_gid, 0);
+
+    return_to_test_dir();
+}
+
+static void test_safe_lchown_absolute_file(void)
+{
+    if (getuid() != 0)
+    {
+        complain_missing_sudo(__FUNCTION__);
+        return;
+    }
+
+    setup_tempfiles();
+
+    struct stat statbuf;
+
+    assert_int_equal(lchown(TEMP_DIR "/" TEST_SUBSUBDIR "/" TEST_FILE, 100, 100), 0);
+    assert_int_equal(stat(TEMP_DIR "/" TEST_SUBSUBDIR "/" TEST_FILE, &statbuf), 0);
+    assert_int_equal(statbuf.st_uid, 100);
+    assert_int_equal(statbuf.st_gid, 100);
+    assert_int_equal(safe_lchown(TEMP_DIR "/" TEST_SUBSUBDIR "/" TEST_FILE, 0, 0), 0);
+    assert_int_equal(stat(TEMP_DIR "/" TEST_SUBSUBDIR "/" TEST_FILE, &statbuf), 0);
+    assert_int_equal(statbuf.st_uid, 0);
+    assert_int_equal(statbuf.st_gid, 0);
+
+    return_to_test_dir();
+}
+
+static void test_safe_lchown_file_extra_slashes(void)
+{
+    if (getuid() != 0)
+    {
+        complain_missing_sudo(__FUNCTION__);
+        return;
+    }
+
+    setup_tempfiles();
+
+    struct stat statbuf;
+
+    assert_int_equal(lchown("/" TEMP_DIR "////" TEST_SUBSUBDIR "//" TEST_FILE, 100, 100), 0);
+    assert_int_equal(stat("/" TEMP_DIR "////" TEST_SUBSUBDIR "//" TEST_FILE, &statbuf), 0);
+    assert_int_equal(statbuf.st_uid, 100);
+    assert_int_equal(statbuf.st_gid, 100);
+    assert_int_equal(safe_lchown("/" TEMP_DIR "////" TEST_SUBSUBDIR "//" TEST_FILE, 0, 0), 0);
+    assert_int_equal(stat("/" TEMP_DIR "////" TEST_SUBSUBDIR "//" TEST_FILE, &statbuf), 0);
+    assert_int_equal(statbuf.st_uid, 0);
+    assert_int_equal(statbuf.st_gid, 0);
+
+    return_to_test_dir();
+}
+
+static void test_safe_lchown_plain_directory(void)
+{
+    if (getuid() != 0)
+    {
+        complain_missing_sudo(__FUNCTION__);
+        return;
+    }
+
+    setup_tempfiles();
+
+    struct stat statbuf;
+
+    assert_int_equal(lchown(TEST_SUBDIR, 100, 100), 0);
+    assert_int_equal(stat(TEST_SUBDIR, &statbuf), 0);
+    assert_int_equal(statbuf.st_uid, 100);
+    assert_int_equal(statbuf.st_gid, 100);
+    assert_int_equal(safe_lchown(TEST_SUBDIR, 0, 0), 0);
+    assert_int_equal(stat(TEST_SUBDIR, &statbuf), 0);
+    assert_int_equal(statbuf.st_uid, 0);
+    assert_int_equal(statbuf.st_gid, 0);
+
+    return_to_test_dir();
+}
+
+static void test_safe_lchown_unsafe_link(void)
+{
+    if (getuid() != 0)
+    {
+        complain_missing_sudo(__FUNCTION__);
+        return;
+    }
+
+    setup_tempfiles();
+
+    struct stat statbuf;
+
+    TEST_SYMLINK_COUNTDOWN = 1;
+    TEST_SYMLINK_NAME = TEMP_DIR "/" TEST_FILE;
+    TEST_SYMLINK_TARGET = TEMP_DIR "/" TEST_SUBDIR "/" TEST_FILE;
+    // Not calling this function will call it right in the middle of the
+    // safe_open() instead.
+    //test_switch_symlink();
+
+    assert_int_equal(lchown(TEST_SUBDIR "/" TEST_FILE, 0, 0), 0);
+    assert_int_equal(stat(TEST_SUBDIR "/" TEST_FILE, &statbuf), 0);
+    assert_int_equal(statbuf.st_uid, 0);
+    assert_int_equal(statbuf.st_gid, 0);
+    // Unsafe links should succeed, because we are operating on the *link*, not the target.
+    assert_int_equal(safe_lchown(TEST_FILE, 100, 100), 0);
+    assert_int_equal(stat(TEST_SUBDIR "/" TEST_FILE, &statbuf), 0);
+    assert_int_equal(statbuf.st_uid, 0);
+    assert_int_equal(statbuf.st_gid, 0);
+
+    return_to_test_dir();
+}
+
+static void test_safe_lchown_unsafe_link_to_directory(void)
+{
+    if (getuid() != 0)
+    {
+        complain_missing_sudo(__FUNCTION__);
+        return;
+    }
+
+    setup_tempfiles();
+
+    struct stat statbuf;
+
+    TEST_SYMLINK_COUNTDOWN = 1;
+    TEST_SYMLINK_NAME = TEMP_DIR "/" TEST_LINK;
+    TEST_SYMLINK_TARGET = TEMP_DIR "/" TEST_SUBDIR;
+    test_switch_symlink();
+
+    assert_int_equal(lchown(TEST_SUBDIR "/" TEST_FILE, 0, 0), 0);
+    assert_int_equal(stat(TEST_SUBDIR "/" TEST_FILE, &statbuf), 0);
+    assert_int_equal(statbuf.st_uid, 0);
+    assert_int_equal(statbuf.st_gid, 0);
+    assert_int_equal(lchown(TEST_SUBDIR, 0, 0), 0);
+    assert_int_equal(stat(TEST_SUBDIR, &statbuf), 0);
+    assert_int_equal(statbuf.st_uid, 0);
+    assert_int_equal(statbuf.st_gid, 0);
+    assert_int_equal(safe_lchown(TEST_LINK "/" TEST_FILE, 100, 100), -1);
+    assert_int_equal(errno, EACCES);
+
+    assert_int_equal(lchown(TEST_SUBDIR "/" TEST_FILE, 100, 100), 0);
+    assert_int_equal(stat(TEST_SUBDIR "/" TEST_FILE, &statbuf), 0);
+    assert_int_equal(statbuf.st_uid, 100);
+    assert_int_equal(statbuf.st_gid, 100);
+    assert_int_equal(lchown(TEST_SUBDIR, 100, 100), 0);
+    assert_int_equal(stat(TEST_SUBDIR, &statbuf), 0);
+    assert_int_equal(statbuf.st_uid, 100);
+    assert_int_equal(statbuf.st_gid, 100);
+    assert_int_equal(safe_lchown(TEST_LINK "/" TEST_FILE, 100, 100), 0);
+    assert_int_equal(stat(TEST_SUBDIR "/" TEST_FILE, &statbuf), 0);
+    assert_int_equal(statbuf.st_uid, 100);
+    assert_int_equal(statbuf.st_gid, 100);
+
+    return_to_test_dir();
+}
+
+static void test_safe_chmod_plain_file(void)
+{
+    setup_tempfiles();
+
+    struct stat statbuf;
+
+    assert_int_equal(chmod(TEST_FILE, 0777), 0);
+    assert_int_equal(stat(TEST_FILE, &statbuf), 0);
+    assert_int_equal(statbuf.st_mode & 0777, 0777);
+    assert_int_equal(safe_chmod(TEST_FILE, 0644), 0);
+    assert_int_equal(stat(TEST_FILE, &statbuf), 0);
+    assert_int_equal(statbuf.st_mode & 0777, 0644);
+
+    return_to_test_dir();
+}
+
+static void test_safe_chmod_relative_file(void)
+{
+    setup_tempfiles();
+
+    struct stat statbuf;
+
+    assert_int_equal(chmod(TEST_SUBDIR "/" TEST_FILE, 0777), 0);
+    assert_int_equal(stat(TEST_SUBDIR "/" TEST_FILE, &statbuf), 0);
+    assert_int_equal(statbuf.st_mode & 0777, 0777);
+    assert_int_equal(safe_chmod(TEST_SUBDIR "/" TEST_FILE, 0644), 0);
+    assert_int_equal(stat(TEST_SUBDIR "/" TEST_FILE, &statbuf), 0);
+    assert_int_equal(statbuf.st_mode & 0777, 0644);
+
+    return_to_test_dir();
+}
+
+static void test_safe_chmod_absolute_file(void)
+{
+    setup_tempfiles();
+
+    struct stat statbuf;
+
+    assert_int_equal(chmod(TEMP_DIR "/" TEST_SUBDIR "/" TEST_FILE, 0777), 0);
+    assert_int_equal(stat(TEMP_DIR "/" TEST_SUBDIR "/" TEST_FILE, &statbuf), 0);
+    assert_int_equal(statbuf.st_mode & 0777, 0777);
+    assert_int_equal(safe_chmod(TEMP_DIR "/" TEST_SUBDIR "/" TEST_FILE, 0644), 0);
+    assert_int_equal(stat(TEMP_DIR "/" TEST_SUBDIR "/" TEST_FILE, &statbuf), 0);
+    assert_int_equal(statbuf.st_mode & 0777, 0644);
+
+    return_to_test_dir();
+}
+
+static void test_safe_chmod_extra_slashes(void)
+{
+    setup_tempfiles();
+
+    struct stat statbuf;
+
+    assert_int_equal(chmod("/" TEMP_DIR "///" TEST_SUBDIR "//" TEST_FILE, 0777), 0);
+    assert_int_equal(stat("/" TEMP_DIR "///" TEST_SUBDIR "//" TEST_FILE, &statbuf), 0);
+    assert_int_equal(statbuf.st_mode & 0777, 0777);
+    assert_int_equal(safe_chmod("/" TEMP_DIR "///" TEST_SUBDIR "//" TEST_FILE, 0644), 0);
+    assert_int_equal(stat("/" TEMP_DIR "///" TEST_SUBDIR "//" TEST_FILE, &statbuf), 0);
+    assert_int_equal(statbuf.st_mode & 0777, 0644);
+
+    return_to_test_dir();
+}
+
+static void test_safe_chmod_unsafe_link(void)
+{
+    if (getuid() != 0)
+    {
+        complain_missing_sudo(__FUNCTION__);
+        return;
+    }
+
+    setup_tempfiles();
+
+    struct stat statbuf;
+
+    TEST_SYMLINK_COUNTDOWN = 1;
+    TEST_SYMLINK_NAME = TEMP_DIR "/" TEST_FILE;
+    TEST_SYMLINK_TARGET = TEMP_DIR "/" TEST_SUBDIR "/" TEST_FILE;
+    // Not calling this function will call it right in the middle of the
+    // safe_open() instead.
+    //test_switch_symlink();
+
+    assert_int_equal(chown(TEST_SUBDIR "/" TEST_FILE, 0, 0), 0);
+
+    assert_int_equal(chmod(TEST_SUBDIR "/" TEST_FILE, 0777), 0);
+    assert_int_equal(stat(TEST_SUBDIR "/" TEST_FILE, &statbuf), 0);
+    assert_int_equal(statbuf.st_mode & 0777, 0777);
+    assert_int_equal(safe_chmod(TEST_FILE, 0644), -1);
+    assert_int_equal(errno, EACCES);
+    assert_int_equal(stat(TEST_SUBDIR "/" TEST_FILE, &statbuf), 0);
+    assert_int_equal(statbuf.st_mode & 0777, 0777);
+
+    return_to_test_dir();
+}
+
+static void test_safe_creat_exists(void)
+{
+    setup_tempfiles();
+
+    int fd;
+    struct stat buf;
+    assert_true((fd = safe_creat(TEST_FILE, 0644)) >= 0);
+    assert_int_equal(fstat(fd, &buf), 0);
+    assert_int_equal(buf.st_size, 0);
+    close(fd);
+
+    return_to_test_dir();
+}
+
+static void test_safe_creat_doesnt_exist(void)
+{
+    setup_tempfiles();
+
+    int fd;
+    struct stat buf;
+    unlink(TEST_FILE);
+    assert_true((fd = safe_creat(TEST_FILE, 0644)) >= 0);
+    assert_int_equal(fstat(fd, &buf), 0);
+    assert_int_equal(buf.st_size, 0);
+    close(fd);
+
+    return_to_test_dir();
+}
+
+static void try_gaining_root_privileges(int argc, char **argv)
+{
+    if (system("sudo -n /bin/true") == 0)
+    {
+        execlp("sudo", "sudo", "-n", argv[0], NULL);
+        // Should never get here.
+    }
+}
+
+int main(int argc, char **argv)
+{
+    if (getuid() != 0)
+    {
+        try_gaining_root_privileges(argc, argv);
+    }
+
     PRINT_TEST_BANNER();
 
     const UnitTest tests[] =
@@ -655,8 +1161,8 @@ int main()
             unit_test(test_safe_open_upupdir),
             unit_test(test_safe_open_generic_relative_dir),
             unit_test(test_safe_open_generic_absolute_dir),
-            unit_test(test_safe_open_double_slashes_relative),
-            unit_test(test_safe_open_double_slashes_absolute),
+            unit_test(test_safe_open_extra_slashes_relative),
+            unit_test(test_safe_open_extra_slashes_absolute),
             unit_test(test_safe_open_unsafe_symlink),
             unit_test(test_safe_open_safe_symlink),
             unit_test(test_safe_open_unsafe_inserted_symlink),
@@ -676,7 +1182,32 @@ int main()
 
             unit_test(test_safe_fopen),
 
+            unit_test(test_safe_chown_plain_file),
+            unit_test(test_safe_chown_relative_file),
+            unit_test(test_safe_chown_absolute_file),
+            unit_test(test_safe_chown_file_extra_slashes),
+            unit_test(test_safe_chown_plain_directory),
+            unit_test(test_safe_chown_unsafe_link),
+
+            unit_test(test_safe_lchown_plain_file),
+            unit_test(test_safe_lchown_relative_file),
+            unit_test(test_safe_lchown_absolute_file),
+            unit_test(test_safe_lchown_file_extra_slashes),
+            unit_test(test_safe_lchown_plain_directory),
+            unit_test(test_safe_lchown_unsafe_link),
+            unit_test(test_safe_lchown_unsafe_link_to_directory),
+
+            unit_test(test_safe_chmod_plain_file),
+            unit_test(test_safe_chmod_relative_file),
+            unit_test(test_safe_chmod_absolute_file),
+            unit_test(test_safe_chmod_extra_slashes),
+            unit_test(test_safe_chmod_unsafe_link),
+
+            unit_test(test_safe_creat_exists),
+            unit_test(test_safe_creat_doesnt_exist),
+
             unit_test(close_test_dir),
+            unit_test(clear_tempfiles),
         };
 
     int ret = run_tests(tests);

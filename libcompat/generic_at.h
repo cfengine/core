@@ -22,6 +22,6 @@
   included file COSL.txt.
 */
 
-#include <pthread.h>
-
-extern pthread_mutex_t CHDIR_LOCK;
+#ifndef __MINGW32__
+int generic_at_function(int dirfd, int (*func)(void *data), void (*cleanup)(void *data), void *data);
+#endif

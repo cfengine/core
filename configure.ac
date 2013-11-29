@@ -754,7 +754,8 @@ AC_REPLACE_FUNCS(pthread_sigmask)
 
 AC_CHECK_DECLS([openat], [], [], [[#include <fcntl.h>]])
 AC_CHECK_DECLS([fstatat], [], [], [[#include <sys/stat.h>]])
-AC_REPLACE_FUNCS(openat fstatat)
+AC_CHECK_DECLS([fchownat], [], [], [[#include <unistd.h>]])
+AC_REPLACE_FUNCS(openat fstatat fchownat)
 
 AC_CHECK_DECLS(socketpair, [], [], [[#include <sys/socket.h>]])
 

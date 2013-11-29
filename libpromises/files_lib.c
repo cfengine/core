@@ -679,21 +679,21 @@ void RotateFiles(char *name, int number)
         return;
     }
 
-    chmod(to, statbuf.st_mode);
-    if (chown(to, statbuf.st_uid, statbuf.st_gid))
+    safe_chmod(to, statbuf.st_mode);
+    if (safe_chown(to, statbuf.st_uid, statbuf.st_gid))
     {
         UnexpectedError("Failed to chown %s", to);
     }
-    chmod(name, 0600);       /* File must be writable to empty .. */
+    safe_chmod(name, 0600);       /* File must be writable to empty .. */
 
-    if ((fd = creat(name, statbuf.st_mode)) == -1)
+    if ((fd = safe_creat(name, statbuf.st_mode)) == -1)
     {
         Log(LOG_LEVEL_ERR, "Failed to create new '%s' in disable(rotate). (creat: %s)",
             name, GetErrorStr());
     }
     else
     {
-        if (chown(name, statbuf.st_uid, statbuf.st_gid))  /* NT doesn't have fchown */
+        if (safe_chown(name, statbuf.st_uid, statbuf.st_gid))  /* NT doesn't have fchown */
         {
             UnexpectedError("Failed to chown '%s'", name);
         }

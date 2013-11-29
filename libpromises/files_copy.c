@@ -31,6 +31,7 @@
 #include "instrumentation.h"
 #include "policy.h"
 #include "files_lib.h"
+#include "file_lib.h"
 #include "string_lib.h"
 #include "acl_tools.h"
 
@@ -177,13 +178,13 @@ bool CopyFilePermissionsDisk(const char *source, const char *destination)
         return false;
     }
 
-    if (chmod(destination, statbuf.st_mode) != 0)
+    if (safe_chmod(destination, statbuf.st_mode) != 0)
     {
         Log(LOG_LEVEL_INFO, "Can't copy permissions '%s'. (chmod: %s)", source, GetErrorStr());
         return false;
     }
 
-    if (chown(destination, statbuf.st_uid, statbuf.st_gid) != 0)
+    if (safe_chown(destination, statbuf.st_uid, statbuf.st_gid) != 0)
     {
         Log(LOG_LEVEL_INFO, "Can't copy permissions '%s'. (chown: %s)", source, GetErrorStr());
         return false;

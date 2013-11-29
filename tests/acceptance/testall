@@ -72,6 +72,7 @@ STAGING_TESTS=${STAGING_TESTS:-0}
 NETWORK_TESTS=${NETWORK_TESTS:-1}
 UNSAFE_TESTS=${UNSAFE_TESTS:-0}
 GAINROOT=${GAINROOT:-fakeroot}
+NO_CLEAN=0
 
 PASSED_TESTS=0
 FAILED_TESTS=0
@@ -162,6 +163,8 @@ usage() {
   echo " --printlog   print the full test.log output immediately."
   echo
   echo " --gdb   Run test under GDB"
+  echo " --no-clean does not clean workdir after test finishes"
+  echo "            (by default it gets cleaned only if test passed)."
 }
 
 runtest() {
@@ -262,7 +265,7 @@ export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP
       fi
     fi
 
-    if [ "$RESULT" = "Pass" ]; then
+    if [ "$RESULT" = "Pass" -a "$NO_CLEAN" = "0" ]; then
       $GAINROOT rm -rf "$WORKDIR"
     fi
 
@@ -381,6 +384,8 @@ while true; do
       PRINTLOG=1;;
     --gdb)
       GDB=1;;
+    --no-clean)
+      NO_CLEAN=1;;
     -*)
       echo "Unknown option: $1"
       exit 1;;

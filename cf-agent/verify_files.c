@@ -184,6 +184,23 @@ static int FileSanityChecks(EvalContext *ctx, char *path, Attributes a, Promise 
     return true;
 }
 
+static bool AttrHasNoAction(Attributes attr)
+{
+    /* Hopefully this includes all "actions" for a files promise. See struct
+     * Attributes for reference. */
+    if (!(attr.transformer || attr.haverename || attr.havedelete ||
+          attr.havecopy || attr.create || attr.touch || attr.havelink ||
+          attr.haveperms || attr.havechange || attr.acl.acl_entries ||
+          attr.haveedit || attr.haveeditline || attr.haveeditxml))
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
 static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, Promise *pp)
 {
     struct stat osb, oslb, dsb;
@@ -264,9 +281,12 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, Promise *pp
     /* If file or directory exists but it is not selected by body file_select
      * (if we have one) then just exit. But continue if it's a directory and
      * depth_search is on, so that we can file_select into it. */
+    bool selected = true;
     if (exists && (!VerifyFileLeaf(ctx, path, &oslb, a, pp, &result)) &&
         !(a.havedepthsearch && S_ISDIR(oslb.st_mode)))
     {
+        /* It exists but it was not selected. */
+        selected = false;
         goto exit;
     }
 
@@ -400,6 +420,30 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, Promise *pp
     }
 
 exit:
+
+    /* No action means action: verify file existence. */
+    /* This is /after/ the exit label so that we can report the promise as
+     * FAILED if the file exists but is not selected. */
+    if (AttrHasNoAction(a))
+    {
+        Log(LOG_LEVEL_VERBOSE,
+            "No action was requested for file '%s', just verifying file exists",
+            path);
+
+        if (!exists || !selected)
+        {
+            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a,
+                 "File does not exist: '%s'", path);
+            result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
+        }
+        else
+        {
+            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_NOOP, pp, a,
+                 "File exists: '%s'", path);
+            result = PromiseResultUpdate(result, PROMISE_RESULT_NOOP);
+        }
+    }
+
     result = PromiseResultUpdate(result, SaveSetuid(ctx, a, pp));
     YieldCurrentLock(thislock);
 

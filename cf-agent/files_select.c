@@ -56,7 +56,6 @@ static int SelectBSDMatch(struct stat *lstatptr, Rlist *bsdflags);
 
 int SelectLeaf(EvalContext *ctx, char *path, struct stat *sb, FileSelect fs)
 {
-    int result = true;
     Rlist *rp;
 
     StringSet *leaf_attr = StringSetNew();
@@ -185,9 +184,11 @@ int SelectLeaf(EvalContext *ctx, char *path, struct stat *sb, FileSelect fs)
         StringSetAdd(leaf_attr, xstrdup("exec_program"));
     }
 
-    result = EvalFileResult(fs.result, leaf_attr);
+    bool result = EvalFileResult(fs.result, leaf_attr);
 
-    Log(LOG_LEVEL_DEBUG, "Select result '%s' on '%s' was %d", fs.result, path, result);
+    Log(LOG_LEVEL_VERBOSE, "file_select result '%s' on '%s' was '%s'",
+        fs.result, path,
+        result ? "true" : "false");
 
     StringSetDestroy(leaf_attr);
 

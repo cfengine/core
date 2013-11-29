@@ -2900,7 +2900,14 @@ static bool GetListReferenceArgument(const EvalContext *ctx, const FnCall *fp, c
 
     if (rval_out->type != RVAL_TYPE_LIST)
     {
-        Log(LOG_LEVEL_VERBOSE, "Function '%s' expected a list variable reference, got variable of type '%s'", fp->name, DataTypeToString(*datatype_out));
+        if (datatype_out)
+        {
+            Log(LOG_LEVEL_VERBOSE, "Function '%s' expected a list variable reference, got variable of type '%s'", fp->name, DataTypeToString(*datatype_out));
+        }
+        else
+        {
+            Log(LOG_LEVEL_VERBOSE, "Function '%s' expected a list variable reference, got variable of a different type", fp->name);
+        }
         return false;
     }
 

@@ -58,22 +58,14 @@ void KeyDestroy(Key **key)
     {
         RSA_free((*key)->key);
     }
-    if ((*key)->hash)
-    {
-        HashDestroy(&(*key)->hash);
-    }
+    HashDestroy(&(*key)->hash);
     free (*key);
     *key = NULL;
 }
 
 const RSA *KeyRSA(const Key *key)
 {
-    if (!key)
-    {
-        return NULL;
-    }
-    const RSA *p = key->key;
-    return p;
+    return key ? key->key : NULL;
 }
 
 const unsigned char *KeyBinaryHash(const Key *key, unsigned int *length)
@@ -85,22 +77,14 @@ const unsigned char *KeyBinaryHash(const Key *key, unsigned int *length)
     return HashData(key->hash, length);
 }
 
-const unsigned char *KeyPrintableHash(const Key *key)
+const char *KeyPrintableHash(const Key *key)
 {
-    if (!key)
-    {
-        return NULL;
-    }
-    return HashPrintable(key->hash);
+    return key ? HashPrintable(key->hash) : NULL;
 }
 
 HashMethod KeyHashMethod(const Key *key)
 {
-    if (!key)
-    {
-        return HASH_METHOD_NONE;
-    }
-    return HashType(key->hash);
+    return key ? HashType(key->hash) : HASH_METHOD_NONE;
 }
 
 int KeySetHashMethod(Key *key, HashMethod method)
@@ -126,10 +110,5 @@ int KeySetHashMethod(Key *key, HashMethod method)
 
 const Hash *KeyData(Key *key)
 {
-    if (!key)
-    {
-        return NULL;
-    }
-    const Hash *hash = key->hash;
-    return hash;
+    return key ? key->hash : NULL;
 }

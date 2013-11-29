@@ -48,7 +48,7 @@
 typedef enum
 {
     /* When connection is initialised ProtocolVersion is 0, i.e. undefined. */
-    CF_PROTOCOL_UNDEFINED = 0, /*!< Protocol not defined yet */
+    CF_PROTOCOL_UNDEFINED, /*!< Protocol not defined yet */
     CF_PROTOCOL_CLASSIC, /*!< Normal CFEngine protocol */
     CF_PROTOCOL_TLS /*!< TLS protocol */
 } ProtocolVersion;

@@ -56,7 +56,7 @@ static const int CF_DIGEST_SIZES[10] =
 
 struct Hash {
     unsigned char digest[EVP_MAX_MD_SIZE];
-    unsigned char printable[EVP_MAX_MD_SIZE * 4];
+    char printable[EVP_MAX_MD_SIZE * 4];
     HashMethod method;
     HashSize size;
 };
@@ -69,11 +69,9 @@ struct Hash {
  */
 Hash *HashBasicInit(HashMethod method)
 {
-    Hash *hash = xmalloc (sizeof(Hash));
+    Hash *hash = xcalloc (1, sizeof(Hash));
     hash->size = CF_DIGEST_SIZES[method];
     hash->method = method;
-    memset(hash->digest, 0, EVP_MAX_MD_SIZE);
-    memset(hash->printable, 0, EVP_MAX_MD_SIZE * 4);
     return hash;
 }
 
@@ -137,7 +135,7 @@ Hash *HashNew(const char *data, const unsigned int length, HashMethod method)
     Hash *hash = HashBasicInit(method);
     context = EVP_MD_CTX_create();
     EVP_DigestInit_ex(context, md, NULL);
-    EVP_DigestUpdate(context, (unsigned char *) data, (size_t) length);
+    EVP_DigestUpdate(context, data, (size_t) length);
     EVP_DigestFinal_ex(context, hash->digest, &md_len);
     EVP_MD_CTX_destroy(context);
     /* Update the printable representation */
@@ -172,7 +170,7 @@ Hash *HashNewFromDescriptor(const int descriptor, HashMethod method)
     EVP_DigestInit_ex(context, md, NULL);
     do {
         read_count = read(descriptor, buffer, 1024);
-        EVP_DigestUpdate(context, (unsigned char *) buffer, (size_t) read_count);
+        EVP_DigestUpdate(context, buffer, (size_t) read_count);
     } while (read_count > 0);
     EVP_DigestFinal_ex(context, hash->digest, &md_len);
     EVP_MD_CTX_destroy(context);
@@ -298,41 +296,28 @@ const unsigned char *HashData(const Hash *hash, unsigned int *length)
         return NULL;
     }
     *length = hash->size;
-    return (const char *)hash->digest;
+    return hash->digest;
 }
 
-const unsigned char *HashPrintable(const Hash *hash)
+const char *HashPrintable(const Hash *hash)
 {
-    if (!hash)
-    {
-        return NULL;
-    }
-    return (const char *)hash->printable;
+    return hash ? hash->printable : NULL;
 }
 
 HashMethod HashType(const Hash *hash)
 {
-    if (!hash)
-    {
-        return HASH_METHOD_NONE;
-    }
-    return hash->method;
+    return hash ? hash->method : HASH_METHOD_NONE;
 }
 
 HashSize HashLength(const Hash *hash)
 {
-    if (!hash)
-    {
-        return CF_NO_HASH;
-    }
-    return hash->size;
+    return hash ? hash->size : CF_NO_HASH;
 }
 
 /* Class methods */
 HashMethod HashIdFromName(const char *hash_name)
 {
-    int i;
-
+    int i = 0;
     for (i = 0; CF_DIGEST_TYPES[i] != NULL; i++)
     {
         if (hash_name && (strcmp(hash_name, CF_DIGEST_TYPES[i]) == 0))
@@ -346,18 +331,10 @@ HashMethod HashIdFromName(const char *hash_name)
 
 const char *HashNameFromId(HashMethod hash_id)
 {
-    if (hash_id >= HASH_METHOD_NONE)
-    {
-        return NULL;
-    }
-    return CF_DIGEST_TYPES[hash_id];
+    return (hash_id >= HASH_METHOD_NONE) ? NULL : CF_DIGEST_TYPES[hash_id];
 }
 
 HashSize HashSizeFromId(HashMethod hash_id)
 {
-    if (hash_id >= HASH_METHOD_NONE)
-    {
-        return CF_NO_HASH;
-    }
-    return CF_DIGEST_SIZES[hash_id];
+    return (hash_id >= HASH_METHOD_NONE) ? CF_NO_HASH : CF_DIGEST_SIZES[hash_id];
 }

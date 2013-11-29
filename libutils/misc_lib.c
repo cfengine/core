@@ -37,10 +37,13 @@ unsigned long UnsignedModulus(long dividend, long divisor)
 void __ProgrammingError(const char *file, int lineno, const char *format, ...)
 {
     va_list ap;
-    va_start(ap, format);
     char *fmt = NULL;
+
+    va_start(ap, format);
     xasprintf(&fmt, "%s:%d: ProgrammingError: %s\n", file, lineno, format);
-    fprintf(stdout, fmt, ap);
+    vfprintf(stdout, fmt, ap);
+    va_end(ap);
+
     free(fmt);
     exit(255);
 }
@@ -52,9 +55,12 @@ void __ProgrammingError(const char *file, int lineno, const char *format, ...)
 void __UnexpectedError(const char *file, int lineno, const char *format, ...)
 {
     va_list ap;
-    va_start(ap, format);
     char *fmt = NULL;
+
+    va_start(ap, format);
     xasprintf(&fmt, "%s:%d: Unexpected Error: %s\n", file, lineno, format);
-    fprintf(stderr, fmt, ap);
+    vfprintf(stderr, fmt, ap);
+    va_end(ap);
+
     free(fmt);
 }

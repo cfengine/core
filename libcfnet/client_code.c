@@ -1065,11 +1065,12 @@ int CopyRegularFileNet(const char *source, const char *dest, off_t size, bool en
     }
 
     buf = xmalloc(CF_BUFSIZE + sizeof(int));    /* Note CF_BUFSIZE not buf_size !! */
-    n_read_total = 0;
 
     Log(LOG_LEVEL_VERBOSE, "Copying remote file '%s:%s', expecting %jd bytes",
           conn->this_server, source, (intmax_t)size);
 
+    n_read_total = 0;
+    done = (n_read_total >= size);
     while (!done)
     {
         if ((size - n_read_total) >= buf_size)
@@ -1163,10 +1164,8 @@ int CopyRegularFileNet(const char *source, const char *dest, off_t size, bool en
 
         n_read_total += towrite;        /* n_read; */
 
-        if (n_read_total >= size)        /* Handle EOF without closing socket */
-        {
-            done = true;
-        }
+        /* Handle EOF without closing socket */
+        done = (n_read_total >= size);
     }
 
     /* If the file ends with a `hole', something needs to be written at

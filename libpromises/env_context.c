@@ -1735,12 +1735,17 @@ static void AddAllClasses(EvalContext *ctx, const char *ns, const Rlist *list, u
                 EvalContextStackFrameAddSoft(ctx, classname, "");
                 break;
 
-            default:
+            case CONTEXT_SCOPE_NONE:
             case CONTEXT_SCOPE_NAMESPACE:
                 EvalContextHeapAddSoft(ctx, classname, ns, "");
                 break;
+
+            default:
+                ProgrammingError("AddAllClasses: Unexpected context_scope %d!",
+                                 context_scope);
             }
         }
+        free(classname);
     }
 }
 

@@ -184,6 +184,23 @@ static int FileSanityChecks(EvalContext *ctx, char *path, Attributes a, Promise 
     return true;
 }
 
+static bool AttrHasNoAction(Attributes attr)
+{
+    /* Hopefully this includes all "actions" for a files promise. See struct
+     * Attributes for reference. */
+    if (!(attr.transformer || attr.haverename || attr.havedelete ||
+          attr.havecopy || attr.create || attr.touch || attr.havelink ||
+          attr.haveperms || attr.havechange || attr.acl.acl_entries ||
+          attr.haveedit || attr.haveeditline || attr.haveeditxml))
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
 static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, Promise *pp)
 {
     struct stat osb, oslb, dsb;
@@ -400,6 +417,13 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, Promise *pp
     }
 
 exit:
+
+    if (AttrHasNoAction(a))
+    {
+        Log(LOG_LEVEL_INFO,
+            "No action was requested for file '%s'. Maybe a typo in the policy?", path);
+    }
+
     result = PromiseResultUpdate(result, SaveSetuid(ctx, a, pp));
     YieldCurrentLock(thislock);
 

@@ -81,8 +81,10 @@ Policy *GenericAgentLoadPolicy(EvalContext *ctx, GenericAgentConfig *config);
 void InitializeGA(EvalContext *ctx, GenericAgentConfig *config);
 void PrintHelp(const char *comp, const struct option options[], const char *hints[], bool accepts_file_argument);
 void PrintVersion(void);
-int CheckPromises(const GenericAgentConfig *config);
+bool GenericAgentArePromisesValid(const GenericAgentConfig *config);
+void GenericAgentUpdatePromisesValidatedFile(const GenericAgentConfig *config);
 Policy *ReadPromises(AgentType agent_type, GenericAgentConfig *config);
+void GetPromisesValidatedFile(char *filename, size_t max_size, const GenericAgentConfig *config);
 int NewPromiseProposals(EvalContext *ctx, const GenericAgentConfig *config, const Rlist *input_files);
 
 void BundleHashVariables(EvalContext *ctx, Bundle *bundle);

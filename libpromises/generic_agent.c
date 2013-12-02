@@ -232,7 +232,11 @@ bool GenericAgentCheckPolicy(EvalContext *ctx, GenericAgentConfig *config, bool 
     {
         if (IsPolicyPrecheckNeeded(ctx, config, force_validation))
         {
-            bool policy_check_ok = CheckPromises(config);
+            bool policy_check_ok = GenericAgentArePromisesValid(config);
+            if (policy_check_ok)
+            {
+                GenericAgentUpdatePromisesValidatedFile(config);
+            }
 
             if (config->agent_specific.agent.bootstrap_policy_server && !policy_check_ok)
             {
@@ -285,7 +289,7 @@ static bool WritePolicyValidatedFile(const char *filename)
     return true;
 }
 
-int CheckPromises(const GenericAgentConfig *config)
+bool GenericAgentArePromisesValid(const GenericAgentConfig *config)
 {
     char cmd[CF_BUFSIZE];
 
@@ -347,6 +351,11 @@ int CheckPromises(const GenericAgentConfig *config)
         return false;
     }
 
+    return true;
+}
+
+void GenericAgentUpdatePromisesValidatedFile(const GenericAgentConfig *config)
+{
     if (!IsFileOutsideDefaultRepository(config->original_input_file))
     {
         char validated_filename[CF_MAXVARSIZE];
@@ -364,8 +373,6 @@ int CheckPromises(const GenericAgentConfig *config)
 
         WritePolicyValidatedFile(validated_filename);
     }
-
-    return true;
 }
 
 
@@ -830,6 +837,20 @@ static bool MissingInputFile(const char *input_file)
 
 /*******************************************************************/
 
+void GetPromisesValidatedFile(char *filename, size_t max_size, const GenericAgentConfig *config)
+{
+    if (MINUSF)
+    {
+        snprintf(filename, max_size, "%s/state/validated_%s", CFWORKDIR, CanonifyName(config->original_input_file));
+        MapName(filename);
+    }
+    else
+    {
+        snprintf(filename, max_size, "%s/masterfiles/cf_promises_validated", CFWORKDIR);
+        MapName(filename);
+    }
+}
+
 int NewPromiseProposals(EvalContext *ctx, const GenericAgentConfig *config, const Rlist *input_files)
 {
     Rlist *sl;
@@ -838,16 +859,7 @@ int NewPromiseProposals(EvalContext *ctx, const GenericAgentConfig *config, cons
     char filename[CF_MAXVARSIZE];
     time_t validated_at;
 
-    if (MINUSF)
-    {
-        snprintf(filename, CF_MAXVARSIZE, "%s/state/validated_%s", CFWORKDIR, CanonifyName(config->original_input_file));
-        MapName(filename);
-    }
-    else
-    {
-        snprintf(filename, CF_MAXVARSIZE, "%s/masterfiles/cf_promises_validated", CFWORKDIR);
-        MapName(filename);
-    }
+    GetPromisesValidatedFile(filename, sizeof(filename), config);
 
     if (stat(filename, &sb) != -1)
     {

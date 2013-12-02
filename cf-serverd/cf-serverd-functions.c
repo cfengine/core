@@ -258,7 +258,7 @@ void StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
     struct timeval timeout;
     int ret_val;
     CfLock thislock;
-    time_t starttime = time(NULL), last_collect = 0;
+    time_t starttime = time(NULL), last_collect = 0, last_policy_reload = 0;
 
     struct sockaddr_storage cin;
     socklen_t addrlen = sizeof(cin);
@@ -343,7 +343,7 @@ void StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
         {
             if (ACTIVE_THREADS == 0)
             {
-                CheckFileChanges(ctx, policy, config);
+                CheckFileChanges(ctx, policy, config, &last_policy_reload);
             }
             ThreadUnlock(cft_server_children);
         }
@@ -367,8 +367,6 @@ void StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
             FD_SET(sd, &rset);
             FD_SET(signal_pipe, &rset);
 
-            /* Set 1 second timeout for select, so that signals are handled in
-             * a timely manner */
             timeout.tv_sec = 60;
             timeout.tv_usec = 0;
 
@@ -527,15 +525,29 @@ int OpenReceiverChannel(void)
 /* Level 3                                                           */
 /*********************************************************************/
 
-void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
+void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *config, time_t *last_policy_reload)
 {
+    struct stat statbuf;
+    char filename[CF_MAXVARSIZE];
+
     Log(LOG_LEVEL_DEBUG, "Checking file updates for input file '%s'", config->input_file);
 
-    if (NewPromiseProposals(ctx, config, InputFiles(ctx, *policy)))
+    GetPromisesValidatedFile(filename, sizeof(filename), config);
+
+    if (stat(filename, &statbuf) != 0)
     {
+        Log(LOG_LEVEL_DEBUG, "Was not able to stat '%s' file. (stat: '%s')",
+            filename, GetErrorStr());
+        return;
+    }
+
+    if (*last_policy_reload < statbuf.st_mtime)
+    {
+        *last_policy_reload = statbuf.st_mtime;
+
         Log(LOG_LEVEL_VERBOSE, "New promises detected...");
 
-        if (CheckPromises(config))
+        if (GenericAgentArePromisesValid(config))
         {
             Log(LOG_LEVEL_INFO, "Rereading policy file '%s'", config->input_file);
 

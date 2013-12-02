@@ -549,10 +549,26 @@ void GetInterfacesInfo(EvalContext *ctx)
 
     close(fd);
 
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "interfaces", interfaces, DATA_TYPE_STRING_LIST, "goal=state,inventory,source=agent");
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "hardware_addresses", hardware, DATA_TYPE_STRING_LIST, "goal=state,inventory,source=agent");
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "hardware_flags", flags, DATA_TYPE_STRING_LIST, "goal=state,inventory,source=agent");
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "ip_addresses", ips, DATA_TYPE_STRING_LIST, "goal=state,inventory,source=agent");
+    if (interfaces)
+    {
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "interfaces", interfaces, DATA_TYPE_STRING_LIST,
+                                      "goal=state,inventory,source=agent");
+    }
+    if (hardware)
+    {
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "hardware_addresses", hardware, DATA_TYPE_STRING_LIST,
+                                      "goal=state,inventory,source=agent");
+    }
+    if (flags)
+    {
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "hardware_flags", flags, DATA_TYPE_STRING_LIST,
+                                      "goal=state,inventory,source=agent");
+    }
+    if (ips)
+    {
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "ip_addresses", ips, DATA_TYPE_STRING_LIST,
+                                      "goal=state,inventory,source=agent");
+    }
 
     RlistDestroy(interfaces);
     RlistDestroy(hardware);

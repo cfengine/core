@@ -135,8 +135,7 @@ static void test_new_csv_reader_lfln_at_end3()
 
 static void test_get_next_line()
 {
-    FILE *fp = NULL;
-    fp = fopen("./data/csv_file.csv", "r");
+    FILE *fp = fopen("./data/csv_file.csv", "r");
     assert_true(fp);
 
     {

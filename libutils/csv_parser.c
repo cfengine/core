@@ -72,7 +72,7 @@ typedef enum {
  */
 static csv_parser_error LaunchCsvAutomata(const char *str, Seq **newlist)
 {
-    char *s = (char*)str;
+    const char *s = str;
     csv_state current_state = CSV_ST_NEW_LINE;
     csv_parser_error ret;
 
@@ -305,16 +305,13 @@ clean:
 Seq *SeqParseCsvString(const char *string)
 {
     Seq *newlist = SeqNew(16, free);
-    int ret;
 
-    ret = LaunchCsvAutomata(string, &newlist);
-
-    if (ret == CSV_ERR_OK)
+    if (LaunchCsvAutomata(string, &newlist) != CSV_ERR_OK)
     {
-        return newlist;
+        return NULL;
     }
 
-    return NULL;
+    return newlist;
 }
 
 char *GetCsvLineNext(FILE *fp)
@@ -326,19 +323,19 @@ char *GetCsvLineNext(FILE *fp)
 
     Writer *buffer = StringWriter();
 
-    int prev = 0;
+    char prev = 0;
 
     for (;;)
     {
-        int current = 0;
-        if ((current = fgetc(fp)) == EOF)
+        char current = fgetc(fp);
+        if (current == EOF)
         {
             break;
         }
 
-        WriterWriteChar(buffer, (char)current);
+        WriterWriteChar(buffer, current);
 
-        if (((char)current == '\n') && ((char)prev) == '\r')
+        if ((current == '\n') && (prev == '\r'))
         {
             break;
         }

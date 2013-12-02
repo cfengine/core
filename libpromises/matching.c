@@ -666,7 +666,7 @@ char *AnchorRegexNew(const char *regex)
 {
     if (NULL_OR_EMPTY(regex))
     {
-        return NULL;
+        return xstrdup("^$");
     }
 
     char *ret = NULL;

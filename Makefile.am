@@ -6,11 +6,11 @@ LCOV_FLAGS = $(if $(filter-out 0,$(V)),,-q)
 
 SUBDIRS = libcompat libutils libcfnet libenv libpromises \
 	cf-agent cf-execd cf-key cf-monitord \
-	cf-promises cf-runagent cf-serverd ext examples \
+	cf-promises cf-runagent cf-serverd cf-upgrade ext examples \
 	tests
 
 DIST_SUBDIRS = libcompat libutils libcfnet libenv libpromises cf-agent cf-execd	\
-	cf-key cf-monitord cf-promises cf-runagent cf-serverd ext	        \
+	cf-key cf-monitord cf-promises cf-runagent cf-serverd cf-upgrade ext	        \
 	examples tests
 
 # Set explicitly to avoid picking up {nova}/*.m4

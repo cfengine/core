@@ -300,7 +300,6 @@ void MonitorStartServer(EvalContext *ctx, const Policy *policy)
     };
 
     thislock = AcquireLock(ctx, pp->promiser, VUQNAME, CFSTARTTIME, tc, pp, false);
-
     if (thislock.lock == NULL)
     {
         PolicyDestroy(monitor_cfengine_policy);

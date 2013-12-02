@@ -24,9 +24,11 @@ PromiseResult PromiseResultUpdate(PromiseResult prior, PromiseResult evidence)
 
         case PROMISE_RESULT_CHANGE:
         case PROMISE_RESULT_NOOP:
+        case PROMISE_RESULT_SKIPPED:
             return prior;
         }
 
+    case PROMISE_RESULT_SKIPPED:
     case PROMISE_RESULT_NOOP:
         return evidence;
 
@@ -42,6 +44,7 @@ PromiseResult PromiseResultUpdate(PromiseResult prior, PromiseResult evidence)
 
         case PROMISE_RESULT_CHANGE:
         case PROMISE_RESULT_NOOP:
+        case PROMISE_RESULT_SKIPPED:
             return prior;
         }
     }

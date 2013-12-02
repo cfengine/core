@@ -90,10 +90,9 @@ PromiseResult VerifyMethod(EvalContext *ctx, char *attrname, Attributes a, Promi
     GetLockName(lockname, "method", pp->promiser, args);
 
     thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a.transaction, pp, false);
-
     if (thislock.lock == NULL)
     {
-        return PROMISE_RESULT_NOOP;
+        return PROMISE_RESULT_SKIPPED;
     }
 
     PromiseBanner(pp);

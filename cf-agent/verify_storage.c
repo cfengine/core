@@ -122,10 +122,9 @@ PromiseResult VerifyStoragePromise(EvalContext *ctx, char *path, Promise *pp)
     }
 
     thislock = AcquireLock(ctx, path, VUQNAME, CFSTARTTIME, a.transaction, pp, false);
-
     if (thislock.lock == NULL)
     {
-        return PROMISE_RESULT_NOOP;
+        return PROMISE_RESULT_SKIPPED;
     }
 
 /* Do mounts first */

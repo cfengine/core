@@ -412,7 +412,7 @@ static PromiseResult VerifyLineDeletions(EvalContext *ctx, Promise *pp, EditCont
 
     if (thislock.lock == NULL)
     {
-        return result;
+        return PROMISE_RESULT_SKIPPED;
     }
 
     if (DeletePromisedLinesMatching(ctx, start, begin_ptr, end_ptr, a, pp, edcontext, &result))
@@ -479,10 +479,9 @@ static PromiseResult VerifyColumnEdits(EvalContext *ctx, Promise *pp, EditContex
 
     snprintf(lockname, CF_BUFSIZE - 1, "column-%s-%s", pp->promiser, edcontext->filename);
     thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a.transaction, pp, true);
-
     if (thislock.lock == NULL)
     {
-        return result;
+        return PROMISE_RESULT_SKIPPED;
     }
 
     if (EditColumns(ctx, begin_ptr, end_ptr, a, pp, edcontext, &result))
@@ -539,7 +538,7 @@ static PromiseResult VerifyPatterns(EvalContext *ctx, Promise *pp, EditContext *
 
     if (thislock.lock == NULL)
     {
-        return result;
+        return PROMISE_RESULT_SKIPPED;
     }
 
 /* Make sure back references are expanded */
@@ -595,10 +594,9 @@ static PromiseResult VerifyLineInsertions(EvalContext *ctx, Promise *pp, EditCon
 
     snprintf(lockname, CF_BUFSIZE - 1, "insertline-%s-%s", pp->promiser, edcontext->filename);
     thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a.transaction, pp, true);
-
     if (thislock.lock == NULL)
     {
-        return result;
+        return PROMISE_RESULT_SKIPPED;
     }
 
     /* Are we looking for an anchored line inside the region? */

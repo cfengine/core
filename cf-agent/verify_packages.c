@@ -118,10 +118,9 @@ PromiseResult VerifyPackagesPromise(EvalContext *ctx, Promise *pp)
     snprintf(lockname, CF_BUFSIZE - 1, "package-%s-%s", pp->promiser, a.packages.package_list_command);
 
     thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a.transaction, pp, false);
-
     if (thislock.lock == NULL)
     {
-        return PROMISE_RESULT_NOOP;
+        return PROMISE_RESULT_SKIPPED;
     }
 
 // Start by reseting the root directory in case yum tries to glob regexs(!)

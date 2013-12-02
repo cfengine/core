@@ -75,12 +75,10 @@ PromiseResult VerifyReportPromise(EvalContext *ctx, Promise *pp)
         VarRefDestroy(ref);
         return PROMISE_RESULT_NOOP;
     }
-       
-    // Now do regular human reports
     
     if (thislock.lock == NULL)
     {
-        return PROMISE_RESULT_NOOP;
+        return PROMISE_RESULT_SKIPPED;
     }
 
     PromiseBanner(pp);

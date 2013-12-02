@@ -201,10 +201,9 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, Promise *pp
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser", path, DATA_TYPE_STRING, "goal=state,source=promise");
 
     thislock = AcquireLock(ctx, path, VUQNAME, CFSTARTTIME, a.transaction, pp, false);
-
     if (thislock.lock == NULL)
     {
-        return PROMISE_RESULT_NOOP;
+        return PROMISE_RESULT_SKIPPED;
     }
 
     LoadSetuid(a);
@@ -474,7 +473,7 @@ PromiseResult ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes
 
     if (thislock.lock == NULL)
     {
-        return PROMISE_RESULT_NOOP;
+        return PROMISE_RESULT_SKIPPED;
     }
 
     EditContext *edcontext = NewEditContext(filename, a);

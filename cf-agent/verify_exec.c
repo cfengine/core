@@ -83,11 +83,10 @@ PromiseResult VerifyExecPromise(EvalContext *ctx, Promise *pp)
     char *lock_name = GetLockNameExec(a, pp);
     CfLock thislock = AcquireLock(ctx, lock_name, VUQNAME, CFSTARTTIME, a.transaction, pp, false);
     free(lock_name);
-
     if (thislock.lock == NULL)
     {
         EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser");
-        return PROMISE_RESULT_NOOP;
+        return PROMISE_RESULT_SKIPPED;
     }
 
     PromiseBanner(pp);

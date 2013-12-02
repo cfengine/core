@@ -112,10 +112,9 @@ static PromiseResult VerifySQLPromise(EvalContext *ctx, Attributes a, Promise *p
     snprintf(lockname, CF_BUFSIZE - 1, "db-%s", pp->promiser);
 
     thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a.transaction, pp, false);
-
     if (thislock.lock == NULL)
     {
-        return PROMISE_RESULT_NOOP;
+        return PROMISE_RESULT_SKIPPED;
     }
 
     database[0] = '\0';

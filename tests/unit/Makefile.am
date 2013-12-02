@@ -92,7 +92,8 @@ check_PROGRAMS = \
 	version_test \
 	hash_test \
 	key_test \
-	cf_upgrade_test
+	cf_upgrade_test \
+	queue_test
 
 if HAVE_AVAHI_CLIENT
 if HAVE_AVAHI_COMMON
@@ -298,3 +299,4 @@ $(CFUPGRADE)/command_line.h $(CFUPGRADE)/configuration.c $(CFUPGRADE)/configurat
 $(CFUPGRADE)/process.c $(CFUPGRADE)/process.h $(CFUPGRADE)/update.c $(CFUPGRADE)/update.h
 cf_upgrade_test_CFLAGS = -I$(CFUPGRADE)
 
+queue_test_SOURCES = queue_test.c

@@ -2971,7 +2971,10 @@ static bool GetListReferenceArgument(const EvalContext *ctx, const FnCall *fp, c
 
     if (!EvalContextVariableGet(ctx, ref, rval_out, datatype_out))
     {
-        Log(LOG_LEVEL_INFO, "Could not resolve expected list variable '%s' in function '%s'", lval_str, fp->name);
+        Log(LOG_LEVEL_INFO,
+            "Could not resolve expected list variable '%s' in function '%s'",
+            lval_str,
+            fp->name);
         VarRefDestroy(ref);
         return false;
     }
@@ -2982,11 +2985,16 @@ static bool GetListReferenceArgument(const EvalContext *ctx, const FnCall *fp, c
     {
         if (datatype_out)
         {
-            Log(LOG_LEVEL_VERBOSE, "Function '%s' expected a list variable reference, got variable of type '%s'", fp->name, DataTypeToString(*datatype_out));
+            Log(LOG_LEVEL_VERBOSE,
+                "Function '%s' expected a list variable reference, got variable of type '%s'",
+                fp->name,
+                DataTypeToString(*datatype_out));
         }
         else
         {
-            Log(LOG_LEVEL_VERBOSE, "Function '%s' expected a list variable reference, got variable of a different type", fp->name);
+            Log(LOG_LEVEL_VERBOSE,
+                "Function '%s' expected a list variable reference, got variable of a different type",
+                fp->name);
         }
         return false;
     }

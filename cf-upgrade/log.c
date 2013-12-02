@@ -79,7 +79,11 @@ void logInit()
     int log_fd = -1;
 
     strftime(path, path_size, "cf-upgrade-%Y%m%d-%H%M%S.log", now_tm);
-    log_fd = open(path, O_WRONLY|O_CREAT, S_IRWXU|S_IRGRP|S_IROTH);
+#if defined(S_IRGRP) && defined(S_IROTH)
+    log_fd = open(path, O_WRONLY|O_CREAT, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+#else
+    log_fd = open(path, O_WRONLY|O_CREAT, S_IRUSR|S_IWUSR);
+#endif // defined(S_IRGRP) && defined(S_IROTH)
     if (log_fd < 0)
     {
         puts("Could not initialize log file, only console messages will be printed");
@@ -89,6 +93,7 @@ void logInit()
      * cf-upgrade spawns itself, therefore to avoid log confusion we need to
      * make sure that the log is closed when we call exeve.
      */
+#ifndef __MINGW32__
     int result = 0;
     result = fcntl(log_fd, F_GETFD);
     if (result < 0)
@@ -102,6 +107,7 @@ void logInit()
         puts("Could not initialize log file, only console messages will be printed");
         return;
     }
+#endif // __MINGW32__ This covers both 32 and 64 bits MinGW
     log_stream = fdopen(log_fd, "a");
 }
 

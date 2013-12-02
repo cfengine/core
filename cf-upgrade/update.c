@@ -53,7 +53,11 @@ int copy_to_temporary_location(const char *source, const char *destination)
     }
     result = fstat(source_fd, &source_stat);
     unlink (destination);
+#if defined(S_IRGRP) && defined(S_IROTH)
     destination_fd = open(destination, O_WRONLY|O_CREAT|O_EXCL, S_IRWXU|S_IRGRP|S_IROTH);
+#else
+    destination_fd = open(destination, O_WRONLY|O_CREAT|O_EXCL, S_IRWXU);
+#endif // defined(S_IRGRP) && defined(S_IROTH)
     if (destination_fd < 0)
     {
         goto bad_onefd;
@@ -85,14 +89,15 @@ int copy_to_temporary_location(const char *source, const char *destination)
         }
         so_far += this_read;
     } while (so_far < source_stat.st_size);
-
+#ifndef __MINGW32__
     fsync(destination_fd);
+#endif // __MINGW32__ This covers both 32 and 64 bits MinGW
     close(source_fd);
     close(destination_fd);
     return 0;
 bad_twofd:
     close(destination_fd);
-    unlink(destination_fd);
+    unlink(destination);
 bad_onefd:
     close(source_fd);
 bad_nofd:

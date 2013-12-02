@@ -367,8 +367,6 @@ void StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
             FD_SET(sd, &rset);
             FD_SET(signal_pipe, &rset);
 
-            /* Set 1 second timeout for select, so that signals are handled in
-             * a timely manner */
             timeout.tv_sec = 60;
             timeout.tv_usec = 0;
 

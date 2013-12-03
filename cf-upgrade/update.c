@@ -34,13 +34,10 @@
 #include <unistd.h>
 #include <fcntl.h>
 
-int copy_to_temporary_location(const char *source, const char *destination)
+#ifndef __MINGW32__
+/* Unix implementation */
+int private_copy_to_temporary_location(const char *source, const char *destination)
 {
-    if (!source || !destination)
-    {
-        return -1;
-    }
-
     struct stat source_stat;
     int result = 0;
     int source_fd = -1;
@@ -53,11 +50,7 @@ int copy_to_temporary_location(const char *source, const char *destination)
     }
     result = fstat(source_fd, &source_stat);
     unlink (destination);
-#if defined(S_IRGRP) && defined(S_IROTH)
     destination_fd = open(destination, O_WRONLY|O_CREAT|O_EXCL, S_IRWXU|S_IRGRP|S_IROTH);
-#else
-    destination_fd = open(destination, O_WRONLY|O_CREAT|O_EXCL, S_IRWXU);
-#endif // defined(S_IRGRP) && defined(S_IROTH)
     if (destination_fd < 0)
     {
         goto bad_onefd;
@@ -89,9 +82,7 @@ int copy_to_temporary_location(const char *source, const char *destination)
         }
         so_far += this_read;
     } while (so_far < source_stat.st_size);
-#ifndef __MINGW32__
     fsync(destination_fd);
-#endif // __MINGW32__ This covers both 32 and 64 bits MinGW
     close(source_fd);
     close(destination_fd);
     return 0;
@@ -102,6 +93,75 @@ bad_onefd:
     close(source_fd);
 bad_nofd:
     return -1;
+}
+#else
+/* Windows implementation */
+int private_copy_to_temporary_location(const char *source, const char *destination)
+{
+    struct stat source_stat;
+    int result = 0;
+    int source_fd = -1;
+    int destination_fd = -1;
+
+    source_fd = open(source, O_RDONLY);
+    if (source_fd < 0)
+    {
+        goto bad_nofd;
+    }
+    result = fstat(source_fd, &source_stat);
+    unlink (destination);
+    destination_fd = open(destination, O_WRONLY|O_CREAT|O_EXCL, S_IRWXU);
+    if (destination_fd < 0)
+    {
+        goto bad_onefd;
+    }
+    char buffer[1024];
+    int so_far = 0;
+    do {
+        int this_read = 0;
+        int this_write = 0;
+        this_read = read(source_fd, buffer, sizeof(buffer));
+        if (this_read < 0)
+        {
+            log_entry(LogCritical, "Failed to read from %s (read so far: %d)",
+                source, so_far);
+            goto bad_twofd;
+        }
+        this_write = write(destination_fd, buffer, this_read);
+        if (this_write < 0)
+        {
+            log_entry(LogCritical, "Failed to write to %s (written so far: %d)",
+                destination, so_far);
+            goto bad_twofd;
+        }
+        if (this_write != this_read)
+        {
+            log_entry(LogCritical, "Short write: read: %d, written: %d (prior progress: %d)",
+                this_read, this_write, so_far);
+            goto bad_twofd;
+        }
+        so_far += this_read;
+    } while (so_far < source_stat.st_size);
+    close(source_fd);
+    close(destination_fd);
+    return 0;
+bad_twofd:
+    close(destination_fd);
+    unlink(destination);
+bad_onefd:
+    close(source_fd);
+bad_nofd:
+    return -1;
+}
+#endif
+
+int copy_to_temporary_location(const char *source, const char *destination)
+{
+    if (!source || !destination)
+    {
+        return -1;
+    }
+    return private_copy_to_temporary_location(source, destination);
 }
 
 int perform_backup(const char *backup_tool, const char *backup_path, const char *cfengine)

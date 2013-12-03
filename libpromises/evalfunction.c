@@ -5507,7 +5507,7 @@ static int BuildLineArray(EvalContext *ctx, const Bundle *bundle, char *array_lv
 {
     char *sp, linebuf[CF_BUFSIZE], name[CF_MAXVARSIZE], first_one[CF_MAXVARSIZE];
     Rlist *rp, *newlist = NULL;
-    int allowblanks = true, vcount, hcount, lcount = 0;
+    int allowblanks = true, vcount, hcount;
     int lineLen;
 
     memset(linebuf, 0, CF_BUFSIZE);

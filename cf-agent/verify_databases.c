@@ -388,7 +388,7 @@ static int CheckDatabaseSanity(Attributes a, Promise *pp)
         {
             commas = CountChar(RlistScalarValue(rp), ',');
 
-            if ((commas > 2) && (commas < 1))
+            if ((commas > 2) || (commas < 1))
             {
                 Log(LOG_LEVEL_ERR, "SQL Column format should be NAME,TYPE[,SIZE]");
                 retval = false;

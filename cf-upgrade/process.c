@@ -34,7 +34,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #ifndef __MINGW32__
-#include <wait.h>
+#include <sys/wait.h>
 #endif // __MINGW32__ This covers both 32 and 64 bits MinGW
 #include <time.h>
 #include <libgen.h>

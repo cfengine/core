@@ -2,7 +2,7 @@
 #
 # Test cf-serverd related promises
 #
-# Tests copy_from encrypted digest verify (SMD5)
+# Tests copy_from encrypted digest verify (SMD5) zero-length file
 #
 #######################################################
 
@@ -15,6 +15,17 @@ body common control
 
 #######################################################
 
+body edit_defaults empty
+{
+empty_file_before_editing => "true";
+edit_backup => "false";
+}
+
+body delete clean
+{
+rmdirs => "true";
+}
+
 bundle agent init
 {
 files:
@@ -24,43 +35,14 @@ files:
 
   "$(G.testdir)/source_file"
        create => "true",
-    edit_line => init_src_file,
 edit_defaults => empty;
 }
 
 #######################################################
 
-body edit_defaults empty
+body classes if_repaired(x)
 {
-empty_file_before_editing => "true";
-edit_backup => "false";
-}
-
-#######################################################
-
-body delete clean
-{
-rmdirs => "true";
-}
-
-#######################################################
-
-bundle edit_line init_src_file
-{
-insert_lines:
-   "This is the source file to copy $(sys.date) - always fresh";
-}
-
-#######################################################
-
-body classes if_repair_failed(x)
-{
-repair_failed => { "$(x)" };
-}
-
-body classes if_satisfied(x)
-{
-promise_repaired => { "$(x)" };
+  promise_repaired => { "$(x)" };
 }
 
 bundle agent test
@@ -68,7 +50,7 @@ bundle agent test
 files:
   "$(G.testdir)/destination_file"
     copy_from => copy_src_file,
-     classes => if_satisfied("copy_ok");
+    classes => if_repaired("copy_ok");
 }
 
 #########################################################
@@ -95,14 +77,17 @@ trustkey => "true";
 
 bundle agent check
 {
-methods:
-  copy_ok::
-    "any" usebundle => default_check_diff("$(G.testdir)/source_file","$(G.testdir)/destination_file","$(fn[1])");
-
 classes:
   "dummy" expression => regextract("(.*)\.sub", $(this.promise_filename), "fn");
 
+  "empty_ok" and => { strcmp(filesize("$(G.testdir)/destination_file"),"0") };
+
+
+methods:
+  copy_ok.empty_ok::
+    "any" usebundle => default_check_diff("$(G.testdir)/source_file","$(G.testdir)/destination_file","$(fn[1])");
+
 reports:
-  !copy_ok::
+  !copy_ok|!empty_ok::
     "$(fn[1]) FAIL";
 }

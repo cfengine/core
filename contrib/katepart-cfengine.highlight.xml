@@ -133,7 +133,6 @@
       <item> trustkeysfrom</item>
       <item> allowusers </item>
       <item> dynamicaddresses </item>
-      <item> skipverify </item>
       <item> logallconnections </item>
       <item> logencryptedtransfers </item>
       <item> hostnamekeys </item>

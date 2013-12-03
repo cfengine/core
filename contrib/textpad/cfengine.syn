@@ -287,7 +287,6 @@ service_dependence_chain
 service_type
 signals
 skipidentify
-skipverify
 smtpserver
 source
 splaytime

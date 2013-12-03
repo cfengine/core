@@ -1096,7 +1096,6 @@ static int VerifyConnection(ServerConnectionState *conn, char buf[CF_BUFSIZE])
 {
     char ipstring[CF_MAXVARSIZE], fqname[CF_MAXVARSIZE], username[CF_MAXVARSIZE];
     char dns_assert[CF_MAXVARSIZE], ip_assert[CF_MAXVARSIZE];
-    int matched = false;
 
     Log(LOG_LEVEL_DEBUG, "Connecting host identifies itself as '%s'", buf);
 
@@ -1119,121 +1118,28 @@ static int VerifyConnection(ServerConnectionState *conn, char buf[CF_BUFSIZE])
    irrelevant fr authentication...
    We can save a lot of time by not looking this up ... */
 
-    if ((conn->trust == false) ||
-        (IsMatchItemIn(conn->ctx, SV.skipverify, MapAddress(conn->ipaddr))))
-    {
-        Log(LOG_LEVEL_VERBOSE,
-              "Allowing %s to connect without (re)checking ID\n", ip_assert);
-        Log(LOG_LEVEL_VERBOSE,
-              "Non-verified Host ID is %s (Using skipverify)\n", dns_assert);
-        strlcpy(conn->hostname, dns_assert, CF_MAXVARSIZE);
-        Log(LOG_LEVEL_VERBOSE,
-              "Non-verified User ID seems to be %s (Using skipverify)\n",
-              username);
-        strlcpy(conn->username, username, CF_MAXVARSIZE);
+    Log(LOG_LEVEL_VERBOSE,
+        "Allowing %s to connect without (re)checking ID\n", ip_assert);
+    Log(LOG_LEVEL_VERBOSE,
+        "Non-verified Host ID is %s\n", dns_assert);
+    strncpy(conn->hostname, dns_assert, CF_MAXVARSIZE);
+    Log(LOG_LEVEL_VERBOSE,
+        "Non-verified User ID seems to be %s\n",
+        username);
+    strncpy(conn->username, username, CF_MAXVARSIZE);
 
 #ifdef __MINGW32__            /* NT uses security identifier instead of uid */
 
-        if (!NovaWin_UserNameToSid(username, (SID *) conn->sid,
-                                   CF_MAXSIDSIZE, false))
-        {
-            memset(conn->sid, 0, CF_MAXSIDSIZE); /* is invalid sid - discarded */
-        }
+    if (!NovaWin_UserNameToSid(username, (SID *) conn->sid,
+                               CF_MAXSIDSIZE, false))
+    {
+        memset(conn->sid, 0, CF_MAXSIDSIZE); /* is invalid sid - discarded */
+    }
 
 #else /* !__MINGW32__ */
 
-        struct passwd *pw;
-        if ((pw = getpwnam(username)) == NULL)    /* Keep this inside mutex */
-        {
-            conn->uid = -2;
-        }
-        else
-        {
-            conn->uid = pw->pw_uid;
-        }
-
-#endif /* !__MINGW32__ */
-        return true;
-    }
-
-    if (strcmp(ip_assert, MapAddress(conn->ipaddr)) != 0)
-    {
-        Log(LOG_LEVEL_VERBOSE,
-              "IP address mismatch between client's assertion (%s) "
-              "and socket (%s) - untrustworthy connection\n",
-              ip_assert, conn->ipaddr);
-        return false;
-    }
-
-    if (strlen(dns_assert) == 0)
-    {
-        Log(LOG_LEVEL_VERBOSE,
-              "DNS asserted name was empty - untrustworthy connection\n");
-        return false;
-    }
-
-    if (strcmp(dns_assert, "skipident") == 0)
-    {
-        Log(LOG_LEVEL_VERBOSE,
-              "DNS asserted name was withheld before key exchange"
-              " - untrustworthy connection\n");
-        return false;
-    }
-
-    Log(LOG_LEVEL_VERBOSE,
-          "Socket caller address appears honest (%s matches %s)\n",
-          ip_assert, MapAddress(conn->ipaddr));
-
-    Log(LOG_LEVEL_VERBOSE, "Socket originates from %s=%s",
-          ip_assert, dns_assert);
-
-    Log(LOG_LEVEL_DEBUG, "Attempting to verify honesty by looking up hostname '%s'",
-            dns_assert);
-
-/* Do a reverse DNS lookup, like tcp wrappers to see if hostname matches IP */
-    struct addrinfo *response, *ap;
-    struct addrinfo query = {
-        .ai_family = AF_UNSPEC,
-        .ai_socktype = SOCK_STREAM
-    };
-    int err;
-
-    err = getaddrinfo(dns_assert, NULL, &query, &response);
-    if (err != 0)
-    {
-        Log(LOG_LEVEL_ERR,
-              "VerifyConnection: Unable to lookup (%s): %s",
-              dns_assert, gai_strerror(err));
-    }
-    else
-    {
-        for (ap = response; ap != NULL; ap = ap->ai_next)
-        {
-            /* No lookup, just convert ai_addr to string. */
-            char txtaddr[CF_MAX_IP_LEN] = "";
-            getnameinfo(ap->ai_addr, ap->ai_addrlen,
-                        txtaddr, sizeof(txtaddr),
-                        NULL, 0, NI_NUMERICHOST);
-
-            if (strcmp(MapAddress(conn->ipaddr), txtaddr) == 0)
-            {
-                Log(LOG_LEVEL_DEBUG, "Found match");
-                matched = true;
-            }
-        }
-        freeaddrinfo(response);
-    }
-
-
-# ifdef __MINGW32__                   /* NT uses security identifier instead of uid */
-    if (!NovaWin_UserNameToSid(username, (SID *) conn->sid, CF_MAXSIDSIZE, false))
-    {
-        memset(conn->sid, 0, CF_MAXSIDSIZE);    /* is invalid sid - discarded */
-    }
-
-# else/* !__MINGW32__ */
     struct passwd *pw;
-    if ((pw = getpwnam(username)) == NULL)      /* Keep this inside mutex */
+    if ((pw = getpwnam(username)) == NULL)    /* Keep this inside mutex */
     {
         conn->uid = -2;
     }
@@ -1241,22 +1147,8 @@ static int VerifyConnection(ServerConnectionState *conn, char buf[CF_BUFSIZE])
     {
         conn->uid = pw->pw_uid;
     }
-# endif/* !__MINGW32__ */
 
-    if (!matched)
-    {
-        Log(LOG_LEVEL_INFO, "Failed on DNS reverse lookup of '%s'. (gethostbyname: %s)",
-            dns_assert, GetErrorStr());
-        Log(LOG_LEVEL_INFO, "Client sent: %s", buf);
-        return false;
-    }
-
-    Log(LOG_LEVEL_VERBOSE, "Host ID is %s", dns_assert);
-    strlcpy(conn->hostname, dns_assert, CF_MAXVARSIZE);
-
-    Log(LOG_LEVEL_VERBOSE, "User ID seems to be %s", username);
-    strlcpy(conn->username, username, CF_MAXVARSIZE);
-
+#endif /* !__MINGW32__ */
     return true;
 }
 
@@ -1425,13 +1317,10 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
     LastSaw1(conn->ipaddr, KeyPrintableHash(ConnectionInfoKey(conn->conn_info)),
              LAST_SEEN_ROLE_ACCEPT);
 
-    if (!CheckStoreKey(conn, newkey))   /* conceals proposition S1 */
+    if (!CheckStoreKey(conn, newkey))
     {
-        if (!conn->trust)
-        {
-            KeyDestroy(&key);
-            return false;
-        }
+        KeyDestroy(&key);
+        return false;
     }
 
 /* Reply with digest of original challenge */
@@ -1503,15 +1392,7 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
 
     if (HashesMatch(digest, in, digestType))    /* replay / piggy in the middle attack ? */
     {
-        if (!conn->trust)
-        {
-            Log(LOG_LEVEL_VERBOSE, "Strong authentication of client %s/%s achieved", conn->hostname, conn->ipaddr);
-        }
-        else
-        {
-            Log(LOG_LEVEL_VERBOSE, "Weak authentication of trusted client %s/%s (key accepted on trust).",
-                  conn->hostname, conn->ipaddr);
-        }
+        Log(LOG_LEVEL_VERBOSE, "Authentication of client %s/%s achieved", conn->hostname, conn->ipaddr);
     }
     else
     {
@@ -1604,9 +1485,6 @@ static int CheckStoreKey(ServerConnectionState *conn, RSA *key)
         Log(LOG_LEVEL_VERBOSE, "A public key was already known from %s/%s - no trust required", conn->hostname,
               conn->ipaddr);
 
-        Log(LOG_LEVEL_VERBOSE, "Adding IP %s to SkipVerify - no need to check this if we have a key", conn->ipaddr);
-        IdempPrependItem(&SV.skipverify, MapAddress(conn->ipaddr), NULL);
-
         if ((BN_cmp(savedkey->e, key->e) == 0) && (BN_cmp(savedkey->n, key->n) == 0))
         {
             Log(LOG_LEVEL_VERBOSE, "The public key identity was confirmed as %s@%s", conn->username, conn->hostname);
@@ -1623,7 +1501,6 @@ static int CheckStoreKey(ServerConnectionState *conn, RSA *key)
     if ((SV.trustkeylist != NULL) && (IsMatchItemIn(conn->ctx, SV.trustkeylist, MapAddress(conn->ipaddr))))
     {
         Log(LOG_LEVEL_VERBOSE, "Host %s/%s was found in the list of hosts to trust", conn->hostname, conn->ipaddr);
-        conn->trust = true;
         SendTransaction(conn->conn_info, "OK: unknown key was accepted on trust", 0, CF_DONE);
         SavePublicKey(conn->username, udigest, key);
         return true;
@@ -1656,7 +1533,6 @@ static ServerConnectionState *NewConn(EvalContext *ctx, ConnectionInfo *info)
     conn->conn_info = info;
     conn->id_verified = false;
     conn->rsa_auth = false;
-    conn->trust = false;
     conn->hostname[0] = '\0';
     conn->ipaddr[0] = '\0';
     conn->username[0] = '\0';

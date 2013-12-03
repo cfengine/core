@@ -232,14 +232,6 @@ void Summarize()
     {
         Log(LOG_LEVEL_VERBOSE, "USERS '%s'", ip->name);
     }
-
-    Log(LOG_LEVEL_VERBOSE, "Host IPs from NAT which we don't verify:");
-
-    for (ip = SV.skipverify; ip != NULL; ip = ip->next)
-    {
-        Log(LOG_LEVEL_VERBOSE, "IP '%s'", ip->name);
-    }
-
 }
 
 /*******************************************************************/
@@ -387,18 +379,6 @@ static void KeepControlPromises(EvalContext *ctx, Policy *policy, GenericAgentCo
 
             if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_SKIP_VERIFY].lval) == 0)
             {
-                Rlist *rp;
-
-                Log(LOG_LEVEL_VERBOSE, "Setting skip verify connections from ...");
-
-                for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
-                {
-                    if (!IsItemIn(SV.skipverify, RlistScalarValue(rp)))
-                    {
-                        AppendItem(&SV.skipverify, RlistScalarValue(rp), cp->classes);
-                    }
-                }
-
                 continue;
             }
 

@@ -1090,15 +1090,6 @@ static int BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *co
     return false;
 }
 
-/**************************************************************/
-/* Level 4                                                    */
-/**************************************************************/
-
-/******************************************************************/
-
-/**************************************************************/
-/*********************************************************************/
-
 static int VerifyConnection(ServerConnectionState *conn, char buf[CF_BUFSIZE])
  /* Try reverse DNS lookup
     and RFC931 username lookup to check the authenticity. */

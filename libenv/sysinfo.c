@@ -636,16 +636,6 @@ static void GetNameInfo3(EvalContext *ctx, bool use_monitoring_data)
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "winprogdir86", "", DATA_TYPE_STRING, "goal=state,source=agent");
 
 # endif
-
-#else /* !__MINGW32__ */
-
-// defs on Unix for manual-building purposes
-
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "windir", "/dev/null", DATA_TYPE_STRING, "goal=state,source=agent");
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "winsysdir", "/dev/null", DATA_TYPE_STRING, "goal=state,source=agent");
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "winprogdir", "/dev/null", DATA_TYPE_STRING, "goal=state,source=agent");
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "winprogdir86", "/dev/null", DATA_TYPE_STRING, "goal=state,source=agent");
-
 #endif /* !__MINGW32__ */
 
     if (use_monitoring_data)

@@ -73,17 +73,17 @@ static Item *NETOUT_DIST[CF_NETATTR];
 
 /* Prototypes */
 
-static void Sniff(long iteration, double *cf_this);
-static void AnalyzeArrival(long iteration, char *arrival, double *cf_this);
+static void Sniff(Item *ip_addresses, long iteration, double *cf_this);
+static void AnalyzeArrival(Item *ip_addresses, long iteration, char *arrival, double *cf_this);
 static void DePort(char *address);
 
 /* Implementation */
 
-void MonNetworkSnifferSniff(long iteration, double *cf_this)
+void MonNetworkSnifferSniff(Item *ip_addresses, long iteration, double *cf_this)
 {
     if (TCPDUMP)
     {
-        Sniff(iteration, cf_this);
+        Sniff(ip_addresses, iteration, cf_this);
     }
     else
     {
@@ -146,7 +146,7 @@ static void CfenvTimeOut(ARG_UNUSED int signum)
 
 /******************************************************************************/
 
-static void Sniff(long iteration, double *cf_this)
+static void Sniff(Item *ip_addresses, long iteration, double *cf_this)
 {
     char tcpbuffer[CF_BUFSIZE];
 
@@ -185,7 +185,7 @@ static void Sniff(long iteration, double *cf_this)
             break;
         }
 
-        AnalyzeArrival(iteration, tcpbuffer, cf_this);
+        AnalyzeArrival(ip_addresses, iteration, tcpbuffer, cf_this);
     }
 
     signal(SIGALRM, SIG_DFL);
@@ -207,7 +207,7 @@ static void IncrementCounter(Item **list, char *name)
 
 /* This coarsely classifies TCP dump data */
 
-static void AnalyzeArrival(long iteration, char *arrival, double *cf_this)
+static void AnalyzeArrival(Item *ip_addresses, long iteration, char *arrival, double *cf_this)
 {
     char src[CF_BUFSIZE], dest[CF_BUFSIZE], flag = '.', *arr;
     int isme_dest, isme_src;
@@ -256,8 +256,8 @@ static void AnalyzeArrival(long iteration, char *arrival, double *cf_this)
         sscanf(arr, "%s %*c %s %c ", src, dest, &flag);
         DePort(src);
         DePort(dest);
-        isme_dest = IsInterfaceAddress(dest);
-        isme_src = IsInterfaceAddress(src);
+        isme_dest = IsInterfaceAddress(ip_addresses, dest);
+        isme_src = IsInterfaceAddress(ip_addresses, src);
 
         switch (flag)
         {
@@ -310,8 +310,8 @@ static void AnalyzeArrival(long iteration, char *arrival, double *cf_this)
         sscanf(arr, "%s %*c %s %c ", src, dest, &flag);
         DePort(src);
         DePort(dest);
-        isme_dest = IsInterfaceAddress(dest);
-        isme_src = IsInterfaceAddress(src);
+        isme_dest = IsInterfaceAddress(ip_addresses, dest);
+        isme_src = IsInterfaceAddress(ip_addresses, src);
 
         Log(LOG_LEVEL_DEBUG, "%ld: DNS packet from '%s' to '%s'", iteration, src, dest);
         if (isme_dest)
@@ -330,8 +330,8 @@ static void AnalyzeArrival(long iteration, char *arrival, double *cf_this)
         sscanf(arr, "%s %*c %s %c ", src, dest, &flag);
         DePort(src);
         DePort(dest);
-        isme_dest = IsInterfaceAddress(dest);
-        isme_src = IsInterfaceAddress(src);
+        isme_dest = IsInterfaceAddress(ip_addresses, dest);
+        isme_src = IsInterfaceAddress(ip_addresses, src);
 
         Log(LOG_LEVEL_DEBUG, "%ld: UDP packet from '%s' to '%s'", iteration, src, dest);
         if (isme_dest)
@@ -350,8 +350,8 @@ static void AnalyzeArrival(long iteration, char *arrival, double *cf_this)
         sscanf(arr, "%s %*c %s %c ", src, dest, &flag);
         DePort(src);
         DePort(dest);
-        isme_dest = IsInterfaceAddress(dest);
-        isme_src = IsInterfaceAddress(src);
+        isme_dest = IsInterfaceAddress(ip_addresses, dest);
+        isme_src = IsInterfaceAddress(ip_addresses, src);
 
         Log(LOG_LEVEL_DEBUG, "%ld: ICMP packet from '%s' to '%s'", iteration, src, dest);
 

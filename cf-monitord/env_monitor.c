@@ -320,7 +320,7 @@ void MonitorStartServer(EvalContext *ctx, const Policy *policy)
 
         ZeroArrivals();
 
-        MonNetworkSnifferSniff(ITER, CF_THIS);
+        MonNetworkSnifferSniff(IPADDRESSES, ITER, CF_THIS);
 
         ITER++;
     }

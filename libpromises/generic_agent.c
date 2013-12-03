@@ -245,7 +245,27 @@ bool GenericAgentCheckPolicy(GenericAgentConfig *config, bool force_validation)
     return false;
 }
 
-static time_t ReadPolicyValidatedFileMTime(const GenericAgentConfig *config)
+static JsonElement *ReadPolicyValidatedFile(const char *filename)
+{
+    struct stat sb;
+    if (stat(filename, &sb) == -1)
+    {
+        return NULL;
+    }
+
+    JsonElement *validated_doc = NULL;
+    JsonParseError err = JsonParseFile(filename, 4096, &validated_doc);
+    if (err != JSON_PARSE_OK)
+    {
+        // old style format for validated file, create dummy
+        validated_doc = JsonObjectCreate(2);
+        JsonObjectAppendInteger(validated_doc, "timestamp", sb.st_mtime);
+    }
+
+    return validated_doc;
+}
+
+static JsonElement *ReadPolicyValidatedFileFromMasterfiles(const GenericAgentConfig *config)
 {
     char filename[CF_MAXVARSIZE];
 
@@ -260,15 +280,25 @@ static time_t ReadPolicyValidatedFileMTime(const GenericAgentConfig *config)
         MapName(filename);
     }
 
-    struct stat sb;
-    if (stat(filename, &sb) != -1)
+    return ReadPolicyValidatedFile(filename);
+}
+
+static JsonElement *ReadPolicyValidatedFileFromInputs(const GenericAgentConfig *config)
+{
+    char filename[CF_MAXVARSIZE];
+
+    if (MINUSF)
     {
-        return sb.st_mtime;
+        snprintf(filename, CF_MAXVARSIZE, "%s/state/validated_%s", CFWORKDIR, CanonifyName(config->original_input_file));
+        MapName(filename);
     }
     else
     {
-        return 0;
+        snprintf(filename, CF_MAXVARSIZE, "%s/inputs/cf_promises_validated", CFWORKDIR);
+        MapName(filename);
     }
+
+    return ReadPolicyValidatedFile(filename);
 }
 
 /**
@@ -658,6 +688,20 @@ Policy *GenericAgentLoadPolicy(EvalContext *ctx, GenericAgentConfig *config)
         VerifyPromises(ctx, policy, config);
     }
 
+    if (!MINUSF)
+    {
+        JsonElement *validated_doc = ReadPolicyValidatedFileFromInputs(config);
+        if (validated_doc)
+        {
+            const char *release_id = JsonObjectGetAsString(validated_doc, "releaseId");
+            if (release_id)
+            {
+                policy->release_id = xstrndup(release_id, 2 * CF_SHA256_LEN);
+            }
+            JsonDestroy(validated_doc);
+        }
+    }
+
     return policy;
 }
 
@@ -902,7 +946,15 @@ bool GeneratePolicyReleaseIDFromMasterfiles(char release_id_out[(2 * CF_SHA1_LEN
 
 bool GenericAgentIsPolicyReloadNeeded(const GenericAgentConfig *config, const Policy *policy)
 {
-    time_t validated_at = ReadPolicyValidatedFileMTime(config);
+    time_t validated_at = 0;
+    {
+        JsonElement *validated_doc = ReadPolicyValidatedFileFromMasterfiles(config);
+        if (validated_doc)
+        {
+            validated_at = JsonPrimitiveGetAsInteger(JsonObjectGet(validated_doc, "timestamp"));
+            JsonDestroy(validated_doc);
+        }
+    }
 
     if (validated_at > time(NULL))
     {

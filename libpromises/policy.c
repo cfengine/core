@@ -78,6 +78,7 @@ Policy *PolicyNew(void)
 {
     Policy *policy = xcalloc(1, sizeof(Policy));
 
+    policy->release_id = NULL;
     policy->bundles = SeqNew(100, BundleDestroy);
     policy->bodies = SeqNew(100, BodyDestroy);
 
@@ -95,6 +96,7 @@ void PolicyDestroy(Policy *policy)
     {
         SeqDestroy(policy->bundles);
         SeqDestroy(policy->bodies);
+        free(policy->release_id);
 
         free(policy);
     }

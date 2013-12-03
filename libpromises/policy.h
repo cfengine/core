@@ -51,6 +51,8 @@ typedef struct
 
 struct Policy_
 {
+    char *release_id;
+
     Seq *bundles;
     Seq *bodies;
 };

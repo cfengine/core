@@ -68,7 +68,6 @@ static int HailServer(EvalContext *ctx, char *host);
 static void SendClassData(AgentConnection *conn);
 static void HailExec(AgentConnection *conn, char *peer, char *recvbuffer, char *sendbuffer);
 static FILE *NewStream(char *name);
-static void DeleteStream(FILE *fp);
 
 /*******************************************************************/
 /* Command line options                                            */
@@ -769,7 +768,10 @@ static void HailExec(AgentConnection *conn, char *peer, char *recvbuffer, char *
         fprintf(fp, "%s> -> %s", VPREFIX, recvbuffer);
     }
 
-    DeleteStream(fp);
+    if (fp != stdout)
+    {
+        fclose(fp);
+    }
     DisconnectServer(conn, false);
 }
 
@@ -807,14 +809,4 @@ static FILE *NewStream(char *name)
     }
 
     return fp;
-}
-
-/********************************************************************/
-
-static void DeleteStream(FILE *fp)
-{
-    if (fp != stdout)
-    {
-        fclose(fp);
-    }
 }

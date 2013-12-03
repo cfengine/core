@@ -318,8 +318,7 @@ void GetInterfacesInfo(EvalContext *ctx)
 
     /* This function may be called many times, while interfaces come and go */
     /* TODO cache results for non-daemon processes? */
-    DeleteItemList(IPADDRESSES);
-    IPADDRESSES = NULL;
+    EvalContextDeleteIpAddresses(ctx);
 
     memset(ifbuf, 0, sizeof(ifbuf));
 
@@ -461,7 +460,7 @@ void GetInterfacesInfo(EvalContext *ctx)
                     assert(sizeof(ip) >= sizeof(VIPADDRESS) + sizeof("ipv4_"));
                     strcpy(ip, "ipv4_");
                     strcat(ip, VIPADDRESS);
-                    AppendItem(&IPADDRESSES, VIPADDRESS, "");
+                    EvalContextAddIpAddress(ctx, VIPADDRESS);
                     RlistAppendScalar(&ips, VIPADDRESS);
 
                     for (sp = ip + strlen(ip) - 1; (sp > ip); sp--)
@@ -507,7 +506,7 @@ void GetInterfacesInfo(EvalContext *ctx)
                     address_set = true;
                 }
 
-                AppendItem(&IPADDRESSES, txtaddr, "");
+                EvalContextAddIpAddress(ctx, txtaddr);
                 RlistAppendScalar(&ips, txtaddr);
 
                 for (sp = ip + strlen(ip) - 1; (sp > ip); sp--)
@@ -654,7 +653,7 @@ static void FindV6InterfacesInfo(EvalContext *ctx)
                 if ((IsIPV6Address(ip->name)) && ((strcmp(ip->name, "::1") != 0)))
                 {
                     Log(LOG_LEVEL_VERBOSE, "Found IPv6 address %s", ip->name);
-                    AppendItem(&IPADDRESSES, ip->name, "");
+                    EvalContextAddIpAddress(ctx, ip->name);
                     EvalContextClassPutHard(ctx, ip->name, "inventory,source=agent");
                 }
             }

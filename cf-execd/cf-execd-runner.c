@@ -667,25 +667,8 @@ static void MailResult(const ExecConfig *config, const char *file)
 
         HashPubKey(PUBKEY, digest, CF_DEFAULT_DIGEST);
 
-        char ipbuf[CF_MAXVARSIZE];
-        memset(ipbuf, '\0', sizeof(CF_MAXVARSIZE));
-
-        for (Item *iptr = IPADDRESSES; iptr != NULL; iptr = iptr->next)
-        {
-            if ((SafeStringLength(ipbuf) + SafeStringLength(iptr->name)) < sizeof(ipbuf))
-            {
-                strcat(ipbuf, iptr->name);
-                strcat(ipbuf, " ");
-            }
-            else
-            {
-                break;
-            }
-        }
-        Chop(ipbuf, sizeof(ipbuf));
-
         snprintf(vbuff, sizeof(vbuff), "X-CFEngine: vfqhost=\"%s\";ip-addresses=\"%s\";policyhub=\"%s\";pkhash=\"%s\"\r\n",
-                 VFQNAME, ipbuf, existing_policy_server,
+                 VFQNAME, config->ip_addresses, existing_policy_server,
                  HashPrintSafe(CF_DEFAULT_DIGEST, true, digest, buffer));
 
         send(sd, vbuff, strlen(vbuff), 0);

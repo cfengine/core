@@ -43,6 +43,7 @@
 #include <audit.h>
 #include <man.h>
 #include <connection_info.h>
+#include <addr_lib.h>
 
 typedef enum
 {
@@ -64,7 +65,6 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv);
 
 static void KeepControlPromises(EvalContext *ctx, Policy *policy);
 static int HailServer(EvalContext *ctx, char *host);
-static int ParseHostname(char *hostname, char *new_hostname);
 static void SendClassData(AgentConnection *conn);
 static void HailExec(AgentConnection *conn, char *peer, char *recvbuffer, char *sendbuffer);
 static FILE *NewStream(char *name);
@@ -558,7 +558,7 @@ static void KeepControlPromises(EvalContext *ctx, Policy *policy)
     RUNATTR.copy.trustkey = false;
     RUNATTR.copy.encrypt = true;
     RUNATTR.copy.force_ipv4 = false;
-    RUNATTR.copy.portnumber = SHORT_CFENGINEPORT;
+    RUNATTR.copy.portnumber = CFENGINE_PORT;
 
 /* Keep promised agent behaviour - control bodies */
 
@@ -677,26 +677,6 @@ static void KeepControlPromises(EvalContext *ctx, Policy *policy)
     }
 
 }
-
-/********************************************************************/
-
-static int ParseHostname(char *name, char *hostname)
-{
-    int port = ntohs(SHORT_CFENGINEPORT);
-
-    if (strchr(name, ':'))
-    {
-        sscanf(name, "%250[^:]:%d", hostname, &port);
-    }
-    else
-    {
-        strncpy(hostname, name, CF_MAXVARSIZE);
-    }
-
-    return (port);
-}
-
-/********************************************************************/
 
 static void SendClassData(AgentConnection *conn)
 {

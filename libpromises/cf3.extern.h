@@ -35,8 +35,7 @@ extern char BINDINTERFACE[CF_BUFSIZE];
 
 extern Item *IPADDRESSES;
 
-extern char STR_CFENGINEPORT[16];
-extern unsigned short SHORT_CFENGINEPORT;
+extern int CFENGINE_PORT;
 extern time_t CONNTIMEOUT;
 
 extern char CFLOCK[CF_BUFSIZE];

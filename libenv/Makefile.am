@@ -2,7 +2,7 @@ noinst_LTLIBRARIES = libenv.la
 
 libenv_la_SOURCES = \
 	constants.c constants.h \
-        sysinfo.c sysinfo.h \
+        sysinfo.c sysinfo.h sysinfo_priv.h \
         time_classes.c time_classes.h \
 	unix_iface.c unix_iface.h \
         zones.c zones.h

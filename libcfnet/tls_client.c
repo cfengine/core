@@ -85,7 +85,7 @@ bool TLSClientInitialize()
     {
         Log(LOG_LEVEL_WARNING,
             "No public/private key pair is loaded, trying to reload");
-        LoadSecretKeys(ReadPolicyServerFile(CFWORKDIR));
+        LoadSecretKeys();
         if (PRIVKEY == NULL || PUBKEY == NULL)
         {
             Log(LOG_LEVEL_ERR,

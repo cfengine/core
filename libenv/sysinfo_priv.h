@@ -20,14 +20,15 @@
   versions of CFEngine, the applicable Commercial Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
-
 */
 
-#ifndef CFENGINE_UNIX_IFACE_H
-#define CFENGINE_UNIX_IFACE_H
+#ifndef CFENGINE_SYSINFO_PRIV_H
+#define CFENGINE_SYSINFO_PRIV_H
 
 #include <cf3.defs.h>
 
-void GetInterfacesInfo(EvalContext *ctx);
+void DiscoverVersion(EvalContext *ctx);
+void DetectDomainName(EvalContext *ctx, const char *orig_nodename);
+int GetUptimeMinutes(time_t now);
 
 #endif

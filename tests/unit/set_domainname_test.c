@@ -1,6 +1,6 @@
 #include <cf3.defs.h>
 
-#include <sysinfo.h>
+#include <sysinfo_priv.h>
 #include <env_context.h>
 #include <item_lib.h>
 #include <rlist.h>

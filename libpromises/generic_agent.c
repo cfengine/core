@@ -116,12 +116,7 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
     THIS_AGENT_TYPE = config->agent_type;
     EvalContextClassPutHard(ctx, CF_AGENTTYPES[config->agent_type], "goal=state,cfe_internal,source=agent");
 
-    GetNameInfo3(ctx, config->agent_type);
-    GetInterfacesInfo(ctx);
-
-    Get3Environment(ctx, config->agent_type);
-    BuiltinClasses(ctx);
-    OSClasses(ctx);
+    DetectEnvironment(ctx, config->agent_type != AGENT_TYPE_EXECUTOR, true);
 
     EvalContextHeapPersistentLoadAll(ctx);
     LoadSystemConstants(ctx);
@@ -735,8 +730,7 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
     char vbuff[CF_BUFSIZE];
     char ebuff[CF_EXPANDSIZE];
 
-    SHORT_CFENGINEPORT = htons((unsigned short) 5308);
-    snprintf(STR_CFENGINEPORT, 15, "5308");
+    DetermineCfenginePort();
 
     EvalContextClassPutHard(ctx, "any", "goal=state,inventory,source=agent");
 
@@ -834,13 +828,14 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
         CheckWorkingDirectories(ctx);
     }
 
-    const char *bootstrapped_policy_server = ReadPolicyServerFile(CFWORKDIR);
-
     /* Initialize keys and networking. cf-key, doesn't need keys. In fact it
        must function properly even without them, so that it generates them! */
     if (config->agent_type != AGENT_TYPE_KEYGEN)
     {
-        LoadSecretKeys(bootstrapped_policy_server);
+        LoadSecretKeys();
+        char *bootstrapped_policy_server = ReadPolicyServerFile(CFWORKDIR);
+        PolicyHubUpdateKeys(bootstrapped_policy_server);
+        free(bootstrapped_policy_server);
         cfnet_init();
     }
 
@@ -848,8 +843,6 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
     {
         GenericAgentConfigSetInputFile(config, GetWorkDir(), "promises.cf");
     }
-
-    DetermineCfenginePort();
 
     VIFELAPSED = 1;
     VEXPIREAFTER = 1;

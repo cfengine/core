@@ -24,6 +24,7 @@
 
 #include <addr_lib.h>
 
+#include <item_lib.h>
 #include <logging.h>
 #include <string_lib.h>
 
@@ -536,4 +537,34 @@ bool IsLoopbackAddress(const char *address)
     }
 
     return false;
+}
+
+bool IsInterfaceAddress(const char *adr)
+ /* Does this address belong to a local interface */
+{
+    Item *ip;
+
+    for (ip = IPADDRESSES; ip != NULL; ip = ip->next)
+    {
+        if (strncasecmp(adr, ip->name, strlen(adr)) == 0)
+        {
+            Log(LOG_LEVEL_DEBUG, "Identifying '%s' as one of my interfaces", adr);
+            return true;
+        }
+    }
+
+    Log(LOG_LEVEL_DEBUG, "'%s' is not one of my interfaces", adr);
+    return false;
+}
+
+int ParseHostname(char *name, char *hostname)
+{
+    int port;
+    if (sscanf(name, "%250[^:]:%d", hostname, &port) != 2)
+    {
+        strlcpy(hostname, name, CF_MAXVARSIZE);
+        port = CFENGINE_PORT;
+    }
+
+    return port;
 }

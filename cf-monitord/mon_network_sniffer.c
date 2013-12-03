@@ -24,7 +24,6 @@
 
 #include <cf3.defs.h>
 
-//#include <sysinfo.h>
 #include <files_names.h>
 #include <files_interfaces.h>
 #include <mon.h>
@@ -33,7 +32,7 @@
 #include <signals.h>
 #include <string_lib.h>
 #include <misc_lib.h>
-#include <unix_iface.h>
+#include <addr_lib.h>
 
 typedef enum
 {

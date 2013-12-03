@@ -2518,8 +2518,8 @@ mode_t PromiseGetConstraintAsOctal(const EvalContext *ctx, const char *lval, con
 
             if (!Str2Mode(cp->rval.item, &retval))
             {
+                Log(LOG_LEVEL_ERR, "Error reading assumed octal value '%s'", (const char *)cp->rval.item);
                 PromiseRef(LOG_LEVEL_ERR, pp);
-                FatalError(ctx, "Error reading assumed octal value '%s'", (const char *)cp->rval.item);
             }
         }
     }

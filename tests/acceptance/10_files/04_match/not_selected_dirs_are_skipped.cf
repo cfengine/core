@@ -1,0 +1,114 @@
+########################################################################
+#
+# Make sure that a directory is skipped when body_select does not match
+# it, even when depth_search is off.
+#
+########################################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+body perms perms1
+{
+  mode => "732";
+}
+
+body depth_search recurse_nobasedir(x)
+{
+  depth => "$(x)";
+  include_basedir => "false";
+}
+
+body delete del
+{
+  rmdirs => "true";
+}
+
+body file_select by_name(names)
+{
+  leaf_name  => { @(names) };
+  file_result => "leaf_name";
+}
+
+bundle agent init
+{
+  files:
+     # Create a directory  and some files in there
+    "$(G.testroot)/srcdir/."
+      create => "true";
+    "$(G.testroot)/srcdir/testfile1"
+      create => "true";
+    "$(G.testroot)/srcdir/testfile2"
+      create => "true";
+
+    # The destination should already exist and have specific
+    # permissions, so that it's excluded by the body files_select later
+    "$(G.testroot)/destdir/."
+      perms => perms1,
+      create => "true";
+
+    # Make sure all of its contents are cleaned up
+    "$(G.testroot)/destdir"
+      depth_search => recurse_nobasedir("inf"),
+      file_select => by_name(".*"),
+      delete => del;
+}
+
+#######################################################
+
+body file_select test_select
+{
+  # Select will fail because the dir is mode 732
+  search_mode => { "444" };
+  file_result => "mode";
+}
+
+body link_from ln_s_children(x)
+{
+      link_type => "symlink";
+      link_children => "true";
+      source => "$(x)";
+}
+
+bundle agent test
+{
+
+   # We promise that if destdir has specific permissions, then it must
+   # contain links to all children from srcdir.
+
+   files:
+    "$(G.testroot)/destdir"
+      file_select => test_select,
+      link_from => ln_s_children("$(G.testroot)/srcdir");
+
+}
+
+#######################################################
+
+bundle agent check
+{
+
+  # Since body select fails, the files in target directory should *not*
+  # be created
+
+  classes:
+    "files_created" and => {
+      fileexists("$(G.testroot)/destdir/testfile1"),
+      fileexists("$(G.testroot)/destdir/testfile2")
+    };
+
+  reports:
+    !files_created::
+      "$(this.promise_filename) Pass";
+
+    files_created::
+      "$(this.promise_filename) FAIL";
+
+}
+

@@ -116,14 +116,14 @@ const char *GetWorkDir(void)
 
 const char *GetLogDir(void)
 {
-    const char *logdir = getenv("CFENGINE_TEST_OVERRIDE_LOGDIR");
+    const char *logdir = getenv("CFENGINE_TEST_OVERRIDE_WORKDIR");
 
     return logdir == NULL ? GetDefaultLogDir() : logdir;
 }
 
 const char *GetPidDir(void)
 {
-    const char *piddir = getenv("CFENGINE_TEST_OVERRIDE_PIDDIR");
+    const char *piddir = getenv("CFENGINE_TEST_OVERRIDE_WORKDIR");
 
     return piddir == NULL ? GetDefaultPidDir() : piddir;
 }

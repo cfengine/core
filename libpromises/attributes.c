@@ -35,8 +35,6 @@ Attributes GetFilesAttributes(const EvalContext *ctx, const Promise *pp)
 {
     Attributes attr = { {0} };
 
-    memset(&attr, 0, sizeof(attr));
-
 // default for file copy
 
     attr.havedepthsearch = PromiseGetConstraintAsBoolean(ctx, "depth_search", pp);

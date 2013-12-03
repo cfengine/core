@@ -95,16 +95,14 @@ trustkey => "true";
 
 bundle agent check
 {
-#TODO check that the two files are identical
-#methods:
-#  "any" usebundle => default_check_diff("$(G.testdir)/source_file","$(G.testdir)/destination_file","$(fn[1])");
+methods:
+  copy_ok::
+    "any" usebundle => default_check_diff("$(G.testdir)/source_file","$(G.testdir)/destination_file","$(fn[1])");
 
 classes:
   "dummy" expression => regextract("(.*)\.sub", $(this.promise_filename), "fn");
 
 reports:
-  copy_ok::
-    "$(fn[1]) Pass";
   !copy_ok::
     "$(fn[1]) FAIL";
 }

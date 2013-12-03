@@ -261,12 +261,13 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, Promise *pp
         }
     }
 
-    if (exists && (!VerifyFileLeaf(ctx, path, &oslb, a, pp, &result)))
+    /* If file or directory exists but it is not selected by body file_select
+     * (if we have one) then just exit. But continue if it's a directory and
+     * depth_search is on, so that we can file_select into it. */
+    if (exists && (!VerifyFileLeaf(ctx, path, &oslb, a, pp, &result)) &&
+        !(a.havedepthsearch && S_ISDIR(oslb.st_mode)))
     {
-        if (!S_ISDIR(oslb.st_mode))
-        {
-            goto exit;
-        }
+        goto exit;
     }
 
     if (stat(path, &osb) == -1)

@@ -110,8 +110,11 @@ if test "x$cross_compiling" = "xno"; then
 fi
 
 dnl ######################################################################
-dnl How to build extension binaries. Can be built as plugins (default)
-dnl or complete binaries (Windows and general debugging).
+dnl Whether to build extensions as builtin extensions or a separate
+dnl plugin. The default is plugin.
+dnl --enable-builtin-extensions is the default on Windows, and can be
+dnl used on other platforms for debugging purposes, but isn't otherwise
+dnl supported.
 dnl ######################################################################
 
 AC_ARG_ENABLE([builtin-extensions], [AS_HELP_STRING([Build binaries with builtin extensions])],
@@ -1221,6 +1224,12 @@ if test "x$have_pam" = "xyes" && test "x$have_userprogs" = "xyes"; then
   AC_MSG_RESULT([-> User promises: PAM/user* tools])
 else
   AC_MSG_RESULT([-> User promises: disabled])
+fi
+
+if test "x$enable_builtin_extensions" = "xyes"; then
+  AC_MSG_RESULT([-> Enterprise extensions: Built in])
+else
+  AC_MSG_RESULT([-> Enterprise extensions: Plugin or not included])
 fi
 
 m4_indir(incstart[]incend, [nova/config.m4])

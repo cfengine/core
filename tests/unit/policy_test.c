@@ -43,7 +43,8 @@ static Seq *LoadAndCheck(const char *filename)
 
 static Seq *LoadAndCheckString(const char *policy_code)
 {
-    const char *tmp = tempnam(NULL, "cfengine_test");
+    char tmp[] = TESTDATADIR "/cfengine_test.XXXXXX";
+    mkstemp(tmp);
 
     {
         FILE *out = fopen(tmp, "w");
@@ -65,13 +66,14 @@ static Seq *LoadAndCheckString(const char *policy_code)
 
 static void test_failsafe(void)
 {
-    char *tmp = tempnam(NULL, "cfengine_test");
+    char tmp[] = TESTDATADIR "/cfengine_test.XXXXXX";
+    mkstemp(tmp);
+
     WriteBuiltinFailsafePolicyToPath(tmp);
 
     Policy *failsafe = ParserParseFile(AGENT_TYPE_COMMON, tmp, PARSER_WARNING_ALL, PARSER_WARNING_ALL);
 
     unlink(tmp);
-    free(tmp);
 
     assert_true(failsafe);
 

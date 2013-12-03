@@ -33,8 +33,6 @@ extern pid_t ALARM_PID;
 extern RSA *PRIVKEY, *PUBKEY;
 extern char BINDINTERFACE[CF_BUFSIZE];
 
-extern Item *IPADDRESSES;
-
 extern int CFENGINE_PORT;
 extern time_t CONNTIMEOUT;
 

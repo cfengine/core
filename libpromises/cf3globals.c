@@ -81,8 +81,6 @@ char PUBKEY_DIGEST[CF_MAXVARSIZE] = { 0 };
 
 char VIPADDRESS[CF_MAX_IP_LEN] = { 0 };
 
-Item *IPADDRESSES = NULL;
-
 /*******************************************************************/
 /*                                                                 */
 /* Checksums                                                       */

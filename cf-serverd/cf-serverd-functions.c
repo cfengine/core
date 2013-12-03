@@ -573,9 +573,6 @@ void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *con
             
             EvalContextClear(ctx);
 
-            DeleteItemList(IPADDRESSES);
-            IPADDRESSES = NULL;
-
             free(SV.allowciphers);
             SV.allowciphers = NULL;
 

@@ -26,6 +26,7 @@
 #include <alloc.h>
 #include <sequence.h>
 #include <string_lib.h>
+#include <file_lib.h>
 
 #include <json.h>
 
@@ -1827,4 +1828,19 @@ JsonParseError JsonParse(const char **data, JsonElement **json_out)
     }
 
     return JSON_PARSE_ERROR_NO_DATA;
+}
+
+JsonParseError JsonParseFile(const char *path, size_t size_max, JsonElement **json_out)
+{
+    Writer *contents = FileRead(path, size_max, NULL);
+    if (!contents)
+    {
+        return JSON_PARSE_ERROR_NO_DATA;
+    }
+    JsonElement *json = NULL;
+    const char *data = StringWriterData(contents);
+    JsonParseError err = JsonParse(&data, &json);
+    WriterClose(contents);
+    *json_out = json;
+    return err;
 }

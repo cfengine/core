@@ -348,6 +348,15 @@ JsonElement *JsonArrayGet(JsonElement *array, size_t index);
   */
 JsonParseError JsonParse(const char **data, JsonElement **json_out);
 
+/**
+ * @brief Convenience function to parse JSON from a file
+ * @param path Path to the file
+ * @param size_max Maximum size to read in memory
+ * @param json_out Resulting JSON object
+ * @return See JsonParseError and JsonParseErrorToString
+ */
+JsonParseError JsonParseFile(const char *path, size_t size_max, JsonElement **json_out);
+
 const char* JsonParseErrorToString(JsonParseError error);
 
 /**

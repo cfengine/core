@@ -33,8 +33,6 @@ extern pid_t ALARM_PID;
 extern RSA *PRIVKEY, *PUBKEY;
 extern char BINDINTERFACE[CF_BUFSIZE];
 
-extern Item *IPADDRESSES;
-
 extern int CFENGINE_PORT;
 extern time_t CONNTIMEOUT;
 
@@ -81,7 +79,6 @@ extern HashMethod CF_DEFAULT_DIGEST;
 extern int CF_DEFAULT_DIGEST_LEN;
 
 extern int CF_PERSISTENCE;
-extern int LOOKUP;
 
 extern const char *CF_AGENTTYPES[];
 

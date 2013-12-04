@@ -428,11 +428,6 @@ void EvalContextHeapPersistentLoadAll(EvalContext *ctx)
     time_t now = time(NULL);
     CfState q;
 
-    if (LOOKUP)
-    {
-        return;
-    }
-
     Banner("Loading persistent classes");
 
     if (!OpenDB(&dbp, dbid_state))
@@ -706,6 +701,7 @@ EvalContext *EvalContextNew(void)
     ctx->eval_options = EVAL_OPTION_FULL;
     ctx->bundle_aborted = false;
     ctx->checksum_updates_default = false;
+    ctx->ip_addresses = NULL;
 
     ctx->heap_abort = NULL;
     ctx->heap_abort_current_bundle = NULL;
@@ -736,6 +732,8 @@ void EvalContextDestroy(EvalContext *ctx)
         EvalContextEnterpriseStateDestroy(ctx->enterprise_state);
 
         PromiseLoggingFinish(ctx);
+
+        DeleteItemList(ctx->ip_addresses);
 
         DeleteItemList(ctx->heap_abort);
         DeleteItemList(ctx->heap_abort_current_bundle);
@@ -817,7 +815,7 @@ bool EvalContextHeapRemoveHard(EvalContext *ctx, const char *name)
 void EvalContextClear(EvalContext *ctx)
 {
     ClassTableClear(ctx->global_classes);
-
+    DeleteItemList(ctx->ip_addresses);
     VariableTableClear(ctx->global_variables, NULL, NULL, NULL);
     VariableTableClear(ctx->match_variables, NULL, NULL, NULL);
     SeqClear(ctx->stack);
@@ -2074,4 +2072,20 @@ void SetChecksumUpdatesDefault(EvalContext *ctx, bool enabled)
 bool GetChecksumUpdatesDefault(const EvalContext *ctx)
 {
     return ctx->checksum_updates_default;
+}
+
+void EvalContextAddIpAddress(EvalContext *ctx, const char *ip_address)
+{
+    AppendItem(&ctx->ip_addresses, ip_address, "");
+}
+
+void EvalContextDeleteIpAddresses(EvalContext *ctx)
+{
+    DeleteItemList(ctx->ip_addresses);
+    ctx->ip_addresses = NULL;
+}
+
+Item *EvalContextGetIpAddresses(const EvalContext *ctx)
+{
+    return ctx->ip_addresses;
 }

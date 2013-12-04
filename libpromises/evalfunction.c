@@ -3510,7 +3510,7 @@ static FnCallResult FnCallIPRange(EvalContext *ctx, FnCall *fp, Rlist *finalargs
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
-    for (ip = IPADDRESSES; ip != NULL; ip = ip->next)
+    for (ip = EvalContextGetIpAddresses(ctx); ip != NULL; ip = ip->next)
     {
         if (FuzzySetMatch(range, VIPADDRESS) == 0)
         {
@@ -5507,7 +5507,7 @@ static int BuildLineArray(EvalContext *ctx, const Bundle *bundle, char *array_lv
 {
     char *sp, linebuf[CF_BUFSIZE], name[CF_MAXVARSIZE], first_one[CF_MAXVARSIZE];
     Rlist *rp, *newlist = NULL;
-    int allowblanks = true, vcount, hcount, lcount = 0;
+    int allowblanks = true, vcount, hcount;
     int lineLen;
 
     memset(linebuf, 0, CF_BUFSIZE);

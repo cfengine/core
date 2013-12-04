@@ -60,7 +60,6 @@ static void cleanup(void *generic_data)
 int openat(int dirfd, const char *pathname, int flags, ...)
 {
     openat_data data;
-    int fd;
 
     data.pathname = pathname;
     data.flags = flags;

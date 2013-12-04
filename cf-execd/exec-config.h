@@ -50,6 +50,7 @@ typedef struct
      */
     char *fq_name;
     char *ip_address;
+    char *ip_addresses;
 } ExecConfig;
 
 ExecConfig *ExecConfigNewDefault(bool scheduled_run, const char *fq_name, const char *ip_address);

@@ -457,7 +457,7 @@ static void KeepControlPromises(EvalContext *ctx, Policy *policy, GenericAgentCo
             if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_PORT_NUMBER].lval) == 0)
             {
                 CFENGINE_PORT = (short) IntFromString(retval.item);
-                Log(LOG_LEVEL_VERBOSE, "Setting default port number to %hd", CFENGINE_PORT);
+                Log(LOG_LEVEL_VERBOSE, "Setting default port number to %d", CFENGINE_PORT);
                 continue;
             }
 

@@ -34,7 +34,6 @@ int SHOWREPORTS = false;
 /* operational state                                                         */
 /*****************************************************************************/
 
-int LOOKUP = false;
 bool FIPS_MODE = false;
 
 struct utsname VSYSNAME;
@@ -80,8 +79,6 @@ char PUBKEY_DIGEST[CF_MAXVARSIZE] = { 0 };
 
 
 char VIPADDRESS[CF_MAX_IP_LEN] = { 0 };
-
-Item *IPADDRESSES = NULL;
 
 /*******************************************************************/
 /*                                                                 */

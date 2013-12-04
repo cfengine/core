@@ -198,7 +198,7 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, Promise *pp
         return PROMISE_RESULT_NOOP;
     }
 
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser", path, DATA_TYPE_STRING, "goal=state,source=promise");
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser", path, DATA_TYPE_STRING, "source=promise");
 
     thislock = AcquireLock(ctx, path, VUQNAME, CFSTARTTIME, a.transaction, pp, false);
     if (thislock.lock == NULL)
@@ -687,7 +687,7 @@ static PromiseResult FindFilePromiserObjects(EvalContext *ctx, Promise *pp)
     if (literal)
     {
         // Prime the promiser temporarily, may override later
-        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser", pp->promiser, DATA_TYPE_STRING, "goal=state,source=promise");
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser", pp->promiser, DATA_TYPE_STRING, "source=promise");
         result = PromiseResultUpdate(result, VerifyFilePromise(ctx, pp->promiser, pp));
     }
     else                        // Default is to expand regex paths

@@ -152,12 +152,12 @@ static void GetMacAddress(EvalContext *ctx, int fd, struct ifreq *ifr, struct if
              (unsigned char) ifr->ifr_hwaddr.sa_data[4], 
              (unsigned char) ifr->ifr_hwaddr.sa_data[5]);
 
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, name, hw_mac, DATA_TYPE_STRING, "goal=state,inventory,source=agent");
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, name, hw_mac, DATA_TYPE_STRING, "inventory,source=agent");
     RlistAppend(hardware, hw_mac, RVAL_TYPE_SCALAR);
     RlistAppend(interfaces, ifp->ifr_name, RVAL_TYPE_SCALAR);
 
     snprintf(name, sizeof(name), "mac_%s", CanonifyName(hw_mac));
-    EvalContextClassPutHard(ctx, name, "goal=state,inventory,source=agent");
+    EvalContextClassPutHard(ctx, name, "inventory,source=agent");
 
 # elif defined(HAVE_GETIFADDRS)
     char hw_mac[CF_MAXVARSIZE];
@@ -170,8 +170,8 @@ static void GetMacAddress(EvalContext *ctx, int fd, struct ifreq *ifr, struct if
         Log(LOG_LEVEL_ERR, "!! Could not get interface %s addresses",
           ifp->ifr_name);
 
-        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, name, "mac_unknown", DATA_TYPE_STRING, "goal=state,inventory,source=agent");
-        EvalContextClassPutHard(ctx, "mac_unknown", "goal=state,inventory,source=agent");
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, name, "mac_unknown", DATA_TYPE_STRING, "inventory,source=agent");
+        EvalContextClassPutHard(ctx, "mac_unknown", "inventory,source=agent");
         return;
     }
     for (ifa = ifaddr; ifa != NULL; ifa=ifa->ifa_next)
@@ -191,12 +191,12 @@ static void GetMacAddress(EvalContext *ctx, int fd, struct ifreq *ifr, struct if
                     (unsigned char) m[4],
                     (unsigned char) m[5]);
 
-                EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, name, hw_mac, DATA_TYPE_STRING, "goal=state,inventory,source=agent");
+                EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, name, hw_mac, DATA_TYPE_STRING, "inventory,source=agent");
                 RlistAppend(hardware, hw_mac, RVAL_TYPE_SCALAR);
                 RlistAppend(interfaces, ifa->ifa_name, RVAL_TYPE_SCALAR);
 
                 snprintf(name, sizeof(name), "mac_%s", CanonifyName(hw_mac));
-                EvalContextClassPutHard(ctx, name, "goal=state,inventory,source=agent");
+                EvalContextClassPutHard(ctx, name, "inventory,source=agent");
             }
         }
 
@@ -212,17 +212,17 @@ static void GetMacAddress(EvalContext *ctx, int fd, struct ifreq *ifr, struct if
         sprintf(hw_mac, "%.2x:%.2x:%.2x:%.2x:%.2x:%.2x",
 	       mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
 	
-        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, name, hw_mac, DATA_TYPE_STRING, "goal=state,inventory,source=agent");
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, name, hw_mac, DATA_TYPE_STRING, "inventory,source=agent");
         RlistAppend(hardware, hw_mac, RVAL_TYPE_SCALAR);
         RlistAppend(interfaces, ifp->ifr_name, RVAL_TYPE_SCALAR);
 
         snprintf(name, CF_MAXVARSIZE, "mac_%s", CanonifyName(hw_mac));
-        EvalContextClassPutHard(ctx, name, "goal=state,inventory,source=agent");
+        EvalContextClassPutHard(ctx, name, "inventory,source=agent");
     }
     else
     {
-        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, name, "mac_unknown", DATA_TYPE_STRING, "goal=state,inventory,source=agent");
-        EvalContextClassPutHard(ctx, "mac_unknown", "goal=state,inventory,source=agent");
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, name, "mac_unknown", DATA_TYPE_STRING, "inventory,source=agent");
+        EvalContextClassPutHard(ctx, "mac_unknown", "inventory,source=agent");
     }
 # elif defined(__sun) && !defined(HAVE_GETIFADDRS)
 
@@ -236,8 +236,8 @@ static void GetMacAddress(EvalContext *ctx, int fd, struct ifreq *ifr, struct if
         Log(LOG_LEVEL_ERR, "getifaddrs", "!! Could not get interface %s addresses",
           ifp->ifr_name);
 
-        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, name, "mac_unknown", DATA_TYPE_STRING, "goal=state,inventory,source=agent");
-        EvalContextClassPutHard(ctx, "mac_unknown", "goal=state,inventory,source=agent");
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, name, "mac_unknown", DATA_TYPE_STRING, "inventory,source=agent");
+        EvalContextClassPutHard(ctx, "mac_unknown", "inventory,source=agent");
         return;
     }
     for (ifa = ifaddr; ifa != NULL; ifa=ifa->ifa_next)
@@ -251,17 +251,17 @@ static void GetMacAddress(EvalContext *ctx, int fd, struct ifreq *ifr, struct if
         (unsigned char) saddr->sa_data[4],
         (unsigned char) saddr->sa_data[5]);
 
-        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, name, hw_mac, DATA_TYPE_STRING, "goal=state,inventory,source=agent");
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, name, hw_mac, DATA_TYPE_STRING, "inventory,source=agent");
         RlistAppend(hardware, hw_mac, RVAL_TYPE_SCALAR);
         RlistAppend(interfaces, ifa->ifa_name, RVAL_TYPE_SCALAR);
 
         snprintf(name, sizeof(name), "mac_%s", CanonifyName(hw_mac));
-        EvalContextClassPutHard(ctx, name, "goal=state,inventory,source=agent");
+        EvalContextClassPutHard(ctx, name, "inventory,source=agent");
     }
     solaris_freeifaddrs(ifaddr);
 # else
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, name, "mac_unknown", DATA_TYPE_STRING, "goal=state,inventory,source=agent");
-    EvalContextClassPutHard(ctx, "mac_unknown", "goal=state,inventory,source=agent");
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, name, "mac_unknown", DATA_TYPE_STRING, "inventory,source=agent");
+    EvalContextClassPutHard(ctx, "mac_unknown", "inventory,source=agent");
 # endif
 }
 
@@ -296,7 +296,7 @@ static void GetInterfaceFlags(EvalContext *ctx, struct ifreq *ifr, Rlist **flags
     {
       // Skip leading space
       fp = buffer + 1;
-      EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, name, fp, DATA_TYPE_STRING, "goal=state,inventory,source=agent");
+      EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, name, fp, DATA_TYPE_STRING, "inventory,source=agent");
       RlistAppend(flags, fp, RVAL_TYPE_SCALAR);
     }
 }
@@ -385,11 +385,11 @@ void GetInterfacesInfo(EvalContext *ctx)
         if (strcmp(last_name, ifp->ifr_name) != 0)
         {
             strcpy(last_name, ifp->ifr_name);
-            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "interface", last_name, DATA_TYPE_STRING, "goal=state,inventory,source=agent");
+            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "interface", last_name, DATA_TYPE_STRING, "inventory,source=agent");
         }
 
         snprintf(workbuf, sizeof(workbuf), "net_iface_%s", CanonifyName(ifp->ifr_name));
-        EvalContextClassPutHard(ctx, workbuf, "goal=state,inventory,source=agent");
+        EvalContextClassPutHard(ctx, workbuf, "inventory,source=agent");
 
         /* TODO IPv6 should be handled transparently */
         if (ifp->ifr_addr.sa_family == AF_INET)
@@ -425,7 +425,7 @@ void GetInterfacesInfo(EvalContext *ctx)
                             NULL, 0, NI_NUMERICHOST);
 
                 Log(LOG_LEVEL_DEBUG, "Adding hostip '%s'", txtaddr);
-                EvalContextClassPutHard(ctx, txtaddr, "goal=state,inventory,source=agent");
+                EvalContextClassPutHard(ctx, txtaddr, "inventory,source=agent");
 
                 if ((hp = gethostbyaddr((char *) &(sin->sin_addr.s_addr),
                                         sizeof(sin->sin_addr.s_addr), AF_INET))
@@ -439,7 +439,7 @@ void GetInterfacesInfo(EvalContext *ctx)
                     if (hp->h_name != NULL)
                     {
                         Log(LOG_LEVEL_DEBUG, "Adding hostname '%s'", hp->h_name);
-                        EvalContextClassPutHard(ctx, hp->h_name, "goal=state,inventory,source=agent");
+                        EvalContextClassPutHard(ctx, hp->h_name, "inventory,source=agent");
 
                         if (hp->h_aliases != NULL)
                         {
@@ -447,7 +447,7 @@ void GetInterfacesInfo(EvalContext *ctx)
                             {
                                 Log(LOG_LEVEL_DEBUG, "Adding alias '%s'",
                                     hp->h_aliases[i]);
-                                EvalContextClassPutHard(ctx, hp->h_aliases[i], "goal=state,inventory,source=agent");
+                                EvalContextClassPutHard(ctx, hp->h_aliases[i], "inventory,source=agent");
                             }
                         }
                     }
@@ -469,7 +469,7 @@ void GetInterfacesInfo(EvalContext *ctx)
                         if (*sp == '.')
                         {
                             *sp = '\0';
-                            EvalContextClassPutHard(ctx, ip, "goal=state,inventory,source=agent");
+                            EvalContextClassPutHard(ctx, ip, "inventory,source=agent");
                         }
                     }
 
@@ -482,7 +482,7 @@ void GetInterfacesInfo(EvalContext *ctx)
                         {
                             *sp = '\0';
                             snprintf(name, sizeof(name), "ipv4_%d[%s]", i--, CanonifyName(VIPADDRESS));
-                            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, name, ip, DATA_TYPE_STRING, "goal=state,inventory,source=agent");
+                            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, name, ip, DATA_TYPE_STRING, "inventory,source=agent");
                         }
                     }
                     continue;
@@ -491,7 +491,7 @@ void GetInterfacesInfo(EvalContext *ctx)
                 assert(sizeof(ip) >= sizeof(txtaddr) + sizeof("ipv4_"));
                 strcpy(ip, "ipv4_");
                 strcat(ip, txtaddr);
-                EvalContextClassPutHard(ctx, ip, "goal=state,inventory,source=agent");
+                EvalContextClassPutHard(ctx, ip, "inventory,source=agent");
 
                 /* VIPADDRESS has already been set to the DNS address of
                  * VFQNAME by GetNameInfo3() during initialisation. Here we
@@ -499,7 +499,7 @@ void GetInterfacesInfo(EvalContext *ctx)
                  * interface. */
                 if (!address_set && !(ifr.ifr_flags & IFF_LOOPBACK))
                 {
-                    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "ipv4", txtaddr, DATA_TYPE_STRING, "goal=state,inventory,source=agent");
+                    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "ipv4", txtaddr, DATA_TYPE_STRING, "inventory,source=agent");
 
                     strcpy(VIPADDRESS, txtaddr);
                     Log(LOG_LEVEL_VERBOSE, "IP address of host set to %s",
@@ -515,7 +515,7 @@ void GetInterfacesInfo(EvalContext *ctx)
                     if (*sp == '.')
                     {
                         *sp = '\0';
-                        EvalContextClassPutHard(ctx, ip, "goal=state,inventory,source=agent");
+                        EvalContextClassPutHard(ctx, ip, "inventory,source=agent");
                     }
                 }
 
@@ -525,7 +525,7 @@ void GetInterfacesInfo(EvalContext *ctx)
 
                 snprintf(name, sizeof(name), "ipv4[%s]", CanonifyName(ifp->ifr_name));
 
-                EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, name, ip, DATA_TYPE_STRING, "goal=state,inventory,source=agent");
+                EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, name, ip, DATA_TYPE_STRING, "inventory,source=agent");
 
                 i = 3;
 
@@ -537,7 +537,7 @@ void GetInterfacesInfo(EvalContext *ctx)
 
                         snprintf(name, sizeof(name), "ipv4_%d[%s]", i--, CanonifyName(ifp->ifr_name));
 
-                        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, name, ip, DATA_TYPE_STRING, "goal=state,inventory,source=agent");
+                        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, name, ip, DATA_TYPE_STRING, "inventory,source=agent");
                     }
                 }
             }
@@ -552,22 +552,22 @@ void GetInterfacesInfo(EvalContext *ctx)
     if (interfaces)
     {
         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "interfaces", interfaces, DATA_TYPE_STRING_LIST,
-                                      "goal=state,inventory,source=agent");
+                                      "inventory,source=agent");
     }
     if (hardware)
     {
         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "hardware_addresses", hardware, DATA_TYPE_STRING_LIST,
-                                      "goal=state,inventory,source=agent");
+                                      "inventory,source=agent");
     }
     if (flags)
     {
         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "hardware_flags", flags, DATA_TYPE_STRING_LIST,
-                                      "goal=state,inventory,source=agent");
+                                      "inventory,source=agent");
     }
     if (ips)
     {
         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "ip_addresses", ips, DATA_TYPE_STRING_LIST,
-                                      "goal=state,inventory,source=agent");
+                                      "inventory,source=agent");
     }
 
     RlistDestroy(interfaces);
@@ -655,7 +655,7 @@ static void FindV6InterfacesInfo(EvalContext *ctx)
                 {
                     Log(LOG_LEVEL_VERBOSE, "Found IPv6 address %s", ip->name);
                     AppendItem(&IPADDRESSES, ip->name, "");
-                    EvalContextClassPutHard(ctx, ip->name, "goal=state,inventory,source=agent");
+                    EvalContextClassPutHard(ctx, ip->name, "inventory,source=agent");
                 }
             }
 

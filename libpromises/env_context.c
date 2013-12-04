@@ -464,11 +464,11 @@ void EvalContextHeapPersistentLoadAll(EvalContext *ctx)
                 ns[0] = '\0';
                 name[0] = '\0';
                 sscanf(key, "%[^:]:%[^\n]", ns, name);
-                EvalContextHeapAddSoft(ctx, name, ns, "goal=context,source=persistent");
+                EvalContextHeapAddSoft(ctx, name, ns, "source=persistent");
             }
             else
             {
-                EvalContextHeapAddSoft(ctx, key, NULL, "goal=context,source=persistent");
+                EvalContextHeapAddSoft(ctx, key, NULL, "source=persistent");
             }
         }
     }
@@ -980,30 +980,30 @@ void EvalContextStackPushPromiseFrame(EvalContext *ctx, const Promise *owner, bo
         char path[CF_BUFSIZE];
         snprintf(path, CF_BUFSIZE, "%s", PromiseGetBundle(owner)->source_path);
 
-        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promise_filename", path, DATA_TYPE_STRING, "goal=state,source=promise");
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promise_filename", path, DATA_TYPE_STRING, "source=promise");
 
         // We now make path just the directory name!
         DeleteSlash(path);
         ChopLastNode(path);
 
-        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promise_dirname", path, DATA_TYPE_STRING, "goal=state,source=promise");
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promise_dirname", path, DATA_TYPE_STRING, "source=promise");
         char number[CF_SMALLBUF];
         snprintf(number, CF_SMALLBUF, "%zu", owner->offset.line);
-        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promise_linenumber", number, DATA_TYPE_STRING, "goal=state,source=promise");
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promise_linenumber", number, DATA_TYPE_STRING, "source=promise");
     }
 
     char v[CF_MAXVARSIZE];
     snprintf(v, CF_MAXVARSIZE, "%d", (int) getuid());
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser_uid", v, DATA_TYPE_INT, "goal=state,source=agent");
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser_uid", v, DATA_TYPE_INT, "source=agent");
     snprintf(v, CF_MAXVARSIZE, "%d", (int) getgid());
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser_gid", v, DATA_TYPE_INT, "goal=state,source=agent");
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser_gid", v, DATA_TYPE_INT, "source=agent");
 
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "bundle", PromiseGetBundle(owner)->name, DATA_TYPE_STRING, "goal=state,source=promise");
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "namespace", PromiseGetNamespace(owner), DATA_TYPE_STRING, "goal=state,source=promise");
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "bundle", PromiseGetBundle(owner)->name, DATA_TYPE_STRING, "source=promise");
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "namespace", PromiseGetNamespace(owner), DATA_TYPE_STRING, "source=promise");
 
     if (owner->has_subbundles)
     {
-        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser", owner->promiser, DATA_TYPE_STRING, "goal=state,source=promise");
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser", owner->promiser, DATA_TYPE_STRING, "source=promise");
     }
 }
 

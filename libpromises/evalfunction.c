@@ -2022,7 +2022,7 @@ static FnCallResult FnCallGetFields(EvalContext *ctx, FnCall *fp, Rlist *finalar
             {
                 snprintf(name, CF_MAXVARSIZE - 1, "%s[%d]", array_lval, vcount);
                 VarRef *ref = VarRefParseFromBundle(name, PromiseGetBundle(fp->caller));
-                EvalContextVariablePut(ctx, ref, RlistScalarValue(rp), DATA_TYPE_STRING, "goal=data,source=function,function=getfields");
+                EvalContextVariablePut(ctx, ref, RlistScalarValue(rp), DATA_TYPE_STRING, "source=function,function=getfields");
                 VarRefDestroy(ref);
                 Log(LOG_LEVEL_VERBOSE, "getfields: defining '%s' => '%s'", name, RlistScalarValue(rp));
                 vcount++;
@@ -2167,12 +2167,12 @@ static FnCallResult FnCallMapArray(EvalContext *ctx, FnCall *fp, Rlist *finalarg
             continue;
         }
 
-        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "k", var->ref->indices[0], DATA_TYPE_STRING, "goal=state,source=function,function=maparray");
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "k", var->ref->indices[0], DATA_TYPE_STRING, "source=function,function=maparray");
 
         switch (var->rval.type)
         {
         case RVAL_TYPE_SCALAR:
-            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "v", var->rval.item, DATA_TYPE_STRING, "goal=state,source=function,function=maparray");
+            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "v", var->rval.item, DATA_TYPE_STRING, "source=function,function=maparray");
             ExpandScalar(ctx, PromiseGetBundle(fp->caller)->ns, PromiseGetBundle(fp->caller)->name, map, expbuf);
 
             if (strstr(expbuf, "$(this.k)") || strstr(expbuf, "${this.k}") ||
@@ -2191,7 +2191,7 @@ static FnCallResult FnCallMapArray(EvalContext *ctx, FnCall *fp, Rlist *finalarg
         case RVAL_TYPE_LIST:
             for (const Rlist *rp = var->rval.item; rp != NULL; rp = rp->next)
             {
-                EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "v", RlistScalarValue(rp), DATA_TYPE_STRING, "goal=state,source=function,function=maparray");
+                EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "v", RlistScalarValue(rp), DATA_TYPE_STRING, "source=function,function=maparray");
                 ExpandScalar(ctx, PromiseGetBundle(fp->caller)->ns, PromiseGetBundle(fp->caller)->name, map, expbuf);
 
                 if (strstr(expbuf, "$(this.k)") || strstr(expbuf, "${this.k}") ||
@@ -2263,7 +2263,7 @@ static FnCallResult FnCallMapList(EvalContext *ctx, FnCall *fp, Rlist *finalargs
 
     for (const Rlist *rp = RvalRlistValue(rval); rp != NULL; rp = rp->next)
     {
-        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "this", RlistScalarValue(rp), DATA_TYPE_STRING, "goal=data,source=function,function=maplist");
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "this", RlistScalarValue(rp), DATA_TYPE_STRING, "source=function,function=maplist");
 
         ExpandScalar(ctx, NULL, "this", map, expbuf);
 
@@ -2467,7 +2467,7 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx, FnCall *fp, Rlist *fin
                 Log(LOG_LEVEL_VERBOSE, "Host '%s' is alive and responding correctly", RlistScalarValue(rp));
                 snprintf(buffer, CF_MAXVARSIZE - 1, "%s[%d]", array_lval, count);
                 VarRef *ref = VarRefParseFromBundle(buffer, PromiseGetBundle(fp->caller));
-                EvalContextVariablePut(ctx, ref, RvalScalarValue(rp->val), DATA_TYPE_STRING, "goal=data,source=function,function=selectservers");
+                EvalContextVariablePut(ctx, ref, RvalScalarValue(rp->val), DATA_TYPE_STRING, "source=function,function=selectservers");
                 VarRefDestroy(ref);
                 count++;
             }
@@ -2477,14 +2477,14 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx, FnCall *fp, Rlist *fin
             Log(LOG_LEVEL_VERBOSE, "Host '%s' is alive", RlistScalarValue(rp));
             snprintf(buffer, CF_MAXVARSIZE - 1, "%s[%d]", array_lval, count);
             VarRef *ref = VarRefParseFromBundle(buffer, PromiseGetBundle(fp->caller));
-            EvalContextVariablePut(ctx, ref, RvalScalarValue(rp->val), DATA_TYPE_STRING, "goal=data,source=function,function=selectservers");
+            EvalContextVariablePut(ctx, ref, RvalScalarValue(rp->val), DATA_TYPE_STRING, "source=function,function=selectservers");
             VarRefDestroy(ref);
 
             if (IsDefinedClass(ctx, CanonifyName(RlistScalarValue(rp)), PromiseGetNamespace(fp->caller)))
             {
                 Log(LOG_LEVEL_VERBOSE, "This host is in the list and has promised to join the class '%s' - joined",
                       array_lval);
-                EvalContextClassPut(ctx, PromiseGetNamespace(fp->caller), array_lval, true, CONTEXT_SCOPE_NAMESPACE, "goal=data,source=function,function=selectservers");
+                EvalContextClassPut(ctx, PromiseGetNamespace(fp->caller), array_lval, true, CONTEXT_SCOPE_NAMESPACE, "source=function,function=selectservers");
             }
 
             count++;
@@ -3801,7 +3801,7 @@ static FnCallResult FnCallRemoteClassesMatching(EvalContext *ctx, FnCall *fp, Rl
             for (rp = classlist; rp != NULL; rp = rp->next)
             {
                 snprintf(class, CF_MAXVARSIZE - 1, "%s_%s", prefix, RlistScalarValue(rp));
-                EvalContextClassPut(ctx, NULL, class, true, CONTEXT_SCOPE_BUNDLE, "goal=state,source=function,function=remoteclassesmatching");
+                EvalContextClassPut(ctx, NULL, class, true, CONTEXT_SCOPE_BUNDLE, "source=function,function=remoteclassesmatching");
             }
             RlistDestroy(classlist);
         }
@@ -4144,7 +4144,7 @@ static FnCallResult FnCallRegExtract(EvalContext *ctx, FnCall *fp, Rlist *finala
             char var[CF_MAXVARSIZE] = "";
             snprintf(var, CF_MAXVARSIZE - 1, "%s[%s]", arrayname, ref->lval);
             VarRef *new_ref = VarRefParseFromBundle(var, PromiseGetBundle(fp->caller));
-            EvalContextVariablePut(ctx, new_ref, RvalScalarValue(rval), DATA_TYPE_STRING, "goal=data,source=function,function=regextract");
+            EvalContextVariablePut(ctx, new_ref, RvalScalarValue(rval), DATA_TYPE_STRING, "source=function,function=regextract");
             VarRefDestroy(new_ref);
         }
 
@@ -5610,7 +5610,7 @@ static int BuildLineArray(EvalContext *ctx, const Bundle *bundle, char *array_lv
             }
 
             VarRef *ref = VarRefParseFromBundle(name, bundle);
-            EvalContextVariablePut(ctx, ref, this_rval, type, "goal=data,source=function,function=buildlinearray");
+            EvalContextVariablePut(ctx, ref, this_rval, type, "source=function,function=buildlinearray");
             VarRefDestroy(ref);
             vcount++;
         }
@@ -5732,7 +5732,7 @@ void ModuleProtocol(EvalContext *ctx, char *command, char *line, int print, cons
         Log(LOG_LEVEL_VERBOSE, "Activated classes '%s'", line + 1);
         if (CheckID(line + 1))
         {
-             EvalContextClassPut(ctx, ns, line + 1, true, CONTEXT_SCOPE_NAMESPACE, "goal=state,source=module");
+             EvalContextClassPut(ctx, ns, line + 1, true, CONTEXT_SCOPE_NAMESPACE, "source=module");
         }
         break;
     case '-':
@@ -5768,7 +5768,7 @@ void ModuleProtocol(EvalContext *ctx, char *command, char *line, int print, cons
         {
             Log(LOG_LEVEL_VERBOSE, "Defined variable '%s' in context '%s' with value '%s'", name, context, content);
             VarRef *ref = VarRefParseFromScope(name, context);
-            EvalContextVariablePut(ctx, ref, content, DATA_TYPE_STRING, "goal=data,source=module");
+            EvalContextVariablePut(ctx, ref, content, DATA_TYPE_STRING, "source=module");
             VarRefDestroy(ref);
         }
         break;
@@ -5785,7 +5785,7 @@ void ModuleProtocol(EvalContext *ctx, char *command, char *line, int print, cons
             Log(LOG_LEVEL_VERBOSE, "Defined variable '%s' in context '%s' with value '%s'", name, context, content);
 
             VarRef *ref = VarRefParseFromScope(name, context);
-            EvalContextVariablePut(ctx, ref, list, DATA_TYPE_STRING_LIST, "goal=data,source=module");
+            EvalContextVariablePut(ctx, ref, list, DATA_TYPE_STRING_LIST, "source=module");
             VarRefDestroy(ref);
         }
         break;

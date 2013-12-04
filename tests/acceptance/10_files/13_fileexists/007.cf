@@ -1,0 +1,86 @@
+###########################################################################
+#
+# Test that a files promise consisting only of body_select, verifies
+# that a file exists, without changing anything if it does not.
+#
+# file exists => promise kept, not repaired, not failed
+#
+# file does not exist => promise failed, not kept, not repaired
+#
+###########################################################################
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+#######################################################
+
+body edit_defaults empty
+{
+  empty_file_before_editing => "true";
+  edit_backup => "false";
+}
+
+bundle edit_line init_insert(str)
+{
+  insert_lines:
+      "$(str)";
+}
+
+bundle agent init
+{
+files:
+
+  "$(G.testdir)/empty_file"
+       create => "true";
+
+  "$(G.testdir)/full_file"
+       create => "true",
+edit_defaults => empty,
+    edit_line => init_insert("$(body)");
+}
+
+#######################################################
+
+body file_select only_empty
+{
+  search_size => irange("0", "0");
+  file_result => "size";
+}
+
+body classes if_kept(x)
+{
+  promise_kept => { "$(x)" };
+}
+
+body classes if_repaired(x)
+{
+  promise_repaired => { "$(x)" };
+}
+
+body classes if_repair_failed(x)
+{
+  repair_failed => { "$(x)" };
+}
+
+bundle agent test
+{
+  files:
+    "$(G.testdir)/empty_file"
+      file_select => only_empty,
+      classes => if_kept("found_means_kept");
+}
+
+#######################################################
+
+bundle agent check
+{
+  reports:
+    found_means_kept::
+      "$(this.promise_filename) Pass";
+    !found_means_kept::
+      "$(this.promise_filename) FAIL";
+}

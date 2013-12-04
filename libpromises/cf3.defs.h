@@ -1625,6 +1625,12 @@ typedef struct
     StorageMount mount;
     StorageVolume volume;
 
+    /* TODO: All "action" flags need to go inside one big int, each action
+     * signified with a bitflag. E.g. for files promise type it could be
+     * FILES_ACTION_CREATE, FILES_ACTION_RENAME etc. That way it would be easy
+     * to test if any action is set, and it would be better defined what
+     * consists an "action". */
+
     int havedepthsearch;
     int haveselect;
     int haverename;

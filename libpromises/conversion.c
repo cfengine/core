@@ -460,25 +460,6 @@ Interval IntervalFromString(const char *string)
     return FindTypeInArray(INTERVAL_TYPES, string, INTERVAL_NONE, INTERVAL_NONE);
 }
 
-/*********************************************************************/
-
-int Day2Number(const char *datestring)
-{
-    int i = 0;
-
-    for (i = 0; i < 7; i++)
-    {
-        if (strncmp(datestring, DAY_TEXT[i], 3) == 0)
-        {
-            return i;
-        }
-    }
-
-    return -1;
-}
-
-/****************************************************************************/
-
 bool DoubleFromString(const char *s, double *value_out)
 {
     static const double NO_DOUBLE = -123.45;

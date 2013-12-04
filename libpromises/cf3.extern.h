@@ -38,8 +38,6 @@ extern Item *IPADDRESSES;
 extern int CFENGINE_PORT;
 extern time_t CONNTIMEOUT;
 
-extern char CFLOCK[CF_BUFSIZE];
-
 extern char CFWORKDIR[CF_BUFSIZE];
 
 extern char VYEAR[];

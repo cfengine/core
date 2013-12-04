@@ -83,14 +83,13 @@ int RefCountDetach(RefCount *ref, void *owner)
     {
         return -1;
     }
-    assert(ref->user_count > 1);
     if (ref->user_count <= 1)
     {
         /*
          * Semantics: If 1 that means that we are the only users, if 0 nobody is using it.
          * In either case we are safe to destroy the refcount.
          */
-        return -1;
+        return 0;
     }
     RefCountNode *p = NULL;
     int found = 0;

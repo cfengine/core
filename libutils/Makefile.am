@@ -35,7 +35,8 @@ libutils_la_SOURCES = \
 	mustache.c mustache.h \
 	cfversion.c cfversion.h \
 	unicode.c unicode.h \
-    hash.c hash.h
+    hash.c hash.h \
+    queue.c queue.h
 
 CLEANFILES = *.gcno *.gcda
 

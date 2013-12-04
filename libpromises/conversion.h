@@ -53,7 +53,6 @@ int SyslogPriorityFromString(const char *s);
 ShellType ShellTypeFromString(const char *s);
 
 // Date/Time conversion
-long Months2Seconds(int m);
 int Day2Number(const char *datestring);
 void TimeToDateStr(time_t t, char *outStr, int outStrSz);
 int Month2Int(const char *string);

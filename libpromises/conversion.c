@@ -453,60 +453,6 @@ long IntFromString(const char *s)
     return a;
 }
 
-/****************************************************************************/
-
-static const long DAYS[] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
-
-static int GetMonthLength(int month, int year)
-{
-    if ((month == 1) && (year % 4 == 0))
-    {
-        if ((year % 100 == 0) && (year % 400 != 0))
-        {
-           return DAYS[month];
-        }
-        else
-        {
-           return 29;
-        }
-    }
-    else
-    {
-        return DAYS[month];
-    }
-}
-
-long Months2Seconds(int m)
-{
-    long tot_days = 0;
-    int this_month, i, month, year;
-
-    if (m == 0)
-    {
-        return 0;
-    }
-
-    this_month = Month2Int(VMONTH);
-    year = IntFromString(VYEAR);
-
-    for (i = 0; i < m; i++)
-    {
-        month = (this_month - i) % 12;
-
-        while (month < 0)
-        {
-            month += 12;
-            year--;
-        }
-
-        tot_days += GetMonthLength(month, year);
-    }
-
-    return (long) tot_days *3600 * 24;
-}
-
-/*********************************************************************/
-
 Interval IntervalFromString(const char *string)
 {
     static const char *INTERVAL_TYPES[] = { "hourly", "daily", NULL };

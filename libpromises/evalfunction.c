@@ -4519,7 +4519,55 @@ static FnCallResult FnCallLaterThan(EvalContext *ctx, FnCall *fp, Rlist *finalar
     return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), RVAL_TYPE_SCALAR } };
 }
 
-/*********************************************************************/
+static const long DAYS[] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
+
+static int GetMonthLength(int month, int year)
+{
+    if ((month == 1) && (year % 4 == 0))
+    {
+        if ((year % 100 == 0) && (year % 400 != 0))
+        {
+           return DAYS[month];
+        }
+        else
+        {
+           return 29;
+        }
+    }
+    else
+    {
+        return DAYS[month];
+    }
+}
+
+static long Months2Seconds(int m)
+{
+    long tot_days = 0;
+    int this_month, i, month, year;
+
+    if (m == 0)
+    {
+        return 0;
+    }
+
+    this_month = Month2Int(VMONTH);
+    year = IntFromString(VYEAR);
+
+    for (i = 0; i < m; i++)
+    {
+        month = (this_month - i) % 12;
+
+        while (month < 0)
+        {
+            month += 12;
+            year--;
+        }
+
+        tot_days += GetMonthLength(month, year);
+    }
+
+    return (long) tot_days *3600 * 24;
+}
 
 static FnCallResult FnCallAgoDate(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {

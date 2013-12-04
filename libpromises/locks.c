@@ -747,8 +747,6 @@ CfLock AcquireLock(EvalContext *ctx, const char *operand, const char *host, time
 
 // Now see if we can get exclusivity to edit the locks
 
-    CFINITSTARTTIME = time(NULL);
-
     WaitForCriticalSection();
 
 /* Look for non-existent (old) processes */

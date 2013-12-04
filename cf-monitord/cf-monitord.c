@@ -295,7 +295,6 @@ static void ThisAgentInit(void)
     strcpy(VPREFIX, "cf-monitord");
 
     SetReferenceTime();
-    SetStartTime();
 
     signal(SIGINT, HandleSignalsForDaemon);
     signal(SIGTERM, HandleSignalsForDaemon);

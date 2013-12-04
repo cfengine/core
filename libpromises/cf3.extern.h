@@ -50,7 +50,6 @@ extern char VSHIFT[];
 extern const char *CLASSTEXT[];
 
 extern time_t CFSTARTTIME;
-extern time_t CFINITSTARTTIME;
 
 extern struct utsname VSYSNAME;
 extern char VIPADDRESS[CF_MAX_IP_LEN];

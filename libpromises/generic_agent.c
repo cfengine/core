@@ -110,7 +110,6 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
 
     time_t t = SetReferenceTime();
     UpdateTimeClasses(ctx, t);
-    SetStartTime();
     SanitizeEnvironment();
 
     THIS_AGENT_TYPE = config->agent_type;

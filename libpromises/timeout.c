@@ -66,17 +66,3 @@ time_t SetReferenceTime(void)
 
     return tloc;
 }
-
-void SetStartTime(void)
-{
-    time_t tloc;
-
-    if ((tloc = time((time_t *) NULL)) == -1)
-    {
-        Log(LOG_LEVEL_ERR, "Couldn't read system clock. (time: %s)", GetErrorStr());
-    }
-
-    CFINITSTARTTIME = tloc;
-
-    Log(LOG_LEVEL_DEBUG, "Job start time set to '%s'", ctime(&tloc));
-}

@@ -28,6 +28,5 @@
 void SetTimeOut(int timeout);
 void TimeOut(void);
 time_t SetReferenceTime(void);
-void SetStartTime(void);
 
 #endif

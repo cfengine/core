@@ -320,10 +320,8 @@ void StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
         return;
     }
 
-    if (sd != -1)
-    {
-        Log(LOG_LEVEL_VERBOSE, "Listening for connections ...");
-    }
+    assert(sd != -1);
+    Log(LOG_LEVEL_VERBOSE, "Listening for connections ...");
 
 #ifdef __MINGW32__
 
@@ -453,13 +451,13 @@ int InitServer(size_t queue_size)
 
     if ((sd = OpenReceiverChannel()) == -1)
     {
-        Log(LOG_LEVEL_ERR, "Unable to start server");
+        Log(LOG_LEVEL_CRIT, "Unable to start server");
         exit(1);
     }
 
     if (listen(sd, queue_size) == -1)
     {
-        Log(LOG_LEVEL_ERR, "listen failed. (listen: %s)", GetErrorStr());
+        Log(LOG_LEVEL_CRIT, "listen: %s", GetErrorStr());
         exit(1);
     }
 

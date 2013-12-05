@@ -19,12 +19,12 @@ static void destroy(void *element)
 }
 
 /*
- * String to use on the tests, they need to be strdup'ed otherwise there will be
- * a segfault caused by this data being on the stack.
+ * String to use on the tests, they need to be strdup'ed before use otherwise
+ * there will be a segfault.
  */
-char first_string[] = "first string";
-char second_string[] = "second string";
-char third_string[] = "third string";
+const char first_string[] = "first string";
+const char second_string[] = "second string";
+const char third_string[] = "third string";
 
 /* Flag to make sure we only run other tests if the basic are in place */
 static bool basic_test_passed = false;
@@ -53,6 +53,7 @@ static void queue_basic_test(void)
     assert_true(NULL == queue->queue);
     assert_true(NULL != queue->ref_count);
     assert_true(NULL != queue->copy);
+    assert_true(copy == queue->copy);
     assert_true(NULL == queue->destroy);
     QueueDestroy(&queue);
     assert_true(queue == NULL);
@@ -65,7 +66,9 @@ static void queue_basic_test(void)
     assert_true(NULL == queue->queue);
     assert_true(NULL != queue->ref_count);
     assert_true(NULL != queue->copy);
+    assert_true(copy == queue->copy);
     assert_true(NULL != queue->destroy);
+    assert_true(destroy == queue->destroy);
     QueueDestroy(&queue);
     assert_true(queue == NULL);
 
@@ -78,12 +81,11 @@ static void queue_enqueue_dequeue_test(void)
     /* If basic tests failed, there is no point in running this */
     assert_true(basic_test_passed);
 
-    Queue *queue = NULL;
     char *first = xstrdup(first_string);
     char *second = xstrdup(second_string);
     char *third = xstrdup(third_string);
 
-    queue = QueueNew(copy, destroy);
+    Queue *queue = QueueNew(copy, destroy);
     assert_true(queue != NULL);
 
     /* Enqueue some elements */
@@ -198,14 +200,6 @@ static void queue_copy_test(void)
     assert_true(queue->ref_count != queue_copy->ref_count);
     assert_true(queue->head != queue_copy->head);
     assert_string_equal(queue->head->data, queue_copy->head->data);
-    /* Add the same element to the original queue */
-    assert_int_equal(0, QueueEnqueue(queue, second));
-    assert_int_equal(2, queue->node_count);
-    assert_int_equal(2, queue_copy->node_count);
-    assert_true(queue->ref_count != queue_copy->ref_count);
-    assert_true(queue->head != queue_copy->head);
-    assert_string_equal(queue->head->data, queue_copy->head->data);
-    assert_string_equal(queue->tail->data, queue_copy->tail->data);
     /* Destroy the original queue */
     QueueDestroy(&queue);
     assert_true(NULL == queue);
@@ -225,7 +219,7 @@ static void queue_copy_test(void)
     assert_int_equal(2, queue_copy->node_count);
     assert_true(queue->ref_count == queue_copy->ref_count);
     assert_true(queue->head == queue_copy->head);
-    /* Add the element */
+    /* Add the last element */
     assert_int_equal(0, QueueEnqueue(queue, third));
     assert_int_equal(3, queue->node_count);
     assert_int_equal(2, queue_copy->node_count);
@@ -285,6 +279,8 @@ static void queue_api_test(void)
     QueueDestroy(&queue);
     assert_true(NULL == queue);
     assert_true(QueueIsEmpty(queue));
+    /* Free the dequeued element */
+    free(first);
 }
 
 int main()

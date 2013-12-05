@@ -37,13 +37,12 @@ struct Queue {
     RefCount *ref_count; /*!< Refcount element to simplify copying */
     void (*copy)(const void *source, void **destination); /*!< Copies one element */
     void (*destroy)(void *element); /*!< Destroys an element */
-    struct QueueNode *queue; /*!< Queue of elements */
     struct QueueNode *head; /*!< Pointer to the start of the queue */
     struct QueueNode *tail; /*!< Pointer to the end of the queue */
 };
 
 /*
- * Detaches a queue of its data. In order to do this, it first creates a copy
+ * Detaches a queue from its data. In order to do this, it first creates a copy
  * of the data and then detaches from the reference count.
  * After it creates a new reference count and attaches to it.
  */
@@ -57,13 +56,14 @@ static int QueueDetach(Queue *queue)
 
     struct QueueNode *copy_start = NULL;
     struct QueueNode *copy_current = NULL;
-    struct QueueNode *next = queue->queue;
-    struct QueueNode *current = NULL;
+    RefCount *old_ref_count = queue->ref_count;
+    RefCountNew(&queue->ref_count);
+    RefCountAttach(queue->ref_count, queue);
 
-    do {
-        current = next;
-        next = current->next;
-
+    for (struct QueueNode * current = queue->head;
+         current;
+         current = current->next)
+    {
         struct QueueNode *p = xcalloc(1, sizeof(struct QueueNode));
         queue->copy(current->data, &p->data);
 
@@ -78,12 +78,9 @@ static int QueueDetach(Queue *queue)
             p->previous = copy_current;
             copy_current = p;
         }
-    } while (next != NULL);
+    };
     /* Now it is time to detach and use the new queue instead of the old one. */
-    RefCountDetach(queue->ref_count, queue);
-    RefCountNew(&queue->ref_count);
-    RefCountAttach(queue->ref_count, queue);
-    queue->queue = copy_start;
+    RefCountDetach(old_ref_count, queue);
     queue->head = copy_start;
     queue->tail = copy_current;
     return 0;
@@ -103,7 +100,6 @@ static int QueueAttach(Queue *original, Queue *copy)
         return -1;
     }
     copy->ref_count = original->ref_count;
-    copy->queue = original->queue;
     copy->head = original->head;
     copy->tail = original->tail;
     copy->node_count = original->node_count;
@@ -131,26 +127,26 @@ void QueueDestroy(Queue **queue)
     {
         return;
     }
-    /* If queue is shared, the just detach */
+    /* If the queue is shared, then just detach */
     if (RefCountIsShared((*queue)->ref_count))
     {
-        /* Shared, we detach and move on */
+        /*
+         * Shared, we detach and move on.
+         * Since in any case we are destroying, we ignore the error because the
+         * only errors are caused by either a NULL pointer or owner not found.
+         */
         RefCountDetach((*queue)->ref_count, (*queue));
     }
     else
     {
         /* We need to destroy the queue */
-        struct QueueNode *current = (*queue)->queue;
+        struct QueueNode *current = (*queue)->head;
         while (current)
         {
             struct QueueNode *next = current->next;
             if ((*queue)->destroy)
             {
                 (*queue)->destroy(current->data);
-            }
-            else
-            {
-                free(current->data);
             }
             free(current);
             current = next;
@@ -215,7 +211,6 @@ int QueueEnqueue(Queue *queue, void *element)
     else
     {
         /* first element */
-        queue->queue = node;
         queue->tail = node;
         queue->head = node;
     }
@@ -240,7 +235,6 @@ void *QueueDequeue(Queue *queue)
     /* Fix the list pointers and counters */
     struct QueueNode *node = queue->head;
     void *data = node->data;
-    queue->queue = node->next;
     queue->head = node->next;
     if (queue->head)
     {
@@ -251,7 +245,6 @@ void *QueueDequeue(Queue *queue)
         /* Empty queue */
         queue->head = NULL;
         queue->tail = NULL;
-        queue->queue = NULL;
     }
     --queue->node_count;
     /* Free the node */
@@ -276,9 +269,5 @@ int QueueCount(const Queue *queue)
 
 bool QueueIsEmpty(const Queue *queue)
 {
-    if (!queue)
-    {
-        return true;
-    }
-    return (queue->node_count == 0) ? true : false;
+    return !queue || (queue->node_count == 0);
 }

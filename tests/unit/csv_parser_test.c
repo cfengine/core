@@ -2,6 +2,7 @@
 #include <sequence.h>
 #include <alloc.h>
 #include <csv_parser.h>
+#include <writer.h>
 
 static void test_new_csv_reader_basic()
 {
@@ -132,6 +133,56 @@ static void test_new_csv_reader_lfln_at_end3()
     }
 }
 
+static void test_get_next_line()
+{
+    FILE *fp = NULL;
+    fp = fopen("./data/csv_file.csv", "r");
+    assert_true(fp);
+
+    {
+        char *line = GetCsvLineNext(fp);
+        assert_true(line);
+        assert_string_equal(line, "field_1, field_2\r\n");
+
+        Seq *list = SeqParseCsvString(line);
+        assert_true(list);
+        assert_int_equal(SeqLength(list), 2);
+        assert_string_equal(SeqAt(list, 0), "field_1");
+        assert_string_equal(SeqAt(list, 1), " field_2");
+        SeqDestroy(list);
+        free(line);
+    }
+
+    {
+        char *line = GetCsvLineNext(fp);
+        assert_true(line);
+        assert_string_equal(line, "field_1, \"value1 \nvalue2 \nvalue3\"\r\n");
+
+        Seq *list = SeqParseCsvString(line);
+        assert_true(list);
+        assert_int_equal(SeqLength(list), 2);
+        assert_string_equal(SeqAt(list, 0), "field_1");
+        assert_string_equal(SeqAt(list, 1), "value1 \nvalue2 \nvalue3");
+        SeqDestroy(list);
+        free(line);
+    }
+
+    {
+        char *line = GetCsvLineNext(fp);
+        assert_true(line);
+        assert_string_equal(line, "field_1, \"field,2\"\r\n");
+        Seq *list = SeqParseCsvString(line);
+        assert_true(list);
+        assert_int_equal(SeqLength(list), 2);
+        assert_string_equal(SeqAt(list, 0), "field_1");
+        assert_string_equal(SeqAt(list, 1), "field,2");
+        SeqDestroy(list);
+        free(line);
+    }
+
+    fclose(fp);
+}
+
 int main()
 {
     PRINT_TEST_BANNER();
@@ -143,6 +194,7 @@ int main()
         unit_test(test_new_csv_reader_lfln_at_end),
         unit_test(test_new_csv_reader_lfln_at_end2),
         unit_test(test_new_csv_reader_lfln_at_end3),
+        unit_test(test_get_next_line)
     };
 
     return run_tests(tests);

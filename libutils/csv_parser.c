@@ -24,6 +24,7 @@
 
 #include <csv_parser.h>
 #include <alloc.h>
+#include <writer.h>
 
 typedef enum
 {
@@ -69,9 +70,9 @@ typedef enum {
 
  @retval 0: successful, <>0: failed
  */
-static csv_parser_error LaunchCsvAutomata(char *str, Seq **newlist)
+static csv_parser_error LaunchCsvAutomata(const char *str, Seq **newlist)
 {
-    char *s = str;
+    char *s = (char*)str;
     csv_state current_state = CSV_ST_NEW_LINE;
     csv_parser_error ret;
 
@@ -301,20 +302,55 @@ clean:
     return ret;
 }
 
-Seq *SeqParseCsvString(char *string)
+Seq *SeqParseCsvString(const char *string)
 {
     Seq *newlist = SeqNew(16, free);
     int ret;
 
     ret = LaunchCsvAutomata(string, &newlist);
 
-    if (!ret)
+    if (ret == CSV_ERR_OK)
     {
         return newlist;
     }
-    else
+
+    return NULL;
+}
+
+char *GetCsvLineNext(FILE *fp)
+{
+    if (!fp)
     {
-        SeqDestroy(newlist);
         return NULL;
     }
+
+    Writer *buffer = StringWriter();
+
+    int prev = 0;
+
+    for (;;)
+    {
+        int current = 0;
+        if ((current = fgetc(fp)) == EOF)
+        {
+            break;
+        }
+
+        WriterWriteChar(buffer, (char)current);
+
+        if (((char)current == '\n') && ((char)prev) == '\r')
+        {
+            break;
+        }
+
+        prev = current;
+    }
+
+    if (StringWriterLength(buffer) <= 0)
+    {
+        WriterClose(buffer);
+        return NULL;
+    }
+
+    return StringWriterClose(buffer);
 }

@@ -340,7 +340,8 @@ void DiscoverVersion(EvalContext *ctx)
         snprintf(workbuf, CF_BUFSIZE, "%s%cinputs%clib%c%d.%d", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR, FILE_SEPARATOR, major, minor);
         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "libdir", workbuf, DATA_TYPE_STRING, "goal=state,source=agent");
 
-        snprintf(workbuf, CF_BUFSIZE, "lib%c%d.%d", FILE_SEPARATOR, major, minor);
+        const char *inputs = getenv("CFENGINE_TEST_INPUTS_DIR");
+        snprintf(workbuf, CF_BUFSIZE, "%s/lib%c%d.%d", (inputs ? inputs : "."), FILE_SEPARATOR, major, minor);
         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "local_libdir", workbuf, DATA_TYPE_STRING, "goal=state,source=agent");
     }
     else

@@ -22,6 +22,8 @@
   included file COSL.txt.
 */
 
+#include <poll.h>
+
 #include <cfnet.h>                                 /* struct ConnectionInfo */
 #include <client_code.h>
 #include <communication.h>
@@ -1665,16 +1667,18 @@ int TryConnect(AgentConnection *conn, struct timeval *tvp, struct sockaddr *cinp
     {
         if (errno == EINPROGRESS)
         {
-            fd_set myset;
             int valopt;
             socklen_t lon = sizeof(int);
 
-            FD_ZERO(&myset);
+            /* We poll for socket writeability (POLLOUT), or socket closed
+             * (POLLHUP). */
+            struct pollfd fds[1] = {
+                { ConnectionInfoSocket(conn->conn_info), POLLOUT | POLLHUP }
+            };
 
-            FD_SET(ConnectionInfoSocket(conn->conn_info), &myset);
+            /* now wait for connect, but no more than tv_sec */
+            res = poll(fds, 1, tvp->tv_sec * 1000);
 
-            /* now wait for connect, but no more than tvp.sec */
-            res = select(ConnectionInfoSocket(conn->conn_info) + 1, NULL, &myset, NULL, tvp);
             if (getsockopt(ConnectionInfoSocket(conn->conn_info), SOL_SOCKET, SO_ERROR, (void *) (&valopt), &lon) != 0)
             {
                 Log(LOG_LEVEL_ERR, "Could not check connection status. (getsockopt: %s)", GetErrorStr());
@@ -1683,13 +1687,13 @@ int TryConnect(AgentConnection *conn, struct timeval *tvp, struct sockaddr *cinp
 
             if (valopt || (res <= 0))
             {
-                Log(LOG_LEVEL_INFO, "Error connecting to server (timeout): (getsockopt: %s)", GetErrorStr());
+                Log(LOG_LEVEL_ERR, "Error connecting to server: %s", GetErrorStr());
                 return false;
             }
         }
         else
         {
-            Log(LOG_LEVEL_INFO, "Error connecting to server. (connect: %s)", GetErrorStr());
+            Log(LOG_LEVEL_ERR, "Error connecting to server. (connect: %s)", GetErrorStr());
             return false;
         }
     }

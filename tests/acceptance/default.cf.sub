@@ -61,7 +61,7 @@ classes:
   "filename_absolute" expression => regcmp("/.*", "$(filename)");
 }
 
-bundle common paths(filename)
+bundle common paths_absolute(filename)
 {
 vars:
   filename_absolute::
@@ -81,7 +81,7 @@ methods:
   "any"
     usebundle => paths_init("$(filename)");
   "any"
-    usebundle => paths("$(filename)");
+    usebundle => paths_absolute("$(filename)");
 
   AUTO::
     "any" usebundle => "$(tests)";

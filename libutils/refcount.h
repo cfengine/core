@@ -25,8 +25,7 @@
 #ifndef CFENGINE_REFCOUNT_H
 #define CFENGINE_REFCOUNT_H
 
-#include <refcount_p.h>
-
+#include <platform.h>
 /**
   @brief Simple reference count implementation.
 
@@ -36,6 +35,13 @@
   we risk multiples attach or detach. We need one way to find out who is connected to
   the refcount so we can act properly.
   */
+struct RefCountNode {
+    struct RefCountNode *next;
+    struct RefCountNode *previous;
+    void *user;
+};
+typedef struct RefCountNode RefCountNode;
+
 struct RefCount {
     // Normally one unless we are shared.
     unsigned int user_count;
@@ -60,9 +66,8 @@ void RefCountDestroy(RefCount **ref);
   This should be called before using the data structure so everybody is aware of the new holder.
   @param ref RefCountr structure
   @param owner Data structure to be attached.
-  @return 0 if it was possible to attach, -1 otherwise.
   */
-int RefCountAttach(RefCount *ref, void *owner);
+void RefCountAttach(RefCount *ref, void *owner);
 /**
   @brief Detaches a data structure from a given RefCount structure.
   Detaching should be called after the container has copied the data structure. As long as the container is
@@ -70,21 +75,23 @@ int RefCountAttach(RefCount *ref, void *owner);
   to undesired side effects.
   @param ref RefCountr structure
   @param owner Data structure to be detached.
-  @return 0 if it was possible to detach, -1 otherwise.
   */
-int RefCountDetach(RefCount *ref, void *owner);
+void RefCountDetach(RefCount *ref, void *owner);
 /**
   @brief Simple check to see if a given data structure is shared.
   @param ref RefCount structure.
   @return True if shared, false otherwise.
   */
-int RefCountIsShared(RefCount *ref);
+bool RefCountIsShared(RefCount *ref);
 /**
   @brief Compares two RefCount structures.
   @param a
   @param b
-  @return True if they are equal, false otherwise.
+  @return True if a and b point to the same object, false otherwise.
+  @remarks This function is needed in order to speed up comparisons of complex
+  data structures. If the RefCount objects of the two structures are the same,
+  then most likely the structures are the same.
   */
-int RefCountIsEqual(RefCount *a, RefCount *b);
+bool RefCountIsEqual(RefCount *a, RefCount *b);
 
 #endif // CFENGINE_REFCOUNT_H

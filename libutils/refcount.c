@@ -24,6 +24,8 @@
 
 #include <alloc.h>
 #include <refcount.h>
+#include <misc_lib.h>
+#include <platform.h>
 
 void RefCountNew(RefCount **ref)
 {
@@ -53,11 +55,11 @@ void RefCountDestroy(RefCount **ref)
     }
 }
 
-int RefCountAttach(RefCount *ref, void *owner)
+void RefCountAttach(RefCount *ref, void *owner)
 {
     if (!ref || !owner)
     {
-        return -1;
+        ProgrammingError("Either refcount or owner is NULL (or both)");
     }
     ref->user_count++;
     RefCountNode *node = (RefCountNode *)xmalloc(sizeof(RefCountNode));
@@ -74,22 +76,21 @@ int RefCountAttach(RefCount *ref, void *owner)
         node->previous = NULL;
     }
     ref->last = node;
-    return ref->user_count;
 }
 
-int RefCountDetach(RefCount *ref, void *owner)
+void RefCountDetach(RefCount *ref, void *owner)
 {
     if (!ref || !owner)
     {
-        return -1;
+        ProgrammingError("Either refcount or owner is NULL (or both)");
     }
     if (ref->user_count <= 1)
     {
         /*
          * Semantics: If 1 that means that we are the only users, if 0 nobody is using it.
-         * In either case we are safe to destroy the refcount.
+         * In either case it is safe to destroy the refcount.
          */
-        return 0;
+        return;
     }
     RefCountNode *p = NULL;
     int found = 0;
@@ -118,7 +119,7 @@ int RefCountDetach(RefCount *ref, void *owner)
             else
             {
                 // Only one node, we cannot detach from ourselves.
-                return 0;
+                return;
             }
             free(p);
             break;
@@ -126,51 +127,17 @@ int RefCountDetach(RefCount *ref, void *owner)
     }
     if (!found)
     {
-        return -1;
+        ProgrammingError("The object is not attached to the RefCount object");
     }
     ref->user_count--;
-    return ref->user_count;
 }
 
-int RefCountIsShared(RefCount *ref)
+bool RefCountIsShared(RefCount *ref)
 {
-    if (!ref)
-    {
-        return 0;
-    }
-    if (ref->user_count == 0)
-    {
-        return 0;
-    }
-    return (ref->user_count > 1);
+    return ref && (ref->user_count > 1);
 }
 
-int RefCountIsEqual(RefCount *a, RefCount *b)
+bool RefCountIsEqual(RefCount *a, RefCount *b)
 {
-    if (a == b)
-    {
-        return 1;
-    }
-    if (a && b)
-    {
-        // Compare the inner elements
-        if (a->user_count == b->user_count)
-        {
-            RefCountNode *na = a->users;
-            RefCountNode *nb = b->users;
-            int equal = 1;
-            while (na && nb)
-            {
-                if (na->user != nb->user)
-                {
-                    equal = 0;
-                    break;
-                }
-                na = na->next;
-                nb = nb->next;
-            }
-            return equal;
-        }
-    }
-    return 0;
+    return (a && b) && (a == b);
 }

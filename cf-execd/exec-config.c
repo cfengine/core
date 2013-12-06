@@ -221,21 +221,5 @@ void ExecConfigUpdate(const EvalContext *ctx, const Policy *policy, ExecConfig *
             }
         }
     }
-
-    char ipbuf[CF_MAXVARSIZE] = "";
-    for (Item *iptr = IPADDRESSES; iptr != NULL; iptr = iptr->next)
-    {
-        if ((SafeStringLength(ipbuf) + SafeStringLength(iptr->name)) < sizeof(ipbuf))
-        {
-            strcat(ipbuf, iptr->name);
-            strcat(ipbuf, " ");
-        }
-        else
-        {
-            break;
-        }
-    }
-    Chop(ipbuf, sizeof(ipbuf));
-    free(exec_config->ipaddresses);
-    exec_config->ipaddresses = xstrdup(ipbuf);
 }
+

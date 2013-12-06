@@ -28,9 +28,9 @@ static const int CF_NOSIZE = -1;
 
 #include <server_common.h>
 
-#include <item_lib.h>
-#include <string_lib.h>                                    /* ToLower */
-#include <crypto.h>                                        /* EncryptString */
+#include <item_lib.h>                                 /* ItemList2CSV_bound */
+#include <string_lib.h>                               /* ToLower */
+#include <crypto.h>                                   /* EncryptString */
 #include <files_names.h>
 #include <files_interfaces.h>
 #include <files_hashes.h>
@@ -47,7 +47,8 @@ static const int CF_NOSIZE = -1;
 #include <cf-serverd-enterprise-stubs.h>
 #include <connection_info.h>
 
-void RefuseAccess(ServerConnectionState *conn, int size, char *errmesg)
+
+void RefuseAccess(ServerConnectionState *conn, char *errmesg)
 {
     char *username, *ipaddr;
     char *def = "?";
@@ -70,11 +71,11 @@ void RefuseAccess(ServerConnectionState *conn, int size, char *errmesg)
         ipaddr = conn->ipaddr;
     }
 
-    char sendbuffer[CF_BUFSIZE];
-    snprintf(sendbuffer, CF_BUFSIZE, "%s", CF_FAILEDSTR);
-    SendTransaction(conn->conn_info, sendbuffer, size, CF_DONE);
+    char buf[CF_BUFSIZE] = "";
+    snprintf(buf, sizeof(buf), "%s", CF_FAILEDSTR);
+    SendTransaction(conn->conn_info, buf, 0, CF_DONE);
 
-    Log(LOG_LEVEL_INFO, "REFUSAL to (user=%s,ip=%s) of request: %s",
+    Log(LOG_LEVEL_VERBOSE, "REFUSAL to (user=%s,ip=%s) of request: %s",
         username, ipaddr, errmesg);
 }
 
@@ -90,451 +91,61 @@ int AllowedUser(char *user)
     return false;
 }
 
-/* 'resolved' argument needs to be at least CF_BUFSIZE long */
-bool ResolveFilename(const char *req_path, char *res_path)
+Item *ListPersistentClasses()
 {
-    char req_dir[CF_BUFSIZE];
-    char req_filename[CF_BUFSIZE];
+    Log(LOG_LEVEL_VERBOSE, "Scanning for all persistent classes");
 
-/*
- * Eliminate symlinks from path, but do not resolve the file itself if it is a
- * symlink.
- */
-
-    strlcpy(req_dir, req_path, CF_BUFSIZE);
-    ChopLastNode(req_dir);
-
-    strlcpy(req_filename, ReadLastNode(req_path), CF_BUFSIZE);
-
-#if defined HAVE_REALPATH && !defined _WIN32
-    if (realpath(req_dir, res_path) == NULL)
-    {
-        return false;
-    }
-#else
-    memset(res_path, 0, CF_BUFSIZE);
-    CompressPath(res_path, req_dir);
-#endif
-
-    AddSlash(res_path);
-    strlcat(res_path, req_filename, CF_BUFSIZE);
-
-/* Adjust for forward slashes */
-
-    MapName(res_path);
-
-/* NT has case-insensitive path names */
-
-#ifdef __MINGW32__
-    int i;
-
-    for (i = 0; i < strlen(res_path); i++)
-    {
-        res_path[i] = ToLower(res_path[i]);
-    }
-#endif /* __MINGW32__ */
-
-    return true;
-}
-
-int AccessControl(EvalContext *ctx, const char *req_path, ServerConnectionState *conn, int encrypt)
-{
-    Auth *ap;
-    int access = false;
-    char transrequest[CF_BUFSIZE];
-    struct stat statbuf;
-    char translated_req_path[CF_BUFSIZE];
-    char transpath[CF_BUFSIZE];
-
-/*
- * /var/cfengine -> $workdir translation.
- */
-    TranslatePath(translated_req_path, req_path);
-
-    if (ResolveFilename(translated_req_path, transrequest))
-    {
-        Log(LOG_LEVEL_VERBOSE, "Filename %s is resolved to %s", translated_req_path, transrequest);
-    }
-    else
-    {
-        Log(LOG_LEVEL_INFO, "Couldn't resolve (realpath: %s) filename: %s",
-            GetErrorStr(), translated_req_path);
-    }
-
-    if (lstat(transrequest, &statbuf) == -1)
-    {
-        Log(LOG_LEVEL_INFO, "Couldn't stat (lstat: %s) filename: %s",
-            GetErrorStr(), transrequest);
-        return false;
-    }
-
-    Log(LOG_LEVEL_DEBUG, "AccessControl, match (%s,%s) encrypt request = %d", transrequest, conn->hostname, encrypt);
-
-    if (SV.admit == NULL)
-    {
-        Log(LOG_LEVEL_INFO, "cf-serverd access list is empty, no files are visible");
-        return false;
-    }
-
-    conn->maproot = false;
-
-    for (ap = SV.admit; ap != NULL; ap = ap->next)
-    {
-        int res = false;
-
-        Log(LOG_LEVEL_DEBUG, "Examining rule in access list (%s,%s)", transrequest, ap->path);
-
-        strncpy(transpath, ap->path, CF_BUFSIZE - 1);
-        MapName(transpath);
-
-        if ((strlen(transrequest) > strlen(transpath)) && (strncmp(transpath, transrequest, strlen(transpath)) == 0)
-            && (transrequest[strlen(transpath)] == FILE_SEPARATOR))
-        {
-            res = true;         /* Substring means must be a / to link, else just a substring og filename */
-        }
-
-        /* Exact match means single file to admit */
-
-        if (strcmp(transpath, transrequest) == 0)
-        {
-            res = true;
-        }
-
-        if (strcmp(transpath, "/") == 0)
-        {
-            res = true;
-        }
-
-        if (res)
-        {
-            Log(LOG_LEVEL_VERBOSE, "Found a matching rule in access list (%s in %s)", transrequest, transpath);
-
-            if (stat(transpath, &statbuf) == -1)
-            {
-                Log(LOG_LEVEL_INFO,
-                      "Warning cannot stat file object %s in admit/grant, or access list refers to dangling link\n",
-                      transpath);
-                continue;
-            }
-
-            if ((!encrypt) && (ap->encrypt == true))
-            {
-                Log(LOG_LEVEL_ERR, "File %s requires encrypt connection...will not serve", transpath);
-                access = false;
-            }
-            else
-            {
-                Log(LOG_LEVEL_DEBUG, "Checking whether to map root privileges..");
-
-                if ((IsMatchItemIn(ap->maproot, MapAddress(conn->ipaddr))) ||
-                    (IsRegexItemIn(ctx, ap->maproot, conn->hostname)))
-                {
-                    conn->maproot = true;
-                    Log(LOG_LEVEL_VERBOSE, "Mapping root privileges to access non-root files");
-                }
-
-                if ((IsMatchItemIn(ap->accesslist, MapAddress(conn->ipaddr)))
-                    || (IsRegexItemIn(ctx, ap->accesslist, conn->hostname)))
-                {
-                    access = true;
-                    Log(LOG_LEVEL_DEBUG, "Access privileges - match found");
-                }
-            }
-            break;
-        }
-    }
-
-    if (strncmp(transpath, transrequest, strlen(transpath)) == 0)
-    {
-        for (ap = SV.deny; ap != NULL; ap = ap->next)
-        {
-            if (IsRegexItemIn(ctx, ap->accesslist, conn->hostname))
-            {
-                access = false;
-                Log(LOG_LEVEL_INFO, "Host %s explicitly denied access to %s", conn->hostname, transrequest);
-                break;
-            }
-        }
-    }
-
-    if (access)
-    {
-        Log(LOG_LEVEL_VERBOSE, "Host %s granted access to %s", conn->hostname, req_path);
-
-        if (encrypt && LOGENCRYPT)
-        {
-            /* Log files that were marked as requiring encryption */
-            Log(LOG_LEVEL_INFO, "Host %s granted access to %s", conn->hostname, req_path);
-        }
-    }
-    else
-    {
-        Log(LOG_LEVEL_INFO, "Host %s denied access to %s", conn->hostname, req_path);
-    }
-
-    if (!conn->rsa_auth)
-    {
-        Log(LOG_LEVEL_INFO, "Cannot map root access without RSA authentication");
-        conn->maproot = false;  /* only public files accessible */
-    }
-
-    return access;
-}
-
-int LiteralAccessControl(EvalContext *ctx, char *in, ServerConnectionState *conn, int encrypt)
-{
-    Auth *ap;
-    int access = false;
-    char name[CF_BUFSIZE];
-
-    name[0] = '\0';
-
-    if (strncmp(in, "VAR", 3) == 0)
-    {
-        sscanf(in, "VAR %255[^\n]", name);
-    }
-    else if (strncmp(in, "CALL_ME_BACK", strlen("CALL_ME_BACK")) == 0)
-    {
-        sscanf(in, "CALL_ME_BACK %255[^\n]", name);
-    }
-    else
-    {
-        sscanf(in, "QUERY %128s", name);
-    }
-
-    conn->maproot = false;
-
-    for (ap = SV.varadmit; ap != NULL; ap = ap->next)
-    {
-        int res = false;
-
-        Log(LOG_LEVEL_VERBOSE, "Examining rule in access list (%s,%s)?", name, ap->path);
-
-        if (strcmp(ap->path, name) == 0)
-        {
-            res = true;         /* Exact match means single file to admit */
-        }
-
-        if (res)
-        {
-            Log(LOG_LEVEL_VERBOSE, "Found a matching rule in access list (%s in %s)", name, ap->path);
-
-            if ((!ap->literal) && (!ap->variable))
-            {
-                Log(LOG_LEVEL_ERR,
-                    "Variable/query '%s' requires a literal server item...cannot set variable directly by path",
-                      ap->path);
-                access = false;
-                break;
-            }
-
-            if ((!encrypt) && (ap->encrypt == true))
-            {
-                Log(LOG_LEVEL_ERR, "Variable %s requires encrypt connection...will not serve", name);
-                access = false;
-                break;
-            }
-            else
-            {
-                Log(LOG_LEVEL_DEBUG, "Checking whether to map root privileges");
-
-                if ((IsMatchItemIn(ap->maproot, MapAddress(conn->ipaddr))) ||
-                    (IsRegexItemIn(ctx, ap->maproot, conn->hostname)))
-                {
-                    conn->maproot = true;
-                    Log(LOG_LEVEL_VERBOSE, "Mapping root privileges");
-                }
-                else
-                {
-                    Log(LOG_LEVEL_VERBOSE, "No root privileges granted");
-                }
-
-                if ((IsMatchItemIn(ap->accesslist, MapAddress(conn->ipaddr)))
-                    || (IsRegexItemIn(ctx, ap->accesslist, conn->hostname)))
-                {
-                    access = true;
-                    Log(LOG_LEVEL_DEBUG, "Access privileges - match found\n");
-                }
-            }
-        }
-    }
-
-    for (ap = SV.vardeny; ap != NULL; ap = ap->next)
-    {
-        if (strcmp(ap->path, name) == 0)
-        {
-            if ((IsMatchItemIn(ap->accesslist, MapAddress(conn->ipaddr)))
-                || (IsRegexItemIn(ctx, ap->accesslist, conn->hostname)))
-            {
-                access = false;
-                Log(LOG_LEVEL_VERBOSE, "Host %s explicitly denied access to %s", conn->hostname, name);
-                break;
-            }
-        }
-    }
-
-    if (access)
-    {
-        Log(LOG_LEVEL_VERBOSE, "Host %s granted access to literal '%s'", conn->hostname, name);
-
-        if (encrypt && LOGENCRYPT)
-        {
-            /* Log files that were marked as requiring encryption */
-            Log(LOG_LEVEL_INFO, "Host %s granted access to literal '%s'", conn->hostname, name);
-        }
-    }
-    else
-    {
-        Log(LOG_LEVEL_VERBOSE, "Host %s denied access to literal '%s'", conn->hostname, name);
-    }
-
-    if (!conn->rsa_auth)
-    {
-        Log(LOG_LEVEL_VERBOSE, "Cannot map root access without RSA authentication");
-        conn->maproot = false;  /* only public files accessible */
-    }
-
-    return access;
-}
-
-Item *ContextAccessControl(EvalContext *ctx, char *in, ServerConnectionState *conn, int encrypt)
-{
-    Auth *ap;
-    int access = false;
-    char client_regex[CF_BUFSIZE];
     CF_DB *dbp;
     CF_DBC *dbcp;
-    int ksize, vsize;
-    char *key;
-    void *value;
-    time_t now = time(NULL);
-    CfState q;
-    Item *ip, *matches = NULL, *candidates = NULL;
-
-    sscanf(in, "CONTEXT %255[^\n]", client_regex);
-
     if (!OpenDB(&dbp, dbid_state))
     {
+        Log(LOG_LEVEL_ERR, "Unable to open state database");
         return NULL;
     }
-
     if (!NewDBCursor(dbp, &dbcp))
     {
-        Log(LOG_LEVEL_INFO, "Unable to scan persistence cache");
+        Log(LOG_LEVEL_ERR, "Unable to scan state database");
         CloseDB(dbp);
         return NULL;
     }
 
+    CfState q;
+    int ksize, vsize;
+    char *key;
+    void *value;
+    size_t count = 0;
+    time_t now = time(NULL);
+    Item *persistent_classes = NULL;
     while (NextDB(dbcp, &key, &ksize, &value, &vsize))
     {
-        memcpy((void *) &q, value, sizeof(CfState));
+        memcpy(&q, value, sizeof(CfState));
 
         if (now > q.expires)
         {
-            Log(LOG_LEVEL_VERBOSE, " Persistent class %s expired", key);
+            Log(LOG_LEVEL_DEBUG,
+                "Persistent class %s expired, removing from database", key);
             DBCursorDeleteEntry(dbcp);
         }
         else
         {
-            if (StringMatchFull(client_regex, key))
-            {
-                Log(LOG_LEVEL_VERBOSE, " - Found key %s...", key);
-                AppendItem(&candidates, key, NULL);
-            }
+            count++;
+            PrependItem(&persistent_classes, key, NULL);
         }
     }
 
     DeleteDBCursor(dbcp);
     CloseDB(dbp);
 
-    for (ip = candidates; ip != NULL; ip = ip->next)
+    if (LogGetGlobalLevel() >= LOG_LEVEL_VERBOSE)
     {
-        for (ap = SV.varadmit; ap != NULL; ap = ap->next)
-        {
-            int res = false;
-
-            if (StringMatchFull(ap->path, ip->name))
-            {
-                res = true;
-            }
-
-            if (res)
-            {
-                Log(LOG_LEVEL_VERBOSE, "Found a matching rule in access list (%s in %s)", ip->name, ap->path);
-
-                if (ap->classpattern == false)
-                {
-                    Log(LOG_LEVEL_ERR,
-                          "Context %s requires a literal server item...cannot set variable directly by path",
-                          ap->path);
-                    access = false;
-                    continue;
-                }
-
-                if ((!encrypt) && (ap->encrypt == true))
-                {
-                    Log(LOG_LEVEL_ERR, "Context %s requires encrypt connection...will not serve", ip->name);
-                    access = false;
-                    break;
-                }
-                else
-                {
-                    Log(LOG_LEVEL_DEBUG, "Checking whether to map root privileges");
-
-                    if ((IsMatchItemIn(ap->maproot, MapAddress(conn->ipaddr)))
-                        || (IsRegexItemIn(ctx, ap->maproot, conn->hostname)))
-                    {
-                        conn->maproot = true;
-                        Log(LOG_LEVEL_VERBOSE, "Mapping root privileges");
-                    }
-                    else
-                    {
-                        Log(LOG_LEVEL_VERBOSE, "No root privileges granted");
-                    }
-
-                    if ((IsMatchItemIn(ap->accesslist, MapAddress(conn->ipaddr)))
-                        || (IsRegexItemIn(ctx, ap->accesslist, conn->hostname)))
-                    {
-                        access = true;
-                        Log(LOG_LEVEL_DEBUG, "Access privileges - match found");
-                    }
-                }
-            }
-        }
-
-        for (ap = SV.vardeny; ap != NULL; ap = ap->next)
-        {
-            if (strcmp(ap->path, ip->name) == 0)
-            {
-                if ((IsMatchItemIn(ap->accesslist, MapAddress(conn->ipaddr)))
-                    || (IsRegexItemIn(ctx, ap->accesslist, conn->hostname)))
-                {
-                    access = false;
-                    Log(LOG_LEVEL_VERBOSE, "Host %s explicitly denied access to context %s", conn->hostname, ip->name);
-                    break;
-                }
-            }
-        }
-
-        if (access)
-        {
-            Log(LOG_LEVEL_VERBOSE, "Host %s granted access to context '%s'", conn->hostname, ip->name);
-            AppendItem(&matches, ip->name, NULL);
-
-            if (encrypt && LOGENCRYPT)
-            {
-                /* Log files that were marked as requiring encryption */
-                Log(LOG_LEVEL_INFO, "Host %s granted access to context '%s'", conn->hostname, ip->name);
-            }
-        }
-        else
-        {
-            Log(LOG_LEVEL_VERBOSE, "Host %s denied access to context '%s'", conn->hostname, ip->name);
-        }
+        char logbuf[CF_BUFSIZE];
+        ItemList2CSV_bound(persistent_classes, logbuf, sizeof(logbuf), ' ');
+        Log(LOG_LEVEL_VERBOSE,
+            "Found %zu valid persistent classes in state database: %s",
+            count, logbuf);
     }
 
-    DeleteItemList(candidates);
-    return matches;
+    return persistent_classes;
 }
 
 
@@ -550,6 +161,8 @@ static void ReplyNothing(ServerConnectionState *conn)
     }
 }
 
+/* Used only in EXEC protocol command, to check if any of the received classes
+ * is defined in the server. */
 int MatchClasses(EvalContext *ctx, ServerConnectionState *conn)
 {
     char recvbuffer[CF_BUFSIZE];
@@ -593,14 +206,21 @@ int MatchClasses(EvalContext *ctx, ServerConnectionState *conn)
             }
 
             {
+                /* What the heck are we doing here? */
+                /* Hmmm so we iterate over all classes to see if the regex
+                 * received (ip->name) matches (StringMatchFull) to any local
+                 * class (expr)... SLOW! Change the spec! Don't accept
+                 * regexes! How many will be affected if a specific class has
+                 * to be set to run command, instead of matching a pattern?
+                 * It's safer anyway... */
                 ClassTableIterator *iter = EvalContextClassTableIteratorNewGlobal(ctx, NULL, true, true);
                 Class *cls = NULL;
                 while ((cls = ClassTableIteratorNext(iter)))
                 {
                     char *expr = ClassRefToString(cls->ns, cls->name);
                     /* FIXME: review this strcmp. Moved out from StringMatch */
-                    bool match = !strcmp(ip->name, expr)
-                        || StringMatchFull(ip->name, expr);
+                    bool match = (strcmp(ip->name, expr) == 0 ||
+                                  StringMatchFull(ip->name, expr));
                     free(expr);
                     if (match)
                     {
@@ -683,11 +303,11 @@ static int AuthorizeRoles(EvalContext *ctx, ServerConnectionState *conn, char *a
             if (StringMatchFull(ap->path, RlistScalarValue(rp)))
             {
                 /* We have a pattern covering this class - so are we allowed to activate it? */
-                if ((IsMatchItemIn(ap->accesslist, MapAddress(conn->ipaddr))) ||
-                    (IsRegexItemIn(ctx, ap->accesslist, conn->hostname)) ||
-                    (IsRegexItemIn(ctx, ap->accesslist, userid1)) ||
-                    (IsRegexItemIn(ctx, ap->accesslist, userid2)) ||
-                    (IsRegexItemIn(ctx, ap->accesslist, conn->username)))
+                if ((IsMatchItemIn(ap->accessIPs, MapAddress(conn->ipaddr))) ||
+                    (IsRegexItemIn(ctx, ap->accessIPs, conn->hostname)) ||
+                    (IsRegexItemIn(ctx, ap->accessIPs, userid1)) ||
+                    (IsRegexItemIn(ctx, ap->accessIPs, userid2)) ||
+                    (IsRegexItemIn(ctx, ap->accessIPs, conn->username)))
                 {
                     Log(LOG_LEVEL_VERBOSE, "Attempt to define role/class %s is permitted", RlistScalarValue(rp));
                     permitted = true;
@@ -963,6 +583,19 @@ static int TransferRights(char *filename, ServerFileGetState *args, struct stat 
             }
         }
     }
+
+    /* Return true if one of the following is true: */
+
+    /* Remote user is root, really useless, "user" is just a string in the
+     * protocol he might claim whatever he wants, *key* is what matters */
+    assert((args->connect->uid == 0) ||
+    /* remote IP has maproot in our access_rules, useless because of previous */
+           (args->connect->maproot == true) ||
+    /* file is owned by the same username the user claimed - useless as well */
+           (sb->st_uid == uid) ||
+    /* file is readable by everyone */
+           (sb->st_mode & S_IROTH));
+
 #endif
 
     return true;
@@ -1015,7 +648,7 @@ void CfGetFile(ServerFileGetState *args)
 
     if (!TransferRights(filename, args, &sb))
     {
-        RefuseAccess(args->connect, args->buf_size, "");
+        RefuseAccess(args->connect, args->replyfile);
         snprintf(sendbuffer, CF_BUFSIZE, "%s", CF_FAILEDSTR);
         if (ConnectionInfoProtocolVersion(conn_info) == CF_PROTOCOL_CLASSIC)
         {
@@ -1171,7 +804,7 @@ void CfEncryptGetFile(ServerFileGetState *args)
 
     if (!TransferRights(filename, args, &sb))
     {
-        RefuseAccess(args->connect, args->buf_size, "");
+        RefuseAccess(args->connect, args->replyfile);
         FailedTransfer(conn_info);
     }
 
@@ -1287,7 +920,7 @@ int StatFile(ServerConnectionState *conn, char *sendbuffer, char *ofilename)
 
     if (strlen(ReadLastNode(filename)) > CF_MAXLINKSIZE)
     {
-        snprintf(sendbuffer, CF_BUFSIZE, "BAD: Filename suspiciously long [%s]\n", filename);
+        snprintf(sendbuffer, CF_BUFSIZE, "BAD: Filename suspiciously long [%s]", filename);
         Log(LOG_LEVEL_ERR, "%s", sendbuffer);
         SendTransaction(conn->conn_info, sendbuffer, 0, CF_DONE);
         return -1;
@@ -1317,7 +950,7 @@ int StatFile(ServerConnectionState *conn, char *sendbuffer, char *ofilename)
 
         if (readlink(filename, linkbuf, CF_BUFSIZE - 1) == -1)
         {
-            strcpy(sendbuffer, "BAD: unable to read link\n");
+            strcpy(sendbuffer, "BAD: unable to read link");
             Log(LOG_LEVEL_ERR, "%s. (readlink: %s)", sendbuffer, GetErrorStr());
             SendTransaction(conn->conn_info, sendbuffer, 0, CF_DONE);
             return -1;
@@ -1528,32 +1161,21 @@ int GetServerQuery(ServerConnectionState *conn, char *recvbuffer, int encrypt)
 
 void ReplyServerContext(ServerConnectionState *conn, int encrypted, Item *classes)
 {
-    char out[CF_BUFSIZE];
-    int cipherlen;
-    Item *ip;
-
     char sendbuffer[CF_BUFSIZE];
-    memset(sendbuffer, 0, CF_BUFSIZE);
-
-    for (ip = classes; ip != NULL; ip = ip->next)
+    size_t ret = ItemList2CSV_bound(classes,
+                                    sendbuffer, sizeof(sendbuffer), ',');
+    if (ret >= sizeof(sendbuffer))
     {
-        if (strlen(sendbuffer) + strlen(ip->name) < CF_BUFSIZE - 3)
-        {
-            strcat(sendbuffer, ip->name);
-            strcat(sendbuffer, ",");
-        }
-        else
-        {
-            Log(LOG_LEVEL_ERR, "Overflow in context grab");
-            break;
-        }
+        Log(LOG_LEVEL_ERR, "Overflow: classes don't fit in send buffer");
     }
 
     DeleteItemList(classes);
 
     if (encrypted)
     {
-        cipherlen = EncryptString(conn->encryption_type, sendbuffer, out, conn->session_key, strlen(sendbuffer) + 1);
+        char out[CF_BUFSIZE];
+        int cipherlen = EncryptString(conn->encryption_type, sendbuffer, out,
+                                      conn->session_key, strlen(sendbuffer) + 1);
         SendTransaction(conn->conn_info, out, cipherlen, CF_DONE);
     }
     else
@@ -1573,15 +1195,16 @@ int CfOpenDirectory(ServerConnectionState *conn, char *sendbuffer, char *oldDirn
 
     if (!IsAbsoluteFileName(dirname))
     {
-        strcpy(sendbuffer, "BAD: request to access a non-absolute filename\n");
+        strcpy(sendbuffer, "BAD: request to access a non-absolute filename");
         SendTransaction(conn->conn_info, sendbuffer, 0, CF_DONE);
         return -1;
     }
 
     if ((dirh = DirOpen(dirname)) == NULL)
     {
-        Log(LOG_LEVEL_DEBUG, "Couldn't open dir '%s'", dirname);
-        snprintf(sendbuffer, CF_BUFSIZE, "BAD: cfengine, couldn't open dir %s\n", dirname);
+        Log(LOG_LEVEL_INFO, "Couldn't open directory '%s' (DirOpen:%s)",
+            dirname, GetErrorStr());
+        snprintf(sendbuffer, CF_BUFSIZE, "BAD: cfengine, couldn't open dir %s", dirname);
         SendTransaction(conn->conn_info, sendbuffer, 0, CF_DONE);
         return -1;
     }
@@ -1622,7 +1245,7 @@ int CfSecOpenDirectory(ServerConnectionState *conn, char *sendbuffer, char *dirn
 
     if (!IsAbsoluteFileName(dirname))
     {
-        strcpy(sendbuffer, "BAD: request to access a non-absolute filename\n");
+        strcpy(sendbuffer, "BAD: request to access a non-absolute filename");
         cipherlen = EncryptString(conn->encryption_type, sendbuffer, out, conn->session_key, strlen(sendbuffer) + 1);
         SendTransaction(conn->conn_info, out, cipherlen, CF_DONE);
         return -1;
@@ -1631,7 +1254,7 @@ int CfSecOpenDirectory(ServerConnectionState *conn, char *sendbuffer, char *dirn
     if ((dirh = DirOpen(dirname)) == NULL)
     {
         Log(LOG_LEVEL_VERBOSE, "Couldn't open dir %s", dirname);
-        snprintf(sendbuffer, CF_BUFSIZE, "BAD: cfengine, couldn't open dir %s\n", dirname);
+        snprintf(sendbuffer, CF_BUFSIZE, "BAD: cfengine, couldn't open dir %s", dirname);
         cipherlen = EncryptString(conn->encryption_type, sendbuffer, out, conn->session_key, strlen(sendbuffer) + 1);
         SendTransaction(conn->conn_info, out, cipherlen, CF_DONE);
         return -1;
@@ -1666,25 +1289,5 @@ int CfSecOpenDirectory(ServerConnectionState *conn, char *sendbuffer, char *dirn
     SendTransaction(conn->conn_info, out, cipherlen, CF_DONE);
     DirClose(dirh);
     return 0;
-}
-
-int cfscanf(char *in, int len1, int len2, char *out1, char *out2, char *out3)
-{
-    int len3 = 0;
-    char *sp;
-
-    sp = in;
-    memcpy(out1, sp, len1);
-    out1[len1] = '\0';
-
-    sp += len1 + 1;
-    memcpy(out2, sp, len2);
-
-    sp += len2 + 1;
-    len3 = strlen(sp);
-    memcpy(out3, sp, len3);
-    out3[len3] = '\0';
-
-    return (len1 + len2 + len3 + 2);
 }
 

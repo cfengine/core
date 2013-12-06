@@ -1353,7 +1353,6 @@ static void test_TLSBasicIO(void)
      */
     USE_MOCK(SSL_write);
     USE_MOCK(SSL_read);
-    assert_int_equal(0, TLSSend(ssl, output_buffer, 0));
     assert_int_equal(-1, TLSSend(ssl, output_buffer, output_buffer_length));
     assert_int_equal(-1, TLSRecv(ssl, input_buffer, output_buffer_length));
     RESET_STATUS;

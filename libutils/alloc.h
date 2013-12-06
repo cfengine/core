@@ -42,7 +42,8 @@ int xvasprintf(char **strp, const char *fmt, va_list ap) FUNC_ATTR_PRINTF(2, 0);
  *
  * Use x* equivalents instead.
  */
-#if !defined(ALLOC_IMPL)
+//#if !defined(ALLOC_IMPL)
+#if 0
 # undef malloc
 # undef calloc
 # undef realloc

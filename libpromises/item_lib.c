@@ -508,6 +508,49 @@ char *ItemList2CSV(const Item *list)
     return s;
 }
 
+/**
+ * Write all strings in list to buffer #buf, separating them with
+ * #separator. Watch out, no escaping happens.
+ *
+ * @return the length of #buf, which will be equal to #buf_size if string was
+ *         truncated. #buf will come out as '\0' terminated.
+ */
+size_t ItemList2CSV_bound(const Item *list, char *buf, size_t buf_size,
+                          char separator)
+{
+    const Item *ip;
+    size_t len = 0;                                /* without counting '\0' */
+
+    for (ip = list; ip != NULL; ip = ip->next)
+    {
+        size_t space_left = buf_size - len;
+        size_t ip_len = strlen(ip->name);
+
+        /* 2 bytes must be spared: one for separator, one for '\0' */
+        if (space_left >= ip_len - 2)
+        {
+            memcpy(buf, ip->name, ip_len);
+            len += ip_len;
+        }
+        else                                            /* we must truncate */
+        {
+            memcpy(buf, ip->name, space_left - 1);
+            buf[buf_size - 1] = '\0';
+            return buf_size;                   /* This signifies truncation */
+        }
+
+        /* Output separator if list has more entries. */
+        if (ip->next != NULL)
+        {
+            buf[len] = separator;
+            len++;
+        }
+    }
+
+    buf[len] = '\0';
+    return len;
+}
+
 /*********************************************************************/
 /* Basic operations                                                  */
 /*********************************************************************/

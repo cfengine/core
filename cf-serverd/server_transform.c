@@ -44,52 +44,12 @@
 #include <cf-serverd-enterprise-stubs.h>
 #include <syslog_client.h>
 #include <verify_classes.h>
+#include <generic_agent.h> /* HashControls */
+#include <file_lib.h>      /* IsDir2 */
 
-#include <generic_agent.h> // HashControls
+#include "access.h"
+#include "strlist.h"
 
-
-<<<<<<< HEAD
-typedef enum
-{
-    REMOTE_ACCESS_ADMIT,
-    REMOTE_ACCESS_DENY,
-    REMOTE_ACCESS_MAPROOT,
-    REMOTE_ACCESS_ENCRYPTED,
-    REMOTE_ACCESS_NONE
-} RemoteAccess;
-
-typedef enum
-{
-    REMOTE_ROLE_AUTHORIZE,
-    REMOTE_ROLE_NONE
-} RemoteRole;
-
-typedef enum
-{
-    SERVER_CONTROL_ALLOW_ALL_CONNECTS,
-    SERVER_CONTROL_ALLOW_CONNECTS,
-    SERVER_CONTROL_ALLOW_USERS,
-    SERVER_CONTROL_AUDITING,
-    SERVER_CONTROL_BIND_TO_INTERFACE,
-    SERVER_CONTROL_CF_RUN_COMMAND,
-    SERVER_CONTROL_CALL_COLLECT_INTERVAL,
-    SERVER_CONTROL_CALL_COLLECT_WINDOW,
-    SERVER_CONTROL_DENY_BAD_CLOCKS,
-    SERVER_CONTROL_DENY_CONNECTS,
-    SERVER_CONTROL_DYNAMIC_ADDRESSES,
-    SERVER_CONTROL_HOSTNAME_KEYS,
-    SERVER_CONTROL_KEY_TTL,
-    SERVER_CONTROL_LOG_ALL_CONNECTIONS,
-    SERVER_CONTROL_LOG_ENCRYPTED_TRANSFERS,
-    SERVER_CONTROL_MAX_CONNECTIONS,
-    SERVER_CONTROL_PORT_NUMBER,
-    SERVER_CONTROL_SERVER_FACILITY,
-    SERVER_CONTROL_SKIP_VERIFY,
-    SERVER_CONTROL_TRUST_KEYS_FROM,
-    SERVER_CONTROL_LISTEN,
-    SERVER_CONTROL_ALLOWCIPHERS,
-    SERVER_CONTROL_NONE
-} ServerControl;
 
 static void KeepContextBundles(EvalContext *ctx, const Policy *policy);
 static PromiseResult KeepServerPromise(EvalContext *ctx, const Promise *pp, void *param);
@@ -118,7 +78,7 @@ extern Item *CONNECTIONLIST;
 
 /*******************************************************************/
 
-static void KeepFileAccessPromise(EvalContext *ctx, const Promise *pp);
+static void KeepFileAccessPromise(const EvalContext *ctx, const Promise *pp);
 static void KeepLiteralAccessPromise(EvalContext *ctx, const Promise *pp, char *type);
 static void KeepQueryAccessPromise(EvalContext *ctx, const Promise *pp, char *type);
 
@@ -127,35 +87,71 @@ static void KeepQueryAccessPromise(EvalContext *ctx, const Promise *pp, char *ty
 /*******************************************************************/
 
 
-void KeepPromises(EvalContext *ctx, const Policy *policy, GenericAgentConfig *config)
-{
-    KeepContextBundles(ctx, policy);
-    KeepControlPromises(ctx, policy, config);
-    KeepPromiseBundles(ctx, policy);
-}
-
-/*******************************************************************/
-
 void Summarize()
 {
+    Log(LOG_LEVEL_VERBOSE, " === BEGIN summary of access promises === ");
+
+    size_t i, j;
+    for (i = 0; i < paths_acl->len; i++)
+    {
+        Log(LOG_LEVEL_VERBOSE, "\tPath: %s",
+            strlist_At(paths_acl->resource_names, i));
+        const struct resource_acl *racl = &paths_acl->acls[i];
+
+        for (j = 0; j < strlist_Len(racl->admit_ips); j++)
+        {
+            Log(LOG_LEVEL_VERBOSE, "\t\tadmit_ips: %s",
+                strlist_At(racl->admit_ips, j));
+        }
+        for (j = 0; j < strlist_Len(racl->admit_hostnames); j++)
+        {
+            Log(LOG_LEVEL_VERBOSE, "\t\tadmit_hostnames: %s",
+                strlist_At(racl->admit_hostnames, j));
+        }
+        for (j = 0; j < strlist_Len(racl->admit_keys); j++)
+        {
+            Log(LOG_LEVEL_VERBOSE, "\t\tadmit_keys: %s",
+                strlist_At(racl->admit_keys, j));
+        }
+        for (j = 0; j < strlist_Len(racl->deny_ips); j++)
+        {
+            Log(LOG_LEVEL_VERBOSE, "\t\tdeny_ips: %s",
+                strlist_At(racl->deny_ips, j));
+        }
+        for (j = 0; j < strlist_Len(racl->deny_hostnames); j++)
+        {
+            Log(LOG_LEVEL_VERBOSE, "\t\tdeny_hostnames: %s",
+                strlist_At(racl->deny_hostnames, j));
+        }
+        for (j = 0; j < strlist_Len(racl->deny_keys); j++)
+        {
+            Log(LOG_LEVEL_VERBOSE, "\t\tdeny_keys: %s",
+                strlist_At(racl->deny_keys, j));
+        }
+    }
+
     Auth *ptr;
     Item *ip, *ipr;
-
-    Log(LOG_LEVEL_VERBOSE, "Summarize control promises");
 
     Log(LOG_LEVEL_VERBOSE, "Granted access to paths :");
 
     for (ptr = SV.admit; ptr != NULL; ptr = ptr->next)
     {
-        Log(LOG_LEVEL_VERBOSE, "Path '%s' (encrypt=%d)", ptr->path, ptr->encrypt);
+        Log(LOG_LEVEL_VERBOSE, "\tPath: %s", ptr->path);
 
-        for (ip = ptr->accesslist; ip != NULL; ip = ip->next)
+        for (ipr = ptr->maproot; ipr != NULL; ipr = ipr->next)
         {
-            Log(LOG_LEVEL_VERBOSE, "Admit: '%s' root=", ip->name);
-            for (ipr = ptr->maproot; ipr != NULL; ipr = ipr->next)
-            {
-                Log(LOG_LEVEL_VERBOSE, "%s,", ipr->name);
-            }
+            Log(LOG_LEVEL_VERBOSE, "\t\tmaproot user: %s,", ipr->name);
+        }
+
+        for (ip = ptr->accessIPs; ip != NULL; ip = ip->next)
+        {
+            Log(LOG_LEVEL_VERBOSE, "\t\tadmit hosts: %s", ip->name);
+        }
+
+        for (ip = ptr->accessIDs; ip != NULL; ip = ip->next)
+        {
+            Log(LOG_LEVEL_VERBOSE, "\t\tadmit hosts: %s", ip->name);
         }
     }
 
@@ -163,11 +159,16 @@ void Summarize()
 
     for (ptr = SV.deny; ptr != NULL; ptr = ptr->next)
     {
-        Log(LOG_LEVEL_VERBOSE, "Path '%s'", ptr->path);
+        Log(LOG_LEVEL_VERBOSE, "\tPath: %s", ptr->path);
 
-        for (ip = ptr->accesslist; ip != NULL; ip = ip->next)
+        for (ip = ptr->accessIPs; ip != NULL; ip = ip->next)
         {
-            Log(LOG_LEVEL_VERBOSE, "Deny '%s'", ip->name);
+            Log(LOG_LEVEL_VERBOSE, "\t\tdeny hosts: %s", ip->name);
+        }
+
+        for (ip = ptr->accessIDs; ip != NULL; ip = ip->next)
+        {
+            Log(LOG_LEVEL_VERBOSE, "\t\tdeny hosts: %s", ip->name);
         }
     }
 
@@ -175,15 +176,15 @@ void Summarize()
 
     for (ptr = SV.varadmit; ptr != NULL; ptr = ptr->next)
     {
-        Log(LOG_LEVEL_VERBOSE, "Object: '%s' (encrypt=%d)", ptr->path, ptr->encrypt);
+        Log(LOG_LEVEL_VERBOSE, "Object: %s", ptr->path);
 
-        for (ip = ptr->accesslist; ip != NULL; ip = ip->next)
+        for (ipr = ptr->maproot; ipr != NULL; ipr = ipr->next)
+        {
+            Log(LOG_LEVEL_VERBOSE, "%s,", ipr->name);
+        }
+        for (ip = ptr->accessIPs; ip != NULL; ip = ip->next)
         {
             Log(LOG_LEVEL_VERBOSE, "Admit '%s' root=", ip->name);
-            for (ipr = ptr->maproot; ipr != NULL; ipr = ipr->next)
-            {
-                Log(LOG_LEVEL_VERBOSE, "%s,", ipr->name);
-            }
         }
     }
 
@@ -191,15 +192,14 @@ void Summarize()
 
     for (ptr = SV.vardeny; ptr != NULL; ptr = ptr->next)
     {
-        Log(LOG_LEVEL_VERBOSE, "Object '%s'", ptr->path);
+        Log(LOG_LEVEL_VERBOSE, "Object %s", ptr->path);
 
-        for (ip = ptr->accesslist; ip != NULL; ip = ip->next)
+        for (ip = ptr->accessIPs; ip != NULL; ip = ip->next)
         {
             Log(LOG_LEVEL_VERBOSE, "Deny '%s'", ip->name);
         }
     }
 
-    
     Log(LOG_LEVEL_VERBOSE, "Host IPs allowed connection access:");
 
     for (ip = SV.nonattackerlist; ip != NULL; ip = ip->next)
@@ -221,7 +221,7 @@ void Summarize()
         Log(LOG_LEVEL_VERBOSE, "IP '%s'", ip->name);
     }
 
-    Log(LOG_LEVEL_VERBOSE, "Host IPs from whom we shall accept public keys on trust:");
+    Log(LOG_LEVEL_VERBOSE, "Host IPs whose keys we shall establish trust to:");
 
     for (ip = SV.trustkeylist; ip != NULL; ip = ip->next)
     {
@@ -234,10 +234,38 @@ void Summarize()
     {
         Log(LOG_LEVEL_VERBOSE, "USERS '%s'", ip->name);
     }
+
+    Log(LOG_LEVEL_VERBOSE, " === END summary of access promises === ");
 }
 
-/*******************************************************************/
-/* Level                                                           */
+void KeepPromises(EvalContext *ctx, const Policy *policy, GenericAgentConfig *config)
+{
+    if (paths_acl != NULL || classes_acl != NULL || vars_acl != NULL ||
+        literals_acl != NULL || query_acl != NULL || path_shortcuts != NULL)
+    {
+        UnexpectedError("ACLs are not NULL - we are probably leaking memory!");
+    }
+
+    paths_acl     = calloc(1, sizeof(*paths_acl));
+    classes_acl   = calloc(1, sizeof(*classes_acl));
+    vars_acl      = calloc(1, sizeof(*vars_acl));
+    literals_acl  = calloc(1, sizeof(*literals_acl));
+    query_acl     = calloc(1, sizeof(*query_acl));
+    path_shortcuts = StringMapNew();
+
+    if (paths_acl == NULL || classes_acl == NULL || vars_acl == NULL ||
+        literals_acl == NULL || query_acl == NULL ||
+        path_shortcuts == NULL)
+    {
+        Log(LOG_LEVEL_CRIT, "calloc: %s", GetErrorStr());
+        exit(255);
+    }
+
+    KeepContextBundles(ctx, policy);
+    KeepControlPromises(ctx, policy, config);
+    KeepPromiseBundles(ctx, policy);
+}
+
 /*******************************************************************/
 
 static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericAgentConfig *config)
@@ -337,7 +365,7 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericA
 
             if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_CF_RUN_COMMAND].lval) == 0)
             {
-                strncpy(CFRUNCOMMAND, value, CF_BUFSIZE - 1);
+                strlcpy(CFRUNCOMMAND, value, sizeof(CFRUNCOMMAND));
                 Log(LOG_LEVEL_VERBOSE, "Setting cfruncommand to '%s'", CFRUNCOMMAND);
                 continue;
             }
@@ -572,10 +600,6 @@ static void KeepPromiseBundles(EvalContext *ctx, const Policy *policy)
     }
 }
 
-/*********************************************************************/
-/* Level                                                             */
-/*********************************************************************/
-
 static PromiseResult KeepServerPromise(EvalContext *ctx, const Promise *pp, ARG_UNUSED void *param)
 {
     assert(!param);
@@ -610,10 +634,19 @@ static PromiseResult KeepServerPromise(EvalContext *ctx, const Promise *pp, ARG_
         return VerifyClassPromise(ctx, pp, NULL);
     }
 
-    const char *resource_type = PromiseGetConstraintAsRval(pp, "resource_type", RVAL_TYPE_SCALAR);
-    if (resource_type && strcmp(pp->parent_promise_type->name, "access") == 0)
+    if (strcmp(pp->parent_promise_type->name, "access") == 0)
     {
-        if (strcmp(resource_type, "literal") == 0)
+        const char *resource_type =
+            PromiseGetConstraintAsRval(pp, "resource_type", RVAL_TYPE_SCALAR);
+
+        /* Default resource_type in access_rules is "path" */
+        if (resource_type == NULL ||
+            strcmp(resource_type, "path") == 0)
+        {
+            KeepFileAccessPromise(ctx, pp);
+            return PROMISE_RESULT_NOOP;
+        }
+        else if (strcmp(resource_type, "literal") == 0)
         {
             KeepLiteralAccessPromise(ctx, pp, "literal");
             return PROMISE_RESULT_NOOP;
@@ -635,12 +668,6 @@ static PromiseResult KeepServerPromise(EvalContext *ctx, const Promise *pp, ARG_
             return PROMISE_RESULT_NOOP;
         }
     }
-
-    if (strcmp(pp->parent_promise_type->name, "access") == 0)
-    {
-        KeepFileAccessPromise(ctx, pp);
-        return PROMISE_RESULT_NOOP;
-    }
     else if (strcmp(pp->parent_promise_type->name, "roles") == 0)
     {
         KeepServerRolePromise(ctx, pp);
@@ -652,32 +679,24 @@ static PromiseResult KeepServerPromise(EvalContext *ctx, const Promise *pp, ARG_
 
 /*********************************************************************/
 
-void KeepFileAccessPromise(EvalContext *ctx, const Promise *pp)
+/**
+ * Add access rules to the given ACL #acl according to the constraints in the
+ * particular access promise.
+ *
+ * For legacy reasons (non-TLS connections), build also the ap (access Auth)
+ * and dp (deny Auth).
+ */
+static void AccessPromise_AddAccessConstraints(const EvalContext *ctx,
+                                               const Promise *pp,
+                                               struct resource_acl *acl,
+                                               Auth *ap, Auth *dp)
 {
     Rlist *rp;
-    Auth *ap, *dp;
-
-    if (strlen(pp->promiser) != 1)
-    {
-        DeleteSlash(pp->promiser);
-    }
-
-    if (!GetAuthPath(pp->promiser, SV.admit))
-    {
-        InstallServerAuthPath(pp->promiser, &SV.admit, &SV.admittail);
-    }
-
-    if (!GetAuthPath(pp->promiser, SV.deny))
-    {
-        InstallServerAuthPath(pp->promiser, &SV.deny, &SV.denytail);
-    }
-
-    ap = GetAuthPath(pp->promiser, SV.admit);
-    dp = GetAuthPath(pp->promiser, SV.deny);
 
     for (size_t i = 0; i < SeqLength(pp->conlist); i++)
     {
-        Constraint *cp = SeqAt(pp->conlist, i);
+        const Constraint *cp = SeqAt(pp->conlist, i);
+        size_t ret = -2;
 
         if (!IsDefinedClass(ctx, cp->classes, PromiseGetNamespace(pp)))
         {
@@ -691,6 +710,35 @@ void KeepFileAccessPromise(EvalContext *ctx, const Promise *pp)
             if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_IFENCRYPTED].lval) == 0)
             {
                 ap->encrypt = true;
+                continue;
+            }
+            if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_SHORTCUT].lval) == 0)
+            {
+                const char *shortcut = cp->rval.item;
+
+                if (strchr(shortcut, FILE_SEPARATOR) != NULL)
+                {
+                    Log(LOG_LEVEL_ERR,
+                        "slashes are forbidden in ACL shortcut: %s",
+                        shortcut);
+                    continue;
+                }
+
+                bool ret = StringMapHasKey(path_shortcuts, shortcut);
+                if (ret)
+                {
+                    Log(LOG_LEVEL_WARNING,
+                        "Already existing shortcut for path '%s' was replaced",
+                        pp->promiser);
+                    continue;
+                }
+
+                StringMapInsert(path_shortcuts,
+                                xstrdup(shortcut), xstrdup(pp->promiser));
+
+                Log(LOG_LEVEL_DEBUG, "Added shortcut '%s' for path: %s",
+                    shortcut, pp->promiser);
+                continue;
             }
 
             break;
@@ -699,15 +747,47 @@ void KeepFileAccessPromise(EvalContext *ctx, const Promise *pp)
 
             for (rp = (Rlist *) cp->rval.item; rp != NULL; rp = rp->next)
             {
-                if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_ADMIT].lval) == 0)
+                if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_ADMITIPS].lval) == 0)
                 {
-                    PrependItem(&(ap->accesslist), RlistScalarValue(rp), NULL);
+                    ret = strlist_Append(&acl->admit_ips, RlistScalarValue(rp));
+                    continue;
+                }
+                if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_DENYIPS].lval) == 0)
+                {
+                    ret = strlist_Append(&acl->deny_ips, RlistScalarValue(rp));
+                    continue;
+                }
+                if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_ADMITHOSTNAMES].lval) == 0)
+                {
+                    ret = strlist_Append(&acl->admit_hostnames, RlistScalarValue(rp));
+                    continue;
+                }
+                if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_DENYHOSTNAMES].lval) == 0)
+                {
+                    ret = strlist_Append(&acl->deny_hostnames, RlistScalarValue(rp));
+                    continue;
+                }
+                if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_ADMITKEYS].lval) == 0)
+                {
+                    ret = strlist_Append(&acl->admit_keys, RlistScalarValue(rp));
+                    continue;
+                }
+                if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_DENYKEYS].lval) == 0)
+                {
+                    ret = strlist_Append(&acl->deny_keys, RlistScalarValue(rp));
                     continue;
                 }
 
+                /* Legacy stuff */
+
+                if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_ADMIT].lval) == 0)
+                {
+                    PrependItem(&(ap->accessIPs), RlistScalarValue(rp), NULL);
+                    continue;
+                }
                 if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_DENY].lval) == 0)
                 {
-                    PrependItem(&(dp->accesslist), RlistScalarValue(rp), NULL);
+                    PrependItem(&(dp->accessIPs), RlistScalarValue(rp), NULL);
                     continue;
                 }
 
@@ -717,6 +797,14 @@ void KeepFileAccessPromise(EvalContext *ctx, const Promise *pp)
                     continue;
                 }
             }
+
+            if (ret == (size_t) -1)
+            {
+                /* Should never happen. */
+                Log(LOG_LEVEL_CRIT, "strlist_Append: %s", GetErrorStr());
+                exit(255);
+            }
+
             break;
 
         default:
@@ -724,14 +812,92 @@ void KeepFileAccessPromise(EvalContext *ctx, const Promise *pp)
             break;
         }
     }
+
+    strlist_Finalise(&acl->admit_ips);
+    strlist_Sort(acl->admit_ips, string_Compare);
+
+    strlist_Finalise(&acl->admit_hostnames);
+    strlist_Sort(acl->admit_hostnames, string_CompareFromEnd);
+
+    strlist_Finalise(&acl->admit_keys);
+    strlist_Sort(acl->admit_keys, string_Compare);
+
+    strlist_Finalise(&acl->deny_ips);
+    strlist_Sort(acl->deny_ips, string_Compare);
+
+    strlist_Finalise(&acl->deny_hostnames);
+    strlist_Sort(acl->deny_hostnames, string_CompareFromEnd);
+
+    strlist_Finalise(&acl->deny_keys);
+    strlist_Sort(acl->deny_keys, string_Compare);
+}
+
+/* It is allowed to have duplicate handles (paths or class names or variables
+ * etc) in access_rules policy files, but here we make sure only one list
+ * entry is created in Auth chains. */
+static Auth *GetOrCreateAuth(const char *handle, Auth **authchain, Auth **authchain_tail)
+{
+    Auth *a = GetAuthPath(handle, *authchain);
+
+    if (!a)
+    {
+        InstallServerAuthPath(handle, authchain, authchain_tail);
+        a = GetAuthPath(handle, *authchain);
+    }
+
+    return a;
+}
+
+static void KeepFileAccessPromise(const EvalContext *ctx, const Promise *pp)
+{
+    /* This new ACL is being used for TLS connections and should replace all
+     * Auth types that follow. For the new ACLs we must insert directories
+     * with trailing '/', since this is now what differentiates files from
+     * directories.
+     */
+
+    /* TODO realpath() (with windows define replacement) with verbose logging adding the paths */
+    /* TODO PathPortable(), i.e. slashes (maybe) and lowercase */
+    /* All in all call PreprocessRequestPath with NULL addr,key,hostname. */
+
+    size_t path_len = strlen(pp->promiser);
+    char path[path_len + 2];
+    memcpy(path, pp->promiser, path_len + 1);
+
+    /* TODO PrepareRequestPath which removes trailing slash etc */
+
+    if (IsDir2(path) == 1 && path[path_len - 1] != FILE_SEPARATOR)
+    {
+        path[path_len] = FILE_SEPARATOR;
+        path[path_len + 1] = '\0';
+        path_len++;
+    }
+
+    size_t pos = acl_SortedInsert(&paths_acl, path);
+    if (pos == (size_t) -1)
+    {
+        /* Should never happen. */
+        Log(LOG_LEVEL_CRIT, "acl_Insert: %s", GetErrorStr());
+        exit(255);
+    }
+
+    /* Legacy code */
+    if (path_len != 1)
+    {
+        DeleteSlash(path);
+    }
+    Auth *ap = GetOrCreateAuth(path, &SV.admit, &SV.admittail);
+    Auth *dp = GetOrCreateAuth(path, &SV.deny, &SV.denytail);
+
+    AccessPromise_AddAccessConstraints(ctx, pp, &paths_acl->acls[pos],
+                                       ap, dp);
 }
 
 /*********************************************************************/
 
 void KeepLiteralAccessPromise(EvalContext *ctx, const Promise *pp, char *type)
 {
-    Rlist *rp;
-    Auth *ap = NULL, *dp = NULL;
+    Auth *ap, *dp;
     const char *handle = PromiseGetHandle(pp);
 
     if ((handle == NULL) && (strcmp(type,"literal") == 0))
@@ -739,198 +905,105 @@ void KeepLiteralAccessPromise(EvalContext *ctx, const Promise *pp, char *type)
         Log(LOG_LEVEL_ERR, "Access to literal server data requires you to define a promise handle for reference");
         return;
     }
-    
+
     if (strcmp(type, "literal") == 0)
     {
         Log(LOG_LEVEL_VERBOSE,"Looking at literal access promise '%s', type '%s'", pp->promiser, type);
 
-        if (!GetAuthPath(handle, SV.varadmit))
-        {
-            InstallServerAuthPath(handle, &SV.varadmit, &SV.varadmittail);
-        }
-
-        if (!GetAuthPath(handle, SV.vardeny))
-        {
-            InstallServerAuthPath(handle, &SV.vardeny, &SV.vardenytail);
-        }
+        ap = GetOrCreateAuth(handle, &SV.varadmit, &SV.varadmittail);
+        dp = GetOrCreateAuth(handle, &SV.vardeny, &SV.vardenytail);
 
         RegisterLiteralServerData(ctx, handle, pp);
-        ap = GetAuthPath(handle, SV.varadmit);
-        dp = GetAuthPath(handle, SV.vardeny);
         ap->literal = true;
+
+
+        size_t pos = acl_SortedInsert(&literals_acl, handle);
+        if (pos == (size_t) -1)
+        {
+            /* Should never happen. */
+            Log(LOG_LEVEL_CRIT, "acl_Insert: %s", GetErrorStr());
+            exit(255);
+        }
+
+        AccessPromise_AddAccessConstraints(ctx, pp, &literals_acl->acls[pos],
+                                           ap, dp);
     }
     else
     {
         Log(LOG_LEVEL_VERBOSE,"Looking at context/var access promise '%s', type '%s'", pp->promiser, type);
 
-        if (!GetAuthPath(pp->promiser, SV.varadmit))
-        {
-            InstallServerAuthPath(pp->promiser, &SV.varadmit, &SV.varadmittail);
-        }
-
-        if (!GetAuthPath(pp->promiser, SV.vardeny))
-        {
-            InstallServerAuthPath(pp->promiser, &SV.vardeny, &SV.vardenytail);
-        }
-
+        ap = GetOrCreateAuth(pp->promiser, &SV.varadmit, &SV.varadmittail);
+        dp = GetOrCreateAuth(pp->promiser, &SV.vardeny, &SV.vardenytail);
 
         if (strcmp(type, "context") == 0)
         {
-            ap = GetAuthPath(pp->promiser, SV.varadmit);
-            dp = GetAuthPath(pp->promiser, SV.vardeny);
             ap->classpattern = true;
-        }
 
-        if (strcmp(type, "variable") == 0)
+            size_t pos = acl_SortedInsert(&classes_acl, pp->promiser);
+            if (pos == (size_t) -1)
+            {
+                /* Only happens on allocation error. */
+                Log(LOG_LEVEL_CRIT, "acl_Insert: %s", GetErrorStr());
+                exit(255);
+            }
+
+            AccessPromise_AddAccessConstraints(ctx, pp, &classes_acl->acls[pos],
+                                               ap, dp);
+        }
+        else if (strcmp(type, "variable") == 0)
         {
-            ap = GetAuthPath(pp->promiser, SV.varadmit); // Allow the promiser (preferred) as well as handle as variable name
-            dp = GetAuthPath(pp->promiser, SV.vardeny);
             ap->variable = true;
-        }
-    }
-    
-    for (size_t i = 0; i < SeqLength(pp->conlist); i++)
-    {
-        Constraint *cp = SeqAt(pp->conlist, i);
 
-        if (!IsDefinedClass(ctx, cp->classes, PromiseGetNamespace(pp)))
-        {
-            continue;
-        }
-
-        switch (cp->rval.type)
-        {
-        case RVAL_TYPE_SCALAR:
-
-            if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_IFENCRYPTED].lval) == 0)
+            size_t pos = acl_SortedInsert(&vars_acl, pp->promiser);
+            if (pos == (size_t) -1)
             {
-                ap->encrypt = true;
+                /* Only happens on allocation error. */
+                Log(LOG_LEVEL_CRIT, "acl_Insert: %s", GetErrorStr());
+                exit(255);
             }
 
-            break;
-
-        case RVAL_TYPE_LIST:
-
-            for (rp = (Rlist *) cp->rval.item; rp != NULL; rp = rp->next)
-            {
-                if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_ADMIT].lval) == 0)
-                {
-                    PrependItem(&(ap->accesslist), RlistScalarValue(rp), NULL);
-                    continue;
-                }
-
-                if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_DENY].lval) == 0)
-                {
-                    PrependItem(&(dp->accesslist), RlistScalarValue(rp), NULL);
-                    continue;
-                }
-
-                if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_MAPROOT].lval) == 0)
-                {
-                    PrependItem(&(ap->maproot), RlistScalarValue(rp), NULL);
-                    continue;
-                }
-            }
-            break;
-
-        default:
-            UnexpectedError("Unknown constraint type!");
-            break;
+            AccessPromise_AddAccessConstraints(ctx, pp, &vars_acl->acls[pos],
+                                               ap, dp);
         }
     }
 }
 
 /*********************************************************************/
 
-void KeepQueryAccessPromise(EvalContext *ctx, const Promise *pp, char *type)
+static void KeepQueryAccessPromise(EvalContext *ctx, const Promise *pp, char *type)
 {
-    Rlist *rp;
     Auth *ap, *dp;
 
-    if (!GetAuthPath(pp->promiser, SV.varadmit))
-    {
-        InstallServerAuthPath(pp->promiser, &SV.varadmit, &SV.varadmittail);
-    }
+    assert (strcmp(type, "query") == 0);
+
+    ap = GetOrCreateAuth(pp->promiser, &SV.varadmit, &SV.varadmittail);
+    dp = GetOrCreateAuth(pp->promiser, &SV.vardeny, &SV.vardenytail);
 
     RegisterLiteralServerData(ctx, pp->promiser, pp);
 
-    if (!GetAuthPath(pp->promiser, SV.vardeny))
+    ap->literal = true;
+
+    size_t pos = acl_SortedInsert(&query_acl, pp->promiser);
+    if (pos == (size_t) -1)
     {
-        InstallServerAuthPath(pp->promiser, &SV.vardeny, &SV.vardenytail);
+        /* Only happens on allocation error. */
+        Log(LOG_LEVEL_CRIT, "acl_Insert: %s", GetErrorStr());
+        exit(255);
     }
 
-    ap = GetAuthPath(pp->promiser, SV.varadmit);
-    dp = GetAuthPath(pp->promiser, SV.vardeny);
-
-    if (strcmp(type, "query") == 0)
-    {
-        ap->literal = true;
-    }
-
-    for (size_t i = 0; i < SeqLength(pp->conlist); i++)
-    {
-        Constraint *cp = SeqAt(pp->conlist, i);
-
-        if (!IsDefinedClass(ctx, cp->classes, PromiseGetNamespace(pp)))
-        {
-            continue;
-        }
-
-        switch (cp->rval.type)
-        {
-        case RVAL_TYPE_SCALAR:
-
-            if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_IFENCRYPTED].lval) == 0)
-            {
-                ap->encrypt = true;
-            }
-
-            break;
-
-        case RVAL_TYPE_LIST:
-
-            for (rp = (Rlist *) cp->rval.item; rp != NULL; rp = rp->next)
-            {
-                if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_ADMIT].lval) == 0)
-                {
-                    PrependItem(&(ap->accesslist), RlistScalarValue(rp), NULL);
-                    continue;
-                }
-
-                if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_DENY].lval) == 0)
-                {
-                    PrependItem(&(dp->accesslist), RlistScalarValue(rp), NULL);
-                    continue;
-                }
-
-                if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_MAPROOT].lval) == 0)
-                {
-                    PrependItem(&(ap->maproot), RlistScalarValue(rp), NULL);
-                    continue;
-                }
-            }
-            break;
-
-        default:
-            UnexpectedError("Unknown constraint type!");
-            break;
-        }
-    }
+    AccessPromise_AddAccessConstraints(ctx, pp, &query_acl->acls[pos],
+                                       ap, dp);
 }
 
 /*********************************************************************/
+
 
 static void KeepServerRolePromise(EvalContext *ctx, const Promise *pp)
 {
     Rlist *rp;
     Auth *ap;
 
-    if (!GetAuthPath(pp->promiser, SV.roles))
-    {
-        InstallServerAuthPath(pp->promiser, &SV.roles, &SV.rolestail);
-    }
-
-    ap = GetAuthPath(pp->promiser, SV.roles);
+    ap = GetOrCreateAuth(pp->promiser, &SV.roles, &SV.rolestail);
 
     for (size_t i = 0; i < SeqLength(pp->conlist); i++)
     {
@@ -947,9 +1020,10 @@ static void KeepServerRolePromise(EvalContext *ctx, const Promise *pp)
 
             for (rp = (Rlist *) cp->rval.item; rp != NULL; rp = rp->next)
             {
+                /* This is for remote class activation by means of cf-runagent.*/
                 if (strcmp(cp->lval, CF_REMROLE_BODIES[REMOTE_ROLE_AUTHORIZE].lval) == 0)
                 {
-                    PrependItem(&(ap->accesslist), RlistScalarValue(rp), NULL);
+                    PrependItem(&(ap->accessIPs), RlistScalarValue(rp), NULL);
                     continue;
                 }
             }
@@ -972,10 +1046,6 @@ static void KeepServerRolePromise(EvalContext *ctx, const Promise *pp)
         }
     }
 }
-
-/***********************************************************************/
-/* Level                                                               */
-/***********************************************************************/
 
 static void InstallServerAuthPath(const char *path, Auth **list, Auth **listtail)
 {
@@ -1008,26 +1078,19 @@ static void InstallServerAuthPath(const char *path, Auth **list, Auth **listtail
     *listtail = ptr;
 }
 
-/***********************************************************************/
-/* Level                                                               */
-/***********************************************************************/
-
 static Auth *GetAuthPath(const char *path, Auth *list)
 {
     Auth *ap;
 
-    char *unslashed_path = xstrdup(path);
+    size_t path_len = strlen(path);
+    char unslashed_path[path_len + 1];
+    memcpy(unslashed_path, path, path_len + 1);
 
 #ifdef __MINGW32__
-    int i;
+    ToLowerStrInplace(unslashed_path);
+#endif
 
-    for (i = 0; unslashed_path[i] != '\0'; i++)
-    {
-        unslashed_path[i] = ToLower(unslashed_path[i]);
-    }
-#endif /* __MINGW32__ */
-
-    if (strlen(unslashed_path) != 1)
+    if (path_len != 1)
     {
         DeleteSlash(unslashed_path);
     }
@@ -1036,13 +1099,9 @@ static Auth *GetAuthPath(const char *path, Auth *list)
     {
         if (strcmp(ap->path, unslashed_path) == 0)
         {
-            free(unslashed_path);
             return ap;
         }
     }
 
-    free(unslashed_path);
     return NULL;
 }
-
-/***********************************************************************/

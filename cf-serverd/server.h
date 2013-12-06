@@ -38,15 +38,19 @@
 
 typedef struct Auth_ Auth;
 
+/* Access rights for a path, literal, context (classpattern), variable */
 struct Auth_
 {
     char *path;
-    Item *accesslist;
-    Item *maproot;              /* which hosts should have root read access */
-    int encrypt;                /* which files HAVE to be transmitted securely */
     int literal;
     int classpattern;
     int variable;
+
+    Item *accessIPs;         /* which hosts -- IP or hostnames */
+    Item *accessIDs;         /* Which IDs -- SHA= or MD5=  */
+    Item *maproot;           /* which hosts should have root read access */
+    int encrypt;             /* which files HAVE to be transmitted securely */
+
     Auth *next;
 };
 
@@ -84,6 +88,13 @@ typedef struct
  * @member trust Whether we'll blindly trust any key from the host, depends on
  *               the "trustkeysfrom" option in body server control. Default
  *               false, check for setting it is in CheckStoreKey().
+ *
+ * @TODO Add "admit_paths", "deny_paths", "admit_classes", "deny_classes",
+ *       "admit_vars", "deny_vars", "admit_literals", "deny_literals", with
+ *       all the resources that the connected client can access, computed
+ *       during connection time by iterating over the global acls.  Hmmm, to
+ *       do that properly we need the main ACLs indexed by IP/hostname/keys,
+ *       not by resource like today...
  */
 struct ServerConnectionState_
 {
@@ -98,7 +109,6 @@ struct ServerConnectionState_
     uid_t uid;
 #endif
     char ipaddr[CF_MAX_IP_LEN];
-    char output[CF_BUFSIZE * 2];        /* Threadsafe output channel */
     /* TODO the following are useless with the new protocol */
     int id_verified;
     int rsa_auth;
@@ -118,7 +128,7 @@ typedef struct
 
 
 void ServerEntryPoint(EvalContext *ctx, char *ipaddr, ConnectionInfo *info);
-void DeleteAuthList(Auth *ap);
+void DeleteAuthList(Auth **list, Auth **list_tail);
 void PurgeOldConnections(Item **list, time_t now);
 
 
@@ -128,21 +138,17 @@ AgentConnection *ExtractCallBackChannel(ServerConnectionState *conn);
 // STATE
 //*******************************************************************
 
-extern char CFRUNCOMMAND[];
-
 #define CLOCK_DRIFT 3600
 
-extern int ACTIVE_THREADS;
 
+extern int ACTIVE_THREADS;
 extern int CFD_MAXPROCESSES;
 extern bool DENYBADCLOCKS;
 extern int MAXTRIES;
 extern bool LOGENCRYPT;
 extern int COLLECT_INTERVAL;
 extern bool SERVER_LISTEN;
-
 extern ServerAccess SV;
-
-extern char CFRUNCOMMAND[];
+extern char CFRUNCOMMAND[CF_MAXVARSIZE];
 
 #endif

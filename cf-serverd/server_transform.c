@@ -93,7 +93,7 @@ typedef enum
 
 static void KeepContextBundles(EvalContext *ctx, const Policy *policy);
 static PromiseResult KeepServerPromise(EvalContext *ctx, const Promise *pp, void *param);
-static void InstallServerAuthPath(const char *path, Auth **list, Auth **listtop);
+static void InstallServerAuthPath(const char *path, Auth **list, Auth **listtail);
 static void KeepServerRolePromise(EvalContext *ctx, const Promise *pp);
 static void KeepPromiseBundles(EvalContext *ctx, const Policy *policy);
 static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericAgentConfig *config);
@@ -664,12 +664,12 @@ void KeepFileAccessPromise(EvalContext *ctx, const Promise *pp)
 
     if (!GetAuthPath(pp->promiser, SV.admit))
     {
-        InstallServerAuthPath(pp->promiser, &SV.admit, &SV.admittop);
+        InstallServerAuthPath(pp->promiser, &SV.admit, &SV.admittail);
     }
 
     if (!GetAuthPath(pp->promiser, SV.deny))
     {
-        InstallServerAuthPath(pp->promiser, &SV.deny, &SV.denytop);
+        InstallServerAuthPath(pp->promiser, &SV.deny, &SV.denytail);
     }
 
     ap = GetAuthPath(pp->promiser, SV.admit);
@@ -746,12 +746,12 @@ void KeepLiteralAccessPromise(EvalContext *ctx, const Promise *pp, char *type)
 
         if (!GetAuthPath(handle, SV.varadmit))
         {
-            InstallServerAuthPath(handle, &SV.varadmit, &SV.varadmittop);
+            InstallServerAuthPath(handle, &SV.varadmit, &SV.varadmittail);
         }
 
         if (!GetAuthPath(handle, SV.vardeny))
         {
-            InstallServerAuthPath(handle, &SV.vardeny, &SV.vardenytop);
+            InstallServerAuthPath(handle, &SV.vardeny, &SV.vardenytail);
         }
 
         RegisterLiteralServerData(ctx, handle, pp);
@@ -765,12 +765,12 @@ void KeepLiteralAccessPromise(EvalContext *ctx, const Promise *pp, char *type)
 
         if (!GetAuthPath(pp->promiser, SV.varadmit))
         {
-            InstallServerAuthPath(pp->promiser, &SV.varadmit, &SV.varadmittop);
+            InstallServerAuthPath(pp->promiser, &SV.varadmit, &SV.varadmittail);
         }
 
         if (!GetAuthPath(pp->promiser, SV.vardeny))
         {
-            InstallServerAuthPath(pp->promiser, &SV.vardeny, &SV.vardenytop);
+            InstallServerAuthPath(pp->promiser, &SV.vardeny, &SV.vardenytail);
         }
 
 
@@ -849,14 +849,14 @@ void KeepQueryAccessPromise(EvalContext *ctx, const Promise *pp, char *type)
 
     if (!GetAuthPath(pp->promiser, SV.varadmit))
     {
-        InstallServerAuthPath(pp->promiser, &SV.varadmit, &SV.varadmittop);
+        InstallServerAuthPath(pp->promiser, &SV.varadmit, &SV.varadmittail);
     }
 
     RegisterLiteralServerData(ctx, pp->promiser, pp);
 
     if (!GetAuthPath(pp->promiser, SV.vardeny))
     {
-        InstallServerAuthPath(pp->promiser, &SV.vardeny, &SV.vardenytop);
+        InstallServerAuthPath(pp->promiser, &SV.vardeny, &SV.vardenytail);
     }
 
     ap = GetAuthPath(pp->promiser, SV.varadmit);
@@ -927,7 +927,7 @@ static void KeepServerRolePromise(EvalContext *ctx, const Promise *pp)
 
     if (!GetAuthPath(pp->promiser, SV.roles))
     {
-        InstallServerAuthPath(pp->promiser, &SV.roles, &SV.rolestop);
+        InstallServerAuthPath(pp->promiser, &SV.roles, &SV.rolestail);
     }
 
     ap = GetAuthPath(pp->promiser, SV.roles);
@@ -977,19 +977,20 @@ static void KeepServerRolePromise(EvalContext *ctx, const Promise *pp)
 /* Level                                                               */
 /***********************************************************************/
 
-static void InstallServerAuthPath(const char *path, Auth **list, Auth **listtop)
+static void InstallServerAuthPath(const char *path, Auth **list, Auth **listtail)
 {
     Auth *ptr;
 
     ptr = xcalloc(1, sizeof(Auth));
 
-    if (*listtop == NULL)       /* First element in the list */
+    if (*listtail == NULL)       /* Last element in the list */
     {
+        assert(*list == NULL);
         *list = ptr;
     }
     else
     {
-        (*listtop)->next = ptr;
+        (*listtail)->next = ptr;
     }
 
     char *path_dup = xstrdup(path);
@@ -1004,7 +1005,7 @@ static void InstallServerAuthPath(const char *path, Auth **list, Auth **listtop)
 #endif /* __MINGW32__ */
 
     ptr->path = path_dup;
-    *listtop = ptr;
+    *listtail = ptr;
 }
 
 /***********************************************************************/
@@ -1024,7 +1025,7 @@ static Auth *GetAuthPath(const char *path, Auth *list)
     {
         unslashed_path[i] = ToLower(unslashed_path[i]);
     }
-#endif /* __MINGW32__ */    
+#endif /* __MINGW32__ */
 
     if (strlen(unslashed_path) != 1)
     {

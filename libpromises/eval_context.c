@@ -1018,6 +1018,10 @@ void EvalContextStackPushPromiseFrame(EvalContext *ctx, const Promise *owner, bo
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser_uid", v, DATA_TYPE_INT, "source=agent");
     snprintf(v, CF_MAXVARSIZE, "%d", (int) getgid());
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser_gid", v, DATA_TYPE_INT, "source=agent");
+    snprintf(v, CF_MAXVARSIZE, "%d", (int) getpid());
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser_pid", v, DATA_TYPE_INT, "source=agent");
+    snprintf(v, CF_MAXVARSIZE, "%d", (int) getppid());
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser_ppid", v, DATA_TYPE_INT, "source=agent");
 
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "bundle", PromiseGetBundle(owner)->name, DATA_TYPE_STRING, "source=promise");
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "namespace", PromiseGetNamespace(owner), DATA_TYPE_STRING, "source=promise");

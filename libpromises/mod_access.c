@@ -71,7 +71,7 @@ static const ConstraintSyntax report_data_select_constraints[] =
 
 static const BodySyntax report_data_select_body = BodySyntaxNew("report_data_select", report_data_select_constraints, NULL, SYNTAX_STATUS_NORMAL);
 
-const ConstraintSyntax CF_REMACCESS_BODIES[] =
+const ConstraintSyntax CF_REMACCESS_BODIES[REMOTE_ACCESS_NONE + 1] =
 {
     ConstraintSyntaxNewStringList("admit", "", "List of host names or IP addresses to grant access to file objects", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewStringList("deny", "", "List of host names or IP addresses to deny access to file objects", SYNTAX_STATUS_NORMAL),
@@ -82,7 +82,7 @@ const ConstraintSyntax CF_REMACCESS_BODIES[] =
     ConstraintSyntaxNewNull()
 };
 
-const ConstraintSyntax CF_REMROLE_BODIES[] =
+const ConstraintSyntax CF_REMROLE_BODIES[REMOTE_ROLE_NONE + 1] =
 {
     ConstraintSyntaxNewStringList("authorize", "", "List of public-key user names that are allowed to activate the promised class during remote agent activation", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()

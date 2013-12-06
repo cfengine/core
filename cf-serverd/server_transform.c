@@ -29,6 +29,7 @@
 #include <misc_lib.h>
 #include <eval_context.h>
 #include <files_names.h>
+#include <mod_common.h>
 #include <mod_access.h>
 #include <item_lib.h>
 #include <conversion.h>
@@ -47,48 +48,6 @@
 #include <generic_agent.h> // HashControls
 
 
-typedef enum
-{
-    REMOTE_ACCESS_ADMIT,
-    REMOTE_ACCESS_DENY,
-    REMOTE_ACCESS_MAPROOT,
-    REMOTE_ACCESS_ENCRYPTED,
-    REMOTE_ACCESS_NONE
-} RemoteAccess;
-
-typedef enum
-{
-    REMOTE_ROLE_AUTHORIZE,
-    REMOTE_ROLE_NONE
-} RemoteRole;
-
-typedef enum
-{
-    SERVER_CONTROL_ALLOW_ALL_CONNECTS,
-    SERVER_CONTROL_ALLOW_CONNECTS,
-    SERVER_CONTROL_ALLOW_USERS,
-    SERVER_CONTROL_AUDITING,
-    SERVER_CONTROL_BIND_TO_INTERFACE,
-    SERVER_CONTROL_CF_RUN_COMMAND,
-    SERVER_CONTROL_CALL_COLLECT_INTERVAL,
-    SERVER_CONTROL_CALL_COLLECT_WINDOW,
-    SERVER_CONTROL_DENY_BAD_CLOCKS,
-    SERVER_CONTROL_DENY_CONNECTS,
-    SERVER_CONTROL_DYNAMIC_ADDRESSES,
-    SERVER_CONTROL_HOSTNAME_KEYS,
-    SERVER_CONTROL_KEY_TTL,
-    SERVER_CONTROL_LOG_ALL_CONNECTIONS,
-    SERVER_CONTROL_LOG_ENCRYPTED_TRANSFERS,
-    SERVER_CONTROL_MAX_CONNECTIONS,
-    SERVER_CONTROL_PORT_NUMBER,
-    SERVER_CONTROL_SERVER_FACILITY,
-    SERVER_CONTROL_SKIP_VERIFY,
-    SERVER_CONTROL_TRUST_KEYS_FROM,
-    SERVER_CONTROL_LISTEN,
-    SERVER_CONTROL_ALLOWCIPHERS,
-    SERVER_CONTROL_NONE
-} ServerControl;
-
 static void KeepContextBundles(EvalContext *ctx, const Policy *policy);
 static PromiseResult KeepServerPromise(EvalContext *ctx, const Promise *pp, void *param);
 static void InstallServerAuthPath(const char *path, Auth **list, Auth **listtop);
@@ -97,11 +56,11 @@ static void KeepPromiseBundles(EvalContext *ctx, const Policy *policy);
 static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericAgentConfig *config);
 static Auth *GetAuthPath(const char *path, Auth *list);
 
-extern const ConstraintSyntax CFS_CONTROLBODY[];
-extern const ConstraintSyntax CF_REMROLE_BODIES[];
+
 extern int COLLECT_INTERVAL;
 extern int COLLECT_WINDOW;
 extern bool SERVER_LISTEN;
+
 
 /*******************************************************************/
 /* GLOBAL VARIABLES                                                */
@@ -686,7 +645,7 @@ void KeepFileAccessPromise(EvalContext *ctx, const Promise *pp)
         {
         case RVAL_TYPE_SCALAR:
 
-            if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_ENCRYPTED].lval) == 0)
+            if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_IFENCRYPTED].lval) == 0)
             {
                 ap->encrypt = true;
             }
@@ -800,7 +759,7 @@ void KeepLiteralAccessPromise(EvalContext *ctx, const Promise *pp, char *type)
         {
         case RVAL_TYPE_SCALAR:
 
-            if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_ENCRYPTED].lval) == 0)
+            if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_IFENCRYPTED].lval) == 0)
             {
                 ap->encrypt = true;
             }
@@ -878,7 +837,7 @@ void KeepQueryAccessPromise(EvalContext *ctx, const Promise *pp, char *type)
         {
         case RVAL_TYPE_SCALAR:
 
-            if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_ENCRYPTED].lval) == 0)
+            if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_IFENCRYPTED].lval) == 0)
             {
                 ap->encrypt = true;
             }

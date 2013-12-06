@@ -27,7 +27,26 @@
 
 #include <cf3.defs.h>
 
+typedef enum
+{
+    REMOTE_ACCESS_ADMIT,
+    REMOTE_ACCESS_DENY,
+    REMOTE_ACCESS_MAPROOT,
+    REMOTE_ACCESS_IFENCRYPTED,
+    REMOTE_ACCESS_RESOURCE_TYPE,
+    REMOTE_ACCESS_REPORT_DATA_SELECT,
+    REMOTE_ACCESS_NONE
+} RemoteAccess;
+
+typedef enum
+{
+    REMOTE_ROLE_AUTHORIZE,
+    REMOTE_ROLE_NONE
+} RemoteRole;
+
+
 extern const PromiseTypeSyntax CF_REMACCESS_PROMISE_TYPES[];
-extern const ConstraintSyntax CF_REMACCESS_BODIES[];
+extern const ConstraintSyntax CF_REMACCESS_BODIES[REMOTE_ACCESS_NONE + 1];
+extern const ConstraintSyntax CF_REMROLE_BODIES[REMOTE_ROLE_NONE + 1];
 
 #endif

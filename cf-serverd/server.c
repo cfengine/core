@@ -298,7 +298,7 @@ static void SpawnConnection(EvalContext *ctx, char *ipaddr, ConnectionInfo *info
 
     conn = NewConn(ctx, info);
     int sd_accepted = ConnectionInfoSocket(info);
-    strncpy(conn->ipaddr, ipaddr, CF_MAX_IP_LEN - 1);
+    strlcpy(conn->ipaddr, ipaddr, CF_MAX_IP_LEN );
 
     Log(LOG_LEVEL_VERBOSE, "New connection...(from %s, sd %d)",
         conn->ipaddr, sd_accepted);
@@ -845,7 +845,7 @@ static int BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *co
 
         if ((tloc = time((time_t *) NULL)) == -1)
         {
-            sprintf(conn->output, "Couldn't read system clock\n");
+            strcpy(conn->output, "Couldn't read system clock\n");
             Log(LOG_LEVEL_INFO, "Couldn't read system clock. (time: %s)", GetErrorStr());
             SendTransaction(conn->conn_info, "BAD: clocks out of synch", 0, CF_DONE);
             return true;
@@ -1084,7 +1084,7 @@ static int BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *co
         ProgrammingError("Unexpected protocol command");
     }
 
-    sprintf(sendbuffer, "BAD: Request denied\n");
+    strcpy(sendbuffer, "BAD: Request denied\n");
     SendTransaction(conn->conn_info, sendbuffer, 0, CF_DONE);
     Log(LOG_LEVEL_INFO, "Closing connection, due to request: '%s'", recvbuffer);
     return false;
@@ -1112,7 +1112,7 @@ static int VerifyConnection(ServerConnectionState *conn, char buf[CF_BUFSIZE])
     strlcpy(dns_assert, fqname, CF_MAXVARSIZE);
     ToLowerStrInplace(dns_assert);
 
-    strncpy(ip_assert, ipstring, CF_MAXVARSIZE - 1);
+    strlcpy(ip_assert, ipstring, CF_MAXVARSIZE );
 
 /* It only makes sense to check DNS by reverse lookup if the key had to be
    accepted on trust. Once we have a positive key ID, the IP address is
@@ -1126,11 +1126,11 @@ static int VerifyConnection(ServerConnectionState *conn, char buf[CF_BUFSIZE])
               "Allowing %s to connect without (re)checking ID\n", ip_assert);
         Log(LOG_LEVEL_VERBOSE,
               "Non-verified Host ID is %s (Using skipverify)\n", dns_assert);
-        strncpy(conn->hostname, dns_assert, CF_MAXVARSIZE);
+        strlcpy(conn->hostname, dns_assert, CF_MAXVARSIZE);
         Log(LOG_LEVEL_VERBOSE,
               "Non-verified User ID seems to be %s (Using skipverify)\n",
               username);
-        strncpy(conn->username, username, CF_MAXVARSIZE);
+        strlcpy(conn->username, username, CF_MAXVARSIZE);
 
 #ifdef __MINGW32__            /* NT uses security identifier instead of uid */
 
@@ -1252,10 +1252,10 @@ static int VerifyConnection(ServerConnectionState *conn, char buf[CF_BUFSIZE])
     }
 
     Log(LOG_LEVEL_VERBOSE, "Host ID is %s", dns_assert);
-    strncpy(conn->hostname, dns_assert, CF_MAXVARSIZE - 1);
+    strlcpy(conn->hostname, dns_assert, CF_MAXVARSIZE);
 
     Log(LOG_LEVEL_VERBOSE, "User ID seems to be %s", username);
-    strncpy(conn->username, username, CF_MAXVARSIZE - 1);
+    strlcpy(conn->username, username, CF_MAXVARSIZE);
 
     return true;
 }

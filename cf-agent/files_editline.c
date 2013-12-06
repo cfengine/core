@@ -367,7 +367,7 @@ static PromiseResult KeepEditLinePromise(EvalContext *ctx, Promise *pp, void *pa
 static PromiseResult VerifyLineDeletions(EvalContext *ctx, Promise *pp, EditContext *edcontext)
 {
     Item **start = &(edcontext->file_start);
-    Attributes a = { {0} };
+    Attributes a;
     Item *begin_ptr, *end_ptr;
     CfLock thislock;
     char lockname[CF_BUFSIZE];
@@ -430,7 +430,7 @@ static PromiseResult VerifyLineDeletions(EvalContext *ctx, Promise *pp, EditCont
 static PromiseResult VerifyColumnEdits(EvalContext *ctx, Promise *pp, EditContext *edcontext)
 {
     Item **start = &(edcontext->file_start);
-    Attributes a = { {0} };
+    Attributes a;
     Item *begin_ptr, *end_ptr;
     CfLock thislock;
     char lockname[CF_BUFSIZE];
@@ -499,7 +499,7 @@ static PromiseResult VerifyColumnEdits(EvalContext *ctx, Promise *pp, EditContex
 static PromiseResult VerifyPatterns(EvalContext *ctx, Promise *pp, EditContext *edcontext)
 {
     Item **start = &(edcontext->file_start);
-    Attributes a = { {0} };
+    Attributes a;
     Item *begin_ptr, *end_ptr;
     CfLock thislock;
     char lockname[CF_BUFSIZE];
@@ -561,7 +561,7 @@ static PromiseResult VerifyLineInsertions(EvalContext *ctx, Promise *pp, EditCon
 {
     Item **start = &(edcontext->file_start), *match, *prev;
     Item *begin_ptr, *end_ptr;
-    Attributes a = { {0} };
+    Attributes a;
     CfLock thislock;
     char lockname[CF_BUFSIZE];
 
@@ -713,14 +713,14 @@ static int InsertMultipleLinesToRegion(EvalContext *ctx, Item **start, Item *beg
     Item *ip, *prev = CF_UNDEFINED_ITEM;
 
     // Insert at the start of the file
-    
+
     if (*start == NULL)
     {
         return InsertMultipleLinesAtLocation(ctx, start, begin_ptr, end_ptr, *start, prev, a, pp, edcontext, result);
     }
 
     // Insert at the start of the region
-    
+
     if (a.location.before_after == EDIT_ORDER_BEFORE)
     {
         for (ip = *start; ip != NULL; ip = ip->next)
@@ -935,7 +935,7 @@ static int ReplacePatterns(EvalContext *ctx, Item *file_start, Item *file_end, A
                            Promise *pp, EditContext *edcontext, PromiseResult *result)
 {
     char replace[CF_EXPANDSIZE], line_buff[CF_EXPANDSIZE];
-    char before[CF_BUFSIZE], after[CF_BUFSIZE];
+    char after[CF_BUFSIZE];
     int match_len, start_off, end_off, once_only = false, retval = false;
     Item *ip;
     int notfound = true, cutoff = 1, replaced = false;
@@ -954,7 +954,7 @@ static int ReplacePatterns(EvalContext *ctx, Item *file_start, Item *file_end, A
         }
 
         cutoff = 1;
-        strncpy(line_buff, ip->name, CF_BUFSIZE);
+        strlcpy(line_buff, ip->name, sizeof(line_buff));
         replaced = false;
         match_len = 0;
 
@@ -978,19 +978,17 @@ static int ReplacePatterns(EvalContext *ctx, Item *file_start, Item *file_end, A
             Log(LOG_LEVEL_VERBOSE, "Verifying replacement of '%s' with '%s', cutoff %d", pp->promiser, replace,
                   cutoff);
 
-            before[0] = after[0] = '\0';
-
-            // Model the partial substitution in line_buff to check convergence
-
-            strncat(before, line_buff, start_off);
+            // Save portion of line after substitution:
+            after[0] = '\0'; // Do what strncpy() should, using strncat():
             strncat(after, line_buff + end_off, sizeof(after) - 1);
-            snprintf(line_buff, CF_EXPANDSIZE - 1, "%s%s", before, replace);
+            // TODO: gripe if that truncated !
+
+            // Substitute into line_buff:
+            snprintf(line_buff + start_off, sizeof(line_buff) - start_off,
+                     "%s%s", replace, after);
+            // TODO: gripe if that truncated or failed !
             notfound = false;
             replaced = true;
-
-            // Model the full substitution in line_buff
-
-            snprintf(line_buff, CF_EXPANDSIZE - 1, "%s%s%s", before, replace, after);
 
             if (once_only)
             {
@@ -1243,7 +1241,7 @@ static int InsertFileAtLocation(EvalContext *ctx, Item **start, Item *begin_ptr,
         *result = PromiseResultUpdate(*result, PROMISE_RESULT_INTERRUPTED);
         return false;
     }
-    
+
     loc = location;
 
     for(;;)
@@ -1272,12 +1270,12 @@ static int InsertFileAtLocation(EvalContext *ctx, Item **start, Item *begin_ptr,
         {
             Log(LOG_LEVEL_ERR, "StripTrailingNewline was called on an overlong string");
         }
-        
+
         if (feof(fin) && strlen(buf) == 0)
         {
             break;
         }
-        
+
         if (a.expandvars)
         {
             ExpandScalar(ctx, PromiseGetBundle(pp)->ns, PromiseGetBundle(pp)->name, buf, exp);
@@ -1286,21 +1284,21 @@ static int InsertFileAtLocation(EvalContext *ctx, Item **start, Item *begin_ptr,
         {
             strcpy(exp, buf);
         }
-        
+
         if (!SelectLine(ctx, exp, a))
         {
             continue;
         }
-        
+
         if (!preserve_block && IsItemInRegion(ctx, exp, begin_ptr, end_ptr, a.insert_match, pp))
         {
             cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a,
                  "Promised file line '%s' exists within file %s (promise kept)", exp, edcontext->filename);
             continue;
         }
-        
+
         // Need to call CompoundLine here in case ExpandScalar has inserted \n into a string
-        
+
         retval |= InsertCompoundLineAtLocation(ctx, exp, start, begin_ptr, end_ptr, loc, prev, a, pp, edcontext, result);
 
         if (preserve_block && prev == CF_UNDEFINED_ITEM)
@@ -1309,7 +1307,7 @@ static int InsertFileAtLocation(EvalContext *ctx, Item **start, Item *begin_ptr,
            // to get the order of the block right
            //a.location.before_after = cfe_after;
            }
-        
+
         if (prev && prev != CF_UNDEFINED_ITEM)
         {
             prev = prev->next;
@@ -1318,7 +1316,7 @@ static int InsertFileAtLocation(EvalContext *ctx, Item **start, Item *begin_ptr,
         {
             prev = *start;
         }
-        
+
         if (loc)
         {
             loc = loc->next;
@@ -1328,14 +1326,14 @@ static int InsertFileAtLocation(EvalContext *ctx, Item **start, Item *begin_ptr,
             location = *start;
         }
     }
-    
+
     fclose(fin);
     return retval;
-    
+
 }
 
 /***************************************************************************/
-    
+
 static int InsertCompoundLineAtLocation(EvalContext *ctx, char *chunk, Item **start, Item *begin_ptr, Item *end_ptr,
                                         Item *location, Item *prev, Attributes a, Promise *pp, EditContext *edcontext,
                                         PromiseResult *result)
@@ -1379,7 +1377,7 @@ static int InsertCompoundLineAtLocation(EvalContext *ctx, char *chunk, Item **st
             // a.location.before_after = cfe_after;
             location = *start;
         }
-        
+
         if (prev && prev != CF_UNDEFINED_ITEM)
         {
             prev = prev->next;
@@ -1388,7 +1386,7 @@ static int InsertCompoundLineAtLocation(EvalContext *ctx, char *chunk, Item **st
         {
             prev = *start;
         }
-        
+
         if (location)
         {
             location = location->next;
@@ -1398,7 +1396,7 @@ static int InsertCompoundLineAtLocation(EvalContext *ctx, char *chunk, Item **st
             location = *start;
         }
     }
-    
+
     return retval;
 }
 
@@ -1466,7 +1464,7 @@ static int InsertLineAtLocation(EvalContext *ctx, char *newline, Item **start, I
     }
 
     if (a.location.before_after == EDIT_ORDER_BEFORE)
-    {    
+    {
         if (!preserve_block && NeighbourItemMatches(ctx, *start, location, newline, EDIT_ORDER_BEFORE, a.insert_match, pp))
         {
             cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "Promised line '%s' exists before locator in (promise kept)",

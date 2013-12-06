@@ -482,7 +482,7 @@ static int ValidateRegistryPromiser(char *key, Promise *pp)
 
     /* First remove the root key */
 
-    strncpy(root_key, key, CF_MAXVARSIZE - 1);
+    strlcpy(root_key, key, CF_MAXVARSIZE );
     sp = strchr(root_key, '\\');
     *sp = '\0';
 
@@ -853,7 +853,7 @@ static int ValidateSQLTableName(char *table_path, char *db, char *table)
 
 /* Should contain a single separator */
 
-    if (dot + back + fwd > true)
+    if (dot + back + fwd != 1)
     {
         return false;
     }

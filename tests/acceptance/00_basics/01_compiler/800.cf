@@ -8,7 +8,7 @@
 body common control
 {
       inputs => { "../../default.cf.sub" };
-      bundlesequence  => { default("$(this.promise_filename)") };   
+      bundlesequence  => { default("$(this.promise_filename)") };
       version => "1.0";
 }
 
@@ -22,8 +22,7 @@ bundle agent test
 {
   vars:
     debian::
-      "myflavor" string => execresult("/bin/grep Debian.*GNU /etc/issue | /usr/bin/cut -d' ' -f3 | cut -d. -f1", "useshell");
-
+      "myflavor" string => execresult("/bin/grep Debian.*GNU /etc/issue | /usr/bin/cut -d' ' -f3 | cut -d. -f1 | cut -d/ -f1", "useshell");
 }
 
 #######################################################

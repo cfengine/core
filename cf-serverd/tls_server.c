@@ -797,7 +797,7 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
 
         if ((tloc = time((time_t *) NULL)) == -1)
         {
-            sprintf(conn->output, "Couldn't read system clock\n");
+            strcpy(conn->output, "Couldn't read system clock\n");
             Log(LOG_LEVEL_INFO, "Couldn't read system clock. (time: %s)", GetErrorStr());
             SendTransaction(conn->conn_info, "BAD: clocks out of synch", 0, CF_DONE);
             return true;
@@ -934,7 +934,7 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
         Log(LOG_LEVEL_WARNING, "Unexpected protocol command: %s", recvbuffer);
     }
 
-    sprintf(sendbuffer, "BAD: Request denied\n");
+    strcpy(sendbuffer, "BAD: Request denied\n");
     SendTransaction(conn->conn_info, sendbuffer, 0, CF_DONE);
     Log(LOG_LEVEL_INFO, "Closing connection, due to request: '%s'", recvbuffer);
     return false;

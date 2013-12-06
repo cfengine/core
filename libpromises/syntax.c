@@ -405,7 +405,7 @@ SyntaxTypeMatch CheckConstraintTypeMatch(const char *lval, Rval rval, DataType d
 
 DataType StringDataType(EvalContext *ctx, const char *string)
 {
-    DataType dtype;
+    DataType dtype = DATA_TYPE_NONE;
     Rval rval;
     int islist = false;
     char var[CF_BUFSIZE];

@@ -1921,7 +1921,7 @@ static void DoSummarizeTransaction(EvalContext *ctx, PromiseResult status, const
         return;
     }
 
-    char *log_name;
+    char *log_name = NULL;
 
     switch (status)
     {

@@ -55,16 +55,14 @@ void SetSyslogPort(uint16_t port)
 
 void RemoteSysLog(int log_priority, const char *log_string)
 {
-    int sd, rfc3164_len = 1024;
-    char message[CF_BUFSIZE];
     time_t now = time(NULL);
-    int pri = log_priority | FACILITY;
+    int sd, pri = log_priority | FACILITY;
 
     int err;
     struct addrinfo query, *response, *ap;
     char strport[CF_MAXVARSIZE];
 
-    snprintf(strport, CF_MAXVARSIZE - 1, "%u", (unsigned) SYSLOG_PORT);
+    snprintf(strport, CF_MAXVARSIZE, "%u", (unsigned) SYSLOG_PORT);
     memset(&query, 0, sizeof(query));
     query.ai_family = AF_UNSPEC;
     query.ai_socktype = SOCK_DGRAM;
@@ -72,8 +70,8 @@ void RemoteSysLog(int log_priority, const char *log_string)
     if ((err = getaddrinfo(SYSLOG_HOST, strport, &query, &response)) != 0)
     {
         Log(LOG_LEVEL_INFO,
-              "Unable to find syslog_host or service: (%s/%s) %s",
-              SYSLOG_HOST, strport, gai_strerror(err));
+            "Unable to find syslog_host or service: (%s/%s) %s",
+            SYSLOG_HOST, strport, gai_strerror(err));
         return;
     }
 
@@ -86,7 +84,7 @@ void RemoteSysLog(int log_priority, const char *log_string)
                     NULL, 0, NI_NUMERICHOST);
         Log(LOG_LEVEL_VERBOSE,
             "Connect to syslog '%s' = '%s' on port '%s'",
-              SYSLOG_HOST, txtaddr, strport);
+            SYSLOG_HOST, txtaddr, strport);
 
         if ((sd = socket(ap->ai_family, ap->ai_socktype, IPPROTO_UDP)) == -1)
         {
@@ -95,10 +93,12 @@ void RemoteSysLog(int log_priority, const char *log_string)
         }
         else
         {
+            const size_t rfc3164_len = 1024;
+            char message[rfc3164_len];
             char timebuffer[26];
             pid_t pid = getpid();
 
-            snprintf(message, rfc3164_len, "<%u>%.15s %s %s[%d]: %s",
+            snprintf(message, sizeof(message), "<%i>%.15s %s %s[%d]: %s",
                      pri, cf_strtimestamp_local(now, timebuffer) + 4,
                      VFQNAME, VPREFIX, pid, log_string);
             err = sendto(sd, message, strlen(message),
@@ -106,7 +106,7 @@ void RemoteSysLog(int log_priority, const char *log_string)
             if (err == -1)
             {
                 Log(LOG_LEVEL_VERBOSE, "Couldn't send '%s' to syslog server '%s'. (sendto: %s)",
-                      message, SYSLOG_HOST, GetErrorStr());
+                    message, SYSLOG_HOST, GetErrorStr());
             }
             else
             {

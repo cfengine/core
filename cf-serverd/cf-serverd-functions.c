@@ -281,9 +281,6 @@ void StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
     time_t last_collect = 0;
     extern int COLLECT_WINDOW;
 
-    struct sockaddr_storage cin;
-    socklen_t addrlen = sizeof(cin);
-
     MakeSignalPipe();
 
     signal(SIGINT, HandleSignalsForDaemon);
@@ -296,6 +293,10 @@ void StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
     ServerTLSInitialize();
 
     sd = SetServerListenState(ctx, QUEUESIZE, SERVER_LISTEN, &InitServer);
+
+    /* We must have a valid listening socket or the main loop will be a busy
+     * loop...*/
+    assert(sd != -1);
 
     TransactionContext tc = {
         .ifelapsed = 0,
@@ -320,7 +321,6 @@ void StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
         return;
     }
 
-    assert(sd != -1);
     Log(LOG_LEVEL_VERBOSE, "Listening for connections ...");
 
 #ifdef __MINGW32__
@@ -389,25 +389,28 @@ void StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
 
         int ret = poll(fds, 2, 60000);
 
-        /* Empty the signal pipe, we don't need the values. It only exists
-         * to wake us up in case a signal is received while we're not
-         * poll()ing. */
-        unsigned char buf;
-        while (recv(signal_pipe, &buf, 1, 0) > 0) {}
-
+        bool interrupted = false;
         if (ret == -1)
         {
-            if (errno == EINTR)     /* poll() was interrupted by signal */
-            {
-                continue;
-            }
-            else
+            if (errno != EINTR)
             {
                 Log(LOG_LEVEL_CRIT, "poll: %s", GetErrorStr());
                 exit(1);
             }
+            else
+            {
+                interrupted = true;
+            }
         }
-        else if (ret == 0) /* No data waiting, we must have timed out! */
+
+        /* Empty the signal pipe, we don't need the values. It only exists to
+         * wake us up in case a signal is received right in-between
+         * IsPendingTermination() and poll(). */
+        unsigned char buf;
+        while (recv(signal_pipe, &buf, 1, 0) > 0) {}
+
+        if (interrupted ||  /* Signal arrived, check IsPendingTermination() */
+            ret == 0)           /* No data waiting, we must have timed out! */
         {
             continue;
         }
@@ -415,17 +418,22 @@ void StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
         if (fds[0].revents & POLLIN ||
             fds[0].revents & POLLHUP);
         {
+            struct sockaddr_storage cin;
+            socklen_t addrlen = sizeof(cin);
+
             int new_client = accept(sd, (struct sockaddr *)&cin, &addrlen);
             if (new_client == -1)
             {
                 Log(LOG_LEVEL_ERR, "accept: %s", GetErrorStr());
                 continue;
             }
+
             /* Just convert IP address to string, no DNS lookup. */
             char ipaddr[CF_MAX_IP_LEN] = "";
             getnameinfo((struct sockaddr *) &cin, addrlen,
                         ipaddr, sizeof(ipaddr),
                         NULL, 0, NI_NUMERICHOST);
+
             ConnectionInfo *info = ConnectionInfoNew();
             if (info == NULL)
             {
@@ -434,7 +442,7 @@ void StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
             }
 
             ConnectionInfoSetSocket(info, new_client);
-            ServerEntryPoint(ctx, ipaddr, info);        /* start thread */
+            ServerEntryPoint(ctx, ipaddr, info);            /* start thread */
         }
     }
 

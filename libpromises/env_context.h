@@ -105,7 +105,6 @@ struct EvalContext_
     int eval_options;
     bool bundle_aborted;
     bool checksum_updates_default;
-    Item *ip_addresses;
 
     Item *heap_abort;
     Item *heap_abort_current_bundle;
@@ -191,11 +190,6 @@ void EvalContextMarkPromiseNotDone(EvalContext *ctx, const Promise *pp);
 /* Various global options */
 void SetChecksumUpdatesDefault(EvalContext *ctx, bool enabled);
 bool GetChecksumUpdatesDefault(const EvalContext *ctx);
-
-/* IP addresses */
-Item *EvalContextGetIpAddresses(const EvalContext *ctx);
-void EvalContextAddIpAddress(EvalContext *ctx, const char *address);
-void EvalContextDeleteIpAddresses(EvalContext *ctx);
 
 /* - Rest - */
 bool EvalContextPromiseIsActive(const EvalContext *ctx, const Promise *pp);

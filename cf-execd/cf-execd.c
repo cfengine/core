@@ -530,6 +530,9 @@ static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *c
 
         EvalContextClear(ctx);
 
+        DeleteItemList(IPADDRESSES);
+        IPADDRESSES = NULL;
+
         strcpy(VDOMAIN, "undefined.domain");
 
         PolicyDestroy(*policy);
@@ -562,6 +565,9 @@ static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *c
         /* Environment reload */
 
         EvalContextClear(ctx);
+
+        DeleteItemList(IPADDRESSES);
+        IPADDRESSES = NULL;
 
         DetectEnvironment(ctx, false, false);
 

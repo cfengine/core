@@ -23,9 +23,11 @@ sub protocol_line
     $s->add(\*STDIN);
 
     # 15-second timeout on any commands
-    my @ready = $s->can_read(15);
+    my $timeout = 15;
+    my @ready = $s->can_read($timeout);
 
-    die unless scalar @ready;
+    die "No protocol data seen in $timeout seconds, aborting"
+     unless scalar @ready;
 
     my $line = <STDIN>;
     chomp $line;
@@ -111,17 +113,16 @@ sub promise_loop
          }
 
 
-        if ($command eq 'initialize' && !$have_initialize)
+        if ($command eq 'initialize')
         {
+            die "Got initialize command twice, aborting"
+             if $have_initialize;
+
             $have_initialize = 1;
 
             print CFEngine::Plugin::make_protocol_line(1, $init_data);
         }
-        elsif ($command eq 'initialize' && $have_initialize)
-        {
-            die "Got initialize command twice, aborting";
-        }
-        elsif ($command ne 'initialize' && !$have_initialize)
+        elsif (!$have_initialize)
         {
             die "Got command '$command' before 'initialize', aborting";
         }

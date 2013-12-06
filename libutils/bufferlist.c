@@ -187,12 +187,12 @@ Buffer *BufferListIteratorData(const BufferListIterator *iterator)
 
 bool BufferListIteratorHasNext(const BufferListIterator *iterator)
 {
-    return iterator ? ListIteratorHasNext(iterator->iterator) : false;
+    return iterator && ListIteratorHasNext(iterator->iterator);
 }
 
 bool BufferListIteratorHasPrevious(const BufferListIterator *iterator)
 {
-    return iterator ? ListIteratorHasPrevious(iterator->iterator) : false;
+    return iterator && ListIteratorHasPrevious(iterator->iterator);
 }
 
 /*
@@ -269,10 +269,10 @@ int BufferListMutableIteratorAppend(BufferListMutableIterator *iterator, Buffer 
 
 bool BufferListMutableIteratorHasNext(const BufferListMutableIterator *iterator)
 {
-    return iterator ? ListMutableIteratorHasNext(iterator->iterator) : false;
+    return iterator && ListMutableIteratorHasNext(iterator->iterator);
 }
 
 bool BufferListMutableIteratorHasPrevious(const BufferListMutableIterator *iterator)
 {
-    return iterator ? ListMutableIteratorHasPrevious(iterator->iterator) : false;
+    return iterator && ListMutableIteratorHasPrevious(iterator->iterator);
 }

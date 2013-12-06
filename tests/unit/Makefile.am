@@ -96,7 +96,8 @@ check_PROGRAMS = \
 	cf_upgrade_test \
 	queue_test \
 	matching_test \
-	ring_buffer_test
+	ring_buffer_test \
+	strlist_test
 
 if HAVE_AVAHI_CLIENT
 if HAVE_AVAHI_COMMON
@@ -159,7 +160,15 @@ cf_key_functions_test_SOURCES = cf_key_functions_test.c ../../cf-key/cf-key-func
 
 ipaddress_test_SOURCES = ipaddress_test.c 
 
-protocol_test_SOURCES = protocol_test.c ../../cf-serverd/server_common.c ../../cf-serverd/tls_server.c ../../cf-serverd/server.c ../../cf-serverd/cf-serverd-enterprise-stubs.c ../../cf-serverd/server_transform.c ../../cf-serverd/cf-serverd-functions.c
+protocol_test_SOURCES = protocol_test.c \
+	../../cf-serverd/server_common.c \
+	../../cf-serverd/tls_server.c \
+	../../cf-serverd/server.c \
+	../../cf-serverd/cf-serverd-enterprise-stubs.c \
+	../../cf-serverd/server_transform.c \
+	../../cf-serverd/cf-serverd-functions.c \
+	../../cf-serverd/access.c \
+	../../cf-serverd/strlist.c
 protocol_test_LDADD = ../../libpromises/libpromises.la libtest.la
 
 if HAVE_AVAHI_CLIENT
@@ -280,7 +289,7 @@ exec_config_test_LDADD = libtest.la ../../libpromises/libpromises.la
 sysinfo_test_LDADD = ../../libpromises/libpromises.la libtest.la
 
 mon_cpu_test_SOURCES = mon_cpu_test.c ../../cf-monitord/mon.h ../../cf-monitord/mon_cpu.c
-mon_cpu_test_LDADD = ../../libpromises/libpromises.la libtest.la 
+mon_cpu_test_LDADD = ../../libpromises/libpromises.la libtest.la
 
 mon_load_test_SOURCES = mon_load_test.c ../../cf-monitord/mon.h ../../cf-monitord/mon_load.c
 mon_load_test_LDADD = ../../libpromises/libpromises.la libtest.la
@@ -292,7 +301,7 @@ mon_processes_test_LDADD = ../../libpromises/libpromises.la libtest.la
 # under OS X. Another way of stubbing functions from libpromises is needed.
 if !XNU
 check_PROGRAMS += tls_generic_test
-tls_generic_test_SOURCES = tls_generic_test.c 
+tls_generic_test_SOURCES = tls_generic_test.c
 tls_generic_test_LDADD = libtest.la ../../libutils/libutils.la ../../libpromises/libpromises.la ../../libcfnet/libcfnet.la
 endif
 
@@ -301,6 +310,8 @@ version_test_SOURCES = version_test.c
 hash_test_SOURCES = hash_test.c ../../libutils/libutils.la
 
 key_test_SOURCES = key_test.c ../../libutils/libutils.la
+
+strlist_test_SOURCES = strlist_test.c ../../cf-serverd/strlist.c ../../cf-serverd/strlist.h
 
 CFUPGRADE=../../cf-upgrade
 cf_upgrade_test_SOURCES = cf_upgrade_test.c $(CFUPGRADE)/alloc-mini.c $(CFUPGRADE)/alloc-mini.h $(CFUPGRADE)/command_line.c \

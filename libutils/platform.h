@@ -426,6 +426,7 @@ void srand48(long seed);
 #if !HAVE_DECL_CLOCK_GETTIME
 int clock_gettime(clockid_t clock_id, struct timespec *tp);
 #endif
+
 #if !HAVE_DECL_REALPATH
     /**
      * WARNING realpath() has varying behaviour among platforms.
@@ -438,10 +439,11 @@ int clock_gettime(clockid_t clock_id, struct timespec *tp);
      *
      * @TODO what we need is a resolvepath(2) cross-platform implementation.
      */
-    #if defined (__MINGW__)
-        #define realpath(N,R) _fullpath((R), (N), PATH_MAX)
-    #endif
+#    if defined (__MINGW32__)
+#        define realpath(N,R) _fullpath((R), (N), PATH_MAX)
+#    endif
 #endif
+
 #if !HAVE_DECL_LSTAT
 int lstat(const char *file_name, struct stat *buf);
 #endif
@@ -497,6 +499,9 @@ char *strsignal(int sig);
 #endif
 #if !HAVE_DECL_STRDUP
 char *strdup(const char *str);
+#endif
+#if !HAVE_DECL_MEMRCHR
+void *memrchr(const void *s, int c, size_t n);
 #endif
 #if !HAVE_DECL_MEMDUP
 void *memdup(const void *mem, size_t size);
@@ -854,4 +859,5 @@ struct timespec
 /* Must be always the last one! */
 #include <config.post.h>
 
-#endif
+
+#endif  /* CFENGINE_PLATFORM_H */

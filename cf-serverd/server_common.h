@@ -36,9 +36,8 @@
 #include <server.h>                                /* ServerConnectionState */
 
 
-void RefuseAccess(ServerConnectionState *conn, int size, char *errmesg);
+void RefuseAccess(ServerConnectionState *conn, char *errmesg);
 int AllowedUser(char *user);
-int AccessControl(EvalContext *ctx, const char *req_path, ServerConnectionState *conn, int encrypt);
 int MatchClasses(EvalContext *ctx, ServerConnectionState *conn);
 void Terminate(ConnectionInfo *connection);
 void DoExec(EvalContext *ctx, ServerConnectionState *conn, char *args);
@@ -50,10 +49,15 @@ int CfOpenDirectory(ServerConnectionState *conn, char *sendbuffer, char *oldDirn
 int CfSecOpenDirectory(ServerConnectionState *conn, char *sendbuffer, char *dirname);
 void GetServerLiteral(EvalContext *ctx, ServerConnectionState *conn, char *sendbuffer, char *recvbuffer, int encrypted);
 int GetServerQuery(ServerConnectionState *conn, char *recvbuffer, int encrypted);
-int cfscanf(char *in, int len1, int len2, char *out1, char *out2, char *out3);
 void CompareLocalHash(ServerConnectionState *conn, char *sendbuffer, char *recvbuffer);
-int LiteralAccessControl(EvalContext *ctx, char *in, ServerConnectionState *conn, int encrypt);
-Item *ContextAccessControl(EvalContext *ctx, char *in, ServerConnectionState *conn, int encrypt);
+Item *ListPersistentClasses(void);
 
+size_t ReplaceSpecialVariables(char *buf, size_t buf_size,
+                               const char *find1, const char *repl1,
+                               const char *find2, const char *repl2,
+                               const char *find3, const char *repl3);
+size_t PreprocessRequestPath(char *reqpath, size_t reqpath_size,
+                             const char *ipaddr, const char *hostname,
+                             const char *key);
 
 #endif  /* CFENGINE_SERVER_COMMON_H */

@@ -22,51 +22,26 @@
   included file COSL.txt.
 */
 
-#include <misc_lib.h>
-
-#include <platform.h>
-#include <alloc.h>
-
-#include <stdarg.h>
-
-unsigned long UnsignedModulus(long dividend, long divisor)
-{
-    return ((dividend % divisor) + divisor) % divisor;
-}
-
-void __ProgrammingError(const char *file, int lineno, const char *format, ...)
-{
-    va_list ap;
-    char *fmt = NULL;
-
-    va_start(ap, format);
-    xasprintf(&fmt, "%s:%d: Programming Error: %s\n", file, lineno, format);
-    vfprintf(stdout, fmt, ap);
-    va_end(ap);
-
-    free(fmt);
-#ifdef NDEBUG
-    exit(255);
-#else
-    abort();
+#ifdef HAVE_CONFIG_H
+# include <config.h>
 #endif
-}
 
-/**
-  @brief Log unexpected runtime error to stderr, do not exit program.
-*/
+#include <stddef.h>                                             /* size_t */
 
-void __UnexpectedError(const char *file, int lineno, const char *format, ...)
+
+void *memrchr(const void *s, int c, size_t n)
 {
-    va_list ap;
-    char *fmt = NULL;
+    unsigned char *s_end = (unsigned char *) s + n - 1;
+    while (n > 0)
+    {
+        if ((*s_end) == (unsigned char) c)
+        {
+            return s_end;
+        }
+        s_end--;
+        n--;
+    }
 
-    va_start(ap, format);
-    xasprintf(&fmt,
-              "%s:%d: Unexpected Error - this is a BUG, please report it: %s\n",
-              file, lineno, format);
-    vfprintf(stderr, fmt, ap);
-    va_end(ap);
-
-    free(fmt);
+    return NULL;
 }
+

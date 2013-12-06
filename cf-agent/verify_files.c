@@ -72,23 +72,15 @@ static int FileSanityChecks(EvalContext *ctx, char *path, Attributes a, const Pr
         return false;
     }
 
+    /* We can't do this verification during parsing as we did not yet read the
+     * body, so we can't distinguish between link and copy source. In
+     * post-verification all bodies are already expanded, so we don't have the
+     * information either */
     if ((a.havelink) && (!a.link.source))
     {
         Log(LOG_LEVEL_ERR, "Promise to establish a link at '%s' has no source", path);
         PromiseRef(LOG_LEVEL_ERR, pp);
         return false;
-    }
-
-/* We can't do this verification during parsing as we did not yet read the body,
- * so we can't distinguish between link and copy source. In post-verification
- * all bodies are already expanded, so we don't have the information either */
-
-    if ((a.havecopy) && (a.copy.source) && (!FullTextMatch(ctx, CF_ABSPATHRANGE, a.copy.source)))
-    {
-        /* FIXME: somehow redo a PromiseRef to be able to embed it into a string */
-        Log(LOG_LEVEL_ERR, "Non-absolute path in source attribute (have no invariant meaning) '%s'", a.copy.source);
-        PromiseRef(LOG_LEVEL_ERR, pp);
-        FatalError(ctx, "Bailing out");
     }
 
     if ((a.haveeditline) && (a.haveeditxml))

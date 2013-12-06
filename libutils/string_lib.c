@@ -402,6 +402,8 @@ bool StringMatch(const char *regex, const char *str, int *start, int *end)
         int erroffset;
         pattern = pcre_compile(regex, PCRE_MULTILINE | PCRE_DOTALL, &errorstr, &erroffset, NULL);
     }
+
+    /* TODO remove bogus assert. */
     assert(pattern);
 
     if (pattern == NULL)

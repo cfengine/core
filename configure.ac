@@ -557,6 +557,9 @@ AC_CHECK_DECLS(realpath)
 AC_CHECK_DECLS(strdup)
 AC_REPLACE_FUNCS(strdup)
 
+AC_CHECK_DECLS(memrchr)
+AC_REPLACE_FUNCS(memrchr)
+
 AC_CHECK_DECLS(round, [], [], [[#include <math.h>]])
 AC_REPLACE_FUNCS(round)
 

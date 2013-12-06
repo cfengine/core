@@ -186,9 +186,13 @@ typedef struct
 #ifdef __MINGW32__
 # define NULLFILE "nul"
 # define EXEC_SUFFIX ".exe"
+# define FILE_SEPARATOR '\\'
+# define FILE_SEPARATOR_STR "\\"
 #else
 # define NULLFILE "/dev/null"
 # define EXEC_SUFFIX ""
+# define FILE_SEPARATOR '/'
+# define FILE_SEPARATOR_STR "/"
 #endif /* !__MINGW32__ */
 
 #define CF_WORDSIZE 8           /* Number of bytes in a word */

@@ -43,6 +43,7 @@
 #include <time_classes.h>
 #include <connection_info.h>
 #include <file_lib.h>
+#include <poll.h>
 
 static const size_t QUEUESIZE = 50;
 int NO_FORK = false;
@@ -276,15 +277,9 @@ void ThisAgentInit(void)
 void StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
 {
     int sd = -1;
-    fd_set rset;
-    struct timeval timeout;
-    int ret_val;
     CfLock thislock;
     time_t last_collect = 0;
     extern int COLLECT_WINDOW;
-
-    struct sockaddr_storage cin;
-    socklen_t addrlen = sizeof(cin);
 
     MakeSignalPipe();
 
@@ -298,6 +293,10 @@ void StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
     ServerTLSInitialize();
 
     sd = SetServerListenState(ctx, QUEUESIZE, SERVER_LISTEN, &InitServer);
+
+    /* We must have a valid listening socket or the main loop will be a busy
+     * loop...*/
+    assert(sd != -1);
 
     TransactionContext tc = {
         .ifelapsed = 0,
@@ -322,10 +321,7 @@ void StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
         return;
     }
 
-    if (sd != -1)
-    {
-        Log(LOG_LEVEL_VERBOSE, "Listening for connections ...");
-    }
+    Log(LOG_LEVEL_VERBOSE, "Listening for connections ...");
 
 #ifdef __MINGW32__
 
@@ -380,66 +376,73 @@ void StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
             continue;
         }
 
-        /* check if listening is working */
-        if (sd != -1)
+        Log(LOG_LEVEL_DEBUG, "Waiting at incoming poll()...");
+
+        /* Poll two file descriptor (socket and signal_pipe) for 60s. We also
+         * query for POLLHUP for portability, see
+         * http://www.greenend.org.uk/rjk/tech/poll.html */
+        int signal_pipe = GetSignalPipe();
+        struct pollfd fds[2] = {
+            { sd, POLLIN | POLLHUP },
+            { signal_pipe, POLLIN | POLLHUP }
+        };
+
+        int ret = poll(fds, 2, 60000);
+
+        bool interrupted = false;
+        if (ret == -1)
         {
-            // Look for normal incoming service requests
-
-            int signal_pipe = GetSignalPipe();
-            FD_ZERO(&rset);
-            FD_SET(sd, &rset);
-            FD_SET(signal_pipe, &rset);
-
-            /* Set 1 second timeout for select, so that signals are handled in
-             * a timely manner */
-            timeout.tv_sec = 60;
-            timeout.tv_usec = 0;
-
-            Log(LOG_LEVEL_DEBUG, "Waiting at incoming select...");
-
-            int max_fd = (sd > signal_pipe) ? (sd + 1) : (signal_pipe + 1);
-            ret_val = select(max_fd, &rset, NULL, NULL, &timeout);
-
-            // Empty the signal pipe. We don't need the values.
-            unsigned char buf;
-            while (recv(signal_pipe, &buf, 1, 0) > 0) {}
-
-            if (ret_val == -1)      /* Error received from call to select */
+            if (errno != EINTR)
             {
-                if (errno == EINTR)
-                {
-                    continue;
-                }
-                else
-                {
-                    Log(LOG_LEVEL_ERR, "select failed. (select: %s)", GetErrorStr());
-                    exit(1);
-                }
+                Log(LOG_LEVEL_CRIT, "poll: %s", GetErrorStr());
+                exit(1);
             }
-            else if (!ret_val) /* No data waiting, we must have timed out! */
+            else
             {
+                interrupted = true;
+            }
+        }
+
+        /* Empty the signal pipe, we don't need the values. It only exists to
+         * wake us up in case a signal is received right in-between
+         * IsPendingTermination() and poll(). */
+        unsigned char buf;
+        while (recv(signal_pipe, &buf, 1, 0) > 0) {}
+
+        if (interrupted ||  /* Signal arrived, check IsPendingTermination() */
+            ret == 0)           /* No data waiting, we must have timed out! */
+        {
+            continue;
+        }
+
+        if (fds[0].revents & POLLIN ||
+            fds[0].revents & POLLHUP);
+        {
+            struct sockaddr_storage cin;
+            socklen_t addrlen = sizeof(cin);
+
+            int new_client = accept(sd, (struct sockaddr *)&cin, &addrlen);
+            if (new_client == -1)
+            {
+                Log(LOG_LEVEL_ERR, "accept: %s", GetErrorStr());
                 continue;
             }
 
-            if (FD_ISSET(sd, &rset))
+            /* Just convert IP address to string, no DNS lookup. */
+            char ipaddr[CF_MAX_IP_LEN] = "";
+            getnameinfo((struct sockaddr *) &cin, addrlen,
+                        ipaddr, sizeof(ipaddr),
+                        NULL, 0, NI_NUMERICHOST);
+
+            ConnectionInfo *info = ConnectionInfoNew();
+            if (info == NULL)
             {
-                int new_client = accept(sd, (struct sockaddr *)&cin, &addrlen);
-                if (new_client == -1)
-                {
-                    continue;
-                }
-                /* Just convert IP address to string, no DNS lookup. */
-                char ipaddr[CF_MAX_IP_LEN] = "";
-                getnameinfo((struct sockaddr *) &cin, addrlen,
-                            ipaddr, sizeof(ipaddr),
-                            NULL, 0, NI_NUMERICHOST);
-                ConnectionInfo *info = ConnectionInfoNew();
-                if (info)
-                {
-                    ConnectionInfoSetSocket(info, new_client);
-                    ServerEntryPoint(ctx, ipaddr, info);
-                }
+                Log(LOG_LEVEL_ERR, "ConnectionInfoNew: %s", GetErrorStr());
+                continue;
             }
+
+            ConnectionInfoSetSocket(info, new_client);
+            ServerEntryPoint(ctx, ipaddr, info);            /* start thread */
         }
     }
 
@@ -456,13 +459,13 @@ int InitServer(size_t queue_size)
 
     if ((sd = OpenReceiverChannel()) == -1)
     {
-        Log(LOG_LEVEL_ERR, "Unable to start server");
+        Log(LOG_LEVEL_CRIT, "Unable to start server");
         exit(1);
     }
 
     if (listen(sd, queue_size) == -1)
     {
-        Log(LOG_LEVEL_ERR, "listen failed. (listen: %s)", GetErrorStr());
+        Log(LOG_LEVEL_CRIT, "listen: %s", GetErrorStr());
         exit(1);
     }
 

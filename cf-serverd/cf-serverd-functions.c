@@ -671,7 +671,7 @@ static int GenerateAvahiConfig(const char *path)
     XmlStartTag(writer, "service", 0);
     XmlTag(writer, "type", "_cfenginehub._tcp",0);
     DetermineCfenginePort();
-    XmlStartTag(writer, "port");
+    XmlStartTag(writer, "port", 0);
     WriterWriteF(writer, "%d", CFENGINE_PORT);
     XmlEndTag(writer, "port");
     XmlEndTag(writer, "service");

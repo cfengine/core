@@ -1,0 +1,18 @@
+body common control
+{
+      bundlesequence => { set, run };
+}
+
+bundle agent set
+{
+  vars:
+      "array[key_scalar]" string => "9b70d955f7e126bc082e4a99eb2b3d08e4ebc29a";
+      "array[key_slist]" slist => { "18a307169ff8a691607846c8a19c361a37695773", "79815eefd0b619c6b875edf68adc7ef0e00c1ad3" };
+      "keys" slist => getindices(array);
+}
+
+bundle agent run
+{
+  reports:
+      "key = $(set.keys), value = $(set.array[$(set.keys)])";
+}

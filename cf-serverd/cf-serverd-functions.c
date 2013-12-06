@@ -624,19 +624,19 @@ void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *con
             strcpy(VDOMAIN, "undefined.domain");
 
             SV.admit = NULL;
-            SV.admittop = NULL;
+            SV.admittail = NULL;
 
             SV.varadmit = NULL;
-            SV.varadmittop = NULL;
+            SV.varadmittail = NULL;
 
             SV.deny = NULL;
-            SV.denytop = NULL;
+            SV.denytail = NULL;
 
             SV.vardeny = NULL;
-            SV.vardenytop = NULL;
+            SV.vardenytail = NULL;
 
             SV.roles = NULL;
-            SV.rolestop = NULL;
+            SV.rolestail = NULL;
 
             SV.trustkeylist = NULL;
             SV.attackerlist = NULL;

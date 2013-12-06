@@ -63,19 +63,19 @@ typedef struct
     char *allowciphers;
 
     Auth *admit;
-    Auth *admittop;
+    Auth *admittail;
 
     Auth *deny;
-    Auth *denytop;
+    Auth *denytail;
 
     Auth *varadmit;
-    Auth *varadmittop;
+    Auth *varadmittail;
 
     Auth *vardeny;
-    Auth *vardenytop;
+    Auth *vardenytail;
 
     Auth *roles;
-    Auth *rolestop;
+    Auth *rolestail;
 
     int logconns;
 } ServerAccess;

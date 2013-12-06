@@ -76,6 +76,11 @@ struct EvalContext_
 
     void *enterprise_state;
 
+    uid_t uid;
+    uid_t gid;
+    pid_t pid;
+    pid_t ppid;
+
     // Full path to directory that the binary was launched from.
     char *launch_directory;
 };
@@ -716,6 +721,11 @@ EvalContext *EvalContextNew(void)
 
     ctx->dependency_handles = StringSetNew();
 
+    ctx->uid = getuid();
+    ctx->gid = getgid();
+    ctx->pid = getpid();
+    ctx->ppid = getppid();
+
     ctx->promises_done = PromiseSetNew();
     ctx->function_cache = RBTreeNew(NULL, NULL, NULL,
                                     NULL, NULL, NULL);
@@ -1014,13 +1024,13 @@ void EvalContextStackPushPromiseFrame(EvalContext *ctx, const Promise *owner, bo
     }
 
     char v[CF_MAXVARSIZE];
-    snprintf(v, CF_MAXVARSIZE, "%d", (int) getuid());
+    snprintf(v, CF_MAXVARSIZE, "%d", (int) ctx->uid);
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser_uid", v, DATA_TYPE_INT, "source=agent");
-    snprintf(v, CF_MAXVARSIZE, "%d", (int) getgid());
+    snprintf(v, CF_MAXVARSIZE, "%d", (int) ctx->gid);
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser_gid", v, DATA_TYPE_INT, "source=agent");
-    snprintf(v, CF_MAXVARSIZE, "%d", (int) getpid());
+    snprintf(v, CF_MAXVARSIZE, "%d", (int) ctx->pid);
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser_pid", v, DATA_TYPE_INT, "source=agent");
-    snprintf(v, CF_MAXVARSIZE, "%d", (int) getppid());
+    snprintf(v, CF_MAXVARSIZE, "%d", (int) ctx->ppid);
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser_ppid", v, DATA_TYPE_INT, "source=agent");
 
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "bundle", PromiseGetBundle(owner)->name, DATA_TYPE_STRING, "source=promise");

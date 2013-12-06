@@ -29,6 +29,7 @@
 #include <misc_lib.h>
 #include <eval_context.h>
 #include <files_names.h>
+#include <mod_common.h>
 #include <mod_access.h>
 #include <item_lib.h>
 #include <conversion.h>
@@ -47,6 +48,7 @@
 #include <generic_agent.h> // HashControls
 
 
+<<<<<<< HEAD
 typedef enum
 {
     REMOTE_ACCESS_ADMIT,
@@ -97,11 +99,11 @@ static void KeepPromiseBundles(EvalContext *ctx, const Policy *policy);
 static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericAgentConfig *config);
 static Auth *GetAuthPath(const char *path, Auth *list);
 
-extern const ConstraintSyntax CFS_CONTROLBODY[];
-extern const ConstraintSyntax CF_REMROLE_BODIES[];
+
 extern int COLLECT_INTERVAL;
 extern int COLLECT_WINDOW;
 extern bool SERVER_LISTEN;
+
 
 /*******************************************************************/
 /* GLOBAL VARIABLES                                                */
@@ -686,7 +688,7 @@ void KeepFileAccessPromise(EvalContext *ctx, const Promise *pp)
         {
         case RVAL_TYPE_SCALAR:
 
-            if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_ENCRYPTED].lval) == 0)
+            if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_IFENCRYPTED].lval) == 0)
             {
                 ap->encrypt = true;
             }
@@ -800,7 +802,7 @@ void KeepLiteralAccessPromise(EvalContext *ctx, const Promise *pp, char *type)
         {
         case RVAL_TYPE_SCALAR:
 
-            if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_ENCRYPTED].lval) == 0)
+            if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_IFENCRYPTED].lval) == 0)
             {
                 ap->encrypt = true;
             }
@@ -878,7 +880,7 @@ void KeepQueryAccessPromise(EvalContext *ctx, const Promise *pp, char *type)
         {
         case RVAL_TYPE_SCALAR:
 
-            if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_ENCRYPTED].lval) == 0)
+            if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_IFENCRYPTED].lval) == 0)
             {
                 ap->encrypt = true;
             }

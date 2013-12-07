@@ -40,7 +40,9 @@ RvalType DataTypeToRvalType(DataType datatype);
 char *RvalScalarValue(Rval rval);
 FnCall *RvalFnCallValue(Rval rval);
 Rlist *RvalRlistValue(Rval rval);
+
 JsonElement *RvalContainerValue(Rval rval);
+const char *RvalContainerPrimitiveAsString(const Rval rval, const size_t index);
 
 Rval RvalNew(const void *item, RvalType type);
 Rval RvalCopy(Rval rval);

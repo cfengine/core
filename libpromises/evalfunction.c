@@ -3238,18 +3238,42 @@ static FnCallResult FnCallUnique(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 
 static FnCallResult FnCallNth(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
-    const char *name = RlistScalarValue(finalargs);
-    long offset = IntFromString(RlistScalarValue(finalargs->next)); // offset
+    const char* const varname = RlistScalarValue(finalargs);
+    long index = IntFromString(RlistScalarValue(finalargs->next));
 
-    Rval rval2;
+    VarRef *ref = VarRefParseFromBundle(varname, PromiseGetBundle(fp->caller));
+    DataType type = DATA_TYPE_NONE;
+    Rval rval;
+    EvalContextVariableGet(ctx, ref, &rval, &type);
 
-    if (!GetListReferenceArgument(ctx, fp, name, &rval2, NULL))
+    Rlist *rp = NULL;
+
+    if (type == DATA_TYPE_CONTAINER)
     {
-        return (FnCallResult) { FNCALL_FAILURE };
+
+        const char* const jstring = RvalContainerPrimitiveAsString(rval, index);
+
+        if (jstring != NULL)
+        {
+          Log(LOG_LEVEL_DEBUG, "%s: from data container %s, got JSON data '%s'", fp->name, varname, jstring);
+
+          RlistAppendScalar(&rp, jstring);
+        }
+    }
+    else
+    {
+        Rval rval2;
+
+        if (!GetListReferenceArgument(ctx, fp, varname, &rval2, NULL))
+        {
+            VarRefDestroy(ref);
+            return (FnCallResult) { FNCALL_FAILURE };
+        }
+
+        for (rp = (Rlist *) rval2.item; rp != NULL && index--; rp = rp->next);
     }
 
-    const Rlist *rp;
-    for (rp = (const Rlist *) rval2.item; rp != NULL && offset--; rp = rp->next);
+    VarRefDestroy(ref);
 
     if (NULL == rp) return (FnCallResult) { FNCALL_FAILURE };
 
@@ -6818,7 +6842,7 @@ const FnCallType CF_FNCALL_TYPES[] =
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("now", DATA_TYPE_INT, NOW_ARGS, &FnCallNow, "Convert the current time into system representation",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_SYSTEM, SYNTAX_STATUS_NORMAL),
-    FnCallTypeNew("nth", DATA_TYPE_STRING, NTH_ARGS, &FnCallNth, "Get the element at arg2 in list arg1",
+    FnCallTypeNew("nth", DATA_TYPE_STRING, NTH_ARGS, &FnCallNth, "Get the element at arg2 in list or data container arg1",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("on", DATA_TYPE_INT, DATE_ARGS, &FnCallOn, "Convert an exact date/time to an integer system representation",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),

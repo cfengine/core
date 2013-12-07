@@ -35,6 +35,7 @@
 #include <misc_lib.h>
 #include <assoc.h>
 #include <env_context.h>
+#include <json.h>
 
 
 static Rlist *RlistPrependRval(Rlist **start, Rval rval);
@@ -142,6 +143,8 @@ Rlist *RvalRlistValue(Rval rval)
     return rval.item;
 }
 
+/*******************************************************************/
+
 JsonElement *RvalContainerValue(Rval rval)
 {
     if (rval.type != RVAL_TYPE_CONTAINER)
@@ -150,6 +153,29 @@ JsonElement *RvalContainerValue(Rval rval)
     }
 
     return rval.item;
+}
+
+/*******************************************************************/
+
+const char *RvalContainerPrimitiveAsString(const Rval rval, const size_t index)
+{
+    const char *jstring = NULL;
+
+    if (JsonGetElementType(RvalContainerValue(rval)) == JSON_ELEMENT_TYPE_CONTAINER)
+    {
+        if (index < JsonLength(RvalContainerValue(rval)))
+        {
+
+            const JsonElement *jelement = JsonAt(RvalContainerValue(rval), index);
+
+            if (JsonGetElementType(jelement) == JSON_ELEMENT_TYPE_PRIMITIVE)
+            {
+                jstring = JsonPrimitiveGetAsString(jelement);
+            }
+        }
+    }
+
+    return jstring;
 }
 
 /*******************************************************************/

@@ -60,6 +60,10 @@ ENTERPRISE_VOID_FUNC_1ARG_DEFINE_STUB(void, Nova_NoteVarUsageDB, ARG_UNUSED Eval
 {
 }
 
+ENTERPRISE_VOID_FUNC_1ARG_DEFINE_STUB(void, Nova_NoteClassUsage, ARG_UNUSED EvalContext *, ctx)
+{
+}
+
 ENTERPRISE_VOID_FUNC_1ARG_DEFINE_STUB(void, Nova_TrackExecution, ARG_UNUSED const char *, input_file)
 {
 }

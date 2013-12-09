@@ -1,0 +1,154 @@
+#######################################################
+#
+# Test nth() with data container input
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+  vars:
+      "results" slist => {
+          'jsonstring = {',
+          '  "boolean": true,',
+          '  "string": "Figaro. Figaro. Figaro, Figaro, Figaro... Figaro!",',
+          '  "integer": 20130111,',
+          '  "list": [',
+          '    "chris",',
+          '    "dituri",',
+          '    "was",',
+          '    "here"',
+          '  ],',
+          '  "object": {',
+          '    "a": true,',
+          '    "b": [',
+          '      1,',
+          '      2,',
+          '      3',
+          '    ],',
+          '    "c": "cat",',
+          '    "d": 108',
+          '  },',
+          '  "integer2": 987654321,',
+          '  "string2": "Othello? Where art thou now?",',
+          '  "boolean2": false,',
+          '  "null": null',
+          '}',
+          'keys:json = boolean',
+          'keys:json = string',
+          'keys:json = integer',
+          'keys:json = list',
+          'keys:json = object',
+          'keys:json = integer2',
+          'keys:json = string2',
+          'keys:json = boolean2',
+          'keys:json = null',
+          'primitive:json[0] = true',
+          'primitive:json[1] = Figaro. Figaro. Figaro, Figaro, Figaro... Figaro!',
+          'primitive:json[2] = 20130111',
+          'primitive:json[5] = 987654321',
+          'primitive:json[6] = Othello? Where art thou now?',
+          'primitive:json[7] = false',
+          'primitive:json[8] = null',
+          'container:json[list][0] = chris',
+          'container:json[object][0] = true',
+          'container:json[list][1] = dituri',
+          'container:json[list][2] = was',
+          'container:json[object][2] = cat',
+          'container:json[list][3] = here',
+          'container:json[object][3] = 108'
+     };
+
+  files:
+      "$(G.testfile).expected"
+      create => "true",
+      edit_defaults => init_empty,
+      edit_line => init_insert;
+}
+
+body edit_defaults init_empty
+{
+      empty_file_before_editing => "true";
+      edit_backup => "false";
+}
+
+bundle edit_line init_insert
+{
+  insert_lines:
+      "$(init.results)";
+}
+
+#######################################################
+
+bundle common test_common
+{
+  vars:
+
+    "datastr" string => storejson("data");
+    "data"    data   => parsejson('
+{ 
+  "boolean": true,
+  "string": "Figaro. Figaro. Figaro, Figaro, Figaro... Figaro!",
+  "integer": 20130111,
+  "list": [ "chris", "dituri", "was", "here" ],
+  "object": { "a": true, "b": [ 1, 2, 3 ], "c": "cat", "d": 108 },
+  "integer2": 987654321,
+  "string2": "Othello? Where art thou now?",
+  "boolean2": false,
+  "null": null,
+}
+');
+    "nth"  ilist  => { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 1000 };
+    "keys" slist  => getindices("data");
+
+    "test[$(nth)]"          string => nth("data", $(nth));
+    "test[$(keys)][$(nth)]" string => nth("data[$(keys)]", $(nth));
+
+  classes:
+
+    "haselement_$(nth)" expression => isvariable("test[$(nth)]");
+    "has$(keys)_$(nth)" expression => isvariable("test[$(keys)][$(nth)]");
+}
+
+
+bundle agent test
+{
+  files:
+
+      "$(G.testfile).actual"
+          create => "true",
+          edit_line => test_insert;
+}
+
+bundle edit_line test_insert
+{
+  insert_lines:
+
+      "jsonstring = $(test_common.datastr)";
+      "keys:json = $(test_common.keys)";
+
+      "primitive:json[$(test_common.nth)] = $(test_common.test[$(test_common.nth)])"
+          ifvarclass => "haselement_$(test_common.nth)";
+
+      "container:json[$(test_common.keys)][$(test_common.nth)] = $(test_common.test[$(test_common.keys)][$(test_common.nth)])"
+          ifvarclass => "has$(test_common.keys)_$(test_common.nth)";
+}
+
+#######################################################
+
+bundle agent check
+{
+  methods:
+      "any" usebundle => default_check_diff("$(G.testfile).actual",
+                                            "$(G.testfile).expected",
+                                            "$(this.promise_filename)");
+}
+

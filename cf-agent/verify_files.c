@@ -56,13 +56,13 @@
 #include <known_dirs.h>
 
 static void LoadSetuid(Attributes a);
-static PromiseResult SaveSetuid(EvalContext *ctx, Attributes a, Promise *pp);
-static PromiseResult FindFilePromiserObjects(EvalContext *ctx, Promise *pp);
-static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, Promise *pp);
+static PromiseResult SaveSetuid(EvalContext *ctx, Attributes a, const Promise *pp);
+static PromiseResult FindFilePromiserObjects(EvalContext *ctx, const Promise *pp);
+static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promise *pp);
 
 /*****************************************************************************/
 
-static int FileSanityChecks(EvalContext *ctx, char *path, Attributes a, Promise *pp)
+static int FileSanityChecks(EvalContext *ctx, char *path, Attributes a, const Promise *pp)
 {
     if ((a.havelink) && (a.havecopy))
     {
@@ -184,7 +184,7 @@ static int FileSanityChecks(EvalContext *ctx, char *path, Attributes a, Promise 
     return true;
 }
 
-static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, Promise *pp)
+static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promise *pp)
 {
     struct stat osb, oslb, dsb;
     Attributes a = { {0} };
@@ -461,7 +461,7 @@ static JsonElement *DefaultTemplateData(const EvalContext *ctx)
     return hash;
 }
 
-PromiseResult ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes a, Promise *pp)
+PromiseResult ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes a, const Promise *pp)
 {
     void *vp;
     FnCall *fp;
@@ -668,7 +668,7 @@ exit:
 
 /*****************************************************************************/
 
-PromiseResult FindAndVerifyFilesPromises(EvalContext *ctx, Promise *pp)
+PromiseResult FindAndVerifyFilesPromises(EvalContext *ctx, const Promise *pp)
 {
     PromiseBanner(pp);
     return FindFilePromiserObjects(ctx, pp);
@@ -676,7 +676,7 @@ PromiseResult FindAndVerifyFilesPromises(EvalContext *ctx, Promise *pp)
 
 /*****************************************************************************/
 
-static PromiseResult FindFilePromiserObjects(EvalContext *ctx, Promise *pp)
+static PromiseResult FindFilePromiserObjects(EvalContext *ctx, const Promise *pp)
 {
     char *val = ConstraintGetRvalValue(ctx, "pathtype", pp, RVAL_TYPE_SCALAR);
     int literal = (PromiseGetConstraintAsBoolean(ctx, "copy_from", pp)) || ((val != NULL) && (strcmp(val, "literal") == 0));
@@ -717,7 +717,7 @@ static void LoadSetuid(Attributes a)
 
 /*********************************************************************/
 
-static PromiseResult SaveSetuid(EvalContext *ctx, Attributes a, Promise *pp)
+static PromiseResult SaveSetuid(EvalContext *ctx, Attributes a, const Promise *pp)
 {
     Attributes b = a;
 

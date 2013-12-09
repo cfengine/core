@@ -40,11 +40,11 @@
 #include <ornaments.h>
 #include <string_lib.h>
 
-static void GetReturnValue(EvalContext *ctx, const Bundle *callee, Promise *caller);
+static void GetReturnValue(EvalContext *ctx, const Bundle *callee, const Promise *caller);
 
 /*****************************************************************************/
 
-PromiseResult VerifyMethodsPromise(EvalContext *ctx, Promise *pp)
+PromiseResult VerifyMethodsPromise(EvalContext *ctx, const Promise *pp)
 {
     Attributes a = { {0} };
 
@@ -58,7 +58,7 @@ PromiseResult VerifyMethodsPromise(EvalContext *ctx, Promise *pp)
 
 /*****************************************************************************/
 
-PromiseResult VerifyMethod(EvalContext *ctx, char *attrname, Attributes a, Promise *pp)
+PromiseResult VerifyMethod(EvalContext *ctx, char *attrname, Attributes a, const Promise *pp)
 {
     Bundle *bp;
     void *vp;
@@ -172,7 +172,7 @@ PromiseResult VerifyMethod(EvalContext *ctx, char *attrname, Attributes a, Promi
 
 /***********************************************************************/
 
-static void GetReturnValue(EvalContext *ctx, const Bundle *callee, Promise *caller)
+static void GetReturnValue(EvalContext *ctx, const Bundle *callee, const Promise *caller)
 {
     char *result = ConstraintGetRvalValue(ctx, "useresult", caller, RVAL_TYPE_SCALAR);
 

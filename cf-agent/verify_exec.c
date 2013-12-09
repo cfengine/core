@@ -53,14 +53,14 @@ typedef enum
     ACTION_RESULT_FAILED
 } ActionResult;
 
-static bool SyntaxCheckExec(Attributes a, Promise *pp);
-static bool PromiseKeptExec(Attributes a, Promise *pp);
-static char *GetLockNameExec(Attributes a, Promise *pp);
-static ActionResult RepairExec(EvalContext *ctx, Attributes a, Promise *pp, PromiseResult *result);
+static bool SyntaxCheckExec(Attributes a, const Promise *pp);
+static bool PromiseKeptExec(Attributes a, const Promise *pp);
+static char *GetLockNameExec(Attributes a, const Promise *pp);
+static ActionResult RepairExec(EvalContext *ctx, Attributes a, const Promise *pp, PromiseResult *result);
 
 static void PreviewProtocolLine(char *line, char *comm);
 
-PromiseResult VerifyExecPromise(EvalContext *ctx, Promise *pp)
+PromiseResult VerifyExecPromise(EvalContext *ctx, const Promise *pp)
 {
     Attributes a = { {0} };
 
@@ -120,7 +120,7 @@ PromiseResult VerifyExecPromise(EvalContext *ctx, Promise *pp)
 /* Level                                                                     */
 /*****************************************************************************/
 
-static bool SyntaxCheckExec(Attributes a, Promise *pp)
+static bool SyntaxCheckExec(Attributes a, const Promise *pp)
 {
     if ((a.contain.nooutput) && (a.contain.preview))
     {
@@ -160,12 +160,12 @@ static bool SyntaxCheckExec(Attributes a, Promise *pp)
     return true;
 }
 
-static bool PromiseKeptExec(ARG_UNUSED Attributes a, ARG_UNUSED Promise *pp)
+static bool PromiseKeptExec(ARG_UNUSED Attributes a, ARG_UNUSED const Promise *pp)
 {
     return false;
 }
 
-static char *GetLockNameExec(Attributes a, Promise *pp)
+static char *GetLockNameExec(Attributes a, const Promise *pp)
 {
     Writer *w = StringWriter();
     if (a.args)
@@ -182,7 +182,7 @@ static char *GetLockNameExec(Attributes a, Promise *pp)
 
 /*****************************************************************************/
 
-static ActionResult RepairExec(EvalContext *ctx, Attributes a, Promise *pp, PromiseResult *result)
+static ActionResult RepairExec(EvalContext *ctx, Attributes a, const Promise *pp, PromiseResult *result)
 {
     char line[CF_BUFSIZE], eventname[CF_BUFSIZE];
     char cmdline[CF_BUFSIZE];

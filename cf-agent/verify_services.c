@@ -38,15 +38,15 @@
 #include <ornaments.h>
 #include <env_context.h>
 
-static int ServicesSanityChecks(Attributes a, Promise *pp);
+static int ServicesSanityChecks(Attributes a, const Promise *pp);
 static void SetServiceDefaults(Attributes *a);
-static PromiseResult DoVerifyServices(EvalContext *ctx, Attributes a, Promise *pp);
-static PromiseResult VerifyServices(EvalContext *ctx, Attributes a, Promise *pp);
+static PromiseResult DoVerifyServices(EvalContext *ctx, Attributes a, const Promise *pp);
+static PromiseResult VerifyServices(EvalContext *ctx, Attributes a, const Promise *pp);
 
 
 /*****************************************************************************/
 
-PromiseResult VerifyServicesPromise(EvalContext *ctx, Promise *pp)
+PromiseResult VerifyServicesPromise(EvalContext *ctx, const Promise *pp)
 {
     Attributes a = { {0} };
 
@@ -66,7 +66,7 @@ PromiseResult VerifyServicesPromise(EvalContext *ctx, Promise *pp)
 
 /*****************************************************************************/
 
-static int ServicesSanityChecks(Attributes a, Promise *pp)
+static int ServicesSanityChecks(Attributes a, const Promise *pp)
 {
     Rlist *dep;
 
@@ -159,7 +159,7 @@ static void SetServiceDefaults(Attributes *a)
 /* Level                                                                     */
 /*****************************************************************************/
 
-static PromiseResult VerifyServices(EvalContext *ctx, Attributes a, Promise *pp)
+static PromiseResult VerifyServices(EvalContext *ctx, Attributes a, const Promise *pp)
 {
     CfLock thislock;
 
@@ -192,7 +192,7 @@ static PromiseResult VerifyServices(EvalContext *ctx, Attributes a, Promise *pp)
 /* Level                                                                     */
 /*****************************************************************************/
 
-static PromiseResult DoVerifyServices(EvalContext *ctx, Attributes a, Promise *pp)
+static PromiseResult DoVerifyServices(EvalContext *ctx, Attributes a, const Promise *pp)
 {
     FnCall *default_bundle = NULL;
     Rlist *args = NULL;

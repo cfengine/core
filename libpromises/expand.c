@@ -109,7 +109,7 @@ since these cannot be mapped into "this" without some magic.
    
 **********************************************************************/
 
-void ExpandPromise(EvalContext *ctx, Promise *pp, PromiseActuator *ActOnPromise, void *param)
+void ExpandPromise(EvalContext *ctx, const Promise *pp, PromiseActuator *ActOnPromise, void *param)
 {
     Rlist *lists = NULL;
     Rlist *scalars = NULL;
@@ -1357,7 +1357,7 @@ static void SetAnyMissingDefaults(EvalContext *ctx, Promise *pp)
     }
 }
 
-PromiseResult CommonEvalPromise(EvalContext *ctx, Promise *pp, ARG_UNUSED void *param)
+PromiseResult CommonEvalPromise(EvalContext *ctx, const Promise *pp, ARG_UNUSED void *param)
 {
     assert(param == NULL);
 

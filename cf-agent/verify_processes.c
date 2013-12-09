@@ -42,12 +42,12 @@
 #include <scope.h>
 #include <ornaments.h>
 
-static PromiseResult VerifyProcesses(EvalContext *ctx, Attributes a, Promise *pp);
-static bool ProcessSanityChecks(Attributes a, Promise *pp);
-static PromiseResult VerifyProcessOp(EvalContext *ctx, Item *procdata, Attributes a, Promise *pp);
+static PromiseResult VerifyProcesses(EvalContext *ctx, Attributes a, const Promise *pp);
+static bool ProcessSanityChecks(Attributes a, const Promise *pp);
+static PromiseResult VerifyProcessOp(EvalContext *ctx, Item *procdata, Attributes a, const Promise *pp);
 static int FindPidMatches(EvalContext *ctx, Item *procdata, Item **killlist, Attributes a, const char *promiser);
 
-PromiseResult VerifyProcessesPromise(EvalContext *ctx, Promise *pp)
+PromiseResult VerifyProcessesPromise(EvalContext *ctx, const Promise *pp)
 {
     Attributes a = { {0} };
 
@@ -61,7 +61,7 @@ PromiseResult VerifyProcessesPromise(EvalContext *ctx, Promise *pp)
 /* Level                                                                     */
 /*****************************************************************************/
 
-static bool ProcessSanityChecks(Attributes a, Promise *pp)
+static bool ProcessSanityChecks(Attributes a, const Promise *pp)
 {
     int promised_zero, ret = true;
 
@@ -105,7 +105,7 @@ static bool ProcessSanityChecks(Attributes a, Promise *pp)
 
 /*****************************************************************************/
 
-static PromiseResult VerifyProcesses(EvalContext *ctx, Attributes a, Promise *pp)
+static PromiseResult VerifyProcesses(EvalContext *ctx, Attributes a, const Promise *pp)
 {
     CfLock thislock;
     char lockname[CF_BUFSIZE];
@@ -135,7 +135,7 @@ static PromiseResult VerifyProcesses(EvalContext *ctx, Attributes a, Promise *pp
     return result;
 }
 
-static PromiseResult VerifyProcessOp(EvalContext *ctx, Item *procdata, Attributes a, Promise *pp)
+static PromiseResult VerifyProcessOp(EvalContext *ctx, Item *procdata, Attributes a, const Promise *pp)
 {
     bool do_signals = true;
     int out_of_range;
@@ -263,7 +263,7 @@ static PromiseResult VerifyProcessOp(EvalContext *ctx, Item *procdata, Attribute
 }
 
 #ifndef __MINGW32__
-int DoAllSignals(EvalContext *ctx, Item *siglist, Attributes a, Promise *pp)
+int DoAllSignals(EvalContext *ctx, Item *siglist, Attributes a, const Promise *pp)
 {
     Item *ip;
     Rlist *rp;

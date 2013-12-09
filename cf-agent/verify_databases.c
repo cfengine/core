@@ -39,12 +39,12 @@
 #include <ornaments.h>
 #include <misc_lib.h>
 
-static int CheckDatabaseSanity(Attributes a, Promise *pp);
-static PromiseResult VerifySQLPromise(EvalContext *ctx, Attributes a, Promise *pp);
+static int CheckDatabaseSanity(Attributes a, const Promise *pp);
+static PromiseResult VerifySQLPromise(EvalContext *ctx, Attributes a, const Promise *pp);
 static int VerifyDatabasePromise(CfdbConn *cfdb, char *database, Attributes a);
 
 static int ValidateSQLTableName(char *table_path, char *db, char *table);
-static int VerifyTablePromise(EvalContext *ctx, CfdbConn *cfdb, char *table_path, Rlist *columns, Attributes a, Promise *pp);
+static int VerifyTablePromise(EvalContext *ctx, CfdbConn *cfdb, char *table_path, Rlist *columns, Attributes a, const Promise *pp);
 static int ValidateSQLTableName(char *table_path, char *db, char *table);
 static void QueryTableColumns(char *s, char *db, char *table);
 static int NewSQLColumns(char *table, Rlist *columns, char ***name_table, char ***type_table, int **size_table,
@@ -52,16 +52,16 @@ static int NewSQLColumns(char *table, Rlist *columns, char ***name_table, char *
 static void DeleteSQLColumns(char **name_table, char **type_table, int *size_table, int *done, int len);
 static void CreateDBQuery(DatabaseType type, char *query);
 static int CreateTableColumns(CfdbConn *cfdb, char *table, Rlist *columns);
-static int CheckSQLDataType(char *type, char *ref_type, Promise *pp);
+static int CheckSQLDataType(char *type, char *ref_type, const Promise *pp);
 static int TableExists(CfdbConn *cfdb, char *name);
 static Rlist *GetSQLTables(CfdbConn *cfdb);
 static void ListTables(int type, char *query);
-static int ValidateRegistryPromiser(char *s, Promise *pp);
-static int CheckRegistrySanity(Attributes a, Promise *pp);
+static int ValidateRegistryPromiser(char *s, const Promise *pp);
+static int CheckRegistrySanity(Attributes a, const Promise *pp);
 
 /*****************************************************************************/
 
-PromiseResult VerifyDatabasePromises(EvalContext *ctx, Promise *pp)
+PromiseResult VerifyDatabasePromises(EvalContext *ctx, const Promise *pp)
 {
     Attributes a = { {0} };
 
@@ -100,7 +100,7 @@ PromiseResult VerifyDatabasePromises(EvalContext *ctx, Promise *pp)
 /* Level                                                                     */
 /*****************************************************************************/
 
-static PromiseResult VerifySQLPromise(EvalContext *ctx, Attributes a, Promise *pp)
+static PromiseResult VerifySQLPromise(EvalContext *ctx, Attributes a, const Promise *pp)
 {
     char database[CF_MAXVARSIZE], table[CF_MAXVARSIZE], query[CF_BUFSIZE];
     char *sp;
@@ -339,7 +339,7 @@ static int VerifyDatabasePromise(CfdbConn *cfdb, char *database, Attributes a)
 
 /*****************************************************************************/
 
-static int CheckDatabaseSanity(Attributes a, Promise *pp)
+static int CheckDatabaseSanity(Attributes a, const Promise *pp)
 {
     Rlist *rp;
     int retval = true, commas = 0;
@@ -415,7 +415,7 @@ static int CheckDatabaseSanity(Attributes a, Promise *pp)
     return retval;
 }
 
-static int CheckRegistrySanity(Attributes a, Promise *pp)
+static int CheckRegistrySanity(Attributes a, const Promise *pp)
 {
     bool retval = true;
 
@@ -471,7 +471,7 @@ static int CheckRegistrySanity(Attributes a, Promise *pp)
     return retval;
 }
 
-static int ValidateRegistryPromiser(char *key, Promise *pp)
+static int ValidateRegistryPromiser(char *key, const Promise *pp)
 {
     static char *valid[] = { "HKEY_CLASSES_ROOT", "HKEY_CURRENT_CONFIG",
         "HKEY_CURRENT_USER", "HKEY_LOCAL_MACHINE", "HKEY_USERS", NULL
@@ -503,7 +503,7 @@ static int ValidateRegistryPromiser(char *key, Promise *pp)
 /* Linker troubles require this code to be here in the main body             */
 /*****************************************************************************/
 
-static int VerifyTablePromise(EvalContext *ctx, CfdbConn *cfdb, char *table_path, Rlist *columns, Attributes a, Promise *pp)
+static int VerifyTablePromise(EvalContext *ctx, CfdbConn *cfdb, char *table_path, Rlist *columns, Attributes a, const Promise *pp)
 {
     char name[CF_MAXVARSIZE], type[CF_MAXVARSIZE], query[CF_MAXVARSIZE], table[CF_MAXVARSIZE], db[CF_MAXVARSIZE];
     int i, count, size, no_of_cols, *size_table, *done, identified, retval = true;
@@ -977,7 +977,7 @@ static void DeleteSQLColumns(char **name_table, char **type_table, int *size_tab
 
 /*****************************************************************************/
 
-static int CheckSQLDataType(char *type, char *ref_type, Promise *pp)
+static int CheckSQLDataType(char *type, char *ref_type, const Promise *pp)
 {
     static char *aliases[3][2] =
         {

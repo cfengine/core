@@ -27,7 +27,7 @@
 
 #include <cf3.defs.h>
 
-PromiseResult VerifyMethodsPromise(EvalContext *ctx, Promise *pp);
-PromiseResult VerifyMethod(EvalContext *ctx, char *attrname, Attributes a, Promise *pp);
+PromiseResult VerifyMethodsPromise(EvalContext *ctx, const Promise *pp);
+PromiseResult VerifyMethod(EvalContext *ctx, char *attrname, Attributes a, const Promise *pp);
 
 #endif

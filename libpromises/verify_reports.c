@@ -41,10 +41,10 @@
 #include <ornaments.h>
 #include <env_context.h>
 
-static void PrintFile(EvalContext *ctx, Attributes a, Promise *pp);
+static void PrintFile(EvalContext *ctx, Attributes a, const Promise *pp);
 static void ReportToFile(const char *logfile, const char *message);
 
-PromiseResult VerifyReportPromise(EvalContext *ctx, Promise *pp)
+PromiseResult VerifyReportPromise(EvalContext *ctx, const Promise *pp)
 {
     Attributes a = { {0} };
     CfLock thislock;
@@ -135,7 +135,7 @@ static void ReportToFile(const char *logfile, const char *message)
     }
 }
 
-static void PrintFile(EvalContext *ctx, Attributes a, Promise *pp)
+static void PrintFile(EvalContext *ctx, Attributes a, const Promise *pp)
 {
     FILE *fp;
     char buffer[CF_BUFSIZE];

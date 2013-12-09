@@ -119,7 +119,7 @@ void DeleteEnvironmentsContext(void)
 
 /*****************************************************************************/
 
-PromiseResult VerifyEnvironmentsPromise(EvalContext *ctx, Promise *pp)
+PromiseResult VerifyEnvironmentsPromise(EvalContext *ctx, const Promise *pp)
 {
     Attributes a = { {0} };
     CfLock thislock;
@@ -1069,7 +1069,7 @@ void DeleteEnvironmentsContext(void)
 {
 }
 
-PromiseResult VerifyEnvironmentsPromise(ARG_UNUSED EvalContext *ctx, ARG_UNUSED Promise *pp)
+PromiseResult VerifyEnvironmentsPromise(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Promise *pp)
 {
     return PROMISE_RESULT_NOOP;
 }

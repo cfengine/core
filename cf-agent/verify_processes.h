@@ -27,10 +27,10 @@
 
 #include <cf3.defs.h>
 
-PromiseResult VerifyProcessesPromise(EvalContext *ctx, Promise *pp);
+PromiseResult VerifyProcessesPromise(EvalContext *ctx, const Promise *pp);
 
 /* To be implemented in Nova for Win32 */
 
-int DoAllSignals(EvalContext *ctx, Item *siglist, Attributes a, Promise *pp);
+int DoAllSignals(EvalContext *ctx, Item *siglist, Attributes a, const Promise *pp);
 
 #endif

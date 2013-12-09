@@ -36,11 +36,11 @@
 #include <string_lib.h>
 
 
-static int EvalClassExpression(EvalContext *ctx, Constraint *cp, Promise *pp);
+static int EvalClassExpression(EvalContext *ctx, Constraint *cp, const Promise *pp);
 static bool ValidClassName(const char *str);
 
 
-PromiseResult VerifyClassPromise(EvalContext *ctx, Promise *pp, ARG_UNUSED void *param)
+PromiseResult VerifyClassPromise(EvalContext *ctx, const Promise *pp, ARG_UNUSED void *param)
 {
     assert(param == NULL);
 
@@ -137,7 +137,7 @@ PromiseResult VerifyClassPromise(EvalContext *ctx, Promise *pp, ARG_UNUSED void 
     return PROMISE_RESULT_NOOP;
 }
 
-static int EvalClassExpression(EvalContext *ctx, Constraint *cp, Promise *pp)
+static int EvalClassExpression(EvalContext *ctx, Constraint *cp, const Promise *pp)
 {
     int result_and = true;
     int result_or = false;

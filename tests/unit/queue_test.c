@@ -50,7 +50,6 @@ static void queue_basic_test(void)
     assert_int_equal(0, queue->node_count);
     assert_true(NULL == queue->head);
     assert_true(NULL == queue->tail);
-    assert_true(NULL == queue->queue);
     assert_true(NULL != queue->ref_count);
     assert_true(NULL != queue->copy);
     assert_true(copy == queue->copy);
@@ -63,7 +62,6 @@ static void queue_basic_test(void)
     assert_int_equal(0, queue->node_count);
     assert_true(NULL == queue->head);
     assert_true(NULL == queue->tail);
-    assert_true(NULL == queue->queue);
     assert_true(NULL != queue->ref_count);
     assert_true(NULL != queue->copy);
     assert_true(copy == queue->copy);
@@ -94,7 +92,6 @@ static void queue_enqueue_dequeue_test(void)
     assert_int_equal(1, queue->node_count);
     assert_true(queue->head->data == first);
     assert_true(queue->tail->data == first);
-    assert_true(queue->queue->data == first);
     head = QueueHead(queue);
     assert_true(NULL != head);
     assert_string_equal(head, first);
@@ -103,7 +100,6 @@ static void queue_enqueue_dequeue_test(void)
     assert_int_equal(2, queue->node_count);
     assert_true(queue->head->data == first);
     assert_true(queue->tail->data == second);
-    assert_true(queue->queue->data == first);
     head = QueueHead(queue);
     assert_true(NULL != head);
     assert_string_equal(head, first);
@@ -114,7 +110,6 @@ static void queue_enqueue_dequeue_test(void)
     assert_true(queue->head->next->data == second);
     assert_true(queue->tail->previous->data == second);
     assert_true(queue->tail->data == third);
-    assert_true(queue->queue->data == first);
     head = QueueHead(queue);
     assert_true(NULL != head);
     assert_string_equal(head, first);
@@ -126,7 +121,6 @@ static void queue_enqueue_dequeue_test(void)
     assert_int_equal(2, queue->node_count);
     assert_true(queue->head->data == second);
     assert_true(queue->tail->data == third);
-    assert_true(queue->queue->data == second);
     head = QueueHead(queue);
     assert_true(NULL != head);
     assert_string_equal(head, second);
@@ -137,7 +131,6 @@ static void queue_enqueue_dequeue_test(void)
     assert_int_equal(1, queue->node_count);
     assert_true(queue->head->data == third);
     assert_true(queue->tail->data == third);
-    assert_true(queue->queue->data == third);
     head = QueueHead(queue);
     assert_true(NULL != head);
     assert_string_equal(head, third);
@@ -148,7 +141,6 @@ static void queue_enqueue_dequeue_test(void)
     assert_int_equal(0, queue->node_count);
     assert_true(queue->head == NULL);
     assert_true(queue->tail == NULL);
-    assert_true(queue->queue == NULL);
     head = QueueHead(queue);
     assert_true(NULL == head);
 
@@ -241,7 +233,6 @@ static void queue_copy_test(void)
     assert_true(NULL == queue->head);
     assert_true(queue->head == queue_copy->head);
     assert_true(queue->tail == queue_copy->tail);
-    assert_true(queue->queue == queue_copy->queue);
     QueueDestroy(&queue);
     assert_true(NULL == queue);
     QueueDestroy(&queue_copy);

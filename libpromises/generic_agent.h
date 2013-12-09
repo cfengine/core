@@ -25,6 +25,8 @@
 #ifndef CFENGINE_GENERIC_AGENT_H
 #define CFENGINE_GENERIC_AGENT_H
 
+#include <platform.h>
+
 #include <cf3.defs.h>
 
 #include <policy.h>

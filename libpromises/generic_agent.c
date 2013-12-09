@@ -516,9 +516,17 @@ static void ShowContext(EvalContext *ctx)
     SeqDestroy(soft_contexts);
 }
 
-static Policy *LoadPolicyInputFiles(EvalContext *ctx, GenericAgentConfig *config, const Rlist *inputs, StringSet *parsed_files, StringSet *failed_files)
+static Policy *LoadPolicyInputFiles(EvalContext *ctx, GenericAgentConfig *config, const Rlist *inputs, StringSet *parsed_files, StringSet *failed_files, const char* source_file)
 {
     Policy *policy = PolicyNew();
+    char path[CF_BUFSIZE];
+    snprintf(path, CF_BUFSIZE, "%s", source_file);
+
+    // We now make path just the directory name!
+    DeleteSlash(path);
+    ChopLastNode(path);
+
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "local_dirname", path, DATA_TYPE_STRING, "source=agent");
 
     for (const Rlist *rp = inputs; rp; rp = rp->next)
     {
@@ -545,7 +553,7 @@ static Policy *LoadPolicyInputFiles(EvalContext *ctx, GenericAgentConfig *config
             break;
 
         case RVAL_TYPE_LIST:
-            aux_policy = LoadPolicyInputFiles(ctx, config, RvalRlistValue(resolved_input), parsed_files, failed_files);
+            aux_policy = LoadPolicyInputFiles(ctx, config, RvalRlistValue(resolved_input), parsed_files, failed_files, source_file);
             break;
 
         default:
@@ -570,11 +578,26 @@ static Policy *LoadPolicyFile(EvalContext *ctx, GenericAgentConfig *config, cons
 {
     Policy *policy = NULL;
 
+#if defined HAVE_REALPATH
+    char *resolve = realpath(policy_file, NULL);
+#endif
+
     if (StringSetContains(parsed_files, policy_file))
     {
         Log(LOG_LEVEL_VERBOSE, "Skipping loading of duplicate policy file %s", policy_file);
+#if defined HAVE_REALPATH
+        free(resolve);
+#endif
         return NULL;
     }
+#if defined HAVE_REALPATH
+    else if (NULL != resolve && StringSetContains(parsed_files, resolve))
+    {
+        Log(LOG_LEVEL_VERBOSE, "Skipping loading of resolved duplicate policy file %s", resolve);
+        free(resolve);
+        return NULL;
+    }
+#endif
     else
     {
         Log(LOG_LEVEL_DEBUG, "Loading policy file %s", policy_file);
@@ -582,6 +605,14 @@ static Policy *LoadPolicyFile(EvalContext *ctx, GenericAgentConfig *config, cons
 
     policy = Cf3ParseFile(config, policy_file);
     StringSetAdd(parsed_files, xstrdup(policy_file));
+
+#if defined HAVE_REALPATH
+    if (NULL != resolve)
+    {
+        StringSetAdd(parsed_files, xstrdup(resolve));
+        free(resolve);
+    }
+#endif
 
     if (!policy)
     {
@@ -602,7 +633,7 @@ static Policy *LoadPolicyFile(EvalContext *ctx, GenericAgentConfig *config, cons
 
         if (cp)
         {
-            Policy *aux_policy = LoadPolicyInputFiles(ctx, config, RvalRlistValue(cp->rval), parsed_files, failed_files);
+            Policy *aux_policy = LoadPolicyInputFiles(ctx, config, RvalRlistValue(cp->rval), parsed_files, failed_files, policy_file);
             if (aux_policy)
             {
                 policy = PolicyMerge(policy, aux_policy);
@@ -620,7 +651,7 @@ static Policy *LoadPolicyFile(EvalContext *ctx, GenericAgentConfig *config, cons
 
         if (cp)
         {
-            Policy *aux_policy = LoadPolicyInputFiles(ctx, config, RvalRlistValue(cp->rval), parsed_files, failed_files);
+            Policy *aux_policy = LoadPolicyInputFiles(ctx, config, RvalRlistValue(cp->rval), parsed_files, failed_files, policy_file);
             if (aux_policy)
             {
                 policy = PolicyMerge(policy, aux_policy);

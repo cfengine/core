@@ -125,7 +125,7 @@ static PromiseResult VerifyProcesses(EvalContext *ctx, Attributes a, Promise *pp
         return PROMISE_RESULT_SKIPPED;
     }
 
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser", pp->promiser, DATA_TYPE_STRING, "goal=state,source=promise");
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser", pp->promiser, DATA_TYPE_STRING, "source=promise");
     PromiseBanner(pp);
     PromiseResult result = VerifyProcessOp(ctx, PROCESSTABLE, a, pp);
     EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser");
@@ -159,7 +159,7 @@ static PromiseResult VerifyProcessOp(EvalContext *ctx, Item *procdata, Attribute
                 ClassRef ref = ClassRefParse(RlistScalarValue(rp));
                 if (!IsDefinedClass(ctx, ref.name, ref.ns))
                 {
-                    EvalContextClassPut(ctx, PromiseGetNamespace(pp), RlistScalarValue(rp), true, CONTEXT_SCOPE_NAMESPACE, "goal=state,source=promise");
+                    EvalContextClassPut(ctx, PromiseGetNamespace(pp), RlistScalarValue(rp), true, CONTEXT_SCOPE_NAMESPACE, "source=promise");
                 }
                 ClassRefDestroy(ref);
             }
@@ -172,7 +172,7 @@ static PromiseResult VerifyProcessOp(EvalContext *ctx, Item *procdata, Attribute
                 ClassRef ref = ClassRefParse(RlistScalarValue(rp));
                 if (!IsDefinedClass(ctx, ref.name, ref.ns))
                 {
-                    EvalContextClassPut(ctx, PromiseGetNamespace(pp), RlistScalarValue(rp), true, CONTEXT_SCOPE_NAMESPACE, "goal=state,source=promise");
+                    EvalContextClassPut(ctx, PromiseGetNamespace(pp), RlistScalarValue(rp), true, CONTEXT_SCOPE_NAMESPACE, "source=promise");
                 }
                 ClassRefDestroy(ref);
             }
@@ -255,7 +255,7 @@ static PromiseResult VerifyProcessOp(EvalContext *ctx, Item *procdata, Attribute
         {
             cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "Making a one-time restart promise for '%s'", pp->promiser);
             result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
-            EvalContextClassPut(ctx, PromiseGetNamespace(pp), a.restart_class, true, CONTEXT_SCOPE_NAMESPACE, "goal=state,source=promise");
+            EvalContextClassPut(ctx, PromiseGetNamespace(pp), a.restart_class, true, CONTEXT_SCOPE_NAMESPACE, "source=promise");
         }
     }
 

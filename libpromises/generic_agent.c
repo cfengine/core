@@ -114,7 +114,7 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
     SanitizeEnvironment();
 
     THIS_AGENT_TYPE = config->agent_type;
-    EvalContextClassPutHard(ctx, CF_AGENTTYPES[config->agent_type], "goal=state,cfe_internal,source=agent");
+    EvalContextClassPutHard(ctx, CF_AGENTTYPES[config->agent_type], "cfe_internal,source=agent");
 
     DetectEnvironment(ctx, config->agent_type != AGENT_TYPE_EXECUTOR, true);
 
@@ -148,7 +148,7 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
             if (am_policy_server)
             {
                 Log(LOG_LEVEL_INFO, "Assuming role as policy server, with policy distribution point at %s/masterfiles", GetWorkDir());
-                EvalContextClassPutHard(ctx, "am_policy_hub", "goal=state,source=bootstrap");
+                EvalContextClassPutHard(ctx, "am_policy_hub", "source=bootstrap");
 
                 if (!MasterfileExists(GetWorkDir()))
                 {
@@ -184,9 +184,9 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
 
         if (GetAmPolicyHub(GetWorkDir()))
         {
-            EvalContextClassPutHard(ctx, "am_policy_hub", "goal=state,source=bootstrap");  // DEPRECATED: use policy_server instead
+            EvalContextClassPutHard(ctx, "am_policy_hub", "source=bootstrap");  // DEPRECATED: use policy_server instead
             Log(LOG_LEVEL_VERBOSE, "Additional class defined: am_policy_hub");
-            EvalContextClassPutHard(ctx, "policy_server", "goal=state,source=bootstrap");
+            EvalContextClassPutHard(ctx, "policy_server", "source=bootstrap");
             Log(LOG_LEVEL_VERBOSE, "Additional class defined: policy_server");
         }
     }
@@ -720,7 +720,7 @@ void CloseLog(void)
 
 ENTERPRISE_VOID_FUNC_1ARG_DEFINE_STUB(void, GenericAgentAddEditionClasses, EvalContext *, ctx)
 {
-    EvalContextClassPutHard(ctx, "community_edition", "goal=state,inventory,source=agent");
+    EvalContextClassPutHard(ctx, "community_edition", "inventory,source=agent");
 }
 
 void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
@@ -732,7 +732,7 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
 
     DetermineCfenginePort();
 
-    EvalContextClassPutHard(ctx, "any", "goal=state,inventory,source=agent");
+    EvalContextClassPutHard(ctx, "any", "inventory,source=agent");
 
     GenericAgentAddEditionClasses(ctx);
 
@@ -1656,21 +1656,21 @@ void GenericAgentConfigApply(EvalContext *ctx, const GenericAgentConfig *config)
                 FatalError(ctx, "You cannot use -D to define a reserved class");
             }
 
-            EvalContextClassPut(ctx, NULL, context, true, CONTEXT_SCOPE_NAMESPACE, "goal=state,source=environment");
+            EvalContextClassPut(ctx, NULL, context, true, CONTEXT_SCOPE_NAMESPACE, "source=environment");
         }
     }
 
     switch (LogGetGlobalLevel())
     {
     case LOG_LEVEL_DEBUG:
-        EvalContextClassPutHard(ctx, "debug_mode", "goal=state,cfe_internal,source=agent");
-        EvalContextClassPutHard(ctx, "opt_debug", "goal=state,cfe_internal,source=agent");
+        EvalContextClassPutHard(ctx, "debug_mode", "cfe_internal,source=agent");
+        EvalContextClassPutHard(ctx, "opt_debug", "cfe_internal,source=agent");
         // intentional fall
     case LOG_LEVEL_VERBOSE:
-        EvalContextClassPutHard(ctx, "verbose_mode", "goal=state,cfe_internal,source=agent");
+        EvalContextClassPutHard(ctx, "verbose_mode", "cfe_internal,source=agent");
         // intentional fall
     case LOG_LEVEL_INFO:
-        EvalContextClassPutHard(ctx, "inform_mode", "goal=state,cfe_internal,source=agent");
+        EvalContextClassPutHard(ctx, "inform_mode", "cfe_internal,source=agent");
         break;
     default:
         break;
@@ -1678,7 +1678,7 @@ void GenericAgentConfigApply(EvalContext *ctx, const GenericAgentConfig *config)
 
     if (config->agent_specific.agent.bootstrap_policy_server)
     {
-        EvalContextClassPutHard(ctx, "bootstrap_mode", "goal=update,source=environment");
+        EvalContextClassPutHard(ctx, "bootstrap_mode", "source=environment");
     }
 
     if (config->color)

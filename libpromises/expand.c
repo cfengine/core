@@ -164,11 +164,11 @@ static void ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp, Rlist *lists
             ExpandScalar(ctx, NULL, "this", handle, tmp);
             CanonifyNameInPlace(tmp);
             Log(LOG_LEVEL_DEBUG, "Expanded handle to '%s'", tmp);
-            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "handle", tmp, DATA_TYPE_STRING, "goal=state,source=promise");
+            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "handle", tmp, DATA_TYPE_STRING, "source=promise");
         }
         else
         {
-            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "handle", PromiseID(pp), DATA_TYPE_STRING, "goal=state,source=promise");
+            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "handle", PromiseID(pp), DATA_TYPE_STRING, "source=promise");
         }
 
         Promise *pexp = EvalContextStackPushPromiseIterationFrame(ctx, i, iter_ctx);
@@ -933,13 +933,13 @@ static void CopyLocalizedReferencesToBundleScope(EvalContext *ctx, const Bundle 
                     Rlist *list = RvalCopy((Rval) {retval.item, RVAL_TYPE_LIST}).item;
                     RlistFlatten(ctx, &list);
 
-                    EvalContextVariablePut(ctx, mangled_ref, list, type, "goal=state,source=agent");
+                    EvalContextVariablePut(ctx, mangled_ref, list, type, "source=agent");
                 }
                 break;
 
             case RVAL_TYPE_CONTAINER:
             case RVAL_TYPE_SCALAR:
-                EvalContextVariablePut(ctx, mangled_ref, retval.item, type, "goal=state,source=agent");
+                EvalContextVariablePut(ctx, mangled_ref, retval.item, type, "source=agent");
                 break;
 
             case RVAL_TYPE_FNCALL:
@@ -1073,7 +1073,7 @@ static void ResolveControlBody(EvalContext *ctx, GenericAgentConfig *config, con
         VarRef *ref = VarRefParseFromScope(cp->lval, scope);
         EvalContextVariableRemove(ctx, ref);
 
-        if (!EvalContextVariablePut(ctx, ref, returnval.item, ConstraintSyntaxGetDataType(body_syntax, cp->lval), "goal=data,source=promise"))
+        if (!EvalContextVariablePut(ctx, ref, returnval.item, ConstraintSyntaxGetDataType(body_syntax, cp->lval), "source=promise"))
         {
             Log(LOG_LEVEL_ERR, "Rule from %s at/before line %zu", control_body->source_path, cp->offset.line);
         }
@@ -1092,9 +1092,9 @@ static void ResolveControlBody(EvalContext *ctx, GenericAgentConfig *config, con
             EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_SYS, "domain");
             EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_SYS, "fqhost");
             snprintf(VFQNAME, CF_MAXVARSIZE, "%s.%s", VUQNAME, VDOMAIN);
-            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "fqhost", VFQNAME, DATA_TYPE_STRING, "goal=state,inventory,source=agent");
-            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "domain", VDOMAIN, DATA_TYPE_STRING, "goal=state,inventory,source=agent");
-            EvalContextClassPutHard(ctx, VDOMAIN, "goal=state,inventory,source=agent");
+            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "fqhost", VFQNAME, DATA_TYPE_STRING, "inventory,source=agent");
+            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "domain", VDOMAIN, DATA_TYPE_STRING, "inventory,source=agent");
+            EvalContextClassPutHard(ctx, VDOMAIN, "inventory,source=agent");
         }
 
         if (strcmp(cp->lval, CFG_CONTROLBODY[COMMON_CONTROL_IGNORE_MISSING_INPUTS].lval) == 0)

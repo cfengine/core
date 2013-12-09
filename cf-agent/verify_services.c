@@ -169,7 +169,7 @@ static PromiseResult VerifyServices(EvalContext *ctx, Attributes a, Promise *pp)
         return PROMISE_RESULT_SKIPPED;
     }
 
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser", pp->promiser, DATA_TYPE_STRING, "goal=state,source=promise");
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser", pp->promiser, DATA_TYPE_STRING, "source=promise");
     PromiseBanner(pp);
 
     PromiseResult result = PROMISE_RESULT_NOOP;
@@ -238,21 +238,21 @@ static PromiseResult DoVerifyServices(EvalContext *ctx, Attributes a, Promise *p
     switch (a.service.service_policy)
     {
     case SERVICE_POLICY_START:
-        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "service_policy", "start", DATA_TYPE_STRING, "goal=state,source=promise");
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "service_policy", "start", DATA_TYPE_STRING, "source=promise");
         break;
 
     case SERVICE_POLICY_RESTART:
-        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "service_policy", "restart", DATA_TYPE_STRING, "goal=state,source=promise");
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "service_policy", "restart", DATA_TYPE_STRING, "source=promise");
         break;
 
     case SERVICE_POLICY_RELOAD:
-        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "service_policy", "reload", DATA_TYPE_STRING, "goal=state,source=promise");
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "service_policy", "reload", DATA_TYPE_STRING, "source=promise");
         break;
         
     case SERVICE_POLICY_STOP:
     case SERVICE_POLICY_DISABLE:
     default:
-        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "service_policy", "stop", DATA_TYPE_STRING, "goal=state,source=promise");
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "service_policy", "stop", DATA_TYPE_STRING, "source=promise");
         break;
     }
 

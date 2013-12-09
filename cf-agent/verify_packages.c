@@ -946,13 +946,13 @@ static PromiseResult SchedulePackageOp(EvalContext *ctx, const char *name, const
     if ((a.packages.package_name_convention) || (a.packages.package_delete_convention))
     {
         VarRef *ref_name = VarRefParseFromScope("name", "cf_pack_context");
-        EvalContextVariablePut(ctx, ref_name, name, DATA_TYPE_STRING, "goal=data,source=promise");
+        EvalContextVariablePut(ctx, ref_name, name, DATA_TYPE_STRING, "source=promise");
 
         VarRef *ref_version = VarRefParseFromScope("version", "cf_pack_context");
-        EvalContextVariablePut(ctx, ref_version, version, DATA_TYPE_STRING, "goal=data,source=promise");
+        EvalContextVariablePut(ctx, ref_version, version, DATA_TYPE_STRING, "source=promise");
 
         VarRef *ref_arch = VarRefParseFromScope("arch", "cf_pack_context");
-        EvalContextVariablePut(ctx, ref_arch, arch, DATA_TYPE_STRING, "goal=data,source=promise");
+        EvalContextVariablePut(ctx, ref_arch, arch, DATA_TYPE_STRING, "source=promise");
 
         if ((a.packages.package_delete_convention) && (a.packages.package_policy == PACKAGE_ACTION_DELETE))
         {
@@ -1023,13 +1023,13 @@ static PromiseResult SchedulePackageOp(EvalContext *ctx, const char *name, const
             {
                 {
                     VarRef *ref_name = VarRefParseFromScope("name", "cf_pack_context_anyver");
-                    EvalContextVariablePut(ctx, ref_name, name, DATA_TYPE_STRING, "goal=data,source=promise");
+                    EvalContextVariablePut(ctx, ref_name, name, DATA_TYPE_STRING, "source=promise");
 
                     VarRef *ref_version = VarRefParseFromScope("version", "cf_pack_context_anyver");
-                    EvalContextVariablePut(ctx, ref_version, "(.*)", DATA_TYPE_STRING, "goal=data,source=promise");
+                    EvalContextVariablePut(ctx, ref_version, "(.*)", DATA_TYPE_STRING, "source=promise");
 
                     VarRef *ref_arch = VarRefParseFromScope("arch", "cf_pack_context_anyver");
-                    EvalContextVariablePut(ctx, ref_arch, arch, DATA_TYPE_STRING, "goal=data,source=promise");
+                    EvalContextVariablePut(ctx, ref_arch, arch, DATA_TYPE_STRING, "source=promise");
 
                     ExpandScalar(ctx, NULL, "cf_pack_context_anyver", a.packages.package_name_convention, refAnyVer);
 
@@ -1165,13 +1165,13 @@ static PromiseResult SchedulePackageOp(EvalContext *ctx, const char *name, const
         {
             {
                 VarRef *ref_name = VarRefParseFromScope("name", "cf_pack_context_anyver");
-                EvalContextVariablePut(ctx, ref_name, name, DATA_TYPE_STRING, "goal=data,source=promise");
+                EvalContextVariablePut(ctx, ref_name, name, DATA_TYPE_STRING, "source=promise");
 
                 VarRef *ref_version = VarRefParseFromScope("version", "cf_pack_context_anyver");
-                EvalContextVariablePut(ctx, ref_version, "(.*)", DATA_TYPE_STRING, "goal=data,source=promise");
+                EvalContextVariablePut(ctx, ref_version, "(.*)", DATA_TYPE_STRING, "source=promise");
 
                 VarRef *ref_arch = VarRefParseFromScope("arch", "cf_pack_context_anyver");
-                EvalContextVariablePut(ctx, ref_arch, arch, DATA_TYPE_STRING, "goal=data,source=promise");
+                EvalContextVariablePut(ctx, ref_arch, arch, DATA_TYPE_STRING, "source=promise");
 
                 ExpandScalar(ctx, NULL, "cf_pack_context_anyver", a.packages.package_name_convention, refAnyVer);
 
@@ -1243,13 +1243,13 @@ static PromiseResult SchedulePackageOp(EvalContext *ctx, const char *name, const
                     }
 
                     VarRef *ref_name = VarRefParseFromScope("name", "cf_pack_context");
-                    EvalContextVariablePut(ctx, ref_name, name, DATA_TYPE_STRING, "goal=data,source=promise");
+                    EvalContextVariablePut(ctx, ref_name, name, DATA_TYPE_STRING, "source=promise");
 
                     VarRef *ref_version = VarRefParseFromScope("version", "cf_pack_context");
-                    EvalContextVariablePut(ctx, ref_version, inst_ver, DATA_TYPE_STRING, "goal=data,source=promise");
+                    EvalContextVariablePut(ctx, ref_version, inst_ver, DATA_TYPE_STRING, "source=promise");
 
                     VarRef *ref_arch = VarRefParseFromScope("arch", "cf_pack_context");
-                    EvalContextVariablePut(ctx, ref_arch, inst_arch, DATA_TYPE_STRING, "goal=data,source=promise");
+                    EvalContextVariablePut(ctx, ref_arch, inst_arch, DATA_TYPE_STRING, "source=promise");
 
                     ExpandScalar(ctx, NULL, "cf_pack_context", a.packages.package_delete_convention, reference2);
                     id_del = reference2;

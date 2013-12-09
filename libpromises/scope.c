@@ -155,14 +155,14 @@ void ScopeAugment(EvalContext *ctx, const Bundle *bp, const Promise *pp, const R
             case DATA_TYPE_REAL_LIST:
                 {
                     VarRef *ref = VarRefParseFromBundle(lval, bp);
-                    EvalContextVariablePut(ctx, ref, retval.item, DATA_TYPE_STRING_LIST, "goal=data,source=promise");
+                    EvalContextVariablePut(ctx, ref, retval.item, DATA_TYPE_STRING_LIST, "source=promise");
                     VarRefDestroy(ref);
                 }
                 break;
             case DATA_TYPE_CONTAINER:
                 {
                     VarRef *ref = VarRefParseFromBundle(lval, bp);
-                    EvalContextVariablePut(ctx, ref, retval.item, DATA_TYPE_CONTAINER, "goal=data,source=promise");
+                    EvalContextVariablePut(ctx, ref, retval.item, DATA_TYPE_CONTAINER, "source=promise");
                     VarRefDestroy(ref);
                 }
                 break;
@@ -170,7 +170,7 @@ void ScopeAugment(EvalContext *ctx, const Bundle *bp, const Promise *pp, const R
                 {
                     Log(LOG_LEVEL_ERR, "List or container parameter '%s' not found while constructing scope '%s' - use @(scope.variable) in calling reference", naked, bp->name);
                     VarRef *ref = VarRefParseFromBundle(lval, bp);
-                    EvalContextVariablePut(ctx, ref, RlistScalarValue(rpr), DATA_TYPE_STRING, "goal=data,source=promise");
+                    EvalContextVariablePut(ctx, ref, RlistScalarValue(rpr), DATA_TYPE_STRING, "source=promise");
                     VarRefDestroy(ref);
                 }
                 break;
@@ -183,7 +183,7 @@ void ScopeAugment(EvalContext *ctx, const Bundle *bp, const Promise *pp, const R
             case RVAL_TYPE_SCALAR:
                 {
                     VarRef *ref = VarRefParseFromBundle(lval, bp);
-                    EvalContextVariablePut(ctx, ref, RvalScalarValue(rpr->val), DATA_TYPE_STRING, "goal=data,source=promise");
+                    EvalContextVariablePut(ctx, ref, RvalScalarValue(rpr->val), DATA_TYPE_STRING, "source=promise");
                     VarRefDestroy(ref);
                 }
                 break;
@@ -195,7 +195,7 @@ void ScopeAugment(EvalContext *ctx, const Bundle *bp, const Promise *pp, const R
                     if (rval.type == RVAL_TYPE_SCALAR)
                     {
                         VarRef *ref = VarRefParseFromBundle(lval, bp);
-                        EvalContextVariablePut(ctx, ref, RvalScalarValue(rval), DATA_TYPE_STRING, "goal=data,source=promise");
+                        EvalContextVariablePut(ctx, ref, RvalScalarValue(rval), DATA_TYPE_STRING, "source=promise");
                         VarRefDestroy(ref);
                     }
                     else
@@ -238,7 +238,7 @@ void ScopeMapBodyArgs(EvalContext *ctx, const Body *body, const Rlist *args)
             {
                 const char *lval = RlistScalarValue(param);
                 VarRef *ref = VarRefParseFromNamespaceAndScope(lval, NULL, "body", CF_NS, '.');
-                EvalContextVariablePut(ctx, ref, RvalScalarValue(arg->val), arg_type, "goal=data,source=body");
+                EvalContextVariablePut(ctx, ref, RvalScalarValue(arg->val), arg_type, "source=body");
             }
             break;
 
@@ -246,7 +246,7 @@ void ScopeMapBodyArgs(EvalContext *ctx, const Body *body, const Rlist *args)
             {
                 const char *lval = RlistScalarValue(param);
                 VarRef *ref = VarRefParseFromNamespaceAndScope(lval, NULL, "body", CF_NS, '.');
-                EvalContextVariablePut(ctx, ref, RvalRlistValue(arg->val), arg_type, "goal=data,source=body");
+                EvalContextVariablePut(ctx, ref, RvalRlistValue(arg->val), arg_type, "source=body");
                 VarRefDestroy(ref);
             }
             break;
@@ -278,7 +278,7 @@ void ScopeMapBodyArgs(EvalContext *ctx, const Body *body, const Rlist *args)
                     void *rval = res.rval.item;
 
                     VarRef *ref = VarRefParseFromNamespaceAndScope(lval, NULL, "body", CF_NS, '.');
-                    EvalContextVariablePut(ctx, ref, rval, arg_type, "goal=data,source=body");
+                    EvalContextVariablePut(ctx, ref, rval, arg_type, "source=body");
                     VarRefDestroy(ref);
                 }
             }

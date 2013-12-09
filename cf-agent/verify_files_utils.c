@@ -100,7 +100,7 @@ static PromiseResult LinkCopy(EvalContext *ctx, char *sourcefile, char *destfile
 static PromiseResult VerifySetUidGid(EvalContext *ctx, const char *file, struct stat *dstat, mode_t newperm, const Promise *pp, Attributes attr);
 #endif
 #ifdef __APPLE__
-static int VerifyFinderType(EvalContext *ctx, const char *file, Attributes a, Promise *pp, PromiseResult *result);
+static int VerifyFinderType(EvalContext *ctx, const char *file, Attributes a, const Promise *pp, PromiseResult *result);
 #endif
 static void VerifyFileChanges(const char *file, struct stat *sb, Attributes attr, const Promise *pp);
 static PromiseResult VerifyFileIntegrity(EvalContext *ctx, const char *file, Attributes attr, const Promise *pp);
@@ -2868,7 +2868,7 @@ static PromiseResult VerifySetUidGid(EvalContext *ctx, const char *file, struct 
 
 #ifdef __APPLE__
 
-static int VerifyFinderType(EvalContext *ctx, const char *file, Attributes a, Promise *pp, PromiseResult *result)
+static int VerifyFinderType(EvalContext *ctx, const char *file, Attributes a, const Promise *pp, PromiseResult *result)
 {                               /* Code modeled after hfstar's extract.c */
     typedef struct
     {

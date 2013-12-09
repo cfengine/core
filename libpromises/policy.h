@@ -322,7 +322,7 @@ Rlist *PromiseGetConstraintAsList(const EvalContext *ctx, const char *lval, cons
 
 bool PromiseBundleConstraintExists(const EvalContext *ctx, const char *lval, const Promise *pp);
 
-void PromiseRecheckAllConstraints(EvalContext *ctx, const Promise *pp);
+void PromiseRecheckAllConstraints(const EvalContext *ctx, const Promise *pp);
 
 /**
  * @brief Get the trinary boolean value of the first effective constraint found matching, from a promise

@@ -116,9 +116,9 @@ extern Item *CONNECTIONLIST;
 
 /*******************************************************************/
 
-void KeepFileAccessPromise(EvalContext *ctx, const Promise *pp);
-void KeepLiteralAccessPromise(EvalContext *ctx, const Promise *pp, char *type);
-void KeepQueryAccessPromise(EvalContext *ctx, const Promise *pp, char *type);
+static void KeepFileAccessPromise(EvalContext *ctx, const Promise *pp);
+static void KeepLiteralAccessPromise(EvalContext *ctx, const Promise *pp, char *type);
+static void KeepQueryAccessPromise(EvalContext *ctx, const Promise *pp, char *type);
 
 /*******************************************************************/
 /* Level                                                           */

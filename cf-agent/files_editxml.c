@@ -98,20 +98,20 @@ static bool SanityCheckTextSet(Attributes a);
 static bool SanityCheckTextInsertions(Attributes a);
 
 static bool XmlDocsEqualMem(xmlDocPtr doc1, xmlDocPtr doc2);
-static bool XmlNodesCompare(xmlNodePtr node1, xmlNodePtr node2, Attributes a,  const Promise *pp);
+static bool XmlNodesCompare(xmlNodePtr node1, xmlNodePtr node2, Attributes a, const Promise *pp);
 static bool XmlNodesCompareAttributes(xmlNodePtr node1, xmlNodePtr node2);
-static bool XmlNodesCompareNodes(xmlNodePtr node1, xmlNodePtr node2, Attributes a,  const Promise *pp);
+static bool XmlNodesCompareNodes(xmlNodePtr node1, xmlNodePtr node2, Attributes a, const Promise *pp);
 static bool XmlNodesCompareTags(xmlNodePtr node1, xmlNodePtr node2);
 static bool XmlNodesCompareText(xmlNodePtr node1, xmlNodePtr node2);
-static bool XmlNodesSubset(xmlNodePtr node1, xmlNodePtr node2, Attributes a,  const Promise *pp);
+static bool XmlNodesSubset(xmlNodePtr node1, xmlNodePtr node2, Attributes a, const Promise *pp);
 static bool XmlNodesSubsetOfAttributes(xmlNodePtr node1, xmlNodePtr node2);
-static bool XmlNodesSubsetOfNodes(xmlNodePtr node1, xmlNodePtr node2, Attributes a,  const Promise *pp);
+static bool XmlNodesSubsetOfNodes(xmlNodePtr node1, xmlNodePtr node2, Attributes a, const Promise *pp);
 static bool XmlNodesSubstringOfText(xmlNodePtr node1, xmlNodePtr node2);
 static xmlAttrPtr XmlVerifyAttributeInNode(const xmlChar *attrname, xmlChar *attrvalue, xmlNodePtr node);
 static xmlChar* XmlVerifyTextInNodeExact(const xmlChar *text, xmlNodePtr node);
 static xmlChar* XmlVerifyTextInNodeSubstring(const xmlChar *text, xmlNodePtr node);
-static xmlNodePtr XmlVerifyNodeInNodeExact(xmlNodePtr node1, xmlNodePtr node2, Attributes a,  const Promise *pp);
-static xmlNodePtr XmlVerifyNodeInNodeSubset(xmlNodePtr node1, xmlNodePtr node2, Attributes a,  const Promise *pp);
+static xmlNodePtr XmlVerifyNodeInNodeExact(xmlNodePtr node1, xmlNodePtr node2, Attributes a, const Promise *pp);
+static xmlNodePtr XmlVerifyNodeInNodeSubset(xmlNodePtr node1, xmlNodePtr node2, Attributes a, const Promise *pp);
 
 //xpath build functionality
 static xmlNodePtr PredicateExtractNode(char predicate[CF_BUFSIZE]);
@@ -1870,7 +1870,7 @@ static bool XmlDocsEqualMem(xmlDocPtr doc1, xmlDocPtr doc2)
 
 /***************************************************************************/
 
-static bool XmlNodesCompare(xmlNodePtr node1, xmlNodePtr node2, Attributes a,  const Promise *pp)
+static bool XmlNodesCompare(xmlNodePtr node1, xmlNodePtr node2, Attributes a, const Promise *pp)
 /* Does node1 contain all content(tag/attributes/text/nodes) found in node2? */
 {
     xmlNodePtr copynode1, copynode2;
@@ -1985,7 +1985,7 @@ static bool XmlNodesCompareAttributes(xmlNodePtr node1, xmlNodePtr node2)
 
 /*********************************************************************/
 
-static bool XmlNodesCompareNodes(xmlNodePtr node1, xmlNodePtr node2, Attributes a,  const Promise *pp)
+static bool XmlNodesCompareNodes(xmlNodePtr node1, xmlNodePtr node2, Attributes a, const Promise *pp)
 /* Does node1 contain same nodes found in node2? */
 {
     xmlNodePtr copynode1, copynode2;
@@ -2116,7 +2116,7 @@ static bool XmlNodesCompareText(xmlNodePtr node1, xmlNodePtr node2)
 
 /*********************************************************************/
 
-static bool XmlNodesSubset(xmlNodePtr node1, xmlNodePtr node2, Attributes a,  const Promise *pp)
+static bool XmlNodesSubset(xmlNodePtr node1, xmlNodePtr node2, Attributes a, const Promise *pp)
 /* Does node1 contain matching subset of content(tag/attributes/text/nodes) found in node2? */
 {
     xmlNodePtr copynode1, copynode2;
@@ -2219,7 +2219,7 @@ static bool XmlNodesSubsetOfAttributes(xmlNodePtr node1, xmlNodePtr node2)
 
 /*********************************************************************/
 
-static bool XmlNodesSubsetOfNodes(xmlNodePtr node1, xmlNodePtr node2, Attributes a,  const Promise *pp)
+static bool XmlNodesSubsetOfNodes(xmlNodePtr node1, xmlNodePtr node2, Attributes a, const Promise *pp)
 /* Does node1 contain matching subset of nodes found in node2? */
 {
     xmlNodePtr copynode1, copynode2;
@@ -2375,7 +2375,7 @@ xmlChar* XmlVerifyTextInNodeSubstring(const xmlChar *text, xmlNodePtr node)
 
 /*********************************************************************/
 
-xmlNodePtr XmlVerifyNodeInNodeExact(xmlNodePtr node1, xmlNodePtr node2, Attributes a,  const Promise *pp)
+xmlNodePtr XmlVerifyNodeInNodeExact(xmlNodePtr node1, xmlNodePtr node2, Attributes a, const Promise *pp)
 /* Does node2 contain a node with content matching all content in node1?
    Returns a pointer to node found in node2 or NULL */
 {
@@ -2406,7 +2406,7 @@ xmlNodePtr XmlVerifyNodeInNodeExact(xmlNodePtr node1, xmlNodePtr node2, Attribut
 
 /*********************************************************************/
 
-xmlNodePtr XmlVerifyNodeInNodeSubset(xmlNodePtr node1, xmlNodePtr node2, Attributes a,  const Promise *pp)
+xmlNodePtr XmlVerifyNodeInNodeSubset(xmlNodePtr node1, xmlNodePtr node2, Attributes a, const Promise *pp)
 /* Does node2 contain: node with subset of content matching all content in node1?
    Returns a pointer to node found in node2 or NULL */
 {

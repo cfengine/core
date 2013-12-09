@@ -32,7 +32,9 @@
 PromiseResult VerifyPackagesPromise(EvalContext *ctx, const Promise *pp);
 void ExecuteScheduledPackages(EvalContext *ctx);
 void CleanScheduledPackages(void);
-int PrependPackageItem(EvalContext *ctx, PackageItem ** list, const char *name, const char *version, const char *arch, const Promise *pp);
+int PrependPackageItem(EvalContext *ctx, PackageItem **list,
+                       const char *name, const char *version,
+                       const char *arch, const Promise *pp);
 
 // For testing.
 VersionCmpResult ComparePackages(EvalContext *ctx,

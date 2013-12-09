@@ -557,7 +557,7 @@ bool IsInterfaceAddress(const char *adr)
     return false;
 }
 
-int ParseHostname(char *name, char *hostname)
+int ParseHostname(const char *name, char *hostname)
 {
     int port;
     if (sscanf(name, "%250[^:]:%d", hostname, &port) != 2)

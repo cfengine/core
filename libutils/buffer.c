@@ -123,12 +123,7 @@ int BufferDestroy(Buffer **buffer)
      */
     if (RefCountIsShared((*buffer)->ref_count))
     {
-        int result = 0;
-        result = RefCountDetach((*buffer)->ref_count, *buffer);
-        if (result < 0)
-        {
-            return -1;
-        }
+        RefCountDetach((*buffer)->ref_count, *buffer);
     }
     else
     {
@@ -166,12 +161,7 @@ int BufferCopy(Buffer *source, Buffer **destination)
     (*destination)->beginning = source->beginning;
     (*destination)->end = source->end;
     (*destination)->memory_cap = source->memory_cap;
-    int elements = 0;
-    elements = RefCountAttach(source->ref_count, (*destination));
-    if (elements < 0)
-    {
-        return -1;
-    }
+    RefCountAttach(source->ref_count, (*destination));
     (*destination)->buffer = source->buffer;
     (*destination)->ref_count = source->ref_count;
     return 0;
@@ -343,44 +333,11 @@ int BufferSet(Buffer *buffer, char *bytes, unsigned int length)
     {
         char *new_buffer = NULL;
         new_buffer = (char *)xmalloc(buffer->capacity);
-        /*
-         * Make a local copy of the variables that are required to restore to normality.
-         */
         RefCount *ref_count = buffer->ref_count;
-        /*
-         * We try to attach first, since it is more likely that Attach might fail than
-         * detach.
-         */
-        int result = 0;
         buffer->ref_count = NULL;
         RefCountNew(&buffer->ref_count);
-        result = RefCountAttach(buffer->ref_count, buffer);
-        if (result < 0)
-        {
-            /*
-             * Restore and signal the error.
-             */
-            free (new_buffer);
-            RefCountDestroy(&buffer->ref_count);
-            buffer->ref_count = ref_count;
-            return -1;
-        }
-        /*
-         * Detach. This operation might fail, although it is very rare.
-         */
-        result = RefCountDetach(ref_count, buffer);
-        if (result < 0)
-        {
-            /*
-             * The ref_count structure has not been modified, therefore
-             * we can reuse it.
-             * We need to destroy the other ref_count though.
-             */
-            free (new_buffer);
-            RefCountDestroy(&buffer->ref_count);
-            buffer->ref_count = ref_count;
-            return -1;
-        }
+        RefCountAttach(buffer->ref_count, buffer);
+        RefCountDetach(ref_count, buffer);
         /*
          * Ok, now we need to take care of the buffer.
          * We copy the data so we have the same data in case of error.
@@ -445,44 +402,11 @@ int BufferAppend(Buffer *buffer, const char *bytes, unsigned int length)
     {
         char *new_buffer = NULL;
         new_buffer = (char *)xmalloc(buffer->capacity);
-        /*
-         * Make a local copy of the variables that are required to restore to normality.
-         */
         RefCount *ref_count = buffer->ref_count;
-        /*
-         * We try to attach first, since it is more likely that Attach might fail than
-         * detach.
-         */
-        int result = 0;
         buffer->ref_count = NULL;
         RefCountNew(&buffer->ref_count);
-        result = RefCountAttach(buffer->ref_count, buffer);
-        if (result < 0)
-        {
-            /*
-             * Restore and signal the error.
-             */
-            free (new_buffer);
-            RefCountDestroy(&buffer->ref_count);
-            buffer->ref_count = ref_count;
-            return -1;
-        }
-        /*
-         * Detach. This operation might fail, although it is very rare.
-         */
-        result = RefCountDetach(ref_count, buffer);
-        if (result < 0)
-        {
-            /*
-             * The ref_count structure has not been modified, therefore
-             * we can reuse it.
-             * We need to destroy the other ref_count though.
-             */
-            free (new_buffer);
-            RefCountDestroy(&buffer->ref_count);
-            buffer->ref_count = ref_count;
-            return -1;
-        }
+        RefCountAttach(buffer->ref_count, buffer);
+        RefCountDetach(ref_count, buffer);
         /*
          * Ok, now we need to take care of the buffer.
          */
@@ -560,48 +484,11 @@ int BufferPrintf(Buffer *buffer, const char *format, ...)
     {
         char *new_buffer = NULL;
         new_buffer = (char *)xmalloc(buffer->capacity);
-        /*
-         * Make a local copy of the variables that are required to restore to normality.
-         */
         RefCount *ref_count = buffer->ref_count;
-        /*
-         * We try to attach first, since it is more likely that Attach might fail than
-         * detach.
-         */
-        int result = 0;
         buffer->ref_count = NULL;
         RefCountNew(&buffer->ref_count);
-        result = RefCountAttach(buffer->ref_count, buffer);
-        if (result < 0)
-        {
-            /*
-             * Restore and signal the error.
-             */
-            free (new_buffer);
-            RefCountDestroy(&buffer->ref_count);
-            buffer->ref_count = ref_count;
-            va_end(aq);
-            va_end(ap);
-            return -1;
-        }
-        /*
-         * Detach. This operation might fail, although it is very rare.
-         */
-        result = RefCountDetach(ref_count, buffer);
-        if (result < 0)
-        {
-            /*
-             * The ref_count structure has not been modified, therefore
-             * we can reuse it.
-             * We need to destroy the other ref_count though.
-             */
-            free (new_buffer);
-            RefCountDestroy(&buffer->ref_count);
-            buffer->ref_count = ref_count;
-            va_end(aq);
-            va_end(ap);
-            return -1;
-        }
+        RefCountAttach(buffer->ref_count, buffer);
+        RefCountDetach(ref_count, buffer);
         /*
          * Ok, now we need to take care of the buffer.
          */
@@ -672,44 +559,11 @@ int BufferVPrintf(Buffer *buffer, const char *format, va_list ap)
     {
         char *new_buffer = NULL;
         new_buffer = (char *)xmalloc(buffer->capacity);
-        /*
-         * Make a local copy of the variables that are required to restore to normality.
-         */
         RefCount *ref_count = buffer->ref_count;
-        /*
-         * We try to attach first, since it is more likely that Attach might fail than
-         * detach.
-         */
-        int result = 0;
         buffer->ref_count = NULL;
         RefCountNew(&buffer->ref_count);
-        result = RefCountAttach(buffer->ref_count, buffer);
-        if (result < 0)
-        {
-            /*
-             * Restore and signal the error.
-             */
-            free (new_buffer);
-            RefCountDestroy(&buffer->ref_count);
-            buffer->ref_count = ref_count;
-            return -1;
-        }
-        /*
-         * Detach. This operation might fail, although it is very rare.
-         */
-        result = RefCountDetach(ref_count, buffer);
-        if (result < 0)
-        {
-            /*
-             * The ref_count structure has not been modified, therefore
-             * we can reuse it.
-             * We need to destroy the other ref_count though.
-             */
-            free (new_buffer);
-            RefCountDestroy(&buffer->ref_count);
-            buffer->ref_count = ref_count;
-            return -1;
-        }
+        RefCountAttach(buffer->ref_count, buffer);
+        RefCountDetach(ref_count, buffer);
         /*
          * Ok, now we need to take care of the buffer.
          */
@@ -778,29 +632,17 @@ void BufferZero(Buffer *buffer)
 
 unsigned int BufferSize(Buffer *buffer)
 {
-    if (!buffer)
-    {
-        return 0;
-    }
-    return buffer->used;
+    return buffer ? buffer->used : 0;
 }
 
 const char *BufferData(Buffer *buffer)
 {
-    if (!buffer)
-    {
-        return NULL;
-    }
-    return (const char *)buffer->buffer;
+    return buffer ? buffer->buffer : NULL;
 }
 
 int BufferMode(Buffer *buffer)
 {
-    if (!buffer)
-    {
-        return -1;
-    }
-    return buffer->mode;
+    return buffer ? buffer->mode : -1;
 }
 
 void BufferSetMode(Buffer *buffer, BufferBehavior mode)
@@ -834,11 +676,7 @@ void BufferSetMode(Buffer *buffer, BufferBehavior mode)
 
 unsigned int BufferMemoryCap(Buffer *buffer)
 {
-    if (!buffer)
-    {
-        return 0;
-    }
-    return buffer->memory_cap;
+    return buffer ? buffer->memory_cap : 0;
 }
 
 void BufferSetMemoryCap(Buffer *buffer, unsigned int cap)

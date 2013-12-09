@@ -162,65 +162,37 @@ int BufferListIteratorDestroy(BufferListIterator **iterator)
 
 int BufferListIteratorFirst(BufferListIterator *iterator)
 {
-    if (!iterator)
-    {
-        return -1;
-    }
-    return ListIteratorFirst(iterator->iterator);
+    return iterator ? ListIteratorFirst(iterator->iterator) : -1;
 }
 
 int BufferListIteratorLast(BufferListIterator *iterator)
 {
-    if (!iterator)
-    {
-        return -1;
-    }
-    return ListIteratorLast(iterator->iterator);
+    return iterator ? ListIteratorLast(iterator->iterator) : -1;
 }
 
 int BufferListIteratorNext(BufferListIterator *iterator)
 {
-    if (!iterator)
-    {
-        return -1;
-    }
-    return ListIteratorNext(iterator->iterator);
+    return iterator ? ListIteratorNext(iterator->iterator) : -1;
 }
 
 int BufferListIteratorPrevious(BufferListIterator *iterator)
 {
-    if (!iterator)
-    {
-        return -1;
-    }
-    return ListIteratorPrevious(iterator->iterator);
+    return iterator ? ListIteratorPrevious(iterator->iterator) : -1;
 }
 
 Buffer *BufferListIteratorData(const BufferListIterator *iterator)
 {
-    if (!iterator)
-    {
-        return NULL;
-    }
-    return (Buffer *)ListIteratorData(iterator->iterator);
+    return iterator ? (Buffer *)ListIteratorData(iterator->iterator) : NULL;
 }
 
 bool BufferListIteratorHasNext(const BufferListIterator *iterator)
 {
-    if (!iterator)
-    {
-        return false;
-    }
-    return ListIteratorHasNext(iterator->iterator);
+    return iterator && ListIteratorHasNext(iterator->iterator);
 }
 
 bool BufferListIteratorHasPrevious(const BufferListIterator *iterator)
 {
-    if (!iterator)
-    {
-        return false;
-    }
-    return ListIteratorHasPrevious(iterator->iterator);
+    return iterator && ListIteratorHasPrevious(iterator->iterator);
 }
 
 /*
@@ -257,74 +229,50 @@ int BufferListMutableIteratorRelease(BufferListMutableIterator **iterator)
 
 int BufferListMutableIteratorFirst(BufferListMutableIterator *iterator)
 {
-    if (!iterator)
-        return -1;
-    return ListMutableIteratorFirst(iterator->iterator);
+    return iterator ? ListMutableIteratorFirst(iterator->iterator) : -1;
 }
 
 int BufferListMutableIteratorLast(BufferListMutableIterator *iterator)
 {
-    if (!iterator)
-        return -1;
-    return ListMutableIteratorLast(iterator->iterator);
+    return iterator ? ListMutableIteratorLast(iterator->iterator) : -1;
 }
 
 int BufferListMutableIteratorNext(BufferListMutableIterator *iterator)
 {
-    if (!iterator)
-        return -1;
-    return ListMutableIteratorNext(iterator->iterator);
+    return iterator ? ListMutableIteratorNext(iterator->iterator) : -1;
 }
 
 int BufferListMutableIteratorPrevious(BufferListMutableIterator *iterator)
 {
-    if (!iterator)
-        return -1;
-    return ListMutableIteratorPrevious(iterator->iterator);
+    return iterator ? ListMutableIteratorPrevious(iterator->iterator) : -1;
 }
 
 Buffer *BufferListMutableIteratorData(const BufferListMutableIterator *iterator)
 {
-    if (!iterator)
-        return NULL;
-    return (Buffer *)ListMutableIteratorData(iterator->iterator);
+    return iterator ? (Buffer *)ListMutableIteratorData(iterator->iterator) : NULL;
 }
 
 int BufferListMutableIteratorRemove(BufferListMutableIterator *iterator)
 {
-    if (!iterator)
-        return -1;
-    return ListMutableIteratorRemove(iterator->iterator);
+    return iterator ? ListMutableIteratorRemove(iterator->iterator) : -1;
 }
 
 int BufferListMutableIteratorPrepend(BufferListMutableIterator *iterator, Buffer *payload)
 {
-    if (!iterator)
-        return -1;
-    return ListMutableIteratorPrepend(iterator->iterator, (void *)payload);
+    return iterator ? ListMutableIteratorPrepend(iterator->iterator, (void *)payload) : -1;
 }
 
 int BufferListMutableIteratorAppend(BufferListMutableIterator *iterator, Buffer *payload)
 {
-    if (!iterator)
-        return -1;
-    return ListMutableIteratorAppend(iterator->iterator, (void *)payload);
+    return iterator ? ListMutableIteratorAppend(iterator->iterator, (void *)payload) : -1;
 }
 
 bool BufferListMutableIteratorHasNext(const BufferListMutableIterator *iterator)
 {
-    if (!iterator)
-    {
-        return false;
-    }
-    return ListMutableIteratorHasNext(iterator->iterator);
+    return iterator && ListMutableIteratorHasNext(iterator->iterator);
 }
 
 bool BufferListMutableIteratorHasPrevious(const BufferListMutableIterator *iterator)
 {
-    if (!iterator)
-    {
-        return false;
-    }
-    return ListMutableIteratorHasPrevious(iterator->iterator);
+    return iterator && ListMutableIteratorHasPrevious(iterator->iterator);
 }

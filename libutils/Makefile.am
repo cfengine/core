@@ -15,7 +15,7 @@ libutils_la_SOURCES = \
 	proc_keyvalue.c proc_keyvalue.h \
 	bool.h \
 	json.c json.h \
-	refcount.c refcount.h refcount_p.h \
+	refcount.c refcount.h \
 	list.c list.h \
 	bufferlist.c bufferlist.h \
 	logging.c logging.h logging_priv.h\
@@ -35,7 +35,8 @@ libutils_la_SOURCES = \
 	mustache.c mustache.h \
 	cfversion.c cfversion.h \
 	unicode.c unicode.h \
-    hash.c hash.h
+    hash.c hash.h \
+    queue.c queue.h
 
 CLEANFILES = *.gcno *.gcda
 

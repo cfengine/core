@@ -394,7 +394,7 @@ bool WriteBuiltinFailsafePolicyToPath(const char *filename)
             "       Please check\n"
             "       * cf-serverd is running on $(sys.policy_hub)\n"
             "       * network connectivity to $(sys.policy_hub) on port 5308\n"
-            "       * masterfiles 'body server control' - in particular allowconnects, trustkeysfrom and skipverify\n"
+            "       * masterfiles 'body server control' - in particular allowconnects, trustkeysfrom\n"
             "       * masterfiles 'bundle server' -> access: -> masterfiles -> admit/deny\n"
             "       It is often useful to restart cf-serverd in verbose mode (cf-serverd -v) on $(sys.policy_hub) to diagnose connection issues.\n"
             "       When updating masterfiles, wait (usually 5 minutes) for files to propagate to inputs on $(sys.policy_hub) before retrying.\"\n"

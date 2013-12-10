@@ -461,7 +461,6 @@ int ServerTLSSessionEstablish(ServerConnectionState *conn)
                     "%s: Explicitly trusting this key from now on.",
                     KeyPrintableHash(ConnectionInfoKey(conn->conn_info)));
 
-                conn->trust = true;
                 SavePublicKey("root", KeyPrintableHash(ConnectionInfoKey(conn->conn_info)),
                               KeyRSA(ConnectionInfoKey(conn->conn_info)));
             }
@@ -545,7 +544,6 @@ int ServerTLSSessionEstablishCallCollectMode(ServerConnectionState *conn)
                 "%s: Explicitly trusting this key from now on.",
                 KeyPrintableHash(ConnectionInfoKey(conn->conn_info)));
 
-            conn->trust = true;
             SavePublicKey("root", KeyPrintableHash(ConnectionInfoKey(conn->conn_info)),
                           KeyRSA(ConnectionInfoKey(conn->conn_info)));
         }

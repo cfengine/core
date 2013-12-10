@@ -320,7 +320,7 @@ const ConstraintSyntax CFS_CONTROLBODY[] =
     ConstraintSyntaxNewInt("maxconnections", CF_VALRANGE, "Maximum number of connections that will be accepted by cf-serverd. Default value: 30 remote queries", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewInt("port", "1024,99999", "Default port for cfengine server. Default value: 5308", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewOption("serverfacility", CF_FACILITY, "Menu option for syslog facility level. Default value: LOG_USER", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewStringList("skipverify", "", "List of IPs or hostnames for which we expect no DNS binding and cannot verify", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewStringList("skipverify", "", "This option is deprecated, does nothing and is kept for backward compatibility.", SYNTAX_STATUS_DEPRECATED),
     ConstraintSyntaxNewStringList("trustkeysfrom", "", "List of IPs from whom we accept public keys on trust", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBool("listen", "true/false enable server daemon to listen on defined port. Default value: true", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("allowciphers", "", "List of ciphers the server accepts. For Syntax help see man page for \"openssl ciphers\". Default is \"AES256-GCM-SHA384:AES256-SHA\"", SYNTAX_STATUS_NORMAL),

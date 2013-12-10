@@ -60,7 +60,6 @@ typedef struct
     Item *allowuserlist;                              /* "allowusers" */
     Item *multiconnlist;                              /* "allowallconnects" */
     Item *trustkeylist;                               /* "trustkeysfrom" */
-    Item *skipverify;
     char *allowciphers;
 
     Auth *admit;
@@ -91,7 +90,6 @@ struct ServerConnectionState_
     EvalContext *ctx;
     ConnectionInfo *conn_info;
     int synchronized;
-    int trust;
     char hostname[CF_MAXVARSIZE];
     char username[CF_MAXVARSIZE];
 #ifdef __MINGW32__

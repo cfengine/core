@@ -280,7 +280,6 @@ void StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
     struct timeval timeout;
     int ret_val;
     CfLock thislock;
-    time_t last_collect = 0, last_policy_reload = 0;
     extern int COLLECT_WINDOW;
 
     struct sockaddr_storage cin;
@@ -354,11 +353,9 @@ void StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
 #ifndef __MINGW32__
     fcntl(sd, F_SETFD, FD_CLOEXEC);
 #endif
-
+    CollectCallStart(COLLECT_INTERVAL);
     while (!IsPendingTermination())
     {
-        time_t now = time(NULL);
-
         /* Note that this loop logic is single threaded, but ACTIVE_THREADS
            might still change in threads pertaining to service handling */
 
@@ -372,19 +369,26 @@ void StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
         }
 
         // Check whether we should try to establish peering with a hub
-
-        if ((COLLECT_INTERVAL > 0) && ((now - last_collect) > COLLECT_INTERVAL))
+        if (CollectCallPending())
         {
-            TryCollectCall(COLLECT_WINDOW, &ServerEntryPoint);
-            last_collect = now;
-            continue;
+            int waiting_queue = 0;
+            int new_client = CollectCallGetPending(&waiting_queue);
+            if (waiting_queue > COLLECT_WINDOW)
+            {
+                Log(LOG_LEVEL_INFO, "Closing Collect Call because it would take"
+                                    "longer than the allocated window [%d]", COLLECT_WINDOW);
+            }
+            ConnectionInfo *info = ConnectionInfoNew();
+            if (info)
+            {
+                ConnectionInfoSetSocket(info, new_client);
+                ServerEntryPoint(ctx, POLICY_SERVER, info);
+            }
         }
-
         /* check if listening is working */
         if (sd != -1)
         {
             // Look for normal incoming service requests
-
             int signal_pipe = GetSignalPipe();
             FD_ZERO(&rset);
             FD_SET(sd, &rset);
@@ -440,7 +444,7 @@ void StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
             }
         }
     }
-
+    CollectCallStop();
     PolicyDestroy(server_cfengine_policy);
 }
 

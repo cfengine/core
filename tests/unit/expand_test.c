@@ -9,37 +9,46 @@ static void test_map_iterators_from_rval_empty(void)
 {
     EvalContext *ctx = EvalContextNew();
 
+    Policy *p = PolicyNew();
+    Bundle *bp = PolicyAppendBundle(p, "default", "none", "agent", NULL, NULL);
+
     Rlist *lists = NULL;
     Rlist *scalars = NULL;
     Rlist *containers =  NULL;
-    MapIteratorsFromRval(ctx, "none", (Rval) { "", RVAL_TYPE_SCALAR }, &scalars, &lists, &containers);
+    MapIteratorsFromRval(ctx, bp, (Rval) { "", RVAL_TYPE_SCALAR }, &scalars, &lists, &containers);
 
     assert_int_equal(0, RlistLen(lists));
     assert_int_equal(0, RlistLen(scalars));
     assert_int_equal(0, RlistLen(containers));
 
+    PolicyDestroy(p);
     EvalContextDestroy(ctx);
 }
 
 static void test_map_iterators_from_rval_literal(void)
 {
     EvalContext *ctx = EvalContextNew();
+    Policy *p = PolicyNew();
+    Bundle *bp = PolicyAppendBundle(p, "default", "none", "agent", NULL, NULL);
 
     Rlist *lists = NULL;
     Rlist *scalars = NULL;
     Rlist *containers = NULL;
-    MapIteratorsFromRval(ctx, "none", (Rval) { "snookie", RVAL_TYPE_SCALAR }, &scalars, &lists, &containers);
+    MapIteratorsFromRval(ctx, bp, (Rval) { "snookie", RVAL_TYPE_SCALAR }, &scalars, &lists, &containers);
 
     assert_int_equal(0, RlistLen(lists));
     assert_int_equal(0, RlistLen(scalars));
     assert_int_equal(0, RlistLen(containers));
 
+    PolicyDestroy(p);
     EvalContextDestroy(ctx);
 }
 
 static void test_map_iterators_from_rval_naked_list_var(void)
 {
     EvalContext *ctx = EvalContextNew();
+    Policy *p = PolicyNew();
+    Bundle *bp = PolicyAppendBundle(p, "default", "scope", "agent", NULL, NULL);
 
     Rlist *list = NULL;
     RlistAppend(&list, "jersey", RVAL_TYPE_SCALAR);
@@ -51,7 +60,7 @@ static void test_map_iterators_from_rval_naked_list_var(void)
     Rlist *lists = NULL;
     Rlist *scalars = NULL;
     Rlist *containers = NULL;
-    MapIteratorsFromRval(ctx, "scope", (Rval) { "${jwow}", RVAL_TYPE_SCALAR }, &scalars, &lists, &containers);
+    MapIteratorsFromRval(ctx, bp, (Rval) { "${jwow}", RVAL_TYPE_SCALAR }, &scalars, &lists, &containers);
 
     assert_int_equal(1, RlistLen(lists));
     assert_string_equal("jwow", RlistScalarValue(lists));
@@ -59,6 +68,7 @@ static void test_map_iterators_from_rval_naked_list_var(void)
     assert_int_equal(0, RlistLen(containers));
 
     VarRefDestroy(lval);
+    PolicyDestroy(p);
     EvalContextDestroy(ctx);
 }
 

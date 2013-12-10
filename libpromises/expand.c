@@ -46,7 +46,7 @@
 
 static void ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp, Rlist *lists, Rlist *containers,
                                PromiseActuator *ActOnPromise, void *param);
-static void ExpandAndMapIteratorsFromScalar(EvalContext *ctx, const char *scope, const char *string, size_t length, int level,
+static void ExpandAndMapIteratorsFromScalar(EvalContext *ctx, const Bundle *bundle, const char *string, size_t length, int level,
                                             Rlist **scalars, Rlist **lists, Rlist **containers, Rlist **full_expansion);
 static void SetAnyMissingDefaults(EvalContext *ctx, Promise *pp);
 static void CopyLocalizedReferencesToBundleScope(EvalContext *ctx, const Bundle *bundle, const Rlist *ref_names);
@@ -121,17 +121,17 @@ void ExpandPromise(EvalContext *ctx, Promise *pp, PromiseActuator *ActOnPromise,
 
     Promise *pcopy = DeRefCopyPromise(ctx, pp);
 
-    MapIteratorsFromRval(ctx, PromiseGetBundle(pp)->name, (Rval) { pcopy->promiser, RVAL_TYPE_SCALAR }, &scalars, &lists, &containers);
+    MapIteratorsFromRval(ctx, PromiseGetBundle(pp), (Rval) { pcopy->promiser, RVAL_TYPE_SCALAR }, &scalars, &lists, &containers);
 
     if (pcopy->promisee.item != NULL)
     {
-        MapIteratorsFromRval(ctx, PromiseGetBundle(pp)->name, pp->promisee, &scalars, &lists, &containers);
+        MapIteratorsFromRval(ctx, PromiseGetBundle(pp), pp->promisee, &scalars, &lists, &containers);
     }
 
     for (size_t i = 0; i < SeqLength(pcopy->conlist); i++)
     {
         Constraint *cp = SeqAt(pcopy->conlist, i);
-        MapIteratorsFromRval(ctx, PromiseGetBundle(pp)->name, cp->rval,&scalars, &lists, &containers);
+        MapIteratorsFromRval(ctx, PromiseGetBundle(pp), cp->rval, &scalars, &lists, &containers);
     }
 
     CopyLocalizedReferencesToBundleScope(ctx, PromiseGetBundle(pp), lists);
@@ -228,7 +228,7 @@ Rval ExpandDanglers(EvalContext *ctx, const char *ns, const char *scope, Rval rv
 
 /*********************************************************************/
 
-void MapIteratorsFromRval(EvalContext *ctx, const char *scopeid, Rval rval, Rlist **scalars, Rlist **lists, Rlist **containers)
+void MapIteratorsFromRval(EvalContext *ctx, const Bundle *bundle, Rval rval, Rlist **scalars, Rlist **lists, Rlist **containers)
 {
     Rlist *rp;
     FnCall *fp;
@@ -243,14 +243,14 @@ void MapIteratorsFromRval(EvalContext *ctx, const char *scopeid, Rval rval, Rlis
     case RVAL_TYPE_SCALAR:
         {
             char *val = (char *)rval.item;
-            ExpandAndMapIteratorsFromScalar(ctx, scopeid, val, strlen(val), 0, scalars, lists, containers, NULL);
+            ExpandAndMapIteratorsFromScalar(ctx, bundle, val, strlen(val), 0, scalars, lists, containers, NULL);
         }
         break;
 
     case RVAL_TYPE_LIST:
         for (rp = (Rlist *) rval.item; rp != NULL; rp = rp->next)
         {
-            MapIteratorsFromRval(ctx, scopeid, rp->val, scalars, lists, containers);
+            MapIteratorsFromRval(ctx, bundle, rp->val, scalars, lists, containers);
         }
         break;
 
@@ -260,13 +260,13 @@ void MapIteratorsFromRval(EvalContext *ctx, const char *scopeid, Rval rval, Rlis
         for (rp = (Rlist *) fp->args; rp != NULL; rp = rp->next)
         {
             Log(LOG_LEVEL_DEBUG, "Looking at arg for function-like object '%s'", fp->name);
-            MapIteratorsFromRval(ctx, scopeid, rp->val, scalars, lists, containers);
+            MapIteratorsFromRval(ctx, bundle, rp->val, scalars, lists, containers);
         }
         break;
 
     case RVAL_TYPE_CONTAINER:
     case RVAL_TYPE_NOPROMISEE:
-        Log(LOG_LEVEL_DEBUG, "Unknown Rval type for scope '%s'", scopeid);
+        Log(LOG_LEVEL_DEBUG, "Unknown Rval type for scope '%s'", bundle->name);
         break;
     }
 }
@@ -296,7 +296,8 @@ static void RlistConcatInto(Rlist **dest, const Rlist *src, const char *extensio
     }
 }
 
-static void ExpandAndMapIteratorsFromScalar(EvalContext *ctx, const char *scopeid, const char *string, size_t length, int level, Rlist **scalars, Rlist **lists,
+static void ExpandAndMapIteratorsFromScalar(EvalContext *ctx, const Bundle *bundle, const char *string, size_t length,
+                                            int level, Rlist **scalars, Rlist **lists,
                                             Rlist **containers, Rlist **full_expansion)
 {
     char *sp;
@@ -347,13 +348,13 @@ static void ExpandAndMapIteratorsFromScalar(EvalContext *ctx, const char *scopei
                 int success = 0;
                 int increment;
 
-                VarRef *ref = VarRefParseFromScope(v, scopeid);
+                VarRef *ref = VarRefParseFromScope(v, bundle->name);
 
                 increment = strlen(v) - 1 + 3;
 
                 // Handle any embedded variables
                 const char *substring = string + (sp - buffer) + 2;
-                ExpandAndMapIteratorsFromScalar(ctx, scopeid, substring, strlen(v), level+1, scalars, lists, containers, &inner_expansion);
+                ExpandAndMapIteratorsFromScalar(ctx, bundle, substring, strlen(v), level+1, scalars, lists, containers, &inner_expansion);
 
                 for (exp = inner_expansion; exp != NULL; exp = exp->next)
                 {
@@ -366,7 +367,7 @@ static void ExpandAndMapIteratorsFromScalar(EvalContext *ctx, const char *scopei
                     //  varname => "test.somelist"; $($(varname)) also fails
                     // TODO Unless the consumer handles it?
 
-                    VarRef *inner_ref = VarRefParseFromScope(RlistScalarValue(exp), scopeid);
+                    VarRef *inner_ref = VarRefParseFromScope(RlistScalarValue(exp), bundle->name);
 
                     // var is the expanded name of the variable in its native context
                     // finalname will be the mapped name in the local context "this."

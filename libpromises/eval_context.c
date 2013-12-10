@@ -1475,9 +1475,9 @@ bool EvalContextVariablePut(EvalContext *ctx, const VarRef *ref, const void *val
 
         StackFrame *last_frame = LastStackFrame(ctx, 0);
 
-        if (last_frame && (last_frame->type != STACK_FRAME_TYPE_PROMISE && last_frame->type != STACK_FRAME_TYPE_PROMISE_ITERATION))
+        if (last_frame && (last_frame->type == STACK_FRAME_TYPE_BUNDLE))
         {
-            MapIteratorsFromRval(ctx, NULL, rval, &scalars, &listvars, &containers);
+            MapIteratorsFromRval(ctx, EvalContextStackCurrentBundle(ctx), rval, &scalars, &listvars, &containers);
 
             if (listvars != NULL)
             {

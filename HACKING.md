@@ -78,7 +78,7 @@ This is the remainder of the old src directory, that which has not been categori
 for the project remains to leave *libpromises* as a component for evaluation.
 
 - *cf3.defs.h*: Contains structure definitions used widely.
-- *env_context.h*: Header for EvalContext, keeper of evaluation state.
+- *eval_context.h*: Header for EvalContext, keeper of evaluation state.
 - *dbm_api.h*: Local database for agents.
 - *mod_.c*: Syntax definitions for all promise types (actuation modules).
 - *syntax.h*: Syntax utilities and type checking.

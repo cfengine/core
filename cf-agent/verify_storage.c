@@ -40,7 +40,7 @@
 #include <verify_files.h>
 #include <promiser_regex_resolver.h>
 #include <ornaments.h>
-#include <env_context.h>
+#include <eval_context.h>
 
 bool CF_MOUNTALL;
 

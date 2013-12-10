@@ -31,7 +31,7 @@
 #include <files_names.h>
 #include <misc_lib.h>
 #include <rlist.h>
-#include <env_context.h>
+#include <eval_context.h>
 
 #ifdef HAVE_ACL_H
 # include <acl.h>

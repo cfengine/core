@@ -35,7 +35,7 @@
 #include <rlist.h>
 #include <set.h>
 #include <hashes.h>
-#include <env_context.h>
+#include <eval_context.h>
 #include <promises.h>
 #include <item_lib.h>
 #include <files_hashes.h>

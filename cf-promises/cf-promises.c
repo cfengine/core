@@ -24,7 +24,7 @@
 
 #include <generic_agent.h>
 
-#include <env_context.h>
+#include <eval_context.h>
 #include <conversion.h>
 #include <syntax.h>
 #include <rlist.h>

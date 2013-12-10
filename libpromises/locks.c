@@ -35,7 +35,7 @@
 #include <rlist.h>
 #include <process_lib.h>
 #include <fncall.h>
-#include <env_context.h>
+#include <eval_context.h>
 #include <misc_lib.h>
 #include <known_dirs.h>
 

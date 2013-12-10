@@ -2,7 +2,7 @@
 
 #include <cf3.defs.h>
 #include <matching.h>
-#include <env_context.h>
+#include <eval_context.h>
 
 static void test_full_text_match(void)
 {

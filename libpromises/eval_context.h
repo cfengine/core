@@ -100,30 +100,6 @@ typedef enum
     EVAL_OPTION_FULL = 0xFFFFFFFF
 } EvalContextOption;
 
-struct EvalContext_
-{
-    int eval_options;
-    bool bundle_aborted;
-    bool checksum_updates_default;
-    Item *ip_addresses;
-
-    Item *heap_abort;
-    Item *heap_abort_current_bundle;
-
-    Seq *stack;
-
-    ClassTable *global_classes;
-    VariableTable *global_variables;
-
-    VariableTable *match_variables;
-
-    StringSet *dependency_handles;
-    RBTree *function_cache;
-    PromiseSet *promises_done;
-
-    void *enterprise_state;
-};
-
 EvalContext *EvalContextNew(void);
 void EvalContextDestroy(EvalContext *ctx);
 
@@ -199,6 +175,10 @@ void EvalContextDeleteIpAddresses(EvalContext *ctx);
 
 /* - Rest - */
 bool EvalContextPromiseIsActive(const EvalContext *ctx, const Promise *pp);
+void EvalContextSetEvalOption(EvalContext *ctx, EvalContextOption option, bool value);
+bool EvalContextGetEvalOption(EvalContext *ctx, EvalContextOption option);
+
+void *EvalContextGetEnterpriseState(const EvalContext *ctx);
 
 bool Abort(EvalContext *ctx);
 int VarClassExcluded(const EvalContext *ctx, const Promise *pp, char **classes);

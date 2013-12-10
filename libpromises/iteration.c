@@ -27,7 +27,7 @@
 #include <scope.h>
 #include <vars.h>
 #include <fncall.h>
-#include <env_context.h>
+#include <eval_context.h>
 #include <misc_lib.h>
 #include <string_lib.h>
 

@@ -24,7 +24,7 @@
 
 #include <fncall.h>
 
-#include <env_context.h>
+#include <eval_context.h>
 #include <files_names.h>
 #include <expand.h>
 #include <vars.h>
@@ -264,7 +264,7 @@ FnCallResult FnCallEvaluate(EvalContext *ctx, FnCall *fp, const Promise *caller)
 {
     fp->caller = caller;
 
-    if (!(ctx->eval_options & EVAL_OPTION_EVAL_FUNCTIONS))
+    if (!EvalContextGetEvalOption(ctx, EVAL_OPTION_EVAL_FUNCTIONS))
     {
         Log(LOG_LEVEL_VERBOSE, "Skipping function '%s', because evaluation was turned off in the evaluator",
             fp->name);

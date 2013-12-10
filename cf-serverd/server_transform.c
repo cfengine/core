@@ -27,7 +27,7 @@
 #include <server.h>
 
 #include <misc_lib.h>
-#include <env_context.h>
+#include <eval_context.h>
 #include <files_names.h>
 #include <mod_access.h>
 #include <item_lib.h>

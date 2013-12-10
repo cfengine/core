@@ -30,7 +30,7 @@
 #include <generic_agent.h>
 #include <server.h>
 
-#include <env_context.h>
+#include <eval_context.h>
 #include <dir.h>
 #include <dbm_api.h>
 #include <lastseen.h>

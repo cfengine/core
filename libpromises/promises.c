@@ -33,7 +33,7 @@
 #include <locks.h>
 #include <misc_lib.h>
 #include <fncall.h>
-#include <env_context.h>
+#include <eval_context.h>
 #include <string_lib.h>
 
 static void DereferenceComment(Promise *pp);

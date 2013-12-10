@@ -22,7 +22,7 @@
   included file COSL.txt.
 */
 
-#include <env_context.h>
+#include <eval_context.h>
 
 #include <files_names.h>
 #include <logic_expressions.h>
@@ -52,6 +52,29 @@ static bool EvalContextStackFrameContainsSoft(const EvalContext *ctx, const char
 static bool EvalContextHeapContainsSoft(const EvalContext *ctx, const char *ns, const char *name);
 static bool EvalContextHeapContainsHard(const EvalContext *ctx, const char *name);
 
+struct EvalContext_
+{
+    int eval_options;
+    bool bundle_aborted;
+    bool checksum_updates_default;
+    Item *ip_addresses;
+
+    Item *heap_abort;
+    Item *heap_abort_current_bundle;
+
+    Seq *stack;
+
+    ClassTable *global_classes;
+    VariableTable *global_variables;
+
+    VariableTable *match_variables;
+
+    StringSet *dependency_handles;
+    RBTree *function_cache;
+    PromiseSet *promises_done;
+
+    void *enterprise_state;
+};
 
 static StackFrame *LastStackFrame(const EvalContext *ctx, size_t offset)
 {
@@ -2088,4 +2111,26 @@ void EvalContextDeleteIpAddresses(EvalContext *ctx)
 Item *EvalContextGetIpAddresses(const EvalContext *ctx)
 {
     return ctx->ip_addresses;
+}
+
+void EvalContextSetEvalOption(EvalContext *ctx, EvalContextOption option, bool value)
+{
+    if (value)
+    {
+        ctx->eval_options |= option;
+    }
+    else
+    {
+        ctx->eval_options &= ~option;
+    }
+}
+
+bool EvalContextGetEvalOption(EvalContext *ctx, EvalContextOption option)
+{
+    return !!(ctx->eval_options & option);
+}
+
+void *EvalContextGetEnterpriseState(const EvalContext *ctx)
+{
+    return ctx->enterprise_state;
 }

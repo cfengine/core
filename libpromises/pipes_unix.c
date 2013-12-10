@@ -28,7 +28,7 @@
 #include <exec_tools.h>
 #include <rlist.h>
 #include <policy.h>
-#include <env_context.h>
+#include <eval_context.h>
 #include <file_lib.h>
 
 static int CfSetuid(uid_t uid, gid_t gid);

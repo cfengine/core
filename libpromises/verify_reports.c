@@ -39,7 +39,7 @@
 #include <policy.h>
 #include <scope.h>
 #include <ornaments.h>
-#include <env_context.h>
+#include <eval_context.h>
 
 static void PrintFile(EvalContext *ctx, Attributes a, Promise *pp);
 static void ReportToFile(const char *logfile, const char *message);

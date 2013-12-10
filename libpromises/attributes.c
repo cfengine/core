@@ -153,9 +153,15 @@ Attributes GetPackageAttributes(const EvalContext *ctx, const Promise *pp)
 {
     Attributes attr = { {0} };
 
+    attr.havetrans = PromiseGetConstraintAsBoolean(ctx, CF_TRANSACTION, pp);
     attr.transaction = GetTransactionConstraints(ctx, pp);
+
+    attr.haveclasses = PromiseGetConstraintAsBoolean(ctx, CF_DEFINECLASSES, pp);
     attr.classes = GetClassDefinitionConstraints(ctx, pp);
+
+    attr.havepackages = PromiseGetConstraintAsBoolean(ctx, "packages", pp);
     attr.packages = GetPackageConstraints(ctx, pp);
+
     return attr;
 }
 
@@ -355,7 +361,7 @@ Environments GetEnvironmentsConstraints(const EvalContext *ctx, const Promise *p
 
 /*******************************************************************/
 
-ExecContain GetExecContainConstraints(const EvalContext *ctx, const Promise *pp)
+ExecContain GetPackageExecContainConstraints(const EvalContext *ctx, const Promise *pp)
 {
     ExecContain e;
 
@@ -363,11 +369,22 @@ ExecContain GetExecContainConstraints(const EvalContext *ctx, const Promise *pp)
     e.umask = PromiseGetConstraintAsOctal(ctx, "umask", pp);
     e.owner = PromiseGetConstraintAsUid(ctx, "exec_owner", pp);
     e.group = PromiseGetConstraintAsGid(ctx, "exec_group", pp);
-    e.preview = PromiseGetConstraintAsBoolean(ctx, "preview", pp);
-    e.nooutput = PromiseGetConstraintAsBoolean(ctx, "no_output", pp);
     e.timeout = PromiseGetConstraintAsInt(ctx, "exec_timeout", pp);
     e.chroot = ConstraintGetRvalValue(ctx, "chroot", pp, RVAL_TYPE_SCALAR);
     e.chdir = ConstraintGetRvalValue(ctx, "chdir", pp, RVAL_TYPE_SCALAR);
+
+    return e;
+}
+
+/*******************************************************************/
+
+ExecContain GetExecContainConstraints(const EvalContext *ctx, const Promise *pp)
+{
+    ExecContain e;
+
+    e = GetPackageExecContainConstraints(ctx, pp);
+    e.preview = PromiseGetConstraintAsBoolean(ctx, "preview", pp);
+    e.nooutput = PromiseGetConstraintAsBoolean(ctx, "no_output", pp);
 
     return e;
 }
@@ -1051,7 +1068,16 @@ Packages GetPackageConstraints(const EvalContext *ctx, const Promise *pp)
     Packages p;
     PackageAction action;
     PackageVersionComparator operator;
+    ExecContain contain;
     PackageActionPolicy change_policy;
+
+    memset(&contain, '\0', sizeof(contain));
+
+    p.havepackagecontain = PromiseGetConstraintAsBoolean(ctx, "contain", pp);
+    if (p.havepackagecontain)
+    {
+        p.contain = GetPackageExecContainConstraints(ctx, pp);
+    }
 
     p.have_package_methods = PromiseGetConstraintAsBoolean(ctx, "havepackage_method", pp);
     p.package_version = (char *) ConstraintGetRvalValue(ctx, "package_version", pp, RVAL_TYPE_SCALAR);
@@ -1068,6 +1094,7 @@ Packages GetPackageConstraints(const EvalContext *ctx, const Promise *pp)
     operator = PackageVersionComparatorFromString((char *) ConstraintGetRvalValue(ctx, "package_select", pp, RVAL_TYPE_SCALAR));
 
     p.package_select = operator;
+
     change_policy = PackageActionPolicyFromString((char *) ConstraintGetRvalValue(ctx, "package_changes", pp, RVAL_TYPE_SCALAR));
     p.package_changes = change_policy;
 
@@ -1101,15 +1128,6 @@ Packages GetPackageConstraints(const EvalContext *ctx, const Promise *pp)
     p.package_verify_command = (char *) ConstraintGetRvalValue(ctx, "package_verify_command", pp, RVAL_TYPE_SCALAR);
     p.package_noverify_regex = (char *) ConstraintGetRvalValue(ctx, "package_noverify_regex", pp, RVAL_TYPE_SCALAR);
     p.package_noverify_returncode = PromiseGetConstraintAsInt(ctx, "package_noverify_returncode", pp);
-
-    if (PromiseGetConstraint(ctx, pp, "package_commands_useshell") == NULL)
-    {
-        p.package_commands_useshell = true;
-    }
-    else
-    {
-        p.package_commands_useshell = PromiseGetConstraintAsBoolean(ctx, "package_commands_useshell", pp);
-    }
 
     p.package_name_convention = (char *) ConstraintGetRvalValue(ctx, "package_name_convention", pp, RVAL_TYPE_SCALAR);
     p.package_delete_convention = (char *) ConstraintGetRvalValue(ctx, "package_delete_convention", pp, RVAL_TYPE_SCALAR);

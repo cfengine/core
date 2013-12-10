@@ -64,10 +64,25 @@ static const ConstraintSyntax package_method_constraints[] =
 
 static const BodySyntax package_method_body = BodySyntaxNew("package_method", package_method_constraints, NULL, SYNTAX_STATUS_NORMAL);
 
+static const ConstraintSyntax package_contain_constraints[] =
+{
+    ConstraintSyntaxNewOption("useshell", "useshell,noshell,powershell," CF_BOOL, "noshell/useshell/powershell embed the command in the given shell environment. Default value: useshell", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewString("exec_owner", "", "The user name or id under which to run the package manager process", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewString("exec_group", "", "The group name or id under which to run the package manager process", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewOption("umask", "0,77,22,27,72,077,002,022,027,072", "The umask value for the package manager process", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewInt("exec_timeout", "1,3600", "Timeout in seconds for package manager process completion", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewString("chdir", CF_ABSPATHRANGE, "Directory for setting current/base directory for the package manager process", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewString("chroot", CF_ABSPATHRANGE, "Directory of root sandbox for the package manager process", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewNull()
+};
+
+static const BodySyntax package_contain_body = BodySyntaxNew("contain", package_contain_constraints, NULL, SYNTAX_STATUS_NORMAL);
+
 static const ConstraintSyntax packages_constraints[] =
 {
     ConstraintSyntaxNewStringList("package_architectures", "", "Select the architecture for package selection", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBody("package_method", &package_method_body, "Criteria for installation and verification", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewBody("contain", &package_contain_body, "Criteria for \"package_method\" execution containment", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewOption("package_policy", "add,delete,reinstall,update,addupdate,patch,verify", "Criteria for package installation/upgrade on the current system. Default value: verify", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewOption("package_select", ">,<,==,!=,>=,<=", "A criterion for first acceptable match relative to \"package_version\"", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("package_version", "", "Version reference point for determining promised version", SYNTAX_STATUS_NORMAL),

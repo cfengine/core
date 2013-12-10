@@ -65,6 +65,8 @@ static char *GetDefaultArch(const char *command);
 
 static int ExecPackageCommand(EvalContext *ctx, char *command, int verify, int setCmdClasses, Attributes a, Promise *pp, PromiseResult *result);
 
+static FILE *PopenPackageCommand(const Attributes* const a, const char* const cmd);
+
 static int PrependPatchItem(EvalContext *ctx, PackageItem ** list, char *item, PackageItem * chklist, const char *default_arch, Attributes a, Promise *pp);
 static int PrependMultiLinePackageItem(EvalContext *ctx, PackageItem ** list, char *item, int reset, const char *default_arch, Attributes a, Promise *pp);
 static int PrependListPackageItem(EvalContext *ctx, PackageItem ** list, char *item, const char *default_arch, Attributes a, Promise *pp);
@@ -187,7 +189,7 @@ static int PackageSanityCheck(EvalContext *ctx, Attributes a, Promise *pp)
         return false;
     }
 
-    if ((!a.packages.package_commands_useshell) && (a.packages.package_list_command) && (!IsExecutable(CommandArg0(a.packages.package_list_command))))
+    if ((a.packages.package_list_command) && (!IsExecutable(CommandArg0(a.packages.package_list_command))))
     {
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a,
              "The proposed package list command '%s' was not executable",
@@ -398,22 +400,11 @@ static bool PackageListInstalledFromCommand(EvalContext *ctx, PackageItem **inst
 
     FILE *fin;
     
-    if (a.packages.package_commands_useshell)
+    if ((fin = PopenPackageCommand(&a, a.packages.package_list_command)) == NULL)
     {
-        if ((fin = cf_popen_sh(a.packages.package_list_command, "r")) == NULL)
-        {
-            Log(LOG_LEVEL_ERR, "Couldn't open the package list with command '%s'. (cf_popen_sh: %s)",
-                  a.packages.package_list_command, GetErrorStr());
-            return false;
-        }
-    }
-    else if ((fin = cf_popen(a.packages.package_list_command, "r", true)) == NULL)
-    {
-        Log(LOG_LEVEL_ERR, "Couldn't open the package list with command '%s'. (cf_popen: %s)",
-            a.packages.package_list_command, GetErrorStr());
         return false;
     }
-
+    
     const int reset = true, update = false;
     char buf[CF_BUFSIZE];
 
@@ -661,28 +652,17 @@ static int VerifyInstalledPackages(EvalContext *ctx, PackageManager **all_mgrs, 
             Log(LOG_LEVEL_VERBOSE, "Reading patches from '%s'", CommandArg0(a.packages.package_patch_list_command));
         }
 
-        if ((!a.packages.package_commands_useshell) && (!IsExecutable(CommandArg0(a.packages.package_patch_list_command))))
+        if (!IsExecutable(CommandArg0(a.packages.package_patch_list_command)))
         {
             Log(LOG_LEVEL_ERR, "The proposed patch list command '%s' was not executable",
                   a.packages.package_patch_list_command);
             return false;
         }
 
-        FILE *fin;
+        FILE *fin = NULL;
 
-        if (a.packages.package_commands_useshell)
+        if ((fin = PopenPackageCommand(&a, a.packages.package_patch_list_command)) == NULL)
         {
-            if ((fin = cf_popen_sh(a.packages.package_patch_list_command, "r")) == NULL)
-            {
-                Log(LOG_LEVEL_ERR, "Couldn't open the patch list with command '%s'. (cf_popen_sh: %s)",
-                      a.packages.package_patch_list_command, GetErrorStr());
-                return false;
-            }
-        }
-        else if ((fin = cf_popen(a.packages.package_patch_list_command, "r", true)) == NULL)
-        {
-            Log(LOG_LEVEL_ERR, "Couldn't open the patch list with command '%s'. (cf_popen: %s)",
-                  a.packages.package_patch_list_command, GetErrorStr());
             return false;
         }
 
@@ -2347,6 +2327,72 @@ char *PrefixLocalRepository(Rlist *repositories, char *package)
     return NULL;
 }
 
+static FILE *PopenPackageCommand(const Attributes* const a, const char* const cmd)
+{
+    FILE *fin = NULL;
+
+    Log(LOG_LEVEL_VERBOSE,
+        "Executing package command '%s' %s with shelltype: %d", 
+        cmd, a->packages.havepackagecontain ? "contained" : "", a->packages.contain.shelltype);
+
+    /* better uid|gid|chdir|chroot|bg logging? */
+
+    switch (a->packages.contain.shelltype)
+    {
+    case SHELL_TYPE_NONE: 
+        fin = (!a->packages.havepackagecontain)
+              ? cf_popen_sh(cmd, "r")
+              : cf_popensetuid(cmd, "r",
+                               a->packages.contain.owner,
+                               a->packages.contain.group,
+                               a->packages.contain.chdir,
+                               a->packages.contain.chroot,
+                               a->transaction.background);
+        break;
+
+    case SHELL_TYPE_USE: 
+        fin = (!a->packages.havepackagecontain)
+              ? cf_popen_sh(cmd, "r")
+              : cf_popen_shsetuid(cmd, "r",
+                                  a->packages.contain.owner,
+                                  a->packages.contain.group,
+                                  a->packages.contain.chdir,
+                                  a->packages.contain.chroot,
+                                  a->transaction.background);
+        break;
+
+#ifdef __MINGW32__
+    case SHELL_TYPE_POWERSHELL: 
+        fin = (!a->packages.havepackagecontain)
+              ? cf_popen_powershell(cmd, "r")
+              : cf_popen_powershell_setuid(cmd, "r",
+                                           a->packages.contain.owner,
+                                           a->packages.contain.group,
+                                           a->packages.contain.chdir,
+                                           a->packages.contain.chroot,
+                                           a->transaction.background);
+        break;
+#else
+    case SHELL_TYPE_POWERSHELL: 
+        Log(LOG_LEVEL_ERR, "Powershell is only supported on Windows");
+        return NULL;
+        break;
+#endif /* !__MINGW32__ */
+    }
+
+    if (fin == NULL)
+    {
+        Log(LOG_LEVEL_ERR,
+            "Couldn't popen package command '%s'. (PopenPackageCommand: %s)",
+            cmd, GetErrorStr());
+        return NULL;
+    }
+    else
+    {
+        return fin;
+    }
+}
+
 int ExecPackageCommand(EvalContext *ctx, char *command, int verify, int setCmdClasses, Attributes a,
                        Promise *pp, PromiseResult *result)
 {
@@ -2355,7 +2401,7 @@ int ExecPackageCommand(EvalContext *ctx, char *command, int verify, int setCmdCl
     FILE *pfp;
     int packmanRetval = 0;
 
-    if ((!a.packages.package_commands_useshell) && (!IsExecutable(CommandArg0(command))))
+    if ((!a.packages.contain.shelltype) && (!IsExecutable(CommandArg0(command))))
     {
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "The proposed package schedule command '%s' was not executable", command);
         *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
@@ -2369,26 +2415,15 @@ int ExecPackageCommand(EvalContext *ctx, char *command, int verify, int setCmdCl
 
 /* Use this form to avoid limited, intermediate argument processing - long lines */
 
-    if (a.packages.package_commands_useshell)
+    pfp = PopenPackageCommand(&a, command);
+
+    if (pfp == NULL)
     {
-        Log(LOG_LEVEL_VERBOSE, "Running %s in shell", command);
-        if ((pfp = cf_popen_sh(command, "r")) == NULL)
-        {
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Couldn't start command '%20s'. (cf_popen_sh: %s)",
-                 command, GetErrorStr());
-            *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
-            return false;
-        }
-    }
-    else
-    {
-        if ((pfp = cf_popen(command, "r", true)) == NULL)
-        {
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Couldn't start command '%20s'. (cf_popen: %s)",
-                 command, GetErrorStr());
-            *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
-            return false;
-        }
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, \
+            "Couldn't execute package command '%20s': %s)", \
+            command, GetErrorStr());
+        *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
+        return false;
     }
 
     Log(LOG_LEVEL_VERBOSE, "Executing %-.60s...", command);

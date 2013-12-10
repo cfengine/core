@@ -37,7 +37,7 @@ typedef enum
  *  a.packages.package_select
  *  a.packages.package_version_less_command
  *  a.packages.package_version_equal_command
- *  a.packages.package_commands_useshell
+ *  a.packages.contain.shelltype
  *  cfPS
  */
 VersionCmpResult CompareVersions(EvalContext *ctx, const char *v1, const char *v2, Attributes a, Promise *pp, PromiseResult *result);

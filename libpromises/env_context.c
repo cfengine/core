@@ -52,6 +52,29 @@ static bool EvalContextStackFrameContainsSoft(const EvalContext *ctx, const char
 static bool EvalContextHeapContainsSoft(const EvalContext *ctx, const char *ns, const char *name);
 static bool EvalContextHeapContainsHard(const EvalContext *ctx, const char *name);
 
+struct EvalContext_
+{
+    int eval_options;
+    bool bundle_aborted;
+    bool checksum_updates_default;
+    Item *ip_addresses;
+
+    Item *heap_abort;
+    Item *heap_abort_current_bundle;
+
+    Seq *stack;
+
+    ClassTable *global_classes;
+    VariableTable *global_variables;
+
+    VariableTable *match_variables;
+
+    StringSet *dependency_handles;
+    RBTree *function_cache;
+    PromiseSet *promises_done;
+
+    void *enterprise_state;
+};
 
 static StackFrame *LastStackFrame(const EvalContext *ctx, size_t offset)
 {
@@ -2105,4 +2128,9 @@ void EvalContextSetEvalOption(EvalContext *ctx, EvalContextOption option, bool v
 bool EvalContextGetEvalOption(EvalContext *ctx, EvalContextOption option)
 {
     return !!(ctx->eval_options & option);
+}
+
+void *EvalContextGetEnterpriseState(const EvalContext *ctx)
+{
+    return ctx->enterprise_state;
 }

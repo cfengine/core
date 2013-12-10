@@ -33,7 +33,7 @@
 struct timespec BeginMeasure(void);
 void EndMeasure(char *eventname, struct timespec start);
 int EndMeasureValueMs(struct timespec start);
-void EndMeasurePromise(EvalContext *ctx, struct timespec start, Promise *pp);
+void EndMeasurePromise(EvalContext *ctx, struct timespec start, const Promise *pp);
 
 // TODO: temporary measure until all heaps are under EvalContext
 void NoteClassUsage(ClassTableIterator *iter, int purge);

@@ -27,7 +27,10 @@
 #include <server.h>
 #include <cf-serverd-functions.h>
 
-ENTERPRISE_VOID_FUNC_3ARG_DEFINE_STUB(void, RegisterLiteralServerData, ARG_UNUSED EvalContext *, ctx, ARG_UNUSED const char *, handle, ARG_UNUSED Promise *, pp)
+ENTERPRISE_VOID_FUNC_3ARG_DEFINE_STUB(void, RegisterLiteralServerData,
+                                      ARG_UNUSED EvalContext *, ctx,
+                                      ARG_UNUSED const char *, handle,
+                                      ARG_UNUSED const Promise *, pp)
 {
     Log(LOG_LEVEL_VERBOSE, "Access to server literals is only available in CFEngine Enterprise");
 }
@@ -65,7 +68,7 @@ ENTERPRISE_FUNC_3ARG_DEFINE_STUB(bool, ReturnQueryData, ARG_UNUSED ServerConnect
     return false;
 }
 
-ENTERPRISE_VOID_FUNC_1ARG_DEFINE_STUB(void, KeepReportDataSelectAccessPromise, ARG_UNUSED Promise *, pp)
+ENTERPRISE_VOID_FUNC_1ARG_DEFINE_STUB(void, KeepReportDataSelectAccessPromise, ARG_UNUSED const Promise *, pp)
 {
     Log(LOG_LEVEL_ERR, "Report data select is only available in CFEngine Enterprise");
 }

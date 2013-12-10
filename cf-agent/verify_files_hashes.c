@@ -133,7 +133,7 @@ static void DeleteHash(CF_DB *dbp, HashMethod type, const char *name)
    updates database to the new value */
 
 int FileHashChanged(EvalContext *ctx, const char *filename, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMethod type,
-                    Attributes attr, Promise *pp, PromiseResult *result)
+                    Attributes attr, const Promise *pp, PromiseResult *result)
 {
     int i, size = 21;
     unsigned char dbdigest[EVP_MAX_MD_SIZE + 1];
@@ -280,7 +280,7 @@ int CompareBinaryFiles(const char *file1, const char *file2, struct stat *sstat,
     }
 }
 
-void PurgeHashes(EvalContext *ctx, char *path, Attributes attr, Promise *pp)
+void PurgeHashes(EvalContext *ctx, char *path, Attributes attr, const Promise *pp)
 /* Go through the database and purge records about non-existent files */
 {
     CF_DB *dbp;
@@ -361,7 +361,7 @@ static char FileStateToChar(FileState status)
     }
 }
 
-void LogHashChange(const char *file, FileState status, char *msg, Promise *pp)
+void LogHashChange(const char *file, FileState status, char *msg, const Promise *pp)
 {
     FILE *fp;
     char fname[CF_BUFSIZE];

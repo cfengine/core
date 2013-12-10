@@ -33,20 +33,22 @@ extern Rlist *SINGLE_COPY_LIST;
 
 void SetFileAutoDefineList(Rlist *auto_define_list);
 
-bool VerifyFileLeaf(EvalContext *ctx, char *path, struct stat *sb, Attributes attr, Promise *pp, PromiseResult *result);
-int DepthSearch(EvalContext *ctx, char *name, struct stat *sb, int rlevel, Attributes attr, Promise *pp, dev_t rootdevice, PromiseResult *result);
-bool CfCreateFile(EvalContext *ctx, char *file, Promise *pp, Attributes attr, PromiseResult *result_out);
-void SetSearchDevice(struct stat *sb, Promise *pp);
+bool VerifyFileLeaf(EvalContext *ctx, char *path, struct stat *sb, Attributes attr, const Promise *pp, PromiseResult *result);
+int DepthSearch(EvalContext *ctx, char *name, struct stat *sb, int rlevel, Attributes attr, const Promise *pp, dev_t rootdevice, PromiseResult *result);
+bool CfCreateFile(EvalContext *ctx, char *file, const Promise *pp, Attributes attr, PromiseResult *result_out);
+void SetSearchDevice(struct stat *sb, const Promise *pp);
 
-PromiseResult ScheduleCopyOperation(EvalContext *ctx, char *destination, Attributes attr, Promise *pp);
-PromiseResult ScheduleLinkChildrenOperation(EvalContext *ctx, char *destination, char *source, int rec, Attributes attr, Promise *pp);
-PromiseResult ScheduleLinkOperation(EvalContext *ctx, char *destination, char *source, Attributes attr, Promise *pp);
-PromiseResult ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes attr, Promise *pp);
+PromiseResult ScheduleCopyOperation(EvalContext *ctx, char *destination, Attributes attr, const Promise *pp);
+PromiseResult ScheduleLinkChildrenOperation(EvalContext *ctx, char *destination, char *source, int rec, Attributes attr, const Promise *pp);
+PromiseResult ScheduleLinkOperation(EvalContext *ctx, char *destination, char *source, Attributes attr, const Promise *pp);
+PromiseResult ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes attr, const Promise *pp);
 
-bool CopyRegularFile(EvalContext *ctx, const char *source, const char *dest, struct stat sstat, struct stat dstat,
-                     Attributes attr, Promise *pp, CompressedArray **inode_cache, AgentConnection *conn, PromiseResult *result);
+bool CopyRegularFile(EvalContext *ctx, const char *source, const char *dest,
+                     struct stat sstat, struct stat dstat,
+                     Attributes attr, const Promise *pp, CompressedArray **inode_cache,
+                     AgentConnection *conn, PromiseResult *result);
 
 /* To be implemented in Nova for Win32 */
-bool VerifyOwner(EvalContext *ctx, const char *file, Promise *pp, Attributes attr, struct stat *sb, PromiseResult *result);
+bool VerifyOwner(EvalContext *ctx, const char *file, const Promise *pp, Attributes attr, struct stat *sb, PromiseResult *result);
 
 #endif

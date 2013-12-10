@@ -24,7 +24,7 @@
 
 #include <cf-agent-enterprise-stubs.h>
 
-ENTERPRISE_FUNC_3ARG_DEFINE_STUB(PromiseResult, VerifyWindowsService, ARG_UNUSED EvalContext *, ctx, ARG_UNUSED Attributes, a, ARG_UNUSED Promise *, pp)
+ENTERPRISE_FUNC_3ARG_DEFINE_STUB(PromiseResult, VerifyWindowsService, ARG_UNUSED EvalContext *, ctx, ARG_UNUSED Attributes, a, ARG_UNUSED const Promise *, pp)
 {
     Log(LOG_LEVEL_ERR, "Windows service management is only supported in CFEngine Enterprise");
     return PROMISE_RESULT_FAIL;
@@ -37,7 +37,7 @@ ENTERPRISE_VOID_FUNC_2ARG_DEFINE_STUB(void, LastSawBundle, ARG_UNUSED const Bund
 ENTERPRISE_FUNC_8ARG_DEFINE_STUB(PromiseResult, LogFileChange,
                                  ARG_UNUSED EvalContext *, ctx,
                                  ARG_UNUSED const char *, file,
-                                 ARG_UNUSED int, change, ARG_UNUSED Attributes, a, ARG_UNUSED Promise *, pp,
+                                 ARG_UNUSED int, change, ARG_UNUSED Attributes, a, ARG_UNUSED const Promise *, pp,
                                  ARG_UNUSED CopyRegularFileFunction, CopyRegularFilePtr, ARG_UNUSED const char *, destination,
                                  ARG_UNUSED DeleteCompressedArrayFunction, DeleteCompressedArrayPtr)
 {
@@ -50,7 +50,7 @@ ENTERPRISE_FUNC_5ARG_DEFINE_STUB(PromiseResult, Nova_CheckNtACL,
                                  ARG_UNUSED const char *, file_path,
                                  ARG_UNUSED Acl, acl,
                                  ARG_UNUSED Attributes, a,
-                                 ARG_UNUSED Promise *, pp)
+                                 ARG_UNUSED const const Promise *, pp)
 {
     Log(LOG_LEVEL_INFO, "NTFS ACLs are only supported in CFEngine Enterprise");
     return PROMISE_RESULT_NOOP;

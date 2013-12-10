@@ -29,9 +29,9 @@
 #include <cfnet.h>
 
 #if defined(__MINGW32__)
-PromiseResult VerifyRegistryPromise(EvalContext *ctx, Attributes a, Promise *pp);
+PromiseResult VerifyRegistryPromise(EvalContext *ctx, Attributes a, const Promise *pp);
 #endif
-ENTERPRISE_FUNC_3ARG_DECLARE(PromiseResult, VerifyWindowsService, EvalContext *, ctx, Attributes, a, Promise *, pp);
+ENTERPRISE_FUNC_3ARG_DECLARE(PromiseResult, VerifyWindowsService, EvalContext *, ctx, Attributes, a, const Promise *, pp);
 
 ENTERPRISE_VOID_FUNC_2ARG_DECLARE(void, LastSawBundle, const Bundle *, bundle, double, compliance);
 
@@ -41,7 +41,7 @@ typedef bool (*CopyRegularFileFunction)(EvalContext *ctx,
                                        struct stat sstat,
                                        struct stat dstat,
                                        Attributes attr,
-                                       Promise *pp,
+                                       const Promise *pp,
                                        CompressedArray **inode_cache,
                                        AgentConnection *conn,
                                        PromiseResult *result);
@@ -49,11 +49,11 @@ typedef void (*DeleteCompressedArrayFunction)(CompressedArray *start);
 ENTERPRISE_FUNC_8ARG_DECLARE(PromiseResult, LogFileChange,
                              EvalContext *, ctx,
                              const char *, file,
-                             int, change, Attributes, a, Promise *, pp, CopyRegularFileFunction, CopyRegularFilePtr,
+                             int, change, Attributes, a, const Promise *, pp, CopyRegularFileFunction, CopyRegularFilePtr,
                              const char *, destination, DeleteCompressedArrayFunction, DeleteCompressedArrayPtr);
 
 ENTERPRISE_FUNC_5ARG_DECLARE(PromiseResult, Nova_CheckNtACL,
-                             EvalContext *, ctx, const char *, file_path, Acl, acl, Attributes, a, Promise *, pp);
+                             EvalContext *, ctx, const char *, file_path, Acl, acl, Attributes, a, const Promise *, pp);
 
 ENTERPRISE_VOID_FUNC_1ARG_DECLARE(void, ReportPatches, PackageManager *, list);
 

@@ -22,8 +22,8 @@
   included file COSL.txt.
 */
 
-#ifndef CFENGINE_ENV_CONTEXT_H
-#define CFENGINE_ENV_CONTEXT_H
+#ifndef CFENGINE_EVAL_CONTEXT_H
+#define CFENGINE_EVAL_CONTEXT_H
 
 #include <cf3.defs.h>
 

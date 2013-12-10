@@ -540,6 +540,7 @@ static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *c
             SetPolicyServer(ctx, existing_policy_server);
             free(existing_policy_server);
         }
+        UpdateLastPolicyUpdateTime(ctx);
 
         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "policy_hub", POLICY_SERVER, DATA_TYPE_STRING, "source=bootstrap");
 

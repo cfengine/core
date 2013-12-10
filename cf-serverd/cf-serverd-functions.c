@@ -620,6 +620,7 @@ void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *con
                 SetPolicyServer(ctx, existing_policy_server);
                 free(existing_policy_server);
             }
+            UpdateLastPolicyUpdateTime(ctx);
 
             DetectEnvironment(ctx);
             KeepHardClasses(ctx);

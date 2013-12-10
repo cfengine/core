@@ -122,7 +122,10 @@ void SetPolicyServer(EvalContext *ctx, const char *new_policy_server)
         snprintf(POLICY_SERVER, CF_MAX_IP_LEN, "%s", new_policy_server);
         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "policy_hub", new_policy_server, DATA_TYPE_STRING, "source=bootstrap");
     }
+}
 
+void UpdateLastPolicyUpdateTime(EvalContext *ctx)
+{
     // Get the timestamp on policy update
     struct stat sb;
     {

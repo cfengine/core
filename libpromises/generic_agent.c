@@ -165,6 +165,8 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
 
         WritePolicyServerFile(GetWorkDir(), config->agent_specific.agent.bootstrap_policy_server);
         SetPolicyServer(ctx, config->agent_specific.agent.bootstrap_policy_server);
+        /* FIXME: Why it is called here? Can't we move both invocations to before if? */
+        UpdateLastPolicyUpdateTime(ctx);
         Log(LOG_LEVEL_INFO, "Bootstrapping to '%s'", POLICY_SERVER);
     }
     else
@@ -174,6 +176,7 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
         {
             Log(LOG_LEVEL_VERBOSE, "This agent is bootstrapped to '%s'", existing_policy_server);
             SetPolicyServer(ctx, existing_policy_server);
+            UpdateLastPolicyUpdateTime(ctx);
         }
         else
         {

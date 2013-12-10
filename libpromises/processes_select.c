@@ -350,7 +350,7 @@ static long TimeAbs2Int(const char *s)
         hour = IntFromString(h);
         min = IntFromString(m);
     }
-    else                        /* date Month */
+    else                        /* Month day */
     {
         sscanf(s, "%3[a-zA-Z] %ld", mon, &day);
 

@@ -295,9 +295,6 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
     int c;
     GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_AGENT);
 
-/* Because of the MacOS linker we have to call this from each agent
-   individually before Generic Initialize */
-
     POLICY_SERVER[0] = '\0';
 
 /* DEPRECATED:

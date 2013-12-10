@@ -295,8 +295,6 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
     int c;
     GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_AGENT);
 
-    POLICY_SERVER[0] = '\0';
-
 /* DEPRECATED:
    --policy-server (-s) is deprecated in community version 3.5.0.
    Support rewrite from some common old bootstrap options (until community version 3.6.0?).

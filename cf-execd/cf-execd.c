@@ -141,7 +141,7 @@ int main(int argc, char *argv[])
     GenericAgentDiscoverContext(ctx, config);
 
     Policy *policy = NULL;
-    if (GenericAgentCheckPolicy(config, false))
+    if (GenericAgentCheckPolicy(config, false, false))
     {
         policy = GenericAgentLoadPolicy(ctx, config);
     }

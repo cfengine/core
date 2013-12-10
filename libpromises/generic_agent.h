@@ -78,7 +78,7 @@ typedef struct
 ENTERPRISE_VOID_FUNC_2ARG_DECLARE(void, GenericAgentSetDefaultDigest, HashMethod *, digest, int *, digest_len);
 const char *GenericAgentResolveInputPath(const GenericAgentConfig *config, const char *input_file);
 void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config);
-bool GenericAgentCheckPolicy(GenericAgentConfig *config, bool force_validation);
+bool GenericAgentCheckPolicy(GenericAgentConfig *config, bool force_validation, bool write_validated_file);
 Policy *GenericAgentLoadPolicy(EvalContext *ctx, GenericAgentConfig *config);
 
 ENTERPRISE_VOID_FUNC_1ARG_DECLARE(void, GenericAgentAddEditionClasses, EvalContext *, ctx);

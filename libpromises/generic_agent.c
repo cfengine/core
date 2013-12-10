@@ -217,14 +217,14 @@ static bool IsPolicyPrecheckNeeded(GenericAgentConfig *config, bool force_valida
     return check_policy;
 }
 
-bool GenericAgentCheckPolicy(GenericAgentConfig *config, bool force_validation)
+bool GenericAgentCheckPolicy(GenericAgentConfig *config, bool force_validation, bool write_validated_file)
 {
     if (!MissingInputFile(config->input_file))
     {
         if (IsPolicyPrecheckNeeded(config, force_validation))
         {
             bool policy_check_ok = GenericAgentArePromisesValid(config);
-            if (policy_check_ok)
+            if (policy_check_ok && write_validated_file)
             {
                 WritePolicyValidatedFileToMasterfiles(config);
             }

@@ -352,7 +352,7 @@ void DiscoverVersion(EvalContext *ctx)
     }
 }
 
-static void GetNameInfo3(EvalContext *ctx, bool use_monitoring_data)
+static void GetNameInfo3(EvalContext *ctx)
 {
     int i, found = false;
     char *sp, workbuf[CF_BUFSIZE];
@@ -638,11 +638,6 @@ static void GetNameInfo3(EvalContext *ctx, bool use_monitoring_data)
 # endif
 #endif /* !__MINGW32__ */
 
-    if (use_monitoring_data)
-    {
-        LoadSlowlyVaryingObservations(ctx);
-    }
-
     EnterpriseContext(ctx);
 
     sprintf(workbuf, "%u_bit", (unsigned) sizeof(void*) * 8);
@@ -857,6 +852,11 @@ static void Get3Environment(EvalContext *ctx, bool use_monitoring_data)
 
     fclose(fp);
     Log(LOG_LEVEL_VERBOSE, "Environment data loaded");
+
+    if (use_monitoring_data)
+    {
+        LoadSlowlyVaryingObservations(ctx);
+    }
 }
 
 static void BuiltinClasses(EvalContext *ctx)
@@ -2633,7 +2633,7 @@ static time_t GetBootTimeFromUptimeCommand(time_t now)
 void DetectEnvironment(EvalContext *ctx, bool use_monitoring_data, bool use_name_info)
 {
     if (use_name_info)
-        GetNameInfo3(ctx, use_monitoring_data);
+        GetNameInfo3(ctx);
     GetInterfacesInfo(ctx);
     Get3Environment(ctx, use_monitoring_data);
     BuiltinClasses(ctx);

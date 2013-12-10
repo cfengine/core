@@ -539,12 +539,10 @@ bool IsLoopbackAddress(const char *address)
     return false;
 }
 
-bool IsInterfaceAddress(const char *adr)
+bool IsInterfaceAddress(const Item *ip_addresses, const char *adr)
  /* Does this address belong to a local interface */
 {
-    Item *ip;
-
-    for (ip = IPADDRESSES; ip != NULL; ip = ip->next)
+    for (const Item *ip = ip_addresses; ip != NULL; ip = ip->next)
     {
         if (strncasecmp(adr, ip->name, strlen(adr)) == 0)
         {

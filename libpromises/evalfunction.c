@@ -3510,7 +3510,7 @@ static FnCallResult FnCallIPRange(EvalContext *ctx, FnCall *fp, Rlist *finalargs
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
-    for (ip = IPADDRESSES; ip != NULL; ip = ip->next)
+    for (ip = EvalContextGetIpAddresses(ctx); ip != NULL; ip = ip->next)
     {
         if (FuzzySetMatch(range, VIPADDRESS) == 0)
         {

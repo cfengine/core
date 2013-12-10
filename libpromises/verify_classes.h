@@ -25,7 +25,7 @@
 #ifndef CFENGINE_VERIFY_CLASSES_H
 #define CFENGINE_VERIFY_CLASSES_H
 
-#include <env_context.h>
+#include <eval_context.h>
 #include <policy.h>
 
 PromiseResult VerifyClassPromise(EvalContext *ctx, Promise *pp, void *param);

@@ -28,7 +28,7 @@
 #include <bootstrap.h>
 #include <known_dirs.h>
 #include <sysinfo.h>
-#include <env_context.h>
+#include <eval_context.h>
 #include <promises.h>
 #include <vars.h>
 #include <item_lib.h>

@@ -25,7 +25,7 @@
 #include <expand.h>
 
 #include <misc_lib.h>
-#include <env_context.h>
+#include <eval_context.h>
 #include <policy.h>
 #include <promises.h>
 #include <vars.h>

@@ -27,7 +27,7 @@
 #include <bootstrap.h>
 #include <sysinfo.h>
 #include <known_dirs.h>
-#include <env_context.h>
+#include <eval_context.h>
 #include <policy.h>
 #include <promises.h>
 #include <files_lib.h>

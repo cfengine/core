@@ -45,7 +45,7 @@
 #include <misc_lib.h>
 #include <rlist.h>
 #include <ornaments.h>
-#include <env_context.h>
+#include <eval_context.h>
 #include <retcode.h>
 #include <cf-agent-enterprise-stubs.h>
 #include <cf-windows-functions.h>

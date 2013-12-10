@@ -30,7 +30,7 @@
 #include <promises.h>
 #include <string_lib.h>
 #include <rlist.h>
-#include <env_context.h>
+#include <eval_context.h>
 #include <cf-agent-enterprise-stubs.h>
 
 // Valid operations (first char of mode)

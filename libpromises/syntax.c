@@ -37,7 +37,7 @@
 #include <misc_lib.h>
 #include <rlist.h>
 #include <vars.h>
-#include <env_context.h>
+#include <eval_context.h>
 
 
 static SyntaxTypeMatch CheckParseString(const char *lv, const char *s, const char *range);

@@ -33,7 +33,7 @@
 #include <vars.h>
 #include <pipes.h>
 #include <misc_lib.h>
-#include <env_context.h>
+#include <eval_context.h>
 
 static VersionCmpResult InvertResult(VersionCmpResult result)
 {

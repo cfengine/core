@@ -24,7 +24,7 @@
 
 #include <bootstrap.h>
 
-#include <env_context.h>
+#include <eval_context.h>
 #include <files_names.h>
 #include <scope.h>
 #include <files_interfaces.h>

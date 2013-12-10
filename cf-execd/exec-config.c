@@ -28,7 +28,7 @@
 #include <string_lib.h>
 
 #include <rlist.h>
-#include <env_context.h>
+#include <eval_context.h>
 #include <conversion.h>
 #include <generic_agent.h> // TODO: fix
 #include <item_lib.h>

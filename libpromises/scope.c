@@ -35,7 +35,7 @@
 #include <conversion.h>
 #include <syntax.h>
 #include <policy.h>
-#include <env_context.h>
+#include <eval_context.h>
 #include <audit.h>
 
 /*******************************************************************/

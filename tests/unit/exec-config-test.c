@@ -3,7 +3,7 @@
 #include <exec-config.h>
 
 #include <parser.h>
-#include <env_context.h>
+#include <eval_context.h>
 #include <expand.h>
 
 static Policy *LoadPolicy(const char *filename)

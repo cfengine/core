@@ -35,7 +35,7 @@ static const int CF_NOSIZE = -1;
 #include <files_interfaces.h>
 #include <files_hashes.h>
 #include <file_lib.h>
-#include <env_context.h>
+#include <eval_context.h>
 #include <dir.h>
 #include <conversion.h>
 #include <matching.h>                        /* IsRegexItemIn,FullTextMatch */

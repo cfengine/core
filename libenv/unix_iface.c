@@ -24,7 +24,7 @@
 #include <unix_iface.h>
 
 #include <files_names.h>
-#include <env_context.h>
+#include <eval_context.h>
 #include <item_lib.h>
 #include <pipes.h>
 #include <misc_lib.h>

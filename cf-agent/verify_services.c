@@ -36,7 +36,7 @@
 #include <scope.h>
 #include <cf-agent-enterprise-stubs.h>
 #include <ornaments.h>
-#include <env_context.h>
+#include <eval_context.h>
 
 static int ServicesSanityChecks(Attributes a, Promise *pp);
 static void SetServiceDefaults(Attributes *a);

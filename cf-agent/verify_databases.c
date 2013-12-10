@@ -35,7 +35,7 @@
 #include <rlist.h>
 #include <policy.h>
 #include <cf-agent-enterprise-stubs.h>
-#include <env_context.h>
+#include <eval_context.h>
 #include <ornaments.h>
 #include <misc_lib.h>
 

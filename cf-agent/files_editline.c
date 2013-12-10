@@ -25,7 +25,7 @@
 #include <files_editline.h>
 
 #include <actuator.h>
-#include <env_context.h>
+#include <eval_context.h>
 #include <promises.h>
 #include <files_names.h>
 #include <vars.h>

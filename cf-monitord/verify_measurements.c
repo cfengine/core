@@ -29,7 +29,7 @@
 #include <attributes.h>
 #include <policy.h>
 #include <cf-monitord-enterprise-stubs.h>
-#include <env_context.h>
+#include <eval_context.h>
 #include <ornaments.h>
 
 static bool CheckMeasureSanity(Measurement m, Promise *pp);

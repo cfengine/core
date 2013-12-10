@@ -45,7 +45,7 @@
 #include <conversion.h>
 #include <pipes.h>
 #include <verify_acl.h>
-#include <env_context.h>
+#include <eval_context.h>
 #include <vars.h>
 #include <exec_tools.h>
 #include <comparray.h>

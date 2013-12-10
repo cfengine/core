@@ -1,7 +1,7 @@
 #include <test.h>
 
 #include <generic_agent.h>
-#include <env_context.h>
+#include <eval_context.h>
 #include <sysinfo_priv.h>
 
 void test_load_masterfiles(void)

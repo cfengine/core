@@ -33,7 +33,7 @@
 #include <locks.h>
 #include <string_lib.h>
 #include <misc_lib.h>
-#include <env_context.h>
+#include <eval_context.h>
 
 #define CF_MAXLINKLEVEL 4
 

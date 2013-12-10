@@ -27,7 +27,7 @@
 
 #include <cf3.defs.h>
 
-void DetectEnvironment(EvalContext *ctx, bool use_monitoring_data, bool use_name_info);
+void DetectEnvironment(EvalContext *ctx);
 
 void CreateHardClassesFromCanonification(EvalContext *ctx, const char *canonified, char *tags);
 

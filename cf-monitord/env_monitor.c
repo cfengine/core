@@ -1150,7 +1150,7 @@ static void GatherPromisedMeasures(EvalContext *ctx, const Policy *policy)
     }
 
     EvalContextClear(ctx);
-    DetectEnvironment(ctx, true, true);
+    DetectEnvironment(ctx);
 }
 
 /*********************************************************************/

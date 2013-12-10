@@ -760,7 +760,7 @@ static void GetNameInfo3(EvalContext *ctx)
 
 /*******************************************************************/
 
-static void Get3Environment(EvalContext *ctx, bool use_monitoring_data)
+static void Get3Environment(EvalContext *ctx)
 {
     char env[CF_BUFSIZE], context[CF_BUFSIZE], name[CF_MAXVARSIZE], value[CF_BUFSIZE];
     FILE *fp;
@@ -835,14 +835,8 @@ static void Get3Environment(EvalContext *ctx, bool use_monitoring_data)
         {
             sscanf(context, "%255[^=]=%255[^\n]", name, value);
 
-
-/*****************************************************************************/
-
-            if (use_monitoring_data)
-            {
-                EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_MON, name, value, DATA_TYPE_STRING, "inventory,source=environment");
-                Log(LOG_LEVEL_DEBUG, "Setting new monitoring scalar '%s' => '%s'", name, value);
-            }
+            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_MON, name, value, DATA_TYPE_STRING, "inventory,source=environment");
+            Log(LOG_LEVEL_DEBUG, "Setting new monitoring scalar '%s' => '%s'", name, value);
         }
         else
         {
@@ -853,10 +847,7 @@ static void Get3Environment(EvalContext *ctx, bool use_monitoring_data)
     fclose(fp);
     Log(LOG_LEVEL_VERBOSE, "Environment data loaded");
 
-    if (use_monitoring_data)
-    {
-        LoadSlowlyVaryingObservations(ctx);
-    }
+    LoadSlowlyVaryingObservations(ctx);
 }
 
 static void BuiltinClasses(EvalContext *ctx)
@@ -2630,12 +2621,11 @@ static time_t GetBootTimeFromUptimeCommand(time_t now)
 }
 #endif
 
-void DetectEnvironment(EvalContext *ctx, bool use_monitoring_data, bool use_name_info)
+void DetectEnvironment(EvalContext *ctx)
 {
-    if (use_name_info)
-        GetNameInfo3(ctx);
+    GetNameInfo3(ctx);
     GetInterfacesInfo(ctx);
-    Get3Environment(ctx, use_monitoring_data);
+    Get3Environment(ctx);
     BuiltinClasses(ctx);
     OSClasses(ctx);
 }

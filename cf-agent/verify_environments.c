@@ -121,11 +121,10 @@ void DeleteEnvironmentsContext(void)
 
 PromiseResult VerifyEnvironmentsPromise(EvalContext *ctx, Promise *pp)
 {
-    Attributes a = { {0} };
     CfLock thislock;
     Promise *pexp;
 
-    a = GetEnvironmentsAttributes(ctx, pp);
+    Attributes a = GetEnvironmentsAttributes(ctx, pp);
 
     PromiseResult result = PROMISE_RESULT_NOOP;
     if (EnvironmentsSanityChecks(a, pp))

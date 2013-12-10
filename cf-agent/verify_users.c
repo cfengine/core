@@ -35,11 +35,10 @@ static int UserSanityCheck(Attributes a, Promise *pp);
 
 PromiseResult VerifyUsersPromise(EvalContext *ctx, Promise *pp)
 {
-    Attributes a = { {0} };
     CfLock thislock;
     char lockname[CF_BUFSIZE];
 
-    a = GetUserAttributes(ctx, pp);
+    Attributes a = GetUserAttributes(ctx, pp);
 
     if (!UserSanityCheck(a, pp))
     {

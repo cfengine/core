@@ -187,11 +187,10 @@ static int FileSanityChecks(EvalContext *ctx, char *path, Attributes a, Promise 
 static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, Promise *pp)
 {
     struct stat osb, oslb, dsb;
-    Attributes a = { {0} };
     CfLock thislock;
     int exists;
 
-    a = GetFilesAttributes(ctx, pp);
+    Attributes a = GetFilesAttributes(ctx, pp);
 
     if (!FileSanityChecks(ctx, path, a, pp))
     {

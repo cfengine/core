@@ -87,10 +87,9 @@ static PromiseResult FindStoragePromiserObjects(EvalContext *ctx, Promise *pp)
 
 PromiseResult VerifyStoragePromise(EvalContext *ctx, char *path, Promise *pp)
 {
-    Attributes a = { {0} };
     CfLock thislock;
 
-    a = GetStorageAttributes(ctx, pp);
+    Attributes a = GetStorageAttributes(ctx, pp);
 
 #ifdef __MINGW32__
     if (!a.havemount)

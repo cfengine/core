@@ -38,8 +38,6 @@ static bool CheckMeasureSanity(Measurement m, Promise *pp);
 
 PromiseResult VerifyMeasurementPromise(EvalContext *ctx, double *measurement, Promise *pp)
 {
-    Attributes a = { {0} };
-
     if (EvalContextPromiseIsDone(ctx, pp))
     {
         if (pp->comment)
@@ -56,7 +54,7 @@ PromiseResult VerifyMeasurementPromise(EvalContext *ctx, double *measurement, Pr
 
     PromiseBanner(pp);
 
-    a = GetMeasurementAttributes(ctx, pp);
+    Attributes a = GetMeasurementAttributes(ctx, pp);
 
     if (!CheckMeasureSanity(a.measure, pp))
     {

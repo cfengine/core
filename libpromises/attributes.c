@@ -191,7 +191,7 @@ Attributes GetDatabaseAttributes(const EvalContext *ctx, const Promise *pp)
 
 Attributes GetClassContextAttributes(const EvalContext *ctx, const Promise *pp)
 {
-    Attributes a = { {0} };;
+    Attributes a = { {0} };
 
     a.transaction = GetTransactionConstraints(ctx, pp);
     a.classes = GetClassDefinitionConstraints(ctx, pp);

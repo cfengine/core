@@ -190,7 +190,6 @@ static void AddTimeClass(EvalContext *ctx, time_t time)
 
 /* Shift */
 
-        strcpy(VSHIFT, SHIFT_TEXT[tz_parsed_time[0].tm_hour / 6]); // VSHIFT has the local shift
         snprintf(buf, CF_BUFSIZE, "%s%s", tz_prefix[tz], SHIFT_TEXT[tz_parsed_time[tz].tm_hour / 6]);
         EvalContextClassPutHard(ctx, buf, "time_based,source=agent");
 

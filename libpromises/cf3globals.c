@@ -66,7 +66,6 @@ char VDOMAIN[CF_MAXVARSIZE] = { 0 }; /* GLOBAL_E GLOBAL_P */
 char VYEAR[5] = { 0 }; /* GLOBAL_E */
 char VDAY[3] = { 0 }; /* GLOBAL_E */
 char VMONTH[4] = { 0 }; /* GLOBAL_E */
-char VSHIFT[12] = { 0 }; /* GLOBAL_E */
 
 char CFWORKDIR[CF_BUFSIZE] = { 0 }; /* GLOBAL_C */
 

@@ -75,8 +75,6 @@ char CFWORKDIR[CF_BUFSIZE] = { 0 };
 char *DEFAULT_COPYTYPE = NULL;
 
 RSA *PRIVKEY = NULL, *PUBKEY = NULL;
-char PUBKEY_DIGEST[CF_MAXVARSIZE] = { 0 };
-
 
 char VIPADDRESS[CF_MAX_IP_LEN] = { 0 };
 
@@ -91,12 +89,7 @@ Item *IPADDRESSES = NULL;
 HashMethod CF_DEFAULT_DIGEST;
 int CF_DEFAULT_DIGEST_LEN;
 
-/***********************************************************/
-
-char CFLOCK[CF_BUFSIZE] = { 0 };
-
 time_t CFSTARTTIME;
-time_t CFINITSTARTTIME;
 
 int CFENGINE_PORT;
 

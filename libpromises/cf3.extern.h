@@ -38,8 +38,6 @@ extern Item *IPADDRESSES;
 extern int CFENGINE_PORT;
 extern time_t CONNTIMEOUT;
 
-extern char CFLOCK[CF_BUFSIZE];
-
 extern char CFWORKDIR[CF_BUFSIZE];
 
 extern char VYEAR[];
@@ -50,7 +48,6 @@ extern char VSHIFT[];
 extern const char *CLASSTEXT[];
 
 extern time_t CFSTARTTIME;
-extern time_t CFINITSTARTTIME;
 
 extern struct utsname VSYSNAME;
 extern char VIPADDRESS[CF_MAX_IP_LEN];
@@ -87,7 +84,6 @@ extern const char *CF_AGENTTYPES[];
 extern int CFA_MAXTHREADS;
 extern AgentType THIS_AGENT_TYPE;
 extern int SHOWREPORTS;
-#define CF_LOCKHORIZON ((time_t)(SECONDS_PER_WEEK * 4))
 extern int LASTSEENEXPIREAFTER;
 extern char *DEFAULT_COPYTYPE;
 extern Item *PROCESSTABLE;

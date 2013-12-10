@@ -774,7 +774,20 @@ static void UpdateAverages(EvalContext *ctx, char *timekey, Averages newvals)
     HistoryUpdate(ctx, newvals);
 }
 
-/*****************************************************************************/
+static int Day2Number(const char *datestring)
+{
+    int i = 0;
+
+    for (i = 0; i < 7; i++)
+    {
+        if (strncmp(datestring, DAY_TEXT[i], 3) == 0)
+        {
+            return i;
+        }
+    }
+
+    return -1;
+}
 
 static void UpdateDistributions(EvalContext *ctx, char *timekey, Averages *av)
 {

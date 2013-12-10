@@ -329,7 +329,60 @@ static int SelectProcTimeCounterRangeMatch(char *name1, char *name2, time_t min,
     return false;
 }
 
-/***************************************************************************/
+static long TimeAbs2Int(const char *s)
+{
+    time_t cftime;
+    char mon[4], h[3], m[3];
+    long month = 0, day = 0, hour = 0, min = 0, year = 0;
+    struct tm tm;
+
+    if (s == NULL)
+    {
+        return CF_NOINT;
+    }
+
+    year = IntFromString(VYEAR);
+
+    if (strstr(s, ":"))         /* Hr:Min */
+    {
+        sscanf(s, "%2[^:]:%2[^:]:", h, m);
+        month = Month2Int(VMONTH);
+        day = IntFromString(VDAY);
+        hour = IntFromString(h);
+        min = IntFromString(m);
+
+        tm.tm_year = year - 1900;
+        tm.tm_mon = month - 1;
+        tm.tm_mday = day;
+        tm.tm_hour = hour;
+        tm.tm_min = min;
+        tm.tm_sec = 0;
+        tm.tm_isdst = -1;
+        cftime = mktime(&tm);
+    }
+    else                        /* date Month */
+    {
+        sscanf(s, "%3[a-zA-Z] %ld", mon, &day);
+
+        month = Month2Int(mon);
+
+        if (Month2Int(VMONTH) < month)
+        {
+            /* Wrapped around */
+            year--;
+        }
+        tm.tm_year = year - 1900;
+        tm.tm_mon = month - 1;
+        tm.tm_mday = day;
+        tm.tm_hour = 0;
+        tm.tm_min = 0;
+        tm.tm_sec = 0;
+        tm.tm_isdst = -1;
+        cftime = mktime(&tm);
+    }
+
+    return (long) cftime;
+}
 
 static int SelectProcTimeAbsRangeMatch(char *name1, char *name2, time_t min, time_t max, char **names, char **line)
 {

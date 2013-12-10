@@ -40,7 +40,9 @@
 #include <known_dirs.h>
 
 #define CFLOGSIZE 1048576       /* Size of lock-log before rotation */
+#define CF_LOCKHORIZON ((time_t)(SECONDS_PER_WEEK * 4))
 
+static char CFLOCK[CF_BUFSIZE] = { 0 };
 static char CFLAST[CF_BUFSIZE] = { 0 };
 static char CFLOG[CF_BUFSIZE] = { 0 };
 
@@ -746,8 +748,6 @@ CfLock AcquireLock(EvalContext *ctx, const char *operand, const char *host, time
     Log(LOG_LEVEL_DEBUG, "Log for bundle '%s', '%s'", PromiseGetBundle(pp)->name, cflock);
 
 // Now see if we can get exclusivity to edit the locks
-
-    CFINITSTARTTIME = time(NULL);
 
     WaitForCriticalSection();
 

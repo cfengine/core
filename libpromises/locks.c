@@ -40,6 +40,7 @@
 #include <known_dirs.h>
 
 #define CFLOGSIZE 1048576       /* Size of lock-log before rotation */
+#define CF_LOCKHORIZON ((time_t)(SECONDS_PER_WEEK * 4))
 
 static char CFLOCK[CF_BUFSIZE] = { 0 };
 static char CFLAST[CF_BUFSIZE] = { 0 };

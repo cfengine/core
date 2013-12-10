@@ -264,7 +264,7 @@ FnCallResult FnCallEvaluate(EvalContext *ctx, FnCall *fp, const Promise *caller)
 {
     fp->caller = caller;
 
-    if (!(ctx->eval_options & EVAL_OPTION_EVAL_FUNCTIONS))
+    if (!EvalContextGetEvalOption(ctx, EVAL_OPTION_EVAL_FUNCTIONS))
     {
         Log(LOG_LEVEL_VERBOSE, "Skipping function '%s', because evaluation was turned off in the evaluator",
             fp->name);

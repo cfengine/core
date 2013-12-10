@@ -2089,3 +2089,20 @@ Item *EvalContextGetIpAddresses(const EvalContext *ctx)
 {
     return ctx->ip_addresses;
 }
+
+void EvalContextSetEvalOption(EvalContext *ctx, EvalContextOption option, bool value)
+{
+    if (value)
+    {
+        ctx->eval_options |= option;
+    }
+    else
+    {
+        ctx->eval_options &= ~option;
+    }
+}
+
+bool EvalContextGetEvalOption(EvalContext *ctx, EvalContextOption option)
+{
+    return !!(ctx->eval_options & option);
+}

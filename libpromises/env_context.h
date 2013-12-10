@@ -199,6 +199,8 @@ void EvalContextDeleteIpAddresses(EvalContext *ctx);
 
 /* - Rest - */
 bool EvalContextPromiseIsActive(const EvalContext *ctx, const Promise *pp);
+void EvalContextSetEvalOption(EvalContext *ctx, EvalContextOption option, bool value);
+bool EvalContextGetEvalOption(EvalContext *ctx, EvalContextOption option);
 
 bool Abort(EvalContext *ctx);
 int VarClassExcluded(const EvalContext *ctx, const Promise *pp, char **classes);

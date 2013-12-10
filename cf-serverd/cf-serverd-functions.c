@@ -590,7 +590,6 @@ void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *con
             DeleteAuthList(SV.roles);
 
             strcpy(VDOMAIN, "undefined.domain");
-            POLICY_SERVER[0] = '\0';
 
             SV.admit = NULL;
             SV.admittop = NULL;

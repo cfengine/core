@@ -542,8 +542,6 @@ static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *c
         }
         UpdateLastPolicyUpdateTime(ctx);
 
-        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "policy_hub", POLICY_SERVER, DATA_TYPE_STRING, "source=bootstrap");
-
         DetectEnvironment(ctx);
 
         EvalContextClassPutHard(ctx, CF_AGENTTYPES[AGENT_TYPE_EXECUTOR], "cfe_internal,source=agent");

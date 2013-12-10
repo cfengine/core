@@ -28,7 +28,7 @@
 #include <cf3.defs.h>
 
 /**
- * @brief Sets classes and the POLICY_SERVER global.
+ * @brief Sets sys.policy_hub and the POLICY_SERVER global.
  * @param ctx EvalContext is used to set related variables
  * @param new_policy_server IP of new policy server
  */

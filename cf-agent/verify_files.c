@@ -486,7 +486,7 @@ PromiseResult ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes
         goto exit;
     }
 
-    Policy *policy = PolicyFromPromise(pp);
+    const Policy *policy = PolicyFromPromise(pp);
 
     if (a.haveeditline)
     {

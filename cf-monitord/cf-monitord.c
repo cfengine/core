@@ -48,7 +48,7 @@ typedef enum
 
 static void ThisAgentInit(EvalContext *ctx);
 static GenericAgentConfig *CheckOpts(int argc, char **argv);
-static void KeepPromises(EvalContext *ctx, Policy *policy);
+static void KeepPromises(EvalContext *ctx, const Policy *policy);
 
 /*****************************************************************************/
 /* Globals                                                                   */
@@ -240,7 +240,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
 
 /*****************************************************************************/
 
-static void KeepPromises(EvalContext *ctx, Policy *policy)
+static void KeepPromises(EvalContext *ctx, const Policy *policy)
 {
     Rval retval;
 

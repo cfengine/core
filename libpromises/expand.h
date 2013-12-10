@@ -50,7 +50,7 @@ Rval EvaluateFinalRval(EvalContext *ctx, const char *ns, const char *scope, Rval
  * @param bundle
  */
 void BundleResolve(EvalContext *ctx, Bundle *bundle);
-void PolicyResolve(EvalContext *ctx, Policy *policy, GenericAgentConfig *config);
+void PolicyResolve(EvalContext *ctx, const Policy *policy, GenericAgentConfig *config);
 
 
 int IsNakedVar(const char *str, char vtype);

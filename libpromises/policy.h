@@ -187,7 +187,7 @@ bool PolicyIsRunnable(const Policy *policy);
  * @param promise
  * @return Policy object
  */
-Policy *PolicyFromPromise(const Promise *promise);
+const Policy *PolicyFromPromise(const Promise *promise);
 char *BundleQualifiedName(const Bundle *bundle);
 
 PolicyError *PolicyErrorNew(PolicyElementType type, const void *subject, const char *error_msg, ...);

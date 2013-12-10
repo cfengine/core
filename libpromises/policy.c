@@ -339,7 +339,7 @@ const char *ConstraintGetNamespace(const Constraint *cp)
 
 /*************************************************************************/
 
-Policy *PolicyFromPromise(const Promise *promise)
+const Policy *PolicyFromPromise(const Promise *promise)
 {
     assert(promise);
 

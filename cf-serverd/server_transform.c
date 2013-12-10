@@ -89,12 +89,12 @@ typedef enum
     SERVER_CONTROL_NONE
 } ServerControl;
 
-static void KeepContextBundles(EvalContext *ctx, Policy *policy);
+static void KeepContextBundles(EvalContext *ctx, const Policy *policy);
 static PromiseResult KeepServerPromise(EvalContext *ctx, Promise *pp, void *param);
 static void InstallServerAuthPath(const char *path, Auth **list, Auth **listtop);
 static void KeepServerRolePromise(EvalContext *ctx, Promise *pp);
-static void KeepPromiseBundles(EvalContext *ctx, Policy *policy);
-static void KeepControlPromises(EvalContext *ctx, Policy *policy, GenericAgentConfig *config);
+static void KeepPromiseBundles(EvalContext *ctx, const Policy *policy);
+static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericAgentConfig *config);
 static Auth *GetAuthPath(const char *path, Auth *list);
 
 extern const ConstraintSyntax CFS_CONTROLBODY[];
@@ -125,7 +125,7 @@ void KeepQueryAccessPromise(EvalContext *ctx, Promise *pp, char *type);
 /*******************************************************************/
 
 
-void KeepPromises(EvalContext *ctx, Policy *policy, GenericAgentConfig *config)
+void KeepPromises(EvalContext *ctx, const Policy *policy, GenericAgentConfig *config)
 {
     KeepContextBundles(ctx, policy);
     KeepControlPromises(ctx, policy, config);
@@ -238,7 +238,7 @@ void Summarize()
 /* Level                                                           */
 /*******************************************************************/
 
-static void KeepControlPromises(EvalContext *ctx, Policy *policy, GenericAgentConfig *config)
+static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericAgentConfig *config)
 {
     Rval retval;
 
@@ -492,7 +492,7 @@ static void KeepControlPromises(EvalContext *ctx, Policy *policy, GenericAgentCo
 
 /*********************************************************************/
 
-static void KeepContextBundles(EvalContext *ctx, Policy *policy)
+static void KeepContextBundles(EvalContext *ctx, const Policy *policy)
 {
 /* Dial up the generic promise expansion with a callback */
 
@@ -537,7 +537,7 @@ static void KeepContextBundles(EvalContext *ctx, Policy *policy)
 
 /*********************************************************************/
 
-static void KeepPromiseBundles(EvalContext *ctx, Policy *policy)
+static void KeepPromiseBundles(EvalContext *ctx, const Policy *policy)
 {
 /* Dial up the generic promise expansion with a callback */
 

@@ -63,7 +63,7 @@ typedef enum
 static void ThisAgentInit(void);
 static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv);
 
-static void KeepControlPromises(EvalContext *ctx, Policy *policy);
+static void KeepControlPromises(EvalContext *ctx, const Policy *policy);
 static int HailServer(EvalContext *ctx, char *host);
 static void SendClassData(AgentConnection *conn);
 static void HailExec(AgentConnection *conn, char *peer, char *recvbuffer, char *sendbuffer);
@@ -549,7 +549,7 @@ static int HailServer(EvalContext *ctx, char *host)
 /* Level 2                                                          */
 /********************************************************************/
 
-static void KeepControlPromises(EvalContext *ctx, Policy *policy)
+static void KeepControlPromises(EvalContext *ctx, const Policy *policy)
 {
     Rval retval;
 

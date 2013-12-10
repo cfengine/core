@@ -117,7 +117,6 @@ typedef struct
 } ServerFileGetState;
 
 
-void KeepPromises(EvalContext *ctx, Policy *policy, GenericAgentConfig *config);
 void ServerEntryPoint(EvalContext *ctx, char *ipaddr, ConnectionInfo *info);
 void DeleteAuthList(Auth *ap);
 void PurgeOldConnections(Item **list, time_t now);

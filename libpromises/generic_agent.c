@@ -67,7 +67,7 @@ static pthread_once_t pid_cleanup_once = PTHREAD_ONCE_INIT;
 
 static char PIDFILE[CF_BUFSIZE];
 
-static void VerifyPromises(EvalContext *ctx, Policy *policy, GenericAgentConfig *config);
+static void VerifyPromises(EvalContext *ctx, const Policy *policy, GenericAgentConfig *config);
 static void CheckWorkingDirectories(EvalContext *ctx);
 
 static Policy *Cf3ParseFile(const GenericAgentConfig *config, const char *input_path);
@@ -1318,7 +1318,7 @@ const char *GenericAgentResolveInputPath(const GenericAgentConfig *config, const
     return MapName(input_path);
 }
 
-static void VerifyPromises(EvalContext *ctx, Policy *policy, GenericAgentConfig *config)
+static void VerifyPromises(EvalContext *ctx, const Policy *policy, GenericAgentConfig *config)
 {
 
 /* Now look once through ALL the bundles themselves */

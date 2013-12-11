@@ -73,6 +73,8 @@ static void CheckWorkingDirectories(EvalContext *ctx);
 static Policy *Cf3ParseFile(const GenericAgentConfig *config, const char *input_path);
 
 static Policy *LoadPolicyFile(EvalContext *ctx, GenericAgentConfig *config, const char *policy_file, StringSet *parsed_files, StringSet *failed_files);
+static bool WritePolicyValidatedFileToMasterfiles(const GenericAgentConfig *config);
+static void GetPromisesValidatedFileFromMasterfiles(char *filename, size_t max_size, const GenericAgentConfig *config);
 
 static bool MissingInputFile(const char *input_file);
 
@@ -217,13 +219,17 @@ static bool IsPolicyPrecheckNeeded(GenericAgentConfig *config, bool force_valida
     return check_policy;
 }
 
-bool GenericAgentCheckPolicy(GenericAgentConfig *config, bool force_validation)
+bool GenericAgentCheckPolicy(GenericAgentConfig *config, bool force_validation, bool write_validated_file)
 {
     if (!MissingInputFile(config->input_file))
     {
         if (IsPolicyPrecheckNeeded(config, force_validation))
         {
-            bool policy_check_ok = GenericAgentCheckPromises(config);
+            bool policy_check_ok = GenericAgentArePromisesValid(config);
+            if (policy_check_ok && write_validated_file)
+            {
+                WritePolicyValidatedFileToMasterfiles(config);
+            }
 
             if (config->agent_specific.agent.bootstrap_policy_server && !policy_check_ok)
             {
@@ -266,16 +272,7 @@ static JsonElement *ReadPolicyValidatedFileFromMasterfiles(const GenericAgentCon
 {
     char filename[CF_MAXVARSIZE];
 
-    if (MINUSF)
-    {
-        snprintf(filename, CF_MAXVARSIZE, "%s/state/validated_%s", CFWORKDIR, CanonifyName(config->original_input_file));
-        MapName(filename);
-    }
-    else
-    {
-        snprintf(filename, CF_MAXVARSIZE, "%s/masterfiles/cf_promises_validated", CFWORKDIR);
-        MapName(filename);
-    }
+    GetPromisesValidatedFileFromMasterfiles(filename, sizeof(filename), config);
 
     return ReadPolicyValidatedFile(filename);
 }
@@ -302,20 +299,11 @@ static JsonElement *ReadPolicyValidatedFileFromInputs(const GenericAgentConfig *
  * @brief Writes a file with a contained timestamp to mark a policy file as validated
  * @return True if successful.
  */
-static bool WritePolicyValidatedFile(const GenericAgentConfig *config)
+static bool WritePolicyValidatedFileToMasterfiles(const GenericAgentConfig *config)
 {
     char filename[CF_MAXVARSIZE];
 
-    if (MINUSF)
-    {
-        snprintf(filename, CF_MAXVARSIZE, "%s/state/validated_%s", CFWORKDIR, CanonifyName(config->original_input_file));
-        MapName(filename);
-    }
-    else
-    {
-        snprintf(filename, CF_MAXVARSIZE, "%s/masterfiles/cf_promises_validated", CFWORKDIR);
-        MapName(filename);
-    }
+    GetPromisesValidatedFileFromMasterfiles(filename, sizeof(filename), config);
 
     if (!MakeParentDirectory(filename, true))
     {
@@ -351,7 +339,7 @@ static bool WritePolicyValidatedFile(const GenericAgentConfig *config)
     return true;
 }
 
-bool GenericAgentCheckPromises(const GenericAgentConfig *config)
+bool GenericAgentArePromisesValid(const GenericAgentConfig *config)
 {
     char cmd[CF_BUFSIZE];
 
@@ -413,14 +401,8 @@ bool GenericAgentCheckPromises(const GenericAgentConfig *config)
         return false;
     }
 
-    if (!IsFileOutsideDefaultRepository(config->input_file))
-    {
-        WritePolicyValidatedFile(config);
-    }
-
     return true;
 }
-
 
 static void ShowContext(EvalContext *ctx)
 {
@@ -942,7 +924,21 @@ bool GeneratePolicyReleaseIDFromMasterfiles(char release_id_out[(2 * CF_SHA1_LEN
     return success;
 }
 
-bool GenericAgentIsPolicyReloadNeeded(const GenericAgentConfig *config, const Policy *policy)
+static void GetPromisesValidatedFileFromMasterfiles(char *filename, size_t max_size, const GenericAgentConfig *config)
+{
+    if (MINUSF)
+    {
+        snprintf(filename, max_size, "%s/state/validated_%s", CFWORKDIR, CanonifyName(config->original_input_file));
+        MapName(filename);
+    }
+    else
+    {
+        snprintf(filename, max_size, "%s/masterfiles/cf_promises_validated", CFWORKDIR);
+        MapName(filename);
+    }
+}
+
+time_t ReadTimestampFromPolicyValidatedMasterfiles(const GenericAgentConfig *config)
 {
     time_t validated_at = 0;
     {
@@ -954,13 +950,20 @@ bool GenericAgentIsPolicyReloadNeeded(const GenericAgentConfig *config, const Po
         }
     }
 
+    return validated_at;
+}
+
+bool GenericAgentIsPolicyReloadNeeded(const GenericAgentConfig *config, const Policy *policy)
+{
+    time_t validated_at = ReadTimestampFromPolicyValidatedMasterfiles(config);
+
     if (validated_at > time(NULL))
     {
         Log(LOG_LEVEL_INFO,
             "Clock seems to have jumped back in time - mtime of %zd is newer than current time - touching it",
             validated_at);
 
-        WritePolicyValidatedFile(config);
+        WritePolicyValidatedFileToMasterfiles(config);
         return true;
     }
 

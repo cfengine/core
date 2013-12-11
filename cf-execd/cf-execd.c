@@ -65,7 +65,8 @@ static pthread_attr_t threads_attrs;
 
 static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv);
 void ThisAgentInit(void);
-static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *config, ExecConfig *exec_config);
+static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *config, ExecConfig *exec_config,
+                        time_t *last_policy_reload);
 #ifndef __MINGW32__
 static void Apoptosis(EvalContext *ctx);
 #endif
@@ -140,7 +141,7 @@ int main(int argc, char *argv[])
     GenericAgentDiscoverContext(ctx, config);
 
     Policy *policy = NULL;
-    if (GenericAgentCheckPolicy(config, false))
+    if (GenericAgentCheckPolicy(config, false, false))
     {
         policy = GenericAgentLoadPolicy(ctx, config);
     }
@@ -337,6 +338,8 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, E
     time_t now = time(NULL);
 #endif
 
+    time_t last_policy_reload = 0;
+
     pthread_attr_init(&threads_attrs);
     pthread_attr_setdetachstate(&threads_attrs, PTHREAD_CREATE_DETACHED);
     pthread_attr_setstacksize(&threads_attrs, (size_t)2048*1024);
@@ -392,7 +395,7 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, E
     {
         while (!IsPendingTermination())
         {
-            if (ScheduleRun(ctx, &policy, config, exec_config))
+            if (ScheduleRun(ctx, &policy, config, exec_config, &last_policy_reload))
             {
                 Log(LOG_LEVEL_VERBOSE, "Sleeping for splaytime %d seconds", exec_config->splay_time);
                 sleep(exec_config->splay_time);
@@ -490,13 +493,21 @@ typedef enum
     RELOAD_FULL
 } Reload;
 
-static Reload CheckNewPromises(GenericAgentConfig *config, const Policy *existing_policy)
+static Reload CheckNewPromises(const GenericAgentConfig *config, time_t *last_policy_reload)
 {
-    if (GenericAgentIsPolicyReloadNeeded(config, existing_policy))
+    time_t validated_at;
+
+    Log(LOG_LEVEL_DEBUG, "Checking file updates for input file '%s'", config->input_file);
+
+    validated_at = ReadTimestampFromPolicyValidatedMasterfiles(config);
+
+    if (*last_policy_reload < validated_at)
     {
+        *last_policy_reload = validated_at;
+
         Log(LOG_LEVEL_VERBOSE, "New promises detected...");
 
-        if (GenericAgentCheckPromises(config))
+        if (GenericAgentArePromisesValid(config))
         {
             return RELOAD_FULL;
         }
@@ -513,7 +524,8 @@ static Reload CheckNewPromises(GenericAgentConfig *config, const Policy *existin
     return RELOAD_ENVIRONMENT;
 }
 
-static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *config, ExecConfig *exec_config)
+static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *config, ExecConfig *exec_config,
+                        time_t *last_policy_reload)
 {
     Log(LOG_LEVEL_VERBOSE, "Sleeping for pulse time %d seconds...", CFPULSETIME);
     sleep(CFPULSETIME);         /* 1 Minute resolution is enough */
@@ -522,7 +534,7 @@ static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *c
      * FIXME: this logic duplicates the one from cf-serverd.c. Unify ASAP.
      */
 
-    if (CheckNewPromises(config, *policy) == RELOAD_FULL)
+    if (CheckNewPromises(config, last_policy_reload) == RELOAD_FULL)
     {
         /* Full reload */
 

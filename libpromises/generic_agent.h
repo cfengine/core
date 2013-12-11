@@ -78,14 +78,15 @@ typedef struct
 ENTERPRISE_VOID_FUNC_2ARG_DECLARE(void, GenericAgentSetDefaultDigest, HashMethod *, digest, int *, digest_len);
 const char *GenericAgentResolveInputPath(const GenericAgentConfig *config, const char *input_file);
 void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config);
-bool GenericAgentCheckPolicy(GenericAgentConfig *config, bool force_validation);
+bool GenericAgentCheckPolicy(GenericAgentConfig *config, bool force_validation, bool write_validated_file);
 Policy *GenericAgentLoadPolicy(EvalContext *ctx, GenericAgentConfig *config);
 
 ENTERPRISE_VOID_FUNC_1ARG_DECLARE(void, GenericAgentAddEditionClasses, EvalContext *, ctx);
 void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config);
 ENTERPRISE_VOID_FUNC_1ARG_DECLARE(void, GenericAgentWriteVersion, Writer *, w);
 void GenericAgentWriteHelp(Writer *w, const char *comp, const struct option options[], const char *hints[], bool accepts_file_argument);
-bool GenericAgentCheckPromises(const GenericAgentConfig *config);
+bool GenericAgentArePromisesValid(const GenericAgentConfig *config);
+time_t ReadTimestampFromPolicyValidatedMasterfiles(const GenericAgentConfig *config);
 
 bool GeneratePolicyReleaseIDFromMasterfiles(char release_id_out[CF_SHA1_LEN + 1]);
 bool GenericAgentIsPolicyReloadNeeded(const GenericAgentConfig *config, const Policy *policy);

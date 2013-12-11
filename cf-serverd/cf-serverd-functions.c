@@ -280,7 +280,7 @@ void StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
     struct timeval timeout;
     int ret_val;
     CfLock thislock;
-    time_t last_collect = 0;
+    time_t last_collect = 0, last_policy_reload = 0;
     extern int COLLECT_WINDOW;
 
     struct sockaddr_storage cin;
@@ -366,7 +366,7 @@ void StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
         {
             if (ACTIVE_THREADS == 0)
             {
-                CheckFileChanges(ctx, policy, config);
+                CheckFileChanges(ctx, policy, config, &last_policy_reload);
             }
             ThreadUnlock(cft_server_children);
         }
@@ -390,8 +390,6 @@ void StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
             FD_SET(sd, &rset);
             FD_SET(signal_pipe, &rset);
 
-            /* Set 1 second timeout for select, so that signals are handled in
-             * a timely manner */
             timeout.tv_sec = 60;
             timeout.tv_usec = 0;
 
@@ -557,15 +555,21 @@ int OpenReceiverChannel(void)
 /* Level 3                                                           */
 /*********************************************************************/
 
-void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
+void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *config, time_t *last_policy_reload)
 {
+    time_t validated_at;
+
     Log(LOG_LEVEL_DEBUG, "Checking file updates for input file '%s'", config->input_file);
 
-    if (GenericAgentIsPolicyReloadNeeded(config, *policy))
+    validated_at = ReadTimestampFromPolicyValidatedMasterfiles(config);
+
+    if (*last_policy_reload < validated_at)
     {
+        *last_policy_reload = validated_at;
+
         Log(LOG_LEVEL_VERBOSE, "New promises detected...");
 
-        if (GenericAgentCheckPromises(config))
+        if (GenericAgentArePromisesValid(config))
         {
             Log(LOG_LEVEL_INFO, "Rereading policy file '%s'", config->input_file);
 

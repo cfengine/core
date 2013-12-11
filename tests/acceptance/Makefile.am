@@ -28,6 +28,9 @@ TESTS_ENVIRONMENT = env \
 	CF_SERVERD=`pwd`/../../cf-serverd/cf-serverd \
 	CF_KEY=`pwd`/../../cf-key/cf-key \
 	MOCK_PACKAGE_MANAGER=`pwd`/mock-package-manager
+if !HAVE_LIBXML2
+TESTS_ENVIRONMENT += LIBXML2_TESTS=0
+endif
 
 dist-hook:
 	cd $(srcdir); tar -c -f - [0-9]* | tar -x -C $(abspath $(distdir)) -f -

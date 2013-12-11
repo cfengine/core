@@ -71,6 +71,7 @@ QUIET=
 STAGING_TESTS=${STAGING_TESTS:-0}
 NETWORK_TESTS=${NETWORK_TESTS:-1}
 UNSAFE_TESTS=${UNSAFE_TESTS:-0}
+LIBXML2_TESTS=${LIBXML2_TESTS:-1}
 GAINROOT=${GAINROOT:-fakeroot}
 NO_CLEAN=0
 
@@ -160,6 +161,9 @@ usage() {
   echo "           otherwise you will get incorrect results."
   echo
   echo " --no-network disable tests in network directories."
+  echo
+  echo " --no-libxml2 disable tests involving xml file editing."
+  echo
   echo " --printlog   print the full test.log output immediately."
   echo
   echo " --gdb   Run test under GDB"
@@ -189,6 +193,9 @@ runtest() {
   elif [ "x$NETWORK_TESTS" = "x0" ] && echo "$TEST" | grep -q -e '/network/'; then
     SKIP=1
     SKIPREASON="Network-dependent tests are disabled"
+  elif [ "x$LIBXML2_TESTS" = "x0" ] && echo "$TEST" | grep -q -e '/11_xml_edits/'; then
+    SKIP=1
+    SKIPREASON="XML file editing tests are disabled"
   else
     SKIP=
     SKIPREASON=
@@ -370,6 +377,8 @@ while true; do
       UNSAFE_TESTS=1;;
     --no-network)
       NETWORK_TESTS=0;;
+    --no-libxml2)
+      LIBXML2_TESTS=0;;
     --agent=*)
       AGENT=${1#--agent=};;
     --cfpromises=*)

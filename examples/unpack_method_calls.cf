@@ -1,0 +1,39 @@
+#+begin_src cfengine3
+body common control
+{
+      bundlesequence => { run };
+}
+
+bundle agent run
+{
+  vars:
+      "todo" slist => { "call_1,a,b", "call_2,x,y", "call_2,p,q" };
+
+  methods:
+      "call" usebundle => unpack($(todo));
+}
+
+bundle agent unpack(list)
+{
+  vars:
+      "split" slist => splitstring($(list), ",", "100");
+      "method" string => nth("split", "0");
+      "param1" string => nth("split", "1");
+      "param2" string => nth("split", "2");
+
+  methods:
+      "relay" usebundle => $(method)($(param1), $(param2));
+}
+
+bundle agent call_1(p1, p2)
+{
+  reports:
+      "$(this.bundle): called with parameters $(p1) and $(p2)";
+}
+
+bundle agent call_2(p1, p2)
+{
+  reports:
+      "$(this.bundle): called with parameters $(p1) and $(p2)";
+}
+#+end_src

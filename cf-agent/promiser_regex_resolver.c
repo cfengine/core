@@ -50,7 +50,7 @@ PromiseResult LocateFilePromiserGroup(EvalContext *ctx, char *wildpath, Promise 
     int count = 0, lastnode = false, expandregex = false;
     uid_t agentuid = getuid();
     int create = PromiseGetConstraintAsBoolean(ctx, "create", pp);
-    char *pathtype = ConstraintGetRvalValue(ctx, "pathtype", pp, RVAL_TYPE_SCALAR);
+    char *pathtype = PromiseGetConstraintAsRval(pp, "pathtype", RVAL_TYPE_SCALAR);
 
 /* Do a search for promiser objects matching wildpath */
 

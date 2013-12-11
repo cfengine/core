@@ -68,13 +68,13 @@ PromiseResult VerifyMethod(EvalContext *ctx, char *attrname, Attributes a, Promi
 
     if (a.havebundle)
     {
-        if ((vp = ConstraintGetRvalValue(ctx, attrname, pp, RVAL_TYPE_FNCALL)))
+        if ((vp = PromiseGetConstraintAsRval(pp, attrname, RVAL_TYPE_FNCALL)))
         {
             fp = (FnCall *) vp;
             ExpandScalar(ctx, PromiseGetBundle(pp)->ns, PromiseGetBundle(pp)->name, fp->name, method_name);
             args = fp->args;
         }
-        else if ((vp = ConstraintGetRvalValue(ctx, attrname, pp, RVAL_TYPE_SCALAR)))
+        else if ((vp = PromiseGetConstraintAsRval(pp, attrname, RVAL_TYPE_SCALAR)))
         {
             ExpandScalar(ctx, PromiseGetBundle(pp)->ns, PromiseGetBundle(pp)->name, (char *) vp, method_name);
             args = NULL;
@@ -172,7 +172,7 @@ PromiseResult VerifyMethod(EvalContext *ctx, char *attrname, Attributes a, Promi
 
 static void GetReturnValue(EvalContext *ctx, const Bundle *callee, Promise *caller)
 {
-    char *result = ConstraintGetRvalValue(ctx, "useresult", caller, RVAL_TYPE_SCALAR);
+    char *result = PromiseGetConstraintAsRval(caller, "useresult", RVAL_TYPE_SCALAR);
 
     if (result)
     {

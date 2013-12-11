@@ -378,7 +378,7 @@ Constraint *EffectiveConstraint(const EvalContext *ctx, Seq *constraints);
  * @param type
  * @return Rval value if found, NULL otherwise
  */
-void *ConstraintGetRvalValue(const EvalContext *ctx, const char *lval, const Promise *promise, RvalType type);
+void *PromiseGetConstraintAsRval(const Promise *promise, const char *lval, RvalType type);
 
 /**
  * @brief Get the Rval value of the first constraint that matches the given

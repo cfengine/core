@@ -620,7 +620,7 @@ static PromiseResult KeepServerPromise(EvalContext *ctx, Promise *pp, ARG_UNUSED
         return VerifyClassPromise(ctx, pp, NULL);
     }
 
-    const char *resource_type = ConstraintGetRvalValue(ctx, "resource_type", pp, RVAL_TYPE_SCALAR);
+    const char *resource_type = PromiseGetConstraintAsRval(pp, "resource_type", RVAL_TYPE_SCALAR);
     if (resource_type && strcmp(pp->parent_promise_type->name, "access") == 0)
     {
         if (strcmp(resource_type, "literal") == 0)

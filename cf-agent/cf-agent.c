@@ -1301,7 +1301,7 @@ static void CheckAgentAccess(Rlist *list, const Policy *policy)
 
 static PromiseResult DefaultVarPromise(EvalContext *ctx, const Promise *pp)
 {
-    char *regex = ConstraintGetRvalValue(ctx, "if_match_regex", pp, RVAL_TYPE_SCALAR);
+    char *regex = PromiseGetConstraintAsRval(pp, "if_match_regex", RVAL_TYPE_SCALAR);
     Rval rval;
     DataType dt;
     Rlist *rp;

@@ -536,7 +536,7 @@ int VarClassExcluded(const EvalContext *ctx, const Promise *pp, char **classes)
         return false;
     }
 
-    *classes = (char *) ConstraintGetRvalValue(ctx, "ifvarclass", pp, RVAL_TYPE_SCALAR);
+    *classes = PromiseGetConstraintAsRval(pp, "ifvarclass", RVAL_TYPE_SCALAR);
 
     if (*classes == NULL)
     {

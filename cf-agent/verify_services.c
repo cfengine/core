@@ -197,7 +197,7 @@ static PromiseResult DoVerifyServices(EvalContext *ctx, Attributes a, Promise *p
 
 // Need to set up the default service pack to eliminate syntax
 
-    if (ConstraintGetRvalValue(ctx, "service_bundle", pp, RVAL_TYPE_SCALAR) == NULL)
+    if (PromiseGetConstraintAsRval(pp, "service_bundle", RVAL_TYPE_SCALAR) == NULL)
     {
         switch (a.service.service_policy)
         {

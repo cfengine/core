@@ -74,7 +74,7 @@ static LogLevel StringToLogLevel(const char *value)
 
 static LogLevel GetLevelForPromise(const EvalContext *ctx, const Promise *pp, const char *attr_name)
 {
-    return StringToLogLevel(ConstraintGetRvalValue(ctx, attr_name, pp, RVAL_TYPE_SCALAR));
+    return StringToLogLevel(PromiseGetConstraintAsRval(pp, attr_name, RVAL_TYPE_SCALAR));
 }
 
 static LogLevel CalculateLogLevel(const EvalContext *ctx, const Promise *pp)

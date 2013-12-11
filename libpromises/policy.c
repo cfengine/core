@@ -2739,7 +2739,7 @@ void *PromiseGetImmediateRvalValue(const char *lval, const Promise *pp, RvalType
 
 /*****************************************************************************/
 
-void *ConstraintGetRvalValue(const EvalContext *ctx, const char *lval, const Promise *pp, RvalType rtype)
+void *PromiseGetConstraintAsRval(const Promise *pp, const char *lval, RvalType rtype)
 {
     const Constraint *constraint = PromiseGetConstraint(pp, lval);
 
@@ -2791,7 +2791,7 @@ void PromiseRecheckAllConstraints(EvalContext *ctx, Promise *pp)
     {
         /* Multiple additions with same criterion will not be convergent -- but ignore for empty file baseline */
 
-        if ((sp = ConstraintGetRvalValue(ctx, "select_line_matching", pp, RVAL_TYPE_SCALAR)))
+        if ((sp = PromiseGetConstraintAsRval(pp, "select_line_matching", RVAL_TYPE_SCALAR)))
         {
             if (!IsExpandable(sp))
             {

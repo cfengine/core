@@ -2383,36 +2383,18 @@ const char *PromiseGetHandle(const Promise *pp)
 int PromiseGetConstraintAsInt(const EvalContext *ctx, const char *lval, const Promise *pp)
 {
     int retval = CF_NOINT;
-
-    for (size_t i = 0; i < SeqLength(pp->conlist); i++)
+    const Constraint *cp = PromiseGetConstraint(pp, lval);
+    if (cp)
     {
-        Constraint *cp = SeqAt(pp->conlist, i);
-
-        if (strcmp(cp->lval, lval) == 0)
+        if (cp->rval.type != RVAL_TYPE_SCALAR)
         {
-            if (IsDefinedClass(ctx, cp->classes, PromiseGetNamespace(pp)))
-            {
-                if (retval != CF_NOINT)
-                {
-                    Log(LOG_LEVEL_ERR, "Multiple '%s' (int) constraints break this promise", lval);
-                    PromiseRef(LOG_LEVEL_ERR, pp);
-                }
-            }
-            else
-            {
-                continue;
-            }
-
-            if (cp->rval.type != RVAL_TYPE_SCALAR)
-            {
-                Log(LOG_LEVEL_ERR,
-                      "Anomalous type mismatch - expected type for int constraint %s did not match internals", lval);
-                PromiseRef(LOG_LEVEL_ERR, pp);
-                FatalError(ctx, "Aborted");
-            }
-
-            retval = (int) IntFromString((char *) cp->rval.item);
+            Log(LOG_LEVEL_ERR,
+                  "Anomalous type mismatch - expected type for int constraint %s did not match internals", lval);
+            PromiseRef(LOG_LEVEL_ERR, pp);
+            FatalError(ctx, "Aborted");
         }
+
+        retval = (int) IntFromString((char *) cp->rval.item);
     }
 
     return retval;
@@ -2422,39 +2404,21 @@ int PromiseGetConstraintAsInt(const EvalContext *ctx, const char *lval, const Pr
 
 bool PromiseGetConstraintAsReal(const EvalContext *ctx, const char *lval, const Promise *pp, double *value_out)
 {
-    bool found_constraint = false;
-
-    for (size_t i = 0; i < SeqLength(pp->conlist); i++)
+    const Constraint *cp = PromiseGetConstraint(pp, lval);
+    if (cp)
     {
-        Constraint *cp = SeqAt(pp->conlist, i);
-
-        if (strcmp(cp->lval, lval) == 0)
+        if (cp->rval.type != RVAL_TYPE_SCALAR)
         {
-            if (IsDefinedClass(ctx, cp->classes, PromiseGetNamespace(pp)))
-            {
-                if (found_constraint)
-                {
-                    Log(LOG_LEVEL_ERR, "Multiple '%s' (real) constraints break this promise", lval);
-                }
-            }
-            else
-            {
-                continue;
-            }
-
-            if (cp->rval.type != RVAL_TYPE_SCALAR)
-            {
-                Log(LOG_LEVEL_ERR,
-                    "Anomalous type mismatch - expected type for int constraint '%s' did not match internals", lval);
-                FatalError(ctx, "Aborted");
-            }
-
-            *value_out = DoubleFromString((char *) cp->rval.item, value_out);
-            found_constraint = true;
+            Log(LOG_LEVEL_ERR,
+                "Anomalous type mismatch - expected type for int constraint '%s' did not match internals", lval);
+            FatalError(ctx, "Aborted");
         }
+
+        *value_out = DoubleFromString((char *) cp->rval.item, value_out);
+        return true;
     }
 
-    return found_constraint;
+    return false;
 }
 
 /*****************************************************************************/
@@ -2489,38 +2453,21 @@ mode_t PromiseGetConstraintAsOctal(const EvalContext *ctx, const char *lval, con
 
 // We could handle units here, like kb,b,mb
 
-    for (size_t i = 0; i < SeqLength(pp->conlist); i++)
+    const Constraint *cp = PromiseGetConstraint(pp, lval);
+    if (cp)
     {
-        Constraint *cp = SeqAt(pp->conlist, i);
-
-        if (strcmp(cp->lval, lval) == 0)
+        if (cp->rval.type != RVAL_TYPE_SCALAR)
         {
-            if (IsDefinedClass(ctx, cp->classes, PromiseGetNamespace(pp)))
-            {
-                if (retval != 077)
-                {
-                    Log(LOG_LEVEL_ERR, "Multiple '%s' (int,octal) constraints break this promise", lval);
-                    PromiseRef(LOG_LEVEL_ERR, pp);
-                }
-            }
-            else
-            {
-                continue;
-            }
+            Log(LOG_LEVEL_ERR,
+                  "Anomalous type mismatch - expected type for int constraint %s did not match internals", lval);
+            PromiseRef(LOG_LEVEL_ERR, pp);
+            FatalError(ctx, "Aborted");
+        }
 
-            if (cp->rval.type != RVAL_TYPE_SCALAR)
-            {
-                Log(LOG_LEVEL_ERR,
-                      "Anomalous type mismatch - expected type for int constraint %s did not match internals", lval);
-                PromiseRef(LOG_LEVEL_ERR, pp);
-                FatalError(ctx, "Aborted");
-            }
-
-            if (!Str2Mode(cp->rval.item, &retval))
-            {
-                Log(LOG_LEVEL_ERR, "Error reading assumed octal value '%s'", (const char *)cp->rval.item);
-                PromiseRef(LOG_LEVEL_ERR, pp);
-            }
+        if (!Str2Mode(cp->rval.item, &retval))
+        {
+            Log(LOG_LEVEL_ERR, "Error reading assumed octal value '%s'", (const char *)cp->rval.item);
+            PromiseRef(LOG_LEVEL_ERR, pp);
         }
     }
 
@@ -2543,36 +2490,19 @@ uid_t PromiseGetConstraintAsUid(const EvalContext *ctx, const char *lval, const 
     int retval = CF_SAME_OWNER;
     char buffer[CF_MAXVARSIZE];
 
-    for (size_t i = 0; i < SeqLength(pp->conlist); i++)
+    const Constraint *cp = PromiseGetConstraint(pp, lval);
+    if (cp)
     {
-        Constraint *cp = SeqAt(pp->conlist, i);
-
-        if (strcmp(cp->lval, lval) == 0)
+        if (cp->rval.type != RVAL_TYPE_SCALAR)
         {
-            if (IsDefinedClass(ctx, cp->classes, PromiseGetNamespace(pp)))
-            {
-                if (retval != CF_UNDEFINED)
-                {
-                    Log(LOG_LEVEL_ERR, "Multiple '%s' (owner/uid) constraints break this promise", lval);
-                    PromiseRef(LOG_LEVEL_ERR, pp);
-                }
-            }
-            else
-            {
-                continue;
-            }
-
-            if (cp->rval.type != RVAL_TYPE_SCALAR)
-            {
-                Log(LOG_LEVEL_ERR,
-                      "Anomalous type mismatch - expected type for owner constraint %s did not match internals",
-                      lval);
-                PromiseRef(LOG_LEVEL_ERR, pp);
-                FatalError(ctx, "Aborted");
-            }
-
-            retval = Str2Uid((char *) cp->rval.item, buffer, pp);
+            Log(LOG_LEVEL_ERR,
+                  "Anomalous type mismatch - expected type for owner constraint %s did not match internals",
+                  lval);
+            PromiseRef(LOG_LEVEL_ERR, pp);
+            FatalError(ctx, "Aborted");
         }
+
+        retval = Str2Uid((char *) cp->rval.item, buffer, pp);
     }
 
     return retval;
@@ -2596,36 +2526,19 @@ gid_t PromiseGetConstraintAsGid(const EvalContext *ctx, char *lval, const Promis
     int retval = CF_SAME_GROUP;
     char buffer[CF_MAXVARSIZE];
 
-    for (size_t i = 0; i < SeqLength(pp->conlist); i++)
+    const Constraint *cp = PromiseGetConstraint(pp, lval);
+    if (cp)
     {
-        Constraint *cp = SeqAt(pp->conlist, i);
-
-        if (strcmp(cp->lval, lval) == 0)
+        if (cp->rval.type != RVAL_TYPE_SCALAR)
         {
-            if (IsDefinedClass(ctx, cp->classes, PromiseGetNamespace(pp)))
-            {
-                if (retval != CF_UNDEFINED)
-                {
-                    Log(LOG_LEVEL_ERR, "Multiple '%s'  (group/gid) constraints break this promise", lval);
-                    PromiseRef(LOG_LEVEL_ERR, pp);
-                }
-            }
-            else
-            {
-                continue;
-            }
-
-            if (cp->rval.type != RVAL_TYPE_SCALAR)
-            {
-                Log(LOG_LEVEL_ERR,
-                    "Anomalous type mismatch - expected type for group constraint '%s' did not match internals",
-                     lval);
-                PromiseRef(LOG_LEVEL_ERR, pp);
-                FatalError(ctx, "Aborted");
-            }
-
-            retval = Str2Gid((char *) cp->rval.item, buffer, pp);
+            Log(LOG_LEVEL_ERR,
+                "Anomalous type mismatch - expected type for group constraint '%s' did not match internals",
+                 lval);
+            PromiseRef(LOG_LEVEL_ERR, pp);
+            FatalError(ctx, "Aborted");
         }
+
+        retval = Str2Gid((char *) cp->rval.item, buffer, pp);
     }
 
     return retval;
@@ -2637,47 +2550,26 @@ gid_t PromiseGetConstraintAsGid(const EvalContext *ctx, char *lval, const Promis
 // FIX: promise constrained classed?
 Rlist *PromiseGetConstraintAsList(const EvalContext *ctx, const char *lval, const Promise *pp)
 {
-    Rlist *retval = NULL;
-
-    for (size_t i = 0; i < SeqLength(pp->conlist); i++)
+    const Constraint *cp = PromiseGetConstraint(pp, lval);
+    if (cp)
     {
-        Constraint *cp = SeqAt(pp->conlist, i);
-
-        if (strcmp(cp->lval, lval) == 0)
+        if (cp->rval.type != RVAL_TYPE_LIST)
         {
-            if (IsDefinedClass(ctx, cp->classes, PromiseGetNamespace(pp)))
-            {
-                if (retval != NULL)
-                {
-                    Log(LOG_LEVEL_ERR, "Multiple '%s' int constraints break this promise", lval);
-                    PromiseRef(LOG_LEVEL_ERR, pp);
-                }
-            }
-            else
-            {
-                continue;
-            }
-
-            if (cp->rval.type != RVAL_TYPE_LIST)
-            {
-                Log(LOG_LEVEL_ERR, "Type mismatch on rhs - expected type for list constraint '%s'", lval);
-                PromiseRef(LOG_LEVEL_ERR, pp);
-                FatalError(ctx, "Aborted");
-            }
-
-            retval = (Rlist *) cp->rval.item;
-            break;
+            Log(LOG_LEVEL_ERR, "Type mismatch on rhs - expected type for list constraint '%s'", lval);
+            PromiseRef(LOG_LEVEL_ERR, pp);
+            FatalError(ctx, "Aborted");
         }
+
+        return RvalRlistValue(cp->rval);
     }
 
-    return retval;
+    return NULL;
 }
 
 Constraint *PromiseGetConstraint(const Promise *pp, const char *lval)
 {
     Constraint *retval = NULL;
-
-    if (pp == NULL)
+    if (!pp)
     {
         return NULL;
     }

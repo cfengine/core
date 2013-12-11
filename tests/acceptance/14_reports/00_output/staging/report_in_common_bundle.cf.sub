@@ -1,0 +1,9 @@
+bundle agent runme
+{
+}
+
+bundle common report
+{
+  reports:
+      "$(this.bundle): rhino_9d85a7796746fb3e2e2ac95f74e4b981564803de";
+}

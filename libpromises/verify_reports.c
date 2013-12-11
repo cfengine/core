@@ -46,11 +46,10 @@ static void ReportToFile(const char *logfile, const char *message);
 
 PromiseResult VerifyReportPromise(EvalContext *ctx, Promise *pp)
 {
-    Attributes a = { {0} };
     CfLock thislock;
     char unique_name[CF_EXPANDSIZE];
 
-    a = GetReportsAttributes(ctx, pp);
+    Attributes a = GetReportsAttributes(ctx, pp);
 
     // We let AcquireLock worry about making a unique name
     snprintf(unique_name, CF_EXPANDSIZE - 1, "%s", pp->promiser);

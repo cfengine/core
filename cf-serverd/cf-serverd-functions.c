@@ -590,7 +590,6 @@ void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *con
             DeleteAuthList(SV.roles);
 
             strcpy(VDOMAIN, "undefined.domain");
-            POLICY_SERVER[0] = '\0';
 
             SV.admit = NULL;
             SV.admittop = NULL;
@@ -620,8 +619,9 @@ void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *con
                 SetPolicyServer(ctx, existing_policy_server);
                 free(existing_policy_server);
             }
+            UpdateLastPolicyUpdateTime(ctx);
 
-            DetectEnvironment(ctx, true, true);
+            DetectEnvironment(ctx);
             KeepHardClasses(ctx);
 
             EvalContextClassPutHard(ctx, CF_AGENTTYPES[config->agent_type], "cfe_internal,source=agent");

@@ -1020,14 +1020,13 @@ static FnCallResult FnCallBundlesmatching(EvalContext *ctx, FnCall *fp, Rlist *f
     char buf[CF_BUFSIZE];
     char *regex = RlistScalarValue(finalargs);
     Rlist *matches = NULL;
-    Policy *policy;
 
     if (!fp->caller)
     {
         FatalError(ctx, "Function '%s' had a null caller", fp->name);
     }
 
-    policy = PolicyFromPromise(fp->caller);
+    const Policy *policy = PolicyFromPromise(fp->caller);
 
     if (!policy)
     {

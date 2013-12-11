@@ -90,11 +90,10 @@ PackageManager *INSTALLED_PACKAGE_LISTS = NULL;
 
 PromiseResult VerifyPackagesPromise(EvalContext *ctx, Promise *pp)
 {
-    Attributes a = { {0} };
     CfLock thislock;
     char lockname[CF_BUFSIZE];
 
-    a = GetPackageAttributes(ctx, pp);
+    Attributes a = GetPackageAttributes(ctx, pp);
 
 #ifdef __MINGW32__
 
@@ -1773,7 +1772,6 @@ static int ExecuteSchedule(EvalContext *ctx, PackageManager *schedule, PackageAc
     PackageManager *pm;
     int size, estimated_size, retval = true, verify = false;
     char *command_string = NULL;
-    Attributes a = { {0} };
     Promise *pp;
     int ok;
 
@@ -1816,7 +1814,7 @@ static int ExecuteSchedule(EvalContext *ctx, PackageManager *schedule, PackageAc
         }
 
         pp = pm->pack_list->pp;
-        a = GetPackageAttributes(ctx, pp);
+        Attributes a = GetPackageAttributes(ctx, pp);
 
         switch (action)
         {
@@ -1918,7 +1916,7 @@ static int ExecuteSchedule(EvalContext *ctx, PackageManager *schedule, PackageAc
                 for (pi = pm->pack_list; pi != NULL; pi = pi->next)
                 {
                     pp = pi->pp;
-                    a = GetPackageAttributes(ctx, pp);
+                    Attributes a = GetPackageAttributes(ctx, pp);
 
                     char *sp, *offset = command_string + strlen(command_string);
 
@@ -2027,7 +2025,6 @@ static int ExecutePatch(EvalContext *ctx, PackageManager *schedule, PackageActio
     PackageManager *pm;
     int size, estimated_size, retval = true, verify = false;
     char *command_string = NULL;
-    Attributes a = { {0} };
     Promise *pp;
 
     for (pm = schedule; pm != NULL; pm = pm->next)
@@ -2069,7 +2066,7 @@ static int ExecutePatch(EvalContext *ctx, PackageManager *schedule, PackageActio
         }
 
         pp = pm->patch_list->pp;
-        a = GetPackageAttributes(ctx, pp);
+        Attributes a = GetPackageAttributes(ctx, pp);
 
         switch (action)
         {

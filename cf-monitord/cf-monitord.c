@@ -35,6 +35,7 @@
 #include <man.h>
 #include <bootstrap.h>
 #include <timeout.h>
+#include <time_classes.h>
 
 typedef enum
 {
@@ -45,9 +46,9 @@ typedef enum
     MONITOR_CONTROL_NONE
 } MonitorControl;
 
-static void ThisAgentInit(void);
+static void ThisAgentInit(EvalContext *ctx);
 static GenericAgentConfig *CheckOpts(int argc, char **argv);
-static void KeepPromises(EvalContext *ctx, Policy *policy);
+static void KeepPromises(EvalContext *ctx, const Policy *policy);
 
 /*****************************************************************************/
 /* Globals                                                                   */
@@ -118,7 +119,7 @@ int main(int argc, char *argv[])
     GenericAgentDiscoverContext(ctx, config);
     Policy *policy = GenericAgentLoadPolicy(ctx, config);
 
-    ThisAgentInit();
+    ThisAgentInit(ctx);
     KeepPromises(ctx, policy);
 
     MonitorStartServer(ctx, policy);
@@ -239,7 +240,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
 
 /*****************************************************************************/
 
-static void KeepPromises(EvalContext *ctx, Policy *policy)
+static void KeepPromises(EvalContext *ctx, const Policy *policy)
 {
     Rval retval;
 
@@ -289,12 +290,13 @@ static void KeepPromises(EvalContext *ctx, Policy *policy)
 /* Level 1                                                                   */
 /*****************************************************************************/
 
-static void ThisAgentInit(void)
+static void ThisAgentInit(EvalContext *ctx)
 {
     umask(077);
     strcpy(VPREFIX, "cf-monitord");
 
-    SetReferenceTime();
+    time_t t = SetReferenceTime();
+    UpdateTimeClasses(ctx, t);
 
     signal(SIGINT, HandleSignalsForDaemon);
     signal(SIGTERM, HandleSignalsForDaemon);

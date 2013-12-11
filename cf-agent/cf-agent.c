@@ -151,15 +151,15 @@ static char **TranslateOldBootstrapOptionsSeparate(int *argc_new, char **argv);
 static char **TranslateOldBootstrapOptionsConcatenated(int argc, char **argv);
 static void FreeStringArray(int size, char **array);
 static void CheckAgentAccess(Rlist *list, const Policy *policy);
-static void KeepControlPromises(EvalContext *ctx, Policy *policy);
+static void KeepControlPromises(EvalContext *ctx, const Policy *policy);
 static PromiseResult KeepAgentPromise(EvalContext *ctx, Promise *pp, void *param);
 static int NewTypeContext(EvalContext *ctx, TypeSequence type);
 static void DeleteTypeContext(EvalContext *ctx, Bundle *bp, TypeSequence type);
 static void ClassBanner(EvalContext *ctx, TypeSequence type);
 static PromiseResult ParallelFindAndVerifyFilesPromises(EvalContext *ctx, Promise *pp);
 static bool VerifyBootstrap(EvalContext *ctx);
-static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, GenericAgentConfig *config);
-static void KeepPromises(EvalContext *ctx, Policy *policy, GenericAgentConfig *config);
+static void KeepPromiseBundles(EvalContext *ctx, const Policy *policy, GenericAgentConfig *config);
+static void KeepPromises(EvalContext *ctx, const Policy *policy, GenericAgentConfig *config);
 static int NoteBundleCompliance(const Bundle *bundle, int save_pr_kept, int save_pr_repaired, int save_pr_notkept);
 static void AllClassesReport(const EvalContext *ctx);
 static bool HasAvahiSupport(void);
@@ -294,11 +294,6 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
     extern char *optarg;
     int c;
     GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_AGENT);
-
-/* Because of the MacOS linker we have to call this from each agent
-   individually before Generic Initialize */
-
-    POLICY_SERVER[0] = '\0';
 
 /* DEPRECATED:
    --policy-server (-s) is deprecated in community version 3.5.0.
@@ -647,7 +642,7 @@ static void ThisAgentInit(void)
 
 /*******************************************************************/
 
-static void KeepPromises(EvalContext *ctx, Policy *policy, GenericAgentConfig *config)
+static void KeepPromises(EvalContext *ctx, const Policy *policy, GenericAgentConfig *config)
 {
     KeepControlPromises(ctx, policy);
     KeepPromiseBundles(ctx, policy, config);
@@ -657,7 +652,7 @@ static void KeepPromises(EvalContext *ctx, Policy *policy, GenericAgentConfig *c
 /* Level 2                                                         */
 /*******************************************************************/
 
-void KeepControlPromises(EvalContext *ctx, Policy *policy)
+static void KeepControlPromises(EvalContext *ctx, const Policy *policy)
 {
     Rval retval;
     Rlist *rp;
@@ -1042,7 +1037,7 @@ void KeepControlPromises(EvalContext *ctx, Policy *policy)
 
 /*********************************************************************/
 
-static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, GenericAgentConfig *config)
+static void KeepPromiseBundles(EvalContext *ctx, const Policy *policy, GenericAgentConfig *config)
 {
     Bundle *bp;
     Rlist *rp, *args;

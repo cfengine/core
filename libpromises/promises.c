@@ -132,7 +132,7 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
         FnCall *fp = NULL;
 
         /* A body template reference could look like a scalar or fn to the parser w/w () */
-        Policy *policy = PolicyFromPromise(pp);
+        const Policy *policy = PolicyFromPromise(pp);
         Seq *bodies = policy ? policy->bodies : NULL;
 
         char body_ns[CF_MAXVARSIZE] = "";
@@ -244,7 +244,7 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
         }
         else
         {
-            Policy *policy = PolicyFromPromise(pp);
+            const Policy *policy = PolicyFromPromise(pp);
 
             if (cp->references_body && !IsBundle(policy->bundles, EmptyString(body_ns) ? NULL : body_ns, body_name))
             {

@@ -46,9 +46,7 @@ static void GetReturnValue(EvalContext *ctx, const Bundle *callee, Promise *call
 
 PromiseResult VerifyMethodsPromise(EvalContext *ctx, Promise *pp)
 {
-    Attributes a = { {0} };
-
-    a = GetMethodAttributes(ctx, pp);
+    Attributes a = GetMethodAttributes(ctx, pp);
 
     PromiseResult result = VerifyMethod(ctx, "usebundle", a, pp);
     EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser");

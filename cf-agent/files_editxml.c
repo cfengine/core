@@ -202,7 +202,6 @@ static PromiseResult KeepEditXmlPromise(EvalContext *ctx, Promise *pp, void *par
     EditContext *edcontext = param;
 
     char *sp = NULL;
-    Attributes a = { {0} };
 
     if (!IsDefinedClass(ctx, pp->classes, PromiseGetNamespace(pp)))
     {
@@ -245,7 +244,7 @@ static PromiseResult KeepEditXmlPromise(EvalContext *ctx, Promise *pp, void *par
     }
     else if (strcmp("build_xpath", pp->parent_promise_type->name) == 0)
     {
-        a = GetInsertionAttributes(ctx, pp);
+        Attributes a = GetInsertionAttributes(ctx, pp);
 #ifdef HAVE_LIBXML2
         xmlInitParser();
         PromiseResult result = PROMISE_RESULT_NOOP;
@@ -259,7 +258,7 @@ static PromiseResult KeepEditXmlPromise(EvalContext *ctx, Promise *pp, void *par
     }
     else if (strcmp("delete_tree", pp->parent_promise_type->name) == 0)
     {
-        a = GetDeletionAttributes(ctx, pp);
+        Attributes a = GetDeletionAttributes(ctx, pp);
 #ifdef HAVE_LIBXML2
         xmlInitParser();
         PromiseResult result = VerifyTreeDeletions(ctx, a, pp, edcontext);
@@ -272,7 +271,7 @@ static PromiseResult KeepEditXmlPromise(EvalContext *ctx, Promise *pp, void *par
     }
     else if (strcmp("insert_tree", pp->parent_promise_type->name) == 0)
     {
-        a = GetInsertionAttributes(ctx, pp);
+        Attributes a = GetInsertionAttributes(ctx, pp);
 #ifdef HAVE_LIBXML2
         xmlInitParser();
         PromiseResult result = VerifyTreeInsertions(ctx, a, pp, edcontext);
@@ -285,7 +284,7 @@ static PromiseResult KeepEditXmlPromise(EvalContext *ctx, Promise *pp, void *par
     }
     else if (strcmp("delete_attribute", pp->parent_promise_type->name) == 0)
     {
-        a = GetDeletionAttributes(ctx, pp);
+        Attributes a = GetDeletionAttributes(ctx, pp);
 #ifdef HAVE_LIBXML2
         xmlInitParser();
         PromiseResult result = VerifyAttributeDeletions(ctx, a, pp, edcontext);
@@ -298,7 +297,7 @@ static PromiseResult KeepEditXmlPromise(EvalContext *ctx, Promise *pp, void *par
     }
     else if (strcmp("set_attribute", pp->parent_promise_type->name) == 0)
     {
-        a = GetInsertionAttributes(ctx, pp);
+        Attributes a = GetInsertionAttributes(ctx, pp);
 #ifdef HAVE_LIBXML2
         xmlInitParser();
         PromiseResult result = VerifyAttributeSet(ctx, a, pp, edcontext);
@@ -311,7 +310,7 @@ static PromiseResult KeepEditXmlPromise(EvalContext *ctx, Promise *pp, void *par
     }
     else if (strcmp("delete_text", pp->parent_promise_type->name) == 0)
     {
-        a = GetDeletionAttributes(ctx, pp);
+        Attributes a = GetDeletionAttributes(ctx, pp);
 #ifdef HAVE_LIBXML2
         xmlInitParser();
         PromiseResult result = VerifyTextDeletions(ctx, a, pp, edcontext);
@@ -324,7 +323,7 @@ static PromiseResult KeepEditXmlPromise(EvalContext *ctx, Promise *pp, void *par
     }
     else if (strcmp("set_text", pp->parent_promise_type->name) == 0)
     {
-        a = GetInsertionAttributes(ctx, pp);
+        Attributes a = GetInsertionAttributes(ctx, pp);
 #ifdef HAVE_LIBXML2
         xmlInitParser();
         PromiseResult result = VerifyTextSet(ctx, a, pp, edcontext);
@@ -337,7 +336,7 @@ static PromiseResult KeepEditXmlPromise(EvalContext *ctx, Promise *pp, void *par
     }
     else if (strcmp("insert_text", pp->parent_promise_type->name) == 0)
     {
-        a = GetInsertionAttributes(ctx, pp);
+        Attributes a = GetInsertionAttributes(ctx, pp);
 #ifdef HAVE_LIBXML2
         xmlInitParser();
         PromiseResult result = VerifyTextInsertions(ctx, a, pp, edcontext);

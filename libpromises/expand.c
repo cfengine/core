@@ -1129,7 +1129,7 @@ static void ResolveControlBody(EvalContext *ctx, GenericAgentConfig *config, con
     EvalContextStackPopFrame(ctx);
 }
 
-void PolicyResolve(EvalContext *ctx, Policy *policy, GenericAgentConfig *config)
+void PolicyResolve(EvalContext *ctx, const Policy *policy, GenericAgentConfig *config)
 {
     for (size_t i = 0; i < SeqLength(policy->bundles); i++)
     {

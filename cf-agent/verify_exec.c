@@ -62,9 +62,7 @@ static void PreviewProtocolLine(char *line, char *comm);
 
 PromiseResult VerifyExecPromise(EvalContext *ctx, Promise *pp)
 {
-    Attributes a = { {0} };
-
-    a = GetExecAttributes(ctx, pp);
+    Attributes a = GetExecAttributes(ctx, pp);
 
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser", pp->promiser, DATA_TYPE_STRING, "source=promise");
 

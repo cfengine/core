@@ -29,6 +29,6 @@
 #include <server.h>
 
 void Summarize(void);
-void KeepPromises(EvalContext *ctx, Policy *policy, GenericAgentConfig *config);
+void KeepPromises(EvalContext *ctx, const Policy *policy, GenericAgentConfig *config);
 
 #endif

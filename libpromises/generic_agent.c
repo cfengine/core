@@ -67,7 +67,7 @@ static pthread_once_t pid_cleanup_once = PTHREAD_ONCE_INIT;
 
 static char PIDFILE[CF_BUFSIZE];
 
-static void VerifyPromises(EvalContext *ctx, Policy *policy, GenericAgentConfig *config);
+static void VerifyPromises(EvalContext *ctx, const Policy *policy, GenericAgentConfig *config);
 static void CheckWorkingDirectories(EvalContext *ctx);
 
 static Policy *Cf3ParseFile(const GenericAgentConfig *config, const char *input_path);
@@ -115,7 +115,7 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
     THIS_AGENT_TYPE = config->agent_type;
     EvalContextClassPutHard(ctx, CF_AGENTTYPES[config->agent_type], "cfe_internal,source=agent");
 
-    DetectEnvironment(ctx, config->agent_type != AGENT_TYPE_EXECUTOR, true);
+    DetectEnvironment(ctx);
 
     EvalContextHeapPersistentLoadAll(ctx);
     LoadSystemConstants(ctx);
@@ -165,6 +165,8 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
 
         WritePolicyServerFile(GetWorkDir(), config->agent_specific.agent.bootstrap_policy_server);
         SetPolicyServer(ctx, config->agent_specific.agent.bootstrap_policy_server);
+        /* FIXME: Why it is called here? Can't we move both invocations to before if? */
+        UpdateLastPolicyUpdateTime(ctx);
         Log(LOG_LEVEL_INFO, "Bootstrapping to '%s'", POLICY_SERVER);
     }
     else
@@ -174,6 +176,7 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
         {
             Log(LOG_LEVEL_VERBOSE, "This agent is bootstrapped to '%s'", existing_policy_server);
             SetPolicyServer(ctx, existing_policy_server);
+            UpdateLastPolicyUpdateTime(ctx);
         }
         else
         {
@@ -1315,7 +1318,7 @@ const char *GenericAgentResolveInputPath(const GenericAgentConfig *config, const
     return MapName(input_path);
 }
 
-static void VerifyPromises(EvalContext *ctx, Policy *policy, GenericAgentConfig *config)
+static void VerifyPromises(EvalContext *ctx, const Policy *policy, GenericAgentConfig *config)
 {
 
 /* Now look once through ALL the bundles themselves */

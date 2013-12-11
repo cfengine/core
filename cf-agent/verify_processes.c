@@ -49,9 +49,7 @@ static int FindPidMatches(EvalContext *ctx, Item *procdata, Item **killlist, Att
 
 PromiseResult VerifyProcessesPromise(EvalContext *ctx, Promise *pp)
 {
-    Attributes a = { {0} };
-
-    a = GetProcessAttributes(ctx, pp);
+    Attributes a = GetProcessAttributes(ctx, pp);
     ProcessSanityChecks(a, pp);
 
     return VerifyProcesses(ctx, a, pp);

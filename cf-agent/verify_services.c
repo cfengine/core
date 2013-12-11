@@ -48,9 +48,7 @@ static PromiseResult VerifyServices(EvalContext *ctx, Attributes a, Promise *pp)
 
 PromiseResult VerifyServicesPromise(EvalContext *ctx, Promise *pp)
 {
-    Attributes a = { {0} };
-
-    a = GetServicesAttributes(ctx, pp);
+    Attributes a = GetServicesAttributes(ctx, pp);
 
     SetServiceDefaults(&a);
 

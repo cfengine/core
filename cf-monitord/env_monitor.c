@@ -566,14 +566,14 @@ static void PublishEnvironment(Item *classes)
 
 /*********************************************************************/
 
-static void AddOpenPortsClasses(const char *name, const Item *value, Item **classlist)
+static void AddOpenPorts(const char *name, const Item *value, Item **mon_data)
 {
     Writer *w = StringWriter();
     WriterWriteF(w, "@%s=", name);
     PrintItemList(value, w);
     if (StringWriterLength(w) <= 1500)
     {
-        AppendItem(classlist, StringWriterClose(w), NULL);
+        AppendItem(mon_data, StringWriterClose(w), NULL);
     }
     else
     {
@@ -584,7 +584,7 @@ static void AddOpenPortsClasses(const char *name, const Item *value, Item **clas
 static void ArmClasses(EvalContext *ctx, Averages av)
 {
     double sigma;
-    Item *ip,*classlist = NULL;
+    Item *ip, *mon_data = NULL;
     int i, j, k;
     char buff[CF_BUFSIZE], ldt_buff[CF_BUFSIZE], name[CF_MAXVARSIZE];
     static int anomaly[CF_OBSERVABLES][LDT_BUFSIZE];
@@ -596,8 +596,8 @@ static void ArmClasses(EvalContext *ctx, Averages av)
         char desc[CF_BUFSIZE];
 
         GetObservable(i, name, desc);
-        sigma = SetClasses(ctx, name, CF_THIS[i], av.Q[i].expect, av.Q[i].var, LOCALAV.Q[i].expect, LOCALAV.Q[i].var, &classlist);
-        SetVariable(name, CF_THIS[i], av.Q[i].expect, sigma, &classlist);
+        sigma = SetClasses(ctx, name, CF_THIS[i], av.Q[i].expect, av.Q[i].var, LOCALAV.Q[i].expect, LOCALAV.Q[i].var, &mon_data);
+        SetVariable(name, CF_THIS[i], av.Q[i].expect, sigma, &mon_data);
 
         /* LDT */
 
@@ -646,7 +646,7 @@ static void ArmClasses(EvalContext *ctx, Averages av)
                 snprintf(buff, CF_BUFSIZE, "%s_high_ldt", name);
             }
 
-            AppendItem(&classlist, buff, "2");
+            AppendItem(&mon_data, buff, "2");
             EvalContextHeapPersistentSave(buff, "measurements", CF_PERSISTENCE, CONTEXT_STATE_POLICY_PRESERVE);
         }
         else
@@ -671,15 +671,15 @@ static void ArmClasses(EvalContext *ctx, Averages av)
         }
     }
 
-    SetMeasurementPromises(&classlist);
+    SetMeasurementPromises(&mon_data);
 
     // Report on the open ports, in various ways
 
-    AddOpenPortsClasses("listening_ports", ALL_INCOMING, &classlist);
-    AddOpenPortsClasses("listening_udp6_ports", MON_UDP6, &classlist);
-    AddOpenPortsClasses("listening_udp4_ports", MON_UDP4, &classlist);
-    AddOpenPortsClasses("listening_tcp6_ports", MON_TCP6, &classlist);
-    AddOpenPortsClasses("listening_tcp4_ports", MON_TCP4, &classlist);
+    AddOpenPorts("listening_ports", ALL_INCOMING, &mon_data);
+    AddOpenPorts("listening_udp6_ports", MON_UDP6, &mon_data);
+    AddOpenPorts("listening_udp4_ports", MON_UDP4, &mon_data);
+    AddOpenPorts("listening_tcp6_ports", MON_TCP6, &mon_data);
+    AddOpenPorts("listening_tcp4_ports", MON_TCP4, &mon_data);
 
     // Port addresses
 
@@ -692,31 +692,31 @@ static void ArmClasses(EvalContext *ctx, Averages av)
         for (ip = MON_TCP6; ip != NULL; ip=ip->next)
         {
             snprintf(buff,CF_BUFSIZE,"tcp6_port_addr[%s]=%s",ip->name,ip->classes);
-            AppendItem(&classlist,buff,NULL);       
+            AppendItem(&mon_data, buff, NULL);
         }
 
         for (ip = MON_TCP4; ip != NULL; ip=ip->next)
         {
             snprintf(buff,CF_BUFSIZE,"tcp4_port_addr[%s]=%s",ip->name,ip->classes);
-            AppendItem(&classlist,buff,NULL);       
+            AppendItem(&mon_data, buff, NULL);
         }
     }
 
     for (ip = MON_UDP6; ip != NULL; ip=ip->next)
     {
         snprintf(buff,CF_BUFSIZE,"udp6_port_addr[%s]=%s",ip->name,ip->classes);
-        AppendItem(&classlist,buff,NULL);       
+        AppendItem(&mon_data, buff, NULL);
     }
     
     for (ip = MON_UDP4; ip != NULL; ip=ip->next)
     {
         snprintf(buff,CF_BUFSIZE,"udp4_port_addr[%s]=%s",ip->name,ip->classes);
-        AppendItem(&classlist,buff,NULL);       
+        AppendItem(&mon_data, buff, NULL);
     }
     
-    PublishEnvironment(classlist);
+    PublishEnvironment(mon_data);
 
-    DeleteItemList(classlist);
+    DeleteItemList(mon_data);
 }
 
 /*****************************************************************************/
@@ -1150,7 +1150,7 @@ static void GatherPromisedMeasures(EvalContext *ctx, const Policy *policy)
     }
 
     EvalContextClear(ctx);
-    DetectEnvironment(ctx, true, true);
+    DetectEnvironment(ctx);
 }
 
 /*********************************************************************/

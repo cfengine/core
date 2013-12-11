@@ -63,7 +63,7 @@ typedef enum
 static void ThisAgentInit(void);
 static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv);
 
-static void KeepControlPromises(EvalContext *ctx, Policy *policy);
+static void KeepControlPromises(EvalContext *ctx, const Policy *policy);
 static int HailServer(EvalContext *ctx, char *host);
 static void SendClassData(AgentConnection *conn);
 static void HailExec(AgentConnection *conn, char *peer, char *recvbuffer, char *sendbuffer);
@@ -137,7 +137,6 @@ char OUTPUT_DIRECTORY[CF_BUFSIZE];
 int BACKGROUND = false;
 int MAXCHILD = 50;
 char REMOTE_AGENT_OPTIONS[CF_MAXVARSIZE];
-Attributes RUNATTR = { {0} };
 
 Rlist *HOSTLIST = NULL;
 char SENDCLASSES[CF_MAXVARSIZE];
@@ -550,14 +549,10 @@ static int HailServer(EvalContext *ctx, char *host)
 /* Level 2                                                          */
 /********************************************************************/
 
-static void KeepControlPromises(EvalContext *ctx, Policy *policy)
+static void KeepControlPromises(EvalContext *ctx, const Policy *policy)
 {
     Rval retval;
 
-    RUNATTR.copy.trustkey = false;
-    RUNATTR.copy.encrypt = true;
-    RUNATTR.copy.force_ipv4 = false;
-    RUNATTR.copy.portnumber = CFENGINE_PORT;
 
 /* Keep promised agent behaviour - control bodies */
 
@@ -586,29 +581,21 @@ static void KeepControlPromises(EvalContext *ctx, Policy *policy)
 
             if (strcmp(cp->lval, CFR_CONTROLBODY[RUNAGENT_CONTROL_FORCE_IPV4].lval) == 0)
             {
-                RUNATTR.copy.force_ipv4 = BooleanFromString(retval.item);
-                Log(LOG_LEVEL_VERBOSE, "SET force_ipv4 = %d", RUNATTR.copy.force_ipv4);
                 continue;
             }
 
             if (strcmp(cp->lval, CFR_CONTROLBODY[RUNAGENT_CONTROL_TRUSTKEY].lval) == 0)
             {
-                RUNATTR.copy.trustkey = BooleanFromString(retval.item);
-                Log(LOG_LEVEL_VERBOSE, "SET trustkey = %d", RUNATTR.copy.trustkey);
                 continue;
             }
 
             if (strcmp(cp->lval, CFR_CONTROLBODY[RUNAGENT_CONTROL_ENCRYPT].lval) == 0)
             {
-                RUNATTR.copy.encrypt = BooleanFromString(retval.item);
-                Log(LOG_LEVEL_VERBOSE, "SET encrypt = %d", RUNATTR.copy.encrypt);
                 continue;
             }
 
             if (strcmp(cp->lval, CFR_CONTROLBODY[RUNAGENT_CONTROL_PORT_NUMBER].lval) == 0)
             {
-                RUNATTR.copy.portnumber = (unsigned short) IntFromString(retval.item);
-                Log(LOG_LEVEL_VERBOSE, "SET default portnumber = %u", RUNATTR.copy.portnumber);
                 continue;
             }
 
@@ -654,7 +641,6 @@ static void KeepControlPromises(EvalContext *ctx, Policy *policy)
 
             if (strcmp(cp->lval, CFR_CONTROLBODY[RUNAGENT_CONTROL_TIMEOUT].lval) == 0)
             {
-                RUNATTR.copy.timeout = (short) IntFromString(retval.item);
                 continue;
             }
 

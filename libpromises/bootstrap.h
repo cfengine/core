@@ -28,11 +28,17 @@
 #include <cf3.defs.h>
 
 /**
- * @brief Sets classes and the POLICY_SERVER global.
+ * @brief Sets sys.policy_hub and the POLICY_SERVER global.
  * @param ctx EvalContext is used to set related variables
  * @param new_policy_server IP of new policy server
  */
 void SetPolicyServer(EvalContext *ctx, const char *new_policy_server);
+
+/**
+ * @brief Updates sys.last_policy_update variable from $WORKDIR/masterfiles/cf_promises_validated
+ * @param ctx EvalContext to put variable into
+ */
+void UpdateLastPolicyUpdateTime(EvalContext *ctx);
 
 /**
  * @return The contents of policy_server.dat, or NULL if file is not found. Return value must be freed.

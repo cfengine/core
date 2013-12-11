@@ -436,28 +436,11 @@ static void *HandleConnection(ServerConnectionState *conn)
 
     case CF_PROTOCOL_TLS:
     {
-        if (ConnectionInfoConnectionStatus(conn->conn_info) != CF_CONNECTION_ESTABLISHED)
+        ret = ServerTLSSessionEstablish(conn);
+        if (ret == -1)
         {
-            /* New connection */
-            ret = ServerTLSSessionEstablish(conn);
-            if (ret == -1)
-            {
-                DeleteConn(conn);
-                return NULL;
-            }
-        }
-        else
-        {
-            /*
-             * Call collect mode.
-             * Run the session negotiation again since we need to trust the other side.
-             */
-            ret = ServerTLSSessionEstablishCallCollectMode(conn);
-            if (ret == -1)
-            {
-                DeleteConn(conn);
-                return NULL;
-            }
+            DeleteConn(conn);
+            return NULL;
         }
 
         while (BusyWithNewProtocol(conn->ctx, conn))

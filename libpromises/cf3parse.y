@@ -583,7 +583,7 @@ constraint:            constraint_id                        /* BUNDLE ONLY */
                                                ValidateClassLiteral(P.rval.item);
                                            }
 
-                                           Constraint *cp = PromiseAppendConstraint(P.currentpromise, P.lval, RvalCopy(P.rval), "any", P.references_body);
+                                           Constraint *cp = PromiseAppendConstraint(P.currentpromise, P.lval, RvalCopy(P.rval), P.references_body);
                                            cp->offset.line = P.line_no;
                                            cp->offset.start = P.offsets.last_id;
                                            cp->offset.end = P.offsets.current;

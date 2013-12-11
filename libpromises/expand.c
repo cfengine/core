@@ -1388,7 +1388,7 @@ static void SetAnyMissingDefaults(EvalContext *ctx, Promise *pp)
     {
         if (PromiseGetConstraint(ctx, pp, "package_method") == NULL)
         {
-            PromiseAppendConstraint(pp, "package_method", (Rval) {"generic", RVAL_TYPE_SCALAR}, "any", true);
+            PromiseAppendConstraint(pp, "package_method", (Rval) {"generic", RVAL_TYPE_SCALAR}, true);
         }
     }
 }

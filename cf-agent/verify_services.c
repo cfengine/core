@@ -227,7 +227,7 @@ static PromiseResult DoVerifyServices(EvalContext *ctx, Attributes a, Promise *p
 
         default_bundle = FnCallNew("standard_services", args);
 
-        PromiseAppendConstraint(pp, "service_bundle", (Rval) {default_bundle, RVAL_TYPE_FNCALL }, "any", false);
+        PromiseAppendConstraint(pp, "service_bundle", (Rval) {default_bundle, RVAL_TYPE_FNCALL }, false);
         a.havebundle = true;
     }
 

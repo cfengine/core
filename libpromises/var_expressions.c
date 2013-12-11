@@ -443,7 +443,7 @@ void VarRefSetMeta(VarRef *ref, bool enabled)
         {
             char *tmp = ref->scope;
             size_t len = strlen(ref->scope);
-            memcpy(ref->scope, StringSubstring(ref->scope, len, 0, len - strlen("_meta")), sizeof(char*));
+            memcpy(ref->scope, StringSubstring(ref->scope, len, 0, len - strlen("_meta")), len - strlen("_meta"));
             free(tmp);
         }
     }

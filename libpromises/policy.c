@@ -1318,10 +1318,10 @@ static Constraint *ConstraintNew(const char *lval, Rval rval, const char *classe
     return cp;
 }
 
-Constraint *PromiseAppendConstraint(Promise *promise, const char *lval, Rval rval, const char *classes,
-                                    bool references_body)
+Constraint *PromiseAppendConstraint(Promise *promise, const char *lval, Rval rval, bool references_body)
 {
-    Constraint *cp = ConstraintNew(lval, rval, classes, references_body);
+    Constraint *cp = ConstraintNew(lval, rval, "any", references_body);
+
     cp->type = POLICY_ELEMENT_TYPE_PROMISE;
     cp->parent.promise = promise;
 
@@ -1921,7 +1921,7 @@ static Rval RvalFromJson(JsonElement *json_rval)
     }
 }
 
-static Constraint *PromiseAppendConstraintJson(Promise *promise, JsonElement *json_constraint, const char *context)
+static Constraint *PromiseAppendConstraintJson(Promise *promise, JsonElement *json_constraint)
 {
     const char *lval = JsonObjectGetAsString(json_constraint, "lval");
 
@@ -1930,7 +1930,7 @@ static Constraint *PromiseAppendConstraintJson(Promise *promise, JsonElement *js
 
     Rval rval = RvalFromJson(json_rval);
 
-    Constraint *cp = PromiseAppendConstraint(promise, lval, rval, context, (strcmp("symbol", type) == 0));
+    Constraint *cp = PromiseAppendConstraint(promise, lval, rval, (strcmp("symbol", type) == 0));
 
     return cp;
 }
@@ -1945,7 +1945,7 @@ static Promise *PromiseTypeAppendPromiseJson(PromiseType *promise_type, JsonElem
     for (size_t i = 0; i < JsonLength(json_attributes); i++)
     {
         JsonElement *json_attribute = JsonArrayGetAsObject(json_attributes, i);
-        PromiseAppendConstraintJson(promise, json_attribute, context);
+        PromiseAppendConstraintJson(promise, json_attribute);
     }
 
     return promise;

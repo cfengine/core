@@ -132,7 +132,7 @@ struct Constraint_
     char *lval;
     Rval rval;
 
-    char *classes;              /* only used within bodies */
+    char *classes;
     bool references_body;
 
     SourceOffset offset;
@@ -257,7 +257,7 @@ void PromiseTypeDestroy(PromiseType *promise_type);
 
 void PromiseDestroy(Promise *pp);
 
-Constraint *PromiseAppendConstraint(Promise *promise, const char *lval, Rval rval, const char *classes, bool references_body);
+Constraint *PromiseAppendConstraint(Promise *promise, const char *lval, Rval rval, bool references_body);
 
 const char *PromiseGetNamespace(const Promise *pp);
 const Bundle *PromiseGetBundle(const Promise *pp);

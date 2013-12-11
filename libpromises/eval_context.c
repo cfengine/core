@@ -1356,7 +1356,6 @@ static VariableTable *GetVariableTableForScope(const EvalContext *ctx, const cha
         }
 
     case SPECIAL_SCOPE_THIS:
-        assert(!ns || strcmp("default", ns) == 0);
         {
             StackFrame *frame = LastStackFrameByType(ctx, STACK_FRAME_TYPE_PROMISE);
             return frame ? frame->data.promise.vars : NULL;

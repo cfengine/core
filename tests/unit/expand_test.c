@@ -57,15 +57,119 @@ static void test_map_iterators_from_rval_naked_list_var(void)
 
     EvalContextVariablePut(ctx, lval, list, DATA_TYPE_STRING_LIST, NULL);
 
-    Rlist *lists = NULL;
-    Rlist *scalars = NULL;
-    Rlist *containers = NULL;
-    MapIteratorsFromRval(ctx, bp, (Rval) { "${jwow}", RVAL_TYPE_SCALAR }, &scalars, &lists, &containers);
+    EvalContextStackPushBundleFrame(ctx, bp, NULL, false);
 
-    assert_int_equal(1, RlistLen(lists));
-    assert_string_equal("jwow", RlistScalarValue(lists));
-    assert_int_equal(0, RlistLen(scalars));
-    assert_int_equal(0, RlistLen(containers));
+    {
+        Rlist *lists = NULL;
+        Rlist *scalars = NULL;
+        Rlist *containers = NULL;
+        MapIteratorsFromRval(ctx, bp, (Rval) { "${jwow}", RVAL_TYPE_SCALAR }, &scalars, &lists, &containers);
+
+        assert_int_equal(1, RlistLen(lists));
+        assert_string_equal("jwow", RlistScalarValue(lists));
+        assert_int_equal(0, RlistLen(scalars));
+        assert_int_equal(0, RlistLen(containers));
+    }
+
+    {
+        Rlist *lists = NULL;
+        Rlist *scalars = NULL;
+        Rlist *containers = NULL;
+        char *str = xstrdup("${scope.jwow}");
+        MapIteratorsFromRval(ctx, bp, (Rval) { str, RVAL_TYPE_SCALAR }, &scalars, &lists, &containers);
+
+        assert_string_equal("${scope#jwow}", str);
+        free(str);
+
+        assert_int_equal(1, RlistLen(lists));
+        assert_string_equal("scope#jwow", RlistScalarValue(lists));
+        assert_int_equal(0, RlistLen(scalars));
+        assert_int_equal(0, RlistLen(containers));
+    }
+
+    {
+        Rlist *lists = NULL;
+        Rlist *scalars = NULL;
+        Rlist *containers = NULL;
+        char *str = xstrdup("${default:scope.jwow}");
+        MapIteratorsFromRval(ctx, bp, (Rval) { str, RVAL_TYPE_SCALAR }, &scalars, &lists, &containers);
+
+        assert_string_equal("${default*scope#jwow}", str);
+        free(str);
+
+        assert_int_equal(1, RlistLen(lists));
+        assert_string_equal("default*scope#jwow", RlistScalarValue(lists));
+        assert_int_equal(0, RlistLen(scalars));
+        assert_int_equal(0, RlistLen(containers));
+    }
+
+    EvalContextStackPopFrame(ctx);
+
+    VarRefDestroy(lval);
+    PolicyDestroy(p);
+    EvalContextDestroy(ctx);
+}
+
+static void test_map_iterators_from_rval_naked_list_var_namespace(void)
+{
+    EvalContext *ctx = EvalContextNew();
+    Policy *p = PolicyNew();
+    Bundle *bp = PolicyAppendBundle(p, "ns", "scope", "agent", NULL, NULL);
+
+    Rlist *list = NULL;
+    RlistAppend(&list, "jersey", RVAL_TYPE_SCALAR);
+
+    VarRef *lval = VarRefParse("ns:scope.jwow");
+
+    EvalContextVariablePut(ctx, lval, list, DATA_TYPE_STRING_LIST, NULL);
+
+    EvalContextStackPushBundleFrame(ctx, bp, NULL, false);
+
+    {
+        Rlist *lists = NULL;
+        Rlist *scalars = NULL;
+        Rlist *containers = NULL;
+        MapIteratorsFromRval(ctx, bp, (Rval) { "${jwow}", RVAL_TYPE_SCALAR }, &scalars, &lists, &containers);
+
+        assert_int_equal(1, RlistLen(lists));
+        assert_string_equal("jwow", RlistScalarValue(lists));
+        assert_int_equal(0, RlistLen(scalars));
+        assert_int_equal(0, RlistLen(containers));
+    }
+
+    {
+        Rlist *lists = NULL;
+        Rlist *scalars = NULL;
+        Rlist *containers = NULL;
+        char *str = xstrdup("${scope.jwow}");
+        MapIteratorsFromRval(ctx, bp, (Rval) { str, RVAL_TYPE_SCALAR }, &scalars, &lists, &containers);
+
+        assert_string_equal("${scope#jwow}", str);
+        free(str);
+
+        assert_int_equal(1, RlistLen(lists));
+        assert_string_equal("scope#jwow", RlistScalarValue(lists));
+        assert_int_equal(0, RlistLen(scalars));
+        assert_int_equal(0, RlistLen(containers));
+    }
+
+    {
+        Rlist *lists = NULL;
+        Rlist *scalars = NULL;
+        Rlist *containers = NULL;
+        char *str = xstrdup("${ns:scope.jwow}");
+        MapIteratorsFromRval(ctx, bp, (Rval) { str, RVAL_TYPE_SCALAR }, &scalars, &lists, &containers);
+
+        assert_string_equal("${ns*scope#jwow}", str);
+        free(str);
+
+        assert_int_equal(1, RlistLen(lists));
+        assert_string_equal("ns*scope#jwow", RlistScalarValue(lists));
+        assert_int_equal(0, RlistLen(scalars));
+        assert_int_equal(0, RlistLen(containers));
+    }
+
+    EvalContextStackPopFrame(ctx);
 
     VarRefDestroy(lval);
     PolicyDestroy(p);
@@ -322,6 +426,7 @@ int main()
         unit_test(test_map_iterators_from_rval_empty),
         unit_test(test_map_iterators_from_rval_literal),
         unit_test(test_map_iterators_from_rval_naked_list_var),
+        unit_test(test_map_iterators_from_rval_naked_list_var_namespace),
         unit_test(test_expand_scalar_two_scalars_concat),
         unit_test(test_expand_scalar_two_scalars_nested),
         unit_test(test_expand_scalar_array_concat),

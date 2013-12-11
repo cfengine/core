@@ -242,8 +242,9 @@ void MapIteratorsFromRval(EvalContext *ctx, const Bundle *bundle, Rval rval, Rli
     {
     case RVAL_TYPE_SCALAR:
         {
-            char *val = (char *)rval.item;
-            ExpandAndMapIteratorsFromScalar(ctx, bundle, val, strlen(val), 0, scalars, lists, containers, NULL);
+            char *val = RvalScalarValue(rval);
+            size_t val_len = strlen(val);
+            ExpandAndMapIteratorsFromScalar(ctx, bundle, val, val_len, 0, scalars, lists, containers, NULL);
         }
         break;
 
@@ -293,6 +294,40 @@ static void RlistConcatInto(Rlist **dest, const Rlist *src, const char *extensio
     if (count == 0)
     {
         RlistAppendScalarIdemp(dest, extension);
+    }
+}
+
+static void MangleVarRefString(char *ref_str, size_t len)
+{
+    for (size_t i = 0; i < len; i++)
+    {
+        if (ref_str[i] == ':')
+        {
+            ref_str[i] = '*';
+        }
+        else if (ref_str[i] == '.')
+        {
+            ref_str[i] = '#';
+        }
+        else if (ref_str[i] == '\0' || ref_str[i] == '[')
+        {
+            return;
+        }
+    }
+}
+
+static void DeMangleVarRefString(char *ref_str, size_t len)
+{
+    for (size_t i = 0; i < len; i++)
+    {
+        if (ref_str[i] == '*')
+        {
+            ref_str[i] = ':';
+        }
+        else if (ref_str[i] == '#')
+        {
+            ref_str[i] = '.';
+        }
     }
 }
 
@@ -348,7 +383,7 @@ static void ExpandAndMapIteratorsFromScalar(EvalContext *ctx, const Bundle *bund
                 int success = 0;
                 int increment;
 
-                VarRef *ref = VarRefParseFromScope(v, bundle->name);
+                VarRef *ref = VarRefParse(v);
 
                 increment = strlen(v) - 1 + 3;
 
@@ -367,14 +402,16 @@ static void ExpandAndMapIteratorsFromScalar(EvalContext *ctx, const Bundle *bund
                     //  varname => "test.somelist"; $($(varname)) also fails
                     // TODO Unless the consumer handles it?
 
-                    VarRef *inner_ref = VarRefParseFromScope(RlistScalarValue(exp), bundle->name);
+                    const char *inner_ref_str = RlistScalarValue(exp);
+                    VarRef *inner_ref = VarRefParseFromBundle(inner_ref_str, bundle);
 
                     // var is the expanded name of the variable in its native context
                     // finalname will be the mapped name in the local context "this."
 
                     if (EvalContextVariableGet(ctx, inner_ref, &rval, NULL))
                     {
-                        char *mangled_inner_ref = IsQualifiedVariable(RlistScalarValue(exp)) ? VarRefMangle(inner_ref) : xstrdup(RlistScalarValue(exp));
+                        char *mangled_inner_ref = xstrdup(inner_ref_str);
+                        MangleVarRefString(mangled_inner_ref, strlen(mangled_inner_ref));
 
                         success++;
                         switch (rval.type)
@@ -912,10 +949,12 @@ static void CopyLocalizedReferencesToBundleScope(EvalContext *ctx, const Bundle 
     for (const Rlist *rp = ref_names; rp != NULL; rp = rp->next)
     {
         const char *mangled = RlistScalarValue(rp);
+        char *demangled = xstrdup(mangled);
+        DeMangleVarRefString(demangled, strlen(demangled));
 
         if (strchr(RlistScalarValue(rp), CF_MAPPEDLIST))
         {
-            VarRef *demangled_ref = VarRefDeMangle(mangled);
+            VarRef *demangled_ref = VarRefParseFromBundle(demangled, bundle);
 
             Rval retval;
             DataType type;
@@ -951,6 +990,8 @@ static void CopyLocalizedReferencesToBundleScope(EvalContext *ctx, const Bundle 
             VarRefDestroy(mangled_ref);
             VarRefDestroy(demangled_ref);
         }
+
+        free(demangled);
     }
 }
 

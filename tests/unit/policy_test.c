@@ -185,14 +185,14 @@ static void test_policy_json_to_from(void)
                         assert_int_equal(2, SeqLength(promise->conlist));
 
                         {
-                            Constraint *create = PromiseGetConstraint(ctx, promise, "create");
+                            Constraint *create = PromiseGetConstraint(promise, "create");
                             assert_true(create);
                             assert_string_equal("create", create->lval);
                             assert_string_equal("true", RvalScalarValue(create->rval));
                         }
 
                         {
-                            Constraint *create = PromiseGetConstraint(ctx, promise, "perms");
+                            Constraint *create = PromiseGetConstraint(promise, "perms");
                             assert_true(create);
                             assert_string_equal("perms", create->lval);
                             assert_string_equal("myperms", RvalScalarValue(create->rval));

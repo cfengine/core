@@ -1102,7 +1102,7 @@ Packages GetPackageConstraints(const EvalContext *ctx, const Promise *pp)
     p.package_noverify_regex = (char *) ConstraintGetRvalValue(ctx, "package_noverify_regex", pp, RVAL_TYPE_SCALAR);
     p.package_noverify_returncode = PromiseGetConstraintAsInt(ctx, "package_noverify_returncode", pp);
 
-    if (PromiseGetConstraint(ctx, pp, "package_commands_useshell") == NULL)
+    if (PromiseGetConstraint(pp, "package_commands_useshell") == NULL)
     {
         p.package_commands_useshell = true;
     }

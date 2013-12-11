@@ -2673,7 +2673,7 @@ Rlist *PromiseGetConstraintAsList(const EvalContext *ctx, const char *lval, cons
     return retval;
 }
 
-Constraint *PromiseGetConstraint(const EvalContext *ctx, const Promise *pp, const char *lval)
+Constraint *PromiseGetConstraint(const Promise *pp, const char *lval)
 {
     Constraint *retval = NULL;
 
@@ -2688,17 +2688,7 @@ Constraint *PromiseGetConstraint(const EvalContext *ctx, const Promise *pp, cons
 
         if (strcmp(cp->lval, lval) == 0)
         {
-            if (IsDefinedClass(ctx, cp->classes, PromiseGetNamespace(pp)))
-            {
-                if (retval != NULL)
-                {
-                    Log(LOG_LEVEL_ERR, "Inconsistent '%s' constraints break this promise", lval);
-                    PromiseRef(LOG_LEVEL_ERR, pp);
-                }
-
-                retval = cp;
-                break;
-            }
+            return cp;
         }
     }
 
@@ -2751,7 +2741,7 @@ void *PromiseGetImmediateRvalValue(const char *lval, const Promise *pp, RvalType
 
 void *ConstraintGetRvalValue(const EvalContext *ctx, const char *lval, const Promise *pp, RvalType rtype)
 {
-    const Constraint *constraint = PromiseGetConstraint(ctx, pp, lval);
+    const Constraint *constraint = PromiseGetConstraint(pp, lval);
 
     if (constraint && constraint->rval.type == rtype)
     {

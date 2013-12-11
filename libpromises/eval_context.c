@@ -525,7 +525,7 @@ void SetBundleAborted(EvalContext *ctx)
 
 int VarClassExcluded(const EvalContext *ctx, const Promise *pp, char **classes)
 {
-    Constraint *cp = PromiseGetConstraint(ctx, pp, "ifvarclass");
+    Constraint *cp = PromiseGetConstraint(pp, "ifvarclass");
     if (!cp)
     {
         return false;

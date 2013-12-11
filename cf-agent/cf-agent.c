@@ -1434,48 +1434,48 @@ static PromiseResult KeepAgentPromise(EvalContext *ctx, Promise *pp, ARG_UNUSED 
     else if (strcmp("storage", pp->parent_promise_type->name) == 0)
     {
         result = FindAndVerifyStoragePromises(ctx, pp);
-        EndMeasurePromise(ctx, start, pp);
+        EndMeasurePromise(start, pp);
     }
     else if (strcmp("packages", pp->parent_promise_type->name) == 0)
     {
         result = VerifyPackagesPromise(ctx, pp);
-        EndMeasurePromise(ctx, start, pp);
+        EndMeasurePromise(start, pp);
     }
     else if (strcmp("users", pp->parent_promise_type->name) == 0)
     {
         result = VerifyUsersPromise(ctx, pp);
-        EndMeasurePromise(ctx, start, pp);
+        EndMeasurePromise(start, pp);
     }
 
     else if (strcmp("files", pp->parent_promise_type->name) == 0)
     {
         result = ParallelFindAndVerifyFilesPromises(ctx, pp);
-        EndMeasurePromise(ctx, start, pp);
+        EndMeasurePromise(start, pp);
     }
     else if (strcmp("commands", pp->parent_promise_type->name) == 0)
     {
         result = VerifyExecPromise(ctx, pp);
-        EndMeasurePromise(ctx, start, pp);
+        EndMeasurePromise(start, pp);
     }
     else if (strcmp("databases", pp->parent_promise_type->name) == 0)
     {
         result = VerifyDatabasePromises(ctx, pp);
-        EndMeasurePromise(ctx, start, pp);
+        EndMeasurePromise(start, pp);
     }
     else if (strcmp("methods", pp->parent_promise_type->name) == 0)
     {
         result = VerifyMethodsPromise(ctx, pp);
-        EndMeasurePromise(ctx, start, pp);
+        EndMeasurePromise(start, pp);
     }
     else if (strcmp("services", pp->parent_promise_type->name) == 0)
     {
         result = VerifyServicesPromise(ctx, pp);
-        EndMeasurePromise(ctx, start, pp);
+        EndMeasurePromise(start, pp);
     }
     else if (strcmp("guest_environments", pp->parent_promise_type->name) == 0)
     {
         result = VerifyEnvironmentsPromise(ctx, pp);
-        EndMeasurePromise(ctx, start, pp);
+        EndMeasurePromise(start, pp);
     }
     else if (strcmp("reports", pp->parent_promise_type->name) == 0)
     {

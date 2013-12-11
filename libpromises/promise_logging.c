@@ -72,18 +72,18 @@ static LogLevel StringToLogLevel(const char *value)
     return -1;
 }
 
-static LogLevel GetLevelForPromise(const EvalContext *ctx, const Promise *pp, const char *attr_name)
+static LogLevel GetLevelForPromise(const Promise *pp, const char *attr_name)
 {
     return StringToLogLevel(PromiseGetConstraintAsRval(pp, attr_name, RVAL_TYPE_SCALAR));
 }
 
-static LogLevel CalculateLogLevel(const EvalContext *ctx, const Promise *pp)
+static LogLevel CalculateLogLevel(const Promise *pp)
 {
     LogLevel log_level = LogGetGlobalLevel();
 
     if (pp)
     {
-        log_level = AdjustLogLevel(log_level, GetLevelForPromise(ctx, pp, "log_level"));
+        log_level = AdjustLogLevel(log_level, GetLevelForPromise(pp, "log_level"));
     }
 
     /* Disable system log for dry-runs */
@@ -95,13 +95,13 @@ static LogLevel CalculateLogLevel(const EvalContext *ctx, const Promise *pp)
     return log_level;
 }
 
-static LogLevel CalculateReportLevel(const EvalContext *ctx, const Promise *pp)
+static LogLevel CalculateReportLevel(const Promise *pp)
 {
     LogLevel report_level = LogGetGlobalLevel();
 
     if (pp)
     {
-        report_level = AdjustLogLevel(report_level, GetLevelForPromise(ctx, pp, "report_level"));
+        report_level = AdjustLogLevel(report_level, GetLevelForPromise(pp, "report_level"));
     }
 
     return report_level;
@@ -178,7 +178,7 @@ void PromiseLoggingPromiseEnter(const EvalContext *eval_context, const Promise *
     assert(plctx->promise_level == 1);
     plctx->stack_path = EvalContextStackPath(eval_context);
 
-    LoggingPrivSetLevels(CalculateLogLevel(eval_context, pp), CalculateReportLevel(eval_context, pp));
+    LoggingPrivSetLevels(CalculateLogLevel(pp), CalculateReportLevel(pp));
 }
 
 void PromiseLoggingPromiseFinish(const EvalContext *eval_context, const Promise *pp)

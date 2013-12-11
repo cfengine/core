@@ -48,7 +48,7 @@ static void ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp, Rlist *lists
                                PromiseActuator *ActOnPromise, void *param);
 static void ExpandAndMapIteratorsFromScalar(EvalContext *ctx, const Bundle *bundle, const char *string, size_t length, int level,
                                             Rlist **scalars, Rlist **lists, Rlist **containers, Rlist **full_expansion);
-static void SetAnyMissingDefaults(EvalContext *ctx, Promise *pp);
+static void SetAnyMissingDefaults(Promise *pp);
 static void CopyLocalizedReferencesToBundleScope(EvalContext *ctx, const Bundle *bundle, const Rlist *ref_names);
 
 /*
@@ -117,7 +117,7 @@ void ExpandPromise(EvalContext *ctx, Promise *pp, PromiseActuator *ActOnPromise,
 
     // Set a default for packages here...general defaults that need to come before
     //fix me wth a general function SetMissingDefaults
-    SetAnyMissingDefaults(ctx, pp);
+    SetAnyMissingDefaults(pp);
 
     Promise *pcopy = DeRefCopyPromise(ctx, pp);
 
@@ -1380,7 +1380,7 @@ bool IsVarList(const char *var)
 
 /*********************************************************************/
 
-static void SetAnyMissingDefaults(EvalContext *ctx, Promise *pp)
+static void SetAnyMissingDefaults(Promise *pp)
 /* Some defaults have to be set here, if they involve body-name
    constraints as names need to be expanded before CopyDeRefPromise */
 {

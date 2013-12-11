@@ -1281,7 +1281,7 @@ Attributes GetInsertionAttributes(const EvalContext *ctx, const Promise *pp)
     Attributes attr = { {0} };
 
     attr.havelocation = PromiseGetConstraintAsBoolean(ctx, "location", pp);
-    attr.location = GetLocationAttributes(ctx, pp);
+    attr.location = GetLocationAttributes(pp);
 
     attr.sourcetype = PromiseGetConstraintAsRval(pp, "insert_type", RVAL_TYPE_SCALAR);
     attr.expandvars = PromiseGetConstraintAsBoolean(ctx, "expand_scalars", pp);
@@ -1296,7 +1296,7 @@ Attributes GetInsertionAttributes(const EvalContext *ctx, const Promise *pp)
     attr.haveregion = PromiseGetConstraintAsBoolean(ctx, "select_region", pp);
     attr.region = GetRegionConstraints(ctx, pp);
 
-    attr.xml = GetXmlConstraints(ctx, pp);
+    attr.xml = GetXmlConstraints(pp);
 
     attr.havetrans = PromiseGetConstraintAsBoolean(ctx, CF_TRANSACTION, pp);
     attr.transaction = GetTransactionConstraints(ctx, pp);
@@ -1309,7 +1309,7 @@ Attributes GetInsertionAttributes(const EvalContext *ctx, const Promise *pp)
 
 /*******************************************************************/
 
-EditLocation GetLocationAttributes(const EvalContext *ctx, const Promise *pp)
+EditLocation GetLocationAttributes(const Promise *pp)
 {
     EditLocation e;
     char *value;
@@ -1347,7 +1347,7 @@ Attributes GetDeletionAttributes(const EvalContext *ctx, const Promise *pp)
     attr.haveregion = PromiseGetConstraintAsBoolean(ctx, "select_region", pp);
     attr.region = GetRegionConstraints(ctx, pp);
 
-    attr.xml = GetXmlConstraints(ctx, pp);
+    attr.xml = GetXmlConstraints(pp);
 
     attr.havetrans = PromiseGetConstraintAsBoolean(ctx, CF_TRANSACTION, pp);
     attr.transaction = GetTransactionConstraints(ctx, pp);
@@ -1388,7 +1388,7 @@ Attributes GetReplaceAttributes(const EvalContext *ctx, const Promise *pp)
     Attributes attr = { {0} };
 
     attr.havereplace = PromiseGetConstraintAsBoolean(ctx, "replace_patterns", pp);
-    attr.replace = GetReplaceConstraints(ctx, pp);
+    attr.replace = GetReplaceConstraints(pp);
 
     attr.havecolumn = PromiseGetConstraintAsBoolean(ctx, "replace_with", pp);
 
@@ -1397,7 +1397,7 @@ Attributes GetReplaceAttributes(const EvalContext *ctx, const Promise *pp)
     attr.haveregion = PromiseGetConstraintAsBoolean(ctx, "select_region", pp);
     attr.region = GetRegionConstraints(ctx, pp);
 
-    attr.xml = GetXmlConstraints(ctx, pp);
+    attr.xml = GetXmlConstraints(pp);
 
     attr.havetrans = PromiseGetConstraintAsBoolean(ctx, CF_TRANSACTION, pp);
     attr.transaction = GetTransactionConstraints(ctx, pp);
@@ -1410,7 +1410,7 @@ Attributes GetReplaceAttributes(const EvalContext *ctx, const Promise *pp)
 
 /*******************************************************************/
 
-EditXml GetXmlConstraints(const EvalContext *ctx, const Promise *pp)
+EditXml GetXmlConstraints(const Promise *pp)
 {
     EditXml x;
 
@@ -1436,7 +1436,7 @@ EditRegion GetRegionConstraints(const EvalContext *ctx, const Promise *pp)
 
 /*******************************************************************/
 
-EditReplace GetReplaceConstraints(const EvalContext *ctx, const Promise *pp)
+EditReplace GetReplaceConstraints(const Promise *pp)
 {
     EditReplace r;
 

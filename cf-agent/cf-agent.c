@@ -259,12 +259,7 @@ int main(int argc, char *argv[])
     }
 
     // only note class usage when default policy is run
-    if (!MINUSF)
-    {
-        ClassTableIterator *iter = EvalContextClassTableIteratorNewGlobal(ctx, NULL, true, true);
-        NoteClassUsage(iter, true);
-        ClassTableIteratorDestroy(iter);
-    }
+    Nova_NoteClassUsage(ctx);
     Nova_NoteVarUsageDB(ctx);
     Nova_TrackExecution(config->input_file);
     PurgeLocks();
@@ -1219,7 +1214,6 @@ int ScheduleAgentOperations(EvalContext *ctx, Bundle *bp)
 
                 if (Abort(ctx))
                 {
-                    //NoteClassUsage(EvalContextStackFrameIteratorSoft(ctx) , false);
                     DeleteTypeContext(ctx, bp, type);
                     NoteBundleCompliance(bp, save_pr_kept, save_pr_repaired, save_pr_notkept);
                     return false;
@@ -1229,9 +1223,6 @@ int ScheduleAgentOperations(EvalContext *ctx, Bundle *bp)
             DeleteTypeContext(ctx, bp, type);
         }
     }
-
-
-    //NoteClassUsage(EvalContextStackFrameIteratorSoft(ctx) , false);
 
     return NoteBundleCompliance(bp, save_pr_kept, save_pr_repaired, save_pr_notkept);
 }

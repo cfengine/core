@@ -58,6 +58,7 @@ ENTERPRISE_FUNC_5ARG_DECLARE(PromiseResult, Nova_CheckNtACL,
 ENTERPRISE_VOID_FUNC_1ARG_DECLARE(void, ReportPatches, PackageManager *, list);
 
 ENTERPRISE_VOID_FUNC_1ARG_DECLARE(void, Nova_NoteVarUsageDB, EvalContext *, ctx);
+ENTERPRISE_VOID_FUNC_1ARG_DECLARE(void, Nova_NoteClassUsage, EvalContext *, ctx);
 ENTERPRISE_VOID_FUNC_1ARG_DECLARE(void, Nova_TrackExecution, const char *, input_file);
 ENTERPRISE_VOID_FUNC_1ARG_DECLARE(void, GenerateDiffReports, const char *, input_file);
 

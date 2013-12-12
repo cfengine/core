@@ -285,7 +285,7 @@ int FuzzySetMatch(const char *s1, const char *s2)
     return -1;
 }
 
-int FuzzyHostParse(char *arg2)
+bool FuzzyHostParse(const char *arg2)
 {
     long start = -1, end = -1;
     int n;
@@ -302,7 +302,7 @@ int FuzzyHostParse(char *arg2)
     return true;
 }
 
-int FuzzyHostMatch(char *arg0, char *arg1, char *refhost)
+int FuzzyHostMatch(const char *arg0, const char *arg1, const char *refhost)
 {
     char *sp, refbase[CF_MAXVARSIZE];
     long cmp = -1, start = -1, end = -1;
@@ -351,14 +351,13 @@ int FuzzyHostMatch(char *arg0, char *arg1, char *refhost)
     return 0;
 }
 
-int FuzzyMatchParse(char *s)
+bool FuzzyMatchParse(const char *s)
 {
-    char *sp;
     short isCIDR = false, isrange = false, isv6 = false, isv4 = false, isADDR = false;
     char address[CF_ADDRSIZE];
     int mask, count = 0;
 
-    for (sp = s; *sp != '\0'; sp++)     /* Is this an address or hostname */
+    for (const char *sp = s; *sp != '\0'; sp++)     /* Is this an address or hostname */
     {
         if (!isxdigit((int) *sp))
         {
@@ -452,9 +451,9 @@ int FuzzyMatchParse(char *s)
     if (isv4 && isrange)
     {
         long i, from = -1, to = -1;
-        char *sp1, buffer1[CF_MAX_IP_LEN];
+        char buffer1[CF_MAX_IP_LEN];
 
-        sp1 = s;
+        const char *sp1 = s;
 
         for (i = 0; i < 4; i++)
         {

@@ -29,9 +29,9 @@
 
 bool IsLoopbackAddress(const char *address);
 int FuzzySetMatch(const char *s1, const char *s2);
-int FuzzyHostParse(char *arg2);
-int FuzzyHostMatch(char *arg0, char *arg1, char *basename);
-int FuzzyMatchParse(char *item);
+bool FuzzyHostParse(const char *arg2);
+int FuzzyHostMatch(const char *arg0, const char *arg1, const char *basename);
+bool FuzzyMatchParse(const char *item);
 int ParseHostname(const char *hostname, char *new_hostname);
 
 bool IsInterfaceAddress(const Item *ip_addresses, const char *adr);

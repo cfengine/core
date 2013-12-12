@@ -9,7 +9,11 @@ body common control
 bundle agent init
 {
 vars:
-  "file" string => "$(this.promise_filename)"; 
+  "file" string => "$(this.promise_filename)";
+}
+
+bundle agent test
+{
 }
 
 body file control

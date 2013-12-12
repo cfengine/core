@@ -1,4 +1,13 @@
+bundle common sub1
+{
+  vars:
+      # this is the same file twice, which should be OK with hash checks
+      "inputs" slist => { "$(this.promise_dirname)/file_inputs.sub2",
+                          "$(this.promise_dirname)/./file_inputs.sub2"
+      };
+}
+
 body file control
 {
-  inputs => { "file_inputs.sub2" };
+  inputs => { @(sub1.inputs) };
 }

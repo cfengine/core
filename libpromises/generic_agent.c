@@ -72,7 +72,7 @@ static void CheckWorkingDirectories(EvalContext *ctx);
 
 static Policy *Cf3ParseFile(const GenericAgentConfig *config, const char *input_path);
 
-static Policy *LoadPolicyFile(EvalContext *ctx, GenericAgentConfig *config, const char *policy_file, StringSet *parsed_files, StringSet *failed_files);
+static Policy *LoadPolicyFile(EvalContext *ctx, GenericAgentConfig *config, const char *policy_file, StringSet *parsed_files_and_checksums, StringSet *failed_files);
 static bool WritePolicyValidatedFileToMasterfiles(const GenericAgentConfig *config);
 static void GetPromisesValidatedFileFromMasterfiles(char *filename, size_t max_size, const GenericAgentConfig *config);
 
@@ -500,7 +500,7 @@ static void ShowContext(EvalContext *ctx)
     SeqDestroy(soft_contexts);
 }
 
-static Policy *LoadPolicyInputFiles(EvalContext *ctx, GenericAgentConfig *config, const Rlist *inputs, StringSet *parsed_files, StringSet *failed_files)
+static Policy *LoadPolicyInputFiles(EvalContext *ctx, GenericAgentConfig *config, const Rlist *inputs, StringSet *parsed_files_and_checksums, StringSet *failed_files)
 {
     Policy *policy = PolicyNew();
 
@@ -525,11 +525,11 @@ static Policy *LoadPolicyInputFiles(EvalContext *ctx, GenericAgentConfig *config
         switch (resolved_input.type)
         {
         case RVAL_TYPE_SCALAR:
-            aux_policy = LoadPolicyFile(ctx, config, GenericAgentResolveInputPath(config, RvalScalarValue(resolved_input)), parsed_files, failed_files);
+            aux_policy = LoadPolicyFile(ctx, config, GenericAgentResolveInputPath(config, RvalScalarValue(resolved_input)), parsed_files_and_checksums, failed_files);
             break;
 
         case RVAL_TYPE_LIST:
-            aux_policy = LoadPolicyInputFiles(ctx, config, RvalRlistValue(resolved_input), parsed_files, failed_files);
+            aux_policy = LoadPolicyInputFiles(ctx, config, RvalRlistValue(resolved_input), parsed_files_and_checksums, failed_files);
             break;
 
         default:
@@ -550,13 +550,27 @@ static Policy *LoadPolicyInputFiles(EvalContext *ctx, GenericAgentConfig *config
     return policy;
 }
 
-static Policy *LoadPolicyFile(EvalContext *ctx, GenericAgentConfig *config, const char *policy_file, StringSet *parsed_files, StringSet *failed_files)
+static Policy *LoadPolicyFile(EvalContext *ctx, GenericAgentConfig *config, const char *policy_file, StringSet *parsed_files_and_checksums, StringSet *failed_files)
 {
     Policy *policy = NULL;
+    unsigned char digest[EVP_MAX_MD_SIZE + 1] = { 0 };
+    char hashbuffer[EVP_MAX_MD_SIZE * 4] = { 0 };
+    char hashprintbuffer[CF_BUFSIZE] = { 0 };
 
-    if (StringSetContains(parsed_files, policy_file))
+    HashFile(policy_file, digest, CF_DEFAULT_DIGEST);
+    snprintf(hashprintbuffer, CF_BUFSIZE - 1, "{checksum}%s",
+             HashPrintSafe(CF_DEFAULT_DIGEST, true, digest, hashbuffer));
+
+    Log(LOG_LEVEL_DEBUG, "Hashed policy file %s to %s", policy_file, hashprintbuffer);
+
+    if (StringSetContains(parsed_files_and_checksums, policy_file))
     {
         Log(LOG_LEVEL_VERBOSE, "Skipping loading of duplicate policy file %s", policy_file);
+        return NULL;
+    }
+    else if (StringSetContains(parsed_files_and_checksums, hashprintbuffer))
+    {
+        Log(LOG_LEVEL_VERBOSE, "Skipping loading of duplicate (detected by hash) policy file %s", policy_file);
         return NULL;
     }
     else
@@ -565,7 +579,9 @@ static Policy *LoadPolicyFile(EvalContext *ctx, GenericAgentConfig *config, cons
     }
 
     policy = Cf3ParseFile(config, policy_file);
-    StringSetAdd(parsed_files, xstrdup(policy_file));
+    // we keep the checksum and the policy file name to help debugging
+    StringSetAdd(parsed_files_and_checksums, xstrdup(policy_file));
+    StringSetAdd(parsed_files_and_checksums, xstrdup(hashprintbuffer));
 
     if (!policy)
     {
@@ -586,7 +602,7 @@ static Policy *LoadPolicyFile(EvalContext *ctx, GenericAgentConfig *config, cons
 
         if (cp)
         {
-            Policy *aux_policy = LoadPolicyInputFiles(ctx, config, RvalRlistValue(cp->rval), parsed_files, failed_files);
+            Policy *aux_policy = LoadPolicyInputFiles(ctx, config, RvalRlistValue(cp->rval), parsed_files_and_checksums, failed_files);
             if (aux_policy)
             {
                 policy = PolicyMerge(policy, aux_policy);
@@ -604,7 +620,7 @@ static Policy *LoadPolicyFile(EvalContext *ctx, GenericAgentConfig *config, cons
 
         if (cp)
         {
-            Policy *aux_policy = LoadPolicyInputFiles(ctx, config, RvalRlistValue(cp->rval), parsed_files, failed_files);
+            Policy *aux_policy = LoadPolicyInputFiles(ctx, config, RvalRlistValue(cp->rval), parsed_files_and_checksums, failed_files);
             if (aux_policy)
             {
                 policy = PolicyMerge(policy, aux_policy);
@@ -617,10 +633,10 @@ static Policy *LoadPolicyFile(EvalContext *ctx, GenericAgentConfig *config, cons
 
 Policy *GenericAgentLoadPolicy(EvalContext *ctx, GenericAgentConfig *config)
 {
-    StringSet *parsed_files = StringSetNew();
+    StringSet *parsed_files_and_checksums = StringSetNew();
     StringSet *failed_files = StringSetNew();
 
-    Policy *policy = LoadPolicyFile(ctx, config, config->input_file, parsed_files, failed_files);
+    Policy *policy = LoadPolicyFile(ctx, config, config->input_file, parsed_files_and_checksums, failed_files);
 
     if (StringSetSize(failed_files) > 0)
     {
@@ -628,7 +644,7 @@ Policy *GenericAgentLoadPolicy(EvalContext *ctx, GenericAgentConfig *config)
         exit(EXIT_FAILURE);
     }
 
-    StringSetDestroy(parsed_files);
+    StringSetDestroy(parsed_files_and_checksums);
     StringSetDestroy(failed_files);
 
     {

@@ -32,7 +32,7 @@ bundle agent test
 bundle agent check
 {
   classes:
-      "fail" expression => regcmp(".*host_licenses_paid.*", $(test.agent));
+      "fail" expression => regcmp(".*Your configuration promises no host_licenses_paid in common control.*", $(test.agent));
 
   reports:
     DEBUG::

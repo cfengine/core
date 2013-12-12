@@ -1198,7 +1198,11 @@ static PromiseResult KeepMonitorPromise(EvalContext *ctx, Promise *pp, ARG_UNUSE
         return PROMISE_RESULT_NOOP;
     }
 
-    if (strcmp("classes", pp->parent_promise_type->name) == 0)
+    if (strcmp("vars", pp->parent_promise_type->name) == 0)
+    {
+        return PROMISE_RESULT_NOOP;
+    }
+    else if (strcmp("classes", pp->parent_promise_type->name) == 0)
     {
         return VerifyClassPromise(ctx, pp, NULL);
     }
@@ -1208,6 +1212,10 @@ static PromiseResult KeepMonitorPromise(EvalContext *ctx, Promise *pp, ARG_UNUSE
         /* FIXME: Verify why this explicit promise status change is done */
         EvalContextMarkPromiseNotDone(ctx, pp);
         return result;
+    }
+    else if (strcmp("reports", pp->parent_promise_type->name) == 0)
+    {
+        return PROMISE_RESULT_NOOP;
     }
 
     assert(false && "Unknown promise type");

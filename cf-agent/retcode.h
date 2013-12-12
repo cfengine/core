@@ -28,6 +28,6 @@
 #include <eval_context.h>
 #include <policy.h>
 
-int VerifyCommandRetcode(EvalContext *ctx, int retcode, int fallback, Attributes a, Promise *pp, PromiseResult *result);
+int VerifyCommandRetcode(EvalContext *ctx, int retcode, int fallback, Attributes a, const Promise *pp, PromiseResult *result);
 
 #endif

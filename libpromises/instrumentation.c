@@ -52,7 +52,7 @@ struct timespec BeginMeasure()
 
 /***************************************************************/
 
-void EndMeasurePromise(struct timespec start, Promise *pp)
+void EndMeasurePromise(struct timespec start, const Promise *pp)
 {
     char id[CF_BUFSIZE], *mid = NULL;
 

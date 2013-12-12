@@ -67,28 +67,28 @@ char *EDITXMLTYPESEQUENCE[] =
     NULL
 };
 
-static PromiseResult KeepEditXmlPromise(EvalContext *ctx, Promise *pp, void *param);
+static PromiseResult KeepEditXmlPromise(EvalContext *ctx, const Promise *pp, void *param);
 #ifdef HAVE_LIBXML2
-static bool VerifyXPathBuild(EvalContext *ctx, Attributes a, Promise *pp, EditContext *edcontext, PromiseResult *result);
-static PromiseResult VerifyTreeDeletions(EvalContext *ctx, Attributes a, Promise *pp, EditContext *edcontext);
-static PromiseResult VerifyTreeInsertions(EvalContext *ctx, Attributes a, Promise *pp, EditContext *edcontext);
-static PromiseResult VerifyAttributeDeletions(EvalContext *ctx, Attributes a, Promise *pp, EditContext *edcontext);
-static PromiseResult VerifyAttributeSet(EvalContext *ctx, Attributes a, Promise *pp, EditContext *edcontext);
-static PromiseResult VerifyTextDeletions(EvalContext *ctx, Attributes a, Promise *pp, EditContext *edcontext);
-static PromiseResult VerifyTextSet(EvalContext *ctx, Attributes a, Promise *pp, EditContext *edcontext);
-static PromiseResult VerifyTextInsertions(EvalContext *ctx, Attributes a, Promise *pp, EditContext *edcontext);
-static bool XmlSelectNode(EvalContext *ctx, char *xpath, xmlDocPtr doc, xmlNodePtr *docnode, Attributes a, Promise *pp, EditContext *edcontext, PromiseResult *result);
-static bool BuildXPathInFile(EvalContext *ctx, char xpath[CF_BUFSIZE], xmlDocPtr doc, Attributes a, Promise *pp, EditContext *edcontext, PromiseResult *result);
-static bool BuildXPathInNode(EvalContext *ctx, char xpath[CF_BUFSIZE], xmlDocPtr doc, Attributes a, Promise *pp, EditContext *edcontext, PromiseResult *result);
-static bool DeleteTreeInNode(EvalContext *ctx, char *tree, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp, EditContext *edcontext, PromiseResult *result);
-static bool InsertTreeInFile(EvalContext *ctx, char *root, xmlDocPtr doc, Attributes a, Promise *pp, EditContext *edcontext, PromiseResult *result);
-static bool InsertTreeInNode(EvalContext *ctx, char *tree, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp, EditContext *edcontext, PromiseResult *result);
-static bool DeleteAttributeInNode(EvalContext *ctx, char *attrname, xmlNodePtr docnode, Attributes a, Promise *pp, EditContext *edcontext, PromiseResult *result);
-static bool SetAttributeInNode(EvalContext *ctx, char *attrname, char *attrvalue, xmlNodePtr docnode, Attributes a, Promise *pp, EditContext *edcontext, PromiseResult *result);
-static bool DeleteTextInNode(EvalContext *ctx, char *tree, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp, EditContext *edcontext, PromiseResult *result);
-static bool SetTextInNode(EvalContext *ctx, char *tree, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp, EditContext *edcontext, PromiseResult *result);
-static bool InsertTextInNode(EvalContext *ctx, char *tree, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, Promise *pp, EditContext *edcontext, PromiseResult *result);
-static bool SanityCheckXPathBuild(EvalContext *ctx, Attributes a, Promise *pp, PromiseResult *result);
+static bool VerifyXPathBuild(EvalContext *ctx, Attributes a, const Promise *pp, EditContext *edcontext, PromiseResult *result);
+static PromiseResult VerifyTreeDeletions(EvalContext *ctx, Attributes a, const Promise *pp, EditContext *edcontext);
+static PromiseResult VerifyTreeInsertions(EvalContext *ctx, Attributes a, const Promise *pp, EditContext *edcontext);
+static PromiseResult VerifyAttributeDeletions(EvalContext *ctx, Attributes a, const Promise *pp, EditContext *edcontext);
+static PromiseResult VerifyAttributeSet(EvalContext *ctx, Attributes a, const Promise *pp, EditContext *edcontext);
+static PromiseResult VerifyTextDeletions(EvalContext *ctx, Attributes a, const Promise *pp, EditContext *edcontext);
+static PromiseResult VerifyTextSet(EvalContext *ctx, Attributes a, const Promise *pp, EditContext *edcontext);
+static PromiseResult VerifyTextInsertions(EvalContext *ctx, Attributes a, const Promise *pp, EditContext *edcontext);
+static bool XmlSelectNode(EvalContext *ctx, char *xpath, xmlDocPtr doc, xmlNodePtr *docnode, Attributes a, const Promise *pp, EditContext *edcontext, PromiseResult *result);
+static bool BuildXPathInFile(EvalContext *ctx, char xpath[CF_BUFSIZE], xmlDocPtr doc, Attributes a, const Promise *pp, EditContext *edcontext, PromiseResult *result);
+static bool BuildXPathInNode(EvalContext *ctx, char xpath[CF_BUFSIZE], xmlDocPtr doc, Attributes a, const Promise *pp, EditContext *edcontext, PromiseResult *result);
+static bool DeleteTreeInNode(EvalContext *ctx, char *tree, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, const Promise *pp, EditContext *edcontext, PromiseResult *result);
+static bool InsertTreeInFile(EvalContext *ctx, char *root, xmlDocPtr doc, Attributes a, const Promise *pp, EditContext *edcontext, PromiseResult *result);
+static bool InsertTreeInNode(EvalContext *ctx, char *tree, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, const Promise *pp, EditContext *edcontext, PromiseResult *result);
+static bool DeleteAttributeInNode(EvalContext *ctx, char *attrname, xmlNodePtr docnode, Attributes a, const Promise *pp, EditContext *edcontext, PromiseResult *result);
+static bool SetAttributeInNode(EvalContext *ctx, char *attrname, char *attrvalue, xmlNodePtr docnode, Attributes a, const Promise *pp, EditContext *edcontext, PromiseResult *result);
+static bool DeleteTextInNode(EvalContext *ctx, char *tree, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, const Promise *pp, EditContext *edcontext, PromiseResult *result);
+static bool SetTextInNode(EvalContext *ctx, char *tree, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, const Promise *pp, EditContext *edcontext, PromiseResult *result);
+static bool InsertTextInNode(EvalContext *ctx, char *tree, xmlDocPtr doc, xmlNodePtr docnode, Attributes a, const Promise *pp, EditContext *edcontext, PromiseResult *result);
+static bool SanityCheckXPathBuild(EvalContext *ctx, Attributes a, const Promise *pp, PromiseResult *result);
 static bool SanityCheckTreeDeletions(Attributes a);
 static bool SanityCheckTreeInsertions(Attributes a, EditContext *edcontext);
 static bool SanityCheckAttributeDeletions(Attributes a);
@@ -98,27 +98,27 @@ static bool SanityCheckTextSet(Attributes a);
 static bool SanityCheckTextInsertions(Attributes a);
 
 static bool XmlDocsEqualMem(xmlDocPtr doc1, xmlDocPtr doc2);
-static bool XmlNodesCompare(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp);
+static bool XmlNodesCompare(xmlNodePtr node1, xmlNodePtr node2, Attributes a,  const Promise *pp);
 static bool XmlNodesCompareAttributes(xmlNodePtr node1, xmlNodePtr node2);
-static bool XmlNodesCompareNodes(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp);
+static bool XmlNodesCompareNodes(xmlNodePtr node1, xmlNodePtr node2, Attributes a,  const Promise *pp);
 static bool XmlNodesCompareTags(xmlNodePtr node1, xmlNodePtr node2);
 static bool XmlNodesCompareText(xmlNodePtr node1, xmlNodePtr node2);
-static bool XmlNodesSubset(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp);
+static bool XmlNodesSubset(xmlNodePtr node1, xmlNodePtr node2, Attributes a,  const Promise *pp);
 static bool XmlNodesSubsetOfAttributes(xmlNodePtr node1, xmlNodePtr node2);
-static bool XmlNodesSubsetOfNodes(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp);
+static bool XmlNodesSubsetOfNodes(xmlNodePtr node1, xmlNodePtr node2, Attributes a,  const Promise *pp);
 static bool XmlNodesSubstringOfText(xmlNodePtr node1, xmlNodePtr node2);
 static xmlAttrPtr XmlVerifyAttributeInNode(const xmlChar *attrname, xmlChar *attrvalue, xmlNodePtr node);
 static xmlChar* XmlVerifyTextInNodeExact(const xmlChar *text, xmlNodePtr node);
 static xmlChar* XmlVerifyTextInNodeSubstring(const xmlChar *text, xmlNodePtr node);
-static xmlNodePtr XmlVerifyNodeInNodeExact(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp);
-static xmlNodePtr XmlVerifyNodeInNodeSubset(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp);
+static xmlNodePtr XmlVerifyNodeInNodeExact(xmlNodePtr node1, xmlNodePtr node2, Attributes a,  const Promise *pp);
+static xmlNodePtr XmlVerifyNodeInNodeSubset(xmlNodePtr node1, xmlNodePtr node2, Attributes a,  const Promise *pp);
 
 //xpath build functionality
 static xmlNodePtr PredicateExtractNode(char predicate[CF_BUFSIZE]);
 static bool PredicateRemoveHead(char xpath[CF_BUFSIZE]);
 
-static xmlNodePtr XPathHeadExtractNode(EvalContext *ctx, char xpath[CF_BUFSIZE], Attributes a, Promise *pp, PromiseResult *result);
-static xmlNodePtr XPathTailExtractNode(EvalContext *ctx, char xpath[CF_BUFSIZE], Attributes a, Promise *pp, PromiseResult *result);
+static xmlNodePtr XPathHeadExtractNode(EvalContext *ctx, char xpath[CF_BUFSIZE], Attributes a, const Promise *pp, PromiseResult *result);
+static xmlNodePtr XPathTailExtractNode(EvalContext *ctx, char xpath[CF_BUFSIZE], Attributes a, const Promise *pp, PromiseResult *result);
 static xmlNodePtr XPathSegmentExtractNode(char segment[CF_BUFSIZE]);
 static char* XPathGetTail(char xpath[CF_BUFSIZE]);
 static bool XPathRemoveHead(char xpath[CF_BUFSIZE]);
@@ -131,7 +131,7 @@ static bool PredicateHeadContainsNode(char *predicate);
 static bool XPathHasTail(char *head);
 static bool XPathHeadContainsNode(char *head);
 static bool XPathHeadContainsPredicate(char *head);
-static bool XPathVerifyBuildSyntax(EvalContext *ctx, const char* xpath, Attributes a, Promise *pp, PromiseResult *result);
+static bool XPathVerifyBuildSyntax(EvalContext *ctx, const char* xpath, Attributes a, const Promise *pp, PromiseResult *result);
 static bool XPathVerifyConvergence(const char* xpath);
 
 //helper functions
@@ -197,7 +197,7 @@ int ScheduleEditXmlOperations(EvalContext *ctx, Bundle *bp, Attributes a, const 
 /* Level                                                                   */
 /***************************************************************************/
 
-static PromiseResult KeepEditXmlPromise(EvalContext *ctx, Promise *pp, void *param)
+static PromiseResult KeepEditXmlPromise(EvalContext *ctx, const Promise *pp, void *param)
 {
     EditContext *edcontext = param;
 
@@ -361,7 +361,7 @@ static PromiseResult KeepEditXmlPromise(EvalContext *ctx, Promise *pp, void *par
 
 /***************************************************************************/
 
-static bool VerifyXPathBuild(EvalContext *ctx, Attributes a, Promise *pp, EditContext *edcontext, PromiseResult *result)
+static bool VerifyXPathBuild(EvalContext *ctx, Attributes a, const Promise *pp, EditContext *edcontext, PromiseResult *result)
 {
     xmlDocPtr doc = NULL;
     CfLock thislock;
@@ -420,7 +420,7 @@ static bool VerifyXPathBuild(EvalContext *ctx, Attributes a, Promise *pp, EditCo
 
 /***************************************************************************/
 
-static PromiseResult VerifyTreeDeletions(EvalContext *ctx, Attributes a, Promise *pp, EditContext *edcontext)
+static PromiseResult VerifyTreeDeletions(EvalContext *ctx, Attributes a, const Promise *pp, EditContext *edcontext)
 {
     xmlDocPtr doc = NULL;
     xmlNodePtr docnode = NULL;
@@ -478,7 +478,7 @@ static PromiseResult VerifyTreeDeletions(EvalContext *ctx, Attributes a, Promise
 
 /***************************************************************************/
 
-static PromiseResult VerifyTreeInsertions(EvalContext *ctx, Attributes a, Promise *pp, EditContext *edcontext)
+static PromiseResult VerifyTreeInsertions(EvalContext *ctx, Attributes a, const Promise *pp, EditContext *edcontext)
 {
     xmlDocPtr doc = NULL;
     xmlNodePtr docnode = NULL;
@@ -546,7 +546,7 @@ static PromiseResult VerifyTreeInsertions(EvalContext *ctx, Attributes a, Promis
 
 /***************************************************************************/
 
-static PromiseResult VerifyAttributeDeletions(EvalContext *ctx, Attributes a, Promise *pp, EditContext *edcontext)
+static PromiseResult VerifyAttributeDeletions(EvalContext *ctx, Attributes a, const Promise *pp, EditContext *edcontext)
 {
     xmlDocPtr doc = NULL;
     xmlNodePtr docnode = NULL;
@@ -604,7 +604,7 @@ static PromiseResult VerifyAttributeDeletions(EvalContext *ctx, Attributes a, Pr
 
 /***************************************************************************/
 
-static PromiseResult VerifyAttributeSet(EvalContext *ctx, Attributes a, Promise *pp, EditContext *edcontext)
+static PromiseResult VerifyAttributeSet(EvalContext *ctx, Attributes a, const Promise *pp, EditContext *edcontext)
 {
     xmlDocPtr doc = NULL;
     xmlNodePtr docnode = NULL;
@@ -662,7 +662,7 @@ static PromiseResult VerifyAttributeSet(EvalContext *ctx, Attributes a, Promise 
 
 /***************************************************************************/
 
-static PromiseResult VerifyTextDeletions(EvalContext *ctx, Attributes a, Promise *pp, EditContext *edcontext)
+static PromiseResult VerifyTextDeletions(EvalContext *ctx, Attributes a, const Promise *pp, EditContext *edcontext)
 {
     xmlDocPtr doc = NULL;
     xmlNodePtr docnode = NULL;
@@ -720,7 +720,7 @@ static PromiseResult VerifyTextDeletions(EvalContext *ctx, Attributes a, Promise
 
 /***************************************************************************/
 
-static PromiseResult VerifyTextSet(EvalContext *ctx, Attributes a, Promise *pp, EditContext *edcontext)
+static PromiseResult VerifyTextSet(EvalContext *ctx, Attributes a, const Promise *pp, EditContext *edcontext)
 {
     xmlDocPtr doc = NULL;
     xmlNodePtr docnode = NULL;
@@ -778,7 +778,7 @@ static PromiseResult VerifyTextSet(EvalContext *ctx, Attributes a, Promise *pp, 
 
 /***************************************************************************/
 
-static PromiseResult VerifyTextInsertions(EvalContext *ctx, Attributes a, Promise *pp, EditContext *edcontext)
+static PromiseResult VerifyTextInsertions(EvalContext *ctx, Attributes a, const Promise *pp, EditContext *edcontext)
 {
     xmlDocPtr doc = NULL;
     xmlNodePtr docnode = NULL;
@@ -845,7 +845,7 @@ If no such node matches, docnode should point to NULL
 
 */
 static bool XmlSelectNode(EvalContext *ctx, char *rawxpath, xmlDocPtr doc, xmlNodePtr *docnode, Attributes a,
-                          Promise *pp, EditContext *edcontext, PromiseResult *result)
+                          const Promise *pp, EditContext *edcontext, PromiseResult *result)
 {
     xmlNodePtr cur = NULL;
     xmlXPathContextPtr xpathCtx = NULL;
@@ -936,7 +936,7 @@ static bool XmlSelectNode(EvalContext *ctx, char *rawxpath, xmlDocPtr doc, xmlNo
 /***************************************************************************/
 
 static bool BuildXPathInFile(EvalContext *ctx, char rawxpath[CF_BUFSIZE], xmlDocPtr doc, Attributes a,
-                             Promise *pp, EditContext *edcontext, PromiseResult *result)
+                             const Promise *pp, EditContext *edcontext, PromiseResult *result)
 {
     xmlNodePtr docnode = NULL, head = NULL;
     char copyxpath[CF_BUFSIZE] = { 0 };
@@ -996,7 +996,7 @@ static bool BuildXPathInFile(EvalContext *ctx, char rawxpath[CF_BUFSIZE], xmlDoc
 /***************************************************************************/
 
 static bool BuildXPathInNode(EvalContext *ctx, char rawxpath[CF_BUFSIZE], xmlDocPtr doc, Attributes a,
-                             Promise *pp, EditContext *edcontext, PromiseResult *result)
+                             const Promise *pp, EditContext *edcontext, PromiseResult *result)
 {
     xmlNodePtr docnode = NULL,  head = NULL, tail = NULL;
     char copyxpath[CF_BUFSIZE] = { 0 };
@@ -1045,7 +1045,7 @@ static bool BuildXPathInNode(EvalContext *ctx, char rawxpath[CF_BUFSIZE], xmlDoc
 /***************************************************************************/
 
 static bool InsertTreeInFile(EvalContext *ctx, char *rawtree, xmlDocPtr doc, Attributes a,
-                             Promise *pp, EditContext *edcontext, PromiseResult *result)
+                             const Promise *pp, EditContext *edcontext, PromiseResult *result)
 {
     xmlNodePtr treenode = NULL, rootnode = NULL;
     xmlChar *buf = NULL;
@@ -1138,7 +1138,7 @@ static bool InsertTreeInFile(EvalContext *ctx, char *rawtree, xmlDocPtr doc, Att
 /***************************************************************************/
 
 static bool DeleteTreeInNode(EvalContext *ctx, char *rawtree, xmlDocPtr doc, xmlNodePtr docnode, Attributes a,
-                             Promise *pp, EditContext *edcontext, PromiseResult *result)
+                             const Promise *pp, EditContext *edcontext, PromiseResult *result)
 {
     xmlNodePtr treenode = NULL;
     xmlNodePtr deletetree = NULL;
@@ -1204,7 +1204,7 @@ static bool DeleteTreeInNode(EvalContext *ctx, char *rawtree, xmlDocPtr doc, xml
 /***************************************************************************/
 
 static bool InsertTreeInNode(EvalContext *ctx, char *rawtree, xmlDocPtr doc, xmlNodePtr docnode, Attributes a,
-                             Promise *pp, EditContext *edcontext, PromiseResult *result)
+                             const Promise *pp, EditContext *edcontext, PromiseResult *result)
 {
     xmlNodePtr treenode = NULL;
     xmlChar *buf = NULL;
@@ -1283,7 +1283,7 @@ static bool InsertTreeInNode(EvalContext *ctx, char *rawtree, xmlDocPtr doc, xml
 /***************************************************************************/
 
 static bool DeleteAttributeInNode(EvalContext *ctx, char *rawname, xmlNodePtr docnode, Attributes a,
-                                  Promise *pp, EditContext *edcontext, PromiseResult *result)
+                                  const Promise *pp, EditContext *edcontext, PromiseResult *result)
 {
     xmlAttrPtr attr = NULL;
     xmlChar *name = NULL;
@@ -1344,7 +1344,7 @@ static bool DeleteAttributeInNode(EvalContext *ctx, char *rawname, xmlNodePtr do
 /***************************************************************************/
 
 static bool SetAttributeInNode(EvalContext *ctx, char *rawname, char *rawvalue, xmlNodePtr docnode, Attributes a,
-                               Promise *pp, EditContext *edcontext, PromiseResult *result)
+                               const Promise *pp, EditContext *edcontext, PromiseResult *result)
 {
     xmlAttrPtr attr = NULL;
     xmlChar *name = NULL;
@@ -1415,7 +1415,7 @@ static bool SetAttributeInNode(EvalContext *ctx, char *rawname, char *rawvalue, 
 /***************************************************************************/
 
 static bool DeleteTextInNode(EvalContext *ctx, char *rawtext, xmlDocPtr doc, xmlNodePtr docnode, Attributes a,
-                             Promise *pp, EditContext *edcontext, PromiseResult *result)
+                             const Promise *pp, EditContext *edcontext, PromiseResult *result)
 {
     xmlNodePtr elemnode, copynode;
     xmlChar *text = NULL;
@@ -1486,7 +1486,7 @@ static bool DeleteTextInNode(EvalContext *ctx, char *rawtext, xmlDocPtr doc, xml
 /***************************************************************************/
 
 static bool SetTextInNode(EvalContext *ctx, char *rawtext, xmlDocPtr doc, xmlNodePtr docnode, Attributes a,
-                          Promise *pp, EditContext *edcontext, PromiseResult *result)
+                          const Promise *pp, EditContext *edcontext, PromiseResult *result)
 {
     xmlNodePtr elemnode, copynode;
     xmlChar *text = NULL;
@@ -1557,7 +1557,7 @@ static bool SetTextInNode(EvalContext *ctx, char *rawtext, xmlDocPtr doc, xmlNod
 /***************************************************************************/
 
 static bool InsertTextInNode(EvalContext *ctx, char *rawtext, xmlDocPtr doc, xmlNodePtr docnode, Attributes a,
-                             Promise *pp, EditContext *edcontext, PromiseResult *result)
+                             const Promise *pp, EditContext *edcontext, PromiseResult *result)
 {
     xmlNodePtr elemnode, copynode;
     xmlChar *text = NULL;
@@ -1628,7 +1628,7 @@ static bool InsertTextInNode(EvalContext *ctx, char *rawtext, xmlDocPtr doc, xml
 
 /***************************************************************************/
 
-static bool SanityCheckXPathBuild(EvalContext *ctx, Attributes a, Promise *pp, PromiseResult *result)
+static bool SanityCheckXPathBuild(EvalContext *ctx, Attributes a, const Promise *pp, PromiseResult *result)
 {
     char rawxpath[CF_BUFSIZE] = { 0 };
 
@@ -1870,7 +1870,7 @@ static bool XmlDocsEqualMem(xmlDocPtr doc1, xmlDocPtr doc2)
 
 /***************************************************************************/
 
-static bool XmlNodesCompare(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp)
+static bool XmlNodesCompare(xmlNodePtr node1, xmlNodePtr node2, Attributes a,  const Promise *pp)
 /* Does node1 contain all content(tag/attributes/text/nodes) found in node2? */
 {
     xmlNodePtr copynode1, copynode2;
@@ -1985,7 +1985,7 @@ static bool XmlNodesCompareAttributes(xmlNodePtr node1, xmlNodePtr node2)
 
 /*********************************************************************/
 
-static bool XmlNodesCompareNodes(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp)
+static bool XmlNodesCompareNodes(xmlNodePtr node1, xmlNodePtr node2, Attributes a,  const Promise *pp)
 /* Does node1 contain same nodes found in node2? */
 {
     xmlNodePtr copynode1, copynode2;
@@ -2116,7 +2116,7 @@ static bool XmlNodesCompareText(xmlNodePtr node1, xmlNodePtr node2)
 
 /*********************************************************************/
 
-static bool XmlNodesSubset(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp)
+static bool XmlNodesSubset(xmlNodePtr node1, xmlNodePtr node2, Attributes a,  const Promise *pp)
 /* Does node1 contain matching subset of content(tag/attributes/text/nodes) found in node2? */
 {
     xmlNodePtr copynode1, copynode2;
@@ -2219,7 +2219,7 @@ static bool XmlNodesSubsetOfAttributes(xmlNodePtr node1, xmlNodePtr node2)
 
 /*********************************************************************/
 
-static bool XmlNodesSubsetOfNodes(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp)
+static bool XmlNodesSubsetOfNodes(xmlNodePtr node1, xmlNodePtr node2, Attributes a,  const Promise *pp)
 /* Does node1 contain matching subset of nodes found in node2? */
 {
     xmlNodePtr copynode1, copynode2;
@@ -2375,7 +2375,7 @@ xmlChar* XmlVerifyTextInNodeSubstring(const xmlChar *text, xmlNodePtr node)
 
 /*********************************************************************/
 
-xmlNodePtr XmlVerifyNodeInNodeExact(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp)
+xmlNodePtr XmlVerifyNodeInNodeExact(xmlNodePtr node1, xmlNodePtr node2, Attributes a,  const Promise *pp)
 /* Does node2 contain a node with content matching all content in node1?
    Returns a pointer to node found in node2 or NULL */
 {
@@ -2406,7 +2406,7 @@ xmlNodePtr XmlVerifyNodeInNodeExact(xmlNodePtr node1, xmlNodePtr node2, Attribut
 
 /*********************************************************************/
 
-xmlNodePtr XmlVerifyNodeInNodeSubset(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp)
+xmlNodePtr XmlVerifyNodeInNodeSubset(xmlNodePtr node1, xmlNodePtr node2, Attributes a,  const Promise *pp)
 /* Does node2 contain: node with subset of content matching all content in node1?
    Returns a pointer to node found in node2 or NULL */
 {
@@ -2491,7 +2491,7 @@ static bool PredicateRemoveHead(char predicate[CF_BUFSIZE])
 
 /*********************************************************************/
 
-xmlNodePtr XPathHeadExtractNode(EvalContext *ctx, char xpath[CF_BUFSIZE], Attributes a, Promise *pp, PromiseResult *result)
+xmlNodePtr XPathHeadExtractNode(EvalContext *ctx, char xpath[CF_BUFSIZE], Attributes a, const Promise *pp, PromiseResult *result)
 {
     xmlNodePtr node = NULL;
     char head[CF_BUFSIZE] = {0}, *tok = NULL, *running;
@@ -2517,7 +2517,7 @@ xmlNodePtr XPathHeadExtractNode(EvalContext *ctx, char xpath[CF_BUFSIZE], Attrib
 
 /*********************************************************************/
 
-xmlNodePtr XPathTailExtractNode(EvalContext *ctx, char xpath[CF_BUFSIZE], Attributes a, Promise *pp, PromiseResult *result)
+xmlNodePtr XPathTailExtractNode(EvalContext *ctx, char xpath[CF_BUFSIZE], Attributes a, const Promise *pp, PromiseResult *result)
 {
     xmlNodePtr node = NULL;
     char copyxpath[CF_BUFSIZE] = {0}, tail[CF_BUFSIZE] = {0}, *tok = NULL;
@@ -2756,7 +2756,7 @@ static bool XPathHeadContainsPredicate(char *head)
 
 /*********************************************************************/
 
-static bool XPathVerifyBuildSyntax(EvalContext *ctx, const char* xpath, Attributes a, Promise *pp, PromiseResult *result)
+static bool XPathVerifyBuildSyntax(EvalContext *ctx, const char* xpath, Attributes a, const Promise *pp, PromiseResult *result)
 /*verify that XPath does not specify position wrt sibling-axis (such as):[#] [last()] [position()] following-sibling:: preceding-sibling:: */
 {
     char regexp[CF_BUFSIZE] = {'\0'};

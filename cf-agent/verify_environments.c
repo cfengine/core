@@ -74,20 +74,20 @@ char *CF_SUSPENDED[CF_MAX_CONCURRENT_ENVIRONMENTS];
 
 /*****************************************************************************/
 
-static int EnvironmentsSanityChecks(Attributes a, Promise *pp);
-static PromiseResult VerifyEnvironments(EvalContext *ctx, Attributes a, Promise *pp);
-static PromiseResult VerifyVirtDomain(EvalContext *ctx, char *uri, enum cfhypervisors envtype, Attributes a, Promise *pp);
-static PromiseResult VerifyVirtNetwork(EvalContext *ctx, char *uri, enum cfhypervisors envtype, Attributes a, Promise *pp);
-static PromiseResult CreateVirtDom(EvalContext *ctx, virConnectPtr vc, Attributes a, Promise *pp);
-static PromiseResult DeleteVirt(EvalContext *ctx, virConnectPtr vc, Attributes a, Promise *pp);
-static PromiseResult RunningVirt(EvalContext *ctx, virConnectPtr vc, Attributes a, Promise *pp);
-static PromiseResult SuspendedVirt(EvalContext *ctx, virConnectPtr vc, Attributes a, Promise *pp);
-static PromiseResult DownVirt(EvalContext *ctx, virConnectPtr vc, Attributes a, Promise *pp);
+static int EnvironmentsSanityChecks(Attributes a, const Promise *pp);
+static PromiseResult VerifyEnvironments(EvalContext *ctx, Attributes a, const Promise *pp);
+static PromiseResult VerifyVirtDomain(EvalContext *ctx, char *uri, enum cfhypervisors envtype, Attributes a, const Promise *pp);
+static PromiseResult VerifyVirtNetwork(EvalContext *ctx, char *uri, enum cfhypervisors envtype, Attributes a, const Promise *pp);
+static PromiseResult CreateVirtDom(EvalContext *ctx, virConnectPtr vc, Attributes a, const Promise *pp);
+static PromiseResult DeleteVirt(EvalContext *ctx, virConnectPtr vc, Attributes a, const Promise *pp);
+static PromiseResult RunningVirt(EvalContext *ctx, virConnectPtr vc, Attributes a, const Promise *pp);
+static PromiseResult SuspendedVirt(EvalContext *ctx, virConnectPtr vc, Attributes a, const Promise *pp);
+static PromiseResult DownVirt(EvalContext *ctx, virConnectPtr vc, Attributes a, const Promise *pp);
 static void EnvironmentErrorHandler(void);
 static void ShowRunList(virConnectPtr vc);
 static void ShowDormant(void);
-static PromiseResult CreateVirtNetwork(EvalContext *ctx, virConnectPtr vc, char **networks, Attributes a, Promise *pp);
-static PromiseResult DeleteVirtNetwork(EvalContext *ctx, virConnectPtr vc, Attributes a, Promise *pp);
+static PromiseResult CreateVirtNetwork(EvalContext *ctx, virConnectPtr vc, char **networks, Attributes a, const Promise *pp);
+static PromiseResult DeleteVirtNetwork(EvalContext *ctx, virConnectPtr vc, Attributes a, const Promise *pp);
 static enum cfhypervisors Str2Hypervisors(char *s);
 
 /*****************************************************************************/
@@ -119,7 +119,7 @@ void DeleteEnvironmentsContext(void)
 
 /*****************************************************************************/
 
-PromiseResult VerifyEnvironmentsPromise(EvalContext *ctx, Promise *pp)
+PromiseResult VerifyEnvironmentsPromise(EvalContext *ctx, const Promise *pp)
 {
     CfLock thislock;
     Promise *pexp;
@@ -151,7 +151,7 @@ PromiseResult VerifyEnvironmentsPromise(EvalContext *ctx, Promise *pp)
 
 /*****************************************************************************/
 
-static int EnvironmentsSanityChecks(Attributes a, Promise *pp)
+static int EnvironmentsSanityChecks(Attributes a, const Promise *pp)
 {
     if (a.env.spec)
     {
@@ -192,7 +192,7 @@ static int EnvironmentsSanityChecks(Attributes a, Promise *pp)
 
 /*****************************************************************************/
 
-static PromiseResult VerifyEnvironments(EvalContext *ctx, Attributes a, Promise *pp)
+static PromiseResult VerifyEnvironments(EvalContext *ctx, Attributes a, const Promise *pp)
 {
     char hyper_uri[CF_MAXVARSIZE];
     enum cfhypervisors envtype = cfv_none;
@@ -318,7 +318,7 @@ static PromiseResult VerifyEnvironments(EvalContext *ctx, Attributes a, Promise 
 /* Level                                                                     */
 /*****************************************************************************/
 
-static PromiseResult VerifyVirtDomain(EvalContext *ctx, char *uri, enum cfhypervisors envtype, Attributes a, Promise *pp)
+static PromiseResult VerifyVirtDomain(EvalContext *ctx, char *uri, enum cfhypervisors envtype, Attributes a, const Promise *pp)
 {
     int num, i;
 
@@ -375,7 +375,7 @@ static PromiseResult VerifyVirtDomain(EvalContext *ctx, char *uri, enum cfhyperv
 
 /*****************************************************************************/
 
-static PromiseResult VerifyVirtNetwork(EvalContext *ctx, char *uri, enum cfhypervisors envtype, Attributes a, Promise *pp)
+static PromiseResult VerifyVirtNetwork(EvalContext *ctx, char *uri, enum cfhypervisors envtype, Attributes a, const Promise *pp)
 {
     int num, i;
     char *networks[CF_MAX_CONCURRENT_ENVIRONMENTS];
@@ -421,7 +421,7 @@ static PromiseResult VerifyVirtNetwork(EvalContext *ctx, char *uri, enum cfhyper
 /* Level                                                                     */
 /*****************************************************************************/
 
-static PromiseResult CreateVirtDom(EvalContext *ctx, virConnectPtr vc, Attributes a, Promise *pp)
+static PromiseResult CreateVirtDom(EvalContext *ctx, virConnectPtr vc, Attributes a, const Promise *pp)
 {
     int alloc_file = false;
     char *xml_file;
@@ -564,7 +564,7 @@ static PromiseResult CreateVirtDom(EvalContext *ctx, virConnectPtr vc, Attribute
 
 /*****************************************************************************/
 
-static PromiseResult DeleteVirt(EvalContext *ctx, virConnectPtr vc, Attributes a, Promise *pp)
+static PromiseResult DeleteVirt(EvalContext *ctx, virConnectPtr vc, Attributes a, const Promise *pp)
 {
     virDomainPtr dom;
 
@@ -596,7 +596,7 @@ static PromiseResult DeleteVirt(EvalContext *ctx, virConnectPtr vc, Attributes a
 
 /*****************************************************************************/
 
-static PromiseResult RunningVirt(EvalContext *ctx, virConnectPtr vc, Attributes a, Promise *pp)
+static PromiseResult RunningVirt(EvalContext *ctx, virConnectPtr vc, Attributes a, const Promise *pp)
 {
     virDomainPtr dom;
     virDomainInfo info;
@@ -730,7 +730,7 @@ static PromiseResult RunningVirt(EvalContext *ctx, virConnectPtr vc, Attributes 
 
 /*****************************************************************************/
 
-static PromiseResult SuspendedVirt(EvalContext *ctx, virConnectPtr vc, Attributes a, Promise *pp)
+static PromiseResult SuspendedVirt(EvalContext *ctx, virConnectPtr vc, Attributes a, const Promise *pp)
 {
     virDomainPtr dom;
     virDomainInfo info;
@@ -815,7 +815,7 @@ static PromiseResult SuspendedVirt(EvalContext *ctx, virConnectPtr vc, Attribute
 
 /*****************************************************************************/
 
-static PromiseResult DownVirt(EvalContext *ctx, virConnectPtr vc, Attributes a, Promise *pp)
+static PromiseResult DownVirt(EvalContext *ctx, virConnectPtr vc, Attributes a, const Promise *pp)
 {
     virDomainPtr dom;
     virDomainInfo info;
@@ -895,7 +895,7 @@ static PromiseResult DownVirt(EvalContext *ctx, virConnectPtr vc, Attributes a, 
 
 /*****************************************************************************/
 
-static PromiseResult CreateVirtNetwork(EvalContext *ctx, virConnectPtr vc, char **networks, Attributes a, Promise *pp)
+static PromiseResult CreateVirtNetwork(EvalContext *ctx, virConnectPtr vc, char **networks, Attributes a, const Promise *pp)
 {
     virNetworkPtr network;
     char *xml_file;
@@ -957,7 +957,7 @@ static PromiseResult CreateVirtNetwork(EvalContext *ctx, virConnectPtr vc, char 
 
 /*****************************************************************************/
 
-static PromiseResult DeleteVirtNetwork(EvalContext *ctx, virConnectPtr vc, Attributes a, Promise *pp)
+static PromiseResult DeleteVirtNetwork(EvalContext *ctx, virConnectPtr vc, Attributes a, const Promise *pp)
 {
     virNetworkPtr network;
 

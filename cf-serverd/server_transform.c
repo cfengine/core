@@ -90,9 +90,9 @@ typedef enum
 } ServerControl;
 
 static void KeepContextBundles(EvalContext *ctx, const Policy *policy);
-static PromiseResult KeepServerPromise(EvalContext *ctx, Promise *pp, void *param);
+static PromiseResult KeepServerPromise(EvalContext *ctx, const Promise *pp, void *param);
 static void InstallServerAuthPath(const char *path, Auth **list, Auth **listtop);
-static void KeepServerRolePromise(EvalContext *ctx, Promise *pp);
+static void KeepServerRolePromise(EvalContext *ctx, const Promise *pp);
 static void KeepPromiseBundles(EvalContext *ctx, const Policy *policy);
 static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericAgentConfig *config);
 static Auth *GetAuthPath(const char *path, Auth *list);
@@ -116,9 +116,9 @@ extern Item *CONNECTIONLIST;
 
 /*******************************************************************/
 
-void KeepFileAccessPromise(EvalContext *ctx, Promise *pp);
-void KeepLiteralAccessPromise(EvalContext *ctx, Promise *pp, char *type);
-void KeepQueryAccessPromise(EvalContext *ctx, Promise *pp, char *type);
+void KeepFileAccessPromise(EvalContext *ctx, const Promise *pp);
+void KeepLiteralAccessPromise(EvalContext *ctx, const Promise *pp, char *type);
+void KeepQueryAccessPromise(EvalContext *ctx, const Promise *pp, char *type);
 
 /*******************************************************************/
 /* Level                                                           */
@@ -586,7 +586,7 @@ static void KeepPromiseBundles(EvalContext *ctx, const Policy *policy)
 /* Level                                                             */
 /*********************************************************************/
 
-static PromiseResult KeepServerPromise(EvalContext *ctx, Promise *pp, ARG_UNUSED void *param)
+static PromiseResult KeepServerPromise(EvalContext *ctx, const Promise *pp, ARG_UNUSED void *param)
 {
     assert(!param);
 
@@ -662,7 +662,7 @@ static PromiseResult KeepServerPromise(EvalContext *ctx, Promise *pp, ARG_UNUSED
 
 /*********************************************************************/
 
-void KeepFileAccessPromise(EvalContext *ctx, Promise *pp)
+void KeepFileAccessPromise(EvalContext *ctx, const Promise *pp)
 {
     Rlist *rp;
     Auth *ap, *dp;
@@ -738,7 +738,7 @@ void KeepFileAccessPromise(EvalContext *ctx, Promise *pp)
 
 /*********************************************************************/
 
-void KeepLiteralAccessPromise(EvalContext *ctx, Promise *pp, char *type)
+void KeepLiteralAccessPromise(EvalContext *ctx, const Promise *pp, char *type)
 {
     Rlist *rp;
     Auth *ap = NULL, *dp = NULL;
@@ -852,7 +852,7 @@ void KeepLiteralAccessPromise(EvalContext *ctx, Promise *pp, char *type)
 
 /*********************************************************************/
 
-void KeepQueryAccessPromise(EvalContext *ctx, Promise *pp, char *type)
+void KeepQueryAccessPromise(EvalContext *ctx, const Promise *pp, char *type)
 {
     Rlist *rp;
     Auth *ap, *dp;
@@ -930,7 +930,7 @@ void KeepQueryAccessPromise(EvalContext *ctx, Promise *pp, char *type)
 
 /*********************************************************************/
 
-static void KeepServerRolePromise(EvalContext *ctx, Promise *pp)
+static void KeepServerRolePromise(EvalContext *ctx, const Promise *pp)
 {
     Rlist *rp;
     Auth *ap;

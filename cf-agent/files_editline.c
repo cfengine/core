@@ -72,27 +72,27 @@ char *EDITLINETYPESEQUENCE[] =
     NULL
 };
 
-static PromiseResult KeepEditLinePromise(EvalContext *ctx, Promise *pp, void *param);
-static PromiseResult VerifyLineDeletions(EvalContext *ctx, Promise *pp, EditContext *edcontext);
-static PromiseResult VerifyColumnEdits(EvalContext *ctx, Promise *pp, EditContext *edcontext);
-static PromiseResult VerifyPatterns(EvalContext *ctx, Promise *pp, EditContext *edcontext);
-static PromiseResult VerifyLineInsertions(EvalContext *ctx, Promise *pp, EditContext *edcontext);
-static int InsertMultipleLinesToRegion(EvalContext *ctx, Item **start, Item *begin_ptr, Item *end_ptr, Attributes a, Promise *pp, EditContext *edcontext, PromiseResult *result);
-static int InsertMultipleLinesAtLocation(EvalContext *ctx, Item **start, Item *begin_ptr, Item *end_ptr, Item *location, Item *prev, Attributes a, Promise *pp, EditContext *edcontext, PromiseResult *result);
-static int DeletePromisedLinesMatching(EvalContext *ctx, Item **start, Item *begin, Item *end, Attributes a, Promise *pp, EditContext *edcontext, PromiseResult *result);
-static int InsertLineAtLocation(EvalContext *ctx, char *newline, Item **start, Item *location, Item *prev, Attributes a, Promise *pp, EditContext *edcontext, PromiseResult *result);
-static int InsertCompoundLineAtLocation(EvalContext *ctx, char *newline, Item **start, Item *begin_ptr, Item *end_ptr, Item *location, Item *prev, Attributes a, Promise *pp, EditContext *edcontext, PromiseResult *result);
-static int ReplacePatterns(EvalContext *ctx, Item *start, Item *end, Attributes a, Promise *pp, EditContext *edcontext, PromiseResult *result);
-static int EditColumns(EvalContext *ctx, Item *file_start, Item *file_end, Attributes a, Promise *pp, EditContext *edcontext, PromiseResult *result);
-static int EditLineByColumn(EvalContext *ctx, Rlist **columns, Attributes a, Promise *pp, EditContext *edcontext, PromiseResult *result);
+static PromiseResult KeepEditLinePromise(EvalContext *ctx, const Promise *pp, void *param);
+static PromiseResult VerifyLineDeletions(EvalContext *ctx, const Promise *pp, EditContext *edcontext);
+static PromiseResult VerifyColumnEdits(EvalContext *ctx, const Promise *pp, EditContext *edcontext);
+static PromiseResult VerifyPatterns(EvalContext *ctx, const Promise *pp, EditContext *edcontext);
+static PromiseResult VerifyLineInsertions(EvalContext *ctx, const Promise *pp, EditContext *edcontext);
+static int InsertMultipleLinesToRegion(EvalContext *ctx, Item **start, Item *begin_ptr, Item *end_ptr, Attributes a, const Promise *pp, EditContext *edcontext, PromiseResult *result);
+static int InsertMultipleLinesAtLocation(EvalContext *ctx, Item **start, Item *begin_ptr, Item *end_ptr, Item *location, Item *prev, Attributes a, const Promise *pp, EditContext *edcontext, PromiseResult *result);
+static int DeletePromisedLinesMatching(EvalContext *ctx, Item **start, Item *begin, Item *end, Attributes a, const Promise *pp, EditContext *edcontext, PromiseResult *result);
+static int InsertLineAtLocation(EvalContext *ctx, char *newline, Item **start, Item *location, Item *prev, Attributes a, const Promise *pp, EditContext *edcontext, PromiseResult *result);
+static int InsertCompoundLineAtLocation(EvalContext *ctx, char *newline, Item **start, Item *begin_ptr, Item *end_ptr, Item *location, Item *prev, Attributes a, const Promise *pp, EditContext *edcontext, PromiseResult *result);
+static int ReplacePatterns(EvalContext *ctx, Item *start, Item *end, Attributes a, const Promise *pp, EditContext *edcontext, PromiseResult *result);
+static int EditColumns(EvalContext *ctx, Item *file_start, Item *file_end, Attributes a, const Promise *pp, EditContext *edcontext, PromiseResult *result);
+static int EditLineByColumn(EvalContext *ctx, Rlist **columns, Attributes a, const Promise *pp, EditContext *edcontext, PromiseResult *result);
 static int DoEditColumn(Rlist **columns, Attributes a, EditContext *edcontext);
 static int SanityCheckInsertions(Attributes a);
-static int SanityCheckDeletions(Attributes a, Promise *pp);
+static int SanityCheckDeletions(Attributes a, const Promise *pp);
 static int SelectLine(EvalContext *ctx, char *line, Attributes a);
 static int NotAnchored(char *s);
-static int SelectRegion(EvalContext *ctx, Item *start, Item **begin_ptr, Item **end_ptr, Attributes a, Promise *pp, EditContext *edcontext, PromiseResult *result);
+static int SelectRegion(EvalContext *ctx, Item *start, Item **begin_ptr, Item **end_ptr, Attributes a, const Promise *pp, EditContext *edcontext, PromiseResult *result);
 static int MultiLineString(char *s);
-static int InsertFileAtLocation(EvalContext *ctx, Item **start, Item *begin_ptr, Item *end_ptr, Item *location, Item *prev, Attributes a, Promise *pp, EditContext *edcontext, PromiseResult *result);
+static int InsertFileAtLocation(EvalContext *ctx, Item **start, Item *begin_ptr, Item *end_ptr, Item *location, Item *prev, Attributes a, const Promise *pp, EditContext *edcontext, PromiseResult *result);
 
 /*****************************************************************************/
 /* Level                                                                     */
@@ -290,7 +290,7 @@ Bundle *MakeTemporaryBundleFromTemplate(EvalContext *ctx, Policy *policy, Attrib
 /* Level                                                                   */
 /***************************************************************************/
 
-static PromiseResult KeepEditLinePromise(EvalContext *ctx, Promise *pp, void *param)
+static PromiseResult KeepEditLinePromise(EvalContext *ctx, const Promise *pp, void *param)
 {
     EditContext *edcontext = param;
 
@@ -364,7 +364,7 @@ static PromiseResult KeepEditLinePromise(EvalContext *ctx, Promise *pp, void *pa
 /* Level                                                                   */
 /***************************************************************************/
 
-static PromiseResult VerifyLineDeletions(EvalContext *ctx, Promise *pp, EditContext *edcontext)
+static PromiseResult VerifyLineDeletions(EvalContext *ctx, const Promise *pp, EditContext *edcontext)
 {
     Item **start = &(edcontext->file_start);
     Item *begin_ptr, *end_ptr;
@@ -426,7 +426,7 @@ static PromiseResult VerifyLineDeletions(EvalContext *ctx, Promise *pp, EditCont
 
 /***************************************************************************/
 
-static PromiseResult VerifyColumnEdits(EvalContext *ctx, Promise *pp, EditContext *edcontext)
+static PromiseResult VerifyColumnEdits(EvalContext *ctx, const Promise *pp, EditContext *edcontext)
 {
     Item **start = &(edcontext->file_start);
     Item *begin_ptr, *end_ptr;
@@ -494,7 +494,7 @@ static PromiseResult VerifyColumnEdits(EvalContext *ctx, Promise *pp, EditContex
 
 /***************************************************************************/
 
-static PromiseResult VerifyPatterns(EvalContext *ctx, Promise *pp, EditContext *edcontext)
+static PromiseResult VerifyPatterns(EvalContext *ctx, const Promise *pp, EditContext *edcontext)
 {
     Item **start = &(edcontext->file_start);
     Item *begin_ptr, *end_ptr;
@@ -554,7 +554,7 @@ static PromiseResult VerifyPatterns(EvalContext *ctx, Promise *pp, EditContext *
 
 /***************************************************************************/
 
-static PromiseResult VerifyLineInsertions(EvalContext *ctx, Promise *pp, EditContext *edcontext)
+static PromiseResult VerifyLineInsertions(EvalContext *ctx, const Promise *pp, EditContext *edcontext)
 {
     Item **start = &(edcontext->file_start), *match, *prev;
     Item *begin_ptr, *end_ptr;
@@ -630,7 +630,7 @@ static PromiseResult VerifyLineInsertions(EvalContext *ctx, Promise *pp, EditCon
 /***************************************************************************/
 
 static int SelectRegion(EvalContext *ctx, Item *start, Item **begin_ptr, Item **end_ptr, Attributes a,
-                        Promise *pp, EditContext *edcontext, PromiseResult *result)
+                        const Promise *pp, EditContext *edcontext, PromiseResult *result)
 /*
 
 This should provide pointers to the first and last line of text that include the
@@ -704,7 +704,7 @@ If no such region matches, begin_ptr and end_ptr should point to CF_UNDEFINED_IT
 /***************************************************************************/
 
 static int InsertMultipleLinesToRegion(EvalContext *ctx, Item **start, Item *begin_ptr, Item *end_ptr, Attributes a,
-                                       Promise *pp, EditContext *edcontext, PromiseResult *result)
+                                       const Promise *pp, EditContext *edcontext, PromiseResult *result)
 {
     Item *ip, *prev = CF_UNDEFINED_ITEM;
 
@@ -756,7 +756,7 @@ static int InsertMultipleLinesToRegion(EvalContext *ctx, Item **start, Item *beg
 /***************************************************************************/
 
 static int InsertMultipleLinesAtLocation(EvalContext *ctx, Item **start, Item *begin_ptr, Item *end_ptr, Item *location,
-                                         Item *prev, Attributes a, Promise *pp, EditContext *edcontext, PromiseResult *result)
+                                         Item *prev, Attributes a, const Promise *pp, EditContext *edcontext, PromiseResult *result)
 
 // Promises to insert a possibly multi-line promiser at the specificed location convergently,
 // i.e. no insertion will be made if a neighbouring line matches
@@ -778,7 +778,7 @@ static int InsertMultipleLinesAtLocation(EvalContext *ctx, Item **start, Item *b
 /***************************************************************************/
 
 static int DeletePromisedLinesMatching(EvalContext *ctx, Item **start, Item *begin, Item *end, Attributes a,
-                                       Promise *pp, EditContext *edcontext, PromiseResult *result)
+                                       const Promise *pp, EditContext *edcontext, PromiseResult *result)
 {
     Item *ip, *np = NULL, *lp, *initiator = begin, *terminator = NULL;
     int i, retval = false, matches, noedits = true;
@@ -928,7 +928,7 @@ static int DeletePromisedLinesMatching(EvalContext *ctx, Item **start, Item *beg
 /********************************************************************/
 
 static int ReplacePatterns(EvalContext *ctx, Item *file_start, Item *file_end, Attributes a,
-                           Promise *pp, EditContext *edcontext, PromiseResult *result)
+                           const Promise *pp, EditContext *edcontext, PromiseResult *result)
 {
     char replace[CF_EXPANDSIZE], line_buff[CF_EXPANDSIZE];
     char after[CF_BUFSIZE];
@@ -1056,7 +1056,7 @@ static int ReplacePatterns(EvalContext *ctx, Item *file_start, Item *file_end, A
 /********************************************************************/
 
 static int EditColumns(EvalContext *ctx, Item *file_start, Item *file_end, Attributes a,
-                       Promise *pp, EditContext *edcontext, PromiseResult *result)
+                       const Promise *pp, EditContext *edcontext, PromiseResult *result)
 {
     char separator[CF_MAXVARSIZE];
     int s, e, retval = false;
@@ -1204,7 +1204,7 @@ static int SanityCheckInsertions(Attributes a)
 
 /***************************************************************************/
 
-static int SanityCheckDeletions(Attributes a, Promise *pp)
+static int SanityCheckDeletions(Attributes a, const Promise *pp)
 {
     if (MultiLineString(pp->promiser))
     {
@@ -1223,7 +1223,7 @@ static int SanityCheckDeletions(Attributes a, Promise *pp)
 /***************************************************************************/
 
 static int InsertFileAtLocation(EvalContext *ctx, Item **start, Item *begin_ptr, Item *end_ptr, Item *location,
-                                Item *prev, Attributes a, Promise *pp, EditContext *edcontext, PromiseResult *result)
+                                Item *prev, Attributes a, const Promise *pp, EditContext *edcontext, PromiseResult *result)
 {
     FILE *fin;
     char buf[CF_BUFSIZE], exp[CF_EXPANDSIZE];
@@ -1331,7 +1331,7 @@ static int InsertFileAtLocation(EvalContext *ctx, Item **start, Item *begin_ptr,
 /***************************************************************************/
 
 static int InsertCompoundLineAtLocation(EvalContext *ctx, char *chunk, Item **start, Item *begin_ptr, Item *end_ptr,
-                                        Item *location, Item *prev, Attributes a, Promise *pp, EditContext *edcontext,
+                                        Item *location, Item *prev, Attributes a, const Promise *pp, EditContext *edcontext,
                                         PromiseResult *result)
 {
     bool retval = false;
@@ -1399,7 +1399,7 @@ static int InsertCompoundLineAtLocation(EvalContext *ctx, char *chunk, Item **st
 /***************************************************************************/
 
 static int InsertLineAtLocation(EvalContext *ctx, char *newline, Item **start, Item *location, Item *prev, Attributes a,
-                                Promise *pp, EditContext *edcontext, PromiseResult *result)
+                                const Promise *pp, EditContext *edcontext, PromiseResult *result)
 
 /* Check line neighbourhood in whole file to avoid edge effects, iff we are not preseving block structure */
 
@@ -1521,7 +1521,7 @@ static int InsertLineAtLocation(EvalContext *ctx, char *newline, Item **start, I
 /***************************************************************************/
 
 static int EditLineByColumn(EvalContext *ctx, Rlist **columns, Attributes a,
-                            Promise *pp, EditContext *edcontext, PromiseResult *result)
+                            const Promise *pp, EditContext *edcontext, PromiseResult *result)
 {
     Rlist *rp, *this_column = NULL;
     char sep[CF_MAXVARSIZE];

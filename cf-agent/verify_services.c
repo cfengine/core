@@ -38,15 +38,15 @@
 #include <ornaments.h>
 #include <eval_context.h>
 
-static int ServicesSanityChecks(Attributes a, Promise *pp);
+static int ServicesSanityChecks(Attributes a, const Promise *pp);
 static void SetServiceDefaults(Attributes *a);
-static PromiseResult DoVerifyServices(EvalContext *ctx, Attributes a, Promise *pp);
-static PromiseResult VerifyServices(EvalContext *ctx, Attributes a, Promise *pp);
+static PromiseResult DoVerifyServices(EvalContext *ctx, Attributes a, const Promise *pp);
+static PromiseResult VerifyServices(EvalContext *ctx, Attributes a, const Promise *pp);
 
 
 /*****************************************************************************/
 
-PromiseResult VerifyServicesPromise(EvalContext *ctx, Promise *pp)
+PromiseResult VerifyServicesPromise(EvalContext *ctx, const Promise *pp)
 {
     Attributes a = GetServicesAttributes(ctx, pp);
 
@@ -64,7 +64,7 @@ PromiseResult VerifyServicesPromise(EvalContext *ctx, Promise *pp)
 
 /*****************************************************************************/
 
-static int ServicesSanityChecks(Attributes a, Promise *pp)
+static int ServicesSanityChecks(Attributes a, const Promise *pp)
 {
     Rlist *dep;
 
@@ -157,7 +157,7 @@ static void SetServiceDefaults(Attributes *a)
 /* Level                                                                     */
 /*****************************************************************************/
 
-static PromiseResult VerifyServices(EvalContext *ctx, Attributes a, Promise *pp)
+static PromiseResult VerifyServices(EvalContext *ctx, Attributes a, const Promise *pp)
 {
     CfLock thislock;
 
@@ -190,48 +190,15 @@ static PromiseResult VerifyServices(EvalContext *ctx, Attributes a, Promise *pp)
 /* Level                                                                     */
 /*****************************************************************************/
 
-static PromiseResult DoVerifyServices(EvalContext *ctx, Attributes a, Promise *pp)
+static PromiseResult DoVerifyServices(EvalContext *ctx, Attributes a, const Promise *pp)
 {
-    FnCall *default_bundle = NULL;
-    Rlist *args = NULL;
-
-// Need to set up the default service pack to eliminate syntax
-
-    if (PromiseGetConstraintAsRval(pp, "service_bundle", RVAL_TYPE_SCALAR) == NULL)
+    FnCall *service_bundle = PromiseGetConstraintAsRval(pp, "service_bundle", RVAL_TYPE_FNCALL);
+    if (!service_bundle)
     {
-        switch (a.service.service_policy)
-        {
-        case SERVICE_POLICY_START:
-            RlistAppendScalar(&args, pp->promiser);
-            RlistAppendScalar(&args, "start");
-            break;
-
-        case SERVICE_POLICY_RESTART:
-            RlistAppendScalar(&args, pp->promiser);
-            RlistAppendScalar(&args, "restart");
-            break;
-
-        case SERVICE_POLICY_RELOAD:
-            RlistAppendScalar(&args, pp->promiser);
-            RlistAppendScalar(&args, "reload");
-            break;
-            
-        case SERVICE_POLICY_STOP:
-        case SERVICE_POLICY_DISABLE:
-        default:
-            RlistAppendScalar(&args, pp->promiser);
-            RlistAppendScalar(&args, "stop");
-            break;
-
-        }
-
-        default_bundle = FnCallNew("standard_services", args);
-
-        PromiseAppendConstraint(pp, "service_bundle", (Rval) {default_bundle, RVAL_TYPE_FNCALL }, false);
-        a.havebundle = true;
+        service_bundle = PromiseGetConstraintAsRval(pp, "service_bundle", RVAL_TYPE_SCALAR);
     }
 
-// Set $(this.service_policy) for flexible bundle adaptation
+    assert(service_bundle);
 
     switch (a.service.service_policy)
     {
@@ -254,14 +221,14 @@ static PromiseResult DoVerifyServices(EvalContext *ctx, Attributes a, Promise *p
         break;
     }
 
-    const Bundle *bp = PolicyGetBundle(PolicyFromPromise(pp), NULL, "agent", default_bundle->name);
+    const Bundle *bp = PolicyGetBundle(PolicyFromPromise(pp), NULL, "agent", service_bundle->name);
     if (!bp)
     {
-        bp = PolicyGetBundle(PolicyFromPromise(pp), NULL, "common", default_bundle->name);
+        bp = PolicyGetBundle(PolicyFromPromise(pp), NULL, "common", service_bundle->name);
     }
 
     PromiseResult result = PROMISE_RESULT_NOOP;
-    if (default_bundle && bp == NULL)
+    if (!bp)
     {
         cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, a, "Service '%s' could not be invoked successfully", pp->promiser);
         result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);

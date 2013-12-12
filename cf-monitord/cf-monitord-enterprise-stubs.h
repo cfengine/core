@@ -34,6 +34,10 @@ ENTERPRISE_VOID_FUNC_0ARG_DECLARE(void, MonOtherInit);
 ENTERPRISE_VOID_FUNC_1ARG_DECLARE(void, MonOtherGatherData, double *, cf_this);
 
 ENTERPRISE_VOID_FUNC_2ARG_DECLARE(void, HistoryUpdate, EvalContext *, ctx, Averages, newvals);
-ENTERPRISE_FUNC_4ARG_DECLARE(PromiseResult, VerifyMeasurement, EvalContext *, ctx, double *, this, Attributes, a, Promise *, pp);
+ENTERPRISE_FUNC_4ARG_DECLARE(PromiseResult, VerifyMeasurement,
+                             EvalContext *, ctx,
+                             double *, this,
+                             Attributes, a,
+                             const Promise *, pp);
 
 #endif

@@ -117,7 +117,7 @@ off_t GetDiskUsage(char *file, enum cfsizes type);
 
 /* verify_reports.c */
 
-PromiseResult VerifyReportPromise(EvalContext *ctx, Promise *pp);
+PromiseResult VerifyReportPromise(EvalContext *ctx, const Promise *pp);
 
 /* cf-key */
 

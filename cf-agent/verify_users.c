@@ -31,9 +31,9 @@
 #include <string_lib.h>
 #include <misc_lib.h>
 
-static int UserSanityCheck(Attributes a, Promise *pp);
+static int UserSanityCheck(Attributes a,  const Promise *pp);
 
-PromiseResult VerifyUsersPromise(EvalContext *ctx, Promise *pp)
+PromiseResult VerifyUsersPromise(EvalContext *ctx, const Promise *pp)
 {
     CfLock thislock;
     char lockname[CF_BUFSIZE];
@@ -84,7 +84,7 @@ PromiseResult VerifyUsersPromise(EvalContext *ctx, Promise *pp)
 
 /** Pre-check of promise contents **/
 
-static int UserSanityCheck(Attributes a, Promise *pp)
+static int UserSanityCheck(Attributes a,  const Promise *pp)
 {
     User *u = &a.users;
     switch (u->policy)

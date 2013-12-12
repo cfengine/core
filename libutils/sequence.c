@@ -89,6 +89,10 @@ static void ExpandIfNeccessary(Seq *seq)
 void SeqSet(Seq *seq, size_t index, void *item)
 {
     assert(index < SeqLength(seq));
+    if (seq->ItemDestroy)
+    {
+        seq->ItemDestroy(seq->data[index]);
+    }
     seq->data[index] = item;
 }
 

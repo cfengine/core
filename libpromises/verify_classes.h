@@ -28,6 +28,6 @@
 #include <eval_context.h>
 #include <policy.h>
 
-PromiseResult VerifyClassPromise(EvalContext *ctx, Promise *pp, void *param);
+PromiseResult VerifyClassPromise(EvalContext *ctx, const Promise *pp, void *param);
 
 #endif

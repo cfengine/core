@@ -32,11 +32,11 @@
 #include <eval_context.h>
 #include <ornaments.h>
 
-static bool CheckMeasureSanity(Measurement m, Promise *pp);
+static bool CheckMeasureSanity(Measurement m, const Promise *pp);
 
 /*****************************************************************************/
 
-PromiseResult VerifyMeasurementPromise(EvalContext *ctx, double *measurement, Promise *pp)
+PromiseResult VerifyMeasurementPromise(EvalContext *ctx, double *measurement, const Promise *pp)
 {
     if (EvalContextPromiseIsDone(ctx, pp))
     {
@@ -67,7 +67,7 @@ PromiseResult VerifyMeasurementPromise(EvalContext *ctx, double *measurement, Pr
 
 /*****************************************************************************/
 
-static bool CheckMeasureSanity(Measurement m, Promise *pp)
+static bool CheckMeasureSanity(Measurement m, const Promise *pp)
 {
     int retval = true;
 

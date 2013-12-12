@@ -27,6 +27,6 @@
 
 #include <cf3.defs.h>
 
-PromiseResult VerifyExecPromise(EvalContext *ctx, Promise *pp);
+PromiseResult VerifyExecPromise(EvalContext *ctx, const Promise *pp);
 
 #endif

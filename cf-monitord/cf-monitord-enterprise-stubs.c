@@ -45,7 +45,11 @@ ENTERPRISE_VOID_FUNC_2ARG_DEFINE_STUB(void, HistoryUpdate, ARG_UNUSED EvalContex
 {
 }
 
-ENTERPRISE_FUNC_4ARG_DEFINE_STUB(PromiseResult, VerifyMeasurement, ARG_UNUSED EvalContext *, ctx, ARG_UNUSED double *, this, ARG_UNUSED Attributes, a, ARG_UNUSED Promise *, pp)
+ENTERPRISE_FUNC_4ARG_DEFINE_STUB(PromiseResult, VerifyMeasurement,
+                                 ARG_UNUSED EvalContext *, ctx,
+                                 ARG_UNUSED double *, this,
+                                 ARG_UNUSED Attributes, a,
+                                 ARG_UNUSED const Promise *, pp)
 {
     return PROMISE_RESULT_NOOP;
 }

@@ -53,6 +53,11 @@ bundle agent check
       "ok" and => { "visited", "revisited" };
 
   reports:
+    DEBUG.visited::
+      "visited defined";
+    DEBUG.revisited::
+      "revisited defined";
+
     ok::
       "$(this.promise_filename) Pass";
     !ok::

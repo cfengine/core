@@ -48,7 +48,6 @@ static void ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp, Rlist *lists
                                PromiseActuator *ActOnPromise, void *param);
 static void ExpandAndMapIteratorsFromScalar(EvalContext *ctx, const Bundle *bundle, const char *string, size_t length, int level,
                                             Rlist **scalars, Rlist **lists, Rlist **containers, Rlist **full_expansion);
-static void SetAnyMissingDefaults(Promise *pp);
 static void CopyLocalizedReferencesToBundleScope(EvalContext *ctx, const Bundle *bundle, const Rlist *ref_names);
 
 /*
@@ -109,15 +108,11 @@ since these cannot be mapped into "this" without some magic.
    
 **********************************************************************/
 
-void ExpandPromise(EvalContext *ctx, Promise *pp, PromiseActuator *ActOnPromise, void *param)
+void ExpandPromise(EvalContext *ctx, const Promise *pp, PromiseActuator *ActOnPromise, void *param)
 {
     Rlist *lists = NULL;
     Rlist *scalars = NULL;
     Rlist *containers = NULL;
-
-    // Set a default for packages here...general defaults that need to come before
-    //fix me wth a general function SetMissingDefaults
-    SetAnyMissingDefaults(pp);
 
     Promise *pcopy = DeRefCopyPromise(ctx, pp);
 
@@ -1378,22 +1373,7 @@ bool IsVarList(const char *var)
     return true;
 }
 
-/*********************************************************************/
-
-static void SetAnyMissingDefaults(Promise *pp)
-/* Some defaults have to be set here, if they involve body-name
-   constraints as names need to be expanded before CopyDeRefPromise */
-{
-    if (strcmp(pp->parent_promise_type->name, "packages") == 0)
-    {
-        if (PromiseGetConstraint(pp, "package_method") == NULL)
-        {
-            PromiseAppendConstraint(pp, "package_method", (Rval) {"generic", RVAL_TYPE_SCALAR}, true);
-        }
-    }
-}
-
-PromiseResult CommonEvalPromise(EvalContext *ctx, Promise *pp, ARG_UNUSED void *param)
+PromiseResult CommonEvalPromise(EvalContext *ctx, const Promise *pp, ARG_UNUSED void *param)
 {
     assert(param == NULL);
 

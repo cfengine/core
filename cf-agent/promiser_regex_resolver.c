@@ -41,8 +41,8 @@
 #include <scope.h>
 #include <item_lib.h>
 
-PromiseResult LocateFilePromiserGroup(EvalContext *ctx, char *wildpath, Promise *pp,
-                                      PromiseResult (*fnptr) (EvalContext *ctx, char *path, Promise *ptr))
+PromiseResult LocateFilePromiserGroup(EvalContext *ctx, char *wildpath, const Promise *pp,
+                                      PromiseResult (*fnptr) (EvalContext *ctx, char *path, const Promise *ptr))
 {
     Item *path, *ip, *remainder = NULL;
     char pbuffer[CF_BUFSIZE];

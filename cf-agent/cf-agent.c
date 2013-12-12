@@ -152,11 +152,11 @@ static char **TranslateOldBootstrapOptionsConcatenated(int argc, char **argv);
 static void FreeStringArray(int size, char **array);
 static void CheckAgentAccess(Rlist *list, const Policy *policy);
 static void KeepControlPromises(EvalContext *ctx, const Policy *policy);
-static PromiseResult KeepAgentPromise(EvalContext *ctx, Promise *pp, void *param);
+static PromiseResult KeepAgentPromise(EvalContext *ctx, const Promise *pp, void *param);
 static int NewTypeContext(EvalContext *ctx, TypeSequence type);
 static void DeleteTypeContext(EvalContext *ctx, Bundle *bp, TypeSequence type);
 static void ClassBanner(EvalContext *ctx, TypeSequence type);
-static PromiseResult ParallelFindAndVerifyFilesPromises(EvalContext *ctx, Promise *pp);
+static PromiseResult ParallelFindAndVerifyFilesPromises(EvalContext *ctx, const Promise *pp);
 static bool VerifyBootstrap(EvalContext *ctx);
 static void KeepPromiseBundles(EvalContext *ctx, const Policy *policy, GenericAgentConfig *config);
 static void KeepPromises(EvalContext *ctx, const Policy *policy, GenericAgentConfig *config);
@@ -1363,7 +1363,7 @@ static PromiseResult DefaultVarPromise(EvalContext *ctx, const Promise *pp)
     return VerifyVarPromise(ctx, pp, true);
 }
 
-static PromiseResult KeepAgentPromise(EvalContext *ctx, Promise *pp, ARG_UNUSED void *param)
+static PromiseResult KeepAgentPromise(EvalContext *ctx, const Promise *pp, ARG_UNUSED void *param)
 {
     assert(param == NULL);
 
@@ -1646,7 +1646,7 @@ static PromiseResult ParallelFindAndVerifyFilesPromises(EvalContext *ctx, Promis
 
 #else /* !__MINGW32__ */
 
-static PromiseResult ParallelFindAndVerifyFilesPromises(EvalContext *ctx, Promise *pp)
+static PromiseResult ParallelFindAndVerifyFilesPromises(EvalContext *ctx, const Promise *pp)
 {
     int background = PromiseGetConstraintAsBoolean(ctx, "background", pp);
     pid_t child = 1;

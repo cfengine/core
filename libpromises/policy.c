@@ -1183,6 +1183,17 @@ Body *PolicyAppendBody(Policy *policy, const char *ns, const char *name, const c
     body->source_path = SafeStringDuplicate(source_path);
     body->conlist = SeqNew(10, ConstraintDestroy);
 
+    // TODO: move to standard callback
+    if (strcmp("service_method", body->name) == 0)
+    {
+        Rlist *args = NULL;
+        RlistAppendRval(&args, RvalNew("$(this.promiser)", RVAL_TYPE_SCALAR));
+        RlistAppendRval(&args, RvalNew("$(this.service_policy)", RVAL_TYPE_SCALAR));
+
+        FnCall *service_bundle = FnCallNew("standard_services", args);
+        BodyAppendConstraint(body, "service_bundle", (Rval) { service_bundle, RVAL_TYPE_FNCALL }, "any", false);
+    }
+
     return body;
 }
 
@@ -1248,6 +1259,12 @@ Promise *PromiseTypeAppendPromise(PromiseType *type, const char *promiser, Rval 
     pp->has_subbundles = false;
     pp->conlist = SeqNew(10, ConstraintDestroy);
     pp->org_pp = pp;
+
+    // TODO: move into promise type syntax callbacks for default values
+    if (strcmp("packages", type->name) == 0)
+    {
+        PromiseAppendConstraint(pp, "package_method", RvalNew("generic", RVAL_TYPE_SCALAR), true);
+    }
 
     return pp;
 }
@@ -1318,15 +1335,23 @@ static Constraint *ConstraintNew(const char *lval, Rval rval, const char *classe
     return cp;
 }
 
-Constraint *PromiseAppendConstraint(Promise *promise, const char *lval, Rval rval, bool references_body)
+Constraint *PromiseAppendConstraint(Promise *pp, const char *lval, Rval rval, bool references_body)
 {
     Constraint *cp = ConstraintNew(lval, rval, "any", references_body);
-
     cp->type = POLICY_ELEMENT_TYPE_PROMISE;
-    cp->parent.promise = promise;
+    cp->parent.promise = pp;
 
-    SeqAppend(promise->conlist, cp);
+    for (size_t i = 0; i < SeqLength(pp->conlist); i++)
+    {
+        Constraint *old_cp = SeqAt(pp->conlist, i);
+        if (strcmp(old_cp->lval, lval) == 0)
+        {
+            SeqSet(pp->conlist, i, cp);
+            return cp;
+        }
+    }
 
+    SeqAppend(pp->conlist, cp);
     return cp;
 }
 
@@ -1336,6 +1361,16 @@ Constraint *BodyAppendConstraint(Body *body, const char *lval, Rval rval, const 
     Constraint *cp = ConstraintNew(lval, rval, classes, references_body);
     cp->type = POLICY_ELEMENT_TYPE_BODY;
     cp->parent.body = body;
+
+    for (size_t i = 0; i < SeqLength(body->conlist); i++)
+    {
+        Constraint *old_cp = SeqAt(body->conlist, i);
+        if (strcmp(old_cp->lval, lval) == 0 && strcmp(old_cp->classes, classes) == 0)
+        {
+            SeqSet(body->conlist, i, cp);
+            return cp;
+        }
+    }
 
     SeqAppend(body->conlist, cp);
 

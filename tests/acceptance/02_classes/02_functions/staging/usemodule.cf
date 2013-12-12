@@ -38,7 +38,7 @@ bundle edit_line usemodule_lines_neg
   insert_lines:
     !windows::
       "#!/bin/sh";
-      ". \"$(G.cwd)/$(init.script_location)/usemodule.cf.bat\"";
+      ". \"$(init.script_location)/usemodule.cf.bat\"";
       "exit 1";
 
   delete_lines:
@@ -50,10 +50,10 @@ bundle edit_line usemodule_lines
   insert_lines:
     windows::
       "@echo off";
-      "\"$(G.cwd)\$(init.script_location)\usemodule.cf.bat\"";
+      "\"$(init.script_location)\usemodule.cf.bat\"";
     !windows::
       "#!/bin/sh";
-      ". \"$(G.cwd)/$(init.script_location)/usemodule.cf.bat\"";
+      ". \"$(init.script_location)/usemodule.cf.bat\"";
 
   delete_lines:
       ".*";

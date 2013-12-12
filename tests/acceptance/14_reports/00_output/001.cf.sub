@@ -7,9 +7,6 @@ body common control
 
 bundle agent test
 {
-vars:
-  "cwd" string => execresult("$(G.pwd)", "noshell");
-
 reports:
   cfengine_3::
     "doesnotmatter"
@@ -18,6 +15,6 @@ reports:
 
 body printfile p
 {
-file_to_print => "$(test.cwd)/$(this.promise_filename).in";
+file_to_print => "$(this.promise_filename).in";
 number_of_lines => "1";
 }

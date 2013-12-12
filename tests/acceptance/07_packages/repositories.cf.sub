@@ -45,9 +45,7 @@ body classes ifrepaired(repaired_class)
 bundle agent test
 {
   vars:
-    "currentdir_cwd" string => "$(G.cwd)";
-    "currentdir_dirname" string => dirname("$(this.promise_filename)");
-    "currentdir" string => "$(currentdir_cwd)/$(currentdir_dirname)";
+    "currentdir" string => dirname("$(this.promise_filename)");
 
   packages:
     "install-exact-version"

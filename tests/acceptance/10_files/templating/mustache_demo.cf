@@ -17,8 +17,7 @@ body common control
 bundle agent init
 {
   vars:
-      "origtestdir" string => concat("$(G.cwd)/",
-				     dirname("$(this.promise_filename)"));
+      "origtestdir" string => dirname("$(this.promise_filename)");
 
   files:
       "$(G.testfile)"

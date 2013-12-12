@@ -49,7 +49,7 @@ bundle agent test
       "linux_go_ahead" expression => regcmp(".*other::rwx.*", "$(sanity_perms)");
   vars:
     linux_go_ahead|windows::
-      "result" string => execresult("$(sys.cf_agent) -Kf $(G.cwd)$(G.DS)$(this.promise_filename).sub", "noshell");
+      "result" string => execresult("$(sys.cf_agent) -Kf $(this.promise_filename).sub", "noshell");
     !linux_go_ahead.!windows::
       "result" string => "";
 

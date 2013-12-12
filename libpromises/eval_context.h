@@ -179,6 +179,7 @@ void EvalContextSetEvalOption(EvalContext *ctx, EvalContextOption option, bool v
 bool EvalContextGetEvalOption(EvalContext *ctx, EvalContextOption option);
 
 void *EvalContextGetEnterpriseState(const EvalContext *ctx);
+void EvalContextSetLaunchDirectory(EvalContext *ctx, const char *path);
 
 bool Abort(EvalContext *ctx);
 int VarClassExcluded(const EvalContext *ctx, const Promise *pp, char **classes);

@@ -74,6 +74,9 @@ struct EvalContext_
     PromiseSet *promises_done;
 
     void *enterprise_state;
+
+    // Full path to directory that the binary was launched from.
+    char *launch_directory;
 };
 
 static StackFrame *LastStackFrame(const EvalContext *ctx, size_t offset)
@@ -745,6 +748,8 @@ EvalContext *EvalContextNew(void)
 
     ctx->enterprise_state = EvalContextEnterpriseStateNew();
 
+    ctx->launch_directory = NULL;
+
     return ctx;
 }
 
@@ -752,6 +757,7 @@ void EvalContextDestroy(EvalContext *ctx)
 {
     if (ctx)
     {
+        free(ctx->launch_directory);
         EvalContextEnterpriseStateDestroy(ctx->enterprise_state);
 
         PromiseLoggingFinish(ctx);
@@ -1004,7 +1010,14 @@ void EvalContextStackPushPromiseFrame(EvalContext *ctx, const Promise *owner, bo
     if (PromiseGetBundle(owner)->source_path)
     {
         char path[CF_BUFSIZE];
-        snprintf(path, CF_BUFSIZE, "%s", PromiseGetBundle(owner)->source_path);
+        if (!IsAbsoluteFileName(PromiseGetBundle(owner)->source_path) && ctx->launch_directory)
+        {
+            snprintf(path, CF_BUFSIZE, "%s%c%s", ctx->launch_directory, FILE_SEPARATOR, PromiseGetBundle(owner)->source_path);
+        }
+        else
+        {
+            strlcpy(path, PromiseGetBundle(owner)->source_path, CF_BUFSIZE);
+        }
 
         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promise_filename", path, DATA_TYPE_STRING, "source=promise");
 
@@ -2132,4 +2145,10 @@ bool EvalContextGetEvalOption(EvalContext *ctx, EvalContextOption option)
 void *EvalContextGetEnterpriseState(const EvalContext *ctx)
 {
     return ctx->enterprise_state;
+}
+
+void EvalContextSetLaunchDirectory(EvalContext *ctx, const char *path)
+{
+    free(ctx->launch_directory);
+    ctx->launch_directory = xstrdup(path);
 }

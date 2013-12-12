@@ -826,6 +826,24 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
         cfnet_init();
     }
 
+    size_t cwd_size = PATH_MAX;
+    while (true)
+    {
+        char cwd[cwd_size];
+        if (!getcwd(cwd, cwd_size))
+        {
+            if (errno == ERANGE)
+            {
+                cwd_size *= 2;
+                continue;
+            }
+            Log(LOG_LEVEL_WARNING, "Could not determine current directory. (getcwd: '%s')", GetErrorStr());
+            break;
+        }
+        EvalContextSetLaunchDirectory(ctx, cwd);
+        break;
+    }
+
     if (!MINUSF)
     {
         GenericAgentConfigSetInputFile(config, GetWorkDir(), "promises.cf");

@@ -259,7 +259,8 @@ export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP
     echo "              "time=\"$(($TEST_END_TIME - $TEST_START_TIME)) seconds\"\> >> "$XMLTMP"
 
     if [ -z "$EXPECTED_CRASH" ]; then
-      if [ $RETVAL -eq 0 ] && echo "$OUT" | grep -q -F -e "R: $TEST Pass"; then
+      ESCAPED_TEST="$(echo "$TEST" | sed -e 's/\./\\./g')"
+      if [ $RETVAL -eq 0 ] && echo "$OUT" | grep -q -e "R: .*$ESCAPED_TEST Pass"; then
         RESULT=Pass
       else
         RESULT=FAIL

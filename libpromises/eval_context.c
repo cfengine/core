@@ -756,7 +756,7 @@ void EvalContextDestroy(EvalContext *ctx)
 
         PromiseLoggingFinish(ctx);
 
-        DeleteItemList(ctx->ip_addresses);
+        EvalContextDeleteIpAddresses(ctx);
 
         DeleteItemList(ctx->heap_abort);
         DeleteItemList(ctx->heap_abort_current_bundle);
@@ -838,7 +838,7 @@ bool EvalContextHeapRemoveHard(EvalContext *ctx, const char *name)
 void EvalContextClear(EvalContext *ctx)
 {
     ClassTableClear(ctx->global_classes);
-    DeleteItemList(ctx->ip_addresses);
+    EvalContextDeleteIpAddresses(ctx);
     VariableTableClear(ctx->global_variables, NULL, NULL, NULL);
     VariableTableClear(ctx->match_variables, NULL, NULL, NULL);
     SeqClear(ctx->stack);

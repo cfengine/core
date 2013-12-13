@@ -132,3 +132,18 @@ StringSet *StringSetFromString(const char *str, char delimiter)
 
     return set;
 }
+
+JsonElement *StringSetToJson(const StringSet *set)
+{
+    JsonElement *arr = JsonArrayCreate(StringSetSize(set));
+
+    StringSetIterator it = StringSetIteratorInit((StringSet *)set);
+    const char *el = NULL;
+
+    while ((el = StringSetIteratorNext(&it)))
+    {
+        JsonArrayAppendString(arr, el);
+    }
+
+    return arr;
+}

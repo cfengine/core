@@ -27,6 +27,7 @@
 
 #include <map.h>
 #include <buffer.h>
+#include <json.h>
 
 typedef Map Set;
 typedef MapIterator SetIterator;
@@ -129,5 +130,6 @@ TYPED_SET_DECLARE(String, char *)
 
 StringSet *StringSetFromString(const char *str, char delimiter);
 Buffer *StringSetToBuffer(StringSet *set, const char delimiter);
+JsonElement *StringSetToJson(const StringSet *set);
 
 #endif

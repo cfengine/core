@@ -126,8 +126,9 @@ void EvalContextStackPushBodyFrame(EvalContext *ctx, const Body *owner, Rlist *a
 void EvalContextStackPushPromiseFrame(EvalContext *ctx, const Promise *owner, bool copy_bundle_context);
 Promise *EvalContextStackPushPromiseIterationFrame(EvalContext *ctx, size_t iteration_index, const PromiseIterator *iter_ctx);
 void EvalContextStackPopFrame(EvalContext *ctx);
-char *EvalContextStackPath(const EvalContext *ctx);
 
+char *EvalContextStackPath(const EvalContext *ctx);
+StringSet *EvalContextStackPromisees(const EvalContext *ctx);
 const Promise *EvalContextStackCurrentPromise(const EvalContext *ctx);
 const Bundle *EvalContextStackCurrentBundle(const EvalContext *ctx);
 

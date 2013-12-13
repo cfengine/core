@@ -1288,6 +1288,50 @@ char *EvalContextStackPath(const EvalContext *ctx)
     return StringWriterClose(path);
 }
 
+StringSet *EvalContextStackPromisees(const EvalContext *ctx)
+{
+    StringSet *promisees = StringSetNew();
+
+    for (size_t i = 0; i < SeqLength(ctx->stack); i++)
+    {
+        StackFrame *frame = SeqAt(ctx->stack, i);
+        if (frame->type != STACK_FRAME_TYPE_PROMISE_ITERATION)
+        {
+            continue;
+        }
+
+        Rval promisee = frame->data.promise_iteration.owner->promisee;
+
+        switch (promisee.type)
+        {
+        case RVAL_TYPE_SCALAR:
+            StringSetAdd(promisees, RvalScalarValue(promisee));
+            break;
+
+        case RVAL_TYPE_LIST:
+            {
+                for (const Rlist *rp = RvalRlistValue(promisee); rp; rp = rp->next)
+                {
+                    if (rp->val.type == RVAL_TYPE_SCALAR)
+                    {
+                        StringSetAdd(promisees, RvalScalarValue(rp->val));
+                    }
+                    else
+                    {
+                        assert(false && "Canary: promisee list contained non-scalar value");
+                    }
+                }
+            }
+            break;
+
+        default:
+            assert(false && "Canary: promisee not scalar or list");
+        }
+    }
+
+    return promisees;
+}
+
 bool EvalContextVariablePutSpecial(EvalContext *ctx, SpecialScope scope, const char *lval, const void *value, DataType type, const char *tags)
 {
     switch (scope)

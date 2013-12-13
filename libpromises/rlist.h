@@ -52,9 +52,6 @@ void RvalShow(FILE *fp, Rval rval);
 void RvalWrite(Writer *writer, Rval rval);
 unsigned RvalHash(Rval rval, unsigned seed, unsigned max);
 
-void RlistPrintToWriter(const Rlist *list, Writer *w);
-void RvalPrintToWriter(Rval rval, Writer *w);
-
 Rlist *RlistCopy(const Rlist *list);
 unsigned RlistHash(const Rlist *list, unsigned seed, unsigned max);
 void RlistDestroy(Rlist *list);

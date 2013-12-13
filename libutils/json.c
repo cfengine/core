@@ -1108,6 +1108,7 @@ JsonElement *JsonNullCreate()
 // *******************************************************************************************
 
 static void JsonContainerWrite(Writer *writer, JsonElement *containerElement, size_t indent_level);
+static void JsonContainerWriteCompact(Writer *writer, JsonElement *containerElement);
 
 static bool IsWhitespace(char ch)
 {
@@ -1157,7 +1158,7 @@ static void JsonPrimitiveWrite(Writer *writer, JsonElement *primitiveElement, si
     }
 }
 
-static void JsonArrayPrint(Writer *writer, JsonElement *array, size_t indent_level)
+static void JsonArrayWrite(Writer *writer, JsonElement *array, size_t indent_level)
 {
     assert(array->type == JSON_ELEMENT_TYPE_CONTAINER);
     assert(array->container.type == JSON_CONTAINER_TYPE_ARRAY);
@@ -1199,7 +1200,7 @@ static void JsonArrayPrint(Writer *writer, JsonElement *array, size_t indent_lev
     WriterWriteChar(writer, ']');
 }
 
-void JsonObjectPrint(Writer *writer, JsonElement *object, size_t indent_level)
+void JsonObjectWrite(Writer *writer, JsonElement *object, size_t indent_level)
 {
     assert(object->type == JSON_ELEMENT_TYPE_CONTAINER);
     assert(object->container.type == JSON_CONTAINER_TYPE_OBJECT);
@@ -1244,11 +1245,11 @@ static void JsonContainerWrite(Writer *writer, JsonElement *container, size_t in
     switch (container->container.type)
     {
     case JSON_CONTAINER_TYPE_OBJECT:
-        JsonObjectPrint(writer, container, indent_level);
+        JsonObjectWrite(writer, container, indent_level);
         break;
 
     case JSON_CONTAINER_TYPE_ARRAY:
-        JsonArrayPrint(writer, container, indent_level);
+        JsonArrayWrite(writer, container, indent_level);
     }
 }
 
@@ -1265,6 +1266,108 @@ void JsonWrite(Writer *writer, JsonElement *element, size_t indent_level)
 
     case JSON_ELEMENT_TYPE_PRIMITIVE:
         JsonPrimitiveWrite(writer, element, indent_level);
+        break;
+    }
+}
+
+static void JsonArrayWriteCompact(Writer *writer, JsonElement *array)
+{
+    assert(array->type == JSON_ELEMENT_TYPE_CONTAINER);
+    assert(array->container.type == JSON_CONTAINER_TYPE_ARRAY);
+
+    if (JsonLength(array) == 0)
+    {
+        WriterWrite(writer, "[]");
+        return;
+    }
+
+    WriterWrite(writer, "[");
+    for (size_t i = 0; i < array->container.children->length; i++)
+    {
+        JsonElement *child = array->container.children->data[i];
+
+        switch (child->type)
+        {
+        case JSON_ELEMENT_TYPE_PRIMITIVE:
+            JsonPrimitiveWrite(writer, child, 0);
+            break;
+
+        case JSON_ELEMENT_TYPE_CONTAINER:
+            JsonContainerWriteCompact(writer, child);
+            break;
+        }
+
+        if (i < array->container.children->length - 1)
+        {
+            WriterWrite(writer, ",");
+        }
+    }
+
+    WriterWriteChar(writer, ']');
+}
+
+void JsonObjectWriteCompact(Writer *writer, JsonElement *object)
+{
+    assert(object->type == JSON_ELEMENT_TYPE_CONTAINER);
+    assert(object->container.type == JSON_CONTAINER_TYPE_OBJECT);
+
+    WriterWrite(writer, "{");
+
+    for (size_t i = 0; i < object->container.children->length; i++)
+    {
+        JsonElement *child = object->container.children->data[i];
+
+        assert(child->propertyName);
+        WriterWriteF(writer, "\"%s\":", child->propertyName);
+
+        switch (child->type)
+        {
+        case JSON_ELEMENT_TYPE_PRIMITIVE:
+            JsonPrimitiveWrite(writer, child, 0);
+            break;
+
+        case JSON_ELEMENT_TYPE_CONTAINER:
+            JsonContainerWriteCompact(writer, child);
+            break;
+        }
+
+        if (i < object->container.children->length - 1)
+        {
+            WriterWriteChar(writer, ',');
+        }
+    }
+
+    WriterWriteChar(writer, '}');
+}
+
+static void JsonContainerWriteCompact(Writer *writer, JsonElement *container)
+{
+    assert(container->type == JSON_ELEMENT_TYPE_CONTAINER);
+
+    switch (container->container.type)
+    {
+    case JSON_CONTAINER_TYPE_OBJECT:
+        JsonObjectWriteCompact(writer, container);
+        break;
+
+    case JSON_CONTAINER_TYPE_ARRAY:
+        JsonArrayWriteCompact(writer, container);
+    }
+}
+
+void JsonWriteCompact(Writer *w, JsonElement *element)
+{
+    assert(w);
+    assert(element);
+
+    switch (element->type)
+    {
+    case JSON_ELEMENT_TYPE_CONTAINER:
+        JsonContainerWriteCompact(w, element);
+        break;
+
+    case JSON_ELEMENT_TYPE_PRIMITIVE:
+        JsonPrimitiveWrite(w, element, 0);
         break;
     }
 }

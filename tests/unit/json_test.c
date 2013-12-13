@@ -184,6 +184,37 @@ static void test_show_object_compound(void)
     free(output);
 }
 
+static void test_show_object_compound_compact(void)
+{
+    JsonElement *json = JsonObjectCreate(10);
+
+    JsonObjectAppendString(json, "first", "one");
+    {
+        JsonElement *inner = JsonObjectCreate(10);
+
+        JsonObjectAppendString(inner, "third", "three");
+
+        JsonObjectAppendObject(json, "second", inner);
+    }
+    {
+        JsonElement *inner = JsonObjectCreate(10);
+
+        JsonObjectAppendString(inner, "fifth", "five");
+
+        JsonObjectAppendObject(json, "fourth", inner);
+    }
+
+    Writer *writer = StringWriter();
+
+    JsonWriteCompact(writer, json);
+    char *output = StringWriterClose(writer);
+
+    assert_string_equal("{\"first\":\"one\",\"second\":{\"third\":\"three\"},\"fourth\":{\"fifth\":\"five\"}}", output);
+
+    JsonDestroy(json);
+    free(output);
+}
+
 static void test_show_object_array(void)
 {
     JsonElement *json = JsonObjectCreate(10);
@@ -219,6 +250,24 @@ static void test_show_array(void)
     char *output = StringWriterClose(writer);
 
     assert_string_equal(ARRAY_SIMPLE, output);
+
+    JsonDestroy(array);
+    free(output);
+}
+
+static void test_show_array_compact(void)
+{
+    JsonElement *array = JsonArrayCreate(10);
+
+    JsonArrayAppendString(array, "one");
+    JsonArrayAppendString(array, "two");
+
+    Writer *writer = StringWriter();
+
+    JsonWriteCompact(writer, array);
+    char *output = StringWriterClose(writer);
+
+    assert_string_equal("[\"one\",\"two\"]", output);
 
     JsonDestroy(array);
     free(output);
@@ -1109,8 +1158,10 @@ int main()
         unit_test(test_show_object_numeric),
         unit_test(test_show_object_boolean),
         unit_test(test_show_object_compound),
+        unit_test(test_show_object_compound_compact),
         unit_test(test_show_object_array),
         unit_test(test_show_array),
+        unit_test(test_show_array_compact),
         unit_test(test_show_array_boolean),
         unit_test(test_show_array_numeric),
         unit_test(test_show_array_object),

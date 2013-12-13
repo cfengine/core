@@ -2389,6 +2389,7 @@ const Bundle *PromiseGetBundle(const Promise *pp)
 
 static void BundlePath(Writer *w, const Bundle *bp)
 {
+    WriterWriteChar(w, '/');
     WriterWrite(w, bp->ns);
     WriterWriteChar(w, '/');
     WriterWrite(w, bp->name);

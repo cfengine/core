@@ -1268,7 +1268,7 @@ char *EvalContextStackPath(const EvalContext *ctx)
             break;
 
         case STACK_FRAME_TYPE_BUNDLE:
-            WriterWriteF(path, "/%s", frame->data.bundle.owner->name);
+            WriterWriteF(path, "/%s/%s", frame->data.bundle.owner->ns, frame->data.bundle.owner->name);
             break;
 
         case STACK_FRAME_TYPE_PROMISE:
@@ -1279,7 +1279,7 @@ char *EvalContextStackPath(const EvalContext *ctx)
             WriterWriteF(path, "/'%s'", frame->data.promise_iteration.owner->promiser);
             if (i == SeqLength(ctx->stack) - 1)
             {
-                WriterWriteF(path, " [%zd]", frame->data.promise_iteration.index);
+                WriterWriteF(path, "[%zd]", frame->data.promise_iteration.index);
             }
             break;
         }

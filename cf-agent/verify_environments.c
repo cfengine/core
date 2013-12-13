@@ -1058,7 +1058,7 @@ static enum cfhypervisors Str2Hypervisors(char *s)
     return (enum cfhypervisors) i;
 }
 /*****************************************************************************/
-#else
+#else /* !HAVE_LIBVIRT */
 
 void NewEnvironmentsContext(void)
 {
@@ -1068,7 +1068,7 @@ void DeleteEnvironmentsContext(void)
 {
 }
 
-PromiseResult VerifyEnvironmentsPromise(ARG_UNUSED EvalContext *ctx, ARG_UNUSED Promise *pp)
+PromiseResult VerifyEnvironmentsPromise(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Promise *pp)
 {
     return PROMISE_RESULT_NOOP;
 }

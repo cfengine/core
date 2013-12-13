@@ -1106,9 +1106,9 @@ static int ParseModePosixLinux(char *mode, acl_permset_t perms)
     return true;
 }
 
-#else /* HAVE_LIBACL */
+#else /* !HAVE_LIBACL */
 
-PromiseResult CheckPosixLinuxACL(EvalContext *ctx, ARG_UNUSED const char *file_path, ARG_UNUSED Acl acl, Attributes a, Promise *pp)
+PromiseResult CheckPosixLinuxACL(EvalContext *ctx, ARG_UNUSED const char *file_path, ARG_UNUSED Acl acl, Attributes a, const Promise *pp)
 {
     cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a,
          "Posix ACLs are not supported on this Linux system - install the Posix acl library");

@@ -3107,7 +3107,10 @@ static FnCallResult FnCallSublist(EvalContext *ctx, FnCall *fp, Rlist *finalargs
 
         int offset = max >= length ? 0 : length-max;
 
-        for (; rp != NULL && offset--; rp = rp->next);
+        for (; rp != NULL && offset--; rp = rp->next)
+        {
+            /* skip to offset */
+        }
 
         for (; rp != NULL; rp = rp->next)
         {

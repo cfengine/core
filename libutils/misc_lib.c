@@ -45,7 +45,11 @@ void __ProgrammingError(const char *file, int lineno, const char *format, ...)
     va_end(ap);
 
     free(fmt);
+#ifdef NDEBUG
     exit(255);
+#else
+    abort();
+#endif
 }
 
 /**

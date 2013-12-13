@@ -2142,7 +2142,7 @@ bool EvalContextGetEvalOption(EvalContext *ctx, EvalContextOption option)
     return !!(ctx->eval_options & option);
 }
 
-void *EvalContextGetEnterpriseState(const EvalContext *ctx)
+EvalContextEnterpriseState *EvalContextGetEnterpriseState(const EvalContext *ctx)
 {
     return ctx->enterprise_state;
 }

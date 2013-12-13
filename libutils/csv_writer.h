@@ -44,4 +44,9 @@ void CsvWriterNewRecord(CsvWriter *csvw);
 /* Does not close underlying Writer, but flushes all pending data */
 void CsvWriterClose(CsvWriter *csvw);
 
+/**
+ * @return The instance of the underlying writer
+ */
+Writer *CsvWriterGetWriter(CsvWriter *csvw);
+
 #endif

@@ -133,3 +133,8 @@ static void WriteCsvEscapedString(Writer *w, const char *s)
     }
     WriterWriteChar(w, '"');
 }
+
+Writer *CsvWriterGetWriter(CsvWriter *csvw)
+{
+    return csvw->w;
+}

@@ -280,6 +280,7 @@ void StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
     struct timeval timeout;
     int ret_val;
     CfLock thislock;
+    time_t last_policy_reload = 0;
     extern int COLLECT_WINDOW;
 
     struct sockaddr_storage cin;

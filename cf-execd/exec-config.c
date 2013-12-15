@@ -72,13 +72,13 @@ static void ExecConfigResetDefault(ExecConfig *exec_config)
     StringSetAdd(exec_config->schedule, xstrdup("Min55"));
 }
 
-ExecConfig *ExecConfigNewDefault(bool scheduled_run, const char *fq_name, const char *ip_address)
+ExecConfig *ExecConfigNewDefault(bool scheduled_run, const EvalContext *ctx, const Policy *policy)
 {
     ExecConfig *exec_config = xcalloc(1, sizeof(ExecConfig));
 
     exec_config->scheduled_run = scheduled_run;
-    exec_config->fq_name = xstrdup(fq_name);
-    exec_config->ip_address = xstrdup(ip_address);
+    exec_config->fq_name = xstrdup(VFQNAME);
+    exec_config->ip_address = xstrdup(VIPADDRESS);
     exec_config->schedule = StringSetNew();
 
     ExecConfigResetDefault(exec_config);
@@ -132,6 +132,7 @@ void ExecConfigDestroy(ExecConfig *exec_config)
         free(exec_config->log_facility);
         free(exec_config->fq_name);
         free(exec_config->ip_address);
+        free(exec_config->ip_addresses);
 
         StringSetDestroy(exec_config->schedule);
 

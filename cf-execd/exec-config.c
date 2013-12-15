@@ -86,20 +86,36 @@ ExecConfig *ExecConfigNewDefault(bool scheduled_run, const char *fq_name, const 
     return exec_config;
 }
 
+static StringSet *CopySchedule(const StringSet *schedule)
+{
+    StringSet *s = StringSetNew();
+    SetIterator i = SetIteratorInit(config->schedule);
+    MapKeyValue *kv;
+    while ((kv = SetIteratorNext(&i)))
+    {
+        StringSetAdd(s, xstrdup(kv->key));
+    }
+    return s;
+}
+
 ExecConfig *ExecConfigCopy(const ExecConfig *config)
 {
     ExecConfig *copy = xcalloc(1, sizeof(ExecConfig));
 
     copy->scheduled_run = config->scheduled_run;
     copy->exec_command = xstrdup(config->exec_command);
+    copy->agent_expireafter = config->agent_expireafter;
     copy->mail_server = xstrdup(config->mail_server);
     copy->mail_from_address = xstrdup(config->mail_from_address);
     copy->mail_to_address = xstrdup(config->mail_to_address);
     copy->mail_subject = xstrdup(config->mail_subject);
+    copy->mail_max_lines = config->mail_max_lines;
+    copy->schedule = CopySchedule(config->schedule);
+    copy->splay_time = config->splay_time;
+    copy->log_facility = xstrdup(config->log_facility);
     copy->fq_name = xstrdup(config->fq_name);
     copy->ip_address = xstrdup(config->ip_address);
-    copy->mail_max_lines = config->mail_max_lines;
-    copy->agent_expireafter = config->agent_expireafter;
+    copy->ip_addresses = xstrdup(config->ip_addresses);
 
     return copy;
 }

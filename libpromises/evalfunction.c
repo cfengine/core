@@ -5614,7 +5614,7 @@ static const FnCallArg GETFIELDS_ARGS[] =
 
 static const FnCallArg GETINDICES_ARGS[] =
 {
-    {CF_IDRANGE, DATA_TYPE_STRING, "CFEngine array identifier"},
+    {CF_IDRANGE, DATA_TYPE_STRING, "CFEngine array or data container identifier"},
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
@@ -6161,7 +6161,7 @@ static const FnCallArg UNIQUE_ARGS[] =
 
 static const FnCallArg NTH_ARGS[] =
 {
-    {CF_IDRANGE, DATA_TYPE_STRING, "CFEngine list identifier"},
+    {CF_IDRANGE, DATA_TYPE_STRING, "CFEngine list or data container identifier"},
     {CF_VALRANGE, DATA_TYPE_INT, "Offset of element to return"},
     {NULL, DATA_TYPE_NONE, NULL}
 };

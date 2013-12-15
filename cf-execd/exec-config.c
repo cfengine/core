@@ -33,31 +33,47 @@
 #include <generic_agent.h> // TODO: fix
 #include <item_lib.h>
 
-static void ExecConfigResetDefault(ExecConfig *exec_config)
+static char *GetIpAddresses(const EvalContext *ctx)
 {
-    free(exec_config->log_facility);
-    exec_config->log_facility = xstrdup("LOG_USER");
+    char ipbuf[CF_MAXVARSIZE] = "";
+    for (Item *iptr = EvalContextGetIpAddresses(ctx); iptr != NULL; iptr = iptr->next)
+    {
+        if ((SafeStringLength(ipbuf) + SafeStringLength(iptr->name)) < sizeof(ipbuf))
+        {
+            strcat(ipbuf, iptr->name);
+            strcat(ipbuf, " ");
+        }
+        else
+        {
+            break;
+        }
+    }
+    Chop(ipbuf, sizeof(ipbuf));
+    return xstrdup(ipbuf);
+}
 
-    free(exec_config->exec_command);
+static double GetSplay(void)
+{
+    char splay[CF_BUFSIZE];
+    snprintf(splay, CF_BUFSIZE, "%s+%s+%ju", VFQNAME, VIPADDRESS, (uintmax_t)getuid());
+    return ((double) StringHash(splay, 0, CF_HASHTABLESIZE)) / CF_HASHTABLESIZE;
+}
+
+ExecConfig *ExecConfigNew(bool scheduled_run, const EvalContext *ctx, const Policy *policy)
+{
+    ExecConfig *exec_config = xcalloc(1, sizeof(ExecConfig));
+
+    exec_config->scheduled_run = scheduled_run;
     exec_config->exec_command = xstrdup("");
-
-    free(exec_config->mail_server);
-    exec_config->mail_server = xstrdup("");
-
-    free(exec_config->mail_from_address);
-    exec_config->mail_from_address = xstrdup("");
-
-    free(exec_config->mail_to_address);
-    exec_config->mail_to_address = xstrdup("");
-
-    free(exec_config->mail_subject);
-    exec_config->mail_subject = xstrdup("");
-
-    exec_config->mail_max_lines = 30;
     exec_config->agent_expireafter = 10800;
-    exec_config->splay_time = 0;
 
-    StringSetClear(exec_config->schedule);
+    exec_config->mail_server = xstrdup("");
+    exec_config->mail_from_address = xstrdup("");
+    exec_config->mail_to_address = xstrdup("");
+    exec_config->mail_subject = xstrdup("");
+    exec_config->mail_max_lines = 30;
+
+    exec_config->schedule = StringSetNew();
     StringSetAdd(exec_config->schedule, xstrdup("Min00"));
     StringSetAdd(exec_config->schedule, xstrdup("Min05"));
     StringSetAdd(exec_config->schedule, xstrdup("Min10"));
@@ -70,86 +86,12 @@ static void ExecConfigResetDefault(ExecConfig *exec_config)
     StringSetAdd(exec_config->schedule, xstrdup("Min45"));
     StringSetAdd(exec_config->schedule, xstrdup("Min50"));
     StringSetAdd(exec_config->schedule, xstrdup("Min55"));
-}
+    exec_config->splay_time = 0;
+    exec_config->log_facility = xstrdup("LOG_USER");
 
-ExecConfig *ExecConfigNewDefault(bool scheduled_run, const EvalContext *ctx, const Policy *policy)
-{
-    ExecConfig *exec_config = xcalloc(1, sizeof(ExecConfig));
-
-    exec_config->scheduled_run = scheduled_run;
     exec_config->fq_name = xstrdup(VFQNAME);
     exec_config->ip_address = xstrdup(VIPADDRESS);
-    exec_config->schedule = StringSetNew();
-
-    ExecConfigResetDefault(exec_config);
-
-    return exec_config;
-}
-
-static StringSet *CopySchedule(const StringSet *schedule)
-{
-    StringSet *s = StringSetNew();
-    SetIterator i = SetIteratorInit(config->schedule);
-    MapKeyValue *kv;
-    while ((kv = SetIteratorNext(&i)))
-    {
-        StringSetAdd(s, xstrdup(kv->key));
-    }
-    return s;
-}
-
-ExecConfig *ExecConfigCopy(const ExecConfig *config)
-{
-    ExecConfig *copy = xcalloc(1, sizeof(ExecConfig));
-
-    copy->scheduled_run = config->scheduled_run;
-    copy->exec_command = xstrdup(config->exec_command);
-    copy->agent_expireafter = config->agent_expireafter;
-    copy->mail_server = xstrdup(config->mail_server);
-    copy->mail_from_address = xstrdup(config->mail_from_address);
-    copy->mail_to_address = xstrdup(config->mail_to_address);
-    copy->mail_subject = xstrdup(config->mail_subject);
-    copy->mail_max_lines = config->mail_max_lines;
-    copy->schedule = CopySchedule(config->schedule);
-    copy->splay_time = config->splay_time;
-    copy->log_facility = xstrdup(config->log_facility);
-    copy->fq_name = xstrdup(config->fq_name);
-    copy->ip_address = xstrdup(config->ip_address);
-    copy->ip_addresses = xstrdup(config->ip_addresses);
-
-    return copy;
-}
-
-void ExecConfigDestroy(ExecConfig *exec_config)
-{
-    if (exec_config)
-    {
-        free(exec_config->exec_command);
-        free(exec_config->mail_server);
-        free(exec_config->mail_from_address);
-        free(exec_config->mail_to_address);
-        free(exec_config->mail_subject);
-        free(exec_config->log_facility);
-        free(exec_config->fq_name);
-        free(exec_config->ip_address);
-        free(exec_config->ip_addresses);
-
-        StringSetDestroy(exec_config->schedule);
-
-        free(exec_config);
-    }
-}
-
-static double GetSplay(void)
-{
-    char splay[CF_BUFSIZE];
-    snprintf(splay, CF_BUFSIZE, "%s+%s+%ju", VFQNAME, VIPADDRESS, (uintmax_t)getuid());
-    return ((double) StringHash(splay, 0, CF_HASHTABLESIZE)) / CF_HASHTABLESIZE;
-}
-
-void ExecConfigUpdate(const EvalContext *ctx, const Policy *policy, ExecConfig *exec_config)
-{
-    ExecConfigResetDefault(exec_config);
+    exec_config->ip_addresses = GetIpAddresses(ctx);
 
     Seq *constraints = ControlBodyConstraints(policy, AGENT_TYPE_EXECUTOR);
     if (constraints)
@@ -240,20 +182,59 @@ void ExecConfigUpdate(const EvalContext *ctx, const Policy *policy, ExecConfig *
         }
     }
 
-    char ipbuf[CF_MAXVARSIZE] = "";
-    for (Item *iptr = EvalContextGetIpAddresses(ctx); iptr != NULL; iptr = iptr->next)
+    return exec_config;
+}
+
+static StringSet *CopySchedule(StringSet *schedule)
+{
+    StringSet *s = StringSetNew();
+    SetIterator i = StringSetIteratorInit(schedule);
+    char *class_;
+    while ((class_ = StringSetIteratorNext(&i)))
     {
-        if ((SafeStringLength(ipbuf) + SafeStringLength(iptr->name)) < sizeof(ipbuf))
-        {
-            strcat(ipbuf, iptr->name);
-            strcat(ipbuf, " ");
-        }
-        else
-        {
-            break;
-        }
+        StringSetAdd(s, xstrdup(class_));
     }
-    Chop(ipbuf, sizeof(ipbuf));
-    free(exec_config->ip_addresses);
-    exec_config->ip_addresses = xstrdup(ipbuf);
+    return s;
+}
+
+ExecConfig *ExecConfigCopy(const ExecConfig *config)
+{
+    ExecConfig *copy = xcalloc(1, sizeof(ExecConfig));
+
+    copy->scheduled_run = config->scheduled_run;
+    copy->exec_command = xstrdup(config->exec_command);
+    copy->agent_expireafter = config->agent_expireafter;
+    copy->mail_server = xstrdup(config->mail_server);
+    copy->mail_from_address = xstrdup(config->mail_from_address);
+    copy->mail_to_address = xstrdup(config->mail_to_address);
+    copy->mail_subject = xstrdup(config->mail_subject);
+    copy->mail_max_lines = config->mail_max_lines;
+    copy->schedule = CopySchedule(config->schedule);
+    copy->splay_time = config->splay_time;
+    copy->log_facility = xstrdup(config->log_facility);
+    copy->fq_name = xstrdup(config->fq_name);
+    copy->ip_address = xstrdup(config->ip_address);
+    copy->ip_addresses = xstrdup(config->ip_addresses);
+
+    return copy;
+}
+
+void ExecConfigDestroy(ExecConfig *exec_config)
+{
+    if (exec_config)
+    {
+        free(exec_config->exec_command);
+        free(exec_config->mail_server);
+        free(exec_config->mail_from_address);
+        free(exec_config->mail_to_address);
+        free(exec_config->mail_subject);
+        free(exec_config->log_facility);
+        free(exec_config->fq_name);
+        free(exec_config->ip_address);
+        free(exec_config->ip_addresses);
+
+        StringSetDestroy(exec_config->schedule);
+
+        free(exec_config);
+    }
 }

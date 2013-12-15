@@ -159,8 +159,7 @@ int main(int argc, char *argv[])
 
     ThisAgentInit();
 
-    ExecConfig *exec_config = ExecConfigNewDefault(!ONCE, VFQNAME, VIPADDRESS);
-    ExecConfigUpdate(ctx, policy, exec_config);
+    ExecConfig *exec_config = ExecConfigNew(!ONCE, ctx, policy);
     SetFacility(exec_config->log_facility);
 
 #ifdef __MINGW32__
@@ -564,7 +563,8 @@ static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *c
         GenericAgentConfigSetBundleSequence(config, NULL);
 
         *policy = GenericAgentLoadPolicy(ctx, config);
-        ExecConfigUpdate(ctx, *policy, exec_config);
+        ExecConfigDestroy(exec_config);
+        exec_config = ExecConfigNew(!ONCE, ctx, *policy);
 
         SetFacility(exec_config->log_facility);
     }

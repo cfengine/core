@@ -53,10 +53,8 @@ typedef struct
     char *ip_addresses;
 } ExecConfig;
 
-ExecConfig *ExecConfigNewDefault(bool scheduled_run, const char *fq_name, const char *ip_address);
+ExecConfig *ExecConfigNew(bool scheduled_run, const EvalContext *ctx, const Policy *policy);
 ExecConfig *ExecConfigCopy(const ExecConfig *exec_config);
 void ExecConfigDestroy(ExecConfig *exec_config);
-
-void ExecConfigUpdate(const EvalContext *ctx, const Policy *policy, ExecConfig *exec_config);
 
 #endif

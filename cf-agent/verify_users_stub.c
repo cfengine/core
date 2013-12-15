@@ -29,7 +29,7 @@ void VerifyOneUsersPromise (ARG_UNUSED const char *puser, ARG_UNUSED User u,
                             ARG_UNUSED enum cfopaction action,
                             ARG_UNUSED EvalContext *ctx,
                             ARG_UNUSED const Attributes *a,
-                            ARG_UNUSED Promise *pp)
+                            ARG_UNUSED const Promise *pp)
 {
     Log(LOG_LEVEL_ERR, "Users promise type is not supported on this OS");
 }

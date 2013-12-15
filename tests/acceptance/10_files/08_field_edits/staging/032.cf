@@ -8,7 +8,7 @@
 body common control
 {
       inputs => { "../../default.cf.sub" };
-      bundlesequence  => { default("$(this.promise_filename)") };   
+      bundlesequence  => { default("$(this.promise_filename)") };
       version => "1.0";
 }
 
@@ -18,19 +18,19 @@ bundle agent init
       "states" slist => { "actual", "expected" };
 
       "actual" string =>
-      "able:baker,booker,XXX,bonker:charlie:delta:echo
+      "able:baker,booker,XXX,banker:charlie:delta:echo
 apple:XXX,banana:carrot:dogfood
 aardvark:baboon,XXX:colugo:dingo::fox
 ampallang:XXX: :dydoe:,:::::
 :blowfish:conger:dogfish:eel:flounder";
-      
+
       "expected" string =>
       "able:baker,booker,banker:charlie:delta:echo
 apple:banana:carrot:dogfood
 aardvark:baboon:colugo:dingo::fox
 ampallang:: :dydoe:,:::::
 :blowfish:conger:dogfish:eel:flounder";
-      
+
   files:
       "$(G.testfile).$(states)"
       create => "true",
@@ -62,7 +62,7 @@ bundle agent test
 bundle edit_line test_edit
 {
   field_edits:
-      "a.*"
+      ".*"
       edit_field => test_col;
 }
 
@@ -86,5 +86,7 @@ bundle agent check
 					    "$(G.testfile).expected",
 					    "$(this.promise_filename)");
 }
+
 ### PROJECT_ID: core
 ### CATEGORY_ID: 27
+

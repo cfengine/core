@@ -424,9 +424,7 @@ if [ "$UNSAFE_TESTS" = "1" -a "$GAINROOT" = "fakeroot" ]; then
 fi
 
 if [ $# -gt 0 ]; then
-  # We need to run all specified tests, but not unsafe ones.
-  STAGING_TESTS=1
-  NETWORK_TESTS=1
+  # We run all specified tests according to the defaults (no unsafe ones).
   for test in "$@"; do
     if ! expr "$test" : '[/.]' >/dev/null; then
       test="./$test"

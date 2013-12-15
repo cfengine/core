@@ -28,6 +28,8 @@
 #include <cf3.defs.h>
 #include <set.h>
 
+/* This struct is supposed to be immutable: don't update it,
+   just destroy and create anew */
 typedef struct
 {
     bool scheduled_run;

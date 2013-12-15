@@ -4484,69 +4484,22 @@ static FnCallResult FnCallLaterThan(EvalContext *ctx, FnCall *fp, Rlist *finalar
     return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), RVAL_TYPE_SCALAR } };
 }
 
-static const long DAYS[] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
-
-static int GetMonthLength(int month, int year)
-{
-    if ((month == 1) && (year % 4 == 0))
-    {
-        if ((year % 100 == 0) && (year % 400 != 0))
-        {
-           return DAYS[month];
-        }
-        else
-        {
-           return 29;
-        }
-    }
-    else
-    {
-        return DAYS[month];
-    }
-}
-
-static long Months2Seconds(int m)
-{
-    long tot_days = 0;
-    int this_month, i, month, year;
-
-    if (m == 0)
-    {
-        return 0;
-    }
-
-    this_month = Month2Int(VMONTH);
-    year = IntFromString(VYEAR);
-
-    for (i = 0; i < m; i++)
-    {
-        month = (this_month - i) % 12;
-
-        while (month < 0)
-        {
-            month += 12;
-            year--;
-        }
-
-        tot_days += GetMonthLength(month, year);
-    }
-
-    return (long) tot_days *3600 * 24;
-}
-
 static FnCallResult FnCallAgoDate(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
     char buffer[CF_BUFSIZE];
-    time_t cftime;
-    struct tm tmv = FnArgsToTm(finalargs);
+    struct tm ago = FnArgsToTm(finalargs);
+    time_t now = time(NULL);
+    struct tm t;
+    localtime_r(&now, &t);
 
-    cftime = CFSTARTTIME;
-    cftime -= tmv.tm_sec;
-    cftime -= tmv.tm_min * 60;
-    cftime -= tmv.tm_hour * 3600;
-    cftime -= (tmv.tm_mday - 1) * 24 * 3600;
-    cftime -= Months2Seconds(tmv.tm_mon);
-    cftime -= (tmv.tm_year + 1900) * 365 * 24 * 3600;
+    t.tm_year -= ago.tm_year + 1900;
+    t.tm_mon -= ago.tm_mon;
+    t.tm_mday -= ago.tm_mday - 1;
+    t.tm_hour -= ago.tm_hour;
+    t.tm_min -= ago.tm_min;
+    t.tm_sec -= ago.tm_sec;
+
+    time_t cftime = mktime(&t);
 
     snprintf(buffer, CF_BUFSIZE - 1, "%ld", cftime);
 
@@ -4563,16 +4516,8 @@ static FnCallResult FnCallAgoDate(EvalContext *ctx, FnCall *fp, Rlist *finalargs
 static FnCallResult FnCallAccumulatedDate(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
     char buffer[CF_BUFSIZE];
-    long cftime;
     struct tm tmv = FnArgsToTm(finalargs);
-
-    cftime = 0;
-    cftime += tmv.tm_sec;
-    cftime += tmv.tm_min * 60;
-    cftime += tmv.tm_hour * 3600;
-    cftime += (tmv.tm_mday - 1) * 24 * 3600;
-    cftime += tmv.tm_mon * 30 * 24 * 3600;
-    cftime += (tmv.tm_year + 1900) * 365 * 24 * 3600;
+    time_t cftime = mktime(&tmv);
 
     snprintf(buffer, CF_BUFSIZE - 1, "%ld", cftime);
 

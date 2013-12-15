@@ -464,6 +464,27 @@ START_TIME=$(unix_seconds)
   echo ----------------------------------------------------------------------
   echo Total tests: $TESTS_COUNT
   echo
+  if [ ${NETWORK_TESTS} -ne 0 ]; then
+    echo NETWORK_TESTS: enabled
+  else
+    echo NETWORK_TESTS: disabled
+  fi
+  if [ ${STAGING_TESTS} -ne 0 ]; then
+    echo STAGING_TESTS: enabled
+  else
+    echo STAGING_TESTS: disabled
+  fi
+  if [ ${UNSAFE_TESTS} -ne 0 ]; then
+    echo UNSAFE_TESTS: enabled
+  else
+    echo UNSAFE_TESTS: disabled
+  fi
+  if [ ${LIBXML2_TESTS} -ne 0 ]; then
+    echo LIBXML2_TESTS: enabled
+  else
+    echo LIBXML2_TESTS: disabled
+  fi
+  echo
 ) | tee "$LOG" | tee "$SUMMARY" >&7
 
 
@@ -499,6 +520,7 @@ END_TIME=$(unix_seconds)
   echo Failed tests: $FAILED_TESTS
   echo Failed to crash tests: $FAILED_TO_CRASH_TESTS
   echo Skipped tests: $SKIPPED_TESTS
+  echo Total tests: $TESTS_COUNT
 ) | tee -a "$LOG" | tee -a "$SUMMARY"
 
 (  echo "           "failures=\"$FAILED_TESTS\"

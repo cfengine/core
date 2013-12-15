@@ -3153,7 +3153,10 @@ static FnCallResult FnCallNth(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
             return FnFailure();
         }
 
-        for (rp = (Rlist *) rval2.item; rp != NULL && index--; rp = rp->next);
+        for (rp = (Rlist *) rval2.item; rp != NULL && index--; rp = rp->next)
+        {
+            /* skip to offset */
+        }
     }
 
     VarRefDestroy(ref);

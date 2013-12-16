@@ -48,7 +48,7 @@ int getallifs(int, sa_family_t, struct lifreq **, int *, int64_t);
  * only be properly freed by passing it to `freeifaddrs'.
  */
 int
-getifaddrs(struct ifaddrs **ifap)
+solaris_getifaddrs(struct ifaddrs **ifap)
 {
     int        err;
     char        *cp;
@@ -71,7 +71,7 @@ getifaddrs(struct ifaddrs **ifap)
 }
 
 void
-freeifaddrs(struct ifaddrs *ifa)
+solaris_freeifaddrs(struct ifaddrs *ifa)
 {
     struct ifaddrs *curr;
 

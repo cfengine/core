@@ -20,7 +20,7 @@ libutils_la_SOURCES = \
 	bufferlist.c bufferlist.h \
 	logging.c logging.h logging_priv.h\
 	buffer.c buffer.h \
-    ip_address.c ip_address.h \
+	ip_address.c ip_address.h \
 	map.c map.h map_common.h \
 	array_map.c array_map_priv.h \
 	hash_map.c hash_map_priv.h \
@@ -35,8 +35,9 @@ libutils_la_SOURCES = \
 	mustache.c mustache.h \
 	cfversion.c cfversion.h \
 	unicode.c unicode.h \
-    hash.c hash.h \
-    queue.c queue.h
+	hash.c hash.h \
+	queue.c queue.h \
+	ring_buffer.c ring_buffer.h
 
 CLEANFILES = *.gcno *.gcda
 

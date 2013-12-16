@@ -1324,6 +1324,9 @@ StringSet *EvalContextStackPromisees(const EvalContext *ctx)
             }
             break;
 
+        case RVAL_TYPE_NOPROMISEE:
+            break;
+
         default:
             assert(false && "Canary: promisee not scalar or list");
         }

@@ -20,19 +20,11 @@
 # (COSL) may apply to this file if you as a licensee so wish it. See
 # included file COSL.txt.
 
-#######################################################
-#
-# MapList - transmute elements in a list
-#
-#######################################################
-
+#+begin_src cfengine3
 body common control
-
 {
-      bundlesequence  => { "example" };   
+      bundlesequence => { "example" };
 }
-
-#######################################################
 
 bundle common g
 {
@@ -57,3 +49,13 @@ bundle agent example
       "Transform: $(newlist1)";
       "Transform: $(newlist2)";
 }
+#+end_src
+###############################################################################
+#+begin_src example_output 3.6-
+2013-12-16T20:48:25+0200   notice: /default/example: R: Transform: Element (x)
+2013-12-16T20:48:25+0200   notice: /default/example: R: Transform: Element (y)
+2013-12-16T20:48:25+0200   notice: /default/example: R: Transform: Element (z)
+2013-12-16T20:48:25+0200   notice: /default/example: R: Transform: Element (a)
+2013-12-16T20:48:25+0200   notice: /default/example: R: Transform: Element (b)
+2013-12-16T20:48:25+0200   notice: /default/example: R: Transform: Element (c)
+#+end_src

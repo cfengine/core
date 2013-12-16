@@ -20,14 +20,13 @@
 # (COSL) may apply to this file if you as a licensee so wish it. See
 # included file COSL.txt.
 
-
+#+begin_src cfengine3
 body common control
 {
-      bundlesequence => { "example" };
+      bundlesequence => { "test" };
 }
 
-bundle agent example
-
+bundle agent test
 {
   vars:
 
@@ -37,6 +36,10 @@ bundle agent example
       "sum"  real => sum("series");
 
   reports:
-
       "Product result: $(prod) > $(sum)";
 }
+#+end_src
+###############################################################################
+#+begin_src example_output 3.6-
+2013-12-16T20:48:27+0200   notice: /default/test: R: Product result: 338.207100 > 19.800000
+#+end_src

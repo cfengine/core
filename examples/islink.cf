@@ -20,27 +20,27 @@
 # (COSL) may apply to this file if you as a licensee so wish it. See
 # included file COSL.txt.
 
-
+#+begin_src cfengine3
 body common control
-
 {
-      bundlesequence  => { "example" };
+      bundlesequence => { "example" };
 }
 
-###########################################################
-
 bundle agent example
-
-{     
+{
   classes:
 
-      "islnk" expression => islink("/tmp/link");
+      "islink" expression => islink("/tmp/link");
 
   reports:
 
-    islnk::
+    islink::
 
-      "link exists..and is a link";
+      "It's a link.";
 
 }
-
+#+end_src
+###############################################################################
+#+begin_src example_output 3.6-
+2013-12-16T20:48:08+0200   notice: /default/example: R: It's a link.
+#+end_src

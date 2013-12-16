@@ -20,30 +20,26 @@
 # (COSL) may apply to this file if you as a licensee so wish it. See
 # included file COSL.txt.
 
-#######################################################
-#
-# grp function to concat a list
-#
-#######################################################
-
+#+begin_src cfengine3
 body common control
-
 {
-      bundlesequence  => { "example" };   
+      bundlesequence => { "test" };
 }
 
-#######################################################
-
-bundle agent example
-
+bundle agent test
 {
   vars:
 
       "mylist" slist => { "One", "Two", "Three", "Four", "Five" };
-
       "sublist" slist => grep("T.*","mylist");
+      "empty_list" slist => grep("ive","mylist");
 
   reports:
       "Item: $(sublist)";
-
 }
+#+end_src
+###############################################################################
+#+begin_src example_output 3.6-
+2013-12-16T20:48:00+0200   notice: /default/test: R: Item: Two
+2013-12-16T20:48:00+0200   notice: /default/test: R: Item: Three
+#+end_src

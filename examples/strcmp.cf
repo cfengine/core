@@ -20,19 +20,14 @@
 # (COSL) may apply to this file if you as a licensee so wish it. See
 # included file COSL.txt.
 
-
-
+#+begin_src cfengine3
 body common control
-
 {
-      bundlesequence  => { "example" };
+      bundlesequence => { "example" };
 }
 
-###########################################################
-
 bundle agent example
-
-{     
+{
   classes:
 
       "same" expression => strcmp("test","test");
@@ -47,4 +42,8 @@ bundle agent example
 
       "Strings are not equal";
 }
-
+#+end_src
+###############################################################################
+#+begin_src example_output 3.6-
+2013-12-16T20:48:03+0200   notice: /default/example: R: Strings are equal
+#+end_src

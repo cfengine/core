@@ -20,29 +20,22 @@
 # (COSL) may apply to this file if you as a licensee so wish it. See
 # included file COSL.txt.
 
-#######################################################
-#
-# Count classes matching a regex
-#
-#######################################################
-
+#+begin_src cfengine3
 body common control
-
 {
-      bundlesequence  => { "test" };   
+      bundlesequence => { "example" };
 }
-
-#######################################################
 
 bundle agent example
-
 {
   vars:
-
-      "number" int => countclassesmatching("cf.*");
+      "num" int => countclassesmatching("cf.*");
 
   reports:
-
-      "Found $(number) classes matching cf.*";
-
+      "Found $(num) classes matching";
 }
+#+end_src
+###############################################################################
+#+begin_src example_output 3.6-
+2013-12-16T20:48:06+0200   notice: /default/example: R: Found 5 classes matching
+#+end_src

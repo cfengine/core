@@ -20,11 +20,11 @@
 # (COSL) may apply to this file if you as a licensee so wish it. See
 # included file COSL.txt.
 
+#+begin_src cfengine3
 body common control
 {
-      bundlesequence => {"yes"};
+      bundlesequence => { "yes" };
 }
-
 
 bundle agent yes
 {
@@ -42,3 +42,8 @@ bundle agent yes
       "Last = $(last1),$(last2),$(last3)";
 
 }
+#+end_src
+###############################################################################
+#+begin_src example_output 3.6-
+2013-12-16T20:48:27+0200   notice: /default/yes: R: Last = last1,last2,one:two:last2
+#+end_src

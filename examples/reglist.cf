@@ -20,34 +20,31 @@
 # (COSL) may apply to this file if you as a licensee so wish it. See
 # included file COSL.txt.
 
-
+#+begin_src cfengine3
 body common control
-
 {
-      bundlesequence  => { "example"  };
+      bundlesequence => { "example" };
 }
-
-###########################################
 
 bundle agent example
 {
   vars:
 
-      "userlist" slist => { "xyz", "mark", "jeang", "jonhenrik", "thomas", "eben" };
-
+      "nameservers" slist => {
+                               "128.39.89.10",
+                               "128.39.74.16",
+                               "192.168.1.103",
+                               "10.132.51.66"
+      };
   classes:
 
-      "ok" expression => reglist("@(userlist)","j.*");
-
+      "am_name_server" expression => reglist("@(nameservers)",escape("$(sys.ipv4[eth0])"));
   reports:
-
-    ok::
-
-      "Found in list";
-
-    !ok::
-
-      "Not found in list";
-
+    am_name_server::
+      "This host ($(sys.ipv4[eth0])) is currently set as a nameserver";
 }
-
+#+end_src
+###############################################################################
+#+begin_src example_output 3.6-
+2013-12-16T20:48:06+0200   notice: /default/example: R: This host (10.132.51.66) is currently set as a nameserver
+#+end_src

@@ -20,26 +20,21 @@
 # (COSL) may apply to this file if you as a licensee so wish it. See
 # included file COSL.txt.
 
-
-
+#+begin_src cfengine3
 body common control
-
 {
-      bundlesequence  => { "example" };
+      bundlesequence => { "example" };
 }
 
-###########################################################
-
 bundle agent example
-
-{     
+{
   vars:
 
       "my80" string => readtcp("research.iu.hio.no","80","GET /index.php HTTP/1.1$(const.r)$(const.n)Host: research.iu.hio.no$(const.r)$(const.n)$(const.r)$(const.n)",20);
 
   classes:
 
-      "server_ok" expression => regcmp(".*200 OK.*\n.*","$(my80)");
+      "server_ok" expression => regcmp("[^\n]*200 OK.*\n.*","$(my80)");
 
   reports:
 
@@ -51,4 +46,8 @@ bundle agent example
 
       "Server is not responding - got $(my80)";
 }
-
+#+end_src
+###############################################################################
+#+begin_src example_output 3.6-
+2013-12-16T20:48:20+0200   notice: /default/example: R: Server is alive
+#+end_src

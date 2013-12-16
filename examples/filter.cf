@@ -1,0 +1,80 @@
+#  Copyright (C) Cfengine AS
+
+#  This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+
+#  This program is free software; you can redistribute it and/or modify it
+#  under the terms of the GNU General Public License as published by the
+#  Free Software Foundation; version 3.
+
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
+
+# To the extent this program is licensed as part of the Enterprise
+# versions of Cfengine, the applicable Commercial Open Source License
+# (COSL) may apply to this file if you as a licensee so wish it. See
+# included file COSL.txt.
+
+#+begin_src cfengine3
+body common control
+{
+      bundlesequence => { "test" };
+}
+
+bundle agent test
+{
+  vars:
+      "test" slist => {
+                        1,2,3,
+                        "one", "two", "three",
+                        "long string",
+                        "one", "two", "three",
+      };
+
+      "test_grep" slist => filter("[0-9]", "test", "true", "false", 999);
+      "test_exact1" slist => filter("one", "test", "false", "false", 999);
+      "test_exact2" slist => filter(".", "test", "false", "false", 999);
+      "test_invert" slist => filter("[0-9]", "test", "true", "true", 999);
+      "test_max2" slist => filter(".*", "test", "true", "false", 2);
+      "test_max0" slist => filter(".*", "test", "true", "false", 0);
+      "grep" slist => grep("[0-9]", "test");
+
+  reports:
+      "The test list is $(test)";
+      "The grepped list is $(grep)";
+      "The filter-grepped list is $(test_grep)";
+      "The filter-exact list, looking for 'one' is $(test_exact1)";
+      "This line should not appear: $(test_exact2)";
+      "The filter-invert list, looking for non-digits, is $(test_invert)";
+      "The filter-bound list, matching at most 2 items, is $(test_max2)";
+      "This line should not appear: $(test_max0)";
+}
+#+end_src
+###############################################################################
+#+begin_src example_output 3.6-
+2013-12-16T20:48:11+0200   notice: /default/test: R: The test list is 1
+2013-12-16T20:48:11+0200   notice: /default/test: R: The test list is 2
+2013-12-16T20:48:11+0200   notice: /default/test: R: The test list is 3
+2013-12-16T20:48:11+0200   notice: /default/test: R: The test list is one
+2013-12-16T20:48:11+0200   notice: /default/test: R: The test list is two
+2013-12-16T20:48:11+0200   notice: /default/test: R: The test list is three
+2013-12-16T20:48:11+0200   notice: /default/test: R: The test list is long string
+2013-12-16T20:48:11+0200   notice: /default/test: R: The grepped list is 1
+2013-12-16T20:48:11+0200   notice: /default/test: R: The grepped list is 2
+2013-12-16T20:48:11+0200   notice: /default/test: R: The grepped list is 3
+2013-12-16T20:48:11+0200   notice: /default/test: R: The filter-grepped list is 1
+2013-12-16T20:48:11+0200   notice: /default/test: R: The filter-grepped list is 2
+2013-12-16T20:48:11+0200   notice: /default/test: R: The filter-grepped list is 3
+2013-12-16T20:48:11+0200   notice: /default/test: R: The filter-exact list, looking for 'one' is one
+2013-12-16T20:48:11+0200   notice: /default/test: R: The filter-invert list, looking for non-digits, is one
+2013-12-16T20:48:11+0200   notice: /default/test: R: The filter-invert list, looking for non-digits, is two
+2013-12-16T20:48:11+0200   notice: /default/test: R: The filter-invert list, looking for non-digits, is three
+2013-12-16T20:48:11+0200   notice: /default/test: R: The filter-invert list, looking for non-digits, is long string
+2013-12-16T20:48:11+0200   notice: /default/test: R: The filter-bound list, matching at most 2 items, is 1
+2013-12-16T20:48:11+0200   notice: /default/test: R: The filter-bound list, matching at most 2 items, is 2
+#+end_src

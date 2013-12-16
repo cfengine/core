@@ -1,0 +1,69 @@
+#  Copyright (C) Cfengine AS
+
+#  This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+
+#  This program is free software; you can redistribute it and/or modify it
+#  under the terms of the GNU General Public License as published by the
+#  Free Software Foundation; version 3.
+
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
+
+# To the extent this program is licensed as part of the Enterprise
+# versions of Cfengine, the applicable Commercial Open Source License
+# (COSL) may apply to this file if you as a licensee so wish it. See
+# included file COSL.txt.
+
+#+begin_src cfengine3
+body common control
+{
+      bundlesequence => { "example" };
+}
+
+bundle agent example
+{
+  vars:
+      "file" string => "$(sys.resolv)";
+  methods:
+      "fileinfo" usebundle => fileinfo("$(file)");
+}
+bundle agent fileinfo(f)
+{
+  vars:
+      "fields" slist => splitstring("size,gid,uid,ino,nlink,ctime,atime,mtime,mode,modeoct,permstr,permoct,type,devno,dev_minor,dev_major,basename,dirname,linktarget,linktarget_shallow", ",", 999);
+
+      "stat[$(f)][$(fields)]" string => filestat($(f), $(fields));
+
+  reports:
+      "$(this.bundle): file $(f) has $(fields) = $(stat[$(f)][$(fields)])";
+}
+#+end_src
+###############################################################################
+#+begin_src example_output 3.6-
+2013-12-16T20:48:25+0200   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /etc/resolv.conf has size = 45
+2013-12-16T20:48:25+0200   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /etc/resolv.conf has gid = 0
+2013-12-16T20:48:25+0200   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /etc/resolv.conf has uid = 0
+2013-12-16T20:48:25+0200   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /etc/resolv.conf has ino = 2884988
+2013-12-16T20:48:25+0200   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /etc/resolv.conf has nlink = 1
+2013-12-16T20:48:25+0200   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /etc/resolv.conf has ctime = 1370031523
+2013-12-16T20:48:25+0200   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /etc/resolv.conf has atime = 1387212799
+2013-12-16T20:48:25+0200   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /etc/resolv.conf has mtime = 1370031523
+2013-12-16T20:48:25+0200   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /etc/resolv.conf has mode = 33188
+2013-12-16T20:48:25+0200   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /etc/resolv.conf has modeoct = 100644
+2013-12-16T20:48:25+0200   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /etc/resolv.conf has permstr = -rw-r--r--
+2013-12-16T20:48:25+0200   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /etc/resolv.conf has permoct = 644
+2013-12-16T20:48:25+0200   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /etc/resolv.conf has type = regular file
+2013-12-16T20:48:25+0200   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /etc/resolv.conf has devno = 2049
+2013-12-16T20:48:25+0200   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /etc/resolv.conf has dev_minor = 1
+2013-12-16T20:48:25+0200   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /etc/resolv.conf has dev_major = 8
+2013-12-16T20:48:25+0200   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /etc/resolv.conf has basename = resolv.conf
+2013-12-16T20:48:25+0200   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /etc/resolv.conf has dirname = /etc
+2013-12-16T20:48:25+0200   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /etc/resolv.conf has linktarget = /etc/resolv.conf
+2013-12-16T20:48:25+0200   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /etc/resolv.conf has linktarget_shallow = /etc/resolv.conf
+#+end_src

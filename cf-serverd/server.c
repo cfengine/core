@@ -1122,11 +1122,11 @@ static int VerifyConnection(ServerConnectionState *conn, char buf[CF_BUFSIZE])
         "Allowing %s to connect without (re)checking ID\n", ip_assert);
     Log(LOG_LEVEL_VERBOSE,
         "Non-verified Host ID is %s\n", dns_assert);
-    strncpy(conn->hostname, dns_assert, CF_MAXVARSIZE);
+    strlcpy(conn->hostname, dns_assert, CF_MAXVARSIZE);
     Log(LOG_LEVEL_VERBOSE,
         "Non-verified User ID seems to be %s\n",
         username);
-    strncpy(conn->username, username, CF_MAXVARSIZE);
+    strlcpy(conn->username, username, CF_MAXVARSIZE);
 
 #ifdef __MINGW32__            /* NT uses security identifier instead of uid */
 

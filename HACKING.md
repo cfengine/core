@@ -214,13 +214,30 @@ It is extremely important to have automated tests for all code, and normally all
 covered by tests, though sometimes it can be hard to mock up the environment.
 
 There are two types of tests in CFEngine. *Unit tests* are generally preferable to *acceptance tests* because
-they are more targeted and take less time to run. All tests are run using *make check*.
+they are more targeted and take less time to run. Most tests can be run using *make check* (see Unsafe tests
+below).
 
 * *Unit tests*. Unit tests are a great way of testing some new module (header file). Ideally, the new functionality
 is written so that the environment can be easily injected and results readily verified.
 
 * *Acceptance tests*. These are tests that run *cf-agent* on a policy file that contains *test* and *check* bundles,
 i.e. it uses CFEngine to both make a change and check it. See also script tests/acceptance/testall.
+
+
+Unsafe tests
+------------
+
+Note that some acceptance tests are considered to be unsafe because they modify the system they are running on. One
+example is the tests for the "users" promise type, which does real manipulation of the user database on the system.
+Due to their potential to do damage to the host system, these tests are not run unless explicitly asked for.
+Normally, this is something you would want to do in a VM, so you can restore the OS to a pristine state afterwards.
+
+To run all tests, including the unsafe ones, you either need to logged in as root or have "sudo" configured to not
+ask for a password. Then run the following:
+
+  $ UNSAFE_TESTS=1 GAINROOT=sudo make check
+
+Again: DO NOT do this on your main computer! Always use a test machine, preferable in a VM.
 
 
 Emacs users

@@ -120,9 +120,10 @@ StringSet *StringSetFromString(const char *str, char delimiter)
     if (NULL != str)
     {
         char *copy = xstrdup(str);
+        char *stringp = copy;
         char *curr = NULL;
 
-        while ((curr = strsep(&copy, delimiters)))
+        while ((curr = strsep(&stringp, delimiters)))
         {
             StringSetAdd(set, xstrdup(curr));
         }

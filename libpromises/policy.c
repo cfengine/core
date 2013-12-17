@@ -2683,7 +2683,7 @@ void *PromiseGetConstraintAsRval(const Promise *pp, const char *lval, RvalType r
 
 /*****************************************************************************/
 
-void PromiseRecheckAllConstraints(EvalContext *ctx, const Promise *pp)
+void PromiseRecheckAllConstraints(const EvalContext *ctx, const Promise *pp)
 {
     static Item *EDIT_ANCHORS = NULL;
 

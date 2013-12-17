@@ -66,7 +66,8 @@ void ClassDestroy(Class *cls)
     {
         free(cls->ns);
         free(cls->name);
-        free(cls->tags);
+        StringSetDestroy(cls->tags);
+        free(cls);
     }
 }
 
@@ -84,6 +85,7 @@ void ClassTableDestroy(ClassTable *table)
     if (table)
     {
         RBTreeDestroy(table->classes);
+        free(table);
     }
 }
 

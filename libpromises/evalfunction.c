@@ -160,16 +160,6 @@ static FnCallResult FnReturnContext(bool result)
     return FnReturn(result ? "any" : "!any");
 }
 
-static FnCallResult FnReturnContextFalse(void)
-{
-    return FnReturnContext(false);
-}
-
-static FnCallResult FnReturnContextTrue(void)
-{
-    return FnReturnContext(true);
-}
-
 static FnCallResult FnFailure(void)
 {
     return (FnCallResult) { FNCALL_FAILURE };
@@ -283,11 +273,11 @@ static FnCallResult FnCallAnd(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
     {
         if (!IsDefinedClass(ctx, RlistScalarValue(arg), PromiseGetNamespace(fp->caller)))
         {
-            return FnReturnContextFalse();
+            return FnReturnContext(false);
         }
     }
 
-    return FnReturnContextTrue();
+    return FnReturnContext(true);
 }
 
 /*******************************************************************/
@@ -685,7 +675,7 @@ static FnCallResult FnCallClassMatch(EvalContext *ctx, FnCall *fp, Rlist *finala
             if (!strcmp(regex, expr) || StringMatchFull(regex, expr))
             {
                 free(expr);
-                return FnReturnContextTrue();
+                return FnReturnContext(true);
             }
 
             free(expr);
@@ -704,7 +694,7 @@ static FnCallResult FnCallClassMatch(EvalContext *ctx, FnCall *fp, Rlist *finala
             if (!strcmp(regex,expr) || StringMatchFull(regex, expr))
             {
                 free(expr);
-                return FnReturnContextTrue();
+                return FnReturnContext(true);
             }
 
             free(expr);
@@ -712,7 +702,7 @@ static FnCallResult FnCallClassMatch(EvalContext *ctx, FnCall *fp, Rlist *finala
         ClassTableIteratorDestroy(iter);
     }
 
-    return FnReturnContextFalse();
+    return FnReturnContext(false);
 }
 
 /*********************************************************************/
@@ -1318,13 +1308,13 @@ static FnCallResult FnCallReturnsZero(EvalContext *ctx, FnCall *fp, Rlist *final
     else if (shelltype == SHELL_TYPE_NONE)
     {
         Log(LOG_LEVEL_ERR, "returnszero '%s' does not have an absolute path", RlistScalarValue(finalargs));
-        return FnReturnContextFalse();
+        return FnReturnContext(false);
     }
 
     if (need_executable_check && !IsExecutable(CommandArg0(RlistScalarValue(finalargs))))
     {
         Log(LOG_LEVEL_ERR, "returnszero '%s' is assumed to be executable but isn't", RlistScalarValue(finalargs));
-        return FnReturnContextFalse();
+        return FnReturnContext(false);
     }
 
     snprintf(comm, CF_BUFSIZE, "%s", RlistScalarValue(finalargs));
@@ -1332,12 +1322,12 @@ static FnCallResult FnCallReturnsZero(EvalContext *ctx, FnCall *fp, Rlist *final
     if (ShellCommandReturnsZero(comm, shelltype))
     {
         Log(LOG_LEVEL_VERBOSE, "%s ran '%s' successfully and it returned zero", fp->name, RlistScalarValue(finalargs));
-        return FnReturnContextTrue();
+        return FnReturnContext(true);
     }
     else
     {
         Log(LOG_LEVEL_VERBOSE, "%s ran '%s' successfully and it did not return zero", fp->name, RlistScalarValue(finalargs));
-        return FnReturnContextFalse();
+        return FnReturnContext(false);
     }
 }
 
@@ -1429,7 +1419,7 @@ static FnCallResult FnCallUseModule(EvalContext *ctx, FnCall *fp, Rlist *finalar
         return FnFailure();
     }
 
-    return FnReturnContextTrue();
+    return FnReturnContext(true);
 }
 
 /*********************************************************************/
@@ -1593,11 +1583,11 @@ static FnCallResult FnCallRegList(EvalContext *ctx, FnCall *fp, Rlist *finalargs
 
         if (FullTextMatch(ctx, regex, RlistScalarValue(rp)))
         {
-            return FnReturnContextTrue();
+            return FnReturnContext(true);
         }
     }
 
-    return FnReturnContextFalse();
+    return FnReturnContext(false);
 }
 
 /*********************************************************************/
@@ -2577,7 +2567,7 @@ static FnCallResult FnCallFileStat(EvalContext *ctx, FnCall *fp, Rlist *finalarg
         {
             return FnFailure();
         }
-        return FnReturnContextFalse();
+        return FnReturnContext(false);
     }
 
     if (!strcmp(fp->name, "isexecutable"))
@@ -2598,7 +2588,7 @@ static FnCallResult FnCallFileStat(EvalContext *ctx, FnCall *fp, Rlist *finalarg
     }
     if (!strcmp(fp->name, "fileexists"))
     {
-        return FnReturnContextTrue();
+        return FnReturnContext(true);
     }
     if (!strcmp(fp->name, "filesize"))
     {
@@ -3451,18 +3441,18 @@ static FnCallResult FnCallIPRange(EvalContext *ctx, FnCall *fp, Rlist *finalargs
     {
         if (FuzzySetMatch(range, VIPADDRESS) == 0)
         {
-            return FnReturnContextTrue();
+            return FnReturnContext(true);
         }
         else
         {
             if (FuzzySetMatch(range, ip->name) == 0)
             {
-                return FnReturnContextTrue();
+                return FnReturnContext(true);
             }
         }
     }
 
-    return FnReturnContextFalse();
+    return FnReturnContext(false);
 }
 
 /*********************************************************************/
@@ -3502,20 +3492,20 @@ FnCallResult FnCallHostInNetgroup(EvalContext *ctx, FnCall *fp, Rlist *finalargs
         {
             Log(LOG_LEVEL_VERBOSE, "Matched '%s' in netgroup '%s'", VFQNAME, RlistScalarValue(finalargs));
             endnetgrent();
-            return FnReturnContextTrue();
+            return FnReturnContext(true);
         }
 
         if (strcmp(host, VFQNAME) == 0 || strcmp(host, VUQNAME) == 0)
         {
             Log(LOG_LEVEL_VERBOSE, "Matched '%s' in netgroup '%s'", host, RlistScalarValue(finalargs));
             endnetgrent();
-            return FnReturnContextTrue();
+            return FnReturnContext(true);
         }
     }
 
     endnetgrent();
 
-    return FnReturnContextFalse();
+    return FnReturnContext(false);
 }
 
 /*********************************************************************/
@@ -3707,7 +3697,7 @@ static FnCallResult FnCallRemoteClassesMatching(EvalContext *ctx, FnCall *fp, Rl
             RlistDestroy(classlist);
         }
 
-        return FnReturnContextTrue();
+        return FnReturnContext(true);
     }
 }
 
@@ -4038,7 +4028,7 @@ static FnCallResult FnCallRegExtract(EvalContext *ctx, FnCall *fp, Rlist *finala
 
     if (i == 0)
     {
-        return FnReturnContextFalse();
+        return FnReturnContext(false);
     }
 
     return FnReturnContext(ret);
@@ -4055,7 +4045,7 @@ static FnCallResult FnCallRegLine(EvalContext *ctx, FnCall *fp, Rlist *finalargs
 
     if ((fin = safe_fopen(argv1, "r")) == NULL)
     {
-        return FnReturnContextFalse();
+        return FnReturnContext(false);
     }
 
     for (;;)
@@ -4073,7 +4063,7 @@ static FnCallResult FnCallRegLine(EvalContext *ctx, FnCall *fp, Rlist *finalargs
             else /* feof */
             {
                 fclose(fin);
-                return FnReturnContextFalse();
+                return FnReturnContext(false);
             }
         }
 
@@ -4085,7 +4075,7 @@ static FnCallResult FnCallRegLine(EvalContext *ctx, FnCall *fp, Rlist *finalargs
         if (FullTextMatch(ctx, argv0, line))
         {
             fclose(fin);
-            return FnReturnContextTrue();
+            return FnReturnContext(true);
         }
     }
 }
@@ -4286,11 +4276,11 @@ static FnCallResult FnCallOr(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
     {
         if (IsDefinedClass(ctx, RlistScalarValue(arg), PromiseGetNamespace(fp->caller)))
         {
-            return FnReturnContextTrue();
+            return FnReturnContext(true);
         }
     }
 
-    return FnReturnContextFalse();
+    return FnReturnContext(false);
 }
 
 /*********************************************************************/
@@ -5022,11 +5012,11 @@ static FnCallResult FnCallFileSexist(EvalContext *ctx, FnCall *fp, Rlist *finala
     {
         if (stat(RlistScalarValue(rp), &sb) == -1)
         {
-            return FnReturnContextFalse();
+            return FnReturnContext(false);
         }
     }
 
-    return FnReturnContextTrue();
+    return FnReturnContext(true);
 }
 
 /*********************************************************************/
@@ -5187,15 +5177,15 @@ FnCallResult FnCallUserExists(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 
         if ((pw = getpwuid(uid)) == NULL)
         {
-            return FnReturnContextFalse();
+            return FnReturnContext(false);
         }
     }
     else if ((pw = getpwnam(arg)) == NULL)
     {
-        return FnReturnContextFalse();
+        return FnReturnContext(false);
     }
 
-    return FnReturnContextTrue();
+    return FnReturnContext(true);
 }
 
 /*********************************************************************/
@@ -5217,15 +5207,15 @@ FnCallResult FnCallGroupExists(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 
         if ((gr = getgrgid(gid)) == NULL)
         {
-            return FnReturnContextFalse();
+            return FnReturnContext(false);
         }
     }
     else if ((gr = getgrnam(arg)) == NULL)
     {
-        return FnReturnContextFalse();
+        return FnReturnContext(false);
     }
 
-    return FnReturnContextTrue();
+    return FnReturnContext(true);
 }
 
 #endif /* !defined(__MINGW32__) */

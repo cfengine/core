@@ -44,8 +44,9 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv);
 static const char *CF_PROMISES_SHORT_DESCRIPTION = "validate and analyze CFEngine policy code";
 
 static const char *CF_PROMISES_MANPAGE_LONG_DESCRIPTION = "cf-promises is a tool for checking CFEngine policy code. "
-        "It operates by first parsing policy code checing for syntax errors. Second, it validates the integrity of "
-        "policy consisting of multiple files. Third, it checks for semantic errors, e.g. specific attribute set rules. "
+        "It operates by first parsing policy code, checking for syntax errors. Second (and only if --full-check is "
+        "specified), it validates the integrity of policy consisting of multiple files. "
+        "Third, it checks for semantic errors, e.g. specific attribute set rules. "
         "Finally, cf-promises attempts to expose errors by partially evaluating the policy, resolving as many variable and "
         "classes promise statements as possible. At no point does cf-promises make any changes to the system.";
 
@@ -95,7 +96,7 @@ static const char *HINTS[] =
     "Generate reports about configuration and insert into CFDB",
     "Output the parsed policy. Possible values: 'none', 'cf', 'json'. Default is 'none'. (experimental)",
     "Output a document describing the available syntax elements of CFEngine. Possible values: 'none', 'json'. Default is 'none'.",
-    "Ensure full policy integrity checks",
+    "Ensure full policy integrity checks. A partial policy check implies ignore_missing_inputs.",
     "Pass comma-separated <warnings>|all to enable non-default warnings, or error=<warnings>|all",
     "Use legacy output format",
     "Enable colorized output. Possible values: 'always', 'auto', 'never'. If option is used, the default value is 'auto'",
@@ -113,6 +114,10 @@ int main(int argc, char *argv[])
     GenericAgentConfigApply(ctx, config);
 
     GenericAgentDiscoverContext(ctx, config);
+    if (!config->check_runnable)
+    {
+       config->ignore_missing_inputs = true;
+    }
     Policy *policy = GenericAgentLoadPolicy(ctx, config);
     if (!policy)
     {

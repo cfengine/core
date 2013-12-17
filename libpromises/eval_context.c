@@ -744,7 +744,7 @@ EvalContext *EvalContextNew(void)
     ctx->promises_done = PromiseSetNew();
     ctx->function_cache = RBTreeNew(NULL, NULL, NULL,
                                     NULL, NULL, NULL);
-    PromiseLoggingInit(ctx);
+    PromiseLoggingInit(ctx, 5);
 
     ctx->enterprise_state = EvalContextEnterpriseStateNew();
 
@@ -2138,7 +2138,9 @@ void cfPS(EvalContext *ctx, LogLevel level, PromiseResult status, const Promise 
     VLog(level, fmt, ap);
     va_end(ap);
 
-    const char *last_msg = PromiseLoggingLastMessage(ctx);
+    // TODO: the rest of this should go away soon
+    const RingBuffer *msgs = PromiseLoggingMessages(ctx);
+    const char *last_msg = RingBufferHead(msgs);
 
     /* Now complete the exits status classes and auditing */
 

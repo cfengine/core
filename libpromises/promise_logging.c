@@ -29,7 +29,7 @@
 #include <misc_lib.h>
 #include <string_lib.h>
 #include <eval_context.h>
-
+#include <ring_buffer.h>
 
 typedef struct
 {
@@ -37,7 +37,8 @@ typedef struct
     int promise_level;
 
     char *stack_path;
-    char *last_message;
+
+    RingBuffer *messages;
 } PromiseLoggingContext;
 
 static LogLevel AdjustLogLevel(LogLevel base, LogLevel adjust)
@@ -111,19 +112,10 @@ static const char *LogHook(LoggingPrivContext *pctx, const char *message)
 {
     PromiseLoggingContext *plctx = pctx->param;
 
-    if (plctx->promise_level)
+    if (plctx->promise_level > 0)
     {
-        free(plctx->last_message);
-        if (LEGACY_OUTPUT)
-        {
-            plctx->last_message = xstrdup(message);
-        }
-        else
-        {
-            plctx->last_message = StringConcatenate(3, plctx->stack_path, ": ", message);
-        }
-
-        return plctx->last_message;
+        RingBufferAppend(plctx->messages, xstrdup(message));
+        return StringConcatenate(3, plctx->stack_path, ": ", message);
     }
     else
     {
@@ -131,7 +123,7 @@ static const char *LogHook(LoggingPrivContext *pctx, const char *message)
     }
 }
 
-void PromiseLoggingInit(const EvalContext *eval_context)
+void PromiseLoggingInit(const EvalContext *eval_context, size_t max_messages)
 {
     LoggingPrivContext *pctx = LoggingPrivGetContext();
 
@@ -142,6 +134,7 @@ void PromiseLoggingInit(const EvalContext *eval_context)
 
     PromiseLoggingContext *plctx = xcalloc(1, sizeof(PromiseLoggingContext));
     plctx->eval_context = eval_context;
+    plctx->messages = RingBufferNew(max_messages, NULL, free);
 
     pctx = xcalloc(1, sizeof(LoggingPrivContext));
     pctx->param = plctx;
@@ -177,7 +170,7 @@ void PromiseLoggingPromiseEnter(const EvalContext *eval_context, const Promise *
     plctx->promise_level++;
     assert(plctx->promise_level == 1);
     plctx->stack_path = EvalContextStackPath(eval_context);
-
+    RingBufferClear(plctx->messages);
     LoggingPrivSetLevels(CalculateLogLevel(pp), CalculateReportLevel(pp));
 }
 
@@ -207,15 +200,13 @@ void PromiseLoggingPromiseFinish(const EvalContext *eval_context, const Promise 
 
     plctx->promise_level--;
     assert(plctx->promise_level == 0);
-    free(plctx->last_message);
-    plctx->last_message = NULL;
     free(plctx->stack_path);
     plctx->stack_path = NULL;
 
     LoggingPrivSetLevels(LogGetGlobalLevel(), LogGetGlobalLevel());
 }
 
-const char *PromiseLoggingLastMessage(const EvalContext *ctx)
+const RingBuffer *PromiseLoggingMessages(const EvalContext *ctx)
 {
     LoggingPrivContext *pctx = LoggingPrivGetContext();
 
@@ -231,7 +222,7 @@ const char *PromiseLoggingLastMessage(const EvalContext *ctx)
         ProgrammingError("Promise logging: Unable to finish promise, bound to EvalContext different from passed one");
     }
 
-    return plctx->last_message;
+    return plctx->messages;
 }
 
 void PromiseLoggingFinish(const EvalContext *eval_context)
@@ -255,8 +246,7 @@ void PromiseLoggingFinish(const EvalContext *eval_context)
         ProgrammingError("Promise logging: Unable to finish, promise is still active");
     }
 
-    assert(plctx->last_message == NULL);
-
+    RingBufferDestroy(plctx->messages);
     LoggingPrivSetContext(NULL);
 
     free(plctx);

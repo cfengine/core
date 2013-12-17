@@ -32,18 +32,19 @@
 
 #include <cf3.defs.h>
 #include <policy.h>
+#include <ring_buffer.h>
 
 /**
  * @brief Binds logging in current thread to EvalContext.
  */
-void PromiseLoggingInit(const EvalContext *ctx);
+void PromiseLoggingInit(const EvalContext *ctx, size_t max_messages);
 
 /**
  * @brief Calculates and sets logging context for the promise.
  */
 void PromiseLoggingPromiseEnter(const EvalContext *ctx, const Promise *pp);
 
-const char *PromiseLoggingLastMessage(const EvalContext *ctx);
+const RingBuffer *PromiseLoggingMessages(const EvalContext *ctx);
 
 /**
  * @brief Finishes processing the promise and looks up the last error message associated with it.

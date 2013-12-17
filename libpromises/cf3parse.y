@@ -396,9 +396,13 @@ promise_decl:          promise_line ';'
                            {
                               ParseError("Expected '->', got '%s'", yytext);
                            }
-                           else if (yychar == IDSYNTAX || yychar == ',')
+                           else if (yychar == IDSYNTAX)
                            {
                               ParseError("Expected attribute, got '%s'", yytext);
+                           }
+                           else if (yychar == ',')
+                           {
+                              ParseError("Expected attribute, got '%s' (comma after promiser is not allowed since 3.5.0)", yytext);
                            }
                            else
                            {

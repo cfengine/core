@@ -22,36 +22,22 @@
   included file COSL.txt.
 */
 
-#ifndef CFENGINE_EXEC_CONFIG_H
-#define CFENGINE_EXEC_CONFIG_H
+#ifndef CFENGINE_EXECD_CONFIG_H
+#define CFENGINE_EXECD_CONFIG_H
 
 #include <cf3.defs.h>
+#include <set.h>
 
 /* This struct is supposed to be immutable: don't update it,
    just destroy and create anew */
-typedef struct
+typedef struct ExecdConfig
 {
-    bool scheduled_run;
-    char *exec_command;
-    int agent_expireafter;
+    StringSet *schedule;
+    int splay_time;
+    char *log_facility;
+} ExecdConfig;
 
-    char *mail_server;
-    char *mail_from_address;
-    char *mail_to_address;
-    char *mail_subject;
-    int mail_max_lines;
-
-    /*
-     * Host information.
-     * Might change during policy reload, so copy is retained in each worker.
-     */
-    char *fq_name;
-    char *ip_address;
-    char *ip_addresses;
-} ExecConfig;
-
-ExecConfig *ExecConfigNew(bool scheduled_run, const EvalContext *ctx, const Policy *policy);
-ExecConfig *ExecConfigCopy(const ExecConfig *exec_config);
-void ExecConfigDestroy(ExecConfig *exec_config);
+ExecdConfig *ExecdConfigNew(const EvalContext *ctx, const Policy *policy);
+void ExecdConfigDestroy(ExecdConfig *exec_config);
 
 #endif

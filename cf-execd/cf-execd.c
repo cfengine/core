@@ -22,35 +22,22 @@
   included file COSL.txt.
 */
 
-#include <generic_agent.h>
-#include <cf-execd-runner.h>
+#include <cf-execd.h>
 
-#include <bootstrap.h>
-#include <known_dirs.h>
-#include <sysinfo.h>
-#include <eval_context.h>
-#include <promises.h>
-#include <vars.h>
+#include <cf-execd-runner.h>
 #include <item_lib.h>
-#include <conversion.h>
-#include <ornaments.h>
-#include <scope.h>
-#include <hashes.h>
-#include <unix.h>
-#include <string_lib.h>
-#include <signals.h>
-#include <locks.h>
-#include <exec_tools.h>
-#include <rlist.h>
-#include <processes_select.h>
+#include <known_dirs.h>
 #include <man.h>
+#include <ornaments.h>
+#include <exec_tools.h>
+#include <signals.h>
+#include <processes_select.h>
+#include <bootstrap.h>
+#include <sysinfo.h>
 #include <timeout.h>
-#include <unix_iface.h>
 #include <time_classes.h>
 
 #include <cf-windows-functions.h>
-
-#include <cf-execd.h>
 
 #define CF_EXEC_IFELAPSED 0
 #define CF_EXEC_EXPIREAFTER 1
@@ -61,12 +48,9 @@ static int WINSERVICE = true;
 
 static pthread_attr_t threads_attrs;
 
-/*******************************************************************/
-
 static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv);
 void ThisAgentInit(void);
-static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *config, ExecConfig *exec_config,
-                        time_t *last_policy_reload);
+static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *config, ExecdConfig *execd_config, ExecConfig *exec_config, time_t *last_policy_reload);
 #ifndef __MINGW32__
 static void Apoptosis(EvalContext *ctx);
 #endif
@@ -160,7 +144,8 @@ int main(int argc, char *argv[])
     ThisAgentInit();
 
     ExecConfig *exec_config = ExecConfigNew(!ONCE, ctx, policy);
-    SetFacility(exec_config->log_facility);
+    ExecdConfig *execd_config = ExecdConfigNew(ctx, policy);
+    SetFacility(execd_config->log_facility);
 
 #ifdef __MINGW32__
     if (WINSERVICE)
@@ -170,10 +155,11 @@ int main(int argc, char *argv[])
     else
 #endif /* __MINGW32__ */
     {
-        StartServer(ctx, policy, config, exec_config);
+        StartServer(ctx, policy, config, execd_config, exec_config);
     }
 
     ExecConfigDestroy(exec_config);
+    ExecdConfigDestroy(execd_config);
     GenericAgentConfigDestroy(config);
 
     return 0;
@@ -331,7 +317,7 @@ void ThisAgentInit(void)
 /*****************************************************************************/
 
 /* Might be called back from NovaWin_StartExecService */
-void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, ExecConfig *exec_config)
+void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, ExecdConfig *execd_config, ExecConfig *exec_config)
 {
 #if !defined(__MINGW32__)
     time_t now = time(NULL);
@@ -394,10 +380,10 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, E
     {
         while (!IsPendingTermination())
         {
-            if (ScheduleRun(ctx, &policy, config, exec_config, &last_policy_reload))
+            if (ScheduleRun(ctx, &policy, config, execd_config, exec_config, &last_policy_reload))
             {
-                Log(LOG_LEVEL_VERBOSE, "Sleeping for splaytime %d seconds", exec_config->splay_time);
-                sleep(exec_config->splay_time);
+                Log(LOG_LEVEL_VERBOSE, "Sleeping for splaytime %d seconds", execd_config->splay_time);
+                sleep(execd_config->splay_time);
 
                 if (!LocalExecInThread(exec_config))
                 {
@@ -523,8 +509,7 @@ static Reload CheckNewPromises(const GenericAgentConfig *config, time_t *last_po
     return RELOAD_ENVIRONMENT;
 }
 
-static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *config, ExecConfig *exec_config,
-                        time_t *last_policy_reload)
+static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *config, ExecdConfig *execd_config, ExecConfig *exec_config, time_t *last_policy_reload)
 {
     Log(LOG_LEVEL_VERBOSE, "Sleeping for pulse time %d seconds...", CFPULSETIME);
     sleep(CFPULSETIME);         /* 1 Minute resolution is enough */
@@ -564,9 +549,12 @@ static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *c
 
         *policy = GenericAgentLoadPolicy(ctx, config);
         ExecConfigDestroy(exec_config);
-        exec_config = ExecConfigNew(!ONCE, ctx, *policy);
+        ExecdConfigDestroy(execd_config);
 
-        SetFacility(exec_config->log_facility);
+        exec_config = ExecConfigNew(!ONCE, ctx, *policy);
+        execd_config = ExecdConfigNew(ctx, *policy);
+
+        SetFacility(execd_config->log_facility);
     }
     else
     {
@@ -581,7 +569,7 @@ static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *c
     }
 
     {
-        StringSetIterator it = StringSetIteratorInit(exec_config->schedule);
+        StringSetIterator it = StringSetIteratorInit(execd_config->schedule);
         const char *time_context = NULL;
         while ((time_context = StringSetIteratorNext(&it)))
         {

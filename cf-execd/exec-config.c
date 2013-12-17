@@ -52,13 +52,6 @@ static char *GetIpAddresses(const EvalContext *ctx)
     return xstrdup(ipbuf);
 }
 
-static double GetSplay(void)
-{
-    char splay[CF_BUFSIZE];
-    snprintf(splay, CF_BUFSIZE, "%s+%s+%ju", VFQNAME, VIPADDRESS, (uintmax_t)getuid());
-    return ((double) StringHash(splay, 0, CF_HASHTABLESIZE)) / CF_HASHTABLESIZE;
-}
-
 ExecConfig *ExecConfigNew(bool scheduled_run, const EvalContext *ctx, const Policy *policy)
 {
     ExecConfig *exec_config = xcalloc(1, sizeof(ExecConfig));
@@ -72,22 +65,6 @@ ExecConfig *ExecConfigNew(bool scheduled_run, const EvalContext *ctx, const Poli
     exec_config->mail_to_address = xstrdup("");
     exec_config->mail_subject = xstrdup("");
     exec_config->mail_max_lines = 30;
-
-    exec_config->schedule = StringSetNew();
-    StringSetAdd(exec_config->schedule, xstrdup("Min00"));
-    StringSetAdd(exec_config->schedule, xstrdup("Min05"));
-    StringSetAdd(exec_config->schedule, xstrdup("Min10"));
-    StringSetAdd(exec_config->schedule, xstrdup("Min15"));
-    StringSetAdd(exec_config->schedule, xstrdup("Min20"));
-    StringSetAdd(exec_config->schedule, xstrdup("Min25"));
-    StringSetAdd(exec_config->schedule, xstrdup("Min30"));
-    StringSetAdd(exec_config->schedule, xstrdup("Min35"));
-    StringSetAdd(exec_config->schedule, xstrdup("Min40"));
-    StringSetAdd(exec_config->schedule, xstrdup("Min45"));
-    StringSetAdd(exec_config->schedule, xstrdup("Min50"));
-    StringSetAdd(exec_config->schedule, xstrdup("Min55"));
-    exec_config->splay_time = 0;
-    exec_config->log_facility = xstrdup("LOG_USER");
 
     exec_config->fq_name = xstrdup(VFQNAME);
     exec_config->ip_address = xstrdup(VIPADDRESS);
@@ -153,48 +130,15 @@ ExecConfig *ExecConfigNew(bool scheduled_run, const EvalContext *ctx, const Poli
                 exec_config->agent_expireafter = IntFromString(retval.item);
                 Log(LOG_LEVEL_DEBUG, "agent_expireafter %d", exec_config->agent_expireafter);
             }
-            else if (strcmp(cp->lval, CFEX_CONTROLBODY[EXEC_CONTROL_EXECUTORFACILITY].lval) == 0)
-            {
-                exec_config->log_facility = xstrdup(retval.item);
-                Log(LOG_LEVEL_DEBUG, "executorfacility '%s'", exec_config->log_facility);
-            }
             else if (strcmp(cp->lval, CFEX_CONTROLBODY[EXEC_CONTROL_MAILMAXLINES].lval) == 0)
             {
                 exec_config->mail_max_lines = IntFromString(retval.item);
                 Log(LOG_LEVEL_DEBUG, "maxlines %d", exec_config->mail_max_lines);
             }
-            else if (strcmp(cp->lval, CFEX_CONTROLBODY[EXEC_CONTROL_SPLAYTIME].lval) == 0)
-            {
-                int time = IntFromString(RvalScalarValue(retval));
-                exec_config->splay_time = (int) (time * SECONDS_PER_MINUTE * GetSplay());
-            }
-            else if (strcmp(cp->lval, CFEX_CONTROLBODY[EXEC_CONTROL_SCHEDULE].lval) == 0)
-            {
-                Log(LOG_LEVEL_DEBUG, "Loading user-defined schedule...");
-                StringSetClear(exec_config->schedule);
-
-                for (const Rlist *rp = retval.item; rp; rp = rp->next)
-                {
-                    StringSetAdd(exec_config->schedule, xstrdup(RlistScalarValue(rp)));
-                    Log(LOG_LEVEL_DEBUG, "Adding '%s'", RlistScalarValue(rp));
-                }
-            }
         }
     }
 
     return exec_config;
-}
-
-static StringSet *CopySchedule(StringSet *schedule)
-{
-    StringSet *s = StringSetNew();
-    SetIterator i = StringSetIteratorInit(schedule);
-    char *class_;
-    while ((class_ = StringSetIteratorNext(&i)))
-    {
-        StringSetAdd(s, xstrdup(class_));
-    }
-    return s;
 }
 
 ExecConfig *ExecConfigCopy(const ExecConfig *config)
@@ -209,9 +153,6 @@ ExecConfig *ExecConfigCopy(const ExecConfig *config)
     copy->mail_to_address = xstrdup(config->mail_to_address);
     copy->mail_subject = xstrdup(config->mail_subject);
     copy->mail_max_lines = config->mail_max_lines;
-    copy->schedule = CopySchedule(config->schedule);
-    copy->splay_time = config->splay_time;
-    copy->log_facility = xstrdup(config->log_facility);
     copy->fq_name = xstrdup(config->fq_name);
     copy->ip_address = xstrdup(config->ip_address);
     copy->ip_addresses = xstrdup(config->ip_addresses);
@@ -228,12 +169,9 @@ void ExecConfigDestroy(ExecConfig *exec_config)
         free(exec_config->mail_from_address);
         free(exec_config->mail_to_address);
         free(exec_config->mail_subject);
-        free(exec_config->log_facility);
         free(exec_config->fq_name);
         free(exec_config->ip_address);
         free(exec_config->ip_addresses);
-
-        StringSetDestroy(exec_config->schedule);
 
         free(exec_config);
     }

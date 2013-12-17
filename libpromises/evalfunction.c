@@ -4466,7 +4466,7 @@ static FnCallResult FnCallLaterThan(EvalContext *ctx, FnCall *fp, Rlist *finalar
     struct tm tmv = FnArgsToTm(finalargs);
     time_t cftime = mktime(&tmv);
 
-    if ((cftime = mktime(&tmv)) == -1)
+    if (cftime == -1)
     {
         Log(LOG_LEVEL_INFO, "Illegal time value");
     }

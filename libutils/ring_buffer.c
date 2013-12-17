@@ -81,6 +81,23 @@ bool RingBufferIsFull(const RingBuffer *buf)
     return buf->len == buf->capacity;
 }
 
+const void *RingBufferHead(const RingBuffer *buf)
+{
+    if (RingBufferLength(buf) == 0)
+    {
+        return NULL;
+    }
+
+    if (buf->end == 0)
+    {
+        return buf->data[buf->capacity - 1];
+    }
+    else
+    {
+        return buf->data[buf->end - 1];
+    }
+}
+
 RingBufferIterator *RingBufferIteratorNew(const RingBuffer *buf)
 {
     RingBufferIterator *iter = xmalloc(sizeof(RingBufferIterator));
@@ -116,7 +133,12 @@ const void *RingBufferIteratorNext(RingBufferIterator *iter)
         return NULL;
     }
 
-    size_t offset = (iter->buf->end + iter->num_read) % iter->buf->capacity;
+    size_t offset = iter->num_read;
+    if (RingBufferIsFull(iter->buf))
+    {
+        offset = (iter->buf->end + iter->num_read) % iter->buf->capacity;
+    }
+
     const void *data = iter->buf->data[offset];
     iter->num_read++;
 

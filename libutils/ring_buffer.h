@@ -14,7 +14,8 @@ void RingBufferClear(RingBuffer *buf);
 
 size_t RingBufferLength(const RingBuffer *buf);
 bool RingBufferIsFull(const RingBuffer *buf);
-
+const void *RingBufferHead(const RingBuffer *buf);
+const void *RingBufferTail(const RingBuffer *buf);
 
 RingBufferIterator *RingBufferIteratorNew(const RingBuffer *buf);
 void RingBufferIteratorDestroy(RingBufferIterator *iter);

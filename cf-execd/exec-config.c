@@ -37,6 +37,7 @@ static const int THREE_HOURS = 3 * 60 * 60;
 
 static char *GetIpAddresses(const EvalContext *ctx)
 {
+    /* FIXME: correctly handle cases with a lot of IPs assigned to a host */
     char ipbuf[CF_MAXVARSIZE] = "";
     for (Item *iptr = EvalContextGetIpAddresses(ctx); iptr != NULL; iptr = iptr->next)
     {
@@ -89,6 +90,7 @@ ExecConfig *ExecConfigNew(bool scheduled_run, const EvalContext *ctx, const Poli
             Rval retval;
             if (!EvalContextVariableGet(ctx, ref, &retval, NULL))
             {
+                /* FIXME: figure out whether this is reachable */
                 // TODO: should've been checked before this point. change to programming error
                 Log(LOG_LEVEL_ERR, "Unknown lval '%s' in exec control body", cp->lval);
                 VarRefDestroy(ref);

@@ -138,14 +138,14 @@ int FnNumArgs(const FnCallType *call_type)
 /*
  * Return succesful FnCallResult with copy of str retained.
  */
-static FnCallResult FnSuccess(const char *str)
+static FnCallResult FnReturn(const char *str)
 {
     return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(str), RVAL_TYPE_SCALAR } };
 }
 
-static FnCallResult FnSuccessF(const char *fmt, ...) FUNC_ATTR_PRINTF(1, 2);
+static FnCallResult FnReturnF(const char *fmt, ...) FUNC_ATTR_PRINTF(1, 2);
 
-static FnCallResult FnSuccessF(const char *fmt, ...)
+static FnCallResult FnReturnF(const char *fmt, ...)
 {
     va_list ap;
     va_start(ap, fmt);
@@ -155,19 +155,19 @@ static FnCallResult FnSuccessF(const char *fmt, ...)
     return (FnCallResult) { FNCALL_SUCCESS, { buffer, RVAL_TYPE_SCALAR } };
 }
 
-static FnCallResult FnSuccessBool(bool result)
+static FnCallResult FnReturnContext(bool result)
 {
-    return FnSuccess(result ? "any" : "!any");
+    return FnReturn(result ? "any" : "!any");
 }
 
-static FnCallResult FnSuccessFalse(void)
+static FnCallResult FnReturnContextFalse(void)
 {
-    return FnSuccessBool(false);
+    return FnReturnContext(false);
 }
 
-static FnCallResult FnSuccessTrue(void)
+static FnCallResult FnReturnContextTrue(void)
 {
-    return FnSuccessBool(true);
+    return FnReturnContext(true);
 }
 
 static FnCallResult FnFailure(void)
@@ -283,11 +283,11 @@ static FnCallResult FnCallAnd(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
     {
         if (!IsDefinedClass(ctx, RlistScalarValue(arg), PromiseGetNamespace(fp->caller)))
         {
-            return FnSuccessFalse();
+            return FnReturnContextFalse();
         }
     }
 
-    return FnSuccessTrue();
+    return FnReturnContextTrue();
 }
 
 /*******************************************************************/
@@ -396,7 +396,7 @@ static FnCallResult FnCallRandomInt(EvalContext *ctx, FnCall *fp, Rlist *finalar
     range = fabs(to - from);
     result = from + (int) (drand48() * (double) range);
 
-    return FnSuccessF("%d", result);
+    return FnReturnF("%d", result);
 }
 
 /*********************************************************************/
@@ -415,7 +415,7 @@ static FnCallResult FnCallGetEnv(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
         snprintf(buffer, CF_BUFSIZE - 1, ctrlstr, getenv(name));
     }
 
-    return FnSuccess(buffer);
+    return FnReturn(buffer);
 }
 
 /*********************************************************************/
@@ -476,7 +476,7 @@ static FnCallResult FnCallEscape(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 
     EscapeSpecialChars(name, buffer, CF_BUFSIZE - 1, "", "");
 
-    return FnSuccess(buffer);
+    return FnReturn(buffer);
 }
 
 /*********************************************************************/
@@ -488,13 +488,13 @@ static FnCallResult FnCallHost2IP(EvalContext *ctx, FnCall *fp, Rlist *finalargs
 
     if (Hostname2IPString(ipaddr, name, sizeof(ipaddr)) != -1)
     {
-        return FnSuccess(ipaddr);
+        return FnReturn(ipaddr);
     }
     else
     {
         /* Retain legacy behaviour,
            return hostname in case resolution fails. */
-        return FnSuccess(name);
+        return FnReturn(name);
     }
 
 }
@@ -508,13 +508,13 @@ static FnCallResult FnCallIP2Host(EvalContext *ctx, FnCall *fp, Rlist *finalargs
 
     if (IPString2Hostname(hostname, ip, sizeof(hostname)) != -1)
     {
-        return FnSuccess(hostname);
+        return FnReturn(hostname);
     }
     else
     {
         /* Retain legacy behaviour,
            return ip address in case resolution fails. */
-        return FnSuccess(ip);
+        return FnReturn(ip);
     }
 }
 
@@ -541,7 +541,7 @@ static FnCallResult FnCallGetUid(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
     }
     else
     {
-        return FnSuccessF("%ju", (uintmax_t)pw->pw_uid);
+        return FnReturnF("%ju", (uintmax_t)pw->pw_uid);
     }
 }
 
@@ -570,7 +570,7 @@ static FnCallResult FnCallGetGid(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
     }
     else
     {
-        return FnSuccessF("%ju", (uintmax_t)gr->gr_gid);
+        return FnReturnF("%ju", (uintmax_t)gr->gr_gid);
     }
 }
 
@@ -605,7 +605,7 @@ static FnCallResult FnCallHandlerHash(EvalContext *ctx, FnCall *fp, Rlist *final
 
     snprintf(buffer, CF_BUFSIZE - 1, "%s",
              HashPrintSafe(type, true, digest, hashbuffer));
-    return FnSuccess(SkipHashType(buffer));
+    return FnReturn(SkipHashType(buffer));
 }
 
 /*********************************************************************/
@@ -633,7 +633,7 @@ static FnCallResult FnCallHashMatch(EvalContext *ctx, FnCall *fp, Rlist *finalar
              HashPrintSafe(type, true, digest, hashbuffer));
     Log(LOG_LEVEL_VERBOSE, "File '%s' hashes to '%s', compare to '%s'", string, buffer, compare);
 
-    return FnSuccessBool(strcmp(buffer + 4, compare) == 0);
+    return FnReturnContext(strcmp(buffer + 4, compare) == 0);
 }
 
 /*********************************************************************/
@@ -666,7 +666,7 @@ static FnCallResult FnCallConcat(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
         }
     }
 
-    return FnSuccess(result);
+    return FnReturn(result);
 }
 
 /*********************************************************************/
@@ -685,7 +685,7 @@ static FnCallResult FnCallClassMatch(EvalContext *ctx, FnCall *fp, Rlist *finala
             if (!strcmp(regex, expr) || StringMatchFull(regex, expr))
             {
                 free(expr);
-                return FnSuccessTrue();
+                return FnReturnContextTrue();
             }
 
             free(expr);
@@ -704,7 +704,7 @@ static FnCallResult FnCallClassMatch(EvalContext *ctx, FnCall *fp, Rlist *finala
             if (!strcmp(regex,expr) || StringMatchFull(regex, expr))
             {
                 free(expr);
-                return FnSuccessTrue();
+                return FnReturnContextTrue();
             }
 
             free(expr);
@@ -712,7 +712,7 @@ static FnCallResult FnCallClassMatch(EvalContext *ctx, FnCall *fp, Rlist *finala
         ClassTableIteratorDestroy(iter);
     }
 
-    return FnSuccessFalse();
+    return FnReturnContextFalse();
 }
 
 /*********************************************************************/
@@ -752,12 +752,12 @@ static FnCallResult FnCallIfElse(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
         {
             /* If the evaluation returned true in the current context,
              * return the second of the two arguments. */
-            return FnSuccess(RlistScalarValue(arg->next));
+            return FnReturn(RlistScalarValue(arg->next));
         }
     }
 
     /* If we get here, we've reached the last argument (arg->next is NULL). */
-    return FnSuccess(RlistScalarValue(arg));
+    return FnReturn(RlistScalarValue(arg));
 }
 
 /*********************************************************************/
@@ -802,7 +802,7 @@ static FnCallResult FnCallCountClassesMatching(EvalContext *ctx, FnCall *fp, Rli
         ClassTableIteratorDestroy(iter);
     }
 
-    return FnSuccessF("%u", count);
+    return FnReturnF("%u", count);
 }
 
 /*********************************************************************/
@@ -1166,7 +1166,7 @@ static FnCallResult FnCallCanonify(EvalContext *ctx, FnCall *fp, Rlist *finalarg
         snprintf(buf, CF_BUFSIZE, "%s", string);
     }
 
-    return FnSuccess(CanonifyName(buf));
+    return FnReturn(CanonifyName(buf));
 }
 
 /*********************************************************************/
@@ -1233,7 +1233,7 @@ static FnCallResult FnCallTextXform(EvalContext *ctx, FnCall *fp, Rlist *finalar
         return FnFailure();
     }
 
-    return FnSuccess(buf);
+    return FnReturn(buf);
 }
 
 /*********************************************************************/
@@ -1288,7 +1288,7 @@ static FnCallResult FnCallClassify(EvalContext *ctx, FnCall *fp, Rlist *finalarg
 {
     bool is_defined = IsDefinedClass(ctx, CanonifyName(RlistScalarValue(finalargs)), PromiseGetNamespace(fp->caller));
 
-    return FnSuccessBool(is_defined);
+    return FnReturnContext(is_defined);
 }
 
 /*********************************************************************/
@@ -1318,13 +1318,13 @@ static FnCallResult FnCallReturnsZero(EvalContext *ctx, FnCall *fp, Rlist *final
     else if (shelltype == SHELL_TYPE_NONE)
     {
         Log(LOG_LEVEL_ERR, "returnszero '%s' does not have an absolute path", RlistScalarValue(finalargs));
-        return FnSuccessFalse();
+        return FnReturnContextFalse();
     }
 
     if (need_executable_check && !IsExecutable(CommandArg0(RlistScalarValue(finalargs))))
     {
         Log(LOG_LEVEL_ERR, "returnszero '%s' is assumed to be executable but isn't", RlistScalarValue(finalargs));
-        return FnSuccessFalse();
+        return FnReturnContextFalse();
     }
 
     snprintf(comm, CF_BUFSIZE, "%s", RlistScalarValue(finalargs));
@@ -1332,12 +1332,12 @@ static FnCallResult FnCallReturnsZero(EvalContext *ctx, FnCall *fp, Rlist *final
     if (ShellCommandReturnsZero(comm, shelltype))
     {
         Log(LOG_LEVEL_VERBOSE, "%s ran '%s' successfully and it returned zero", fp->name, RlistScalarValue(finalargs));
-        return FnSuccessTrue();
+        return FnReturnContextTrue();
     }
     else
     {
         Log(LOG_LEVEL_VERBOSE, "%s ran '%s' successfully and it did not return zero", fp->name, RlistScalarValue(finalargs));
-        return FnSuccessFalse();
+        return FnReturnContextFalse();
     }
 }
 
@@ -1379,7 +1379,7 @@ static FnCallResult FnCallExecResult(EvalContext *ctx, FnCall *fp, Rlist *finala
     if (GetExecOutput(RlistScalarValue(finalargs), buffer, shelltype))
     {
         Log(LOG_LEVEL_VERBOSE, "%s ran '%s' successfully", fp->name, RlistScalarValue(finalargs));
-        return FnSuccess(buffer);
+        return FnReturn(buffer);
     }
     else
     {
@@ -1429,7 +1429,7 @@ static FnCallResult FnCallUseModule(EvalContext *ctx, FnCall *fp, Rlist *finalar
         return FnFailure();
     }
 
-    return FnSuccessTrue();
+    return FnReturnContextTrue();
 }
 
 /*********************************************************************/
@@ -1458,7 +1458,7 @@ static FnCallResult FnCallSplayClass(EvalContext *ctx, FnCall *fp, Rlist *finala
         snprintf(class, CF_MAXVARSIZE, "Min%02d_%02d.Hr%02d", slot * 5, ((slot + 1) * 5) % 60, hour);
     }
 
-    return FnSuccessBool(IsDefinedClass(ctx, class, PromiseGetNamespace(fp->caller)));
+    return FnReturnContext(IsDefinedClass(ctx, class, PromiseGetNamespace(fp->caller)));
 }
 
 /*********************************************************************/
@@ -1546,7 +1546,7 @@ static FnCallResult FnCallReadTcp(EvalContext *ctx, FnCall *fp, Rlist *finalargs
     cf_closesocket(ConnectionInfoSocket(conn->conn_info));
     DeleteAgentConn(conn, false);
 
-    return FnSuccess(buffer);
+    return FnReturn(buffer);
 }
 
 /*********************************************************************/
@@ -1593,11 +1593,11 @@ static FnCallResult FnCallRegList(EvalContext *ctx, FnCall *fp, Rlist *finalargs
 
         if (FullTextMatch(ctx, regex, RlistScalarValue(rp)))
         {
-            return FnSuccessTrue();
+            return FnReturnContextTrue();
         }
     }
 
-    return FnSuccessFalse();
+    return FnReturnContextFalse();
 }
 
 /*********************************************************************/
@@ -1622,7 +1622,7 @@ static FnCallResult FnCallRegArray(EvalContext *ctx, FnCall *fp, Rlist *finalarg
     }
     VariableTableIteratorDestroy(iter);
 
-    return FnSuccessBool(found);
+    return FnReturnContext(found);
 }
 
 
@@ -1827,7 +1827,7 @@ static FnCallResult FnCallSum(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
         }
     }
 
-    return FnSuccessF("%lf", sum);
+    return FnReturnF("%lf", sum);
 }
 
 /*********************************************************************/
@@ -1868,7 +1868,7 @@ static FnCallResult FnCallProduct(EvalContext *ctx, FnCall *fp, Rlist *finalargs
         }
     }
 
-    return FnSuccessF("%lf", product);
+    return FnReturnF("%lf", product);
 }
 
 /*********************************************************************/
@@ -2002,7 +2002,7 @@ static FnCallResult FnCallGetFields(EvalContext *ctx, FnCall *fp, Rlist *finalar
 
     fclose(fin);
 
-    return FnSuccessF("%d", lcount);
+    return FnReturnF("%d", lcount);
 }
 
 /*********************************************************************/
@@ -2020,7 +2020,7 @@ static FnCallResult FnCallCountLinesMatching(EvalContext *ctx, FnCall *fp, Rlist
     if ((fin = safe_fopen(filename, "r")) == NULL)
     {
         Log(LOG_LEVEL_VERBOSE, "File '%s' could not be read in countlinesmatching(). (fopen: %s)", filename, GetErrorStr());
-        return FnSuccess("0");
+        return FnReturn("0");
     }
 
     for (;;)
@@ -2054,7 +2054,7 @@ static FnCallResult FnCallCountLinesMatching(EvalContext *ctx, FnCall *fp, Rlist
 
     fclose(fin);
 
-    return FnSuccessF("%d", lcount);
+    return FnReturnF("%d", lcount);
 }
 
 /*********************************************************************/
@@ -2372,7 +2372,7 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx, FnCall *fp, Rlist *fin
 
     if (THIS_AGENT_TYPE != AGENT_TYPE_AGENT)
     {
-        return FnSuccessF("%d", count);
+        return FnReturnF("%d", count);
     }
 
     Policy *select_server_policy = PolicyNew();
@@ -2461,7 +2461,7 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx, FnCall *fp, Rlist *fin
 
 /* Return the number of lines in array */
 
-    return FnSuccessF("%d", count);
+    return FnReturnF("%d", count);
 }
 
 
@@ -2518,7 +2518,7 @@ static FnCallResult FnCallIsNewerThan(EvalContext *ctx, FnCall *fp, Rlist *final
         return FnFailure();
     }
 
-    return FnSuccessBool(frombuf.st_mtime > tobuf.st_mtime);
+    return FnReturnContext(frombuf.st_mtime > tobuf.st_mtime);
 }
 
 /*********************************************************************/
@@ -2539,7 +2539,7 @@ static FnCallResult FnCallIsAccessedBefore(EvalContext *ctx, FnCall *fp, Rlist *
         return FnFailure();
     }
 
-    return FnSuccessBool(frombuf.st_atime < tobuf.st_atime);
+    return FnReturnContext(frombuf.st_atime < tobuf.st_atime);
 }
 
 /*********************************************************************/
@@ -2559,7 +2559,7 @@ static FnCallResult FnCallIsChangedBefore(EvalContext *ctx, FnCall *fp, Rlist *f
         return FnFailure();
     }
 
-    return FnSuccessBool(frombuf.st_ctime > tobuf.st_ctime);
+    return FnReturnContext(frombuf.st_ctime > tobuf.st_ctime);
 }
 
 /*********************************************************************/
@@ -2577,32 +2577,32 @@ static FnCallResult FnCallFileStat(EvalContext *ctx, FnCall *fp, Rlist *finalarg
         {
             return FnFailure();
         }
-        return FnSuccessFalse();
+        return FnReturnContextFalse();
     }
 
     if (!strcmp(fp->name, "isexecutable"))
     {
-        return FnSuccessBool(IsExecutable(path));
+        return FnReturnContext(IsExecutable(path));
     }
     if (!strcmp(fp->name, "isdir"))
     {
-        return FnSuccessBool(S_ISDIR(statbuf.st_mode));
+        return FnReturnContext(S_ISDIR(statbuf.st_mode));
     }
     if (!strcmp(fp->name, "islink"))
     {
-        return FnSuccessBool(S_ISLNK(statbuf.st_mode));
+        return FnReturnContext(S_ISLNK(statbuf.st_mode));
     }
     if (!strcmp(fp->name, "isplain"))
     {
-        return FnSuccessBool(S_ISREG(statbuf.st_mode));
+        return FnReturnContext(S_ISREG(statbuf.st_mode));
     }
     if (!strcmp(fp->name, "fileexists"))
     {
-        return FnSuccessTrue();
+        return FnReturnContextTrue();
     }
     if (!strcmp(fp->name, "filesize"))
     {
-        return FnSuccessF("%jd", (uintmax_t) statbuf.st_size);
+        return FnReturnF("%jd", (uintmax_t) statbuf.st_size);
     }
 
     ProgrammingError("Unexpected function name in FnCallFileStat: %s", fp->name);
@@ -2810,7 +2810,7 @@ static FnCallResult FnCallFileStatDetails(EvalContext *ctx, FnCall *fp, Rlist *f
         }
     }
 
-    return FnSuccess(buffer);
+    return FnReturn(buffer);
 }
 
 /*********************************************************************/
@@ -2986,7 +2986,7 @@ static FnCallResult FilterInternal(EvalContext *ctx, FnCall *fp, char *regex, ch
 
     if (contextmode)
     {
-        return FnSuccessBool(ret);
+        return FnReturnContext(ret);
     }
 
     // else, return the list itself
@@ -3127,7 +3127,7 @@ static FnCallResult FnCallLength(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
         count = 0;
     }
 
-    return FnSuccessF("%d", count);
+    return FnReturnF("%d", count);
 }
 
 /*********************************************************************/
@@ -3197,7 +3197,7 @@ static FnCallResult FnCallNth(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 
     if (NULL == rp) return FnFailure();
 
-    return FnSuccess(RlistScalarValue(rp));
+    return FnReturn(RlistScalarValue(rp));
 }
 
 /*********************************************************************/
@@ -3451,18 +3451,18 @@ static FnCallResult FnCallIPRange(EvalContext *ctx, FnCall *fp, Rlist *finalargs
     {
         if (FuzzySetMatch(range, VIPADDRESS) == 0)
         {
-            return FnSuccessTrue();
+            return FnReturnContextTrue();
         }
         else
         {
             if (FuzzySetMatch(range, ip->name) == 0)
             {
-                return FnSuccessTrue();
+                return FnReturnContextTrue();
             }
         }
     }
 
-    return FnSuccessFalse();
+    return FnReturnContextFalse();
 }
 
 /*********************************************************************/
@@ -3485,7 +3485,7 @@ static FnCallResult FnCallHostRange(EvalContext *ctx, FnCall *fp, Rlist *finalar
         return FnFailure();
     }
 
-    return FnSuccessBool(FuzzyHostMatch(prefix, range, VUQNAME) == 0);
+    return FnReturnContext(FuzzyHostMatch(prefix, range, VUQNAME) == 0);
 }
 
 /*********************************************************************/
@@ -3502,20 +3502,20 @@ FnCallResult FnCallHostInNetgroup(EvalContext *ctx, FnCall *fp, Rlist *finalargs
         {
             Log(LOG_LEVEL_VERBOSE, "Matched '%s' in netgroup '%s'", VFQNAME, RlistScalarValue(finalargs));
             endnetgrent();
-            return FnSuccessTrue();
+            return FnReturnContextTrue();
         }
 
         if (strcmp(host, VFQNAME) == 0 || strcmp(host, VUQNAME) == 0)
         {
             Log(LOG_LEVEL_VERBOSE, "Matched '%s' in netgroup '%s'", host, RlistScalarValue(finalargs));
             endnetgrent();
-            return FnSuccessTrue();
+            return FnReturnContextTrue();
         }
     }
 
     endnetgrent();
 
-    return FnSuccessFalse();
+    return FnReturnContextFalse();
 }
 
 /*********************************************************************/
@@ -3537,14 +3537,14 @@ static FnCallResult FnCallIsVariable(EvalContext *ctx, FnCall *fp, Rlist *finala
         VarRefDestroy(ref);
     }
 
-    return FnSuccessBool(found);
+    return FnReturnContext(found);
 }
 
 /*********************************************************************/
 
 static FnCallResult FnCallStrCmp(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
-    return FnSuccessBool(strcmp(RlistScalarValue(finalargs), RlistScalarValue(finalargs->next)) == 0);
+    return FnReturnContext(strcmp(RlistScalarValue(finalargs), RlistScalarValue(finalargs->next)) == 0);
 }
 
 /*********************************************************************/
@@ -3556,7 +3556,7 @@ static FnCallResult FnCallTranslatePath(EvalContext *ctx, FnCall *fp, Rlist *fin
     snprintf(buffer, sizeof(buffer), "%s", RlistScalarValue(finalargs));
     MapName(buffer);
 
-    return FnSuccess(buffer);
+    return FnReturn(buffer);
 }
 
 /*********************************************************************/
@@ -3569,7 +3569,7 @@ static FnCallResult FnCallRegistryValue(EvalContext *ctx, FnCall *fp, Rlist *fin
 
     if (GetRegistryValue(RlistScalarValue(finalargs), RlistScalarValue(finalargs->next), buffer, sizeof(buffer)))
     {
-        return FnSuccess(buffer);
+        return FnReturn(buffer);
     }
     else
     {
@@ -3609,7 +3609,7 @@ static FnCallResult FnCallRemoteScalar(EvalContext *ctx, FnCall *fp, Rlist *fina
 
     if (THIS_AGENT_TYPE == AGENT_TYPE_COMMON)
     {
-        return FnSuccess("<remote scalar>");
+        return FnReturn("<remote scalar>");
     }
     else
     {
@@ -3628,7 +3628,7 @@ static FnCallResult FnCallRemoteScalar(EvalContext *ctx, FnCall *fp, Rlist *fina
             CacheUnreliableValue("remotescalar", handle, buffer);
         }
 
-        return FnSuccess(buffer);
+        return FnReturn(buffer);
     }
 }
 
@@ -3644,7 +3644,7 @@ static FnCallResult FnCallHubKnowledge(EvalContext *ctx, FnCall *fp, Rlist *fina
 
     if (THIS_AGENT_TYPE != AGENT_TYPE_AGENT)
     {
-        return FnSuccess("<inaccessible remote scalar>");
+        return FnReturn("<inaccessible remote scalar>");
     }
     else
     {
@@ -3655,10 +3655,10 @@ static FnCallResult FnCallHubKnowledge(EvalContext *ctx, FnCall *fp, Rlist *fina
 
         if (strncmp(buffer, "BAD:", 4) == 0)
         {
-            return FnSuccess("0");
+            return FnReturn("0");
         }
 
-        return FnSuccess(buffer);
+        return FnReturn(buffer);
     }
 }
 
@@ -3686,7 +3686,7 @@ static FnCallResult FnCallRemoteClassesMatching(EvalContext *ctx, FnCall *fp, Rl
 
     if (THIS_AGENT_TYPE == AGENT_TYPE_COMMON)
     {
-        return FnSuccess("remote_classes");
+        return FnReturn("remote_classes");
     }
     else
     {
@@ -3707,7 +3707,7 @@ static FnCallResult FnCallRemoteClassesMatching(EvalContext *ctx, FnCall *fp, Rl
             RlistDestroy(classlist);
         }
 
-        return FnSuccessTrue();
+        return FnReturnContextTrue();
     }
 }
 
@@ -3882,7 +3882,7 @@ static FnCallResult FnCallPeerLeader(EvalContext *ctx, FnCall *fp, Rlist *finala
 
     if (strlen(buffer) > 0)
     {
-        return FnSuccess(buffer);
+        return FnReturn(buffer);
     }
     else
     {
@@ -3982,7 +3982,7 @@ static FnCallResult FnCallRegCmp(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
     char *argv0 = RlistScalarValue(finalargs);
     char *argv1 = RlistScalarValue(finalargs->next);
 
-    return FnSuccessBool(FullTextMatch(ctx, argv0, argv1));
+    return FnReturnContext(FullTextMatch(ctx, argv0, argv1));
 }
 
 /*********************************************************************/
@@ -4038,10 +4038,10 @@ static FnCallResult FnCallRegExtract(EvalContext *ctx, FnCall *fp, Rlist *finala
 
     if (i == 0)
     {
-        return FnSuccessFalse();
+        return FnReturnContextFalse();
     }
 
-    return FnSuccessBool(ret);
+    return FnReturnContext(ret);
 }
 
 /*********************************************************************/
@@ -4055,7 +4055,7 @@ static FnCallResult FnCallRegLine(EvalContext *ctx, FnCall *fp, Rlist *finalargs
 
     if ((fin = safe_fopen(argv1, "r")) == NULL)
     {
-        return FnSuccessFalse();
+        return FnReturnContextFalse();
     }
 
     for (;;)
@@ -4073,7 +4073,7 @@ static FnCallResult FnCallRegLine(EvalContext *ctx, FnCall *fp, Rlist *finalargs
             else /* feof */
             {
                 fclose(fin);
-                return FnSuccessFalse();
+                return FnReturnContextFalse();
             }
         }
 
@@ -4085,7 +4085,7 @@ static FnCallResult FnCallRegLine(EvalContext *ctx, FnCall *fp, Rlist *finalargs
         if (FullTextMatch(ctx, argv0, line))
         {
             fclose(fin);
-            return FnSuccessTrue();
+            return FnReturnContextTrue();
         }
     }
 }
@@ -4112,21 +4112,21 @@ static FnCallResult FnCallIsLessGreaterThan(EvalContext *ctx, FnCall *fp, Rlist 
 
         if (!strcmp(fp->name, "isgreaterthan"))
         {
-            return FnSuccessBool(a > b);
+            return FnReturnContext(a > b);
         }
         else
         {
-            return FnSuccessBool(a < b);
+            return FnReturnContext(a < b);
         }
     }
 
     if (!strcmp(fp->name, "isgreaterthan"))
     {
-        return FnSuccessBool(strcmp(argv0, argv1) > 0);
+        return FnReturnContext(strcmp(argv0, argv1) > 0);
     }
     else
     {
-        return FnSuccessBool(strcmp(argv0, argv1) < 0);
+        return FnReturnContext(strcmp(argv0, argv1) < 0);
     }
 }
 
@@ -4153,7 +4153,7 @@ static FnCallResult FnCallIRange(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
         from = tmp;
     }
 
-    return FnSuccessF("%ld,%ld", from, to);
+    return FnReturnF("%ld,%ld", from, to);
 }
 
 /*********************************************************************/
@@ -4185,7 +4185,7 @@ static FnCallResult FnCallRRange(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
         from = tmp;
     }
 
-    return FnSuccessF("%lf,%lf", from, to);
+    return FnReturnF("%lf,%lf", from, to);
 }
 
 static FnCallResult FnCallReverse(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
@@ -4286,11 +4286,11 @@ static FnCallResult FnCallOr(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
     {
         if (IsDefinedClass(ctx, RlistScalarValue(arg), PromiseGetNamespace(fp->caller)))
         {
-            return FnSuccessTrue();
+            return FnReturnContextTrue();
         }
     }
 
-    return FnSuccessFalse();
+    return FnReturnContextFalse();
 }
 
 /*********************************************************************/
@@ -4501,14 +4501,14 @@ static FnCallResult FnCallAccumulatedDate(EvalContext *ctx, FnCall *fp, Rlist *f
 
 static FnCallResult FnCallNot(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
-    return FnSuccessBool(!IsDefinedClass(ctx, RlistScalarValue(finalargs), PromiseGetNamespace(fp->caller)));
+    return FnReturnContext(!IsDefinedClass(ctx, RlistScalarValue(finalargs), PromiseGetNamespace(fp->caller)));
 }
 
 /*********************************************************************/
 
 static FnCallResult FnCallNow(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
-    return FnSuccessF("%ld", (long)CFSTARTTIME);
+    return FnReturnF("%ld", (long)CFSTARTTIME);
 }
 
 /*********************************************************************/
@@ -4545,7 +4545,7 @@ static FnCallResult FnCallStrftime(EvalContext *ctx, FnCall *fp, Rlist *finalarg
         Log(LOG_LEVEL_WARNING, "Function strftime, the given time stamp '%ld' was invalid. (strftime: %s)", when, GetErrorStr());
     }
 
-    return FnSuccess(buffer);
+    return FnReturn(buffer);
 }
 
 /*********************************************************************/
@@ -4568,11 +4568,11 @@ static FnCallResult FnCallEval(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
     if (strlen(failure) > 0)
     {
         Log(LOG_LEVEL_INFO, "%s error: %s (input '%s')", fp->name, failure, input);
-        return FnSuccess("");
+        return FnReturn("");
     }
     else
     {
-        return FnSuccessF("%lf", result);
+        return FnReturnF("%lf", result);
     }
 }
 
@@ -4778,7 +4778,7 @@ static FnCallResult FnCallStoreJson(EvalContext *ctx, FnCall *fp, Rlist *finalar
         return FnFailure();
     }
 
-    return FnSuccess(buf);
+    return FnReturn(buf);
 }
 
 
@@ -4834,7 +4834,7 @@ static FnCallResult ReadArray(EvalContext *ctx, FnCall *fp, Rlist *finalargs, Da
 
     free(file_buffer);
 
-    return FnSuccessF("%d", entries);
+    return FnReturnF("%d", entries);
 }
 
 /*********************************************************************/
@@ -4918,7 +4918,7 @@ static FnCallResult ParseArray(EvalContext *ctx, FnCall *fp, Rlist *finalargs, D
 
     free(instring);
 
-    return FnSuccessF("%d", entries);
+    return FnReturnF("%d", entries);
 }
 
 /*********************************************************************/
@@ -5022,11 +5022,11 @@ static FnCallResult FnCallFileSexist(EvalContext *ctx, FnCall *fp, Rlist *finala
     {
         if (stat(RlistScalarValue(rp), &sb) == -1)
         {
-            return FnSuccessFalse();
+            return FnReturnContextFalse();
         }
     }
 
-    return FnSuccessTrue();
+    return FnReturnContextTrue();
 }
 
 /*********************************************************************/
@@ -5165,7 +5165,7 @@ static FnCallResult FnCallDiskFree(EvalContext *ctx, FnCall *fp, Rlist *finalarg
         df = 0;
     }
 
-    return FnSuccessF("%jd", ((intmax_t) df) / KILOBYTE);
+    return FnReturnF("%jd", ((intmax_t) df) / KILOBYTE);
 }
 
 #if !defined(__MINGW32__)
@@ -5187,15 +5187,15 @@ FnCallResult FnCallUserExists(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 
         if ((pw = getpwuid(uid)) == NULL)
         {
-            return FnSuccessFalse();
+            return FnReturnContextFalse();
         }
     }
     else if ((pw = getpwnam(arg)) == NULL)
     {
-        return FnSuccessFalse();
+        return FnReturnContextFalse();
     }
 
-    return FnSuccessTrue();
+    return FnReturnContextTrue();
 }
 
 /*********************************************************************/
@@ -5217,15 +5217,15 @@ FnCallResult FnCallGroupExists(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 
         if ((gr = getgrgid(gid)) == NULL)
         {
-            return FnSuccessFalse();
+            return FnReturnContextFalse();
         }
     }
     else if ((gr = getgrnam(arg)) == NULL)
     {
-        return FnSuccessFalse();
+        return FnReturnContextFalse();
     }
 
-    return FnSuccessTrue();
+    return FnReturnContextTrue();
 }
 
 #endif /* !defined(__MINGW32__) */

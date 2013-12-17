@@ -4397,7 +4397,7 @@ static FnCallResult FnCallReverse(EvalContext *ctx, FnCall *fp, Rlist *finalargs
 static struct tm FnArgsToTm(const Rlist *rp)
 {
     struct tm ret = { .tm_isdst = -1 };
-    ret.tm_year = IntFromString(RlistScalarValue(rp)) - 1900;
+    ret.tm_year = IntFromString(RlistScalarValue(rp)) - 1900; /* tm.tm_year stores year - 1900 */
     rp = rp->next;
     ret.tm_mon = IntFromString(RlistScalarValue(rp));
     rp = rp->next;
@@ -4491,7 +4491,7 @@ static FnCallResult FnCallAgoDate(EvalContext *ctx, FnCall *fp, Rlist *finalargs
     struct tm t;
     localtime_r(&now, &t);
 
-    t.tm_year -= ago.tm_year + 1900;
+    t.tm_year -= ago.tm_year + 1900; /* tm.tm_year stores year - 1900 */
     t.tm_mon -= ago.tm_mon;
     t.tm_mday -= ago.tm_mday - 1;
     t.tm_hour -= ago.tm_hour;

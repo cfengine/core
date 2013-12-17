@@ -4396,7 +4396,7 @@ static FnCallResult FnCallReverse(EvalContext *ctx, FnCall *fp, Rlist *finalargs
 /* Convert y/m/d/h/m/s 6-tuple */
 static struct tm FnArgsToTm(const Rlist *rp)
 {
-    struct tm ret;
+    struct tm ret = { .tm_isdst = -1 };
     ret.tm_year = IntFromString(RlistScalarValue(rp)) - 1900;
     rp = rp->next;
     ret.tm_mon = IntFromString(RlistScalarValue(rp));
@@ -4408,7 +4408,6 @@ static struct tm FnArgsToTm(const Rlist *rp)
     ret.tm_min = IntFromString(RlistScalarValue(rp));
     rp = rp->next;
     ret.tm_sec = IntFromString(RlistScalarValue(rp));
-    ret.tm_isdst = -1;
     return ret;
 }
 

@@ -402,6 +402,7 @@ bool WriteBuiltinFailsafePolicyToPath(const char *filename)
             "       Please check\n"
             "       * cf-serverd is running on $(sys.policy_hub)\n"
             "       * network connectivity to $(sys.policy_hub) on port 5308\n"
+            "       * masterfiles should not be a symbolic link on policy hub\n"
             "       * masterfiles 'body server control' - in particular allowconnects, trustkeysfrom\n"
             "       * masterfiles 'bundle server' -> access: -> masterfiles -> admit/deny\n"
             "       It is often useful to restart cf-serverd in verbose mode (cf-serverd -v) on $(sys.policy_hub) to diagnose connection issues.\n"

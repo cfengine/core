@@ -40,7 +40,7 @@ bundle agent run
 
 #+end_src
 ###############################################################################
-#+begin_src example_output 3.6-
+#+begin_src example_output
 2013-12-16T20:48:09+0200   notice: /default/run: R: All classes = GMT_Yr2013
 2013-12-16T20:48:09+0200   notice: /default/run: R: All classes = compiled_on_linux_gnu
 2013-12-16T20:48:09+0200   notice: /default/run: R: All classes = Min48

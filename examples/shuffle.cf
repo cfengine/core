@@ -41,7 +41,7 @@ bundle agent test
 }
 #+end_src
 ###############################################################################
-#+begin_src example_output 3.6-
+#+begin_src example_output
 2013-12-16T20:48:13+0200   notice: /default/test: R: shuffled by xx = 'b,a,c'
 2013-12-16T20:48:13+0200   notice: /default/test: R: shuffled by yy = 'a,c,b'
 2013-12-16T20:48:13+0200   notice: /default/test: R: shuffled by zz = 'c,b,a'

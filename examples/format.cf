@@ -48,7 +48,7 @@ bundle agent run
 }
 #+end_src
 ###############################################################################
-#+begin_src example_output 3.6-
+#+begin_src example_output
 2013-12-16T20:47:58+0200   notice: /default/run: R: version 2.5.6 => padded 000200050006
 2013-12-16T20:47:58+0200   notice: /default/run: R: %10.10s on 'x' => '         x'
 2013-12-16T20:47:58+0200   notice: /default/run: R: %-10.10s on 'x' => 'x         '

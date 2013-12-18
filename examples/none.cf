@@ -54,7 +54,7 @@ bundle agent example
 }
 #+end_src
 ###############################################################################
-#+begin_src example_output 3.6-
+#+begin_src example_output
 2013-12-16T20:48:21+0200   notice: /default/example: R: The test list is 1
 2013-12-16T20:48:21+0200   notice: /default/example: R: The test list is 2
 2013-12-16T20:48:21+0200   notice: /default/example: R: The test list is 3

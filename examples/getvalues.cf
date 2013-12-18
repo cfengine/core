@@ -41,7 +41,7 @@ bundle agent example
 }
 #+end_src
 ###############################################################################
-#+begin_src example_output 3.6-
+#+begin_src example_output
 2013-12-16T20:48:16+0200   notice: /default/example: R: Found values: value_2
 2013-12-16T20:48:16+0200   notice: /default/example: R: Found values: value_1
 #+end_src

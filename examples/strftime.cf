@@ -42,7 +42,7 @@ bundle agent example
 }
 #+end_src
 ###############################################################################
-#+begin_src example_output 3.6-
+#+begin_src example_output
 2013-12-16T20:48:12+0200   notice: /default/example: R: time 1387219692; now 2013-12-16 20:48:12; then 1970-01-01 02:00:00
 2013-12-16T20:48:12+0200   notice: /default/example: R: time 1387219692; GMT now 2013-12-16 20:48:12; GMT then 1970-01-01 02:00:00
 #+end_src

@@ -45,7 +45,7 @@ bundle agent fileinfo(f)
 }
 #+end_src
 ###############################################################################
-#+begin_src example_output 3.6-
+#+begin_src example_output
 2013-12-16T20:48:25+0200   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /etc/resolv.conf has size = 45
 2013-12-16T20:48:25+0200   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /etc/resolv.conf has gid = 0
 2013-12-16T20:48:25+0200   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /etc/resolv.conf has uid = 0

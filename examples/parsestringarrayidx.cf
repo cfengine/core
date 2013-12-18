@@ -52,7 +52,7 @@ bundle agent test(f)
 }
 #+end_src
 ###############################################################################
-#+begin_src example_output 3.6-
+#+begin_src example_output
 2013-12-16T20:48:19+0200   notice: /default/test: R: 1
 2013-12-16T20:48:19+0200   notice: /default/test: R: 0
 2013-12-16T20:48:19+0200   notice: /default/test: R: 2

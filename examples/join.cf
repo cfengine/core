@@ -39,6 +39,6 @@ bundle agent test
 }
 #+end_src
 ###############################################################################
-#+begin_src example_output 3.6-
+#+begin_src example_output
 2013-12-16T20:48:22+0200   notice: /default/test: R: Concatenated one->two->three->four->five
 #+end_src

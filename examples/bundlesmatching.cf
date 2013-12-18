@@ -50,7 +50,7 @@ bundle agent run_123_456
 }
 #+end_src
 ###############################################################################
-#+begin_src example_output 3.6-
+#+begin_src example_output
 2013-12-16T20:47:56+0200   notice: /default/mefirst/methods/''/default/run_123_456: R: bundles = default:run_123_456
 2013-12-16T20:47:56+0200   notice: /default/mefirst/methods/''/default/run_123_456: R: bundles = default:mefirst
 2013-12-16T20:47:56+0200   notice: /default/mefirst/methods/''/default/run_123_456: R: bundles = default:g

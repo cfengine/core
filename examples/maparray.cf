@@ -40,7 +40,7 @@ bundle agent run
 
 #+end_src
 ###############################################################################
-#+begin_src example_output 3.6-
+#+begin_src example_output
 2013-12-16T20:48:09+0200   notice: /default/run: R: Hello yes 1 2
 2013-12-16T20:48:09+0200   notice: /default/run: R: Hello yes one two
 2013-12-16T20:48:09+0200   notice: /default/run: R: Hello yes 3999 big

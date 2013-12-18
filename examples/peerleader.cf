@@ -44,7 +44,7 @@ bundle agent peers
 }
 #+end_src
 ###############################################################################
-#+begin_src example_output 3.6-
+#+begin_src example_output
 2013-12-16T20:48:16+0200   notice: /default/peers: R: mypeer $(mygroup)
 2013-12-16T20:48:16+0200   notice: /default/peers: R: myleader $(myleader)
 2013-12-16T20:48:16+0200   notice: /default/peers: R: another leader $(all_leaders)

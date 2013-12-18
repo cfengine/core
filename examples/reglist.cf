@@ -45,6 +45,6 @@ bundle agent example
 }
 #+end_src
 ###############################################################################
-#+begin_src example_output 3.6-
+#+begin_src example_output
 2013-12-16T20:48:06+0200   notice: /default/example: R: This host (10.132.51.66) is currently set as a nameserver
 #+end_src

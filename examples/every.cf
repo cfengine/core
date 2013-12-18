@@ -55,7 +55,7 @@ bundle agent test
 }
 #+end_src
 ###############################################################################
-#+begin_src example_output 3.6-
+#+begin_src example_output
 2013-12-16T20:47:59+0200   notice: /default/test: R: The test list is 1
 2013-12-16T20:47:59+0200   notice: /default/test: R: The test list is 2
 2013-12-16T20:47:59+0200   notice: /default/test: R: The test list is 3

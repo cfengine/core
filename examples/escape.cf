@@ -39,6 +39,6 @@ body server control
 }
 #+end_src
 ###############################################################################
-#+begin_src example_output 3.6-
+#+begin_src example_output
 2013-12-16T20:48:04+0200   notice: /default/example: R: escaped 10.123.321.250 = 10\.123\.321\.250
 #+end_src

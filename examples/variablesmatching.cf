@@ -40,7 +40,7 @@ bundle agent run
 
 #+end_src
 ###############################################################################
-#+begin_src example_output 3.6-
+#+begin_src example_output
 2013-12-16T20:47:58+0200   notice: /default/run: R: All classes = default:sys.cf_version_major
 2013-12-16T20:47:58+0200   notice: /default/run: R: All classes = default:sys.systime
 2013-12-16T20:47:58+0200   notice: /default/run: R: All classes = default:sys.ipv4_3[eth0]

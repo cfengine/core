@@ -48,7 +48,7 @@ bundle agent example
 }
 #+end_src
 ###############################################################################
-#+begin_src example_output 3.6-
+#+begin_src example_output
 2013-12-16T20:48:29+0200   notice: /default/example: R: Found key relayhost
 2013-12-16T20:48:29+0200   notice: /default/example: R: Found key smtp_sasl_security_options
 2013-12-16T20:48:29+0200   notice: /default/example: R: Found key inet_protocols

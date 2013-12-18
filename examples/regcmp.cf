@@ -78,6 +78,6 @@ bundle agent example
 }
 #+end_src
 ###############################################################################
-#+begin_src example_output 3.6-
+#+begin_src example_output
 2013-12-16T20:47:53+0200   notice: /default/subtest: R: User name $(user) is valid at exactly 4 letters
 #+end_src

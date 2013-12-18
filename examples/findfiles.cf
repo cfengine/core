@@ -36,7 +36,7 @@ bundle agent run
 
 #+end_src
 ###############################################################################
-#+begin_src example_output 3.6-
+#+begin_src example_output
 2013-12-16T20:48:24+0200   notice: /default/run: R: All files under root = /bin
 2013-12-16T20:48:24+0200   notice: /default/run: R: All files under root = /boot
 2013-12-16T20:48:24+0200   notice: /default/run: R: All files under root = /dev

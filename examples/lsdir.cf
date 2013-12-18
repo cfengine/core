@@ -35,7 +35,7 @@ bundle agent example
 }
 #+end_src
 ###############################################################################
-#+begin_src example_output 3.6-
+#+begin_src example_output
 2013-12-16T20:48:03+0200   notice: /default/example: R: files in list: /etc/shadow-
 2013-12-16T20:48:03+0200   notice: /default/example: R: files in list: /etc/passwd-
 2013-12-16T20:48:03+0200   notice: /default/example: R: files in list: /etc/passwd

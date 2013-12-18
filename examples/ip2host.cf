@@ -39,7 +39,7 @@ bundle agent reverse_lookup
 }
 #+end_src
 ###############################################################################
-#+begin_src example_output 3.6-
+#+begin_src example_output
 2013-12-16T20:48:13+0200   notice: /default/reverse_lookup: R: local4 is localhost
 2013-12-16T20:48:13+0200   notice: /default/reverse_lookup: R: local6 is localhost
 #+end_src

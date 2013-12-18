@@ -44,7 +44,7 @@ bundle agent example
 }
 #+end_src
 ###############################################################################
-#+begin_src example_output 3.6-
+#+begin_src example_output
 2013-12-16T20:48:12+0200   notice: /default/example: R: Found 1 lines matching
 2013-12-16T20:48:12+0200   notice: /default/example: R: Mark's homedir = /home/mark
 2013-12-16T20:48:12+0200   notice: /default/example: R: Mark's handle = mark

@@ -47,7 +47,7 @@ bundle agent test
 }
 #+end_src
 ###############################################################################
-#+begin_src example_output 3.6-
+#+begin_src example_output
 2013-12-16T20:48:11+0200   notice: /default/test: R: The test list is 1,2,3,one,two,three,long string,four,fix,six,one,two,three
 2013-12-16T20:48:11+0200   notice: /default/test: R: The test list has 13 elements
 #+end_src

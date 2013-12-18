@@ -53,6 +53,7 @@ static const char *POLICY_ERROR_BUNDLE_REDEFINITION = "Duplicate definition of b
 static const char *POLICY_ERROR_BUNDLE_UNDEFINED = "Undefined bundle %s with type %s";
 static const char *POLICY_ERROR_BODY_REDEFINITION = "Duplicate definition of body %s with type %s";
 static const char *POLICY_ERROR_BODY_UNDEFINED = "Undefined body %s with type %s";
+static const char *POLICY_ERROR_BODY_CONTROL_ARGS = "Control bodies cannot take arguments, body %s control";
 static const char *POLICY_ERROR_PROMISE_UNCOMMENTED = "Promise is missing a comment attribute, and comments are required by policy";
 static const char *POLICY_ERROR_PROMISE_DUPLICATE_HANDLE = "Duplicate promise handle %s found";
 static const char *POLICY_ERROR_LVAL_INVALID = "Promise type %s has unknown attribute %s";
@@ -544,6 +545,17 @@ static bool PolicyCheckBundle(const Bundle *bundle, Seq *errors)
 static bool PolicyCheckBody(const Body *body, Seq *errors)
 {
     bool success = true;
+
+    if (strcmp("control", body->name) == 0)
+    {
+        if (RlistLen(body->args) > 0)
+        {
+            SeqAppend(errors, PolicyErrorNew(POLICY_ELEMENT_TYPE_BODY, body,
+                                             POLICY_ERROR_BODY_CONTROL_ARGS,
+                                             body->type));
+            success = false;
+        }
+    }
 
     for (size_t i = 0; i < SeqLength(body->conlist); i++)
     {

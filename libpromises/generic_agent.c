@@ -583,7 +583,26 @@ static Policy *LoadPolicyFile(EvalContext *ctx, GenericAgentConfig *config, cons
     StringSetAdd(parsed_files_and_checksums, xstrdup(policy_file));
     StringSetAdd(parsed_files_and_checksums, xstrdup(hashprintbuffer));
 
-    if (!policy)
+    if (policy)
+    {
+        Seq *errors = SeqNew(10, free);
+        if (!PolicyCheckPartial(policy, errors))
+        {
+            Writer *writer = FileWriter(stderr);
+            for (size_t i = 0; i < errors->length; i++)
+            {
+                PolicyErrorWrite(writer, errors->data[i]);
+            }
+            WriterClose(writer);
+            SeqDestroy(errors);
+
+            StringSetAdd(failed_files, xstrdup(policy_file));
+            return NULL;
+        }
+
+        SeqDestroy(errors);
+    }
+    else
     {
         StringSetAdd(failed_files, xstrdup(policy_file));
         return NULL;

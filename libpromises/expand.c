@@ -1087,7 +1087,7 @@ static void ResolveControlBody(EvalContext *ctx, GenericAgentConfig *config, con
     snprintf(scope, CF_BUFSIZE, "%s_%s", control_body->name, control_body->type);
     Log(LOG_LEVEL_DEBUG, "Initiate control variable convergence for scope '%s'", scope);
 
-    EvalContextStackPushBodyFrame(ctx, control_body, NULL);
+    EvalContextStackPushBodyFrame(ctx, NULL, control_body, NULL);
 
     for (size_t i = 0; i < SeqLength(control_body->conlist); i++)
     {

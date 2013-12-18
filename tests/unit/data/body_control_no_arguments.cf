@@ -1,0 +1,4 @@
+body common control(arg)
+{
+  bundlesequence => { test };
+}

@@ -968,24 +968,29 @@ void EvalContextStackPushBundleFrame(EvalContext *ctx, const Bundle *owner, cons
     }
 }
 
-void EvalContextStackPushBodyFrame(EvalContext *ctx, const Body *owner, Rlist *args)
+void EvalContextStackPushBodyFrame(EvalContext *ctx, const Promise *caller, const Body *body, Rlist *args)
 {
-    assert((!LastStackFrame(ctx, 0) && strcmp("control", owner->name) == 0) || LastStackFrame(ctx, 0)->type == STACK_FRAME_TYPE_BUNDLE);
+    assert((!LastStackFrame(ctx, 0) && strcmp("control", body->name) == 0) || LastStackFrame(ctx, 0)->type == STACK_FRAME_TYPE_BUNDLE);
 
-    EvalContextStackPushFrame(ctx, StackFrameNewBody(owner));
+    EvalContextStackPushFrame(ctx, StackFrameNewBody(body));
 
-    if (RlistLen(owner->args) != RlistLen(args))
+    if (RlistLen(body->args) != RlistLen(args))
     {
-        const Promise *caller = EvalContextStackCurrentPromise(ctx);
-        assert(caller);
-
-        Log(LOG_LEVEL_ERR, "Argument arity mismatch in body '%s' at line %zu in file '%s', expected %d, got %d",
-            owner->name, caller->offset.line, PromiseGetBundle(caller)->source_path, RlistLen(owner->args), RlistLen(args));
+        if (caller)
+        {
+            Log(LOG_LEVEL_ERR, "Argument arity mismatch in body '%s' at line %zu in file '%s', expected %d, got %d",
+                body->name, caller->offset.line, PromiseGetBundle(caller)->source_path, RlistLen(body->args), RlistLen(args));
+        }
+        else
+        {
+            assert(strcmp("control", body->name) == 0);
+            ProgrammingError("Control body stack frame was pushed with arguments. This should have been caught before");
+        }
         return;
     }
     else
     {
-        ScopeMapBodyArgs(ctx, owner, args);
+        ScopeMapBodyArgs(ctx, body, args);
     }
 }
 

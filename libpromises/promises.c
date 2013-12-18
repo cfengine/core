@@ -171,7 +171,7 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
 
         if (bp)
         {
-            EvalContextStackPushBodyFrame(ctx, bp, fp ? fp->args : NULL);
+            EvalContextStackPushBodyFrame(ctx, pcopy, bp, fp ? fp->args : NULL);
 
             if (strcmp(bp->type, cp->lval) != 0)
             {

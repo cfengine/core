@@ -228,9 +228,15 @@ const char *GetErrorStr(void)
 void VLog(LogLevel level, const char *fmt, va_list ap)
 {
     LoggingContext *lctx = GetCurrentThreadContext();
+    if (LogGetGlobalLevel() > lctx->report_level &&
+        LogGetGlobalLevel() > lctx->log_level)
+    {
+        return;
+    }
+
 
     char *msg = StringVFormat(fmt, ap);
-    const char *hooked_msg = NULL;
+    char *hooked_msg = NULL;
 
     if (lctx->pctx && lctx->pctx->log_hook)
     {
@@ -238,7 +244,7 @@ void VLog(LogLevel level, const char *fmt, va_list ap)
     }
     else
     {
-        hooked_msg = msg;
+        hooked_msg = xstrdup(msg);
     }
 
     if (level <= lctx->report_level)
@@ -251,6 +257,7 @@ void VLog(LogLevel level, const char *fmt, va_list ap)
         LogToSystemLog(hooked_msg, level);
     }
     free(msg);
+    free(hooked_msg);
 }
 
 /**

@@ -33,7 +33,7 @@
 
 typedef struct LoggingPrivContext LoggingPrivContext;
 
-typedef const char *(*LoggingPrivLogHook)(LoggingPrivContext *context, const char *message);
+typedef char *(*LoggingPrivLogHook)(LoggingPrivContext *context, const char *message);
 
 struct LoggingPrivContext
 {

@@ -108,7 +108,7 @@ static LogLevel CalculateReportLevel(const Promise *pp)
     return report_level;
 }
 
-static const char *LogHook(LoggingPrivContext *pctx, const char *message)
+static char *LogHook(LoggingPrivContext *pctx, const char *message)
 {
     PromiseLoggingContext *plctx = pctx->param;
 
@@ -119,7 +119,7 @@ static const char *LogHook(LoggingPrivContext *pctx, const char *message)
     }
     else
     {
-        return message;
+        return xstrdup(message);
     }
 }
 

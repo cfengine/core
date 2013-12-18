@@ -1,0 +1,7047 @@
+{
+  "bundleTypes": {
+    "agent": {
+      "status": "normal",
+      "promiseTypes": [
+        "commands",
+        "databases",
+        "guest_environments",
+        "files",
+        "methods",
+        "packages",
+        "processes",
+        "services",
+        "storage",
+        "classes",
+        "defaults",
+        "meta",
+        "reports",
+        "vars"
+      ]
+    },
+    "edit_line": {
+      "status": "normal",
+      "promiseTypes": [
+        "delete_lines",
+        "insert_lines",
+        "field_edits",
+        "replace_patterns",
+        "classes",
+        "defaults",
+        "meta",
+        "reports",
+        "vars"
+      ]
+    },
+    "edit_xml": {
+      "status": "normal",
+      "promiseTypes": [
+        "build_xpath",
+        "delete_tree",
+        "insert_tree",
+        "delete_attribute",
+        "set_attribute",
+        "delete_text",
+        "set_text",
+        "insert_text",
+        "classes",
+        "defaults",
+        "meta",
+        "reports",
+        "vars"
+      ]
+    },
+    "server": {
+      "status": "normal",
+      "promiseTypes": [
+        "access",
+        "roles",
+        "classes",
+        "defaults",
+        "meta",
+        "reports",
+        "vars"
+      ]
+    },
+    "monitor": {
+      "status": "normal",
+      "promiseTypes": [
+        "measurements",
+        "classes",
+        "defaults",
+        "meta",
+        "reports",
+        "vars"
+      ]
+    },
+    "common": {
+      "status": "normal",
+      "promiseTypes": [
+        "classes",
+        "defaults",
+        "meta",
+        "reports",
+        "vars"
+      ]
+    }
+  },
+  "promiseTypes": {
+    "classes": {
+      "status": "normal",
+      "attributes": {
+        "scope": {
+          "attribute": "scope",
+          "status": "normal",
+          "type": "option",
+          "range": "namespace,bundle",
+          "visibility": "promiseType"
+        },
+        "and": {
+          "attribute": "and",
+          "status": "normal",
+          "type": "clist",
+          "range": "[a-zA-Z0-9_!&@@$|.()\\[\\]{}:]+",
+          "visibility": "promiseType"
+        },
+        "dist": {
+          "attribute": "dist",
+          "status": "normal",
+          "type": "rlist",
+          "range": "-9.99999E100,9.99999E100",
+          "visibility": "promiseType"
+        },
+        "expression": {
+          "attribute": "expression",
+          "status": "normal",
+          "type": "context",
+          "range": "[a-zA-Z0-9_!&@@$|.()\\[\\]{}:]+",
+          "visibility": "promiseType"
+        },
+        "or": {
+          "attribute": "or",
+          "status": "normal",
+          "type": "clist",
+          "range": "[a-zA-Z0-9_!&@@$|.()\\[\\]{}:]+",
+          "visibility": "promiseType"
+        },
+        "persistence": {
+          "attribute": "persistence",
+          "status": "normal",
+          "type": "int",
+          "range": "0,99999999999",
+          "visibility": "promiseType"
+        },
+        "not": {
+          "attribute": "not",
+          "status": "normal",
+          "type": "context",
+          "range": "[a-zA-Z0-9_!&@@$|.()\\[\\]{}:]+",
+          "visibility": "promiseType"
+        },
+        "select_class": {
+          "attribute": "select_class",
+          "status": "normal",
+          "type": "clist",
+          "range": "[a-zA-Z0-9_!&@@$|.()\\[\\]{}:]+",
+          "visibility": "promiseType"
+        },
+        "xor": {
+          "attribute": "xor",
+          "status": "normal",
+          "type": "clist",
+          "range": "[a-zA-Z0-9_!&@@$|.()\\[\\]{}:]+",
+          "visibility": "promiseType"
+        },
+        "action": {
+          "attribute": "action",
+          "status": "normal",
+          "type": "body",
+          "visibility": "global"
+        },
+        "classes": {
+          "attribute": "classes",
+          "status": "normal",
+          "type": "body",
+          "visibility": "global"
+        },
+        "comment": {
+          "attribute": "comment",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "global"
+        },
+        "depends_on": {
+          "attribute": "depends_on",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "global"
+        },
+        "handle": {
+          "attribute": "handle",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "global"
+        },
+        "ifvarclass": {
+          "attribute": "ifvarclass",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "global"
+        },
+        "meta": {
+          "attribute": "meta",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "global"
+        }
+      }
+    },
+    "defaults": {
+      "status": "normal",
+      "attributes": {
+        "if_match_regex": {
+          "attribute": "if_match_regex",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "promiseType"
+        },
+        "string": {
+          "attribute": "string",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "promiseType"
+        },
+        "slist": {
+          "attribute": "slist",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "promiseType"
+        },
+        "action": {
+          "attribute": "action",
+          "status": "normal",
+          "type": "body",
+          "visibility": "global"
+        },
+        "classes": {
+          "attribute": "classes",
+          "status": "normal",
+          "type": "body",
+          "visibility": "global"
+        },
+        "comment": {
+          "attribute": "comment",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "global"
+        },
+        "depends_on": {
+          "attribute": "depends_on",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "global"
+        },
+        "handle": {
+          "attribute": "handle",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "global"
+        },
+        "ifvarclass": {
+          "attribute": "ifvarclass",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "global"
+        },
+        "meta": {
+          "attribute": "meta",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "global"
+        }
+      }
+    },
+    "meta": {
+      "status": "normal",
+      "attributes": {
+        "string": {
+          "attribute": "string",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "promiseType"
+        },
+        "slist": {
+          "attribute": "slist",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "promiseType"
+        },
+        "action": {
+          "attribute": "action",
+          "status": "normal",
+          "type": "body",
+          "visibility": "global"
+        },
+        "classes": {
+          "attribute": "classes",
+          "status": "normal",
+          "type": "body",
+          "visibility": "global"
+        },
+        "comment": {
+          "attribute": "comment",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "global"
+        },
+        "depends_on": {
+          "attribute": "depends_on",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "global"
+        },
+        "handle": {
+          "attribute": "handle",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "global"
+        },
+        "ifvarclass": {
+          "attribute": "ifvarclass",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "global"
+        },
+        "meta": {
+          "attribute": "meta",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "global"
+        }
+      }
+    },
+    "reports": {
+      "status": "normal",
+      "attributes": {
+        "friend_pattern": {
+          "attribute": "friend_pattern",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "promiseType"
+        },
+        "intermittency": {
+          "attribute": "intermittency",
+          "status": "normal",
+          "type": "real",
+          "range": "0,1",
+          "visibility": "promiseType"
+        },
+        "lastseen": {
+          "attribute": "lastseen",
+          "status": "normal",
+          "type": "int",
+          "range": "0,99999999999",
+          "visibility": "promiseType"
+        },
+        "printfile": {
+          "attribute": "printfile",
+          "status": "normal",
+          "type": "body",
+          "visibility": "promiseType"
+        },
+        "report_to_file": {
+          "attribute": "report_to_file",
+          "status": "normal",
+          "type": "string",
+          "range": "\"?(/.*)",
+          "visibility": "promiseType"
+        },
+        "bundle_return_value_index": {
+          "attribute": "bundle_return_value_index",
+          "status": "normal",
+          "type": "string",
+          "range": "[a-zA-Z0-9_$(){}\\[\\].:]+",
+          "visibility": "promiseType"
+        },
+        "showstate": {
+          "attribute": "showstate",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "promiseType"
+        },
+        "action": {
+          "attribute": "action",
+          "status": "normal",
+          "type": "body",
+          "visibility": "global"
+        },
+        "classes": {
+          "attribute": "classes",
+          "status": "normal",
+          "type": "body",
+          "visibility": "global"
+        },
+        "comment": {
+          "attribute": "comment",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "global"
+        },
+        "depends_on": {
+          "attribute": "depends_on",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "global"
+        },
+        "handle": {
+          "attribute": "handle",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "global"
+        },
+        "ifvarclass": {
+          "attribute": "ifvarclass",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "global"
+        },
+        "meta": {
+          "attribute": "meta",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "global"
+        }
+      }
+    },
+    "vars": {
+      "status": "normal",
+      "attributes": {
+        "string": {
+          "attribute": "string",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "promiseType"
+        },
+        "int": {
+          "attribute": "int",
+          "status": "normal",
+          "type": "int",
+          "range": "-99999999999,9999999999",
+          "visibility": "promiseType"
+        },
+        "real": {
+          "attribute": "real",
+          "status": "normal",
+          "type": "real",
+          "range": "-9.99999E100,9.99999E100",
+          "visibility": "promiseType"
+        },
+        "slist": {
+          "attribute": "slist",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "promiseType"
+        },
+        "ilist": {
+          "attribute": "ilist",
+          "status": "normal",
+          "type": "ilist",
+          "range": "-99999999999,9999999999",
+          "visibility": "promiseType"
+        },
+        "rlist": {
+          "attribute": "rlist",
+          "status": "normal",
+          "type": "rlist",
+          "range": "-9.99999E100,9.99999E100",
+          "visibility": "promiseType"
+        },
+        "policy": {
+          "attribute": "policy",
+          "status": "normal",
+          "type": "option",
+          "range": "free,overridable,constant,ifdefined",
+          "visibility": "promiseType"
+        },
+        "action": {
+          "attribute": "action",
+          "status": "normal",
+          "type": "body",
+          "visibility": "global"
+        },
+        "classes": {
+          "attribute": "classes",
+          "status": "normal",
+          "type": "body",
+          "visibility": "global"
+        },
+        "comment": {
+          "attribute": "comment",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "global"
+        },
+        "depends_on": {
+          "attribute": "depends_on",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "global"
+        },
+        "handle": {
+          "attribute": "handle",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "global"
+        },
+        "ifvarclass": {
+          "attribute": "ifvarclass",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "global"
+        },
+        "meta": {
+          "attribute": "meta",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "global"
+        }
+      }
+    },
+    "commands": {
+      "status": "normal",
+      "attributes": {
+        "args": {
+          "attribute": "args",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "promiseType"
+        },
+        "contain": {
+          "attribute": "contain",
+          "status": "normal",
+          "type": "body",
+          "visibility": "promiseType"
+        },
+        "module": {
+          "attribute": "module",
+          "status": "normal",
+          "type": "option",
+          "range": "true,false,yes,no,on,off",
+          "visibility": "promiseType"
+        },
+        "action": {
+          "attribute": "action",
+          "status": "normal",
+          "type": "body",
+          "visibility": "global"
+        },
+        "classes": {
+          "attribute": "classes",
+          "status": "normal",
+          "type": "body",
+          "visibility": "global"
+        },
+        "comment": {
+          "attribute": "comment",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "global"
+        },
+        "depends_on": {
+          "attribute": "depends_on",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "global"
+        },
+        "handle": {
+          "attribute": "handle",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "global"
+        },
+        "ifvarclass": {
+          "attribute": "ifvarclass",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "global"
+        },
+        "meta": {
+          "attribute": "meta",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "global"
+        }
+      }
+    },
+    "databases": {
+      "status": "normal",
+      "attributes": {
+        "database_server": {
+          "attribute": "database_server",
+          "status": "normal",
+          "type": "body",
+          "visibility": "promiseType"
+        },
+        "database_type": {
+          "attribute": "database_type",
+          "status": "normal",
+          "type": "option",
+          "range": "sql,ms_registry",
+          "visibility": "promiseType"
+        },
+        "database_operation": {
+          "attribute": "database_operation",
+          "status": "normal",
+          "type": "option",
+          "range": "create,delete,drop,cache,verify,restore",
+          "visibility": "promiseType"
+        },
+        "database_columns": {
+          "attribute": "database_columns",
+          "status": "normal",
+          "type": "slist",
+          "range": ".*",
+          "visibility": "promiseType"
+        },
+        "database_rows": {
+          "attribute": "database_rows",
+          "status": "normal",
+          "type": "slist",
+          "range": ".*,.*",
+          "visibility": "promiseType"
+        },
+        "registry_exclude": {
+          "attribute": "registry_exclude",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "promiseType"
+        },
+        "action": {
+          "attribute": "action",
+          "status": "normal",
+          "type": "body",
+          "visibility": "global"
+        },
+        "classes": {
+          "attribute": "classes",
+          "status": "normal",
+          "type": "body",
+          "visibility": "global"
+        },
+        "comment": {
+          "attribute": "comment",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "global"
+        },
+        "depends_on": {
+          "attribute": "depends_on",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "global"
+        },
+        "handle": {
+          "attribute": "handle",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "global"
+        },
+        "ifvarclass": {
+          "attribute": "ifvarclass",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "global"
+        },
+        "meta": {
+          "attribute": "meta",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "global"
+        }
+      }
+    },
+    "guest_environments": {
+      "status": "normal",
+      "attributes": {
+        "environment_host": {
+          "attribute": "environment_host",
+          "status": "normal",
+          "type": "string",
+          "range": "[a-zA-Z0-9_]+",
+          "visibility": "promiseType"
+        },
+        "environment_interface": {
+          "attribute": "environment_interface",
+          "status": "normal",
+          "type": "body",
+          "visibility": "promiseType"
+        },
+        "environment_resources": {
+          "attribute": "environment_resources",
+          "status": "normal",
+          "type": "body",
+          "visibility": "promiseType"
+        },
+        "environment_state": {
+          "attribute": "environment_state",
+          "status": "normal",
+          "type": "option",
+          "range": "create,delete,running,suspended,down",
+          "visibility": "promiseType"
+        },
+        "environment_type": {
+          "attribute": "environment_type",
+          "status": "normal",
+          "type": "option",
+          "range": "xen,kvm,esx,vbox,test,xen_net,kvm_net,esx_net,test_net,zone,ec2,eucalyptus",
+          "visibility": "promiseType"
+        },
+        "action": {
+          "attribute": "action",
+          "status": "normal",
+          "type": "body",
+          "visibility": "global"
+        },
+        "classes": {
+          "attribute": "classes",
+          "status": "normal",
+          "type": "body",
+          "visibility": "global"
+        },
+        "comment": {
+          "attribute": "comment",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "global"
+        },
+        "depends_on": {
+          "attribute": "depends_on",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "global"
+        },
+        "handle": {
+          "attribute": "handle",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "global"
+        },
+        "ifvarclass": {
+          "attribute": "ifvarclass",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "global"
+        },
+        "meta": {
+          "attribute": "meta",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "global"
+        }
+      }
+    },
+    "files": {
+      "status": "normal",
+      "attributes": {
+        "acl": {
+          "attribute": "acl",
+          "status": "normal",
+          "type": "body",
+          "visibility": "promiseType"
+        },
+        "changes": {
+          "attribute": "changes",
+          "status": "normal",
+          "type": "body",
+          "visibility": "promiseType"
+        },
+        "copy_from": {
+          "attribute": "copy_from",
+          "status": "normal",
+          "type": "body",
+          "visibility": "promiseType"
+        },
+        "create": {
+          "attribute": "create",
+          "status": "normal",
+          "type": "option",
+          "range": "true,false,yes,no,on,off",
+          "visibility": "promiseType"
+        },
+        "delete": {
+          "attribute": "delete",
+          "status": "normal",
+          "type": "body",
+          "visibility": "promiseType"
+        },
+        "depth_search": {
+          "attribute": "depth_search",
+          "status": "normal",
+          "type": "body",
+          "visibility": "promiseType"
+        },
+        "edit_defaults": {
+          "attribute": "edit_defaults",
+          "status": "normal",
+          "type": "body",
+          "visibility": "promiseType"
+        },
+        "edit_line": {
+          "attribute": "edit_line",
+          "status": "normal",
+          "type": "bundle",
+          "visibility": "promiseType"
+        },
+        "edit_template": {
+          "attribute": "edit_template",
+          "status": "normal",
+          "type": "string",
+          "range": "\"?(/.*)",
+          "visibility": "promiseType"
+        },
+        "edit_xml": {
+          "attribute": "edit_xml",
+          "status": "normal",
+          "type": "bundle",
+          "visibility": "promiseType"
+        },
+        "file_select": {
+          "attribute": "file_select",
+          "status": "normal",
+          "type": "body",
+          "visibility": "promiseType"
+        },
+        "link_from": {
+          "attribute": "link_from",
+          "status": "normal",
+          "type": "body",
+          "visibility": "promiseType"
+        },
+        "move_obstructions": {
+          "attribute": "move_obstructions",
+          "status": "normal",
+          "type": "option",
+          "range": "true,false,yes,no,on,off",
+          "visibility": "promiseType"
+        },
+        "pathtype": {
+          "attribute": "pathtype",
+          "status": "normal",
+          "type": "option",
+          "range": "literal,regex,guess",
+          "visibility": "promiseType"
+        },
+        "perms": {
+          "attribute": "perms",
+          "status": "normal",
+          "type": "body",
+          "visibility": "promiseType"
+        },
+        "rename": {
+          "attribute": "rename",
+          "status": "normal",
+          "type": "body",
+          "visibility": "promiseType"
+        },
+        "repository": {
+          "attribute": "repository",
+          "status": "normal",
+          "type": "string",
+          "range": "\"?(/.*)",
+          "visibility": "promiseType"
+        },
+        "touch": {
+          "attribute": "touch",
+          "status": "normal",
+          "type": "option",
+          "range": "true,false,yes,no,on,off",
+          "visibility": "promiseType"
+        },
+        "transformer": {
+          "attribute": "transformer",
+          "status": "normal",
+          "type": "string",
+          "range": "\"?(/.*)",
+          "visibility": "promiseType"
+        },
+        "action": {
+          "attribute": "action",
+          "status": "normal",
+          "type": "body",
+          "visibility": "global"
+        },
+        "classes": {
+          "attribute": "classes",
+          "status": "normal",
+          "type": "body",
+          "visibility": "global"
+        },
+        "comment": {
+          "attribute": "comment",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "global"
+        },
+        "depends_on": {
+          "attribute": "depends_on",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "global"
+        },
+        "handle": {
+          "attribute": "handle",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "global"
+        },
+        "ifvarclass": {
+          "attribute": "ifvarclass",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "global"
+        },
+        "meta": {
+          "attribute": "meta",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "global"
+        }
+      }
+    },
+    "delete_lines": {
+      "status": "normal",
+      "attributes": {
+        "delete_select": {
+          "attribute": "delete_select",
+          "status": "normal",
+          "type": "body",
+          "visibility": "promiseType"
+        },
+        "not_matching": {
+          "attribute": "not_matching",
+          "status": "normal",
+          "type": "option",
+          "range": "true,false,yes,no,on,off",
+          "visibility": "promiseType"
+        },
+        "select_region": {
+          "attribute": "select_region",
+          "status": "normal",
+          "type": "body",
+          "visibility": "bundle"
+        },
+        "action": {
+          "attribute": "action",
+          "status": "normal",
+          "type": "body",
+          "visibility": "global"
+        },
+        "classes": {
+          "attribute": "classes",
+          "status": "normal",
+          "type": "body",
+          "visibility": "global"
+        },
+        "comment": {
+          "attribute": "comment",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "global"
+        },
+        "depends_on": {
+          "attribute": "depends_on",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "global"
+        },
+        "handle": {
+          "attribute": "handle",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "global"
+        },
+        "ifvarclass": {
+          "attribute": "ifvarclass",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "global"
+        },
+        "meta": {
+          "attribute": "meta",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "global"
+        }
+      }
+    },
+    "insert_lines": {
+      "status": "normal",
+      "attributes": {
+        "expand_scalars": {
+          "attribute": "expand_scalars",
+          "status": "normal",
+          "type": "option",
+          "range": "true,false,yes,no,on,off",
+          "visibility": "promiseType"
+        },
+        "insert_type": {
+          "attribute": "insert_type",
+          "status": "normal",
+          "type": "option",
+          "range": "literal,string,file,file_preserve_block,preserve_block",
+          "visibility": "promiseType"
+        },
+        "insert_select": {
+          "attribute": "insert_select",
+          "status": "normal",
+          "type": "body",
+          "visibility": "promiseType"
+        },
+        "location": {
+          "attribute": "location",
+          "status": "normal",
+          "type": "body",
+          "visibility": "promiseType"
+        },
+        "whitespace_policy": {
+          "attribute": "whitespace_policy",
+          "status": "normal",
+          "type": "olist",
+          "range": "ignore_leading,ignore_trailing,ignore_embedded,exact_match",
+          "visibility": "promiseType"
+        },
+        "select_region": {
+          "attribute": "select_region",
+          "status": "normal",
+          "type": "body",
+          "visibility": "bundle"
+        },
+        "action": {
+          "attribute": "action",
+          "status": "normal",
+          "type": "body",
+          "visibility": "global"
+        },
+        "classes": {
+          "attribute": "classes",
+          "status": "normal",
+          "type": "body",
+          "visibility": "global"
+        },
+        "comment": {
+          "attribute": "comment",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "global"
+        },
+        "depends_on": {
+          "attribute": "depends_on",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "global"
+        },
+        "handle": {
+          "attribute": "handle",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "global"
+        },
+        "ifvarclass": {
+          "attribute": "ifvarclass",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "global"
+        },
+        "meta": {
+          "attribute": "meta",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "global"
+        }
+      }
+    },
+    "field_edits": {
+      "status": "normal",
+      "attributes": {
+        "edit_field": {
+          "attribute": "edit_field",
+          "status": "normal",
+          "type": "body",
+          "visibility": "promiseType"
+        },
+        "select_region": {
+          "attribute": "select_region",
+          "status": "normal",
+          "type": "body",
+          "visibility": "bundle"
+        },
+        "action": {
+          "attribute": "action",
+          "status": "normal",
+          "type": "body",
+          "visibility": "global"
+        },
+        "classes": {
+          "attribute": "classes",
+          "status": "normal",
+          "type": "body",
+          "visibility": "global"
+        },
+        "comment": {
+          "attribute": "comment",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "global"
+        },
+        "depends_on": {
+          "attribute": "depends_on",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "global"
+        },
+        "handle": {
+          "attribute": "handle",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "global"
+        },
+        "ifvarclass": {
+          "attribute": "ifvarclass",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "global"
+        },
+        "meta": {
+          "attribute": "meta",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "global"
+        }
+      }
+    },
+    "replace_patterns": {
+      "status": "normal",
+      "attributes": {
+        "replace_with": {
+          "attribute": "replace_with",
+          "status": "normal",
+          "type": "body",
+          "visibility": "promiseType"
+        },
+        "select_region": {
+          "attribute": "select_region",
+          "status": "normal",
+          "type": "body",
+          "visibility": "bundle"
+        },
+        "action": {
+          "attribute": "action",
+          "status": "normal",
+          "type": "body",
+          "visibility": "global"
+        },
+        "classes": {
+          "attribute": "classes",
+          "status": "normal",
+          "type": "body",
+          "visibility": "global"
+        },
+        "comment": {
+          "attribute": "comment",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "global"
+        },
+        "depends_on": {
+          "attribute": "depends_on",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "global"
+        },
+        "handle": {
+          "attribute": "handle",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "global"
+        },
+        "ifvarclass": {
+          "attribute": "ifvarclass",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "global"
+        },
+        "meta": {
+          "attribute": "meta",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "global"
+        }
+      }
+    },
+    "build_xpath": {
+      "status": "normal",
+      "attributes": {
+        "build_xpath": {
+          "attribute": "build_xpath",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "bundle"
+        },
+        "select_xpath": {
+          "attribute": "select_xpath",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "bundle"
+        },
+        "action": {
+          "attribute": "action",
+          "status": "normal",
+          "type": "body",
+          "visibility": "global"
+        },
+        "classes": {
+          "attribute": "classes",
+          "status": "normal",
+          "type": "body",
+          "visibility": "global"
+        },
+        "comment": {
+          "attribute": "comment",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "global"
+        },
+        "depends_on": {
+          "attribute": "depends_on",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "global"
+        },
+        "handle": {
+          "attribute": "handle",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "global"
+        },
+        "ifvarclass": {
+          "attribute": "ifvarclass",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "global"
+        },
+        "meta": {
+          "attribute": "meta",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "global"
+        }
+      }
+    },
+    "delete_tree": {
+      "status": "normal",
+      "attributes": {
+        "build_xpath": {
+          "attribute": "build_xpath",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "bundle"
+        },
+        "select_xpath": {
+          "attribute": "select_xpath",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "bundle"
+        },
+        "action": {
+          "attribute": "action",
+          "status": "normal",
+          "type": "body",
+          "visibility": "global"
+        },
+        "classes": {
+          "attribute": "classes",
+          "status": "normal",
+          "type": "body",
+          "visibility": "global"
+        },
+        "comment": {
+          "attribute": "comment",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "global"
+        },
+        "depends_on": {
+          "attribute": "depends_on",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "global"
+        },
+        "handle": {
+          "attribute": "handle",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "global"
+        },
+        "ifvarclass": {
+          "attribute": "ifvarclass",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "global"
+        },
+        "meta": {
+          "attribute": "meta",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "global"
+        }
+      }
+    },
+    "insert_tree": {
+      "status": "normal",
+      "attributes": {
+        "build_xpath": {
+          "attribute": "build_xpath",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "bundle"
+        },
+        "select_xpath": {
+          "attribute": "select_xpath",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "bundle"
+        },
+        "action": {
+          "attribute": "action",
+          "status": "normal",
+          "type": "body",
+          "visibility": "global"
+        },
+        "classes": {
+          "attribute": "classes",
+          "status": "normal",
+          "type": "body",
+          "visibility": "global"
+        },
+        "comment": {
+          "attribute": "comment",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "global"
+        },
+        "depends_on": {
+          "attribute": "depends_on",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "global"
+        },
+        "handle": {
+          "attribute": "handle",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "global"
+        },
+        "ifvarclass": {
+          "attribute": "ifvarclass",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "global"
+        },
+        "meta": {
+          "attribute": "meta",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "global"
+        }
+      }
+    },
+    "delete_attribute": {
+      "status": "normal",
+      "attributes": {
+        "build_xpath": {
+          "attribute": "build_xpath",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "bundle"
+        },
+        "select_xpath": {
+          "attribute": "select_xpath",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "bundle"
+        },
+        "action": {
+          "attribute": "action",
+          "status": "normal",
+          "type": "body",
+          "visibility": "global"
+        },
+        "classes": {
+          "attribute": "classes",
+          "status": "normal",
+          "type": "body",
+          "visibility": "global"
+        },
+        "comment": {
+          "attribute": "comment",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "global"
+        },
+        "depends_on": {
+          "attribute": "depends_on",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "global"
+        },
+        "handle": {
+          "attribute": "handle",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "global"
+        },
+        "ifvarclass": {
+          "attribute": "ifvarclass",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "global"
+        },
+        "meta": {
+          "attribute": "meta",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "global"
+        }
+      }
+    },
+    "set_attribute": {
+      "status": "normal",
+      "attributes": {
+        "attribute_value": {
+          "attribute": "attribute_value",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "promiseType"
+        },
+        "build_xpath": {
+          "attribute": "build_xpath",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "bundle"
+        },
+        "select_xpath": {
+          "attribute": "select_xpath",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "bundle"
+        },
+        "action": {
+          "attribute": "action",
+          "status": "normal",
+          "type": "body",
+          "visibility": "global"
+        },
+        "classes": {
+          "attribute": "classes",
+          "status": "normal",
+          "type": "body",
+          "visibility": "global"
+        },
+        "comment": {
+          "attribute": "comment",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "global"
+        },
+        "depends_on": {
+          "attribute": "depends_on",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "global"
+        },
+        "handle": {
+          "attribute": "handle",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "global"
+        },
+        "ifvarclass": {
+          "attribute": "ifvarclass",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "global"
+        },
+        "meta": {
+          "attribute": "meta",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "global"
+        }
+      }
+    },
+    "delete_text": {
+      "status": "normal",
+      "attributes": {
+        "build_xpath": {
+          "attribute": "build_xpath",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "bundle"
+        },
+        "select_xpath": {
+          "attribute": "select_xpath",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "bundle"
+        },
+        "action": {
+          "attribute": "action",
+          "status": "normal",
+          "type": "body",
+          "visibility": "global"
+        },
+        "classes": {
+          "attribute": "classes",
+          "status": "normal",
+          "type": "body",
+          "visibility": "global"
+        },
+        "comment": {
+          "attribute": "comment",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "global"
+        },
+        "depends_on": {
+          "attribute": "depends_on",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "global"
+        },
+        "handle": {
+          "attribute": "handle",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "global"
+        },
+        "ifvarclass": {
+          "attribute": "ifvarclass",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "global"
+        },
+        "meta": {
+          "attribute": "meta",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "global"
+        }
+      }
+    },
+    "set_text": {
+      "status": "normal",
+      "attributes": {
+        "build_xpath": {
+          "attribute": "build_xpath",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "bundle"
+        },
+        "select_xpath": {
+          "attribute": "select_xpath",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "bundle"
+        },
+        "action": {
+          "attribute": "action",
+          "status": "normal",
+          "type": "body",
+          "visibility": "global"
+        },
+        "classes": {
+          "attribute": "classes",
+          "status": "normal",
+          "type": "body",
+          "visibility": "global"
+        },
+        "comment": {
+          "attribute": "comment",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "global"
+        },
+        "depends_on": {
+          "attribute": "depends_on",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "global"
+        },
+        "handle": {
+          "attribute": "handle",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "global"
+        },
+        "ifvarclass": {
+          "attribute": "ifvarclass",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "global"
+        },
+        "meta": {
+          "attribute": "meta",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "global"
+        }
+      }
+    },
+    "insert_text": {
+      "status": "normal",
+      "attributes": {
+        "build_xpath": {
+          "attribute": "build_xpath",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "bundle"
+        },
+        "select_xpath": {
+          "attribute": "select_xpath",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "bundle"
+        },
+        "action": {
+          "attribute": "action",
+          "status": "normal",
+          "type": "body",
+          "visibility": "global"
+        },
+        "classes": {
+          "attribute": "classes",
+          "status": "normal",
+          "type": "body",
+          "visibility": "global"
+        },
+        "comment": {
+          "attribute": "comment",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "global"
+        },
+        "depends_on": {
+          "attribute": "depends_on",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "global"
+        },
+        "handle": {
+          "attribute": "handle",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "global"
+        },
+        "ifvarclass": {
+          "attribute": "ifvarclass",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "global"
+        },
+        "meta": {
+          "attribute": "meta",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "global"
+        }
+      }
+    },
+    "methods": {
+      "status": "normal",
+      "attributes": {
+        "inherit": {
+          "attribute": "inherit",
+          "status": "normal",
+          "type": "option",
+          "range": "true,false,yes,no,on,off",
+          "visibility": "promiseType"
+        },
+        "usebundle": {
+          "attribute": "usebundle",
+          "status": "normal",
+          "type": "bundle",
+          "visibility": "promiseType"
+        },
+        "useresult": {
+          "attribute": "useresult",
+          "status": "normal",
+          "type": "string",
+          "range": "[a-zA-Z0-9_$(){}\\[\\].:]+",
+          "visibility": "promiseType"
+        },
+        "action": {
+          "attribute": "action",
+          "status": "normal",
+          "type": "body",
+          "visibility": "global"
+        },
+        "classes": {
+          "attribute": "classes",
+          "status": "normal",
+          "type": "body",
+          "visibility": "global"
+        },
+        "comment": {
+          "attribute": "comment",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "global"
+        },
+        "depends_on": {
+          "attribute": "depends_on",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "global"
+        },
+        "handle": {
+          "attribute": "handle",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "global"
+        },
+        "ifvarclass": {
+          "attribute": "ifvarclass",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "global"
+        },
+        "meta": {
+          "attribute": "meta",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "global"
+        }
+      }
+    },
+    "packages": {
+      "status": "normal",
+      "attributes": {
+        "package_architectures": {
+          "attribute": "package_architectures",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "promiseType"
+        },
+        "package_method": {
+          "attribute": "package_method",
+          "status": "normal",
+          "type": "body",
+          "visibility": "promiseType"
+        },
+        "package_policy": {
+          "attribute": "package_policy",
+          "status": "normal",
+          "type": "option",
+          "range": "add,delete,reinstall,update,addupdate,patch,verify",
+          "visibility": "promiseType"
+        },
+        "package_select": {
+          "attribute": "package_select",
+          "status": "normal",
+          "type": "option",
+          "range": ">,<,==,!=,>=,<=",
+          "visibility": "promiseType"
+        },
+        "package_version": {
+          "attribute": "package_version",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "promiseType"
+        },
+        "action": {
+          "attribute": "action",
+          "status": "normal",
+          "type": "body",
+          "visibility": "global"
+        },
+        "classes": {
+          "attribute": "classes",
+          "status": "normal",
+          "type": "body",
+          "visibility": "global"
+        },
+        "comment": {
+          "attribute": "comment",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "global"
+        },
+        "depends_on": {
+          "attribute": "depends_on",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "global"
+        },
+        "handle": {
+          "attribute": "handle",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "global"
+        },
+        "ifvarclass": {
+          "attribute": "ifvarclass",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "global"
+        },
+        "meta": {
+          "attribute": "meta",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "global"
+        }
+      }
+    },
+    "processes": {
+      "status": "normal",
+      "attributes": {
+        "process_count": {
+          "attribute": "process_count",
+          "status": "normal",
+          "type": "body",
+          "visibility": "promiseType"
+        },
+        "process_select": {
+          "attribute": "process_select",
+          "status": "normal",
+          "type": "body",
+          "visibility": "promiseType"
+        },
+        "process_stop": {
+          "attribute": "process_stop",
+          "status": "normal",
+          "type": "string",
+          "range": "\"?(/.*)",
+          "visibility": "promiseType"
+        },
+        "restart_class": {
+          "attribute": "restart_class",
+          "status": "normal",
+          "type": "string",
+          "range": "[a-zA-Z0-9_$(){}\\[\\].:]+",
+          "visibility": "promiseType"
+        },
+        "signals": {
+          "attribute": "signals",
+          "status": "normal",
+          "type": "olist",
+          "range": "hup,int,trap,kill,pipe,cont,abrt,stop,quit,term,child,usr1,usr2,bus,segv",
+          "visibility": "promiseType"
+        },
+        "action": {
+          "attribute": "action",
+          "status": "normal",
+          "type": "body",
+          "visibility": "global"
+        },
+        "classes": {
+          "attribute": "classes",
+          "status": "normal",
+          "type": "body",
+          "visibility": "global"
+        },
+        "comment": {
+          "attribute": "comment",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "global"
+        },
+        "depends_on": {
+          "attribute": "depends_on",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "global"
+        },
+        "handle": {
+          "attribute": "handle",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "global"
+        },
+        "ifvarclass": {
+          "attribute": "ifvarclass",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "global"
+        },
+        "meta": {
+          "attribute": "meta",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "global"
+        }
+      }
+    },
+    "services": {
+      "status": "normal",
+      "attributes": {
+        "service_policy": {
+          "attribute": "service_policy",
+          "status": "normal",
+          "type": "option",
+          "range": "start,stop,disable,restart,reload",
+          "visibility": "promiseType"
+        },
+        "service_dependencies": {
+          "attribute": "service_dependencies",
+          "status": "normal",
+          "type": "slist",
+          "range": "[a-zA-Z0-9_$(){}\\[\\].:]+",
+          "visibility": "promiseType"
+        },
+        "service_method": {
+          "attribute": "service_method",
+          "status": "normal",
+          "type": "body",
+          "visibility": "promiseType"
+        },
+        "action": {
+          "attribute": "action",
+          "status": "normal",
+          "type": "body",
+          "visibility": "global"
+        },
+        "classes": {
+          "attribute": "classes",
+          "status": "normal",
+          "type": "body",
+          "visibility": "global"
+        },
+        "comment": {
+          "attribute": "comment",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "global"
+        },
+        "depends_on": {
+          "attribute": "depends_on",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "global"
+        },
+        "handle": {
+          "attribute": "handle",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "global"
+        },
+        "ifvarclass": {
+          "attribute": "ifvarclass",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "global"
+        },
+        "meta": {
+          "attribute": "meta",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "global"
+        }
+      }
+    },
+    "storage": {
+      "status": "normal",
+      "attributes": {
+        "mount": {
+          "attribute": "mount",
+          "status": "normal",
+          "type": "body",
+          "visibility": "promiseType"
+        },
+        "volume": {
+          "attribute": "volume",
+          "status": "normal",
+          "type": "body",
+          "visibility": "promiseType"
+        },
+        "action": {
+          "attribute": "action",
+          "status": "normal",
+          "type": "body",
+          "visibility": "global"
+        },
+        "classes": {
+          "attribute": "classes",
+          "status": "normal",
+          "type": "body",
+          "visibility": "global"
+        },
+        "comment": {
+          "attribute": "comment",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "global"
+        },
+        "depends_on": {
+          "attribute": "depends_on",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "global"
+        },
+        "handle": {
+          "attribute": "handle",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "global"
+        },
+        "ifvarclass": {
+          "attribute": "ifvarclass",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "global"
+        },
+        "meta": {
+          "attribute": "meta",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "global"
+        }
+      }
+    },
+    "access": {
+      "status": "normal",
+      "attributes": {
+        "admit": {
+          "attribute": "admit",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "promiseType"
+        },
+        "deny": {
+          "attribute": "deny",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "promiseType"
+        },
+        "maproot": {
+          "attribute": "maproot",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "promiseType"
+        },
+        "ifencrypted": {
+          "attribute": "ifencrypted",
+          "status": "normal",
+          "type": "option",
+          "range": "true,false,yes,no,on,off",
+          "visibility": "promiseType"
+        },
+        "resource_type": {
+          "attribute": "resource_type",
+          "status": "normal",
+          "type": "option",
+          "range": "path,literal,context,query,variable",
+          "visibility": "promiseType"
+        },
+        "report_data_select": {
+          "attribute": "report_data_select",
+          "status": "normal",
+          "type": "body",
+          "visibility": "promiseType"
+        },
+        "action": {
+          "attribute": "action",
+          "status": "normal",
+          "type": "body",
+          "visibility": "global"
+        },
+        "classes": {
+          "attribute": "classes",
+          "status": "normal",
+          "type": "body",
+          "visibility": "global"
+        },
+        "comment": {
+          "attribute": "comment",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "global"
+        },
+        "depends_on": {
+          "attribute": "depends_on",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "global"
+        },
+        "handle": {
+          "attribute": "handle",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "global"
+        },
+        "ifvarclass": {
+          "attribute": "ifvarclass",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "global"
+        },
+        "meta": {
+          "attribute": "meta",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "global"
+        }
+      }
+    },
+    "roles": {
+      "status": "normal",
+      "attributes": {
+        "authorize": {
+          "attribute": "authorize",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "promiseType"
+        },
+        "action": {
+          "attribute": "action",
+          "status": "normal",
+          "type": "body",
+          "visibility": "global"
+        },
+        "classes": {
+          "attribute": "classes",
+          "status": "normal",
+          "type": "body",
+          "visibility": "global"
+        },
+        "comment": {
+          "attribute": "comment",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "global"
+        },
+        "depends_on": {
+          "attribute": "depends_on",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "global"
+        },
+        "handle": {
+          "attribute": "handle",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "global"
+        },
+        "ifvarclass": {
+          "attribute": "ifvarclass",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "global"
+        },
+        "meta": {
+          "attribute": "meta",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "global"
+        }
+      }
+    },
+    "measurements": {
+      "status": "normal",
+      "attributes": {
+        "stream_type": {
+          "attribute": "stream_type",
+          "status": "normal",
+          "type": "option",
+          "range": "pipe,file",
+          "visibility": "promiseType"
+        },
+        "data_type": {
+          "attribute": "data_type",
+          "status": "normal",
+          "type": "option",
+          "range": "counter,int,real,string,slist",
+          "visibility": "promiseType"
+        },
+        "history_type": {
+          "attribute": "history_type",
+          "status": "normal",
+          "type": "option",
+          "range": "weekly,scalar,static,log",
+          "visibility": "promiseType"
+        },
+        "units": {
+          "attribute": "units",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "promiseType"
+        },
+        "match_value": {
+          "attribute": "match_value",
+          "status": "normal",
+          "type": "body",
+          "visibility": "promiseType"
+        },
+        "action": {
+          "attribute": "action",
+          "status": "normal",
+          "type": "body",
+          "visibility": "global"
+        },
+        "classes": {
+          "attribute": "classes",
+          "status": "normal",
+          "type": "body",
+          "visibility": "global"
+        },
+        "comment": {
+          "attribute": "comment",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "global"
+        },
+        "depends_on": {
+          "attribute": "depends_on",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "global"
+        },
+        "handle": {
+          "attribute": "handle",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "global"
+        },
+        "ifvarclass": {
+          "attribute": "ifvarclass",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "global"
+        },
+        "meta": {
+          "attribute": "meta",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "global"
+        }
+      }
+    }
+  },
+  "bodyTypes": {
+    "printfile": {
+      "status": "normal",
+      "attributes": {
+        "file_to_print": {
+          "attribute": "file_to_print",
+          "status": "normal",
+          "type": "string",
+          "range": "\"?(/.*)",
+          "visibility": "body"
+        },
+        "number_of_lines": {
+          "attribute": "number_of_lines",
+          "status": "normal",
+          "type": "int",
+          "range": "0,99999999999",
+          "visibility": "body"
+        }
+      }
+    },
+    "action": {
+      "status": "normal",
+      "attributes": {
+        "action_policy": {
+          "attribute": "action_policy",
+          "status": "normal",
+          "type": "option",
+          "range": "fix,warn,nop",
+          "visibility": "body"
+        },
+        "ifelapsed": {
+          "attribute": "ifelapsed",
+          "status": "normal",
+          "type": "int",
+          "range": "0,99999999999",
+          "visibility": "body"
+        },
+        "expireafter": {
+          "attribute": "expireafter",
+          "status": "normal",
+          "type": "int",
+          "range": "0,99999999999",
+          "visibility": "body"
+        },
+        "log_string": {
+          "attribute": "log_string",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "body"
+        },
+        "log_level": {
+          "attribute": "log_level",
+          "status": "normal",
+          "type": "option",
+          "range": "inform,verbose,error,log",
+          "visibility": "body"
+        },
+        "log_kept": {
+          "attribute": "log_kept",
+          "status": "normal",
+          "type": "string",
+          "range": "stdout|udp_syslog|(\"?[a-zA-Z]:\\\\.*)|(/.*)",
+          "visibility": "body"
+        },
+        "log_priority": {
+          "attribute": "log_priority",
+          "status": "normal",
+          "type": "option",
+          "range": "emergency,alert,critical,error,warning,notice,info,debug",
+          "visibility": "body"
+        },
+        "log_repaired": {
+          "attribute": "log_repaired",
+          "status": "normal",
+          "type": "string",
+          "range": "stdout|udp_syslog|(\"?[a-zA-Z]:\\\\.*)|(/.*)",
+          "visibility": "body"
+        },
+        "log_failed": {
+          "attribute": "log_failed",
+          "status": "normal",
+          "type": "string",
+          "range": "stdout|udp_syslog|(\"?[a-zA-Z]:\\\\.*)|(/.*)",
+          "visibility": "body"
+        },
+        "value_kept": {
+          "attribute": "value_kept",
+          "status": "normal",
+          "type": "real",
+          "range": "-9.99999E100,9.99999E100",
+          "visibility": "body"
+        },
+        "value_repaired": {
+          "attribute": "value_repaired",
+          "status": "normal",
+          "type": "real",
+          "range": "-9.99999E100,9.99999E100",
+          "visibility": "body"
+        },
+        "value_notkept": {
+          "attribute": "value_notkept",
+          "status": "normal",
+          "type": "real",
+          "range": "-9.99999E100,9.99999E100",
+          "visibility": "body"
+        },
+        "audit": {
+          "attribute": "audit",
+          "status": "normal",
+          "type": "option",
+          "range": "true,false,yes,no,on,off",
+          "visibility": "body"
+        },
+        "background": {
+          "attribute": "background",
+          "status": "normal",
+          "type": "option",
+          "range": "true,false,yes,no,on,off",
+          "visibility": "body"
+        },
+        "report_level": {
+          "attribute": "report_level",
+          "status": "normal",
+          "type": "option",
+          "range": "inform,verbose,error,log",
+          "visibility": "body"
+        },
+        "measurement_class": {
+          "attribute": "measurement_class",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "body"
+        }
+      }
+    },
+    "classes": {
+      "status": "normal",
+      "attributes": {
+        "scope": {
+          "attribute": "scope",
+          "status": "normal",
+          "type": "option",
+          "range": "namespace,bundle",
+          "visibility": "body"
+        },
+        "promise_repaired": {
+          "attribute": "promise_repaired",
+          "status": "normal",
+          "type": "slist",
+          "range": "[a-zA-Z0-9_$(){}\\[\\].:]+",
+          "visibility": "body"
+        },
+        "repair_failed": {
+          "attribute": "repair_failed",
+          "status": "normal",
+          "type": "slist",
+          "range": "[a-zA-Z0-9_$(){}\\[\\].:]+",
+          "visibility": "body"
+        },
+        "repair_denied": {
+          "attribute": "repair_denied",
+          "status": "normal",
+          "type": "slist",
+          "range": "[a-zA-Z0-9_$(){}\\[\\].:]+",
+          "visibility": "body"
+        },
+        "repair_timeout": {
+          "attribute": "repair_timeout",
+          "status": "normal",
+          "type": "slist",
+          "range": "[a-zA-Z0-9_$(){}\\[\\].:]+",
+          "visibility": "body"
+        },
+        "promise_kept": {
+          "attribute": "promise_kept",
+          "status": "normal",
+          "type": "slist",
+          "range": "[a-zA-Z0-9_$(){}\\[\\].:]+",
+          "visibility": "body"
+        },
+        "cancel_kept": {
+          "attribute": "cancel_kept",
+          "status": "normal",
+          "type": "slist",
+          "range": "[a-zA-Z0-9_$(){}\\[\\].:]+",
+          "visibility": "body"
+        },
+        "cancel_repaired": {
+          "attribute": "cancel_repaired",
+          "status": "normal",
+          "type": "slist",
+          "range": "[a-zA-Z0-9_$(){}\\[\\].:]+",
+          "visibility": "body"
+        },
+        "cancel_notkept": {
+          "attribute": "cancel_notkept",
+          "status": "normal",
+          "type": "slist",
+          "range": "[a-zA-Z0-9_$(){}\\[\\].:]+",
+          "visibility": "body"
+        },
+        "kept_returncodes": {
+          "attribute": "kept_returncodes",
+          "status": "normal",
+          "type": "slist",
+          "range": "[-0-9_$(){}\\[\\].]+",
+          "visibility": "body"
+        },
+        "repaired_returncodes": {
+          "attribute": "repaired_returncodes",
+          "status": "normal",
+          "type": "slist",
+          "range": "[-0-9_$(){}\\[\\].]+",
+          "visibility": "body"
+        },
+        "failed_returncodes": {
+          "attribute": "failed_returncodes",
+          "status": "normal",
+          "type": "slist",
+          "range": "[-0-9_$(){}\\[\\].]+",
+          "visibility": "body"
+        },
+        "persist_time": {
+          "attribute": "persist_time",
+          "status": "normal",
+          "type": "int",
+          "range": "0,99999999999",
+          "visibility": "body"
+        },
+        "timer_policy": {
+          "attribute": "timer_policy",
+          "status": "normal",
+          "type": "option",
+          "range": "absolute,reset",
+          "visibility": "body"
+        }
+      }
+    },
+    "contain": {
+      "status": "normal",
+      "attributes": {
+        "useshell": {
+          "attribute": "useshell",
+          "status": "normal",
+          "type": "option",
+          "range": "noshell,useshell,powershell,true,false,yes,no,on,off",
+          "visibility": "body"
+        },
+        "umask": {
+          "attribute": "umask",
+          "status": "normal",
+          "type": "option",
+          "range": "0,77,22,27,72,077,002,022,027,072",
+          "visibility": "body"
+        },
+        "exec_owner": {
+          "attribute": "exec_owner",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "body"
+        },
+        "exec_group": {
+          "attribute": "exec_group",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "body"
+        },
+        "exec_timeout": {
+          "attribute": "exec_timeout",
+          "status": "normal",
+          "type": "int",
+          "range": "1,3600",
+          "visibility": "body"
+        },
+        "chdir": {
+          "attribute": "chdir",
+          "status": "normal",
+          "type": "string",
+          "range": "\"?(/.*)",
+          "visibility": "body"
+        },
+        "chroot": {
+          "attribute": "chroot",
+          "status": "normal",
+          "type": "string",
+          "range": "\"?(/.*)",
+          "visibility": "body"
+        },
+        "preview": {
+          "attribute": "preview",
+          "status": "normal",
+          "type": "option",
+          "range": "true,false,yes,no,on,off",
+          "visibility": "body"
+        },
+        "no_output": {
+          "attribute": "no_output",
+          "status": "normal",
+          "type": "option",
+          "range": "true,false,yes,no,on,off",
+          "visibility": "body"
+        }
+      }
+    },
+    "database_server": {
+      "status": "normal",
+      "attributes": {
+        "db_server_owner": {
+          "attribute": "db_server_owner",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "body"
+        },
+        "db_server_password": {
+          "attribute": "db_server_password",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "body"
+        },
+        "db_server_host": {
+          "attribute": "db_server_host",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "body"
+        },
+        "db_server_type": {
+          "attribute": "db_server_type",
+          "status": "normal",
+          "type": "option",
+          "range": "postgres,mysql",
+          "visibility": "body"
+        },
+        "db_server_connection_db": {
+          "attribute": "db_server_connection_db",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "body"
+        }
+      }
+    },
+    "environment_interface": {
+      "status": "normal",
+      "attributes": {
+        "env_addresses": {
+          "attribute": "env_addresses",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "body"
+        },
+        "env_name": {
+          "attribute": "env_name",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "body"
+        },
+        "env_network": {
+          "attribute": "env_network",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "body"
+        }
+      }
+    },
+    "environment_resources": {
+      "status": "normal",
+      "attributes": {
+        "env_cpus": {
+          "attribute": "env_cpus",
+          "status": "normal",
+          "type": "int",
+          "range": "0,99999999999",
+          "visibility": "body"
+        },
+        "env_memory": {
+          "attribute": "env_memory",
+          "status": "normal",
+          "type": "int",
+          "range": "0,99999999999",
+          "visibility": "body"
+        },
+        "env_disk": {
+          "attribute": "env_disk",
+          "status": "normal",
+          "type": "int",
+          "range": "0,99999999999",
+          "visibility": "body"
+        },
+        "env_baseline": {
+          "attribute": "env_baseline",
+          "status": "normal",
+          "type": "string",
+          "range": "\"?(/.*)",
+          "visibility": "body"
+        },
+        "env_spec": {
+          "attribute": "env_spec",
+          "status": "normal",
+          "type": "string",
+          "range": ".*",
+          "visibility": "body"
+        }
+      }
+    },
+    "acl": {
+      "status": "normal",
+      "attributes": {
+        "aces": {
+          "attribute": "aces",
+          "status": "normal",
+          "type": "slist",
+          "range": "((user|group):[^:]+:[-=+,rwx()dtTabBpcoD]*(:(allow|deny))?)|((all|mask):[-=+,rwx()]*(:(allow|deny))?)",
+          "visibility": "body"
+        },
+        "acl_directory_inherit": {
+          "attribute": "acl_directory_inherit",
+          "status": "deprecated",
+          "type": "option",
+          "range": "nochange,parent,specify,clear",
+          "visibility": "body"
+        },
+        "acl_default": {
+          "attribute": "acl_default",
+          "status": "normal",
+          "type": "option",
+          "range": "nochange,access,specify,clear",
+          "visibility": "body"
+        },
+        "acl_method": {
+          "attribute": "acl_method",
+          "status": "normal",
+          "type": "option",
+          "range": "append,overwrite",
+          "visibility": "body"
+        },
+        "acl_type": {
+          "attribute": "acl_type",
+          "status": "normal",
+          "type": "option",
+          "range": "generic,posix,ntfs",
+          "visibility": "body"
+        },
+        "specify_inherit_aces": {
+          "attribute": "specify_inherit_aces",
+          "status": "deprecated",
+          "type": "slist",
+          "range": "((user|group):[^:]+:[-=+,rwx()dtTabBpcoD]*(:(allow|deny))?)|((all|mask):[-=+,rwx()]*(:(allow|deny))?)",
+          "visibility": "body"
+        },
+        "specify_default_aces": {
+          "attribute": "specify_default_aces",
+          "status": "normal",
+          "type": "slist",
+          "range": "((user|group):[^:]+:[-=+,rwx()dtTabBpcoD]*(:(allow|deny))?)|((all|mask):[-=+,rwx()]*(:(allow|deny))?)",
+          "visibility": "body"
+        },
+        "acl_inherit": {
+          "attribute": "acl_inherit",
+          "status": "normal",
+          "type": "option",
+          "range": "true,false,yes,no,on,off,nochange",
+          "visibility": "body"
+        }
+      }
+    },
+    "changes": {
+      "status": "normal",
+      "attributes": {
+        "hash": {
+          "attribute": "hash",
+          "status": "normal",
+          "type": "option",
+          "range": "md5,sha1,sha224,sha256,sha384,sha512,best",
+          "visibility": "body"
+        },
+        "report_changes": {
+          "attribute": "report_changes",
+          "status": "normal",
+          "type": "option",
+          "range": "all,stats,content,none",
+          "visibility": "body"
+        },
+        "update_hashes": {
+          "attribute": "update_hashes",
+          "status": "normal",
+          "type": "option",
+          "range": "true,false,yes,no,on,off",
+          "visibility": "body"
+        },
+        "report_diffs": {
+          "attribute": "report_diffs",
+          "status": "normal",
+          "type": "option",
+          "range": "true,false,yes,no,on,off",
+          "visibility": "body"
+        }
+      }
+    },
+    "copy_from": {
+      "status": "normal",
+      "attributes": {
+        "source": {
+          "attribute": "source",
+          "status": "normal",
+          "type": "string",
+          "range": ".+",
+          "visibility": "body"
+        },
+        "servers": {
+          "attribute": "servers",
+          "status": "normal",
+          "type": "slist",
+          "range": "[A-Za-z0-9_.:-]+",
+          "visibility": "body"
+        },
+        "collapse_destination_dir": {
+          "attribute": "collapse_destination_dir",
+          "status": "normal",
+          "type": "option",
+          "range": "true,false,yes,no,on,off",
+          "visibility": "body"
+        },
+        "compare": {
+          "attribute": "compare",
+          "status": "normal",
+          "type": "option",
+          "range": "atime,mtime,ctime,digest,hash,exists,binary",
+          "visibility": "body"
+        },
+        "copy_backup": {
+          "attribute": "copy_backup",
+          "status": "normal",
+          "type": "option",
+          "range": "true,false,timestamp",
+          "visibility": "body"
+        },
+        "encrypt": {
+          "attribute": "encrypt",
+          "status": "normal",
+          "type": "option",
+          "range": "true,false,yes,no,on,off",
+          "visibility": "body"
+        },
+        "check_root": {
+          "attribute": "check_root",
+          "status": "normal",
+          "type": "option",
+          "range": "true,false,yes,no,on,off",
+          "visibility": "body"
+        },
+        "copylink_patterns": {
+          "attribute": "copylink_patterns",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "body"
+        },
+        "copy_size": {
+          "attribute": "copy_size",
+          "status": "normal",
+          "type": "irange",
+          "range": "0,inf",
+          "visibility": "body"
+        },
+        "findertype": {
+          "attribute": "findertype",
+          "status": "normal",
+          "type": "option",
+          "range": "MacOSX",
+          "visibility": "body"
+        },
+        "linkcopy_patterns": {
+          "attribute": "linkcopy_patterns",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "body"
+        },
+        "link_type": {
+          "attribute": "link_type",
+          "status": "normal",
+          "type": "option",
+          "range": "symlink,hardlink,relative,absolute",
+          "visibility": "body"
+        },
+        "force_update": {
+          "attribute": "force_update",
+          "status": "normal",
+          "type": "option",
+          "range": "true,false,yes,no,on,off",
+          "visibility": "body"
+        },
+        "force_ipv4": {
+          "attribute": "force_ipv4",
+          "status": "normal",
+          "type": "option",
+          "range": "true,false,yes,no,on,off",
+          "visibility": "body"
+        },
+        "portnumber": {
+          "attribute": "portnumber",
+          "status": "normal",
+          "type": "int",
+          "range": "1024,99999",
+          "visibility": "body"
+        },
+        "preserve": {
+          "attribute": "preserve",
+          "status": "normal",
+          "type": "option",
+          "range": "true,false,yes,no,on,off",
+          "visibility": "body"
+        },
+        "purge": {
+          "attribute": "purge",
+          "status": "normal",
+          "type": "option",
+          "range": "true,false,yes,no,on,off",
+          "visibility": "body"
+        },
+        "stealth": {
+          "attribute": "stealth",
+          "status": "normal",
+          "type": "option",
+          "range": "true,false,yes,no,on,off",
+          "visibility": "body"
+        },
+        "timeout": {
+          "attribute": "timeout",
+          "status": "normal",
+          "type": "int",
+          "range": "1,3600",
+          "visibility": "body"
+        },
+        "trustkey": {
+          "attribute": "trustkey",
+          "status": "normal",
+          "type": "option",
+          "range": "true,false,yes,no,on,off",
+          "visibility": "body"
+        },
+        "type_check": {
+          "attribute": "type_check",
+          "status": "normal",
+          "type": "option",
+          "range": "true,false,yes,no,on,off",
+          "visibility": "body"
+        },
+        "verify": {
+          "attribute": "verify",
+          "status": "normal",
+          "type": "option",
+          "range": "true,false,yes,no,on,off",
+          "visibility": "body"
+        }
+      }
+    },
+    "delete": {
+      "status": "normal",
+      "attributes": {
+        "dirlinks": {
+          "attribute": "dirlinks",
+          "status": "normal",
+          "type": "option",
+          "range": "delete,tidy,keep",
+          "visibility": "body"
+        },
+        "rmdirs": {
+          "attribute": "rmdirs",
+          "status": "normal",
+          "type": "option",
+          "range": "true,false,yes,no,on,off",
+          "visibility": "body"
+        }
+      }
+    },
+    "depth_search": {
+      "status": "normal",
+      "attributes": {
+        "depth": {
+          "attribute": "depth",
+          "status": "normal",
+          "type": "int",
+          "range": "0,99999999999",
+          "visibility": "body"
+        },
+        "exclude_dirs": {
+          "attribute": "exclude_dirs",
+          "status": "normal",
+          "type": "slist",
+          "range": ".*",
+          "visibility": "body"
+        },
+        "include_basedir": {
+          "attribute": "include_basedir",
+          "status": "normal",
+          "type": "option",
+          "range": "true,false,yes,no,on,off",
+          "visibility": "body"
+        },
+        "include_dirs": {
+          "attribute": "include_dirs",
+          "status": "normal",
+          "type": "slist",
+          "range": ".*",
+          "visibility": "body"
+        },
+        "rmdeadlinks": {
+          "attribute": "rmdeadlinks",
+          "status": "normal",
+          "type": "option",
+          "range": "true,false,yes,no,on,off",
+          "visibility": "body"
+        },
+        "traverse_links": {
+          "attribute": "traverse_links",
+          "status": "normal",
+          "type": "option",
+          "range": "true,false,yes,no,on,off",
+          "visibility": "body"
+        },
+        "xdev": {
+          "attribute": "xdev",
+          "status": "normal",
+          "type": "option",
+          "range": "true,false,yes,no,on,off",
+          "visibility": "body"
+        }
+      }
+    },
+    "edit_defaults": {
+      "status": "normal",
+      "attributes": {
+        "edit_backup": {
+          "attribute": "edit_backup",
+          "status": "normal",
+          "type": "option",
+          "range": "true,false,timestamp,rotate",
+          "visibility": "body"
+        },
+        "empty_file_before_editing": {
+          "attribute": "empty_file_before_editing",
+          "status": "normal",
+          "type": "option",
+          "range": "true,false,yes,no,on,off",
+          "visibility": "body"
+        },
+        "inherit": {
+          "attribute": "inherit",
+          "status": "normal",
+          "type": "option",
+          "range": "true,false,yes,no,on,off",
+          "visibility": "body"
+        },
+        "max_file_size": {
+          "attribute": "max_file_size",
+          "status": "normal",
+          "type": "int",
+          "range": "0,99999999999",
+          "visibility": "body"
+        },
+        "recognize_join": {
+          "attribute": "recognize_join",
+          "status": "normal",
+          "type": "option",
+          "range": "true,false,yes,no,on,off",
+          "visibility": "body"
+        },
+        "rotate": {
+          "attribute": "rotate",
+          "status": "normal",
+          "type": "int",
+          "range": "0,99",
+          "visibility": "body"
+        }
+      }
+    },
+    "file_select": {
+      "status": "normal",
+      "attributes": {
+        "leaf_name": {
+          "attribute": "leaf_name",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "body"
+        },
+        "path_name": {
+          "attribute": "path_name",
+          "status": "normal",
+          "type": "slist",
+          "range": "\"?(/.*)",
+          "visibility": "body"
+        },
+        "search_mode": {
+          "attribute": "search_mode",
+          "status": "normal",
+          "type": "slist",
+          "range": "[0-7augorwxst,+-]+",
+          "visibility": "body"
+        },
+        "search_size": {
+          "attribute": "search_size",
+          "status": "normal",
+          "type": "irange",
+          "range": "0,inf",
+          "visibility": "body"
+        },
+        "search_owners": {
+          "attribute": "search_owners",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "body"
+        },
+        "search_groups": {
+          "attribute": "search_groups",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "body"
+        },
+        "search_bsdflags": {
+          "attribute": "search_bsdflags",
+          "status": "normal",
+          "type": "slist",
+          "range": "[+-]*[(arch|archived|nodump|opaque|sappnd|sappend|schg|schange|simmutable|sunlnk|sunlink|uappnd|uappend|uchg|uchange|uimmutable|uunlnk|uunlink)]+",
+          "visibility": "body"
+        },
+        "ctime": {
+          "attribute": "ctime",
+          "status": "normal",
+          "type": "irange",
+          "range": "0,2147483647",
+          "visibility": "body"
+        },
+        "mtime": {
+          "attribute": "mtime",
+          "status": "normal",
+          "type": "irange",
+          "range": "0,2147483647",
+          "visibility": "body"
+        },
+        "atime": {
+          "attribute": "atime",
+          "status": "normal",
+          "type": "irange",
+          "range": "0,2147483647",
+          "visibility": "body"
+        },
+        "exec_regex": {
+          "attribute": "exec_regex",
+          "status": "normal",
+          "type": "string",
+          "range": ".*",
+          "visibility": "body"
+        },
+        "exec_program": {
+          "attribute": "exec_program",
+          "status": "normal",
+          "type": "string",
+          "range": "\"?(/.*)",
+          "visibility": "body"
+        },
+        "file_types": {
+          "attribute": "file_types",
+          "status": "normal",
+          "type": "olist",
+          "range": "plain,reg,symlink,dir,socket,fifo,door,char,block",
+          "visibility": "body"
+        },
+        "issymlinkto": {
+          "attribute": "issymlinkto",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "body"
+        },
+        "file_result": {
+          "attribute": "file_result",
+          "status": "normal",
+          "type": "string",
+          "range": "[!*(leaf_name|path_name|file_types|mode|size|owner|group|atime|ctime|mtime|issymlinkto|exec_regex|exec_program|bsdflags)[|&.]*]*",
+          "visibility": "body"
+        }
+      }
+    },
+    "link_from": {
+      "status": "normal",
+      "attributes": {
+        "copy_patterns": {
+          "attribute": "copy_patterns",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "body"
+        },
+        "link_children": {
+          "attribute": "link_children",
+          "status": "normal",
+          "type": "option",
+          "range": "true,false,yes,no,on,off",
+          "visibility": "body"
+        },
+        "link_type": {
+          "attribute": "link_type",
+          "status": "normal",
+          "type": "option",
+          "range": "symlink,hardlink,relative,absolute",
+          "visibility": "body"
+        },
+        "source": {
+          "attribute": "source",
+          "status": "normal",
+          "type": "string",
+          "range": ".+",
+          "visibility": "body"
+        },
+        "when_linking_children": {
+          "attribute": "when_linking_children",
+          "status": "normal",
+          "type": "option",
+          "range": "override_file,if_no_such_file",
+          "visibility": "body"
+        },
+        "when_no_source": {
+          "attribute": "when_no_source",
+          "status": "normal",
+          "type": "option",
+          "range": "force,delete,nop",
+          "visibility": "body"
+        }
+      }
+    },
+    "perms": {
+      "status": "normal",
+      "attributes": {
+        "bsdflags": {
+          "attribute": "bsdflags",
+          "status": "normal",
+          "type": "slist",
+          "range": "[+-]*[(arch|archived|nodump|opaque|sappnd|sappend|schg|schange|simmutable|sunlnk|sunlink|uappnd|uappend|uchg|uchange|uimmutable|uunlnk|uunlink)]+",
+          "visibility": "body"
+        },
+        "groups": {
+          "attribute": "groups",
+          "status": "normal",
+          "type": "slist",
+          "range": "[a-zA-Z0-9_$.-]+",
+          "visibility": "body"
+        },
+        "mode": {
+          "attribute": "mode",
+          "status": "normal",
+          "type": "string",
+          "range": "[0-7augorwxst,+-]+",
+          "visibility": "body"
+        },
+        "owners": {
+          "attribute": "owners",
+          "status": "normal",
+          "type": "slist",
+          "range": "[a-zA-Z0-9_$.-]+",
+          "visibility": "body"
+        },
+        "rxdirs": {
+          "attribute": "rxdirs",
+          "status": "normal",
+          "type": "option",
+          "range": "true,false,yes,no,on,off",
+          "visibility": "body"
+        }
+      }
+    },
+    "rename": {
+      "status": "normal",
+      "attributes": {
+        "disable": {
+          "attribute": "disable",
+          "status": "normal",
+          "type": "option",
+          "range": "true,false,yes,no,on,off",
+          "visibility": "body"
+        },
+        "disable_mode": {
+          "attribute": "disable_mode",
+          "status": "normal",
+          "type": "string",
+          "range": "[0-7augorwxst,+-]+",
+          "visibility": "body"
+        },
+        "disable_suffix": {
+          "attribute": "disable_suffix",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "body"
+        },
+        "newname": {
+          "attribute": "newname",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "body"
+        },
+        "rotate": {
+          "attribute": "rotate",
+          "status": "normal",
+          "type": "int",
+          "range": "0,99",
+          "visibility": "body"
+        }
+      }
+    },
+    "select_region": {
+      "status": "normal",
+      "attributes": {
+        "include_start_delimiter": {
+          "attribute": "include_start_delimiter",
+          "status": "normal",
+          "type": "option",
+          "range": "true,false,yes,no,on,off",
+          "visibility": "body"
+        },
+        "include_end_delimiter": {
+          "attribute": "include_end_delimiter",
+          "status": "normal",
+          "type": "option",
+          "range": "true,false,yes,no,on,off",
+          "visibility": "body"
+        },
+        "select_start": {
+          "attribute": "select_start",
+          "status": "normal",
+          "type": "string",
+          "range": ".*",
+          "visibility": "body"
+        },
+        "select_end": {
+          "attribute": "select_end",
+          "status": "normal",
+          "type": "string",
+          "range": ".*",
+          "visibility": "body"
+        }
+      }
+    },
+    "delete_select": {
+      "status": "normal",
+      "attributes": {
+        "delete_if_startwith_from_list": {
+          "attribute": "delete_if_startwith_from_list",
+          "status": "normal",
+          "type": "slist",
+          "range": ".*",
+          "visibility": "body"
+        },
+        "delete_if_not_startwith_from_list": {
+          "attribute": "delete_if_not_startwith_from_list",
+          "status": "normal",
+          "type": "slist",
+          "range": ".*",
+          "visibility": "body"
+        },
+        "delete_if_match_from_list": {
+          "attribute": "delete_if_match_from_list",
+          "status": "normal",
+          "type": "slist",
+          "range": ".*",
+          "visibility": "body"
+        },
+        "delete_if_not_match_from_list": {
+          "attribute": "delete_if_not_match_from_list",
+          "status": "normal",
+          "type": "slist",
+          "range": ".*",
+          "visibility": "body"
+        },
+        "delete_if_contains_from_list": {
+          "attribute": "delete_if_contains_from_list",
+          "status": "normal",
+          "type": "slist",
+          "range": ".*",
+          "visibility": "body"
+        },
+        "delete_if_not_contains_from_list": {
+          "attribute": "delete_if_not_contains_from_list",
+          "status": "normal",
+          "type": "slist",
+          "range": ".*",
+          "visibility": "body"
+        }
+      }
+    },
+    "insert_select": {
+      "status": "normal",
+      "attributes": {
+        "insert_if_startwith_from_list": {
+          "attribute": "insert_if_startwith_from_list",
+          "status": "normal",
+          "type": "slist",
+          "range": ".*",
+          "visibility": "body"
+        },
+        "insert_if_not_startwith_from_list": {
+          "attribute": "insert_if_not_startwith_from_list",
+          "status": "normal",
+          "type": "slist",
+          "range": ".*",
+          "visibility": "body"
+        },
+        "insert_if_match_from_list": {
+          "attribute": "insert_if_match_from_list",
+          "status": "normal",
+          "type": "slist",
+          "range": ".*",
+          "visibility": "body"
+        },
+        "insert_if_not_match_from_list": {
+          "attribute": "insert_if_not_match_from_list",
+          "status": "normal",
+          "type": "slist",
+          "range": ".*",
+          "visibility": "body"
+        },
+        "insert_if_contains_from_list": {
+          "attribute": "insert_if_contains_from_list",
+          "status": "normal",
+          "type": "slist",
+          "range": ".*",
+          "visibility": "body"
+        },
+        "insert_if_not_contains_from_list": {
+          "attribute": "insert_if_not_contains_from_list",
+          "status": "normal",
+          "type": "slist",
+          "range": ".*",
+          "visibility": "body"
+        }
+      }
+    },
+    "location": {
+      "status": "normal",
+      "attributes": {
+        "before_after": {
+          "attribute": "before_after",
+          "status": "normal",
+          "type": "option",
+          "range": "before,after",
+          "visibility": "body"
+        },
+        "first_last": {
+          "attribute": "first_last",
+          "status": "normal",
+          "type": "option",
+          "range": "first,last",
+          "visibility": "body"
+        },
+        "select_line_matching": {
+          "attribute": "select_line_matching",
+          "status": "normal",
+          "type": "string",
+          "range": ".*",
+          "visibility": "body"
+        }
+      }
+    },
+    "edit_field": {
+      "status": "normal",
+      "attributes": {
+        "allow_blank_fields": {
+          "attribute": "allow_blank_fields",
+          "status": "normal",
+          "type": "option",
+          "range": "true,false,yes,no,on,off",
+          "visibility": "body"
+        },
+        "extend_fields": {
+          "attribute": "extend_fields",
+          "status": "normal",
+          "type": "option",
+          "range": "true,false,yes,no,on,off",
+          "visibility": "body"
+        },
+        "field_operation": {
+          "attribute": "field_operation",
+          "status": "normal",
+          "type": "option",
+          "range": "prepend,append,alphanum,delete,set",
+          "visibility": "body"
+        },
+        "field_separator": {
+          "attribute": "field_separator",
+          "status": "normal",
+          "type": "string",
+          "range": ".*",
+          "visibility": "body"
+        },
+        "field_value": {
+          "attribute": "field_value",
+          "status": "normal",
+          "type": "string",
+          "range": ".*",
+          "visibility": "body"
+        },
+        "select_field": {
+          "attribute": "select_field",
+          "status": "normal",
+          "type": "int",
+          "range": "0,99999999",
+          "visibility": "body"
+        },
+        "start_fields_from_zero": {
+          "attribute": "start_fields_from_zero",
+          "status": "normal",
+          "type": "option",
+          "range": "true,false,yes,no,on,off",
+          "visibility": "body"
+        },
+        "value_separator": {
+          "attribute": "value_separator",
+          "status": "normal",
+          "type": "string",
+          "range": "^.$",
+          "visibility": "body"
+        }
+      }
+    },
+    "replace_with": {
+      "status": "normal",
+      "attributes": {
+        "occurrences": {
+          "attribute": "occurrences",
+          "status": "normal",
+          "type": "option",
+          "range": "all,first",
+          "visibility": "body"
+        },
+        "replace_value": {
+          "attribute": "replace_value",
+          "status": "normal",
+          "type": "string",
+          "range": ".*",
+          "visibility": "body"
+        }
+      }
+    },
+    "package_method": {
+      "status": "normal",
+      "attributes": {
+        "package_add_command": {
+          "attribute": "package_add_command",
+          "status": "normal",
+          "type": "string",
+          "range": ".+",
+          "visibility": "body"
+        },
+        "package_arch_regex": {
+          "attribute": "package_arch_regex",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "body"
+        },
+        "package_changes": {
+          "attribute": "package_changes",
+          "status": "normal",
+          "type": "option",
+          "range": "individual,bulk",
+          "visibility": "body"
+        },
+        "package_delete_command": {
+          "attribute": "package_delete_command",
+          "status": "normal",
+          "type": "string",
+          "range": ".+",
+          "visibility": "body"
+        },
+        "package_delete_convention": {
+          "attribute": "package_delete_convention",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "body"
+        },
+        "package_file_repositories": {
+          "attribute": "package_file_repositories",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "body"
+        },
+        "package_installed_regex": {
+          "attribute": "package_installed_regex",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "body"
+        },
+        "package_default_arch_command": {
+          "attribute": "package_default_arch_command",
+          "status": "normal",
+          "type": "string",
+          "range": "\"?(/.*)",
+          "visibility": "body"
+        },
+        "package_list_arch_regex": {
+          "attribute": "package_list_arch_regex",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "body"
+        },
+        "package_list_command": {
+          "attribute": "package_list_command",
+          "status": "normal",
+          "type": "string",
+          "range": ".+",
+          "visibility": "body"
+        },
+        "package_list_name_regex": {
+          "attribute": "package_list_name_regex",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "body"
+        },
+        "package_list_update_command": {
+          "attribute": "package_list_update_command",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "body"
+        },
+        "package_list_update_ifelapsed": {
+          "attribute": "package_list_update_ifelapsed",
+          "status": "normal",
+          "type": "int",
+          "range": "-99999999999,9999999999",
+          "visibility": "body"
+        },
+        "package_list_version_regex": {
+          "attribute": "package_list_version_regex",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "body"
+        },
+        "package_name_convention": {
+          "attribute": "package_name_convention",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "body"
+        },
+        "package_name_regex": {
+          "attribute": "package_name_regex",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "body"
+        },
+        "package_noverify_regex": {
+          "attribute": "package_noverify_regex",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "body"
+        },
+        "package_noverify_returncode": {
+          "attribute": "package_noverify_returncode",
+          "status": "normal",
+          "type": "int",
+          "range": "-99999999999,9999999999",
+          "visibility": "body"
+        },
+        "package_patch_arch_regex": {
+          "attribute": "package_patch_arch_regex",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "body"
+        },
+        "package_patch_command": {
+          "attribute": "package_patch_command",
+          "status": "normal",
+          "type": "string",
+          "range": ".+",
+          "visibility": "body"
+        },
+        "package_patch_installed_regex": {
+          "attribute": "package_patch_installed_regex",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "body"
+        },
+        "package_patch_list_command": {
+          "attribute": "package_patch_list_command",
+          "status": "normal",
+          "type": "string",
+          "range": ".+",
+          "visibility": "body"
+        },
+        "package_patch_name_regex": {
+          "attribute": "package_patch_name_regex",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "body"
+        },
+        "package_patch_version_regex": {
+          "attribute": "package_patch_version_regex",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "body"
+        },
+        "package_update_command": {
+          "attribute": "package_update_command",
+          "status": "normal",
+          "type": "string",
+          "range": ".+",
+          "visibility": "body"
+        },
+        "package_verify_command": {
+          "attribute": "package_verify_command",
+          "status": "normal",
+          "type": "string",
+          "range": ".+",
+          "visibility": "body"
+        },
+        "package_version_regex": {
+          "attribute": "package_version_regex",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "body"
+        },
+        "package_multiline_start": {
+          "attribute": "package_multiline_start",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "body"
+        },
+        "package_commands_useshell": {
+          "attribute": "package_commands_useshell",
+          "status": "normal",
+          "type": "option",
+          "range": "true,false,yes,no,on,off",
+          "visibility": "body"
+        },
+        "package_version_less_command": {
+          "attribute": "package_version_less_command",
+          "status": "normal",
+          "type": "string",
+          "range": ".+",
+          "visibility": "body"
+        },
+        "package_version_equal_command": {
+          "attribute": "package_version_equal_command",
+          "status": "normal",
+          "type": "string",
+          "range": ".+",
+          "visibility": "body"
+        }
+      }
+    },
+    "process_count": {
+      "status": "normal",
+      "attributes": {
+        "in_range_define": {
+          "attribute": "in_range_define",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "body"
+        },
+        "match_range": {
+          "attribute": "match_range",
+          "status": "normal",
+          "type": "irange",
+          "range": "0,99999999999",
+          "visibility": "body"
+        },
+        "out_of_range_define": {
+          "attribute": "out_of_range_define",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "body"
+        }
+      }
+    },
+    "process_select": {
+      "status": "normal",
+      "attributes": {
+        "command": {
+          "attribute": "command",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "body"
+        },
+        "pid": {
+          "attribute": "pid",
+          "status": "normal",
+          "type": "irange",
+          "range": "0,99999999999",
+          "visibility": "body"
+        },
+        "pgid": {
+          "attribute": "pgid",
+          "status": "normal",
+          "type": "irange",
+          "range": "0,99999999999",
+          "visibility": "body"
+        },
+        "ppid": {
+          "attribute": "ppid",
+          "status": "normal",
+          "type": "irange",
+          "range": "0,99999999999",
+          "visibility": "body"
+        },
+        "priority": {
+          "attribute": "priority",
+          "status": "normal",
+          "type": "irange",
+          "range": "-20,+20",
+          "visibility": "body"
+        },
+        "process_owner": {
+          "attribute": "process_owner",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "body"
+        },
+        "process_result": {
+          "attribute": "process_result",
+          "status": "normal",
+          "type": "string",
+          "range": "[(process_owner|pid|ppid||pgid|rsize|vsize|status|command|ttime|stime|tty|priority|threads)[|&!.]*]*",
+          "visibility": "body"
+        },
+        "rsize": {
+          "attribute": "rsize",
+          "status": "normal",
+          "type": "irange",
+          "range": "0,99999999999",
+          "visibility": "body"
+        },
+        "status": {
+          "attribute": "status",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "body"
+        },
+        "stime_range": {
+          "attribute": "stime_range",
+          "status": "normal",
+          "type": "irange",
+          "range": "0,2147483647",
+          "visibility": "body"
+        },
+        "ttime_range": {
+          "attribute": "ttime_range",
+          "status": "normal",
+          "type": "irange",
+          "range": "0,2147483647",
+          "visibility": "body"
+        },
+        "tty": {
+          "attribute": "tty",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "body"
+        },
+        "threads": {
+          "attribute": "threads",
+          "status": "normal",
+          "type": "irange",
+          "range": "0,99999999999",
+          "visibility": "body"
+        },
+        "vsize": {
+          "attribute": "vsize",
+          "status": "normal",
+          "type": "irange",
+          "range": "0,99999999999",
+          "visibility": "body"
+        }
+      }
+    },
+    "service_method": {
+      "status": "normal",
+      "attributes": {
+        "service_args": {
+          "attribute": "service_args",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "body"
+        },
+        "service_autostart_policy": {
+          "attribute": "service_autostart_policy",
+          "status": "normal",
+          "type": "option",
+          "range": "none,boot_time,on_demand",
+          "visibility": "body"
+        },
+        "service_bundle": {
+          "attribute": "service_bundle",
+          "status": "normal",
+          "type": "bundle",
+          "visibility": "body"
+        },
+        "service_dependence_chain": {
+          "attribute": "service_dependence_chain",
+          "status": "normal",
+          "type": "option",
+          "range": "ignore,start_parent_services,stop_child_services,all_related",
+          "visibility": "body"
+        },
+        "service_type": {
+          "attribute": "service_type",
+          "status": "normal",
+          "type": "option",
+          "range": "windows,generic",
+          "visibility": "body"
+        }
+      }
+    },
+    "mount": {
+      "status": "normal",
+      "attributes": {
+        "edit_fstab": {
+          "attribute": "edit_fstab",
+          "status": "normal",
+          "type": "option",
+          "range": "true,false,yes,no,on,off",
+          "visibility": "body"
+        },
+        "mount_type": {
+          "attribute": "mount_type",
+          "status": "normal",
+          "type": "option",
+          "range": "nfs,nfs2,nfs3,nfs4",
+          "visibility": "body"
+        },
+        "mount_source": {
+          "attribute": "mount_source",
+          "status": "normal",
+          "type": "string",
+          "range": "\"?(/.*)",
+          "visibility": "body"
+        },
+        "mount_server": {
+          "attribute": "mount_server",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "body"
+        },
+        "mount_options": {
+          "attribute": "mount_options",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "body"
+        },
+        "unmount": {
+          "attribute": "unmount",
+          "status": "normal",
+          "type": "option",
+          "range": "true,false,yes,no,on,off",
+          "visibility": "body"
+        }
+      }
+    },
+    "volume_method": {
+      "status": "normal",
+      "attributes": {
+        "check_foreign": {
+          "attribute": "check_foreign",
+          "status": "normal",
+          "type": "option",
+          "range": "true,false,yes,no,on,off",
+          "visibility": "body"
+        },
+        "freespace": {
+          "attribute": "freespace",
+          "status": "normal",
+          "type": "string",
+          "range": "[0-9]+[MBkKgGmb%]",
+          "visibility": "body"
+        },
+        "sensible_size": {
+          "attribute": "sensible_size",
+          "status": "normal",
+          "type": "int",
+          "range": "0,99999999999",
+          "visibility": "body"
+        },
+        "sensible_count": {
+          "attribute": "sensible_count",
+          "status": "normal",
+          "type": "int",
+          "range": "0,99999999999",
+          "visibility": "body"
+        },
+        "scan_arrivals": {
+          "attribute": "scan_arrivals",
+          "status": "normal",
+          "type": "option",
+          "range": "true,false,yes,no,on,off",
+          "visibility": "body"
+        }
+      }
+    },
+    "report_data_select": {
+      "status": "normal",
+      "attributes": {
+        "classes_include": {
+          "attribute": "classes_include",
+          "status": "normal",
+          "type": "slist",
+          "range": ".*",
+          "visibility": "body"
+        },
+        "classes_exclude": {
+          "attribute": "classes_exclude",
+          "status": "normal",
+          "type": "slist",
+          "range": ".*",
+          "visibility": "body"
+        },
+        "variables_include": {
+          "attribute": "variables_include",
+          "status": "normal",
+          "type": "slist",
+          "range": ".*",
+          "visibility": "body"
+        },
+        "variables_exclude": {
+          "attribute": "variables_exclude",
+          "status": "normal",
+          "type": "slist",
+          "range": ".*",
+          "visibility": "body"
+        },
+        "promise_notkept_log_include": {
+          "attribute": "promise_notkept_log_include",
+          "status": "normal",
+          "type": "slist",
+          "range": ".*",
+          "visibility": "body"
+        },
+        "promise_notkept_log_exclude": {
+          "attribute": "promise_notkept_log_exclude",
+          "status": "normal",
+          "type": "slist",
+          "range": ".*",
+          "visibility": "body"
+        },
+        "promise_repaired_log_include": {
+          "attribute": "promise_repaired_log_include",
+          "status": "normal",
+          "type": "slist",
+          "range": ".*",
+          "visibility": "body"
+        },
+        "promise_repaired_log_exclude": {
+          "attribute": "promise_repaired_log_exclude",
+          "status": "normal",
+          "type": "slist",
+          "range": ".*",
+          "visibility": "body"
+        },
+        "monitoring_include": {
+          "attribute": "monitoring_include",
+          "status": "normal",
+          "type": "slist",
+          "range": ".*",
+          "visibility": "body"
+        },
+        "monitoring_exclude": {
+          "attribute": "monitoring_exclude",
+          "status": "normal",
+          "type": "slist",
+          "range": ".*",
+          "visibility": "body"
+        }
+      }
+    },
+    "match_value": {
+      "status": "normal",
+      "attributes": {
+        "select_line_matching": {
+          "attribute": "select_line_matching",
+          "status": "normal",
+          "type": "string",
+          "range": ".*",
+          "visibility": "body"
+        },
+        "select_line_number": {
+          "attribute": "select_line_number",
+          "status": "normal",
+          "type": "int",
+          "range": "0,99999999999",
+          "visibility": "body"
+        },
+        "extraction_regex": {
+          "attribute": "extraction_regex",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "body"
+        },
+        "track_growing_file": {
+          "attribute": "track_growing_file",
+          "status": "normal",
+          "type": "option",
+          "range": "true,false,yes,no,on,off",
+          "visibility": "body"
+        },
+        "select_multiline_policy": {
+          "attribute": "select_multiline_policy",
+          "status": "normal",
+          "type": "option",
+          "range": "average,sum,first,last",
+          "visibility": "body"
+        }
+      }
+    },
+    "common": {
+      "status": "normal",
+      "attributes": {
+        "bundlesequence": {
+          "attribute": "bundlesequence",
+          "status": "normal",
+          "type": "slist",
+          "range": ".*",
+          "visibility": "body"
+        },
+        "goal_patterns": {
+          "attribute": "goal_patterns",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "body"
+        },
+        "ignore_missing_bundles": {
+          "attribute": "ignore_missing_bundles",
+          "status": "normal",
+          "type": "option",
+          "range": "true,false,yes,no,on,off",
+          "visibility": "body"
+        },
+        "ignore_missing_inputs": {
+          "attribute": "ignore_missing_inputs",
+          "status": "normal",
+          "type": "option",
+          "range": "true,false,yes,no,on,off",
+          "visibility": "body"
+        },
+        "inputs": {
+          "attribute": "inputs",
+          "status": "normal",
+          "type": "slist",
+          "range": ".*",
+          "visibility": "body"
+        },
+        "version": {
+          "attribute": "version",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "body"
+        },
+        "lastseenexpireafter": {
+          "attribute": "lastseenexpireafter",
+          "status": "normal",
+          "type": "int",
+          "range": "0,99999999999",
+          "visibility": "body"
+        },
+        "output_prefix": {
+          "attribute": "output_prefix",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "body"
+        },
+        "domain": {
+          "attribute": "domain",
+          "status": "normal",
+          "type": "string",
+          "range": ".*",
+          "visibility": "body"
+        },
+        "require_comments": {
+          "attribute": "require_comments",
+          "status": "normal",
+          "type": "option",
+          "range": "true,false,yes,no,on,off",
+          "visibility": "body"
+        },
+        "site_classes": {
+          "attribute": "site_classes",
+          "status": "normal",
+          "type": "clist",
+          "range": "[a-zA-Z0-9_!&@@$|.()\\[\\]{}:]+",
+          "visibility": "body"
+        },
+        "syslog_host": {
+          "attribute": "syslog_host",
+          "status": "normal",
+          "type": "string",
+          "range": "[a-zA-Z0-9_$(){}.:-]+",
+          "visibility": "body"
+        },
+        "syslog_port": {
+          "attribute": "syslog_port",
+          "status": "normal",
+          "type": "int",
+          "range": "0,99999999999",
+          "visibility": "body"
+        },
+        "fips_mode": {
+          "attribute": "fips_mode",
+          "status": "normal",
+          "type": "option",
+          "range": "true,false,yes,no,on,off",
+          "visibility": "body"
+        }
+      }
+    },
+    "agent": {
+      "status": "normal",
+      "attributes": {
+        "abortclasses": {
+          "attribute": "abortclasses",
+          "status": "normal",
+          "type": "slist",
+          "range": ".*",
+          "visibility": "body"
+        },
+        "abortbundleclasses": {
+          "attribute": "abortbundleclasses",
+          "status": "normal",
+          "type": "slist",
+          "range": ".*",
+          "visibility": "body"
+        },
+        "addclasses": {
+          "attribute": "addclasses",
+          "status": "normal",
+          "type": "slist",
+          "range": ".*",
+          "visibility": "body"
+        },
+        "agentaccess": {
+          "attribute": "agentaccess",
+          "status": "normal",
+          "type": "slist",
+          "range": ".*",
+          "visibility": "body"
+        },
+        "agentfacility": {
+          "attribute": "agentfacility",
+          "status": "normal",
+          "type": "option",
+          "range": "LOG_USER,LOG_DAEMON,LOG_LOCAL0,LOG_LOCAL1,LOG_LOCAL2,LOG_LOCAL3,LOG_LOCAL4,LOG_LOCAL5,LOG_LOCAL6,LOG_LOCAL7",
+          "visibility": "body"
+        },
+        "allclassesreport": {
+          "attribute": "allclassesreport",
+          "status": "normal",
+          "type": "option",
+          "range": "true,false,yes,no,on,off",
+          "visibility": "body"
+        },
+        "alwaysvalidate": {
+          "attribute": "alwaysvalidate",
+          "status": "normal",
+          "type": "option",
+          "range": "true,false,yes,no,on,off",
+          "visibility": "body"
+        },
+        "bindtointerface": {
+          "attribute": "bindtointerface",
+          "status": "normal",
+          "type": "string",
+          "range": ".*",
+          "visibility": "body"
+        },
+        "hashupdates": {
+          "attribute": "hashupdates",
+          "status": "normal",
+          "type": "option",
+          "range": "true,false,yes,no,on,off",
+          "visibility": "body"
+        },
+        "childlibpath": {
+          "attribute": "childlibpath",
+          "status": "normal",
+          "type": "string",
+          "range": ".*",
+          "visibility": "body"
+        },
+        "checksum_alert_time": {
+          "attribute": "checksum_alert_time",
+          "status": "normal",
+          "type": "int",
+          "range": "0,60",
+          "visibility": "body"
+        },
+        "defaultcopytype": {
+          "attribute": "defaultcopytype",
+          "status": "normal",
+          "type": "option",
+          "range": "mtime,atime,ctime,digest,hash,binary",
+          "visibility": "body"
+        },
+        "dryrun": {
+          "attribute": "dryrun",
+          "status": "normal",
+          "type": "option",
+          "range": "true,false,yes,no,on,off",
+          "visibility": "body"
+        },
+        "editbinaryfilesize": {
+          "attribute": "editbinaryfilesize",
+          "status": "normal",
+          "type": "int",
+          "range": "0,99999999999",
+          "visibility": "body"
+        },
+        "editfilesize": {
+          "attribute": "editfilesize",
+          "status": "normal",
+          "type": "int",
+          "range": "0,99999999999",
+          "visibility": "body"
+        },
+        "environment": {
+          "attribute": "environment",
+          "status": "normal",
+          "type": "slist",
+          "range": "[A-Za-z0-9_]+=.*",
+          "visibility": "body"
+        },
+        "expireafter": {
+          "attribute": "expireafter",
+          "status": "normal",
+          "type": "int",
+          "range": "0,99999999999",
+          "visibility": "body"
+        },
+        "files_single_copy": {
+          "attribute": "files_single_copy",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "body"
+        },
+        "files_auto_define": {
+          "attribute": "files_auto_define",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "body"
+        },
+        "hostnamekeys": {
+          "attribute": "hostnamekeys",
+          "status": "normal",
+          "type": "option",
+          "range": "true,false,yes,no,on,off",
+          "visibility": "body"
+        },
+        "ifelapsed": {
+          "attribute": "ifelapsed",
+          "status": "normal",
+          "type": "int",
+          "range": "0,99999999999",
+          "visibility": "body"
+        },
+        "inform": {
+          "attribute": "inform",
+          "status": "normal",
+          "type": "option",
+          "range": "true,false,yes,no,on,off",
+          "visibility": "body"
+        },
+        "intermittency": {
+          "attribute": "intermittency",
+          "status": "normal",
+          "type": "option",
+          "range": "true,false,yes,no,on,off",
+          "visibility": "body"
+        },
+        "max_children": {
+          "attribute": "max_children",
+          "status": "normal",
+          "type": "int",
+          "range": "0,99999999999",
+          "visibility": "body"
+        },
+        "maxconnections": {
+          "attribute": "maxconnections",
+          "status": "normal",
+          "type": "int",
+          "range": "0,99999999999",
+          "visibility": "body"
+        },
+        "mountfilesystems": {
+          "attribute": "mountfilesystems",
+          "status": "normal",
+          "type": "option",
+          "range": "true,false,yes,no,on,off",
+          "visibility": "body"
+        },
+        "nonalphanumfiles": {
+          "attribute": "nonalphanumfiles",
+          "status": "normal",
+          "type": "option",
+          "range": "true,false,yes,no,on,off",
+          "visibility": "body"
+        },
+        "repchar": {
+          "attribute": "repchar",
+          "status": "normal",
+          "type": "string",
+          "range": ".",
+          "visibility": "body"
+        },
+        "refresh_processes": {
+          "attribute": "refresh_processes",
+          "status": "normal",
+          "type": "slist",
+          "range": "[a-zA-Z0-9_$(){}\\[\\].:]+",
+          "visibility": "body"
+        },
+        "default_repository": {
+          "attribute": "default_repository",
+          "status": "normal",
+          "type": "string",
+          "range": "\"?(/.*)",
+          "visibility": "body"
+        },
+        "secureinput": {
+          "attribute": "secureinput",
+          "status": "normal",
+          "type": "option",
+          "range": "true,false,yes,no,on,off",
+          "visibility": "body"
+        },
+        "sensiblecount": {
+          "attribute": "sensiblecount",
+          "status": "normal",
+          "type": "int",
+          "range": "0,99999999999",
+          "visibility": "body"
+        },
+        "sensiblesize": {
+          "attribute": "sensiblesize",
+          "status": "normal",
+          "type": "int",
+          "range": "0,99999999999",
+          "visibility": "body"
+        },
+        "skipidentify": {
+          "attribute": "skipidentify",
+          "status": "normal",
+          "type": "option",
+          "range": "true,false,yes,no,on,off",
+          "visibility": "body"
+        },
+        "suspiciousnames": {
+          "attribute": "suspiciousnames",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "body"
+        },
+        "track_value": {
+          "attribute": "track_value",
+          "status": "normal",
+          "type": "option",
+          "range": "true,false,yes,no,on,off",
+          "visibility": "body"
+        },
+        "timezone": {
+          "attribute": "timezone",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "body"
+        },
+        "default_timeout": {
+          "attribute": "default_timeout",
+          "status": "normal",
+          "type": "int",
+          "range": "0,99999999999",
+          "visibility": "body"
+        },
+        "verbose": {
+          "attribute": "verbose",
+          "status": "normal",
+          "type": "option",
+          "range": "true,false,yes,no,on,off",
+          "visibility": "body"
+        }
+      }
+    },
+    "server": {
+      "status": "normal",
+      "attributes": {
+        "allowallconnects": {
+          "attribute": "allowallconnects",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "body"
+        },
+        "allowconnects": {
+          "attribute": "allowconnects",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "body"
+        },
+        "allowusers": {
+          "attribute": "allowusers",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "body"
+        },
+        "auditing": {
+          "attribute": "auditing",
+          "status": "normal",
+          "type": "option",
+          "range": "true,false,yes,no,on,off",
+          "visibility": "body"
+        },
+        "bindtointerface": {
+          "attribute": "bindtointerface",
+          "status": "normal",
+          "type": "string",
+          "range": "",
+          "visibility": "body"
+        },
+        "cfruncommand": {
+          "attribute": "cfruncommand",
+          "status": "normal",
+          "type": "string",
+          "range": ".+",
+          "visibility": "body"
+        },
+        "call_collect_interval": {
+          "attribute": "call_collect_interval",
+          "status": "normal",
+          "type": "int",
+          "range": "0,99999999999",
+          "visibility": "body"
+        },
+        "collect_window": {
+          "attribute": "collect_window",
+          "status": "normal",
+          "type": "int",
+          "range": "0,99999999999",
+          "visibility": "body"
+        },
+        "denybadclocks": {
+          "attribute": "denybadclocks",
+          "status": "normal",
+          "type": "option",
+          "range": "true,false,yes,no,on,off",
+          "visibility": "body"
+        },
+        "denyconnects": {
+          "attribute": "denyconnects",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "body"
+        },
+        "dynamicaddresses": {
+          "attribute": "dynamicaddresses",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "body"
+        },
+        "hostnamekeys": {
+          "attribute": "hostnamekeys",
+          "status": "normal",
+          "type": "option",
+          "range": "true,false,yes,no,on,off",
+          "visibility": "body"
+        },
+        "logallconnections": {
+          "attribute": "logallconnections",
+          "status": "normal",
+          "type": "option",
+          "range": "true,false,yes,no,on,off",
+          "visibility": "body"
+        },
+        "logencryptedtransfers": {
+          "attribute": "logencryptedtransfers",
+          "status": "normal",
+          "type": "option",
+          "range": "true,false,yes,no,on,off",
+          "visibility": "body"
+        },
+        "maxconnections": {
+          "attribute": "maxconnections",
+          "status": "normal",
+          "type": "int",
+          "range": "0,99999999999",
+          "visibility": "body"
+        },
+        "port": {
+          "attribute": "port",
+          "status": "normal",
+          "type": "int",
+          "range": "1024,99999",
+          "visibility": "body"
+        },
+        "serverfacility": {
+          "attribute": "serverfacility",
+          "status": "normal",
+          "type": "option",
+          "range": "LOG_USER,LOG_DAEMON,LOG_LOCAL0,LOG_LOCAL1,LOG_LOCAL2,LOG_LOCAL3,LOG_LOCAL4,LOG_LOCAL5,LOG_LOCAL6,LOG_LOCAL7",
+          "visibility": "body"
+        },
+        "skipverify": {
+          "attribute": "skipverify",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "body"
+        },
+        "trustkeysfrom": {
+          "attribute": "trustkeysfrom",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "body"
+        },
+        "listen": {
+          "attribute": "listen",
+          "status": "normal",
+          "type": "option",
+          "range": "true,false,yes,no,on,off",
+          "visibility": "body"
+        }
+      }
+    },
+    "monitor": {
+      "status": "normal",
+      "attributes": {
+        "forgetrate": {
+          "attribute": "forgetrate",
+          "status": "normal",
+          "type": "real",
+          "range": "0,1",
+          "visibility": "body"
+        },
+        "monitorfacility": {
+          "attribute": "monitorfacility",
+          "status": "normal",
+          "type": "option",
+          "range": "LOG_USER,LOG_DAEMON,LOG_LOCAL0,LOG_LOCAL1,LOG_LOCAL2,LOG_LOCAL3,LOG_LOCAL4,LOG_LOCAL5,LOG_LOCAL6,LOG_LOCAL7",
+          "visibility": "body"
+        },
+        "histograms": {
+          "attribute": "histograms",
+          "status": "normal",
+          "type": "option",
+          "range": "true,false,yes,no,on,off",
+          "visibility": "body"
+        },
+        "tcpdump": {
+          "attribute": "tcpdump",
+          "status": "normal",
+          "type": "option",
+          "range": "true,false,yes,no,on,off",
+          "visibility": "body"
+        },
+        "tcpdumpcommand": {
+          "attribute": "tcpdumpcommand",
+          "status": "normal",
+          "type": "string",
+          "range": "\"?(/.*)",
+          "visibility": "body"
+        }
+      }
+    },
+    "runagent": {
+      "status": "normal",
+      "attributes": {
+        "hosts": {
+          "attribute": "hosts",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "body"
+        },
+        "port": {
+          "attribute": "port",
+          "status": "normal",
+          "type": "int",
+          "range": "1024,99999",
+          "visibility": "body"
+        },
+        "force_ipv4": {
+          "attribute": "force_ipv4",
+          "status": "normal",
+          "type": "option",
+          "range": "true,false,yes,no,on,off",
+          "visibility": "body"
+        },
+        "trustkey": {
+          "attribute": "trustkey",
+          "status": "normal",
+          "type": "option",
+          "range": "true,false,yes,no,on,off",
+          "visibility": "body"
+        },
+        "encrypt": {
+          "attribute": "encrypt",
+          "status": "normal",
+          "type": "option",
+          "range": "true,false,yes,no,on,off",
+          "visibility": "body"
+        },
+        "background_children": {
+          "attribute": "background_children",
+          "status": "normal",
+          "type": "option",
+          "range": "true,false,yes,no,on,off",
+          "visibility": "body"
+        },
+        "max_children": {
+          "attribute": "max_children",
+          "status": "normal",
+          "type": "int",
+          "range": "0,99999999999",
+          "visibility": "body"
+        },
+        "output_to_file": {
+          "attribute": "output_to_file",
+          "status": "normal",
+          "type": "option",
+          "range": "true,false,yes,no,on,off",
+          "visibility": "body"
+        },
+        "output_directory": {
+          "attribute": "output_directory",
+          "status": "normal",
+          "type": "string",
+          "range": "\"?(/.*)",
+          "visibility": "body"
+        },
+        "timeout": {
+          "attribute": "timeout",
+          "status": "normal",
+          "type": "int",
+          "range": "1,9999",
+          "visibility": "body"
+        }
+      }
+    },
+    "executor": {
+      "status": "normal",
+      "attributes": {
+        "splaytime": {
+          "attribute": "splaytime",
+          "status": "normal",
+          "type": "int",
+          "range": "0,99999999999",
+          "visibility": "body"
+        },
+        "mailfrom": {
+          "attribute": "mailfrom",
+          "status": "normal",
+          "type": "string",
+          "range": ".*@.*",
+          "visibility": "body"
+        },
+        "mailto": {
+          "attribute": "mailto",
+          "status": "normal",
+          "type": "string",
+          "range": ".*@.*",
+          "visibility": "body"
+        },
+        "smtpserver": {
+          "attribute": "smtpserver",
+          "status": "normal",
+          "type": "string",
+          "range": ".*",
+          "visibility": "body"
+        },
+        "mailmaxlines": {
+          "attribute": "mailmaxlines",
+          "status": "normal",
+          "type": "int",
+          "range": "0,1000",
+          "visibility": "body"
+        },
+        "schedule": {
+          "attribute": "schedule",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "body"
+        },
+        "executorfacility": {
+          "attribute": "executorfacility",
+          "status": "normal",
+          "type": "option",
+          "range": "LOG_USER,LOG_DAEMON,LOG_LOCAL0,LOG_LOCAL1,LOG_LOCAL2,LOG_LOCAL3,LOG_LOCAL4,LOG_LOCAL5,LOG_LOCAL6,LOG_LOCAL7",
+          "visibility": "body"
+        },
+        "exec_command": {
+          "attribute": "exec_command",
+          "status": "normal",
+          "type": "string",
+          "range": "\"?(/.*)",
+          "visibility": "body"
+        },
+        "agent_expireafter": {
+          "attribute": "agent_expireafter",
+          "status": "normal",
+          "type": "int",
+          "range": "0,10080",
+          "visibility": "body"
+        }
+      }
+    },
+    "hub": {
+      "status": "normal",
+      "attributes": {
+        "export_zenoss": {
+          "attribute": "export_zenoss",
+          "status": "normal",
+          "type": "string",
+          "range": ".+",
+          "visibility": "body"
+        },
+        "exclude_hosts": {
+          "attribute": "exclude_hosts",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "body"
+        },
+        "hub_schedule": {
+          "attribute": "hub_schedule",
+          "status": "normal",
+          "type": "slist",
+          "range": "",
+          "visibility": "body"
+        },
+        "port": {
+          "attribute": "port",
+          "status": "normal",
+          "type": "int",
+          "range": "1024,99999",
+          "visibility": "body"
+        }
+      }
+    },
+    "file": {
+      "status": "normal",
+      "attributes": {
+        "namespace": {
+          "attribute": "namespace",
+          "status": "normal",
+          "type": "string",
+          "range": "[a-zA-Z0-9_$(){}\\[\\].:]+",
+          "visibility": "body"
+        }
+      }
+    }
+  },
+  "functions": {
+    "accessedbefore": {
+      "status": "normal",
+      "returnType": "context",
+      "parameters": [
+        {
+          "type": "string",
+          "range": "\"?(/.*)"
+        },
+        {
+          "type": "string",
+          "range": "\"?(/.*)"
+        }
+      ],
+      "variadic": false,
+      "category": "files"
+    },
+    "accumulated": {
+      "status": "normal",
+      "returnType": "int",
+      "parameters": [
+        {
+          "type": "int",
+          "range": "0,1000"
+        },
+        {
+          "type": "int",
+          "range": "0,1000"
+        },
+        {
+          "type": "int",
+          "range": "0,1000"
+        },
+        {
+          "type": "int",
+          "range": "0,1000"
+        },
+        {
+          "type": "int",
+          "range": "0,1000"
+        },
+        {
+          "type": "int",
+          "range": "0,40000"
+        }
+      ],
+      "variadic": false,
+      "category": "data"
+    },
+    "ago": {
+      "status": "normal",
+      "returnType": "int",
+      "parameters": [
+        {
+          "type": "int",
+          "range": "0,1000"
+        },
+        {
+          "type": "int",
+          "range": "0,1000"
+        },
+        {
+          "type": "int",
+          "range": "0,1000"
+        },
+        {
+          "type": "int",
+          "range": "0,1000"
+        },
+        {
+          "type": "int",
+          "range": "0,1000"
+        },
+        {
+          "type": "int",
+          "range": "0,40000"
+        }
+      ],
+      "variadic": false,
+      "category": "data"
+    },
+    "and": {
+      "status": "normal",
+      "returnType": "string",
+      "parameters": [],
+      "variadic": true,
+      "category": "data"
+    },
+    "canonify": {
+      "status": "normal",
+      "returnType": "string",
+      "parameters": [
+        {
+          "type": "string",
+          "range": ".*"
+        }
+      ],
+      "variadic": false,
+      "category": "data"
+    },
+    "concat": {
+      "status": "normal",
+      "returnType": "string",
+      "parameters": [],
+      "variadic": true,
+      "category": "data"
+    },
+    "changedbefore": {
+      "status": "normal",
+      "returnType": "context",
+      "parameters": [
+        {
+          "type": "string",
+          "range": "\"?(/.*)"
+        },
+        {
+          "type": "string",
+          "range": "\"?(/.*)"
+        }
+      ],
+      "variadic": false,
+      "category": "files"
+    },
+    "classify": {
+      "status": "normal",
+      "returnType": "context",
+      "parameters": [
+        {
+          "type": "string",
+          "range": ".*"
+        }
+      ],
+      "variadic": false,
+      "category": "data"
+    },
+    "classmatch": {
+      "status": "normal",
+      "returnType": "context",
+      "parameters": [
+        {
+          "type": "string",
+          "range": ".*"
+        }
+      ],
+      "variadic": false,
+      "category": "utils"
+    },
+    "classesmatching": {
+      "status": "normal",
+      "returnType": "slist",
+      "parameters": [
+        {
+          "type": "string",
+          "range": ".*"
+        }
+      ],
+      "variadic": false,
+      "category": "utils"
+    },
+    "countclassesmatching": {
+      "status": "normal",
+      "returnType": "int",
+      "parameters": [
+        {
+          "type": "string",
+          "range": ".*"
+        }
+      ],
+      "variadic": false,
+      "category": "utils"
+    },
+    "countlinesmatching": {
+      "status": "normal",
+      "returnType": "int",
+      "parameters": [
+        {
+          "type": "string",
+          "range": ".*"
+        },
+        {
+          "type": "string",
+          "range": "\"?(/.*)"
+        }
+      ],
+      "variadic": false,
+      "category": "io"
+    },
+    "difference": {
+      "status": "normal",
+      "returnType": "slist",
+      "parameters": [
+        {
+          "type": "string",
+          "range": "[a-zA-Z0-9_$(){}\\[\\].:]+"
+        },
+        {
+          "type": "string",
+          "range": "[a-zA-Z0-9_$(){}\\[\\].:]+"
+        }
+      ],
+      "variadic": false,
+      "category": "data"
+    },
+    "dirname": {
+      "status": "normal",
+      "returnType": "string",
+      "parameters": [
+        {
+          "type": "string",
+          "range": ".*"
+        }
+      ],
+      "variadic": false,
+      "category": "files"
+    },
+    "diskfree": {
+      "status": "normal",
+      "returnType": "int",
+      "parameters": [
+        {
+          "type": "string",
+          "range": "\"?(/.*)"
+        }
+      ],
+      "variadic": false,
+      "category": "files"
+    },
+    "escape": {
+      "status": "normal",
+      "returnType": "string",
+      "parameters": [
+        {
+          "type": "string",
+          "range": ".*"
+        }
+      ],
+      "variadic": false,
+      "category": "data"
+    },
+    "every": {
+      "status": "normal",
+      "returnType": "context",
+      "parameters": [
+        {
+          "type": "string",
+          "range": ".*"
+        },
+        {
+          "type": "string",
+          "range": "[a-zA-Z0-9_$(){}\\[\\].:]+"
+        }
+      ],
+      "variadic": false,
+      "category": "data"
+    },
+    "execresult": {
+      "status": "normal",
+      "returnType": "string",
+      "parameters": [
+        {
+          "type": "string",
+          "range": ".+"
+        },
+        {
+          "type": "option",
+          "range": "useshell,noshell,powershell"
+        }
+      ],
+      "variadic": false,
+      "category": "utils"
+    },
+    "fileexists": {
+      "status": "normal",
+      "returnType": "context",
+      "parameters": [
+        {
+          "type": "string",
+          "range": "\"?(/.*)"
+        }
+      ],
+      "variadic": false,
+      "category": "files"
+    },
+    "filesexist": {
+      "status": "normal",
+      "returnType": "context",
+      "parameters": [
+        {
+          "type": "string",
+          "range": "@[(][a-zA-Z0-9]+[)]"
+        }
+      ],
+      "variadic": false,
+      "category": "files"
+    },
+    "filesize": {
+      "status": "normal",
+      "returnType": "int",
+      "parameters": [
+        {
+          "type": "string",
+          "range": "\"?(/.*)"
+        }
+      ],
+      "variadic": false,
+      "category": "files"
+    },
+    "filestat": {
+      "status": "normal",
+      "returnType": "string",
+      "parameters": [
+        {
+          "type": "string",
+          "range": "\"?(/.*)"
+        },
+        {
+          "type": "option",
+          "range": "size,gid,uid,ino,nlink,ctime,atime,mtime,mode,modeoct,permstr,permoct,type,devno,dev_minor,dev_major,basename,dirname"
+        }
+      ],
+      "variadic": false,
+      "category": "files"
+    },
+    "filter": {
+      "status": "normal",
+      "returnType": "slist",
+      "parameters": [
+        {
+          "type": "string",
+          "range": ".*"
+        },
+        {
+          "type": "string",
+          "range": "[a-zA-Z0-9_$(){}\\[\\].:]+"
+        },
+        {
+          "type": "option",
+          "range": "true,false,yes,no,on,off"
+        },
+        {
+          "type": "option",
+          "range": "true,false,yes,no,on,off"
+        },
+        {
+          "type": "int",
+          "range": "0,99999999999"
+        }
+      ],
+      "variadic": false,
+      "category": "data"
+    },
+    "format": {
+      "status": "normal",
+      "returnType": "string",
+      "parameters": [
+        {
+          "type": "string",
+          "range": ".*"
+        }
+      ],
+      "variadic": true,
+      "category": "data"
+    },
+    "getenv": {
+      "status": "normal",
+      "returnType": "string",
+      "parameters": [
+        {
+          "type": "string",
+          "range": "[a-zA-Z0-9_$(){}\\[\\].:]+"
+        },
+        {
+          "type": "int",
+          "range": "0,99999999999"
+        }
+      ],
+      "variadic": false,
+      "category": "system"
+    },
+    "getfields": {
+      "status": "normal",
+      "returnType": "int",
+      "parameters": [
+        {
+          "type": "string",
+          "range": ".*"
+        },
+        {
+          "type": "string",
+          "range": "\"?(/.*)"
+        },
+        {
+          "type": "string",
+          "range": ".*"
+        },
+        {
+          "type": "string",
+          "range": ".*"
+        }
+      ],
+      "variadic": false,
+      "category": "data"
+    },
+    "getgid": {
+      "status": "normal",
+      "returnType": "int",
+      "parameters": [
+        {
+          "type": "string",
+          "range": ".*"
+        }
+      ],
+      "variadic": false,
+      "category": "data"
+    },
+    "getindices": {
+      "status": "normal",
+      "returnType": "slist",
+      "parameters": [
+        {
+          "type": "string",
+          "range": "[a-zA-Z0-9_$(){}\\[\\].:]+"
+        }
+      ],
+      "variadic": false,
+      "category": "data"
+    },
+    "getuid": {
+      "status": "normal",
+      "returnType": "int",
+      "parameters": [
+        {
+          "type": "string",
+          "range": ".*"
+        }
+      ],
+      "variadic": false,
+      "category": "system"
+    },
+    "getusers": {
+      "status": "normal",
+      "returnType": "slist",
+      "parameters": [
+        {
+          "type": "string",
+          "range": ".*"
+        },
+        {
+          "type": "string",
+          "range": ".*"
+        }
+      ],
+      "variadic": false,
+      "category": "system"
+    },
+    "getvalues": {
+      "status": "normal",
+      "returnType": "slist",
+      "parameters": [
+        {
+          "type": "string",
+          "range": "[a-zA-Z0-9_$(){}\\[\\].:]+"
+        }
+      ],
+      "variadic": false,
+      "category": "data"
+    },
+    "grep": {
+      "status": "normal",
+      "returnType": "slist",
+      "parameters": [
+        {
+          "type": "string",
+          "range": ".*"
+        },
+        {
+          "type": "string",
+          "range": "[a-zA-Z0-9_$(){}\\[\\].:]+"
+        }
+      ],
+      "variadic": false,
+      "category": "data"
+    },
+    "groupexists": {
+      "status": "normal",
+      "returnType": "context",
+      "parameters": [
+        {
+          "type": "string",
+          "range": ".*"
+        }
+      ],
+      "variadic": false,
+      "category": "system"
+    },
+    "hash": {
+      "status": "normal",
+      "returnType": "string",
+      "parameters": [
+        {
+          "type": "string",
+          "range": ".*"
+        },
+        {
+          "type": "option",
+          "range": "md5,sha1,sha256,sha512,sha384,crypt"
+        }
+      ],
+      "variadic": false,
+      "category": "data"
+    },
+    "hashmatch": {
+      "status": "normal",
+      "returnType": "context",
+      "parameters": [
+        {
+          "type": "string",
+          "range": "\"?(/.*)"
+        },
+        {
+          "type": "option",
+          "range": "md5,sha1,crypt,cf_sha224,cf_sha256,cf_sha384,cf_sha512"
+        },
+        {
+          "type": "string",
+          "range": "[a-zA-Z0-9_$(){}\\[\\].:]+"
+        }
+      ],
+      "variadic": false,
+      "category": "data"
+    },
+    "host2ip": {
+      "status": "normal",
+      "returnType": "string",
+      "parameters": [
+        {
+          "type": "string",
+          "range": ".*"
+        }
+      ],
+      "variadic": false,
+      "category": "communication"
+    },
+    "ip2host": {
+      "status": "normal",
+      "returnType": "string",
+      "parameters": [
+        {
+          "type": "string",
+          "range": ".*"
+        }
+      ],
+      "variadic": false,
+      "category": "communication"
+    },
+    "hostinnetgroup": {
+      "status": "normal",
+      "returnType": "context",
+      "parameters": [
+        {
+          "type": "string",
+          "range": ".*"
+        }
+      ],
+      "variadic": false,
+      "category": "system"
+    },
+    "hostrange": {
+      "status": "normal",
+      "returnType": "context",
+      "parameters": [
+        {
+          "type": "string",
+          "range": ".*"
+        },
+        {
+          "type": "string",
+          "range": ".*"
+        }
+      ],
+      "variadic": false,
+      "category": "communication"
+    },
+    "hostsseen": {
+      "status": "normal",
+      "returnType": "slist",
+      "parameters": [
+        {
+          "type": "int",
+          "range": "0,99999999999"
+        },
+        {
+          "type": "option",
+          "range": "lastseen,notseen"
+        },
+        {
+          "type": "option",
+          "range": "name,address"
+        }
+      ],
+      "variadic": false,
+      "category": "communication"
+    },
+    "hostswithclass": {
+      "status": "normal",
+      "returnType": "slist",
+      "parameters": [
+        {
+          "type": "string",
+          "range": "[a-zA-Z0-9_]+"
+        },
+        {
+          "type": "option",
+          "range": "name,address"
+        }
+      ],
+      "variadic": false,
+      "category": "communication"
+    },
+    "hubknowledge": {
+      "status": "normal",
+      "returnType": "string",
+      "parameters": [
+        {
+          "type": "string",
+          "range": "[a-zA-Z0-9_$(){}\\[\\].:]+"
+        }
+      ],
+      "variadic": false,
+      "category": "communication"
+    },
+    "ifelse": {
+      "status": "normal",
+      "returnType": "string",
+      "parameters": [],
+      "variadic": true,
+      "category": "data"
+    },
+    "intersection": {
+      "status": "normal",
+      "returnType": "slist",
+      "parameters": [
+        {
+          "type": "string",
+          "range": "[a-zA-Z0-9_$(){}\\[\\].:]+"
+        },
+        {
+          "type": "string",
+          "range": "[a-zA-Z0-9_$(){}\\[\\].:]+"
+        }
+      ],
+      "variadic": false,
+      "category": "data"
+    },
+    "iprange": {
+      "status": "normal",
+      "returnType": "context",
+      "parameters": [
+        {
+          "type": "string",
+          "range": ".*"
+        }
+      ],
+      "variadic": false,
+      "category": "communication"
+    },
+    "irange": {
+      "status": "normal",
+      "returnType": "irange",
+      "parameters": [
+        {
+          "type": "int",
+          "range": "-99999999999,9999999999"
+        },
+        {
+          "type": "int",
+          "range": "-99999999999,9999999999"
+        }
+      ],
+      "variadic": false,
+      "category": "data"
+    },
+    "isdir": {
+      "status": "normal",
+      "returnType": "context",
+      "parameters": [
+        {
+          "type": "string",
+          "range": "\"?(/.*)"
+        }
+      ],
+      "variadic": false,
+      "category": "files"
+    },
+    "isexecutable": {
+      "status": "normal",
+      "returnType": "context",
+      "parameters": [
+        {
+          "type": "string",
+          "range": "\"?(/.*)"
+        }
+      ],
+      "variadic": false,
+      "category": "files"
+    },
+    "isgreaterthan": {
+      "status": "normal",
+      "returnType": "context",
+      "parameters": [
+        {
+          "type": "string",
+          "range": ".*"
+        },
+        {
+          "type": "string",
+          "range": ".*"
+        }
+      ],
+      "variadic": false,
+      "category": "data"
+    },
+    "islessthan": {
+      "status": "normal",
+      "returnType": "context",
+      "parameters": [
+        {
+          "type": "string",
+          "range": ".*"
+        },
+        {
+          "type": "string",
+          "range": ".*"
+        }
+      ],
+      "variadic": false,
+      "category": "data"
+    },
+    "islink": {
+      "status": "normal",
+      "returnType": "context",
+      "parameters": [
+        {
+          "type": "string",
+          "range": "\"?(/.*)"
+        }
+      ],
+      "variadic": false,
+      "category": "files"
+    },
+    "isnewerthan": {
+      "status": "normal",
+      "returnType": "context",
+      "parameters": [
+        {
+          "type": "string",
+          "range": "\"?(/.*)"
+        },
+        {
+          "type": "string",
+          "range": "\"?(/.*)"
+        }
+      ],
+      "variadic": false,
+      "category": "files"
+    },
+    "isplain": {
+      "status": "normal",
+      "returnType": "context",
+      "parameters": [
+        {
+          "type": "string",
+          "range": "\"?(/.*)"
+        }
+      ],
+      "variadic": false,
+      "category": "files"
+    },
+    "isvariable": {
+      "status": "normal",
+      "returnType": "context",
+      "parameters": [
+        {
+          "type": "string",
+          "range": "[a-zA-Z0-9_$(){}\\[\\].:]+"
+        }
+      ],
+      "variadic": false,
+      "category": "utils"
+    },
+    "join": {
+      "status": "normal",
+      "returnType": "string",
+      "parameters": [
+        {
+          "type": "string",
+          "range": ".*"
+        },
+        {
+          "type": "string",
+          "range": "[a-zA-Z0-9_$(){}\\[\\].:]+"
+        }
+      ],
+      "variadic": false,
+      "category": "data"
+    },
+    "lastnode": {
+      "status": "normal",
+      "returnType": "string",
+      "parameters": [
+        {
+          "type": "string",
+          "range": ".*"
+        },
+        {
+          "type": "string",
+          "range": ".*"
+        }
+      ],
+      "variadic": false,
+      "category": "data"
+    },
+    "laterthan": {
+      "status": "normal",
+      "returnType": "context",
+      "parameters": [
+        {
+          "type": "int",
+          "range": "0,1000"
+        },
+        {
+          "type": "int",
+          "range": "0,1000"
+        },
+        {
+          "type": "int",
+          "range": "0,1000"
+        },
+        {
+          "type": "int",
+          "range": "0,1000"
+        },
+        {
+          "type": "int",
+          "range": "0,1000"
+        },
+        {
+          "type": "int",
+          "range": "0,40000"
+        }
+      ],
+      "variadic": false,
+      "category": "files"
+    },
+    "ldaparray": {
+      "status": "normal",
+      "returnType": "context",
+      "parameters": [
+        {
+          "type": "string",
+          "range": ".*"
+        },
+        {
+          "type": "string",
+          "range": ".*"
+        },
+        {
+          "type": "string",
+          "range": ".*"
+        },
+        {
+          "type": "string",
+          "range": ".*"
+        },
+        {
+          "type": "option",
+          "range": "subtree,onelevel,base"
+        },
+        {
+          "type": "option",
+          "range": "none,ssl,sasl"
+        }
+      ],
+      "variadic": false,
+      "category": "communication"
+    },
+    "ldaplist": {
+      "status": "normal",
+      "returnType": "slist",
+      "parameters": [
+        {
+          "type": "string",
+          "range": ".*"
+        },
+        {
+          "type": "string",
+          "range": ".*"
+        },
+        {
+          "type": "string",
+          "range": ".*"
+        },
+        {
+          "type": "string",
+          "range": ".*"
+        },
+        {
+          "type": "option",
+          "range": "subtree,onelevel,base"
+        },
+        {
+          "type": "option",
+          "range": "none,ssl,sasl"
+        }
+      ],
+      "variadic": false,
+      "category": "communication"
+    },
+    "ldapvalue": {
+      "status": "normal",
+      "returnType": "string",
+      "parameters": [
+        {
+          "type": "string",
+          "range": ".*"
+        },
+        {
+          "type": "string",
+          "range": ".*"
+        },
+        {
+          "type": "string",
+          "range": ".*"
+        },
+        {
+          "type": "string",
+          "range": ".*"
+        },
+        {
+          "type": "option",
+          "range": "subtree,onelevel,base"
+        },
+        {
+          "type": "option",
+          "range": "none,ssl,sasl"
+        }
+      ],
+      "variadic": false,
+      "category": "communication"
+    },
+    "length": {
+      "status": "normal",
+      "returnType": "int",
+      "parameters": [
+        {
+          "type": "string",
+          "range": "[a-zA-Z0-9_$(){}\\[\\].:]+"
+        }
+      ],
+      "variadic": false,
+      "category": "data"
+    },
+    "lsdir": {
+      "status": "normal",
+      "returnType": "slist",
+      "parameters": [
+        {
+          "type": "string",
+          "range": ".+"
+        },
+        {
+          "type": "string",
+          "range": ".*"
+        },
+        {
+          "type": "option",
+          "range": "true,false,yes,no,on,off"
+        }
+      ],
+      "variadic": false,
+      "category": "files"
+    },
+    "maparray": {
+      "status": "normal",
+      "returnType": "slist",
+      "parameters": [
+        {
+          "type": "string",
+          "range": ".*"
+        },
+        {
+          "type": "string",
+          "range": "[a-zA-Z0-9_$(){}\\[\\].:]+"
+        }
+      ],
+      "variadic": false,
+      "category": "data"
+    },
+    "maplist": {
+      "status": "normal",
+      "returnType": "slist",
+      "parameters": [
+        {
+          "type": "string",
+          "range": ".*"
+        },
+        {
+          "type": "string",
+          "range": "[a-zA-Z0-9_$(){}\\[\\].:]+"
+        }
+      ],
+      "variadic": false,
+      "category": "data"
+    },
+    "none": {
+      "status": "normal",
+      "returnType": "context",
+      "parameters": [
+        {
+          "type": "string",
+          "range": ".*"
+        },
+        {
+          "type": "string",
+          "range": "[a-zA-Z0-9_$(){}\\[\\].:]+"
+        }
+      ],
+      "variadic": false,
+      "category": "data"
+    },
+    "not": {
+      "status": "normal",
+      "returnType": "string",
+      "parameters": [
+        {
+          "type": "string",
+          "range": ".*"
+        }
+      ],
+      "variadic": false,
+      "category": "data"
+    },
+    "now": {
+      "status": "normal",
+      "returnType": "int",
+      "parameters": [],
+      "variadic": false,
+      "category": "system"
+    },
+    "nth": {
+      "status": "normal",
+      "returnType": "string",
+      "parameters": [
+        {
+          "type": "string",
+          "range": "[a-zA-Z0-9_$(){}\\[\\].:]+"
+        },
+        {
+          "type": "int",
+          "range": "0,99999999999"
+        }
+      ],
+      "variadic": false,
+      "category": "data"
+    },
+    "on": {
+      "status": "normal",
+      "returnType": "int",
+      "parameters": [
+        {
+          "type": "int",
+          "range": "1970,3000"
+        },
+        {
+          "type": "int",
+          "range": "1,12"
+        },
+        {
+          "type": "int",
+          "range": "1,31"
+        },
+        {
+          "type": "int",
+          "range": "0,23"
+        },
+        {
+          "type": "int",
+          "range": "0,59"
+        },
+        {
+          "type": "int",
+          "range": "0,59"
+        }
+      ],
+      "variadic": false,
+      "category": "data"
+    },
+    "or": {
+      "status": "normal",
+      "returnType": "string",
+      "parameters": [],
+      "variadic": true,
+      "category": "data"
+    },
+    "parseintarray": {
+      "status": "normal",
+      "returnType": "int",
+      "parameters": [
+        {
+          "type": "string",
+          "range": "[a-zA-Z0-9_$(){}\\[\\].:]+"
+        },
+        {
+          "type": "string",
+          "range": "\"?(/.*)"
+        },
+        {
+          "type": "string",
+          "range": ".*"
+        },
+        {
+          "type": "string",
+          "range": ".*"
+        },
+        {
+          "type": "int",
+          "range": "0,99999999999"
+        },
+        {
+          "type": "int",
+          "range": "0,99999999999"
+        }
+      ],
+      "variadic": false,
+      "category": "io"
+    },
+    "parserealarray": {
+      "status": "normal",
+      "returnType": "int",
+      "parameters": [
+        {
+          "type": "string",
+          "range": "[a-zA-Z0-9_$(){}\\[\\].:]+"
+        },
+        {
+          "type": "string",
+          "range": "\"?(/.*)"
+        },
+        {
+          "type": "string",
+          "range": ".*"
+        },
+        {
+          "type": "string",
+          "range": ".*"
+        },
+        {
+          "type": "int",
+          "range": "0,99999999999"
+        },
+        {
+          "type": "int",
+          "range": "0,99999999999"
+        }
+      ],
+      "variadic": false,
+      "category": "io"
+    },
+    "parsestringarray": {
+      "status": "normal",
+      "returnType": "int",
+      "parameters": [
+        {
+          "type": "string",
+          "range": "[a-zA-Z0-9_$(){}\\[\\].:]+"
+        },
+        {
+          "type": "string",
+          "range": "\"?(/.*)"
+        },
+        {
+          "type": "string",
+          "range": ".*"
+        },
+        {
+          "type": "string",
+          "range": ".*"
+        },
+        {
+          "type": "int",
+          "range": "0,99999999999"
+        },
+        {
+          "type": "int",
+          "range": "0,99999999999"
+        }
+      ],
+      "variadic": false,
+      "category": "io"
+    },
+    "parsestringarrayidx": {
+      "status": "normal",
+      "returnType": "int",
+      "parameters": [
+        {
+          "type": "string",
+          "range": "[a-zA-Z0-9_$(){}\\[\\].:]+"
+        },
+        {
+          "type": "string",
+          "range": "\"?(/.*)"
+        },
+        {
+          "type": "string",
+          "range": ".*"
+        },
+        {
+          "type": "string",
+          "range": ".*"
+        },
+        {
+          "type": "int",
+          "range": "0,99999999999"
+        },
+        {
+          "type": "int",
+          "range": "0,99999999999"
+        }
+      ],
+      "variadic": false,
+      "category": "io"
+    },
+    "peers": {
+      "status": "normal",
+      "returnType": "slist",
+      "parameters": [
+        {
+          "type": "string",
+          "range": "\"?(/.*)"
+        },
+        {
+          "type": "string",
+          "range": ".*"
+        },
+        {
+          "type": "int",
+          "range": "0,99999999999"
+        }
+      ],
+      "variadic": false,
+      "category": "communication"
+    },
+    "peerleader": {
+      "status": "normal",
+      "returnType": "string",
+      "parameters": [
+        {
+          "type": "string",
+          "range": "\"?(/.*)"
+        },
+        {
+          "type": "string",
+          "range": ".*"
+        },
+        {
+          "type": "int",
+          "range": "0,99999999999"
+        }
+      ],
+      "variadic": false,
+      "category": "communication"
+    },
+    "peerleaders": {
+      "status": "normal",
+      "returnType": "slist",
+      "parameters": [
+        {
+          "type": "string",
+          "range": "\"?(/.*)"
+        },
+        {
+          "type": "string",
+          "range": ".*"
+        },
+        {
+          "type": "int",
+          "range": "0,99999999999"
+        }
+      ],
+      "variadic": false,
+      "category": "communication"
+    },
+    "product": {
+      "status": "normal",
+      "returnType": "real",
+      "parameters": [
+        {
+          "type": "string",
+          "range": "[a-zA-Z0-9_$(){}\\[\\].:]+"
+        }
+      ],
+      "variadic": false,
+      "category": "data"
+    },
+    "randomint": {
+      "status": "normal",
+      "returnType": "int",
+      "parameters": [
+        {
+          "type": "int",
+          "range": "-99999999999,9999999999"
+        },
+        {
+          "type": "int",
+          "range": "-99999999999,9999999999"
+        }
+      ],
+      "variadic": false,
+      "category": "data"
+    },
+    "readfile": {
+      "status": "normal",
+      "returnType": "string",
+      "parameters": [
+        {
+          "type": "string",
+          "range": "\"?(/.*)"
+        },
+        {
+          "type": "int",
+          "range": "0,99999999999"
+        }
+      ],
+      "variadic": false,
+      "category": "io"
+    },
+    "readintarray": {
+      "status": "normal",
+      "returnType": "int",
+      "parameters": [
+        {
+          "type": "string",
+          "range": "[a-zA-Z0-9_$(){}\\[\\].:]+"
+        },
+        {
+          "type": "string",
+          "range": "\"?(/.*)"
+        },
+        {
+          "type": "string",
+          "range": ".*"
+        },
+        {
+          "type": "string",
+          "range": ".*"
+        },
+        {
+          "type": "int",
+          "range": "0,99999999999"
+        },
+        {
+          "type": "int",
+          "range": "0,99999999999"
+        }
+      ],
+      "variadic": false,
+      "category": "io"
+    },
+    "readintlist": {
+      "status": "normal",
+      "returnType": "ilist",
+      "parameters": [
+        {
+          "type": "string",
+          "range": "\"?(/.*)"
+        },
+        {
+          "type": "string",
+          "range": ".*"
+        },
+        {
+          "type": "string",
+          "range": ".*"
+        },
+        {
+          "type": "int",
+          "range": "0,99999999999"
+        },
+        {
+          "type": "int",
+          "range": "0,99999999999"
+        }
+      ],
+      "variadic": false,
+      "category": "io"
+    },
+    "readrealarray": {
+      "status": "normal",
+      "returnType": "int",
+      "parameters": [
+        {
+          "type": "string",
+          "range": "[a-zA-Z0-9_$(){}\\[\\].:]+"
+        },
+        {
+          "type": "string",
+          "range": "\"?(/.*)"
+        },
+        {
+          "type": "string",
+          "range": ".*"
+        },
+        {
+          "type": "string",
+          "range": ".*"
+        },
+        {
+          "type": "int",
+          "range": "0,99999999999"
+        },
+        {
+          "type": "int",
+          "range": "0,99999999999"
+        }
+      ],
+      "variadic": false,
+      "category": "io"
+    },
+    "readreallist": {
+      "status": "normal",
+      "returnType": "rlist",
+      "parameters": [
+        {
+          "type": "string",
+          "range": "\"?(/.*)"
+        },
+        {
+          "type": "string",
+          "range": ".*"
+        },
+        {
+          "type": "string",
+          "range": ".*"
+        },
+        {
+          "type": "int",
+          "range": "0,99999999999"
+        },
+        {
+          "type": "int",
+          "range": "0,99999999999"
+        }
+      ],
+      "variadic": false,
+      "category": "io"
+    },
+    "readstringarray": {
+      "status": "normal",
+      "returnType": "int",
+      "parameters": [
+        {
+          "type": "string",
+          "range": "[a-zA-Z0-9_$(){}\\[\\].:]+"
+        },
+        {
+          "type": "string",
+          "range": "\"?(/.*)"
+        },
+        {
+          "type": "string",
+          "range": ".*"
+        },
+        {
+          "type": "string",
+          "range": ".*"
+        },
+        {
+          "type": "int",
+          "range": "0,99999999999"
+        },
+        {
+          "type": "int",
+          "range": "0,99999999999"
+        }
+      ],
+      "variadic": false,
+      "category": "io"
+    },
+    "readstringarrayidx": {
+      "status": "normal",
+      "returnType": "int",
+      "parameters": [
+        {
+          "type": "string",
+          "range": "[a-zA-Z0-9_$(){}\\[\\].:]+"
+        },
+        {
+          "type": "string",
+          "range": "\"?(/.*)"
+        },
+        {
+          "type": "string",
+          "range": ".*"
+        },
+        {
+          "type": "string",
+          "range": ".*"
+        },
+        {
+          "type": "int",
+          "range": "0,99999999999"
+        },
+        {
+          "type": "int",
+          "range": "0,99999999999"
+        }
+      ],
+      "variadic": false,
+      "category": "io"
+    },
+    "readstringlist": {
+      "status": "normal",
+      "returnType": "slist",
+      "parameters": [
+        {
+          "type": "string",
+          "range": "\"?(/.*)"
+        },
+        {
+          "type": "string",
+          "range": ".*"
+        },
+        {
+          "type": "string",
+          "range": ".*"
+        },
+        {
+          "type": "int",
+          "range": "0,99999999999"
+        },
+        {
+          "type": "int",
+          "range": "0,99999999999"
+        }
+      ],
+      "variadic": false,
+      "category": "io"
+    },
+    "readtcp": {
+      "status": "normal",
+      "returnType": "string",
+      "parameters": [
+        {
+          "type": "string",
+          "range": ".*"
+        },
+        {
+          "type": "int",
+          "range": "0,99999999999"
+        },
+        {
+          "type": "string",
+          "range": ".*"
+        },
+        {
+          "type": "int",
+          "range": "0,99999999999"
+        }
+      ],
+      "variadic": false,
+      "category": "communication"
+    },
+    "regarray": {
+      "status": "normal",
+      "returnType": "context",
+      "parameters": [
+        {
+          "type": "string",
+          "range": "[a-zA-Z0-9_$(){}\\[\\].:]+"
+        },
+        {
+          "type": "string",
+          "range": ".*"
+        }
+      ],
+      "variadic": false,
+      "category": "data"
+    },
+    "regcmp": {
+      "status": "normal",
+      "returnType": "context",
+      "parameters": [
+        {
+          "type": "string",
+          "range": ".*"
+        },
+        {
+          "type": "string",
+          "range": ".*"
+        }
+      ],
+      "variadic": false,
+      "category": "data"
+    },
+    "regextract": {
+      "status": "normal",
+      "returnType": "context",
+      "parameters": [
+        {
+          "type": "string",
+          "range": ".*"
+        },
+        {
+          "type": "string",
+          "range": ".*"
+        },
+        {
+          "type": "string",
+          "range": "[a-zA-Z0-9_$(){}\\[\\].:]+"
+        }
+      ],
+      "variadic": false,
+      "category": "data"
+    },
+    "registryvalue": {
+      "status": "normal",
+      "returnType": "string",
+      "parameters": [
+        {
+          "type": "string",
+          "range": ".*"
+        },
+        {
+          "type": "string",
+          "range": ".*"
+        }
+      ],
+      "variadic": false,
+      "category": "system"
+    },
+    "regline": {
+      "status": "normal",
+      "returnType": "context",
+      "parameters": [
+        {
+          "type": "string",
+          "range": ".*"
+        },
+        {
+          "type": "string",
+          "range": ".*"
+        }
+      ],
+      "variadic": false,
+      "category": "io"
+    },
+    "reglist": {
+      "status": "normal",
+      "returnType": "context",
+      "parameters": [
+        {
+          "type": "string",
+          "range": "@[(][a-zA-Z0-9]+[)]"
+        },
+        {
+          "type": "string",
+          "range": ".*"
+        }
+      ],
+      "variadic": false,
+      "category": "data"
+    },
+    "regldap": {
+      "status": "normal",
+      "returnType": "context",
+      "parameters": [
+        {
+          "type": "string",
+          "range": ".*"
+        },
+        {
+          "type": "string",
+          "range": ".*"
+        },
+        {
+          "type": "string",
+          "range": ".*"
+        },
+        {
+          "type": "string",
+          "range": ".*"
+        },
+        {
+          "type": "option",
+          "range": "subtree,onelevel,base"
+        },
+        {
+          "type": "string",
+          "range": ".*"
+        },
+        {
+          "type": "option",
+          "range": "none,ssl,sasl"
+        }
+      ],
+      "variadic": false,
+      "category": "communication"
+    },
+    "remotescalar": {
+      "status": "normal",
+      "returnType": "string",
+      "parameters": [
+        {
+          "type": "string",
+          "range": "[a-zA-Z0-9_$(){}\\[\\].:]+"
+        },
+        {
+          "type": "string",
+          "range": ".*"
+        },
+        {
+          "type": "option",
+          "range": "true,false,yes,no,on,off"
+        }
+      ],
+      "variadic": false,
+      "category": "communication"
+    },
+    "remoteclassesmatching": {
+      "status": "normal",
+      "returnType": "context",
+      "parameters": [
+        {
+          "type": "string",
+          "range": ".*"
+        },
+        {
+          "type": "string",
+          "range": ".*"
+        },
+        {
+          "type": "option",
+          "range": "true,false,yes,no,on,off"
+        },
+        {
+          "type": "string",
+          "range": "[a-zA-Z0-9_$(){}\\[\\].:]+"
+        }
+      ],
+      "variadic": false,
+      "category": "communication"
+    },
+    "returnszero": {
+      "status": "normal",
+      "returnType": "context",
+      "parameters": [
+        {
+          "type": "string",
+          "range": "\"?(/.*)"
+        },
+        {
+          "type": "option",
+          "range": "useshell,noshell,powershell"
+        }
+      ],
+      "variadic": false,
+      "category": "utils"
+    },
+    "rrange": {
+      "status": "normal",
+      "returnType": "rrange",
+      "parameters": [
+        {
+          "type": "real",
+          "range": "-9.99999E100,9.99999E100"
+        },
+        {
+          "type": "real",
+          "range": "-9.99999E100,9.99999E100"
+        }
+      ],
+      "variadic": false,
+      "category": "data"
+    },
+    "reverse": {
+      "status": "normal",
+      "returnType": "slist",
+      "parameters": [
+        {
+          "type": "string",
+          "range": "[a-zA-Z0-9_$(){}\\[\\].:]+"
+        }
+      ],
+      "variadic": false,
+      "category": "data"
+    },
+    "selectservers": {
+      "status": "normal",
+      "returnType": "int",
+      "parameters": [
+        {
+          "type": "string",
+          "range": "@[(][a-zA-Z0-9]+[)]"
+        },
+        {
+          "type": "int",
+          "range": "0,99999999999"
+        },
+        {
+          "type": "string",
+          "range": ".*"
+        },
+        {
+          "type": "string",
+          "range": ".*"
+        },
+        {
+          "type": "int",
+          "range": "0,99999999999"
+        },
+        {
+          "type": "string",
+          "range": "[a-zA-Z0-9_$(){}\\[\\].:]+"
+        }
+      ],
+      "variadic": false,
+      "category": "communication"
+    },
+    "shuffle": {
+      "status": "normal",
+      "returnType": "slist",
+      "parameters": [
+        {
+          "type": "string",
+          "range": "[a-zA-Z0-9_$(){}\\[\\].:]+"
+        },
+        {
+          "type": "string",
+          "range": ".*"
+        }
+      ],
+      "variadic": false,
+      "category": "data"
+    },
+    "some": {
+      "status": "normal",
+      "returnType": "context",
+      "parameters": [
+        {
+          "type": "string",
+          "range": ".*"
+        },
+        {
+          "type": "string",
+          "range": "[a-zA-Z0-9_$(){}\\[\\].:]+"
+        }
+      ],
+      "variadic": false,
+      "category": "data"
+    },
+    "sort": {
+      "status": "normal",
+      "returnType": "slist",
+      "parameters": [
+        {
+          "type": "string",
+          "range": "[a-zA-Z0-9_$(){}\\[\\].:]+"
+        },
+        {
+          "type": "string",
+          "range": "lex"
+        }
+      ],
+      "variadic": false,
+      "category": "data"
+    },
+    "splayclass": {
+      "status": "normal",
+      "returnType": "context",
+      "parameters": [
+        {
+          "type": "string",
+          "range": ".*"
+        },
+        {
+          "type": "option",
+          "range": "daily,hourly"
+        }
+      ],
+      "variadic": false,
+      "category": "utils"
+    },
+    "splitstring": {
+      "status": "normal",
+      "returnType": "slist",
+      "parameters": [
+        {
+          "type": "string",
+          "range": ".*"
+        },
+        {
+          "type": "string",
+          "range": ".*"
+        },
+        {
+          "type": "int",
+          "range": "0,99999999999"
+        }
+      ],
+      "variadic": false,
+      "category": "data"
+    },
+    "strcmp": {
+      "status": "normal",
+      "returnType": "context",
+      "parameters": [
+        {
+          "type": "string",
+          "range": ".*"
+        },
+        {
+          "type": "string",
+          "range": ".*"
+        }
+      ],
+      "variadic": false,
+      "category": "data"
+    },
+    "strftime": {
+      "status": "normal",
+      "returnType": "string",
+      "parameters": [
+        {
+          "type": "option",
+          "range": "gmtime,localtime"
+        },
+        {
+          "type": "string",
+          "range": ".*"
+        },
+        {
+          "type": "int",
+          "range": "0,99999999999"
+        }
+      ],
+      "variadic": false,
+      "category": "data"
+    },
+    "sublist": {
+      "status": "normal",
+      "returnType": "slist",
+      "parameters": [
+        {
+          "type": "string",
+          "range": "[a-zA-Z0-9_$(){}\\[\\].:]+"
+        },
+        {
+          "type": "option",
+          "range": "head,tail"
+        },
+        {
+          "type": "int",
+          "range": "0,99999999999"
+        }
+      ],
+      "variadic": false,
+      "category": "data"
+    },
+    "sum": {
+      "status": "normal",
+      "returnType": "real",
+      "parameters": [
+        {
+          "type": "string",
+          "range": "[a-zA-Z0-9_$(){}\\[\\].:]+"
+        }
+      ],
+      "variadic": false,
+      "category": "data"
+    },
+    "translatepath": {
+      "status": "normal",
+      "returnType": "string",
+      "parameters": [
+        {
+          "type": "string",
+          "range": "\"?(/.*)"
+        }
+      ],
+      "variadic": false,
+      "category": "files"
+    },
+    "unique": {
+      "status": "normal",
+      "returnType": "slist",
+      "parameters": [
+        {
+          "type": "string",
+          "range": "[a-zA-Z0-9_$(){}\\[\\].:]+"
+        }
+      ],
+      "variadic": false,
+      "category": "data"
+    },
+    "usemodule": {
+      "status": "normal",
+      "returnType": "context",
+      "parameters": [
+        {
+          "type": "string",
+          "range": ".*"
+        },
+        {
+          "type": "string",
+          "range": ".*"
+        }
+      ],
+      "variadic": false,
+      "category": "utils"
+    },
+    "userexists": {
+      "status": "normal",
+      "returnType": "context",
+      "parameters": [
+        {
+          "type": "string",
+          "range": ".*"
+        }
+      ],
+      "variadic": false,
+      "category": "system"
+    }
+  }
+}

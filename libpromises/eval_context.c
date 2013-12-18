@@ -1316,7 +1316,7 @@ StringSet *EvalContextStackPromisees(const EvalContext *ctx)
                 {
                     if (rp->val.type == RVAL_TYPE_SCALAR)
                     {
-                        StringSetAdd(promisees, RvalScalarValue(rp->val));
+                        StringSetAdd(promisees, xstrdup(RvalScalarValue(rp->val)));
                     }
                     else
                     {

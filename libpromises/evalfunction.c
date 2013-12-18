@@ -135,9 +135,35 @@ int FnNumArgs(const FnCallType *call_type)
 
   */
 
-/*******************************************************************/
-/* End FnCall API                                                  */
-/*******************************************************************/
+/*
+ * Return succesful FnCallResult with copy of str retained.
+ */
+static FnCallResult FnReturn(const char *str)
+{
+    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(str), RVAL_TYPE_SCALAR } };
+}
+
+static FnCallResult FnReturnF(const char *fmt, ...) FUNC_ATTR_PRINTF(1, 2);
+
+static FnCallResult FnReturnF(const char *fmt, ...)
+{
+    va_list ap;
+    va_start(ap, fmt);
+    char *buffer;
+    xvasprintf(&buffer, fmt, ap);
+    va_end(ap);
+    return (FnCallResult) { FNCALL_SUCCESS, { buffer, RVAL_TYPE_SCALAR } };
+}
+
+static FnCallResult FnReturnContext(bool result)
+{
+    return FnReturn(result ? "any" : "!any");
+}
+
+static FnCallResult FnFailure(void)
+{
+    return (FnCallResult) { FNCALL_FAILURE };
+}
 
 static Rlist *GetHostsFromLastseenDB(Item *addresses, time_t horizon, bool return_address, bool return_recent)
 {
@@ -247,11 +273,11 @@ static FnCallResult FnCallAnd(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
     {
         if (!IsDefinedClass(ctx, RlistScalarValue(arg), PromiseGetNamespace(fp->caller)))
         {
-            return (FnCallResult) { FNCALL_SUCCESS, { xstrdup("!any"), RVAL_TYPE_SCALAR } };
+            return FnReturnContext(false);
         }
     }
 
-    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup("any"), RVAL_TYPE_SCALAR } };
+    return FnReturnContext(true);
 }
 
 /*******************************************************************/
@@ -289,7 +315,7 @@ static FnCallResult FnCallHostsSeen(EvalContext *ctx, FnCall *fp, Rlist *finalar
 
     if (!ScanLastSeenQuality(&CallHostsSeenCallback, &addresses))
     {
-        return (FnCallResult) { FNCALL_FAILURE };
+        return FnFailure();
     }
 
     Rlist *returnlist = GetHostsFromLastseenDB(addresses, horizon,
@@ -311,7 +337,7 @@ static FnCallResult FnCallHostsSeen(EvalContext *ctx, FnCall *fp, Rlist *finalar
 
     if (returnlist == NULL)
     {
-        return (FnCallResult) { FNCALL_FAILURE };
+        return FnFailure();
     }
     else
     {
@@ -330,7 +356,7 @@ static FnCallResult FnCallHostsWithClass(EvalContext *ctx, FnCall *fp, Rlist *fi
     
     if(!ListHostsWithClass(ctx, &returnlist, class_name, return_format))
     {
-        return (FnCallResult){ FNCALL_FAILURE };
+        return FnFailure();
     }
     
     return (FnCallResult) { FNCALL_SUCCESS, { returnlist, RVAL_TYPE_LIST } };
@@ -340,19 +366,14 @@ static FnCallResult FnCallHostsWithClass(EvalContext *ctx, FnCall *fp, Rlist *fi
 
 static FnCallResult FnCallRandomInt(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
-    char buffer[CF_BUFSIZE];
     int tmp, range, result;
-
-    buffer[0] = '\0';
-
-/* begin fn specific content */
 
     int from = IntFromString(RlistScalarValue(finalargs));
     int to = IntFromString(RlistScalarValue(finalargs->next));
 
     if (from == CF_NOINT || to == CF_NOINT)
     {
-        return (FnCallResult) { FNCALL_FAILURE };
+        return FnFailure();
     }
 
     if (from > to)
@@ -364,11 +385,8 @@ static FnCallResult FnCallRandomInt(EvalContext *ctx, FnCall *fp, Rlist *finalar
 
     range = fabs(to - from);
     result = from + (int) (drand48() * (double) range);
-    snprintf(buffer, CF_BUFSIZE - 1, "%d", result);
 
-/* end fn specific content */
-
-    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), RVAL_TYPE_SCALAR } };
+    return FnReturnF("%d", result);
 }
 
 /*********************************************************************/
@@ -376,8 +394,6 @@ static FnCallResult FnCallRandomInt(EvalContext *ctx, FnCall *fp, Rlist *finalar
 static FnCallResult FnCallGetEnv(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
     char buffer[CF_BUFSIZE] = "", ctrlstr[CF_SMALLBUF];
-
-/* begin fn specific content */
 
     char *name = RlistScalarValue(finalargs);
     int limit = IntFromString(RlistScalarValue(finalargs->next));
@@ -389,7 +405,7 @@ static FnCallResult FnCallGetEnv(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
         snprintf(buffer, CF_BUFSIZE - 1, ctrlstr, getenv(name));
     }
 
-    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), RVAL_TYPE_SCALAR } };
+    return FnReturn(buffer);
 }
 
 /*********************************************************************/
@@ -433,7 +449,7 @@ static FnCallResult FnCallGetUsers(EvalContext *ctx, FnCall *fp, Rlist *finalarg
 static FnCallResult FnCallGetUsers(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
     Log(LOG_LEVEL_ERR, "getusers is not implemented");
-    return (FnCallResult) { FNCALL_FAILURE };
+    return FnFailure();
 }
 
 #endif
@@ -446,13 +462,11 @@ static FnCallResult FnCallEscape(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 
     buffer[0] = '\0';
 
-/* begin fn specific content */
-
     char *name = RlistScalarValue(finalargs);
 
     EscapeSpecialChars(name, buffer, CF_BUFSIZE - 1, "", "");
 
-    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), RVAL_TYPE_SCALAR } };
+    return FnReturn(buffer);
 }
 
 /*********************************************************************/
@@ -464,17 +478,13 @@ static FnCallResult FnCallHost2IP(EvalContext *ctx, FnCall *fp, Rlist *finalargs
 
     if (Hostname2IPString(ipaddr, name, sizeof(ipaddr)) != -1)
     {
-        return (FnCallResult) {
-            FNCALL_SUCCESS, { xstrdup(ipaddr), RVAL_TYPE_SCALAR }
-        };
+        return FnReturn(ipaddr);
     }
     else
     {
         /* Retain legacy behaviour,
            return hostname in case resolution fails. */
-        return (FnCallResult) {
-            FNCALL_SUCCESS, { xstrdup(name), RVAL_TYPE_SCALAR }
-        };
+        return FnReturn(name);
     }
 
 }
@@ -488,17 +498,13 @@ static FnCallResult FnCallIP2Host(EvalContext *ctx, FnCall *fp, Rlist *finalargs
 
     if (IPString2Hostname(hostname, ip, sizeof(hostname)) != -1)
     {
-        return (FnCallResult) {
-            FNCALL_SUCCESS, { xstrdup(hostname), RVAL_TYPE_SCALAR }
-        };
+        return FnReturn(hostname);
     }
     else
     {
         /* Retain legacy behaviour,
            return ip address in case resolution fails. */
-        return (FnCallResult) {
-            FNCALL_SUCCESS, { xstrdup(ip), RVAL_TYPE_SCALAR }
-        };
+        return FnReturn(ip);
     }
 }
 
@@ -508,7 +514,7 @@ static FnCallResult FnCallIP2Host(EvalContext *ctx, FnCall *fp, Rlist *finalargs
 
 static FnCallResult FnCallGetUid(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
-    return (FnCallResult) { FNCALL_FAILURE };
+    return FnFailure();
 }
 
 #else /* !__MINGW32__ */
@@ -521,14 +527,11 @@ static FnCallResult FnCallGetUid(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 
     if ((pw = getpwnam(RlistScalarValue(finalargs))) == NULL)
     {
-        return (FnCallResult) { FNCALL_FAILURE };
+        return FnFailure();
     }
     else
     {
-        char buffer[CF_BUFSIZE];
-
-        snprintf(buffer, CF_BUFSIZE - 1, "%ju", (uintmax_t)pw->pw_uid);
-        return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), RVAL_TYPE_SCALAR } };
+        return FnReturnF("%ju", (uintmax_t)pw->pw_uid);
     }
 }
 
@@ -540,7 +543,7 @@ static FnCallResult FnCallGetUid(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 
 static FnCallResult FnCallGetGid(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
-    return (FnCallResult) { FNCALL_FAILURE };
+    return FnFailure();
 }
 
 #else /* !__MINGW32__ */
@@ -553,14 +556,11 @@ static FnCallResult FnCallGetGid(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 
     if ((gr = getgrnam(RlistScalarValue(finalargs))) == NULL)
     {
-        return (FnCallResult) { FNCALL_FAILURE };
+        return FnFailure();
     }
     else
     {
-        char buffer[CF_BUFSIZE];
-
-        snprintf(buffer, CF_BUFSIZE - 1, "%ju", (uintmax_t)gr->gr_gid);
-        return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), RVAL_TYPE_SCALAR } };
+        return FnReturnF("%ju", (uintmax_t)gr->gr_gid);
     }
 }
 
@@ -595,8 +595,7 @@ static FnCallResult FnCallHandlerHash(EvalContext *ctx, FnCall *fp, Rlist *final
 
     snprintf(buffer, CF_BUFSIZE - 1, "%s",
              HashPrintSafe(type, true, digest, hashbuffer));
-
-    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(SkipHashType(buffer)), RVAL_TYPE_SCALAR } };
+    return FnReturn(SkipHashType(buffer));
 }
 
 /*********************************************************************/
@@ -604,7 +603,7 @@ static FnCallResult FnCallHandlerHash(EvalContext *ctx, FnCall *fp, Rlist *final
 static FnCallResult FnCallHashMatch(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 /* HashMatch(string,md5|sha1|crypt,"abdxy98edj") */
 {
-    char buffer[CF_BUFSIZE], ret[CF_BUFSIZE];
+    char buffer[CF_BUFSIZE];
     unsigned char digest[EVP_MAX_MD_SIZE + 1];
     HashMethod type;
 
@@ -624,16 +623,7 @@ static FnCallResult FnCallHashMatch(EvalContext *ctx, FnCall *fp, Rlist *finalar
              HashPrintSafe(type, true, digest, hashbuffer));
     Log(LOG_LEVEL_VERBOSE, "File '%s' hashes to '%s', compare to '%s'", string, buffer, compare);
 
-    if (strcmp(buffer + 4, compare) == 0)
-    {
-        strcpy(ret, "any");
-    }
-    else
-    {
-        strcpy(ret, "!any");
-    }
-
-    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(ret), RVAL_TYPE_SCALAR } };
+    return FnReturnContext(strcmp(buffer + 4, compare) == 0);
 }
 
 /*********************************************************************/
@@ -662,11 +652,11 @@ static FnCallResult FnCallConcat(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
         {
             /* Complain */
             Log(LOG_LEVEL_ERR, "Unable to evaluate concat() function, arguments are too long");
-            return (FnCallResult) { FNCALL_FAILURE};
+            return FnFailure();
         }
     }
 
-    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(result), RVAL_TYPE_SCALAR } };
+    return FnReturn(result);
 }
 
 /*********************************************************************/
@@ -685,7 +675,7 @@ static FnCallResult FnCallClassMatch(EvalContext *ctx, FnCall *fp, Rlist *finala
             if (!strcmp(regex, expr) || StringMatchFull(regex, expr))
             {
                 free(expr);
-                return (FnCallResult) { FNCALL_SUCCESS, { xstrdup("any"), RVAL_TYPE_SCALAR } };
+                return FnReturnContext(true);
             }
 
             free(expr);
@@ -704,7 +694,7 @@ static FnCallResult FnCallClassMatch(EvalContext *ctx, FnCall *fp, Rlist *finala
             if (!strcmp(regex,expr) || StringMatchFull(regex, expr))
             {
                 free(expr);
-                return (FnCallResult) { FNCALL_SUCCESS, { xstrdup("any"), RVAL_TYPE_SCALAR } };
+                return FnReturnContext(true);
             }
 
             free(expr);
@@ -712,7 +702,7 @@ static FnCallResult FnCallClassMatch(EvalContext *ctx, FnCall *fp, Rlist *finala
         ClassTableIteratorDestroy(iter);
     }
 
-    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup("!any"), RVAL_TYPE_SCALAR } };
+    return FnReturnContext(false);
 }
 
 /*********************************************************************/
@@ -752,12 +742,12 @@ static FnCallResult FnCallIfElse(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
         {
             /* If the evaluation returned true in the current context,
              * return the second of the two arguments. */
-            return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(RlistScalarValue(arg->next)), RVAL_TYPE_SCALAR } };
+            return FnReturn(RlistScalarValue(arg->next));
         }
     }
 
     /* If we get here, we've reached the last argument (arg->next is NULL). */
-    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(RlistScalarValue(arg)), RVAL_TYPE_SCALAR } };
+    return FnReturn(RlistScalarValue(arg));
 }
 
 /*********************************************************************/
@@ -802,7 +792,7 @@ static FnCallResult FnCallCountClassesMatching(EvalContext *ctx, FnCall *fp, Rli
         ClassTableIteratorDestroy(iter);
     }
 
-    return (FnCallResult) { FNCALL_SUCCESS, { StringFromLong(count), RVAL_TYPE_SCALAR } };
+    return FnReturnF("%u", count);
 }
 
 /*********************************************************************/
@@ -1081,7 +1071,7 @@ static FnCallResult FnCallPackagesMatching(EvalContext *ctx, FnCall *fp, Rlist *
         Log(LOG_LEVEL_ERR, "%s cannot open the package inventory '%s' - you need to run a package discovery promise to create it in cf-agent. (fopen: %s)",
             fp->name, filename, GetErrorStr());
         JsonDestroy(json);
-        return (FnCallResult) { FNCALL_FAILURE };
+        return FnFailure();
     }
     
     int linenumber = 0;
@@ -1099,7 +1089,7 @@ static FnCallResult FnCallPackagesMatching(EvalContext *ctx, FnCall *fp, Rlist *
             Log(LOG_LEVEL_ERR, "Unable to read package inventory from '%s'. (fread: %s)", filename, GetErrorStr());
             fclose(fin);
             JsonDestroy(json);
-            return (FnCallResult) { FNCALL_FAILURE };
+            return FnFailure();
         }
 
         if (strlen(line) > CF_BUFSIZE - 80)
@@ -1166,7 +1156,7 @@ static FnCallResult FnCallCanonify(EvalContext *ctx, FnCall *fp, Rlist *finalarg
         snprintf(buf, CF_BUFSIZE, "%s", string);
     }
 
-    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(CanonifyName(buf)), RVAL_TYPE_SCALAR } };
+    return FnReturn(CanonifyName(buf));
 }
 
 /*********************************************************************/
@@ -1230,10 +1220,10 @@ static FnCallResult FnCallTextXform(EvalContext *ctx, FnCall *fp, Rlist *finalar
     else
     {
         Log(LOG_LEVEL_ERR, "text xform with unknown call function %s, aborting", fp->name);
-        return (FnCallResult) { FNCALL_FAILURE };
+        return FnFailure();
     }
 
-    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buf), RVAL_TYPE_SCALAR } };
+    return FnReturn(buf);
 }
 
 /*********************************************************************/
@@ -1260,14 +1250,13 @@ static FnCallResult FnCallLastNode(EvalContext *ctx, FnCall *fp, Rlist *finalarg
     if (rp && rp->val.item)
     {
         char *res = xstrdup(RlistScalarValue(rp));
-
         RlistDestroy(newlist);
         return (FnCallResult) { FNCALL_SUCCESS, { res, RVAL_TYPE_SCALAR } };
     }
     else
     {
         RlistDestroy(newlist);
-        return (FnCallResult) { FNCALL_FAILURE };
+        return FnFailure();
     }
 }
 
@@ -1289,7 +1278,7 @@ static FnCallResult FnCallClassify(EvalContext *ctx, FnCall *fp, Rlist *finalarg
 {
     bool is_defined = IsDefinedClass(ctx, CanonifyName(RlistScalarValue(finalargs)), PromiseGetNamespace(fp->caller));
 
-    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(is_defined ? "any" : "!any"), RVAL_TYPE_SCALAR } };
+    return FnReturnContext(is_defined);
 }
 
 /*********************************************************************/
@@ -1319,31 +1308,27 @@ static FnCallResult FnCallReturnsZero(EvalContext *ctx, FnCall *fp, Rlist *final
     else if (shelltype == SHELL_TYPE_NONE)
     {
         Log(LOG_LEVEL_ERR, "returnszero '%s' does not have an absolute path", RlistScalarValue(finalargs));
-        return (FnCallResult) { FNCALL_SUCCESS, { xstrdup("!any"), RVAL_TYPE_SCALAR } };
+        return FnReturnContext(false);
     }
 
     if (need_executable_check && !IsExecutable(CommandArg0(RlistScalarValue(finalargs))))
     {
         Log(LOG_LEVEL_ERR, "returnszero '%s' is assumed to be executable but isn't", RlistScalarValue(finalargs));
-        return (FnCallResult) { FNCALL_SUCCESS, { xstrdup("!any"), RVAL_TYPE_SCALAR } };
+        return FnReturnContext(false);
     }
 
     snprintf(comm, CF_BUFSIZE, "%s", RlistScalarValue(finalargs));
 
-    Rval retval;
-    retval.type = RVAL_TYPE_SCALAR;
     if (ShellCommandReturnsZero(comm, shelltype))
     {
         Log(LOG_LEVEL_VERBOSE, "%s ran '%s' successfully and it returned zero", fp->name, RlistScalarValue(finalargs));
-        retval.item = xstrdup("any");
+        return FnReturnContext(true);
     }
     else
     {
         Log(LOG_LEVEL_VERBOSE, "%s ran '%s' successfully and it did not return zero", fp->name, RlistScalarValue(finalargs));
-        retval.item = xstrdup("!any");
+        return FnReturnContext(false);
     }
-
-    return (FnCallResult) { FNCALL_SUCCESS, retval };
 }
 
 /*********************************************************************/
@@ -1370,13 +1355,13 @@ static FnCallResult FnCallExecResult(EvalContext *ctx, FnCall *fp, Rlist *finala
     else if (shelltype == SHELL_TYPE_NONE)
     {
         Log(LOG_LEVEL_ERR, "%s '%s' does not have an absolute path", fp->name, RlistScalarValue(finalargs));
-        return (FnCallResult) { FNCALL_FAILURE };
+        return FnFailure();
     }
 
     if (need_executable_check && !IsExecutable(CommandArg0(RlistScalarValue(finalargs))))
     {
         Log(LOG_LEVEL_ERR, "%s '%s' is assumed to be executable but isn't", fp->name, RlistScalarValue(finalargs));
-        return (FnCallResult) { FNCALL_FAILURE };
+        return FnFailure();
     }
 
     char buffer[CF_EXPANDSIZE];
@@ -1384,13 +1369,12 @@ static FnCallResult FnCallExecResult(EvalContext *ctx, FnCall *fp, Rlist *finala
     if (GetExecOutput(RlistScalarValue(finalargs), buffer, shelltype))
     {
         Log(LOG_LEVEL_VERBOSE, "%s ran '%s' successfully", fp->name, RlistScalarValue(finalargs));
-        Rval retval = RvalNew(buffer, RVAL_TYPE_SCALAR);
-        return (FnCallResult) { FNCALL_SUCCESS, retval };
+        return FnReturn(buffer);
     }
     else
     {
         Log(LOG_LEVEL_VERBOSE, "%s could not run '%s' successfully", fp->name, RlistScalarValue(finalargs));
-        return (FnCallResult) { FNCALL_FAILURE };
+        return FnFailure();
     }
 }
 
@@ -1412,19 +1396,19 @@ static FnCallResult FnCallUseModule(EvalContext *ctx, FnCall *fp, Rlist *finalar
     if (stat(CommandArg0(modulecmd), &statbuf) == -1)
     {
         Log(LOG_LEVEL_ERR, "Plug-in module '%s' not found", modulecmd);
-        return (FnCallResult) { FNCALL_FAILURE };
+        return FnFailure();
     }
 
     if ((statbuf.st_uid != 0) && (statbuf.st_uid != getuid()))
     {
         Log(LOG_LEVEL_ERR, "Module '%s' was not owned by uid %ju who is executing agent", modulecmd, (uintmax_t)getuid());
-        return (FnCallResult) { FNCALL_FAILURE };
+        return FnFailure();
     }
 
     if (!JoinPath(modulecmd, args))
     {
         Log(LOG_LEVEL_ERR, "Culprit: class list for module (shouldn't happen)");
-        return (FnCallResult) { FNCALL_FAILURE };
+        return FnFailure();
     }
 
     snprintf(modulecmd, CF_BUFSIZE, "\"%s%cmodules%c%s\" %s", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR, command, args);
@@ -1432,10 +1416,10 @@ static FnCallResult FnCallUseModule(EvalContext *ctx, FnCall *fp, Rlist *finalar
 
     if (!ExecModule(ctx, modulecmd, PromiseGetNamespace(fp->caller)))
     {
-        return (FnCallResult) { FNCALL_FAILURE};
+        return FnFailure();
     }
 
-    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup("any"), RVAL_TYPE_SCALAR } };
+    return FnReturnContext(true);
 }
 
 /*********************************************************************/
@@ -1444,7 +1428,7 @@ static FnCallResult FnCallUseModule(EvalContext *ctx, FnCall *fp, Rlist *finalar
 
 static FnCallResult FnCallSplayClass(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
-    char buffer[CF_BUFSIZE], class[CF_MAXVARSIZE];
+    char class[CF_MAXVARSIZE];
 
     Interval policy = IntervalFromString(RlistScalarValue(finalargs->next));
 
@@ -1464,16 +1448,7 @@ static FnCallResult FnCallSplayClass(EvalContext *ctx, FnCall *fp, Rlist *finala
         snprintf(class, CF_MAXVARSIZE, "Min%02d_%02d.Hr%02d", slot * 5, ((slot + 1) * 5) % 60, hour);
     }
 
-    if (IsDefinedClass(ctx, class, PromiseGetNamespace(fp->caller)))
-    {
-        strcpy(buffer, "any");
-    }
-    else
-    {
-        strcpy(buffer, "!any");
-    }
-
-    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), RVAL_TYPE_SCALAR } };
+    return FnReturnContext(IsDefinedClass(ctx, class, PromiseGetNamespace(fp->caller)));
 }
 
 /*********************************************************************/
@@ -1500,7 +1475,7 @@ static FnCallResult FnCallReadTcp(EvalContext *ctx, FnCall *fp, Rlist *finalargs
 
     if (val < 0 || portnum < 0 || THIS_AGENT_TYPE == AGENT_TYPE_COMMON)
     {
-        return (FnCallResult) { FNCALL_FAILURE };
+        return FnFailure();
     }
 
     if (val > CF_BUFSIZE - 1)
@@ -1524,7 +1499,7 @@ static FnCallResult FnCallReadTcp(EvalContext *ctx, FnCall *fp, Rlist *finalargs
     {
         Log(LOG_LEVEL_INFO, "Couldn't open a tcp socket. (socket: %s)", GetErrorStr());
         DeleteAgentConn(conn, false);
-        return (FnCallResult) { FNCALL_FAILURE };
+        return FnFailure();
     }
 
     if (strlen(sendstring) > 0)
@@ -1538,7 +1513,7 @@ static FnCallResult FnCallReadTcp(EvalContext *ctx, FnCall *fp, Rlist *finalargs
             {
                 cf_closesocket(ConnectionInfoSocket(conn->conn_info));
                 DeleteAgentConn(conn, false);
-                return (FnCallResult) { FNCALL_FAILURE };
+                return FnFailure();
             }
             else
             {
@@ -1555,13 +1530,13 @@ static FnCallResult FnCallReadTcp(EvalContext *ctx, FnCall *fp, Rlist *finalargs
     {
         cf_closesocket(ConnectionInfoSocket(conn->conn_info));
         DeleteAgentConn(conn, false);
-        return (FnCallResult) { FNCALL_FAILURE };
+        return FnFailure();
     }
 
     cf_closesocket(ConnectionInfoSocket(conn->conn_info));
     DeleteAgentConn(conn, false);
 
-    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), RVAL_TYPE_SCALAR } };
+    return FnReturn(buffer);
 }
 
 /*********************************************************************/
@@ -1574,7 +1549,7 @@ static FnCallResult FnCallRegList(EvalContext *ctx, FnCall *fp, Rlist *finalargs
     if (!IsVarList(listvar))
     {
         Log(LOG_LEVEL_VERBOSE, "Function reglist was promised a list called '%s' but this was not found", listvar);
-        return (FnCallResult) { FNCALL_FAILURE };
+        return FnFailure();
     }
 
     char naked[CF_MAXVARSIZE] = "";
@@ -1587,20 +1562,17 @@ static FnCallResult FnCallRegList(EvalContext *ctx, FnCall *fp, Rlist *finalargs
     {
         Log(LOG_LEVEL_VERBOSE, "Function REGLIST was promised a list called '%s' but this was not found", listvar);
         VarRefDestroy(ref);
-        return (FnCallResult) { FNCALL_FAILURE };
+        return FnFailure();
     }
 
     if (retval.type != RVAL_TYPE_LIST)
     {
         Log(LOG_LEVEL_VERBOSE, "Function reglist was promised a list called '%s' but this variable is not a list",
               listvar);
-        return (FnCallResult) { FNCALL_FAILURE };
+        return FnFailure();
     }
 
     const Rlist *list = retval.item;
-
-    char buffer[CF_BUFSIZE];
-    strcpy(buffer, "!any");
 
     for (const Rlist *rp = list; rp != NULL; rp = rp->next)
     {
@@ -1611,12 +1583,11 @@ static FnCallResult FnCallRegList(EvalContext *ctx, FnCall *fp, Rlist *finalargs
 
         if (FullTextMatch(ctx, regex, RlistScalarValue(rp)))
         {
-            strcpy(buffer, "any");
-            break;
+            return FnReturnContext(true);
         }
     }
 
-    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), RVAL_TYPE_SCALAR } };
+    return FnReturnContext(false);
 }
 
 /*********************************************************************/
@@ -1641,14 +1612,7 @@ static FnCallResult FnCallRegArray(EvalContext *ctx, FnCall *fp, Rlist *finalarg
     }
     VariableTableIteratorDestroy(iter);
 
-    if (found)
-    {
-        return (FnCallResult) { FNCALL_SUCCESS, { xstrdup("any"), RVAL_TYPE_SCALAR } };
-    }
-    else
-    {
-        return (FnCallResult) { FNCALL_SUCCESS, { xstrdup("!any"), RVAL_TYPE_SCALAR } };
-    }
+    return FnReturnContext(found);
 }
 
 
@@ -1818,7 +1782,6 @@ static FnCallResult FnCallGrep(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 
 static FnCallResult FnCallSum(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
-    char buffer[CF_MAXVARSIZE];
     Rval rval2;
     double sum = 0;
 
@@ -1828,14 +1791,14 @@ static FnCallResult FnCallSum(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
     {
         Log(LOG_LEVEL_VERBOSE, "Function sum was promised a list called '%s' but this was not found", ref->lval);
         VarRefDestroy(ref);
-        return (FnCallResult) { FNCALL_FAILURE };
+        return FnFailure();
     }
 
     if (rval2.type != RVAL_TYPE_LIST)
     {
         Log(LOG_LEVEL_VERBOSE, "Function sum was promised a list called '%s' but this was not found", ref->lval);
         VarRefDestroy(ref);
-        return (FnCallResult) { FNCALL_FAILURE };
+        return FnFailure();
     }
 
     VarRefDestroy(ref);
@@ -1846,7 +1809,7 @@ static FnCallResult FnCallSum(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 
         if (!DoubleFromString(RlistScalarValue(rp), &x))
         {
-            return (FnCallResult) { FNCALL_FAILURE };
+            return FnFailure();
         }
         else
         {
@@ -1854,15 +1817,13 @@ static FnCallResult FnCallSum(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
         }
     }
 
-    snprintf(buffer, CF_MAXVARSIZE, "%lf", sum);
-    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), RVAL_TYPE_SCALAR } };
+    return FnReturnF("%lf", sum);
 }
 
 /*********************************************************************/
 
 static FnCallResult FnCallProduct(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
-    char buffer[CF_MAXVARSIZE];
     Rval rval2;
     double product = 1.0;
 
@@ -1872,14 +1833,14 @@ static FnCallResult FnCallProduct(EvalContext *ctx, FnCall *fp, Rlist *finalargs
     {
         Log(LOG_LEVEL_VERBOSE, "Function 'product' was promised a list called '%s' but this was not found", ref->lval);
         VarRefDestroy(ref);
-        return (FnCallResult) { FNCALL_FAILURE };
+        return FnFailure();
     }
 
     if (rval2.type != RVAL_TYPE_LIST)
     {
         Log(LOG_LEVEL_VERBOSE, "Function 'product' was promised a list called '%s' but this was not found", ref->lval);
         VarRefDestroy(ref);
-        return (FnCallResult) { FNCALL_FAILURE };
+        return FnFailure();
     }
 
     VarRefDestroy(ref);
@@ -1889,7 +1850,7 @@ static FnCallResult FnCallProduct(EvalContext *ctx, FnCall *fp, Rlist *finalargs
         double x;
         if (!DoubleFromString(RlistScalarValue(rp), &x))
         {
-            return (FnCallResult) { FNCALL_FAILURE };
+            return FnFailure();
         }
         else
         {
@@ -1897,9 +1858,7 @@ static FnCallResult FnCallProduct(EvalContext *ctx, FnCall *fp, Rlist *finalargs
         }
     }
 
-    snprintf(buffer, CF_MAXVARSIZE, "%lf", product);
-
-    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), RVAL_TYPE_SCALAR } };
+    return FnReturnF("%lf", product);
 }
 
 /*********************************************************************/
@@ -1917,14 +1876,14 @@ static FnCallResult FnCallJoin(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
     {
         Log(LOG_LEVEL_VERBOSE, "Function 'join' was promised a list called '%s.%s' but this was not (yet) found", ref->scope, ref->lval);
         VarRefDestroy(ref);
-        return (FnCallResult) { FNCALL_FAILURE };
+        return FnFailure();
     }
 
     if (rval2.type != RVAL_TYPE_LIST)
     {
         Log(LOG_LEVEL_VERBOSE, "Function 'join' was promised a list called '%s' but this was not (yet) found", ref->lval);
         VarRefDestroy(ref);
-        return (FnCallResult) { FNCALL_FAILURE };
+        return FnFailure();
     }
 
     VarRefDestroy(ref);
@@ -1966,7 +1925,7 @@ static FnCallResult FnCallJoin(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 static FnCallResult FnCallGetFields(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
     Rlist *rp, *newlist;
-    char name[CF_MAXVARSIZE], retval[CF_SMALLBUF];
+    char name[CF_MAXVARSIZE];
     int lcount = 0, vcount = 0, nopurge = true;
     FILE *fin;
 
@@ -1980,7 +1939,7 @@ static FnCallResult FnCallGetFields(EvalContext *ctx, FnCall *fp, Rlist *finalar
     if ((fin = safe_fopen(filename, "r")) == NULL)
     {
         Log(LOG_LEVEL_ERR, "File '%s' could not be read in getfields(). (fopen: %s)", filename, GetErrorStr());
-        return (FnCallResult) { FNCALL_FAILURE };
+        return FnFailure();
     }
 
     for (;;)
@@ -1993,7 +1952,7 @@ static FnCallResult FnCallGetFields(EvalContext *ctx, FnCall *fp, Rlist *finalar
             {
                 Log(LOG_LEVEL_ERR, "Unable to read data from file '%s'. (fgets: %s)", filename, GetErrorStr());
                 fclose(fin);
-                return (FnCallResult) { FNCALL_FAILURE };
+                return FnFailure();
             }
             else /* feof */
             {
@@ -2033,16 +1992,13 @@ static FnCallResult FnCallGetFields(EvalContext *ctx, FnCall *fp, Rlist *finalar
 
     fclose(fin);
 
-    snprintf(retval, CF_SMALLBUF - 1, "%d", lcount);
-
-    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(retval), RVAL_TYPE_SCALAR } };
+    return FnReturnF("%d", lcount);
 }
 
 /*********************************************************************/
 
 static FnCallResult FnCallCountLinesMatching(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
-    char retval[CF_SMALLBUF];
     int lcount = 0;
     FILE *fin;
 
@@ -2054,8 +2010,7 @@ static FnCallResult FnCallCountLinesMatching(EvalContext *ctx, FnCall *fp, Rlist
     if ((fin = safe_fopen(filename, "r")) == NULL)
     {
         Log(LOG_LEVEL_VERBOSE, "File '%s' could not be read in countlinesmatching(). (fopen: %s)", filename, GetErrorStr());
-        snprintf(retval, CF_SMALLBUF - 1, "0");
-        return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(retval), RVAL_TYPE_SCALAR } };
+        return FnReturn("0");
     }
 
     for (;;)
@@ -2067,7 +2022,7 @@ static FnCallResult FnCallCountLinesMatching(EvalContext *ctx, FnCall *fp, Rlist
             {
                 Log(LOG_LEVEL_ERR, "Unable to read data from file '%s'. (fgets: %s)", filename, GetErrorStr());
                 fclose(fin);
-                return (FnCallResult) { FNCALL_FAILURE };
+                return FnFailure();
             }
             else /* feof */
             {
@@ -2089,9 +2044,7 @@ static FnCallResult FnCallCountLinesMatching(EvalContext *ctx, FnCall *fp, Rlist
 
     fclose(fin);
 
-    snprintf(retval, CF_SMALLBUF - 1, "%d", lcount);
-
-    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(retval), RVAL_TYPE_SCALAR } };
+    return FnReturnF("%d", lcount);
 }
 
 /*********************************************************************/
@@ -2180,7 +2133,7 @@ static FnCallResult FnCallMapArray(EvalContext *ctx, FnCall *fp, Rlist *finalarg
                 RlistDestroy(returnlist);
                 EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_THIS, "k");
                 EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_THIS, "v");
-                return (FnCallResult) { FNCALL_FAILURE };
+                return FnFailure();
             }
 
             RlistAppendScalar(&returnlist, expbuf);
@@ -2199,7 +2152,7 @@ static FnCallResult FnCallMapArray(EvalContext *ctx, FnCall *fp, Rlist *finalarg
                     RlistDestroy(returnlist);
                     EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_THIS, "k");
                     EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_THIS, "v");
-                    return (FnCallResult) { FNCALL_FAILURE };
+                    return FnFailure();
                 }
 
                 RlistAppendScalarIdemp(&returnlist, expbuf);
@@ -2250,14 +2203,14 @@ static FnCallResult FnCallMapList(EvalContext *ctx, FnCall *fp, Rlist *finalargs
     if (!EvalContextVariableGet(ctx, ref, &rval, &retype))
     {
         VarRefDestroy(ref);
-        return (FnCallResult) { FNCALL_FAILURE };
+        return FnFailure();
     }
 
     VarRefDestroy(ref);
 
     if (retype != DATA_TYPE_STRING_LIST && retype != DATA_TYPE_INT_LIST && retype != DATA_TYPE_REAL_LIST)
     {
-        return (FnCallResult) { FNCALL_FAILURE };
+        return FnFailure();
     }
 
     for (const Rlist *rp = RvalRlistValue(rval); rp != NULL; rp = rp->next)
@@ -2270,7 +2223,7 @@ static FnCallResult FnCallMapList(EvalContext *ctx, FnCall *fp, Rlist *finalargs
         {
             RlistDestroy(newlist);
             EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_THIS, "this");
-            return (FnCallResult) { FNCALL_FAILURE };
+            return FnFailure();
         }
 
         RlistAppendScalar(&newlist, expbuf);
@@ -2285,7 +2238,7 @@ static FnCallResult FnCallMergeData(EvalContext *ctx, FnCall *fp, Rlist *args)
     if (RlistLen(args) == 0)
     {
         Log(LOG_LEVEL_ERR, "Function mergedata needs at least one argument, a reference to a container variable");
-        return (FnCallResult)  { FNCALL_FAILURE };
+        return FnFailure();
     }
 
     for (const Rlist *arg = args; arg; arg = arg->next)
@@ -2293,7 +2246,7 @@ static FnCallResult FnCallMergeData(EvalContext *ctx, FnCall *fp, Rlist *args)
         if (args->val.type != RVAL_TYPE_SCALAR)
         {
             Log(LOG_LEVEL_ERR, "Function mergedata, argument '%s' is not a variable reference", RlistScalarValue(arg));
-            return (FnCallResult)  { FNCALL_FAILURE };
+            return FnFailure();
         }
     }
 
@@ -2308,7 +2261,7 @@ static FnCallResult FnCallMergeData(EvalContext *ctx, FnCall *fp, Rlist *args)
             Log(LOG_LEVEL_ERR, "Function mergedata, argument '%s' does not resolve to a container", RlistScalarValue(arg));
             SeqDestroy(containers);
             VarRefDestroy(ref);
-            return (FnCallResult)  { FNCALL_FAILURE };
+            return FnFailure();
         }
 
         SeqAppend(containers, RvalContainerValue(rval));
@@ -2369,7 +2322,7 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx, FnCall *fp, Rlist *fin
     else
     {
         Log(LOG_LEVEL_VERBOSE, "Function selectservers was promised a list called '%s' but this was not found", listvar);
-        return (FnCallResult) { FNCALL_FAILURE };
+        return FnFailure();
     }
 
     VarRef *ref = VarRefParse(naked);
@@ -2380,7 +2333,7 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx, FnCall *fp, Rlist *fin
             "Function selectservers was promised a list called '%s' but this was not found from context '%s.%s'",
               listvar, ref->scope, naked);
         VarRefDestroy(ref);
-        return (FnCallResult) { FNCALL_FAILURE };
+        return FnFailure();
     }
 
     VarRefDestroy(ref);
@@ -2389,7 +2342,7 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx, FnCall *fp, Rlist *fin
     {
         Log(LOG_LEVEL_VERBOSE,
             "Function selectservers was promised a list called '%s' but this variable is not a list", listvar);
-        return (FnCallResult) { FNCALL_FAILURE };
+        return FnFailure();
     }
 
     hostnameip = RvalRlistValue(retval);
@@ -2398,7 +2351,7 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx, FnCall *fp, Rlist *fin
 
     if (val < 0 || portnum < 0)
     {
-        return (FnCallResult) { FNCALL_FAILURE };
+        return FnFailure();
     }
 
     if (val > CF_BUFSIZE - 1)
@@ -2409,8 +2362,7 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx, FnCall *fp, Rlist *fin
 
     if (THIS_AGENT_TYPE != AGENT_TYPE_AGENT)
     {
-        snprintf(buffer, CF_MAXVARSIZE - 1, "%d", count);
-        return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), RVAL_TYPE_SCALAR } };
+        return FnReturnF("%d", count);
     }
 
     Policy *select_server_policy = PolicyNew();
@@ -2499,9 +2451,7 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx, FnCall *fp, Rlist *fin
 
 /* Return the number of lines in array */
 
-    snprintf(buffer, CF_MAXVARSIZE - 1, "%d", count);
-
-    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), RVAL_TYPE_SCALAR } };
+    return FnReturnF("%d", count);
 }
 
 
@@ -2514,13 +2464,13 @@ static FnCallResult FnCallShuffle(EvalContext *ctx, FnCall *fp, Rlist *finalargs
 
     if (!GetListReferenceArgument(ctx, fp, RlistScalarValue(finalargs), &list_rval, &list_dtype))
     {
-        return (FnCallResult) { FNCALL_FAILURE };
+        return FnFailure();
     }
 
     if (list_dtype != DATA_TYPE_STRING_LIST)
     {
         Log(LOG_LEVEL_ERR, "Function '%s' expected a variable that resolves to a string list, got '%s'", fp->name, DataTypeToString(list_dtype));
-        return (FnCallResult) { FNCALL_FAILURE };
+        return FnFailure();
     }
 
     Seq *seq = SeqNew(1000, NULL);
@@ -2550,22 +2500,15 @@ static FnCallResult FnCallIsNewerThan(EvalContext *ctx, FnCall *fp, Rlist *final
 
     if (stat(RlistScalarValue(finalargs), &frombuf) == -1)
     {
-        return (FnCallResult) { FNCALL_FAILURE };
+        return FnFailure();
     }
 
     if (stat(RlistScalarValue(finalargs->next), &tobuf) == -1)
     {
-        return (FnCallResult) { FNCALL_FAILURE};
+        return FnFailure();
     }
 
-    if (frombuf.st_mtime > tobuf.st_mtime)
-    {
-        return (FnCallResult) { FNCALL_SUCCESS, { xstrdup("any"), RVAL_TYPE_SCALAR } };
-    }
-    else
-    {
-        return (FnCallResult) { FNCALL_SUCCESS, { xstrdup("!any"), RVAL_TYPE_SCALAR } };
-    }
+    return FnReturnContext(frombuf.st_mtime > tobuf.st_mtime);
 }
 
 /*********************************************************************/
@@ -2578,22 +2521,15 @@ static FnCallResult FnCallIsAccessedBefore(EvalContext *ctx, FnCall *fp, Rlist *
 
     if (stat(RlistScalarValue(finalargs), &frombuf) == -1)
     {
-        return (FnCallResult) { FNCALL_FAILURE };
+        return FnFailure();
     }
 
     if (stat(RlistScalarValue(finalargs->next), &tobuf) == -1)
     {
-        return (FnCallResult) { FNCALL_FAILURE};
+        return FnFailure();
     }
 
-    if (frombuf.st_atime < tobuf.st_atime)
-    {
-        return (FnCallResult) { FNCALL_SUCCESS, { xstrdup("any"), RVAL_TYPE_SCALAR } };
-    }
-    else
-    {
-        return (FnCallResult) { FNCALL_SUCCESS, { xstrdup("!any"), RVAL_TYPE_SCALAR } };
-    }
+    return FnReturnContext(frombuf.st_atime < tobuf.st_atime);
 }
 
 /*********************************************************************/
@@ -2606,31 +2542,22 @@ static FnCallResult FnCallIsChangedBefore(EvalContext *ctx, FnCall *fp, Rlist *f
 
     if (stat(RlistScalarValue(finalargs), &frombuf) == -1)
     {
-        return (FnCallResult) { FNCALL_FAILURE };
+        return FnFailure();
     }
     else if (stat(RlistScalarValue(finalargs->next), &tobuf) == -1)
     {
-        return (FnCallResult) { FNCALL_FAILURE };
+        return FnFailure();
     }
 
-    if (frombuf.st_ctime > tobuf.st_ctime)
-    {
-        return (FnCallResult) { FNCALL_SUCCESS, { xstrdup("any"), RVAL_TYPE_SCALAR } };
-    }
-    else
-    {
-        return (FnCallResult) { FNCALL_SUCCESS, { xstrdup("!any"), RVAL_TYPE_SCALAR } };
-    }
+    return FnReturnContext(frombuf.st_ctime > tobuf.st_ctime);
 }
 
 /*********************************************************************/
 
 static FnCallResult FnCallFileStat(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
-    char buffer[CF_BUFSIZE], *path = RlistScalarValue(finalargs);
+    char *path = RlistScalarValue(finalargs);
     struct stat statbuf;
-
-    buffer[0] = '\0';
 
 /* begin fn specific content */
 
@@ -2638,54 +2565,37 @@ static FnCallResult FnCallFileStat(EvalContext *ctx, FnCall *fp, Rlist *finalarg
     {
         if (!strcmp(fp->name, "filesize"))
         {
-            return (FnCallResult) { FNCALL_FAILURE };
+            return FnFailure();
         }
-
-        strcpy(buffer, "!any");
+        return FnReturnContext(false);
     }
-    else
+
+    if (!strcmp(fp->name, "isexecutable"))
     {
-        strcpy(buffer, "!any");
-
-        if (!strcmp(fp->name, "isexecutable"))
-        {
-            if (IsExecutable(path))
-            {
-                strcpy(buffer, "any");
-            }
-        }
-        else if (!strcmp(fp->name, "isdir"))
-        {
-            if (S_ISDIR(statbuf.st_mode))
-            {
-                strcpy(buffer, "any");
-            }
-        }
-        else if (!strcmp(fp->name, "islink"))
-        {
-            if (S_ISLNK(statbuf.st_mode))
-            {
-                strcpy(buffer, "any");
-            }
-        }
-        else if (!strcmp(fp->name, "isplain"))
-        {
-            if (S_ISREG(statbuf.st_mode))
-            {
-                strcpy(buffer, "any");
-            }
-        }
-        else if (!strcmp(fp->name, "fileexists"))
-        {
-            strcpy(buffer, "any");
-        }
-        else if (!strcmp(fp->name, "filesize"))
-        {
-            snprintf(buffer, CF_MAXVARSIZE, "%jd", (uintmax_t) statbuf.st_size);
-        }
+        return FnReturnContext(IsExecutable(path));
+    }
+    if (!strcmp(fp->name, "isdir"))
+    {
+        return FnReturnContext(S_ISDIR(statbuf.st_mode));
+    }
+    if (!strcmp(fp->name, "islink"))
+    {
+        return FnReturnContext(S_ISLNK(statbuf.st_mode));
+    }
+    if (!strcmp(fp->name, "isplain"))
+    {
+        return FnReturnContext(S_ISREG(statbuf.st_mode));
+    }
+    if (!strcmp(fp->name, "fileexists"))
+    {
+        return FnReturnContext(true);
+    }
+    if (!strcmp(fp->name, "filesize"))
+    {
+        return FnReturnF("%jd", (uintmax_t) statbuf.st_size);
     }
 
-    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), RVAL_TYPE_SCALAR } };
+    ProgrammingError("Unexpected function name in FnCallFileStat: %s", fp->name);
 }
 
 /*********************************************************************/
@@ -2890,7 +2800,7 @@ static FnCallResult FnCallFileStatDetails(EvalContext *ctx, FnCall *fp, Rlist *f
         }
     }
 
-    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), RVAL_TYPE_SCALAR } };
+    return FnReturn(buffer);
 }
 
 /*********************************************************************/
@@ -3010,7 +2920,7 @@ static FnCallResult FilterInternal(EvalContext *ctx, FnCall *fp, char *regex, ch
 
     if (!GetListReferenceArgument(ctx, fp, name, &rval2, NULL))
     {
-        return (FnCallResult) { FNCALL_FAILURE };
+        return FnFailure();
     }
 
     RlistAppendScalar(&returnlist, CF_NULL_VALUE);
@@ -3066,7 +2976,7 @@ static FnCallResult FilterInternal(EvalContext *ctx, FnCall *fp, char *regex, ch
 
     if (contextmode)
     {
-        return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(ret ? "any" : "!any"), RVAL_TYPE_SCALAR } };
+        return FnReturnContext(ret);
     }
 
     // else, return the list itself
@@ -3086,7 +2996,7 @@ static FnCallResult FnCallSublist(EvalContext *ctx, FnCall *fp, Rlist *finalargs
 
     if (!GetListReferenceArgument(ctx, fp, name, &rval2, NULL))
     {
-        return (FnCallResult) { FNCALL_FAILURE };
+        return FnFailure();
     }
 
     RlistAppendScalar(&returnlist, CF_NULL_VALUE);
@@ -3134,13 +3044,13 @@ static FnCallResult FnCallSetop(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
     Rval rval_a;
     if (!GetListReferenceArgument(ctx, fp, name_a, &rval_a, NULL))
     {
-        return (FnCallResult) { FNCALL_FAILURE };
+        return FnFailure();
     }
 
     Rval rval_b;
     if (!GetListReferenceArgument(ctx, fp, name_b, &rval_b, NULL))
     {
-        return (FnCallResult) { FNCALL_FAILURE };
+        return FnFailure();
     }
 
     Rlist *returnlist = NULL;
@@ -3185,12 +3095,11 @@ static FnCallResult FnCallLength(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
     const char *name = RlistScalarValue(finalargs);
 
     Rval rval2;
-    char buffer[CF_BUFSIZE];
     int count = 0;
 
     if (!GetListReferenceArgument(ctx, fp, name, &rval2, NULL))
     {
-        return (FnCallResult) { FNCALL_FAILURE };
+        return FnFailure();
     }
 
     bool null_seen = false;
@@ -3208,9 +3117,7 @@ static FnCallResult FnCallLength(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
         count = 0;
     }
 
-    snprintf(buffer, CF_MAXVARSIZE, "%d", count);
-
-    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), RVAL_TYPE_SCALAR } };
+    return FnReturnF("%d", count);
 }
 
 /*********************************************************************/
@@ -3224,7 +3131,7 @@ static FnCallResult FnCallUnique(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 
     if (!GetListReferenceArgument(ctx, fp, name, &rval2, NULL))
     {
-        return (FnCallResult) { FNCALL_FAILURE };
+        return FnFailure();
     }
 
     RlistAppendScalar(&returnlist, CF_NULL_VALUE);
@@ -3270,7 +3177,7 @@ static FnCallResult FnCallNth(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
         if (!GetListReferenceArgument(ctx, fp, varname, &rval2, NULL))
         {
             VarRefDestroy(ref);
-            return (FnCallResult) { FNCALL_FAILURE };
+            return FnFailure();
         }
 
         for (rp = (Rlist *) rval2.item; rp != NULL && index--; rp = rp->next);
@@ -3278,9 +3185,9 @@ static FnCallResult FnCallNth(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 
     VarRefDestroy(ref);
 
-    if (NULL == rp) return (FnCallResult) { FNCALL_FAILURE };
+    if (NULL == rp) return FnFailure();
 
-    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(RlistScalarValue(rp)), RVAL_TYPE_SCALAR } };
+    return FnReturn(RlistScalarValue(rp));
 }
 
 /*********************************************************************/
@@ -3306,14 +3213,14 @@ static FnCallResult FnCallSort(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
     if (!EvalContextVariableGet(ctx, ref, &list_var_rval, &list_var_dtype))
     {
         VarRefDestroy(ref);
-        return (FnCallResult) { FNCALL_FAILURE };
+        return FnFailure();
     }
 
     VarRefDestroy(ref);
 
     if (list_var_dtype != DATA_TYPE_STRING_LIST)
     {
-        return (FnCallResult) { FNCALL_FAILURE };
+        return FnFailure();
     }
 
     Rlist *sorted;
@@ -3363,14 +3270,14 @@ static FnCallResult FnCallFormat(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 /* begin fn specific content */
     if (!finalargs)
     {
-        return (FnCallResult) { FNCALL_FAILURE };
+        return FnFailure();
     }
 
     char *format = RlistScalarValue(finalargs);
 
     if (!format)
     {
-        return (FnCallResult) { FNCALL_FAILURE };
+        return FnFailure();
     }
 
     const Rlist *rp = finalargs->next;
@@ -3407,7 +3314,7 @@ static FnCallResult FnCallFormat(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
                     {
                         Log(LOG_LEVEL_ERR, "format() didn't have enough parameters");
                         BufferDestroy(&buf);
-                        return (FnCallResult) { FNCALL_FAILURE };
+                        return FnFailure();
                     }
 
                     char piece[CF_BUFSIZE];
@@ -3424,7 +3331,7 @@ static FnCallResult FnCallFormat(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
                                   bad_modifiers[b],
                                   format_piece);
                             BufferDestroy(&buf);
-                            return (FnCallResult) { FNCALL_FAILURE };
+                            return FnFailure();
                         }
                     }
 
@@ -3522,38 +3429,30 @@ static FnCallResult FnCallFormat(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 
 static FnCallResult FnCallIPRange(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
-    char buffer[CF_BUFSIZE], *range = RlistScalarValue(finalargs);
+    char *range = RlistScalarValue(finalargs);
     Item *ip;
-
-    buffer[0] = '\0';
-
-/* begin fn specific content */
-
-    strcpy(buffer, "!any");
 
     if (!FuzzyMatchParse(range))
     {
-        return (FnCallResult) { FNCALL_FAILURE };
+        return FnFailure();
     }
 
     for (ip = EvalContextGetIpAddresses(ctx); ip != NULL; ip = ip->next)
     {
         if (FuzzySetMatch(range, VIPADDRESS) == 0)
         {
-            strcpy(buffer, "any");
-            break;
+            return FnReturnContext(true);
         }
         else
         {
             if (FuzzySetMatch(range, ip->name) == 0)
             {
-                strcpy(buffer, "any");
-                break;
+                return FnReturnContext(true);
             }
         }
     }
 
-    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), RVAL_TYPE_SCALAR } };
+    return FnReturnContext(false);
 }
 
 /*********************************************************************/
@@ -3573,31 +3472,17 @@ static FnCallResult FnCallHostRange(EvalContext *ctx, FnCall *fp, Rlist *finalar
 
     if (!FuzzyHostParse(range))
     {
-        return (FnCallResult) { FNCALL_FAILURE };
+        return FnFailure();
     }
 
-    if (FuzzyHostMatch(prefix, range, VUQNAME) == 0)
-    {
-        return (FnCallResult) { FNCALL_SUCCESS, { xstrdup("any"), RVAL_TYPE_SCALAR } };
-    }
-    else
-    {
-        return (FnCallResult) { FNCALL_SUCCESS, { xstrdup("!any"), RVAL_TYPE_SCALAR } };
-    }
+    return FnReturnContext(FuzzyHostMatch(prefix, range, VUQNAME) == 0);
 }
 
 /*********************************************************************/
 
 FnCallResult FnCallHostInNetgroup(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
-    char buffer[CF_BUFSIZE];
     char *host, *user, *domain;
-
-    buffer[0] = '\0';
-
-/* begin fn specific content */
-
-    strcpy(buffer, "!any");
 
     setnetgrent(RlistScalarValue(finalargs));
 
@@ -3606,21 +3491,21 @@ FnCallResult FnCallHostInNetgroup(EvalContext *ctx, FnCall *fp, Rlist *finalargs
         if (host == NULL)
         {
             Log(LOG_LEVEL_VERBOSE, "Matched '%s' in netgroup '%s'", VFQNAME, RlistScalarValue(finalargs));
-            strcpy(buffer, "any");
-            break;
+            endnetgrent();
+            return FnReturnContext(true);
         }
 
         if (strcmp(host, VFQNAME) == 0 || strcmp(host, VUQNAME) == 0)
         {
             Log(LOG_LEVEL_VERBOSE, "Matched '%s' in netgroup '%s'", host, RlistScalarValue(finalargs));
-            strcpy(buffer, "any");
-            break;
+            endnetgrent();
+            return FnReturnContext(true);
         }
     }
 
     endnetgrent();
 
-    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), RVAL_TYPE_SCALAR } };
+    return FnReturnContext(false);
 }
 
 /*********************************************************************/
@@ -3628,7 +3513,6 @@ FnCallResult FnCallHostInNetgroup(EvalContext *ctx, FnCall *fp, Rlist *finalargs
 static FnCallResult FnCallIsVariable(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
     const char *lval = RlistScalarValue(finalargs);
-    Rval rval = { 0 };
     bool found = false;
 
     if (!lval)
@@ -3638,32 +3522,19 @@ static FnCallResult FnCallIsVariable(EvalContext *ctx, FnCall *fp, Rlist *finala
     else
     {
         VarRef *ref = VarRefParse(lval);
+        Rval rval = { 0 };
         found = EvalContextVariableGet(ctx, ref, &rval, NULL);
         VarRefDestroy(ref);
     }
 
-    if (found)
-    {
-        return (FnCallResult) { FNCALL_SUCCESS, { xstrdup("any"), RVAL_TYPE_SCALAR } };
-    }
-    else
-    {
-        return (FnCallResult) { FNCALL_SUCCESS, { xstrdup("!any"), RVAL_TYPE_SCALAR } };
-    }
+    return FnReturnContext(found);
 }
 
 /*********************************************************************/
 
 static FnCallResult FnCallStrCmp(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
-    if (strcmp(RlistScalarValue(finalargs), RlistScalarValue(finalargs->next)) == 0)
-    {
-        return (FnCallResult) { FNCALL_SUCCESS, { xstrdup("any"), RVAL_TYPE_SCALAR } };
-    }
-    else
-    {
-        return (FnCallResult) { FNCALL_SUCCESS, { xstrdup("!any"), RVAL_TYPE_SCALAR } };
-    }
+    return FnReturnContext(strcmp(RlistScalarValue(finalargs), RlistScalarValue(finalargs->next)) == 0);
 }
 
 /*********************************************************************/
@@ -3672,14 +3543,10 @@ static FnCallResult FnCallTranslatePath(EvalContext *ctx, FnCall *fp, Rlist *fin
 {
     char buffer[MAX_FILENAME];
 
-    buffer[0] = '\0';
-
-/* begin fn specific content */
-
     snprintf(buffer, sizeof(buffer), "%s", RlistScalarValue(finalargs));
     MapName(buffer);
 
-    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), RVAL_TYPE_SCALAR } };
+    return FnReturn(buffer);
 }
 
 /*********************************************************************/
@@ -3692,20 +3559,20 @@ static FnCallResult FnCallRegistryValue(EvalContext *ctx, FnCall *fp, Rlist *fin
 
     if (GetRegistryValue(RlistScalarValue(finalargs), RlistScalarValue(finalargs->next), buffer, sizeof(buffer)))
     {
-        return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), RVAL_TYPE_SCALAR } };
+        return FnReturn(buffer);
     }
     else
     {
-        return (FnCallResult) { FNCALL_FAILURE };
+        return FnFailure();
     }
-    return (FnCallResult) { FNCALL_FAILURE };
+    return FnFailure();
 }
 
 #else /* !__MINGW32__ */
 
 static FnCallResult FnCallRegistryValue(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
-    return (FnCallResult) { FNCALL_FAILURE };
+    return FnFailure();
 }
 
 #endif /* !__MINGW32__ */
@@ -3732,7 +3599,7 @@ static FnCallResult FnCallRemoteScalar(EvalContext *ctx, FnCall *fp, Rlist *fina
 
     if (THIS_AGENT_TYPE == AGENT_TYPE_COMMON)
     {
-        return (FnCallResult) { FNCALL_SUCCESS, { xstrdup("<remote scalar>"), RVAL_TYPE_SCALAR } };
+        return FnReturn("<remote scalar>");
     }
     else
     {
@@ -3751,7 +3618,7 @@ static FnCallResult FnCallRemoteScalar(EvalContext *ctx, FnCall *fp, Rlist *fina
             CacheUnreliableValue("remotescalar", handle, buffer);
         }
 
-        return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), RVAL_TYPE_SCALAR } };
+        return FnReturn(buffer);
     }
 }
 
@@ -3763,13 +3630,11 @@ static FnCallResult FnCallHubKnowledge(EvalContext *ctx, FnCall *fp, Rlist *fina
 
     buffer[0] = '\0';
 
-/* begin fn specific content */
-
     char *handle = RlistScalarValue(finalargs);
 
     if (THIS_AGENT_TYPE != AGENT_TYPE_AGENT)
     {
-        return (FnCallResult) { FNCALL_SUCCESS, { xstrdup("<inaccessible remote scalar>"), RVAL_TYPE_SCALAR } };
+        return FnReturn("<inaccessible remote scalar>");
     }
     else
     {
@@ -3780,10 +3645,10 @@ static FnCallResult FnCallHubKnowledge(EvalContext *ctx, FnCall *fp, Rlist *fina
 
         if (strncmp(buffer, "BAD:", 4) == 0)
         {
-            snprintf(buffer, CF_MAXVARSIZE, "0");
+            return FnReturn("0");
         }
 
-        return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), RVAL_TYPE_SCALAR } };
+        return FnReturn(buffer);
     }
 }
 
@@ -3811,7 +3676,7 @@ static FnCallResult FnCallRemoteClassesMatching(EvalContext *ctx, FnCall *fp, Rl
 
     if (THIS_AGENT_TYPE == AGENT_TYPE_COMMON)
     {
-        return (FnCallResult) { FNCALL_SUCCESS, { xstrdup("remote_classes"), RVAL_TYPE_SCALAR } };
+        return FnReturn("remote_classes");
     }
     else
     {
@@ -3819,7 +3684,7 @@ static FnCallResult FnCallRemoteClassesMatching(EvalContext *ctx, FnCall *fp, Rl
 
         if (strncmp(buffer, "BAD:", 4) == 0)
         {
-            return (FnCallResult) { FNCALL_FAILURE };
+            return FnFailure();
         }
 
         if ((classlist = RlistFromSplitString(buffer, ',')))
@@ -3832,7 +3697,7 @@ static FnCallResult FnCallRemoteClassesMatching(EvalContext *ctx, FnCall *fp, Rl
             RlistDestroy(classlist);
         }
 
-        return (FnCallResult) { FNCALL_SUCCESS, { xstrdup("any"), RVAL_TYPE_SCALAR } };
+        return FnReturnContext(true);
     }
 }
 
@@ -3855,7 +3720,7 @@ static FnCallResult FnCallPeers(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 
     if (file_buffer == NULL)
     {
-        return (FnCallResult) { FNCALL_FAILURE };
+        return FnFailure();
     }
 
     file_buffer = StripPatterns(file_buffer, comment, filename);
@@ -3919,7 +3784,7 @@ static FnCallResult FnCallPeers(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
     }
     else
     {
-        return (FnCallResult) { FNCALL_FAILURE };
+        return FnFailure();
     }
 }
 
@@ -3944,7 +3809,7 @@ static FnCallResult FnCallPeerLeader(EvalContext *ctx, FnCall *fp, Rlist *finala
 
     if (file_buffer == NULL)
     {
-        return (FnCallResult) { FNCALL_FAILURE };
+        return FnFailure();
     }
     else
     {
@@ -4007,11 +3872,11 @@ static FnCallResult FnCallPeerLeader(EvalContext *ctx, FnCall *fp, Rlist *finala
 
     if (strlen(buffer) > 0)
     {
-        return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), RVAL_TYPE_SCALAR } };
+        return FnReturn(buffer);
     }
     else
     {
-        return (FnCallResult) { FNCALL_FAILURE };
+        return FnFailure();
     }
 
 }
@@ -4035,7 +3900,7 @@ static FnCallResult FnCallPeerLeaders(EvalContext *ctx, FnCall *fp, Rlist *final
 
     if (file_buffer == NULL)
     {
-        return (FnCallResult) { FNCALL_FAILURE };
+        return FnFailure();
     }
 
     file_buffer = StripPatterns(file_buffer, comment, filename);
@@ -4088,7 +3953,7 @@ static FnCallResult FnCallPeerLeaders(EvalContext *ctx, FnCall *fp, Rlist *final
     }
     else
     {
-        return (FnCallResult) { FNCALL_FAILURE };
+        return FnFailure();
     }
 
 }
@@ -4107,16 +3972,7 @@ static FnCallResult FnCallRegCmp(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
     char *argv0 = RlistScalarValue(finalargs);
     char *argv1 = RlistScalarValue(finalargs->next);
 
-    if (FullTextMatch(ctx, argv0, argv1))
-    {
-        strcpy(buffer, "any");
-    }
-    else
-    {
-        strcpy(buffer, "!any");
-    }
-
-    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), RVAL_TYPE_SCALAR } };
+    return FnReturnContext(FullTextMatch(ctx, argv0, argv1));
 }
 
 /*********************************************************************/
@@ -4134,14 +3990,7 @@ static FnCallResult FnCallRegExtract(EvalContext *ctx, FnCall *fp, Rlist *finala
     char *data = RlistScalarValue(finalargs->next);
     char *arrayname = RlistScalarValue(finalargs->next->next);
 
-    if (FullTextMatch(ctx, regex, data))
-    {
-        strcpy(buffer, "any");
-    }
-    else
-    {
-        strcpy(buffer, "!any");
-    }
+    bool ret = FullTextMatch(ctx, regex, data);
 
     long i = 0;
 
@@ -4163,7 +4012,7 @@ static FnCallResult FnCallRegExtract(EvalContext *ctx, FnCall *fp, Rlist *finala
         {
             Log(LOG_LEVEL_ERR,
                   "Software error: pattern match was non-scalar in regextract (shouldn't happen)");
-            return (FnCallResult) { FNCALL_FAILURE };
+            return FnFailure();
         }
         else
         {
@@ -4179,74 +4028,62 @@ static FnCallResult FnCallRegExtract(EvalContext *ctx, FnCall *fp, Rlist *finala
 
     if (i == 0)
     {
-        strcpy(buffer, "!any");
+        return FnReturnContext(false);
     }
 
-    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), RVAL_TYPE_SCALAR } };
+    return FnReturnContext(ret);
 }
 
 /*********************************************************************/
 
 static FnCallResult FnCallRegLine(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
-    char buffer[CF_BUFSIZE];
     FILE *fin;
-
-    buffer[0] = '\0';
-
-/* begin fn specific content */
 
     char *argv0 = RlistScalarValue(finalargs);
     char *argv1 = RlistScalarValue(finalargs->next);
 
-    strcpy(buffer, "!any");
-
-    if ((fin = safe_fopen(argv1, "r")) != NULL)
+    if ((fin = safe_fopen(argv1, "r")) == NULL)
     {
-        for (;;)
+        return FnReturnContext(false);
+    }
+
+    for (;;)
+    {
+        char line[CF_BUFSIZE];
+
+        if (fgets(line, sizeof(line), fin) == NULL)
         {
-            char line[CF_BUFSIZE];
-
-            if (fgets(line, sizeof(line), fin) == NULL)
+            if (ferror(fin))
             {
-                if (ferror(fin))
-                {
-                    Log(LOG_LEVEL_ERR, "Function regline, unable to read from the file '%s'", argv1);
-                    fclose(fin);
-                    return (FnCallResult) { FNCALL_FAILURE };
-                }
-                else /* feof */
-                {
-                    break;
-                }
+                Log(LOG_LEVEL_ERR, "Function regline, unable to read from the file '%s'", argv1);
+                fclose(fin);
+                return FnFailure();
             }
-
-            if (Chop(line, CF_EXPANDSIZE) == -1)
+            else /* feof */
             {
-                Log(LOG_LEVEL_ERR, "Chop was called on a string that seemed to have no terminator");
-            }
-
-            if (FullTextMatch(ctx, argv0, line))
-            {
-                strcpy(buffer, "any");
-                break;
+                fclose(fin);
+                return FnReturnContext(false);
             }
         }
 
-        fclose(fin);
-    }
+        if (Chop(line, CF_EXPANDSIZE) == -1)
+        {
+            Log(LOG_LEVEL_ERR, "Chop was called on a string that seemed to have no terminator");
+        }
 
-    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), RVAL_TYPE_SCALAR } };
+        if (FullTextMatch(ctx, argv0, line))
+        {
+            fclose(fin);
+            return FnReturnContext(true);
+        }
+    }
 }
 
 /*********************************************************************/
 
 static FnCallResult FnCallIsLessGreaterThan(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
-    char buffer[CF_BUFSIZE];
-
-    buffer[0] = '\0';
-
     char *argv0 = RlistScalarValue(finalargs);
     char *argv1 = RlistScalarValue(finalargs->next);
 
@@ -4255,71 +4092,39 @@ static FnCallResult FnCallIsLessGreaterThan(EvalContext *ctx, FnCall *fp, Rlist 
         double a = 0;
         if (!DoubleFromString(argv0, &a))
         {
-            return (FnCallResult) { FNCALL_FAILURE };
+            return FnFailure();
         }
         double b = 0;
         if (!DoubleFromString(argv1, &b))
         {
-            return (FnCallResult) { FNCALL_FAILURE };
+            return FnFailure();
         }
 
         if (!strcmp(fp->name, "isgreaterthan"))
         {
-            if (a > b)
-            {
-                strcpy(buffer, "any");
-            }
-            else
-            {
-                strcpy(buffer, "!any");
-            }
+            return FnReturnContext(a > b);
         }
         else
         {
-            if (a < b)
-            {
-                strcpy(buffer, "any");
-            }
-            else
-            {
-                strcpy(buffer, "!any");
-            }
+            return FnReturnContext(a < b);
         }
     }
-    else if (strcmp(argv0, argv1) > 0)
+
+    if (!strcmp(fp->name, "isgreaterthan"))
     {
-        if (!strcmp(fp->name, "isgreaterthan"))
-        {
-            strcpy(buffer, "any");
-        }
-        else
-        {
-            strcpy(buffer, "!any");
-        }
+        return FnReturnContext(strcmp(argv0, argv1) > 0);
     }
     else
     {
-        if (!strcmp(fp->name, "isgreaterthan"))
-        {
-            strcpy(buffer, "!any");
-        }
-        else
-        {
-            strcpy(buffer, "any");
-        }
+        return FnReturnContext(strcmp(argv0, argv1) < 0);
     }
-
-    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), RVAL_TYPE_SCALAR } };
 }
 
 /*********************************************************************/
 
 static FnCallResult FnCallIRange(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
-    char buffer[CF_BUFSIZE];
     long tmp;
-
-    buffer[0] = '\0';
 
 /* begin fn specific content */
 
@@ -4328,7 +4133,7 @@ static FnCallResult FnCallIRange(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 
     if (from == CF_NOINT || to == CF_NOINT)
     {
-        return (FnCallResult) { FNCALL_FAILURE };
+        return FnFailure();
     }
 
     if (from > to)
@@ -4338,19 +4143,14 @@ static FnCallResult FnCallIRange(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
         from = tmp;
     }
 
-    snprintf(buffer, CF_BUFSIZE - 1, "%ld,%ld", from, to);
-
-    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), RVAL_TYPE_SCALAR } };
+    return FnReturnF("%ld,%ld", from, to);
 }
 
 /*********************************************************************/
 
 static FnCallResult FnCallRRange(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
-    char buffer[CF_BUFSIZE];
     int tmp;
-
-    buffer[0] = '\0';
 
 /* begin fn specific content */
 
@@ -4358,14 +4158,14 @@ static FnCallResult FnCallRRange(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
     if (!DoubleFromString(RlistScalarValue(finalargs), &from))
     {
         Log(LOG_LEVEL_ERR, "Function rrange, error reading assumed real value '%s' => %lf", RlistScalarValue(finalargs), from);
-        return (FnCallResult) { FNCALL_FAILURE };
+        return FnFailure();
     }
 
     double to = 0;
     if (!DoubleFromString(RlistScalarValue(finalargs), &to))
     {
         Log(LOG_LEVEL_ERR, "Function rrange, error reading assumed real value '%s' => %lf", RlistScalarValue(finalargs->next), from);
-        return (FnCallResult) { FNCALL_FAILURE };
+        return FnFailure();
     }
 
     if (from > to)
@@ -4375,9 +4175,7 @@ static FnCallResult FnCallRRange(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
         from = tmp;
     }
 
-    snprintf(buffer, CF_BUFSIZE - 1, "%lf,%lf", from, to);
-
-    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), RVAL_TYPE_SCALAR } };
+    return FnReturnF("%lf,%lf", from, to);
 }
 
 static FnCallResult FnCallReverse(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
@@ -4387,13 +4185,13 @@ static FnCallResult FnCallReverse(EvalContext *ctx, FnCall *fp, Rlist *finalargs
 
     if (!GetListReferenceArgument(ctx, fp, RlistScalarValue(finalargs), &list_rval, &list_dtype))
     {
-        return (FnCallResult) { FNCALL_FAILURE };
+        return FnFailure();
     }
 
     if (list_dtype != DATA_TYPE_STRING_LIST)
     {
         Log(LOG_LEVEL_ERR, "Function '%s' expected a variable that resolves to a string list, got '%s'", fp->name, DataTypeToString(list_dtype));
-        return (FnCallResult) { FNCALL_FAILURE };
+        return FnFailure();
     }
 
     Rlist *copy = RlistCopy(RvalRlistValue(list_rval));
@@ -4478,11 +4276,11 @@ static FnCallResult FnCallOr(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
     {
         if (IsDefinedClass(ctx, RlistScalarValue(arg), PromiseGetNamespace(fp->caller)))
         {
-            return (FnCallResult) { FNCALL_SUCCESS, { xstrdup("any"), RVAL_TYPE_SCALAR } };
+            return FnReturnContext(true);
         }
     }
 
-    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup("!any"), RVAL_TYPE_SCALAR } };
+    return FnReturnContext(false);
 }
 
 /*********************************************************************/
@@ -4693,25 +4491,14 @@ static FnCallResult FnCallAccumulatedDate(EvalContext *ctx, FnCall *fp, Rlist *f
 
 static FnCallResult FnCallNot(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
-    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(IsDefinedClass(ctx, RlistScalarValue(finalargs), PromiseGetNamespace(fp->caller)) ? "!any" : "any"), RVAL_TYPE_SCALAR } };
+    return FnReturnContext(!IsDefinedClass(ctx, RlistScalarValue(finalargs), PromiseGetNamespace(fp->caller)));
 }
 
 /*********************************************************************/
 
 static FnCallResult FnCallNow(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
-    char buffer[CF_BUFSIZE];
-    time_t cftime;
-
-    buffer[0] = '\0';
-
-/* begin fn specific content */
-
-    cftime = CFSTARTTIME;
-
-    snprintf(buffer, CF_BUFSIZE - 1, "%ld", (long) cftime);
-
-    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), RVAL_TYPE_SCALAR } };
+    return FnReturnF("%ld", (long)CFSTARTTIME);
 }
 
 /*********************************************************************/
@@ -4748,7 +4535,7 @@ static FnCallResult FnCallStrftime(EvalContext *ctx, FnCall *fp, Rlist *finalarg
         Log(LOG_LEVEL_WARNING, "Function strftime, the given time stamp '%ld' was invalid. (strftime: %s)", when, GetErrorStr());
     }
 
-    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), RVAL_TYPE_SCALAR } };
+    return FnReturn(buffer);
 }
 
 /*********************************************************************/
@@ -4761,28 +4548,22 @@ static FnCallResult FnCallEval(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
     if (0 != strcmp(type, "math") || 0 != strcmp(options, "infix"))
     {
         Log(LOG_LEVEL_ERR, "Unknown %s evaluation type %s or options %s", fp->name, type, options);
-        return (FnCallResult) { FNCALL_FAILURE };
+        return FnFailure();
     }
 
     char failure[CF_BUFSIZE];
     memset(failure, 0, sizeof(failure));
 
-    char out[CF_BUFSIZE];
-    memset(out, 0, sizeof(out));
-
     double result = EvaluateMathInfix(ctx, input, failure);
     if (strlen(failure) > 0)
     {
         Log(LOG_LEVEL_INFO, "%s error: %s (input '%s')", fp->name, failure, input);
-        //return (FnCallResult) { FNCALL_FAILURE };
-        memset(out, 0, sizeof(out));
+        return FnReturn("");
     }
     else
     {
-        sprintf(out, "%lf", result);
+        return FnReturnF("%lf", result);
     }
-
-    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(out), RVAL_TYPE_SCALAR } };
 }
 
 /*********************************************************************/
@@ -4811,7 +4592,7 @@ static FnCallResult FnCallReadFile(EvalContext *ctx, FnCall *fp, Rlist *finalarg
     }
     else
     {
-        return (FnCallResult) { FNCALL_FAILURE };
+        return FnFailure();
     }
 }
 
@@ -4836,7 +4617,7 @@ static FnCallResult ReadList(EvalContext *ctx, FnCall *fp, Rlist *finalargs, Dat
 
     if (file_buffer == NULL)
     {
-        return (FnCallResult) { FNCALL_FAILURE };
+        return FnFailure();
     }
     else
     {
@@ -4894,7 +4675,7 @@ static FnCallResult ReadList(EvalContext *ctx, FnCall *fp, Rlist *finalargs, Dat
     }
     else
     {
-        return (FnCallResult) { FNCALL_FAILURE };
+        return FnFailure();
     }
 
 }
@@ -4924,7 +4705,7 @@ static FnCallResult FnCallReadJson(EvalContext *ctx, FnCall *fp, Rlist *args)
     if (!contents)
     {
         Log(LOG_LEVEL_ERR, "Error reading JSON input file '%s'", input_path);
-        return (FnCallResult) { FNCALL_FAILURE, };
+        return FnFailure();
     }
     JsonElement *json = NULL;
     const char *data = StringWriterData(contents);
@@ -4932,7 +4713,7 @@ static FnCallResult FnCallReadJson(EvalContext *ctx, FnCall *fp, Rlist *args)
     {
         Log(LOG_LEVEL_ERR, "Error parsing JSON file '%s'", input_path);
         WriterClose(contents);
-        return (FnCallResult) { FNCALL_FAILURE };
+        return FnFailure();
     }
 
     WriterClose(contents);
@@ -4946,7 +4727,7 @@ static FnCallResult FnCallParseJson(EvalContext *ctx, FnCall *fp, Rlist *args)
     if (JsonParse(&data, &json) != JSON_PARSE_OK)
     {
         Log(LOG_LEVEL_ERR, "Error parsing JSON expression '%s'", data);
-        return (FnCallResult) { FNCALL_FAILURE };
+        return FnFailure();
     }
 
     return (FnCallResult) { FNCALL_SUCCESS, (Rval) { json, RVAL_TYPE_CONTAINER } };
@@ -4984,10 +4765,10 @@ static FnCallResult FnCallStoreJson(EvalContext *ctx, FnCall *fp, Rlist *finalar
     else
     {
         Log(LOG_LEVEL_VERBOSE, "%s: data container %s could not be found or has an invalid type", fp->name, varname);
-        return (FnCallResult) { FNCALL_FAILURE };
+        return FnFailure();
     }
 
-    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buf), RVAL_TYPE_SCALAR } };
+    return FnReturn(buf);
 }
 
 
@@ -4996,19 +4777,8 @@ static FnCallResult FnCallStoreJson(EvalContext *ctx, FnCall *fp, Rlist *finalar
 static FnCallResult ReadArray(EvalContext *ctx, FnCall *fp, Rlist *finalargs, DataType type, int intIndex)
 /* lval,filename,separator,comment,Max number of bytes  */
 {
-    char fnname[CF_MAXVARSIZE], *file_buffer = NULL;
+    char *file_buffer = NULL;
     int entries = 0;
-
-    /* Arg validation */
-
-    if (intIndex)
-    {
-        snprintf(fnname, CF_MAXVARSIZE - 1, "read%sarrayidx", DataTypeToString(type));
-    }
-    else
-    {
-        snprintf(fnname, CF_MAXVARSIZE - 1, "read%sarray", DataTypeToString(type));
-    }
 
 /* begin fn specific content */
 
@@ -5054,10 +4824,7 @@ static FnCallResult ReadArray(EvalContext *ctx, FnCall *fp, Rlist *finalargs, Da
 
     free(file_buffer);
 
-/* Return the number of lines in array */
-
-    snprintf(fnname, CF_MAXVARSIZE - 1, "%d", entries);
-    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(fnname), RVAL_TYPE_SCALAR } };
+    return FnReturnF("%d", entries);
 }
 
 /*********************************************************************/
@@ -5093,19 +4860,7 @@ static FnCallResult FnCallReadRealArray(EvalContext *ctx, FnCall *fp, Rlist *arg
 static FnCallResult ParseArray(EvalContext *ctx, FnCall *fp, Rlist *finalargs, DataType type, int intIndex)
 /* lval,filename,separator,comment,Max number of bytes  */
 {
-    char fnname[CF_MAXVARSIZE];
     int entries = 0;
-
-    /* Arg validation */
-
-    if (intIndex)
-    {
-        snprintf(fnname, CF_MAXVARSIZE - 1, "read%sarrayidx", DataTypeToString(type));
-    }
-    else
-    {
-        snprintf(fnname, CF_MAXVARSIZE - 1, "read%sarray", DataTypeToString(type));
-    }
 
 /* begin fn specific content */
 
@@ -5153,10 +4908,7 @@ static FnCallResult ParseArray(EvalContext *ctx, FnCall *fp, Rlist *finalargs, D
 
     free(instring);
 
-/* Return the number of lines in array */
-
-    snprintf(fnname, CF_MAXVARSIZE - 1, "%d", entries);
-    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(fnname), RVAL_TYPE_SCALAR } };
+    return FnReturnF("%d", entries);
 }
 
 /*********************************************************************/
@@ -5218,11 +4970,9 @@ static FnCallResult FnCallSplitString(EvalContext *ctx, FnCall *fp, Rlist *final
 static FnCallResult FnCallFileSexist(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
     Rlist *rp, *files;
-    char buffer[CF_BUFSIZE], naked[CF_MAXVARSIZE];
+    char naked[CF_MAXVARSIZE];
     Rval retval;
     struct stat sb;
-
-    buffer[0] = '\0';
 
 /* begin fn specific content */
 
@@ -5235,7 +4985,7 @@ static FnCallResult FnCallFileSexist(EvalContext *ctx, FnCall *fp, Rlist *finala
     else
     {
         Log(LOG_LEVEL_VERBOSE, "Function filesexist was promised a list called '%s' but this was not found", listvar);
-        return (FnCallResult) { FNCALL_FAILURE };
+        return FnFailure();
     }
 
     VarRef *ref = VarRefParse(naked);
@@ -5244,7 +4994,7 @@ static FnCallResult FnCallFileSexist(EvalContext *ctx, FnCall *fp, Rlist *finala
     {
         Log(LOG_LEVEL_VERBOSE, "Function filesexist was promised a list called '%s' but this was not found", listvar);
         VarRefDestroy(ref);
-        return (FnCallResult) { FNCALL_FAILURE };
+        return FnFailure();
     }
 
     VarRefDestroy(ref);
@@ -5253,23 +5003,20 @@ static FnCallResult FnCallFileSexist(EvalContext *ctx, FnCall *fp, Rlist *finala
     {
         Log(LOG_LEVEL_VERBOSE, "Function filesexist was promised a list called '%s' but this variable is not a list",
               listvar);
-        return (FnCallResult) { FNCALL_FAILURE };
+        return FnFailure();
     }
 
     files = (Rlist *) retval.item;
-
-    strcpy(buffer, "any");
 
     for (rp = files; rp != NULL; rp = rp->next)
     {
         if (stat(RlistScalarValue(rp), &sb) == -1)
         {
-            strcpy(buffer, "!any");
-            break;
+            return FnReturnContext(false);
         }
     }
 
-    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), RVAL_TYPE_SCALAR } };
+    return FnReturnContext(true);
 }
 
 /*********************************************************************/
@@ -5310,7 +5057,7 @@ static FnCallResult FnCallLDAPValue(EvalContext *ctx, FnCall *fp, Rlist *finalar
     }
     else
     {
-        return (FnCallResult) { FNCALL_FAILURE };
+        return FnFailure();
     }
 }
 
@@ -5335,7 +5082,7 @@ static FnCallResult FnCallLDAPArray(EvalContext *ctx, FnCall *fp, Rlist *finalar
     }
     else
     {
-        return (FnCallResult) { FNCALL_FAILURE };
+        return FnFailure();
     }
 
 }
@@ -5361,7 +5108,7 @@ static FnCallResult FnCallLDAPList(EvalContext *ctx, FnCall *fp, Rlist *finalarg
     }
     else
     {
-        return (FnCallResult) { FNCALL_FAILURE };
+        return FnFailure();
     }
 
 }
@@ -5388,7 +5135,7 @@ static FnCallResult FnCallRegLDAP(EvalContext *ctx, FnCall *fp, Rlist *finalargs
     }
     else
     {
-        return (FnCallResult) { FNCALL_FAILURE };
+        return FnFailure();
     }
 
 }
@@ -5399,10 +5146,7 @@ static FnCallResult FnCallRegLDAP(EvalContext *ctx, FnCall *fp, Rlist *finalargs
 
 static FnCallResult FnCallDiskFree(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
-    char buffer[CF_BUFSIZE];
     off_t df;
-
-    buffer[0] = '\0';
 
     df = GetDiskUsage(RlistScalarValue(finalargs), cfabs);
 
@@ -5411,26 +5155,16 @@ static FnCallResult FnCallDiskFree(EvalContext *ctx, FnCall *fp, Rlist *finalarg
         df = 0;
     }
 
-    /* Result is in kilobytes */
-    snprintf(buffer, CF_BUFSIZE - 1, "%jd", ((intmax_t) df) / KILOBYTE);
-
-    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), RVAL_TYPE_SCALAR } };
+    return FnReturnF("%jd", ((intmax_t) df) / KILOBYTE);
 }
 
 #if !defined(__MINGW32__)
 
 FnCallResult FnCallUserExists(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
-    char buffer[CF_BUFSIZE];
     struct passwd *pw;
     uid_t uid = CF_SAME_OWNER;
     char *arg = RlistScalarValue(finalargs);
-
-    buffer[0] = '\0';
-
-/* begin fn specific content */
-
-    strcpy(buffer, CF_ANYCLASS);
 
     if (StringIsNumeric(arg))
     {
@@ -5438,36 +5172,29 @@ FnCallResult FnCallUserExists(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 
         if (uid == CF_SAME_OWNER || uid == CF_UNKNOWN_OWNER)
         {
-            return (FnCallResult){ FNCALL_FAILURE };
+            return FnFailure();
         }
 
         if ((pw = getpwuid(uid)) == NULL)
         {
-            strcpy(buffer, "!any");
+            return FnReturnContext(false);
         }
     }
     else if ((pw = getpwnam(arg)) == NULL)
     {
-        strcpy(buffer, "!any");
+        return FnReturnContext(false);
     }
 
-    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), RVAL_TYPE_SCALAR } };
+    return FnReturnContext(true);
 }
 
 /*********************************************************************/
 
 FnCallResult FnCallGroupExists(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
-    char buffer[CF_BUFSIZE];
     struct group *gr;
     gid_t gid = CF_SAME_GROUP;
     char *arg = RlistScalarValue(finalargs);
-
-    buffer[0] = '\0';
-
-/* begin fn specific content */
-
-    strcpy(buffer, CF_ANYCLASS);
 
     if (isdigit((int) *arg))
     {
@@ -5475,20 +5202,20 @@ FnCallResult FnCallGroupExists(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 
         if (gid == CF_SAME_GROUP || gid == CF_UNKNOWN_GROUP)
         {
-            return (FnCallResult) { FNCALL_FAILURE };
+            return FnFailure();
         }
 
         if ((gr = getgrgid(gid)) == NULL)
         {
-            strcpy(buffer, "!any");
+            return FnReturnContext(false);
         }
     }
     else if ((gr = getgrnam(arg)) == NULL)
     {
-        strcpy(buffer, "!any");
+        return FnReturnContext(false);
     }
 
-    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), RVAL_TYPE_SCALAR } };
+    return FnReturnContext(true);
 }
 
 #endif /* !defined(__MINGW32__) */

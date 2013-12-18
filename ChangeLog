@@ -30,6 +30,32 @@
           - `this` and similar variables 
        - Improve performance of list iteration (Redmine #1875)
 
+3.5.3
+       Changes:
+       - Improved security checks of symlink ownership. A symlink created by a user pointing
+         to resources owned by a different user will no longer be followed.
+       - Changed the way package versions are compared in package promises. (Redmine #3314)
+         In previous versions the comparison was inconsistent. This has been fixed, but may
+         also lead to behavior changes in certain cases. In CFEngine 3.5.3, the comparison
+         works as follows:
+           <package-being-considered> <package_select> <package_version>
+         For instance:
+                 apache-2.2.31              ">="            "2.2.0"
+         will result in the package being installed.
+
+       Bug fixes:
+       - fix cf-monitord crash due to incorrect array initialization (Redmine #3180)
+       - fix cf-serverd stat()'ing the file tree every second (Redmine #3479)
+       - correctly populate sys.hardware_addresses variable (Redmine #2936)
+       - add support for Debian's GNU/kfreebsd to build system (Redmine #3500)
+       - fix possible stack corruption in guest_environments promises (Redmine #3552)
+       - work-around hostname trunctation in HP-UX's uname (Redmine #3517)
+       - fix body copy purging of empty directories (Redmine #3429)
+       - make discovery and loading of avahi libraries more robust
+       - compile and packaging fixes for HP-UX, AIX and Solaris
+       - fix fatal error in lsdir() when directory doesn't exist (Redmine #3273)
+       - fix epoch calculation for stime inrange calculation (Redmine #2921)
+
 3.5.2
        Bug fixes:
        - fix delayed abortclasses checking (Redmine #2316, #3114, #3003)

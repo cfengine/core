@@ -1,0 +1,107 @@
+#  Copyright (C) Cfengine AS
+
+#  This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+
+#  This program is free software; you can redistribute it and/or modify it
+#  under the terms of the GNU General Public License as published by the
+#  Free Software Foundation; version 3.
+
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
+
+# To the extent this program is licensed as part of the Enterprise
+# versions of Cfengine, the applicable Commercial Open Source License
+# (COSL) may apply to this file if you as a licensee so wish it. See
+# included file COSL.txt.
+
+#+begin_src cfengine3
+body common control
+{
+      bundlesequence => { "test" };
+}
+
+bundle agent test
+{
+  vars:
+      "test" slist => {
+                        1,2,3,
+                        "one", "two", "three",
+                        "long string",
+                        "four", "fix", "six",
+      };
+
+      "test_head9999" slist => sublist("test", "head", 9999);
+      "test_head1" slist => sublist("test", "head", 1);
+      "test_head0" slist => sublist("test", "head", 0);
+
+      "test_tail9999" slist => sublist("test", "tail", 9999);
+      "test_tail10" slist => sublist("test", "tail", 10);
+      "test_tail2" slist => sublist("test", "tail", 2);
+      "test_tail1" slist => sublist("test", "tail", 1);
+      "test_tail0" slist => sublist("test", "tail", 0);
+
+  reports:
+      "The test list is $(test)";
+      "This line should not appear: $(test_head0)";
+      "The head(1) of the test list is $(test_head1)";
+      "The head(9999) of the test list is $(test_head9999)";
+      "This line should not appear: $(test_tail0)";
+      "The tail(1) of the test list is $(test_tail1)";
+      "The tail(10) of the test list is $(test_tail10)";
+      "The tail(2) of the test list is $(test_tail2)";
+      "The tail(9999) of the test list is $(test_tail9999)";
+}
+#+end_src
+###############################################################################
+#+begin_src example_output 3.6-
+2013-12-16T20:47:54+0200   notice: /default/test: R: The test list is 1
+2013-12-16T20:47:54+0200   notice: /default/test: R: The test list is 2
+2013-12-16T20:47:54+0200   notice: /default/test: R: The test list is 3
+2013-12-16T20:47:54+0200   notice: /default/test: R: The test list is one
+2013-12-16T20:47:54+0200   notice: /default/test: R: The test list is two
+2013-12-16T20:47:54+0200   notice: /default/test: R: The test list is three
+2013-12-16T20:47:54+0200   notice: /default/test: R: The test list is long string
+2013-12-16T20:47:54+0200   notice: /default/test: R: The test list is four
+2013-12-16T20:47:54+0200   notice: /default/test: R: The test list is fix
+2013-12-16T20:47:54+0200   notice: /default/test: R: The test list is six
+2013-12-16T20:47:54+0200   notice: /default/test: R: The head(1) of the test list is 1
+2013-12-16T20:47:54+0200   notice: /default/test: R: The head(9999) of the test list is 1
+2013-12-16T20:47:54+0200   notice: /default/test: R: The head(9999) of the test list is 2
+2013-12-16T20:47:54+0200   notice: /default/test: R: The head(9999) of the test list is 3
+2013-12-16T20:47:54+0200   notice: /default/test: R: The head(9999) of the test list is one
+2013-12-16T20:47:54+0200   notice: /default/test: R: The head(9999) of the test list is two
+2013-12-16T20:47:54+0200   notice: /default/test: R: The head(9999) of the test list is three
+2013-12-16T20:47:54+0200   notice: /default/test: R: The head(9999) of the test list is long string
+2013-12-16T20:47:54+0200   notice: /default/test: R: The head(9999) of the test list is four
+2013-12-16T20:47:54+0200   notice: /default/test: R: The head(9999) of the test list is fix
+2013-12-16T20:47:54+0200   notice: /default/test: R: The head(9999) of the test list is six
+2013-12-16T20:47:54+0200   notice: /default/test: R: The tail(1) of the test list is six
+2013-12-16T20:47:54+0200   notice: /default/test: R: The tail(10) of the test list is 1
+2013-12-16T20:47:54+0200   notice: /default/test: R: The tail(10) of the test list is 2
+2013-12-16T20:47:54+0200   notice: /default/test: R: The tail(10) of the test list is 3
+2013-12-16T20:47:54+0200   notice: /default/test: R: The tail(10) of the test list is one
+2013-12-16T20:47:54+0200   notice: /default/test: R: The tail(10) of the test list is two
+2013-12-16T20:47:54+0200   notice: /default/test: R: The tail(10) of the test list is three
+2013-12-16T20:47:54+0200   notice: /default/test: R: The tail(10) of the test list is long string
+2013-12-16T20:47:54+0200   notice: /default/test: R: The tail(10) of the test list is four
+2013-12-16T20:47:54+0200   notice: /default/test: R: The tail(10) of the test list is fix
+2013-12-16T20:47:54+0200   notice: /default/test: R: The tail(10) of the test list is six
+2013-12-16T20:47:54+0200   notice: /default/test: R: The tail(2) of the test list is fix
+2013-12-16T20:47:54+0200   notice: /default/test: R: The tail(2) of the test list is six
+2013-12-16T20:47:54+0200   notice: /default/test: R: The tail(9999) of the test list is 1
+2013-12-16T20:47:54+0200   notice: /default/test: R: The tail(9999) of the test list is 2
+2013-12-16T20:47:54+0200   notice: /default/test: R: The tail(9999) of the test list is 3
+2013-12-16T20:47:54+0200   notice: /default/test: R: The tail(9999) of the test list is one
+2013-12-16T20:47:54+0200   notice: /default/test: R: The tail(9999) of the test list is two
+2013-12-16T20:47:54+0200   notice: /default/test: R: The tail(9999) of the test list is three
+2013-12-16T20:47:54+0200   notice: /default/test: R: The tail(9999) of the test list is long string
+2013-12-16T20:47:54+0200   notice: /default/test: R: The tail(9999) of the test list is four
+2013-12-16T20:47:54+0200   notice: /default/test: R: The tail(9999) of the test list is fix
+2013-12-16T20:47:54+0200   notice: /default/test: R: The tail(9999) of the test list is six
+#+end_src

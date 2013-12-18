@@ -1,0 +1,70 @@
+#  Copyright (C) Cfengine AS
+
+#  This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+
+#  This program is free software; you can redistribute it and/or modify it
+#  under the terms of the GNU General Public License as published by the
+#  Free Software Foundation; version 3.
+
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
+
+# To the extent this program is licensed as part of the Enterprise
+# versions of Cfengine, the applicable Commercial Open Source License
+# (COSL) may apply to this file if you as a licensee so wish it. See
+# included file COSL.txt.
+
+#+begin_src cfengine3
+body common control
+{
+      bundlesequence => { "test" };
+}
+
+bundle agent test
+{
+  vars:
+      "test" slist => {
+                        1,2,3,
+                        "one", "two", "three",
+                        "long string",
+                        "four", "fix", "six",
+                        "one", "two", "three",
+      };
+
+      "nth" slist => { 1, 2, 6, 10, 11, 1000 };
+
+      "test[$(nth)]" string => nth("test", $(nth));
+      "test[0]" string => nth("test", 0);
+
+  reports:
+      "The test list is $(test)";
+      "element #$(nth) of the test list: $(test[$(nth)])";
+      "element #0 of the test list: $(test[0])";
+}
+#+end_src
+###############################################################################
+#+begin_src example_output 3.6-
+2013-12-16T20:48:10+0200   notice: /default/test: R: The test list is 1
+2013-12-16T20:48:10+0200   notice: /default/test: R: The test list is 2
+2013-12-16T20:48:10+0200   notice: /default/test: R: The test list is 3
+2013-12-16T20:48:10+0200   notice: /default/test: R: The test list is one
+2013-12-16T20:48:10+0200   notice: /default/test: R: The test list is two
+2013-12-16T20:48:10+0200   notice: /default/test: R: The test list is three
+2013-12-16T20:48:10+0200   notice: /default/test: R: The test list is long string
+2013-12-16T20:48:10+0200   notice: /default/test: R: The test list is four
+2013-12-16T20:48:10+0200   notice: /default/test: R: The test list is fix
+2013-12-16T20:48:10+0200   notice: /default/test: R: The test list is six
+2013-12-16T20:48:10+0200   notice: /default/test: R: element #1 of the test list: 2
+2013-12-16T20:48:10+0200   notice: /default/test: R: element #2 of the test list: 3
+2013-12-16T20:48:10+0200   notice: /default/test: R: element #6 of the test list: long string
+2013-12-16T20:48:10+0200   notice: /default/test: R: element #10 of the test list: one
+2013-12-16T20:48:10+0200   notice: /default/test: R: element #11 of the test list: two
+2013-12-16T20:48:10+0200   notice: /default/test: R: element #1000 of the test list: $(test[1000])
+2013-12-16T20:48:10+0200   notice: /default/test: R: element #0 of the test list: 1
+#+end_src

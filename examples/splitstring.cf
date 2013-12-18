@@ -20,30 +20,34 @@
 # (COSL) may apply to this file if you as a licensee so wish it. See
 # included file COSL.txt.
 
-#######################################################
-#
-# Split a string into a list
-#
-#######################################################
-
+#+begin_src cfengine3
 body common control
-
 {
-      bundlesequence  => { "example" };   
+      bundlesequence => { "test" };
 }
 
-#######################################################
-
-bundle agent example
-
+bundle agent test
 {
   vars:
 
       "split1" slist => splitstring("one:two:three",":","10");
-      "split2" slist => splitstring("alpha:xyz:beta","xyz","10");
+      "split2" slist => splitstring("one:two:three",":","1");
+      "split3" slist => splitstring("alpha:xyz:beta","xyz","10");
 
   reports:
-      "Found key $(split1)";
-      "Found key $(split2)";
+
+      "split1: $(split1)";  # will list "one", "two", and "three"
+      "split2: $(split2)";  # will list "one" and "two:three"
+      "split3: $(split3)";  # will list "alpha:" and ":beta"
 
 }
+#+end_src
+###############################################################################
+#+begin_src example_output 3.6-
+2013-12-16T20:48:26+0200   notice: /default/test: R: split1: one
+2013-12-16T20:48:26+0200   notice: /default/test: R: split1: two
+2013-12-16T20:48:26+0200   notice: /default/test: R: split1: three
+2013-12-16T20:48:26+0200   notice: /default/test: R: split2: one
+2013-12-16T20:48:26+0200   notice: /default/test: R: split3: alpha:
+2013-12-16T20:48:26+0200   notice: /default/test: R: split3: :beta
+#+end_src

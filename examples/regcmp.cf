@@ -1,0 +1,83 @@
+#  Copyright (C) Cfengine AS
+
+#  This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+
+#  This program is free software; you can redistribute it and/or modify it
+#  under the terms of the GNU General Public License as published by the
+#  Free Software Foundation; version 3.
+
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
+
+# To the extent this program is licensed as part of the Enterprise
+# versions of Cfengine, the applicable Commercial Open Source License
+# (COSL) may apply to this file if you as a licensee so wish it. See
+# included file COSL.txt.
+
+#+begin_src cfengine3
+body common control
+{
+      bundlesequence => { "subtest" };
+}
+
+bundle agent subtest(user)
+{
+  classes:
+
+      "invalid" not => regcmp("[a-z]{4}","$(user)");
+
+  reports:
+
+    !invalid::
+
+      "User name $(user) is valid at exactly 4 letters";
+
+    invalid::
+
+      "User name $(user) is invalid";
+}
+bundle agent example
+{
+  vars:
+
+      "x" string => "
+           NAME: apache2 - Apache 2.2 web server
+           CATEGORY: application
+           ARCH: all
+           VERSION: 2.2.3,REV=2006.09.01
+           BASEDIR: /
+           VENDOR: http://httpd.apache.org/ packaged for CSW by Cory Omand
+           PSTAMP: comand@thor-20060901022929
+           INSTDATE: Dec 14 2006 16:05
+           HOTLINE: http://www.blastwave.org/bugtrack/
+           EMAIL: comand@blastwave.org
+           STATUS: completely installed
+         ";
+
+  classes:
+
+      "pkg_installed" expression => regcmp("(.*\n)*STATUS:\s+completely installed\n(.*\n)*",$(x));
+
+      "base_is_root" expression => regcmp("(?ms).*^BASEDIR:\s+/$.*", $(x));
+
+  reports:
+
+    pkg_installed::
+
+      "installed";
+
+    base_is_root::
+
+      "in root";
+}
+#+end_src
+###############################################################################
+#+begin_src example_output 3.6-
+2013-12-16T20:47:53+0200   notice: /default/subtest: R: User name $(user) is valid at exactly 4 letters
+#+end_src

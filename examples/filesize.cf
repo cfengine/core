@@ -20,18 +20,14 @@
 # (COSL) may apply to this file if you as a licensee so wish it. See
 # included file COSL.txt.
 
-
+#+begin_src cfengine3
 body common control
-
 {
-      bundlesequence  => { "example" };
+      bundlesequence => { "example" };
 }
 
-###########################################################
-
 bundle agent example
-
-{     
+{
   vars:
 
       "exists" int => filesize("/etc/passwd");
@@ -40,6 +36,10 @@ bundle agent example
   reports:
       "File size $(exists)";
       "Does not exist $(nexists)";
-
 }
-
+#+end_src
+###############################################################################
+#+begin_src example_output 3.6-
+2013-12-16T20:48:17+0200   notice: /default/example: R: File size 1385
+2013-12-16T20:48:17+0200   notice: /default/example: R: Does not exist $(nexists)
+#+end_src

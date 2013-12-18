@@ -1,4 +1,3 @@
-
 #  Copyright (C) Cfengine AS
 
 #  This file is part of Cfengine 3 - written and maintained by Cfengine AS.
@@ -21,29 +20,25 @@
 # (COSL) may apply to this file if you as a licensee so wish it. See
 # included file COSL.txt.
 
-#######################################################
-#
-# escape function for literal -> regular expressions
-#
-#######################################################
-
+#+begin_src cfengine3
 body common control
-
 {
-      bundlesequence  => { "test" };   
+      bundlesequence => { "example" };
 }
 
-#######################################################
-
-bundle agent example
-
-{
+bundle agent example{
   vars:
-
-      "literal" string => escape("192.168.1.100");
-
+      "ip" string => "10.123.321.250";
+      "escaped" string => escape("$(ip)");
   reports:
-
-      "Escaped $(literal)";
-
+      "escaped $(ip) = $(escaped)";
 }
+body server control
+{
+      allowconnects => { "127\.0\.0\.1", escape("192.168.2.1") };
+}
+#+end_src
+###############################################################################
+#+begin_src example_output 3.6-
+2013-12-16T20:48:04+0200   notice: /default/example: R: escaped 10.123.321.250 = 10\.123\.321\.250
+#+end_src

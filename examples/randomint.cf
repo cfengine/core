@@ -1,0 +1,71 @@
+#  Copyright (C) Cfengine AS
+
+#  This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+
+#  This program is free software; you can redistribute it and/or modify it
+#  under the terms of the GNU General Public License as published by the
+#  Free Software Foundation; version 3.
+
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
+
+# To the extent this program is licensed as part of the Enterprise
+# versions of Cfengine, the applicable Commercial Open Source License
+# (COSL) may apply to this file if you as a licensee so wish it. See
+# included file COSL.txt.
+
+#+begin_src cfengine3
+body common control
+{
+      bundlesequence => { "randomint_example" };
+}
+
+bundle agent randomint_example
+{
+  vars:
+      "low"    string => "4";
+      "high"   string => "60";
+
+      "random"    int => randomint("$(low)", "$(high)"),
+      policy => "free";
+
+    !classes1::
+      "random1"
+      string  => "$(random)",
+      handle  => "var_random1",
+      comment => "this should only be set on the first pass";
+
+    classes1.!classes2::
+
+      "random2"
+      string     => "$(random)",
+      handle     => "var_random2",
+      comment    => "this should only be set on the second pass";
+
+    classes2::
+
+      "random3"
+      string     => "$(random)",
+      handle     => "var_random3",
+      comment    => "this should only be set on the third pass";
+
+  classes:
+      "classes3" expression => "classes2";
+      "classes2" expression => "classes1";
+      "classes1" expression => "any";
+
+  reports:
+    classes3::
+      "Random Numbers: $(random1), $(random2), $(random3)";
+}
+#+end_src
+###############################################################################
+#+begin_src example_output 3.6-
+2013-12-16T20:48:16+0200   notice: /default/randomint_example: R: Random Numbers: 37, 13, 57
+#+end_src

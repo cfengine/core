@@ -1,0 +1,57 @@
+#  Copyright (C) Cfengine AS
+
+#  This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+
+#  This program is free software; you can redistribute it and/or modify it
+#  under the terms of the GNU General Public License as published by the
+#  Free Software Foundation; version 3.
+
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
+
+# To the extent this program is licensed as part of the Enterprise
+# versions of Cfengine, the applicable Commercial Open Source License
+# (COSL) may apply to this file if you as a licensee so wish it. See
+# included file COSL.txt.
+
+#+begin_src cfengine3
+body common control
+{
+      bundlesequence => { mefirst };
+}
+
+bundle common g
+{
+  vars:
+      "todo" slist => bundlesmatching("default:run.*");
+}
+
+bundle agent mefirst
+{
+  methods:
+      # note this is a dynamic bundle sequence!
+      "" usebundle => $(g.todo);
+}
+
+bundle agent run_123_456
+{
+  vars:
+      "bundles" slist => bundlesmatching(".*");
+      "no_bundles" slist => bundlesmatching("891");
+  reports:
+      "bundles = $(bundles)";
+      "no bundles = $(no_bundles)";
+}
+#+end_src
+###############################################################################
+#+begin_src example_output 3.6-
+2013-12-16T20:47:56+0200   notice: /default/mefirst/methods/''/default/run_123_456: R: bundles = default:run_123_456
+2013-12-16T20:47:56+0200   notice: /default/mefirst/methods/''/default/run_123_456: R: bundles = default:mefirst
+2013-12-16T20:47:56+0200   notice: /default/mefirst/methods/''/default/run_123_456: R: bundles = default:g
+#+end_src

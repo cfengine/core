@@ -70,6 +70,7 @@ Writer *StringWriter(void)
     writer->type = WT_STRING;
     writer->string.data = xstrdup("");
     writer->string.allocated = 1;
+    writer->string.len = 0;
     return writer;
 }
 

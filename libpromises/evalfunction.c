@@ -4314,7 +4314,15 @@ static FnCallResult FnCallAccumulatedDate(EvalContext *ctx, FnCall *fp, Rlist *f
 {
     char buffer[CF_BUFSIZE];
     struct tm tmv = FnArgsToTm(finalargs);
-    time_t cftime = mktime(&tmv);
+
+    time_t cftime = 0;
+    cftime = 0;
+    cftime += tmv.tm_sec;
+    cftime += tmv.tm_min * 60;
+    cftime += tmv.tm_hour * 3600;
+    cftime += (tmv.tm_mday -1) * 24 * 3600;
+    cftime += tmv.tm_mon * 30 * 24 * 3600;
+    cftime += (tmv.tm_year + 1900) * 365 * 24 * 3600;
 
     snprintf(buffer, CF_BUFSIZE - 1, "%ld", cftime);
 

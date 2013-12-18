@@ -285,7 +285,7 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const Promise *pp)
     pcopy = xcalloc(1, sizeof(Promise));
 
     returnval = ExpandPrivateRval(ctx, NULL, "this", (Rval) {pp->promiser, RVAL_TYPE_SCALAR });
-    pcopy->promiser = (char *) returnval.item;
+    pcopy->promiser = RvalScalarValue(returnval);
 
     if (pp->promisee.item)
     {

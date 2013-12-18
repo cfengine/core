@@ -166,7 +166,7 @@ static void ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp, Rlist *lists
             EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "handle", PromiseID(pp), DATA_TYPE_STRING, "source=promise");
         }
 
-        Promise *pexp = EvalContextStackPushPromiseIterationFrame(ctx, i, iter_ctx);
+        const Promise *pexp = EvalContextStackPushPromiseIterationFrame(ctx, i, iter_ctx);
         ActOnPromise(ctx, pexp, param);
 
         if (strcmp(pp->parent_promise_type->name, "vars") == 0 || strcmp(pp->parent_promise_type->name, "meta") == 0)

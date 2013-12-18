@@ -673,9 +673,9 @@ static void StackFramePromiseDestroy(StackFramePromise frame)
     VariableTableDestroy(frame.vars);
 }
 
-static void StackFramePromiseIterationDestroy(ARG_UNUSED StackFramePromiseIteration frame)
+static void StackFramePromiseIterationDestroy(StackFramePromiseIteration frame)
 {
-    return;
+    PromiseDestroy(frame.owner);
 }
 
 static void StackFrameDestroy(StackFrame *frame)
@@ -963,6 +963,7 @@ void EvalContextStackPushBundleFrame(EvalContext *ctx, const Bundle *owner, cons
             RvalDestroy(var->rval);
             var->rval = retval;
         }
+        VariableTableIteratorDestroy(iter);
     }
 }
 
@@ -1091,7 +1092,6 @@ void EvalContextStackPopFrame(EvalContext *ctx)
 
     case STACK_FRAME_TYPE_PROMISE_ITERATION:
         PromiseLoggingPromiseFinish(ctx, last_frame->data.promise_iteration.owner);
-        PromiseDestroy(last_frame->data.promise_iteration.owner);
         break;
 
     default:

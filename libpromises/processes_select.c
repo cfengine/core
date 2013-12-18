@@ -331,7 +331,6 @@ static int SelectProcTimeCounterRangeMatch(char *name1, char *name2, time_t min,
 
 static long TimeAbs2Int(const char *s)
 {
-    time_t cftime;
     char mon[4], h[3], m[3];
     long month = 0, day = 0, hour = 0, min = 0, year = 0;
     struct tm tm;
@@ -350,17 +349,8 @@ static long TimeAbs2Int(const char *s)
         day = IntFromString(VDAY);
         hour = IntFromString(h);
         min = IntFromString(m);
-
-        tm.tm_year = year - 1900;
-        tm.tm_mon = month - 1;
-        tm.tm_mday = day;
-        tm.tm_hour = hour;
-        tm.tm_min = min;
-        tm.tm_sec = 0;
-        tm.tm_isdst = -1;
-        cftime = mktime(&tm);
     }
-    else                        /* date Month */
+    else                        /* Month day */
     {
         sscanf(s, "%3[a-zA-Z] %ld", mon, &day);
 
@@ -371,17 +361,16 @@ static long TimeAbs2Int(const char *s)
             /* Wrapped around */
             year--;
         }
-        tm.tm_year = year - 1900;
-        tm.tm_mon = month - 1;
-        tm.tm_mday = day;
-        tm.tm_hour = 0;
-        tm.tm_min = 0;
-        tm.tm_sec = 0;
-        tm.tm_isdst = -1;
-        cftime = mktime(&tm);
     }
 
-    return (long) cftime;
+    tm.tm_year = year - 1900;
+    tm.tm_mon = month - 1;
+    tm.tm_mday = day;
+    tm.tm_hour = hour;
+    tm.tm_min = min;
+    tm.tm_sec = 0;
+    tm.tm_isdst = -1;
+    return (long) mktime(&tm);
 }
 
 static int SelectProcTimeAbsRangeMatch(char *name1, char *name2, time_t min, time_t max, char **names, char **line)

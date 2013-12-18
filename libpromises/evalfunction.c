@@ -88,16 +88,6 @@
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 #endif
 
-typedef enum
-{
-    DATE_TEMPLATE_YEAR,
-    DATE_TEMPLATE_MONTH,
-    DATE_TEMPLATE_DAY,
-    DATE_TEMPLATE_HOUR,
-    DATE_TEMPLATE_MIN,
-    DATE_TEMPLATE_SEC
-} DateTemplate;
-
 static FnCallResult FilterInternal(EvalContext *ctx, FnCall *fp, char *regex, char *name, int do_regex, int invert, long max);
 
 static char *StripPatterns(char *file_buffer, char *pattern, char *filename);
@@ -4200,50 +4190,32 @@ static FnCallResult FnCallReverse(EvalContext *ctx, FnCall *fp, Rlist *finalargs
     return (FnCallResult) { FNCALL_SUCCESS, (Rval) { copy, RVAL_TYPE_LIST } };
 }
 
-/*********************************************************************/
+
+/* Convert y/m/d/h/m/s 6-tuple */
+static struct tm FnArgsToTm(const Rlist *rp)
+{
+    struct tm ret = { .tm_isdst = -1 };
+    ret.tm_year = IntFromString(RlistScalarValue(rp)) - 1900; /* tm.tm_year stores year - 1900 */
+    rp = rp->next;
+    ret.tm_mon = IntFromString(RlistScalarValue(rp));
+    rp = rp->next;
+    ret.tm_mday = IntFromString(RlistScalarValue(rp)) + 1;
+    rp = rp->next;
+    ret.tm_hour = IntFromString(RlistScalarValue(rp));
+    rp = rp->next;
+    ret.tm_min = IntFromString(RlistScalarValue(rp));
+    rp = rp->next;
+    ret.tm_sec = IntFromString(RlistScalarValue(rp));
+    return ret;
+}
 
 static FnCallResult FnCallOn(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
-    Rlist *rp;
     char buffer[CF_BUFSIZE];
-    long d[6];
-    time_t cftime;
-    struct tm tmv;
-    DateTemplate i;
+    struct tm tmv = FnArgsToTm(finalargs);
+    time_t cftime = mktime(&tmv);
 
-    d[DATE_TEMPLATE_YEAR] = 1900;
-    d[DATE_TEMPLATE_MONTH] = 1;
-    d[DATE_TEMPLATE_DAY] = 0;
-    d[DATE_TEMPLATE_HOUR] = 0;
-    d[DATE_TEMPLATE_MIN] = 0;
-    d[DATE_TEMPLATE_SEC] = 0;
-
-    buffer[0] = '\0';
-
-/* begin fn specific content */
-
-    rp = finalargs;
-
-    for (i = 0; i < 6; i++)
-    {
-        if (rp != NULL)
-        {
-            d[i] = IntFromString(RlistScalarValue(rp));
-            rp = rp->next;
-        }
-    }
-
-/* (year,month,day,hour,minutes,seconds) */
-
-    tmv.tm_year = d[DATE_TEMPLATE_YEAR] - 1900;
-    tmv.tm_mon = d[DATE_TEMPLATE_MONTH] - 1;
-    tmv.tm_mday = d[DATE_TEMPLATE_DAY];
-    tmv.tm_hour = d[DATE_TEMPLATE_HOUR];
-    tmv.tm_min = d[DATE_TEMPLATE_MIN];
-    tmv.tm_sec = d[DATE_TEMPLATE_SEC];
-    tmv.tm_isdst = -1;
-
-    if ((cftime = mktime(&tmv)) == -1)
+    if (cftime == -1)
     {
         Log(LOG_LEVEL_INFO, "Illegal time value");
     }
@@ -4287,46 +4259,12 @@ static FnCallResult FnCallOr(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 
 static FnCallResult FnCallLaterThan(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
-    Rlist *rp;
     char buffer[CF_BUFSIZE];
-    long d[6];
-    time_t cftime, now = time(NULL);
-    struct tm tmv;
-    DateTemplate i;
+    time_t now = time(NULL);
+    struct tm tmv = FnArgsToTm(finalargs);
+    time_t cftime = mktime(&tmv);
 
-    d[DATE_TEMPLATE_YEAR] = 1900;
-    d[DATE_TEMPLATE_MONTH] = 1;
-    d[DATE_TEMPLATE_DAY] = 0;
-    d[DATE_TEMPLATE_HOUR] = 0;
-    d[DATE_TEMPLATE_MIN] = 0;
-    d[DATE_TEMPLATE_SEC] = 0;
-
-    buffer[0] = '\0';
-
-/* begin fn specific content */
-
-    rp = finalargs;
-
-    for (i = 0; i < 6; i++)
-    {
-        if (rp != NULL)
-        {
-            d[i] = IntFromString(RlistScalarValue(rp));
-            rp = rp->next;
-        }
-    }
-
-/* (year,month,day,hour,minutes,seconds) */
-
-    tmv.tm_year = d[DATE_TEMPLATE_YEAR] - 1900;
-    tmv.tm_mon = d[DATE_TEMPLATE_MONTH] - 1;
-    tmv.tm_mday = d[DATE_TEMPLATE_DAY];
-    tmv.tm_hour = d[DATE_TEMPLATE_HOUR];
-    tmv.tm_min = d[DATE_TEMPLATE_MIN];
-    tmv.tm_sec = d[DATE_TEMPLATE_SEC];
-    tmv.tm_isdst = -1;
-
-    if ((cftime = mktime(&tmv)) == -1)
+    if (cftime == -1)
     {
         Log(LOG_LEVEL_INFO, "Illegal time value");
     }
@@ -4343,94 +4281,22 @@ static FnCallResult FnCallLaterThan(EvalContext *ctx, FnCall *fp, Rlist *finalar
     return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), RVAL_TYPE_SCALAR } };
 }
 
-static const long DAYS[] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
-
-static int GetMonthLength(int month, int year)
-{
-    if ((month == 1) && (year % 4 == 0))
-    {
-        if ((year % 100 == 0) && (year % 400 != 0))
-        {
-           return DAYS[month];
-        }
-        else
-        {
-           return 29;
-        }
-    }
-    else
-    {
-        return DAYS[month];
-    }
-}
-
-static long Months2Seconds(int m)
-{
-    long tot_days = 0;
-    int this_month, i, month, year;
-
-    if (m == 0)
-    {
-        return 0;
-    }
-
-    this_month = Month2Int(VMONTH);
-    year = IntFromString(VYEAR);
-
-    for (i = 0; i < m; i++)
-    {
-        month = (this_month - i) % 12;
-
-        while (month < 0)
-        {
-            month += 12;
-            year--;
-        }
-
-        tot_days += GetMonthLength(month, year);
-    }
-
-    return (long) tot_days *3600 * 24;
-}
-
 static FnCallResult FnCallAgoDate(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
-    Rlist *rp;
     char buffer[CF_BUFSIZE];
-    time_t cftime;
-    long d[6];
-    DateTemplate i;
+    struct tm ago = FnArgsToTm(finalargs);
+    time_t now = time(NULL);
+    struct tm t;
+    localtime_r(&now, &t);
 
-    d[DATE_TEMPLATE_YEAR] = 1900;
-    d[DATE_TEMPLATE_MONTH] = 1;
-    d[DATE_TEMPLATE_DAY] = 0;
-    d[DATE_TEMPLATE_HOUR] = 0;
-    d[DATE_TEMPLATE_MIN] = 0;
-    d[DATE_TEMPLATE_SEC] = 0;
-    buffer[0] = '\0';
+    t.tm_year -= ago.tm_year + 1900; /* tm.tm_year stores year - 1900 */
+    t.tm_mon -= ago.tm_mon;
+    t.tm_mday -= ago.tm_mday - 1;
+    t.tm_hour -= ago.tm_hour;
+    t.tm_min -= ago.tm_min;
+    t.tm_sec -= ago.tm_sec;
 
-/* begin fn specific content */
-
-    rp = finalargs;
-
-    for (i = 0; i < 6; i++)
-    {
-        if (rp != NULL)
-        {
-            d[i] = IntFromString(RlistScalarValue(rp));
-            rp = rp->next;
-        }
-    }
-
-/* (year,month,day,hour,minutes,seconds) */
-
-    cftime = CFSTARTTIME;
-    cftime -= d[DATE_TEMPLATE_SEC];
-    cftime -= d[DATE_TEMPLATE_MIN] * 60;
-    cftime -= d[DATE_TEMPLATE_HOUR] * 3600;
-    cftime -= d[DATE_TEMPLATE_DAY] * 24 * 3600;
-    cftime -= Months2Seconds(d[DATE_TEMPLATE_MONTH]);
-    cftime -= d[DATE_TEMPLATE_YEAR] * 365 * 24 * 3600;
+    time_t cftime = mktime(&t);
 
     snprintf(buffer, CF_BUFSIZE - 1, "%ld", cftime);
 
@@ -4446,41 +4312,9 @@ static FnCallResult FnCallAgoDate(EvalContext *ctx, FnCall *fp, Rlist *finalargs
 
 static FnCallResult FnCallAccumulatedDate(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
-    Rlist *rp;
     char buffer[CF_BUFSIZE];
-    long d[6], cftime;
-    DateTemplate i;
-
-    d[DATE_TEMPLATE_YEAR] = 1900;
-    d[DATE_TEMPLATE_MONTH] = 1;
-    d[DATE_TEMPLATE_DAY] = 0;
-    d[DATE_TEMPLATE_HOUR] = 0;
-    d[DATE_TEMPLATE_MIN] = 0;
-    d[DATE_TEMPLATE_SEC] = 0;
-    buffer[0] = '\0';
-
-/* begin fn specific content */
-
-    rp = finalargs;
-
-    for (i = 0; i < 6; i++)
-    {
-        if (rp != NULL)
-        {
-            d[i] = IntFromString(RlistScalarValue(rp));
-            rp = rp->next;
-        }
-    }
-
-/* (year,month,day,hour,minutes,seconds) */
-
-    cftime = 0;
-    cftime += d[DATE_TEMPLATE_SEC];
-    cftime += d[DATE_TEMPLATE_MIN] * 60;
-    cftime += d[DATE_TEMPLATE_HOUR] * 3600;
-    cftime += d[DATE_TEMPLATE_DAY] * 24 * 3600;
-    cftime += d[DATE_TEMPLATE_MONTH] * 30 * 24 * 3600;
-    cftime += d[DATE_TEMPLATE_YEAR] * 365 * 24 * 3600;
+    struct tm tmv = FnArgsToTm(finalargs);
+    time_t cftime = mktime(&tmv);
 
     snprintf(buffer, CF_BUFSIZE - 1, "%ld", cftime);
 

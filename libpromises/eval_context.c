@@ -786,6 +786,7 @@ void EvalContextDestroy(EvalContext *ctx)
                 free(rval);
             }
             RBTreeIteratorDestroy(it);
+            RBTreeDestroy(ctx->function_cache);
         }
 
         free(ctx);

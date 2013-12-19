@@ -46,5 +46,5 @@ bundle agent test
 #+end_src
 ###############################################################################
 #+begin_src example_output
-2013-12-16T20:48:05+0200   notice: /default/test: R: Assertion is true
+#@ 2013-12-20T13:44:31-0500   notice: /default/test: R: Assertion is true
 #+end_src

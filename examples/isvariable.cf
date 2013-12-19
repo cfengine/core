@@ -46,5 +46,5 @@ bundle agent example
 #+end_src
 ###############################################################################
 #+begin_src example_output
-2013-12-16T20:48:10+0200   notice: /default/example: R: Variable exists: "xyz.."..
+#@ 2013-12-20T13:44:31-0500   notice: /default/example: R: Variable exists: "xyz.."..
 #+end_src

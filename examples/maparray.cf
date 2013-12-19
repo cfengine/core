@@ -32,17 +32,17 @@ bundle agent run
       "todo[1]" string => "2";
       "todo[one]" string => "two";
       "todo[3999]" slist => { "big", "small" };
-      "map" slist => maparray("yes $(this.k) $(this.v)", "todo");
+      "map" slist => maparray("key='$(this.k)', value='$(this.v)'", "todo");
 
   reports:
-      "Hello $(map)";
+      "mapped array: $(map)";
 }
 
 #+end_src
 ###############################################################################
 #+begin_src example_output
-2013-12-16T20:48:09+0200   notice: /default/run: R: Hello yes 1 2
-2013-12-16T20:48:09+0200   notice: /default/run: R: Hello yes one two
-2013-12-16T20:48:09+0200   notice: /default/run: R: Hello yes 3999 big
-2013-12-16T20:48:09+0200   notice: /default/run: R: Hello yes 3999 small
+#@ 2013-12-20T13:44:31-0500   notice: /default/run: R: mapped array: key='1', value='2'
+#@ 2013-12-20T13:44:31-0500   notice: /default/run: R: mapped array: key='one', value='two'
+#@ 2013-12-20T13:44:31-0500   notice: /default/run: R: mapped array: key='3999', value='big'
+#@ 2013-12-20T13:44:31-0500   notice: /default/run: R: mapped array: key='3999', value='small'
 #+end_src

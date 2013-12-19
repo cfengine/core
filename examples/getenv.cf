@@ -30,7 +30,7 @@ bundle agent example
 {
   vars:
 
-      "myvar" string => getenv("PATH","20");
+      "myvar" string => getenv("EXAMPLE","2048");
 
   classes:
 
@@ -40,15 +40,15 @@ bundle agent example
 
     isdefined::
 
-      "The path is $(myvar)";
+      "The EXAMPLE environment variable is $(myvar)";
 
     !isdefined::
 
-      "The named variable PATH does not exist";
+      "The environment variable EXAMPLE does not exist";
 
 }
 #+end_src
 ###############################################################################
 #+begin_src example_output
-2013-12-16T20:48:20+0200   notice: /default/example: R: The path is /usr/local/bin:/usr/
+#@ 2013-12-20T13:44:29-0500   notice: /default/example: R: The EXAMPLE environment variable is /tmp/example.cf
 #+end_src

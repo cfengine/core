@@ -36,7 +36,7 @@ bundle agent run
       "b" string => format("%-10.10s", "x");
       "c" string => format("%04d", 1);
       "d" string => format("%07.2f", 1);
-      "e" string => format("hello %s, my IP is %s", $(sys.policy_hub), $(sys.ipv4));
+      "e" string => format("hello my name is %s %s", "Inigo", "Montoya");
 
   reports:
       "version $(v) => padded $(padded)";
@@ -44,15 +44,15 @@ bundle agent run
       "%-10.10s on 'x' => '$(b)'";
       "%04d on '1' => '$(c)'";
       "%07.2f on '1' => '$(d)'";
-      "hello my IP is... => '$(e)'";
+      "you killed my father... => '$(e)'";
 }
 #+end_src
 ###############################################################################
 #+begin_src example_output
-2013-12-16T20:47:58+0200   notice: /default/run: R: version 2.5.6 => padded 000200050006
-2013-12-16T20:47:58+0200   notice: /default/run: R: %10.10s on 'x' => '         x'
-2013-12-16T20:47:58+0200   notice: /default/run: R: %-10.10s on 'x' => 'x         '
-2013-12-16T20:47:58+0200   notice: /default/run: R: %04d on '1' => '0001'
-2013-12-16T20:47:58+0200   notice: /default/run: R: %07.2f on '1' => '0001.00'
-2013-12-16T20:47:58+0200   notice: /default/run: R: hello my IP is... => '$(e)'
+#@ 2013-12-20T13:44:29-0500   notice: /default/run: R: version 2.5.6 => padded 000200050006
+#@ 2013-12-20T13:44:29-0500   notice: /default/run: R: %10.10s on 'x' => '         x'
+#@ 2013-12-20T13:44:29-0500   notice: /default/run: R: %-10.10s on 'x' => 'x         '
+#@ 2013-12-20T13:44:29-0500   notice: /default/run: R: %04d on '1' => '0001'
+#@ 2013-12-20T13:44:29-0500   notice: /default/run: R: %07.2f on '1' => '0001.00'
+#@ 2013-12-20T13:44:29-0500   notice: /default/run: R: you killed my father... => 'hello my name is Inigo Montoya'
 #+end_src

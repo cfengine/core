@@ -40,5 +40,5 @@ bundle agent test
 #+end_src
 ###############################################################################
 #+begin_src example_output
-2013-12-16T20:48:07+0200   notice: /default/test: R: six is 6.000000, zero is 0.000000
+#@ 2013-12-20T13:44:35-0500   notice: /default/test: R: six is 6.000000, zero is 0.000000
 #+end_src

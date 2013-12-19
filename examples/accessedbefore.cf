@@ -20,6 +20,11 @@
 # (COSL) may apply to this file if you as a licensee so wish it. See
 # included file COSL.txt.
 
+#+begin_src prep
+#@ touch -a -d 2001 /tmp/earlier
+#@ touch -a -d 2002 /tmp/later
+#+end_src
+###############################################################################
 #+begin_src cfengine3
 body common control
 {
@@ -41,5 +46,5 @@ bundle agent example
 #+end_src
 ###############################################################################
 #+begin_src example_output
-2013-12-16T20:48:24+0200   notice: /default/example: R: The secret changes have been accessed after the reference time
+#@ 2013-12-20T13:44:28-0500   notice: /default/example: R: The secret changes have been accessed after the reference time
 #+end_src

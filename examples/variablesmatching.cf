@@ -30,91 +30,38 @@ bundle agent run
 {
   vars:
       "all" slist => variablesmatching(".*");
-      "c" slist => variablesmatching("sys");
-      "c_plus_plus" slist => variablesmatching("sys", "plus");
+      "v" slist => variablesmatching("default:sys.cf_.*");
+      "v_internal" slist => variablesmatching(".*", "cfe_internal");
   reports:
-      "All classes = $(all)";
-      "Classes matching 'sys' = $(c)";
-      "Classes matching 'sys' with the 'plus' tag = $(c_plus_plus)";
+      "Variables matching 'default:sys.cf_' = $(v)";
+      "CFEngine internal variables: $(v_internal)";
 }
 
 #+end_src
 ###############################################################################
 #+begin_src example_output
-2013-12-16T20:47:58+0200   notice: /default/run: R: All classes = default:sys.cf_version_major
-2013-12-16T20:47:58+0200   notice: /default/run: R: All classes = default:sys.systime
-2013-12-16T20:47:58+0200   notice: /default/run: R: All classes = default:sys.ipv4_3[eth0]
-2013-12-16T20:47:58+0200   notice: /default/run: R: All classes = default:sys.local_libdir
-2013-12-16T20:47:58+0200   notice: /default/run: R: All classes = default:sys.cpus
-2013-12-16T20:47:58+0200   notice: /default/run: R: All classes = default:sys.ipv4[eth0]
-2013-12-16T20:47:58+0200   notice: /default/run: R: All classes = default:sys.exports
-2013-12-16T20:47:58+0200   notice: /default/run: R: All classes = default:const.r
-2013-12-16T20:47:58+0200   notice: /default/run: R: All classes = default:sys.hardware_mac[eth0]
-2013-12-16T20:47:58+0200   notice: /default/run: R: All classes = default:sys.host
-2013-12-16T20:47:58+0200   notice: /default/run: R: All classes = default:sys.cdate
-2013-12-16T20:47:58+0200   notice: /default/run: R: All classes = default:sys.libdir
-2013-12-16T20:47:58+0200   notice: /default/run: R: All classes = default:sys.hardware_flags
-2013-12-16T20:47:58+0200   notice: /default/run: R: All classes = default:sys.resolv
-2013-12-16T20:47:58+0200   notice: /default/run: R: All classes = default:sys.interface_flags[lo]
-2013-12-16T20:47:58+0200   notice: /default/run: R: All classes = default:sys.cf_serverd
-2013-12-16T20:47:58+0200   notice: /default/run: R: All classes = default:sys.arch
-2013-12-16T20:47:58+0200   notice: /default/run: R: All classes = default:sys.cf_version_patch
-2013-12-16T20:47:58+0200   notice: /default/run: R: All classes = default:sys.class
-2013-12-16T20:47:58+0200   notice: /default/run: R: All classes = default:sys.interface
-2013-12-16T20:47:58+0200   notice: /default/run: R: All classes = default:sys.fqhost
-2013-12-16T20:47:58+0200   notice: /default/run: R: All classes = default:sys.ip_addresses
-2013-12-16T20:47:58+0200   notice: /default/run: R: All classes = default:sys.ipv4[lo]
-2013-12-16T20:47:58+0200   notice: /default/run: R: All classes = default:sys.cf_version_minor
-2013-12-16T20:47:58+0200   notice: /default/run: R: All classes = default:control_common.bundlesequence
-2013-12-16T20:47:58+0200   notice: /default/run: R: All classes = default:sys.os
-2013-12-16T20:47:58+0200   notice: /default/run: R: All classes = default:sys.flavour
-2013-12-16T20:47:58+0200   notice: /default/run: R: All classes = default:sys.ipv4_1[eth0]
-2013-12-16T20:47:58+0200   notice: /default/run: R: All classes = default:const.t
-2013-12-16T20:47:58+0200   notice: /default/run: R: All classes = default:sys.cf_agent
-2013-12-16T20:47:58+0200   notice: /default/run: R: All classes = default:sys.uptime
-2013-12-16T20:47:58+0200   notice: /default/run: R: All classes = default:sys.interface_flags[eth0]
-2013-12-16T20:47:58+0200   notice: /default/run: R: All classes = default:sys.uqhost
-2013-12-16T20:47:58+0200   notice: /default/run: R: All classes = default:const.dollar
-2013-12-16T20:47:58+0200   notice: /default/run: R: All classes = default:sys.interface_flags[br0]
-2013-12-16T20:47:58+0200   notice: /default/run: R: All classes = default:sys.masterdir
-2013-12-16T20:47:58+0200   notice: /default/run: R: All classes = default:sys.ipv4_2[lo]
-2013-12-16T20:47:58+0200   notice: /default/run: R: All classes = default:const.endl
-2013-12-16T20:47:58+0200   notice: /default/run: R: All classes = default:sys.cf_promises
-2013-12-16T20:47:58+0200   notice: /default/run: R: All classes = default:sys.ipv4_2[eth0]
-2013-12-16T20:47:58+0200   notice: /default/run: R: All classes = default:sys.cf_twin
-2013-12-16T20:47:58+0200   notice: /default/run: R: All classes = default:sys.ipv4_2[br0]
-2013-12-16T20:47:58+0200   notice: /default/run: R: All classes = default:sys.piddir
-2013-12-16T20:47:58+0200   notice: /default/run: R: All classes = default:sys.update_policy_path
-2013-12-16T20:47:58+0200   notice: /default/run: R: All classes = default:sys.ipv4_1[br0]
-2013-12-16T20:47:58+0200   notice: /default/run: R: All classes = default:sys.hardware_addresses
-2013-12-16T20:47:58+0200   notice: /default/run: R: All classes = default:sys.ipv4_3[br0]
-2013-12-16T20:47:58+0200   notice: /default/run: R: All classes = default:const.n
-2013-12-16T20:47:58+0200   notice: /default/run: R: All classes = default:sys.cf_version
-2013-12-16T20:47:58+0200   notice: /default/run: R: All classes = default:sys.fstab
-2013-12-16T20:47:58+0200   notice: /default/run: R: All classes = default:sys.version
-2013-12-16T20:47:58+0200   notice: /default/run: R: All classes = default:run.c
-2013-12-16T20:47:58+0200   notice: /default/run: R: All classes = default:sys.interfaces
-2013-12-16T20:47:58+0200   notice: /default/run: R: All classes = default:sys.key_digest
-2013-12-16T20:47:58+0200   notice: /default/run: R: All classes = default:sys.failsafe_policy_path
-2013-12-16T20:47:58+0200   notice: /default/run: R: All classes = default:sys.flavor
-2013-12-16T20:47:58+0200   notice: /default/run: R: All classes = default:sys.date
-2013-12-16T20:47:58+0200   notice: /default/run: R: All classes = default:sys.maildir
-2013-12-16T20:47:58+0200   notice: /default/run: R: All classes = default:sys.release
-2013-12-16T20:47:58+0200   notice: /default/run: R: All classes = default:sys.inputdir
-2013-12-16T20:47:58+0200   notice: /default/run: R: All classes = default:sys.workdir
-2013-12-16T20:47:58+0200   notice: /default/run: R: All classes = default:sys.hardware_mac[br0]
-2013-12-16T20:47:58+0200   notice: /default/run: R: All classes = default:sys.ipv4
-2013-12-16T20:47:58+0200   notice: /default/run: R: All classes = default:sys.crontab
-2013-12-16T20:47:58+0200   notice: /default/run: R: All classes = default:sys.long_arch
-2013-12-16T20:47:58+0200   notice: /default/run: R: All classes = default:run.all
-2013-12-16T20:47:58+0200   notice: /default/run: R: All classes = default:run.c_plus_plus
-2013-12-16T20:47:58+0200   notice: /default/run: R: All classes = default:sys.logdir
-2013-12-16T20:47:58+0200   notice: /default/run: R: All classes = default:sys.sysday
-2013-12-16T20:47:58+0200   notice: /default/run: R: All classes = default:sys.ostype
-2013-12-16T20:47:58+0200   notice: /default/run: R: All classes = default:sys.ipv4_3[lo]
-2013-12-16T20:47:58+0200   notice: /default/run: R: All classes = default:sys.domain
-2013-12-16T20:47:58+0200   notice: /default/run: R: All classes = default:sys.ipv4_1[lo]
-2013-12-16T20:47:58+0200   notice: /default/run: R: All classes = default:sys.bindir
-2013-12-16T20:47:58+0200   notice: /default/run: R: All classes = default:sys.doc_root
-2013-12-16T20:47:58+0200   notice: /default/run: R: All classes = default:sys.ipv4[br0]
+#@ 2013-12-20T12:48:39-0500   notice: /default/run: R: Variables matching 'default:sys.cf_' = default:sys.cf_agent
+#@ 2013-12-20T12:48:39-0500   notice: /default/run: R: Variables matching 'default:sys.cf_' = default:sys.cf_execd
+#@ 2013-12-20T12:48:39-0500   notice: /default/run: R: Variables matching 'default:sys.cf_' = default:sys.cf_twin
+#@ 2013-12-20T12:48:39-0500   notice: /default/run: R: Variables matching 'default:sys.cf_' = default:sys.cf_key
+#@ 2013-12-20T12:48:39-0500   notice: /default/run: R: Variables matching 'default:sys.cf_' = default:sys.cf_version_major
+#@ 2013-12-20T12:48:39-0500   notice: /default/run: R: Variables matching 'default:sys.cf_' = default:sys.cf_version_patch
+#@ 2013-12-20T12:48:39-0500   notice: /default/run: R: Variables matching 'default:sys.cf_' = default:sys.cf_promises
+#@ 2013-12-20T12:48:39-0500   notice: /default/run: R: Variables matching 'default:sys.cf_' = default:sys.cf_version
+#@ 2013-12-20T12:48:39-0500   notice: /default/run: R: Variables matching 'default:sys.cf_' = default:sys.cf_runagent
+#@ 2013-12-20T12:48:39-0500   notice: /default/run: R: Variables matching 'default:sys.cf_' = default:sys.cf_serverd
+#@ 2013-12-20T12:48:39-0500   notice: /default/run: R: Variables matching 'default:sys.cf_' = default:sys.cf_report
+#@ 2013-12-20T12:48:39-0500   notice: /default/run: R: Variables matching 'default:sys.cf_' = default:sys.cf_version_minor
+#@ 2013-12-20T12:48:39-0500   notice: /default/run: R: Variables matching 'default:sys.cf_' = default:sys.cf_monitord
+#@ 2013-12-20T12:48:39-0500   notice: /default/run: R: Variables matching 'default:sys.cf_' = default:sys.cf_know
+#@ 2013-12-20T12:48:39-0500   notice: /default/run: R: CFEngine internal variables: default:sys.cf_agent
+#@ 2013-12-20T12:48:39-0500   notice: /default/run: R: CFEngine internal variables: default:sys.cf_execd
+#@ 2013-12-20T12:48:39-0500   notice: /default/run: R: CFEngine internal variables: default:sys.cf_twin
+#@ 2013-12-20T12:48:39-0500   notice: /default/run: R: CFEngine internal variables: default:sys.cf_key
+#@ 2013-12-20T12:48:39-0500   notice: /default/run: R: CFEngine internal variables: default:sys.cf_promises
+#@ 2013-12-20T12:48:39-0500   notice: /default/run: R: CFEngine internal variables: default:sys.cf_runagent
+#@ 2013-12-20T12:48:39-0500   notice: /default/run: R: CFEngine internal variables: default:sys.cf_serverd
+#@ 2013-12-20T12:48:39-0500   notice: /default/run: R: CFEngine internal variables: default:sys.cf_report
+#@ 2013-12-20T12:48:39-0500   notice: /default/run: R: CFEngine internal variables: default:sys.cf_monitord
+#@ 2013-12-20T12:48:39-0500   notice: /default/run: R: CFEngine internal variables: default:sys.cf_know
 #+end_src

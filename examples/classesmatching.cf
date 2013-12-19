@@ -31,41 +31,25 @@ bundle agent run
   vars:
       "all" slist => classesmatching(".*");
       "c" slist => classesmatching("cfengine");
+      "internal_environment" slist => classesmatching(".*", 'cfe_internal', 'source=environment');
       "c_plus_plus" slist => classesmatching("cfengine", "plus");
   reports:
-      "All classes = $(all)";
-      "Classes matching 'cfengine' = $(c)";
+      # you may find this list of all classes interesting but it
+      # produces different output every time, so it's commented out here
+      # "All classes = '$(all)'";
+
+      "All classes with the 'cfe_internal' and 'source=environment' tags = '$(internal_environment)'";
+
+      "Classes matching 'cfengine' = '$(c)'";
+
+      # this should produce no output
       "Classes matching 'cfengine' with the 'plus' tag = $(c_plus_plus)";
 }
 
 #+end_src
 ###############################################################################
 #+begin_src example_output
-2013-12-16T20:48:09+0200   notice: /default/run: R: All classes = GMT_Yr2013
-2013-12-16T20:48:09+0200   notice: /default/run: R: All classes = compiled_on_linux_gnu
-2013-12-16T20:48:09+0200   notice: /default/run: R: All classes = Min48
-2013-12-16T20:48:09+0200   notice: /default/run: R: All classes = ipv4_10_132_51
-2013-12-16T20:48:09+0200   notice: /default/run: R: All classes = Hr20_Q4
-2013-12-16T20:48:09+0200   notice: /default/run: R: All classes = PK_MD5_b75aef12be94bb7e07ba35deb82925cf
-2013-12-16T20:48:09+0200   notice: /default/run: R: All classes = ipv4_10_132
-2013-12-16T20:48:09+0200   notice: /default/run: R: All classes = localhost
-2013-12-16T20:48:09+0200   notice: /default/run: R: All classes = Lcycle_0
-2013-12-16T20:48:09+0200   notice: /default/run: R: All classes = ipv4_127_0_0_1
-2013-12-16T20:48:09+0200   notice: /default/run: R: All classes = GMT_Monday
-2013-12-16T20:48:09+0200   notice: /default/run: R: All classes = x86_64
-2013-12-16T20:48:09+0200   notice: /default/run: R: All classes = Evening
-2013-12-16T20:48:09+0200   notice: /default/run: R: All classes = debian_7_0
-2013-12-16T20:48:09+0200   notice: /default/run: R: All classes = cfengine_3_6
-2013-12-16T20:48:09+0200   notice: /default/run: R: All classes = GMT_Q4
-2013-12-16T20:48:09+0200   notice: /default/run: R: All classes = Monday
-2013-12-16T20:48:09+0200   notice: /default/run: R: All classes = GMT_December
-2013-12-16T20:48:09+0200   notice: /default/run: R: All classes = cfengine_3_6_0a1
-2013-12-16T20:48:09+0200   notice: /default/run: R: All classes = ipv4_127_0_0
-2013-12-16T20:48:09+0200   notice: /default/run: R: All classes = GMT_Evening
-[output snipped]
-2013-12-16T20:48:09+0200   notice: /default/run: R: All classes = agent
-2013-12-16T20:48:09+0200   notice: /default/run: R: All classes = Yr2013
-2013-12-16T20:48:09+0200   notice: /default/run: R: All classes = cfengine_3
-2013-12-16T20:48:09+0200   notice: /default/run: R: All classes = have_aptitude
-2013-12-16T20:48:09+0200   notice: /default/run: R: Classes matching 'cfengine' = cfengine
+#@ 2013-12-20T13:00:24-0500   notice: /default/run: R: All classes with the 'cfe_internal' and 'source=environment' tags = 'opt_dry_run'
+#@ 2013-12-20T13:00:24-0500   notice: /default/run: R: All classes with the 'cfe_internal' and 'source=environment' tags = 'agent'
+#@ 2013-12-20T13:00:24-0500   notice: /default/run: R: Classes matching 'cfengine' = 'cfengine'
 #+end_src

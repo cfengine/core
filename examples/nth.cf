@@ -50,21 +50,21 @@ bundle agent test
 #+end_src
 ###############################################################################
 #+begin_src example_output
-2013-12-16T20:48:10+0200   notice: /default/test: R: The test list is 1
-2013-12-16T20:48:10+0200   notice: /default/test: R: The test list is 2
-2013-12-16T20:48:10+0200   notice: /default/test: R: The test list is 3
-2013-12-16T20:48:10+0200   notice: /default/test: R: The test list is one
-2013-12-16T20:48:10+0200   notice: /default/test: R: The test list is two
-2013-12-16T20:48:10+0200   notice: /default/test: R: The test list is three
-2013-12-16T20:48:10+0200   notice: /default/test: R: The test list is long string
-2013-12-16T20:48:10+0200   notice: /default/test: R: The test list is four
-2013-12-16T20:48:10+0200   notice: /default/test: R: The test list is fix
-2013-12-16T20:48:10+0200   notice: /default/test: R: The test list is six
-2013-12-16T20:48:10+0200   notice: /default/test: R: element #1 of the test list: 2
-2013-12-16T20:48:10+0200   notice: /default/test: R: element #2 of the test list: 3
-2013-12-16T20:48:10+0200   notice: /default/test: R: element #6 of the test list: long string
-2013-12-16T20:48:10+0200   notice: /default/test: R: element #10 of the test list: one
-2013-12-16T20:48:10+0200   notice: /default/test: R: element #11 of the test list: two
-2013-12-16T20:48:10+0200   notice: /default/test: R: element #1000 of the test list: $(test[1000])
-2013-12-16T20:48:10+0200   notice: /default/test: R: element #0 of the test list: 1
+#@ 2013-12-20T13:44:32-0500   notice: /default/test: R: The test list is 1
+#@ 2013-12-20T13:44:32-0500   notice: /default/test: R: The test list is 2
+#@ 2013-12-20T13:44:32-0500   notice: /default/test: R: The test list is 3
+#@ 2013-12-20T13:44:32-0500   notice: /default/test: R: The test list is one
+#@ 2013-12-20T13:44:32-0500   notice: /default/test: R: The test list is two
+#@ 2013-12-20T13:44:32-0500   notice: /default/test: R: The test list is three
+#@ 2013-12-20T13:44:32-0500   notice: /default/test: R: The test list is long string
+#@ 2013-12-20T13:44:32-0500   notice: /default/test: R: The test list is four
+#@ 2013-12-20T13:44:32-0500   notice: /default/test: R: The test list is fix
+#@ 2013-12-20T13:44:32-0500   notice: /default/test: R: The test list is six
+#@ 2013-12-20T13:44:32-0500   notice: /default/test: R: element #1 of the test list: 2
+#@ 2013-12-20T13:44:32-0500   notice: /default/test: R: element #2 of the test list: 3
+#@ 2013-12-20T13:44:32-0500   notice: /default/test: R: element #6 of the test list: long string
+#@ 2013-12-20T13:44:32-0500   notice: /default/test: R: element #10 of the test list: one
+#@ 2013-12-20T13:44:32-0500   notice: /default/test: R: element #11 of the test list: two
+#@ 2013-12-20T13:44:32-0500   notice: /default/test: R: element #1000 of the test list: $(test[1000])
+#@ 2013-12-20T13:44:32-0500   notice: /default/test: R: element #0 of the test list: 1
 #+end_src

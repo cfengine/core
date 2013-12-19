@@ -23,7 +23,7 @@
 #+begin_src cfengine3
 body common control
 {
-      bundlesequence => { "subtest" };
+      bundlesequence => { subtest("mark") };
 }
 
 bundle agent subtest(user)
@@ -42,42 +42,8 @@ bundle agent subtest(user)
 
       "User name $(user) is invalid";
 }
-bundle agent example
-{
-  vars:
-
-      "x" string => "
-           NAME: apache2 - Apache 2.2 web server
-           CATEGORY: application
-           ARCH: all
-           VERSION: 2.2.3,REV=2006.09.01
-           BASEDIR: /
-           VENDOR: http://httpd.apache.org/ packaged for CSW by Cory Omand
-           PSTAMP: comand@thor-20060901022929
-           INSTDATE: Dec 14 2006 16:05
-           HOTLINE: http://www.blastwave.org/bugtrack/
-           EMAIL: comand@blastwave.org
-           STATUS: completely installed
-         ";
-
-  classes:
-
-      "pkg_installed" expression => regcmp("(.*\n)*STATUS:\s+completely installed\n(.*\n)*",$(x));
-
-      "base_is_root" expression => regcmp("(?ms).*^BASEDIR:\s+/$.*", $(x));
-
-  reports:
-
-    pkg_installed::
-
-      "installed";
-
-    base_is_root::
-
-      "in root";
-}
 #+end_src
 ###############################################################################
 #+begin_src example_output
-2013-12-16T20:47:53+0200   notice: /default/subtest: R: User name $(user) is valid at exactly 4 letters
+#@ 2013-12-20T13:44:34-0500   notice: /default/subtest: R: User name mark is valid at exactly 4 letters
 #+end_src

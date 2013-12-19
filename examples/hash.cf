@@ -47,8 +47,8 @@ bundle agent example
 #+end_src
 ###############################################################################
 #+begin_src example_output
-2013-12-16T20:48:08+0200   notice: /default/example: R: Hashed to: md5 2036af0ee58d6d9dffcc6507af92664f
-2013-12-16T20:48:08+0200   notice: /default/example: R: Hashed to: sha256 e2fb1927976bfe1ea3987c1a731c75e8ac1453d22a21811dc352db5e62d3f73c
-2013-12-16T20:48:08+0200   notice: /default/example: R: Hashed to: sha384 b348c0b83ccd9ee12673f5daaba3ee5f49c42906540936bb16cf9d2001ed502b8c56f6e36b8389ab596febb529aab17f
-2013-12-16T20:48:08+0200   notice: /default/example: R: Hashed to: sha512 29ce0883afbe7740bb2a016735499ae5a0a9b067539018ce6bb2c309a7e885c2d7da64744956e9f151bc72ec8dc19f85efd85eb0a73cbf1e829a15ac9ac35358
+#@ 2013-12-20T13:44:30-0500   notice: /default/example: R: Hashed to: md5 2036af0ee58d6d9dffcc6507af92664f
+#@ 2013-12-20T13:44:30-0500   notice: /default/example: R: Hashed to: sha256 e2fb1927976bfe1ea3987c1a731c75e8ac1453d22a21811dc352db5e62d3f73c
+#@ 2013-12-20T13:44:30-0500   notice: /default/example: R: Hashed to: sha384 b348c0b83ccd9ee12673f5daaba3ee5f49c42906540936bb16cf9d2001ed502b8c56f6e36b8389ab596febb529aab17f
+#@ 2013-12-20T13:44:30-0500   notice: /default/example: R: Hashed to: sha512 29ce0883afbe7740bb2a016735499ae5a0a9b067539018ce6bb2c309a7e885c2d7da64744956e9f151bc72ec8dc19f85efd85eb0a73cbf1e829a15ac9ac35358
 #+end_src

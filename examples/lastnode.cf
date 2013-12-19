@@ -32,18 +32,26 @@ bundle agent yes
 
       "path1" string => "/one/two/last1";
       "path2" string => "one:two:last2";
+      "path4" string => "/one/two/";
 
       "last1" string => lastnode("$(path1)","/");
       "last2" string => lastnode("$(path2)",":");
 
       "last3" string => lastnode("$(path2)","/");
+      "last4" string => lastnode("$(path4)","/");
 
   reports:
-      "Last = $(last1),$(last2),$(last3)";
+      "Last / node in / path '$(path1)' = '$(last1)'";
+      "Last : node in : path '$(path2)' = '$(last2)'";
+      "Last / node in : path '$(path2)' = '$(last3)'";
+      "Last / node in /-terminated path '$(path4)' = '$(last4)'";
 
 }
 #+end_src
 ###############################################################################
 #+begin_src example_output
-2013-12-16T20:48:27+0200   notice: /default/yes: R: Last = last1,last2,one:two:last2
+#@ 2013-12-20T13:48:00-0500   notice: /default/yes: R: Last / node in / path '/one/two/last1' = 'last1'
+#@ 2013-12-20T13:48:00-0500   notice: /default/yes: R: Last : node in : path 'one:two:last2' = 'last2'
+#@ 2013-12-20T13:48:00-0500   notice: /default/yes: R: Last / node in : path 'one:two:last2' = 'one:two:last2'
+#@ 2013-12-20T13:48:00-0500   notice: /default/yes: R: Last / node in /-terminated path '/one/two/' = ''
 #+end_src

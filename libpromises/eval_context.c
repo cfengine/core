@@ -1312,7 +1312,7 @@ StringSet *EvalContextStackPromisees(const EvalContext *ctx)
         switch (promisee.type)
         {
         case RVAL_TYPE_SCALAR:
-            StringSetAdd(promisees, RvalScalarValue(promisee));
+            StringSetAdd(promisees, xstrdup(RvalScalarValue(promisee)));
             break;
 
         case RVAL_TYPE_LIST:

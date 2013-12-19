@@ -22,7 +22,7 @@ bundle agent test
 {
   vars:
     debian::
-      "myflavor" string => execresult("/bin/grep Debian.*GNU /etc/issue | /usr/bin/cut -d' ' -f3 | cut -d. -f1 | cut -d/ -f1", "useshell");
+      "myflavor" string => execresult("cat /etc/debian_version | /usr/bin/cut -d. -f1 | /usr/bin/cut -d/ -f1", "useshell");
 }
 
 #######################################################

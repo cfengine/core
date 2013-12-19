@@ -908,7 +908,6 @@ static StackFrame *StackFrameNewPromise(const Promise *owner)
     StackFrame *frame = StackFrameNew(STACK_FRAME_TYPE_PROMISE, true);
 
     frame->data.promise.owner = owner;
-    frame->data.promise.vars = VariableTableNew();
 
     return frame;
 }

@@ -1619,7 +1619,7 @@ static int Linux_Suse_Version(EvalContext *ctx)
     EvalContextClassPutHard(ctx, "SUSE", "inventory,source=agent,group=OS,comment=SUSE");
 
     /* Keep this for backwards compatibility ("SUSE" used to be "SuSE") */
-    EvalContextClassPutHard(ctx, "SuSE", "inventory,source=agent,group=OS,comment=SUSE");
+    EvalContextClassPutHard(ctx, "SuSE", "inventory,source=agent,group=OS,comment=SUSE,deprecated");
 
 /* Grab the first line from the file and then close it. */
 
@@ -1767,13 +1767,13 @@ static int Linux_Suse_Version(EvalContext *ctx)
 
                 /* Keep this for backwards compatibility ("SUSE" used to be "SuSE") */
                 strcpy(classbuf, "SuSE");
-                EvalContextClassPutHard(ctx, classbuf, "inventory,source=agent,group=OS,comment=SUSE");
+                EvalContextClassPutHard(ctx, classbuf, "inventory,source=agent,group=OS,comment=SUSE,deprecated");
                 strcat(classbuf, "_");
                 strcat(classbuf, strmajor);
                 SetFlavour(ctx, classbuf);
                 strcat(classbuf, "_");
                 strcat(classbuf, strminor);
-                EvalContextClassPutHard(ctx, classbuf, "inventory,source=agent,group=OS,comment=SUSE");
+                EvalContextClassPutHard(ctx, classbuf, "inventory,source=agent,group=OS,comment=SUSE,deprecated");
 
                 Log(LOG_LEVEL_VERBOSE, "Discovered SUSE version %s", classbuf);
                 return 0;

@@ -1,0 +1,22 @@
+##############################################################################
+#
+# Redmine #3907: supposedly missing functions (in this case, a classes body with parameters) aren't
+#
+##############################################################################
+
+body common control
+{
+      bundlesequence => {"example"};
+}
+
+bundle agent example
+{
+  vars:
+      "testme" string => "me?!?!?!",
+      classes => 9fdee2550bec1030e22addb0dc9d7218b9174c70("1");
+}
+
+body classes 9fdee2550bec1030e22addb0dc9d7218b9174c70(x)
+{
+      promise_repaired => { "9fdee2550bec1030e22addb0dc9d7218b9174c70" };
+}

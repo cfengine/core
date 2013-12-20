@@ -590,7 +590,6 @@ static void FindV6InterfacesInfo(EvalContext *ctx)
    BSDi has done getifaddrs(), solaris 8 has a new ioctl, Stevens
    book shows the suggestion which has not been implemented...
 */
-
     Log(LOG_LEVEL_VERBOSE, "Trying to locate my IPv6 address");
 
 #if defined(__CYGWIN__)
@@ -603,6 +602,12 @@ static void FindV6InterfacesInfo(EvalContext *ctx)
         return;
     }
 #elif defined(_AIX)
+    /*
+     * XXX: This is out of date. AIX 6.x introduced ioctl(SIOCGIFADDR6).
+     * http://publib.boulder.ibm.com/infocenter/aix/v6r1/index.jsp?topic=%2Fcom.ibm.aix.kernelext%2Fdoc%2Fkernextc%2Fioctl_commands.htm
+     * http://publib.boulder.ibm.com/infocenter/aix/v7r1/index.jsp?topic=%2Fcom.ibm.aix.commtechref%2Fdoc%2Fcommtrf2%2Fioctl_socket_control_operations.htm
+     * DANGER, WILL ROBINSON! AIX 5.2 and 5.3 have no end of support due to WPARs for AIX 7. So a version check is required!
+     */
     if ((pp = cf_popen("/etc/ifconfig -a", "r", true)) == NULL)
     {
         Log(LOG_LEVEL_VERBOSE, "Could not find interface info");
@@ -649,7 +654,9 @@ static void FindV6InterfacesInfo(EvalContext *ctx)
                         *sp = '\0';
                     }
                 }
-
+                /* XXX: This is very kludge.
+                 * Needs to be "if ((ip == NI_NUMERICHOST) && (ip != IN6_IS_ADDR_LOOPBACK || ip != IN6_IS_ADDR_LINKLOCAL))"
+                 */
                 if ((IsIPV6Address(ip->name)) && ((strcmp(ip->name, "::1") != 0)))
                 {
                     Log(LOG_LEVEL_VERBOSE, "Found IPv6 address %s", ip->name);

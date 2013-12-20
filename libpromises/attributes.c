@@ -227,7 +227,7 @@ Attributes GetExecAttributes(const EvalContext *ctx, const Promise *pp)
 
 Attributes GetProcessAttributes(const EvalContext *ctx, const Promise *pp)
 {
-    static Attributes attr = { {0} };
+    Attributes attr = { {0} };
 
     attr.signals = PromiseGetConstraintAsList(ctx, "signals", pp);
     attr.process_stop = PromiseGetConstraintAsRval(pp, "process_stop", RVAL_TYPE_SCALAR);

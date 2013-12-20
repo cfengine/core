@@ -15,8 +15,6 @@ body common control
 
 bundle agent init
 {
-  vars:
-        "dummy" string => "dummy";
 }
 
 #######################################################

@@ -68,7 +68,7 @@ extern int EDITFILESIZE;
 extern int VIFELAPSED;
 extern int VEXPIREAFTER;
 
-extern const char *OBS[CF_OBSERVABLES][2];
+extern const char *const OBS[CF_OBSERVABLES][2];
 
 extern bool FIPS_MODE;
 extern char POLICY_SERVER[CF_MAX_IP_LEN];
@@ -77,7 +77,7 @@ extern int CF_DEFAULT_DIGEST_LEN;
 
 extern int CF_PERSISTENCE;
 
-extern const char *CF_AGENTTYPES[];
+extern const char *const CF_AGENTTYPES[];
 
 extern int CFA_MAXTHREADS;
 extern AgentType THIS_AGENT_TYPE;
@@ -86,9 +86,9 @@ extern int LASTSEENEXPIREAFTER;
 extern char *DEFAULT_COPYTYPE;
 extern Item *PROCESSTABLE;
 
-extern const char *DAY_TEXT[];
-extern const char *MONTH_TEXT[];
-extern const char *SHIFT_TEXT[];
+extern const char *const DAY_TEXT[];
+extern const char *const MONTH_TEXT[];
+extern const char *const SHIFT_TEXT[];
 
 #if defined(__MINGW32__)
 # define FILE_SEPARATOR '\\'

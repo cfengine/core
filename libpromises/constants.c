@@ -24,7 +24,7 @@
 
 #include <cf3.defs.h>
 
-const char *DAY_TEXT[] =
+const char *const DAY_TEXT[] =
 {
     "Monday",
     "Tuesday",
@@ -36,7 +36,7 @@ const char *DAY_TEXT[] =
     NULL
 };
 
-const char *MONTH_TEXT[] =
+const char *const MONTH_TEXT[] =
 {
     "January",
     "February",
@@ -53,7 +53,7 @@ const char *MONTH_TEXT[] =
     NULL
 };
 
-const char *SHIFT_TEXT[] =
+const char *const SHIFT_TEXT[] =
 {
     "Night",
     "Morning",
@@ -62,7 +62,7 @@ const char *SHIFT_TEXT[] =
     NULL
 };
 
-const char *CF_AGENTTYPES[] =   /* see enum cfagenttype */
+const char *const CF_AGENTTYPES[] =   /* see enum cfagenttype */
 {
     CF_COMMONC,
     CF_AGENTC,
@@ -76,7 +76,7 @@ const char *CF_AGENTTYPES[] =   /* see enum cfagenttype */
 };
 
 
-const char *OBS[CF_OBSERVABLES][2] =
+const char *const OBS[CF_OBSERVABLES][2] =
 {
     {"users", "Users with active processes - including system users"},
     {"rootprocs", "Sum privileged system processes"},

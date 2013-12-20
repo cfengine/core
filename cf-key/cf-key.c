@@ -45,7 +45,8 @@ bool LICENSE_INSTALL = false;
 char LICENSE_SOURCE[MAX_FILENAME];
 const char *remove_keys_host;
 static char *print_digest_arg = NULL;
-static char *trust_key_arg = NULL;
+static char *trust_server_key_arg = NULL;
+static char *trust_client_key_arg = NULL;
 static char *KEY_PATH;
 
 static GenericAgentConfig *CheckOpts(int argc, char **argv);
@@ -69,7 +70,8 @@ static const struct option OPTIONS[] =
     {"remove-keys", required_argument, 0, 'r'},
     {"install-license", required_argument, 0, 'l'},
     {"print-digest", required_argument, 0, 'p'},
-    {"trust-key", required_argument, 0, 't'},
+    {"trust-client-key", required_argument, 0, 't'},
+    {"trust-server-key", required_argument, 0, 'T'},
     {"color", optional_argument, 0, 'C'},
     {NULL, 0, 0, '\0'}
 };
@@ -85,7 +87,8 @@ static const char *HINTS[] =
     "Remove keys for specified hostname/IP",
     "Install license without boostrapping (CFEngine Enterprise only)",
     "Print digest of the specified public key",
-    "Make cf-serverd/cf-agent trust the specified public key",
+    "Make cf-serverd trust the specified public key. Argument value is file name of the public key to trust.",
+    "Make cf-agent trust the specified public key for connecting to a specified IP address. Argument value has the form IP_ADDR:FILENAME.",
     "Enable colorized output. Possible values: 'always', 'auto', 'never'. If option is used, the default value is 'auto'",
     NULL
 };
@@ -123,9 +126,25 @@ int main(int argc, char *argv[])
         return success ? 0 : 1;
     }
 
-    if (trust_key_arg)
+    if (trust_client_key_arg)
     {
-        return TrustKey(trust_key_arg);
+        /* No IP required for trusting clients on the server */
+        return TrustKey(trust_client_key_arg, NULL);
+    }
+
+    if (trust_server_key_arg)
+    {
+        /* Server IP address required to trust key on the client side;
+           break argument into IP address + filename */
+        char *filename, *ipaddr;
+        ipaddr = trust_server_key_arg;
+        filename = strchr(trust_server_key_arg, ':');
+        if (NULL == filename)  {
+            return 1; /* ERROR */
+        };
+        *filename = '\0'; /* terminate `ipaddr` string */
+        ++filename; /* advance `filename` to 1st character after ':' */
+        return TrustKey(filename, ipaddr);
     }
 
     char *public_key_file, *private_key_file;
@@ -162,7 +181,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
     int c;
     GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_KEYGEN);
 
-    while ((c = getopt_long(argc, argv, "dvf:VMp:sr:t:hl:C::", OPTIONS, &optindex)) != EOF)
+    while ((c = getopt_long(argc, argv, "dvf:VMp:sr:t:T:hl:C::", OPTIONS, &optindex)) != EOF)
     {
         switch ((char) c)
         {
@@ -205,7 +224,11 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             break;
 
         case 't':
-            trust_key_arg = optarg;
+            trust_client_key_arg = optarg;
+            break;
+
+        case 'T':
+            trust_server_key_arg = optarg;
             break;
 
         case 'h':

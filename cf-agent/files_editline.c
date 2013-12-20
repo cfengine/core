@@ -574,6 +574,7 @@ static PromiseResult VerifyLineInsertions(EvalContext *ctx, const Promise *pp, E
     /* Are we working in a restricted region? */
 
     PromiseResult result = PROMISE_RESULT_NOOP;
+
     if (!a.haveregion)
     {
         begin_ptr = *start;
@@ -736,6 +737,11 @@ static int InsertMultipleLinesToRegion(EvalContext *ctx, Item **start, Item *beg
     {
         for (ip = *start; ip != NULL; ip = ip->next)
         {
+            if (MatchRegion(ctx, pp->promiser, ip, end_ptr, true))
+            {
+                return false;
+            }
+
             if (ip->next != NULL && ip->next == end_ptr)
             {
                 return InsertMultipleLinesAtLocation(ctx, start, begin_ptr, end_ptr, ip, prev, a, pp, edcontext, result);

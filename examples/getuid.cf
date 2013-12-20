@@ -30,13 +30,13 @@ bundle agent example
 {
   vars:
 
-      "uid" int => getuid("mark");
+      "uid" int => getuid("root");
 
   reports:
-      "Users uid is $(uid)";
+      "root's uid is $(uid)";
 }
 #+end_src
 ###############################################################################
 #+begin_src example_output
-2013-12-16T20:48:29+0200   notice: /default/example: R: Users uid is 1002
+#@ 2013-12-20T13:44:30-0500   notice: /default/example: R: root's uid is 0
 #+end_src

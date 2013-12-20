@@ -29,8 +29,8 @@ body common control
 bundle agent example
 {
   vars:
-
-      "no" int => countlinesmatching("m.*","/etc/passwd");
+      # typically there is only one root user
+      "no" int => countlinesmatching("root:.*","/etc/passwd");
 
   reports:
       "Found $(no) lines matching";
@@ -38,5 +38,5 @@ bundle agent example
 #+end_src
 ###############################################################################
 #+begin_src example_output
-2013-12-16T20:48:28+0200   notice: /default/example: R: Found 5 lines matching
+#@ 2013-12-20T13:44:28-0500   notice: /default/example: R: Found 1 lines matching
 #+end_src

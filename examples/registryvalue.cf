@@ -31,6 +31,8 @@ bundle agent reg
   vars:
     windows::
       "value" string => registryvalue("HKEY_LOCAL_MACHINE\SOFTWARE\CFEngine AS\CFEngine","value3");
+    !windows::
+      "value" string => "Sorry, no registry data is available";
 
   reports:
       "Value extracted: $(value)";
@@ -39,5 +41,5 @@ bundle agent reg
 #+end_src
 ###############################################################################
 #+begin_src example_output
-2013-12-16T20:48:14+0200   notice: /default/reg: R: Value extracted: $(value)
+#@ 2013-12-20T13:44:34-0500   notice: /default/reg: R: Value extracted: Sorry, no registry data is available
 #+end_src

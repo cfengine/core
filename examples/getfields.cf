@@ -30,26 +30,26 @@ bundle agent example
 {
   vars:
 
-      "no" int => getfields("mark:.*","/etc/passwd",":","userdata");
+      "no" int => getfields("root:.*","/etc/passwd",":","userdata");
 
   reports:
       "Found $(no) lines matching";
-      "Mark's homedir = $(userdata[6])";
-      "Mark's handle = $(userdata[1])";
-      "Mark's passwd = ... forget it!";
-      "Mark's uid = $(userdata[3])";
-      "Mark's gid = $(userdata[4])";
-      "Mark's name = $(userdata[5])";
+      "root's homedir = $(userdata[6])";
+      "root's handle = $(userdata[1])";
+      "root's passwd = ... forget it!";
+      "root's uid = $(userdata[3])";
+      "root's gid = $(userdata[4])";
+      # uncomment this if you want to see the GECOS field
+      #"root's name = $(userdata[5])";
 
 }
 #+end_src
 ###############################################################################
 #+begin_src example_output
-2013-12-16T20:48:12+0200   notice: /default/example: R: Found 1 lines matching
-2013-12-16T20:48:12+0200   notice: /default/example: R: Mark's homedir = /home/mark
-2013-12-16T20:48:12+0200   notice: /default/example: R: Mark's handle = mark
-2013-12-16T20:48:12+0200   notice: /default/example: R: Mark's passwd = ... forget it!
-2013-12-16T20:48:12+0200   notice: /default/example: R: Mark's uid = 1002
-2013-12-16T20:48:12+0200   notice: /default/example: R: Mark's gid = 1002
-2013-12-16T20:48:12+0200   notice: /default/example: R: Mark's name = Mark
+#@ 2013-12-20T13:44:30-0500   notice: /default/example: R: Found 1 lines matching
+#@ 2013-12-20T13:44:30-0500   notice: /default/example: R: root's homedir = /root
+#@ 2013-12-20T13:44:30-0500   notice: /default/example: R: root's handle = root
+#@ 2013-12-20T13:44:30-0500   notice: /default/example: R: root's passwd = ... forget it!
+#@ 2013-12-20T13:44:30-0500   notice: /default/example: R: root's uid = 0
+#@ 2013-12-20T13:44:30-0500   notice: /default/example: R: root's gid = 0
 #+end_src

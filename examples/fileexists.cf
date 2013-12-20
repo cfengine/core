@@ -29,17 +29,19 @@ body common control
 bundle agent example
 {
   classes:
-
-      "exists" expression => fileexists("/etc/passwd");
+      # this.promise_filename has the currently-executed file, so it
+      # better exist!
+      "exists" expression => fileexists($(this.promise_filename));
+      "exists_etc_passwd" expression => fileexists("/etc/passwd");
 
   reports:
 
     exists::
 
-      "File exists";
+      "I exist!  I mean, file exists!";
 }
 #+end_src
 ###############################################################################
 #+begin_src example_output
-2013-12-16T20:48:08+0200   notice: /default/example: R: File exists
+#@ 2013-12-20T13:44:29-0500   notice: /default/example: R: I exist!  I mean, file exists!
 #+end_src

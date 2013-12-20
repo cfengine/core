@@ -41,5 +41,5 @@ bundle agent test
 #+end_src
 ###############################################################################
 #+begin_src example_output
-2013-12-16T20:48:27+0200   notice: /default/test: R: Product result: 338.207100 > 19.800000
+#@ 2013-12-20T13:44:32-0500   notice: /default/test: R: Product result: 338.207100 > 19.800000
 #+end_src

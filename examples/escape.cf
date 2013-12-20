@@ -26,19 +26,18 @@ body common control
       bundlesequence => { "example" };
 }
 
-bundle agent example{
+bundle agent example
+{
   vars:
       "ip" string => "10.123.321.250";
-      "escaped" string => escape("$(ip)");
+      "escaped" string => escape($(ip));
+
   reports:
       "escaped $(ip) = $(escaped)";
 }
-body server control
-{
-      allowconnects => { "127\.0\.0\.1", escape("192.168.2.1") };
-}
+
 #+end_src
 ###############################################################################
 #+begin_src example_output
-2013-12-16T20:48:04+0200   notice: /default/example: R: escaped 10.123.321.250 = 10\.123\.321\.250
+#@ 2013-12-20T13:44:29-0500   notice: /default/example: R: escaped 10.123.321.250 = 10\.123\.321\.250
 #+end_src

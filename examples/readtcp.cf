@@ -30,7 +30,7 @@ bundle agent example
 {
   vars:
 
-      "my80" string => readtcp("research.iu.hio.no","80","GET /index.php HTTP/1.1$(const.r)$(const.n)Host: research.iu.hio.no$(const.r)$(const.n)$(const.r)$(const.n)",20);
+      "my80" string => readtcp("cfengine.com","80","GET /index.php HTTP/1.1$(const.r)$(const.n)Host: cfengine.com$(const.r)$(const.n)$(const.r)$(const.n)",20);
 
   classes:
 
@@ -49,5 +49,5 @@ bundle agent example
 #+end_src
 ###############################################################################
 #+begin_src example_output
-2013-12-16T20:48:20+0200   notice: /default/example: R: Server is alive
+#@ 2013-12-20T13:44:34-0500   notice: /default/example: R: Server is alive
 #+end_src

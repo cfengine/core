@@ -20,6 +20,18 @@
 # (COSL) may apply to this file if you as a licensee so wish it. See
 # included file COSL.txt.
 
+#+begin_src prep
+#@ echo 1 > /tmp/cfe_list_ints
+#@ echo 2 >> /tmp/cfe_list_ints
+#@ echo 3 >> /tmp/cfe_list_ints
+#@ echo 1.1 > /tmp/cfe_list_reals
+#@ echo 2.2 >> /tmp/cfe_list_reals
+#@ echo 3 >> /tmp/cfe_list_reals
+#@ echo alpha > /tmp/cfe_list_strings
+#@ echo beta >> /tmp/cfe_list_strings
+#@ echo gamma >> /tmp/cfe_list_strings
+#+end_src
+###############################################################################
 #+begin_src cfengine3
 body common control
 {
@@ -30,17 +42,27 @@ bundle agent example
 {
   vars:
 
-      "integers" ilist => readintlist("/tmp/listofint","#.*","[\n]",10,400);
-      "strings" slist => readstringlist("/tmp/listofstring", "#.*", "\s", 10, 400);
-      "reals" rlist => readreallist("/tmp/listofreal","#.*","[\n]",10,400);
+      "integers" ilist => readintlist("/tmp/cfe_list_ints","#.*","[\n]",10,400);
+      "strings" slist => readstringlist("/tmp/cfe_list_strings", "#.*", "\s", 10, 400);
+      "reals" rlist => readreallist("/tmp/cfe_list_reals","#.*","[\n]",10,400);
 
   reports:
 
-      "List entry: $(mylist)";
+      "integers in /tmp/cfe_list_ints: $(integers)";
+      "strings in /tmp/cfe_list_strings: $(strings)";
+      "reals in /tmp/cfe_list_reals: $(reals)";
 
 }
 #+end_src
 ###############################################################################
 #+begin_src example_output
-2013-12-16T20:47:54+0200   notice: /default/example: R: List entry: $(mylist)
+#@ 2013-12-20T13:44:32-0500   notice: /default/example: R: integers in /tmp/cfe_list_ints: 1
+#@ 2013-12-20T13:44:32-0500   notice: /default/example: R: integers in /tmp/cfe_list_ints: 2
+#@ 2013-12-20T13:44:32-0500   notice: /default/example: R: integers in /tmp/cfe_list_ints: 3
+#@ 2013-12-20T13:44:32-0500   notice: /default/example: R: strings in /tmp/cfe_list_strings: alpha
+#@ 2013-12-20T13:44:32-0500   notice: /default/example: R: strings in /tmp/cfe_list_strings: beta
+#@ 2013-12-20T13:44:32-0500   notice: /default/example: R: strings in /tmp/cfe_list_strings: gamma
+#@ 2013-12-20T13:44:32-0500   notice: /default/example: R: reals in /tmp/cfe_list_reals: 1.1
+#@ 2013-12-20T13:44:32-0500   notice: /default/example: R: reals in /tmp/cfe_list_reals: 2.2
+#@ 2013-12-20T13:44:32-0500   notice: /default/example: R: reals in /tmp/cfe_list_reals: 3
 #+end_src

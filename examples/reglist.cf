@@ -38,13 +38,15 @@ bundle agent example
       };
   classes:
 
-      "am_name_server" expression => reglist("@(nameservers)",escape("$(sys.ipv4[eth0])"));
+      "am_name_server" expression => reglist(@(nameservers), "127\.0\.0\.1");
   reports:
     am_name_server::
-      "This host ($(sys.ipv4[eth0])) is currently set as a nameserver";
+      "127.0.0.1 is currently set as a nameserver";
+    !am_name_server::
+      "127.0.0.1 is NOT currently set as a nameserver";
 }
 #+end_src
 ###############################################################################
 #+begin_src example_output
-2013-12-16T20:48:06+0200   notice: /default/example: R: This host (10.132.51.66) is currently set as a nameserver
+#@ 2013-12-20T13:44:34-0500   notice: /default/example: R: 127.0.0.1 is NOT currently set as a nameserver
 #+end_src

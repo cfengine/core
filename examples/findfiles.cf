@@ -29,35 +29,13 @@ body common control
 bundle agent run
 {
   vars:
-      "all_root" slist => findfiles("/*");
+      "findtmp" slist => findfiles("/[tT][mM][pP]");
   reports:
-      "All files under root = $(all_root)";
+      "All files that match '/[tT][mM][pP]' = $(findtmp)";
 }
 
 #+end_src
 ###############################################################################
 #+begin_src example_output
-2013-12-16T20:48:24+0200   notice: /default/run: R: All files under root = /bin
-2013-12-16T20:48:24+0200   notice: /default/run: R: All files under root = /boot
-2013-12-16T20:48:24+0200   notice: /default/run: R: All files under root = /dev
-2013-12-16T20:48:24+0200   notice: /default/run: R: All files under root = /etc
-2013-12-16T20:48:24+0200   notice: /default/run: R: All files under root = /home
-2013-12-16T20:48:24+0200   notice: /default/run: R: All files under root = /initrd.img
-2013-12-16T20:48:24+0200   notice: /default/run: R: All files under root = /lib
-2013-12-16T20:48:24+0200   notice: /default/run: R: All files under root = /lib64
-2013-12-16T20:48:24+0200   notice: /default/run: R: All files under root = /lost+found
-2013-12-16T20:48:24+0200   notice: /default/run: R: All files under root = /media
-2013-12-16T20:48:24+0200   notice: /default/run: R: All files under root = /mnt
-2013-12-16T20:48:24+0200   notice: /default/run: R: All files under root = /opt
-2013-12-16T20:48:24+0200   notice: /default/run: R: All files under root = /proc
-2013-12-16T20:48:24+0200   notice: /default/run: R: All files under root = /root
-2013-12-16T20:48:24+0200   notice: /default/run: R: All files under root = /run
-2013-12-16T20:48:24+0200   notice: /default/run: R: All files under root = /sbin
-2013-12-16T20:48:24+0200   notice: /default/run: R: All files under root = /selinux
-2013-12-16T20:48:24+0200   notice: /default/run: R: All files under root = /srv
-2013-12-16T20:48:24+0200   notice: /default/run: R: All files under root = /sys
-2013-12-16T20:48:24+0200   notice: /default/run: R: All files under root = /tmp
-2013-12-16T20:48:24+0200   notice: /default/run: R: All files under root = /usr
-2013-12-16T20:48:24+0200   notice: /default/run: R: All files under root = /var
-2013-12-16T20:48:24+0200   notice: /default/run: R: All files under root = /vmlinuz
+#@ 2013-12-20T13:44:29-0500   notice: /default/run: R: All files that match '/[tT][mM][pP]' = /tmp
 #+end_src

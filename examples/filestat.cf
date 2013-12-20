@@ -20,6 +20,16 @@
 # (COSL) may apply to this file if you as a licensee so wish it. See
 # included file COSL.txt.
 
+#+begin_src prep
+#@ sudo rm /tmp/cfe_testhere.txt
+#@ echo 1234567890 > /tmp/cfe_testhere.txt
+#@ touch -a -d 2012 /tmp/cfe_testhere.txt
+#@ touch -m -d 2011 /tmp/cfe_testhere.txt
+#@ chmod 0755 /tmp/cfe_testhere.txt
+#@ sudo chown 0 /tmp/cfe_testhere.txt
+#@ sudo chgrp 0 /tmp/cfe_testhere.txt
+#+end_src
+###############################################################################
 #+begin_src cfengine3
 body common control
 {
@@ -29,14 +39,21 @@ body common control
 bundle agent example
 {
   vars:
-      "file" string => "$(sys.resolv)";
+      "file" string => "/tmp/cfe_testhere.txt";
   methods:
       "fileinfo" usebundle => fileinfo("$(file)");
 }
 bundle agent fileinfo(f)
 {
   vars:
-      "fields" slist => splitstring("size,gid,uid,ino,nlink,ctime,atime,mtime,mode,modeoct,permstr,permoct,type,devno,dev_minor,dev_major,basename,dirname,linktarget,linktarget_shallow", ",", 999);
+      # use the full list if you want to see all the attributes!
+      # "fields" slist => splitstring("size,gid,uid,ino,nlink,ctime,atime,mtime,mode,modeoct,permstr,permoct,type,devno,dev_minor,dev_major,basename,dirname,linktarget,linktarget_shallow", ",", 999);
+
+      # ino (inode number), ctime (creation time),
+      # devno/dev_minor/dev_major (device numbers) were omitted but
+      # they are all integers
+
+      "fields" slist => splitstring("size,gid,uid,nlink,atime,mtime,mode,modeoct,permstr,permoct,type,basename,dirname,linktarget,linktarget_shallow", ",", 999);
 
       "stat[$(f)][$(fields)]" string => filestat($(f), $(fields));
 
@@ -46,24 +63,19 @@ bundle agent fileinfo(f)
 #+end_src
 ###############################################################################
 #+begin_src example_output
-2013-12-16T20:48:25+0200   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /etc/resolv.conf has size = 45
-2013-12-16T20:48:25+0200   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /etc/resolv.conf has gid = 0
-2013-12-16T20:48:25+0200   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /etc/resolv.conf has uid = 0
-2013-12-16T20:48:25+0200   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /etc/resolv.conf has ino = 2884988
-2013-12-16T20:48:25+0200   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /etc/resolv.conf has nlink = 1
-2013-12-16T20:48:25+0200   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /etc/resolv.conf has ctime = 1370031523
-2013-12-16T20:48:25+0200   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /etc/resolv.conf has atime = 1387212799
-2013-12-16T20:48:25+0200   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /etc/resolv.conf has mtime = 1370031523
-2013-12-16T20:48:25+0200   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /etc/resolv.conf has mode = 33188
-2013-12-16T20:48:25+0200   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /etc/resolv.conf has modeoct = 100644
-2013-12-16T20:48:25+0200   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /etc/resolv.conf has permstr = -rw-r--r--
-2013-12-16T20:48:25+0200   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /etc/resolv.conf has permoct = 644
-2013-12-16T20:48:25+0200   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /etc/resolv.conf has type = regular file
-2013-12-16T20:48:25+0200   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /etc/resolv.conf has devno = 2049
-2013-12-16T20:48:25+0200   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /etc/resolv.conf has dev_minor = 1
-2013-12-16T20:48:25+0200   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /etc/resolv.conf has dev_major = 8
-2013-12-16T20:48:25+0200   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /etc/resolv.conf has basename = resolv.conf
-2013-12-16T20:48:25+0200   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /etc/resolv.conf has dirname = /etc
-2013-12-16T20:48:25+0200   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /etc/resolv.conf has linktarget = /etc/resolv.conf
-2013-12-16T20:48:25+0200   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /etc/resolv.conf has linktarget_shallow = /etc/resolv.conf
+#@ 2013-12-20T13:00:25-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /tmp/cfe_testhere.txt has size = 11
+#@ 2013-12-20T13:00:25-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /tmp/cfe_testhere.txt has gid = 0
+#@ 2013-12-20T13:00:25-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /tmp/cfe_testhere.txt has uid = 0
+#@ 2013-12-20T13:00:25-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /tmp/cfe_testhere.txt has nlink = 1
+#@ 2013-12-20T13:00:25-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /tmp/cfe_testhere.txt has atime = 1387588320
+#@ 2013-12-20T13:00:25-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /tmp/cfe_testhere.txt has mtime = 1387588260
+#@ 2013-12-20T13:00:25-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /tmp/cfe_testhere.txt has mode = 33261
+#@ 2013-12-20T13:00:25-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /tmp/cfe_testhere.txt has modeoct = 100755
+#@ 2013-12-20T13:00:25-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /tmp/cfe_testhere.txt has permstr = -rwxr-xr-x
+#@ 2013-12-20T13:00:25-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /tmp/cfe_testhere.txt has permoct = 755
+#@ 2013-12-20T13:00:25-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /tmp/cfe_testhere.txt has type = regular file
+#@ 2013-12-20T13:00:25-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /tmp/cfe_testhere.txt has basename = cfe_testhere.txt
+#@ 2013-12-20T13:00:25-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /tmp/cfe_testhere.txt has dirname = /tmp
+#@ 2013-12-20T13:00:25-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /tmp/cfe_testhere.txt has linktarget = /tmp/cfe_testhere.txt
+#@ 2013-12-20T13:00:25-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /tmp/cfe_testhere.txt has linktarget_shallow = /tmp/cfe_testhere.txt
 #+end_src

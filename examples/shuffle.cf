@@ -29,20 +29,20 @@ body common control
 bundle agent test
 {
   vars:
-      "a" slist => { "b", "c", "a" };
-      "shuffles" slist => { "xx", "yy", "zz" };
+      "mylist" slist => { "b", "c", "a" };
+      "seeds" slist => { "xx", "yy", "zz" };
 
-      "sa_$(shuffles)" slist => shuffle("a", $(shuffles));
+      "shuffled_$(seeds)" slist => shuffle(mylist, $(seeds));
 
-      "j_$(shuffles)" string => join(",", "sa_$(shuffles)");
+      "joined_$(seeds)" string => join(",", "shuffled_$(seeds)");
 
   reports:
-      "shuffled by $(shuffles) = '$(j_$(shuffles))'";
+      "shuffled by $(seeds) = '$(joined_$(seeds))'";
 }
 #+end_src
 ###############################################################################
 #+begin_src example_output
-2013-12-16T20:48:13+0200   notice: /default/test: R: shuffled by xx = 'b,a,c'
-2013-12-16T20:48:13+0200   notice: /default/test: R: shuffled by yy = 'a,c,b'
-2013-12-16T20:48:13+0200   notice: /default/test: R: shuffled by zz = 'c,b,a'
+#@ 2013-12-20T13:40:20-0500   notice: /default/test: R: shuffled by xx = 'b,a,c'
+#@ 2013-12-20T13:40:20-0500   notice: /default/test: R: shuffled by yy = 'a,c,b'
+#@ 2013-12-20T13:40:20-0500   notice: /default/test: R: shuffled by zz = 'c,b,a'
 #+end_src

@@ -34,8 +34,8 @@ bundle agent example
 {
   classes:
 
-      "gname" expression => groupexists("users");
-      "gid"   expression => groupexists("100");
+      "gname" expression => groupexists("root");
+      "gid"   expression => groupexists("0");
 
   reports:
 
@@ -51,6 +51,6 @@ bundle agent example
 #+end_src
 ###############################################################################
 #+begin_src example_output
-2013-12-16T20:48:21+0200   notice: /default/example: R: Group exists by name
-2013-12-16T20:48:21+0200   notice: /default/example: R: Group exists by id
+#@ 2013-12-20T13:44:30-0500   notice: /default/example: R: Group exists by name
+#@ 2013-12-20T13:44:30-0500   notice: /default/example: R: Group exists by id
 #+end_src

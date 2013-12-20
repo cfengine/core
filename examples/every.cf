@@ -30,8 +30,9 @@ bundle agent test
 
 {
   classes:
-      "every1" expression => every(".*", "test");
-      "every2" expression => every(".", "test");
+      "every_dot_star" expression => every(".*", "test");
+      "every_dot" expression => every(".", "test");
+      "every_number" expression => every("[0-9]", "test");
 
   vars:
       "test" slist => {
@@ -44,28 +45,33 @@ bundle agent test
 
   reports:
       "The test list is $(test)";
-    every1::
-      "every() test 1 passed";
-    !every1::
-      "every() test 1 failed";
-    every2::
-      "every() test 2 failed";
-    !every2::
-      "every() test 2 passed";
+    every_dot_star::
+      "every() test passed: every element matches '.*'";
+    !every_dot_star::
+      "every() test failed: not every element matches '.*'";
+    every_number::
+      "every() test failed: every element matches '[0-9]'";
+    !every_number::
+      "every() test passed: not every element matches '[0-9]'";
+    every_dot::
+      "every() test failed: every element matches '.'";
+    !every_dot::
+      "every() test passed: not every element matches '.'";
 }
 #+end_src
 ###############################################################################
 #+begin_src example_output
-2013-12-16T20:47:59+0200   notice: /default/test: R: The test list is 1
-2013-12-16T20:47:59+0200   notice: /default/test: R: The test list is 2
-2013-12-16T20:47:59+0200   notice: /default/test: R: The test list is 3
-2013-12-16T20:47:59+0200   notice: /default/test: R: The test list is one
-2013-12-16T20:47:59+0200   notice: /default/test: R: The test list is two
-2013-12-16T20:47:59+0200   notice: /default/test: R: The test list is three
-2013-12-16T20:47:59+0200   notice: /default/test: R: The test list is long string
-2013-12-16T20:47:59+0200   notice: /default/test: R: The test list is four
-2013-12-16T20:47:59+0200   notice: /default/test: R: The test list is fix
-2013-12-16T20:47:59+0200   notice: /default/test: R: The test list is six
-2013-12-16T20:47:59+0200   notice: /default/test: R: every() test 1 passed
-2013-12-16T20:47:59+0200   notice: /default/test: R: every() test 2 passed
+#@ 2013-12-20T13:44:29-0500   notice: /default/test: R: The test list is 1
+#@ 2013-12-20T13:44:29-0500   notice: /default/test: R: The test list is 2
+#@ 2013-12-20T13:44:29-0500   notice: /default/test: R: The test list is 3
+#@ 2013-12-20T13:44:29-0500   notice: /default/test: R: The test list is one
+#@ 2013-12-20T13:44:29-0500   notice: /default/test: R: The test list is two
+#@ 2013-12-20T13:44:29-0500   notice: /default/test: R: The test list is three
+#@ 2013-12-20T13:44:29-0500   notice: /default/test: R: The test list is long string
+#@ 2013-12-20T13:44:29-0500   notice: /default/test: R: The test list is four
+#@ 2013-12-20T13:44:29-0500   notice: /default/test: R: The test list is fix
+#@ 2013-12-20T13:44:29-0500   notice: /default/test: R: The test list is six
+#@ 2013-12-20T13:44:29-0500   notice: /default/test: R: every() test passed: every element matches '.*'
+#@ 2013-12-20T13:44:29-0500   notice: /default/test: R: every() test passed: not every element matches '[0-9]'
+#@ 2013-12-20T13:44:29-0500   notice: /default/test: R: every() test passed: not every element matches '.'
 #+end_src

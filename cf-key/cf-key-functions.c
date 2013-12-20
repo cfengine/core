@@ -21,6 +21,7 @@
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
 */
+#include <assert.h>
 
 #include "generic_agent.h"
 
@@ -36,6 +37,9 @@
 #include "env_context.h"
 #include "crypto.h"
 #include "file_lib.h"
+#ifndef __MINGW32__
+# include "sysinfo.h"
+#endif
 
 #include "cf-key-functions.h"
 
@@ -84,13 +88,13 @@ RSA* LoadPublicKey(const char* filename)
 
 /** Return a string with the printed digest of the given key file,
     or NULL if an error occurred. */
-char* GetPubkeyDigest(const char* pubkey)
+char* LoadPubkeyDigest(const char* filename)
 {
     unsigned char digest[EVP_MAX_MD_SIZE + 1];
     RSA* key = NULL;
     char* buffer = xmalloc(EVP_MAX_MD_SIZE * 4);
 
-    key = LoadPublicKey(pubkey);
+    key = LoadPublicKey(filename);
     if (NULL == key)
     {
         return NULL;
@@ -101,13 +105,26 @@ char* GetPubkeyDigest(const char* pubkey)
     return buffer;
 }
 
+/** Return a string with the printed digest of the given key file. */
+char* GetPubkeyDigest(RSA* pubkey)
+{
+    unsigned char digest[EVP_MAX_MD_SIZE + 1];
+    char* buffer = xmalloc(EVP_MAX_MD_SIZE * 4);
+
+    assert(NULL != pubkey);
+
+    HashPubKey(pubkey, digest, CF_DEFAULT_DIGEST);
+    HashPrintSafe(CF_DEFAULT_DIGEST, digest, buffer);
+    return buffer;
+}
+
 /*****************************************************************************/
 
 /** Print digest of the specified public key file.
     Return 0 on success and 1 on error. */
 int PrintDigest(const char* pubkey)
 {
-    char *digeststr = GetPubkeyDigest(pubkey);
+    char *digeststr = LoadPubkeyDigest(pubkey);
 
     if (NULL == digeststr)
     {
@@ -119,21 +136,38 @@ int PrintDigest(const char* pubkey)
     return 0; /* OK exitcode */
 }
 
-int TrustKey(const char* pubkey)
+/** Trust the given key.  If @c ipaddress is not @c NULL, then also
+ * update the "last seen" database.  The IP address is required for
+ * trusting a server key (on the client); it is -currently- optional
+ * for trusting a client key (on the server). */
+int TrustKey(const char* filename, const char* ipaddress)
 {
-    char *digeststr = GetPubkeyDigest(pubkey);
-    char outfilename[CF_BUFSIZE];
-    bool ok;
+    RSA* key = NULL;
+    char *digest = NULL;
+    char username[CF_SMALLBUF+1];
 
-    if (NULL == digeststr)
+    key = LoadPublicKey(filename);
+    if (NULL == key)
         return 1; /* ERROR exitcode */
 
-    snprintf(outfilename, CF_BUFSIZE, "%s/ppkeys/root-%s.pub", CFWORKDIR, digeststr);
-    free(digeststr);
+    digest = GetPubkeyDigest(key);
+    if (NULL == digest)
+        return 1; /* ERROR exitcode */
 
-    ok = CopyRegularFileDisk(pubkey, outfilename);
+/* determine username; same code (and bugs) as in ServerConnection() */
+#ifdef __MINGW32__
+    snprintf(username, CF_SMALLBUF, "root");
+#else
+    /* FIXME: username is local */
+    GetCurrentUserName(username, CF_SMALLBUF);
+#endif /* !__MINGW32__ */
 
-    return (ok? 0 : 1);
+    if (NULL != ipaddress)
+        LastSaw(ipaddress, digest, LAST_SEEN_ROLE_CONNECT);
+    SavePublicKey(username, digest, key);
+
+    free(digest);
+    return 0; /* OK exitcode */
 }
 
 bool ShowHost(const char *hostkey, const char *address, bool incoming,
@@ -177,7 +211,7 @@ int RemoveKeys(const char *host)
 
     if (Hostname2IPString(ipaddr, host, sizeof(ipaddr)) == -1)
     {
-        Log(LOG_LEVEL_ERR, 
+        Log(LOG_LEVEL_ERR,
             "ERROR, could not resolve '%s', not removing", host);
         return 255;
     }

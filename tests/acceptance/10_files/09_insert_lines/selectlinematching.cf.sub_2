@@ -1,0 +1,91 @@
+#######################################################
+#
+# Redmine 2778:
+#
+# A reduced form of the generating case.
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+vars:
+        "states" slist => { "actual", "expected" };
+
+        "actual" string =>
+"dnl #
+dnl define(`SMART_HOST', `smtp.your.provider')dnl
+dnl #";
+
+        "expected" string =>
+"dnl #
+dnl define(`SMART_HOST', `smtp.your.provider')dnl
+define(`SMART_HOST', `mail1.$m')dnl
+define(`MAIL_HUB', `mail1.$m')dnl
+dnl #";
+
+files:
+        "$(G.testfile).$(states)"
+            create => "true",
+            edit_line => init_insert("$(init.$(states))"),
+            edit_defaults => init_empty;
+}
+
+bundle edit_line init_insert(str)
+{
+insert_lines:
+        "$(str)";
+}
+
+body edit_defaults init_empty
+{
+        empty_file_before_editing => "true";
+}
+
+#######################################################
+
+bundle agent test
+{
+vars:
+      "hostname" string => "mail1.$m";
+
+files:
+        "$(G.testfile).actual"
+            create => "true",
+            edit_line => test_insert("$(hostname)");
+
+}
+
+bundle edit_line test_insert(h)
+{
+  insert_lines:
+# These sendmail "define" lines comprise a cfengine multi-line string.
+"define(`SMART_HOST', `$(h)')dnl
+define(`MAIL_HUB', `$(h)')dnl"
+      location => location_sendmail_mc;
+}
+
+body location location_sendmail_mc
+{
+  select_line_matching => "^dnl.*SMART_HOST.*";
+  before_after => "after";
+}
+
+#######################################################
+
+bundle agent check
+{
+methods:
+        "any" usebundle => default_check_diff("$(G.testfile).actual",
+                                              "$(G.testfile).expected",
+                                              "$(this.promise_filename)");
+}
+

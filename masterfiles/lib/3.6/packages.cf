@@ -106,14 +106,14 @@ package_list_update_ifelapsed => "240";
 
 have_aptitude::
    package_add_command => "$(debian_knowledge.call_aptitude) $(debian_knowledge.dpkg_options) --assume-yes install";
-   package_list_update_command => "/usr/bin/aptitude update";
+   package_list_update_command => "$(debian_knowledge.call_aptitude) update";
    package_delete_command => "$(debian_knowledge.call_aptitude) $(debian_knowledge.dpkg_options) --assume-yes -q remove";
    package_update_command =>  "$(debian_knowledge.call_aptitude) $(debian_knowledge.dpkg_options) --assume-yes install";
    package_patch_command =>  "$(debian_knowledge.call_aptitude) $(debian_knowledge.dpkg_options) --assume-yes install";
-   package_verify_command =>  "/usr/bin/aptitude show";
+   package_verify_command =>  "$(debian_knowledge.call_aptitude) show";
    package_noverify_regex => "(State: not installed|E: Unable to locate package .*)";
 
-   package_patch_list_command => "/usr/bin/aptitude --assume-yes --simulate --verbose full-upgrade";
+   package_patch_list_command => "$(debian_knowledge.call_aptitude) --assume-yes --simulate --verbose full-upgrade";
    package_patch_name_regex => "^Inst\s+(\S+)\s+.*";
    package_patch_version_regex => "^Inst\s+\S+\s+\[?\(?([^\],\s]+).*";
 
@@ -225,7 +225,7 @@ debian.i686::
    package_name_convention => "$(name)_$(version)_i386.deb";
 
 have_aptitude::
-   package_patch_list_command => "/usr/bin/aptitude --assume-yes --simulate --verbose full-upgrade";
+   package_patch_list_command => "$(debian_knowledge.call_aptitude) --assume-yes --simulate --verbose full-upgrade";
    package_patch_name_regex => "^Inst\s+(\S+)\s+.*";
    package_patch_version_regex => "^Inst\s+\S+\s+\[?\(?([^\],\s]+).*";
 !have_aptitude::
@@ -944,14 +944,14 @@ debian::
 
 debian.have_aptitude::
    package_add_command => "$(debian_knowledge.call_aptitude) $(debian_knowledge.dpkg_options) --assume-yes install";
-   package_list_update_command => "/usr/bin/aptitude update";
+   package_list_update_command => "$(debian_knowledge.call_aptitude) update";
    package_delete_command => "$(debian_knowledge.call_aptitude) $(debian_knowledge.dpkg_options) --assume-yes remove";
    package_update_command =>  "$(debian_knowledge.call_aptitude) $(debian_knowledge.dpkg_options) --assume-yes install";
    package_patch_command =>  "$(debian_knowledge.call_aptitude) $(debian_knowledge.dpkg_options) --assume-yes install";
-   package_verify_command =>  "/usr/bin/aptitude show";
+   package_verify_command =>  "$(debian_knowledge.call_aptitude) show";
    package_noverify_regex => "(State: not installed|E: Unable to locate package .*)";
 
-   package_patch_list_command => "/usr/bin/aptitude --assume-yes --simulate --verbose full-upgrade";
+   package_patch_list_command => "$(debian_knowledge.call_aptitude) --assume-yes --simulate --verbose full-upgrade";
    package_patch_name_regex => "^Inst\s+(\S+)\s+.*";
    package_patch_version_regex => "^Inst\s+\S+\s+\[?\(?([^\],\s]+).*";
 

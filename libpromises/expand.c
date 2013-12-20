@@ -840,7 +840,6 @@ Rval EvaluateFinalRval(EvalContext *ctx, const char *ns, const char *scope, Rval
     Rlist *rp;
     Rval returnval, newret;
     char naked[CF_MAXVARSIZE];
-    FnCall *fp;
 
     if ((rval.type == RVAL_TYPE_SCALAR) && IsNakedVar(rval.item, '@'))        /* Treat lists specially here */
     {
@@ -897,7 +896,7 @@ Rval EvaluateFinalRval(EvalContext *ctx, const char *ns, const char *scope, Rval
         {
             if (rp->val.type == RVAL_TYPE_FNCALL)
             {
-                fp = RlistFnCallValue(rp);
+                FnCall *fp = RlistFnCallValue(rp);
                 FnCallResult res = FnCallEvaluate(ctx, fp, pp);
 
                 FnCallDestroy(fp);
@@ -921,11 +920,12 @@ Rval EvaluateFinalRval(EvalContext *ctx, const char *ns, const char *scope, Rval
         break;
 
     case RVAL_TYPE_FNCALL:
-
-        // Also have to eval function now
-        fp = (FnCall *) returnval.item;
-        returnval = FnCallEvaluate(ctx, fp, pp).rval;
-        FnCallDestroy(fp);
+        if (FnCallIsBuiltIn(returnval))
+        {
+            FnCall *fp = RvalFnCallValue(returnval);
+            returnval = FnCallEvaluate(ctx, fp, pp).rval;
+            FnCallDestroy(fp);
+        }
         break;
 
     default:

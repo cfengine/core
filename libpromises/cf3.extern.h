@@ -43,7 +43,7 @@ extern char VDAY[];
 extern char VMONTH[];
 extern char VSHIFT[];
 
-extern const char *CLASSTEXT[];
+extern const char *const CLASSTEXT[];
 
 extern time_t CFSTARTTIME;
 
@@ -60,9 +60,9 @@ extern bool DONTDO;
 extern int IGNORELOCK;
 extern bool MINUSF;
 
-extern const char *VPSCOMM[];
-extern const char *VPSOPTS[];
-extern const char *VFSTAB[];
+extern const char *const VPSCOMM[];
+extern const char *const VPSOPTS[];
+extern const char *const VFSTAB[];
 
 extern int EDITFILESIZE;
 extern int VIFELAPSED;

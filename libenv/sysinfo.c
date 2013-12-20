@@ -1618,7 +1618,7 @@ static int Linux_Suse_Version(EvalContext *ctx)
     Log(LOG_LEVEL_VERBOSE, "This appears to be a SUSE system.");
     EvalContextClassPutHard(ctx, "SUSE", "inventory,source=agent,group=OS,comment=SUSE");
 
-    /* Keep this for backwards compatibility ("SUSE" used to be "SuSE") */
+    /* Keep this for backwards compatibility ("SUSE" used to be "SuSE") - remove in CFEngine 3.7 */
     EvalContextClassPutHard(ctx, "SuSE", "inventory,source=agent,group=OS,comment=SUSE,deprecated");
 
 /* Grab the first line from the file and then close it. */
@@ -1765,12 +1765,12 @@ static int Linux_Suse_Version(EvalContext *ctx)
                 strcat(classbuf, strminor);
                 EvalContextClassPutHard(ctx, classbuf, "inventory,source=agent,group=OS,comment=SUSE");
 
-                /* Keep this for backwards compatibility ("SUSE" used to be "SuSE") */
+                /* Keep this for backwards compatibility ("SUSE" used to be "SuSE") - remove in CFEngine 3.7 */
                 strcpy(classbuf, "SuSE");
                 EvalContextClassPutHard(ctx, classbuf, "inventory,source=agent,group=OS,comment=SUSE,deprecated");
                 strcat(classbuf, "_");
                 strcat(classbuf, strmajor);
-                SetFlavour(ctx, classbuf);
+                EvalContextClassPutHard(ctx, classbuf, "inventory,source=agent,group=OS,comment=SUSE,deprecated");
                 strcat(classbuf, "_");
                 strcat(classbuf, strminor);
                 EvalContextClassPutHard(ctx, classbuf, "inventory,source=agent,group=OS,comment=SUSE,deprecated");
@@ -1794,10 +1794,13 @@ static int Linux_Suse_Version(EvalContext *ctx)
                 strcat(classbuf, "_");
                 strcat(classbuf, strminor);
                 EvalContextClassPutHard(ctx, classbuf, "inventory,source=agent,group=OS,comment=SUSE");
+
                 snprintf(classbuf, CF_MAXVARSIZE, "SUSE_%d", major);
-                /* Keep this for backwards compatibility ("SUSE" used to be "SuSE") */
-                snprintf(classbuf, CF_MAXVARSIZE, "SuSE_%d", major);
                 SetFlavour(ctx, classbuf);
+
+                /* Keep this for backwards compatibility ("SUSE" used to be "SuSE") - remove in CFEngine 3.7 */
+                snprintf(classbuf, CF_MAXVARSIZE, "SuSE_%d", major);
+                EvalContextClassPutHard(ctx, classbuf, "inventory,source=agent,group=OS,comment=SUSE,deprecated");
 
                 Log(LOG_LEVEL_VERBOSE, "Discovered SUSE version %s", classbuf);
                 return 0;

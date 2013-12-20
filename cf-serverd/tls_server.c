@@ -580,6 +580,10 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
     memset(recvbuffer, 0, CF_BUFSIZE + CF_BUFEXT);
     memset(&get_args, 0, sizeof(get_args));
 
+    /* Legacy stuff only for old protocol */
+    assert(conn->rsa_auth == 1);
+    assert(conn->id_verified == 1);
+
     received = ReceiveTransaction(conn->conn_info, recvbuffer, NULL);
     if (received == -1 || received == 0)
     {
@@ -604,23 +608,9 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
         memset(args, 0, CF_BUFSIZE);
         sscanf(recvbuffer, "EXEC %255[^\n]", args);
 
-        if (!conn->id_verified)
-        {
-            Log(LOG_LEVEL_INFO, "Server refusal due to incorrect identity");
-            RefuseAccess(conn, 0, recvbuffer);
-            return false;
-        }
-
         if (!AllowedUser(conn->username))
         {
             Log(LOG_LEVEL_INFO, "Server refusal due to non-allowed user");
-            RefuseAccess(conn, 0, recvbuffer);
-            return false;
-        }
-
-        if (!conn->rsa_auth)
-        {
-            Log(LOG_LEVEL_INFO, "Server refusal due to no RSA authentication");
             RefuseAccess(conn, 0, recvbuffer);
             return false;
         }
@@ -645,15 +635,9 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
 
     case PROTOCOL_COMMAND_VERSION:
 
-        if (!conn->id_verified)
-        {
-            Log(LOG_LEVEL_INFO, "ID not verified");
-            RefuseAccess(conn, 0, recvbuffer);
-        }
-
         snprintf(conn->output, CF_BUFSIZE, "OK: %s", Version());
         SendTransaction(conn->conn_info, conn->output, 0, CF_DONE);
-        return conn->id_verified;
+        return true;
 
     case PROTOCOL_COMMAND_GET:
 
@@ -663,13 +647,6 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
         if ((get_args.buf_size < 0) || (get_args.buf_size > CF_BUFSIZE))
         {
             Log(LOG_LEVEL_INFO, "GET buffer out of bounds");
-            RefuseAccess(conn, 0, recvbuffer);
-            return false;
-        }
-
-        if (!conn->id_verified)
-        {
-            Log(LOG_LEVEL_INFO, "ID not verified");
             RefuseAccess(conn, 0, recvbuffer);
             return false;
         }
@@ -702,13 +679,6 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
         memset(filename, 0, CF_BUFSIZE);
         sscanf(recvbuffer, "OPENDIR %[^\n]", filename);
 
-        if (!conn->id_verified)
-        {
-            Log(LOG_LEVEL_INFO, "ID not verified");
-            RefuseAccess(conn, 0, recvbuffer);
-            return false;
-        }
-
         if (!AccessControl(ctx, filename, conn, true))        /* opendir don't care about privacy */
         {
             Log(LOG_LEVEL_INFO, "DIR access error");
@@ -720,13 +690,6 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
         return true;
 
     case PROTOCOL_COMMAND_SYNC:
-
-        if (!conn->id_verified)
-        {
-            Log(LOG_LEVEL_INFO, "ID not verified");
-            RefuseAccess(conn, 0, recvbuffer);
-            return false;
-        }
 
         memset(filename, 0, CF_BUFSIZE);
         sscanf(recvbuffer, "SYNCH %ld STAT %[^\n]", &time_no_see, filename);
@@ -772,24 +735,10 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
 
     case PROTOCOL_COMMAND_MD5:
 
-        if (!conn->id_verified)
-        {
-            Log(LOG_LEVEL_INFO, "ID not verified");
-            RefuseAccess(conn, 0, recvbuffer);
-            return true;
-        }
-
         CompareLocalHash(conn, sendbuffer, recvbuffer);
         return true;
 
     case PROTOCOL_COMMAND_VAR:
-
-        if (!conn->id_verified)
-        {
-            Log(LOG_LEVEL_INFO, "ID not verified");
-            RefuseAccess(conn, 0, recvbuffer);
-            return true;
-        }
 
         if (!LiteralAccessControl(ctx, recvbuffer, conn, encrypted))
         {
@@ -803,13 +752,6 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
 
     case PROTOCOL_COMMAND_CONTEXT:
 
-        if (!conn->id_verified)
-        {
-            Log(LOG_LEVEL_INFO, "ID not verified");
-            RefuseAccess(conn, 0, "Context probe");
-            return true;
-        }
-
         if ((classes = ContextAccessControl(ctx, recvbuffer, conn, encrypted)) == NULL)
         {
             Log(LOG_LEVEL_INFO, "Context access failure on %s", recvbuffer);
@@ -821,17 +763,6 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
         return true;
 
     case PROTOCOL_COMMAND_QUERY:
-
-        /*
-         * TLS has no authentication, therefore we need to remove this.
-         * Or find another way to do this.
-         */
-        if (!conn->id_verified)
-        {
-            Log(LOG_LEVEL_INFO, "ID not verified (here)");
-            RefuseAccess(conn, 0, recvbuffer);
-            return true;
-        }
 
         if (!LiteralAccessControl(ctx, recvbuffer, conn, encrypted))
         {
@@ -857,13 +788,6 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
             return false;
         }
         strcpy(filename, "CALL_ME_BACK collect_calls");
-
-        if (!conn->id_verified)
-        {
-            Log(LOG_LEVEL_INFO, "ID not verified");
-            RefuseAccess(conn, 0, recvbuffer);
-            return false;
-        }
 
         if (!LiteralAccessControl(ctx, filename, conn, true))
         {

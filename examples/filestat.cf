@@ -23,8 +23,8 @@
 #+begin_src prep
 #@ sudo rm /tmp/cfe_testhere.txt
 #@ echo 1234567890 > /tmp/cfe_testhere.txt
-#@ touch -a -d 2012 /tmp/cfe_testhere.txt
-#@ touch -m -d 2011 /tmp/cfe_testhere.txt
+#@ touch -a -d '2000-01-01 01:23:45' /tmp/cfe_testhere.txt
+#@ touch -m -d '2001-02-03 12:34:56' /tmp/cfe_testhere.txt
 #@ chmod 0755 /tmp/cfe_testhere.txt
 #@ sudo chown 0 /tmp/cfe_testhere.txt
 #@ sudo chgrp 0 /tmp/cfe_testhere.txt
@@ -63,19 +63,19 @@ bundle agent fileinfo(f)
 #+end_src
 ###############################################################################
 #+begin_src example_output
-#@ 2013-12-20T13:00:25-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /tmp/cfe_testhere.txt has size = 11
-#@ 2013-12-20T13:00:25-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /tmp/cfe_testhere.txt has gid = 0
-#@ 2013-12-20T13:00:25-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /tmp/cfe_testhere.txt has uid = 0
-#@ 2013-12-20T13:00:25-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /tmp/cfe_testhere.txt has nlink = 1
-#@ 2013-12-20T13:00:25-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /tmp/cfe_testhere.txt has atime = 1387588320
-#@ 2013-12-20T13:00:25-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /tmp/cfe_testhere.txt has mtime = 1387588260
-#@ 2013-12-20T13:00:25-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /tmp/cfe_testhere.txt has mode = 33261
-#@ 2013-12-20T13:00:25-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /tmp/cfe_testhere.txt has modeoct = 100755
-#@ 2013-12-20T13:00:25-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /tmp/cfe_testhere.txt has permstr = -rwxr-xr-x
-#@ 2013-12-20T13:00:25-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /tmp/cfe_testhere.txt has permoct = 755
-#@ 2013-12-20T13:00:25-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /tmp/cfe_testhere.txt has type = regular file
-#@ 2013-12-20T13:00:25-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /tmp/cfe_testhere.txt has basename = cfe_testhere.txt
-#@ 2013-12-20T13:00:25-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /tmp/cfe_testhere.txt has dirname = /tmp
-#@ 2013-12-20T13:00:25-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /tmp/cfe_testhere.txt has linktarget = /tmp/cfe_testhere.txt
-#@ 2013-12-20T13:00:25-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /tmp/cfe_testhere.txt has linktarget_shallow = /tmp/cfe_testhere.txt
+#@ 2013-12-21T16:06:55-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /tmp/cfe_testhere.txt has size = 11
+#@ 2013-12-21T16:06:55-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /tmp/cfe_testhere.txt has gid = 0
+#@ 2013-12-21T16:06:55-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /tmp/cfe_testhere.txt has uid = 0
+#@ 2013-12-21T16:06:55-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /tmp/cfe_testhere.txt has nlink = 1
+#@ 2013-12-21T16:06:55-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /tmp/cfe_testhere.txt has atime = 946707825
+#@ 2013-12-21T16:06:55-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /tmp/cfe_testhere.txt has mtime = 981221696
+#@ 2013-12-21T16:06:55-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /tmp/cfe_testhere.txt has mode = 33261
+#@ 2013-12-21T16:06:55-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /tmp/cfe_testhere.txt has modeoct = 100755
+#@ 2013-12-21T16:06:55-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /tmp/cfe_testhere.txt has permstr = -rwxr-xr-x
+#@ 2013-12-21T16:06:55-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /tmp/cfe_testhere.txt has permoct = 755
+#@ 2013-12-21T16:06:55-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /tmp/cfe_testhere.txt has type = regular file
+#@ 2013-12-21T16:06:55-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /tmp/cfe_testhere.txt has basename = cfe_testhere.txt
+#@ 2013-12-21T16:06:55-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /tmp/cfe_testhere.txt has dirname = /tmp
+#@ 2013-12-21T16:06:55-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /tmp/cfe_testhere.txt has linktarget = /tmp/cfe_testhere.txt
+#@ 2013-12-21T16:06:55-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /tmp/cfe_testhere.txt has linktarget_shallow = /tmp/cfe_testhere.txt
 #+end_src

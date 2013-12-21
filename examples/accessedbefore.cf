@@ -21,8 +21,8 @@
 # included file COSL.txt.
 
 #+begin_src prep
-#@ touch -a -d 2001 /tmp/earlier
-#@ touch -a -d 2002 /tmp/later
+#@ touch -a -d '2001-02-03 12:34:56' /tmp/earlier
+#@ touch -a -d '2002-02-03 12:34:56' /tmp/later
 #+end_src
 ###############################################################################
 #+begin_src cfengine3

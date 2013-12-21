@@ -39,8 +39,8 @@ Each input .cf file is scanned for three markers:
 (each command will be run before the cfengine3 code block)
 
 #+begin_src prep
-#@ touch -a -d 2001 /tmp/earlier
-#@ touch -a -d 2002 /tmp/later
+#@ touch -d '2001-02-03 12:34:56' /tmp/earlier
+#@ touch -d '2002-02-03 12:34:56' /tmp/later
 #+end_src
 
 3) required: an output code block

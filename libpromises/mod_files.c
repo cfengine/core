@@ -303,6 +303,7 @@ static const ConstraintSyntax copy_from_constraints[] =
     ConstraintSyntaxNewInt("portnumber", "1024,99999", "Port number to connect to on server host", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBool("preserve", "true/false whether to preserve file permissions on copied file. Default value: false", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBool("purge", "true/false purge files on client that do not match files on server when a depth_search is used. Default value: false", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewString("remote_variable_prefix", CF_IDRANGE, "Request that the remote tree root be at this location", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBool("stealth", "true/false whether to preserve time stamps on copied file. Default value: false", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewInt("timeout", "1,3600", "Connection timeout, seconds", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBool("trustkey", "true/false trust public keys from remote server if previously unknown. Default value: false", SYNTAX_STATUS_NORMAL),

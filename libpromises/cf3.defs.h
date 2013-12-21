@@ -1128,7 +1128,6 @@ typedef struct
     int encrypt;
     int verify;
     int purge;
-    char *remote_variable_prefix;
     unsigned short portnumber;
     short timeout;
 } FileCopy;

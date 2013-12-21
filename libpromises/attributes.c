@@ -916,7 +916,6 @@ FileCopy GetCopyConstraints(const EvalContext *ctx, const Promise *pp)
     f.encrypt = PromiseGetConstraintAsBoolean(ctx, "encrypt", pp);
     f.verify = PromiseGetConstraintAsBoolean(ctx, "verify", pp);
     f.purge = PromiseGetConstraintAsBoolean(ctx, "purge", pp);
-    f.remote_variable_prefix = PromiseGetConstraintAsRval(pp, "remote_variable_prefix", RVAL_TYPE_SCALAR);
     f.destination = NULL;
 
     return f;

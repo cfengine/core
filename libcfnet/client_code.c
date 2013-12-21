@@ -419,15 +419,6 @@ static AgentConnection *ServerConnection(const char *server, FileCopy fc, int *e
                 *err = -2; // auth err
                 return NULL;
             }
-
-            if (fc.remote_variable_prefix && !SetVariablePrefix(conn, fc.remote_variable_prefix))
-            {
-                Log(LOG_LEVEL_ERR, "Requested setting of the variable prefix to '%s' with '%s' failed", fc.remote_variable_prefix, server);
-                errno = EPERM; // TODO: new error code?
-                DisconnectServer(conn, false);
-                *err = -2; // auth err // TODO: new error code?
-                return NULL;
-            }
             ConnectionInfoSetConnectionStatus(conn->conn_info, CF_CONNECTION_ESTABLISHED);
             break;
 

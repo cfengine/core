@@ -582,7 +582,6 @@ typedef enum
     PROTOCOL_COMMAND_CONTEXT,
     PROTOCOL_COMMAND_QUERY,
     PROTOCOL_COMMAND_CALL_ME_BACK,
-    PROTOCOL_COMMAND_SETVARPREFIX,
     PROTOCOL_COMMAND_BAD
 } ProtocolCommandNew;
 
@@ -598,7 +597,6 @@ static const char *PROTOCOL_NEW[PROTOCOL_COMMAND_BAD + 1] =
     "CONTEXT",
     "QUERY",
     "SCALLBACK",
-    "SETVARPREFIX",
     NULL
 };
 
@@ -624,12 +622,11 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
 {
     time_t tloc, trem = 0;
     char recvbuffer[CF_BUFSIZE + CF_BUFEXT], sendbuffer[CF_BUFSIZE];
-    char filename[CF_BUFSIZE], temp_filename[CF_BUFSIZE], args[CF_BUFSIZE];
+    char filename[CF_BUFSIZE], args[CF_BUFSIZE];
     long time_no_see = 0;
-    int drift, received, scanned;
+    int drift, received;
     ServerFileGetState get_args;
     Item *classes;
-    char remote_variable_prefix[CF_BUFSIZE] = "";
 
     /* We never double encrypt within the TLS layer */
     const int encrypted = 0;
@@ -716,8 +713,7 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
     case PROTOCOL_COMMAND_GET:
 
         memset(filename, 0, CF_BUFSIZE);
-        memset(temp_filename, 0, CF_BUFSIZE);
-        sscanf(recvbuffer, "GET %d %[^\n]", &(get_args.buf_size), temp_filename);
+        sscanf(recvbuffer, "GET %d %[^\n]", &(get_args.buf_size), filename);
 
         if ((get_args.buf_size < 0) || (get_args.buf_size > CF_BUFSIZE))
         {
@@ -732,8 +728,6 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
             RefuseAccess(conn, 0, recvbuffer);
             return false;
         }
-
-        snprintf(filename, CF_BUFSIZE-1, "%s%s", remote_variable_prefix, temp_filename);
 
         if (!AccessControl(ctx, filename, conn, false))
         {
@@ -761,8 +755,7 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
     case PROTOCOL_COMMAND_OPENDIR:
 
         memset(filename, 0, CF_BUFSIZE);
-        memset(temp_filename, 0, CF_BUFSIZE);
-        sscanf(recvbuffer, "OPENDIR %[^\n]", temp_filename);
+        sscanf(recvbuffer, "OPENDIR %[^\n]", filename);
 
         if (!conn->id_verified)
         {
@@ -770,8 +763,6 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
             RefuseAccess(conn, 0, recvbuffer);
             return false;
         }
-
-        snprintf(filename, CF_BUFSIZE-1, "%s%s", remote_variable_prefix, temp_filename);
 
         if (!AccessControl(ctx, filename, conn, true))        /* opendir don't care about privacy */
         {
@@ -793,12 +784,9 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
         }
 
         memset(filename, 0, CF_BUFSIZE);
-        memset(temp_filename, 0, CF_BUFSIZE);
-        sscanf(recvbuffer, "SYNCH %ld STAT %[^\n]", &time_no_see, temp_filename);
+        sscanf(recvbuffer, "SYNCH %ld STAT %[^\n]", &time_no_see, filename);
 
         trem = (time_t) time_no_see;
-
-        snprintf(filename, CF_BUFSIZE-1, "%s%s", remote_variable_prefix, temp_filename);
 
         if ((time_no_see == 0) || (filename[0] == '\0'))
         {
@@ -917,7 +905,6 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
     case PROTOCOL_COMMAND_CALL_ME_BACK:
 
         memset(filename, 0, CF_BUFSIZE);
-        memset(temp_filename, 0, CF_BUFSIZE);
         if (strncmp(recvbuffer, "SCALLBACK CALL_ME_BACK collect_calls", strlen("SCALLBACK CALL_ME_BACK collect_calls")) != 0)
         {
             Log(LOG_LEVEL_INFO, "CALL_ME_BACK protocol defect");
@@ -940,28 +927,6 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
             return false;
         }
         return ReceiveCollectCall(conn);
-
-    case PROTOCOL_COMMAND_SETVARPREFIX:
-
-        scanned = sscanf(recvbuffer, "SETVARPREFIX %[^\n]", remote_variable_prefix);
-
-        if (!conn->id_verified)
-        {
-            Log(LOG_LEVEL_INFO, "ID not verified");
-            RefuseAccess(conn, 0, recvbuffer);
-            return false;
-        }
-
-        if (scanned != 1)
-        {
-            Log(LOG_LEVEL_INFO, "Remote variable prefix setting was not parseable");
-            RefuseAccess(conn, 0, recvbuffer);
-            return false;
-        }
-
-        // TODO: evaluate remote_variable_prefix in the cf-serverd EvalContext
-        Log(LOG_LEVEL_INFO, "Remote variable prefix was set to '%s'", remote_variable_prefix);
-        return true;
 
     case PROTOCOL_COMMAND_BAD:
         Log(LOG_LEVEL_WARNING, "Unexpected protocol command: %s", recvbuffer);

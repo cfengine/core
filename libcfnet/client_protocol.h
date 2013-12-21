@@ -30,7 +30,6 @@
 
 int IdentifyAgent(ConnectionInfo *connection);
 int AuthenticateAgent(AgentConnection *conn, bool trust_key);
-int SetVariablePrefix(AgentConnection *conn, char *remote_variable_prefix);
 int BadProtoReply(char *buf);
 int OKProtoReply(char *buf);
 int FailedProtoReply(char *buf);

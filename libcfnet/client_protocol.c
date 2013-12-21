@@ -168,26 +168,6 @@ int IdentifyAgent(ConnectionInfo *conn_info)
 
 /*********************************************************************/
 
-int SetVariablePrefix(AgentConnection *conn, char *remote_variable_prefix)
-{
-    char sendbuff[CF_BUFSIZE];
-
-    assert(NULL != remote_variable_prefix);
-    snprintf(sendbuff, sizeof(sendbuff), "SETVARPREFIX %s",
-             remote_variable_prefix);
-
-    if (SendTransaction(conn->conn_info, sendbuff, 0, CF_DONE) == -1)
-    {
-        Log(LOG_LEVEL_ERR,
-              "During initial agent connection, could not set remote_variable_prefix. (SendTransaction: %s)", GetErrorStr());
-        return false;
-    }
-
-    return true;
-}
-
-/*********************************************************************/
-
 static bool SetSessionKey(AgentConnection *conn)
 {
     BIGNUM *bp;

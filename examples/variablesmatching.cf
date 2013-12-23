@@ -30,38 +30,16 @@ bundle agent run
 {
   vars:
       "all" slist => variablesmatching(".*");
-      "v" slist => variablesmatching("default:sys.cf_.*");
-      "v_internal" slist => variablesmatching(".*", "cfe_internal");
+      "v" slist => variablesmatching("default:sys.cf_version.*");
   reports:
-      "Variables matching 'default:sys.cf_' = $(v)";
-      "CFEngine internal variables: $(v_internal)";
+      "Variables matching 'default:sys.cf_version.*' = $(v)";
 }
 
 #+end_src
 ###############################################################################
 #+begin_src example_output
-#@ 2013-12-20T12:48:39-0500   notice: /default/run: R: Variables matching 'default:sys.cf_' = default:sys.cf_agent
-#@ 2013-12-20T12:48:39-0500   notice: /default/run: R: Variables matching 'default:sys.cf_' = default:sys.cf_execd
-#@ 2013-12-20T12:48:39-0500   notice: /default/run: R: Variables matching 'default:sys.cf_' = default:sys.cf_twin
-#@ 2013-12-20T12:48:39-0500   notice: /default/run: R: Variables matching 'default:sys.cf_' = default:sys.cf_key
-#@ 2013-12-20T12:48:39-0500   notice: /default/run: R: Variables matching 'default:sys.cf_' = default:sys.cf_version_major
-#@ 2013-12-20T12:48:39-0500   notice: /default/run: R: Variables matching 'default:sys.cf_' = default:sys.cf_version_patch
-#@ 2013-12-20T12:48:39-0500   notice: /default/run: R: Variables matching 'default:sys.cf_' = default:sys.cf_promises
-#@ 2013-12-20T12:48:39-0500   notice: /default/run: R: Variables matching 'default:sys.cf_' = default:sys.cf_version
-#@ 2013-12-20T12:48:39-0500   notice: /default/run: R: Variables matching 'default:sys.cf_' = default:sys.cf_runagent
-#@ 2013-12-20T12:48:39-0500   notice: /default/run: R: Variables matching 'default:sys.cf_' = default:sys.cf_serverd
-#@ 2013-12-20T12:48:39-0500   notice: /default/run: R: Variables matching 'default:sys.cf_' = default:sys.cf_report
-#@ 2013-12-20T12:48:39-0500   notice: /default/run: R: Variables matching 'default:sys.cf_' = default:sys.cf_version_minor
-#@ 2013-12-20T12:48:39-0500   notice: /default/run: R: Variables matching 'default:sys.cf_' = default:sys.cf_monitord
-#@ 2013-12-20T12:48:39-0500   notice: /default/run: R: Variables matching 'default:sys.cf_' = default:sys.cf_know
-#@ 2013-12-20T12:48:39-0500   notice: /default/run: R: CFEngine internal variables: default:sys.cf_agent
-#@ 2013-12-20T12:48:39-0500   notice: /default/run: R: CFEngine internal variables: default:sys.cf_execd
-#@ 2013-12-20T12:48:39-0500   notice: /default/run: R: CFEngine internal variables: default:sys.cf_twin
-#@ 2013-12-20T12:48:39-0500   notice: /default/run: R: CFEngine internal variables: default:sys.cf_key
-#@ 2013-12-20T12:48:39-0500   notice: /default/run: R: CFEngine internal variables: default:sys.cf_promises
-#@ 2013-12-20T12:48:39-0500   notice: /default/run: R: CFEngine internal variables: default:sys.cf_runagent
-#@ 2013-12-20T12:48:39-0500   notice: /default/run: R: CFEngine internal variables: default:sys.cf_serverd
-#@ 2013-12-20T12:48:39-0500   notice: /default/run: R: CFEngine internal variables: default:sys.cf_report
-#@ 2013-12-20T12:48:39-0500   notice: /default/run: R: CFEngine internal variables: default:sys.cf_monitord
-#@ 2013-12-20T12:48:39-0500   notice: /default/run: R: CFEngine internal variables: default:sys.cf_know
+#@ 2013-12-23T13:46:50-0500   notice: /default/run: R: Variables matching 'default:sys.cf_version.*' = default:sys.cf_version_major
+#@ 2013-12-23T13:46:50-0500   notice: /default/run: R: Variables matching 'default:sys.cf_version.*' = default:sys.cf_version_patch
+#@ 2013-12-23T13:46:50-0500   notice: /default/run: R: Variables matching 'default:sys.cf_version.*' = default:sys.cf_version
+#@ 2013-12-23T13:46:50-0500   notice: /default/run: R: Variables matching 'default:sys.cf_version.*' = default:sys.cf_version_minor
 #+end_src

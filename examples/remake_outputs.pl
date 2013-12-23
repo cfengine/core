@@ -4,6 +4,7 @@ use warnings;
 use strict;
 use Data::Dumper;
 use Getopt::Long;
+use File::Basename;
 
 $|=1;                                   # autoflush
 
@@ -12,19 +13,21 @@ my %options = (
                verbose => 0,
                help => 0,
                cfagent => "../cf-agent/cf-agent",
+               workdir => "/tmp",
               );
 
 GetOptions(\%options,
            "help|h!",
            "check|c!",
            "cfagent=s",
+           "workdir=s",
            "verbose!",
     );
 
 if ($options{help})
 {
  print <<EOHIPPUS;
-Syntax: $0 [-c|--check] [-v|--verbose] FILE1.cf FILE2.cf ...
+Syntax: $0 [-c|--check] [-v|--verbose] [--cfagent=PATH] [--workdir=WORKDIR] FILE1.cf FILE2.cf ...
 
 Generate the output section of CFEngine code example.
 
@@ -32,6 +35,11 @@ With -c or --check, the script reports if the output is different but doesn't
 write it.
 
 With -v or --verbose, the script shows the full output of each test.
+
+The --workdir path, defaulting to /tmp, is used for storing the example to be
+run.
+
+The --cfagent path, defaulting to ../cf-agent/cf-agent, is the cf-agent path.
 
 Each input .cf file is scanned for three markers:
 
@@ -150,21 +158,24 @@ sub run_example
     my $prep = shift @_ || [];
     my $example = shift @_;
 
+    my $base = basename($file);
+    my $tempfile = "$options{workdir}/$base";
+    mkdir $options{workdir};
+    open my $fh, '>', $tempfile or die "Could not write to $tempfile: $!";
+    print $fh $example;
+    close $fh;
+
     foreach (@$prep)
     {
         s/^#@ //;
+        s/FILE/$tempfile/g;
         print "processing $file: Running prep '$_'"
          if $options{verbose};
         system($_);
     }
 
-    my $tempfile = '/tmp/example.cf';
-    open my $fh, '>', $tempfile or die "Could not write to $tempfile: $!";
-    print $fh $example;
-    close $fh;
-
     my $cmd = "$options{cfagent} -nKf $tempfile 2>&1";
-    $ENV{EXAMPLE} = $tempfile;
+    $ENV{EXAMPLE} = $base;
     open my $ofh, '-|', $cmd;
     my $output = join '', <$ofh>;
     close $ofh;

@@ -11,11 +11,13 @@ my %options = (
                check => 0,
                verbose => 0,
                help => 0,
+               cfagent => "../cf-agent/cf-agent",
               );
 
 GetOptions(\%options,
            "help|h!",
-           "check!",
+           "check|c!",
+           "cfagent=s",
            "verbose!",
     );
 
@@ -151,7 +153,8 @@ sub run_example
     foreach (@$prep)
     {
         s/^#@ //;
-        warn "processing $file: Running prep '$_'";
+        print "processing $file: Running prep '$_'"
+         if $options{verbose};
         system($_);
     }
 
@@ -160,7 +163,7 @@ sub run_example
     print $fh $example;
     close $fh;
 
-    my $cmd = "../cf-agent/cf-agent -nKf $tempfile 2>&1";
+    my $cmd = "$options{cfagent} -nKf $tempfile 2>&1";
     $ENV{EXAMPLE} = $tempfile;
     open my $ofh, '-|', $cmd;
     my $output = join '', <$ofh>;

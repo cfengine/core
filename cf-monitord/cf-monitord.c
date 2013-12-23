@@ -186,7 +186,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
                 GenericAgentWriteVersion(w);
                 FileWriterDetach(w);
             }
-            exit(0);
+            exit(EXIT_SUCCESS);
 
         case 'h':
             {
@@ -194,7 +194,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
                 GenericAgentWriteHelp(w, "cf-monitord", OPTIONS, HINTS, true);
                 FileWriterDetach(w);
             }
-            exit(0);
+            exit(EXIT_SUCCESS);
 
         case 'M':
             {
@@ -210,7 +210,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
 
         case 'x':
             Log(LOG_LEVEL_ERR, "Self-diagnostic functionality is retired.");
-            exit(0);
+            exit(EXIT_SUCCESS);
 
         case 'C':
             if (!GenericAgentConfigParseColor(config, optarg))
@@ -225,7 +225,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
                 GenericAgentWriteHelp(w, "cf-monitord", OPTIONS, HINTS, true);
                 FileWriterDetach(w);
             }
-            exit(1);
+            exit(EXIT_FAILURE);
         }
     }
 

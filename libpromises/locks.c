@@ -401,7 +401,7 @@ static void LogLockCompletion(char *cflog, int pid, char *str, char *op, char *o
     if ((fp = fopen(cflog, "a")) == NULL)
     {
         Log(LOG_LEVEL_ERR, "Can't open lock-log file '%s'. (fopen: %s)", cflog, GetErrorStr());
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     if ((tim = time((time_t *) NULL)) == -1)

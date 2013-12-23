@@ -130,7 +130,7 @@ static void TestCursorIteration(CF_DB *db)
     {
         fprintf(stderr, "Test: could not create cursor");
         pthread_exit((void*)STATUS_ERROR);
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     char *key;
@@ -176,7 +176,7 @@ static void TestCursorIteration(CF_DB *db)
     if(!DeleteDBCursor(dbc))
     {
         fprintf(stderr, "Test: could not delete cursor");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
 }
@@ -213,7 +213,7 @@ int main(int argc, char **argv)
     if (argc != 2)
     {
         fprintf(stderr, "Usage: db_load <num_threads>\n");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     /* To clean up after databases are closed */
@@ -327,7 +327,7 @@ void FatalError(const EvalContext *ctx, char *fmt, ...)
         Log(LOG_LEVEL_ERR, "Fatal CFEngine error (no description)");
     }
 
-    exit(1);
+    exit(EXIT_FAILURE);
 }
 
 

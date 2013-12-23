@@ -242,11 +242,11 @@ int main(int argc, char **argv)
 
     if (rstreq(argv[2], "lt"))
     {
-        exit(rc == -1 ? 0 : 1);
+        exit(rc == -1 ? EXIT_SUCCESS : EXIT_FAILURE);
     }
     else
     {
-        exit(rc == 0 ? 0 : 1);
+        exit(rc == 0 ? EXIT_SUCCESS : EXIT_FAILURE);
     }
 }
 

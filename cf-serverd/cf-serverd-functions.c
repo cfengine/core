@@ -196,7 +196,7 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
                 GenericAgentWriteVersion(w);
                 FileWriterDetach(w);
             }
-            exit(0);
+            exit(EXIT_SUCCESS);
 
         case 'h':
             {
@@ -204,7 +204,7 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
                 GenericAgentWriteHelp(w, "cf-serverd", OPTIONS, HINTS, true);
                 FileWriterDetach(w);
             }
-            exit(0);
+            exit(EXIT_SUCCESS);
 
         case 'M':
             {
@@ -220,22 +220,22 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
 
         case 'x':
             Log(LOG_LEVEL_ERR, "Self-diagnostic functionality is retired.");
-            exit(0);
+            exit(EXIT_SUCCESS);
         case 'A':
 #ifdef HAVE_AVAHI_CLIENT_CLIENT_H
 #ifdef HAVE_AVAHI_COMMON_ADDRESS_H
             Log(LOG_LEVEL_NOTICE, "Generating Avahi configuration file.");
             if (GenerateAvahiConfig("/etc/avahi/services/cfengine-hub.service") != 0)
             {
-                exit(1);
+                exit(EXIT_FAILURE);
             }
             cf_popen("/etc/init.d/avahi-daemon restart", "r", true);
             Log(LOG_LEVEL_NOTICE, "Avahi configuration file generated successfuly.");
-            exit(0);
+            exit(EXIT_SUCCESS);
 #endif
 #endif
             Log(LOG_LEVEL_ERR, "Generating avahi configuration can only be done when avahi-daemon and libavahi are installed on the machine.");
-            exit(0);
+            exit(EXIT_SUCCESS);
 
         case 'C':
             if (!GenericAgentConfigParseColor(config, optarg))
@@ -250,7 +250,7 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
                 GenericAgentWriteHelp(w, "cf-serverd", OPTIONS, HINTS, true);
                 FileWriterDetach(w);
             }
-            exit(1);
+            exit(EXIT_FAILURE);
 
         }
     }
@@ -338,7 +338,7 @@ void StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
 
     if ((!NO_FORK) && (fork() != 0))
     {
-        _exit(0);
+        _exit(EXIT_SUCCESS);
     }
 
     if (!NO_FORK)
@@ -411,7 +411,7 @@ void StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
                 else
                 {
                     Log(LOG_LEVEL_ERR, "select failed. (select: %s)", GetErrorStr());
-                    exit(1);
+                    exit(EXIT_FAILURE);
                 }
             }
             else if (!ret_val) /* No data waiting, we must have timed out! */
@@ -455,13 +455,13 @@ int InitServer(size_t queue_size)
     if ((sd = OpenReceiverChannel()) == -1)
     {
         Log(LOG_LEVEL_ERR, "Unable to start server");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     if (listen(sd, queue_size) == -1)
     {
         Log(LOG_LEVEL_ERR, "listen failed. (listen: %s)", GetErrorStr());
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     return sd;
@@ -506,7 +506,7 @@ int OpenReceiverChannel(void)
                        &yes, sizeof(yes)) == -1)
         {
             Log(LOG_LEVEL_ERR, "Socket option SO_REUSEADDR was not accepted. (setsockopt: %s)", GetErrorStr());
-            exit(1);
+            exit(EXIT_FAILURE);
         }
 
         struct linger cflinger = {
@@ -517,7 +517,7 @@ int OpenReceiverChannel(void)
                        &cflinger, sizeof(cflinger)) == -1)
         {
             Log(LOG_LEVEL_ERR, "Socket option SO_LINGER was not accepted. (setsockopt: %s)", GetErrorStr());
-            exit(1);
+            exit(EXIT_FAILURE);
         }
 
         if (bind(sd, ap->ai_addr, ap->ai_addrlen) != -1)
@@ -544,7 +544,7 @@ int OpenReceiverChannel(void)
     if (sd < 0)
     {
         Log(LOG_LEVEL_ERR, "Couldn't open/bind a socket");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     freeaddrinfo(response);

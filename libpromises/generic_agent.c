@@ -1111,14 +1111,14 @@ static Policy *Cf3ParseFile(const GenericAgentConfig *config, const char *input_
         }
 
         Log(LOG_LEVEL_ERR, "Can't stat file '%s' for parsing. (stat: %s)", input_path, GetErrorStr());
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
 #ifndef _WIN32
     if (config->check_not_writable_by_others && (statbuf.st_mode & (S_IWGRP | S_IWOTH)))
     {
         Log(LOG_LEVEL_ERR, "File %s (owner %ju) is writable by others (security exception)", input_path, (uintmax_t)statbuf.st_uid);
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 #endif
 
@@ -1127,7 +1127,7 @@ static Policy *Cf3ParseFile(const GenericAgentConfig *config, const char *input_
     if (!FileCanOpen(input_path, "r"))
     {
         Log(LOG_LEVEL_ERR, "Can't open file '%s' for parsing", input_path);
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     Policy *policy = NULL;

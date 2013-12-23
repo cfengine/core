@@ -58,7 +58,7 @@ void child_cycle(int channel)
     {
         message = -1;
         result = write(channel, &message, sizeof(int));
-        exit(0);
+        exit(EXIT_SUCCESS);
     }
     /*
      * Create a unix socket
@@ -79,7 +79,7 @@ void child_cycle(int channel)
     {
         message = -1;
         result = write(channel, &message, sizeof(int));
-        exit(0);
+        exit(EXIT_SUCCESS);
     }
     /*
      * Start listening for connections
@@ -89,7 +89,7 @@ void child_cycle(int channel)
     {
         message = -1;
         result = write(channel, &message, sizeof(int));
-        exit(0);
+        exit(EXIT_SUCCESS);
     }
     /*
      * Signal the parent that we are ok.
@@ -100,7 +100,7 @@ void child_cycle(int channel)
      */
     if (result < 0)
     {
-        exit(0);
+        exit(EXIT_SUCCESS);
     }
     /*
      * Send the name of the public key file.
@@ -108,7 +108,7 @@ void child_cycle(int channel)
     result = write(channel, server_name_template_public, strlen(server_name_template_public));
     if (result < 0)
     {
-        exit(0);
+        exit(EXIT_SUCCESS);
     }
     /*
      * Send the name of the certificate file.
@@ -116,7 +116,7 @@ void child_cycle(int channel)
     result = write(channel, server_certificate_template_public, strlen(server_certificate_template_public));
     if (result < 0)
     {
-        exit(0);
+        exit(EXIT_SUCCESS);
     }
     /*
      * Now wait until somebody calls.
@@ -180,7 +180,7 @@ void child_cycle(int channel)
         SSL_free(ssl);
         remote_socket = -1;
     }
-    exit(0);
+    exit(EXIT_SUCCESS);
 }
 
 int start_child_process()

@@ -7,5 +7,5 @@ MAINTAINERCLEANFILES = Makefile.in mdate-sh
 remake:
 	perl ./remake_outputs.pl $(shell grep -l example_output $(dist_examples_DATA))
 
-check:
+recheck:
 	perl ./remake_outputs.pl -c $(shell grep -l example_output $(dist_examples_DATA))

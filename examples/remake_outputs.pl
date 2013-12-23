@@ -9,23 +9,27 @@ $|=1;                                   # autoflush
 
 my %options = (
                check => 0,
+               verbose => 0,
                help => 0,
               );
 
 GetOptions(\%options,
            "help|h!",
            "check!",
+           "verbose!",
     );
 
 if ($options{help})
 {
  print <<EOHIPPUS;
-Syntax: $0 [-c|--check] FILE1.cf FILE2.cf ...
+Syntax: $0 [-c|--check] [-v|--verbose] FILE1.cf FILE2.cf ...
 
 Generate the output section of CFEngine code example.
 
 With -c or --check, the script reports if the output is different but doesn't
 write it.
+
+With -v or --verbose, the script shows the full output of each test.
 
 Each input .cf file is scanned for three markers:
 
@@ -156,9 +160,13 @@ sub run_example
     print $fh $example;
     close $fh;
 
+    my $cmd = "../cf-agent/cf-agent -nKf $tempfile 2>&1";
     $ENV{EXAMPLE} = $tempfile;
-    open my $ofh, '-|', "../cf-agent/cf-agent -nKf $tempfile 2>&1";
+    open my $ofh, '-|', $cmd;
     my $output = join '', <$ofh>;
     close $ofh;
+
+    print "Test file: $file\nCommand: $cmd\nOutput: $output\n\n\n"
+     if $options{verbose};
     return $output;
 }

@@ -75,7 +75,7 @@ static void chdir_or_exit(const char *path)
     if (chdir(path) < 0)
     {
         // Don't risk writing into folders we shouldn't. Just bail.
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 }
 
@@ -137,7 +137,7 @@ static void return_to_test_dir(void)
     if (fchdir(ORIG_DIR) < 0)
     {
         // Don't risk writing into folders we shouldn't. Just bail.
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 }
 

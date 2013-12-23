@@ -175,7 +175,7 @@ void ConfigurationAddArgument(Configuration *configuration, char *argument)
     {
         log_entry(LogCritical, "A maximum of %d arguments can be specified, aborting",
                   CF_UPGRADE_MAX_ARGUMENTS);
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 }
 

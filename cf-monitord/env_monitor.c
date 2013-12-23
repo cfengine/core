@@ -284,7 +284,7 @@ void MonitorStartServer(EvalContext *ctx, const Policy *policy)
     if ((!NO_FORK) && (fork() != 0))
     {
         Log(LOG_LEVEL_INFO, "cf-monitord: starting");
-        _exit(0);
+        _exit(EXIT_SUCCESS);
     }
 
     if (!NO_FORK)
@@ -369,7 +369,7 @@ static Averages EvalAvQ(EvalContext *ctx, char *t)
     if ((lastweek_vals = GetCurrentAverages(t)) == NULL)
     {
         Log(LOG_LEVEL_ERR, "Error reading average database");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
 /* Discard any apparently anomalous behaviour before renormalizing database */

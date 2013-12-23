@@ -178,7 +178,7 @@ promise_type   [a-zA-Z_]+:
                       if ( include_stack_ptr >= MAX_INCLUDE_DEPTH )
                       {
                           ParserDebug("\tI: Includes nested too deeply\n" );
-                          exit( 1 );
+                          exit(EXIT_FAILURE);
                       }
                       BEGIN(incl_state);
                       }
@@ -209,7 +209,7 @@ promise_type   [a-zA-Z_]+:
 
                                    snprintf(error_str, CF_MAXVARSIZE, "\tI: Could not resolve realpath of file '%s': %s\n", P.filename, strerror(errno));
                                    yyerror(error_str);
-                                   exit(1);
+                                   exit(EXIT_FAILURE);
                                }
 
                                char *chop = strrchr(dirname, '/');
@@ -238,7 +238,7 @@ promise_type   [a-zA-Z_]+:
 
                               snprintf(error_str, CF_MAXVARSIZE, "\tI: Could not open file '%s' for reading: %s\n", fname, strerror(errno));
                               yyerror(error_str);
-                              exit(1);
+                              exit(EXIT_FAILURE);
                           }
                           else
                           {
@@ -255,7 +255,7 @@ promise_type   [a-zA-Z_]+:
 
 <incl_state>.[^'"]*   {
                           yyerror("Not a valid include statement");
-                          exit(1);
+                          exit(EXIT_FAILURE);
                       }
 
 

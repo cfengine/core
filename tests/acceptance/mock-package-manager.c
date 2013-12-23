@@ -307,7 +307,7 @@ static void AddPackage(PackagePattern *pattern)
     if (SeqLength(matching_available) == 0)
     {
         fprintf(stderr, "Unable to find any package matching %s\n", SerializePackagePattern(pattern));
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     for (size_t i = 0; i < SeqLength(matching_available); i++)
@@ -319,7 +319,7 @@ static void AddPackage(PackagePattern *pattern)
         if (SeqLength(FindPackages(INSTALLED_PACKAGES_FILE_NAME, pat)) > 0)
         {
             fprintf(stderr, "Package %s is already installed.\n", SerializePackage(p));
-            exit(1);
+            exit(EXIT_FAILURE);
         }
     }
 
@@ -334,7 +334,7 @@ static void AddPackage(PackagePattern *pattern)
     }
 
     SavePackages(INSTALLED_PACKAGES_FILE_NAME, installed_packages);
-    exit(0);
+    exit(EXIT_SUCCESS);
 }
 
 /******************************************************************************/
@@ -434,7 +434,7 @@ int main(int argc, char *argv[])
                 GenericAgentWriteHelp(w, "mock-package-manager - pretend that you are managing packages!", OPTIONS, HINTS, false);
                 FileWriterDetach(w);
             }
-            exit(1);
+            exit(EXIT_FAILURE);
         }
 
     }

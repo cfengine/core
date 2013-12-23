@@ -180,7 +180,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
                 GenericAgentWriteVersion(w);
                 FileWriterDetach(w);
             }
-            exit(0);
+            exit(EXIT_SUCCESS);
 
         case 'v':
             LogSetGlobalLevel(LOG_LEVEL_VERBOSE);
@@ -214,7 +214,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
                 GenericAgentWriteHelp(w, "cf-key", OPTIONS, HINTS, false);
                 FileWriterDetach(w);
             }
-            exit(0);
+            exit(EXIT_SUCCESS);
 
         case 'M':
             {
@@ -241,7 +241,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
                 GenericAgentWriteHelp(w, "cf-key", OPTIONS, HINTS, false);
                 FileWriterDetach(w);
             }
-            exit(1);
+            exit(EXIT_FAILURE);
 
         }
     }

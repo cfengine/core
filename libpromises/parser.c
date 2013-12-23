@@ -99,7 +99,7 @@ Policy *ParserParseFile(AgentType agent_type, const char *path, unsigned int war
     if (yyin == NULL)
     {
         Log(LOG_LEVEL_ERR, "While opening file '%s' for parsing. (fopen: %s)", path, GetErrorStr());
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     while (!feof(yyin))
@@ -109,7 +109,7 @@ Policy *ParserParseFile(AgentType agent_type, const char *path, unsigned int war
         if (ferror(yyin))
         {
             perror("cfengine");
-            exit(1);
+            exit(EXIT_FAILURE);
         }
     }
 

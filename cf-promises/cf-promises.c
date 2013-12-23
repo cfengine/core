@@ -296,7 +296,7 @@ GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
                 GenericAgentWriteVersion(w);
                 FileWriterDetach(w);
             }
-            exit(0);
+            exit(EXIT_SUCCESS);
 
         case 'h':
             {
@@ -304,7 +304,7 @@ GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
                 GenericAgentWriteHelp(w, "cf-promises", OPTIONS, HINTS, true);
                 FileWriterDetach(w);
             }
-            exit(0);
+            exit(EXIT_SUCCESS);
 
         case 'M':
             {
@@ -332,7 +332,7 @@ GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
 
         case 'x':
             Log(LOG_LEVEL_ERR, "Self-diagnostic functionality is retired.");
-            exit(0);
+            exit(EXIT_SUCCESS);
 
         case 'C':
             if (!GenericAgentConfigParseColor(config, optarg))
@@ -347,7 +347,7 @@ GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
                 GenericAgentWriteHelp(w, "cf-promises", OPTIONS, HINTS, true);
                 FileWriterDetach(w);
             }
-            exit(1);
+            exit(EXIT_FAILURE);
 
         }
     }

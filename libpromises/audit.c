@@ -160,7 +160,7 @@ void FatalError(const EvalContext *ctx, char *s, ...)
 
     EndAudit(ctx, 0);
 #ifdef NDEBUG
-    exit(1);
+    exit(EXIT_FAILURE);
 #else
     abort();
 #endif

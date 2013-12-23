@@ -51,7 +51,7 @@ void MakeSignalPipe()
     {
         Log(LOG_LEVEL_CRIT, "Could not create internal communication pipe. Cannot continue. (socketpair: '%s')",
             GetErrorStr());
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     for (int c = 0; c < 2; c++)
@@ -61,7 +61,7 @@ void MakeSignalPipe()
         {
             Log(LOG_LEVEL_CRIT, "Could not create internal communication pipe. Cannot continue. (fcntl: '%s')",
                 GetErrorStr());
-            exit(1);
+            exit(EXIT_FAILURE);
         }
 #else // __MINGW32__
         u_long enable = 1;
@@ -69,7 +69,7 @@ void MakeSignalPipe()
         {
             Log(LOG_LEVEL_CRIT, "Could not create internal communication pipe. Cannot continue. (ioctlsocket: '%s')",
                 GetErrorStr());
-            exit(1);
+            exit(EXIT_FAILURE);
         }
 #endif // __MINGW32__
     }
@@ -91,7 +91,7 @@ void HandleSignalsForAgent(int signum)
     {
         /* TODO don't exit from the signal handler, just set a flag. Reason is
          * that all the atexit() hooks we register are not reentrant. */
-        exit(0);
+        exit(EXIT_SUCCESS);
     }
     else if (signum == SIGUSR1)
     {
@@ -119,7 +119,7 @@ void HandleSignalsForAgent(int signum)
                 // going on.
                 Log(LOG_LEVEL_CRIT, "Could not write to signal pipe. Unsafe to continue. (write: '%s')",
                     GetErrorStr());
-                _exit(1);
+                _exit(EXIT_FAILURE);
             }
         }
     }
@@ -163,7 +163,7 @@ void HandleSignalsForDaemon(int signum)
                 // going on.
                 Log(LOG_LEVEL_CRIT, "Could not write to signal pipe. Unsafe to continue. (write: '%s')",
                     GetErrorStr());
-                _exit(1);
+                _exit(EXIT_FAILURE);
             }
         }
     }

@@ -167,7 +167,7 @@ int main(int argc, char *argv[])
     if (BACKGROUND && INTERACTIVE)
     {
         Log(LOG_LEVEL_ERR, "You cannot specify background mode and interactive mode together");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
 /* HvB */
@@ -193,7 +193,7 @@ int main(int argc, char *argv[])
                     if (fork() == 0)    /* child process */
                     {
                         HailServer(ctx, RlistScalarValue(rp));
-                        exit(0);
+                        exit(EXIT_SUCCESS);
                     }
                     else        /* parent process */
                     {
@@ -332,7 +332,7 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
                 GenericAgentWriteVersion(w);
                 FileWriterDetach(w);
             }
-            exit(0);
+            exit(EXIT_SUCCESS);
 
         case 'h':
             {
@@ -340,7 +340,7 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
                 GenericAgentWriteHelp(w, "cf-runagent", OPTIONS, HINTS, true);
                 FileWriterDetach(w);
             }
-            exit(0);
+            exit(EXIT_SUCCESS);
 
         case 'M':
             {
@@ -356,7 +356,7 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
 
         case 'x':
             Log(LOG_LEVEL_ERR, "Self-diagnostic functionality is retired.");
-            exit(0);
+            exit(EXIT_SUCCESS);
 
         case 'C':
             if (!GenericAgentConfigParseColor(config, optarg))
@@ -371,7 +371,7 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
                 GenericAgentWriteHelp(w, "cf-runagent", OPTIONS, HINTS, true);
                 FileWriterDetach(w);
             }
-            exit(1);
+            exit(EXIT_FAILURE);
 
         }
     }
@@ -395,7 +395,7 @@ static void ThisAgentInit(void)
     {
         Log(LOG_LEVEL_ERR,
               "The specified remote options include a useless --file option. The remote server has promised to ignore this, thus it is disallowed.");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 }
 

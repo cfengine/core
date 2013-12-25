@@ -300,7 +300,7 @@ static const ConstraintSyntax copy_from_constraints[] =
     ConstraintSyntaxNewOption("link_type", CF_LINKRANGE, "Menu option for type of links to use when copying. Default value: symlink", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBool("force_update", "true/false force copy update always. Default value: false", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBool("force_ipv4", "true/false force use of ipv4 on ipv6 enabled network. Default value: false", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewInt("portnumber", "1024,99999", "Port number to connect to on server host", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewInt("portnumber", "1024,65535", "Port number to connect to on server host", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBool("preserve", "true/false whether to preserve file permissions on copied file. Default value: false", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBool("purge", "true/false purge files on client that do not match files on server when a depth_search is used. Default value: false", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBool("stealth", "true/false whether to preserve time stamps on copied file. Default value: false", SYNTAX_STATUS_NORMAL),

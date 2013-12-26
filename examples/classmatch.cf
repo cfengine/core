@@ -30,7 +30,7 @@ bundle agent example
 {
   classes:
 
-      "do_it" and => { classmatch("cfengine_3.*"), "linux" };
+      "do_it" and => { classmatch("cfengine_3.*"), "any" };
 
   reports:
 
@@ -41,5 +41,5 @@ bundle agent example
 #+end_src
 ###############################################################################
 #+begin_src example_output
-2013-12-16T20:47:58+0200   notice: /default/example: R: Host matches pattern
+#@ 2013-12-20T13:44:28-0500   notice: /default/example: R: Host matches pattern
 #+end_src

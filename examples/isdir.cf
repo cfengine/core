@@ -30,7 +30,7 @@ bundle agent example
 {
   classes:
 
-      "isdir" expression => isdir("/etc");
+      "isdir" expression => isdir("/");
 
   reports:
 
@@ -42,5 +42,5 @@ bundle agent example
 #+end_src
 ###############################################################################
 #+begin_src example_output
-2013-12-16T20:48:01+0200   notice: /default/example: R: Directory exists..
+#@ 2013-12-20T13:44:30-0500   notice: /default/example: R: Directory exists..
 #+end_src

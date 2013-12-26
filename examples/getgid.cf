@@ -30,13 +30,13 @@ bundle agent example
 {
   vars:
 
-      "gid" int => getgid("users");
+      "gid" int => getgid("root");
 
   reports:
-      "Users gid is $(gid)";
+      "root's gid is $(gid)";
 }
 #+end_src
 ###############################################################################
 #+begin_src example_output
-2013-12-16T20:48:05+0200   notice: /default/example: R: Users gid is 100
+#@ 2013-12-20T13:44:30-0500   notice: /default/example: R: root's gid is 0
 #+end_src

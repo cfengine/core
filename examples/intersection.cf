@@ -32,21 +32,21 @@ bundle agent test
       "a" slist => { 1,2,3,"x" };
       "b" slist => { "x" };
 
-      "listname1" slist => { "a", "b" };
-      "listname2" slist => { "a", "b" };
-      "$(listname1)_str" string => join(",", $(listname1));
+      "mylist1" slist => { "a", "b" };
+      "mylist2" slist => { "a", "b" };
+      "$(mylist1)_str" string => join(",", $(mylist1));
 
-      "int_$(listname1)_$(listname2)" slist => intersection($(listname1), $(listname2));
-      "int_$(listname1)_$(listname2)_str" string => join(",", "int_$(listname1)_$(listname2)");
+      "int_$(mylist1)_$(mylist2)" slist => intersection($(mylist1), $(mylist2));
+      "int_$(mylist1)_$(mylist2)_str" string => join(",", "int_$(mylist1)_$(mylist2)");
 
   reports:
-      "The intersection of list '$($(listname1)_str)' with '$($(listname2)_str)' is '$(int_$(listname1)_$(listname2)_str)'";
+      "The intersection of list '$($(mylist1)_str)' with '$($(mylist2)_str)' is '$(int_$(mylist1)_$(mylist2)_str)'";
 }
 #+end_src
 ###############################################################################
 #+begin_src example_output
-2013-12-16T20:47:57+0200   notice: /default/test: R: The intersection of list '1,2,3,x' with '1,2,3,x' is '1,2,3,x'
-2013-12-16T20:47:57+0200   notice: /default/test: R: The intersection of list '1,2,3,x' with 'x' is 'x'
-2013-12-16T20:47:57+0200   notice: /default/test: R: The intersection of list 'x' with '1,2,3,x' is 'x'
-2013-12-16T20:47:57+0200   notice: /default/test: R: The intersection of list 'x' with 'x' is 'x'
+#@ 2013-12-20T13:44:30-0500   notice: /default/test: R: The intersection of list '1,2,3,x' with '1,2,3,x' is '1,2,3,x'
+#@ 2013-12-20T13:44:30-0500   notice: /default/test: R: The intersection of list '1,2,3,x' with 'x' is 'x'
+#@ 2013-12-20T13:44:30-0500   notice: /default/test: R: The intersection of list 'x' with '1,2,3,x' is 'x'
+#@ 2013-12-20T13:44:30-0500   notice: /default/test: R: The intersection of list 'x' with 'x' is 'x'
 #+end_src

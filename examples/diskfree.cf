@@ -28,14 +28,20 @@ body common control
 
 bundle agent example
 {
+  classes:
+      "has_space" expression => isgreaterthan($(free), 0);
+
   vars:
       "free" int => diskfree("/tmp");
 
   reports:
-      "Freedisk $(free)";
+    has_space::
+      "The filesystem has free space";
+    !has_space::
+      "The filesystem has NO free space";
 }
 #+end_src
 ###############################################################################
 #+begin_src example_output
-2013-12-16T20:48:07+0200   notice: /default/example: R: Freedisk 64512232
+#@ 2013-12-20T13:44:29-0500   notice: /default/example: R: The filesystem has free space
 #+end_src

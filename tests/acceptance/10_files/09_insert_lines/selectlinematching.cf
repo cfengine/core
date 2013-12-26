@@ -1,0 +1,96 @@
+##############################################################################
+#
+# Redmine #2778
+#   3.5.x: incorrect output of:
+#    "insert_lines promise uses the same select_line_matching anchor [...]"
+#
+# This test is loosely modelled on "execresult_multiples.cf" (post-3.5.x).
+#
+# The original Redmine 2778 report concerned editing a "sendmail.mc" file.
+# But in developing this acceptance test, I discovered that some existing
+# tests in this area also exhibit this behaviour, such as "009.cf".
+#
+# This test has two subtests:
+#   o  a copy of "009.cf";
+#   o  the "sendmail.mc" edit from the original report.
+#
+# The subtests functionally pass but exhibit the incorrect output.
+#
+# Our intention is to fail if any of:
+#   o  incorrect output is seen (our prime concern)
+#   o  subtest itself functionally fails (its problem, not ours)
+#
+# David Lee <david.lee@ecmwf.int>
+# December 2013
+#
+##############################################################################
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+
+}
+
+#######################################################
+
+bundle agent test
+{
+  vars:
+    any::
+      # Run subtests.  Need to be in verbose mode to see the output.
+      # The full verbose output is too big for variable assignment here.
+      # So extract (grep) only potentially interesting lines.
+      "subout_1" string => execresult("$(sys.cf_agent) -Kv -f $(this.promise_filename).sub_1 2>&1 | $(G.grep) -Ei 'select_line_matching'", "useshell");
+      "subout_2" string => execresult("$(sys.cf_agent) -Kv -f $(this.promise_filename).sub_2 2>&1 | $(G.grep) -Ei 'select_line_matching'", "useshell");
+
+  reports:
+    DEBUG::
+      "bundle test: this.promise_filename: $(this.promise_filename)";
+      "bundle test: subtest_1: $(this.promise_filename).sub_1";
+      "bundle test: subout_1:  $(subout_1)";
+      "bundle test: subtest_2: $(this.promise_filename).sub_2";
+      "bundle test: subout_2:  $(subout_2)";
+}
+
+
+#######################################################
+
+bundle agent check
+{
+  vars:
+    any::
+      # These patterns spell trouble.
+      "pattern_fail" string => ".*select_line_matching anchor.*";
+
+  # Examine output from 'test' to decide whether good or bad.
+  classes:
+    any::
+      "ok_pattern_1" not => regcmp("$(pattern_fail)", "$(test.subout_1)");
+      "ok_pattern_2" not => regcmp("$(pattern_fail)", "$(test.subout_2)");
+
+  reports:
+    DEBUG::
+      "Attempted subtest '$(this.promise_filename).sub_1' in verbose mode.";
+      "Significant output of sub_1 was '$(test.subout_1)'.";
+      "Attempted subtest '$(this.promise_filename).sub_2' in verbose mode.";
+      "Significant output of sub_2 was '$(test.subout_2)'.";
+
+    DEBUG.!ok_pattern_1::
+      "failing: pattern '$(pattern_fail)' in subtest_1";
+
+    DEBUG.!ok_pattern_2::
+      "failing: pattern '$(pattern_fail)' in subtest_2";
+
+    ok_pattern_1.ok_pattern_2::
+      "$(this.promise_filename) Pass";
+    !(ok_pattern_1.ok_pattern_2)::
+      "$(this.promise_filename) FAIL";
+}

@@ -32,40 +32,16 @@ bundle agent randomint_example
       "low"    string => "4";
       "high"   string => "60";
 
-      "random"    int => randomint("$(low)", "$(high)"),
-      policy => "free";
-
-    !classes1::
-      "random1"
-      string  => "$(random)",
-      handle  => "var_random1",
-      comment => "this should only be set on the first pass";
-
-    classes1.!classes2::
-
-      "random2"
-      string     => "$(random)",
-      handle     => "var_random2",
-      comment    => "this should only be set on the second pass";
-
-    classes2::
-
-      "random3"
-      string     => "$(random)",
-      handle     => "var_random3",
-      comment    => "this should only be set on the third pass";
-
+      "random"    int => randomint($(low), $(high));
   classes:
-      "classes3" expression => "classes2";
-      "classes2" expression => "classes1";
-      "classes1" expression => "any";
+      "isabove" expression => isgreaterthan($(random), 3);
 
   reports:
-    classes3::
-      "Random Numbers: $(random1), $(random2), $(random3)";
+    isabove::
+      "The generated random number was above 3";
 }
 #+end_src
 ###############################################################################
 #+begin_src example_output
-2013-12-16T20:48:16+0200   notice: /default/randomint_example: R: Random Numbers: 37, 13, 57
+#@ 2013-12-20T13:44:32-0500   notice: /default/randomint_example: R: The generated random number was above 3
 #+end_src

@@ -29,20 +29,16 @@ body common control
 bundle agent example
 {
   vars:
-      "allusers" slist => getusers("zenoss,mysql,at","12,0");
+      "allusers" slist => getusers("","");
+      "root_list" slist => { "root" };
+      # this will get just the root users out of the full user list
+      "justroot" slist => intersection(allusers, root_list);
 
   reports:
-      "Found user $(allusers)";
+      "Found just the root user: $(justroot)";
 }
 #+end_src
 ###############################################################################
 #+begin_src example_output
-2013-12-16T20:48:15+0200   notice: /default/example: R: Found user daemon
-2013-12-16T20:48:15+0200   notice: /default/example: R: Found user bin
-2013-12-16T20:48:15+0200   notice: /default/example: R: Found user sys
-2013-12-16T20:48:15+0200   notice: /default/example: R: Found user sync
-2013-12-16T20:48:15+0200   notice: /default/example: R: Found user games
-2013-12-16T20:48:15+0200   notice: /default/example: R: Found user man
-[output snipped]
-2013-12-16T20:48:15+0200   notice: /default/example: R: Found user mark
+#@ 2013-12-20T13:44:30-0500   notice: /default/example: R: Found just the root user: root
 #+end_src

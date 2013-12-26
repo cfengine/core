@@ -45,18 +45,18 @@ bundle agent test
 #+end_src
 ###############################################################################
 #+begin_src example_output
-2013-12-16T20:48:21+0200   notice: /default/test: R: Original list is 1
-2013-12-16T20:48:21+0200   notice: /default/test: R: Original list is 2
-2013-12-16T20:48:21+0200   notice: /default/test: R: Original list is 3
-2013-12-16T20:48:21+0200   notice: /default/test: R: Original list is one
-2013-12-16T20:48:21+0200   notice: /default/test: R: Original list is two
-2013-12-16T20:48:21+0200   notice: /default/test: R: Original list is three
-2013-12-16T20:48:21+0200   notice: /default/test: R: Original list is long string
-2013-12-16T20:48:21+0200   notice: /default/test: R: The reversed list is three
-2013-12-16T20:48:21+0200   notice: /default/test: R: The reversed list is two
-2013-12-16T20:48:21+0200   notice: /default/test: R: The reversed list is one
-2013-12-16T20:48:21+0200   notice: /default/test: R: The reversed list is long string
-2013-12-16T20:48:21+0200   notice: /default/test: R: The reversed list is 3
-2013-12-16T20:48:21+0200   notice: /default/test: R: The reversed list is 2
-2013-12-16T20:48:21+0200   notice: /default/test: R: The reversed list is 1
+#@ 2013-12-20T13:44:34-0500   notice: /default/test: R: Original list is 1
+#@ 2013-12-20T13:44:34-0500   notice: /default/test: R: Original list is 2
+#@ 2013-12-20T13:44:34-0500   notice: /default/test: R: Original list is 3
+#@ 2013-12-20T13:44:34-0500   notice: /default/test: R: Original list is one
+#@ 2013-12-20T13:44:34-0500   notice: /default/test: R: Original list is two
+#@ 2013-12-20T13:44:34-0500   notice: /default/test: R: Original list is three
+#@ 2013-12-20T13:44:34-0500   notice: /default/test: R: Original list is long string
+#@ 2013-12-20T13:44:34-0500   notice: /default/test: R: The reversed list is three
+#@ 2013-12-20T13:44:34-0500   notice: /default/test: R: The reversed list is two
+#@ 2013-12-20T13:44:34-0500   notice: /default/test: R: The reversed list is one
+#@ 2013-12-20T13:44:34-0500   notice: /default/test: R: The reversed list is long string
+#@ 2013-12-20T13:44:34-0500   notice: /default/test: R: The reversed list is 3
+#@ 2013-12-20T13:44:34-0500   notice: /default/test: R: The reversed list is 2
+#@ 2013-12-20T13:44:34-0500   notice: /default/test: R: The reversed list is 1
 #+end_src

@@ -20,6 +20,12 @@
 # (COSL) may apply to this file if you as a licensee so wish it. See
 # included file COSL.txt.
 
+#+begin_src prep
+#@ echo alpha > /tmp/cfe_hostlist
+#@ echo beta >> /tmp/cfe_hostlist
+#@ echo gamma >> /tmp/cfe_hostlist
+#+end_src
+###############################################################################
 #+begin_src cfengine3
 body common control
 {
@@ -31,12 +37,12 @@ bundle agent example
   vars:
 
       "xxx"
-      string => readfile( "/tmp/testfile" , "33" );
+      string => readfile( "/tmp/cfe_hostlist" , "5" );
   reports:
-      "content: $(xxx)";
+      "first 5 characters of /tmp/cfe_hostlist: $(xxx)";
 }
 #+end_src
 ###############################################################################
 #+begin_src example_output
-2013-12-16T20:48:14+0200   notice: /default/example: R: content: $(xxx)
+#@ 2013-12-20T13:44:32-0500   notice: /default/example: R: first 5 characters of /tmp/cfe_hostlist: alpha
 #+end_src

@@ -29,7 +29,7 @@ body common control
 bundle agent test
 {
   vars:
-      "inputs_dir" string => translatepath("$(sys.workdir)/inputs");
+      "inputs_dir" string => translatepath("/a/b/c/inputs");
 
   reports:
 
@@ -42,5 +42,5 @@ bundle agent test
 #+end_src
 ###############################################################################
 #+begin_src example_output
-2013-12-16T20:48:18+0200   notice: /default/test: R: The path has slashes: /home/tero/.cfagent/inputs
+#@ 2013-12-20T12:51:16-0500   notice: /default/test: R: The path has slashes: /a/b/c/inputs
 #+end_src

@@ -30,17 +30,21 @@ bundle agent example
 {
   classes:
 
-      "isplain" expression => isplain("/etc/passwd");
+      "fileisplain" expression => isplain("/etc/passwd");
+      "dirisnotplain" not => isplain("/");
 
   reports:
 
-    isplain::
+    fileisplain::
+      "/etc/passwd is plain..";
 
-      "File exists..";
+    dirisnotplain::
+      "/ is not plain..";
 
 }
 #+end_src
 ###############################################################################
 #+begin_src example_output
-2013-12-16T20:47:55+0200   notice: /default/example: R: File exists..
+#@ 2013-12-20T13:44:31-0500   notice: /default/example: R: /etc/passwd is plain..
+#@ 2013-12-20T13:44:31-0500   notice: /default/example: R: / is not plain..
 #+end_src

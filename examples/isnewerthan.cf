@@ -20,6 +20,11 @@
 # (COSL) may apply to this file if you as a licensee so wish it. See
 # included file COSL.txt.
 
+#+begin_src prep
+#@ touch -d '2001-02-03 12:34:56' /tmp/earlier
+#@ touch -d '2002-02-03 12:34:56' /tmp/later
+#+end_src
+###############################################################################
 #+begin_src cfengine3
 body common control
 {
@@ -30,16 +35,16 @@ bundle agent example
 {
   classes:
 
-      "do_it" and => { isnewerthan("/tmp/later","/tmp/earlier"), "linux" };
+      "do_it" and => { isnewerthan("/tmp/later","/tmp/earlier"), "cfengine" };
 
   reports:
 
     do_it::
 
-      "The derived file needs updating";
+      "/tmp/later is older than /tmp/earlier";
 }
 #+end_src
 ###############################################################################
 #+begin_src example_output
-2013-12-16T20:48:15+0200   notice: /default/example: R: The derived file needs updating
+#@ 2013-12-20T13:44:31-0500   notice: /default/example: R: /tmp/later is older than /tmp/earlier
 #+end_src

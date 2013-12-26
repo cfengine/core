@@ -908,7 +908,6 @@ static StackFrame *StackFrameNewPromise(const Promise *owner)
     StackFrame *frame = StackFrameNew(STACK_FRAME_TYPE_PROMISE, true);
 
     frame->data.promise.owner = owner;
-    frame->data.promise.vars = VariableTableNew();
 
     return frame;
 }
@@ -1312,7 +1311,7 @@ StringSet *EvalContextStackPromisees(const EvalContext *ctx)
         switch (promisee.type)
         {
         case RVAL_TYPE_SCALAR:
-            StringSetAdd(promisees, RvalScalarValue(promisee));
+            StringSetAdd(promisees, xstrdup(RvalScalarValue(promisee)));
             break;
 
         case RVAL_TYPE_LIST:

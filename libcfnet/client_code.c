@@ -321,7 +321,7 @@ static AgentConnection *ServerConnection(const char *server, FileCopy fc, int *e
 #endif /* !__MINGW32__ */
 
 #if !defined(__MINGW32__)
-    static sigset_t signal_mask;
+    sigset_t signal_mask;
     sigemptyset(&signal_mask);
     sigaddset(&signal_mask, SIGPIPE);
     pthread_sigmask(SIG_BLOCK, &signal_mask, NULL);

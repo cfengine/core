@@ -795,7 +795,7 @@ const Stat *ClientCacheLookup(AgentConnection *conn, const char *server_name, co
 
 int CompareHashNet(const char *file1, const char *file2, bool encrypt, AgentConnection *conn)
 {
-    static unsigned char d[EVP_MAX_MD_SIZE + 1];
+    unsigned char d[EVP_MAX_MD_SIZE + 1];
     char *sp, sendbuffer[CF_BUFSIZE], recvbuffer[CF_BUFSIZE], in[CF_BUFSIZE], out[CF_BUFSIZE];
     int i, tosend, cipherlen;
 

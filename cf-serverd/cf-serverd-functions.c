@@ -476,7 +476,7 @@ int InitServer(size_t queue_size)
 
 int OpenReceiverChannel(void)
 {
-    struct addrinfo *response, *ap;
+    struct addrinfo *response = NULL, *ap;
     struct addrinfo query = {
         .ai_flags = AI_PASSIVE,
         .ai_family = AF_UNSPEC,
@@ -497,6 +497,10 @@ int OpenReceiverChannel(void)
     if (getaddrinfo(ptr, servname, &query, &response) != 0)
     {
         Log(LOG_LEVEL_ERR, "DNS/service lookup failure. (getaddrinfo: %s)", GetErrorStr());
+        if (response)
+        {
+            freeaddrinfo(response);
+        }
         return -1;
     }
 

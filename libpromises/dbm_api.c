@@ -69,7 +69,7 @@ static pthread_once_t db_shutdown_once = PTHREAD_ONCE_INIT;
 
 /******************************************************************************/
 
-static const char *DB_PATHS[] = {
+static const char *const DB_PATHS[] = {
     [dbid_classes] = "cf_classes",
     [dbid_variables] = "state/cf_variables",
     [dbid_performance] = "performance",

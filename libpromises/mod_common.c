@@ -46,10 +46,15 @@
 #include <policy.h>
 #include <syntax.h>
 
-static const char *POLICY_ERROR_VARS_CONSTRAINT_DUPLICATE_TYPE = "Variable contains existing data type contstraint %s, tried to redefine with %s";
-static const char *POLICY_ERROR_VARS_PROMISER_NUMERICAL = "Variable promises cannot have a purely numerical promiser (name)";
-static const char *POLICY_ERROR_VARS_PROMISER_RESERVED = "Variable promise is using a reserved name";
-static const char *POLICY_ERROR_CLASSES_PROMISER_NUMERICAL = "Classes promises cannot have a purely numerical promiser (name)";
+static const char *const POLICY_ERROR_VARS_CONSTRAINT_DUPLICATE_TYPE =
+    "Variable contains existing data type contstraint %s, tried to "
+    "redefine with %s";
+static const char *const POLICY_ERROR_VARS_PROMISER_NUMERICAL =
+    "Variable promises cannot have a purely numerical promiser (name)";
+static const char *const POLICY_ERROR_VARS_PROMISER_RESERVED =
+    "Variable promise is using a reserved name";
+static const char *const POLICY_ERROR_CLASSES_PROMISER_NUMERICAL =
+    "Classes promises cannot have a purely numerical promiser (name)";
 
 static bool ActionCheck(const Body *body, Seq *errors)
 {

@@ -44,23 +44,34 @@
 #include <expand.h>
 
 
-static const char *POLICY_ERROR_POLICY_NOT_RUNNABLE = "Policy is not runnable (does not contain a body common control)";
+static const char *const POLICY_ERROR_POLICY_NOT_RUNNABLE =
+    "Policy is not runnable (does not contain a body common control)";
 
+static const char *const POLICY_ERROR_BUNDLE_NAME_RESERVED =
+    "Use of a reserved container name as a bundle name \"%s\"";
+static const char *const POLICY_ERROR_BUNDLE_REDEFINITION =
+    "Duplicate definition of bundle %s with type %s";
+static const char *const POLICY_ERROR_BUNDLE_UNDEFINED =
+    "Undefined bundle %s with type %s";
+static const char *const POLICY_ERROR_BODY_REDEFINITION =
+    "Duplicate definition of body %s with type %s";
+static const char *const POLICY_ERROR_BODY_UNDEFINED =
+    "Undefined body %s with type %s";
+static const char *const POLICY_ERROR_BODY_CONTROL_ARGS =
+    "Control bodies cannot take arguments, body %s control";
+static const char *const POLICY_ERROR_PROMISE_UNCOMMENTED =
+    "Promise is missing a comment attribute, and comments are required "
+    "by policy";
+static const char *const POLICY_ERROR_PROMISE_DUPLICATE_HANDLE =
+    "Duplicate promise handle %s found";
+static const char *const POLICY_ERROR_LVAL_INVALID =
+    "Promise type %s has unknown attribute %s";
 
+static const char *const POLICY_ERROR_CONSTRAINT_TYPE_MISMATCH =
+    "Type mismatch in constraint: %s";
 
-static const char *POLICY_ERROR_BUNDLE_NAME_RESERVED = "Use of a reserved container name as a bundle name \"%s\"";
-static const char *POLICY_ERROR_BUNDLE_REDEFINITION = "Duplicate definition of bundle %s with type %s";
-static const char *POLICY_ERROR_BUNDLE_UNDEFINED = "Undefined bundle %s with type %s";
-static const char *POLICY_ERROR_BODY_REDEFINITION = "Duplicate definition of body %s with type %s";
-static const char *POLICY_ERROR_BODY_UNDEFINED = "Undefined body %s with type %s";
-static const char *POLICY_ERROR_BODY_CONTROL_ARGS = "Control bodies cannot take arguments, body %s control";
-static const char *POLICY_ERROR_PROMISE_UNCOMMENTED = "Promise is missing a comment attribute, and comments are required by policy";
-static const char *POLICY_ERROR_PROMISE_DUPLICATE_HANDLE = "Duplicate promise handle %s found";
-static const char *POLICY_ERROR_LVAL_INVALID = "Promise type %s has unknown attribute %s";
-
-static const char *POLICY_ERROR_CONSTRAINT_TYPE_MISMATCH = "Type mismatch in constraint: %s";
-
-static const char *POLICY_ERROR_EMPTY_VARREF = "Empty variable reference";
+static const char *const POLICY_ERROR_EMPTY_VARREF =
+    "Empty variable reference";
 
 //************************************************************************
 

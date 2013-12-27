@@ -27,7 +27,7 @@
 
 #define MATH_EVAL_STACK_SIZE 1024
 
-const char *math_eval_function_names[] =
+const char *const math_eval_function_names[] =
 {
     "ceil", "floor", "log10", "log2", "log", "sqrt", "sin", "cos", "tan", "asin", "acos", "atan", "abs", "step"
 };
@@ -37,7 +37,9 @@ static double _math_eval_step(double p)
     return ((p < 0) ? 0 : 1);
 }
 
-static double (*math_eval_functions[]) (double) =
+typedef double (*MathEvalFunctionType)(double);
+
+static const MathEvalFunctionType math_eval_functions[] =
 {
     ceil, floor, log10, log2, log, sqrt, sin, cos, tan, asin, acos, atan, fabs, _math_eval_step
 };

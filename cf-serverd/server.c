@@ -118,7 +118,7 @@ typedef enum
     PROTOCOL_COMMAND_BAD
 } ProtocolCommandClassic;
 
-static const char *PROTOCOL_CLASSIC[] =
+static const char *const PROTOCOL_CLASSIC[] =
 {
     "EXEC",
     "AUTH",                     /* old protocol */

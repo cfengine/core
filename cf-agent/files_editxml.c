@@ -51,7 +51,7 @@ enum editxmltypesequence
     elx_none
 };
 
-char *EDITXMLTYPESEQUENCE[] =
+static const char *const EDITXMLTYPESEQUENCE[] =
 {
     "vars",
     "classes",

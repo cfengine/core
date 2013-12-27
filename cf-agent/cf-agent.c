@@ -120,7 +120,7 @@ static int CFA_BACKGROUND_LIMIT = 1;
 
 static Item *PROCESSREFRESH;
 
-static const char *AGENT_TYPESEQUENCE[] =
+static const char *const AGENT_TYPESEQUENCE[] =
 {
     "meta",
     "vars",

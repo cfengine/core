@@ -585,7 +585,7 @@ typedef enum
     PROTOCOL_COMMAND_BAD
 } ProtocolCommandNew;
 
-static const char *PROTOCOL_NEW[PROTOCOL_COMMAND_BAD + 1] =
+static const char *const PROTOCOL_NEW[PROTOCOL_COMMAND_BAD + 1] =
 {
     "EXEC",
     "GET",

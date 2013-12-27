@@ -381,7 +381,7 @@ char *DBPrivDiagnose(const char *dbpath)
         ((num & 0xff00000000000000ULL) >> 56) \
     )
 
-    static const char *MAGIC="ToKyO CaBiNeT";
+    static const char *const MAGIC="ToKyO CaBiNeT";
 
     FILE *fp = fopen(dbpath, "r");
     if(!fp)

@@ -39,12 +39,13 @@
 
 #include <cf-key-functions.h>
 
+static const char *passphrase = "Cfengine passphrase";
+
 RSA* LoadPublicKey(const char* filename)
 {
     unsigned long err;
     FILE* fp;
     RSA* key;
-    static char *passphrase = "Cfengine passphrase";
 
     fp = safe_fopen(filename, "r");
     if (fp == NULL)
@@ -53,7 +54,8 @@ RSA* LoadPublicKey(const char* filename)
         return NULL;
     };
 
-    if ((key = PEM_read_RSAPublicKey(fp, NULL, NULL, passphrase)) == NULL)
+    if ((key = PEM_read_RSAPublicKey(fp, NULL, NULL,
+                                     (void *)passphrase)) == NULL)
     {
         err = ERR_get_error();
         Log(LOG_LEVEL_ERR, "Error reading public key. (PEM_read_RSAPublicKey: %s)",
@@ -218,7 +220,6 @@ void KeepKeyPromises(const char *public_key_file, const char *private_key_file)
     FILE *fp;
     struct stat statbuf;
     int fd;
-    static char *passphrase = "Cfengine passphrase";
     const EVP_CIPHER *cipher;
     char vbuff[CF_BUFSIZE];
 
@@ -270,7 +271,8 @@ void KeepKeyPromises(const char *public_key_file, const char *private_key_file)
 
     Log(LOG_LEVEL_VERBOSE, "Writing private key to '%s'", private_key_file);
 
-    if (!PEM_write_RSAPrivateKey(fp, pair, cipher, passphrase, strlen(passphrase), NULL, NULL))
+    if (!PEM_write_RSAPrivateKey(fp, pair, cipher, (void *)passphrase,
+                                 strlen(passphrase), NULL, NULL))
     {
         err = ERR_get_error();
         Log(LOG_LEVEL_ERR, "Couldn't write private key. (PEM_write_RSAPrivateKey: %s)", ERR_reason_error_string(err));

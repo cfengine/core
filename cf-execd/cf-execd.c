@@ -443,7 +443,7 @@ static bool LocalExecInThread(const ExecConfig *config)
 
 static void Apoptosis(EvalContext *ctx)
 {
-    static char promiser_buf[CF_SMALLBUF];
+    char promiser_buf[CF_SMALLBUF];
     snprintf(promiser_buf, sizeof(promiser_buf), "%s/bin/cf-execd", CFWORKDIR);
 
     if (LoadProcessTable(ctx, &PROCESSTABLE))

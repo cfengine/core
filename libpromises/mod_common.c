@@ -492,7 +492,7 @@ const PromiseTypeSyntax CF_COMMON_PROMISE_TYPES[] =
 /* Read in all parsable Bundle definitions */
 /* REMEMBER TO REGISTER THESE IN cf3.extern.h */
 
-const PromiseTypeSyntax *CF_ALL_PROMISE_TYPES[] =
+const PromiseTypeSyntax *const CF_ALL_PROMISE_TYPES[] =
 {
     CF_COMMON_PROMISE_TYPES,         /* Add modules after this, mod_report.c is here */
     CF_EXEC_PROMISE_TYPES,           /* mod_exec.c */

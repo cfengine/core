@@ -1680,7 +1680,7 @@ typedef struct
 
 extern const ConstraintSyntax CF_COMMON_BODIES[];
 extern const ConstraintSyntax CF_VARBODY[];
-extern const PromiseTypeSyntax *CF_ALL_PROMISE_TYPES[];
+extern const PromiseTypeSyntax *const CF_ALL_PROMISE_TYPES[];
 extern const ConstraintSyntax CFG_CONTROLBODY[];
 extern const FnCallType CF_FNCALL_TYPES[];
 extern const BodySyntax CONTROL_BODIES[];

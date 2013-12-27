@@ -471,7 +471,7 @@ static int CheckRegistrySanity(Attributes a, const Promise *pp)
 
 static int ValidateRegistryPromiser(char *key, const Promise *pp)
 {
-    static char *valid[] = { "HKEY_CLASSES_ROOT", "HKEY_CURRENT_CONFIG",
+    static char *const valid[] = { "HKEY_CLASSES_ROOT", "HKEY_CURRENT_CONFIG",
         "HKEY_CURRENT_USER", "HKEY_LOCAL_MACHINE", "HKEY_USERS", NULL
     };
     char root_key[CF_MAXVARSIZE];
@@ -978,7 +978,7 @@ static void DeleteSQLColumns(char **name_table, char **type_table, int *size_tab
 
 static int CheckSQLDataType(char *type, char *ref_type, const Promise *pp)
 {
-    static char *aliases[3][2] =
+    static char *const aliases[3][2] =
         {
             {"varchar", "character@varying"},
             {"varchar", "character varying"},

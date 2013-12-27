@@ -1759,9 +1759,9 @@ void EvalContextFunctionCachePut(EvalContext *ctx, const FnCall *fp, const Rlist
  * Internal functions temporarily used from logging implementation
  */
 
-static const char *NO_STATUS_TYPES[] =
+static const char *const NO_STATUS_TYPES[] =
     { "vars", "classes", "insert_lines", "delete_lines", "replace_patterns", "field_edits", NULL };
-static const char *NO_LOG_TYPES[] =
+static const char *const NO_LOG_TYPES[] =
     { "vars", "classes", "insert_lines", "delete_lines", "replace_patterns", "field_edits", NULL };
 
 /*

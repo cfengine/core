@@ -50,7 +50,7 @@ static void AugmentMountInfo(Seq *list, char *host, char *source, char *mounton,
 static int MatchFSInFstab(char *match);
 static void DeleteThisItem(Item **liststart, Item *entry);
 
-static const char *VMOUNTCOMM[] =
+static const char *const VMOUNTCOMM[] =
 {
     [PLATFORM_CONTEXT_UNKNOWN] = "",
     [PLATFORM_CONTEXT_OPENVZ] = "/bin/mount -va",           /* virt_host_vz_vzps */
@@ -72,7 +72,7 @@ static const char *VMOUNTCOMM[] =
     [PLATFORM_CONTEXT_VMWARE] = "/bin/mount -a",            /* vmware */
 };
 
-static const char *VUNMOUNTCOMM[] =
+static const char *const VUNMOUNTCOMM[] =
 {
     [PLATFORM_CONTEXT_UNKNOWN] = "",
     [PLATFORM_CONTEXT_OPENVZ] = "/bin/umount",              /* virt_host_vz_vzps */
@@ -94,7 +94,7 @@ static const char *VUNMOUNTCOMM[] =
     [PLATFORM_CONTEXT_VMWARE] = "/bin/umount",              /* vmware */
 };
 
-static const char *VMOUNTOPTS[] =
+static const char *const VMOUNTOPTS[] =
 {
     [PLATFORM_CONTEXT_UNKNOWN] = "",
     [PLATFORM_CONTEXT_OPENVZ] = "defaults",                 /* virt_host_vz_vzps */

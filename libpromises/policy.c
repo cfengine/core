@@ -535,7 +535,8 @@ static bool PolicyCheckBundle(const Bundle *bundle, Seq *errors)
 
     // ensure no reserved bundle names are used
     {
-        static const char *reserved_names[] = { "sys", "const", "mon", "edit", "match", "mon", "this", NULL };
+        static const char *const reserved_names[] =
+            { "sys", "const", "mon", "edit", "match", "mon", "this", NULL };
         if (IsStrIn(bundle->name, reserved_names))
         {
             SeqAppend(errors, PolicyErrorNew(POLICY_ELEMENT_TYPE_BUNDLE, bundle,

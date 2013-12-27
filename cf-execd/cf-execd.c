@@ -77,9 +77,10 @@ static bool LocalExecInThread(const ExecConfig *config);
 /* Command line options                                            */
 /*******************************************************************/
 
-static const char *CF_EXECD_SHORT_DESCRIPTION = "scheduling daemon for cf-agent";
+static const char *const CF_EXECD_SHORT_DESCRIPTION =
+    "scheduling daemon for cf-agent";
 
-static const char *CF_EXECD_MANPAGE_LONG_DESCRIPTION =
+static const char *const CF_EXECD_MANPAGE_LONG_DESCRIPTION =
         "cf-execd is the scheduling daemon for cf-agent. It runs cf-agent locally according to a schedule specified in "
         "policy code (executor control body). After a cf-agent run is completed, cf-execd gathers output from cf-agent, "
         "and may be configured to email the output to a specified address. It may also be configured to splay (randomize) the "
@@ -107,7 +108,7 @@ static const struct option OPTIONS[] =
     {NULL, 0, 0, '\0'}
 };
 
-static const char *HINTS[] =
+static const char *const HINTS[] =
 {
     "Print the help message",
     "Enable debugging output",

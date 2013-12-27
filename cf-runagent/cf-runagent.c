@@ -73,9 +73,10 @@ static FILE *NewStream(char *name);
 /* Command line options                                            */
 /*******************************************************************/
 
-static const char *CF_RUNAGENT_SHORT_DESCRIPTION = "activate cf-agent on a remote host";
+static const char *const CF_RUNAGENT_SHORT_DESCRIPTION =
+    "activate cf-agent on a remote host";
 
-static const char *CF_RUNAGENT_MANPAGE_LONG_DESCRIPTION =
+static const char *const CF_RUNAGENT_MANPAGE_LONG_DESCRIPTION =
     "cf-runagent connects to a list of running instances of "
     "cf-serverd. It allows foregoing the usual cf-execd schedule "
     "to activate cf-agent. Additionally, a user "
@@ -107,7 +108,7 @@ static const struct option OPTIONS[] =
     {NULL, 0, 0, '\0'}
 };
 
-static const char *HINTS[] =
+static const char *const HINTS[] =
 {
     "Print the help message",
     "Parallelize connections (50 by default)",

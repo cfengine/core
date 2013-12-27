@@ -54,9 +54,11 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv);
 /* Command line options                                            */
 /*******************************************************************/
 
-static const char *CF_KEY_SHORT_DESCRIPTION = "make private/public key-pairs for CFEngine authentication";
+static const char *const CF_KEY_SHORT_DESCRIPTION =
+    "make private/public key-pairs for CFEngine authentication";
 
-static const char *CF_KEY_MANPAGE_LONG_DESCRIPTION = "The CFEngine key generator makes key pairs for remote authentication.\n";
+static const char *const CF_KEY_MANPAGE_LONG_DESCRIPTION =
+    "The CFEngine key generator makes key pairs for remote authentication.\n";
 
 static const struct option OPTIONS[] =
 {
@@ -74,7 +76,7 @@ static const struct option OPTIONS[] =
     {NULL, 0, 0, '\0'}
 };
 
-static const char *HINTS[] =
+static const char *const HINTS[] =
 {
     "Print the help message",
     "Enable debugging output",

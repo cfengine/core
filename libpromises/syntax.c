@@ -174,7 +174,7 @@ const BodySyntax *BodySyntaxGet(const char *body_type)
 
 const char *SyntaxStatusToString(SyntaxStatus status)
 {
-    static const char *status_strings[] =
+    static const char *const status_strings[] =
     {
         [SYNTAX_STATUS_DEPRECATED] = "deprecated",
         [SYNTAX_STATUS_NORMAL] = "normal",
@@ -248,7 +248,7 @@ const char *SyntaxTypeMatchToString(SyntaxTypeMatch result)
 {
     assert(result < SYNTAX_TYPE_MATCH_MAX);
 
-    static const char *msgs[SYNTAX_TYPE_MATCH_MAX] =
+    static const char *const msgs[SYNTAX_TYPE_MATCH_MAX] =
     {
         [SYNTAX_TYPE_MATCH_OK] = "OK",
 
@@ -1169,7 +1169,7 @@ static JsonElement *BodyTypesToJson(void)
 
 static const char *FnCallCategoryToString(FnCallCategory category)
 {
-    static const char *category_str[] =
+    static const char *const category_str[] =
     {
         [FNCALL_CATEGORY_COMM] = "communication",
         [FNCALL_CATEGORY_DATA] = "data",

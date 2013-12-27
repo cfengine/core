@@ -118,13 +118,13 @@ static void RandomSeed(void)
 
 /*********************************************************************/
 
+static const char *const passphrase = "Cfengine passphrase";
+
 /**
  * @return true the error is not so severe that we must stop
  */
 bool LoadSecretKeys(void)
 {
-    static char *passphrase = "Cfengine passphrase";
-
     {
         FILE *fp = fopen(PrivateKeyFile(GetWorkDir()), "r");
         if (!fp)
@@ -135,7 +135,8 @@ bool LoadSecretKeys(void)
             return false;
         }
 
-        if ((PRIVKEY = PEM_read_RSAPrivateKey(fp, (RSA **) NULL, NULL, passphrase)) == NULL)
+        if ((PRIVKEY = PEM_read_RSAPrivateKey(fp, (RSA **) NULL, NULL,
+                                              (void *)passphrase)) == NULL)
         {
             unsigned long err = ERR_get_error();
             Log(LOG_LEVEL_ERR,
@@ -160,7 +161,8 @@ bool LoadSecretKeys(void)
             return false;
         }
 
-        if ((PUBKEY = PEM_read_RSAPublicKey(fp, NULL, NULL, passphrase)) == NULL)
+        if ((PUBKEY = PEM_read_RSAPublicKey(fp, NULL, NULL,
+                                            (void *)passphrase)) == NULL)
         {
             unsigned long err = ERR_get_error();
             Log(LOG_LEVEL_ERR,
@@ -256,7 +258,6 @@ RSA *HavePublicKey(const char *username, const char *ipaddress, const char *dige
 {
     char keyname[CF_MAXVARSIZE], newname[CF_BUFSIZE], oldname[CF_BUFSIZE];
     struct stat statbuf;
-    static char *passphrase = "public";
     unsigned long err;
     FILE *fp;
     RSA *newkey = NULL;
@@ -307,7 +308,8 @@ RSA *HavePublicKey(const char *username, const char *ipaddress, const char *dige
         return NULL;
     }
 
-    if ((newkey = PEM_read_RSAPublicKey(fp, NULL, NULL, passphrase)) == NULL)
+    if ((newkey = PEM_read_RSAPublicKey(fp, NULL, NULL,
+                                        (void *)passphrase)) == NULL)
     {
         err = ERR_get_error();
         Log(LOG_LEVEL_ERR, "Error reading public key. (PEM_read_RSAPublicKey: %s)", ERR_reason_error_string(err));

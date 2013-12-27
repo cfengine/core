@@ -35,7 +35,7 @@ void AddFilenameToListOfSuspicious(const char *pattern)
     PrependItem(&SUSPICIOUSLIST, pattern, NULL);
 }
 
-static const char *SKIPFILES[] =
+static const char *const SKIPFILES[] =
 {
     ".",
     "..",

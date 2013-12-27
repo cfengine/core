@@ -51,9 +51,9 @@ int NO_FORK = false;
 /* Command line options                                            */
 /*******************************************************************/
 
-static const char *CF_SERVERD_SHORT_DESCRIPTION = "CFEngine file server daemon";
+static const char *const CF_SERVERD_SHORT_DESCRIPTION = "CFEngine file server daemon";
 
-static const char *CF_SERVERD_MANPAGE_LONG_DESCRIPTION =
+static const char *const CF_SERVERD_MANPAGE_LONG_DESCRIPTION =
         "cf-serverd is a socket listening daemon providing two services: it acts as a file server for remote file copying "
         "and it allows an authorized cf-runagent to start a cf-agent run. cf-agent typically connects to a "
         "cf-serverd instance to request updated policy code, but may also request additional files for download. "
@@ -79,7 +79,7 @@ static const struct option OPTIONS[] =
     {NULL, 0, 0, '\0'}
 };
 
-static const char *HINTS[] =
+static const char *const HINTS[] =
 {
     "Print the help message",
     "Enable debugging output",

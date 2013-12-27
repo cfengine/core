@@ -125,7 +125,8 @@ static void WriteDescription(Writer *out, const char *description)
     WriterWriteF(out, ".SH DESCRIPTION\n%s\n", description);
 }
 
-static void WriteOptions(Writer *out, const struct option options[], const char *option_hints[])
+static void WriteOptions(Writer *out, const struct option options[],
+                         const char *const option_hints[])
 {
     WriterWrite(out, ".SH OPTIONS\n");
 
@@ -202,8 +203,8 @@ static void WritePromiseTheory(Writer *out)
 
 void ManPageWrite(Writer *out, const char *program, time_t last_modified,
                   const char *short_description, const char *long_description,
-                  const struct option options[], const char *option_hints[],
-                  bool accepts_file_argument)
+                  const struct option options[],
+                  const char *const option_hints[], bool accepts_file_argument)
 {
     WriteCopyright(out);
     WriteHeader(out, program, last_modified);

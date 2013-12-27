@@ -1415,7 +1415,7 @@ static void VerifyPromises(EvalContext *ctx, const Policy *policy, GenericAgentC
     }
 }
 
-void GenericAgentWriteHelp(Writer *w, const char *component, const struct option options[], const char *hints[], bool accepts_file_argument)
+void GenericAgentWriteHelp(Writer *w, const char *component, const struct option options[], const char *const hints[], bool accepts_file_argument)
 {
     WriterWriteF(w, "Usage: %s [OPTION]...%s\n", component, accepts_file_argument ? " [FILE]" : "");
 

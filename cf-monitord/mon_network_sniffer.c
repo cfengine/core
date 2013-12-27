@@ -51,7 +51,7 @@ typedef enum
 
 static const int SLEEPTIME = 2.5 * 60;  /* Should be a fraction of 5 minutes */
 
-static const char *TCPNAMES[CF_NETATTR] =
+static const char *const TCPNAMES[CF_NETATTR] =
 {
     "icmp",
     "udp",

@@ -41,9 +41,10 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv);
 /* Command line options                                            */
 /*******************************************************************/
 
-static const char *CF_PROMISES_SHORT_DESCRIPTION = "validate and analyze CFEngine policy code";
+static const char *const CF_PROMISES_SHORT_DESCRIPTION =
+    "validate and analyze CFEngine policy code";
 
-static const char *CF_PROMISES_MANPAGE_LONG_DESCRIPTION = "cf-promises is a tool for checking CFEngine policy code. "
+static const char *const CF_PROMISES_MANPAGE_LONG_DESCRIPTION = "cf-promises is a tool for checking CFEngine policy code. "
         "It operates by first parsing policy code checing for syntax errors. Second, it validates the integrity of "
         "policy consisting of multiple files. Third, it checks for semantic errors, e.g. specific attribute set rules. "
         "Finally, cf-promises attempts to expose errors by partially evaluating the policy, resolving as many variable and "
@@ -78,7 +79,7 @@ static const struct option OPTIONS[] =
     {NULL, 0, 0, '\0'}
 };
 
-static const char *HINTS[] =
+static const char *const HINTS[] =
 {
     [PROMISES_OPTION_EVAL_FUNCTIONS] = "Evaluate functions during syntax checking (may catch more run-time errors). Possible values: 'yes', 'no'. Default is 'no'",
     "Print the help message",

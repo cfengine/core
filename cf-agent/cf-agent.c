@@ -169,9 +169,10 @@ static int AutomaticBootstrap(GenericAgentConfig *config);
 /* Command line options                                            */
 /*******************************************************************/
 
-static const char *CF_AGENT_SHORT_DESCRIPTION = "evaluate CFEngine policy code and actuate change to the system.";
+static const char *const CF_AGENT_SHORT_DESCRIPTION =
+    "evaluate CFEngine policy code and actuate change to the system.";
 
-static const char *CF_AGENT_MANPAGE_LONG_DESCRIPTION =
+static const char *const CF_AGENT_MANPAGE_LONG_DESCRIPTION =
         "cf-agent evaluates policy code and makes changes to the system. Policy bundles are evaluated in the order of the "
         "provided bundlesequence (this is normally specified in the common control body). "
         "For each bundle, cf-agent groups promise statements according to their type. Promise types are then evaluated in a preset "
@@ -198,7 +199,7 @@ static const struct option OPTIONS[] =
     {NULL, 0, 0, '\0'}
 };
 
-static const char *HINTS[] =
+static const char *const HINTS[] =
 {
     "Bootstrap CFEngine to the given policy server IP, hostname or :avahi (automatic detection)",
     "Set or override bundlesequence from command line",

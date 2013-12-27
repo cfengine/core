@@ -486,7 +486,7 @@ void StringBytesToHex(const unsigned char *bytes, size_t num_bytes, char out[(nu
     out[num_bytes * 2] = '\0';
 }
 
-bool IsStrIn(const char *str, const char **strs)
+bool IsStrIn(const char *str, const char *const strs[])
 {
     int i;
 
@@ -500,7 +500,7 @@ bool IsStrIn(const char *str, const char **strs)
     return false;
 }
 
-bool IsStrCaseIn(const char *str, const char **strs)
+bool IsStrCaseIn(const char *str, const char *const strs[])
 {
     int i;
 

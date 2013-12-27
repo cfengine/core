@@ -177,21 +177,20 @@ int FullTextMatch(EvalContext *ctx, const char *regexp, const char *teststring)
 
 char *ExtractFirstReference(const char *regexp, const char *teststring)
 {
-    static char *nothing = "";
     char *backreference;
 
     pcre *rx;
 
     if ((regexp == NULL) || (teststring == NULL))
     {
-        return nothing;
+        return "";
     }
 
     rx = CompileRegExp(regexp);
 
     if (rx == NULL)
     {
-        return nothing;
+        return "";
     }
 
     backreference = FirstBackReference(rx, teststring);

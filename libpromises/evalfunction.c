@@ -4790,6 +4790,86 @@ static FnCallResult FnCallSplitString(ARG_UNUSED EvalContext *ctx, ARG_UNUSED Fn
     return (FnCallResult) { FNCALL_SUCCESS, { newlist, RVAL_TYPE_LIST } };
 }
 
+
+/*********************************************************************/
+
+static FnCallResult FnCallMakeFrom(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
+{
+    const char *target = RlistScalarValue(finalargs);
+    const char *listvar = RlistScalarValue(finalargs->next);
+    Rlist *list = NULL;
+    struct stat statbuf;
+    bool result = false;
+    time_t target_time = 0;
+        
+    if (!IsVarList(listvar))
+       {
+       RlistPrepend(&list, listvar, RVAL_TYPE_SCALAR);
+       }
+    else
+       {
+       char naked[CF_MAXVARSIZE] = "";
+       GetNaked(naked, listvar);
+       
+       VarRef *ref = VarRefParse(naked);
+       
+       Rval retval;
+       if (!EvalContextVariableGet(ctx, ref, &retval, NULL))
+          {
+          Log(LOG_LEVEL_VERBOSE, "Function MAKEFROM was promised a list called '%s' but this was not found", listvar);
+          VarRefDestroy(ref);
+          return FnFailure();
+          }
+       
+       if (retval.type != RVAL_TYPE_LIST)
+          {
+          Log(LOG_LEVEL_WARNING, "Function MAKEFROM was promised a list called '%s' but this variable is not a list", listvar);
+          return FnFailure();
+          }
+
+       list = retval.item;
+       }
+
+    if (lstat(target, &statbuf) == -1)
+       {
+       result = true;
+       }
+    else
+       {
+       if (!S_ISREG(statbuf.st_mode))
+          {
+          Log(LOG_LEVEL_VERBOSE, "Warning function makefrom target file object %s exists and is not a plain file", target);
+          // Not a probe's responsibility to fix - but have this for debugging
+          }
+       
+       target_time = statbuf.st_mtime;
+       }
+    
+    // For each file in sources, check they exist and are older than target
+
+    for (const Rlist *rp = list; rp != NULL; rp = rp->next)
+    {
+    if (lstat(rp->val.item, &statbuf) == -1)
+       {
+       Log(LOG_LEVEL_VERBOSE, "Function makefrom, one of the source files was not readable");
+       result = false; // if one of the sources does not exist, we cannot make
+       break;
+       }
+    else
+       {
+       if (statbuf.st_mtime > target_time)
+          {
+          result = true;
+          }
+       }
+    }
+
+    // free menory?
+    
+    return FnReturnContext(result);
+}
+
+
 /*********************************************************************/
 
 static FnCallResult FnCallFileSexist(EvalContext *ctx, ARG_UNUSED FnCall *fp, Rlist *finalargs)
@@ -6042,6 +6122,13 @@ static const FnCallArg REGLIST_ARGS[] =
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
+static const FnCallArg MAKEFROM_ARGS[] =
+{
+    {CF_ABSPATHRANGE, DATA_TYPE_STRING, "Target filename"},
+    {CF_ANYSTRING, DATA_TYPE_STRING, "Source filename or CFEngine list identifier"},
+    {NULL, DATA_TYPE_NONE, NULL}
+};
+
 static const FnCallArg REGLDAP_ARGS[] =
 {
     {CF_ANYSTRING, DATA_TYPE_STRING, "URI"},
@@ -6456,6 +6543,8 @@ const FnCallType CF_FNCALL_TYPES[] =
     FnCallTypeNew("regline", DATA_TYPE_CONTEXT, REGLINE_ARGS, &FnCallRegLine, "True if the regular expression in arg1 matches a line in file arg2",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("reglist", DATA_TYPE_CONTEXT, REGLIST_ARGS, &FnCallRegList, "True if the regular expression in arg2 matches any item in the list whose id is arg1",
+                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("makefrom", DATA_TYPE_CONTEXT, MAKEFROM_ARGS, &FnCallMakeFrom, "True if the target file arg1 does not exist or a source file in arg2 is newer",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("regldap", DATA_TYPE_CONTEXT, REGLDAP_ARGS, &FnCallRegLDAP, "True if the regular expression in arg6 matches a value item in an ldap search",
                   FNCALL_OPTION_CACHED, FNCALL_CATEGORY_COMM, SYNTAX_STATUS_NORMAL),

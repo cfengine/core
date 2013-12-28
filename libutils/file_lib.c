@@ -232,9 +232,12 @@ int safe_open(const char *pathname, int flags, ...)
         next_component = strchr(component + 1, '/');
         if (next_component)
         {
-            *next_component = '\0';
-            // Eliminate double slashes.
-            while (*(++next_component) == '/') { /*noop*/ }
+            *(next_component++) = '\0';
+        }
+        if (! *component)
+        {
+            // empty part between 2 slashes or slash at end of string
+            continue;
         }
 
         struct stat stat_before, stat_after;

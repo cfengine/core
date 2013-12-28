@@ -25,6 +25,12 @@
 #ifndef CF_EXECD_H
 #define CF_EXECD_H
 
-void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, ExecConfig *exec_config);
+#include <eval_context.h>
+#include <policy.h>
+#include <generic_agent.h>
+#include <exec-config.h>
+#include <execd-config.h>
+
+void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, ExecdConfig *execd_config, ExecConfig *exec_config);
 
 #endif

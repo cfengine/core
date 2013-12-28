@@ -4803,72 +4803,71 @@ static FnCallResult FnCallMakeFrom(EvalContext *ctx, FnCall *fp, Rlist *finalarg
     time_t target_time = 0;
         
     if (!IsVarList(listvar))
-       {
-       RlistPrepend(&list, listvar, RVAL_TYPE_SCALAR);
-       }
+    {
+        RlistPrepend(&list, listvar, RVAL_TYPE_SCALAR);
+    }
     else
-       {
-       char naked[CF_MAXVARSIZE] = "";
-       GetNaked(naked, listvar);
+    {
+        char naked[CF_MAXVARSIZE] = "";
+        GetNaked(naked, listvar);
        
-       VarRef *ref = VarRefParse(naked);
+        VarRef *ref = VarRefParse(naked);
        
-       Rval retval;
-       if (!EvalContextVariableGet(ctx, ref, &retval, NULL))
-          {
-          Log(LOG_LEVEL_VERBOSE, "Function MAKEFROM was promised a list called '%s' but this was not found", listvar);
-          VarRefDestroy(ref);
-          return FnFailure();
-          }
+        Rval retval;
+        if (!EvalContextVariableGet(ctx, ref, &retval, NULL))
+        {
+            Log(LOG_LEVEL_VERBOSE, "Function MAKEFROM was promised a list called '%s' but this was not found", listvar);
+            VarRefDestroy(ref);
+            return FnFailure();
+        }
        
        if (retval.type != RVAL_TYPE_LIST)
-          {
-          Log(LOG_LEVEL_WARNING, "Function MAKEFROM was promised a list called '%s' but this variable is not a list", listvar);
-          return FnFailure();
-          }
+       {
+           Log(LOG_LEVEL_WARNING, "Function MAKEFROM was promised a list called '%s' but this variable is not a list", listvar);
+           return FnFailure();
+       }
 
        list = retval.item;
-       }
+    }
 
     if (lstat(target, &statbuf) == -1)
-       {
-       result = true;
-       }
+    {
+        result = true;
+    }
     else
-       {
-       if (!S_ISREG(statbuf.st_mode))
-          {
-          Log(LOG_LEVEL_VERBOSE, "Warning function makefrom target file object %s exists and is not a plain file", target);
-          // Not a probe's responsibility to fix - but have this for debugging
-          }
+    {
+        if (!S_ISREG(statbuf.st_mode))
+        {
+            Log(LOG_LEVEL_VERBOSE, "Warning function makefrom target file object %s exists and is not a plain file", target);
+            // Not a probe's responsibility to fix - but have this for debugging
+        }
        
-       target_time = statbuf.st_mtime;
-       }
+        target_time = statbuf.st_mtime;
+    }
     
     // For each file in sources, check they exist and are older than target
 
     for (const Rlist *rp = list; rp != NULL; rp = rp->next)
     {
-    if (lstat(rp->val.item, &statbuf) == -1)
-       {
-       Log(LOG_LEVEL_VERBOSE, "Function makefrom, one of the source files was not readable");
-       result = false; // if one of the sources does not exist, we cannot make
-       break;
-       }
-    else
-       {
-       if (statbuf.st_mtime > target_time)
-          {
-          result = true;
-          }
-       }
+        if (lstat(rp->val.item, &statbuf) == -1)
+        {
+            Log(LOG_LEVEL_VERBOSE, "Function makefrom, one of the source files was not readable");
+            result = false; // if one of the sources does not exist, we cannot make
+            break;
+        }
+        else
+        {
+            if (statbuf.st_mtime > target_time)
+            {
+                result = true;
+            }
+        }
     }
-
+    
     // free menory?
     
     return FnReturnContext(result);
 }
-
 
 /*********************************************************************/
 

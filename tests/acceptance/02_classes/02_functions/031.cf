@@ -1,0 +1,94 @@
+#######################################################
+#
+# Test makefrom()
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };   
+      version => "1.0";
+}
+
+bundle agent init
+{
+  vars:
+      "dummy" string => "dummy";
+}
+
+#######################################################
+
+bundle agent test
+{
+  vars:
+      "lold" slist => { "/etc/passwd", "/etc/group" };
+      "lnew" slist => { "/etc/passwd", "/tmp/newfile" };
+      "lnon" slist => { "/etc/passwd", "/etc/NoFriggin'WayThisExi5ts" };
+
+ files:
+
+   "/tmp/newfile"
+        create => "true";
+
+   "/tmp/nosuchfile"
+
+         delete => tidy;
+}
+
+body delete tidy
+{
+dirlinks => "delete";
+rmdirs   => "true";
+}
+
+#######################################################
+
+bundle agent check
+{
+  classes:
+
+      # A new file does not need to be rebuild from an older file
+      "ok1" not => makefrom("/tmp/newfile", "/etc/passwd");
+
+      # An older file does need to be rebuilt from a newer file
+      "ok2" expression => makefrom("/etc/passwd", "/tmp/newfile");
+
+      # An older file does need to be rebuilt from a newer file
+      "ok3" not => makefrom("/etc/passwd", "/tmp/nosuchfile");
+
+      # An non existent file does need to be rebuilt from a source file
+      "ok4" expression => makefrom("/tmp/nosuchfile", "/etc/passwd");
+
+      # A new file does not need to be rebuild from an older file
+      "ok5" not => makefrom("/tmp/newfile", "@(test.lold)");
+
+      # An old file does need to be rebuild from an newer file in a list
+      "ok6" expression => makefrom("/etc/passwd", "@(test.lnew)");
+
+      # An old file does not need to be rebuild from sources with a missing file
+      "ok7" not => makefrom("/etc/passwd", "@(test.lnon)");
+
+      "ok" and => { "ok1", "ok2", "ok3", "ok4", "ok5", "ok6", "ok7" };
+
+  reports:
+    DEBUG.ok1::
+      "1. pass";
+    DEBUG.ok2::
+      "2. pass";
+    DEBUG.ok3::
+      "3. pass";
+    DEBUG.ok4::
+      "4. pass";
+    DEBUG.ok5::
+      "5. pass";
+    DEBUG.ok6::
+      "6. pass";
+    DEBUG.ok7::
+      "7. pass";
+
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

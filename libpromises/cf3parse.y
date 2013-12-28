@@ -1166,7 +1166,7 @@ static void ParseErrorVColumnOffset(int column_offset, const char *s, va_list ap
 
         if (P.error_count > 12)
         {
-            fprintf(stderr, "Too many errors");
+            fprintf(stderr, "Too many errors\n");
             exit(1);
         }
     }
@@ -1227,7 +1227,7 @@ static void ParseWarningV(unsigned int warning, const char *s, va_list ap)
 
     if (P.error_count > 12)
     {
-        fprintf(stderr, "Too many errors");
+        fprintf(stderr, "Too many errors\n");
         exit(1);
     }
 }

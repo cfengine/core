@@ -270,7 +270,7 @@ process_terminate_unix_test_SOURCES = process_terminate_unix_test.c \
 process_terminate_unix_test_LDADD = libtest.la ../../libutils/libutils.la
 
 exec_config_test_SOURCES = exec-config-test.c \
-	../../cf-execd/exec-config.c
+	../../cf-execd/exec-config.c ../../cf-execd/execd-config.c
 exec_config_test_LDADD = libtest.la ../../libpromises/libpromises.la
 
 sysinfo_test_LDADD = ../../libpromises/libpromises.la libtest.la

@@ -1,6 +1,7 @@
 #include <test.h>
 
 #include <exec-config.h>
+#include <execd-config.h>
 
 #include <parser.h>
 #include <eval_context.h>
@@ -14,108 +15,147 @@ static Policy *LoadPolicy(const char *filename)
     return ParserParseFile(AGENT_TYPE_COMMON, path, PARSER_WARNING_ALL, PARSER_WARNING_ALL);
 }
 
-static void TestCheckConfigIsDefault(ExecConfig *c)
+typedef void (*TestFn)(const EvalContext *ctx, const Policy *policy);
+
+static void run_test_in_policy(const char *policy_filename, TestFn fn)
 {
-    assert_int_equal(10800, c->agent_expireafter);
-    assert_string_equal("", c->exec_command);
-    assert_string_equal("LOG_USER",c->log_facility);
-    assert_string_equal("",c->mail_from_address);
-    assert_int_equal(30, c->mail_max_lines);
-    assert_string_equal("", c->mail_server);
-    assert_string_equal("",c->mail_to_address);
-    assert_string_equal("",c->mail_subject);
-    assert_int_equal(0, c->splay_time);
-
-    assert_int_equal(12, StringSetSize(c->schedule));
-}
-
-static void test_new_destroy(void)
-{
-    ExecConfig *c = ExecConfigNewDefault(true, "host", "ip");
-    TestCheckConfigIsDefault(c);
-    ExecConfigDestroy(c);
-}
-
-static void test_load(void)
-{
-    GenericAgentConfig *agent_config = GenericAgentConfigNewDefault(AGENT_TYPE_EXECUTOR);
-    ExecConfig *c = ExecConfigNewDefault(true, "host", "ip");
-
-    assert_true(c->scheduled_run);
-    assert_string_equal("host", c->fq_name);
-    assert_string_equal("ip", c->ip_address);
-
-    TestCheckConfigIsDefault(c);
-
+    GenericAgentConfig *agent_config = GenericAgentConfigNewDefault(
+        AGENT_TYPE_EXECUTOR);
     EvalContext *ctx = EvalContextNew();
-    {
-        VarRef *lval = VarRefParse("g.host");
-        EvalContextVariablePut(ctx, lval, "snookie", DATA_TYPE_STRING, NULL);
-        VarRefDestroy(lval);
-    }
+    Policy *policy = LoadPolicy(policy_filename);
+    PolicyResolve(ctx, policy, agent_config);
 
-    // provide a full body executor control and check that all options are collected
-    {
-        Policy *p = LoadPolicy("body_executor_control_full.cf");
-        PolicyResolve(ctx, p, agent_config);
+    /* Setup global environment */
+    strcpy(VFQNAME, "localhost.localdomain");
+    strcpy(VIPADDRESS, "127.0.0.100");
+    EvalContextAddIpAddress(ctx, "127.0.0.100");
+    EvalContextAddIpAddress(ctx, "127.0.0.101");
 
-        ExecConfigUpdate(ctx, p, c);
+    fn(ctx, policy);
 
-        assert_true(c->scheduled_run);
-        assert_string_equal("host", c->fq_name);
-        assert_string_equal("ip", c->ip_address);
-
-        assert_int_equal(120, c->agent_expireafter);
-        assert_string_equal("/bin/echo", c->exec_command);
-        assert_string_equal("LOG_LOCAL6",c->log_facility);
-        assert_string_equal("cfengine@snookie.example.org",c->mail_from_address);
-        assert_int_equal(50, c->mail_max_lines);
-        assert_string_equal("localhost", c->mail_server);
-        assert_string_equal("cfengine_mail@example.org",c->mail_to_address);
-        assert_string_equal("Test [localhost/127.0.0.1]",c->mail_subject);
-
-        // splay time hard to test (pseudo random)
-
-        assert_int_equal(2, StringSetSize(c->schedule));
-        assert_true(StringSetContains(c->schedule, "Min00_05"));
-        assert_true(StringSetContains(c->schedule, "Min05_10"));
-
-        PolicyDestroy(p);
-    }
-
-    // provide a small policy and check that missing settings are being reverted to default
-    {
-        {
-            Policy *p = LoadPolicy("body_executor_control_agent_expireafter_only.cf");
-            PolicyResolve(ctx, p, agent_config);
-
-            ExecConfigUpdate(ctx, p, c);
-
-            assert_true(c->scheduled_run);
-            assert_string_equal("host", c->fq_name);
-            assert_string_equal("ip", c->ip_address);
-
-            assert_int_equal(121, c->agent_expireafter);
-
-            // rest should be default
-            assert_string_equal("", c->exec_command);
-            assert_string_equal("LOG_USER",c->log_facility);
-            assert_string_equal("",c->mail_from_address);
-            assert_int_equal(30, c->mail_max_lines);
-            assert_string_equal("", c->mail_server);
-            assert_string_equal("",c->mail_to_address);
-            assert_string_equal("",c->mail_subject);
-            assert_int_equal(0, c->splay_time);
-
-            assert_int_equal(12, StringSetSize(c->schedule));
-
-            PolicyDestroy(p);
-        }
-    }
-
+    PolicyDestroy(policy);
     EvalContextDestroy(ctx);
     GenericAgentConfigDestroy(agent_config);
+}
 
+static void execd_config_empty_cb(const EvalContext *ctx, const Policy *policy)
+{
+    ExecdConfig *config = ExecdConfigNew(ctx, policy);
+
+    assert_int_equal(12, StringSetSize(config->schedule));
+    assert_int_equal(true, StringSetContains(config->schedule, "Min00"));
+    assert_int_equal(true, StringSetContains(config->schedule, "Min05"));
+    assert_int_equal(true, StringSetContains(config->schedule, "Min10"));
+    assert_int_equal(true, StringSetContains(config->schedule, "Min15"));
+    assert_int_equal(true, StringSetContains(config->schedule, "Min20"));
+    assert_int_equal(true, StringSetContains(config->schedule, "Min25"));
+    assert_int_equal(true, StringSetContains(config->schedule, "Min30"));
+    assert_int_equal(true, StringSetContains(config->schedule, "Min35"));
+    assert_int_equal(true, StringSetContains(config->schedule, "Min40"));
+    assert_int_equal(true, StringSetContains(config->schedule, "Min45"));
+    assert_int_equal(true, StringSetContains(config->schedule, "Min50"));
+    assert_int_equal(true, StringSetContains(config->schedule, "Min55"));
+    assert_int_equal(0, config->splay_time);
+    assert_string_equal("LOG_USER", config->log_facility);
+
+    ExecdConfigDestroy(config);
+}
+
+static void test_execd_config_empty(void)
+{
+    run_test_in_policy("body_executor_control_empty.cf", &execd_config_empty_cb);
+}
+
+static void execd_config_full_cb(const EvalContext *ctx, const Policy *policy)
+{
+    ExecdConfig *config = ExecdConfigNew(ctx, policy);
+
+    assert_int_equal(2, StringSetSize(config->schedule));
+    assert_int_equal(true, StringSetContains(config->schedule, "Min00_05"));
+    assert_int_equal(true, StringSetContains(config->schedule, "Min05_10"));
+    /* Splay calculation uses FQNAME and getuid(), so can't predict
+       actual splay value */
+    assert_int_equal(true, config->splay_time>=0 && config->splay_time<60);
+    assert_string_equal("LOG_LOCAL6", config->log_facility);
+
+    ExecdConfigDestroy(config);
+}
+
+static void test_execd_config_full(void)
+{
+    run_test_in_policy("body_executor_control_full.cf", &execd_config_full_cb);
+}
+
+#define THREE_HOURS (3*60*60)
+
+static void exec_config_empty_cb(const EvalContext *ctx, const Policy *policy)
+{
+    ExecConfig *config = ExecConfigNew(false, ctx, policy);
+
+    assert_int_equal(false, config->scheduled_run);
+    /* FIXME: exec-config should provide default exec_command */
+    assert_string_equal("", config->exec_command);
+    assert_int_equal(THREE_HOURS, config->agent_expireafter);
+    assert_string_equal("", config->mail_server);
+    /* FIXME: exec-config should provide default from address */
+    assert_string_equal("", config->mail_from_address);
+    assert_string_equal("", config->mail_to_address);
+    /* FIXME: exec-config should provide default subject */
+    assert_string_equal("", config->mail_subject);
+    assert_int_equal(30, config->mail_max_lines);
+    assert_string_equal("localhost.localdomain", config->fq_name);
+    assert_string_equal("127.0.0.100", config->ip_address);
+    assert_string_equal("127.0.0.100 127.0.0.101", config->ip_addresses);
+
+    ExecConfigDestroy(config);
+}
+
+static void test_exec_config_empty(void)
+{
+    run_test_in_policy("body_executor_control_empty.cf", &exec_config_empty_cb);
+}
+
+static void CheckFullExecConfig(const ExecConfig *config)
+{
+    assert_int_equal(true, config->scheduled_run);
+    assert_string_equal("/bin/echo", config->exec_command);
+    assert_int_equal(120, config->agent_expireafter);
+    assert_string_equal("localhost", config->mail_server);
+    assert_string_equal("cfengine@example.org", config->mail_from_address);
+    assert_string_equal("cfengine_mail@example.org", config->mail_to_address);
+    assert_string_equal("Test [localhost/127.0.0.1]", config->mail_subject);
+    assert_int_equal(50, config->mail_max_lines);
+    assert_string_equal("localhost.localdomain", config->fq_name);
+    assert_string_equal("127.0.0.100", config->ip_address);
+    assert_string_equal("127.0.0.100 127.0.0.101", config->ip_addresses);
+}
+
+static void exec_config_full_cb(const EvalContext *ctx, const Policy *policy)
+{
+    ExecConfig *config = ExecConfigNew(true, ctx, policy);
+    CheckFullExecConfig(config);
+    ExecConfigDestroy(config);
+}
+
+static void test_exec_config_full(void)
+{
+    run_test_in_policy("body_executor_control_full.cf", &exec_config_full_cb);
+}
+
+static void exec_config_copy_cb(const EvalContext *ctx, const Policy *policy)
+{
+    ExecConfig *config = ExecConfigNew(true, ctx, policy);
+    ExecConfig *config2 = ExecConfigCopy(config);
+    ExecConfigDestroy(config);
+
+    CheckFullExecConfig(config2);
+
+    ExecConfigDestroy(config2);
+}
+
+static void test_exec_config_copy(void)
+{
+    run_test_in_policy("body_executor_control_full.cf", &exec_config_copy_cb);
 }
 
 int main()
@@ -123,11 +163,12 @@ int main()
     PRINT_TEST_BANNER();
     const UnitTest tests[] =
     {
-        unit_test(test_new_destroy),
-        unit_test(test_load)
+        unit_test(test_execd_config_empty),
+        unit_test(test_execd_config_full),
+        unit_test(test_exec_config_empty),
+        unit_test(test_exec_config_full),
+        unit_test(test_exec_config_copy),
     };
 
     return run_tests(tests);
 }
-
-// STUBS

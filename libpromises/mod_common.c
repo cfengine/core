@@ -318,7 +318,7 @@ const ConstraintSyntax CFS_CONTROLBODY[] =
     ConstraintSyntaxNewBool("logallconnections", "true/false causes the server to log all new connections to syslog. Default value: false", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBool("logencryptedtransfers", "true/false log all successful transfers required to be encrypted. Default value: false", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewInt("maxconnections", CF_VALRANGE, "Maximum number of connections that will be accepted by cf-serverd. Default value: 30 remote queries", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewInt("port", "1024,65535", "Default port for cfengine server. Default value: 5308", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewInt("port", "1,65535", "Default port for cfengine server. Default value: 5308", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewOption("serverfacility", CF_FACILITY, "Menu option for syslog facility level. Default value: LOG_USER", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewStringList("skipverify", "", "This option is deprecated, does nothing and is kept for backward compatibility.", SYNTAX_STATUS_DEPRECATED),
     ConstraintSyntaxNewStringList("trustkeysfrom", "", "List of IPs from whom we accept public keys on trust", SYNTAX_STATUS_NORMAL),
@@ -340,7 +340,7 @@ const ConstraintSyntax CFM_CONTROLBODY[] =
 const ConstraintSyntax CFR_CONTROLBODY[] =
 {
     ConstraintSyntaxNewStringList("hosts", "", "List of host or IP addresses to attempt connection with", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewInt("port", "1024,65535", "Default port for cfengine server. Default value: 5308", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewInt("port", "1,65535", "Default port for cfengine server. Default value: 5308", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBool("force_ipv4", "true/false force use of ipv4 in connection. Default value: false", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBool("trustkey", "true/false automatically accept all keys on trust from servers. Default value: false", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBool("encrypt", "true/false encrypt connections with servers. Default value: false", SYNTAX_STATUS_NORMAL),
@@ -372,7 +372,7 @@ const ConstraintSyntax CFH_CONTROLBODY[] =  /* enum cfh_control */
     ConstraintSyntaxNewString("export_zenoss", CF_PATHRANGE, "Generate report for Zenoss integration", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewStringList("exclude_hosts", "", "A list of IP addresses of hosts to exclude from report collection", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewStringList("hub_schedule", "", "The class schedule used by cf-hub for report collation", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewInt("port", "1024,65535", "Default port for contacting hub nodes. Default value: 5308", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewInt("port", "1,65535", "Default port for contacting hub nodes. Default value: 5308", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };
 

@@ -4864,8 +4864,6 @@ static FnCallResult FnCallMakeFrom(EvalContext *ctx, FnCall *fp, Rlist *finalarg
         }
     }
     
-    // free menory?
-    
     return FnReturnContext(result);
 }
 

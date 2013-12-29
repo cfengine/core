@@ -1,6 +1,6 @@
 #######################################################
 #
-# Test makefrom()
+# Test maketarget()
 #
 #######################################################
 
@@ -49,25 +49,25 @@ bundle agent check
   classes:
 
       # A new file does not need to be rebuild from an older file
-      "ok1" not => makefrom("/tmp/newfile", "/etc/passwd");
+      "ok1" not => maketarget("/tmp/newfile", "/etc/passwd");
 
       # An older file does need to be rebuilt from a newer file
-      "ok2" expression => makefrom("/etc/passwd", "/tmp/newfile");
+      "ok2" expression => maketarget("/etc/passwd", "/tmp/newfile");
 
       # An older file does need to be rebuilt from a newer file
-      "ok3" not => makefrom("/etc/passwd", "/tmp/nosuchfile");
+      "ok3" not => maketarget("/etc/passwd", "/tmp/nosuchfile");
 
       # An non existent file does need to be rebuilt from a source file
-      "ok4" expression => makefrom("/tmp/nosuchfile", "/etc/passwd");
+      "ok4" expression => maketarget("/tmp/nosuchfile", "/etc/passwd");
 
       # A new file does not need to be rebuild from an older file
-      "ok5" not => makefrom("/tmp/newfile", "@(test.lold)");
+      "ok5" not => maketarget("/tmp/newfile", "@(test.lold)");
 
       # An old file does need to be rebuild from an newer file in a list
-      "ok6" expression => makefrom("/etc/passwd", "@(test.lnew)");
+      "ok6" expression => maketarget("/etc/passwd", "@(test.lnew)");
 
       # An old file does not need to be rebuild from sources with a missing file
-      "ok7" not => makefrom("/etc/passwd", "@(test.lnon)");
+      "ok7" not => maketarget("/etc/passwd", "@(test.lnon)");
 
       "ok" and => { "ok1", "ok2", "ok3", "ok4", "ok5", "ok6", "ok7" };
 

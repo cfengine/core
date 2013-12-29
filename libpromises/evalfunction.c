@@ -4852,8 +4852,7 @@ static FnCallResult FnCallMakeTarget(EvalContext *ctx, FnCall *fp, Rlist *finala
         if (lstat(rp->val.item, &statbuf) == -1)
         {
             Log(LOG_LEVEL_VERBOSE, "Function makefrom, one of the source files was not readable");
-            result = false; // if one of the sources does not exist, we cannot make
-            break;
+            return FnFailure();
         }
         else
         {
@@ -4863,8 +4862,15 @@ static FnCallResult FnCallMakeTarget(EvalContext *ctx, FnCall *fp, Rlist *finala
             }
         }
     }
-    
-    return FnReturnContext(result);
+
+    if (result)
+    {
+        return FnReturnContext(true);
+    }
+    else
+    {
+        return FnFailure();
+    }
 }
 
 /*********************************************************************/

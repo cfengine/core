@@ -1758,6 +1758,12 @@ void GenericAgentConfigApply(EvalContext *ctx, const GenericAgentConfig *config)
     default:
         break;
     }
+
+    if (DONTDO)
+    {
+        EvalContextClassPut(ctx, NULL, "opt_dry_run", false, CONTEXT_SCOPE_NAMESPACE,
+                            "cfe_internal,source=environment");
+    }
 }
 
 void GenericAgentConfigSetInputFile(GenericAgentConfig *config, const char *workdir, const char *input_file)

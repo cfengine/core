@@ -35,7 +35,7 @@
 
 #include <time.h>
 
-static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv);
+static GenericAgentConfig *CheckOpts(int argc, char **argv);
 
 /*******************************************************************/
 /* Command line options                                            */
@@ -110,7 +110,7 @@ static const char *const HINTS[] =
 int main(int argc, char *argv[])
 {
     EvalContext *ctx = EvalContextNew();
-    GenericAgentConfig *config = CheckOpts(ctx, argc, argv);
+    GenericAgentConfig *config = CheckOpts(argc, argv);
     GenericAgentConfigApply(ctx, config);
 
     GenericAgentDiscoverContext(ctx, config);
@@ -166,7 +166,7 @@ int main(int argc, char *argv[])
 /* Level 1                                                         */
 /*******************************************************************/
 
-GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
+GenericAgentConfig *CheckOpts(int argc, char **argv)
 {
     extern char *optarg;
     int optindex = 0;
@@ -288,7 +288,6 @@ GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
         case 'n':
             DONTDO = true;
             IGNORELOCK = true;
-            EvalContextClassPutHard(ctx, "opt_dry_run", "cfe_internal,source=environment");
             break;
 
         case 'V':

@@ -380,7 +380,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
                 CloseNetwork();
 
                 MINUSF = true;
-                IGNORELOCK = true;
+                config->ignore_locks = true;
                 GenericAgentConfigSetInputFile(config, GetWorkDir(),
                                                "promises.cf");
                 config->agent_specific.agent.bootstrap_policy_server =
@@ -389,7 +389,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             break;
 
         case 'K':
-            IGNORELOCK = true;
+            config->ignore_locks = true;
             break;
 
         case 'D':
@@ -410,7 +410,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
 
         case 'n':
             DONTDO = true;
-            IGNORELOCK = true;
+            config->ignore_locks = true;
             break;
 
         case 'V':

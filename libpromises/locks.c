@@ -831,7 +831,7 @@ CfLock AcquireLock(EvalContext *ctx, const char *operand, const char *host, time
 
 void YieldCurrentLock(CfLock lock)
 {
-    if (IGNORELOCK)
+    if (lock.dummy)
     {
         free(lock.lock);        /* allocated in AquireLock as a special case */
         return;

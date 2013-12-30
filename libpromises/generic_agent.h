@@ -45,6 +45,7 @@ typedef struct
 
     StringSet *heap_soft;
     StringSet *heap_negated;
+    bool ignore_locks;
 
     bool tty_interactive; // agent is running interactively, via tty/terminal interface
     bool color;

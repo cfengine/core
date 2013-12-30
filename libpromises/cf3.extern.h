@@ -57,7 +57,6 @@ extern char VFQNAME[];
 extern char VUQNAME[];
 
 extern bool DONTDO;
-extern int IGNORELOCK;
 extern bool MINUSF;
 
 extern const char *const VPSCOMM[];

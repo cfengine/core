@@ -58,6 +58,7 @@ struct EvalContext_
     bool bundle_aborted;
     bool checksum_updates_default;
     Item *ip_addresses;
+    bool ignore_locks;
 
     Item *heap_abort;
     Item *heap_abort_current_bundle;
@@ -728,6 +729,7 @@ EvalContext *EvalContextNew(void)
     ctx->bundle_aborted = false;
     ctx->checksum_updates_default = false;
     ctx->ip_addresses = NULL;
+    ctx->ignore_locks = false;
 
     ctx->heap_abort = NULL;
     ctx->heap_abort_current_bundle = NULL;
@@ -2206,4 +2208,14 @@ void EvalContextSetLaunchDirectory(EvalContext *ctx, const char *path)
 {
     free(ctx->launch_directory);
     ctx->launch_directory = xstrdup(path);
+}
+
+void EvalContextSetIgnoreLocks(EvalContext *ctx, bool ignore)
+{
+    ctx->ignore_locks = ignore;
+}
+
+bool EvalContextIsIgnoringLocks(const EvalContext *ctx)
+{
+    return ctx->ignore_locks;
 }

@@ -218,7 +218,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             break;
 
         case 'K':
-            IGNORELOCK = true;
+            config->ignore_locks = true;
             break;
 
         case 'D':
@@ -240,7 +240,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
 
         case 'n':
             DONTDO = true;
-            IGNORELOCK = true;
+            config->ignore_locks = true;
             break;
 
         case 'L':

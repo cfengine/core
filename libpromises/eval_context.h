@@ -179,6 +179,9 @@ bool EvalContextPromiseIsActive(const EvalContext *ctx, const Promise *pp);
 void EvalContextSetEvalOption(EvalContext *ctx, EvalContextOption option, bool value);
 bool EvalContextGetEvalOption(EvalContext *ctx, EvalContextOption option);
 
+bool EvalContextIsIgnoringLocks(const EvalContext *ctx);
+void EvalContextSetIgnoreLocks(EvalContext *ctx, bool ignore);
+
 void EvalContextSetLaunchDirectory(EvalContext *ctx, const char *path);
 
 bool Abort(EvalContext *ctx);

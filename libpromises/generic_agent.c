@@ -1672,6 +1672,7 @@ GenericAgentConfig *GenericAgentConfigNewDefault(AgentType agent_type)
 
     config->heap_soft = NULL;
     config->heap_negated = NULL;
+    config->ignore_locks = false;
 
     config->agent_specific.agent.bootstrap_policy_server = NULL;
 
@@ -1758,6 +1759,8 @@ void GenericAgentConfigApply(EvalContext *ctx, const GenericAgentConfig *config)
     default:
         break;
     }
+
+    EvalContextSetIgnoreLocks(ctx, config->ignore_locks);
 
     if (DONTDO)
     {

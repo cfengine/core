@@ -158,7 +158,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             break;
 
         case 'K':
-            IGNORELOCK = true;
+            config->ignore_locks = true;
             break;
 
         case 'I':

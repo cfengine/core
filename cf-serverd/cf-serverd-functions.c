@@ -160,7 +160,7 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
             NO_FORK = true;
 
         case 'K':
-            IGNORELOCK = true;
+            config->ignore_locks = true;
             break;
 
         case 'D':

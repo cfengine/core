@@ -57,7 +57,6 @@ char POLICY_SERVER[CF_MAX_IP_LEN] = { 0 }; /* GLOBAL_X */
 /* Compatability infrastructure                                              */
 /*****************************************************************************/
 
-int IGNORELOCK = false; /* GLOBAL_A */
 bool DONTDO = false; /* GLOBAL_A */
 
 char VFQNAME[CF_MAXVARSIZE] = { 0 }; /* GLOBAL_E GLOBAL_P */

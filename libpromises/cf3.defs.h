@@ -973,6 +973,7 @@ typedef struct
     char *last;
     char *lock;
     char *log;
+    bool dummy;
 } CfLock;
 
 /*************************************************************************/

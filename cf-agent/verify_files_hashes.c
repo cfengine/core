@@ -367,7 +367,7 @@ void LogHashChange(const char *file, FileState status, char *msg, const Promise 
     char fname[CF_BUFSIZE];
     time_t now = time(NULL);
     mode_t perm = 0600;
-    static char prevFile[CF_MAXVARSIZE] = { 0 };
+    static char prevFile[CF_MAXVARSIZE] = { 0 }; /* GLOBAL_X */
 
 // we might get called twice..
     if (strcmp(file, prevFile) == 0)

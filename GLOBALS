@@ -1,0 +1,54 @@
+This is a WiP classification of global variables in CFEngine created with the
+purpose of getting rid of them.
+
+GLOBAL_A
+--------
+
+Globals filled in during arguments parsing.
+
+Plan of attack: Move to ArgContext.
+
+GLOBAL_C
+--------
+
+Globals filled in during startup and not changed afterwards.
+
+Plan of attack: ?
+
+GLOBAL_E
+--------
+
+Globals filled in during environment detection and updated every time
+environment is re-read.
+
+Plan of attack: Move to EnvContext.
+
+GLOBAL_P
+--------
+
+Description: Globals filled in during policy parsing and/or body * control
+reading, and updated every time policy is re-read.
+
+Plan of attack: Move to evaluation time resolution as much as possible. Clearly
+state in documentation which variables cannot be resolved at evaluation
+time. Keep those in EvalContext (?).
+
+GLOBAL_R
+--------
+
+Static buffers used for returning values from functions.
+
+Plan of attack: allocate and return values instead of storing them in temporary
+variables.
+
+GLOBAL_T
+--------
+
+Mutexes, condition variables, once-controls and thread parameters.
+
+Plan of attack: change algorithms to share-nothing.
+
+GLOBAL_X
+--------
+
+All other unclassified globals.

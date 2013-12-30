@@ -28,54 +28,54 @@
 /* flags                                                                     */
 /*****************************************************************************/
 
-int SHOWREPORTS = false;
+int SHOWREPORTS = false; /* GLOBAL_A */
 
 /*****************************************************************************/
 /* operational state                                                         */
 /*****************************************************************************/
 
-bool FIPS_MODE = false;
+bool FIPS_MODE = false; /* GLOBAL_P */
 
-struct utsname VSYSNAME;
+struct utsname VSYSNAME; /* GLOBAL_E */
 
-int CFA_MAXTHREADS = 10;
-int CF_PERSISTENCE = 10;
+int CFA_MAXTHREADS = 10; /* GLOBAL_P */
+int CF_PERSISTENCE = 10; /* GLOBAL_P */
 
-AgentType THIS_AGENT_TYPE;
+AgentType THIS_AGENT_TYPE; /* GLOBAL_C */
 
-Item *PROCESSTABLE = NULL;
+Item *PROCESSTABLE = NULL; /* GLOBAL_X */
 Item *ROTATED = NULL;
 
 /*****************************************************************************/
 /* Internal data structures                                                  */
 /*****************************************************************************/
 
-int LASTSEENEXPIREAFTER = SECONDS_PER_WEEK;
+int LASTSEENEXPIREAFTER = SECONDS_PER_WEEK; /* GLOBAL_P */
 
-char POLICY_SERVER[CF_MAX_IP_LEN] = { 0 };
+char POLICY_SERVER[CF_MAX_IP_LEN] = { 0 }; /* GLOBAL_X */
 
 /*****************************************************************************/
 /* Compatability infrastructure                                              */
 /*****************************************************************************/
 
-int IGNORELOCK = false;
-bool DONTDO = false;
+int IGNORELOCK = false; /* GLOBAL_A */
+bool DONTDO = false; /* GLOBAL_A */
 
-char VFQNAME[CF_MAXVARSIZE] = { 0 };
-char VUQNAME[CF_MAXVARSIZE] = { 0 };
-char VDOMAIN[CF_MAXVARSIZE] = { 0 };
+char VFQNAME[CF_MAXVARSIZE] = { 0 }; /* GLOBAL_E GLOBAL_P */
+char VUQNAME[CF_MAXVARSIZE] = { 0 }; /* GLOBAL_E */
+char VDOMAIN[CF_MAXVARSIZE] = { 0 }; /* GLOBAL_E GLOBAL_P */
 
-char VYEAR[5] = { 0 };
-char VDAY[3] = { 0 };
-char VMONTH[4] = { 0 };
-char VSHIFT[12] = { 0 };
+char VYEAR[5] = { 0 }; /* GLOBAL_E */
+char VDAY[3] = { 0 }; /* GLOBAL_E */
+char VMONTH[4] = { 0 }; /* GLOBAL_E */
+char VSHIFT[12] = { 0 }; /* GLOBAL_E */
 
-char CFWORKDIR[CF_BUFSIZE] = { 0 };
+char CFWORKDIR[CF_BUFSIZE] = { 0 }; /* GLOBAL_C */
 
 /*
   Default value for copytype attribute. Loaded by cf-agent from body control
 */
-char *DEFAULT_COPYTYPE = NULL;
+char *DEFAULT_COPYTYPE = NULL; /* GLOBAL_P */
 
 /*
   Keys for the agent. Loaded by GAInitialize (and hence every time policy is
@@ -83,7 +83,7 @@ char *DEFAULT_COPYTYPE = NULL;
 
   Used in network protocol and leaked to language.
 */
-RSA *PRIVKEY = NULL, *PUBKEY = NULL;
+RSA *PRIVKEY = NULL, *PUBKEY = NULL; /* GLOBAL_X */
 
 /*
   First IP address discovered by DetectEnvironment (hence reloaded every policy
@@ -92,15 +92,15 @@ RSA *PRIVKEY = NULL, *PUBKEY = NULL;
   Used somewhere in cf-execd, superficially in old-style protocol handshake and
   sporadically in other situations.
 */
-char VIPADDRESS[CF_MAX_IP_LEN] = { 0 };
+char VIPADDRESS[CF_MAX_IP_LEN] = { 0 }; /* GLOBAL_E */
 
 /*
   Edition-time constant (MD5 for community, something else for Enterprise)
 
   Used as a default hash everywhere (not only in network protocol)
 */
-HashMethod CF_DEFAULT_DIGEST;
-int CF_DEFAULT_DIGEST_LEN;
+HashMethod CF_DEFAULT_DIGEST; /* GLOBAL_C */
+int CF_DEFAULT_DIGEST_LEN; /* GLOBAL_C */
 
 /*
   Holds the "now" time captured at the moment of policy load (and in response to
@@ -108,55 +108,55 @@ int CF_DEFAULT_DIGEST_LEN;
 
   Utilized everywhere "now" start time is needed
 */
-time_t CFSTARTTIME;
+time_t CFSTARTTIME; /* GLOBAL_E */
 
 /*
   Set in cf-serverd (from control body)/GenericAgentInitialize (defaults)
 
   Used in network code
 */
-int CFENGINE_PORT;
+int CFENGINE_PORT; /* GLOBAL_P GLOBAL_E */
 
 /*
   Set in cf-agent/cf-runagent (from control body).
 
   Used as a timeout for socket operations in network code.
 */
-time_t CONNTIMEOUT = 30;        /* seconds */
+time_t CONNTIMEOUT = 30;        /* seconds */ /* GLOBAL_A GLOBAL_P */
 
 /*
   Internal detail of timeout operations. Due to historical reasons
   is defined here, not in libpromises/timeout.c
  */
-pid_t ALARM_PID = -1;
+pid_t ALARM_PID = -1; /* GLOBAL_X */
 
 /*
   Set in cf-agent (from control body).
 
   Used as a default value for maxfilesize attribute in policy
 */
-int EDITFILESIZE = 10000;
+int EDITFILESIZE = 10000; /* GLOBAL_P */
 
 /*
   Set in cf-agent (from control body) and GenericAgentInitialize.
 
   Used as a default value for ifelapsed attribute in policy.
 */
-int VIFELAPSED = 1;
+int VIFELAPSED = 1; /* GLOBAL_P */
 
 /*
   Set in cf-agent (from control body) and GenericAgentInitialize.
 
   Used as a default value for expireafter attribute in policy.
 */
-int VEXPIREAFTER = 120;
+int VEXPIREAFTER = 120; /* GLOBAL_P */
 
 /*
   Set in cf-agent/cf-serverd (from control body).
 
   Utilized in server/client code to bind sockets.
 */
-char BINDINTERFACE[CF_BUFSIZE] = { 0 };
+char BINDINTERFACE[CF_BUFSIZE] = { 0 }; /* GLOBAL_P */
 
 /*
   Set in cf-*.c:CheckOpts and GenericAgentConfigParseArguments.
@@ -166,7 +166,7 @@ char BINDINTERFACE[CF_BUFSIZE] = { 0 };
     - GenericAgentCheckPolicy
     - GenericAgentLoadPolicy (ReadPolicyValidatedFile)
 */
-bool MINUSF = false;
+bool MINUSF = false; /* GLOBAL_A */
 
 /* Set in libenv/sysinfo.c::DetectEnvironment (called every time environment
    reload is performed).
@@ -174,4 +174,4 @@ bool MINUSF = false;
    Utilized all over the place, usually to look up OS-specific command/option to
    call external utility
 */
-PlatformContext VSYSTEMHARDCLASS;
+PlatformContext VSYSTEMHARDCLASS; /* GLOBAL_E? */

@@ -28,7 +28,7 @@
 #include <files_interfaces.h>
 #include <item_lib.h>
 
-static Item *SUSPICIOUSLIST = NULL;
+static Item *SUSPICIOUSLIST = NULL; /* GLOBAL_P */
 
 void AddFilenameToListOfSuspicious(const char *pattern)
 {

@@ -55,11 +55,11 @@
 #define CF_EXEC_IFELAPSED 0
 #define CF_EXEC_EXPIREAFTER 1
 
-static int NO_FORK;
-static int ONCE;
-static int WINSERVICE = true;
+static int NO_FORK; /* GLOBAL_A */
+static int ONCE; /* GLOBAL_A */
+static int WINSERVICE = true; /* GLOBAL_A */
 
-static pthread_attr_t threads_attrs;
+static pthread_attr_t threads_attrs; /* GLOBAL_T */
 
 /*******************************************************************/
 

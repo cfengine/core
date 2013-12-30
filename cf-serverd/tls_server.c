@@ -36,8 +36,8 @@
 #include <cf-serverd-enterprise-stubs.h>
 #include <connection_info.h>
 
-static SSL_CTX *SSLSERVERCONTEXT = NULL;
-static X509 *SSLSERVERCERT = NULL;
+static SSL_CTX *SSLSERVERCONTEXT = NULL; /* GLOBAL_X */
+static X509 *SSLSERVERCERT = NULL; /* GLOBAL_X */
 
 
 /**

@@ -39,7 +39,7 @@
 
 #include <cf-key-functions.h>
 
-static const char *passphrase = "Cfengine passphrase";
+static const char *const passphrase = "Cfengine passphrase";
 
 RSA* LoadPublicKey(const char* filename)
 {

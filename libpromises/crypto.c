@@ -60,7 +60,7 @@ static char *CFPRIVKEYFILE;
  * lastseen db. */
 
 
-static bool crypto_initialized = false;
+static bool crypto_initialized = false; /* GLOBAL_X */
 
 void CryptoInitialize()
 {
@@ -483,7 +483,7 @@ const char *PrivateKeyFile(const char *workdir)
  * Only pthread support - we don't create threads with any other API *
  *********************************************************************/
 
-static pthread_mutex_t *cf_openssl_locks;
+static pthread_mutex_t *cf_openssl_locks; /* GLOBAL_T */
 
 #ifndef __MINGW32__
 unsigned long ThreadId_callback(void)

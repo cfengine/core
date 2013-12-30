@@ -39,14 +39,14 @@
 
 #include <cf-key-functions.h>
 
-int SHOWHOSTS = false;
-bool REMOVEKEYS = false;
-bool LICENSE_INSTALL = false;
-char LICENSE_SOURCE[MAX_FILENAME];
-const char *remove_keys_host;
-static char *print_digest_arg = NULL;
-static char *trust_key_arg = NULL;
-static char *KEY_PATH;
+int SHOWHOSTS = false; /* GLOBAL_A */
+bool REMOVEKEYS = false; /* GLOBAL_A */
+bool LICENSE_INSTALL = false; /* GLOBAL_A */
+char LICENSE_SOURCE[MAX_FILENAME]; /* GLOBAL_A */
+const char *remove_keys_host; /* GLOBAL_A */
+static char *print_digest_arg = NULL; /* GLOBAL_A */
+static char *trust_key_arg = NULL; /* GLOBAL_A */
+static char *KEY_PATH; /* GLOBAL_A */
 
 static GenericAgentConfig *CheckOpts(int argc, char **argv);
 

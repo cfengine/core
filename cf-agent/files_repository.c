@@ -34,9 +34,9 @@
 
 /*********************************************************************/
 
-static Item *VREPOSLIST;
-static char REPOSCHAR;
-static char *VREPOSITORY = NULL;
+static Item *VREPOSLIST; /* GLOBAL_X */
+static char REPOSCHAR; /* GLOBAL_P */
+static char *VREPOSITORY = NULL; /* GLOBAL_P */
 
 /*********************************************************************/
 

@@ -42,11 +42,11 @@
 #define CFLOGSIZE 1048576       /* Size of lock-log before rotation */
 #define CF_LOCKHORIZON ((time_t)(SECONDS_PER_WEEK * 4))
 
-static char CFLOCK[CF_BUFSIZE] = { 0 };
-static char CFLAST[CF_BUFSIZE] = { 0 };
-static char CFLOG[CF_BUFSIZE] = { 0 };
+static char CFLOCK[CF_BUFSIZE] = { 0 }; /* GLOBAL_X */
+static char CFLAST[CF_BUFSIZE] = { 0 }; /* GLOBAL_X */
+static char CFLOG[CF_BUFSIZE] = { 0 }; /* GLOBAL_X */
 
-static pthread_once_t lock_cleanup_once = PTHREAD_ONCE_INIT;
+static pthread_once_t lock_cleanup_once = PTHREAD_ONCE_INIT; /* GLOBAL_X */
 
 
 #ifdef LMDB
@@ -651,7 +651,7 @@ CfLock AcquireLock(EvalContext *ctx, const char *operand, const char *host, time
     char cflock[CF_BUFSIZE], cflast[CF_BUFSIZE], cflog[CF_BUFSIZE];
     char str_digest[CF_BUFSIZE];
     char *rbt_key = NULL;
-    static RBTree *rbt = NULL;
+    static RBTree *rbt = NULL; /* GLOBAL_X */
     CfLock this;
     unsigned char digest[EVP_MAX_MD_SIZE + 1];
 

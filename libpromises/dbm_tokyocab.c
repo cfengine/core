@@ -117,7 +117,7 @@ static bool OpenTokyoDatabase(const char *filename, TCHDB **hdb)
         return false;
     }
 
-    static int threshold = -1; 
+    static int threshold = -1; /* GLOBAL_X */
 
     if (threshold == -1)
     {

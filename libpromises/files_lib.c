@@ -36,7 +36,7 @@
 #include <string_lib.h>
 
 
-static Item *ROTATED = NULL;
+static Item *ROTATED = NULL; /* GLOBAL_X */
 
 
 /*********************************************************************/

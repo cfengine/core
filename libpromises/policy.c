@@ -2709,7 +2709,7 @@ void *PromiseGetConstraintAsRval(const Promise *pp, const char *lval, RvalType r
 
 void PromiseRecheckAllConstraints(const EvalContext *ctx, const Promise *pp)
 {
-    static Item *EDIT_ANCHORS = NULL;
+    static Item *EDIT_ANCHORS = NULL; /* GLOBAL_X */
 
     if (!IsDefinedClass(ctx, pp->classes, PromiseGetNamespace(pp)))
     {

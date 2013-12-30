@@ -65,12 +65,12 @@
 
 #define CF_RECURSION_LIMIT 100
 
-static Rlist *AUTO_DEFINE_LIST;
+static Rlist *AUTO_DEFINE_LIST; /* GLOBAL_P */
 
-Item *VSETUIDLIST;
+Item *VSETUIDLIST; /* GLOBAL_X */
 
-Rlist *SINGLE_COPY_LIST = NULL;
-static Rlist *SINGLE_COPY_CACHE = NULL;
+Rlist *SINGLE_COPY_LIST = NULL; /* GLOBAL_P */
+static Rlist *SINGLE_COPY_CACHE = NULL; /* GLOBAL_X */
 
 static bool TransformFile(EvalContext *ctx, char *file, Attributes attr, const Promise *pp, PromiseResult *result);
 static PromiseResult VerifyName(EvalContext *ctx, char *path, struct stat *sb, Attributes attr, const Promise *pp);

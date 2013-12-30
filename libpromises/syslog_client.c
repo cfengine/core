@@ -29,15 +29,15 @@
 /*
  * Set by cf-agent/cf-serverd from body agent/server control.
  */
-static char SYSLOG_HOST[MAXHOSTNAMELEN] = "localhost";
+static char SYSLOG_HOST[MAXHOSTNAMELEN] = "localhost"; /* GLOBAL_P */
 /*
  * Set by cf-agent/cf-serverd from body agent/server control.
  */
-static uint16_t SYSLOG_PORT = 514;
+static uint16_t SYSLOG_PORT = 514; /* GLOBAL_P */
 /*
  * Set by cf-agent/cf-serverd/cf-execd from body agent/exec/server control.
  */
-static int SYSLOG_FACILITY = LOG_USER;
+static int SYSLOG_FACILITY = LOG_USER; /* GLOBAL_P */
 
 void SetSyslogFacility(int facility)
 {

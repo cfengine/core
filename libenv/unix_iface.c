@@ -75,7 +75,7 @@ static bool IgnoreJailInterface(int ifaceidx, struct sockaddr_in *inaddr);
 static bool IgnoreInterface(char *name);
 static void InitIgnoreInterfaces(void);
 
-static Rlist *IGNORE_INTERFACES = NULL;
+static Rlist *IGNORE_INTERFACES = NULL; /* GLOBAL_E */
 
 
 /*********************************************************************/

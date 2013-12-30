@@ -24,7 +24,7 @@
 
 #include <signals.h>
 
-static bool PENDING_TERMINATION = false;
+static bool PENDING_TERMINATION = false; /* GLOBAL_X */
 
 /********************************************************************/
 
@@ -35,7 +35,7 @@ bool IsPendingTermination(void)
 
 /********************************************************************/
 
-static int SIGNAL_PIPE[2] = { -1, -1 };
+static int SIGNAL_PIPE[2] = { -1, -1 }; /* GLOBAL_C */
 
 /**
  * Make a pipe that can be used to flag that a signal has arrived.

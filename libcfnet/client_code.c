@@ -65,7 +65,7 @@ typedef struct
 /* With this lock we ensure we read the list head atomically, but we don't
  * guarantee anything about the queue's contents. It should be OK since we
  * never remove elements from the queue, only prepend to the head.*/
-static pthread_mutex_t cft_serverlist = PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP;
+static pthread_mutex_t cft_serverlist = PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP; /* GLOBAL_T */
 
 static void NewClientCache(Stat *data, AgentConnection *conn);
 static void CacheServerConnection(AgentConnection *conn, const char *server);
@@ -82,7 +82,7 @@ static AgentConnection *ServerConnection(const char *server, FileCopy fc, int *e
 int TryConnect(AgentConnection *conn, struct timeval *tvp, struct sockaddr *cinp, int cinpSz);
 
 
-ProtocolVersion SELECTED_PROTOCOL = CF_PROTOCOL_TLS; /* TODO command line / body common control policy option */
+ProtocolVersion SELECTED_PROTOCOL = CF_PROTOCOL_TLS; /* TODO command line / body common control policy option */ /* GLOBAL_P */
 
 
 /**
@@ -102,7 +102,7 @@ static Seq *GetGlobalServerList(void)
 {
     /* Only ip address strings are stored in this list, so don't put any
      * hostnames. TODO convert to list of (sockaddr_storage *) to enforce this. */
-    static Seq *server_list = NULL;
+    static Seq *server_list = NULL; /* GLOBAL_X */
     if (!server_list)
     {
         server_list = SeqNew(100, free);

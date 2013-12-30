@@ -109,16 +109,16 @@ extern int PR_KEPT;
 extern int PR_REPAIRED;
 extern int PR_NOTKEPT;
 
-static bool ALLCLASSESREPORT;
-static bool ALWAYS_VALIDATE;
-static bool CFPARANOID = false;
+static bool ALLCLASSESREPORT; /* GLOBAL_P */
+static bool ALWAYS_VALIDATE; /* GLOBAL_P */
+static bool CFPARANOID = false; /* GLOBAL_P */
 
-static Rlist *ACCESSLIST;
+static Rlist *ACCESSLIST; /* GLOBAL_P */
 
-static int CFA_BACKGROUND = 0;
-static int CFA_BACKGROUND_LIMIT = 1;
+static int CFA_BACKGROUND = 0; /* GLOBAL_X */
+static int CFA_BACKGROUND_LIMIT = 1; /* GLOBAL_P */
 
-static Item *PROCESSREFRESH;
+static Item *PROCESSREFRESH; /* GLOBAL_P */
 
 static const char *const AGENT_TYPESEQUENCE[] =
 {

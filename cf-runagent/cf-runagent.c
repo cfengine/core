@@ -132,16 +132,16 @@ static const char *const HINTS[] =
 
 extern const ConstraintSyntax CFR_CONTROLBODY[];
 
-int INTERACTIVE = false;
-int OUTPUT_TO_FILE = false;
-char OUTPUT_DIRECTORY[CF_BUFSIZE];
-int BACKGROUND = false;
-int MAXCHILD = 50;
-char REMOTE_AGENT_OPTIONS[CF_MAXVARSIZE];
+int INTERACTIVE = false; /* GLOBAL_A */
+int OUTPUT_TO_FILE = false; /* GLOBAL_P */
+char OUTPUT_DIRECTORY[CF_BUFSIZE]; /* GLOBAL_P */
+int BACKGROUND = false; /* GLOBAL_P GLOBAL_A */
+int MAXCHILD = 50; /* GLOBAL_P GLOBAL_A */
+char REMOTE_AGENT_OPTIONS[CF_MAXVARSIZE]; /* GLOBAL_A */
 
-Rlist *HOSTLIST = NULL;
-char SENDCLASSES[CF_MAXVARSIZE];
-char DEFINECLASSES[CF_MAXVARSIZE];
+Rlist *HOSTLIST = NULL; /* GLOBAL_P GLOBAL_A */
+char SENDCLASSES[CF_MAXVARSIZE]; /* GLOBAL_A */
+char DEFINECLASSES[CF_MAXVARSIZE]; /* GLOBAL_A */
 
 /*****************************************************************************/
 

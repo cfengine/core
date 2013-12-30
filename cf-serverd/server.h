@@ -130,7 +130,8 @@ AgentConnection *ExtractCallBackChannel(ServerConnectionState *conn);
 
 extern char CFRUNCOMMAND[];
 
-extern int CLOCK_DRIFT;
+#define CLOCK_DRIFT 3600
+
 extern int ACTIVE_THREADS;
 
 extern int CFD_MAXPROCESSES;

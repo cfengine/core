@@ -50,7 +50,6 @@
 // GLOBAL STATE
 //******************************************************************
 
-int CLOCK_DRIFT = 3600;  /* 1hr */
 int ACTIVE_THREADS; /* GLOBAL_X */
 
 int CFD_MAXPROCESSES = 0; /* GLOBAL_P */

@@ -628,7 +628,7 @@ void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *con
             DetectEnvironment(ctx);
             KeepHardClasses(ctx);
 
-            EvalContextClassPutHard(ctx, CF_AGENTTYPES[config->agent_type], "cfe_internal,source=agent");
+            EvalContextClassPutHard(ctx, CF_AGENTTYPES[AGENT_TYPE_SERVER], "cfe_internal,source=agent");
 
             time_t t = SetReferenceTime();
             UpdateTimeClasses(ctx, t);

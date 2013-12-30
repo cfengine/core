@@ -130,7 +130,7 @@ int main(int argc, char *argv[])
     {
     case GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_CF:
         {
-            Policy *output_policy = ParserParseFile(config->agent_type, config->input_file,
+            Policy *output_policy = ParserParseFile(AGENT_TYPE_COMMON, config->input_file,
                                                     config->agent_specific.common.parser_warnings,
                                                     config->agent_specific.common.parser_warnings_error);
             Writer *writer = FileWriter(stdout);
@@ -142,7 +142,7 @@ int main(int argc, char *argv[])
 
     case GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_JSON:
         {
-            Policy *output_policy = ParserParseFile(config->agent_type, config->input_file,
+            Policy *output_policy = ParserParseFile(AGENT_TYPE_COMMON, config->input_file,
                                                     config->agent_specific.common.parser_warnings,
                                                     config->agent_specific.common.parser_warnings_error);
             JsonElement *json_policy = PolicyToJson(output_policy);

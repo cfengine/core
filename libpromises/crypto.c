@@ -483,7 +483,6 @@ const char *PrivateKeyFile(const char *workdir)
  * Only pthread support - we don't create threads with any other API *
  *********************************************************************/
 
-#if defined(HAVE_PTHREAD)
 static pthread_mutex_t *cf_openssl_locks;
 
 #ifndef __MINGW32__
@@ -504,11 +503,9 @@ static void OpenSSLLock_callback(int mode, int index, ARG_UNUSED char *file, ARG
         pthread_mutex_unlock(&(cf_openssl_locks[index]));
     }
 }
-#endif
 
 static void SetupOpenSSLThreadLocks(void)
 {
-#if defined(HAVE_PTHREAD)
     const int numLocks = CRYPTO_num_locks();
     cf_openssl_locks = OPENSSL_malloc(numLocks * sizeof(pthread_mutex_t));
 
@@ -521,12 +518,10 @@ static void SetupOpenSSLThreadLocks(void)
     CRYPTO_set_id_callback((unsigned long (*)())ThreadId_callback);
 #endif
     CRYPTO_set_locking_callback((void (*)())OpenSSLLock_callback);
-#endif
 }
 
 static void CleanupOpenSSLThreadLocks(void)
 {
-#if defined(HAVE_PTHREAD)
     const int numLocks = CRYPTO_num_locks();
     CRYPTO_set_locking_callback(NULL);
 #ifndef __MINGW32__
@@ -538,6 +533,4 @@ static void CleanupOpenSSLThreadLocks(void)
         pthread_mutex_destroy(&(cf_openssl_locks[i]));
     }
     OPENSSL_free(cf_openssl_locks);
-#endif
 }
-

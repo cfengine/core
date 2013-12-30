@@ -137,8 +137,8 @@ int main(int argc, char *argv[])
     }
     else
     {
-        public_key_file = xstrdup(PublicKeyFile(GetWorkDir()));
-        private_key_file = xstrdup(PrivateKeyFile(GetWorkDir()));
+        public_key_file = PublicKeyFile(GetWorkDir());
+        private_key_file = PrivateKeyFile(GetWorkDir());
     }
 
     KeepKeyPromises(public_key_file, private_key_file);

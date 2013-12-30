@@ -210,7 +210,9 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
         LoadSecretKeys();
         if ((PUBKEY == NULL) || (PRIVKEY == NULL))
         {
-            Log(LOG_LEVEL_ERR, "No public/private key pair found at '%s'", PublicKeyFile(GetWorkDir()));
+            char *pubkeyfile = PublicKeyFile(GetWorkDir());
+            Log(LOG_LEVEL_ERR, "No public/private key pair found at '%s'", pubkeyfile);
+            free(pubkeyfile);
             return false;
         }
     }

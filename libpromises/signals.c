@@ -87,19 +87,22 @@ int GetSignalPipe(void)
 
 void HandleSignalsForAgent(int signum)
 {
-    if ((signum == SIGTERM) || (signum == SIGINT))
+    switch (signum)
     {
+    case SIGTERM:
+    case SIGINT:
         /* TODO don't exit from the signal handler, just set a flag. Reason is
          * that all the atexit() hooks we register are not reentrant. */
         exit(0);
-    }
-    else if (signum == SIGUSR1)
-    {
+    case SIGUSR1:
         LogSetGlobalLevel(LOG_LEVEL_DEBUG);
-    }
-    else if (signum == SIGUSR2)
-    {
+        break;
+    case SIGUSR2:
         LogSetGlobalLevel(LOG_LEVEL_NOTICE);
+        break;
+    default:
+        /* No action */
+        break;
     }
 
     unsigned char sig = (unsigned char)signum;
@@ -132,18 +135,25 @@ void HandleSignalsForAgent(int signum)
 
 void HandleSignalsForDaemon(int signum)
 {
-    if ((signum == SIGTERM) || (signum == SIGINT) || (signum == SIGHUP) || (signum == SIGSEGV) || (signum == SIGKILL)
-        || (signum == SIGPIPE))
+    switch (signum)
     {
+    case SIGTERM:
+    case SIGINT:
+    case SIGHUP:
+    case SIGSEGV:
+    case SIGKILL:
+    case SIGPIPE:
         PENDING_TERMINATION = true;
-    }
-    else if (signum == SIGUSR1)
-    {
+        break;
+    case SIGUSR1:
         LogSetGlobalLevel(LOG_LEVEL_DEBUG);
-    }
-    else if (signum == SIGUSR2)
-    {
+        break;
+    case SIGUSR2:
         LogSetGlobalLevel(LOG_LEVEL_NOTICE);
+        break;
+    default:
+        /* No action */
+        break;
     }
 
     unsigned char sig = (unsigned char)signum;

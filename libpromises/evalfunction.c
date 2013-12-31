@@ -4793,7 +4793,7 @@ static FnCallResult FnCallSplitString(ARG_UNUSED EvalContext *ctx, ARG_UNUSED Fn
 
 /*********************************************************************/
 
-static FnCallResult FnCallMakeTarget(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
+static FnCallResult FnCallMakerule(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
     const char *target = RlistScalarValue(finalargs);
     const char *listvar = RlistScalarValue(finalargs->next);
@@ -6547,7 +6547,7 @@ const FnCallType CF_FNCALL_TYPES[] =
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("reglist", DATA_TYPE_CONTEXT, REGLIST_ARGS, &FnCallRegList, "True if the regular expression in arg2 matches any item in the list whose id is arg1",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
-    FnCallTypeNew("maketarget", DATA_TYPE_CONTEXT, MAKEFROM_ARGS, &FnCallMakeTarget, "True if the target file arg1 does not exist or a source file in arg2 is newer",
+    FnCallTypeNew("makerule", DATA_TYPE_CONTEXT, MAKEFROM_ARGS, &FnCallMakerule, "True if the target file arg1 does not exist or a source file in arg2 is newer",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("regldap", DATA_TYPE_CONTEXT, REGLDAP_ARGS, &FnCallRegLDAP, "True if the regular expression in arg6 matches a value item in an ldap search",
                   FNCALL_OPTION_CACHED, FNCALL_CATEGORY_COMM, SYNTAX_STATUS_NORMAL),

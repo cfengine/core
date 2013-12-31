@@ -45,7 +45,7 @@ static int SIGNAL_PIPE[2] = { -1, -1 }; /* GLOBAL_C */
  * using select() with real sockets. This means also using send() and recv()
  * instead of write() and read().
  */
-void MakeSignalPipe()
+void MakeSignalPipe(void)
 {
     if (socketpair(AF_UNIX, SOCK_STREAM, 0, SIGNAL_PIPE) != 0)
     {
@@ -80,7 +80,7 @@ void MakeSignalPipe()
  * Each byte read corresponds to one arrived signal.
  * Note: Use recv() to read from the pipe, not read().
  */
-int GetSignalPipe()
+int GetSignalPipe(void)
 {
     return SIGNAL_PIPE[0];
 }

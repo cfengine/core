@@ -3195,6 +3195,77 @@ static FnCallResult FnCallUnique(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 
 /*********************************************************************/
 
+static FnCallResult FnCallDatatype(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
+{
+    const char* const varname = RlistScalarValue(finalargs);
+
+    VarRef* const ref = VarRefParseFromBundle(varname, PromiseGetBundle(fp->caller));
+    DataType type = DATA_TYPE_NONE;
+    Rval rval;
+    EvalContextVariableGet(ctx, ref, &rval, &type);
+
+    Writer* const typestring = StringWriter();
+
+    if (type == DATA_TYPE_CONTAINER)
+    {
+
+        const JsonElement* const jelement = RvalContainerValue(rval);
+
+        if (JsonGetElementType(jelement) == JSON_ELEMENT_TYPE_CONTAINER)
+        {
+            switch (JsonGetContrainerType(jelement))
+            {
+            case JSON_CONTAINER_TYPE_OBJECT:
+                WriterWrite(typestring, "json_object");
+                break;
+            case JSON_CONTAINER_TYPE_ARRAY:
+                WriterWrite(typestring, "json_array");
+                break;
+            }
+        }
+        else if (JsonGetElementType(jelement) == JSON_ELEMENT_TYPE_PRIMITIVE)
+        {
+            switch (JsonGetPrimitiveType(jelement))
+            {
+            case JSON_PRIMITIVE_TYPE_STRING:
+                WriterWrite(typestring, "json_string");
+                break;
+            case JSON_PRIMITIVE_TYPE_INTEGER:
+                WriterWrite(typestring, "json_integer");
+                break;
+            case JSON_PRIMITIVE_TYPE_REAL:
+                WriterWrite(typestring, "json_real");
+                break;
+            case JSON_PRIMITIVE_TYPE_BOOL:
+                WriterWrite(typestring, "json_bool");
+                break;
+            case JSON_PRIMITIVE_TYPE_NULL:
+                WriterWrite(typestring, "json_null");
+                break;
+            }
+        }
+
+    }
+    else
+    {
+        Log(LOG_LEVEL_ERR, "%s: variable '%s' is not a data container", fp->name, varname);
+
+        VarRefDestroy(ref);
+
+        return FnFailure();
+    }
+
+    Log(LOG_LEVEL_DEBUG,
+        "%s: from data container '%s', got top-level type '%s'",
+        fp->name, varname, StringWriterData(typestring));
+
+    VarRefDestroy(ref);
+
+    return (FnCallResult) { FNCALL_SUCCESS, { StringWriterClose(typestring), RVAL_TYPE_SCALAR } };
+}
+
+/*********************************************************************/
+
 static FnCallResult FnCallNth(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
     const char* const varname = RlistScalarValue(finalargs);
@@ -6288,6 +6359,12 @@ static const FnCallArg UNIQUE_ARGS[] =
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
+static const FnCallArg DATATYPE_ARGS[] =
+{
+    {CF_IDRANGE, DATA_TYPE_STRING, "CFEngine data container identifier"},
+    {NULL, DATA_TYPE_NONE, NULL}
+};
+
 static const FnCallArg NTH_ARGS[] =
 {
     {CF_IDRANGE, DATA_TYPE_STRING, "CFEngine list or data container identifier"},
@@ -6526,6 +6603,8 @@ const FnCallType CF_FNCALL_TYPES[] =
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("now", DATA_TYPE_INT, NOW_ARGS, &FnCallNow, "Convert the current time into system representation",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_SYSTEM, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("datatype", DATA_TYPE_STRING, DATATYPE_ARGS, &FnCallDatatype, "Return the top-level type of a data container",
+                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("nth", DATA_TYPE_STRING, NTH_ARGS, &FnCallNth, "Get the element at arg2 in list or data container arg1",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("on", DATA_TYPE_INT, DATE_ARGS, &FnCallOn, "Convert an exact date/time to an integer system representation",

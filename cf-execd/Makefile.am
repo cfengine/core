@@ -15,7 +15,8 @@ libcf_execd_la_LIBADD = ../libpromises/libpromises.la
 libcf_execd_la_SOURCES = \
         cf-execd.c cf-execd.h \
         cf-execd-runner.c cf-execd-runner.h \
-        exec-config.c exec-config.h
+        exec-config.c exec-config.h \
+        execd-config.c execd-config.h
 
 if !BUILTIN_EXTENSIONS
  sbin_PROGRAMS = cf-execd

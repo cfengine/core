@@ -91,45 +91,52 @@ AgentDiagnosticsResult AgentDiagnosticsCheckAmPolicyServer(const char *workdir)
 
 AgentDiagnosticsResult AgentDiagnosticsCheckPrivateKey(const char *workdir)
 {
-    const char *path = PrivateKeyFile(workdir);
-    assert(path);
+    char *path = PrivateKeyFile(workdir);
     struct stat sb;
+    AgentDiagnosticsResult res;
 
     if (stat(path, &sb) != 0)
     {
-        return AgentDiagnosticsResultNew(false, StringFormat("No private key found at '%s'", path));
+        res = AgentDiagnosticsResultNew(false, StringFormat("No private key found at '%s'", path));
     }
-
-    if (sb.st_mode != (S_IFREG | S_IWUSR | S_IRUSR))
+    else if (sb.st_mode != (S_IFREG | S_IWUSR | S_IRUSR))
     {
-        return AgentDiagnosticsResultNew(false, StringFormat("Private key found at '%s', but had incorrect permissions '%o'", path, sb.st_mode));
+        res = AgentDiagnosticsResultNew(false, StringFormat("Private key found at '%s', but had incorrect permissions '%o'", path, sb.st_mode));
+    }
+    else
+    {
+        res = AgentDiagnosticsResultNew(true, StringFormat("OK at '%s'", path));
     }
 
-    return AgentDiagnosticsResultNew(true, StringFormat("OK at '%s'", path));
+    free(path);
+    return res;
 }
 
 AgentDiagnosticsResult AgentDiagnosticsCheckPublicKey(const char *workdir)
 {
-    const char *path = PublicKeyFile(workdir);
-    assert(path);
+    char *path = PublicKeyFile(workdir);
     struct stat sb;
+    AgentDiagnosticsResult res;
 
     if (stat(path, &sb) != 0)
     {
-        return AgentDiagnosticsResultNew(false, StringFormat("No public key found at '%s'", path));
+        res = AgentDiagnosticsResultNew(false, StringFormat("No public key found at '%s'", path));
     }
-
-    if (sb.st_mode != (S_IFREG | S_IWUSR | S_IRUSR))
+    else if (sb.st_mode != (S_IFREG | S_IWUSR | S_IRUSR))
     {
-        return AgentDiagnosticsResultNew(false, StringFormat("Public key found at '%s', but had incorrect permissions '%o'", path, sb.st_mode));
+        res = AgentDiagnosticsResultNew(false, StringFormat("Public key found at '%s', but had incorrect permissions '%o'", path, sb.st_mode));
     }
-
-    if (sb.st_size != 426)
+    else if (sb.st_size != 426)
     {
-        return AgentDiagnosticsResultNew(false, StringFormat("Public key at '%s' had size %zd bytes, expected 426 bytes", path, sb.st_size));
+        res = AgentDiagnosticsResultNew(false, StringFormat("Public key at '%s' had size %zd bytes, expected 426 bytes", path, sb.st_size));
+    }
+    else
+    {
+        res = AgentDiagnosticsResultNew(true, StringFormat("OK at '%s'", path));
     }
 
-    return AgentDiagnosticsResultNew(true, StringFormat("OK at '%s'", path));
+    free(path);
+    return res;
 }
 
 static AgentDiagnosticsResult AgentDiagnosticsCheckDB(const char *workdir, dbid id)

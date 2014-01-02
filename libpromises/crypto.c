@@ -126,12 +126,14 @@ bool LoadSecretKeys(void)
     static char *passphrase = "Cfengine passphrase";
 
     {
-        FILE *fp = fopen(PrivateKeyFile(GetWorkDir()), "r");
+        char *privkeyfile = PrivateKeyFile(GetWorkDir());
+        FILE *fp = fopen(privkeyfile, "r");
         if (!fp)
         {
             Log(LOG_LEVEL_ERR,
                 "Couldn't find a private key at '%s', use cf-key to get one. (fopen: %s)",
-                PrivateKeyFile(GetWorkDir()), GetErrorStr());
+                privkeyfile, GetErrorStr());
+            free(privkeyfile);
             return false;
         }
 
@@ -147,16 +149,19 @@ bool LoadSecretKeys(void)
         }
 
         fclose(fp);
-        Log(LOG_LEVEL_VERBOSE, "Loaded private key at '%s'", PrivateKeyFile(GetWorkDir()));
+        Log(LOG_LEVEL_VERBOSE, "Loaded private key at '%s'", privkeyfile);
+        free(privkeyfile);
     }
 
     {
-        FILE *fp = fopen(PublicKeyFile(GetWorkDir()), "r");
+        char *pubkeyfile = PublicKeyFile(GetWorkDir());
+        FILE *fp = fopen(pubkeyfile, "r");
         if (!fp)
         {
             Log(LOG_LEVEL_ERR,
                 "Couldn't find a public key at '%s', use cf-key to get one (fopen: %s)",
-                PublicKeyFile(GetWorkDir()), GetErrorStr());
+                pubkeyfile, GetErrorStr());
+            free(pubkeyfile);
             return false;
         }
 
@@ -165,13 +170,15 @@ bool LoadSecretKeys(void)
             unsigned long err = ERR_get_error();
             Log(LOG_LEVEL_ERR,
                 "Error reading public key at '%s'. (PEM_read_RSAPublicKey: %s)",
-                PublicKeyFile(GetWorkDir()), ERR_reason_error_string(err));
+                pubkeyfile, ERR_reason_error_string(err));
             PUBKEY = NULL;
             fclose(fp);
+            free(pubkeyfile);
             return false;
         }
 
-        Log(LOG_LEVEL_VERBOSE, "Loaded public key '%s'", PublicKeyFile(GetWorkDir()));
+        Log(LOG_LEVEL_VERBOSE, "Loaded public key '%s'", pubkeyfile);
+        free(pubkeyfile);
         fclose(fp);
     }
 
@@ -456,24 +463,20 @@ void DebugBinOut(char *buffer, int len, char *comment)
     Log(LOG_LEVEL_VERBOSE, "BinaryBuffer, %d bytes, comment '%s', buffer '%s'", len, comment, buf);
 }
 
-const char *PublicKeyFile(const char *workdir)
+char *PublicKeyFile(const char *workdir)
 {
-    if (!CFPUBKEYFILE)
-    {
-        xasprintf(&CFPUBKEYFILE,
-                  "%s" FILE_SEPARATOR_STR "ppkeys" FILE_SEPARATOR_STR "localhost.pub", workdir);
-    }
-    return CFPUBKEYFILE;
+    char *keyfile;
+    xasprintf(&keyfile,
+              "%s" FILE_SEPARATOR_STR "ppkeys" FILE_SEPARATOR_STR "localhost.pub", workdir);
+    return keyfile;
 }
 
-const char *PrivateKeyFile(const char *workdir)
+char *PrivateKeyFile(const char *workdir)
 {
-    if (!CFPRIVKEYFILE)
-    {
-        xasprintf(&CFPRIVKEYFILE,
-                  "%s" FILE_SEPARATOR_STR "ppkeys" FILE_SEPARATOR_STR "localhost.priv", workdir);
-    }
-    return CFPRIVKEYFILE;
+    char *keyfile;
+    xasprintf(&keyfile,
+              "%s" FILE_SEPARATOR_STR "ppkeys" FILE_SEPARATOR_STR "localhost.priv", workdir);
+    return keyfile;
 }
 
 /*********************************************************************

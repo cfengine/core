@@ -39,7 +39,7 @@ RSA *HavePublicKey(const char *username, const char *ipaddress, const char *dige
 RSA *HavePublicKeyByIP(const char *username, const char *ipaddress);
 void SavePublicKey(const char *username, const char *digest, const RSA *key);
 
-const char *PublicKeyFile(const char *workdir);
-const char *PrivateKeyFile(const char *workdir);
+char *PublicKeyFile(const char *workdir);
+char *PrivateKeyFile(const char *workdir);
 
 #endif

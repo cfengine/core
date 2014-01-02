@@ -36,8 +36,8 @@
 #include <cf-serverd-enterprise-stubs.h>
 #include <connection_info.h>
 
-static SSL_CTX *SSLSERVERCONTEXT = NULL;
-static X509 *SSLSERVERCERT = NULL;
+static SSL_CTX *SSLSERVERCONTEXT = NULL; /* GLOBAL_X */
+static X509 *SSLSERVERCERT = NULL; /* GLOBAL_X */
 
 
 /**
@@ -585,7 +585,7 @@ typedef enum
     PROTOCOL_COMMAND_BAD
 } ProtocolCommandNew;
 
-static const char *PROTOCOL_NEW[PROTOCOL_COMMAND_BAD + 1] =
+static const char *const PROTOCOL_NEW[PROTOCOL_COMMAND_BAD + 1] =
 {
     "EXEC",
     "GET",

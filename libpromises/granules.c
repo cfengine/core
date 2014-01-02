@@ -29,7 +29,7 @@
 char *GenTimeKey(time_t now)
 {
     struct tm tm;
-    static char buf[18];
+    static char buf[18]; /* GLOBAL_R */
 
     gmtime_r(&now, &tm);
 

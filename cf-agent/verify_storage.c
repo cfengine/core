@@ -42,7 +42,7 @@
 #include <ornaments.h>
 #include <eval_context.h>
 
-bool CF_MOUNTALL;
+bool CF_MOUNTALL; /* GLOBAL_X */
 
 static PromiseResult FindStoragePromiserObjects(EvalContext *ctx, const Promise *pp);
 static PromiseResult VerifyFileSystem(EvalContext *ctx, char *name, Attributes a, const Promise *pp);
@@ -59,7 +59,7 @@ static PromiseResult VerifyMountPromise(EvalContext *ctx, char *file, Attributes
 
 Seq *GetGlobalMountedFSList(void)
 {
-    static Seq *mounted_fs_list = NULL;
+    static Seq *mounted_fs_list = NULL; /* GLOBAL_X */
     if (!mounted_fs_list)
     {
         mounted_fs_list = SeqNew(100, free);

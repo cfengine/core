@@ -60,7 +60,7 @@ enum editlinetypesequence
     elp_none
 };
 
-char *EDITLINETYPESEQUENCE[] =
+static const char *const EDITLINETYPESEQUENCE[] =
 {
     "vars",
     "classes",

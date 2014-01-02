@@ -81,8 +81,8 @@ ENTERPRISE_VOID_FUNC_1ARG_DEFINE_STUB(void, ReportPatches, ARG_UNUSED PackageMan
 
 /*****************************************************************************/
 
-PackageManager *PACKAGE_SCHEDULE = NULL;
-PackageManager *INSTALLED_PACKAGE_LISTS = NULL;
+PackageManager *PACKAGE_SCHEDULE = NULL; /* GLOBAL_X */
+PackageManager *INSTALLED_PACKAGE_LISTS = NULL; /* GLOBAL_X */
 
 #define PACKAGE_LIST_COMMAND_WINAPI "/Windows_API"
 
@@ -2326,7 +2326,7 @@ static void DeletePackageManagers(PackageManager *newlist)
 
 char *PrefixLocalRepository(Rlist *repositories, char *package)
 {
-    static char quotedPath[CF_MAXVARSIZE];
+    static char quotedPath[CF_MAXVARSIZE]; /* GLOBAL_R */
     Rlist *rp;
     struct stat sb;
     char path[CF_BUFSIZE];
@@ -2570,10 +2570,10 @@ static int PrependPatchItem(EvalContext *ctx, PackageItem ** list, char *item, P
 static int PrependMultiLinePackageItem(EvalContext *ctx, PackageItem ** list, char *item, int reset, const char *default_arch,
                                        Attributes a, const Promise *pp)
 {
-    static char name[CF_MAXVARSIZE];
-    static char arch[CF_MAXVARSIZE];
-    static char version[CF_MAXVARSIZE];
-    static char vbuff[CF_MAXVARSIZE];
+    static char name[CF_MAXVARSIZE]; /* GLOBAL_X */
+    static char arch[CF_MAXVARSIZE]; /* GLOBAL_X */
+    static char version[CF_MAXVARSIZE]; /* GLOBAL_X */
+    static char vbuff[CF_MAXVARSIZE]; /* GLOBAL_X */
 
     if (reset)
     {

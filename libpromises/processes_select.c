@@ -684,7 +684,7 @@ static void GetProcessColumnNames(char *proc, char **names, int *start, int *end
 #ifndef __MINGW32__
 static const char *GetProcessOptions(void)
 {
-    static char psopts[CF_BUFSIZE];
+    static char psopts[CF_BUFSIZE]; /* GLOBAL_R */
 
     if (IsGlobalZone())
     {

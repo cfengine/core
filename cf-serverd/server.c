@@ -50,21 +50,20 @@
 // GLOBAL STATE
 //******************************************************************
 
-int CLOCK_DRIFT = 3600;  /* 1hr */
-int ACTIVE_THREADS;
+int ACTIVE_THREADS; /* GLOBAL_X */
 
-int CFD_MAXPROCESSES = 0;
-bool DENYBADCLOCKS = true;
+int CFD_MAXPROCESSES = 0; /* GLOBAL_P */
+bool DENYBADCLOCKS = true; /* GLOBAL_P */
 
-int MAXTRIES = 5;
-bool LOGENCRYPT = false;
-int COLLECT_INTERVAL = 0;
-int COLLECT_WINDOW = 10;
-bool SERVER_LISTEN = true;
+int MAXTRIES = 5; /* GLOBAL_P */
+bool LOGENCRYPT = false; /* GLOBAL_P */
+int COLLECT_INTERVAL = 0; /* GLOBAL_P */
+int COLLECT_WINDOW = 10; /* GLOBAL_P */
+bool SERVER_LISTEN = true; /* GLOBAL_P */
 
-ServerAccess SV;
+ServerAccess SV; /* GLOBAL_P */
 
-char CFRUNCOMMAND[CF_BUFSIZE] = { 0 };
+char CFRUNCOMMAND[CF_BUFSIZE] = { 0 }; /* GLOBAL_P */
 
 //******************************************************************/
 // LOCAL CONSTANTS
@@ -84,7 +83,7 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
 // LOCAL STATE
 //******************************************************************/
 
-static int TRIES = 0;
+static int TRIES = 0; /* GLOBAL_X */
 
 /*******************************************************************/
 
@@ -118,7 +117,7 @@ typedef enum
     PROTOCOL_COMMAND_BAD
 } ProtocolCommandClassic;
 
-static const char *PROTOCOL_CLASSIC[] =
+static const char *const PROTOCOL_CLASSIC[] =
 {
     "EXEC",
     "AUTH",                     /* old protocol */

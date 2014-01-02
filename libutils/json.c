@@ -34,9 +34,9 @@
 static const int SPACES_PER_INDENT = 2;
 static const int DEFAULT_CONTAINER_CAPACITY = 64;
 
-static const char *JSON_TRUE = "true";
-static const char *JSON_FALSE = "false";
-static const char *JSON_NULL = "null";
+static const char *const JSON_TRUE = "true";
+static const char *const JSON_FALSE = "false";
+static const char *const JSON_NULL = "null";
 
 struct JsonElement_
 {
@@ -1419,7 +1419,7 @@ static JsonElement *JsonParseAsNull(const char **data)
 
 const char* JsonParseErrorToString(JsonParseError error)
 {
-    static const char *parse_errors[JSON_PARSE_ERROR_MAX] =
+    static const char *const parse_errors[JSON_PARSE_ERROR_MAX] =
     {
         [JSON_PARSE_OK] = "Success",
 

@@ -30,7 +30,8 @@
 #include <fncall.h>
 #include <rlist.h>
 
-static const char *POLICY_ERROR_METHODS_BUNDLE_ARITY = "Conflicting arity in calling bundle %s, expected %d arguments, %d given";
+static const char *const POLICY_ERROR_METHODS_BUNDLE_ARITY =
+    "Conflicting arity in calling bundle %s, expected %d arguments, %d given";
 
 static const ConstraintSyntax CF_METHOD_BODIES[] =
 {

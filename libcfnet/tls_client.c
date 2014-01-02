@@ -39,8 +39,8 @@ extern char CFWORKDIR[];
 
 
 /* Global SSL context for client connections over new TLS protocol. */
-static SSL_CTX *SSLCLIENTCONTEXT = NULL;
-static X509 *SSLCLIENTCERT = NULL;
+static SSL_CTX *SSLCLIENTCONTEXT = NULL; /* GLOBAL_X */
+static X509 *SSLCLIENTCERT = NULL; /* GLOBAL_X */
 
 
 /**
@@ -49,7 +49,7 @@ static X509 *SSLCLIENTCERT = NULL;
 bool TLSClientInitialize()
 {
     int ret;
-    static bool is_initialised = false;
+    static bool is_initialised = false; /* GLOBAL_X */
 
     if (is_initialised)
     {

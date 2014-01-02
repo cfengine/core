@@ -35,15 +35,16 @@
 
 #include <time.h>
 
-static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv);
+static GenericAgentConfig *CheckOpts(int argc, char **argv);
 
 /*******************************************************************/
 /* Command line options                                            */
 /*******************************************************************/
 
-static const char *CF_PROMISES_SHORT_DESCRIPTION = "validate and analyze CFEngine policy code";
+static const char *const CF_PROMISES_SHORT_DESCRIPTION =
+    "validate and analyze CFEngine policy code";
 
-static const char *CF_PROMISES_MANPAGE_LONG_DESCRIPTION = "cf-promises is a tool for checking CFEngine policy code. "
+static const char *const CF_PROMISES_MANPAGE_LONG_DESCRIPTION = "cf-promises is a tool for checking CFEngine policy code. "
         "It operates by first parsing policy code checing for syntax errors. Second, it validates the integrity of "
         "policy consisting of multiple files. Third, it checks for semantic errors, e.g. specific attribute set rules. "
         "Finally, cf-promises attempts to expose errors by partially evaluating the policy, resolving as many variable and "
@@ -78,7 +79,7 @@ static const struct option OPTIONS[] =
     {NULL, 0, 0, '\0'}
 };
 
-static const char *HINTS[] =
+static const char *const HINTS[] =
 {
     [PROMISES_OPTION_EVAL_FUNCTIONS] = "Evaluate functions during syntax checking (may catch more run-time errors). Possible values: 'yes', 'no'. Default is 'no'",
     "Print the help message",
@@ -109,7 +110,7 @@ static const char *HINTS[] =
 int main(int argc, char *argv[])
 {
     EvalContext *ctx = EvalContextNew();
-    GenericAgentConfig *config = CheckOpts(ctx, argc, argv);
+    GenericAgentConfig *config = CheckOpts(argc, argv);
     GenericAgentConfigApply(ctx, config);
 
     GenericAgentDiscoverContext(ctx, config);
@@ -129,7 +130,7 @@ int main(int argc, char *argv[])
     {
     case GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_CF:
         {
-            Policy *output_policy = ParserParseFile(config->agent_type, config->input_file,
+            Policy *output_policy = ParserParseFile(AGENT_TYPE_COMMON, config->input_file,
                                                     config->agent_specific.common.parser_warnings,
                                                     config->agent_specific.common.parser_warnings_error);
             Writer *writer = FileWriter(stdout);
@@ -141,7 +142,7 @@ int main(int argc, char *argv[])
 
     case GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_JSON:
         {
-            Policy *output_policy = ParserParseFile(config->agent_type, config->input_file,
+            Policy *output_policy = ParserParseFile(AGENT_TYPE_COMMON, config->input_file,
                                                     config->agent_specific.common.parser_warnings,
                                                     config->agent_specific.common.parser_warnings_error);
             JsonElement *json_policy = PolicyToJson(output_policy);
@@ -165,7 +166,7 @@ int main(int argc, char *argv[])
 /* Level 1                                                         */
 /*******************************************************************/
 
-GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
+GenericAgentConfig *CheckOpts(int argc, char **argv)
 {
     extern char *optarg;
     int optindex = 0;
@@ -265,7 +266,7 @@ GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             break;
 
         case 'K':
-            IGNORELOCK = true;
+            config->ignore_locks = true;
             break;
 
         case 'D':
@@ -286,8 +287,7 @@ GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
 
         case 'n':
             DONTDO = true;
-            IGNORELOCK = true;
-            EvalContextClassPutHard(ctx, "opt_dry_run", "cfe_internal,source=environment");
+            config->ignore_locks = true;
             break;
 
         case 'V':

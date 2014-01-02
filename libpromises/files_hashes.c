@@ -31,7 +31,7 @@
 #include <rlist.h>
 #include <policy.h>
 
-static const char *CF_DIGEST_TYPES[10][2] =
+static const char *const CF_DIGEST_TYPES[10][2] =
 {
     {"md5", "m"},
     {"sha224", "c"},

@@ -38,7 +38,7 @@ static const int CF_NOSIZE = -1;
 #include <eval_context.h>
 #include <dir.h>
 #include <conversion.h>
-#include <matching.h>                        /* IsRegexItemIn,FullTextMatch */
+#include <matching.h>                        /* IsRegexItemIn */
 #include <pipes.h>
 #include <classic.h>                  /* SendSocketStream */
 #include <net.h>                      /* SendTransaction,ReceiveTransaction */
@@ -436,7 +436,7 @@ Item *ContextAccessControl(EvalContext *ctx, char *in, ServerConnectionState *co
         }
         else
         {
-            if (FullTextMatch(ctx, client_regex, key))
+            if (StringMatchFull(client_regex, key))
             {
                 Log(LOG_LEVEL_VERBOSE, " - Found key %s...", key);
                 AppendItem(&candidates, key, NULL);
@@ -453,7 +453,7 @@ Item *ContextAccessControl(EvalContext *ctx, char *in, ServerConnectionState *co
         {
             int res = false;
 
-            if (FullTextMatch(ctx, ap->path, ip->name))
+            if (StringMatchFull(ap->path, ip->name))
             {
                 res = true;
             }
@@ -680,7 +680,7 @@ static int AuthorizeRoles(EvalContext *ctx, ServerConnectionState *conn, char *a
 
         for (ap = SV.roles; ap != NULL; ap = ap->next)
         {
-            if (FullTextMatch(ctx, ap->path, RlistScalarValue(rp)))
+            if (StringMatchFull(ap->path, RlistScalarValue(rp)))
             {
                 /* We have a pattern covering this class - so are we allowed to activate it? */
                 if ((IsMatchItemIn(ctx, ap->accesslist, MapAddress(conn->ipaddr))) ||

@@ -61,7 +61,7 @@ typedef enum
 } RunagentControl;
 
 static void ThisAgentInit(void);
-static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv);
+static GenericAgentConfig *CheckOpts(int argc, char **argv);
 
 static void KeepControlPromises(EvalContext *ctx, const Policy *policy);
 static int HailServer(EvalContext *ctx, char *host);
@@ -73,9 +73,10 @@ static FILE *NewStream(char *name);
 /* Command line options                                            */
 /*******************************************************************/
 
-static const char *CF_RUNAGENT_SHORT_DESCRIPTION = "activate cf-agent on a remote host";
+static const char *const CF_RUNAGENT_SHORT_DESCRIPTION =
+    "activate cf-agent on a remote host";
 
-static const char *CF_RUNAGENT_MANPAGE_LONG_DESCRIPTION =
+static const char *const CF_RUNAGENT_MANPAGE_LONG_DESCRIPTION =
     "cf-runagent connects to a list of running instances of "
     "cf-serverd. It allows foregoing the usual cf-execd schedule "
     "to activate cf-agent. Additionally, a user "
@@ -107,7 +108,7 @@ static const struct option OPTIONS[] =
     {NULL, 0, 0, '\0'}
 };
 
-static const char *HINTS[] =
+static const char *const HINTS[] =
 {
     "Print the help message",
     "Parallelize connections (50 by default)",
@@ -131,16 +132,16 @@ static const char *HINTS[] =
 
 extern const ConstraintSyntax CFR_CONTROLBODY[];
 
-int INTERACTIVE = false;
-int OUTPUT_TO_FILE = false;
-char OUTPUT_DIRECTORY[CF_BUFSIZE];
-int BACKGROUND = false;
-int MAXCHILD = 50;
-char REMOTE_AGENT_OPTIONS[CF_MAXVARSIZE];
+int INTERACTIVE = false; /* GLOBAL_A */
+int OUTPUT_TO_FILE = false; /* GLOBAL_P */
+char OUTPUT_DIRECTORY[CF_BUFSIZE]; /* GLOBAL_P */
+int BACKGROUND = false; /* GLOBAL_P GLOBAL_A */
+int MAXCHILD = 50; /* GLOBAL_P GLOBAL_A */
+char REMOTE_AGENT_OPTIONS[CF_MAXVARSIZE]; /* GLOBAL_A */
 
-Rlist *HOSTLIST = NULL;
-char SENDCLASSES[CF_MAXVARSIZE];
-char DEFINECLASSES[CF_MAXVARSIZE];
+Rlist *HOSTLIST = NULL; /* GLOBAL_P GLOBAL_A */
+char SENDCLASSES[CF_MAXVARSIZE]; /* GLOBAL_A */
+char DEFINECLASSES[CF_MAXVARSIZE]; /* GLOBAL_A */
 
 /*****************************************************************************/
 
@@ -155,7 +156,7 @@ int main(int argc, char *argv[])
 
     EvalContext *ctx = EvalContextNew();
 
-    GenericAgentConfig *config = CheckOpts(ctx, argc, argv);
+    GenericAgentConfig *config = CheckOpts(argc, argv);
     GenericAgentConfigApply(ctx, config);
 
     GenericAgentDiscoverContext(ctx, config);
@@ -237,7 +238,7 @@ int main(int argc, char *argv[])
 
 /*******************************************************************/
 
-static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
+static GenericAgentConfig *CheckOpts(int argc, char **argv)
 {
     extern char *optarg;
     int optindex = 0;
@@ -273,7 +274,7 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             break;
 
         case 'K':
-            IGNORELOCK = true;
+            config->ignore_locks = true;
             break;
 
         case 's':
@@ -318,8 +319,7 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
 
         case 'n':
             DONTDO = true;
-            IGNORELOCK = true;
-            EvalContextClassPutHard(ctx, "opt_dry_run", "cfe_internal,source=environment");
+            config->ignore_locks = true;
             break;
 
         case 't':

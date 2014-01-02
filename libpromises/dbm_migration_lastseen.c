@@ -181,7 +181,7 @@ static bool LastseenMigrationVersion0(DBHandle *db)
     return !errors;
 }
 
-DBMigrationFunction dbm_migration_plan_lastseen[] =
+const DBMigrationFunction dbm_migration_plan_lastseen[] =
 {
     LastseenMigrationVersion0,
     NULL

@@ -32,7 +32,7 @@
 
 int yyparse(void);
 
-ParserState P = { 0 };
+ParserState P = { 0 }; /* GLOBAL_X */
 
 extern FILE *yyin;
 

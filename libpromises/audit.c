@@ -28,15 +28,15 @@
 #include <logging.h>
 #include <string_lib.h>
 
-int PR_KEPT;
-int PR_REPAIRED;
-int PR_NOTKEPT;
+int PR_KEPT; /* GLOBAL_X */
+int PR_REPAIRED; /* GLOBAL_X */
+int PR_NOTKEPT; /* GLOBAL_X */
 
-static double VAL_KEPT;
-static double VAL_REPAIRED;
-static double VAL_NOTKEPT;
+static double VAL_KEPT; /* GLOBAL_X */
+static double VAL_REPAIRED; /* GLOBAL_X */
+static double VAL_NOTKEPT; /* GLOBAL_X */
 
-static bool END_AUDIT_REQUIRED = false;
+static bool END_AUDIT_REQUIRED = false; /* GLOBAL_X */
 
 #define CF_VALUE_LOG      "cf_value.log"
 

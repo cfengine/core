@@ -55,15 +55,15 @@
 #define CF_EXEC_IFELAPSED 0
 #define CF_EXEC_EXPIREAFTER 1
 
-static int NO_FORK;
-static int ONCE;
-static int WINSERVICE = true;
+static int NO_FORK; /* GLOBAL_A */
+static int ONCE; /* GLOBAL_A */
+static int WINSERVICE = true; /* GLOBAL_A */
 
-static pthread_attr_t threads_attrs;
+static pthread_attr_t threads_attrs; /* GLOBAL_T */
 
 /*******************************************************************/
 
-static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv);
+static GenericAgentConfig *CheckOpts(int argc, char **argv);
 void ThisAgentInit(void);
 static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *config, ExecConfig *exec_config,
                         time_t *last_policy_reload);
@@ -77,9 +77,10 @@ static bool LocalExecInThread(const ExecConfig *config);
 /* Command line options                                            */
 /*******************************************************************/
 
-static const char *CF_EXECD_SHORT_DESCRIPTION = "scheduling daemon for cf-agent";
+static const char *const CF_EXECD_SHORT_DESCRIPTION =
+    "scheduling daemon for cf-agent";
 
-static const char *CF_EXECD_MANPAGE_LONG_DESCRIPTION =
+static const char *const CF_EXECD_MANPAGE_LONG_DESCRIPTION =
         "cf-execd is the scheduling daemon for cf-agent. It runs cf-agent locally according to a schedule specified in "
         "policy code (executor control body). After a cf-agent run is completed, cf-execd gathers output from cf-agent, "
         "and may be configured to email the output to a specified address. It may also be configured to splay (randomize) the "
@@ -107,7 +108,7 @@ static const struct option OPTIONS[] =
     {NULL, 0, 0, '\0'}
 };
 
-static const char *HINTS[] =
+static const char *const HINTS[] =
 {
     "Print the help message",
     "Enable debugging output",
@@ -135,7 +136,7 @@ int main(int argc, char *argv[])
 {
     EvalContext *ctx = EvalContextNew();
 
-    GenericAgentConfig *config = CheckOpts(ctx, argc, argv);
+    GenericAgentConfig *config = CheckOpts(argc, argv);
     GenericAgentConfigApply(ctx, config);
 
     GenericAgentDiscoverContext(ctx, config);
@@ -184,7 +185,7 @@ int main(int argc, char *argv[])
 /* Level 1                                                                   */
 /*****************************************************************************/
 
-static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
+static GenericAgentConfig *CheckOpts(int argc, char **argv)
 {
     extern char *optarg;
     int optindex = 0;
@@ -217,7 +218,7 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             break;
 
         case 'K':
-            IGNORELOCK = true;
+            config->ignore_locks = true;
             break;
 
         case 'D':
@@ -239,8 +240,7 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
 
         case 'n':
             DONTDO = true;
-            IGNORELOCK = true;
-            EvalContextClassPut(ctx, NULL, "opt_dry_run", false, CONTEXT_SCOPE_NAMESPACE, "cfe_internal,source=environment");
+            config->ignore_locks = true;
             break;
 
         case 'L':
@@ -443,7 +443,7 @@ static bool LocalExecInThread(const ExecConfig *config)
 
 static void Apoptosis(EvalContext *ctx)
 {
-    static char promiser_buf[CF_SMALLBUF];
+    char promiser_buf[CF_SMALLBUF];
     snprintf(promiser_buf, sizeof(promiser_buf), "%s/bin/cf-execd", CFWORKDIR);
 
     if (LoadProcessTable(ctx, &PROCESSTABLE))

@@ -26,7 +26,7 @@
 #include <logging.h>
 #include <hash.h>
 
-static const char *CF_DIGEST_TYPES[10] =
+static const char *const CF_DIGEST_TYPES[10] =
 {
     "md5",
     "sha224",

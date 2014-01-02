@@ -200,7 +200,7 @@ Rlist *RlistKeyIn(Rlist *list, const char *key)
 
 /*******************************************************************/
 
-bool RlistIsInListOfRegex(EvalContext *ctx, const Rlist *list, const char *str)
+bool RlistIsInListOfRegex(const Rlist *list, const char *str)
 {
     if (str == NULL || list == NULL)
     {
@@ -214,7 +214,7 @@ bool RlistIsInListOfRegex(EvalContext *ctx, const Rlist *list, const char *str)
             continue;
         }
 
-        if (FullTextMatch(ctx, RlistScalarValue(rp), str))
+        if (StringMatchFull(RlistScalarValue(rp), str))
         {
             return true;
         }

@@ -166,8 +166,6 @@ int main()
 }
 
 /* STUBS */
-const char *DAY_TEXT[] = {};
-const char *MONTH_TEXT[] = {};
 
 void __ProgrammingError(const char *file, int lineno, const char *format, ...)
 {

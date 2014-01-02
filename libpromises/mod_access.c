@@ -49,7 +49,8 @@
   like in a body "sub-routine"
 */
 
-static const char *POLICY_ERROR_WRONG_RESOURCE_FOR_DATA_SELECT = "Constraint report_data_select is allowed only for 'query' resource_type";
+static const char *const POLICY_ERROR_WRONG_RESOURCE_FOR_DATA_SELECT =
+    "Constraint report_data_select is allowed only for 'query' resource_type";
 
 static bool AccessParseTreeCheck(const Promise *pp, Seq *errors);
 

@@ -45,6 +45,7 @@ typedef struct
 
     StringSet *heap_soft;
     StringSet *heap_negated;
+    bool ignore_locks;
 
     bool tty_interactive; // agent is running interactively, via tty/terminal interface
     bool color;
@@ -84,7 +85,7 @@ Policy *GenericAgentLoadPolicy(EvalContext *ctx, GenericAgentConfig *config);
 ENTERPRISE_VOID_FUNC_1ARG_DECLARE(void, GenericAgentAddEditionClasses, EvalContext *, ctx);
 void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config);
 ENTERPRISE_VOID_FUNC_1ARG_DECLARE(void, GenericAgentWriteVersion, Writer *, w);
-void GenericAgentWriteHelp(Writer *w, const char *comp, const struct option options[], const char *hints[], bool accepts_file_argument);
+void GenericAgentWriteHelp(Writer *w, const char *comp, const struct option options[], const char *const hints[], bool accepts_file_argument);
 bool GenericAgentArePromisesValid(const GenericAgentConfig *config);
 time_t ReadTimestampFromPolicyValidatedMasterfiles(const GenericAgentConfig *config);
 

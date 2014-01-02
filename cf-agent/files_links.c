@@ -678,7 +678,7 @@ static char *AbsLinkPath(const char *from, const char *relto)
    and find the absolute name of the to object */
 {
     int pop = 1;
-    static char destination[CF_BUFSIZE];
+    static char destination[CF_BUFSIZE]; /* GLOBAL_R */
 
     if (IsAbsoluteFileName(relto))
     {

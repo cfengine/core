@@ -24,7 +24,7 @@
 
 #include <cf3.defs.h>
 
-const char *CLASSTEXT[] =
+const char *const CLASSTEXT[] =
 {
     [PLATFORM_CONTEXT_UNKNOWN] = "<unknown>",
     [PLATFORM_CONTEXT_OPENVZ] = "virt_host_vz_vzps",
@@ -46,7 +46,7 @@ const char *CLASSTEXT[] =
     [PLATFORM_CONTEXT_VMWARE] = "vmware",
 };
 
-const char *VPSCOMM[] =
+const char *const VPSCOMM[] =
 {
     [PLATFORM_CONTEXT_UNKNOWN] = "",
     [PLATFORM_CONTEXT_OPENVZ] = "/bin/vzps",                /* virt_host_vz_vzps */
@@ -71,7 +71,7 @@ const char *VPSCOMM[] =
 // linux after rhel 3: ps -eo user,pid,ppid,pgid,%cpu,%mem,vsize,ni,rss,stat,nlwp,stime,time,args
 // solaris: ps -eo user,pid,ppid,pgid,pcpu,pmem,vsz,pri,rss,nlwp,stime,time,args
 
-const char *VPSOPTS[] =
+const char *const VPSOPTS[] =
 {
     [PLATFORM_CONTEXT_UNKNOWN] = "",
     [PLATFORM_CONTEXT_OPENVZ] = "-E 0 -o user,pid,ppid,pgid,pcpu,pmem,vsz,ni,rss,nlwp,stime,time,args",   /* virt_host_vz_vzps (with vzps, the -E 0 replace the -e) */
@@ -93,7 +93,7 @@ const char *VPSOPTS[] =
     [PLATFORM_CONTEXT_VMWARE] = "?",                        /* vmware */
 };
 
-const char *VFSTAB[] =
+const char *const VFSTAB[] =
 {
     [PLATFORM_CONTEXT_UNKNOWN] = "-",
     [PLATFORM_CONTEXT_OPENVZ] = "/etc/fstab",               /* virt_host_vz_vzps */

@@ -30,7 +30,7 @@
 
 static void WriteCopyright(Writer *out)
 {
-    static const char *copyright =
+    static const char *const copyright =
         ".\\\"Copyright (C) CFEngine AS\n"
         ".\\\"\n"
         ".\\\"This file is part of CFEngine 3 - written and maintained by CFEngine AS.\n"
@@ -74,7 +74,7 @@ static void WriteHeader(Writer *out, const char *program, time_t last_modified)
 
 static void WriteAvailability(Writer *out, const char *program)
 {
-    static const char *availability =
+    static const char *const availability =
         ".SH AVAILABILITY\n"
         "%s is part of CFEngine.\n"
         ".br\n"
@@ -87,7 +87,7 @@ static void WriteAvailability(Writer *out, const char *program)
 
 static void WriteAuthor(Writer *out)
 {
-    static const char *author =
+    static const char *const author =
         ".SH AUTHOR\n"
         "Mark Burgess and CFEngine AS\n";
 
@@ -96,7 +96,7 @@ static void WriteAuthor(Writer *out)
 
 static void WriteName(Writer *out, const char *program, const char *short_description)
 {
-    static const char *author =
+    static const char *const author =
         ".SH NAME\n"
         "%s \\- %s\n";
 
@@ -105,7 +105,7 @@ static void WriteName(Writer *out, const char *program, const char *short_descri
 
 static void WriteSynopsis(Writer *out, const char *program, bool accepts_file_argument)
 {
-    static const char *synopsis =
+    static const char *const synopsis =
         ".SH SYNOPSIS\n"
         ".B %s\n"
         ".RI [ OPTION ]...\n";
@@ -125,7 +125,8 @@ static void WriteDescription(Writer *out, const char *description)
     WriterWriteF(out, ".SH DESCRIPTION\n%s\n", description);
 }
 
-static void WriteOptions(Writer *out, const struct option options[], const char *option_hints[])
+static void WriteOptions(Writer *out, const struct option options[],
+                         const char *const option_hints[])
 {
     WriterWrite(out, ".SH OPTIONS\n");
 
@@ -144,7 +145,7 @@ static void WriteOptions(Writer *out, const struct option options[], const char 
 
 static void WriteSeeAlso(Writer *out)
 {
-    static const char *see_also =
+    static const char *const see_also =
             ".SH \"SEE ALSO\"\n"
             ".BR cf-promises (8),\n"
             ".BR cf-agent (8),\n"
@@ -159,7 +160,7 @@ static void WriteSeeAlso(Writer *out)
 
 static void WriteBugs(Writer *out)
 {
-    static const char *bugs =
+    static const char *const bugs =
             ".SH BUGS\n"
             "Please see the public bug-tracker at http://bug.cfengine.com/.\n"
             ".br\n"
@@ -170,7 +171,7 @@ static void WriteBugs(Writer *out)
 
 static void WriteCFEngine(Writer *out)
 {
-    static const char *cfengine =
+    static const char *const cfengine =
             ".SH CFENGINE\n"
             "CFEngine provides automated configuration management of large-scale computer systems. A system administrator "
             "describes the desired state of a system using CFEngine policy code. The program \\fBcf-agent\\fR reads policy code "
@@ -185,7 +186,7 @@ static void WriteCFEngine(Writer *out)
 
 static void WritePromiseTheory(Writer *out)
 {
-    static const char *promise_theory =
+    static const char *const promise_theory =
             ".SH PROMISE THEORY\n"
             "CFEngine is built on principles from promise theory, proposed by Mark Burgess in 2004. "
             "Promise theory is a model of voluntary cooperation between individual, autonomous "
@@ -200,8 +201,10 @@ static void WritePromiseTheory(Writer *out)
     WriterWrite(out, promise_theory);
 }
 
-void ManPageWrite(Writer *out, const char *program, time_t last_modified, const char *short_description,
-                  const char *long_description, const struct option options[], const char *option_hints[], bool accepts_file_argument)
+void ManPageWrite(Writer *out, const char *program, time_t last_modified,
+                  const char *short_description, const char *long_description,
+                  const struct option options[],
+                  const char *const option_hints[], bool accepts_file_argument)
 {
     WriteCopyright(out);
     WriteHeader(out, program, last_modified);

@@ -62,9 +62,10 @@ extern const ConstraintSyntax CFM_CONTROLBODY[];
 /* Command line options                                            */
 /*******************************************************************/
 
-static const char *CF_MONITORD_SHORT_DESCRIPTION = "monitoring daemon for CFEngine";
+static const char *const CF_MONITORD_SHORT_DESCRIPTION =
+    "monitoring daemon for CFEngine";
 
-static const char *CF_MONITORD_MANPAGE_LONG_DESCRIPTION =
+static const char *const CF_MONITORD_MANPAGE_LONG_DESCRIPTION =
         "cf-monitord is the monitoring daemon for CFEngine. It samples probes defined in policy code and attempts to learn the "
         "normal system state based on current and past observations. Current estimates are made available as "
         "special variables (e.g. $(mon.av_cpu)) to cf-agent, which may use them to inform policy decisions.";
@@ -88,7 +89,7 @@ static const struct option OPTIONS[] =
     {NULL, 0, 0, '\0'}
 };
 
-static const char *HINTS[] =
+static const char *const HINTS[] =
 {
     "Print the help message",
     "Enable debugging output",
@@ -157,7 +158,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             break;
 
         case 'K':
-            IGNORELOCK = true;
+            config->ignore_locks = true;
             break;
 
         case 'I':

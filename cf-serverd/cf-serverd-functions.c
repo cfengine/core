@@ -45,15 +45,15 @@
 #include <file_lib.h>
 
 static const size_t QUEUESIZE = 50;
-int NO_FORK = false;
+int NO_FORK = false; /* GLOBAL_A */
 
 /*******************************************************************/
 /* Command line options                                            */
 /*******************************************************************/
 
-static const char *CF_SERVERD_SHORT_DESCRIPTION = "CFEngine file server daemon";
+static const char *const CF_SERVERD_SHORT_DESCRIPTION = "CFEngine file server daemon";
 
-static const char *CF_SERVERD_MANPAGE_LONG_DESCRIPTION =
+static const char *const CF_SERVERD_MANPAGE_LONG_DESCRIPTION =
         "cf-serverd is a socket listening daemon providing two services: it acts as a file server for remote file copying "
         "and it allows an authorized cf-runagent to start a cf-agent run. cf-agent typically connects to a "
         "cf-serverd instance to request updated policy code, but may also request additional files for download. "
@@ -79,7 +79,7 @@ static const struct option OPTIONS[] =
     {NULL, 0, 0, '\0'}
 };
 
-static const char *HINTS[] =
+static const char *const HINTS[] =
 {
     "Print the help message",
     "Enable debugging output",
@@ -160,7 +160,7 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
             NO_FORK = true;
 
         case 'K':
-            IGNORELOCK = true;
+            config->ignore_locks = true;
             break;
 
         case 'D':
@@ -628,7 +628,7 @@ void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *con
             DetectEnvironment(ctx);
             KeepHardClasses(ctx);
 
-            EvalContextClassPutHard(ctx, CF_AGENTTYPES[config->agent_type], "cfe_internal,source=agent");
+            EvalContextClassPutHard(ctx, CF_AGENTTYPES[AGENT_TYPE_SERVER], "cfe_internal,source=agent");
 
             time_t t = SetReferenceTime();
             UpdateTimeClasses(ctx, t);

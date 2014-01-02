@@ -83,7 +83,7 @@ static bool BundlesMigrationVersion0(DBHandle *db)
     return !errors;
 }
 
-DBMigrationFunction dbm_migration_plan_bundles[] =
+const DBMigrationFunction dbm_migration_plan_bundles[] =
 {
     BundlesMigrationVersion0,
     NULL

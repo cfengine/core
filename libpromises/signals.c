@@ -24,7 +24,7 @@
 
 #include <signals.h>
 
-static bool PENDING_TERMINATION = false;
+static bool PENDING_TERMINATION = false; /* GLOBAL_X */
 
 /********************************************************************/
 
@@ -35,7 +35,7 @@ bool IsPendingTermination(void)
 
 /********************************************************************/
 
-static int SIGNAL_PIPE[2] = { -1, -1 };
+static int SIGNAL_PIPE[2] = { -1, -1 }; /* GLOBAL_C */
 
 /**
  * Make a pipe that can be used to flag that a signal has arrived.
@@ -45,7 +45,7 @@ static int SIGNAL_PIPE[2] = { -1, -1 };
  * using select() with real sockets. This means also using send() and recv()
  * instead of write() and read().
  */
-void MakeSignalPipe()
+void MakeSignalPipe(void)
 {
     if (socketpair(AF_UNIX, SOCK_STREAM, 0, SIGNAL_PIPE) != 0)
     {
@@ -80,28 +80,13 @@ void MakeSignalPipe()
  * Each byte read corresponds to one arrived signal.
  * Note: Use recv() to read from the pipe, not read().
  */
-int GetSignalPipe()
+int GetSignalPipe(void)
 {
     return SIGNAL_PIPE[0];
 }
 
-void HandleSignalsForAgent(int signum)
+static void SignalNotify(int signum)
 {
-    if ((signum == SIGTERM) || (signum == SIGINT))
-    {
-        /* TODO don't exit from the signal handler, just set a flag. Reason is
-         * that all the atexit() hooks we register are not reentrant. */
-        exit(0);
-    }
-    else if (signum == SIGUSR1)
-    {
-        LogSetGlobalLevel(LOG_LEVEL_DEBUG);
-    }
-    else if (signum == SIGUSR2)
-    {
-        LogSetGlobalLevel(LOG_LEVEL_NOTICE);
-    }
-
     unsigned char sig = (unsigned char)signum;
     if (SIGNAL_PIPE[1] >= 0)
     {
@@ -123,6 +108,29 @@ void HandleSignalsForAgent(int signum)
             }
         }
     }
+}
+
+void HandleSignalsForAgent(int signum)
+{
+    switch (signum)
+    {
+    case SIGTERM:
+    case SIGINT:
+        /* TODO don't exit from the signal handler, just set a flag. Reason is
+         * that all the atexit() hooks we register are not reentrant. */
+        exit(0);
+    case SIGUSR1:
+        LogSetGlobalLevel(LOG_LEVEL_DEBUG);
+        break;
+    case SIGUSR2:
+        LogSetGlobalLevel(LOG_LEVEL_NOTICE);
+        break;
+    default:
+        /* No action */
+        break;
+    }
+
+    SignalNotify(signum);
 
 /* Reset the signal handler */
     signal(signum, HandleSignalsForAgent);
@@ -132,41 +140,28 @@ void HandleSignalsForAgent(int signum)
 
 void HandleSignalsForDaemon(int signum)
 {
-    if ((signum == SIGTERM) || (signum == SIGINT) || (signum == SIGHUP) || (signum == SIGSEGV) || (signum == SIGKILL)
-        || (signum == SIGPIPE))
+    switch (signum)
     {
+    case SIGTERM:
+    case SIGINT:
+    case SIGHUP:
+    case SIGSEGV:
+    case SIGKILL:
+    case SIGPIPE:
         PENDING_TERMINATION = true;
-    }
-    else if (signum == SIGUSR1)
-    {
+        break;
+    case SIGUSR1:
         LogSetGlobalLevel(LOG_LEVEL_DEBUG);
-    }
-    else if (signum == SIGUSR2)
-    {
+        break;
+    case SIGUSR2:
         LogSetGlobalLevel(LOG_LEVEL_NOTICE);
+        break;
+    default:
+        /* No action */
+        break;
     }
 
-    unsigned char sig = (unsigned char)signum;
-    if (SIGNAL_PIPE[1] >= 0)
-    {
-        // send() is async-safe, according to POSIX.
-        if (send(SIGNAL_PIPE[1], &sig, 1, 0) < 0)
-        {
-            // These signal contention. Everything else is an error.
-            if (errno != EAGAIN
-#ifndef __MINGW32__
-                && errno != EWOULDBLOCK
-#endif
-                )
-            {
-                // This is not async safe, but if we get in here there's something really weird
-                // going on.
-                Log(LOG_LEVEL_CRIT, "Could not write to signal pipe. Unsafe to continue. (write: '%s')",
-                    GetErrorStr());
-                _exit(1);
-            }
-        }
-    }
+    SignalNotify(signum);
 
 /* Reset the signal handler */
     signal(signum, HandleSignalsForDaemon);

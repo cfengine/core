@@ -22,9 +22,9 @@
   included file COSL.txt.
 */
 
-#ifndef ACL_TOOLS_H
-#define ACL_TOOLS_H
+#ifndef CFENGINE_ACL_TOOLS_H
+#define CFENGINE_ACL_TOOLS_H
 
 int CopyACLs(const char *src, const char *dst);
 
-#endif // ACL_TOOLS_H
+#endif // CFENGINE_ACL_TOOLS_H

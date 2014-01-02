@@ -65,12 +65,12 @@
 
 #define CF_RECURSION_LIMIT 100
 
-static Rlist *AUTO_DEFINE_LIST;
+static Rlist *AUTO_DEFINE_LIST; /* GLOBAL_P */
 
-Item *VSETUIDLIST;
+Item *VSETUIDLIST; /* GLOBAL_X */
 
-Rlist *SINGLE_COPY_LIST = NULL;
-static Rlist *SINGLE_COPY_CACHE = NULL;
+Rlist *SINGLE_COPY_LIST = NULL; /* GLOBAL_P */
+static Rlist *SINGLE_COPY_CACHE = NULL; /* GLOBAL_X */
 
 static bool TransformFile(EvalContext *ctx, char *file, Attributes attr, const Promise *pp, PromiseResult *result);
 static PromiseResult VerifyName(EvalContext *ctx, char *path, struct stat *sb, Attributes attr, const Promise *pp);
@@ -208,7 +208,7 @@ static PromiseResult CfCopyFile(EvalContext *ctx, char *sourcefile, char *destfi
         return PROMISE_RESULT_NOOP;
     }
 
-    if (RlistIsInListOfRegex(ctx, SINGLE_COPY_CACHE, destfile))
+    if (RlistIsInListOfRegex(SINGLE_COPY_CACHE, destfile))
     {
         Log(LOG_LEVEL_INFO, "Skipping single-copied file '%s'", destfile);
         return PROMISE_RESULT_NOOP;
@@ -497,7 +497,7 @@ static PromiseResult CfCopyFile(EvalContext *ctx, char *sourcefile, char *destfi
                         result = PromiseResultUpdate(result, VerifyCopiedFileAttributes(ctx, sourcefile, destfile, &ssb, &dsb, attr, pp));
                     }
 
-                    if (RlistIsInListOfRegex(ctx, SINGLE_COPY_LIST, destfile))
+                    if (RlistIsInListOfRegex(SINGLE_COPY_LIST, destfile))
                     {
                         RlistPrependScalarIdemp(&SINGLE_COPY_CACHE, destfile);
                     }
@@ -524,7 +524,7 @@ static PromiseResult CfCopyFile(EvalContext *ctx, char *sourcefile, char *destfi
                otherwise we can get oscillations between multipe versions if type
                is based on a checksum */
 
-            if (RlistIsInListOfRegex(ctx, SINGLE_COPY_LIST, destfile))
+            if (RlistIsInListOfRegex(SINGLE_COPY_LIST, destfile))
             {
                 RlistPrependScalarIdemp(&SINGLE_COPY_CACHE, destfile);
             }

@@ -69,8 +69,8 @@ bool StringMatchFull(const char *regex, const char *str);
 
 int ReplaceStr(char *in, char *out, int outSz, char *from, char *to);
 
-bool IsStrIn(const char *str, const char **strs);
-bool IsStrCaseIn(const char *str, const char **strs);
+bool IsStrIn(const char *str, const char *const strs[]);
+bool IsStrCaseIn(const char *str, const char *const strs[]);
 
 size_t StringCountTokens(const char *str, size_t len, const char *seps);
 StringRef StringGetToken(const char *str, size_t len, size_t index, const char *seps);

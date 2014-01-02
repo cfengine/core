@@ -57,8 +57,8 @@
 
 #ifndef BUILTIN_EXTENSIONS
 
-static bool enable_extension_libraries = true;
-static bool attempted_loading = false;
+static bool enable_extension_libraries = true; /* GLOBAL_X */
+static bool attempted_loading = false; /* GLOBAL_X */
 
 void extension_libraries_disable()
 {

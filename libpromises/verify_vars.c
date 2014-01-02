@@ -241,7 +241,7 @@ PromiseResult VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_d
             return result;
         }
 
-        if (!FullTextMatch(ctx, "[a-zA-Z0-9_\200-\377.]+(\\[.+\\])*", pp->promiser))
+        if (!StringMatchFull("[a-zA-Z0-9_\200-\377.]+(\\[.+\\])*", pp->promiser))
         {
             Log(LOG_LEVEL_ERR, "Variable identifier contains illegal characters");
             PromiseRef(LOG_LEVEL_ERR, pp);

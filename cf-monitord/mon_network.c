@@ -72,7 +72,7 @@ static const Sock ECGSOCKS[ATTR] =     /* extended to map old to new using enum 
     {"631", "ipp", ob_ipp_in, ob_ipp_out},
 };
 
-static const char *VNETSTAT[] =
+static const char *const VNETSTAT[] =
 {
     [PLATFORM_CONTEXT_UNKNOWN] = "-",
     [PLATFORM_CONTEXT_OPENVZ] = "/bin/netstat -rn",         /* virt_host_vz_vzps */

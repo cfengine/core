@@ -26,7 +26,7 @@
 #include <buffer.h>
 #include <refcount.h>
 
-static unsigned int general_memory_cap = DEFAULT_MEMORY_CAP;
+static unsigned int general_memory_cap = DEFAULT_MEMORY_CAP; /* GLOBAL_X */
 unsigned int BufferGeneralMemoryCap()
 {
     return general_memory_cap;

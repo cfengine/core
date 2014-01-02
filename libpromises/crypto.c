@@ -60,7 +60,7 @@ static char *CFPRIVKEYFILE;
  * lastseen db. */
 
 
-static bool crypto_initialized = false;
+static bool crypto_initialized = false; /* GLOBAL_X */
 
 void CryptoInitialize()
 {
@@ -118,13 +118,13 @@ static void RandomSeed(void)
 
 /*********************************************************************/
 
+static const char *const passphrase = "Cfengine passphrase";
+
 /**
  * @return true the error is not so severe that we must stop
  */
 bool LoadSecretKeys(void)
 {
-    static char *passphrase = "Cfengine passphrase";
-
     {
         char *privkeyfile = PrivateKeyFile(GetWorkDir());
         FILE *fp = fopen(privkeyfile, "r");
@@ -137,7 +137,8 @@ bool LoadSecretKeys(void)
             return false;
         }
 
-        if ((PRIVKEY = PEM_read_RSAPrivateKey(fp, (RSA **) NULL, NULL, passphrase)) == NULL)
+        if ((PRIVKEY = PEM_read_RSAPrivateKey(fp, (RSA **) NULL, NULL,
+                                              (void *)passphrase)) == NULL)
         {
             unsigned long err = ERR_get_error();
             Log(LOG_LEVEL_ERR,
@@ -165,7 +166,8 @@ bool LoadSecretKeys(void)
             return false;
         }
 
-        if ((PUBKEY = PEM_read_RSAPublicKey(fp, NULL, NULL, passphrase)) == NULL)
+        if ((PUBKEY = PEM_read_RSAPublicKey(fp, NULL, NULL,
+                                            (void *)passphrase)) == NULL)
         {
             unsigned long err = ERR_get_error();
             Log(LOG_LEVEL_ERR,
@@ -263,7 +265,6 @@ RSA *HavePublicKey(const char *username, const char *ipaddress, const char *dige
 {
     char keyname[CF_MAXVARSIZE], newname[CF_BUFSIZE], oldname[CF_BUFSIZE];
     struct stat statbuf;
-    static char *passphrase = "public";
     unsigned long err;
     FILE *fp;
     RSA *newkey = NULL;
@@ -314,7 +315,8 @@ RSA *HavePublicKey(const char *username, const char *ipaddress, const char *dige
         return NULL;
     }
 
-    if ((newkey = PEM_read_RSAPublicKey(fp, NULL, NULL, passphrase)) == NULL)
+    if ((newkey = PEM_read_RSAPublicKey(fp, NULL, NULL,
+                                        (void *)passphrase)) == NULL)
     {
         err = ERR_get_error();
         Log(LOG_LEVEL_ERR, "Error reading public key. (PEM_read_RSAPublicKey: %s)", ERR_reason_error_string(err));
@@ -484,8 +486,7 @@ char *PrivateKeyFile(const char *workdir)
  * Only pthread support - we don't create threads with any other API *
  *********************************************************************/
 
-#if defined(HAVE_PTHREAD)
-static pthread_mutex_t *cf_openssl_locks;
+static pthread_mutex_t *cf_openssl_locks; /* GLOBAL_T */
 
 #ifndef __MINGW32__
 unsigned long ThreadId_callback(void)
@@ -505,11 +506,9 @@ static void OpenSSLLock_callback(int mode, int index, ARG_UNUSED char *file, ARG
         pthread_mutex_unlock(&(cf_openssl_locks[index]));
     }
 }
-#endif
 
 static void SetupOpenSSLThreadLocks(void)
 {
-#if defined(HAVE_PTHREAD)
     const int numLocks = CRYPTO_num_locks();
     cf_openssl_locks = OPENSSL_malloc(numLocks * sizeof(pthread_mutex_t));
 
@@ -522,12 +521,10 @@ static void SetupOpenSSLThreadLocks(void)
     CRYPTO_set_id_callback((unsigned long (*)())ThreadId_callback);
 #endif
     CRYPTO_set_locking_callback((void (*)())OpenSSLLock_callback);
-#endif
 }
 
 static void CleanupOpenSSLThreadLocks(void)
 {
-#if defined(HAVE_PTHREAD)
     const int numLocks = CRYPTO_num_locks();
     CRYPTO_set_locking_callback(NULL);
 #ifndef __MINGW32__
@@ -539,6 +536,4 @@ static void CleanupOpenSSLThreadLocks(void)
         pthread_mutex_destroy(&(cf_openssl_locks[i]));
     }
     OPENSSL_free(cf_openssl_locks);
-#endif
 }
-

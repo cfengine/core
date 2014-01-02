@@ -89,19 +89,19 @@ static const char *GetDefaultDir_helper(char dir[MAX_WORKDIR_LENGTH], const char
 
 static const char *GetDefaultWorkDir(void)
 {
-    static char workdir[MAX_WORKDIR_LENGTH];
+    static char workdir[MAX_WORKDIR_LENGTH]; /* GLOBAL_C */
     return GetDefaultDir_helper(workdir, WORKDIR);
 }
 
 static const char *GetDefaultLogDir(void)
 {
-    static char logdir[MAX_WORKDIR_LENGTH];
+    static char logdir[MAX_WORKDIR_LENGTH]; /* GLOBAL_C */
     return GetDefaultDir_helper(logdir, LOGDIR);
 }
 
 static const char *GetDefaultPidDir(void)
 {
-    static char piddir[MAX_WORKDIR_LENGTH];
+    static char piddir[MAX_WORKDIR_LENGTH]; /* GLOBAL_C */
     return GetDefaultDir_helper(piddir, PIDDIR);
 }
 

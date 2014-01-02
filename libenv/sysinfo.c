@@ -139,7 +139,7 @@ static FILE *ReadFirstLine(const char *filename, char *buf, int bufsize);
 
 static void GetCPUInfo(EvalContext *ctx);
 
-static const char *CLASSATTRIBUTES[][3] =
+static const char *const CLASSATTRIBUTES[][3] =
 {
     [PLATFORM_CONTEXT_UNKNOWN] = {"-", "-", "-"},            /* as appear here are matched. The fields are sysname and machine */
     [PLATFORM_CONTEXT_OPENVZ] = {"virt_host_vz_vzps", ".*", ".*"},      /* VZ Host with vzps installed (virt_host_vz_vzps) */
@@ -161,7 +161,7 @@ static const char *CLASSATTRIBUTES[][3] =
     [PLATFORM_CONTEXT_VMWARE] = {"vmkernel", ".*", ".*"},   /* VMWARE / ESX */
 };
 
-static const char *VRESOLVCONF[] =
+static const char *const VRESOLVCONF[] =
 {
     [PLATFORM_CONTEXT_UNKNOWN] = "-",
     [PLATFORM_CONTEXT_OPENVZ] = "/etc/resolv.conf",         /* virt_host_vz_vzps */
@@ -183,7 +183,7 @@ static const char *VRESOLVCONF[] =
     [PLATFORM_CONTEXT_VMWARE] = "/etc/resolv.conf",         /* vmware */
 };
 
-static const char *VMAILDIR[] =
+static const char *const VMAILDIR[] =
 {
     [PLATFORM_CONTEXT_UNKNOWN] = "-",
     [PLATFORM_CONTEXT_OPENVZ] = "/var/spool/mail",          /* virt_host_vz_vzps */
@@ -205,7 +205,7 @@ static const char *VMAILDIR[] =
     [PLATFORM_CONTEXT_VMWARE] = "/var/spool/mail",          /* vmware */
 };
 
-static const char *VEXPORTS[] =
+static const char *const VEXPORTS[] =
 {
     [PLATFORM_CONTEXT_UNKNOWN] = "-",
     [PLATFORM_CONTEXT_OPENVZ] = "/etc/exports",             /* virt_host_vz_vzps */

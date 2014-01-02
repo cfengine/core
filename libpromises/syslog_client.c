@@ -39,6 +39,7 @@ static uint16_t SYSLOG_PORT = 514;
  */
 static int SYSLOG_FACILITY = LOG_USER;
 
+
 void SetSyslogFacility(int facility)
 {
     SYSLOG_FACILITY = facility;

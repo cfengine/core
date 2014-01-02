@@ -157,6 +157,4 @@ const char *GetErrorStr(void)
     return strerror(errno);
 }
 
-const char *DAY_TEXT[] = {};
-const char *MONTH_TEXT[] = {};
 

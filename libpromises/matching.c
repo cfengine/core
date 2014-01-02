@@ -113,7 +113,7 @@ static int RegExMatchFullString(EvalContext *ctx, pcre *rx, const char *teststri
 /* Pure, non-thread-safe */
 static char *FirstBackReference(pcre *rx, const char *teststring)
 {
-    static char backreference[CF_BUFSIZE];
+    static char backreference[CF_BUFSIZE]; /* GLOBAL_R */
 
     int ovector[OVECCOUNT], i, rc;
 
@@ -177,21 +177,20 @@ int FullTextMatch(EvalContext *ctx, const char *regexp, const char *teststring)
 
 char *ExtractFirstReference(const char *regexp, const char *teststring)
 {
-    static char *nothing = "";
     char *backreference;
 
     pcre *rx;
 
     if ((regexp == NULL) || (teststring == NULL))
     {
-        return nothing;
+        return "";
     }
 
     rx = CompileRegExp(regexp);
 
     if (rx == NULL)
     {
-        return nothing;
+        return "";
     }
 
     backreference = FirstBackReference(rx, teststring);

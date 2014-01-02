@@ -61,15 +61,15 @@ struct DBCursor_
  * This lock protects on-demand initialization of db_handles[i].lock and
  * db_handles[i].name.
  */
-static pthread_mutex_t db_handles_lock = PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP;
+static pthread_mutex_t db_handles_lock = PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP; /* GLOBAL_T */
 
-static DBHandle db_handles[dbid_max] = { { 0 } };
+static DBHandle db_handles[dbid_max] = { { 0 } }; /* GLOBAL_X */
 
-static pthread_once_t db_shutdown_once = PTHREAD_ONCE_INIT;
+static pthread_once_t db_shutdown_once = PTHREAD_ONCE_INIT; /* GLOBAL_T */
 
 /******************************************************************************/
 
-static const char *DB_PATHS[] = {
+static const char *const DB_PATHS[] = {
     [dbid_classes] = "cf_classes",
     [dbid_variables] = "state/cf_variables",
     [dbid_performance] = "performance",

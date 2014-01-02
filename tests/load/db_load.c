@@ -359,5 +359,5 @@ int ThreadUnlock(pthread_mutex_t *t)
 
 pthread_mutex_t *cft_dbhandle;
 
-const char *DAY_TEXT[] = {};
-const char *MONTH_TEXT[] = {};
+const char *const DAY_TEXT[] = {};
+const char *const MONTH_TEXT[] = {};

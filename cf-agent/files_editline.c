@@ -562,6 +562,7 @@ static PromiseResult VerifyLineInsertions(EvalContext *ctx, const Promise *pp, E
     char lockname[CF_BUFSIZE];
 
     Attributes a = GetInsertionAttributes(ctx, pp);
+    int preserve_block = a.sourcetype && strcmp(a.sourcetype, "preserve_block") == 0;
     a.transaction.ifelapsed = CF_EDIT_IFELAPSED;
 
     if (!SanityCheckInsertions(a))
@@ -589,11 +590,14 @@ static PromiseResult VerifyLineInsertions(EvalContext *ctx, const Promise *pp, E
         return result;
     }
 
-    snprintf(lockname, CF_BUFSIZE - 1, "insertline-%s-%s", pp->promiser, edcontext->filename);
-    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a.transaction, pp, true);
-    if (thislock.lock == NULL)
+    if (!preserve_block)
     {
-        return PROMISE_RESULT_SKIPPED;
+        snprintf(lockname, CF_BUFSIZE - 1, "insertline-%s-%s", pp->promiser, edcontext->filename);
+        thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a.transaction, pp, true);
+        if (thislock.lock == NULL)
+        {
+            return PROMISE_RESULT_SKIPPED;
+        }
     }
 
     /* Are we looking for an anchored line inside the region? */

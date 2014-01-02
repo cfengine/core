@@ -52,8 +52,7 @@ static pthread_once_t lock_cleanup_once = PTHREAD_ONCE_INIT; /* GLOBAL_X */
 #ifdef LMDB
 static void GenerateMd5Hash(const char *istring, char *ohash)
 {
-    if (!strcmp(istring, "CF_CRITICAL_SECTION") ||
-        !strncmp(istring, "lock.track_license_bundle.track_license", 39))
+    if (!strcmp(istring, "CF_CRITICAL_SECTION"))
     { 
         strcpy(ohash, istring);
         return;
@@ -69,6 +68,11 @@ static void GenerateMd5Hash(const char *istring, char *ohash)
         ohash[i*2+1] = lookup[digest[i] & 0xf];
     }
     ohash[16*2] = '\0';
+
+    if (!strncmp(istring, "lock.track_license_bundle.track_license", 39))
+    {
+        ohash[0] = 'X';
+    }
 }
 #endif
 
@@ -77,8 +81,7 @@ static bool WriteLockData(CF_DB *dbp, const char *lock_id, LockData *lock_data)
 #ifdef LMDB
     unsigned char digest2[EVP_MAX_MD_SIZE*2 + 1];
 
-    if (!strcmp(lock_id, "CF_CRITICAL_SECTION") ||
-        !strncmp(lock_id, "lock.track_license_bundle.track_license", 39))
+    if (!strcmp(lock_id, "CF_CRITICAL_SECTION"))
     {
         strcpy(digest2, lock_id);
     }
@@ -962,11 +965,18 @@ void PurgeLocks(void)
 
     while (NextDB(dbcp, &key, &ksize, (void *) &entry, &vsize))
     {
+#ifdef LMDB
+        if (key[0] == 'X')
+        {
+            continue;
+        }
+#else
         if (strncmp(key, "last.internal_bundle.track_license.handle",
                     strlen("last.internal_bundle.track_license.handle")) == 0)
         {
             continue;
         }
+#endif
 
         if (now - entry.time > (time_t) CF_LOCKHORIZON)
         {

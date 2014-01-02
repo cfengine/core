@@ -1,0 +1,23 @@
+#
+# Check the parser enforces standard TCP port ( 1 <= port <= 65535) for:
+# -cf-serverd listening port
+#
+
+body common control
+{
+  bundlesequence => { "test" };
+  inputs => { "../../default.cf.sub" };
+  version => "1.0";
+}
+
+body server control 
+{
+  port => "5308";
+}
+
+bundle agent test
+{
+  reports:
+    "$(this.promise_filename) Pass";
+}
+

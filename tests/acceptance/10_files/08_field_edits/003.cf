@@ -56,6 +56,7 @@ bundle agent test
 {
   files:
       "$(G.testfile).actual"
+         create => "true",
       edit_line => test_edit;
 
 }

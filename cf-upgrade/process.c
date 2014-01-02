@@ -196,7 +196,7 @@ int private_run_process_finish(const char *command, char **args, char **envp)
      * and hope for the best. Notice that if the process failed to start we
      * would have caught it in the if loop above.
      */
-    exit(0);
+    exit(EXIT_SUCCESS);
 }
 /*
  * There is an interesting difference in the Windows way of doing things versus

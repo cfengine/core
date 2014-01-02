@@ -51,7 +51,7 @@ void MakeSignalPipe(void)
     {
         Log(LOG_LEVEL_CRIT, "Could not create internal communication pipe. Cannot continue. (socketpair: '%s')",
             GetErrorStr());
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     for (int c = 0; c < 2; c++)
@@ -61,7 +61,7 @@ void MakeSignalPipe(void)
         {
             Log(LOG_LEVEL_CRIT, "Could not create internal communication pipe. Cannot continue. (fcntl: '%s')",
                 GetErrorStr());
-            exit(1);
+            exit(EXIT_FAILURE);
         }
 #else // __MINGW32__
         u_long enable = 1;
@@ -69,7 +69,7 @@ void MakeSignalPipe(void)
         {
             Log(LOG_LEVEL_CRIT, "Could not create internal communication pipe. Cannot continue. (ioctlsocket: '%s')",
                 GetErrorStr());
-            exit(1);
+            exit(EXIT_FAILURE);
         }
 #endif // __MINGW32__
     }
@@ -104,7 +104,7 @@ static void SignalNotify(int signum)
                 // going on.
                 Log(LOG_LEVEL_CRIT, "Could not write to signal pipe. Unsafe to continue. (write: '%s')",
                     GetErrorStr());
-                _exit(1);
+                _exit(EXIT_FAILURE);
             }
         }
     }

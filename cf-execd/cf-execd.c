@@ -257,7 +257,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
                 GenericAgentWriteVersion(w);
                 FileWriterDetach(w);
             }
-            exit(0);
+            exit(EXIT_SUCCESS);
 
         case 'h':
             {
@@ -265,7 +265,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
                 GenericAgentWriteHelp(w, "cf-execd", OPTIONS, HINTS, true);
                 FileWriterDetach(w);
             }
-            exit(0);
+            exit(EXIT_SUCCESS);
 
         case 'M':
             {
@@ -281,7 +281,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
 
         case 'x':
             Log(LOG_LEVEL_ERR, "Self-diagnostic functionality is retired.");
-            exit(0);
+            exit(EXIT_SUCCESS);
 
         case 'C':
             if (!GenericAgentConfigParseColor(config, optarg))
@@ -296,7 +296,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
                 GenericAgentWriteHelp(w, "cf-execd", OPTIONS, HINTS, true);
                 FileWriterDetach(w);
             }
-            exit(1);
+            exit(EXIT_FAILURE);
 
         }
     }
@@ -354,7 +354,7 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, E
     if ((!NO_FORK) && (fork() != 0))
     {
         Log(LOG_LEVEL_INFO, "cf-execd starting %.24s", ctime(&now));
-        _exit(0);
+        _exit(EXIT_SUCCESS);
     }
 
     if (!NO_FORK)

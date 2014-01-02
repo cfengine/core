@@ -419,7 +419,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
                 GenericAgentWriteVersion(w);
                 FileWriterDetach(w);
             }
-            exit(0);
+            exit(EXIT_SUCCESS);
 
         case 'h':
             {
@@ -427,7 +427,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
                 GenericAgentWriteHelp(w, "cf-agent", OPTIONS, HINTS, true);
                 FileWriterDetach(w);
             }
-            exit(0);
+            exit(EXIT_SUCCESS);
 
         case 'M':
             {
@@ -454,7 +454,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
                 AgentDiagnosticsRunAllChecksNova(workdir, out, &AgentDiagnosticsRun, &AgentDiagnosticsResultNew);
                 FileWriterDetach(out);
             }
-            exit(0);
+            exit(EXIT_SUCCESS);
 
         case 'C':
             if (!GenericAgentConfigParseColor(config, optarg))
@@ -473,7 +473,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
                 GenericAgentWriteHelp(w, "cf-agent", OPTIONS, HINTS, true);
                 FileWriterDetach(w);
             }
-            exit(1);
+            exit(EXIT_FAILURE);
         }
     }
 
@@ -1049,7 +1049,7 @@ static void KeepPromiseBundles(EvalContext *ctx, const Policy *policy, GenericAg
     else if (!EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_BUNDLESEQUENCE, &retval))
     {
         Log(LOG_LEVEL_ERR, "No bundlesequence in the common control body");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
@@ -1273,7 +1273,7 @@ static void CheckAgentAccess(Rlist *list, const Policy *policy)
                 if (!access)
                 {
                     Log(LOG_LEVEL_ERR, "File '%s' is not owned by an authorized user (security exception)", input_file);
-                    exit(1);
+                    exit(EXIT_FAILURE);
                 }
             }
             else if (CFPARANOID && IsPrivileged())
@@ -1282,7 +1282,7 @@ static void CheckAgentAccess(Rlist *list, const Policy *policy)
                 {
                     Log(LOG_LEVEL_ERR, "File '%s' is not owned by uid %ju (security exception)", input_file,
                           (uintmax_t)getuid());
-                    exit(1);
+                    exit(EXIT_FAILURE);
                 }
             }
         }
@@ -1291,7 +1291,7 @@ static void CheckAgentAccess(Rlist *list, const Policy *policy)
     }
 
     Log(LOG_LEVEL_ERR, "You are denied access to run this policy");
-    exit(1);
+    exit(EXIT_FAILURE);
 }
 #endif /* !__MINGW32__ */
 
@@ -1668,7 +1668,7 @@ static PromiseResult ParallelFindAndVerifyFilesPromises(EvalContext *ctx, const 
 
                 Log(LOG_LEVEL_VERBOSE, "Exiting backgrounded promise");
                 PromiseRef(LOG_LEVEL_VERBOSE, pp);
-                _exit(0);
+                _exit(EXIT_SUCCESS);
                 // TODO: need to solve this
             }
         }

@@ -6,7 +6,7 @@
 
 body common control
 {
-      inputs => { "../../default.cf.sub", "namespaced_edit_line_bundle.cf.sub" };
+      inputs => { "../../default.cf.sub" };
       bundlesequence  => { default("$(this.promise_filename)") };
       version => "1.0";
 }
@@ -15,24 +15,17 @@ body common control
 
 bundle agent init
 {
-  vars:
-      "states" slist => { "actual", "expected" };
-
-      "actual" string => "";
-
-      "expected" string => "Hello";
-
   files:
-      "$(G.testfile).$(states)"
+      "$(G.testfile).expected"
       create => "true",
-      edit_line => init_insert("$($(states))"),
+      edit_line => init_insert,
       edit_defaults => init_empty;
 }
 
 bundle edit_line init_insert(str)
 {
   insert_lines:
-      "$(str)";
+      "Hello";
 }
 
 body edit_defaults init_empty
@@ -46,7 +39,9 @@ bundle agent test
 {
   files:
       "$(G.testfile).actual"
-      edit_line => testing_namespace:simple_insert();
+      create => "true",
+      edit_defaults => init_empty,
+      edit_line => testing_namespace:simple_insert;
 }
 
 #######################################################
@@ -58,6 +53,22 @@ bundle agent check
                                             "$(G.testfile).expected",
                                             "$(this.promise_filename)");
 }
+
+#######################################################
+# NS
+#######################################################
+
+body file control
+{
+    namespace => "testing_namespace";
+}
+
+bundle edit_line simple_insert
+{
+  insert_lines:
+      "Hello";
+}
+
 
 ### PROJECT_ID: core
 ### CATEGORY_ID: 27

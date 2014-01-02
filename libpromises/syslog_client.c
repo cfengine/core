@@ -26,13 +26,22 @@
 
 #include <cf3.defs.h>
 
+/*
+ * Set by cf-agent/cf-serverd from body agent/server control.
+ */
 static char SYSLOG_HOST[MAXHOSTNAMELEN] = "localhost";
+/*
+ * Set by cf-agent/cf-serverd from body agent/server control.
+ */
 static uint16_t SYSLOG_PORT = 514;
-int FACILITY;
+/*
+ * Set by cf-agent/cf-serverd/cf-execd from body agent/exec/server control.
+ */
+static int SYSLOG_FACILITY = LOG_USER;
 
 void SetSyslogFacility(int facility)
 {
-    FACILITY = facility;
+    SYSLOG_FACILITY = facility;
 }
 
 bool SetSyslogHost(const char *host)
@@ -56,7 +65,7 @@ void SetSyslogPort(uint16_t port)
 void RemoteSysLog(int log_priority, const char *log_string)
 {
     time_t now = time(NULL);
-    int sd, pri = log_priority | FACILITY;
+    int sd, pri = log_priority | SYSLOG_FACILITY;
 
     int err;
     struct addrinfo query, *response, *ap;

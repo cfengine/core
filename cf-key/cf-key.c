@@ -139,7 +139,8 @@ int main(int argc, char *argv[])
         char *filename, *ipaddr;
         ipaddr = trust_server_key_arg;
         filename = strchr(trust_server_key_arg, ':');
-        if (NULL == filename)  {
+        if (NULL == filename)
+        {
             return 1; /* ERROR */
         };
         *filename = '\0'; /* terminate `ipaddr` string */

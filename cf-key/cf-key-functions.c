@@ -135,15 +135,19 @@ int TrustKey(const char* filename, const char* ipaddress)
 {
     RSA* key = NULL;
     char *digest = NULL;
-    char username[CF_SMALLBUF+1];
+    char username[CF_SMALLBUF];
 
     key = LoadPublicKey(filename);
     if (NULL == key)
+    {
         return 1; /* ERROR exitcode */
+    }
 
     digest = GetPubkeyDigest(key);
     if (NULL == digest)
+    {
         return 1; /* ERROR exitcode */
+    }
 
 /* determine username; same code (and bugs) as in ServerConnection() */
 #ifdef __MINGW32__
@@ -154,7 +158,9 @@ int TrustKey(const char* filename, const char* ipaddress)
 #endif /* !__MINGW32__ */
 
     if (NULL != ipaddress)
+    {
         LastSaw1(ipaddress, digest, LAST_SEEN_ROLE_CONNECT);
+    }
     SavePublicKey(username, digest, key);
 
     free(digest);

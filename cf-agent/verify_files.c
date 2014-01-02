@@ -555,6 +555,7 @@ PromiseResult ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes
         Log(LOG_LEVEL_VERBOSE, "Handling file edits in edit_line bundle '%s'", method_deref);
 
         Bundle *bp = NULL;
+
         if ((bp = PolicyGetBundle(policy, NULL, "edit_line", method_deref)))
         {
             BannerSubBundle(bp, args);

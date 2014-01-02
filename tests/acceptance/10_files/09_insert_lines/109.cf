@@ -22,7 +22,7 @@ bundle agent init
 
       "expected" string =>
 "START
-        1
+         1
         x2x
        xx3xx
         x4x
@@ -31,12 +31,12 @@ bundle agent init
        xx7xx
       xxx8xxx
      xxxx9xxxx
-    xxxxx10xxxxx
+    xxxxx10xxxx
    xxxxxx11xxxxx
   xxxxxxx12xxxxxx
  xxxxxxxx13xxxxxxx
 xxxxxxxxx14xxxxxxxx
-xxxxxxxxx15xxxxxxxx
+xxxxxxxxx15xxxxxxxxx
       xxx16xx
       xxx17xx
       xxx18xx
@@ -75,7 +75,7 @@ bundle edit_line test_insert(lines)
 {
 insert_lines:
 
-"        1
+"         1
         x2x
        xx3xx
         x4x
@@ -84,12 +84,12 @@ insert_lines:
        xx7xx
       xxx8xxx
      xxxx9xxxx
-    xxxxx10xxxxx
+    xxxxx10xxxx
    xxxxxx11xxxxx
   xxxxxxx12xxxxxx
  xxxxxxxx13xxxxxxx
 xxxxxxxxx14xxxxxxxx
-xxxxxxxxx15xxxxxxxx
+xxxxxxxxx15xxxxxxxxx
       xxx16xx
       xxx17xx
       xxx18xx

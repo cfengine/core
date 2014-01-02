@@ -1582,14 +1582,14 @@ static int EditLineByColumn(EvalContext *ctx, Rlist **columns, Attributes a,
     {
         /* internal separator, single char so split again */
 
-        if (strcmp(RlistScalarValue(rp), a.column.column_value) == 0)
-        {
-            retval = false;
-        }
-        else
+        if (strstr(RlistScalarValue(rp), a.column.column_value) || strcmp(RlistScalarValue(rp), a.column.column_value) != 0) 
         {
             this_column = RlistFromSplitString(RlistScalarValue(rp), a.column.value_separator);
             retval = DoEditColumn(&this_column, a, edcontext);
+        }
+        else
+        {
+            retval = false;
         }
 
         if (retval)
@@ -1784,19 +1784,17 @@ static int DoEditColumn(Rlist **columns, Attributes a, EditContext *edcontext)
     Rlist *rp, *found;
     int retval = false;
 
-    if (a.column.column_operation && strcmp(a.column.column_operation, "delete") == 0)
+    if (a.column.column_operation && (strcmp(a.column.column_operation, "delete") == 0))
     {
-        if ((found = RlistKeyIn(*columns, a.column.column_value)))
+        while ((found = RlistKeyIn(*columns, a.column.column_value)))
         {
             Log(LOG_LEVEL_INFO, "Deleting column field sub-value '%s' in '%s'", a.column.column_value,
                   edcontext->filename);
             RlistDestroyEntry(columns, found);
-            return true;
+            retval = true;
         }
-        else
-        {
-            return false;
-        }
+
+        return retval;
     }
 
     if (a.column.column_operation && strcmp(a.column.column_operation, "set") == 0)

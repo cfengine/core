@@ -45,8 +45,8 @@ static pcre *CompileRegExp(const char *regexp)
 
     if (rx == NULL)
     {
-        Log(LOG_LEVEL_ERR, "Regular expression error '%s' in expression '%s' at %d", errorstr, regexp,
-              erroffset);
+        Log(LOG_LEVEL_ERR, "Regular expression error: pcre_compile() '%s' in expression '%s' (offset: %d)", 
+              errorstr, regexp, erroffset);
     }
 
     return rx;

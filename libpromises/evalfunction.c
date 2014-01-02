@@ -4816,14 +4816,14 @@ static FnCallResult FnCallMakerule(EvalContext *ctx, FnCall *fp, Rlist *finalarg
         Rval retval;
         if (!EvalContextVariableGet(ctx, ref, &retval, NULL))
         {
-            Log(LOG_LEVEL_VERBOSE, "Function MAKEFROM was promised a list called '%s' but this was not found", listvar);
+            Log(LOG_LEVEL_VERBOSE, "Function MAKERULE was promised a list called '%s' but this was not found", listvar);
             VarRefDestroy(ref);
             return FnFailure();
         }
        
        if (retval.type != RVAL_TYPE_LIST)
        {
-           Log(LOG_LEVEL_WARNING, "Function MAKEFROM was promised a list called '%s' but this variable is not a list", listvar);
+           Log(LOG_LEVEL_WARNING, "Function MAKERULE was promised a list called '%s' but this variable is not a list", listvar);
            return FnFailure();
        }
 
@@ -4838,7 +4838,7 @@ static FnCallResult FnCallMakerule(EvalContext *ctx, FnCall *fp, Rlist *finalarg
     {
         if (!S_ISREG(statbuf.st_mode))
         {
-            Log(LOG_LEVEL_VERBOSE, "Warning function makefrom target file object %s exists and is not a plain file", target);
+            Log(LOG_LEVEL_VERBOSE, "Warning function makerule target file object %s exists and is not a plain file", target);
             // Not a probe's responsibility to fix - but have this for debugging
         }
        
@@ -4851,7 +4851,7 @@ static FnCallResult FnCallMakerule(EvalContext *ctx, FnCall *fp, Rlist *finalarg
     {
         if (lstat(rp->val.item, &statbuf) == -1)
         {
-            Log(LOG_LEVEL_VERBOSE, "Function makefrom, one of the source files was not readable");
+            Log(LOG_LEVEL_VERBOSE, "Function makerule, one of the source files was not readable");
             return FnFailure();
         }
         else
@@ -6125,7 +6125,7 @@ static const FnCallArg REGLIST_ARGS[] =
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-static const FnCallArg MAKEFROM_ARGS[] =
+static const FnCallArg MAKERULE_ARGS[] =
 {
     {CF_ABSPATHRANGE, DATA_TYPE_STRING, "Target filename"},
     {CF_ANYSTRING, DATA_TYPE_STRING, "Source filename or CFEngine list identifier"},
@@ -6547,7 +6547,7 @@ const FnCallType CF_FNCALL_TYPES[] =
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("reglist", DATA_TYPE_CONTEXT, REGLIST_ARGS, &FnCallRegList, "True if the regular expression in arg2 matches any item in the list whose id is arg1",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
-    FnCallTypeNew("makerule", DATA_TYPE_CONTEXT, MAKEFROM_ARGS, &FnCallMakerule, "True if the target file arg1 does not exist or a source file in arg2 is newer",
+    FnCallTypeNew("makerule", DATA_TYPE_CONTEXT, MAKERULE_ARGS, &FnCallMakerule, "True if the target file arg1 does not exist or a source file in arg2 is newer",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("regldap", DATA_TYPE_CONTEXT, REGLDAP_ARGS, &FnCallRegLDAP, "True if the regular expression in arg6 matches a value item in an ldap search",
                   FNCALL_OPTION_CACHED, FNCALL_CATEGORY_COMM, SYNTAX_STATUS_NORMAL),

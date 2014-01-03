@@ -48,7 +48,7 @@ bundle agent check
 {
   classes:
 
-      # A new file does not need to be rebuild from an older file (fails)
+      # A new file does not need to be rebuilt from an older file (fails)
       "ok1" expression => makerule("/tmp/newfile", "/etc/passwd");
 
       # An older file does need to be rebuilt from a newer file
@@ -63,10 +63,10 @@ bundle agent check
       # A new file does not need to be rebuilt from an older file (fails)
       "ok5" expression => makerule("/tmp/newfile", "@(test.lold)");
 
-      # An old file does need to be rebuild from an newer file in a list
+      # An old file does need to be rebuilt from an newer file in a list
       "ok6" expression => makerule("/etc/passwd", "@(test.lnew)");
 
-      # An old file does not need to be rebuild from sources with a missing file (fails)
+      # An old file does not need to be rebuilt from sources with a missing file (fails)
       "ok7" expression => makerule("/etc/passwd", "@(test.lnon)");
 
       "ok" and => { "!ok1", "ok2", "!ok3", "ok4", "!ok5", "ok6", "!ok7" };

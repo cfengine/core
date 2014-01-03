@@ -4799,7 +4799,7 @@ static FnCallResult FnCallMakerule(EvalContext *ctx, FnCall *fp, Rlist *finalarg
     const char *listvar = RlistScalarValue(finalargs->next);
     Rlist *list = NULL;
     struct stat statbuf;
-    bool result = false;
+    bool stale = false;
     time_t target_time = 0;
         
     if (!IsVarList(listvar))
@@ -4832,13 +4832,13 @@ static FnCallResult FnCallMakerule(EvalContext *ctx, FnCall *fp, Rlist *finalarg
 
     if (lstat(target, &statbuf) == -1)
     {
-        result = true;
+        stale = true;
     }
     else
     {
         if (!S_ISREG(statbuf.st_mode))
         {
-            Log(LOG_LEVEL_VERBOSE, "Warning function makerule target file object %s exists and is not a plain file", target);
+            Log(LOG_LEVEL_INFORM, "Warning: function MAKERULE target-file %s exists and is not a plain file", target);
             // Not a probe's responsibility to fix - but have this for debugging
         }
        
@@ -4851,26 +4851,19 @@ static FnCallResult FnCallMakerule(EvalContext *ctx, FnCall *fp, Rlist *finalarg
     {
         if (lstat(rp->val.item, &statbuf) == -1)
         {
-            Log(LOG_LEVEL_VERBOSE, "Function makerule, one of the source files was not readable");
+            Log(LOG_LEVEL_INFORM, "Function MAKERULE, source dependency %s was not readable", rp->val.item);
             return FnFailure();
         }
         else
         {
             if (statbuf.st_mtime > target_time)
             {
-                result = true;
+                stale = true;
             }
         }
     }
 
-    if (result)
-    {
-        return FnReturnContext(true);
-    }
-    else
-    {
-        return FnFailure();
-    }
+    return stale ? FnReturnContext(true) : FnFailure();
 }
 
 /*********************************************************************/

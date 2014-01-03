@@ -17,66 +17,81 @@ body common control
 
 bundle agent init
 {
-  vars:
-      "origtestdir" string => dirname("$(this.promise_filename)");
+files:
+      "$(G.testfile).expected"
+      create => "true",
+edit_defaults => init_empty,
+      edit_line => init_expect;
 
-  files:
-      "$(G.testfile)"
-      delete => init_delete;
-}
-
-body delete init_delete
-{
-      dirlinks => "delete";
-      rmdirs   => "true";
+      "$(G.testfile).template"
+      create => "true",
+   edit_line => template,
+   edit_defaults => init_empty;
 }
 
 #######################################################
 
 bundle agent test
 {
-  vars:
-      "template_file" string => "$(init.origtestdir)/basic_classes.template";
-
   classes:
       "two" expression => "any";
       "three" expression => "any";
 
   files:
-      "$(G.testfile)"
-      create => "true",
-      edit_template => "$(template_file)";
-
-  reports:
-    DEBUG::
-      "Rendering template file $(template_file) to $(G.testfile)";
+      "$(G.testfile).actual"
+          create => "true",
+   edit_defaults => init_empty,
+   edit_template => "$(G.testfile).template";
 }
 
-body copy_from sync_cp(from)
+#######################################################
+
+bundle edit_line template
 {
-      source => "$(from)";
+insert_lines:
+
+"[%CFEngine BEGIN %]
+one
+[%CFEngine END %]
+
+[%CFEngine two:: %]
+two
+
+[%CFEngine default:three:: %]
+three
+"
+
+  insert_type => "preserve_block";
 }
 
+#######################################################
+
+bundle edit_line init_expect
+{
+insert_lines:
+
+"one
+
+two
+
+three
+"
+  insert_type => "preserve_block";
+}
+
+body edit_defaults init_empty
+{
+      empty_file_before_editing => "true";
+}
 
 #######################################################
 
 bundle agent check
 {
-  vars:
-      "expect" string => "one$(const.endl)$(const.endl)two$$(const.endl)three$(const.endl)";
-      "actual" string => readfile("$(G.testfile)", 1000);
-
-  classes:
-      "ok" expression => regcmp("$(expect)", "$(actual)");
-
-  reports:
-    DEBUG::
-      "expect: '$(expect)'";
-      "actual: '$(actual)'";
-    ok::
-      "$(this.promise_filename) Pass";
-    !ok::
-      "$(this.promise_filename) FAIL";
+  methods:
+      "any" usebundle => default_check_diff("$(G.testfile).actual",
+                                            "$(G.testfile).expected",
+                                            "$(this.promise_filename)");
 }
 ### PROJECT_ID: core
 ### CATEGORY_ID: 27

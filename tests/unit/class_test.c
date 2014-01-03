@@ -43,6 +43,14 @@ static void test_ns(void)
         assert_string_equal("foo", cls->ns);
         assert_string_equal("127_0_0_1", cls->name);
         assert_true(cls->is_soft);
+
+        cls = ClassTableMatch(t, "foo:127_0_.*");
+        assert_true(cls);
+        cls = ClassTableMatch(t, "foo:127_1_.*");
+        assert_false(cls);
+        cls = ClassTableMatch(t, "127_0_.*");
+        assert_false(cls);
+
         ClassTableDestroy(t);
     }
 }
@@ -58,6 +66,12 @@ static void test_default_ns(void)
         assert_true(cls->ns == NULL);
         assert_string_equal("127_0_0_1", cls->name);
         assert_false(cls->is_soft);
+
+        cls = ClassTableMatch(t, "127_0_.*");
+        assert_true(cls);
+        cls = ClassTableMatch(t, "127_1_.*");
+        assert_false(cls);
+
         ClassTableDestroy(t);
     }
 

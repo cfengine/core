@@ -123,6 +123,30 @@ Class *ClassTableGet(const ClassTable *table, const char *ns, const char *name)
     return RBTreeGet(table->classes, (void *)hash);
 }
 
+static bool ClassRefMatch(const char *ns, const char *name, const char *regex)
+{
+    char *class_expr = ClassRefToString(ns, name);
+    bool matched = StringMatchFull(regex, class_expr);
+    free(class_expr);
+    return matched;
+}
+
+Class *ClassTableMatch(const ClassTable *table, const char *regex)
+{
+    ClassTableIterator *it = ClassTableIteratorNew(table, NULL, true, true);
+    Class *cls = NULL;
+    while ((cls = ClassTableIteratorNext(it)))
+    {
+        if (ClassRefMatch(cls->ns, cls->name, regex))
+        {
+            break;
+        }
+    }
+
+    ClassTableIteratorDestroy(it);
+    return cls;
+}
+
 bool ClassTableRemove(ClassTable *table, const char *ns, const char *name)
 {
     size_t hash = ClassRefHash(ns, name);

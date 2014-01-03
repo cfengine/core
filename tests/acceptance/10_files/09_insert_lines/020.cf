@@ -1,0 +1,111 @@
+#######################################################
+#
+# Files read in as templates, check variable expansion
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+  files:
+      "$(G.testfile).expected"
+      create => "true",
+      edit_line => init_expected,
+      edit_defaults => init_empty;
+
+  files:
+      "$(G.testfile).template"
+      create => "true",
+      edit_line => init_template,
+      edit_defaults => init_empty;
+
+}
+
+#######
+
+bundle edit_line init_template
+{
+insert_lines:
+
+"BEGIN
+$(const.dollar)(test.scalar)
+
+CCCCCCCC
+CCCCCCCC
+CCCCCCCC
+
+DDDDDDDD
+[%CFEngine BEGIN %]
+<title>$(const.dollar)(test.list)</title>
+[%CFEngine END %]
+"
+
+insert_type => "preserve_block";
+}
+
+#######
+
+bundle edit_line init_expected
+{
+insert_lines:
+
+"BEGIN
+One upon a time...
+
+CCCCCCCC
+CCCCCCCC
+CCCCCCCC
+
+DDDDDDDD
+<title>Many times</title>
+<title>Upon a star</title>
+"
+
+insert_type => "preserve_block";
+}
+
+body edit_defaults init_empty
+{
+      empty_file_before_editing => "true";
+}
+
+#######################################################
+
+bundle agent test
+{
+vars:
+
+  "scalar" string => "One upon a time...";
+  "list"   slist  => { "Many times", "Upon a star" };
+
+classes:
+
+  "fishy" expression => "any";
+
+files:
+
+   "$(G.testfile).actual"
+           create => "true",
+    edit_template => "$(G.testfile).template";
+}
+
+#######################################################
+
+bundle agent check
+{
+  methods:
+      "any" usebundle => default_check_diff("$(G.testfile).expected",
+                                            "$(G.testfile).actual",
+                                            "$(this.promise_filename)");
+}
+
+### PROJECT_ID: core
+### CATEGORY_ID: 27

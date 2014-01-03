@@ -127,15 +127,70 @@ int PrintDigest(const char* pubkey)
     return 0; /* OK exitcode */
 }
 
+/** Split a "key" argument of the form "user@address:filename" into
+ * components (public) key file name, IP address, and (remote) user
+ * name.  Pointers to the corresponding segments of the @c keyarg
+ * string will be written into the three output arguments @c filename,
+ * @c ipaddr, and @c username. (Hence, the three output string have
+ * the same lifetime/scope as the @c keyarg string.)
+ *
+ * The only required component is the file name.  If IP address is
+ * missing, @c NULL is written into the @c ipaddr pointer.  If the
+ * username is missing, @c username will point to the constant string
+ * @c "root".
+ *
+ * NOTE: the @c keyarg argument is modified by this function!
+ */
+void ParseKeyArg(char* keyarg, char** filename, char** ipaddr, char** username)
+{
+    char *s;
+
+    /* set defaults */
+    *ipaddr = NULL;
+    *username = "root";
+
+    /* use rightmost colon so we can cope with IPv6 addresses */
+    s = strrchr(keyarg, ':');
+    if (NULL == s)
+    {
+        /* no colon, entire argument is a filename */
+        *filename = keyarg;
+        return;
+    }
+
+    *s = '\0'; /* split string */
+    *filename = ++s; /* advance `filename` to 1st character after ':' */
+
+    s = strchr(keyarg, '@');
+    if (NULL == s)
+    {
+        /* no username given, use default */
+        *ipaddr = keyarg;
+        return;
+    }
+
+    *s = '\0';
+    *ipaddr = ++s;
+    *username = keyarg;
+
+    /* special case: if we got user@:/path/to/file
+       then reset `ipaddr` to NULL instead of empty string */
+    if ('\0' == **ipaddr)
+    {
+        *ipaddr = NULL;
+    }
+
+    return;
+}
+
 /** Trust the given key.  If @c ipaddress is not @c NULL, then also
  * update the "last seen" database.  The IP address is required for
  * trusting a server key (on the client); it is -currently- optional
  * for trusting a client key (on the server). */
-int TrustKey(const char* filename, const char* ipaddress)
+int TrustKey(const char* filename, const char* ipaddress, const char* username)
 {
     RSA* key;
     char *digest;
-    char username[CF_SMALLBUF];
 
     key = LoadPublicKey(filename);
     if (NULL == key)
@@ -148,14 +203,6 @@ int TrustKey(const char* filename, const char* ipaddress)
     {
         return 1; /* ERROR exitcode */
     }
-
-/* determine username; same code (and bugs) as in ServerConnection() */
-#ifdef __MINGW32__
-    snprintf(username, CF_SMALLBUF, "root");
-#else
-    /* FIXME: username is local */
-    GetCurrentUserName(username, CF_SMALLBUF);
-#endif /* !__MINGW32__ */
 
     if (NULL != ipaddress)
     {

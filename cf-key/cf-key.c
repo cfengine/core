@@ -128,24 +128,22 @@ int main(int argc, char *argv[])
 
     if (trust_client_key_arg)
     {
-        /* No IP required for trusting clients on the server */
-        return TrustKey(trust_client_key_arg, NULL);
+        char *filename, *ipaddr, *username;
+        ParseKeyArg(trust_client_key_arg, &filename, &ipaddr, &username);
+        /* TrustKey assumes we're trusting a server if the IP address is given. */
+        return TrustKey(trust_client_key_arg, NULL, username);
     }
 
     if (trust_server_key_arg)
     {
-        /* Server IP address required to trust key on the client side;
-           break argument into IP address + filename */
-        char *filename, *ipaddr;
-        ipaddr = trust_server_key_arg;
-        filename = strchr(trust_server_key_arg, ':');
-        if (NULL == filename)
+        char *filename, *ipaddr, *username;
+        ParseKeyArg(trust_server_key_arg, &filename, &ipaddr, &username);
+        /* Server IP address required to trust key on the client side */
+        if (NULL == ipaddr)
         {
             return 1; /* ERROR */
         }
-        *filename = '\0'; /* terminate `ipaddr` string */
-        ++filename; /* advance `filename` to 1st character after ':' */
-        return TrustKey(filename, ipaddr);
+        return TrustKey(filename, ipaddr, username);
     }
 
     char *public_key_file, *private_key_file;

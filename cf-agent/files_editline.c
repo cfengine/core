@@ -1600,15 +1600,8 @@ static int EditLineByColumn(EvalContext *ctx, Rlist **columns, Attributes a,
     {
         /* internal separator, single char so split again */
 
-        if (strstr(RlistScalarValue(rp), a.column.column_value) || strcmp(RlistScalarValue(rp), a.column.column_value) != 0) 
-        {
-            this_column = RlistFromSplitString(RlistScalarValue(rp), a.column.value_separator);
-            retval = DoEditColumn(&this_column, a, edcontext);
-        }
-        else
-        {
-            retval = false;
-        }
+        this_column = RlistFromSplitString(RlistScalarValue(rp), a.column.value_separator);
+        retval = DoEditColumn(&this_column, a, edcontext);
 
         if (retval)
         {

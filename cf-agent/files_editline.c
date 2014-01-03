@@ -173,6 +173,7 @@ Bundle *MakeTemporaryBundleFromTemplate(EvalContext *ctx, Policy *policy, Attrib
         PromiseType *tp = BundleAppendPromiseType(bp, "insert_lines");
         Promise *np = NULL;
         Item *lines = NULL;
+        Item *stack = NULL;
         char context[CF_BUFSIZE] = "any";
         int lineno = 0;
         size_t level = 0;
@@ -212,8 +213,7 @@ Bundle *MakeTemporaryBundleFromTemplate(EvalContext *ctx, Policy *policy, Attrib
 
                 if (strcmp(op, "BEGIN") == 0)
                 {
-                    // start new buffer
-
+                    PrependItem(&stack, context, NULL);
                     if (++level > 1)
                     {
                         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a, "Template file '%s' contains nested blocks which are not allowed, near line %d", a.edit_template, lineno);
@@ -226,8 +226,12 @@ Bundle *MakeTemporaryBundleFromTemplate(EvalContext *ctx, Policy *policy, Attrib
 
                 if (strcmp(op, "END") == 0)
                 {
-                    // install buffer
                     level--;
+                    if (stack != NULL)
+                       {
+                       strcpy(context, stack->name);
+                       DeleteItem(&stack, stack);
+                       }
                 }
 
                 if (strcmp(op + strlen(op)-2, "::") == 0)
@@ -266,7 +270,10 @@ Bundle *MakeTemporaryBundleFromTemplate(EvalContext *ctx, Policy *policy, Attrib
             {
                 if (level > 0)
                 {
-                    AppendItem(&lines, buffer, NULL);
+                    if (IsDefinedClass(ctx, context, PromiseGetNamespace(pp)))
+                    {
+                        AppendItem(&lines, buffer, context);
+                    }
                 }
                 else
                 {

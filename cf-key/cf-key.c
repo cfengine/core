@@ -142,7 +142,7 @@ int main(int argc, char *argv[])
         if (NULL == filename)
         {
             return 1; /* ERROR */
-        };
+        }
         *filename = '\0'; /* terminate `ipaddr` string */
         ++filename; /* advance `filename` to 1st character after ':' */
         return TrustKey(filename, ipaddr);

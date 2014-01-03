@@ -4838,7 +4838,7 @@ static FnCallResult FnCallMakerule(EvalContext *ctx, FnCall *fp, Rlist *finalarg
     {
         if (!S_ISREG(statbuf.st_mode))
         {
-            Log(LOG_LEVEL_INFORM, "Warning: function MAKERULE target-file %s exists and is not a plain file", target);
+            Log(LOG_LEVEL_INFO, "Warning: function MAKERULE target-file %s exists and is not a plain file", target);
             // Not a probe's responsibility to fix - but have this for debugging
         }
        
@@ -4851,7 +4851,7 @@ static FnCallResult FnCallMakerule(EvalContext *ctx, FnCall *fp, Rlist *finalarg
     {
         if (lstat(rp->val.item, &statbuf) == -1)
         {
-            Log(LOG_LEVEL_INFORM, "Function MAKERULE, source dependency %s was not readable", rp->val.item);
+            Log(LOG_LEVEL_INFO, "Function MAKERULE, source dependency %s was not readable", (char *) rp->val.item);
             return FnFailure();
         }
         else

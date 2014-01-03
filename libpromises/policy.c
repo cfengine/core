@@ -276,9 +276,9 @@ Bundle *PolicyGetBundle(const Policy *policy, const char *ns, const char *type, 
     {
         Bundle *bp = SeqAt(policy->bundles, i);
 
-        char *bundle_symbol = StripNamespace(bp->name);
+        char *bundle_symbol = StripNamespace(name);
 
-        if ((!type || strcmp(bp->type, type) == 0) && ((strcmp(bundle_symbol, name) == 0) || (strcmp(bp->name, name) == 0)))
+        if ((!type || strcmp(bp->type, type) == 0) && ((strcmp(bundle_symbol, bp->name) == 0) || (strcmp(bp->name, name) == 0)))
         {
             free(bundle_symbol);
 

@@ -397,7 +397,15 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promi
 
     if (a.haveedit)
     {
-        result = PromiseResultUpdate(result, ScheduleEditOperation(ctx, path, a, pp));
+        if (exists)
+        {
+            result = PromiseResultUpdate(result, ScheduleEditOperation(ctx, path, a, pp));
+        }
+        else
+        {
+            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Promised to edit '%s', but file does not exist", path);
+            result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
+        }
     }
 
 // Once more in case a file has been created as a result of editing or copying
@@ -547,6 +555,7 @@ PromiseResult ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes
         Log(LOG_LEVEL_VERBOSE, "Handling file edits in edit_line bundle '%s'", method_deref);
 
         Bundle *bp = NULL;
+
         if ((bp = PolicyGetBundle(policy, NULL, "edit_line", method_deref)))
         {
             BannerSubBundle(bp, args);

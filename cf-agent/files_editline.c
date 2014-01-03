@@ -173,6 +173,7 @@ Bundle *MakeTemporaryBundleFromTemplate(EvalContext *ctx, Policy *policy, Attrib
         PromiseType *tp = BundleAppendPromiseType(bp, "insert_lines");
         Promise *np = NULL;
         Item *lines = NULL;
+        Item *stack = NULL;
         char context[CF_BUFSIZE] = "any";
         int lineno = 0;
         size_t level = 0;
@@ -212,8 +213,7 @@ Bundle *MakeTemporaryBundleFromTemplate(EvalContext *ctx, Policy *policy, Attrib
 
                 if (strcmp(op, "BEGIN") == 0)
                 {
-                    // start new buffer
-
+                    PrependItem(&stack, context, NULL);
                     if (++level > 1)
                     {
                         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a, "Template file '%s' contains nested blocks which are not allowed, near line %d", a.edit_template, lineno);
@@ -226,8 +226,12 @@ Bundle *MakeTemporaryBundleFromTemplate(EvalContext *ctx, Policy *policy, Attrib
 
                 if (strcmp(op, "END") == 0)
                 {
-                    // install buffer
                     level--;
+                    if (stack != NULL)
+                       {
+                       strcpy(context, stack->name);
+                       DeleteItem(&stack, stack);
+                       }
                 }
 
                 if (strcmp(op + strlen(op)-2, "::") == 0)
@@ -266,7 +270,10 @@ Bundle *MakeTemporaryBundleFromTemplate(EvalContext *ctx, Policy *policy, Attrib
             {
                 if (level > 0)
                 {
-                    AppendItem(&lines, buffer, NULL);
+                    if (IsDefinedClass(ctx, context, PromiseGetNamespace(pp))) // This is ok because template is basically a closure
+                    {
+                        AppendItem(&lines, buffer, context);
+                    }
                 }
                 else
                 {
@@ -562,6 +569,7 @@ static PromiseResult VerifyLineInsertions(EvalContext *ctx, const Promise *pp, E
     char lockname[CF_BUFSIZE];
 
     Attributes a = GetInsertionAttributes(ctx, pp);
+    int preserve_block = a.sourcetype && strcmp(a.sourcetype, "preserve_block") == 0;
     a.transaction.ifelapsed = CF_EDIT_IFELAPSED;
 
     if (!SanityCheckInsertions(a))
@@ -589,7 +597,16 @@ static PromiseResult VerifyLineInsertions(EvalContext *ctx, const Promise *pp, E
         return result;
     }
 
-    snprintf(lockname, CF_BUFSIZE - 1, "insertline-%s-%s", pp->promiser, edcontext->filename);
+    if (preserve_block)
+    {
+        // promise to insert duplicates on first pass only
+        snprintf(lockname, CF_BUFSIZE - 1, "insertline-%s-%s-%lu", pp->promiser, edcontext->filename, (long unsigned int) pp->org_pp);
+    }
+    else
+    {
+        snprintf(lockname, CF_BUFSIZE - 1, "insertline-%s-%s", pp->promiser, edcontext->filename);
+    }
+
     thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a.transaction, pp, true);
     if (thislock.lock == NULL)
     {
@@ -708,6 +725,7 @@ static int InsertMultipleLinesToRegion(EvalContext *ctx, Item **start, Item *beg
                                        const Promise *pp, EditContext *edcontext, PromiseResult *result)
 {
     Item *ip, *prev = CF_UNDEFINED_ITEM;
+    int preserve_block = a.sourcetype && strcmp(a.sourcetype, "preserve_block") == 0;
 
     // Insert at the start of the file
 
@@ -737,7 +755,7 @@ static int InsertMultipleLinesToRegion(EvalContext *ctx, Item **start, Item *beg
     {
         for (ip = *start; ip != NULL; ip = ip->next)
         {
-            if (MatchRegion(ctx, pp->promiser, ip, end_ptr, true))
+            if (!preserve_block && MatchRegion(ctx, pp->promiser, ip, end_ptr, true))
             {
                 cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "Promised chunk '%s' exists within selected region of %s (promise kept)", pp->promiser, edcontext->filename);
                 return false;
@@ -1346,7 +1364,7 @@ static int InsertCompoundLineAtLocation(EvalContext *ctx, char *chunk, Item **st
     char *sp;
     int preserve_block = a.sourcetype && (strcmp(a.sourcetype, "preserve_block") == 0 || strcmp(a.sourcetype, "file_preserve_block") == 0);
 
-    if (MatchRegion(ctx, chunk, location, NULL, false))
+    if (!preserve_block && MatchRegion(ctx, chunk, location, NULL, false))
     {
         cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "Promised chunk '%s' exists within selected region of %s (promise kept)", pp->promiser, edcontext->filename);
         return false;
@@ -1582,15 +1600,8 @@ static int EditLineByColumn(EvalContext *ctx, Rlist **columns, Attributes a,
     {
         /* internal separator, single char so split again */
 
-        if (strcmp(RlistScalarValue(rp), a.column.column_value) == 0)
-        {
-            retval = false;
-        }
-        else
-        {
-            this_column = RlistFromSplitString(RlistScalarValue(rp), a.column.value_separator);
-            retval = DoEditColumn(&this_column, a, edcontext);
-        }
+        this_column = RlistFromSplitString(RlistScalarValue(rp), a.column.value_separator);
+        retval = DoEditColumn(&this_column, a, edcontext);
 
         if (retval)
         {
@@ -1784,19 +1795,17 @@ static int DoEditColumn(Rlist **columns, Attributes a, EditContext *edcontext)
     Rlist *rp, *found;
     int retval = false;
 
-    if (a.column.column_operation && strcmp(a.column.column_operation, "delete") == 0)
+    if (a.column.column_operation && (strcmp(a.column.column_operation, "delete") == 0))
     {
-        if ((found = RlistKeyIn(*columns, a.column.column_value)))
+        while ((found = RlistKeyIn(*columns, a.column.column_value)))
         {
             Log(LOG_LEVEL_INFO, "Deleting column field sub-value '%s' in '%s'", a.column.column_value,
                   edcontext->filename);
             RlistDestroyEntry(columns, found);
-            return true;
+            retval = true;
         }
-        else
-        {
-            return false;
-        }
+
+        return retval;
     }
 
     if (a.column.column_operation && strcmp(a.column.column_operation, "set") == 0)

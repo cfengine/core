@@ -95,7 +95,8 @@ check_PROGRAMS = \
 	key_test \
 	cf_upgrade_test \
 	queue_test \
-	ring_buffer_test
+	ring_buffer_test \
+	matching_test
 
 if HAVE_AVAHI_CLIENT
 if HAVE_AVAHI_COMMON

@@ -270,7 +270,7 @@ Bundle *MakeTemporaryBundleFromTemplate(EvalContext *ctx, Policy *policy, Attrib
             {
                 if (level > 0)
                 {
-                    if (IsDefinedClass(ctx, context, PromiseGetNamespace(pp)))
+                    if (IsDefinedClass(ctx, context, PromiseGetNamespace(pp))) // This is ok because template is basically a closure
                     {
                         AppendItem(&lines, buffer, context);
                     }

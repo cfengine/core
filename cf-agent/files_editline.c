@@ -590,14 +590,20 @@ static PromiseResult VerifyLineInsertions(EvalContext *ctx, const Promise *pp, E
         return result;
     }
 
-    if (!preserve_block)
+    if (preserve_block)
+    {
+    // promise to insert duplicates on first pass only
+    snprintf(lockname, CF_BUFSIZE - 1, "insertline-%s-%s-%lu", pp->promiser, edcontext->filename, pp->org_pp);
+    }
+    else
     {
         snprintf(lockname, CF_BUFSIZE - 1, "insertline-%s-%s", pp->promiser, edcontext->filename);
-        thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a.transaction, pp, true);
-        if (thislock.lock == NULL)
-        {
-            return PROMISE_RESULT_SKIPPED;
-        }
+    }
+
+    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a.transaction, pp, true);
+    if (thislock.lock == NULL)
+    {
+        return PROMISE_RESULT_SKIPPED;
     }
 
     /* Are we looking for an anchored line inside the region? */
@@ -712,6 +718,7 @@ static int InsertMultipleLinesToRegion(EvalContext *ctx, Item **start, Item *beg
                                        const Promise *pp, EditContext *edcontext, PromiseResult *result)
 {
     Item *ip, *prev = CF_UNDEFINED_ITEM;
+    int preserve_block = a.sourcetype && strcmp(a.sourcetype, "preserve_block") == 0;
 
     // Insert at the start of the file
 
@@ -741,7 +748,7 @@ static int InsertMultipleLinesToRegion(EvalContext *ctx, Item **start, Item *beg
     {
         for (ip = *start; ip != NULL; ip = ip->next)
         {
-            if (MatchRegion(ctx, pp->promiser, ip, end_ptr, true))
+            if (!preserve_block && MatchRegion(ctx, pp->promiser, ip, end_ptr, true))
             {
                 cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "Promised chunk '%s' exists within selected region of %s (promise kept)", pp->promiser, edcontext->filename);
                 return false;
@@ -1350,7 +1357,7 @@ static int InsertCompoundLineAtLocation(EvalContext *ctx, char *chunk, Item **st
     char *sp;
     int preserve_block = a.sourcetype && (strcmp(a.sourcetype, "preserve_block") == 0 || strcmp(a.sourcetype, "file_preserve_block") == 0);
 
-    if (MatchRegion(ctx, chunk, location, NULL, false))
+    if (!preserve_block && MatchRegion(ctx, chunk, location, NULL, false))
     {
         cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "Promised chunk '%s' exists within selected region of %s (promise kept)", pp->promiser, edcontext->filename);
         return false;

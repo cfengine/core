@@ -133,8 +133,8 @@ int PrintDigest(const char* pubkey)
  * for trusting a client key (on the server). */
 int TrustKey(const char* filename, const char* ipaddress)
 {
-    RSA* key = NULL;
-    char *digest = NULL;
+    RSA* key;
+    char *digest;
     char username[CF_SMALLBUF];
 
     key = LoadPublicKey(filename);

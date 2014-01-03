@@ -116,9 +116,7 @@ static void RandomSeed(void)
     RAND_seed(uninitbuffer, sizeof(uninitbuffer));
 }
 
-/*********************************************************************/
-
-static const char *const passphrase = "Cfengine passphrase";
+static const char *const priv_passphrase = "Cfengine passphrase";
 
 /**
  * @return true the error is not so severe that we must stop
@@ -138,7 +136,7 @@ bool LoadSecretKeys(void)
         }
 
         if ((PRIVKEY = PEM_read_RSAPrivateKey(fp, (RSA **) NULL, NULL,
-                                              (void *)passphrase)) == NULL)
+                                              (void *)priv_passphrase)) == NULL)
         {
             unsigned long err = ERR_get_error();
             Log(LOG_LEVEL_ERR,
@@ -167,7 +165,7 @@ bool LoadSecretKeys(void)
         }
 
         if ((PUBKEY = PEM_read_RSAPublicKey(fp, NULL, NULL,
-                                            (void *)passphrase)) == NULL)
+                                            (void *)priv_passphrase)) == NULL)
         {
             unsigned long err = ERR_get_error();
             Log(LOG_LEVEL_ERR,
@@ -253,7 +251,7 @@ RSA *HavePublicKeyByIP(const char *username, const char *ipaddress)
     }
 }
 
-/*********************************************************************/
+static const char *const pub_passphrase = "public";
 
 /**
  * @brief Search for a key:
@@ -316,7 +314,7 @@ RSA *HavePublicKey(const char *username, const char *ipaddress, const char *dige
     }
 
     if ((newkey = PEM_read_RSAPublicKey(fp, NULL, NULL,
-                                        (void *)passphrase)) == NULL)
+                                        (void *)pub_passphrase)) == NULL)
     {
         err = ERR_get_error();
         Log(LOG_LEVEL_ERR, "Error reading public key. (PEM_read_RSAPublicKey: %s)", ERR_reason_error_string(err));

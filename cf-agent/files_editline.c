@@ -592,8 +592,8 @@ static PromiseResult VerifyLineInsertions(EvalContext *ctx, const Promise *pp, E
 
     if (preserve_block)
     {
-    // promise to insert duplicates on first pass only
-    snprintf(lockname, CF_BUFSIZE - 1, "insertline-%s-%s-%lu", pp->promiser, edcontext->filename, (long unsigned int) pp->org_pp);
+        // promise to insert duplicates on first pass only
+        snprintf(lockname, CF_BUFSIZE - 1, "insertline-%s-%s-%lu", pp->promiser, edcontext->filename, (long unsigned int) pp->org_pp);
     }
     else
     {

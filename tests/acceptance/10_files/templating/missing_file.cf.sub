@@ -1,0 +1,19 @@
+##############################################################################
+#
+# Redmine #3573: establish message for missing target file with a template
+#
+##############################################################################
+
+bundle agent run
+{
+  files:
+      "/no/such/file"
+      create        => "false",
+      edit_defaults => init_empty,
+      edit_template => "$(this.promise_filename)";
+}
+
+body edit_defaults init_empty
+{
+      empty_file_before_editing => "true";
+}

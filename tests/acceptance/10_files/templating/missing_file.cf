@@ -1,0 +1,61 @@
+##############################################################################
+#
+# Redmine #3573: establish message for missing target file with a template
+#
+##############################################################################
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+
+}
+
+#######################################################
+
+bundle agent test
+{
+  vars:
+    any::
+      # Run subtests.  Need to be in verbose mode to see the output.
+      # The full verbose output is too big for variable assignment here.
+      # So extract (grep) only potentially interesting lines.
+      "subout" string => execresult("$(sys.cf_agent) -KI -b run -f $(this.promise_filename).sub 2>&1 | $(G.grep) '/no/such/file'", "useshell");
+}
+
+
+#######################################################
+
+bundle agent check
+{
+  vars:
+      "must_have" string => ".*Promised to edit.*but file does not exist.*";
+      "cant_have" string => ".*no longer access file.*";
+
+  classes:
+      "ok_1" not => regcmp($(cant_have), "$(test.subout)");
+      "ok_2" expression => regcmp($(must_have), "$(test.subout)");
+
+  reports:
+    DEBUG::
+      "Attempted subtest '$(this.promise_filename).sub'";
+      "Significant output was '$(test.subout)'.";
+
+    DEBUG.!ok_1::
+      "failing: can't have pattern '$(cant_have)' in subtest";
+
+    DEBUG.!ok_2::
+      "failing: must have pattern '$(must_have)' in subtest";
+
+    ok_1.ok_2::
+      "$(this.promise_filename) Pass";
+    !(ok_1.ok_2)::
+      "$(this.promise_filename) FAIL";
+}

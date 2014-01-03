@@ -4983,6 +4983,82 @@ static FnCallResult FnCallDiskFree(ARG_UNUSED EvalContext *ctx, ARG_UNUSED FnCal
     return FnReturnF("%jd", ((intmax_t) df) / KILOBYTE);
 }
 
+
+static FnCallResult FnCallMakerule(EvalContext *ctx, ARG_UNUSED FnCall *fp, Rlist *finalargs)
+{
+    const char *target = RlistScalarValue(finalargs);
+    const char *listvar = RlistScalarValue(finalargs->next);
+    Rlist *list = NULL;
+    bool stale = false;
+    time_t target_time = 0;
+
+    // TODO: replace IsVarList with GetListReferenceArgument
+    if (!IsVarList(listvar))
+    {
+        RlistPrepend(&list, listvar, RVAL_TYPE_SCALAR);
+    }
+    else
+    {
+        char naked[CF_MAXVARSIZE] = "";
+        GetNaked(naked, listvar);
+
+        VarRef *ref = VarRefParse(naked);
+
+        Rval retval;
+        if (!EvalContextVariableGet(ctx, ref, &retval, NULL))
+        {
+            Log(LOG_LEVEL_VERBOSE, "Function 'makerule' was promised a list called '%s' but this was not found", listvar);
+            VarRefDestroy(ref);
+            return FnFailure();
+        }
+
+       if (retval.type != RVAL_TYPE_LIST)
+       {
+           Log(LOG_LEVEL_WARNING, "Function 'makerule' was promised a list called '%s' but this variable is not a list", listvar);
+           return FnFailure();
+       }
+
+       list = retval.item;
+    }
+
+    struct stat statbuf;
+    if (lstat(target, &statbuf) == -1)
+    {
+        stale = true;
+    }
+    else
+    {
+        if (!S_ISREG(statbuf.st_mode))
+        {
+            Log(LOG_LEVEL_WARNING, "Function 'makerule' target-file '%s' exists and is not a plain file", target);
+            // Not a probe's responsibility to fix - but have this for debugging
+        }
+
+        target_time = statbuf.st_mtime;
+    }
+
+    // For each file in sources, check they exist and are older than target
+
+    for (const Rlist *rp = list; rp != NULL; rp = rp->next)
+    {
+        if (lstat(RvalScalarValue(rp->val), &statbuf) == -1)
+        {
+            Log(LOG_LEVEL_INFO, "Function MAKERULE, source dependency %s was not readable",  RvalScalarValue(rp->val));
+            return FnFailure();
+        }
+        else
+        {
+            if (statbuf.st_mtime > target_time)
+            {
+                stale = true;
+            }
+        }
+    }
+
+    return stale ? FnReturnContext(true) : FnFailure();
+}
+
+
 #if !defined(__MINGW32__)
 
 FnCallResult FnCallUserExists(ARG_UNUSED EvalContext *ctx, ARG_UNUSED FnCall *fp, Rlist *finalargs)
@@ -6042,6 +6118,13 @@ static const FnCallArg REGLIST_ARGS[] =
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
+static const FnCallArg MAKERULE_ARGS[] =
+{
+    {CF_ABSPATHRANGE, DATA_TYPE_STRING, "Target filename"},
+    {CF_ANYSTRING, DATA_TYPE_STRING, "Source filename or CFEngine list identifier"},
+    {NULL, DATA_TYPE_NONE, NULL}
+};
+
 static const FnCallArg REGLDAP_ARGS[] =
 {
     {CF_ANYSTRING, DATA_TYPE_STRING, "URI"},
@@ -6385,6 +6468,8 @@ const FnCallType CF_FNCALL_TYPES[] =
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("lsdir", DATA_TYPE_STRING_LIST, LSDIRLIST_ARGS, &FnCallLsDir, "Return a list of files in a directory matching a regular expression",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_FILES, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("makerule", DATA_TYPE_CONTEXT, MAKERULE_ARGS, &FnCallMakerule, "True if the target file arg1 does not exist or a source file in arg2 is newer",
+                      FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("maparray", DATA_TYPE_STRING_LIST, MAPARRAY_ARGS, &FnCallMapArray, "Return a list with each element modified by a pattern based $(this.k) and $(this.v)",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("maplist", DATA_TYPE_STRING_LIST, MAPLIST_ARGS, &FnCallMapList, "Return a list with each element modified by a pattern based $(this)",

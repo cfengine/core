@@ -107,9 +107,15 @@ static const char *GetAgentAbortingContext(const EvalContext *ctx)
 {
     for (const Item *ip = ctx->heap_abort; ip != NULL; ip = ip->next)
     {
-        if (IsDefinedClass(ctx, ip->name, NULL))
+        if (IsDefinedClass(ctx, ip->classes, NULL))
         {
-            return ip->name;
+            const char *regex = ip->name;
+            Class *cls = EvalContextClassMatch(ctx, regex);
+
+            if (cls)
+            {
+                return regex;
+            }
         }
     }
     return NULL;
@@ -1147,6 +1153,21 @@ Class *EvalContextClassGet(const EvalContext *ctx, const char *ns, const char *n
     }
 
     return ClassTableGet(ctx->global_classes, ns, name);
+}
+
+Class *EvalContextClassMatch(const EvalContext *ctx, const char *regex)
+{
+    StackFrame *frame = LastStackFrameByType(ctx, STACK_FRAME_TYPE_BUNDLE);
+    if (frame)
+    {
+        Class *cls = ClassTableMatch(frame->data.bundle.classes, regex);
+        if (cls)
+        {
+            return cls;
+        }
+    }
+
+    return ClassTableMatch(ctx->global_classes, regex);
 }
 
 bool EvalContextClassPut(EvalContext *ctx, const char *ns, const char *name, bool is_soft, ContextScope scope, const char *tags)

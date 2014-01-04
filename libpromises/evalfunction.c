@@ -3062,13 +3062,19 @@ static FnCallResult FnCallSetop(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 }
 
 /*********************************************************************/
-
-static FnCallResult FnCallLength(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
+static FnCallResult FnCallFold(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
     const char *name = RlistScalarValue(finalargs);
+    const char *sort_type = finalargs->next ? RlistScalarValue(finalargs->next) : NULL;
 
     Rval rval2;
     int count = 0;
+    double mean = 0;
+    double M2 = 0;
+    Rlist *max = NULL;
+    Rlist *min = NULL;
+    bool variance_mode = strcmp(fp->name, "variance") == 0;
+    bool mean_mode = strcmp(fp->name, "mean") == 0;
 
     if (!GetListReferenceArgument(ctx, fp, name, &rval2, NULL))
     {
@@ -3078,11 +3084,47 @@ static FnCallResult FnCallLength(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
     bool null_seen = false;
     for (const Rlist *rp = RvalRlistValue(rval2); rp != NULL; rp = rp->next)
     {
-        if (strcmp(RlistScalarValue(rp), CF_NULL_VALUE) == 0)
+        const char *cur = RlistScalarValue(rp);
+        if (strcmp(cur, CF_NULL_VALUE) == 0)
         {
             null_seen = true;
         }
+        else if (sort_type)
+        {
+            if (NULL == min || NULL == max)
+            {
+                min = max = rp;
+            }
+            else
+            {
+                if (!GenericItemLess(sort_type, (void*) min, (void*) rp))
+                {
+                    min = rp;
+                }
+
+                if (GenericItemLess(sort_type, (void*) max, (void*) rp))
+                {
+                    max = rp;
+                }
+            }
+        }
+
         count++;
+
+        // none of the following apply if CF_NULL_VALUE has been seen
+        if (null_seen) continue;
+        
+        double x;
+        if (mean_mode || variance_mode)
+        {
+            if (1 == sscanf(cur, "%lf", &x))
+            {
+                // Welford's algorithm
+                double delta = x - mean;
+                mean += delta/count;
+                M2 += delta * (x - mean);
+            }
+        }
     }
 
     if (count == 1 && null_seen)
@@ -3090,7 +3132,40 @@ static FnCallResult FnCallLength(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
         count = 0;
     }
 
-    return FnReturnF("%d", count);
+    if (mean_mode)
+    {
+        return count == 0 ? FnFailure() : FnReturnF("%lf", mean);
+    }
+    else if (variance_mode)
+    {
+        double variance = 0;
+
+        if (count == 0) return FnFailure();
+
+        // if count is 1, variance is 0
+
+        if (count > 1)
+        {
+            variance = M2/(count - 1);
+        }
+
+        return FnReturnF("%lf", variance);
+    }
+    else if (strcmp(fp->name, "length") == 0)
+    {
+        return FnReturnF("%d", count);
+    }
+    else if (strcmp(fp->name, "max") == 0)
+    {
+        return count == 0 ? FnFailure() : FnReturn(RlistScalarValue(max));
+    }
+    else if (strcmp(fp->name, "min") == 0)
+    {
+        return count == 0 ? FnFailure() : FnReturn(RlistScalarValue(min));
+    }
+
+    ProgrammingError("Unknown function call %s to FnCallFold", fp->name);
+    return FnFailure();
 }
 
 /*********************************************************************/
@@ -6282,7 +6357,7 @@ static const FnCallArg SHUFFLE_ARGS[] =
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-static const FnCallArg LENGTH_ARGS[] =
+static const FnCallArg STAT_FOLD_ARGS[] =
 {
     {CF_IDRANGE, DATA_TYPE_STRING, "CFEngine list identifier"},
     {NULL, DATA_TYPE_NONE, NULL}
@@ -6464,8 +6539,6 @@ const FnCallType CF_FNCALL_TYPES[] =
                   FNCALL_OPTION_CACHED, FNCALL_CATEGORY_COMM, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("ldapvalue", DATA_TYPE_STRING, LDAPVALUE_ARGS, &FnCallLDAPValue, "Extract the first matching named value from ldap",
                   FNCALL_OPTION_CACHED, FNCALL_CATEGORY_COMM, SYNTAX_STATUS_NORMAL),
-    FnCallTypeNew("length", DATA_TYPE_INT, LENGTH_ARGS, &FnCallLength, "Return the length of a list",
-                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("lsdir", DATA_TYPE_STRING_LIST, LSDIRLIST_ARGS, &FnCallLsDir, "Return a list of files in a directory matching a regular expression",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_FILES, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("makerule", DATA_TYPE_CONTEXT, MAKERULE_ARGS, &FnCallMakerule, "True if the target file arg1 does not exist or a source file in arg2 is newer",
@@ -6601,5 +6674,17 @@ const FnCallType CF_FNCALL_TYPES[] =
     FnCallTypeNew("upcase", DATA_TYPE_STRING, XFORM_ARGS, &FnCallTextXform, "Convert a string to UPPERCASE",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
 
+    // List folding functions
+    FnCallTypeNew("length", DATA_TYPE_INT, STAT_FOLD_ARGS, &FnCallFold, "Return the length of a list",
+                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("max", DATA_TYPE_STRING, SORT_ARGS, &FnCallFold, "Return the maximum of a list",
+                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("mean", DATA_TYPE_REAL, STAT_FOLD_ARGS, &FnCallFold, "Return the mean (average) of a list",
+                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("min", DATA_TYPE_STRING, SORT_ARGS, &FnCallFold, "Return the minimum of a list",
+                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("variance", DATA_TYPE_REAL, STAT_FOLD_ARGS, &FnCallFold, "Return the variance of a list",
+                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
+    
     FnCallTypeNewNull()
 };

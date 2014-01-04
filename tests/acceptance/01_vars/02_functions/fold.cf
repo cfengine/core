@@ -1,0 +1,170 @@
+#######################################################
+#
+# Test folding functions: length(), max(), min(), mean(), range(), and variance()
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+}
+
+#######################################################
+
+bundle agent test
+{
+  vars:
+      "a" slist => { "b", "c", "a" };
+      "b" slist => { "100", "9", "10" };
+      "c" slist => { };
+      "d" slist => { "", "a", "", "b" };
+      "e" slist => { "a", "1", "b" };
+      "f" rlist => { "100", "200", "300" };
+      "g" rlist => { "1.11", "-2.22", "-3.33" };
+      "h" ilist => { "-10", "0", "200" };
+
+      "lists" slist => { "a", "b", "c", "d", "e", "f", "g", "h" };
+      "bad_lists" slist => { "c" };
+      "good_lists" slist => difference("lists", "bad_lists");
+      "joined_$(good_lists)" string => concat("[ ", join(", ", $(good_lists)), " ]");
+      "joined_$(bad_lists)" string => "[--BADLIST-$(bad_lists)--]";
+
+      "length_$(lists)" int => length($(lists));
+      "lexmin_$(lists)" string => min($(lists), "lex");
+      "realmin_$(lists)" string => min($(lists), "real");
+      "lexmax_$(lists)" string => max($(lists), "lex");
+      "realmax_$(lists)" string => max($(lists), "real");
+      "variance_$(lists)" string => format("%.2f", variance($(lists)));
+      "stddev_$(lists)" string => format("%.2f", eval("sqrt($(variance_$(lists)))", "math", "infix"));
+      "mean_$(lists)" string => format("%.2f", mean($(lists)));
+
+  reports:
+    DEBUG::
+      "List $(lists): $(joined_$(lists)) had length $(length_$(lists))";
+      "List $(lists): $(joined_$(lists)) had variance $(variance_$(lists))";
+      "List $(lists): $(joined_$(lists)) had standard deviation $(stddev_$(lists))";
+      "List $(lists): $(joined_$(lists)) had mean $(mean_$(lists))";
+      "List $(lists): $(joined_$(lists)) had lex min $(lexmin_$(lists))";
+      "List $(lists): $(joined_$(lists)) had lex max $(lexmax_$(lists))";
+      "List $(lists): $(joined_$(lists)) had real min $(realmin_$(lists))";
+      "List $(lists): $(joined_$(lists)) had real max $(realmax_$(lists))";
+}
+
+
+#######################################################
+
+bundle agent check
+{
+  vars:
+      "lists" slist => { @(test.lists) };
+      "good_lists" slist => { @(test.good_lists) };
+      "methods" slist => { @(test.methods) };
+      "measurements" slist => { "length", "mean", "variance", "stddev", "lexmin", "lexmax", "realmin", "realmax" };
+
+      "expected[a][length]" int => "3";
+      "expected[b][length]" int => "3";
+      "expected[c][length]" int => "0";
+      "expected[d][length]" int => "4";
+      "expected[e][length]" int => "3";
+      "expected[f][length]" int => "3";
+      "expected[g][length]" int => "3";
+      "expected[h][length]" int => "3";
+
+      "expected[a][variance]" string => "0.00";
+      "expected[b][variance]" string => "2730.33";
+      "expected[c][variance]" string => "-1";
+      "expected[d][variance]" string => "0.00";
+      "expected[e][variance]" string => "0.25";
+      "expected[f][variance]" string => "10000.00";
+      "expected[g][variance]" string => "5.34";
+      "expected[h][variance]" string => "14033.33";
+
+      "expected[a][stddev]" string => "0.00";
+      "expected[b][stddev]" string => "52.25";
+      "expected[c][stddev]" string => "-1";
+      "expected[d][stddev]" string => "0.00";
+      "expected[e][stddev]" string => "0.50";
+      "expected[f][stddev]" string => "100.00";
+      "expected[g][stddev]" string => "2.31";
+      "expected[h][stddev]" string => "118.46";
+
+      "expected[a][mean]" string => "0.00";
+      "expected[b][mean]" string => "39.67";
+      "expected[c][mean]" string => "-1";
+      "expected[d][mean]" string => "0.00";
+      "expected[e][mean]" string => "0.50";
+      "expected[f][mean]" string => "200.00";
+      "expected[g][mean]" string => "-1.48";
+      "expected[h][mean]" string => "63.33";
+
+      "expected[a][lexmin]" string => "a";
+      "expected[b][lexmin]" string => "10";
+      "expected[c][lexmin]" string => "-1";
+      "expected[d][lexmin]" string => "";
+      "expected[e][lexmin]" string => "1";
+      "expected[f][lexmin]" string => "100";
+      "expected[g][lexmin]" string => "-2.22";
+      "expected[h][lexmin]" string => "-10";
+      "expected[a][realmin]" string => "a";
+      "expected[b][realmin]" string => "9";
+      "expected[c][realmin]" string => "-1";
+      "expected[d][realmin]" string => "a";
+      "expected[e][realmin]" string => "a";
+      "expected[f][realmin]" string => "100";
+      "expected[g][realmin]" string => "-3.33";
+      "expected[h][realmin]" string => "-10";
+      "expected[a][lexmax]" string => "c";
+      "expected[b][lexmax]" string => "9";
+      "expected[c][lexmax]" string => "-1";
+      "expected[d][lexmax]" string => "b";
+      "expected[e][lexmax]" string => "b";
+      "expected[f][lexmax]" string => "300";
+      "expected[g][lexmax]" string => "1.11";
+      "expected[h][lexmax]" string => "200";
+      "expected[a][realmax]" string => "c";
+      "expected[b][realmax]" string => "100";
+      "expected[c][realmax]" string => "-1";
+      "expected[d][realmax]" string => "";
+      "expected[e][realmax]" string => "1";
+      "expected[f][realmax]" string => "300";
+      "expected[g][realmax]" string => "1.11";
+      "expected[h][realmax]" string => "200";
+
+  classes:
+      "ok_$(measurements)_$(lists)" expression => strcmp("$(expected[$(lists)][$(measurements)])",
+                                                         "$(test.$(measurements)_$(lists))");
+
+      "no_$(measurements)_$(lists)" not => isvariable("test.$(measurements)_$(lists)");
+
+      "ok" and => {
+                    "ok_length_a", "ok_length_b", "ok_length_c", "ok_length_d", "ok_length_e", "ok_length_f", "ok_length_g", "ok_length_h",
+                    "ok_mean_a", "ok_mean_b", "no_mean_c", "ok_mean_d", "ok_mean_e", "ok_mean_f", "ok_mean_g", "ok_mean_h",
+                    "ok_variance_a", "ok_variance_b", "no_variance_c", "ok_variance_d", "ok_variance_e", "ok_variance_f", "ok_variance_g", "ok_variance_h",
+                    "ok_stddev_a", "ok_stddev_b", "no_stddev_c", "ok_stddev_d", "ok_stddev_e", "ok_stddev_f", "ok_stddev_g", "ok_stddev_h",
+                    "ok_realmax_a", "ok_realmax_b", "no_realmax_c", "ok_realmax_d", "ok_realmax_e", "ok_realmax_f", "ok_realmax_g", "ok_realmax_h",
+                    "ok_realmin_a", "ok_realmin_b", "no_realmin_c", "ok_realmin_d", "ok_realmin_e", "ok_realmin_f", "ok_realmin_g", "ok_realmin_h",
+                    "ok_lexmax_a", "ok_lexmax_b", "no_lexmax_c", "ok_lexmax_d", "ok_lexmax_e", "ok_lexmax_f", "ok_lexmax_g", "ok_lexmax_h",
+                    "ok_lexmin_a", "ok_lexmin_b", "no_lexmin_c", "ok_lexmin_d", "ok_lexmin_e", "ok_lexmin_f", "ok_lexmin_g", "ok_lexmin_h",
+      };
+
+  reports:
+    DEBUG::
+      "$(measurements) check expected '$(expected[$(good_lists)][$(measurements)])' <> actual '$(test.$(measurements)_$(good_lists))'"
+      ifvarclass => "!ok_$(measurements)_$(good_lists)";
+
+      "good list $(good_lists) had no $(measurements): '$(test.$(measurements)_$(good_lists))' was not expanded"
+      ifvarclass => "no_$(measurements)_$(good_lists)";
+
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

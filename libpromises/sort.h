@@ -41,4 +41,6 @@ Rlist *RealSortRListNames(Rlist *list);
 Rlist *IPSortRListNames(Rlist *list);
 Rlist *MACSortRListNames(Rlist *list);
 
+bool GenericItemLess(const char *mode, void *lhs, void *rhs);
+
 #endif

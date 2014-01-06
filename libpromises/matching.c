@@ -673,3 +673,18 @@ char *AnchorRegexNew(const char *regex)
 
     return ret;
 }
+
+bool HasRegexMetaChars(const char *string)
+{
+    if (!string)
+    {
+        return false;
+    }
+
+    if (strcspn(string, "\\^${}[]().*+?|<>-&") == strlen(string))
+    {
+        return false;
+    }
+
+    return true;
+}

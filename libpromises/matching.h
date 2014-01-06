@@ -38,6 +38,7 @@ char *ExtractFirstReference(const char *regexp, const char *teststring); /* Pure
 bool ValidateRegEx(const char *regex); /* Pure */
 int IsPathRegex(char *str); /* Pure */
 int IsRegex(char *str); /* Pure */
+bool HasRegexMetaChars(const char *string);
 void EscapeRegexChars(char *str, char *strEsc, int strEscSz); /* Pure */
 void EscapeSpecialChars(char *str, char *strEsc, int strEscSz, char *noEscseq, char *noEsclist); /* Pure */
 char *EscapeChar(char *str, int strSz, char esc); /* Pure */

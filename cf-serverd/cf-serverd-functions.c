@@ -158,6 +158,7 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
         case 'd':
             LogSetGlobalLevel(LOG_LEVEL_DEBUG);
             NO_FORK = true;
+            /* no break */
 
         case 'K':
             config->ignore_locks = true;
@@ -467,6 +468,48 @@ int InitServer(size_t queue_size)
     return sd;
 }
 
+/* XXX: Start over on ORC; it's not salvageable.
+ * Replacement function does not map 1:1 because it returns value.
+ * XXX: the bindtointerface is in server_transform.c AND reimplemented in ../cf-agent/cf-agent.c too. Why?
+ * XXX: Need to double-test; forward + reverse. e.g. "gethostbyaddr(...)" + "gethostbyname(...)" must both pass with same ai_family.
+ * XXX: Probably will need to be broken into two parts. Sigh.
+ */
+
+int TestPossiblePort(void)
+{
+	struct addrinfo *response, *ap;
+	/* XXX: Do not set family yet. */
+	struct addrinfo query = {
+			.ai_flags = AI_PASSIVE,
+			.ai_socktype = SOCK_STREAM
+	};
+	char servname[10];	/* XXX: Why is this hardcoded this way?? */
+
+}
+
+
+int OpenReceiverPort(struct ifaddr, int family, char servname, void srvport)
+{
+	struct addrinfo *response, *ap;
+	struct addrinfo query = {
+			.ai_flags = AI_PASSIVE,
+			.ai_family = *family,
+			.ai_socktype = SOCK_STREAM
+	};
+
+	char *interface = NULL;
+	if (BINDINTERFACE[0] != '\0')
+	{
+		/* Clear to continue onward... */
+		interface = BINDINTERFACE;	/* XXX: Pretty sure this macro is a bad idea. */
+	}
+
+	char servname[255];		/* Going oversized as a temp solution. */
+	snprintf(servname, 255, "%d", CFENGINE_PORT);
+
+	/* Resolve against the server name. */
+}
+
 int OpenReceiverChannel(void)
 {
     struct addrinfo *response, *ap;
@@ -476,6 +519,7 @@ int OpenReceiverChannel(void)
         .ai_socktype = SOCK_STREAM
     };
 
+    /* XXX: This is so very wrong. */
     /* Listen to INADDR(6)_ANY if BINDINTERFACE unset. */
     char *ptr = NULL;
     if (BINDINTERFACE[0] != '\0')

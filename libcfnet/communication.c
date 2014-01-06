@@ -42,7 +42,7 @@ AgentConnection *NewAgentConn(const char *server_name, int partial)
         ConnectionInfo *info = ConnectionInfoNew();
         conn->conn_info = info;
     }
-    conn->family = AF_INET;
+    conn->family = AF_UNSPEC;
     conn->trust = false;
     conn->encryption_type = 'c';
     conn->this_server = xstrdup(server_name);
@@ -79,6 +79,9 @@ void DeleteAgentConn(AgentConnection *conn, int partial)
     free(conn);
 }
 
+/*
+ * Needed due to unix_iface.c, but can be done better. Flagging for general cleanup if I have time.
+ */
 int IsIPV6Address(char *name)
 {
     if (!name)
@@ -111,6 +114,9 @@ int IsIPV6Address(char *name)
 
 /*******************************************************************/
 
+/*
+ * XXX: This function is no longer used anywhere. Safe to remove?
+ */
 int IsIPV4Address(char *name)
 {
     if (!name)
@@ -148,6 +154,11 @@ int IsIPV4Address(char *name)
  * dst_size.
  * @return -1 in case of unresolvable hostname or other error.
  */
+/* XXX: This is somewhat of a kludge. Doesn't check dst_size for <=32 or <=128.
+ * Needs to test dst_size then set ai_family explicit. query is just hugely bad
+ * because AF_UNSPEC will prevent error if set IPv4 but only has IPv6 DNS and
+ * vice versa. Also likely what's causing the IPv4/IPv6 address reversals.
+ */
 int Hostname2IPString(char *dst, const char *hostname, size_t dst_size)
 {
     int ret;
@@ -168,6 +179,7 @@ int Hostname2IPString(char *dst, const char *hostname, size_t dst_size)
     if ((ret) != 0)
     {
         Log(LOG_LEVEL_INFO,
+        	/* XXX: Bad practice. Should be checking host and port separate. -prj */
             "Unable to lookup hostname '%s' or cfengine service. (getaddrinfo: %s)",
             hostname, gai_strerror(ret));
         return -1;
@@ -176,6 +188,7 @@ int Hostname2IPString(char *dst, const char *hostname, size_t dst_size)
     for (ap = response; ap != NULL; ap = ap->ai_next)
     {
         /* No lookup, just convert numeric IP to string. */
+    	/* XXX: Needs ai_family explicit. -prj */
         int ret2 = getnameinfo(ap->ai_addr, ap->ai_addrlen,
                                dst, dst_size, NULL, 0, NI_NUMERICHOST);
         if (ret2 == 0)
@@ -202,6 +215,13 @@ int IPString2Hostname(char *dst, const char *ipaddr, size_t dst_size)
 {
     int ret;
     struct addrinfo *response;
+
+    /* XXX: This is obviously a kludge. Doesn't check dst_size for <=32 or <=128.
+     * Needs to test dst_size then set ai_family explicit. query is just hugely bad
+     * because AF_UNSPEC will prevent error if set IPv4 but only has IPv6 DNS and
+     * vice versa. Also likely what's causing the IPv4/IPv6 address reversals.
+     * Not sure where AF_UNSPEC is coming from in this function context though.. most likely server-functions?
+     */
 
     /* First convert ipaddr string to struct sockaddr, with no DNS query. */
     struct addrinfo query = {
@@ -238,6 +258,7 @@ int IPString2Hostname(char *dst, const char *ipaddr, size_t dst_size)
 
 /*****************************************************************************/
 
+/* XXX: Wow, this is super broken. [MAXIP4CHARLEN]?! Uh. */
 int GetMyHostInfo(char nameBuf[MAXHOSTNAMELEN], char ipBuf[MAXIP4CHARLEN])
 {
     char *ip;

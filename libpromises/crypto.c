@@ -50,12 +50,6 @@ static void RandomSeed(void);
 static void SetupOpenSSLThreadLocks(void);
 static void CleanupOpenSSLThreadLocks(void);
 
-static char *CFPUBKEYFILE;
-static char *CFPRIVKEYFILE;
-
-/**********************************************************************/
-
-
 /* TODO move crypto.[ch] to libutils. Will need to remove all manipulation of
  * lastseen db. */
 

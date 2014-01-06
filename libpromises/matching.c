@@ -673,3 +673,18 @@ char *AnchorRegexNew(const char *regex)
 
     return ret;
 }
+
+bool HasRegexMetaChars(const char *string)
+{
+    if (!string)
+    {
+        return false;
+    }
+
+    if (string[strcspn(string, "\\^${}[]().*+?|<>-&")] == '\0') /* i.e. no metachars appear in string */
+    {
+        return false;
+    }
+
+    return true;
+}

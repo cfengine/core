@@ -225,6 +225,71 @@ int ReceiveTransaction(const ConnectionInfo *conn_info, char *buffer, int *more)
     return ret;
 }
 
+pthread_mutex_t bwlimit_lock = PTHREAD_MUTEX_INITIALIZER;
+struct timespec bwlimit_next = {0L, 0L};
+u_long bwlimit_kbytes = 0L;
+
+
+/** Throttle traffic, if next packet happens too soon after the previous one
+ * 
+ *  This function is global, accross all network operations (and interfaces, perhaps)
+ *  @param tosend Length of current packet being sent out
+ */
+
+void EnforceBwLimit(int tosend){
+    struct timespec clock_now;
+
+    if (!bwlimit_kbytes)
+    {
+        /* early return, before any expensive syscalls */
+        return;
+    }
+
+    if (pthread_mutex_lock(&bwlimit_lock) == 0)
+    {
+        clock_gettime(CLOCK_MONOTONIC, &clock_now);
+
+        if ((bwlimit_next.tv_sec < clock_now.tv_sec) ||
+                ( (bwlimit_next.tv_sec == clock_now.tv_sec)
+                   && (bwlimit_next.tv_nsec < clock_now.tv_nsec)))
+        {
+            /* penalty has expired, we can immediately send data. But reset the timestamp */
+            bwlimit_next = clock_now;
+            clock_now.tv_sec = 0;
+            clock_now.tv_nsec = 0L;
+        }
+        else
+        {
+            clock_now.tv_sec = bwlimit_next.tv_sec - clock_now.tv_sec;
+            clock_now.tv_nsec = bwlimit_next.tv_nsec - clock_now.tv_nsec;
+            if (clock_now.tv_nsec < 0L)
+            {
+                clock_now.tv_sec --;
+                clock_now.tv_nsec += 1000000000L ;
+            }
+        }
+
+        uint64_t delay = ((uint64_t) tosend * 1000000L) / bwlimit_kbytes;
+
+        bwlimit_next.tv_sec += (delay / 1000000000L);
+        bwlimit_next.tv_nsec += (long) (delay % 1000000000L);
+        if (bwlimit_next.tv_nsec >= 1000000000L)
+        {
+            bwlimit_next.tv_sec++;
+            bwlimit_next.tv_nsec -= 1000000000L;
+        }
+        pthread_mutex_unlock(&bwlimit_lock);
+    }
+
+    /* Sleep only if we have >10ms penalty */
+    if (clock_now.tv_sec >= 0 || ( (clock_now.tv_sec == 0) && (clock_now.tv_nsec >= 10000L))  )
+    {
+        nanosleep(&clock_now, NULL);
+    }
+
+}
+
+
 /*************************************************************************/
 
 

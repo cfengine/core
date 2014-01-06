@@ -1032,6 +1032,15 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy)
         }
     }
 
+    if ((value = EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_BWLIMIT)))
+    {
+        double bval;
+        if (DoubleFromString(value, &bval))
+        {
+            bwlimit_kbytes = (u_long) ( bval / 1000.0);
+            Log(LOG_LEVEL_VERBOSE, "Setting rate limit to %ld kBytes/sec", bwlimit_kbytes);
+        }
+    }
     Nova_Initialize(ctx);
 }
 

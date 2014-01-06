@@ -538,6 +538,18 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericA
     {
         LASTSEENEXPIREAFTER = IntFromString(value) * 60;
     }
+
+    value = EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_BWLIMIT);
+    if (value)
+    {
+        double bval;
+        if (DoubleFromString(value, &bval))
+        {
+            bwlimit_kbytes = (u_long) ( bval / 1000.0);
+            Log(LOG_LEVEL_VERBOSE, "Setting rate limit to %ld kBytes/sec", bwlimit_kbytes);
+        }
+    }
+
 }
 
 /*********************************************************************/

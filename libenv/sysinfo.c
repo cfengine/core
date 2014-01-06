@@ -1121,7 +1121,7 @@ static void OSClasses(EvalContext *ctx)
     {
         char vbuff[CF_BUFSIZE];
 
-        if (IsDefinedClass(ctx, "SuSE", NULL))
+        if (IsDefinedClass(ctx, "SUSE", NULL))
         {
             snprintf(vbuff, CF_BUFSIZE, "/var/spool/cron/tabs/%s", pw->pw_name);
         }
@@ -1151,7 +1151,7 @@ static void OSClasses(EvalContext *ctx)
     }
 #endif
     
-    /* FIXME: this variable needs redhat/SuSE/debian classes to be defined and
+    /* FIXME: this variable needs redhat/SUSE/debian classes to be defined and
      * hence can't be initialized earlier */
 
     if (IsDefinedClass(ctx, "redhat", NULL))
@@ -1159,7 +1159,7 @@ static void OSClasses(EvalContext *ctx)
         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "doc_root", "/var/www/html", DATA_TYPE_STRING, "source=agent");
     }
 
-    if (IsDefinedClass(ctx, "SuSE", NULL))
+    if (IsDefinedClass(ctx, "SUSE", NULL))
     {
         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "doc_root", "/srv/www/htdocs", DATA_TYPE_STRING, "source=agent");
     }
@@ -1595,7 +1595,7 @@ static int Linux_Redhat_Version(EvalContext *ctx)
 static int Linux_Suse_Version(EvalContext *ctx)
 {
 #define SUSE_REL_FILENAME "/etc/SuSE-release"
-/* Check if it's a SuSE Enterprise version (all in lowercase) */
+/* Check if it's a SUSE Enterprise version (all in lowercase) */
 #define SUSE_SLES8_ID "suse sles-8"
 #define SUSE_SLES_ID  "suse linux enterprise server"
 #define SUSE_SLED_ID  "suse linux enterprise desktop"
@@ -1615,8 +1615,13 @@ static int Linux_Suse_Version(EvalContext *ctx)
     char strminor[CF_MAXVARSIZE];
     FILE *fp;
 
-    Log(LOG_LEVEL_VERBOSE, "This appears to be a SuSE system.");
-    EvalContextClassPutHard(ctx, "SuSE", "inventory,source=agent,group=OS,comment=SUSE");
+    Log(LOG_LEVEL_VERBOSE, "This appears to be a SUSE system.");
+    EvalContextClassPutHard(ctx, "SUSE", "inventory,source=agent,group=OS,comment=SUSE");
+
+    /* The correct spelling for SUSE is "SUSE" but CFEngine used to use "SuSE".
+     * Keep this for backwards compatibility until CFEngine 3.7
+     */
+    EvalContextClassPutHard(ctx, "SuSE", "inventory,source=agent,group=OS,comment=SUSE,deprecated");
 
 /* Grab the first line from the file and then close it. */
 
@@ -1659,9 +1664,9 @@ static int Linux_Suse_Version(EvalContext *ctx)
 
     fclose(fp);
 
-    /* Check if it's a SuSE Enterprise version  */
+    /* Check if it's a SUSE Enterprise version  */
 
-    Log(LOG_LEVEL_VERBOSE, "Looking for SuSE enterprise info in '%s'", relstring);
+    Log(LOG_LEVEL_VERBOSE, "Looking for SUSE enterprise info in '%s'", relstring);
 
     /* Convert relstring to lowercase to handle rename of SuSE to
      * SUSE with SUSE 10.0.
@@ -1672,7 +1677,7 @@ static int Linux_Suse_Version(EvalContext *ctx)
         relstring[i] = tolower(relstring[i]);
     }
 
-    /* Check if it's a SuSE Enterprise version (all in lowercase) */
+    /* Check if it's a SUSE Enterprise version (all in lowercase) */
 
     if (!strncmp(relstring, SUSE_SLES8_ID, strlen(SUSE_SLES8_ID)))
     {
@@ -1753,7 +1758,7 @@ static int Linux_Suse_Version(EvalContext *ctx)
 
             if (major != -1 && minor != -1)
             {
-                strcpy(classbuf, "SuSE");
+                strcpy(classbuf, "SUSE");
                 EvalContextClassPutHard(ctx, classbuf, "inventory,source=agent,group=OS,comment=SUSE");
                 strcat(classbuf, "_");
                 strcat(classbuf, strmajor);
@@ -1762,7 +1767,19 @@ static int Linux_Suse_Version(EvalContext *ctx)
                 strcat(classbuf, strminor);
                 EvalContextClassPutHard(ctx, classbuf, "inventory,source=agent,group=OS,comment=SUSE");
 
-                Log(LOG_LEVEL_VERBOSE, "Discovered SuSE version %s", classbuf);
+                /* The correct spelling for SUSE is "SUSE" but CFEngine used to use "SuSE".
+                 * Keep this for backwards compatibility until CFEngine 3.7
+                 */
+                strcpy(classbuf, "SuSE");
+                EvalContextClassPutHard(ctx, classbuf, "inventory,source=agent,group=OS,comment=SUSE,deprecated");
+                strcat(classbuf, "_");
+                strcat(classbuf, strmajor);
+                EvalContextClassPutHard(ctx, classbuf, "inventory,source=agent,group=OS,comment=SUSE,deprecated");
+                strcat(classbuf, "_");
+                strcat(classbuf, strminor);
+                EvalContextClassPutHard(ctx, classbuf, "inventory,source=agent,group=OS,comment=SUSE,deprecated");
+
+                Log(LOG_LEVEL_VERBOSE, "Discovered SUSE version %s", classbuf);
                 return 0;
             }
         }
@@ -1781,10 +1798,17 @@ static int Linux_Suse_Version(EvalContext *ctx)
                 strcat(classbuf, "_");
                 strcat(classbuf, strminor);
                 EvalContextClassPutHard(ctx, classbuf, "inventory,source=agent,group=OS,comment=SUSE");
-                snprintf(classbuf, CF_MAXVARSIZE, "SuSE_%d", major);
+
+                snprintf(classbuf, CF_MAXVARSIZE, "SUSE_%d", major);
                 SetFlavour(ctx, classbuf);
 
-                Log(LOG_LEVEL_VERBOSE, "Discovered SuSE version %s", classbuf);
+                /* The correct spelling for SUSE is "SUSE" but CFEngine used to use "SuSE".
+                 * Keep this for backwards compatibility until CFEngine 3.7
+                 */
+                snprintf(classbuf, CF_MAXVARSIZE, "SuSE_%d", major);
+                EvalContextClassPutHard(ctx, classbuf, "inventory,source=agent,group=OS,comment=SUSE,deprecated");
+
+                Log(LOG_LEVEL_VERBOSE, "Discovered SUSE version %s", classbuf);
                 return 0;
             }
         }

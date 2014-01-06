@@ -681,7 +681,7 @@ bool HasRegexMetaChars(const char *string)
         return false;
     }
 
-    if (strcspn(string, "\\^${}[]().*+?|<>-&") == strlen(string))
+    if (string[strcspn(string, "\\^${}[]().*+?|<>-&")] == '\0') /* i.e. no metachars appear in string */
     {
         return false;
     }

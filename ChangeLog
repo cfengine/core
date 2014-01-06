@@ -10,6 +10,8 @@
        - #TODO# support for LMDB in local data storage
        - cf-promises will not call functions in policy now.  Use the --eval-functions option to retain the old behavior.
        - Logging contexts to local database (cf_classes.tcdb) have been deprecated. 
+       - Linux flavor "SUSE" now correctly spelled with all uppercase in variables and class names
+         (Redmine #3734).
 
        New features:
        - #TODO# new promise type "users" for managing user accounts

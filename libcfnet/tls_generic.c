@@ -197,6 +197,8 @@ int TLSSend(SSL *ssl, const char *buffer, int length)
         return 0;
     }
 
+    EnforceBwLimit(length);
+
     int sent = SSL_write(ssl, buffer, length);
     if (sent == 0)
     {

@@ -99,6 +99,8 @@ int SendSocketStream(int sd, char buffer[CF_BUFSIZE], int tosend)
 {
     int sent, already = 0;
 
+    EnforceBwLimit(tosend);
+
     do
     {
         sent = send(sd, buffer + already, tosend - already, 0);

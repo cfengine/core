@@ -88,7 +88,7 @@ static const char *HINTS[] =
     "Install license without boostrapping (CFEngine Enterprise only)",
     "Print digest of the specified public key",
     "Make cf-serverd trust the specified public key. Argument value is file name of the public key to trust.",
-    "Make cf-agent trust the specified public key for connecting to a specified IP address. Argument value has the form IP_ADDR:FILENAME.",
+    "Make cf-agent trust the specified public key for connecting to a specified IP address. Argument value has the form [USER@]IP_ADDR:FILENAME.",
     "Enable colorized output. Possible values: 'always', 'auto', 'never'. If option is used, the default value is 'auto'",
     NULL
 };

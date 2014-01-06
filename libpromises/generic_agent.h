@@ -125,4 +125,6 @@ void GenericAgentConfigSetBundleSequence(GenericAgentConfig *config, const Rlist
 bool GenericAgentTagReleaseDirectory(const GenericAgentConfig *config, const char *dirname, bool write_validated, bool write_release);
 
 void GetReleaseIdFile(const char *base_path, char *filename, size_t max_size);
+
+extern u_long bwlimit_kbytes; /* from libcfnet/net.c */
 #endif

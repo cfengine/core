@@ -1624,12 +1624,12 @@ static FnCallResult FnCallGetIndices(EvalContext *ctx, FnCall *fp, Rlist *finala
     else
     {
         VariableTableIterator *iter = EvalContextVariableTableIteratorNew(ctx, ref->ns, ref->scope, ref->lval);
-        Variable *var = NULL;
+        const Variable *var = NULL;
         while ((var = VariableTableIteratorNext(iter)))
         {
-            for (size_t i = 0; i < var->ref->num_indices; i++)
+            if (ref->num_indices < var->ref->num_indices)
             {
-                RlistAppendScalarIdemp(&keys, var->ref->indices[i]);
+                RlistAppendScalarIdemp(&keys, var->ref->indices[ref->num_indices]);
             }
         }
         VariableTableIteratorDestroy(iter);

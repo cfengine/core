@@ -159,7 +159,7 @@ void ParseKeyArg(char* keyarg, char** filename, char** ipaddr, char** username)
     }
 
     *s = '\0'; /* split string */
-    *filename = ++s; /* advance `filename` to 1st character after ':' */
+    *filename = s+1; /* `filename` starts at 1st character after ':' */
 
     s = strchr(keyarg, '@');
     if (NULL == s)
@@ -170,7 +170,7 @@ void ParseKeyArg(char* keyarg, char** filename, char** ipaddr, char** username)
     }
 
     *s = '\0';
-    *ipaddr = ++s;
+    *ipaddr = s+1;
     *username = keyarg;
 
     /* special case: if we got user@:/path/to/file

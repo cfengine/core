@@ -124,7 +124,7 @@ unix_seconds() {
 # echo
 
 usage() {
-  echo "testall [-q] [--gainroot=<command>] [--agent=<agent>] [--cfpromises=<cf-promises>] [--cfserverd=<cf-serverd>] [--cfkey=<cf-key>] [--no-nova] [--staging] [--unsafe] [--no-network] [--gdb] [--printlog] [<test> <test>...]"
+  echo "testall [-h|--help] [-q|--quiet] [--gainroot=<command>] [--agent=<agent>] [--cfpromises=<cf-promises>] [--cfserverd=<cf-serverd>] [--cfkey=<cf-key>] [--no-nova] [--staging] [--unsafe] [--no-network] [--gdb] [--printlog] [<test> <test>...]"
   echo
   echo "If no test is given, all standard tests are run:"
   echo "  Tests with names of form <file>.cf are expected to run succesfully"
@@ -132,7 +132,11 @@ usage() {
   echo
   echo "If arguments are given, those are executed as tests"
   echo
-  echo " -q makes script much quieter"
+  echo " -h        prints usage"
+  echo " --help"
+  echo
+  echo " -q        makes script much quieter"
+  echo " --quiet"
   echo
   echo " --gainroot=<command> forces use of command to gain root privileges,"
   echo "           otherwise fakeroot is used."
@@ -365,10 +369,10 @@ find_default_binary DEFCF_KEY cf-key
 
 while true; do
   case "$1" in
-    --help)
+    -h|--help)
       usage
       exit;;
-    -q)
+    -q|--quiet)
       QUIET=1;;
     --gainroot=*)
       GAINROOT=${1#--gainroot=};;

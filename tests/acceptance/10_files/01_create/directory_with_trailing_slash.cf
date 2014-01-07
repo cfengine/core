@@ -1,0 +1,81 @@
+#######################################################
+#
+# Redmine#3905: Create a directory, set permissions using a trailing slash
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+  files:
+      "$(G.testfile)"
+      delete => init_delete;
+}
+
+body delete init_delete
+{
+      dirlinks => "delete";
+      rmdirs   => "true";
+}
+
+#######################################################
+
+bundle agent test
+{
+  vars:
+      "mode" string => "751";
+  methods:
+      "1" usebundle => test1; # create the directory
+      "1" usebundle => test2($(mode)); # promise the directory with a trailing slash
+}
+
+bundle agent test1
+{
+  files:
+      "$(G.testfile)/."
+      create => "true",
+      perms => test_perms("700");
+}
+
+bundle agent test2(mode)
+{
+  files:
+      "$(G.testfile)/"
+      perms => test_perms($(mode));
+}
+
+body perms test_perms(m)
+{
+      mode => "$(m)";
+}
+
+#######################################################
+
+bundle agent check
+{
+  vars:
+      "result" string => filestat($(G.testfile), "permoct");
+
+  classes:
+      "ok" expression => strcmp($(test.mode), "$(result)");
+
+  reports:
+    DEBUG::
+      "expected: '$(test.mode)'";
+      "got:      '$(result)'";
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}
+
+### PROJECT_ID: core
+### CATEGORY_ID: 27

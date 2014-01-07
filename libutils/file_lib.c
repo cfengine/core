@@ -152,14 +152,14 @@ int safe_open(const char *pathname, int flags, ...)
         first_dir = "/";
         // Eliminate double slashes.
         while (*(++next_component) == '/') { /*noop*/ }
+        if (!*next_component)
+        {
+            next_component = NULL;
+        }
     }
     else
     {
         first_dir = ".";
-    }
-    if (!*next_component)
-    {
-        next_component = NULL;
     }
     currentfd = open(first_dir, O_RDONLY);
     if (currentfd < 0)

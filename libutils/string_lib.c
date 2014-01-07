@@ -441,6 +441,51 @@ bool StringMatchFull(const char *regex, const char *str)
     }
 }
 
+Seq *StringMatchCaptures(const char *regex, const char *str)
+{
+    assert(regex);
+    assert(str);
+
+    pcre *pattern = NULL;
+    {
+        const char *errorstr;
+        int erroffset;
+        pattern = pcre_compile(regex, PCRE_MULTILINE | PCRE_DOTALL, &errorstr, &erroffset, NULL);
+    }
+    assert(pattern);
+
+    if (pattern == NULL)
+    {
+        return NULL;
+    }
+
+    int captures;
+    int res = pcre_fullinfo(pattern, NULL, PCRE_INFO_CAPTURECOUNT, &captures);
+    if (res != 0)
+    {
+        free(pattern);
+        return NULL;
+    }
+
+    int *ovector = xmalloc(sizeof(int) * (captures + 1) * 3);
+
+    int result = pcre_exec(pattern, NULL, str, strlen(str), 0, 0, ovector, (captures + 1) * 3);
+
+    if (result <= 0)
+    {
+        free(ovector);
+        free(pattern);
+        return NULL;
+    }
+
+    Seq *ret = SeqNew(captures + 1, free);
+    for (int i = 0; i <= captures; ++i)
+    {
+        SeqAppend(ret, xstrndup(str + ovector[2*i], ovector[2*i + 1] - ovector[2 * i]));
+    }
+    return ret;
+}
+
 char *StringEncodeBase64(const char *str, size_t len)
 {
     assert(str);

@@ -36,6 +36,7 @@
 #include <scope.h>
 #include <vercmp.h>
 #include <matching.h>
+#include <match_scope.h>
 #include <attributes.h>
 #include <string_lib.h>
 #include <pipes.h>

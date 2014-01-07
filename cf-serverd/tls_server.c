@@ -452,7 +452,7 @@ int ServerTLSSessionEstablish(ServerConnectionState *conn)
                 KeyPrintableHash(ConnectionInfoKey(conn->conn_info)));
 
             if ((SV.trustkeylist != NULL) &&
-                (IsMatchItemIn(conn->ctx, SV.trustkeylist, MapAddress(conn->ipaddr))))
+                (IsMatchItemIn(SV.trustkeylist, MapAddress(conn->ipaddr))))
             {
                 Log(LOG_LEVEL_VERBOSE,
                     "Host %s was found in the \"trustkeysfrom\" list",
@@ -535,7 +535,7 @@ int ServerTLSSessionEstablishCallCollectMode(ServerConnectionState *conn)
             KeyPrintableHash(ConnectionInfoKey(conn->conn_info)));
 
         if ((SV.trustkeylist != NULL) &&
-                (IsMatchItemIn(conn->ctx, SV.trustkeylist, MapAddress(conn->ipaddr))))
+                (IsMatchItemIn(SV.trustkeylist, MapAddress(conn->ipaddr))))
         {
             Log(LOG_LEVEL_VERBOSE,
                 "Host %s was found in the \"trustkeysfrom\" list",

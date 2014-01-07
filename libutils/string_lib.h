@@ -27,6 +27,7 @@
 
 #include <platform.h>
 #include <compiler.h>
+#include <sequence.h>
 
 typedef struct
 {
@@ -66,6 +67,7 @@ char *SearchAndReplace(const char *source, const char *search, const char *repla
 
 bool StringMatch(const char *regex, const char *str, int *start, int *end);
 bool StringMatchFull(const char *regex, const char *str);
+Seq *StringMatchCaptures(const char *regex, const char *str);
 
 int ReplaceStr(char *in, char *out, int outSz, char *from, char *to);
 

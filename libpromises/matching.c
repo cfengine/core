@@ -35,7 +35,7 @@
 #include <string_lib.h>
 
 /* Pure */
-static pcre *CompileRegExp(const char *regexp)
+pcre *CompileRegExp(const char *regexp)
 {
     pcre *rx;
     const char *errorstr;
@@ -50,64 +50,6 @@ static pcre *CompileRegExp(const char *regexp)
     }
 
     return rx;
-}
-
-/* Sets variables */
-static int RegExMatchSubString(EvalContext *ctx, pcre *rx, const char *teststring, int *start, int *end)
-{
-    int ovector[OVECCOUNT];
-    int rc = 0;
-
-    if ((rc = pcre_exec(rx, NULL, teststring, strlen(teststring), 0, 0, ovector, OVECCOUNT)) >= 0)
-    {
-        *start = ovector[0];
-        *end = ovector[1];
-
-        EvalContextVariableClearMatch(ctx);
-
-        for (int i = 0; i < rc; i++)        /* make backref vars $(1),$(2) etc */
-        {
-            const char *backref_start = teststring + ovector[i * 2];
-            int backref_len = ovector[i * 2 + 1] - ovector[i * 2];
-
-            if (backref_len < CF_MAXVARSIZE)
-            {
-                char substring[CF_MAXVARSIZE];
-
-                strlcpy(substring, backref_start, MIN(CF_MAXVARSIZE, backref_len + 1));
-                if (THIS_AGENT_TYPE == AGENT_TYPE_AGENT)
-                {
-                    char *index = StringFromLong(i);
-                    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_MATCH, index, substring, DATA_TYPE_STRING, "source=regex");
-                    free(index);
-                }
-            }
-        }
-    }
-    else
-    {
-        *start = 0;
-        *end = 0;
-    }
-
-    free(rx);
-    return rc >= 0;
-}
-
-/* Sets variables */
-static int RegExMatchFullString(EvalContext *ctx, pcre *rx, const char *teststring)
-{
-    int match_start;
-    int match_len;
-
-    if (RegExMatchSubString(ctx, rx, teststring, &match_start, &match_len))
-    {
-        return (match_start == 0) && (match_len == strlen(teststring));
-    }
-    else
-    {
-        return false;
-    }
 }
 
 /* Pure, non-thread-safe */
@@ -140,41 +82,6 @@ static char *FirstBackReference(pcre *rx, const char *teststring)
     return backreference;
 }
 
-bool ValidateRegEx(const char *regex)
-{
-    pcre *rx = CompileRegExp(regex);
-    bool regex_valid = rx != NULL;
-
-    free(rx);
-    return regex_valid;
-}
-
-int FullTextMatch(EvalContext *ctx, const char *regexp, const char *teststring)
-{
-    pcre *rx;
-
-    if (strcmp(regexp, teststring) == 0)
-    {
-        return true;
-    }
-
-    rx = CompileRegExp(regexp);
-
-    if (rx == NULL)
-    {
-        return false;
-    }
-
-    if (RegExMatchFullString(ctx, rx, teststring))
-    {
-        return true;
-    }
-    else
-    {
-        return false;
-    }
-}
-
 char *ExtractFirstReference(const char *regexp, const char *teststring)
 {
     char *backreference;
@@ -201,25 +108,6 @@ char *ExtractFirstReference(const char *regexp, const char *teststring)
     }
 
     return backreference;
-}
-
-int BlockTextMatch(EvalContext *ctx, const char *regexp, const char *teststring, int *start, int *end)
-{
-    pcre *rx = CompileRegExp(regexp);
-
-    if (rx == NULL)
-    {
-        return 0;
-    }
-
-    if (RegExMatchSubString(ctx, rx, teststring, start, end))
-    {
-        return true;
-    }
-    else
-    {
-        return false;
-    }
 }
 
 int IsRegex(char *str)
@@ -390,160 +278,7 @@ int IsRegexItemIn(EvalContext *ctx, Item *list, char *regex)
 
         /* Make it commutative */
 
-        if ((FullTextMatch(ctx, regex, ptr->name)) || (FullTextMatch(ctx, ptr->name, regex)))
-        {
-            return true;
-        }
-    }
-
-    return false;
-}
-
-int MatchPolicy(EvalContext *ctx, const char *camel, const char *haystack, Rlist *insert_match, const Promise *pp)
-{
-    Rlist *rp;
-    char *sp, *spto, *firstchar, *lastchar;
-    InsertMatchType opt;
-    char work[CF_BUFSIZE], final[CF_BUFSIZE];
-    Item *list = SplitString(camel, '\n'), *ip;
-    int direct_cmp = false, ok = false, escaped = false;
-
-//Split into separate lines first
-
-    for (ip = list; ip != NULL; ip = ip->next)
-    {
-        ok = false;
-        direct_cmp = (strcmp(camel, haystack) == 0);
-
-        if (insert_match == NULL)
-        {
-            // No whitespace policy means exact_match
-            ok = ok || direct_cmp;
-            break;
-        }
-
-        memset(final, 0, CF_BUFSIZE);
-        strncpy(final, ip->name, CF_BUFSIZE - 1);
-
-        for (rp = insert_match; rp != NULL; rp = rp->next)
-        {
-            opt = InsertMatchTypeFromString(RlistScalarValue(rp));
-
-            /* Exact match can be done immediately */
-
-            if (opt == INSERT_MATCH_TYPE_EXACT)
-            {
-                if ((rp->next != NULL) || (rp != insert_match))
-                {
-                    Log(LOG_LEVEL_ERR, "Multiple policies conflict with \"exact_match\", using exact match");
-                    PromiseRef(LOG_LEVEL_ERR, pp);
-                }
-
-                ok = ok || direct_cmp;
-                break;
-            }
-
-            if (!escaped)
-            {    
-            // Need to escape the original string once here in case it contains regex chars when non-exact match
-            EscapeRegexChars(ip->name, final, CF_BUFSIZE - 1);
-            escaped = true;
-            }
-            
-            if (opt == INSERT_MATCH_TYPE_IGNORE_EMBEDDED)
-            {
-                memset(work, 0, CF_BUFSIZE);
-
-                // Strip initial and final first
-
-                for (firstchar = final; isspace((int)*firstchar); firstchar++)
-                {
-                }
-
-                for (lastchar = final + strlen(final) - 1; (lastchar > firstchar) && (isspace((int)*lastchar)); lastchar--)
-                {
-                }
-
-                for (sp = final, spto = work; *sp != '\0'; sp++)
-                {
-                    if ((sp > firstchar) && (sp < lastchar))
-                    {
-                        if (isspace((int)*sp))
-                        {
-                            while (isspace((int)*(sp + 1)))
-                            {
-                                sp++;
-                            }
-
-                            strcat(spto, "\\s+");
-                            spto += 3;
-                        }
-                        else
-                        {
-                            *spto++ = *sp;
-                        }
-                    }
-                    else
-                    {
-                        *spto++ = *sp;
-                    }
-                }
-
-                strcpy(final, work);
-            }
-
-            if (opt == INSERT_MATCH_TYPE_IGNORE_LEADING)
-            {
-                if (strncmp(final, "\\s*", 3) != 0)
-                {
-                    for (sp = final; isspace((int)*sp); sp++)
-                    {
-                    }
-                    strcpy(work, sp);
-                    snprintf(final, CF_BUFSIZE, "\\s*%s", work);
-                }
-            }
-
-            if (opt == INSERT_MATCH_TYPE_IGNORE_TRAILING)
-            {
-                if (strncmp(final + strlen(final) - 4, "\\s*", 3) != 0)
-                {
-                    strcpy(work, final);
-                    snprintf(final, CF_BUFSIZE, "%s\\s*", work);
-                }
-            }
-
-            ok = ok || (FullTextMatch(ctx, final, haystack));
-        }
-
-        if (!ok)                // All lines in region need to match to avoid insertions
-        {
-            break;
-        }
-    }
-
-    DeleteItemList(list);
-    return ok;
-}
-
-
-/* Checks whether item matches a list of wildcards */
-int MatchRlistItem(EvalContext *ctx, Rlist *listofregex, const char *teststring)
-{
-    Rlist *rp;
-
-    for (rp = listofregex; rp != NULL; rp = rp->next)
-    {
-        /* Avoid using regex if possible, due to memory leak */
-
-        if (strcmp(teststring, RlistScalarValue(rp)) == 0)
-        {
-            return (true);
-        }
-
-        /* Make it commutative */
-
-        if (FullTextMatch(ctx, RlistScalarValue(rp), teststring))
+        if ((StringMatchFull(regex, ptr->name)) || (StringMatchFull(ptr->name, regex)))
         {
             return true;
         }

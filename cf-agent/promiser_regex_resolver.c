@@ -33,6 +33,7 @@
 #include <actuator.h>
 #include <policy.h>
 #include <matching.h>
+#include <match_scope.h>
 #include <files_names.h>
 #include <files_interfaces.h>
 #include <promises.h>

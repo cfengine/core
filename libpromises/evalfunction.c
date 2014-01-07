@@ -1554,7 +1554,7 @@ static FnCallResult FnCallRegList(EvalContext *ctx, ARG_UNUSED FnCall *fp, Rlist
             continue;
         }
 
-        if (FullTextMatch(ctx, regex, RlistScalarValue(rp)))
+        if (StringMatchFull(regex, RlistScalarValue(rp)))
         {
             return FnReturnContext(true);
         }
@@ -1577,7 +1577,7 @@ static FnCallResult FnCallRegArray(EvalContext *ctx, ARG_UNUSED FnCall *fp, Rlis
     Variable *var = NULL;
     while ((var = VariableTableIteratorNext(iter)))
     {
-        if (FullTextMatch(ctx, regex, RvalScalarValue(var->rval)))
+        if (StringMatchFull(regex, RvalScalarValue(var->rval)))
         {
             found = true;
             break;
@@ -1938,7 +1938,7 @@ static FnCallResult FnCallGetFields(EvalContext *ctx, FnCall *fp, Rlist *finalar
             Log(LOG_LEVEL_ERR, "Chop was called on a string that seemed to have no terminator");
         }
 
-        if (!FullTextMatch(ctx, regex, line))
+        if (!StringMatchFull(regex, line))
         {
             continue;
         }
@@ -2007,7 +2007,7 @@ static FnCallResult FnCallCountLinesMatching(EvalContext *ctx, ARG_UNUSED FnCall
             Log(LOG_LEVEL_ERR, "Chop was called on a string that seemed to have no terminator");
         }
 
-        if (FullTextMatch(ctx, regex, line))
+        if (StringMatchFull(regex, line))
         {
             lcount++;
             Log(LOG_LEVEL_VERBOSE, "countlinesmatching: matched '%s'", line);
@@ -2046,7 +2046,7 @@ static FnCallResult FnCallLsDir(EvalContext *ctx, ARG_UNUSED FnCall *fp, Rlist *
 
     for (dirp = DirRead(dirh); dirp != NULL; dirp = DirRead(dirh))
     {
-        if (strlen(regex) == 0 || FullTextMatch(ctx, regex, dirp->d_name))
+        if (strlen(regex) == 0 || StringMatchFull(regex, dirp->d_name))
         {
             if (includepath)
             {
@@ -2386,7 +2386,7 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx, FnCall *fp, Rlist *fin
                 continue;
             }
 
-            if (strlen(regex) == 0 || FullTextMatch(ctx, regex, buffer))
+            if (strlen(regex) == 0 || StringMatchFull(regex, buffer))
             {
                 Log(LOG_LEVEL_VERBOSE, "Host '%s' is alive and responding correctly", RlistScalarValue(rp));
                 snprintf(buffer, CF_MAXVARSIZE - 1, "%s[%d]", array_lval, count);
@@ -2902,7 +2902,7 @@ static FnCallResult FilterInternal(EvalContext *ctx, FnCall *fp, char *regex, ch
     long total = 0;
     for (const Rlist *rp = input_list; rp != NULL && match_count < max; rp = rp->next)
     {
-        bool found = do_regex ? FullTextMatch(ctx, regex, RlistScalarValue(rp)) : (0==strcmp(regex, RlistScalarValue(rp)));
+        bool found = do_regex ? StringMatchFull(regex, RlistScalarValue(rp)) : (0==strcmp(regex, RlistScalarValue(rp)));
 
         if (invert ? !found : found)
         {
@@ -3342,16 +3342,14 @@ static FnCallResult FnCallFormat(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
     if (check)
     {
         BufferAppend(buf, format, (check - format));
+        Seq *s = NULL;
 
-        while (check && FullTextMatch(ctx, "(%%|%[^diouxXeEfFgGaAcsCSpnm%]*?[diouxXeEfFgGaAcsCSpnm])([^%]*)(.*)", check))
+        while (check && (s = StringMatchCaptures("^(%%|%[^diouxXeEfFgGaAcsCSpnm%]*?[diouxXeEfFgGaAcsCSpnm])([^%]*)(.*)$", check)))
         {
             {
-                VarRef *ref_1 = VarRefParseFromScope("1", "match");
-                Rval rval_1;
-                DataType type_1 = DATA_TYPE_NONE;
-                if (EvalContextVariableGet(ctx, ref_1, &rval_1, &type_1))
+                if (SeqLength(s) >= 2)
                 {
-                    const char* format_piece = RvalScalarValue(rval_1);
+                    const char *format_piece = SeqAt(s, 1);
                     bool percent = (0 == strncmp(format_piece, "%%", 2));
                     char *data = NULL;
 
@@ -3426,17 +3424,12 @@ static FnCallResult FnCallFormat(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
                 {
                     check = NULL;
                 }
-
-                VarRefDestroy(ref_1);
             }
 
             {
-                VarRef *ref_2 = VarRefParseFromScope("2", "match");
-                Rval rval_2;
-                DataType type_2 = DATA_TYPE_NONE;
-                if (EvalContextVariableGet(ctx, ref_2, &rval_2, &type_2))
+                if (SeqLength(s) >= 3)
                 {
-                    const char* static_piece = RvalScalarValue(rval_2);
+                    const char* static_piece = SeqAt(s, 2);
                     BufferAppend(buf, static_piece, strlen(static_piece));
                     // CfOut(OUTPUT_LEVEL_INFORM, "", "format: appending static piece = '%s'", static_piece);
                 }
@@ -3444,26 +3437,21 @@ static FnCallResult FnCallFormat(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
                 {
                     check = NULL;
                 }
-
-                VarRefDestroy(ref_2);
             }
 
             {
-                VarRef *ref_3 = VarRefParseFromScope("3", "match");
-                Rval rval_3;
-                DataType type_3 = DATA_TYPE_NONE;
-                if (EvalContextVariableGet(ctx, ref_3, &rval_3, &type_3))
+                if (SeqLength(s) >= 4)
                 {
-                    strncpy(check_buffer, RvalScalarValue(rval_3), CF_BUFSIZE);
+                    strncpy(check_buffer, SeqAt(s, 3), CF_BUFSIZE);
                     check = check_buffer;
                 }
                 else
                 {
                     check = NULL;
                 }
-
-                VarRefDestroy(ref_3);
             }
+
+            SeqDestroy(s);
         }
     }
     else
@@ -4025,7 +4013,7 @@ static FnCallResult FnCallRegCmp(EvalContext *ctx, ARG_UNUSED FnCall *fp, Rlist 
     char *argv0 = RlistScalarValue(finalargs);
     char *argv1 = RlistScalarValue(finalargs->next);
 
-    return FnReturnContext(FullTextMatch(ctx, argv0, argv1));
+    return FnReturnContext(StringMatchFull(argv0, argv1));
 }
 
 /*********************************************************************/
@@ -4043,48 +4031,25 @@ static FnCallResult FnCallRegExtract(EvalContext *ctx, ARG_UNUSED FnCall *fp, Rl
     char *data = RlistScalarValue(finalargs->next);
     char *arrayname = RlistScalarValue(finalargs->next->next);
 
-    bool ret = FullTextMatch(ctx, regex, data);
+    Seq *s = StringMatchCaptures(regex, data);
 
-    long i = 0;
-
-    while (true)
+    if (!s || SeqLength(s) == 0)
     {
-        Rval rval;
-        DataType type;
-
-        char *index = StringFromLong(i);
-        VarRef *ref = VarRefParseFromScope(index, "match");
-        free(index);
-
-        if (!EvalContextVariableGet(ctx, ref, &rval, &type))
-        {
-            break;
-        }
-
-        if (rval.type != RVAL_TYPE_SCALAR)
-        {
-            Log(LOG_LEVEL_ERR,
-                  "Software error: pattern match was non-scalar in regextract (shouldn't happen)");
-            return FnFailure();
-        }
-        else
-        {
-            char var[CF_MAXVARSIZE] = "";
-            snprintf(var, CF_MAXVARSIZE - 1, "%s[%s]", arrayname, ref->lval);
-            VarRef *new_ref = VarRefParseFromBundle(var, PromiseGetBundle(fp->caller));
-            EvalContextVariablePut(ctx, new_ref, RvalScalarValue(rval), DATA_TYPE_STRING, "source=function,function=regextract");
-            VarRefDestroy(new_ref);
-        }
-
-        i++;
-    }
-
-    if (i == 0)
-    {
+        SeqDestroy(s);
         return FnReturnContext(false);
     }
 
-    return FnReturnContext(ret);
+    for (int i = 0; i < SeqLength(s); ++i)
+    {
+        char var[CF_MAXVARSIZE] = "";
+        snprintf(var, CF_MAXVARSIZE - 1, "%s[%d]", arrayname, i);
+        VarRef *new_ref = VarRefParseFromBundle(var, PromiseGetBundle(fp->caller));
+        EvalContextVariablePut(ctx, new_ref, SeqAt(s, i), DATA_TYPE_STRING, "source=function,function=regextract");
+        VarRefDestroy(new_ref);
+    }
+
+    SeqDestroy(s);
+    return FnReturnContext(true);
 }
 
 /*********************************************************************/
@@ -4125,7 +4090,7 @@ static FnCallResult FnCallRegLine(EvalContext *ctx, ARG_UNUSED FnCall *fp, Rlist
             Log(LOG_LEVEL_ERR, "Chop was called on a string that seemed to have no terminator");
         }
 
-        if (FullTextMatch(ctx, argv0, line))
+        if (StringMatchFull(argv0, line))
         {
             fclose(fin);
             return FnReturnContext(true);

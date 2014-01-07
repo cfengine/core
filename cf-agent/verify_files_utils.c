@@ -168,6 +168,31 @@ bool VerifyFileLeaf(EvalContext *ctx, char *path, struct stat *sb, Attributes at
     return true;
 }
 
+/* Checks whether item matches a list of wildcards */
+static int MatchRlistItem(EvalContext *ctx, Rlist *listofregex, const char *teststring)
+{
+    Rlist *rp;
+
+    for (rp = listofregex; rp != NULL; rp = rp->next)
+    {
+        /* Avoid using regex if possible, due to memory leak */
+
+        if (strcmp(teststring, RlistScalarValue(rp)) == 0)
+        {
+            return (true);
+        }
+
+        /* Make it commutative */
+
+        if (FullTextMatch(ctx, RlistScalarValue(rp), teststring))
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 static PromiseResult CfCopyFile(EvalContext *ctx, char *sourcefile, char *destfile, struct stat ssb, Attributes attr,
                                 const Promise *pp, CompressedArray **inode_cache, AgentConnection *conn)
 {

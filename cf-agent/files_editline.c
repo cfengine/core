@@ -1397,9 +1397,145 @@ static int SanityCheckDeletions(Attributes a, const Promise *pp)
     return true;
 }
 
-/***************************************************************************/
-/* Level                                                                   */
-/***************************************************************************/
+static int MatchPolicy(EvalContext *ctx, const char *camel, const char *haystack, Rlist *insert_match, const Promise *pp)
+{
+    Rlist *rp;
+    char *sp, *spto, *firstchar, *lastchar;
+    InsertMatchType opt;
+    char work[CF_BUFSIZE], final[CF_BUFSIZE];
+    Item *list = SplitString(camel, '\n'), *ip;
+    int direct_cmp = false, ok = false, escaped = false;
+
+//Split into separate lines first
+
+    for (ip = list; ip != NULL; ip = ip->next)
+    {
+        ok = false;
+        direct_cmp = (strcmp(camel, haystack) == 0);
+
+        if (insert_match == NULL)
+        {
+            // No whitespace policy means exact_match
+            ok = ok || direct_cmp;
+            break;
+        }
+
+        memset(final, 0, CF_BUFSIZE);
+        strncpy(final, ip->name, CF_BUFSIZE - 1);
+
+        for (rp = insert_match; rp != NULL; rp = rp->next)
+        {
+            opt = InsertMatchTypeFromString(RlistScalarValue(rp));
+
+            /* Exact match can be done immediately */
+
+            if (opt == INSERT_MATCH_TYPE_EXACT)
+            {
+                if ((rp->next != NULL) || (rp != insert_match))
+                {
+                    Log(LOG_LEVEL_ERR, "Multiple policies conflict with \"exact_match\", using exact match");
+                    PromiseRef(LOG_LEVEL_ERR, pp);
+                }
+
+                ok = ok || direct_cmp;
+                break;
+            }
+
+            if (!escaped)
+            {    
+            // Need to escape the original string once here in case it contains regex chars when non-exact match
+            EscapeRegexChars(ip->name, final, CF_BUFSIZE - 1);
+            escaped = true;
+            }
+            
+            if (opt == INSERT_MATCH_TYPE_IGNORE_EMBEDDED)
+            {
+                memset(work, 0, CF_BUFSIZE);
+
+                // Strip initial and final first
+
+                for (firstchar = final; isspace((int)*firstchar); firstchar++)
+                {
+                }
+
+                for (lastchar = final + strlen(final) - 1; (lastchar > firstchar) && (isspace((int)*lastchar)); lastchar--)
+                {
+                }
+
+                for (sp = final, spto = work; *sp != '\0'; sp++)
+                {
+                    if ((sp > firstchar) && (sp < lastchar))
+                    {
+                        if (isspace((int)*sp))
+                        {
+                            while (isspace((int)*(sp + 1)))
+                            {
+                                sp++;
+                            }
+
+                            strcat(spto, "\\s+");
+                            spto += 3;
+                        }
+                        else
+                        {
+                            *spto++ = *sp;
+                        }
+                    }
+                    else
+                    {
+                        *spto++ = *sp;
+                    }
+                }
+
+                strcpy(final, work);
+            }
+
+            if (opt == INSERT_MATCH_TYPE_IGNORE_LEADING)
+            {
+                if (strncmp(final, "\\s*", 3) != 0)
+                {
+                    for (sp = final; isspace((int)*sp); sp++)
+                    {
+                    }
+                    strcpy(work, sp);
+                    snprintf(final, CF_BUFSIZE, "\\s*%s", work);
+                }
+            }
+
+            if (opt == INSERT_MATCH_TYPE_IGNORE_TRAILING)
+            {
+                if (strncmp(final + strlen(final) - 4, "\\s*", 3) != 0)
+                {
+                    strcpy(work, final);
+                    snprintf(final, CF_BUFSIZE, "%s\\s*", work);
+                }
+            }
+
+            ok = ok || (FullTextMatch(ctx, final, haystack));
+        }
+
+        if (!ok)                // All lines in region need to match to avoid insertions
+        {
+            break;
+        }
+    }
+
+    DeleteItemList(list);
+    return ok;
+}
+
+static int IsItemInRegion(EvalContext *ctx, const char *item, const Item *begin_ptr, const Item *end_ptr, Rlist *insert_match, const Promise *pp)
+{
+    for (const Item *ip = begin_ptr; ((ip != end_ptr) && (ip != NULL)); ip = ip->next)
+    {
+        if (MatchPolicy(ctx, item, ip->name, insert_match, pp))
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
 
 static int InsertFileAtLocation(EvalContext *ctx, Item **start, Item *begin_ptr, Item *end_ptr, Item *location,
                                 Item *prev, Attributes a, const Promise *pp, EditContext *edcontext, PromiseResult *result)
@@ -1575,7 +1711,46 @@ static int InsertCompoundLineAtLocation(EvalContext *ctx, char *chunk, Item **st
     return retval;
 }
 
-/***************************************************************************/
+static int NeighbourItemMatches(EvalContext *ctx, const Item *file_start, const Item *location, const char *string, EditOrder pos, Rlist *insert_match,
+                         const Promise *pp)
+{
+/* Look for a line matching proposed insert before or after location */
+
+    for (const Item *ip = file_start; ip != NULL; ip = ip->next)
+    {
+        if (pos == EDIT_ORDER_BEFORE)
+        {
+            if ((ip->next) && (ip->next == location))
+            {
+                if (MatchPolicy(ctx, string, ip->name, insert_match, pp))
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+        }
+
+        if (pos == EDIT_ORDER_AFTER)
+        {
+            if (ip == location)
+            {
+                if ((ip->next) && (MatchPolicy(ctx, string, ip->next->name, insert_match, pp)))
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+        }
+    }
+
+    return false;
+}
 
 static int InsertLineAtLocation(EvalContext *ctx, char *newline, Item **start, Item *location, Item *prev, Attributes a,
                                 const Promise *pp, EditContext *edcontext, PromiseResult *result)

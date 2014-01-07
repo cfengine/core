@@ -189,18 +189,6 @@ Item *EndOfList(Item *start)
 
 /*********************************************************************/
 
-int IsItemInRegion(EvalContext *ctx, const char *item, const Item *begin_ptr, const Item *end_ptr, Rlist *insert_match, const Promise *pp)
-{
-    for (const Item *ip = begin_ptr; ((ip != end_ptr) && (ip != NULL)); ip = ip->next)
-    {
-        if (MatchPolicy(ctx, item, ip->name, insert_match, pp))
-        {
-            return true;
-        }
-    }
-
-    return false;
-}
 
 /*********************************************************************/
 
@@ -412,51 +400,6 @@ void InsertAfter(Item **filestart, Item *ptr, const char *string)
     ip->name = xstrdup(string);
     ip->classes = NULL;
 }
-
-/*********************************************************************/
-
-int NeighbourItemMatches(EvalContext *ctx, const Item *file_start, const Item *location, const char *string, EditOrder pos, Rlist *insert_match,
-                         const Promise *pp)
-{
-/* Look for a line matching proposed insert before or after location */
-
-    for (const Item *ip = file_start; ip != NULL; ip = ip->next)
-    {
-        if (pos == EDIT_ORDER_BEFORE)
-        {
-            if ((ip->next) && (ip->next == location))
-            {
-                if (MatchPolicy(ctx, string, ip->name, insert_match, pp))
-                {
-                    return true;
-                }
-                else
-                {
-                    return false;
-                }
-            }
-        }
-
-        if (pos == EDIT_ORDER_AFTER)
-        {
-            if (ip == location)
-            {
-                if ((ip->next) && (MatchPolicy(ctx, string, ip->next->name, insert_match, pp)))
-                {
-                    return true;
-                }
-                else
-                {
-                    return false;
-                }
-            }
-        }
-    }
-
-    return false;
-}
-
-/*********************************************************************/
 
 Item *SplitString(const char *string, char sep)
  /* Splits a string containing a separator like : 

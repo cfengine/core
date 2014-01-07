@@ -301,7 +301,7 @@ void EnforceBwLimit(int tosend)
       nanosleep() for such short delays.
       So, sleep only if we have >1ms penalty
     */
-    if (clock_now.tv_sec >= 0 || ( (clock_now.tv_sec == 0) && (clock_now.tv_nsec >= u_10e6))  )
+    if (clock_now.tv_sec > 0 || ( (clock_now.tv_sec == 0) && (clock_now.tv_nsec >= u_10e6))  )
     {
         nanosleep(&clock_now, NULL);
     }

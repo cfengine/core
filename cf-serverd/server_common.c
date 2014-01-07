@@ -226,14 +226,14 @@ int AccessControl(EvalContext *ctx, const char *req_path, ServerConnectionState 
             {
                 Log(LOG_LEVEL_DEBUG, "Checking whether to map root privileges..");
 
-                if ((IsMatchItemIn(ctx, ap->maproot, MapAddress(conn->ipaddr))) ||
+                if ((IsMatchItemIn(ap->maproot, MapAddress(conn->ipaddr))) ||
                     (IsRegexItemIn(ctx, ap->maproot, conn->hostname)))
                 {
                     conn->maproot = true;
                     Log(LOG_LEVEL_VERBOSE, "Mapping root privileges to access non-root files");
                 }
 
-                if ((IsMatchItemIn(ctx, ap->accesslist, MapAddress(conn->ipaddr)))
+                if ((IsMatchItemIn(ap->accesslist, MapAddress(conn->ipaddr)))
                     || (IsRegexItemIn(ctx, ap->accesslist, conn->hostname)))
                 {
                     access = true;
@@ -338,7 +338,7 @@ int LiteralAccessControl(EvalContext *ctx, char *in, ServerConnectionState *conn
             {
                 Log(LOG_LEVEL_DEBUG, "Checking whether to map root privileges");
 
-                if ((IsMatchItemIn(ctx, ap->maproot, MapAddress(conn->ipaddr))) ||
+                if ((IsMatchItemIn(ap->maproot, MapAddress(conn->ipaddr))) ||
                     (IsRegexItemIn(ctx, ap->maproot, conn->hostname)))
                 {
                     conn->maproot = true;
@@ -349,7 +349,7 @@ int LiteralAccessControl(EvalContext *ctx, char *in, ServerConnectionState *conn
                     Log(LOG_LEVEL_VERBOSE, "No root privileges granted");
                 }
 
-                if ((IsMatchItemIn(ctx, ap->accesslist, MapAddress(conn->ipaddr)))
+                if ((IsMatchItemIn(ap->accesslist, MapAddress(conn->ipaddr)))
                     || (IsRegexItemIn(ctx, ap->accesslist, conn->hostname)))
                 {
                     access = true;
@@ -363,7 +363,7 @@ int LiteralAccessControl(EvalContext *ctx, char *in, ServerConnectionState *conn
     {
         if (strcmp(ap->path, name) == 0)
         {
-            if ((IsMatchItemIn(ctx, ap->accesslist, MapAddress(conn->ipaddr)))
+            if ((IsMatchItemIn(ap->accesslist, MapAddress(conn->ipaddr)))
                 || (IsRegexItemIn(ctx, ap->accesslist, conn->hostname)))
             {
                 access = false;
@@ -481,7 +481,7 @@ Item *ContextAccessControl(EvalContext *ctx, char *in, ServerConnectionState *co
                 {
                     Log(LOG_LEVEL_DEBUG, "Checking whether to map root privileges");
 
-                    if ((IsMatchItemIn(ctx, ap->maproot, MapAddress(conn->ipaddr)))
+                    if ((IsMatchItemIn(ap->maproot, MapAddress(conn->ipaddr)))
                         || (IsRegexItemIn(ctx, ap->maproot, conn->hostname)))
                     {
                         conn->maproot = true;
@@ -492,7 +492,7 @@ Item *ContextAccessControl(EvalContext *ctx, char *in, ServerConnectionState *co
                         Log(LOG_LEVEL_VERBOSE, "No root privileges granted");
                     }
 
-                    if ((IsMatchItemIn(ctx, ap->accesslist, MapAddress(conn->ipaddr)))
+                    if ((IsMatchItemIn(ap->accesslist, MapAddress(conn->ipaddr)))
                         || (IsRegexItemIn(ctx, ap->accesslist, conn->hostname)))
                     {
                         access = true;
@@ -506,7 +506,7 @@ Item *ContextAccessControl(EvalContext *ctx, char *in, ServerConnectionState *co
         {
             if (strcmp(ap->path, ip->name) == 0)
             {
-                if ((IsMatchItemIn(ctx, ap->accesslist, MapAddress(conn->ipaddr)))
+                if ((IsMatchItemIn(ap->accesslist, MapAddress(conn->ipaddr)))
                     || (IsRegexItemIn(ctx, ap->accesslist, conn->hostname)))
                 {
                     access = false;
@@ -683,7 +683,7 @@ static int AuthorizeRoles(EvalContext *ctx, ServerConnectionState *conn, char *a
             if (StringMatchFull(ap->path, RlistScalarValue(rp)))
             {
                 /* We have a pattern covering this class - so are we allowed to activate it? */
-                if ((IsMatchItemIn(ctx, ap->accesslist, MapAddress(conn->ipaddr))) ||
+                if ((IsMatchItemIn(ap->accesslist, MapAddress(conn->ipaddr))) ||
                     (IsRegexItemIn(ctx, ap->accesslist, conn->hostname)) ||
                     (IsRegexItemIn(ctx, ap->accesslist, userid1)) ||
                     (IsRegexItemIn(ctx, ap->accesslist, userid2)) ||

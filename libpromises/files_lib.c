@@ -41,7 +41,7 @@ static Item *ROTATED = NULL; /* GLOBAL_X */
 
 /*********************************************************************/
 
-void PurgeItemList(EvalContext *ctx, Item **list, char *name)
+void PurgeItemList(Item **list, char *name)
 {
     Item *ip, *copy = NULL;
     struct stat sb;
@@ -53,7 +53,7 @@ void PurgeItemList(EvalContext *ctx, Item **list, char *name)
         if (stat(ip->name, &sb) == -1)
         {
             Log(LOG_LEVEL_VERBOSE, "Purging file '%s' from '%s' list as it no longer exists", ip->name, name);
-            DeleteItemLiteral(ctx, list, ip->name);
+            DeleteItemLiteral(list, ip->name);
         }
     }
 

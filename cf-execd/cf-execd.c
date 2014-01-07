@@ -55,7 +55,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv);
 void ThisAgentInit(void);
 static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *config, ExecdConfig *execd_config, ExecConfig *exec_config, time_t *last_policy_reload);
 #ifndef __MINGW32__
-static void Apoptosis(EvalContext *ctx);
+static void Apoptosis(void);
 #endif
 
 static bool LocalExecInThread(const ExecConfig *config);
@@ -338,7 +338,7 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, E
     if (!ONCE)
     {
         /* Kill previous instances of cf-execd if those are still running */
-        Apoptosis(ctx);
+        Apoptosis();
     }
 #endif
 
@@ -429,12 +429,12 @@ static bool LocalExecInThread(const ExecConfig *config)
 
 #ifndef __MINGW32__
 
-static void Apoptosis(EvalContext *ctx)
+static void Apoptosis(void)
 {
     char promiser_buf[CF_SMALLBUF];
     snprintf(promiser_buf, sizeof(promiser_buf), "%s/bin/cf-execd", CFWORKDIR);
 
-    if (LoadProcessTable(ctx, &PROCESSTABLE))
+    if (LoadProcessTable(&PROCESSTABLE))
     {
         char myuid[32];
         snprintf(myuid, 32, "%d", (int)getuid());
@@ -447,7 +447,7 @@ static void Apoptosis(EvalContext *ctx)
             .process_result = "process_owner",
         };
 
-        Item *killlist = SelectProcesses(ctx, PROCESSTABLE, promiser_buf, process_select, true);
+        Item *killlist = SelectProcesses(PROCESSTABLE, promiser_buf, process_select, true);
 
         for (Item *ip = killlist; ip != NULL; ip = ip->next)
         {

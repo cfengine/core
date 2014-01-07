@@ -37,7 +37,7 @@
 #include <zones.h>
 
 static int SelectProcRangeMatch(char *name1, char *name2, int min, int max, char **names, char **line);
-static int SelectProcRegexMatch(EvalContext *ctx, char *name1, char *name2, char *regex, char **colNames, char **line);
+static int SelectProcRegexMatch(char *name1, char *name2, char *regex, char **colNames, char **line);
 static int SplitProcLine(char *proc, char **names, int *start, int *end, char **line);
 static int SelectProcTimeCounterRangeMatch(char *name1, char *name2, time_t min, time_t max, char **names, char **line);
 static int SelectProcTimeAbsRangeMatch(char *name1, char *name2, time_t min, time_t max, char **names, char **line);
@@ -47,7 +47,7 @@ static int ExtractPid(char *psentry, char **names, int *end);
 
 /***************************************************************************/
 
-static int SelectProcess(EvalContext *ctx, char *procentry, char **names, int *start, int *end, ProcessSelect a)
+static int SelectProcess(char *procentry, char **names, int *start, int *end, ProcessSelect a)
 {
     int result = true, i;
     char *column[CF_PROCCOLS];
@@ -67,7 +67,7 @@ static int SelectProcess(EvalContext *ctx, char *procentry, char **names, int *s
 
     for (rp = a.owner; rp != NULL; rp = rp->next)
     {
-        if (SelectProcRegexMatch(ctx, "USER", "UID", RlistScalarValue(rp), names, column))
+        if (SelectProcRegexMatch("USER", "UID", RlistScalarValue(rp), names, column))
         {
             StringSetAdd(process_select_attributes, xstrdup("process_owner"));
             break;
@@ -120,17 +120,17 @@ static int SelectProcess(EvalContext *ctx, char *procentry, char **names, int *s
         StringSetAdd(process_select_attributes, xstrdup("threads"));
     }
 
-    if (SelectProcRegexMatch(ctx, "S", "STAT", a.status, names, column))
+    if (SelectProcRegexMatch("S", "STAT", a.status, names, column))
     {
         StringSetAdd(process_select_attributes, xstrdup("status"));
     }
 
-    if (SelectProcRegexMatch(ctx, "CMD", "COMMAND", a.command, names, column))
+    if (SelectProcRegexMatch("CMD", "COMMAND", a.command, names, column))
     {
         StringSetAdd(process_select_attributes, xstrdup("command"));
     }
 
-    if (SelectProcRegexMatch(ctx, "TTY", "TTY", a.tty, names, column))
+    if (SelectProcRegexMatch("TTY", "TTY", a.tty, names, column))
     {
         StringSetAdd(process_select_attributes, xstrdup("tty"));
     }
@@ -173,7 +173,7 @@ static int SelectProcess(EvalContext *ctx, char *procentry, char **names, int *s
     return result;
 }
 
-Item *SelectProcesses(EvalContext *ctx, const Item *processes, const char *process_name, ProcessSelect a, bool attrselect)
+Item *SelectProcesses(const Item *processes, const char *process_name, ProcessSelect a, bool attrselect)
 {
     Item *result = NULL;
 
@@ -192,14 +192,14 @@ Item *SelectProcesses(EvalContext *ctx, const Item *processes, const char *proce
     {
         int s, e;
 
-        if (BlockTextMatch(ctx, process_name, ip->name, &s, &e))
+        if (StringMatch(process_name, ip->name, &s, &e))
         {
             if (NULL_OR_EMPTY(ip->name))
             {
                 continue;
             }
 
-            if (attrselect && !SelectProcess(ctx, ip->name, names, start, end, a))
+            if (attrselect && !SelectProcess(ip->name, names, start, end, a))
             {
                 continue;
             }
@@ -411,7 +411,7 @@ static int SelectProcTimeAbsRangeMatch(char *name1, char *name2, time_t min, tim
 
 /***************************************************************************/
 
-static int SelectProcRegexMatch(EvalContext *ctx, char *name1, char *name2, char *regex, char **colNames, char **line)
+static int SelectProcRegexMatch(char *name1, char *name2, char *regex, char **colNames, char **line)
 {
     int i;
 
@@ -423,7 +423,7 @@ static int SelectProcRegexMatch(EvalContext *ctx, char *name1, char *name2, char
     if ((i = GetProcColumnIndex(name1, name2, colNames)) != -1)
     {
 
-        if (FullTextMatch(ctx, regex, line[i]))
+        if (StringMatchFull(regex, line[i]))
         {
             return true;
         }
@@ -575,7 +575,7 @@ static int GetProcColumnIndex(char *name1, char *name2, char **names)
 
 /**********************************************************************************/
 
-bool IsProcessNameRunning(EvalContext *ctx, char *procNameRegex)
+bool IsProcessNameRunning(char *procNameRegex)
 {
     char *colHeaders[CF_PROCCOLS];
     Item *ip;
@@ -607,7 +607,7 @@ bool IsProcessNameRunning(EvalContext *ctx, char *procNameRegex)
             continue;
         }
 
-        if (SelectProcRegexMatch(ctx, "CMD", "COMMAND", procNameRegex, colHeaders, lineSplit))
+        if (SelectProcRegexMatch("CMD", "COMMAND", procNameRegex, colHeaders, lineSplit))
         {
             matched = true;
             break;
@@ -751,7 +751,7 @@ static int ExtractPid(char *psentry, char **names, int *end)
 }
 
 #ifndef __MINGW32__
-int LoadProcessTable(EvalContext *ctx, Item **procdata)
+int LoadProcessTable(Item **procdata)
 {
     FILE *prp;
     char pscomm[CF_MAXLINKSIZE], vbuff[CF_BUFSIZE], *sp;
@@ -814,11 +814,11 @@ int LoadProcessTable(EvalContext *ctx, Item **procdata)
     CopyList(&rootprocs, *procdata);
     CopyList(&otherprocs, *procdata);
 
-    while (DeleteItemNotContaining(ctx, &rootprocs, "root"))
+    while (DeleteItemNotContaining(&rootprocs, "root"))
     {
     }
 
-    while (DeleteItemContaining(ctx, &otherprocs, "root"))
+    while (DeleteItemContaining(&otherprocs, "root"))
     {
     }
 

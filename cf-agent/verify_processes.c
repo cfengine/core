@@ -45,7 +45,7 @@
 static PromiseResult VerifyProcesses(EvalContext *ctx, Attributes a, const Promise *pp);
 static bool ProcessSanityChecks(Attributes a, const Promise *pp);
 static PromiseResult VerifyProcessOp(EvalContext *ctx, Item *procdata, Attributes a, const Promise *pp);
-static int FindPidMatches(EvalContext *ctx, Item *procdata, Item **killlist, Attributes a, const char *promiser);
+static int FindPidMatches(Item *procdata, Item **killlist, Attributes a, const char *promiser);
 
 PromiseResult VerifyProcessesPromise(EvalContext *ctx, const Promise *pp)
 {
@@ -141,7 +141,7 @@ static PromiseResult VerifyProcessOp(EvalContext *ctx, Item *procdata, Attribute
     bool need_to_restart = true;
     Item *killlist = NULL;
 
-    int matches = FindPidMatches(ctx, procdata, &killlist, a, pp->promiser);
+    int matches = FindPidMatches(procdata, &killlist, a, pp->promiser);
 
 /* promise based on number of matches */
 
@@ -318,12 +318,12 @@ int DoAllSignals(EvalContext *ctx, Item *siglist, Attributes a, const Promise *p
 }
 #endif
 
-static int FindPidMatches(EvalContext *ctx, Item *procdata, Item **killlist, Attributes a, const char *promiser)
+static int FindPidMatches(Item *procdata, Item **killlist, Attributes a, const char *promiser)
 {
     int matches = 0;
     pid_t cfengine_pid = getpid();
 
-    Item *matched = SelectProcesses(ctx, procdata, promiser, a.process_select, a.haveselect);
+    Item *matched = SelectProcesses(procdata, promiser, a.process_select, a.haveselect);
 
     for (Item *ip = matched; ip != NULL; ip = ip->next)
     {

@@ -760,7 +760,7 @@ static PromiseResult SaveSetuid(EvalContext *ctx, Attributes a, const Promise *p
     snprintf(filename, CF_BUFSIZE, "%s/cfagent.%s.log", GetLogDir(), VSYSNAME.nodename);
     MapName(filename);
 
-    PurgeItemList(ctx, &VSETUIDLIST, "SETUID/SETGID");
+    PurgeItemList(&VSETUIDLIST, "SETUID/SETGID");
 
     PromiseResult result = PROMISE_RESULT_NOOP;
     if (!CompareToFile(ctx, VSETUIDLIST, filename, a, pp, &result))

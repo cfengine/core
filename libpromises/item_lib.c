@@ -28,6 +28,7 @@
 #include <addr_lib.h>
 #include <matching.h>
 #include <misc_lib.h>
+#include <string_lib.h>
 
 /*******************************************************************/
 void PrintItemList(const Item *list, Writer *w)
@@ -782,7 +783,7 @@ void SetItemListCounter(Item *list, const char *item, int value)
 
 /*********************************************************************/
 
-int IsMatchItemIn(EvalContext *ctx, Item *list, const char *item)
+int IsMatchItemIn(Item *list, const char *item)
 /* Solve for possible regex/fuzzy models unified */
 {
     Item *ptr;
@@ -801,7 +802,7 @@ int IsMatchItemIn(EvalContext *ctx, Item *list, const char *item)
 
         if (IsRegex(ptr->name))
         {
-            if (FullTextMatch(ctx, ptr->name, item))
+            if (StringMatchFull(ptr->name, item))
             {
                 return (true);
             }
@@ -892,7 +893,7 @@ void DeleteItem(Item **liststart, Item *item)
 
 /*********************************************************************/
 
-int DeleteItemGeneral(EvalContext *ctx, Item **list, const char *string, ItemMatchType type)
+int DeleteItemGeneral(Item **list, const char *string, ItemMatchType type)
 {
     Item *ip, *last = NULL;
     int match = 0;
@@ -931,8 +932,7 @@ int DeleteItemGeneral(EvalContext *ctx, Item **list, const char *string, ItemMat
             break;
         case ITEM_MATCH_TYPE_REGEX_COMPLETE_NOT:
         case ITEM_MATCH_TYPE_REGEX_COMPLETE:
-            /* To fix a bug on some implementations where rx gets emptied */
-            match = FullTextMatch(ctx, string, ip->name);
+            match = StringMatchFull(string, ip->name);
 
             if (type == ITEM_MATCH_TYPE_REGEX_COMPLETE_NOT)
             {
@@ -983,51 +983,51 @@ int DeleteItemGeneral(EvalContext *ctx, Item **list, const char *string, ItemMat
 
 /*********************************************************************/
 
-int DeleteItemStarting(EvalContext *ctx, Item **list, const char *string)       /* delete 1st item starting with string */
+int DeleteItemStarting(Item **list, const char *string)       /* delete 1st item starting with string */
 {
-    return DeleteItemGeneral(ctx, list, string, ITEM_MATCH_TYPE_LITERAL_START);
+    return DeleteItemGeneral(list, string, ITEM_MATCH_TYPE_LITERAL_START);
 }
 
 /*********************************************************************/
 
-int DeleteItemNotStarting(EvalContext *ctx, Item **list, const char *string)    /* delete 1st item starting with string */
+int DeleteItemNotStarting(Item **list, const char *string)    /* delete 1st item starting with string */
 {
-    return DeleteItemGeneral(ctx, list, string, ITEM_MATCH_TYPE_LITERAL_START_NOT);
+    return DeleteItemGeneral(list, string, ITEM_MATCH_TYPE_LITERAL_START_NOT);
 }
 
 /*********************************************************************/
 
-int DeleteItemLiteral(EvalContext *ctx, Item **list, const char *string)  /* delete 1st item which is string */
+int DeleteItemLiteral(Item **list, const char *string)  /* delete 1st item which is string */
 {
-    return DeleteItemGeneral(ctx, list, string, ITEM_MATCH_TYPE_LITERAL_COMPLETE);
+    return DeleteItemGeneral(list, string, ITEM_MATCH_TYPE_LITERAL_COMPLETE);
 }
 
 /*********************************************************************/
 
-int DeleteItemMatching(EvalContext *ctx, Item **list, const char *string)       /* delete 1st item fully matching regex */
+int DeleteItemMatching(Item **list, const char *string)       /* delete 1st item fully matching regex */
 {
-    return DeleteItemGeneral(ctx, list, string, ITEM_MATCH_TYPE_REGEX_COMPLETE);
+    return DeleteItemGeneral(list, string, ITEM_MATCH_TYPE_REGEX_COMPLETE);
 }
 
 /*********************************************************************/
 
-int DeleteItemNotMatching(EvalContext *ctx, Item **list, const char *string)    /* delete 1st item fully matching regex */
+int DeleteItemNotMatching(Item **list, const char *string)    /* delete 1st item fully matching regex */
 {
-    return DeleteItemGeneral(ctx, list, string, ITEM_MATCH_TYPE_REGEX_COMPLETE_NOT);
+    return DeleteItemGeneral(list, string, ITEM_MATCH_TYPE_REGEX_COMPLETE_NOT);
 }
 
 /*********************************************************************/
 
-int DeleteItemContaining(EvalContext *ctx, Item **list, const char *string)     /* delete first item containing string */
+int DeleteItemContaining(Item **list, const char *string)     /* delete first item containing string */
 {
-    return DeleteItemGeneral(ctx, list, string, ITEM_MATCH_TYPE_LITERAL_SOMEWHERE);
+    return DeleteItemGeneral(list, string, ITEM_MATCH_TYPE_LITERAL_SOMEWHERE);
 }
 
 /*********************************************************************/
 
-int DeleteItemNotContaining(EvalContext *ctx, Item **list, const char *string)  /* delete first item containing string */
+int DeleteItemNotContaining(Item **list, const char *string)  /* delete first item containing string */
 {
-    return DeleteItemGeneral(ctx, list, string, ITEM_MATCH_TYPE_LITERAL_SOMEWHERE_NOT);
+    return DeleteItemGeneral(list, string, ITEM_MATCH_TYPE_LITERAL_SOMEWHERE_NOT);
 }
 
 /*********************************************************************/

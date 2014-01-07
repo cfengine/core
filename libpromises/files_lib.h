@@ -27,7 +27,7 @@
 
 #include <cf3.defs.h>
 
-void PurgeItemList(EvalContext *ctx, Item **list, char *name);
+void PurgeItemList(Item **list, char *name);
 bool FileWriteOver(char *filename, char *contents);
 
 int LoadFileAsItemList(Item **liststart, const char *file, EditDefaults edits);

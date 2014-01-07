@@ -29,7 +29,7 @@
 
 int FullTextMatch(EvalContext *ctx, const char *regptr, const char *cmpptr); /* Sets variables */
 int BlockTextMatch(EvalContext *ctx, const char *regexp, const char *teststring, int *s, int *e); /* Sets variables */
-int IsRegexItemIn(EvalContext *ctx, Item *list, char *regex); /* Uses context, sets variables */
+int IsRegexItemIn(EvalContext *ctx, Item *list, char *regex); /* Uses context */
 int MatchRlistItem(EvalContext *ctx, Rlist *listofregex, const char *teststring); /* Sets variables */
 int MatchPolicy(EvalContext *ctx, const char *needle, const char *haystack, Rlist *insert_match, const Promise *pp); /* Sets variables */
 

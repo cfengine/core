@@ -390,7 +390,7 @@ int IsRegexItemIn(EvalContext *ctx, Item *list, char *regex)
 
         /* Make it commutative */
 
-        if ((FullTextMatch(ctx, regex, ptr->name)) || (FullTextMatch(ctx, ptr->name, regex)))
+        if ((StringMatchFull(regex, ptr->name)) || (StringMatchFull(ptr->name, regex)))
         {
             return true;
         }

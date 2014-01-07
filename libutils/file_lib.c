@@ -169,6 +169,12 @@ int safe_open(const char *pathname, int flags, ...)
         return -1;
     }
 
+    if (*pathname == '\0')
+    {
+        errno = ENOENT;
+        return -1;
+    }
+
     mode_t mode;
     if (flags & O_CREAT)
     {
@@ -211,14 +217,14 @@ int safe_open(const char *pathname, int flags, ...)
         first_dir = "/";
         // Eliminate double slashes.
         while (*(++next_component) == '/') { /*noop*/ }
+        if (!*next_component)
+        {
+            next_component = NULL;
+        }
     }
     else
     {
         first_dir = ".";
-    }
-    if (!*next_component)
-    {
-        next_component = NULL;
     }
     currentfd = open(first_dir, O_RDONLY);
     if (currentfd < 0)
@@ -235,6 +241,10 @@ int safe_open(const char *pathname, int flags, ...)
             *next_component = '\0';
             // Eliminate double slashes.
             while (*(++next_component) == '/') { /*noop*/ }
+            if (!*next_component)
+            {
+                next_component = NULL;
+            }
         }
 
         struct stat stat_before, stat_after;

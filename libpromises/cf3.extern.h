@@ -38,10 +38,6 @@ extern time_t CONNTIMEOUT;
 
 extern char CFWORKDIR[CF_BUFSIZE];
 
-extern char VYEAR[];
-extern char VDAY[];
-extern char VMONTH[];
-
 extern const char *const CLASSTEXT[];
 
 extern time_t CFSTARTTIME;

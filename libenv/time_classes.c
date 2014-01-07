@@ -162,13 +162,11 @@ static void AddTimeClass(EvalContext *ctx, time_t time)
 
 /* Year */
 
-        snprintf(VYEAR, CF_BUFSIZE, "%04d", tz_parsed_time[0].tm_year + 1900); // VYEAR has the local year
         snprintf(buf, CF_BUFSIZE, "%sYr%04d", tz_prefix[tz], tz_parsed_time[tz].tm_year + 1900);
         EvalContextClassPutHard(ctx, buf, "time_based,source=agent");
 
 /* Month */
 
-        strlcpy(VMONTH, MONTH_TEXT[tz_parsed_time[0].tm_mon], 4); // VMONTH has the local month
         snprintf(buf, CF_BUFSIZE, "%s%s", tz_prefix[tz], MONTH_TEXT[tz_parsed_time[tz].tm_mon]);
         EvalContextClassPutHard(ctx, buf, "time_based,source=agent");
 
@@ -184,7 +182,6 @@ static void AddTimeClass(EvalContext *ctx, time_t time)
 
 /* Day */
 
-        snprintf(VDAY, CF_BUFSIZE, "%d", tz_parsed_time[tz].tm_mday); // VDAY has the local day
         snprintf(buf, CF_BUFSIZE, "%sDay%d", tz_prefix[tz], tz_parsed_time[tz].tm_mday);
         EvalContextClassPutHard(ctx, buf, "time_based,source=agent");
 

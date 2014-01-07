@@ -126,5 +126,5 @@ bool GenericAgentTagReleaseDirectory(const GenericAgentConfig *config, const cha
 
 void GetReleaseIdFile(const char *base_path, char *filename, size_t max_size);
 
-extern u_long bwlimit_kbytes; /* from libcfnet/net.c */
+extern uint32_t bwlimit_kbytes; /* from libcfnet/net.c */
 #endif

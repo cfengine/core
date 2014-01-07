@@ -1528,7 +1528,9 @@ static void VarRefStackQualify(const EvalContext *ctx, VarRef *ref)
     }
 }
 
-bool EvalContextVariablePut(EvalContext *ctx, const VarRef *ref, const void *value, DataType type, const char *tags)
+bool EvalContextVariablePut(EvalContext *ctx,
+                            const VarRef *ref, const void *value,
+                            DataType type, const char *tags)
 {
     assert(type != DATA_TYPE_NONE);
     assert(ref);
@@ -1542,12 +1544,15 @@ bool EvalContextVariablePut(EvalContext *ctx, const VarRef *ref, const void *val
     if (strlen(ref->lval) > CF_MAXVARSIZE)
     {
         char *lval_str = VarRefToString(ref, true);
-        Log(LOG_LEVEL_ERR, "Variable '%s'' cannot be added because its length exceeds the maximum length allowed '%d' characters", lval_str, CF_MAXVARSIZE);
+        Log(LOG_LEVEL_ERR, "Variable '%s'' cannot be added because "
+            "its length exceeds the maximum length allowed ('%d' characters)",
+            lval_str, CF_MAXVARSIZE);
         free(lval_str);
         return false;
     }
 
-    if (strcmp(ref->scope, "body") != 0 && IsVariableSelfReferential(ref, value, DataTypeToRvalType(type)))
+    if (strcmp(ref->scope, "body") != 0 &&
+        IsVariableSelfReferential(ref, value, DataTypeToRvalType(type)))
     {
         return false;
     }
@@ -1557,19 +1562,22 @@ bool EvalContextVariablePut(EvalContext *ctx, const VarRef *ref, const void *val
     // Look for outstanding lists in variable rvals
     if (THIS_AGENT_TYPE == AGENT_TYPE_COMMON)
     {
-        Rlist *listvars = NULL;
-        Rlist *scalars = NULL;
-        Rlist *containers = NULL;
-
         StackFrame *last_frame = LastStackFrame(ctx, 0);
 
         if (last_frame && (last_frame->type == STACK_FRAME_TYPE_BUNDLE))
         {
-            MapIteratorsFromRval(ctx, EvalContextStackCurrentBundle(ctx), rval, &scalars, &listvars, &containers);
+            Rlist *listvars = NULL;
+            Rlist *scalars = NULL;
+            Rlist *containers = NULL;
+
+            MapIteratorsFromRval(ctx, EvalContextStackCurrentBundle(ctx),
+                                 rval, &scalars, &listvars, &containers);
 
             if (listvars != NULL)
             {
-                Log(LOG_LEVEL_ERR, "Redefinition of variable '%s' (embedded list in RHS)", ref->lval);
+                Log(LOG_LEVEL_ERR,
+                    "Redefinition of variable '%s' (embedded list in RHS)",
+                    ref->lval);
             }
 
             RlistDestroy(listvars);
@@ -1580,6 +1588,7 @@ bool EvalContextVariablePut(EvalContext *ctx, const VarRef *ref, const void *val
 
     VariableTable *table = GetVariableTableForScope(ctx, ref->ns, ref->scope);
     VariableTablePut(table, ref, &rval, type, tags);
+    /* FIXME: we really shouldn't be ignoring the return from that ... */
     return true;
 }
 

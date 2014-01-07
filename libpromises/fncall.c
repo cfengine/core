@@ -88,7 +88,7 @@ static Rlist *NewExpArgs(EvalContext *ctx, const FnCall *fp)
             assert(rval.item);
             break;
         default:
-            rval = ExpandPrivateRval(ctx, NULL, NULL, (Rval) { rp->val.item, rp->val.type});
+            rval = ExpandPrivateRval(ctx, NULL, NULL, rp->val.item, rp->val.type);
             assert(rval.item);
             break;
         }
@@ -131,14 +131,14 @@ bool FnCallIsBuiltIn(Rval rval)
 
 /*******************************************************************/
 
-FnCall *FnCallNew(const char *name, Rlist *args)
+FnCall *FnCallNew(const char *name, const Rlist *args)
 {
     FnCall *fp;
 
     fp = xmalloc(sizeof(FnCall));
 
     fp->name = xstrdup(name);
-    fp->args = args;
+    fp->args = RlistCopy(args);
 
     return fp;
 }
@@ -169,7 +169,7 @@ unsigned FnCallHash(const FnCall *fp, unsigned seed, unsigned max)
 }
 
 
-FnCall *ExpandFnCall(EvalContext *ctx, const char *ns, const char *scope, FnCall *f)
+FnCall *ExpandFnCall(EvalContext *ctx, const char *ns, const char *scope, const FnCall *f)
 {
     return FnCallNew(f->name, ExpandList(ctx, ns, scope, f->args, false));
 }

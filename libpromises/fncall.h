@@ -37,7 +37,7 @@ struct FnCall_
 
 bool FnCallIsBuiltIn(Rval rval);
 
-FnCall *FnCallNew(const char *name, Rlist *args);
+FnCall *FnCallNew(const char *name, const Rlist *args);
 FnCall *FnCallCopy(const FnCall *f);
 void FnCallDestroy(FnCall *fp);
 unsigned FnCallHash(const FnCall *fp, unsigned seed, unsigned max);
@@ -48,7 +48,7 @@ FnCallResult FnCallEvaluate(EvalContext *ctx, FnCall *fp, const Promise *caller)
 
 const FnCallType *FnCallTypeGet(const char *name);
 
-FnCall *ExpandFnCall(EvalContext *ctx, const char *ns, const char *scope, FnCall *f);
+FnCall *ExpandFnCall(EvalContext *ctx, const char *ns, const char *scope, const FnCall *f);
 
 // TODO: should probably demolish this eventually
 void FnCallShow(FILE *fout, const char *prefix, const FnCall *fp, const Rlist *args);

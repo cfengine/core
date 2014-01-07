@@ -50,7 +50,7 @@ typedef struct
 
 static ConvergeVariableOptions CollectConvergeVariableOptions(EvalContext *ctx, const Promise *pp, bool allow_redefine);
 static bool Epimenides(EvalContext *ctx, const char *ns, const char *scope, const char *var, Rval rval, int level);
-static int CompareRval(Rval rval1, Rval rval2);
+static int CompareRval(const void *rval1_item, RvalType rval1_type, const void *rval2_item, RvalType rval2_type);
 
 
 PromiseResult VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates)
@@ -197,7 +197,9 @@ PromiseResult VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_d
             {
                 EvalContextVariableRemove(ctx, ref);
             }
-            else if ((THIS_AGENT_TYPE == AGENT_TYPE_COMMON) && (CompareRval(existing_var_rval, rval) == false))
+            else if ((THIS_AGENT_TYPE == AGENT_TYPE_COMMON)
+                     && (CompareRval(existing_var_rval.item, existing_var_rval.type,
+                                     rval.item, rval.type) == false))
             {
                 switch (rval.type)
                 {
@@ -346,15 +348,15 @@ PromiseResult VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_d
 
 // FIX: this function is a mixture of Equal/Compare (boolean/diff).
 // somebody is bound to misuse this at some point
-static int CompareRlist(Rlist *list1, Rlist *list2)
+static int CompareRlist(const Rlist *list1, const Rlist *list2)
 {
-    Rlist *rp1, *rp2;
+    const Rlist *rp1, *rp2;
 
     for (rp1 = list1, rp2 = list2; rp1 != NULL && rp2 != NULL; rp1 = rp1->next, rp2 = rp2->next)
     {
         if (rp1->val.item && rp2->val.item)
         {
-            Rlist *rc1, *rc2;
+            const Rlist *rc1, *rc2;
 
             if (rp1->val.type == RVAL_TYPE_FNCALL || rp2->val.type == RVAL_TYPE_FNCALL)
             {
@@ -395,23 +397,24 @@ static int CompareRlist(Rlist *list1, Rlist *list2)
     return true;
 }
 
-static int CompareRval(Rval rval1, Rval rval2)
+static int CompareRval(const void *rval1_item, RvalType rval1_type,
+                       const void *rval2_item, RvalType rval2_type)
 {
-    if (rval1.type != rval2.type)
+    if (rval1_type != rval2_type)
     {
         return -1;
     }
 
-    switch (rval1.type)
+    switch (rval1_type)
     {
     case RVAL_TYPE_SCALAR:
 
-        if (IsCf3VarString((char *) rval1.item) || IsCf3VarString((char *) rval2.item))
+        if (IsCf3VarString(rval1_item) || IsCf3VarString(rval2_item))
         {
             return -1;          // inconclusive
         }
 
-        if (strcmp(rval1.item, rval2.item) != 0)
+        if (strcmp(rval1_item, rval2_item) != 0)
         {
             return false;
         }
@@ -419,7 +422,7 @@ static int CompareRval(Rval rval1, Rval rval2)
         break;
 
     case RVAL_TYPE_LIST:
-        return CompareRlist(rval1.item, rval2.item);
+        return CompareRlist(rval1_item, rval2_item);
 
     case RVAL_TYPE_FNCALL:
         return -1;

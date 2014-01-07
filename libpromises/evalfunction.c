@@ -3117,13 +3117,15 @@ static FnCallResult FnCallFold(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
         double x;
         if (mean_mode || variance_mode)
         {
-            if (1 == sscanf(cur, "%lf", &x))
+            if (1 != sscanf(cur, "%lf", &x))
             {
-                // Welford's algorithm
-                double delta = x - mean;
-                mean += delta/count;
-                M2 += delta * (x - mean);
+                x = 0; /* treat non-numeric entries as zero */
             }
+
+            // Welford's algorithm
+            double delta = x - mean;
+            mean += delta/count;
+            M2 += delta * (x - mean);
         }
     }
 

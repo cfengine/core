@@ -82,7 +82,7 @@ bundle agent check
       "expected[b][variance]" string => "2730.33";
       "expected[c][variance]" string => "-1";
       "expected[d][variance]" string => "0.00";
-      "expected[e][variance]" string => "0.25";
+      "expected[e][variance]" string => "0.33";
       "expected[f][variance]" string => "10000.00";
       "expected[g][variance]" string => "5.34";
       "expected[h][variance]" string => "14033.33";
@@ -91,7 +91,7 @@ bundle agent check
       "expected[b][stddev]" string => "52.25";
       "expected[c][stddev]" string => "-1";
       "expected[d][stddev]" string => "0.00";
-      "expected[e][stddev]" string => "0.50";
+      "expected[e][stddev]" string => "0.57";
       "expected[f][stddev]" string => "100.00";
       "expected[g][stddev]" string => "2.31";
       "expected[h][stddev]" string => "118.46";
@@ -100,7 +100,7 @@ bundle agent check
       "expected[b][mean]" string => "39.67";
       "expected[c][mean]" string => "-1";
       "expected[d][mean]" string => "0.00";
-      "expected[e][mean]" string => "0.50";
+      "expected[e][mean]" string => "0.33";
       "expected[f][mean]" string => "200.00";
       "expected[g][mean]" string => "-1.48";
       "expected[h][mean]" string => "63.33";
@@ -157,7 +157,7 @@ bundle agent check
 
   reports:
     DEBUG::
-      "$(measurements) check expected '$(expected[$(good_lists)][$(measurements)])' <> actual '$(test.$(measurements)_$(good_lists))'"
+      "$(good_lists) $(measurements) check expected '$(expected[$(good_lists)][$(measurements)])' <> actual '$(test.$(measurements)_$(good_lists))'"
       ifvarclass => "!ok_$(measurements)_$(good_lists)";
 
       "good list $(good_lists) had no $(measurements): '$(test.$(measurements)_$(good_lists))' was not expanded"

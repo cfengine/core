@@ -95,7 +95,7 @@ static void GetDatabaseAge(void);
 static void LoadHistogram(void);
 static void GetQ(EvalContext *ctx, const Policy *policy);
 static Averages EvalAvQ(EvalContext *ctx, char *timekey);
-static void ArmClasses(EvalContext *ctx, Averages newvals);
+static void ArmClasses(Averages newvals);
 static void GatherPromisedMeasures(EvalContext *ctx, const Policy *policy);
 
 static void LeapDetection(void);
@@ -103,7 +103,7 @@ static Averages *GetCurrentAverages(char *timekey);
 static void UpdateAverages(EvalContext *ctx, char *timekey, Averages newvals);
 static void UpdateDistributions(EvalContext *ctx, char *timekey, Averages *av);
 static double WAverage(double newvals, double oldvals, double age);
-static double SetClasses(EvalContext *ctx, char *name, double variable, double av_expect, double av_var, double localav_expect,
+static double SetClasses(char *name, double variable, double av_expect, double av_var, double localav_expect,
                          double localav_var, Item **classlist);
 static void SetVariable(char *name, double now, double average, double stddev, Item **list);
 static double RejectAnomaly(double new, double av, double var, double av2, double var2);
@@ -316,7 +316,7 @@ void MonitorStartServer(EvalContext *ctx, const Policy *policy)
         snprintf(timekey, sizeof(timekey), "%s", GenTimeKey(time(NULL)));
         averages = EvalAvQ(ctx, timekey);
         LeapDetection();
-        ArmClasses(ctx, averages);
+        ArmClasses(averages);
 
         ZeroArrivals();
 
@@ -581,7 +581,7 @@ static void AddOpenPorts(const char *name, const Item *value, Item **mon_data)
     }
 }
 
-static void ArmClasses(EvalContext *ctx, Averages av)
+static void ArmClasses(Averages av)
 {
     double sigma;
     Item *ip, *mon_data = NULL;
@@ -596,7 +596,7 @@ static void ArmClasses(EvalContext *ctx, Averages av)
         char desc[CF_BUFSIZE];
 
         GetObservable(i, name, desc);
-        sigma = SetClasses(ctx, name, CF_THIS[i], av.Q[i].expect, av.Q[i].var, LOCALAV.Q[i].expect, LOCALAV.Q[i].var, &mon_data);
+        sigma = SetClasses(name, CF_THIS[i], av.Q[i].expect, av.Q[i].var, LOCALAV.Q[i].expect, LOCALAV.Q[i].var, &mon_data);
         SetVariable(name, CF_THIS[i], av.Q[i].expect, sigma, &mon_data);
 
         /* LDT */
@@ -912,7 +912,7 @@ static double WAverage(double anew, double aold, double age)
 
 /*****************************************************************************/
 
-static double SetClasses(EvalContext *ctx, char *name, double variable, double av_expect, double av_var, double localav_expect,
+static double SetClasses(char *name, double variable, double av_expect, double av_var, double localav_expect,
                          double localav_var, Item **classlist)
 {
     char buffer[CF_BUFSIZE], buffer2[CF_BUFSIZE];
@@ -931,7 +931,7 @@ static double SetClasses(EvalContext *ctx, char *name, double variable, double a
         Log(LOG_LEVEL_DEBUG, "No sigma variation .. can't measure class");
 
         snprintf(buffer, CF_MAXVARSIZE, "entropy_%s.*", name);
-        MonEntropyPurgeUnused(ctx, buffer);
+        MonEntropyPurgeUnused(buffer);
 
         return sig;
     }

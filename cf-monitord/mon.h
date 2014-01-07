@@ -32,7 +32,7 @@ void MonEntropyClassesInit(void);
 void MonEntropyClassesReset(void);
 void MonEntropyClassesSet(const char *service, const char *direction, double entropy);
 void MonEntropyClassesPublish(FILE *fp);
-void MonEntropyPurgeUnused(EvalContext *ctx, char *name);
+void MonEntropyPurgeUnused(char *name);
 double MonEntropyCalculate(const Item *items);
 
 /* mon_cpu.c */

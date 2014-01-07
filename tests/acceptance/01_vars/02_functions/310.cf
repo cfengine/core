@@ -33,11 +33,11 @@ bundle agent test
       "t1" string => escape("foo");
       "e1" string => "foo";
       "t2" string => escape("foo.baz");
-      "e2" string => "foo\.baz";
+      "e2" string => "foo.baz";
       "t3" string => escape("foo[baz]");
-      "e3" string => "foo\[baz\]";
+      "e3" string => "foo[baz]";
       "t4" string => escape("(fo?o|baz)+x{3}y*");
-      "e4" string => "\(fo\?o\|baz\)\+x\{3\}y\*";
+      "e4" string => "(fo?o|baz)+x{3}y*";
       "t5" string => escape("~`!@#%&_=\"';:,/<>");
       "e5" string => "~`!@#%&_=\"';:,/<>";
 }

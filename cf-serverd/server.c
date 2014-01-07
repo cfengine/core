@@ -170,7 +170,7 @@ void ServerEntryPoint(EvalContext *ctx, char *ipaddr, ConnectionInfo *info)
         "Obtained IP address of '%s' on socket %d from accept",
         ipaddr, ConnectionInfoSocket(info));
 
-    if ((SV.nonattackerlist) && (!IsMatchItemIn(ctx, SV.nonattackerlist, MapAddress(ipaddr))))
+    if ((SV.nonattackerlist) && (!IsMatchItemIn(SV.nonattackerlist, MapAddress(ipaddr))))
     {
         Log(LOG_LEVEL_ERR, "Not allowing connection from non-authorized IP '%s'", ipaddr);
         cf_closesocket(ConnectionInfoSocket(info));
@@ -178,7 +178,7 @@ void ServerEntryPoint(EvalContext *ctx, char *ipaddr, ConnectionInfo *info)
         return;
     }
 
-    if (IsMatchItemIn(ctx, SV.attackerlist, MapAddress(ipaddr)))
+    if (IsMatchItemIn(SV.attackerlist, MapAddress(ipaddr)))
     {
         Log(LOG_LEVEL_ERR, "Denying connection from non-authorized IP '%s'", ipaddr);
         cf_closesocket(ConnectionInfoSocket(info));
@@ -193,7 +193,7 @@ void ServerEntryPoint(EvalContext *ctx, char *ipaddr, ConnectionInfo *info)
 
     PurgeOldConnections(&SV.connectionlist, now);
 
-    if (!IsMatchItemIn(ctx, SV.multiconnlist, MapAddress(ipaddr)))
+    if (!IsMatchItemIn(SV.multiconnlist, MapAddress(ipaddr)))
     {
         if (!ThreadLock(cft_count))
         {
@@ -1497,7 +1497,7 @@ static int CheckStoreKey(ServerConnectionState *conn, RSA *key)
      * directory): Allow access only if host is listed in "trustkeysfrom" body
      * server control option. */
 
-    if ((SV.trustkeylist != NULL) && (IsMatchItemIn(conn->ctx, SV.trustkeylist, MapAddress(conn->ipaddr))))
+    if ((SV.trustkeylist != NULL) && (IsMatchItemIn(SV.trustkeylist, MapAddress(conn->ipaddr))))
     {
         Log(LOG_LEVEL_VERBOSE, "Host %s/%s was found in the list of hosts to trust", conn->hostname, conn->ipaddr);
         SendTransaction(conn->conn_info, "OK: unknown key was accepted on trust", 0, CF_DONE);
@@ -1559,7 +1559,7 @@ static void DeleteConn(ServerConnectionState *conn)
             return;
         }
 
-        DeleteItemMatching(conn->ctx, &SV.connectionlist, MapAddress(conn->ipaddr));
+        DeleteItemMatching(&SV.connectionlist, MapAddress(conn->ipaddr));
 
         if (!ThreadUnlock(cft_count))
         {

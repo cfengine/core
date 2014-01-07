@@ -11,7 +11,7 @@ libtest_la_SOURCES = cmockery.c cmockery.h schema.h test.c test.h ../../libutils
 libtest_la_LIBADD = ../../libcompat/libcompat.la
 
 check_LTLIBRARIES += libstr.la
-libstr_la_SOURCES = ../../libutils/string_lib.c ../../libutils/writer.c
+libstr_la_SOURCES = ../../libutils/string_lib.c ../../libutils/writer.c ../../libutils/sequence.c
 libstr_la_LIBADD = libtest.la
 
 
@@ -153,6 +153,8 @@ bufferlist_test_SOURCES = bufferlist_test.c ../../libutils/buffer.c ../../libuti
 csv_parser_test_SOURCES = csv_parser_test.c ../../libutils/csv_parser.c
 csv_parser_test_LDADD = libtest.la ../../libutils/libutils.la
 
+regex_test_SOURCES = regex_test.c ../../cf-agent/match_scope.c
+
 cf_key_functions_test_SOURCES = cf_key_functions_test.c ../../cf-key/cf-key-functions.c
 
 ipaddress_test_SOURCES = ipaddress_test.c 
@@ -200,7 +202,7 @@ dbm_migration_bundles_test_LDADD = libdb.la
 
 CLEANFILES = *.gcno *.gcda cfengine-enterprise.so
 
-package_versions_compare_test_SOURCES = package_versions_compare_test.c ../../cf-agent/verify_packages.c ../../cf-agent/vercmp.c ../../cf-agent/vercmp_internal.c ../../cf-agent/retcode.c
+package_versions_compare_test_SOURCES = package_versions_compare_test.c ../../cf-agent/verify_packages.c ../../cf-agent/vercmp.c ../../cf-agent/vercmp_internal.c ../../cf-agent/retcode.c ../../cf-agent/match_scope.c
 
 package_versions_compare_test_CPPFLAGS = $(AM_CPPFLAGS)
 package_versions_compare_test_LDADD = ../../libpromises/libpromises.la libtest.la
@@ -210,6 +212,7 @@ file_lib_test_SOURCES = file_lib_test.c \
 	../../libutils/logging.c \
 	../../libutils/misc_lib.c \
 	../../libutils/string_lib.c \
+	../../libutils/sequence.c \
 	../../libutils/writer.c
 file_lib_test_LDADD = libtest.la
 file_lib_test_CPPFLAGS = $(AM_CPPFLAGS) -DTEST_SYMLINK_ATOMICITY

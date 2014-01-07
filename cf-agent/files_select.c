@@ -28,7 +28,7 @@
 #include <files_names.h>
 #include <files_interfaces.h>
 #include <promises.h>
-#include <matching.h>
+#include <match_scope.h>
 #include <string_lib.h>
 #include <pipes.h>
 #include <promises.h>

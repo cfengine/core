@@ -22,14 +22,13 @@
   included file COSL.txt.
 */
 
-#ifndef CFENGINE_PROCESSES_SELECT_H
-#define CFENGINE_PROCESSES_SELECT_H
+#ifndef CFENGINE_MATCH_SCOPE_H
+#define CFENGINE_MATCH_SCOPE_H
 
 #include <cf3.defs.h>
 
-int LoadProcessTable(Item **procdata);
-
-Item *SelectProcesses(const Item *processes, const char *process_name, ProcessSelect a, bool attrselect);
-bool IsProcessNameRunning(char *procNameRegex);
+int FullTextMatch(EvalContext *ctx, const char *regptr, const char *cmpptr); /* Sets variables */
+int BlockTextMatch(EvalContext *ctx, const char *regexp, const char *teststring, int *s, int *e); /* Sets variables */
+bool ValidateRegEx(const char *regex); /* Pure */
 
 #endif

@@ -53,6 +53,7 @@
 #include <locks.h>
 #include <scope.h>
 #include <matching.h>
+#include <match_scope.h>
 #include <instrumentation.h>
 #include <promises.h>
 #include <unix.h>
@@ -153,11 +154,11 @@ static void FreeStringArray(int size, char **array);
 static void CheckAgentAccess(Rlist *list, const Policy *policy);
 static void KeepControlPromises(EvalContext *ctx, const Policy *policy);
 static PromiseResult KeepAgentPromise(EvalContext *ctx, const Promise *pp, void *param);
-static int NewTypeContext(EvalContext *ctx, TypeSequence type);
+static int NewTypeContext(TypeSequence type);
 static void DeleteTypeContext(EvalContext *ctx, Bundle *bp, TypeSequence type);
 static void ClassBanner(EvalContext *ctx, TypeSequence type);
 static PromiseResult ParallelFindAndVerifyFilesPromises(EvalContext *ctx, const Promise *pp);
-static bool VerifyBootstrap(EvalContext *ctx);
+static bool VerifyBootstrap(void);
 static void KeepPromiseBundles(EvalContext *ctx, const Policy *policy, GenericAgentConfig *config);
 static void KeepPromises(EvalContext *ctx, const Policy *policy, GenericAgentConfig *config);
 static int NoteBundleCompliance(const Bundle *bundle, int save_pr_kept, int save_pr_repaired, int save_pr_notkept);
@@ -265,7 +266,7 @@ int main(int argc, char *argv[])
     Nova_TrackExecution(config->input_file);
     PurgeLocks();
 
-    if (config->agent_specific.agent.bootstrap_policy_server && !VerifyBootstrap(ctx))
+    if (config->agent_specific.agent.bootstrap_policy_server && !VerifyBootstrap())
     {
         RemovePolicyServerFile(GetWorkDir());
         WriteAmPolicyHubFile(GetWorkDir(), false);
@@ -1201,7 +1202,7 @@ int ScheduleAgentOperations(EvalContext *ctx, Bundle *bp)
 
             BannerPromiseType(bp->name, sp->name, pass);
 
-            if (!NewTypeContext(ctx, type))
+            if (!NewTypeContext(type))
             {
                 continue;
             }
@@ -1495,7 +1496,7 @@ static PromiseResult KeepAgentPromise(EvalContext *ctx, const Promise *pp, ARG_U
 /* Type context                                                      */
 /*********************************************************************/
 
-static int NewTypeContext(EvalContext *ctx, TypeSequence type)
+static int NewTypeContext(TypeSequence type)
 {
 // get maxconnections
 
@@ -1512,7 +1513,7 @@ static int NewTypeContext(EvalContext *ctx, TypeSequence type)
 
     case TYPE_SEQUENCE_PROCESSES:
 
-        if (!LoadProcessTable(ctx, &PROCESSTABLE))
+        if (!LoadProcessTable(&PROCESSTABLE))
         {
             Log(LOG_LEVEL_ERR, "Unable to read the process table - cannot keep process promises");
             return false;
@@ -1690,7 +1691,7 @@ static PromiseResult ParallelFindAndVerifyFilesPromises(EvalContext *ctx, const 
 
 /**************************************************************/
 
-static bool VerifyBootstrap(EvalContext *ctx)
+static bool VerifyBootstrap(void)
 {
     if (NULL_OR_EMPTY(POLICY_SERVER))
     {
@@ -1715,9 +1716,9 @@ static bool VerifyBootstrap(EvalContext *ctx)
     // embedded failsafe.cf (bootstrap.c) contains a promise to start cf-execd (executed while running this cf-agent)
     DeleteItemList(PROCESSTABLE);
     PROCESSTABLE = NULL;
-    LoadProcessTable(ctx, &PROCESSTABLE);
+    LoadProcessTable(&PROCESSTABLE);
 
-    if (!IsProcessNameRunning(ctx, ".*cf-execd.*"))
+    if (!IsProcessNameRunning(".*cf-execd.*"))
     {
         Log(LOG_LEVEL_ERR, "Bootstrapping failed, cf-execd is not running");
         return false;

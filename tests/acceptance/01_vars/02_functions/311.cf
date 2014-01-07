@@ -38,7 +38,7 @@ bundle agent test
 		      "estr",
       };
       "t1" string => join(",","s1");
-      "e1" string => "bstr,foo,foo\.baz,foo\[baz\],estr";
+      "e1" string => "bstr,foo,foo.baz,foo[baz],estr";
 }
 
 #######################################################

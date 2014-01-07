@@ -58,30 +58,30 @@
 
 double FORGETRATE = 0.7;
 
-static char ENVFILE_NEW[CF_BUFSIZE];
-static char ENVFILE[CF_BUFSIZE];
+static char ENVFILE_NEW[CF_BUFSIZE] = "";
+static char ENVFILE[CF_BUFSIZE] = "";
 
-static double HISTOGRAM[CF_OBSERVABLES][7][CF_GRAINS];
+static double HISTOGRAM[CF_OBSERVABLES][7][CF_GRAINS] = { { { 0.0 } } };
 
 /* persistent observations */
 
-static double CF_THIS[CF_OBSERVABLES];  /* New from 2.1.21 replacing above - current observation */
+static double CF_THIS[CF_OBSERVABLES] = { 0.0 };
 
 /* Work */
 
-static long ITER;               /* Iteration since start */
-static double AGE, WAGE;        /* Age and weekly age of database */
+static long ITER = 0;               /* Iteration since start */
+static double AGE = 0.0, WAGE = 0.0;        /* Age and weekly age of database */
 
-static Averages LOCALAV;
+static Averages LOCALAV = { 0 };
 
 /* Leap Detection vars */
 
-static double LDT_BUF[CF_OBSERVABLES][LDT_BUFSIZE];
-static double LDT_SUM[CF_OBSERVABLES];
-static double LDT_AVG[CF_OBSERVABLES];
-static double CHI_LIMIT[CF_OBSERVABLES];
-static double CHI[CF_OBSERVABLES];
-static double LDT_MAX[CF_OBSERVABLES];
+static double LDT_BUF[CF_OBSERVABLES][LDT_BUFSIZE] = { { 0 } };
+static double LDT_SUM[CF_OBSERVABLES] = { 0 };
+static double LDT_AVG[CF_OBSERVABLES] = { 0 };
+static double CHI_LIMIT[CF_OBSERVABLES] = { 0 };
+static double CHI[CF_OBSERVABLES] = { 0 };
+static double LDT_MAX[CF_OBSERVABLES] = { 0 };
 static int LDT_POS = 0;
 static int LDT_FULL = false;
 
@@ -587,7 +587,7 @@ static void ArmClasses(EvalContext *ctx, Averages av)
     Item *ip, *mon_data = NULL;
     int i, j, k;
     char buff[CF_BUFSIZE], ldt_buff[CF_BUFSIZE], name[CF_MAXVARSIZE];
-    static int anomaly[CF_OBSERVABLES][LDT_BUFSIZE];
+    static int anomaly[CF_OBSERVABLES][LDT_BUFSIZE] = { { 0 } };
     extern Item *ALL_INCOMING;
     extern Item *MON_UDP4, *MON_UDP6, *MON_TCP4, *MON_TCP6;
 
@@ -724,7 +724,7 @@ static void ArmClasses(EvalContext *ctx, Averages av)
 static Averages *GetCurrentAverages(char *timekey)
 {
     CF_DB *dbp;
-    static Averages entry;
+    static Averages entry; /* No need to initialize */
 
     if (!OpenDB(&dbp, dbid_observations))
     {

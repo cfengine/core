@@ -774,7 +774,7 @@ const char *CommandArg0(const char *execstr)
  * WARNING: Not thread-safe.
  **/
 {
-    static char arg[CF_BUFSIZE]; /* GLOBAL_R */
+    static char arg[CF_BUFSIZE]; /* GLOBAL_R, no initialization needed */
 
     const char *start;
     char end_delimiter;

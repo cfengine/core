@@ -33,7 +33,7 @@
 
 /* Globals */
 
-Item *ALL_INCOMING;
+Item *ALL_INCOMING = NULL;
 Item *MON_UDP4 = NULL, *MON_UDP6 = NULL, *MON_TCP4 = NULL, *MON_TCP6 = NULL;
 
 /*******************************************************************/

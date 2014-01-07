@@ -429,7 +429,7 @@ void TransformNameInPlace(char *s, char from, char to)
 
 char *CanonifyName(const char *str)
 {
-    static char buffer[CF_BUFSIZE]; /* GLOBAL_R */
+    static char buffer[CF_BUFSIZE]; /* GLOBAL_R, no initialization needed */
 
     strncpy(buffer, str, CF_BUFSIZE);
     CanonifyNameInPlace(buffer);
@@ -440,7 +440,7 @@ char *CanonifyName(const char *str)
 
 char *CanonifyChar(const char *str, char ch)
 {
-    static char buffer[CF_BUFSIZE]; /* GLOBAL_R */
+    static char buffer[CF_BUFSIZE]; /* GLOBAL_R, no initialization needed */
     char *sp;
 
     strncpy(buffer, str, CF_BUFSIZE - 1);

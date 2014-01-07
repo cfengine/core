@@ -36,12 +36,12 @@ int SHOWREPORTS = false; /* GLOBAL_A */
 
 bool FIPS_MODE = false; /* GLOBAL_P */
 
-struct utsname VSYSNAME; /* GLOBAL_E */
+struct utsname VSYSNAME; /* GLOBAL_E, initialized later */
 
 int CFA_MAXTHREADS = 10; /* GLOBAL_P */
 int CF_PERSISTENCE = 10; /* GLOBAL_P */
 
-AgentType THIS_AGENT_TYPE; /* GLOBAL_C */
+AgentType THIS_AGENT_TYPE; /* GLOBAL_C, initialized later */
 
 Item *PROCESSTABLE = NULL; /* GLOBAL_X */
 
@@ -51,7 +51,7 @@ Item *PROCESSTABLE = NULL; /* GLOBAL_X */
 
 int LASTSEENEXPIREAFTER = SECONDS_PER_WEEK; /* GLOBAL_P */
 
-char POLICY_SERVER[CF_MAX_IP_LEN] = { 0 }; /* GLOBAL_X */
+char POLICY_SERVER[CF_MAX_IP_LEN] = ""; /* GLOBAL_X */
 
 /*****************************************************************************/
 /* Compatability infrastructure                                              */
@@ -59,15 +59,15 @@ char POLICY_SERVER[CF_MAX_IP_LEN] = { 0 }; /* GLOBAL_X */
 
 bool DONTDO = false; /* GLOBAL_A */
 
-char VFQNAME[CF_MAXVARSIZE] = { 0 }; /* GLOBAL_E GLOBAL_P */
-char VUQNAME[CF_MAXVARSIZE] = { 0 }; /* GLOBAL_E */
-char VDOMAIN[CF_MAXVARSIZE] = { 0 }; /* GLOBAL_E GLOBAL_P */
+char VFQNAME[CF_MAXVARSIZE] = ""; /* GLOBAL_E GLOBAL_P */
+char VUQNAME[CF_MAXVARSIZE] = ""; /* GLOBAL_E */
+char VDOMAIN[CF_MAXVARSIZE] = ""; /* GLOBAL_E GLOBAL_P */
 
-char VYEAR[5] = { 0 }; /* GLOBAL_E */
-char VDAY[3] = { 0 }; /* GLOBAL_E */
-char VMONTH[4] = { 0 }; /* GLOBAL_E */
+char VYEAR[5] = ""; /* GLOBAL_E */
+char VDAY[3] = ""; /* GLOBAL_E */
+char VMONTH[4] = ""; /* GLOBAL_E */
 
-char CFWORKDIR[CF_BUFSIZE] = { 0 }; /* GLOBAL_C */
+char CFWORKDIR[CF_BUFSIZE] = ""; /* GLOBAL_C */
 
 /*
   Default value for copytype attribute. Loaded by cf-agent from body control
@@ -89,15 +89,15 @@ RSA *PRIVKEY = NULL, *PUBKEY = NULL; /* GLOBAL_X */
   Used somewhere in cf-execd, superficially in old-style protocol handshake and
   sporadically in other situations.
 */
-char VIPADDRESS[CF_MAX_IP_LEN] = { 0 }; /* GLOBAL_E */
+char VIPADDRESS[CF_MAX_IP_LEN] = ""; /* GLOBAL_E */
 
 /*
   Edition-time constant (MD5 for community, something else for Enterprise)
 
   Used as a default hash everywhere (not only in network protocol)
 */
-HashMethod CF_DEFAULT_DIGEST; /* GLOBAL_C */
-int CF_DEFAULT_DIGEST_LEN; /* GLOBAL_C */
+HashMethod CF_DEFAULT_DIGEST; /* GLOBAL_C, initialized later */
+int CF_DEFAULT_DIGEST_LEN; /* GLOBAL_C, initialized later */
 
 /*
   Holds the "now" time captured at the moment of policy load (and in response to
@@ -105,14 +105,14 @@ int CF_DEFAULT_DIGEST_LEN; /* GLOBAL_C */
 
   Utilized everywhere "now" start time is needed
 */
-time_t CFSTARTTIME; /* GLOBAL_E */
+time_t CFSTARTTIME; /* GLOBAL_E, initialized later */
 
 /*
   Set in cf-serverd (from control body)/GenericAgentInitialize (defaults)
 
   Used in network code
 */
-int CFENGINE_PORT; /* GLOBAL_P GLOBAL_E */
+int CFENGINE_PORT = 5308; /* GLOBAL_P GLOBAL_E */
 
 /*
   Set in cf-agent/cf-runagent (from control body).
@@ -153,7 +153,7 @@ int VEXPIREAFTER = 120; /* GLOBAL_P */
 
   Utilized in server/client code to bind sockets.
 */
-char BINDINTERFACE[CF_BUFSIZE] = { 0 }; /* GLOBAL_P */
+char BINDINTERFACE[CF_BUFSIZE] = ""; /* GLOBAL_P */
 
 /*
   Set in cf-*.c:CheckOpts and GenericAgentConfigParseArguments.
@@ -171,4 +171,4 @@ bool MINUSF = false; /* GLOBAL_A */
    Utilized all over the place, usually to look up OS-specific command/option to
    call external utility
 */
-PlatformContext VSYSTEMHARDCLASS; /* GLOBAL_E? */
+PlatformContext VSYSTEMHARDCLASS; /* GLOBAL_E?, initialized_later */

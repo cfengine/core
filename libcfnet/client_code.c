@@ -164,7 +164,6 @@ void DetermineCfenginePort()
         {
             Log(LOG_LEVEL_VERBOSE, "Unable to query services database, using default. (getservbyname: %s)", GetErrorStr());
         }
-        CFENGINE_PORT = 5308;
     }
 
     Log(LOG_LEVEL_VERBOSE, "Setting cfengine default port to %d", CFENGINE_PORT);

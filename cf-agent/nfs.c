@@ -43,7 +43,7 @@
 /* seconds */
 #define RPCTIMEOUT 60
 
-static int FSTAB_EDITS; /* GLOBAL_X */
+static int FSTAB_EDITS = 0; /* GLOBAL_X */
 static Item *FSTABLIST = NULL; /* GLOBAL_X */
 
 static void AugmentMountInfo(Seq *list, char *host, char *source, char *mounton, char *options);

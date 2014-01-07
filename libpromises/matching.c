@@ -113,7 +113,7 @@ static int RegExMatchFullString(EvalContext *ctx, pcre *rx, const char *teststri
 /* Pure, non-thread-safe */
 static char *FirstBackReference(pcre *rx, const char *teststring)
 {
-    static char backreference[CF_BUFSIZE]; /* GLOBAL_R */
+    static char backreference[CF_BUFSIZE]; /* GLOBAL_R, no initialization needed */
 
     int ovector[OVECCOUNT], i, rc;
 

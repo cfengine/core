@@ -42,9 +42,9 @@
 #define CFLOGSIZE 1048576       /* Size of lock-log before rotation */
 #define CF_LOCKHORIZON ((time_t)(SECONDS_PER_WEEK * 4))
 
-static char CFLOCK[CF_BUFSIZE] = { 0 }; /* GLOBAL_X */
-static char CFLAST[CF_BUFSIZE] = { 0 }; /* GLOBAL_X */
-static char CFLOG[CF_BUFSIZE] = { 0 }; /* GLOBAL_X */
+static char CFLOCK[CF_BUFSIZE] = ""; /* GLOBAL_X */
+static char CFLAST[CF_BUFSIZE] = ""; /* GLOBAL_X */
+static char CFLOG[CF_BUFSIZE] = ""; /* GLOBAL_X */
 
 static pthread_once_t lock_cleanup_once = PTHREAD_ONCE_INIT; /* GLOBAL_X */
 

@@ -478,7 +478,7 @@ char *PrivateKeyFile(const char *workdir)
  * Only pthread support - we don't create threads with any other API *
  *********************************************************************/
 
-static pthread_mutex_t *cf_openssl_locks; /* GLOBAL_T */
+static pthread_mutex_t *cf_openssl_locks = NULL; /* GLOBAL_T */
 
 #ifndef __MINGW32__
 unsigned long ThreadId_callback(void)

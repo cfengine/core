@@ -45,7 +45,7 @@ extern char VFQNAME[];
 
 /*********************************************************************/
 
-static int SKIPIDENTIFY; /* GLOBAL_P */
+static bool SKIPIDENTIFY = false; /* GLOBAL_P */
 
 /*********************************************************************/
 

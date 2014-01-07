@@ -42,7 +42,7 @@
 #include <ornaments.h>
 #include <eval_context.h>
 
-bool CF_MOUNTALL; /* GLOBAL_X */
+bool CF_MOUNTALL = false; /* GLOBAL_X */
 
 static PromiseResult FindStoragePromiserObjects(EvalContext *ctx, const Promise *pp);
 static PromiseResult VerifyFileSystem(EvalContext *ctx, char *name, Attributes a, const Promise *pp);

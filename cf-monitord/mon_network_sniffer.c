@@ -64,12 +64,12 @@ static const char *const TCPNAMES[CF_NETATTR] =
 
 /* Global variables */
 
-static bool TCPDUMP;
-static bool TCPPAUSE;
-static FILE *TCPPIPE;
+static bool TCPDUMP = false;
+static bool TCPPAUSE = false;
+static FILE *TCPPIPE = NULL;
 
-static Item *NETIN_DIST[CF_NETATTR];
-static Item *NETOUT_DIST[CF_NETATTR];
+static Item *NETIN_DIST[CF_NETATTR] = { NULL };
+static Item *NETOUT_DIST[CF_NETATTR] = { NULL };
 
 /* Prototypes */
 

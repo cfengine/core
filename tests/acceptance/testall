@@ -124,7 +124,7 @@ unix_seconds() {
 # echo
 
 usage() {
-  echo "testall [-q] [--gainroot=<command>] [--agent=<agent>] [--cfpromises=<cf-promises>] [--cfserverd=<cf-serverd>] [--cfkey=<cf-key>] [--no-nova] [--staging] [--unsafe] [--no-network] [--gdb] [--printlog] [<test> <test>...]"
+  echo "testall [-h|--help] [-q|--quiet] [--gainroot=<command>] [--agent=<agent>] [--cfpromises=<cf-promises>] [--cfserverd=<cf-serverd>] [--cfkey=<cf-key>] [--no-nova] [--staging] [--unsafe] [--no-network] [--gdb] [--printlog] [<test> <test>...]"
   echo
   echo "If no test is given, all standard tests are run:"
   echo "  Tests with names of form <file>.cf are expected to run succesfully"
@@ -132,7 +132,11 @@ usage() {
   echo
   echo "If arguments are given, those are executed as tests"
   echo
-  echo " -q makes script much quieter"
+  echo " -h        prints usage"
+  echo " --help"
+  echo
+  echo " -q        makes script much quieter"
+  echo " --quiet"
   echo
   echo " --gainroot=<command> forces use of command to gain root privileges,"
   echo "           otherwise fakeroot is used."
@@ -365,10 +369,10 @@ find_default_binary DEFCF_KEY cf-key
 
 while true; do
   case "$1" in
-    --help)
+    -h|--help)
       usage
       exit;;
-    -q)
+    -q|--quiet)
       QUIET=1;;
     --gainroot=*)
       GAINROOT=${1#--gainroot=};;
@@ -424,9 +428,7 @@ if [ "$UNSAFE_TESTS" = "1" -a "$GAINROOT" = "fakeroot" ]; then
 fi
 
 if [ $# -gt 0 ]; then
-  # We need to run all specified tests, but not unsafe ones.
-  STAGING_TESTS=1
-  NETWORK_TESTS=1
+  # We run all specified tests according to the defaults (no unsafe ones).
   for test in "$@"; do
     if ! expr "$test" : '[/.]' >/dev/null; then
       test="./$test"
@@ -466,6 +468,27 @@ START_TIME=$(unix_seconds)
   echo ----------------------------------------------------------------------
   echo Total tests: $TESTS_COUNT
   echo
+  if [ ${NETWORK_TESTS} -ne 0 ]; then
+    echo NETWORK_TESTS: enabled
+  else
+    echo NETWORK_TESTS: disabled
+  fi
+  if [ ${STAGING_TESTS} -ne 0 ]; then
+    echo STAGING_TESTS: enabled
+  else
+    echo STAGING_TESTS: disabled
+  fi
+  if [ ${UNSAFE_TESTS} -ne 0 ]; then
+    echo UNSAFE_TESTS: enabled
+  else
+    echo UNSAFE_TESTS: disabled
+  fi
+  if [ ${LIBXML2_TESTS} -ne 0 ]; then
+    echo LIBXML2_TESTS: enabled
+  else
+    echo LIBXML2_TESTS: disabled
+  fi
+  echo
 ) | tee "$LOG" | tee "$SUMMARY" >&7
 
 
@@ -501,6 +524,7 @@ END_TIME=$(unix_seconds)
   echo Failed tests: $FAILED_TESTS
   echo Failed to crash tests: $FAILED_TO_CRASH_TESTS
   echo Skipped tests: $SKIPPED_TESTS
+  echo Total tests: $TESTS_COUNT
 ) | tee -a "$LOG" | tee -a "$SUMMARY"
 
 (  echo "           "failures=\"$FAILED_TESTS\"

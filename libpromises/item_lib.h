@@ -88,6 +88,5 @@ void IncrementItemListCounter(Item *ptr, const char *string);
 void SetItemListCounter(Item *ptr, const char *string, int value);
 char *ItemList2CSV(const Item *list);
 int ItemListSize(const Item *list);
-int MatchRegion(EvalContext *ctx, const char *chunk, const Item *begin, const Item *end, bool regex);
 
 #endif

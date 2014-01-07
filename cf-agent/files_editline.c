@@ -815,7 +815,65 @@ If no such region matches, begin_ptr and end_ptr should point to CF_UNDEFINED_IT
     return true;
 }
 
-/***************************************************************************/
+static int MatchRegion(EvalContext *ctx, const char *chunk, const Item *begin, const Item *end, bool regex)
+/*
+  Match a region in between the selection delimiters. It is
+  called after SelectRegion. The end delimiter will be visible
+  here so we have to check for it. Can handle multi-line chunks
+*/
+{
+    const Item *ip = begin;
+    char buf[CF_BUFSIZE];
+    int lines = 0;
+
+    for (const char *sp = chunk; sp <= chunk + strlen(chunk); sp++)
+    {
+        memset(buf, 0, CF_BUFSIZE);
+        sscanf(sp, "%[^\n]", buf);
+        sp += strlen(buf);
+
+        if (ip == NULL)
+        {
+            return false;
+        }
+
+        if (!regex && strcmp(buf, ip->name) != 0)
+        {
+            return false;
+        }
+        if (regex && !FullTextMatch(ctx, buf, ip->name))
+        {
+            return false;
+        }
+
+        lines++;
+
+        // We have to manually exclude the marked terminator
+
+        if (ip == end)
+        {
+            return false;
+        }
+
+        // Now see if there is more
+
+        if (ip->next)
+        {
+            ip = ip->next;
+        }
+        else                    // if the region runs out before the end
+        {
+            if (++sp <= chunk + strlen(chunk))
+            {
+                return false;
+            }
+
+            break;
+        }
+    }
+
+    return lines;
+}
 
 static int InsertMultipleLinesToRegion(EvalContext *ctx, Item **start, Item *begin_ptr, Item *end_ptr, Attributes a,
                                        const Promise *pp, EditContext *edcontext, PromiseResult *result)

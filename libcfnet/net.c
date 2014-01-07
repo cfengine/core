@@ -281,8 +281,13 @@ void EnforceBwLimit(int tosend){
         pthread_mutex_unlock(&bwlimit_lock);
     }
 
-    /* Sleep only if we have >10ms penalty */
-    if (clock_now.tv_sec >= 0 || ( (clock_now.tv_sec == 0) && (clock_now.tv_nsec >= 10000L))  )
+    /* Even if we push our data every few bytes to the network interface,
+      the software+hardware buffers will queue it and send it in bursts,
+      anyway. It is more likely that we will waste CPU sys-time calling
+      nanosleep() for such short delays.
+      So, sleep only if we have >1ms penalty
+    */
+    if (clock_now.tv_sec >= 0 || ( (clock_now.tv_sec == 0) && (clock_now.tv_nsec >= 1000000L))  )
     {
         nanosleep(&clock_now, NULL);
     }

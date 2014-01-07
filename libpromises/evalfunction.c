@@ -3340,16 +3340,14 @@ static FnCallResult FnCallFormat(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
     if (check)
     {
         BufferAppend(buf, format, (check - format));
+        Seq *s = NULL;
 
-        while (check && StringMatchFull("(%%|%[^diouxXeEfFgGaAcsCSpnm%]*?[diouxXeEfFgGaAcsCSpnm])([^%]*)(.*)", check))
+        while (check && (s = StringMatchCaptures("^(%%|%[^diouxXeEfFgGaAcsCSpnm%]*?[diouxXeEfFgGaAcsCSpnm])([^%]*)(.*)$", check)))
         {
             {
-                VarRef *ref_1 = VarRefParseFromScope("1", "match");
-                Rval rval_1;
-                DataType type_1 = DATA_TYPE_NONE;
-                if (EvalContextVariableGet(ctx, ref_1, &rval_1, &type_1))
+                if (SeqLength(s) >= 2)
                 {
-                    const char* format_piece = RvalScalarValue(rval_1);
+                    const char *format_piece = SeqAt(s, 1);
                     bool percent = (0 == strncmp(format_piece, "%%", 2));
                     char *data = NULL;
 
@@ -3424,17 +3422,12 @@ static FnCallResult FnCallFormat(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
                 {
                     check = NULL;
                 }
-
-                VarRefDestroy(ref_1);
             }
 
             {
-                VarRef *ref_2 = VarRefParseFromScope("2", "match");
-                Rval rval_2;
-                DataType type_2 = DATA_TYPE_NONE;
-                if (EvalContextVariableGet(ctx, ref_2, &rval_2, &type_2))
+                if (SeqLength(s) >= 3)
                 {
-                    const char* static_piece = RvalScalarValue(rval_2);
+                    const char* static_piece = SeqAt(s, 2);
                     BufferAppend(buf, static_piece, strlen(static_piece));
                     // CfOut(OUTPUT_LEVEL_INFORM, "", "format: appending static piece = '%s'", static_piece);
                 }
@@ -3442,26 +3435,21 @@ static FnCallResult FnCallFormat(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
                 {
                     check = NULL;
                 }
-
-                VarRefDestroy(ref_2);
             }
 
             {
-                VarRef *ref_3 = VarRefParseFromScope("3", "match");
-                Rval rval_3;
-                DataType type_3 = DATA_TYPE_NONE;
-                if (EvalContextVariableGet(ctx, ref_3, &rval_3, &type_3))
+                if (SeqLength(s) >= 4)
                 {
-                    strncpy(check_buffer, RvalScalarValue(rval_3), CF_BUFSIZE);
+                    strncpy(check_buffer, SeqAt(s, 3), CF_BUFSIZE);
                     check = check_buffer;
                 }
                 else
                 {
                     check = NULL;
                 }
-
-                VarRefDestroy(ref_3);
             }
+
+            SeqDestroy(s);
         }
     }
     else
@@ -4041,48 +4029,25 @@ static FnCallResult FnCallRegExtract(EvalContext *ctx, ARG_UNUSED FnCall *fp, Rl
     char *data = RlistScalarValue(finalargs->next);
     char *arrayname = RlistScalarValue(finalargs->next->next);
 
-    bool ret = StringMatchFull(regex, data);
+    Seq *s = StringMatchCaptures(regex, data);
 
-    long i = 0;
-
-    while (true)
+    if (!s || SeqLength(s) == 0)
     {
-        Rval rval;
-        DataType type;
-
-        char *index = StringFromLong(i);
-        VarRef *ref = VarRefParseFromScope(index, "match");
-        free(index);
-
-        if (!EvalContextVariableGet(ctx, ref, &rval, &type))
-        {
-            break;
-        }
-
-        if (rval.type != RVAL_TYPE_SCALAR)
-        {
-            Log(LOG_LEVEL_ERR,
-                  "Software error: pattern match was non-scalar in regextract (shouldn't happen)");
-            return FnFailure();
-        }
-        else
-        {
-            char var[CF_MAXVARSIZE] = "";
-            snprintf(var, CF_MAXVARSIZE - 1, "%s[%s]", arrayname, ref->lval);
-            VarRef *new_ref = VarRefParseFromBundle(var, PromiseGetBundle(fp->caller));
-            EvalContextVariablePut(ctx, new_ref, RvalScalarValue(rval), DATA_TYPE_STRING, "source=function,function=regextract");
-            VarRefDestroy(new_ref);
-        }
-
-        i++;
-    }
-
-    if (i == 0)
-    {
+        SeqDestroy(s);
         return FnReturnContext(false);
     }
 
-    return FnReturnContext(ret);
+    for (int i = 0; i < SeqLength(s); ++i)
+    {
+        char var[CF_MAXVARSIZE] = "";
+        snprintf(var, CF_MAXVARSIZE - 1, "%s[%d]", arrayname, i);
+        VarRef *new_ref = VarRefParseFromBundle(var, PromiseGetBundle(fp->caller));
+        EvalContextVariablePut(ctx, new_ref, SeqAt(s, i), DATA_TYPE_STRING, "source=function,function=regextract");
+        VarRefDestroy(new_ref);
+    }
+
+    SeqDestroy(s);
+    return FnReturnContext(true);
 }
 
 /*********************************************************************/

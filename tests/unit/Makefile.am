@@ -11,7 +11,7 @@ libtest_la_SOURCES = cmockery.c cmockery.h schema.h test.c test.h ../../libutils
 libtest_la_LIBADD = ../../libcompat/libcompat.la
 
 check_LTLIBRARIES += libstr.la
-libstr_la_SOURCES = ../../libutils/string_lib.c ../../libutils/writer.c
+libstr_la_SOURCES = ../../libutils/string_lib.c ../../libutils/writer.c ../../libutils/sequence.c
 libstr_la_LIBADD = libtest.la
 
 
@@ -212,6 +212,7 @@ file_lib_test_SOURCES = file_lib_test.c \
 	../../libutils/logging.c \
 	../../libutils/misc_lib.c \
 	../../libutils/string_lib.c \
+	../../libutils/sequence.c \
 	../../libutils/writer.c
 file_lib_test_LDADD = libtest.la
 file_lib_test_CPPFLAGS = $(AM_CPPFLAGS) -DTEST_SYMLINK_ATOMICITY

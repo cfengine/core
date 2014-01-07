@@ -559,7 +559,103 @@ static PromiseResult VerifyPatterns(EvalContext *ctx, const Promise *pp, EditCon
     return result;
 }
 
-/***************************************************************************/
+static int SelectNextItemMatching(EvalContext *ctx, const char *regexp, Item *begin, Item *end, Item **match, Item **prev)
+{
+    Item *ip_prev = CF_UNDEFINED_ITEM;
+
+    *match = CF_UNDEFINED_ITEM;
+    *prev = CF_UNDEFINED_ITEM;
+
+    for (Item *ip = begin; ip != end; ip = ip->next)
+    {
+        if (ip->name == NULL)
+        {
+            continue;
+        }
+
+        if (FullTextMatch(ctx, regexp, ip->name))
+        {
+            *match = ip;
+            *prev = ip_prev;
+            return true;
+        }
+
+        ip_prev = ip;
+    }
+
+    return false;
+}
+
+static int SelectLastItemMatching(EvalContext *ctx, const char *regexp, Item *begin, Item *end, Item **match, Item **prev)
+{
+    Item *ip, *ip_last = NULL, *ip_prev = CF_UNDEFINED_ITEM;
+
+    *match = CF_UNDEFINED_ITEM;
+    *prev = CF_UNDEFINED_ITEM;
+
+    for (ip = begin; ip != end; ip = ip->next)
+    {
+        if (ip->name == NULL)
+        {
+            continue;
+        }
+
+        if (FullTextMatch(ctx, regexp, ip->name))
+        {
+            *prev = ip_prev;
+            ip_last = ip;
+        }
+
+        ip_prev = ip;
+    }
+
+    if (ip_last)
+    {
+        *match = ip_last;
+        return true;
+    }
+
+    return false;
+}
+
+static int SelectItemMatching(EvalContext *ctx, Item *start, char *regex, Item *begin_ptr, Item *end_ptr, Item **match, Item **prev, char *fl)
+{
+    Item *ip;
+    int ret = false;
+
+    *match = CF_UNDEFINED_ITEM;
+    *prev = CF_UNDEFINED_ITEM;
+
+    if (regex == NULL)
+    {
+        return false;
+    }
+
+    if (fl && (strcmp(fl, "first") == 0))
+    {
+        if (SelectNextItemMatching(ctx, regex, begin_ptr, end_ptr, match, prev))
+        {
+            ret = true;
+        }
+    }
+    else
+    {
+        if (SelectLastItemMatching(ctx, regex, begin_ptr, end_ptr, match, prev))
+        {
+            ret = true;
+        }
+    }
+
+    if ((*match != CF_UNDEFINED_ITEM) && (*prev == CF_UNDEFINED_ITEM))
+    {
+        for (ip = start; (ip != NULL) && (ip != *match); ip = ip->next)
+        {
+            *prev = ip;
+        }
+    }
+
+    return ret;
+}
 
 static PromiseResult VerifyLineInsertions(EvalContext *ctx, const Promise *pp, EditContext *edcontext)
 {

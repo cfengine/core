@@ -390,3 +390,26 @@ Rlist *MACSortRListNames(Rlist *list)
 {
     return Sort(list, &RlistItemMACLess, &RlistGetNext, &RlistPutNext, NULL);
 }
+
+bool GenericItemLess(const char *sort_type, void *lhs, void *rhs)
+{
+    if (strcmp(sort_type, "int") == 0)
+    {
+        return RlistItemNumberLess(lhs, rhs, NULL, true);
+    }
+    else if (strcmp(sort_type, "real") == 0)
+    {
+        return RlistItemNumberLess(lhs, rhs, NULL, false);
+    }
+    else if (strcmp(sort_type, "IP") == 0 || strcmp(sort_type, "ip") == 0)
+    {
+        return RlistItemIPLess(lhs, rhs, NULL);
+    }
+    else if (strcmp(sort_type, "MAC") == 0 || strcmp(sort_type, "mac") == 0)
+    {
+        return RlistItemMACLess(lhs, rhs, NULL);
+    }
+
+    // "lex"
+    return RlistItemLess(lhs, rhs, NULL);
+}

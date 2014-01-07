@@ -49,14 +49,10 @@ static int RegExMatchSubString(EvalContext *ctx, pcre *rx, const char *teststrin
             if (backref_len < CF_MAXVARSIZE)
             {
                 char substring[CF_MAXVARSIZE];
-
+                char *index = StringFromLong(i);
                 strlcpy(substring, backref_start, MIN(CF_MAXVARSIZE, backref_len + 1));
-                if (THIS_AGENT_TYPE == AGENT_TYPE_AGENT)
-                {
-                    char *index = StringFromLong(i);
-                    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_MATCH, index, substring, DATA_TYPE_STRING, "source=regex");
-                    free(index);
-                }
+                EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_MATCH, index, substring, DATA_TYPE_STRING, "source=regex");
+                free(index);
             }
         }
     }

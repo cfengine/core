@@ -243,8 +243,6 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
 
 static void KeepPromises(EvalContext *ctx, const Policy *policy)
 {
-    Rval retval;
-
     Seq *constraints = ControlBodyConstraints(policy, AGENT_TYPE_MONITOR);
     if (constraints)
     {
@@ -258,15 +256,13 @@ static void KeepPromises(EvalContext *ctx, const Policy *policy)
             }
 
             VarRef *ref = VarRefParseFromScope(cp->lval, "control_monitor");
-
-            if (!EvalContextVariableGet(ctx, ref, &retval, NULL))
+            const void *value = EvalContextVariableGet(ctx, ref, NULL);
+            VarRefDestroy(ref);
+            if (!value)
             {
                 Log(LOG_LEVEL_ERR, "Unknown lval '%s' in monitor control body", cp->lval);
-                VarRefDestroy(ref);
                 continue;
             }
-
-            VarRefDestroy(ref);
 
             if (strcmp(cp->lval, CFM_CONTROLBODY[MONITOR_CONTROL_HISTOGRAMS].lval) == 0)
             {
@@ -275,12 +271,12 @@ static void KeepPromises(EvalContext *ctx, const Policy *policy)
 
             if (strcmp(cp->lval, CFM_CONTROLBODY[MONITOR_CONTROL_TCP_DUMP].lval) == 0)
             {
-                MonNetworkSnifferEnable(BooleanFromString(retval.item));
+                MonNetworkSnifferEnable(BooleanFromString(value));
             }
 
             if (strcmp(cp->lval, CFM_CONTROLBODY[MONITOR_CONTROL_FORGET_RATE].lval) == 0)
             {
-                sscanf(retval.item, "%lf", &FORGETRATE);
+                sscanf(value, "%lf", &FORGETRATE);
                 Log(LOG_LEVEL_DEBUG, "forget rate %f", FORGETRATE);
             }
         }

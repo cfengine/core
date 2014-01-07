@@ -29,9 +29,9 @@
 #include <cfnet.h>                                       /* AgentConnection */
 
 extern Item *VSETUIDLIST;
-extern Rlist *SINGLE_COPY_LIST;
+extern const Rlist *SINGLE_COPY_LIST;
 
-void SetFileAutoDefineList(Rlist *auto_define_list);
+void SetFileAutoDefineList(const Rlist *auto_define_list);
 
 bool VerifyFileLeaf(EvalContext *ctx, char *path, struct stat *sb, Attributes attr, const Promise *pp, PromiseResult *result);
 int DepthSearch(EvalContext *ctx, char *name, struct stat *sb, int rlevel, Attributes attr, const Promise *pp, dev_t rootdevice, PromiseResult *result);

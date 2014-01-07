@@ -72,7 +72,7 @@ char CFWORKDIR[CF_BUFSIZE] = ""; /* GLOBAL_C */
 /*
   Default value for copytype attribute. Loaded by cf-agent from body control
 */
-char *DEFAULT_COPYTYPE = NULL; /* GLOBAL_P */
+const char *DEFAULT_COPYTYPE = NULL; /* GLOBAL_P */
 
 /*
   Keys for the agent. Loaded by GAInitialize (and hence every time policy is

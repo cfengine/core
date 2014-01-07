@@ -191,7 +191,7 @@ char *JoinSuffix(char *path, char *leaf)
     return path;
 }
 
-int IsAbsPath(char *path)
+int IsAbsPath(const char *path)
 {
     if (IsFileSep(*path))
     {

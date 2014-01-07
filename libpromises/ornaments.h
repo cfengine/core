@@ -38,6 +38,6 @@ void BannerSubBundle(const Bundle *bp, const Rlist *params);
 void BannerPromiseType(const char *bundlename, const char *type, int p);
 void BannerSubPromiseType(const EvalContext *ctx, const char *bundlename, const char *type);
 void Banner(const char *s);
-void BannerBundle(Bundle *bp, Rlist *params);
+void BannerBundle(const Bundle *bp, const Rlist *params);
 
 #endif

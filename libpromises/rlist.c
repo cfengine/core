@@ -155,30 +155,6 @@ JsonElement *RvalContainerValue(Rval rval)
     return rval.item;
 }
 
-/*******************************************************************/
-
-const char *RvalContainerPrimitiveAsString(const Rval rval, const size_t index)
-{
-    const char *jstring = NULL;
-
-    if (JsonGetElementType(RvalContainerValue(rval)) == JSON_ELEMENT_TYPE_CONTAINER)
-    {
-        if (index < JsonLength(RvalContainerValue(rval)))
-        {
-
-            const JsonElement* const jelement = JsonAt(RvalContainerValue(rval), index);
-
-            if (JsonGetElementType(jelement) == JSON_ELEMENT_TYPE_PRIMITIVE)
-            {
-                jstring = JsonPrimitiveGetAsString(jelement);
-            }
-        }
-    }
-
-    return jstring;
-}
-
-/*******************************************************************/
 
 Rlist *RlistKeyIn(Rlist *list, const char *key)
 {
@@ -1228,19 +1204,17 @@ void RlistFlatten(EvalContext *ctx, Rlist **list)
 
             if (!IsExpandable(naked))
             {
-                Rval rv;
                 VarRef *ref = VarRefParse(naked);
-
-                bool var_found = EvalContextVariableGet(ctx, ref, &rv, NULL);
-
+                DataType value_type = DATA_TYPE_NONE;
+                const void *value = EvalContextVariableGet(ctx, ref, &value_type);
                 VarRefDestroy(ref);
 
-                if (var_found)
+                if (value)
                 {
-                    switch (rv.type)
+                    switch (DataTypeToRvalType(value_type))
                     {
                     case RVAL_TYPE_LIST:
-                        for (const Rlist *srp = rv.item; srp != NULL; srp = srp->next)
+                        for (const Rlist *srp = value; srp != NULL; srp = srp->next)
                         {
                             RlistAppendRval(list, RvalCopy(srp->val));
                         }

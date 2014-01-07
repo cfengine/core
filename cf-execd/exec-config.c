@@ -87,8 +87,8 @@ ExecConfig *ExecConfigNew(bool scheduled_run, const EvalContext *ctx, const Poli
 
             VarRef *ref = VarRefParseFromScope(cp->lval, "control_executor");
 
-            Rval retval;
-            if (!EvalContextVariableGet(ctx, ref, &retval, NULL))
+            const void *value = EvalContextVariableGet(ctx, ref, NULL);
+            if (!value)
             {
                 /* FIXME: figure out whether this is reachable */
                 // TODO: should've been checked before this point. change to programming error
@@ -102,41 +102,41 @@ ExecConfig *ExecConfigNew(bool scheduled_run, const EvalContext *ctx, const Poli
             if (strcmp(cp->lval, CFEX_CONTROLBODY[EXEC_CONTROL_MAILFROM].lval) == 0)
             {
                 free(exec_config->mail_from_address);
-                exec_config->mail_from_address = xstrdup(retval.item);
+                exec_config->mail_from_address = xstrdup(value);
                 Log(LOG_LEVEL_DEBUG, "mailfrom '%s'", exec_config->mail_from_address);
             }
             else if (strcmp(cp->lval, CFEX_CONTROLBODY[EXEC_CONTROL_MAILTO].lval) == 0)
             {
                 free(exec_config->mail_to_address);
-                exec_config->mail_to_address = xstrdup(retval.item);
+                exec_config->mail_to_address = xstrdup(value);
                 Log(LOG_LEVEL_DEBUG, "mailto '%s'", exec_config->mail_to_address);
             }
             else if (strcmp(cp->lval, CFEX_CONTROLBODY[EXEC_CONTROL_MAILSUBJECT].lval) == 0)
             {
                 free(exec_config->mail_subject);
-                exec_config->mail_subject = xstrdup(retval.item);
+                exec_config->mail_subject = xstrdup(value);
                 Log(LOG_LEVEL_DEBUG, "mailsubject '%s'", exec_config->mail_subject);
             }
             else if (strcmp(cp->lval, CFEX_CONTROLBODY[EXEC_CONTROL_SMTPSERVER].lval) == 0)
             {
                 free(exec_config->mail_server);
-                exec_config->mail_server = xstrdup(retval.item);
+                exec_config->mail_server = xstrdup(value);
                 Log(LOG_LEVEL_DEBUG, "smtpserver '%s'", exec_config->mail_server);
             }
             else if (strcmp(cp->lval, CFEX_CONTROLBODY[EXEC_CONTROL_EXECCOMMAND].lval) == 0)
             {
                 free(exec_config->exec_command);
-                exec_config->exec_command = xstrdup(retval.item);
+                exec_config->exec_command = xstrdup(value);
                 Log(LOG_LEVEL_DEBUG, "exec_command '%s'", exec_config->exec_command);
             }
             else if (strcmp(cp->lval, CFEX_CONTROLBODY[EXEC_CONTROL_AGENT_EXPIREAFTER].lval) == 0)
             {
-                exec_config->agent_expireafter = IntFromString(retval.item);
+                exec_config->agent_expireafter = IntFromString(value);
                 Log(LOG_LEVEL_DEBUG, "agent_expireafter %d", exec_config->agent_expireafter);
             }
             else if (strcmp(cp->lval, CFEX_CONTROLBODY[EXEC_CONTROL_MAILMAXLINES].lval) == 0)
             {
-                exec_config->mail_max_lines = IntFromString(retval.item);
+                exec_config->mail_max_lines = IntFromString(value);
                 Log(LOG_LEVEL_DEBUG, "maxlines %d", exec_config->mail_max_lines);
             }
         }

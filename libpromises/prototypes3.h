@@ -41,7 +41,7 @@ void yyerror(const char *s);
 
 /* agent.c */
 
-int ScheduleAgentOperations(EvalContext *ctx, Bundle *bp);
+int ScheduleAgentOperations(EvalContext *ctx, const Bundle *bp);
 
 /* Only for agent.c */
 

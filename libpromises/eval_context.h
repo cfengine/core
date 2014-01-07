@@ -135,7 +135,7 @@ const Bundle *EvalContextStackCurrentBundle(const EvalContext *ctx);
 
 bool EvalContextVariablePut(EvalContext *ctx, const VarRef *ref, const void *value, DataType type, const char *tags);
 bool EvalContextVariablePutSpecial(EvalContext *ctx, SpecialScope scope, const char *lval, const void *value, DataType type, const char *tags);
-bool EvalContextVariableGet(const EvalContext *ctx, const VarRef *ref, Rval *rval_out, DataType *type_out);
+const void *EvalContextVariableGet(const EvalContext *ctx, const VarRef *ref, DataType *type_out);
 bool EvalContextVariableRemoveSpecial(const EvalContext *ctx, SpecialScope scope, const char *lval);
 bool EvalContextVariableRemove(const EvalContext *ctx, const VarRef *ref);
 StringSet *EvalContextVariableTags(const EvalContext *ctx, const VarRef *ref);
@@ -145,7 +145,7 @@ VariableTableIterator *EvalContextVariableTableIteratorNew(const EvalContext *ct
 bool EvalContextFunctionCacheGet(const EvalContext *ctx, const FnCall *fp, const Rlist *args, Rval *rval_out);
 void EvalContextFunctionCachePut(EvalContext *ctx, const FnCall *fp, const Rlist *args, const Rval *rval);
 
-bool EvalContextVariableControlCommonGet(const EvalContext *ctx, CommonControl lval, Rval *rval_out);
+const void  *EvalContextVariableControlCommonGet(const EvalContext *ctx, CommonControl lval);
 
 
 /* - Parsing/evaluating expressions - */

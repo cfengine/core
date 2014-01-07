@@ -134,9 +134,9 @@ PromiseIterator *PromiseIteratorNew(EvalContext *ctx, const Promise *pp, const R
     {
         VarRef *ref = VarRefParseFromBundle(RlistScalarValue(rp), PromiseGetBundle(pp));
 
-        Rval rval;
         DataType dtype = DATA_TYPE_NONE;
-        if (!EvalContextVariableGet(ctx, ref, &rval, &dtype))
+        const void *value = EvalContextVariableGet(ctx, ref, &dtype);
+        if (!value)
         {
             Log(LOG_LEVEL_ERR, "Couldn't locate variable '%s' apparently in '%s'", RlistScalarValue(rp), PromiseGetBundle(pp)->name);
             VarRefDestroy(ref);
@@ -145,7 +145,7 @@ PromiseIterator *PromiseIteratorNew(EvalContext *ctx, const Promise *pp, const R
 
         VarRefDestroy(ref);
 
-        CfAssoc *new_var = NewAssoc(RlistScalarValue(rp), rval, dtype);
+        CfAssoc *new_var = NewAssoc(RlistScalarValue(rp), (Rval) { (void *)value, DataTypeToRvalType(dtype) }, dtype);
         AppendIterationVariable(iter, new_var);
     }
 
@@ -153,9 +153,9 @@ PromiseIterator *PromiseIteratorNew(EvalContext *ctx, const Promise *pp, const R
     {
         VarRef *ref = VarRefParseFromBundle(RlistScalarValue(rp), PromiseGetBundle(pp));
 
-        Rval rval;
         DataType dtype = DATA_TYPE_NONE;
-        if (!EvalContextVariableGet(ctx, ref, &rval, &dtype))
+        const JsonElement *value = EvalContextVariableGet(ctx, ref, &dtype);
+        if (!value)
         {
             Log(LOG_LEVEL_ERR, "Couldn't locate variable '%s' apparently in '%s'", RlistScalarValue(rp), PromiseGetBundle(pp)->name);
             VarRefDestroy(ref);
@@ -164,12 +164,11 @@ PromiseIterator *PromiseIteratorNew(EvalContext *ctx, const Promise *pp, const R
 
         VarRefDestroy(ref);
 
-        assert(rval.type == RVAL_TYPE_CONTAINER);
         assert(dtype == DATA_TYPE_CONTAINER);
 
         CfAssoc *new_var = xmalloc(sizeof(CfAssoc));
         new_var->lval = xstrdup(RlistScalarValue(rp));
-        new_var->rval = (Rval) { ContainerToRlist(RvalContainerValue(rval)), RVAL_TYPE_LIST };
+        new_var->rval = (Rval) { ContainerToRlist(value), RVAL_TYPE_LIST };
         new_var->dtype = DATA_TYPE_STRING_LIST;
 
         AppendIterationVariable(iter, new_var);

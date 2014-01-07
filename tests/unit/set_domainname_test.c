@@ -52,11 +52,7 @@ ExpectedVars expected_vars[] =
 static void TestSysVar(EvalContext *ctx, const char *lval, const char *expected)
 {
     VarRef *ref = VarRefParseFromScope(lval, "sys");
-    Rval rval;
-
-    assert_true(EvalContextVariableGet(ctx, ref, &rval, NULL));
-    assert_string_equal(expected, RvalScalarValue(rval));
-
+    assert_string_equal(expected, EvalContextVariableGet(ctx, ref, NULL));
     VarRefDestroy(ref);
 }
 

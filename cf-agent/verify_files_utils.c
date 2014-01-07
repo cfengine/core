@@ -65,9 +65,9 @@
 
 #define CF_RECURSION_LIMIT 100
 
-static Rlist *AUTO_DEFINE_LIST; /* GLOBAL_P */
+static Rlist *AUTO_DEFINE_LIST = NULL; /* GLOBAL_P */
 
-Item *VSETUIDLIST; /* GLOBAL_X */
+Item *VSETUIDLIST = NULL; /* GLOBAL_X */
 
 Rlist *SINGLE_COPY_LIST = NULL; /* GLOBAL_P */
 static Rlist *SINGLE_COPY_CACHE = NULL; /* GLOBAL_X */

@@ -28,13 +28,13 @@
 #include <logging.h>
 #include <string_lib.h>
 
-int PR_KEPT; /* GLOBAL_X */
-int PR_REPAIRED; /* GLOBAL_X */
-int PR_NOTKEPT; /* GLOBAL_X */
+int PR_KEPT = 0; /* GLOBAL_X */
+int PR_REPAIRED = 0; /* GLOBAL_X */
+int PR_NOTKEPT = 0; /* GLOBAL_X */
 
-static double VAL_KEPT; /* GLOBAL_X */
-static double VAL_REPAIRED; /* GLOBAL_X */
-static double VAL_NOTKEPT; /* GLOBAL_X */
+static double VAL_KEPT = 0.0; /* GLOBAL_X */
+static double VAL_REPAIRED = 0.0; /* GLOBAL_X */
+static double VAL_NOTKEPT = 0.0; /* GLOBAL_X */
 
 static bool END_AUDIT_REQUIRED = false; /* GLOBAL_X */
 

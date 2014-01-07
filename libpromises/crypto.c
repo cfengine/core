@@ -50,12 +50,6 @@ static void RandomSeed(void);
 static void SetupOpenSSLThreadLocks(void);
 static void CleanupOpenSSLThreadLocks(void);
 
-static char *CFPUBKEYFILE;
-static char *CFPRIVKEYFILE;
-
-/**********************************************************************/
-
-
 /* TODO move crypto.[ch] to libutils. Will need to remove all manipulation of
  * lastseen db. */
 
@@ -484,7 +478,7 @@ char *PrivateKeyFile(const char *workdir)
  * Only pthread support - we don't create threads with any other API *
  *********************************************************************/
 
-static pthread_mutex_t *cf_openssl_locks; /* GLOBAL_T */
+static pthread_mutex_t *cf_openssl_locks = NULL; /* GLOBAL_T */
 
 #ifndef __MINGW32__
 unsigned long ThreadId_callback(void)

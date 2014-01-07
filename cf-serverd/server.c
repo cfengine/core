@@ -50,7 +50,7 @@
 // GLOBAL STATE
 //******************************************************************
 
-int ACTIVE_THREADS; /* GLOBAL_X */
+int ACTIVE_THREADS = 0; /* GLOBAL_X */
 
 int CFD_MAXPROCESSES = 0; /* GLOBAL_P */
 bool DENYBADCLOCKS = true; /* GLOBAL_P */
@@ -61,9 +61,9 @@ int COLLECT_INTERVAL = 0; /* GLOBAL_P */
 int COLLECT_WINDOW = 10; /* GLOBAL_P */
 bool SERVER_LISTEN = true; /* GLOBAL_P */
 
-ServerAccess SV; /* GLOBAL_P */
+ServerAccess SV = { 0 }; /* GLOBAL_P */
 
-char CFRUNCOMMAND[CF_BUFSIZE] = { 0 }; /* GLOBAL_P */
+char CFRUNCOMMAND[CF_BUFSIZE] = ""; /* GLOBAL_P */
 
 //******************************************************************/
 // LOCAL CONSTANTS

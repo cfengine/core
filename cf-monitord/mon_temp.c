@@ -32,8 +32,8 @@
 
 /* Globals */
 
-static bool ACPI;
-static bool LMSENSORS;
+static bool ACPI = false;
+static bool LMSENSORS = false;
 
 /* Prototypes */
 

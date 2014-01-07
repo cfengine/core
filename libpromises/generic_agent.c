@@ -65,7 +65,7 @@
 
 static pthread_once_t pid_cleanup_once = PTHREAD_ONCE_INIT; /* GLOBAL_T */
 
-static char PIDFILE[CF_BUFSIZE]; /* GLOBAL_C */
+static char PIDFILE[CF_BUFSIZE] = ""; /* GLOBAL_C */
 
 static void VerifyPromises(EvalContext *ctx, const Policy *policy, GenericAgentConfig *config);
 static void CheckWorkingDirectories(EvalContext *ctx);
@@ -1357,7 +1357,7 @@ static void CheckWorkingDirectories(EvalContext *ctx)
 
 const char *GenericAgentResolveInputPath(const GenericAgentConfig *config, const char *input_file)
 {
-    static char input_path[CF_BUFSIZE]; /* GLOBAL_R */
+    static char input_path[CF_BUFSIZE]; /* GLOBAL_R, no initialization needed */
 
     switch (FilePathGetType(input_file))
     {

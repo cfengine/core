@@ -41,7 +41,6 @@ extern char CFWORKDIR[CF_BUFSIZE];
 extern char VYEAR[];
 extern char VDAY[];
 extern char VMONTH[];
-extern char VSHIFT[];
 
 extern const char *const CLASSTEXT[];
 

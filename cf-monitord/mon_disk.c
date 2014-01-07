@@ -29,7 +29,7 @@
 
 /* Globals */
 
-static double LASTQ[CF_OBSERVABLES];
+static double LASTQ[CF_OBSERVABLES] = { 0.0 };
 
 /* Prototypes */
 

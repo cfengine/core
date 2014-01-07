@@ -42,11 +42,11 @@
 int SHOWHOSTS = false; /* GLOBAL_A */
 bool REMOVEKEYS = false; /* GLOBAL_A */
 bool LICENSE_INSTALL = false; /* GLOBAL_A */
-char LICENSE_SOURCE[MAX_FILENAME]; /* GLOBAL_A */
-const char *remove_keys_host; /* GLOBAL_A */
+char LICENSE_SOURCE[MAX_FILENAME] = ""; /* GLOBAL_A */
+const char *remove_keys_host = NULL; /* GLOBAL_A */
 static char *print_digest_arg = NULL; /* GLOBAL_A */
 static char *trust_key_arg = NULL; /* GLOBAL_A */
-static char *KEY_PATH; /* GLOBAL_A */
+static char *KEY_PATH = NULL; /* GLOBAL_A */
 
 static GenericAgentConfig *CheckOpts(int argc, char **argv);
 

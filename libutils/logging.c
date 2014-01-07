@@ -29,7 +29,7 @@
 #include <string_lib.h>
 #include <misc_lib.h>
 
-char VPREFIX[1024]; /* GLOBAL_C */
+char VPREFIX[1024] = ""; /* GLOBAL_C */
 bool LEGACY_OUTPUT = false; /* GLOBAL_A */
 
 typedef struct
@@ -46,7 +46,7 @@ static LogLevel global_level = LOG_LEVEL_NOTICE; /* GLOBAL_X */
 static void LogToSystemLog(const char *msg, LogLevel level);
 
 static pthread_once_t log_context_init_once = PTHREAD_ONCE_INIT; /* GLOBAL_T */
-static pthread_key_t log_context_key; /* GLOBAL_T */
+static pthread_key_t log_context_key; /* GLOBAL_T, initialized by pthread_key_create */
 
 static void LoggingInitializeOnce(void)
 {

@@ -34,8 +34,8 @@
 
 /* Globals */
 
-static double LAST_CPU_Q[MON_CPU_MAX + 1];
-static long LAST_CPU_T[MON_CPU_MAX + 1];
+static double LAST_CPU_Q[MON_CPU_MAX + 1] = { 0.0 };
+static long LAST_CPU_T[MON_CPU_MAX + 1] = { 0 };
 
 /* Implementation */
 

@@ -145,18 +145,6 @@ PromiseIterator *PromiseIteratorNew(EvalContext *ctx, const Promise *pp, const R
 
         VarRefDestroy(ref);
 
-        for (Rlist *rps = RvalRlistValue(rval); rps; rps = rps->next)
-        {
-            if (rps->val.type == RVAL_TYPE_FNCALL)
-            {
-                FnCall *fp = RlistFnCallValue(rps);
-
-                Rval newret = FnCallEvaluate(ctx, fp, pp).rval;
-                FnCallDestroy(fp);
-                rps->val = newret;
-            }
-        }
-
         CfAssoc *new_var = NewAssoc(RlistScalarValue(rp), rval, dtype);
         AppendIterationVariable(iter, new_var);
     }

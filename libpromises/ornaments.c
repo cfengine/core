@@ -139,7 +139,7 @@ void BannerSubPromiseType(const EvalContext *ctx, const char *bundlename, const 
     Log(LOG_LEVEL_VERBOSE, "\n");
 }
 
-void BannerBundle(Bundle *bp, Rlist *params)
+void BannerBundle(const Bundle *bp, const Rlist *params)
 {
     if (!LEGACY_OUTPUT)
     {

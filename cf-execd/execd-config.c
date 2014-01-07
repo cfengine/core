@@ -70,8 +70,8 @@ ExecdConfig *ExecdConfigNew(const EvalContext *ctx, const Policy *policy)
 
             VarRef *ref = VarRefParseFromScope(cp->lval, "control_executor");
 
-            Rval retval;
-            if (!EvalContextVariableGet(ctx, ref, &retval, NULL))
+            const void *value = EvalContextVariableGet(ctx, ref, NULL);
+            if (!value)
             {
                 // TODO: should've been checked before this point. change to programming error
                 Log(LOG_LEVEL_ERR, "Unknown lval '%s' in exec control body", cp->lval);
@@ -84,12 +84,12 @@ ExecdConfig *ExecdConfigNew(const EvalContext *ctx, const Policy *policy)
             if (strcmp(cp->lval, CFEX_CONTROLBODY[EXEC_CONTROL_EXECUTORFACILITY].lval) == 0)
             {
                 free(execd_config->log_facility);
-                execd_config->log_facility = xstrdup(retval.item);
+                execd_config->log_facility = xstrdup(value);
                 Log(LOG_LEVEL_DEBUG, "executorfacility '%s'", execd_config->log_facility);
             }
             else if (strcmp(cp->lval, CFEX_CONTROLBODY[EXEC_CONTROL_SPLAYTIME].lval) == 0)
             {
-                int time = IntFromString(RvalScalarValue(retval));
+                int time = IntFromString(value);
                 execd_config->splay_time = (int) (time * SECONDS_PER_MINUTE * GetSplay());
             }
             else if (strcmp(cp->lval, CFEX_CONTROLBODY[EXEC_CONTROL_SCHEDULE].lval) == 0)
@@ -97,7 +97,7 @@ ExecdConfig *ExecdConfigNew(const EvalContext *ctx, const Policy *policy)
                 Log(LOG_LEVEL_DEBUG, "Loading user-defined schedule...");
                 StringSetClear(execd_config->schedule);
 
-                for (const Rlist *rp = retval.item; rp; rp = rp->next)
+                for (const Rlist *rp = value; rp; rp = rp->next)
                 {
                     StringSetAdd(execd_config->schedule, xstrdup(RlistScalarValue(rp)));
                     Log(LOG_LEVEL_DEBUG, "Adding '%s'", RlistScalarValue(rp));

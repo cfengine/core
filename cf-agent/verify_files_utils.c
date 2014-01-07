@@ -65,11 +65,11 @@
 
 #define CF_RECURSION_LIMIT 100
 
-static Rlist *AUTO_DEFINE_LIST = NULL; /* GLOBAL_P */
+static const Rlist *AUTO_DEFINE_LIST = NULL; /* GLOBAL_P */
 
 Item *VSETUIDLIST = NULL; /* GLOBAL_X */
 
-Rlist *SINGLE_COPY_LIST = NULL; /* GLOBAL_P */
+const Rlist *SINGLE_COPY_LIST = NULL; /* GLOBAL_P */
 static Rlist *SINGLE_COPY_CACHE = NULL; /* GLOBAL_X */
 
 static bool TransformFile(EvalContext *ctx, char *file, Attributes attr, const Promise *pp, PromiseResult *result);
@@ -105,7 +105,7 @@ static int VerifyFinderType(EvalContext *ctx, const char *file, Attributes a, co
 static void VerifyFileChanges(const char *file, struct stat *sb, Attributes attr, const Promise *pp);
 static PromiseResult VerifyFileIntegrity(EvalContext *ctx, const char *file, Attributes attr, const Promise *pp);
 
-void SetFileAutoDefineList(Rlist *auto_define_list)
+void SetFileAutoDefineList(const Rlist *auto_define_list)
 {
     AUTO_DEFINE_LIST = auto_define_list;
 }
@@ -169,11 +169,9 @@ bool VerifyFileLeaf(EvalContext *ctx, char *path, struct stat *sb, Attributes at
 }
 
 /* Checks whether item matches a list of wildcards */
-static int MatchRlistItem(EvalContext *ctx, Rlist *listofregex, const char *teststring)
+static int MatchRlistItem(EvalContext *ctx, const Rlist *listofregex, const char *teststring)
 {
-    Rlist *rp;
-
-    for (rp = listofregex; rp != NULL; rp = rp->next)
+    for (const Rlist *rp = listofregex; rp != NULL; rp = rp->next)
     {
         /* Avoid using regex if possible, due to memory leak */
 

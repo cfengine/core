@@ -129,40 +129,41 @@ void ScopeAugment(EvalContext *ctx, const Bundle *bp, const Promise *pp, const R
 
         if (rpr->val.type == RVAL_TYPE_SCALAR && IsNakedVar(RlistScalarValue(rpr), '@'))
         {
-            DataType vtype;
+
             char naked[CF_BUFSIZE];
             
             GetNaked(naked, RlistScalarValue(rpr));
 
-            Rval retval;
+            DataType value_type = DATA_TYPE_NONE;
+            const void *value = NULL;
             if (pbp != NULL)
             {
                 VarRef *ref = VarRefParseFromBundle(naked, pbp);
-                EvalContextVariableGet(ctx, ref, &retval, &vtype);
+                value = EvalContextVariableGet(ctx, ref, &value_type);
                 VarRefDestroy(ref);
             }
             else
             {
                 VarRef *ref = VarRefParseFromBundle(naked, bp);
-                EvalContextVariableGet(ctx, ref, &retval, &vtype);
+                value = EvalContextVariableGet(ctx, ref, &value_type);
                 VarRefDestroy(ref);
             }
 
-            switch (vtype)
+            switch (value_type)
             {
             case DATA_TYPE_STRING_LIST:
             case DATA_TYPE_INT_LIST:
             case DATA_TYPE_REAL_LIST:
                 {
                     VarRef *ref = VarRefParseFromBundle(lval, bp);
-                    EvalContextVariablePut(ctx, ref, retval.item, DATA_TYPE_STRING_LIST, "source=promise");
+                    EvalContextVariablePut(ctx, ref, value, DATA_TYPE_STRING_LIST, "source=promise");
                     VarRefDestroy(ref);
                 }
                 break;
             case DATA_TYPE_CONTAINER:
                 {
                     VarRef *ref = VarRefParseFromBundle(lval, bp);
-                    EvalContextVariablePut(ctx, ref, retval.item, DATA_TYPE_CONTAINER, "source=promise");
+                    EvalContextVariablePut(ctx, ref, value, DATA_TYPE_CONTAINER, "source=promise");
                     VarRefDestroy(ref);
                 }
                 break;

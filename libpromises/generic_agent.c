@@ -1499,23 +1499,16 @@ void WritePID(char *filename)
 
 static bool VerifyBundleSequence(EvalContext *ctx, const Policy *policy, const GenericAgentConfig *config)
 {
-    char *name;
-    Rval retval;
-    int ok = true;
-    FnCall *fp;
-
-    if (!EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_BUNDLESEQUENCE, &retval))
+    const Rlist *bundlesequence = EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_BUNDLESEQUENCE);
+    if (!bundlesequence)
     {
         Log(LOG_LEVEL_ERR, " No bundlesequence in the common control body");
         return false;
     }
 
-    if (retval.type != RVAL_TYPE_LIST)
-    {
-        FatalError(ctx, "Promised bundlesequence was not a list");
-    }
-
-    for (Rlist *rp = RvalRlistValue(retval); rp != NULL; rp = rp->next)
+    const char *name;
+    int ok = true;
+    for (const Rlist *rp = bundlesequence; rp != NULL; rp = rp->next)
     {
         switch (rp->val.type)
         {
@@ -1524,8 +1517,7 @@ static bool VerifyBundleSequence(EvalContext *ctx, const Policy *policy, const G
             break;
 
         case RVAL_TYPE_FNCALL:
-            fp = RlistFnCallValue(rp);
-            name = fp->name;
+            name = RlistFnCallValue(rp)->name;
             break;
 
         default:

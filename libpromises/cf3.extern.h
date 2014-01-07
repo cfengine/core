@@ -81,7 +81,7 @@ extern int CFA_MAXTHREADS;
 extern AgentType THIS_AGENT_TYPE;
 extern int SHOWREPORTS;
 extern int LASTSEENEXPIREAFTER;
-extern char *DEFAULT_COPYTYPE;
+extern const char *DEFAULT_COPYTYPE;
 extern Item *PROCESSTABLE;
 
 extern const char *const DAY_TEXT[];

@@ -847,13 +847,12 @@ FileChange GetChangeMgtConstraints(const EvalContext *ctx, const Promise *pp)
 FileCopy GetCopyConstraints(const EvalContext *ctx, const Promise *pp)
 {
     FileCopy f;
-    char *value;
     long min, max;
     int pval;
 
     f.source = PromiseGetConstraintAsRval(pp, "source", RVAL_TYPE_SCALAR);
 
-    value = PromiseGetConstraintAsRval(pp, "compare", RVAL_TYPE_SCALAR);
+    const char *value = PromiseGetConstraintAsRval(pp, "compare", RVAL_TYPE_SCALAR);
 
     if (value == NULL)
     {

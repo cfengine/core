@@ -72,12 +72,12 @@ PromiseResult VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_d
         VarRefSetMeta(ref, true);
     }
 
-    Rval existing_var_rval;
-    DataType existing_var_type = DATA_TYPE_NONE;
+    DataType existing_value_type = DATA_TYPE_NONE;
+    const void *existing_value = NULL;
 
     if (!IsExpandable(pp->promiser))
     {
-        EvalContextVariableGet(ctx, ref, &existing_var_rval, &existing_var_type);
+        existing_value = EvalContextVariableGet(ctx, ref, &existing_value_type);
     }
 
     PromiseResult result = PROMISE_RESULT_NOOP;
@@ -92,7 +92,7 @@ PromiseResult VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_d
 
         if (opts.cp_save->rval.type == RVAL_TYPE_FNCALL)
         {
-            if (existing_var_type != DATA_TYPE_NONE)
+            if (existing_value_type != DATA_TYPE_NONE)
             {
                 // Already did this
                 VarRefDestroy(ref);
@@ -191,21 +191,21 @@ PromiseResult VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_d
             rval = returnval;
         }
 
-        if (existing_var_type != DATA_TYPE_NONE)
+        if (existing_value_type != DATA_TYPE_NONE)
         {
             if (opts.ok_redefine)    /* only on second iteration, else we ignore broken promises */
             {
                 EvalContextVariableRemove(ctx, ref);
             }
             else if ((THIS_AGENT_TYPE == AGENT_TYPE_COMMON)
-                     && (CompareRval(existing_var_rval.item, existing_var_rval.type,
+                     && (CompareRval(existing_value, DataTypeToRvalType(existing_value_type),
                                      rval.item, rval.type) == false))
             {
                 switch (rval.type)
                 {
                 case RVAL_TYPE_SCALAR:
                     Log(LOG_LEVEL_VERBOSE, "Redefinition of a constant scalar '%s', was '%s' now '%s'",
-                          pp->promiser, RvalScalarValue(existing_var_rval), RvalScalarValue(rval));
+                          pp->promiser, (const char *)existing_value, RvalScalarValue(rval));
                     PromiseRef(LOG_LEVEL_VERBOSE, pp);
                     break;
 
@@ -213,7 +213,7 @@ PromiseResult VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_d
                     {
                     Log(LOG_LEVEL_VERBOSE, "Redefinition of a constant list '%s'", pp->promiser);
                         Writer *w = StringWriter();
-                        RlistWrite(w, existing_var_rval.item);
+                        RlistWrite(w, existing_value);
                         char *oldstr = StringWriterClose(w);
                         Log(LOG_LEVEL_VERBOSE, "Old value '%s'", oldstr);
                         free(oldstr);
@@ -280,7 +280,7 @@ PromiseResult VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_d
             {
                 DataType existing_type = DATA_TYPE_NONE;
                 VarRef *base_ref = VarRefCopyIndexless(ref);
-                if (EvalContextVariableGet(ctx, ref, NULL, &existing_type) && existing_type == DATA_TYPE_CONTAINER)
+                if (EvalContextVariableGet(ctx, ref, &existing_type) && existing_type == DATA_TYPE_CONTAINER)
                 {
                     char *lval_str = VarRefToString(ref, true);
                     char *base_ref_str = VarRefToString(base_ref, true);

@@ -139,7 +139,7 @@ int BACKGROUND = false; /* GLOBAL_P GLOBAL_A */
 int MAXCHILD = 50; /* GLOBAL_P GLOBAL_A */
 char REMOTE_AGENT_OPTIONS[CF_MAXVARSIZE] = ""; /* GLOBAL_A */
 
-Rlist *HOSTLIST = NULL; /* GLOBAL_P GLOBAL_A */
+const Rlist *HOSTLIST = NULL; /* GLOBAL_P GLOBAL_A */
 char SENDCLASSES[CF_MAXVARSIZE] = ""; /* GLOBAL_A */
 char DEFINECLASSES[CF_MAXVARSIZE] = ""; /* GLOBAL_A */
 
@@ -147,7 +147,6 @@ char DEFINECLASSES[CF_MAXVARSIZE] = ""; /* GLOBAL_A */
 
 int main(int argc, char *argv[])
 {
-    Rlist *rp;
 #if !defined(__MINGW32__)
     int count = 0;
     int status;
@@ -174,7 +173,7 @@ int main(int argc, char *argv[])
 /* HvB */
     if (HOSTLIST)
     {
-        rp = HOSTLIST;
+        const Rlist *rp = HOSTLIST;
 
         while (rp != NULL)
         {
@@ -551,11 +550,6 @@ static int HailServer(EvalContext *ctx, char *host)
 
 static void KeepControlPromises(EvalContext *ctx, const Policy *policy)
 {
-    Rval retval;
-
-
-/* Keep promised agent behaviour - control bodies */
-
     Seq *constraints = ControlBodyConstraints(policy, AGENT_TYPE_RUNAGENT);
     if (constraints)
     {
@@ -569,15 +563,14 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy)
             }
 
             VarRef *ref = VarRefParseFromScope(cp->lval, "control_runagent");
+            const void *value = EvalContextVariableGet(ctx, ref, NULL);
+            VarRefDestroy(ref);
 
-            if (!EvalContextVariableGet(ctx, ref, &retval, NULL))
+            if (!value)
             {
                 Log(LOG_LEVEL_ERR, "Unknown lval '%s' in runagent control body", cp->lval);
-                VarRefDestroy(ref);
                 continue;
             }
-
-            VarRefDestroy(ref);
 
             if (strcmp(cp->lval, CFR_CONTROLBODY[RUNAGENT_CONTROL_FORCE_IPV4].lval) == 0)
             {
@@ -612,28 +605,28 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy)
                 }
                 else
                 {
-                    BACKGROUND = BooleanFromString(retval.item);
+                    BACKGROUND = BooleanFromString(value);
                 }
                 continue;
             }
 
             if (strcmp(cp->lval, CFR_CONTROLBODY[RUNAGENT_CONTROL_MAX_CHILD].lval) == 0)
             {
-                MAXCHILD = (short) IntFromString(retval.item);
+                MAXCHILD = (short) IntFromString(value);
                 continue;
             }
 
             if (strcmp(cp->lval, CFR_CONTROLBODY[RUNAGENT_CONTROL_OUTPUT_TO_FILE].lval) == 0)
             {
-                OUTPUT_TO_FILE = BooleanFromString(retval.item);
+                OUTPUT_TO_FILE = BooleanFromString(value);
                 continue;
             }
 
             if (strcmp(cp->lval, CFR_CONTROLBODY[RUNAGENT_CONTROL_OUTPUT_DIRECTORY].lval) == 0)
             {
-                if (IsAbsPath(retval.item))
+                if (IsAbsPath(value))
                 {
-                    strncpy(OUTPUT_DIRECTORY, retval.item, CF_BUFSIZE - 1);
+                    strncpy(OUTPUT_DIRECTORY, value, CF_BUFSIZE - 1);
                     Log(LOG_LEVEL_VERBOSE, "Setting output direcory to '%s'", OUTPUT_DIRECTORY);
                 }
                 continue;
@@ -648,7 +641,7 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy)
             {
                 if (HOSTLIST == NULL)       // Don't override if command line setting
                 {
-                    HOSTLIST = retval.item;
+                    HOSTLIST = value;
                 }
 
                 continue;
@@ -656,9 +649,10 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy)
         }
     }
 
-    if (EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_LASTSEEN_EXPIRE_AFTER, &retval))
+    const char *expire_after = EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_LASTSEEN_EXPIRE_AFTER);
+    if (expire_after)
     {
-        LASTSEENEXPIREAFTER = IntFromString(retval.item) * 60;
+        LASTSEENEXPIREAFTER = IntFromString(expire_after) * 60;
     }
 
 }

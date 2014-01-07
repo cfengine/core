@@ -240,8 +240,6 @@ void Summarize()
 
 static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericAgentConfig *config)
 {
-    Rval retval;
-
     CFD_MAXPROCESSES = 30;
     MAXTRIES = 5;
     DENYBADCLOCKS = true;
@@ -269,46 +267,45 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericA
             }
 
             VarRef *ref = VarRefParseFromScope(cp->lval, "control_server");
+            const void *value = EvalContextVariableGet(ctx, ref, NULL);
+            VarRefDestroy(ref);
 
-            if (!EvalContextVariableGet(ctx, ref, &retval, NULL))
+            if (!value)
             {
                 Log(LOG_LEVEL_ERR, "Unknown lval '%s' in server control body", cp->lval);
-                VarRefDestroy(ref);
                 continue;
             }
 
-            VarRefDestroy(ref);
-
             if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_SERVER_FACILITY].lval) == 0)
             {
-                SetFacility(retval.item);
+                SetFacility(value);
                 continue;
             }
 
             if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_DENY_BAD_CLOCKS].lval) == 0)
             {
-                DENYBADCLOCKS = BooleanFromString(retval.item);
+                DENYBADCLOCKS = BooleanFromString(value);
                 Log(LOG_LEVEL_VERBOSE, "Setting denybadclocks to '%s'", DENYBADCLOCKS ? "true" : "false");
                 continue;
             }
 
             if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_LOG_ENCRYPTED_TRANSFERS].lval) == 0)
             {
-                LOGENCRYPT = BooleanFromString(retval.item);
+                LOGENCRYPT = BooleanFromString(value);
                 Log(LOG_LEVEL_VERBOSE, "Setting logencrypt to '%s'", LOGENCRYPT ? "true" : "false");
                 continue;
             }
 
             if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_LOG_ALL_CONNECTIONS].lval) == 0)
             {
-                SV.logconns = BooleanFromString(retval.item);
+                SV.logconns = BooleanFromString(value);
                 Log(LOG_LEVEL_VERBOSE, "Setting logconns to %d", SV.logconns);
                 continue;
             }
 
             if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_MAX_CONNECTIONS].lval) == 0)
             {
-                CFD_MAXPROCESSES = (int) IntFromString(retval.item);
+                CFD_MAXPROCESSES = (int) IntFromString(value);
                 MAXTRIES = CFD_MAXPROCESSES / 3;
                 Log(LOG_LEVEL_VERBOSE, "Setting maxconnections to %d", CFD_MAXPROCESSES);
                 continue;
@@ -316,14 +313,14 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericA
 
             if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_CALL_COLLECT_INTERVAL].lval) == 0)
             {
-                COLLECT_INTERVAL = (int) 60 * IntFromString(retval.item);
+                COLLECT_INTERVAL = (int) 60 * IntFromString(value);
                 Log(LOG_LEVEL_VERBOSE, "Setting call_collect_interval to %d (seconds)", COLLECT_INTERVAL);
                 continue;
             }
 
             if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_LISTEN].lval) == 0)
             {
-                SERVER_LISTEN = BooleanFromString(retval.item);
+                SERVER_LISTEN = BooleanFromString(value);
                 Log(LOG_LEVEL_VERBOSE, "Setting server listen to '%s' ",
                       (SERVER_LISTEN)? "true":"false");
                 continue;
@@ -331,25 +328,23 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericA
 
             if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_CALL_COLLECT_WINDOW].lval) == 0)
             {
-                COLLECT_WINDOW = (int) IntFromString(retval.item);
+                COLLECT_WINDOW = (int) IntFromString(value);
                 Log(LOG_LEVEL_VERBOSE, "Setting collect_window to %d (seconds)", COLLECT_INTERVAL);
                 continue;
             }
 
             if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_CF_RUN_COMMAND].lval) == 0)
             {
-                strncpy(CFRUNCOMMAND, retval.item, CF_BUFSIZE - 1);
+                strncpy(CFRUNCOMMAND, value, CF_BUFSIZE - 1);
                 Log(LOG_LEVEL_VERBOSE, "Setting cfruncommand to '%s'", CFRUNCOMMAND);
                 continue;
             }
 
             if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_ALLOW_CONNECTS].lval) == 0)
             {
-                Rlist *rp;
-
                 Log(LOG_LEVEL_VERBOSE, "Setting allowing connections from ...");
 
-                for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
+                for (const Rlist *rp = value; rp != NULL; rp = rp->next)
                 {
                     if (!IsItemIn(SV.nonattackerlist, RlistScalarValue(rp)))
                     {
@@ -362,11 +357,9 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericA
 
             if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_DENY_CONNECTS].lval) == 0)
             {
-                Rlist *rp;
-
                 Log(LOG_LEVEL_VERBOSE, "Setting denying connections from ...");
 
-                for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
+                for (const Rlist *rp = value; rp != NULL; rp = rp->next)
                 {
                     if (!IsItemIn(SV.attackerlist, RlistScalarValue(rp)))
                     {
@@ -382,14 +375,11 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericA
                 continue;
             }
 
-
             if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_ALLOW_ALL_CONNECTS].lval) == 0)
             {
-                Rlist *rp;
-
                 Log(LOG_LEVEL_VERBOSE, "Setting allowing multiple connections from ...");
 
-                for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
+                for (const Rlist *rp = value; rp != NULL; rp = rp->next)
                 {
                     if (!IsItemIn(SV.multiconnlist, RlistScalarValue(rp)))
                     {
@@ -402,11 +392,9 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericA
 
             if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_ALLOW_USERS].lval) == 0)
             {
-                Rlist *rp;
-
                 Log(LOG_LEVEL_VERBOSE, "SET Allowing users ...");
 
-                for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
+                for (const Rlist *rp = value; rp != NULL; rp = rp->next)
                 {
                     if (!IsItemIn(SV.allowuserlist, RlistScalarValue(rp)))
                     {
@@ -419,11 +407,9 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericA
 
             if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_TRUST_KEYS_FROM].lval) == 0)
             {
-                Rlist *rp;
-
                 Log(LOG_LEVEL_VERBOSE, "Setting trust keys from ...");
 
-                for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
+                for (const Rlist *rp = value; rp != NULL; rp = rp->next)
                 {
                     if (!IsItemIn(SV.trustkeylist, RlistScalarValue(rp)))
                     {
@@ -436,14 +422,14 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericA
 
             if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_PORT_NUMBER].lval) == 0)
             {
-                CFENGINE_PORT = (short) IntFromString(retval.item);
+                CFENGINE_PORT = (short) IntFromString(value);
                 Log(LOG_LEVEL_VERBOSE, "Setting default port number to %d", CFENGINE_PORT);
                 continue;
             }
 
             if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_BIND_TO_INTERFACE].lval) == 0)
             {
-                strncpy(BINDINTERFACE, retval.item, CF_BUFSIZE - 1);
+                strncpy(BINDINTERFACE, value, CF_BUFSIZE - 1);
                 Log(LOG_LEVEL_VERBOSE, "Setting bindtointerface to '%s'", BINDINTERFACE);
                 continue;
             }
@@ -451,42 +437,44 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericA
             if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_ALLOWCIPHERS].lval) == 0)
             {
 
-                SV.allowciphers = xstrdup(retval.item);
+                SV.allowciphers = xstrdup(value);
                 Log(LOG_LEVEL_VERBOSE, "Setting allowciphers to '%s'", SV.allowciphers);
                 continue;
             }
         }
     }
 
-    if (EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_SYSLOG_HOST, &retval))
+    const void *value = EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_SYSLOG_HOST);
+    if (value)
     {
         /* Don't resolve syslog_host now, better do it per log request. */
-        if (!SetSyslogHost(retval.item))
+        if (!SetSyslogHost(value))
         {
-            Log(LOG_LEVEL_ERR, "Failed to set syslog_host, '%s' too long",
-                  (char *) retval.item);
+            Log(LOG_LEVEL_ERR, "Failed to set syslog_host, '%s' too long", (const char *)value);
         }
         else
         {
-            Log(LOG_LEVEL_VERBOSE, "Setting syslog_host to '%s'",
-                  (char *) retval.item);
+            Log(LOG_LEVEL_VERBOSE, "Setting syslog_host to '%s'", (const char *)value);
         }
     }
 
-    if (EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_SYSLOG_PORT, &retval))
+    value = EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_SYSLOG_PORT);
+    if (value)
     {
-        SetSyslogPort(IntFromString(retval.item));
+        SetSyslogPort(IntFromString(value));
     }
 
-    if (EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_FIPS_MODE, &retval))
+    value = EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_FIPS_MODE);
+    if (value)
     {
-        FIPS_MODE = BooleanFromString(retval.item);
+        FIPS_MODE = BooleanFromString(value);
         Log(LOG_LEVEL_VERBOSE, "Setting FIPS mode to to '%s'", FIPS_MODE ? "true" : "false");
     }
 
-    if (EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_LASTSEEN_EXPIRE_AFTER, &retval))
+    value = EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_LASTSEEN_EXPIRE_AFTER);
+    if (value)
     {
-        LASTSEENEXPIREAFTER = IntFromString(retval.item) * 60;
+        LASTSEENEXPIREAFTER = IntFromString(value) * 60;
     }
 }
 

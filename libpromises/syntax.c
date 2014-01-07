@@ -405,10 +405,9 @@ SyntaxTypeMatch CheckConstraintTypeMatch(const char *lval, Rval rval, DataType d
 
 DataType StringDataType(EvalContext *ctx, const char *string)
 {
-    DataType dtype = DATA_TYPE_NONE;
-    Rval rval;
     int islist = false;
     char var[CF_BUFSIZE];
+    DataType dtype = DATA_TYPE_NONE;
 
 /*-------------------------------------------------------
 What happens if we embed vars in a literal string
@@ -431,10 +430,9 @@ vars:
             if (!IsExpandable(var))
             {
                 VarRef *ref = VarRefParse(var);
-
-                if (EvalContextVariableGet(ctx, ref, &rval, &dtype))
+                if (EvalContextVariableGet(ctx, ref, &dtype))
                 {
-                    if (rval.type == RVAL_TYPE_LIST)
+                    if (DataTypeToRvalType(dtype) == RVAL_TYPE_LIST)
                     {
                         if (!islist)
                         {

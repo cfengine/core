@@ -78,29 +78,22 @@ void EndAudit(const EvalContext *ctx, int background_tasks)
         return;
     }
 
-    char *sp, string[CF_BUFSIZE];
-    Rval retval = { 0 };
-
     double total = (double) (PR_KEPT + PR_NOTKEPT + PR_REPAIRED) / 100.0;
 
-    if (EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_VERSION, &retval))
+    const char *version = EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_VERSION);
+    if (!version)
     {
-        sp = (char *) retval.item;
-    }
-    else
-    {
-        sp = "(not specified)";
+        version = "(not specified)";
     }
 
     if (total == 0)
     {
-        *string = '\0';
-        Log(LOG_LEVEL_VERBOSE, "Outcome of version '%s', no checks were scheduled", sp);
+        Log(LOG_LEVEL_VERBOSE, "Outcome of version '%s', no checks were scheduled", version);
         return;
     }
     else
     {
-        LogTotalCompliance(sp, background_tasks);
+        LogTotalCompliance(version, background_tasks);
     }
 }
 

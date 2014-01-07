@@ -39,7 +39,6 @@
 int private_copy_to_temporary_location(const char *source, const char *destination)
 {
     struct stat source_stat;
-    int result = 0;
     int source_fd = -1;
     int destination_fd = -1;
 
@@ -48,7 +47,7 @@ int private_copy_to_temporary_location(const char *source, const char *destinati
     {
         goto bad_nofd;
     }
-    result = fstat(source_fd, &source_stat);
+    fstat(source_fd, &source_stat);
     unlink (destination);
     destination_fd = open(destination, O_WRONLY|O_CREAT|O_EXCL, S_IRWXU|S_IRGRP|S_IROTH);
     if (destination_fd < 0)

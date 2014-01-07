@@ -99,9 +99,7 @@ PromiseResult VerifyPackagesPromise(EvalContext *ctx, const Promise *pp)
     {
         const char *reserved = reserved_vars[c];
         VarRef *var_ref = VarRefParseFromScope(reserved, "this");
-        Rval rval;
-        DataType dt;
-        if (EvalContextVariableGet(ctx, var_ref, &rval, &dt))
+        if (EvalContextVariableGet(ctx, var_ref, NULL))
         {
             Log(LOG_LEVEL_WARNING, "$(%s) variable has a special meaning in packages promises. "
                 "Things may not work as expected if it is already defined.", reserved);

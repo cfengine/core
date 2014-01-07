@@ -1620,7 +1620,7 @@ static Variable *VariableResolve(const EvalContext *ctx, const VarRef *ref)
     return NULL;
 }
 
-bool EvalContextVariableGet(const EvalContext *ctx, const VarRef *ref, Rval *rval_out, DataType *type_out)
+const void  *EvalContextVariableGet(const EvalContext *ctx, const VarRef *ref, DataType *type_out)
 {
     Variable *var = VariableResolve(ctx, ref);
     if (var)
@@ -1630,41 +1630,28 @@ bool EvalContextVariableGet(const EvalContext *ctx, const VarRef *ref, Rval *rva
             JsonElement *child = JsonSelect(RvalContainerValue(var->rval), ref->num_indices, ref->indices);
             if (child)
             {
-                if (rval_out)
-                {
-                    rval_out->item = child;
-                    rval_out->type = RVAL_TYPE_CONTAINER;
-                }
                 if (type_out)
                 {
                     *type_out = DATA_TYPE_CONTAINER;
                 }
-                return true;
+                return child;
             }
         }
         else
         {
-            if (rval_out)
-            {
-                *rval_out = var->rval;
-            }
             if (type_out)
             {
                 *type_out = var->type;
             }
-            return true;
+            return var->rval.item;
         }
     }
 
-    if (rval_out)
-    {
-        *rval_out = (Rval) {NULL, RVAL_TYPE_SCALAR };
-    }
     if (type_out)
     {
         *type_out = DATA_TYPE_NONE;
     }
-    return false;
+    return NULL;
 }
 
 StringSet *EvalContextClassTags(const EvalContext *ctx, const char *ns, const char *name)
@@ -1710,7 +1697,7 @@ VariableTableIterator *EvalContextVariableTableIteratorNew(const EvalContext *ct
     return table ? VariableTableIteratorNew(table, ns, scope, lval) : NULL;
 }
 
-bool EvalContextVariableControlCommonGet(const EvalContext *ctx, CommonControl lval, Rval *rval_out)
+const void *EvalContextVariableControlCommonGet(const EvalContext *ctx, CommonControl lval)
 {
     if (lval == COMMON_CONTROL_NONE)
     {
@@ -1718,7 +1705,7 @@ bool EvalContextVariableControlCommonGet(const EvalContext *ctx, CommonControl l
     }
 
     VarRef *ref = VarRefParseFromScope(CFG_CONTROLBODY[lval].lval, "control_common");
-    bool ret = EvalContextVariableGet(ctx, ref, rval_out, NULL);
+    const void *ret = EvalContextVariableGet(ctx, ref, NULL);
     VarRefDestroy(ref);
     return ret;
 }
@@ -2100,11 +2087,10 @@ static void LogPromiseContext(const EvalContext *ctx, const Promise *pp)
     }
 
     {
-
-        Rval retval;
-        if (EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_VERSION, &retval))
+        const char *version = EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_VERSION);
+        if (version)
         {
-            WriterWriteF(w, " version '%s'", RvalScalarValue(retval));
+            WriterWriteF(w, " version '%s'", version);
         }
     }
 

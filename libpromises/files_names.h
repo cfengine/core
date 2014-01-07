@@ -41,7 +41,7 @@ int CompareCSVName(const char *s1, const char *s2);
 int IsDir(const char *path);
 char *JoinPath(char *path, const char *leaf);
 char *JoinSuffix(char *path, char *leaf);
-int IsAbsPath(char *path);
+int IsAbsPath(const char *path);
 void AddSlash(char *str);
 char *GetParentDirectoryCopy(const char *path);
 void DeleteSlash(char *str);

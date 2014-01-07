@@ -225,18 +225,32 @@ int ReceiveTransaction(const ConnectionInfo *conn_info, char *buffer, int *more)
     return ret;
 }
 
-pthread_mutex_t bwlimit_lock = PTHREAD_MUTEX_INITIALIZER;
-struct timespec bwlimit_next = {0L, 0L};
-u_long bwlimit_kbytes = 0L;
+/* BWlimit global variables
+
+  Throttling happens for all network interfaces, all traffic being sent for
+  any connection of this process (cf-agent or cf-serverd).
+  We need a lock, to avoid concurrent writes to "bwlimit_next".
+  Then, "bwlimit_next" is the absolute time (as of clock_gettime() ) that we
+  are clear to send, after. It is incremented with the delay for every packet
+  scheduled for sending. Thus, integer arithmetic will make sure we wait for
+  the correct amount of time, in total.
+ */
+
+static pthread_mutex_t bwlimit_lock = PTHREAD_MUTEX_INITIALIZER;
+static struct timespec bwlimit_next = {0, 0L};
+uint32_t bwlimit_kbytes = 0; /* desired limit, in kB/s */ 
 
 
 /** Throttle traffic, if next packet happens too soon after the previous one
  * 
  *  This function is global, accross all network operations (and interfaces, perhaps)
- *  @param tosend Length of current packet being sent out
+ *  @param tosend Length of current packet being sent out (in bytes)
  */
 
-void EnforceBwLimit(int tosend){
+void EnforceBwLimit(int tosend)
+{
+    const uint32_t u_10e6 = 1000000L;
+    const uint32_t u_10e9 = 1000000000L;
     struct timespec clock_now;
 
     if (!bwlimit_kbytes)
@@ -250,8 +264,8 @@ void EnforceBwLimit(int tosend){
         clock_gettime(CLOCK_MONOTONIC, &clock_now);
 
         if ((bwlimit_next.tv_sec < clock_now.tv_sec) ||
-                ( (bwlimit_next.tv_sec == clock_now.tv_sec)
-                   && (bwlimit_next.tv_nsec < clock_now.tv_nsec)))
+            ( (bwlimit_next.tv_sec == clock_now.tv_sec) &&
+              (bwlimit_next.tv_nsec < clock_now.tv_nsec) ) )
         {
             /* penalty has expired, we can immediately send data. But reset the timestamp */
             bwlimit_next = clock_now;
@@ -265,18 +279,18 @@ void EnforceBwLimit(int tosend){
             if (clock_now.tv_nsec < 0L)
             {
                 clock_now.tv_sec --;
-                clock_now.tv_nsec += 1000000000L ;
+                clock_now.tv_nsec += u_10e9;
             }
         }
 
-        uint64_t delay = ((uint64_t) tosend * 1000000L) / bwlimit_kbytes;
+        uint64_t delay = ((uint64_t) tosend * u_10e6) / bwlimit_kbytes; /* in ns */
 
-        bwlimit_next.tv_sec += (delay / 1000000000L);
-        bwlimit_next.tv_nsec += (long) (delay % 1000000000L);
-        if (bwlimit_next.tv_nsec >= 1000000000L)
+        bwlimit_next.tv_sec += (delay / u_10e9);
+        bwlimit_next.tv_nsec += (long) (delay % u_10e9);
+        if (bwlimit_next.tv_nsec >= u_10e9)
         {
             bwlimit_next.tv_sec++;
-            bwlimit_next.tv_nsec -= 1000000000L;
+            bwlimit_next.tv_nsec -= u_10e9;
         }
         pthread_mutex_unlock(&bwlimit_lock);
     }
@@ -287,7 +301,7 @@ void EnforceBwLimit(int tosend){
       nanosleep() for such short delays.
       So, sleep only if we have >1ms penalty
     */
-    if (clock_now.tv_sec >= 0 || ( (clock_now.tv_sec == 0) && (clock_now.tv_nsec >= 1000000L))  )
+    if (clock_now.tv_sec >= 0 || ( (clock_now.tv_sec == 0) && (clock_now.tv_nsec >= u_10e6))  )
     {
         nanosleep(&clock_now, NULL);
     }

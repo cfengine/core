@@ -589,6 +589,10 @@ int fchownat(int dirfd, const char *pathname, uid_t owner, gid_t group, int flag
 #endif
 #endif
 
+#if !HAVE_DECL_LOG2
+double log2(double x);
+#endif
+
 /*******************************************************************/
 /*  Windows                                                        */
 /*******************************************************************/

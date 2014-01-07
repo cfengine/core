@@ -837,6 +837,9 @@ AC_CHECK_DECLS([fstatat], [], [], [[#include <sys/stat.h>]])
 AC_CHECK_DECLS([fchownat], [], [], [[#include <unistd.h>]])
 AC_REPLACE_FUNCS(openat fstatat fchownat)
 
+AC_CHECK_DECLS([log2], [], [], [[#include <math.h>]])
+AC_REPLACE_FUNCS(log2)
+
 dnl ######################################################################
 dnl Required by cf-upgrade. It cannot be implemented in libcompat because
 dnl cf-upgrade does not link to any libraries except libutils and only

@@ -403,9 +403,6 @@ bool StringMatch(const char *regex, const char *str, int *start, int *end)
         pattern = pcre_compile(regex, PCRE_MULTILINE | PCRE_DOTALL, &errorstr, &erroffset, NULL);
     }
 
-    /* TODO remove bogus assert. */
-    assert(pattern);
-
     if (pattern == NULL)
     {
         return false;
@@ -467,7 +464,6 @@ Seq *StringMatchCaptures(const char *regex, const char *str)
         int erroffset;
         pattern = pcre_compile(regex, PCRE_MULTILINE | PCRE_DOTALL, &errorstr, &erroffset, NULL);
     }
-    assert(pattern);
 
     if (pattern == NULL)
     {

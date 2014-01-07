@@ -92,6 +92,7 @@ static const char *const VNETSTAT[] =
     [PLATFORM_CONTEXT_DRAGONFLY] = "/usr/bin/netstat -rn",     /* dragonfly */
     [PLATFORM_CONTEXT_MINGW] = "mingw-invalid",            /* mingw */
     [PLATFORM_CONTEXT_VMWARE] = "/usr/bin/netstat",         /* vmware */
+    [PLATFORM_CONTEXT_ANDROID] = "/system/xbin/netstat -rn",    /* android */
 };
 
 /* Implementation */

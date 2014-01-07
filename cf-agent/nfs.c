@@ -70,6 +70,7 @@ static const char *const VMOUNTCOMM[] =
     [PLATFORM_CONTEXT_DRAGONFLY] = "/sbin/mount -va",          /* dragonfly */
     [PLATFORM_CONTEXT_MINGW] = "mingw-invalid",            /* mingw */
     [PLATFORM_CONTEXT_VMWARE] = "/bin/mount -a",            /* vmware */
+    [PLATFORM_CONTEXT_ANDROID] = "",                        /* android */
 };
 
 static const char *const VUNMOUNTCOMM[] =
@@ -92,6 +93,7 @@ static const char *const VUNMOUNTCOMM[] =
     [PLATFORM_CONTEXT_DRAGONFLY] = "/sbin/umount",             /* dragonfly */
     [PLATFORM_CONTEXT_MINGW] = "mingw-invalid",            /* mingw */
     [PLATFORM_CONTEXT_VMWARE] = "/bin/umount",              /* vmware */
+    [PLATFORM_CONTEXT_ANDROID] = "/system/xbin/umount",     /* android */
 };
 
 static const char *const VMOUNTOPTS[] =
@@ -114,6 +116,7 @@ static const char *const VMOUNTOPTS[] =
     [PLATFORM_CONTEXT_DRAGONFLY] = "bg,intr",                  /* dragonfly */
     [PLATFORM_CONTEXT_MINGW] = "mingw-invalid",            /* mingw */
     [PLATFORM_CONTEXT_VMWARE] = "defaults",                 /* vmstate */
+    [PLATFORM_CONTEXT_ANDROID] = "defaults",                 /* android */
 };
 
 bool LoadMountInfo(Seq *list)

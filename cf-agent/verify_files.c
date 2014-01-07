@@ -56,8 +56,8 @@
 #include <known_dirs.h>
 #include <evalfunction.h>
 
-static void LoadSetuid(Attributes a);
-static PromiseResult SaveSetuid(EvalContext *ctx, Attributes a, const Promise *pp);
+static void LoadSetuid(void);
+static void SaveSetuid(void);
 static PromiseResult FindFilePromiserObjects(EvalContext *ctx, const Promise *pp);
 static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promise *pp);
 
@@ -215,7 +215,7 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promi
         return PROMISE_RESULT_SKIPPED;
     }
 
-    LoadSetuid(a);
+    LoadSetuid();
 
     PromiseResult result = PROMISE_RESULT_NOOP;
     if (lstat(path, &oslb) == -1)       /* Careful if the object is a link */
@@ -424,7 +424,7 @@ exit:
             "No action was requested for file '%s'. Maybe a typo in the policy?", path);
     }
 
-    result = PromiseResultUpdate(result, SaveSetuid(ctx, a, pp));
+    SaveSetuid();
     YieldCurrentLock(thislock);
 
     return result;
@@ -675,46 +675,31 @@ static PromiseResult FindFilePromiserObjects(EvalContext *ctx, const Promise *pp
     return result;
 }
 
-static void LoadSetuid(Attributes a)
+static void LoadSetuid(void)
 {
     char filename[CF_BUFSIZE];
-
-    EditDefaults edits = a.edits;
-    edits.backup = BACKUP_OPTION_NO_BACKUP;
-    edits.maxfilesize = 1000000;
-
     snprintf(filename, CF_BUFSIZE, "%s/cfagent.%s.log", GetLogDir(), VSYSNAME.nodename);
     MapName(filename);
 
-    if (!LoadFileAsItemList(&VSETUIDLIST, filename, edits))
-    {
-        Log(LOG_LEVEL_VERBOSE, "Did not find any previous setuid log '%s', creating a new one", filename);
-    }
+    VSETUIDLIST = RawLoadItemList(filename);
 }
 
 /*********************************************************************/
 
-static PromiseResult SaveSetuid(EvalContext *ctx, Attributes a, const Promise *pp)
+static void SaveSetuid(void)
 {
-    Attributes b = a;
-
-    b.edits.backup = BACKUP_OPTION_NO_BACKUP;
-    b.edits.maxfilesize = 1000000;
-
     char filename[CF_BUFSIZE];
     snprintf(filename, CF_BUFSIZE, "%s/cfagent.%s.log", GetLogDir(), VSYSNAME.nodename);
     MapName(filename);
 
     PurgeItemList(&VSETUIDLIST, "SETUID/SETGID");
 
-    PromiseResult result = PROMISE_RESULT_NOOP;
-    if (!CompareToFile(ctx, VSETUIDLIST, filename, a, pp, &result))
+    Item *current = RawLoadItemList(filename);
+    if (!ListsCompare(VSETUIDLIST, current))
     {
-        SaveItemListAsFile(VSETUIDLIST, filename, b);
+        RawSaveItemList(VSETUIDLIST, filename);
     }
 
     DeleteItemList(VSETUIDLIST);
     VSETUIDLIST = NULL;
-
-    return result;
 }

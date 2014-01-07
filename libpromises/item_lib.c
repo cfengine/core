@@ -29,6 +29,8 @@
 #include <matching.h>
 #include <misc_lib.h>
 #include <string_lib.h>
+#include <file_lib.h>
+#include <files_interfaces.h>
 
 /*******************************************************************/
 void PrintItemList(const Item *list, Writer *w)
@@ -857,4 +859,41 @@ int ByteSizeList(const Item *list)
     }
 
     return count;
+}
+
+Item *RawLoadItemList(const char *filename)
+{
+    FILE *fp = safe_fopen(filename, "r");
+    if (fp == NULL)
+    {
+        return NULL;
+    }
+
+    Item *list = NULL;
+    for (;;)
+    {
+        char line[CF_BUFSIZE];
+        ssize_t res = CfReadLine(line, CF_BUFSIZE, fp);
+        if (res == 0)
+        {
+            if (fclose(fp) == -1)
+            {
+                DeleteItemList(list);
+                return NULL;
+            }
+            return list;
+        }
+
+        if (res == -1)
+        {
+            fclose(fp);
+            DeleteItemList(list);
+            return NULL;
+        }
+
+        if (strlen(line) != 0)
+        {
+            AppendItem(&list, line, NULL);
+        }
+    }
 }

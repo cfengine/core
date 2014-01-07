@@ -208,7 +208,7 @@ retry:
 fail:
     err = errno;
     free(buf);
-    freeifaddrs(*ifap);
+    solaris_freeifaddrs(*ifap);
     *ifap = NULL;
     if (err == ENXIO)
         goto retry;

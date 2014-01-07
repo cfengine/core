@@ -1107,8 +1107,8 @@ JsonElement *JsonNullCreate()
 // Printing
 // *******************************************************************************************
 
-static void JsonContainerWrite(Writer *writer, JsonElement *containerElement, size_t indent_level);
-static void JsonContainerWriteCompact(Writer *writer, JsonElement *containerElement);
+static void JsonContainerWrite(Writer *writer, const JsonElement *containerElement, size_t indent_level);
+static void JsonContainerWriteCompact(Writer *writer, const JsonElement *containerElement);
 
 static bool IsWhitespace(char ch)
 {
@@ -1136,7 +1136,7 @@ static void PrintIndent(Writer *writer, int num)
     }
 }
 
-static void JsonPrimitiveWrite(Writer *writer, JsonElement *primitiveElement, size_t indent_level)
+static void JsonPrimitiveWrite(Writer *writer, const JsonElement *primitiveElement, size_t indent_level)
 {
     assert(primitiveElement->type == JSON_ELEMENT_TYPE_PRIMITIVE);
 
@@ -1158,7 +1158,7 @@ static void JsonPrimitiveWrite(Writer *writer, JsonElement *primitiveElement, si
     }
 }
 
-static void JsonArrayWrite(Writer *writer, JsonElement *array, size_t indent_level)
+static void JsonArrayWrite(Writer *writer, const JsonElement *array, size_t indent_level)
 {
     assert(array->type == JSON_ELEMENT_TYPE_CONTAINER);
     assert(array->container.type == JSON_CONTAINER_TYPE_ARRAY);
@@ -1200,7 +1200,7 @@ static void JsonArrayWrite(Writer *writer, JsonElement *array, size_t indent_lev
     WriterWriteChar(writer, ']');
 }
 
-void JsonObjectWrite(Writer *writer, JsonElement *object, size_t indent_level)
+void JsonObjectWrite(Writer *writer, const JsonElement *object, size_t indent_level)
 {
     assert(object->type == JSON_ELEMENT_TYPE_CONTAINER);
     assert(object->container.type == JSON_CONTAINER_TYPE_OBJECT);
@@ -1238,7 +1238,7 @@ void JsonObjectWrite(Writer *writer, JsonElement *object, size_t indent_level)
     WriterWriteChar(writer, '}');
 }
 
-static void JsonContainerWrite(Writer *writer, JsonElement *container, size_t indent_level)
+static void JsonContainerWrite(Writer *writer, const JsonElement *container, size_t indent_level)
 {
     assert(container->type == JSON_ELEMENT_TYPE_CONTAINER);
 
@@ -1253,7 +1253,7 @@ static void JsonContainerWrite(Writer *writer, JsonElement *container, size_t in
     }
 }
 
-void JsonWrite(Writer *writer, JsonElement *element, size_t indent_level)
+void JsonWrite(Writer *writer, const JsonElement *element, size_t indent_level)
 {
     assert(writer);
     assert(element);
@@ -1270,7 +1270,7 @@ void JsonWrite(Writer *writer, JsonElement *element, size_t indent_level)
     }
 }
 
-static void JsonArrayWriteCompact(Writer *writer, JsonElement *array)
+static void JsonArrayWriteCompact(Writer *writer, const JsonElement *array)
 {
     assert(array->type == JSON_ELEMENT_TYPE_CONTAINER);
     assert(array->container.type == JSON_CONTAINER_TYPE_ARRAY);
@@ -1306,7 +1306,7 @@ static void JsonArrayWriteCompact(Writer *writer, JsonElement *array)
     WriterWriteChar(writer, ']');
 }
 
-void JsonObjectWriteCompact(Writer *writer, JsonElement *object)
+void JsonObjectWriteCompact(Writer *writer, const JsonElement *object)
 {
     assert(object->type == JSON_ELEMENT_TYPE_CONTAINER);
     assert(object->container.type == JSON_CONTAINER_TYPE_OBJECT);
@@ -1340,7 +1340,7 @@ void JsonObjectWriteCompact(Writer *writer, JsonElement *object)
     WriterWriteChar(writer, '}');
 }
 
-static void JsonContainerWriteCompact(Writer *writer, JsonElement *container)
+static void JsonContainerWriteCompact(Writer *writer, const JsonElement *container)
 {
     assert(container->type == JSON_ELEMENT_TYPE_CONTAINER);
 

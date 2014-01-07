@@ -170,7 +170,7 @@ const char *JsonGetPropertyAsString(const JsonElement *element);
   @param indent_level [in] The nesting level with which the printing should be done. This is mainly to allow the
   function to be called recursively. Clients will normally want to set this to 0.
   */
-void JsonWrite(Writer *writer, JsonElement *element, size_t indent_level);
+void JsonWrite(Writer *writer, const JsonElement *element, size_t indent_level);
 
 void JsonWriteCompact(Writer *w, JsonElement *element);
 

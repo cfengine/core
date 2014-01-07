@@ -93,6 +93,21 @@ PromiseResult VerifyPackagesPromise(EvalContext *ctx, const Promise *pp)
     CfLock thislock;
     char lockname[CF_BUFSIZE];
 
+    const char *reserved_vars[] = { "name", "version", "arch", "firstrepo", NULL };
+    for (int c = 0; reserved_vars[c]; c++)
+    {
+        const char *reserved = reserved_vars[c];
+        VarRef *var_ref = VarRefParseFromScope(reserved, "this");
+        Rval rval;
+        DataType dt;
+        if (EvalContextVariableGet(ctx, var_ref, &rval, &dt))
+        {
+            Log(LOG_LEVEL_WARNING, "$(%s) variable has a special meaning in packages promises. "
+                "Things may not work as expected if it is already defined.", reserved);
+        }
+        VarRefDestroy(var_ref);
+    }
+
     Attributes a = GetPackageAttributes(ctx, pp);
 
 #ifdef __MINGW32__

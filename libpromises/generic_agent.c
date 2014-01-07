@@ -387,12 +387,6 @@ bool GenericAgentArePromisesValid(const GenericAgentConfig *config)
         strlcat(cmd, "\"", CF_BUFSIZE);
     }
 
-    if (config->agent_specific.agent.bootstrap_policy_server)
-    {
-        // avoids license complains from commercial cf-promises during bootstrap - see Nova_CheckLicensePromise
-        strlcat(cmd, " -D bootstrap_mode", CF_BUFSIZE);
-    }
-
     Log(LOG_LEVEL_VERBOSE, "Checking policy with command '%s'", cmd);
 
     if (!ShellCommandReturnsZero(cmd, true))

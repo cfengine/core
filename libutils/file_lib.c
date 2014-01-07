@@ -235,6 +235,10 @@ int safe_open(const char *pathname, int flags, ...)
             *next_component = '\0';
             // Eliminate double slashes.
             while (*(++next_component) == '/') { /*noop*/ }
+            if (!*next_component)
+            {
+                next_component = NULL;
+            }
         }
 
         struct stat stat_before, stat_after;

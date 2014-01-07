@@ -523,23 +523,23 @@ Rlist *ExpandList(EvalContext *ctx, const char *ns, const char *scope, const Rli
 
                 if (EvalContextVariableGet(ctx, ref, &returnval, NULL))
                 {
-                    returnval = ExpandPrivateRval(ctx, ns, scope, returnval);
+                    returnval = ExpandPrivateRval(ctx, ns, scope, returnval.item, returnval.type);
                 }
                 else
                 {
-                    returnval = ExpandPrivateRval(ctx, ns, scope, rp->val);
+                    returnval = ExpandPrivateRval(ctx, ns, scope, rp->val.item, rp->val.type);
                 }
 
                 VarRefDestroy(ref);
             }
             else
             {
-                returnval = ExpandPrivateRval(ctx, ns, scope, rp->val);
+                returnval = ExpandPrivateRval(ctx, ns, scope, rp->val.item, rp->val.type);
             }
         }
         else
         {
-            returnval = ExpandPrivateRval(ctx, ns, scope, rp->val);
+            returnval = ExpandPrivateRval(ctx, ns, scope, rp->val.item, rp->val.type);
         }
 
         RlistAppend(&start, returnval.item, returnval.type);
@@ -551,42 +551,38 @@ Rlist *ExpandList(EvalContext *ctx, const char *ns, const char *scope, const Rli
 
 /*********************************************************************/
 
-Rval ExpandPrivateRval(EvalContext *ctx, const char *ns, const char *scope, Rval rval)
+Rval ExpandPrivateRval(EvalContext *ctx, const char *ns, const char *scope, const void *rval_item, RvalType rval_type)
 {
     char buffer[CF_EXPANDSIZE];
-    FnCall *fp, *fpe;
+    FnCall *fpe = NULL;
     Rval returnval;
 
     // Allocates new memory for the copy
     returnval.item = NULL;
     returnval.type = RVAL_TYPE_NOPROMISEE;
 
-    switch (rval.type)
+    switch (rval_type)
     {
     case RVAL_TYPE_SCALAR:
-
-        ExpandScalar(ctx, ns, scope, (char *) rval.item, buffer);
+         ExpandScalar(ctx, ns, scope, rval_item, buffer);
         returnval.item = xstrdup(buffer);
         returnval.type = RVAL_TYPE_SCALAR;
         break;
 
     case RVAL_TYPE_LIST:
-
-        returnval.item = ExpandList(ctx, ns, scope, rval.item, true);
+        returnval.item = ExpandList(ctx, ns, scope, rval_item, true);
         returnval.type = RVAL_TYPE_LIST;
         break;
 
     case RVAL_TYPE_FNCALL:
-
         /* Note expand function does not mean evaluate function, must preserve type */
-        fp = (FnCall *) rval.item;
-        fpe = ExpandFnCall(ctx, ns, scope, fp);
+        fpe = ExpandFnCall(ctx, ns, scope, rval_item);
         returnval.item = fpe;
         returnval.type = RVAL_TYPE_FNCALL;
         break;
 
     case RVAL_TYPE_CONTAINER:
-        returnval = RvalCopy(rval);
+        returnval = RvalNew(JsonCopy(rval_item), RVAL_TYPE_CONTAINER);
         break;
 
     case RVAL_TYPE_NOPROMISEE:
@@ -851,7 +847,7 @@ Rval EvaluateFinalRval(EvalContext *ctx, const char *ns, const char *scope, Rval
 
             if (!EvalContextVariableGet(ctx, ref, &returnval, NULL) || returnval.type != RVAL_TYPE_LIST)
             {
-                returnval = ExpandPrivateRval(ctx, NULL, "this", rval);
+                returnval = ExpandPrivateRval(ctx, NULL, "this", rval.item, rval.type);
             }
             else
             {
@@ -863,14 +859,14 @@ Rval EvaluateFinalRval(EvalContext *ctx, const char *ns, const char *scope, Rval
         }
         else
         {
-            returnval = ExpandPrivateRval(ctx, NULL, "this", rval);
+            returnval = ExpandPrivateRval(ctx, NULL, "this", rval.item, rval.type);
         }
     }
     else
     {
         if (forcelist)          /* We are replacing scalar @(name) with list */
         {
-            returnval = ExpandPrivateRval(ctx, ns, scope, rval);
+            returnval = ExpandPrivateRval(ctx, ns, scope, rval.item, rval.type);
         }
         else
         {
@@ -880,7 +876,7 @@ Rval EvaluateFinalRval(EvalContext *ctx, const char *ns, const char *scope, Rval
             }
             else
             {
-                returnval = ExpandPrivateRval(ctx, NULL, "this", rval);
+                returnval = ExpandPrivateRval(ctx, NULL, "this", rval.item, rval.type);
             }
         }
     }
@@ -908,7 +904,7 @@ Rval EvaluateFinalRval(EvalContext *ctx, const char *ns, const char *scope, Rval
                 {
                     if (IsCf3VarString(RlistScalarValue(rp)))
                     {
-                        newret = ExpandPrivateRval(ctx, NULL, "this", rp->val);
+                        newret = ExpandPrivateRval(ctx, NULL, "this", rp->val.item, rp->val.type);
                         free(rp->val.item);
                         rp->val.item = newret.item;
                     }
@@ -1100,7 +1096,7 @@ static void ResolveControlBody(EvalContext *ctx, GenericAgentConfig *config, con
 
         if (strcmp(cp->lval, CFG_CONTROLBODY[COMMON_CONTROL_BUNDLESEQUENCE].lval) == 0)
         {
-            returnval = ExpandPrivateRval(ctx, NULL, scope, cp->rval);
+            returnval = ExpandPrivateRval(ctx, NULL, scope, cp->rval.item, cp->rval.type);
         }
         else
         {

@@ -967,7 +967,7 @@ void EvalContextStackPushBundleFrame(EvalContext *ctx, const Bundle *owner, cons
         Variable *var = NULL;
         while ((var = VariableTableIteratorNext(iter)))
         {
-            Rval retval = ExpandPrivateRval(ctx, owner->ns, owner->name, var->rval);
+            Rval retval = ExpandPrivateRval(ctx, owner->ns, owner->name, var->rval.item, var->rval.type);
             RvalDestroy(var->rval);
             var->rval = retval;
         }

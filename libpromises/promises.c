@@ -202,7 +202,7 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
                 {
                     Constraint *scp = SeqAt(bp->conlist, k);
 
-                    returnval = ExpandPrivateRval(ctx, NULL, "body", scp->rval);
+                    returnval = ExpandPrivateRval(ctx, NULL, "body", scp->rval.item, scp->rval.type);
                     if (IsDefinedClass(ctx, scp->classes, PromiseGetNamespace(pcopy)))
                     {
                         Constraint *scp_copy = PromiseAppendConstraint(pcopy, scp->lval, returnval, false);
@@ -284,7 +284,7 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const Promise *pp)
 
     pcopy = xcalloc(1, sizeof(Promise));
 
-    returnval = ExpandPrivateRval(ctx, NULL, "this", (Rval) {pp->promiser, RVAL_TYPE_SCALAR });
+    returnval = ExpandPrivateRval(ctx, NULL, "this", pp->promiser, RVAL_TYPE_SCALAR);
     pcopy->promiser = RvalScalarValue(returnval);
 
     if (pp->promisee.item)

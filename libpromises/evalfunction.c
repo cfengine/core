@@ -3071,8 +3071,8 @@ static FnCallResult FnCallFold(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
     int count = 0;
     double mean = 0;
     double M2 = 0;
-    Rlist *max = NULL;
-    Rlist *min = NULL;
+    const Rlist *max = NULL;
+    const Rlist *min = NULL;
     bool variance_mode = strcmp(fp->name, "variance") == 0;
     bool mean_mode = strcmp(fp->name, "mean") == 0;
 

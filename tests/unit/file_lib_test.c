@@ -561,6 +561,28 @@ static void test_safe_open_ending_slashes(void)
     return_to_test_dir();
 }
 
+static void test_safe_open_null(void)
+{
+    setup_tempfiles();
+
+    int fd;
+    assert_false((fd = safe_open(NULL, O_RDONLY)) >= 0);
+    assert_int_equal(errno, EINVAL);
+
+    return_to_test_dir();
+}
+
+static void test_safe_open_empty(void)
+{
+    setup_tempfiles();
+
+    int fd;
+    assert_false((fd = safe_open("", O_RDONLY)) >= 0);
+    assert_int_equal(errno, ENOENT);
+
+    return_to_test_dir();
+}
+
 static void test_safe_fopen(void)
 {
     setup_tempfiles();
@@ -1193,6 +1215,8 @@ int main(int argc, char **argv)
             unit_test(test_safe_open_dangling_symlink),
             unit_test(test_safe_open_root),
             unit_test(test_safe_open_ending_slashes),
+            unit_test(test_safe_open_null),
+            unit_test(test_safe_open_empty),
 
             unit_test(test_safe_fopen),
 

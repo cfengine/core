@@ -329,7 +329,7 @@ static int SelectProcTimeCounterRangeMatch(char *name1, char *name2, time_t min,
     return false;
 }
 
-static long TimeAbs2Int(const char *s)
+static time_t TimeAbs2Int(const char *s)
 {
     if (s == NULL)
     {
@@ -365,7 +365,7 @@ static long TimeAbs2Int(const char *s)
         tm.tm_min = 0;
     }
 
-    return (long) mktime(&tm);
+    return mktime(&tm);
 }
 
 static int SelectProcTimeAbsRangeMatch(char *name1, char *name2, time_t min, time_t max, char **names, char **line)
@@ -380,7 +380,7 @@ static int SelectProcTimeAbsRangeMatch(char *name1, char *name2, time_t min, tim
 
     if ((i = GetProcColumnIndex(name1, name2, names)) != -1)
     {
-        value = (time_t) TimeAbs2Int(line[i]);
+        value = TimeAbs2Int(line[i]);
 
         if (value == CF_NOINT)
         {

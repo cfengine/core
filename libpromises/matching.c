@@ -35,7 +35,7 @@
 #include <string_lib.h>
 
 /* Pure */
-static pcre *CompileRegExp(const char *regexp)
+pcre *CompileRegExp(const char *regexp)
 {
     pcre *rx;
     const char *errorstr;
@@ -50,64 +50,6 @@ static pcre *CompileRegExp(const char *regexp)
     }
 
     return rx;
-}
-
-/* Sets variables */
-static int RegExMatchSubString(EvalContext *ctx, pcre *rx, const char *teststring, int *start, int *end)
-{
-    int ovector[OVECCOUNT];
-    int rc = 0;
-
-    if ((rc = pcre_exec(rx, NULL, teststring, strlen(teststring), 0, 0, ovector, OVECCOUNT)) >= 0)
-    {
-        *start = ovector[0];
-        *end = ovector[1];
-
-        EvalContextVariableClearMatch(ctx);
-
-        for (int i = 0; i < rc; i++)        /* make backref vars $(1),$(2) etc */
-        {
-            const char *backref_start = teststring + ovector[i * 2];
-            int backref_len = ovector[i * 2 + 1] - ovector[i * 2];
-
-            if (backref_len < CF_MAXVARSIZE)
-            {
-                char substring[CF_MAXVARSIZE];
-
-                strlcpy(substring, backref_start, MIN(CF_MAXVARSIZE, backref_len + 1));
-                if (THIS_AGENT_TYPE == AGENT_TYPE_AGENT)
-                {
-                    char *index = StringFromLong(i);
-                    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_MATCH, index, substring, DATA_TYPE_STRING, "source=regex");
-                    free(index);
-                }
-            }
-        }
-    }
-    else
-    {
-        *start = 0;
-        *end = 0;
-    }
-
-    free(rx);
-    return rc >= 0;
-}
-
-/* Sets variables */
-static int RegExMatchFullString(EvalContext *ctx, pcre *rx, const char *teststring)
-{
-    int match_start;
-    int match_len;
-
-    if (RegExMatchSubString(ctx, rx, teststring, &match_start, &match_len))
-    {
-        return (match_start == 0) && (match_len == strlen(teststring));
-    }
-    else
-    {
-        return false;
-    }
 }
 
 /* Pure, non-thread-safe */
@@ -140,41 +82,6 @@ static char *FirstBackReference(pcre *rx, const char *teststring)
     return backreference;
 }
 
-bool ValidateRegEx(const char *regex)
-{
-    pcre *rx = CompileRegExp(regex);
-    bool regex_valid = rx != NULL;
-
-    free(rx);
-    return regex_valid;
-}
-
-int FullTextMatch(EvalContext *ctx, const char *regexp, const char *teststring)
-{
-    pcre *rx;
-
-    if (strcmp(regexp, teststring) == 0)
-    {
-        return true;
-    }
-
-    rx = CompileRegExp(regexp);
-
-    if (rx == NULL)
-    {
-        return false;
-    }
-
-    if (RegExMatchFullString(ctx, rx, teststring))
-    {
-        return true;
-    }
-    else
-    {
-        return false;
-    }
-}
-
 char *ExtractFirstReference(const char *regexp, const char *teststring)
 {
     char *backreference;
@@ -201,25 +108,6 @@ char *ExtractFirstReference(const char *regexp, const char *teststring)
     }
 
     return backreference;
-}
-
-int BlockTextMatch(EvalContext *ctx, const char *regexp, const char *teststring, int *start, int *end)
-{
-    pcre *rx = CompileRegExp(regexp);
-
-    if (rx == NULL)
-    {
-        return 0;
-    }
-
-    if (RegExMatchSubString(ctx, rx, teststring, start, end))
-    {
-        return true;
-    }
-    else
-    {
-        return false;
-    }
 }
 
 int IsRegex(char *str)

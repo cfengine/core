@@ -31,7 +31,7 @@
 #include <files_lib.h>
 #include <item_lib.h>
 #include <conversion.h>
-#include <matching.h>
+#include <match_scope.h>
 #include <string_lib.h>
 #include <pipes.h>
 #include <nfs.h>

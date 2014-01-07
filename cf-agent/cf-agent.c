@@ -53,6 +53,7 @@
 #include <locks.h>
 #include <scope.h>
 #include <matching.h>
+#include <match_scope.h>
 #include <instrumentation.h>
 #include <promises.h>
 #include <unix.h>

@@ -25,6 +25,8 @@ static void test_list_len(void)
     DeleteItemList(list);
 }
 
+/* FIXME: those functions are now internal to cf-agent */
+#if 0
 static void test_list_select_last_matching_finds_first(void)
 {
     EvalContext *ctx = EvalContextNew();
@@ -81,6 +83,7 @@ static void test_list_select_last_matching_not_found(void)
     DeleteItemList(list);
     EvalContextDestroy(ctx);
 }
+#endif
 
 static void test_list_compare(void)
 {
@@ -114,9 +117,6 @@ int main()
     {
         unit_test(test_prepend_item),
         unit_test(test_list_len),
-        unit_test(test_list_select_last_matching_finds_first),
-        unit_test(test_list_select_last_matching_finds_last),
-        unit_test(test_list_select_last_matching_not_found),
         unit_test(test_list_compare)
     };
 

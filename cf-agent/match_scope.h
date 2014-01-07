@@ -22,27 +22,13 @@
   included file COSL.txt.
 */
 
-#ifndef CFENGINE_MATCHING_H
-#define CFENGINE_MATCHING_H
+#ifndef CFENGINE_MATCH_SCOPE_H
+#define CFENGINE_MATCH_SCOPE_H
 
 #include <cf3.defs.h>
 
-pcre *CompileRegExp(const char *regexp);
-int IsRegex(char *str); /* Pure */
-int IsRegexItemIn(EvalContext *ctx, Item *list, char *regex); /* Uses context */
+int FullTextMatch(EvalContext *ctx, const char *regptr, const char *cmpptr); /* Sets variables */
+int BlockTextMatch(EvalContext *ctx, const char *regexp, const char *teststring, int *s, int *e); /* Sets variables */
+bool ValidateRegEx(const char *regex); /* Pure */
 
-char *ExtractFirstReference(const char *regexp, const char *teststring); /* Pure, not thread-safe */
-
-int IsPathRegex(char *str); /* Pure */
-bool HasRegexMetaChars(const char *string);
-void EscapeRegexChars(char *str, char *strEsc, int strEscSz); /* Pure */
-void EscapeSpecialChars(char *str, char *strEsc, int strEscSz, char *noEscseq, char *noEsclist); /* Pure */
-char *EscapeChar(char *str, int strSz, char esc); /* Pure */
-void AnchorRegex(const char *regex, char *out, int outSz); /* Pure */
-
-/**
-   result is malloced
- */
-char *AnchorRegexNew(const char *regex);
-
-#endif // MATCHING_H
+#endif

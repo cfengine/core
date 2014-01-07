@@ -35,6 +35,7 @@
 #include <expand.h>
 #include <scope.h>
 #include <matching.h>
+#include <match_scope.h>
 #include <attributes.h>
 #include <locks.h>
 #include <string_lib.h>

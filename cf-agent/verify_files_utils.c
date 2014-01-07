@@ -32,7 +32,7 @@
 #include <files_properties.h>
 #include <locks.h>
 #include <instrumentation.h>
-#include <matching.h>
+#include <match_scope.h>
 #include <files_interfaces.h>
 #include <promises.h>
 #include <files_operators.h>

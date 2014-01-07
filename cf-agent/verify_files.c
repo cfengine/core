@@ -40,7 +40,7 @@
 #include <files_editline.h>
 #include <files_properties.h>
 #include <item_lib.h>
-#include <matching.h>
+#include <match_scope.h>
 #include <attributes.h>
 #include <locks.h>
 #include <string_lib.h>

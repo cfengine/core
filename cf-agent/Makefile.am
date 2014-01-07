@@ -44,6 +44,7 @@ libcf_agent_la_SOURCES = \
         acl_posix.c acl_posix.h \
         cf_sql.c cf_sql.h \
         promiser_regex_resolver.c promiser_regex_resolver.h \
+        match_scope.c match_scope.h \
         retcode.c retcode.h \
         verify_acl.c verify_acl.h \
         verify_files.c verify_files.h \

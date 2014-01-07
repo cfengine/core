@@ -3,6 +3,8 @@
 #include <item_lib.h>
 #include <eval_context.h>
 
+/* FIXME: MatchRegion is now internal function of cf-agent */
+#if 0
 static void test_match_region(void)
 {
     EvalContext *ctx =EvalContextNew();
@@ -37,13 +39,13 @@ static void test_match_region(void)
 
     assert_true(MatchRegion(ctx, "first\nsecond\nthird", begin, NULL, false));
 }
+#endif
 
 int main()
 {
     PRINT_TEST_BANNER();
     const UnitTest tests[] =
     {
-        unit_test(test_match_region),
     };
 
     return run_tests(tests);

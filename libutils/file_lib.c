@@ -110,6 +110,12 @@ int safe_open(const char *pathname, int flags, ...)
         return -1;
     }
 
+    if (*pathname == '\0')
+    {
+        errno = ENOENT;
+        return -1;
+    }
+
     mode_t mode;
     if (flags & O_CREAT)
     {

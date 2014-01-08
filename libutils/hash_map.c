@@ -127,6 +127,18 @@ static void FreeBucketListItem(HashMap *map, BucketListItem *item)
     free(item);
 }
 
+/* Do not destroy value item */
+static void FreeBucketListItemSoft(HashMap *map, BucketListItem *item)
+{
+    if (item->next)
+    {
+        FreeBucketListItemSoft(map, item->next);
+    }
+
+    map->destroy_key_fn(item->value.key);
+    free(item);
+}
+
 void HashMapClear(HashMap *map)
 {
     for (int i = 0; i < HASHMAP_BUCKETS; ++i)
@@ -136,6 +148,24 @@ void HashMapClear(HashMap *map)
             FreeBucketListItem(map, map->buckets[i]);
         }
         map->buckets[i] = NULL;
+    }
+}
+
+void HashMapSoftDestroy(HashMap *map)
+{
+    if (map)
+    {
+        for (int i = 0; i < HASHMAP_BUCKETS; ++i)
+        {
+            if (map->buckets[i])
+            {
+                FreeBucketListItemSoft(map, map->buckets[i]);
+            }
+            map->buckets[i] = NULL;
+        }
+
+        free(map->buckets);
+        free(map);
     }
 }
 

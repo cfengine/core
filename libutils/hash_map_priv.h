@@ -59,6 +59,7 @@ bool HashMapInsert(HashMap *map, void *key, void *value);
 bool HashMapRemove(HashMap *map, const void *key);
 MapKeyValue *HashMapGet(const HashMap *map, const void *key);
 void HashMapClear(HashMap *map);
+void HashMapSoftDestroy(HashMap *map);
 void HashMapDestroy(HashMap *map);
 
 /******************************************************************************/

@@ -97,6 +97,11 @@ void MapClear(Map *map);
  */
 void MapDestroy(Map *map);
 
+/*
+ * Destroy the map object without removing values.
+ */
+void MapSoftDestroy(Map *map);
+
 /**
  * Returns whether the two maps contain the same keys.
  * The values DO NOT have to be equal, just the keys.
@@ -117,6 +122,7 @@ bool MapContainsSameKeys(const Map *map1, const Map *map2);
     void Prefix##MapClear(Prefix##Map *map);                            \
     size_t Prefix##MapSize(const Prefix##Map *map);                            \
     void Prefix##MapDestroy(Prefix##Map *map);                          \
+    void Prefix##MapSoftDestroy(Prefix##Map *map);                          \
     bool Prefix##MapContainsSameKeys(const Prefix##Map *map1, const Prefix##Map *map2); \
 
 #define TYPED_MAP_DEFINE(Prefix, KeyType, ValueType, hash_fn, equal_fn, \
@@ -163,6 +169,12 @@ bool MapContainsSameKeys(const Map *map1, const Map *map2);
     void Prefix##MapDestroy(Prefix##Map *map)                           \
     {                                                                   \
         MapDestroy(map->impl);                                          \
+        free(map);                                                      \
+    }                                                                   \
+                                                                        \
+    void Prefix##MapSoftDestroy(Prefix##Map *map)                       \
+    {                                                                   \
+        MapSoftDestroy(map->impl);                                      \
         free(map);                                                      \
     }                                                                   \
                                                                         \

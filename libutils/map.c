@@ -218,6 +218,22 @@ void MapClear(Map *map)
     }
 }
 
+void MapSoftDestroy(Map *map)
+{
+    if (map)
+    {
+        if (IsArrayMap(map))
+        {
+            ArrayMapSoftDestroy(map->arraymap);
+        }
+        else
+        {
+            HashMapSoftDestroy(map->hashmap);
+        }
+        free(map);
+    }
+}
+
 void MapDestroy(Map *map)
 {
     if (map)

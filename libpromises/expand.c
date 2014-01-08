@@ -1036,7 +1036,7 @@ static void ResolveVariablesPromises(EvalContext *ctx, PromiseType *pt)
 
 void BundleResolve(EvalContext *ctx, const Bundle *bundle)
 {
-    Log(LOG_LEVEL_VERBOSE, "Resolving variables in bundle '%s' '%s'", bundle->type, bundle->name);
+    Log(LOG_LEVEL_DEBUG, "Resolving variables in bundle '%s' '%s'", bundle->type, bundle->name);
 
     for (size_t j = 0; j < SeqLength(bundle->promise_types); j++)
     {

@@ -511,15 +511,13 @@ static void GetNameInfo3(EvalContext *ctx)
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "exports", VEXPORTS[VSYSTEMHARDCLASS], DATA_TYPE_STRING, "source=agent");
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "logdir", GetLogDir(), DATA_TYPE_STRING, "source=agent");
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "piddir", GetPidDir(), DATA_TYPE_STRING, "source=agent");
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "masterdir", GetMasterDir(), DATA_TYPE_STRING, "source=agent");
 
     snprintf(workbuf, CF_BUFSIZE, "%s%cbin", CFWORKDIR, FILE_SEPARATOR);
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "bindir", workbuf, DATA_TYPE_STRING, "source=agent");
 
     snprintf(workbuf, CF_BUFSIZE, "%s%cinputs", CFWORKDIR, FILE_SEPARATOR);
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "inputdir", workbuf, DATA_TYPE_STRING, "source=agent");
-
-    snprintf(workbuf, CF_BUFSIZE, "%s%cmasterfiles", CFWORKDIR, FILE_SEPARATOR);
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "masterdir", workbuf, DATA_TYPE_STRING, "source=agent");
 
     snprintf(workbuf, CF_BUFSIZE, "%s%cinputs%cfailsafe.cf", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "failsafe_policy_path", workbuf, DATA_TYPE_STRING, "source=agent");

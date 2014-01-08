@@ -141,6 +141,7 @@ AS_IF([test x"$enable_fhs" = xyes], [
   projlibdir='${libdir}/cfengine'
   projdatadir='${exec_prefix}/share/cfengine'
   WORKDIR='${localstatedir}/lib/cfengine'
+  MASTERDIR='${localstatedir}/lib/cfengine/masterfiles'
   LOGDIR='${localstatedir}/lib/cfengine'
   PIDDIR=='${localstatedir}/lib/cfengine'
 ], [
@@ -149,17 +150,20 @@ AS_IF([test x"$enable_fhs" = xyes], [
     case "$target_os" in
       mingw*)
         WORKDIR=$(cmd /c "echo %PROGRAMFILES%\\Cfengine" | sed 's/\\/\\\\/g')
+        MASTERDIR=$(cmd /c "echo %PROGRAMFILES%\\Cfengine\\masterfiles" | sed 's/\\/\\\\/g')
         LOGDIR=$(cmd /c "echo %PROGRAMFILES%\\Cfengine" | sed 's/\\/\\\\/g')
         PIDDIR=$(cmd /c "echo %PROGRAMFILES%\\Cfengine" | sed 's/\\/\\\\/g')
       ;;
       *)
         WORKDIR=/var/cfengine
+        MASTERDIR=/var/cfengine/masterfiles
         LOGDIR=/var/cfengine
         PIDDIR=/var/cfengine
       ;;
     esac
   else
     WORKDIR="${localstatedir}/cfengine"
+    MASTERDIR="${localstatedir}/cfengine/masterfiles"
     LOGDIR="${localstatedir}/cfengine"
     PIDDIR="${localstatedir}/cfengine"
   fi
@@ -1034,6 +1038,7 @@ AC_ARG_WITH(workdir,
             WORKDIR=$withval
             LOGDIR=$withval
             PIDDIR==$withval
+            MASTERDIR=$withval/masterfiles
         fi
     ],
 )
@@ -1045,6 +1050,21 @@ adl_RECURSIVE_EVAL("${WORKDIR}", WORKDIR)
 AC_DEFINE_UNQUOTED(WORKDIR, "${WORKDIR}", [Workdir location])
 AC_SUBST(workdir, "${WORKDIR}")
 
+AC_ARG_WITH(masterdir,
+    [  --with-masterdir=MASTERDIR  default internal for masterfiles directory ],
+    [
+        if test x$withval != x ; then
+            MASTERDIR=$withval
+        fi
+    ],
+)
+
+dnl Expand ${prefix} and whatnot in MASTERDIR
+
+adl_RECURSIVE_EVAL("${MASTERDIR}", MASTERDIR)
+
+AC_DEFINE_UNQUOTED(MASTERDIR, "${MASTERDIR}", [Masterfiles directory location])
+AC_SUBST(masterdir, "${MASTERDIR}")
 
 
 AC_ARG_WITH(logdir,
@@ -1242,6 +1262,7 @@ fi
 m4_indir(incstart[]incend, [nova/config.m4])
 
 AC_MSG_RESULT([-> Workdir: $WORKDIR])
+AC_MSG_RESULT([-> Masterdir: $MASTERDIR])
 AC_MSG_RESULT([-> Logdir: $LOGDIR])
 AC_MSG_RESULT([-> Piddir: $PIDDIR])
 

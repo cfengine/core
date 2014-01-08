@@ -1,0 +1,270 @@
+#######################################################
+#
+# Test datatype()
+#
+#######################################################
+
+body common control
+{
+    inputs => { "../../default.cf.sub" };
+    bundlesequence  => { default("$(this.promise_filename)") };
+    version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+  vars:
+    "results" string => 'jsonstring = {
+  "person": {
+    "first": "miyamoto",
+    "last": "musashi"
+  },
+  "birth": null,
+  "death": 16450613,
+  "go rin no sho": {
+    "1": "ground",
+    "2": "water",
+    "3": "fire",
+    "4": "wind",
+    "5": "void"
+  },
+  "dokkōdō": [
+    "accept everything just the way it is.",
+    "do not seek pleasure for its own sake.",
+    "do not, under any circumstances, depend on a partial feeling.",
+    "think lightly of yourself and deeply of the world.",
+    "be detached from desire your whole life.",
+    "do not regret what you have done.",
+    "never be jealous.",
+    "never let yourself be saddened by a separation.",
+    "resentment and complaint are appropriate neither for oneself nor others.",
+    "do not let yourself be guided by the feeling of lust or love.",
+    "In all things, have no preferences.",
+    "be indifferent to where you live.",
+    "do not pursue the taste of good food.",
+    "do not hold on to possessions you no longer need.",
+    "do not act following customary beliefs.",
+    "do not collect weapons or practice with weapons beyond what is useful.",
+    "do not fear death.",
+    "do not seek to possess either goods or fiefs for your old age.",
+    "respect buddha and the gods without counting on their help.",
+    "you may abandon your own body but you must preserve your honor.",
+    "never stray from the way."
+  ],
+  "styles": [
+    "two heavens as one",
+    "two swords as one"
+  ],
+  "decidable": false,
+  "dituri was here": 3.1416
+}';
+
+    "results2" string => '---------------------
+toplevel:key = person
+toplevel:key = birth
+toplevel:key = death
+toplevel:key = go rin no sho
+toplevel:key = dokkōdō
+toplevel:key = styles
+toplevel:key = decidable
+toplevel:key = dituri was here
+toplevel[person]:type = json_object
+toplevel[birth]:type = json_null
+toplevel[death]:type = json_integer
+toplevel[go rin no sho]:type = json_object
+toplevel[dokkōdō]:type = json_array
+toplevel[styles]:type = json_array
+toplevel[decidable]:type = json_bool
+toplevel[dituri was here]:type = json_real
+------------------------------------------
+toplevel[person]:key= first
+toplevel[go rin no sho]:key= 1
+toplevel[dokkōdō]:key= 0
+toplevel[styles]:key= 0
+toplevel[person]:key= last
+toplevel[go rin no sho]:key= 2
+toplevel[go rin no sho]:key= 3
+toplevel[go rin no sho]:key= 4
+toplevel[go rin no sho]:key= 5
+toplevel[dokkōdō]:key= 1
+toplevel[dokkōdō]:key= 2
+toplevel[dokkōdō]:key= 3
+toplevel[dokkōdō]:key= 4
+toplevel[dokkōdō]:key= 5
+toplevel[dokkōdō]:key= 6
+toplevel[dokkōdō]:key= 7
+toplevel[dokkōdō]:key= 8
+toplevel[dokkōdō]:key= 9
+toplevel[dokkōdō]:key= 10
+toplevel[dokkōdō]:key= 11
+toplevel[dokkōdō]:key= 12
+toplevel[dokkōdō]:key= 13
+toplevel[dokkōdō]:key= 14
+toplevel[dokkōdō]:key= 15
+toplevel[dokkōdō]:key= 16
+toplevel[dokkōdō]:key= 17
+toplevel[dokkōdō]:key= 18
+toplevel[dokkōdō]:key= 19
+toplevel[dokkōdō]:key= 20
+toplevel[styles]:key= 1';
+
+    "results3" string => 'toplevel[person][first]:type = json_string
+toplevel[go rin no sho][1]:type = json_string
+toplevel[dokkōdō][0]:type = json_string
+toplevel[styles][0]:type = json_string
+toplevel[person][last]:type = json_string
+toplevel[go rin no sho][2]:type = json_string
+toplevel[go rin no sho][3]:type = json_string
+toplevel[go rin no sho][4]:type = json_string
+toplevel[go rin no sho][5]:type = json_string
+toplevel[dokkōdō][1]:type = json_string
+toplevel[dokkōdō][2]:type = json_string
+toplevel[dokkōdō][3]:type = json_string
+toplevel[dokkōdō][4]:type = json_string
+toplevel[dokkōdō][5]:type = json_string
+toplevel[dokkōdō][6]:type = json_string
+toplevel[dokkōdō][7]:type = json_string
+toplevel[dokkōdō][8]:type = json_string
+toplevel[dokkōdō][9]:type = json_string
+toplevel[dokkōdō][10]:type = json_string
+toplevel[dokkōdō][11]:type = json_string
+toplevel[dokkōdō][12]:type = json_string
+toplevel[dokkōdō][13]:type = json_string
+toplevel[dokkōdō][14]:type = json_string
+toplevel[dokkōdō][15]:type = json_string
+toplevel[dokkōdō][16]:type = json_string
+toplevel[dokkōdō][17]:type = json_string
+toplevel[dokkōdō][18]:type = json_string
+toplevel[dokkōdō][19]:type = json_string
+toplevel[dokkōdō][20]:type = json_string
+toplevel[styles][1]:type = json_string
+ok: datatype(datastr) failed properly';
+
+  files:
+    "$(G.testfile).expected"
+    create => "true",
+    edit_defaults => init_empty,
+    edit_line => init_insert;
+}
+
+body edit_defaults init_empty
+{
+    empty_file_before_editing => "true";
+    edit_backup => "false";
+}
+
+bundle edit_line init_insert
+{
+  insert_lines:
+    "$(init.results)";
+    "$(init.results2)";
+    "$(init.results3)";
+}
+
+#######################################################
+
+bundle common test_common
+{
+  vars:
+    "datastr" string => storejson("data");
+    "data"    data   => parsejson('
+{
+  "person": { "first": "miyamoto", "last": "musashi" },
+  "birth": null,
+  "death": 16450613,
+  "go rin no sho": { "1": "ground", "2": "water", "3": "fire", "4": "wind", "5": "void" },
+  "dokkōdō": [
+      "accept everything just the way it is.",
+      "do not seek pleasure for its own sake.",
+      "do not, under any circumstances, depend on a partial feeling.",
+      "think lightly of yourself and deeply of the world.",
+      "be detached from desire your whole life.",
+      "do not regret what you have done.",
+      "never be jealous.",
+      "never let yourself be saddened by a separation.",
+      "resentment and complaint are appropriate neither for oneself nor others.",
+      "do not let yourself be guided by the feeling of lust or love.",
+      "In all things, have no preferences.",
+      "be indifferent to where you live.",
+      "do not pursue the taste of good food.",
+      "do not hold on to possessions you no longer need.",
+      "do not act following customary beliefs.",
+      "do not collect weapons or practice with weapons beyond what is useful.",
+      "do not fear death.",
+      "do not seek to possess either goods or fiefs for your old age.",
+      "respect buddha and the gods without counting on their help.",
+      "you may abandon your own body but you must preserve your honor.",
+      "never stray from the way."
+  ],
+  "styles": ["two heavens as one","two swords as one"],
+  "decidable": false
+  "dituri was here": 3.14159265
+}
+');
+
+    "typenames" slist  => { "person", "go rin no sho", "dokkōdō", "styles" };
+
+    "keys[top]"
+      slist  => getindices("data");
+
+    "types[top][$(keys[top])]"
+      string => datatype("data[$(keys[top])]");
+
+    "keys[$(typenames)]"
+      slist  => getindices("data[$(typenames)]");
+
+    "types[$(typenames)][$(keys[$(typenames)])]"
+      string => datatype("data[$(typenames)][$(keys[$(typenames)])]");
+
+    "bad_type_test"
+      string => datatype("datastr");
+
+  classes:
+    "ok_invalid_test_failed"  not => isvariable("bad_type_test");
+}
+
+
+bundle agent test
+{
+  files:
+    "$(G.testfile).actual"
+      create => "true",
+      edit_line => test_insert;
+}
+
+bundle edit_line test_insert
+{
+  insert_lines:
+    cfengine::
+      "jsonstring = $(test_common.datastr)";
+
+      "---------------------";
+      "toplevel:key = $(test_common.keys[top])";
+      "toplevel[$(test_common.keys[top])]:type = $(test_common.types[top][$(test_common.keys[top])])";
+
+      "------------------------------------------";
+      "toplevel[$(test_common.typenames)]:key= $(test_common.keys[$(test_common.typenames)])";
+      "toplevel[$(test_common.typenames)][$(test_common.keys[$(test_common.typenames)])]:type = $(test_common.types[$(test_common.typenames)][$(test_common.keys[$(test_common.typenames)])])";
+
+    ok_invalid_test_failed::      
+      "------------------------------------------";
+      "ok: datatype(datastr) failed properly";
+
+    !ok_invalid_test_failed::      
+      "------------------------------------------";
+      "NOT_OK: datatype(datastr) was supposed to fail";
+
+}
+
+#######################################################
+
+bundle agent check
+{
+  methods:
+      "any" usebundle => default_check_diff("$(G.testfile).actual",
+                                            "$(G.testfile).expected",
+                                            "$(this.promise_filename)");
+}
+

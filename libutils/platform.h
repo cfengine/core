@@ -513,6 +513,9 @@ int rpl_asprintf(char **, const char *, ...);
 #if !defined(isfinite)
 # define isfinite(x) finite(x)
 #endif
+#if !HAVE_DECL_GETLINE
+ssize_t getline(char **lineptr, size_t *n, FILE *stream);
+#endif
 #if !HAVE_DECL_GMTIME_R
 struct tm *gmtime_r(const time_t *timep, struct tm *result);
 #endif

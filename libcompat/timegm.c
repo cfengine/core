@@ -24,7 +24,7 @@
 
 #include <platform.h>
 
-time_t timegm(const struct tm *tm)
+time_t timegm(struct tm *tm)
 {
     char *tz = getenv("TZ");
     setenv("TZ", "", true);

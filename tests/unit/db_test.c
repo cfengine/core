@@ -81,6 +81,7 @@ void test_iter_delete_entry(void)
     CloseDB(db);
 }
 
+#if defined(HAVE_LIBTOKYOCABINET) || defined(HAVE_LIBQDBM)
 static void CreateGarbage(const char *filename)
 {
     FILE *fh = fopen(filename, "w");
@@ -90,6 +91,7 @@ static void CreateGarbage(const char *filename)
     }
     fclose(fh);
 }
+#endif /* HAVE_LIBTOKYOCABINET || HAVE_LIBQDBM */
 
 void test_recreate(void)
 {

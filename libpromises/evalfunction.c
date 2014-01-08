@@ -3169,15 +3169,14 @@ static FnCallResult FnCallDatatype(EvalContext *ctx, FnCall *fp, Rlist *finalarg
 
     VarRef* const ref = VarRefParseFromBundle(varname, PromiseGetBundle(fp->caller));
     DataType type = DATA_TYPE_NONE;
-    Rval rval;
-    EvalContextVariableGet(ctx, ref, &rval, &type);
+    const void *rval = EvalContextVariableGet(ctx, ref, &type);
 
     Writer* const typestring = StringWriter();
 
     if (type == DATA_TYPE_CONTAINER)
     {
 
-        const JsonElement* const jelement = RvalContainerValue(rval);
+        const JsonElement* const jelement = rval;
 
         if (JsonGetElementType(jelement) == JSON_ELEMENT_TYPE_CONTAINER)
         {

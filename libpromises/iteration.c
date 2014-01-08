@@ -100,7 +100,7 @@ Rlist *NewIterationContext(EvalContext *ctx, const char *scopeid, Rlist *namelis
 
     for (Rlist *rp = namelist; rp != NULL; rp = rp->next)
     {
-        dtype = DATA_TYPE_NONE;
+        dtype = CF_DATA_TYPE_NONE;
         if (!EvalContextVariableGet(ctx, (VarRef) { NULL, scopeid, rp->item }, &retval, &dtype))
         {
             Log(LOG_LEVEL_ERR, "Couldn't locate variable %s apparently in %s", RlistScalarValue(rp), scopeid);

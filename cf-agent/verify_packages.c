@@ -940,9 +940,9 @@ static void SchedulePackageOp(EvalContext *ctx, const char *name, const char *ve
 
     if ((a.packages.package_name_convention) || (a.packages.package_delete_convention))
     {
-        EvalContextVariablePut(ctx, (VarRef) { NULL, "cf_pack_context", "name" }, (Rval) { name, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
-        EvalContextVariablePut(ctx, (VarRef) { NULL, "cf_pack_context", "version" }, (Rval) { version, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
-        EvalContextVariablePut(ctx, (VarRef) { NULL, "cf_pack_context", "arch" }, (Rval) { arch, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
+        EvalContextVariablePut(ctx, (VarRef) { NULL, "cf_pack_context", "name" }, (Rval) { name, RVAL_TYPE_SCALAR }, CF_DATA_TYPE_STRING);
+        EvalContextVariablePut(ctx, (VarRef) { NULL, "cf_pack_context", "version" }, (Rval) { version, RVAL_TYPE_SCALAR }, CF_DATA_TYPE_STRING);
+        EvalContextVariablePut(ctx, (VarRef) { NULL, "cf_pack_context", "arch" }, (Rval) { arch, RVAL_TYPE_SCALAR }, CF_DATA_TYPE_STRING);
 
         if ((a.packages.package_delete_convention) && (a.packages.package_policy == PACKAGE_ACTION_DELETE))
         {
@@ -1004,9 +1004,9 @@ static void SchedulePackageOp(EvalContext *ctx, const char *name, const char *ve
             if ((a.packages.package_file_repositories != NULL))
             {
                 {
-                    EvalContextVariablePut(ctx, (VarRef) { NULL, "cf_pack_context_anyver", "name" }, (Rval) { name, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
-                    EvalContextVariablePut(ctx, (VarRef) { NULL, "cf_pack_context_anyver", "version" }, (Rval) { "(.*)", RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
-                    EvalContextVariablePut(ctx, (VarRef) { NULL, "cf_pack_context_anyver", "arch" }, (Rval) { arch, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
+                    EvalContextVariablePut(ctx, (VarRef) { NULL, "cf_pack_context_anyver", "name" }, (Rval) { name, RVAL_TYPE_SCALAR }, CF_DATA_TYPE_STRING);
+                    EvalContextVariablePut(ctx, (VarRef) { NULL, "cf_pack_context_anyver", "version" }, (Rval) { "(.*)", RVAL_TYPE_SCALAR }, CF_DATA_TYPE_STRING);
+                    EvalContextVariablePut(ctx, (VarRef) { NULL, "cf_pack_context_anyver", "arch" }, (Rval) { arch, RVAL_TYPE_SCALAR }, CF_DATA_TYPE_STRING);
                     ExpandScalar(ctx, "cf_pack_context_anyver", a.packages.package_name_convention, refAnyVer);
 
                     ScopeClear("cf_pack_context_anyver");
@@ -1124,9 +1124,9 @@ static void SchedulePackageOp(EvalContext *ctx, const char *name, const char *ve
         if ((a.packages.package_file_repositories != NULL))
         {
             {
-                EvalContextVariablePut(ctx, (VarRef) { NULL, "cf_pack_context_anyver", "name" }, (Rval) { name, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
-                EvalContextVariablePut(ctx, (VarRef) { NULL, "cf_pack_context_anyver", "version" }, (Rval) { "(.*)", RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
-                EvalContextVariablePut(ctx, (VarRef) { NULL, "cf_pack_context_anyver", "arch" }, (Rval) { arch, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
+                EvalContextVariablePut(ctx, (VarRef) { NULL, "cf_pack_context_anyver", "name" }, (Rval) { name, RVAL_TYPE_SCALAR }, CF_DATA_TYPE_STRING);
+                EvalContextVariablePut(ctx, (VarRef) { NULL, "cf_pack_context_anyver", "version" }, (Rval) { "(.*)", RVAL_TYPE_SCALAR }, CF_DATA_TYPE_STRING);
+                EvalContextVariablePut(ctx, (VarRef) { NULL, "cf_pack_context_anyver", "arch" }, (Rval) { arch, RVAL_TYPE_SCALAR }, CF_DATA_TYPE_STRING);
                 ExpandScalar(ctx, "cf_pack_context_anyver", a.packages.package_name_convention, refAnyVer);
 
                 ScopeClear("cf_pack_context_anyver");
@@ -1189,9 +1189,9 @@ static void SchedulePackageOp(EvalContext *ctx, const char *name, const char *ve
                     }
 
                     {
-                        EvalContextVariablePut(ctx, (VarRef) { NULL, "cf_pack_context", "name" }, (Rval) { name, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
-                        EvalContextVariablePut(ctx, (VarRef) { NULL, "cf_pack_context", "version" }, (Rval) { instVer, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
-                        EvalContextVariablePut(ctx, (VarRef) { NULL, "cf_pack_context", "arch" }, (Rval) { instArch, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
+                        EvalContextVariablePut(ctx, (VarRef) { NULL, "cf_pack_context", "name" }, (Rval) { name, RVAL_TYPE_SCALAR }, CF_DATA_TYPE_STRING);
+                        EvalContextVariablePut(ctx, (VarRef) { NULL, "cf_pack_context", "version" }, (Rval) { instVer, RVAL_TYPE_SCALAR }, CF_DATA_TYPE_STRING);
+                        EvalContextVariablePut(ctx, (VarRef) { NULL, "cf_pack_context", "arch" }, (Rval) { instArch, RVAL_TYPE_SCALAR }, CF_DATA_TYPE_STRING);
                         ExpandScalar(ctx, "cf_pack_context", a.packages.package_delete_convention, reference2);
                         id_del = reference2;
 

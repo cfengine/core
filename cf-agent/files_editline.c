@@ -114,7 +114,7 @@ int ScheduleEditLineOperations(EvalContext *ctx, Bundle *bp, Attributes a, const
         return false;
     }
 
-    ScopeNewSpecial(ctx, "edit", "filename", edcontext->filename, DATA_TYPE_STRING);
+    ScopeNewSpecial(ctx, "edit", "filename", edcontext->filename, CF_DATA_TYPE_STRING);
 
     for (pass = 1; pass < CF_DONEPASSES; pass++)
     {

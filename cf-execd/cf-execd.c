@@ -553,7 +553,7 @@ static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *c
             free(existing_policy_server);
         }
 
-        ScopeNewSpecial(ctx, "sys", "policy_hub", POLICY_SERVER, DATA_TYPE_STRING);
+        ScopeNewSpecial(ctx, "sys", "policy_hub", POLICY_SERVER, CF_DATA_TYPE_STRING);
 
         GetNameInfo3(ctx, AGENT_TYPE_EXECUTOR);
         GetInterfacesInfo(ctx, AGENT_TYPE_EXECUTOR);

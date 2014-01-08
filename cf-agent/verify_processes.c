@@ -124,7 +124,7 @@ static void VerifyProcesses(EvalContext *ctx, Attributes a, Promise *pp)
     }
 
     ScopeDeleteSpecial("this", "promiser");
-    ScopeNewSpecial(ctx, "this", "promiser", pp->promiser, DATA_TYPE_STRING);
+    ScopeNewSpecial(ctx, "this", "promiser", pp->promiser, CF_DATA_TYPE_STRING);
     PromiseBanner(pp);
     VerifyProcessOp(ctx, PROCESSTABLE, a, pp);
     ScopeDeleteSpecial("this", "promiser");

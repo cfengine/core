@@ -136,7 +136,7 @@ void VerifyEnvironmentsPromise(EvalContext *ctx, Promise *pp)
         }
 
         PromiseBanner(pp);
-        ScopeNewSpecial(ctx, "this", "promiser", pp->promiser, DATA_TYPE_STRING);
+        ScopeNewSpecial(ctx, "this", "promiser", pp->promiser, CF_DATA_TYPE_STRING);
 
         pexp = ExpandDeRefPromise(ctx, "this", pp);
         VerifyEnvironments(ctx, a, pp);

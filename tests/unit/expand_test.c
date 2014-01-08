@@ -44,7 +44,7 @@ static void test_map_iterators_from_rval_naked_list_var(void)
 
     VarRef lval = VarRefParse("scope.jwow");
 
-    EvalContextVariablePut(ctx, lval, (Rval) { list, RVAL_TYPE_LIST }, DATA_TYPE_STRING_LIST);
+    EvalContextVariablePut(ctx, lval, (Rval) { list, RVAL_TYPE_LIST }, CF_DATA_TYPE_STRING_LIST);
 
     Rlist *lists = NULL;
     Rlist *scalars = NULL;
@@ -63,12 +63,12 @@ static void test_expand_scalar_two_scalars_concat(void)
     EvalContext *ctx = EvalContextNew();
     {
         VarRef lval = VarRefParse("default:bundle.one");
-        EvalContextVariablePut(ctx, lval, (Rval) { "first", RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
+        EvalContextVariablePut(ctx, lval, (Rval) { "first", RVAL_TYPE_SCALAR }, CF_DATA_TYPE_STRING);
         VarRefDestroy(lval);
     }
     {
         VarRef lval = VarRefParse("default:bundle.two");
-        EvalContextVariablePut(ctx, lval, (Rval) { "second", RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
+        EvalContextVariablePut(ctx, lval, (Rval) { "second", RVAL_TYPE_SCALAR }, CF_DATA_TYPE_STRING);
         VarRefDestroy(lval);
     }
 
@@ -85,12 +85,12 @@ static void test_expand_scalar_two_scalars_nested(void)
     EvalContext *ctx = EvalContextNew();
     {
         VarRef lval = VarRefParse("default:bundle.one");
-        EvalContextVariablePut(ctx, lval, (Rval) { "first", RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
+        EvalContextVariablePut(ctx, lval, (Rval) { "first", RVAL_TYPE_SCALAR }, CF_DATA_TYPE_STRING);
         VarRefDestroy(lval);
     }
     {
         VarRef lval = VarRefParse("default:bundle.two");
-        EvalContextVariablePut(ctx, lval, (Rval) { "one", RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
+        EvalContextVariablePut(ctx, lval, (Rval) { "one", RVAL_TYPE_SCALAR }, CF_DATA_TYPE_STRING);
         VarRefDestroy(lval);
     }
 
@@ -107,12 +107,12 @@ static void test_expand_scalar_array_concat(void)
     EvalContext *ctx = EvalContextNew();
     {
         VarRef lval = VarRefParse("default:bundle.foo[one]");
-        EvalContextVariablePut(ctx, lval, (Rval) { "first", RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
+        EvalContextVariablePut(ctx, lval, (Rval) { "first", RVAL_TYPE_SCALAR }, CF_DATA_TYPE_STRING);
         VarRefDestroy(lval);
     }
     {
         VarRef lval = VarRefParse("default:bundle.foo[two]");
-        EvalContextVariablePut(ctx, lval, (Rval) { "second", RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
+        EvalContextVariablePut(ctx, lval, (Rval) { "second", RVAL_TYPE_SCALAR }, CF_DATA_TYPE_STRING);
         VarRefDestroy(lval);
     }
 
@@ -129,12 +129,12 @@ static void test_expand_scalar_array_with_scalar_arg(void)
     EvalContext *ctx = EvalContextNew();
     {
         VarRef lval = VarRefParse("default:bundle.foo[one]");
-        EvalContextVariablePut(ctx, lval, (Rval) { "first", RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
+        EvalContextVariablePut(ctx, lval, (Rval) { "first", RVAL_TYPE_SCALAR }, CF_DATA_TYPE_STRING);
         VarRefDestroy(lval);
     }
     {
         VarRef lval = VarRefParse("default:bundle.bar");
-        EvalContextVariablePut(ctx, lval, (Rval) { "one", RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
+        EvalContextVariablePut(ctx, lval, (Rval) { "one", RVAL_TYPE_SCALAR }, CF_DATA_TYPE_STRING);
         VarRefDestroy(lval);
     }
 
@@ -156,12 +156,12 @@ static void test_expand_promise_array_with_scalar_arg(void)
     EvalContext *ctx = EvalContextNew();
     {
         VarRef lval = VarRefParse("default:bundle.foo[one]");
-        EvalContextVariablePut(ctx, lval, (Rval) { "first", RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
+        EvalContextVariablePut(ctx, lval, (Rval) { "first", RVAL_TYPE_SCALAR }, CF_DATA_TYPE_STRING);
         VarRefDestroy(lval);
     }
     {
         VarRef lval = VarRefParse("default:bundle.bar");
-        EvalContextVariablePut(ctx, lval, (Rval) { "one", RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
+        EvalContextVariablePut(ctx, lval, (Rval) { "one", RVAL_TYPE_SCALAR }, CF_DATA_TYPE_STRING);
         VarRefDestroy(lval);
     }
 
@@ -210,7 +210,7 @@ static void test_expand_promise_slist(void)
         RlistAppendScalar(&list, "a");
         RlistAppendScalar(&list, "b");
 
-        EvalContextVariablePut(ctx, lval, (Rval) { list, RVAL_TYPE_LIST }, DATA_TYPE_STRING_LIST);
+        EvalContextVariablePut(ctx, lval, (Rval) { list, RVAL_TYPE_LIST }, CF_DATA_TYPE_STRING_LIST);
 
         RlistDestroy(list);
         VarRefDestroy(lval);
@@ -263,7 +263,7 @@ static void test_expand_promise_array_with_slist_arg(void)
         RlistAppendScalar(&list, "one");
         RlistAppendScalar(&list, "two");
 
-        EvalContextVariablePut(ctx, lval, (Rval) { list, RVAL_TYPE_LIST }, DATA_TYPE_STRING_LIST);
+        EvalContextVariablePut(ctx, lval, (Rval) { list, RVAL_TYPE_LIST }, CF_DATA_TYPE_STRING_LIST);
 
         RlistDestroy(list);
         VarRefDestroy(lval);
@@ -271,13 +271,13 @@ static void test_expand_promise_array_with_slist_arg(void)
 
     {
         VarRef lval = VarRefParse("default:bundle.arr[one]");
-        EvalContextVariablePut(ctx, lval, (Rval) { "first", RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
+        EvalContextVariablePut(ctx, lval, (Rval) { "first", RVAL_TYPE_SCALAR }, CF_DATA_TYPE_STRING);
         VarRefDestroy(lval);
     }
 
     {
         VarRef lval = VarRefParse("default:bundle.arr[two]");
-        EvalContextVariablePut(ctx, lval, (Rval) { "second", RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
+        EvalContextVariablePut(ctx, lval, (Rval) { "second", RVAL_TYPE_SCALAR }, CF_DATA_TYPE_STRING);
         VarRefDestroy(lval);
     }
 

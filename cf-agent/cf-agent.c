@@ -1311,9 +1311,9 @@ static void DefaultVarPromise(EvalContext *ctx, const Promise *pp)
 
     switch (dt)
        {
-       case DATA_TYPE_STRING:
-       case DATA_TYPE_INT:
-       case DATA_TYPE_REAL:
+       case CF_DATA_TYPE_STRING:
+       case CF_DATA_TYPE_INT:
+       case CF_DATA_TYPE_REAL:
 
            if (regex && !FullTextMatch(regex,rval.item))
               {
@@ -1327,9 +1327,9 @@ static void DefaultVarPromise(EvalContext *ctx, const Promise *pp)
 
            break;
 
-       case DATA_TYPE_STRING_LIST:
-       case DATA_TYPE_INT_LIST:
-       case DATA_TYPE_REAL_LIST:
+       case CF_DATA_TYPE_STRING_LIST:
+       case CF_DATA_TYPE_INT_LIST:
+       case CF_DATA_TYPE_REAL_LIST:
 
            if (regex)
               {

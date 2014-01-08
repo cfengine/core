@@ -84,7 +84,7 @@ void ScopeNewSpecial(EvalContext *ctx, const char *ns, const char *varname, cons
     int i;
 
     assert_string_equal(ns, "sys");
-    assert_int_equal(type, DATA_TYPE_STRING);
+    assert_int_equal(type, CF_DATA_TYPE_STRING);
 
     for (i = 0; i < sizeof(expected_vars) / sizeof(expected_vars[0]); ++i)      /* LCOV_EXCL_LINE */
     {

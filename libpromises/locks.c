@@ -646,79 +646,82 @@ void PromiseRuntimeHash(const Promise *pp, const char *salt, unsigned char diges
 /* Digest length stored in md_len */
 }
 
+static CfLock CfLockNew(const char *last, const char *lock, const char *log, bool is_dummy)
+{
+    return (CfLock) {
+        .last = last ? xstrdup(last) : NULL,
+        .lock = lock ? xstrdup(lock) : NULL,
+        .log = log ? xstrdup(log) : NULL,
+        .is_dummy = is_dummy
+    };
+}
+
+static CfLock CfLockNull(void)
+{
+    return (CfLock) {
+        .last = NULL,
+        .lock = NULL,
+        .log = NULL,
+        .is_dummy = false
+    };
+}
+
 CfLock AcquireLock(EvalContext *ctx, const char *operand, const char *host, time_t now,
                    TransactionContext tc, const Promise *pp, bool ignoreProcesses)
 {
-    int i, sum = 0;
-    time_t lastcompleted = 0, elapsedtime;
-    char *promise, cc_operator[CF_BUFSIZE], cc_operand[CF_BUFSIZE];
-    char cflock[CF_BUFSIZE], cflast[CF_BUFSIZE], cflog[CF_BUFSIZE];
-    char str_digest[CF_BUFSIZE];
-    char *rbt_key = NULL;
-    static RBTree *rbt = NULL; /* GLOBAL_X */
+    static StringSet *lock_cache = NULL; /* GLOBAL_X */
     unsigned char digest[EVP_MAX_MD_SIZE + 1];
 
     if (now == 0)
     {
-        return (CfLock) {
-            .last = (char *) CF_UNDEFINED,
-            .lock = (char *) CF_UNDEFINED,
-            .log = (char *) CF_UNDEFINED
-        };
+        return CfLockNull();
     }
 
     // rbt is static, allocate it the first time
-    if (rbt == NULL)
+    if (lock_cache == NULL)
     {
-      rbt = RBTreeNew(NULL, (RBTreeKeyCompareFn *) StringSafeCompare, NULL, NULL, NULL, NULL);
+        lock_cache = StringSetNew();
     }
 
-/* Indicate as done if we tried ... as we have passed all class
-   constraints now but we should only do this for level 0
-   promises. Sub routine bundles cannot be marked as done or it will
-   disallow iteration over bundles */
-
+    /* Indicate as done if we tried ... as we have passed all class
+       constraints now but we should only do this for level 0
+       promises. Sub routine bundles cannot be marked as done or it will
+       disallow iteration over bundles */
     if (EvalContextPromiseIsDone(ctx, pp))
     {
-        return (CfLock) { NULL, NULL, NULL, false };
+        return CfLockNull();
     }
 
     if (EvalContextStackCurrentPromise(ctx))
     {
-        /* Must not set promise to be done for editfiles etc */
+        // Must not set promise to be done for editfiles etc
         EvalContextMarkPromiseDone(ctx, pp);
     }
 
     PromiseRuntimeHash(pp, operand, digest, CF_DEFAULT_DIGEST);
+    char str_digest[CF_BUFSIZE];
     HashPrintSafe(CF_DEFAULT_DIGEST, true, digest, str_digest);
 
-/* As a backup to "done" we need something immune to re-use */
-
+    // As a backup to "done" we need something immune to re-use
     if (THIS_AGENT_TYPE == AGENT_TYPE_AGENT)
     {
-        /* Avoid same prefix to have a better key for our Red Black Tree */
-        rbt_key = xcalloc(1, CF_BUFSIZE);
-        snprintf(rbt_key, CF_BUFSIZE, "%s", SkipHashType(str_digest));
-
-        if (RBTreeGet(rbt, (void *) rbt_key) != NULL)
+        if (StringSetContains(lock_cache, str_digest))
         {
             Log(LOG_LEVEL_DEBUG, "This promise has already been verified");
-            free(rbt_key);
-            return (CfLock) { NULL, NULL, NULL, false };
+            return CfLockNull();
         }
 
-        /* Using &sum to avoid the declaration of a dedicated dummy variable */
-        RBTreePut(rbt, (void * ) rbt_key, &sum);
+        StringSetAdd(lock_cache, xstrdup(str_digest));
     }
 
-/* Finally if we're supposed to ignore locks ... do the remaining stuff */
-
+    // Finally if we're supposed to ignore locks ... do the remaining stuff
     if (EvalContextIsIgnoringLocks(ctx))
     {
-        return (CfLock) { .lock = xstrdup("dummy"), .dummy = true };
+        return CfLockNew(NULL, "dummy", NULL, true);
     }
 
-    promise = BodyName(pp);
+    char *promise = BodyName(pp);
+    char cc_operator[CF_BUFSIZE], cc_operand[CF_BUFSIZE];
     snprintf(cc_operator, CF_MAXVARSIZE - 1, "%s-%s", promise, host);
     strncpy(cc_operand, operand, CF_BUFSIZE - 1);
     CanonifyNameInPlace(cc_operand);
@@ -729,49 +732,52 @@ CfLock AcquireLock(EvalContext *ctx, const char *operand, const char *host, time
     Log(LOG_LEVEL_DEBUG, "AcquireLock(%s,%s), ExpireAfter = %d, IfElapsed = %d", cc_operator, cc_operand, tc.expireafter,
         tc.ifelapsed);
 
-    for (i = 0; cc_operator[i] != '\0'; i++)
+    int sum = 0;
+    for (int i = 0; cc_operator[i] != '\0'; i++)
     {
         sum = (CF_MACROALPHABET * sum + cc_operator[i]) % CF_HASHTABLESIZE;
     }
 
-    for (i = 0; cc_operand[i] != '\0'; i++)
+    for (int i = 0; cc_operand[i] != '\0'; i++)
     {
         sum = (CF_MACROALPHABET * sum + cc_operand[i]) % CF_HASHTABLESIZE;
     }
 
+    char cflog[CF_BUFSIZE] = "";
     snprintf(cflog, CF_BUFSIZE, "%s/cf3.%.40s.runlog", GetLogDir(), host);
+
+    char cflock[CF_BUFSIZE] = "";
     snprintf(cflock, CF_BUFSIZE, "lock.%.100s.%s.%.100s_%d_%s", PromiseGetBundle(pp)->name, cc_operator, cc_operand, sum, str_digest);
+
+    char cflast[CF_BUFSIZE] = "";
     snprintf(cflast, CF_BUFSIZE, "last.%.100s.%s.%.100s_%d_%s", PromiseGetBundle(pp)->name, cc_operator, cc_operand, sum, str_digest);
 
     Log(LOG_LEVEL_DEBUG, "Log for bundle '%s', '%s'", PromiseGetBundle(pp)->name, cflock);
 
-// Now see if we can get exclusivity to edit the locks
-
+    // Now see if we can get exclusivity to edit the locks
     WaitForCriticalSection();
 
-/* Look for non-existent (old) processes */
-
-    lastcompleted = FindLock(cflast);
-    elapsedtime = (time_t) (now - lastcompleted) / 60;
+    // Look for non-existent (old) processes
+    time_t lastcompleted = FindLock(cflast);
+    time_t elapsedtime = (time_t) (now - lastcompleted) / 60;
 
     if (elapsedtime < 0)
     {
-        Log(LOG_LEVEL_VERBOSE, " XX Another cf-agent seems to have done this since I started (elapsed=%jd)",
+        Log(LOG_LEVEL_VERBOSE, "XX Another cf-agent seems to have done this since I started (elapsed=%jd)",
               (intmax_t) elapsedtime);
         ReleaseCriticalSection();
-        return (CfLock) { NULL, NULL, NULL, false };
+        return CfLockNull();
     }
 
     if (elapsedtime < tc.ifelapsed)
     {
-        Log(LOG_LEVEL_VERBOSE, " XX Nothing promised here [%.40s] (%jd/%u minutes elapsed)", cflast,
+        Log(LOG_LEVEL_VERBOSE, "XX Nothing promised here [%.40s] (%jd/%u minutes elapsed)", cflast,
               (intmax_t) elapsedtime, tc.ifelapsed);
         ReleaseCriticalSection();
-        return (CfLock) { NULL, NULL, NULL, false };
+        return CfLockNull();
     }
 
-/* Look for existing (current) processes */
-
+    // Look for existing (current) processes
     if (!ignoreProcesses)
     {
         lastcompleted = FindLock(cflock);
@@ -800,7 +806,7 @@ CfLock AcquireLock(EvalContext *ctx, const char *operand, const char *host, time
             {
                 ReleaseCriticalSection();
                 Log(LOG_LEVEL_VERBOSE, "Couldn't obtain lock for %s (already running!)", cflock);
-                return (CfLock) { NULL, NULL, NULL, false };
+                return CfLockNull();
             }
         }
 
@@ -819,22 +825,17 @@ CfLock AcquireLock(EvalContext *ctx, const char *operand, const char *host, time
 
     ReleaseCriticalSection();
 
-/* Keep this as a global for signal handling */
+    // Keep this as a global for signal handling
     strcpy(CFLOCK, cflock);
     strcpy(CFLAST, cflast);
     strcpy(CFLOG, cflog);
 
-    return (CfLock) {
-        .lock = xstrdup(cflock),
-        .last = xstrdup(cflast),
-        .log = xstrdup(cflog),
-        .dummy = false
-    };
+    return CfLockNew(cflast, cflock, cflog, false);
 }
 
 void YieldCurrentLock(CfLock lock)
 {
-    if (lock.dummy)
+    if (lock.is_dummy)
     {
         free(lock.lock);        /* allocated in AquireLock as a special case */
         return;

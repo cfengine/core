@@ -38,6 +38,7 @@ int main()
 }
 
 /* STUBS */
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 
 void __ProgrammingError(const char *file, int lineno, const char *format, ...)
 {

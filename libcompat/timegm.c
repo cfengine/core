@@ -27,7 +27,7 @@
 time_t timegm(const struct tm *tm)
 {
     char *tz = getenv("TZ");
-    setenv("TZ", "");
+    setenv("TZ", "", true);
     tzset();
     time_t ret = mktime(tm);
     if (tz)

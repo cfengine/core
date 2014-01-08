@@ -259,6 +259,10 @@ char *strsep(char **stringp, const char *delim);
 int socketpair(int domain, int type, int protocol, int sv[2]);
 #endif
 
+#if !HAVE_DECL_SETENV
+int setenv(const char *name, const char *value, int overwrite);
+#endif
+
 #ifdef __APPLE__
 # include <sys/malloc.h>
 # include <sys/paths.h>

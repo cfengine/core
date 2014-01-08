@@ -27,10 +27,7 @@
 
 #include <cf3.defs.h>
 
-bool AcquireLockByID(const char *lock_id, int acquire_after_minutes);
 time_t FindLockTime(const char *name);
-bool InvalidateLockTime(const char *lock_id);
-
 
 CfLock AcquireLock(EvalContext *ctx, const char *operand, const char *host, time_t now, TransactionContext tc, const Promise *pp, bool ignoreProcesses);
 void YieldCurrentLock(CfLock lock);

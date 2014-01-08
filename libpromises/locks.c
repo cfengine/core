@@ -114,58 +114,6 @@ static bool WriteLockDataCurrent(CF_DB *dbp, const char *lock_id)
     return WriteLockData(dbp, lock_id, &lock_data);
 }
 
-/*
- * Much simpler than AcquireLock. Useful when you just want to check
- * if a certain amount of time has elapsed for an action since last
- * time you checked.  No need to clean up after calling this
- * (e.g. like YieldCurrentLock()).
- *
- * WARNING: Is prone to race-conditions, both on the thread and
- *          process level.
- */
-
-bool AcquireLockByID(const char *lock_id, int acquire_after_minutes)
-{
-    CF_DB *dbp = OpenLock();
-
-    if(dbp == NULL)
-    {
-        return false;
-    }
-
-    bool result;
-    LockData lock_data = {
-        .process_start_time = PROCESS_START_TIME_UNKNOWN,
-    };
-
-#ifdef LMDB
-    unsigned char ohash[EVP_MAX_MD_SIZE*2 + 1];
-    GenerateMd5Hash(lock_id, ohash);
-
-    if (ReadDB(dbp, ohash, &lock_data, sizeof(lock_data)))
-#else
-    if (ReadDB(dbp, lock_id, &lock_data, sizeof(lock_data)))
-#endif
-    {
-        if(lock_data.time + (acquire_after_minutes * SECONDS_PER_MINUTE) < time(NULL))
-        {
-            result = WriteLockDataCurrent(dbp, lock_id);
-        }
-        else
-        {
-            result = false;
-        }
-    }
-    else
-    {
-        result = WriteLockDataCurrent(dbp, lock_id);
-    }
-
-    CloseLock(dbp);
-
-    return result;
-}
-
 time_t FindLockTime(const char *name)
 {
     CF_DB *dbp;
@@ -196,44 +144,6 @@ time_t FindLockTime(const char *name)
         return -1;
     }
 }
-
-bool InvalidateLockTime(const char *lock_id)
-{
-    time_t epoch = 0;
-
-    CF_DB *dbp = OpenLock();
-
-    if (dbp == NULL)
-    {
-        return false;
-    }
-
-    LockData lock_data = {
-        .process_start_time = PROCESS_START_TIME_UNKNOWN,
-    };
-
-#ifdef LMDB
-    unsigned char ohash[EVP_MAX_MD_SIZE*2 + 1];
-    GenerateMd5Hash(lock_id, ohash);
-
-    if(!ReadDB(dbp, ohash, &lock_data, sizeof(lock_data)))
-#else
-    if(!ReadDB(dbp, lock_id, &lock_data, sizeof(lock_data)))
-#endif
-    {
-        CloseLock(dbp);
-        return true;  /* nothing to invalidate */
-    }
-
-    lock_data.time = epoch;
-
-    bool result = WriteLockData(dbp, lock_id, &lock_data);
-
-    CloseLock(dbp);
-
-    return result;
-}
-
 
 static void RemoveDates(char *s)
 {

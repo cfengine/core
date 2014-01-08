@@ -520,7 +520,7 @@ struct tm *gmtime_r(const time_t *timep, struct tm *result);
 struct tm *localtime_r(const time_t *timep, struct tm *result);
 #endif
 #if !HAVE_DECL_TIMEGM
-time_t timegm(const struct tm *tm);
+time_t timegm(struct tm *tm);
 #endif
 #if !HAVE_DECL_CHMOD
 int chmod(const char *path, mode_t mode);

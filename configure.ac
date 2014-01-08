@@ -597,6 +597,9 @@ AC_REPLACE_FUNCS(strsignal)
 AC_CHECK_DECLS(gmtime_r, [], [], [[#include <time.h>]])
 AC_REPLACE_FUNCS(gmtime_r)
 
+AC_CHECK_DECLS(getline, [], [], [[#include <stdio.h>]])
+AC_REPLACE_FUNCS(getline)
+
 AC_CHECK_DECLS(localtime_r, [], [], [[#include <time.h>]])
 AC_REPLACE_FUNCS(localtime_r)
 

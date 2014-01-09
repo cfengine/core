@@ -49,6 +49,11 @@ static const char *GetDefaultMasterDir(void)
     return MASTERDIR;
 }
 
+static const char *GetDefaultInputDir(void)
+{
+    return INPUTDIR;
+}
+
 #elif defined(__ANDROID__)
 
 static const char *GetDefaultWorkDir(void)
@@ -70,6 +75,11 @@ static const char *GetDefaultPidDir(void)
 static const char *GetDefaultMasterDir(void)
 {
     return MASTERDIR;
+}
+
+static const char *GetDefaultInputDir(void)
+{
+    return INPUTDIR;
 }
 
 #elif !defined(__MINGW32__)
@@ -121,6 +131,11 @@ static const char *GetDefaultMasterDir(void)
     return GetDefaultDir_helper(masterdir, MASTERDIR);
 }
 
+static const char *GetDefaultInputDir(void)
+{
+    static char inputdir[MAX_WORKDIR_LENGTH] = ""; /* GLOBAL_C */
+    return GetDefaultDir_helper(inputdir, INPUTDIR);
+}
 
 #endif
 
@@ -158,6 +173,23 @@ const char *GetMasterDir(void)
     else
     {
        return GetDefaultMasterDir();
+    }
+
+}
+
+const char *GetInputDir(void)
+{
+    const char *inputdir = getenv("CFENGINE_TEST_OVERRIDE_WORKDIR");
+
+    if (inputdir != NULL) 
+    {
+        char workbuf[CF_BUFSIZE];
+        snprintf(workbuf, CF_BUFSIZE, "%s%cinputs", inputdir, FILE_SEPARATOR);
+        return workbuf;
+    }
+    else
+    {
+       return GetDefaultInputDir();
     }
 
 }

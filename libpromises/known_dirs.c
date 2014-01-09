@@ -147,7 +147,17 @@ const char *GetPidDir(void)
 
 const char *GetMasterDir(void)
 {
-    const char *masterdir = getenv("CFENGINE_TEST_OVERRIDE_WORKDIR");
+    const char *workdir = getenv("CFENGINE_TEST_OVERRIDE_WORKDIR");
 
-    return masterdir == NULL ? GetDefaultMasterDir() : masterdir;
+    if (workdir != NULL) 
+    {
+        char workbuf[CF_BUFSIZE];
+        snprintf(workbuf, CF_BUFSIZE, "%s%cmasterfiles", workdir, FILE_SEPARATOR);
+        return workbuf;
+    }
+    else
+    {
+       return GetDefaultMasterDir();
+    }
+
 }

@@ -1463,7 +1463,7 @@ bool CopyRegularFile(EvalContext *ctx, const char *source, const char *dest, str
 
 static bool TransformFile(EvalContext *ctx, char *file, Attributes attr, const Promise *pp, PromiseResult *result)
 {
-    char comm[CF_EXPANDSIZE], line[CF_BUFSIZE];
+    char comm[CF_EXPANDSIZE];
     FILE *pop = NULL;
     int transRetcode = 0;
 
@@ -1499,26 +1499,33 @@ static bool TransformFile(EvalContext *ctx, char *file, Attributes attr, const P
             return false;
         }
 
+        size_t line_size = CF_BUFSIZE;
+        char *line = xmalloc(line_size);
+
         for (;;)
         {
-            ssize_t res = CfReadLine(line, CF_BUFSIZE, pop);
-
-            if (res == 0)
-            {
-                break;
-            }
-
+            ssize_t res = CfReadLine(&line, &line_size, pop);
             if (res == -1)
             {
-                cf_pclose(pop);
-                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Transformer '%s' for file '%s' failed", attr.transformer, file);
-                *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
-                YieldCurrentLock(thislock);
-                return false;
+                if (!feof(pop))
+                {
+                    cf_pclose(pop);
+                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Transformer '%s' for file '%s' failed", attr.transformer, file);
+                    *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
+                    YieldCurrentLock(thislock);
+                    free(line);
+                    return false;
+                }
+                else
+                {
+                    break;
+                }
             }
 
             Log(LOG_LEVEL_INFO, "%s", line);
         }
+
+        free(line);
 
         transRetcode = cf_pclose(pop);
 

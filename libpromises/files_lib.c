@@ -361,7 +361,7 @@ int LoadFileAsItemList(Item **liststart, const char *file, EditDefaults edits)
 {
     FILE *fp;
     struct stat statbuf;
-    char line[CF_BUFSIZE], concat[CF_BUFSIZE];
+    char concat[CF_BUFSIZE];
     int join = false;
 
     if (stat(file, &statbuf) == -1)
@@ -389,22 +389,27 @@ int LoadFileAsItemList(Item **liststart, const char *file, EditDefaults edits)
         return false;
     }
 
-    memset(line, 0, CF_BUFSIZE);
     memset(concat, 0, CF_BUFSIZE);
+
+    size_t line_size = CF_BUFSIZE;
+    char *line = xmalloc(line_size);
 
     for (;;)
     {
-        ssize_t res = CfReadLine(line, CF_BUFSIZE, fp);
-        if (res == 0)
+        ssize_t num_read = CfReadLine(&line, &line_size, fp);
+        if (num_read == -1)
         {
-            break;
-        }
-
-        if (res == -1)
-        {
-            Log(LOG_LEVEL_ERR, "Unable to read contents of '%s'. (fread: %s)", file, GetErrorStr());
-            fclose(fp);
-            return false;
+            if (!feof(fp))
+            {
+                Log(LOG_LEVEL_ERR, "Unable to read contents of '%s'. (fread: %s)", file, GetErrorStr());
+                fclose(fp);
+                free(line);
+                return false;
+            }
+            else
+            {
+                break;
+            }
         }
 
         if (edits.joinlines && *(line + strlen(line) - 1) == '\\')
@@ -447,6 +452,7 @@ int LoadFileAsItemList(Item **liststart, const char *file, EditDefaults edits)
     }
 
     fclose(fp);
+    free(line);
     return true;
 }
 

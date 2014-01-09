@@ -178,7 +178,6 @@ static bool GetLMSensors(double *cf_this)
     double temp = 0;
     char name[CF_BUFSIZE];
     int count;
-    char vbuff[CF_BUFSIZE];
 
     cf_this[ob_temp0] = 0.0;
     cf_this[ob_temp1] = 0.0;
@@ -191,37 +190,46 @@ static bool GetLMSensors(double *cf_this)
         return false;
     }
 
-    ssize_t res = CfReadLine(vbuff, CF_BUFSIZE, pp);
-    if (res == -1 || res == 0)
     {
-        /* FIXME: do we need to log anything here? */
-        cf_pclose(pp);
-        return false;
-    }
+        size_t vbuff_size = CF_BUFSIZE;
+        char *vbuff = xmalloc(vbuff_size);
 
-    for (;;)
-    {
-        ssize_t res = CfReadLine(vbuff, CF_BUFSIZE, pp);
-
-        if (res == 0)
+        ssize_t res = CfReadLine(&vbuff, &vbuff_size, pp);
+        if (res <= 0)
         {
-            break;
-        }
-
-        if (res == -1)
-        {
-            /* FIXME: Do we need to log anything here? */
+            /* FIXME: do we need to log anything here? */
             cf_pclose(pp);
+            free(vbuff);
             return false;
         }
 
-        if (strstr(vbuff, "Temp") || strstr(vbuff, "temp"))
+        for (;;)
         {
-            PrependItem(&list, vbuff, NULL);
-        }
-    }
+            ssize_t res = CfReadLine(&vbuff, &vbuff_size, pp);
+            if (res == -1)
+            {
+                if (!feof(pp))
+                {
+                    /* FIXME: Do we need to log anything here? */
+                    cf_pclose(pp);
+                    free(vbuff);
+                    return false;
+                }
+                else
+                {
+                    break;
+                }
+            }
 
-    cf_pclose(pp);
+            if (strstr(vbuff, "Temp") || strstr(vbuff, "temp"))
+            {
+                PrependItem(&list, vbuff, NULL);
+            }
+        }
+
+        cf_pclose(pp);
+        free(vbuff);
+    }
 
     if (ListLen(list) > 0)
     {

@@ -420,7 +420,6 @@ static int SelectPathRegexMatch(EvalContext *ctx, char *filename, char *crit)
 
 static bool SelectExecRegexMatch(EvalContext *ctx, char *filename, char *crit, char *prog)
 {
-    char line[CF_BUFSIZE];
     FILE *pp;
     char buf[CF_MAXVARSIZE];
 
@@ -435,30 +434,33 @@ static bool SelectExecRegexMatch(EvalContext *ctx, char *filename, char *crit, c
         return false;
     }
 
+    size_t line_size = CF_BUFSIZE;
+    char *line = xmalloc(line_size);
+
     for (;;)
     {
-        ssize_t res = CfReadLine(line, CF_BUFSIZE, pp);
+        ssize_t res = CfReadLine(&line, &line_size, pp);
         if (res == -1)
         {
-            Log(LOG_LEVEL_ERR, "Error reading output from command '%s'. (fgets: %s)", buf, GetErrorStr());
+            if (!feof(pp))
+            {
+                Log(LOG_LEVEL_ERR, "Error reading output from command '%s'. (fgets: %s)", buf, GetErrorStr());
+            }
             cf_pclose(pp);
-            return false;
-        }
-
-        if (res == 0)
-        {
-            cf_pclose(pp);
+            free(line);
             return false;
         }
 
         if (FullTextMatch(ctx, crit, line))
         {
             cf_pclose(pp);
+            free(line);
             return true;
         }
     }
 
     cf_pclose(pp);
+    free(line);
     return false;
 }
 

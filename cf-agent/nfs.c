@@ -122,7 +122,7 @@ bool LoadMountInfo(Seq *list)
 {
     FILE *pp;
     char buf1[CF_BUFSIZE], buf2[CF_BUFSIZE], buf3[CF_BUFSIZE];
-    char host[CF_MAXVARSIZE], source[CF_BUFSIZE], mounton[CF_BUFSIZE], vbuff[CF_BUFSIZE];
+    char host[CF_MAXVARSIZE], source[CF_BUFSIZE], mounton[CF_BUFSIZE];
     int i, nfs = false;
 
     for (i = 0; VMOUNTCOMM[VSYSTEMHARDCLASS][i] != ' '; i++)
@@ -140,23 +140,28 @@ bool LoadMountInfo(Seq *list)
         return false;
     }
 
+    size_t vbuff_size = CF_BUFSIZE;
+    char *vbuff = xmalloc(vbuff_size);
+
     for (;;)
     {
-        vbuff[0] = buf1[0] = buf2[0] = buf3[0] = source[0] = '\0';
+        buf1[0] = buf2[0] = buf3[0] = source[0] = '\0';
         nfs = false;
 
-        ssize_t res = CfReadLine(vbuff, CF_BUFSIZE, pp);
-
+        ssize_t res = CfReadLine(&vbuff, &vbuff_size, pp);
         if (res == -1)
         {
-            Log(LOG_LEVEL_ERR, "Unable to read list of mounted filesystems. (fread: %s)", GetErrorStr());
-            cf_pclose(pp);
-            return false;
-        }
-
-        if (res == 0)
-        {
-            break;
+            if (!feof(pp))
+            {
+                Log(LOG_LEVEL_ERR, "Unable to read list of mounted filesystems. (fread: %s)", GetErrorStr());
+                cf_pclose(pp);
+                free(vbuff);
+                return false;
+            }
+            else
+            {
+                break;
+            }
         }
 
         if (strstr(vbuff, "nfs"))
@@ -197,6 +202,7 @@ bool LoadMountInfo(Seq *list)
             Log(LOG_LEVEL_INFO, "Session failed while trying to talk to remote host");
             Log(LOG_LEVEL_INFO, "%s", vbuff);
             cf_pclose(pp);
+            free(vbuff);
             return false;
         }
 
@@ -255,6 +261,7 @@ bool LoadMountInfo(Seq *list)
         }
     }
 
+    free(vbuff);
     alarm(0);
     signal(SIGALRM, SIG_DFL);
     cf_pclose(pp);
@@ -437,7 +444,7 @@ int VerifyNotInFstab(EvalContext *ctx, char *name, Attributes a, const Promise *
         {
 #if defined(_AIX)
             FILE *pfp;
-            char line[CF_BUFSIZE], aixcomm[CF_BUFSIZE];
+            char aixcomm[CF_BUFSIZE];
 
             snprintf(aixcomm, CF_BUFSIZE, "/usr/sbin/rmnfsmnt -f %s", mountpt);
 
@@ -448,21 +455,27 @@ int VerifyNotInFstab(EvalContext *ctx, char *name, Attributes a, const Promise *
                 return 0;
             }
 
+            size_t line_size = CF_BUFSIZE;
+            char *line = xmalloc(line_size);
+
             for (;;)
             {
-                ssize_t res = CfReadLine(line, CF_BUFSIZE, pfp);
+                ssize_t res = getline(&line, &line_size, pfp);
 
                 if (res == -1)
                 {
-                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Unable to read output of /bin/rmnfsmnt");
-                    *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
-                    cf_pclose(pfp);
-                    return 0;
-                }
-
-                if (res == 0)
-                {
-                    break;
+                    if (!feof(pfp))
+                    {
+                        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Unable to read output of /bin/rmnfsmnt");
+                        *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
+                        cf_pclose(pfp);
+                        free(line);
+                        return 0;
+                    }
+                    else
+                    {
+                        break;
+                    }
                 }
 
                 if (line[0] == '#')
@@ -475,10 +488,12 @@ int VerifyNotInFstab(EvalContext *ctx, char *name, Attributes a, const Promise *
                     cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_INTERRUPTED, pp, a, "The device under '%s' cannot be removed from '%s'",
                          mountpt, VFSTAB[VSYSTEMHARDCLASS]);
                     *result = PromiseResultUpdate(*result, PROMISE_RESULT_INTERRUPTED);
+                    free(line);
                     return 0;
                 }
             }
 
+            free(line);
             cf_pclose(pfp);
 
             return 0;       /* ignore internal editing for aix , always returns 0 changes */
@@ -514,7 +529,7 @@ int VerifyNotInFstab(EvalContext *ctx, char *name, Attributes a, const Promise *
 
 PromiseResult VerifyMount(EvalContext *ctx, char *name, Attributes a, const Promise *pp)
 {
-    char comm[CF_BUFSIZE], line[CF_BUFSIZE];
+    char comm[CF_BUFSIZE];
     FILE *pfp;
     char *host, *rmountpt, *mountpt, *opts=NULL;
 
@@ -540,26 +555,34 @@ PromiseResult VerifyMount(EvalContext *ctx, char *name, Attributes a, const Prom
         if ((pfp = cf_popen(comm, "r", true)) == NULL)
         {
             Log(LOG_LEVEL_ERR, "Failed to open pipe from '%s'", CommandArg0(VMOUNTCOMM[VSYSTEMHARDCLASS]));
-            return 0;
+            return PROMISE_RESULT_FAIL;
         }
 
-        ssize_t res = CfReadLine(line, CF_BUFSIZE, pfp);
+        size_t line_size = CF_BUFSIZE;
+        char *line = xmalloc(line_size);
+
+        ssize_t res = CfReadLine(&line, &line_size, pfp);
 
         if (res == -1)
         {
-            Log(LOG_LEVEL_ERR, "Unable to read output of mount command. (fread: %s)", GetErrorStr());
-            cf_pclose(pfp);
-            return 0;
+            if (!feof(pfp))
+            {
+                Log(LOG_LEVEL_ERR, "Unable to read output of mount command. (fread: %s)", GetErrorStr());
+                cf_pclose(pfp);
+                free(line);
+                return PROMISE_RESULT_FAIL;
+            }
         }
-
-        if (res != 0 && ((strstr(line, "busy")) || (strstr(line, "Busy"))))
+        else if ((strstr(line, "busy")) || (strstr(line, "Busy")))
         {
             cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_INTERRUPTED, pp, a, "The device under '%s' cannot be mounted", mountpt);
             result = PromiseResultUpdate(result, PROMISE_RESULT_INTERRUPTED);
             cf_pclose(pfp);
+            free(line);
             return 1;
         }
 
+        free(line);
         cf_pclose(pfp);
     }
 
@@ -576,7 +599,7 @@ PromiseResult VerifyMount(EvalContext *ctx, char *name, Attributes a, const Prom
 
 PromiseResult VerifyUnmount(EvalContext *ctx, char *name, Attributes a, const Promise *pp)
 {
-    char comm[CF_BUFSIZE], line[CF_BUFSIZE];
+    char comm[CF_BUFSIZE];
     FILE *pfp;
     char *mountpt;
 
@@ -593,24 +616,29 @@ PromiseResult VerifyUnmount(EvalContext *ctx, char *name, Attributes a, const Pr
             return result;
         }
 
-        ssize_t res = CfReadLine(line, CF_BUFSIZE, pfp);
+        size_t line_size = CF_BUFSIZE;
+        char *line = xmalloc(line_size);
 
+        ssize_t res = CfReadLine(&line, &line_size, pfp);
         if (res == -1)
         {
-            Log(LOG_LEVEL_ERR, "Unable to read output of unmount command. (fread: %s)", GetErrorStr());
             cf_pclose(pfp);
-            return result;
-        }
+            free(line);
 
-        if (res != 0 && ((strstr(line, "busy")) || (strstr(line, "Busy"))))
+            if (!feof(pfp))
+            {
+                Log(LOG_LEVEL_ERR, "Unable to read output of unmount command. (fread: %s)", GetErrorStr());
+                return result;
+            }
+        }
+        else if (res > 0 && ((strstr(line, "busy")) || (strstr(line, "Busy"))))
         {
             cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_INTERRUPTED, pp, a, "The device under '%s' cannot be unmounted", mountpt);
             result = PromiseResultUpdate(result, PROMISE_RESULT_INTERRUPTED);
             cf_pclose(pfp);
+            free(line);
             return result;
         }
-
-        cf_pclose(pfp);
     }
 
     cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "Unmounting '%s' to keep promise", mountpt);
@@ -639,7 +667,6 @@ static int MatchFSInFstab(char *match)
 
 void MountAll()
 {
-    char line[CF_BUFSIZE];
     FILE *pp;
 
     if (DONTDO)
@@ -688,18 +715,18 @@ void MountAll()
         return;
     }
 
+    size_t line_size = CF_BUFSIZE;
+    char *line = xmalloc(line_size);
+
     for (;;)
     {
-        ssize_t res = CfReadLine(line, CF_BUFSIZE, pp);
-
-        if (res == 0)
-        {
-            break;
-        }
-
+        ssize_t res = CfReadLine(&line, &line_size, pp);
         if (res == -1)
         {
-            Log(LOG_LEVEL_ERR, "Error reading list of mounted filesystems. (ferror: %s)", GetErrorStr());
+            if (!feof(pp))
+            {
+                Log(LOG_LEVEL_ERR, "Error reading list of mounted filesystems. (ferror: %s)", GetErrorStr());
+            }
             break;
         }
 
@@ -726,6 +753,7 @@ void MountAll()
         }
     }
 
+    free(line);
     alarm(0);
     signal(SIGALRM, SIG_DFL);
     cf_pclose(pp);

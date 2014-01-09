@@ -749,7 +749,7 @@ static int ExtractPid(char *psentry, char **names, int *end)
 int LoadProcessTable(Item **procdata)
 {
     FILE *prp;
-    char pscomm[CF_MAXLINKSIZE], vbuff[CF_BUFSIZE], *sp;
+    char pscomm[CF_MAXLINKSIZE], *sp = NULL;
     Item *rootprocs = NULL;
     Item *otherprocs = NULL;
 
@@ -771,19 +771,25 @@ int LoadProcessTable(Item **procdata)
         return false;
     }
 
+    size_t vbuff_size = CF_BUFSIZE;
+    char *vbuff = xmalloc(vbuff_size);
+
     for (;;)
     {
-        ssize_t res = CfReadLine(vbuff, CF_BUFSIZE, prp);
-        if (res == 0)
-        {
-            break;
-        }
-
+        ssize_t res = CfReadLine(&vbuff, &vbuff_size, prp);
         if (res == -1)
         {
-            Log(LOG_LEVEL_ERR, "Unable to read process list with command '%s'. (fread: %s)", pscomm, GetErrorStr());
-            cf_pclose(prp);
-            return false;
+            if (!feof(prp))
+            {
+                Log(LOG_LEVEL_ERR, "Unable to read process list with command '%s'. (fread: %s)", pscomm, GetErrorStr());
+                cf_pclose(prp);
+                free(vbuff);
+                return false;
+            }
+            else
+            {
+                break;
+            }
         }
 
         for (sp = vbuff + strlen(vbuff) - 1; (sp > vbuff) && (isspace((int)*sp)); sp--)
@@ -830,6 +836,7 @@ int LoadProcessTable(Item **procdata)
     RawSaveItemList(otherprocs, vbuff);
     DeleteItemList(otherprocs);
 
+    free(vbuff);
     return true;
 }
 #endif

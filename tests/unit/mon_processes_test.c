@@ -95,7 +95,7 @@ void test_processes_monitor(void)
     ousr = 3*ousr;
     int upper = (int)((double)usr*1.10);
     int lower = (int)((double)usr*0.90);
-    assert_true(cf_this[ob_users]<=upper && cf_this[ob_users]>=lower);
+    assert_in_range(cf_this[ob_users], lower, upper);
 }
 
 int main()

@@ -202,19 +202,21 @@ void LocalExec(const ExecConfig *config)
     char esc_command[CF_BUFSIZE];
     strncpy(esc_command, MapName(cmd), CF_BUFSIZE - 1);
 
-    char line[CF_BUFSIZE];
-    snprintf(line, CF_BUFSIZE - 1, "_%jd_%s", (intmax_t) starttime, CanonifyName(ctime(&starttime)));
 
     char filename[CF_BUFSIZE];
     {
-        char canonified_fq_name[CF_BUFSIZE];
+        char line[CF_BUFSIZE];
+        snprintf(line, CF_BUFSIZE - 1, "_%jd_%s", (intmax_t) starttime, CanonifyName(ctime(&starttime)));
+        {
+            char canonified_fq_name[CF_BUFSIZE];
 
-        strlcpy(canonified_fq_name, config->fq_name, CF_BUFSIZE);
-        CanonifyNameInPlace(canonified_fq_name);
+            strlcpy(canonified_fq_name, config->fq_name, CF_BUFSIZE);
+            CanonifyNameInPlace(canonified_fq_name);
 
 
-        snprintf(filename, CF_BUFSIZE - 1, "%s/outputs/cf_%s_%s_%p", CFWORKDIR, canonified_fq_name, line, thread_name);
-        MapName(filename);
+            snprintf(filename, CF_BUFSIZE - 1, "%s/outputs/cf_%s_%s_%p", CFWORKDIR, canonified_fq_name, line, thread_name);
+            MapName(filename);
+        }
     }
 
 
@@ -251,6 +253,10 @@ void LocalExec(const ExecConfig *config)
     Log(LOG_LEVEL_VERBOSE, "Command is executing...%s", esc_command);
 
     int count = 0;
+
+    size_t line_size = CF_BUFSIZE;
+    char *line = xmalloc(line_size);
+
     for (;;)
     {
         if(!IsReadReady(fileno(pp), (config->agent_expireafter * SECONDS_PER_MINUTE)))
@@ -277,18 +283,20 @@ void LocalExec(const ExecConfig *config)
             break;
         }
 
-        ssize_t res = CfReadLine(line, CF_BUFSIZE, pp);
-
-        if (res == 0)
-        {
-            break;
-        }
-
+        ssize_t res = CfReadLine(&line, &line_size, pp);
         if (res == -1)
         {
-            Log(LOG_LEVEL_ERR, "Unable to read output from command '%s'. (cfread: %s)", cmd, GetErrorStr());
-            cf_pclose(pp);
-            return;
+            if (!feof(pp))
+            {
+                Log(LOG_LEVEL_ERR, "Unable to read output from command '%s'. (cfread: %s)", cmd, GetErrorStr());
+                cf_pclose(pp);
+                free(line);
+                return;
+            }
+            else
+            {
+                break;
+            }
         }
 
         bool print = false;
@@ -331,6 +339,7 @@ void LocalExec(const ExecConfig *config)
         }
     }
 
+    free(line);
     cf_pclose(pp);
     Log(LOG_LEVEL_DEBUG, "Closing fp");
     fclose(fp);
@@ -376,24 +385,30 @@ static int CompareResult(const char *filename, const char *prev_file)
 
         while (regex)
         {
-            char old_line[CF_BUFSIZE];
-            char new_line[CF_BUFSIZE];
-            char *old_msg = old_line;
-            char *new_msg = new_line;
-            if (CfReadLine(old_line, sizeof(old_line), old_fp) <= 0)
+            size_t old_line_size = CF_BUFSIZE;
+            char *old_line = xmalloc(old_line_size);
+            char *old_msg = NULL;
+            if (CfReadLine(&old_line, &old_line_size, old_fp) >= 0)
             {
-                old_msg = NULL;
+                old_msg = old_line;
             }
-            if (CfReadLine(new_line, sizeof(new_line), new_fp) <= 0)
+
+            size_t new_line_size = CF_BUFSIZE;
+            char *new_line = xmalloc(new_line_size);
+            char *new_msg = NULL;
+            if (CfReadLine(&new_line, &new_line_size, new_fp) >= 0)
             {
-                new_msg = NULL;
+                new_msg = new_line;
             }
+
             if (!old_msg || !new_msg)
             {
                 if (old_msg != new_msg)
                 {
                     rtn = 1;
                 }
+                free(old_line);
+                free(new_line);
                 break;
             }
 
@@ -418,8 +433,13 @@ static int CompareResult(const char *filename, const char *prev_file)
             if (strcmp(old_msg, new_msg) != 0)
             {
                 rtn = 1;
+                free(old_line);
+                free(new_line);
                 break;
             }
+
+            free(old_line);
+            free(new_line);
         }
 
         if (regex_extra)

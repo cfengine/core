@@ -77,7 +77,7 @@ static char *StripPatterns(char *file_buffer, char *pattern, char *filename);
 static void CloseStringHole(char *s, int start, int end);
 static int BuildLineArray(EvalContext *ctx, const Bundle *bundle, char *array_lval, char *file_buffer, char *split, int maxent, DataType type, int intIndex);
 static int ExecModule(EvalContext *ctx, char *command, const char *ns);
-static int CheckID(char *id);
+static bool CheckID(const char *id);
 static const Rlist *GetListReferenceArgument(const EvalContext *ctx, const FnCall *fp, const char *lval_str, DataType *datatype_out);
 static void *CfReadFile(char *filename, int maxsize);
 
@@ -1034,7 +1034,7 @@ static FnCallResult FnCallPackagesMatching(ARG_UNUSED EvalContext *ctx, FnCall *
     char *regex_method = RlistScalarValue(finalargs->next->next->next);
 
     JsonElement *json = JsonArrayCreate(50);
-    char filename[CF_MAXVARSIZE], line[CF_BUFSIZE], regex[CF_BUFSIZE];
+    char filename[CF_MAXVARSIZE], regex[CF_BUFSIZE];
     FILE *fin;
 
     GetSoftwareCacheFilename(filename);
@@ -1048,21 +1048,27 @@ static FnCallResult FnCallPackagesMatching(ARG_UNUSED EvalContext *ctx, FnCall *
     }
     
     int linenumber = 0;
+
+    size_t line_size = CF_BUFSIZE;
+    char *line = xmalloc(line_size);
+
     for(;;)
     {
-        ssize_t res = CfReadLine(line, sizeof(line), fin);
-
-        if (res == 0)
-        {
-            break;
-        }
-
+        ssize_t res = CfReadLine(&line, &line_size, fin);
         if (res == -1)
         {
-            Log(LOG_LEVEL_ERR, "Unable to read package inventory from '%s'. (fread: %s)", filename, GetErrorStr());
-            fclose(fin);
-            JsonDestroy(json);
-            return FnFailure();
+            if (!feof(fin))
+            {
+                Log(LOG_LEVEL_ERR, "Unable to read package inventory from '%s'. (fread: %s)", filename, GetErrorStr());
+                fclose(fin);
+                JsonDestroy(json);
+                free(line);
+                return FnFailure();
+            }
+            else
+            {
+                break;
+            }
         }
 
         if (strlen(line) > CF_BUFSIZE - 80)
@@ -1099,6 +1105,7 @@ static FnCallResult FnCallPackagesMatching(ARG_UNUSED EvalContext *ctx, FnCall *
     }
 
     fclose(fin);
+    free(line);
 
     return (FnCallResult) { FNCALL_SUCCESS, (Rval) { json, RVAL_TYPE_CONTAINER } };
 
@@ -5422,7 +5429,7 @@ static int BuildLineArray(EvalContext *ctx, const Bundle *bundle, char *array_lv
 static int ExecModule(EvalContext *ctx, char *command, const char *ns)
 {
     FILE *pp;
-    char *sp, line[CF_BUFSIZE];
+    char *sp = NULL;
     char context[CF_BUFSIZE];
     int print = false;
 
@@ -5434,20 +5441,25 @@ static int ExecModule(EvalContext *ctx, char *command, const char *ns)
         return false;
     }
 
+    size_t line_size = CF_BUFSIZE;
+    char *line = xmalloc(line_size);
+
     for (;;)
     {
-        ssize_t res = CfReadLine(line, CF_BUFSIZE, pp);
-
-        if (res == 0)
-        {
-            break;
-        }
-
+        ssize_t res = CfReadLine(&line, &line_size, pp);
         if (res == -1)
         {
-            Log(LOG_LEVEL_ERR, "Unable to read output from '%s'. (fread: %s)", command, GetErrorStr());
-            cf_pclose(pp);
-            return false;
+            if (!feof(pp))
+            {
+                Log(LOG_LEVEL_ERR, "Unable to read output from '%s'. (fread: %s)", command, GetErrorStr());
+                cf_pclose(pp);
+                free(line);
+                return false;
+            }
+            else
+            {
+                break;
+            }
         }
 
         if (strlen(line) > CF_BUFSIZE - 80)
@@ -5471,6 +5483,7 @@ static int ExecModule(EvalContext *ctx, char *command, const char *ns)
     }
 
     cf_pclose(pp);
+    free(line);
     return true;
 }
 
@@ -5478,7 +5491,7 @@ static int ExecModule(EvalContext *ctx, char *command, const char *ns)
 /* Level                                                             */
 /*********************************************************************/
 
-void ModuleProtocol(EvalContext *ctx, char *command, char *line, int print, const char *ns, char* context)
+void ModuleProtocol(EvalContext *ctx, char *command, const char *line, int print, const char *ns, char* context)
 {
     char name[CF_BUFSIZE], content[CF_BUFSIZE];
     char arg0[CF_BUFSIZE];
@@ -5592,11 +5605,9 @@ void ModuleProtocol(EvalContext *ctx, char *command, char *line, int print, cons
 /* Level                                                             */
 /*********************************************************************/
 
-static int CheckID(char *id)
+static bool CheckID(const char *id)
 {
-    char *sp;
-
-    for (sp = id; *sp != '\0'; sp++)
+    for (const char *sp = id; *sp != '\0'; sp++)
     {
         if (!isalnum((int) *sp) && (*sp != '.') && (*sp != '-') && (*sp != '_') && (*sp != '[') && (*sp != ']'))
         {

@@ -43,6 +43,7 @@
 #include <pipes.h>
 #include <known_dirs.h>
 #include <unix_iface.h>
+#include <files_lib.h>
 
 #include <cf-windows-functions.h>
 
@@ -2243,7 +2244,6 @@ static int VM_Version(EvalContext *ctx)
 static int Xen_Domain(EvalContext *ctx)
 {
     FILE *fp;
-    char buffer[CF_BUFSIZE];
     int sufficient = 0;
 
     Log(LOG_LEVEL_VERBOSE, "This appears to be a xen pv system.");
@@ -2253,19 +2253,25 @@ static int Xen_Domain(EvalContext *ctx)
 
     if ((fp = fopen("/proc/xen/capabilities", "r")) != NULL)
     {
+        size_t buffer_size = CF_BUFSIZE;
+        char *buffer = xmalloc(buffer_size);
+
         for (;;)
         {
-            ssize_t res = CfReadLine(buffer, CF_BUFSIZE, fp);
-            if (res == 0)
-            {
-                break;
-            }
-
+            ssize_t res = CfReadLine(&buffer, &buffer_size, fp);
             if (res == -1)
             {
-                /* Failure reading Xen capabilites. Do we care? */
-                fclose(fp);
-                return 1;
+                if (!feof(fp))
+                {
+                    /* Failure reading Xen capabilites. Do we care? */
+                    fclose(fp);
+                    free(buffer);
+                    return 1;
+                }
+                else
+                {
+                    break;
+                }
             }
 
             if (strstr(buffer, "control_d"))
@@ -2282,6 +2288,7 @@ static int Xen_Domain(EvalContext *ctx)
         }
 
         fclose(fp);
+        free(buffer);
     }
 
     return sufficient < 1 ? 1 : 0;
@@ -2579,7 +2586,7 @@ static time_t GetBootTimeFromUptimeCommand(time_t now)
     FILE *uptimecmd;
     pcre *rx;
     int ovector[UPTIME_OVECTOR], i, seconds;
-    char uptime_output[CF_SMALLBUF] = { '\0' }, *backref;
+    char *backref = NULL;
     const char *uptimepath = "/usr/bin/uptime";
     time_t uptime = 0;
     const char *errptr;
@@ -2600,15 +2607,19 @@ static time_t GetBootTimeFromUptimeCommand(time_t now)
         Log(LOG_LEVEL_ERR, "uptime failed: (cf_popen: %s)", GetErrorStr());
         return -1;
     }
-    i = CfReadLine(uptime_output, CF_SMALLBUF, uptimecmd);
+
+    size_t uptime_output_size = CF_SMALLBUF;
+    char *uptime_output = xmalloc(uptime_output_size);
+    i = CfReadLine(&uptime_output, &uptime_output_size, uptimecmd);
+
     cf_pclose(uptimecmd);
-    if (i < 0)
+    if (i == -1 && !feof(uptimecmd))
     {
-        Log(LOG_LEVEL_ERR, "Reading uptime output failed. (CfReadLine: '%s')", GetErrorStr());
+        Log(LOG_LEVEL_ERR, "Reading uptime output failed. (getline: '%s')", GetErrorStr());
         return -1;
     }
 
-    if ((i != 0) && (pcre_exec(rx, NULL, (const char *)uptime_output, i, 0, 0, ovector, UPTIME_OVECTOR) > 1))
+    if ((i > 0) && (pcre_exec(rx, NULL, (const char *)uptime_output, i, 0, 0, ovector, UPTIME_OVECTOR) > 1))
     {
         for (i = 1; i <= UPTIME_BACKREFS ; i++)
         {

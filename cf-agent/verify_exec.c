@@ -183,7 +183,7 @@ static char *GetLockNameExec(Attributes a, const Promise *pp)
 static ActionResult RepairExec(EvalContext *ctx, Attributes a,
                                const Promise *pp, PromiseResult *result)
 {
-    char line[CF_BUFSIZE], eventname[CF_BUFSIZE];
+    char eventname[CF_BUFSIZE];
     char cmdline[CF_BUFSIZE];
     char comm[20];
     int outsourced, count = 0;
@@ -320,20 +320,25 @@ static ActionResult RepairExec(EvalContext *ctx, Attributes a,
             return ACTION_RESULT_FAILED;
         }
 
+        size_t line_size = CF_BUFSIZE;
+        char *line = xmalloc(line_size);
+
         for (;;)
         {
-            ssize_t res = CfReadLine(line, CF_BUFSIZE, pfp);
-
-            if (res == 0)
-            {
-                break;
-            }
-
+            ssize_t res = CfReadLine(&line, &line_size, pfp);
             if (res == -1)
             {
-                Log(LOG_LEVEL_ERR, "Unable to read output from command '%s'. (fread: %s)", cmdline, GetErrorStr());
-                cf_pclose(pfp);
-                return ACTION_RESULT_FAILED;
+                if (!feof(pfp))
+                {
+                    Log(LOG_LEVEL_ERR, "Unable to read output from command '%s'. (fread: %s)", cmdline, GetErrorStr());
+                    cf_pclose(pfp);
+                    free(line);
+                    return ACTION_RESULT_FAILED;
+                }
+                else
+                {
+                    break;
+                }
             }
 
             if (strstr(line, "cfengine-die"))
@@ -372,6 +377,9 @@ static ActionResult RepairExec(EvalContext *ctx, Attributes a,
                 count++;
             }
         }
+
+        free(line);
+
 #ifdef __MINGW32__
         if (outsourced)     // only get return value if we waited for command execution
         {

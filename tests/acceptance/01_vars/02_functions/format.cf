@@ -9,8 +9,6 @@ body common control
       inputs => { "../../default.cf.sub" };
       bundlesequence  => { default("$(this.promise_filename)") };
       version => "1.0";
-    nova_edition::
-      host_licenses_paid => "5";
 }
 
 #######################################################
@@ -52,6 +50,10 @@ bundle edit_line init_insert
       "key='2strings-6abc-6def' value='abc   def   '";
       "key='badend' value='ends badly '";
       "key='escape' value='% should be a single percent'";
+      "key='S_123_list' value='{ \"one\", \"two\", \"\\\"three\\\"\" }'";
+      "key='S_container_1' value='[null]'";
+      "key='S_container_2' value='[{\"x\":123},\"yz\"]'";
+      "key='S_empty_list' value='{ --empty-list-- }'";
 }
 
 #######################################################
@@ -75,6 +77,20 @@ bundle agent test
       "array[2strings-6abc-6def]" string => format("%-6s%-6s", "abc", "def");
       "array[badend]" string => format("ends badly %");
       "array[escape]" string => format("%% should be a single percent");
+
+      # %S specifier
+      "mydata" string => 'simplest data';
+      "emptylist" slist => {};
+      "list123" slist => { "one", "two", '"three"'};
+      "mycontainer1" data => parsejson("[ null ]");
+      "mycontainer2" data => parsejson('[ { "x": 123 }, "yz" ]');
+
+      "array[S_string]" string => format("prefix %S suffix", "simple data");
+      "array[S_var]" string => format("%S", $(mydata));
+      "array[S_empty_list]" string => format("%S", emptylist);
+      "array[S_123_list]" string => format("%S", list123);
+      "array[S_container_1]" string => format("%S", mycontainer1);
+      "array[S_container_2]" string => format("%S", mycontainer2);
 
       "formatted" slist => maparray("key='$(this.k)' value='$(this.v)'", "array");
 

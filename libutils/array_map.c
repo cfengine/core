@@ -104,6 +104,21 @@ void ArrayMapClear(ArrayMap *map)
     map->size = 0;
 }
 
+void ArrayMapSoftDestroy(ArrayMap *map)
+{
+    if (map)
+    {
+        for (int i = 0; i < map->size; ++i)
+        {
+            map->destroy_key_fn(map->values[i].key);
+        }
+        map->size = 0;
+
+        free(map->values);
+        free(map);
+    }
+}
+
 void ArrayMapDestroy(ArrayMap *map)
 {
     if (map)

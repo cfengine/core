@@ -54,6 +54,7 @@ bool ArrayMapInsert(ArrayMap *map, void *key, void *value);
 bool ArrayMapRemove(ArrayMap *map, const void *key);
 MapKeyValue *ArrayMapGet(const ArrayMap *map, const void *key);
 void ArrayMapClear(ArrayMap *map);
+void ArrayMapSoftDestroy(ArrayMap *map);
 void ArrayMapDestroy(ArrayMap *map);
 
 /******************************************************************************/

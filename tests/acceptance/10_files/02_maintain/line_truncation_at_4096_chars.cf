@@ -1,0 +1,98 @@
+#######################################################
+#
+# Check if the lines in a file get truncated after 4096
+# chars during file editing.
+#
+# Ticket: https://cfengine.com/dev/issues/3882
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("${this.promise_filename}") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+  vars:
+    any::
+      "file_mode"              int => "0644";
+      "char_number"            int => "6144";
+      "line_to_add"         string => "This is a nice short line.";
+
+  files:
+      "${G.testfile}"
+        create => "true",
+        perms  => m("${file_mode}");
+
+  # Using system command instead of CFEngine itself to
+  # prevent the bug to be here at file creation too.
+  # It would create a false negative.
+  commands:
+      "${G.perl}"
+        args    => "-e 'print \"#\" x ${char_number}; print \"ENDMARK\n\"' > ${G.testfile}",
+        contain => in_shell;
+}
+
+body perms m(mode)
+{
+      mode => "${mode}";
+}
+
+body contain in_shell
+{
+      useshell => "true"; # canonical "useshell" but this is backwards-compatible
+}
+
+#######################################################
+
+bundle agent test
+{
+
+  files:
+      "${G.testfile}"
+        create    => "false",
+        edit_line => insert_lines("${init.line_to_add}");
+}
+
+bundle edit_line insert_lines(lines)
+{
+insert_lines:
+
+  "${lines}"
+    comment => "Append lines if they don't exist";
+}
+
+#######################################################
+
+bundle agent check
+{
+
+  classes:
+      # ok is defined if the file still contains ENDMARK, meaning the end of the sample very
+      # long line did not get truncated during file editing
+      "ok" expression => returnszero("${G.grep} -q ENDMARK ${G.testfile}", "noshell");
+
+  reports:
+    DEBUG.!ok::
+      "${this.promise_filename} FAILed as the generated file got at least a line truncated to 4096 characters";
+    ok::
+      "${this.promise_filename} Pass";
+    !ok::
+      "${this.promise_filename} FAIL";
+}
+
+#######################################################
+
+bundle agent fini
+{
+  methods:
+      "any" usebundle => default_fini("${G.testfile}");
+}
+
+### PROJECT_ID: core
+### CATEGORY_ID: 27

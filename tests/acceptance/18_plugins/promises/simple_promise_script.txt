@@ -1,0 +1,4 @@
+{ "cmpv": "0.0.2", "command": "initialize" }
+{ "cmpv": "0.0.2", "command": "verify", "state": { "alpha": "one", "beta": "two" }, "attributes": { "x": 100, "y": [ "y1", "y2", "y3" ] } }
+{ "cmpv": "0.0.2", "command": "repair", "state": { "alpha": "three", "beta": "four" } }
+{ "cmpv": "0.0.2", "command": "shutdown" }

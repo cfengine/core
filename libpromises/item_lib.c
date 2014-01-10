@@ -861,6 +861,45 @@ int ByteSizeList(const Item *list)
     return count;
 }
 
+int RawSaveItemList(const Item *liststart, const char *file)
+{
+    char new[CF_BUFSIZE], backup[CF_BUFSIZE];
+    FILE *fp;
+
+    strcpy(new, file);
+    strcat(new, CF_EDITED);
+
+    strcpy(backup, file);
+    strcat(backup, CF_SAVED);
+
+    unlink(new);                /* Just in case of races */
+
+    if ((fp = safe_fopen(new, "w")) == NULL)
+    {
+        Log(LOG_LEVEL_ERR, "Couldn't write file '%s'. (fopen: %s)", new, GetErrorStr());
+        return false;
+    }
+
+    for (const Item *ip = liststart; ip != NULL; ip = ip->next)
+    {
+        fprintf(fp, "%s\n", ip->name);
+    }
+
+    if (fclose(fp) == -1)
+    {
+        Log(LOG_LEVEL_ERR, "Unable to close file '%s' while writing. (fclose: %s)", new, GetErrorStr());
+        return false;
+    }
+
+    if (rename(new, file) == -1)
+    {
+        Log(LOG_LEVEL_INFO, "Error while renaming file '%s' to '%s'. (rename: %s)", new, file, GetErrorStr());
+        return false;
+    }
+
+    return true;
+}
+
 Item *RawLoadItemList(const char *filename)
 {
     FILE *fp = safe_fopen(filename, "r");

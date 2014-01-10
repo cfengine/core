@@ -44,7 +44,7 @@ void test_stringset_serialization(void)
         assert_true(buff);
         assert_string_equal(BufferData(buff), "tag_1,tag_2,tag_3");
 
-        BufferDestroy(&buff);
+        BufferDestroy(buff);
         StringSetDestroy(set);
     }
 
@@ -56,7 +56,7 @@ void test_stringset_serialization(void)
         assert_true(buff);
         assert_string_equal(BufferData(buff), "");
 
-        BufferDestroy(&buff);
+        BufferDestroy(buff);
         StringSetDestroy(set);
     }
 }

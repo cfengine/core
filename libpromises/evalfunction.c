@@ -3412,7 +3412,7 @@ static FnCallResult FnCallFormat(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
                     else // not %% and no data
                     {
                         Log(LOG_LEVEL_ERR, "format() didn't have enough parameters");
-                        BufferDestroy(&buf);
+                        BufferDestroy(buf);
                         return FnFailure();
                     }
 
@@ -3429,7 +3429,7 @@ static FnCallResult FnCallFormat(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
                             Log(LOG_LEVEL_ERR, "format() does not allow modifier character '%c' in format specifier '%s'.",
                                   bad_modifiers[b],
                                   format_piece);
-                            BufferDestroy(&buf);
+                            BufferDestroy(buf);
                             return FnFailure();
                         }
                     }
@@ -3579,7 +3579,7 @@ static FnCallResult FnCallFormat(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
     }
 
     char *result = xstrdup(BufferData(buf));
-    BufferDestroy(&buf);
+    BufferDestroy(buf);
 
     return (FnCallResult) { FNCALL_SUCCESS, { result, RVAL_TYPE_SCALAR } };
 

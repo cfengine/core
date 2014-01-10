@@ -282,8 +282,8 @@ static bool RlistItemIPLess(void *lhs, void *rhs, ARG_UNUSED void *ctx)
     bool matched_left = left != NULL;
     bool matched_right = right != NULL;
 
-    BufferDestroy(&left_buffer);
-    BufferDestroy(&right_buffer);
+    BufferDestroy(left_buffer);
+    BufferDestroy(right_buffer);
 
     if (matched_left && matched_right)
     {

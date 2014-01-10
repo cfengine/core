@@ -275,7 +275,7 @@ VarRef *VarRefParseFromNamespaceAndScope(const char *qualified_name, const char 
 
                 BufferAppend(buf, c, sizeof(char));
             }
-            BufferDestroy(&buf);
+            BufferDestroy(buf);
         }
     }
     else
@@ -387,7 +387,7 @@ char *VarRefToString(const VarRef *ref, bool qualified)
     }
 
     char *var_string = xstrdup(BufferData(buf));
-    BufferDestroy(&buf);
+    BufferDestroy(buf);
     return var_string;
 }
 

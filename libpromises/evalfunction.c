@@ -3461,6 +3461,77 @@ static FnCallResult FnCallFormat(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
                         BufferAppend(buf, piece, strlen(piece));
                         // CfOut(OUTPUT_LEVEL_INFORM, "", "format: appending string format piece = '%s' with data '%s'", format_piece, data);
                     }
+                    else if (strrchr(format_piece, 'S'))
+                    {
+                        char *found_format_spec = NULL;
+                        char format_rewrite[CF_BUFSIZE];
+
+                        strlcpy(format_rewrite, format_piece, CF_BUFSIZE);
+                        found_format_spec = strrchr(format_rewrite, 'S');
+
+                        if (found_format_spec)
+                        {
+                            *found_format_spec = 's';
+                        }
+                        else
+                        {
+                            ProgrammingError("Couldn't find the expected S format spec in %s", format_piece);
+                        }
+
+                        const char* const varname = data;
+                        VarRef *ref = VarRefParseFromBundle(varname, PromiseGetBundle(fp->caller));
+                        DataType type = DATA_TYPE_NONE;
+                        const void *value = EvalContextVariableGet(ctx, ref, &type);
+                        VarRefDestroy(ref);
+
+                        if (type == DATA_TYPE_CONTAINER)
+                        {
+                            Writer *w = StringWriter();
+                            JsonWriteCompact(w, value);
+                            snprintf(piece, CF_BUFSIZE, format_rewrite, StringWriterData(w));
+                            WriterClose(w);
+                            BufferAppend(buf, piece, strlen(piece));
+                        }
+                        else            // it might be a list reference
+                        {
+                            const Rlist *list = GetListReferenceArgument(ctx, fp, varname, NULL);
+                            if (NULL != list)
+                            {
+                                Writer *w = StringWriter();
+                                WriterWrite(w, "{ ");
+                                for (Rlist *rp = list; rp; rp = rp->next)
+                                {
+                                    char *escaped = EscapeCharCopy(RlistScalarValue(rp), '"', '\\');
+                                    if (0 == strcmp(escaped, CF_NULL_VALUE))
+                                    {
+                                        WriterWrite(w, "--empty-list--");
+                                    }
+                                    else
+                                    {
+                                        WriterWriteF(w, "\"%s\"", escaped);
+                                    }
+                                    free(escaped);
+
+                                    if (NULL != rp && NULL != rp->next)
+                                    {
+                                        WriterWrite(w, ", ");
+                                    }
+                                }
+                                WriterWrite(w, " }");
+
+                                snprintf(piece, CF_BUFSIZE, format_rewrite, StringWriterData(w));
+                                WriterClose(w);
+                                BufferAppend(buf, piece, strlen(piece));
+                            }
+                            else        // whatever this is, it's not a list reference or a data container
+                            {
+                                Log(LOG_LEVEL_ERR, "format() with %%S specifier needs a data container or a list instead of '%s'.",
+                                    varname);
+                                BufferDestroy(&buf);
+                                return FnFailure();
+                            }
+                        }
+                    }
                     else
                     {
                         char error[] = "(unhandled format)";

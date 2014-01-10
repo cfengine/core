@@ -225,6 +225,7 @@ void ServerEntryPoint(EvalContext *ctx, char *ipaddr, ConnectionInfo *info)
 
     if (!ThreadLock(cft_count))
     {
+        cf_closesocket(ConnectionInfoSocket(info));
         ConnectionInfoDestroy(&info);
         return;
     }
@@ -233,6 +234,7 @@ void ServerEntryPoint(EvalContext *ctx, char *ipaddr, ConnectionInfo *info)
 
     if (!ThreadUnlock(cft_count))
     {
+        cf_closesocket(ConnectionInfoSocket(info));
         ConnectionInfoDestroy(&info);
         return;
     }
@@ -1548,8 +1550,7 @@ static ServerConnectionState *NewConn(EvalContext *ctx, ConnectionInfo *info)
 
 static void DeleteConn(ServerConnectionState *conn)
 {
-    /* Sockets should have already been closed by the client, so we are just
-     * making sure here in case an error occured. */
+    cf_closesocket(ConnectionInfoSocket(conn->conn_info));
     ConnectionInfoDestroy(&conn->conn_info);
     free(conn->session_key);
     if (conn->ipaddr != NULL)

@@ -11,6 +11,7 @@ $|=1;                                   # autoflush
 my %options = (
                check => 0,
                verbose => 0,
+               veryverbose => 0,
                help => 0,
                cfagent => "../cf-agent/cf-agent",
                workdir => "/tmp",
@@ -21,7 +22,8 @@ GetOptions(\%options,
            "check|c!",
            "cfagent=s",
            "workdir=s",
-           "verbose!",
+           "v|verbose!",
+           "veryverbose!",
     );
 
 if ($options{help})
@@ -34,7 +36,8 @@ Generate the output section of CFEngine code example.
 With -c or --check, the script reports if the output is different but doesn't
 write it.
 
-With -v or --verbose, the script shows the full output of each test.
+With -v or --verbose, the script shows the full output of each test.  Use
+--veryverbose if you REALLY want a lot of output.
 
 The --workdir path, defaulting to /tmp, is used for storing the example to be
 run.
@@ -137,6 +140,7 @@ sub rewrite_output
     if (defined $new_output && length $new_output > 0)
     {
         $new_output =~ s/^/#@ /mg;
+        $new_output = "#@ ```\n$new_output#@ ```\n";
     }
 
     return $new_output;
@@ -147,6 +151,12 @@ sub equal_outputs
     # strip out date, e.g. '2013-12-16T20:48:24+0200'
     my $x = shift @_;
     my $y = shift @_;
+
+    $x =~ s/^#@ ```\s+//mg;
+    $y =~ s/^#@ ```\s+//mg;
+
+    print "output compare: [$x] vs [$y]\n"
+     if $options{veryverbose};
 
     $x =~ s/^(#@ )//mg;
     $x =~ s/^[-0-9T:+]+\s+//mg;

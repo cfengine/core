@@ -95,16 +95,16 @@ int IsIPV6Address(char *name)
     is_ip = IPAddressIsIPAddress(buffer, &ip_address);
     if (!is_ip)
     {
-        BufferDestroy(&buffer);
+        BufferDestroy(buffer);
         return false;
     }
     if (IPAddressType(ip_address) != IP_ADDRESS_TYPE_IPV6)
     {
-        BufferDestroy(&buffer);
+        BufferDestroy(buffer);
         IPAddressDestroy(&ip_address);
         return false;
     }
-    BufferDestroy(&buffer);
+    BufferDestroy(buffer);
     IPAddressDestroy(&ip_address);
     return true;
 }
@@ -127,16 +127,16 @@ int IsIPV4Address(char *name)
     is_ip = IPAddressIsIPAddress(buffer, &ip_address);
     if (!is_ip)
     {
-        BufferDestroy(&buffer);
+        BufferDestroy(buffer);
         return false;
     }
     if (IPAddressType(ip_address) != IP_ADDRESS_TYPE_IPV4)
     {
-        BufferDestroy(&buffer);
+        BufferDestroy(buffer);
         IPAddressDestroy(&ip_address);
         return false;
     }
-    BufferDestroy(&buffer);
+    BufferDestroy(buffer);
     IPAddressDestroy(&ip_address);
     return true;
 }

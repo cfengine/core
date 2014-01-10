@@ -148,12 +148,12 @@ static void test_removeFromList(void)
 
     // Now we destroy the list.
     assert_int_equal(BufferListDestroy(&list), 0);
-    BufferDestroy(&buffer4);
-    free (element0);
-    free (element1);
-    free (element2);
-    free (element3);
-    free (element4);
+    BufferDestroy(buffer4);
+    free(element0);
+    free(element1);
+    free(element2);
+    free(element3);
+    free(element4);
 }
 
 static void test_destroyList(void)

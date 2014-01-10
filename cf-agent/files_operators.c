@@ -280,8 +280,8 @@ int SaveAsFile(SaveCallbackFn callback, void *param, const char *file, Attribute
     ret = true;
 
 end:
-    BufferDestroy(&pretty_file);
-    BufferDestroy(&deref_file);
+    BufferDestroy(pretty_file);
+    BufferDestroy(deref_file);
     return ret;
 }
 

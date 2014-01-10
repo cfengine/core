@@ -49,13 +49,13 @@ static void copy(const void *o, void **d)
 {
     Buffer *origin = (Buffer *)o;
     Buffer **destination = (Buffer **)d;
-    BufferCopy(origin, destination);
+    *destination = BufferCopy(origin);
 }
 
 static void destroy(void *e)
 {
     Buffer *element = (Buffer *)e;
-    BufferDestroy(&element);
+    BufferDestroy(element);
 }
 
 BufferList *BufferListNew()
@@ -113,7 +113,9 @@ int BufferListAppend(BufferList *list, Buffer *payload)
 int BufferListRemove(BufferList *list, Buffer *payload)
 {
     if (!list || !payload)
+    {
         return -1;
+    }
     return ListRemove(list->list, (void *)payload);
 }
 

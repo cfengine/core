@@ -57,7 +57,7 @@ Item *ReturnItemAtIndex(Item *list, int index);
 Item *EndOfList(Item *start);
 void PrependItemList(Item **liststart, const char *itemstring);
 void InsertAfter(Item **filestart, Item *ptr, const char *string);
-int RawSaveItemList(const Item *liststart, const char *file);
+bool RawSaveItemList(const Item *liststart, const char *filename);
 Item *RawLoadItemList(const char *filename);
 Item *SplitStringAsItemList(const char *string, char sep);
 Item *SplitString(const char *string, char sep);

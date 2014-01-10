@@ -967,7 +967,7 @@ Buffer *IPAddressGetAddress(IPAddress *address)
     }
     if (result < 0)
     {
-        BufferDestroy(&buffer);
+        BufferDestroy(buffer);
         return NULL;
     }
     return buffer;

@@ -101,15 +101,13 @@ static void test_creation_destruction(void)
     assert_int_equal(version->build, 0);
     VersionDestroy(&version);
     assert_true (version == NULL);
-    BufferDestroy(&buffer);
-    assert_true(buffer == NULL);
+    BufferDestroy(buffer);
 
     buffer = BufferNewFrom(wrong_version, strlen(wrong_version));
     assert_true (buffer != NULL);
     version = VersionNewFrom(buffer);
     assert_true(version == NULL);
-    BufferDestroy(&buffer);
-    assert_true(buffer == NULL);
+    BufferDestroy(buffer);
 }
 
 static void test_comparison(void)

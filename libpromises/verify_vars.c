@@ -128,7 +128,7 @@ PromiseResult VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_d
                      */
                     UnexpectedError("Problems writing to buffer");
                     VarRefDestroy(ref);
-                    BufferDestroy(&conv);
+                    BufferDestroy(conv);
                     return result;
                 }
                 rval = RvalNew(BufferData(conv), opts.cp_save->rval.type);
@@ -154,7 +154,7 @@ PromiseResult VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_d
                      */
                     UnexpectedError("Problems writing to buffer");
                     VarRefDestroy(ref);
-                    BufferDestroy(&conv);
+                    BufferDestroy(conv);
                     return result;
                 }
                 rval = RvalCopy((Rval) {(char *)BufferData(conv), opts.cp_save->rval.type});
@@ -171,7 +171,7 @@ PromiseResult VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_d
                 rval.item = rval_list;
             }
 
-            BufferDestroy(&conv);
+            BufferDestroy(conv);
         }
 
         if (Epimenides(ctx, PromiseGetBundle(pp)->ns, PromiseGetBundle(pp)->name, pp->promiser, rval, 0))
@@ -315,7 +315,7 @@ PromiseResult VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_d
                     StringSetAdd(class_meta, xstrdup(RlistScalarValue(rp)));
                     print = StringSetToBuffer(class_meta, ',');
                     Log(LOG_LEVEL_INFO, "Added tag %s to class %s, tags now [%s]", RlistScalarValue(rp), pp->promiser, BufferData(print));
-                    BufferDestroy(&print);
+                    BufferDestroy(print);
                 }
             }
 

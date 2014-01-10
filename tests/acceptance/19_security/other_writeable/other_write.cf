@@ -1,0 +1,100 @@
+#######################################################
+#
+# Create a file, check defaults
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle common g
+{
+  vars:
+      # This extracts the octal mode, and decimal nlink, uid, gid, size
+      "policy_file" string => '
+
+body common control
+{
+      bundlesequence  => { "test" };
+}
+
+bundle agent test
+{
+  reports:
+    "We\'re not in KS anymore toto.";
+
+}';
+
+}
+
+#######################################################
+
+bundle agent init
+{
+  files:
+    "$(G.testfile)"
+      create => "true",
+      edit_defaults => empty,
+      edit_line => insert_lines("$(g.policy_file)"),
+      perms => m("602");
+}
+
+#######################################################
+
+bundle agent test
+{
+
+  vars:
+    "agent_output" string => execresult("$(sys.cf_agent) -f $(G.testfile)", "noshell");
+
+  classes:
+    "security_exception"
+      expression => regcmp(".*is writable by others (security exception).*", "$(agent_output)"),
+      comment => "It's a security risk to evaluate policy that is writeable by users other than the owner";
+}
+
+#######################################################
+
+bundle agent check
+{
+  classes:
+      "ok" expression => "!security_exception";
+
+  reports:
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}
+
+bundle edit_line insert_lines(lines)
+{
+  insert_lines:
+
+      "$(lines)"
+      comment => "Append lines if they don't exist";
+}
+
+body perms m(mode)
+{
+      mode   => "$(mode)";
+}
+
+body edit_defaults empty
+{
+empty_file_before_editing => "true";
+edit_backup => "false";
+#max_file_size => "300000";
+}
+body classes if_ok(x)
+{
+promise_repaired => { "$(x)" };
+promise_kept => { "$(x)" };
+}
+
+
+

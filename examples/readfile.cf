@@ -21,9 +21,11 @@
 # included file COSL.txt.
 
 #+begin_src prep
+#@ ```
 #@ echo alpha > /tmp/cfe_hostlist
 #@ echo beta >> /tmp/cfe_hostlist
 #@ echo gamma >> /tmp/cfe_hostlist
+#@ ```
 #+end_src
 ###############################################################################
 #+begin_src cfengine3
@@ -44,5 +46,7 @@ bundle agent example
 #+end_src
 ###############################################################################
 #+begin_src example_output
+#@ ```
 #@ 2013-12-20T13:44:32-0500   notice: /default/example: R: first 5 characters of /tmp/cfe_hostlist: alpha
+#@ ```
 #+end_src

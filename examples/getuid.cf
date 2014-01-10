@@ -38,5 +38,7 @@ bundle agent example
 #+end_src
 ###############################################################################
 #+begin_src example_output
+#@ ```
 #@ 2013-12-20T13:44:30-0500   notice: /default/example: R: root's uid is 0
+#@ ```
 #+end_src

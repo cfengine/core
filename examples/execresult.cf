@@ -21,8 +21,10 @@
 # included file COSL.txt.
 
 #+begin_src prep
+#@ ```
 #@ mkdir -p /tmp/testhere
 #@ touch /tmp/testhere/{a,b,c,d,e}
+#@ ```
 #+end_src
 ###############################################################################
 #+begin_src cfengine3
@@ -48,9 +50,11 @@ bundle agent example
 #+end_src
 ###############################################################################
 #+begin_src example_output
+#@ ```
 #@ 2013-12-20T13:48:35-0500   notice: /default/example: R: /bin/ls /tmp/testhere returned 'a
 #@ b
 #@ c
 #@ d
 #@ e'
+#@ ```
 #+end_src

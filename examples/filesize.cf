@@ -41,6 +41,8 @@ bundle agent example
 #+end_src
 ###############################################################################
 #+begin_src example_output
+#@ ```
 #@ 2013-12-20T13:44:29-0500   notice: /default/example: R: File size 301
 #@ 2013-12-20T13:44:29-0500   notice: /default/example: R: Does not exist: $(nexists)
+#@ ```
 #+end_src

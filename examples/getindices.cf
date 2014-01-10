@@ -49,6 +49,7 @@ bundle agent example
 #+end_src
 ###############################################################################
 #+begin_src example_output
+#@ ```
 #@ 2013-12-20T13:44:30-0500   notice: /default/example: R: Found key relayhost
 #@ 2013-12-20T13:44:30-0500   notice: /default/example: R: Found key smtp_sasl_security_options
 #@ 2013-12-20T13:44:30-0500   notice: /default/example: R: Found key inet_protocols
@@ -58,4 +59,5 @@ bundle agent example
 #@ 2013-12-20T13:44:30-0500   notice: /default/example: R: Found key smtp_sasl_password_maps
 #@ 2013-12-20T13:44:30-0500   notice: /default/example: R: Found key mydomain
 #@ 2013-12-20T13:44:30-0500   notice: /default/example: R: Found key inet_interfaces
+#@ ```
 #+end_src

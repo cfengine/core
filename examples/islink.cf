@@ -21,7 +21,9 @@
 # included file COSL.txt.
 
 #+begin_src prep
+#@ ```
 #@ ln -fs /tmp/cfe_testhere.txt /tmp/link
+#@ ```
 #+end_src
 ###############################################################################
 #+begin_src cfengine3
@@ -46,5 +48,7 @@ bundle agent example
 #+end_src
 ###############################################################################
 #+begin_src example_output
+#@ ```
 #@ 2013-12-20T13:44:31-0500   notice: /default/example: R: It's a link.
+#@ ```
 #+end_src

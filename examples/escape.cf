@@ -39,5 +39,7 @@ bundle agent example
 #+end_src
 ###############################################################################
 #+begin_src example_output
+#@ ```
 #@ 2013-12-20T13:44:29-0500   notice: /default/example: R: escaped 10.123.321.250 = 10\.123\.321\.250
+#@ ```
 #+end_src

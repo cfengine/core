@@ -42,7 +42,9 @@ bundle agent test
 #+end_src
 ###############################################################################
 #+begin_src example_output
+#@ ```
 #@ 2013-12-20T13:40:20-0500   notice: /default/test: R: shuffled by xx = 'b,a,c'
 #@ 2013-12-20T13:40:20-0500   notice: /default/test: R: shuffled by yy = 'a,c,b'
 #@ 2013-12-20T13:40:20-0500   notice: /default/test: R: shuffled by zz = 'c,b,a'
+#@ ```
 #+end_src

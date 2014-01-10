@@ -37,5 +37,7 @@ bundle agent run
 #+end_src
 ###############################################################################
 #+begin_src example_output
+#@ ```
 #@ 2013-12-20T13:44:29-0500   notice: /default/run: R: All files that match '/[tT][mM][pP]' = /tmp
+#@ ```
 #+end_src

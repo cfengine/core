@@ -49,10 +49,12 @@ bundle agent run
 #+end_src
 ###############################################################################
 #+begin_src example_output
+#@ ```
 #@ 2013-12-20T13:44:29-0500   notice: /default/run: R: version 2.5.6 => padded 000200050006
 #@ 2013-12-20T13:44:29-0500   notice: /default/run: R: %10.10s on 'x' => '         x'
 #@ 2013-12-20T13:44:29-0500   notice: /default/run: R: %-10.10s on 'x' => 'x         '
 #@ 2013-12-20T13:44:29-0500   notice: /default/run: R: %04d on '1' => '0001'
 #@ 2013-12-20T13:44:29-0500   notice: /default/run: R: %07.2f on '1' => '0001.00'
 #@ 2013-12-20T13:44:29-0500   notice: /default/run: R: you killed my father... => 'hello my name is Inigo Montoya'
+#@ ```
 #+end_src

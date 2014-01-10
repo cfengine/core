@@ -45,8 +45,10 @@ bundle agent test
 #+end_src
 ###############################################################################
 #+begin_src example_output
+#@ ```
 #@ 2013-12-20T13:44:28-0500   notice: /default/test: R: The difference of list '1,2,3,x' with '1,2,3,x' is ''
 #@ 2013-12-20T13:44:28-0500   notice: /default/test: R: The difference of list '1,2,3,x' with 'x' is '1,2,3'
 #@ 2013-12-20T13:44:28-0500   notice: /default/test: R: The difference of list 'x' with '1,2,3,x' is ''
 #@ 2013-12-20T13:44:28-0500   notice: /default/test: R: The difference of list 'x' with 'x' is ''
+#@ ```
 #+end_src

@@ -45,6 +45,8 @@ bundle agent example
 #+end_src
 ###############################################################################
 #+begin_src example_output
+#@ ```
 #@ 2013-12-20T13:44:31-0500   notice: /default/example: R: /etc/passwd is plain..
 #@ 2013-12-20T13:44:31-0500   notice: /default/example: R: / is not plain..
+#@ ```
 #+end_src

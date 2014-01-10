@@ -50,5 +50,7 @@ bundle agent example
 #+end_src
 ###############################################################################
 #+begin_src example_output
+#@ ```
 #@ 2013-12-20T13:44:29-0500   notice: /default/example: R: The EXAMPLE environment variable is getenv.cf
+#@ ```
 #+end_src

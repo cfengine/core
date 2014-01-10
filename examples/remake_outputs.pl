@@ -53,20 +53,24 @@ Each input .cf file is scanned for three markers:
 (each command will be run before the cfengine3 code block)
 
 #+begin_src prep
+#@ ```
 #@ touch -d '2001-02-03 12:34:56' /tmp/earlier
 #@ touch -d '2002-02-03 12:34:56' /tmp/later
+#@ ```
 #+end_src
 
 3) required: an output code block
 
 #+begin_src example_output
+#@ ```
 #@ 2013-12-16T20:48:24+0200   notice: /default/example: R: The secret changes have been accessed after the reference time
+#@ ```
 #+end_src
 
 This block is rewritten if it's different, otherwise it's left alone.
 
 The "#@ " part is optional but needed if you want the file to be valid CFEngine
-policy.
+policy. The "#@ ```" parts make the prep and output steps render as code in markdown.
 
 EOHIPPUS
 

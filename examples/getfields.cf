@@ -46,10 +46,12 @@ bundle agent example
 #+end_src
 ###############################################################################
 #+begin_src example_output
+#@ ```
 #@ 2013-12-20T13:44:30-0500   notice: /default/example: R: Found 1 lines matching
 #@ 2013-12-20T13:44:30-0500   notice: /default/example: R: root's homedir = /root
 #@ 2013-12-20T13:44:30-0500   notice: /default/example: R: root's handle = root
 #@ 2013-12-20T13:44:30-0500   notice: /default/example: R: root's passwd = ... forget it!
 #@ 2013-12-20T13:44:30-0500   notice: /default/example: R: root's uid = 0
 #@ 2013-12-20T13:44:30-0500   notice: /default/example: R: root's gid = 0
+#@ ```
 #+end_src

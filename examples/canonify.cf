@@ -44,6 +44,8 @@ bundle agent example
 #+end_src
 ###############################################################################
 #+begin_src example_output
+#@ ```
 #@ 2013-12-20T13:44:28-0500   notice: /default/example: R: canonified component == _var_cfengine_bin_cf_serverd
 #@ 2013-12-20T13:44:28-0500   notice: /default/example: R: component exists in /var/cfengine/bin/cf-serverd
+#@ ```
 #+end_src

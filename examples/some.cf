@@ -55,6 +55,7 @@ bundle agent test
 #+end_src
 ###############################################################################
 #+begin_src example_output
+#@ ```
 #@ 2013-12-20T13:44:34-0500   notice: /default/test: R: The test list is 1
 #@ 2013-12-20T13:44:34-0500   notice: /default/test: R: The test list is 2
 #@ 2013-12-20T13:44:34-0500   notice: /default/test: R: The test list is 3
@@ -67,4 +68,5 @@ bundle agent test
 #@ 2013-12-20T13:44:34-0500   notice: /default/test: R: The test list is six
 #@ 2013-12-20T13:44:34-0500   notice: /default/test: R: some() test 1 passed
 #@ 2013-12-20T13:44:34-0500   notice: /default/test: R: some() test 2 passed
+#@ ```
 #+end_src

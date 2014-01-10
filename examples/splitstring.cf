@@ -44,10 +44,12 @@ bundle agent test
 #+end_src
 ###############################################################################
 #+begin_src example_output
+#@ ```
 #@ 2013-12-20T13:44:35-0500   notice: /default/test: R: split1: one
 #@ 2013-12-20T13:44:35-0500   notice: /default/test: R: split1: two
 #@ 2013-12-20T13:44:35-0500   notice: /default/test: R: split1: three
 #@ 2013-12-20T13:44:35-0500   notice: /default/test: R: split2: one
 #@ 2013-12-20T13:44:35-0500   notice: /default/test: R: split3: alpha:
 #@ 2013-12-20T13:44:35-0500   notice: /default/test: R: split3: :beta
+#@ ```
 #+end_src

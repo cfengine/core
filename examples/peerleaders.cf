@@ -20,6 +20,7 @@
 # (COSL) may apply to this file if you as a licensee so wish it. See
 # included file COSL.txt.
 #+begin_src prep
+#@ ```
 #@ echo alpha > /tmp/cfe_hostlist
 #@ echo beta >> /tmp/cfe_hostlist
 #@ echo gamma >> /tmp/cfe_hostlist
@@ -29,6 +30,7 @@
 #@ echo may1 I help ya >> /tmp/cfe_hostlist
 #@ echo may2 I help ya >> /tmp/cfe_hostlist
 #@ echo may3 I help ya >> /tmp/cfe_hostlist
+#@ ```
 #+end_src
 ###############################################################################
 #+begin_src cfengine3
@@ -57,9 +59,11 @@ bundle agent peers
 #+end_src
 ###############################################################################
 #+begin_src example_output
+#@ ```
 #@ 2013-12-20T13:44:32-0500   notice: /default/peers: R: /tmp/cfe_hostlist mypeer may3
 #@ 2013-12-20T13:44:32-0500   notice: /default/peers: R: /tmp/cfe_hostlist myleader $(myleader)
 #@ 2013-12-20T13:44:32-0500   notice: /default/peers: R: /tmp/cfe_hostlist another leader may3
 #@ 2013-12-20T13:44:32-0500   notice: /default/peers: R: /tmp/cfe_hostlist another leader delta2
 #@ 2013-12-20T13:44:32-0500   notice: /default/peers: R: /tmp/cfe_hostlist another leader alpha
+#@ ```
 #+end_src

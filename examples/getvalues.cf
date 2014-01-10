@@ -42,6 +42,8 @@ bundle agent example
 #+end_src
 ###############################################################################
 #+begin_src example_output
+#@ ```
 #@ 2013-12-20T13:44:30-0500   notice: /default/example: R: Found values: value_2
 #@ 2013-12-20T13:44:30-0500   notice: /default/example: R: Found values: value_1
+#@ ```
 #+end_src

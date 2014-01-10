@@ -48,5 +48,7 @@ bundle agent example
 #+end_src
 ###############################################################################
 #+begin_src example_output
+#@ ```
 #@ 2013-12-20T13:44:34-0500   notice: /default/example: R: 127.0.0.1 is NOT currently set as a nameserver
+#@ ```
 #+end_src

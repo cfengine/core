@@ -49,7 +49,9 @@ bundle agent run
 #+end_src
 ###############################################################################
 #+begin_src example_output
+#@ ```
 #@ 2013-12-20T13:00:24-0500   notice: /default/run: R: All classes with the 'cfe_internal' and 'source=environment' tags = 'opt_dry_run'
 #@ 2013-12-20T13:00:24-0500   notice: /default/run: R: All classes with the 'cfe_internal' and 'source=environment' tags = 'agent'
 #@ 2013-12-20T13:00:24-0500   notice: /default/run: R: Classes matching 'cfengine' = 'cfengine'
+#@ ```
 #+end_src

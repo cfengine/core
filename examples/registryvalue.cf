@@ -41,5 +41,7 @@ bundle agent reg
 #+end_src
 ###############################################################################
 #+begin_src example_output
+#@ ```
 #@ 2013-12-20T13:44:34-0500   notice: /default/reg: R: Value extracted: Sorry, no registry data is available
+#@ ```
 #+end_src

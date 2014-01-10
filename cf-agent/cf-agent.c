@@ -247,7 +247,7 @@ int main(int argc, char *argv[])
     {
         Log(LOG_LEVEL_ERR, "CFEngine was not able to get confirmation of promises from cf-promises, so going to failsafe");
         EvalContextClassPut(ctx, NULL, "failsafe_fallback", false, CONTEXT_SCOPE_NAMESPACE, "source=agent");
-        GenericAgentConfigSetInputFile(config, GetWorkDir(), "failsafe.cf");
+        GenericAgentConfigSetInputFile(config, GetInputDir(), "failsafe.cf");
         policy = GenericAgentLoadPolicy(ctx, config);
     }
 
@@ -317,7 +317,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
                 exit(EXIT_FAILURE);
             }
 
-            GenericAgentConfigSetInputFile(config, GetWorkDir(), optarg);
+            GenericAgentConfigSetInputFile(config, GetInputDir(), optarg);
             MINUSF = true;
             break;
 
@@ -382,7 +382,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
 
                 MINUSF = true;
                 config->ignore_locks = true;
-                GenericAgentConfigSetInputFile(config, GetWorkDir(),
+                GenericAgentConfigSetInputFile(config, GetInputDir(),
                                                "promises.cf");
                 config->agent_specific.agent.bootstrap_policy_server =
                     xstrdup(mapped_policy_server);
@@ -445,10 +445,12 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
         case 'x':
             {
                 const char *workdir = GetWorkDir();
+                const char *inputdir = GetInputDir();
                 const char *logdir = GetLogDir();
                 strcpy(CFWORKDIR, workdir);
                 Writer *out = FileWriter(stdout);
                 WriterWriteF(out, "self-diagnostics for agent using workdir '%s'\n", workdir);
+                WriterWriteF(out, "self-diagnostics for agent using inputdir '%s'\n", inputdir);
                 WriterWriteF(out, "self-diagnostics for agent using logdir '%s'\n", logdir);
 
                 AgentDiagnosticsRun(workdir, AgentDiagnosticsAllChecks(), out);
@@ -1681,7 +1683,7 @@ static bool VerifyBootstrap(void)
     // we should at least have gotten promises.cf from the policy hub
     {
         char filename[CF_MAXVARSIZE];
-        snprintf(filename, sizeof(filename), "%s/inputs/promises.cf", CFWORKDIR);
+        snprintf(filename, sizeof(filename), "%s/promises.cf", GetInputDir());
         MapName(filename);
 
         struct stat sb;

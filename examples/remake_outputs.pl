@@ -172,6 +172,8 @@ sub run_example
     foreach (@$prep)
     {
         s/^#@ //;
+        # skip Markdown markup like ```
+        next unless m/^\w/;
         s/FILE/$tempfile/g;
         print "processing $file: Running prep '$_'"
          if $options{verbose};

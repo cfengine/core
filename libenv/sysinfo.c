@@ -369,7 +369,9 @@ static void GetNameInfo3(EvalContext *ctx)
 #endif
     char *components[] = { "cf-twin", "cf-agent", "cf-serverd", "cf-monitord", "cf-know",
         "cf-report", "cf-key", "cf-runagent", "cf-execd", "cf-hub",
-        "cf-promises", NULL
+        "cf-promises",
+        "cf-upgrade",
+        NULL
     };
     int have_component[11];
     struct stat sb;

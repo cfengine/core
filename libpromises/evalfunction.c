@@ -3499,7 +3499,7 @@ static FnCallResult FnCallFormat(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
                             {
                                 Writer *w = StringWriter();
                                 WriterWrite(w, "{ ");
-                                for (Rlist *rp = list; rp; rp = rp->next)
+                                for (const Rlist *rp = list; rp; rp = rp->next)
                                 {
                                     char *escaped = EscapeCharCopy(RlistScalarValue(rp), '"', '\\');
                                     if (0 == strcmp(escaped, CF_NULL_VALUE))
@@ -3527,7 +3527,7 @@ static FnCallResult FnCallFormat(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
                             {
                                 Log(LOG_LEVEL_ERR, "format() with %%S specifier needs a data container or a list instead of '%s'.",
                                     varname);
-                                BufferDestroy(&buf);
+                                BufferDestroy(buf);
                                 return FnFailure();
                             }
                         }

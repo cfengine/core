@@ -172,7 +172,7 @@ const char *JsonGetPropertyAsString(const JsonElement *element);
   */
 void JsonWrite(Writer *writer, const JsonElement *element, size_t indent_level);
 
-void JsonWriteCompact(Writer *w, JsonElement *element);
+void JsonWriteCompact(Writer *w, const JsonElement *element);
 
 /**
   @brief Append a string field to an object.

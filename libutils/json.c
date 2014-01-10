@@ -1355,7 +1355,7 @@ static void JsonContainerWriteCompact(Writer *writer, const JsonElement *contain
     }
 }
 
-void JsonWriteCompact(Writer *w, JsonElement *element)
+void JsonWriteCompact(Writer *w, const JsonElement *element)
 {
     assert(w);
     assert(element);

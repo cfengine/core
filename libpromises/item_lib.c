@@ -861,15 +861,15 @@ int ByteSizeList(const Item *list)
     return count;
 }
 
-int RawSaveItemList(const Item *liststart, const char *file)
+bool RawSaveItemList(const Item *liststart, const char *filename)
 {
     char new[CF_BUFSIZE], backup[CF_BUFSIZE];
     FILE *fp;
 
-    strcpy(new, file);
+    strcpy(new, filename);
     strcat(new, CF_EDITED);
 
-    strcpy(backup, file);
+    strcpy(backup, filename);
     strcat(backup, CF_SAVED);
 
     unlink(new);                /* Just in case of races */
@@ -891,9 +891,9 @@ int RawSaveItemList(const Item *liststart, const char *file)
         return false;
     }
 
-    if (rename(new, file) == -1)
+    if (rename(new, filename) == -1)
     {
-        Log(LOG_LEVEL_INFO, "Error while renaming file '%s' to '%s'. (rename: %s)", new, file, GetErrorStr());
+        Log(LOG_LEVEL_INFO, "Error while renaming file '%s' to '%s'. (rename: %s)", new, filename, GetErrorStr());
         return false;
     }
 

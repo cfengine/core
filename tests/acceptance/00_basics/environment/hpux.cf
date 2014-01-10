@@ -1,0 +1,53 @@
+##############################################################################
+#
+# Redmine #3842: ensure correct sys.flavor, sys.arch on HP-UX
+#
+##############################################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle agent init
+{
+}
+
+
+bundle agent test
+{
+}
+
+
+bundle agent check
+{
+  vars:
+      "expected[flavor]" string => ifelse("hpux", "hp-ux_.+",
+                                          "unknown");
+
+      "expected[arch]" string => ifelse("hpux", "ia64",
+                                        "unknown");
+
+      "checks" slist => getindices("expected");
+
+      # If the output contains the string, we fail
+  classes:
+      "ok_$(checks)" expression => regcmp("$(expected[$(checks)])", "$(sys.$(checks))");
+      "unknown_$(checks)" expression => strcmp("$(expected[$(checks)])", "unknown");
+
+      "ok" and => { "ok_flavor", "ok_arch" };
+      "skipped" and => { "unknown_flavor", "unknown_arch" };
+
+  reports:
+    DEBUG::
+      "check $(checks) was OK" ifvarclass => "ok_$(checks)";
+      "check $(checks) was not OK" ifvarclass => "!ok_$(checks).!unknown_$(checks)";
+      "check $(checks) was unknown (skipped)" ifvarclass => "unknown_$(checks)";
+
+    ok||skipped::
+      "$(this.promise_filename) Pass";
+    !ok.!skipped::
+      "$(this.promise_filename) FAIL";
+}

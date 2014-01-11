@@ -335,19 +335,19 @@ static void ExpandAndMapIteratorsFromScalar(EvalContext *ctx, const Bundle *bund
     for (const char *sp = buffer; (*sp != '\0'); sp++)
     {
         Rlist *tmp_list = NULL;
+        BufferZero(value);
+        if (ExtractScalarPrefix(value, sp, strlen(sp)))
         {
-            char v[CF_BUFSIZE] = "";
-            sscanf(sp, "%[^$]", v);
-
             if (full_expansion)
             {
-                RlistConcatInto(&tmp_list, *full_expansion, v);
+                RlistConcatInto(&tmp_list, *full_expansion, BufferData(value));
                 RlistDestroy(*full_expansion);
                 *full_expansion = tmp_list;
                 tmp_list = NULL;
             }
 
-            sp += strlen(v);
+            sp += BufferSize(value);
+            BufferZero(value);
         }
 
         if (*sp == '\0')

@@ -6,6 +6,23 @@
 #include <eval_context.h>
 #include <vars.h>
 
+static void test_extract_scalar_prefix(void)
+{
+    Buffer *b = BufferNew();
+    assert_int_equal(sizeof("hello ") - 1, ExtractScalarPrefix(b, "hello $(world) xy", sizeof("hello $(world) xy") -1));
+    assert_string_equal("hello ", BufferData(b));
+
+    BufferZero(b);
+    assert_int_equal(sizeof("hello (world) xy") -1, ExtractScalarPrefix(b, "hello (world) xy", sizeof("hello (world) xy") -1));
+    assert_string_equal("hello (world) xy", BufferData(b));
+
+    BufferZero(b);
+    assert_int_equal(0, ExtractScalarPrefix(b, "", 0));
+    assert_string_equal("", BufferData(b));
+
+    BufferDestroy(b);
+}
+
 static void test_extract_inner_varstring(void)
 {
     Buffer *b = BufferNew();
@@ -433,6 +450,7 @@ int main()
     PRINT_TEST_BANNER();
     const UnitTest tests[] =
     {
+        unit_test(test_extract_scalar_prefix),
         unit_test(test_extract_inner_varstring),
         unit_test(test_map_iterators_from_rval_empty),
         unit_test(test_map_iterators_from_rval_literal),

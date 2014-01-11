@@ -271,7 +271,28 @@ static int IsCf3Scalar(char *str)
     return vars;
 }
 
-/*******************************************************************/
+size_t ExtractScalarPrefix(Buffer *out, const char *str, size_t len)
+{
+    assert(str);
+    if (len == 0)
+    {
+        return 0;
+    }
+
+    const char *dollar_point = memchr(str, '$', len);
+    if (!dollar_point)
+    {
+        BufferAppend(out, str, len);
+        return len;
+    }
+    else if (dollar_point > str)
+    {
+        size_t prefix_len = dollar_point - str;
+        BufferAppend(out, str, prefix_len);
+        return prefix_len;
+    }
+    return 0;
+}
 
 bool ExtractInnerCf3VarString(Buffer *out, const char *str, size_t len)
 {

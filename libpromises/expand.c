@@ -44,7 +44,7 @@
 #include <verify_classes.h>
 
 
-static void ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp, Rlist *lists, Rlist *containers,
+static PromiseResult ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp, Rlist *lists, Rlist *containers,
                                PromiseActuator *ActOnPromise, void *param);
 static void ExpandAndMapIteratorsFromScalar(EvalContext *ctx, const Bundle *bundle, char *string, size_t length, int level,
                                             Rlist **scalars, Rlist **lists, Rlist **containers, Rlist **full_expansion);
@@ -108,7 +108,7 @@ since these cannot be mapped into "this" without some magic.
    
 **********************************************************************/
 
-void ExpandPromise(EvalContext *ctx, const Promise *pp, PromiseActuator *ActOnPromise, void *param)
+PromiseResult ExpandPromise(EvalContext *ctx, const Promise *pp, PromiseActuator *ActOnPromise, void *param)
 {
     Rlist *lists = NULL;
     Rlist *scalars = NULL;
@@ -133,16 +133,18 @@ void ExpandPromise(EvalContext *ctx, const Promise *pp, PromiseActuator *ActOnPr
     CopyLocalizedReferencesToBundleScope(ctx, PromiseGetBundle(pp), scalars);
     CopyLocalizedReferencesToBundleScope(ctx, PromiseGetBundle(pp), containers);
 
-    ExpandPromiseAndDo(ctx, pcopy, lists, containers, ActOnPromise, param);
+    PromiseResult result = ExpandPromiseAndDo(ctx, pcopy, lists, containers, ActOnPromise, param);
 
     PromiseDestroy(pcopy);
 
     RlistDestroy(lists);
     RlistDestroy(scalars);
     RlistDestroy(containers);
+
+    return result;
 }
 
-static void ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp, Rlist *lists, Rlist *containers, PromiseActuator *ActOnPromise, void *param)
+static PromiseResult ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp, Rlist *lists, Rlist *containers, PromiseActuator *ActOnPromise, void *param)
 {
     const char *handle = PromiseGetHandle(pp);
 
@@ -150,6 +152,7 @@ static void ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp, Rlist *lists
 
     PromiseIterator *iter_ctx = NULL;
     size_t i = 0;
+    PromiseResult result = PROMISE_RESULT_NOOP;
     for (iter_ctx = PromiseIteratorNew(ctx, pp, lists, containers); PromiseIteratorHasMore(iter_ctx); i++, PromiseIteratorNext(iter_ctx))
     {
         if (handle)
@@ -167,7 +170,8 @@ static void ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp, Rlist *lists
         }
 
         const Promise *pexp = EvalContextStackPushPromiseIterationFrame(ctx, i, iter_ctx);
-        ActOnPromise(ctx, pexp, param);
+        PromiseResult iteration_result = ActOnPromise(ctx, pexp, param);
+        result = PromiseResultUpdate(result, iteration_result);
 
         if (strcmp(pp->parent_promise_type->name, "vars") == 0 || strcmp(pp->parent_promise_type->name, "meta") == 0)
         {
@@ -179,6 +183,8 @@ static void ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp, Rlist *lists
 
     PromiseIteratorDestroy(iter_ctx);
     EvalContextStackPopFrame(ctx);
+
+    return result;
 }
 
 

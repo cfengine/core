@@ -1153,7 +1153,7 @@ static void AllClassesReport(const EvalContext *ctx)
     }
 }
 
-int ScheduleAgentOperations(EvalContext *ctx, const Bundle *bp)
+PromiseResult ScheduleAgentOperations(EvalContext *ctx, const Bundle *bp)
 // NB - this function can be called recursively through "methods"
 {
     int save_pr_kept = PR_KEPT;
@@ -1166,6 +1166,7 @@ int ScheduleAgentOperations(EvalContext *ctx, const Bundle *bp)
         PROCESSTABLE = NULL;
     }
 
+    PromiseResult result = PROMISE_RESULT_NOOP;
     for (int pass = 1; pass < CF_DONEPASSES; pass++)
     {
         for (TypeSequence type = 0; AGENT_TYPESEQUENCE[type] != NULL; type++)
@@ -1190,13 +1191,14 @@ int ScheduleAgentOperations(EvalContext *ctx, const Bundle *bp)
             {
                 Promise *pp = SeqAt(sp->promises, ppi);
 
-                ExpandPromise(ctx, pp, KeepAgentPromise, NULL);
+                PromiseResult promise_result = ExpandPromise(ctx, pp, KeepAgentPromise, NULL);
+                result = PromiseResultUpdate(result, promise_result);
 
                 if (Abort(ctx))
                 {
                     DeleteTypeContext(ctx, bp, type);
                     NoteBundleCompliance(bp, save_pr_kept, save_pr_repaired, save_pr_notkept);
-                    return false;
+                    return result;
                 }
             }
 
@@ -1204,7 +1206,8 @@ int ScheduleAgentOperations(EvalContext *ctx, const Bundle *bp)
         }
     }
 
-    return NoteBundleCompliance(bp, save_pr_kept, save_pr_repaired, save_pr_notkept);
+    NoteBundleCompliance(bp, save_pr_kept, save_pr_repaired, save_pr_notkept);
+    return result;
 }
 
 /*********************************************************************/
@@ -1721,10 +1724,10 @@ static int NoteBundleCompliance(const Bundle *bundle, int save_pr_kept, int save
     delta_pr_repaired = (double) (PR_REPAIRED - save_pr_repaired);
 
     if (delta_pr_kept + delta_pr_notkept + delta_pr_repaired <= 0)
-       {
-       Log(LOG_LEVEL_VERBOSE, "Zero promises executed for bundle '%s'", bundle->name);
-       return PROMISE_RESULT_NOOP;
-       }
+    {
+        Log(LOG_LEVEL_VERBOSE, "Zero promises executed for bundle '%s'", bundle->name);
+        return PROMISE_RESULT_NOOP;
+    }
 
     Log(LOG_LEVEL_VERBOSE, "Bundle Accounting Summary for '%s'", bundle->name);
     Log(LOG_LEVEL_VERBOSE, "Promises kept in '%s' = %.0lf", bundle->name, delta_pr_kept);

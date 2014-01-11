@@ -123,10 +123,12 @@ PromiseResult VerifyMethod(EvalContext *ctx, char *attrname, Attributes a, const
         {
         case PROMISE_RESULT_FAIL:
             cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, a, "Method '%s' failed in some repairs or aborted", bp->name);
+            result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
             break;
 
         case PROMISE_RESULT_CHANGE:
             cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, "Method '%s' invoked repairs", bp->name);
+            result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
             break;
 
         default:

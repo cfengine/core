@@ -183,6 +183,10 @@ void BufferZero(Buffer *buffer);
   @return The size of the buffer, that is the number of bytes contained on it.
   */
 unsigned int BufferSize(Buffer *buffer);
+
+void BufferSetCapacity(Buffer *buffer, unsigned int capacity);
+unsigned BufferCapacity(const Buffer *buffer);
+
 /**
   @brief Returns the current mode of operation of the buffer.
   @param buffer The buffer to operate on.

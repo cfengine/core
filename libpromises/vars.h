@@ -26,9 +26,9 @@
 #define CFENGINE_VARS_H
 
 #include <cf3.defs.h>
-#include <assoc.h>
+#include <buffer.h>
 
-const char *ExtractInnerCf3VarString(const char *str, char *substr);
+bool ExtractInnerCf3VarString(Buffer *out, const char *str, size_t len);
 const char *ExtractOuterCf3VarString(const char *str, char *substr);
 int UnresolvedArgs(Rlist *args);
 bool IsQualifiedVariable(const char *var);

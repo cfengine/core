@@ -406,7 +406,6 @@ SyntaxTypeMatch CheckConstraintTypeMatch(const char *lval, Rval rval, DataType d
 DataType StringDataType(EvalContext *ctx, const char *string)
 {
     int islist = false;
-    char var[CF_BUFSIZE];
     DataType dtype = DATA_TYPE_NONE;
 
 /*-------------------------------------------------------
@@ -421,15 +420,16 @@ vars:
    "listvar" slist => EmbellishList("prefix$(list)suffix");
 ---------------------------------------------------------*/
 
-    var[0] = '\0';
+    size_t len = strlen(string);
 
     if (*string == '$')
     {
-        if (ExtractInnerCf3VarString(string, var))
+        Buffer *inner_value = BufferNew();
+        if (ExtractInnerCf3VarString(inner_value, string, len))
         {
-            if (!IsExpandable(var))
+            if (!IsExpandable(BufferData(inner_value)))
             {
-                VarRef *ref = VarRefParse(var);
+                VarRef *ref = VarRefParse(BufferData(inner_value));
                 if (EvalContextVariableGet(ctx, ref, &dtype))
                 {
                     if (DataTypeToRvalType(dtype) == RVAL_TYPE_LIST)
@@ -448,17 +448,19 @@ vars:
                 VarRefDestroy(ref);
             }
 
-            if (strlen(var) == strlen(string))
+            if (BufferSize(inner_value) == strlen(string))
             {
-                /* Can trust variables own datatype  */
+                BufferDestroy(inner_value);
                 return dtype;
             }
             else
             {
-                /* Must force non-pure substitution to be generic type CF_SCALAR.cf_str */
+                BufferDestroy(inner_value);
                 return DATA_TYPE_STRING;
             }
         }
+
+        BufferDestroy(inner_value);
     }
 
     return DATA_TYPE_STRING;

@@ -4,6 +4,16 @@
 #include <rlist.h>
 #include <scope.h>
 #include <eval_context.h>
+#include <vars.h>
+
+static void test_extract_inner_varstring(void)
+{
+    Buffer *b = BufferNew();
+    assert_true(ExtractInnerCf3VarString(b, "${stuff}", sizeof("${stuff}") - 1));
+    assert_string_equal("stuff", BufferData(b));
+
+    BufferDestroy(b);
+}
 
 static void test_map_iterators_from_rval_empty(void)
 {
@@ -423,6 +433,7 @@ int main()
     PRINT_TEST_BANNER();
     const UnitTest tests[] =
     {
+        unit_test(test_extract_inner_varstring),
         unit_test(test_map_iterators_from_rval_empty),
         unit_test(test_map_iterators_from_rval_literal),
         unit_test(test_map_iterators_from_rval_naked_list_var),

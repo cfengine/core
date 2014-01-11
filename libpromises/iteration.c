@@ -30,6 +30,7 @@
 #include <eval_context.h>
 #include <misc_lib.h>
 #include <string_lib.h>
+#include <assoc.h>
 
 struct PromiseIterator_
 {

@@ -273,27 +273,24 @@ static int IsCf3Scalar(char *str)
 
 /*******************************************************************/
 
-const char *ExtractInnerCf3VarString(const char *str, char *substr)
+bool ExtractInnerCf3VarString(Buffer *out, const char *str, size_t len)
 {
-    const char *sp;
-    int bracks = 1;
-
-    if (str == NULL || strlen(str) == 0)
+    assert(str);
+    if (len == 0)
     {
-        return NULL;
+        return false;
     }
-
-    memset(substr, 0, CF_BUFSIZE);
 
     if (*(str + 1) != '(' && *(str + 1) != '{')
     {
-        return NULL;
+        return false;
     }
 
-/* Start this from after the opening $( */
+    int bracks = 1;
 
-    for (sp = str + 2; *sp != '\0'; sp++)       /* check for varitems */
+    for (size_t i = 2; i < len; i++)
     {
+        const char *sp = str + i;
         switch (*sp)
         {
         case '(':
@@ -306,10 +303,7 @@ const char *ExtractInnerCf3VarString(const char *str, char *substr)
             break;
 
         default:
-            if (isalnum((int) *sp) || strchr("_[]$.:-# ", *sp))
-            {
-            }
-            else
+            if (!(isalnum((int) *sp) || strchr("_[]$.:-# ", *sp)))
             {
                 Log(LOG_LEVEL_DEBUG, "Illegal character found '%c'", *sp);
                 Log(LOG_LEVEL_DEBUG, "Illegal character somewhere in variable '%s' or nested expansion", str);
@@ -318,34 +312,30 @@ const char *ExtractInnerCf3VarString(const char *str, char *substr)
 
         if (bracks == 0)
         {
-            strncpy(substr, str + 2, sp - str - 2);
-
-            if (strlen(substr) == 0)
+            size_t var_ref_len = sp - str - 2;
+            if (var_ref_len == 0)
             {
-                char output[CF_BUFSIZE];
-                snprintf(output, CF_BUFSIZE, "Empty variable name in brackets: %s", str);
-                yyerror(output);
-                return NULL;
+                Log(LOG_LEVEL_ERR, "Empty variable name in brackets '%s'", str);
+                return false;
             }
 
-            Log(LOG_LEVEL_DEBUG, "Returning substring value '%s'", substr);
-            return substr;
+            BufferAppend(out, str + 2, var_ref_len);
+            return true;
         }
     }
 
     if (bracks != 0)
     {
-        char output[CF_BUFSIZE];
+        Writer *w = StringWriter();
+        WriterWriteLen(w, str, len);
+        Log(LOG_LEVEL_ERR, "Broken variable syntax or bracket mismatch '%s'", StringWriterData(w));
+        WriterClose(w);
 
-        if (strlen(substr) > 0)
-        {
-            snprintf(output, CF_BUFSIZE, "Broken variable syntax or bracket mismatch - inner '%s/%s'", str, substr);
-            yyerror(output);
-        }
-        return NULL;
+        return false;
     }
 
-    return sp - 1;
+    assert(false && "Never reach");
+    return false;
 }
 
 /*********************************************************************/

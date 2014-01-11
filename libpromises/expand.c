@@ -330,21 +330,25 @@ static void ExpandAndMapIteratorsFromScalar(EvalContext *ctx, const Bundle *bund
     strncpy(buffer, string, length);
     buffer[length] = '\0';
 
+    Buffer *value = BufferNew();
+
     for (const char *sp = buffer; (*sp != '\0'); sp++)
     {
-        char v[CF_BUFSIZE] = "";
-        sscanf(sp, "%[^$]", v);
-
         Rlist *tmp_list = NULL;
-        if (full_expansion)
         {
-            RlistConcatInto(&tmp_list, *full_expansion, v);
-            RlistDestroy(*full_expansion);
-            *full_expansion = tmp_list;
-            tmp_list = NULL;
-        }
+            char v[CF_BUFSIZE] = "";
+            sscanf(sp, "%[^$]", v);
 
-        sp += strlen(v);
+            if (full_expansion)
+            {
+                RlistConcatInto(&tmp_list, *full_expansion, v);
+                RlistDestroy(*full_expansion);
+                *full_expansion = tmp_list;
+                tmp_list = NULL;
+            }
+
+            sp += strlen(v);
+        }
 
         if (*sp == '\0')
         {
@@ -353,20 +357,23 @@ static void ExpandAndMapIteratorsFromScalar(EvalContext *ctx, const Bundle *bund
 
         if (*sp == '$')
         {
-            if (ExtractInnerCf3VarString(sp, v))
+            size_t remaining = strlen(sp);
+            BufferZero(value);
+            ExtractInnerCf3VarString(value, sp, remaining);
+            if (value)
             {
                 Rlist *inner_expansion = NULL;
                 Rlist *exp = NULL;
                 int success = 0;
                 int increment;
 
-                VarRef *ref = VarRefParse(v);
+                VarRef *ref = VarRefParse(BufferData(value));
 
-                increment = strlen(v) - 1 + 3;
+                increment = BufferSize(value) - 1 + 3;
 
                 // Handle any embedded variables
                 char *substring = string + (sp - buffer) + 2;
-                ExpandAndMapIteratorsFromScalar(ctx, bundle, substring, strlen(v), level+1, scalars, lists, containers, &inner_expansion);
+                ExpandAndMapIteratorsFromScalar(ctx, bundle, substring, BufferSize(value), level+1, scalars, lists, containers, &inner_expansion);
 
                 for (exp = inner_expansion; exp != NULL; exp = exp->next)
                 {
@@ -456,7 +463,7 @@ static void ExpandAndMapIteratorsFromScalar(EvalContext *ctx, const Bundle *bund
                 }
 
                 // No need to map this.* even though it's technically qualified
-                if (success && IsQualifiedVariable(v) && strcmp(ref->scope, "this") != 0)
+                if (success && IsQualifiedVariable(BufferData(value)) && strcmp(ref->scope, "this") != 0)
                 {
                     char *dotpos = strchr(substring, '.');
                     if (dotpos)
@@ -464,7 +471,7 @@ static void ExpandAndMapIteratorsFromScalar(EvalContext *ctx, const Bundle *bund
                         *dotpos = CF_MAPPEDLIST;    // replace '.' with '#'
                     }
 
-                    if (strchr(v, ':'))
+                    if (strchr(BufferData(value), ':'))
                     {
                         char *colonpos = strchr(substring, ':');
                         if (colonpos)
@@ -480,6 +487,8 @@ static void ExpandAndMapIteratorsFromScalar(EvalContext *ctx, const Bundle *bund
             }
         }
     }
+
+    BufferDestroy(value);
 }
 
 /*********************************************************************/
@@ -692,18 +701,21 @@ bool ExpandScalar(const EvalContext *ctx, const char *ns, const char *scope, con
 
         currentitem[0] = '\0';
 
-        char temp[CF_BUFSIZE] = "";
-        ExtractInnerCf3VarString(sp, temp);
+        {
+            Buffer *temp = BufferNew();
+            ExtractInnerCf3VarString(temp, sp, strlen(sp));
 
-        if (IsCf3VarString(temp))
-        {
-            Log(LOG_LEVEL_DEBUG, "Nested variables '%s'", temp);
-            ExpandScalar(ctx, ns, scope, temp, currentitem);
-        }
-        else
-        {
-            Log(LOG_LEVEL_DEBUG, "Delta '%s'", temp);
-            strncpy(currentitem, temp, CF_BUFSIZE - 1);
+            if (IsCf3VarString(BufferData(temp)))
+            {
+                Log(LOG_LEVEL_DEBUG, "Nested variables '%s'", BufferData(temp));
+                ExpandScalar(ctx, ns, scope, BufferData(temp), currentitem);
+            }
+            else
+            {
+                Log(LOG_LEVEL_DEBUG, "Delta '%s'", BufferData(temp));
+                strncpy(currentitem, BufferData(temp), CF_BUFSIZE - 1);
+            }
+            BufferDestroy(temp);
         }
 
         increment = strlen(var) - 1;

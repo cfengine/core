@@ -359,21 +359,27 @@ static bool ChangePasswordHashUsingLckpwdf(const char *puser, const char *passwo
 
     while (true)
     {
-        char line[CF_BUFSIZE];
-        int read_result = CfReadLine(line, sizeof(line), passwd_fd);
+        size_t line_size = CF_BUFSIZE;
+        char *line = xmalloc(line_size);
+
+        int read_result = getline(&line, &line_size, passwd_fd);
         if (read_result < 0)
         {
-            Log(LOG_LEVEL_ERR, "Error while reading password database: %s", GetErrorStr());
-            goto close_both;
+            if (!feof(passwd_fd))
+            {
+                Log(LOG_LEVEL_ERR, "Error while reading password database: %s", GetErrorStr());
+                free(line);
+                goto close_both;
+            }
+            else
+            {
+                break;
+            }
         }
         else if (read_result >= sizeof(line))
         {
             Log(LOG_LEVEL_ERR, "Unusually long line found in password database while editing user '%s'. Not updating.",
                 puser);
-        }
-        else if (read_result == 0)
-        {
-            break;
         }
 
         // Editing the password database is risky business, so do as little parsing as possible.
@@ -389,6 +395,7 @@ static bool ChangePasswordHashUsingLckpwdf(const char *puser, const char *passwo
         {
             Log(LOG_LEVEL_ERR, "Unexpected format found in password database while editing user '%s'. Not updating.",
                 puser);
+            free(line);
             goto close_both;
         }
 
@@ -404,6 +411,8 @@ static bool ChangePasswordHashUsingLckpwdf(const char *puser, const char *passwo
         {
             sprintf(new_line, "%s:%s:%s\n", line, field_start + 1, field_end + 1);
         }
+
+        free(line);
 
         size_t new_line_size = strlen(new_line);
         size_t written_so_far = 0;

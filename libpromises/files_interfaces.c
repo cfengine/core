@@ -49,6 +49,23 @@ int cf_lstat(char *file, struct stat *buf, FileCopy fc, AgentConnection *conn)
     }
 }
 
+ssize_t CfReadLine(char **buff, size_t *size, FILE *fp)
+{
+    ssize_t b = getline(buff, size, fp);
+    assert(b != 0 && "To the best of my knowledge, getline never returns zero");
+
+    if (b > 0)
+    {
+        if ((*buff)[b - 1] == '\n')
+        {
+            (*buff)[b - 1] = '\0';
+            b--;
+        }
+    }
+
+    return b;
+}
+/*
 ssize_t CfReadLine(char *buff, size_t size, FILE *fp)
 {
     if (fgets(buff, size, fp) == NULL)
@@ -63,22 +80,22 @@ ssize_t CfReadLine(char *buff, size_t size, FILE *fp)
         }
     }
 
-    /* We have got a line here */
+    // We have got a line here
 
     size_t line_length = strlen(buff);
 
-    /* Check for \n */
+    // Check for \n
 
     char *nl = strchr(buff, '\n');
 
     if (nl != NULL)
     {
-        /* If we have found a \n, then line was read fully. */
+        // If we have found a \n, then line was read fully.
         *nl = '\0';
         return line_length;
     }
 
-    /* Read the remainder of the line */
+    // Read the remainder of the line
 
     for (;;)
     {
@@ -91,7 +108,7 @@ ssize_t CfReadLine(char *buff, size_t size, FILE *fp)
             }
             else
             {
-                /* We have reached EOF, report the length of line read so far */
+                // We have reached EOF, report the length of line read so far
                 return line_length;
             }
         }
@@ -104,3 +121,4 @@ ssize_t CfReadLine(char *buff, size_t size, FILE *fp)
         }
     }
 }
+*/

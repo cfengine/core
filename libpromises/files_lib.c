@@ -359,94 +359,78 @@ bool MakeParentDirectory(const char *parentandchild, bool force)
 
 int LoadFileAsItemList(Item **liststart, const char *file, EditDefaults edits)
 {
-    FILE *fp;
-    struct stat statbuf;
-    char line[CF_BUFSIZE], concat[CF_BUFSIZE];
-    int join = false;
-
-    if (stat(file, &statbuf) == -1)
     {
-        Log(LOG_LEVEL_VERBOSE, "The proposed file '%s' could not be loaded. (stat: %s)", file, GetErrorStr());
-        return false;
+        struct stat statbuf;
+        if (stat(file, &statbuf) == -1)
+        {
+            Log(LOG_LEVEL_VERBOSE, "The proposed file '%s' could not be loaded. (stat: %s)", file, GetErrorStr());
+            return false;
+        }
+
+        if (edits.maxfilesize != 0 && statbuf.st_size > edits.maxfilesize)
+        {
+            Log(LOG_LEVEL_INFO, "File '%s' is bigger than the limit edit.max_file_size = %jd > %d bytes", file,
+                  (intmax_t) statbuf.st_size, edits.maxfilesize);
+            return (false);
+        }
+
+        if (!S_ISREG(statbuf.st_mode))
+        {
+            Log(LOG_LEVEL_INFO, "%s is not a plain file", file);
+            return false;
+        }
     }
 
-    if (edits.maxfilesize != 0 && statbuf.st_size > edits.maxfilesize)
-    {
-        Log(LOG_LEVEL_INFO, "File '%s' is bigger than the limit edit.max_file_size = %jd > %d bytes", file,
-              (intmax_t) statbuf.st_size, edits.maxfilesize);
-        return (false);
-    }
-
-    if (!S_ISREG(statbuf.st_mode))
-    {
-        Log(LOG_LEVEL_INFO, "%s is not a plain file", file);
-        return false;
-    }
-
-    if ((fp = safe_fopen(file, "r")) == NULL)
+    FILE *fp = fp = safe_fopen(file, "r");
+    if (!fp)
     {
         Log(LOG_LEVEL_INFO, "Couldn't read file '%s' for editing. (fopen: %s)", file, GetErrorStr());
         return false;
     }
 
-    memset(line, 0, CF_BUFSIZE);
-    memset(concat, 0, CF_BUFSIZE);
+    Buffer *concat = BufferNew();
+
+    size_t line_size = CF_BUFSIZE;
+    char *line = xmalloc(line_size);
 
     for (;;)
     {
-        ssize_t res = CfReadLine(line, CF_BUFSIZE, fp);
-        if (res == 0)
+        ssize_t num_read = CfReadLine(&line, &line_size, fp);
+        if (num_read == -1)
         {
-            break;
-        }
-
-        if (res == -1)
-        {
-            Log(LOG_LEVEL_ERR, "Unable to read contents of '%s'. (fread: %s)", file, GetErrorStr());
-            fclose(fp);
-            return false;
+            if (!feof(fp))
+            {
+                Log(LOG_LEVEL_ERR, "Unable to read contents of '%s'. (fread: %s)", file, GetErrorStr());
+                fclose(fp);
+                free(line);
+                return false;
+            }
+            else
+            {
+                break;
+            }
         }
 
         if (edits.joinlines && *(line + strlen(line) - 1) == '\\')
         {
-            join = true;
-        }
-        else
-        {
-            join = false;
-        }
-
-        if (join)
-        {
             *(line + strlen(line) - 1) = '\0';
 
-            if (strlcat(concat, line, CF_BUFSIZE) >= CF_BUFSIZE)
-            {
-                Log(LOG_LEVEL_ERR, "Internal limit 3: Buffer ran out of space constructing string. Tried to add '%s' to '%s'",
-                    concat, line);
-            }
+            BufferAppend(concat, line, num_read);
         }
         else
         {
-            if (strlcat(concat, line, CF_BUFSIZE) >= CF_BUFSIZE)
+            BufferAppend(concat, line, num_read);
+            if (!feof(fp) || (BufferSize(concat) > 0))
             {
-                Log(LOG_LEVEL_ERR, "Internal limit 3: Buffer ran out of space constructing string. Tried to add '%s' to '%s'",
-                    concat, line);
+                AppendItem(liststart, BufferData(concat), NULL);
             }
-
-            if (!feof(fp) || (strlen(concat) != 0))
-            {
-                AppendItem(liststart, concat, NULL);
-            }
-
-            concat[0] = '\0';
-            join = false;
         }
 
-        line[0] = '\0';
+        BufferZero(concat);
     }
 
     fclose(fp);
+    free(line);
     return true;
 }
 

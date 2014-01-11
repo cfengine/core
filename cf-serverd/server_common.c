@@ -760,7 +760,7 @@ static int OptionFound(char *args, char *pos, char *word)
 
 void DoExec(EvalContext *ctx, ServerConnectionState *conn, char *args)
 {
-    char ebuff[CF_EXPANDSIZE], line[CF_BUFSIZE], *sp;
+    char ebuff[CF_EXPANDSIZE], *sp = NULL;
     int print = false, i;
     FILE *pp;
 
@@ -855,18 +855,18 @@ void DoExec(EvalContext *ctx, ServerConnectionState *conn, char *args)
         return;
     }
 
+    size_t line_size = CF_BUFSIZE;
+    char *line = xmalloc(line_size);
+
     for (;;)
     {
-        ssize_t res = CfReadLine(line, CF_BUFSIZE, pp);
-
-        if (res == 0)
-        {
-            break;
-        }
-
+        ssize_t res = CfReadLine(&line, &line_size, pp);
         if (res == -1)
         {
-            fflush(pp); /* FIXME: is it necessary? */
+            if (!feof(pp))
+            {
+                fflush(pp); /* FIXME: is it necessary? */
+            }
             break;
         }
 
@@ -893,6 +893,7 @@ void DoExec(EvalContext *ctx, ServerConnectionState *conn, char *args)
         }
     }
 
+    free(line);
     cf_pclose(pp);
 }
 

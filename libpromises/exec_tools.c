@@ -37,7 +37,6 @@ bool GetExecOutput(const char *command, char *buffer, ShellType shell)
 /* Buffer initially contains whole exec string */
 {
     int offset = 0;
-    char line[CF_EXPANDSIZE];
     FILE *pp;
 
     if (shell == SHELL_TYPE_USE)
@@ -66,19 +65,25 @@ bool GetExecOutput(const char *command, char *buffer, ShellType shell)
 
     memset(buffer, 0, CF_EXPANDSIZE);
 
+    size_t line_size = CF_EXPANDSIZE;
+    char *line = xmalloc(line_size);
+
     for (;;)
     {
-        ssize_t res = CfReadLine(line, CF_EXPANDSIZE, pp);
-        if (res == 0)
-        {
-            break;
-        }
-
+        ssize_t res = CfReadLine(&line, &line_size, pp);
         if (res == -1)
         {
-            Log(LOG_LEVEL_ERR, "Unable to read output of command '%s'. (fread: %s)", command, GetErrorStr());
-            cf_pclose(pp);
-            return false;
+            if (!feof(pp))
+            {
+                Log(LOG_LEVEL_ERR, "Unable to read output of command '%s'. (fread: %s)", command, GetErrorStr());
+                cf_pclose(pp);
+                free(line);
+                return false;
+            }
+            else
+            {
+                break;
+            }
         }
 
         if (strlen(line) + offset > CF_EXPANDSIZE - 10)
@@ -103,6 +108,7 @@ bool GetExecOutput(const char *command, char *buffer, ShellType shell)
     Log(LOG_LEVEL_DEBUG, "GetExecOutput got '%s'", buffer);
 
     cf_pclose(pp);
+    free(line);
     return true;
 }
 

@@ -178,7 +178,6 @@ void MonNetworkGatherData(double *cf_this)
     Item *in[ATTR], *out[ATTR];
     char *sp;
     int i;
-    char vbuff[CF_BUFSIZE];
     enum cf_netstat_type { cfn_new, cfn_old } type = cfn_new;
     enum cf_packet_type { cfn_udp4, cfn_udp6, cfn_tcp4, cfn_tcp6} packet = cfn_tcp4;
 
@@ -200,23 +199,27 @@ void MonNetworkGatherData(double *cf_this)
         return;
     }
 
+    size_t vbuff_size = CF_BUFSIZE;
+    char *vbuff = xmalloc(vbuff_size);
+
     for (;;)
     {
         memset(local, 0, CF_BUFSIZE);
         memset(remote, 0, CF_BUFSIZE);
 
-        size_t res = CfReadLine(vbuff, CF_BUFSIZE, pp);
-
-        if (res == 0)
-        {
-            break;
-        }
-
+        size_t res = CfReadLine(&vbuff, &vbuff_size, pp);
         if (res == -1)
         {
-            /* FIXME: no logging */
-            cf_pclose(pp);
-            return;
+            if (!feof(pp))
+            {
+                /* FIXME: no logging */
+                cf_pclose(pp);
+                return;
+            }
+            else
+            {
+                break;
+            }
         }
 
         if (strstr(vbuff, "UNIX"))
@@ -366,6 +369,7 @@ void MonNetworkGatherData(double *cf_this)
         }
     }
 
+    free(vbuff);
     cf_pclose(pp);
 
 /* Now save the state for ShowState() 

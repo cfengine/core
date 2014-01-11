@@ -428,23 +428,27 @@ static bool PackageListInstalledFromCommand(EvalContext *ctx, PackageItem **inst
     }
 
     const int reset = true, update = false;
-    char buf[CF_BUFSIZE];
+
+    size_t buf_size = CF_BUFSIZE;
+    char *buf = xmalloc(buf_size);
 
     for (;;)
     {
-        ssize_t res = CfReadLine(buf, CF_BUFSIZE, fin);
-
-        if (res == 0)
-        {
-            break;
-        }
-
+        ssize_t res = CfReadLine(&buf, &buf_size, fin);
         if (res == -1)
         {
-            Log(LOG_LEVEL_ERR, "Unable to read list of packages from command '%s'. (fread: %s)",
-                  a.packages.package_list_command, GetErrorStr());
-            cf_pclose(fin);
-            return false;
+            if (!feof(fin))
+            {
+                Log(LOG_LEVEL_ERR, "Unable to read list of packages from command '%s'. (fread: %s)",
+                      a.packages.package_list_command, GetErrorStr());
+                cf_pclose(fin);
+                free(buf);
+                return false;
+            }
+            else
+            {
+                break;
+            }
         }
 
         if (a.packages.package_multiline_start)
@@ -479,6 +483,7 @@ static bool PackageListInstalledFromCommand(EvalContext *ctx, PackageItem **inst
         PrependMultiLinePackageItem(ctx, installed_list, buf, reset, default_arch, a, pp);
     }
     
+    free(buf);
     return cf_pclose(fin) == 0;
 }
 
@@ -604,7 +609,6 @@ static int VerifyInstalledPackages(EvalContext *ctx, PackageManager **all_mgrs, 
                                    Attributes a, const Promise *pp, PromiseResult *result)
 {
     PackageManager *manager = NewPackageManager(all_mgrs, a.packages.package_list_command, PACKAGE_ACTION_NONE, PACKAGE_ACTION_POLICY_NONE);
-    char vbuff[CF_BUFSIZE];
 
     if (manager == NULL)
     {
@@ -700,21 +704,26 @@ static int VerifyInstalledPackages(EvalContext *ctx, PackageManager **all_mgrs, 
             return false;
         }
 
+        size_t vbuff_size = CF_BUFSIZE;
+        char *vbuff = xmalloc(vbuff_size);
+
         for (;;)
         {
-            ssize_t res = CfReadLine(vbuff, CF_BUFSIZE, fin);
-
-            if (res == 0)
-            {
-                break;
-            }
-
+            ssize_t res = CfReadLine(&vbuff, &vbuff_size, fin);
             if (res == -1)
             {
-                Log(LOG_LEVEL_ERR, "Unable to read list of patches from command '%s'. (fread: %s)",
-                      a.packages.package_patch_list_command, GetErrorStr());
-                cf_pclose(fin);
-                return false;
+                if (!feof(fin))
+                {
+                    Log(LOG_LEVEL_ERR, "Unable to read list of patches from command '%s'. (fread: %s)",
+                          a.packages.package_patch_list_command, GetErrorStr());
+                    cf_pclose(fin);
+                    free(vbuff);
+                    return false;
+                }
+                else
+                {
+                    break;
+                }
             }
 
             // assume patch_list_command lists available patches/updates by default
@@ -732,6 +741,7 @@ static int VerifyInstalledPackages(EvalContext *ctx, PackageManager **all_mgrs, 
         }
 
         cf_pclose(fin);
+        free(vbuff);
     }
 
     ReportPatches(INSTALLED_PACKAGE_LISTS);
@@ -2367,7 +2377,7 @@ int ExecPackageCommand(EvalContext *ctx, char *command, int verify, int setCmdCl
                        const Promise *pp, PromiseResult *result)
 {
     int retval = true;
-    char line[CF_BUFSIZE], lineSafe[CF_BUFSIZE], *cmd;
+    char lineSafe[CF_BUFSIZE], *cmd;
     FILE *pfp;
     int packmanRetval = 0;
 
@@ -2419,22 +2429,27 @@ int ExecPackageCommand(EvalContext *ctx, char *command, int verify, int setCmdCl
         cmd--;
     }
 
+    size_t line_size = CF_BUFSIZE;
+    char *line = xmalloc(line_size);
+
     for (;;)
     {
-        ssize_t res = CfReadLine(line, CF_BUFSIZE, pfp);
-
-        if (res == 0)
-        {
-            break;
-        }
-
+        ssize_t res = CfReadLine(&line, &line_size, pfp);
         if (res == -1)
         {
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Unable to read output from command '%20s'. (fread: %s)",
-                 command, GetErrorStr());
-            *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
-            cf_pclose(pfp);
-            return false;
+            if (!feof(pfp))
+            {
+                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Unable to read output from command '%20s'. (fread: %s)",
+                     command, GetErrorStr());
+                *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
+                cf_pclose(pfp);
+                free(line);
+                return false;
+            }
+            else
+            {
+                break;
+            }
         }
 
         ReplaceStr(line, lineSafe, sizeof(lineSafe), "%", "%%");
@@ -2452,8 +2467,9 @@ int ExecPackageCommand(EvalContext *ctx, char *command, int verify, int setCmdCl
                 }
             }
         }
-
     }
+
+    free(line);
 
     packmanRetval = cf_pclose(pfp);
 
@@ -2680,12 +2696,14 @@ static char *GetDefaultArch(const char *command)
         return NULL;
     }
 
-    char arch[CF_BUFSIZE];
+    size_t arch_size = CF_SMALLBUF;
+    char *arch = xmalloc(arch_size);
 
-    ssize_t res = CfReadLine(arch, CF_BUFSIZE, fp);
-    if (res == -1 || res == 0)
+    ssize_t res = CfReadLine(&arch, &arch_size, fp);
+    if (res == -1)
     {
         cf_pclose(fp);
+        free(arch);
         return NULL;
     }
 

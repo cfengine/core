@@ -31,11 +31,9 @@
 int cf_lstat(char *file, struct stat *buf, FileCopy fc, AgentConnection *conn);
 
 /**
- * Reads one line from #fp and places it in #buff. Newline at the end of line is
- * removed. Line is truncated to #size - 1 characters.
- *
- * @return Length of line read (not truncated), 0 on EOF, -1 on error.
+ * @brief Works exactly like posix 'getline', EXCEPT it does not include carriage return at the end.
+ * @return -1 on error OR EOF, so check. Or bytes read without null terminator. Never returns zero.
  */
-ssize_t CfReadLine(char *buff, size_t size, FILE *fp) FUNC_WARN_UNUSED_RESULT;
+ssize_t CfReadLine(char **buff, size_t *size, FILE *fp);
 
 #endif

@@ -73,7 +73,6 @@ static bool GatherProcessUsers(Item **userList, int *userListSz, int *numRootPro
     FILE *pp;
     char pscomm[CF_BUFSIZE];
     char user[CF_MAXVARSIZE];
-    char vbuff[CF_BUFSIZE];
 
     snprintf(pscomm, CF_BUFSIZE, "%s %s", VPSCOMM[VSYSTEMHARDCLASS], VPSOPTS[VSYSTEMHARDCLASS]);
 
@@ -83,28 +82,35 @@ static bool GatherProcessUsers(Item **userList, int *userListSz, int *numRootPro
         return false;
     }
 
+    size_t vbuff_size = CF_BUFSIZE;
+    char *vbuff = xmalloc(vbuff_size);
+
     /* Ignore first line -- header */
-    ssize_t res = CfReadLine(vbuff, CF_BUFSIZE, pp);
-    if (res == -1 || res == 0)
+    ssize_t res = CfReadLine(&vbuff, &vbuff_size, pp);
+    if (res <= 0)
     {
         /* FIXME: no logging */
         cf_pclose(pp);
+        free(vbuff);
         return false;
     }
 
     for (;;)
     {
-        ssize_t res = CfReadLine(vbuff, CF_BUFSIZE, pp);
-        if (res == 0)
-        {
-            break;
-        }
-
+        ssize_t res = CfReadLine(&vbuff, &vbuff_size, pp);
         if (res == -1)
         {
-            /* FIXME: no logging */
-            cf_pclose(pp);
-            return false;
+            if (!feof(pp))
+            {
+                /* FIXME: no logging */
+                cf_pclose(pp);
+                free(vbuff);
+                return false;
+            }
+            else
+            {
+                break;
+            }
         }
 
         sscanf(vbuff, "%s", user);
@@ -131,6 +137,7 @@ static bool GatherProcessUsers(Item **userList, int *userListSz, int *numRootPro
     }
 
     cf_pclose(pp);
+    free(vbuff);
     return true;
 }
 

@@ -1,0 +1,122 @@
+#######################################################
+#
+# Create a file, check defaults
+#
+#######################################################
+
+body common control
+{
+      inputs => {
+                  "../default.cf.sub"
+                 };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle common g
+{
+  vars:
+
+    !windows::
+      "cf_upgrade" string => "$(sys.cf_upgrade)";
+
+      "file_represents_success" string => "$(sys.workdir)/UPGRADED";
+      "install_command" string => "/bin/touch $(sys.workdir)/UPGRADED";
+      "backup_destination" string => "$(this.promise_dirname)/cf_upgrade_backup.tar.gz";
+
+      "backup_script" string => "$(this.promise_dirname)/backup_script";
+      "backup_script_content" string => '#!/bin/sh
+MODE=$1
+TARGET_FILE=$2
+if [ "$MODE" = "BACKUP" ]; then
+  /bin/tar -czf $TARGET_FILE $(sys.workdir)
+fi
+if [ "$MODE" = "RESTORE" ]; then
+    $(sys.workdir)
+    tar -zxf $TARGET_FILE --directory /
+fi';
+}
+
+#######################################################
+
+bundle agent init
+{
+  files:
+      "$(g.backup_destination)"
+        delete => tidy;
+
+      "$(g.file_represents_success)"
+        delete => tidy;
+
+      "$(g.backup_script)"
+        create        => "true",
+        edit_line     => append_if_no_line("$(g.backup_script_content)"),
+        edit_defaults => empty,
+        perms         => m("700"),
+        comment       => "Ensure backup script is in place";
+
+      "$(g.cf_upgrade)"
+        perms => m("700");
+}
+
+#######################################################
+
+bundle agent test
+{
+
+  commands:
+      "$(g.cf_upgrade)"
+        args => "-b $(g.backup_script) -s $(g.backup_destination) -i $(g.install_command)";
+}
+
+#######################################################
+
+bundle agent check
+{
+  classes:
+      "generated_backup" expression => fileexists("$(g.backup_destination)");
+      "found_file_represents_success" expression=> fileexists("$(g.file_represents_success)");
+
+      "ok" and => { "found_file_represents_success", "generated_backup" };
+
+  reports:
+    DEBUG::
+      "file_represents_success=$(g.file_represents_success)";
+      "backup_destination=$(g.backup_destination)";
+      "Generated Backup"
+        ifvarclass => "generated_backup";
+      "Upgrade Succeeded"
+        ifvarclass => "found_file_represents_success";
+
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}
+
+bundle edit_line append_if_no_line(str)
+{
+insert_lines:
+
+ "$(str)"
+
+     comment => "Append a line to the file if it doesn't already exist";
+}
+
+body edit_defaults empty
+{
+empty_file_before_editing => "true";
+edit_backup => "false";
+#max_file_size => "300000";
+}
+body perms m(mode)
+{
+mode   => "$(mode)";
+}
+
+body delete tidy
+
+{
+dirlinks => "delete";
+rmdirs   => "true";
+}

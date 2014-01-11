@@ -37,8 +37,7 @@ bundle agent example
 
   reports:
       "canonified component == $(canon)";
-      "component exists in $(component)"
-      ifvarclass => canonify("$(component)_exists");
+      "component exists" ifvarclass => canonify("$(component)_exists");
 }
 
 #+end_src
@@ -46,6 +45,6 @@ bundle agent example
 #+begin_src example_output
 #@ ```
 #@ 2013-12-20T13:44:28-0500   notice: /default/example: R: canonified component == _var_cfengine_bin_cf_serverd
-#@ 2013-12-20T13:44:28-0500   notice: /default/example: R: component exists in /var/cfengine/bin/cf-serverd
+#@ 2013-12-20T13:44:28-0500   notice: /default/example: R: component exists
 #@ ```
 #+end_src

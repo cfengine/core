@@ -22,7 +22,7 @@ GetOptions(\%options,
            "check|c!",
            "cfagent=s",
            "workdir=s",
-           "v|verbose!",
+           "verbose|v!",
            "veryverbose!",
     );
 

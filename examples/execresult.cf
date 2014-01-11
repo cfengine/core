@@ -23,7 +23,11 @@
 #+begin_src prep
 #@ ```
 #@ mkdir -p /tmp/testhere
-#@ touch /tmp/testhere/{a,b,c,d,e}
+#@ touch /tmp/testhere/a
+#@ touch /tmp/testhere/b
+#@ touch /tmp/testhere/c
+#@ touch /tmp/testhere/d
+#@ touch /tmp/testhere/e
 #@ ```
 #+end_src
 ###############################################################################

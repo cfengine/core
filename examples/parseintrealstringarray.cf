@@ -45,7 +45,7 @@ bundle agent test(f)
       );
 
       "keys" slist => getindices("items");
-      "sorted_keys" slist => sort("int", keys);
+      "sorted_keys" slist => sort(keys, "int");
 
   reports:
       "$(sorted_keys)";

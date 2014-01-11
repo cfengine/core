@@ -1941,8 +1941,6 @@ static FnCallResult FnCallCountLinesMatching(ARG_UNUSED EvalContext *ctx, ARG_UN
     int lcount = 0;
     FILE *fin;
 
-/* begin fn specific content */
-
     char *regex = RlistScalarValue(finalargs);
     char *filename = RlistScalarValue(finalargs->next);
 
@@ -1952,33 +1950,28 @@ static FnCallResult FnCallCountLinesMatching(ARG_UNUSED EvalContext *ctx, ARG_UN
         return FnReturn("0");
     }
 
-    for (;;)
     {
-        char line[CF_BUFSIZE];
-        if (fgets(line, sizeof(line), fin) == NULL)
+        size_t line_size = CF_BUFSIZE;
+        char *line = xmalloc(line_size);
+
+        while (getline(&line, &line_size, fin) != -1)
         {
-            if (ferror(fin))
+            if (StringMatchFull(regex, line))
             {
-                Log(LOG_LEVEL_ERR, "Unable to read data from file '%s'. (fgets: %s)", filename, GetErrorStr());
-                fclose(fin);
-                return FnFailure();
+                lcount++;
+                Log(LOG_LEVEL_VERBOSE, "countlinesmatching: matched '%s'", line);
+                continue;
             }
-            else /* feof */
-            {
-                break;
-            }
-        }
-        if (Chop(line, CF_EXPANDSIZE) == -1)
-        {
-            Log(LOG_LEVEL_ERR, "Chop was called on a string that seemed to have no terminator");
         }
 
-        if (StringMatchFull(regex, line))
-        {
-            lcount++;
-            Log(LOG_LEVEL_VERBOSE, "countlinesmatching: matched '%s'", line);
-            continue;
-        }
+        free(line);
+    }
+
+    if (!feof(fin))
+    {
+        Log(LOG_LEVEL_ERR, "Unable to read data from file '%s'. (fgets: %s)", filename, GetErrorStr());
+        fclose(fin);
+        return FnFailure();
     }
 
     fclose(fin);

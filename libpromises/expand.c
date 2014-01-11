@@ -327,11 +327,6 @@ static void ExpandAndMapIteratorsFromScalar(EvalContext *ctx, const Bundle *bund
         return;
     }
 
-    if (length >= CF_BUFSIZE)
-    {
-        ProgrammingError("ExpandAndMapIteratorsFromScalar called with invalid strlen");
-    }
-
     Buffer *value = BufferNew();
 
     for (size_t i = 0; i < length; i++)

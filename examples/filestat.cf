@@ -23,8 +23,6 @@
 #+begin_src prep
 #@ ```
 #@ echo 1234567890 > FILE.txt
-#@ touch -a -d '2000-01-01 01:23:45' FILE.txt
-#@ touch -m -d '2001-02-03 12:34:56' FILE.txt
 #@ chmod 0755 FILE.txt
 #@ chown 0 FILE.txt
 #@ chgrp 0 FILE.txt
@@ -54,7 +52,7 @@ bundle agent fileinfo(f)
       # devno/dev_minor/dev_major (device numbers) were omitted but
       # they are all integers
 
-      "fields" slist => splitstring("size,gid,uid,nlink,atime,mtime,mode,modeoct,permstr,permoct,type,basename", ",", 999);
+      "fields" slist => splitstring("size,gid,uid,nlink,mode,modeoct,permstr,permoct,type,basename", ",", 999);
 
       "stat[$(f)][$(fields)]" string => filestat($(f), $(fields));
 
@@ -65,17 +63,15 @@ bundle agent fileinfo(f)
 ###############################################################################
 #+begin_src example_output
 #@ ```
-#@ 2013-12-23T13:42:17-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file filestat.cf.txt has size = 11
-#@ 2013-12-23T13:42:17-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file filestat.cf.txt has gid = 0
-#@ 2013-12-23T13:42:17-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file filestat.cf.txt has uid = 0
-#@ 2013-12-23T13:42:17-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file filestat.cf.txt has nlink = 1
-#@ 2013-12-23T13:42:17-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file filestat.cf.txt has atime = 946707825
-#@ 2013-12-23T13:42:17-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file filestat.cf.txt has mtime = 981221696
-#@ 2013-12-23T13:42:17-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file filestat.cf.txt has mode = 33261
-#@ 2013-12-23T13:42:17-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file filestat.cf.txt has modeoct = 100755
-#@ 2013-12-23T13:42:17-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file filestat.cf.txt has permstr = -rwxr-xr-x
-#@ 2013-12-23T13:42:17-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file filestat.cf.txt has permoct = 755
-#@ 2013-12-23T13:42:17-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file filestat.cf.txt has type = regular file
-#@ 2013-12-23T13:42:17-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file filestat.cf.txt has basename = filestat.cf.txt
+#@ 2014-01-11T07:39:40-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file filestat.cf.txt has size = 11
+#@ 2014-01-11T07:39:40-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file filestat.cf.txt has gid = 0
+#@ 2014-01-11T07:39:40-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file filestat.cf.txt has uid = 0
+#@ 2014-01-11T07:39:40-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file filestat.cf.txt has nlink = 1
+#@ 2014-01-11T07:39:40-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file filestat.cf.txt has mode = 33261
+#@ 2014-01-11T07:39:40-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file filestat.cf.txt has modeoct = 100755
+#@ 2014-01-11T07:39:40-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file filestat.cf.txt has permstr = -rwxr-xr-x
+#@ 2014-01-11T07:39:40-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file filestat.cf.txt has permoct = 755
+#@ 2014-01-11T07:39:40-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file filestat.cf.txt has type = regular file
+#@ 2014-01-11T07:39:40-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file filestat.cf.txt has basename = filestat.cf.txt
 #@ ```
 #+end_src

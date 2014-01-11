@@ -326,17 +326,15 @@ static void ExpandAndMapIteratorsFromScalar(EvalContext *ctx, const Bundle *bund
         ProgrammingError("ExpandAndMapIteratorsFromScalar called with invalid strlen");
     }
 
-    char buffer[CF_BUFSIZE];
-    strncpy(buffer, string, length);
-    buffer[length] = '\0';
-
     Buffer *value = BufferNew();
 
-    for (const char *sp = buffer; (*sp != '\0'); sp++)
+    for (size_t i = 0; i < length; i++)
     {
+        const char *sp = string + i;
+
         Rlist *tmp_list = NULL;
         BufferZero(value);
-        if (ExtractScalarPrefix(value, sp, strlen(sp)))
+        if (ExtractScalarPrefix(value, sp, length - i))
         {
             if (full_expansion)
             {
@@ -347,32 +345,32 @@ static void ExpandAndMapIteratorsFromScalar(EvalContext *ctx, const Bundle *bund
             }
 
             sp += BufferSize(value);
-            BufferZero(value);
-        }
+            i += BufferSize(value);
 
-        if (*sp == '\0')
-        {
-            break;
+            BufferZero(value);
+
+            if (i >= length)
+            {
+                break;
+            }
         }
 
         if (*sp == '$')
         {
-            size_t remaining = strlen(sp);
             BufferZero(value);
-            ExtractInnerCf3VarString(value, sp, remaining);
+            ExtractInnerCf3VarString(value, sp, length - i);
             if (value)
             {
                 Rlist *inner_expansion = NULL;
                 Rlist *exp = NULL;
                 int success = 0;
-                int increment;
 
                 VarRef *ref = VarRefParse(BufferData(value));
 
-                increment = BufferSize(value) - 1 + 3;
+                int increment = BufferSize(value) - 1 + 3;
 
                 // Handle any embedded variables
-                char *substring = string + (sp - buffer) + 2;
+                char *substring = string + i + 2;
                 ExpandAndMapIteratorsFromScalar(ctx, bundle, substring, BufferSize(value), level+1, scalars, lists, containers, &inner_expansion);
 
                 for (exp = inner_expansion; exp != NULL; exp = exp->next)
@@ -484,6 +482,7 @@ static void ExpandAndMapIteratorsFromScalar(EvalContext *ctx, const Bundle *bund
                 VarRefDestroy(ref);
 
                 sp += increment;
+                i += increment;
             }
         }
     }

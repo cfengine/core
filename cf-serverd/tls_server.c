@@ -389,28 +389,55 @@ int ServerTLSSessionEstablish(ServerConnectionState *conn)
 
     if (ConnectionInfoConnectionStatus(conn->conn_info) != CF_CONNECTION_ESTABLISHED)
     {
-        ConnectionInfoSetSSL(conn->conn_info, SSL_new(SSLSERVERCONTEXT));
-        if (ConnectionInfoSSL(conn->conn_info) == NULL)
+        SSL *ssl = SSL_new(SSLSERVERCONTEXT);
+        if (ssl == NULL)
         {
             Log(LOG_LEVEL_ERR, "SSL_new: %s",
                 ERR_reason_error_string(ERR_get_error()));
             return -1;
         }
+        ConnectionInfoSetSSL(conn->conn_info, ssl);
 
         /* Now we are letting OpenSSL take over the open socket. */
-        SSL_set_fd(ConnectionInfoSSL(conn->conn_info), ConnectionInfoSocket(conn->conn_info));
+        int sd = ConnectionInfoSocket(conn->conn_info);
+        SSL_set_fd(ssl, sd);
 
-        ret = SSL_accept(ConnectionInfoSSL(conn->conn_info));
+        ret = SSL_accept(ssl);
         if (ret <= 0)
         {
-            TLSLogError(ConnectionInfoSSL(conn->conn_info), LOG_LEVEL_ERR,
-                        "Connection handshake", ret);
-            return -1;
+            Log(LOG_LEVEL_VERBOSE, "Checking if the accept operation can be retried");
+            /* Retry just in case something was problematic at that point in time */
+            fd_set rfds;
+            FD_ZERO(&rfds);
+            FD_SET(sd, &rfds);
+            struct timeval tv;
+            tv.tv_sec = 10;
+            tv.tv_usec = 0;
+            int ready = select(sd+1, &rfds, NULL, NULL, &tv);
+
+            if (ready > 0)
+            {
+                Log(LOG_LEVEL_VERBOSE, "The accept operation can be retried");
+                ret = SSL_accept(ssl);
+                if (ret <= 0)
+                {
+                    Log(LOG_LEVEL_VERBOSE, "The accept operation was retried and failed");
+                    TLSLogError(ssl, LOG_LEVEL_ERR, "Connection handshake server", ret);
+                    return -1;
+                }
+                Log(LOG_LEVEL_VERBOSE, "The accept operation was retried and succeeded");
+            }
+            else
+            {
+                Log(LOG_LEVEL_VERBOSE, "The connect operation cannot be retried");
+                TLSLogError(ssl, LOG_LEVEL_ERR, "Connection handshake server", ret);
+                return -1;
+            }
         }
 
         Log(LOG_LEVEL_VERBOSE, "TLS cipher negotiated: %s, %s",
-            SSL_get_cipher_name(ConnectionInfoSSL(conn->conn_info)),
-            SSL_get_cipher_version(ConnectionInfoSSL(conn->conn_info)));
+            SSL_get_cipher_name(ssl),
+            SSL_get_cipher_version(ssl));
         Log(LOG_LEVEL_VERBOSE, "TLS session established, checking trust...");
 
         /* Send/Receive "CFE_v%d" version string and agree on version. */

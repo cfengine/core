@@ -214,8 +214,8 @@ sub run_example
         system($_);
     }
 
-    my $cmd = "$options{cfagent} -nKf $tempfile 2>&1";
     $ENV{EXAMPLE} = $base;
+    my $cmd = "$options{cfagent} -D_cfe_output_testing -nKf $tempfile 2>&1";
     open my $ofh, '-|', $cmd;
     my $output = join '', <$ofh>;
     close $ofh;

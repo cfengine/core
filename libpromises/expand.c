@@ -46,7 +46,7 @@
 
 static void ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp, Rlist *lists, Rlist *containers,
                                PromiseActuator *ActOnPromise, void *param);
-static void ExpandAndMapIteratorsFromScalar(EvalContext *ctx, const Bundle *bundle, const char *string, size_t length, int level,
+static void ExpandAndMapIteratorsFromScalar(EvalContext *ctx, const Bundle *bundle, char *string, size_t length, int level,
                                             Rlist **scalars, Rlist **lists, Rlist **containers, Rlist **full_expansion);
 static void CopyLocalizedReferencesToBundleScope(EvalContext *ctx, const Bundle *bundle, const Rlist *ref_names);
 
@@ -228,7 +228,7 @@ void MapIteratorsFromRval(EvalContext *ctx, const Bundle *bundle, Rval rval, Rli
     {
     case RVAL_TYPE_SCALAR:
         {
-            const char *val = RvalScalarValue(rval);
+            char *val = RvalScalarValue(rval);
             size_t val_len = strlen(val);
             ExpandAndMapIteratorsFromScalar(ctx, bundle, val, val_len, 0, scalars, lists, containers, NULL);
         }
@@ -311,7 +311,7 @@ static void DeMangleVarRefString(char *ref_str, size_t len)
     }
 }
 
-static void ExpandAndMapIteratorsFromScalar(EvalContext *ctx, const Bundle *bundle, const char *string, size_t length,
+static void ExpandAndMapIteratorsFromScalar(EvalContext *ctx, const Bundle *bundle, char *string, size_t length,
                                             int level, Rlist **scalars, Rlist **lists,
                                             Rlist **containers, Rlist **full_expansion)
 {
@@ -365,7 +365,7 @@ static void ExpandAndMapIteratorsFromScalar(EvalContext *ctx, const Bundle *bund
                 increment = strlen(v) - 1 + 3;
 
                 // Handle any embedded variables
-                const char *substring = string + (sp - buffer) + 2;
+                char *substring = string + (sp - buffer) + 2;
                 ExpandAndMapIteratorsFromScalar(ctx, bundle, substring, strlen(v), level+1, scalars, lists, containers, &inner_expansion);
 
                 for (exp = inner_expansion; exp != NULL; exp = exp->next)

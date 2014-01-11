@@ -114,8 +114,8 @@ PromiseResult VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_d
 
             if (strcmp(opts.cp_save->lval, "int") == 0)
             {
-                int result = BufferPrintf(conv, "%ld", IntFromString(opts.cp_save->rval.item));
-                if (result < 0)
+                int printed = BufferPrintf(conv, "%ld", IntFromString(opts.cp_save->rval.item));
+                if (printed < 0)
                 {
                     /*
                      * Even though there will be no problems with memory allocation, there
@@ -130,18 +130,18 @@ PromiseResult VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_d
             }
             else if (strcmp(opts.cp_save->lval, "real") == 0)
             {
-                int result = -1;
+                int printed = -1;
                 double real_value = 0.0;
                 if (DoubleFromString(opts.cp_save->rval.item, &real_value))
                 {
-                    result = BufferPrintf(conv, "%lf", real_value);
+                    printed = BufferPrintf(conv, "%lf", real_value);
                 }
                 else
                 {
-                    result = BufferPrintf(conv, "(double conversion error)");
+                    printed = BufferPrintf(conv, "(double conversion error)");
                 }
 
-                if (result < 0)
+                if (printed < 0)
                 {
                     /*
                      * Even though there will be no problems with memory allocation, there

@@ -367,13 +367,15 @@ static void GetNameInfo3(EvalContext *ctx)
 #if defined(HAVE_SYSINFO) && (defined(SI_ARCHITECTURE) || defined(SI_PLATFORM))
     long sz;
 #endif
-    char *components[] = { "cf-twin", "cf-agent", "cf-serverd", "cf-monitord", "cf-know",
+
+#define COMPONENTS_SIZE 13
+    char *components[COMPONENTS_SIZE] = { "cf-twin", "cf-agent", "cf-serverd", "cf-monitord", "cf-know",
         "cf-report", "cf-key", "cf-runagent", "cf-execd", "cf-hub",
         "cf-promises",
         "cf-upgrade",
         NULL
     };
-    int have_component[11];
+    int have_component[COMPONENTS_SIZE];
     struct stat sb;
     char name[CF_MAXVARSIZE], quoteName[CF_MAXVARSIZE], shortname[CF_MAXVARSIZE];
 

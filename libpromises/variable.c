@@ -3,6 +3,7 @@
 #include <alloc.h>
 #include <rb-tree.h>
 #include <rlist.h>
+#include <writer.h>
 
 struct VariableTable_
 {
@@ -71,20 +72,35 @@ static Variable *VariableNew(VarRef *ref, Rval rval, DataType type, StringSet *t
 bool VariableTablePut(VariableTable *table, const VarRef *ref, const Rval *rval, DataType type, const char *tags)
 {
     assert(VarRefIsQualified(ref));
+    bool result;
+    char* target = VarRefToString(ref, true);
+    Writer *logval = StringWriter();
+    WriterWriteF(logval, "variable '%s' => '", target);
+    free(target);
+    RvalWrite(logval, *rval);
+    WriterWrite(logval, "'");
 
     Variable *var = VariableTableGet(table, ref);
-    if (var)
+    if (var == NULL)
     {
+        Log(LOG_LEVEL_VERBOSE, "Setting %s", StringWriterData(logval));
+        var = VariableNew(VarRefCopy(ref), RvalCopy(*rval), type, StringSetFromString(tags, ','));
+        result = RBTreePut(table->vars, (void *)var->ref->hash, var);
+    }
+    else // if (!RvalsEqual(var->rval *rval) // TODO: implement-me !
+    {
+        Writer *prior = StringWriter();
+        RvalWrite(prior, var->rval);
+        Log(LOG_LEVEL_VERBOSE, "Modifying %s (was '%s')",
+            StringWriterData(logval), StringWriterData(prior));
+        WriterClose(prior);
         RvalDestroy(var->rval);
         var->rval = RvalCopy(*rval);
         var->type = type;
-        return true;
+        result = true;
     }
-    else
-    {
-        var = VariableNew(VarRefCopy(ref), RvalCopy(*rval), type, StringSetFromString(tags, ','));
-        return RBTreePut(table->vars, (void *)var->ref->hash, var);
-    }
+    WriterClose(logval);
+    return result;
 }
 
 bool VariableTableClear(VariableTable *table, const char *ns, const char *scope, const char *lval)

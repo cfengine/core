@@ -143,6 +143,9 @@ sub rewrite_output
         $new_output = "#@ ```\n$new_output#@ ```\n";
     }
 
+    # at this point we know we have differing output and will print the new
+    # output later
+    print "OLD OUTPUT: [[[$old_output]]]\n" if $options{verbose};
     return $new_output;
 }
 
@@ -154,9 +157,6 @@ sub equal_outputs
 
     $x =~ s/^#@ ```\s+//mg;
     $y =~ s/^#@ ```\s+//mg;
-
-    print "output compare: [$x] vs [$y]\n"
-     if $options{veryverbose};
 
     $x =~ s/^(#@ )//mg;
     $x =~ s/^[-0-9T:+]+\s+//mg;
@@ -178,6 +178,7 @@ sub run_example
     open my $fh, '>', $tempfile or die "Could not write to $tempfile: $!";
     print $fh $example;
     close $fh;
+    chmod 0600, $tempfile;
 
     foreach (@$prep)
     {
@@ -196,7 +197,7 @@ sub run_example
     my $output = join '', <$ofh>;
     close $ofh;
 
-    print "Test file: $file\nCommand: $cmd\nOutput: $output\n\n\n"
+    print "Test file: $file\nCommand: $cmd\n\nNEW OUTPUT: [[[$output]]]\n\n\n"
      if $options{verbose};
     return $output;
 }

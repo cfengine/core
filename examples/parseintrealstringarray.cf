@@ -45,16 +45,17 @@ bundle agent test(f)
       );
 
       "keys" slist => getindices("items");
+      "sorted_keys" slist => sort("int", keys);
 
   reports:
-      "$(keys)";
+      "$(sorted_keys)";
 }
 #+end_src
 ###############################################################################
 #+begin_src example_output
 #@ ```
-#@ 2013-12-20T13:44:32-0500   notice: /default/test: R: 1
 #@ 2013-12-20T13:44:32-0500   notice: /default/test: R: 0
+#@ 2013-12-20T13:44:32-0500   notice: /default/test: R: 1
 #@ 2013-12-20T13:44:32-0500   notice: /default/test: R: 3
 #@ 2013-12-20T13:44:32-0500   notice: /default/test: R: 5
 #@ ```

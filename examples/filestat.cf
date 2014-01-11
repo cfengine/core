@@ -59,23 +59,23 @@ bundle agent fileinfo(f)
       "stat[$(f)][$(fields)]" string => filestat($(f), $(fields));
 
   reports:
-      "$(this.bundle): file $(f) has $(fields) = $(stat[$(f)][$(fields)])";
+      "$(this.bundle): file $(stat[$(f)][basename]) has $(fields) = $(stat[$(f)][$(fields)])";
 }
 #+end_src
 ###############################################################################
 #+begin_src example_output
 #@ ```
-#@ 2013-12-23T13:42:17-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /home/tzz/source/cfengine/core/tests/acceptance/workdir/__18_examples_check_outputs_cf/tmp/TEST.cfengine/filestat.cf.txt has size = 11
-#@ 2013-12-23T13:42:17-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /home/tzz/source/cfengine/core/tests/acceptance/workdir/__18_examples_check_outputs_cf/tmp/TEST.cfengine/filestat.cf.txt has gid = 0
-#@ 2013-12-23T13:42:17-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /home/tzz/source/cfengine/core/tests/acceptance/workdir/__18_examples_check_outputs_cf/tmp/TEST.cfengine/filestat.cf.txt has uid = 0
-#@ 2013-12-23T13:42:17-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /home/tzz/source/cfengine/core/tests/acceptance/workdir/__18_examples_check_outputs_cf/tmp/TEST.cfengine/filestat.cf.txt has nlink = 1
-#@ 2013-12-23T13:42:17-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /home/tzz/source/cfengine/core/tests/acceptance/workdir/__18_examples_check_outputs_cf/tmp/TEST.cfengine/filestat.cf.txt has atime = 946707825
-#@ 2013-12-23T13:42:17-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /home/tzz/source/cfengine/core/tests/acceptance/workdir/__18_examples_check_outputs_cf/tmp/TEST.cfengine/filestat.cf.txt has mtime = 981221696
-#@ 2013-12-23T13:42:17-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /home/tzz/source/cfengine/core/tests/acceptance/workdir/__18_examples_check_outputs_cf/tmp/TEST.cfengine/filestat.cf.txt has mode = 33261
-#@ 2013-12-23T13:42:17-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /home/tzz/source/cfengine/core/tests/acceptance/workdir/__18_examples_check_outputs_cf/tmp/TEST.cfengine/filestat.cf.txt has modeoct = 100755
-#@ 2013-12-23T13:42:17-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /home/tzz/source/cfengine/core/tests/acceptance/workdir/__18_examples_check_outputs_cf/tmp/TEST.cfengine/filestat.cf.txt has permstr = -rwxr-xr-x
-#@ 2013-12-23T13:42:17-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /home/tzz/source/cfengine/core/tests/acceptance/workdir/__18_examples_check_outputs_cf/tmp/TEST.cfengine/filestat.cf.txt has permoct = 755
-#@ 2013-12-23T13:42:17-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /home/tzz/source/cfengine/core/tests/acceptance/workdir/__18_examples_check_outputs_cf/tmp/TEST.cfengine/filestat.cf.txt has type = regular file
-#@ 2013-12-23T13:42:17-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file /home/tzz/source/cfengine/core/tests/acceptance/workdir/__18_examples_check_outputs_cf/tmp/TEST.cfengine/filestat.cf.txt has basename = filestat.cf.txt
+#@ 2013-12-23T13:42:17-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file filestat.cf.txt has size = 11
+#@ 2013-12-23T13:42:17-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file filestat.cf.txt has gid = 0
+#@ 2013-12-23T13:42:17-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file filestat.cf.txt has uid = 0
+#@ 2013-12-23T13:42:17-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file filestat.cf.txt has nlink = 1
+#@ 2013-12-23T13:42:17-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file filestat.cf.txt has atime = 946707825
+#@ 2013-12-23T13:42:17-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file filestat.cf.txt has mtime = 981221696
+#@ 2013-12-23T13:42:17-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file filestat.cf.txt has mode = 33261
+#@ 2013-12-23T13:42:17-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file filestat.cf.txt has modeoct = 100755
+#@ 2013-12-23T13:42:17-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file filestat.cf.txt has permstr = -rwxr-xr-x
+#@ 2013-12-23T13:42:17-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file filestat.cf.txt has permoct = 755
+#@ 2013-12-23T13:42:17-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file filestat.cf.txt has type = regular file
+#@ 2013-12-23T13:42:17-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file filestat.cf.txt has basename = filestat.cf.txt
 #@ ```
 #+end_src

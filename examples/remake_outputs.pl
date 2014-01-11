@@ -11,7 +11,6 @@ $|=1;                                   # autoflush
 my %options = (
                check => 0,
                verbose => 0,
-               veryverbose => 0,
                help => 0,
                cfagent => "../cf-agent/cf-agent",
                workdir => "/tmp",
@@ -22,8 +21,7 @@ GetOptions(\%options,
            "check|c!",
            "cfagent=s",
            "workdir=s",
-           "v|verbose!",
-           "veryverbose!",
+           "verbose!",
     );
 
 if ($options{help})
@@ -36,8 +34,7 @@ Generate the output section of CFEngine code example.
 With -c or --check, the script reports if the output is different but doesn't
 write it.
 
-With -v or --verbose, the script shows the full output of each test.  Use
---veryverbose if you REALLY want a lot of output.
+With -v or --verbose, the script shows the full output of each test.
 
 The --workdir path, defaulting to /tmp, is used for storing the example to be
 run.
@@ -56,24 +53,20 @@ Each input .cf file is scanned for three markers:
 (each command will be run before the cfengine3 code block)
 
 #+begin_src prep
-#@ ```
 #@ touch -d '2001-02-03 12:34:56' /tmp/earlier
 #@ touch -d '2002-02-03 12:34:56' /tmp/later
-#@ ```
 #+end_src
 
 3) required: an output code block
 
 #+begin_src example_output
-#@ ```
 #@ 2013-12-16T20:48:24+0200   notice: /default/example: R: The secret changes have been accessed after the reference time
-#@ ```
 #+end_src
 
 This block is rewritten if it's different, otherwise it's left alone.
 
 The "#@ " part is optional but needed if you want the file to be valid CFEngine
-policy. The "#@ ```" parts make the prep and output steps render as code in markdown.
+policy.
 
 EOHIPPUS
 
@@ -140,9 +133,9 @@ sub rewrite_output
     if (defined $new_output && length $new_output > 0)
     {
         $new_output =~ s/^/#@ /mg;
-        $new_output = "#@ ```\n$new_output#@ ```\n";
     }
 
+    print "OLD OUTPUT: [$old_output]\nNEW OUTPUT: [$new_output]\n" if $options{verbose};
     return $new_output;
 }
 
@@ -151,12 +144,6 @@ sub equal_outputs
     # strip out date, e.g. '2013-12-16T20:48:24+0200'
     my $x = shift @_;
     my $y = shift @_;
-
-    $x =~ s/^#@ ```\s+//mg;
-    $y =~ s/^#@ ```\s+//mg;
-
-    print "output compare: [$x] vs [$y]\n"
-     if $options{veryverbose};
 
     $x =~ s/^(#@ )//mg;
     $x =~ s/^[-0-9T:+]+\s+//mg;
@@ -178,12 +165,11 @@ sub run_example
     open my $fh, '>', $tempfile or die "Could not write to $tempfile: $!";
     print $fh $example;
     close $fh;
+    chmod 0600, $tempfile;
 
     foreach (@$prep)
     {
         s/^#@ //;
-        # skip Markdown markup like ```
-        next unless m/^\w/;
         s/FILE/$tempfile/g;
         print "processing $file: Running prep '$_'"
          if $options{verbose};

@@ -30,14 +30,15 @@ bundle agent example
 {
   vars:
       "listfiles" slist => lsdir("/etc", "(p.sswd|shad[oa]w)", "true");
+      "sorted_listfiles" slist => sort(listfiles, "lex");
   reports:
-      "files in list: $(listfiles)";
+      "files in list: $(sorted_listfiles)";
 }
 #+end_src
 ###############################################################################
 #+begin_src example_output
 #@ ```
-#@ 2013-12-20T13:44:31-0500   notice: /default/example: R: files in list: /etc/shadow
 #@ 2013-12-20T13:44:31-0500   notice: /default/example: R: files in list: /etc/passwd
+#@ 2013-12-20T13:44:31-0500   notice: /default/example: R: files in list: /etc/shadow
 #@ ```
 #+end_src

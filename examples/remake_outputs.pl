@@ -132,7 +132,7 @@ sub rewrite_output
     my $old_output = shift @_;
     my $new_output = run_example($file, $prep, $example);
 
-    if (equal_outputs($old_output, $new_output))
+    if (equal_outputs($old_output, $new_output, $file))
     {
         return $old_output;
     }
@@ -143,9 +143,6 @@ sub rewrite_output
         $new_output = "#@ ```\n$new_output#@ ```\n";
     }
 
-    # at this point we know we have differing output and will print the new
-    # output later
-    print "OLD OUTPUT: [[[$old_output]]]\n" if $options{verbose};
     return $new_output;
 }
 
@@ -154,6 +151,9 @@ sub equal_outputs
     # strip out date, e.g. '2013-12-16T20:48:24+0200'
     my $x = shift @_;
     my $y = shift @_;
+    my $file = shift @_;
+
+    my ($tempfile, $base) = get_tempfile($file);
 
     $x =~ s/^#@ ```\s+//mg;
     $y =~ s/^#@ ```\s+//mg;
@@ -163,7 +163,32 @@ sub equal_outputs
     $y =~ s/^(#@ )//mg;
     $y =~ s/^[-0-9T:+]+\s+//mg;
 
-    return $x eq $y;
+    if ($x ne $y)
+    {
+        open my $fha, '>', "$tempfile.a" or die "Could not write to diff output $tempfile.a: $!";
+        print $fha $x;
+        close $fha;
+
+        open my $fhb, '>', "$tempfile.b" or die "Could not write to diff output $tempfile.b: $!";
+        print $fhb $y;
+        close $fhb;
+
+        system("diff -u $tempfile.a $tempfile.b") if $options{verbose};
+        return 0;
+    }
+
+    return 1;
+}
+
+sub get_tempfile
+{
+    my $file = shift @_;
+
+    my $base = basename($file);
+    my $tempfile = "$options{workdir}/$base";
+    mkdir $options{workdir} unless -e $options{workdir};
+
+    return ($tempfile, $base);
 }
 
 sub run_example
@@ -172,9 +197,7 @@ sub run_example
     my $prep = shift @_ || [];
     my $example = shift @_;
 
-    my $base = basename($file);
-    my $tempfile = "$options{workdir}/$base";
-    mkdir $options{workdir};
+    my ($tempfile, $base) = get_tempfile($file);
     open my $fh, '>', $tempfile or die "Could not write to $tempfile: $!";
     print $fh $example;
     close $fh;
@@ -199,5 +222,6 @@ sub run_example
 
     print "Test file: $file\nCommand: $cmd\n\nNEW OUTPUT: [[[$output]]]\n\n\n"
      if $options{verbose};
+
     return $output;
 }

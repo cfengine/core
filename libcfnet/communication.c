@@ -269,13 +269,13 @@ int GetMyHostInfo(char nameBuf[MAXHOSTNAMELEN], char ipBuf[MAXIP4CHARLEN])
 
 unsigned short SocketFamily(int sd)
 {
-   struct sockaddr sa = {0};
-   socklen_t len = sizeof(sa);
+   struct sockaddr_storage ss = {0};
+   socklen_t len = sizeof(ss);
 
-   if (getsockname(sd, &sa, &len) == -1)
+   if (getsockname(sd, (struct sockaddr *) &ss, &len) == -1)
    {
        Log(LOG_LEVEL_ERR, "Could not get socket family. (getsockname: %s)", GetErrorStr());
    }
 
-   return sa.sa_family;
+   return ss.ss_family;
 }

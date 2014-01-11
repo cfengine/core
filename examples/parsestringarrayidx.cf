@@ -55,8 +55,8 @@ bundle agent test(f)
 ###############################################################################
 #+begin_src example_output
 #@ ```
-#@ 2013-12-20T13:44:32-0500   notice: /default/test: R: 1
-#@ 2013-12-20T13:44:32-0500   notice: /default/test: R: 0
-#@ 2013-12-20T13:44:32-0500   notice: /default/test: R: 2
+#@ 2014-01-11T07:28:48-0500   notice: /default/test: R: item 0 has column 0 = one and column 1 =  a
+#@ 2014-01-11T07:28:48-0500   notice: /default/test: R: item 1 has column 0 =                            two and column 1 =  b
+#@ 2014-01-11T07:28:48-0500   notice: /default/test: R: item 2 has column 0 =                          three and column 1 =  c
 #@ ```
 #+end_src

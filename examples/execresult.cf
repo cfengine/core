@@ -22,6 +22,7 @@
 
 #+begin_src prep
 #@ ```
+#@ rm -rf /tmp/testhere
 #@ mkdir -p /tmp/testhere
 #@ touch /tmp/testhere/a
 #@ touch /tmp/testhere/b

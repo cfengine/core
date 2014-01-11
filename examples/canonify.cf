@@ -32,12 +32,8 @@ bundle agent example
       "component" string => "/var/cfengine/bin/cf-serverd";
       "canon" string => canonify("$(component)");
 
-  classes:
-      "$(component)_exists" expression => fileexists("$(component)");
-
   reports:
       "canonified component == $(canon)";
-      "component exists" ifvarclass => canonify("$(component)_exists");
 }
 
 #+end_src
@@ -45,6 +41,5 @@ bundle agent example
 #+begin_src example_output
 #@ ```
 #@ 2013-12-20T13:44:28-0500   notice: /default/example: R: canonified component == _var_cfengine_bin_cf_serverd
-#@ 2013-12-20T13:44:28-0500   notice: /default/example: R: component exists
 #@ ```
 #+end_src

@@ -53,7 +53,7 @@ void BundleResolve(EvalContext *ctx, const Bundle *bundle);
 void PolicyResolve(EvalContext *ctx, const Policy *policy, GenericAgentConfig *config);
 
 
-int IsNakedVar(const char *str, char vtype);
+bool IsNakedVar(const char *str, char vtype);
 /**
   @brief Takes a variable and removes decorations.
 

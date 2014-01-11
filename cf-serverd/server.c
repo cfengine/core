@@ -1504,12 +1504,13 @@ static int CheckStoreKey(ServerConnectionState *conn, RSA *key)
 static ServerConnectionState *NewConn(EvalContext *ctx, ConnectionInfo *info)
 {
     ServerConnectionState *conn = NULL;
-    struct sockaddr addr;
+    struct sockaddr_storage addr;
     socklen_t size = sizeof(addr);
 
     if (getsockname(ConnectionInfoSocket(info), &addr, &size) == -1)
     {
-       return NULL;
+        Log(LOG_LEVEL_ERR, "Could not obtain socket address. (getsockname: '%s')", GetErrorStr());
+        return NULL;
     }
 
     conn = xcalloc(1, sizeof(*conn));

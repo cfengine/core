@@ -1,0 +1,55 @@
+#  Copyright (C) Cfengine AS
+
+#  This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+
+#  This program is free software; you can redistribute it and/or modify it
+#  under the terms of the GNU General Public License as published by the
+#  Free Software Foundation; version 3.
+
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
+
+# To the extent this program is licensed as part of the Enterprise
+# versions of Cfengine, the applicable Commercial Open Source License
+# (COSL) may apply to this file if you as a licensee so wish it. See
+# included file COSL.txt.
+
+#+begin_src cfengine3
+body common control
+{
+      bundlesequence => { "test" };
+}
+
+bundle agent test
+{
+  vars:
+
+      "split1" slist => string_split("one:two:three",":","10");
+      "split2" slist => string_split("one:two:three",":","1");
+      "split3" slist => string_split("alpha:xyz:beta","xyz","10");
+
+  reports:
+
+      "split1: $(split1)";  # will list "one", "two", and "three"
+      "split2: $(split2)";  # will list "one:two:three"
+      "split3: $(split3)";  # will list "alpha:" and ":beta"
+
+}
+#+end_src
+###############################################################################
+#+begin_src example_output
+#@ ```
+#@ 2014-01-11T17:06:51+0100   notice: /default/test: R: split1: one
+#@ 2014-01-11T17:06:51+0100   notice: /default/test: R: split1: two
+#@ 2014-01-11T17:06:51+0100   notice: /default/test: R: split1: three
+#@ 2014-01-11T17:06:51+0100   notice: /default/test: R: split2: one:two:three
+#@ 2014-01-11T17:06:51+0100   notice: /default/test: R: split3: alpha:
+#@ 2014-01-11T17:06:51+0100   notice: /default/test: R: split3: :beta
+#@ ```
+#+end_src

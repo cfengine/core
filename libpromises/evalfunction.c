@@ -5193,6 +5193,33 @@ static FnCallResult FnCallSplitString(ARG_UNUSED EvalContext *ctx, ARG_UNUSED Fn
 
 /*********************************************************************/
 
+static FnCallResult FnCallStringSplit(ARG_UNUSED EvalContext *ctx, ARG_UNUSED FnCall *fp, Rlist *finalargs)
+{
+    Rlist *newlist = NULL;
+
+    /* 3 args: string, split_regex, max  */
+    char *string = RlistScalarValue(finalargs);
+    char *split = RlistScalarValue(finalargs->next);
+    int max = IntFromString(RlistScalarValue(finalargs->next->next));
+
+    if (max < 1)
+    {
+        Log(LOG_LEVEL_VERBOSE, "Function string_split called with invalid maxent argument: '%d'", max);
+        return FnFailure();
+    }
+
+    newlist = RlistFromRegexSplitNoOverflow(string, split, max, true);
+
+    if (newlist == NULL)
+    {
+        RlistPrepend(&newlist, CF_NULL_VALUE, RVAL_TYPE_SCALAR);
+    }
+
+    return (FnCallResult) { FNCALL_SUCCESS, { newlist, RVAL_TYPE_LIST } };
+}
+
+/*********************************************************************/
+
 static FnCallResult FnCallFileSexist(EvalContext *ctx, ARG_UNUSED FnCall *fp, Rlist *finalargs)
 {
     char naked[CF_MAXVARSIZE];
@@ -7046,6 +7073,10 @@ const FnCallType CF_FNCALL_TYPES[] =
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_SYSTEM, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("variablesmatching", DATA_TYPE_STRING_LIST, CLASSMATCH_ARGS, &FnCallVariablesMatching, "List the variables matching regex arg1 and tag regexes arg2,arg3,...",
                   FNCALL_OPTION_VARARG, FNCALL_CATEGORY_UTILS, SYNTAX_STATUS_NORMAL),
+
+    // Functions section following new naming convention
+    FnCallTypeNew("string_split", DATA_TYPE_STRING_LIST, SPLITSTRING_ARGS, &FnCallStringSplit, "Convert a string in arg1 into a list of max arg3 strings by splitting on a regular expression in arg2",
+                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
 
     // Text xform functions
     FnCallTypeNew("string_downcase", DATA_TYPE_STRING, XFORM_ARGS, &FnCallTextXform, "Convert a string to lowercase",

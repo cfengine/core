@@ -985,6 +985,65 @@ Rlist *RlistFromSplitRegex(const char *string, const char *regex, int max, int b
     return liststart;
 }
 
+/*******************************************************************/
+/*
+ * Splits a string containing a separator like "," into a linked list of separate items.
+ *
+ * NOTE: in contrast with RlistFromSplitRegex() this one will produce at most max number of elements
+ */
+
+Rlist *RlistFromRegexSplitNoOverflow(const char *string, const char *regex, int max, int blanks)
+
+{
+    Rlist *liststart = NULL;
+    char node[CF_MAXVARSIZE];
+    int start, end;
+    int count = 0;
+
+    if (string == NULL)
+    {
+        return NULL;
+    }
+
+    const char *sp = string;
+
+    while ((count < max) && StringMatch(regex, sp, &start, &end))
+    {
+        memset(node, 0, CF_MAXVARSIZE);
+
+        if (count == max - 1) //we are processing last chunk
+        {
+            if (blanks || start > 0)
+            {
+                strncpy(node, sp, CF_MAXVARSIZE - 1);
+                RlistAppendScalar(&liststart, node);
+            }
+            return liststart;
+        }
+
+        if (blanks || start > 0)
+        {
+            strncpy(node, sp, start);
+            RlistAppendScalar(&liststart, node);
+            count++;
+        }
+
+        sp += end;
+    }
+
+    if (count < max)
+    {
+        memset(node, 0, CF_MAXVARSIZE);
+        strncpy(node, sp, CF_MAXVARSIZE - 1);
+        if (blanks || strlen(node) > 0)
+        {
+            RlistAppendScalar(&liststart, node);
+        }
+    }
+
+    return liststart;
+}
+
 Rlist *RlistLast(Rlist *start)
 {
     if (start == NULL)

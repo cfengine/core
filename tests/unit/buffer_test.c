@@ -12,7 +12,7 @@ static void test_createBuffer(void)
     assert_true(buffer != NULL);
     assert_true(buffer->buffer != NULL);
     assert_int_equal(buffer->mode, BUFFER_BEHAVIOR_CSTRING);
-    assert_int_equal(buffer->capacity, DEFAULT_BUFFER_SIZE);
+    assert_int_equal(buffer->capacity, DEFAULT_BUFFER_CAPACITY);
     assert_int_equal(buffer->used, 0);
     assert_true(buffer->ref_count != NULL);
     assert_int_equal(buffer->ref_count->user_count, 1);
@@ -31,7 +31,7 @@ static void test_createBufferFrom(void)
     assert_true(buffer->buffer != NULL);
     assert_string_equal(data, buffer->buffer);
     assert_int_equal(buffer->mode, BUFFER_BEHAVIOR_CSTRING);
-    assert_int_equal(buffer->capacity, DEFAULT_BUFFER_SIZE);
+    assert_int_equal(buffer->capacity, DEFAULT_BUFFER_CAPACITY);
     assert_int_equal(buffer->used, dataLength);
     assert_true(buffer->ref_count != NULL);
     assert_int_equal(buffer->ref_count->user_count, 1);
@@ -52,8 +52,8 @@ static void test_setBuffer(void)
 {
     char *element0 = xstrdup("element0");
     unsigned int element0size = strlen(element0);
-    char *element1 = (char *)xmalloc(2 * DEFAULT_BUFFER_SIZE + 2);
-    unsigned int element1size = 2 * DEFAULT_BUFFER_SIZE + 1;
+    char *element1 = (char *)xmalloc(2 * DEFAULT_BUFFER_CAPACITY + 2);
+    unsigned int element1size = 2 * DEFAULT_BUFFER_CAPACITY + 1;
 
     Buffer *buffer = BufferNew();
     assert_true(buffer != NULL);
@@ -63,7 +63,7 @@ static void test_setBuffer(void)
     assert_int_equal(element0size, BufferSize(buffer));
     assert_string_equal(element0, buffer->buffer);
     assert_string_equal(element0, BufferData(buffer));
-    assert_int_equal(DEFAULT_BUFFER_SIZE, buffer->capacity);
+    assert_int_equal(DEFAULT_BUFFER_CAPACITY, buffer->capacity);
     // Larger than the allocated buffer
     for (int i = 0; i < element1size; ++i)
     {
@@ -74,7 +74,7 @@ static void test_setBuffer(void)
     assert_int_equal(element1size, buffer->used);
     assert_string_equal(element1, buffer->buffer);
     assert_string_equal(element1, BufferData(buffer));
-    assert_int_equal(DEFAULT_BUFFER_SIZE * 3, buffer->capacity);
+    assert_int_equal(DEFAULT_BUFFER_CAPACITY * 3, buffer->capacity);
 
     /*
      * Boundary checks, BUFFER_SIZE-1, BUFFER_SIZE and BUFFER_SIZE+1
@@ -82,13 +82,13 @@ static void test_setBuffer(void)
     Buffer *bm1 = BufferNew();
     Buffer *be = BufferNew();
     Buffer *bp1 = BufferNew();
-    char buffer_m1[DEFAULT_BUFFER_SIZE - 1];
-    char buffer_0[DEFAULT_BUFFER_SIZE];
-    char buffer_p1[DEFAULT_BUFFER_SIZE + 1];
-    unsigned int bm1_size = DEFAULT_BUFFER_SIZE - 1;
-    unsigned int be_size = DEFAULT_BUFFER_SIZE;
-    unsigned int bp1_size = DEFAULT_BUFFER_SIZE + 1;
-    for (int i = 0; i < DEFAULT_BUFFER_SIZE - 1; ++i)
+    char buffer_m1[DEFAULT_BUFFER_CAPACITY - 1];
+    char buffer_0[DEFAULT_BUFFER_CAPACITY];
+    char buffer_p1[DEFAULT_BUFFER_CAPACITY + 1];
+    unsigned int bm1_size = DEFAULT_BUFFER_CAPACITY - 1;
+    unsigned int be_size = DEFAULT_BUFFER_CAPACITY;
+    unsigned int bp1_size = DEFAULT_BUFFER_CAPACITY + 1;
+    for (int i = 0; i < DEFAULT_BUFFER_CAPACITY - 1; ++i)
     {
         buffer_m1[i] = 'c';
         buffer_0[i] = 'd';
@@ -97,21 +97,21 @@ static void test_setBuffer(void)
     /*
      * One shorter, that means the buffer remains the same size as before.
      */
-    buffer_m1[DEFAULT_BUFFER_SIZE - 2] = '\0';
+    buffer_m1[DEFAULT_BUFFER_CAPACITY - 2] = '\0';
     BufferSet(bm1, buffer_m1, bm1_size);
-    assert_int_equal(bm1->capacity, DEFAULT_BUFFER_SIZE);
+    assert_int_equal(bm1->capacity, DEFAULT_BUFFER_CAPACITY);
     /*
      * Same size, it should allocate one more block
      */
-    buffer_0[DEFAULT_BUFFER_SIZE - 1] = '\0';
+    buffer_0[DEFAULT_BUFFER_CAPACITY - 1] = '\0';
     BufferSet(be, buffer_0, be_size);
-    assert_int_equal(be->capacity, 2 * DEFAULT_BUFFER_SIZE);
+    assert_int_equal(be->capacity, 2 * DEFAULT_BUFFER_CAPACITY);
     /*
      * 1 more, it should allocate one more block
      */
-    buffer_p1[DEFAULT_BUFFER_SIZE] = '\0';
+    buffer_p1[DEFAULT_BUFFER_CAPACITY] = '\0';
     BufferSet(bp1, buffer_p1, bp1_size);
-    assert_int_equal(bp1->capacity, 2 * DEFAULT_BUFFER_SIZE);
+    assert_int_equal(bp1->capacity, 2 * DEFAULT_BUFFER_CAPACITY);
     BufferSet(buffer, element0, 0);
     /*
      * Destroy the buffer and good night.
@@ -136,7 +136,7 @@ static void test_zeroBuffer(void)
     assert_int_equal(element0size, buffer->used);
     assert_int_equal(element0size, BufferSize(buffer));
     BufferZero(buffer);
-    assert_int_equal(DEFAULT_BUFFER_SIZE, buffer->capacity);
+    assert_int_equal(DEFAULT_BUFFER_CAPACITY, buffer->capacity);
     assert_int_equal(0, buffer->used);
     assert_int_equal(0, BufferSize(buffer));
 	const char *data = BufferData(buffer);
@@ -192,8 +192,8 @@ static void test_appendBuffer(void)
     char *element1 = xstrdup("element1");
     unsigned int element1size = strlen(element1);
     const char *element1pointer = NULL;
-    char *element2 = (char *)xmalloc(2 * DEFAULT_BUFFER_SIZE + 2);
-    unsigned int element2size = 2 * DEFAULT_BUFFER_SIZE + 1;
+    char *element2 = (char *)xmalloc(2 * DEFAULT_BUFFER_CAPACITY + 2);
+    unsigned int element2size = 2 * DEFAULT_BUFFER_CAPACITY + 1;
 
     Buffer *buffer = BufferNew();
     assert_true(buffer != NULL);
@@ -204,7 +204,7 @@ static void test_appendBuffer(void)
     assert_int_equal(element0size, BufferSize(buffer));
     assert_string_equal(element0, buffer->buffer);
     assert_string_equal(element0, BufferData(buffer));
-    assert_int_equal(DEFAULT_BUFFER_SIZE, buffer->capacity);
+    assert_int_equal(DEFAULT_BUFFER_CAPACITY, buffer->capacity);
     // Attach a small string to it
     BufferAppend(buffer, element1, element1size);
     assert_int_equal(element0size + element1size, BufferSize(buffer));
@@ -257,13 +257,13 @@ static void test_appendBuffer(void)
     Buffer *bm1 = BufferNew();
     Buffer *be = BufferNew();
     Buffer *bp1 = BufferNew();
-    char buffer_m1[DEFAULT_BUFFER_SIZE - 1];
-    char buffer_0[DEFAULT_BUFFER_SIZE];
-    char buffer_p1[DEFAULT_BUFFER_SIZE + 1];
-    unsigned int bm1_size = DEFAULT_BUFFER_SIZE - 1;
-    unsigned int be_size = DEFAULT_BUFFER_SIZE;
-    unsigned int bp1_size = DEFAULT_BUFFER_SIZE + 1;
-    for (i = 0; i < DEFAULT_BUFFER_SIZE - 1; ++i)
+    char buffer_m1[DEFAULT_BUFFER_CAPACITY - 1];
+    char buffer_0[DEFAULT_BUFFER_CAPACITY];
+    char buffer_p1[DEFAULT_BUFFER_CAPACITY + 1];
+    unsigned int bm1_size = DEFAULT_BUFFER_CAPACITY - 1;
+    unsigned int be_size = DEFAULT_BUFFER_CAPACITY;
+    unsigned int bp1_size = DEFAULT_BUFFER_CAPACITY + 1;
+    for (i = 0; i < DEFAULT_BUFFER_CAPACITY - 1; ++i)
     {
         buffer_m1[i] = 'c';
         buffer_0[i] = 'd';
@@ -272,24 +272,24 @@ static void test_appendBuffer(void)
     /*
      * One shorter, that means the buffer remains the same size as before.
      */
-    buffer_m1[DEFAULT_BUFFER_SIZE - 2] = '\0';
+    buffer_m1[DEFAULT_BUFFER_CAPACITY - 2] = '\0';
     BufferAppend(bm1, buffer_m1, bm1_size);
     assert_int_equal(bm1_size, BufferSize(bm1));
-    assert_int_equal(bm1->capacity, DEFAULT_BUFFER_SIZE);
+    assert_int_equal(bm1->capacity, DEFAULT_BUFFER_CAPACITY);
     /*
      * Same size, it should allocate one more block
      */
-    buffer_0[DEFAULT_BUFFER_SIZE - 1] = '\0';
+    buffer_0[DEFAULT_BUFFER_CAPACITY - 1] = '\0';
     BufferAppend(be, buffer_0, be_size);
     assert_int_equal(be_size, BufferSize(be));
-    assert_int_equal(be->capacity, 2 * DEFAULT_BUFFER_SIZE);
+    assert_int_equal(be->capacity, 2 * DEFAULT_BUFFER_CAPACITY);
     /*
      * 1 more, it should allocate one more block
      */
-    buffer_p1[DEFAULT_BUFFER_SIZE] = '\0';
+    buffer_p1[DEFAULT_BUFFER_CAPACITY] = '\0';
     BufferAppend(bp1, buffer_p1, bp1_size);
     assert_int_equal(bp1_size, BufferSize(bp1));
-    assert_int_equal(bp1->capacity, 2 * DEFAULT_BUFFER_SIZE);
+    assert_int_equal(bp1->capacity, 2 * DEFAULT_BUFFER_CAPACITY);
     /*
      * Destroy the buffer and good night.
      */
@@ -312,8 +312,8 @@ static void test_printf(void)
     char *char1 = xstrdup("char1");
     unsigned int char1size = strlen(char1);
     const char *char1pointer = NULL;
-    char *char2 = (char *)xmalloc(2 * DEFAULT_BUFFER_SIZE + 2);
-    unsigned int char2size = 2 * DEFAULT_BUFFER_SIZE + 1;
+    char *char2 = (char *)xmalloc(2 * DEFAULT_BUFFER_CAPACITY + 2);
+    unsigned int char2size = 2 * DEFAULT_BUFFER_CAPACITY + 1;
     int int0 = 123456789;
     char *int0char = xstrdup("123456789");
     unsigned int int0charsize = strlen(int0char);
@@ -391,47 +391,47 @@ static void test_printf(void)
      * The sizes are different for printf. If we have a size of X, then the string
      * is of length X-1, and so forth.
      */
-    char buffer_m1[DEFAULT_BUFFER_SIZE];
-    char buffer_0[DEFAULT_BUFFER_SIZE + 1];
-    char buffer_p1[DEFAULT_BUFFER_SIZE + 2];
-    unsigned int bm1_size = DEFAULT_BUFFER_SIZE - 1;
-    unsigned int be_size = DEFAULT_BUFFER_SIZE;
-    unsigned int bp1_size = DEFAULT_BUFFER_SIZE + 1;
+    char buffer_m1[DEFAULT_BUFFER_CAPACITY];
+    char buffer_0[DEFAULT_BUFFER_CAPACITY + 1];
+    char buffer_p1[DEFAULT_BUFFER_CAPACITY + 2];
+    unsigned int bm1_size = DEFAULT_BUFFER_CAPACITY - 1;
+    unsigned int be_size = DEFAULT_BUFFER_CAPACITY;
+    unsigned int bp1_size = DEFAULT_BUFFER_CAPACITY + 1;
     /*
      * Make sure the buffers are filled with 0.
      */
-    memset(buffer_m1, '\0', DEFAULT_BUFFER_SIZE);
-    memset(buffer_0, '\0', DEFAULT_BUFFER_SIZE + 1);
-    memset(buffer_p1, '\0', DEFAULT_BUFFER_SIZE + 2);
+    memset(buffer_m1, '\0', DEFAULT_BUFFER_CAPACITY);
+    memset(buffer_0, '\0', DEFAULT_BUFFER_CAPACITY + 1);
+    memset(buffer_p1, '\0', DEFAULT_BUFFER_CAPACITY + 2);
     /*
      * Write something to the buffers
      */
-    memset(buffer_m1, 'c', DEFAULT_BUFFER_SIZE);
-    memset(buffer_0, 'd', DEFAULT_BUFFER_SIZE + 1);
-    memset(buffer_p1, 'e', DEFAULT_BUFFER_SIZE + 2);
+    memset(buffer_m1, 'c', DEFAULT_BUFFER_CAPACITY);
+    memset(buffer_0, 'd', DEFAULT_BUFFER_CAPACITY + 1);
+    memset(buffer_p1, 'e', DEFAULT_BUFFER_CAPACITY + 2);
     /*
      * One shorter, that means the buffer remains the same size as before.
      */
-    buffer_m1[DEFAULT_BUFFER_SIZE - 1] = '\0';
+    buffer_m1[DEFAULT_BUFFER_CAPACITY - 1] = '\0';
     assert_int_equal(bm1_size, BufferPrintf(bm1, "%s", buffer_m1));
     assert_string_equal(buffer_m1, bm1->buffer);
-    assert_int_equal(bm1->capacity, DEFAULT_BUFFER_SIZE);
+    assert_int_equal(bm1->capacity, DEFAULT_BUFFER_CAPACITY);
     /*
      * Same size, it should allocate one more block.
      * This means retrying the operation.
      */
-    buffer_0[DEFAULT_BUFFER_SIZE] = '\0';
+    buffer_0[DEFAULT_BUFFER_CAPACITY] = '\0';
     assert_int_equal(be_size, BufferPrintf(be, "%s", buffer_0));
     assert_string_equal(buffer_0, be->buffer);
-    assert_int_equal(be->capacity, 2 * DEFAULT_BUFFER_SIZE);
+    assert_int_equal(be->capacity, 2 * DEFAULT_BUFFER_CAPACITY);
     /*
      * 1 more, it should allocate one more block
      * This means retrying the operation.
      */
-    buffer_p1[DEFAULT_BUFFER_SIZE + 1] = '\0';
+    buffer_p1[DEFAULT_BUFFER_CAPACITY + 1] = '\0';
     assert_int_equal(bp1_size, BufferPrintf(bp1, "%s", buffer_p1));
     assert_string_equal(buffer_p1, bp1->buffer);
-    assert_int_equal(bp1->capacity, 2 * DEFAULT_BUFFER_SIZE);
+    assert_int_equal(bp1->capacity, 2 * DEFAULT_BUFFER_CAPACITY);
     /*
      * Release the resources
      */
@@ -465,8 +465,8 @@ static void test_vprintf(void)
     char *char1 = xstrdup("char1");
     unsigned int char1size = strlen(char1);
     const char *char1pointer = NULL;
-    char *char2 = (char *)xmalloc(2 * DEFAULT_BUFFER_SIZE + 2);
-    unsigned int char2size = 2 * DEFAULT_BUFFER_SIZE + 1;
+    char *char2 = (char *)xmalloc(2 * DEFAULT_BUFFER_CAPACITY + 2);
+    unsigned int char2size = 2 * DEFAULT_BUFFER_CAPACITY + 1;
     int int0 = 123456789;
     char *int0char = xstrdup("123456789");
     unsigned int int0charsize = strlen(int0char);
@@ -544,47 +544,47 @@ static void test_vprintf(void)
      * The sizes are different for printf. If we have a size of X, then the string
      * is of length X-1, and so forth.
      */
-    char buffer_m1[DEFAULT_BUFFER_SIZE];
-    char buffer_0[DEFAULT_BUFFER_SIZE + 1];
-    char buffer_p1[DEFAULT_BUFFER_SIZE + 2];
-    unsigned int bm1_size = DEFAULT_BUFFER_SIZE - 1;
-    unsigned int be_size = DEFAULT_BUFFER_SIZE;
-    unsigned int bp1_size = DEFAULT_BUFFER_SIZE + 1;
+    char buffer_m1[DEFAULT_BUFFER_CAPACITY];
+    char buffer_0[DEFAULT_BUFFER_CAPACITY + 1];
+    char buffer_p1[DEFAULT_BUFFER_CAPACITY + 2];
+    unsigned int bm1_size = DEFAULT_BUFFER_CAPACITY - 1;
+    unsigned int be_size = DEFAULT_BUFFER_CAPACITY;
+    unsigned int bp1_size = DEFAULT_BUFFER_CAPACITY + 1;
     /*
      * Make sure the buffers are filled with 0.
      */
-    memset(buffer_m1, '\0', DEFAULT_BUFFER_SIZE);
-    memset(buffer_0, '\0', DEFAULT_BUFFER_SIZE + 1);
-    memset(buffer_p1, '\0', DEFAULT_BUFFER_SIZE + 2);
+    memset(buffer_m1, '\0', DEFAULT_BUFFER_CAPACITY);
+    memset(buffer_0, '\0', DEFAULT_BUFFER_CAPACITY + 1);
+    memset(buffer_p1, '\0', DEFAULT_BUFFER_CAPACITY + 2);
     /*
      * Write something to the buffers
      */
-    memset(buffer_m1, 'c', DEFAULT_BUFFER_SIZE);
-    memset(buffer_0, 'd', DEFAULT_BUFFER_SIZE + 1);
-    memset(buffer_p1, 'e', DEFAULT_BUFFER_SIZE + 2);
+    memset(buffer_m1, 'c', DEFAULT_BUFFER_CAPACITY);
+    memset(buffer_0, 'd', DEFAULT_BUFFER_CAPACITY + 1);
+    memset(buffer_p1, 'e', DEFAULT_BUFFER_CAPACITY + 2);
     /*
      * One shorter, that means the buffer remains the same size as before.
      */
-    buffer_m1[DEFAULT_BUFFER_SIZE - 1] = '\0';
+    buffer_m1[DEFAULT_BUFFER_CAPACITY - 1] = '\0';
     assert_int_equal(bm1_size, test_vprintf_helper(bm1, "%s", buffer_m1));
     assert_string_equal(buffer_m1, bm1->buffer);
-    assert_int_equal(bm1->capacity, DEFAULT_BUFFER_SIZE);
+    assert_int_equal(bm1->capacity, DEFAULT_BUFFER_CAPACITY);
     /*
      * Same size, it should allocate one more block.
      * This means retrying the operation.
      */
-    buffer_0[DEFAULT_BUFFER_SIZE] = '\0';
+    buffer_0[DEFAULT_BUFFER_CAPACITY] = '\0';
     assert_int_equal(be_size, test_vprintf_helper(be, "%s", buffer_0));
     assert_string_equal(buffer_0, be->buffer);
-    assert_int_equal(be->capacity, 2 * DEFAULT_BUFFER_SIZE);
+    assert_int_equal(be->capacity, 2 * DEFAULT_BUFFER_CAPACITY);
     /*
      * 1 more, it should allocate one more block
      * This means retrying the operation.
      */
-    buffer_p1[DEFAULT_BUFFER_SIZE + 1] = '\0';
+    buffer_p1[DEFAULT_BUFFER_CAPACITY + 1] = '\0';
     assert_int_equal(bp1_size, test_vprintf_helper(bp1, "%s", buffer_p1));
     assert_string_equal(buffer_p1, bp1->buffer);
-    assert_int_equal(bp1->capacity, 2 * DEFAULT_BUFFER_SIZE);
+    assert_int_equal(bp1->capacity, 2 * DEFAULT_BUFFER_CAPACITY);
     /*
      * Release the resources
      */

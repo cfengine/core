@@ -50,7 +50,7 @@ typedef enum
     , BUFFER_BEHAVIOR_BYTEARRAY //<! Byte array mode. A '\0' has no meaning, only the size of the buffer is taken into consideration.
 } BufferBehavior ;
 
-#define DEFAULT_BUFFER_SIZE     4096
+#define DEFAULT_BUFFER_CAPACITY     4096
 
 typedef struct
 {
@@ -58,6 +58,7 @@ typedef struct
     BufferBehavior mode;
     unsigned int capacity;
     unsigned int used;
+    bool unsafe;
     RefCount *ref_count;
 } Buffer;
 
@@ -65,11 +66,13 @@ typedef struct
   @brief Buffer initialization routine.
 
   Initializes the internals of a buffer. By default it is initialized to emulate a C string, but that can be
-  changed at run time if needed. The default size of the buffer is set to DEFAULT_BUFFER_SIZE (4096).
+  changed at run time if needed. The default size of the buffer is set to DEFAULT_BUFFER_CAPACITY (4096).
   @return Pointer to initialized Buffer if the initialization was successful,
           otherwise terminate with message to stderr.
   */
 Buffer* BufferNew(void);
+
+Buffer *BufferNewWithCapacity(unsigned int initial_capacity);
 
 /**
   @brief Initializes a buffer based on a const char pointer.
@@ -116,6 +119,9 @@ int BufferCompare(const Buffer *buffer1, const Buffer *buffer2);
   @param length Length of the collection of bytes.
   */
 void BufferSet(Buffer *buffer, char *bytes, unsigned int length);
+
+char *BufferGet(Buffer *buffer);
+
 
 /**
   @brief Appends the collection of bytes at the end of the current buffer.

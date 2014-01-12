@@ -311,6 +311,19 @@ bool StringIsNumeric(const char *s)
     return true;
 }
 
+bool StringIsPrintable(const char *s)
+{
+    for (; *s; s++)
+    {
+        if (!isprint((int)*s))
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 bool EmptyString(const char *s)
 {
     const char *sp;

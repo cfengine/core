@@ -29,8 +29,7 @@
 #include <buffer.h>
 
 size_t ExtractScalarPrefix(Buffer *out, const char *str, size_t len);
-bool ExtractInnerCf3VarString(Buffer *out, const char *str, size_t len);
-const char *ExtractOuterCf3VarString(const char *str, char *substr);
+bool ExtractScalarReference(Buffer *out, const char *str, size_t len, bool extract_inner);
 int UnresolvedArgs(Rlist *args);
 bool IsQualifiedVariable(const char *var);
 

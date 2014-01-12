@@ -6,7 +6,7 @@
 #include <eval_context.h>
 #include <vars.h>
 
-static void test_extract_scalar_prefix(void **state)
+static void test_extract_scalar_prefix()
 {
     Buffer *b = BufferNew();
     assert_int_equal(sizeof("hello ") - 1, ExtractScalarPrefix(b, "hello $(world) xy", sizeof("hello $(world) xy") -1));
@@ -23,14 +23,41 @@ static void test_extract_scalar_prefix(void **state)
     BufferDestroy(b);
 }
 
-static void test_extract_inner_varstring(void **state)
+static void test_extract_reference_(const char *scalar, bool expect_success, const char *outer, const char *inner)
 {
     Buffer *b = BufferNew();
-    assert_true(ExtractInnerCf3VarString(b, "${stuff}", sizeof("${stuff}") - 1));
-    assert_string_equal("stuff", BufferData(b));
+    size_t len = strlen(scalar);
+
+    bool success = ExtractScalarReference(b, scalar, len, false);
+    assert_true(success == expect_success);
+    assert_string_equal(outer, BufferData(b));
+
+    BufferZero(b);
+    success = ExtractScalarReference(b, scalar, len, true);
+    assert_true(success == expect_success);
+    assert_string_equal(inner, BufferData(b));
 
     BufferDestroy(b);
 }
+
+static void test_extract_reference(void)
+{
+    test_extract_reference_("${stuff}", true, "${stuff}", "stuff");
+    test_extract_reference_("$(stuff)", true, "$(stuff)", "stuff");
+    test_extract_reference_("abc $def ${x} y", true, "${x}", "x");
+    test_extract_reference_("${stuff)", false, "", "");
+    test_extract_reference_("abc $def", false, "", "");
+    test_extract_reference_("stuff", false, "", "");
+    test_extract_reference_("", false, "", "");
+    test_extract_reference_("abc $xa ", false, "", "");
+    test_extract_reference_("${}", false, "", "");
+    test_extract_reference_("x$()a", false, "", "");
+
+    test_extract_reference_("$($(x))", true, "$($(x))", "$(x)");
+    test_extract_reference_("$(x${$(y)})", true, "$(x${$(y)})", "x${$(y)}");
+    test_extract_reference_("$(x${$(y)}) $(y) ${x${z}}", true, "$(x${$(y)})", "x${$(y)}");
+}
+
 
 static void test_map_iterators_from_rval_empty(void **state)
 {
@@ -446,8 +473,8 @@ int main()
     PRINT_TEST_BANNER();
     const UnitTest tests[] =
     {
-        unit_test_setup_teardown(test_extract_scalar_prefix, test_setup, test_teardown),
-        unit_test_setup_teardown(test_extract_inner_varstring, test_setup, test_teardown),
+        unit_test(test_extract_scalar_prefix),
+        unit_test(test_extract_reference),
         unit_test_setup_teardown(test_map_iterators_from_rval_empty, test_setup, test_teardown),
         unit_test_setup_teardown(test_map_iterators_from_rval_literal, test_setup, test_teardown),
         unit_test_setup_teardown(test_map_iterators_from_rval_naked_list_var, test_setup, test_teardown),

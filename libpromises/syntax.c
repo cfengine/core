@@ -425,7 +425,7 @@ vars:
     if (*string == '$')
     {
         Buffer *inner_value = BufferNew();
-        if (ExtractInnerCf3VarString(inner_value, string, len))
+        if (ExtractScalarReference(inner_value, string, len, true))
         {
             if (!IsExpandable(BufferData(inner_value)))
             {

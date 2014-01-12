@@ -294,134 +294,123 @@ size_t ExtractScalarPrefix(Buffer *out, const char *str, size_t len)
     return 0;
 }
 
-bool ExtractInnerCf3VarString(Buffer *out, const char *str, size_t len)
+static const char *ReferenceEnd(const char *str, size_t len)
 {
-    assert(str);
-    if (len == 0)
-    {
-        return false;
-    }
+    assert(len > 1);
+    assert(str[0] == '$');
+    assert(str[1] == '{' || str[1] == '(');
 
-    if (*(str + 1) != '(' && *(str + 1) != '{')
-    {
-        return false;
-    }
-
-    int bracks = 1;
+#define MAX_VARIABLE_REFERENCE_LEVELS 10
+    char stack[MAX_VARIABLE_REFERENCE_LEVELS] = { 0, str[1], 0 };
+    int level = 1;
 
     for (size_t i = 2; i < len; i++)
     {
-        const char *sp = str + i;
-        switch (*sp)
+        switch (str[i])
         {
-        case '(':
         case '{':
-            bracks++;
-            break;
-        case ')':
-        case '}':
-            bracks--;
-            break;
-
-        default:
-            if (!(isalnum((int) *sp) || strchr("_[]$.:-# ", *sp)))
+        case '(':
+            if (level < MAX_VARIABLE_REFERENCE_LEVELS - 1)
             {
-                Log(LOG_LEVEL_DEBUG, "Illegal character found '%c'", *sp);
-                Log(LOG_LEVEL_DEBUG, "Illegal character somewhere in variable '%s' or nested expansion", str);
+                level++;
+                stack[level] = str[i];
             }
-        }
-
-        if (bracks == 0)
-        {
-            size_t var_ref_len = sp - str - 2;
-            if (var_ref_len == 0)
+            else
             {
-                Log(LOG_LEVEL_ERR, "Empty variable name in brackets '%s'", str);
-                return false;
-            }
-
-            BufferAppend(out, str + 2, var_ref_len);
-            return true;
-        }
-    }
-
-    if (bracks != 0)
-    {
-        Writer *w = StringWriter();
-        WriterWriteLen(w, str, len);
-        Log(LOG_LEVEL_ERR, "Broken variable syntax or bracket mismatch '%s'", StringWriterData(w));
-        WriterClose(w);
-
-        return false;
-    }
-
-    assert(false && "Never reach");
-    return false;
-}
-
-/*********************************************************************/
-
-const char *ExtractOuterCf3VarString(const char *str, char *substr)
-  /* Should only by applied on str[0] == '$' */
-{
-    const char *sp;
-    int dollar = false;
-    int bracks = 0, onebrack = false;
-
-    memset(substr, 0, CF_BUFSIZE);
-
-    for (sp = str; *sp != '\0'; sp++)   /* check for varitems */
-    {
-        switch (*sp)
-        {
-        case '$':
-            dollar = true;
-            switch (*(sp + 1))
-            {
-            case '(':
-            case '{':
-                break;
-            default:
-                /* Stray dollar not a variable */
+                Log(LOG_LEVEL_ERR, "Stack overflow in variable reference parsing. More than %d levels", MAX_VARIABLE_REFERENCE_LEVELS);
                 return NULL;
             }
             break;
-        case '(':
-        case '{':
-            bracks++;
-            onebrack = true;
+
+        case '}':
+            if (stack[level] != '{')
+            {
+                Writer *w = StringWriter();
+                WriterWriteLen(w, str, len);
+                Log(LOG_LEVEL_ERR, "Variable reference bracket mismatch '%s'", StringWriterData(w));
+                WriterClose(w);
+                return NULL;
+            }
+            level--;
             break;
         case ')':
-        case '}':
-            bracks--;
+            if (stack[level] != '(')
+            {
+                Writer *w = StringWriter();
+                WriterWriteLen(w, str, len);
+                Log(LOG_LEVEL_ERR, "Variable reference bracket mismatch '%s'", StringWriterData(w));
+                WriterClose(w);
+                return NULL;
+            }
+            level--;
             break;
         }
 
-        if (dollar && (bracks == 0) && onebrack)
+        if (level == 0)
         {
-            strncpy(substr, str, sp - str + 1);
-            return substr;
+            return str + i;
         }
     }
 
-    if (dollar == false)
+    return NULL;
+}
+
+bool ExtractScalarReference(Buffer *out, const char *str, size_t len, bool extract_inner)
+{
+    if (len <= 1)
     {
-        return str;             /* This is not a variable */
+        return false;
     }
 
-    if (bracks != 0)
+    const char *dollar_point = memchr(str, '$', len);
+    if (!dollar_point || (dollar_point - str) == len)
     {
-        char output[CF_BUFSIZE];
-
-        snprintf(output, CF_BUFSIZE, "Broken variable syntax or bracket mismatch in - outer (%s/%s)", str, substr);
-        yyerror(output);
-        return NULL;
+        return false;
     }
+    else
+    {
+        const char *close_point = NULL;
+        {
+            size_t remaining = len - (dollar_point - str);
+            if (*(dollar_point + 1) == '{' || *(dollar_point + 1) == '(')
+            {
+                close_point = ReferenceEnd(dollar_point, remaining);
+            }
+            else
+            {
+                return ExtractScalarReference(out, dollar_point + 1, remaining - 1, extract_inner);
+            }
+        }
 
-/* Return pointer to first position in string (shouldn't happen)
-   as long as we only call this function from the first $ position */
+        if (!close_point)
+        {
+            Writer *w = StringWriter();
+            WriterWriteLen(w, str, len);
+            Log(LOG_LEVEL_ERR, "Variable reference close mismatch '%s'", StringWriterData(w));
+            WriterClose(w);
+            return false;
+        }
 
-    return str;
+        size_t outer_len = close_point - dollar_point + 1;
+        if (outer_len <= 3)
+        {
+            Writer *w = StringWriter();
+            WriterWriteLen(w, str, len);
+            Log(LOG_LEVEL_ERR, "Empty variable reference close mismatch '%s'", StringWriterData(w));
+            WriterClose(w);
+            return false;
+        }
+
+        if (extract_inner)
+        {
+            BufferAppend(out, dollar_point + 2, outer_len - 3);
+        }
+        else
+        {
+            BufferAppend(out, dollar_point, outer_len);
+        }
+        return true;
+    }
 }
 
 /*********************************************************************/

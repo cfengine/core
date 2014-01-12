@@ -359,7 +359,7 @@ static void ExpandAndMapIteratorsFromScalar(EvalContext *ctx, const Bundle *bund
         if (*sp == '$')
         {
             BufferZero(value);
-            ExtractInnerCf3VarString(value, sp, length - i);
+            ExtractScalarReference(value, sp, length - i, true);
             if (value)
             {
                 Rlist *inner_expansion = NULL;
@@ -630,7 +630,7 @@ static bool ExpandOverflow(const char *str1, const char *str2)
 
 bool ExpandScalar(const EvalContext *ctx, const char *ns, const char *scope, const char *string, char buffer[CF_EXPANDSIZE])
 {
-    bool is_varstring = false;
+    char is_varstring = false;
     char name[CF_MAXVARSIZE];
     size_t increment;
     bool returnval = true;
@@ -641,9 +641,9 @@ bool ExpandScalar(const EvalContext *ctx, const char *ns, const char *scope, con
     }
     buffer[0] = '\0';
 
+    Buffer *var = BufferNew();
     for (const char *sp = string; /* No exit */ ; sp++)     /* check for varitems */
     {
-        char var[CF_BUFSIZE] = "";
         increment = 0;
 
         if (*sp == '\0')
@@ -669,14 +669,15 @@ bool ExpandScalar(const EvalContext *ctx, const char *ns, const char *scope, con
             break;
         }
 
+        BufferZero(var);
         if (*sp == '$')
         {
             switch (*(sp + 1))
             {
             case '(':
-                ExtractOuterCf3VarString(sp, var);
                 is_varstring = ')';
-                if (strlen(var) == 0)
+                ExtractScalarReference(var, sp, strlen(sp), false);
+                if (BufferSize(var) == 0)
                 {
                     strlcat(buffer, "$", CF_EXPANDSIZE);
                     continue;
@@ -684,9 +685,9 @@ bool ExpandScalar(const EvalContext *ctx, const char *ns, const char *scope, con
                 break;
 
             case '{':
-                ExtractOuterCf3VarString(sp, var);
                 is_varstring = '}';
-                if (strlen(var) == 0)
+                ExtractScalarReference(var, sp, strlen(sp), false);
+                if (BufferSize(var) == 0)
                 {
                     strlcat(buffer, "$", CF_EXPANDSIZE);
                     continue;
@@ -703,7 +704,7 @@ bool ExpandScalar(const EvalContext *ctx, const char *ns, const char *scope, con
 
         {
             Buffer *temp = BufferNew();
-            ExtractInnerCf3VarString(temp, sp, strlen(sp));
+            ExtractScalarReference(temp, sp, strlen(sp), true);
 
             if (IsCf3VarString(BufferData(temp)))
             {
@@ -718,7 +719,7 @@ bool ExpandScalar(const EvalContext *ctx, const char *ns, const char *scope, con
             BufferDestroy(temp);
         }
 
-        increment = strlen(var) - 1;
+        increment = BufferSize(var) - 1;
 
         if (!IsExpandable(currentitem))
         {

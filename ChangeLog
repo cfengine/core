@@ -15,6 +15,7 @@
 
        New features:
        - #TODO# new promise type "users" for managing user accounts
+       - New options to cf-promises: --show-classes and --show-vars
        - support colorized output for agent binaries with command line option --color
        - Introduced alias 'policy_server' for context 'am_policy_hub' (the latter will be deprecated)
        - #TODO# new sys variables

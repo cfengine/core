@@ -67,6 +67,8 @@ typedef struct
             unsigned int parser_warnings;
             unsigned int parser_warnings_error;
             bool eval_functions;
+            bool show_classes;
+            bool show_variables;
         } common;
         struct
         {

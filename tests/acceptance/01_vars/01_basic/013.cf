@@ -36,10 +36,10 @@ bundle agent test
 body classes setclasses(t,f)
 {
       promise_repaired => { "$(t)" };
-      promise_kept => { "$(t)" };
-      repair_failed   => { "$(f)" };
-      repair_denied   => { "$(f)" };
-      repair_timeout  => { "$(f)" };
+      promise_kept     => { "$(t)" };
+      repair_failed  => { "$(f)" };
+      repair_denied  => { "$(f)" };
+      repair_timeout => { "$(f)" };
 }
 
 #######################################################

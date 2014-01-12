@@ -34,7 +34,9 @@
 #include <sys/time.h>
 #include <unistd.h>
 #include <sys/types.h>
+#ifndef __MINGW32__
 #include <sys/select.h>
+#endif // __MINGW32__
 /* TODO move crypto.h to libutils */
 #include <crypto.h>                        /* PRIVKEY,PUBKEY,LoadSecretKeys */
 #include <bootstrap.h>                     /* ReadPolicyServerFile */

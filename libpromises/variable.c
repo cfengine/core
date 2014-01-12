@@ -23,6 +23,7 @@ void VariableDestroy(Variable *var)
         VarRefDestroy(var->ref);
         RvalDestroy(var->rval);
         StringSetDestroy(var->tags);
+        // Nothing to do for ->promise
 
         free(var);
     }
@@ -57,7 +58,7 @@ bool VariableTableRemove(VariableTable *table, const VarRef *ref)
     return RBTreeRemove(table->vars, (void *)ref->hash);
 }
 
-static Variable *VariableNew(VarRef *ref, Rval rval, DataType type, StringSet *tags)
+static Variable *VariableNew(VarRef *ref, Rval rval, DataType type, StringSet *tags, const Promise *promise)
 {
     Variable *var = xmalloc(sizeof(Variable));
 
@@ -65,11 +66,14 @@ static Variable *VariableNew(VarRef *ref, Rval rval, DataType type, StringSet *t
     var->rval = rval;
     var->type = type;
     var->tags = tags;
+    var->promise = promise;
 
     return var;
 }
 
-bool VariableTablePut(VariableTable *table, const VarRef *ref, const Rval *rval, DataType type, const char *tags)
+bool VariableTablePut(VariableTable *table, const VarRef *ref,
+                      const Rval *rval, DataType type,
+                      const char *tags, const Promise *promise)
 {
     assert(VarRefIsQualified(ref));
     bool result;
@@ -84,7 +88,7 @@ bool VariableTablePut(VariableTable *table, const VarRef *ref, const Rval *rval,
     if (var == NULL)
     {
         Log(LOG_LEVEL_VERBOSE, "Setting %s", StringWriterData(logval));
-        var = VariableNew(VarRefCopy(ref), RvalCopy(*rval), type, StringSetFromString(tags, ','));
+        var = VariableNew(VarRefCopy(ref), RvalCopy(*rval), type, StringSetFromString(tags, ','), promise);
         result = RBTreePut(table->vars, (void *)var->ref->hash, var);
     }
     else // if (!RvalsEqual(var->rval *rval) // TODO: implement-me !
@@ -97,6 +101,7 @@ bool VariableTablePut(VariableTable *table, const VarRef *ref, const Rval *rval,
         RvalDestroy(var->rval);
         var->rval = RvalCopy(*rval);
         var->type = type;
+        var->promise = promise;
         result = true;
     }
     WriterClose(logval);
@@ -259,7 +264,9 @@ VariableTable *VariableTableCopyLocalized(const VariableTable *table, const char
     Variable *foreign_var = NULL;
     while ((foreign_var = VariableTableIteratorNext(iter)))
     {
-        Variable *localized_var = VariableNew(VarRefCopyLocalized(foreign_var->ref), RvalCopy(foreign_var->rval), foreign_var->type, NULL);
+        Variable *localized_var = VariableNew(VarRefCopyLocalized(foreign_var->ref),
+                                              RvalCopy(foreign_var->rval), foreign_var->type,
+                                              NULL, foreign_var->promise);
         RBTreePut(localized_copy->vars, (void *)localized_var->ref->hash, localized_var);
     }
     VariableTableIteratorDestroy(iter);

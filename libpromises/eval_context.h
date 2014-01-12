@@ -136,6 +136,7 @@ const Bundle *EvalContextStackCurrentBundle(const EvalContext *ctx);
 bool EvalContextVariablePut(EvalContext *ctx, const VarRef *ref, const void *value, DataType type, const char *tags);
 bool EvalContextVariablePutSpecial(EvalContext *ctx, SpecialScope scope, const char *lval, const void *value, DataType type, const char *tags);
 const void *EvalContextVariableGet(const EvalContext *ctx, const VarRef *ref, DataType *type_out);
+const Promise *EvalContextVariablePromiseGet(const EvalContext *ctx, const VarRef *ref);
 bool EvalContextVariableRemoveSpecial(const EvalContext *ctx, SpecialScope scope, const char *lval);
 bool EvalContextVariableRemove(const EvalContext *ctx, const VarRef *ref);
 StringSet *EvalContextVariableTags(const EvalContext *ctx, const VarRef *ref);

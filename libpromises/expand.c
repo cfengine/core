@@ -630,12 +630,11 @@ static bool ExpandOverflow(const char *str1, const char *str2)
 
 bool ExpandScalar(const EvalContext *ctx, const char *ns, const char *scope, const char *string, char buffer[CF_EXPANDSIZE])
 {
-    char is_varstring = false;
-    char name[CF_MAXVARSIZE];
-    size_t increment;
+    assert(string);
+
     bool returnval = true;
 
-    if (string == 0 || strlen(string) == 0)
+    if (strlen(string) == 0)
     {
         return false;
     }
@@ -644,7 +643,8 @@ bool ExpandScalar(const EvalContext *ctx, const char *ns, const char *scope, con
     Buffer *var = BufferNew();
     for (const char *sp = string; /* No exit */ ; sp++)     /* check for varitems */
     {
-        increment = 0;
+        char varstring = false;
+        size_t increment = 0;
 
         if (*sp == '\0')
         {
@@ -675,7 +675,7 @@ bool ExpandScalar(const EvalContext *ctx, const char *ns, const char *scope, con
             switch (*(sp + 1))
             {
             case '(':
-                is_varstring = ')';
+                varstring = ')';
                 ExtractScalarReference(var, sp, strlen(sp), false);
                 if (BufferSize(var) == 0)
                 {
@@ -685,7 +685,7 @@ bool ExpandScalar(const EvalContext *ctx, const char *ns, const char *scope, con
                 break;
 
             case '{':
-                is_varstring = '}';
+                varstring = '}';
                 ExtractScalarReference(var, sp, strlen(sp), false);
                 if (BufferSize(var) == 0)
                 {
@@ -721,6 +721,7 @@ bool ExpandScalar(const EvalContext *ctx, const char *ns, const char *scope, con
 
         increment = BufferSize(var) - 1;
 
+        char name[CF_MAXVARSIZE] = "";
         if (!IsExpandable(currentitem))
         {
             DataType type = DATA_TYPE_NONE;
@@ -763,7 +764,7 @@ bool ExpandScalar(const EvalContext *ctx, const char *ns, const char *scope, con
                             currentitem);
                     }
 
-                    if (is_varstring == '}')
+                    if (varstring == '}')
                     {
                         snprintf(name, CF_MAXVARSIZE, "${%s}", currentitem);
                     }
@@ -786,7 +787,7 @@ bool ExpandScalar(const EvalContext *ctx, const char *ns, const char *scope, con
             {
                 Log(LOG_LEVEL_DEBUG, "Currently non existent or list variable '%s'", currentitem);
 
-                if (is_varstring == '}')
+                if (varstring == '}')
                 {
                     snprintf(name, CF_MAXVARSIZE, "${%s}", currentitem);
                 }

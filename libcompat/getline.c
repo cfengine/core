@@ -34,8 +34,18 @@
 # include <config.h>
 #endif
 
+#include <stddef.h>
+#include <stdio.h>
+#include <errno.h>
+#include <limits.h>
+#include <stdlib.h>
+
 #if !HAVE_DECL_GETLINE
 ssize_t getline(char **lineptr, size_t *n, FILE *stream);
+#endif
+
+#ifndef SSIZE_MAX
+#define SSIZE_MAX 32767
 #endif
 
 #define _GETDELIM_GROWBY 4096    /* amount to grow line buffer by */
@@ -81,7 +91,7 @@ static ssize_t getdelim(char **restrict lineptr, size_t *restrict n, int delimit
     {
         if (bytes + 1 >= SSIZE_MAX)
         {
-            errno = EOVERFLOW;
+            errno = ERANGE;
             return -1;
         }
         bytes++;

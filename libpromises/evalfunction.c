@@ -1041,7 +1041,9 @@ static FnCallResult FnCallPackagesMatching(ARG_UNUSED EvalContext *ctx, FnCall *
 
     if ((fin = fopen(filename, "r")) == NULL)
     {
-        Log(LOG_LEVEL_ERR, "%s cannot open the package inventory '%s' - you need to run a package discovery promise to create it in cf-agent. (fopen: %s)",
+        Log(LOG_LEVEL_VERBOSE, "%s cannot open the package inventory '%s' - "
+            "This is not necessarily an error. Either the inventory policy has not been included, "
+            "or it has not had time to have an effect yet. A future call may still succeed. (fopen: %s)",
             fp->name, filename, GetErrorStr());
         JsonDestroy(json);
         return FnFailure();

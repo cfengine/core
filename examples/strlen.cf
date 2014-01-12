@@ -31,7 +31,7 @@ bundle agent example
   vars:
       "length" int =>  strlen("abc"); # will contain "3"
   reports:
-      "length of string abc = $(length}";
+      "length of string abc = $(length)";
 }
 #+end_src
 ###############################################################################

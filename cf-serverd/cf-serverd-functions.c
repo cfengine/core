@@ -280,7 +280,7 @@ void StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
     struct timeval timeout;
     int ret_val;
     CfLock thislock;
-    time_t last_collect = 0, last_policy_reload = 0;
+    time_t last_policy_reload = 0;
     extern int COLLECT_WINDOW;
 
     struct sockaddr_storage cin;
@@ -354,11 +354,9 @@ void StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
 #ifndef __MINGW32__
     fcntl(sd, F_SETFD, FD_CLOEXEC);
 #endif
-
+    CollectCallStart(COLLECT_INTERVAL);
     while (!IsPendingTermination())
     {
-        time_t now = time(NULL);
-
         /* Note that this loop logic is single threaded, but ACTIVE_THREADS
            might still change in threads pertaining to service handling */
 
@@ -371,76 +369,89 @@ void StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
             ThreadUnlock(cft_server_children);
         }
 
-        // Check whether we should try to establish peering with a hub
-
-        if ((COLLECT_INTERVAL > 0) && ((now - last_collect) > COLLECT_INTERVAL))
+        // Check whether we have established peering with a hub
+        if (CollectCallPending())
         {
-            TryCollectCall(COLLECT_WINDOW, &ServerEntryPoint);
-            last_collect = now;
-            continue;
+            int waiting_queue = 0;
+            int new_client = CollectCallGetPending(&waiting_queue);
+            if (waiting_queue > COLLECT_WINDOW)
+            {
+                Log(LOG_LEVEL_INFO, "Closing Collect Call because it would take"
+                                    "longer than the allocated window [%d]", COLLECT_WINDOW);
+            }
+            ConnectionInfo *info = ConnectionInfoNew();
+            if (info)
+            {
+                ConnectionInfoSetSocket(info, new_client);
+                ServerEntryPoint(ctx, POLICY_SERVER, info);
+                CollectCallMarkProcessed();
+            }
         }
-
-        /* check if listening is working */
-        if (sd != -1)
+        else
         {
-            // Look for normal incoming service requests
-
-            int signal_pipe = GetSignalPipe();
-            FD_ZERO(&rset);
-            FD_SET(sd, &rset);
-            FD_SET(signal_pipe, &rset);
-
-            timeout.tv_sec = 60;
-            timeout.tv_usec = 0;
-
-            Log(LOG_LEVEL_DEBUG, "Waiting at incoming select...");
-
-            int max_fd = (sd > signal_pipe) ? (sd + 1) : (signal_pipe + 1);
-            ret_val = select(max_fd, &rset, NULL, NULL, &timeout);
-
-            // Empty the signal pipe. We don't need the values.
-            unsigned char buf;
-            while (recv(signal_pipe, &buf, 1, 0) > 0) {}
-
-            if (ret_val == -1)      /* Error received from call to select */
+            /* check if listening is working */
+            if (sd != -1)
             {
-                if (errno == EINTR)
+                // Look for normal incoming service requests
+                int signal_pipe = GetSignalPipe();
+                FD_ZERO(&rset);
+                FD_SET(sd, &rset);
+                FD_SET(signal_pipe, &rset);
+
+                /* Set 1 second timeout for select, so that signals are handled in
+                 * a timely manner */
+                timeout.tv_sec = 60;
+                timeout.tv_usec = 0;
+
+                Log(LOG_LEVEL_DEBUG, "Waiting at incoming select...");
+
+                int max_fd = (sd > signal_pipe) ? (sd + 1) : (signal_pipe + 1);
+                ret_val = select(max_fd, &rset, NULL, NULL, &timeout);
+
+                // Empty the signal pipe. We don't need the values.
+                unsigned char buf;
+                while (recv(signal_pipe, &buf, 1, 0) > 0) {}
+
+                if (ret_val == -1)      /* Error received from call to select */
+                {
+                    if (errno == EINTR)
+                    {
+                        continue;
+                    }
+                    else
+                    {
+                        Log(LOG_LEVEL_ERR, "select failed. (select: %s)", GetErrorStr());
+                        exit(1);
+                    }
+                }
+                else if (!ret_val) /* No data waiting, we must have timed out! */
                 {
                     continue;
                 }
-                else
-                {
-                    Log(LOG_LEVEL_ERR, "select failed. (select: %s)", GetErrorStr());
-                    exit(EXIT_FAILURE);
-                }
-            }
-            else if (!ret_val) /* No data waiting, we must have timed out! */
-            {
-                continue;
-            }
 
-            if (FD_ISSET(sd, &rset))
-            {
-                int new_client = accept(sd, (struct sockaddr *)&cin, &addrlen);
-                if (new_client == -1)
+                if (FD_ISSET(sd, &rset))
                 {
-                    continue;
-                }
-                /* Just convert IP address to string, no DNS lookup. */
-                char ipaddr[CF_MAX_IP_LEN] = "";
-                getnameinfo((struct sockaddr *) &cin, addrlen,
-                            ipaddr, sizeof(ipaddr),
-                            NULL, 0, NI_NUMERICHOST);
-                ConnectionInfo *info = ConnectionInfoNew();
-                if (info)
-                {
-                    ConnectionInfoSetSocket(info, new_client);
-                    ServerEntryPoint(ctx, ipaddr, info);
+                    int new_client = accept(sd, (struct sockaddr *)&cin, &addrlen);
+                    if (new_client == -1)
+                    {
+                        continue;
+                    }
+                    /* Just convert IP address to string, no DNS lookup. */
+                    char ipaddr[CF_MAX_IP_LEN] = "";
+                    getnameinfo((struct sockaddr *) &cin, addrlen,
+                                ipaddr, sizeof(ipaddr),
+                                NULL, 0, NI_NUMERICHOST);
+                    ConnectionInfo *info = ConnectionInfoNew();
+                    if (info)
+                    {
+                        ConnectionInfoSetSocket(info, new_client);
+                        ServerEntryPoint(ctx, ipaddr, info);
+                    }
                 }
             }
         }
     }
-
+    CollectCallStop();
     PolicyDestroy(server_cfengine_policy);
 }
 

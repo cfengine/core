@@ -32,7 +32,7 @@
  * Do not move this declaration to the header file, otherwise this structure
  * will become modifiable without accessing the API.
  */
-struct ConnectionInfoData {
+struct ConnectionInfo {
     ProtocolVersion type;
     ConnectionStatus status;
     int sd;                           /* Socket descriptor */
@@ -40,23 +40,10 @@ struct ConnectionInfoData {
     Key *remote_key;
 };
 
-struct ConnectionInfo {
-    struct ConnectionInfoData *data;
-};
-
 ConnectionInfo *ConnectionInfoNew(void)
 {
-    struct ConnectionInfoData *data = NULL;
-    data = xmalloc(sizeof(struct ConnectionInfoData));
-    data->remote_key = NULL;
-    data->ssl = NULL;
-    data->sd = SOCKET_INVALID;
-    data->type = CF_PROTOCOL_UNDEFINED;
-    data->status = CF_CONNECTION_NOT_ESTABLISHED;
-
-    ConnectionInfo *info = NULL;
-    info = xmalloc(sizeof(ConnectionInfo));
-    info->data = data;
+    struct ConnectionInfo *info = xcalloc(1, sizeof(struct ConnectionInfo));
+    info->sd = SOCKET_INVALID;
 
     return info;
 }
@@ -68,33 +55,18 @@ void ConnectionInfoDestroy(ConnectionInfo **info)
         return;
     }
     /* Destroy everything */
-    if ((*info)->data)
+    if ((*info)->ssl)
     {
-        if ((*info)->data->ssl)
-        {
-            SSL_free((*info)->data->ssl);
-        }
-        if ((*info)->data->remote_key)
-        {
-            KeyDestroy(&(*info)->data->remote_key);
-        }
+        SSL_free((*info)->ssl);
     }
-    free ((*info)->data);
+    KeyDestroy(&(*info)->remote_key);
     free (*info);
     *info = NULL;
 }
 
 ProtocolVersion ConnectionInfoProtocolVersion(const ConnectionInfo *info)
 {
-    if (!info)
-    {
-        return CF_PROTOCOL_UNDEFINED;
-    }
-    if (!info->data)
-    {
-        return CF_PROTOCOL_UNDEFINED;
-    }
-    return info->data->type;
+    return info ? info->type : CF_PROTOCOL_UNDEFINED;
 }
 
 void ConnectionInfoSetProtocolVersion(ConnectionInfo *info, ProtocolVersion version)
@@ -103,16 +75,12 @@ void ConnectionInfoSetProtocolVersion(ConnectionInfo *info, ProtocolVersion vers
     {
         return;
     }
-    if (!info->data)
-    {
-        return;
-    }
     switch (version)
     {
     case CF_PROTOCOL_UNDEFINED:
     case CF_PROTOCOL_CLASSIC:
     case CF_PROTOCOL_TLS:
-        info->data->type = version;
+        info->type = version;
         break;
     default:
         break;
@@ -121,15 +89,7 @@ void ConnectionInfoSetProtocolVersion(ConnectionInfo *info, ProtocolVersion vers
 
 ConnectionStatus ConnectionInfoConnectionStatus(const ConnectionInfo *info)
 {
-    if (!info)
-    {
-        return CF_CONNECTION_NOT_ESTABLISHED;
-    }
-    if (!info->data)
-    {
-        return CF_CONNECTION_NOT_ESTABLISHED;
-    }
-    return info->data->status;
+    return info ? info->status : CF_CONNECTION_NOT_ESTABLISHED;
 }
 
 void ConnectionInfoSetConnectionStatus(ConnectionInfo *info, ConnectionStatus status)
@@ -138,15 +98,11 @@ void ConnectionInfoSetConnectionStatus(ConnectionInfo *info, ConnectionStatus st
     {
         return;
     }
-    if (!info->data)
-    {
-        return;
-    }
     switch (status)
     {
     case CF_CONNECTION_NOT_ESTABLISHED:
     case CF_CONNECTION_ESTABLISHED:
-        info->data->status = status;
+        info->status = status;
     default:
         break;
     }
@@ -154,15 +110,7 @@ void ConnectionInfoSetConnectionStatus(ConnectionInfo *info, ConnectionStatus st
 
 int ConnectionInfoSocket(const ConnectionInfo *info)
 {
-    if (!info)
-    {
-        return -1;
-    }
-    if (!info->data)
-    {
-        return -1;
-    }
-    return info->data->sd;
+    return info ? info->sd : -1;
 }
 
 void ConnectionInfoSetSocket(ConnectionInfo *info, int s)
@@ -171,24 +119,12 @@ void ConnectionInfoSetSocket(ConnectionInfo *info, int s)
     {
         return;
     }
-    if (!info->data)
-    {
-        return;
-    }
-    info->data->sd = s;
+    info->sd = s;
 }
 
 SSL *ConnectionInfoSSL(const ConnectionInfo *info)
 {
-    if (!info)
-    {
-        return NULL;
-    }
-    if (!info->data)
-    {
-        return NULL;
-    }
-    return info->data->ssl;
+    return info ? info->ssl : NULL;
 }
 
 void ConnectionInfoSetSSL(ConnectionInfo *info, SSL *ssl)
@@ -197,24 +133,12 @@ void ConnectionInfoSetSSL(ConnectionInfo *info, SSL *ssl)
     {
         return;
     }
-    if (!info->data)
-    {
-        return;
-    }
-    info->data->ssl = ssl;
+    info->ssl = ssl;
 }
 
 const Key *ConnectionInfoKey(const ConnectionInfo *info)
 {
-    if (!info)
-    {
-        return NULL;
-    }
-    if (!info->data)
-    {
-        return NULL;
-    }
-    const Key *key = info->data->remote_key;
+    const Key *key = info ? info->remote_key : NULL;
     return key;
 }
 
@@ -224,12 +148,8 @@ void ConnectionInfoSetKey(ConnectionInfo *info, Key *key)
     {
         return;
     }
-    if (!info->data)
-    {
-        return;
-    }
     /* The key can be assigned only once on a session */
-    if (info->data->remote_key)
+    if (info->remote_key)
     {
         return;
     }
@@ -237,7 +157,7 @@ void ConnectionInfoSetKey(ConnectionInfo *info, Key *key)
     {
         return;
     }
-    info->data->remote_key = key;
+    info->remote_key = key;
 }
 
 const unsigned char *ConnectionInfoBinaryKeyHash(ConnectionInfo *info, unsigned int *length)
@@ -246,11 +166,7 @@ const unsigned char *ConnectionInfoBinaryKeyHash(ConnectionInfo *info, unsigned 
     {
         return NULL;
     }
-    if (!info->data)
-    {
-        return NULL;
-    }
-    Key *connection_key = info->data->remote_key;
+    Key *connection_key = info->remote_key;
     unsigned int real_length = 0;
     const char *binary = KeyBinaryHash(connection_key, &real_length);
     if (length)
@@ -260,16 +176,7 @@ const unsigned char *ConnectionInfoBinaryKeyHash(ConnectionInfo *info, unsigned 
     return binary;
 }
 
-const unsigned char *ConnectionInfoPrintableKeyHash(ConnectionInfo *info)
+const char *ConnectionInfoPrintableKeyHash(ConnectionInfo *info)
 {
-    if (!info)
-    {
-        return NULL;
-    }
-    if (!info->data)
-    {
-        return NULL;
-    }
-    Key *connection_key = info->data->remote_key;
-    return KeyPrintableHash(connection_key);
+    return info ? KeyPrintableHash(info->remote_key) : NULL;
 }

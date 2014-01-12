@@ -447,6 +447,7 @@ void DisconnectServer(AgentConnection *conn, int partial)
             }
 
             cf_closesocket(ConnectionInfoSocket(conn->conn_info));
+            ConnectionInfoSetSocket(conn->conn_info, SOCKET_INVALID);
             Log(LOG_LEVEL_INFO, "Connection to %s is closed", conn->remoteip);
         }
     }

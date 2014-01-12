@@ -389,28 +389,55 @@ int ServerTLSSessionEstablish(ServerConnectionState *conn)
 
     if (ConnectionInfoConnectionStatus(conn->conn_info) != CF_CONNECTION_ESTABLISHED)
     {
-        ConnectionInfoSetSSL(conn->conn_info, SSL_new(SSLSERVERCONTEXT));
-        if (ConnectionInfoSSL(conn->conn_info) == NULL)
+        SSL *ssl = SSL_new(SSLSERVERCONTEXT);
+        if (ssl == NULL)
         {
             Log(LOG_LEVEL_ERR, "SSL_new: %s",
                 ERR_reason_error_string(ERR_get_error()));
             return -1;
         }
+        ConnectionInfoSetSSL(conn->conn_info, ssl);
 
         /* Now we are letting OpenSSL take over the open socket. */
-        SSL_set_fd(ConnectionInfoSSL(conn->conn_info), ConnectionInfoSocket(conn->conn_info));
+        int sd = ConnectionInfoSocket(conn->conn_info);
+        SSL_set_fd(ssl, sd);
 
-        ret = SSL_accept(ConnectionInfoSSL(conn->conn_info));
+        ret = SSL_accept(ssl);
         if (ret <= 0)
         {
-            TLSLogError(ConnectionInfoSSL(conn->conn_info), LOG_LEVEL_ERR,
-                        "Connection handshake", ret);
-            return -1;
+            Log(LOG_LEVEL_VERBOSE, "Checking if the accept operation can be retried");
+            /* Retry just in case something was problematic at that point in time */
+            fd_set rfds;
+            FD_ZERO(&rfds);
+            FD_SET(sd, &rfds);
+            struct timeval tv;
+            tv.tv_sec = 10;
+            tv.tv_usec = 0;
+            int ready = select(sd+1, &rfds, NULL, NULL, &tv);
+
+            if (ready > 0)
+            {
+                Log(LOG_LEVEL_VERBOSE, "The accept operation can be retried");
+                ret = SSL_accept(ssl);
+                if (ret <= 0)
+                {
+                    Log(LOG_LEVEL_VERBOSE, "The accept operation was retried and failed");
+                    TLSLogError(ssl, LOG_LEVEL_ERR, "Connection handshake server", ret);
+                    return -1;
+                }
+                Log(LOG_LEVEL_VERBOSE, "The accept operation was retried and succeeded");
+            }
+            else
+            {
+                Log(LOG_LEVEL_VERBOSE, "The connect operation cannot be retried");
+                TLSLogError(ssl, LOG_LEVEL_ERR, "Connection handshake server", ret);
+                return -1;
+            }
         }
 
         Log(LOG_LEVEL_VERBOSE, "TLS cipher negotiated: %s, %s",
-            SSL_get_cipher_name(ConnectionInfoSSL(conn->conn_info)),
-            SSL_get_cipher_version(ConnectionInfoSSL(conn->conn_info)));
+            SSL_get_cipher_name(ssl),
+            SSL_get_cipher_version(ssl));
         Log(LOG_LEVEL_VERBOSE, "TLS session established, checking trust...");
 
         /* Send/Receive "CFE_v%d" version string and agree on version. */
@@ -481,88 +508,6 @@ int ServerTLSSessionEstablish(ServerConnectionState *conn)
 
         ServerSendWelcome(conn);
     }
-    return 1;
-}
-
-/**
- * @brief Accept a TLS connection and authenticate and identify in call collect mode.
- * @note Various fields in #conn are set, like username and keyhash.
- */
-int ServerTLSSessionEstablishCallCollectMode(ServerConnectionState *conn)
-{
-    int ret;
-
-    if (ConnectionInfoConnectionStatus(conn->conn_info) != CF_CONNECTION_ESTABLISHED)
-    {
-        return -1;
-    }
-    /* Send/Receive "CFE_v%d" version string and agree on version. */
-    ret = ServerNegotiateProtocol(conn->conn_info);
-    if (ret <= 0)
-    {
-        return -1;
-    }
-
-    /* Receive IDENTITY USER=asdf plain string. */
-    ret = ServerIdentifyClient(conn->conn_info, conn->username,
-                               sizeof(conn->username));
-    if (ret != 1)
-    {
-        return -1;
-    }
-
-    /* We *now* (maybe a bit late) verify the key that the client sent us in
-     * the TLS handshake, since we need the username to do so. TODO in the
-     * future store keys irrelevant of username, so that we can match them
-     * before IDENTIFY. */
-    ret = TLSVerifyPeer(conn->conn_info, conn->ipaddr, conn->username);
-    if (ret == -1)                                      /* error */
-    {
-        return -1;
-    }
-
-    if (ret == 1)                                    /* trusted key */
-    {
-        Log(LOG_LEVEL_VERBOSE,
-            "%s: Client is TRUSTED, public key MATCHES stored one.",
-            KeyPrintableHash(ConnectionInfoKey(conn->conn_info)));
-    }
-
-    if (ret == 0)                                  /* untrusted key */
-    {
-        Log(LOG_LEVEL_WARNING,
-            "%s: Client's public key is UNKNOWN!",
-            KeyPrintableHash(ConnectionInfoKey(conn->conn_info)));
-
-        if ((SV.trustkeylist != NULL) &&
-                (IsMatchItemIn(SV.trustkeylist, MapAddress(conn->ipaddr))))
-        {
-            Log(LOG_LEVEL_VERBOSE,
-                "Host %s was found in the \"trustkeysfrom\" list",
-                conn->ipaddr);
-            Log(LOG_LEVEL_WARNING,
-                "%s: Explicitly trusting this key from now on.",
-                KeyPrintableHash(ConnectionInfoKey(conn->conn_info)));
-
-            SavePublicKey("root", KeyPrintableHash(ConnectionInfoKey(conn->conn_info)),
-                          KeyRSA(ConnectionInfoKey(conn->conn_info)));
-        }
-        else
-        {
-            Log(LOG_LEVEL_ERR, "TRUST FAILED, WARNING: possible MAN IN THE MIDDLE attack, dropping connection!");
-            Log(LOG_LEVEL_ERR, "Open server's ACL if you really want to start trusting this new key.");
-            return -1;
-        }
-    }
-
-    /* skipping CAUTH */
-    conn->id_verified = 1;
-    /* skipping SAUTH, allow access to read-only files */
-    conn->rsa_auth = 1;
-    LastSaw1(conn->ipaddr, KeyPrintableHash(ConnectionInfoKey(conn->conn_info)),
-             LAST_SEEN_ROLE_ACCEPT);
-
-    ServerSendWelcome(conn);
     return 1;
 }
 

@@ -31,7 +31,10 @@
 #include <tls_client.h>
 #include <tls_generic.h>
 #include <net.h>                     /* SendTransaction, ReceiveTransaction */
-
+#include <sys/time.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/select.h>
 /* TODO move crypto.h to libutils */
 #include <crypto.h>                        /* PRIVKEY,PUBKEY,LoadSecretKeys */
 #include <bootstrap.h>                     /* ReadPolicyServerFile */
@@ -284,22 +287,47 @@ int TLSTry(ConnectionInfo *conn_info)
     }
 
     /* Initiate the TLS handshake over the already open TCP socket. */
-    SSL_set_fd(ssl, ConnectionInfoSocket(conn_info));
+    int sd = ConnectionInfoSocket(conn_info);
+    SSL_set_fd(ssl, sd);
 
     int ret = SSL_connect(ssl);
     if (ret <= 0)
     {
-        TLSLogError(ssl, LOG_LEVEL_ERR,
-                    "Connection handshake", ret);
-        return -1;
+        TLSLogError(ssl, LOG_LEVEL_ERR, "Connection handshake client", ret);
+        Log(LOG_LEVEL_VERBOSE, "Checking if the connect operation can be retried");
+        /* Retry just in case something was problematic at that point in time */
+        fd_set wfds;
+        FD_ZERO(&wfds);
+        FD_SET(sd, &wfds);
+        struct timeval tv;
+        tv.tv_sec = 10;
+        tv.tv_usec = 0;
+        int ready = select(sd+1, NULL, &wfds, NULL, &tv);
+
+        if (ready > 0)
+        {
+            Log(LOG_LEVEL_VERBOSE, "The connect operation can be retried");
+            ret = SSL_connect(ssl);
+            if (ret <= 0)
+            {
+                Log(LOG_LEVEL_VERBOSE, "The connect operation was retried and failed");
+                TLSLogError(ssl, LOG_LEVEL_ERR,
+                            "Connection handshake client", ret);
+                return -1;
+            }
+            Log(LOG_LEVEL_VERBOSE, "The connect operation was retried and succeeded");
+        }
+        else
+        {
+            Log(LOG_LEVEL_VERBOSE, "The connect operation cannot be retried");
+            TLSLogError(ssl, LOG_LEVEL_ERR, "Connection handshake client", ret);
+            return -1;
+        }
     }
-    else
-    {
-        Log(LOG_LEVEL_VERBOSE, "TLS cipher negotiated: %s, %s",
-            SSL_get_cipher_name(ssl),
-            SSL_get_cipher_version(ssl));
-        Log(LOG_LEVEL_VERBOSE, "TLS session established, checking trust...");
-    }
+    Log(LOG_LEVEL_VERBOSE, "TLS cipher negotiated: %s, %s",
+        SSL_get_cipher_name(ssl),
+        SSL_get_cipher_version(ssl));
+    Log(LOG_LEVEL_VERBOSE, "TLS session established, checking trust...");
 
     return 0;
 }

@@ -153,6 +153,6 @@ const unsigned char *ConnectionInfoBinaryKeyHash(ConnectionInfo *info, unsigned 
   @param info ConnectionInfo structure
   @return Returns a printable representation of the hash. The string is '\0' terminated or NULL in case of failure.
   */
-const unsigned char *ConnectionInfoPrintableKeyHash(ConnectionInfo *info);
+const char *ConnectionInfoPrintableKeyHash(ConnectionInfo *info);
 
 #endif // CONNECTION_INFO_H

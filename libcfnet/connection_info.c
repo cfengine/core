@@ -176,7 +176,7 @@ const unsigned char *ConnectionInfoBinaryKeyHash(ConnectionInfo *info, unsigned 
     return binary;
 }
 
-const unsigned char *ConnectionInfoPrintableKeyHash(ConnectionInfo *info)
+const char *ConnectionInfoPrintableKeyHash(ConnectionInfo *info)
 {
     return info ? KeyPrintableHash(info->remote_key) : NULL;
 }

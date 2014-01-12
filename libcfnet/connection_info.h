@@ -48,7 +48,7 @@
 typedef enum
 {
     /* When connection is initialised ProtocolVersion is 0, i.e. undefined. */
-    CF_PROTOCOL_UNDEFINED = 0, /*!< Protocol not defined yet */
+    CF_PROTOCOL_UNDEFINED, /*!< Protocol not defined yet */
     CF_PROTOCOL_CLASSIC, /*!< Normal CFEngine protocol */
     CF_PROTOCOL_TLS /*!< TLS protocol */
 } ProtocolVersion;
@@ -153,6 +153,6 @@ const unsigned char *ConnectionInfoBinaryKeyHash(ConnectionInfo *info, unsigned 
   @param info ConnectionInfo structure
   @return Returns a printable representation of the hash. The string is '\0' terminated or NULL in case of failure.
   */
-const unsigned char *ConnectionInfoPrintableKeyHash(ConnectionInfo *info);
+const char *ConnectionInfoPrintableKeyHash(ConnectionInfo *info);
 
 #endif // CONNECTION_INFO_H

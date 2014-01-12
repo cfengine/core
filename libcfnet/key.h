@@ -49,22 +49,22 @@ void KeyDestroy(Key **key);
 /**
   @brief Constant pointer to the key data.
   @param key Key
-  @return A constant pointer to the RSA structure.
+  @return A pointer to the RSA structure.
   */
 const RSA *KeyRSA(const Key *key);
 /**
   @brief Binary hash of the key
   @param key Key structure
   @param length Length of the binary hash
-  @return A constant pointer to the binary hash or NULL in case of error.
+  @return A pointer to the binary hash or NULL in case of error.
   */
 const unsigned char *KeyBinaryHash(const Key *key, unsigned int *length);
 /**
   @brief Printable hash of the key.
   @param key
-  @return A constant pointer to the printable hash of the key.
+  @return A pointer to the printable hash of the key.
   */
-const unsigned char *KeyPrintableHash(const Key *key);
+const char *KeyPrintableHash(const Key *key);
 /**
   @brief Method use to hash the key.
   @param key Structure
@@ -83,7 +83,7 @@ int KeySetHashMethod(Key *key, HashMethod method);
 /**
   @brief Internal Hash data
   @param key Structure
-  @return A constant pointer to the Hash structure or NULL in case of error.
+  @return A pointer to the Hash structure or NULL in case of error.
   */
 const Hash *KeyData(Key *key);
 

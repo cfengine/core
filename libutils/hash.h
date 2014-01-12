@@ -83,7 +83,7 @@ Hash *HashNewFromDescriptor(const int descriptor, HashMethod method);
 Hash *HashNewFromKey(const RSA *rsa, HashMethod method);
 /**
   @brief Destroys a structure of type Hash.
-  @param hash The structure.
+  @param hash The structure to be destroyed.
   */
 void HashDestroy(Hash **hash);
 /**
@@ -101,18 +101,19 @@ int HashCopy(Hash *origin, Hash **destination);
   */
 int HashEqual(const Hash *a, const Hash *b);
 /**
-  @brief Const pointer to the raw digest data, notice that this is a binary representation and not '\0' terminated.
+  @brief Const pointer to the raw digest data, notice that this is a binary
+         representation and not '\0' terminated.
   @param hash Hash structure.
   @param length Pointer to an unsigned int to hold the length of the data.
-  @return A const pointer to the raw digest data.
+  @return A pointer to the raw digest data.
   */
 const unsigned  char *HashData(const Hash *hash, unsigned int *length);
 /**
   @brief Printable hash representation.
   @param hash Hash structure.
-  @return A const pointer to the printable digest representation.
+  @return A pointer to the printable digest representation.
   */
-const unsigned char *HashPrintable(const Hash *hash);
+const char *HashPrintable(const Hash *hash);
 /**
   @brief Hash type.
   @param hash Hash structure

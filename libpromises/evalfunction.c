@@ -2814,7 +2814,7 @@ static const Rlist *GetListReferenceArgument(const EvalContext *ctx, const FnCal
     const Rlist *value = EvalContextVariableGet(ctx, ref, &value_type);
     if (!value)
     {
-        Log(LOG_LEVEL_INFO,
+        Log(LOG_LEVEL_VERBOSE,
             "Could not resolve expected list variable '%s' in function '%s'",
             lval_str,
             fp->name);
@@ -3217,7 +3217,7 @@ static FnCallResult FnCallDatatype(EvalContext *ctx, FnCall *fp, Rlist *finalarg
     }
     else
     {
-        Log(LOG_LEVEL_ERR, "%s: variable '%s' is not a data container", fp->name, varname);
+        Log(LOG_LEVEL_VERBOSE, "%s: variable '%s' is not a data container", fp->name, varname);
 
         VarRefDestroy(ref);
 
@@ -3527,7 +3527,7 @@ static FnCallResult FnCallFormat(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
                             }
                             else        // whatever this is, it's not a list reference or a data container
                             {
-                                Log(LOG_LEVEL_ERR, "format() with %%S specifier needs a data container or a list instead of '%s'.",
+                                Log(LOG_LEVEL_VERBOSE, "format() with %%S specifier needs a data container or a list instead of '%s'.",
                                     varname);
                                 BufferDestroy(buf);
                                 return FnFailure();

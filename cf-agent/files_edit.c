@@ -103,7 +103,7 @@ PromiseResult FinishEditContext(EvalContext *ctx, EditContext *ec, Attributes a,
     }
     else if (ec && (ec->num_edits > 0))
     {
-        if (a.haveeditline)
+        if (a.haveeditline || a.edit_template)
         {
             if (CompareToFile(ctx, ec->file_start, ec->filename, a, pp, &result))
             {

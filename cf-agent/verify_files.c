@@ -636,6 +636,11 @@ PromiseResult ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes
                 ScheduleEditLineOperations(ctx, bp, a, pp, edcontext);
 
                 EvalContextStackPopFrame(ctx);
+
+                if (edcontext->num_edits == 0)
+                {
+                    edcontext->num_edits++;
+                }
             }
 
             PolicyDestroy(tmp_policy);

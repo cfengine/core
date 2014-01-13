@@ -261,7 +261,7 @@ Bundle *MakeTemporaryBundleFromTemplate(EvalContext *ctx, Policy *policy, Attrib
                 *(sp-1) = '\0'; // StripTrailingNewline(promiser) and terminate
 
                 np = PromiseTypeAppendPromise(tp, promiser, (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, context);
-                PromiseAppendConstraint(np, "insert_type", (Rval) { xstrdup("preserve_block"), RVAL_TYPE_SCALAR }, false);
+                PromiseAppendConstraint(np, "insert_type", RvalNew("preserve_block", RVAL_TYPE_SCALAR), false);
 
                 DeleteItemList(lines);
                 free(promiser);
@@ -269,28 +269,29 @@ Bundle *MakeTemporaryBundleFromTemplate(EvalContext *ctx, Policy *policy, Attrib
             }
             else
             {
-                if (level > 0)
+                if (IsDefinedClass(ctx, context, PromiseGetNamespace(pp)))
                 {
-                    if (IsDefinedClass(ctx, context, PromiseGetNamespace(pp))) // This is ok because template is basically a closure
+                    if (level > 0)
                     {
                         AppendItem(&lines, buffer, context);
                     }
-                }
-                else
-                {
-                    //install independent promise line
-                    if (StripTrailingNewline(buffer, CF_EXPANDSIZE) == -1)
+                    else
                     {
-                        Log(LOG_LEVEL_ERR, "StripTrailingNewline was called on an overlong string");
+                        //install independent promise line
+                        if (StripTrailingNewline(buffer, CF_EXPANDSIZE) == -1)
+                        {
+                            Log(LOG_LEVEL_ERR, "StripTrailingNewline was called on an overlong string");
+                        }
+                        np = PromiseTypeAppendPromise(tp, buffer, (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, context);
+                        PromiseAppendConstraint(np, "insert_type", RvalNew("preserve_block", RVAL_TYPE_SCALAR), false);
                     }
-                    np = PromiseTypeAppendPromise(tp, buffer, (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, context);
-                    PromiseAppendConstraint(np, "insert_type", (Rval) { xstrdup("preserve_block"), RVAL_TYPE_SCALAR }, false);
                 }
             }
         }
     }
 
     fclose(fp);
+
     return bp;
 }
 

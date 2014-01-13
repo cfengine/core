@@ -1,0 +1,131 @@
+#######################################################
+#
+# Insert a number of lines
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+
+#######################################################
+
+bundle agent init
+{
+
+           
+vars:
+        "test_policy" string =>
+
+	"body common control 
+	{
+ 		bundlesequence => { \"test\" };
+ 		inputs => { \"/var/cfengine/inputs/lib/3.5/files.cf\", \"/var/cfengine/inputs/lib/3.5/common.cf\" };
+	}
+
+	body agent control 
+	{
+		default_repository => \"/var/cfengine/backup\";
+	}
+
+	bundle agent test 
+	{
+ 		files:
+  		\"/tmp/test\"
+    		create => \"true\",
+    		edit_line => append_if_no_line(\"username:x:1:3:gcos:/home/dir:/bin/false\");
+  		\"/tmp/test\"
+    		changes => diff;
+	}
+        bundle edit_line append_if_no_line(value)
+        { 
+          insert_lines:
+
+            \"$(value)\"
+           comment => \"Append a line to the file if it doesn't already exist\";
+        }
+        body changes diff
+       {
+        hash           => \"sha256\";
+        report_changes => \"content\";
+        report_diffs   => \"true\";
+        update_hashes  => \"yes\";
+       }";
+
+files:
+
+    "/tmp/test.cf"
+    create => "true",
+    edit_defaults => empty,
+    edit_line => test_insert("$(init.test_policy)");
+
+}
+
+body edit_defaults empty
+{
+   empty_file_before_editing => "true";
+   edit_backup => "false";
+}
+
+bundle edit_line test_insert(str)
+{
+    insert_lines:
+        "$(str)";
+}
+
+
+
+#######################################################
+
+bundle agent test
+{
+
+     
+  files:     
+    agent_ran::
+     "/tmp/test"
+     edit_line => test_insert("inserted text"),
+     classes => if_ok("file_edited");
+
+  commands:
+      "/var/cfengine/bin/cf-agent"
+      args => "-f /tmp/test.cf -K",
+      classes => if_ok("agent_ran");
+  
+  commands:
+    files_edited::
+      "/var/cfengine/bin/cf-agent"
+      args => "-f /tmp/test.cf -K",
+      classes => if_ok("all_ran");
+  
+  classes:
+     all_ran::
+      "hung" expression => "any"; 
+}
+
+body classes if_ok(x)
+{
+   promise_repaired => { "$(x)" };
+   promise_kept => { "$(x)" };
+}
+
+#######################################################
+
+bundle agent check
+{
+
+classes:
+   "ok" expression => "agent_ran";        
+
+reports:
+    ok::
+        "$(this.promise_filename) Pass";
+    !ok::    
+        "$(this.promise_filename) FAIL";
+    
+}
+

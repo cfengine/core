@@ -1,0 +1,83 @@
+#######################################################
+#
+# Acceptance tests for #3643
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+
+#######################################################
+
+bundle agent init
+{
+
+
+}
+
+body edit_defaults empty
+{
+   empty_file_before_editing => "true";
+   edit_backup => "false";
+}
+
+bundle edit_line test_insert(str)
+{
+    insert_lines:
+        "$(str)";
+}
+
+
+
+#######################################################
+
+bundle agent test
+{
+
+     
+  files:     
+    agent_ran::
+     "$(G.testdir)/test"
+     edit_line => test_insert("inserted text"),
+     classes => if_ok("file_edited");
+
+  commands:
+      "$(sys.cf_agent)"
+      args => "-f $(this.promise_filename).sub -K",
+      classes => if_ok("agent_ran");
+  
+  commands:
+    files_edited::
+      "$(sys.cf_agent)"
+      args => "-f $(this.promise_filename).sub -K",
+      classes => if_ok("all_ran");
+  
+}
+
+body classes if_ok(x)
+{
+   promise_repaired => { "$(x)" };
+   promise_kept => { "$(x)" };
+}
+
+#######################################################
+
+bundle agent check
+{
+
+classes:
+   "ok" expression => "agent_ran";        
+
+reports:
+    ok::
+        "$(this.promise_filename) Pass";
+    !ok::    
+        "$(this.promise_filename) FAIL";
+    
+}
+

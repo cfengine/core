@@ -1610,7 +1610,7 @@ static FnCallResult FnCallGetIndices(EvalContext *ctx, FnCall *fp, Rlist *finala
     {
         if (JsonGetElementType(value) == JSON_ELEMENT_TYPE_CONTAINER)
         {
-            if (JsonGetContrainerType(value) == JSON_CONTAINER_TYPE_OBJECT)
+            if (JsonGetContainerType(value) == JSON_CONTAINER_TYPE_OBJECT)
             {
                 JsonIterator iter = JsonIteratorInit(value);
                 const char *key = NULL;
@@ -3225,7 +3225,7 @@ static FnCallResult FnCallDatatype(EvalContext *ctx, FnCall *fp, Rlist *finalarg
 
         if (JsonGetElementType(jelement) == JSON_ELEMENT_TYPE_CONTAINER)
         {
-            switch (JsonGetContrainerType(jelement))
+            switch (JsonGetContainerType(jelement))
             {
             case JSON_CONTAINER_TYPE_OBJECT:
                 WriterWrite(typestring, "json_object");
@@ -3281,7 +3281,9 @@ static FnCallResult FnCallDatatype(EvalContext *ctx, FnCall *fp, Rlist *finalarg
 static FnCallResult FnCallNth(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
     const char* const varname = RlistScalarValue(finalargs);
-    long index = IntFromString(RlistScalarValue(finalargs->next));
+
+    const char* const key = RlistScalarValue(finalargs->next);
+    long index = IntFromString(key);
 
     VarRef *ref = VarRefParseFromBundle(varname, PromiseGetBundle(fp->caller));
     DataType type = DATA_TYPE_NONE;
@@ -3295,17 +3297,35 @@ static FnCallResult FnCallNth(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
         const char *jstring = NULL;
         if (JsonGetElementType(value) == JSON_ELEMENT_TYPE_CONTAINER)
         {
-            if (index < JsonLength(value))
+            JsonElement* jholder = (JsonElement*) value;
+            JsonContainerType ct = JsonGetContainerType(value);
+            JsonElement* jelement = NULL;
+
+            if (JSON_CONTAINER_TYPE_OBJECT == ct)
             {
-                const JsonElement* const jelement = JsonAt(value, index);
-                if (JsonGetElementType(jelement) == JSON_ELEMENT_TYPE_PRIMITIVE)
+                    jelement = JsonObjectGet(jholder, key);
+            }
+            else if (JSON_CONTAINER_TYPE_ARRAY == ct)
+            {
+                index = IntFromString(key);
+
+                if (index >= 0 && index < JsonLength(value))
                 {
-                    jstring = JsonPrimitiveGetAsString(jelement);
+                    jelement = JsonAt(jholder, index);
                 }
+            }
+            else
+            {
+                ProgrammingError("JSON Container is neither array nor object but type %d", (int) ct);
+            }
+
+            if (NULL != jelement && JsonGetElementType(jelement) == JSON_ELEMENT_TYPE_PRIMITIVE)
+            {
+                jstring = JsonPrimitiveGetAsString(jelement);
             }
         }
 
-        if (jstring != NULL)
+        if (NULL != jstring)
         {
             Log(LOG_LEVEL_DEBUG, "%s: from data container %s, got JSON data '%s'", fp->name, varname, jstring);
             RlistAppendScalar(&return_list, jstring);
@@ -6453,7 +6473,7 @@ static const FnCallArg DATATYPE_ARGS[] =
 static const FnCallArg NTH_ARGS[] =
 {
     {CF_IDRANGE, DATA_TYPE_STRING, "CFEngine list or data container identifier"},
-    {CF_VALRANGE, DATA_TYPE_INT, "Offset of element to return"},
+    {CF_ANYSTRING, DATA_TYPE_STRING, "Offset or key of element to return"},
     {NULL, DATA_TYPE_NONE, NULL}
 };
 

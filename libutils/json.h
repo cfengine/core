@@ -153,7 +153,7 @@ size_t JsonLength(const JsonElement *element);
 
 JsonElementType JsonGetElementType(const JsonElement *element);
 
-JsonContainerType JsonGetContrainerType(const JsonElement *container);
+JsonContainerType JsonGetContainerType(const JsonElement *container);
 
 JsonPrimitiveType JsonGetPrimitiveType(const JsonElement *primitive);
 const char *JsonPrimitiveGetAsString(const JsonElement *primitive);

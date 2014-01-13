@@ -15,75 +15,6 @@ body common control
 
 bundle agent init
 {
-  vars:
-      "results" slist => {
-          'jsonstring = {',
-          '  "boolean": true,',
-          '  "string": "Figaro. Figaro. Figaro, Figaro, Figaro... Figaro!",',
-          '  "integer": 20130111,',
-          '  "list": [',
-          '    "chris",',
-          '    "dituri",',
-          '    "was",',
-          '    "here"',
-          '  ],',
-          '  "object": {',
-          '    "a": true,',
-          '    "b": [',
-          '      1,',
-          '      2,',
-          '      3',
-          '    ],',
-          '    "c": "cat",',
-          '    "d": 108',
-          '  },',
-          '  "integer2": 987654321,',
-          '  "string2": "Othello? Where art thou now?",',
-          '  "boolean2": false,',
-          '  "null": null',
-          '}',
-          'keys:json = boolean',
-          'keys:json = string',
-          'keys:json = integer',
-          'keys:json = list',
-          'keys:json = object',
-          'keys:json = integer2',
-          'keys:json = string2',
-          'keys:json = boolean2',
-          'keys:json = null',
-          'primitive:json[0] = true',
-          'primitive:json[1] = Figaro. Figaro. Figaro, Figaro, Figaro... Figaro!',
-          'primitive:json[2] = 20130111',
-          'primitive:json[5] = 987654321',
-          'primitive:json[6] = Othello? Where art thou now?',
-          'primitive:json[7] = false',
-          'primitive:json[8] = null',
-          'container:json[list][0] = chris',
-          'container:json[object][0] = true',
-          'container:json[list][1] = dituri',
-          'container:json[list][2] = was',
-          'container:json[object][2] = cat',
-          'container:json[list][3] = here',
-          'container:json[object][3] = 108'
-     };
-
-  files:
-      "$(G.testfile).expected"
-      create => "true",
-      edit_defaults => init_empty,
-      edit_line => init_insert;
-}
-
-body edit_defaults init_empty
-{
-      empty_file_before_editing => "true";
-      edit_backup => "false";
-}
-
-bundle edit_line init_insert
-{
-  insert_lines:
-      "$(init.results)";
 }
 
 #######################################################
@@ -92,30 +23,31 @@ bundle common test_common
 {
   vars:
 
-    "datastr" string => storejson("data");
-    "data"    data   => parsejson('
-{ 
-  "boolean": true,
-  "string": "Figaro. Figaro. Figaro, Figaro, Figaro... Figaro!",
-  "integer": 20130111,
-  "list": [ "chris", "dituri", "was", "here" ],
-  "object": { "a": true, "b": [ 1, 2, 3 ], "c": "cat", "d": 108 },
-  "integer2": 987654321,
-  "string2": "Othello? Where art thou now?",
-  "boolean2": false,
-  "null": null,
-}
-');
-    "nth"  ilist  => { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 1000 };
-    "keys" slist  => getindices("data");
+      "data"    data   => readjson("$(this.promise_filename).json", "100k");
+      "datastr" string => format("%S", data);
 
-    "test[$(nth)]"          string => nth("data", $(nth));
-    "test[$(keys)][$(nth)]" string => nth("data[$(keys)]", $(nth));
+      "numbers"  ilist  => { "-100", "-1", 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 1000 };
+      "keys" slist  => getindices(data);
+      "object_keys" slist => getindices("data[object]");
+      "list_keys" slist => getindices("data[list]");
+      "all_keys" slist =>
+      {
+        @(object_keys),
+        @(list_keys),
+        "foo", "bar", "",
+        $(numbers),
+        $(keys)
+      };
+
+      "primitives[$(keys)]" string => nth(data, $(keys));
+      "list[$(all_keys)]" string => nth("data[list]", $(all_keys));
+      "object[$(all_keys)]" string => nth("data[object]", $(all_keys));
 
   classes:
 
-    "haselement_$(nth)" expression => isvariable("test[$(nth)]");
-    "has$(keys)_$(nth)" expression => isvariable("test[$(keys)][$(nth)]");
+      "hasprimitive_$(keys)" expression => isvariable("primitives[$(keys)]");
+      "haslist_$(all_keys)" expression => isvariable("list[$(all_keys)]");
+      "hasobject_$(all_keys)" expression => isvariable("object[$(all_keys)]");
 }
 
 
@@ -124,8 +56,16 @@ bundle agent test
   files:
 
       "$(G.testfile).actual"
-          create => "true",
-          edit_line => test_insert;
+      create => "true",
+      edit_line => test_insert;
+
+      "$(G.testfile).expected"
+      copy_from => local_cp("$(this.promise_filename).expected");
+}
+
+body copy_from local_cp(from)
+{
+      source      => "$(from)";
 }
 
 bundle edit_line test_insert
@@ -135,11 +75,15 @@ bundle edit_line test_insert
       "jsonstring = $(test_common.datastr)";
       "keys:json = $(test_common.keys)";
 
-      "primitive:json[$(test_common.nth)] = $(test_common.test[$(test_common.nth)])"
-          ifvarclass => "haselement_$(test_common.nth)";
+      "primitive:json[$(test_common.keys)] = $(test_common.primitives[$(test_common.keys)])"
+      ifvarclass => "hasprimitive_$(test_common.keys)";
 
-      "container:json[$(test_common.keys)][$(test_common.nth)] = $(test_common.test[$(test_common.keys)][$(test_common.nth)])"
-          ifvarclass => "has$(test_common.keys)_$(test_common.nth)";
+      "list:json[$(test_common.all_keys)] = $(test_common.list[$(test_common.all_keys)])"
+      ifvarclass => "haslist_$(test_common.all_keys)";
+
+      "object:json[$(test_common.all_keys)] = $(test_common.object[$(test_common.all_keys)])"
+      ifvarclass => "hasobject_$(test_common.all_keys)";
+
 }
 
 #######################################################
@@ -151,4 +95,3 @@ bundle agent check
                                             "$(G.testfile).expected",
                                             "$(this.promise_filename)");
 }
-

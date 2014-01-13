@@ -1415,7 +1415,12 @@ bool EvalContextVariableRemoveSpecial(const EvalContext *ctx, SpecialScope scope
     }
 }
 
-static VariableTable *GetVariableTableForScope(const EvalContext *ctx, const char *ns, const char *scope)
+static VariableTable *GetVariableTableForScope(const EvalContext *ctx,
+#ifdef NDEBUG
+                                               ARG_UNUSED
+#endif /* ns is only used in assertions ... */
+                                               const char *ns,
+                                               const char *scope)
 {
     switch (SpecialScopeFromString(scope))
     {

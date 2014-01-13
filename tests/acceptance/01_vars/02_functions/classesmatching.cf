@@ -35,9 +35,9 @@ bundle agent check
 
   reports:
     DEBUG::
-      "Found classes $(test.classes)";
-      "Found x classes $(test.x_classes)";
-      "Found z classes $(test.z_classes)";
+      "Found classes $(test.classes), length $(test.count)";
+      "Found x classes $(test.x_classes), length $(test.x_count)";
+      "Found z classes $(test.z_classes), length $(test.z_count)";
     ok::
       "$(this.promise_filename) Pass";
     !ok::

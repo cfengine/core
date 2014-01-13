@@ -2843,16 +2843,8 @@ static const Rlist *GetListReferenceArgument(const EvalContext *ctx, const FnCal
 
     if (DataTypeToRvalType(value_type) != RVAL_TYPE_LIST)
     {
-        if (value_type)
-        {
-            Log(LOG_LEVEL_VERBOSE, "Function '%s' expected a list variable reference, got variable of type '%s'",
-                fp->name, DataTypeToString(value_type));
-        }
-        else
-        {
-            Log(LOG_LEVEL_VERBOSE,
-                "Function '%s' expected a list variable reference, got variable of a different type", fp->name);
-        }
+        Log(LOG_LEVEL_ERR, "Function '%s' expected a list variable reference, got variable of type '%s'",
+            fp->name, DataTypeToString(value_type));
         if (datatype_out)
         {
             *datatype_out = DATA_TYPE_NONE;
@@ -3044,7 +3036,46 @@ static FnCallResult FnCallSetop(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
     return (FnCallResult) { FNCALL_SUCCESS, (Rval) { returnlist, RVAL_TYPE_LIST } };
 }
 
-/*********************************************************************/
+static FnCallResult FnCallLength(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
+{
+    const char *name = RlistScalarValue(finalargs);
+
+    DataType type = DATA_TYPE_NONE;
+    VarRef *ref = VarRefParse(name);
+    const void *value = EvalContextVariableGet(ctx, ref, &type);
+    VarRefDestroy(ref);
+    if (!value)
+    {
+        Log(LOG_LEVEL_VERBOSE, "Function '%s', argument '%s' did not resolve to a variable",
+            fp->name, name);
+        return FnFailure();
+    }
+
+    switch (DataTypeToRvalType(type))
+    {
+    case RVAL_TYPE_LIST:
+        {
+            int len = RlistLen(value);
+            if (len == 1
+                && ((Rlist *)value)->val.type == RVAL_TYPE_SCALAR
+                && strcmp(RlistScalarValue(value), CF_NULL_VALUE) == 0) // TODO: This... bullshit
+            {
+                return FnReturn("0");
+            }
+            else
+            {
+                return FnReturnF("%d", len);
+            }
+        }
+    case RVAL_TYPE_CONTAINER:
+        return FnReturnF("%zd", JsonLength(value));
+    default:
+        Log(LOG_LEVEL_ERR, "Function '%s', argument '%s' resolved to unsupported datatype '%s'",
+            fp->name, name, DataTypeToString(type));
+        return FnFailure();
+    }
+}
+
 static FnCallResult FnCallFold(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
     const char *name = RlistScalarValue(finalargs);
@@ -3095,7 +3126,10 @@ static FnCallResult FnCallFold(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
         count++;
 
         // none of the following apply if CF_NULL_VALUE has been seen
-        if (null_seen) continue;
+        if (null_seen)
+        {
+            continue;
+        }
         
         double x;
         if (mean_mode || variance_mode)
@@ -3135,10 +3169,6 @@ static FnCallResult FnCallFold(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
         }
 
         return FnReturnF("%lf", variance);
-    }
-    else if (strcmp(fp->name, "length") == 0)
-    {
-        return FnReturnF("%d", count);
     }
     else if (strcmp(fp->name, "max") == 0)
     {
@@ -3267,9 +3297,7 @@ static FnCallResult FnCallNth(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
         {
             if (index < JsonLength(value))
             {
-
                 const JsonElement* const jelement = JsonAt(value, index);
-
                 if (JsonGetElementType(jelement) == JSON_ELEMENT_TYPE_PRIMITIVE)
                 {
                     jstring = JsonPrimitiveGetAsString(jelement);
@@ -6782,7 +6810,7 @@ const FnCallType CF_FNCALL_TYPES[] =
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
 
     // List folding functions
-    FnCallTypeNew("length", DATA_TYPE_INT, STAT_FOLD_ARGS, &FnCallFold, "Return the length of a list",
+    FnCallTypeNew("length", DATA_TYPE_INT, STAT_FOLD_ARGS, &FnCallLength, "Return the length of a list",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("max", DATA_TYPE_STRING, SORT_ARGS, &FnCallFold, "Return the maximum of a list",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),

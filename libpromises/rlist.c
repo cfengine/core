@@ -1031,23 +1031,28 @@ static void ScalarWrite(Writer *w, const char *s)
 
 void RvalWrite(Writer *writer, Rval rval)
 {
-    if (rval.item == NULL)
+    RvalWriteParts(writer, rval.item, rval.type);
+}
+
+void RvalWriteParts(Writer *writer, const void* item, RvalType type)
+{
+    if (item == NULL)
     {
         return;
     }
 
-    switch (rval.type)
+    switch (type)
     {
     case RVAL_TYPE_SCALAR:
-        ScalarWrite(writer, RvalScalarValue(rval));
+        ScalarWrite(writer, item);
         break;
 
     case RVAL_TYPE_LIST:
-        RlistWrite(writer, RvalRlistValue(rval));
+        RlistWrite(writer, item);
         break;
 
     case RVAL_TYPE_FNCALL:
-        FnCallWrite(writer, RvalFnCallValue(rval));
+        FnCallWrite(writer, item);
         break;
 
     case RVAL_TYPE_NOPROMISEE:
@@ -1055,7 +1060,7 @@ void RvalWrite(Writer *writer, Rval rval)
         break;
 
     case RVAL_TYPE_CONTAINER:
-        JsonWrite(writer, RvalContainerValue(rval), 0);
+        JsonWrite(writer, item, 0);
         break;
     }
 }

@@ -1,0 +1,79 @@
+#######################################################
+#
+# Redmine#3870: Test that an empty CFEngine template will empty the file.
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+
+}
+
+#######################################################
+
+bundle agent init
+{
+  files:
+      "$(G.testfile)"
+      edit_defaults => init_empty,
+      create => "true",
+      edit_line => init_insert_lines("TEXT NOT GOOD");
+}
+
+bundle edit_line init_insert_lines(lines)
+{
+  insert_lines:
+
+      "$(lines)"
+      comment => "Append lines if they don't exist";
+}
+
+body edit_defaults init_empty
+{
+      empty_file_before_editing => "true";
+      edit_backup => "false";
+      #max_file_size => "300000";
+}
+
+#######################################################
+
+bundle agent test
+{
+  vars:
+      "template_file" string => "$(this.promise_filename).template";
+
+  files:
+      "$(G.testfile)"
+      edit_template => "$(template_file)";
+
+  reports:
+    DEBUG::
+      "Rendering template file $(template_file) to $(G.testfile)";
+}
+
+
+#######################################################
+
+bundle agent check
+{
+  vars:
+      "expect" string => "";
+      "actual" string => readfile("$(G.testfile)", 1000);
+
+  classes:
+      "ok" expression => regcmp("$(expect)", "$(actual)");
+
+  reports:
+    DEBUG::
+      "expect: '$(expect)'";
+      "actual: '$(actual)'";
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}
+### PROJECT_ID: core
+### CATEGORY_ID: 27

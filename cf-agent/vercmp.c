@@ -28,7 +28,6 @@
 
 #include <actuator.h>
 #include <scope.h>
-/* ExpandScalar */
 #include <expand.h>
 #include <vars.h>
 #include <pipes.h>
@@ -62,8 +61,7 @@ static VersionCmpResult AndResults(VersionCmpResult lhs, VersionCmpResult rhs)
 static VersionCmpResult RunCmpCommand(EvalContext *ctx, const char *command, const char *v1, const char *v2, Attributes a,
                                       const Promise *pp, PromiseResult *result)
 {
-    char expanded_command[CF_EXPANDSIZE];
-
+    Buffer *expanded_command = BufferNew();
     {
         VarRef *ref_v1 = VarRefParseFromScope("v1", "cf_pack_context");
         EvalContextVariablePut(ctx, ref_v1, v1, DATA_TYPE_STRING, "source=promise");
@@ -80,25 +78,27 @@ static VersionCmpResult RunCmpCommand(EvalContext *ctx, const char *command, con
         VarRefDestroy(ref_v2);
     }
 
-    FILE *pfp = a.packages.package_commands_useshell ? cf_popen_sh(expanded_command, "w") : cf_popen(expanded_command, "w", true);
+    FILE *pfp = a.packages.package_commands_useshell ? cf_popen_sh(BufferData(expanded_command), "w") : cf_popen(BufferData(expanded_command), "w", true);
 
     if (pfp == NULL)
     {
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Can not start package version comparison command '%s'. (cf_popen: %s)",
-             expanded_command, GetErrorStr());
+             BufferData(expanded_command), GetErrorStr());
         *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
+        BufferDestroy(expanded_command);
         return VERCMP_ERROR;
     }
 
-    Log(LOG_LEVEL_VERBOSE, "Executing '%s'", expanded_command);
+    Log(LOG_LEVEL_VERBOSE, "Executing '%s'", BufferData(expanded_command));
 
     int retcode = cf_pclose(pfp);
 
     if (retcode == -1)
     {
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Error during package version comparison command execution '%s'. (cf_pclose: %s)",
-            expanded_command, GetErrorStr());
+            BufferData(expanded_command), GetErrorStr());
         *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
+        BufferDestroy(expanded_command);
         return VERCMP_ERROR;
     }
 

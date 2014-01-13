@@ -436,45 +436,46 @@ static int CompareRval(const void *rval1_item, RvalType rval1_type,
 
 static bool Epimenides(EvalContext *ctx, const char *ns, const char *scope, const char *var, Rval rval, int level)
 {
-    Rlist *rp, *list;
-    char exp[CF_EXPANDSIZE];
-
     switch (rval.type)
     {
     case RVAL_TYPE_SCALAR:
 
-        if (StringContainsVar(rval.item, var))
+        if (StringContainsVar(RvalScalarValue(rval), var))
         {
-            Log(LOG_LEVEL_ERR, "Scalar variable '%s' contains itself (non-convergent) '%s'", var, (char *) rval.item);
+            Log(LOG_LEVEL_ERR, "Scalar variable '%s' contains itself (non-convergent) '%s'", var, RvalScalarValue(rval));
             return true;
         }
 
-        if (IsCf3VarString(rval.item))
+        if (IsCf3VarString(RvalScalarValue(rval)))
         {
-            ExpandScalar(ctx, ns, scope, rval.item, exp);
+            Buffer *exp = BufferNew();
+            ExpandScalar(ctx, ns, scope, RvalScalarValue(rval), exp);
 
-            if (strcmp(exp, (const char *) rval.item) == 0)
+            if (strcmp(BufferData(exp), RvalScalarValue(rval)) == 0)
             {
+                BufferDestroy(exp);
                 return false;
             }
 
             if (level > 3)
             {
+                BufferDestroy(exp);
                 return false;
             }
 
-            if (Epimenides(ctx, ns, scope, var, (Rval) {exp, RVAL_TYPE_SCALAR}, level + 1))
+            if (Epimenides(ctx, ns, scope, var, (Rval) { BufferGet(exp), RVAL_TYPE_SCALAR}, level + 1))
             {
+                BufferDestroy(exp);
                 return true;
             }
+
+            BufferDestroy(exp);
         }
 
         break;
 
     case RVAL_TYPE_LIST:
-        list = (Rlist *) rval.item;
-
-        for (rp = list; rp != NULL; rp = rp->next)
+        for (const Rlist *rp = RvalRlistValue(rval); rp != NULL; rp = rp->next)
         {
             if (Epimenides(ctx, ns, scope, var, rp->val, level))
             {

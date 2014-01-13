@@ -153,16 +153,16 @@ static PromiseResult ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp, Rli
     PromiseIterator *iter_ctx = NULL;
     size_t i = 0;
     PromiseResult result = PROMISE_RESULT_NOOP;
+    Buffer *expbuf = BufferNew();
     for (iter_ctx = PromiseIteratorNew(ctx, pp, lists, containers); PromiseIteratorHasMore(iter_ctx); i++, PromiseIteratorNext(iter_ctx))
     {
         if (handle)
         {
-            char tmp[CF_EXPANDSIZE];
             // This ordering is necessary to get automated canonification
-            ExpandScalar(ctx, NULL, "this", handle, tmp);
-            CanonifyNameInPlace(tmp);
-            Log(LOG_LEVEL_DEBUG, "Expanded handle to '%s'", tmp);
-            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "handle", tmp, DATA_TYPE_STRING, "source=promise");
+            BufferZero(expbuf);
+            ExpandScalar(ctx, NULL, "this", handle, expbuf);
+            CanonifyNameInPlace(BufferGet(expbuf));
+            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "handle", BufferData(expbuf), DATA_TYPE_STRING, "source=promise");
         }
         else
         {
@@ -181,6 +181,7 @@ static PromiseResult ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp, Rli
         EvalContextStackPopFrame(ctx);
     }
 
+    BufferDestroy(expbuf);
     PromiseIteratorDestroy(iter_ctx);
     EvalContextStackPopFrame(ctx);
 
@@ -555,9 +556,9 @@ Rval ExpandPrivateRval(EvalContext *ctx, const char *ns, const char *scope, cons
     {
     case RVAL_TYPE_SCALAR:
         {
-            char buffer[CF_EXPANDSIZE] = "";
+            Buffer *buffer = BufferNew();
             ExpandScalar(ctx, ns, scope, rval_item, buffer);
-            returnval = RvalNew(buffer, RVAL_TYPE_SCALAR);
+            returnval = (Rval) { BufferClose(buffer),  RVAL_TYPE_SCALAR };
         }
         break;
 
@@ -591,9 +592,9 @@ Rval ExpandBundleReference(EvalContext *ctx, const char *ns, const char *scope, 
     {
     case RVAL_TYPE_SCALAR:
         {
-            char buffer[CF_EXPANDSIZE];
-            ExpandScalar(ctx, ns, scope, (char *) rval.item, buffer);
-            return RvalNew(buffer, RVAL_TYPE_SCALAR);
+            Buffer *buffer = BufferNew();
+            ExpandScalar(ctx, ns, scope, RvalScalarValue(rval), buffer);
+            return (Rval) { BufferClose(buffer), RVAL_TYPE_SCALAR };
         }
 
     case RVAL_TYPE_FNCALL:
@@ -609,26 +610,8 @@ Rval ExpandBundleReference(EvalContext *ctx, const char *ns, const char *scope, 
     return RvalNew(NULL, RVAL_TYPE_NOPROMISEE);
 }
 
-/*********************************************************************/
 
-static bool ExpandOverflow(const char *str1, const char *str2)
-{
-    size_t len = strlen(str2);
-
-    if ((strlen(str1) + len) > (CF_EXPANDSIZE - CF_BUFFERMARGIN))
-    {
-        Log(LOG_LEVEL_ERR,
-            "Expansion overflow constructing string. Increase CF_EXPANDSIZE macro. Tried to add '%s' to '%s'", str2,
-              str1);
-        return true;
-    }
-
-    return false;
-}
-
-/*********************************************************************/
-
-bool ExpandScalar(const EvalContext *ctx, const char *ns, const char *scope, const char *string, char buffer[CF_EXPANDSIZE])
+bool ExpandScalar(const EvalContext *ctx, const char *ns, const char *scope, const char *string, Buffer *out)
 {
     assert(string);
 
@@ -638,9 +621,11 @@ bool ExpandScalar(const EvalContext *ctx, const char *ns, const char *scope, con
     {
         return false;
     }
-    buffer[0] = '\0';
 
+    // TODO: cleanup, optimize this mess
     Buffer *var = BufferNew();
+    Buffer *current_item = BufferNew();
+    Buffer *temp = BufferNew();
     for (const char *sp = string; /* No exit */ ; sp++)     /* check for varitems */
     {
         char varstring = false;
@@ -651,18 +636,11 @@ bool ExpandScalar(const EvalContext *ctx, const char *ns, const char *scope, con
             break;
         }
 
-        char currentitem[CF_EXPANDSIZE] = "";
-        StringNotMatchingSetCapped(sp,CF_EXPANDSIZE,"$",currentitem);
+        BufferZero(current_item);
+        ExtractScalarPrefix(current_item, sp, strlen(sp));
 
-        if (ExpandOverflow(buffer, currentitem))
-        {
-            FatalError(ctx, "Can't expand varstring");
-        }
-
-        strlcat(buffer, currentitem, CF_EXPANDSIZE);
-        sp += strlen(currentitem);
-
-        Log(LOG_LEVEL_DEBUG, "  Aggregate result '%s', scanning at '%s' (current delta '%s')", buffer, sp, currentitem);
+        BufferAppend(out, BufferData(current_item), BufferSize(current_item));
+        sp += BufferSize(current_item);
 
         if (*sp == '\0')
         {
@@ -679,7 +657,7 @@ bool ExpandScalar(const EvalContext *ctx, const char *ns, const char *scope, con
                 ExtractScalarReference(var, sp, strlen(sp), false);
                 if (BufferSize(var) == 0)
                 {
-                    strlcat(buffer, "$", CF_EXPANDSIZE);
+                    BufferAppendChar(out, '$');
                     continue;
                 }
                 break;
@@ -689,45 +667,41 @@ bool ExpandScalar(const EvalContext *ctx, const char *ns, const char *scope, con
                 ExtractScalarReference(var, sp, strlen(sp), false);
                 if (BufferSize(var) == 0)
                 {
-                    strlcat(buffer, "$", CF_EXPANDSIZE);
+                    BufferAppendChar(out, '$');
                     continue;
                 }
                 break;
 
             default:
-                strlcat(buffer, "$", CF_EXPANDSIZE);
+                BufferAppendChar(out, '$');
                 continue;
             }
         }
 
-        currentitem[0] = '\0';
-
+        BufferZero(current_item);
         {
-            Buffer *temp = BufferNew();
+            BufferZero(temp);
             ExtractScalarReference(temp, sp, strlen(sp), true);
 
             if (IsCf3VarString(BufferData(temp)))
             {
-                Log(LOG_LEVEL_DEBUG, "Nested variables '%s'", BufferData(temp));
-                ExpandScalar(ctx, ns, scope, BufferData(temp), currentitem);
+                ExpandScalar(ctx, ns, scope, BufferData(temp), current_item);
             }
             else
             {
-                Log(LOG_LEVEL_DEBUG, "Delta '%s'", BufferData(temp));
-                strncpy(currentitem, BufferData(temp), CF_BUFSIZE - 1);
+                BufferAppend(current_item, BufferData(temp), BufferSize(temp));
             }
-            BufferDestroy(temp);
         }
 
         increment = BufferSize(var) - 1;
 
         char name[CF_MAXVARSIZE] = "";
-        if (!IsExpandable(currentitem))
+        if (!IsExpandable(BufferData(current_item)))
         {
             DataType type = DATA_TYPE_NONE;
             const void *value = NULL;
             {
-                VarRef *ref = VarRefParseFromNamespaceAndScope(currentitem, ns, scope, CF_NS, '.');
+                VarRef *ref = VarRefParseFromNamespaceAndScope(BufferData(current_item), ns, scope, CF_NS, '.');
                 value = EvalContextVariableGet(ctx, ref, &type);
                 VarRefDestroy(ref);
             }
@@ -739,82 +713,58 @@ bool ExpandScalar(const EvalContext *ctx, const char *ns, const char *scope, con
                 case DATA_TYPE_STRING:
                 case DATA_TYPE_INT:
                 case DATA_TYPE_REAL:
-
-                    if (ExpandOverflow(buffer, value))
-                    {
-                        FatalError(ctx, "Can't expand varstring");
-                    }
-
-                    strlcat(buffer, value, CF_EXPANDSIZE);
+                    BufferAppend(out, value, strlen(value));
                     break;
 
                 case DATA_TYPE_STRING_LIST:
                 case DATA_TYPE_INT_LIST:
                 case DATA_TYPE_REAL_LIST:
                 case DATA_TYPE_NONE:
-                    if (type == DATA_TYPE_NONE)
-                    {
-                        Log(LOG_LEVEL_DEBUG,
-                            "Can't expand inexistent variable '%s'", currentitem);
-                    }
-                    else
-                    {
-                        Log(LOG_LEVEL_DEBUG,
-                            "Expecting scalar, can't expand list variable '%s'",
-                            currentitem);
-                    }
-
                     if (varstring == '}')
                     {
-                        snprintf(name, CF_MAXVARSIZE, "${%s}", currentitem);
+                        snprintf(name, CF_MAXVARSIZE, "${%s}", BufferData(current_item));
                     }
                     else
                     {
-                        snprintf(name, CF_MAXVARSIZE, "$(%s)", currentitem);
+                        snprintf(name, CF_MAXVARSIZE, "$(%s)", BufferData(current_item));
                     }
 
-                    strlcat(buffer, name, CF_EXPANDSIZE);
+                    BufferAppend(out, name, strlen(name));
                     returnval = false;
                     break;
 
                 default:
-                    Log(LOG_LEVEL_DEBUG, "Returning Unknown Scalar ('%s' => '%s')", string, buffer);
+                    Log(LOG_LEVEL_DEBUG, "Returning Unknown Scalar ('%s' => '%s')", string, BufferData(out));
+                    BufferDestroy(var);
+                    BufferDestroy(current_item);
+                    BufferDestroy(temp);
                     return false;
 
                 }
             }
             else
             {
-                Log(LOG_LEVEL_DEBUG, "Currently non existent or list variable '%s'", currentitem);
-
                 if (varstring == '}')
                 {
-                    snprintf(name, CF_MAXVARSIZE, "${%s}", currentitem);
+                    snprintf(name, CF_MAXVARSIZE, "${%s}", BufferData(current_item));
                 }
                 else
                 {
-                    snprintf(name, CF_MAXVARSIZE, "$(%s)", currentitem);
+                    snprintf(name, CF_MAXVARSIZE, "$(%s)", BufferData(current_item));
                 }
 
-                strlcat(buffer, name, CF_EXPANDSIZE);
+                BufferAppend(out, name, strlen(name));
                 returnval = false;
             }
         }
 
         sp += increment;
-        currentitem[0] = '\0';
+        BufferZero(current_item);
     }
 
-    if (returnval)
-    {
-        Log(LOG_LEVEL_DEBUG, "Returning complete scalar expansion ('%s' => '%s')", string, buffer);
-
-        /* Can we be sure this is complete? What about recursion */
-    }
-    else
-    {
-        Log(LOG_LEVEL_DEBUG, "Returning partial / best effort scalar expansion ('%s' => '%s')", string, buffer);
-    }
+    BufferDestroy(var);
+    BufferDestroy(current_item);
+    BufferDestroy(temp);
 
     return returnval;
 }

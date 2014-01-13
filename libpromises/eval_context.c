@@ -1975,17 +1975,16 @@ static void SummarizeTransaction(EvalContext *ctx, TransactionContext tc, const 
 {
     if (logname && (tc.log_string))
     {
-        char buffer[CF_EXPANDSIZE];
-
+        Buffer *buffer = BufferNew();
         ExpandScalar(ctx, NULL, NULL, tc.log_string, buffer);
 
         if (strcmp(logname, "udp_syslog") == 0)
         {
-            RemoteSysLog(tc.log_priority, buffer);
+            RemoteSysLog(tc.log_priority, BufferData(buffer));
         }
         else if (strcmp(logname, "stdout") == 0)
         {
-            Log(LOG_LEVEL_INFO, "L: %s", buffer);
+            Log(LOG_LEVEL_INFO, "L: %s", BufferData(buffer));
         }
         else
         {
@@ -2011,12 +2010,13 @@ static void SummarizeTransaction(EvalContext *ctx, TransactionContext tc, const 
                 return;
             }
 
-            Log(LOG_LEVEL_VERBOSE, "Logging string '%s' to '%s'", buffer, logname);
-            fprintf(fout, "%s\n", buffer);
+            Log(LOG_LEVEL_VERBOSE, "Logging string '%s' to '%s'", BufferData(buffer), logname);
+            fprintf(fout, "%s\n", BufferData(buffer));
 
             fclose(fout);
         }
 
+        BufferDestroy(buffer);
         tc.log_string = NULL;     /* To avoid repetition */
     }
 }

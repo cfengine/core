@@ -91,6 +91,8 @@ Buffer* BufferNewFrom(const char *data, unsigned int length);
   */
 void BufferDestroy(Buffer *buffer);
 
+char *BufferClose(Buffer *buffer);
+
 /**
   @brief Creates a shallow copy of the source buffer.
   @param source Source buffer.
@@ -138,6 +140,8 @@ char *BufferGet(Buffer *buffer);
   @return The number of bytes used or -1 in case of error.
   */
 void BufferAppend(Buffer *buffer, const char *bytes, unsigned int length);
+void BufferAppendChar(Buffer *buffer, char byte);
+
 /**
   @brief Stores complex data on the buffer.
 

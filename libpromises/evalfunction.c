@@ -2036,7 +2036,6 @@ static FnCallResult FnCallLsDir(ARG_UNUSED EvalContext *ctx, ARG_UNUSED FnCall *
 
 static FnCallResult FnCallMapArray(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
-    char expbuf[CF_EXPANDSIZE];
     Rlist *returnlist = NULL;
 
     char *map = RlistScalarValue(finalargs);
@@ -2046,6 +2045,7 @@ static FnCallResult FnCallMapArray(EvalContext *ctx, FnCall *fp, Rlist *finalarg
     VariableTableIterator *iter = EvalContextVariableTableIteratorNew(ctx, ref->ns, ref->scope, ref->lval);
     Variable *var = NULL;
 
+    Buffer *expbuf = BufferNew();
     while ((var = VariableTableIteratorNext(iter)))
     {
         if (var->ref->num_indices != 1)
@@ -2058,39 +2058,48 @@ static FnCallResult FnCallMapArray(EvalContext *ctx, FnCall *fp, Rlist *finalarg
         switch (var->rval.type)
         {
         case RVAL_TYPE_SCALAR:
-            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "v", var->rval.item, DATA_TYPE_STRING, "source=function,function=maparray");
-            ExpandScalar(ctx, PromiseGetBundle(fp->caller)->ns, PromiseGetBundle(fp->caller)->name, map, expbuf);
-
-            if (strstr(expbuf, "$(this.k)") || strstr(expbuf, "${this.k}") ||
-                strstr(expbuf, "$(this.v)") || strstr(expbuf, "${this.v}"))
             {
-                RlistDestroy(returnlist);
-                EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_THIS, "k");
-                EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_THIS, "v");
-                return FnFailure();
-            }
-
-            RlistAppendScalar(&returnlist, expbuf);
-            EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_THIS, "v");
-            break;
-
-        case RVAL_TYPE_LIST:
-            for (const Rlist *rp = var->rval.item; rp != NULL; rp = rp->next)
-            {
-                EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "v", RlistScalarValue(rp), DATA_TYPE_STRING, "source=function,function=maparray");
+                BufferZero(expbuf);
+                EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "v", var->rval.item, DATA_TYPE_STRING,
+                                              "source=function,function=maparray");
                 ExpandScalar(ctx, PromiseGetBundle(fp->caller)->ns, PromiseGetBundle(fp->caller)->name, map, expbuf);
 
-                if (strstr(expbuf, "$(this.k)") || strstr(expbuf, "${this.k}") ||
-                    strstr(expbuf, "$(this.v)") || strstr(expbuf, "${this.v}"))
+                if (strstr(BufferData(expbuf), "$(this.k)") || strstr(BufferData(expbuf), "${this.k}") ||
+                    strstr(BufferData(expbuf), "$(this.v)") || strstr(BufferData(expbuf), "${this.v}"))
                 {
                     RlistDestroy(returnlist);
                     EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_THIS, "k");
                     EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_THIS, "v");
+                    BufferDestroy(expbuf);
                     return FnFailure();
                 }
 
-                RlistAppendScalarIdemp(&returnlist, expbuf);
+                RlistAppendScalar(&returnlist, BufferData(expbuf));
                 EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_THIS, "v");
+            }
+            break;
+
+        case RVAL_TYPE_LIST:
+            {
+                for (const Rlist *rp = var->rval.item; rp != NULL; rp = rp->next)
+                {
+                    BufferZero(expbuf);
+                    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "v", RlistScalarValue(rp), DATA_TYPE_STRING, "source=function,function=maparray");
+                    ExpandScalar(ctx, PromiseGetBundle(fp->caller)->ns, PromiseGetBundle(fp->caller)->name, map, expbuf);
+
+                    if (strstr(BufferData(expbuf), "$(this.k)") || strstr(BufferData(expbuf), "${this.k}") ||
+                        strstr(BufferData(expbuf), "$(this.v)") || strstr(BufferData(expbuf), "${this.v}"))
+                    {
+                        RlistDestroy(returnlist);
+                        EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_THIS, "k");
+                        EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_THIS, "v");
+                        BufferDestroy(expbuf);
+                        return FnFailure();
+                    }
+
+                    RlistAppendScalarIdemp(&returnlist, BufferData(expbuf));
+                    EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_THIS, "v");
+                }
             }
             break;
 
@@ -2100,6 +2109,7 @@ static FnCallResult FnCallMapArray(EvalContext *ctx, FnCall *fp, Rlist *finalarg
         EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_THIS, "k");
     }
 
+    BufferDestroy(expbuf);
     VariableTableIteratorDestroy(iter);
     VarRefDestroy(ref);
 
@@ -2113,7 +2123,6 @@ static FnCallResult FnCallMapArray(EvalContext *ctx, FnCall *fp, Rlist *finalarg
 
 static FnCallResult FnCallMapList(EvalContext *ctx, ARG_UNUSED FnCall *fp, Rlist *finalargs)
 {
-    char expbuf[CF_EXPANDSIZE];
     Rlist *newlist = NULL;
     DataType retype;
 
@@ -2147,22 +2156,26 @@ static FnCallResult FnCallMapList(EvalContext *ctx, ARG_UNUSED FnCall *fp, Rlist
         return FnFailure();
     }
 
+    Buffer *expbuf = BufferNew();
     for (const Rlist *rp = list; rp != NULL; rp = rp->next)
     {
+        BufferZero(expbuf);
         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "this", RlistScalarValue(rp), DATA_TYPE_STRING, "source=function,function=maplist");
 
         ExpandScalar(ctx, NULL, "this", map, expbuf);
 
-        if (strstr(expbuf, "$(this)") || strstr(expbuf, "${this}"))
+        if (strstr(BufferData(expbuf), "$(this)") || strstr(BufferData(expbuf), "${this}"))
         {
             RlistDestroy(newlist);
             EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_THIS, "this");
+            BufferDestroy(expbuf);
             return FnFailure();
         }
 
-        RlistAppendScalar(&newlist, expbuf);
+        RlistAppendScalar(&newlist, BufferData(expbuf));
         EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_THIS, "this");
     }
+    BufferDestroy(expbuf);
 
     return (FnCallResult) { FNCALL_SUCCESS, { newlist, RVAL_TYPE_LIST } };
 }

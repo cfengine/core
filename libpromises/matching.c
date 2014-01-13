@@ -289,9 +289,8 @@ int IsRegexItemIn(EvalContext *ctx, Item *list, char *regex)
 
 /* Escapes non-alphanumeric chars, except sequence given in noEscSeq */
 
-void EscapeSpecialChars(char *str, char *strEsc, int strEscSz, char *noEscSeq, char *noEscList)
+void EscapeSpecialChars(const char *str, char *strEsc, int strEscSz, char *noEscSeq, char *noEscList)
 {
-    char *sp;
     int strEscPos = 0;
 
     if (noEscSeq == NULL)
@@ -306,7 +305,7 @@ void EscapeSpecialChars(char *str, char *strEsc, int strEscSz, char *noEscSeq, c
 
     memset(strEsc, 0, strEscSz);
 
-    for (sp = str; (*sp != '\0') && (strEscPos < strEscSz - 2); sp++)
+    for (const char *sp = str; (*sp != '\0') && (strEscPos < strEscSz - 2); sp++)
     {
         if (strncmp(sp, noEscSeq, strlen(noEscSeq)) == 0)
         {

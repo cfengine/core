@@ -89,7 +89,7 @@ static int EditLineByColumn(EvalContext *ctx, Rlist **columns, Attributes a, con
 static int DoEditColumn(Rlist **columns, Attributes a, EditContext *edcontext);
 static int SanityCheckInsertions(Attributes a);
 static int SanityCheckDeletions(Attributes a, const Promise *pp);
-static int SelectLine(EvalContext *ctx, char *line, Attributes a);
+static int SelectLine(EvalContext *ctx, const char *line, Attributes a);
 static int NotAnchored(char *s);
 static int SelectRegion(EvalContext *ctx, Item *start, Item **begin_ptr, Item **end_ptr, Attributes a, const Promise *pp, EditContext *edcontext, PromiseResult *result);
 static int MultiLineString(char *s);
@@ -1110,7 +1110,7 @@ static int DeletePromisedLinesMatching(EvalContext *ctx, Item **start, Item *beg
 static int ReplacePatterns(EvalContext *ctx, Item *file_start, Item *file_end, Attributes a,
                            const Promise *pp, EditContext *edcontext, PromiseResult *result)
 {
-    char replace[CF_EXPANDSIZE], line_buff[CF_EXPANDSIZE];
+    char line_buff[CF_EXPANDSIZE];
     char after[CF_BUFSIZE];
     int match_len, start_off, end_off, once_only = false, retval = false;
     Item *ip;
@@ -1122,6 +1122,7 @@ static int ReplacePatterns(EvalContext *ctx, Item *file_start, Item *file_end, A
         once_only = true;
     }
 
+    Buffer *replace = BufferNew();
     for (ip = file_start; ip != NULL && ip != file_end; ip = ip->next)
     {
         if (ip->name == NULL)
@@ -1149,9 +1150,10 @@ static int ReplacePatterns(EvalContext *ctx, Item *file_start, Item *file_end, A
             }
 
             match_len = end_off - start_off;
+            BufferZero(replace);
             ExpandScalar(ctx, PromiseGetBundle(pp)->ns, PromiseGetBundle(pp)->name, a.replace.replace_value, replace);
 
-            Log(LOG_LEVEL_VERBOSE, "Verifying replacement of '%s' with '%s', cutoff %d", pp->promiser, replace,
+            Log(LOG_LEVEL_VERBOSE, "Verifying replacement of '%s' with '%s', cutoff %d", pp->promiser, BufferData(replace),
                   cutoff);
 
             // Save portion of line after substitution:
@@ -1161,7 +1163,7 @@ static int ReplacePatterns(EvalContext *ctx, Item *file_start, Item *file_end, A
 
             // Substitute into line_buff:
             snprintf(line_buff + start_off, sizeof(line_buff) - start_off,
-                     "%s%s", replace, after);
+                     "%s%s", BufferData(replace), after);
             // TODO: gripe if that truncated or failed !
             notfound = false;
             replaced = true;
@@ -1224,6 +1226,8 @@ static int ReplacePatterns(EvalContext *ctx, Item *file_start, Item *file_end, A
             }
         }
     }
+
+    BufferDestroy(replace);
 
     if (notfound)
     {
@@ -1542,7 +1546,7 @@ static int InsertFileAtLocation(EvalContext *ctx, Item **start, Item *begin_ptr,
                                 Item *prev, Attributes a, const Promise *pp, EditContext *edcontext, PromiseResult *result)
 {
     FILE *fin;
-    char buf[CF_BUFSIZE], exp[CF_EXPANDSIZE];
+    char buf[CF_BUFSIZE];
     int retval = false;
     Item *loc = NULL;
     int preserve_block = a.sourcetype && strcmp(a.sourcetype, "file_preserve_block") == 0;
@@ -1555,6 +1559,7 @@ static int InsertFileAtLocation(EvalContext *ctx, Item **start, Item *begin_ptr,
     }
 
     loc = location;
+    Buffer *exp = BufferNew();
 
     for(;;)
     {
@@ -1588,37 +1593,38 @@ static int InsertFileAtLocation(EvalContext *ctx, Item **start, Item *begin_ptr,
             break;
         }
 
+        BufferZero(exp);
         if (a.expandvars)
         {
             ExpandScalar(ctx, PromiseGetBundle(pp)->ns, PromiseGetBundle(pp)->name, buf, exp);
         }
         else
         {
-            strcpy(exp, buf);
+            BufferAppend(exp, buf, strlen(buf));
         }
 
-        if (!SelectLine(ctx, exp, a))
+        if (!SelectLine(ctx, BufferData(exp), a))
         {
             continue;
         }
 
-        if (!preserve_block && IsItemInRegion(ctx, exp, begin_ptr, end_ptr, a.insert_match, pp))
+        if (!preserve_block && IsItemInRegion(ctx, BufferData(exp), begin_ptr, end_ptr, a.insert_match, pp))
         {
             cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a,
-                 "Promised file line '%s' exists within file %s (promise kept)", exp, edcontext->filename);
+                 "Promised file line '%s' exists within file %s (promise kept)", BufferData(exp), edcontext->filename);
             continue;
         }
 
         // Need to call CompoundLine here in case ExpandScalar has inserted \n into a string
 
-        retval |= InsertCompoundLineAtLocation(ctx, exp, start, begin_ptr, end_ptr, loc, prev, a, pp, edcontext, result);
+        retval |= InsertCompoundLineAtLocation(ctx, BufferGet(exp), start, begin_ptr, end_ptr, loc, prev, a, pp, edcontext, result);
 
         if (preserve_block && prev == CF_UNDEFINED_ITEM)
-           {
-           // If we are inserting a preserved block before, need to flip the implied order after the first insertion
-           // to get the order of the block right
-           //a.location.before_after = cfe_after;
-           }
+        {
+            // If we are inserting a preserved block before, need to flip the implied order after the first insertion
+            // to get the order of the block right
+            //a.location.before_after = cfe_after;
+        }
 
         if (prev && prev != CF_UNDEFINED_ITEM)
         {
@@ -1640,6 +1646,7 @@ static int InsertFileAtLocation(EvalContext *ctx, Item **start, Item *begin_ptr,
     }
 
     fclose(fin);
+    BufferDestroy(exp);
     return retval;
 
 }
@@ -2024,7 +2031,7 @@ static int EditLineByColumn(EvalContext *ctx, Rlist **columns, Attributes a,
 
 /***************************************************************************/
 
-static int SelectLine(EvalContext *ctx, char *line, Attributes a)
+static int SelectLine(EvalContext *ctx, const char *line, Attributes a)
 {
     Rlist *rp, *c;
     int s, e;

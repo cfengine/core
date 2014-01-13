@@ -976,15 +976,12 @@ static PromiseResult AddPatchToSchedule(EvalContext *ctx, const Attributes *a, c
 static PromiseResult SchedulePackageOp(EvalContext *ctx, const char *name, const char *version, const char *arch, int installed, int matched,
                                        int no_version_specified, Attributes a, const Promise *pp)
 {
-    char reference[CF_EXPANDSIZE], reference2[CF_EXPANDSIZE];
-    char refAnyVer[CF_EXPANDSIZE];
     char refAnyVerEsc[CF_EXPANDSIZE];
     char largestVerAvail[CF_MAXVARSIZE];
     char largestPackAvail[CF_MAXVARSIZE];
     char inst_ver[CF_MAXVARSIZE];
     char inst_arch[CF_MAXVARSIZE];
     char idBuf[CF_MAXVARSIZE];
-    char *id_del;
     char id[CF_EXPANDSIZE];
     char *pathName = NULL;
     int package_select_in_range = false;
@@ -995,6 +992,7 @@ static PromiseResult SchedulePackageOp(EvalContext *ctx, const char *name, const
 
 /* Now we need to know the name-convention expected by the package manager */
 
+    Buffer *expanded = BufferNew();
     if ((a.packages.package_name_convention) || (a.packages.package_delete_convention))
     {
         VarRef *ref_name = VarRefParseFromScope("name", "cf_pack_context");
@@ -1008,13 +1006,13 @@ static PromiseResult SchedulePackageOp(EvalContext *ctx, const char *name, const
 
         if ((a.packages.package_delete_convention) && (a.packages.package_policy == PACKAGE_ACTION_DELETE))
         {
-            ExpandScalar(ctx, NULL, "cf_pack_context", a.packages.package_delete_convention, reference);
-            strlcpy(id, reference, CF_EXPANDSIZE);
+            ExpandScalar(ctx, NULL, "cf_pack_context", a.packages.package_delete_convention, expanded);
+            strlcpy(id, BufferData(expanded), CF_EXPANDSIZE);
         }
         else if (a.packages.package_name_convention)
         {
-            ExpandScalar(ctx, NULL, "cf_pack_context", a.packages.package_name_convention, reference);
-            strlcpy(id, reference, CF_EXPANDSIZE);
+            ExpandScalar(ctx, NULL, "cf_pack_context", a.packages.package_name_convention, expanded);
+            strlcpy(id, BufferData(expanded), CF_EXPANDSIZE);
         }
         else
         {
@@ -1083,7 +1081,8 @@ static PromiseResult SchedulePackageOp(EvalContext *ctx, const char *name, const
                     VarRef *ref_arch = VarRefParseFromScope("arch", "cf_pack_context_anyver");
                     EvalContextVariablePut(ctx, ref_arch, arch, DATA_TYPE_STRING, "source=promise");
 
-                    ExpandScalar(ctx, NULL, "cf_pack_context_anyver", a.packages.package_name_convention, refAnyVer);
+                    BufferZero(expanded);
+                    ExpandScalar(ctx, NULL, "cf_pack_context_anyver", a.packages.package_name_convention, expanded);
 
                     EvalContextVariableRemove(ctx, ref_name);
                     VarRefDestroy(ref_name);
@@ -1095,7 +1094,7 @@ static PromiseResult SchedulePackageOp(EvalContext *ctx, const char *name, const
                     VarRefDestroy(ref_arch);
                 }
 
-                EscapeSpecialChars(refAnyVer, refAnyVerEsc, sizeof(refAnyVerEsc), "(.*)","");
+                EscapeSpecialChars(BufferData(expanded), refAnyVerEsc, sizeof(refAnyVerEsc), "(.*)","");
 
                 if (FindLargestVersionAvail(ctx, largestPackAvail, largestVerAvail, refAnyVerEsc, version,
                                             a.packages.package_file_repositories, a, pp, &result))
@@ -1115,6 +1114,7 @@ static PromiseResult SchedulePackageOp(EvalContext *ctx, const char *name, const
             if (a.packages.package_add_command == NULL)
             {
                 cfPS_HELPER_0ARG(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, pp, a, "Package add command undefined");
+                BufferDestroy(expanded);
                 return PROMISE_RESULT_FAIL;
             }
             result = PromiseResultUpdate_HELPER(pp, result,
@@ -1137,6 +1137,7 @@ static PromiseResult SchedulePackageOp(EvalContext *ctx, const char *name, const
             if (a.packages.package_delete_command == NULL)
             {
                 cfPS_HELPER_0ARG(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, pp, a, "Package delete command undefined");
+                BufferDestroy(expanded);
                 return PROMISE_RESULT_FAIL;
             }
             // expand local repository in the name convetion, if present
@@ -1178,6 +1179,7 @@ static PromiseResult SchedulePackageOp(EvalContext *ctx, const char *name, const
         if (a.packages.package_delete_command == NULL)
         {
             cfPS_HELPER_0ARG(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, pp, a, "Package delete command undefined");
+            BufferDestroy(expanded);
             return PROMISE_RESULT_FAIL;
         }
 
@@ -1187,6 +1189,7 @@ static PromiseResult SchedulePackageOp(EvalContext *ctx, const char *name, const
             if (a.packages.package_add_command == NULL)
             {
                 cfPS_HELPER_0ARG(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, pp, a, "Package add command undefined");
+                BufferDestroy(expanded);
                 return PROMISE_RESULT_FAIL;
             }
             if ((matched && package_select_in_range) || (installed && no_version_specified))
@@ -1204,6 +1207,7 @@ static PromiseResult SchedulePackageOp(EvalContext *ctx, const char *name, const
         {
             cfPS_HELPER_0ARG(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a,
                  "Package reinstallation cannot be promised -- insufficient version info or no match");
+            BufferDestroy(expanded);
             return PROMISE_RESULT_FAIL;
         }
         break;
@@ -1225,7 +1229,8 @@ static PromiseResult SchedulePackageOp(EvalContext *ctx, const char *name, const
                 VarRef *ref_arch = VarRefParseFromScope("arch", "cf_pack_context_anyver");
                 EvalContextVariablePut(ctx, ref_arch, arch, DATA_TYPE_STRING, "source=promise");
 
-                ExpandScalar(ctx, NULL, "cf_pack_context_anyver", a.packages.package_name_convention, refAnyVer);
+                BufferZero(expanded);
+                ExpandScalar(ctx, NULL, "cf_pack_context_anyver", a.packages.package_name_convention, expanded);
 
                 EvalContextVariableRemove(ctx, ref_name);
                 VarRefDestroy(ref_name);
@@ -1238,7 +1243,7 @@ static PromiseResult SchedulePackageOp(EvalContext *ctx, const char *name, const
             }
 
 
-            EscapeSpecialChars(refAnyVer, refAnyVerEsc, sizeof(refAnyVerEsc), "(.*)","");
+            EscapeSpecialChars(BufferData(expanded), refAnyVerEsc, sizeof(refAnyVerEsc), "(.*)","");
 
             if (FindLargestVersionAvail(ctx, largestPackAvail, largestVerAvail, refAnyVerEsc, version,
                                         a.packages.package_file_repositories, a, pp, &result))
@@ -1280,6 +1285,7 @@ static PromiseResult SchedulePackageOp(EvalContext *ctx, const char *name, const
                 Log(LOG_LEVEL_VERBOSE, "Package update command undefined - failing over to delete then add");
 
                 // we need to have the version of installed package
+                const char *id_del = id;
                 if (a.packages.package_delete_convention)
                 {
                     if (*inst_ver == '\0')
@@ -1303,8 +1309,9 @@ static PromiseResult SchedulePackageOp(EvalContext *ctx, const char *name, const
                     VarRef *ref_arch = VarRefParseFromScope("arch", "cf_pack_context");
                     EvalContextVariablePut(ctx, ref_arch, inst_arch, DATA_TYPE_STRING, "source=promise");
 
-                    ExpandScalar(ctx, NULL, "cf_pack_context", a.packages.package_delete_convention, reference2);
-                    id_del = reference2;
+                    BufferZero(expanded);
+                    ExpandScalar(ctx, NULL, "cf_pack_context", a.packages.package_delete_convention, expanded);
+                    id_del = BufferData(expanded);
 
                     EvalContextVariableRemove(ctx, ref_name);
                     VarRefDestroy(ref_name);
@@ -1315,21 +1322,19 @@ static PromiseResult SchedulePackageOp(EvalContext *ctx, const char *name, const
                     EvalContextVariableRemove(ctx, ref_arch);
                     VarRefDestroy(ref_arch);
                 }
-                else
-                {
-                    id_del = id;        // defaults to the package_name_convention
-                }
 
                 Log(LOG_LEVEL_VERBOSE, "Scheduling package with id '%s' for deletion", id_del);
 
                 if (a.packages.package_add_command == NULL)
                 {
                     cfPS_HELPER_0ARG(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, pp, a, "Package add command undefined");
+                    BufferDestroy(expanded);
                     return PROMISE_RESULT_FAIL;
                 }
                 if (a.packages.package_delete_command == NULL)
                 {
                     cfPS_HELPER_0ARG(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, pp, a, "Package delete command undefined");
+                    BufferDestroy(expanded);
                     return PROMISE_RESULT_FAIL;
                 }
                 result = PromiseResultUpdate_HELPER(pp, result,
@@ -1384,6 +1389,7 @@ static PromiseResult SchedulePackageOp(EvalContext *ctx, const char *name, const
         else
         {
             cfPS_HELPER_1ARG(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, a, "Package '%s' cannot be verified -- no match", pp->promiser);
+            BufferDestroy(expanded);
             return PROMISE_RESULT_FAIL;
         }
 
@@ -1393,6 +1399,7 @@ static PromiseResult SchedulePackageOp(EvalContext *ctx, const char *name, const
         break;
     }
 
+    BufferDestroy(expanded);
     return result;
 }
 

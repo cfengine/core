@@ -61,11 +61,11 @@ PromiseResult VerifyMethod(EvalContext *ctx, char *attrname, Attributes a, const
     Bundle *bp;
     void *vp;
     FnCall *fp;
-    char method_name[CF_EXPANDSIZE];
     Rlist *args = NULL;
     CfLock thislock;
     char lockname[CF_BUFSIZE];
 
+    Buffer *method_name = BufferNew();
     if (a.havebundle)
     {
         if ((vp = PromiseGetConstraintAsRval(pp, attrname, RVAL_TYPE_FNCALL)))
@@ -81,6 +81,7 @@ PromiseResult VerifyMethod(EvalContext *ctx, char *attrname, Attributes a, const
         }
         else
         {
+            BufferDestroy(method_name);
             return PROMISE_RESULT_NOOP;
         }
     }
@@ -90,6 +91,7 @@ PromiseResult VerifyMethod(EvalContext *ctx, char *attrname, Attributes a, const
     thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a.transaction, pp, false);
     if (thislock.lock == NULL)
     {
+        BufferDestroy(method_name);
         return PROMISE_RESULT_SKIPPED;
     }
 
@@ -97,7 +99,7 @@ PromiseResult VerifyMethod(EvalContext *ctx, char *attrname, Attributes a, const
 
     char ns[CF_MAXVARSIZE] = "";
     char bundle_name[CF_MAXVARSIZE] = "";
-    SplitScopeName(method_name, ns, bundle_name);
+    SplitScopeName(BufferData(method_name), ns, bundle_name);
     
     bp = PolicyGetBundle(PolicyFromPromise(pp), EmptyString(ns) ? NULL : ns, "agent", bundle_name);
     if (!bp)
@@ -123,12 +125,10 @@ PromiseResult VerifyMethod(EvalContext *ctx, char *attrname, Attributes a, const
         {
         case PROMISE_RESULT_FAIL:
             cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, a, "Method '%s' failed in some repairs or aborted", bp->name);
-            result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
             break;
 
         case PROMISE_RESULT_CHANGE:
             cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, "Method '%s' invoked repairs", bp->name);
-            result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
             break;
 
         default:
@@ -147,7 +147,7 @@ PromiseResult VerifyMethod(EvalContext *ctx, char *attrname, Attributes a, const
     }
     else
     {
-        if (IsCf3VarString(method_name))
+        if (IsCf3VarString(BufferData(method_name)))
         {
             Log(LOG_LEVEL_ERR,
                   "A variable seems to have been used for the name of the method. In this case, the promiser also needs to contain the unique name of the method");
@@ -160,13 +160,14 @@ PromiseResult VerifyMethod(EvalContext *ctx, char *attrname, Attributes a, const
         else
         {
             cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a,
-                 "A method attempted to use a bundle '%s' that was apparently not defined", method_name);
+                 "A method attempted to use a bundle '%s' that was apparently not defined", BufferData(method_name));
             result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
         }
     }
 
     
     YieldCurrentLock(thislock);
+    BufferDestroy(method_name);
     return result;
 }
 

@@ -110,6 +110,24 @@ void BufferDestroy(Buffer *buffer)
     }
 }
 
+char *BufferClose(Buffer *buffer)
+{
+    char *detached;
+    if (RefCountIsShared(buffer->ref_count))
+    {
+        detached = xmemdup(buffer->buffer, buffer->used);
+        RefCountDetach(buffer->ref_count, buffer);
+    }
+    else
+    {
+        detached = buffer->buffer;
+        RefCountDestroy(&(buffer->ref_count));
+    }
+
+    free(buffer);
+    return detached;
+}
+
 Buffer *BufferCopy(const Buffer *source)
 {
     Buffer *copy = xmalloc(sizeof(Buffer));
@@ -392,6 +410,12 @@ void BufferAppend(Buffer *buffer, const char *bytes, unsigned int length)
     {
         buffer->buffer[buffer->used] = '\0';
     }
+}
+
+void BufferAppendChar(Buffer *buffer, char byte)
+{
+    // TODO: can probably be optimized
+    BufferAppend(buffer, &byte, 1);
 }
 
 int BufferPrintf(Buffer *buffer, const char *format, ...)

@@ -240,10 +240,11 @@ static void test_expand_scalar_two_scalars_concat(void **state)
         VarRefDestroy(lval);
     }
 
-    char res[CF_EXPANDSIZE] = { 0 };
+    Buffer *res = BufferNew();
     ExpandScalar(ctx, "default", "bundle", "a $(one) b $(two)c", res);
 
-    assert_string_equal("a first b secondc", res);
+    assert_string_equal("a first b secondc", BufferData(res));
+    BufferDestroy(res);
 }
 
 static void test_expand_scalar_two_scalars_nested(void **state)
@@ -260,10 +261,11 @@ static void test_expand_scalar_two_scalars_nested(void **state)
         VarRefDestroy(lval);
     }
 
-    char res[CF_EXPANDSIZE] = { 0 };
+    Buffer *res = BufferNew();
     ExpandScalar(ctx, "default", "bundle", "a $($(two))b", res);
 
-    assert_string_equal("a firstb", res);
+    assert_string_equal("a firstb", BufferData(res));
+    BufferDestroy(res);
 }
 
 static void test_expand_scalar_array_concat(void **state)
@@ -280,10 +282,11 @@ static void test_expand_scalar_array_concat(void **state)
         VarRefDestroy(lval);
     }
 
-    char res[CF_EXPANDSIZE] = { 0 };
+    Buffer *res = BufferNew();
     ExpandScalar(ctx, "default", "bundle", "a $(foo[one]) b $(foo[two])c", res);
 
-    assert_string_equal("a first b secondc", res);
+    assert_string_equal("a first b secondc", BufferData(res));
+    BufferDestroy(res);
 }
 
 static void test_expand_scalar_array_with_scalar_arg(void **state)
@@ -300,10 +303,11 @@ static void test_expand_scalar_array_with_scalar_arg(void **state)
         VarRefDestroy(lval);
     }
 
-    char res[CF_EXPANDSIZE] = { 0 };
+    Buffer *res = BufferNew();
     ExpandScalar(ctx, "default", "bundle", "a$(foo[$(bar)])b", res);
 
-    assert_string_equal("afirstb", res);
+    assert_string_equal("afirstb", BufferData(res));
+    BufferDestroy(res);
 }
 
 static PromiseResult actuator_expand_promise_array_with_scalar_arg(EvalContext *ctx, const Promise *pp, ARG_UNUSED void *param)

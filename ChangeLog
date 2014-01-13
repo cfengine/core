@@ -1,6 +1,11 @@
+3.5.4
+       Bug fixes:
+       - correctly initialize sys.flavor and sys.arch on HP-UX (Redmine #3482)
+       - Fix failure to open paths ending in a slash (Redmine #3905)
+
 3.5.3
        Changes:
-       - Improved security checks of symlink ownership. A symlink created by a user pointing
+       - Improved security checks of symlink ownership. A symlink created by a user pointing
          to resources owned by a different user will no longer be followed.
        - Changed the way package versions are compared in package promises. (Redmine #3314)
          In previous versions the comparison was inconsistent. This has been fixed, but may

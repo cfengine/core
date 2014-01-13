@@ -21,7 +21,7 @@ bundle agent test
   methods:
       "x" usebundle => see_scalar($(x));
       "y" usebundle => see_slist(@(test.y));
-      "z" usebundle => see_data(z);
+      "z" usebundle => see_data(@(z));
 }
 
 bundle agent see_scalar(svar)

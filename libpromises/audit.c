@@ -32,10 +32,6 @@ int PR_KEPT = 0; /* GLOBAL_X */
 int PR_REPAIRED = 0; /* GLOBAL_X */
 int PR_NOTKEPT = 0; /* GLOBAL_X */
 
-static double VAL_KEPT = 0.0; /* GLOBAL_X */
-static double VAL_REPAIRED = 0.0; /* GLOBAL_X */
-static double VAL_NOTKEPT = 0.0; /* GLOBAL_X */
-
 static bool END_AUDIT_REQUIRED = false; /* GLOBAL_X */
 
 void BeginAudit()
@@ -43,18 +39,16 @@ void BeginAudit()
     END_AUDIT_REQUIRED = true;
 }
 
-void UpdatePromiseCounters(PromiseResult status, TransactionContext tc)
+void UpdatePromiseCounters(PromiseResult status)
 {
     switch (status)
     {
     case PROMISE_RESULT_CHANGE:
         PR_REPAIRED++;
-        VAL_REPAIRED += tc.value_repaired;
         break;
 
     case PROMISE_RESULT_NOOP:
         PR_KEPT++;
-        VAL_KEPT += tc.value_kept;
         break;
 
     case PROMISE_RESULT_WARN:
@@ -63,7 +57,6 @@ void UpdatePromiseCounters(PromiseResult status, TransactionContext tc)
     case PROMISE_RESULT_DENIED:
     case PROMISE_RESULT_INTERRUPTED:
         PR_NOTKEPT++;
-        VAL_NOTKEPT += tc.value_notkept;
         break;
 
     default:

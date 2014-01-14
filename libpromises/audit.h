@@ -35,7 +35,7 @@
 
 void BeginAudit(void);
 
-void UpdatePromiseCounters(PromiseResult status, TransactionContext tc);
+void UpdatePromiseCounters(PromiseResult status);
 
 void EndAudit(const EvalContext *ctx, int background_tasks);
 

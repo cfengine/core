@@ -3303,7 +3303,7 @@ static FnCallResult FnCallNth(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 
             if (JSON_CONTAINER_TYPE_OBJECT == ct)
             {
-                    jelement = JsonObjectGet(jholder, key);
+                jelement = JsonObjectGet(jholder, key);
             }
             else if (JSON_CONTAINER_TYPE_ARRAY == ct)
             {

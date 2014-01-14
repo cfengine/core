@@ -643,21 +643,6 @@ TransactionContext GetTransactionConstraints(const EvalContext *ctx, const Promi
     t.log_repaired = PromiseGetConstraintAsRval(pp, "log_repaired", RVAL_TYPE_SCALAR);
     t.log_failed = PromiseGetConstraintAsRval(pp, "log_failed", RVAL_TYPE_SCALAR);
 
-    if (!PromiseGetConstraintAsReal(ctx, "value_kept", pp, &t.value_kept))
-    {
-        t.value_kept = 1.0;
-    }
-
-    if (!PromiseGetConstraintAsReal(ctx, "value_repaired", pp, &t.value_repaired))
-    {
-        t.value_repaired = 0.5;
-    }
-
-    if (!PromiseGetConstraintAsReal(ctx, "value_notkept", pp, &t.value_notkept))
-    {
-        t.value_notkept = -1.0;
-    }
-
     value = PromiseGetConstraintAsRval(pp, "log_level", RVAL_TYPE_SCALAR);
     t.log_level = ActionAttributeLogLevelFromString(value);
 

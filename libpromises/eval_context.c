@@ -2089,7 +2089,7 @@ void ClassAuditLog(EvalContext *ctx, const Promise *pp, Attributes attr, Promise
     if (IsPromiseValuableForStatus(pp))
     {
         TrackTotalCompliance(status, pp);
-        UpdatePromiseCounters(status, attr.transaction);
+        UpdatePromiseCounters(status);
     }
 
     SetPromiseOutcomeClasses(status, ctx, pp, attr.classes);

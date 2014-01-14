@@ -1014,9 +1014,6 @@ typedef struct
     char *log_failed;
     int log_priority;
     char *measure_id;
-    double value_kept;
-    double value_notkept;
-    double value_repaired;
     int audit;
     LogLevel report_level;
     LogLevel log_level;

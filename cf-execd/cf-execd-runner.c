@@ -688,7 +688,7 @@ static void MailResult(const ExecConfig *config, const char *file)
         HashPubKey(PUBKEY, digest, CF_DEFAULT_DIGEST);
 
         snprintf(vbuff, sizeof(vbuff), "X-CFEngine: vfqhost=\"%s\";ip-addresses=\"%s\";policyhub=\"%s\";pkhash=\"%s\"\r\n",
-                 VFQNAME, config->ip_addresses, existing_policy_server,
+                 config->fq_name, config->ip_addresses, existing_policy_server,
                  HashPrintSafe(CF_DEFAULT_DIGEST, true, digest, buffer));
 
         send(sd, vbuff, strlen(vbuff), 0);

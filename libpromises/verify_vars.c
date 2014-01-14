@@ -61,9 +61,9 @@ PromiseResult VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_d
         return PROMISE_RESULT_NOOP;
     }
 
-    //More consideration needs to be given to using these
-    //a.transaction = GetTransactionConstraints(pp);
     Attributes a = { {0} };
+    // More consideration needs to be given to using these
+    //a.transaction = GetTransactionConstraints(pp);
     a.classes = GetClassDefinitionConstraints(ctx, pp);
 
     VarRef *ref = VarRefParseFromBundle(pp->promiser, PromiseGetBundle(pp));
@@ -73,15 +73,10 @@ PromiseResult VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_d
     }
 
     DataType existing_value_type = DATA_TYPE_NONE;
-    const void *existing_value = NULL;
-
-    if (!IsExpandable(pp->promiser))
-    {
-        existing_value = EvalContextVariableGet(ctx, ref, &existing_value_type);
-    }
+    const void *const existing_value =
+        IsExpandable(pp->promiser) ? NULL : EvalContextVariableGet(ctx, ref, &existing_value_type);
 
     PromiseResult result = PROMISE_RESULT_NOOP;
-
     Rval rval = opts.cp_save->rval;
 
     if (rval.item != NULL)
@@ -96,7 +91,7 @@ PromiseResult VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_d
             {
                 // Already did this
                 VarRefDestroy(ref);
-                return result;
+                return PROMISE_RESULT_NOOP;
             }
 
             FnCallResult res = FnCallEvaluate(ctx, fp, pp);
@@ -106,7 +101,7 @@ PromiseResult VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_d
                 /* We do not assign variables to failed fn calls */
                 RvalDestroy(res.rval);
                 VarRefDestroy(ref);
-                return result;
+                return PROMISE_RESULT_NOOP;
             }
             else
             {
@@ -119,8 +114,8 @@ PromiseResult VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_d
 
             if (strcmp(opts.cp_save->lval, "int") == 0)
             {
-                int result = BufferPrintf(conv, "%ld", IntFromString(opts.cp_save->rval.item));
-                if (result < 0)
+                int printed = BufferPrintf(conv, "%ld", IntFromString(opts.cp_save->rval.item));
+                if (printed < 0)
                 {
                     /*
                      * Even though there will be no problems with memory allocation, there
@@ -129,24 +124,24 @@ PromiseResult VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_d
                     UnexpectedError("Problems writing to buffer");
                     VarRefDestroy(ref);
                     BufferDestroy(conv);
-                    return result;
+                    return PROMISE_RESULT_NOOP;
                 }
                 rval = RvalNew(BufferData(conv), opts.cp_save->rval.type);
             }
             else if (strcmp(opts.cp_save->lval, "real") == 0)
             {
-                int result = -1;
+                int printed = -1;
                 double real_value = 0.0;
                 if (DoubleFromString(opts.cp_save->rval.item, &real_value))
                 {
-                    result = BufferPrintf(conv, "%lf", real_value);
+                    printed = BufferPrintf(conv, "%lf", real_value);
                 }
                 else
                 {
-                    result = BufferPrintf(conv, "(double conversion error)");
+                    printed = BufferPrintf(conv, "(double conversion error)");
                 }
 
-                if (result < 0)
+                if (printed < 0)
                 {
                     /*
                      * Even though there will be no problems with memory allocation, there
@@ -155,7 +150,7 @@ PromiseResult VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_d
                     UnexpectedError("Problems writing to buffer");
                     VarRefDestroy(ref);
                     BufferDestroy(conv);
-                    return result;
+                    return PROMISE_RESULT_NOOP;
                 }
                 rval = RvalCopy((Rval) {(char *)BufferData(conv), opts.cp_save->rval.type});
             }
@@ -197,35 +192,35 @@ PromiseResult VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_d
             {
                 EvalContextVariableRemove(ctx, ref);
             }
-            else if ((THIS_AGENT_TYPE == AGENT_TYPE_COMMON)
-                     && (CompareRval(existing_value, DataTypeToRvalType(existing_value_type),
-                                     rval.item, rval.type) == false))
+            else if (THIS_AGENT_TYPE == AGENT_TYPE_COMMON &&
+                     !CompareRval(existing_value, DataTypeToRvalType(existing_value_type),
+                                  rval.item, rval.type))
             {
                 switch (rval.type)
                 {
                 case RVAL_TYPE_SCALAR:
                     Log(LOG_LEVEL_VERBOSE, "Redefinition of a constant scalar '%s', was '%s' now '%s'",
-                          pp->promiser, (const char *)existing_value, RvalScalarValue(rval));
+                        pp->promiser, (const char *)existing_value, RvalScalarValue(rval));
                     PromiseRef(LOG_LEVEL_VERBOSE, pp);
                     break;
 
                 case RVAL_TYPE_LIST:
-                    {
+                {
                     Log(LOG_LEVEL_VERBOSE, "Redefinition of a constant list '%s'", pp->promiser);
-                        Writer *w = StringWriter();
-                        RlistWrite(w, existing_value);
-                        char *oldstr = StringWriterClose(w);
-                        Log(LOG_LEVEL_VERBOSE, "Old value '%s'", oldstr);
-                        free(oldstr);
+                    Writer *w = StringWriter();
+                    RlistWrite(w, existing_value);
+                    char *oldstr = StringWriterClose(w);
+                    Log(LOG_LEVEL_VERBOSE, "Old value '%s'", oldstr);
+                    free(oldstr);
 
-                        w = StringWriter();
-                        RlistWrite(w, rval.item);
-                        char *newstr = StringWriterClose(w);
-                        Log(LOG_LEVEL_VERBOSE, " New value '%s'", newstr);
-                        free(newstr);
-                        PromiseRef(LOG_LEVEL_VERBOSE, pp);
-                    }
-                    break;
+                    w = StringWriter();
+                    RlistWrite(w, rval.item);
+                    char *newstr = StringWriterClose(w);
+                    Log(LOG_LEVEL_VERBOSE, " New value '%s'", newstr);
+                    free(newstr);
+                    PromiseRef(LOG_LEVEL_VERBOSE, pp);
+                }
+                break;
 
                 case RVAL_TYPE_CONTAINER:
                 case RVAL_TYPE_FNCALL:
@@ -299,7 +294,9 @@ PromiseResult VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_d
 
         if (!EvalContextVariablePut(ctx, ref, rval.item, DataTypeFromString(opts.cp_save->lval), "source=promise"))
         {
-            Log(LOG_LEVEL_VERBOSE, "Unable to converge %s.%s value (possibly empty or infinite regression)", ref->scope, pp->promiser);
+            Log(LOG_LEVEL_VERBOSE,
+                "Unable to converge %s.%s value (possibly empty or infinite regression)",
+                ref->scope, pp->promiser);
             PromiseRef(LOG_LEVEL_VERBOSE, pp);
             result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
         }
@@ -314,7 +311,9 @@ PromiseResult VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_d
                 {
                     StringSetAdd(class_meta, xstrdup(RlistScalarValue(rp)));
                     print = StringSetToBuffer(class_meta, ',');
-                    Log(LOG_LEVEL_DEBUG, "Added tag %s to class %s, tags now [%s]", RlistScalarValue(rp), pp->promiser, BufferData(print));
+                    Log(LOG_LEVEL_DEBUG,
+                        "Added tag %s to class %s, tags now [%s]",
+                        RlistScalarValue(rp), pp->promiser, BufferData(print));
                     BufferDestroy(print);
                 }
             }

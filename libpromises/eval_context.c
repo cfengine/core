@@ -1415,7 +1415,12 @@ bool EvalContextVariableRemoveSpecial(const EvalContext *ctx, SpecialScope scope
     }
 }
 
-static VariableTable *GetVariableTableForScope(const EvalContext *ctx, const char *ns, const char *scope)
+static VariableTable *GetVariableTableForScope(const EvalContext *ctx,
+#ifdef NDEBUG
+                                               ARG_UNUSED
+#endif /* ns is only used in assertions ... */
+                                               const char *ns,
+                                               const char *scope)
 {
     switch (SpecialScopeFromString(scope))
     {
@@ -1587,7 +1592,7 @@ bool EvalContextVariablePut(EvalContext *ctx,
     }
 
     VariableTable *table = GetVariableTableForScope(ctx, ref->ns, ref->scope);
-    VariableTablePut(table, ref, &rval, type, tags);
+    VariableTablePut(table, ref, &rval, type, tags, EvalContextStackCurrentPromise(ctx));
     /* FIXME: we really shouldn't be ignoring the return from that ... */
     return true;
 }
@@ -1661,6 +1666,12 @@ const void  *EvalContextVariableGet(const EvalContext *ctx, const VarRef *ref, D
         *type_out = DATA_TYPE_NONE;
     }
     return NULL;
+}
+
+const Promise *EvalContextVariablePromiseGet(const EvalContext *ctx, const VarRef *ref)
+{
+    Variable *var = VariableResolve(ctx, ref);
+    return var ? var->promise : NULL;
 }
 
 StringSet *EvalContextClassTags(const EvalContext *ctx, const char *ns, const char *name)

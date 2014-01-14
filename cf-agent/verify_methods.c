@@ -100,7 +100,7 @@ PromiseResult VerifyMethod(EvalContext *ctx, char *attrname, Attributes a, const
     char ns[CF_MAXVARSIZE] = "";
     char bundle_name[CF_MAXVARSIZE] = "";
     SplitScopeName(BufferData(method_name), ns, bundle_name);
-    
+
     bp = PolicyGetBundle(PolicyFromPromise(pp), EmptyString(ns) ? NULL : ns, "agent", bundle_name);
     if (!bp)
     {
@@ -152,20 +152,12 @@ PromiseResult VerifyMethod(EvalContext *ctx, char *attrname, Attributes a, const
             Log(LOG_LEVEL_ERR,
                   "A variable seems to have been used for the name of the method. In this case, the promiser also needs to contain the unique name of the method");
         }
-        if (bp && (bp->name))
-        {
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Method '%s' was used but was not defined", bp->name);
-            result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
-        }
-        else
-        {
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a,
-                 "A method attempted to use a bundle '%s' that was apparently not defined", BufferData(method_name));
-            result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
-        }
+	cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a,
+	     "A method attempted to use a bundle '%s' that was apparently not defined",
+	     BufferData(method_name));
+	result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
     }
 
-    
     YieldCurrentLock(thislock);
     BufferDestroy(method_name);
     return result;
@@ -203,4 +195,3 @@ static void GetReturnValue(EvalContext *ctx, const Bundle *callee, const Promise
     }
 
 }
-

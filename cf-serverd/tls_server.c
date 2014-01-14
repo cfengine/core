@@ -315,7 +315,7 @@ int ServerIdentifyClient(const ConnectionInfo *conn_info,
     /* Assert sscanf() is safe to use. */
     assert(sizeof(word1)>=sizeof(line) && sizeof(word2)>=sizeof(line));
 
-    ret = sscanf(line, "IDENTITY %[^=]=%s %n", word1, word2, &chars_read);
+    ret = sscanf(line, "IDENTITY %[^=]=%s%n", word1, word2, &chars_read);
     while (ret >= 2)
     {
         /* Found USERNAME identity setting */
@@ -341,7 +341,7 @@ int ServerIdentifyClient(const ConnectionInfo *conn_info,
         }
 
         line_pos += chars_read;
-        ret = sscanf(&line[line_pos], " %[^=]=%s %n", word1, word2, &chars_read);
+        ret = sscanf(&line[line_pos], " %[^=]=%s%n", word1, word2, &chars_read);
     }
 
     return 1;

@@ -1,0 +1,67 @@
+#######################################################
+#
+# Test basics of meta promises
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+}
+
+#######################################################
+
+bundle agent test
+{
+  meta:
+      "s" string => "Wally Walleye";
+      "l" slist => { "Be", "Hg", "Pb" };
+      "c" data => parsejson('
+{
+ "first": 1,
+ "seconds": 2,
+ "third": [ "a", "b", "c" ],
+ "fourth": null
+}
+');
+}
+
+bundle agent check
+{
+  vars:
+      "actual[s]" string => $(test_meta.s);
+      "actual[l]" string => format("%S", "test_meta.l");
+      "actual[c]" string => format("%S", "test_meta.c");
+
+      "expected[s]" string => "Wally Walleye";
+      "expected[l]" string => '{ "Be", "Hg", "Pb" }';
+      "expected[c]" string => '{ "first": 1, "seconds": 2, "third": [ "a", "b", "c" ], "fourth": null }';
+      "tests" slist => getindices(expected);
+
+  classes:
+      "ok_$(tests)" expression => strcmp("$(actual[$(tests)])", "$(expected[$(tests)])");
+      "ok_$(tests)" not => strcmp("$(actual[$(tests)])", "$(expected[$(tests)])");
+
+      "ok" and => { "ok_s", "ok_l", "ok_c" };
+
+  reports:
+    DEBUG::
+      "OK: $(tests) got $(actual[$(tests)])"
+      ifvarclass => "ok_$(tests)";
+
+      "FAIL: $(tests) got $(actual[$(tests)]) != $(expected[$(tests)])"
+      ifvarclass => "not_ok_$(tests)";
+
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

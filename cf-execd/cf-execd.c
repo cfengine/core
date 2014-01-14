@@ -53,7 +53,7 @@ static pthread_attr_t threads_attrs; /* GLOBAL_T, initialized by pthread_attr_in
 static GenericAgentConfig *CheckOpts(int argc, char **argv);
 
 void ThisAgentInit(void);
-static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *config, ExecdConfig *execd_config, ExecConfig *exec_config, time_t *last_policy_reload);
+static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *config, ExecdConfig **execd_config, ExecConfig **exec_config, time_t *last_policy_reload);
 #ifndef __MINGW32__
 static void Apoptosis(void);
 #endif
@@ -159,7 +159,7 @@ int main(int argc, char *argv[])
     else
 #endif /* __MINGW32__ */
     {
-        StartServer(ctx, policy, config, execd_config, exec_config);
+        StartServer(ctx, policy, config, &execd_config, &exec_config);
     }
 
     ExecConfigDestroy(exec_config);
@@ -320,7 +320,7 @@ void ThisAgentInit(void)
 /*****************************************************************************/
 
 /* Might be called back from NovaWin_StartExecService */
-void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, ExecdConfig *execd_config, ExecConfig *exec_config)
+void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, ExecdConfig **execd_config, ExecConfig **exec_config)
 {
 #if !defined(__MINGW32__)
     time_t now = time(NULL);
@@ -376,7 +376,7 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, E
 
     if (ONCE)
     {
-        LocalExec(exec_config);
+        LocalExec(*exec_config);
         CloseLog();
     }
     else
@@ -385,13 +385,13 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, E
         {
             if (ScheduleRun(ctx, &policy, config, execd_config, exec_config, &last_policy_reload))
             {
-                Log(LOG_LEVEL_VERBOSE, "Sleeping for splaytime %d seconds", execd_config->splay_time);
-                sleep(execd_config->splay_time);
+                Log(LOG_LEVEL_VERBOSE, "Sleeping for splaytime %d seconds", (*execd_config)->splay_time);
+                sleep((*execd_config)->splay_time);
 
-                if (!LocalExecInThread(exec_config))
+                if (!LocalExecInThread(*exec_config))
                 {
                     Log(LOG_LEVEL_INFO, "Unable to run agent in thread, falling back to blocking execution");
-                    LocalExec(exec_config);
+                    LocalExec(*exec_config);
                 }
             }
         }
@@ -512,7 +512,7 @@ static Reload CheckNewPromises(const GenericAgentConfig *config, time_t *last_po
     return RELOAD_ENVIRONMENT;
 }
 
-static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *config, ExecdConfig *execd_config, ExecConfig *exec_config, time_t *last_policy_reload)
+static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *config, ExecdConfig **execd_config, ExecConfig **exec_config, time_t *last_policy_reload)
 {
     Log(LOG_LEVEL_VERBOSE, "Sleeping for pulse time %d seconds...", CFPULSETIME);
     sleep(CFPULSETIME);         /* 1 Minute resolution is enough */
@@ -551,13 +551,13 @@ static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *c
         GenericAgentConfigSetBundleSequence(config, NULL);
 
         *policy = GenericAgentLoadPolicy(ctx, config);
-        ExecConfigDestroy(exec_config);
-        ExecdConfigDestroy(execd_config);
+        ExecConfigDestroy(*exec_config);
+        ExecdConfigDestroy(*execd_config);
 
-        exec_config = ExecConfigNew(!ONCE, ctx, *policy);
-        execd_config = ExecdConfigNew(ctx, *policy);
+        *exec_config = ExecConfigNew(!ONCE, ctx, *policy);
+        *execd_config = ExecdConfigNew(ctx, *policy);
 
-        SetFacility(execd_config->log_facility);
+        SetFacility((*execd_config)->log_facility);
     }
     else
     {
@@ -572,7 +572,7 @@ static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *c
     }
 
     {
-        StringSetIterator it = StringSetIteratorInit(execd_config->schedule);
+        StringSetIterator it = StringSetIteratorInit((*execd_config)->schedule);
         const char *time_context = NULL;
         while ((time_context = StringSetIteratorNext(&it)))
         {

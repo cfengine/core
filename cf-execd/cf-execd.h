@@ -31,6 +31,6 @@
 #include <exec-config.h>
 #include <execd-config.h>
 
-void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, ExecdConfig *execd_config, ExecConfig *exec_config);
+void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, ExecdConfig **execd_config, ExecConfig **exec_config);
 
 #endif

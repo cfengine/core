@@ -1507,7 +1507,7 @@ static ServerConnectionState *NewConn(EvalContext *ctx, ConnectionInfo *info)
     struct sockaddr_storage addr;
     socklen_t size = sizeof(addr);
 
-    if (getsockname(ConnectionInfoSocket(info), &addr, &size) == -1)
+    if (getsockname(ConnectionInfoSocket(info), (struct sockaddr *)&addr, &size) == -1)
     {
         Log(LOG_LEVEL_ERR, "Could not obtain socket address. (getsockname: '%s')", GetErrorStr());
         return NULL;

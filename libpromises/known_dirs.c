@@ -168,7 +168,7 @@ const char *GetMasterDir(void)
     {
         char workbuf[CF_BUFSIZE];
         snprintf(workbuf, CF_BUFSIZE, "%s%cmasterfiles", workdir, FILE_SEPARATOR);
-        MapName(workbuf);
+        return workbuf;
     }
     else
     {
@@ -185,7 +185,7 @@ const char *GetInputDir(void)
     {
         char workbuf[CF_BUFSIZE];
         snprintf(workbuf, CF_BUFSIZE, "%s%cinputs", inputdir, FILE_SEPARATOR);
-        MapName(workbuf);
+        return workbuf;
     }
     else
     {

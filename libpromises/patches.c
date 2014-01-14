@@ -33,6 +33,7 @@
 #include <cf3.defs.h>
 
 #include <audit.h>
+#include <time_constants.h>
 
 static char *cf_format_strtimestamp(struct tm *tm, char *buf);
 

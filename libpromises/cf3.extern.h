@@ -80,8 +80,4 @@ extern int LASTSEENEXPIREAFTER;
 extern const char *DEFAULT_COPYTYPE;
 extern Item *PROCESSTABLE;
 
-extern const char *const DAY_TEXT[];
-extern const char *const MONTH_TEXT[];
-extern const char *const SHIFT_TEXT[];
-
 #endif

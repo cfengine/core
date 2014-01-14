@@ -37,7 +37,8 @@ libutils_la_SOURCES = \
 	unicode.c unicode.h \
 	hash.c hash.h \
 	queue.c queue.h \
-	ring_buffer.c ring_buffer.h
+	ring_buffer.c ring_buffer.h \
+	time_constants.c time_constants.h
 
 CLEANFILES = *.gcno *.gcda
 

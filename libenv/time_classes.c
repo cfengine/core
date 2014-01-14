@@ -24,6 +24,7 @@
 
 #include <time_classes.h>
 #include <eval_context.h>
+#include <time_constants.h>
 
 static void RemoveTimeClass(EvalContext *ctx, time_t time)
 {

@@ -133,7 +133,7 @@ static JsonElement *LookupVariable(Seq *hash_stack, const char *name, size_t nam
                 continue;
             }
 
-            if (JsonGetElementType(hash) == JSON_ELEMENT_TYPE_CONTAINER && JsonGetContrainerType(hash) == JSON_CONTAINER_TYPE_OBJECT)
+            if (JsonGetElementType(hash) == JSON_ELEMENT_TYPE_CONTAINER && JsonGetContainerType(hash) == JSON_CONTAINER_TYPE_OBJECT)
             {
                 JsonElement *var = JsonObjectGet(hash, base_comp_str);
                 if (var)
@@ -153,7 +153,7 @@ static JsonElement *LookupVariable(Seq *hash_stack, const char *name, size_t nam
 
     for (size_t i = 1; i < num_comps; i++)
     {
-        if (JsonGetElementType(base_var) != JSON_ELEMENT_TYPE_CONTAINER || JsonGetContrainerType(base_var) != JSON_CONTAINER_TYPE_OBJECT)
+        if (JsonGetElementType(base_var) != JSON_ELEMENT_TYPE_CONTAINER || JsonGetContainerType(base_var) != JSON_CONTAINER_TYPE_OBJECT)
         {
             return NULL;
         }
@@ -539,7 +539,7 @@ static bool Render(Writer *out, const char *start, const char *input, Seq *hash_
                     break;
 
                 case JSON_ELEMENT_TYPE_CONTAINER:
-                    switch (JsonGetContrainerType(var))
+                    switch (JsonGetContainerType(var))
                     {
                     case JSON_CONTAINER_TYPE_OBJECT:
                         {

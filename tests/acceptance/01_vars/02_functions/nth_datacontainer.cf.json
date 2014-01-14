@@ -1,0 +1,11 @@
+{
+  "boolean": true,
+  "string": "Figaro. Figaro. Figaro, Figaro, Figaro... Figaro!",
+  "integer": 20130111,
+  "list": [ "chris", "dituri", "was", "here" ],
+  "object": { "a": true, "b": [ 1, 2, 3 ], "c": "cat", "d": 108 },
+  "integer_2": 987654321,
+  "string_2": "Othello? Where art thou now?",
+  "boolean_2": false,
+  "null": null,
+}

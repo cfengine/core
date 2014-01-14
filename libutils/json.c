@@ -344,9 +344,9 @@ JsonElement *JsonMerge(const JsonElement *a, const JsonElement *b)
 {
     assert(JsonGetElementType(a) == JsonGetElementType(b));
     assert(JsonGetElementType(a) == JSON_ELEMENT_TYPE_CONTAINER);
-    assert(JsonGetContrainerType(a) == JsonGetContrainerType(b));
+    assert(JsonGetContainerType(a) == JsonGetContainerType(b));
 
-    switch (JsonGetContrainerType(a))
+    switch (JsonGetContainerType(a))
     {
     case JSON_CONTAINER_TYPE_ARRAY:
         {
@@ -507,7 +507,7 @@ JsonElementType JsonGetElementType(const JsonElement *element)
     return element->type;
 }
 
-JsonContainerType JsonGetContrainerType(const JsonElement *container)
+JsonContainerType JsonGetContainerType(const JsonElement *container)
 {
     assert(container);
     assert(container->type == JSON_ELEMENT_TYPE_CONTAINER);
@@ -597,7 +597,7 @@ JsonElement *JsonSelect(JsonElement *element, size_t num_indices, char **indices
 
         const char *index = indices[0];
 
-        switch (JsonGetContrainerType(element))
+        switch (JsonGetContainerType(element))
         {
         case JSON_CONTAINER_TYPE_OBJECT:
             {

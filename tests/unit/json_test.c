@@ -511,7 +511,7 @@ static void test_select(void)
 
     {
         char *indices[] = { "first" };
-        assert_int_equal(JSON_CONTAINER_TYPE_ARRAY, JsonGetContrainerType(JsonSelect(obj, 1, indices)));
+        assert_int_equal(JSON_CONTAINER_TYPE_ARRAY, JsonGetContainerType(JsonSelect(obj, 1, indices)));
     }
     {
         char *indices[] = { "first", "0" };
@@ -602,7 +602,7 @@ static void test_parse_empty_containers(void)
         assert_int_equal(JSON_PARSE_OK, JsonParse(&data, &obj));
         assert_true(obj != NULL);
         assert_int_equal(JSON_ELEMENT_TYPE_CONTAINER, JsonGetElementType(obj));
-        assert_int_equal(JSON_CONTAINER_TYPE_OBJECT, JsonGetContrainerType(obj));
+        assert_int_equal(JSON_CONTAINER_TYPE_OBJECT, JsonGetContainerType(obj));
         assert_int_equal(0, JsonLength(obj));
         JsonDestroy(obj);
     }
@@ -613,7 +613,7 @@ static void test_parse_empty_containers(void)
         assert_int_equal(JSON_PARSE_OK, JsonParse(&data, &arr));
         assert_true(arr != NULL);
         assert_int_equal(JSON_ELEMENT_TYPE_CONTAINER, JsonGetElementType(arr));
-        assert_int_equal(JSON_CONTAINER_TYPE_ARRAY, JsonGetContrainerType(arr));
+        assert_int_equal(JSON_CONTAINER_TYPE_ARRAY, JsonGetContainerType(arr));
         assert_int_equal(0, JsonLength(arr));
         JsonDestroy(arr);
     }

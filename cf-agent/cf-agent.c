@@ -885,15 +885,6 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy)
                 continue;
             }
 
-            if (strcmp(cp->lval, CFA_CONTROLBODY[AGENT_CONTROL_SKIPIDENTIFY].lval) == 0)
-            {
-                bool enabled = BooleanFromString(value);
-
-                SetSkipIdentify(enabled);
-                Log(LOG_LEVEL_VERBOSE, "Setting skipidentify to '%s'", enabled ? "true" : "false");
-                continue;
-            }
-
             if (strcmp(cp->lval, CFA_CONTROLBODY[AGENT_CONTROL_SUSPICIOUSNAMES].lval) == 0)
             {
                 for (const Rlist *rp = value; rp != NULL; rp = rp->next)

@@ -36,37 +36,54 @@ bundle agent test
                         "four", "fix", "six",
                         "one", "two", "three",
       };
+      "test_str" string => format("%S", test);
+
+      "test2" data => parsejson("[1, 2, 3, null]");
+      "test2_str" string => format("%S", test2);
+
+      "test3" data => parsejson('{ "x": true, "y": "z" }');
+      "test3_str" string => format("%S", test3);
 
       "nth" slist => { 1, 2, 6, 10, 11, 1000 };
+      "nth2" slist => getindices(test2);
+      "nth3" slist => getindices(test3);
 
-      "test[$(nth)]" string => nth("test", $(nth));
-      "test[0]" string => nth("test", 0);
+      "access[$(nth)]" string => nth(test, $(nth));
+      "access[0]" string => nth(test, 0);
+
+      "access2[$(nth2)]" string => nth(test2, $(nth2));
+      "access3[$(nth3)]" string => nth(test3, $(nth3));
 
   reports:
-      "The test list is $(test)";
-      "element #$(nth) of the test list: $(test[$(nth)])";
-      "element #0 of the test list: $(test[0])";
+      "The test list is $(test_str)";
+      "element #$(nth) of the test list: $(access[$(nth)])";
+      "element #0 of the test list: $(access[0])";
+
+      "The test2 data container is $(test2_str)";
+      "element #$(nth2) of the test2 data container: $(access2[$(nth2)])";
+
+      "The test3 data container is $(test3_str)";
+      "element #$(nth3) of the test3 data container: $(access3[$(nth3)])";
 }
 #+end_src
 ###############################################################################
 #+begin_src example_output
 #@ ```
-#@ 2013-12-20T13:44:32-0500   notice: /default/test: R: The test list is 1
-#@ 2013-12-20T13:44:32-0500   notice: /default/test: R: The test list is 2
-#@ 2013-12-20T13:44:32-0500   notice: /default/test: R: The test list is 3
-#@ 2013-12-20T13:44:32-0500   notice: /default/test: R: The test list is one
-#@ 2013-12-20T13:44:32-0500   notice: /default/test: R: The test list is two
-#@ 2013-12-20T13:44:32-0500   notice: /default/test: R: The test list is three
-#@ 2013-12-20T13:44:32-0500   notice: /default/test: R: The test list is long string
-#@ 2013-12-20T13:44:32-0500   notice: /default/test: R: The test list is four
-#@ 2013-12-20T13:44:32-0500   notice: /default/test: R: The test list is fix
-#@ 2013-12-20T13:44:32-0500   notice: /default/test: R: The test list is six
-#@ 2013-12-20T13:44:32-0500   notice: /default/test: R: element #1 of the test list: 2
-#@ 2013-12-20T13:44:32-0500   notice: /default/test: R: element #2 of the test list: 3
-#@ 2013-12-20T13:44:32-0500   notice: /default/test: R: element #6 of the test list: long string
-#@ 2013-12-20T13:44:32-0500   notice: /default/test: R: element #10 of the test list: one
-#@ 2013-12-20T13:44:32-0500   notice: /default/test: R: element #11 of the test list: two
-#@ 2013-12-20T13:44:32-0500   notice: /default/test: R: element #1000 of the test list: $(test[1000])
-#@ 2013-12-20T13:44:32-0500   notice: /default/test: R: element #0 of the test list: 1
+#@ 2014-01-13T18:40:14-0500   notice: /default/test: R: The test list is { "1", "2", "3", "one", "two", "three", "long string", "four", "fix", "six", "one", "two", "three" }
+#@ 2014-01-13T18:40:14-0500   notice: /default/test: R: element #1 of the test list: 2
+#@ 2014-01-13T18:40:14-0500   notice: /default/test: R: element #2 of the test list: 3
+#@ 2014-01-13T18:40:14-0500   notice: /default/test: R: element #6 of the test list: long string
+#@ 2014-01-13T18:40:14-0500   notice: /default/test: R: element #10 of the test list: one
+#@ 2014-01-13T18:40:14-0500   notice: /default/test: R: element #11 of the test list: two
+#@ 2014-01-13T18:40:14-0500   notice: /default/test: R: element #1000 of the test list: $(access[1000])
+#@ 2014-01-13T18:40:14-0500   notice: /default/test: R: element #0 of the test list: 1
+#@ 2014-01-13T18:40:14-0500   notice: /default/test: R: The test2 data container is [1,2,3,null]
+#@ 2014-01-13T18:40:14-0500   notice: /default/test: R: element #0 of the test2 data container: 1
+#@ 2014-01-13T18:40:14-0500   notice: /default/test: R: element #1 of the test2 data container: 2
+#@ 2014-01-13T18:40:14-0500   notice: /default/test: R: element #2 of the test2 data container: 3
+#@ 2014-01-13T18:40:14-0500   notice: /default/test: R: element #3 of the test2 data container: null
+#@ 2014-01-13T18:40:14-0500   notice: /default/test: R: The test3 data container is {"x":true,"y":"z"}
+#@ 2014-01-13T18:40:14-0500   notice: /default/test: R: element #x of the test3 data container: true
+#@ 2014-01-13T18:40:14-0500   notice: /default/test: R: element #y of the test3 data container: z
 #@ ```
 #+end_src

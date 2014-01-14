@@ -206,11 +206,11 @@ vars:
         "file1r" string => readfile("$(file1)", "99999999");
         "file2r" string => readfile("$(file2)", "99999999");
 
-    DEBUG.check_ready.!no_difference.has_hexdump::
+    DEBUG_HEXDUMP.check_ready.!no_difference.has_hexdump::
         "file1h" string => execresult("$(G.hexdump) -C $(file1)", "useshell");
         "file2h" string => execresult("$(G.hexdump) -C $(file2)", "useshell");
 
-    DEBUG.check_ready.!no_difference.!has_hexdump::
+    DEBUG_HEXDUMP.check_ready.!no_difference.!has_hexdump::
         "file1h" string => execresult("$(G.od) -c $(file1)", "useshell");
         "file2h" string => execresult("$(G.od) -c $(file2)", "useshell");
 
@@ -246,12 +246,12 @@ reports:
 $(file1r)";
         "CONTENTS OF $(file2):
 $(file2r)";
-### Comment out hexdump to avoid cluttering output file
-#         "hexdump $(file1):
-# $(file1h)";
-#         "hexdump $(file2):
-# $(file2h)";
-#         "$(G.diffu)";
+        "$(diffu)";
+    DEBUG_HEXDUMP.check_ready.!no_difference.!expected_difference::
+        "hexdump $(file1):
+$(file1h)";
+        "hexdump $(file2):
+$(file2h)";
     DEBUG.check_ready.no_difference.expected_difference::
         "Contents of $(file1) and $(file) are the same but should differ.";
 }

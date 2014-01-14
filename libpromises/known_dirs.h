@@ -29,6 +29,5 @@ const char *GetWorkDir(void);
 const char *GetLogDir(void);
 const char *GetPidDir(void);
 const char *GetMasterDir(void);
-const char *GetInputDir(void);
 
 #endif

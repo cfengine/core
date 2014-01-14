@@ -1646,9 +1646,12 @@ static JsonElement *BundleContextsToJson(const Seq *promises)
         JsonArrayAppendObject(json_promises, json_promise);
     }
 
-    JsonArrayAppendObject(json_contexts,
-                          CreateContextAsJson(current_context,
-                                              "promises", json_promises));
+    if (JsonLength(json_promises) > 0)
+    {
+        JsonArrayAppendObject(json_contexts,
+                              CreateContextAsJson(current_context,
+                                                  "promises", json_promises));
+    }
 
     return json_contexts;
 }

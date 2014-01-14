@@ -42,10 +42,6 @@
 #include <cmockery.h>
 #include <schema.h>
 
-#ifdef _WIN32
-# define vsnprintf _vsnprintf
-#endif // _WIN32
-
 /* Backwards compatibility with headers shipped with Visual Studio 2005 and
  * earlier. */
 #ifdef _WIN32
@@ -1678,10 +1674,8 @@ static LONG WINAPI exception_filter(EXCEPTION_POINTERS *exception_pointers)
 
 void vinit_xml (const char *const format, va_list args)
 {
-    char buffer[1024] = {0};
     FILE* xmlfile = fopen(global_xmlfile, "w");
-    vsnprintf(buffer, sizeof(buffer), format, args);
-    fprintf(xmlfile, "%s", buffer);
+    vfprintf(xmlfile, format, args);
     fclose(xmlfile);
 #ifdef _WIN32
     OutputDebugString(buffer);
@@ -1701,10 +1695,8 @@ void init_xml (const char *const format, ...)
 
 void vprint_xml(const char *const format, va_list args)
 {
-    char buffer[1024] = {0};
     FILE* xmlfile = fopen(global_xmlfile, "a");
-    vsnprintf(buffer, sizeof(buffer), format, args);
-    fprintf(xmlfile, "%s", buffer);
+    vfprintf(xmlfile, format, args);
     fclose(xmlfile);
 #ifdef _WIN32
     OutputDebugString(buffer);
@@ -1745,10 +1737,7 @@ void append_xml(const char *ofile, const char *ifile)
 // Standard output and error print methods.
 void vprint_message(const char *const format, va_list args)
 {
-    char buffer[1024];
-
-    vsnprintf(buffer, sizeof(buffer), format, args);
-    printf("%s", buffer);
+    vprintf(format, args);
 #ifdef _WIN32
     OutputDebugString(buffer);
 #endif // _WIN32
@@ -1756,10 +1745,7 @@ void vprint_message(const char *const format, va_list args)
 
 void vprint_error(const char *const format, va_list args)
 {
-    char buffer[1024];
-
-    vsnprintf(buffer, sizeof(buffer), format, args);
-    fprintf(stderr, "%s", buffer);
+    vfprintf(stderr, format, args);
 #ifdef _WIN32
     OutputDebugString(buffer);
 #endif // _WIN32
@@ -1929,7 +1915,7 @@ int _run_tests(const UnitTest *const tests, const size_t number_of_tests, const 
     char xmlfile[1024]     = {0};
     int len;
 
-    sprintf(path, "%s", file);
+    strcpy(path, file);
     strcpy(filename, basename(path));
     len = strrchr(filename, '.')-filename;
 

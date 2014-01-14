@@ -44,11 +44,6 @@ static const char *GetDefaultPidDir(void)
     return PIDDIR;
 }
 
-static const char *GetDefaultMasterDir(void)
-{
-    return MASTERDIR;
-}
-
 #elif defined(__ANDROID__)
 
 static const char *GetDefaultWorkDir(void)
@@ -65,11 +60,6 @@ static const char *GetDefaultLogDir(void)
 static const char *GetDefaultPidDir(void)
 {
     return PIDDIR;
-}
-
-static const char *GetDefaultMasterDir(void)
-{
-    return MASTERDIR;
 }
 
 #elif !defined(__MINGW32__)
@@ -115,13 +105,6 @@ static const char *GetDefaultPidDir(void)
     return GetDefaultDir_helper(piddir, PIDDIR);
 }
 
-static const char *GetDefaultMasterDir(void)
-{
-    static char masterdir[MAX_WORKDIR_LENGTH] = ""; /* GLOBAL_C */
-    return GetDefaultDir_helper(masterdir, MASTERDIR);
-}
-
-
 #endif
 
 const char *GetWorkDir(void)
@@ -143,11 +126,4 @@ const char *GetPidDir(void)
     const char *piddir = getenv("CFENGINE_TEST_OVERRIDE_WORKDIR");
 
     return piddir == NULL ? GetDefaultPidDir() : piddir;
-}
-
-const char *GetMasterDir(void)
-{
-    const char *masterdir = getenv("CFENGINE_TEST_OVERRIDE_WORKDIR");
-
-    return masterdir == NULL ? GetDefaultMasterDir() : masterdir;
 }

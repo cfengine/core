@@ -146,13 +146,6 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
             break;
 
         case 'f':
-
-            if (optarg && (strlen(optarg) < 5))
-            {
-                Log(LOG_LEVEL_ERR, " -f used but argument '%s' incorrect", optarg);
-                exit(EXIT_FAILURE);
-            }
-
             GenericAgentConfigSetInputFile(config, GetInputDir(), optarg);
             MINUSF = true;
             break;

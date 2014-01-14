@@ -124,13 +124,13 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
 
     if (config->agent_type == AGENT_TYPE_AGENT && config->agent_specific.agent.bootstrap_policy_server)
     {
-        if (!RemoveAllExistingPolicyInInputs(GetInputDir()))
+        if (!RemoveAllExistingPolicyInInputs(GetWorkDir()))
         {
             Log(LOG_LEVEL_ERR, "Error removing existing input files prior to bootstrap");
             exit(EXIT_FAILURE);
         }
 
-        if (!WriteBuiltinFailsafePolicy(GetInputDir()))
+        if (!WriteBuiltinFailsafePolicy(GetWorkDir()))
         {
             Log(LOG_LEVEL_ERR, "Error writing builtin failsafe to inputs prior to bootstrap");
             exit(EXIT_FAILURE);
@@ -148,12 +148,12 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
 
             if (am_policy_server)
             {
-                Log(LOG_LEVEL_INFO, "Assuming role as policy server, with policy distribution point at %s", GetMasterDir());
+                Log(LOG_LEVEL_INFO, "Assuming role as policy server, with policy distribution point at %s/masterfiles", GetWorkDir());
                 EvalContextClassPutHard(ctx, "am_policy_hub", "source=bootstrap");
 
-                if (!MasterfileExists(GetMasterDir()))
+                if (!MasterfileExists(GetWorkDir()))
                 {
-                    Log(LOG_LEVEL_ERR, "In order to bootstrap as a policy server, the file '%s/promises.cf' must exist.", GetMasterDir());
+                    Log(LOG_LEVEL_ERR, "In order to bootstrap as a policy server, the file '%s/masterfiles/promises.cf' must exist.", GetWorkDir());
                     exit(EXIT_FAILURE);
                 }
             }
@@ -288,7 +288,7 @@ static JsonElement *ReadPolicyValidatedFileFromInputs(const GenericAgentConfig *
     }
     else
     {
-        snprintf(filename, CF_MAXVARSIZE, "%s/cf_promises_validated", GetInputDir());
+        snprintf(filename, CF_MAXVARSIZE, "%s/inputs/cf_promises_validated", CFWORKDIR);
         MapName(filename);
     }
 
@@ -775,7 +775,7 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
 
     Log(LOG_LEVEL_VERBOSE, "Work directory is %s", CFWORKDIR);
 
-    snprintf(vbuff, CF_BUFSIZE, "%s%cupdate.conf", GetInputDir(), FILE_SEPARATOR);
+    snprintf(vbuff, CF_BUFSIZE, "%s%cinputs%cupdate.conf", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
     MakeParentDirectory(vbuff, force);
     snprintf(vbuff, CF_BUFSIZE, "%s%cbin%ccf-agent -D from_cfexecd", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
     MakeParentDirectory(vbuff, force);
@@ -786,7 +786,7 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
     snprintf(vbuff, CF_BUFSIZE, "%s%creports%cvarious", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
     MakeParentDirectory(vbuff, force);
 
-    snprintf(vbuff, CF_BUFSIZE, "%s", GetInputDir());
+    snprintf(vbuff, CF_BUFSIZE, "%s%cinputs", CFWORKDIR, FILE_SEPARATOR);
 
     if (stat(vbuff, &sb) == -1)
     {
@@ -875,7 +875,7 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
 
     if (!MINUSF)
     {
-        GenericAgentConfigSetInputFile(config, GetInputDir(), "promises.cf");
+        GenericAgentConfigSetInputFile(config, GetWorkDir(), "promises.cf");
     }
 
     VIFELAPSED = 1;
@@ -885,15 +885,15 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
 
     if (config->agent_specific.agent.bootstrap_policy_server)
     {
-        snprintf(vbuff, CF_BUFSIZE, "%s%cfailsafe.cf", GetInputDir(), FILE_SEPARATOR);
+        snprintf(vbuff, CF_BUFSIZE, "%s%cinputs%cfailsafe.cf", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
 
         if (stat(vbuff, &statbuf) == -1)
         {
-            GenericAgentConfigSetInputFile(config, GetInputDir(), "failsafe.cf");
+            GenericAgentConfigSetInputFile(config, GetWorkDir(), "failsafe.cf");
         }
         else
         {
-            GenericAgentConfigSetInputFile(config, GetInputDir(), vbuff);
+            GenericAgentConfigSetInputFile(config, GetWorkDir(), vbuff);
         }
     }
 }
@@ -914,7 +914,7 @@ static bool MissingInputFile(const char *input_file)
 bool GeneratePolicyReleaseIDFromMasterfiles(char release_id_out[(2 * CF_SHA1_LEN) + 1])
 {
     char policy_dir[FILENAME_MAX + 1];
-    snprintf(policy_dir, FILENAME_MAX, "%s", GetMasterDir());
+    snprintf(policy_dir, FILENAME_MAX, "%s" FILE_SEPARATOR_STR "masterfiles", GetWorkDir());
 
     {
         char git_filename[FILENAME_MAX + 1];
@@ -980,7 +980,7 @@ static void GetPromisesValidatedFileFromMasterfiles(char *filename, size_t max_s
     }
     else
     {
-        snprintf(filename, max_size, "%s/cf_promises_validated", GetMasterDir());
+        snprintf(filename, max_size, "%s/masterfiles/cf_promises_validated", CFWORKDIR);
         MapName(filename);
     }
 }
@@ -1030,7 +1030,11 @@ bool GenericAgentIsPolicyReloadNeeded(const GenericAgentConfig *config, const Po
 
     // Check the directories first for speed and because non-input/data files should trigger an update
     {
-        if (IsNewerFileTree( (char *)GetInputDir(), validated_at))
+        char inputs_dir[MAX_FILENAME];
+        snprintf(inputs_dir, MAX_FILENAME, "%s/inputs", CFWORKDIR);
+        MapName(inputs_dir);
+
+        if (IsNewerFileTree(inputs_dir, validated_at))
         {
             Log(LOG_LEVEL_VERBOSE, "Quick search detected file changes");
             return true;
@@ -1751,7 +1755,7 @@ void GenericAgentConfigApply(EvalContext *ctx, const GenericAgentConfig *config)
     }
 }
 
-void GenericAgentConfigSetInputFile(GenericAgentConfig *config, const char *inputdir, const char *input_file)
+void GenericAgentConfigSetInputFile(GenericAgentConfig *config, const char *workdir, const char *input_file)
 {
     free(config->original_input_file);
     free(config->input_file);
@@ -1759,9 +1763,9 @@ void GenericAgentConfigSetInputFile(GenericAgentConfig *config, const char *inpu
 
     config->original_input_file = xstrdup(input_file);
 
-    if (inputdir && FilePathGetType(input_file) == FILE_PATH_TYPE_NON_ANCHORED)
+    if (workdir && FilePathGetType(input_file) == FILE_PATH_TYPE_NON_ANCHORED)
     {
-        config->input_file = StringFormat("%s%c%s", inputdir, FILE_SEPARATOR, input_file);
+        config->input_file = StringFormat("%s%cinputs%c%s", workdir, FILE_SEPARATOR, FILE_SEPARATOR, input_file);
     }
     else
     {

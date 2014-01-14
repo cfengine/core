@@ -148,7 +148,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             break;
 
         case 'f':
-            GenericAgentConfigSetInputFile(config, GetInputDir(), optarg);
+            GenericAgentConfigSetInputFile(config, GetWorkDir(), optarg);
             MINUSF = true;
             break;
 

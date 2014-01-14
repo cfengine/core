@@ -44,16 +44,6 @@ static const char *GetDefaultPidDir(void)
     return PIDDIR;
 }
 
-static const char *GetDefaultMasterDir(void)
-{
-    return MASTERDIR;
-}
-
-static const char *GetDefaultInputDir(void)
-{
-    return INPUTDIR;
-}
-
 #elif defined(__ANDROID__)
 
 static const char *GetDefaultWorkDir(void)
@@ -70,16 +60,6 @@ static const char *GetDefaultLogDir(void)
 static const char *GetDefaultPidDir(void)
 {
     return PIDDIR;
-}
-
-static const char *GetDefaultMasterDir(void)
-{
-    return MASTERDIR;
-}
-
-static const char *GetDefaultInputDir(void)
-{
-    return INPUTDIR;
 }
 
 #elif !defined(__MINGW32__)
@@ -125,18 +105,6 @@ static const char *GetDefaultPidDir(void)
     return GetDefaultDir_helper(piddir, PIDDIR);
 }
 
-static const char *GetDefaultMasterDir(void)
-{
-    static char masterdir[MAX_WORKDIR_LENGTH] = ""; /* GLOBAL_C */
-    return GetDefaultDir_helper(masterdir, MASTERDIR);
-}
-
-static const char *GetDefaultInputDir(void)
-{
-    static char inputdir[MAX_WORKDIR_LENGTH] = ""; /* GLOBAL_C */
-    return GetDefaultDir_helper(inputdir, INPUTDIR);
-}
-
 #endif
 
 const char *GetWorkDir(void)
@@ -158,38 +126,4 @@ const char *GetPidDir(void)
     const char *piddir = getenv("CFENGINE_TEST_OVERRIDE_WORKDIR");
 
     return piddir == NULL ? GetDefaultPidDir() : piddir;
-}
-
-const char *GetMasterDir(void)
-{
-    const char *workdir = getenv("CFENGINE_TEST_OVERRIDE_WORKDIR");
-
-    if (workdir != NULL) 
-    {
-        static char workbuf[CF_BUFSIZE];
-        snprintf(workbuf, CF_BUFSIZE, "%s%cmasterfiles", workdir, FILE_SEPARATOR);
-        MapName(workbuf);
-        return workbuf;
-    }
-    else
-    {
-        return GetDefaultMasterDir();
-    }
-}
-
-const char *GetInputDir(void)
-{
-    const char *inputdir = getenv("CFENGINE_TEST_OVERRIDE_WORKDIR");
-
-    if (inputdir != NULL) 
-    {
-        static char workbuf[CF_BUFSIZE];
-        snprintf(workbuf, CF_BUFSIZE, "%s%cinputs", inputdir, FILE_SEPARATOR);
-        MapName(workbuf);
-        return workbuf;
-    }
-    else
-    {
-        return GetDefaultInputDir();
-    }
 }

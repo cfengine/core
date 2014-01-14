@@ -42,7 +42,7 @@ extern const char *const CLASSTEXT[];
 
 extern time_t CFSTARTTIME;
 
-extern struct utsname VSYSNAME;
+extern char *PSOPTS;
 extern char VIPADDRESS[CF_MAX_IP_LEN];
 extern char VPREFIX[];
 
@@ -55,7 +55,6 @@ extern bool DONTDO;
 extern bool MINUSF;
 
 extern const char *const VPSCOMM[];
-extern const char *const VPSOPTS[];
 extern const char *const VFSTAB[];
 
 extern int EDITFILESIZE;

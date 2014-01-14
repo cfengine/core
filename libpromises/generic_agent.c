@@ -1310,12 +1310,6 @@ static void CheckWorkingDirectories(EvalContext *ctx)
     struct stat statbuf;
     char vbuff[CF_BUFSIZE];
 
-    if (uname(&VSYSNAME) == -1)
-    {
-        Log(LOG_LEVEL_ERR, "Couldn't get kernel name info. (uname: %s)", GetErrorStr());
-        memset(&VSYSNAME, 0, sizeof(VSYSNAME));
-    }
-
     snprintf(vbuff, CF_BUFSIZE, "%s%c.", CFWORKDIR, FILE_SEPARATOR);
     MakeParentDirectory(vbuff, false);
 

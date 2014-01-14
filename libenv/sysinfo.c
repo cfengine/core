@@ -44,6 +44,7 @@
 #include <known_dirs.h>
 #include <unix_iface.h>
 #include <files_lib.h>
+#include <zones.h>
 
 #include <cf-windows-functions.h>
 
@@ -108,7 +109,29 @@ static time_t GetBootTimeFromUptimeCommand(time_t); // Last resort
 #endif
 #endif
 
-/*****************************************************/
+static const char *const VPSOPTS[] =
+{
+    [PLATFORM_CONTEXT_UNKNOWN] = "",
+    [PLATFORM_CONTEXT_OPENVZ] = "-E 0 -o user,pid,ppid,pgid,pcpu,pmem,vsz,ni,rss,nlwp,stime,time,args",   /* virt_host_vz_vzps (with vzps, the -E 0 replace the -e) */
+    [PLATFORM_CONTEXT_HP] = "-ef",                      /* hpux */
+    [PLATFORM_CONTEXT_AIX] =  "-N -eo user,pid,ppid,pgid,pcpu,pmem,vsz,ni,stat,st=STIME,time,args", /* aix */
+    [PLATFORM_CONTEXT_LINUX] = "-eo user,pid,ppid,pgid,pcpu,pmem,vsz,ni,rss,nlwp,stime,time,args",   /* linux */
+    [PLATFORM_CONTEXT_SOLARIS] = "-eo user,pid,ppid,pgid,pcpu,pmem,vsz,pri,rss,nlwp,stime,time,args",  /* solaris */
+    [PLATFORM_CONTEXT_FREEBSD] = "-axo user,pid,ppid,pgid,pcpu,pmem,vsz,ni,rss,nlwp,start,time,args",  /* freebsd */
+    [PLATFORM_CONTEXT_NETBSD] = "-axo user,pid,ppid,pgid,pcpu,pmem,vsz,ni,rss,nlwp,start,time,args",  /* netbsd */
+    [PLATFORM_CONTEXT_CRAYOS] = "-elyf",                    /* cray */
+    [PLATFORM_CONTEXT_WINDOWS_NT] = "-aW",                      /* NT */
+    [PLATFORM_CONTEXT_SYSTEMV] = "-ef",                      /* Unixware */
+    [PLATFORM_CONTEXT_OPENBSD] = "-axo user,pid,ppid,pgid,pcpu,pmem,vsz,ni,rss,start,time,args",       /* openbsd */
+    [PLATFORM_CONTEXT_CFSCO] = "-ef",                      /* sco */
+    [PLATFORM_CONTEXT_DARWIN] = "auxw",                     /* darwin */
+    [PLATFORM_CONTEXT_QNX] = "-elyf",                    /* qnx */
+    [PLATFORM_CONTEXT_DRAGONFLY] = "auxw",                     /* dragonfly */
+    [PLATFORM_CONTEXT_MINGW] = "mingw-invalid",            /* mingw */
+    [PLATFORM_CONTEXT_VMWARE] = "?",                        /* vmware */
+};
+
+static struct utsname VSYSNAME;
 
 void CalculateDomainName(const char *nodename, const char *dnsname, char *fqname, char *uqname, char *domain);
 
@@ -269,13 +292,8 @@ void CalculateDomainName(const char *nodename, const char *dnsname, char *fqname
 
 /*******************************************************************/
 
-void DetectDomainName(EvalContext *ctx, const char *orig_nodename)
+void DetectDomainName(EvalContext *ctx, const char *nodename)
 {
-    char nodename[CF_BUFSIZE];
-
-    strcpy(nodename, orig_nodename);
-    ToLowerStrInplace(nodename);
-
     char dnsname[CF_BUFSIZE] = "";
     char fqn[CF_BUFSIZE];
 
@@ -353,6 +371,29 @@ void DiscoverVersion(EvalContext *ctx)
     }
 }
 
+#ifndef __MINGW32__
+static void DetectPsOptions(void)
+{
+    free(PSOPTS);
+    if (IsGlobalZone())
+    {
+        xasprintf(&PSOPTS, "%s,zone", VPSOPTS[VSYSTEMHARDCLASS]);
+    }
+#ifdef __linux__
+    else if (strncmp(VSYSNAME.release, "2.4", 3) == 0)
+    {
+        // No threads on 2.4 kernels
+        PSOPTS = xstrdup("-eo user,pid,ppid,pgid,pcpu,pmem,vsz,pri,rss,stime,time,args");
+    }
+#endif
+    else
+    {
+        PSOPTS = xstrdup(VPSOPTS[VSYSTEMHARDCLASS]);
+    }
+}
+#endif
+
+
 static void GetNameInfo3(EvalContext *ctx)
 {
     int i, found = false;
@@ -393,6 +434,7 @@ static void GetNameInfo3(EvalContext *ctx)
 
     ToLowerStrInplace(VSYSNAME.sysname);
     ToLowerStrInplace(VSYSNAME.machine);
+    ToLowerStrInplace(VSYSNAME.nodename);
 
 #ifdef _AIX
     switch (_system_configuration.architecture)
@@ -486,11 +528,11 @@ static void GetNameInfo3(EvalContext *ctx)
     {
         Log(LOG_LEVEL_VERBOSE, "------------------------------------------------------------------------");
     }
-    Log(LOG_LEVEL_VERBOSE, "Host name is: %s", VSYSNAME.nodename);
+    Log(LOG_LEVEL_VERBOSE, "Host name is: %s", VFQNAME);
     Log(LOG_LEVEL_VERBOSE, "Operating System Type is %s", VSYSNAME.sysname);
     Log(LOG_LEVEL_VERBOSE, "Operating System Release is %s", VSYSNAME.release);
     Log(LOG_LEVEL_VERBOSE, "Architecture = %s", VSYSNAME.machine);
-    Log(LOG_LEVEL_VERBOSE, "Using internal soft-class %s for host %s", workbuf, VSYSNAME.nodename);
+    Log(LOG_LEVEL_VERBOSE, "Using internal soft-class %s for host %s", workbuf, VFQNAME);
     Log(LOG_LEVEL_VERBOSE, "The time is now %s", ctime(&tloc));
     if (LEGACY_OUTPUT)
     {
@@ -719,7 +761,7 @@ static void GetNameInfo3(EvalContext *ctx)
 
     if ((hp = gethostbyname(VFQNAME)) == NULL)
     {
-        Log(LOG_LEVEL_VERBOSE, "Hostname lookup failed on node name '%s'", VSYSNAME.nodename);
+        Log(LOG_LEVEL_VERBOSE, "Hostname lookup failed on node name '%s'", VFQNAME);
         return;
     }
     else
@@ -756,6 +798,10 @@ static void GetNameInfo3(EvalContext *ctx)
     {
         Log(LOG_LEVEL_VERBOSE, "CFEngine seems to be running inside a local solaris zone of name '%s'", zone);
     }
+#endif
+
+#ifndef __MINGW32__
+    DetectPsOptions();
 #endif
 }
 

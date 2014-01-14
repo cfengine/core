@@ -36,7 +36,7 @@ int SHOWREPORTS = false; /* GLOBAL_A */
 
 bool FIPS_MODE = false; /* GLOBAL_P */
 
-struct utsname VSYSNAME; /* GLOBAL_E, initialized later */
+char *PSOPTS = NULL; /* GLOBAL_E */
 
 int CFA_MAXTHREADS = 10; /* GLOBAL_P */
 int CF_PERSISTENCE = 10; /* GLOBAL_P */

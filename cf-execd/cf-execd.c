@@ -233,9 +233,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
 
         case 'L':
             snprintf(ld_library_path, CF_BUFSIZE - 1, "LD_LIBRARY_PATH=%s", optarg);
-            if (putenv(xstrdup(ld_library_path)) != 0)
-            {
-            }
+            putenv(xstrdup(ld_library_path));
             break;
 
         case 'W':

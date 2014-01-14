@@ -1,0 +1,91 @@
+#######################################################
+#
+# Demo of Mustache templates with no external JSON data
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+
+}
+
+#######################################################
+
+bundle agent init
+{
+  vars:
+      "origtestdir" string => dirname("$(this.promise_filename)");
+
+  files:
+      "$(G.testfile)"
+      delete => init_delete;
+}
+
+body delete init_delete
+{
+      dirlinks => "delete";
+      rmdirs   => "true";
+}
+
+#######################################################
+
+bundle agent test
+{
+  classes:
+      "empty" expression => "any";
+
+  vars:
+      "template_file" string => "$(init.origtestdir)/demo.datastate.mustache";
+      "header" string => "Colors";
+      "items" slist => { "red", "green", "blue" };
+
+  files:
+      "$(G.testfile)"
+      create => "true",
+      edit_template => "$(template_file)",
+      template_method => "mustache";
+
+  reports:
+    DEBUG::
+      "Rendering template file $(template_file) to $(G.testfile)";
+}
+
+body copy_from sync_cp(from)
+{
+      source => "$(from)";
+}
+
+
+#######################################################
+
+bundle agent check
+{
+  vars:
+      "expect" string => '<h1>Colors</h1>
+
+ red
+ green
+ blue
+
+  <p>The list is empty.</p>
+';
+
+      "actual" string => readfile("$(G.testfile)", 10000);
+
+  classes:
+      "ok" expression => strcmp($(expect), $(actual));
+
+  reports:
+    DEBUG::
+      "'$(expect)' != '$(actual)'" ifvarclass => "!ok";
+      "'$(expect)' == '$(actual)'" ifvarclass => "ok";
+      "expect: '$(expect)'";
+      "actual: '$(actual)'";
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

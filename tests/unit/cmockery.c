@@ -226,11 +226,9 @@ static ListNode global_allocated_blocks;
 
 // Data of running tests for XML output.
 static int global_errors;
-const char *global_casename;
-const char *global_filename;
-const char *global_path;
-const char *global_suitename;
-const char *global_xmlfile;
+static const char *global_filename;
+static const char *global_xmlfile;
+static int global_is_file_writer_test; /* bool, but type not defined here */
 
 #ifndef _WIN32
 // Signals caught by exception_handler().
@@ -1692,7 +1690,7 @@ void vinit_xml (const char *const format, va_list args)
 
 void init_xml (const char *const format, ...)
 {
-    if(strcmp(global_suitename, "file_writer_test") != 0)
+    if (!global_is_file_writer_test)
     {
         va_list args;
         va_start(args, format);
@@ -1715,7 +1713,7 @@ void vprint_xml(const char *const format, va_list args)
 
 void print_xml(const char *const format, ...)
 {
-    if(strcmp(global_suitename, "file_writer_test") != 0)
+    if (!global_is_file_writer_test)
     {
         va_list args;
         va_start(args, format);
@@ -1726,7 +1724,7 @@ void print_xml(const char *const format, ...)
 
 void append_xml(const char *ofile, const char *ifile)
 {
-    if(strcmp(global_suitename, "file_writer_test") != 0)
+    if (!global_is_file_writer_test)
     {
         char ch;
         FILE* xmlfile = fopen(ofile, "ab");
@@ -1939,9 +1937,8 @@ int _run_tests(const UnitTest *const tests, const size_t number_of_tests, const 
     strncat(suitename, filename, len);
     strcpy(xmlfile, "xml_tmp_suite");
 
-    global_path = path;
     global_filename = filename;
-    global_suitename = suitename;
+    global_is_file_writer_test = (0 == strcmp(suitename, "file_writer_test"));
     global_xmlfile = xmlfile;
     global_errors = 0;
 
@@ -2000,7 +1997,6 @@ int _run_tests(const UnitTest *const tests, const size_t number_of_tests, const 
         {
             strcpy(casename, test->name);
             strcpy(xmlfile, "xml_tmp_case");
-            global_casename = casename;
             init_xml("");
             time(&time_case);
             int failed = _run_test(test->name, test->f.function, current_state,

@@ -512,12 +512,29 @@ int OpenReceiverChannel(void)
             continue;
         }
 
+        /* Some platforms don't listen to both address families (windows) for
+           the IPv6 loopback address and need this flag. Some other platforms
+           won't even honour this flag (openbsd).
+        */
+        int no = 0;
+        if (BINDINTERFACE[0] == '\0')
+        {
+            if (setsockopt(sd, IPPROTO_IPV6, IPV6_V6ONLY,
+                           &no, sizeof(no)) == -1)
+            {
+                Log(LOG_LEVEL_WARNING,
+                    "Listening socket is IPv6-only. setsockopt: %s",
+                    GetErrorStr());
+            }
+        }
+
         int yes = 1;
         if (setsockopt(sd, SOL_SOCKET, SO_REUSEADDR,
                        &yes, sizeof(yes)) == -1)
         {
-            Log(LOG_LEVEL_ERR, "Socket option SO_REUSEADDR was not accepted. (setsockopt: %s)", GetErrorStr());
-            exit(EXIT_FAILURE);
+            Log(LOG_LEVEL_WARNING,
+                "Socket option SO_REUSEADDR was not accepted. (setsockopt: %s)",
+                GetErrorStr());
         }
 
         struct linger cflinger = {

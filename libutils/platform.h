@@ -190,6 +190,10 @@ struct utsname
 # define LOG_USER        (1<<3)
 # define LOG_DAEMON      (3<<3)
 
+#ifndef IPV6_V6ONLY
+#define IPV6_V6ONLY 27
+#endif
+
 #else /* !__MINGW32__ */
 # include <syslog.h>
 #endif

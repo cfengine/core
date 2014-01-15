@@ -39,21 +39,31 @@ bundle agent mefirst
       "" usebundle => $(g.todo);
 }
 
+bundle agent run_deprecated
+{
+  meta:
+      "tags" slist => { "deprecated" };
+}
+
 bundle agent run_123_456
 {
   vars:
       "bundles" slist => bundlesmatching(".*");
+      "deprecated_bundles" slist => bundlesmatching(".*", "deprecated");
       "no_bundles" slist => bundlesmatching("891");
   reports:
       "bundles = $(bundles)";
+      "deprecated bundles = $(deprecated_bundles)";
       "no bundles = $(no_bundles)";
 }
 #+end_src
 ###############################################################################
 #+begin_src example_output
 #@ ```
-#@ 2013-12-20T13:44:28-0500   notice: /default/mefirst/methods/''/default/run_123_456: R: bundles = default:run_123_456
-#@ 2013-12-20T13:44:28-0500   notice: /default/mefirst/methods/''/default/run_123_456: R: bundles = default:mefirst
-#@ 2013-12-20T13:44:28-0500   notice: /default/mefirst/methods/''/default/run_123_456: R: bundles = default:g
+#@ 2014-01-15T14:04:57-0500   notice: /default/mefirst/methods/''/default/run_123_456: R: bundles = default:run_123_456
+#@ 2014-01-15T14:04:57-0500   notice: /default/mefirst/methods/''/default/run_123_456: R: bundles = default:run_deprecated
+#@ 2014-01-15T14:04:57-0500   notice: /default/mefirst/methods/''/default/run_123_456: R: bundles = default:mefirst
+#@ 2014-01-15T14:04:57-0500   notice: /default/mefirst/methods/''/default/run_123_456: R: bundles = default:g
+#@ 2014-01-15T14:04:57-0500   notice: /default/mefirst/methods/''/default/run_123_456: R: deprecated bundles = default:run_deprecated
 #@ ```
 #+end_src

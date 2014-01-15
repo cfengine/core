@@ -176,7 +176,61 @@ Rlist *RlistKeyIn(Rlist *list, const char *key)
 
 /*******************************************************************/
 
+bool RlistMatchesRegexRlist(const Rlist *list, const Rlist *search)
+/*
+   Returns true if "list" contains all the regular expressions in
+   "search".  Non-scalars in "list" and "search" are skipped.
+*/
+{
+    for (Rlist *rp = search; rp != NULL; rp = rp->next)
+    {
+        if (rp->val.type != RVAL_TYPE_SCALAR)
+        {
+            continue;
+        }
+
+        // check for the current element in the search list
+        if (!RlistMatchesRegex(list, RlistScalarValue(search)))
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+bool RlistMatchesRegex(const Rlist *list, const char *regex)
+/*
+   Returns true if any of the "list" of strings matches "regex".
+   Non-scalars in "list" are skipped.
+*/
+{
+    if (regex == NULL || list == NULL)
+    {
+        return false;
+    }
+
+    for (const Rlist *rp = list; rp != NULL; rp = rp->next)
+    {
+        if (rp->val.type != RVAL_TYPE_SCALAR)
+        {
+            continue;
+        }
+
+        if (StringMatchFull(regex, RlistScalarValue(rp)))
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 bool RlistIsInListOfRegex(const Rlist *list, const char *str)
+/*
+   Returns true if any of the "list" of regular expressions matches "str".
+   Non-scalars in "list" are skipped.
+*/
 {
     if (str == NULL || list == NULL)
     {

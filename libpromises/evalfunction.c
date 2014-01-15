@@ -5204,7 +5204,7 @@ static FnCallResult FnCallStringSplit(ARG_UNUSED EvalContext *ctx, ARG_UNUSED Fn
 
     if (max < 1)
     {
-        Log(LOG_LEVEL_VERBOSE, "Function string_split called with invalid maxent argument: '%d'", max);
+        Log(LOG_LEVEL_VERBOSE, "Function '%s' called with invalid maxent argument: '%d'", fp->name, max);
         return FnFailure();
     }
 
@@ -7052,7 +7052,7 @@ const FnCallType CF_FNCALL_TYPES[] =
     FnCallTypeNew("splayclass", DATA_TYPE_CONTEXT, SPLAYCLASS_ARGS, &FnCallSplayClass, "True if the first argument's time-slot has arrived, according to a policy in arg2",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_UTILS, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("splitstring", DATA_TYPE_STRING_LIST, SPLITSTRING_ARGS, &FnCallSplitString, "Convert a string in arg1 into a list of max arg3 strings by splitting on a regular expression in arg2",
-                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
+                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_DEPRECATED),
     FnCallTypeNew("storejson", DATA_TYPE_STRING, STOREJSON_ARGS, &FnCallStoreJson, "Convert a data container to a JSON string",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("strcmp", DATA_TYPE_CONTEXT, STRCMP_ARGS, &FnCallStrCmp, "True if the two strings match exactly",

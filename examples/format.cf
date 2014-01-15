@@ -38,6 +38,10 @@ bundle agent run
       "d" string => format("%07.2f", 1);
       "e" string => format("hello my name is %s %s", "Inigo", "Montoya");
 
+      "container" data => parsejson('{ "x": "y", "z": true }');
+
+      "packed" string => format("slist = %S, container = %S", vlist, container);
+
   reports:
       "version $(v) => padded $(padded)";
       "%10.10s on 'x' => '$(a)'";
@@ -45,16 +49,18 @@ bundle agent run
       "%04d on '1' => '$(c)'";
       "%07.2f on '1' => '$(d)'";
       "you killed my father... => '$(e)'";
+      "$(packed)";
 }
 #+end_src
 ###############################################################################
 #+begin_src example_output
 #@ ```
-#@ 2013-12-20T13:44:29-0500   notice: /default/run: R: version 2.5.6 => padded 000200050006
-#@ 2013-12-20T13:44:29-0500   notice: /default/run: R: %10.10s on 'x' => '         x'
-#@ 2013-12-20T13:44:29-0500   notice: /default/run: R: %-10.10s on 'x' => 'x         '
-#@ 2013-12-20T13:44:29-0500   notice: /default/run: R: %04d on '1' => '0001'
-#@ 2013-12-20T13:44:29-0500   notice: /default/run: R: %07.2f on '1' => '0001.00'
-#@ 2013-12-20T13:44:29-0500   notice: /default/run: R: you killed my father... => 'hello my name is Inigo Montoya'
+#@ 2014-01-15T16:03:43-0500   notice: /default/run: R: version 2.5.6 => padded 000200050006
+#@ 2014-01-15T16:03:43-0500   notice: /default/run: R: %10.10s on 'x' => '         x'
+#@ 2014-01-15T16:03:43-0500   notice: /default/run: R: %-10.10s on 'x' => 'x         '
+#@ 2014-01-15T16:03:43-0500   notice: /default/run: R: %04d on '1' => '0001'
+#@ 2014-01-15T16:03:43-0500   notice: /default/run: R: %07.2f on '1' => '0001.00'
+#@ 2014-01-15T16:03:43-0500   notice: /default/run: R: you killed my father... => 'hello my name is Inigo Montoya'
+#@ 2014-01-15T16:03:43-0500   notice: /default/run: R: slist = { "2", "5", "6" }, container = {"x":"y","z":true}
 #@ ```
 #+end_src

@@ -3307,8 +3307,6 @@ static FnCallResult FnCallNth(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
             }
             else if (JSON_CONTAINER_TYPE_ARRAY == ct)
             {
-                index = IntFromString(key);
-
                 if (index >= 0 && index < JsonLength(value))
                 {
                     jelement = JsonAt(jholder, index);

@@ -1050,7 +1050,7 @@ static FnCallResult FnCallBundlesMatching(EvalContext *ctx, const Policy *policy
         const Bundle *bp = SeqAt(policy->bundles, i);
         if (!bp)
         {
-            FatalError(ctx, "Function '%s' found null bundle at %ld", fp->name, i);
+            FatalError(ctx, "Function '%s' found null bundle at %zu", fp->name, i);
         }
 
         char *bundle_name = BundleQualifiedName(bp);
@@ -1890,7 +1890,7 @@ static FnCallResult FnCallGrep(EvalContext *ctx, ARG_UNUSED const Policy *policy
                           RlistScalarValue(finalargs->next), // list identifier
                           1, // regex match = TRUE
                           0, // invert matches = FALSE
-                          99999999999); // max results = max int
+                          LONG_MAX); // max results = max int
 }
 
 /*********************************************************************/
@@ -3973,7 +3973,7 @@ static FnCallResult FnCallEverySomeNone(EvalContext *ctx, ARG_UNUSED const Polic
                           RlistScalarValue(finalargs->next), // list identifier
                           1,
                           0,
-                          99999999999);
+                          LONG_MAX);
 }
 
 static FnCallResult FnCallSort(EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, const Rlist *finalargs)

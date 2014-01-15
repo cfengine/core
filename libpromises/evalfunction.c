@@ -978,17 +978,20 @@ static FnCallResult FnCallVariablesMatching(EvalContext *ctx, FnCall *fp, Rlist 
 
 /*********************************************************************/
 
-static FnCallResult FnCallBundlesmatching(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
+static FnCallResult FnCallBundlesMatching(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
-    char buf[CF_BUFSIZE];
-    char *regex = RlistScalarValue(finalargs);
-    Rlist *matches = NULL;
+    if (!finalargs)
+    {
+        return FnFailure();
+    }
 
     if (!fp->caller)
     {
         FatalError(ctx, "Function '%s' had a null caller", fp->name);
     }
 
+    const char *regex = RlistScalarValue(finalargs);
+    const Rlist *tag_args = finalargs->next;
     const Policy *policy = PolicyFromPromise(fp->caller);
 
     if (!policy)
@@ -1001,6 +1004,7 @@ static FnCallResult FnCallBundlesmatching(EvalContext *ctx, FnCall *fp, Rlist *f
         FatalError(ctx, "Function '%s' had null policy bundles", fp->name);
     }
 
+    Rlist *matches = NULL;
     for (size_t i = 0; i < SeqLength(policy->bundles); i++)
     {
         const Bundle *bp = SeqAt(policy->bundles, i);
@@ -1009,11 +1013,54 @@ static FnCallResult FnCallBundlesmatching(EvalContext *ctx, FnCall *fp, Rlist *f
             FatalError(ctx, "Function '%s' found null bundle at %ld", fp->name, i);
         }
 
-        snprintf(buf, CF_BUFSIZE, "%s:%s", bp->ns, bp->name);
-        if (StringMatchFull(regex, buf))
+        char *bundle_name = BundleQualifiedName(bp);
+        if (StringMatchFull(regex, bundle_name))
         {
-            RlistPrepend(&matches, xstrdup(buf), RVAL_TYPE_SCALAR);
+            VarRef *ref = VarRefParseFromBundle("tags", bp);
+            VarRefSetMeta(ref, true);
+            DataType type = DATA_TYPE_NONE;
+            const void *bundle_tags = EvalContextVariableGet(ctx, ref, &type);
+            VarRefDestroy(ref);
+
+            bool found = false; // case where tag_args are given and the bundle has no tags
+
+            if (NULL == tag_args)
+            {
+                // we declare it found if no tags were requested
+                found = true;
+            }
+            else if (NULL != bundle_tags)
+            {
+                
+                switch (DataTypeToRvalType(type))
+                {
+                case RVAL_TYPE_SCALAR:
+                    {
+                        Rlist *searched = RlistFromSplitString(bundle_tags, ',');
+                        found = RlistMatchesRegexRlist(searched, tag_args);
+                        RlistDestroy(searched);
+                    }
+                    break;
+
+                case RVAL_TYPE_LIST:
+                    found = RlistMatchesRegexRlist(bundle_tags, tag_args);
+                    break;
+
+                default:
+                    Log(LOG_LEVEL_WARNING, "Function '%s' only matches tags defined as a scalar or a list.  "
+                        "Bundle '%s' had meta defined as '%s'", fp->name, bundle_name, DataTypeToString(type));
+                    found = false;
+                    break;
+                }
+            }
+
+            if (found)
+            {
+                RlistPrepend(&matches, bundle_name, RVAL_TYPE_SCALAR);
+            }
         }
+
+        free(bundle_name);
     }
 
     if (!matches)
@@ -6570,8 +6617,8 @@ const FnCallType CF_FNCALL_TYPES[] =
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("and", DATA_TYPE_STRING, AND_ARGS, &FnCallAnd, "Calculate whether all arguments evaluate to true",
                   FNCALL_OPTION_VARARG, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
-    FnCallTypeNew("bundlesmatching", DATA_TYPE_STRING_LIST, BUNDLESMATCHING_ARGS, &FnCallBundlesmatching, "Find all the bundles that match a regular expression",
-                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("bundlesmatching", DATA_TYPE_STRING_LIST, BUNDLESMATCHING_ARGS, &FnCallBundlesMatching, "Find all the bundles that match a regular expression and tags.",
+                  FNCALL_OPTION_VARARG, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("canonify", DATA_TYPE_STRING, CANONIFY_ARGS, &FnCallCanonify, "Convert an abitrary string into a legal class name",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("canonifyuniquely", DATA_TYPE_STRING, CANONIFY_ARGS, &FnCallCanonify, "Convert an abitrary string into a unique legal class name",

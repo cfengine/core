@@ -63,6 +63,8 @@ Rlist *RlistParseShown(const char *string);
 Rlist *RlistParseString(const char *string);
 Rlist *RlistKeyIn(Rlist *list, const char *key);
 int RlistLen(const Rlist *start);
+bool RlistMatchesRegexRlist(const Rlist *list, const Rlist *search);
+bool RlistMatchesRegex(const Rlist *list, const char *str);
 bool RlistIsInListOfRegex(const Rlist *list, const char *str);
 
 Rlist *RlistAppendRval(Rlist **start, Rval rval);

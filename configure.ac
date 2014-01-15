@@ -141,6 +141,8 @@ AS_IF([test x"$enable_fhs" = xyes], [
   projlibdir='${libdir}/cfengine'
   projdatadir='${exec_prefix}/share/cfengine'
   WORKDIR='${localstatedir}/lib/cfengine'
+  MASTERDIR='default'
+  INPUTDIR='default'
   LOGDIR='${localstatedir}/lib/cfengine'
   PIDDIR=='${localstatedir}/lib/cfengine'
 ], [
@@ -149,17 +151,23 @@ AS_IF([test x"$enable_fhs" = xyes], [
     case "$target_os" in
       mingw*)
         WORKDIR=$(cmd /c "echo %PROGRAMFILES%\\Cfengine" | sed 's/\\/\\\\/g')
+        MASTERDIR=default
+        INPUTDIR=default
         LOGDIR=$(cmd /c "echo %PROGRAMFILES%\\Cfengine" | sed 's/\\/\\\\/g')
         PIDDIR=$(cmd /c "echo %PROGRAMFILES%\\Cfengine" | sed 's/\\/\\\\/g')
       ;;
       *)
         WORKDIR=/var/cfengine
+        MASTERDIR=default
+        INPUTDIR=default
         LOGDIR=/var/cfengine
         PIDDIR=/var/cfengine
       ;;
     esac
   else
     WORKDIR="${localstatedir}/cfengine"
+    MASTERDIR="default"
+    INPUTDIR="default"
     LOGDIR="${localstatedir}/cfengine"
     PIDDIR="${localstatedir}/cfengine"
   fi
@@ -1045,7 +1053,37 @@ adl_RECURSIVE_EVAL("${WORKDIR}", WORKDIR)
 AC_DEFINE_UNQUOTED(WORKDIR, "${WORKDIR}", [Workdir location])
 AC_SUBST(workdir, "${WORKDIR}")
 
+AC_ARG_WITH(masterdir,
+    [  --with-masterdir=MASTERDIR  default internal for masterfiles directory ],
+    [
+        if test x$withval != x ; then
+            MASTERDIR=$withval
+        fi
+    ],
+)
 
+dnl Expand ${prefix} and whatnot in MASTERDIR
+
+adl_RECURSIVE_EVAL("${MASTERDIR}", MASTERDIR)
+
+AC_DEFINE_UNQUOTED(MASTERDIR, "${MASTERDIR}", [Masterfiles directory location])
+AC_SUBST(masterdir, "${MASTERDIR}")
+
+AC_ARG_WITH(inputdir,
+    [  --with-inputdir=INPUTDIR  default internal for inputs directory ],
+    [
+        if test x$withval != x ; then
+            INPUTDIR=$withval
+        fi
+    ],
+)
+
+dnl Expand ${prefix} and whatnot in INPUTDIR
+
+adl_RECURSIVE_EVAL("${INPUTDIR}", INPUTDIR)
+
+AC_DEFINE_UNQUOTED(INPUTDIR, "${INPUTDIR}", [Inputs directory location])
+AC_SUBST(inputdir, "${INPUTDIR}")
 
 AC_ARG_WITH(logdir,
     [  --with-logdir=LOGDIR  default internal for log directory ],
@@ -1242,6 +1280,8 @@ fi
 m4_indir(incstart[]incend, [nova/config.m4])
 
 AC_MSG_RESULT([-> Workdir: $WORKDIR])
+AC_MSG_RESULT([-> Masterdir: $MASTERDIR])
+AC_MSG_RESULT([-> Inputdir: $INPUTDIR])
 AC_MSG_RESULT([-> Logdir: $LOGDIR])
 AC_MSG_RESULT([-> Piddir: $PIDDIR])
 

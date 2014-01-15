@@ -87,7 +87,7 @@ bool VariableTablePut(VariableTable *table, const VarRef *ref,
     Variable *var = VariableTableGet(table, ref);
     if (var == NULL)
     {
-        Log(LOG_LEVEL_VERBOSE, "Setting %s", StringWriterData(logval));
+        Log(LOG_LEVEL_DEBUG, "Setting %s", StringWriterData(logval));
         var = VariableNew(VarRefCopy(ref), RvalCopy(*rval), type, StringSetFromString(tags, ','), promise);
         result = RBTreePut(table->vars, (void *)var->ref->hash, var);
     }
@@ -95,7 +95,7 @@ bool VariableTablePut(VariableTable *table, const VarRef *ref,
     {
         Writer *prior = StringWriter();
         RvalWrite(prior, var->rval);
-        Log(LOG_LEVEL_VERBOSE, "Modifying %s (was '%s')",
+        Log(LOG_LEVEL_DEBUG, "Modifying %s (was '%s')",
             StringWriterData(logval), StringWriterData(prior));
         WriterClose(prior);
         RvalDestroy(var->rval);

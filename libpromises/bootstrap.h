@@ -35,7 +35,7 @@
 void SetPolicyServer(EvalContext *ctx, const char *new_policy_server);
 
 /**
- * @brief Updates sys.last_policy_update variable from $WORKDIR/masterfiles/cf_promises_validated
+ * @brief Updates sys.last_policy_update variable from $sys.masterdir/cf_promises_validated
  * @param ctx EvalContext to put variable into
  */
 void UpdateLastPolicyUpdateTime(EvalContext *ctx);
@@ -80,15 +80,15 @@ bool WriteBuiltinFailsafePolicy(const char *workdir);
 bool WriteBuiltinFailsafePolicyToPath(const char *filename);
 
 /**
- * @brief Removes all files in WORKDIR/inputs
- * @param workdir
+ * @brief Removes all files in $(sys.inputdir)
+ * @param inputdir
  * @return True if succesful
  */
-bool RemoveAllExistingPolicyInInputs(const char *workdir);
+bool RemoveAllExistingPolicyInInputs(const char *inputdir);
 
 /**
- * @return True if the file WORKDIR/masterfiles/promises.cf exists
+ * @return True if the file $(sys.masterdir)/promises.cf exists
  */
-bool MasterfileExists(const char *workdir);
+bool MasterfileExists(const char *masterdir);
 
 #endif

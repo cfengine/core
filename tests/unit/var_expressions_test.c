@@ -103,6 +103,31 @@ static void test_array_with_dot_colon_in_index(void)
     VarRefDestroy(ref);
 }
 
+static void test_special_scope(void)
+{
+    {
+        Policy *p = PolicyNew();
+        Bundle *bp = PolicyAppendBundle(p, "ns", "b", "agent", NULL, NULL);
+
+        {
+            VarRef *ref = VarRefParseFromBundle("c.lval", bp);
+            assert_string_equal("ns", ref->ns);
+            assert_string_equal("c", ref->scope);
+            assert_string_equal("lval", ref->lval);
+            VarRefDestroy(ref);
+        }
+
+        {
+            VarRef *ref = VarRefParseFromBundle("sys.lval", bp);
+            assert_false(ref->ns);
+            assert_string_equal("sys", ref->scope);
+            assert_string_equal("lval", ref->lval);
+            VarRefDestroy(ref);
+        }
+    }
+
+}
+
 static void CheckToStringQualified(const char *str, const char *expect)
 {
     VarRef *ref = VarRefParse(str);
@@ -170,6 +195,7 @@ int main()
         unit_test(test_qualified_array),
         unit_test(test_nested_array),
         unit_test(test_array_with_dot_colon_in_index),
+        unit_test(test_special_scope),
         unit_test(test_to_string_qualified),
         unit_test(test_to_string_unqualified),
     };

@@ -1,0 +1,34 @@
+# Redmine#3122: ensure lists are interpolated in the correct order
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle agent init
+{
+  vars:
+      "first_list" slist => { "item1", "item2", "item3", "item4", "item5" };
+}
+
+bundle agent test
+{
+  vars:
+      "local" slist =>  { @(second_list) };
+      "second_list" slist => { @(init.first_list), "item6" };
+}
+
+bundle agent check
+{
+  vars:
+      "expected" string => '{ "item1", "item2", "item3", "item4", "item5", "item6" }';
+      "joined" string => format("%S", "test.local");
+
+  methods:
+      "check" usebundle => default_check_strcmp($(expected),
+                                                $(joined),
+                                                "$(this.promise_filename)",
+                                                "no");
+}

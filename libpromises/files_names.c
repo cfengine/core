@@ -37,7 +37,7 @@
 
 /*********************************************************************/
 
-int IsNewerFileTree(char *dir, time_t reftime)
+int IsNewerFileTree(const char *dir, time_t reftime)
 {
     const struct dirent *dirp;
     char path[CF_BUFSIZE] = { 0 };
@@ -170,7 +170,7 @@ char *JoinPath(char *path, const char *leaf)
 
 /*********************************************************************/
 
-char *JoinSuffix(char *path, char *leaf)
+char *JoinSuffix(char *path, const char *leaf)
 {
     int len = strlen(leaf);
 

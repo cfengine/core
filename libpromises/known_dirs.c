@@ -180,18 +180,15 @@ const char *GetInputDir(void)
         snprintf(workbuf, CF_BUFSIZE, "%s%cinputs", inputdir, FILE_SEPARATOR);
         return MapName(workbuf);
     }
+    else if (strcmp(INPUTDIR, "default") == 0 )
+    {
+        static char workbuf[CF_BUFSIZE];
+        snprintf(workbuf, CF_BUFSIZE, "%s%cinputs", GetWorkDir(), FILE_SEPARATOR);
+        return MapName(workbuf);
+    }
     else
     {
-        if (strcmp(INPUTDIR, "default") == 0 )
-        {
-            static char workbuf[CF_BUFSIZE];
-            snprintf(workbuf, CF_BUFSIZE, "%s%cinputs", GetWorkDir(), FILE_SEPARATOR);
-            return MapName(workbuf);
-       }
-       else
-       {
-            return GetDefaultInputDir();
-       }
+        return GetDefaultInputDir();
     }
 
 }
@@ -206,17 +203,14 @@ const char *GetMasterDir(void)
         snprintf(workbuf, CF_BUFSIZE, "%s%cmasterfiles", masterdir, FILE_SEPARATOR);
         return MapName(workbuf);
     }
+    else if (strcmp(MASTERDIR, "default") == 0 )
+    {
+        static char workbuf[CF_BUFSIZE];
+        snprintf(workbuf, CF_BUFSIZE, "%s%cmasterfiles", GetWorkDir(), FILE_SEPARATOR);
+        return MapName(workbuf);
+    }
     else
     {
-        if (strcmp(MASTERDIR, "default") == 0 )
-        {
-            static char workbuf[CF_BUFSIZE];
-            snprintf(workbuf, CF_BUFSIZE, "%s%cmasterfiles", GetWorkDir(), FILE_SEPARATOR);
-            return MapName(workbuf);
-       }
-       else
-       {
-            return GetDefaultMasterDir();
-       }
+        return GetDefaultMasterDir();
     }
 }

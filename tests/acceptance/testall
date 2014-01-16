@@ -444,7 +444,7 @@ if [ $# -gt 0 ]; then
     fi
   done
 else
-  TESTS=$(find "$(dirname $0)" -name '*.cf' | sort)
+  TESTS=$(find . -name '*.cf' | sort)
 fi
 
 #

@@ -35,7 +35,7 @@
 void SetPolicyServer(EvalContext *ctx, const char *new_policy_server);
 
 /**
- * @brief Updates sys.last_policy_update variable from $sys.masterdir/cf_promises_validated
+ * @brief Updates sys.last_policy_update variable from $(sys.masterdir)/cf_promises_validated
  * @param ctx EvalContext to put variable into
  */
 void UpdateLastPolicyUpdateTime(EvalContext *ctx);

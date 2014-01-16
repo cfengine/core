@@ -282,16 +282,18 @@ body contain useshell
 }
 
 #######################################################
-
 # Test based on whether two strings are the same
 
 bundle agent default_check_strcmp(strA, strB, test, expected_difference)
 {
   classes:
-      "equal" expression => strcmp("$(strA)", "$(strB)");
-      "expected_difference" or => { strcmp("$(expected_difference)", "yes"),
-                                    strcmp("$(expected_difference)", "true") };
+      "equal" expression => strcmp($(strA), $(strB));
+      "expected_difference" or => { strcmp($(expected_difference), "yes"),
+                                    strcmp($(expected_difference), "true") };
   reports:
+    DEBUG::
+      "STRING A: '$(strA)'";
+      "STRING B: '$(strB)'";
     equal.!expected_difference::
       "$(test) Pass";
     equal.expected_difference::
@@ -299,5 +301,28 @@ bundle agent default_check_strcmp(strA, strB, test, expected_difference)
     !equal.!expected_difference::
       "$(test) FAIL";
     !equal.expected_difference::
+      "$(test) Pass";
+}
+
+#######################################################
+# Test based on whether a string matches a regular expression
+
+bundle agent default_check_regcmp(regex, thestring, test, expected_mismatch)
+{
+  classes:
+      "matched" expression => regcmp($(regex), $(thestring));
+      "expected_difference" or => { strcmp($(expected_difference), "yes"),
+                                    strcmp($(expected_difference), "true") };
+  reports:
+    DEBUG::
+      "REGEX: '$(regex)'";
+      "STRING TO MATCH: '$(thestring)'";
+    matched.!expected_difference::
+      "$(test) Pass";
+    matched.expected_difference::
+      "$(test) FAIL";
+    !matched.!expected_difference::
+      "$(test) FAIL";
+    !matched.expected_difference::
       "$(test) Pass";
 }

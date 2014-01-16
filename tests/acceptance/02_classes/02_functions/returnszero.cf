@@ -7,7 +7,7 @@
 body common control
 {
       inputs => { "../../default.cf.sub" };
-      bundlesequence  => { default("$(this.promise_filename)") };   
+      bundlesequence  => { default("$(this.promise_filename)") };
       version => "1.0";
 }
 
@@ -57,6 +57,9 @@ bundle agent check
       "nxe_abs" string => "/xbin/nosuchprogramexists";
 
   classes:
+      "rawshell_no_prefix" expression => returnszero("ls /", "useshell");
+      "rawnoshell_no_prefix" expression => returnszero("ls /", "noshell");
+
       "zero_noshell_rel" expression => returnszero("$(zero_rel)", "noshell");
       "zero_useshell_rel" expression => returnszero("$(zero_rel)", "useshell");
       "zero_noshell_abs" expression => returnszero("$(zero_abs)", "noshell");

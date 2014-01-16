@@ -6421,7 +6421,7 @@ static const FnCallArg REMOTECLASSESMATCHING_ARGS[] =
 
 static const FnCallArg RETURNSZERO_ARGS[] =
 {
-    {CF_ABSPATHRANGE, DATA_TYPE_STRING, "Fully qualified command path"},
+    {CF_PATHRANGE, DATA_TYPE_STRING, "Command path"},
     {"noshell,useshell,powershell", DATA_TYPE_OPTION, "Shell encapsulation option"},
     {NULL, DATA_TYPE_NONE, NULL}
 };

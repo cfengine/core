@@ -1,0 +1,95 @@
+#######################################################
+#
+# Redmine#3184: Test editing of an immutable file
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle common chattr
+{
+  vars:
+      "chattr" string => "/usr/bin/chattr";
+
+  classes:
+      "have_chattr" expression => fileexists($(chattr));
+}
+
+bundle agent init
+{
+  files:
+      "$(G.testfile)"
+      create => "true";
+}
+
+bundle agent test
+{
+  methods:
+      "1" usebundle => test_setup($(G.testfile));
+      "2" usebundle => test_edit($(G.testfile));
+      "3" usebundle => test_teardown($(G.testfile));
+}
+
+bundle agent test_setup(file)
+{
+  commands:
+    have_chattr::
+      "$(chattr.chattr)" args => "+i $(file)",
+      classes => default_cf_sub_scoped_generic_classes("chattr", "namespace");
+}
+
+bundle agent test_edit(file)
+{
+  files:
+    have_chattr::
+      "$(file)"
+      edit_line => test_edit_line(),
+      classes => default_cf_sub_scoped_generic_classes("test", "namespace");
+}
+
+bundle agent test_teardown(file)
+{
+  commands:
+    have_chattr::
+      "$(chattr.chattr)" args => "-i $(file)",
+      classes => default_cf_sub_scoped_generic_classes("chattr", "namespace");
+}
+
+bundle edit_line test_edit_line()
+{
+  insert_lines:
+      "blah";
+}
+
+#######################################################
+
+bundle agent check
+{
+  classes:
+      # we're OK if:
+      # - we don't have chattr
+      # - chattr failed to DTRT (e.g. we're not root)
+      # - the test failed to edit
+      "ok" expression => "!have_chattr|chattr_failed|(test_failed.!test_kept.!test_denied.!test_timeout.!test_repaired)";
+
+  methods:
+      "report" usebundle => default_cf_sub_report_generic_classes("test");
+      "report" usebundle => default_cf_sub_report_generic_classes("chattr");
+
+  reports:
+    DEBUG.!have_chattr::
+      "Without $(chattr.chattr), the test will always pass";
+    DEBUG.chattr_failed::
+      "Since you can't run $(chattr.chattr) to set attributes, the test will always pass";
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

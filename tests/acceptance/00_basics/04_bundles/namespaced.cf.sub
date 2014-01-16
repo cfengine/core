@@ -1,0 +1,11 @@
+body file control
+{
+      namespace => "mytest";
+}
+
+bundle agent mytest
+{
+  files:
+      "$(sys.workdir)/ppkeys/."
+      create => "true";
+}

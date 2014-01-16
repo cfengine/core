@@ -285,19 +285,19 @@ export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP
       echo $RESULT $TEST '(UNEXPECTED FAILURE)' >> "$SUMMARY"
       ( echo "        "\<failure type=\"UNEXPECTED FAILURE\"
         echo "                 "message=\"$RESULT $TEST '(UNEXPECTED FAILURE)'\"\>
-        echo "        "\<\/failure\>
+        echo "        $OUT"\<\/failure\>
       ) >> "$XMLTMP"
     else
       echo $RESULT $TEST >> "$SUMMARY"
       if [ "$RESULT" = FAIL ]; then
         ( echo "        "\<failure type=\"FAIL\"
           echo "                 "message=\"$RESULT $TEST\"\>
-          echo "        "\<\/failure\>
+          echo "        $OUT"\<\/failure\>
         ) >> "$XMLTMP"
       elif [ "$RESULT" = "FAILed to crash" ]; then
         ( echo "        "\<failure type=\"FAILed to crash\"
           echo "                 "message=\"$RESULT $TEST\"\>
-          echo "        "\<\/failure\>
+          echo "        $OUT"\<\/failure\>
         ) >> "$XMLTMP"
       fi
     fi

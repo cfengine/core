@@ -196,6 +196,7 @@ const ConstraintSyntax CF_METABODY[] =
 {
     ConstraintSyntaxNewString("string", "", "A scalar string", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewStringList("slist", "", "A list of scalar strings", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewContainer("data", "A data container", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };
 

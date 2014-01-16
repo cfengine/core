@@ -279,7 +279,19 @@ size_t ExtractScalarPrefix(Buffer *out, const char *str, size_t len)
         return 0;
     }
 
-    const char *dollar_point = memchr(str, '$', len);
+    const char *dollar_point = NULL;
+    for (size_t i = 0; i < (len - 1); i++)
+    {
+        if (str[i] == '$')
+        {
+            if (str[i + 1] == '(' || str[i + 1] == '{')
+            {
+                dollar_point = str + i;
+                break;
+            }
+        }
+    }
+
     if (!dollar_point)
     {
         BufferAppend(out, str, len);
@@ -288,6 +300,9 @@ size_t ExtractScalarPrefix(Buffer *out, const char *str, size_t len)
     else if (dollar_point > str)
     {
         size_t prefix_len = dollar_point - str;
+        if (prefix_len )
+
+
         BufferAppend(out, str, prefix_len);
         return prefix_len;
     }

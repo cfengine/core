@@ -17,6 +17,10 @@ static void test_extract_scalar_prefix()
     assert_string_equal("hello (world) xy", BufferData(b));
 
     BufferZero(b);
+    assert_int_equal(sizeof("hello$)") -1, ExtractScalarPrefix(b, "hello$)$(world)xy", sizeof("hello$)$(world)xy") -1));
+    assert_string_equal("hello$)", BufferData(b));
+
+    BufferZero(b);
     assert_int_equal(0, ExtractScalarPrefix(b, "", 0));
     assert_string_equal("", BufferData(b));
 

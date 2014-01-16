@@ -361,7 +361,7 @@ static void ExpandAndMapIteratorsFromScalar(EvalContext *ctx, const Bundle *bund
         {
             BufferZero(value);
             ExtractScalarReference(value, sp, length - i, true);
-            if (value)
+            if (BufferSize(value) > 0)
             {
                 Rlist *inner_expansion = NULL;
                 Rlist *exp = NULL;

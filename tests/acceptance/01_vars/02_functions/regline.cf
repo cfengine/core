@@ -1,0 +1,80 @@
+#######################################################
+#
+# Test filter()
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle agent init
+{
+  vars:
+      "results" slist => {
+                           "five trailing spaces     ",
+                           "no trailing spaces",
+      };
+
+  files:
+      "$(G.testfile)"
+      create => "true",
+      edit_defaults => init_empty,
+      edit_line => init_insert;
+}
+
+
+body edit_defaults init_empty
+{
+      empty_file_before_editing => "true";
+      edit_backup => "false";
+}
+
+bundle edit_line init_insert
+{
+  insert_lines:
+      "$(init.results)";
+}
+
+
+bundle agent test 
+{
+    classes:
+        "matched1" 
+            expression => regline("five trailing spaces     ",
+	    	       	  	  $(G.testfile)),
+            scope => "namespace";
+        "matched2" 
+            expression => regline("five trailing spaces   ",
+	    	       	  	  $(G.testfile)),
+            scope => "namespace";
+
+
+
+   reports:
+     DEBUG.matched1::
+       "Line matched1 matched";
+     DEBUG.!matched1::
+       "Line matched1 did not match";
+     DEBUG.matched2::
+       "Line matched2 matched";
+     DEBUG.!matched2::
+       "Line matched2 did not match";
+
+}
+
+bundle agent check
+{
+  classes:
+   "ok" expression => "matched1.!matched2";
+
+  reports:
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+
+}

@@ -4233,48 +4233,40 @@ static FnCallResult FnCallRegExtract(EvalContext *ctx, ARG_UNUSED FnCall *fp, Rl
 
 /*********************************************************************/
 
-static FnCallResult FnCallRegLine(ARG_UNUSED EvalContext *ctx, ARG_UNUSED FnCall *fp, Rlist *finalargs)
+static FnCallResult FnCallRegLine(ARG_UNUSED EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
-    FILE *fin;
+    const char *arg_regex = RlistScalarValue(finalargs);
+    const char *arg_filename = RlistScalarValue(finalargs->next);
 
-    char *argv0 = RlistScalarValue(finalargs);
-    char *argv1 = RlistScalarValue(finalargs->next);
-
-    if ((fin = safe_fopen(argv1, "r")) == NULL)
+    FILE *fin = safe_fopen(arg_filename, "r");
+    if (!fin)
     {
         return FnReturnContext(false);
     }
 
-    for (;;)
+    size_t line_size = CF_BUFSIZE;
+    char *line = xmalloc(line_size);
+
+    while (CfReadLine(&line, &line_size, fin) != -1)
     {
-        char line[CF_BUFSIZE];
-
-        if (fgets(line, sizeof(line), fin) == NULL)
+        if (StringMatchFull(arg_regex, line))
         {
-            if (ferror(fin))
-            {
-                Log(LOG_LEVEL_ERR, "Function regline, unable to read from the file '%s'", argv1);
-                fclose(fin);
-                return FnFailure();
-            }
-            else /* feof */
-            {
-                fclose(fin);
-                return FnReturnContext(false);
-            }
-        }
-
-        if (Chop(line, CF_EXPANDSIZE) == -1)
-        {
-            Log(LOG_LEVEL_ERR, "Chop was called on a string that seemed to have no terminator");
-        }
-
-        if (StringMatchFull(argv0, line))
-        {
+            free(line);
             fclose(fin);
             return FnReturnContext(true);
         }
     }
+
+    free(line);
+
+    if (!feof(fin))
+    {
+        Log(LOG_LEVEL_ERR, "In function '%s', error reading from file. (getline: %s)",
+            fp->name, GetErrorStr());
+    }
+
+    fclose(fin);
+    return FnReturnContext(false);
 }
 
 /*********************************************************************/

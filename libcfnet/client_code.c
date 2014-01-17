@@ -102,6 +102,10 @@ static Seq *GetGlobalServerList(void)
 {
     /* Only ip address strings are stored in this list, so don't put any
      * hostnames. TODO convert to list of (sockaddr_storage *) to enforce this. */
+    /* TODO replace Seq or lock properly. Someone changed this SERVERLIST from
+     * RList to Seq, but didn't think of the implications. As a result this
+     * list now is in great danger of corruption when written from multiple
+     * threads. Luckily multi-threaded access is not the common case. */
     static Seq *server_list = NULL; /* GLOBAL_X */
     if (!server_list)
     {
@@ -192,7 +196,6 @@ AgentConnection *NewServerConnection(FileCopy fc, bool background, int *err, int
             ThreadUnlock(&cft_serverlist);
 
             /* TODO not return NULL if >= CFA_MAXTREADS ? */
-            /* TODO RlistLen is O(n) operation. */
             if (SeqLength(srvlist_tmp) < CFA_MAXTHREADS)
             {
                 /* If background connection was requested, then don't cache it
@@ -521,18 +524,21 @@ int cf_remote_stat(char *file, struct stat *buf, char *stattype, bool encrypt, A
 
     if (ReceiveTransaction(conn->conn_info, recvbuffer, NULL) == -1)
     {
+        /* TODO mark connection as closed, or better remove from cache */
         return -1;
     }
 
     if (strstr(recvbuffer, "unsynchronized"))
     {
-        Log(LOG_LEVEL_ERR, "Clocks differ too much to do copy by date (security) '%s'", recvbuffer + 4);
+        Log(LOG_LEVEL_ERR,
+            "Clocks differ too much to do copy by date (security), server reported: %s",
+            recvbuffer + 5);
         return -1;
     }
 
     if (BadProtoReply(recvbuffer))
     {
-        Log(LOG_LEVEL_VERBOSE, "Server returned error '%s'", recvbuffer + 4);
+        Log(LOG_LEVEL_VERBOSE, "Server returned error '%s'", recvbuffer + 5);
         errno = EPERM;
         return -1;
     }
@@ -585,6 +591,7 @@ int cf_remote_stat(char *file, struct stat *buf, char *stattype, bool encrypt, A
 
         if (ReceiveTransaction(conn->conn_info, recvbuffer, NULL) == -1)
         {
+            /* TODO mark connection as closed, or better remove from cache */
             return -1;
         }
 
@@ -712,6 +719,7 @@ Item *RemoteDirList(const char *dirname, bool encrypt, AgentConnection *conn)
     {
         if ((n = ReceiveTransaction(conn->conn_info, recvbuffer, NULL)) == -1)
         {
+            /* TODO mark connection as closed, or better remove from cache */
             return NULL;
         }
 
@@ -734,7 +742,7 @@ Item *RemoteDirList(const char *dirname, bool encrypt, AgentConnection *conn)
 
         if (BadProtoReply(recvbuffer))
         {
-            Log(LOG_LEVEL_INFO, "%s", recvbuffer + 4);
+            Log(LOG_LEVEL_INFO, "%s", recvbuffer + 5);
             return NULL;
         }
 
@@ -846,6 +854,7 @@ int CompareHashNet(const char *file1, const char *file2, bool encrypt, AgentConn
 
     if (ReceiveTransaction(conn->conn_info, recvbuffer, NULL) == -1)
     {
+        /* TODO mark connection as closed, or better remove from cache */
         Log(LOG_LEVEL_ERR, "Failed receive. (ReceiveTransaction: %s)", GetErrorStr());
         Log(LOG_LEVEL_VERBOSE,  "No answer from host, assuming checksum ok to avoid remote copy for now...");
         return false;
@@ -1368,7 +1377,6 @@ static AgentConnection *GetIdleConnectionToServer(const char *server)
         return NULL;
     }
 
-    // TODO: How does this locking help anything? This is not a copy
     ThreadLock(&cft_serverlist);
     Seq *srvlist_tmp = GetGlobalServerList();
     ThreadUnlock(&cft_serverlist);
@@ -1394,19 +1402,19 @@ static AgentConnection *GetIdleConnectionToServer(const char *server)
             if (svp->busy)
             {
                 Log(LOG_LEVEL_VERBOSE, "GetIdleConnectionToServer:"
-                    " connection to '%s' seems to be active...",
+                    " connection to '%s' seems to be busy.",
                     ipaddr);
             }
             else if (ConnectionInfoSocket(svp->conn->conn_info) == CF_COULD_NOT_CONNECT)
             {
                 Log(LOG_LEVEL_VERBOSE, "GetIdleConnectionToServer:"
-                    " connection to '%s' is marked as offline...",
+                    " connection to '%s' is marked as offline.",
                     ipaddr);
             }
             else if (ConnectionInfoSocket(svp->conn->conn_info) > 0)
             {
                 Log(LOG_LEVEL_VERBOSE, "GetIdleConnectionToServer:"
-                    " found connection to %s already open and ready.",
+                    " found connection to '%s' already open and ready.",
                     ipaddr);
                 svp->busy = true;
                 return svp->conn;
@@ -1414,14 +1422,14 @@ static AgentConnection *GetIdleConnectionToServer(const char *server)
             else
             {
                 Log(LOG_LEVEL_VERBOSE,
-                    " connection to '%s' is in unknown state %d...",
+                    " connection to '%s' is in unknown state %d!",
                     ipaddr, ConnectionInfoSocket(svp->conn->conn_info));
             }
         }
     }
 
     Log(LOG_LEVEL_VERBOSE, "GetIdleConnectionToServer:"
-        " no existing connection to '%s' is established...", ipaddr);
+        " no existing connection to '%s' is established.", ipaddr);
     return NULL;
 }
 
@@ -1463,6 +1471,7 @@ static void MarkServerOffline(const char *server)
         return;
     }
 
+    ThreadLock(&cft_serverlist);
     Seq *srvlist_tmp = GetGlobalServerList();
 
     for (size_t i = 0; i < SeqLength(srvlist_tmp); i++)
@@ -1479,6 +1488,7 @@ static void MarkServerOffline(const char *server)
         {
             /* Found it, mark offline */
             ConnectionInfoSetSocket(conn->conn_info, CF_COULD_NOT_CONNECT);
+            ThreadUnlock(&cft_serverlist);
             return;
         }
     }
@@ -1492,7 +1502,6 @@ static void MarkServerOffline(const char *server)
     ConnectionInfoSetConnectionStatus(svp->conn->conn_info, CF_CONNECTION_NOT_ESTABLISHED);
     ConnectionInfoSetSocket(svp->conn->conn_info, CF_COULD_NOT_CONNECT);
 
-    ThreadLock(&cft_serverlist);
     SeqAppend(srvlist_tmp, svp);
     ThreadUnlock(&cft_serverlist);
 }

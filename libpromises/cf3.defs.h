@@ -589,11 +589,14 @@ typedef enum
 #define CF_NAKEDLRANGE "@[(][a-zA-Z0-9]+[)]"
 #define CF_ANYSTRING   ".*"
 
+#define CF_KEYSTRING   "^(SHA|MD5)=[0123456789abcdef]*$"
+
+
 #ifndef __MINGW32__
-# define CF_ABSPATHRANGE   "\042?(/.*)"
+# define CF_ABSPATHRANGE   "\"?(/.*)"
 #else
 // can start with e.g. c:\... or "c:\...  |  unix (for Cygwin-style paths)
-# define CF_ABSPATHRANGE   "\042?(([a-zA-Z]:\\\\.*)|(/.*))"
+# define CF_ABSPATHRANGE   "\"?(([a-zA-Z]:\\\\.*)|(/.*))"
 #endif
 
 /* Any non-empty string can be an absolute path under Unix */

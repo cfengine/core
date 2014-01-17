@@ -65,13 +65,9 @@ P.offsets.current += yyleng;
 
 #define YY_USER_ACTION yyuseraction();
 
-#define MAX_INCLUDE_DEPTH 1
-YY_BUFFER_STATE include_stack[MAX_INCLUDE_DEPTH];
-int include_stack_ptr = 0;
+// Do not use lex - flex only
 
 %}
-
-%x incl_state
 
 space      [ \t]+
 
@@ -80,8 +76,6 @@ newline    ([\n]|[\xd][\xa])
 line       ^.*$
 
 comment    #[^\n]*
-
-include    ^@include
 
 promises   bundle
 
@@ -171,106 +165,6 @@ promise_type   [a-zA-Z_]+:
                           P.line_pos += yyleng;
                           ParserDebug("\tL:body %d\n", P.line_pos);
                           return BODY;
-                      }
-
-{include}             {
-                      ParserDebug("\tL:include %d\n", P.line_pos);
-                      if ( include_stack_ptr >= MAX_INCLUDE_DEPTH )
-                      {
-                          ParserDebug("\tI: Includes nested too deeply\n" );
-                          exit(EXIT_FAILURE);
-                      }
-                      BEGIN(incl_state);
-                      }
-
-<incl_state>[ \t]*         
-<incl_state>{qstring}  {
-                          ParserDebug("\tL:include state:qstring:%s\n", yytext);
-                          include_stack[include_stack_ptr++] = YY_CURRENT_BUFFER;
-
-                          char *fname = NULL;
-                          fname = xstrdup(yytext+1); // skip up to the opening quote
-                          fname[strlen(fname)-1] = '\0'; // clear the ending quote
-
-                          // check for leading path components, attempting to catch Windows paths
-                          if (fname == strchr(fname, '/') || (strlen(fname) > 3 && fname[2] == ':'))
-                          {
-                               ParserDebug("\tL:include_state:%s (absolute path, included in %s)\n", fname, P.filename);
-                          }
-                          else
-                          {
-                               ParserDebug("\tL:include_state:%s (relative path, included in %s)\n", fname, P.filename);
-                               char current[CFE_PARSER_PATH_MAX];
-                               char dirname[CFE_PARSER_PATH_MAX];
-
-                               if (NULL == realpath(P.filename, dirname))
-                               {
-                                   char error_str[CF_MAXVARSIZE];
-
-                                   snprintf(error_str, CF_MAXVARSIZE, "\tI: Could not resolve realpath of file '%s': %s\n", P.filename, strerror(errno));
-                                   yyerror(error_str);
-                                   exit(EXIT_FAILURE);
-                               }
-
-                               char *chop = strrchr(dirname, '/');
-
-                               if (NULL == chop)
-                               {
-                                    chop = strrchr(dirname, '\\');
-                               }
-
-                               if (NULL != chop)
-                               {
-                                    *chop = '\0';
-                               }
-
-                               // this should work on Windows too
-                               snprintf(current, CFE_PARSER_PATH_MAX-1, "%s/%s", dirname, fname);
-                               free(fname);
-                               fname = xstrdup(current);
-                          }
-
-                          yyin = safe_fopen(fname, "r" );
-
-                          if ( ! yyin )
-                          {
-                              char error_str[CF_MAXVARSIZE];
-
-                              snprintf(error_str, CF_MAXVARSIZE, "\tI: Could not open file '%s' for reading: %s\n", fname, strerror(errno));
-                              yyerror(error_str);
-                              exit(EXIT_FAILURE);
-                          }
-                          else
-                          {
-                              ParserDebug("\tI: @Including file '%s'\n", fname);
-                          }
-
-                          strncpy(P.include_filename, fname, CFE_PARSER_PATH_MAX);
-                          free(fname);
-
-                          yy_switch_to_buffer( yy_create_buffer( yyin, YY_BUF_SIZE ) );
-
-                          BEGIN(INITIAL);
-                      }
-
-<incl_state>.[^'"]*   {
-                          yyerror("Not a valid include statement");
-                          exit(EXIT_FAILURE);
-                      }
-
-
-<<EOF>>               {
-                          P.include_filename[0] = '\0';
-
-                          if ( --include_stack_ptr < 0 || !YY_CURRENT_BUFFER)
-                          {
-                              yyterminate();
-                          }
-                          else
-                          {
-                              yy_delete_buffer( YY_CURRENT_BUFFER );
-                              yy_switch_to_buffer(include_stack[include_stack_ptr] );
-                          }
                       }
 
 {id}                  {

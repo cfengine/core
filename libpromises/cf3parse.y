@@ -1145,15 +1145,7 @@ gaitem:                IDSYNTAX
 static void ParseErrorVColumnOffset(int column_offset, const char *s, va_list ap)
 {
     char *errmsg = StringVFormat(s, ap);
-
-    if (strlen(P.include_filename) > 0)
-    {
-        fprintf(stderr, "%s:%d:%d: error: (included file %s) %s\n", P.filename, P.line_no, P.line_pos + column_offset, P.include_filename, errmsg);
-    }
-    else
-    {
-        fprintf(stderr, "%s:%d:%d: error: %s\n", P.filename, P.line_no, P.line_pos + column_offset, errmsg);
-    }
+    fprintf(stderr, "%s:%d:%d: error: %s\n", P.filename, P.line_no, P.line_pos + column_offset, errmsg);
     free(errmsg);
 
     /* FIXME: why this might be NULL? */
@@ -1204,15 +1196,7 @@ static void ParseWarningV(unsigned int warning, const char *s, va_list ap)
     char *errmsg = StringVFormat(s, ap);
     const char *warning_str = ParserWarningToString(warning);
 
-    if (strlen(P.include_filename) > 0)
-    {
-        fprintf(stderr, "%s:%d:%d: warning: (included file %s) %s [-W%s]\n", P.filename, P.line_no, P.line_pos, P.include_filename, errmsg, warning_str);
-    }
-    else
-    {
-        fprintf(stderr, "%s:%d:%d: warning: %s [-W%s]\n", P.filename, P.line_no, P.line_pos, errmsg, warning_str);
-    }
-
+    fprintf(stderr, "%s:%d:%d: warning: %s [-W%s]\n", P.filename, P.line_no, P.line_pos, errmsg, warning_str);
     fprintf(stderr, "%s\n", P.current_line);
     fprintf(stderr, "%*s\n", P.line_pos, "^");
 
@@ -1254,15 +1238,7 @@ static void fatal_yyerror(const char *s)
         sp++;
     }
 
-    if (strlen(P.include_filename) > 0)
-    {
-        fprintf(stderr, "%s: %d,%d: Fatal error during parsing: (included file %s) %s, near token \'%.20s\'\n", P.filename, P.line_no, P.line_pos, P.include_filename, s, sp ? sp : "NULL");
-    }
-    else
-    {
-        fprintf(stderr, "%s: %d,%d: Fatal error during parsing: %s, near token \'%.20s\'\n", P.filename, P.line_no, P.line_pos, s, sp ? sp : "NULL");
-    }
-
+    fprintf(stderr, "%s: %d,%d: Fatal error during parsing: %s, near token \'%.20s\'\n", P.filename, P.line_no, P.line_pos, s, sp ? sp : "NULL");
     exit(EXIT_FAILURE);
 }
 

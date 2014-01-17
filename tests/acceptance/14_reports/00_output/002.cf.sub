@@ -1,0 +1,93 @@
+#######################################################
+#
+# Test policy that triggers the segfault - provided
+# as near identical to the original since it was not
+# possible to simplify whilst triggering the segfault 
+# 
+#######################################################
+
+body common control
+
+{ 
+    inputs => { "../../../../masterfiles/libraries/cfengine_stdlib.cf" };
+    bundlesequence => { "test" };
+}
+
+bundle agent test 
+{ 
+    vars: 
+        redhat_6:: 
+        
+            "allowed_files" slist => {"site-packages", "README", }; 
+            "python_vms" slist => {"LNKD-python2.6", }; 
+            "2_6_path" string => "/export/apps/python/python-2.6.9"; 
+            "site_packages" slist => { "$(2_6_path)/lib/python2.6/site-packages", };
+
+    classes: 
+    
+        redhat_6:: 
+        
+            "2_6_not_installed" expression => returnszero("/bin/rpm -q LNKD-python2.6 > /dev/null", "useshell"); 
+    files: 
+    
+        redhat_6:: 
+        
+            "/export/apps/python/current2.6" 
+            handle => "symlink_export_apps_python_python_2_6", 
+            link_from => ln_s("$(2_6_path)"), 
+            classes => if_repaired("symlink_modified");
+
+        redhat_6:: 
+        
+            "$(site_packages)/README" 
+            handle => "drop_site_packages_readme", 
+            copy_from => no_backup_cp("/var/cfengine/inputs/config-general/python_administration/README"), 
+            perms => mog("0444","root","root");
+
+        redhat_6:: 
+        
+            "$(site_packages)" 
+            handle => "report_site_packages_cruft", 
+            file_select => clean_python_site_packages, 
+            depth_search => recurse("inf"), 
+            transformer => "/bin/echo cf3: Cfengine cleaned the python module $(this.promiser) on $(sys.host) at $(sys.date)";
+
+        redhat_6:: 
+        
+            "$(site_packages)" 
+            handle => "clean_site_packages_from_cruft", 
+            file_select => clean_python_site_packages, 
+            delete => tidy, 
+            depth_search => recurse("inf");
+
+    packages: 
+    
+        redhat_6.!2_6_not_installed:: 
+        
+            "$(python_vms)" 
+            package_policy => "add", 
+            package_method => yum, 
+            package_select => "==", 
+            package_version => "2.6.9-1", 
+            package_architectures => {"x86_64", }, 
+            classes => cf2_if_else("$(python_vms)_packages_installed", "$(python_vms)_packages_failed");
+
+    reports: 
+    
+        cfengine_3:: 
+        
+            "cf3: The python virtual machine $(python_vms) was installed on $(sys.host)" 
+            ifvarclass => canonify("$(python_vms)_packages_installed");
+
+        cfengine_3:: 
+        
+            "cf3: The python virtual machine $(python_vms) could not be installed on $(sys.host)" 
+            ifvarclass => canonify("$(python_vms)_packages_failed");
+            
+} 
+################################################################################################################# 
+body file_select clean_python_site_packages 
+{ 
+    leaf_name => { @(python_administration.allowed_files) }; 
+    file_result => "!leaf_name"; 
+}

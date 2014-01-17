@@ -589,11 +589,32 @@ typedef enum
 #define CF_NAKEDLRANGE "@[(][a-zA-Z0-9]+[)]"
 #define CF_ANYSTRING   ".*"
 
+#define CF_KEYSTRING   "^(SHA|MD5)=[0123456789abcdef]*$"
+
+
+#define CF_IPV4SEG_REGEX "(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])"
+#define CF_IPV4_SUBNETSUFFIX_REGEX "/(3[210]|[21]?[0-9])"
+
+#define CF_IPV4_REGEX "(" CF_IPV4SEG_REGEX "\.){3,3}" CF_IPV4SEG_REGEX
+#define CF_IPV4_SUBNET_REGEX CF_IPV4_REGEX "(" CF_IPV4_SUBNETSUFFIX_REGEX ")?"
+
+#define CF_HEXDIGIT_REGEX "[0-9a-fA-F]"
+#define CF_IPV6SEG_REGEX CF_HEXDIGIT_REGEX "{1,4}"
+#define CF_IPV6_SUBNETSUFFIX_REGEX "/(1[01][0-9]|12[0-8]|[0-9]{1,2})"
+
+//#define CF_IPV6_1_REGEX "(" CF_IPV6SEG_REGEX ":){7,7}" CF_IPV6SEG_REGEX
+
+//#define CF_IPV6_REGEX
+#define CF_IPV6_SUBNET_REGEX CF_IPV6_REGEX "(" CF_IPV6_SUBNETSUFFIX_REGEX ")?"
+
+#define CF_IPSUBNET_STRING ""
+#define DF_IPV6SUBNET_STRING "(\h{1,4}(:\h{1,4})*(::)()*"
+
 #ifndef __MINGW32__
-# define CF_ABSPATHRANGE   "\042?(/.*)"
+# define CF_ABSPATHRANGE   "\"?(/.*)"
 #else
 // can start with e.g. c:\... or "c:\...  |  unix (for Cygwin-style paths)
-# define CF_ABSPATHRANGE   "\042?(([a-zA-Z]:\\\\.*)|(/.*))"
+# define CF_ABSPATHRANGE   "\"?(([a-zA-Z]:\\\\.*)|(/.*))"
 #endif
 
 /* Any non-empty string can be an absolute path under Unix */

@@ -1643,7 +1643,8 @@ GenericAgentConfig *GenericAgentConfigNewDefault(AgentType agent_type)
     // TODO: system state, perhaps pull out as param
     config->tty_interactive = isatty(0) && isatty(1);
 
-    config->color = false;
+    const char *color_env = getenv("CFENGINE_COLOR");
+    config->color = (color_env && 0 == strcmp(color_env, "1"));
 
     config->bundlesequence = NULL;
 

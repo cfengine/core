@@ -1,6 +1,7 @@
 #######################################################
 #
 # Redmine#3184: Test editing of an immutable file
+# Redmine#2100: Test chmod of an immutable file
 #
 #######################################################
 
@@ -34,6 +35,7 @@ bundle agent test
   methods:
       "1" usebundle => test_setup($(G.testfile));
       "2" usebundle => test_edit($(G.testfile));
+      "2" usebundle => test_chmod($(G.testfile));
       "3" usebundle => test_teardown($(G.testfile));
 }
 
@@ -52,6 +54,20 @@ bundle agent test_edit(file)
       "$(file)"
       edit_line => test_edit_line(),
       classes => default_cf_sub_scoped_generic_classes("test", "namespace");
+}
+
+bundle agent test_chmod(file)
+{
+  files:
+    have_chattr::
+      "$(file)"
+      perms => m("755"),
+      classes => default_cf_sub_scoped_generic_classes("chmod", "namespace");
+}
+
+body perms m(mode)
+{
+      mode => "$(mode)";
 }
 
 bundle agent test_teardown(file)
@@ -77,10 +93,12 @@ bundle agent check
       # - we don't have chattr
       # - chattr failed to DTRT (e.g. we're not root)
       # - the test failed to edit
-      "ok" expression => "!have_chattr|chattr_failed|(test_failed.!test_kept.!test_denied.!test_timeout.!test_repaired)";
+      # - the test denied the chmod (TODO: should it be "denied" or "failed"?
+      "ok" expression => "!have_chattr|chattr_failed|(test_failed.!test_kept.!test_denied.!test_timeout.!test_repaired.!chmod_failed.!chmod_kept.chmod_denied.!chmod_timeout.!chmod_repaired)";
 
   methods:
       "report" usebundle => default_cf_sub_report_generic_classes("test");
+      "report" usebundle => default_cf_sub_report_generic_classes("chmod");
       "report" usebundle => default_cf_sub_report_generic_classes("chattr");
 
   reports:

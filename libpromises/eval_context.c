@@ -1592,8 +1592,8 @@ bool EvalContextVariablePut(EvalContext *ctx,
     }
 
     VariableTable *table = GetVariableTableForScope(ctx, ref->ns, ref->scope);
-    VariableTablePut(table, ref, &rval, type, tags, EvalContextStackCurrentPromise(ctx));
-    /* FIXME: we really shouldn't be ignoring the return from that ... */
+    const Promise *pp = EvalContextStackCurrentPromise(ctx);
+    VariableTablePut(table, ref, &rval, type, tags, pp ? pp->org_pp : pp);
     return true;
 }
 

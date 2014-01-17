@@ -1,0 +1,73 @@
+#######################################################
+#
+# Test that segfault does not occur (Issue 4038)
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+
+bundle agent init
+{
+}
+
+body delete tidy
+ 
+{
+    dirlinks => "delete";
+    rmdirs   => "true";
+}
+ 
+ body depth_search recurse(d)
+ 
+{
+    depth => "$(d)";
+    xdev  => "true";
+}
+
+
+body file_select all
+{ 
+    leaf_name => { ".*" };
+    file_result => "leaf_name";
+}
+
+body classes if_ok(x)
+{
+    promise_repaired => { "$(x)" };
+    promise_kept => { "$(x)" };
+}
+#######################################################
+
+bundle agent test
+{
+    commands:
+        dir_purged::
+            "$(sys.cf_agent)"
+            args => "-f $(this.promise_filename).sub -K",
+            classes => if_ok("report_ran");
+    
+}
+
+#######################################################
+
+bundle agent check
+{
+classes:
+  
+  "ok" expression => "report_ran";
+
+reports:
+  DEBUG::
+    "$(test.subout)";
+
+    ok::
+        "$(this.promise_filename) Pass";
+    !ok::
+        "$(this.promise_filename) FAIL";
+}

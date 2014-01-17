@@ -54,7 +54,7 @@ ENTERPRISE_FUNC_4ARG_DEFINE_STUB(int, SetServerListenState, ARG_UNUSED EvalConte
 
 ENTERPRISE_FUNC_1ARG_DEFINE_STUB(bool, ReceiveCollectCall, ARG_UNUSED ServerConnectionState *, conn)
 {
-    Log(LOG_LEVEL_VERBOSE, "  Collect Call only supported in the CFEngine Enterprise");
+    Log(LOG_LEVEL_VERBOSE, "  Call Collect only supported in CFEngine Enterprise");
     return false;
 }
 
@@ -76,27 +76,27 @@ ENTERPRISE_VOID_FUNC_0ARG_DEFINE_STUB(void, CleanReportBookFilterSet)
 
 ENTERPRISE_VOID_FUNC_1ARG_DEFINE_STUB(void, CollectCallStart, ARG_UNUSED int, interval)
 {
-    Log(LOG_LEVEL_ERR, "Collect calling is only supported in CFEngine Enterprise");
+    Log(LOG_LEVEL_ERR, "Call Collect is only supported in CFEngine Enterprise");
 }
 
 ENTERPRISE_VOID_FUNC_0ARG_DEFINE_STUB(void, CollectCallStop)
 {
-    Log(LOG_LEVEL_ERR, "Collect calling is only supported in CFEngine Enterprise");
+    Log(LOG_LEVEL_ERR, "Call Collect is only supported in CFEngine Enterprise");
 }
 
-ENTERPRISE_FUNC_0ARG_DEFINE_STUB(bool, CollectCallPending)
+ENTERPRISE_FUNC_0ARG_DEFINE_STUB(bool, CollectCallHasPending)
 {
-    Log(LOG_LEVEL_ERR, "Collect calling is only supported in CFEngine Enterprise");
+    Log(LOG_LEVEL_ERR, "Call Collect is only supported in CFEngine Enterprise");
     return false;
 }
 
 ENTERPRISE_FUNC_1ARG_DEFINE_STUB(int, CollectCallGetPending, ARG_UNUSED int *, queue_length)
 {
-    Log(LOG_LEVEL_ERR, "Collect calling is only supported in CFEngine Enterprise");
+    Log(LOG_LEVEL_ERR, "Call Collect is only supported in CFEngine Enterprise");
     return -1;
 }
 
 ENTERPRISE_VOID_FUNC_0ARG_DEFINE_STUB(void, CollectCallMarkProcessed)
 {
-    Log(LOG_LEVEL_ERR, "Collect calling is only supported in CFEngine Enterprise");
+    Log(LOG_LEVEL_ERR, "Call Collect is only supported in CFEngine Enterprise");
 }

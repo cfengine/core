@@ -317,7 +317,7 @@ HashSize HashLength(const Hash *hash)
 /* Class methods */
 HashMethod HashIdFromName(const char *hash_name)
 {
-    int i = 0;
+    int i;
     for (i = 0; CF_DIGEST_TYPES[i] != NULL; i++)
     {
         if (hash_name && (strcmp(hash_name, CF_DIGEST_TYPES[i]) == 0))

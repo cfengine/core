@@ -379,10 +379,22 @@ JsonElement *JsonMerge(const JsonElement *a, const JsonElement *b)
             }
             iter = JsonIteratorInit(b);
             child = NULL;
+            long counter = 0;
             while ((child = JsonIteratorNextValue(&iter)))
             {
                 const char *key = JsonIteratorCurrentKey(&iter);
-                JsonObjectAppendElement(obj, key, JsonCopy(child));
+                if (NULL == key)
+                {
+                    char* countkey = StringFromLong(counter);
+                    JsonObjectAppendElement(obj, countkey, JsonCopy(child));
+                    free(countkey);
+                }
+                else
+                {
+                    JsonObjectAppendElement(obj, key, JsonCopy(child));
+                }
+
+                counter++;
             }
 
             return obj;

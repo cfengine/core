@@ -236,6 +236,7 @@ runtest() {
 CFENGINE_TEST_OVERRIDE_WORKDIR=\"$PLATFORM_WORKDIR\"
 TEMP=\"$PLATFORM_WORKDIR${DS}tmp\"
 export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP
+export CFENGINE_TEST_OVERRIDE_EXTENSION_LIBRARY_DIR=\"$CFENGINE_TEST_OVERRIDE_EXTENSION_LIBRARY_DIR\"
 
 " > "$WORKDIR/runtest"
 
@@ -444,7 +445,7 @@ if [ $# -gt 0 ]; then
     fi
   done
 else
-  TESTS=$(find "$(dirname $0)" -name '*.cf' | sort)
+  TESTS=$(find . -name '*.cf' | sort)
 fi
 
 #

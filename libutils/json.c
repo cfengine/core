@@ -340,57 +340,94 @@ void JsonDestroy(JsonElement *element)
     }
 }
 
-JsonElement *JsonMerge(const JsonElement *a, const JsonElement *b)
+JsonElement *JsonArrayMergeArray(const JsonElement *a, const JsonElement *b)
 {
     assert(JsonGetElementType(a) == JsonGetElementType(b));
     assert(JsonGetElementType(a) == JSON_ELEMENT_TYPE_CONTAINER);
     assert(JsonGetContainerType(a) == JsonGetContainerType(b));
+    assert(JsonGetContainerType(a) == JSON_CONTAINER_TYPE_ARRAY);
+
+    JsonElement *result = JsonArrayCreate(JsonLength(a) + JsonLength(b));
+    for (size_t i = 0; i < JsonLength(a); i++)
+    {
+        JsonArrayAppendElement(result, JsonCopy(JsonAt(a, i)));
+    }
+
+    for (size_t i = 0; i < JsonLength(b); i++)
+    {
+        JsonArrayAppendElement(result, JsonCopy(JsonAt(b, i)));
+    }
+
+    return result;
+}
+
+JsonElement *JsonObjectMergeArray(const JsonElement *a, const JsonElement *b)
+{
+    assert(JsonGetElementType(a) == JsonGetElementType(b));
+    assert(JsonGetElementType(a) == JSON_ELEMENT_TYPE_CONTAINER);
+    assert(JsonGetContainerType(a) == JSON_CONTAINER_TYPE_OBJECT);
+    assert(JsonGetContainerType(b) == JSON_CONTAINER_TYPE_ARRAY);
+
+    JsonElement *result = JsonObjectCopy(a);
+    for (size_t i = 0; i < JsonLength(b); i++)
+    {
+        char *key = StringFromLong(i);
+        JsonObjectAppendElement(result, key, JsonCopy(JsonAt(b, i)));
+        free(key);
+    }
+
+    return result;
+}
+
+JsonElement *JsonObjectMergeObject(const JsonElement *a, const JsonElement *b)
+{
+    assert(JsonGetElementType(a) == JsonGetElementType(b));
+    assert(JsonGetElementType(a) == JSON_ELEMENT_TYPE_CONTAINER);
+    assert(JsonGetContainerType(a) == JSON_CONTAINER_TYPE_OBJECT);
+    assert(JsonGetContainerType(b) == JSON_CONTAINER_TYPE_OBJECT);
+
+    JsonElement *result = JsonObjectCopy(a);
+    JsonIterator iter = JsonIteratorInit(b);
+    const char *key;
+    while ((key = JsonIteratorNextKey(&iter)))
+    {
+        JsonObjectAppendElement(result, key, JsonCopy(JsonIteratorCurrentValue(&iter)));
+    }
+
+    return result;
+}
+
+JsonElement *JsonMerge(const JsonElement *a, const JsonElement *b)
+{
+    assert(JsonGetElementType(a) == JsonGetElementType(b));
+    assert(JsonGetElementType(a) == JSON_ELEMENT_TYPE_CONTAINER);
 
     switch (JsonGetContainerType(a))
     {
     case JSON_CONTAINER_TYPE_ARRAY:
+        switch (JsonGetContainerType(b))
         {
-            JsonElement *arr = JsonArrayCreate(JsonLength(a) + JsonLength(b));
-            for (size_t i = 0; i < JsonLength(a); i++)
-            {
-                JsonElement *child = JsonCopy(JsonArrayGet((JsonElement *)a, i));
-                JsonArrayAppendElement(arr, child);
-            }
-            for (size_t i = 0; i < JsonLength(b); i++)
-            {
-                JsonElement *child = JsonCopy(JsonArrayGet((JsonElement *)b, i));
-                JsonArrayAppendElement(arr, child);
-            }
-
-            return arr;
+        case JSON_CONTAINER_TYPE_ARRAY:
+            return JsonArrayMergeArray(a, b);
+        case JSON_CONTAINER_TYPE_OBJECT:
+            return JsonObjectMergeArray(b, a);
         }
+        assert(false && "never reach");
         break;
 
-    case JSON_ELEMENT_TYPE_CONTAINER:
+    case JSON_CONTAINER_TYPE_OBJECT:
+        switch (JsonGetContainerType(b))
         {
-            JsonElement *obj = JsonObjectCreate(JsonLength(a) + JsonLength(b));
-
-            JsonIterator iter = JsonIteratorInit(a);
-            const JsonElement *child = NULL;
-            while ((child = JsonIteratorNextValue(&iter)))
-            {
-                const char *key = JsonIteratorCurrentKey(&iter);
-                JsonObjectAppendElement(obj, key, JsonCopy(child));
-            }
-            iter = JsonIteratorInit(b);
-            child = NULL;
-            while ((child = JsonIteratorNextValue(&iter)))
-            {
-                const char *key = JsonIteratorCurrentKey(&iter);
-                JsonObjectAppendElement(obj, key, JsonCopy(child));
-            }
-
-            return obj;
+        case JSON_CONTAINER_TYPE_OBJECT:
+            return JsonObjectMergeObject(a, b);
+        case JSON_CONTAINER_TYPE_ARRAY:
+            return JsonObjectMergeArray(a, b);
         }
+        assert(false && "never reach");
         break;
     }
 
-    assert(false);
+    assert(false && "never reach");
     return NULL;
 }
 

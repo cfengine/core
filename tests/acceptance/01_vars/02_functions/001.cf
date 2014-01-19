@@ -30,11 +30,11 @@ bundle agent test
     !darwin::
       "uid_bin" int => getuid("bin");
 
-    (linux.!SuSE.!redhat.!gentoo)|solaris|hpux|aix::
+    (linux.!archlinux.!SuSE.!redhat.!gentoo)|solaris|hpux|aix::
       "num_root" int => "0";
       "num_daemon" int => "1";
       "num_bin" int => "2";
-    SuSE|redhat|gentoo::
+    archlinux|SuSE|redhat|gentoo::
       "num_root" int => "0";
       "num_daemon" int => "2";
       "num_bin" int => "1";

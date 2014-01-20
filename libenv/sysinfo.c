@@ -314,10 +314,10 @@ void DetectDomainName(EvalContext *ctx, const char *orig_nodename)
     EvalContextClassPutHard(ctx, VUQNAME, "inventory,source=agent,group=Identity,derived-from=sys.uqhost");
     EvalContextClassPutHard(ctx, VDOMAIN, "inventory,source=agent,group=Identity,derived-from=sys.domain");
 
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "host", nodename, DATA_TYPE_STRING, "inventory,source=agent,group=Identity");
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "uqhost", VUQNAME, DATA_TYPE_STRING, "inventory,source=agent,group=Identity");
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "fqhost", VFQNAME, DATA_TYPE_STRING, "inventory,source=agent,group=Identity");
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "domain", VDOMAIN, DATA_TYPE_STRING, "inventory,source=agent,group=Identity");
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "host", nodename, DATA_TYPE_STRING, "inventory,source=agent");
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "uqhost", VUQNAME, DATA_TYPE_STRING, "inventory,source=agent");
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "fqhost", VFQNAME, DATA_TYPE_STRING, "inventory,source=agent");
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "domain", VDOMAIN, DATA_TYPE_STRING, "inventory,source=agent");
 }
 
 /*******************************************************************/
@@ -461,7 +461,7 @@ static void GetNameInfo3(EvalContext *ctx)
                     found = true;
 
                     VSYSTEMHARDCLASS = (PlatformContext) i;
-                    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "class", CLASSTEXT[i], DATA_TYPE_STRING, "inventory,source=agent,group=OS");
+                    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "class", CLASSTEXT[i], DATA_TYPE_STRING, "inventory,source=agent");
                     break;
                 }
             }
@@ -505,10 +505,10 @@ static void GetNameInfo3(EvalContext *ctx)
 
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "date", workbuf, DATA_TYPE_STRING, "time_based,source=agent");
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "cdate", CanonifyName(workbuf), DATA_TYPE_STRING, "time_based,source=agent");
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "os", VSYSNAME.sysname, DATA_TYPE_STRING, "inventory,source=agent,group=OS");
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "release", VSYSNAME.release, DATA_TYPE_STRING, "inventory,source=agent,group=OS");
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "version", VSYSNAME.version, DATA_TYPE_STRING, "inventory,source=agent,group=OS");
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "arch", VSYSNAME.machine, DATA_TYPE_STRING, "inventory,source=agent,group=OS");
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "os", VSYSNAME.sysname, DATA_TYPE_STRING, "inventory,source=agent");
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "release", VSYSNAME.release, DATA_TYPE_STRING, "inventory,source=agent");
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "version", VSYSNAME.version, DATA_TYPE_STRING, "inventory,source=agent");
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "arch", VSYSNAME.machine, DATA_TYPE_STRING, "inventory,source=agent");
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "workdir", CFWORKDIR, DATA_TYPE_STRING, "source=agent");
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "fstab", VFSTAB[VSYSTEMHARDCLASS], DATA_TYPE_STRING, "source=agent");
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "resolv", VRESOLVCONF[VSYSTEMHARDCLASS], DATA_TYPE_STRING, "source=agent");
@@ -544,7 +544,7 @@ static void GetNameInfo3(EvalContext *ctx)
         HashPubKey(PUBKEY, digest, CF_DEFAULT_DIGEST);
         HashPrintSafe(CF_DEFAULT_DIGEST, true, digest, pubkey_digest);
 
-        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "key_digest", pubkey_digest, DATA_TYPE_STRING, "inventory,source=agent,group=Identity");
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "key_digest", pubkey_digest, DATA_TYPE_STRING, "inventory,source=agent");
 
         snprintf(workbuf, CF_MAXVARSIZE - 1, "PK_%s", pubkey_digest);
         CanonifyNameInPlace(workbuf);
@@ -699,13 +699,13 @@ static void GetNameInfo3(EvalContext *ctx)
     }
 
     sp = xstrdup(CanonifyName(workbuf));
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "long_arch", sp, DATA_TYPE_STRING, "inventory,source=agent,group=OS");
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "long_arch", sp, DATA_TYPE_STRING, "inventory,source=agent");
     EvalContextClassPutHard(ctx, sp, "inventory,source=agent,group=OS,derived-from=sys.long_arch");
     free(sp);
 
     snprintf(workbuf, CF_BUFSIZE, "%s_%s", VSYSNAME.sysname, VSYSNAME.machine);
     sp = xstrdup(CanonifyName(workbuf));
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "ostype", sp, DATA_TYPE_STRING, "inventory,source=agent,group=OS");
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "ostype", sp, DATA_TYPE_STRING, "inventory,source=agent");
     EvalContextClassPutHard(ctx, sp, "inventory,source=agent,group=OS,derived-from=sys.ostype");
     free(sp);
 
@@ -748,7 +748,7 @@ static void GetNameInfo3(EvalContext *ctx)
     zid = getzoneid();
     getzonenamebyid(zid, zone, ZONENAME_MAX);
 
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "zone", zone, DATA_TYPE_STRING, "inventory,source=agent,group=OS,comment=Solaris zone");
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "zone", zone, DATA_TYPE_STRING, "inventory,source=agent,comment=Solaris zone");
     snprintf(vbuff, CF_BUFSIZE - 1, "zone_%s", zone);
     EvalContextClassPutHard(ctx, vbuff, "inventory,source=agent,group=OS,derived-from=sys.zone");
 
@@ -888,8 +888,8 @@ void CreateHardClassesFromCanonification(EvalContext *ctx, const char *canonifie
 static void SetFlavour(EvalContext *ctx, const char *flavour)
 {
     EvalContextClassPutHard(ctx, flavour, "inventory,source=agent,group=OS,derived-from=sys.flavour");
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "flavour", flavour, DATA_TYPE_STRING, "inventory,source=agent,group=OS");
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "flavor", flavour, DATA_TYPE_STRING, "inventory,source=agent,group=OS");
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "flavour", flavour, DATA_TYPE_STRING, "inventory,source=agent");
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "flavor", flavour, DATA_TYPE_STRING, "inventory,source=agent");
 }
 
 static void OSClasses(EvalContext *ctx)
@@ -2474,12 +2474,12 @@ static void GetCPUInfo(EvalContext *ctx)
 
     if (count == 1) {
         EvalContextClassPutHard(ctx, buf, "inventory,source=agent,group=OS,derived-from=sys.cpus");  // "1_cpu" from init - change if buf is ever used above
-        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "cpus", "1", DATA_TYPE_STRING, "inventory,source=agent,group=OS");
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "cpus", "1", DATA_TYPE_STRING, "inventory,source=agent");
     } else {
         snprintf(buf, CF_SMALLBUF, "%d_cpus", count);
         EvalContextClassPutHard(ctx, buf, "inventory,source=agent,group=OS,derived-from=sys.cpus");
         snprintf(buf, CF_SMALLBUF, "%d", count);
-        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "cpus", buf, DATA_TYPE_STRING, "inventory,source=agent,group=OS,comment=Number of CPUs");
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "cpus", buf, DATA_TYPE_STRING, "inventory,source=agent,comment=Number of CPUs");
     }
 }
 

@@ -50,7 +50,7 @@ AgentConnection *NewAgentConn(const char *server_name, int partial)
     return conn;
 }
 
-void DeleteAgentConn(AgentConnection *conn, int partial)
+void DeleteAgentConn(AgentConnection *conn)
 {
     Stat *sp = conn->cache;
 
@@ -61,11 +61,7 @@ void DeleteAgentConn(AgentConnection *conn, int partial)
         free(sps);
     }
 
-    if (!partial)
-    {
-        ConnectionInfoDestroy(&conn->conn_info);
-    }
-
+    ConnectionInfoDestroy(&conn->conn_info);
     if (conn->session_key)
     {
         free(conn->session_key);

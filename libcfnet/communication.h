@@ -42,7 +42,7 @@ AgentConnection *NewAgentConn(const char *server_name, int partial);
   @param ap AgentConnection structure.
   @param partial If true then only a partial destruction is performed, i.e. the ConnectionInfo structure is not destructed.
   */
-void DeleteAgentConn(AgentConnection *ap, int partial);
+void DeleteAgentConn(AgentConnection *ap);
 int IsIPV6Address(char *name);
 int IsIPV4Address(char *name);
 int Hostname2IPString(char *dst, const char *hostname, size_t dst_size);

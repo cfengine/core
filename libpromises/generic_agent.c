@@ -992,7 +992,11 @@ time_t ReadTimestampFromPolicyValidatedMasterfiles(const GenericAgentConfig *con
         JsonElement *validated_doc = ReadPolicyValidatedFileFromMasterfiles(config);
         if (validated_doc)
         {
-            validated_at = JsonPrimitiveGetAsInteger(JsonObjectGet(validated_doc, "timestamp"));
+            JsonElement *timestamp = JsonObjectGet(validated_doc, "timestamp");
+            if (timestamp)
+            {
+                validated_at = JsonPrimitiveGetAsInteger(timestamp);
+            }
             JsonDestroy(validated_doc);
         }
     }

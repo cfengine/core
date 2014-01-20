@@ -1515,7 +1515,7 @@ static FnCallResult FnCallReadTcp(ARG_UNUSED EvalContext *ctx, ARG_UNUSED FnCall
 
     Log(LOG_LEVEL_DEBUG, "Want to read %d bytes from port %d at '%s'", val, portnum, hostnameip);
 
-    conn = NewAgentConn(hostnameip, false);
+    conn = NewAgentConn(hostnameip);
 
     FileCopy fc = {
         .force_ipv4 = false,
@@ -2462,7 +2462,7 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx, FnCall *fp, Rlist *fin
     {
         Log(LOG_LEVEL_DEBUG, "Want to read %d bytes from port %d at '%s'", val, portnum, RlistScalarValue(rp));
 
-        conn = NewAgentConn(RlistScalarValue(rp), false);
+        conn = NewAgentConn(RlistScalarValue(rp));
 
         FileCopy fc = {
             .force_ipv4 = false,

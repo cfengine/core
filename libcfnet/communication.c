@@ -30,18 +30,11 @@
 #include <buffer.h>                                     /* Buffer */
 #include <ip_address.h>                                 /* IPAddress */
 
-AgentConnection *NewAgentConn(const char *server_name, int partial)
+AgentConnection *NewAgentConn(const char *server_name)
 {
     AgentConnection *conn = xcalloc(1, sizeof(AgentConnection));
-    if (partial)
-    {
-        conn->conn_info = NULL;
-    }
-    else
-    {
-        ConnectionInfo *info = ConnectionInfoNew();
-        conn->conn_info = info;
-    }
+    ConnectionInfo *info = ConnectionInfoNew();
+    conn->conn_info = info;
     conn->family = AF_INET;
     conn->trust = false;
     conn->encryption_type = 'c';

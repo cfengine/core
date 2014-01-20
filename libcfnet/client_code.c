@@ -326,7 +326,7 @@ static AgentConnection *ServerConnection(const char *server, FileCopy fc, int *e
     pthread_sigmask(SIG_BLOCK, &signal_mask, NULL);
 #endif
 
-    conn = NewAgentConn(server, false);
+    conn = NewAgentConn(server);
 
 /* username of the client - say root from Windows */
 
@@ -1484,7 +1484,7 @@ static void MarkServerOffline(const char *server)
     ServerItem *svp = xmalloc(sizeof(*svp));
     svp->server = xstrdup(ipaddr);
     svp->busy = false;
-    svp->conn = NewAgentConn(ipaddr, false);
+    svp->conn = NewAgentConn(ipaddr);
     ConnectionInfoSetProtocolVersion(svp->conn->conn_info, CF_PROTOCOL_CLASSIC);
     ConnectionInfoSetConnectionStatus(svp->conn->conn_info, CF_CONNECTION_NOT_ESTABLISHED);
     ConnectionInfoSetSocket(svp->conn->conn_info, CF_COULD_NOT_CONNECT);

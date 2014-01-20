@@ -65,10 +65,10 @@ static void test_real_extension_library()
     // This makes an assumption about your directory structure that may not always be correct.
     setenv("CFENGINE_TEST_OVERRIDE_EXTENSION_LIBRARY_DIR", "../../../enterprise/enterprise-plugin/.libs", 1);
 
-    // Crude way to make the test pass if you built Community only. It assumes that if you ran autogen.sh, then
+    // Crude way to make the test pass if you built Community only. It assumes that if you ran ./configure, then
     // you have built enterprise and the test should be attempted.
     struct stat statbuf;
-    if (stat("../../../enterprise/configure", &statbuf) == -1)
+    if (stat("../../../enterprise/Makefile", &statbuf) == -1)
     {
         printf("%s: Can't find enterprise build. Assuming you haven't built it and skipping test...\n", __FUNCTION__);
         return;

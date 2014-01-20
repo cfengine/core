@@ -1204,9 +1204,9 @@ static void test_TLSVerifyPeer(void)
     REREAD_PUBLIC_KEY(stream, pubkey, server_pubkey);
     X509_GET_PUBKEY_RETURN(server_pubkey);
     assert_int_equal(0, TLSVerifyPeer(conn_info, "127.0.0.1", "root"));
-    /* Since TLSVerifyPeer() returned 0 or 1 it has put a valid key in
+    /* TODO: Since TLSVerifyPeer() returned 0 or 1 it has put a valid key in
      * conn_info, so we have to free it. */
-//    RSA_free(KeyRSA(ConnectionInfoKey(conn_info)));
+    //    RSA_free(KeyRSA(ConnectionInfoKey(conn_info)));
     EVP_PKEY_free(server_pubkey);
 
     USE_MOCK(EVP_PKEY_cmp);
@@ -1217,9 +1217,9 @@ static void test_TLSVerifyPeer(void)
     X509_GET_PUBKEY_RETURN(server_pubkey);
     HAVEPUBLICKEY_RETURN(pubkey);
     assert_int_equal(0, TLSVerifyPeer(conn_info, "127.0.0.1", "root"));
-    /* Since TLSVerifyPeer() returned 0 or 1 it has put a valid key in
+    /* TODO: Since TLSVerifyPeer() returned 0 or 1 it has put a valid key in
      * conn_info, so we have to free it. */
-//    RSA_free(KeyRSA(ConnectionInfoKey(conn_info)));
+    //    RSA_free(KeyRSA(ConnectionInfoKey(conn_info)));
     EVP_PKEY_free(server_pubkey);
 
     EVP_PKEY_CMP_RETURN(0);
@@ -1229,9 +1229,9 @@ static void test_TLSVerifyPeer(void)
     X509_GET_PUBKEY_RETURN(server_pubkey);
     HAVEPUBLICKEY_RETURN(pubkey);
     assert_int_equal(0, TLSVerifyPeer(conn_info, "127.0.0.1", "root"));
-    /* Since TLSVerifyPeer() returned 0 or 1 it has put a valid key in
+    /* TODO: Since TLSVerifyPeer() returned 0 or 1 it has put a valid key in
      * conn_info, so we have to free it. */
-//    RSA_free(KeyRSA(ConnectionInfoKey(conn_info)));
+    //    RSA_free(KeyRSA(ConnectionInfoKey(conn_info)));
     EVP_PKEY_free(server_pubkey);
 
     EVP_PKEY_CMP_RETURN(-2);
@@ -1250,9 +1250,9 @@ static void test_TLSVerifyPeer(void)
     X509_GET_PUBKEY_RETURN(server_pubkey);
     HAVEPUBLICKEY_RETURN(pubkey);
     assert_int_equal(1, TLSVerifyPeer(conn_info, "127.0.0.1", "root"));
-    /* Since TLSVerifyPeer() returned 0 or 1 it has put a valid key in
+    /* TODO: Since TLSVerifyPeer() returned 0 or 1 it has put a valid key in
      * conn_info, so we have to free it. */
-//    RSA_free(KeyRSA(ConnectionInfoKey(conn_info)));
+    //    RSA_free(KeyRSA(ConnectionInfoKey(conn_info)));
     EVP_PKEY_free(server_pubkey);
 
     /*

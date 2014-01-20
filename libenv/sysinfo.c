@@ -1096,16 +1096,16 @@ static void OSClasses(EvalContext *ctx)
 
     if (strstr(VSYSNAME.sysname, "workstation"))
     {
-        EvalContextClassPutHard(ctx, "WinWorkstation", ",source=agent,derived-from=sys.sysname");
+        EvalContextClassPutHard(ctx, "WinWorkstation", "inventory,group=Windows roles,source=agent,derived-from=sys.sysname");
     }
     else if (strstr(VSYSNAME.sysname, "server"))
     {
-        EvalContextClassPutHard(ctx, "WinServer", "source=agent,derived-from=sys.sysname");
+        EvalContextClassPutHard(ctx, "WinServer", "inventory,group=Windows roles,source=agent,derived-from=sys.sysname");
     }
     else if (strstr(VSYSNAME.sysname, "domain controller"))
     {
-        EvalContextClassPutHard(ctx, "DomainController", "source=agent,derived-from=sys.sysname");
-        EvalContextClassPutHard(ctx, "WinServer", "source=agent,derived-from=sys.sysname");
+        EvalContextClassPutHard(ctx, "DomainController", "inventory,group=Windows roles,source=agent,derived-from=sys.sysname");
+        EvalContextClassPutHard(ctx, "WinServer", "inventory,group=Windows roles,source=agent,derived-from=sys.sysname");
     }
     else
     {

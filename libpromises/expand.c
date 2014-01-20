@@ -1067,7 +1067,7 @@ static void ResolveControlBody(EvalContext *ctx, GenericAgentConfig *config, con
             snprintf(VFQNAME, CF_MAXVARSIZE, "%s.%s", VUQNAME, VDOMAIN);
             EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "fqhost", VFQNAME, DATA_TYPE_STRING, "inventory,source=agent,group=Host name");
             EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "domain", VDOMAIN, DATA_TYPE_STRING, "source=agent");
-            EvalContextClassPutHard(ctx, VDOMAIN, "inventory,source=agent");
+            EvalContextClassPutHard(ctx, VDOMAIN, "source=agent");
         }
 
         if (strcmp(cp->lval, CFG_CONTROLBODY[COMMON_CONTROL_IGNORE_MISSING_INPUTS].lval) == 0)

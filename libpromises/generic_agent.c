@@ -733,7 +733,7 @@ void CloseLog(void)
 
 ENTERPRISE_VOID_FUNC_1ARG_DEFINE_STUB(void, GenericAgentAddEditionClasses, EvalContext *, ctx)
 {
-    EvalContextClassPutHard(ctx, "community_edition", "inventory,source=agent");
+    EvalContextClassPutHard(ctx, "community_edition", "source=agent");
 }
 
 void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
@@ -745,7 +745,7 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
 
     DetermineCfenginePort();
 
-    EvalContextClassPutHard(ctx, "any", "inventory,source=agent");
+    EvalContextClassPutHard(ctx, "any", "source=agent");
 
     GenericAgentAddEditionClasses(ctx);
 

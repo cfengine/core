@@ -5195,8 +5195,6 @@ static FnCallResult FnCallSplitString(ARG_UNUSED EvalContext *ctx, ARG_UNUSED Fn
 
 static FnCallResult FnCallStringSplit(ARG_UNUSED EvalContext *ctx, ARG_UNUSED FnCall *fp, Rlist *finalargs)
 {
-    Rlist *newlist = NULL;
-
     /* 3 args: string, split_regex, max  */
     char *string = RlistScalarValue(finalargs);
     char *split = RlistScalarValue(finalargs->next);
@@ -5208,7 +5206,7 @@ static FnCallResult FnCallStringSplit(ARG_UNUSED EvalContext *ctx, ARG_UNUSED Fn
         return FnFailure();
     }
 
-    newlist = RlistFromRegexSplitNoOverflow(string, split, max, true);
+    Rlist *newlist = RlistFromRegexSplitNoOverflow(string, split, max);
 
     if (newlist == NULL)
     {
@@ -7075,7 +7073,7 @@ const FnCallType CF_FNCALL_TYPES[] =
                   FNCALL_OPTION_VARARG, FNCALL_CATEGORY_UTILS, SYNTAX_STATUS_NORMAL),
 
     // Functions section following new naming convention
-    FnCallTypeNew("string_split", DATA_TYPE_STRING_LIST, SPLITSTRING_ARGS, &FnCallStringSplit, "Convert a string in arg1 into a list of max arg3 strings by splitting on a regular expression in arg2",
+    FnCallTypeNew("string_split", DATA_TYPE_STRING_LIST, SPLITSTRING_ARGS, &FnCallStringSplit, "Convert a string in arg1 into a list of at most arg3 strings by splitting on a regular expression in arg2",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
 
     // Text xform functions

@@ -30,9 +30,9 @@ bundle agent test
 {
   vars:
 
-      "split1" slist => string_split("one:two:three",":","10");
-      "split2" slist => string_split("one:two:three",":","1");
-      "split3" slist => string_split("alpha:xyz:beta","xyz","10");
+      "split1" slist => string_split("one:two:three", ":", "10");
+      "split2" slist => string_split("one:two:three", ":", "1");
+      "split3" slist => string_split("alpha:xyz:beta", "xyz", "10");
 
   reports:
 

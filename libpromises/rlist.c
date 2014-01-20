@@ -992,7 +992,7 @@ Rlist *RlistFromSplitRegex(const char *string, const char *regex, int max, int b
  * NOTE: in contrast with RlistFromSplitRegex() this one will produce at most max number of elements
  */
 
-Rlist *RlistFromRegexSplitNoOverflow(const char *string, const char *regex, int max, int blanks)
+Rlist *RlistFromRegexSplitNoOverflow(const char *string, const char *regex, int max)
 
 {
     Rlist *liststart = NULL;
@@ -1006,40 +1006,35 @@ Rlist *RlistFromRegexSplitNoOverflow(const char *string, const char *regex, int 
     }
 
     const char *sp = string;
+    // We will avoid compiling regex multiple times.
+    pcre *pattern = CompileRegex(regex);
 
-    while ((count < max) && StringMatch(regex, sp, &start, &end))
+    if (pattern == NULL)
     {
-        memset(node, 0, CF_MAXVARSIZE);
+        return NULL;
+    }
 
-        if (count == max - 1) //we are processing last chunk
+    while ((count < max) && StringMatchWithPrecompiledRegex(pattern, sp, &start, &end))
+    {
+        if (count == max - 1) // We are processing last chunk.
         {
-            if (blanks || start > 0)
-            {
-                strncpy(node, sp, CF_MAXVARSIZE - 1);
-                RlistAppendScalar(&liststart, node);
-            }
-            return liststart;
+            break;
         }
 
-        if (blanks || start > 0)
-        {
-            strncpy(node, sp, start);
-            RlistAppendScalar(&liststart, node);
-            count++;
-        }
+        memcpy(node, sp, start);
+        node[start] = '\0';
+        RlistAppendScalar(&liststart, node);
+        count++;
 
         sp += end;
     }
 
     if (count < max)
     {
-        memset(node, 0, CF_MAXVARSIZE);
-        strncpy(node, sp, CF_MAXVARSIZE - 1);
-        if (blanks || strlen(node) > 0)
-        {
-            RlistAppendScalar(&liststart, node);
-        }
+        RlistAppendScalar(&liststart, sp);
     }
+
+    free(pattern);
 
     return liststart;
 }

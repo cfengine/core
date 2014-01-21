@@ -157,13 +157,16 @@ int StringSafeCompare(const char *a, const char *b)
     {
         return 0;
     }
-
-    if ((a == NULL) || (b == NULL))
+    if (a && b)
+    {
+        return strcmp(a, b);
+    }
+    if (a == NULL)
     {
         return -1;
     }
-
-    return strcmp(a, b);
+    assert(b == NULL);
+    return +1;
 }
 
 bool StringSafeEqual(const char *a, const char *b)

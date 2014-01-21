@@ -532,9 +532,13 @@ static int cfscanf(char *in, int len1, int len2, char *out1, char *out2, char *o
     return (len1 + len2 + len3 + 2);
 }
 
+/* No DNS verification performed anymore. This function used to enforce (when
+ * skipverify == true) that the fqname the peer sent us resolves to an address
+ * equal to the connecting IP address. Today skipverify option is removed and
+ * this function is dummy, since key verification is the norm and the
+ * verification code here was /unreachable/ because of bug for about 5 years,
+ * but nobody protested. */
 static int VerifyConnection(ServerConnectionState *conn, char buf[CF_BUFSIZE])
- /* Try reverse DNS lookup
-    and RFC931 username lookup to check the authenticity. */
 {
     char ipstring[CF_MAXVARSIZE], fqname[CF_MAXVARSIZE], username[CF_MAXVARSIZE];
 

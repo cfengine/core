@@ -144,7 +144,7 @@ AS_IF([test x"$enable_fhs" = xyes], [
   MASTERDIR='default'
   INPUTDIR='default'
   LOGDIR='${localstatedir}/lib/cfengine'
-  PIDDIR=='${localstatedir}/lib/cfengine'
+  PIDDIR='${localstatedir}/lib/cfengine'
 ], [
   if test x"$prefix" = xNONE || test x"$prefix" = x/var/cfengine; then
     prefix=/var/cfengine
@@ -1041,7 +1041,7 @@ AC_ARG_WITH(workdir,
         if test x$withval != x ; then
             WORKDIR=$withval
             LOGDIR=$withval
-            PIDDIR==$withval
+            PIDDIR=$withval
         fi
     ],
 )

@@ -2231,7 +2231,7 @@ static FnCallResult FnCallMergeData(EvalContext *ctx, FnCall *fp, Rlist *args)
 {
     if (RlistLen(args) == 0)
     {
-        Log(LOG_LEVEL_ERR, "Function mergedata needs at least one argument, a reference to a container variable");
+        Log(LOG_LEVEL_ERR, "%s needs at least one argument, a reference to a container variable", fp->name);
         return FnFailure();
     }
 
@@ -2239,27 +2239,49 @@ static FnCallResult FnCallMergeData(EvalContext *ctx, FnCall *fp, Rlist *args)
     {
         if (args->val.type != RVAL_TYPE_SCALAR)
         {
-            Log(LOG_LEVEL_ERR, "Function mergedata, argument '%s' is not a variable reference", RlistScalarValue(arg));
+            Log(LOG_LEVEL_ERR, "%s: argument '%s' is not a variable reference", fp->name, RlistScalarValue(arg));
             return FnFailure();
         }
     }
 
     Seq *containers = SeqNew(10, NULL);
+    Seq *toremove = SeqNew(10, NULL);
+    // segfaults: Seq *toremove = SeqNew(10, JsonDestroy);
     for (const Rlist *arg = args; arg; arg = arg->next)
     {
         VarRef *ref = VarRefParseFromBundle(RlistScalarValue(arg), PromiseGetBundle(fp->caller));
 
         DataType value_type = DATA_TYPE_NONE;
-        const JsonElement *value = EvalContextVariableGet(ctx, ref, &value_type);
-        if (value_type != DATA_TYPE_CONTAINER)
+        const void *value = EvalContextVariableGet(ctx, ref, &value_type);
+
+        switch (DataTypeToRvalType(value_type))
         {
-            Log(LOG_LEVEL_ERR, "Function mergedata, argument '%s' does not resolve to a container", RlistScalarValue(arg));
+        case RVAL_TYPE_LIST:
+            {
+                JsonElement *convert = JsonArrayCreate(10);
+                for (const Rlist *rp = value; rp != NULL; rp = rp->next)
+                {
+                    if (rp->val.type == RVAL_TYPE_SCALAR &&
+                        strcmp(RlistScalarValue(value), CF_NULL_VALUE) != 0)
+                    {
+                        JsonArrayAppendString(convert, RlistScalarValue(rp));
+                    }
+                }
+                SeqAppend(containers, convert);
+                SeqAppend(toremove, convert);
+            }
+        break;
+
+        case RVAL_TYPE_CONTAINER:
+            SeqAppend(containers, (void *)value);
+            break;
+        default:
+            Log(LOG_LEVEL_ERR, "%s: argument '%s' does not resolve to a container or a list", fp->name, RlistScalarValue(arg));
             SeqDestroy(containers);
             VarRefDestroy(ref);
+            SeqDestroy(toremove);
             return FnFailure();
         }
-
-        SeqAppend(containers, (void *)value);
 
         VarRefDestroy(ref);
     }
@@ -2268,6 +2290,7 @@ static FnCallResult FnCallMergeData(EvalContext *ctx, FnCall *fp, Rlist *args)
     {
         JsonElement *first = SeqAt(containers, 0);
         SeqDestroy(containers);
+        SeqDestroy(toremove);
         return  (FnCallResult) { FNCALL_SUCCESS, (Rval) { JsonCopy(first), RVAL_TYPE_CONTAINER } };
     }
     else
@@ -2285,12 +2308,12 @@ static FnCallResult FnCallMergeData(EvalContext *ctx, FnCall *fp, Rlist *args)
         }
 
         SeqDestroy(containers);
+        SeqDestroy(toremove);
         return (FnCallResult) { FNCALL_SUCCESS, (Rval) { result, RVAL_TYPE_CONTAINER } };
     }
 
     assert(false);
 }
-
 
 static FnCallResult FnCallSelectServers(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
  /* ReadTCP(localhost,80,'GET index.html',1000) */

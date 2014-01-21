@@ -1,0 +1,90 @@
+#######################################################
+#
+# Test mergedata()
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+}
+
+#######################################################
+
+bundle agent test
+{
+  vars:
+      "load1" data => parsejson('[ 1, 2, 3]');
+      "load2" slist => { "element1", "element2", "element3" };
+      "load3" data => parsejson('{ "x": "y" }');
+      "load4" slist => { };
+
+      "X" slist => { "1", "2", "3", "4" };
+      "Y" slist => { @(X) };
+
+      "load_$(X)" data => mergedata("load$(X)");
+      "load_$(X)_$(Y)" data => mergedata("load$(X)", "load$(Y)");
+}
+
+#######################################################
+
+bundle agent check
+{
+  vars:
+      "X" slist => { @(test.X) };
+      "Y" slist => { @(test.X) };
+
+      "expected_1" string => '[1,2,3]';
+      "expected_2" string => '["element1","element2","element3"]';
+      "expected_3" string => '{"x":"y"}';
+      "expected_4" string => '[]';
+      "expected_1_1" string => '[1,2,3,1,2,3]';
+      "expected_1_2" string => '[1,2,3,"element1","element2","element3"]';
+      "expected_1_3" string => '[1,2,3,"y"]';
+      "expected_1_4" string => '[1,2,3]';
+      "expected_2_1" string => '["element1","element2","element3",1,2,3]';
+      "expected_2_2" string => '["element1","element2","element3","element1","element2","element3"]';
+      "expected_2_3" string => '["element1","element2","element3","y"]';
+      "expected_2_4" string => '["element1","element2","element3"]';
+      "expected_3_1" string => '{"x":"y","0":1,"1":2,"2":3}';
+      "expected_3_2" string => '{"x":"y","0":"element1","1":"element2","2":"element3"}';
+      "expected_3_3" string => '{"x":"y"}';
+      "expected_3_4" string => '{"x":"y"}';
+      "expected_4_1" string => '[1,2,3]';
+      "expected_4_2" string => '["element1","element2","element3"]';
+      "expected_4_3" string => '["y"]';
+      "expected_4_4" string => '[]';
+
+      "actual_$(X)_$(Y)" string => format("%S", "test.load_$(X)_$(Y)");
+      "actual_$(X)" string => format("%S", "test.load_$(X)");
+
+  classes:
+      "not_ok_$(X)_$(Y)" not => strcmp("$(actual_$(X)_$(Y))",
+                                       "$(expected_$(X)_$(Y))");
+
+      "not_ok_$(X)" not => strcmp("$(actual_$(X))",
+                                  "$(expected_$(X))");
+
+      "ok" not => classmatch("not_ok_.*");
+
+  reports:
+    DEBUG::
+      "$(X): $(actual_$(X)) != $(X) $(expected_$(X))"
+       ifvarclass => "not_ok_$(X)";
+
+      "$(X)+$(Y): $(actual_$(X)_$(Y)) != $(X)+$(Y) $(expected_$(X)_$(Y))"
+       ifvarclass => "not_ok_$(X)_$(Y)";
+
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

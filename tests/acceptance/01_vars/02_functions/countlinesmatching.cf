@@ -1,0 +1,40 @@
+# Test that countlinesmatching works correctly
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence => { default("$(this.promise_filename)") };
+}
+
+bundle common init
+{
+}
+
+bundle agent test
+{
+  vars:
+      # meta comment 1
+      # meta comment 2
+      # meta comment 3
+      # meta comment 4
+      "metagrep" int => countlinesmatching(".*# meta comment.*",
+                                           $(this.promise_filename));
+      "nullgrep" int => countlinesmatching("blue hippo, purple elephant, yellow submarine",
+                                           $(this.promise_filename));
+}
+
+bundle agent check
+{
+  classes:
+      "ok" and => { strcmp("$(test.metagrep)", "5"), # the 4 comments plus the pattern!
+                    strcmp("$(test.nullgrep)", "0") };
+
+  reports:
+    DEBUG::
+      "Grepping for 'meta comment' found $(test.metagrep) matches";
+      "Grepping for children's rhyme found $(test.nullgrep) matches";
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

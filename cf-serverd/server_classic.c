@@ -17,7 +17,7 @@
 #include "server_common.h"                         /* ListPersistentClasses */
 
 
-/* Functions needed exclusively for the classic protocol. */
+/* Functionality needed exclusively for the classic protocol. */
 
 
 //*******************************************************************
@@ -594,10 +594,9 @@ static int VerifyConnection(ServerConnectionState *conn, char buf[CF_BUFSIZE])
 static int CheckStoreKey(ServerConnectionState *conn, RSA *key)
 {
     RSA *savedkey;
-    char udigest[CF_MAXVARSIZE];
 
-    snprintf(udigest, CF_MAXVARSIZE - 1, "%s",
-             KeyPrintableHash(ConnectionInfoKey(conn->conn_info)));
+    const char *udigest = KeyPrintableHash(ConnectionInfoKey(conn->conn_info));
+    assert(udigest != NULL);
 
     if ((savedkey = HavePublicKey(conn->username, MapAddress(conn->ipaddr), udigest)))
     {

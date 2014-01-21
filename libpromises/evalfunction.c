@@ -5516,6 +5516,32 @@ static int BuildLineArray(EvalContext *ctx, const Bundle *bundle,
         {
             char *name;
 
+            switch (type)
+            {
+            case DATA_TYPE_STRING:
+                break;
+
+            case DATA_TYPE_INT:
+                if (IntFromString(*token) == CF_NOINT)
+                {
+                    FatalError(ctx, "Could not convert token to int");
+                }
+                break;
+
+            case DATA_TYPE_REAL:
+                {
+                    double real_value = 0;
+                    if (!DoubleFromString(*token, &real_value))
+                    {
+                        FatalError(ctx, "Could not convert token to double");
+                    }
+                }
+                break;
+
+            default:
+                ProgrammingError("Unhandled type in switch: %d", type);
+            }
+
             if (NULL == first_index)
             {
                 first_index = xstrdup(*token);

@@ -525,7 +525,8 @@ int OpenReceiverChannel(void)
                            &no, sizeof(no)) == -1)
             {
                 Log(LOG_LEVEL_VERBOSE,
-                    "Couldn't set the IPPROTO_IPV6:IPV6_V6ONLY socket option to 0 (setsockopt: %s)",
+                    "Failed to clear IPv6-only flag on listening socket"
+                    " (setsockopt: %s)",
                     GetErrorStr());
             }
         }

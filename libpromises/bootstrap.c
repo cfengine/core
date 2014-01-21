@@ -34,6 +34,7 @@
 #include <logging.h>
 #include <string_lib.h>
 #include <files_lib.h>
+#include <known_dirs.h>
 
 #include <assert.h>
 
@@ -135,7 +136,7 @@ void UpdateLastPolicyUpdateTime(EvalContext *ctx)
     struct stat sb;
     {
         char cf_promises_validated_filename[CF_MAXVARSIZE];
-        snprintf(cf_promises_validated_filename, CF_MAXVARSIZE, "%s/masterfiles/cf_promises_validated", CFWORKDIR);
+        snprintf(cf_promises_validated_filename, CF_MAXVARSIZE, "%s/cf_promises_validated", GetMasterDir());
         MapName(cf_promises_validated_filename);
 
         if ((stat(cf_promises_validated_filename, &sb)) != 0)
@@ -222,12 +223,8 @@ bool GetAmPolicyHub(const char *workdir)
     return stat(path, &sb) == 0;
 }
 
-bool RemoveAllExistingPolicyInInputs(const char *workdir)
+bool RemoveAllExistingPolicyInInputs(const char *inputs_path)
 {
-    char inputs_path[CF_BUFSIZE] = { 0 };
-    snprintf(inputs_path, sizeof(inputs_path), "%s/inputs/", workdir);
-    MapName(inputs_path);
-
     Log(LOG_LEVEL_INFO, "Removing all files in '%s'", inputs_path);
 
     struct stat sb;
@@ -253,10 +250,10 @@ bool RemoveAllExistingPolicyInInputs(const char *workdir)
     return DeleteDirectoryTree(inputs_path);
 }
 
-bool MasterfileExists(const char *workdir)
+bool MasterfileExists(const char *masterdir)
 {
     char filename[CF_BUFSIZE] = { 0 };
-    snprintf(filename, sizeof(filename), "%s/masterfiles/promises.cf", workdir);
+    snprintf(filename, sizeof(filename), "%s/promises.cf", masterdir);
     MapName(filename);
 
     struct stat sb;
@@ -321,7 +318,7 @@ bool WriteBuiltinFailsafePolicyToPath(const char *filename)
             "      expression => fileexists(\"$(sys.workdir)/ppkeys/localhost.pub\"),\n"
             "          handle => \"cfe_internal_bootstrap_update_classes_have_ppkeys\";\n"
             "   \"have_promises_cf\"\n"
-            "      expression => fileexists(\"$(sys.workdir)/inputs/promises.cf\"),\n"
+            "      expression => fileexists(\"$(sys.inputdir)/promises.cf\"),\n"
             "          handle => \"cfe_internal_bootstrap_update_classes_have_promises_cf\";\n"
             "\n#\n\n"
             " commands:\n\n"
@@ -331,23 +328,25 @@ bool WriteBuiltinFailsafePolicyToPath(const char *filename)
             "\n#\n\n"
             " files:\n\n"
             "  !windows.have_ppkeys::\n"
-            "   \"$(sys.workdir)/inputs\" \n"
+            "   \"$(sys.inputdir)\" \n"
             "            handle => \"cfe_internal_bootstrap_update_files_sys_workdir_inputs_not_windows\",\n"
 #ifdef __MINGW32__
+            // This section is needed because Windows attempts to copy from "C:\Program Files\Cfengine\masterfiles".
             "         copy_from => u_scp(\"/var/cfengine/masterfiles\"),\n"
 #else
-            "         copy_from => u_scp(\"%s/masterfiles\"),\n"
+            "         copy_from => u_scp(\"$(sys.masterdir)\"),\n"
 #endif /* !__MINGW32__ */
             "      depth_search => u_recurse(\"inf\"),\n"
             "           classes => repaired(\"got_policy\");\n"
             "\n"
             "  windows.have_ppkeys::\n"
-            "   \"$(sys.workdir)\\inputs\" \n"
+            "   \"$(sys.inputdir)\" \n"
             "            handle => \"cfe_internal_bootstrap_update_files_sys_workdir_inputs_windows\",\n"
 #ifdef __MINGW32__
+            // This section is needed because Windows attempts to copy from "C:\Program Files\Cfengine\masterfiles".
             "         copy_from => u_scp(\"/var/cfengine/masterfiles\"),\n"
 #else
-            "         copy_from => u_scp(\"%s/masterfiles\"),\n"
+            "         copy_from => u_scp(\"$(sys.masterdir)\"),\n"
 #endif /* !__MINGW32__ */
             "      depth_search => u_recurse(\"inf\"),\n"
             "           classes => repaired(\"got_policy\");\n\n"
@@ -398,7 +397,7 @@ bool WriteBuiltinFailsafePolicyToPath(const char *filename)
             "   \"Updated local policy from policy server\"\n"
             "      handle => \"cfe_internal_bootstrap_update_reports_got_policy\";\n"
             "  !got_policy.!have_promises_cf.have_ppkeys::\n"
-            "   \"Failed to copy policy from policy server at $(sys.policy_hub):$(sys.workdir)/masterfiles\n"
+            "   \"Failed to copy policy from policy server at $(sys.policy_hub):$(sys.masterdir)\n"
             "       Please check\n"
             "       * cf-serverd is running on $(sys.policy_hub)\n"
             "       * network connectivity to $(sys.policy_hub) on port 5308\n"
@@ -421,7 +420,7 @@ bool WriteBuiltinFailsafePolicyToPath(const char *filename)
             "      handle => \"cfe_internal_bootstrap_update_reports_failed_to_start_execd\";\n"
             "  !executor_started.have_promises_cf::\n"
             "   \"You are running a hard-coded failsafe. Please use the following command instead.\n"
-            "      $(sys.cf_agent) -f $(sys.workdir)/inputs/update.cf\"\n"
+            "      $(sys.cf_agent) -f $(sys.inputdir)/update.cf\"\n"
             "      handle => \"cfe_internal_bootstrap_update_reports_run_another_failsafe_instead\";\n"
             "}\n\n"
             "############################################\n"
@@ -469,11 +468,7 @@ bool WriteBuiltinFailsafePolicyToPath(const char *filename)
             "body copy_from u_cp(from)\n"
             "{\n"
             "source          => \"$(from)\";\n"
-#ifdef __MINGW32__
             "compare         => \"digest\";\n" "copy_backup     => \"false\";\n" "}\n" "\n");
-#else
-            "compare         => \"digest\";\n" "copy_backup     => \"false\";\n" "}\n" "\n", CFWORKDIR, CFWORKDIR);
-#endif /* !__MINGW32__ */
     fclose(fout);
 
     if (chmod(filename, S_IRUSR | S_IWUSR) == -1)
@@ -485,10 +480,10 @@ bool WriteBuiltinFailsafePolicyToPath(const char *filename)
     return true;
 }
 
-bool WriteBuiltinFailsafePolicy(const char *workdir)
+bool WriteBuiltinFailsafePolicy(const char *inputdir)
 {
     char failsafe_path[CF_BUFSIZE];
-    snprintf(failsafe_path, CF_BUFSIZE - 1, "%s/inputs/failsafe.cf", workdir);
+    snprintf(failsafe_path, CF_BUFSIZE - 1, "%s/failsafe.cf", inputdir);
     MapName(failsafe_path);
 
     return WriteBuiltinFailsafePolicyToPath(failsafe_path);

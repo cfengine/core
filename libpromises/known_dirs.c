@@ -44,6 +44,16 @@ static const char *GetDefaultPidDir(void)
     return PIDDIR;
 }
 
+static const char *GetDefaultInputDir(void)
+{
+    return INPUTDIR;
+}
+
+static const char *GetDefaultMasterDir(void)
+{
+    return MASTERDIR;
+}
+
 #elif defined(__ANDROID__)
 
 static const char *GetDefaultWorkDir(void)
@@ -62,11 +72,21 @@ static const char *GetDefaultPidDir(void)
     return PIDDIR;
 }
 
+static const char *GetDefaultInputDir(void)
+{
+    return INPUTDIR;
+}
+
+static const char *GetDefaultMasterDir(void)
+{
+    return MASTERDIR;
+}
+
 #elif !defined(__MINGW32__)
 
 #define MAX_WORKDIR_LENGTH (CF_BUFSIZE / 2)
 
-static const char *GetDefaultDir_helper(char dir[MAX_WORKDIR_LENGTH], const char *root_dir)
+static const char *GetDefaultDir_helper(char dir[MAX_WORKDIR_LENGTH], const char *root_dir, const char *append_dir)
 {
     if (getuid() > 0)
     {
@@ -74,9 +94,19 @@ static const char *GetDefaultDir_helper(char dir[MAX_WORKDIR_LENGTH], const char
         {
             struct passwd *mpw = getpwuid(getuid());
 
-            if (snprintf(dir, MAX_WORKDIR_LENGTH, "%s/.cfagent", mpw->pw_dir) >= MAX_WORKDIR_LENGTH)
+            if ( append_dir == NULL )
             {
-                return NULL;
+                if (snprintf(dir, MAX_WORKDIR_LENGTH, "%s/.cfagent", mpw->pw_dir) >= MAX_WORKDIR_LENGTH)
+                {
+                    return NULL;
+                }
+            }
+            else
+            {
+                if (snprintf(dir, MAX_WORKDIR_LENGTH, "%s/.cfagent/%s", mpw->pw_dir, append_dir) >= MAX_WORKDIR_LENGTH)
+                {
+                    return NULL;
+                }
             }
         }
         return dir;
@@ -90,19 +120,31 @@ static const char *GetDefaultDir_helper(char dir[MAX_WORKDIR_LENGTH], const char
 static const char *GetDefaultWorkDir(void)
 {
     static char workdir[MAX_WORKDIR_LENGTH] = ""; /* GLOBAL_C */
-    return GetDefaultDir_helper(workdir, WORKDIR);
+    return GetDefaultDir_helper(workdir, WORKDIR, NULL);
 }
 
 static const char *GetDefaultLogDir(void)
 {
     static char logdir[MAX_WORKDIR_LENGTH] = ""; /* GLOBAL_C */
-    return GetDefaultDir_helper(logdir, LOGDIR);
+    return GetDefaultDir_helper(logdir, LOGDIR, NULL);
 }
 
 static const char *GetDefaultPidDir(void)
 {
     static char piddir[MAX_WORKDIR_LENGTH] = ""; /* GLOBAL_C */
-    return GetDefaultDir_helper(piddir, PIDDIR);
+    return GetDefaultDir_helper(piddir, PIDDIR, NULL);
+}
+
+static const char *GetDefaultMasterDir(void)
+{
+    static char masterdir[MAX_WORKDIR_LENGTH] = ""; /* GLOBAL_C */
+    return GetDefaultDir_helper(masterdir, MASTERDIR, "masterfiles");
+}
+
+static const char *GetDefaultInputDir(void)
+{
+    static char inputdir[MAX_WORKDIR_LENGTH] = ""; /* GLOBAL_C */
+    return GetDefaultDir_helper(inputdir, INPUTDIR, "inputs");
 }
 
 #endif
@@ -126,4 +168,49 @@ const char *GetPidDir(void)
     const char *piddir = getenv("CFENGINE_TEST_OVERRIDE_WORKDIR");
 
     return piddir == NULL ? GetDefaultPidDir() : piddir;
+}
+
+const char *GetInputDir(void)
+{
+    const char *inputdir = getenv("CFENGINE_TEST_OVERRIDE_WORKDIR");
+
+    if (inputdir != NULL) 
+    {
+        static char workbuf[CF_BUFSIZE];
+        snprintf(workbuf, CF_BUFSIZE, "%s%cinputs", inputdir, FILE_SEPARATOR);
+        return MapName(workbuf);
+    }
+    else if (strcmp(INPUTDIR, "default") == 0 )
+    {
+        static char workbuf[CF_BUFSIZE];
+        snprintf(workbuf, CF_BUFSIZE, "%s%cinputs", GetWorkDir(), FILE_SEPARATOR);
+        return MapName(workbuf);
+    }
+    else
+    {
+        return GetDefaultInputDir();
+    }
+
+}
+
+const char *GetMasterDir(void)
+{
+    const char *masterdir = getenv("CFENGINE_TEST_OVERRIDE_WORKDIR");
+
+    if (masterdir != NULL) 
+    {
+        static char workbuf[CF_BUFSIZE];
+        snprintf(workbuf, CF_BUFSIZE, "%s%cmasterfiles", masterdir, FILE_SEPARATOR);
+        return MapName(workbuf);
+    }
+    else if (strcmp(MASTERDIR, "default") == 0 )
+    {
+        static char workbuf[CF_BUFSIZE];
+        snprintf(workbuf, CF_BUFSIZE, "%s%cmasterfiles", GetWorkDir(), FILE_SEPARATOR);
+        return MapName(workbuf);
+    }
+    else
+    {
+        return GetDefaultMasterDir();
+    }
 }

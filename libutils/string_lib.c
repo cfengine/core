@@ -772,7 +772,7 @@ StringRef StringGetToken(const char *str, size_t len, size_t index, const char *
     return ref;
 }
 
-char **String2StringArray(char *str, char separator)
+char **String2StringArray(const char *str, char separator)
 /**
  * Parse CSVs into char **.
  * MEMORY NOTE: Caller must free return value with FreeStringArray().

@@ -78,7 +78,7 @@ bool IsStrCaseIn(const char *str, const char *const strs[]);
 size_t StringCountTokens(const char *str, size_t len, const char *seps);
 StringRef StringGetToken(const char *str, size_t len, size_t index, const char *seps);
 
-char **String2StringArray(char *str, char separator);
+char **String2StringArray(const char *str, char separator);
 void FreeStringArray(char **strs);
 
 int CountChar(const char *string, char sp);

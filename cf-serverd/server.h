@@ -84,6 +84,11 @@ typedef struct
     Auth *rolestail;
 
     int logconns;
+
+    /* bundle server access_rules: shortcut for ACL entries, which expands to
+     * the ACL entry when seen in client requests. */
+    StringMap *path_shortcuts;
+
 } ServerAccess;
 
 /**
@@ -104,6 +109,7 @@ struct ServerConnectionState_
     uid_t uid;
 #endif
     char ipaddr[CF_MAX_IP_LEN];
+
     /* TODO the following are useless with the new protocol */
     int id_verified;
     int rsa_auth;

@@ -660,8 +660,8 @@ void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *con
             acl_Free(literals_acl); literals_acl = NULL;
             acl_Free(query_acl);    query_acl = NULL;
 
-            StringMapDestroy(path_shortcuts);
-            path_shortcuts = NULL;
+            StringMapDestroy(SV.path_shortcuts);
+            SV.path_shortcuts = NULL;
 
             PolicyDestroy(*policy);
             *policy = NULL;

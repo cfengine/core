@@ -47,6 +47,7 @@
 #include <generic_agent.h> /* HashControls */
 #include <file_lib.h>      /* IsDir2 */
 
+#include "server_common.h"                         /* PreprocessRequestPath */
 #include "access.h"
 #include "strlist.h"
 
@@ -133,11 +134,15 @@ void Summarize()
     Auth *ptr;
     Item *ip, *ipr;
 
-    Log(LOG_LEVEL_VERBOSE, "Granted access to paths :");
+    Log(LOG_LEVEL_VERBOSE, "Granted access to paths for classic protocol:");
 
     for (ptr = SV.admit; ptr != NULL; ptr = ptr->next)
     {
-        Log(LOG_LEVEL_VERBOSE, "\tPath: %s", ptr->path);
+        /* Don't report empty entries. */
+        if (ptr->maproot != NULL || ptr->accesslist != NULL)
+        {
+            Log(LOG_LEVEL_VERBOSE, "\tPath: %s", ptr->path);
+        }
 
         for (ipr = ptr->maproot; ipr != NULL; ipr = ipr->next)
         {
@@ -150,11 +155,15 @@ void Summarize()
         }
     }
 
-    Log(LOG_LEVEL_VERBOSE, "Denied access to paths :");
+    Log(LOG_LEVEL_VERBOSE, "Denied access to paths for classic protocol:");
 
     for (ptr = SV.deny; ptr != NULL; ptr = ptr->next)
     {
-        Log(LOG_LEVEL_VERBOSE, "\tPath: %s", ptr->path);
+        /* Don't report empty entries. */
+        if (ptr->accesslist != NULL)
+        {
+            Log(LOG_LEVEL_VERBOSE, "\tPath: %s", ptr->path);
+        }
 
         for (ip = ptr->accesslist; ip != NULL; ip = ip->next)
         {
@@ -231,7 +240,7 @@ void Summarize()
 void KeepPromises(EvalContext *ctx, const Policy *policy, GenericAgentConfig *config)
 {
     if (paths_acl != NULL || classes_acl != NULL || vars_acl != NULL ||
-        literals_acl != NULL || query_acl != NULL || path_shortcuts != NULL)
+        literals_acl != NULL || query_acl != NULL || SV.path_shortcuts != NULL)
     {
         UnexpectedError("ACLs are not NULL - we are probably leaking memory!");
     }
@@ -241,11 +250,11 @@ void KeepPromises(EvalContext *ctx, const Policy *policy, GenericAgentConfig *co
     vars_acl      = calloc(1, sizeof(*vars_acl));
     literals_acl  = calloc(1, sizeof(*literals_acl));
     query_acl     = calloc(1, sizeof(*query_acl));
-    path_shortcuts = StringMapNew();
+    SV.path_shortcuts = StringMapNew();
 
     if (paths_acl == NULL || classes_acl == NULL || vars_acl == NULL ||
         literals_acl == NULL || query_acl == NULL ||
-        path_shortcuts == NULL)
+        SV.path_shortcuts == NULL)
     {
         Log(LOG_LEVEL_CRIT, "calloc: %s", GetErrorStr());
         exit(255);
@@ -669,12 +678,40 @@ static PromiseResult KeepServerPromise(EvalContext *ctx, const Promise *pp, ARG_
 
 /*********************************************************************/
 
+enum admit_type
+{
+    ADMIT_TYPE_IP,
+    ADMIT_TYPE_HOSTNAME,
+    ADMIT_TYPE_KEY,
+    ADMIT_TYPE_OTHER
+};
+
+/* Check if the given string is an IP subnet, a hostname, a key, or none of
+ * the above. */
+static enum admit_type AdmitType(const char *s)
+{
+    if (strncmp(s, "SHA=", strlen("SHA=")) == 0 ||
+        strncmp(s, "MD5=", strlen("MD5=")) == 0)
+    {
+        return ADMIT_TYPE_KEY;
+    }
+    /* IPv4 or IPv6 subnet mask */
+    else if (s[strspn(s, "0123456789abcdef.:/")] == '\0')
+    {
+        return ADMIT_TYPE_IP;
+    }
+    else
+    {
+        return ADMIT_TYPE_HOSTNAME;
+    }
+}
+
 /**
  * Add access rules to the given ACL #acl according to the constraints in the
  * particular access promise.
  *
- * For legacy reasons (non-TLS connections), build also the ap (access Auth)
- * and dp (deny Auth).
+ * For legacy reasons (non-TLS connections), build also the #ap (access Auth)
+ * and #dp (deny Auth).
  */
 static void AccessPromise_AddAccessConstraints(const EvalContext *ctx,
                                                const Promise *pp,
@@ -714,7 +751,7 @@ static void AccessPromise_AddAccessConstraints(const EvalContext *ctx,
                     continue;
                 }
 
-                bool ret = StringMapHasKey(path_shortcuts, shortcut);
+                bool ret = StringMapHasKey(SV.path_shortcuts, shortcut);
                 if (ret)
                 {
                     Log(LOG_LEVEL_WARNING,
@@ -723,7 +760,7 @@ static void AccessPromise_AddAccessConstraints(const EvalContext *ctx,
                     continue;
                 }
 
-                StringMapInsert(path_shortcuts,
+                StringMapInsert(SV.path_shortcuts,
                                 xstrdup(shortcut), xstrdup(pp->promiser));
 
                 Log(LOG_LEVEL_DEBUG, "Added shortcut '%s' for path: %s",
@@ -737,6 +774,9 @@ static void AccessPromise_AddAccessConstraints(const EvalContext *ctx,
 
             for (rp = (Rlist *) cp->rval.item; rp != NULL; rp = rp->next)
             {
+
+                /* TODO keys, ips, hostnames are valid such strings. */
+
                 if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_ADMITIPS].lval) == 0)
                 {
                     ret = strlist_Append(&acl->admit_ips, RlistScalarValue(rp));
@@ -772,11 +812,48 @@ static void AccessPromise_AddAccessConstraints(const EvalContext *ctx,
 
                 if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_ADMIT].lval) == 0)
                 {
+                    switch (AdmitType(RlistScalarValue(rp)))
+                    {
+                    case ADMIT_TYPE_IP:
+                        /* TODO convert IP string to binary representation. */
+                        ret = strlist_Append(&acl->admit_ips, RlistScalarValue(rp));
+                        break;
+                    case ADMIT_TYPE_KEY:
+                        ret = strlist_Append(&acl->admit_keys, RlistScalarValue(rp));
+                        break;
+                    case ADMIT_TYPE_HOSTNAME:
+                        /* TODO clean up possible regex, if it starts with ".*"
+                         * then store two entries: itself, and *dot*itself. */
+                        ret = strlist_Append(&acl->admit_hostnames, RlistScalarValue(rp));
+                        break;
+                    default:
+                        Log(LOG_LEVEL_WARNING,
+                            "Access rule 'admit: %s' is not IP, hostname or key, ignoring",
+                            RlistScalarValue(rp));
+                    }
+
                     PrependItem(&(ap->accesslist), RlistScalarValue(rp), NULL);
                     continue;
                 }
                 if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_DENY].lval) == 0)
                 {
+                    switch (AdmitType(RlistScalarValue(rp)))
+                    {
+                    case ADMIT_TYPE_IP:
+                        ret = strlist_Append(&acl->deny_ips, RlistScalarValue(rp));
+                        break;
+                    case ADMIT_TYPE_KEY:
+                        ret = strlist_Append(&acl->deny_keys, RlistScalarValue(rp));
+                        break;
+                    case ADMIT_TYPE_HOSTNAME:
+                        ret = strlist_Append(&acl->deny_hostnames, RlistScalarValue(rp));
+                        break;
+                    default:
+                        Log(LOG_LEVEL_WARNING,
+                            "Access rule 'deny: %s' is not IP, hostname or key, ignoring",
+                            RlistScalarValue(rp));
+                    }
+
                     PrependItem(&(dp->accesslist), RlistScalarValue(rp), NULL);
                     continue;
                 }
@@ -823,8 +900,8 @@ static void AccessPromise_AddAccessConstraints(const EvalContext *ctx,
 }
 
 /* It is allowed to have duplicate handles (paths or class names or variables
- * etc) in access_rules policy files, but here we make sure only one list
- * entry is created in Auth chains. */
+ * etc) in bundle server access_rules in policy files, but the lists here
+ * should have unique entries. This, we make sure here. */
 static Auth *GetOrCreateAuth(const char *handle, Auth **authchain, Auth **authchain_tail)
 {
     Auth *a = GetAuthPath(handle, *authchain);
@@ -840,24 +917,35 @@ static Auth *GetOrCreateAuth(const char *handle, Auth **authchain, Auth **authch
 
 static void KeepFileAccessPromise(const EvalContext *ctx, const Promise *pp)
 {
-    /* This new ACL is being used for TLS connections and should replace all
-     * Auth types that follow. For the new ACLs we must insert directories
-     * with trailing '/', since this is now what differentiates files from
-     * directories.
-     */
-
-    /* TODO realpath() (with windows define replacement) with verbose logging adding the paths */
-    /* TODO PathPortable(), i.e. slashes (maybe) and lowercase */
-    /* All in all call PreprocessRequestPath with NULL addr,key,hostname. */
-
+    char path[PATH_MAX];
     size_t path_len = strlen(pp->promiser);
-    char path[path_len + 2];
+    if (path_len > sizeof(path) - 1)
+    {
+        goto err_too_long;
+    }
     memcpy(path, pp->promiser, path_len + 1);
 
-    /* TODO PrepareRequestPath which removes trailing slash etc */
-
-    if (IsDir2(path) == 1 && path[path_len - 1] != FILE_SEPARATOR)
+    /* Resolve symlinks and canonicalise access_rules path. */
+    int ret = PreprocessRequestPath(path, sizeof(path), NULL, NULL, NULL);
+    if (ret == -1 && errno != ENOENT)
     {
+        goto err_too_long;
+    }
+
+    int is_dir = IsDir2(path);
+    if (is_dir == -1)
+    {
+        Log(LOG_LEVEL_WARNING,
+            "Path '%s' in access_rules does not exist, assuming it will be a regular file, access rule will not be applied recursively!",
+            path);
+    }
+    else if (is_dir == 1 && path[path_len - 1] != FILE_SEPARATOR)
+    {
+        /* Append '/' if it's a directory. */
+        if (path_len > sizeof(path) - 2)
+        {
+            goto err_too_long;
+        }
         path[path_len] = FILE_SEPARATOR;
         path[path_len + 1] = '\0';
         path_len++;
@@ -881,6 +969,11 @@ static void KeepFileAccessPromise(const EvalContext *ctx, const Promise *pp)
 
     AccessPromise_AddAccessConstraints(ctx, pp, &paths_acl->acls[pos],
                                        ap, dp);
+    return;
+
+  err_too_long:
+        Log(LOG_LEVEL_ERR, "Path '%s' in access_rules is too long, ignoring!",
+            pp->promiser);
 }
 
 /*********************************************************************/
@@ -932,7 +1025,7 @@ void KeepLiteralAccessPromise(EvalContext *ctx, const Promise *pp, char *type)
             size_t pos = acl_SortedInsert(&classes_acl, pp->promiser);
             if (pos == (size_t) -1)
             {
-                /* Only happens on allocation error. */
+                /* Should never happen. */
                 Log(LOG_LEVEL_CRIT, "acl_Insert: %s", GetErrorStr());
                 exit(255);
             }
@@ -947,7 +1040,7 @@ void KeepLiteralAccessPromise(EvalContext *ctx, const Promise *pp, char *type)
             size_t pos = acl_SortedInsert(&vars_acl, pp->promiser);
             if (pos == (size_t) -1)
             {
-                /* Only happens on allocation error. */
+                /* Should never happen. */
                 Log(LOG_LEVEL_CRIT, "acl_Insert: %s", GetErrorStr());
                 exit(255);
             }

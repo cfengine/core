@@ -1,4 +1,3 @@
-
 body common control
 {
   bundlesequence => { "access_rules" };
@@ -21,7 +20,6 @@ body server control
 #########################################################
 
 bundle server access_rules()
-
 {
   access:
     "$(G.testroot)"
@@ -29,4 +27,3 @@ bundle server access_rules()
     "$(G.testdir)"
       deny => { "127.0.0.1", "::1" };
 }
-

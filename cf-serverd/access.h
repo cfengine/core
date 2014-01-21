@@ -46,8 +46,8 @@ enum acl_type
  * == path, this should contain a list of all paths together with a list of
  * ACLs (struct resource_acl) referring to the relevant path.
  *
- * @note Currently this list of resource_names may binary searched so it must
- *       be sorted before being searched.
+ * @note Currently this list of resource_names may be binary searched so it
+ *       must be sorted once populated.
  *
  * @WARNING Remember to store directories *always* with traling '/', else they
  *          won't match for children dirs (on purpose, and this functionality
@@ -63,15 +63,18 @@ struct acl
 };
 
 
-
 /* These acls are set on server startup or when promises change, and are
- * read-only for the rest of their life, thus thread-safe. */
-extern struct acl *paths_acl;
-extern struct acl *classes_acl, *vars_acl, *literals_acl;
-extern struct acl *query_acl;                                  /* reporting */
-//extern struct acl *roles_acl;                                /* cf-runagent */
+ * read-only for the rest of their life, thus are thread-safe. */
 
-StringMap *path_shortcuts;
+/* The paths_acl should be populated with directories having a trailing '/'
+ * to be able to tell apart from files. */
+struct acl *paths_acl;
+
+/* TODO we need the following for optimal ACL lookups in all cases. But first
+ * we need to stop accepting regexes as allowed/denied mathes. */
+struct acl *classes_acl, *vars_acl, *literals_acl;
+struct acl *query_acl;                                         /* reporting */
+//extern struct acl *roles_acl;                                /* cf-runagent */
 
 
 size_t ReplaceSpecialVariables(char *buf, size_t buf_size,

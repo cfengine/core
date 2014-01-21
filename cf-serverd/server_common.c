@@ -1294,3 +1294,291 @@ int CfSecOpenDirectory(ServerConnectionState *conn, char *sendbuffer, char *dirn
     return 0;
 }
 
+
+/********************* MISC UTILITY FUNCTIONS *************************/
+
+
+/**
+ * Replace all occurences of #find with #replace.
+ *
+ * @return the length of #buf or (size_t) -1 in case of overflow, or 0
+ *         if no replace took place.
+ */
+static size_t StringReplace(char *buf, size_t buf_size,
+                            const char *find, const char *replace)
+{
+    assert(find[0] != '\0');
+
+    char *p = strstr(buf, find);
+    if (p == NULL)
+    {
+        return 0;
+    }
+
+    size_t find_len = strlen(find);
+    size_t replace_len = strlen(replace);
+    size_t buf_len = strlen(buf);
+    size_t buf_idx = 0;
+    char tmp[buf_size];
+    size_t tmp_len = 0;
+
+    /* Do all replacements we find. */
+    do
+    {
+        size_t buf_newidx = p - buf;
+        size_t prefix_len = buf_newidx - buf_idx;
+
+        if (tmp_len + prefix_len + replace_len >= buf_size)
+        {
+            return (size_t) -1;
+        }
+
+        memcpy(&tmp[tmp_len], &buf[buf_idx], prefix_len);
+        tmp_len += prefix_len;
+
+        memcpy(&tmp[tmp_len], replace, replace_len);
+        tmp_len += replace_len;
+
+        buf_idx = buf_newidx + find_len;
+        p = strstr(&buf[buf_idx], find);
+    }
+    while (p != NULL);
+
+    /* Copy leftover plus terminating '\0'. */
+    size_t leftover_len = buf_len - buf_idx;
+    if (tmp_len + leftover_len >= buf_size)
+    {
+        return (size_t) -1;
+    }
+    memcpy(&tmp[tmp_len], &buf[buf_idx], leftover_len + 1);
+    tmp_len += leftover_len;
+
+    /* And finally copy to source, we are supposed to modify it in place. */
+    memcpy(buf, tmp, tmp_len + 1);
+
+    return tmp_len;
+}
+
+/**
+ * Search and replace occurences of #ipaddr, #hostname, #key (if not NULL)
+ *
+ *   "$(connection.ip)" from "191.168.0.1"
+ *   "$(connection.fqdn)" from "blah.cfengine.com",
+ *   "$(connection.key)" from "SHA=asdfghjkl"
+ *   @TODO where should the following happen?
+ *   "$(connection.ip_32) same as "$(connection.ip)"
+ *   "$(connection.ip_24)" from "192.168.0",
+ *   "$(connection.fqdn_1)" from "blah",
+ *   "$(connection.domain)" from "com" same as "$(connection.domain_1)",
+ *   "$(connection.domain_2)" from "cfengine.com".
+ *
+ * @return the output length of #dst, (size_t) -1 if overflow would occur,
+ *         or 0 if no replacement happened and #dst was not touched.
+ *
+ * @TODO change the function to more generic interface accepting arbitrary
+ *       find/replace pairs.
+ */
+size_t ReplaceSpecialVariables(char *buf, size_t buf_size,
+                               const char *find1, const char *repl1,
+                               const char *find2, const char *repl2,
+                               const char *find3, const char *repl3)
+{
+    size_t ret = 0;
+
+    if ((find1 != NULL) && (find1[0] != '\0') && (repl1 != NULL))
+    {
+        size_t ret2 = StringReplace(buf, buf_size, find1, repl1);
+        ret = MAX(ret, ret2);           /* size_t is unsigned, thus -1 wins */
+    }
+    if ((ret != (size_t) -1) &&
+        (find2 != NULL) && (find2[0] != '\0') && (repl2 != NULL))
+    {
+        size_t ret2 = StringReplace(buf, buf_size, find2, repl2);
+        ret = MAX(ret, ret2);
+    }
+    if ((ret != (size_t) -1) &&
+        (find3 != NULL) && (find3[0] != '\0') && (repl3 != NULL))
+    {
+        size_t ret2 = StringReplace(buf, buf_size, find3, repl3);
+        ret = MAX(ret, ret2);
+    }
+
+    /* Zero is returned only if all of the above were zero. */
+    return ret;
+}
+
+
+/* We use this instead of IsAbsoluteFileName() which also checks for
+ * quotes. There is no meaning in receiving quoted strings over the
+ * network. */
+static bool PathIsAbsolute(const char *s)
+{
+    bool result = false;
+
+#if defined(__MINGW32__)
+    if (isalpha(s[0]) && (s[1] == ':') && (req_path[2] == FILE_SEPARATOR))
+    {
+        result = true;
+    }
+    else
+    {
+        result = (s[0] == FILE_SEPARATOR && s[1] == FILE_SEPARATOR);
+    }
+#else
+    if (s[0] == FILE_SEPARATOR)
+    {
+        result = true;
+    }
+#endif
+
+    return result;
+}
+
+/**
+ * Canonicalize a path, convert to absolute, and resolve all symlinks.
+ * In detail:
+ *
+ * 1. MinGW: Translate to windows-compatible: slashes to FILE_SEPARATOR
+ *           and uppercase to lowercase.
+ * 2. If path is relative then convert to absolute according to shortcuts.
+ *    In replacement string, expand any special variables like
+ *    $(connection.ip), $(connection.fqdn) and $(connection.key) to the
+ *    variables #ipaddr, #hostname, #key (if they are not NULL)
+ * 3. Resolve symlinks, resolve '.' and '..' and remove double '/'
+ *    by calling realpath()
+ * 4. Remove possible trailing '/' --- TODO add it if it refers to dir?
+ *
+ * @note #reqpath is written in place (if true was returned). It is always
+ *       an absolute path.
+ * @note #reqpath is invalid to be of zero length.
+ * @note #reqpath_size should be at least PATH_MAX.
+ *
+ * @return the length of #reqpath after preprocessing. In case of error
+ *         (possible overflow, inability to convert to absolute path etc,
+ *         return (size_t) -1.
+ */
+size_t PreprocessRequestPath(char *reqpath, size_t reqpath_size,
+                             const char *ipaddr, const char *hostname,
+                             const char *key)
+{
+    errno = 0;             /* on return, errno might be set from realpath() */
+    char dst[reqpath_size];
+    size_t reqpath_len = strlen(reqpath);
+    assert(reqpath_len > 0);
+
+    /* Translate all slashes to backslashes on Winblows so that all the rest
+     * of work is done using FILE_SEPARATOR. THIS HAS TO BE FIRST. */
+    #if defined(__MINGW32__)
+    {
+        char *p = reqpath;
+        while ((p = strchr(p, '/')) != NULL)
+        {
+            *p = FILE_SEPARATOR;
+        }
+        /* Also convert everything to lowercase. */
+        ToLowerStrInplace(reqpath);
+    }
+    #endif
+
+    /* Convert relative paths to absolute. */
+    if (!PathIsAbsolute(reqpath))
+    {
+        char *separ = strchr(reqpath, FILE_SEPARATOR);
+        size_t first_part_len;
+        if (separ != NULL)
+        {
+            first_part_len = separ - reqpath;
+            assert(first_part_len < reqpath_len);
+        }
+        else
+        {
+            first_part_len = reqpath_len;
+        }
+        size_t second_part_len = reqpath_len - first_part_len;
+
+        /* '\0'-terminate first_part, do StringMapGet(), undo '\0'-term */
+        char tmpchar = reqpath[first_part_len];
+        reqpath[first_part_len] = '\0';
+        char *replacement = StringMapGet(SV.path_shortcuts, reqpath);
+        reqpath[first_part_len] = tmpchar;
+
+        if (replacement != NULL)
+        {
+            size_t replacement_len = strlen(replacement);
+            /* Replacement shortcut was found, but it may contain special
+             * variables such as $(connection.ip), so we need to expand
+             * them. */
+            char replacement2[reqpath_size];
+            memcpy(replacement2, replacement, replacement_len);
+            replacement2[replacement_len] = '\0';
+            size_t ret =
+                ReplaceSpecialVariables(replacement2, sizeof(replacement2),
+                                        "$(connection.ip)", ipaddr,
+                                        "$(connection.fqdn)", hostname,
+                                        "$(connection.key)", key);
+
+            size_t replacement2_len = (ret == 0) ? replacement_len : ret;
+            size_t dst_len = replacement2_len + second_part_len;
+            if (ret == (size_t) -1 || dst_len >= sizeof(dst))
+            {
+                Log(LOG_LEVEL_INFO, "Request path too long, aborting!");
+                return (size_t) -1;
+            }
+
+            memcpy(dst, replacement2, replacement2_len);
+            dst[replacement2_len] = FILE_SEPARATOR;
+            memcpy(&dst[replacement2_len], &reqpath[first_part_len],
+                   second_part_len + 1);
+
+            Log(LOG_LEVEL_DEBUG,
+                "Path received '%s' was relative, became: %s",
+                reqpath, dst);
+
+            /* Copy back to reqpath */
+            memcpy(reqpath, dst, dst_len + 1);
+            reqpath_len = dst_len;
+        }
+    }
+
+    if (!PathIsAbsolute(reqpath))
+    {
+        Log(LOG_LEVEL_INFO, "Relative paths are not allowed: %s", reqpath);
+        return (size_t) -1;
+    }
+
+    /* TODO replace realpath with Solaris' resolvepath(), in all
+     * platforms. That one does not check for existence, just resolves
+     * symlinks and canonicalises. */
+
+    assert(sizeof(dst) >= PATH_MAX);               /* needed for realpath() */
+    char *p = realpath(reqpath, dst);
+    if (p == NULL)
+    {
+        /* TODO If path does not exist try to canonicalise only directory. INSECURE?*/
+        /* if (errno == ENOENT) */
+        /* { */
+
+        /* } */
+
+        Log(LOG_LEVEL_INFO,
+            "Failed to canonicalise filename '%s' (realpath: %s)",
+            reqpath, GetErrorStr());
+        return (size_t) -1;
+    }
+    reqpath_len = strlen(dst);
+    memcpy(reqpath, dst, reqpath_len + 1);
+
+    char *first_separator = strchr(dst, FILE_SEPARATOR);
+    assert(first_separator != NULL);            /* realpath must be working */
+
+    /* Remove trailing slash, unless we're referring to root: '/' or 'a:\' */
+    if ( reqpath[reqpath_len-1] == FILE_SEPARATOR &&
+        &reqpath[reqpath_len-1] != first_separator)
+    {
+        reqpath[reqpath_len-1] = '\0';
+        reqpath_len--;
+    }
+
+    return reqpath_len;
+}
+

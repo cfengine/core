@@ -8,15 +8,6 @@
 #include <misc_lib.h>
 
 
-/* These acls are set on server startup or when promises change, and are
- * read-only for the rest of their life, thus are thread-safe. */
-struct acl *paths_acl;
-struct acl *classes_acl, *vars_acl, *literals_acl;
-struct acl *query_acl;                                  /* reporting */
-//extern struct acl *roles_acl;                                /* cf-runagent */
-
-
-
 /**
  * Run this function on every resource (file, class, var etc) access to
  * grant/deny rights. Currently it checks if:
@@ -186,115 +177,6 @@ bool access_CheckResource(const struct resource_acl *acl,
     }
 
     return access;
-}
-
-/**
- * Replace all occurences of #find with #replace.
- *
- * @return the length of #buf or (size_t) -1 in case of overflow, or 0
- *         if no replace took place.
- */
-size_t StringReplace(char *buf, size_t buf_size,
-                      const char *find, const char *replace)
-{
-    assert(find[0] != '\0');
-
-    char *p = strstr(buf, find);
-    if (p == NULL)
-    {
-        return 0;
-    }
-
-    size_t find_len = strlen(find);
-    size_t replace_len = strlen(replace);
-    size_t buf_len = strlen(buf);
-    size_t buf_idx = 0;
-    char tmp[buf_size];
-    size_t tmp_len = 0;
-
-    /* Do all replacements we find. */
-    do
-    {
-        size_t buf_newidx = p - buf;
-        size_t prefix_len = buf_newidx - buf_idx;
-
-        if (tmp_len + prefix_len + replace_len >= buf_size)
-        {
-            return (size_t) -1;
-        }
-
-        memcpy(&tmp[tmp_len], &buf[buf_idx], prefix_len);
-        tmp_len += prefix_len;
-
-        memcpy(&tmp[tmp_len], replace, replace_len);
-        tmp_len += replace_len;
-
-        buf_idx = buf_newidx + find_len;
-        p = strstr(&buf[buf_idx], find);
-    }
-    while (p != NULL);
-
-    /* Copy leftover plus terminating '\0'. */
-    size_t leftover_len = buf_len - buf_idx;
-    if (tmp_len + leftover_len >= buf_size)
-    {
-        return (size_t) -1;
-    }
-    memcpy(&tmp[tmp_len], &buf[buf_idx], leftover_len + 1);
-    tmp_len += leftover_len;
-
-    /* And finally copy to source, we are supposed to modify it in place. */
-    memcpy(buf, tmp, tmp_len + 1);
-
-    return tmp_len;
-}
-
-/**
- * Search and replace occurences of #ipaddr, #hostname, #key (if not NULL)
- *
- *   "$(connection.ip)" from "191.168.0.1"
- *   "$(connection.fqdn)" from "blah.cfengine.com",
- *   "$(connection.key)" from "SHA=asdfghjkl"
- *   @TODO where should the following happen?
- *   "$(connection.ip_32) same as "$(connection.ip)"
- *   "$(connection.ip_24)" from "192.168.0",
- *   "$(connection.fqdn_1)" from "blah",
- *   "$(connection.domain)" from "com" same as "$(connection.domain_1)",
- *   "$(connection.domain_2)" from "cfengine.com".
- *
- * @return the output length of #dst, (size_t) -1 if overflow would occur,
- *         or 0 if no replacement happened and #dst was not touched.
- *
- * @TODO change the function to more generic interface accepting arbitrary
- *       find/replace pairs.
- */
-size_t ReplaceSpecialVariables(char *buf, size_t buf_size,
-                               const char *find1, const char *repl1,
-                               const char *find2, const char *repl2,
-                               const char *find3, const char *repl3)
-{
-    size_t ret = 0;
-
-    if (find1 != NULL && find1[0] != '\0')
-    {
-        size_t ret2 = StringReplace(buf, buf_size, find1, repl1);
-        ret = MAX(ret, ret2);           /* size_t is unsigned, thus -1 wins */
-    }
-    if (ret != (size_t) -1 &&
-        find2 != NULL && find2[0] != '\0')
-    {
-        size_t ret2 = StringReplace(buf, buf_size, find2, repl2);
-        ret = MAX(ret, ret2);
-    }
-    if (ret != (size_t) -1 &&
-        find3 != NULL && find3[0] != '\0')
-    {
-        size_t ret2 = StringReplace(buf, buf_size, find3, repl3);
-        ret = MAX(ret, ret2);
-    }
-
-    /* Zero is returned only if all of the above were zero. */
-    return ret;
 }
 
 /**

@@ -301,6 +301,7 @@ static int AccessControl(EvalContext *ctx, const char *req_path, ServerConnectio
     return access;
 }
 
+/* Checks the "varadmit" legacy ACL. */
 static int LiteralAccessControl(EvalContext *ctx, char *in, ServerConnectionState *conn, int encrypt)
 {
     Auth *ap;
@@ -410,6 +411,7 @@ static int LiteralAccessControl(EvalContext *ctx, char *in, ServerConnectionStat
     return access;
 }
 
+/* Checks the "varadmit" legacy ACL. */
 static Item *ContextAccessControl(EvalContext *ctx, char *in, ServerConnectionState *conn, int encrypt)
 {
     Auth *ap;

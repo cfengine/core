@@ -585,6 +585,30 @@ int OpenReceiverChannel(void)
 /* Level 3                                                           */
 /*********************************************************************/
 
+static void DeleteAuthList(Auth **list, Auth **list_tail)
+{
+    Auth *ap = *list;
+
+    while (ap != NULL)
+    {
+        Auth *ap_next = ap->next;
+
+        DeleteItemList(ap->accesslist);
+        DeleteItemList(ap->maproot);
+        free(ap->path);
+        free(ap);
+
+        /* Just make sure the tail was consistent. */
+        if (ap_next == NULL)
+            assert(ap == *list_tail);
+
+        ap = ap_next;
+    }
+
+    *list = NULL;
+    *list_tail = NULL;
+}
+
 void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *config, time_t *last_policy_reload)
 {
     time_t validated_at;

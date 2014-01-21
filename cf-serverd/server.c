@@ -48,6 +48,16 @@
 #include "server_classic.h"                    /* BusyWithClassicConnection */
 
 
+/*
+  The only two exported function in this file is the following, used only in
+  cf-serverd-functions.c.
+
+  void ServerEntryPoint(EvalContext *ctx, char *ipaddr, ConnectionInfo *info);
+
+  TODO move this file to cf-serverd-functions.c or most probably server_common.c.
+*/
+
+
 //******************************************************************
 // GLOBAL STATE
 //******************************************************************
@@ -73,6 +83,7 @@ char CFRUNCOMMAND[CF_MAXVARSIZE] = { 0 };                       /* GLOBAL_P */
 
 
 static void SpawnConnection(EvalContext *ctx, char *ipaddr, ConnectionInfo *info);
+static void PurgeOldConnections(Item **list, time_t now);
 static void *HandleConnection(ServerConnectionState *conn);
 static ServerConnectionState *NewConn(EvalContext *ctx, ConnectionInfo *info);
 static void DeleteConn(ServerConnectionState *conn);
@@ -170,7 +181,7 @@ void ServerEntryPoint(EvalContext *ctx, char *ipaddr, ConnectionInfo *info)
 
 /**********************************************************************/
 
-void PurgeOldConnections(Item **list, time_t now)
+static void PurgeOldConnections(Item **list, time_t now)
    /* Some connections might not terminate properly. These should be cleaned
       every couple of hours. That should be enough to prevent spamming. */
 {
@@ -278,7 +289,7 @@ static void SpawnConnection(EvalContext *ctx, char *ipaddr, ConnectionInfo *info
 
 /*********************************************************************/
 
-void DisableSendDelays(int sockfd)
+static void DisableSendDelays(int sockfd)
 {
     int yes = 1;
 
@@ -398,31 +409,6 @@ static void *HandleConnection(ServerConnectionState *conn)
     return NULL;
 }
 
-/*********************************************************************/
-
-void DeleteAuthList(Auth **list, Auth **list_tail)
-{
-    Auth *ap = *list;
-
-    while (ap != NULL)
-    {
-        Auth *ap_next = ap->next;
-
-        DeleteItemList(ap->accesslist);
-        DeleteItemList(ap->maproot);
-        free(ap->path);
-        free(ap);
-
-        /* Just make sure the tail was consistent. */
-        if (ap_next == NULL)
-            assert(ap == *list_tail);
-
-        ap = ap_next;
-    }
-
-    *list = NULL;
-    *list_tail = NULL;
-}
 
 /***************************************************************/
 /* Toolkit/Class: conn                                         */

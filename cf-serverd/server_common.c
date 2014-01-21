@@ -517,6 +517,7 @@ void DoExec(EvalContext *ctx, ServerConnectionState *conn, char *args)
     cf_pclose(pp);
 }
 
+/* TODO don't pass "args" just the things we actually check: sid, username, maproot, uid */
 static int TransferRights(char *filename, ServerFileGetState *args, struct stat *sb)
 {
 #ifdef __MINGW32__
@@ -586,12 +587,14 @@ static int TransferRights(char *filename, ServerFileGetState *args, struct stat 
 
     /* Return true if one of the following is true: */
 
-    /* Remote user is root, really useless, "user" is just a string in the
-     * protocol he might claim whatever he wants, *key* is what matters */
+    /* Remote user is root, where "user" is just a string in the protocol, he
+     * might claim whatever he wants but will be able to login only if the
+     * user-key.pub key is found, */
     assert((args->connect->uid == 0) ||
-    /* remote IP has maproot in our access_rules, useless because of previous */
+    /* OR remote IP has maproot in the file's access_rules, */
            (args->connect->maproot == true) ||
-    /* file is owned by the same username the user claimed - useless as well */
+    /* OR file is owned by the same username the user claimed - useless or
+     * even dangerous outside NIS, KERBEROS or LDAP authenticated domains,  */
            (sb->st_uid == uid) ||
     /* file is readable by everyone */
            (sb->st_mode & S_IROTH));

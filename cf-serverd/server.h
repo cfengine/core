@@ -66,12 +66,14 @@ typedef struct
     Item *trustkeylist;                               /* "trustkeysfrom" */
     char *allowciphers;
 
+    /* ACL for resource_type "path". */
     Auth *admit;
     Auth *admittail;
 
     Auth *deny;
     Auth *denytail;
 
+    /* ACL for resource_types "literal", "query", "context", "variable". */
     Auth *varadmit;
     Auth *varadmittail;
 
@@ -88,13 +90,6 @@ typedef struct
  * @member trust Whether we'll blindly trust any key from the host, depends on
  *               the "trustkeysfrom" option in body server control. Default
  *               false, check for setting it is in CheckStoreKey().
- *
- * @TODO Add "admit_paths", "deny_paths", "admit_classes", "deny_classes",
- *       "admit_vars", "deny_vars", "admit_literals", "deny_literals", with
- *       all the resources that the connected client can access, computed
- *       during connection time by iterating over the global acls.  Hmmm, to
- *       do that properly we need the main ACLs indexed by IP/hostname/keys,
- *       not by resource like today...
  */
 struct ServerConnectionState_
 {
@@ -127,9 +122,8 @@ typedef struct
 } ServerFileGetState;
 
 
+/* Used in cf-serverd-functions.c. */
 void ServerEntryPoint(EvalContext *ctx, char *ipaddr, ConnectionInfo *info);
-void DeleteAuthList(Auth **list, Auth **list_tail);
-void PurgeOldConnections(Item **list, time_t now);
 
 
 AgentConnection *ExtractCallBackChannel(ServerConnectionState *conn);

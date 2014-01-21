@@ -19,6 +19,8 @@ bundle agent test
       # meta comment 4
       "metagrep" int => countlinesmatching(".*# meta comment.*",
                                            $(this.promise_filename));
+      "exactgrep" int => countlinesmatching("bundle agent test",
+                                           $(this.promise_filename));
       "nullgrep" int => countlinesmatching("blue hippo, purple elephant, yellow submarine",
                                            $(this.promise_filename));
 }
@@ -27,12 +29,14 @@ bundle agent check
 {
   classes:
       "ok" and => { strcmp("$(test.metagrep)", "5"), # the 4 comments plus the pattern!
+                    strcmp("$(test.exactgrep)", "1"),
                     strcmp("$(test.nullgrep)", "0") };
 
   reports:
     DEBUG::
-      "Grepping for 'meta comment' found $(test.metagrep) matches";
-      "Grepping for children's rhyme found $(test.nullgrep) matches";
+      "Grepping for 'meta comment' found $(test.metagrep) matches, expected 5";
+      "Grepping for exactly 'bundle agent test' found $(test.exactgrep) matches, expected 1";
+      "Grepping for children's rhyme found $(test.nullgrep) matches, expected 0";
     ok::
       "$(this.promise_filename) Pass";
     !ok::

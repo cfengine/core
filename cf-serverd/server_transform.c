@@ -144,12 +144,7 @@ void Summarize()
             Log(LOG_LEVEL_VERBOSE, "\t\tmaproot user: %s,", ipr->name);
         }
 
-        for (ip = ptr->accessIPs; ip != NULL; ip = ip->next)
-        {
-            Log(LOG_LEVEL_VERBOSE, "\t\tadmit hosts: %s", ip->name);
-        }
-
-        for (ip = ptr->accessIDs; ip != NULL; ip = ip->next)
+        for (ip = ptr->accesslist; ip != NULL; ip = ip->next)
         {
             Log(LOG_LEVEL_VERBOSE, "\t\tadmit hosts: %s", ip->name);
         }
@@ -161,12 +156,7 @@ void Summarize()
     {
         Log(LOG_LEVEL_VERBOSE, "\tPath: %s", ptr->path);
 
-        for (ip = ptr->accessIPs; ip != NULL; ip = ip->next)
-        {
-            Log(LOG_LEVEL_VERBOSE, "\t\tdeny hosts: %s", ip->name);
-        }
-
-        for (ip = ptr->accessIDs; ip != NULL; ip = ip->next)
+        for (ip = ptr->accesslist; ip != NULL; ip = ip->next)
         {
             Log(LOG_LEVEL_VERBOSE, "\t\tdeny hosts: %s", ip->name);
         }
@@ -182,7 +172,7 @@ void Summarize()
         {
             Log(LOG_LEVEL_VERBOSE, "%s,", ipr->name);
         }
-        for (ip = ptr->accessIPs; ip != NULL; ip = ip->next)
+        for (ip = ptr->accesslist; ip != NULL; ip = ip->next)
         {
             Log(LOG_LEVEL_VERBOSE, "Admit '%s' root=", ip->name);
         }
@@ -194,7 +184,7 @@ void Summarize()
     {
         Log(LOG_LEVEL_VERBOSE, "Object %s", ptr->path);
 
-        for (ip = ptr->accessIPs; ip != NULL; ip = ip->next)
+        for (ip = ptr->accesslist; ip != NULL; ip = ip->next)
         {
             Log(LOG_LEVEL_VERBOSE, "Deny '%s'", ip->name);
         }
@@ -782,12 +772,12 @@ static void AccessPromise_AddAccessConstraints(const EvalContext *ctx,
 
                 if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_ADMIT].lval) == 0)
                 {
-                    PrependItem(&(ap->accessIPs), RlistScalarValue(rp), NULL);
+                    PrependItem(&(ap->accesslist), RlistScalarValue(rp), NULL);
                     continue;
                 }
                 if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_DENY].lval) == 0)
                 {
-                    PrependItem(&(dp->accessIPs), RlistScalarValue(rp), NULL);
+                    PrependItem(&(dp->accesslist), RlistScalarValue(rp), NULL);
                     continue;
                 }
 
@@ -1023,7 +1013,7 @@ static void KeepServerRolePromise(EvalContext *ctx, const Promise *pp)
                 /* This is for remote class activation by means of cf-runagent.*/
                 if (strcmp(cp->lval, CF_REMROLE_BODIES[REMOTE_ROLE_AUTHORIZE].lval) == 0)
                 {
-                    PrependItem(&(ap->accessIPs), RlistScalarValue(rp), NULL);
+                    PrependItem(&(ap->accesslist), RlistScalarValue(rp), NULL);
                     continue;
                 }
             }

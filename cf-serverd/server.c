@@ -408,8 +408,7 @@ void DeleteAuthList(Auth **list, Auth **list_tail)
     {
         Auth *ap_next = ap->next;
 
-        DeleteItemList(ap->accessIPs);
-        DeleteItemList(ap->accessIDs);
+        DeleteItemList(ap->accesslist);
         DeleteItemList(ap->maproot);
         free(ap->path);
         free(ap);

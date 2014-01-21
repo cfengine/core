@@ -238,17 +238,12 @@ static int AccessControl(EvalContext *ctx, const char *req_path, ServerConnectio
                     Log(LOG_LEVEL_VERBOSE, "Mapping root privileges to access non-root files");
                 }
 
-                if ((IsMatchItemIn(ap->accessIPs, MapAddress(conn->ipaddr)))
-                    || (IsRegexItemIn(ctx, ap->accessIPs, conn->hostname)))
+                if ((IsMatchItemIn(ap->accesslist, MapAddress(conn->ipaddr)))
+                    || (IsRegexItemIn(ctx, ap->accesslist, conn->hostname)))
                 {
                     access = true;
                     Log(LOG_LEVEL_DEBUG, "Access granted to host: %s", conn->ipaddr);
                 }
-                /* else if (MatchKey(ap->accessIDs, conn->keyhash_str)) */
-                /* { */
-                /*     access = true; */
-                /*     Log(LOG_LEVEL_DEBUG, "Access granted: %s", conn->keyhash_str); */
-                /* } */
             }
             break;
         }
@@ -271,21 +266,14 @@ static int AccessControl(EvalContext *ctx, const char *req_path, ServerConnectio
             ||
             strcmp(transpath, transrequest) == 0)
         {
-            if ((IsMatchItemIn(dp->accessIPs, MapAddress(conn->ipaddr))) ||
-                (IsRegexItemIn(ctx, dp->accessIPs, conn->hostname)))
+            if ((IsMatchItemIn(dp->accesslist, MapAddress(conn->ipaddr))) ||
+                (IsRegexItemIn(ctx, dp->accesslist, conn->hostname)))
             {
                 access = false;
                 Log(LOG_LEVEL_INFO, "Host '%s' in deny list, explicitly denying access to '%s'",
                     conn->ipaddr, transrequest);
                 break;
             }
-            /* else if (MatchItem(dp->accessIDs, conn->keyhash_str)) */
-            /* { */
-            /*     access = false; */
-            /*     Log(LOG_LEVEL_INFO, "Host '%s' in denykeys, explicitly denying access to '%s'", */
-            /*         conn->ipaddr, transrequest); */
-            /*     break; */
-            /* } */
         }
     }
 
@@ -374,8 +362,8 @@ static int LiteralAccessControl(EvalContext *ctx, char *in, ServerConnectionStat
                     Log(LOG_LEVEL_VERBOSE, "No root privileges granted");
                 }
 
-                if ((IsMatchItemIn(ap->accessIPs, MapAddress(conn->ipaddr)))
-                    || (IsRegexItemIn(ctx, ap->accessIPs, conn->hostname)))
+                if ((IsMatchItemIn(ap->accesslist, MapAddress(conn->ipaddr)))
+                    || (IsRegexItemIn(ctx, ap->accesslist, conn->hostname)))
                 {
                     access = true;
                     Log(LOG_LEVEL_DEBUG, "Access privileges - match found\n");
@@ -388,8 +376,8 @@ static int LiteralAccessControl(EvalContext *ctx, char *in, ServerConnectionStat
     {
         if (strcmp(ap->path, name) == 0)
         {
-            if ((IsMatchItemIn(ap->accessIPs, MapAddress(conn->ipaddr)))
-                || (IsRegexItemIn(ctx, ap->accessIPs, conn->hostname)))
+            if ((IsMatchItemIn(ap->accesslist, MapAddress(conn->ipaddr)))
+                || (IsRegexItemIn(ctx, ap->accesslist, conn->hostname)))
             {
                 access = false;
                 Log(LOG_LEVEL_VERBOSE, "Host %s explicitly denied access to %s", conn->hostname, name);
@@ -478,8 +466,8 @@ static Item *ContextAccessControl(EvalContext *ctx, char *in, ServerConnectionSt
                             Log(LOG_LEVEL_VERBOSE, "No root privileges granted");
                         }
 
-                        if ((IsMatchItemIn(ap->accessIPs, MapAddress(conn->ipaddr)))
-                            || (IsRegexItemIn(ctx, ap->accessIPs, conn->hostname)))
+                        if ((IsMatchItemIn(ap->accesslist, MapAddress(conn->ipaddr)))
+                            || (IsRegexItemIn(ctx, ap->accesslist, conn->hostname)))
                         {
                             access = true;
                             Log(LOG_LEVEL_DEBUG, "Access privileges - match found");
@@ -492,8 +480,8 @@ static Item *ContextAccessControl(EvalContext *ctx, char *in, ServerConnectionSt
             {
                 if (strcmp(ap->path, ip->name) == 0)
                 {
-                    if ((IsMatchItemIn(ap->accessIPs, MapAddress(conn->ipaddr)))
-                        || (IsRegexItemIn(ctx, ap->accessIPs, conn->hostname)))
+                    if ((IsMatchItemIn(ap->accesslist, MapAddress(conn->ipaddr)))
+                        || (IsRegexItemIn(ctx, ap->accesslist, conn->hostname)))
                     {
                         access = false;
                         Log(LOG_LEVEL_VERBOSE, "Host %s explicitly denied access to context %s", conn->hostname, ip->name);

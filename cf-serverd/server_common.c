@@ -303,11 +303,11 @@ static int AuthorizeRoles(EvalContext *ctx, ServerConnectionState *conn, char *a
             if (StringMatchFull(ap->path, RlistScalarValue(rp)))
             {
                 /* We have a pattern covering this class - so are we allowed to activate it? */
-                if ((IsMatchItemIn(ap->accessIPs, MapAddress(conn->ipaddr))) ||
-                    (IsRegexItemIn(ctx, ap->accessIPs, conn->hostname)) ||
-                    (IsRegexItemIn(ctx, ap->accessIPs, userid1)) ||
-                    (IsRegexItemIn(ctx, ap->accessIPs, userid2)) ||
-                    (IsRegexItemIn(ctx, ap->accessIPs, conn->username)))
+                if ((IsMatchItemIn(ap->accesslist, MapAddress(conn->ipaddr))) ||
+                    (IsRegexItemIn(ctx, ap->accesslist, conn->hostname)) ||
+                    (IsRegexItemIn(ctx, ap->accesslist, userid1)) ||
+                    (IsRegexItemIn(ctx, ap->accesslist, userid2)) ||
+                    (IsRegexItemIn(ctx, ap->accesslist, conn->username)))
                 {
                     Log(LOG_LEVEL_VERBOSE, "Attempt to define role/class %s is permitted", RlistScalarValue(rp));
                     permitted = true;

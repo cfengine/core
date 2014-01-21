@@ -39,6 +39,7 @@
 typedef struct Auth_ Auth;
 
 /* Access rights for a path, literal, context (classpattern), variable */
+/* LEGACY CODE the new struct is paths_acl etc. */
 struct Auth_
 {
     char *path;
@@ -46,8 +47,7 @@ struct Auth_
     int classpattern;
     int variable;
 
-    Item *accessIPs;         /* which hosts -- IP or hostnames */
-    Item *accessIDs;         /* Which IDs -- SHA= or MD5=  */
+    Item *accesslist;        /* which hosts -- IP or hostnames */
     Item *maproot;           /* which hosts should have root read access */
     int encrypt;             /* which files HAVE to be transmitted securely */
 

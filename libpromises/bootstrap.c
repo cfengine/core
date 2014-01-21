@@ -330,14 +330,24 @@ bool WriteBuiltinFailsafePolicyToPath(const char *filename)
             "  !windows.have_ppkeys::\n"
             "   \"$(sys.inputdir)\" \n"
             "            handle => \"cfe_internal_bootstrap_update_files_sys_workdir_inputs_not_windows\",\n"
+#ifdef __MINGW32__
+            // This section is needed because Windows attempts to copy from "C:\Program Files\Cfengine\masterfiles".
+            "         copy_from => u_scp(\"/var/cfengine/masterfiles\"),\n"
+#else
             "         copy_from => u_scp(\"$(sys.masterdir)\"),\n"
+#endif /* !__MINGW32__ */
             "      depth_search => u_recurse(\"inf\"),\n"
             "           classes => repaired(\"got_policy\");\n"
             "\n"
             "  windows.have_ppkeys::\n"
             "   \"$(sys.inputdir)\" \n"
             "            handle => \"cfe_internal_bootstrap_update_files_sys_workdir_inputs_windows\",\n"
+#ifdef __MINGW32__
+            // This section is needed because Windows attempts to copy from "C:\Program Files\Cfengine\masterfiles".
+            "         copy_from => u_scp(\"/var/cfengine/masterfiles\"),\n"
+#else
             "         copy_from => u_scp(\"$(sys.masterdir)\"),\n"
+#endif /* !__MINGW32__ */
             "      depth_search => u_recurse(\"inf\"),\n"
             "           classes => repaired(\"got_policy\");\n\n"
             "   \"$(sys.workdir)\\bin-twin\\.\"\n"

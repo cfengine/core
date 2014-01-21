@@ -12,10 +12,11 @@
        - Logging contexts to local database (cf_classes.tcdb) have been deprecated. 
        - Linux flavor "SUSE" now correctly spelled with all uppercase in variables and class names
          (Redmine #3734).
+       - #TODO# function caching
+       - $(this.promise_filename) and $(..._dirname) variables are now absolute paths. (Redmine #3839)
 
        New features:
        - New promise type "users" for managing local user accounts.
-       - #TODO# new promise type "users" for managing user accounts
        - New options to cf-promises: --show-classes and --show-vars
        - support colorized output for agent binaries with command line option --color
        - Introduced alias 'policy_server' for context 'am_policy_hub' (the latter will be deprecated)
@@ -23,6 +24,7 @@
        - #TODO# new functions
           - findfiles
           - eval
+          - packagesmatching
        - #TODO# support for mustache templates
        - #TODO# new datastruct data type for handling of structured data (ie JSON)
           - including supporting functions

@@ -2003,7 +2003,7 @@ static FnCallResult FnCallCountLinesMatching(ARG_UNUSED EvalContext *ctx, ARG_UN
         size_t line_size = CF_BUFSIZE;
         char *line = xmalloc(line_size);
 
-        while (getline(&line, &line_size, fin) != -1)
+        while (CfReadLine(&line, &line_size, fin) != -1)
         {
             if (StringMatchFull(regex, line))
             {

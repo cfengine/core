@@ -1,6 +1,7 @@
 ##############################################################################
 #
 # Redmine #3576: cf-promises should not run agent bundles
+# NOTE: changed to if --eval-functions=no
 #
 ##############################################################################
 
@@ -20,9 +21,8 @@ bundle agent init
 bundle agent test
 {
 vars:
-  "subout" string => execresult("$(sys.cf_promises) -v -f $(this.promise_filename).sub | $(G.grep) PURPLE", "useshell");
+  "subout" string => execresult("$(sys.cf_promises) --eval-functions=no -v -f $(this.promise_filename).sub | $(G.grep) PURPLE", "useshell");
 }
-
 
 bundle agent check
 {

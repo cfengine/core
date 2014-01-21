@@ -37,6 +37,7 @@ typedef struct
     LogLevel log_level;
     LogLevel report_level;
     bool color;
+    bool syslog_include_prefix;
 
     LoggingPrivContext *pctx;
 } LoggingContext;
@@ -254,7 +255,7 @@ void VLog(LogLevel level, const char *fmt, va_list ap)
 
     if (level <= lctx->log_level)
     {
-        LogToSystemLog(hooked_msg, level);
+        LogToSystemLog(lctx->syslog_include_prefix ? hooked_msg : msg, level);
     }
     free(msg);
     free(hooked_msg);
@@ -307,4 +308,10 @@ void LoggingSetColor(bool enabled)
 {
     LoggingContext *lctx = GetCurrentThreadContext();
     lctx->color = enabled;
+}
+
+void LoggingSetSyslogIncludePrefix(bool enabled)
+{
+    LoggingContext *lctx = GetCurrentThreadContext();
+    lctx->syslog_include_prefix = enabled;
 }

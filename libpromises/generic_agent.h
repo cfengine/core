@@ -49,6 +49,7 @@ typedef struct
 
     bool tty_interactive; // agent is running interactively, via tty/terminal interface
     bool color;
+    bool syslog_include_prefix;
 
     // agent state
     bool ignore_missing_bundles;

@@ -63,6 +63,7 @@ void LogSetGlobalLevel(LogLevel level);
 LogLevel LogGetGlobalLevel(void);
 
 void LoggingSetColor(bool enabled);
+void LoggingSetSyslogIncludePrefix(bool enabled);
 
 /*
  * Portable strerror(errno)

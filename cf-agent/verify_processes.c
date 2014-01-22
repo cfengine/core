@@ -155,10 +155,7 @@ static PromiseResult VerifyProcessOp(EvalContext *ctx, Item *procdata, Attribute
             for (const Rlist *rp = a.process_count.out_of_range_define; rp != NULL; rp = rp->next)
             {
                 ClassRef ref = ClassRefParse(RlistScalarValue(rp));
-                if (!IsDefinedClass(ctx, ref.name, ref.ns))
-                {
-                    EvalContextClassPut(ctx, PromiseGetNamespace(pp), RlistScalarValue(rp), true, CONTEXT_SCOPE_NAMESPACE, "source=promise");
-                }
+                EvalContextClassPut(ctx, PromiseGetNamespace(pp), RlistScalarValue(rp), true, CONTEXT_SCOPE_NAMESPACE, "source=promise");
                 ClassRefDestroy(ref);
             }
             out_of_range = true;
@@ -168,10 +165,7 @@ static PromiseResult VerifyProcessOp(EvalContext *ctx, Item *procdata, Attribute
             for (const Rlist *rp = a.process_count.in_range_define; rp != NULL; rp = rp->next)
             {
                 ClassRef ref = ClassRefParse(RlistScalarValue(rp));
-                if (!IsDefinedClass(ctx, ref.name, ref.ns))
-                {
-                    EvalContextClassPut(ctx, PromiseGetNamespace(pp), RlistScalarValue(rp), true, CONTEXT_SCOPE_NAMESPACE, "source=promise");
-                }
+                EvalContextClassPut(ctx, PromiseGetNamespace(pp), RlistScalarValue(rp), true, CONTEXT_SCOPE_NAMESPACE, "source=promise");
                 ClassRefDestroy(ref);
             }
             cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "Process promise for '%s' is kept", pp->promiser);

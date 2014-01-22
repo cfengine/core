@@ -246,7 +246,7 @@ int main(int argc, char *argv[])
     else
     {
         Log(LOG_LEVEL_ERR, "CFEngine was not able to get confirmation of promises from cf-promises, so going to failsafe");
-        EvalContextClassPut(ctx, NULL, "failsafe_fallback", false, CONTEXT_SCOPE_NAMESPACE, "source=agent");
+        EvalContextClassPutHard(ctx, "failsafe_fallback", "source=agent");
         GenericAgentConfigSetInputFile(config, GetInputDir(), "failsafe.cf");
         policy = GenericAgentLoadPolicy(ctx, config);
     }

@@ -1818,8 +1818,7 @@ void GenericAgentConfigApply(EvalContext *ctx, const GenericAgentConfig *config)
 
     if (DONTDO)
     {
-        EvalContextClassPut(ctx, NULL, "opt_dry_run", false, CONTEXT_SCOPE_NAMESPACE,
-                            "cfe_internal,source=environment");
+        EvalContextClassPutHard(ctx, "opt_dry_run", "cfe_internal,source=environment");
     }
 }
 

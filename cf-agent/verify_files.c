@@ -54,6 +54,7 @@
 #include <expand.h>
 #include <mustache.h>
 #include <known_dirs.h>
+#include <evalfunction.h>
 
 static void LoadSetuid(Attributes a);
 static PromiseResult SaveSetuid(EvalContext *ctx, Attributes a, const Promise *pp);
@@ -438,65 +439,6 @@ exit:
 }
 
 /*****************************************************************************/
-
-static JsonElement *DefaultTemplateData(const EvalContext *ctx)
-{
-    JsonElement *hash = JsonObjectCreate(10);
-    Writer *w;
-
-    {
-        ClassTableIterator *it = EvalContextClassTableIteratorNewGlobal(ctx, NULL, true, true);
-        Class *cls = NULL;
-        while ((cls = ClassTableIteratorNext(it)))
-        {
-            char *key = ClassRefToString(cls->ns, cls->name);
-            JsonObjectAppendBool(hash, key, true);
-            free(key);
-        }
-        ClassTableIteratorDestroy(it);
-    }
-
-    {
-        ClassTableIterator *it = EvalContextClassTableIteratorNewLocal(ctx);
-        Class *cls = NULL;
-        while ((cls = ClassTableIteratorNext(it)))
-        {
-            char *key = ClassRefToString(cls->ns, cls->name);
-            JsonObjectAppendBool(hash, key, true);
-            free(key);
-        }
-        ClassTableIteratorDestroy(it);
-    }
-
-    {
-        VariableTableIterator *it = EvalContextVariableTableIteratorNew(ctx, NULL, NULL, NULL);
-        Variable *var = NULL;
-        while ((var = VariableTableIteratorNext(it)))
-        {
-            // TODO: need to get a CallRef, this is bad
-            char *scope_key = ClassRefToString(var->ref->ns, var->ref->scope);
-            JsonElement *scope_obj = JsonObjectGetAsObject(hash, scope_key);
-            if (!scope_obj)
-            {
-                scope_obj = JsonObjectCreate(50);
-                JsonObjectAppendObject(hash, scope_key, scope_obj);
-            }
-            free(scope_key);
-
-            char *lval_key = VarRefToString(var->ref, false);
-            JsonObjectAppendElement(scope_obj, lval_key, RvalToJson(var->rval));
-            free(lval_key);
-        }
-        VariableTableIteratorDestroy(it);
-    }
-
-    w = StringWriter();
-    JsonWrite(w, hash, 0);
-    Log(LOG_LEVEL_DEBUG, "Generated DefaultTemplateData '%s'", StringWriterData(w));
-    WriterClose(w);
-
-    return hash;
-}
 
 PromiseResult ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes a, const Promise *pp)
 {

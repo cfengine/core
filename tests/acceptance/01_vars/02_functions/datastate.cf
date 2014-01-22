@@ -1,0 +1,63 @@
+# Test that the datastate() function gives good data
+
+body common control
+{
+      inputs => { "../../default.cf.sub", "datastate.cf.sub" };
+      bundlesequence => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle agent init
+{
+  classes:
+      "a" expression => "any", scope => "namespace";
+      "b" expression => "any";
+      "c" expression => "!any";
+
+  vars:
+      "x" string => "1";
+      "y" data => parsejson('{"ykey":["yvalue1", "yvalue2"]}');
+      "z" slist => { "z1", "z2", "z3" };
+}
+
+bundle agent test
+{
+  vars:
+      "state" data => datastate();
+}
+
+bundle agent check
+{
+  vars:
+      "init_state_str" string => format("%S", "test.state[vars][init]");
+      "ns_state_str" string => format("%S", "test.state[vars][visible_namespace:included]");
+      "known_classes" slist => getindices("test.state[classes]");
+      "printed_classes" string => format("%S", known_classes);
+      "init_expected" string => '{"x":"1","y":{"ykey":["yvalue1","yvalue2"]},"z":["z1","z2","z3"]}';
+      "ns_expected" string => '{"i":"1","l":[1,"l","|"],"j":"two","k":["k2","everest"]}';
+
+  classes:
+      "init_ok" expression => strcmp($(init_state_str), $(init_expected));
+      "ns_ok" expression => strcmp($(ns_state_str), $(ns_expected));
+      "classes_ok" and => { some("cfengine_3", known_classes),
+                            some("a", known_classes),
+                            some("visible_namespace:foo", known_classes) };
+      "ok" and => { "init_ok", "ns_ok", "classes_ok" };
+
+  reports:
+    DEBUG.!ns_ok::
+      "visible_namespace:included data state is $(ns_state_str)";
+      "expected visible_namespace:included state is $(ns_expected)";
+      "expected state != visible_namespace:included data state";
+    DEBUG.!init_ok::
+      "init data state is $(init_state_str)";
+      "expected init state is $(init_expected)";
+      "expected init state != init data state";
+    DEBUG.!classes_ok::
+      "expected classes a, visible_namespace:foo, and cfengine_3 were not in $(printed_classes)";
+
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

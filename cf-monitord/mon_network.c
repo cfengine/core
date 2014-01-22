@@ -214,6 +214,7 @@ void MonNetworkGatherData(double *cf_this)
             {
                 /* FIXME: no logging */
                 cf_pclose(pp);
+                free(vbuff);
                 return;
             }
             else

@@ -68,7 +68,7 @@ bool access_CheckResource(const struct resource_acl *acl,
     }
     if (!access && acl->admit_keys != NULL)
     {
-        bool ret = strlist_BinarySearch(acl->admit_keys, key, &pos);
+        bool ret = StrList_BinarySearch(acl->admit_keys, key, &pos);
         if (ret)
         {
             rule = acl->admit_keys->list[pos]->str;
@@ -79,7 +79,7 @@ bool access_CheckResource(const struct resource_acl *acl,
     if (!access && acl->admit_hostnames != NULL && hostname != NULL)
     {
         size_t hostname_len = strlen(hostname);
-        size_t pos = strlist_SearchShortestPrefix(acl->admit_hostnames,
+        size_t pos = StrList_SearchShortestPrefix(acl->admit_hostnames,
                                                   hostname, hostname_len,
                                                   false);
         if (pos != (size_t) -1)
@@ -121,7 +121,7 @@ bool access_CheckResource(const struct resource_acl *acl,
     }
     if (access && acl->deny_keys != NULL)
     {
-        bool ret = strlist_BinarySearch(acl->deny_keys, key, &pos);
+        bool ret = StrList_BinarySearch(acl->deny_keys, key, &pos);
         if (ret)
         {
             rule = acl->deny_keys->list[pos]->str;
@@ -132,7 +132,7 @@ bool access_CheckResource(const struct resource_acl *acl,
     if (access && acl->deny_hostnames != NULL && hostname != NULL)
     {
         size_t hostname_len = strlen(hostname);
-        size_t pos = strlist_SearchShortestPrefix(acl->deny_hostnames,
+        size_t pos = StrList_SearchShortestPrefix(acl->deny_hostnames,
                                                   hostname, hostname_len,
                                                   false);
         if (pos != (size_t) -1)
@@ -167,7 +167,7 @@ bool acl_CheckPath(const struct acl *acl, const char *reqpath,
     bool access = false;                          /* Deny access by default */
     size_t reqpath_len = strlen(reqpath);
 
-    size_t pos = strlist_SearchLongestPrefix(acl->resource_names,
+    size_t pos = StrList_SearchLongestPrefix(acl->resource_names,
                                              reqpath, reqpath_len,
                                              FILE_SEPARATOR, true);
 
@@ -200,7 +200,7 @@ bool acl_CheckPath(const struct acl *acl, const char *reqpath,
     if (mangled_path_len != 0 &&
         mangled_path_len != (size_t) -1) /* Overflow, TODO handle separately. */
     {
-        size_t pos2 = strlist_SearchLongestPrefix(acl->resource_names,
+        size_t pos2 = StrList_SearchLongestPrefix(acl->resource_names,
                                                   mangled_path, mangled_path_len,
                                                   FILE_SEPARATOR, true);
 
@@ -233,7 +233,7 @@ bool acl_CheckExact(const struct acl *acl, const char *req_string,
     bool access = false;
 
     size_t pos = -1;
-    bool found = strlist_BinarySearch(acl->resource_names, req_string, &pos);
+    bool found = StrList_BinarySearch(acl->resource_names, req_string, &pos);
     if (found)
     {
         const struct resource_acl *racl = &acl->acls[pos];
@@ -264,7 +264,7 @@ bool acl_CheckExact(const struct acl *acl, const char *req_string,
  *          i.e. pathlist contains no strings prefixed with s.
  */
 static char *PathBinarySearch(const char *s, size_t s_len,
-                                    const struct strlist *pathlist,
+                                    const StrList *pathlist,
                                     size_t *min, size_t *max)
 {
     char *found = NULL;
@@ -330,7 +330,7 @@ static char *PathBinarySearch(const char *s, size_t s_len,
  * does not have to be '\0'-terminated. s can be a file or a directory,
  * i.e. it can end or not end with '/'. */
 static char *FindLongestParentDir(const char *s, size_t s_len,
-                                  struct strlist *dirlist)
+                                  StrList *dirlist)
 {
     /* Remember, NULL strlist is equivalent to empty strlist. */
     if (dirlist == NULL)
@@ -395,7 +395,7 @@ size_t acl_SortedInsert(struct acl **a, const char *handle)
     struct acl *acl = *a;                                    /* for clarity */
 
     size_t position = (size_t) -1;
-    bool found = strlist_BinarySearch(acl->resource_names,
+    bool found = StrList_BinarySearch(acl->resource_names,
                                       handle, &position);
     if (found)
     {
@@ -430,7 +430,7 @@ size_t acl_SortedInsert(struct acl **a, const char *handle)
 
     /* 2. We now have enough space, so insert the resource at the proper
           index. */
-    size_t ret = strlist_Insert(&acl->resource_names,
+    size_t ret = StrList_Insert(&acl->resource_names,
                                 handle, position);
     if (ret == (size_t) -1)
     {
@@ -454,17 +454,17 @@ size_t acl_SortedInsert(struct acl **a, const char *handle)
 
 void acl_Free(struct acl *a)
 {
-    strlist_Free(&a->resource_names);
+    StrList_Free(&a->resource_names);
 
     size_t i;
     for (i = 0; i < a->len; i++)
     {
-        strlist_Free(&a->acls[i].admit_ips);
-        strlist_Free(&a->acls[i].admit_hostnames);
-        strlist_Free(&a->acls[i].admit_keys);
-        strlist_Free(&a->acls[i].deny_ips);
-        strlist_Free(&a->acls[i].deny_hostnames);
-        strlist_Free(&a->acls[i].deny_keys);
+        StrList_Free(&a->acls[i].admit_ips);
+        StrList_Free(&a->acls[i].admit_hostnames);
+        StrList_Free(&a->acls[i].admit_keys);
+        StrList_Free(&a->acls[i].deny_ips);
+        StrList_Free(&a->acls[i].deny_hostnames);
+        StrList_Free(&a->acls[i].deny_keys);
     }
 
     free(a);

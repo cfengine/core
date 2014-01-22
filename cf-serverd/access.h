@@ -8,7 +8,7 @@
 #include <platform.h>
 
 #include <map.h>                                          /* StringMap */
-#include "strlist.h"                                      /* struct strlist */
+#include "strlist.h"                                      /* StrList */
 
 
 /**
@@ -19,16 +19,16 @@
  *        elements.
  *
  * @note: Currently these lists are binary searched, so after filling them up
- *        make sure you call strlist_Sort() to sort them.
+ *        make sure you call StrList_Sort() to sort them.
  */
 struct resource_acl
 {
-    struct strlist *admit_ips;
-    struct strlist *admit_hostnames;
-    struct strlist *admit_keys;
-    struct strlist *deny_ips;
-    struct strlist *deny_hostnames;
-    struct strlist *deny_keys;
+    StrList *admit_ips;
+    StrList *admit_hostnames;
+    StrList *admit_keys;
+    StrList *deny_ips;
+    StrList *deny_hostnames;
+    StrList *deny_keys;
 };
 
 enum acl_type
@@ -51,14 +51,14 @@ enum acl_type
  *
  * @WARNING Remember to store directories *always* with traling '/', else they
  *          won't match for children dirs (on purpose, and this functionality
- *          was built into strlist_SearchLongestPrefix()).
+ *          was built into StrList_SearchLongestPrefix()).
  */
 struct acl
 {
 //TODO    enum acl_type resource_type;
     size_t len;                        /* Length of the following arrays */
     size_t alloc_len;                  /* Used for realloc() economy  */
-    struct strlist *resource_names;    /* paths, class names, variables etc */
+    StrList *resource_names;    /* paths, class names, variables etc */
     struct resource_acl acls[];
 };
 

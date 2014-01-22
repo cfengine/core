@@ -38,8 +38,8 @@ int string_CompareFromEnd(const struct string **s1,
  *
  * @note strlist can be NULL, which is equivalent to having 0 elements. In
  *       fact, NULL is the properly initialised strlist, it will be
- *       automatically allocated after using strlist_Insert() or
- *       strlist_Append().
+ *       automatically allocated after using StrList_Insert() or
+ *       StrList_Append().
  *
  * @note strlist can be a container for *any* kind of data, not only strings,
  *       as long as it is a one-piece memory block, and a struct with first
@@ -54,22 +54,22 @@ typedef struct strlist
     struct string *list[];
 } StrList;
 
-size_t strlist_Len(const struct strlist *sl);
-char *strlist_At(const struct strlist *sl, size_t idx);
-size_t strlist_Insert(struct strlist **sl, const char *s, size_t idx);
-size_t strlist_Append(struct strlist **sl, const char *s);
-void strlist_Finalise(struct strlist **sl);
-void strlist_Free(struct strlist **sl);
-void strlist_Sort(struct strlist *sl, StringComparatorF f);
-bool strlist_BinarySearchString(const struct strlist *slp,
+size_t StrList_Len(const StrList *sl);
+char *StrList_At(const StrList *sl, size_t idx);
+size_t StrList_Insert(StrList **sl, const char *s, size_t idx);
+size_t StrList_Append(StrList **sl, const char *s);
+void StrList_Finalise(StrList **sl);
+void StrList_Free(StrList **sl);
+void StrList_Sort(StrList *sl, StringComparatorF f);
+bool StrList_BinarySearchString(const StrList *slp,
                                 const struct string *s,
                                 size_t *position);
-bool strlist_BinarySearch(const struct strlist *slp, const char *s,
+bool StrList_BinarySearch(const StrList *slp, const char *s,
                           size_t *position);
-size_t strlist_SearchLongestPrefix(const struct strlist *sl,
+size_t StrList_SearchLongestPrefix(const StrList *sl,
                                   const char *s, size_t s_len,
                                   char separator, bool direction_forward);
-size_t strlist_SearchShortestPrefix(const struct strlist *sl,
+size_t StrList_SearchShortestPrefix(const StrList *sl,
                                     const char *s, size_t s_len,
                                     bool direction_forward);
 

@@ -145,7 +145,7 @@ int FullRead(int fd, char *ptr, size_t len)
  * @note difference with files_names.h:IsDir() is that this doesn't
  *       follow symlinks, so a symlink is never a directory...
  */
-int IsDir2(const char *path)
+int IsDirReal(const char *path)
 {
     struct stat s;
 

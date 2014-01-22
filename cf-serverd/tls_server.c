@@ -37,7 +37,7 @@
 #include <connection_info.h>
 #include <string_lib.h>                                  /* StringMatchFull */
 #include <known_dirs.h>
-#include <file_lib.h>                                           /* IsDir2 */
+#include <file_lib.h>                                           /* IsDirReal */
 
 #include "access.h"                 /* access_CheckResource, acl_CheckExact */
 
@@ -791,7 +791,7 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
         {
             goto protocol_error;
         }
-        if (IsDir2(filename) == 1)                            /* append '/' */
+        if (IsDirReal(filename) == 1)                            /* append '/' */
         {
             assert(ret + 1 < sizeof(filename));
             filename[ret] = FILE_SEPARATOR;

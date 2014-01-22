@@ -45,7 +45,7 @@
 #include <syslog_client.h>
 #include <verify_classes.h>
 #include <generic_agent.h> /* HashControls */
-#include <file_lib.h>      /* IsDir2 */
+#include <file_lib.h>      /* IsDirReal */
 
 #include "server_common.h"                         /* PreprocessRequestPath */
 #include "access.h"
@@ -932,7 +932,7 @@ static void KeepFileAccessPromise(const EvalContext *ctx, const Promise *pp)
         goto err_too_long;
     }
 
-    int is_dir = IsDir2(path);
+    int is_dir = IsDirReal(path);
     if (is_dir == -1)
     {
         Log(LOG_LEVEL_WARNING,

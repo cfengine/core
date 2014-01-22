@@ -307,7 +307,7 @@ FnCallResult FnCallEvaluate(EvalContext *ctx, FnCall *fp, const Promise *caller)
         Writer *w = StringWriter();
         FnCallWrite(w, fp);
         Log(LOG_LEVEL_DEBUG, "Using previously cached result for function '%s'", StringWriterData(w));
-        StringWriterClose(w);
+        WriterClose(w);
 
         return (FnCallResult) { FNCALL_SUCCESS, RvalCopy(cached_rval) };
     }
@@ -325,7 +325,7 @@ FnCallResult FnCallEvaluate(EvalContext *ctx, FnCall *fp, const Promise *caller)
         Writer *w = StringWriter();
         FnCallWrite(w, fp);
         Log(LOG_LEVEL_VERBOSE, "Caching result for function '%s'", StringWriterData(w));
-        StringWriterClose(w);
+        WriterClose(w);
 
         EvalContextFunctionCachePut(ctx, fp, expargs, &result.rval);
     }

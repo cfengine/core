@@ -39,7 +39,7 @@
 #include <known_dirs.h>
 #include <file_lib.h>                                           /* IsDirReal */
 
-#include "access.h"                 /* access_CheckResource, acl_CheckExact */
+#include "server_access.h"          /* access_CheckResource, acl_CheckExact */
 
 
 static SSL_CTX *SSLSERVERCONTEXT = NULL; /* GLOBAL_X */

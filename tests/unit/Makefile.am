@@ -167,7 +167,7 @@ protocol_test_SOURCES = protocol_test.c \
 	../../cf-serverd/cf-serverd-enterprise-stubs.c \
 	../../cf-serverd/server_transform.c \
 	../../cf-serverd/cf-serverd-functions.c \
-	../../cf-serverd/access.c \
+	../../cf-serverd/server_access.c \
 	../../cf-serverd/strlist.c
 protocol_test_LDADD = ../../libpromises/libpromises.la libtest.la
 

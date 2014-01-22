@@ -48,7 +48,7 @@
 #include <file_lib.h>      /* IsDirReal */
 
 #include "server_common.h"                         /* PreprocessRequestPath */
-#include "access.h"
+#include "server_access.h"
 #include "strlist.h"
 
 

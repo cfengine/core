@@ -240,7 +240,8 @@ static PromiseResult VerifyEnvironments(EvalContext *ctx, Attributes a, const Pr
 
     Log(LOG_LEVEL_VERBOSE, "Selecting environment type '%s' '%s'", a.env.type, hyper_uri);
 
-    if (!IsDefinedClass(ctx, a.env.host, NULL))
+    ClassRef environment_host_ref = ClassRefParse(a.env.host);
+    if (!EvalContextClassGet(ctx, environment_host_ref.ns, environment_host_ref.name))
     {
         switch (a.env.state)
         {
@@ -256,6 +257,7 @@ static PromiseResult VerifyEnvironments(EvalContext *ctx, Attributes a, const Pr
                   "This is not the promised host for the environment, but it does not promise a run state, so take promise as valid");
         }
     }
+    ClassRefDestroy(environment_host_ref);
 
     virInitialize();
 

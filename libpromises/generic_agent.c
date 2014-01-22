@@ -180,6 +180,7 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
         {
             Log(LOG_LEVEL_VERBOSE, "This agent is bootstrapped to '%s'", existing_policy_server);
             SetPolicyServer(ctx, existing_policy_server);
+            free(existing_policy_server);
             UpdateLastPolicyUpdateTime(ctx);
         }
         else

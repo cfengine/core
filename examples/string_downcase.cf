@@ -29,14 +29,14 @@ body common control
 bundle agent example
 {
   vars:
-      "length" int =>  strlen("abc"); # will contain "3"
+      "downcase" string => string_downcase("ABC"); # will contain "abc"
   reports:
-      "length of string abc = $(length)";
+      "downcased ABC = $(downcase)";
 }
 #+end_src
 ###############################################################################
 #+begin_src example_output
 #@ ```
-#@ 2013-12-20T13:44:35-0500   notice: /default/example: R: length of string abc = 3
+#@ 2013-12-20T13:44:29-0500   notice: /default/example: R: downcased ABC = abc
 #@ ```
 #+end_src

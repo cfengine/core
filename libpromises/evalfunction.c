@@ -1200,7 +1200,7 @@ static FnCallResult FnCallTextXform(ARG_UNUSED EvalContext *ctx, FnCall *fp, Rli
     strncpy(buf, string, sizeof(buf) - 1);
     len = strlen(buf);
 
-    if (!strcmp(fp->name, "downcase"))
+    if (!strcmp(fp->name, "string_downcase"))
     {
         int pos = 0;
         for (pos = 0; pos < len; pos++)
@@ -1208,7 +1208,7 @@ static FnCallResult FnCallTextXform(ARG_UNUSED EvalContext *ctx, FnCall *fp, Rli
             buf[pos] = tolower(buf[pos]);
         }
     }
-    else if (!strcmp(fp->name, "upcase"))
+    else if (!strcmp(fp->name, "string_upcase"))
     {
         int pos = 0;
         for (pos = 0; pos < len; pos++)
@@ -1216,7 +1216,7 @@ static FnCallResult FnCallTextXform(ARG_UNUSED EvalContext *ctx, FnCall *fp, Rli
             buf[pos] = toupper(buf[pos]);
         }
     }
-    else if (!strcmp(fp->name, "reversestring"))
+    else if (!strcmp(fp->name, "string_reverse"))
     {
         int c, i, j;
         for (i = 0, j = len - 1; i < j; i++, j--)
@@ -1226,11 +1226,11 @@ static FnCallResult FnCallTextXform(ARG_UNUSED EvalContext *ctx, FnCall *fp, Rli
             buf[j] = c;
         }
     }
-    else if (!strcmp(fp->name, "strlen"))
+    else if (!strcmp(fp->name, "string_length"))
     {
         sprintf(buf, "%d", len);
     }
-    else if (!strcmp(fp->name, "head"))
+    else if (!strcmp(fp->name, "string_head"))
     {
         long max = IntFromString(RlistScalarValue(finalargs->next));
         if (max < sizeof(buf))
@@ -1238,7 +1238,7 @@ static FnCallResult FnCallTextXform(ARG_UNUSED EvalContext *ctx, FnCall *fp, Rli
             buf[max] = '\0';
         }
     }
-    else if (!strcmp(fp->name, "tail"))
+    else if (!strcmp(fp->name, "string_tail"))
     {
         long max = IntFromString(RlistScalarValue(finalargs->next));
         if (max < len)
@@ -6876,17 +6876,17 @@ const FnCallType CF_FNCALL_TYPES[] =
                   FNCALL_OPTION_VARARG, FNCALL_CATEGORY_UTILS, SYNTAX_STATUS_NORMAL),
 
     // Text xform functions
-    FnCallTypeNew("downcase", DATA_TYPE_STRING, XFORM_ARGS, &FnCallTextXform, "Convert a string to lowercase",
+    FnCallTypeNew("string_downcase", DATA_TYPE_STRING, XFORM_ARGS, &FnCallTextXform, "Convert a string to lowercase",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
-    FnCallTypeNew("head", DATA_TYPE_STRING, XFORM_SUBSTR_ARGS, &FnCallTextXform, "Extract characters from the head of the string",
+    FnCallTypeNew("string_head", DATA_TYPE_STRING, XFORM_SUBSTR_ARGS, &FnCallTextXform, "Extract characters from the head of the string",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
-    FnCallTypeNew("reversestring", DATA_TYPE_STRING, XFORM_ARGS, &FnCallTextXform, "Reverse a string",
+    FnCallTypeNew("string_reverse", DATA_TYPE_STRING, XFORM_ARGS, &FnCallTextXform, "Reverse a string",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
-    FnCallTypeNew("strlen", DATA_TYPE_INT, XFORM_ARGS, &FnCallTextXform, "Return the length of a string",
+    FnCallTypeNew("string_length", DATA_TYPE_INT, XFORM_ARGS, &FnCallTextXform, "Return the length of a string",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
-    FnCallTypeNew("tail", DATA_TYPE_STRING, XFORM_SUBSTR_ARGS, &FnCallTextXform, "Extract characters from the tail of the string",
+    FnCallTypeNew("string_tail", DATA_TYPE_STRING, XFORM_SUBSTR_ARGS, &FnCallTextXform, "Extract characters from the tail of the string",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
-    FnCallTypeNew("upcase", DATA_TYPE_STRING, XFORM_ARGS, &FnCallTextXform, "Convert a string to UPPERCASE",
+    FnCallTypeNew("string_upcase", DATA_TYPE_STRING, XFORM_ARGS, &FnCallTextXform, "Convert a string to UPPERCASE",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
 
     // List folding functions

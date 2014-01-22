@@ -29,15 +29,14 @@ body common control
 bundle agent example
 {
   vars:
-
-      "upcase" string =>  upcase("abc"); # will contain "ABC"
+      "length" int =>  string_length("abc"); # will contain "3"
   reports:
-      "upcased abc: $(upcase)";
+      "length of string abc = $(length)";
 }
 #+end_src
 ###############################################################################
 #+begin_src example_output
 #@ ```
-#@ 2013-12-20T13:44:35-0500   notice: /default/example: R: upcased abc: ABC
+#@ 2013-12-20T13:44:35-0500   notice: /default/example: R: length of string abc = 3
 #@ ```
 #+end_src

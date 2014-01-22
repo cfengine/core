@@ -369,7 +369,6 @@ void MonNetworkGatherData(double *cf_this)
         }
     }
 
-    free(vbuff);
     cf_pclose(pp);
 
 /* Now save the state for ShowState() 
@@ -422,4 +421,6 @@ void MonNetworkGatherData(double *cf_this)
         Log(LOG_LEVEL_DEBUG, "Saved out netstat data in '%s'", vbuff);
         DeleteItemList(out[i]);
     }
+
+    free(vbuff);
 }

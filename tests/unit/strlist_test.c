@@ -4,7 +4,7 @@
 #include <strlist.h>
 
 
-static struct strlist *SL = NULL;
+static StrList *SL = NULL;
 
 
 /* Strings that will be inserted to strlist, listed here in sorted order. */
@@ -36,28 +36,28 @@ static void test_init_SL()
     /* Insert in random order. */
     for (size_t i = 0; i < STRINGS_LEN; i++)
     {
-        size_t ret = strlist_Append(&SL, STRINGS[ INSERT_ORDER[i] ]);
+        size_t ret = StrList_Append(&SL, STRINGS[ INSERT_ORDER[i] ]);
         assert_int_equal(ret, i);
-        assert_string_equal(strlist_At(SL, i), STRINGS[ INSERT_ORDER[i] ]);
+        assert_string_equal(StrList_At(SL, i), STRINGS[ INSERT_ORDER[i] ]);
     }
 
-    assert_int_equal(strlist_Len(SL), STRINGS_LEN);
+    assert_int_equal(StrList_Len(SL), STRINGS_LEN);
 
-    strlist_Finalise(&SL);
+    StrList_Finalise(&SL);
 }
 
-static void test_strlist_Sort()
+static void test_StrList_Sort()
 {
-    strlist_Sort(SL, string_Compare);
-    assert_int_equal(strlist_Len(SL), STRINGS_LEN);
+    StrList_Sort(SL, string_Compare);
+    assert_int_equal(StrList_Len(SL), STRINGS_LEN);
 
     for (size_t i = 0; i < STRINGS_LEN; i++)
     {
-        assert_string_equal(strlist_At(SL, i), STRINGS[i]);
+        assert_string_equal(StrList_At(SL, i), STRINGS[i]);
     }
 }
 
-static void test_strlist_BinarySearch()
+static void test_StrList_BinarySearch()
 {
     size_t pos;
     bool found;
@@ -65,7 +65,7 @@ static void test_strlist_BinarySearch()
     /* Search for existing strings. */
     for (size_t i = 0; i < STRINGS_LEN; i++)
     {
-        found = strlist_BinarySearch(SL, STRINGS[i], &pos);
+        found = StrList_BinarySearch(SL, STRINGS[i], &pos);
         assert_int_equal(found, true);
         assert_int_equal(pos, i);
     }
@@ -73,76 +73,76 @@ static void test_strlist_BinarySearch()
     /* Search for inexistent entries, check that the returned position is the
      * one they should be inserted into. */
 
-    found = strlist_BinarySearch(SL, "", &pos);
+    found = StrList_BinarySearch(SL, "", &pos);
     assert_int_equal(found, false);
     assert_int_equal(pos, 0);      /* empty string should always come first */
 
-    found = strlist_BinarySearch(SL, "   ", &pos);
+    found = StrList_BinarySearch(SL, "   ", &pos);
     assert_int_equal(found, false);
     assert_int_equal(pos, 2);
 
-    found = strlist_BinarySearch(SL, "zzz", &pos);
+    found = StrList_BinarySearch(SL, "zzz", &pos);
     assert_int_equal(found, false);
     assert_int_equal(pos, STRINGS_LEN);
 
-    found = strlist_BinarySearch(SL, "/path/", &pos);
+    found = StrList_BinarySearch(SL, "/path/", &pos);
     assert_int_equal(found, false);
     assert_int_equal(pos, 4);
 
-    found = strlist_BinarySearch(SL, "/path/to", &pos);
+    found = StrList_BinarySearch(SL, "/path/to", &pos);
     assert_int_equal(found, false);
     assert_int_equal(pos, 4);
 }
 
-static void test_strlist_SearchLongestPrefix()
+static void test_StrList_SearchLongestPrefix()
 {
     /* REMINDER: STRINGS[] = { " ", "  ", "/", "/path", "/path/to/file.name", "blah", "waza" }; */
 
     size_t ret, ret2, ret3;
 
     /* These searches all search for  "/path", since length is the same. */
-    ret = strlist_SearchLongestPrefix(SL, "/path", 0, '/', true);
-    ret2 = strlist_SearchLongestPrefix(SL, "/path/", 5, '/', true);
-    ret3 = strlist_SearchLongestPrefix(SL, "/path/to/file.name", 5, '/', true);
-    assert_string_equal(strlist_At(SL, ret), "/path");
-    assert_string_equal(strlist_At(SL, ret2), "/path");
-    assert_string_equal(strlist_At(SL, ret3), "/path");
+    ret = StrList_SearchLongestPrefix(SL, "/path", 0, '/', true);
+    ret2 = StrList_SearchLongestPrefix(SL, "/path/", 5, '/', true);
+    ret3 = StrList_SearchLongestPrefix(SL, "/path/to/file.name", 5, '/', true);
+    assert_string_equal(StrList_At(SL, ret), "/path");
+    assert_string_equal(StrList_At(SL, ret2), "/path");
+    assert_string_equal(StrList_At(SL, ret3), "/path");
 
     /* Searching for "/path/" does not bring up "/path", but "/", since
      * directories *must* have a trailing slash. */
-    ret = strlist_SearchLongestPrefix(SL, "/path/", 0, '/', true);
-    assert_string_equal(strlist_At(SL, ret), "/");
+    ret = StrList_SearchLongestPrefix(SL, "/path/", 0, '/', true);
+    assert_string_equal(StrList_At(SL, ret), "/");
 
-    ret = strlist_SearchLongestPrefix(SL, "/path.json", 0, '/', true);
-    assert_string_equal(strlist_At(SL, ret), "/");
+    ret = StrList_SearchLongestPrefix(SL, "/path.json", 0, '/', true);
+    assert_string_equal(StrList_At(SL, ret), "/");
 
 
     /* We insert a couple more directories and sort again. */
-    strlist_Append(&SL, "/path/to/file.namewhatever/whatever");
-    strlist_Append(&SL, "/path/to/file.name/whatever/");
-    strlist_Append(&SL, "/path/to/");
-    strlist_Sort(SL, string_Compare);
+    StrList_Append(&SL, "/path/to/file.namewhatever/whatever");
+    StrList_Append(&SL, "/path/to/file.name/whatever/");
+    StrList_Append(&SL, "/path/to/");
+    StrList_Sort(SL, string_Compare);
 
-    ret = strlist_SearchLongestPrefix(SL, "/path/to/file.name",
+    ret = StrList_SearchLongestPrefix(SL, "/path/to/file.name",
                                       0, '/', true);
-    assert_string_equal(strlist_At(SL, ret), "/path/to/file.name");
+    assert_string_equal(StrList_At(SL, ret), "/path/to/file.name");
 
-    ret = strlist_SearchLongestPrefix(SL, "/path/to/file",
+    ret = StrList_SearchLongestPrefix(SL, "/path/to/file",
                                       0, '/', true);
-    assert_string_equal(strlist_At(SL, ret), "/path/to/");
+    assert_string_equal(StrList_At(SL, ret), "/path/to/");
 
-    ret = strlist_SearchLongestPrefix(SL, "/path/to/file.name/whatever/blah",
+    ret = StrList_SearchLongestPrefix(SL, "/path/to/file.name/whatever/blah",
                                       0, '/', true);
-    assert_string_equal(strlist_At(SL, ret), "/path/to/file.name/whatever/");
+    assert_string_equal(StrList_At(SL, ret), "/path/to/file.name/whatever/");
 
-    ret = strlist_SearchLongestPrefix(SL, "/path/to/",
+    ret = StrList_SearchLongestPrefix(SL, "/path/to/",
                                       0, '/', true);
-    assert_string_equal(strlist_At(SL, ret), "/path/to/");
+    assert_string_equal(StrList_At(SL, ret), "/path/to/");
 }
 
-static void test_strlist_Free()
+static void test_StrList_Free()
 {
-    strlist_Free(&SL);
+    StrList_Free(&SL);
 
     assert_int_equal(SL, NULL);
 }
@@ -154,10 +154,10 @@ int main()
     const UnitTest tests[] =
     {
         unit_test(test_init_SL),
-        unit_test(test_strlist_Sort),
-        unit_test(test_strlist_BinarySearch),
-        unit_test(test_strlist_SearchLongestPrefix),
-        unit_test(test_strlist_Free)
+        unit_test(test_StrList_Sort),
+        unit_test(test_StrList_BinarySearch),
+        unit_test(test_StrList_SearchLongestPrefix),
+        unit_test(test_StrList_Free)
     };
 
     int ret = run_tests(tests);

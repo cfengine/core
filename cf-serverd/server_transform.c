@@ -96,38 +96,38 @@ void Summarize()
     for (i = 0; i < paths_acl->len; i++)
     {
         Log(LOG_LEVEL_VERBOSE, "\tPath: %s",
-            strlist_At(paths_acl->resource_names, i));
+            StrList_At(paths_acl->resource_names, i));
         const struct resource_acl *racl = &paths_acl->acls[i];
 
-        for (j = 0; j < strlist_Len(racl->admit_ips); j++)
+        for (j = 0; j < StrList_Len(racl->admit_ips); j++)
         {
             Log(LOG_LEVEL_VERBOSE, "\t\tadmit_ips: %s",
-                strlist_At(racl->admit_ips, j));
+                StrList_At(racl->admit_ips, j));
         }
-        for (j = 0; j < strlist_Len(racl->admit_hostnames); j++)
+        for (j = 0; j < StrList_Len(racl->admit_hostnames); j++)
         {
             Log(LOG_LEVEL_VERBOSE, "\t\tadmit_hostnames: %s",
-                strlist_At(racl->admit_hostnames, j));
+                StrList_At(racl->admit_hostnames, j));
         }
-        for (j = 0; j < strlist_Len(racl->admit_keys); j++)
+        for (j = 0; j < StrList_Len(racl->admit_keys); j++)
         {
             Log(LOG_LEVEL_VERBOSE, "\t\tadmit_keys: %s",
-                strlist_At(racl->admit_keys, j));
+                StrList_At(racl->admit_keys, j));
         }
-        for (j = 0; j < strlist_Len(racl->deny_ips); j++)
+        for (j = 0; j < StrList_Len(racl->deny_ips); j++)
         {
             Log(LOG_LEVEL_VERBOSE, "\t\tdeny_ips: %s",
-                strlist_At(racl->deny_ips, j));
+                StrList_At(racl->deny_ips, j));
         }
-        for (j = 0; j < strlist_Len(racl->deny_hostnames); j++)
+        for (j = 0; j < StrList_Len(racl->deny_hostnames); j++)
         {
             Log(LOG_LEVEL_VERBOSE, "\t\tdeny_hostnames: %s",
-                strlist_At(racl->deny_hostnames, j));
+                StrList_At(racl->deny_hostnames, j));
         }
-        for (j = 0; j < strlist_Len(racl->deny_keys); j++)
+        for (j = 0; j < StrList_Len(racl->deny_keys); j++)
         {
             Log(LOG_LEVEL_VERBOSE, "\t\tdeny_keys: %s",
-                strlist_At(racl->deny_keys, j));
+                StrList_At(racl->deny_keys, j));
         }
     }
 
@@ -779,32 +779,32 @@ static void AccessPromise_AddAccessConstraints(const EvalContext *ctx,
 
                 if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_ADMITIPS].lval) == 0)
                 {
-                    ret = strlist_Append(&acl->admit_ips, RlistScalarValue(rp));
+                    ret = StrList_Append(&acl->admit_ips, RlistScalarValue(rp));
                     continue;
                 }
                 if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_DENYIPS].lval) == 0)
                 {
-                    ret = strlist_Append(&acl->deny_ips, RlistScalarValue(rp));
+                    ret = StrList_Append(&acl->deny_ips, RlistScalarValue(rp));
                     continue;
                 }
                 if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_ADMITHOSTNAMES].lval) == 0)
                 {
-                    ret = strlist_Append(&acl->admit_hostnames, RlistScalarValue(rp));
+                    ret = StrList_Append(&acl->admit_hostnames, RlistScalarValue(rp));
                     continue;
                 }
                 if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_DENYHOSTNAMES].lval) == 0)
                 {
-                    ret = strlist_Append(&acl->deny_hostnames, RlistScalarValue(rp));
+                    ret = StrList_Append(&acl->deny_hostnames, RlistScalarValue(rp));
                     continue;
                 }
                 if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_ADMITKEYS].lval) == 0)
                 {
-                    ret = strlist_Append(&acl->admit_keys, RlistScalarValue(rp));
+                    ret = StrList_Append(&acl->admit_keys, RlistScalarValue(rp));
                     continue;
                 }
                 if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_DENYKEYS].lval) == 0)
                 {
-                    ret = strlist_Append(&acl->deny_keys, RlistScalarValue(rp));
+                    ret = StrList_Append(&acl->deny_keys, RlistScalarValue(rp));
                     continue;
                 }
 
@@ -816,15 +816,15 @@ static void AccessPromise_AddAccessConstraints(const EvalContext *ctx,
                     {
                     case ADMIT_TYPE_IP:
                         /* TODO convert IP string to binary representation. */
-                        ret = strlist_Append(&acl->admit_ips, RlistScalarValue(rp));
+                        ret = StrList_Append(&acl->admit_ips, RlistScalarValue(rp));
                         break;
                     case ADMIT_TYPE_KEY:
-                        ret = strlist_Append(&acl->admit_keys, RlistScalarValue(rp));
+                        ret = StrList_Append(&acl->admit_keys, RlistScalarValue(rp));
                         break;
                     case ADMIT_TYPE_HOSTNAME:
                         /* TODO clean up possible regex, if it starts with ".*"
                          * then store two entries: itself, and *dot*itself. */
-                        ret = strlist_Append(&acl->admit_hostnames, RlistScalarValue(rp));
+                        ret = StrList_Append(&acl->admit_hostnames, RlistScalarValue(rp));
                         break;
                     default:
                         Log(LOG_LEVEL_WARNING,
@@ -840,13 +840,13 @@ static void AccessPromise_AddAccessConstraints(const EvalContext *ctx,
                     switch (AdmitType(RlistScalarValue(rp)))
                     {
                     case ADMIT_TYPE_IP:
-                        ret = strlist_Append(&acl->deny_ips, RlistScalarValue(rp));
+                        ret = StrList_Append(&acl->deny_ips, RlistScalarValue(rp));
                         break;
                     case ADMIT_TYPE_KEY:
-                        ret = strlist_Append(&acl->deny_keys, RlistScalarValue(rp));
+                        ret = StrList_Append(&acl->deny_keys, RlistScalarValue(rp));
                         break;
                     case ADMIT_TYPE_HOSTNAME:
-                        ret = strlist_Append(&acl->deny_hostnames, RlistScalarValue(rp));
+                        ret = StrList_Append(&acl->deny_hostnames, RlistScalarValue(rp));
                         break;
                     default:
                         Log(LOG_LEVEL_WARNING,
@@ -868,7 +868,7 @@ static void AccessPromise_AddAccessConstraints(const EvalContext *ctx,
             if (ret == (size_t) -1)
             {
                 /* Should never happen. */
-                Log(LOG_LEVEL_CRIT, "strlist_Append: %s", GetErrorStr());
+                Log(LOG_LEVEL_CRIT, "StrList_Append: %s", GetErrorStr());
                 exit(255);
             }
 
@@ -880,23 +880,23 @@ static void AccessPromise_AddAccessConstraints(const EvalContext *ctx,
         }
     }
 
-    strlist_Finalise(&acl->admit_ips);
-    strlist_Sort(acl->admit_ips, string_Compare);
+    StrList_Finalise(&acl->admit_ips);
+    StrList_Sort(acl->admit_ips, string_Compare);
 
-    strlist_Finalise(&acl->admit_hostnames);
-    strlist_Sort(acl->admit_hostnames, string_CompareFromEnd);
+    StrList_Finalise(&acl->admit_hostnames);
+    StrList_Sort(acl->admit_hostnames, string_CompareFromEnd);
 
-    strlist_Finalise(&acl->admit_keys);
-    strlist_Sort(acl->admit_keys, string_Compare);
+    StrList_Finalise(&acl->admit_keys);
+    StrList_Sort(acl->admit_keys, string_Compare);
 
-    strlist_Finalise(&acl->deny_ips);
-    strlist_Sort(acl->deny_ips, string_Compare);
+    StrList_Finalise(&acl->deny_ips);
+    StrList_Sort(acl->deny_ips, string_Compare);
 
-    strlist_Finalise(&acl->deny_hostnames);
-    strlist_Sort(acl->deny_hostnames, string_CompareFromEnd);
+    StrList_Finalise(&acl->deny_hostnames);
+    StrList_Sort(acl->deny_hostnames, string_CompareFromEnd);
 
-    strlist_Finalise(&acl->deny_keys);
-    strlist_Sort(acl->deny_keys, string_Compare);
+    StrList_Finalise(&acl->deny_keys);
+    StrList_Sort(acl->deny_keys, string_Compare);
 }
 
 /* It is allowed to have duplicate handles (paths or class names or variables

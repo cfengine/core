@@ -158,6 +158,10 @@ suitable for library writers.
 
 * Spaces, not tabs.
 
+* Always use typedefs, no "struct X", or "enum Y" are allowed. Types
+  defined with typedef should be in camelcase and no trailing "_t",
+  "_f" etc.
+
 * Constify what can be. Don't use global variables.
 
 * Keep tidy header files and document using Doxygen (within reason).

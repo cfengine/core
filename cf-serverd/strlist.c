@@ -179,12 +179,12 @@ size_t string_ReverseMatchCount(const struct string *s1,
 /***************************** STRLIST **************************************/
 
 
-size_t strlist_Len(const struct strlist *sl)
+size_t StrList_Len(const StrList *sl)
 {
     return (sl == NULL) ? 0 : sl->len;
 }
 
-char *strlist_At(const struct strlist *sl, size_t idx)
+char *StrList_At(const StrList *sl, size_t idx)
 {
     assert(sl != NULL);
     assert(idx < sl->len);
@@ -197,17 +197,17 @@ char *strlist_At(const struct strlist *sl, size_t idx)
  * @return index of the newly inserted string. If -1 (i.e. MAXINT) is returned
  *         then something went horribly wrong.
  */
-size_t strlist_Insert(struct strlist **sl, const char *s, size_t idx)
+size_t StrList_Insert(StrList **sl, const char *s, size_t idx)
 {
     assert(s != NULL);
 
-    struct strlist *slp = *sl;                    /* for clarity only */
+    StrList *slp = *sl;                    /* for clarity only */
     size_t new_alloc_len = 0;          /* 0 means no reallocation is needed */
 
     if ((slp == NULL && idx > 0) ||
         (slp != NULL && idx > slp->len))
     {
-        ProgrammingError("strlist_Insert: Out of bounds index %zu", idx);
+        ProgrammingError("StrList_Insert: Out of bounds index %zu", idx);
     }
 
     if (slp == NULL)
@@ -232,7 +232,7 @@ size_t strlist_Insert(struct strlist **sl, const char *s, size_t idx)
 
     if (new_alloc_len > 0)                        /* reallocation is needed */
     {
-        struct strlist *p =
+        StrList *p =
             realloc(slp, sizeof(*p) + sizeof (*p->list) * new_alloc_len);
         if (p == NULL)
         {
@@ -269,7 +269,7 @@ size_t strlist_Insert(struct strlist **sl, const char *s, size_t idx)
  *
  * @note It is valid for sl to be NULL, which is equivalent to being empty.
  */
-size_t strlist_Append(struct strlist **sl, const char *s)
+size_t StrList_Append(StrList **sl, const char *s)
 {
     assert(s != NULL);
 
@@ -277,11 +277,11 @@ size_t strlist_Append(struct strlist **sl, const char *s)
 
     if (*sl == NULL)
     {
-        ret = strlist_Insert(sl, s, 0);
+        ret = StrList_Insert(sl, s, 0);
     }
     else
     {
-        ret = strlist_Insert(sl, s, (*sl)->len);
+        ret = StrList_Insert(sl, s, (*sl)->len);
     }
 
     return ret;
@@ -304,9 +304,9 @@ size_t strlist_Append(struct strlist **sl, const char *s)
  *
  * @param **sl in-out param, might become NULL if the struct was freed.
  */
-void strlist_Finalise(struct strlist **sl)
+void StrList_Finalise(StrList **sl)
 {
-    struct strlist *slp = *sl;                    /* for clarity only */
+    StrList *slp = *sl;                    /* for clarity only */
 
     if (slp == NULL)
     {
@@ -322,7 +322,7 @@ void strlist_Finalise(struct strlist **sl)
     }
     else if (slp->len < slp->alloc_len)
     {
-        struct strlist *p =
+        StrList *p =
             realloc(slp, sizeof(*p) + sizeof (*p->list) * slp->len);
 
         if (p == NULL)
@@ -343,9 +343,9 @@ void strlist_Finalise(struct strlist **sl)
 /**
  * Frees everything and sets the strlist back to NULL, i.e. empty.
  */
-void strlist_Free(struct strlist **sl)
+void StrList_Free(StrList **sl)
 {
-    struct strlist *slp = *sl;                               /* for clarity */
+    StrList *slp = *sl;                               /* for clarity */
 
     if (slp == NULL)
     {
@@ -363,7 +363,7 @@ void strlist_Free(struct strlist **sl)
 }
 
 
-void strlist_Sort(struct strlist *sl, StringComparatorF comparator)
+void StrList_Sort(StrList *sl, StringComparatorF comparator)
 {
     if (sl != NULL && sl->len > 0)
     {
@@ -378,7 +378,7 @@ void strlist_Sort(struct strlist *sl, StringComparatorF comparator)
  *
  * @return index of match or (size_t) -1 if not found
  */
-size_t strlist_bsearch(const struct strlist *sl,
+size_t StrList_bsearch(const StrList *sl,
                        const struct string *s,
                        StringComparatorF comparator)
 {
@@ -403,7 +403,7 @@ size_t strlist_bsearch(const struct strlist *sl,
  * @param position returns either the index where it was found, or
  *        the index where it should be inserted in to keep it sorted.
  */
-bool strlist_BinarySearchString(const struct strlist *slp,
+bool StrList_BinarySearchString(const StrList *slp,
                                 const struct string *s,
                                 size_t *position)
 {
@@ -448,7 +448,7 @@ bool strlist_BinarySearchString(const struct strlist *slp,
  * Same as previous, but accepts a raw char* pointer rather than a struct
  * string.
  */
-bool strlist_BinarySearch(const struct strlist *slp, const char *s,
+bool StrList_BinarySearch(const StrList *slp, const char *s,
                           size_t *position)
 {
     if (slp == NULL)
@@ -491,7 +491,7 @@ bool strlist_BinarySearch(const struct strlist *slp, const char *s,
 /* Search a sorted strlist for string s, of s_len, in forward or backward
  * direction (strlist must be sorted with string_CompareFromEnd()). */
 static
-size_t strlist_BinarySearchExtended(const struct strlist *sl,
+size_t StrList_BinarySearchExtended(const StrList *sl,
                                     const char *s, size_t s_len,
                                     bool direction_forward,
                                     size_t *min, size_t *max)
@@ -581,7 +581,7 @@ size_t strlist_BinarySearchExtended(const struct strlist *sl,
  *          if we searched for #s="www.cfengine.com" then it would return 2,
  *          which is the index of "www.cfengine.com".
  */
-size_t strlist_SearchLongestPrefix(const struct strlist *sl,
+size_t StrList_SearchLongestPrefix(const StrList *sl,
                                    const char *s, size_t s_len,
                                    char separator, bool direction_forward)
 {
@@ -626,7 +626,7 @@ size_t strlist_SearchLongestPrefix(const struct strlist *sl,
             s_prefix_len = s_len;     /* No separator found, use all string */
         }
 
-        /* printf("strlist_SearchLongestPrefix %s: " */
+        /* printf("StrList_SearchLongestPrefix %s: " */
         /*        "'%s' len:%zu prefix_len:%zu\n", */
         /*        direction_forward == true ? "forward" : "backward", */
         /*        s, s_len, s_prefix_len); */
@@ -638,7 +638,7 @@ size_t strlist_SearchLongestPrefix(const struct strlist *sl,
             old_found = found;
         }
 
-        found = strlist_BinarySearchExtended(sl,
+        found = StrList_BinarySearchExtended(sl,
             direction_forward == true ? s : &s[s_len - 1],
             s_prefix_len, direction_forward, &min, &max);
 
@@ -648,13 +648,13 @@ size_t strlist_SearchLongestPrefix(const struct strlist *sl,
 
     found = (found == -1) ? old_found : found;
 
-    /* printf("strlist_SearchLongestPrefix s:'%s' len:%zu found:'%s'\n", */
+    /* printf("StrList_SearchLongestPrefix s:'%s' len:%zu found:'%s'\n", */
     /*        s, s_len, (found == -1) ? "NONE" : sl->list[found]->str); */
 
     return found;
 }
 
-size_t strlist_SearchShortestPrefix(const struct strlist *sl,
+size_t StrList_SearchShortestPrefix(const StrList *sl,
                                     const char *s, size_t s_len,
                                     bool direction_forward)
 {

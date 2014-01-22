@@ -867,7 +867,7 @@ static void AccessPromise_AddAccessConstraints(const EvalContext *ctx,
 
             if (ret == (size_t) -1)
             {
-                /* Should never happen. */
+                /* Should never happen, besides when allocation fails. */
                 Log(LOG_LEVEL_CRIT, "StrList_Append: %s", GetErrorStr());
                 exit(255);
             }
@@ -954,7 +954,7 @@ static void KeepFileAccessPromise(const EvalContext *ctx, const Promise *pp)
     size_t pos = acl_SortedInsert(&paths_acl, path);
     if (pos == (size_t) -1)
     {
-        /* Should never happen. */
+        /* Should never happen, besides when allocation fails. */
         Log(LOG_LEVEL_CRIT, "acl_Insert: %s", GetErrorStr());
         exit(255);
     }
@@ -1003,7 +1003,7 @@ void KeepLiteralAccessPromise(EvalContext *ctx, const Promise *pp, char *type)
         size_t pos = acl_SortedInsert(&literals_acl, handle);
         if (pos == (size_t) -1)
         {
-            /* Should never happen. */
+            /* Should never happen, besides when allocation fails. */
             Log(LOG_LEVEL_CRIT, "acl_Insert: %s", GetErrorStr());
             exit(255);
         }
@@ -1025,7 +1025,7 @@ void KeepLiteralAccessPromise(EvalContext *ctx, const Promise *pp, char *type)
             size_t pos = acl_SortedInsert(&classes_acl, pp->promiser);
             if (pos == (size_t) -1)
             {
-                /* Should never happen. */
+                /* Should never happen, besides when allocation fails. */
                 Log(LOG_LEVEL_CRIT, "acl_Insert: %s", GetErrorStr());
                 exit(255);
             }
@@ -1040,7 +1040,7 @@ void KeepLiteralAccessPromise(EvalContext *ctx, const Promise *pp, char *type)
             size_t pos = acl_SortedInsert(&vars_acl, pp->promiser);
             if (pos == (size_t) -1)
             {
-                /* Should never happen. */
+                /* Should never happen, besides when allocation fails. */
                 Log(LOG_LEVEL_CRIT, "acl_Insert: %s", GetErrorStr());
                 exit(255);
             }
@@ -1069,7 +1069,7 @@ static void KeepQueryAccessPromise(EvalContext *ctx, const Promise *pp, char *ty
     size_t pos = acl_SortedInsert(&query_acl, pp->promiser);
     if (pos == (size_t) -1)
     {
-        /* Only happens on allocation error. */
+        /* Should never happen, besides when allocation fails. */
         Log(LOG_LEVEL_CRIT, "acl_Insert: %s", GetErrorStr());
         exit(255);
     }

@@ -153,7 +153,7 @@ static int EvalClassExpression(EvalContext *ctx, Constraint *cp, const Promise *
         Log(LOG_LEVEL_ERR, "EvalClassExpression internal diagnostic discovered an ill-formed condition");
     }
 
-    if (!IsDefinedClass(ctx, pp->classes, PromiseGetNamespace(pp)))
+    if (!IsDefinedClass(ctx, pp->classes))
     {
         return false;
     }
@@ -163,7 +163,7 @@ static int EvalClassExpression(EvalContext *ctx, Constraint *cp, const Promise *
         return false;
     }
 
-    if (IsDefinedClass(ctx, pp->promiser, PromiseGetNamespace(pp)))
+    if (IsDefinedClass(ctx, pp->promiser))
     {
         if (PromiseGetConstraintAsInt(ctx, "persistence", pp) == 0)
         {
@@ -208,7 +208,7 @@ static int EvalClassExpression(EvalContext *ctx, Constraint *cp, const Promise *
             return false;
         }
 
-        if (IsDefinedClass(ctx, (char *) cp->rval.item, PromiseGetNamespace(pp)))
+        if (IsDefinedClass(ctx, RvalScalarValue(cp->rval)))
         {
             return true;
         }
@@ -225,7 +225,7 @@ static int EvalClassExpression(EvalContext *ctx, Constraint *cp, const Promise *
             return false;
         }
 
-        if (IsDefinedClass(ctx, (char *) cp->rval.item, PromiseGetNamespace(pp)))
+        if (IsDefinedClass(ctx, RvalScalarValue(cp->rval)))
         {
             return false;
         }
@@ -344,7 +344,7 @@ static int EvalClassExpression(EvalContext *ctx, Constraint *cp, const Promise *
             return false;
         }
 
-        result = IsDefinedClass(ctx, RlistScalarValue(rp), PromiseGetNamespace(pp));
+        result = IsDefinedClass(ctx, RlistScalarValue(rp));
 
         result_and = result_and && result;
         result_or = result_or || result;

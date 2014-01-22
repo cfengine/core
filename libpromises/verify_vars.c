@@ -508,7 +508,7 @@ static ConvergeVariableOptions CollectConvergeVariableOptions(EvalContext *ctx, 
         return opts;
     }
 
-    if (!IsDefinedClass(ctx, pp->classes, PromiseGetNamespace(pp)))
+    if (!IsDefinedClass(ctx, pp->classes))
     {
         return opts;
     }
@@ -530,13 +530,10 @@ static ConvergeVariableOptions CollectConvergeVariableOptions(EvalContext *ctx, 
 
         if (strcmp(cp->lval, "ifvarclass") == 0)
         {
-            Rval res;
-
             switch (cp->rval.type)
             {
             case RVAL_TYPE_SCALAR:
-
-                if (!IsDefinedClass(ctx, cp->rval.item, PromiseGetNamespace(pp)))
+                if (!IsDefinedClass(ctx, cp->rval.item))
                 {
                     return opts;
                 }
@@ -549,7 +546,7 @@ static ConvergeVariableOptions CollectConvergeVariableOptions(EvalContext *ctx, 
 
                     /* eval it: e.g. ifvarclass => not("a_class") */
 
-                    res = FnCallEvaluate(ctx, cp->rval.item, pp).rval;
+                    Rval res = FnCallEvaluate(ctx, cp->rval.item, pp).rval;
 
                     /* Don't continue unless function was evaluated properly */
                     if (res.type != RVAL_TYPE_SCALAR)
@@ -558,7 +555,7 @@ static ConvergeVariableOptions CollectConvergeVariableOptions(EvalContext *ctx, 
                         return opts;
                     }
 
-                    excluded = !IsDefinedClass(ctx, res.item, PromiseGetNamespace(pp));
+                    excluded = !IsDefinedClass(ctx, res.item);
 
                     RvalDestroy(res);
 

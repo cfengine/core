@@ -139,11 +139,11 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
         bool am_policy_server = false;
         {
             const char *canonified_bootstrap_policy_server = CanonifyName(config->agent_specific.agent.bootstrap_policy_server);
-            am_policy_server = IsDefinedClass(ctx, canonified_bootstrap_policy_server, NULL);
+            am_policy_server = NULL != EvalContextClassGet(ctx, NULL, canonified_bootstrap_policy_server);
             {
                 char policy_server_ipv4_class[CF_BUFSIZE];
                 snprintf(policy_server_ipv4_class, CF_MAXVARSIZE, "ipv4_%s", canonified_bootstrap_policy_server);
-                am_policy_server |= IsDefinedClass(ctx, policy_server_ipv4_class, NULL);
+                am_policy_server |= NULL != EvalContextClassGet(ctx, NULL, policy_server_ipv4_class);
             }
 
             if (am_policy_server)

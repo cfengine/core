@@ -576,7 +576,7 @@ static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *c
         const char *time_context = NULL;
         while ((time_context = StringSetIteratorNext(&it)))
         {
-            if (IsDefinedClass(ctx, time_context, NULL))
+            if (IsDefinedClass(ctx, time_context))
             {
                 Log(LOG_LEVEL_VERBOSE, "Waking up the agent at %s ~ %s", ctime(&CFSTARTTIME), time_context);
                 return true;

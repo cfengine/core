@@ -225,7 +225,7 @@ static Rlist *GetHostsFromLastseenDB(Item *addresses, time_t horizon, bool retur
 
 /*********************************************************************/
 
-static FnCallResult FnCallAnd(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
+static FnCallResult FnCallAnd(EvalContext *ctx, ARG_UNUSED FnCall *fp, Rlist *finalargs)
 {
     Rlist *arg;
     char id[CF_BUFSIZE];
@@ -244,7 +244,7 @@ static FnCallResult FnCallAnd(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 
     for (arg = finalargs; arg; arg = arg->next)
     {
-        if (!IsDefinedClass(ctx, RlistScalarValue(arg), PromiseGetNamespace(fp->caller)))
+        if (!IsDefinedClass(ctx, RlistScalarValue(arg)))
         {
             return FnReturnContext(false);
         }
@@ -711,7 +711,7 @@ static FnCallResult FnCallIfElse(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
     {
         /* Similar to classmatch(), we evaluate the first of the two
          * arguments as a class. */
-        if (IsDefinedClass(ctx, RlistScalarValue(arg), PromiseGetNamespace(fp->caller)))
+        if (IsDefinedClass(ctx, RlistScalarValue(arg)))
         {
             /* If the evaluation returned true in the current context,
              * return the second of the two arguments. */
@@ -1305,7 +1305,7 @@ static FnCallResult FnCallDirname(ARG_UNUSED EvalContext *ctx, ARG_UNUSED FnCall
 
 static FnCallResult FnCallClassify(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
-    bool is_defined = IsDefinedClass(ctx, CanonifyName(RlistScalarValue(finalargs)), PromiseGetNamespace(fp->caller));
+    bool is_defined = IsDefinedClass(ctx, CanonifyName(RlistScalarValue(finalargs)));
 
     return FnReturnContext(is_defined);
 }
@@ -1457,7 +1457,7 @@ static FnCallResult FnCallUseModule(EvalContext *ctx, FnCall *fp, Rlist *finalar
 
 static FnCallResult FnCallSplayClass(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
-    char class[CF_MAXVARSIZE];
+    char class_name[CF_MAXVARSIZE];
 
     Interval policy = IntervalFromString(RlistScalarValue(finalargs->next));
 
@@ -1465,7 +1465,7 @@ static FnCallResult FnCallSplayClass(EvalContext *ctx, FnCall *fp, Rlist *finala
     {
         /* 12 5-minute slots in hour */
         int slot = StringHash(RlistScalarValue(finalargs), 0, CF_HASHTABLESIZE) * 12 / CF_HASHTABLESIZE;
-        snprintf(class, CF_MAXVARSIZE, "Min%02d_%02d", slot * 5, ((slot + 1) * 5) % 60);
+        snprintf(class_name, CF_MAXVARSIZE, "Min%02d_%02d", slot * 5, ((slot + 1) * 5) % 60);
     }
     else
     {
@@ -1474,10 +1474,10 @@ static FnCallResult FnCallSplayClass(EvalContext *ctx, FnCall *fp, Rlist *finala
         int hour = dayslot / 12;
         int slot = dayslot % 12;
 
-        snprintf(class, CF_MAXVARSIZE, "Min%02d_%02d.Hr%02d", slot * 5, ((slot + 1) * 5) % 60, hour);
+        snprintf(class_name, CF_MAXVARSIZE, "Min%02d_%02d.Hr%02d", slot * 5, ((slot + 1) * 5) % 60, hour);
     }
 
-    return FnReturnContext(IsDefinedClass(ctx, class, PromiseGetNamespace(fp->caller)));
+    return FnReturnContext(IsDefinedClass(ctx, class_name));
 }
 
 /*********************************************************************/
@@ -2516,7 +2516,7 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx, FnCall *fp, Rlist *fin
             EvalContextVariablePut(ctx, ref, RvalScalarValue(rp->val), DATA_TYPE_STRING, "source=function,function=selectservers");
             VarRefDestroy(ref);
 
-            if (IsDefinedClass(ctx, CanonifyName(RlistScalarValue(rp)), PromiseGetNamespace(fp->caller)))
+            if (IsDefinedClass(ctx, CanonifyName(RlistScalarValue(rp))))
             {
                 Log(LOG_LEVEL_VERBOSE, "This host is in the list and has promised to join the class '%s' - joined",
                       array_lval);
@@ -4583,7 +4583,7 @@ static FnCallResult FnCallOr(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 
     for (arg = finalargs; arg; arg = arg->next)
     {
-        if (IsDefinedClass(ctx, RlistScalarValue(arg), PromiseGetNamespace(fp->caller)))
+        if (IsDefinedClass(ctx, RlistScalarValue(arg)))
         {
             return FnReturnContext(true);
         }
@@ -4670,7 +4670,7 @@ static FnCallResult FnCallAccumulatedDate(ARG_UNUSED EvalContext *ctx, ARG_UNUSE
 
 static FnCallResult FnCallNot(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
-    return FnReturnContext(!IsDefinedClass(ctx, RlistScalarValue(finalargs), PromiseGetNamespace(fp->caller)));
+    return FnReturnContext(!IsDefinedClass(ctx, RlistScalarValue(finalargs)));
 }
 
 /*********************************************************************/

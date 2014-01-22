@@ -203,7 +203,7 @@ static PromiseResult KeepEditXmlPromise(EvalContext *ctx, const Promise *pp, voi
 
     char *sp = NULL;
 
-    if (!IsDefinedClass(ctx, pp->classes, PromiseGetNamespace(pp)))
+    if (!IsDefinedClass(ctx, pp->classes))
     {
         if (LEGACY_OUTPUT)
         {

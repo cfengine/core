@@ -151,7 +151,7 @@ const void  *EvalContextVariableControlCommonGet(const EvalContext *ctx, CommonC
 
 /* - Parsing/evaluating expressions - */
 void ValidateClassSyntax(const char *str);
-bool IsDefinedClass(const EvalContext *ctx, const char *context, const char *ns);
+bool IsDefinedClass(const EvalContext *ctx, const char *context);
 
 bool EvalProcessResult(const char *process_result, StringSet *proc_attr);
 bool EvalFileResult(const char *file_result, StringSet *leaf_attr);

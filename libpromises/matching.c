@@ -264,7 +264,7 @@ int IsRegexItemIn(EvalContext *ctx, Item *list, char *regex)
 
     for (ptr = list; ptr != NULL; ptr = ptr->next)
     {
-        if ((ptr->classes) && (!IsDefinedClass(ctx, ptr->classes, NULL))) // This NULL might be wrong
+        if ((ptr->classes) && (!IsDefinedClass(ctx, ptr->classes)))
         {
             continue;
         }

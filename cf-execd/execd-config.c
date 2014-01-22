@@ -63,7 +63,7 @@ ExecdConfig *ExecdConfigNew(const EvalContext *ctx, const Policy *policy)
         {
             Constraint *cp = SeqAt(constraints, i);
 
-            if (!IsDefinedClass(ctx, cp->classes, NULL))
+            if (!IsDefinedClass(ctx, cp->classes))
             {
                 continue;
             }

@@ -80,7 +80,7 @@ ExecConfig *ExecConfigNew(bool scheduled_run, const EvalContext *ctx, const Poli
         {
             Constraint *cp = SeqAt(constraints, i);
 
-            if (!IsDefinedClass(ctx, cp->classes, NULL))
+            if (!IsDefinedClass(ctx, cp->classes))
             {
                 continue;
             }

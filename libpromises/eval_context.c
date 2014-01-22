@@ -107,7 +107,7 @@ static const char *GetAgentAbortingContext(const EvalContext *ctx)
 {
     for (const Item *ip = ctx->heap_abort; ip != NULL; ip = ip->next)
     {
-        if (IsDefinedClass(ctx, ip->classes, NULL))
+        if (IsDefinedClass(ctx, ip->classes))
         {
             const char *regex = ip->name;
             Class *cls = EvalContextClassMatch(ctx, regex);
@@ -169,7 +169,7 @@ void EvalContextHeapAddSoft(EvalContext *ctx, const char *context, const char *n
     {
         for (const Item *ip = ctx->heap_abort_current_bundle; ip != NULL; ip = ip->next)
         {
-            if (IsDefinedClass(ctx, ip->name, ns))
+            if (IsDefinedClass(ctx, ip->name))
             {
                 Log(LOG_LEVEL_ERR, "Setting abort for '%s' when setting '%s'", ip->name, context_copy);
                 SetBundleAborted(ctx);
@@ -248,7 +248,7 @@ static void EvalContextStackFrameAddSoft(EvalContext *ctx, const char *context, 
     {
         for (const Item *ip = ctx->heap_abort_current_bundle; ip != NULL; ip = ip->next)
         {
-            if (IsDefinedClass(ctx, ip->name, frame.owner->ns))
+            if (IsDefinedClass(ctx, ip->name))
             {
                 Log(LOG_LEVEL_ERR, "Setting abort for '%s' when setting '%s'", ip->name, context);
                 SetBundleAborted(ctx);
@@ -258,15 +258,9 @@ static void EvalContextStackFrameAddSoft(EvalContext *ctx, const char *context, 
     }
 }
 
-typedef struct
-{
-    const EvalContext *ctx;
-    const char *ns;
-} EvalTokenAsClassContext;
-
 static ExpressionValue EvalTokenAsClass(const char *classname, void *param)
 {
-    const EvalContext *ctx = ((EvalTokenAsClassContext *)param)->ctx;
+    const EvalContext *ctx = param;
     ClassRef ref = ClassRefParse(classname);
 
     if (strcmp("any", ref.name) == 0)
@@ -307,7 +301,7 @@ static char *EvalVarRef(ARG_UNUSED const char *varname, ARG_UNUSED VarRefType ty
 
 /**********************************************************************/
 
-bool IsDefinedClass(const EvalContext *ctx, const char *context, const char *ns)
+bool IsDefinedClass(const EvalContext *ctx, const char *context)
 {
     ParseResult res;
 
@@ -325,14 +319,9 @@ bool IsDefinedClass(const EvalContext *ctx, const char *context, const char *ns)
     }
     else
     {
-        EvalTokenAsClassContext etacc = {
-            .ctx = ctx,
-            .ns = ns
-        };
-
         ExpressionValue r = EvalExpression(res.result,
                                            &EvalTokenAsClass, &EvalVarRef,
-                                           &etacc);
+                                           (void *)ctx); // controlled cast. None of these should modify EvalContext
 
         FreeExpression(res.result);
 
@@ -559,7 +548,7 @@ int VarClassExcluded(const EvalContext *ctx, const Promise *pp, char **classes)
         return true;
     }
 
-    if (*classes && IsDefinedClass(ctx, *classes, PromiseGetNamespace(pp)))
+    if (*classes && IsDefinedClass(ctx, *classes))
     {
         return false;
     }
@@ -571,7 +560,7 @@ int VarClassExcluded(const EvalContext *ctx, const Promise *pp, char **classes)
 
 bool EvalContextPromiseIsActive(const EvalContext *ctx, const Promise *pp)
 {
-    if (!IsDefinedClass(ctx, pp->classes, PromiseGetNamespace(pp)))
+    if (!IsDefinedClass(ctx, pp->classes))
     {
         return false;
     }
@@ -1242,7 +1231,7 @@ bool EvalContextClassPut(EvalContext *ctx, const char *ns, const char *name, boo
         {
             const char *class_expr = ip->name;
 
-            if (IsDefinedClass(ctx, class_expr, ns))
+            if (IsDefinedClass(ctx, class_expr))
             {
                 Log(LOG_LEVEL_ERR, "Setting abort for '%s' when setting class '%s'", ip->name, name);
                 SetBundleAborted(ctx);

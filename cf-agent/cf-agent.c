@@ -659,7 +659,7 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy)
         {
             Constraint *cp = SeqAt(constraints, i);
 
-            if (!IsDefinedClass(ctx, cp->classes, NULL))
+            if (!IsDefinedClass(ctx, cp->classes))
             {
                 continue;
             }
@@ -1355,7 +1355,7 @@ static PromiseResult KeepAgentPromise(EvalContext *ctx, const Promise *pp, ARG_U
     char *sp = NULL;
     struct timespec start = BeginMeasure();
 
-    if (!IsDefinedClass(ctx, pp->classes, PromiseGetNamespace(pp)))
+    if (!IsDefinedClass(ctx, pp->classes))
     {
         if (LEGACY_OUTPUT)
         {

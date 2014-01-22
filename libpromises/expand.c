@@ -1029,7 +1029,7 @@ static void ResolveControlBody(EvalContext *ctx, GenericAgentConfig *config, con
     {
         Constraint *cp = SeqAt(control_body->conlist, i);
 
-        if (!IsDefinedClass(ctx, cp->classes, NULL))
+        if (!IsDefinedClass(ctx, cp->classes))
         {
             continue;
         }

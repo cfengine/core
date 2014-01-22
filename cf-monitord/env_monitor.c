@@ -800,7 +800,7 @@ static void UpdateDistributions(EvalContext *ctx, char *timekey, Averages *av)
    std-deviation for the current time.
 */
 
-    if (IsDefinedClass(ctx, "Min40_45", NULL))
+    if (IsDefinedClass(ctx, "Min40_45"))
     {
         day = Day2Number(timekey);
 
@@ -1163,7 +1163,7 @@ static PromiseResult KeepMonitorPromise(EvalContext *ctx, const Promise *pp, ARG
 
     char *sp = NULL;
 
-    if (!IsDefinedClass(ctx, pp->classes, PromiseGetNamespace(pp)))
+    if (!IsDefinedClass(ctx, pp->classes))
     {
         if (LEGACY_OUTPUT)
         {

@@ -182,7 +182,7 @@ bool RlistMatchesRegexRlist(const Rlist *list, const Rlist *search)
    "search".  Non-scalars in "list" and "search" are skipped.
 */
 {
-    for (Rlist *rp = search; rp != NULL; rp = rp->next)
+    for (const Rlist *rp = search; rp != NULL; rp = rp->next)
     {
         if (rp->val.type != RVAL_TYPE_SCALAR)
         {

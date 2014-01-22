@@ -1122,11 +1122,11 @@ static void OSClasses(EvalContext *ctx)
     {
         char vbuff[CF_BUFSIZE];
 
-        if (IsDefinedClass(ctx, "SUSE", NULL))
+        if (EvalContextClassGet(ctx, NULL, "SUSE"))
         {
             snprintf(vbuff, CF_BUFSIZE, "/var/spool/cron/tabs/%s", pw->pw_name);
         }
-        else if (IsDefinedClass(ctx, "redhat", NULL))
+        else if (EvalContextClassGet(ctx, NULL, "redhat"))
         {
             snprintf(vbuff, CF_BUFSIZE, "/var/spool/cron/%s", pw->pw_name);
         }
@@ -1155,17 +1155,17 @@ static void OSClasses(EvalContext *ctx)
     /* FIXME: this variable needs redhat/SUSE/debian classes to be defined and
      * hence can't be initialized earlier */
 
-    if (IsDefinedClass(ctx, "redhat", NULL))
+    if (EvalContextClassGet(ctx, NULL, "redhat"))
     {
         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "doc_root", "/var/www/html", DATA_TYPE_STRING, "source=agent");
     }
 
-    if (IsDefinedClass(ctx, "SUSE", NULL))
+    if (EvalContextClassGet(ctx, NULL, "SUSE"))
     {
         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "doc_root", "/srv/www/htdocs", DATA_TYPE_STRING, "source=agent");
     }
 
-    if (IsDefinedClass(ctx, "debian", NULL))
+    if (EvalContextClassGet(ctx, NULL, "debian"))
     {
         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "doc_root", "/var/www", DATA_TYPE_STRING, "source=agent");
     }

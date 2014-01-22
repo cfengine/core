@@ -269,7 +269,7 @@ Bundle *MakeTemporaryBundleFromTemplate(EvalContext *ctx, Policy *policy, Attrib
             }
             else
             {
-                if (IsDefinedClass(ctx, context, PromiseGetNamespace(pp)))
+                if (IsDefinedClass(ctx, context))
                 {
                     if (level > 0)
                     {
@@ -305,7 +305,7 @@ static PromiseResult KeepEditLinePromise(EvalContext *ctx, const Promise *pp, vo
 
     char *sp = NULL;
 
-    if (!IsDefinedClass(ctx, pp->classes, PromiseGetNamespace(pp)))
+    if (!IsDefinedClass(ctx, pp->classes))
     {
         if (LEGACY_OUTPUT)
         {

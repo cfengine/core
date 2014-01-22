@@ -2200,9 +2200,7 @@ Constraint *EffectiveConstraint(const EvalContext *ctx, Seq *constraints)
         Constraint *cp = SeqAt(constraints, i);
 
         const char *context = ConstraintContext(cp);
-        const char *ns = ConstraintGetNamespace(cp);
-
-        if (IsDefinedClass(ctx, context, ns))
+        if (IsDefinedClass(ctx, context))
         {
             return cp;
         }
@@ -2235,7 +2233,7 @@ int PromiseGetConstraintAsBoolean(const EvalContext *ctx, const char *lval, cons
 
         if (strcmp(cp->lval, lval) == 0)
         {
-            if (IsDefinedClass(ctx, cp->classes, PromiseGetNamespace(pp)))
+            if (IsDefinedClass(ctx, cp->classes))
             {
                 if (retval != CF_UNDEFINED)
                 {
@@ -2289,7 +2287,7 @@ int ConstraintsGetAsBoolean(const EvalContext *ctx, const char *lval, const Seq 
 
         if (strcmp(cp->lval, lval) == 0)
         {
-            if (IsDefinedClass(ctx, cp->classes, NULL))
+            if (IsDefinedClass(ctx, cp->classes))
             {
                 if (retval != CF_UNDEFINED)
                 {
@@ -2341,7 +2339,7 @@ bool PromiseBundleConstraintExists(const EvalContext *ctx, const char *lval, con
 
         if (strcmp(cp->lval, lval) == 0)
         {
-            if (IsDefinedClass(ctx, cp->classes, PromiseGetNamespace(pp)))
+            if (IsDefinedClass(ctx, cp->classes))
             {
                 if (retval != CF_UNDEFINED)
                 {
@@ -2714,7 +2712,7 @@ void PromiseRecheckAllConstraints(const EvalContext *ctx, const Promise *pp)
 {
     static Item *EDIT_ANCHORS = NULL; /* GLOBAL_X */
 
-    if (!IsDefinedClass(ctx, pp->classes, PromiseGetNamespace(pp)))
+    if (!IsDefinedClass(ctx, pp->classes))
     {
         return;
     }

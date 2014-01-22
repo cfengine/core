@@ -585,7 +585,7 @@ int MatchClasses(EvalContext *ctx, ServerConnectionState *conn)
         {
             Log(LOG_LEVEL_VERBOSE, "Checking whether class %s can be identified as me...", ip->name);
 
-            if (IsDefinedClass(ctx, ip->name, NULL))
+            if (IsDefinedClass(ctx, ip->name))
             {
                 Log(LOG_LEVEL_DEBUG, "Class '%s' matched, accepting...", ip->name);
                 DeleteItemList(classlist);

@@ -1,0 +1,65 @@
+#  Copyright (C) Cfengine AS
+
+#  This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+
+#  This program is free software; you can redistribute it and/or modify it
+#  under the terms of the GNU General Public License as published by the
+#  Free Software Foundation; version 3.
+
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
+
+# To the extent this program is licensed as part of the Enterprise
+# versions of Cfengine, the applicable Commercial Open Source License
+# (COSL) may apply to this file if you as a licensee so wish it. See
+# included file COSL.txt.
+
+#+begin_src cfengine3
+body common control
+{
+      bundlesequence => { holder, test };
+}
+
+bundle common holder
+{
+  classes:
+      "holderclass" expression => "any"; # will be global
+
+  vars:
+      "s" string => "Hello!";
+      "d" data => parsejson('[4,5,6]');
+      "list" slist => { "element1", "element2" };
+}
+
+bundle agent test
+{
+  vars:
+      "state" data => datastate();
+
+      # all the variables in bundle "holder" defined as of the execution of datastate() will be here
+      "holderstate" string => format("%S", "state[vars][holder]");
+      # all the classes defined as of the execution of datastate() will be here
+      "allclasses" slist => getindices("state[classes]");
+
+  classes:
+      "have_holderclass" expression => some("holderclass", allclasses);
+
+  reports:
+      "holder vars = $(holderstate)";
+    have_holderclass::
+      "I have the holder class";
+}
+#+end_src
+###############################################################################
+#+begin_src example_output
+#@ ```
+#@ 2014-01-22T12:02:23-0500   notice: /default/test: R: holder vars = {"list":["element1","element2"],"s":"Hello!","d":[4,5,6]}
+#@ 2014-01-22T12:02:23-0500   notice: /default/test: R: I have the holder class
+#@ ```
+#+end_src

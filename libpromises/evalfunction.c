@@ -76,7 +76,7 @@ static FnCallResult FilterInternal(EvalContext *ctx, FnCall *fp, char *regex, ch
 static char *StripPatterns(char *file_buffer, char *pattern, char *filename);
 static void CloseStringHole(char *s, int start, int end);
 static int BuildLineArray(EvalContext *ctx, const Bundle *bundle, char *array_lval, char *file_buffer, char *split, int maxent, DataType type, int intIndex);
-static int ExecModule(EvalContext *ctx, char *command, const char *ns);
+static int ExecModule(EvalContext *ctx, char *command);
 static bool CheckID(const char *id);
 static const Rlist *GetListReferenceArgument(const EvalContext *ctx, const FnCall *fp, const char *lval_str, DataType *datatype_out);
 static void *CfReadFile(char *filename, int maxsize);
@@ -1443,7 +1443,7 @@ static FnCallResult FnCallUseModule(EvalContext *ctx, FnCall *fp, Rlist *finalar
     snprintf(modulecmd, CF_BUFSIZE, "\"%s%cmodules%c%s\" %s", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR, command, args);
     Log(LOG_LEVEL_VERBOSE, "Executing and using module [%s]", modulecmd);
 
-    if (!ExecModule(ctx, modulecmd, PromiseGetNamespace(fp->caller)))
+    if (!ExecModule(ctx, modulecmd))
     {
         return FnFailure();
     }
@@ -5682,7 +5682,7 @@ static int BuildLineArray(EvalContext *ctx, const Bundle *bundle, char *array_lv
 
 /*********************************************************************/
 
-static int ExecModule(EvalContext *ctx, char *command, const char *ns)
+static int ExecModule(EvalContext *ctx, char *command)
 {
     FILE *pp;
     char *sp = NULL;
@@ -5735,7 +5735,7 @@ static int ExecModule(EvalContext *ctx, char *command, const char *ns)
             }
         }
 
-        ModuleProtocol(ctx, command, line, print, ns, context);
+        ModuleProtocol(ctx, command, line, print, context);
     }
 
     cf_pclose(pp);
@@ -5747,7 +5747,7 @@ static int ExecModule(EvalContext *ctx, char *command, const char *ns)
 /* Level                                                             */
 /*********************************************************************/
 
-void ModuleProtocol(EvalContext *ctx, char *command, const char *line, int print, const char *ns, char* context)
+void ModuleProtocol(EvalContext *ctx, char *command, const char *line, int print, char* context)
 {
     char name[CF_BUFSIZE], content[CF_BUFSIZE];
     char arg0[CF_BUFSIZE];

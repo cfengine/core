@@ -353,7 +353,7 @@ static ActionResult RepairExec(EvalContext *ctx, Attributes a,
 
             if (a.module)
             {
-                ModuleProtocol(ctx, cmdline, line, !a.contain.nooutput, PromiseGetNamespace(pp), module_context);
+                ModuleProtocol(ctx, cmdline, line, !a.contain.nooutput, module_context);
             }
             else if ((!a.contain.nooutput) && (!EmptyString(line)))
             {

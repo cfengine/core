@@ -39,7 +39,6 @@ Map *MapNew(MapHashFn hash_fn,
             MapDestroyDataFn destroy_value_fn);
 
 /*
- * Returns 'true' if the key was previously used in the map, otherwise 'false'.
  * If the key is in the map, value get replaced. Old value is destroyed.
  */
 void MapInsert(Map *map, void *key, void *value);

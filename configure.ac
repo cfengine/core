@@ -561,7 +561,6 @@ AC_CHECK_DECLS(strlcpy)
 AC_REPLACE_FUNCS(strlcpy)
 
 AC_CHECK_DECLS(realpath)
-AC_CHECK_FUNCS(realpath)
 
 AC_CHECK_DECLS(strdup)
 AC_REPLACE_FUNCS(strdup)

@@ -402,6 +402,8 @@ bool StringMatch(const char *regex, const char *str, int *start, int *end)
         int erroffset;
         pattern = pcre_compile(regex, PCRE_MULTILINE | PCRE_DOTALL, &errorstr, &erroffset, NULL);
     }
+
+    /* TODO remove bogus assert. */
     assert(pattern);
 
     if (pattern == NULL)
@@ -624,6 +626,8 @@ void ReplaceChar(char *in, char *out, int outSz, char from, char to)
     }
 }
 
+/* TODO replace with StringReplace. This one is pretty slow, calls strncmp
+ * O(n) times even if string matches nowhere. */
 int ReplaceStr(char *in, char *out, int outSz, char *from, char *to)
 /* Replaces all occurences of strings 'from' to 'to' in preallocated
  * string 'out'. Returns true on success, false otherwise. */

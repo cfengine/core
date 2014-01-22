@@ -172,6 +172,14 @@ struct utsname
 # endif
 #endif
 
+#ifndef PATH_MAX
+# ifdef _MAX_PATH
+#  define PATH_MAX _MAX_PATH
+# else
+#  define PATH_MAX 4096
+# endif
+#endif
+
 #include <signal.h>
 
 #ifdef __MINGW32__
@@ -420,7 +428,20 @@ void srand48(long seed);
 int clock_gettime(clockid_t clock_id, struct timespec *tp);
 #endif
 #if !HAVE_DECL_REALPATH
-char *realpath(const char *path, char *resolved_path);
+    /**
+     * WARNING realpath() has varying behaviour among platforms.
+     *  - Do not use it to convert relative paths to absolute
+     *    (Solaris under certain conditions will return relative path).
+     *  - Do not use it to check existence of file
+     *    (on *BSD the last component of the path may not exist).
+     * Use it only to resolve all symlinks and canonicalise filename,
+     * i.e. remove double '/' and "/./" and "/../".
+     *
+     * @TODO what we need is a resolvepath(2) cross-platform implementation.
+     */
+    #if defined (__MINGW__)
+        #define realpath(N,R) _fullpath((R), (N), PATH_MAX)
+    #endif
 #endif
 #if !HAVE_DECL_LSTAT
 int lstat(const char *file_name, struct stat *buf);

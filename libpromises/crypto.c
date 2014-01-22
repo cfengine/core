@@ -335,13 +335,25 @@ void SavePublicKey(const char *user, const char *digest, const RSA *key)
     char keyname[CF_MAXVARSIZE], filename[CF_BUFSIZE];
     struct stat statbuf;
     FILE *fp;
-    int err;
+    int err, ret;
 
-    snprintf(keyname, CF_MAXVARSIZE, "%s-%s", user, digest);
+    ret = snprintf(keyname, sizeof(keyname), "%s-%s", user, digest);
+    if (ret >= sizeof(keyname))
+    {
+        Log(LOG_LEVEL_ERR, "USERNAME-KEY (%s-%s) string too long!",
+            user, digest);
+        return;
+    }
 
-    snprintf(filename, CF_BUFSIZE, "%s/ppkeys/%s.pub", CFWORKDIR, keyname);
+    ret = snprintf(filename, sizeof(filename), "%s/ppkeys/%s.pub",
+                   CFWORKDIR, keyname);
+    if (ret >= sizeof(filename))
+    {
+        Log(LOG_LEVEL_ERR, "Filename too long!");
+        return;
+    }
+
     MapName(filename);
-
     if (stat(filename, &statbuf) != -1)
     {
         return;

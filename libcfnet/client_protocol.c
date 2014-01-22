@@ -505,7 +505,7 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
 
 int BadProtoReply(char *buf)
 {
-    return (strncmp(buf, "BAD:", 4) == 0);
+    return (strncmp(buf, "BAD: ", 5) == 0);
 }
 
 /*********************************************************************/

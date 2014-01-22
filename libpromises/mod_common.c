@@ -306,7 +306,7 @@ const ConstraintSyntax CFA_CONTROLBODY[] =
     ConstraintSyntaxNewNull()
 };
 
-const ConstraintSyntax CFS_CONTROLBODY[] =
+const ConstraintSyntax CFS_CONTROLBODY[SERVER_CONTROL_NONE + 1] =
 {
     ConstraintSyntaxNewStringList("allowallconnects", "","List of IPs or hostnames that may have more than one connection to the server port", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewStringList("allowconnects", "", "List of IPs or hostnames that may connect to the server port", SYNTAX_STATUS_NORMAL),

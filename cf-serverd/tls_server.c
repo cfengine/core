@@ -35,6 +35,12 @@
 #include <tls_generic.h>              /* TLSSend */
 #include <cf-serverd-enterprise-stubs.h>
 #include <connection_info.h>
+#include <string_lib.h>                                  /* StringMatchFull */
+#include <known_dirs.h>
+#include <file_lib.h>                                           /* IsDir2 */
+
+#include "access.h"                 /* access_CheckResource, acl_CheckExact */
+
 
 static SSL_CTX *SSLSERVERCONTEXT = NULL; /* GLOBAL_X */
 static X509 *SSLSERVERCERT = NULL; /* GLOBAL_X */
@@ -74,7 +80,10 @@ bool ServerTLSInitialize()
      */
     const char *cipher_list = SV.allowciphers;
     if (cipher_list == NULL)
+    {
         cipher_list ="AES256-GCM-SHA384:AES256-SHA";
+    }
+
     ret = SSL_CTX_set_cipher_list(SSLSERVERCONTEXT, cipher_list);
     if (ret != 1)
     {
@@ -520,7 +529,7 @@ typedef enum
     PROTOCOL_COMMAND_EXEC = 0,
     PROTOCOL_COMMAND_GET,
     PROTOCOL_COMMAND_OPENDIR,
-    PROTOCOL_COMMAND_SYNC,
+    PROTOCOL_COMMAND_SYNCH,
     PROTOCOL_COMMAND_MD5,
     PROTOCOL_COMMAND_VERSION,
     PROTOCOL_COMMAND_VAR,
@@ -562,23 +571,23 @@ static ProtocolCommandNew GetCommandNew(char *str)
 }
 
 
-/****************************************************************************/
 bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
 {
-    time_t tloc, trem = 0;
-    char recvbuffer[CF_BUFSIZE + CF_BUFEXT], sendbuffer[CF_BUFSIZE];
-    char filename[CF_BUFSIZE], args[CF_BUFSIZE];
-    long time_no_see = 0;
-    int drift, received;
+    char recvbuffer[CF_BUFSIZE + CF_BUFEXT];
+    char sendbuffer[CF_BUFSIZE] = { 0 };
+    char filename[sizeof(recvbuffer)];
+    int received;
     ServerFileGetState get_args;
-    Item *classes;
 
-    /* We never double encrypt within the TLS layer */
+    /* We already encrypt because of the TLS layer, no need to encrypt more. */
     const int encrypted = 0;
-
 
     memset(recvbuffer, 0, CF_BUFSIZE + CF_BUFEXT);
     memset(&get_args, 0, sizeof(get_args));
+
+    /* Legacy stuff only for old protocol */
+    assert(conn->rsa_auth == 1);
+    assert(conn->id_verified == 1);
 
     received = ReceiveTransaction(conn->conn_info, recvbuffer, NULL);
     if (received == -1 || received == 0)
@@ -598,43 +607,47 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
         return false;
     }
 
+    /* TODO break recvbuffer here: command, param1, param2 etc. */
+
     switch (GetCommandNew(recvbuffer))
     {
-    case PROTOCOL_COMMAND_EXEC:
-        memset(args, 0, CF_BUFSIZE);
-        sscanf(recvbuffer, "EXEC %255[^\n]", args);
-
-        if (!conn->id_verified)
+    case PROTOCOL_COMMAND_EXEC:                                 /* TODO always file never directory, no end with '/' */
+    {
+        char args[256];
+        int ret = sscanf(recvbuffer, "EXEC %255[^\n]", args);
+        if (ret != 1)
         {
-            Log(LOG_LEVEL_INFO, "Server refusal due to incorrect identity");
-            RefuseAccess(conn, 0, recvbuffer);
-            return false;
+            goto protocol_error;
         }
 
         if (!AllowedUser(conn->username))
         {
-            Log(LOG_LEVEL_INFO, "Server refusal due to non-allowed user");
-            RefuseAccess(conn, 0, recvbuffer);
+            Log(LOG_LEVEL_INFO, "EXEC denied due to non-allowed user");
+            RefuseAccess(conn, recvbuffer);
             return false;
         }
 
-        if (!conn->rsa_auth)
-        {
-            Log(LOG_LEVEL_INFO, "Server refusal due to no RSA authentication");
-            RefuseAccess(conn, 0, recvbuffer);
-            return false;
-        }
+        char arg0[sizeof(CFRUNCOMMAND)];
+        CommandArg0_unsafe(arg0, CFRUNCOMMAND);
 
-        if (!AccessControl(ctx, CommandArg0(CFRUNCOMMAND), conn, false))
+        /* TODO EXEC should not just use paths_acl access control, but
+         * specific "paths_execute" ACL. Then different command execution
+         * could be allowed per host, and the host could even set argv[0] in
+         * his EXEC request, rather than only the arguments. */
+
+        if (acl_CheckPath(paths_acl, arg0,
+                          conn->ipaddr, conn->hostname,
+                          KeyPrintableHash(ConnectionInfoKey(conn->conn_info)))
+            == false)
         {
-            Log(LOG_LEVEL_INFO, "Server refusal due to denied access to requested object");
-            RefuseAccess(conn, 0, recvbuffer);
+            Log(LOG_LEVEL_INFO, "EXEC denied due to ACL");
+            RefuseAccess(conn, recvbuffer);
             return false;
         }
 
         if (!MatchClasses(ctx, conn))
         {
-            Log(LOG_LEVEL_INFO, "Server refusal due to failed class/context match");
+            Log(LOG_LEVEL_INFO, "EXEC denied due to failed class match");
             Terminate(conn->conn_info);
             return false;
         }
@@ -642,52 +655,56 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
         DoExec(ctx, conn, args);
         Terminate(conn->conn_info);
         return false;
-
+    }
     case PROTOCOL_COMMAND_VERSION:
 
-        if (!conn->id_verified)
-        {
-            Log(LOG_LEVEL_INFO, "ID not verified");
-            RefuseAccess(conn, 0, recvbuffer);
-        }
-
-        snprintf(conn->output, CF_BUFSIZE, "OK: %s", Version());
-        SendTransaction(conn->conn_info, conn->output, 0, CF_DONE);
-        return conn->id_verified;
+        snprintf(sendbuffer, sizeof(sendbuffer), "OK: %s", Version());
+        SendTransaction(conn->conn_info, sendbuffer, 0, CF_DONE);
+        return true;
 
     case PROTOCOL_COMMAND_GET:
+    {
+        int ret = sscanf(recvbuffer, "GET %d %[^\n]",
+                         &(get_args.buf_size), filename);
 
-        memset(filename, 0, CF_BUFSIZE);
-        sscanf(recvbuffer, "GET %d %[^\n]", &(get_args.buf_size), filename);
-
-        if ((get_args.buf_size < 0) || (get_args.buf_size > CF_BUFSIZE))
+        if (ret != 2 ||
+            get_args.buf_size <= 0 || get_args.buf_size > CF_BUFSIZE)
         {
-            Log(LOG_LEVEL_INFO, "GET buffer out of bounds");
-            RefuseAccess(conn, 0, recvbuffer);
+            goto protocol_error;
+        }
+
+        Log(LOG_LEVEL_VERBOSE, "%14s %7s %s",
+            "Received:", "GET", filename);
+
+        ret = PreprocessRequestPath(filename, sizeof(filename),
+                                    conn->ipaddr, conn->hostname,
+                                    KeyPrintableHash(ConnectionInfoKey(conn->conn_info)));
+        if (ret == (size_t) -1)
+        {
+            goto protocol_error;
+        }
+
+        Log(LOG_LEVEL_VERBOSE, "%14s %7s %s",
+            "Translated to:", "GET", filename);
+
+        if (acl_CheckPath(paths_acl, filename,
+                          conn->ipaddr, conn->hostname,
+                          KeyPrintableHash(ConnectionInfoKey(conn->conn_info)))
+            == false)
+        {
+            Log(LOG_LEVEL_INFO, "access denied to GET: %s", filename);
+            RefuseAccess(conn, recvbuffer);
             return false;
         }
 
-        if (!conn->id_verified)
-        {
-            Log(LOG_LEVEL_INFO, "ID not verified");
-            RefuseAccess(conn, 0, recvbuffer);
-            return false;
-        }
-
-        if (!AccessControl(ctx, filename, conn, false))
-        {
-            Log(LOG_LEVEL_INFO, "Access denied to get object");
-            RefuseAccess(conn, 0, recvbuffer);
-            return true;
-        }
-
-        memset(sendbuffer, 0, CF_BUFSIZE);
+        memset(sendbuffer, 0, sizeof(sendbuffer));
 
         if (get_args.buf_size >= CF_BUFSIZE)
         {
             get_args.buf_size = 2048;
         }
 
+        /* TODO eliminate! */
         get_args.connect = conn;
         get_args.encrypt = false;
         get_args.replybuff = sendbuffer;
@@ -696,70 +713,112 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
         CfGetFile(&get_args);
 
         return true;
-
+    }
     case PROTOCOL_COMMAND_OPENDIR:
-
-        memset(filename, 0, CF_BUFSIZE);
-        sscanf(recvbuffer, "OPENDIR %[^\n]", filename);
-
-        if (!conn->id_verified)
+    {
+        memset(filename, 0, sizeof(filename));
+        int ret = sscanf(recvbuffer, "OPENDIR %[^\n]", filename);
+        if (ret != 1)
         {
-            Log(LOG_LEVEL_INFO, "ID not verified");
-            RefuseAccess(conn, 0, recvbuffer);
-            return false;
+            goto protocol_error;
         }
 
-        if (!AccessControl(ctx, filename, conn, true))        /* opendir don't care about privacy */
+        Log(LOG_LEVEL_VERBOSE, "%14s %7s %s",
+            "Received:", "OPENDIR", filename);
+
+        /* sizeof()-1 because we need one extra byte for
+           appending '/' afterwards. */
+        ret = PreprocessRequestPath(filename, sizeof(filename) - 1,
+                                    conn->ipaddr, conn->hostname,
+                                    KeyPrintableHash(ConnectionInfoKey(conn->conn_info)));
+        if (ret == (size_t) -1)
         {
-            Log(LOG_LEVEL_INFO, "DIR access error");
-            RefuseAccess(conn, 0, recvbuffer);
+            goto protocol_error;
+        }
+        /* OPENDIR *must* be directory. */
+        filename[ret] = FILE_SEPARATOR;
+        filename[ret+1] = '\0';
+
+        Log(LOG_LEVEL_VERBOSE, "%14s %7s %s",
+            "Translated to:", "OPENDIR", filename);
+
+        if (acl_CheckPath(paths_acl, filename,
+                          conn->ipaddr, conn->hostname,
+                          KeyPrintableHash(ConnectionInfoKey(conn->conn_info)))
+            == false)
+        {
+            Log(LOG_LEVEL_INFO, "access denied to OPENDIR: %s", filename);
+            RefuseAccess(conn, recvbuffer);
             return false;
         }
 
         CfOpenDirectory(conn, sendbuffer, filename);
         return true;
+    }
+    case PROTOCOL_COMMAND_SYNCH:
+    {
+        long time_no_see = 0;
+        memset(filename, 0, sizeof(filename));
+        int ret = sscanf(recvbuffer, "SYNCH %ld STAT %[^\n]",
+                         &time_no_see, filename);
 
-    case PROTOCOL_COMMAND_SYNC:
-
-        if (!conn->id_verified)
+        if (ret != 2  || time_no_see == 0 || filename[0] == '\0')
         {
-            Log(LOG_LEVEL_INFO, "ID not verified");
-            RefuseAccess(conn, 0, recvbuffer);
-            return false;
+            goto protocol_error;
         }
 
-        memset(filename, 0, CF_BUFSIZE);
-        sscanf(recvbuffer, "SYNCH %ld STAT %[^\n]", &time_no_see, filename);
-
-        trem = (time_t) time_no_see;
-
-        if ((time_no_see == 0) || (filename[0] == '\0'))
+        time_t tloc = time(NULL);
+        if (tloc == -1)
         {
-            break;
-        }
-
-        if ((tloc = time((time_t *) NULL)) == -1)
-        {
-            strcpy(conn->output, "Couldn't read system clock\n");
-            Log(LOG_LEVEL_INFO, "Couldn't read system clock. (time: %s)", GetErrorStr());
+            /* Should never happen. */
+            Log(LOG_LEVEL_ERR, "Couldn't read system clock. (time: %s)", GetErrorStr());
             SendTransaction(conn->conn_info, "BAD: clocks out of synch", 0, CF_DONE);
             return true;
         }
 
-        drift = (int) (tloc - trem);
+        time_t trem = (time_t) time_no_see;
+        int drift = (int) (tloc - trem);
 
-        if (!AccessControl(ctx, filename, conn, true))
+        Log(LOG_LEVEL_VERBOSE, "%14s %7s %s",
+            "Received:", "STAT", filename);
+
+        /* sizeof()-1 because we need one extra byte for
+           appending '/' afterwards. */
+        ret = PreprocessRequestPath(filename, sizeof(filename) - 1,
+                                    conn->ipaddr, conn->hostname,
+                                    KeyPrintableHash(ConnectionInfoKey(conn->conn_info)));
+        if (ret == (size_t) -1)
         {
-            Log(LOG_LEVEL_VERBOSE, "AccessControl: access denied");
-            RefuseAccess(conn, 0, recvbuffer);
+            goto protocol_error;
+        }
+        if (IsDir2(filename) == 1)                            /* append '/' */
+        {
+            assert(ret + 1 < sizeof(filename));
+            filename[ret] = FILE_SEPARATOR;
+            filename[ret + 1] = '\0';
+            ret++;
+        }
+
+        Log(LOG_LEVEL_VERBOSE, "%14s %7s %s",
+            "Translated to:", "STAT", filename);
+
+        if (acl_CheckPath(paths_acl, filename,
+                          conn->ipaddr, conn->hostname,
+                          KeyPrintableHash(ConnectionInfoKey(conn->conn_info)))
+            == false)
+        {
+            Log(LOG_LEVEL_INFO, "access denied to STAT: %s", filename);
+            RefuseAccess(conn, recvbuffer);
             return true;
         }
 
         if (DENYBADCLOCKS && (drift * drift > CLOCK_DRIFT * CLOCK_DRIFT))
         {
-            snprintf(conn->output, CF_BUFSIZE - 1, "BAD: Clocks are too far unsynchronized %ld/%ld\n", (long) tloc,
-                     (long) trem);
-            SendTransaction(conn->conn_info, conn->output, 0, CF_DONE);
+            snprintf(sendbuffer, sizeof(sendbuffer),
+                     "BAD: Clocks are too far unsynchronized %ld/%ld",
+                     (long) tloc, (long) trem);
+            Log(LOG_LEVEL_INFO, "denybadclocks %s", sendbuffer);
+            SendTransaction(conn->conn_info, sendbuffer, 0, CF_DONE);
             return true;
         }
         else
@@ -769,74 +828,114 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
         }
 
         return true;
-
+    }
     case PROTOCOL_COMMAND_MD5:
-
-        if (!conn->id_verified)
-        {
-            Log(LOG_LEVEL_INFO, "ID not verified");
-            RefuseAccess(conn, 0, recvbuffer);
-            return true;
-        }
 
         CompareLocalHash(conn, sendbuffer, recvbuffer);
         return true;
 
     case PROTOCOL_COMMAND_VAR:
-
-        if (!conn->id_verified)
+    {
+        char var[256];
+        int ret = sscanf(recvbuffer, "VAR %255[^\n]", var);
+        if (ret != 1)
         {
-            Log(LOG_LEVEL_INFO, "ID not verified");
-            RefuseAccess(conn, 0, recvbuffer);
-            return true;
+            goto protocol_error;
         }
 
-        if (!LiteralAccessControl(ctx, recvbuffer, conn, encrypted))
+        /* TODO if this is literals_acl, then when should I check vars_acl? */
+        if (acl_CheckExact(literals_acl, var,
+                           conn->ipaddr, conn->hostname,
+                           KeyPrintableHash(ConnectionInfoKey(conn->conn_info)))
+            == false)
         {
-            Log(LOG_LEVEL_INFO, "Literal access failure");
-            RefuseAccess(conn, 0, recvbuffer);
+            Log(LOG_LEVEL_INFO, "access denied to variable: %s", var);
+            RefuseAccess(conn, recvbuffer);
             return false;
         }
 
         GetServerLiteral(ctx, conn, sendbuffer, recvbuffer, encrypted);
         return true;
-
+    }
     case PROTOCOL_COMMAND_CONTEXT:
-
-        if (!conn->id_verified)
+    {
+        char client_regex[256];
+        int ret = sscanf(recvbuffer, "CONTEXT %255[^\n]", client_regex);
+        if (ret != 1)
         {
-            Log(LOG_LEVEL_INFO, "ID not verified");
-            RefuseAccess(conn, 0, "Context probe");
-            return true;
+            goto protocol_error;
         }
 
-        if ((classes = ContextAccessControl(ctx, recvbuffer, conn, encrypted)) == NULL)
+        /* WARNING: this comes from legacy code and must be killed if we care
+         * about performance. We should not accept regular expressions from
+         * the client, but this will break backwards compatibility.
+         *
+         * I replicated the code in raw form here to emphasize complexity,
+         * it's the only *slow* command currently in the protocol.  */
+
+        Item *persistent_classes = ListPersistentClasses();
+        Item *matched_classes = NULL;
+
+        /* For all persistent classes */
+        for (Item *ip = persistent_classes; ip != NULL; ip = ip->next)
         {
-            Log(LOG_LEVEL_INFO, "Context access failure on %s", recvbuffer);
-            RefuseAccess(conn, 0, recvbuffer);
+            const char *class_name = ip->name;
+
+            /* Does this class match the regex the client sent? */
+            if (StringMatchFull(client_regex, class_name))
+            {
+                /* For all ACLs */
+                for (size_t i = 0; i < classes_acl->len; i++)
+                {
+                    struct resource_acl *racl = &classes_acl->acls[i];
+
+                    /* Does this ACL apply to this host? */
+                    if (access_CheckResource(racl, conn->ipaddr, conn->hostname,
+                                             KeyPrintableHash(ConnectionInfoKey(conn->conn_info)))
+                        == true)
+                    {
+                        const char *allowed_classes_regex =
+                            classes_acl->resource_names->list[i]->str;
+
+                        /* Does this ACL admits access for this class to the
+                         * connected host? */
+                        if (StringMatchFull(allowed_classes_regex, class_name))
+                        {
+                            PrependItem(&matched_classes, class_name, NULL);
+                        }
+                    }
+                }
+            }
+        }
+
+        if (matched_classes == NULL)
+        {
+            Log(LOG_LEVEL_INFO,
+                "No allowed classes for remoteclassesmatching: %s",
+                client_regex);
+            RefuseAccess(conn, recvbuffer);
             return false;
         }
 
-        ReplyServerContext(conn, encrypted, classes);
+        ReplyServerContext(conn, encrypted, matched_classes);
         return true;
-
+    }
     case PROTOCOL_COMMAND_QUERY:
-
-        /*
-         * TLS has no authentication, therefore we need to remove this.
-         * Or find another way to do this.
-         */
-        if (!conn->id_verified)
+    {
+        char query[256];
+        int ret = sscanf(recvbuffer, "QUERY %255[^\n]", query);
+        if (ret != 1)
         {
-            Log(LOG_LEVEL_INFO, "ID not verified (here)");
-            RefuseAccess(conn, 0, recvbuffer);
-            return true;
+            goto protocol_error;
         }
 
-        if (!LiteralAccessControl(ctx, recvbuffer, conn, encrypted))
+        if (acl_CheckExact(query_acl, query,
+                           conn->ipaddr, conn->hostname,
+                           KeyPrintableHash(ConnectionInfoKey(conn->conn_info)))
+            == false)
         {
-            Log(LOG_LEVEL_INFO, "Query access failure");
-            RefuseAccess(conn, 0, recvbuffer);
+            Log(LOG_LEVEL_INFO, "access denied to query: %s", query);
+            RefuseAccess(conn, recvbuffer);
             return false;
         }
 
@@ -846,38 +945,37 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
         }
 
         break;
-
+    }
     case PROTOCOL_COMMAND_CALL_ME_BACK:
 
-        memset(filename, 0, CF_BUFSIZE);
-        if (strncmp(recvbuffer, "SCALLBACK CALL_ME_BACK collect_calls", strlen("SCALLBACK CALL_ME_BACK collect_calls")) != 0)
+        if (acl_CheckExact(query_acl, "collect_calls",
+                           conn->ipaddr, conn->hostname,
+                           KeyPrintableHash(ConnectionInfoKey(conn->conn_info)))
+            == false)
         {
-            Log(LOG_LEVEL_INFO, "CALL_ME_BACK protocol defect");
-            RefuseAccess(conn, 0, "decryption failure");
-            return false;
-        }
-        strcpy(filename, "CALL_ME_BACK collect_calls");
-
-        if (!conn->id_verified)
-        {
-            Log(LOG_LEVEL_INFO, "ID not verified");
-            RefuseAccess(conn, 0, recvbuffer);
+            Log(LOG_LEVEL_INFO,
+                "access denied to Call-Collect, check the ACL for class: collect_calls");
+            RefuseAccess(conn, recvbuffer);
             return false;
         }
 
-        if (!LiteralAccessControl(ctx, filename, conn, true))
-        {
-            Log(LOG_LEVEL_INFO, "Query access failure");
-            RefuseAccess(conn, 0, filename);
-            return false;
-        }
         return ReceiveCollectCall(conn);
 
+
     case PROTOCOL_COMMAND_BAD:
+
         Log(LOG_LEVEL_WARNING, "Unexpected protocol command: %s", recvbuffer);
     }
 
-    strcpy(sendbuffer, "BAD: Request denied\n");
+    /* We should only reach this point if something went really bad, and
+     * close connection. In all other cases (like access denied) connection
+     * shouldn't be closed.
+     * TODO So we need this function to return more than
+     * true/false. -1 for error, 0 on success, 1 on access denied. It can be
+     * an option if connection will close on denial. */
+
+protocol_error:
+    strcpy(sendbuffer, "BAD: Request denied");
     SendTransaction(conn->conn_info, sendbuffer, 0, CF_DONE);
     Log(LOG_LEVEL_INFO, "Closing connection, due to request: '%s'", recvbuffer);
     return false;

@@ -2520,7 +2520,7 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx, FnCall *fp, Rlist *fin
             {
                 Log(LOG_LEVEL_VERBOSE, "This host is in the list and has promised to join the class '%s' - joined",
                       array_lval);
-                EvalContextClassPut(ctx, PromiseGetNamespace(fp->caller), array_lval, true, CONTEXT_SCOPE_NAMESPACE, "source=function,function=selectservers");
+                EvalContextClassPutSoft(ctx, array_lval, CONTEXT_SCOPE_NAMESPACE, "source=function,function=selectservers");
             }
 
             count++;
@@ -4016,7 +4016,7 @@ static FnCallResult FnCallHubKnowledge(EvalContext *ctx, ARG_UNUSED FnCall *fp, 
 static FnCallResult FnCallRemoteClassesMatching(EvalContext *ctx, ARG_UNUSED FnCall *fp, Rlist *finalargs)
 {
     Rlist *rp, *classlist;
-    char buffer[CF_BUFSIZE], class[CF_MAXVARSIZE];
+    char buffer[CF_BUFSIZE], class_name[CF_MAXVARSIZE];
 
     buffer[0] = '\0';
 
@@ -4050,8 +4050,8 @@ static FnCallResult FnCallRemoteClassesMatching(EvalContext *ctx, ARG_UNUSED FnC
         {
             for (rp = classlist; rp != NULL; rp = rp->next)
             {
-                snprintf(class, CF_MAXVARSIZE - 1, "%s_%s", prefix, RlistScalarValue(rp));
-                EvalContextClassPut(ctx, NULL, class, true, CONTEXT_SCOPE_BUNDLE, "source=function,function=remoteclassesmatching");
+                snprintf(class_name, CF_MAXVARSIZE - 1, "%s_%s", prefix, RlistScalarValue(rp));
+                EvalContextClassPutSoft(ctx, class_name, CONTEXT_SCOPE_BUNDLE, "source=function,function=remoteclassesmatching");
             }
             RlistDestroy(classlist);
         }
@@ -5787,7 +5787,7 @@ void ModuleProtocol(EvalContext *ctx, char *command, const char *line, int print
         Log(LOG_LEVEL_VERBOSE, "Activated classes '%s'", line + 1);
         if (CheckID(line + 1))
         {
-             EvalContextClassPut(ctx, ns, line + 1, true, CONTEXT_SCOPE_NAMESPACE, "source=module");
+             EvalContextClassPutSoft(ctx, line + 1, CONTEXT_SCOPE_NAMESPACE, "source=module");
         }
         break;
     case '-':

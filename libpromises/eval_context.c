@@ -179,13 +179,6 @@ void EvalContextHeapAddSoft(EvalContext *ctx, const char *context, const char *n
     }
 }
 
-/*******************************************************************/
-
-void EvalContextClassPutHard(EvalContext *ctx, const char *name, const char *tags)
-{
-    EvalContextClassPut(ctx, NULL, name, false, CONTEXT_SCOPE_NAMESPACE, tags);
-}
-
 static void EvalContextStackFrameAddSoft(EvalContext *ctx, const char *context, const char *tags)
 {
     assert(SeqLength(ctx->stack) > 0);
@@ -1159,7 +1152,7 @@ Class *EvalContextClassMatch(const EvalContext *ctx, const char *regex)
     return ClassTableMatch(ctx->global_classes, regex);
 }
 
-bool EvalContextClassPut(EvalContext *ctx, const char *ns, const char *name, bool is_soft, ContextScope scope, const char *tags)
+static bool EvalContextClassPut(EvalContext *ctx, const char *ns, const char *name, bool is_soft, ContextScope scope, const char *tags)
 {
     {
         char context_copy[CF_MAXVARSIZE];
@@ -1242,6 +1235,41 @@ bool EvalContextClassPut(EvalContext *ctx, const char *ns, const char *name, boo
 
     return true;
 }
+
+static const char *EvalContextCurrentNamespace(const EvalContext *ctx)
+{
+    if (SeqLength(ctx->stack) == 0)
+    {
+        return NULL;
+    }
+
+    for (size_t i = SeqLength(ctx->stack) - 1; i >= 0; i--)
+    {
+        StackFrame *frame = SeqAt(ctx->stack, i);
+        switch (frame->type)
+        {
+        case STACK_FRAME_TYPE_BUNDLE:
+            return frame->data.bundle.owner->ns;
+        case STACK_FRAME_TYPE_BODY:
+            return frame->data.body.owner->ns;
+        default:
+            break;
+        }
+    }
+
+    return NULL;
+}
+
+bool EvalContextClassPutHard(EvalContext *ctx, const char *name, const char *tags)
+{
+    return EvalContextClassPut(ctx, NULL, name, false, CONTEXT_SCOPE_NAMESPACE, tags);
+}
+
+bool EvalContextClassPutSoft(EvalContext *ctx, const char *name, ContextScope scope, const char *tags)
+{
+    return EvalContextClassPut(ctx, EvalContextCurrentNamespace(ctx), name, true, scope, tags);
+}
+
 
 ClassTableIterator *EvalContextClassTableIteratorNewGlobal(const EvalContext *ctx, const char *ns, bool is_hard, bool is_soft)
 {

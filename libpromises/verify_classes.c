@@ -105,12 +105,12 @@ PromiseResult VerifyClassPromise(EvalContext *ctx, const Promise *pp, ARG_UNUSED
             if (global_class)
             {
                 Log(LOG_LEVEL_VERBOSE, "Adding global class '%s'", pp->promiser);
-                EvalContextClassPut(ctx, PromiseGetNamespace(pp), pp->promiser, true, CONTEXT_SCOPE_NAMESPACE, "source=promise");
+                EvalContextClassPutSoft(ctx, pp->promiser, CONTEXT_SCOPE_NAMESPACE, "source=promise");
             }
             else
             {
                 Log(LOG_LEVEL_VERBOSE, "Adding local bundle class '%s'", pp->promiser);
-                EvalContextClassPut(ctx, PromiseGetNamespace(pp), pp->promiser, true, CONTEXT_SCOPE_BUNDLE, "source=promise");
+                EvalContextClassPutSoft(ctx, pp->promiser, CONTEXT_SCOPE_BUNDLE, "source=promise");
             }
 
             if (a.context.persistent > 0)
@@ -265,7 +265,7 @@ static int EvalClassExpression(EvalContext *ctx, Constraint *cp, const Promise *
         {
             if (i == n)
             {
-                EvalContextClassPut(ctx, PromiseGetNamespace(pp), RlistScalarValue(rp), true, CONTEXT_SCOPE_NAMESPACE, "source=promise");
+                EvalContextClassPutSoft(ctx, RlistScalarValue(rp), CONTEXT_SCOPE_NAMESPACE, "source=promise");
                 return true;
             }
         }
@@ -325,11 +325,11 @@ static int EvalClassExpression(EvalContext *ctx, Constraint *cp, const Promise *
 
         if (strcmp(PromiseGetBundle(pp)->type, "common") == 0)
         {
-            EvalContextClassPut(ctx, PromiseGetNamespace(pp), buffer, true, CONTEXT_SCOPE_NAMESPACE, "source=promise");
+            EvalContextClassPutSoft(ctx, buffer, CONTEXT_SCOPE_NAMESPACE, "source=promise");
         }
         else
         {
-            EvalContextClassPut(ctx, PromiseGetNamespace(pp), buffer, true, CONTEXT_SCOPE_BUNDLE, "source=promise");
+            EvalContextClassPutSoft(ctx, buffer, CONTEXT_SCOPE_BUNDLE, "source=promise");
         }
 
         return true;

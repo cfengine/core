@@ -760,7 +760,7 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy)
                 for (const Rlist *rp = value; rp != NULL; rp = rp->next)
                 {
                     Log(LOG_LEVEL_VERBOSE, "... %s", RlistScalarValue(rp));
-                    EvalContextClassPut(ctx, NULL, RlistScalarValue(rp), true, CONTEXT_SCOPE_NAMESPACE, "source=environment");
+                    EvalContextClassPutSoft(ctx, RlistScalarValue(rp), CONTEXT_SCOPE_NAMESPACE, "source=environment");
                 }
 
                 continue;

@@ -1772,7 +1772,7 @@ void GenericAgentConfigApply(EvalContext *ctx, const GenericAgentConfig *config)
                 FatalError(ctx, "You cannot use -D to define a reserved class");
             }
 
-            EvalContextClassPut(ctx, NULL, context, true, CONTEXT_SCOPE_NAMESPACE, "source=environment");
+            EvalContextClassPutSoft(ctx, context, CONTEXT_SCOPE_NAMESPACE, "source=environment");
         }
     }
 

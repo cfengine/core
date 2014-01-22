@@ -29,10 +29,8 @@ body common control
 bundle agent example
 {
   vars:
-
       "reversed"
-
-      string =>  reversestring("abc"); # will contain "cba"
+      string =>  string_reverse("abc"); # will contain "cba"
   reports:
       "reversed abs = $(reversed)";
 }

@@ -29,8 +29,7 @@ body common control
 bundle agent example
 {
   vars:
-
-      "end" string =>  tail("abc", "1"); # will contain "c"
+      "end" string => string_tail("abc", "1"); # will contain "c"
   reports:
       "end of abc = $(end)";
 

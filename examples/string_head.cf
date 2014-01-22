@@ -29,15 +29,15 @@ body common control
 bundle agent example
 {
   vars:
-
-      "downcase" string =>  downcase("ABC"); # will contain "abc"
+      "start" string => string_head("abc", "1"); # will contain "a"
   reports:
-      "downcased ABC = $(downcase)";
+      "start of abc = $(start)";
+
 }
 #+end_src
 ###############################################################################
 #+begin_src example_output
 #@ ```
-#@ 2013-12-20T13:44:29-0500   notice: /default/example: R: downcased ABC = abc
+#@ 2013-12-20T13:44:30-0500   notice: /default/example: R: start of abc = a
 #@ ```
 #+end_src

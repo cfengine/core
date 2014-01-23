@@ -989,7 +989,9 @@ Rlist *RlistFromSplitRegex(const char *string, const char *regex, int max, int b
 /*
  * Splits a string containing a separator like "," into a linked list of separate items.
  *
- * NOTE: in contrast with RlistFromSplitRegex() this one will produce at most max number of elements
+ * NOTE: in contrast with RlistFromSplitRegex() this one will produce at most max number of elements;
+ *       last element will contain everything that lefts from original string (we use everything after
+ *       the (max-1)-th separator as the final list element, including any separators that may be embedded in it)
  */
 
 Rlist *RlistFromRegexSplitNoOverflow(const char *string, const char *regex, int max)
@@ -1000,10 +1002,8 @@ Rlist *RlistFromRegexSplitNoOverflow(const char *string, const char *regex, int 
     int start, end;
     int count = 0;
 
-    if (string == NULL)
-    {
-        return NULL;
-    }
+    assert(max > 0); // ensured by FnCallStringSplit() before calling us
+    assert(string != NULL); // ensured by FnCallStringSplit() before calling us
 
     const char *sp = string;
     // We will avoid compiling regex multiple times.
@@ -1011,16 +1011,13 @@ Rlist *RlistFromRegexSplitNoOverflow(const char *string, const char *regex, int 
 
     if (pattern == NULL)
     {
+        Log(LOG_LEVEL_DEBUG, "Error compiling regex from '%s'", regex);
         return NULL;
     }
 
-    while ((count < max) && StringMatchWithPrecompiledRegex(pattern, sp, &start, &end))
+    while ((count < max - 1) && StringMatchWithPrecompiledRegex(pattern, sp, &start, &end))
     {
-        if (count == max - 1) // We are processing last chunk.
-        {
-            break;
-        }
-
+        assert(start < CF_MAXVARSIZE);
         memcpy(node, sp, start);
         node[start] = '\0';
         RlistAppendScalar(&liststart, node);
@@ -1034,7 +1031,7 @@ Rlist *RlistFromRegexSplitNoOverflow(const char *string, const char *regex, int 
         RlistAppendScalar(&liststart, sp);
     }
 
-    free(pattern);
+    pcre_free(pattern);
 
     return liststart;
 }

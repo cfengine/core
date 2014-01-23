@@ -62,7 +62,7 @@ static int RegExMatchSubString(EvalContext *ctx, pcre *rx, const char *teststrin
         *end = 0;
     }
 
-    free(rx);
+    pcre_free(rx);
     return rc >= 0;
 }
 
@@ -113,7 +113,7 @@ bool ValidateRegEx(const char *regex)
     pcre *rx = CompileRegExp(regex);
     bool regex_valid = rx != NULL;
 
-    free(rx);
+    pcre_free(rx);
     return regex_valid;
 }
 

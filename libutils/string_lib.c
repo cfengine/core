@@ -447,7 +447,7 @@ bool StringMatch(const char *regex, const char *str, int *start, int *end)
 
     bool ret = StringMatchWithPrecompiledRegex(pattern, str, start, end);
 
-    free(pattern);
+    pcre_free(pattern);
     return ret;
 
 }
@@ -488,7 +488,7 @@ Seq *StringMatchCaptures(const char *regex, const char *str)
     int res = pcre_fullinfo(pattern, NULL, PCRE_INFO_CAPTURECOUNT, &captures);
     if (res != 0)
     {
-        free(pattern);
+        pcre_free(pattern);
         return NULL;
     }
 
@@ -499,7 +499,7 @@ Seq *StringMatchCaptures(const char *regex, const char *str)
     if (result <= 0)
     {
         free(ovector);
-        free(pattern);
+        pcre_free(pattern);
         return NULL;
     }
 

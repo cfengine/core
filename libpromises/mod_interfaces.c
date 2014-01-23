@@ -23,6 +23,7 @@
 */
 
 #include <mod_interfaces.h>
+#include <syntax.h>
 
 /**********************************************************************************************/
 
@@ -45,14 +46,24 @@ static const BodySyntax linkstate_body = BodySyntaxNew("link_state", linkstate_c
 static const ConstraintSyntax interface_constraints[] =
 {
     ConstraintSyntaxNewStringList("aggregate", CF_ANYSTRING, "List of interfaces to bond with LACP", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewStringList("tagged_vlans", CF_IDENT, "List of labelled (trunk) vlan identifers for this interface", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewString("untagged_vlan", CF_IDENT, "Unlabelled (access) vlan", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewStringList("tagged_vlans", CF_IDRANGE, "List of labelled (trunk) vlan identifers for this interface", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewString("untagged_vlan", CF_IDRANGE, "Unlabelled (access) vlan", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("ipv4_address", CF_IPRANGE, "A static IPV4 address", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("ipv6_address", CF_IPRANGE, "A static IPV6 address", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBody("link_state", &linkstate_body, "The desired state of the interface link", SYNTAX_STATUS_NORMAL),
 //    ConstraintSyntaxNewBody("proxy", &linkstate_body, "For treating a remote device as a peripheral", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };
+
+/**********************************************************************************************/
+
+static const ConstraintSyntax sharingpolicy_constraints[] =
+{
+    ConstraintSyntaxNewOption("balance_policy", "lru,rr", "Load balancing policy", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewNull()
+};
+
+static const BodySyntax sharingpolicy_body = BodySyntaxNew("sharing_policy", sharingpolicy_constraints, NULL, SYNTAX_STATUS_NORMAL);
 
 /**********************************************************************************************/
 
@@ -67,8 +78,7 @@ static const ConstraintSyntax balancer_constraints[] =
 
 static const ConstraintSyntax overlay_constraints[] =
 {
-    ConstraintSyntaxNewStringList("id", CF_IDENT, "Identifier for the overlay", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewBody("sharing_policy", &sharingpolicy_body, "The balancer policy settings", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewStringList("id", CF_IDRANGE, "Identifier for the overlay", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };
 

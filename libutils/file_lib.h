@@ -40,6 +40,8 @@ int FullWrite(int desc, const char *ptr, size_t len);
    Return amount of bytes read upon success, -1 otherwise */
 int FullRead(int desc, char *ptr, size_t len);
 
+int IsDirReal(const char *path);
+
 int safe_open(const char *pathname, int flags, ...);
 FILE *safe_fopen(const char *path, const char *mode);
 

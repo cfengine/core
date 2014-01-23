@@ -1,6 +1,10 @@
 3.6.0
 
        Changes:
+       - "admit" and "deny" constraints in bundle server access_rules have
+         been deprecated, preferred constraints are now
+         "admit_ips", "admit_hostnames", "admit_keys".
+       - Enable source file in agent copy_from promises to be a relative path.
        - add process name and pid in syslog message (GitHub #789)
        - process_results default to AND'ing of set attributes if not specified (Redmine #3224)
        - interface is now canonified in sys.hardware_mac[interface] to align with sys.ipv4[interface] (Redmine #3418)
@@ -9,13 +13,23 @@
          to speak the legacy protocol with old agents.
        - #TODO# support for LMDB in local data storage
        - cf-promises --eval-functions option controls whether cf-promises should evaluate functions.
-       - Logging contexts to local database (cf_classes.tcdb) have been deprecated. 
+       - Logging contexts to local database (cf_classes.tcdb) has been deprecated.
        - Linux flavor "SUSE" now correctly spelled with all uppercase in variables and class names
          (Redmine #3734).
        - #TODO# function caching
        - $(this.promise_filename) and $(..._dirname) variables are now absolute paths. (Redmine #3839)
 
        New features:
+       - New "admit_ips", "admit_hostnames", "admit_keys" constraints for
+         bundle server access_rules. "admit_keys" adds the new functionality
+         of controlling access according to host identity, regardless the
+         host IP.
+       - These new constaints and the paths in access_rules, can contain
+         special variables "$(connection.ip)", "$(connection.fqdn)",
+         "$(connection.key)", which are expanded dynamically for every
+         received connection.
+       - New "shortcut" constraint in bundle server access_rules used
+         to dynamically expand non-absolute request paths.
        - New promise type "users" for managing local user accounts.
        - New options to cf-promises: --show-classes and --show-vars
        - support colorized output for agent binaries with command line option --color

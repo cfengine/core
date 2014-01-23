@@ -561,10 +561,12 @@ AC_CHECK_DECLS(strlcpy)
 AC_REPLACE_FUNCS(strlcpy)
 
 AC_CHECK_DECLS(realpath)
-AC_CHECK_FUNCS(realpath)
 
 AC_CHECK_DECLS(strdup)
 AC_REPLACE_FUNCS(strdup)
+
+AC_CHECK_DECLS(memrchr)
+AC_REPLACE_FUNCS(memrchr)
 
 AC_CHECK_DECLS(round, [], [], [[#include <math.h>]])
 AC_REPLACE_FUNCS(round)

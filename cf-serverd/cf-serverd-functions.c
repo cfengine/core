@@ -44,6 +44,8 @@
 #include <connection_info.h>
 #include <file_lib.h>
 
+#include "server_access.h"
+
 static const size_t QUEUESIZE = 50;
 int NO_FORK = false; /* GLOBAL_A */
 
@@ -583,6 +585,30 @@ int OpenReceiverChannel(void)
 /* Level 3                                                           */
 /*********************************************************************/
 
+static void DeleteAuthList(Auth **list, Auth **list_tail)
+{
+    Auth *ap = *list;
+
+    while (ap != NULL)
+    {
+        Auth *ap_next = ap->next;
+
+        DeleteItemList(ap->accesslist);
+        DeleteItemList(ap->maproot);
+        free(ap->path);
+        free(ap);
+
+        /* Just make sure the tail was consistent. */
+        if (ap_next == NULL)
+            assert(ap == *list_tail);
+
+        ap = ap_next;
+    }
+
+    *list = NULL;
+    *list_tail = NULL;
+}
+
 void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *config, time_t *last_policy_reload)
 {
     time_t validated_at;
@@ -602,7 +628,7 @@ void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *con
             Log(LOG_LEVEL_INFO, "Rereading policy file '%s'", config->input_file);
 
             /* Free & reload -- lock this to avoid access errors during reload */
-            
+
             EvalContextClear(ctx);
 
             free(SV.allowciphers);
@@ -613,35 +639,29 @@ void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *con
             DeleteItemList(SV.nonattackerlist);
             DeleteItemList(SV.multiconnlist);
 
-            DeleteAuthList(SV.admit);
-            DeleteAuthList(SV.deny);
+            DeleteAuthList(&SV.admit, &SV.admittail);
+            DeleteAuthList(&SV.deny, &SV.denytail);
 
-            DeleteAuthList(SV.varadmit);
-            DeleteAuthList(SV.vardeny);
+            DeleteAuthList(&SV.varadmit, &SV.varadmittail);
+            DeleteAuthList(&SV.vardeny, &SV.vardenytail);
 
-            DeleteAuthList(SV.roles);
+            DeleteAuthList(&SV.roles, &SV.rolestail);
 
             strcpy(VDOMAIN, "undefined.domain");
-
-            SV.admit = NULL;
-            SV.admittop = NULL;
-
-            SV.varadmit = NULL;
-            SV.varadmittop = NULL;
-
-            SV.deny = NULL;
-            SV.denytop = NULL;
-
-            SV.vardeny = NULL;
-            SV.vardenytop = NULL;
-
-            SV.roles = NULL;
-            SV.rolestop = NULL;
 
             SV.trustkeylist = NULL;
             SV.attackerlist = NULL;
             SV.nonattackerlist = NULL;
             SV.multiconnlist = NULL;
+
+            acl_Free(paths_acl);    paths_acl = NULL;
+            acl_Free(classes_acl);  classes_acl = NULL;
+            acl_Free(vars_acl);     vars_acl = NULL;
+            acl_Free(literals_acl); literals_acl = NULL;
+            acl_Free(query_acl);    query_acl = NULL;
+
+            StringMapDestroy(SV.path_shortcuts);
+            SV.path_shortcuts = NULL;
 
             PolicyDestroy(*policy);
             *policy = NULL;

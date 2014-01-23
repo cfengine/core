@@ -1,0 +1,31 @@
+body common control
+{
+      inputs => { "../../default.cf.sub", "./run_with_server.cf.sub" };
+      bundlesequence => { create_directories, test };
+      version => "1.0";
+}
+
+bundle agent test
+{
+  methods:
+      "any" usebundle => generate_key;
+      "any" usebundle => start_server("localhost_deny_one_directory");
+    !server_failed::
+      "any" usebundle => run_test("$(this.promise_filename).sub");
+      "any" usebundle => stop_server("localhost_deny_one_directory");
+
+  reports:
+    server_failed::
+      "FAIL";
+}
+
+
+# For the access rules in cf-serverd to work recursively, the paths must exist and be directories
+bundle agent create_directories
+{
+  files:
+    "$(G.testroot)/."
+      create => "true";
+    "$(G.testdir)/."
+      create => "true";
+}

@@ -140,6 +140,23 @@ int FullRead(int fd, char *ptr, size_t len)
     return total_read;
 }
 
+/**
+ * @return 1 if dir, 0 if not, -1 in case of error.
+ * @note difference with files_names.h:IsDir() is that this doesn't
+ *       follow symlinks, so a symlink is never a directory...
+ */
+int IsDirReal(const char *path)
+{
+    struct stat s;
+
+    if (lstat(path, &s) == -1)
+    {
+        return -1;
+    }
+
+    return (S_ISDIR(s.st_mode) != 0);
+}
+
 #ifdef TEST_SYMLINK_ATOMICITY
 void test_switch_symlink();
 #define TEST_SYMLINK_SWITCH_POINT test_switch_symlink();

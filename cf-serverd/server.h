@@ -38,15 +38,19 @@
 
 typedef struct Auth_ Auth;
 
+/* Access rights for a path, literal, context (classpattern), variable */
+/* LEGACY CODE the new struct is paths_acl etc. */
 struct Auth_
 {
     char *path;
-    Item *accesslist;
-    Item *maproot;              /* which hosts should have root read access */
-    int encrypt;                /* which files HAVE to be transmitted securely */
     int literal;
     int classpattern;
     int variable;
+
+    Item *accesslist;        /* which hosts -- IP or hostnames */
+    Item *maproot;           /* which hosts should have root read access */
+    int encrypt;             /* which files HAVE to be transmitted securely */
+
     Auth *next;
 };
 
@@ -62,22 +66,29 @@ typedef struct
     Item *trustkeylist;                               /* "trustkeysfrom" */
     char *allowciphers;
 
+    /* ACL for resource_type "path". */
     Auth *admit;
-    Auth *admittop;
+    Auth *admittail;
 
     Auth *deny;
-    Auth *denytop;
+    Auth *denytail;
 
+    /* ACL for resource_types "literal", "query", "context", "variable". */
     Auth *varadmit;
-    Auth *varadmittop;
+    Auth *varadmittail;
 
     Auth *vardeny;
-    Auth *vardenytop;
+    Auth *vardenytail;
 
     Auth *roles;
-    Auth *rolestop;
+    Auth *rolestail;
 
     int logconns;
+
+    /* bundle server access_rules: shortcut for ACL entries, which expands to
+     * the ACL entry when seen in client requests. */
+    StringMap *path_shortcuts;
+
 } ServerAccess;
 
 /**
@@ -98,7 +109,7 @@ struct ServerConnectionState_
     uid_t uid;
 #endif
     char ipaddr[CF_MAX_IP_LEN];
-    char output[CF_BUFSIZE * 2];        /* Threadsafe output channel */
+
     /* TODO the following are useless with the new protocol */
     int id_verified;
     int rsa_auth;
@@ -117,9 +128,8 @@ typedef struct
 } ServerFileGetState;
 
 
+/* Used in cf-serverd-functions.c. */
 void ServerEntryPoint(EvalContext *ctx, char *ipaddr, ConnectionInfo *info);
-void DeleteAuthList(Auth *ap);
-void PurgeOldConnections(Item **list, time_t now);
 
 
 AgentConnection *ExtractCallBackChannel(ServerConnectionState *conn);
@@ -128,21 +138,17 @@ AgentConnection *ExtractCallBackChannel(ServerConnectionState *conn);
 // STATE
 //*******************************************************************
 
-extern char CFRUNCOMMAND[];
-
 #define CLOCK_DRIFT 3600
 
-extern int ACTIVE_THREADS;
 
+extern int ACTIVE_THREADS;
 extern int CFD_MAXPROCESSES;
 extern bool DENYBADCLOCKS;
 extern int MAXTRIES;
 extern bool LOGENCRYPT;
 extern int COLLECT_INTERVAL;
 extern bool SERVER_LISTEN;
-
 extern ServerAccess SV;
-
-extern char CFRUNCOMMAND[];
+extern char CFRUNCOMMAND[CF_MAXVARSIZE];
 
 #endif

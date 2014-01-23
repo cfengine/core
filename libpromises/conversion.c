@@ -769,8 +769,37 @@ void TimeToDateStr(time_t t, char *outStr, int outStrSz)
 
 /*********************************************************************/
 
+/**
+ * Thread-safe version of CommandArg0(), but unsafe since bounds are not
+ * checked.
+ *
+ * @note This function is overflow-safe if sizeof(dst) >= sizeof(src)
+ */
+const char *CommandArg0_unsafe(char *dst, const char *src)
+{
+    const char *start;
+    char *end_delimiter;
+
+    if(src[0] == '\"')
+    {
+        start = &src[1];
+        end_delimiter = "\"";
+    }
+    else
+    {
+        start = src;
+        end_delimiter = " ";
+    }
+
+    size_t len = strcspn(start, end_delimiter);
+    memcpy(dst, start, len);
+    dst[len] = '\0';
+
+    return dst;
+}
+
 const char *CommandArg0(const char *execstr)
-/** 
+/**
  * WARNING: Not thread-safe.
  **/
 {
@@ -778,7 +807,7 @@ const char *CommandArg0(const char *execstr)
 
     const char *start;
     char end_delimiter;
-    
+
     if(execstr[0] == '\"')
     {
         start = execstr + 1;
@@ -791,9 +820,9 @@ const char *CommandArg0(const char *execstr)
     }
 
     strlcpy(arg, start, sizeof(arg));
-    
+
     char *cut = strchr(arg, end_delimiter);
-    
+
     if(cut)
     {
         *cut = '\0';

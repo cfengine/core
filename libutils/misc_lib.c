@@ -40,7 +40,7 @@ void __ProgrammingError(const char *file, int lineno, const char *format, ...)
     char *fmt = NULL;
 
     va_start(ap, format);
-    xasprintf(&fmt, "%s:%d: ProgrammingError: %s\n", file, lineno, format);
+    xasprintf(&fmt, "%s:%d: Programming Error: %s\n", file, lineno, format);
     vfprintf(stdout, fmt, ap);
     va_end(ap);
 
@@ -62,7 +62,9 @@ void __UnexpectedError(const char *file, int lineno, const char *format, ...)
     char *fmt = NULL;
 
     va_start(ap, format);
-    xasprintf(&fmt, "%s:%d: Unexpected Error: %s\n", file, lineno, format);
+    xasprintf(&fmt,
+              "%s:%d: Unexpected Error - this is a BUG, please report it: %s\n",
+              file, lineno, format);
     vfprintf(stderr, fmt, ap);
     va_end(ap);
 

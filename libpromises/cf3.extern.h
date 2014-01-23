@@ -84,12 +84,4 @@ extern const char *const DAY_TEXT[];
 extern const char *const MONTH_TEXT[];
 extern const char *const SHIFT_TEXT[];
 
-#if defined(__MINGW32__)
-# define FILE_SEPARATOR '\\'
-# define FILE_SEPARATOR_STR "\\"
-#else
-# define FILE_SEPARATOR '/'
-# define FILE_SEPARATOR_STR "/"
-#endif
-
 #endif

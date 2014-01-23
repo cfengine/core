@@ -22,27 +22,26 @@
   included file COSL.txt.
 */
 
-#ifndef CFENGINE_VERIFY_PACKAGES_H
-#define CFENGINE_VERIFY_PACKAGES_H
-
-#include <cf3.defs.h>
-
-#include <vercmp.h>
-
-PromiseResult VerifyPackagesPromise(EvalContext *ctx, const Promise *pp);
-void ExecuteScheduledPackages(EvalContext *ctx);
-void CleanScheduledPackages(void);
-int PrependPackageItem(EvalContext *ctx, PackageItem **list,
-                       const char *name, const char *version,
-                       const char *arch, const Promise *pp);
-
-// For testing.
-VersionCmpResult ComparePackages(EvalContext *ctx,
-                                 const char *n, const char *v, const char *arch,
-                                 PackageItem *pi, Attributes a,
-                                 const Promise *pp,
-                                 const char *mode,
-                                 PromiseResult *result);
-
-
+#ifdef HAVE_CONFIG_H
+# include <config.h>
 #endif
+
+#include <stddef.h>                                             /* size_t */
+
+
+void *memrchr(const void *s, int c, size_t n)
+{
+    unsigned char *s_end = (unsigned char *) s + n - 1;
+    while (n > 0)
+    {
+        if ((*s_end) == (unsigned char) c)
+        {
+            return s_end;
+        }
+        s_end--;
+        n--;
+    }
+
+    return NULL;
+}
+

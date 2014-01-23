@@ -4,6 +4,10 @@
 #include <server.h>
 #include <server_common.h>
 
+
+#include <server.c>                                  /* PurgeOldConnections */
+
+
 const int CONNECTION_MAX_AGE_SECONDS = SECONDS_PER_HOUR * 2;
 
 /* NOTE: Invalid memory access has been seen in PurgeOldConnections().
@@ -143,22 +147,4 @@ int main()
     };
 
     return run_tests(tests);
-}
-
-
-/* stubs */
-
-int ReceiveCollectCall(ServerConnectionState *conn)
-{
-    return false;
-}
-
-int ReturnLiteralData(EvalContext *ctx, char *handle, char *ret)
-{
-    return 0;
-}
-
-int ReturnQueryData(ServerConnectionState *conn, char *menu)
-{
-    return false;
 }

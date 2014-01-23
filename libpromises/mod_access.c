@@ -71,18 +71,25 @@ static const ConstraintSyntax report_data_select_constraints[] =
 
 static const BodySyntax report_data_select_body = BodySyntaxNew("report_data_select", report_data_select_constraints, NULL, SYNTAX_STATUS_NORMAL);
 
-const ConstraintSyntax CF_REMACCESS_BODIES[] =
+const ConstraintSyntax CF_REMACCESS_BODIES[REMOTE_ACCESS_NONE + 1] =
 {
-    ConstraintSyntaxNewStringList("admit", "", "List of host names or IP addresses to grant access to file objects", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewStringList("deny", "", "List of host names or IP addresses to deny access to file objects", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewStringList("admit", "", "List of host names or IP addresses to grant access to file objects", SYNTAX_STATUS_DEPRECATED),
+    ConstraintSyntaxNewStringList("deny", "", "List of host names or IP addresses to deny access to file objects", SYNTAX_STATUS_DEPRECATED),
+    ConstraintSyntaxNewStringList("admit_ips", "", "List of IP addresses or subnet masks to grant access to file objects", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewStringList("deny_ips", "", "List of IP addresses or subnet masks to deny access to file objects", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewStringList("admit_hostnames", "", "List of hostnames to grant access to file objects", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewStringList("deny_hostnames", "", "List of hostnames to deny access to file objects", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewStringList("admit_keys", "", "List of host keys that will be granted access to file objects", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewStringList("deny_keys", "", "List of host keys that will be denied access to file objects", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewStringList("maproot", "", "List of host names or IP addresses to grant full read-privilege on the server", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBool("ifencrypted", "true/false whether the current file access promise is conditional on the connection from the client being encrypted. Default value: false", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewOption("resource_type", "path,literal,context,query,variable", "The type of object being granted access (the default grants access to files)", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBody("report_data_select", &report_data_select_body, "Report content filter", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewString("shortcut", "", "For path resource_type, the server will expand a relative path beginning with this text", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };
 
-const ConstraintSyntax CF_REMROLE_BODIES[] =
+const ConstraintSyntax CF_REMROLE_BODIES[REMOTE_ROLE_NONE + 1] =
 {
     ConstraintSyntaxNewStringList("authorize", "", "List of public-key user names that are allowed to activate the promised class during remote agent activation", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()

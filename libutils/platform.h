@@ -172,6 +172,14 @@ struct utsname
 # endif
 #endif
 
+#ifndef PATH_MAX
+# ifdef _MAX_PATH
+#  define PATH_MAX _MAX_PATH
+# else
+#  define PATH_MAX 4096
+# endif
+#endif
+
 #include <signal.h>
 
 #ifdef __MINGW32__
@@ -419,9 +427,24 @@ void srand48(long seed);
 #if !HAVE_DECL_CLOCK_GETTIME
 int clock_gettime(clockid_t clock_id, struct timespec *tp);
 #endif
+
 #if !HAVE_DECL_REALPATH
-char *realpath(const char *path, char *resolved_path);
+    /**
+     * WARNING realpath() has varying behaviour among platforms.
+     *  - Do not use it to convert relative paths to absolute
+     *    (Solaris under certain conditions will return relative path).
+     *  - Do not use it to check existence of file
+     *    (on *BSD the last component of the path may not exist).
+     * Use it only to resolve all symlinks and canonicalise filename,
+     * i.e. remove double '/' and "/./" and "/../".
+     *
+     * @TODO what we need is a resolvepath(2) cross-platform implementation.
+     */
+#    if defined (__MINGW32__)
+#        define realpath(N,R) _fullpath((R), (N), PATH_MAX)
+#    endif
 #endif
+
 #if !HAVE_DECL_LSTAT
 int lstat(const char *file_name, struct stat *buf);
 #endif
@@ -477,6 +500,9 @@ char *strsignal(int sig);
 #endif
 #if !HAVE_DECL_STRDUP
 char *strdup(const char *str);
+#endif
+#if !HAVE_DECL_MEMRCHR
+void *memrchr(const void *s, int c, size_t n);
 #endif
 #if !HAVE_DECL_MEMDUP
 void *memdup(const void *mem, size_t size);
@@ -834,4 +860,5 @@ struct timespec
 /* Must be always the last one! */
 #include <config.post.h>
 
-#endif
+
+#endif  /* CFENGINE_PLATFORM_H */

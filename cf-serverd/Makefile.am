@@ -17,7 +17,10 @@ libcf_serverd_la_SOURCES = \
 	server_common.c server_common.h \
 	server.c server.h \
 	server_transform.c server_transform.h \
-	tls_server.c tls_server.h
+	server_classic.c server_classic.h \
+	tls_server.c tls_server.h \
+	server_access.c server_access.h \
+	strlist.c strlist.h
 
 if !BUILTIN_EXTENSIONS
  sbin_PROGRAMS = cf-serverd

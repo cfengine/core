@@ -42,7 +42,17 @@ int xvasprintf(char **strp, const char *fmt, va_list ap) FUNC_ATTR_PRINTF(2, 0);
  *
  * Use x* equivalents instead.
  */
-#if !defined(ALLOC_IMPL)
+
+/**
+ * Currently regular malloc() calls are allowed for mission-critical code that
+ * can somehow recover, like cf-serverd dropping connections or cf-execd
+ * postponing its scheduled actions.
+ *
+ * @note for 99% of the cases (libpromises, cf-agent etc) use xmalloc() and
+ *       friends.
+ **/
+#if 0
+
 # undef malloc
 # undef calloc
 # undef realloc
@@ -68,6 +78,7 @@ void __error_unchecked_strndup(void);
 void __error_unchecked_memdup(void);
 void __error_unchecked_asprintf(void);
 void __error_unchecked_vasprintf(void);
+
 #endif
 
 #endif

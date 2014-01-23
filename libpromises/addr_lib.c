@@ -36,6 +36,7 @@
 
    Returns 0 on match. */
 
+/* TODO rename to AddrSubnetMatch() */
 int FuzzySetMatch(const char *s1, const char *s2)
 {
     short isCIDR = false, isrange = false, isv6 = false, isv4 = false;

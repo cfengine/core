@@ -27,6 +27,7 @@
 #include <mod_common.h>
 
 #include <mod_environ.h>
+#include <mod_interfaces.h>
 #include <mod_outputs.h>
 #include <mod_access.h>
 #include <mod_storage.h>
@@ -512,6 +513,7 @@ const PromiseTypeSyntax *const CF_ALL_PROMISE_TYPES[] =
     CF_DATABASES_PROMISE_TYPES,      /* mod_databases.c */
     CF_ENVIRONMENT_PROMISE_TYPES,    /* mod_environ.c */
     CF_FILES_PROMISE_TYPES,          /* mod_files.c */
+    CF_INTERFACES_PROMISE_TYPES,     /* mod_interfaces.c */
     CF_METHOD_PROMISE_TYPES,         /* mod_methods.c */
     CF_OUTPUTS_PROMISE_TYPES,        /* mod_outputs.c */
     CF_PACKAGES_PROMISE_TYPES,       /* mod_packages.c */

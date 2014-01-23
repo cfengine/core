@@ -1279,7 +1279,7 @@ static bool LvalWantsBody(char *stype, char *lval)
             {
                 if (strcmp(bs[l].lval, lval) == 0)
                 {
-                    if (bs[l].dtype == DATA_TYPE_BODY)
+                    if (bs[l].dtype == CF_DATA_TYPE_BODY)
                     {
                         return true;
                     }
@@ -1310,11 +1310,11 @@ static SyntaxTypeMatch CheckSelection(const char *type, const char *name, const 
                 {
                     if (strcmp(lval, bs[l].lval) == 0)
                     {
-                        if (bs[l].dtype == DATA_TYPE_BODY)
+                        if (bs[l].dtype == CF_DATA_TYPE_BODY)
                         {
                             return SYNTAX_TYPE_MATCH_OK;
                         }
-                        else if (bs[l].dtype == DATA_TYPE_BUNDLE)
+                        else if (bs[l].dtype == CF_DATA_TYPE_BUNDLE)
                         {
                             return SYNTAX_TYPE_MATCH_OK;
                         }
@@ -1349,7 +1349,7 @@ static SyntaxTypeMatch CheckSelection(const char *type, const char *name, const 
 
             for (int l = 0; bs[l].lval != NULL; l++)
             {
-                if (bs[l].dtype == DATA_TYPE_BODY)
+                if (bs[l].dtype == CF_DATA_TYPE_BODY)
                 {
                     const ConstraintSyntax *bs2 = bs[l].range.body_type_syntax->constraints;
 
@@ -1358,7 +1358,7 @@ static SyntaxTypeMatch CheckSelection(const char *type, const char *name, const 
                         continue;
                     }
 
-                    for (int k = 0; bs2[k].dtype != DATA_TYPE_NONE; k++)
+                    for (int k = 0; bs2[k].dtype != CF_DATA_TYPE_NONE; k++)
                     {
                         /* Either module defined or common */
 
@@ -1408,8 +1408,8 @@ static SyntaxTypeMatch CheckConstraint(const char *type, const char *lval, Rval 
 
                     /* For bodies and bundles definitions can be elsewhere, so
                        they are checked in PolicyCheckRunnable(). */
-                    if (bs[l].dtype != DATA_TYPE_BODY &&
-                        bs[l].dtype != DATA_TYPE_BUNDLE)
+                    if (bs[l].dtype != CF_DATA_TYPE_BODY &&
+                        bs[l].dtype != CF_DATA_TYPE_BUNDLE)
                     {
                         return CheckConstraintTypeMatch(lval, rval, bs[l].dtype, bs[l].range.validation_string, 0);
                     }

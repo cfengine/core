@@ -86,27 +86,27 @@ const char *SyntaxStatusToString(SyntaxStatus status);
 
 JsonElement *SyntaxToJson(void);
 
-#define ConstraintSyntaxNewNull() { NULL, DATA_TYPE_NONE, .range.validation_string = NULL, .status = SYNTAX_STATUS_NORMAL }
-#define ConstraintSyntaxNewBool(lval, description, status) { lval, DATA_TYPE_OPTION, .range.validation_string = CF_BOOL, description, status }
+#define ConstraintSyntaxNewNull() { NULL, CF_DATA_TYPE_NONE, .range.validation_string = NULL, .status = SYNTAX_STATUS_NORMAL }
+#define ConstraintSyntaxNewBool(lval, description, status) { lval, CF_DATA_TYPE_OPTION, .range.validation_string = CF_BOOL, description, status }
 
-#define ConstraintSyntaxNewOption(lval, options, description, status) { lval, DATA_TYPE_OPTION, .range.validation_string = options, description, status }
-#define ConstraintSyntaxNewOptionList(lval, item_range, description, status) { lval, DATA_TYPE_OPTION_LIST, .range.validation_string = item_range, description, status }
+#define ConstraintSyntaxNewOption(lval, options, description, status) { lval, CF_DATA_TYPE_OPTION, .range.validation_string = options, description, status }
+#define ConstraintSyntaxNewOptionList(lval, item_range, description, status) { lval, CF_DATA_TYPE_OPTION_LIST, .range.validation_string = item_range, description, status }
 
-#define ConstraintSyntaxNewString(lval, regex, description, status) { lval, DATA_TYPE_STRING, .range.validation_string = regex, description, status }
-#define ConstraintSyntaxNewStringList(lval, item_range, description, status) { lval, DATA_TYPE_STRING_LIST, .range.validation_string = item_range, description, status }
+#define ConstraintSyntaxNewString(lval, regex, description, status) { lval, CF_DATA_TYPE_STRING, .range.validation_string = regex, description, status }
+#define ConstraintSyntaxNewStringList(lval, item_range, description, status) { lval, CF_DATA_TYPE_STRING_LIST, .range.validation_string = item_range, description, status }
 
-#define ConstraintSyntaxNewInt(lval, int_range, description, status) { lval, DATA_TYPE_INT, .range.validation_string = int_range, description, status }
-#define ConstraintSyntaxNewIntRange(lval, int_range, description, status ) { lval , DATA_TYPE_INT_RANGE, .range.validation_string = int_range, description, status }
-#define ConstraintSyntaxNewIntList(lval, description, status) { lval, DATA_TYPE_INT_LIST, .range.validation_string = CF_INTRANGE, description, status }
+#define ConstraintSyntaxNewInt(lval, int_range, description, status) { lval, CF_DATA_TYPE_INT, .range.validation_string = int_range, description, status }
+#define ConstraintSyntaxNewIntRange(lval, int_range, description, status ) { lval , CF_DATA_TYPE_INT_RANGE, .range.validation_string = int_range, description, status }
+#define ConstraintSyntaxNewIntList(lval, description, status) { lval, CF_DATA_TYPE_INT_LIST, .range.validation_string = CF_INTRANGE, description, status }
 
-#define ConstraintSyntaxNewReal(lval, real_range, description, status) { lval, DATA_TYPE_REAL, .range.validation_string = real_range, description, status }
-#define ConstraintSyntaxNewRealList(lval, description, status) { lval, DATA_TYPE_REAL_LIST, .range.validation_string = CF_REALRANGE, description, status }
+#define ConstraintSyntaxNewReal(lval, real_range, description, status) { lval, CF_DATA_TYPE_REAL, .range.validation_string = real_range, description, status }
+#define ConstraintSyntaxNewRealList(lval, description, status) { lval, CF_DATA_TYPE_REAL_LIST, .range.validation_string = CF_REALRANGE, description, status }
 
-#define ConstraintSyntaxNewContext(lval, description, status) { lval, DATA_TYPE_CONTEXT, .range.validation_string = CF_CLASSRANGE, description, status }
-#define ConstraintSyntaxNewContextList(lval, description, status) { lval, DATA_TYPE_CONTEXT_LIST, .range.validation_string = CF_CLASSRANGE, description, status }
+#define ConstraintSyntaxNewContext(lval, description, status) { lval, CF_DATA_TYPE_CONTEXT, .range.validation_string = CF_CLASSRANGE, description, status }
+#define ConstraintSyntaxNewContextList(lval, description, status) { lval, CF_DATA_TYPE_CONTEXT_LIST, .range.validation_string = CF_CLASSRANGE, description, status }
 
-#define ConstraintSyntaxNewBody(lval, body_syntax, description, status) { lval, DATA_TYPE_BODY, .range.body_type_syntax = body_syntax, description, status }
-#define ConstraintSyntaxNewBundle(lval, description, status) { lval, DATA_TYPE_BUNDLE, .range.validation_string = CF_BUNDLE, description, status }
+#define ConstraintSyntaxNewBody(lval, body_syntax, description, status) { lval, CF_DATA_TYPE_BODY, .range.body_type_syntax = body_syntax, description, status }
+#define ConstraintSyntaxNewBundle(lval, description, status) { lval, CF_DATA_TYPE_BUNDLE, .range.validation_string = CF_BUNDLE, description, status }
 
 #define BodySyntaxNew(body_type, constraints, check_fn, status) { body_type, constraints, check_fn, status }
 #define BodySyntaxNewNull() { NULL, NULL, NULL, SYNTAX_STATUS_NORMAL }
@@ -115,6 +115,6 @@ JsonElement *SyntaxToJson(void);
 #define PromiseTypeSyntaxNewNull() PromiseTypeSyntaxNew(NULL, NULL, NULL, NULL, SYNTAX_STATUS_NORMAL)
 
 #define FnCallTypeNew(name, return_type, arguments, implementation, description, is_varargs, category, status) { name, return_type, arguments, implementation, description, is_varargs, category, status }
-#define FnCallTypeNewNull() FnCallTypeNew(NULL, DATA_TYPE_NONE, NULL, NULL, NULL, false, FNCALL_CATEGORY_UTILS, SYNTAX_STATUS_NORMAL)
+#define FnCallTypeNewNull() FnCallTypeNew(NULL, CF_DATA_TYPE_NONE, NULL, NULL, NULL, false, FNCALL_CATEGORY_UTILS, SYNTAX_STATUS_NORMAL)
 
 #endif

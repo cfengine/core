@@ -249,7 +249,7 @@ void TexinfoManual(EvalContext *ctx, const char *source_dir, const char *output_
 
 // scopes const and sys
 
-    ScopeNewSpecial(ctx, "edit", "filename", "x", DATA_TYPE_STRING);
+    ScopeNewSpecial(ctx, "edit", "filename", "x", CF_DATA_TYPE_STRING);
 
     ScopePutMatch(0, "x");
 
@@ -481,7 +481,7 @@ static void TexinfoBodyParts(const char *source_dir, FILE *fout, const Constrain
             fprintf(fout, "\n\n@node %s in %s\n@subsection @code{%s}\n\n@b{Type}: %s (Separate Bundle) \n", bs[i].lval,
                     context, bs[i].lval, DataTypeToString(bs[i].dtype));
         }
-        else if (bs[i].dtype == DATA_TYPE_BODY)
+        else if (bs[i].dtype == CF_DATA_TYPE_BODY)
         {
             fprintf(fout, "\n\n@node %s in %s\n@subsection @code{%s} (body template)\n@noindent @b{Type}: %s\n\n",
                     bs[i].lval, context, bs[i].lval, DataTypeToString(bs[i].dtype));
@@ -613,7 +613,7 @@ static void TexinfoShowRange(FILE *fout, const char *s, DataType type)
         return;
     }
 
-    if ((type == DATA_TYPE_OPTION) || (type == DATA_TYPE_OPTION_LIST))
+    if ((type == CF_DATA_TYPE_OPTION) || (type == CF_DATA_TYPE_OPTION_LIST))
     {
         list = RlistFromSplitString(s, ',');
         fprintf(fout, "@noindent @b{Allowed input range}: @*\n@example");
@@ -656,7 +656,7 @@ static void TexinfoSubBodyParts(const char *source_dir, FILE *fout, const Constr
             fprintf(fout, "@item @code{%s}\n@b{Type}: %s\n (Separate Bundle) \n\n", bs[i].lval,
                     DataTypeToString(bs[i].dtype));
         }
-        else if (bs[i].dtype == DATA_TYPE_BODY)
+        else if (bs[i].dtype == CF_DATA_TYPE_BODY)
         {
             fprintf(fout, "@item @code{%s}\n@b{Type}: %s\n\n", bs[i].lval, DataTypeToString(bs[i].dtype));
             TexinfoSubBodyParts(source_dir, fout, bs[i].range.body_type_syntax->constraints);

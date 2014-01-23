@@ -197,7 +197,7 @@ static void VerifyFilePromise(EvalContext *ctx, char *path, Promise *pp)
     }
 
     ScopeDeleteSpecial("this", "promiser");
-    ScopeNewSpecial(ctx, "this", "promiser", path, DATA_TYPE_STRING);
+    ScopeNewSpecial(ctx, "this", "promiser", path, CF_DATA_TYPE_STRING);
     
     thislock = AcquireLock(ctx, path, VUQNAME, CFSTARTTIME, a.transaction, pp, false);
 
@@ -589,7 +589,7 @@ static void FindFilePromiserObjects(EvalContext *ctx, Promise *pp)
     if (literal)
     {
         // Prime the promiser temporarily, may override later
-        ScopeNewSpecial(ctx, "this", "promiser", pp->promiser, DATA_TYPE_STRING);
+        ScopeNewSpecial(ctx, "this", "promiser", pp->promiser, CF_DATA_TYPE_STRING);
         VerifyFilePromise(ctx, pp->promiser, pp);
     }
     else                        // Default is to expand regex paths

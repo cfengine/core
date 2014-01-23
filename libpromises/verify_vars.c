@@ -76,7 +76,7 @@ void VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates
     a.classes = GetClassDefinitionConstraints(ctx, pp);
 
     Rval existing_var_rval;
-    DataType existing_var_type = DATA_TYPE_NONE;
+    DataType existing_var_type = CF_DATA_TYPE_NONE;
     EvalContextVariableGet(ctx, (VarRef) { NULL, scope, pp->promiser }, &existing_var_rval, &existing_var_type);
     Buffer *qualified_scope = BufferNew();
     int result = 0;
@@ -139,7 +139,7 @@ void VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates
 
         if (opts.cp_save->rval.type == RVAL_TYPE_FNCALL)
         {
-            if (existing_var_type != DATA_TYPE_NONE)
+            if (existing_var_type != CF_DATA_TYPE_NONE)
             {
                 // Already did this
                 free(scope);
@@ -241,7 +241,7 @@ void VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates
             rval = returnval;
         }
 
-        if (existing_var_type != DATA_TYPE_NONE)
+        if (existing_var_type != CF_DATA_TYPE_NONE)
         {
             if (opts.ok_redefine)    /* only on second iteration, else we ignore broken promises */
             {

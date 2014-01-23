@@ -647,14 +647,14 @@ bool ExpandScalar(const EvalContext *ctx, const char *scopeid, const char *strin
 
         increment = strlen(var) - 1;
 
-        DataType type = DATA_TYPE_NONE;
+        DataType type = CF_DATA_TYPE_NONE;
         if (EvalContextVariableGet(ctx, (VarRef) { NULL, scopeid, currentitem }, &rval, &type))
         {
             switch (type)
             {
-            case DATA_TYPE_STRING:
-            case DATA_TYPE_INT:
-            case DATA_TYPE_REAL:
+            case CF_DATA_TYPE_STRING:
+            case CF_DATA_TYPE_INT:
+            case CF_DATA_TYPE_REAL:
 
                 if (ExpandOverflow(buffer, (char *) rval.item))
                 {
@@ -664,11 +664,11 @@ bool ExpandScalar(const EvalContext *ctx, const char *scopeid, const char *strin
                 strlcat(buffer, (char *) rval.item, CF_EXPANDSIZE);
                 break;
 
-            case DATA_TYPE_STRING_LIST:
-            case DATA_TYPE_INT_LIST:
-            case DATA_TYPE_REAL_LIST:
-            case DATA_TYPE_NONE:
-                if (type == DATA_TYPE_NONE)
+            case CF_DATA_TYPE_STRING_LIST:
+            case CF_DATA_TYPE_INT_LIST:
+            case CF_DATA_TYPE_REAL_LIST:
+            case CF_DATA_TYPE_NONE:
+                if (type == CF_DATA_TYPE_NONE)
                 {
                     Log(LOG_LEVEL_DEBUG,
                         "Can't expand inexistent variable '%s'", currentitem);
@@ -782,18 +782,18 @@ static void ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp, Rlist *listv
 
         if (PromiseGetBundle(pp)->source_path)
         {
-            ScopeNewSpecial(ctx, "this", "promise_filename",PromiseGetBundle(pp)->source_path, DATA_TYPE_STRING);
+            ScopeNewSpecial(ctx, "this", "promise_filename",PromiseGetBundle(pp)->source_path, CF_DATA_TYPE_STRING);
             snprintf(number, CF_SMALLBUF, "%zu", pp->offset.line);
-            ScopeNewSpecial(ctx, "this", "promise_linenumber", number, DATA_TYPE_STRING);
+            ScopeNewSpecial(ctx, "this", "promise_linenumber", number, CF_DATA_TYPE_STRING);
         }
 
         snprintf(v, CF_MAXVARSIZE, "%d", (int) getuid());
-        ScopeNewSpecial(ctx, "this", "promiser_uid", v, DATA_TYPE_INT);
+        ScopeNewSpecial(ctx, "this", "promiser_uid", v, CF_DATA_TYPE_INT);
         snprintf(v, CF_MAXVARSIZE, "%d", (int) getgid());
-        ScopeNewSpecial(ctx, "this", "promiser_gid", v, DATA_TYPE_INT);
+        ScopeNewSpecial(ctx, "this", "promiser_gid", v, CF_DATA_TYPE_INT);
 
-        ScopeNewSpecial(ctx, "this", "bundle", PromiseGetBundle(pp)->name, DATA_TYPE_STRING);
-        ScopeNewSpecial(ctx, "this", "namespace", PromiseGetNamespace(pp), DATA_TYPE_STRING);
+        ScopeNewSpecial(ctx, "this", "bundle", PromiseGetBundle(pp)->name, CF_DATA_TYPE_STRING);
+        ScopeNewSpecial(ctx, "this", "namespace", PromiseGetNamespace(pp), CF_DATA_TYPE_STRING);
 
         /* Must expand $(this.promiser) here for arg dereferencing in things
            like edit_line and methods, but we might have to
@@ -802,7 +802,7 @@ static void ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp, Rlist *listv
 
         if (pp->has_subbundles)
         {
-            ScopeNewSpecial(ctx, "this", "promiser", pp->promiser, DATA_TYPE_STRING);
+            ScopeNewSpecial(ctx, "this", "promiser", pp->promiser, CF_DATA_TYPE_STRING);
         }
 
         if (handle)
@@ -812,11 +812,11 @@ static void ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp, Rlist *listv
             ExpandScalar(ctx, "this", handle, tmp);
             CanonifyNameInPlace(tmp);
             Log(LOG_LEVEL_DEBUG, "Expanded handle to '%s'", tmp);
-            ScopeNewSpecial(ctx, "this", "handle", tmp, DATA_TYPE_STRING);
+            ScopeNewSpecial(ctx, "this", "handle", tmp, CF_DATA_TYPE_STRING);
         }
         else
         {
-            ScopeNewSpecial(ctx, "this", "handle", PromiseID(pp), DATA_TYPE_STRING);
+            ScopeNewSpecial(ctx, "this", "handle", PromiseID(pp), CF_DATA_TYPE_STRING);
         }
 
         /* End special variables */
@@ -958,7 +958,7 @@ static void CopyLocalizedIteratorsToThisScope(EvalContext *ctx, const char *scop
             {
                 Rlist *list = RvalCopy((Rval) {retval.item, RVAL_TYPE_LIST}).item;
                 RlistFlatten(ctx, &list);
-                EvalContextVariablePut(ctx, (VarRef) { NULL, scope, rp->item }, (Rval) { list, RVAL_TYPE_LIST }, DATA_TYPE_STRING_LIST);
+                EvalContextVariablePut(ctx, (VarRef) { NULL, scope, rp->item }, (Rval) { list, RVAL_TYPE_LIST }, CF_DATA_TYPE_STRING_LIST);
             }
         }
     }
@@ -984,7 +984,7 @@ static void CopyLocalizedScalarsToThisScope(EvalContext *ctx, const char *scope,
 
             if (EvalContextVariableGet(ctx, (VarRef) { NULL, orgscope, orgname }, &retval, NULL))
             {
-                EvalContextVariablePut(ctx, (VarRef) { NULL, scope, rp->item }, (Rval) { retval.item, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
+                EvalContextVariablePut(ctx, (VarRef) { NULL, scope, rp->item }, (Rval) { retval.item, RVAL_TYPE_SCALAR }, CF_DATA_TYPE_STRING);
             }
         }
     }
@@ -1317,21 +1317,21 @@ static void ParseServices(EvalContext *ctx, Promise *pp)
     switch (a.service.service_policy)
     {
     case SERVICE_POLICY_START:
-        ScopeNewSpecial(ctx, "this", "service_policy", "start", DATA_TYPE_STRING);
+        ScopeNewSpecial(ctx, "this", "service_policy", "start", CF_DATA_TYPE_STRING);
         break;
 
     case SERVICE_POLICY_RESTART:
-        ScopeNewSpecial(ctx, "this", "service_policy", "restart", DATA_TYPE_STRING);
+        ScopeNewSpecial(ctx, "this", "service_policy", "restart", CF_DATA_TYPE_STRING);
         break;
 
     case SERVICE_POLICY_RELOAD:
-        ScopeNewSpecial(ctx, "this", "service_policy", "reload", DATA_TYPE_STRING);
+        ScopeNewSpecial(ctx, "this", "service_policy", "reload", CF_DATA_TYPE_STRING);
         break;
         
     case SERVICE_POLICY_STOP:
     case SERVICE_POLICY_DISABLE:
     default:
-        ScopeNewSpecial(ctx, "this", "service_policy", "stop", DATA_TYPE_STRING);
+        ScopeNewSpecial(ctx, "this", "service_policy", "stop", CF_DATA_TYPE_STRING);
         break;
     }
 

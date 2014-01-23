@@ -44,7 +44,7 @@ static void test_push_pop_this(void)
 
     EvalContext *ctx = EvalContextNew();
 
-    ScopeNewSpecial(ctx, "this", "lval", "rval1", DATA_TYPE_STRING);
+    ScopeNewSpecial(ctx, "this", "lval", "rval1", CF_DATA_TYPE_STRING);
     assert_true(EvalContextVariableGet(ctx, lval, &rval, NULL));
     assert_string_equal("rval1", RvalScalarValue(rval));
     {
@@ -52,7 +52,7 @@ static void test_push_pop_this(void)
 
         assert_false(EvalContextVariableGet(ctx, lval, &rval, NULL));
 
-        ScopeNewSpecial(ctx, "this", "lval", "rval2", DATA_TYPE_STRING);
+        ScopeNewSpecial(ctx, "this", "lval", "rval2", CF_DATA_TYPE_STRING);
         assert_true(EvalContextVariableGet(ctx, lval, &rval, NULL));
         assert_string_equal("rval2", RvalScalarValue(rval));
         {
@@ -60,7 +60,7 @@ static void test_push_pop_this(void)
 
             assert_false(EvalContextVariableGet(ctx, lval, &rval, NULL));
 
-            ScopeNewSpecial(ctx, "this", "lval", "rval3", DATA_TYPE_STRING);
+            ScopeNewSpecial(ctx, "this", "lval", "rval3", CF_DATA_TYPE_STRING);
             assert_true(EvalContextVariableGet(ctx, lval, &rval, NULL));
             assert_string_equal("rval3", RvalScalarValue(rval));
             {

@@ -106,13 +106,13 @@ void ScopePutMatch(int index, const char *value)
             }
             RvalDestroy(assoc->rval);
             assoc->rval = RvalCopy(rval);
-            assoc->dtype = DATA_TYPE_STRING;
+            assoc->dtype = CF_DATA_TYPE_STRING;
             Log(LOG_LEVEL_DEBUG, "Stored '%s' in context '%s'", lval, "match");
         }
     }
     else
     {
-        if (!HashInsertElement(ptr->hashtable, lval, rval, DATA_TYPE_STRING))
+        if (!HashInsertElement(ptr->hashtable, lval, rval, CF_DATA_TYPE_STRING))
         {
             ProgrammingError("Hash table is full");
         }
@@ -220,14 +220,14 @@ void ScopeAugment(EvalContext *ctx, const Bundle *bp, const Promise *pp, const R
 
             switch (vtype)
             {
-            case DATA_TYPE_STRING_LIST:
-            case DATA_TYPE_INT_LIST:
-            case DATA_TYPE_REAL_LIST:
-                EvalContextVariablePut(ctx, (VarRef) { NULL, bp->name, lval }, (Rval) { retval.item, RVAL_TYPE_LIST}, DATA_TYPE_STRING_LIST);
+            case CF_DATA_TYPE_STRING_LIST:
+            case CF_DATA_TYPE_INT_LIST:
+            case CF_DATA_TYPE_REAL_LIST:
+                EvalContextVariablePut(ctx, (VarRef) { NULL, bp->name, lval }, (Rval) { retval.item, RVAL_TYPE_LIST}, CF_DATA_TYPE_STRING_LIST);
                 break;
             default:
                 Log(LOG_LEVEL_ERR, "List parameter '%s' not found while constructing scope '%s' - use @(scope.variable) in calling reference", naked, bp->name);
-                EvalContextVariablePut(ctx, (VarRef) { NULL, bp->name, lval }, (Rval) { rpr->item, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
+                EvalContextVariablePut(ctx, (VarRef) { NULL, bp->name, lval }, (Rval) { rpr->item, RVAL_TYPE_SCALAR }, CF_DATA_TYPE_STRING);
                 break;
             }
         }
@@ -236,7 +236,7 @@ void ScopeAugment(EvalContext *ctx, const Bundle *bp, const Promise *pp, const R
             switch(rpr->type)
             {
             case RVAL_TYPE_SCALAR:
-                EvalContextVariablePut(ctx, (VarRef) { NULL, bp->name, lval }, (Rval) { rpr->item, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
+                EvalContextVariablePut(ctx, (VarRef) { NULL, bp->name, lval }, (Rval) { rpr->item, RVAL_TYPE_SCALAR }, CF_DATA_TYPE_STRING);
                 break;
 
             case RVAL_TYPE_FNCALL:
@@ -245,7 +245,7 @@ void ScopeAugment(EvalContext *ctx, const Bundle *bp, const Promise *pp, const R
                     Rval rval = FnCallEvaluate(ctx, subfp, pp).rval;
                     if (rval.type == RVAL_TYPE_SCALAR)
                     {
-                        EvalContextVariablePut(ctx, (VarRef) { NULL, bp->name, lval }, (Rval) { rval.item, RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
+                        EvalContextVariablePut(ctx, (VarRef) { NULL, bp->name, lval }, (Rval) { rval.item, RVAL_TYPE_SCALAR }, CF_DATA_TYPE_STRING);
                     }
                     else
                     {
@@ -665,16 +665,16 @@ void ScopeDeRefListsInHashtable(char *scope, Rlist *namelist, Rlist *dereflist)
 
                 switch (assoc->dtype)
                 {
-                case DATA_TYPE_STRING_LIST:
-                    assoc->dtype = DATA_TYPE_STRING;
+                case CF_DATA_TYPE_STRING_LIST:
+                    assoc->dtype = CF_DATA_TYPE_STRING;
                     assoc->rval.type = RVAL_TYPE_SCALAR;
                     break;
-                case DATA_TYPE_INT_LIST:
-                    assoc->dtype = DATA_TYPE_INT;
+                case CF_DATA_TYPE_INT_LIST:
+                    assoc->dtype = CF_DATA_TYPE_INT;
                     assoc->rval.type = RVAL_TYPE_SCALAR;
                     break;
-                case DATA_TYPE_REAL_LIST:
-                    assoc->dtype = DATA_TYPE_REAL;
+                case CF_DATA_TYPE_REAL_LIST:
+                    assoc->dtype = CF_DATA_TYPE_REAL;
                     assoc->rval.type = RVAL_TYPE_SCALAR;
                     break;
                 default:
@@ -691,7 +691,7 @@ int ScopeMapBodyArgs(EvalContext *ctx, const char *scopeid, Rlist *give, const R
     Rlist *rpg = NULL;
     const Rlist *rpt = NULL;
     FnCall *fp;
-    DataType dtg = DATA_TYPE_NONE, dtt = DATA_TYPE_NONE;
+    DataType dtg = CF_DATA_TYPE_NONE, dtt = CF_DATA_TYPE_NONE;
     char *lval;
     void *rval;
     int len1, len2;
@@ -734,7 +734,7 @@ int ScopeMapBodyArgs(EvalContext *ctx, const char *scopeid, Rlist *give, const R
 
         case RVAL_TYPE_FNCALL:
             fp = (FnCall *) rpg->item;
-            dtg = DATA_TYPE_NONE;
+            dtg = CF_DATA_TYPE_NONE;
             {
                 const FnCallType *fncall_type = FnCallTypeGet(fp->name);
                 if (fncall_type)

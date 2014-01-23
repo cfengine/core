@@ -1195,7 +1195,7 @@ char *EvalContextStackPath(const EvalContext *ctx)
 
 bool EvalContextVariablePut(EvalContext *ctx, VarRef lval, Rval rval, DataType type)
 {
-    assert(type != DATA_TYPE_NONE);
+    assert(type != CF_DATA_TYPE_NONE);
 
     if (lval.lval == NULL || lval.scope == NULL)
     {
@@ -1321,7 +1321,7 @@ bool EvalContextVariableGet(const EvalContext *ctx, VarRef lval, Rval *rval_out,
         }
         if (type_out)
         {
-            *type_out = DATA_TYPE_NONE;
+            *type_out = CF_DATA_TYPE_NONE;
         }
         return false;
     }
@@ -1346,7 +1346,7 @@ bool EvalContextVariableGet(const EvalContext *ctx, VarRef lval, Rval *rval_out,
             }
             if (type_out)
             {
-                *type_out = DATA_TYPE_NONE;
+                *type_out = CF_DATA_TYPE_NONE;
             }
             return false;
         }
@@ -1387,7 +1387,7 @@ bool EvalContextVariableGet(const EvalContext *ctx, VarRef lval, Rval *rval_out,
         }
         if (type_out)
         {
-            *type_out = DATA_TYPE_NONE;
+            *type_out = CF_DATA_TYPE_NONE;
         }
         return false;
     }
@@ -1401,7 +1401,7 @@ bool EvalContextVariableGet(const EvalContext *ctx, VarRef lval, Rval *rval_out,
         }
         if (type_out)
         {
-            *type_out = DATA_TYPE_NONE;
+            *type_out = CF_DATA_TYPE_NONE;
         }
         return false;
     }
@@ -1413,7 +1413,7 @@ bool EvalContextVariableGet(const EvalContext *ctx, VarRef lval, Rval *rval_out,
     if (type_out)
     {
         *type_out = assoc->dtype;
-        assert(*type_out != DATA_TYPE_NONE);
+        assert(*type_out != CF_DATA_TYPE_NONE);
     }
 
     return true;

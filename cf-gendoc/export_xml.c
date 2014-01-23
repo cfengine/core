@@ -355,10 +355,10 @@ void XmlExportConstraint(Writer *writer, const ConstraintSyntax *bs)
 
     switch (bs->dtype)
     {
-    case DATA_TYPE_BODY:
-    case DATA_TYPE_BUNDLE:
-    case DATA_TYPE_NONE:
-    case DATA_TYPE_COUNTER:
+    case CF_DATA_TYPE_BODY:
+    case CF_DATA_TYPE_BUNDLE:
+    case CF_DATA_TYPE_NONE:
+    case CF_DATA_TYPE_COUNTER:
         /* NO ADDITIONAL INFO */
         break;
 
@@ -394,17 +394,17 @@ static void XmlExportType(Writer *writer, const ConstraintSyntax *constraint_syn
 
     switch (constraint_syntax->dtype)
     {
-    case DATA_TYPE_BODY:
+    case CF_DATA_TYPE_BODY:
         /* EXPORT CONSTRAINTS */
         XmlExportConstraints(writer, constraint_syntax->range.body_type_syntax->constraints);
         break;
 
-    case DATA_TYPE_INT:
-    case DATA_TYPE_REAL:
-    case DATA_TYPE_INT_LIST:
-    case DATA_TYPE_REAL_LIST:
-    case DATA_TYPE_INT_RANGE:
-    case DATA_TYPE_REAL_RANGE:
+    case CF_DATA_TYPE_INT:
+    case CF_DATA_TYPE_REAL:
+    case CF_DATA_TYPE_INT_LIST:
+    case CF_DATA_TYPE_REAL_LIST:
+    case CF_DATA_TYPE_INT_RANGE:
+    case CF_DATA_TYPE_REAL_RANGE:
         if (constraint_syntax->range.validation_string != NULL)
         {
             /* START XML ELEMENT -- RANGE */
@@ -433,8 +433,8 @@ static void XmlExportType(Writer *writer, const ConstraintSyntax *constraint_syn
             break;
         }
 
-    case DATA_TYPE_OPTION:
-    case DATA_TYPE_OPTION_LIST:
+    case CF_DATA_TYPE_OPTION:
+    case CF_DATA_TYPE_OPTION_LIST:
         if (constraint_syntax->range.validation_string != NULL)
         {
             /* START XML ELEMENT -- OPTIONS */
@@ -454,10 +454,10 @@ static void XmlExportType(Writer *writer, const ConstraintSyntax *constraint_syn
             break;
         }
 
-    case DATA_TYPE_STRING:
-    case DATA_TYPE_STRING_LIST:
-    case DATA_TYPE_CONTEXT:
-    case DATA_TYPE_CONTEXT_LIST:
+    case CF_DATA_TYPE_STRING:
+    case CF_DATA_TYPE_STRING_LIST:
+    case CF_DATA_TYPE_CONTEXT:
+    case CF_DATA_TYPE_CONTEXT_LIST:
         /* XML ELEMENT -- ACCEPTED-VALUES */
         if (strlen(constraint_syntax->range.validation_string) == 0)
         {
@@ -470,9 +470,9 @@ static void XmlExportType(Writer *writer, const ConstraintSyntax *constraint_syn
 
         break;
 
-    case DATA_TYPE_BUNDLE:
-    case DATA_TYPE_NONE:
-    case DATA_TYPE_COUNTER:
+    case CF_DATA_TYPE_BUNDLE:
+    case CF_DATA_TYPE_NONE:
+    case CF_DATA_TYPE_COUNTER:
         /* NONE */
         break;
     }

@@ -843,7 +843,7 @@ static FnCallResult FnCallClassesMatching(EvalContext *ctx, FnCall *fp, Rlist *f
     Rlist *matches = NULL;
 
     {
-        ClassTableIterator *iter = EvalContextClassTableIteratorNewGlobal(ctx, PromiseGetNamespace(fp->caller), true, true);
+        ClassTableIterator *iter = EvalContextClassTableIteratorNewGlobal(ctx, NULL, true, true);
         StringSet *global_matches = ClassesMatching(ctx, iter, finalargs);
 
         StringSetIterator it = StringSetIteratorInit(global_matches);

@@ -42,8 +42,8 @@ bundle agent check
   vars:
       "list0" slist => {"abc", "def", "ghi"};
       "list1" slist => {"{{abc}}", "  ' def}", "ghi'''"};
-      "list2" slist => {'{{a,bc}}', '  " de,f}', 'gh,,i"""'}; 
-      "list3" slist => {"{{a'bc',,}}", '  ",, d"ef}', "ghi,},'''"}; 
+      "list2" slist => {'{{a,bc}}', '  " de,f}', 'gh,,i"""'};
+      "list3" slist => {"{{a'bc',,}}", '  ",, d"ef}', "ghi,},'''"};
 
       "actual0" string => join(":", "list0");
       "actual1" string => join(":", "list1");

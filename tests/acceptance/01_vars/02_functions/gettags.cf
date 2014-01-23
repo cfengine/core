@@ -1,0 +1,56 @@
+# Test that getvariabletags and getclasstags work correctly
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence => { default("$(this.promise_filename)") };
+}
+
+bundle common init
+{
+  classes:
+      "myclass" expression => "any", meta => { "mytag1" };
+      "myotherclass" expression => "any", meta => { "mytag5", "mytag51" };
+      "myplainclass" expression => "any";
+
+  vars:
+      "tests" slist => { "1", "2", "3", "4", "5" };
+      "myvar" string => "123", meta => { "mytag3" };
+      "myothervar" string => "123";
+}
+
+bundle agent test
+{
+  vars:
+      "tags1" slist => getclassmetatags("myclass");
+      "tags2" slist => getclassmetatags("myplainclass");
+      "tags3" slist => getvariablemetatags("init.myvar");
+      "tags4" slist => getvariablemetatags("init.myothervar");
+      "tags5" slist => getclassmetatags("myotherclass");
+
+      "actual[$(init.tests)]" string => format('%S', "tags$(init.tests)");
+}
+
+bundle agent check
+{
+  vars:
+      "expected[1]" string => '{ "source=promise", "mytag1" }';
+      "expected[2]" string => '{ "source=promise" }';
+      "expected[3]" string => '{ "source=promise", "mytag3" }';
+      "expected[4]" string => '{ "source=promise" }';
+      "expected[5]" string => '{ "source=promise", "mytag5", "mytag51" }';
+
+  classes:
+      "ok_$(init.tests)" expression => strcmp("$(test.actual[$(init.tests)])", "$(expected[$(init.tests)])");
+
+      "ok" and => { ok_1, ok_2, ok_3, ok_4, ok_5,  };
+
+  reports:
+    DEBUG::
+      "Pass case $(init.tests)" ifvarclass => "ok_$(init.tests)";
+      "FAIL case $(init.tests): actual '$(test.actual[$(init.tests)])', expected '$(expected[$(init.tests)])'" ifvarclass => "!ok_$(init.tests)";
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

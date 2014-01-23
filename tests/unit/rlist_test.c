@@ -474,6 +474,146 @@ static void test_new_parser_failure()
     }
 }
 
+static void test_regex_split()
+{
+    Rlist *list = RlistFromRegexSplitNoOverflow("one-->two-->three", "-->", 3);
+
+    assert_int_equal(3, RlistLen(list));
+
+    assert_string_equal(RlistScalarValue(list), "one");
+    assert_string_equal(RlistScalarValue(list->next), "two");
+    assert_string_equal(RlistScalarValue(list->next->next), "three");
+
+    RlistDestroy(list);
+}
+
+static void test_regex_split_too_few_chunks()
+{
+    Rlist *list = RlistFromRegexSplitNoOverflow("one:two:three", ":", 2);
+
+    assert_int_equal(2, RlistLen(list));
+
+    assert_string_equal(RlistScalarValue(list), "one");
+    assert_string_equal(RlistScalarValue(list->next), "two:three");
+
+    RlistDestroy(list);
+}
+
+static void test_regex_split_too_many_chunks()
+{
+    Rlist *list = RlistFromRegexSplitNoOverflow("one:two:three:", ":", 10);
+
+    assert_int_equal(4, RlistLen(list));
+
+    assert_string_equal(RlistScalarValue(list), "one");
+    assert_string_equal(RlistScalarValue(list->next), "two");
+    assert_string_equal(RlistScalarValue(list->next->next), "three");
+    assert_string_equal(RlistScalarValue(list->next->next->next), "");
+
+    RlistDestroy(list);
+}
+
+static void test_regex_split_empty_chunks()
+{
+    Rlist *list = RlistFromRegexSplitNoOverflow(":one:two:three:", ":", 5);
+
+    assert_int_equal(5, RlistLen(list));
+
+    assert_string_equal(RlistScalarValue(list), "");
+    assert_string_equal(RlistScalarValue(list->next), "one");
+    assert_string_equal(RlistScalarValue(list->next->next), "two");
+    assert_string_equal(RlistScalarValue(list->next->next->next), "three");
+    assert_string_equal(RlistScalarValue(list->next->next->next->next), "");
+
+    RlistDestroy(list);
+}
+
+static void test_regex_split_no_match()
+{
+    Rlist *list = RlistFromRegexSplitNoOverflow(":one:two:three:", "/", 2);
+
+    assert_int_equal(1, RlistLen(list));
+    assert_string_equal(RlistScalarValue(list), ":one:two:three:"); 
+
+    RlistDestroy(list);
+}
+
+static void test_regex_split_adjacent_separators()
+{
+    Rlist *list = RlistFromRegexSplitNoOverflow(":one::two::three:", ":", 3);
+
+    assert_int_equal(3, RlistLen(list));
+
+    assert_string_equal(RlistScalarValue(list), "");
+    assert_string_equal(RlistScalarValue(list->next), "one");
+    assert_string_equal(RlistScalarValue(list->next->next), ":two::three:");
+
+    RlistDestroy(list);
+
+
+    list = RlistFromRegexSplitNoOverflow(":one::two:::three:", ":", 4);
+
+    assert_int_equal(4, RlistLen(list));
+
+    assert_string_equal(RlistScalarValue(list), "");
+    assert_string_equal(RlistScalarValue(list->next), "one");
+    assert_string_equal(RlistScalarValue(list->next->next), "");
+    assert_string_equal(RlistScalarValue(list->next->next->next), "two:::three:");
+
+    RlistDestroy(list);
+
+
+    list = RlistFromRegexSplitNoOverflow(":one::two:::three:", ":", 7);
+
+    assert_int_equal(7, RlistLen(list));
+
+    assert_string_equal(RlistScalarValue(list), "");
+    assert_string_equal(RlistScalarValue(list->next), "one");
+    assert_string_equal(RlistScalarValue(list->next->next), "");
+    assert_string_equal(RlistScalarValue(list->next->next->next), "two");
+    assert_string_equal(RlistScalarValue(list->next->next->next->next), "");
+    assert_string_equal(RlistScalarValue(list->next->next->next->next->next), "");
+    assert_string_equal(RlistScalarValue(list->next->next->next->next->next->next), "three:");
+
+    RlistDestroy(list);
+}
+
+static void test_regex_split_real_regex()
+{
+    //whole string is matched by regex in below example
+    Rlist *list = RlistFromRegexSplitNoOverflow("one-two-three", ".+", 3);
+
+    assert_int_equal(2, RlistLen(list));
+    assert_string_equal(RlistScalarValue(list), "");
+    assert_string_equal(RlistScalarValue(list->next), "");
+
+    RlistDestroy(list);
+
+
+    list = RlistFromRegexSplitNoOverflow("one>>>two<<<three<><>four", "[<>]+", 4);
+
+    assert_int_equal(4, RlistLen(list));
+    assert_string_equal(RlistScalarValue(list), "one");
+    assert_string_equal(RlistScalarValue(list->next), "two");
+    assert_string_equal(RlistScalarValue(list->next->next), "three");
+    assert_string_equal(RlistScalarValue(list->next->next->next), "four");
+
+    RlistDestroy(list);
+}
+
+static void test_regex_split_overlapping_delimiters()
+{
+    Rlist *list = RlistFromRegexSplitNoOverflow("-one---two---three", "--", 3);
+
+    assert_int_equal(3, RlistLen(list));
+
+    assert_string_equal(RlistScalarValue(list), "-one");
+    assert_string_equal(RlistScalarValue(list->next), "-two");
+    assert_string_equal(RlistScalarValue(list->next->next), "-three");
+
+    RlistDestroy(list);
+}
+
 int main()
 {
     PRINT_TEST_BANNER();
@@ -494,6 +634,14 @@ int main()
         unit_test(test_reverse),
         unit_test(test_new_parser_success),
         unit_test(test_new_parser_failure),
+        unit_test(test_regex_split),
+        unit_test(test_regex_split_too_few_chunks),
+        unit_test(test_regex_split_too_many_chunks),
+        unit_test(test_regex_split_empty_chunks),
+        unit_test(test_regex_split_no_match),
+        unit_test(test_regex_split_adjacent_separators),
+        unit_test(test_regex_split_real_regex),
+        unit_test(test_regex_split_overlapping_delimiters)
     };
 
     return run_tests(tests);

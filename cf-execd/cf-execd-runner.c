@@ -446,7 +446,7 @@ static int CompareResult(const char *filename, const char *prev_file)
         {
             free(regex_extra);
         }
-        free(regex);
+        pcre_free(regex);
     }
     else
     {

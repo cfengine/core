@@ -1,0 +1,71 @@
+#######################################################
+#
+# Test string_split()
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+###############################################
+
+bundle agent init
+{
+
+vars:
+      "states" slist => { "actual", "expected" };
+
+      "expected" string =>
+      "one
+two:three";
+
+  files:
+      "$(G.testfile).expected"
+      create => "true",
+      edit_line => ensure_lines("$(init.expected)"),
+      edit_defaults => empty;
+
+}
+
+
+#######################################################
+
+bundle agent test
+{
+  vars:
+      "result" slist => string_split("one:two:three", ":", "2");
+
+  files:
+      "$(G.testfile).actual"
+        create => "true",
+        edit_defaults => empty,
+        edit_line => ensure_lines(@(result));
+
+}
+
+
+#######################################################
+
+bundle agent check
+{
+  methods:
+    "any" usebundle => default_check_diff("$(G.testfile).actual",
+                                          "$(G.testfile).expected",
+                                          "$(this.promise_filename)");
+}
+
+
+bundle edit_line ensure_lines(list)
+{
+  insert_lines:
+      "$(list)";
+}
+
+body edit_defaults empty
+{
+      empty_file_before_editing => "true";
+}

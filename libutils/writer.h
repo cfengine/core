@@ -54,9 +54,11 @@ const char *StringWriterData(const Writer *writer);
 void WriterClose(Writer *writer);
 
 /* Returns modifiable string and destroys itself */
-char *StringWriterClose(Writer *writer);
+char *StringWriterClose(Writer *writer) FUNC_WARN_UNUSED_RESULT;
 
 /* Returns the open file and destroys itself */
 FILE *FileWriterDetach(Writer *writer);
+/* Commonly used on a FileWriter(stdout), ignoring return; so don't
+ * try to warn on unused result ! */
 
 #endif

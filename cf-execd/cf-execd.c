@@ -448,6 +448,7 @@ static void Apoptosis(void)
         };
 
         Item *killlist = SelectProcesses(PROCESSTABLE, promiser_buf, process_select, true);
+        RlistDestroy(owners);
 
         for (Item *ip = killlist; ip != NULL; ip = ip->next)
         {

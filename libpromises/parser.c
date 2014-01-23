@@ -36,13 +36,30 @@ ParserState P = { 0 }; /* GLOBAL_X */
 
 extern FILE *yyin;
 
-static void ParserStateReset(ParserState *p)
+static void ParserStateReset(ParserState *p, bool discard)
 {
     p->agent_type = AGENT_TYPE_COMMON;
-
+    p->warnings = PARSER_WARNING_ALL;
     p->policy = NULL;
 
-    p->warnings = PARSER_WARNING_ALL;
+    for (int i = CF_MAX_NESTING; i-- > 0;)
+    {
+        if (discard)
+        {
+            free(p->currentfnid[i]);
+            RlistDestroy(p->giveargs[i]);
+            FnCallDestroy(p->currentfncall[i]);
+        }
+        else
+        {
+            assert(!p->currentfnid[i]);
+            assert(!p->giveargs[i]);
+            assert(!p->currentfncall[i]);
+        }
+        p->currentfnid[i] = NULL;
+        p->giveargs[i] = NULL;
+        p->currentfncall[i] = NULL;
+    }
 
     free(p->current_line);
     p->current_line = NULL;
@@ -83,7 +100,7 @@ static void ParserStateReset(ParserState *p)
 
 Policy *ParserParseFile(AgentType agent_type, const char *path, unsigned int warnings, unsigned int warnings_error)
 {
-    ParserStateReset(&P);
+    ParserStateReset(&P, false);
 
     P.agent_type = agent_type;
     P.policy = PolicyNew();
@@ -116,12 +133,12 @@ Policy *ParserParseFile(AgentType agent_type, const char *path, unsigned int war
     if (P.error_count > 0)
     {
         PolicyDestroy(P.policy);
-        ParserStateReset(&P);
+        ParserStateReset(&P, true);
         return NULL;
     }
 
     Policy *policy = P.policy;
-    ParserStateReset(&P);
+    ParserStateReset(&P, false);
     return policy;
 }
 

@@ -256,28 +256,13 @@ static ExpressionValue EvalTokenAsClass(const char *classname, void *param)
     const EvalContext *ctx = param;
     ClassRef ref = ClassRefParse(classname);
 
-    if (strcmp("any", ref.name) == 0)
-    {
-        ClassRefDestroy(ref);
-        return true;
-    }
-    else if (!ref.ns && EvalContextHeapContainsHard(ctx, ref.name))
-    {
-        ClassRefDestroy(ref);
-        return true;
-    }
-    else if (EvalContextHeapContainsSoft(ctx, ref.ns, ref.name))
-    {
-        ClassRefDestroy(ref);
-        return true;
-    }
-    else if (EvalContextStackFrameContainsSoft(ctx, ref.name))
-    {
-        ClassRefDestroy(ref);
-        return true;
-    }
+    bool classy = (strcmp("any", ref.name) == 0 ||
+                   (!ref.ns && EvalContextHeapContainsHard(ctx, ref.name)) ||
+                   EvalContextHeapContainsSoft(ctx, ref.ns, ref.name) ||
+                   EvalContextStackFrameContainsSoft(ctx, ref.name));
 
-    return false;
+    ClassRefDestroy(ref);
+    return classy; /* ExpressionValue is just an enum extending bool... */
 }
 
 /**********************************************************************/

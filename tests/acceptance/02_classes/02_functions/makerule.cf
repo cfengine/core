@@ -23,15 +23,15 @@ bundle agent test
 {
   vars:
       "lold" slist => { "/etc/passwd", "/etc/group" };
-      "lnew" slist => { "/etc/passwd", "/tmp/newfile" };
+      "lnew" slist => { "/etc/passwd", "$(G.testfile)" };
       "lnon" slist => { "/etc/passwd", "/etc/NoFriggin'WayThisExi5ts" };
 
  files:
 
-   "/tmp/newfile"
+   "$(G.testfile)"
         create => "true";
 
-   "/tmp/nosuchfile"
+   "$(G.testfile).nosuchfile"
 
          delete => tidy;
 }
@@ -49,19 +49,19 @@ bundle agent check
   classes:
 
       # A new file does not need to be rebuilt from an older file (fails)
-      "ok1" expression => makerule("/tmp/newfile", "/etc/passwd");
+      "ok1" expression => makerule("$(G.testfile)", "/etc/passwd");
 
       # An older file does need to be rebuilt from a newer file
-      "ok2" expression => makerule("/etc/passwd", "/tmp/newfile");
+      "ok2" expression => makerule("/etc/passwd", "$(G.testfile)");
 
       # An older file cannot be rebuilt from a non existent file (fails)
-      "ok3" expression => makerule("/etc/passwd", "/tmp/nosuchfile");
+      "ok3" expression => makerule("/etc/passwd", "$(G.testfile).nosuchfile");
 
       # An non existent file does need to be rebuilt from a source file
-      "ok4" expression => makerule("/tmp/nosuchfile", "/etc/passwd");
+      "ok4" expression => makerule("$(G.testfile).nosuchfile", "/etc/passwd");
 
       # A new file does not need to be rebuilt from an older file (fails)
-      "ok5" expression => makerule("/tmp/newfile", "@(test.lold)");
+      "ok5" expression => makerule("$(G.testfile)", "@(test.lold)");
 
       # An old file does need to be rebuilt from an newer file in a list
       "ok6" expression => makerule("/etc/passwd", "@(test.lnew)");

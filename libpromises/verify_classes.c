@@ -44,9 +44,7 @@ PromiseResult VerifyClassPromise(EvalContext *ctx, const Promise *pp, ARG_UNUSED
 {
     assert(param == NULL);
 
-    Attributes a;
-
-    a = GetClassContextAttributes(ctx, pp);
+    Attributes a = GetClassContextAttributes(ctx, pp);
 
     if (!StringMatchFull("[a-zA-Z0-9_]+", pp->promiser))
     {
@@ -66,32 +64,6 @@ PromiseResult VerifyClassPromise(EvalContext *ctx, const Promise *pp, ARG_UNUSED
         return PROMISE_RESULT_FAIL;
     }
 
-    bool global_class = false;
-    if (a.context.persistent > 0) /* Persistent classes are always global */
-    {
-        global_class = true;
-    }
-    else if (a.context.scope == CONTEXT_SCOPE_NONE)
-    {
-        /* If there is no explicit scope, common bundles define global classes, other bundles define local classes */
-        if (strcmp(PromiseGetBundle(pp)->type, "common") == 0)
-        {
-            global_class = true;
-        }
-        else
-        {
-            global_class = false;
-        }
-    }
-    else if (a.context.scope == CONTEXT_SCOPE_NAMESPACE)
-    {
-        global_class = true;
-    }
-    else if (a.context.scope == CONTEXT_SCOPE_BUNDLE)
-    {
-        global_class = false;
-    }
-
     if (EvalClassExpression(ctx, a.context.expression, pp))
     {
         if (!ValidClassName(pp->promiser))
@@ -102,7 +74,14 @@ PromiseResult VerifyClassPromise(EvalContext *ctx, const Promise *pp, ARG_UNUSED
         }
         else
         {
-            if (global_class)
+            if (/* Persistent classes are always global: */
+                a.context.persistent > 0 ||
+                /* Namespace-scope is global: */
+                a.context.scope == CONTEXT_SCOPE_NAMESPACE ||
+                /* If there is no explicit scope, common bundles define global
+                 * classes, other bundles define local classes: */
+                (a.context.scope == CONTEXT_SCOPE_NONE &&
+                 0 == strcmp(PromiseGetBundle(pp)->type, "common")))
             {
                 Log(LOG_LEVEL_VERBOSE, "Adding global class '%s'", pp->promiser);
                 EvalContextClassPut(ctx, PromiseGetNamespace(pp), pp->promiser, true, CONTEXT_SCOPE_NAMESPACE, "source=promise");
@@ -145,10 +124,8 @@ static int EvalClassExpression(EvalContext *ctx, Constraint *cp, const Promise *
     int result = 0, total = 0;
     char buffer[CF_MAXVARSIZE];
     Rlist *rp;
-    FnCall *fp;
-    Rval rval;
 
-    if (cp == NULL)
+    if (cp == NULL) // ProgrammingError ?  We'll crash RSN anyway ...
     {
         Log(LOG_LEVEL_ERR, "EvalClassExpression internal diagnostic discovered an ill-formed condition");
     }
@@ -175,9 +152,12 @@ static int EvalClassExpression(EvalContext *ctx, Constraint *cp, const Promise *
 
     switch (cp->rval.type)
     {
-    case RVAL_TYPE_FNCALL:
+        Rval rval;
+        FnCall *fp;
 
-        fp = (FnCall *) cp->rval.item;  /* Special expansion of functions for control, best effort only */
+    case RVAL_TYPE_FNCALL:
+        fp = (FnCall *) cp->rval.item;
+        /* Special expansion of functions for control, best effort only: */
         FnCallResult res = FnCallEvaluate(ctx, fp, pp);
 
         FnCallDestroy(fp);
@@ -194,7 +174,6 @@ static int EvalClassExpression(EvalContext *ctx, Constraint *cp, const Promise *
         break;
 
     default:
-
         rval = ExpandPrivateRval(ctx, NULL, "this", cp->rval.item, cp->rval.type);
         RvalDestroy(cp->rval);
         cp->rval = rval;
@@ -203,36 +182,14 @@ static int EvalClassExpression(EvalContext *ctx, Constraint *cp, const Promise *
 
     if (strcmp(cp->lval, "expression") == 0)
     {
-        if (cp->rval.type != RVAL_TYPE_SCALAR)
-        {
-            return false;
-        }
-
-        if (IsDefinedClass(ctx, RvalScalarValue(cp->rval)))
-        {
-            return true;
-        }
-        else
-        {
-            return false;
-        }
+        return (cp->rval.type == RVAL_TYPE_SCALAR &&
+                IsDefinedClass(ctx, RvalScalarValue(cp->rval)));
     }
 
     if (strcmp(cp->lval, "not") == 0)
     {
-        if (cp->rval.type != RVAL_TYPE_SCALAR)
-        {
-            return false;
-        }
-
-        if (IsDefinedClass(ctx, RvalScalarValue(cp->rval)))
-        {
-            return false;
-        }
-        else
-        {
-            return true;
-        }
+        return (cp->rval.type == RVAL_TYPE_SCALAR &&
+                !IsDefinedClass(ctx, RvalScalarValue(cp->rval)));
     }
 
 // Class selection

@@ -75,6 +75,8 @@ static Policy *Cf3ParseFile(const GenericAgentConfig *config, const char *input_
 static Policy *LoadPolicyFile(EvalContext *ctx, GenericAgentConfig *config, const char *policy_file, StringSet *parsed_files_and_checksums, StringSet *failed_files);
 static bool WritePolicyValidatedFileToMasterfiles(const GenericAgentConfig *config);
 static void GetPromisesValidatedFileFromMasterfiles(char *filename, size_t max_size, const GenericAgentConfig *config);
+static bool WriteReleaseIdFileToMasterfiles(void);
+static void GetReleaseIdFile(const char *base_path, char *filename, size_t max_size);
 
 static bool MissingInputFile(const char *input_file);
 
@@ -229,6 +231,10 @@ bool GenericAgentCheckPolicy(GenericAgentConfig *config, bool force_validation, 
             if (policy_check_ok && write_validated_file)
             {
                 WritePolicyValidatedFileToMasterfiles(config);
+                if (GetAmPolicyHub(GetWorkDir()))
+                {
+                    WriteReleaseIdFileToMasterfiles(config);
+                }
             }
 
             if (config->agent_specific.agent.bootstrap_policy_server && !policy_check_ok)
@@ -277,24 +283,6 @@ static JsonElement *ReadPolicyValidatedFileFromMasterfiles(const GenericAgentCon
     return ReadPolicyValidatedFile(filename);
 }
 
-static JsonElement *ReadPolicyValidatedFileFromInputs(const GenericAgentConfig *config)
-{
-    char filename[CF_MAXVARSIZE];
-
-    if (MINUSF)
-    {
-        snprintf(filename, CF_MAXVARSIZE, "%s/state/validated_%s", CFWORKDIR, CanonifyName(config->original_input_file));
-        MapName(filename);
-    }
-    else
-    {
-        snprintf(filename, CF_MAXVARSIZE, "%s/cf_promises_validated", GetInputDir());
-        MapName(filename);
-    }
-
-    return ReadPolicyValidatedFile(filename);
-}
-
 /**
  * @brief Writes a file with a contained timestamp to mark a policy file as validated
  * @return True if successful.
@@ -311,13 +299,6 @@ static bool WritePolicyValidatedFileToMasterfiles(const GenericAgentConfig *conf
         return false;
     }
 
-    char release_id[(2 * CF_SHA1_LEN) + 1];
-    bool have_release_id = false;
-    if (!MINUSF)
-    {
-        have_release_id = GeneratePolicyReleaseIDFromMasterfiles(release_id);
-    }
-
     int fd = creat(filename, 0600);
     if (fd == -1)
     {
@@ -327,14 +308,82 @@ static bool WritePolicyValidatedFileToMasterfiles(const GenericAgentConfig *conf
 
     JsonElement *info = JsonObjectCreate(3);
     JsonObjectAppendInteger(info, "timestamp", time(NULL));
-    if (have_release_id)
-    {
-        JsonObjectAppendString(info, "releaseId", release_id);
-    }
 
     Writer *w = FileWriter(fdopen(fd, "w"));
     JsonWrite(w, info, 0);
+
     WriterClose(w);
+    JsonDestroy(info);
+
+    return true;
+}
+
+/**
+ * @brief Reads the release_id file from inputs and return a JsonElement.
+ */
+static JsonElement *ReadReleaseIdFileFromInputs()
+{
+    char filename[CF_MAXVARSIZE];
+
+    GetReleaseIdFile(GetInputDir(), filename, sizeof(filename));
+
+    struct stat sb;
+    if (stat(filename, &sb) == -1)
+    {
+        return NULL;
+    }
+
+    JsonElement *validated_doc = NULL;
+    JsonParseError err = JsonParseFile(filename, 4096, &validated_doc);
+    if (err != JSON_PARSE_OK)
+    {
+        Log(LOG_LEVEL_WARNING, "Could not read release ID: '%s' did not contain valid JSON data. "
+            "(JsonParseFile: '%s')", filename, JsonParseErrorToString(err));
+    }
+
+    return validated_doc;
+}
+
+/**
+ * @brief Writes a file with a contained release ID based on git SHA,
+ *        or file checksum if git SHA is not available.
+ * @return True if successful or if no release ID is needed (-f specified).
+ */
+static bool WriteReleaseIdFileToMasterfiles(void)
+{
+    if (MINUSF)
+    {
+        return true;
+    }
+
+    char filename[CF_MAXVARSIZE];
+
+    GetReleaseIdFile(GetMasterDir(), filename, sizeof(filename));
+
+    char release_id[(2 * CF_SHA1_LEN) + 1];
+
+    bool have_release_id = GeneratePolicyReleaseIDFromMasterfiles(release_id);
+
+    if (!have_release_id)
+    {
+        return false;
+    }
+
+    int fd = creat(filename, 0600);
+    if (fd == -1)
+    {
+        Log(LOG_LEVEL_ERR, "While writing policy release ID file '%s', could not create file (creat: %s)", filename, GetErrorStr());
+        return false;
+    }
+
+    JsonElement *info = JsonObjectCreate(3);
+    JsonObjectAppendString(info, "releaseId", release_id);
+
+    Writer *w = FileWriter(fdopen(fd, "w"));
+    JsonWrite(w, info, 0);
+
+    WriterClose(w);
+    JsonDestroy(info);
 
     return true;
 }
@@ -698,7 +747,7 @@ Policy *GenericAgentLoadPolicy(EvalContext *ctx, GenericAgentConfig *config)
 
     if (!MINUSF)
     {
-        JsonElement *validated_doc = ReadPolicyValidatedFileFromInputs(config);
+        JsonElement *validated_doc = ReadReleaseIdFileFromInputs();
         if (validated_doc)
         {
             const char *release_id = JsonObjectGetAsString(validated_doc, "releaseId");
@@ -985,6 +1034,22 @@ static void GetPromisesValidatedFileFromMasterfiles(char *filename, size_t max_s
     }
 }
 
+/**
+ * @brief Gets the release_id file name in the given base_path.
+ */
+static void GetReleaseIdFile(const char *base_path, char *filename, size_t max_size)
+{
+    if (MINUSF)
+    {
+        *filename = '\0';
+    }
+    else
+    {
+        snprintf(filename, max_size, "%s/cf_promises_release_id", base_path);
+        MapName(filename);
+    }
+}
+
 time_t ReadTimestampFromPolicyValidatedMasterfiles(const GenericAgentConfig *config)
 {
     time_t validated_at = 0;
@@ -992,7 +1057,11 @@ time_t ReadTimestampFromPolicyValidatedMasterfiles(const GenericAgentConfig *con
         JsonElement *validated_doc = ReadPolicyValidatedFileFromMasterfiles(config);
         if (validated_doc)
         {
-            validated_at = JsonPrimitiveGetAsInteger(JsonObjectGet(validated_doc, "timestamp"));
+            JsonElement *timestamp = JsonObjectGet(validated_doc, "timestamp");
+            if (timestamp)
+            {
+                validated_at = JsonPrimitiveGetAsInteger(timestamp);
+            }
             JsonDestroy(validated_doc);
         }
     }

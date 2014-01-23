@@ -44,7 +44,7 @@ unsigned FnCallHash(const FnCall *fp, unsigned seed, unsigned max);
 void FnCallWrite(Writer *writer, const FnCall *call);
 
 
-FnCallResult FnCallEvaluate(EvalContext *ctx, FnCall *fp, const Promise *caller);
+FnCallResult FnCallEvaluate(EvalContext *ctx, const Policy *policy, FnCall *fp, const Promise *caller);
 
 const FnCallType *FnCallTypeGet(const char *name);
 

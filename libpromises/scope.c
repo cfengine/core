@@ -192,7 +192,7 @@ void ScopeAugment(EvalContext *ctx, const Bundle *bp, const Promise *pp, const R
             case RVAL_TYPE_FNCALL:
                 {
                     FnCall *subfp = RlistFnCallValue(rpr);
-                    Rval rval = FnCallEvaluate(ctx, subfp, pp).rval;
+                    Rval rval = FnCallEvaluate(ctx, PromiseGetPolicy(pp), subfp, pp).rval;
                     if (rval.type == RVAL_TYPE_SCALAR)
                     {
                         VarRef *ref = VarRefParseFromBundle(lval, bp);
@@ -264,7 +264,7 @@ void ScopeMapBodyArgs(EvalContext *ctx, const Body *body, const Rlist *args)
                     }
                 }
 
-                FnCallResult res = FnCallEvaluate(ctx, fp, NULL);
+                FnCallResult res = FnCallEvaluate(ctx, body->parent_policy, fp, NULL);
 
                 if (res.status == FNCALL_FAILURE && THIS_AGENT_TYPE != AGENT_TYPE_COMMON)
                 {

@@ -728,7 +728,7 @@ typedef struct
     const char *name;
     DataType dtype;
     const FnCallArg *args;
-    FnCallResult (*impl)(EvalContext *ctx, FnCall *, Rlist *);
+    FnCallResult (*impl)(EvalContext *, const Policy *, FnCall *, Rlist *);
     const char *description;
     FnCallOption options;
     FnCallCategory category;

@@ -156,9 +156,9 @@ static int EvalClassExpression(EvalContext *ctx, Constraint *cp, const Promise *
         FnCall *fp;
 
     case RVAL_TYPE_FNCALL:
-        fp = (FnCall *) cp->rval.item;
+        fp = RvalFnCallValue(cp->rval);
         /* Special expansion of functions for control, best effort only: */
-        FnCallResult res = FnCallEvaluate(ctx, fp, pp);
+        FnCallResult res = FnCallEvaluate(ctx, PromiseGetPolicy(pp), fp, pp);
 
         FnCallDestroy(fp);
         cp->rval = res.rval;

@@ -261,6 +261,7 @@ Constraint *PromiseAppendConstraint(Promise *promise, const char *lval, Rval rva
 
 const char *PromiseGetNamespace(const Promise *pp);
 const Bundle *PromiseGetBundle(const Promise *pp);
+const Policy *PromiseGetPolicy(const Promise *pp);
 
 /**
  * @brief Write a string describing the promise location in policy, e.g. /default/foo/packages/'emacs'

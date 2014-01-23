@@ -834,7 +834,7 @@ Rval EvaluateFinalRval(EvalContext *ctx, const char *ns, const char *scope, Rval
             if (rp->val.type == RVAL_TYPE_FNCALL)
             {
                 FnCall *fp = RlistFnCallValue(rp);
-                FnCallResult res = FnCallEvaluate(ctx, fp, pp);
+                FnCallResult res = FnCallEvaluate(ctx, PromiseGetPolicy(pp), fp, pp);
 
                 FnCallDestroy(fp);
                 rp->val = res.rval;
@@ -860,7 +860,7 @@ Rval EvaluateFinalRval(EvalContext *ctx, const char *ns, const char *scope, Rval
         if (FnCallIsBuiltIn(returnval))
         {
             FnCall *fp = RvalFnCallValue(returnval);
-            returnval = FnCallEvaluate(ctx, fp, pp).rval;
+            returnval = FnCallEvaluate(ctx, PromiseGetPolicy(pp), fp, pp).rval;
             FnCallDestroy(fp);
         }
         break;

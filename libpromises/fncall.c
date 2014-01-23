@@ -57,7 +57,7 @@ leads to Hash Association (lval,rval) => (user,"$(person)")
 
 /******************************************************************/
 
-static Rlist *NewExpArgs(EvalContext *ctx, const FnCall *fp)
+static Rlist *NewExpArgs(EvalContext *ctx, const Policy *policy, const FnCall *fp)
 {
     int len;
     Rval rval;
@@ -84,7 +84,7 @@ static Rlist *NewExpArgs(EvalContext *ctx, const FnCall *fp)
         {
         case RVAL_TYPE_FNCALL:
             subfp = RlistFnCallValue(rp);
-            rval = FnCallEvaluate(ctx, subfp, fp->caller).rval;
+            rval = FnCallEvaluate(ctx, policy, subfp, fp->caller).rval;
             assert(rval.item);
             break;
         default:
@@ -207,7 +207,7 @@ void FnCallWrite(Writer *writer, const FnCall *call)
 
 /*******************************************************************/
 
-static FnCallResult CallFunction(EvalContext *ctx, FnCall *fp, Rlist *expargs)
+static FnCallResult CallFunction(EvalContext *ctx, const Policy *policy, FnCall *fp, Rlist *expargs)
 {
     Rlist *rp = fp->args;
     const FnCallType *fncall_type = FnCallTypeGet(fp->name);
@@ -257,11 +257,14 @@ static FnCallResult CallFunction(EvalContext *ctx, FnCall *fp, Rlist *expargs)
     }
 
 
-    return (*fncall_type->impl) (ctx, fp, expargs);
+    return (*fncall_type->impl) (ctx, policy, fp, expargs);
 }
 
-FnCallResult FnCallEvaluate(EvalContext *ctx, FnCall *fp, const Promise *caller)
+FnCallResult FnCallEvaluate(EvalContext *ctx, const Policy *policy, FnCall *fp, const Promise *caller)
 {
+    assert(ctx);
+    assert(policy);
+    assert(fp);
     fp->caller = caller;
 
     if (!EvalContextGetEvalOption(ctx, EVAL_OPTION_EVAL_FUNCTIONS))
@@ -293,7 +296,7 @@ FnCallResult FnCallEvaluate(EvalContext *ctx, FnCall *fp, const Promise *caller)
         return (FnCallResult) { FNCALL_FAILURE, { FnCallCopy(fp), RVAL_TYPE_FNCALL } };
     }
 
-    Rlist *expargs = NewExpArgs(ctx, fp);
+    Rlist *expargs = NewExpArgs(ctx, policy, fp);
 
     if (UnresolvedArgs(expargs))
     {
@@ -312,7 +315,7 @@ FnCallResult FnCallEvaluate(EvalContext *ctx, FnCall *fp, const Promise *caller)
         return (FnCallResult) { FNCALL_SUCCESS, RvalCopy(cached_rval) };
     }
 
-    FnCallResult result = CallFunction(ctx, fp, expargs);
+    FnCallResult result = CallFunction(ctx, policy, fp, expargs);
 
     if (result.status == FNCALL_FAILURE)
     {

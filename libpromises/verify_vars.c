@@ -94,7 +94,7 @@ PromiseResult VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_d
                 return PROMISE_RESULT_NOOP;
             }
 
-            FnCallResult res = FnCallEvaluate(ctx, fp, pp);
+            FnCallResult res = FnCallEvaluate(ctx, PromiseGetPolicy(pp), fp, pp);
 
             if (res.status == FNCALL_FAILURE)
             {
@@ -546,7 +546,7 @@ static ConvergeVariableOptions CollectConvergeVariableOptions(EvalContext *ctx, 
 
                     /* eval it: e.g. ifvarclass => not("a_class") */
 
-                    Rval res = FnCallEvaluate(ctx, cp->rval.item, pp).rval;
+                    Rval res = FnCallEvaluate(ctx, PromiseGetPolicy(pp), cp->rval.item, pp).rval;
 
                     /* Don't continue unless function was evaluated properly */
                     if (res.type != RVAL_TYPE_SCALAR)

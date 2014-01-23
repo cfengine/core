@@ -2412,6 +2412,11 @@ const Bundle *PromiseGetBundle(const Promise *pp)
     return pp->parent_promise_type->parent_bundle;
 }
 
+const Policy *PromiseGetPolicy(const Promise *pp)
+{
+    return PromiseGetBundle(pp)->parent_policy;
+}
+
 static void BundlePath(Writer *w, const Bundle *bp)
 {
     WriterWriteChar(w, '/');

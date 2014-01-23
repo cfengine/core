@@ -236,14 +236,21 @@ int safe_open(const char *pathname, int flags, ...)
     {
         char *component = next_component;
         next_component = strchr(component + 1, '/');
+        // Used to restore the slashes in the final path component.
+        char *restore_slash = NULL;
         if (next_component)
         {
+            restore_slash = next_component;
             *next_component = '\0';
             // Eliminate double slashes.
             while (*(++next_component) == '/') { /*noop*/ }
             if (!*next_component)
             {
                 next_component = NULL;
+            }
+            else
+            {
+                restore_slash = NULL;
             }
         }
 
@@ -272,6 +279,10 @@ int safe_open(const char *pathname, int flags, ...)
             {
                 // Already exists. Make sure we *don't* create it.
                 flags &= ~O_CREAT;
+            }
+            if (restore_slash)
+            {
+                *restore_slash = '/';
             }
             int filefd = openat(currentfd, component, flags, mode);
             close(currentfd);

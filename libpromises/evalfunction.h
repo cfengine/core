@@ -29,15 +29,15 @@
 #include <rlist.h>
 #include <set.h>
 
-FnCallResult FnCallHostInNetgroup(EvalContext *ctx, const Policy *policy, const FnCall *fp, Rlist *finalargs);
+FnCallResult FnCallHostInNetgroup(EvalContext *ctx, const Policy *policy, const FnCall *fp, const Rlist *finalargs);
 
 int FnNumArgs(const FnCallType *call_type);
 
 void ModuleProtocol(EvalContext *ctx, char *command, const char *line, int print, char* context, StringSet **tags);
 
 /* Implemented in Nova for Win32 */
-FnCallResult FnCallGroupExists(EvalContext *ctx, const Policy *policy, const FnCall *fp, Rlist *finalargs);
-FnCallResult FnCallUserExists(EvalContext *ctx, const Policy *policy, const FnCall *fp, Rlist *finalargs);
+FnCallResult FnCallGroupExists(EvalContext *ctx, const Policy *policy, const FnCall *fp, const Rlist *finalargs);
+FnCallResult FnCallUserExists(EvalContext *ctx, const Policy *policy, const FnCall *fp, const Rlist *finalargs);
 
 JsonElement *DefaultTemplateData(const EvalContext *ctx);
 

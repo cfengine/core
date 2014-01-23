@@ -1515,7 +1515,7 @@ static FnCallResult FnCallReadTcp(ARG_UNUSED EvalContext *ctx, ARG_UNUSED FnCall
 
     Log(LOG_LEVEL_DEBUG, "Want to read %d bytes from port %d at '%s'", val, portnum, hostnameip);
 
-    conn = NewAgentConn(hostnameip, false);
+    conn = NewAgentConn(hostnameip);
 
     FileCopy fc = {
         .force_ipv4 = false,
@@ -1527,7 +1527,7 @@ static FnCallResult FnCallReadTcp(ARG_UNUSED EvalContext *ctx, ARG_UNUSED FnCall
     if (!ServerConnect(conn, hostnameip, fc))
     {
         Log(LOG_LEVEL_INFO, "Couldn't open a tcp socket. (socket: %s)", GetErrorStr());
-        DeleteAgentConn(conn, false);
+        DeleteAgentConn(conn);
         return FnFailure();
     }
 
@@ -1541,7 +1541,7 @@ static FnCallResult FnCallReadTcp(ARG_UNUSED EvalContext *ctx, ARG_UNUSED FnCall
             if (result < 0)
             {
                 cf_closesocket(ConnectionInfoSocket(conn->conn_info));
-                DeleteAgentConn(conn, false);
+                DeleteAgentConn(conn);
                 return FnFailure();
             }
             else
@@ -1558,12 +1558,12 @@ static FnCallResult FnCallReadTcp(ARG_UNUSED EvalContext *ctx, ARG_UNUSED FnCall
     if (n_read == -1)
     {
         cf_closesocket(ConnectionInfoSocket(conn->conn_info));
-        DeleteAgentConn(conn, false);
+        DeleteAgentConn(conn);
         return FnFailure();
     }
 
     cf_closesocket(ConnectionInfoSocket(conn->conn_info));
-    DeleteAgentConn(conn, false);
+    DeleteAgentConn(conn);
 
     return FnReturn(buffer);
 }
@@ -2462,7 +2462,7 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx, FnCall *fp, Rlist *fin
     {
         Log(LOG_LEVEL_DEBUG, "Want to read %d bytes from port %d at '%s'", val, portnum, RlistScalarValue(rp));
 
-        conn = NewAgentConn(RlistScalarValue(rp), false);
+        conn = NewAgentConn(RlistScalarValue(rp));
 
         FileCopy fc = {
             .force_ipv4 = false,
@@ -2474,7 +2474,7 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx, FnCall *fp, Rlist *fin
         if (!ServerConnect(conn, RlistScalarValue(rp), fc))
         {
             Log(LOG_LEVEL_INFO, "Couldn't open a tcp socket. (socket %s)", GetErrorStr());
-            DeleteAgentConn(conn, false);
+            DeleteAgentConn(conn);
             continue;
         }
 
@@ -2483,7 +2483,7 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx, FnCall *fp, Rlist *fin
             if (SendSocketStream(ConnectionInfoSocket(conn->conn_info), sendstring, strlen(sendstring)) == -1)
             {
                 cf_closesocket(ConnectionInfoSocket(conn->conn_info));
-                DeleteAgentConn(conn, false);
+                DeleteAgentConn(conn);
                 continue;
             }
 
@@ -2494,7 +2494,7 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx, FnCall *fp, Rlist *fin
             if (n_read == -1)
             {
                 cf_closesocket(ConnectionInfoSocket(conn->conn_info));
-                DeleteAgentConn(conn, false);
+                DeleteAgentConn(conn);
                 continue;
             }
 
@@ -2527,7 +2527,7 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx, FnCall *fp, Rlist *fin
         }
 
         cf_closesocket(ConnectionInfoSocket(conn->conn_info));
-        DeleteAgentConn(conn, false);
+        DeleteAgentConn(conn);
     }
 
     PolicyDestroy(select_server_policy);

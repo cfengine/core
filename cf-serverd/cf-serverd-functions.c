@@ -370,13 +370,13 @@ void StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
         }
 
         // Check whether we have established peering with a hub
-        if (CollectCallPending())
+        if (CollectCallHasPending())
         {
             int waiting_queue = 0;
             int new_client = CollectCallGetPending(&waiting_queue);
             if (waiting_queue > COLLECT_WINDOW)
             {
-                Log(LOG_LEVEL_INFO, "Closing Collect Call because it would take"
+                Log(LOG_LEVEL_INFO, "Closing collect call because it would take"
                                     "longer than the allocated window [%d]", COLLECT_WINDOW);
             }
             ConnectionInfo *info = ConnectionInfoNew();

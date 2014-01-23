@@ -702,7 +702,7 @@ static void HailExec(AgentConnection *conn, char *peer, char *recvbuffer, char *
     if (SendTransaction(conn->conn_info, sendbuffer, 0, CF_DONE) == -1)
     {
         Log(LOG_LEVEL_ERR, "Transmission rejected. (send: %s)", GetErrorStr());
-        DisconnectServer(conn, false);
+        DisconnectServer(conn);
         return;
     }
 
@@ -752,7 +752,7 @@ static void HailExec(AgentConnection *conn, char *peer, char *recvbuffer, char *
     {
         fclose(fp);
     }
-    DisconnectServer(conn, false);
+    DisconnectServer(conn);
 }
 
 /********************************************************************/

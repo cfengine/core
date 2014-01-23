@@ -41,7 +41,7 @@ void DetermineCfenginePort(void);
   @param s Socket to use for the connection, only useful for call collect mode.
   */
 AgentConnection *NewServerConnection(FileCopy fc, bool background, int *err, int s);
-void DisconnectServer(AgentConnection *conn, int partial);
+void DisconnectServer(AgentConnection *conn);
 int cf_remote_stat(char *file, struct stat *buf, char *stattype, bool encrypt, AgentConnection *conn);
 int CompareHashNet(const char *file1, const char *file2, bool encrypt, AgentConnection *conn);
 int CopyRegularFileNet(const char *source, const char *dest, off_t size, bool encrypt, AgentConnection *conn);

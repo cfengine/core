@@ -67,6 +67,7 @@ typedef struct Hash Hash;
   @return A structure of type Hash or NULL in case of error.
   */
 Hash *HashNew(const char *data, const unsigned int length, HashMethod method);
+
 /**
   @brief Creates a new structure of type Hash.
   @param descriptor Either file descriptor or socket descriptor.
@@ -74,6 +75,7 @@ Hash *HashNew(const char *data, const unsigned int length, HashMethod method);
   @return A structure of type Hash or NULL in case of error.
   */
 Hash *HashNewFromDescriptor(const int descriptor, HashMethod method);
+
 /**
   @brief Creates a new structure of type Hash.
   @param rsa RSA key to be hashed.
@@ -81,11 +83,13 @@ Hash *HashNewFromDescriptor(const int descriptor, HashMethod method);
   @return A structure of type Hash or NULL in case of error.
   */
 Hash *HashNewFromKey(const RSA *rsa, HashMethod method);
+
 /**
   @brief Destroys a structure of type Hash.
   @param hash The structure to be destroyed.
   */
 void HashDestroy(Hash **hash);
+
 /**
   @brief Copy a hash
   @param origin Hash to be copied.
@@ -93,6 +97,7 @@ void HashDestroy(Hash **hash);
   @return 0 if successful, -1 in any other case.
   */
 int HashCopy(Hash *origin, Hash **destination);
+
 /**
   @brief Checks if two hashes are equal.
   @param a 1st hash to be compared.
@@ -100,44 +105,51 @@ int HashCopy(Hash *origin, Hash **destination);
   @return True if both hashes are equal and false in any other case.
   */
 int HashEqual(const Hash *a, const Hash *b);
+
 /**
-  @brief Const pointer to the raw digest data, notice that this is a binary
-         representation and not '\0' terminated.
+  @brief Pointer to the raw digest data.
+  @note Notice that this is a binary representation and not '\0' terminated.
   @param hash Hash structure.
   @param length Pointer to an unsigned int to hold the length of the data.
   @return A pointer to the raw digest data.
   */
 const unsigned  char *HashData(const Hash *hash, unsigned int *length);
+
 /**
   @brief Printable hash representation.
   @param hash Hash structure.
   @return A pointer to the printable digest representation.
   */
 const char *HashPrintable(const Hash *hash);
+
 /**
   @brief Hash type.
   @param hash Hash structure
   @return The hash method used by this hash structure.
   */
 HashMethod HashType(const Hash *hash);
+
 /**
   @brief Hash length in bytes.
   @param hash Hash structure
   @return The hash length in bytes.
   */
 HashSize HashLength(const Hash *hash);
+
 /**
   @brief Returns the ID of the hash based on the name
   @param hash_name Name of the hash.
   @return Returns the ID of the hash from the name.
   */
 HashMethod HashIdFromName(const char *hash_name);
+
 /**
   @brief Returns the name of the hash based on the ID.
   @param hash_id Id of the hash.
   @return Returns the name of the hash.
   */
 const char *HashNameFromId(HashMethod hash_id);
+
 /**
   @brief Size of the hash
   @param method Hash method

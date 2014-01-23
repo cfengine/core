@@ -326,7 +326,7 @@ static AgentConnection *ServerConnection(const char *server, FileCopy fc, int *e
     pthread_sigmask(SIG_BLOCK, &signal_mask, NULL);
 #endif
 
-    conn = NewAgentConn(server, false);
+    conn = NewAgentConn(server);
 
 /* username of the client - say root from Windows */
 
@@ -346,7 +346,7 @@ static AgentConnection *ServerConnection(const char *server, FileCopy fc, int *e
             if (!ServerConnect(conn, server, fc))
             {
                 Log(LOG_LEVEL_INFO, "No server is responding on this port");
-                DisconnectServer(conn, false);
+                DisconnectServer(conn);
                 *err = -1;
                 return NULL;
             }
@@ -378,13 +378,13 @@ static AgentConnection *ServerConnection(const char *server, FileCopy fc, int *e
 
             if (ret == -1)                                      /* Error */
             {
-                DisconnectServer(conn, false);
+                DisconnectServer(conn);
                 *err = -1;
                 return NULL;
             }
             else if (ret == 0)                             /* Auth/ID error */
             {
-                    DisconnectServer(conn, false);
+                    DisconnectServer(conn);
                     errno = EPERM;
                     *err = -2;
                     return NULL;
@@ -405,7 +405,7 @@ static AgentConnection *ServerConnection(const char *server, FileCopy fc, int *e
             {
                 Log(LOG_LEVEL_ERR, "Id-authentication for '%s' failed", VFQNAME);
                 errno = EPERM;
-                DisconnectServer(conn, false);
+                DisconnectServer(conn);
                 *err = -2; // auth err
                 return NULL;
             }
@@ -414,7 +414,7 @@ static AgentConnection *ServerConnection(const char *server, FileCopy fc, int *e
             {
                 Log(LOG_LEVEL_ERR, "Authentication dialogue with '%s' failed", server);
                 errno = EPERM;
-                DisconnectServer(conn, false);
+                DisconnectServer(conn);
                 *err = -2; // auth err
                 return NULL;
             }
@@ -433,25 +433,22 @@ static AgentConnection *ServerConnection(const char *server, FileCopy fc, int *e
 
 /*********************************************************************/
 
-void DisconnectServer(AgentConnection *conn, int partial)
+void DisconnectServer(AgentConnection *conn)
 {
-    if (!partial)
+    /* Socket needs to be closed even after SSL_shutdown. */
+    if (ConnectionInfoSocket(conn->conn_info) >= 0)                  /* Not INVALID or OFFLINE */
     {
-        /* Socket needs to be closed even after SSL_shutdown. */
-        if (ConnectionInfoSocket(conn->conn_info) >= 0)                  /* Not INVALID or OFFLINE */
-        {
-            if (ConnectionInfoProtocolVersion(conn->conn_info) == CF_PROTOCOL_TLS &&
+        if (ConnectionInfoProtocolVersion(conn->conn_info) == CF_PROTOCOL_TLS &&
                 ConnectionInfoSSL(conn->conn_info) != NULL)
-            {
-                SSL_shutdown(ConnectionInfoSSL(conn->conn_info));
-            }
-
-            cf_closesocket(ConnectionInfoSocket(conn->conn_info));
-            ConnectionInfoSetSocket(conn->conn_info, SOCKET_INVALID);
-            Log(LOG_LEVEL_INFO, "Connection to %s is closed", conn->remoteip);
+        {
+            SSL_shutdown(ConnectionInfoSSL(conn->conn_info));
         }
+
+        cf_closesocket(ConnectionInfoSocket(conn->conn_info));
+        ConnectionInfoSetSocket(conn->conn_info, SOCKET_INVALID);
+        Log(LOG_LEVEL_INFO, "Connection to %s is closed", conn->remoteip);
     }
-    DeleteAgentConn(conn, partial);
+    DeleteAgentConn(conn);
 }
 
 /*********************************************************************/
@@ -1487,7 +1484,7 @@ static void MarkServerOffline(const char *server)
     ServerItem *svp = xmalloc(sizeof(*svp));
     svp->server = xstrdup(ipaddr);
     svp->busy = false;
-    svp->conn = NewAgentConn(ipaddr, false);
+    svp->conn = NewAgentConn(ipaddr);
     ConnectionInfoSetProtocolVersion(svp->conn->conn_info, CF_PROTOCOL_CLASSIC);
     ConnectionInfoSetConnectionStatus(svp->conn->conn_info, CF_CONNECTION_NOT_ESTABLISHED);
     ConnectionInfoSetSocket(svp->conn->conn_info, CF_COULD_NOT_CONNECT);
@@ -1606,7 +1603,7 @@ void ConnectionsCleanup(void)
                              "NULL connection in SERVERLIST!");
         }
 
-        DisconnectServer(svp->conn, false);
+        DisconnectServer(svp->conn);
     }
 
     SeqClear(srvlist_tmp);

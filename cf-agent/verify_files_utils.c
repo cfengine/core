@@ -2500,7 +2500,7 @@ PromiseResult ScheduleCopyOperation(EvalContext *ctx, char *destination, Attribu
          * client_code.c:SERVERLIST, so just close it right after transaction. */
         if (attr.transaction.background)
         {
-            DisconnectServer(conn, false);
+            DisconnectServer(conn);
         }
         else
         {

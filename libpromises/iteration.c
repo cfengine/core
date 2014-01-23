@@ -196,6 +196,7 @@ void PromiseIteratorDestroy(PromiseIterator *iter)
 
         SeqDestroy(iter->var_states);
         SeqDestroy(iter->vars);
+        free(iter);
     }
 }
 

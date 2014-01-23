@@ -948,6 +948,7 @@ rval:                  IDSYNTAX
                        {
                            RvalDestroy(P.rval);
                            P.rval = (Rval) { P.currentfncall[P.arg_nesting+1], RVAL_TYPE_FNCALL };
+                           P.currentfncall[P.arg_nesting+1] = NULL;
                            P.references_body = false;
                        }
 
@@ -1012,6 +1013,7 @@ litem:                 IDSYNTAX
                        {
                            RlistAppend(&P.currentRlist, P.currentfncall[P.arg_nesting+1], RVAL_TYPE_FNCALL);
                            FnCallDestroy(P.currentfncall[P.arg_nesting+1]);
+                           P.currentfncall[P.arg_nesting+1] = NULL;
                        }
 
                      | error
@@ -1118,6 +1120,7 @@ gaitem:                IDSYNTAX
                            ParserDebug("\tP:%s:%s:%s:%s function %s, nakedvar arg = %s\n", P.block, P.blocktype, P.blockid, P.currentclasses ? P.currentclasses : "any", P.currentfnid[P.arg_nesting], P.currentstring);
                            RlistAppend(&P.giveargs[P.arg_nesting], P.currentfncall[P.arg_nesting+1], RVAL_TYPE_FNCALL);
                            RvalDestroy((Rval) { P.currentfncall[P.arg_nesting+1], RVAL_TYPE_FNCALL });
+                           P.currentfncall[P.arg_nesting+1] = NULL;
                        }
 
                      | error

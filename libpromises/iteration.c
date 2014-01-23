@@ -216,25 +216,27 @@ static bool NullIteratorsInternal(PromiseIterator *iter, size_t index)
         if (var->rval.type == RVAL_TYPE_LIST)
         {
             const Rlist *state = SeqAt(iter->var_states, i);
-
-            switch (state->val.type)
+            if (state)
             {
-            case RVAL_TYPE_SCALAR:
-                if (strcmp(RlistScalarValue(state), CF_NULL_VALUE) == 0)
+                switch (state->val.type)
                 {
-                    return true;
-                }
-               break;
+                case RVAL_TYPE_SCALAR:
+                    if (strcmp(RlistScalarValue(state), CF_NULL_VALUE) == 0)
+                    {
+                        return true;
+                    }
+                   break;
 
-            case RVAL_TYPE_FNCALL:
-                if (strcmp(RlistFnCallValue(state)->name, CF_NULL_VALUE) == 0)
-                {
-                    return true;
-                }
-                break;
+                case RVAL_TYPE_FNCALL:
+                    if (strcmp(RlistFnCallValue(state)->name, CF_NULL_VALUE) == 0)
+                    {
+                        return true;
+                    }
+                    break;
 
-            default:
-                ProgrammingError("Unexpected rval type %d in iterator", state->val.type);
+                default:
+                    ProgrammingError("Unexpected rval type %d in iterator", state->val.type);
+                }
             }
         }
     }

@@ -1695,7 +1695,23 @@ static FnCallResult FnCallRegArray(EvalContext *ctx, ARG_UNUSED FnCall *fp, Rlis
 
 static FnCallResult FnCallGetIndices(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
-    VarRef *ref = VarRefParseFromBundle(RlistScalarValue(finalargs), PromiseGetBundle(fp->caller));
+    VarRef *ref = VarRefParse(RlistScalarValue(finalargs));
+    if (!VarRefIsQualified(ref))
+    {
+        if (fp->caller)
+        {
+            const Bundle *caller_bundle = PromiseGetBundle(fp->caller);
+            VarRefQualify(ref, caller_bundle->ns, caller_bundle->name);
+        }
+        else
+        {
+            Log(LOG_LEVEL_WARNING, "Function '%s'' was given an unqualified variable reference, "
+                "and it was not called from a promise. No way to automatically qualify the reference '%s'.",
+                fp->name, RlistScalarValue(finalargs));
+            VarRefDestroy(ref);
+            return FnFailure();
+        }
+    }
 
     DataType type = DATA_TYPE_NONE;
     const void *value = EvalContextVariableGet(ctx, ref, &type);

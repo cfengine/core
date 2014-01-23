@@ -43,6 +43,16 @@ static const BodySyntax linkstate_body = BodySyntaxNew("link_state", linkstate_c
 
 /**********************************************************************************************/
 
+static const ConstraintSyntax proxy_constraints[] =
+{
+    ConstraintSyntaxNewString("generate_file", CF_PATHRANGE, "Filename of output", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewNull()
+};
+
+static const BodySyntax proxy_body = BodySyntaxNew("proxy", proxy_constraints, NULL, SYNTAX_STATUS_NORMAL);
+
+/**********************************************************************************************/
+
 static const ConstraintSyntax interface_constraints[] =
 {
     ConstraintSyntaxNewStringList("aggregate", CF_ANYSTRING, "List of interfaces to bond with LACP", SYNTAX_STATUS_NORMAL),
@@ -51,7 +61,7 @@ static const ConstraintSyntax interface_constraints[] =
     ConstraintSyntaxNewString("ipv4_address", CF_IPRANGE, "A static IPV4 address", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("ipv6_address", CF_IPRANGE, "A static IPV6 address", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBody("link_state", &linkstate_body, "The desired state of the interface link", SYNTAX_STATUS_NORMAL),
-//    ConstraintSyntaxNewBody("proxy", &linkstate_body, "For treating a remote device as a peripheral", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewBody("proxy", &proxy_body, "For treating a remote device as a peripheral", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };
 
@@ -59,7 +69,7 @@ static const ConstraintSyntax interface_constraints[] =
 
 static const ConstraintSyntax sharingpolicy_constraints[] =
 {
-    ConstraintSyntaxNewOption("balance_policy", "lru,rr", "Load balancing policy", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewOption("balance_policy", "LeastRecentlyUsed,RoundRobin", "Load balancing policy", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };
 
@@ -84,9 +94,23 @@ static const ConstraintSyntax overlay_constraints[] =
 
 /**********************************************************************************************/
 
+static const ConstraintSyntax relay_constraints[] =
+{
+    ConstraintSyntaxNewStringList("rip_networks", CF_ANYSTRING, "List of local networks", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewInt("rip_metric", CF_INTRANGE, "RIP route metric", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewInt("rip_timeout", CF_INTRANGE, "RIP timeout on updates", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewOption("rip_horizon", "split-horizon-poison-reverse", "RIP Horizon control", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewBool("rip_passive", "Passive mode", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewNull()
+};
+
+static const BodySyntax relay_body = BodySyntaxNew("relay", relay_constraints, NULL, SYNTAX_STATUS_NORMAL);
+
+/**********************************************************************************************/
+
 static const ConstraintSyntax route_constraints[] =
 {
-    ConstraintSyntaxNewBody("forwarding", &sharingpolicy_body, "A body assigning a forwarding agent", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewBody("relay", &relay_body, "A body assigning a forwarding agent", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };
 

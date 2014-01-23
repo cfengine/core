@@ -1005,7 +1005,7 @@ static FnCallResult FnCallGetMetaTags(EvalContext *ctx, FnCall *fp, Rlist *final
 
     if (NULL == tagset)
     {
-        Log(LOG_LEVEL_VERBOSE, "%s found variable %s without a tagset", fp->name, RlistScalarValue(finalargs));
+        Log(LOG_LEVEL_VERBOSE, "%s found variable or class %s without a tagset", fp->name, RlistScalarValue(finalargs));
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
@@ -1018,7 +1018,7 @@ static FnCallResult FnCallGetMetaTags(EvalContext *ctx, FnCall *fp, Rlist *final
 
     if (!tags)
     {
-        RlistAppendScalarIdemp(&tags, CF_NULL_VALUE);
+        RlistAppendScalar(&tags, CF_NULL_VALUE);
     }
 
     return (FnCallResult) { FNCALL_SUCCESS, { tags, RVAL_TYPE_LIST } };

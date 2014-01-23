@@ -1,0 +1,14 @@
+#!/bin/sh
+
+echo "^context=xyz"
+echo "^meta=xyz,abc=def,,??what is this??"
+echo "+myclass"
+echo "=myvar=hello there"
+echo "@mylist={\"abc\", \"def\", \"ghi\"}"
+echo "@myalist={\"{{abc}}\", \"  ' def}\", \"ghi'''\"}"
+echo "^meta=1,2,3"
+echo "@myblist={'{{a,bc}}', '  \" de,f}', 'gh,,i\"\"\"'}"
+echo "+mybclass"
+echo "^meta=a,b,c"
+echo "@myclist={\"{{a'bc',,}}\", '  \",, d\"ef}', \"ghi,},'''\"}"
+echo "+mycclass"

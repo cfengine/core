@@ -243,7 +243,7 @@ VarRef *VarRefParseFromNamespaceAndScope(const char *qualified_name, const char 
 
         if (!IndexBracketsBalance(indices_start - 1))
         {
-            Log(LOG_LEVEL_ERR, "Broken variable expressoin, index brackets do not balance, in '%s'", qualified_name);
+            Log(LOG_LEVEL_ERR, "Broken variable expression, index brackets do not balance, in '%s'", qualified_name);
         }
         else
         {

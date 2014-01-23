@@ -553,9 +553,31 @@ static void test_safe_open_ending_slashes(void)
     setup_tempfiles();
 
     int fd;
-    assert_true((fd = safe_open(TEMP_DIR "/"
-                                TEST_FILE "///", O_RDONLY)) >= 0);
-    check_contents(fd, TEST_STRING);
+    // Whether a regular file with ending slash fails to open is platform dependent,
+    // so should be the same as open().
+    fd = open(TEMP_DIR "/" TEST_FILE "///", O_RDONLY);
+    bool ending_file_slash_ok;
+    if (fd >= 0)
+    {
+        close(fd);
+        ending_file_slash_ok = true;
+    }
+    else
+    {
+        ending_file_slash_ok = false;
+    }
+    fd = safe_open(TEMP_DIR "/" TEST_FILE "///", O_RDONLY);
+    assert_true(ending_file_slash_ok ? (fd >= 0) : (fd < 0));
+    if (fd >= 0)
+    {
+        close(fd);
+    }
+    else
+    {
+        assert_int_equal(errno, ENOTDIR);
+    }
+
+    assert_true((fd = safe_open(TEMP_DIR "/", O_RDONLY)) >= 0);
     close(fd);
 
     return_to_test_dir();

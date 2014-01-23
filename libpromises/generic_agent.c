@@ -233,7 +233,7 @@ bool GenericAgentCheckPolicy(GenericAgentConfig *config, bool force_validation, 
                 WritePolicyValidatedFileToMasterfiles(config);
                 if (GetAmPolicyHub(GetWorkDir()))
                 {
-                    WriteReleaseIdFileToMasterfiles(config);
+                    WriteReleaseIdFileToMasterfiles();
                 }
             }
 

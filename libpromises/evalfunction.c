@@ -5787,6 +5787,11 @@ static int ExecModule(EvalContext *ctx, char *command)
         ModuleProtocol(ctx, command, line, print, context, &tags);
     }
 
+    if (NULL != tags)
+    {
+        StringSetDestroy(tags);
+    }
+    
     cf_pclose(pp);
     free(line);
     return true;

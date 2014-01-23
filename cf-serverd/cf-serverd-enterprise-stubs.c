@@ -54,7 +54,7 @@ ENTERPRISE_FUNC_4ARG_DEFINE_STUB(int, SetServerListenState, ARG_UNUSED EvalConte
 
 ENTERPRISE_FUNC_1ARG_DEFINE_STUB(bool, ReceiveCollectCall, ARG_UNUSED ServerConnectionState *, conn)
 {
-    Log(LOG_LEVEL_VERBOSE, "  Call Collect only supported in CFEngine Enterprise");
+    Log(LOG_LEVEL_VERBOSE, "  Call Collect is only supported in CFEngine Enterprise");
     return false;
 }
 

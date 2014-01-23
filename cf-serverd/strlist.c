@@ -285,15 +285,6 @@ size_t StrList_Append(StrList **sl, const char *s)
     }
 
     return ret;
-    /* if (ret == (size_t) -1) */
-    /* { */
-    /*     return NULL; */
-    /* } */
-    /* else */
-    /* { */
-    /*     assert(ret == slp->len - 1); */
-    /*     return slp->list[ret]; */
-    /* } */
 }
 
 /**

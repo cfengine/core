@@ -883,7 +883,7 @@ void CreateHardClassesFromCanonification(EvalContext *ctx, const char *canonifie
 
 static void SetFlavour(EvalContext *ctx, const char *flavour)
 {
-    EvalContextClassPutHard(ctx, flavour, "source=agent,derived-from=sys.flavour");
+    EvalContextClassPutHard(ctx, flavour, "inventory,group=none,source=agent,derived-from=sys.flavor");
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "flavour", flavour, DATA_TYPE_STRING, "source=agent");
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "flavor", flavour, DATA_TYPE_STRING, "inventory,source=agent,group=OS");
 }

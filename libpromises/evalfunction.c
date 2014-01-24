@@ -2025,7 +2025,26 @@ static FnCallResult FnCallGetFields(EvalContext *ctx,
             {
                 char name[CF_MAXVARSIZE];
                 snprintf(name, CF_MAXVARSIZE - 1, "%s[%d]", array_lval, vcount);
-                VarRef *ref = VarRefParseFromBundle(name, PromiseGetBundle(fp->caller));
+                VarRef *ref = VarRefParse(name);
+                if (!VarRefIsQualified(ref))
+                {
+                    if (fp->caller)
+                    {
+                        const Bundle *caller_bundle = PromiseGetBundle(fp->caller);
+                        VarRefQualify(ref, caller_bundle->ns, caller_bundle->name);
+                    }
+                    else
+                    {
+                        Log(LOG_LEVEL_WARNING, "Function '%s'' was given an unqualified variable reference, "
+                            "and it was not called from a promise. No way to automatically qualify the reference '%s'.",
+                            fp->name, RlistScalarValue(finalargs));
+                        VarRefDestroy(ref);
+                        free(line);
+                        RlistDestroy(newlist);
+                        return FnFailure();
+                    }
+                }
+
                 EvalContextVariablePut(ctx, ref, RlistScalarValue(rp), DATA_TYPE_STRING, "source=function,function=getfields");
                 VarRefDestroy(ref);
                 Log(LOG_LEVEL_VERBOSE, "getfields: defining '%s' => '%s'", name, RlistScalarValue(rp));

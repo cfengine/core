@@ -86,14 +86,6 @@ static const ConstraintSyntax balancer_constraints[] =
 
 /**********************************************************************************************/
 
-static const ConstraintSyntax overlay_constraints[] =
-{
-    ConstraintSyntaxNewStringList("id", CF_IDRANGE, "Identifier for the overlay", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewNull()
-};
-
-/**********************************************************************************************/
-
 static const ConstraintSyntax relay_constraints[] =
 {
     ConstraintSyntaxNewStringList("rip_networks", CF_ANYSTRING, "List of local networks", SYNTAX_STATUS_NORMAL),
@@ -119,8 +111,6 @@ static const ConstraintSyntax route_constraints[] =
 const PromiseTypeSyntax CF_INTERFACES_PROMISE_TYPES[] =
 {
     PromiseTypeSyntaxNew("agent", "interfaces", interface_constraints, NULL, SYNTAX_STATUS_NORMAL),
-
-    PromiseTypeSyntaxNew("agent", "overlays", overlay_constraints, NULL, SYNTAX_STATUS_NORMAL),
     PromiseTypeSyntaxNew("agent", "routes", route_constraints, NULL, SYNTAX_STATUS_NORMAL),
     PromiseTypeSyntaxNew("agent", "balancers", balancer_constraints, NULL, SYNTAX_STATUS_NORMAL),
     PromiseTypeSyntaxNewNull()

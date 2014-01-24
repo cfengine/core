@@ -5,9 +5,10 @@
          been deprecated, preferred constraints are now
          "admit_ips", "admit_hostnames", "admit_keys".
        - All of the above constraints (admit*, deny*) now differentiate
-         between a directory and a file using the trailing slash. If you
-         don't append a trailing slash then the path is considered a file
-         and not allowed recursive access.
+         between a directory and a file using the trailing slash, in case
+         that the path does not exist during initialisation time. You have
+         to append a trailing slash to a inexistant path (e.g.
+         "/path/to/$(connection.ip)/") to force recursive access.
        - Enable source file in agent copy_from promises to be a relative path.
        - add process name and pid in syslog message (GitHub #789)
        - process_results default to AND'ing of set attributes if not specified (Redmine #3224)

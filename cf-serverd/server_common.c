@@ -1645,50 +1645,40 @@ size_t PreprocessRequestPath(char *reqpath, size_t reqpath_size)
      *   OR appends it depending on last component ISDIR.
      */
 
-    /* If the path has special variables then we know it does not exist, so we
-     * don't even care to run realpath(). */
-    if (strstr(reqpath, "$(connection.") == NULL)
+    assert(sizeof(dst) >= PATH_MAX);               /* needed for realpath() */
+    char *p = realpath(reqpath, dst);
+    if (p == NULL)
     {
-        assert(sizeof(dst) >= PATH_MAX);               /* needed for realpath() */
-        char *p = realpath(reqpath, dst);
-        if (p == NULL)
+        /* TODO If path does not exist try to canonicalise only directory. INSECURE?*/
+        /* if (errno == ENOENT) */
+        /* { */
+
+        /* } */
+
+        Log(LOG_LEVEL_INFO,
+            "Failed to canonicalise filename '%s' (realpath: %s)",
+            reqpath, GetErrorStr());
+        return (size_t) -1;
+    }
+
+    size_t dst_len = strlen(dst);
+
+    /* Some realpath()s remove trailing '/' even for dirs! Put it back if
+     * original request had it. */
+    if (reqpath[reqpath_len - 1] == FILE_SEPARATOR &&
+        dst[dst_len - 1]         != FILE_SEPARATOR)
+    {
+        if (dst_len + 2 > sizeof(dst))
         {
-            /* TODO If path does not exist try to canonicalise only directory. INSECURE?*/
-            /* if (errno == ENOENT) */
-            /* { */
-
-            /* } */
-
-            Log(LOG_LEVEL_INFO,
-                "Failed to canonicalise filename '%s' (realpath: %s)",
-                reqpath, GetErrorStr());
             return (size_t) -1;
         }
 
-        size_t dst_len = strlen(dst);
-
-        /* Some realpath()s remove trailing '/' even for dirs! */
-        if (reqpath[reqpath_len - 1] == FILE_SEPARATOR &&
-            dst[dst_len - 1]         != FILE_SEPARATOR)
-        {
-            if (dst_len + 2 > sizeof(dst))
-            {
-                return (size_t) -1;
-            }
-
-            PathAppendTrailingSlash(dst, dst_len);
-            dst_len++;
-        }
-
-        memcpy(reqpath, dst, dst_len + 1);
-        reqpath_len = dst_len;
+        PathAppendTrailingSlash(dst, dst_len);
+        dst_len++;
     }
-    else
-    {
-        Log(LOG_LEVEL_VERBOSE,
-            "Path is special so it's not checked for existence: %s",
-            reqpath);
-    }
+
+    memcpy(reqpath, dst, dst_len + 1);
+    reqpath_len = dst_len;
 
     return reqpath_len;
 }

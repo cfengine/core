@@ -928,10 +928,34 @@ static void KeepFileAccessPromise(const EvalContext *ctx, const Promise *pp)
     /* Resolve symlinks and canonicalise access_rules path. */
     int ret = PreprocessRequestPath(path, sizeof(path));
 
-    /* The file does not have to exist at initialisation time. */
-    if (ret == -1 && errno != ENOENT)
+    if (ret == -1)
     {
-        goto err_too_long;
+        if (errno != ENOENT)                        /* something went wrong */
+        {
+            goto err_too_long;
+        }
+        else                      /* file does not exist, it doesn't matter */
+        {
+            Log(LOG_LEVEL_INFO,
+                "Path does not exist, it's added as-is in access rules: %s",
+                path);
+            Log(LOG_LEVEL_INFO,
+                "WARNING: that means that having a trailing slash defines if it's a directory!");
+        }
+    }
+    else                                 /* file exists, path canonicalised */
+    {
+        /* If it's a directory append trailing '/'. */
+        int is_dir = IsDirReal(path);
+        if (is_dir == 1 && path[path_len - 1] != FILE_SEPARATOR)
+        {
+            if (path_len + 2 > sizeof(path))
+            {
+                goto err_too_long;
+            }
+            PathAppendTrailingSlash(path, path_len);
+            path_len++;
+        }
     }
 
     size_t pos = acl_SortedInsert(&paths_acl, path);

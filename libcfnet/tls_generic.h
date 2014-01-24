@@ -33,6 +33,7 @@
 
 
 int TLSVerifyCallback(X509_STORE_CTX *ctx, void *arg);
+
 /**
  * @return 1 if the certificate received during the TLS handshake is valid
  *         signed and its public key is the same with the stored one for that
@@ -44,6 +45,7 @@ int TLSVerifyCallback(X509_STORE_CTX *ctx, void *arg);
  *       should have been populated, with key received and its hash.
  */
 int TLSVerifyPeer(ConnectionInfo *conn_info, const char *remoteip, const char *username);
+
 /**
  * @brief OpenSSL is missing an SSL_reason_error_string() like
  *        ERR_reason_error_string().  Provide missing functionality here,
@@ -53,7 +55,15 @@ int TLSVerifyPeer(ConnectionInfo *conn_info, const char *remoteip, const char *u
  * @warning Use only for SSL_connect(), SSL_accept(), SSL_do_handshake(),
  *          SSL_read(), SSL_peek(), SSL_write(), see SSL_get_error man page.
  */
+
+/**
+ * @brief Generate and return a dummy X509 certificate signed from the private
+ *        key passed.
+ */
+X509 *TLSGenerateCertFromPrivKey(RSA *privkey);
+
 void TLSLogError(SSL *ssl, LogLevel level, const char *prepend, int code);
+
 /**
  * @brief Sends the data stored on the buffer using a TLS session.
  * @param ssl SSL information.
@@ -66,6 +76,7 @@ void TLSLogError(SSL *ssl, LogLevel level, const char *prepend, int code);
  *       operation completed or an error occured.
  */
 int TLSSend(SSL *ssl, const char *buffer, int length);
+
 /**
  * @brief Receives data from the SSL session and stores it on the buffer.
  * @param ssl SSL information.
@@ -79,6 +90,7 @@ int TLSSend(SSL *ssl, const char *buffer, int length);
  *       operation completed or an error occured.
  */
 int TLSRecv(SSL *ssl, char *buffer, int length);
+
 /**
  * @brief Receives character until a new line is found.
  * @return Line is '\0'-terminated and put in #line. Return value is line

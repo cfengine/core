@@ -219,6 +219,14 @@ int start_child_process()
         if ((result < 0) || (message < 0))
         {
             close (channel[0]);
+            if (result < 0)
+            {
+                perror("Failed to read() from child");
+            }
+            if (message < 0)
+            {
+                Log(LOG_LEVEL_ERR, "Child responded with -1!");
+            }
             /*
              * Wait for child process
              */
@@ -751,7 +759,6 @@ static bool original_function_SSL_get_shutdown = true;
 static bool original_function_SSL_get_peer_certificate = true;
 static bool original_function_X509_get_pubkey = true;
 static bool original_function_EVP_PKEY_type = true;
-static bool original_function_X509_verify = true;
 static bool original_function_HavePublicKey = true;
 static bool original_function_EVP_PKEY_cmp = true;
 static int SSL_write_result = -1;
@@ -761,9 +768,9 @@ static int SSL_get_shutdown_result = -1;
 static X509 *SSL_get_peer_certificate_result = NULL;
 static EVP_PKEY *X509_get_pubkey_result = NULL;
 static int EVP_PKEY_type_result = -1;
-static int X509_verify_result = -1;
 static RSA *HavePublicKey_result = NULL;
 static int EVP_PKEY_cmp_result = -1;
+
 #define RESET_STATUS \
     original_function_SSL_write = true; \
     original_function_SSL_read = true; \
@@ -771,7 +778,6 @@ static int EVP_PKEY_cmp_result = -1;
     original_function_SSL_get_peer_certificate = true; \
     original_function_X509_get_pubkey = true; \
     original_function_EVP_PKEY_type = true; \
-    original_function_X509_verify = true; \
     original_function_HavePublicKey = true; \
     original_function_EVP_PKEY_cmp = true; \
     SSL_write_result = -1; \
@@ -779,7 +785,6 @@ static int EVP_PKEY_cmp_result = -1;
     SSL_get_shutdown_result = -1; \
     X509_get_pubkey_result = NULL; \
     EVP_PKEY_type_result = -1; \
-    X509_verify_result = -1; \
     HavePublicKey_result = NULL; \
     EVP_PKEY_cmp_result = -1;
 /*
@@ -807,16 +812,17 @@ static int EVP_PKEY_cmp_result = -1;
     }
 #define SSL_GET_PEER_CERTIFICATE_RETURN(x) \
     SSL_get_peer_certificate_result = x
-#define X509_GET_PUBKEY_RETURN(x) \
+#define X509_GET_PUBKEY_RETURN(x)                    \
+    if (x) ((EVP_PKEY *) x)->references++;           \
     X509_get_pubkey_result = x
 #define EVP_PKEY_TYPE_RETURN(x) \
     EVP_PKEY_type_result = x
-#define X509_VERIFY_RETURN(x) \
-    X509_verify_result = x
-#define HAVEPUBLICKEY_RETURN(x) \
+#define HAVEPUBLICKEY_RETURN(x)                 \
+    if (x) ((RSA *) x)->references++;           \
     HavePublicKey_result = x
 #define EVP_PKEY_CMP_RETURN(x) \
     EVP_PKEY_cmp_result = x
+
 /*
  * We keep a copy of the original functions, so we can simulate
  * the real behavior if needed.
@@ -902,11 +908,6 @@ int original_EVP_PKEY_type(int type)
         return(NID_undef);
     }
     return(NID_undef);
-}
-int original_X509_verify(X509 *a, EVP_PKEY *r)
-{
-    return(ASN1_item_verify(ASN1_ITEM_rptr(X509_CINF),a->sig_alg,
-        a->signature,a->cert_info,r));
 }
 RSA *original_HavePublicKey(const char *username, const char *ipaddress, const char *digest)
 {
@@ -1058,14 +1059,6 @@ int EVP_PKEY_type(int type)
     }
     return EVP_PKEY_type_result;
 }
-int X509_verify(X509 *a, EVP_PKEY *r)
-{
-    if (USING(X509_verify))
-    {
-        return original_X509_verify(a, r);
-    }
-    return X509_verify_result;
-}
 RSA *HavePublicKey(const char *username, const char *ipaddress, const char *digest)
 {
     if (USING(HavePublicKey))
@@ -1117,6 +1110,7 @@ static void test_TLSVerifyCallback(void)
     k = PEM_read_RSAPublicKey(f, (RSA **)NULL, NULL, NULL); \
     e = EVP_PKEY_new(); \
     EVP_PKEY_assign_RSA(e, k)
+
 static void test_TLSVerifyPeer(void)
 {
     ASSERT_IF_NOT_INITIALIZED;
@@ -1174,47 +1168,34 @@ static void test_TLSVerifyPeer(void)
     /*
      * Start testing
      */
+
+    /* Certificate is mocked to return NULL. */
     USE_MOCK(SSL_get_peer_certificate);
     assert_int_equal(-1, TLSVerifyPeer(conn_info, "127.0.0.1", "root"));
-    SSL_GET_PEER_CERTIFICATE_RETURN(certificate);
 
+    /* Certificate is properly returned, but pubkey is mocked to NULL. */
+    SSL_GET_PEER_CERTIFICATE_RETURN(certificate);
     USE_MOCK(X509_get_pubkey);
     X509_GET_PUBKEY_RETURN(NULL);
     assert_int_equal(-1, TLSVerifyPeer(conn_info, "127.0.0.1", "root"));
 
+    EVP_PKEY *server_pubkey = NULL;
+    RSA *pubkey = NULL;
+    FILE *stream = fopen(server_name_template_public, "r");
+
     /*
-     * Due to the cleaning up we do after failing, we need to re read the certificate after
-     * very failure. The same is true for the public key.
+     * Due to the cleaning up we do after failing, we need to re read the
+     * certificate after very failure. The same is true for the public key.
      */
     REREAD_CERTIFICATE(certificate_stream, certificate);
     SSL_GET_PEER_CERTIFICATE_RETURN(certificate);
-    EVP_PKEY *server_pubkey = NULL;
-    FILE *stream = NULL;
-    stream = fopen(server_name_template_public, "r");
-    RSA *pubkey = PEM_read_RSAPublicKey(stream, (RSA **)NULL, NULL, NULL);
-    server_pubkey = EVP_PKEY_new();
-    EVP_PKEY_assign_RSA(server_pubkey, pubkey);
+    REREAD_PUBLIC_KEY(stream, pubkey, server_pubkey);
     X509_GET_PUBKEY_RETURN(server_pubkey);
-
     USE_MOCK(EVP_PKEY_type);
     EVP_PKEY_TYPE_RETURN(EVP_PKEY_DSA);
     assert_int_equal(-1, TLSVerifyPeer(conn_info, "127.0.0.1", "root"));
+    EVP_PKEY_free(server_pubkey);
     EVP_PKEY_TYPE_RETURN(EVP_PKEY_RSA);
-
-    REREAD_CERTIFICATE(certificate_stream, certificate);
-    SSL_GET_PEER_CERTIFICATE_RETURN(certificate);
-    REREAD_PUBLIC_KEY(stream, pubkey, server_pubkey);
-    X509_GET_PUBKEY_RETURN(server_pubkey);
-    USE_MOCK(X509_verify);
-    X509_VERIFY_RETURN(-1);
-    assert_int_equal(-1, TLSVerifyPeer(conn_info, "127.0.0.1", "root"));
-    X509_VERIFY_RETURN(0);
-    REREAD_CERTIFICATE(certificate_stream, certificate);
-    SSL_GET_PEER_CERTIFICATE_RETURN(certificate);
-    REREAD_PUBLIC_KEY(stream, pubkey, server_pubkey);
-    X509_GET_PUBKEY_RETURN(server_pubkey);
-    assert_int_equal(-1, TLSVerifyPeer(conn_info, "127.0.0.1", "root"));
-    X509_VERIFY_RETURN(1);
 
     USE_MOCK(HavePublicKey);
     HAVEPUBLICKEY_RETURN(NULL);
@@ -1223,6 +1204,10 @@ static void test_TLSVerifyPeer(void)
     REREAD_PUBLIC_KEY(stream, pubkey, server_pubkey);
     X509_GET_PUBKEY_RETURN(server_pubkey);
     assert_int_equal(0, TLSVerifyPeer(conn_info, "127.0.0.1", "root"));
+    /* TODO: Since TLSVerifyPeer() returned 0 or 1 it has put a valid key in
+     * conn_info, so we have to free it. */
+    //    RSA_free(KeyRSA(ConnectionInfoKey(conn_info)));
+    EVP_PKEY_free(server_pubkey);
 
     USE_MOCK(EVP_PKEY_cmp);
     EVP_PKEY_CMP_RETURN(-1);
@@ -1232,6 +1217,11 @@ static void test_TLSVerifyPeer(void)
     X509_GET_PUBKEY_RETURN(server_pubkey);
     HAVEPUBLICKEY_RETURN(pubkey);
     assert_int_equal(0, TLSVerifyPeer(conn_info, "127.0.0.1", "root"));
+    /* TODO: Since TLSVerifyPeer() returned 0 or 1 it has put a valid key in
+     * conn_info, so we have to free it. */
+    //    RSA_free(KeyRSA(ConnectionInfoKey(conn_info)));
+    EVP_PKEY_free(server_pubkey);
+
     EVP_PKEY_CMP_RETURN(0);
     REREAD_CERTIFICATE(certificate_stream, certificate);
     SSL_GET_PEER_CERTIFICATE_RETURN(certificate);
@@ -1239,6 +1229,11 @@ static void test_TLSVerifyPeer(void)
     X509_GET_PUBKEY_RETURN(server_pubkey);
     HAVEPUBLICKEY_RETURN(pubkey);
     assert_int_equal(0, TLSVerifyPeer(conn_info, "127.0.0.1", "root"));
+    /* TODO: Since TLSVerifyPeer() returned 0 or 1 it has put a valid key in
+     * conn_info, so we have to free it. */
+    //    RSA_free(KeyRSA(ConnectionInfoKey(conn_info)));
+    EVP_PKEY_free(server_pubkey);
+
     EVP_PKEY_CMP_RETURN(-2);
     REREAD_CERTIFICATE(certificate_stream, certificate);
     SSL_GET_PEER_CERTIFICATE_RETURN(certificate);
@@ -1246,6 +1241,8 @@ static void test_TLSVerifyPeer(void)
     X509_GET_PUBKEY_RETURN(server_pubkey);
     HAVEPUBLICKEY_RETURN(pubkey);
     assert_int_equal(-1, TLSVerifyPeer(conn_info, "127.0.0.1", "root"));
+    EVP_PKEY_free(server_pubkey);
+
     EVP_PKEY_CMP_RETURN(1);
     REREAD_CERTIFICATE(certificate_stream, certificate);
     SSL_GET_PEER_CERTIFICATE_RETURN(certificate);
@@ -1253,6 +1250,10 @@ static void test_TLSVerifyPeer(void)
     X509_GET_PUBKEY_RETURN(server_pubkey);
     HAVEPUBLICKEY_RETURN(pubkey);
     assert_int_equal(1, TLSVerifyPeer(conn_info, "127.0.0.1", "root"));
+    /* TODO: Since TLSVerifyPeer() returned 0 or 1 it has put a valid key in
+     * conn_info, so we have to free it. */
+    //    RSA_free(KeyRSA(ConnectionInfoKey(conn_info)));
+    EVP_PKEY_free(server_pubkey);
 
     /*
      * Shutting down is not as easy as it seems.

@@ -182,7 +182,6 @@ avahi_config_test_SOURCES = avahi_config_test.c \
 	../../cf-serverd/server.c \
 	../../cf-serverd/server_transform.c \
 	../../cf-serverd/cf-serverd-enterprise-stubs.c \
-	../../cf-serverd/cf-serverd-functions.c \
 	../../cf-serverd/server_access.c \
 	../../cf-serverd/server_classic.c \
 	../../cf-serverd/strlist.c

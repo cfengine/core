@@ -2947,7 +2947,19 @@ static FnCallResult FilterInternal(EvalContext *ctx, FnCall *fp, char *regex, ch
     long total = 0;
     for (const Rlist *rp = input_list; rp != NULL && match_count < max; rp = rp->next)
     {
-        bool found = do_regex ? StringMatchFull(regex, RlistScalarValue(rp)) : (0==strcmp(regex, RlistScalarValue(rp)));
+        bool found;
+        if (strcmp(RlistScalarValue(rp), CF_NULL_VALUE) == 0)
+        {
+            found = false;
+        }
+        else if (do_regex)
+        {
+            found = StringMatchFull(regex, RlistScalarValue(rp));
+        }
+        else
+        {
+            found = (0==strcmp(regex, RlistScalarValue(rp)));
+        }
 
         if (invert ? !found : found)
         {

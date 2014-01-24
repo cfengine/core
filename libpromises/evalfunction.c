@@ -5953,6 +5953,37 @@ void ModuleProtocol(EvalContext *ctx, char *command, const char *line, int print
         }
         break;
 
+    case '%':
+        content[0] = '\0';
+        sscanf(line + 1, "%[^=]=%[^\n]", name, content);
+
+        if (CheckID(name))
+        {
+            JsonElement *json = NULL;
+            Buffer *holder = BufferNewFrom(content, strlen(content));
+            const char *hold = BufferData(holder);
+            Log(LOG_LEVEL_DEBUG, "Module protocol parsing JSON %s", content);
+
+            if (JsonParse(&hold, &json) != JSON_PARSE_OK)
+            {
+                Log(LOG_LEVEL_INFO, "Module protocol passed an invalid or too-long JSON structure, must be object or array");
+            }
+            else
+            {
+                Log(LOG_LEVEL_VERBOSE, "Defined data container variable '%s' in context '%s' with value '%s'", name, context, content);
+                VarRef *ref = VarRefParseFromScope(name, context);
+
+                Buffer *tagbuf = StringSetToBuffer(*tags, ',');
+                EvalContextVariablePut(ctx, ref, json, DATA_TYPE_CONTAINER, BufferData(tagbuf));
+                BufferDestroy(tagbuf);
+
+                VarRefDestroy(ref);
+            }
+
+            BufferDestroy(holder);
+        }
+        break;
+
     case '@':
         content[0] = '\0';
         sscanf(line + 1, "%[^=]=%[^\n]", name, content);

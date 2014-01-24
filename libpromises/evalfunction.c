@@ -73,13 +73,14 @@
 
 static FnCallResult FilterInternal(EvalContext *ctx, const FnCall *fp, char *regex, char *name, int do_regex, int invert, long max);
 
-static char *StripPatterns(char *file_buffer, char *pattern, char *filename);
+static char *StripPatterns(char *file_buffer, const char *pattern, const char *filename);
 static void CloseStringHole(char *s, int start, int end);
-static int BuildLineArray(EvalContext *ctx, const Bundle *bundle, char *array_lval, char *file_buffer, char *split, int maxent, DataType type, int intIndex);
+static int BuildLineArray(EvalContext *ctx, const Bundle *bundle, const char *array_lval, const char *file_buffer,
+                          const char *split, int maxent, DataType type, int intIndex);
 static int ExecModule(EvalContext *ctx, char *command);
 static bool CheckID(const char *id);
 static const Rlist *GetListReferenceArgument(const EvalContext *ctx, const const FnCall *fp, const char *lval_str, DataType *datatype_out);
-static void *CfReadFile(char *filename, int maxsize);
+static void *CfReadFile(const char *filename, int maxsize);
 
 /*******************************************************************/
 
@@ -5135,6 +5136,12 @@ static FnCallResult FnCallStoreJson(EvalContext *ctx, ARG_UNUSED const Policy *p
 static FnCallResult ReadArray(EvalContext *ctx, const FnCall *fp, const Rlist *finalargs, DataType type, int intIndex)
 /* lval,filename,separator,comment,Max number of bytes  */
 {
+    if (!fp->caller)
+    {
+        Log(LOG_LEVEL_ERR, "Function '%s' can only be called from a promise", fp->name);
+        return FnFailure();
+    }
+
     char *file_buffer = NULL;
     int entries = 0;
 
@@ -5142,10 +5149,10 @@ static FnCallResult ReadArray(EvalContext *ctx, const FnCall *fp, const Rlist *f
 
     /* 6 args: array_lval,filename,comment_regex,split_regex,max number of entries,maxfilesize  */
 
-    char *array_lval = RlistScalarValue(finalargs);
-    char *filename = RlistScalarValue(finalargs->next);
-    char *comment = RlistScalarValue(finalargs->next->next);
-    char *split = RlistScalarValue(finalargs->next->next->next);
+    const char *array_lval = RlistScalarValue(finalargs);
+    const char *filename = RlistScalarValue(finalargs->next);
+    const char *comment = RlistScalarValue(finalargs->next->next);
+    const char *split = RlistScalarValue(finalargs->next->next->next);
     int maxent = IntFromString(RlistScalarValue(finalargs->next->next->next->next));
     int maxsize = IntFromString(RlistScalarValue(finalargs->next->next->next->next->next));
 
@@ -5218,6 +5225,12 @@ static FnCallResult FnCallReadRealArray(EvalContext *ctx, ARG_UNUSED const Polic
 static FnCallResult ParseArray(EvalContext *ctx, const FnCall *fp, const Rlist *finalargs, DataType type, int intIndex)
 /* lval,filename,separator,comment,Max number of bytes  */
 {
+    if (!fp->caller)
+    {
+        Log(LOG_LEVEL_ERR, "Function '%s' can only be called from a promise", fp->name);
+        return FnFailure();
+    }
+
     int entries = 0;
 
 /* begin fn specific content */
@@ -5416,9 +5429,13 @@ static FnCallResult FnCallLDAPValue(ARG_UNUSED EvalContext *ctx, ARG_UNUSED cons
 
 static FnCallResult FnCallLDAPArray(EvalContext *ctx, ARG_UNUSED const Policy *policy, const FnCall *fp, const Rlist *finalargs)
 {
-    void *newval;
+    if (!fp->caller)
+    {
+        Log(LOG_LEVEL_ERR, "Function '%s' can only be called from a promise", fp->name);
+        return FnFailure();
+    }
 
-/* begin fn specific content */
+    void *newval;
 
     char *array = RlistScalarValue(finalargs);
     char *uri = RlistScalarValue(finalargs->next);
@@ -5655,7 +5672,7 @@ static bool SingleLine(const char *s)
     return s[length] && !s[length+1];
 }
 
-static void *CfReadFile(char *filename, int maxsize)
+static void *CfReadFile(const char *filename, int maxsize)
 {
     struct stat sb;
     if (stat(filename, &sb) == -1)
@@ -5710,7 +5727,7 @@ static void *CfReadFile(char *filename, int maxsize)
 
 /*********************************************************************/
 
-static char *StripPatterns(char *file_buffer, char *pattern, char *filename)
+static char *StripPatterns(char *file_buffer, const char *pattern, const char *filename)
 {
     int start, end;
     int count = 0;
@@ -5756,10 +5773,11 @@ static void CloseStringHole(char *s, int start, int end)
 
 /*********************************************************************/
 
-static int BuildLineArray(EvalContext *ctx, const Bundle *bundle, char *array_lval, char *file_buffer, char *split, int maxent, DataType type,
+static int BuildLineArray(EvalContext *ctx, const Bundle *bundle, const char *array_lval,
+                          const char *file_buffer, const char *split, int maxent, DataType type,
                           int intIndex)
 {
-    char *sp, linebuf[CF_BUFSIZE], name[CF_MAXVARSIZE], first_one[CF_MAXVARSIZE];
+    char linebuf[CF_BUFSIZE], name[CF_MAXVARSIZE], first_one[CF_MAXVARSIZE];
     Rlist *rp, *newlist = NULL;
     int allowblanks = true, vcount, hcount;
     int lineLen;
@@ -5767,7 +5785,7 @@ static int BuildLineArray(EvalContext *ctx, const Bundle *bundle, char *array_lv
     memset(linebuf, 0, CF_BUFSIZE);
     hcount = 0;
 
-    for (sp = file_buffer; hcount < maxent && *sp != '\0'; sp++)
+    for (const char *sp = file_buffer; hcount < maxent && *sp != '\0'; sp++)
     {
         linebuf[0] = '\0';
         sscanf(sp, "%1023[^\n]", linebuf);

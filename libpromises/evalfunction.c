@@ -1987,62 +1987,43 @@ static FnCallResult FnCallJoin(EvalContext *ctx, ARG_UNUSED const Policy *policy
 
 /*********************************************************************/
 
-static FnCallResult FnCallGetFields(EvalContext *ctx, ARG_UNUSED const Policy *policy, const FnCall *fp, const Rlist *finalargs)
+static FnCallResult FnCallGetFields(EvalContext *ctx,
+                                    ARG_UNUSED const Policy *policy,
+                                    const FnCall *fp,
+                                    const Rlist *finalargs)
 {
-    Rlist *rp, *newlist;
-    char name[CF_MAXVARSIZE];
-    int lcount = 0, vcount = 0, nopurge = true;
-    FILE *fin;
+    const char *regex = RlistScalarValue(finalargs);
+    const char *filename = RlistScalarValue(finalargs->next);
+    const char *split = RlistScalarValue(finalargs->next->next);
+    const char *array_lval = RlistScalarValue(finalargs->next->next->next);
 
-/* begin fn specific content */
-
-    char *regex = RlistScalarValue(finalargs);
-    char *filename = RlistScalarValue(finalargs->next);
-    char *split = RlistScalarValue(finalargs->next->next);
-    char *array_lval = RlistScalarValue(finalargs->next->next->next);
-
-    if ((fin = safe_fopen(filename, "r")) == NULL)
+    FILE *fin = safe_fopen(filename, "r");
+    if (!fin)
     {
         Log(LOG_LEVEL_ERR, "File '%s' could not be read in getfields(). (fopen: %s)", filename, GetErrorStr());
         return FnFailure();
     }
 
-    for (;;)
+    size_t line_size = CF_BUFSIZE;
+    char *line = xmalloc(CF_BUFSIZE);
+
+    int line_count = 0;
+
+    while (CfReadLine(&line, &line_size, fin) != -1)
     {
-        char line[CF_BUFSIZE];
-
-        if (fgets(line, sizeof(line), fin) == NULL)
-        {
-            if (ferror(fin))
-            {
-                Log(LOG_LEVEL_ERR, "Unable to read data from file '%s'. (fgets: %s)", filename, GetErrorStr());
-                fclose(fin);
-                return FnFailure();
-            }
-            else /* feof */
-            {
-                break;
-            }
-        }
-
-        if (Chop(line, CF_EXPANDSIZE) == -1)
-        {
-            Log(LOG_LEVEL_ERR, "Chop was called on a string that seemed to have no terminator");
-        }
-
         if (!StringMatchFull(regex, line))
         {
             continue;
         }
 
-        if (lcount == 0)
+        if (line_count == 0)
         {
-            newlist = RlistFromSplitRegex(line, split, 31, nopurge);
+            Rlist *newlist = RlistFromSplitRegex(line, split, 31, true);
+            int vcount = 1;
 
-            vcount = 1;
-
-            for (rp = newlist; rp != NULL; rp = rp->next)
+            for (const Rlist *rp = newlist; rp != NULL; rp = rp->next)
             {
+                char name[CF_MAXVARSIZE];
                 snprintf(name, CF_MAXVARSIZE - 1, "%s[%d]", array_lval, vcount);
                 VarRef *ref = VarRefParseFromBundle(name, PromiseGetBundle(fp->caller));
                 EvalContextVariablePut(ctx, ref, RlistScalarValue(rp), DATA_TYPE_STRING, "source=function,function=getfields");
@@ -2050,14 +2031,25 @@ static FnCallResult FnCallGetFields(EvalContext *ctx, ARG_UNUSED const Policy *p
                 Log(LOG_LEVEL_VERBOSE, "getfields: defining '%s' => '%s'", name, RlistScalarValue(rp));
                 vcount++;
             }
+
+            RlistDestroy(newlist);
         }
 
-        lcount++;
+        line_count++;
+    }
+
+    free(line);
+
+    if (!feof(fin))
+    {
+        Log(LOG_LEVEL_ERR, "Unable to read data from file '%s'. (fgets: %s)", filename, GetErrorStr());
+        fclose(fin);
+        return FnFailure();
     }
 
     fclose(fin);
 
-    return FnReturnF("%d", lcount);
+    return FnReturnF("%d", line_count);
 }
 
 /*********************************************************************/

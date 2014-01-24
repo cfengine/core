@@ -77,7 +77,7 @@ Rlist *RlistPrepend(Rlist **start, const void *item, RvalType type);
 Rlist *RlistAppend(Rlist **start, const void *item, RvalType type);
 
 Rlist *RlistFromSplitString(const char *string, char sep);
-Rlist *RlistFromSplitRegex(const char *string, const char *regex, int max, int purge);
+Rlist *RlistFromSplitRegex(const char *string, const char *regex, int max, bool purge);
 void RlistShow(FILE *fp, const Rlist *list);
 void RlistWrite(Writer *writer, const Rlist *list);
 Rlist *RlistLast(Rlist *start);

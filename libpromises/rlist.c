@@ -934,7 +934,7 @@ Rlist *RlistFromSplitString(const char *string, char sep)
 
 /*******************************************************************/
 
-Rlist *RlistFromSplitRegex(const char *string, const char *regex, int max, int blanks)
+Rlist *RlistFromSplitRegex(const char *string, const char *regex, int max, bool blanks)
  /* Splits a string containing a separator like "," 
     into a linked list of separate items, */
 // NOTE: this has a bad side-effect of creating scope match and variables,

@@ -174,6 +174,18 @@ Attributes GetUserAttributes(const EvalContext *ctx, const Promise *pp)
 
 /*******************************************************************/
 
+Attributes GetInterfaceAttributes(const EvalContext *ctx, const Promise *pp)
+{
+    Attributes attr = { {0} };
+
+    attr.transaction = GetTransactionConstraints(ctx, pp);
+    attr.classes = GetClassDefinitionConstraints(ctx, pp);
+    attr.interface = GetInterfaceConstraints(ctx, pp);
+    return attr;
+}
+
+/*******************************************************************/
+
 Attributes GetDatabaseAttributes(const EvalContext *ctx, const Promise *pp)
 {
     Attributes attr = { {0} };
@@ -1519,10 +1531,10 @@ StorageVolume GetVolumeConstraints(const EvalContext *ctx, const Promise *pp)
 
 Report GetReportConstraints(const EvalContext *ctx, const Promise *pp)
 {
- Report r = {0};
- 
- r.result = PromiseGetConstraintAsRval(pp, "bundle_return_value_index", RVAL_TYPE_SCALAR);
-    
+    Report r = {0};
+
+    r.result = PromiseGetConstraintAsRval(pp, "bundle_return_value_index", RVAL_TYPE_SCALAR);
+
     if (PromiseGetConstraintAsRval(pp, "lastseen", RVAL_TYPE_SCALAR))
     {
         r.havelastseen = true;
@@ -1563,7 +1575,7 @@ Report GetReportConstraints(const EvalContext *ctx, const Promise *pp)
     {
         Log(LOG_LEVEL_ERR, "bundle_return_value promise for '%s' in bundle '%s' with too many constraints (ignored)", pp->promiser, PromiseGetBundle(pp)->name);
     }
-    
+
     return r;
 }
 
@@ -1620,7 +1632,7 @@ Measurement GetMeasurementConstraint(const EvalContext *ctx, const Promise *pp)
     m.select_line_matching = PromiseGetConstraintAsRval(pp, "select_line_matching", RVAL_TYPE_SCALAR);
     m.select_line_number = PromiseGetConstraintAsInt(ctx, "select_line_number", pp);
     m.policy = MeasurePolicyFromString(PromiseGetConstraintAsRval(pp, "select_multiline_policy", RVAL_TYPE_SCALAR));
-    
+
     m.extraction_regex = PromiseGetConstraintAsRval(pp, "extraction_regex", RVAL_TYPE_SCALAR);
     m.units = PromiseGetConstraintAsRval(pp, "units", RVAL_TYPE_SCALAR);
     m.growing = PromiseGetConstraintAsBoolean(ctx, "track_growing_file", pp);
@@ -1656,6 +1668,32 @@ Database GetDatabaseConstraints(const EvalContext *ctx, const Promise *pp)
 
     return d;
 }
+
+/*******************************************************************/
+
+Interfaces GetInterfaceConstraints(const EvalContext *ctx, const Promise *pp)
+{
+    Interfaces i;
+
+    // Proxy body
+
+    i.tagged_vlans = PromiseGetConstraintAsList(ctx, "tagged_vlans", pp);
+    i.untagged_vlan = PromiseGetConstraintAsRval(pp, "untagged_vlan", RVAL_TYPE_SCALAR);
+    i.v4_address = PromiseGetConstraintAsRval(pp, "ipv4_address", RVAL_TYPE_SCALAR);
+    i.v6_address = PromiseGetConstraintAsRval(pp, "ipv6_address", RVAL_TYPE_SCALAR);
+    i.duplex = PromiseGetConstraintAsRval(pp, "duplex", RVAL_TYPE_SCALAR);
+    i.state = PromiseGetConstraintAsRval(pp, "state", RVAL_TYPE_SCALAR);
+    i.aggregate = PromiseGetConstraintAsList(ctx, "aggregate", pp);
+    i.state = PromiseGetConstraintAsRval(pp, "state", RVAL_TYPE_SCALAR);
+    i.spanning = PromiseGetConstraintAsRval(pp, "spanning", RVAL_TYPE_SCALAR);
+    i.bonding = PromiseGetConstraintAsBoolean(ctx, "bonding", pp);
+    i.mtu = PromiseGetConstraintAsInt(ctx, "mtu", pp);
+    i.speed = PromiseGetConstraintAsInt(ctx, "speed", pp);
+    i.min_bonding = PromiseGetConstraintAsInt(ctx, "min_bonding", pp);
+
+    return i;
+}
+
 /*******************************************************************/
 
 User GetUserConstraints(const EvalContext *ctx, const Promise *pp)

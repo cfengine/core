@@ -186,6 +186,18 @@ Attributes GetInterfaceAttributes(const EvalContext *ctx, const Promise *pp)
 
 /*******************************************************************/
 
+Attributes GetRoutingAttributes(const EvalContext *ctx, const Promise *pp)
+{
+    Attributes attr = { {0} };
+
+    attr.transaction = GetTransactionConstraints(ctx, pp);
+    attr.classes = GetClassDefinitionConstraints(ctx, pp);
+    attr.routes = GetRouteConstraints(ctx, pp);
+    return attr;
+}
+
+/*******************************************************************/
+
 Attributes GetDatabaseAttributes(const EvalContext *ctx, const Promise *pp)
 {
     Attributes attr = { {0} };
@@ -1692,6 +1704,24 @@ Interfaces GetInterfaceConstraints(const EvalContext *ctx, const Promise *pp)
     i.min_bonding = PromiseGetConstraintAsInt(ctx, "min_bonding", pp);
 
     return i;
+}
+
+/*******************************************************************/
+
+Routes GetRouteConstraints(const EvalContext *ctx, const Promise *pp)
+{
+    Routes r;
+
+    r.relay_networks = PromiseGetConstraintAsList(ctx, "relay_networks", pp);
+    r.rip_metric = PromiseGetConstraintAsInt(ctx, "rip_metric", pp);
+    r.rip_timeout = PromiseGetConstraintAsInt(ctx, "rip_timeout", pp);
+    r.rip_splithorizon = PromiseGetConstraintAsBoolean(ctx, "rip_split_horizon", pp);
+    r.rip_passive = PromiseGetConstraintAsBoolean(ctx, "rip_passive", pp);
+
+    r.nat_pool = PromiseGetConstraintAsRval(pp, "nat_pool", RVAL_TYPE_SCALAR);
+    r.relay_policy = PromiseGetConstraintAsRval(pp, "relay_policy", RVAL_TYPE_SCALAR);
+
+    return r;
 }
 
 /*******************************************************************/

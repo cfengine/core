@@ -67,42 +67,34 @@ static const ConstraintSyntax interface_constraints[] =
 
 /**********************************************************************************************/
 
-static const ConstraintSyntax sharingpolicy_constraints[] =
-{
-    ConstraintSyntaxNewOption("balance_policy", "LeastRecentlyUsed,RoundRobin", "Load balancing policy", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewNull()
-};
-
-static const BodySyntax sharingpolicy_body = BodySyntaxNew("sharing_policy", sharingpolicy_constraints, NULL, SYNTAX_STATUS_NORMAL);
-
-/**********************************************************************************************/
-
-static const ConstraintSyntax balancer_constraints[] =
-{
-    ConstraintSyntaxNewStringList("share_hosts", CF_ANYSTRING, "List of hosts connected to balancer", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewBody("sharing_policy", &sharingpolicy_body, "The balancer policy settings", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewNull()
-};
-
-/**********************************************************************************************/
-
 static const ConstraintSyntax relay_constraints[] =
 {
-    ConstraintSyntaxNewStringList("rip_networks", CF_ANYSTRING, "List of local networks", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewStringList("relay_networks", CF_ANYSTRING, "List of local networks", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewInt("rip_metric", CF_INTRANGE, "RIP route metric", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewInt("rip_timeout", CF_INTRANGE, "RIP timeout on updates", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewOption("rip_horizon", "split-horizon-poison-reverse", "RIP Horizon control", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewBool("rip_split_horizon", "RIP Horizon control", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBool("rip_passive", "Passive mode", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };
 
 static const BodySyntax relay_body = BodySyntaxNew("relay", relay_constraints, NULL, SYNTAX_STATUS_NORMAL);
 
+static const ConstraintSyntax balance_constraints[] =
+{
+    ConstraintSyntaxNewString("relay_policy", CF_ANYSTRING, "Load sharing algorithm, e.g. RR, LRU", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewInt("nat_pool", CF_INTRANGE, "Port range for NAT traffoc", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewNull()
+};
+
+static const BodySyntax balancing_body = BodySyntaxNew("balancing_policy", balance_constraints, NULL, SYNTAX_STATUS_NORMAL);
+
 /**********************************************************************************************/
 
 static const ConstraintSyntax route_constraints[] =
 {
     ConstraintSyntaxNewBody("relay", &relay_body, "A body assigning a forwarding agent", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewBody("balancing_policy", &balancing_body, "Settings for load balancing with balanced_relay", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewStringList("balanced_relay", CF_ANYSTRING, "List of hosts by name/address", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };
 
@@ -112,7 +104,6 @@ const PromiseTypeSyntax CF_INTERFACES_PROMISE_TYPES[] =
 {
     PromiseTypeSyntaxNew("agent", "interfaces", interface_constraints, NULL, SYNTAX_STATUS_NORMAL),
     PromiseTypeSyntaxNew("agent", "routes", route_constraints, NULL, SYNTAX_STATUS_NORMAL),
-    PromiseTypeSyntaxNew("agent", "balancers", balancer_constraints, NULL, SYNTAX_STATUS_NORMAL),
     PromiseTypeSyntaxNewNull()
 };
 

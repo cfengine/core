@@ -4500,9 +4500,27 @@ static FnCallResult FnCallRegExtract(EvalContext *ctx, ARG_UNUSED const Policy *
 /* begin fn specific content */
 
     strcpy(buffer, CF_ANYCLASS);
-    char *regex = RlistScalarValue(finalargs);
-    char *data = RlistScalarValue(finalargs->next);
-    char *arrayname = RlistScalarValue(finalargs->next->next);
+    const char *regex = RlistScalarValue(finalargs);
+    const char *data = RlistScalarValue(finalargs->next);
+    char *arrayname = xstrdup(RlistScalarValue(finalargs->next->next));
+    if (!IsQualifiedVariable(arrayname))
+    {
+        if (fp->caller)
+        {
+            VarRef *ref = VarRefParseFromBundle(arrayname, PromiseGetBundle(fp->caller));
+            free(arrayname);
+            arrayname = VarRefToString(ref, true);
+            VarRefDestroy(ref);
+        }
+        else
+        {
+            Log(LOG_LEVEL_ERR, "Function '%s' called with an unqualifed array reference '%s', "
+                "and the reference could not be automatically qualified as the function was not called from a promise.",
+                fp->name, arrayname);
+            free(arrayname);
+            return FnFailure();
+        }
+    }
 
     Seq *s = StringMatchCaptures(regex, data);
 
@@ -4516,11 +4534,12 @@ static FnCallResult FnCallRegExtract(EvalContext *ctx, ARG_UNUSED const Policy *
     {
         char var[CF_MAXVARSIZE] = "";
         snprintf(var, CF_MAXVARSIZE - 1, "%s[%d]", arrayname, i);
-        VarRef *new_ref = VarRefParseFromBundle(var, PromiseGetBundle(fp->caller));
+        VarRef *new_ref = VarRefParse(var);
         EvalContextVariablePut(ctx, new_ref, SeqAt(s, i), DATA_TYPE_STRING, "source=function,function=regextract");
         VarRefDestroy(new_ref);
     }
 
+    free(arrayname);
     SeqDestroy(s);
     return FnReturnContext(true);
 }

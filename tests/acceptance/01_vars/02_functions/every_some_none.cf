@@ -36,6 +36,9 @@ bundle agent init
                            "none() test 2 passed",
                            "some() test 1 passed",
                            "some() test 2 passed",
+                           "every() empty test passed",
+                           "some() empty test passed",
+                           "none() empty test passed",
       };
 
   files:
@@ -69,6 +72,7 @@ bundle common testaide
                         "four", "fix", "six",
                         "one", "two", "three",
       };
+      "empty" slist => { };
 
   classes:
       "every1" expression => every(".*", "test");
@@ -79,6 +83,10 @@ bundle common testaide
 
       "none1" expression => none("jebadiah", "test");
       "none2" expression => none("2", "test");
+
+      "every_empty" expression => every(".*", "empty");
+      "some_empty" expression => some(".*", "empty");
+      "none_empty" expression => none(".*", "empty");
 }
 
 bundle agent test
@@ -117,6 +125,12 @@ bundle edit_line test_insert
       "none() test 2 failed";
     !none2::
       "none() test 2 passed";
+    !every_empty::
+      "every() empty test passed";
+    !some_empty::
+      "some() empty test passed";
+    none_empty::
+      "none() empty test passed";
 }
 
 #######################################################

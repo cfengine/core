@@ -3834,7 +3834,7 @@ static FnCallResult FnCallFormat(EvalContext *ctx, ARG_UNUSED const Policy *poli
                         }
 
                         const char* const varname = data;
-                        VarRef *ref = VarRefParseFromBundle(varname, PromiseGetBundle(fp->caller));
+                        VarRef *ref = VarRefParse(varname);
                         DataType type = DATA_TYPE_NONE;
                         const void *value = EvalContextVariableGet(ctx, ref, &type);
                         VarRefDestroy(ref);

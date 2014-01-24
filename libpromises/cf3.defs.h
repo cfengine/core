@@ -1342,6 +1342,25 @@ typedef struct
 
 /*************************************************************************/
 
+typedef struct
+{
+    char *untagged_vlan;
+    Rlist *tagged_vlans;
+    char *v4_address;
+    char *v6_address;
+    char *state;
+    Rlist *aggregate;
+    int mtu;
+    int speed;
+    char *duplex; // f/h
+    char *spanning;
+    bool bonding;
+    int min_bonding;
+    // Proxy body
+} Interfaces;
+
+/*************************************************************************/
+
 typedef enum
 {
     ENVIRONMENT_STATE_CREATE,
@@ -1401,6 +1420,7 @@ typedef struct
 
 typedef struct
 {
+    Interfaces interface;
     FileSelect select;
     FilePerms perms;
     FileCopy copy;

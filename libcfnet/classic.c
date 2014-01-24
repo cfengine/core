@@ -95,7 +95,7 @@ int RecvSocketStream(int sd, char buffer[CF_BUFSIZE], int toget)
 
 /*************************************************************************/
 
-int SendSocketStream(int sd, char buffer[CF_BUFSIZE], int tosend)
+int SendSocketStream(int sd, const char buffer[CF_BUFSIZE], int tosend)
 {
     int sent, already = 0;
 

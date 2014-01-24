@@ -2509,7 +2509,10 @@ static FnCallResult FnCallDatastate(EvalContext *ctx,
 }
 
 
-static FnCallResult FnCallSelectServers(EvalContext *ctx, ARG_UNUSED const Policy *policy, const FnCall *fp, const Rlist *finalargs)
+static FnCallResult FnCallSelectServers(EvalContext *ctx,
+                                        ARG_UNUSED const Policy *policy,
+                                        const FnCall *fp,
+                                        const Rlist *finalargs)
  /* ReadTCP(localhost,80,'GET index.html',1000) */
 {
     AgentConnection *conn = NULL;
@@ -2518,12 +2521,31 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx, ARG_UNUSED const Polic
     short portnum;
     buffer[0] = '\0';
 
-    char *listvar = RlistScalarValue(finalargs);
-    char *port = RlistScalarValue(finalargs->next);
-    char *sendstring = RlistScalarValue(finalargs->next->next);
-    char *regex = RlistScalarValue(finalargs->next->next->next);
-    char *maxbytes = RlistScalarValue(finalargs->next->next->next->next);
-    char *array_lval = RlistScalarValue(finalargs->next->next->next->next->next);
+    const char *listvar = RlistScalarValue(finalargs);
+    const char *port = RlistScalarValue(finalargs->next);
+    const char *sendstring = RlistScalarValue(finalargs->next->next);
+    const char *regex = RlistScalarValue(finalargs->next->next->next);
+    const char *maxbytes = RlistScalarValue(finalargs->next->next->next->next);
+    char *array_lval = xstrdup(RlistScalarValue(finalargs->next->next->next->next->next));
+
+    if (!IsQualifiedVariable(array_lval))
+    {
+        if (fp->caller)
+        {
+            VarRef *ref = VarRefParseFromBundle(array_lval, PromiseGetBundle(fp->caller));
+            free(array_lval);
+            array_lval = VarRefToString(ref, true);
+            VarRefDestroy(ref);
+        }
+        else
+        {
+            Log(LOG_LEVEL_ERR, "Function '%s' called with an unqualifed array reference '%s', "
+                "and the reference could not be automatically qualified as the function was not called from a promise.",
+                fp->name, array_lval);
+            free(array_lval);
+            return FnFailure();
+        }
+    }
 
     if (IsVarList(listvar))
     {
@@ -2544,6 +2566,7 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx, ARG_UNUSED const Polic
             "Function selectservers was promised a list called '%s' but this was not found from context '%s.%s'",
               listvar, ref->scope, naked);
         VarRefDestroy(ref);
+        free(array_lval);
         return FnFailure();
     }
 
@@ -2553,6 +2576,7 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx, ARG_UNUSED const Polic
     {
         Log(LOG_LEVEL_VERBOSE,
             "Function selectservers was promised a list called '%s' but this variable is not a list", listvar);
+        free(array_lval);
         return FnFailure();
     }
 
@@ -2561,6 +2585,7 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx, ARG_UNUSED const Polic
 
     if (val < 0 || portnum < 0)
     {
+        free(array_lval);
         return FnFailure();
     }
 
@@ -2572,6 +2597,7 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx, ARG_UNUSED const Polic
 
     if (THIS_AGENT_TYPE != AGENT_TYPE_AGENT)
     {
+        free(array_lval);
         return FnReturnF("%d", count);
     }
 
@@ -2627,7 +2653,7 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx, ARG_UNUSED const Polic
             {
                 Log(LOG_LEVEL_VERBOSE, "Host '%s' is alive and responding correctly", RlistScalarValue(rp));
                 snprintf(buffer, CF_MAXVARSIZE - 1, "%s[%d]", array_lval, count);
-                VarRef *ref = VarRefParseFromBundle(buffer, PromiseGetBundle(fp->caller));
+                VarRef *ref = VarRefParse(buffer);
                 EvalContextVariablePut(ctx, ref, RvalScalarValue(rp->val), DATA_TYPE_STRING, "source=function,function=selectservers");
                 VarRefDestroy(ref);
                 count++;
@@ -2637,7 +2663,7 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx, ARG_UNUSED const Polic
         {
             Log(LOG_LEVEL_VERBOSE, "Host '%s' is alive", RlistScalarValue(rp));
             snprintf(buffer, CF_MAXVARSIZE - 1, "%s[%d]", array_lval, count);
-            VarRef *ref = VarRefParseFromBundle(buffer, PromiseGetBundle(fp->caller));
+            VarRef *ref = VarRefParse(buffer);
             EvalContextVariablePut(ctx, ref, RvalScalarValue(rp->val), DATA_TYPE_STRING, "source=function,function=selectservers");
             VarRefDestroy(ref);
 
@@ -2656,6 +2682,7 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx, ARG_UNUSED const Polic
     }
 
     PolicyDestroy(select_server_policy);
+    free(array_lval);
 
 /* Return the subset that is alive and responding correctly */
 

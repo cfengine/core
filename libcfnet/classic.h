@@ -27,6 +27,6 @@
 
 
 int RecvSocketStream(int sd, char *buffer, int toget);
-int SendSocketStream(int sd, char *buffer, int tosend);
+int SendSocketStream(int sd, const char *buffer, int tosend);
 
 #endif // CLASSIC_H

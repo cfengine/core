@@ -5193,6 +5193,32 @@ static FnCallResult FnCallSplitString(ARG_UNUSED EvalContext *ctx, ARG_UNUSED Fn
 
 /*********************************************************************/
 
+static FnCallResult FnCallStringSplit(ARG_UNUSED EvalContext *ctx, ARG_UNUSED FnCall *fp, Rlist *finalargs)
+{
+    /* 3 args: string, split_regex, max  */
+    char *string = RlistScalarValue(finalargs);
+    char *split = RlistScalarValue(finalargs->next);
+    int max = IntFromString(RlistScalarValue(finalargs->next->next));
+
+    if (max < 1)
+    {
+        Log(LOG_LEVEL_VERBOSE, "Function '%s' called with invalid maxent argument: '%d' (should be > 0).", fp->name, max);
+        return FnFailure();
+    }
+
+    Rlist *newlist = RlistFromRegexSplitNoOverflow(string, split, max);
+
+    if (newlist == NULL)
+    {
+        /* We are logging error in RlistFromRegexSplitNoOverflow() so no need to do it here as well. */
+        return FnFailure();
+    }
+
+    return (FnCallResult) { FNCALL_SUCCESS, { newlist, RVAL_TYPE_LIST } };
+}
+
+/*********************************************************************/
+
 static FnCallResult FnCallFileSexist(EvalContext *ctx, ARG_UNUSED FnCall *fp, Rlist *finalargs)
 {
     char naked[CF_MAXVARSIZE];
@@ -7025,7 +7051,7 @@ const FnCallType CF_FNCALL_TYPES[] =
     FnCallTypeNew("splayclass", DATA_TYPE_CONTEXT, SPLAYCLASS_ARGS, &FnCallSplayClass, "True if the first argument's time-slot has arrived, according to a policy in arg2",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_UTILS, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("splitstring", DATA_TYPE_STRING_LIST, SPLITSTRING_ARGS, &FnCallSplitString, "Convert a string in arg1 into a list of max arg3 strings by splitting on a regular expression in arg2",
-                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
+                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_DEPRECATED),
     FnCallTypeNew("storejson", DATA_TYPE_STRING, STOREJSON_ARGS, &FnCallStoreJson, "Convert a data container to a JSON string",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("strcmp", DATA_TYPE_CONTEXT, STRCMP_ARGS, &FnCallStrCmp, "True if the two strings match exactly",
@@ -7046,6 +7072,10 @@ const FnCallType CF_FNCALL_TYPES[] =
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_SYSTEM, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("variablesmatching", DATA_TYPE_STRING_LIST, CLASSMATCH_ARGS, &FnCallVariablesMatching, "List the variables matching regex arg1 and tag regexes arg2,arg3,...",
                   FNCALL_OPTION_VARARG, FNCALL_CATEGORY_UTILS, SYNTAX_STATUS_NORMAL),
+
+    // Functions section following new naming convention
+    FnCallTypeNew("string_split", DATA_TYPE_STRING_LIST, SPLITSTRING_ARGS, &FnCallStringSplit, "Convert a string in arg1 into a list of at most arg3 strings by splitting on a regular expression in arg2",
+                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
 
     // Text xform functions
     FnCallTypeNew("string_downcase", DATA_TYPE_STRING, XFORM_ARGS, &FnCallTextXform, "Convert a string to lowercase",

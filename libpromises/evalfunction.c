@@ -3514,16 +3514,17 @@ static FnCallResult FnCallDatatype(EvalContext *ctx, ARG_UNUSED const Policy *po
 {
     const char* const varname = RlistScalarValue(finalargs);
 
-    VarRef* const ref = VarRefParseFromBundle(varname, PromiseGetBundle(fp->caller));
+    VarRef* const ref = VarRefParse(varname);
     DataType type = DATA_TYPE_NONE;
-    const void *rval = EvalContextVariableGet(ctx, ref, &type);
+    const void *value = EvalContextVariableGet(ctx, ref, &type);
+    VarRefDestroy(ref);
 
     Writer* const typestring = StringWriter();
 
     if (type == DATA_TYPE_CONTAINER)
     {
 
-        const JsonElement* const jelement = rval;
+        const JsonElement* const jelement = value;
 
         if (JsonGetElementType(jelement) == JSON_ELEMENT_TYPE_CONTAINER)
         {
@@ -3563,17 +3564,8 @@ static FnCallResult FnCallDatatype(EvalContext *ctx, ARG_UNUSED const Policy *po
     else
     {
         Log(LOG_LEVEL_VERBOSE, "%s: variable '%s' is not a data container", fp->name, varname);
-
-        VarRefDestroy(ref);
-
         return FnFailure();
     }
-
-    Log(LOG_LEVEL_DEBUG,
-        "%s: from data container '%s', got top-level type '%s'",
-        fp->name, varname, StringWriterData(typestring));
-
-    VarRefDestroy(ref);
 
     return (FnCallResult) { FNCALL_SUCCESS, { StringWriterClose(typestring), RVAL_TYPE_SCALAR } };
 }

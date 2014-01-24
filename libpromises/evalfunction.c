@@ -1037,23 +1037,8 @@ static FnCallResult FnCallBundlesMatching(EvalContext *ctx, const Policy *policy
         return FnFailure();
     }
 
-    if (!fp->caller)
-    {
-        FatalError(ctx, "Function '%s' had a null caller", fp->name);
-    }
-
     const char *regex = RlistScalarValue(finalargs);
     const Rlist *tag_args = finalargs->next;
-
-    if (!policy)
-    {
-        FatalError(ctx, "Function '%s' had a null policy", fp->name);
-    }
-
-    if (!policy->bundles)
-    {
-        FatalError(ctx, "Function '%s' had null policy bundles", fp->name);
-    }
 
     Rlist *matches = NULL;
     for (size_t i = 0; i < SeqLength(policy->bundles); i++)
@@ -1780,7 +1765,23 @@ static FnCallResult FnCallGetIndices(EvalContext *ctx, ARG_UNUSED const Policy *
 
 static FnCallResult FnCallGetValues(EvalContext *ctx, ARG_UNUSED const Policy *policy, const FnCall *fp, const Rlist *finalargs)
 {
-    VarRef *ref = VarRefParseFromBundle(RlistScalarValue(finalargs), PromiseGetBundle(fp->caller));
+    VarRef *ref = VarRefParse(RlistScalarValue(finalargs));
+    if (!VarRefIsQualified(ref))
+    {
+        if (fp->caller)
+        {
+            const Bundle *caller_bundle = PromiseGetBundle(fp->caller);
+            VarRefQualify(ref, caller_bundle->ns, caller_bundle->name);
+        }
+        else
+        {
+            Log(LOG_LEVEL_WARNING, "Function '%s'' was given an unqualified variable reference, "
+                "and it was not called from a promise. No way to automatically qualify the reference '%s'.",
+                fp->name, RlistScalarValue(finalargs));
+            VarRefDestroy(ref);
+            return FnFailure();
+        }
+    }
 
     DataType type = DATA_TYPE_NONE;
     const void *value = EvalContextVariableGet(ctx, ref, &type);

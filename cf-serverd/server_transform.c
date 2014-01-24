@@ -926,29 +926,12 @@ static void KeepFileAccessPromise(const EvalContext *ctx, const Promise *pp)
     memcpy(path, pp->promiser, path_len + 1);
 
     /* Resolve symlinks and canonicalise access_rules path. */
-    int ret = PreprocessRequestPath(path, sizeof(path), NULL, NULL, NULL);
+    int ret = PreprocessRequestPath(path, sizeof(path));
+
+    /* The file does not have to exist at initialisation time. */
     if (ret == -1 && errno != ENOENT)
     {
         goto err_too_long;
-    }
-
-    int is_dir = IsDirReal(path);
-    if (is_dir == -1)
-    {
-        Log(LOG_LEVEL_WARNING,
-            "Path '%s' in access_rules does not exist, assuming it will be a regular file, access rule will not be applied recursively!",
-            path);
-    }
-    else if (is_dir == 1 && path[path_len - 1] != FILE_SEPARATOR)
-    {
-        /* Append '/' if it's a directory. */
-        if (path_len > sizeof(path) - 2)
-        {
-            goto err_too_long;
-        }
-        path[path_len] = FILE_SEPARATOR;
-        path[path_len + 1] = '\0';
-        path_len++;
     }
 
     size_t pos = acl_SortedInsert(&paths_acl, path);

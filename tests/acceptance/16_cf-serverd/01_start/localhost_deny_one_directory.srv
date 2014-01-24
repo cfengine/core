@@ -22,8 +22,8 @@ body server control
 bundle server access_rules()
 {
   access:
-    "$(G.testroot)"
+    "$(G.testroot)/"
       admit => { "127.0.0.1", "::1" };
-    "$(G.testdir)"
+    "$(G.testdir)/"
       deny => { "127.0.0.1", "::1" };
 }

@@ -5096,10 +5096,11 @@ static FnCallResult FnCallParseJson(ARG_UNUSED EvalContext *ctx, ARG_UNUSED cons
 static FnCallResult FnCallStoreJson(EvalContext *ctx, ARG_UNUSED const Policy *policy, const FnCall *fp, const Rlist *finalargs)
 {
     const char *varname = RlistScalarValue(finalargs);
-    VarRef *ref = VarRefParseFromBundle(varname, PromiseGetBundle(fp->caller));
 
+    VarRef *ref = VarRefParse(varname);
     DataType type = DATA_TYPE_NONE;
     const JsonElement *value = EvalContextVariableGet(ctx, ref, &type);
+    VarRefDestroy(ref);
 
     if (type == DATA_TYPE_CONTAINER)
     {

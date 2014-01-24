@@ -3579,7 +3579,7 @@ static FnCallResult FnCallNth(EvalContext *ctx, ARG_UNUSED const Policy *policy,
     const char* const key = RlistScalarValue(finalargs->next);
     long index = IntFromString(key);
 
-    VarRef *ref = VarRefParseFromBundle(varname, PromiseGetBundle(fp->caller));
+    VarRef *ref = VarRefParse(varname);
     DataType type = DATA_TYPE_NONE;
     const void *value = EvalContextVariableGet(ctx, ref, &type);
     VarRefDestroy(ref);

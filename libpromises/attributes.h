@@ -54,6 +54,7 @@ Acl GetAclConstraints(const EvalContext *ctx, const Promise *pp);
 ContextConstraint GetContextConstraints(const EvalContext *ctx, const Promise *pp);
 Database GetDatabaseConstraints(const EvalContext *ctx, const Promise *pp);
 Interfaces GetInterfaceConstraints(const EvalContext *ctx, const Promise *pp);
+Routes GetRouteConstraints(const EvalContext *ctx, const Promise *pp);
 DefineClasses GetClassDefinitionConstraints(const EvalContext *ctx, const Promise *pp);
 EditColumn GetColumnConstraints(const EvalContext *ctx, const Promise *pp);
 EditDefaults GetEditDefaults(const EvalContext *ctx, const Promise *pp);

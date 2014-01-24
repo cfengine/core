@@ -647,13 +647,25 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
         Log(LOG_LEVEL_VERBOSE, "%14s %7s %s",
             "Received:", "GET", filename);
 
-        ret = PreprocessRequestPath(filename, sizeof(filename),
-                                    conn->ipaddr, conn->hostname,
-                                    KeyPrintableHash(ConnectionInfoKey(conn->conn_info)));
+        /* TODO batch all the following in one function since it's very
+         * similar in all of GET, OPENDIR and STAT. */
+
+        ret = ShortcutsExpand(filename, sizeof(filename),
+                              SV.path_shortcuts,
+                              conn->ipaddr, conn->hostname,
+                              KeyPrintableHash(ConnectionInfoKey(conn->conn_info)));
         if (ret == (size_t) -1)
         {
             goto protocol_error;
         }
+
+        ret = PreprocessRequestPath(filename, sizeof(filename));
+        if (ret == (size_t) -1)
+        {
+            goto protocol_error;
+        }
+
+        PathRemoveTrailingSlash(filename, strlen(filename));
 
         Log(LOG_LEVEL_VERBOSE, "%14s %7s %s",
             "Translated to:", "GET", filename);
@@ -699,16 +711,23 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
 
         /* sizeof()-1 because we need one extra byte for
            appending '/' afterwards. */
-        ret = PreprocessRequestPath(filename, sizeof(filename) - 1,
-                                    conn->ipaddr, conn->hostname,
-                                    KeyPrintableHash(ConnectionInfoKey(conn->conn_info)));
+        ret = ShortcutsExpand(filename, sizeof(filename) - 1,
+                              SV.path_shortcuts,
+                              conn->ipaddr, conn->hostname,
+                              KeyPrintableHash(ConnectionInfoKey(conn->conn_info)));
         if (ret == (size_t) -1)
         {
             goto protocol_error;
         }
+
+        ret = PreprocessRequestPath(filename, sizeof(filename) - 1);
+        if (ret == (size_t) -1)
+        {
+            goto protocol_error;
+        }
+
         /* OPENDIR *must* be directory. */
-        filename[ret] = FILE_SEPARATOR;
-        filename[ret+1] = '\0';
+        PathAppendTrailingSlash(filename, strlen(filename));
 
         Log(LOG_LEVEL_VERBOSE, "%14s %7s %s",
             "Translated to:", "OPENDIR", filename);
@@ -755,19 +774,28 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
 
         /* sizeof()-1 because we need one extra byte for
            appending '/' afterwards. */
-        ret = PreprocessRequestPath(filename, sizeof(filename) - 1,
-                                    conn->ipaddr, conn->hostname,
-                                    KeyPrintableHash(ConnectionInfoKey(conn->conn_info)));
+        ret = ShortcutsExpand(filename, sizeof(filename) - 1,
+                              SV.path_shortcuts,
+                              conn->ipaddr, conn->hostname,
+                              KeyPrintableHash(ConnectionInfoKey(conn->conn_info)));
         if (ret == (size_t) -1)
         {
             goto protocol_error;
         }
-        if (IsDirReal(filename) == 1)                            /* append '/' */
+
+        ret = PreprocessRequestPath(filename, sizeof(filename) - 1);
+        if (ret == (size_t) -1)
         {
-            assert(ret + 1 < sizeof(filename));
-            filename[ret] = FILE_SEPARATOR;
-            filename[ret + 1] = '\0';
-            ret++;
+            goto protocol_error;
+        }
+
+        if (IsDirReal(filename) == 1)
+        {
+            PathAppendTrailingSlash(filename, strlen(filename));
+        }
+        else
+        {
+            PathRemoveTrailingSlash(filename, strlen(filename));
         }
 
         Log(LOG_LEVEL_VERBOSE, "%14s %7s %s",

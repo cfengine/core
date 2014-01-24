@@ -926,29 +926,36 @@ static void KeepFileAccessPromise(const EvalContext *ctx, const Promise *pp)
     memcpy(path, pp->promiser, path_len + 1);
 
     /* Resolve symlinks and canonicalise access_rules path. */
-    int ret = PreprocessRequestPath(path, sizeof(path), NULL, NULL, NULL);
-    if (ret == -1 && errno != ENOENT)
-    {
-        goto err_too_long;
-    }
+    int ret = PreprocessRequestPath(path, sizeof(path));
 
-    int is_dir = IsDirReal(path);
-    if (is_dir == -1)
+    if (ret == -1)
     {
-        Log(LOG_LEVEL_WARNING,
-            "Path '%s' in access_rules does not exist, assuming it will be a regular file, access rule will not be applied recursively!",
-            path);
-    }
-    else if (is_dir == 1 && path[path_len - 1] != FILE_SEPARATOR)
-    {
-        /* Append '/' if it's a directory. */
-        if (path_len > sizeof(path) - 2)
+        if (errno != ENOENT)                        /* something went wrong */
         {
             goto err_too_long;
         }
-        path[path_len] = FILE_SEPARATOR;
-        path[path_len + 1] = '\0';
-        path_len++;
+        else                      /* file does not exist, it doesn't matter */
+        {
+            Log(LOG_LEVEL_INFO,
+                "Path does not exist, it's added as-is in access rules: %s",
+                path);
+            Log(LOG_LEVEL_INFO,
+                "WARNING: that means that having a trailing slash defines if it's a directory!");
+        }
+    }
+    else                                 /* file exists, path canonicalised */
+    {
+        /* If it's a directory append trailing '/'. */
+        int is_dir = IsDirReal(path);
+        if (is_dir == 1 && path[path_len - 1] != FILE_SEPARATOR)
+        {
+            if (path_len + 2 > sizeof(path))
+            {
+                goto err_too_long;
+            }
+            PathAppendTrailingSlash(path, path_len);
+            path_len++;
+        }
     }
 
     size_t pos = acl_SortedInsert(&paths_acl, path);

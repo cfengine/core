@@ -52,12 +52,17 @@ int GetServerQuery(ServerConnectionState *conn, char *recvbuffer, int encrypted)
 void CompareLocalHash(ServerConnectionState *conn, char *sendbuffer, char *recvbuffer);
 Item *ListPersistentClasses(void);
 
+bool PathRemoveTrailingSlash(char *s, size_t s_len);
+bool PathAppendTrailingSlash(char *s, size_t s_len);
 size_t ReplaceSpecialVariables(char *buf, size_t buf_size,
                                const char *find1, const char *repl1,
                                const char *find2, const char *repl2,
                                const char *find3, const char *repl3);
-size_t PreprocessRequestPath(char *reqpath, size_t reqpath_size,
-                             const char *ipaddr, const char *hostname,
-                             const char *key);
+size_t ShortcutsExpand(char *path, size_t path_size,
+                       const StringMap *shortcuts,
+                       const char *ipaddr, const char *hostname,
+                       const char *key);
+size_t PreprocessRequestPath(char *reqpath, size_t reqpath_size);
+
 
 #endif  /* CFENGINE_SERVER_COMMON_H */

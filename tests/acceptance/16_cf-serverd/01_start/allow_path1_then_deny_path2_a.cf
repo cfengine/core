@@ -1,7 +1,7 @@
 body common control
 {
       inputs => { "../../default.cf.sub", "./run_with_server.cf.sub" };
-      bundlesequence => { test };
+      bundlesequence => { create_directories, test };
       version => "1.0";
 }
 

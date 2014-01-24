@@ -985,6 +985,54 @@ Rlist *RlistFromSplitRegex(const char *string, const char *regex, int max, bool 
     return liststart;
 }
 
+/*******************************************************************/
+/*
+ * Splits string on regex, returns a list of (at most max) fragments.
+ *
+ * NOTE: in contrast with RlistFromSplitRegex() this one will produce at most max number of elements;
+ *       last element will contain everything that lefts from original string (we use everything after
+ *       the (max-1)-th separator as the final list element, including any separators that may be embedded in it)
+ */
+Rlist *RlistFromRegexSplitNoOverflow(const char *string, const char *regex, int max)
+
+{
+    Rlist *liststart = NULL;
+    char node[CF_MAXVARSIZE];
+    int start, end;
+    int count = 0;
+
+    assert(max > 0); // ensured by FnCallStringSplit() before calling us
+    assert(string != NULL); // ensured by FnCallStringSplit() before calling us
+
+    const char *sp = string;
+    // We will avoid compiling regex multiple times.
+    pcre *pattern = CompileRegex(regex);
+
+    if (pattern == NULL)
+    {
+        Log(LOG_LEVEL_DEBUG, "Error compiling regex from '%s'", regex);
+        return NULL;
+    }
+
+    while ((count < max - 1) && StringMatchWithPrecompiledRegex(pattern, sp, &start, &end))
+    {
+        assert(start < CF_MAXVARSIZE);
+        memcpy(node, sp, start);
+        node[start] = '\0';
+        RlistAppendScalar(&liststart, node);
+        count++;
+
+        sp += end;
+    }
+
+    assert(count < max);
+    RlistAppendScalar(&liststart, sp);
+
+    pcre_free(pattern);
+
+    return liststart;
+}
+
 Rlist *RlistLast(Rlist *start)
 {
     if (start == NULL)

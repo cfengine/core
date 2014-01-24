@@ -2350,10 +2350,28 @@ static FnCallResult FnCallMergeData(EvalContext *ctx, ARG_UNUSED const Policy *p
 
     Seq *containers = SeqNew(10, NULL);
     Seq *toremove = SeqNew(10, NULL);
-    // segfaults: Seq *toremove = SeqNew(10, JsonDestroy);
+
     for (const Rlist *arg = args; arg; arg = arg->next)
     {
-        VarRef *ref = VarRefParseFromBundle(RlistScalarValue(arg), PromiseGetBundle(fp->caller));
+        VarRef *ref = VarRefParse(RlistScalarValue(arg));
+        if (!VarRefIsQualified(ref))
+        {
+            if (fp->caller)
+            {
+                const Bundle *caller_bundle = PromiseGetBundle(fp->caller);
+                VarRefQualify(ref, caller_bundle->ns, caller_bundle->name);
+            }
+            else
+            {
+                Log(LOG_LEVEL_WARNING, "Function '%s'' was given an unqualified variable reference, "
+                    "and it was not called from a promise. No way to automatically qualify the reference '%s'.",
+                    fp->name, RlistScalarValue(arg));
+                VarRefDestroy(ref);
+                SeqDestroy(containers);
+                SeqDestroy(toremove);
+                return FnFailure();
+            }
+        }
 
         DataType value_type = DATA_TYPE_NONE;
         const void *value = EvalContextVariableGet(ctx, ref, &value_type);

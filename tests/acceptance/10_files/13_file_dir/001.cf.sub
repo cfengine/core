@@ -1,0 +1,40 @@
+body common control 
+{
+      bundlesequence => { "create_test_file" };
+      inputs => { "../../default.cf.sub" };
+}
+
+body agent control 
+{
+      default_repository => "$(G.testdir)/backup";
+}
+
+bundle agent create_test_file
+{
+  files:
+      "$(G.testdir)/test"
+      create => "true",
+      edit_line => append_if_no_line("username:x:1:3:gcos:/home/dir:/bin/false");
+      "$(G.testdir)/test"
+      changes => diff;
+    SECOND_RUN::
+      "$(G.testdir)/SECOND_RUN"
+      create => "true";
+}
+
+bundle edit_line append_if_no_line(value)
+{ 
+  insert_lines:
+
+      "$(value)"
+      comment => "Append a line to the file if it doesn't already exist";
+}
+
+body changes diff
+{
+      hash           => "sha256";
+      report_changes => "content";
+      report_diffs   => "true";                                                                                                                                                                                            
+      update_hashes  => "yes";                                                                                                                                                                                             
+}
+

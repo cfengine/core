@@ -2171,15 +2171,30 @@ static FnCallResult FnCallLsDir(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Po
 
 static FnCallResult FnCallMapArray(EvalContext *ctx, ARG_UNUSED const Policy *policy, const FnCall *fp, const Rlist *finalargs)
 {
+    if (!fp->caller)
+    {
+        Log(LOG_LEVEL_ERR, "Function '%s' must be called from a promise", fp->name);
+        return FnFailure();
+    }
+
+    const char *arg_map = RlistScalarValue(finalargs);
+    const char *arg_array = RlistScalarValue(finalargs->next);
+
+    VariableTableIterator *iter;
+    {
+        VarRef *ref = VarRefParse(arg_array);
+        if (!VarRefIsQualified(ref))
+        {
+            const Bundle *caller_bundle = PromiseGetBundle(fp->caller);
+            VarRefQualify(ref, caller_bundle->ns, caller_bundle->name);
+        }
+
+        iter = EvalContextVariableTableIteratorNew(ctx, ref->ns, ref->scope, ref->lval);
+        VarRefDestroy(ref);
+    }
+
     Rlist *returnlist = NULL;
-
-    char *map = RlistScalarValue(finalargs);
-
-    VarRef *ref = VarRefParseFromBundle(RlistScalarValue(finalargs->next), PromiseGetBundle(fp->caller));
-
-    VariableTableIterator *iter = EvalContextVariableTableIteratorNew(ctx, ref->ns, ref->scope, ref->lval);
-    Variable *var = NULL;
-
+    Variable *var;
     Buffer *expbuf = BufferNew();
     while ((var = VariableTableIteratorNext(iter)))
     {
@@ -2197,7 +2212,7 @@ static FnCallResult FnCallMapArray(EvalContext *ctx, ARG_UNUSED const Policy *po
                 BufferZero(expbuf);
                 EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "v", var->rval.item, DATA_TYPE_STRING,
                                               "source=function,function=maparray");
-                ExpandScalar(ctx, PromiseGetBundle(fp->caller)->ns, PromiseGetBundle(fp->caller)->name, map, expbuf);
+                ExpandScalar(ctx, PromiseGetBundle(fp->caller)->ns, PromiseGetBundle(fp->caller)->name, arg_map, expbuf);
 
                 if (strstr(BufferData(expbuf), "$(this.k)") || strstr(BufferData(expbuf), "${this.k}") ||
                     strstr(BufferData(expbuf), "$(this.v)") || strstr(BufferData(expbuf), "${this.v}"))
@@ -2206,6 +2221,7 @@ static FnCallResult FnCallMapArray(EvalContext *ctx, ARG_UNUSED const Policy *po
                     EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_THIS, "k");
                     EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_THIS, "v");
                     BufferDestroy(expbuf);
+                    VariableTableIteratorDestroy(iter);
                     return FnFailure();
                 }
 
@@ -2216,11 +2232,11 @@ static FnCallResult FnCallMapArray(EvalContext *ctx, ARG_UNUSED const Policy *po
 
         case RVAL_TYPE_LIST:
             {
-                for (const Rlist *rp = var->rval.item; rp != NULL; rp = rp->next)
+                for (const Rlist *rp = RvalRlistValue(var->rval); rp != NULL; rp = rp->next)
                 {
                     BufferZero(expbuf);
                     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "v", RlistScalarValue(rp), DATA_TYPE_STRING, "source=function,function=maparray");
-                    ExpandScalar(ctx, PromiseGetBundle(fp->caller)->ns, PromiseGetBundle(fp->caller)->name, map, expbuf);
+                    ExpandScalar(ctx, PromiseGetBundle(fp->caller)->ns, PromiseGetBundle(fp->caller)->name, arg_map, expbuf);
 
                     if (strstr(BufferData(expbuf), "$(this.k)") || strstr(BufferData(expbuf), "${this.k}") ||
                         strstr(BufferData(expbuf), "$(this.v)") || strstr(BufferData(expbuf), "${this.v}"))
@@ -2229,6 +2245,7 @@ static FnCallResult FnCallMapArray(EvalContext *ctx, ARG_UNUSED const Policy *po
                         EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_THIS, "k");
                         EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_THIS, "v");
                         BufferDestroy(expbuf);
+                        VariableTableIteratorDestroy(iter);
                         return FnFailure();
                     }
 
@@ -2246,7 +2263,6 @@ static FnCallResult FnCallMapArray(EvalContext *ctx, ARG_UNUSED const Policy *po
 
     BufferDestroy(expbuf);
     VariableTableIteratorDestroy(iter);
-    VarRefDestroy(ref);
 
     if (returnlist == NULL)
     {
@@ -2261,7 +2277,7 @@ static FnCallResult FnCallMapList(EvalContext *ctx, ARG_UNUSED const Policy *pol
     Rlist *newlist = NULL;
     DataType retype;
 
-    const char *map = RlistScalarValue(finalargs);
+    const char *arg_map = RlistScalarValue(finalargs);
     char *listvar = RlistScalarValue(finalargs->next);
 
     char naked[CF_MAXVARSIZE] = "";
@@ -2297,7 +2313,7 @@ static FnCallResult FnCallMapList(EvalContext *ctx, ARG_UNUSED const Policy *pol
         BufferZero(expbuf);
         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "this", RlistScalarValue(rp), DATA_TYPE_STRING, "source=function,function=maplist");
 
-        ExpandScalar(ctx, NULL, "this", map, expbuf);
+        ExpandScalar(ctx, NULL, "this", arg_map, expbuf);
 
         if (strstr(BufferData(expbuf), "$(this)") || strstr(BufferData(expbuf), "${this}"))
         {

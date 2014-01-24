@@ -182,7 +182,8 @@ avahi_config_test_SOURCES = avahi_config_test.c \
 	../../cf-serverd/server.c \
 	../../cf-serverd/server_transform.c \
 	../../cf-serverd/cf-serverd-enterprise-stubs.c \
-	../../cf-serverd/server_access.c
+	../../cf-serverd/server_access.c \
+	../../cf-serverd/strlist.c
 avahi_config_test_LDADD = ../../libpromises/libpromises.la libtest.la
 
 endif

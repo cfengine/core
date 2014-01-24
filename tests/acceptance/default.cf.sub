@@ -303,7 +303,6 @@ body contain useshell
 }
 
 #######################################################
-
 # Test based on whether two strings are the same
 
 bundle agent default_check_strcmp(strA, strB, test, expected_difference)
@@ -320,5 +319,25 @@ bundle agent default_check_strcmp(strA, strB, test, expected_difference)
     !equal.!expected_difference::
       "$(test) FAIL";
     !equal.expected_difference::
+      "$(test) Pass";
+}
+
+#######################################################
+# Test based on whether a regex matches a string
+
+bundle agent default_check_regcmp(regexA, strB, test, expected_mismatch)
+{
+  classes:
+      "equal" expression => regcmp("$(regexA)", "$(strB)");
+      "expected_mismatch" or => { strcmp("$(expected_mismatch)", "yes"),
+                                  strcmp("$(expected_mismatch)", "true") };
+  reports:
+    equal.!expected_mismatch::
+      "$(test) Pass";
+    equal.expected_mismatch::
+      "$(test) FAIL";
+    !equal.!expected_mismatch::
+      "$(test) FAIL";
+    !equal.expected_mismatch::
       "$(test) Pass";
 }

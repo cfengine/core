@@ -49,6 +49,8 @@ bundle agent test
   vars:
       "teststr" string => readfile("$(G.testfile)",1000);
       "cnt" int => parsestringarray("ary", "$(teststr)","NoComment",":",10,1000);
+      # ensure that bare words are OK
+      "ignore" int => parsestringarray("ary", "mydata","NoComment",":",10,1000);
       "num" int => "3";
 }
 

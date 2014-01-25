@@ -6620,7 +6620,7 @@ static const FnCallArg READSTRINGARRAY_ARGS[] =
 static const FnCallArg PARSESTRINGARRAY_ARGS[] =
 {
     {CF_IDRANGE, DATA_TYPE_STRING, "Array identifier to populate"},
-    {CF_ABSPATHRANGE, DATA_TYPE_STRING, "A string to parse for input data"},
+    {CF_ANYSTRING, DATA_TYPE_STRING, "A string to parse for input data"},
     {CF_ANYSTRING, DATA_TYPE_STRING, "Regex matching comments"},
     {CF_ANYSTRING, DATA_TYPE_STRING, "Regex to split data"},
     {CF_VALRANGE, DATA_TYPE_INT, "Maximum number of entries to read"},
@@ -6642,7 +6642,7 @@ static const FnCallArg READSTRINGARRAYIDX_ARGS[] =
 static const FnCallArg PARSESTRINGARRAYIDX_ARGS[] =
 {
     {CF_IDRANGE, DATA_TYPE_STRING, "Array identifier to populate"},
-    {CF_ABSPATHRANGE, DATA_TYPE_STRING, "A string to parse for input data"},
+    {CF_ANYSTRING, DATA_TYPE_STRING, "A string to parse for input data"},
     {CF_ANYSTRING, DATA_TYPE_STRING, "Regex matching comments"},
     {CF_ANYSTRING, DATA_TYPE_STRING, "Regex to split data"},
     {CF_VALRANGE, DATA_TYPE_INT, "Maximum number of entries to read"},

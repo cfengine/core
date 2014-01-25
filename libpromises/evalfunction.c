@@ -77,6 +77,7 @@ static char *StripPatterns(char *file_buffer, const char *pattern, const char *f
 static void CloseStringHole(char *s, int start, int end);
 static int BuildLineArray(EvalContext *ctx, const Bundle *bundle, const char *array_lval, const char *file_buffer,
                           const char *split, int maxent, DataType type, bool int_index);
+static JsonElement* BuildData(EvalContext *ctx, const char *file_buffer,  const char *split, int maxent, bool make_array);
 static int ExecModule(EvalContext *ctx, char *command);
 
 static bool CheckID(const char *id);
@@ -5134,6 +5135,55 @@ static FnCallResult FnCallStoreJson(EvalContext *ctx, ARG_UNUSED const Policy *p
 
 /*********************************************************************/
 
+// this function is separate so other data container readers can use it
+static FnCallResult DataRead(EvalContext *ctx, const FnCall *fp, const Rlist *finalargs)
+{
+    char *file_buffer = NULL;
+    JsonElement *json = NULL;
+
+/* begin fn specific content */
+
+    /* 5 args: filename,comment_regex,split_regex,max number of entries,maxfilesize  */
+
+    const char *filename = RlistScalarValue(finalargs);
+    const char *comment = RlistScalarValue(finalargs->next);
+    const char *split = RlistScalarValue(finalargs->next->next);
+    int maxent = IntFromString(RlistScalarValue(finalargs->next->next->next));
+    int maxsize = IntFromString(RlistScalarValue(finalargs->next->next->next->next));
+    bool make_array = 0 == strcmp(fp->name, "data_readstringarrayidx");
+
+// Read once to validate structure of file in itemlist
+    file_buffer = CfReadFile(filename, maxsize);
+    if (file_buffer)
+    {
+        file_buffer = StripPatterns(file_buffer, comment, filename);
+
+        if (file_buffer != NULL)
+        {
+            json = BuildData(ctx, file_buffer, split, maxent, make_array);
+        }
+    }
+
+    free(file_buffer);
+
+    if (NULL == json)
+    {
+        Log(LOG_LEVEL_INFO, "%s: error reading from file '%s'", fp->name, filename);
+        return FnFailure();
+    }
+
+    return (FnCallResult) { FNCALL_SUCCESS, (Rval) { json, RVAL_TYPE_CONTAINER } };
+}
+
+/*********************************************************************/
+
+static FnCallResult FnCallDataRead(EvalContext *ctx, ARG_UNUSED const Policy *policy, const FnCall *fp, const Rlist *args)
+{
+    return DataRead(ctx, fp, args);
+}
+
+/*********************************************************************/
+
 static FnCallResult ReadArray(EvalContext *ctx, const FnCall *fp, const Rlist *finalargs, DataType type, bool int_index)
 /* lval,filename,separator,comment,Max number of bytes  */
 {
@@ -5772,6 +5822,68 @@ static void CloseStringHole(char *s, int start, int end)
     *sp = '\0';
 }
 
+
+static JsonElement* BuildData(ARG_UNUSED EvalContext *ctx, const char *file_buffer,  const char *split, int maxent, bool make_array)
+{
+    JsonElement *ret = make_array ? JsonArrayCreate(10) : JsonObjectCreate(10);
+    StringSet *lines = StringSetFromString(file_buffer, '\n');
+
+    StringSetIterator iter = StringSetIteratorInit(lines);
+    char *line;
+    int hcount = 0;
+
+    while ((line = StringSetIteratorNext(&iter)) && hcount < maxent)
+    {
+        size_t line_len = strlen(line);
+
+        if (line_len == 0 || (line_len == 1 && line[0] == '\r'))
+        {
+            continue;
+        }
+
+        if ((line)[line_len - 1] ==  '\r')
+        {
+            (line)[line_len - 1] = '\0';
+        }
+
+        Rlist *tokens = RlistFromSplitRegex(line, split, 99999, true);
+        JsonElement *linearray = JsonArrayCreate(10);
+
+        for (const Rlist *rp = tokens; rp; rp = rp->next)
+        {
+            const char *token = RlistScalarValue(rp);
+
+            JsonArrayAppendString(linearray, xstrdup(token));
+        }
+
+        RlistDestroy(tokens);
+
+        if (JsonLength(linearray) > 0)
+        {
+            if (make_array)
+            {
+                JsonArrayAppendArray(ret, linearray);
+            }
+            else
+            {
+                char* key = xstrdup(JsonArrayGetAsString(linearray, 0));
+                JsonArrayRemoveRange(linearray, 0, 0);
+                JsonObjectAppendArray(ret, key, linearray);
+            }
+
+            // only increase hcount if we actually got something
+            hcount++;
+        }
+
+        line++;
+    }
+
+    StringSetDestroy(lines);
+
+    return ret;
+}
+
+/*********************************************************************/
 
 static int BuildLineArray(EvalContext *ctx, const Bundle *bundle,
                           const char *array_lval, const char *file_buffer,
@@ -6964,6 +7076,16 @@ static const FnCallArg GETVARIABLEMETATAGS_ARGS[] =
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
+static const FnCallArg DATA_READSTRINGARRAY_ARGS[] =
+{
+    {CF_ABSPATHRANGE, DATA_TYPE_STRING, "File name to read"},
+    {CF_ANYSTRING, DATA_TYPE_STRING, "Regex matching comments"},
+    {CF_ANYSTRING, DATA_TYPE_STRING, "Regex to split data"},
+    {CF_VALRANGE, DATA_TYPE_INT, "Maximum number of entries to read"},
+    {CF_VALRANGE, DATA_TYPE_INT, "Maximum bytes to read"},
+    {NULL, DATA_TYPE_NONE, NULL}
+};
+
 /*********************************************************/
 /* FnCalls are rvalues in certain promise constraints    */
 /*********************************************************/
@@ -7255,5 +7377,10 @@ const FnCallType CF_FNCALL_TYPES[] =
     FnCallTypeNew("variance", DATA_TYPE_REAL, STAT_FOLD_ARGS, &FnCallFold, "Return the variance of a list",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     
+    // File parsing functions that output a data container
+    FnCallTypeNew("data_readstringarray", DATA_TYPE_CONTAINER, DATA_READSTRINGARRAY_ARGS, &FnCallDataRead, "Read an array of strings from a file into a data container map, using the first element as a key",
+                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("data_readstringarrayidx", DATA_TYPE_CONTAINER, DATA_READSTRINGARRAY_ARGS, &FnCallDataRead, "Read an array of strings from a file into a data container array",
+                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),
     FnCallTypeNewNull()
 };

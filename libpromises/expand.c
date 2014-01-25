@@ -191,12 +191,15 @@ static PromiseResult ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp, Rli
 
 Rval ExpandDanglers(EvalContext *ctx, const char *ns, const char *scope, Rval rval, const Promise *pp)
 {
+    assert(ctx);
+    assert(pp);
+
     switch (rval.type)
     {
     case RVAL_TYPE_SCALAR:
         if (IsCf3VarString(RvalScalarValue(rval)))
         {
-            return EvaluateFinalRval(ctx, ns, scope, rval, false, pp);
+            return EvaluateFinalRval(ctx, PromiseGetPolicy(pp), ns, scope, rval, false, pp);
         }
         else
         {
@@ -772,8 +775,12 @@ bool ExpandScalar(const EvalContext *ctx, const char *ns, const char *scope, con
 /*********************************************************************/
 
 
-Rval EvaluateFinalRval(EvalContext *ctx, const char *ns, const char *scope, Rval rval, bool forcelist, const Promise *pp)
+Rval EvaluateFinalRval(EvalContext *ctx, const Policy *policy, const char *ns, const char *scope,
+                       Rval rval, bool forcelist, const Promise *pp)
 {
+    assert(ctx);
+    assert(policy);
+
     Rval returnval, newret;
     if ((rval.type == RVAL_TYPE_SCALAR) && IsNakedVar(rval.item, '@'))        /* Treat lists specially here */
     {
@@ -834,7 +841,7 @@ Rval EvaluateFinalRval(EvalContext *ctx, const char *ns, const char *scope, Rval
             if (rp->val.type == RVAL_TYPE_FNCALL)
             {
                 FnCall *fp = RlistFnCallValue(rp);
-                FnCallResult res = FnCallEvaluate(ctx, PromiseGetPolicy(pp), fp, pp);
+                FnCallResult res = FnCallEvaluate(ctx, policy, fp, pp);
 
                 FnCallDestroy(fp);
                 rp->val = res.rval;
@@ -860,7 +867,7 @@ Rval EvaluateFinalRval(EvalContext *ctx, const char *ns, const char *scope, Rval
         if (FnCallIsBuiltIn(returnval))
         {
             FnCall *fp = RvalFnCallValue(returnval);
-            returnval = FnCallEvaluate(ctx, PromiseGetPolicy(pp), fp, pp).rval;
+            returnval = FnCallEvaluate(ctx, policy, fp, pp).rval;
             FnCallDestroy(fp);
         }
         break;
@@ -1040,7 +1047,7 @@ static void ResolveControlBody(EvalContext *ctx, GenericAgentConfig *config, con
         }
         else
         {
-            returnval = EvaluateFinalRval(ctx, NULL, scope, cp->rval, true, NULL);
+            returnval = EvaluateFinalRval(ctx, control_body->parent_policy, NULL, scope, cp->rval, true, NULL);
         }
 
         VarRef *ref = VarRefParseFromScope(cp->lval, scope);

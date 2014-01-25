@@ -118,6 +118,8 @@ PromiseResult VerifyClassPromise(EvalContext *ctx, const Promise *pp, ARG_UNUSED
 
 static int EvalClassExpression(EvalContext *ctx, Constraint *cp, const Promise *pp)
 {
+    assert(pp);
+
     int result_and = true;
     int result_or = false;
     int result_xor = 0;
@@ -167,7 +169,7 @@ static int EvalClassExpression(EvalContext *ctx, Constraint *cp, const Promise *
     case RVAL_TYPE_LIST:
         for (rp = (Rlist *) cp->rval.item; rp != NULL; rp = rp->next)
         {
-            rval = EvaluateFinalRval(ctx, NULL, "this", rp->val, true, pp);
+            rval = EvaluateFinalRval(ctx, PromiseGetPolicy(pp), NULL, "this", rp->val, true, pp);
             RvalDestroy(rp->val);
             rp->val = rval;
         }

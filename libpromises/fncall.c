@@ -207,9 +207,9 @@ void FnCallWrite(Writer *writer, const FnCall *call)
 
 /*******************************************************************/
 
-static FnCallResult CallFunction(EvalContext *ctx, const Policy *policy, FnCall *fp, Rlist *expargs)
+static FnCallResult CallFunction(EvalContext *ctx, const Policy *policy, const FnCall *fp, const Rlist *expargs)
 {
-    Rlist *rp = fp->args;
+    const Rlist *rp = fp->args;
     const FnCallType *fncall_type = FnCallTypeGet(fp->name);
 
     int argnum = 0;
@@ -273,7 +273,7 @@ FnCallResult FnCallEvaluate(EvalContext *ctx, const Policy *policy, FnCall *fp, 
             fp->name);
         return (FnCallResult) { FNCALL_FAILURE, { FnCallCopy(fp), RVAL_TYPE_FNCALL } };
     }
-    else if (!EvalContextPromiseIsActive(ctx, caller))
+    else if (caller && !EvalContextPromiseIsActive(ctx, caller))
     {
         Log(LOG_LEVEL_VERBOSE, "Skipping function '%s', because it was excluded by classes", fp->name);
         return (FnCallResult) { FNCALL_FAILURE, { FnCallCopy(fp), RVAL_TYPE_FNCALL } };

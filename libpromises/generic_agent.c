@@ -563,7 +563,7 @@ static Policy *LoadPolicyInputFiles(EvalContext *ctx, GenericAgentConfig *config
             continue;
         }
 
-        Rval resolved_input = EvaluateFinalRval(ctx, NULL, "sys", rp->val, true, NULL);
+        Rval resolved_input = EvaluateFinalRval(ctx, policy, NULL, "sys", rp->val, true, NULL);
 
         Policy *aux_policy = NULL;
         switch (resolved_input.type)

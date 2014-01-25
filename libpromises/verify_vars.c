@@ -178,7 +178,7 @@ PromiseResult VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_d
         {
             /* See if the variable needs recursively expanding again */
 
-            Rval returnval = EvaluateFinalRval(ctx, ref->ns, ref->scope, rval, true, pp);
+            Rval returnval = EvaluateFinalRval(ctx, PromiseGetPolicy(pp), ref->ns, ref->scope, rval, true, pp);
 
             RvalDestroy(rval);
 

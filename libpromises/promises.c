@@ -289,7 +289,7 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const Promise *pp)
 
     if (pp->promisee.item)
     {
-        pcopy->promisee = EvaluateFinalRval(ctx, NULL, "this", pp->promisee, true, pp);
+        pcopy->promisee = EvaluateFinalRval(ctx, PromiseGetPolicy(pp), NULL, "this", pp->promisee, true, pp);
     }
     else
     {
@@ -330,7 +330,7 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const Promise *pp)
         }
         else
         {
-            returnval = EvaluateFinalRval(ctx, NULL, "this", cp->rval, false, pp);
+            returnval = EvaluateFinalRval(ctx, PromiseGetPolicy(pp), NULL, "this", cp->rval, false, pp);
             final = ExpandDanglers(ctx, NULL, "this", returnval, pp);
             RvalDestroy(returnval);
         }

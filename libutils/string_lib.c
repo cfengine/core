@@ -778,7 +778,6 @@ char **String2StringArray(char *str, char separator)
  * MEMORY NOTE: Caller must free return value with FreeStringArray().
  **/
 {
-    char *sp, *esp;
     int i = 0, len;
 
     if (str == NULL)
@@ -786,7 +785,7 @@ char **String2StringArray(char *str, char separator)
         return NULL;
     }
 
-    for (sp = str; *sp != '\0'; sp++)
+    for (const char *sp = str; *sp != '\0'; sp++)
     {
         if (*sp == separator)
         {
@@ -796,12 +795,12 @@ char **String2StringArray(char *str, char separator)
 
     char **arr = (char **) xcalloc(i + 2, sizeof(char *));
 
-    sp = str;
+    const char *sp = str;
     i = 0;
 
     while (sp)
     {
-        esp = strchr(sp, separator);
+        const char *esp = strchr(sp, separator);
 
         if (esp)
         {

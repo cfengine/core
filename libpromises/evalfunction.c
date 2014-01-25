@@ -76,8 +76,9 @@ static FnCallResult FilterInternal(EvalContext *ctx, const FnCall *fp, char *reg
 static char *StripPatterns(char *file_buffer, const char *pattern, const char *filename);
 static void CloseStringHole(char *s, int start, int end);
 static int BuildLineArray(EvalContext *ctx, const Bundle *bundle, const char *array_lval, const char *file_buffer,
-                          const char *split, int maxent, DataType type, int intIndex);
+                          const char *split, int maxent, DataType type, bool int_index);
 static int ExecModule(EvalContext *ctx, char *command);
+
 static bool CheckID(const char *id);
 static const Rlist *GetListReferenceArgument(const EvalContext *ctx, const const FnCall *fp, const char *lval_str, DataType *datatype_out);
 static void *CfReadFile(const char *filename, int maxsize);
@@ -5133,7 +5134,7 @@ static FnCallResult FnCallStoreJson(EvalContext *ctx, ARG_UNUSED const Policy *p
 
 /*********************************************************************/
 
-static FnCallResult ReadArray(EvalContext *ctx, const FnCall *fp, const Rlist *finalargs, DataType type, int intIndex)
+static FnCallResult ReadArray(EvalContext *ctx, const FnCall *fp, const Rlist *finalargs, DataType type, bool int_index)
 /* lval,filename,separator,comment,Max number of bytes  */
 {
     if (!fp->caller)
@@ -5172,7 +5173,7 @@ static FnCallResult ReadArray(EvalContext *ctx, const FnCall *fp, const Rlist *f
         }
         else
         {
-            entries = BuildLineArray(ctx, PromiseGetBundle(fp->caller), array_lval, file_buffer, split, maxent, type, intIndex);
+            entries = BuildLineArray(ctx, PromiseGetBundle(fp->caller), array_lval, file_buffer, split, maxent, type, int_index);
         }
     }
 
@@ -5771,109 +5772,107 @@ static void CloseStringHole(char *s, int start, int end)
     *sp = '\0';
 }
 
-/*********************************************************************/
 
-static int BuildLineArray(EvalContext *ctx, const Bundle *bundle, const char *array_lval,
-                          const char *file_buffer, const char *split, int maxent, DataType type,
-                          int intIndex)
+static int BuildLineArray(EvalContext *ctx, const Bundle *bundle,
+                          const char *array_lval, const char *file_buffer,
+                          const char *split, int maxent, DataType type,
+                          bool int_index)
 {
-    char linebuf[CF_BUFSIZE], name[CF_MAXVARSIZE], first_one[CF_MAXVARSIZE];
-    Rlist *rp, *newlist = NULL;
-    int allowblanks = true, vcount, hcount;
-    int lineLen;
+    StringSet *lines = StringSetFromString(file_buffer, '\n');
 
-    memset(linebuf, 0, CF_BUFSIZE);
-    hcount = 0;
+    StringSetIterator iter = StringSetIteratorInit(lines);
+    char *line;
+    int hcount = 0;
 
-    for (const char *sp = file_buffer; hcount < maxent && *sp != '\0'; sp++)
+    while ((line = StringSetIteratorNext(&iter)) && hcount < maxent)
     {
-        linebuf[0] = '\0';
-        sscanf(sp, "%1023[^\n]", linebuf);
+        size_t line_len = strlen(line);
 
-        lineLen = strlen(linebuf);
-
-        if (lineLen == 0)
-        {
-            continue;
-        }
-        else if (lineLen == 1 && linebuf[0] == '\r')
+        if (line_len == 0 || (line_len == 1 && line[0] == '\r'))
         {
             continue;
         }
 
-        if (linebuf[lineLen - 1] == '\r')
+        if ((line)[line_len - 1] ==  '\r')
         {
-            linebuf[lineLen - 1] = '\0';
+            (line)[line_len - 1] = '\0';
         }
 
-        newlist = RlistFromSplitRegex(linebuf, split, maxent, allowblanks);
+        char* first_index = NULL;
+        int vcount = 0;
 
-        vcount = 0;
-        first_one[0] = '\0';
+        Rlist *tokens = RlistFromSplitRegex(line, split, 99999, true);
 
-        for (rp = newlist; rp != NULL; rp = rp->next)
+        for (const Rlist *rp = tokens; rp; rp = rp->next)
         {
-            char this_rval[CF_MAXVARSIZE];
-            long ival;
+            const char *token = RlistScalarValue(rp);
+            char *converted = NULL;
 
             switch (type)
             {
             case DATA_TYPE_STRING:
-                strncpy(this_rval, RlistScalarValue(rp), CF_MAXVARSIZE - 1);
+                converted = xstrdup(token);
                 break;
 
             case DATA_TYPE_INT:
-                ival = IntFromString(RlistScalarValue(rp));
-                snprintf(this_rval, CF_MAXVARSIZE, "%d", (int) ival);
+                {
+                    long value = IntFromString(token);
+                    if (value == CF_NOINT)
+                    {
+                        FatalError(ctx, "Could not convert token to int");
+                    }
+                    converted = StringFormat("%ld", value);
+                }
                 break;
 
             case DATA_TYPE_REAL:
                 {
                     double real_value = 0;
-                    if (!DoubleFromString(RlistScalarValue(rp), &real_value))
+                    if (!DoubleFromString(token, &real_value))
                     {
-                        FatalError(ctx, "Could not convert rval to double");
+                        FatalError(ctx, "Could not convert token to double");
                     }
+                    converted = xstrdup(token);
                 }
-                sscanf(RlistScalarValue(rp), "%255s", this_rval);
                 break;
 
             default:
                 ProgrammingError("Unhandled type in switch: %d", type);
             }
 
-            if (strlen(first_one) == 0)
+            if (NULL == first_index)
             {
-                strncpy(first_one, this_rval, CF_MAXVARSIZE - 1);
+                first_index = xstrdup(converted);
             }
 
-            if (intIndex)
+            char *name;
+            if (int_index)
             {
-                snprintf(name, CF_MAXVARSIZE, "%s[%d][%d]", array_lval, hcount, vcount);
+                xasprintf(&name, "%s[%d][%d]", array_lval, hcount, vcount);
             }
             else
             {
-                snprintf(name, CF_MAXVARSIZE, "%s[%s][%d]", array_lval, first_one, vcount);
+                xasprintf(&name, "%s[%s][%d]", array_lval, first_index, vcount);
             }
 
             VarRef *ref = VarRefParseFromBundle(name, bundle);
-            EvalContextVariablePut(ctx, ref, this_rval, type, "source=function,function=buildlinearray");
+            EvalContextVariablePut(ctx, ref, converted, type, "source=function,function=buildlinearray");
             VarRefDestroy(ref);
+
+            free(name);
+            free(converted);
+
             vcount++;
         }
 
-        RlistDestroy(newlist);
+        free(first_index);
+        RlistDestroy(tokens);
 
         hcount++;
-        sp += lineLen;
-
-        if (*sp == '\0')        // either \n or \0
-        {
-            break;
-        }
+        line++;
     }
 
-/* Don't free data - goes into vars */
+    StringSetDestroy(lines);
 
     return hcount;
 }

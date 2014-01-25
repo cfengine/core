@@ -390,28 +390,28 @@ static bool RvalTypeCheckDataType(RvalType rval_type, DataType expected_datatype
 
     switch (expected_datatype)
     {
-    case DATA_TYPE_BODY:
-    case DATA_TYPE_BUNDLE:
+    case CF_DATA_TYPE_BODY:
+    case CF_DATA_TYPE_BUNDLE:
         return rval_type == RVAL_TYPE_SCALAR;
 
-    case DATA_TYPE_CONTEXT:
-    case DATA_TYPE_COUNTER:
-    case DATA_TYPE_INT:
-    case DATA_TYPE_INT_RANGE:
-    case DATA_TYPE_OPTION:
-    case DATA_TYPE_REAL:
-    case DATA_TYPE_REAL_RANGE:
-    case DATA_TYPE_STRING:
+    case CF_DATA_TYPE_CONTEXT:
+    case CF_DATA_TYPE_COUNTER:
+    case CF_DATA_TYPE_INT:
+    case CF_DATA_TYPE_INT_RANGE:
+    case CF_DATA_TYPE_OPTION:
+    case CF_DATA_TYPE_REAL:
+    case CF_DATA_TYPE_REAL_RANGE:
+    case CF_DATA_TYPE_STRING:
         return rval_type == RVAL_TYPE_SCALAR;
 
-    case DATA_TYPE_CONTEXT_LIST:
-    case DATA_TYPE_INT_LIST:
-    case DATA_TYPE_OPTION_LIST:
-    case DATA_TYPE_REAL_LIST:
-    case DATA_TYPE_STRING_LIST:
+    case CF_DATA_TYPE_CONTEXT_LIST:
+    case CF_DATA_TYPE_INT_LIST:
+    case CF_DATA_TYPE_OPTION_LIST:
+    case CF_DATA_TYPE_REAL_LIST:
+    case CF_DATA_TYPE_STRING_LIST:
         return (rval_type == RVAL_TYPE_SCALAR) || (rval_type == RVAL_TYPE_LIST);
 
-    case DATA_TYPE_CONTAINER:
+    case CF_DATA_TYPE_CONTAINER:
         return (rval_type == RVAL_TYPE_CONTAINER);
 
     default:
@@ -726,7 +726,7 @@ static bool PolicyCheckUndefinedBodies(const Policy *policy, Seq *errors)
                     Constraint *constraint = SeqAt(promise->conlist, cpi);
 
                     const ConstraintSyntax *syntax = ConstraintGetSyntax(constraint);
-                    if (syntax->dtype == DATA_TYPE_BODY)
+                    if (syntax->dtype == CF_DATA_TYPE_BODY)
                     {
                         char *ns = QualifiedNameNamespaceComponent(RvalFullSymbol(&constraint->rval));
                         char *symbol = QualifiedNameScopeComponent(RvalFullSymbol(&constraint->rval));
@@ -771,7 +771,7 @@ static bool PolicyCheckUndefinedBundles(const Policy *policy, Seq *errors)
                     Constraint *constraint = SeqAt(promise->conlist, cpi);
 
                     const ConstraintSyntax *syntax = ConstraintGetSyntax(constraint);
-                    if (syntax->dtype == DATA_TYPE_BUNDLE &&
+                    if (syntax->dtype == CF_DATA_TYPE_BUNDLE &&
                         !IsCf3VarString(RvalFullSymbol(&constraint->rval)))
                     {
                         char *ns = QualifiedNameNamespaceComponent(RvalFullSymbol(&constraint->rval));
@@ -2808,10 +2808,10 @@ static SyntaxTypeMatch ConstraintCheckType(const Constraint *cp)
 
                         for (size_t l = 0; bs[l].lval != NULL; l++)
                         {
-                            if (bs[l].dtype == DATA_TYPE_BUNDLE)
+                            if (bs[l].dtype == CF_DATA_TYPE_BUNDLE)
                             {
                             }
-                            else if (bs[l].dtype == DATA_TYPE_BODY)
+                            else if (bs[l].dtype == CF_DATA_TYPE_BODY)
                             {
                                 const ConstraintSyntax *bs2 = bs[l].range.body_type_syntax->constraints;
 
@@ -2839,7 +2839,7 @@ static SyntaxTypeMatch ConstraintCheckType(const Constraint *cp)
 
     for (size_t i = 0; CF_COMMON_BODIES[i].lval != NULL; i++)
     {
-        if (CF_COMMON_BODIES[i].dtype == DATA_TYPE_BODY)
+        if (CF_COMMON_BODIES[i].dtype == CF_DATA_TYPE_BODY)
         {
             continue;
         }

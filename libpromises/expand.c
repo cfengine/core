@@ -159,11 +159,11 @@ static void ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp, Rlist *lists
             ExpandScalar(ctx, NULL, "this", handle, tmp);
             CanonifyNameInPlace(tmp);
             Log(LOG_LEVEL_DEBUG, "Expanded handle to '%s'", tmp);
-            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "handle", tmp, DATA_TYPE_STRING, "source=promise");
+            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "handle", tmp, CF_DATA_TYPE_STRING, "source=promise");
         }
         else
         {
-            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "handle", PromiseID(pp), DATA_TYPE_STRING, "source=promise");
+            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "handle", PromiseID(pp), CF_DATA_TYPE_STRING, "source=promise");
         }
 
         const Promise *pexp = EvalContextStackPushPromiseIterationFrame(ctx, i, iter_ctx);
@@ -402,7 +402,7 @@ static void ExpandAndMapIteratorsFromScalar(EvalContext *ctx, const Bundle *bund
                     // var is the expanded name of the variable in its native context
                     // finalname will be the mapped name in the local context "this."
 
-                    DataType value_type = DATA_TYPE_NONE;
+                    DataType value_type = CF_DATA_TYPE_NONE;
                     const void *value = EvalContextVariableGet(ctx, inner_ref, &value_type);
                     if (value)
                     {
@@ -522,7 +522,7 @@ Rlist *ExpandList(EvalContext *ctx, const char *ns, const char *scope, const Rli
             {
                 VarRef *ref = VarRefParseFromScope(naked, scope);
 
-                DataType value_type = DATA_TYPE_NONE;
+                DataType value_type = CF_DATA_TYPE_NONE;
                 const void *value = EvalContextVariableGet(ctx, ref, &value_type);
                 if (value)
                 {
@@ -735,7 +735,7 @@ bool ExpandScalar(const EvalContext *ctx, const char *ns, const char *scope, con
 
         if (!IsExpandable(currentitem))
         {
-            DataType type = DATA_TYPE_NONE;
+            DataType type = CF_DATA_TYPE_NONE;
             const void *value = NULL;
             {
                 VarRef *ref = VarRefParseFromNamespaceAndScope(currentitem, ns, scope, CF_NS, '.');
@@ -747,9 +747,9 @@ bool ExpandScalar(const EvalContext *ctx, const char *ns, const char *scope, con
             {
                 switch (type)
                 {
-                case DATA_TYPE_STRING:
-                case DATA_TYPE_INT:
-                case DATA_TYPE_REAL:
+                case CF_DATA_TYPE_STRING:
+                case CF_DATA_TYPE_INT:
+                case CF_DATA_TYPE_REAL:
 
                     if (ExpandOverflow(buffer, value))
                     {
@@ -759,11 +759,11 @@ bool ExpandScalar(const EvalContext *ctx, const char *ns, const char *scope, con
                     strlcat(buffer, value, CF_EXPANDSIZE);
                     break;
 
-                case DATA_TYPE_STRING_LIST:
-                case DATA_TYPE_INT_LIST:
-                case DATA_TYPE_REAL_LIST:
-                case DATA_TYPE_NONE:
-                    if (type == DATA_TYPE_NONE)
+                case CF_DATA_TYPE_STRING_LIST:
+                case CF_DATA_TYPE_INT_LIST:
+                case CF_DATA_TYPE_REAL_LIST:
+                case CF_DATA_TYPE_NONE:
+                    if (type == CF_DATA_TYPE_NONE)
                     {
                         Log(LOG_LEVEL_DEBUG,
                             "Can't expand inexistent variable '%s'", currentitem);
@@ -846,7 +846,7 @@ Rval EvaluateFinalRval(EvalContext *ctx, const char *ns, const char *scope, Rval
         if (!IsExpandable(naked))
         {
             VarRef *ref = VarRefParseFromScope(naked, scope);
-            DataType value_type = DATA_TYPE_NONE;
+            DataType value_type = CF_DATA_TYPE_NONE;
             const void *value = EvalContextVariableGet(ctx, ref, &value_type);
 
             if (!value || DataTypeToRvalType(value_type) != RVAL_TYPE_LIST)
@@ -1128,8 +1128,8 @@ static void ResolveControlBody(EvalContext *ctx, GenericAgentConfig *config, con
             EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_SYS, "domain");
             EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_SYS, "fqhost");
             snprintf(VFQNAME, CF_MAXVARSIZE, "%s.%s", VUQNAME, VDOMAIN);
-            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "fqhost", VFQNAME, DATA_TYPE_STRING, "inventory,source=agent");
-            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "domain", VDOMAIN, DATA_TYPE_STRING, "inventory,source=agent");
+            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "fqhost", VFQNAME, CF_DATA_TYPE_STRING, "inventory,source=agent");
+            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "domain", VDOMAIN, CF_DATA_TYPE_STRING, "inventory,source=agent");
             EvalContextClassPutHard(ctx, VDOMAIN, "inventory,source=agent");
         }
 

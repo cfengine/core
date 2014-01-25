@@ -324,7 +324,7 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const Promise *pp)
 
         Rval returnval;
 
-        if (ExpectedDataType(cp->lval) == DATA_TYPE_BUNDLE)
+        if (ExpectedDataType(cp->lval) == CF_DATA_TYPE_BUNDLE)
         {
             final = ExpandBundleReference(ctx, NULL, "this", cp->rval);
         }

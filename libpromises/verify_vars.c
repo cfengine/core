@@ -72,7 +72,7 @@ PromiseResult VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_d
         VarRefSetMeta(ref, true);
     }
 
-    DataType existing_value_type = DATA_TYPE_NONE;
+    DataType existing_value_type = CF_DATA_TYPE_NONE;
     const void *existing_value = NULL;
 
     if (!IsExpandable(pp->promiser))
@@ -92,7 +92,7 @@ PromiseResult VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_d
 
         if (opts.cp_save->rval.type == RVAL_TYPE_FNCALL)
         {
-            if (existing_value_type != DATA_TYPE_NONE)
+            if (existing_value_type != CF_DATA_TYPE_NONE)
             {
                 // Already did this
                 VarRefDestroy(ref);
@@ -191,7 +191,7 @@ PromiseResult VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_d
             rval = returnval;
         }
 
-        if (existing_value_type != DATA_TYPE_NONE)
+        if (existing_value_type != CF_DATA_TYPE_NONE)
         {
             if (opts.ok_redefine)    /* only on second iteration, else we ignore broken promises */
             {
@@ -266,7 +266,7 @@ PromiseResult VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_d
 
         if (ref->num_indices > 0)
         {
-            if (data_type == DATA_TYPE_CONTAINER)
+            if (data_type == CF_DATA_TYPE_CONTAINER)
             {
                 char *lval_str = VarRefToString(ref, true);
                 Log(LOG_LEVEL_ERR, "Cannot assign a container to an indexed variable name '%s'. Should be assigned to '%s' instead",
@@ -278,9 +278,9 @@ PromiseResult VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_d
             }
             else
             {
-                DataType existing_type = DATA_TYPE_NONE;
+                DataType existing_type = CF_DATA_TYPE_NONE;
                 VarRef *base_ref = VarRefCopyIndexless(ref);
-                if (EvalContextVariableGet(ctx, ref, &existing_type) && existing_type == DATA_TYPE_CONTAINER)
+                if (EvalContextVariableGet(ctx, ref, &existing_type) && existing_type == CF_DATA_TYPE_CONTAINER)
                 {
                     char *lval_str = VarRefToString(ref, true);
                     char *base_ref_str = VarRefToString(base_ref, true);
@@ -593,7 +593,7 @@ static ConvergeVariableOptions CollectConvergeVariableOptions(EvalContext *ctx, 
                 opts.ok_redefine |= true;
             }
         }
-        else if (DataTypeFromString(cp->lval) != DATA_TYPE_NONE)
+        else if (DataTypeFromString(cp->lval) != CF_DATA_TYPE_NONE)
         {
             num_values++;
             opts.cp_save = cp;

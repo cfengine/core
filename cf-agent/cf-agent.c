@@ -1285,7 +1285,7 @@ static PromiseResult DefaultVarPromise(EvalContext *ctx, const Promise *pp)
     bool okay = true;
 
 
-    DataType value_type = DATA_TYPE_NONE;
+    DataType value_type = CF_DATA_TYPE_NONE;
     const void *value = NULL;
     {
         VarRef *ref = VarRefParseFromScope(pp->promiser, "this");
@@ -1295,9 +1295,9 @@ static PromiseResult DefaultVarPromise(EvalContext *ctx, const Promise *pp)
 
     switch (value_type)
     {
-    case DATA_TYPE_STRING:
-    case DATA_TYPE_INT:
-    case DATA_TYPE_REAL:
+    case CF_DATA_TYPE_STRING:
+    case CF_DATA_TYPE_INT:
+    case CF_DATA_TYPE_REAL:
         if (regex && !FullTextMatch(ctx, regex, value))
         {
             return PROMISE_RESULT_NOOP;
@@ -1309,9 +1309,9 @@ static PromiseResult DefaultVarPromise(EvalContext *ctx, const Promise *pp)
         }
         break;
 
-    case DATA_TYPE_STRING_LIST:
-    case DATA_TYPE_INT_LIST:
-    case DATA_TYPE_REAL_LIST:
+    case CF_DATA_TYPE_STRING_LIST:
+    case CF_DATA_TYPE_INT_LIST:
+    case CF_DATA_TYPE_REAL_LIST:
         if (regex)
         {
             for (const Rlist *rp = value; rp != NULL; rp = rp->next)

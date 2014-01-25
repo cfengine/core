@@ -151,7 +151,7 @@ const BodySyntax *BodySyntaxGet(const char *body_type)
             {
                 const ConstraintSyntax constraint_syntax = promise_type_syntax[k].constraints[z];
 
-                if (constraint_syntax.dtype == DATA_TYPE_BODY && strcmp(body_type, constraint_syntax.lval) == 0)
+                if (constraint_syntax.dtype == CF_DATA_TYPE_BODY && strcmp(body_type, constraint_syntax.lval) == 0)
                 {
                     return constraint_syntax.range.body_type_syntax;
                 }
@@ -215,7 +215,7 @@ DataType ExpectedDataType(const char *lvalname)
 
             for (k = 0; bs[k].lval != NULL; k++)
             {
-                if (bs[k].dtype == DATA_TYPE_BODY)
+                if (bs[k].dtype == CF_DATA_TYPE_BODY)
                 {
                     bs2 = bs[k].range.body_type_syntax->constraints;
 
@@ -224,7 +224,7 @@ DataType ExpectedDataType(const char *lvalname)
                         continue;
                     }
 
-                    for (l = 0; bs2[l].dtype != DATA_TYPE_NONE; l++)
+                    for (l = 0; bs2[l].dtype != CF_DATA_TYPE_NONE; l++)
                     {
                         if (strcmp(lvalname, bs2[l].lval) == 0)
                         {
@@ -237,7 +237,7 @@ DataType ExpectedDataType(const char *lvalname)
         }
     }
 
-    return DATA_TYPE_NONE;
+    return CF_DATA_TYPE_NONE;
 }
 
 /****************************************************************************/
@@ -291,11 +291,11 @@ SyntaxTypeMatch CheckConstraintTypeMatch(const char *lval, Rval rval, DataType d
     case RVAL_TYPE_SCALAR:
         switch (dt)
         {
-        case DATA_TYPE_STRING_LIST:
-        case DATA_TYPE_INT_LIST:
-        case DATA_TYPE_REAL_LIST:
-        case DATA_TYPE_CONTEXT_LIST:
-        case DATA_TYPE_OPTION_LIST:
+        case CF_DATA_TYPE_STRING_LIST:
+        case CF_DATA_TYPE_INT_LIST:
+        case CF_DATA_TYPE_REAL_LIST:
+        case CF_DATA_TYPE_CONTEXT_LIST:
+        case CF_DATA_TYPE_OPTION_LIST:
             if (level == 0)
             {
                 return SYNTAX_TYPE_MATCH_ERROR_GOT_SCALAR;
@@ -311,11 +311,11 @@ SyntaxTypeMatch CheckConstraintTypeMatch(const char *lval, Rval rval, DataType d
 
         switch (dt)
         {
-        case DATA_TYPE_STRING_LIST:
-        case DATA_TYPE_INT_LIST:
-        case DATA_TYPE_REAL_LIST:
-        case DATA_TYPE_CONTEXT_LIST:
-        case DATA_TYPE_OPTION_LIST:
+        case CF_DATA_TYPE_STRING_LIST:
+        case CF_DATA_TYPE_INT_LIST:
+        case CF_DATA_TYPE_REAL_LIST:
+        case CF_DATA_TYPE_CONTEXT_LIST:
+        case CF_DATA_TYPE_OPTION_LIST:
             break;
         default:
             return SYNTAX_TYPE_MATCH_ERROR_GOT_LIST;
@@ -362,35 +362,35 @@ SyntaxTypeMatch CheckConstraintTypeMatch(const char *lval, Rval rval, DataType d
 
     switch (dt)
     {
-    case DATA_TYPE_STRING:
-    case DATA_TYPE_STRING_LIST:
+    case CF_DATA_TYPE_STRING:
+    case CF_DATA_TYPE_STRING_LIST:
         return CheckParseString(lval, (const char *) rval.item, range);
 
-    case DATA_TYPE_INT:
-    case DATA_TYPE_INT_LIST:
+    case CF_DATA_TYPE_INT:
+    case CF_DATA_TYPE_INT_LIST:
         return CheckParseInt(lval, (const char *) rval.item, range);
 
-    case DATA_TYPE_REAL:
-    case DATA_TYPE_REAL_LIST:
+    case CF_DATA_TYPE_REAL:
+    case CF_DATA_TYPE_REAL_LIST:
         return CheckParseReal(lval, (const char *) rval.item, range);
 
-    case DATA_TYPE_BODY:
-    case DATA_TYPE_BUNDLE:
-    case DATA_TYPE_CONTAINER:
+    case CF_DATA_TYPE_BODY:
+    case CF_DATA_TYPE_BUNDLE:
+    case CF_DATA_TYPE_CONTAINER:
         break;
 
-    case DATA_TYPE_OPTION:
-    case DATA_TYPE_OPTION_LIST:
+    case CF_DATA_TYPE_OPTION:
+    case CF_DATA_TYPE_OPTION_LIST:
         return CheckParseOpts(RvalScalarValue(rval), range);
 
-    case DATA_TYPE_CONTEXT:
-    case DATA_TYPE_CONTEXT_LIST:
+    case CF_DATA_TYPE_CONTEXT:
+    case CF_DATA_TYPE_CONTEXT_LIST:
         return CheckParseContext((const char *) rval.item, range);
 
-    case DATA_TYPE_INT_RANGE:
+    case CF_DATA_TYPE_INT_RANGE:
         return CheckParseIntRange(lval, (const char *) rval.item, range);
 
-    case DATA_TYPE_REAL_RANGE:
+    case CF_DATA_TYPE_REAL_RANGE:
         return CheckParseRealRange(lval, (char *) rval.item, range);
 
     default:
@@ -407,7 +407,7 @@ DataType StringDataType(EvalContext *ctx, const char *string)
 {
     int islist = false;
     char var[CF_BUFSIZE];
-    DataType dtype = DATA_TYPE_NONE;
+    DataType dtype = CF_DATA_TYPE_NONE;
 
 /*-------------------------------------------------------
 What happens if we embed vars in a literal string
@@ -456,12 +456,12 @@ vars:
             else
             {
                 /* Must force non-pure substitution to be generic type CF_SCALAR.cf_str */
-                return DATA_TYPE_STRING;
+                return CF_DATA_TYPE_STRING;
             }
         }
     }
 
-    return DATA_TYPE_STRING;
+    return CF_DATA_TYPE_STRING;
 }
 
 /****************************************************************************/
@@ -873,27 +873,27 @@ static SyntaxTypeMatch CheckFnCallType(const char *s, DataType dtype)
         {
             /* Ok to allow fn calls of correct element-type in lists */
 
-            if (dt == DATA_TYPE_STRING && dtype == DATA_TYPE_STRING_LIST)
+            if (dt == CF_DATA_TYPE_STRING && dtype == DATA_TYPE_STRING_LIST)
             {
                 return SYNTAX_TYPE_MATCH_OK;
             }
 
-            if (dt == DATA_TYPE_INT && dtype == DATA_TYPE_INT_LIST)
+            if (dt == CF_DATA_TYPE_INT && dtype == DATA_TYPE_INT_LIST)
             {
                 return SYNTAX_TYPE_MATCH_OK;
             }
 
-            if (dt == DATA_TYPE_REAL && dtype == DATA_TYPE_REAL_LIST)
+            if (dt == CF_DATA_TYPE_REAL && dtype == DATA_TYPE_REAL_LIST)
             {
                 return SYNTAX_TYPE_MATCH_OK;
             }
 
-            if (dt == DATA_TYPE_OPTION && dtype == DATA_TYPE_OPTION_LIST)
+            if (dt == CF_DATA_TYPE_OPTION && dtype == DATA_TYPE_OPTION_LIST)
             {
                 return SYNTAX_TYPE_MATCH_OK;
             }
 
-            if (dt == DATA_TYPE_CONTEXT && dtype == DATA_TYPE_CONTEXT_LIST)
+            if (dt == CF_DATA_TYPE_CONTEXT && dtype == DATA_TYPE_CONTEXT_LIST)
             {
                 return SYNTAX_TYPE_MATCH_OK;
             }
@@ -922,7 +922,7 @@ static JsonElement *ConstraintSyntaxToJson(const ConstraintSyntax *constraint_sy
     JsonObjectAppendString(json_constraint, "status", SyntaxStatusToString(constraint_syntax->status));
     JsonObjectAppendString(json_constraint, "type", DataTypeToString(constraint_syntax->dtype));
 
-    if (constraint_syntax->dtype != DATA_TYPE_BODY && constraint_syntax->dtype != DATA_TYPE_BUNDLE)
+    if (constraint_syntax->dtype != CF_DATA_TYPE_BODY && constraint_syntax->dtype != DATA_TYPE_BUNDLE)
     {
         JsonObjectAppendString(json_constraint, "range", constraint_syntax->range.validation_string);
     }
@@ -1124,7 +1124,7 @@ static JsonElement *BodyTypesToJson(void)
             for (int constraint_index = 0; promise_type_syntax->constraints[constraint_index].lval; constraint_index++)
             {
                 const ConstraintSyntax *constraint_syntax = &promise_type_syntax->constraints[constraint_index];
-                if (constraint_syntax->dtype != DATA_TYPE_BODY)
+                if (constraint_syntax->dtype != CF_DATA_TYPE_BODY)
                 {
                     continue;
                 }

@@ -1248,10 +1248,12 @@ JsonElement *RvalToJson(Rval rval)
 
 void RlistFlatten(EvalContext *ctx, Rlist **list)
 {
+    Rlist *prev = NULL;
     for (Rlist *rp = *list; rp != NULL;)
     {
         if (rp->val.type != RVAL_TYPE_SCALAR)
         {
+            prev = rp;
             rp = rp->next;
             continue;
         }
@@ -1273,23 +1275,41 @@ void RlistFlatten(EvalContext *ctx, Rlist **list)
                     switch (DataTypeToRvalType(value_type))
                     {
                     case RVAL_TYPE_LIST:
-                        for (const Rlist *srp = value; srp != NULL; srp = srp->next)
                         {
-                            RlistAppendRval(list, RvalCopy(srp->val));
+                            Rlist *next = rp->next;
+                            RlistDestroyEntry(list, rp);
+
+                            for (const Rlist *srp = value; srp != NULL; srp = srp->next)
+                            {
+                                Rlist *nrp = xmalloc(sizeof(Rlist));
+                                nrp->val = RvalCopy(srp->val);
+                                nrp->next = next;
+
+                                if (prev)
+                                {
+                                    prev->next = nrp;
+                                }
+                                else
+                                {
+                                    *list = nrp;
+                                }
+
+                                prev = nrp;
+                            }
+
+                            rp = next;
                         }
-                        Rlist *next = rp->next;
-                        RlistDestroyEntry(list, rp);
-                        rp = next;
                         continue;
 
                     default:
                         ProgrammingError("List variable does not resolve to a list");
-                        RlistAppendRval(list, RvalCopy(rp->val));
                         break;
                     }
                 }
             }
         }
+
+        prev = rp;
         rp = rp->next;
     }
 }

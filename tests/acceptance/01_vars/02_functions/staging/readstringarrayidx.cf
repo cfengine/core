@@ -1,0 +1,59 @@
+# Redmine#2926: test long lines with readstringarrayidx()
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle agent init
+{
+}
+
+bundle agent test
+{
+  vars:
+      "dim" int => readstringarrayidx("parms",
+                                      "$(this.promise_filename).txt",
+                                      "\s*#[^\n]*",
+                                      ";",
+                                      9999,
+                                      99999);
+      "pk" slist   => getindices("parms");
+
+  reports:
+    DEBUG::
+      "$(parms[$(pk)]): $(parms[$(pk)][0]) $(parms[$(pk)][16])";
+}
+
+bundle agent check
+{
+  vars:
+      "length" int => length("test.pk");
+      "last" string => nth("test.value", 599);
+  classes:
+      "ok1" expression => strcmp("$(test.dim)", "3");
+      "ok2" expression => strcmp("$(test.dim)", "$(length)");
+      "ok3" expression => strcmp("$(test.parms[2][0])", "not_working_app_config");
+      "ok" and => { "ok1", "ok2", "ok3" };
+
+  reports:
+    DEBUG.ok1::
+      "passed1";
+    DEBUG.ok2::
+      "passed2";
+    DEBUG.ok3::
+      "passed3";
+    DEBUG.!ok1::
+      "failed1 $(test.dim) != 3";
+    DEBUG.!ok2::
+      "failed2 $(test.dim) != $(length)";
+    DEBUG.!ok3::
+      "failed3 $(test.parms[2][0]) != not_working_app_config";
+
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

@@ -308,10 +308,13 @@ body contain useshell
 bundle agent default_check_strcmp(strA, strB, test, expected_difference)
 {
   classes:
-      "equal" expression => strcmp("$(strA)", "$(strB)");
-      "expected_difference" or => { strcmp("$(expected_difference)", "yes"),
-                                    strcmp("$(expected_difference)", "true") };
+      "equal" expression => strcmp($(strA), $(strB));
+      "expected_difference" or => { strcmp($(expected_difference), "yes"),
+                                    strcmp($(expected_difference), "true") };
   reports:
+    DEBUG::
+      "STRING A: '$(strA)'";
+      "STRING B: '$(strB)'";
     equal.!expected_difference::
       "$(test) Pass";
     equal.expected_difference::
@@ -323,21 +326,24 @@ bundle agent default_check_strcmp(strA, strB, test, expected_difference)
 }
 
 #######################################################
-# Test based on whether a regex matches a string
+# Test based on whether a string matches a regular expression
 
-bundle agent default_check_regcmp(regexA, strB, test, expected_mismatch)
+bundle agent default_check_regcmp(regex, thestring, test, expected_mismatch)
 {
   classes:
-      "equal" expression => regcmp("$(regexA)", "$(strB)");
-      "expected_mismatch" or => { strcmp("$(expected_mismatch)", "yes"),
-                                  strcmp("$(expected_mismatch)", "true") };
+      "matched" expression => regcmp($(regex), $(thestring));
+      "expected_mismatch" or => { strcmp($(expected_mismatch), "yes"),
+                                    strcmp($(expected_mismatch), "true") };
   reports:
-    equal.!expected_mismatch::
+    DEBUG::
+      "REGEX: '$(regex)'";
+      "STRING TO MATCH: '$(thestring)'";
+    matched.!expected_mismatch::
       "$(test) Pass";
-    equal.expected_mismatch::
+    matched.expected_mismatch::
       "$(test) FAIL";
-    !equal.!expected_mismatch::
+    !matched.!expected_mismatch::
       "$(test) FAIL";
-    !equal.expected_mismatch::
+    !matched.expected_mismatch::
       "$(test) Pass";
 }

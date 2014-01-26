@@ -60,8 +60,8 @@ static int InterfaceSanityCheck(EvalContext *ctx, Attributes a,  const Promise *
 static void AssessInterfacePromise(char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp);
 static void AssessDebianInterfacePromise(char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp);
 static void AssessDebianVlan(char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp);
-static int GetVlanInfo(Item **list);
-static int GetInterfaceInformation(LinkState **list);
+static int GetVlanInfo(Item **list, const Promise *pp);
+static int GetInterfaceInformation(LinkState **list, const Promise *pp);
 
 /****************************************************************************/
 
@@ -181,7 +181,7 @@ static void AssessDebianInterfacePromise(char *promiser, PromiseResult *result, 
 
     LinkState *ifs = NULL;
 
-    if (!GetInterfaceInformation(&ifs))
+    if (!GetInterfaceInformation(&ifs, pp))
     {
         *result = PROMISE_RESULT_INTERRUPTED;
         return;
@@ -240,29 +240,77 @@ static void AssessDebianInterfacePromise(char *promiser, PromiseResult *result, 
 
 static void AssessDebianVlan(char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp)
 {
-    Item *vlans = NULL;
+    Item *vlans = NULL, *ip;
+    Rlist *rp;
+    int vlan_id = 0;
 
-
-    if (!GetVlanInfo(&vlans))
+    if (!GetVlanInfo(&vlans, pp))
     {
         *result = PROMISE_RESULT_INTERRUPTED;
         return;
     }
 
+    // Look through the labelled VLANs to see if they are on this interface
 
-// Look for reserved variable
-// VLANS[blue] int => "id"
+    for (rp = a->interface.tagged_vlans; rp != NULL; rp = rp->next)
+    {
+        // Non-numeric alias (like JunOS) have to be looked up in VLANS[]
+
+        vlan_id = atoi((char *)rp->val.item);
+
+        if (vlan_id == 0)
+        {
+            char vlan_lookup[CF_MAXVARSIZE];
+            snprintf(vlan_lookup, CF_MAXVARSIZE, "VLANS[%s]", (char *)rp->val.item);
+
+            DataType type = CF_DATA_TYPE_NONE;
+            VarRef *ref = VarRefParse(vlan_lookup);
+            const void *value = EvalContextVariableGet(ctx, ref, &type);
+            VarRefDestroy(ref);
+
+            if (DataTypeToRvalType(type) == RVAL_TYPE_SCALAR)
+            {
+                vlan_id = atoi((char *)value);
+            }
+            else
+            {
+                Log(LOG_LEVEL_ERR, "Variable %s is not defined in `interfaces' promise", vlan_lookup);
+                PromiseRef(LOG_LEVEL_ERR, pp);
+                *result = PROMISE_RESULT_INTERRUPTED;
+                return;
+            }
+        }
+
+        for (ip = vlans; ip != NULL; ip = ip->next)
+        {
+            if (ip->counter == vlan_id)
+            {
+                printf("We FOUND %s = %d\n", ip->name, ip->counter);
+                *result = PROMISE_RESULT_NOOP;
+                return;
+            }
+
+
+            // ARE THERE VLANS THAT SHOULD NOT BE HERE?
+        }
+
+        printf("DID NOT FIND VLAN = %d --- NEED TO MAKE IT\n", vlan_id);
+        printf("EXEC: %s add %s %d <<<<<<<<<<<<<<<<<<<<<\n", CF_DEBIAN_VLAN_COMMAND, pp->promiser, vlan_id);
+    }
+
 
     // Linux naming INTERFACE:alias.vlan, e.g. eth0:2.1 or eth0.100
 
     // GET INTERFACES
 
 // /sbin/ip -6 addr add 2001:0db8:0:f101::1/64 dev eth0
+
+    *result = PROMISE_RESULT_CHANGE;
 }
 
 /****************************************************************************/
 
-static int GetVlanInfo(Item **list)
+static int GetVlanInfo(Item **list, const Promise *pp)
 {
     FILE *fp;
     size_t line_size = CF_BUFSIZE;
@@ -272,6 +320,8 @@ static int GetVlanInfo(Item **list)
 
     if ((fp = safe_fopen(CF_DEBIAN_VLAN_FILE, "r")) == NULL)
     {
+        Log(LOG_LEVEL_ERR, "Unable to open '%s'", CF_DEBIAN_VLAN_FILE);
+        PromiseRef(LOG_LEVEL_ERR, pp);
         return false;
     }
 
@@ -282,10 +332,8 @@ static int GetVlanInfo(Item **list)
     while (!feof(fp))
     {
         int id = CF_NOINT;
-
         CfReadLine(&line, &line_size, fp);
         sscanf(line, "%s | %d | %s", ifname, &id, ifparent);
-        printf("GOT %s with id %d\n", ifname, id);
         PrependFullItem(list, ifname, NULL, id, 0);
     }
 
@@ -296,9 +344,9 @@ static int GetVlanInfo(Item **list)
 
 /****************************************************************************/
 
-static int GetInterfaceInformation(LinkState **list)
+static int GetInterfaceInformation(LinkState **list, const Promise *pp)
 {
-    FILE *pp;
+    FILE *pfp;
     size_t line_size = CF_BUFSIZE;
     char *line = xmalloc(line_size);
     char indent[CF_SMALLBUF];
@@ -308,18 +356,20 @@ static int GetInterfaceInformation(LinkState **list)
     char if_name[CF_SMALLBUF];
     char endline[CF_BUFSIZE];
     int mtu = CF_NOINT;
-    LinkState *entry;
+    LinkState *entry = NULL;
 
-    if ((pp = cf_popen(CF_DEBIAN_LISTINTERFACES_COMMAND, "r", true)) == NULL)
+    if ((pfp = cf_popen(CF_DEBIAN_LISTINTERFACES_COMMAND, "r", true)) == NULL)
     {
+        Log(LOG_LEVEL_ERR, "Unable to execute '%s'", CF_DEBIAN_LISTINTERFACES_COMMAND);
+        PromiseRef(LOG_LEVEL_ERR, pp);
         return false;
     }
 
-    while (!feof(pp))
+    while (!feof(pfp))
     {
-        CfReadLine(&line, &line_size, pp);
+        CfReadLine(&line, &line_size, pfp);
 
-        if (feof(pp))
+        if (feof(pfp))
         {
             break;
         }
@@ -327,6 +377,7 @@ static int GetInterfaceInformation(LinkState **list)
         if (isdigit(*line))
         {
             sscanf(line, "%*d: %32[^@ ]", if_name);
+
             if (if_name[strlen(if_name)-1] == ':')
             {
                 if_name[strlen(if_name)-1] = '\0';
@@ -338,6 +389,7 @@ static int GetInterfaceInformation(LinkState **list)
             entry->name = xstrdup(if_name);
 
             sscanf(line, "%*[^>]> mtu %d %[^\n]", &mtu, endline);
+
             if (strstr(endline, "UP"))
             {
                 entry->up = true;
@@ -377,6 +429,6 @@ static int GetInterfaceInformation(LinkState **list)
     }
 
     free(line);
-    cf_pclose(pp);
+    cf_pclose(pfp);
     return true;
 }

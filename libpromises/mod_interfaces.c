@@ -55,6 +55,7 @@ static const BodySyntax proxy_body = BodySyntaxNew("proxy", proxy_constraints, N
 
 static const ConstraintSyntax interface_constraints[] =
 {
+    ConstraintSyntaxNewStringList("bridge_interfaces", CF_ANYSTRING, "List of interfaces to bridge with IP forwarding", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewStringList("aggregate", CF_ANYSTRING, "List of interfaces to bond with LACP", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewStringList("tagged_vlans", CF_IDRANGE, "List of labelled (trunk) vlan identifers for this interface", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("untagged_vlan", CF_IDRANGE, "Unlabelled (access) vlan", SYNTAX_STATUS_NORMAL),
@@ -74,6 +75,8 @@ static const ConstraintSyntax relay_constraints[] =
     ConstraintSyntaxNewInt("rip_timeout", CF_INTRANGE, "RIP timeout on updates", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBool("rip_split_horizon", "RIP Horizon control", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBool("rip_passive", "Passive mode", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewInt("ospf_area", CF_INTRANGE, "OSPF Link database area number", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewBool("ospf_passive", "Passive mode", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };
 
@@ -81,12 +84,12 @@ static const BodySyntax relay_body = BodySyntaxNew("relay", relay_constraints, N
 
 static const ConstraintSyntax balance_constraints[] =
 {
-    ConstraintSyntaxNewString("relay_policy", CF_ANYSTRING, "Load sharing algorithm, e.g. RR, LRU", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewString("algorithm", CF_ANYSTRING, "Load sharing algorithm, e.g. RR, LRU", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewInt("nat_pool", CF_INTRANGE, "Port range for NAT traffoc", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };
 
-static const BodySyntax balancing_body = BodySyntaxNew("balancing_policy", balance_constraints, NULL, SYNTAX_STATUS_NORMAL);
+static const BodySyntax balancing_body = BodySyntaxNew("route_select", balance_constraints, NULL, SYNTAX_STATUS_NORMAL);
 
 /**********************************************************************************************/
 
@@ -94,9 +97,8 @@ static const ConstraintSyntax network_constraints[] =
 {
     ConstraintSyntaxNewBody("routed_to", &relay_body, "A body assigning a forwarding agent", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBody("advertised_by", &relay_body, "A body assigning a protocol service", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewStringList("select_route_from", CF_IDRANGE, "A list of nodes to select from", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewBody("route_selection_policy", &balancing_body, "Settings for load balancing with balanced_relay", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewStringList("balanced_relay", CF_ANYSTRING, "List of hosts by name/address", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewStringList("equivalent_gateways", CF_IDRANGE, "A list of nodes to select from", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewBody("route_select", &balancing_body, "Settings for load balancing with balanced_relay", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };
 

@@ -85,7 +85,7 @@ static const char *const HINTS[] =
 {
     "Print the help message",
     "Enable debugging output",
-    "Output verbose information about the behaviour of the agent",
+    "Output verbose information about the behaviour of the agent. Also implies --no-fork and --legacy-output",
     "Output the version of the software",
     "Specify an alternative input file than the default",
     "Define a list of comma separated classes to be defined at the start of execution",
@@ -178,6 +178,7 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
             break;
 
         case 'v':
+            LEGACY_OUTPUT = true;
             LogSetGlobalLevel(LOG_LEVEL_VERBOSE);
             NO_FORK = true;
             break;

@@ -186,13 +186,13 @@ Attributes GetInterfaceAttributes(const EvalContext *ctx, const Promise *pp)
 
 /*******************************************************************/
 
-Attributes GetRoutingAttributes(const EvalContext *ctx, const Promise *pp)
+Attributes GetNetworkAttributes(const EvalContext *ctx, const Promise *pp)
 {
     Attributes attr = { {0} };
 
     attr.transaction = GetTransactionConstraints(ctx, pp);
     attr.classes = GetClassDefinitionConstraints(ctx, pp);
-    attr.routes = GetRouteConstraints(ctx, pp);
+    attr.networks = GetNetworkConstraints(ctx, pp);
     return attr;
 }
 
@@ -1708,20 +1708,19 @@ Interfaces GetInterfaceConstraints(const EvalContext *ctx, const Promise *pp)
 
 /*******************************************************************/
 
-Routes GetRouteConstraints(const EvalContext *ctx, const Promise *pp)
+Networks GetNetworkConstraints(const EvalContext *ctx, const Promise *pp)
 {
-    Routes r;
+    Networks n;
 
-    r.relay_networks = PromiseGetConstraintAsList(ctx, "relay_networks", pp);
-    r.rip_metric = PromiseGetConstraintAsInt(ctx, "rip_metric", pp);
-    r.rip_timeout = PromiseGetConstraintAsInt(ctx, "rip_timeout", pp);
-    r.rip_splithorizon = PromiseGetConstraintAsBoolean(ctx, "rip_split_horizon", pp);
-    r.rip_passive = PromiseGetConstraintAsBoolean(ctx, "rip_passive", pp);
+    n.rip_metric = PromiseGetConstraintAsInt(ctx, "rip_metric", pp);
+    n.rip_timeout = PromiseGetConstraintAsInt(ctx, "rip_timeout", pp);
+    n.rip_splithorizon = PromiseGetConstraintAsBoolean(ctx, "rip_split_horizon", pp);
+    n.rip_passive = PromiseGetConstraintAsBoolean(ctx, "rip_passive", pp);
 
-    r.nat_pool = PromiseGetConstraintAsRval(pp, "nat_pool", RVAL_TYPE_SCALAR);
-    r.relay_policy = PromiseGetConstraintAsRval(pp, "relay_policy", RVAL_TYPE_SCALAR);
+    n.nat_pool = PromiseGetConstraintAsRval(pp, "nat_pool", RVAL_TYPE_SCALAR);
+    n.relay_policy = PromiseGetConstraintAsRval(pp, "relay_policy", RVAL_TYPE_SCALAR);
 
-    return r;
+    return n;
 }
 
 /*******************************************************************/

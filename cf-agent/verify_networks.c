@@ -22,7 +22,7 @@
   included file COSL.txt.
 */
 
-#include <verify_routing.h>
+#include <verify_networks.h>
 #include <attributes.h>
 #include <eval_context.h>
 #include <ornaments.h>
@@ -31,19 +31,19 @@
 #include <string_lib.h>
 #include <misc_lib.h>
 
-static int RouteSanityCheck(Attributes a,  const Promise *pp);
-static void AssessRoutingPromise(char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp);
+static int NetworkSanityCheck(Attributes a,  const Promise *pp);
+static void AssessNetworkingPromise(char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp);
 
 /****************************************************************************/
 
-PromiseResult VerifyRoutingPromise(EvalContext *ctx, const Promise *pp)
+PromiseResult VerifyNetworkingPromise(EvalContext *ctx, const Promise *pp)
 {
     CfLock thislock;
     char lockname[CF_BUFSIZE];
 
-    Attributes a = GetRoutingAttributes(ctx, pp);
+    Attributes a = GetNetworkingAttributes(ctx, pp);
 
-    if (!RoutingSanityCheck(a, pp))
+    if (!NetworkSanityCheck(a, pp))
     {
         return PROMISE_RESULT_FAIL;
     }
@@ -59,22 +59,22 @@ PromiseResult VerifyRoutingPromise(EvalContext *ctx, const Promise *pp)
     }
 
     PromiseResult result = PROMISE_RESULT_NOOP;
-    AssessRoutingPromise(pp->promiser, &result, ctx, &a, pp);
+    AssessNetworkingPromise(pp->promiser, &result, ctx, &a, pp);
 
     switch (result)
     {
     case PROMISE_RESULT_NOOP:
-        cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_NOOP, pp, a, "Routing promise kept");
+        cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_NOOP, pp, a, "Networking promise kept");
         break;
     case PROMISE_RESULT_FAIL:
     case PROMISE_RESULT_DENIED:
     case PROMISE_RESULT_TIMEOUT:
     case PROMISE_RESULT_INTERRUPTED:
     case PROMISE_RESULT_WARN:
-        cfPS(ctx, LOG_LEVEL_INFO, result, pp, a, "Routing promise not kept");
+        cfPS(ctx, LOG_LEVEL_INFO, result, pp, a, "Networking promise not kept");
         break;
     case PROMISE_RESULT_CHANGE:
-        cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "Routing promise repaired");
+        cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "Networking promise repaired");
         break;
     default:
         ProgrammingError("Unknown promise result");
@@ -88,14 +88,14 @@ PromiseResult VerifyRoutingPromise(EvalContext *ctx, const Promise *pp)
 
 /****************************************************************************/
 
-static int RouteSanityCheck(Attributes a,  const Promise *pp)
+static int NetworkSanityCheck(Attributes a,  const Promise *pp)
 {
     return true;
 }
 
 /****************************************************************************/
 
-void AssessRoutingPromise(char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp)
+void AssessNetworkingPromise(char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp)
 {
 
     printf("CONFIG %s\n", promiser);

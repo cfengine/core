@@ -37,6 +37,8 @@
 #include <verify_users.h>
 #include <verify_services.h>
 #include <verify_storage.h>
+#include <verify_networks.h>
+#include <verify_interfaces.h>
 #include <verify_files.h>
 #include <verify_files_utils.h>
 #include <verify_vars.h>
@@ -1433,6 +1435,14 @@ static PromiseResult KeepAgentPromise(EvalContext *ctx, const Promise *pp, ARG_U
     else if (strcmp("processes", pp->parent_promise_type->name) == 0)
     {
         result = VerifyProcessesPromise(ctx, pp);
+    }
+    else if (strcmp("interfaces", pp->parent_promise_type->name) == 0)
+    {
+        result = VerifyInterfacePromise(ctx, pp);
+    }
+    else if (strcmp("networks", pp->parent_promise_type->name) == 0)
+    {
+        result = VerifyNetworkingPromise(ctx, pp);
     }
     else if (strcmp("storage", pp->parent_promise_type->name) == 0)
     {

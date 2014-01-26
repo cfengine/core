@@ -31,11 +31,26 @@
 #include <string_lib.h>
 #include <misc_lib.h>
 #include <files_lib.h>
+#include <files_interfaces.h>
 
 static int InterfaceSanityCheck(EvalContext *ctx, Attributes a,  const Promise *pp);
 static void AssessInterfacePromise(char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp);
 static void AssessDebianInterfacePromise(char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp);
 static void AssessDebianVlan(char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp);
+
+typedef struct
+{
+    char *name;
+    char *v4_address;
+    char *v4_broadcast;
+    Rlist *v6_addresses;
+    char *hw_address;
+    bool multicast;
+    bool up;
+    int mtu;
+    int speed;
+}
+    LinkState;
 
 /****************************************************************************/
 
@@ -159,27 +174,33 @@ static void AssessDebianInterfacePromise(char *promiser, PromiseResult *result, 
 {
     if (a->havetvlan || a->haveuvlan)
     {
+        printf("SET VLANs %s\n", pp->promiser);
         AssessDebianVlan(promiser, result, ctx, a, pp);
     }
     else if (a->havebridge)
     {
+        printf("BRIDGE %s\n", pp->promiser);
     }
     else if (a->haveaggr)
     {
+        printf("BONDED %s\n", pp->promiser);
     }
 
     if (a->haveipv4)
     {
+        printf("SET 4 ADDRESS %s\n", pp->promiser);
     }
 
     if (a->haveipv6)
     {
+        printf("SET 6 ADDRESS %s\n", pp->promiser);
     }
 
     if (PromiseGetConstraintAsBoolean(ctx, "link_state", pp))
     {
+        printf("LINK STAT on %s\n", pp->promiser);
     }
-
+    printf("----------------\n");
 }
 
 /****************************************************************************/
@@ -187,34 +208,48 @@ static void AssessDebianInterfacePromise(char *promiser, PromiseResult *result, 
 static void AssessDebianVlan(char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp)
 {
     FILE *fp;
+    Item *vlans;
+
+    GetVlans(&vlans);
 
 // Look for reserved variable
 // VLANS[blue] int => "id"
 
     // Linux naming INTERFACE:alias.vlan, e.g. eth0:2.1 or eth0.100
 
-    printf("CONFIG %s\n", promiser);
+    // GET INTERFACES
 
+
+    fclose(fp);
+}
+
+/****************************************************************************/
+
+static void GetVlans(Item **list)
+{
     if ((fp = safe_fopen(CF_VLAN_FILE, "r")) == NULL)
     {
         return;
     }
 
-/*    size_t line_size = CF_BUFSIZE;
-      char *line = xmalloc(line_size);
+    size_t line_size = CF_BUFSIZE;
+    char *line = xmalloc(line_size);
+    char ifname[CF_SMALLBUF];
+    char ifparent[CF_SMALLBUF];
 
-      // Skip two headers
-      CfReadLine(&line, &line_size, fp);
-      CfReadLine(&line, &line_size, fp);
+    // Skip two headers
+    CfReadLine(&line, &line_size, fp);
+    CfReadLine(&line, &line_size, fp);
 
-      while (!feof(fp))
-      {
-      CfReadLine(&line, &line_size, fp);
-      sscanf(line, "%s | %d 1 %s", ifname, &id, parent);
-      printf("GOT %s with id %d\n");
-      }
+    while (!feof(fp))
+    {
+        int id = CF_NOINT;
 
-      free(line);
-*/
-    fclose(fp);
+        CfReadLine(&line, &line_size, fp);
+        sscanf(line, "%s | %d | %s", ifname, &id, ifparent);
+        printf("GOT %s with id %d\n", ifname, id);
+        PrependFullItem(list, ifname, NULL, id, 0);
+    }
+
+    free(line);
 }

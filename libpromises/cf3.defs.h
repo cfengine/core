@@ -1346,13 +1346,15 @@ typedef struct
 {
     char *untagged_vlan;
     Rlist *tagged_vlans;
-    char *v4_address;
-    char *v6_address;
-    char *state;
+    Rlist *bridge_interfaces;
     Rlist *aggregate;
+    Rlist *v6_addresses;
+    char *v4_address;
+    char *v4_broadcast;
+    char *state;
     int mtu;
     int speed;
-    char *duplex; // f/h
+    char *duplex;
     char *spanning;
     bool bonding;
     int min_bonding;

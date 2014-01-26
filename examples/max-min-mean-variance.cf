@@ -1,0 +1,74 @@
+#  Copyright (C) Cfengine AS
+
+#  This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+
+#  This program is free software; you can redistribute it and/or modify it
+#  under the terms of the GNU General Public License as published by the
+#  Free Software Foundation; version 3.
+
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
+
+# To the extent this program is licensed as part of the Enterprise
+# versions of Cfengine, the applicable Commercial Open Source License
+# (COSL) may apply to this file if you as a licensee so wish it. See
+# included file COSL.txt.
+
+#+begin_src cfengine3
+body common control
+{
+      bundlesequence => { "test" };
+}
+
+bundle agent test
+{
+  vars:
+      "mylist" slist => { "foo", "1", "2", "3000", "bar", "10.20.30.40" };
+      "mylist_str" string => format("%S", mylist);
+
+      "max_int" string => max(mylist, "int");
+      "max_lex" string => max(mylist, "lex");
+      "max_ip" string => max(mylist, "ip");
+
+      "min_int" string => min(mylist, "int");
+      "min_lex" string => min(mylist, "lex");
+      "min_ip" string => min(mylist, "ip");
+
+      "mean" real => mean(mylist);
+      "variance" real => variance(mylist);
+
+  reports:
+      "my list is $(mylist_str)";
+
+      "mean is $(mean)";
+      "variance is $(variance) (use eval() to get the standard deviation)";
+
+      "max int is $(max_int)";
+      "max IP is $(max_ip)";
+      "max lexicographically is $(max_lex)";
+
+      "min int is $(min_int)";
+      "min IP is $(min_ip)";
+      "min lexicographically is $(min_lex)";
+}
+#+end_src
+###############################################################################
+#+begin_src example_output
+#@ ```
+#@ 2014-01-26T08:10:47-0500   notice: /default/test: R: my list is { "foo", "1", "2", "3000", "bar", "10.20.30.40" }
+#@ 2014-01-26T08:10:47-0500   notice: /default/test: R: mean is 502.200000
+#@ 2014-01-26T08:10:47-0500   notice: /default/test: R: variance is 1497376.000000 (use eval() to get the standard deviation)
+#@ 2014-01-26T08:10:47-0500   notice: /default/test: R: max int is 3000
+#@ 2014-01-26T08:10:47-0500   notice: /default/test: R: max IP is 10.20.30.40
+#@ 2014-01-26T08:10:47-0500   notice: /default/test: R: max lexicographically is foo
+#@ 2014-01-26T08:10:47-0500   notice: /default/test: R: min int is bar
+#@ 2014-01-26T08:10:47-0500   notice: /default/test: R: min IP is 1
+#@ 2014-01-26T08:10:47-0500   notice: /default/test: R: min lexicographically is 1
+#@ ```
+#+end_src

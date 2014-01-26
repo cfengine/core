@@ -30,12 +30,15 @@ bundle agent test
       "f" rlist => { "100", "200", "300" };
       "g" rlist => { "1.11", "-2.22", "-3.33" };
       "h" ilist => { "-10", "0", "200" };
+      "i" data => parsejson('[ 1, 2, 3000 ]');
+      "j" data => parsejson('[ 1, 2, [ 3, 4, 5 ], null, true, false ]');
+      "k" data => parsejson('{}');
+      "l" data => parsejson('{ "a": 100, "b": 200, "c": null}');
 
-      "lists" slist => { "a", "b", "c", "d", "e", "f", "g", "h" };
-      "bad_lists" slist => { "c" };
+      "lists" slist => { "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l" };
+      "bad_lists" slist => { "c", "k" };
       "good_lists" slist => difference("lists", "bad_lists");
-      "joined_$(good_lists)" string => concat("[ ", join(", ", $(good_lists)), " ]");
-      "joined_$(bad_lists)" string => "[--BADLIST-$(bad_lists)--]";
+      "joined_$(lists)" string => format("%S", $(lists));
 
       "length_$(lists)" int => length($(lists));
       "lexmin_$(lists)" string => min($(lists), "lex");
@@ -77,6 +80,10 @@ bundle agent check
       "expected[f][length]" int => "3";
       "expected[g][length]" int => "3";
       "expected[h][length]" int => "3";
+      "expected[i][length]" int => "3";
+      "expected[j][length]" int => "6";
+      "expected[k][length]" int => "0";
+      "expected[l][length]" int => "3";
 
       "expected[a][variance]" string => "0.00";
       "expected[b][variance]" string => "2730.33";
@@ -86,6 +93,10 @@ bundle agent check
       "expected[f][variance]" string => "10000.00";
       "expected[g][variance]" string => "5.34";
       "expected[h][variance]" string => "14033.33";
+      "expected[i][variance]" string => "2997001.00";
+      "expected[j][variance]" string => "0.92";
+      "expected[k][variance]" string => "0";
+      "expected[l][variance]" string => "5000.00";
 
       "expected[a][stddev]" string => "0.00";
       "expected[b][stddev]" string => "52.25";
@@ -95,6 +106,10 @@ bundle agent check
       "expected[f][stddev]" string => "100.00";
       "expected[g][stddev]" string => "2.31";
       "expected[h][stddev]" string => "118.46";
+      "expected[i][stddev]" string => "1731.18";
+      "expected[j][stddev]" string => "0.96";
+      "expected[k][stddev]" string => "0";
+      "expected[l][stddev]" string => "70.71";
 
       "expected[a][mean]" string => "0.00";
       "expected[b][mean]" string => "39.67";
@@ -104,6 +119,10 @@ bundle agent check
       "expected[f][mean]" string => "200.00";
       "expected[g][mean]" string => "-1.48";
       "expected[h][mean]" string => "63.33";
+      "expected[i][mean]" string => "1001.00";
+      "expected[j][mean]" string => "0.75";
+      "expected[k][mean]" string => "0";
+      "expected[l][mean]" string => "150.00";
 
       "expected[a][lexmin]" string => "a";
       "expected[b][lexmin]" string => "10";
@@ -113,6 +132,11 @@ bundle agent check
       "expected[f][lexmin]" string => "100";
       "expected[g][lexmin]" string => "-2.22";
       "expected[h][lexmin]" string => "-10";
+      "expected[i][lexmin]" string => "1";
+      "expected[j][lexmin]" string => "1";
+      "expected[k][lexmin]" string => "";
+      "expected[l][lexmin]" string => "100";
+
       "expected[a][realmin]" string => "a";
       "expected[b][realmin]" string => "9";
       "expected[c][realmin]" string => "-1";
@@ -121,6 +145,11 @@ bundle agent check
       "expected[f][realmin]" string => "100";
       "expected[g][realmin]" string => "-3.33";
       "expected[h][realmin]" string => "-10";
+      "expected[i][realmin]" string => "1";
+      "expected[j][realmin]" string => "false";
+      "expected[k][realmin]" string => "";
+      "expected[l][realmin]" string => "100";
+
       "expected[a][lexmax]" string => "c";
       "expected[b][lexmax]" string => "9";
       "expected[c][lexmax]" string => "-1";
@@ -129,6 +158,11 @@ bundle agent check
       "expected[f][lexmax]" string => "300";
       "expected[g][lexmax]" string => "1.11";
       "expected[h][lexmax]" string => "200";
+      "expected[i][lexmax]" string => "3000";
+      "expected[j][lexmax]" string => "true";
+      "expected[k][lexmax]" string => "";
+      "expected[l][lexmax]" string => "200";
+
       "expected[a][realmax]" string => "c";
       "expected[b][realmax]" string => "100";
       "expected[c][realmax]" string => "-1";
@@ -137,6 +171,10 @@ bundle agent check
       "expected[f][realmax]" string => "300";
       "expected[g][realmax]" string => "1.11";
       "expected[h][realmax]" string => "200";
+      "expected[i][realmax]" string => "3000";
+      "expected[j][realmax]" string => "2";
+      "expected[k][realmax]" string => "";
+      "expected[l][realmax]" string => "200";
 
   classes:
       "ok_$(measurements)_$(lists)" expression => strcmp("$(expected[$(lists)][$(measurements)])",
@@ -145,14 +183,14 @@ bundle agent check
       "no_$(measurements)_$(lists)" not => isvariable("test.$(measurements)_$(lists)");
 
       "ok" and => {
-                    "ok_length_a", "ok_length_b", "ok_length_c", "ok_length_d", "ok_length_e", "ok_length_f", "ok_length_g", "ok_length_h",
-                    "ok_mean_a", "ok_mean_b", "no_mean_c", "ok_mean_d", "ok_mean_e", "ok_mean_f", "ok_mean_g", "ok_mean_h",
-                    "ok_variance_a", "ok_variance_b", "no_variance_c", "ok_variance_d", "ok_variance_e", "ok_variance_f", "ok_variance_g", "ok_variance_h",
-                    "ok_stddev_a", "ok_stddev_b", "no_stddev_c", "ok_stddev_d", "ok_stddev_e", "ok_stddev_f", "ok_stddev_g", "ok_stddev_h",
-                    "ok_realmax_a", "ok_realmax_b", "no_realmax_c", "ok_realmax_d", "ok_realmax_e", "ok_realmax_f", "ok_realmax_g", "ok_realmax_h",
-                    "ok_realmin_a", "ok_realmin_b", "no_realmin_c", "ok_realmin_d", "ok_realmin_e", "ok_realmin_f", "ok_realmin_g", "ok_realmin_h",
-                    "ok_lexmax_a", "ok_lexmax_b", "no_lexmax_c", "ok_lexmax_d", "ok_lexmax_e", "ok_lexmax_f", "ok_lexmax_g", "ok_lexmax_h",
-                    "ok_lexmin_a", "ok_lexmin_b", "no_lexmin_c", "ok_lexmin_d", "ok_lexmin_e", "ok_lexmin_f", "ok_lexmin_g", "ok_lexmin_h",
+                    "ok_length_a", "ok_length_b", "ok_length_c", "ok_length_d", "ok_length_e", "ok_length_f", "ok_length_g", "ok_length_h", "ok_length_i", "ok_length_j", "ok_length_k", "ok_length_l",
+                    "ok_mean_a", "ok_mean_b", "no_mean_c", "ok_mean_d", "ok_mean_e", "ok_mean_f", "ok_mean_g", "ok_mean_h", "ok_mean_i", "ok_mean_j", "no_mean_k", "ok_mean_l",
+                    "ok_variance_a", "ok_variance_b", "no_variance_c", "ok_variance_d", "ok_variance_e", "ok_variance_f", "ok_variance_g", "ok_variance_h", "ok_variance_i", "ok_variance_j", "no_variance_k", "ok_variance_l",
+                    "ok_stddev_a", "ok_stddev_b", "no_stddev_c", "ok_stddev_d", "ok_stddev_e", "ok_stddev_f", "ok_stddev_g", "ok_stddev_h", "ok_stddev_i", "ok_stddev_j", "no_stddev_k", "ok_stddev_l",
+                    "ok_realmax_a", "ok_realmax_b", "no_realmax_c", "ok_realmax_d", "ok_realmax_e", "ok_realmax_f", "ok_realmax_g", "ok_realmax_h", "ok_realmax_i", "ok_realmax_j", "no_realmax_k", "ok_realmax_l",
+                    "ok_realmin_a", "ok_realmin_b", "no_realmin_c", "ok_realmin_d", "ok_realmin_e", "ok_realmin_f", "ok_realmin_g", "ok_realmin_h", "ok_realmin_i", "ok_realmin_j", "no_realmin_k", "ok_realmin_l",
+                    "ok_lexmax_a", "ok_lexmax_b", "no_lexmax_c", "ok_lexmax_d", "ok_lexmax_e", "ok_lexmax_f", "ok_lexmax_g", "ok_lexmax_h", "ok_lexmax_i", "ok_lexmax_j", "no_lexmax_k", "ok_lexmax_l",
+                    "ok_lexmin_a", "ok_lexmin_b", "no_lexmin_c", "ok_lexmin_d", "ok_lexmin_e", "ok_lexmin_f", "ok_lexmin_g", "ok_lexmin_h", "ok_lexmin_i", "ok_lexmin_j", "no_lexmin_k", "ok_lexmin_l",
       };
 
   reports:

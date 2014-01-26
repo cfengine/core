@@ -3475,76 +3475,172 @@ static FnCallResult FnCallFold(EvalContext *ctx, ARG_UNUSED const Policy *policy
     int count = 0;
     double mean = 0;
     double M2 = 0;
-    const Rlist *max = NULL;
-    const Rlist *min = NULL;
+    Rlist *max = NULL;
+    Rlist *min = NULL;
     bool variance_mode = strcmp(fp->name, "variance") == 0;
     bool mean_mode = strcmp(fp->name, "mean") == 0;
 
-    const Rlist *input_list = GetListReferenceArgument(ctx, fp, name, NULL);
-    if (!input_list)
+    DataType type = DATA_TYPE_NONE;
+    VarRef *ref = VarRefParse(name);
+    const void *value = EvalContextVariableGet(ctx, ref, &type);
+    VarRefDestroy(ref);
+    if (!value)
     {
+        Log(LOG_LEVEL_VERBOSE, "Function '%s', argument '%s' did not resolve to a variable",
+            fp->name, name);
         return FnFailure();
     }
 
-    bool null_seen = false;
-    for (const Rlist *rp = input_list; rp != NULL; rp = rp->next)
+    Rlist *input_list = NULL;
+    JsonElement *json = NULL;
+
+    switch (DataTypeToRvalType(type))
     {
-        const char *cur = RlistScalarValue(rp);
-        if (strcmp(cur, CF_NULL_VALUE) == 0)
+    case RVAL_TYPE_LIST:
+        input_list = (Rlist *)value;
+        if (NULL != input_list && NULL == input_list->next
+            && input_list->val.type == RVAL_TYPE_SCALAR
+            && strcmp(RlistScalarValue(input_list), CF_NULL_VALUE) == 0) // TODO: This... bullshit
         {
-            null_seen = true;
+            input_list = NULL;
         }
-        else if (sort_type)
+        break;
+    case RVAL_TYPE_CONTAINER:
+        json = (JsonElement *)value;
+        break;
+    default:
+        Log(LOG_LEVEL_ERR, "Function '%s', argument '%s' resolved to unsupported datatype '%s'",
+            fp->name, name, DataTypeToString(type));
+        return FnFailure();
+    }
+
+    if (NULL != input_list)
+    {
+        bool null_seen = false;
+        for (const Rlist *rp = input_list; rp != NULL; rp = rp->next)
         {
-            if (NULL == min || NULL == max)
+            const char *cur = RlistScalarValue(rp);
+            if (strcmp(cur, CF_NULL_VALUE) == 0)
             {
-                min = max = rp;
+                null_seen = true;
             }
-            else
+            else if (sort_type)
             {
-                if (!GenericItemLess(sort_type, (void*) min, (void*) rp))
+                if (NULL == min || NULL == max)
                 {
-                    min = rp;
+                    min = max = (Rlist*) rp;
+                }
+                else
+                {
+                    if (!GenericItemLess(sort_type, (void*) min, (void*) rp))
+                    {
+                        min = (Rlist*) rp;
+                    }
+
+                    if (GenericItemLess(sort_type, (void*) max, (void*) rp))
+                    {
+                        max = (Rlist*) rp;
+                    }
+                }
+            }
+
+            count++;
+
+            // none of the following apply if CF_NULL_VALUE has been seen
+            if (null_seen)
+            {
+                continue;
+            }
+        
+            double x;
+            if (mean_mode || variance_mode)
+            {
+                if (1 != sscanf(cur, "%lf", &x))
+                {
+                    x = 0; /* treat non-numeric entries as zero */
                 }
 
-                if (GenericItemLess(sort_type, (void*) max, (void*) rp))
-                {
-                    max = rp;
-                }
+                // Welford's algorithm
+                double delta = x - mean;
+                mean += delta/count;
+                M2 += delta * (x - mean);
             }
-        }
-
-        count++;
-
-        // none of the following apply if CF_NULL_VALUE has been seen
-        if (null_seen)
-        {
-            continue;
         }
         
-        double x;
-        if (mean_mode || variance_mode)
-        {
-            if (1 != sscanf(cur, "%lf", &x))
-            {
-                x = 0; /* treat non-numeric entries as zero */
-            }
 
-            // Welford's algorithm
-            double delta = x - mean;
-            mean += delta/count;
-            M2 += delta * (x - mean);
+        if (count == 1 && null_seen)
+        {
+            count = 0;
+        }
+    }
+    else if (NULL != json)
+    {
+        if (JsonGetElementType(value) == JSON_ELEMENT_TYPE_CONTAINER)
+        {
+            JsonIterator iter = JsonIteratorInit(value);
+            const JsonElement *el = NULL;
+            while ((el = JsonIteratorNextValue(&iter)))
+            {
+                char *value = JsonPrimitiveAsString(el);
+
+                if (NULL != value)
+                {
+                    Rlist *temp_list = NULL;
+                    RlistAppendScalar(&temp_list, value);
+                    if (sort_type)
+                    {
+                        if (NULL == min || NULL == max)
+                        {
+                            RlistAppendScalar(&min, value);
+                            RlistAppendScalar(&max, value);
+                        }
+                        else
+                        {
+                            if (!GenericItemLess(sort_type, (void*) min, (void*) temp_list))
+                            {
+                                RlistDestroy(min);
+                                min = NULL;
+                                RlistAppendScalar(&min, value);
+                            }
+
+                            if (GenericItemLess(sort_type, (void*) max, (void*) temp_list))
+                            {
+                                RlistDestroy(max);
+                                max = NULL;
+                                RlistAppendScalar(&max, value);
+                            }
+                        }
+                    }
+
+                    count++;
+
+                    double x;
+                    if (mean_mode || variance_mode)
+                    {
+                        if (1 != sscanf(value, "%lf", &x))
+                        {
+                            x = 0; /* treat non-numeric entries as zero */
+                        }
+
+                        // Welford's algorithm
+                        double delta = x - mean;
+                        mean += delta/count;
+                        M2 += delta * (x - mean);
+                    }
+
+                    RlistDestroy(temp_list);
+                    free(value);
+                }
+            }
         }
     }
 
-    if (count == 1 && null_seen)
-    {
-        count = 0;
-    }
-
+    FnCallResult *ret = NULL;
+    FnCallResult result;
     if (mean_mode)
     {
-        return count == 0 ? FnFailure() : FnReturnF("%lf", mean);
+        result = count == 0 ? FnFailure() : FnReturnF("%lf", mean);
+        ret = &result;
     }
     else if (variance_mode)
     {
@@ -3559,15 +3655,30 @@ static FnCallResult FnCallFold(EvalContext *ctx, ARG_UNUSED const Policy *policy
             variance = M2/(count - 1);
         }
 
-        return FnReturnF("%lf", variance);
+        result = FnReturnF("%lf", variance);
+        ret = &result;
     }
     else if (strcmp(fp->name, "max") == 0)
     {
-        return count == 0 ? FnFailure() : FnReturn(RlistScalarValue(max));
+        result = count == 0 ? FnFailure() : FnReturn(RlistScalarValue(max));
+        ret = &result;
+
     }
     else if (strcmp(fp->name, "min") == 0)
     {
-        return count == 0 ? FnFailure() : FnReturn(RlistScalarValue(min));
+        result = count == 0 ? FnFailure() : FnReturn(RlistScalarValue(min));
+        ret = &result;
+    }
+
+    if (ret)
+    {
+        if (NULL != json)
+        {
+            RlistDestroy(max);
+            RlistDestroy(min);
+        }
+
+        return *ret;
     }
 
     ProgrammingError("Unknown function call %s to FnCallFold", fp->name);

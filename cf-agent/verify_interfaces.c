@@ -32,13 +32,12 @@
 #include <misc_lib.h>
 #include <files_lib.h>
 #include <files_interfaces.h>
+#include <pipes.h>
+#include <item_lib.h>
 
-static int InterfaceSanityCheck(EvalContext *ctx, Attributes a,  const Promise *pp);
-static void AssessInterfacePromise(char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp);
-static void AssessDebianInterfacePromise(char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp);
-static void AssessDebianVlan(char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp);
+typedef struct LinkState_ LinkState;
 
-typedef struct
+struct LinkState_
 {
     char *name;
     char *v4_address;
@@ -49,8 +48,20 @@ typedef struct
     bool up;
     int mtu;
     int speed;
-}
-    LinkState;
+    LinkState *next;
+};
+
+#define CF_DEBIAN_IFCONF "/etc/network/interfaces"
+#define CF_DEBIAN_VLAN_FILE "/proc/net/vlan/config"
+#define CF_DEBIAN_VLAN_COMMAND "/sbin/vconfig"
+#define CF_DEBIAN_LISTINTERFACES_COMMAND "/bin/ip addr"
+
+static int InterfaceSanityCheck(EvalContext *ctx, Attributes a,  const Promise *pp);
+static void AssessInterfacePromise(char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp);
+static void AssessDebianInterfacePromise(char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp);
+static void AssessDebianVlan(char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp);
+static int GetVlanInfo(Item **list);
+static int GetInterfaceInformation(LinkState **list);
 
 /****************************************************************************/
 
@@ -165,13 +176,33 @@ void AssessInterfacePromise(char *promiser, PromiseResult *result, EvalContext *
 /* Level 1                                                                  */
 /****************************************************************************/
 
-#define CF_DEBIAN_IFCONF "/etc/network/interfaces"
-#define CF_VLAN_FILE "/proc/net/vlan/config"
-#define CF_VLAN_COMMAND "/sbin/vconfig"
-#define CF_LISTINTERFACES_COMMAND "/bin/ip addr"
-
 static void AssessDebianInterfacePromise(char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp)
 {
+
+    LinkState *ifs = NULL;
+
+    if (!GetInterfaceInformation(&ifs))
+    {
+        *result = PROMISE_RESULT_INTERRUPTED;
+        return;
+    }
+
+    LinkState *lsp;
+
+    for (lsp = ifs; lsp != NULL; lsp = lsp->next)
+    {
+        printf("======================\n");
+        printf("INTERFACE %s (mtu %d)\n", lsp->name, lsp->mtu);
+        printf("V4: %s\n", lsp->v4_address);
+        printf("MAC: %s\n", lsp->hw_address);
+        for (Rlist *rp = lsp->v6_addresses; rp!=NULL; rp=rp->next)
+        {
+            printf("V6: %s\n", (char *)rp->val.item);
+        }
+    }
+
+    printf("======================\n");
+
     if (a->havetvlan || a->haveuvlan)
     {
         printf("SET VLANs %s\n", pp->promiser);
@@ -200,6 +231,8 @@ static void AssessDebianInterfacePromise(char *promiser, PromiseResult *result, 
     {
         printf("LINK STAT on %s\n", pp->promiser);
     }
+
+    printf("NOW EDIT %s\n", CF_DEBIAN_IFCONF);
     printf("----------------\n");
 }
 
@@ -207,10 +240,15 @@ static void AssessDebianInterfacePromise(char *promiser, PromiseResult *result, 
 
 static void AssessDebianVlan(char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp)
 {
-    FILE *fp;
-    Item *vlans;
+    Item *vlans = NULL;
 
-    GetVlans(&vlans);
+
+    if (!GetVlanInfo(&vlans))
+    {
+        *result = PROMISE_RESULT_INTERRUPTED;
+        return;
+    }
+
 
 // Look for reserved variable
 // VLANS[blue] int => "id"
@@ -219,23 +257,23 @@ static void AssessDebianVlan(char *promiser, PromiseResult *result, EvalContext 
 
     // GET INTERFACES
 
-
-    fclose(fp);
+// /sbin/ip -6 addr add 2001:0db8:0:f101::1/64 dev eth0
 }
 
 /****************************************************************************/
 
-static void GetVlans(Item **list)
+static int GetVlanInfo(Item **list)
 {
-    if ((fp = safe_fopen(CF_VLAN_FILE, "r")) == NULL)
-    {
-        return;
-    }
-
+    FILE *fp;
     size_t line_size = CF_BUFSIZE;
     char *line = xmalloc(line_size);
     char ifname[CF_SMALLBUF];
     char ifparent[CF_SMALLBUF];
+
+    if ((fp = safe_fopen(CF_DEBIAN_VLAN_FILE, "r")) == NULL)
+    {
+        return false;
+    }
 
     // Skip two headers
     CfReadLine(&line, &line_size, fp);
@@ -251,5 +289,94 @@ static void GetVlans(Item **list)
         PrependFullItem(list, ifname, NULL, id, 0);
     }
 
+    fclose(fp);
     free(line);
+    return true;
+}
+
+/****************************************************************************/
+
+static int GetInterfaceInformation(LinkState **list)
+{
+    FILE *pp;
+    size_t line_size = CF_BUFSIZE;
+    char *line = xmalloc(line_size);
+    char indent[CF_SMALLBUF];
+    char hw_addr[CF_MAX_IP_LEN];
+    char v4_addr[CF_MAX_IP_LEN];
+    char v6_addr[CF_MAX_IP_LEN];
+    char if_name[CF_SMALLBUF];
+    char endline[CF_BUFSIZE];
+    int mtu = CF_NOINT;
+    LinkState *entry;
+
+    if ((pp = cf_popen(CF_DEBIAN_LISTINTERFACES_COMMAND, "r", true)) == NULL)
+    {
+        return false;
+    }
+
+    while (!feof(pp))
+    {
+        CfReadLine(&line, &line_size, pp);
+
+        if (feof(pp))
+        {
+            break;
+        }
+
+        if (isdigit(*line))
+        {
+            sscanf(line, "%*d: %32[^@ ]", if_name);
+            if (if_name[strlen(if_name)-1] == ':')
+            {
+                if_name[strlen(if_name)-1] = '\0';
+            }
+
+            entry = xcalloc(sizeof(LinkState), 1);
+            entry->next = *list;
+            *list = entry;
+            entry->name = xstrdup(if_name);
+
+            sscanf(line, "%*[^>]> mtu %d %[^\n]", &mtu, endline);
+            if (strstr(endline, "UP"))
+            {
+                entry->up = true;
+            }
+            else
+            {
+                entry->up = false;
+            }
+
+            entry->mtu = mtu;
+        }
+        else
+        {
+            *indent = '\0';
+            *hw_addr = '\0';
+            *v4_addr = '\0';
+            *v6_addr = '\0';
+
+            sscanf(line, "%31s", indent);
+
+            if (strncmp(indent, "inet6", 5) == 0)
+            {
+                sscanf(line, "%*s %64s", v6_addr);
+                RlistPrepend(&(entry->v6_addresses), v6_addr, RVAL_TYPE_SCALAR);
+            }
+            else if (strncmp(indent, "inet", 4) == 0)
+            {
+                sscanf(line, "%*s %64s", v4_addr);
+                entry->v4_address = xstrdup(v4_addr);
+            }
+            else if (strncmp(indent, "link", 4) == 0)
+            {
+                sscanf(line, "%*s %64s", hw_addr);
+                entry->hw_address = xstrdup(hw_addr);
+            }
+        }
+    }
+
+    free(line);
+    cf_pclose(pp);
+    return true;
 }

@@ -55,16 +55,16 @@ static const BodySyntax proxy_body = BodySyntaxNew("proxy", proxy_constraints, N
 
 static const ConstraintSyntax interface_constraints[] =
 {
-    ConstraintSyntaxNewStringList("bridge_interfaces", CF_ANYSTRING, "List of interfaces to bridge with IP forwarding", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewBool("spanning_tree", "Spanning tree protocol active", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewStringList("aggregate", CF_ANYSTRING, "List of interfaces to bond with LACP", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewStringList("tagged_vlans", CF_IDRANGE, "List of labelled (trunk) vlan identifers for this interface", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewStringList("bridge_interfaces", "", "List of interfaces to bridge with IP forwarding", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewStringList("aggregate", "", "List of interfaces to bond with LACP", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewStringList("tagged_vlans", "", "List of labelled (trunk) vlan identifers for this interface", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("untagged_vlan", CF_IDRANGE, "Unlabelled (access) vlan", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("ipv4_address", CF_IPRANGE, "A static IPV4 address", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("ipv4_broadcast", CF_IPRANGE, "A static IPV4 address for broadcast messages", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewStringList("ipv6_addresses", CF_IPRANGE, "A static IPV6 address", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBody("link_state", &linkstate_body, "The desired state of the interface link", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBody("proxy", &proxy_body, "For treating a remote device as a peripheral", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewBool("spanning_tree", "Spanning tree protocol active", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };
 
@@ -82,7 +82,15 @@ static const ConstraintSyntax relay_constraints[] =
     ConstraintSyntaxNewNull()
 };
 
-static const BodySyntax relay_body = BodySyntaxNew("relay", relay_constraints, NULL, SYNTAX_STATUS_NORMAL);
+static const ConstraintSyntax route_constraints[] =
+{
+    ConstraintSyntaxNewString("gateway_ip", CF_ANYSTRING, "IP address on gateway to next hop", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewString("gateway_interface", CF_ANYSTRING, "Interface name of gateway to next hop", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewNull()
+};
+
+static const BodySyntax relay_body = BodySyntaxNew("advertised_by", relay_constraints, NULL, SYNTAX_STATUS_NORMAL);
+static const BodySyntax route_body = BodySyntaxNew("routed_to", route_constraints, NULL, SYNTAX_STATUS_NORMAL);
 
 static const ConstraintSyntax balance_constraints[] =
 {
@@ -97,7 +105,7 @@ static const BodySyntax balancing_body = BodySyntaxNew("route_select", balance_c
 
 static const ConstraintSyntax network_constraints[] =
 {
-    ConstraintSyntaxNewBody("routed_to", &relay_body, "A body assigning a forwarding agent", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewBody("routed_to", &route_body, "A body assigning a forwarding agent", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBody("advertised_by", &relay_body, "A body assigning a protocol service", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewStringList("equivalent_gateways", CF_IDRANGE, "A list of nodes to select from", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBody("route_select", &balancing_body, "Settings for load balancing with balanced_relay", SYNTAX_STATUS_NORMAL),

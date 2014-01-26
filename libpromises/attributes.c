@@ -187,6 +187,7 @@ Attributes GetInterfaceAttributes(const EvalContext *ctx, const Promise *pp)
     attr.haveipv6 = (attr.interface.v6_addresses == NULL) ? false : true;
     attr.haveuvlan = (attr.interface.untagged_vlan == NULL) ? false : true;
     attr.havetvlan = (attr.interface.tagged_vlans == NULL) ? false : true;
+
     return attr;
 }
 

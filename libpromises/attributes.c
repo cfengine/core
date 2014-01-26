@@ -163,7 +163,6 @@ Attributes GetUserAttributes(const EvalContext *ctx, const Promise *pp)
     Attributes attr = { {0} };
 
     attr.havebundle = PromiseBundleConstraintExists(ctx, "home_bundle", pp);
-
     attr.inherit = PromiseGetConstraintAsBoolean(ctx, "home_bundle_inherit", pp);
 
     attr.transaction = GetTransactionConstraints(ctx, pp);
@@ -177,6 +176,13 @@ Attributes GetUserAttributes(const EvalContext *ctx, const Promise *pp)
 Attributes GetInterfaceAttributes(const EvalContext *ctx, const Promise *pp)
 {
     Attributes attr = { {0} };
+
+    attr.havebridge = PromiseGetConstraintAsBoolean(ctx, "bridge_interfaces", pp);
+    attr.haveaggr = PromiseGetConstraintAsBoolean(ctx, "aggregate", pp);
+    attr.haveipv4 = PromiseGetConstraintAsBoolean(ctx, "ipv4_address", pp);
+    attr.haveipv6 = PromiseGetConstraintAsBoolean(ctx, "ipv6_addresses", pp);
+    attr.haveuvlan = PromiseGetConstraintAsBoolean(ctx, "untagged_vlan", pp);
+    attr.havetvlan = PromiseGetConstraintAsBoolean(ctx, "tagged_vlans", pp);
 
     attr.transaction = GetTransactionConstraints(ctx, pp);
     attr.classes = GetClassDefinitionConstraints(ctx, pp);

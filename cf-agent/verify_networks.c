@@ -41,7 +41,7 @@ PromiseResult VerifyNetworkingPromise(EvalContext *ctx, const Promise *pp)
     CfLock thislock;
     char lockname[CF_BUFSIZE];
 
-    Attributes a = GetNetworkingAttributes(ctx, pp);
+    Attributes a = GetNetworkAttributes(ctx, pp);
 
     if (!NetworkSanityCheck(a, pp))
     {
@@ -99,7 +99,7 @@ void AssessNetworkingPromise(char *promiser, PromiseResult *result, EvalContext 
 {
 
     printf("CONFIG %s\n", promiser);
-    printf("");
+    printf("routed_to  # ip route add 192.168.55.0/24 via 192.168.1.254 dev eth1");
 
 // ip route replace
     // ip route delete

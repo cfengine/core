@@ -1498,6 +1498,12 @@ typedef struct
     int havevolume;
     int havebundle;
     int havepackages;
+    int havebridge;
+    int haveaggr;
+    int haveipv4;
+    int haveipv6;
+    int haveuvlan;
+    int havetvlan;
 
     /* editline */
 

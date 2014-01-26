@@ -27,6 +27,6 @@
 
 #include <cf3.defs.h>
 
-PromiseResult VerifyInterfacePromise(EvalContext *ctx, const Promise *pp);
+PromiseResult VerifyNetworkingPromise(EvalContext *ctx, const Promise *pp);
 
 #endif

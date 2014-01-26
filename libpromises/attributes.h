@@ -50,7 +50,7 @@ Attributes GetReportsAttributes(const EvalContext *ctx, const Promise *pp);
 Attributes GetServicesAttributes(const EvalContext *ctx, const Promise *pp);
 Attributes GetStorageAttributes(const EvalContext *ctx, const Promise *pp);
 Attributes GetInterfaceAttributes(const EvalContext *ctx, const Promise *pp);
-Attributes GetNetworkingAttributes(const EvalContext *ctx, const Promise *pp);
+Attributes GetNetworkAttributes(const EvalContext *ctx, const Promise *pp);
 
 Acl GetAclConstraints(const EvalContext *ctx, const Promise *pp);
 ContextConstraint GetContextConstraints(const EvalContext *ctx, const Promise *pp);

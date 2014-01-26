@@ -724,7 +724,12 @@ EvalContext *EvalContextNew(void)
     ctx->uid = getuid();
     ctx->gid = getgid();
     ctx->pid = getpid();
+
+#ifdef __MINGW32__
+    ctx->ppid = 0;
+#else
     ctx->ppid = getppid();
+#endif
 
     ctx->promises_done = PromiseSetNew();
     ctx->function_cache = RBTreeNew(NULL, NULL, NULL,

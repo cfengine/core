@@ -30,9 +30,12 @@
 #include <promises.h>
 #include <string_lib.h>
 #include <misc_lib.h>
+#include <files_lib.h>
 
-static int InterfaceSanityCheck(Attributes a,  const Promise *pp);
+static int InterfaceSanityCheck(EvalContext *ctx, Attributes a,  const Promise *pp);
 static void AssessInterfacePromise(char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp);
+static void AssessDebianInterfacePromise(char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp);
+static void AssessDebianVlan(char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp);
 
 /****************************************************************************/
 
@@ -43,12 +46,17 @@ PromiseResult VerifyInterfacePromise(EvalContext *ctx, const Promise *pp)
 
     Attributes a = GetInterfaceAttributes(ctx, pp);
 
-    if (!InterfaceSanityCheck(a, pp))
+    if (!InterfaceSanityCheck(ctx, a, pp))
     {
         return PROMISE_RESULT_FAIL;
     }
 
     PromiseBanner(pp);
+
+    if (!IsPrivileged())
+    {
+        return PROMISE_RESULT_SKIPPED;
+    }
 
     snprintf(lockname, CF_BUFSIZE - 1, "interface-%s", pp->promiser);
 
@@ -88,8 +96,36 @@ PromiseResult VerifyInterfacePromise(EvalContext *ctx, const Promise *pp)
 
 /****************************************************************************/
 
-static int InterfaceSanityCheck(Attributes a,  const Promise *pp)
+static int InterfaceSanityCheck(EvalContext *ctx, Attributes a,  const Promise *pp)
 {
+    if (a.havebridge && (a.haveipv4 || a.haveipv6))
+    {
+        Log(LOG_LEVEL_ERR, "Can't set IP address on bridge virtual interface for 'interfaces' promise '%s'", pp->promiser);
+        PromiseRef(LOG_LEVEL_ERR, pp);
+        return false;
+    }
+
+    if (a.havebridge && (a.havetvlan || a.haveuvlan))
+    {
+        Log(LOG_LEVEL_ERR, "Bridge virtual interace cannot have vlans in 'interfaces' promise '%s'", pp->promiser);
+        PromiseRef(LOG_LEVEL_ERR, pp);
+        return false;
+    }
+
+    if (a.haveaggr && a.havebridge)
+    {
+        Log(LOG_LEVEL_ERR, "Bonded/aggregate interface is not a bridge in 'interfaces' promise '%s'", pp->promiser);
+        PromiseRef(LOG_LEVEL_ERR, pp);
+        return false;
+    }
+
+    if (PromiseGetConstraintAsBoolean(ctx, "spanning_tree", pp) && !a.havebridge)
+    {
+        Log(LOG_LEVEL_ERR, "Spanning tree on non-bridge for 'interfaces' promise '%s'", pp->promiser);
+        PromiseRef(LOG_LEVEL_ERR, pp);
+        return false;
+    }
+
     return true;
 }
 
@@ -97,33 +133,88 @@ static int InterfaceSanityCheck(Attributes a,  const Promise *pp)
 
 void AssessInterfacePromise(char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp)
 {
+// if (IsDefinedClass(ctx,"debian"))
+    if (true)
+    {
+        AssessDebianInterfacePromise(promiser, result, ctx, a, pp);
+    }
+    else
+    {
+        Log(LOG_LEVEL_ERR, "'interfaces' promises are not yet supported on this platform");
+        *result = PROMISE_RESULT_INTERRUPTED;
+        return;
+    }
+}
+
+/****************************************************************************/
+/* Level 1                                                                  */
+/****************************************************************************/
+
+#define CF_DEBIAN_IFCONF "/etc/network/interfaces"
+#define CF_VLAN_FILE "/proc/net/vlan/config"
+#define CF_VLAN_COMMAND "/sbin/vconfig"
+#define CF_LISTINTERFACES_COMMAND "/bin/ip addr"
+
+static void AssessDebianInterfacePromise(char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp)
+{
+    if (a->havetvlan || a->haveuvlan)
+    {
+        AssessDebianVlan(promiser, result, ctx, a, pp);
+    }
+    else if (a->havebridge)
+    {
+    }
+    else if (a->haveaggr)
+    {
+    }
+
+    if (a->haveipv4)
+    {
+    }
+
+    if (a->haveipv6)
+    {
+    }
+
+    if (PromiseGetConstraintAsBoolean(ctx, "link_state", pp))
+    {
+    }
+
+}
+
+/****************************************************************************/
+
+static void AssessDebianVlan(char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp)
+{
+    FILE *fp;
 
 // Look for reserved variable
 // VLANS[blue] int => "id"
 
+    // Linux naming INTERFACE:alias.vlan, e.g. eth0:2.1 or eth0.100
+
     printf("CONFIG %s\n", promiser);
-    printf("");
 
-    if (IsDefinedClass(ctx,"debian"))
+    if ((fp = safe_fopen(CF_VLAN_FILE, "r")) == NULL)
     {
-
+        return;
     }
 
-    // JunOS, Arista, CiscoIOS ?
+/*    size_t line_size = CF_BUFSIZE;
+      char *line = xmalloc(line_size);
 
-    /*
-      i.tagged_vlans = PromiseGetConstraintAsList(ctx, "tagged_vlans", pp);
-      i.untagged_vlan = PromiseGetConstraintAsRval(pp, "untagged_vlan", RVAL_TYPE_SCALAR);
-      i.v4_address = PromiseGetConstraintAsRval(pp, "ipv4_address", RVAL_TYPE_SCALAR);
-      i.v6_address = PromiseGetConstraintAsRval(pp, "ipv6_address", RVAL_TYPE_SCALAR);
-      i.duplex = PromiseGetConstraintAsRval(pp, "duplex", RVAL_TYPE_SCALAR);
-      i.state = PromiseGetConstraintAsRval(pp, "state", RVAL_TYPE_SCALAR);
-      i.aggregate = PromiseGetConstraintAsList(ctx, "aggregate", pp);
-      i.state = PromiseGetConstraintAsRval(pp, "state", RVAL_TYPE_SCALAR);
-      i.spanning = PromiseGetConstraintAsRval(pp, "spanning", RVAL_TYPE_SCALAR);
-      i.bonding = PromiseGetConstraintAsBoolean(ctx, "bonding", pp);
-      i.mtu = PromiseGetConstraintAsInt(ctx, "mtu", pp);
-      i.speed = PromiseGetConstraintAsInt(ctx, "speed", pp);
-      i.min_bonding = PromiseGetConstraintAsInt(ctx, "min_bonding", pp);
-    */
+      // Skip two headers
+      CfReadLine(&line, &line_size, fp);
+      CfReadLine(&line, &line_size, fp);
+
+      while (!feof(fp))
+      {
+      CfReadLine(&line, &line_size, fp);
+      sscanf(line, "%s | %d 1 %s", ifname, &id, parent);
+      printf("GOT %s with id %d\n");
+      }
+
+      free(line);
+*/
+    fclose(fp);
 }

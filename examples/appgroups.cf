@@ -1,0 +1,147 @@
+#  Copyright (C) Cfengine AS
+
+#  This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+
+#  This program is free software; you can redistribute it and/or modify it
+#  under the terms of the GNU General Public License as published by the
+#  Free Software Foundation; version 3.
+
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
+
+# To the extent this program is licensed as part of the Enterprise
+# versions of Cfengine, the applicable Commercial Open Source License
+# (COSL) may apply to this file if you as a licensee so wish it. See
+# included file COSL.txt.
+
+#+begin_src cfengine3
+body common control
+{
+      bundlesequence => { run };
+}
+
+bundle agent run
+{
+  vars:
+      # you can also readjson() from a file
+      "groups" data => parsejson('{
+"ByGroup":
+{
+  "App1":
+  [
+    "GrpA",
+    "GrpB",
+    "GrpC"
+  ],
+  "App2":
+  [
+    "GrpX",
+    "GrpY",
+    "GrpZ"
+  ]
+},
+
+"ByApp":
+{
+  "App1":
+  [
+    "Host1",
+    "Host2",
+    "Host3"
+  ],
+  "App2":
+  [
+    "Host1",
+    "Host3"
+  ]
+}
+}');
+
+  methods:
+      # use the first one on the client
+      #"go" usebundle => appgroups($(sys.uqhost), @(groups));
+      "go" usebundle => appgroups("Host1", @(groups));
+      "go" usebundle => appgroups("Host2", @(groups));
+}
+
+bundle agent appgroups(name, g)
+{
+  classes:
+      "$(maps)" expression => strcmp($(name), "$(hosts_$(maps))");
+      "$(groups_$(gmaps))" expression => classmatch($(gmaps));
+      "have_groups" not => strcmp("0", length(list));
+
+  vars:
+      "maps" slist => getindices("g[ByApp]");
+      "hosts_$(maps)" slist => getvalues("g[ByApp][$(maps)]");
+
+      "gmaps" slist => getindices("g[ByGroup]");
+      "groups_$(gmaps)" slist => getvalues("g[ByGroup][$(gmaps)]");
+
+      "grouplist[$(groups_$(gmaps))]" string => "1",
+       ifvarclass => "$(gmaps)";
+
+      "list" slist => getindices("grouplist");
+      "list_sorted" slist => sort(list, "lex");
+      "list_spaces" string => join(" ", list_sorted);
+
+  reports:
+      "$(this.bundle): looking for $(name)";
+
+      "$(this.bundle): ByApp $(maps)";
+      "$(this.bundle): hosts for $(maps): $(hosts_$(maps))";
+
+      "$(this.bundle): ByGroup $(gmaps)";
+      "$(this.bundle): groups for $(gmaps): $(groups_$(gmaps))";
+
+      "$(this.bundle): $(name) is in $(maps)" ifvarclass => "$(maps)";
+
+      "$(this.bundle): all groups for $(name) = $(groups_$(gmaps))"
+       ifvarclass => "$(gmaps)";
+
+    have_groups::
+      "$(this.bundle): space-separated groups for $(name) = $(list_spaces)";
+}
+#+end_src
+###############################################################################
+#+begin_src example_output
+#@ ```
+#@ 2014-01-26T16:03:33-0500   notice: /default/run/methods/'go'/default/appgroups: R: appgroups: looking for Host1
+#@ 2014-01-26T16:03:33-0500   notice: /default/run/methods/'go'/default/appgroups: R: appgroups: ByApp App1
+#@ 2014-01-26T16:03:33-0500   notice: /default/run/methods/'go'/default/appgroups: R: appgroups: ByApp App2
+#@ 2014-01-26T16:03:33-0500   notice: /default/run/methods/'go'/default/appgroups: R: appgroups: hosts for App1: Host1
+#@ 2014-01-26T16:03:33-0500   notice: /default/run/methods/'go'/default/appgroups: R: appgroups: hosts for App2: Host1
+#@ 2014-01-26T16:03:33-0500   notice: /default/run/methods/'go'/default/appgroups: R: appgroups: hosts for App1: Host2
+#@ 2014-01-26T16:03:33-0500   notice: /default/run/methods/'go'/default/appgroups: R: appgroups: hosts for App1: Host3
+#@ 2014-01-26T16:03:33-0500   notice: /default/run/methods/'go'/default/appgroups: R: appgroups: hosts for App2: Host3
+#@ 2014-01-26T16:03:33-0500   notice: /default/run/methods/'go'/default/appgroups: R: appgroups: ByGroup App1
+#@ 2014-01-26T16:03:33-0500   notice: /default/run/methods/'go'/default/appgroups: R: appgroups: ByGroup App2
+#@ 2014-01-26T16:03:33-0500   notice: /default/run/methods/'go'/default/appgroups: R: appgroups: groups for App1: GrpA
+#@ 2014-01-26T16:03:33-0500   notice: /default/run/methods/'go'/default/appgroups: R: appgroups: groups for App2: GrpX
+#@ 2014-01-26T16:03:33-0500   notice: /default/run/methods/'go'/default/appgroups: R: appgroups: groups for App1: GrpB
+#@ 2014-01-26T16:03:33-0500   notice: /default/run/methods/'go'/default/appgroups: R: appgroups: groups for App1: GrpC
+#@ 2014-01-26T16:03:33-0500   notice: /default/run/methods/'go'/default/appgroups: R: appgroups: groups for App2: GrpY
+#@ 2014-01-26T16:03:33-0500   notice: /default/run/methods/'go'/default/appgroups: R: appgroups: groups for App2: GrpZ
+#@ 2014-01-26T16:03:33-0500   notice: /default/run/methods/'go'/default/appgroups: R: appgroups: Host1 is in App1
+#@ 2014-01-26T16:03:33-0500   notice: /default/run/methods/'go'/default/appgroups: R: appgroups: Host1 is in App2
+#@ 2014-01-26T16:03:33-0500   notice: /default/run/methods/'go'/default/appgroups: R: appgroups: all groups for Host1 = GrpA
+#@ 2014-01-26T16:03:33-0500   notice: /default/run/methods/'go'/default/appgroups: R: appgroups: all groups for Host1 = GrpX
+#@ 2014-01-26T16:03:33-0500   notice: /default/run/methods/'go'/default/appgroups: R: appgroups: all groups for Host1 = GrpB
+#@ 2014-01-26T16:03:33-0500   notice: /default/run/methods/'go'/default/appgroups: R: appgroups: all groups for Host1 = GrpC
+#@ 2014-01-26T16:03:33-0500   notice: /default/run/methods/'go'/default/appgroups: R: appgroups: all groups for Host1 = GrpY
+#@ 2014-01-26T16:03:33-0500   notice: /default/run/methods/'go'/default/appgroups: R: appgroups: all groups for Host1 = GrpZ
+#@ 2014-01-26T16:03:33-0500   notice: /default/run/methods/'go'/default/appgroups: R: appgroups: space-separated groups for Host1 = GrpA GrpB GrpC GrpX GrpY GrpZ
+#@ 2014-01-26T16:03:33-0500   notice: /default/run/methods/'go'/default/appgroups: R: appgroups: looking for Host2
+#@ 2014-01-26T16:03:33-0500   notice: /default/run/methods/'go'/default/appgroups: R: appgroups: Host2 is in App1
+#@ 2014-01-26T16:03:33-0500   notice: /default/run/methods/'go'/default/appgroups: R: appgroups: all groups for Host2 = GrpA
+#@ 2014-01-26T16:03:33-0500   notice: /default/run/methods/'go'/default/appgroups: R: appgroups: all groups for Host2 = GrpB
+#@ 2014-01-26T16:03:33-0500   notice: /default/run/methods/'go'/default/appgroups: R: appgroups: all groups for Host2 = GrpC
+#@ 2014-01-26T16:03:33-0500   notice: /default/run/methods/'go'/default/appgroups: R: appgroups: space-separated groups for Host2 = GrpA GrpB GrpC GrpX GrpY GrpZ
+#@ ```
+#+end_src

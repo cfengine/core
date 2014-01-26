@@ -31,7 +31,7 @@ static const ConstraintSyntax linkstate_constraints[] =
 {
     ConstraintSyntaxNewBool("bonding", "If true, the Link Aggregation Control Protocol is enabled to bond interfaces", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewOption("state", "up,down", "Status of interface", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewOption("duplex", "half,full", "Duplex wiring configuration", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewOption("duplex", "half,full,auto", "Duplex wiring configuration", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewOption("spanning_tree", "on,off", "Status of local spanning tree protocol", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewInt("mtu", CF_INTRANGE, "MTU setting", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewInt("speed", CF_INTRANGE, "Link speed in MB/s", SYNTAX_STATUS_NORMAL),
@@ -90,10 +90,12 @@ static const BodySyntax balancing_body = BodySyntaxNew("balancing_policy", balan
 
 /**********************************************************************************************/
 
-static const ConstraintSyntax route_constraints[] =
+static const ConstraintSyntax network_constraints[] =
 {
-    ConstraintSyntaxNewBody("relay", &relay_body, "A body assigning a forwarding agent", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewBody("balancing_policy", &balancing_body, "Settings for load balancing with balanced_relay", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewBody("routed_to", &relay_body, "A body assigning a forwarding agent", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewBody("advertised_by", &relay_body, "A body assigning a protocol service", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewStringList("select_route_from", CF_IDRANGE, "A list of nodes to select from", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewBody("route_selection_policy", &balancing_body, "Settings for load balancing with balanced_relay", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewStringList("balanced_relay", CF_ANYSTRING, "List of hosts by name/address", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };
@@ -103,7 +105,7 @@ static const ConstraintSyntax route_constraints[] =
 const PromiseTypeSyntax CF_INTERFACES_PROMISE_TYPES[] =
 {
     PromiseTypeSyntaxNew("agent", "interfaces", interface_constraints, NULL, SYNTAX_STATUS_NORMAL),
-    PromiseTypeSyntaxNew("agent", "routes", route_constraints, NULL, SYNTAX_STATUS_NORMAL),
+    PromiseTypeSyntaxNew("agent", "networks", network_constraints, NULL, SYNTAX_STATUS_NORMAL),
     PromiseTypeSyntaxNewNull()
 };
 

@@ -177,16 +177,16 @@ Attributes GetInterfaceAttributes(const EvalContext *ctx, const Promise *pp)
 {
     Attributes attr = { {0} };
 
-    attr.havebridge = PromiseGetConstraintAsBoolean(ctx, "bridge_interfaces", pp);
-    attr.haveaggr = PromiseGetConstraintAsBoolean(ctx, "aggregate", pp);
-    attr.haveipv4 = PromiseGetConstraintAsBoolean(ctx, "ipv4_address", pp);
-    attr.haveipv6 = PromiseGetConstraintAsBoolean(ctx, "ipv6_addresses", pp);
-    attr.haveuvlan = PromiseGetConstraintAsBoolean(ctx, "untagged_vlan", pp);
-    attr.havetvlan = PromiseGetConstraintAsBoolean(ctx, "tagged_vlans", pp);
-
     attr.transaction = GetTransactionConstraints(ctx, pp);
     attr.classes = GetClassDefinitionConstraints(ctx, pp);
     attr.interface = GetInterfaceConstraints(ctx, pp);
+
+    attr.havebridge = (attr.interface.bridge_interfaces == NULL) ? false : true;
+    attr.haveaggr = (attr.interface.aggregate == NULL) ? false : true;
+    attr.haveipv4 = (attr.interface.v4_address == NULL) ? false : true;
+    attr.haveipv6 = (attr.interface.v6_addresses == NULL) ? false : true;
+    attr.haveuvlan = (attr.interface.untagged_vlan == NULL) ? false : true;
+    attr.havetvlan = (attr.interface.tagged_vlans == NULL) ? false : true;
     return attr;
 }
 
@@ -1695,10 +1695,11 @@ Interfaces GetInterfaceConstraints(const EvalContext *ctx, const Promise *pp)
 
     // Proxy body
 
+    i.bridge_interfaces = PromiseGetConstraintAsList(ctx, "bridge_interfaces", pp);
     i.tagged_vlans = PromiseGetConstraintAsList(ctx, "tagged_vlans", pp);
     i.untagged_vlan = PromiseGetConstraintAsRval(pp, "untagged_vlan", RVAL_TYPE_SCALAR);
     i.v4_address = PromiseGetConstraintAsRval(pp, "ipv4_address", RVAL_TYPE_SCALAR);
-    i.v6_address = PromiseGetConstraintAsRval(pp, "ipv6_address", RVAL_TYPE_SCALAR);
+    i.v6_addresses = PromiseGetConstraintAsList(ctx, "ipv6_addresses", pp);
     i.duplex = PromiseGetConstraintAsRval(pp, "duplex", RVAL_TYPE_SCALAR);
     i.state = PromiseGetConstraintAsRval(pp, "state", RVAL_TYPE_SCALAR);
     i.aggregate = PromiseGetConstraintAsList(ctx, "aggregate", pp);

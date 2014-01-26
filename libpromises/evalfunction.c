@@ -1957,39 +1957,101 @@ static FnCallResult FnCallJoin(EvalContext *ctx, ARG_UNUSED const Policy *policy
     int size = 0;
 
     const char *join = RlistScalarValue(finalargs);
-    const Rlist *input_list = GetListReferenceArgument(ctx, fp, RlistScalarValue(finalargs->next), NULL);
-    if (!input_list)
+    const char *name = RlistScalarValue(finalargs->next);
+
+    DataType type = DATA_TYPE_NONE;
+    VarRef *ref = VarRefParse(name);
+    const void *value = EvalContextVariableGet(ctx, ref, &type);
+    VarRefDestroy(ref);
+    if (!value)
     {
+        Log(LOG_LEVEL_VERBOSE, "Function '%s', argument '%s' did not resolve to a variable",
+            fp->name, name);
         return FnFailure();
     }
 
-    for (const Rlist *rp = input_list; rp != NULL; rp = rp->next)
-    {
-        if (strcmp(RlistScalarValue(rp), CF_NULL_VALUE) == 0)
-        {
-            continue;
-        }
+    Rlist *input_list = NULL;
+    JsonElement *json = NULL;
 
-        size += strlen(RlistScalarValue(rp)) + strlen(join);
+    switch (DataTypeToRvalType(type))
+    {
+    case RVAL_TYPE_LIST:
+        input_list = (Rlist *)value;
+        if (NULL != input_list && NULL == input_list->next
+            && input_list->val.type == RVAL_TYPE_SCALAR
+            && strcmp(RlistScalarValue(input_list), CF_NULL_VALUE) == 0) // TODO: This... bullshit
+        {
+            input_list = NULL;
+        }
+        break;
+    case RVAL_TYPE_CONTAINER:
+        json = (JsonElement *)value;
+        break;
+    default:
+        Log(LOG_LEVEL_ERR, "Function '%s', argument '%s' resolved to unsupported datatype '%s'",
+            fp->name, name, DataTypeToString(type));
+        return FnFailure();
     }
 
-    joined = xcalloc(1, size + 1);
-    size = 0;
-
-    for (const Rlist *rp = input_list; rp != NULL; rp = rp->next)
+    if (NULL != input_list)
     {
-        if (strcmp(RlistScalarValue(rp), CF_NULL_VALUE) == 0)
+        for (const Rlist *rp = input_list; rp != NULL; rp = rp->next)
         {
-            continue;
-        }
+            if (strcmp(RlistScalarValue(rp), CF_NULL_VALUE) == 0)
+            {
+                continue;
+            }
 
-        strcpy(joined + size, RlistScalarValue(rp));
-
-        if (rp->next != NULL)
-        {
-            strcpy(joined + size + strlen(RlistScalarValue(rp)), join);
             size += strlen(RlistScalarValue(rp)) + strlen(join);
         }
+
+        joined = xcalloc(1, size + 1);
+        size = 0;
+
+        for (const Rlist *rp = input_list; rp != NULL; rp = rp->next)
+        {
+            if (strcmp(RlistScalarValue(rp), CF_NULL_VALUE) == 0)
+            {
+                continue;
+            }
+
+            strcpy(joined + size, RlistScalarValue(rp));
+
+            if (rp->next != NULL)
+            {
+                strcpy(joined + size + strlen(RlistScalarValue(rp)), join);
+                size += strlen(RlistScalarValue(rp)) + strlen(join);
+            }
+        }
+    }
+    else if (NULL != json)
+    {
+        Buffer *buf = BufferNew();
+        size_t trimto = 0;
+
+        if (JsonGetElementType(value) == JSON_ELEMENT_TYPE_CONTAINER)
+        {
+            JsonIterator iter = JsonIteratorInit(value);
+            const JsonElement *el = NULL;
+            while ((el = JsonIteratorNextValue(&iter)))
+            {
+                char *value = JsonPrimitiveAsString(el);
+                if (NULL != value)
+                {
+                    BufferAppend(buf, value, strlen(value));
+                    trimto = BufferSize(buf);
+                    BufferAppend(buf, join, strlen(join));
+                }
+            }
+        }
+
+        joined = xstrdup(BufferData(buf));
+        joined[trimto] = '\0';
+        BufferDestroy(buf);
+    }
+    else
+    {
+        joined = xstrdup("");
     }
 
     return (FnCallResult) { FNCALL_SUCCESS, { joined, RVAL_TYPE_SCALAR } };

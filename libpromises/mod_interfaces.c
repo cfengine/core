@@ -56,6 +56,7 @@ static const BodySyntax proxy_body = BodySyntaxNew("proxy", proxy_constraints, N
 static const ConstraintSyntax interface_constraints[] =
 {
     ConstraintSyntaxNewStringList("bridge_interfaces", CF_ANYSTRING, "List of interfaces to bridge with IP forwarding", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewBool("spanning_tree", "Spanning tree protocol active", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewStringList("aggregate", CF_ANYSTRING, "List of interfaces to bond with LACP", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewStringList("tagged_vlans", CF_IDRANGE, "List of labelled (trunk) vlan identifers for this interface", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("untagged_vlan", CF_IDRANGE, "Unlabelled (access) vlan", SYNTAX_STATUS_NORMAL),

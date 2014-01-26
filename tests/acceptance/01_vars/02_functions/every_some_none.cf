@@ -32,10 +32,25 @@ bundle agent init
                            "starting list = three",
                            "every() test 1 passed",
                            "every() test 2 passed",
+                           "every() test d11 passed",
+                           "every() test d12 passed",
+                           "every() test d21 passed",
+                           "every() test d22 passed",
+                           "none() dempty test passed",
                            "none() test 1 passed",
                            "none() test 2 passed",
+                           "none() test d11 passed",
+                           "none() test d12 passed",
+                           "none() test d21 passed",
+                           "none() test d22 passed",
+                           "some() dempty test passed",
                            "some() test 1 passed",
                            "some() test 2 passed",
+                           "some() test d11 passed",
+                           "some() test d12 passed",
+                           "some() test d21 passed",
+                           "some() test d22 passed",
+                           "every() dempty test passed",
                            "every() empty test passed",
                            "some() empty test passed",
                            "none() empty test passed",
@@ -72,7 +87,21 @@ bundle common testaide
                         "four", "fix", "six",
                         "one", "two", "three",
       };
+
       "empty" slist => { };
+
+      "d1" data => parsejson('
+[1,2,3,
+ "one", "two", "three",
+ "long string",
+ "four", "fix", "six",
+ "one", "two", "three"]');
+
+      "d2" data => parsejson('
+{ "one": 1, "two": 2, "three": 3,
+  "x": "y", "a": "b", "p": "q" }');
+
+      "dempty" data => parsejson('[]');
 
   classes:
       "every1" expression => every(".*", "test");
@@ -87,6 +116,28 @@ bundle common testaide
       "every_empty" expression => every(".*", "empty");
       "some_empty" expression => some(".*", "empty");
       "none_empty" expression => none(".*", "empty");
+
+      "everyd11" expression => every(".*", d1);
+      "everyd12" expression => every(".", d1);
+
+      "somed11" expression => some("long string", d1);
+      "somed12" expression => some("none", d1);
+
+      "noned11" expression => none("jebadiah", d1);
+      "noned12" expression => none("2", d1);
+
+      "everyd21" expression => every(".*", d2);
+      "everyd22" expression => every(".", d2);
+
+      "somed21" expression => some("long string", d2);
+      "somed22" expression => some("none", d2);
+
+      "noned21" expression => none("jebadiah", d2);
+      "noned22" expression => none("2", d2);
+
+      "every_dempty" expression => every(".*", dempty);
+      "some_dempty" expression => some(".*", dempty);
+      "none_dempty" expression => none(".*", dempty);
 }
 
 bundle agent test
@@ -131,6 +182,60 @@ bundle edit_line test_insert
       "some() empty test passed";
     none_empty::
       "none() empty test passed";
+    everyd11::
+      "every() test d11 passed";
+    !everyd11::
+      "every() test d11 failed";
+    everyd12::
+      "every() test d12 failed";
+    !everyd12::
+      "every() test d12 passed";
+    somed11::
+      "some() test d11 passed";
+    !somed11::
+      "some() test d11 failed";
+    somed12::
+      "some() test d12 failed";
+    !somed12::
+      "some() test d12 passed";
+    noned11::
+      "none() test d11 passed";
+    !noned11::
+      "none() test d11 failed";
+    noned12::
+      "none() test d12 failed";
+    !noned12::
+      "none() test d12 passed";
+    everyd21::
+      "every() test d21 passed";
+    !everyd21::
+      "every() test d21 failed";
+    everyd22::
+      "every() test d22 passed";
+    !everyd22::
+      "every() test d22 failed";
+    somed21::
+      "some() test d21 failed";
+    !somed21::
+      "some() test d21 passed";
+    somed22::
+      "some() test d22 failed";
+    !somed22::
+      "some() test d22 passed";
+    noned21::
+      "none() test d21 passed";
+    !noned21::
+      "none() test d21 failed";
+    noned22::
+      "none() test d22 failed";
+    !noned22::
+      "none() test d22 passed";
+    !every_dempty::
+      "every() dempty test passed";
+    !some_dempty::
+      "some() dempty test passed";
+    none_dempty::
+      "none() dempty test passed";
 }
 
 #######################################################

@@ -983,6 +983,7 @@ LIBS="$CORE_LIBS"
 dnl ######################################################################
 dnl OS specific stuff
 dnl ######################################################################
+AM_CONDITIONAL([IS_FREEBSD],false)
 
 case "$target_os" in
 
@@ -1003,6 +1004,8 @@ case "$target_os" in
         AC_CHECK_LIB(nss_nis, yp_get_default_domain)
         ;;
    freebsd*|dragonfly*)
+        AC_DEFINE([IS_FREEBSD],[1],[FreeBSD Host])
+        AM_CONDITIONAL([IS_FREEBSD],true)
         ;;
    netbsd*)
         ;;

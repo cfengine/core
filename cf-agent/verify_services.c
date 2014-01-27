@@ -201,7 +201,7 @@ static PromiseResult DoVerifyServices(EvalContext *ctx, Attributes a, const Prom
 
     if (!service_bundle)
     {
-        cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, a, "Service '%s' cannmot be resolved as a bundle", pp->promiser);
+        cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, a, "Service '%s' cannot be resolved as a bundle", pp->promiser);
         return PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
     }
 

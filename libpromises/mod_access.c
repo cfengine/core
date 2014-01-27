@@ -73,8 +73,8 @@ static const BodySyntax report_data_select_body = BodySyntaxNew("report_data_sel
 
 const ConstraintSyntax CF_REMACCESS_BODIES[REMOTE_ACCESS_NONE + 1] =
 {
-    ConstraintSyntaxNewStringList("admit", "", "List of host names or IP addresses to grant access to file objects", SYNTAX_STATUS_DEPRECATED),
-    ConstraintSyntaxNewStringList("deny", "", "List of host names or IP addresses to deny access to file objects", SYNTAX_STATUS_DEPRECATED),
+    ConstraintSyntaxNewStringList("admit", "", "List of host names or IP addresses to grant access to file objects", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewStringList("deny", "", "List of host names or IP addresses to deny access to file objects", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewStringList("admit_ips", "", "List of IP addresses or subnet masks to grant access to file objects", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewStringList("deny_ips", "", "List of IP addresses or subnet masks to deny access to file objects", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewStringList("admit_hostnames", "", "List of hostnames to grant access to file objects", SYNTAX_STATUS_NORMAL),

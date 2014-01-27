@@ -1130,6 +1130,10 @@ static void OSClasses(EvalContext *ctx)
         {
             snprintf(vbuff, CF_BUFSIZE, "/var/spool/cron/%s", pw->pw_name);
         }
+        else if (EvalContextClassGet(ctx, NULL, "freebsd"))
+        {
+            snprintf(vbuff, CF_BUFSIZE, "/var/cron/tabs/%s", pw->pw_name);
+        }
         else
         {
             snprintf(vbuff, CF_BUFSIZE, "/var/spool/cron/crontabs/%s", pw->pw_name);

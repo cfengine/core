@@ -193,12 +193,17 @@ static PromiseResult VerifyServices(EvalContext *ctx, Attributes a, const Promis
 static PromiseResult DoVerifyServices(EvalContext *ctx, Attributes a, const Promise *pp)
 {
     FnCall *service_bundle = PromiseGetConstraintAsRval(pp, "service_bundle", RVAL_TYPE_FNCALL);
+    PromiseResult result = PROMISE_RESULT_NOOP;
     if (!service_bundle)
     {
         service_bundle = PromiseGetConstraintAsRval(pp, "service_bundle", RVAL_TYPE_SCALAR);
     }
 
-    assert(service_bundle);
+    if (!service_bundle)
+    {
+        cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, a, "Service '%s' cannmot be resolved as a bundle", pp->promiser);
+        return PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
+    }
 
     switch (a.service.service_policy)
     {
@@ -227,7 +232,6 @@ static PromiseResult DoVerifyServices(EvalContext *ctx, Attributes a, const Prom
         bp = PolicyGetBundle(PolicyFromPromise(pp), NULL, "common", service_bundle->name);
     }
 
-    PromiseResult result = PROMISE_RESULT_NOOP;
     if (!bp)
     {
         cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, a, "Service '%s' could not be invoked successfully", pp->promiser);

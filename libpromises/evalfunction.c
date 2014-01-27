@@ -5743,7 +5743,7 @@ static char *StripPatterns(char *file_buffer, const char *pattern, const char *f
             {
                 Log(LOG_LEVEL_ERR,
                     "Comment regex '%s' was irreconcilable reading input '%s' probably because it legally matches nothing",
-                      pattern, filename);
+                    pattern, filename);
                 return file_buffer;
             }
         }
@@ -6628,28 +6628,6 @@ static const FnCallArg PARSESTRINGARRAY_ARGS[] =
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-static const FnCallArg READSTRINGARRAYIDX_ARGS[] =
-{
-    {CF_IDRANGE, DATA_TYPE_STRING, "Array identifier to populate"},
-    {CF_ABSPATHRANGE, DATA_TYPE_STRING, "A string to parse for input data"},
-    {CF_ANYSTRING, DATA_TYPE_STRING, "Regex matching comments"},
-    {CF_ANYSTRING, DATA_TYPE_STRING, "Regex to split data"},
-    {CF_VALRANGE, DATA_TYPE_INT, "Maximum number of entries to read"},
-    {CF_VALRANGE, DATA_TYPE_INT, "Maximum bytes to read"},
-    {NULL, DATA_TYPE_NONE, NULL}
-};
-
-static const FnCallArg PARSESTRINGARRAYIDX_ARGS[] =
-{
-    {CF_IDRANGE, DATA_TYPE_STRING, "Array identifier to populate"},
-    {CF_ANYSTRING, DATA_TYPE_STRING, "A string to parse for input data"},
-    {CF_ANYSTRING, DATA_TYPE_STRING, "Regex matching comments"},
-    {CF_ANYSTRING, DATA_TYPE_STRING, "Regex to split data"},
-    {CF_VALRANGE, DATA_TYPE_INT, "Maximum number of entries to read"},
-    {CF_VALRANGE, DATA_TYPE_INT, "Maximum bytes to read"},
-    {NULL, DATA_TYPE_NONE, NULL}
-};
-
 static const FnCallArg READSTRINGLIST_ARGS[] =
 {
     {CF_ABSPATHRANGE, DATA_TYPE_STRING, "File name to read"},
@@ -7132,15 +7110,15 @@ const FnCallType CF_FNCALL_TYPES[] =
                   FNCALL_OPTION_VARARG, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("packagesmatching", DATA_TYPE_CONTAINER, PACKAGESMATCHING_ARGS, &FnCallPackagesMatching, "List the defined packages (\"name,version,arch,manager\") matching regex arg1=name,arg2=version,arg3=arch,arg4=method",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_SYSTEM, SYNTAX_STATUS_NORMAL),
-    FnCallTypeNew("parseintarray", DATA_TYPE_INT, PARSESTRINGARRAY_ARGS, &FnCallParseIntArray, "Read an array of integers from a string and assign the dimension to a variable",
+    FnCallTypeNew("parseintarray", DATA_TYPE_INT, PARSESTRINGARRAY_ARGS, &FnCallParseIntArray, "Read an array of integers from a string, indexing by first entry on line and sequentially within each line; return line count",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("parsejson", DATA_TYPE_CONTAINER, PARSEJSON_ARGS, &FnCallParseJson, "Parse a JSON data container from a string",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),
-    FnCallTypeNew("parserealarray", DATA_TYPE_INT, PARSESTRINGARRAY_ARGS, &FnCallParseRealArray, "Read an array of real numbers from a string and assign the dimension to a variable",
+    FnCallTypeNew("parserealarray", DATA_TYPE_INT, PARSESTRINGARRAY_ARGS, &FnCallParseRealArray, "Read an array of real numbers from a string, indexing by first entry on line and sequentially within each line; return line count",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),
-    FnCallTypeNew("parsestringarray", DATA_TYPE_INT, PARSESTRINGARRAY_ARGS, &FnCallParseStringArray, "Read an array of strings from a string and assign the dimension to a variable",
+    FnCallTypeNew("parsestringarray", DATA_TYPE_INT, PARSESTRINGARRAY_ARGS, &FnCallParseStringArray, "Read an array of strings from a string, indexing by first word on line and sequentially within each line; return line count",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),
-    FnCallTypeNew("parsestringarrayidx", DATA_TYPE_INT, PARSESTRINGARRAYIDX_ARGS, &FnCallParseStringArrayIndex, "Read an array of strings from a string and assign the dimension to a variable with integer indices",
+    FnCallTypeNew("parsestringarrayidx", DATA_TYPE_INT, PARSESTRINGARRAY_ARGS, &FnCallParseStringArrayIndex, "Read an array of strings from a string, indexing by line number and sequentially within each line; return line count",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("peers", DATA_TYPE_STRING_LIST, PEERS_ARGS, &FnCallPeers, "Get a list of peers (not including ourself) from the partition to which we belong",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_COMM, SYNTAX_STATUS_NORMAL),
@@ -7154,19 +7132,19 @@ const FnCallType CF_FNCALL_TYPES[] =
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("readfile", DATA_TYPE_STRING, READFILE_ARGS, &FnCallReadFile, "Read max number of bytes from named file and assign to variable",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),
-    FnCallTypeNew("readintarray", DATA_TYPE_INT, READSTRINGARRAY_ARGS, &FnCallReadIntArray, "Read an array of integers from a file and assign the dimension to a variable",
+    FnCallTypeNew("readintarray", DATA_TYPE_INT, READSTRINGARRAY_ARGS, &FnCallReadIntArray, "Read an array of integers from a file, indexed by first entry on line and sequentially on each line; return line count",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("readintlist", DATA_TYPE_INT_LIST, READSTRINGLIST_ARGS, &FnCallReadIntList, "Read and assign a list variable from a file of separated ints",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("readjson", DATA_TYPE_CONTAINER, READJSON_ARGS, &FnCallReadJson, "Read a JSON data container from a file",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),
-    FnCallTypeNew("readrealarray", DATA_TYPE_INT, READSTRINGARRAY_ARGS, &FnCallReadRealArray, "Read an array of real numbers from a file and assign the dimension to a variable",
+    FnCallTypeNew("readrealarray", DATA_TYPE_INT, READSTRINGARRAY_ARGS, &FnCallReadRealArray, "Read an array of real numbers from a file, indexed by first entry on line and sequentially on each line; return line count",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("readreallist", DATA_TYPE_REAL_LIST, READSTRINGLIST_ARGS, &FnCallReadRealList, "Read and assign a list variable from a file of separated real numbers",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),
-    FnCallTypeNew("readstringarray", DATA_TYPE_INT, READSTRINGARRAY_ARGS, &FnCallReadStringArray, "Read an array of strings from a file and assign the dimension to a variable",
+    FnCallTypeNew("readstringarray", DATA_TYPE_INT, READSTRINGARRAY_ARGS, &FnCallReadStringArray, "Read an array of strings from a file, indexed by first entry on line and sequentially on each line; return line count",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),
-    FnCallTypeNew("readstringarrayidx", DATA_TYPE_INT, READSTRINGARRAYIDX_ARGS, &FnCallReadStringArrayIndex, "Read an array of strings from a file and assign the dimension to a variable with integer indices",
+    FnCallTypeNew("readstringarrayidx", DATA_TYPE_INT, READSTRINGARRAY_ARGS, &FnCallReadStringArrayIndex, "Read an array of strings from a file, indexed by line number and sequentially on each line; return line count",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("readstringlist", DATA_TYPE_STRING_LIST, READSTRINGLIST_ARGS, &FnCallReadStringList, "Read and assign a list variable from a file of separated strings",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),

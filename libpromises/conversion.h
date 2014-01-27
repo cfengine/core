@@ -69,7 +69,7 @@ char *Rlist2String(Rlist *list, char *sep); // TODO: Yet another Rlist serializa
 DataType ConstraintSyntaxGetDataType(const ConstraintSyntax *body_syntax, const char *lval);
 const char *MapAddress(const char *addr);
 const char *CommandArg0(const char *execstr);
-const char *CommandArg0_unsafe(char *dst, const char *src);
+size_t CommandArg0_bound(char *dst, const char *src, size_t dst_size);
 void CommandPrefix(char *execstr, char *comm);
 const char *DataTypeShortToType(char *short_type);
 int CoarseLaterThan(const char *key, const char *from);

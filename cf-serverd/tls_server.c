@@ -586,32 +586,44 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
     {
         char args[256];
         int ret = sscanf(recvbuffer, "EXEC %255[^\n]", args);
-        if (ret != 1)
+        if (ret != 1)                    /* No arguments, use default args. */
         {
-            goto protocol_error;
+            args[0] = '\0';
         }
 
         if (!AllowedUser(conn->username))
         {
-            Log(LOG_LEVEL_INFO, "EXEC denied due to non-allowed user");
+            Log(LOG_LEVEL_INFO, "EXEC denied due to not allowed user: %s",
+                conn->username);
             RefuseAccess(conn, recvbuffer);
             return false;
         }
 
-        char arg0[sizeof(CFRUNCOMMAND)];
-        CommandArg0_unsafe(arg0, CFRUNCOMMAND);
+        char arg0[PATH_MAX];
+        size_t ret2 = CommandArg0_bound(arg0, CFRUNCOMMAND, sizeof(arg0));
+        if (ret2 == (size_t) -1)
+        {
+            goto protocol_error;
+        }
+
+        ret2 = PreprocessRequestPath(arg0, sizeof(arg0));
+        if (ret2 == (size_t) -1)
+        {
+            goto protocol_error;
+        }
+
 
         /* TODO EXEC should not just use paths_acl access control, but
-         * specific "paths_execute" ACL. Then different command execution
-         * could be allowed per host, and the host could even set argv[0] in
-         * his EXEC request, rather than only the arguments. */
+         * specific "path_exec" ACL. Then different command execution could be
+         * allowed per host, and the host could even set argv[0] in his EXEC
+         * request, rather than only the arguments. */
 
         if (acl_CheckPath(paths_acl, arg0,
                           conn->ipaddr, conn->hostname,
                           KeyPrintableHash(ConnectionInfoKey(conn->conn_info)))
             == false)
         {
-            Log(LOG_LEVEL_INFO, "EXEC denied due to ACL");
+            Log(LOG_LEVEL_INFO, "EXEC denied due to ACL for file: %s", arg0);
             RefuseAccess(conn, recvbuffer);
             return false;
         }

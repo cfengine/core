@@ -770,32 +770,44 @@ void TimeToDateStr(time_t t, char *outStr, int outStrSz)
 /*********************************************************************/
 
 /**
- * Thread-safe version of CommandArg0(), but unsafe since bounds are not
- * checked.
+ * Copy first argument of #src to #dst. Argument is delimited either by double
+ * quotes if first character is double quotes, or by space.
  *
- * @note This function is overflow-safe if sizeof(dst) >= sizeof(src)
+ * @note Thread-safe version of CommandArg0().
+ *
+ * @return The length of #dst, or (size_t) -1 in case of overflow.
  */
-const char *CommandArg0_unsafe(char *dst, const char *src)
+size_t CommandArg0_bound(char *dst, const char *src, size_t dst_size)
 {
     const char *start;
-    char *end_delimiter;
+    char end_delimiter;
 
     if(src[0] == '\"')
     {
         start = &src[1];
-        end_delimiter = "\"";
+        end_delimiter = '\"';
     }
     else
     {
         start = src;
-        end_delimiter = " ";
+        end_delimiter = ' ';
     }
 
-    size_t len = strcspn(start, end_delimiter);
-    memcpy(dst, start, len);
-    dst[len] = '\0';
-
-    return dst;
+    char *end = strchr(start, end_delimiter);
+    size_t len = end - start;
+    if (len < dst_size)
+    {
+        memcpy(dst, start, len);
+        dst[len] = '\0';
+        return len;
+    }
+    else
+    {
+        /* Check return value! If -1, the user should never use dst. */
+        strlcpy(dst, "BUG: COMMANDARG0_TOO_LONG",
+                MIN(dst_size - 1, strlen("BUG: COMMANDARG0_TOO_LONG")));
+        return (size_t) -1;
+    }
 }
 
 const char *CommandArg0(const char *execstr)

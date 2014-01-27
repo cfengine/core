@@ -5236,14 +5236,14 @@ static FnCallResult ParseArray(EvalContext *ctx, const FnCall *fp, const Rlist *
 
 /* begin fn specific content */
 
-    /* 6 args: array_lval,instring,comment_regex,split_regex,max number of entries,maxfilesize  */
+    /* 6 args: array_lval,instring,comment_regex,split_regex,max number of entries,maxtextsize  */
 
-    char *array_lval = RlistScalarValue(finalargs);
-    char *instring = xstrdup(RlistScalarValue(finalargs->next));
-    char *comment = RlistScalarValue(finalargs->next->next);
-    char *split = RlistScalarValue(finalargs->next->next->next);
-    int maxent = IntFromString(RlistScalarValue(finalargs->next->next->next->next));
+    const char *array_lval = RlistScalarValue(finalargs);
     int maxsize = IntFromString(RlistScalarValue(finalargs->next->next->next->next->next));
+    char *instring = xstrndup(RlistScalarValue(finalargs->next), maxsize);
+    const char *comment = RlistScalarValue(finalargs->next->next);
+    const char *split = RlistScalarValue(finalargs->next->next->next);
+    int maxent = IntFromString(RlistScalarValue(finalargs->next->next->next->next));
 
 // Read once to validate structure of file in itemlist
 

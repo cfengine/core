@@ -933,14 +933,15 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
     }
     case PROTOCOL_COMMAND_QUERY:
     {
-        char query[256];
-        int ret = sscanf(recvbuffer, "QUERY %255[^\n]", query);
-        if (ret != 1)
+        char query[256], name[128];
+        int ret1 = sscanf(recvbuffer, "QUERY %256[^\n]", query);
+        int ret2 = sscanf(recvbuffer, "QUERY %128s", name);
+        if (ret1 != 1 || ret2 != 1)
         {
             goto protocol_error;
         }
 
-        if (acl_CheckExact(query_acl, query,
+        if (acl_CheckExact(query_acl, name,
                            conn->ipaddr, conn->hostname,
                            KeyPrintableHash(ConnectionInfoKey(conn->conn_info)))
             == false)

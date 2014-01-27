@@ -625,7 +625,7 @@ size_t StrList_SearchLongestPrefix(const StrList *sl,
         /*        s, s_len, s_prefix_len); */
         assert(s_prefix_len <= s_len);
 
-        if (found != -1)
+        if (found != (size_t) -1)
         {
             /* Keep the smaller string match in case we don't match again. */
             old_found = found;
@@ -639,7 +639,7 @@ size_t StrList_SearchLongestPrefix(const StrList *sl,
         longer_match_possible = (min < max);
     }
 
-    found = (found == -1) ? old_found : found;
+    found = (found == (size_t) -1) ? old_found : found;
 
     /* printf("StrList_SearchLongestPrefix s:'%s' len:%zu found:'%s'\n", */
     /*        s, s_len, (found == -1) ? "NONE" : sl->list[found]->str); */

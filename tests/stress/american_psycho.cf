@@ -1,0 +1,227 @@
+# It might be interesting to run some of these with action => background to test parralism
+# might be good to have a test to create large files (over 100M) and very large files (over 1G) and copy_from on those, especially when using compare digest, encrypt and verify
+
+bundle agent stress
+{
+
+  vars:
+    "large_number"
+      string => "1834",
+      comment => "values larger than this generate a segfault in execresult for seq";
+
+  methods:
+
+    STRESS_DEFINE_CLASSES::
+      "define_classes"
+        usebundle => define_classes;
+
+    STRESS_COMMANDS_ECHO::
+      "commands_echo"
+        usebundle => commands_echo;
+
+    STRESS_DEFINE_VARIABLES::
+      "define_variables"
+        usebundle => define_variables;
+
+    STRESS_EXECRESULT_ECHO_NOSHELL::
+      "execresult_echo_noshell"
+        usebundle => execresult_echo_noshell;
+
+    STRESS_EXECRESULT_ECHO_USESHELL::
+      "execresult_echo_useshell"
+        usebundle => execresult_echo_useshell;
+
+    STRESS_DEFINE_PERSISTENT_CLASSES::
+      "define_persistent_classes"
+        usebundle => define_persistent_classes;
+
+    STRESS_NESTED_USEBUNDLE::
+    "nested_usebundle"
+      usebundle => nested_usebundle;
+
+    STRESS_COPY_FROM_INIT::
+      "copy_from_init"
+        usebundle => copy_from_init;
+
+    STRESS_COPY_MANY_FILES_TO_MANY_FILES::
+      "copy_many_files_to_many_files"
+        usebundle => copy_many_files_to_many_files;
+}
+
+bundle common knowledge
+{
+  vars:
+    "seq" string => "/usr/bin/seq";
+    "echo" string => "/bin/echo";
+    "bc" string => "/usr/bin/bc -l";
+
+    "range" string => execresult("$(knowledge.seq) $(stress.large_number)", "noshell");
+    "range_list" slist => splitstring("$(range)", $(const.n), "$(stress.large_number)");
+}
+
+bundle agent define_classes
+{
+   classes:
+    "$(this.bundle)_class_$(knowledge.range_list)" expression => "any";
+
+  reports:
+    DEBUG::
+    "$(this.bundle): Defined $(this.bundle)_class_$(knowledge.range_list)";
+}
+
+bundle agent commands_echo
+{
+  commands:
+    "$(knowledge.echo)"
+      args => "$(this.bundle): $(knowledge.range_list)";
+
+  reports:
+    DEBUG::
+    "$(this.bundle) Called $(knowledge.echo) $(this.bundle): $(knowledge.range_list)";
+
+}
+
+bundle agent define_variables
+{
+  vars:
+    "var_$(knowledge.range_list)" string => "var_$(knowledge.range_list)";
+
+  reports:
+    DEBUG::
+    "$(this.bundle) Defined var_$(knowledge.range_list)";
+}
+
+bundle agent execresult_echo_noshell
+{
+  vars:
+    "var_$(knowledge.range_list)"
+      string => execresult("$(knowledge.echo) $(this.bundle): $(knowledge.range_list)", "noshell");
+
+  reports:
+    DEBUG::
+    "$(this.bundle) Defined var_$(knowledge.echo) with value $(var_$(knowledge.range_list))";
+}
+
+bundle agent execresult_echo_useshell
+{
+  vars:
+    "var_$(knowledge.range_list)"
+      string => execresult("$(knowledge.echo) $(this.bundle): $(knowledge.range_list)", "useshell");
+
+  reports:
+    DEBUG::
+    "$(this.bundle) Defined var_$(knowledge.echo) with value $(var_$(knowledge.range_list))";
+}
+
+bundle agent define_persistent_classes
+{
+  classes:
+    "$(this.bundle)_class_$(knowledge.range_list)"
+      expression => "any",
+      classes => persist("persistent_$(this.promiser)", "5");
+
+  reports:
+    DEBUG::
+    "$(this.bundle): Defined persistent_$(this.bundle)_class_$(knowledge.range_list)";
+
+}
+
+bundle agent nested_usebundle
+{
+  methods:
+    "call myself"
+      usebundle => nested_usebundle_param("$(knowledge.range_list)");
+}
+
+bundle agent nested_usebundle_param(number)
+# If the divisor is changed to 1 (effectively not reducing the initial number
+# called with this bundle call will generate a segfault relatively quickly
+{
+  vars:
+    "half" string => execresult("$(knowledge.echo) $(number)/1.2 | $(knowledge.bc)", "useshell");
+
+  methods:
+    "call myself inderectly"
+      usebundle => nested_usebundle_param($(half));
+
+  reports:
+    "$(knowledge.echo) $(number)/1.2 | $(knowledge.bc)";
+    "$(this.bundle): '$(knowledge.echo) $(number)/1.2 | $(knowledge.bc)' = $(half)"
+      action => immediate;
+}
+
+bundle agent copy_from_init
+{
+  vars:
+    "copy_from_source_path" string => "/var/cfengine/masterfiles/";
+    "copy_from_single_file" string => "$(copy_from_source_path)/promises.cf";
+
+
+  files:
+    "$(copy_from_source_path)/$(knowledge.range_list).txt"
+      copy_from => local_cp("$(copy_from_single_file)");
+
+    "/tmp/$(knowledge.range_list)"
+      delete => tidy;
+
+}
+
+bundle agent copy_many_files_to_many_files
+{
+  files:
+    "/tmp/$(knowledge.range_list)"
+      copy_from => secure_cp("$(copy_from_init.copy_from_source_path)/$(knowledge.range_list).txt", $(sys.uqhost)),
+      classes => classes_generic("$(this.bundle)_tmp_$(knowledge.range_list)");
+      # if you use 'generic' as the classes body here the agent aborts, need acceptance test.
+
+  reports:
+    DEBUG::
+      "$(this.bundle): copied $(copy_from_init.copy_from_source_path)/$(knowledge.range_list).txt to /tmp/$(knowledge.range_list)"
+        ifvarclass => "$(this.bundle)_tmp_$(knowledge.range_list)_repaired";
+}
+
+body classes classes_generic(x)
+# Define x prefixed/suffixed with promise outcome
+{
+  promise_repaired => { "promise_repaired_$(x)", "$(x)_repaired", "$(x)_ok", "$(x)_reached" };
+  repair_failed => { "repair_failed_$(x)", "$(x)_failed", "$(x)_not_ok", "$(x)_not_kept", "$(x)_not_repaired", "$(x)_reached" };
+  repair_denied => { "repair_denied_$(x)", "$(x)_denied", "$(x)_not_ok", "$(x)_not_kept", "$(x)_not_repaired", "$(x)_reached" };
+  repair_timeout => { "repair_timeout_$(x)", "$(x)_timeout", "$(x)_not_ok", "$(x)_not_kept", "$(x)_not_repaired", "$(x)_reached" };
+  promise_kept => { "promise_kept_$(x)", "$(x)_kept", "$(x)_ok", "$(x)_not_repaired", "$(x)_reached" };
+}
+
+body copy_from local_cp(from)
+{
+source      => "$(from)";
+}
+
+body delete tidy
+{
+dirlinks => "delete";
+rmdirs   => "true";
+}
+
+body copy_from secure_cp(from,server)
+{
+source	    => "$(from)";
+servers     => { "$(server)" };
+compare     => "digest";
+encrypt     => "true";
+verify	    => "true";
+}
+
+
+
+body action immediate
+{
+ifelapsed => "0";
+}
+
+
+body classes persist(class, minutes)
+{
+  promise_kept => { @(class) };
+  promise_repaired => { @(class) };
+  persist_time => "$(minutes)";
+}
+

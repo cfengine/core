@@ -72,7 +72,7 @@
 
 
 static FnCallResult FilterInternal(EvalContext *ctx, const FnCall *fp, char *regex, char *name, int do_regex, int invert, long max);
-static char* JsonPrimitiveAsString(const JsonElement *el);
+static char* JsonPrimitiveToString(const JsonElement *el);
 
 static char *StripPatterns(char *file_buffer, const char *pattern, const char *filename);
 static void CloseStringHole(char *s, int start, int end);
@@ -1766,7 +1766,7 @@ static FnCallResult FnCallGetIndices(EvalContext *ctx, ARG_UNUSED const Policy *
 
 /*********************************************************************/
 
-static char* JsonPrimitiveAsString(const JsonElement *el)
+static char* JsonPrimitiveToString(const JsonElement *el)
 {
     if (JsonGetElementType(el) != JSON_ELEMENT_TYPE_PRIMITIVE)
     {
@@ -1830,7 +1830,7 @@ static FnCallResult FnCallGetValues(EvalContext *ctx, ARG_UNUSED const Policy *p
             const JsonElement *el = NULL;
             while ((el = JsonIteratorNextValue(&iter)))
             {
-                char *value = JsonPrimitiveAsString(el);
+                char *value = JsonPrimitiveToString(el);
                 if (NULL != value)
                 {
                     RlistAppendScalar(&values, value);
@@ -2035,7 +2035,7 @@ static FnCallResult FnCallJoin(EvalContext *ctx, ARG_UNUSED const Policy *policy
             const JsonElement *el = NULL;
             while ((el = JsonIteratorNextValue(&iter)))
             {
-                char *value = JsonPrimitiveAsString(el);
+                char *value = JsonPrimitiveToString(el);
                 if (NULL != value)
                 {
                     BufferAppend(buf, value, strlen(value));
@@ -3308,7 +3308,7 @@ static FnCallResult FilterInternal(EvalContext *ctx, const FnCall *fp, char *reg
             const JsonElement *el = NULL;
             while ((el = JsonIteratorNextValue(&iter)) && match_count < max)
             {
-                char *value = JsonPrimitiveAsString(el);
+                char *value = JsonPrimitiveToString(el);
                 if (NULL != value)
                 {
                     bool found;
@@ -3643,7 +3643,7 @@ static FnCallResult FnCallFold(EvalContext *ctx, ARG_UNUSED const Policy *policy
             const JsonElement *el = NULL;
             while ((el = JsonIteratorNextValue(&iter)))
             {
-                char *value = JsonPrimitiveAsString(el);
+                char *value = JsonPrimitiveToString(el);
 
                 if (NULL != value)
                 {

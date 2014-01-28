@@ -101,7 +101,7 @@ static const BodySyntax insert_select_body = BodySyntaxNew("insert_select", inse
 static const ConstraintSyntax CF_INSERTLINES_BODIES[] =
 {
     ConstraintSyntaxNewBool("expand_scalars", "Expand any unexpanded variables. Default value: false", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewOption("insert_type", "literal,string,file,file_preserve_block,preserve_block", "Type of object the promiser string refers to. Default value: literal", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewOption("insert_type", "literal,string,file,file_preserve_block,preserve_block,preserve_all_lines", "Type of object the promiser string refers to. Default value: literal", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBody("insert_select", &insert_select_body, "Insert only if lines pass filter criteria", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBody("location", &location_body, "Specify where in a file an insertion will be made", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewOptionList("whitespace_policy", "ignore_leading,ignore_trailing,ignore_embedded,exact_match", "Criteria for matching and recognizing existing lines", SYNTAX_STATUS_NORMAL),

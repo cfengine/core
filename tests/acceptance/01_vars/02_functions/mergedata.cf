@@ -1,6 +1,7 @@
 #######################################################
 #
 # Test mergedata()
+# This test is unstable until we have canonical JSON output
 #
 #######################################################
 
@@ -26,8 +27,11 @@ bundle agent test
       "load2" slist => { "element1", "element2", "element3" };
       "load3" data => parsejson('{ "x": "y" }');
       "load4" slist => { };
+      "load5[mykey]" slist => { "myvalue" };
+      "load5[anotherkey]" string => "anothervalue";
+      "load5[lastkey!]" slist => {};
 
-      "X" slist => { "1", "2", "3", "4" };
+      "X" slist => { "1", "2", "3", "4", "5" };
       "Y" slist => { @(X) };
 
       "load_$(X)" data => mergedata("load$(X)");
@@ -46,22 +50,32 @@ bundle agent check
       "expected_2" string => '["element1","element2","element3"]';
       "expected_3" string => '{"x":"y"}';
       "expected_4" string => '[]';
+      "expected_5" string => '{"lastkey!":[],"anotherkey":"anothervalue","mykey":["myvalue"]}';
       "expected_1_1" string => '[1,2,3,1,2,3]';
       "expected_1_2" string => '[1,2,3,"element1","element2","element3"]';
       "expected_1_3" string => '{"x":"y","0":1,"1":2,"2":3}';
       "expected_1_4" string => '[1,2,3]';
+      "expected_1_5" string => '{"lastkey!":[],"anotherkey":"anothervalue","mykey":["myvalue"],"0":1,"1":2,"2":3}';
       "expected_2_1" string => '["element1","element2","element3",1,2,3]';
       "expected_2_2" string => '["element1","element2","element3","element1","element2","element3"]';
       "expected_2_3" string => '{"x":"y","0":"element1","1":"element2","2":"element3"}';
       "expected_2_4" string => '["element1","element2","element3"]';
+      "expected_2_5" string => '{"lastkey!":[],"anotherkey":"anothervalue","mykey":["myvalue"],"0":"element1","1":"element2","2":"element3"}';
       "expected_3_1" string => '{"x":"y","0":1,"1":2,"2":3}';
       "expected_3_2" string => '{"x":"y","0":"element1","1":"element2","2":"element3"}';
       "expected_3_3" string => '{"x":"y"}';
       "expected_3_4" string => '{"x":"y"}';
+      "expected_3_5" string => '{"x":"y","lastkey!":[],"anotherkey":"anothervalue","mykey":["myvalue"]}';
       "expected_4_1" string => '[1,2,3]';
       "expected_4_2" string => '["element1","element2","element3"]';
       "expected_4_3" string => '{"x":"y"}';
       "expected_4_4" string => '[]';
+      "expected_4_5" string => '{"lastkey!":[],"anotherkey":"anothervalue","mykey":["myvalue"]}';
+      "expected_5_1" string => '{"lastkey!":[],"anotherkey":"anothervalue","mykey":["myvalue"],"0":1,"1":2,"2":3}';
+      "expected_5_2" string => '{"lastkey!":[],"anotherkey":"anothervalue","mykey":["myvalue"],"0":"element1","1":"element2","2":"element3"}';
+      "expected_5_3" string => '{"lastkey!":[],"anotherkey":"anothervalue","mykey":["myvalue"],"x":"y"}';
+      "expected_5_4" string => '{"lastkey!":[],"anotherkey":"anothervalue","mykey":["myvalue"]}';
+      "expected_5_5" string => '{"lastkey!":[],"anotherkey":"anothervalue","mykey":["myvalue"]}';
 
       "actual_$(X)_$(Y)" string => format("%S", "test.load_$(X)_$(Y)");
       "actual_$(X)" string => format("%S", "test.load_$(X)");
@@ -77,10 +91,10 @@ bundle agent check
 
   reports:
     DEBUG::
-      "$(X): $(actual_$(X)) != $(X) $(expected_$(X))"
+      "$(X): actual $(actual_$(X)) != $(X) expected $(expected_$(X))"
        ifvarclass => "not_ok_$(X)";
 
-      "$(X)+$(Y): $(actual_$(X)_$(Y)) != $(X)+$(Y) $(expected_$(X)_$(Y))"
+      "$(X)+$(Y): actual $(actual_$(X)_$(Y)) != $(X)+$(Y) expected $(expected_$(X)_$(Y))"
        ifvarclass => "not_ok_$(X)_$(Y)";
 
     ok::

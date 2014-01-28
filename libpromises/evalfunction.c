@@ -2471,15 +2471,65 @@ static FnCallResult FnCallMergeData(EvalContext *ctx, ARG_UNUSED const Policy *p
             SeqAppend(containers, (void *)value);
             break;
         default:
-            Log(LOG_LEVEL_ERR, "%s: argument '%s' does not resolve to a container or a list", fp->name, RlistScalarValue(arg));
-            SeqDestroy(containers);
-            VarRefDestroy(ref);
-            SeqDestroy(toremove);
-            return FnFailure();
-        }
+        {
+            VariableTableIterator *iter = EvalContextVariableTableIteratorNew(ctx, ref->ns, ref->scope, ref->lval);
+            JsonElement *convert = JsonObjectCreate(10);
+            Variable *var;
+            while ((var = VariableTableIteratorNext(iter)))
+            {
+                if (var->ref->num_indices != 1)
+                {
+                    continue;
+                }
+
+                switch (var->rval.type)
+                {
+                case RVAL_TYPE_SCALAR:
+                    JsonObjectAppendString(convert, var->ref->indices[0], xstrdup(var->rval.item));
+                    break;
+
+                case RVAL_TYPE_LIST:
+                {
+                    JsonElement *array = JsonArrayCreate(10);
+                    for (const Rlist *rp = RvalRlistValue(var->rval); rp != NULL; rp = rp->next)
+                    {
+                        if (rp->val.type == RVAL_TYPE_SCALAR &&
+                            strcmp(RlistScalarValue(rp), CF_NULL_VALUE) != 0)
+                        {
+                            JsonArrayAppendString(array, RlistScalarValue(rp));
+                        }
+                    }
+                    JsonObjectAppendArray(convert, var->ref->indices[0], array);
+                }
+                break;
+
+                default:
+                    break;
+                }
+            }
+
+            VariableTableIteratorDestroy(iter);
+
+            if (JsonLength(convert) < 1)
+            {
+                Log(LOG_LEVEL_ERR, "%s: argument '%s' does not resolve to a container or a list", fp->name, RlistScalarValue(arg));
+                SeqDestroy(containers);
+                VarRefDestroy(ref);
+                SeqDestroy(toremove);
+                return FnFailure();
+            }
+            else
+            {
+                SeqAppend(containers, convert);
+                SeqAppend(toremove, convert);
+            }
+            break;
+        } // end of default case
+
+        } // end of data type switch
 
         VarRefDestroy(ref);
-    }
+    } // end of args loop
 
     if (SeqLength(containers) == 1)
     {

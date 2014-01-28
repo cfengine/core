@@ -515,13 +515,13 @@ int OpenReceiverChannel(void)
             continue;
         }
 
+       #ifdef IPV6_V6ONLY
         /* Some platforms don't listen to both address families (windows) for
            the IPv6 loopback address and need this flag. Some other platforms
-           won't even honour this flag (openbsd).
-        */
-        int no = 0;
+           won't even honour this flag (openbsd). */
         if (BINDINTERFACE[0] == '\0')
         {
+            int no = 0;
             if (setsockopt(sd, IPPROTO_IPV6, IPV6_V6ONLY,
                            &no, sizeof(no)) == -1)
             {
@@ -531,6 +531,7 @@ int OpenReceiverChannel(void)
                     GetErrorStr());
             }
         }
+        #endif
 
         int yes = 1;
         if (setsockopt(sd, SOL_SOCKET, SO_REUSEADDR,

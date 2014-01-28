@@ -31,18 +31,28 @@ bundle agent test
   vars:
 
       "mylist" slist => { "One", "Two", "Three", "Four", "Five" };
-      "sublist" slist => grep("T.*","mylist");
+      "Tlist" slist => grep("T.*","mylist");
       "empty_list" slist => grep("ive","mylist");
 
+      "datalist" data => parsejson('[1,2,3, "Tab", "chive"]');
+      "data_Tlist" slist => grep("T.*","datalist");
+      "data_empty_list" slist => grep("ive","datalist");
+
+      "todo" slist => { "mylist", "Tlist", "empty_list", "datalist", "data_Tlist", "data_empty_list" };
+      "$(todo)_str" string => format("%S", $(todo));
+
   reports:
-      "Item: $(sublist)";
-      "You won't see this: $(empty_list)";
+      "$(todo): $($(todo)_str)";
 }
 #+end_src
 ###############################################################################
 #+begin_src example_output
 #@ ```
-#@ 2013-12-20T13:44:30-0500   notice: /default/test: R: Item: Two
-#@ 2013-12-20T13:44:30-0500   notice: /default/test: R: Item: Three
+#@ 2014-01-28T08:25:33-0500   notice: /default/test: R: mylist: { "One", "Two", "Three", "Four", "Five" }
+#@ 2014-01-28T08:25:33-0500   notice: /default/test: R: Tlist: { "Two", "Three" }
+#@ 2014-01-28T08:25:33-0500   notice: /default/test: R: empty_list: { --empty-list-- }
+#@ 2014-01-28T08:25:33-0500   notice: /default/test: R: datalist: [1,2,3,"Tab","chive"]
+#@ 2014-01-28T08:25:33-0500   notice: /default/test: R: data_Tlist: { "Tab" }
+#@ 2014-01-28T08:25:33-0500   notice: /default/test: R: data_empty_list: { --empty-list-- }
 #@ ```
 #+end_src

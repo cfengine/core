@@ -36,47 +36,63 @@ bundle agent test
                         "one", "two", "three",
       };
 
-      "test_grep" slist => filter("[0-9]", "test", "true", "false", 999);
-      "test_exact1" slist => filter("one", "test", "false", "false", 999);
-      "test_exact2" slist => filter(".", "test", "false", "false", 999);
-      "test_invert" slist => filter("[0-9]", "test", "true", "true", 999);
-      "test_max2" slist => filter(".*", "test", "true", "false", 2);
-      "test_max0" slist => filter(".*", "test", "true", "false", 0);
-      "grep" slist => grep("[0-9]", "test");
+      "test2" data => parsejson('[1,2,3, "ab", "c"]');
+
+      "test_filtergrep" slist => filter("[0-9]", test, "true", "false", 999);
+      "test_exact1" slist => filter("one", test, "false", "false", 999);
+      "test_exact2" slist => filter(".", test, "false", "false", 999);
+      "test_invert" slist => filter("[0-9]", test, "true", "true", 999);
+      "test_max2" slist => filter(".*", test, "true", "false", 2);
+      "test_max0" slist => filter(".*", test, "true", "false", 0);
+      "test_grep" slist => grep("[0-9]", test);
+
+      "test2_filtergrep" slist => filter("[0-9]", test2, "true", "false", 999);
+      "test2_exact1" slist => filter("one", test2, "false", "false", 999);
+      "test2_exact2" slist => filter(".", test2, "false", "false", 999);
+      "test2_invert" slist => filter("[0-9]", test2, "true", "true", 999);
+      "test2_max2" slist => filter(".*", test2, "true", "false", 2);
+      "test2_max0" slist => filter(".*", test2, "true", "false", 0);
+      "test2_grep" slist => grep("[0-9]", test2);
+
+      "todo" slist => { "test", "test2", "test_filtergrep", "test_exact1",
+                        "test_exact2", "test_invert", "test_max2",
+                        "test_max0", "test_grep", "test2_filtergrep",
+                        "test2_exact1", "test2_exact2",
+                        "test2_invert", "test2_max2", "test2_max0",
+                        "test2_grep"};
+
+      "$(todo)_str" string => format("%S", $(todo));
+      "tests" slist => { "test", "test2" };
 
   reports:
-      "The test list is $(test)";
-      "The grepped list (only single digits) is $(grep)";
-      "The filter-grepped list (only single digits) is $(test_grep)";
-      "The filter-exact list, looking for only 'one' is $(test_exact1)";
-      "This line should not appear, the '.' is not literally in the list: $(test_exact2)";
-      "The filter-invert list, looking for non-digits, is $(test_invert)";
-      "The filter-bound list, matching at most 2 items from the whole list, is $(test_max2)";
-      "This line should not appear because 0 elements were requested: $(test_max0)";
+      "The $(tests) list is $($(tests)_str)";
+      "The grepped list (only single digits from $(tests)) is $($(tests)_grep_str)";
+      "The filter-grepped list (only single digits from $(tests)) is $($(tests)_grep_str)";
+      "The filter-exact list, looking for only 'one' in $(tests), is $($(tests)_exact1_str)";
+      "This list should be empty, the '.' is not literally in the list $(tests): $($(tests)_exact2_str)";
+      "The filter-invert list, looking for non-digits in $(tests), is $($(tests)_invert_str)";
+      "The filter-bound list, matching at most 2 items from the whole list $(tests), is $($(tests)_max2_str)";
+      "This list should be empty because 0 elements of $(tests) were requested: $($(tests)_max0_str)";
 }
 #+end_src
 ###############################################################################
 #+begin_src example_output
 #@ ```
-#@ 2013-12-20T13:44:29-0500   notice: /default/test: R: The test list is 1
-#@ 2013-12-20T13:44:29-0500   notice: /default/test: R: The test list is 2
-#@ 2013-12-20T13:44:29-0500   notice: /default/test: R: The test list is 3
-#@ 2013-12-20T13:44:29-0500   notice: /default/test: R: The test list is one
-#@ 2013-12-20T13:44:29-0500   notice: /default/test: R: The test list is two
-#@ 2013-12-20T13:44:29-0500   notice: /default/test: R: The test list is three
-#@ 2013-12-20T13:44:29-0500   notice: /default/test: R: The test list is long string
-#@ 2013-12-20T13:44:29-0500   notice: /default/test: R: The grepped list (only single digits) is 1
-#@ 2013-12-20T13:44:29-0500   notice: /default/test: R: The grepped list (only single digits) is 2
-#@ 2013-12-20T13:44:29-0500   notice: /default/test: R: The grepped list (only single digits) is 3
-#@ 2013-12-20T13:44:29-0500   notice: /default/test: R: The filter-grepped list (only single digits) is 1
-#@ 2013-12-20T13:44:29-0500   notice: /default/test: R: The filter-grepped list (only single digits) is 2
-#@ 2013-12-20T13:44:29-0500   notice: /default/test: R: The filter-grepped list (only single digits) is 3
-#@ 2013-12-20T13:44:29-0500   notice: /default/test: R: The filter-exact list, looking for only 'one' is one
-#@ 2013-12-20T13:44:29-0500   notice: /default/test: R: The filter-invert list, looking for non-digits, is one
-#@ 2013-12-20T13:44:29-0500   notice: /default/test: R: The filter-invert list, looking for non-digits, is two
-#@ 2013-12-20T13:44:29-0500   notice: /default/test: R: The filter-invert list, looking for non-digits, is three
-#@ 2013-12-20T13:44:29-0500   notice: /default/test: R: The filter-invert list, looking for non-digits, is long string
-#@ 2013-12-20T13:44:29-0500   notice: /default/test: R: The filter-bound list, matching at most 2 items from the whole list, is 1
-#@ 2013-12-20T13:44:29-0500   notice: /default/test: R: The filter-bound list, matching at most 2 items from the whole list, is 2
+#@ 2014-01-28T08:22:06-0500   notice: /default/test: R: The test list is { "1", "2", "3", "one", "two", "three", "long string", "one", "two", "three" }
+#@ 2014-01-28T08:22:06-0500   notice: /default/test: R: The test2 list is [1,2,3,"ab","c"]
+#@ 2014-01-28T08:22:06-0500   notice: /default/test: R: The grepped list (only single digits from test) is { "1", "2", "3" }
+#@ 2014-01-28T08:22:06-0500   notice: /default/test: R: The grepped list (only single digits from test2) is { "1", "2", "3" }
+#@ 2014-01-28T08:22:06-0500   notice: /default/test: R: The filter-grepped list (only single digits from test) is { "1", "2", "3" }
+#@ 2014-01-28T08:22:06-0500   notice: /default/test: R: The filter-grepped list (only single digits from test2) is { "1", "2", "3" }
+#@ 2014-01-28T08:22:06-0500   notice: /default/test: R: The filter-exact list, looking for only 'one' in test, is { "one", "one" }
+#@ 2014-01-28T08:22:06-0500   notice: /default/test: R: The filter-exact list, looking for only 'one' in test2, is { --empty-list-- }
+#@ 2014-01-28T08:22:06-0500   notice: /default/test: R: This list should be empty, the '.' is not literally in the list test: { --empty-list-- }
+#@ 2014-01-28T08:22:06-0500   notice: /default/test: R: This list should be empty, the '.' is not literally in the list test2: { --empty-list-- }
+#@ 2014-01-28T08:22:06-0500   notice: /default/test: R: The filter-invert list, looking for non-digits in test, is { "one", "two", "three", "long string", "one", "two", "three" }
+#@ 2014-01-28T08:22:06-0500   notice: /default/test: R: The filter-invert list, looking for non-digits in test2, is { "ab", "c" }
+#@ 2014-01-28T08:22:06-0500   notice: /default/test: R: The filter-bound list, matching at most 2 items from the whole list test, is { "1", "2" }
+#@ 2014-01-28T08:22:06-0500   notice: /default/test: R: The filter-bound list, matching at most 2 items from the whole list test2, is { "1", "2" }
+#@ 2014-01-28T08:22:06-0500   notice: /default/test: R: This list should be empty because 0 elements of test were requested: { --empty-list-- }
+#@ 2014-01-28T08:22:06-0500   notice: /default/test: R: This list should be empty because 0 elements of test2 were requested: { --empty-list-- }
 #@ ```
 #+end_src

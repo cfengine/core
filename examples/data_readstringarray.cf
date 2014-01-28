@@ -1,0 +1,62 @@
+#  Copyright (C) Cfengine AS
+
+#  This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+
+#  This program is free software; you can redistribute it and/or modify it
+#  under the terms of the GNU General Public License as published by the
+#  Free Software Foundation; version 3.
+
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
+
+# To the extent this program is licensed as part of the Enterprise
+# versions of Cfengine, the applicable Commercial Open Source License
+# (COSL) may apply to this file if you as a licensee so wish it. See
+# included file COSL.txt.
+
+#+begin_src prep
+#@ ```
+#@ echo a,b,c > /tmp/cfe_array
+#@ echo d,e,f >> /tmp/cfe_array
+#@ echo g,h,i >> /tmp/cfe_array
+#@ echo j,k,l >> /tmp/cfe_array
+#@ ```
+#+end_src
+###############################################################################
+#+begin_src cfengine3
+body common control
+{
+      bundlesequence => { "example" };
+}
+
+bundle agent example
+{
+  vars:
+      "bykey" data => data_readstringarray("/tmp/cfe_array","#.*",",",10,400);
+      "byint" data => data_readstringarrayidx("/tmp/cfe_array","#.*",",",10,400);
+
+      "bykey_str" string => format("%S", bykey);
+      "byint_str" string => format("%S", byint);
+  reports:
+      "By key: $(bykey_str)";
+      "specific element by key a, offset 0: '$(bykey[a][0])'";
+      "By int offset: $(byint_str)";
+      "specific element by int offset 2, 0: '$(byint[2][0])'";
+
+}
+#+end_src
+###############################################################################
+#+begin_src example_output
+#@ ```
+#@ 2014-01-28T08:50:38-0500   notice: /default/example: R: By key: {"a":["b","c"],"d":["e","f"],"g":["h","i"],"j":["k","l"]}
+#@ 2014-01-28T08:50:38-0500   notice: /default/example: R: specific element by key a, offset 0: 'b'
+#@ 2014-01-28T08:50:38-0500   notice: /default/example: R: By int offset: [["a","b","c"],["d","e","f"],["g","h","i"],["j","k","l"]]
+#@ 2014-01-28T08:50:38-0500   notice: /default/example: R: specific element by int offset 2, 0: 'g'
+#@ ```
+#+end_src

@@ -190,13 +190,6 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             break;
 
         case 'f':
-
-            if (optarg && strlen(optarg) < 5)
-            {
-                Log(LOG_LEVEL_ERR, " -f used but argument '%s' incorrect", optarg);
-                exit(EXIT_FAILURE);
-            }
-
             GenericAgentConfigSetInputFile(config, GetInputDir(), optarg);
             MINUSF = true;
             break;
@@ -234,9 +227,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
 
         case 'L':
             snprintf(ld_library_path, CF_BUFSIZE - 1, "LD_LIBRARY_PATH=%s", optarg);
-            if (putenv(xstrdup(ld_library_path)) != 0)
-            {
-            }
+            putenv(xstrdup(ld_library_path));
             break;
 
         case 'W':

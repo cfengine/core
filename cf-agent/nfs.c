@@ -795,17 +795,13 @@ static void DeleteThisItem(Item **liststart, Item *entry)
 
 void CleanupNFS(void)
 {
-    Attributes a = { {0} };
     Log(LOG_LEVEL_VERBOSE, "Number of changes observed in '%s' is %d", VFSTAB[VSYSTEMHARDCLASS], FSTAB_EDITS);
 
     if (FSTAB_EDITS && FSTABLIST && !DONTDO)
     {
-        if (FSTABLIST)
-        {
-            SaveItemListAsFile(FSTABLIST, VFSTAB[VSYSTEMHARDCLASS], a);
-            DeleteItemList(FSTABLIST);
-            FSTABLIST = NULL;
-        }
+        RawSaveItemList(FSTABLIST, VFSTAB[VSYSTEMHARDCLASS]);
+        DeleteItemList(FSTABLIST);
+        FSTABLIST = NULL;
         FSTAB_EDITS = 0;
     }
 }

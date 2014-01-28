@@ -1361,20 +1361,15 @@ static size_t StringReplace(char *buf, size_t buf_size,
 }
 
 /**
- * Search and replace occurences of #ipaddr, #hostname, #key (if not NULL)
+ * Search and replace occurences of #find1, #find2, #find3, with
+ * #repl1, #repl2, #repl3 respectively.
  *
  *   "$(connection.ip)" from "191.168.0.1"
- *   "$(connection.fqdn)" from "blah.cfengine.com",
+ *   "$(connection.hostname)" from "blah.cfengine.com",
  *   "$(connection.key)" from "SHA=asdfghjkl"
- *   @TODO where should the following happen?
- *   "$(connection.ip_32) same as "$(connection.ip)"
- *   "$(connection.ip_24)" from "192.168.0",
- *   "$(connection.fqdn_1)" from "blah",
- *   "$(connection.domain)" from "com" same as "$(connection.domain_1)",
- *   "$(connection.domain_2)" from "cfengine.com".
  *
- * @return the output length of #dst, (size_t) -1 if overflow would occur,
- *         or 0 if no replacement happened and #dst was not touched.
+ * @return the output length of #buf, (size_t) -1 if overflow would occur,
+ *         or 0 if no replacement happened and #buf was not touched.
  *
  * @TODO change the function to more generic interface accepting arbitrary
  *       find/replace pairs.
@@ -1526,14 +1521,14 @@ size_t ShortcutsExpand(char *path, size_t path_size,
             /* Replacement path for shortcut was found, but it may contain
              * special variables such as $(connection.ip), that we also need
              * to expand. */
-            /* TODO if StrAnyStr(replacement, "$(connection.ip)", "$(connection.fqdn)", "$(connection.key)") */
+            /* TODO if StrAnyStr(replacement, "$(connection.ip)", "$(connection.hostname)", "$(connection.key)") */
             char replacement_expanded[path_size];
             memcpy(replacement_expanded, replacement, replacement_len + 1);
 
             size_t ret =
                 ReplaceSpecialVariables(replacement_expanded, sizeof(replacement_expanded),
                                         "$(connection.ip)", ipaddr,
-                                        "$(connection.fqdn)", hostname,
+                                        "$(connection.hostname)", hostname,
                                         "$(connection.key)", key);
 
             size_t replacement_expanded_len;

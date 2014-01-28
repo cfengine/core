@@ -193,7 +193,7 @@ bool acl_CheckPath(const struct acl *acl, const char *reqpath,
     size_t mangled_path_len =
         ReplaceSpecialVariables(mangled_path, sizeof(mangled_path),
                                 ipaddr,   "$(connection.ip)",
-                                hostname, "$(connection.fqdn)",
+                                hostname, "$(connection.hostname)",
                                 key,      "$(connection.key)");
 
     /* If there were special variables replaced */
@@ -210,7 +210,8 @@ bool acl_CheckPath(const struct acl *acl, const char *reqpath,
             const struct resource_acl *racl = &acl->acls[pos2];
             /* Check if the magic strings are allowed or denied. */
             bool ret =
-                access_CheckResource(racl, "$(connection.ip)", "$(connection.fqdn)",
+                access_CheckResource(racl, "$(connection.ip)",
+                                     "$(connection.hostname)",
                                      "$(connection.key)");
             if (ret == true)                  /* entry found that grants access */
             {

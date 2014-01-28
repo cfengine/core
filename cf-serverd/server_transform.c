@@ -80,7 +80,7 @@ extern Item *CONNECTIONLIST;
 /*******************************************************************/
 
 static void KeepFileAccessPromise(const EvalContext *ctx, const Promise *pp);
-static void KeepLiteralAccessPromise(EvalContext *ctx, const Promise *pp, char *type);
+static void KeepLiteralAccessPromise(EvalContext *ctx, const Promise *pp, const char *type);
 static void KeepQueryAccessPromise(EvalContext *ctx, const Promise *pp);
 
 /*******************************************************************/
@@ -985,7 +985,7 @@ static void KeepFileAccessPromise(const EvalContext *ctx, const Promise *pp)
 
 /*********************************************************************/
 
-void KeepLiteralAccessPromise(EvalContext *ctx, const Promise *pp, char *type)
+void KeepLiteralAccessPromise(EvalContext *ctx, const Promise *pp, const char *type)
 {
     Auth *ap, *dp;
     const char *handle = PromiseGetHandle(pp);

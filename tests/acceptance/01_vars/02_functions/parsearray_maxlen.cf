@@ -1,0 +1,78 @@
+# Test the parse\w+array(idx)? functions honour their maxlen parameter.
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+}
+
+bundle agent init
+{
+  vars:
+      "float" string => "
+1.0     4.0
+2.0     1.0
+3.0     1e1     # 36 bytes up to 1e1
+4.0     2.0
+5.0    16.0
+6.0     3.0";
+      "whole" string => "
+1       4
+2       1
+3      10       # 30 bytes up to 10
+4       2
+5      16
+6       3";
+      "words" string => "
+one     four
+two     one
+three   ten     # 37 bytes up to ten
+four    two
+five    sixteen
+six     three";
+}
+
+bundle agent test
+{
+  vars:
+      "flen" int => parserealarray("float", "$(init.float)", "\s*#[^\n]*", "\s+", 1000, 36);
+      "ilen" int => parseintarray("whole", "$(init.whole)", "\s*#[^\n]*", "\s+", 1000, 30);
+      "slen" int => parsestringarray("words", "$(init.words)", "\s*#[^\n]*", "\s+", 1000, 37);
+      "tlen" int => parsestringarrayidx("texts", "$(init.words)", "\s*#[^\n]*", "\s+", 1000, 37);
+}
+
+bundle agent check
+{
+  vars:
+      "arrays" slist => { "float", "whole", "words", "texts" };
+
+      "key_$(arrays)" slist => getindices("test.$(arrays)");
+      "sub_$(key_$(arrays))" slist => getindices("test.$(arrays)[$(key_$(arrays))]");
+
+  classes:
+      "okf" expression => strcmp("$(test.flen)", "3");
+      "oki" expression => strcmp("$(test.ilen)", "3");
+      "oks" expression => strcmp("$(test.slen)", "3");
+      "okt" expression => strcmp("$(test.tlen)", "3");
+
+      "ok" and => { "okf", "oki", "oks", "okt" };
+
+  reports:
+    DEBUG.!okf::
+      "float: '$(test.flen)'";
+      "float[$(key_float)][$(sub_$(key_float))] = $(test.float[$(key_float)][$(sub_$(key_float))])";
+    DEBUG.!oki::
+      "whole: '$(test.ilen)'";
+      "whole[$(key_whole)][$(sub_$(key_whole))] = $(test.whole[$(key_whole)][$(sub_$(key_whole))])";
+    DEBUG.!oks::
+      "words: '$(test.slen)'";
+      "words[$(key_words)][$(sub_$(key_words))] = $(test.words[$(key_words)][$(sub_$(key_words))])";
+    DEBUG.!okt::
+      "texts: '$(test.tlen)'";
+      "texts[$(key_texts)][$(sub_$(key_texts))] = $(test.texts[$(key_texts)][$(sub_$(key_texts))])";
+
+  reports:
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

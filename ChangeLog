@@ -886,7 +886,7 @@
 	Support for package_changes => "bulk" in file repository as well.
 
 	New special function readstringarrayidx, similar to readstringarray,
-	but uses integer indeces. Very useful if first row elements are
+	but uses integer indices. Very useful if first row elements are
 	not good identifiers (e.g. contains spaces, non-unique, etc.).
 
 	Change two log formats to use time() instead of date()

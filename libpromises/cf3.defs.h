@@ -1349,11 +1349,12 @@ typedef struct
     Rlist *bridge_interfaces;
     Rlist *aggregate;
     Rlist *v6_addresses;
-    char *v4_address;
+    Rlist *v4_addresses;
     char *v4_broadcast;
     char *state;
     int mtu;
     int speed;
+    int purge;
     char *duplex;
     char *spanning;
     bool bonding;

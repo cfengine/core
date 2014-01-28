@@ -940,7 +940,7 @@ static void KeepFileAccessPromise(const EvalContext *ctx, const Promise *pp)
                 "Path does not exist, it's added as-is in access rules: %s",
                 path);
             Log(LOG_LEVEL_INFO,
-                "WARNING: that means that having a trailing slash defines if it's a directory!");
+                "WARNING: that means that (not) having a trailing slash defines if it's a directory!");
         }
     }
     else                                 /* file exists, path canonicalised */

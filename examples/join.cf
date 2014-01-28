@@ -31,16 +31,26 @@ bundle agent test
   vars:
 
       "mylist" slist => { "one", "two", "three", "four", "five" };
+      "datalist" data => parsejson('[1,2,3,
+                        "one", "two", "three",
+                        "long string",
+                        "four", "fix", "six",
+                        "one", "two", "three",]');
 
-      "scalar" string => join("->","mylist");
+      "mylist_str" string => format("%S", mylist);
+      "datalist_str" string => format("%S", datalist);
+      "myscalar" string => join("->", mylist);
+      "datascalar" string => join("->", datalist);
 
   reports:
-      "Concatenated $(scalar)";
+      "Concatenated $(mylist_str): $(myscalar)";
+      "Concatenated $(datalist_str): $(datascalar)";
 }
 #+end_src
 ###############################################################################
 #+begin_src example_output
 #@ ```
-#@ 2013-12-20T13:44:31-0500   notice: /default/test: R: Concatenated one->two->three->four->five
+#@ 2014-01-28T08:41:53-0500   notice: /default/test: R: Concatenated { "one", "two", "three", "four", "five" }: one->two->three->four->five
+#@ 2014-01-28T08:41:53-0500   notice: /default/test: R: Concatenated [1,2,3,"one","two","three","long string","four","fix","six","one","two","three"]: 1->2->3->one->two->three->long string->four->fix->six->one->two->three
 #@ ```
 #+end_src

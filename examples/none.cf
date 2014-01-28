@@ -29,11 +29,13 @@ body common control
 bundle agent example
 {
   classes:
-      "none1" expression => none("jebadiah", "test");
-      "none2" expression => none("2", "test");
+      "none11" expression => none("jebadiah", test1);
+      "none12" expression => none("2", test1);
+      "none21" expression => none("jebadiah", test2);
+      "none22" expression => none("2", test2);
 
   vars:
-      "test" slist => {
+      "test1" slist => {
                         1,2,3,
                         "one", "two", "three",
                         "long string",
@@ -41,32 +43,61 @@ bundle agent example
                         "one", "two", "three",
       };
 
+
+      "test2" data => parsejson('[1,2,3,
+                        "one", "two", "three",
+                        "long string",
+                        "four", "fix", "six",
+                        "one", "two", "three",]');
+
   reports:
-      "The test list is $(test)";
-    none1::
-      "none() test 1 passed";
-    !none1::
-      "none() test 1 failed";
-    none2::
-      "none() test 2 failed";
-    !none2::
-      "none() test 2 passed";
+      "The test1 list is $(test1)";
+    none11::
+      "none() test1 1 passed";
+    !none11::
+      "none() test1 1 failed";
+    none12::
+      "none() test1 2 failed";
+    !none12::
+      "none() test1 2 passed";
+
+      "The test2 list is $(test2)";
+    none21::
+      "none() test2 1 passed";
+    !none21::
+      "none() test2 1 failed";
+    none22::
+      "none() test2 2 failed";
+    !none22::
+      "none() test2 2 passed";
 }
 #+end_src
 ###############################################################################
 #+begin_src example_output
 #@ ```
-#@ 2013-12-20T13:44:31-0500   notice: /default/example: R: The test list is 1
-#@ 2013-12-20T13:44:31-0500   notice: /default/example: R: The test list is 2
-#@ 2013-12-20T13:44:31-0500   notice: /default/example: R: The test list is 3
-#@ 2013-12-20T13:44:31-0500   notice: /default/example: R: The test list is one
-#@ 2013-12-20T13:44:31-0500   notice: /default/example: R: The test list is two
-#@ 2013-12-20T13:44:31-0500   notice: /default/example: R: The test list is three
-#@ 2013-12-20T13:44:31-0500   notice: /default/example: R: The test list is long string
-#@ 2013-12-20T13:44:31-0500   notice: /default/example: R: The test list is four
-#@ 2013-12-20T13:44:31-0500   notice: /default/example: R: The test list is fix
-#@ 2013-12-20T13:44:31-0500   notice: /default/example: R: The test list is six
-#@ 2013-12-20T13:44:31-0500   notice: /default/example: R: none() test 1 passed
-#@ 2013-12-20T13:44:31-0500   notice: /default/example: R: none() test 2 passed
+#@ 2014-01-28T08:38:06-0500   notice: /default/example: R: The test1 list is 1
+#@ 2014-01-28T08:38:06-0500   notice: /default/example: R: The test1 list is 2
+#@ 2014-01-28T08:38:06-0500   notice: /default/example: R: The test1 list is 3
+#@ 2014-01-28T08:38:06-0500   notice: /default/example: R: The test1 list is one
+#@ 2014-01-28T08:38:06-0500   notice: /default/example: R: The test1 list is two
+#@ 2014-01-28T08:38:06-0500   notice: /default/example: R: The test1 list is three
+#@ 2014-01-28T08:38:06-0500   notice: /default/example: R: The test1 list is long string
+#@ 2014-01-28T08:38:06-0500   notice: /default/example: R: The test1 list is four
+#@ 2014-01-28T08:38:06-0500   notice: /default/example: R: The test1 list is fix
+#@ 2014-01-28T08:38:06-0500   notice: /default/example: R: The test1 list is six
+#@ 2014-01-28T08:38:06-0500   notice: /default/example: R: none() test1 1 passed
+#@ 2014-01-28T08:38:06-0500   notice: /default/example: R: none() test1 2 passed
+#@ 2014-01-28T08:38:06-0500   notice: /default/example: R: The test2 list is 1
+#@ 2014-01-28T08:38:06-0500   notice: /default/example: R: The test2 list is 2
+#@ 2014-01-28T08:38:06-0500   notice: /default/example: R: The test2 list is 3
+#@ 2014-01-28T08:38:06-0500   notice: /default/example: R: The test2 list is one
+#@ 2014-01-28T08:38:06-0500   notice: /default/example: R: The test2 list is two
+#@ 2014-01-28T08:38:06-0500   notice: /default/example: R: The test2 list is three
+#@ 2014-01-28T08:38:06-0500   notice: /default/example: R: The test2 list is long string
+#@ 2014-01-28T08:38:06-0500   notice: /default/example: R: The test2 list is four
+#@ 2014-01-28T08:38:06-0500   notice: /default/example: R: The test2 list is fix
+#@ 2014-01-28T08:38:06-0500   notice: /default/example: R: The test2 list is six
+#@ 2014-01-28T08:38:06-0500   notice: /default/example: R: none() test2 1 passed
+#@ 2014-01-28T08:38:06-0500   notice: /default/example: R: none() test2 2 passed
 #@ ```
 #+end_src

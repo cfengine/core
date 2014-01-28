@@ -29,7 +29,9 @@ body common control
 bundle agent test
 {
   vars:
-      "mylist" slist => { "foo", "1", "2", "3000", "bar", "10.20.30.40" };
+      # the behavior will be the same whether you use a data container or a list
+      # "mylist" slist => { "foo", "1", "2", "3000", "bar", "10.20.30.40" };
+      "mylist" data => parsejson('["foo", "1", "2", "3000", "bar", "10.20.30.40"]');
       "mylist_str" string => format("%S", mylist);
 
       "max_int" string => max(mylist, "int");
@@ -61,14 +63,14 @@ bundle agent test
 ###############################################################################
 #+begin_src example_output
 #@ ```
-#@ 2014-01-26T08:10:47-0500   notice: /default/test: R: my list is { "foo", "1", "2", "3000", "bar", "10.20.30.40" }
-#@ 2014-01-26T08:10:47-0500   notice: /default/test: R: mean is 502.200000
-#@ 2014-01-26T08:10:47-0500   notice: /default/test: R: variance is 1497376.000000 (use eval() to get the standard deviation)
-#@ 2014-01-26T08:10:47-0500   notice: /default/test: R: max int is 3000
-#@ 2014-01-26T08:10:47-0500   notice: /default/test: R: max IP is 10.20.30.40
-#@ 2014-01-26T08:10:47-0500   notice: /default/test: R: max lexicographically is foo
-#@ 2014-01-26T08:10:47-0500   notice: /default/test: R: min int is bar
-#@ 2014-01-26T08:10:47-0500   notice: /default/test: R: min IP is 1
-#@ 2014-01-26T08:10:47-0500   notice: /default/test: R: min lexicographically is 1
+#@ 2014-01-28T08:39:27-0500   notice: /default/test: R: my list is ["foo","1","2","3000","bar","10.20.30.40"]
+#@ 2014-01-28T08:39:27-0500   notice: /default/test: R: mean is 502.200000
+#@ 2014-01-28T08:39:27-0500   notice: /default/test: R: variance is 1497376.000000 (use eval() to get the standard deviation)
+#@ 2014-01-28T08:39:27-0500   notice: /default/test: R: max int is 3000
+#@ 2014-01-28T08:39:27-0500   notice: /default/test: R: max IP is 10.20.30.40
+#@ 2014-01-28T08:39:27-0500   notice: /default/test: R: max lexicographically is foo
+#@ 2014-01-28T08:39:27-0500   notice: /default/test: R: min int is bar
+#@ 2014-01-28T08:39:27-0500   notice: /default/test: R: min IP is 1
+#@ 2014-01-28T08:39:27-0500   notice: /default/test: R: min lexicographically is 1
 #@ ```
 #+end_src

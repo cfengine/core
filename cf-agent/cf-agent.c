@@ -250,6 +250,7 @@ int main(int argc, char *argv[])
         GenericAgentConfigSetInputFile(config, GetInputDir(), "failsafe.cf");
         policy = GenericAgentLoadPolicy(ctx, config);
     }
+    assert(policy);
 
     ThisAgentInit();
     BeginAudit();
@@ -266,6 +267,7 @@ int main(int argc, char *argv[])
     Nova_TrackExecution(config->input_file);
     PurgeLocks();
 
+    PolicyDestroy(policy); /* Can we safely do this earlier ? */
     if (config->agent_specific.agent.bootstrap_policy_server && !VerifyBootstrap())
     {
         RemovePolicyServerFile(GetWorkDir());

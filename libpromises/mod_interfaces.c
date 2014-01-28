@@ -73,7 +73,6 @@ static const ConstraintSyntax interface_constraints[] =
 
 static const ConstraintSyntax relay_constraints[] =
 {
-    ConstraintSyntaxNewStringList("relay_networks", CF_ANYSTRING, "List of local networks", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewInt("rip_metric", CF_INTRANGE, "RIP route metric", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewInt("rip_timeout", CF_INTRANGE, "RIP timeout on updates", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBool("rip_split_horizon", "RIP Horizon control", SYNTAX_STATUS_NORMAL),
@@ -108,7 +107,7 @@ static const ConstraintSyntax network_constraints[] =
 {
     ConstraintSyntaxNewBody("routed_to", &route_body, "A body assigning a forwarding agent", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBody("advertised_by", &relay_body, "A body assigning a protocol service", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewStringList("equivalent_gateways", CF_IDRANGE, "A list of nodes to select from", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewStringList("balanced_destinations", CF_IDRANGE, "A list of nodes to select from", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBody("route_select", &balancing_body, "Settings for load balancing with balanced_relay", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };

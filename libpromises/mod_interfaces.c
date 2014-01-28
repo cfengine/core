@@ -59,12 +59,13 @@ static const ConstraintSyntax interface_constraints[] =
     ConstraintSyntaxNewStringList("aggregate", "", "List of interfaces to bond with LACP", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewStringList("tagged_vlans", "", "List of labelled (trunk) vlan identifers for this interface", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("untagged_vlan", CF_IDRANGE, "Unlabelled (access) vlan", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewString("ipv4_address", CF_IPRANGE, "A static IPV4 address", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewStringList("ipv4_addresses", CF_IPRANGE, "A static IPV4 address", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("ipv4_broadcast", CF_IPRANGE, "A static IPV4 address for broadcast messages", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewStringList("ipv6_addresses", CF_IPRANGE, "A static IPV6 address", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBody("link_state", &linkstate_body, "The desired state of the interface link", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBody("proxy", &proxy_body, "For treating a remote device as a peripheral", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBool("spanning_tree", "Spanning tree protocol active", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewBool("purge_addresses", "Remove existing addresses from interface if not defined here", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };
 

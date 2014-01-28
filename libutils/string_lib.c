@@ -506,6 +506,8 @@ Seq *StringMatchCaptures(const char *regex, const char *str)
     {
         SeqAppend(ret, xstrndup(str + ovector[2*i], ovector[2*i + 1] - ovector[2 * i]));
     }
+    free(ovector);
+    pcre_free(pattern);
     return ret;
 }
 

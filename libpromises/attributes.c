@@ -30,6 +30,13 @@
 #include <logging.h>
 #include <chflags.h>
 #include <audit.h>
+static FilePerms GetPermissionConstraints(const EvalContext *ctx, const Promise *pp);
+
+void ClearFilesAttributes(Attributes *whom)
+{
+    UidListDestroy(whom->perms.owners);
+    GidListDestroy(whom->perms.groups);
+}
 
 Attributes GetFilesAttributes(const EvalContext *ctx, const Promise *pp)
 {
@@ -421,7 +428,7 @@ Acl GetAclConstraints(const EvalContext *ctx, const Promise *pp)
 
 /*******************************************************************/
 
-FilePerms GetPermissionConstraints(const EvalContext *ctx, const Promise *pp)
+static FilePerms GetPermissionConstraints(const EvalContext *ctx, const Promise *pp)
 {
     FilePerms p;
     char *value;

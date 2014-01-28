@@ -33,6 +33,9 @@ Attributes GetDatabaseAttributes(const EvalContext *ctx, const Promise *pp);
 Attributes GetDeletionAttributes(const EvalContext *ctx, const Promise *pp);
 Attributes GetEnvironmentsAttributes(const EvalContext *ctx, const Promise *pp);
 Attributes GetExecAttributes(const EvalContext *ctx, const Promise *pp);
+void ClearFilesAttributes(Attributes *whom);
+/* Every return from GetFilesAttributes() must be passed to
+ * ClearFilesAttributes() when you're done with it. */
 Attributes GetFilesAttributes(const EvalContext *ctx, const Promise *pp);
 Attributes GetInferencesAttributes(const EvalContext *ctx, const Promise *pp);
 Attributes GetInsertionAttributes(const EvalContext *ctx, const Promise *pp);
@@ -65,7 +68,6 @@ FileChange GetChangeMgtConstraints(const EvalContext *ctx, const Promise *pp);
 FileCopy GetCopyConstraints(const EvalContext *ctx, const Promise *pp);
 FileDelete GetDeleteConstraints(const EvalContext *ctx, const Promise *pp);
 FileLink GetLinkConstraints(const EvalContext *ctx, const Promise *pp);
-FilePerms GetPermissionConstraints(const EvalContext *ctx, const Promise *pp);
 FileRename GetRenameConstraints(const EvalContext *ctx, const Promise *pp);
 FileSelect GetSelectConstraints(const EvalContext *ctx, const Promise *pp);
 LineSelect GetDeleteSelectConstraints(const EvalContext *ctx, const Promise *pp);

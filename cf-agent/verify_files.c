@@ -204,6 +204,7 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promi
 
     if (!FileSanityChecks(path, a, pp))
     {
+        ClearFilesAttributes(&a);
         return PROMISE_RESULT_NOOP;
     }
 
@@ -212,6 +213,7 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promi
     thislock = AcquireLock(ctx, path, VUQNAME, CFSTARTTIME, a.transaction, pp, false);
     if (thislock.lock == NULL)
     {
+        ClearFilesAttributes(&a);
         return PROMISE_RESULT_SKIPPED;
     }
 
@@ -426,6 +428,7 @@ exit:
 
     SaveSetuid();
     YieldCurrentLock(thislock);
+    ClearFilesAttributes(&a);
 
     return result;
 }

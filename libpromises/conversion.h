@@ -75,6 +75,8 @@ const char *DataTypeShortToType(char *short_type);
 int CoarseLaterThan(const char *key, const char *from);
 int FindTypeInArray(const char *const haystack[], const char *needle, int default_value, int null_value);
 
+void UidListDestroy(UidList *uids);
+void GidListDestroy(GidList *gids);
 UidList *Rlist2UidList(Rlist *uidnames, const Promise *pp);
 GidList *Rlist2GidList(Rlist *gidnames, const Promise *pp);
 #ifndef __MINGW32__

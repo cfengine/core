@@ -964,7 +964,8 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy)
 
                 for (const Rlist *rp = value; rp != NULL; rp = rp->next)
                 {
-                    if (putenv(RlistScalarValue(rp)) != 0)
+                    assert(strchr(RlistScalarValue(rp), '=')); /* Valid for putenv() */
+                    if (putenv(xstrdup(RlistScalarValue(rp))) != 0)
                     {
                         Log(LOG_LEVEL_ERR, "Failed to set environment variable '%s'. (putenv: %s)",
                             RlistScalarValue(rp), GetErrorStr());

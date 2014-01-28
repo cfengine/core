@@ -261,7 +261,7 @@ Bundle *MakeTemporaryBundleFromTemplate(EvalContext *ctx, Policy *policy, Attrib
                 *(sp-1) = '\0'; // StripTrailingNewline(promiser) and terminate
 
                 np = PromiseTypeAppendPromise(tp, promiser, (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, context);
-                PromiseAppendConstraint(np, "insert_type", RvalNew("preserve_block", RVAL_TYPE_SCALAR), false);
+                PromiseAppendConstraint(np, "insert_type", RvalNew("preserve_all_lines", RVAL_TYPE_SCALAR), false);
 
                 DeleteItemList(lines);
                 free(promiser);
@@ -283,7 +283,7 @@ Bundle *MakeTemporaryBundleFromTemplate(EvalContext *ctx, Policy *policy, Attrib
                             Log(LOG_LEVEL_ERR, "StripTrailingNewline was called on an overlong string");
                         }
                         np = PromiseTypeAppendPromise(tp, buffer, (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, context);
-                        PromiseAppendConstraint(np, "insert_type", RvalNew("preserve_block", RVAL_TYPE_SCALAR), false);
+                        PromiseAppendConstraint(np, "insert_type", RvalNew("preserve_all_lines", RVAL_TYPE_SCALAR), false);
                     }
                 }
             }
@@ -561,6 +561,8 @@ static PromiseResult VerifyPatterns(EvalContext *ctx, const Promise *pp, EditCon
     return result;
 }
 
+/***************************************************************************/
+
 static int SelectNextItemMatching(EvalContext *ctx, const char *regexp, Item *begin, Item *end, Item **match, Item **prev)
 {
     Item *ip_prev = CF_UNDEFINED_ITEM;
@@ -587,6 +589,8 @@ static int SelectNextItemMatching(EvalContext *ctx, const char *regexp, Item *be
 
     return false;
 }
+
+/***************************************************************************/
 
 static int SelectLastItemMatching(EvalContext *ctx, const char *regexp, Item *begin, Item *end, Item **match, Item **prev)
 {
@@ -619,6 +623,8 @@ static int SelectLastItemMatching(EvalContext *ctx, const char *regexp, Item *be
 
     return false;
 }
+
+/***************************************************************************/
 
 static int SelectItemMatching(EvalContext *ctx, Item *start, char *regex, Item *begin_ptr, Item *end_ptr, Item **match, Item **prev, char *fl)
 {
@@ -659,6 +665,8 @@ static int SelectItemMatching(EvalContext *ctx, Item *start, char *regex, Item *
     return ret;
 }
 
+/***************************************************************************/
+
 static PromiseResult VerifyLineInsertions(EvalContext *ctx, const Promise *pp, EditContext *edcontext)
 {
     Item **start = &(edcontext->file_start), *match, *prev;
@@ -667,7 +675,7 @@ static PromiseResult VerifyLineInsertions(EvalContext *ctx, const Promise *pp, E
     char lockname[CF_BUFSIZE];
 
     Attributes a = GetInsertionAttributes(ctx, pp);
-    int preserve_block = a.sourcetype && strcmp(a.sourcetype, "preserve_block") == 0;
+    int allow_multi_lines = a.sourcetype && strcmp(a.sourcetype, "preserve_all_lines") == 0;
     a.transaction.ifelapsed = CF_EDIT_IFELAPSED;
 
     if (!SanityCheckInsertions(a))
@@ -695,7 +703,7 @@ static PromiseResult VerifyLineInsertions(EvalContext *ctx, const Promise *pp, E
         return result;
     }
 
-    if (preserve_block)
+    if (allow_multi_lines)
     {
         // promise to insert duplicates on first pass only
         snprintf(lockname, CF_BUFSIZE - 1, "insertline-%s-%s-%lu", pp->promiser, edcontext->filename, (long unsigned int) pp->org_pp);
@@ -817,6 +825,8 @@ If no such region matches, begin_ptr and end_ptr should point to CF_UNDEFINED_IT
     return true;
 }
 
+/*****************************************************************************/
+
 static int MatchRegion(EvalContext *ctx, const char *chunk, const Item *begin, const Item *end, bool regex)
 /*
   Match a region in between the selection delimiters. It is
@@ -877,11 +887,13 @@ static int MatchRegion(EvalContext *ctx, const char *chunk, const Item *begin, c
     return lines;
 }
 
+/*****************************************************************************/
+
 static int InsertMultipleLinesToRegion(EvalContext *ctx, Item **start, Item *begin_ptr, Item *end_ptr, Attributes a,
                                        const Promise *pp, EditContext *edcontext, PromiseResult *result)
 {
     Item *ip, *prev = CF_UNDEFINED_ITEM;
-    int preserve_block = a.sourcetype && strcmp(a.sourcetype, "preserve_block") == 0;
+    int allow_multi_lines = a.sourcetype && strcmp(a.sourcetype, "preserve_all_lines") == 0;
 
     // Insert at the start of the file
 
@@ -911,7 +923,7 @@ static int InsertMultipleLinesToRegion(EvalContext *ctx, Item **start, Item *beg
     {
         for (ip = *start; ip != NULL; ip = ip->next)
         {
-            if (!preserve_block && MatchRegion(ctx, pp->promiser, ip, end_ptr, true))
+            if (!allow_multi_lines && MatchRegion(ctx, pp->promiser, ip, end_ptr, true))
             {
                 cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "Promised chunk '%s' exists within selected region of %s (promise kept)", pp->promiser, edcontext->filename);
                 return false;
@@ -1403,6 +1415,8 @@ static int SanityCheckDeletions(Attributes a, const Promise *pp)
     return true;
 }
 
+/***************************************************************************/
+
 static int MatchPolicy(EvalContext *ctx, const char *camel, const char *haystack, Rlist *insert_match, const Promise *pp)
 {
     Rlist *rp;
@@ -1543,6 +1557,8 @@ static int IsItemInRegion(EvalContext *ctx, const char *item, const Item *begin_
     return false;
 }
 
+/***************************************************************************/
+
 static int InsertFileAtLocation(EvalContext *ctx, Item **start, Item *begin_ptr, Item *end_ptr, Item *location,
                                 Item *prev, Attributes a, const Promise *pp, EditContext *edcontext, PromiseResult *result)
 {
@@ -1661,7 +1677,7 @@ static int InsertCompoundLineAtLocation(EvalContext *ctx, char *chunk, Item **st
     bool retval = false;
     char buf[CF_EXPANDSIZE];
     char *sp;
-    int preserve_block = a.sourcetype && (strcmp(a.sourcetype, "preserve_block") == 0 || strcmp(a.sourcetype, "file_preserve_block") == 0);
+    int preserve_block = a.sourcetype && (strcmp(a.sourcetype, "preserve_all_lines") == 0 || strcmp(a.sourcetype, "preserve_block") == 0 || strcmp(a.sourcetype, "file_preserve_block") == 0);
 
     if (!preserve_block && MatchRegion(ctx, chunk, location, NULL, false))
     {

@@ -1,6 +1,6 @@
 #######################################################
 #
-# Files read in as templates, check class handling
+# Test idempotency of preserve_block
 #
 #######################################################
 
@@ -22,38 +22,24 @@ bundle agent init
       edit_defaults => init_empty;
 
   files:
-      "$(G.testfile).template"
+      "$(G.testfile).actual"
       create => "true",
-      edit_line => init_template,
+      edit_line => init_file,
       edit_defaults => init_empty;
 
 }
 
 #######
 
-bundle edit_line init_template
+bundle edit_line init_file
 {
 insert_lines:
 
-"[%CFEngine BEGIN %]
-WARNING
-No unauthorized logins. All logins are recorded.
-Property of Example.com
-[%CFEngine END %]
+"auto eth0.1190
+iface eth0.1190 inet manual
+	up ifconfig eth0.1190 up"
 
-[%CFEngine nosuchclass:: %]
-manager: Mr. White <mwhite@example.com>
-phone: 555-555-5555
-
-[%CFEngine fishy:: %]
-manager: Mr. Black <mblack@example.com>
-phone: 555-555-4444
-
-[%CFEngine any:: %]
-AAAAAAAA
-"
-
-insert_type => "preserve_all_lines";
+insert_type => "preserve_block";
 }
 
 #######
@@ -62,15 +48,9 @@ bundle edit_line init_expected
 {
 insert_lines:
 
-"WARNING
-No unauthorized logins. All logins are recorded.
-Property of Example.com
-
-manager: Mr. Black <mblack@example.com>
-phone: 555-555-4444
-
-AAAAAAAA
-"
+"auto eth0.1190
+iface eth0.1190 inet manual
+	up ifconfig eth0.1190 up"
 
 insert_type => "preserve_block";
 }
@@ -84,15 +64,12 @@ body edit_defaults init_empty
 
 bundle agent test
 {
-classes:
-
-  "fishy" expression => "any";
-
 files:
 
+  # Do the same again to test idempotency of preserve_block
+
    "$(G.testfile).actual"
-           create => "true",
-    edit_template => "$(G.testfile).template";
+     edit_line => init_expected;
 }
 
 #######################################################

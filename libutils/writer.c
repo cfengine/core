@@ -98,14 +98,16 @@ static size_t StringWriterWriteChar(Writer *writer, char c)
 
 static size_t StringWriterWriteLen(Writer *writer, const char *str, size_t len_)
 {
-    size_t len = MIN(strlen(str), len_);
+    /* NB: str[:len_] may come from read(), which hasn't '\0'-terminated */
+    size_t len = strnlen(str, len_);
 
     if (writer->string.len + len + 1 > writer->string.allocated)
     {
         StringWriterReallocate(writer, len);
     }
 
-    strlcpy(writer->string.data + writer->string.len, str, len + 1);
+    memcpy(writer->string.data + writer->string.len, str, len);
+    writer->string.data[writer->string.len + len] = '\0';
     writer->string.len += len;
 
     return len;
@@ -122,7 +124,7 @@ static size_t FileWriterWriteF(Writer *writer, const char *fmt, va_list ap)
 
 static size_t FileWriterWriteLen(Writer *writer, const char *str, size_t len_)
 {
-    size_t len = MIN(strlen(str), len_);
+    size_t len = strnlen(str, len_);
 
     return fwrite(str, 1, len, writer->file);
 }
@@ -238,7 +240,7 @@ void WriterClose(Writer *writer)
 /*********************************************************************/
 
 char *StringWriterClose(Writer *writer)
-//NOTE: transfer of ownership for allocated return value
+// NOTE: transfer of ownership for allocated return value
 {
     if (writer->type != WT_STRING)
     {

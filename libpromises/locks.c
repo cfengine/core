@@ -217,7 +217,22 @@ static int RemoveLock(char *name)
     }
 
     ThreadLock(cft_lock);
+#ifdef LMDB
+    unsigned char digest2[EVP_MAX_MD_SIZE*2 + 1];
+
+    if (!strcmp(name, "CF_CRITICAL_SECTION"))
+    {
+        strcpy(digest2, name);
+    }
+    else
+    {
+        GenerateMd5Hash(name, digest2);
+    }
+
+    DeleteDB(dbp, digest2);
+#else
     DeleteDB(dbp, name);
+#endif
     ThreadUnlock(cft_lock);
 
     CloseLock(dbp);

@@ -1,0 +1,83 @@
+#######################################################
+#
+# test join()
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+  vars:
+      "a" slist => { "b", "c", "a" };
+      "b" slist => { "100", "9", "10" };
+      "c" slist => { };
+      "d" slist => { "", "a", "", "b" };
+      "e" slist => { "a", "1", "b" };
+      "f" rlist => { "100", "200", "300" };
+      "g" rlist => { "1.11", "-2.22", "-3.33" };
+      "h" ilist => { "-10", "0", "200" };
+      "i" data => parsejson('[ 1, 2, "", 3000, "" ]');
+      "j" data => parsejson('[ 1, 2, [ 3, 4, 5 ], null, true, false ]');
+      "k" data => parsejson('{}');
+      "l" data => parsejson('{ "a": 100, "b": 200, "c": null}');
+
+      "lists" slist => { "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l" };
+}
+
+#######################################################
+
+bundle agent test
+{
+  vars:
+      "lists" slist => { @(init.lists) };
+      "join_$(lists)" string => join(":", "init.$(lists)");
+}
+
+
+#######################################################
+
+bundle agent check
+{
+  vars:
+      "lists" slist => { @(init.lists) };
+
+      "expected_a" string => "b:c:a";
+      "expected_b" string => "100:9:10";
+      "expected_c" string => "";
+      "expected_d" string => ":a::b";
+      "expected_e" string => "a:1:b";
+      "expected_f" string => "100:200:300";
+      "expected_g" string => "1.11:-2.22:-3.33";
+      "expected_h" string => "-10:0:200";
+      "expected_i" string => "1:2::3000:";
+      "expected_j" string => "1:2:true:false";
+      "expected_k" string => "";
+      "expected_l" string => "100:200";
+
+  classes:
+      "ok_$(lists)" expression => strcmp("$(expected_$(lists))",
+                                         "$(test.join_$(lists))");
+      "not_ok_$(lists)" not => strcmp("$(expected_$(lists))",
+                                      "$(test.join_$(lists))");
+
+      "ok" and => { "ok_a", "ok_b", "ok_c", "ok_d", "ok_e", "ok_f",
+                    "ok_g", "ok_h", "ok_i", "ok_j", "ok_k", "ok_l" };
+
+  reports:
+    DEBUG::
+      "mismatch: expected '$(expected_$(lists))' vs. actual '$(test.join_$(lists))'"
+      ifvarclass => "not_ok_$(lists)";
+
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

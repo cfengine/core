@@ -17,26 +17,49 @@ bundle agent init
 {
   vars:
       "results" slist => {
-                           "starting list = 1",
-                           "starting list = 2",
-                           "starting list = 3",
-                           "starting list = one",
-                           "starting list = two",
-                           "starting list = three",
-                           "starting list = long string",
-                           "grepped list = 1",
-                           "grepped list = 2",
-                           "grepped list = 3",
-                           "filter-grepped list = 1",
-                           "filter-grepped list = 2",
-                           "filter-grepped list = 3",
-                           "filter-exact list, looking for 'one' = one",
-                           "filter-invert list, looking for non-digits = one",
-                           "filter-invert list, looking for non-digits = two",
-                           "filter-invert list, looking for non-digits = three",
-                           "filter-invert list, looking for non-digits = long string",
-                           "filter-bound list, matching at most 2 items = 1",
-                           "filter-bound list, matching at most 2 items = 2",
+                           'This filtering of d1 should have only exact "." entries: { --empty-list-- }',
+                           'This filtering of d1 should have only one-character entries: { "1", "2", "3" }',
+                           'This filtering of d2 should have only exact "." entries: { --empty-list-- }',
+                           'This filtering of d2 should have only one-character entries: { "1", "2", "3", "y", "b", "q" }',
+                           'This filtering of dempty should have only exact "." entries: { --empty-list-- }',
+                           'This filtering of dempty should have only one-character entries: { --empty-list-- }',
+                           'This filtering of s1 should have only exact "." entries: { --empty-list-- }',
+                           'This filtering of s1 should have only one-character entries: { "1", "2", "3" }',
+
+                           'filter-bound d1, matching at most 2 items = { "1", "2" }',
+                           'filter-bound d2, matching at most 2 items = { "1", "2" }',
+                           'filter-bound dempty, matching at most 2 items = { --empty-list-- }',
+                           'filter-bound s1, matching at most 2 items = { "1", "2" }',
+
+                           'filter-exact d1, looking for "one" = { "one", "one" }',
+                           'filter-exact d2, looking for "one" = { --empty-list-- }',
+                           'filter-exact dempty, looking for "one" = { --empty-list-- }',
+                           'filter-exact s1, looking for "one" = { "one", "one" }',
+
+                           'filter-grep09 d1 = { "1", "2", "3" }',
+                           'filter-grep09 d2 = { "1", "2", "3" }',
+                           'filter-grep09 dempty = { --empty-list-- }',
+                           'filter-grep09 s1 = { "1", "2", "3" }',
+
+                           'filter-invert d1, looking for non-digits = { "one", "two", "three", "long string", "four", "fix", "six", "one", "two", "three" }',
+                           'filter-invert d2, looking for non-digits = { "y", "b", "q" }',
+                           'filter-invert dempty, looking for non-digits = { --empty-list-- }',
+                           'filter-invert s1, looking for non-digits = { "one", "two", "three", "long string", "one", "two", "three" }',
+
+                           'grep09 d1 = { "1", "2", "3" }',
+                           'grep09 d2 = { "1", "2", "3" }',
+                           'grep09 dempty = { --empty-list-- }',
+                           'grep09 s1 = { "1", "2", "3" }',
+
+                           'max0 filtering of d1 should be empty: { --empty-list-- }',
+                           'max0 filtering of d2 should be empty: { --empty-list-- }',
+                           'max0 filtering of dempty should be empty: { --empty-list-- }',
+                           'max0 filtering of s1 should be empty: { --empty-list-- }',
+
+                           'starting d1 = [1,2,3,"one","two","three","long string","four","fix","six","one","two","three"]',
+                           'starting d2 = {"one":1,"two":2,"three":3,"x":"y","a":"b","p":"q"}',
+                           'starting dempty = []',
+                           'starting s1 = { "1", "2", "3", "one", "two", "three", "long string", "one", "two", "three" }'
       };
 
   files:
@@ -63,20 +86,40 @@ bundle edit_line init_insert
 bundle agent test
 {
   vars:
-      "test" slist => {
-                        1,2,3,
-                        "one", "two", "three",
-                        "long string",
-                        "one", "two", "three",
+      "tests" slist => { "fgrep09", "exact1", "exactdot", "regexdot", "invert", "max2", "max0", "grep09" };
+      "lists" slist => { "s1", "d1", "d2", "dempty" };
+
+      "s1" slist => {
+                      1,2,3,
+                      "one", "two", "three",
+                      "long string",
+                      "one", "two", "three",
       };
 
-      "test_grep" slist => filter("[0-9]", "test", "true", "false", 999);
-      "test_exact1" slist => filter("one", "test", "false", "false", 999);
-      "test_exact2" slist => filter(".", "test", "false", "false", 999);
-      "test_invert" slist => filter("[0-9]", "test", "true", "true", 999);
-      "test_max2" slist => filter(".*", "test", "true", "false", 2);
-      "test_max0" slist => filter(".*", "test", "true", "false", 0);
-      "grep" slist => grep("[0-9]", "test");
+      "d1" data => parsejson('
+[1,2,3,
+ "one", "two", "three",
+ "long string",
+ "four", "fix", "six",
+ "one", "two", "three"]');
+
+      "d2" data => parsejson('
+{ "one": 1, "two": 2, "three": 3,
+  "x": "y", "a": "b", "p": "q" }');
+
+      "dempty" data => parsejson('[]');
+
+      "$(lists)_fgrep09" slist => filter("[0-9]", $(lists), "true", "false", 999);
+      "$(lists)_exact1" slist => filter("one", $(lists), "false", "false", 999);
+      "$(lists)_exactdot" slist => filter(".", $(lists), "false", "false", 999);
+      "$(lists)_regexdot" slist => filter(".", $(lists), "true", "false", 999);
+      "$(lists)_invert" slist => filter("[0-9]", $(lists), "true", "true", 999);
+      "$(lists)_max2" slist => filter(".*", $(lists), "true", "false", 2);
+      "$(lists)_max0" slist => filter(".*", $(lists), "true", "false", 0);
+      "$(lists)_grep09" slist => grep("[0-9]", $(lists));
+
+      "$(lists)_str" string => format("%S", "$(lists)");
+      "$(lists)_$(tests)_str" string => format("%S", "$(lists)_$(tests)");
 
   files:
       "$(G.testfile).actual"
@@ -86,15 +129,19 @@ bundle agent test
 
 bundle edit_line test_insert
 {
+  vars:
+      "lists" slist => { @(test.lists) };
+
   insert_lines:
-      "starting list = $(test.test)";
-      "grepped list = $(test.grep)";
-      "filter-grepped list = $(test.test_grep)";
-      "filter-exact list, looking for 'one' = $(test.test_exact1)";
-      "This line should not appear: $(test.test_exact2)";
-      "filter-invert list, looking for non-digits = $(test.test_invert)";
-      "filter-bound list, matching at most 2 items = $(test.test_max2)";
-      "This line should not appear: $(test.test_max0)";
+      "starting $(lists) = $(test.$(lists)_str)";
+      "grep09 $(lists) = $(test.$(lists)_grep09_str)";
+      "filter-grep09 $(lists) = $(test.$(lists)_fgrep09_str)";
+      "filter-exact $(lists), looking for \"one\" = $(test.$(lists)_exact1_str)";
+      "This filtering of $(lists) should have only exact \".\" entries: $(test.$(lists)_exactdot_str)";
+      "This filtering of $(lists) should have only one-character entries: $(test.$(lists)_regexdot_str)";
+      "filter-invert $(lists), looking for non-digits = $(test.$(lists)_invert_str)";
+      "filter-bound $(lists), matching at most 2 items = $(test.$(lists)_max2_str)";
+      "max0 filtering of $(lists) should be empty: $(test.$(lists)_max0_str)";
 }
 
 #######################################################

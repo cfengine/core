@@ -183,7 +183,7 @@ Attributes GetInterfaceAttributes(const EvalContext *ctx, const Promise *pp)
 
     attr.havebridge = (attr.interface.bridge_interfaces == NULL) ? false : true;
     attr.haveaggr = (attr.interface.aggregate == NULL) ? false : true;
-    attr.haveipv4 = (attr.interface.v4_address == NULL) ? false : true;
+    attr.haveipv4 = (attr.interface.v4_addresses == NULL) ? false : true;
     attr.haveipv6 = (attr.interface.v6_addresses == NULL) ? false : true;
     attr.haveuvlan = (attr.interface.untagged_vlan == NULL) ? false : true;
     attr.havetvlan = (attr.interface.tagged_vlans == NULL) ? false : true;
@@ -1699,14 +1699,16 @@ Interfaces GetInterfaceConstraints(const EvalContext *ctx, const Promise *pp)
     i.bridge_interfaces = PromiseGetConstraintAsList(ctx, "bridge_interfaces", pp);
     i.tagged_vlans = PromiseGetConstraintAsList(ctx, "tagged_vlans", pp);
     i.untagged_vlan = PromiseGetConstraintAsRval(pp, "untagged_vlan", RVAL_TYPE_SCALAR);
-    i.v4_address = PromiseGetConstraintAsRval(pp, "ipv4_address", RVAL_TYPE_SCALAR);
+    i.v4_addresses = PromiseGetConstraintAsList(ctx, "ipv4_addresses", pp);
     i.v6_addresses = PromiseGetConstraintAsList(ctx, "ipv6_addresses", pp);
+    i.v4_broadcast  = PromiseGetConstraintAsRval(pp, "ipv4_broadcast", RVAL_TYPE_SCALAR);
     i.duplex = PromiseGetConstraintAsRval(pp, "duplex", RVAL_TYPE_SCALAR);
     i.state = PromiseGetConstraintAsRval(pp, "state", RVAL_TYPE_SCALAR);
     i.aggregate = PromiseGetConstraintAsList(ctx, "aggregate", pp);
     i.state = PromiseGetConstraintAsRval(pp, "state", RVAL_TYPE_SCALAR);
     i.spanning = PromiseGetConstraintAsRval(pp, "spanning", RVAL_TYPE_SCALAR);
     i.bonding = PromiseGetConstraintAsBoolean(ctx, "bonding", pp);
+    i.purge = PromiseGetConstraintAsBoolean(ctx, "purge_addresses", pp);
     i.mtu = PromiseGetConstraintAsInt(ctx, "mtu", pp);
     i.speed = PromiseGetConstraintAsInt(ctx, "speed", pp);
     i.min_bonding = PromiseGetConstraintAsInt(ctx, "min_bonding", pp);

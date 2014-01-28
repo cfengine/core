@@ -40,7 +40,7 @@ typedef struct LinkState_ LinkState;
 struct LinkState_
 {
     char *name;
-    char *v4_address;
+    Rlist *v4_addresses;
     char *v4_broadcast;
     Rlist *v6_addresses;
     char *hw_address;
@@ -54,14 +54,24 @@ struct LinkState_
 #define CF_DEBIAN_IFCONF "/etc/network/interfaces"
 #define CF_DEBIAN_VLAN_FILE "/proc/net/vlan/config"
 #define CF_DEBIAN_VLAN_COMMAND "/sbin/vconfig"
-#define CF_DEBIAN_LISTINTERFACES_COMMAND "/bin/ip addr"
+#define CF_DEBIAN_IP_COMM "/sbin/ip"
 
 static int InterfaceSanityCheck(EvalContext *ctx, Attributes a,  const Promise *pp);
 static void AssessInterfacePromise(char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp);
 static void AssessDebianInterfacePromise(char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp);
-static void AssessDebianVlan(char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp);
+static void AssessDebianTaggedVlan(char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp);
 static int GetVlanInfo(Item **list, const Promise *pp);
 static int GetInterfaceInformation(LinkState **list, const Promise *pp);
+static int NewVLAN(int vlan_id, char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp);
+static int DeleteVLAN(int vlan_id, char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp);
+static int ExecCommand(char *cmd, PromiseResult *result, const Promise *pp);
+static void AssessIPv4Config(char *promiser, PromiseResult *result, EvalContext *ctx, Rlist *addresses, const Attributes *a, const Promise *pp);
+static void AssessIPv6Config(char *promiser, PromiseResult *result, EvalContext *ctx, Rlist *addresses, const Attributes *a, const Promise *pp);
+static void AssessBridge(char *promiser, PromiseResult *result, EvalContext *ctx, LinkState *ifs, const Attributes *a, const Promise *pp);
+static void AssessLACPBond(char *promiser, PromiseResult *result, EvalContext *ctx, LinkState *ifs, const Attributes *a, const Promise *pp);
+static void AssessDeviceAlias(char *promiser, PromiseResult *result, EvalContext *ctx, LinkState *ifs, const Attributes *a, const Promise *pp);
+static Rlist *IPV4Addresses(LinkState *ifs, char *interface);
+static Rlist *IPV6Addresses(LinkState *ifs, char *interface);
 
 /****************************************************************************/
 
@@ -159,8 +169,7 @@ static int InterfaceSanityCheck(EvalContext *ctx, Attributes a,  const Promise *
 
 void AssessInterfacePromise(char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp)
 {
-// if (IsDefinedClass(ctx,"debian"))
-    if (true)
+    if (IsDefinedClass(ctx,"linux"))
     {
         AssessDebianInterfacePromise(promiser, result, ctx, a, pp);
     }
@@ -178,7 +187,6 @@ void AssessInterfacePromise(char *promiser, PromiseResult *result, EvalContext *
 
 static void AssessDebianInterfacePromise(char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp)
 {
-
     LinkState *ifs = NULL;
 
     if (!GetInterfaceInformation(&ifs, pp))
@@ -187,62 +195,76 @@ static void AssessDebianInterfacePromise(char *promiser, PromiseResult *result, 
         return;
     }
 
-    LinkState *lsp;
+/* LinkState *lsp;
+   for (lsp = ifs; lsp != NULL; lsp = lsp->next)
+   {
+   printf("======================\n");
+   printf("INTERFACE %s (mtu %d)\n", lsp->name, lsp->mtu);
+   printf("MAC: %s\n", lsp->hw_address);
 
-    for (lsp = ifs; lsp != NULL; lsp = lsp->next)
-    {
-        printf("======================\n");
-        printf("INTERFACE %s (mtu %d)\n", lsp->name, lsp->mtu);
-        printf("V4: %s\n", lsp->v4_address);
-        printf("MAC: %s\n", lsp->hw_address);
-        for (Rlist *rp = lsp->v6_addresses; rp!=NULL; rp=rp->next)
-        {
-            printf("V6: %s\n", (char *)rp->val.item);
-        }
-    }
+   for (Rlist *rp = lsp->v4_addresses; rp!=NULL; rp=rp->next)
+   {
+   printf("V4: %s\n", (char *)rp->val.item);
+   }
+   for (Rlist *rp = lsp->v6_addresses; rp!=NULL; rp=rp->next)
+   {
+   printf("V6: %s\n", (char *)rp->val.item);
+   }
+   }
 
-    printf("======================\n");
+   printf("======================\n");
 
-    if (a->havetvlan || a->haveuvlan)
-    {
-        printf("SET VLANs %s\n", pp->promiser);
-        AssessDebianVlan(promiser, result, ctx, a, pp);
-    }
-    else if (a->havebridge)
-    {
-        printf("BRIDGE %s\n", pp->promiser);
-    }
-    else if (a->haveaggr)
-    {
-        printf("BONDED %s\n", pp->promiser);
-    }
+*/
+
+    // Linux naming INTERFACE:alias.vlan, e.g. eth0:2.1 or eth0.100
 
     if (a->haveipv4)
     {
-        printf("SET 4 ADDRESS %s\n", pp->promiser);
+        AssessIPv4Config(promiser, result, ctx, IPV4Addresses(ifs, promiser), a, pp);
     }
 
     if (a->haveipv6)
     {
-        printf("SET 6 ADDRESS %s\n", pp->promiser);
+        AssessIPv6Config(promiser, result, ctx, IPV6Addresses(ifs, promiser), a, pp);
     }
 
-    if (PromiseGetConstraintAsBoolean(ctx, "link_state", pp))
+    if (a->havetvlan)
     {
-        printf("LINK STAT on %s\n", pp->promiser);
+        AssessDebianTaggedVlan(promiser, result, ctx, a, pp);
     }
 
-    printf("NOW EDIT %s\n", CF_DEBIAN_IFCONF);
-    printf("----------------\n");
+    if (a->haveuvlan)
+    {
+        AssessDeviceAlias(promiser, result, ctx, ifs, a, pp);
+        //DO UNTAGGED -- just a device ALIAS eth0:n ?
+    }
+    else if (a->havebridge)
+    {
+        AssessBridge(promiser, result, ctx, ifs, a, pp);
+    }
+    else if (a->haveaggr)
+    {
+        AssessLACPBond(promiser, result, ctx, ifs, a, pp);
+    }
+
+    printf("NOW EDIT %s ??\n", CF_DEBIAN_IFCONF);
+
 }
 
 /****************************************************************************/
 
-static void AssessDebianVlan(char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp)
+static void AssessDebianTaggedVlan(char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp)
 {
     Item *vlans = NULL, *ip;
     Rlist *rp;
     int vlan_id = 0;
+
+    if (!IsDefinedClass(ctx,"debian"))
+    {
+        Log(LOG_LEVEL_ERR, "VLAN configuration is not yet supported on this platform");
+        *result = PROMISE_RESULT_INTERRUPTED;
+        return;
+    }
 
     if (!GetVlanInfo(&vlans, pp))
     {
@@ -254,16 +276,23 @@ static void AssessDebianVlan(char *promiser, PromiseResult *result, EvalContext 
 
     for (rp = a->interface.tagged_vlans; rp != NULL; rp = rp->next)
     {
-        // Non-numeric alias (like JunOS) have to be looked up in VLANS[]
-
         vlan_id = atoi((char *)rp->val.item);
+
+        if (vlan_id == 1)
+        {
+            Log(LOG_LEVEL_ERR, "VLAN 1 may not be tagged/access as per 802.1D standard");
+            *result = PROMISE_RESULT_FAIL;
+            continue;
+        }
 
         if (vlan_id == 0)
         {
+            // Non-numeric alias (like JunOS) have to be looked up in VLANS[]
             char vlan_lookup[CF_MAXVARSIZE];
+            DataType type = CF_DATA_TYPE_NONE;
+
             snprintf(vlan_lookup, CF_MAXVARSIZE, "VLANS[%s]", (char *)rp->val.item);
 
-            DataType type = CF_DATA_TYPE_NONE;
             VarRef *ref = VarRefParse(vlan_lookup);
             const void *value = EvalContextVariableGet(ctx, ref, &type);
             VarRefDestroy(ref);
@@ -285,27 +314,22 @@ static void AssessDebianVlan(char *promiser, PromiseResult *result, EvalContext 
         {
             if (ip->counter == vlan_id)
             {
-                printf("We FOUND %s = %d\n", ip->name, ip->counter);
-                *result = PROMISE_RESULT_NOOP;
-                return;
+                DeleteItem(&vlans, ip);
             }
-
-
-            // ARE THERE VLANS THAT SHOULD NOT BE HERE?
         }
 
-        printf("DID NOT FIND VLAN = %d --- NEED TO MAKE IT\n", vlan_id);
-        printf("EXEC: %s add %s %d <<<<<<<<<<<<<<<<<<<<<\n", CF_DEBIAN_VLAN_COMMAND, pp->promiser, vlan_id);
+        if (!NewVLAN(vlan_id, promiser, result, ctx, a, pp))
+        {
+            return;
+        }
+
+        // Anything remaining needs to be removed
+
+        for (ip = vlans; ip != NULL; ip=ip->next)
+        {
+            DeleteVLAN(vlan_id, promiser, result, ctx, a, pp);
+        }
     }
-
-
-    // Linux naming INTERFACE:alias.vlan, e.g. eth0:2.1 or eth0.100
-
-    // GET INTERFACES
-
-// /sbin/ip -6 addr add 2001:0db8:0:f101::1/64 dev eth0
-
-    *result = PROMISE_RESULT_CHANGE;
 }
 
 /****************************************************************************/
@@ -355,12 +379,15 @@ static int GetInterfaceInformation(LinkState **list, const Promise *pp)
     char v6_addr[CF_MAX_IP_LEN];
     char if_name[CF_SMALLBUF];
     char endline[CF_BUFSIZE];
+    char comm[CF_BUFSIZE];
     int mtu = CF_NOINT;
     LinkState *entry = NULL;
 
-    if ((pfp = cf_popen(CF_DEBIAN_LISTINTERFACES_COMMAND, "r", true)) == NULL)
+    snprintf(comm, CF_BUFSIZE, "%s addr", CF_DEBIAN_IP_COMM);
+
+    if ((pfp = cf_popen(comm, "r", true)) == NULL)
     {
-        Log(LOG_LEVEL_ERR, "Unable to execute '%s'", CF_DEBIAN_LISTINTERFACES_COMMAND);
+        Log(LOG_LEVEL_ERR, "Unable to execute '%s'", CF_DEBIAN_IP_COMM);
         PromiseRef(LOG_LEVEL_ERR, pp);
         return false;
     }
@@ -390,7 +417,7 @@ static int GetInterfaceInformation(LinkState **list, const Promise *pp)
 
             sscanf(line, "%*[^>]> mtu %d %[^\n]", &mtu, endline);
 
-            if (strstr(endline, "UP"))
+            if (strstr(endline, "UP>")) // The intended link state is in <..>, the actual is after "state"
             {
                 entry->up = true;
             }
@@ -418,7 +445,7 @@ static int GetInterfaceInformation(LinkState **list, const Promise *pp)
             else if (strncmp(indent, "inet", 4) == 0)
             {
                 sscanf(line, "%*s %64s", v4_addr);
-                entry->v4_address = xstrdup(v4_addr);
+                RlistPrepend(&(entry->v4_addresses), v4_addr, RVAL_TYPE_SCALAR);
             }
             else if (strncmp(indent, "link", 4) == 0)
             {
@@ -432,3 +459,274 @@ static int GetInterfaceInformation(LinkState **list, const Promise *pp)
     cf_pclose(pfp);
     return true;
 }
+
+/****************************************************************************/
+
+static int NewVLAN(int vlan_id, char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp)
+{
+    char cmd[CF_BUFSIZE];
+    int ret;
+
+    Log(LOG_LEVEL_VERBOSE, "Did not find VLAN %d on %s (i.e. virtual device %s.%d)", vlan_id, promiser, promiser, vlan_id);
+
+    snprintf(cmd, CF_BUFSIZE, "%s add %s %d", CF_DEBIAN_VLAN_COMMAND, pp->promiser, vlan_id);
+
+    if ((ret = ExecCommand(cmd, result, pp)))
+    {
+        Log(LOG_LEVEL_INFO, "Tagging VLAN %d on %s for 'interfaces' promise", vlan_id, promiser);
+    }
+
+    return ret;
+}
+
+/****************************************************************************/
+
+static int DeleteVLAN(int vlan_id, char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp)
+{
+    char cmd[CF_BUFSIZE];
+    int ret;
+
+    Log(LOG_LEVEL_VERBOSE, "Attempting to remove VLAN %d on %s (i.e. virtual device %s.%d)", vlan_id, promiser, promiser, vlan_id);
+
+    snprintf(cmd, CF_BUFSIZE, "%s rem %s.%d", CF_DEBIAN_VLAN_COMMAND, promiser, vlan_id);
+
+    if ((ret = ExecCommand(cmd, result, pp)))
+    {
+        Log(LOG_LEVEL_INFO, "Purged VLAN %d on %s for 'interfaces' promise", vlan_id, promiser);
+    }
+
+    return ret;
+}
+
+/****************************************************************************/
+
+static void AssessIPv4Config(char *promiser, PromiseResult *result, EvalContext *ctx,  Rlist *addresses, const Attributes *a, const Promise *pp)
+{
+    Rlist *rp, *rpa;
+    char cmd[CF_BUFSIZE];
+
+    for (rp = a->interface.v4_addresses; rp != NULL; rp = rp->next)
+    {
+        if (!RlistKeyIn(addresses, rp->val.item))
+        {
+            *result = PROMISE_RESULT_CHANGE;
+
+            if (a->interface.v4_broadcast && strlen(a->interface.v4_broadcast) > 0)
+            {
+                snprintf(cmd, CF_BUFSIZE, "%s addr add %s broadcast %s dev %s", CF_DEBIAN_IP_COMM, rp->val.item, a->interface.v4_broadcast, promiser);
+                a->interface.v4_broadcast[0] = '\0'; // Only need to do this once
+            }
+            else
+            {
+                snprintf(cmd, CF_BUFSIZE, "%s addr add %s dev %s", CF_DEBIAN_IP_COMM, rp->val.item, promiser);
+            }
+
+            Log(LOG_LEVEL_VERBOSE, "Adding ipv4 %s to %s", rp->val.item, promiser);
+
+            if (!ExecCommand(cmd, result, pp))
+            {
+                printf("FAILED!!\n");
+                *result = PROMISE_RESULT_FAIL;
+                return;
+            }
+        }
+    }
+
+    if (a->interface.purge)
+    {
+        for (rpa = addresses; rpa != NULL; rpa=rpa->next)
+        {
+            if (!RlistKeyIn(a->interface.v4_addresses, rpa->val.item))
+            {
+                *result = PROMISE_RESULT_CHANGE;
+
+                Log(LOG_LEVEL_VERBOSE, "Purging ipv4 %s from %s", rpa->val.item, promiser);
+                snprintf(cmd, CF_BUFSIZE, "%s addr del %s dev %s", CF_DEBIAN_IP_COMM, rpa->val.item, promiser);
+
+                if (!ExecCommand(cmd, result, pp))
+                {
+                    *result = PROMISE_RESULT_FAIL;
+                }
+            }
+        }
+    }
+}
+
+/****************************************************************************/
+
+static void AssessIPv6Config(char *promiser, PromiseResult *result, EvalContext *ctx, Rlist *addresses, const Attributes *a, const Promise *pp)
+{
+    Rlist *rp, *rpa;
+    char cmd[CF_BUFSIZE];
+
+    for (rp = a->interface.v6_addresses; rp != NULL; rp = rp->next)
+    {
+        if (!RlistKeyIn(addresses, rp->val.item))
+        {
+            *result = PROMISE_RESULT_CHANGE;
+
+            snprintf(cmd, CF_BUFSIZE, "%s -6 addr add %s dev %s", CF_DEBIAN_IP_COMM, rp->val.item, promiser);
+
+            Log(LOG_LEVEL_VERBOSE, "Adding ipv6 %s to %s", rp->val.item, promiser);
+
+            if (!ExecCommand(cmd, result, pp))
+            {
+                *result = PROMISE_RESULT_FAIL;
+                return;
+            }
+        }
+    }
+
+    if (a->interface.purge)
+    {
+        for (rpa = addresses; rpa != NULL; rpa=rpa->next)
+        {
+            if (!RlistKeyIn(a->interface.v6_addresses, rpa->val.item))
+            {
+                *result = PROMISE_RESULT_CHANGE;
+
+                Log(LOG_LEVEL_VERBOSE, "Purging ipv6 %s from %s", rpa->val.item, promiser);
+                snprintf(cmd, CF_BUFSIZE, "%s -6 addr del %s dev %s", CF_DEBIAN_IP_COMM, rpa->val.item, promiser);
+
+                if (!ExecCommand(cmd, result, pp))
+                {
+                    *result = PROMISE_RESULT_FAIL;
+                }
+            }
+        }
+    }
+}
+
+/****************************************************************************/
+
+static void AssessBridge(char *promiser, PromiseResult *result, EvalContext *ctx, LinkState *ifs, const Attributes *a, const Promise *pp)
+{
+    /*
+      # Untagged interface
+      ifconfig eth0 up
+      # Tagged interface
+      ifconfig eth1 up
+      vconfig add eth1 1 set_name_type DEV_PLUS_VID_NO_PAD
+      # Bridge them together
+      brctl addbr vlan1
+      brctl addif vlan1 eth0
+      brctl addif vlan1 eth1.1
+    */
+}
+
+/****************************************************************************/
+
+static void AssessLACPBond(char *promiser, PromiseResult *result, EvalContext *ctx, LinkState *ifs, const Attributes *a, const Promise *pp)
+{
+    /*
+      # Untagged interface
+      ifconfig eth0 up
+      # Tagged interface
+      ifconfig eth1 up
+      vconfig add eth1 1 set_name_type DEV_PLUS_VID_NO_PAD
+      # Bridge them together
+      brctl addbr vlan1
+      brctl addif vlan1 eth0
+      brctl addif vlan1 eth1.1
+    */
+}
+
+/****************************************************************************/
+
+static void AssessDeviceAlias(char *promiser, PromiseResult *result, EvalContext *ctx, LinkState *ifs, const Attributes *a, const Promise *pp)
+{
+
+
+}
+
+
+
+
+
+
+/*
+  Routes
+
+  ip route add default via <default gateway IP address>
+
+  # ip link set eth0 up
+  # ip link set eth0 down
+*/
+
+/****************************************************************************/
+
+static Rlist *IPV4Addresses(LinkState *ifs, char *interface)
+{
+    LinkState *lsp;
+
+    for (lsp = ifs; lsp != NULL; lsp = lsp->next)
+    {
+        if (strcmp(lsp->name, interface) == 0)
+        {
+            return lsp->v4_addresses;
+        }
+    }
+
+    return NULL;
+}
+
+/****************************************************************************/
+
+static Rlist *IPV6Addresses(LinkState *ifs, char *interface)
+{
+    LinkState *lsp;
+
+    for (lsp = ifs; lsp != NULL; lsp = lsp->next)
+    {
+        if (strcmp(lsp->name, interface) == 0)
+        {
+            return lsp->v6_addresses;
+        }
+    }
+
+    return NULL;
+}
+
+/****************************************************************************/
+
+static int ExecCommand(char *cmd, PromiseResult *result, const Promise *pp)
+{
+    FILE *pfp;
+    size_t line_size = CF_BUFSIZE;
+
+    if ((pfp = cf_popen(cmd, "r", true)) == NULL)
+    {
+        Log(LOG_LEVEL_ERR, "Unable to execute '%s'", cmd);
+        PromiseRef(LOG_LEVEL_ERR, pp);
+        *result = PROMISE_RESULT_INTERRUPTED;
+        return false;
+    }
+
+    char *line = xmalloc(line_size);
+
+    while (!feof(pfp))
+    {
+        *line = '\0';
+        CfReadLine(&line, &line_size, pfp);
+
+        if (feof(pfp))
+        {
+            break;
+        }
+
+        if (strncmp("ERROR:", line, 6) == 0 || strstr(line, "error") == 0)
+        {
+            *result = PROMISE_RESULT_FAIL;
+            break;
+        }
+        else
+        {
+            *result = PROMISE_RESULT_CHANGE;
+        }
+    }
+
+    free(line);
+    cf_pclose(pfp);
+    return true;
+}
+

@@ -7,6 +7,9 @@
 #include <conversion.h>                                   /* MapAddress */
 #include <misc_lib.h>
 
+struct acl *paths_acl;
+struct acl *classes_acl, *vars_acl, *literals_acl;
+struct acl *query_acl;
 
 /**
  * Run this function on every resource (file, class, var etc) access to

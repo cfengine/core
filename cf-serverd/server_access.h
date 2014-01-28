@@ -68,12 +68,12 @@ struct acl
 
 /* The paths_acl should be populated with directories having a trailing '/'
  * to be able to tell apart from files. */
-struct acl *paths_acl;
+extern struct acl *paths_acl;
 
 /* TODO we need the following for optimal ACL lookups in all cases. But first
  * we need to stop accepting regexes as allowed/denied mathes. */
-struct acl *classes_acl, *vars_acl, *literals_acl;
-struct acl *query_acl;                                         /* reporting */
+extern struct acl *classes_acl, *vars_acl, *literals_acl;
+extern struct acl *query_acl;                                         /* reporting */
 //extern struct acl *roles_acl;                                /* cf-runagent */
 
 

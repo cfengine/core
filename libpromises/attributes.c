@@ -200,6 +200,11 @@ Attributes GetNetworkAttributes(const EvalContext *ctx, const Promise *pp)
     attr.transaction = GetTransactionConstraints(ctx, pp);
     attr.classes = GetClassDefinitionConstraints(ctx, pp);
     attr.networks = GetNetworkConstraints(ctx, pp);
+
+    attr.haveroutedto = PromiseGetConstraintAsBoolean(ctx, "routed_to", pp);
+    attr.haveadvertisedby = PromiseGetConstraintAsBoolean(ctx, "advertised_by", pp);
+    attr.havebalance = PromiseGetConstraintAsBoolean(ctx, "balanced_destinations", pp);
+
     return attr;
 }
 
@@ -1721,6 +1726,9 @@ Interfaces GetInterfaceConstraints(const EvalContext *ctx, const Promise *pp)
 Networks GetNetworkConstraints(const EvalContext *ctx, const Promise *pp)
 {
     Networks n;
+
+    n.gateway_ip = PromiseGetConstraintAsRval(pp, "gateway_ip", RVAL_TYPE_SCALAR);
+    n.gateway_interface = PromiseGetConstraintAsRval(pp, "gateway_interface", RVAL_TYPE_SCALAR);
 
     n.rip_metric = PromiseGetConstraintAsInt(ctx, "rip_metric", pp);
     n.rip_timeout = PromiseGetConstraintAsInt(ctx, "rip_timeout", pp);

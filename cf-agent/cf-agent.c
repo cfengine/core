@@ -86,6 +86,7 @@ typedef enum
     TYPE_SEQUENCE_DEFAULTS,
     TYPE_SEQUENCE_CONTEXTS,
     TYPE_SEQUENCE_INTERFACES,
+    TYPE_SEQUENCE_NETWORKSS,
     TYPE_SEQUENCE_USERS,
     TYPE_SEQUENCE_FILES,
     TYPE_SEQUENCE_PACKAGES,
@@ -131,6 +132,7 @@ static const char *const AGENT_TYPESEQUENCE[] =
     "defaults",
     "classes",                  /* Maelstrom order 2 */
     "interfaces",
+    "networks",
     "users",
     "files",
     "packages",
@@ -1347,8 +1349,6 @@ static void CheckAgentAccess(const Rlist *list, const Policy *policy)
 
 /*********************************************************************/
 
-/**************************************************************/
-
 static PromiseResult DefaultVarPromise(EvalContext *ctx, const Promise *pp)
 {
     char *regex = PromiseGetConstraintAsRval(pp, "if_match_regex", RVAL_TYPE_SCALAR);
@@ -1417,7 +1417,6 @@ static PromiseResult KeepAgentPromise(EvalContext *ctx, const Promise *pp, ARG_U
 {
     assert(param == NULL);
     struct timespec start = BeginMeasure();
-
     PromiseResult result = PROMISE_RESULT_NOOP;
 
     if (strcmp("meta", pp->parent_promise_type->name) == 0 || strcmp("vars", pp->parent_promise_type->name) == 0)
@@ -1432,10 +1431,6 @@ static PromiseResult KeepAgentPromise(EvalContext *ctx, const Promise *pp, ARG_U
     {
         result = VerifyClassPromise(ctx, pp, NULL);
     }
-    else if (strcmp("processes", pp->parent_promise_type->name) == 0)
-    {
-        result = VerifyProcessesPromise(ctx, pp);
-    }
     else if (strcmp("interfaces", pp->parent_promise_type->name) == 0)
     {
         result = VerifyInterfacePromise(ctx, pp);
@@ -1443,6 +1438,10 @@ static PromiseResult KeepAgentPromise(EvalContext *ctx, const Promise *pp, ARG_U
     else if (strcmp("networks", pp->parent_promise_type->name) == 0)
     {
         result = VerifyNetworkingPromise(ctx, pp);
+    }
+    else if (strcmp("processes", pp->parent_promise_type->name) == 0)
+    {
+        result = VerifyProcessesPromise(ctx, pp);
     }
     else if (strcmp("storage", pp->parent_promise_type->name) == 0)
     {

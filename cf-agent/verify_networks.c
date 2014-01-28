@@ -30,9 +30,30 @@
 #include <promises.h>
 #include <string_lib.h>
 #include <misc_lib.h>
+#include <files_lib.h>
+#include <files_interfaces.h>
+#include <pipes.h>
+#include <item_lib.h>
+
+typedef struct FIBState_ FIBState;
+
+struct FIBState_
+{
+    char *network;
+    char *gateway;
+    char *device;
+    FIBState *next;
+};
+
+#define CF_DEBIAN_IP_COMM "/sbin/ip"
 
 static int NetworkSanityCheck(Attributes a,  const Promise *pp);
 static void AssessNetworkingPromise(char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp);
+static int GetRouteInfo(FIBState **list, const Promise *pp);
+static void AssessStaticRoute(char *promiser, PromiseResult *result, EvalContext *ctx, FIBState *fib, const Attributes *a, const Promise *pp);
+static void AssessAdvertiseRoute(char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp);
+static void AssessLoadBalance(char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp);
+int ExecCommand(char *cmd, PromiseResult *result, const Promise *pp);
 
 /****************************************************************************/
 
@@ -97,6 +118,104 @@ static int NetworkSanityCheck(Attributes a,  const Promise *pp)
 
 void AssessNetworkingPromise(char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp)
 {
+    FIBState *fib = NULL, *fip;
+
+    if (!GetRouteInfo(&fib, pp))
+    {
+        *result = PROMISE_RESULT_INTERRUPTED;
+        return;
+    }
+
+    if (a->haveroutedto)
+    {
+        AssessStaticRoute(promiser, result, ctx, fib, a, pp);
+    }
+
+    else if (a->haveadvertisedby)
+    {
+        AssessAdvertiseRoute(promiser, result, ctx, a, pp);
+    }
+
+    else if (a->havebalance)
+    {
+        AssessLoadBalance(promiser, result, ctx, a, pp);
+    }
+}
+
+/*************************************************************************/
+
+static int GetRouteInfo(FIBState **list, const Promise *pp)
+{
+    FILE *pfp;
+    size_t line_size = CF_BUFSIZE;
+    char *line = xmalloc(line_size);
+    char comm[CF_BUFSIZE];
+    char network[CF_MAX_IP_LEN], gateway[CF_MAX_IP_LEN], device[CF_MAX_IP_LEN];
+    FIBState *entry = NULL;
+
+    snprintf(comm, CF_BUFSIZE, "%s route", CF_DEBIAN_IP_COMM);
+
+    if ((pfp = cf_popen(comm, "r", true)) == NULL)
+    {
+        Log(LOG_LEVEL_ERR, "Unable to execute '%s'", CF_DEBIAN_IP_COMM);
+        PromiseRef(LOG_LEVEL_ERR, pp);
+        return false;
+    }
+
+    while (!feof(pfp))
+    {
+        CfReadLine(&line, &line_size, pfp);
+
+        if (feof(pfp))
+        {
+            break;
+        }
+
+        /*
+          default via 192.168.1.1 dev wlan0  proto static
+          10.6.0.0/24 via 10.6.0.25 dev tun0  proto static
+          10.6.0.25 dev tun0  proto kernel  scope link  src 10.6.0.26
+        */
+
+        sscanf(line, "%31s via %31s dev %31s", network, gateway, device);
+        entry = xcalloc(sizeof(FIBState), 1);
+        entry->next = *list;
+        *list = entry;
+        entry->network = xstrdup(network);
+        entry->gateway = xstrdup(gateway);
+        entry->device = xstrdup(device);
+    }
+
+    free(line);
+    cf_pclose(pfp);
+    return true;
+}
+
+/*************************************************************************/
+
+static void AssessStaticRoute(char *promiser, PromiseResult *result, EvalContext *ctx, FIBState *fib, const Attributes *a, const Promise *pp)
+{
+    FIBState *fip;
+    char cmd[CF_BUFSIZE];
+
+    for (fip = fib; fip != NULL; fip = fip->next)
+    {
+        if (strcmp(fip->network, promiser) == 0)
+        {
+            return;
+        }
+
+        snprintf(cmd, CF_BUFSIZE, "%s route add %s via %s dev %s", CF_DEBIAN_IP_COMM, promiser, a->networks.gateway_ip, a->networks.gateway_interface);
+
+        Log(LOG_LEVEL_VERBOSE, "Adding static route for %s via %s on %s", promiser, a->networks.gateway_ip, a->networks.gateway_interface);
+
+        if (!ExecCommand(cmd, result, pp))
+        {
+            *result = PROMISE_RESULT_FAIL;
+            return;
+        }
+    }
+
 
     printf("CONFIG %s\n", promiser);
     printf("routed_to  # ip route add 192.168.55.0/24 via 192.168.1.254 dev eth1");
@@ -104,15 +223,17 @@ void AssessNetworkingPromise(char *promiser, PromiseResult *result, EvalContext 
 // ip route replace
     // ip route delete
 
-    /*
-      r.relay_networks = PromiseGetConstraintAsList(ctx, "relay_networks", pp);
-      r.rip_metric = PromiseGetConstraintAsInt(ctx, "rip_metric", pp);
-      r.rip_timeout = PromiseGetConstraintAsInt(ctx, "rip_timeout", pp);
-      r.rip_splithorizon = PromiseGetConstraintAsBoolean(ctx, "rip_split_horizon", pp);
-      r.rip_passive = PromiseGetConstraintAsBoolean(ctx, "rip_passive", pp);
 
-      r.nat_pool = PromiseGetConstraintAsRval(pp, "nat_pool", RVAL_TYPE_SCALAR);
-      r.relay_policy = PromiseGetConstraintAsRval(pp, "relay_policy", RVAL_TYPE_SCALAR);
+}
 
-    */
+/*************************************************************************/
+
+static void AssessAdvertiseRoute(char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp)
+{
+}
+
+/*************************************************************************/
+
+static void AssessLoadBalance(char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp)
+{
 }

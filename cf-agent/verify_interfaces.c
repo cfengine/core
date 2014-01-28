@@ -64,7 +64,7 @@ static int GetVlanInfo(Item **list, const Promise *pp);
 static int GetInterfaceInformation(LinkState **list, const Promise *pp);
 static int NewVLAN(int vlan_id, char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp);
 static int DeleteVLAN(int vlan_id, char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp);
-static int ExecCommand(char *cmd, PromiseResult *result, const Promise *pp);
+int ExecCommand(char *cmd, PromiseResult *result, const Promise *pp);
 static void AssessIPv4Config(char *promiser, PromiseResult *result, EvalContext *ctx, Rlist *addresses, const Attributes *a, const Promise *pp);
 static void AssessIPv6Config(char *promiser, PromiseResult *result, EvalContext *ctx, Rlist *addresses, const Attributes *a, const Promise *pp);
 static void AssessBridge(char *promiser, PromiseResult *result, EvalContext *ctx, LinkState *ifs, const Attributes *a, const Promise *pp);
@@ -194,27 +194,6 @@ static void AssessDebianInterfacePromise(char *promiser, PromiseResult *result, 
         *result = PROMISE_RESULT_INTERRUPTED;
         return;
     }
-
-/* LinkState *lsp;
-   for (lsp = ifs; lsp != NULL; lsp = lsp->next)
-   {
-   printf("======================\n");
-   printf("INTERFACE %s (mtu %d)\n", lsp->name, lsp->mtu);
-   printf("MAC: %s\n", lsp->hw_address);
-
-   for (Rlist *rp = lsp->v4_addresses; rp!=NULL; rp=rp->next)
-   {
-   printf("V4: %s\n", (char *)rp->val.item);
-   }
-   for (Rlist *rp = lsp->v6_addresses; rp!=NULL; rp=rp->next)
-   {
-   printf("V6: %s\n", (char *)rp->val.item);
-   }
-   }
-
-   printf("======================\n");
-
-*/
 
     // Linux naming INTERFACE:alias.vlan, e.g. eth0:2.1 or eth0.100
 
@@ -601,6 +580,8 @@ static void AssessIPv6Config(char *promiser, PromiseResult *result, EvalContext 
 
 static void AssessBridge(char *promiser, PromiseResult *result, EvalContext *ctx, LinkState *ifs, const Attributes *a, const Promise *pp)
 {
+
+    printf("BRIDGING NOT YET IMPLEMENTED\n");
     /*
       # Untagged interface
       ifconfig eth0 up
@@ -618,17 +599,20 @@ static void AssessBridge(char *promiser, PromiseResult *result, EvalContext *ctx
 
 static void AssessLACPBond(char *promiser, PromiseResult *result, EvalContext *ctx, LinkState *ifs, const Attributes *a, const Promise *pp)
 {
-    /*
-      # Untagged interface
-      ifconfig eth0 up
-      # Tagged interface
-      ifconfig eth1 up
-      vconfig add eth1 1 set_name_type DEV_PLUS_VID_NO_PAD
-      # Bridge them together
-      brctl addbr vlan1
-      brctl addif vlan1 eth0
-      brctl addif vlan1 eth1.1
-    */
+
+    printf("BONDING not yet impelemented\n");
+
+/*
+  # Untagged interface
+  ifconfig eth0 up
+  # Tagged interface
+  ifconfig eth1 up
+  vconfig add eth1 1 set_name_type DEV_PLUS_VID_NO_PAD
+  # Bridge them together
+  brctl addbr vlan1
+  brctl addif vlan1 eth0
+  brctl addif vlan1 eth1.1
+*/
 }
 
 /****************************************************************************/
@@ -636,7 +620,7 @@ static void AssessLACPBond(char *promiser, PromiseResult *result, EvalContext *c
 static void AssessDeviceAlias(char *promiser, PromiseResult *result, EvalContext *ctx, LinkState *ifs, const Attributes *a, const Promise *pp)
 {
 
-
+    printf("ALIASING not yet implemented - untagged VLANS\n");
 }
 
 
@@ -689,7 +673,7 @@ static Rlist *IPV6Addresses(LinkState *ifs, char *interface)
 
 /****************************************************************************/
 
-static int ExecCommand(char *cmd, PromiseResult *result, const Promise *pp)
+int ExecCommand(char *cmd, PromiseResult *result, const Promise *pp)
 {
     FILE *pfp;
     size_t line_size = CF_BUFSIZE;

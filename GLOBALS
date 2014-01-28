@@ -1,19 +1,106 @@
-This is a WiP classification of global variables in CFEngine created with the
-purpose of getting rid of them.
+State and mutability in CFEngine
+================================
+
+Issue: there are hard-to-reproduce and hard-to-debug issues with CFEngine
+
+How to solve it: Minimize amount of global state stored in CFEngine, externalize
+remaining state as much as possible (e.g. into databases).
+
+Plan of attack
+--------------
+
+There are two major pieces of mutable data in CFEngine: EvalContext and global
+variables.
+
+EvalContext is a fragile construct as it persists the whole life of agents (even
+long-living ones). EvalContext (and globals) outlive policy reload, environment
+re-detection and time changes.
+
+This is not good: every time something changes in environment, we carefully
+clear EvalContext (and globals) off stored data and re-fill them. This is a
+delicate process, but it is duplicated 6-7 times: once per agent.
+
+EvalContext (and globals) are used in this way due to the way initialization
+process is structured: on agent start some data is loaded into EvalContext (and
+globals) and is not available afterwards. Hence, one cannot just destroy the
+EvalContext and create new one.
+
+One way to solve this issue is to ensure all data collected during
+initialization is available afterwards (in read-only form) to re-supply
+EvalContext. If this is the case, EvalContext (and any state in it) can be
+dropped and re-created between evaluations.
+
+What are the sources of this data?
+----------------------------------
+
+ - Command-line arguments
+ - Environment (system)
+ - Policy
+
+What is the EvalContext lifetime?
+---------------------------------
+
+ Initialization:
+ - EvalContext is created
+ - EvalContext is passed to all functions detecting state
+   - Those functions create variables and classes in EvalContext
+   - Those functions set values in globals
+ - EvalContext is used in evaluation
+ Update:
+ - EvalContext is cleared off transient data (e.g. time classes)
+ - Global variables are cleared off transient data
+ - Subset of state-detection functions is run
+   - Those functions create variables and classes in EvalContext
+   - Those functions set values in globals
+ - EvalContext is used in evaluation
+
+How to fix all this?
+--------------------
+
+EvalContext
+-----------
+
+Environment-detection functions should not take EvalContext. Instead they should
+produce lists of variables and classes detected.
+
+Those lists are stored and refreshed as needed (e.g. time classes/variables,
+network configuration classes/variables are refreshed every time environment is
+reloaded, CLI argument and OS detection classes/variables are not refreshed at all).
+
+At the beginning of each evaluation cycle EvalContext is generated from all
+lists of classes/variables gathered and run. At the end of evaluation cycle
+EvalContext is destroyed.
+
+Globals
+-------
+
+Only GLOBAL_A, GLOBAL_E, GLOBAL_P from the following classification are
+discussed (GLOBAL_R just need to be removed; GLOBAL_C, GLOBAL_T are OK; GLOBAL_X
+have to be dealt case-by-case).
+
+Those are coming from CLI argument parsing, environment detection and policy
+parsing. They ought to be constant during evaluation cycle. Hence the approach
+similar to EvalContext can be used: during CLI argument parsing, policy loading
+and environment detection agent fills in values, and those are passed along the
+EvalContext to evaluation as *constants*.
+
+Good place to store those globals is GenericAgentConfig and agent_specific
+field in it.
+
+Classification of globals
+=========================
 
 GLOBAL_A
 --------
 
 Globals filled in during arguments parsing.
 
-Plan of attack: Move to ArgContext.
-
 GLOBAL_C
 --------
 
 Globals filled in during startup and not changed afterwards.
 
-Plan of attack: ?
+Plan of attack: N/A
 
 GLOBAL_E
 --------
@@ -21,17 +108,11 @@ GLOBAL_E
 Globals filled in during environment detection and updated every time
 environment is re-read.
 
-Plan of attack: Move to EnvContext.
-
 GLOBAL_P
 --------
 
 Description: Globals filled in during policy parsing and/or body * control
 reading, and updated every time policy is re-read.
-
-Plan of attack: Move to evaluation time resolution as much as possible. Clearly
-state in documentation which variables cannot be resolved at evaluation
-time. Keep those in EvalContext (?).
 
 GLOBAL_R
 --------

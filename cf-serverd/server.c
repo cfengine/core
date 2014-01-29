@@ -305,7 +305,7 @@ static void DisableSendDelays(int sockfd)
 static char *LogHook(LoggingPrivContext *log_ctx, const char *message)
 {
     const char *ipaddr = log_ctx->param;
-    return StringConcatenate(3, ipaddr, ": ", message);
+    return StringConcatenate(3, ipaddr, "> ", message);
 }
 
 static void *HandleConnection(ServerConnectionState *conn)

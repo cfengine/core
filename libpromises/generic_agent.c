@@ -899,12 +899,6 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
     if (config->agent_type != AGENT_TYPE_KEYGEN)
     {
         LoadSecretKeys();
-        if (PRIVKEY == NULL)
-        {
-            char *secretkeyfile = PrivateKeyFile(GetWorkDir());
-            FatalError(ctx, "Couldn't read private key from file %s\n", secretkeyfile);
-        }
-
         char *bootstrapped_policy_server = ReadPolicyServerFile(CFWORKDIR);
         PolicyHubUpdateKeys(bootstrapped_policy_server);
         free(bootstrapped_policy_server);

@@ -111,6 +111,26 @@ PromiseResult VerifyNetworkingPromise(EvalContext *ctx, const Promise *pp)
 
 static int NetworkSanityCheck(Attributes a,  const Promise *pp)
 {
+    if (strchr(a.networks.gateway_ip, '/'))
+    {
+        Log(LOG_LEVEL_ERR, "The gateway IP address should not be in CIDR format in 'networks' promise about '%s'", pp->promiser);
+        PromiseRef(LOG_LEVEL_ERR, pp);
+        return false;
+    }
+
+    if (a.haveroutedto)
+    {
+        if (strchr(pp->promiser, '/'))
+        {
+            if (strstr(pp->promiser, ".0/") == NULL)
+            {
+                Log(LOG_LEVEL_ERR, "Unicast address given? Only network IP addresses may be in CIDR notation in 'networks' promise about '%s'", pp->promiser);
+                PromiseRef(LOG_LEVEL_ERR, pp);
+                return false;
+            }
+        }
+    }
+
     return true;
 }
 
@@ -202,38 +222,55 @@ static void AssessStaticRoute(char *promiser, PromiseResult *result, EvalContext
     {
         if (strcmp(fip->network, promiser) == 0)
         {
-            return;
+            if (strcmp(a->networks.gateway_ip, fip->gateway) == 0)
+            {
+                if (strcmp(a->networks.gateway_interface, fip->device) == 0)
+                {
+                    if (a->networks.delete_route)
+                    {
+                        snprintf(cmd, CF_BUFSIZE, "%s route del %s via %s dev %s", CF_DEBIAN_IP_COMM, promiser, a->networks.gateway_ip, a->networks.gateway_interface);
+                        Log(LOG_LEVEL_VERBOSE, "Deleting static route for %s via %s on %s", promiser, a->networks.gateway_ip, a->networks.gateway_interface);
+                    }
+                    else
+                    {
+                        Log(LOG_LEVEL_VERBOSE, "Static route for %s via %s / %s is ok", promiser, a->networks.gateway_ip, a->networks.gateway_interface);
+                        return;
+                    }
+                }
+                else
+                {
+                    snprintf(cmd, CF_BUFSIZE, "%s route replace %s via %s dev %s", CF_DEBIAN_IP_COMM, promiser, a->networks.gateway_ip, a->networks.gateway_interface);
+                    Log(LOG_LEVEL_VERBOSE, "Adding static route for %s via %s on %s", promiser, a->networks.gateway_ip, a->networks.gateway_interface);
+                }
+            }
+        }
+        else
+        {
+            snprintf(cmd, CF_BUFSIZE, "%s route replace %s via %s dev %s", CF_DEBIAN_IP_COMM, promiser, a->networks.gateway_ip, a->networks.gateway_interface);
+            Log(LOG_LEVEL_VERBOSE, "Adding static route for %s via %s on %s", promiser, a->networks.gateway_ip, a->networks.gateway_interface);
         }
 
-        snprintf(cmd, CF_BUFSIZE, "%s route add %s via %s dev %s", CF_DEBIAN_IP_COMM, promiser, a->networks.gateway_ip, a->networks.gateway_interface);
-
-        Log(LOG_LEVEL_VERBOSE, "Adding static route for %s via %s on %s", promiser, a->networks.gateway_ip, a->networks.gateway_interface);
+        // The semantics of route replace allow us to add or change in a single convergent command.
 
         if (!ExecCommand(cmd, result, pp))
         {
+            Log(LOG_LEVEL_VERBOSE, "Failed to change routing");
             *result = PROMISE_RESULT_FAIL;
             return;
         }
     }
-
-
-    printf("CONFIG %s\n", promiser);
-    printf("routed_to  # ip route add 192.168.55.0/24 via 192.168.1.254 dev eth1");
-
-// ip route replace
-    // ip route delete
-
-
 }
 
 /*************************************************************************/
 
 static void AssessAdvertiseRoute(char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp)
 {
+    printf("Route advertisement not yet implemented\n");
 }
 
 /*************************************************************************/
 
 static void AssessLoadBalance(char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp)
 {
+    printf("Load balancing not yet implemented\n");
 }

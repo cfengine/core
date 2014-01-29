@@ -1729,6 +1729,7 @@ Networks GetNetworkConstraints(const EvalContext *ctx, const Promise *pp)
 
     n.gateway_ip = PromiseGetConstraintAsRval(pp, "gateway_ip", RVAL_TYPE_SCALAR);
     n.gateway_interface = PromiseGetConstraintAsRval(pp, "gateway_interface", RVAL_TYPE_SCALAR);
+    n.delete_route = PromiseGetConstraintAsBoolean(ctx, "delete_route", pp);
 
     n.rip_metric = PromiseGetConstraintAsInt(ctx, "rip_metric", pp);
     n.rip_timeout = PromiseGetConstraintAsInt(ctx, "rip_timeout", pp);

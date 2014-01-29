@@ -1374,6 +1374,7 @@ typedef struct
     char *relay_policy;
     char *gateway_interface;
     char *gateway_ip;
+    bool delete_route;
 } Networks;
 
 /*************************************************************************/

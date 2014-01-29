@@ -98,6 +98,7 @@ void BannerPromiseType(const char *bundlename, const char *type, int pass)
 {
     if (!LEGACY_OUTPUT)
     {
+        Log(LOG_LEVEL_VERBOSE, "/Pass:%d/Bundle:%s/PromiseType:%s", pass, bundlename, type);
         return;
     }
 

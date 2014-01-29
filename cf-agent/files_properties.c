@@ -55,13 +55,11 @@ static bool ConsiderFile(const char *nodename, const char *path, struct stat *st
         return true;
     }
 
-    if (IsItemIn(SUSPICIOUSLIST, nodename))
+    if (stat != NULL && (S_ISREG(stat->st_mode) || S_ISLNK(stat->st_mode)) &&
+        IsItemIn(SUSPICIOUSLIST, nodename))
     {
-        if (stat && (S_ISREG(stat->st_mode) || S_ISLNK(stat->st_mode)))
-        {
-            Log(LOG_LEVEL_ERR, "Suspicious file '%s' found in '%s'", nodename, path);
-                return false;
-        }
+        Log(LOG_LEVEL_ERR, "Suspicious file '%s' found in '%s'", nodename, path);
+        return false;
     }
 
     if (strcmp(nodename, "...") == 0)
@@ -104,7 +102,8 @@ static bool ConsiderFile(const char *nodename, const char *path, struct stat *st
 
     if (stat == NULL)
     {
-        Log(LOG_LEVEL_VERBOSE, "Couldn't stat '%s/%s'. (cf_lstat: %s)", path, nodename, GetErrorStr());
+        /* stat is NULL so we can't make more checks, call this function again
+         * but pass the stat info as well. */
         return true;
     }
 
@@ -144,6 +143,13 @@ bool ConsiderLocalFile(const char *filename, const char *directory)
 
 bool ConsiderAbstractFile(const char *filename, const char *directory, FileCopy fc, AgentConnection *conn)
 {
+    /* First check if the file should be avoided, e.g. ".." - before sending
+     * anything over the network*/
+    if (!ConsiderFile(filename, directory, NULL))
+    {
+        return false;
+    }
+
     char buf[CF_BUFSIZE];
     int ret = snprintf(buf, sizeof(buf), "%s/%s", directory, filename);
     if (ret < 0 || ret >= sizeof(buf))
@@ -153,16 +159,16 @@ bool ConsiderAbstractFile(const char *filename, const char *directory, FileCopy 
             directory, filename);
         return false;
     }
-
     MapName(buf);
 
     struct stat stat;
     if (cf_lstat(buf, &stat, fc, conn) == -1)
     {
-        return ConsiderFile(filename, directory, NULL);
+        return false;                                      /* stat() failed */
     }
     else
     {
+        /* Reconsider, but using stat info this time. */
         return ConsiderFile(filename, directory, &stat);
     }
 }

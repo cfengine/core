@@ -1169,6 +1169,8 @@ PromiseResult ScheduleAgentOperations(EvalContext *ctx, const Bundle *bp)
     }
 
     PromiseResult result = PROMISE_RESULT_NOOP;
+    Log(LOG_LEVEL_VERBOSE, "/%s/%s: Evaluating bundle", bp->ns, bp->name);
+
     for (int pass = 1; pass < CF_DONEPASSES; pass++)
     {
         for (TypeSequence type = 0; AGENT_TYPESEQUENCE[type] != NULL; type++)
@@ -1182,6 +1184,7 @@ PromiseResult ScheduleAgentOperations(EvalContext *ctx, const Bundle *bp)
                 continue;
             }
 
+            Log(LOG_LEVEL_VERBOSE, "/%s/%s/%s: Evaluating pass %d", bp->ns, bp->name, sp->name, pass);
             BannerPromiseType(bp->name, sp->name, pass);
 
             if (!NewTypeContext(type))

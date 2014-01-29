@@ -41,7 +41,12 @@ int cf_lstat(char *file, struct stat *buf, FileCopy fc, AgentConnection *conn)
 {
     if ((fc.servers == NULL) || (strcmp(fc.servers->val.item, "localhost") == 0))
     {
-        return lstat(file, buf);
+        int ret = lstat(file, buf);
+        if (ret == -1)
+        {
+            Log(LOG_LEVEL_ERR, "lstat: %s", GetErrorStr());
+        }
+        return ret;
     }
     else
     {

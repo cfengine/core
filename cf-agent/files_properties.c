@@ -144,11 +144,19 @@ bool ConsiderLocalFile(const char *filename, const char *directory)
 
 bool ConsiderAbstractFile(const char *filename, const char *directory, FileCopy fc, AgentConnection *conn)
 {
-    struct stat stat;
     char buf[CF_BUFSIZE];
-    snprintf(buf, sizeof(buf), "%s/%s", directory, filename);
+    int ret = snprintf(buf, sizeof(buf), "%s/%s", directory, filename);
+    if (ret < 0 || ret >= sizeof(buf))
+    {
+        Log(LOG_LEVEL_ERR,
+            "Filename too long! Directory '%s' filename '%s'",
+            directory, filename);
+        return false;
+    }
+
     MapName(buf);
 
+    struct stat stat;
     if (cf_lstat(buf, &stat, fc, conn) == -1)
     {
         return ConsiderFile(filename, directory, NULL);

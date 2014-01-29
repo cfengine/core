@@ -700,6 +700,7 @@ int ExecCommand(char *cmd, PromiseResult *result, const Promise *pp)
 
         if (strncmp("ERROR:", line, 6) == 0 || strstr(line, "error") == 0)
         {
+            Log(LOG_LEVEL_ERR, "Execution returned an error: %s", line);
             *result = PROMISE_RESULT_FAIL;
             break;
         }

@@ -1147,7 +1147,7 @@ void PolicyErrorWrite(Writer *writer, const PolicyError *error)
     // FIX: need to track columns in SourceOffset
     WriterWriteF(writer, "%s:%zu:%zu: error: %s\n", path, offset.line, (size_t)0, error->message);
 #else
-   WriterWriteF(writer, "%s:%ul:%ul: error: %s\n", path, (unsigned long)offset.line, (unsigned long)0, error->message);
+   WriterWriteF(writer, "%s:%lu:%lu: error: %s\n", path, (unsigned long)offset.line, (unsigned long)0, error->message);
 #endif
 }
 

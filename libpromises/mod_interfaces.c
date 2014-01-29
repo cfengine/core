@@ -86,6 +86,7 @@ static const ConstraintSyntax route_constraints[] =
 {
     ConstraintSyntaxNewString("gateway_ip", CF_ANYSTRING, "IP address on gateway to next hop", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("gateway_interface", CF_ANYSTRING, "Interface name of gateway to next hop", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewBool("delete_route", "If this route exists, remove it", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };
 

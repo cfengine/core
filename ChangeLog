@@ -1,69 +1,121 @@
-3.6.0
+3.6.0 Beta 1
 
-       Changes:
-       - There is the choice of switching to a new networking protocol, which
-         uses TLS for authentication, after which all dialog happens encrypted
-         within the established TLS session. The hub is still able to speak
-         the legacy protocol with old agents.
-       - For the connections using the new protocol, "admit" and "deny"
-         constraints in bundle server access_rules are being phased out,
-         preferred constraints are now "admit_ips", "admit_hostnames",
-         "admit_keys". Regular expressions are not allowed then, only CIDR
-         notation for "admit_ips", exact "SHA=..." strings for "admit_keys",
-         and exact hostnames (e.g. "cfengine.com") or subdomains (starting
-         with dot, e.g. ".cfengine.com") for admit_hostnames.
-       - For the connections using the new protocol, all of the paths in
-         bundle server access_rules now differentiate between a directory and
-         a file using the trailing slash. If the path exists then this is
-         auto-detected and trailing slash appended automatically. You have to
-         append a trailing slash manually to an inexistent or symbolic path
-         (e.g.  "/path/to/$(connection.ip)/") to force recursive access.
-       - Enable source file in agent copy_from promises to be a relative path.
-       - add process name and pid in syslog message (GitHub #789)
-       - process_results default to AND'ing of set attributes if not specified (Redmine #3224)
-       - interface is now canonified in sys.hardware_mac[interface] to align with sys.ipv4[interface] (Redmine #3418)
-       - #TODO# support for LMDB in local data storage
-       - cf-promises --eval-functions option controls whether cf-promises should evaluate functions.
-       - Logging contexts to local database (cf_classes.tcdb) has been deprecated.
-       - Linux flavor "SUSE" now correctly spelled with all uppercase in variables and class names
-         (Redmine #3734).
-       - #TODO# function caching
-       - $(this.promise_filename) and $(..._dirname) variables are now absolute paths. (Redmine #3839)
+        Changes:
+        - TLS authentication and fully encrypted network protocol
+            - There is the choice of switching to a new networking protocol, which
+              uses TLS for authentication, after which all dialog happens encrypted
+              within the established TLS session. The hub is still able to speak
+              the legacy protocol with old agents.
+            - For the connections using the new protocol, "admit" and "deny"
+              constraints in bundle server access_rules are being phased out,
+              preferred constraints are now "admit_ips", "admit_hostnames",
+              "admit_keys". Regular expressions are not allowed then, only CIDR
+              notation for "admit_ips", exact "SHA=..." strings for "admit_keys",
+              and exact hostnames (e.g. "cfengine.com") or subdomains (starting
+              with dot, e.g. ".cfengine.com") for admit_hostnames.
+            - For the connections using the new protocol, all of the paths in
+              bundle server access_rules now differentiate between a directory and
+              a file using the trailing slash. If the path exists then this is
+              auto-detected and trailing slash appended automatically. You have to
+              append a trailing slash manually to an inexistent or symbolic path
+              (e.g.  "/path/to/$(connection.ip)/") to force recursive access.
+            - The 'skipverify' option in body server control is deprecated and
+              only left for compatibility; it does nothing
+        - Enable source file in agent copy_from promises to be a relative path.
+        - #TODO# Changes to logging output
+            - add process name and pid in syslog message (GitHub #789)
+        - process_results default to AND'ing of set attributes if not specified (Redmine #3224)
+        - interface is now canonified in sys.hardware_mac[interface] to align with sys.ipv4[interface] (Redmine #3418)
 
-       New features:
-       - Implementation for Access control (enforcing bundle server
-         access_rules) has been completely revamped for connections that use
-         the new protocol. Looking up paths and admit/deny rules should now
-         perform even with many thousands of entries.
-       - New constraints "admit_ips", "admit_hostnames", "admit_keys" for
-         bundle server access_rules. "admit_keys" adds the new functionality
-         of controlling access according to host identity, regardless of the
-         connecting IP.
-       - These new constaints and the paths in access_rules, can contain
-         special variables "$(connection.ip)", "$(connection.hostname)",
-         "$(connection.key)", which are expanded dynamically for every
-         received connection.
-       - New "shortcut" constraint in bundle server access_rules used to
-         dynamically expand non-absolute request paths.
-       - New promise type "users" for managing local user accounts.
-       - New options to cf-promises: --show-classes and --show-vars
-       - support colorized output for agent binaries with command line option --color
-       - Introduced alias 'policy_server' for context 'am_policy_hub' (the latter will be deprecated)
-       - #TODO# new sys variables
-       - #TODO# new functions
-          - findfiles
-          - eval
-          - packagesmatching
-       - #TODO# support for mustache templates
-       - #TODO# new datastruct data type for handling of structured data (ie JSON)
-          - including supporting functions
-       - #TODO# replace_patterns changes
-       - #TODO# transitive inputs
+        - Logging contexts to local database (cf_classes.tcdb) has been deprecated.
+        - Linux flavor "SUSE" now correctly spelled with all uppercase in variables and class names
+        (Redmine #3734).
+        - $(this.promise_filename) and $(..._dirname) variables are now absolute paths. (Redmine #3839)
 
-       Bug fixes:
-       - #TODO# goodness from evaluator and variable table refactoring
-          - `this` and similar variables 
-       - Improve performance of list iteration (Redmine #1875)
+        New features:
+        - New promise type "users" for managing local user accounts.
+        - New in 'bundle server access_rules'
+            - Constraints "admit_ips", "admit_hostnames", "admit_keys"
+            - "admit_keys" adds the new functionality of controlling access according to
+              host identity, regardless of the connecting IP.
+            - These new constaints and the paths in access_rules, can contain
+              special variables "$(connection.ip)", "$(connection.hostname)",
+              "$(connection.key)", which are expanded dynamically for every
+              received connection.
+            - New "shortcut" constraint in bundle server access_rules used to
+              dynamically expand non-absolute request paths.
+        - New command line options for agent binaries
+            - New options to cf-promises
+                - '--show-classes' and '--show-vars'
+                - '--eval-functions' controls whether cf-promises should evaluate functions
+            - Colorized output for agent binaries with command line option '--color'
+        - New language features
+            - New variable type 'data' for handling of structured data (ie JSON), 
+              including supporting functions:
+                - 'data_readstringarray' - read a delimited file into a data map
+                - 'data_readstringarrayidx' - read a delimited file into a data array
+                - 'datastate' - create a data variable with currently set classes and variables
+                - 'format' - %S can be used to serialize 'data' containers into a string
+                - 'mergedata' - merge two data containers
+                - 'parsejson' - create a data container from a JSON string
+                - 'readjson' - create a data container from a file that contains JSON
+                - 'storejson' - serialize a data container into a string
+                - Most functions operating on lists can also operate on data containers
+            - Tagging of classes and variables allows annotating of language construct with
+              meta data; supporting functionality:
+                - The module protocol in 'commands' promises has been extended to allow setting
+                  of tags
+                - 'getclassmetatags' - returns list of meta tags for a class
+                - 'getvariablemetatags' - returns list of meta tags for a variable
+            - #TODO# transitive inputs
+        - New attributes in existing promise types and bodies
+            - Introduced alias 'policy_server' for context 'am_policy_hub' (the latter will be deprecated)
+            - New option 'preserve_all_lines' for insert_type in insert_lines promises
+            - Caching of expensive system functions to avoid multiple executions of
+              execresults() etc, can be controlled via cache_system_functions attribute in
+              body common control
+            - New option 'mailsubject' in body executor control allows defining the subject
+              in emails sent by CFEngine
+            - Support for mustache templates in 'files' promises; use 'template_method' and
+              'template_data' attributes
+        - New variables
+            - 'sys.bindir' - the location of the CFEngine binaries
+            - 'sys.failsafe_policy_path' - the location of the failsafe policy file
+            - 'sys.inputdir' - the directory where CFEngine searches for policy files
+            - 'sys.key_digest' - the digest of the host's cryptographic key
+            - 'sys.libdir', 'sys.local_libdir' - the location of the CFEngine libraries
+            - 'sys.masterdir' - the location of masterfiles on the policy server
+            - 'sys.sysday' - the number of days since the beginning of the UNIX epoch
+            - 'sys.systime' - the number of seconds since the beginning of the UNIX epoch
+            - 'sys.update_policy_path' - the name of the update policy file
+            - 'sys.uptime' - the number of minutes the host has been online
+            - 'this.promise_dirname' - the name of the file in which the current promise is defined
+            - 'this.promiser_uid' - the ID of the user running cf-agent
+            - 'this.promiser_gid' - the group ID of the user running cf-agent
+            - 'this.promiser_ppid' - the ID of the  parent process running cf-agent
+        - New and improved functions
+            - 'bundlesmatching' - returns list of defined bundles matching a regex
+            - 'canonifyuniquely' - converts a string into a unique, legal class name
+            - 'classesmatching' - returns list of set classes matching a regex
+            - 'eval' - evaluates mathematical expressions
+            - 'findfiles' - returns list of files matching a search pattern
+            - 'makerule' - evaluates whether a target file needs to be rebuilt from sources
+            - 'max', 'mean', 'min' - returns maximum, mean and minimum in a container or list
+            - 'packagesmatching' - #TODO#
+            - 'string_downcase', 'string_upcase' - returns the lower-/upper-case version of a string
+            - 'string_head', 'string_tail' - returns the beginning/end of a string
+            - 'string_length' - returns the length of a string
+            - 'string_reverse' - reverses a string
+            - 'variablesmatching' - returns a list of variables matching a regex
+            - 'variance' - returns the variance of numbers in a list
+        - #TODO# support for LMDB in local data storage
+        - #TODO# replace_patterns changes
+
+        Bug fixes: #TODO#
+        - #TODO# goodness from evaluator and variable table refactoring
+        - `this` and similar variables ...?
+        - Improve performance of list iteration (Redmine #1875)
+        - Removed limitation of input length to internal buffer sizes
 
 3.5.3
        Changes:

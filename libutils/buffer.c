@@ -130,6 +130,8 @@ char *BufferClose(Buffer *buffer)
 
 Buffer *BufferCopy(const Buffer *source)
 {
+    assert(source);
+
     Buffer *copy = xmalloc(sizeof(Buffer));
 
     copy->capacity = source->capacity;
@@ -351,13 +353,43 @@ char *BufferGet(Buffer *buffer)
     {
         RefCountDetach(buffer->ref_count, buffer);
         buffer->buffer = xmalloc(buffer->capacity);
+        RefCountNew(&buffer->ref_count);
+        RefCountAttach(buffer->ref_count, buffer);
     }
-    buffer->unsafe = true;
     return buffer->buffer;
+}
+
+void BufferFix(Buffer *buffer)
+{
+    assert(buffer);
+    if (buffer->mode == BUFFER_BEHAVIOR_BYTEARRAY)
+    {
+        buffer->used = buffer->capacity;
+    }
+    else
+    {
+        int i;
+        bool found = false;
+        for (i = 0; i < buffer->capacity; ++i)
+        {
+            if (buffer->buffer[i] == '\0')
+            {
+                buffer->used = i;
+                found = true;
+                break;
+            }
+        }
+        if (!found)
+        {
+            buffer->used = buffer->capacity - 1;
+            buffer->buffer[buffer->used] = '\0';
+        }
+    }
 }
 
 void BufferAppend(Buffer *buffer, const char *bytes, unsigned int length)
 {
+    assert(buffer);
     if (RefCountIsShared(buffer->ref_count))
     {
         char *new_buffer = NULL;
@@ -422,7 +454,6 @@ int BufferPrintf(Buffer *buffer, const char *format, ...)
 {
     assert(buffer);
     assert(format);
-
     /*
      * We declare two lists, in case we need to reiterate over the list because the buffer was
      * too small.
@@ -491,6 +522,8 @@ int BufferPrintf(Buffer *buffer, const char *format, ...)
 
 int BufferVPrintf(Buffer *buffer, const char *format, va_list ap)
 {
+    assert(buffer);
+    assert(format);
     va_list aq;
     va_copy(aq, ap);
     int printed = 0;
@@ -547,6 +580,7 @@ int BufferVPrintf(Buffer *buffer, const char *format, va_list ap)
 
 void BufferZero(Buffer *buffer)
 {
+    assert(buffer);
     /*
      * 1. Detach if shared, allocate a new buffer
      * 2. Mark used as zero.
@@ -562,25 +596,28 @@ void BufferZero(Buffer *buffer)
 	buffer->buffer[0] = '\0';
 }
 
-unsigned int BufferSize(Buffer *buffer)
+unsigned int BufferSize(const Buffer *buffer)
 {
-    return buffer->used;
+    assert(buffer);
+    return buffer ? buffer->used : 0;
 }
 
-const char *BufferData(Buffer *buffer)
+const char *BufferData(const Buffer *buffer)
 {
-    return buffer->buffer;
+    assert(buffer);
+    return buffer ? buffer->buffer : NULL;
 }
 
-BufferBehavior BufferMode(Buffer *buffer)
+BufferBehavior BufferMode(const Buffer *buffer)
 {
-    return buffer->mode;
+    assert(buffer);
+    return buffer ? buffer->mode : BUFFER_BEHAVIOR_BYTEARRAY;
 }
 
 void BufferSetMode(Buffer *buffer, BufferBehavior mode)
 {
+    assert(buffer);
     assert(mode == BUFFER_BEHAVIOR_CSTRING || mode == BUFFER_BEHAVIOR_BYTEARRAY);
-
     /*
      * If we switch from BYTEARRAY mode to CSTRING then we need to adjust the
      * length to the first '\0'. This makes our life easier in the long run.
@@ -597,4 +634,43 @@ void BufferSetMode(Buffer *buffer, BufferBehavior mode)
         }
     }
     buffer->mode = mode;
+}
+
+void BufferSetCapacity(Buffer *buffer, unsigned int capacity)
+{
+    assert(buffer);
+    if (capacity < buffer->capacity)
+    {
+        return;
+    }
+    /*
+     * Assigning capacity is a complicated matter, it is not a matter of
+     * increasing the number. We need to grow the buffer that we already have.
+     * Notice that this operation might fail, in that case xmalloc/xrealloc will
+     * crash the program.
+     */
+    unsigned int required_blocks = (capacity / DEFAULT_BUFFER_CAPACITY) + 1;
+    if (RefCountIsShared(buffer->ref_count))
+    {
+        /* We are shared, detach */
+        char *temp_buffer = xmalloc(required_blocks * DEFAULT_BUFFER_CAPACITY);
+        memcpy(temp_buffer, buffer->buffer, buffer->used);
+        RefCountDetach(buffer->ref_count, buffer);
+        RefCountNew(&buffer->ref_count);
+        RefCountAttach(buffer->ref_count, buffer);
+        buffer->buffer = temp_buffer;
+        buffer->capacity = capacity;
+    }
+    else
+    {
+        /* Increase the buffer size */
+        buffer->buffer = xrealloc(buffer->buffer, required_blocks * DEFAULT_BUFFER_CAPACITY);
+        buffer->capacity = required_blocks * DEFAULT_BUFFER_CAPACITY;
+    }
+}
+
+unsigned BufferCapacity(const Buffer *buffer)
+{
+    assert(buffer);
+    return buffer ? buffer->capacity : 0;
 }

@@ -600,6 +600,49 @@ static void test_vprintf(void)
     free(char0int0char1double0);
 }
 
+static void test_get_fix(void)
+{
+    /*
+     * This test creates a buffer and then populates it directly.
+     * This is dangerous and there is very little we can do to make this
+     * safer, so be careful.
+     */
+    const char buffer0[] = "abcd";
+    unsigned int buffer0_size = sizeof(buffer0) - 1;
+    const char buffer1[] = "abcdefghijklmnopqrstuvwxyz0123456789";
+    unsigned int buffer1_size = sizeof(buffer1) - 1;
+    const char buffer2[] = "abcdefghijklmnopqrstuvwxyz0123456789abcd";
+    unsigned int buffer2_size = sizeof(buffer2) - 1;
+    unsigned int capacity = buffer2_size + 1;
+
+    assert_true(capacity > buffer2_size);
+    Buffer *buffer = BufferNewWithCapacity(capacity);
+    assert_true(buffer != NULL);
+
+    char *data0 = BufferGet(buffer);
+    assert_true(data0 == strcpy(data0, buffer0));
+    assert_int_equal(0, BufferSize(buffer));
+    BufferFix(buffer);
+    assert_int_equal(buffer0_size, BufferSize(buffer));
+
+    char *data1 = BufferGet(buffer);
+    assert_true(data0 == data1);
+    assert_true(data1 == strcpy(data1, buffer1));
+    assert_int_equal(buffer0_size, BufferSize(buffer));
+    BufferFix(buffer);
+    assert_int_equal(buffer1_size, BufferSize(buffer));
+
+    /*
+     * The next tests are only safe to run if BufferFix(...) was called before,
+     * otherwise the pointers will be all wrong.
+     */
+    BufferAppend(buffer, buffer0, buffer0_size);
+    assert_int_equal(buffer2_size, BufferSize(buffer));
+    assert_string_equal(buffer2, BufferData(buffer));
+
+    BufferDestroy(buffer);
+}
+
 int main()
 {
     PRINT_TEST_BANNER();
@@ -614,6 +657,7 @@ int main()
         , unit_test(test_appendBuffer)
         , unit_test(test_printf)
         , unit_test(test_vprintf)
+        , unit_test(test_get_fix)
     };
 
     return run_tests(tests);

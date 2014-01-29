@@ -6373,12 +6373,6 @@ static int ExecModule(EvalContext *ctx, char *command)
             }
         }
 
-        if (strlen(line) > CF_BUFSIZE - 80)
-        {
-            Log(LOG_LEVEL_ERR, "Line from module '%s' is too long to be sensible", command);
-            break;
-        }
-
         print = false;
 
         for (sp = line; *sp != '\0'; sp++)
@@ -6409,6 +6403,7 @@ void ModuleProtocol(EvalContext *ctx, char *command, const char *line, int print
     char name[CF_BUFSIZE], content[CF_BUFSIZE];
     char arg0[CF_BUFSIZE];
     char *filename;
+    size_t length = strlen(line);
 
     if (NULL == *tags)
     {
@@ -6438,12 +6433,12 @@ void ModuleProtocol(EvalContext *ctx, char *command, const char *line, int print
         content[0] = '\0';
 
         // Allow modules to set their variable context (up to 50 characters)
-        if (1 == sscanf(line + 1, "context=%50[a-z]", content) && strlen(content) > 0)
+        if (1 == sscanf(line + 1, "context=%50[a-z]", content) && content[0] != '\0')
         {
             Log(LOG_LEVEL_VERBOSE, "Module changed variable context from '%s' to '%s'", context, content);
             strcpy(context, content);
         }
-        else if (1 == sscanf(line + 1, "meta=%[^\n]", content) && strlen(content) > 0)
+        else if (1 == sscanf(line + 1, "meta=%1024[^\n]", content) && content[0] != '\0')
         {
             Log(LOG_LEVEL_VERBOSE, "Module set meta tags to '%s'", content);
             if (NULL != *tags)
@@ -6462,21 +6457,39 @@ void ModuleProtocol(EvalContext *ctx, char *command, const char *line, int print
         break;
 
     case '+':
-        Log(LOG_LEVEL_VERBOSE, "Activated classes '%s'", line + 1);
-        if (CheckID(line + 1))
+        if (length > CF_MAXVARSIZE)
+        {
+            Log(LOG_LEVEL_ERR, "Module protocol was given an overlong +class line (%ld bytes), skipping", length);
+            break;
+        }
+
+        // the class name will fit safely inside CF_MAXVARSIZE - 1 bytes
+        content[0] = '\0';
+        sscanf(line + 1, "%1023[^\n]", content);
+        Log(LOG_LEVEL_VERBOSE, "Activating classes from module protocol: '%s'", content);
+        if (CheckID(content))
         {
             Buffer *tagbuf = StringSetToBuffer(*tags, ',');
-            EvalContextClassPutSoft(ctx, line + 1, CONTEXT_SCOPE_NAMESPACE, BufferData(tagbuf));
+            EvalContextClassPutSoft(ctx, content, CONTEXT_SCOPE_NAMESPACE, BufferData(tagbuf));
             BufferDestroy(tagbuf);
         }
         break;
     case '-':
-        Log(LOG_LEVEL_VERBOSE, "Deactivated classes '%s'", line + 1);
-        if (CheckID(line + 1))
+        if (length > CF_MAXVARSIZE)
         {
-            if (line[1] != '\0')
+            Log(LOG_LEVEL_ERR, "Module protocol was given an overlong -class line (%ld bytes), skipping", length);
+            break;
+        }
+
+        // the class name(s) will fit safely inside CF_MAXVARSIZE - 1 bytes
+        content[0] = '\0';
+        sscanf(line + 1, "%1023[^\n]", content);
+        Log(LOG_LEVEL_VERBOSE, "Deactivating classes from module protocol: '%s'", content);
+        if (CheckID(content))
+        {
+            if (content[0] != '\0')
             {
-                StringSet *negated = StringSetFromString(line + 1, ',');
+                StringSet *negated = StringSetFromString(content, ',');
                 StringSetIterator it = StringSetIteratorInit(negated);
                 const char *negated_context = NULL;
                 while ((negated_context = StringSetIteratorNext(&it)))
@@ -6496,8 +6509,16 @@ void ModuleProtocol(EvalContext *ctx, char *command, const char *line, int print
         }
         break;
     case '=':
+        if (length > CF_BUFSIZE + 256)
+        {
+            Log(LOG_LEVEL_ERR, "Module protocol was given an overlong variable =line (%ld bytes), skipping", length);
+            break;
+        }
+
         content[0] = '\0';
-        sscanf(line + 1, "%[^=]=%[^\n]", name, content);
+        // TODO: the variable name is limited to 256 to accomodate the
+        // context name once it's in the vartable.  Maybe this can be relaxed.
+        sscanf(line + 1, "%256[^=]=%4095[^\n]", name, content);
 
         if (CheckID(name))
         {
@@ -6514,12 +6535,15 @@ void ModuleProtocol(EvalContext *ctx, char *command, const char *line, int print
 
     case '%':
         content[0] = '\0';
-        sscanf(line + 1, "%[^=]=%[^\n]", name, content);
+        // TODO: the variable name is limited to 256 to accomodate the
+        // context name once it's in the vartable.  Maybe this can be relaxed.
+        sscanf(line + 1, "%256[^=]=", name);
 
         if (CheckID(name))
         {
             JsonElement *json = NULL;
-            Buffer *holder = BufferNewFrom(content, strlen(content));
+            Buffer *holder = BufferNewFrom(line+strlen(name)+1+1,
+                                           length - strlen(name) - 1 - 1);
             const char *hold = BufferData(holder);
             Log(LOG_LEVEL_DEBUG, "Module protocol parsing JSON %s", content);
 
@@ -6529,7 +6553,7 @@ void ModuleProtocol(EvalContext *ctx, char *command, const char *line, int print
             }
             else
             {
-                Log(LOG_LEVEL_VERBOSE, "Defined data container variable '%s' in context '%s' with value '%s'", name, context, content);
+                Log(LOG_LEVEL_VERBOSE, "Defined data container variable '%s' in context '%s' with value '%s'", name, context, BufferData(holder));
                 VarRef *ref = VarRefParseFromScope(name, context);
 
                 Buffer *tagbuf = StringSetToBuffer(*tags, ',');
@@ -6544,23 +6568,41 @@ void ModuleProtocol(EvalContext *ctx, char *command, const char *line, int print
         break;
 
     case '@':
+        if (length > CF_BUFSIZE + 256 - 1)
+        {
+            Log(LOG_LEVEL_ERR, "Module protocol was given an overlong variable @line (%ld bytes), skipping", length);
+            break;
+        }
+
         content[0] = '\0';
-        sscanf(line + 1, "%[^=]=%[^\n]", name, content);
+        // TODO: the variable name is limited to 256 to accomodate the
+        // context name once it's in the vartable.  Maybe this can be relaxed.
+
+        // TODO: the RlistParseString function can do at most CF_BUFSIZE-1
+        sscanf(line + 1, "%256[^=]=%4095[^\n]", name, content);
 
         if (CheckID(name))
         {
             Rlist *list = NULL;
 
             list = RlistParseString(content);
-            Log(LOG_LEVEL_VERBOSE, "Defined variable '%s' in context '%s' with value '%s'", name, context, content);
 
-            VarRef *ref = VarRefParseFromScope(name, context);
+            if (NULL == list)
+            {
+                Log(LOG_LEVEL_ERR, "Module protocol could not parse variable %s's data content %s", name, content);
+            }
+            else
+            {
+                Log(LOG_LEVEL_VERBOSE, "Defined variable '%s' in context '%s' with value '%s'", name, context, content);
 
-            Buffer *tagbuf = StringSetToBuffer(*tags, ',');
-            EvalContextVariablePut(ctx, ref, list, CF_DATA_TYPE_STRING_LIST, BufferData(tagbuf));
-            BufferDestroy(tagbuf);
+                VarRef *ref = VarRefParseFromScope(name, context);
 
-            VarRefDestroy(ref);
+                Buffer *tagbuf = StringSetToBuffer(*tags, ',');
+                EvalContextVariablePut(ctx, ref, list, CF_DATA_TYPE_STRING_LIST, BufferData(tagbuf));
+                BufferDestroy(tagbuf);
+
+                VarRefDestroy(ref);
+            }
         }
         break;
 

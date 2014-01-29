@@ -101,7 +101,7 @@
             - 'findfiles' - returns list of files matching a search pattern
             - 'makerule' - evaluates whether a target file needs to be rebuilt from sources
             - 'max', 'mean', 'min' - returns maximum, mean and minimum in a container or list
-            - 'packagesmatching' - #TODO#
+            - 'packagesmatching' - returns a filtered list of installed packages.
             - 'string_downcase', 'string_upcase' - returns the lower-/upper-case version of a string
             - 'string_head', 'string_tail' - returns the beginning/end of a string
             - 'string_length' - returns the length of a string

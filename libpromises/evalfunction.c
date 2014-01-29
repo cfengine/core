@@ -1050,7 +1050,8 @@ static FnCallResult FnCallBundlesMatching(EvalContext *ctx, const Policy *policy
         const Bundle *bp = SeqAt(policy->bundles, i);
         if (!bp)
         {
-            FatalError(ctx, "Function '%s' found null bundle at %zu", fp->name, i);
+            FatalError(ctx, "Function '%s' found null bundle at %llu",
+                       fp->name, (unsigned long long)i);
         }
 
         char *bundle_name = BundleQualifiedName(bp);
@@ -3572,7 +3573,7 @@ static FnCallResult FnCallLength(EvalContext *ctx, ARG_UNUSED const Policy *poli
             }
         }
     case RVAL_TYPE_CONTAINER:
-        return FnReturnF("%zd", JsonLength(value));
+        return FnReturnF("%llu", (unsigned long long)JsonLength(value));
     default:
         Log(LOG_LEVEL_ERR, "Function '%s', argument '%s' resolved to unsupported datatype '%s'",
             fp->name, name, DataTypeToString(type));

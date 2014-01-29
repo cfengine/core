@@ -399,7 +399,8 @@ char *DBPrivDiagnose(const char *dbpath)
     if(size < 256)
     {
         fclose(fp);
-        return StringFormat("Seek-to-end size less than minimum required: %zd", size);
+        return StringFormat("Seek-to-end size less than minimum required: %llu",
+                            (unsigned long long)size);
     }
 
     char hbuf[256];
@@ -436,12 +437,18 @@ char *DBPrivDiagnose(const char *dbpath)
         if(declared_size == size)
         {
             fclose(fp);
-            return StringFormat("Endianness mismatch, declared size SWAB64 '%zd' equals seek-to-end size '%zd'", declared_size, size);
+            return StringFormat("Endianness mismatch, declared size SWAB64 "
+                                "'%llu' equals seek-to-end size '%llu'",
+                                (unsigned long long)declared_size,
+                                (unsigned long long)size);
         }
         else
         {
             fclose(fp);
-            return StringFormat("Size mismatch, declared size SWAB64 '%zd', seek-to-end-size '%zd'", declared_size, size);
+            return StringFormat("Size mismatch, declared size SWAB64 '%llu', "
+                                "seek-to-end-size '%llu'",
+                                (unsigned long long)declared_size,
+                                (unsigned long long)size);
         }
     }
 }

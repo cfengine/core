@@ -134,7 +134,7 @@ int ScheduleEditLineOperations(EvalContext *ctx, Bundle *bp, Attributes a, const
             {
                 Promise *pp = SeqAt(sp->promises, ppi);
 
-                ExpandPromise(ctx, pp, KeepEditLinePromise, edcontext);
+                ExpandPromise(ctx, pass, pp, KeepEditLinePromise, edcontext);
 
                 if (Abort(ctx))
                 {

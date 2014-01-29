@@ -1457,7 +1457,7 @@ static void VerifyPromises(EvalContext *ctx, const Policy *policy, GenericAgentC
             for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
             {
                 Promise *pp = SeqAt(sp->promises, ppi);
-                ExpandPromise(ctx, pp, CommonEvalPromise, NULL);
+                ExpandPromise(ctx, 0, pp, CommonEvalPromise, NULL);
             }
         }
 

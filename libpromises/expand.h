@@ -31,7 +31,7 @@
 
 PromiseResult CommonEvalPromise(EvalContext *ctx, const Promise *pp, void *param);
 
-PromiseResult ExpandPromise(EvalContext *ctx, const Promise *pp, PromiseActuator *ActOnPromise, void *param);
+PromiseResult ExpandPromise(EvalContext *ctx, size_t pass, const Promise *pp, PromiseActuator *ActOnPromise, void *param);
 
 Rval ExpandDanglers(EvalContext *ctx, const char *ns, const char *scope, Rval rval, const Promise *pp);
 void MapIteratorsFromRval(EvalContext *ctx, const Bundle *bundle, Rval rval, Rlist **scalars, Rlist **lists, Rlist **containers);

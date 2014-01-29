@@ -24,7 +24,7 @@ bundle agent check
 {
 # If the output contains the string "ONCE" twice then we fail
 classes:
-  "ok" not => regcmp(".*ONCE.*ONCE.*", "$(test.subout)");
+  "ok" not => regcmp(".*ONCE.*ONCE.*ONCE.*", "$(test.subout)");
 
 reports:
   DEBUG::

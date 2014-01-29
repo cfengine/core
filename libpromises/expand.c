@@ -44,8 +44,13 @@
 #include <verify_classes.h>
 
 
-static PromiseResult ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp, Rlist *lists, Rlist *containers,
-                               PromiseActuator *ActOnPromise, void *param);
+static PromiseResult ExpandPromiseAndDo(EvalContext *ctx,
+                                        size_t pass,
+                                        const Promise *pp,
+                                        Rlist *lists,
+                                        Rlist *containers,
+                                        PromiseActuator *ActOnPromise,
+                                        void *param);
 static void ExpandAndMapIteratorsFromScalar(EvalContext *ctx, const Bundle *bundle, char *string, size_t length, int level,
                                             Rlist **scalars, Rlist **lists, Rlist **containers, Rlist **full_expansion);
 static void CopyLocalizedReferencesToBundleScope(EvalContext *ctx, const Bundle *bundle, const Rlist *ref_names);
@@ -108,7 +113,7 @@ since these cannot be mapped into "this" without some magic.
    
 **********************************************************************/
 
-PromiseResult ExpandPromise(EvalContext *ctx, const Promise *pp, PromiseActuator *ActOnPromise, void *param)
+PromiseResult ExpandPromise(EvalContext *ctx, size_t pass, const Promise *pp, PromiseActuator *ActOnPromise, void *param)
 {
     Rlist *lists = NULL;
     Rlist *scalars = NULL;
@@ -133,7 +138,7 @@ PromiseResult ExpandPromise(EvalContext *ctx, const Promise *pp, PromiseActuator
     CopyLocalizedReferencesToBundleScope(ctx, PromiseGetBundle(pp), scalars);
     CopyLocalizedReferencesToBundleScope(ctx, PromiseGetBundle(pp), containers);
 
-    PromiseResult result = ExpandPromiseAndDo(ctx, pcopy, lists, containers, ActOnPromise, param);
+    PromiseResult result = ExpandPromiseAndDo(ctx, pass, pcopy, lists, containers, ActOnPromise, param);
 
     PromiseDestroy(pcopy);
 
@@ -144,11 +149,16 @@ PromiseResult ExpandPromise(EvalContext *ctx, const Promise *pp, PromiseActuator
     return result;
 }
 
-static PromiseResult ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp, Rlist *lists, Rlist *containers, PromiseActuator *ActOnPromise, void *param)
+static PromiseResult ExpandPromiseAndDo(EvalContext *ctx, size_t pass, const Promise *pp, Rlist *lists, Rlist *containers, PromiseActuator *ActOnPromise, void *param)
 {
     const char *handle = PromiseGetHandle(pp);
 
-    EvalContextStackPushPromiseFrame(ctx, pp, true);
+    EvalContextStackPushPromiseFrame(ctx, pp, true, pass);
+    {
+        char *stack_path = EvalContextStackPath(ctx);
+        Log(LOG_LEVEL_VERBOSE, "%s/%s/'%s' Evaluating promise", stack_path, pp->parent_promise_type->name, pp->promiser);
+        free(stack_path);
+    }
 
     PromiseIterator *iter_ctx = NULL;
     size_t i = 0;
@@ -959,7 +969,7 @@ static void ResolveCommonClassPromises(EvalContext *ctx, PromiseType *pt)
             continue;
         }
 
-        ExpandPromise(ctx, pp, VerifyClassPromise, NULL);
+        ExpandPromise(ctx, 0, pp, VerifyClassPromise, NULL);
     }
 }
 
@@ -970,7 +980,7 @@ static void ResolveVariablesPromises(EvalContext *ctx, PromiseType *pt)
     for (size_t i = 0; i < SeqLength(pt->promises); i++)
     {
         Promise *pp = SeqAt(pt->promises, i);
-        EvalContextStackPushPromiseFrame(ctx, pp, false);
+        EvalContextStackPushPromiseFrame(ctx, pp, false, 0);
         EvalContextStackPushPromiseIterationFrame(ctx, 0, NULL);
         VerifyVarPromise(ctx, pp, false);
         EvalContextStackPopFrame(ctx);

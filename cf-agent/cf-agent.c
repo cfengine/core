@@ -1196,7 +1196,7 @@ PromiseResult ScheduleAgentOperations(EvalContext *ctx, const Bundle *bp)
             {
                 Promise *pp = SeqAt(sp->promises, ppi);
 
-                PromiseResult promise_result = ExpandPromise(ctx, pp, KeepAgentPromise, NULL);
+                PromiseResult promise_result = ExpandPromise(ctx, pass, pp, KeepAgentPromise, NULL);
                 result = PromiseResultUpdate(result, promise_result);
 
                 if (Abort(ctx))

@@ -63,6 +63,7 @@ typedef struct
 typedef struct
 {
     const Promise *owner;
+    size_t pass;
 
     VariableTable *vars;
 } StackFramePromise;
@@ -124,7 +125,7 @@ void EvalContextClear(EvalContext *ctx);
 
 void EvalContextStackPushBundleFrame(EvalContext *ctx, const Bundle *owner, const Rlist *args, bool inherits_previous);
 void EvalContextStackPushBodyFrame(EvalContext *ctx, const Promise *caller, const Body *body, Rlist *args);
-void EvalContextStackPushPromiseFrame(EvalContext *ctx, const Promise *owner, bool copy_bundle_context);
+void EvalContextStackPushPromiseFrame(EvalContext *ctx, const Promise *owner, bool copy_bundle_context, size_t pass);
 Promise *EvalContextStackPushPromiseIterationFrame(EvalContext *ctx, size_t iteration_index, const PromiseIterator *iter_ctx);
 void EvalContextStackPopFrame(EvalContext *ctx);
 

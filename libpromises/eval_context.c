@@ -893,11 +893,12 @@ static StackFrame *StackFrameNewBody(const Body *owner)
     return frame;
 }
 
-static StackFrame *StackFrameNewPromise(const Promise *owner)
+static StackFrame *StackFrameNewPromise(const Promise *owner, size_t pass)
 {
     StackFrame *frame = StackFrameNew(STACK_FRAME_TYPE_PROMISE, true);
 
     frame->data.promise.owner = owner;
+    frame->data.promise.pass = pass;
 
     return frame;
 }
@@ -983,13 +984,13 @@ void EvalContextStackPushBodyFrame(EvalContext *ctx, const Promise *caller, cons
     }
 }
 
-void EvalContextStackPushPromiseFrame(EvalContext *ctx, const Promise *owner, bool copy_bundle_context)
+void EvalContextStackPushPromiseFrame(EvalContext *ctx, const Promise *owner, bool copy_bundle_context, size_t pass)
 {
     assert(LastStackFrame(ctx, 0) && LastStackFrame(ctx, 0)->type == STACK_FRAME_TYPE_BUNDLE);
 
     EvalContextVariableClearMatch(ctx);
 
-    StackFrame *frame = StackFrameNewPromise(owner);
+    StackFrame *frame = StackFrameNewPromise(owner, pass);
 
     EvalContextStackPushFrame(ctx, frame);
 
@@ -1063,9 +1064,8 @@ Promise *EvalContextStackPushPromiseIterationFrame(EvalContext *ctx, size_t iter
         PromiseLoggingPromiseFinish(ctx, EvalContextStackCurrentPromise(ctx));
     }
 
-    PromiseLoggingPromiseEnter(ctx, pexp);
-
     EvalContextStackPushFrame(ctx, StackFrameNewPromiseIteration(pexp, iter_ctx, iteration_index));
+    PromiseLoggingPromiseEnter(ctx, pexp);
 
     return pexp;
 }
@@ -1322,15 +1322,16 @@ char *EvalContextStackPath(const EvalContext *ctx)
             break;
 
         case STACK_FRAME_TYPE_PROMISE:
+            WriterWriteF(path, "/%s[%zd]",
+                         frame->data.promise.owner->parent_promise_type->name,
+                         frame->data.promise.pass);
             break;
 
         case STACK_FRAME_TYPE_PROMISE_ITERATION:
-            WriterWriteF(path, "/%s", frame->data.promise_iteration.owner->parent_promise_type->name);
-            WriterWriteF(path, "/'%s'", frame->data.promise_iteration.owner->promiser);
-            if (i == SeqLength(ctx->stack) - 1)
-            {
-                WriterWriteF(path, "[%zd]", frame->data.promise_iteration.index);
-            }
+            WriterWriteF(path, "/%s/'%s'[%zd]",
+                         frame->data.promise_iteration.owner->parent_promise_type->name,
+                         frame->data.promise_iteration.owner->promiser,
+                         frame->data.promise_iteration.index + 1);
             break;
         }
     }

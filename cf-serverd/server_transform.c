@@ -543,7 +543,7 @@ static void KeepContextBundles(EvalContext *ctx, const Policy *policy)
                 for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
                 {
                     Promise *pp = SeqAt(sp->promises, ppi);
-                    ExpandPromise(ctx, pp, KeepServerPromise, NULL);
+                    ExpandPromise(ctx, 0, pp, KeepServerPromise, NULL);
                 }
 
                 EvalContextStackPopFrame(ctx);
@@ -590,7 +590,7 @@ static void KeepPromiseBundles(EvalContext *ctx, const Policy *policy)
                 for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
                 {
                     Promise *pp = SeqAt(sp->promises, ppi);
-                    ExpandPromise(ctx, pp, KeepServerPromise, NULL);
+                    ExpandPromise(ctx, 0, pp, KeepServerPromise, NULL);
                 }
 
                 EvalContextStackPopFrame(ctx);

@@ -178,7 +178,7 @@ int ScheduleEditXmlOperations(EvalContext *ctx, Bundle *bp, Attributes a, const 
             {
                 Promise *pp = SeqAt(sp->promises, ppi);
 
-                ExpandPromise(ctx, pp, KeepEditXmlPromise, edcontext);
+                ExpandPromise(ctx, pass, pp, KeepEditXmlPromise, edcontext);
 
                 if (Abort(ctx))
                 {

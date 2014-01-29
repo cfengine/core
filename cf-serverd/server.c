@@ -44,6 +44,7 @@
 #include <server_common.h>
 #include <connection_info.h>
 #include <cf-windows-functions.h>
+#include <logging_priv.h>                          /* LoggingPrivSetContext */
 
 #include "server_classic.h"                    /* BusyWithClassicConnection */
 
@@ -301,10 +302,27 @@ static void DisableSendDelays(int sockfd)
 
 /*********************************************************************/
 
+static char *LogHook(LoggingPrivContext *log_ctx, const char *message)
+{
+    const char *ipaddr = log_ctx->param;
+    return StringConcatenate(3, ipaddr, ": ", message);
+}
+
 static void *HandleConnection(ServerConnectionState *conn)
 {
     int ret;
     char output[CF_BUFSIZE];
+
+    /* Set logging prefix to be the IP address for all of thread's lifetime. */
+
+    /* Should be valid for all lifetime of the thread. Just make sure that
+     * after calling DeleteConn(), you exit right away. */
+    LoggingPrivContext log_ctx = {
+        .log_hook = LogHook,
+        .param = conn->ipaddr
+    };
+
+    LoggingPrivSetContext(&log_ctx);
 
     if (!ThreadLock(cft_server_children))
     {
@@ -390,7 +408,7 @@ static void *HandleConnection(ServerConnectionState *conn)
                         ConnectionInfoProtocolVersion(conn->conn_info));
     }
 
-    Log(LOG_LEVEL_INFO, "Connection from %s is closed, terminating thread",
+    Log(LOG_LEVEL_INFO, "Connection closed, terminating thread",
         conn->ipaddr);
 
     if (!ThreadLock(cft_server_children))

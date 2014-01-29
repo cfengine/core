@@ -440,6 +440,7 @@ void StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
                     getnameinfo((struct sockaddr *) &cin, addrlen,
                                 ipaddr, sizeof(ipaddr),
                                 NULL, 0, NI_NUMERICHOST);
+
                     ConnectionInfo *info = ConnectionInfoNew();
                     if (info)
                     {

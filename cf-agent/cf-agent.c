@@ -213,7 +213,7 @@ static const char *const HINTS[] =
     "Print basic information about changes made to the system, i.e. promises repaired",
     "Define a list of comma separated classes to be undefined at the start of execution",
     "Ignore locking constraints during execution (ifelapsed/expireafter) if \"too soon\" to run",
-    "Output verbose information about the behaviour of the agent. Implies --legacy-output",
+    "Output verbose information about the behaviour of the agent",
     "Output the version of the software",
     "Use legacy output format",
     "Enable colorized output. Possible values: 'always', 'auto', 'never'. If option is used, the default value is 'auto'",
@@ -406,7 +406,6 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             break;
 
         case 'v':
-            LEGACY_OUTPUT = true;
             LogSetGlobalLevel(LOG_LEVEL_VERBOSE);
             break;
 

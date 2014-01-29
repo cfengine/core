@@ -80,7 +80,7 @@ static const char *const HINTS[] =
 {
     "Print the help message",
     "Enable debugging output",
-    "Output verbose information about the behaviour of the agent. Implies --legacy-output.",
+    "Output verbose information about the behaviour of the agent",
     "Output the version of the software",
     "Specify an alternative output file than the default (localhost)",
     "Show lastseen hostnames and IP addresses",
@@ -185,7 +185,6 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             exit(EXIT_SUCCESS);
 
         case 'v':
-            LEGACY_OUTPUT = true;
             LogSetGlobalLevel(LOG_LEVEL_VERBOSE);
             break;
 

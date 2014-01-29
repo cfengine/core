@@ -55,6 +55,7 @@
                 - 'data_readstringarray' - read a delimited file into a data map
                 - 'data_readstringarrayidx' - read a delimited file into a data array
                 - 'datastate' - create a data variable with currently set classes and variables
+                - 'datatype' - #TODO#
                 - 'format' - %S can be used to serialize 'data' containers into a string
                 - 'mergedata' - merge two data containers
                 - 'parsejson' - create a data container from a JSON string

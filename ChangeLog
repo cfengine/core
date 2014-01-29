@@ -1,7 +1,8 @@
 3.6.0 Beta 1
 
         Changes:
-        - TLS authentication and fully encrypted network protocol
+        - TLS authentication and fully encrypted network protocol. Changes
+          specific to the new type of connections:
             - There is the choice of switching to a new networking protocol, which
               uses TLS for authentication, after which all dialog happens encrypted
               within the established TLS session. The hub is still able to speak
@@ -21,6 +22,12 @@
               (e.g.  "/path/to/$(connection.ip)/") to force recursive access.
             - The 'skipverify' option in body server control is deprecated and
               only left for compatibility; it does nothing
+            - cf-serverd logging levels are now more standardised:
+                  - INFO logs only failures
+                  - VERBOSE logs successful requests as well
+                  - DEBUG logs actual protocol traffic.
+            - cf-serverd does not hang up the connection if some request fails,
+              so that the client can add more requests.
         - Enable source file in agent copy_from promises to be a relative path.
         - #TODO# Changes to logging output
             - add process name and pid in syslog message (GitHub #789)
@@ -33,6 +40,7 @@
         - $(this.promise_filename) and $(..._dirname) variables are now absolute paths. (Redmine #3839)
 
         New features:
+        - cf-serverd now logs the relevant client IP address on each message.
         - New promise type "users" for managing local user accounts.
         - New in 'bundle server access_rules'
             - Constraints "admit_ips", "admit_hostnames", "admit_keys"

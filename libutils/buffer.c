@@ -82,6 +82,7 @@ char *BufferClose(Buffer *buffer)
 
 Buffer *BufferCopy(const Buffer *source)
 {
+    assert(source);
     return BufferNewFrom(source->buffer, source->used);
 }
 
@@ -327,7 +328,6 @@ int BufferPrintf(Buffer *buffer, const char *format, ...)
 {
     assert(buffer);
     assert(format);
-
     /*
      * We declare two lists, in case we need to reiterate over the list because the buffer was
      * too small.
@@ -369,6 +369,8 @@ int BufferPrintf(Buffer *buffer, const char *format, ...)
 
 int BufferVPrintf(Buffer *buffer, const char *format, va_list ap)
 {
+    assert(buffer);
+    assert(format);
     va_list aq;
     va_copy(aq, ap);
 
@@ -398,29 +400,33 @@ int BufferVPrintf(Buffer *buffer, const char *format, va_list ap)
 
 void BufferClear(Buffer *buffer)
 {
+    assert(buffer);
     buffer->used = 0;
-	buffer->buffer[0] = '\0';
+    buffer->buffer[0] = '\0';
 }
 
-unsigned int BufferSize(Buffer *buffer)
+unsigned int BufferSize(const Buffer *buffer)
 {
-    return buffer->used;
+    assert(buffer);
+    return buffer ? buffer->used : 0;
 }
 
-const char *BufferData(Buffer *buffer)
+const char *BufferData(const Buffer *buffer)
 {
-    return buffer->buffer;
+    assert(buffer);
+    return buffer ? buffer->buffer : NULL;
 }
 
-BufferBehavior BufferMode(Buffer *buffer)
+BufferBehavior BufferMode(const Buffer *buffer)
 {
-    return buffer->mode;
+    assert(buffer);
+    return buffer ? buffer->mode : BUFFER_BEHAVIOR_BYTEARRAY;
 }
 
 void BufferSetMode(Buffer *buffer, BufferBehavior mode)
 {
+    assert(buffer);
     assert(mode == BUFFER_BEHAVIOR_CSTRING || mode == BUFFER_BEHAVIOR_BYTEARRAY);
-
     /*
      * If we switch from BYTEARRAY mode to CSTRING then we need to adjust the
      * length to the first '\0'. This makes our life easier in the long run.
@@ -437,4 +443,10 @@ void BufferSetMode(Buffer *buffer, BufferBehavior mode)
         }
     }
     buffer->mode = mode;
+}
+
+unsigned BufferCapacity(const Buffer *buffer)
+{
+    assert(buffer);
+    return buffer ? buffer->capacity : 0;
 }

@@ -36,11 +36,6 @@
 
   If an error arises while doing something, we do everything we can to restore things to its previous state.
   Unfortunately not all errors are recoverable. Since we do not have a proper errno system, we just return -1.
-
-  For security reasons, there is a memory cap on each buffer. At creation time each buffer gets assigned a certain
-  amount of memory, can be checked via BufferGeneralMemoryCap(). This general cap can be raised or lowered by calling
-  BufferSetGeneralMemoryCap(unsigned int cap). After changing the cap, only newly allocated buffers will have the new cap
-  as default, all the previous buffers will have the old cap. This can be changed on a per instance basis.
   */
 
 typedef enum
@@ -60,6 +55,8 @@ typedef struct
     bool unsafe;
 } Buffer;
 
+
+
 /**
   @brief Buffer initialization routine.
 
@@ -70,6 +67,12 @@ typedef struct
   */
 Buffer* BufferNew(void);
 
+/**
+  @brief Allocates and setup a buffer with a capacity different than the default capacity.
+  @param initial_capacity Initial capacity of the buffer.
+  @return Pointer to initialized Buffer if the initialization was successful,
+          otherwise terminate with message to stderr.
+  */
 Buffer *BufferNewWithCapacity(unsigned int initial_capacity);
 
 /**
@@ -89,6 +92,11 @@ Buffer* BufferNewFrom(const char *data, unsigned int length);
   */
 void BufferDestroy(Buffer *buffer);
 
+/**
+  @brief Destroys a buffer structure returning the its contents.
+  @param buffer Structure to operate on.
+  @return Contents of the buffer.
+  */
 char *BufferClose(Buffer *buffer);
 
 /**
@@ -120,9 +128,21 @@ int BufferCompare(const Buffer *buffer1, const Buffer *buffer2);
   */
 void BufferSet(Buffer *buffer, const char *bytes, unsigned int length);
 
+/**
+  @brief This functions allows direct access to the storage inside Buffer.
+  @return Returns the pointer used to store data inside the buffer. The content can be freely modified up to the capacity of the buffer.
+  @remarks This function invalidates the size of the buffer. Mixing calls to this
+  function with other Buffer functions is generally a bad idea.
+  */
 char *BufferGet(Buffer *buffer);
 
 void BufferAppend(Buffer *buffer, const char *bytes, unsigned int length);
+
+/**
+  @brief Appends a char to an existing buffer.
+  @param buffer Structure to operate on.
+  @param byte Char to be added to the buffer.
+  */
 void BufferAppendChar(Buffer *buffer, char byte);
 void BufferAppendF(Buffer *buffer, const char *format, ...);
 void BufferAppendString(Buffer *buffer, const char *str);
@@ -141,6 +161,7 @@ void BufferAppendString(Buffer *buffer, const char *str);
   @return The number of bytes written to the buffer or 0 if the operation needs to be retried. In case of error -1 is returned.
   */
 int BufferPrintf(Buffer *buffer, const char *format, ...) FUNC_ATTR_PRINTF(2, 3);
+
 /**
   @brief Stores complex data on the buffer.
 
@@ -156,6 +177,7 @@ int BufferPrintf(Buffer *buffer, const char *format, ...) FUNC_ATTR_PRINTF(2, 3)
   @return The number of bytes written to the buffer or 0 if the operation needs to be retried. In case of error -1 is returned.
   */
 int BufferVPrintf(Buffer *buffer, const char *format, va_list ap);
+
 /**
   @brief Clears the buffer.
 
@@ -167,14 +189,19 @@ int BufferVPrintf(Buffer *buffer, const char *format, va_list ap);
   @param buffer Buffer to clear.
   */
 void BufferClear(Buffer *buffer);
+
 /**
   @brief Returns the size of the buffer.
   @param buffer
   @return The size of the buffer, that is the number of bytes contained on it.
+  @note
   */
-unsigned int BufferSize(Buffer *buffer);
+unsigned int BufferSize(const Buffer *buffer);
 
-void BufferSetCapacity(Buffer *buffer, unsigned int capacity);
+/**
+  @param buffer Structure to operate on.
+  @return Returns the capacity of the buffer.
+  */
 unsigned BufferCapacity(const Buffer *buffer);
 
 /**
@@ -182,7 +209,8 @@ unsigned BufferCapacity(const Buffer *buffer);
   @param buffer The buffer to operate on.
   @return The current mode of operation.
   */
-BufferBehavior BufferMode(Buffer *buffer);
+BufferBehavior BufferMode(const Buffer *buffer);
+
 /**
   @brief Sets the operational mode of the buffer.
 
@@ -193,6 +221,7 @@ BufferBehavior BufferMode(Buffer *buffer);
   @param mode The new mode of operation.
   */
 void BufferSetMode(Buffer *buffer, BufferBehavior mode);
+
 /**
   @brief Provides a pointer to the internal data.
 
@@ -201,6 +230,6 @@ void BufferSetMode(Buffer *buffer, BufferBehavior mode);
   @param buffer
   @return A const char pointer to the data contained on the buffer.
   */
-const char *BufferData(Buffer *buffer);
+const char *BufferData(const Buffer *buffer);
 
 #endif

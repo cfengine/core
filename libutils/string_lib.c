@@ -157,13 +157,16 @@ int StringSafeCompare(const char *a, const char *b)
     {
         return 0;
     }
-
-    if ((a == NULL) || (b == NULL))
+    if (a && b)
+    {
+        return strcmp(a, b);
+    }
+    if (a == NULL)
     {
         return -1;
     }
-
-    return strcmp(a, b);
+    assert(b == NULL);
+    return +1;
 }
 
 bool StringSafeEqual(const char *a, const char *b)
@@ -772,7 +775,7 @@ StringRef StringGetToken(const char *str, size_t len, size_t index, const char *
     return ref;
 }
 
-char **String2StringArray(char *str, char separator)
+char **String2StringArray(const char *str, char separator)
 /**
  * Parse CSVs into char **.
  * MEMORY NOTE: Caller must free return value with FreeStringArray().

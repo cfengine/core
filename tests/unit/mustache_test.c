@@ -69,13 +69,20 @@ static void test_spec(void)
     num_failures = comments_fail + interpolation_fail + sections_fail + delimiters_fail + inverted_fail + extra_fail;
     if (num_failures > 0)
     {
-        fprintf(stdout, "Failures in comments: %zd\n", comments_fail);
-        fprintf(stdout, "Failures in interpolation: %zd\n", interpolation_fail);
-        fprintf(stdout, "Failures in sections: %zd\n", sections_fail);
-        fprintf(stdout, "Failures in delimiters: %zd\n", delimiters_fail);
-        fprintf(stdout, "Failures in inverted: %zd\n", inverted_fail);
-        fprintf(stdout, "Failures in extra: %zd\n", inverted_fail);
-        fprintf(stdout, "TOTAL FAILURES: %zd\n", num_failures);
+        fprintf(stdout, "Failures in comments: %llu\n",
+                (unsigned long long)comments_fail);
+        fprintf(stdout, "Failures in interpolation: %llu\n",
+                (unsigned long long)interpolation_fail);
+        fprintf(stdout, "Failures in sections: %llu\n",
+                (unsigned long long)sections_fail);
+        fprintf(stdout, "Failures in delimiters: %llu\n",
+                (unsigned long long)delimiters_fail);
+        fprintf(stdout, "Failures in inverted: %llu\n",
+                (unsigned long long)inverted_fail);
+        fprintf(stdout, "Failures in extra: %llu\n",
+                (unsigned long long)inverted_fail);
+        fprintf(stdout, "TOTAL FAILURES: %llu\n",
+                (unsigned long long)num_failures);
 
         fail();
     }

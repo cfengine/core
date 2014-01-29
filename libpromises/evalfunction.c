@@ -329,12 +329,12 @@ static FnCallResult FnCallHostsWithClass(EvalContext *ctx, ARG_UNUSED const Poli
 
     char *class_name = RlistScalarValue(finalargs);
     char *return_format = RlistScalarValue(finalargs->next);
-    
+
     if(!ListHostsWithClass(ctx, &returnlist, class_name, return_format))
     {
         return FnFailure();
     }
-    
+
     return (FnCallResult) { FNCALL_SUCCESS, { returnlist, RVAL_TYPE_LIST } };
 }
 
@@ -1050,7 +1050,8 @@ static FnCallResult FnCallBundlesMatching(EvalContext *ctx, const Policy *policy
         const Bundle *bp = SeqAt(policy->bundles, i);
         if (!bp)
         {
-            FatalError(ctx, "Function '%s' found null bundle at %ld", fp->name, i);
+            FatalError(ctx, "Function '%s' found null bundle at %llu",
+                       fp->name, (unsigned long long)i);
         }
 
         char *bundle_name = BundleQualifiedName(bp);
@@ -1071,7 +1072,7 @@ static FnCallResult FnCallBundlesMatching(EvalContext *ctx, const Policy *policy
             }
             else if (NULL != bundle_tags)
             {
-                
+
                 switch (DataTypeToRvalType(type))
                 {
                 case RVAL_TYPE_SCALAR:
@@ -1135,7 +1136,7 @@ static FnCallResult FnCallPackagesMatching(ARG_UNUSED EvalContext *ctx, ARG_UNUS
         JsonDestroy(json);
         return FnFailure();
     }
-    
+
     int linenumber = 0;
 
     size_t line_size = CF_BUFSIZE;
@@ -1208,7 +1209,7 @@ static FnCallResult FnCallCanonify(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const
     char *string = RlistScalarValue(finalargs);
 
     buf[0] = '\0';
-    
+
     if (!strcmp(fp->name, "canonifyuniquely"))
     {
         char hashbuffer[EVP_MAX_MD_SIZE * 4];
@@ -1890,7 +1891,7 @@ static FnCallResult FnCallGrep(EvalContext *ctx, ARG_UNUSED const Policy *policy
                           RlistScalarValue(finalargs->next), // list identifier
                           1, // regex match = TRUE
                           0, // invert matches = FALSE
-                          99999999999); // max results = max int
+                          LONG_MAX); // max results = max int
 }
 
 /*********************************************************************/
@@ -3531,7 +3532,7 @@ static FnCallResult FnCallSetop(EvalContext *ctx, ARG_UNUSED const Policy *polic
         {
             continue;
         }
-                
+
         RlistAppendScalarIdemp(&returnlist, RlistScalarValue(rp_a));
     }
 
@@ -3572,7 +3573,7 @@ static FnCallResult FnCallLength(EvalContext *ctx, ARG_UNUSED const Policy *poli
             }
         }
     case RVAL_TYPE_CONTAINER:
-        return FnReturnF("%zd", JsonLength(value));
+        return FnReturnF("%llu", (unsigned long long)JsonLength(value));
     default:
         Log(LOG_LEVEL_ERR, "Function '%s', argument '%s' resolved to unsupported datatype '%s'",
             fp->name, name, DataTypeToString(type));
@@ -3664,7 +3665,7 @@ static FnCallResult FnCallFold(EvalContext *ctx, ARG_UNUSED const Policy *policy
             {
                 continue;
             }
-        
+
             double x;
             if (mean_mode || variance_mode)
             {
@@ -3679,7 +3680,7 @@ static FnCallResult FnCallFold(EvalContext *ctx, ARG_UNUSED const Policy *policy
                 M2 += delta * (x - mean);
             }
         }
-        
+
 
         if (count == 1 && null_seen)
         {
@@ -3973,7 +3974,7 @@ static FnCallResult FnCallEverySomeNone(EvalContext *ctx, ARG_UNUSED const Polic
                           RlistScalarValue(finalargs->next), // list identifier
                           1,
                           0,
-                          99999999999);
+                          LONG_MAX);
 }
 
 static FnCallResult FnCallSort(EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, const Rlist *finalargs)
@@ -6362,7 +6363,7 @@ static int ExecModule(EvalContext *ctx, char *command)
     {
         StringSetDestroy(tags);
     }
-    
+
     cf_pclose(pp);
     free(line);
     return true;
@@ -7664,7 +7665,7 @@ const FnCallType CF_FNCALL_TYPES[] =
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("variance", DATA_TYPE_REAL, STAT_FOLD_ARGS, &FnCallFold, "Return the variance of a list",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
-    
+
     // File parsing functions that output a data container
     FnCallTypeNew("data_readstringarray", DATA_TYPE_CONTAINER, DATA_READSTRINGARRAY_ARGS, &FnCallDataRead, "Read an array of strings from a file into a data container map, using the first element as a key",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),

@@ -80,8 +80,8 @@ extern Item *CONNECTIONLIST;
 /*******************************************************************/
 
 static void KeepFileAccessPromise(const EvalContext *ctx, const Promise *pp);
-static void KeepLiteralAccessPromise(EvalContext *ctx, const Promise *pp, char *type);
-static void KeepQueryAccessPromise(EvalContext *ctx, const Promise *pp, char *type);
+static void KeepLiteralAccessPromise(EvalContext *ctx, const Promise *pp, const char *type);
+static void KeepQueryAccessPromise(EvalContext *ctx, const Promise *pp);
 
 /*******************************************************************/
 /* Level                                                           */
@@ -657,7 +657,7 @@ static PromiseResult KeepServerPromise(EvalContext *ctx, const Promise *pp, ARG_
         }
         else if (strcmp(resource_type, "query") == 0)
         {
-            KeepQueryAccessPromise(ctx, pp, "query");
+            KeepQueryAccessPromise(ctx, pp);
             KeepReportDataSelectAccessPromise(pp);
             return PROMISE_RESULT_NOOP;
         }
@@ -985,7 +985,7 @@ static void KeepFileAccessPromise(const EvalContext *ctx, const Promise *pp)
 
 /*********************************************************************/
 
-void KeepLiteralAccessPromise(EvalContext *ctx, const Promise *pp, char *type)
+void KeepLiteralAccessPromise(EvalContext *ctx, const Promise *pp, const char *type)
 {
     Auth *ap, *dp;
     const char *handle = PromiseGetHandle(pp);
@@ -1060,11 +1060,9 @@ void KeepLiteralAccessPromise(EvalContext *ctx, const Promise *pp, char *type)
 
 /*********************************************************************/
 
-static void KeepQueryAccessPromise(EvalContext *ctx, const Promise *pp, char *type)
+static void KeepQueryAccessPromise(EvalContext *ctx, const Promise *pp)
 {
     Auth *ap, *dp;
-
-    assert (strcmp(type, "query") == 0);
 
     ap = GetOrCreateAuth(pp->promiser, &SV.varadmit, &SV.varadmittail);
     dp = GetOrCreateAuth(pp->promiser, &SV.vardeny, &SV.vardenytail);

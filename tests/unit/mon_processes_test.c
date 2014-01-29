@@ -76,7 +76,7 @@ static bool GetSysUsers( int *userListSz, int *numRootProcs, int *numOtherProcs)
 
 void test_processes_monitor(void)
 {
-    double cf_this[100];
+    double cf_this[100] = { 0.0 };
     MonProcessesGatherData(cf_this);
     MonProcessesGatherData(cf_this);
     MonProcessesGatherData(cf_this);

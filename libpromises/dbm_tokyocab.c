@@ -399,7 +399,8 @@ char *DBPrivDiagnose(const char *dbpath)
     if(size < 256)
     {
         fclose(fp);
-        return StringFormat("Seek-to-end size less than minimum required: %zd", size);
+        return StringFormat("Seek-to-end size less than minimum required: %llu",
+                            (unsigned long long)size);
     }
 
     char hbuf[256];
@@ -416,32 +417,35 @@ char *DBPrivDiagnose(const char *dbpath)
         fclose(fp);
         return StringFormat("Error reading 256 bytes: %s\n", strerror(errno));
     }
+    fclose(fp);
 
     if(strncmp(hbuf, MAGIC, strlen(MAGIC)) != 0)
     {
-        fclose(fp);
         return StringFormat("Magic string mismatch");
     }
 
     uint64_t declared_size = 0;
     memcpy(&declared_size, hbuf+56, sizeof(uint64_t));
-    if(declared_size == size)
+    if (declared_size == size)
     {
-        fclose(fp);
         return NULL; // all is well
     }
     else
     {
         declared_size = SWAB64(declared_size);
-        if(declared_size == size)
+        if (declared_size == size)
         {
-            fclose(fp);
-            return StringFormat("Endianness mismatch, declared size SWAB64 '%zd' equals seek-to-end size '%zd'", declared_size, size);
+            return StringFormat("Endianness mismatch, declared size SWAB64 "
+                                "'%llu' equals seek-to-end size '%llu'",
+                                (unsigned long long)declared_size,
+                                (unsigned long long)size);
         }
         else
         {
-            fclose(fp);
-            return StringFormat("Size mismatch, declared size SWAB64 '%zd', seek-to-end-size '%zd'", declared_size, size);
+            return StringFormat("Size mismatch, declared size SWAB64 '%llu', "
+                                "seek-to-end-size '%llu'",
+                                (unsigned long long)declared_size,
+                                (unsigned long long)size);
         }
     }
 }

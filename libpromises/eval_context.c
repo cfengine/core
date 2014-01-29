@@ -967,8 +967,12 @@ void EvalContextStackPushBodyFrame(EvalContext *ctx, const Promise *caller, cons
     {
         if (caller)
         {
-            Log(LOG_LEVEL_ERR, "Argument arity mismatch in body '%s' at line %zu in file '%s', expected %d, got %d",
-                body->name, caller->offset.line, PromiseGetBundle(caller)->source_path, RlistLen(body->args), RlistLen(args));
+            Log(LOG_LEVEL_ERR,
+                "Argument arity mismatch in body '%s' at line %llu "
+                "in file '%s', expected %d, got %d",
+                body->name, (unsigned long long)caller->offset.line,
+                PromiseGetBundle(caller)->source_path, RlistLen(body->args),
+                RlistLen(args));
         }
         else
         {
@@ -1024,7 +1028,7 @@ void EvalContextStackPushPromiseFrame(EvalContext *ctx, const Promise *owner, bo
 
         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promise_dirname", path, DATA_TYPE_STRING, "source=promise");
         char number[CF_SMALLBUF];
-        snprintf(number, CF_SMALLBUF, "%zu", owner->offset.line);
+        snprintf(number, CF_SMALLBUF, "%llu", (unsigned long long)owner->offset.line);
         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promise_linenumber", number, DATA_TYPE_STRING, "source=promise");
     }
 
@@ -1329,7 +1333,8 @@ char *EvalContextStackPath(const EvalContext *ctx)
             WriterWriteF(path, "/'%s'", frame->data.promise_iteration.owner->promiser);
             if (i == SeqLength(ctx->stack) - 1)
             {
-                WriterWriteF(path, "[%zd]", frame->data.promise_iteration.index);
+                WriterWriteF(path, "[%llu]",
+                             (unsigned long long)frame->data.promise_iteration.index);
             }
             break;
         }
@@ -2137,7 +2142,9 @@ static void LogPromiseContext(const EvalContext *ctx, const Promise *pp)
 
     if (PromiseGetBundle(pp)->source_path)
     {
-        WriterWriteF(w, " source path '%s' at line %zu", PromiseGetBundle(pp)->source_path, pp->offset.line);
+        WriterWriteF(w, " source path '%s' at line %llu",
+                     PromiseGetBundle(pp)->source_path,
+                     (unsigned long long)pp->offset.line);
     }
 
     switch (pp->promisee.type)

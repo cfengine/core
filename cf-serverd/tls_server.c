@@ -596,7 +596,7 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
             Log(LOG_LEVEL_INFO, "EXEC denied due to not allowed user: %s",
                 conn->username);
             RefuseAccess(conn, recvbuffer);
-            return false;
+            return true;
         }
 
         char arg0[PATH_MAX];
@@ -625,19 +625,19 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
         {
             Log(LOG_LEVEL_INFO, "EXEC denied due to ACL for file: %s", arg0);
             RefuseAccess(conn, recvbuffer);
-            return false;
+            return true;
         }
 
         if (!MatchClasses(ctx, conn))
         {
             Log(LOG_LEVEL_INFO, "EXEC denied due to failed class match");
             Terminate(conn->conn_info);
-            return false;
+            return true;
         }
 
         DoExec(ctx, conn, args);
         Terminate(conn->conn_info);
-        return false;
+        return true;
     }
     case PROTOCOL_COMMAND_VERSION:
 
@@ -689,7 +689,7 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
         {
             Log(LOG_LEVEL_INFO, "access denied to GET: %s", filename);
             RefuseAccess(conn, recvbuffer);
-            return false;
+            return true;
         }
 
         memset(sendbuffer, 0, sizeof(sendbuffer));
@@ -751,7 +751,7 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
         {
             Log(LOG_LEVEL_INFO, "access denied to OPENDIR: %s", filename);
             RefuseAccess(conn, recvbuffer);
-            return false;
+            return true;
         }
 
         CfOpenDirectory(conn, sendbuffer, filename);
@@ -798,7 +798,8 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
         ret = PreprocessRequestPath(filename, sizeof(filename) - 1);
         if (ret == (size_t) -1)
         {
-            goto protocol_error;
+            RefuseAccess(conn, recvbuffer);
+            return true;
         }
 
         if (IsDirReal(filename) == 1)
@@ -862,7 +863,7 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
         {
             Log(LOG_LEVEL_INFO, "access denied to variable: %s", var);
             RefuseAccess(conn, recvbuffer);
-            return false;
+            return true;
         }
 
         GetServerLiteral(ctx, conn, sendbuffer, recvbuffer, encrypted);
@@ -925,7 +926,7 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
                 "No allowed classes for remoteclassesmatching: %s",
                 client_regex);
             RefuseAccess(conn, recvbuffer);
-            return false;
+            return true;
         }
 
         ReplyServerContext(conn, encrypted, matched_classes);
@@ -948,7 +949,7 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
         {
             Log(LOG_LEVEL_INFO, "access denied to query: %s", query);
             RefuseAccess(conn, recvbuffer);
-            return false;
+            return true;
         }
 
         if (GetServerQuery(conn, recvbuffer, encrypted))

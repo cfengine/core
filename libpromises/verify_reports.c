@@ -130,9 +130,6 @@ static void ReportToFile(const char *logfile, const char *message)
 
 static bool PrintFile(Attributes a)
 {
-    char buffer[CF_BUFSIZE];
-    int lines = 0;
-
     if (a.report.filename == NULL)
     {
         Log(LOG_LEVEL_VERBOSE, "Printfile promise was incomplete, with no filename.");
@@ -146,25 +143,30 @@ static bool PrintFile(Attributes a)
         return false;
     }
 
-    while ((lines < a.report.numlines))
+    size_t line_size = CF_BUFSIZE;
+    char *line = xmalloc(line_size);
+
+    for (size_t i = 0; i < a.report.numlines; i++)
     {
-        if (fgets(buffer, sizeof(buffer), fp) == NULL)
+        if (CfReadLine(&line, &line_size, fp) == -1)
         {
             if (ferror(fp))
             {
-                UnexpectedError("Failed to read line from stream");
-                break;
+                Log(LOG_LEVEL_ERR, "Failed to read line from stream, (getline: %s)", GetErrorStr());
+                free(line);
+                return false;
             }
-            else /* feof */
+            else
             {
                 break;
             }
         }
-        Log(LOG_LEVEL_ERR, "R: %s", buffer);
-        lines++;
+
+        Log(LOG_LEVEL_ERR, "R: %s", line);
     }
 
     fclose(fp);
+    free(line);
 
     return true;
 }

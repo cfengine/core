@@ -1933,7 +1933,7 @@ static int EditLineByColumn(EvalContext *ctx, Rlist **columns, Attributes a,
         {
             for (i = 0; i < (a.column.select_column - count); i++)
             {
-                RlistAppendScalar(columns, xstrdup(""));
+                RlistAppendScalar(columns, "");
             }
 
             count = 0;

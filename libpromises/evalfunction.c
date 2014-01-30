@@ -3189,7 +3189,7 @@ static FnCallResult FnCallFindfiles(EvalContext *ctx, ARG_UNUSED const Policy *p
     {
         char *pattern = RlistScalarValue(arg);
 #ifdef __MINGW32__
-        RlistAppendScalarIdemp(&returnlist, xstrdup(pattern));
+        RlistAppendScalarIdemp(&returnlist, pattern);
 #else /* !__MINGW32__ */
         glob_t globbuf;
         if (0 == glob(pattern, 0, NULL, &globbuf))
@@ -3200,7 +3200,7 @@ static FnCallResult FnCallFindfiles(EvalContext *ctx, ARG_UNUSED const Policy *p
                 char fname[CF_BUFSIZE];
                 snprintf(fname, CF_BUFSIZE, "%s", found);
                 Log(LOG_LEVEL_VERBOSE, "%s pattern '%s' found match '%s'", fp->name, pattern, fname);
-                RlistAppendScalarIdemp(&returnlist, xstrdup(fname));
+                RlistAppendScalarIdemp(&returnlist, fname);
             }
 
             globfree(&globbuf);

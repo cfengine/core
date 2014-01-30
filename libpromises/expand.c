@@ -211,7 +211,7 @@ Rval ExpandDanglers(EvalContext *ctx, const char *ns, const char *scope, Rval rv
         {
             Rlist *result_list = RlistCopy(RvalRlistValue(rval));
             RlistFlatten(ctx, &result_list);
-            return RvalNew(result_list, RVAL_TYPE_LIST);
+            return (Rval) { result_list, RVAL_TYPE_LIST };
         }
         break;
 

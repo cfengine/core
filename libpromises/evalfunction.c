@@ -4060,7 +4060,8 @@ static FnCallResult FnCallFormat(EvalContext *ctx, ARG_UNUSED const Policy *poli
         BufferAppend(buf, format, (check - format));
         Seq *s = NULL;
 
-        while (check && (s = StringMatchCaptures("^(%%|%[^diouxXeEfFgGaAcsCSpnm%]*?[diouxXeEfFgGaAcsCSpnm])([^%]*)(.*)$", check)))
+        while (check &&
+               (s = StringMatchCaptures("^(%%|%[^diouxXeEfFgGaAcsCSpnm%]*?[diouxXeEfFgGaAcsCSpnm])([^%]*)(.*)$", check)))
         {
             {
                 if (SeqLength(s) >= 2)
@@ -4081,6 +4082,7 @@ static FnCallResult FnCallFormat(EvalContext *ctx, ARG_UNUSED const Policy *poli
                     {
                         Log(LOG_LEVEL_ERR, "format() didn't have enough parameters");
                         BufferDestroy(buf);
+                        SeqDestroy(s);
                         return FnFailure();
                     }
 
@@ -4098,6 +4100,7 @@ static FnCallResult FnCallFormat(EvalContext *ctx, ARG_UNUSED const Policy *poli
                                   bad_modifiers[b],
                                   format_piece);
                             BufferDestroy(buf);
+                            SeqDestroy(s);
                             return FnFailure();
                         }
                     }
@@ -4196,6 +4199,7 @@ static FnCallResult FnCallFormat(EvalContext *ctx, ARG_UNUSED const Policy *poli
                                 Log(LOG_LEVEL_VERBOSE, "format() with %%S specifier needs a data container or a list instead of '%s'.",
                                     varname);
                                 BufferDestroy(buf);
+                                SeqDestroy(s);
                                 return FnFailure();
                             }
                         }

@@ -94,11 +94,11 @@ PromiseResult FinishEditContext(EvalContext *ctx, EditContext *ec, Attributes a,
         if (ec && (!CompareToFile(ctx, ec->file_start, ec->filename, a, pp, &result)) && (ec->num_edits > 0))
         {
             cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, a, "Should edit file '%s' but only a warning promised", ec->filename);
-            return PROMISE_RESULT_WARN;
+            result = PROMISE_RESULT_WARN;
         }
         else
         {
-            return PROMISE_RESULT_NOOP;
+            result = PROMISE_RESULT_NOOP;
         }
     }
     else if (ec && (ec->num_edits > 0))
@@ -168,6 +168,7 @@ PromiseResult FinishEditContext(EvalContext *ctx, EditContext *ec, Attributes a,
     if (ec != NULL)
     {
         DeleteItemList(ec->file_start);
+        free(ec);
     }
 
     return result;

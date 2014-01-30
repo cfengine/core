@@ -277,7 +277,6 @@ void StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
     fd_set rset;
     int ret_val;
     CfLock thislock;
-    time_t last_policy_reload = 0;
     extern int COLLECT_WINDOW;
 
     struct sockaddr_storage cin;
@@ -343,19 +342,20 @@ void StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
         ActAsDaemon();
     }
 
+    /* Close sd on exec, needed for not passing the socket to cf-runagent
+     * spawned commands. */
+    fcntl(sd, F_SETFD, FD_CLOEXEC);
+
 #endif /* !__MINGW32__ */
 
     WritePID("cf-serverd.pid");
-
-/* Andrew Stribblehill <ads@debian.org> -- close sd on exec */
-#ifndef __MINGW32__
-    fcntl(sd, F_SETFD, FD_CLOEXEC);
-#endif
     CollectCallStart(COLLECT_INTERVAL);
+    time_t last_policy_reload = 0;
+
     while (!IsPendingTermination())
     {
-        /* Note that this loop logic is single threaded, but ACTIVE_THREADS
-           might still change in threads pertaining to service handling */
+        /* Note that this loop is executed from main thread only, but
+           ACTIVE_THREADS might still change from connectionthreads. */
 
         if (ThreadLock(cft_server_children))
         {

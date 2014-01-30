@@ -228,7 +228,71 @@ static const char *const VEXPORTS[] =
     [PLATFORM_CONTEXT_VMWARE] = "none",                     /* vmware */
 };
 
+static const char *const VETCPASSWD[] =
+{
+    [PLATFORM_CONTEXT_UNKNOWN] = "-",
+    [PLATFORM_CONTEXT_OPENVZ] = "/etc/passwd",           /* virt_host_vz_vzps */
+    [PLATFORM_CONTEXT_HP] = "",                          /* hpux */
+    [PLATFORM_CONTEXT_AIX] = "/etc/passwd",              /* aix */
+    [PLATFORM_CONTEXT_LINUX] = "/etc/passwd",            /* linux */
+    [PLATFORM_CONTEXT_SOLARIS] = "/etc/passwd",          /* solaris */
+    [PLATFORM_CONTEXT_FREEBSD] = "/etc/passwd",          /* freebsd */
+    [PLATFORM_CONTEXT_NETBSD] = "/etc/passwd",           /* netbsd */
+    [PLATFORM_CONTEXT_CRAYOS] = "/etc/passwd",           /* cray */
+    [PLATFORM_CONTEXT_WINDOWS_NT] = "",                  /* NT */
+    [PLATFORM_CONTEXT_SYSTEMV] = "",                     /* Unixware */
+    [PLATFORM_CONTEXT_OPENBSD] = "/etc/passwd",          /* openbsd */
+    [PLATFORM_CONTEXT_CFSCO] = "",                       /* sco */
+    [PLATFORM_CONTEXT_DARWIN] = "/etc/passwd",           /* darwin */
+    [PLATFORM_CONTEXT_QNX] = "/etc/passwd",              /* qnx */
+    [PLATFORM_CONTEXT_DRAGONFLY] = "/etc/passwd",        /* dragonfly */
+    [PLATFORM_CONTEXT_MINGW] = "",                       /* mingw */
+    [PLATFORM_CONTEXT_VMWARE] = "/etc/passwd",           /* vmware */
+};
 
+static const char *const VETCSHADOW[] =
+{
+    [PLATFORM_CONTEXT_UNKNOWN] = "-",
+    [PLATFORM_CONTEXT_OPENVZ] = "/etc/shadow",           /* virt_host_vz_vzps */
+    [PLATFORM_CONTEXT_HP] = "",                          /* hpux */
+    [PLATFORM_CONTEXT_AIX] = "/etc/security/passwd",     /* aix */
+    [PLATFORM_CONTEXT_LINUX] = "/etc/shadow",            /* linux */
+    [PLATFORM_CONTEXT_SOLARIS] = "/etc/shadow",          /* solaris */
+    [PLATFORM_CONTEXT_FREEBSD] = "/etc/master.passwd",   /* freebsd */
+    [PLATFORM_CONTEXT_NETBSD] = "/etc/passwd",           /* netbsd */
+    [PLATFORM_CONTEXT_CRAYOS] = "",                      /* cray */
+    [PLATFORM_CONTEXT_WINDOWS_NT] = "",                  /* NT */
+    [PLATFORM_CONTEXT_SYSTEMV] = "",                     /* Unixware */
+    [PLATFORM_CONTEXT_OPENBSD] = "/etc/master.passwd",   /* openbsd */
+    [PLATFORM_CONTEXT_CFSCO] = "",                       /* sco */
+    [PLATFORM_CONTEXT_DARWIN] = "/etc/master.passwd",    /* darwin */
+    [PLATFORM_CONTEXT_QNX] = "/etc/shadow",              /* qnx */
+    [PLATFORM_CONTEXT_DRAGONFLY] = "/etc/master.passwd", /* dragonfly */
+    [PLATFORM_CONTEXT_MINGW] = "",                       /* mingw */
+    [PLATFORM_CONTEXT_VMWARE] = "",                      /* vmware */
+};
+
+static const char *const VETCGROUP[] =
+{
+    [PLATFORM_CONTEXT_UNKNOWN] = "-",
+    [PLATFORM_CONTEXT_OPENVZ] = "/etc/group",            /* virt_host_vz_vzps */
+    [PLATFORM_CONTEXT_HP] = "",                          /* hpux */
+    [PLATFORM_CONTEXT_AIX] = "/etc/group",               /* aix */
+    [PLATFORM_CONTEXT_LINUX] = "/etc/group",             /* linux */
+    [PLATFORM_CONTEXT_SOLARIS] = "/etc/group",           /* solaris */
+    [PLATFORM_CONTEXT_FREEBSD] = "/etc/group",           /* freebsd */
+    [PLATFORM_CONTEXT_NETBSD] = "/etc/group",            /* netbsd */
+    [PLATFORM_CONTEXT_CRAYOS] = "",                      /* cray */
+    [PLATFORM_CONTEXT_WINDOWS_NT] = "",                  /* NT */
+    [PLATFORM_CONTEXT_SYSTEMV] = "",                     /* Unixware */
+    [PLATFORM_CONTEXT_OPENBSD] = "/etc/group",           /* openbsd */
+    [PLATFORM_CONTEXT_CFSCO] = "",                       /* sco */
+    [PLATFORM_CONTEXT_DARWIN] = "/etc/group",            /* darwin */
+    [PLATFORM_CONTEXT_QNX] = "/etc/group",               /* qnx */
+    [PLATFORM_CONTEXT_DRAGONFLY] = "/etc/group",         /* dragonfly */
+    [PLATFORM_CONTEXT_MINGW] = "",                       /* mingw */
+    [PLATFORM_CONTEXT_VMWARE] = "/etc/group",            /* vmware */
+};
 /*******************************************************************/
 
 void CalculateDomainName(const char *nodename, const char *dnsname, char *fqname, char *uqname, char *domain)
@@ -518,6 +582,9 @@ static void GetNameInfo3(EvalContext *ctx)
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "piddir", GetPidDir(), DATA_TYPE_STRING, "source=agent");
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "masterdir", GetMasterDir(), DATA_TYPE_STRING, "source=agent");
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "inputdir", GetInputDir(), DATA_TYPE_STRING, "source=agent");
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "passwd", VETCPASSWD[VSYSTEMHARDCLASS], DATA_TYPE_STRING, "source=agent");
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "shadow", VETCSHADOW[VSYSTEMHARDCLASS], DATA_TYPE_STRING, "source=agent");
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "group", VETCGROUP[VSYSTEMHARDCLASS], DATA_TYPE_STRING, "source=agent");
 
     snprintf(workbuf, CF_BUFSIZE, "%s%cbin", CFWORKDIR, FILE_SEPARATOR);
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "bindir", workbuf, DATA_TYPE_STRING, "source=agent");

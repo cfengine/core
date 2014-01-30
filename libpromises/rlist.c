@@ -1296,13 +1296,13 @@ JsonElement *RvalToJson(Rval rval)
 
 void RlistFlatten(EvalContext *ctx, Rlist **list)
 {
-    Rlist *prev = NULL;
-    for (Rlist *rp = *list; rp != NULL;)
+    Rlist *prev = NULL, *next;
+    for (Rlist *rp = *list; rp != NULL; rp = next)
     {
+        next = rp->next;
         if (rp->val.type != RVAL_TYPE_SCALAR)
         {
             prev = rp;
-            rp = rp->next;
             continue;
         }
 
@@ -1324,7 +1324,6 @@ void RlistFlatten(EvalContext *ctx, Rlist **list)
                     {
                     case RVAL_TYPE_LIST:
                         {
-                            Rlist *next = rp->next;
                             RlistDestroyEntry(list, rp);
 
                             for (const Rlist *srp = value; srp != NULL; srp = srp->next)
@@ -1344,8 +1343,6 @@ void RlistFlatten(EvalContext *ctx, Rlist **list)
 
                                 prev = nrp;
                             }
-
-                            rp = next;
                         }
                         continue;
 
@@ -1358,6 +1355,5 @@ void RlistFlatten(EvalContext *ctx, Rlist **list)
         }
 
         prev = rp;
-        rp = rp->next;
     }
 }

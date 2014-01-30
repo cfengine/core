@@ -1016,7 +1016,7 @@ static void OSClasses(EvalContext *ctx)
     else if (Xen_Hv_Check())
     {
         Log(LOG_LEVEL_VERBOSE, "This appears to be a xen hv system.");
-        EvalContextClassPutHard(ctx, "xen", "inventory,group=Virtaul host,source=agent");
+        EvalContextClassPutHard(ctx, "xen", "inventory,group=Virtual host,source=agent");
         EvalContextClassPutHard(ctx, "xen_domu_hv", "source=agent");
     }
 #endif
@@ -1190,7 +1190,7 @@ static void Linux_Oracle_VM_Server_Version(EvalContext *ctx)
 
     Log(LOG_LEVEL_VERBOSE, "This appears to be Oracle VM Server");
     EvalContextClassPutHard(ctx, "redhat", "inventory,group=none,source=agent");
-    EvalContextClassPutHard(ctx, "oraclevmserver", "inventory,group=Virtaul host,source=agent");
+    EvalContextClassPutHard(ctx, "oraclevmserver", "inventory,group=Virtual host,source=agent");
 
     if (!ReadLine(ORACLE_VM_SERVER_REL_FILENAME, relstring, sizeof(relstring)))
     {
@@ -2200,7 +2200,7 @@ static int VM_Version(EvalContext *ctx)
     int sufficient = 0;
 
     Log(LOG_LEVEL_VERBOSE, "This appears to be a VMware Server ESX/xSX system.");
-    EvalContextClassPutHard(ctx, "VMware", "inventory,group=Virtaul host,source=agent");
+    EvalContextClassPutHard(ctx, "VMware", "inventory,group=Virtual host,source=agent");
 
 /* VMware Server ESX >= 3 has version info in /proc */
     if (ReadLine("/proc/vmware/version", buffer, sizeof(buffer)))
@@ -2316,11 +2316,11 @@ static void OpenVZ_Detect(EvalContext *ctx)
     if (stat(OPENVZ_HOST_FILENAME, &statbuf) != -1)
     {
         Log(LOG_LEVEL_VERBOSE, "This appears to be an OpenVZ/Virtuozzo/Parallels Cloud Server host system.\n");
-        EvalContextClassPutHard(ctx, "virt_host_vz", "inventory,group=Virtaul host,source=agent");
+        EvalContextClassPutHard(ctx, "virt_host_vz", "inventory,group=Virtual host,source=agent");
         /* if the file /bin/vzps is there, it is safe to use the processes promise type */ 
         if (stat(OPENVZ_VZPS_FILE, &statbuf) != -1)
         {
-            EvalContextClassPutHard(ctx, "virt_host_vz_vzps", "inventory,group=Virtaul host,source=agent");
+            EvalContextClassPutHard(ctx, "virt_host_vz_vzps", "inventory,group=Virtual host,source=agent");
         }
         else
         {
@@ -2330,7 +2330,7 @@ static void OpenVZ_Detect(EvalContext *ctx)
     else if (stat(OPENVZ_GUEST_FILENAME, &statbuf) != -1)
     {
         Log(LOG_LEVEL_VERBOSE, "This appears to be an OpenVZ/Virtuozzo/Parallels Cloud Server guest system.\n");
-        EvalContextClassPutHard(ctx, "virt_guest_vz", "inventory,group=Virtaul host,source=agent");
+        EvalContextClassPutHard(ctx, "virt_guest_vz", "inventory,group=Virtual host,source=agent");
     }
 }
 

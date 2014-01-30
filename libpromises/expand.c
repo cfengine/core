@@ -44,11 +44,17 @@
 #include <verify_classes.h>
 
 
-static PromiseResult ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp, Rlist *lists, Rlist *containers,
-                               PromiseActuator *ActOnPromise, void *param);
-static void ExpandAndMapIteratorsFromScalar(EvalContext *ctx, const Bundle *bundle, char *string, size_t length, int level,
-                                            Rlist **scalars, Rlist **lists, Rlist **containers, Rlist **full_expansion);
-static void CopyLocalizedReferencesToBundleScope(EvalContext *ctx, const Bundle *bundle, const Rlist *ref_names);
+static PromiseResult ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp,
+                                        Rlist *lists, Rlist *containers,
+                                        PromiseActuator *ActOnPromise, void *param);
+static void ExpandAndMapIteratorsFromScalar(EvalContext *ctx, const Bundle *bundle,
+                                            char *string, size_t length, int level,
+                                            Rlist **scalars, Rlist **lists,
+                                            Rlist **containers,
+                                            Rlist **full_expansion);
+static void CopyLocalizedReferencesToBundleScope(EvalContext *ctx,
+                                                 const Bundle *bundle,
+                                                 const Rlist *ref_names);
 
 /*
 
@@ -108,7 +114,8 @@ since these cannot be mapped into "this" without some magic.
    
 **********************************************************************/
 
-PromiseResult ExpandPromise(EvalContext *ctx, const Promise *pp, PromiseActuator *ActOnPromise, void *param)
+PromiseResult ExpandPromise(EvalContext *ctx, const Promise *pp,
+                            PromiseActuator *ActOnPromise, void *param)
 {
     Rlist *lists = NULL;
     Rlist *scalars = NULL;
@@ -144,7 +151,9 @@ PromiseResult ExpandPromise(EvalContext *ctx, const Promise *pp, PromiseActuator
     return result;
 }
 
-static PromiseResult ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp, Rlist *lists, Rlist *containers, PromiseActuator *ActOnPromise, void *param)
+static PromiseResult ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp,
+                                        Rlist *lists, Rlist *containers,
+                                        PromiseActuator *ActOnPromise, void *param)
 {
     const char *handle = PromiseGetHandle(pp);
 
@@ -189,7 +198,9 @@ static PromiseResult ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp, Rli
 }
 
 
-Rval ExpandDanglers(EvalContext *ctx, const char *ns, const char *scope, Rval rval, const Promise *pp)
+Rval ExpandDanglers(EvalContext *ctx,
+                    const char *ns, const char *scope,
+                    Rval rval, const Promise *pp)
 {
     assert(ctx);
     assert(pp);
@@ -226,7 +237,8 @@ Rval ExpandDanglers(EvalContext *ctx, const char *ns, const char *scope, Rval rv
 
 /*********************************************************************/
 
-void MapIteratorsFromRval(EvalContext *ctx, const Bundle *bundle, Rval rval, Rlist **scalars, Rlist **lists, Rlist **containers)
+void MapIteratorsFromRval(EvalContext *ctx, const Bundle *bundle, Rval rval,
+                          Rlist **scalars, Rlist **lists, Rlist **containers)
 {
     assert(rval.item);
     if (rval.item == NULL)
@@ -268,7 +280,8 @@ void MapIteratorsFromRval(EvalContext *ctx, const Bundle *bundle, Rval rval, Rli
 
 /*********************************************************************/
 
-static void RlistConcatInto(Rlist **dest, const Rlist *src, const char *extension)
+static void RlistConcatInto(Rlist **dest,
+                            const Rlist *src, const char *extension)
 {
     assert(dest);
 
@@ -321,9 +334,13 @@ static void DeMangleVarRefString(char *ref_str, size_t len)
     }
 }
 
-static void ExpandAndMapIteratorsFromScalar(EvalContext *ctx, const Bundle *bundle, char *string, size_t length,
-                                            int level, Rlist **scalars, Rlist **lists,
-                                            Rlist **containers, Rlist **full_expansion)
+static void ExpandAndMapIteratorsFromScalar(EvalContext *ctx,
+                                            const Bundle *bundle,
+                                            char *string, size_t length,
+                                            int level,
+                                            Rlist **scalars, Rlist **lists,
+                                            Rlist **containers,
+                                            Rlist **full_expansion)
 {
     assert(string);
     if (!string)
@@ -497,7 +514,9 @@ static void ExpandAndMapIteratorsFromScalar(EvalContext *ctx, const Bundle *bund
 
 /*********************************************************************/
 
-Rlist *ExpandList(EvalContext *ctx, const char *ns, const char *scope, const Rlist *list, int expandnaked)
+Rlist *ExpandList(EvalContext *ctx,
+                  const char *ns, const char *scope,
+                  const Rlist *list, int expandnaked)
 {
     Rlist *start = NULL;
     Rval returnval;
@@ -549,7 +568,9 @@ Rlist *ExpandList(EvalContext *ctx, const char *ns, const char *scope, const Rli
 
 /*********************************************************************/
 
-Rval ExpandPrivateRval(EvalContext *ctx, const char *ns, const char *scope, const void *rval_item, RvalType rval_type)
+Rval ExpandPrivateRval(EvalContext *ctx,
+                       const char *ns, const char *scope,
+                       const void *rval_item, RvalType rval_type)
 {
     Rval returnval;
     returnval.item = NULL;
@@ -588,7 +609,9 @@ Rval ExpandPrivateRval(EvalContext *ctx, const char *ns, const char *scope, cons
 
 /*********************************************************************/
 
-Rval ExpandBundleReference(EvalContext *ctx, const char *ns, const char *scope, Rval rval)
+Rval ExpandBundleReference(EvalContext *ctx,
+                           const char *ns, const char *scope,
+                           Rval rval)
 {
     // Allocates new memory for the copy
     switch (rval.type)
@@ -614,7 +637,9 @@ Rval ExpandBundleReference(EvalContext *ctx, const char *ns, const char *scope, 
 }
 
 
-bool ExpandScalar(const EvalContext *ctx, const char *ns, const char *scope, const char *string, Buffer *out)
+bool ExpandScalar(const EvalContext *ctx,
+                  const char *ns, const char *scope, const char *string,
+                  Buffer *out)
 {
     assert(string);
 
@@ -775,7 +800,8 @@ bool ExpandScalar(const EvalContext *ctx, const char *ns, const char *scope, con
 /*********************************************************************/
 
 
-Rval EvaluateFinalRval(EvalContext *ctx, const Policy *policy, const char *ns, const char *scope,
+Rval EvaluateFinalRval(EvalContext *ctx, const Policy *policy,
+                       const char *ns, const char *scope,
                        Rval rval, bool forcelist, const Promise *pp)
 {
     assert(ctx);
@@ -883,7 +909,9 @@ Rval EvaluateFinalRval(EvalContext *ctx, const Policy *policy, const char *ns, c
 
 /*********************************************************************/
 
-static void CopyLocalizedReferencesToBundleScope(EvalContext *ctx, const Bundle *bundle, const Rlist *ref_names)
+static void CopyLocalizedReferencesToBundleScope(EvalContext *ctx,
+                                                 const Bundle *bundle,
+                                                 const Rlist *ref_names)
 {
     for (const Rlist *rp = ref_names; rp != NULL; rp = rp->next)
     {
@@ -1004,7 +1032,8 @@ void BundleResolve(EvalContext *ctx, const Bundle *bundle)
 
 }
 
-static void ResolveControlBody(EvalContext *ctx, GenericAgentConfig *config, const Body *control_body)
+static void ResolveControlBody(EvalContext *ctx, GenericAgentConfig *config,
+                               const Body *control_body)
 {
     const ConstraintSyntax *body_syntax = NULL;
     Rval returnval;
@@ -1109,7 +1138,8 @@ static void ResolveControlBody(EvalContext *ctx, GenericAgentConfig *config, con
     EvalContextStackPopFrame(ctx);
 }
 
-void PolicyResolve(EvalContext *ctx, const Policy *policy, GenericAgentConfig *config)
+void PolicyResolve(EvalContext *ctx, const Policy *policy,
+                   GenericAgentConfig *config)
 {
     for (size_t i = 0; i < SeqLength(policy->bundles); i++)
     {
@@ -1316,7 +1346,8 @@ bool IsVarList(const char *var)
     return true;
 }
 
-PromiseResult CommonEvalPromise(EvalContext *ctx, const Promise *pp, ARG_UNUSED void *param)
+PromiseResult CommonEvalPromise(EvalContext *ctx, const Promise *pp,
+                                ARG_UNUSED void *param)
 {
     assert(param == NULL);
 

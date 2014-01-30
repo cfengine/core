@@ -807,13 +807,19 @@ Rval EvaluateFinalRval(EvalContext *ctx, const Policy *policy,
     assert(ctx);
     assert(policy);
 
-    Rval returnval, newret;
-    if ((rval.type == RVAL_TYPE_SCALAR) && IsNakedVar(rval.item, '@'))        /* Treat lists specially here */
+    Rval returnval;
+    if (rval.type == RVAL_TYPE_SCALAR &&
+        IsNakedVar(rval.item, '@'))
     {
+        /* Treat lists specially here */
         char naked[CF_MAXVARSIZE];
         GetNaked(naked, rval.item);
 
-        if (!IsExpandable(naked))
+        if (IsExpandable(naked))
+        {
+            returnval = ExpandPrivateRval(ctx, NULL, "this", rval.item, rval.type);
+        }
+        else
         {
             VarRef *ref = VarRefParseFromScope(naked, scope);
             DataType value_type = CF_DATA_TYPE_NONE;
@@ -831,28 +837,18 @@ Rval EvaluateFinalRval(EvalContext *ctx, const Policy *policy,
 
             VarRefDestroy(ref);
         }
-        else
-        {
-            returnval = ExpandPrivateRval(ctx, NULL, "this", rval.item, rval.type);
-        }
+    }
+    else if (forcelist) /* We are replacing scalar @(name) with list */
+    {
+        returnval = ExpandPrivateRval(ctx, ns, scope, rval.item, rval.type);
+    }
+    else if (FnCallIsBuiltIn(rval))
+    {
+        returnval = RvalCopy(rval);
     }
     else
     {
-        if (forcelist)          /* We are replacing scalar @(name) with list */
-        {
-            returnval = ExpandPrivateRval(ctx, ns, scope, rval.item, rval.type);
-        }
-        else
-        {
-            if (FnCallIsBuiltIn(rval))
-            {
-                returnval = RvalCopy(rval);
-            }
-            else
-            {
-                returnval = ExpandPrivateRval(ctx, NULL, "this", rval.item, rval.type);
-            }
-        }
+        returnval = ExpandPrivateRval(ctx, NULL, "this", rval.item, rval.type);
     }
 
     switch (returnval.type)
@@ -864,28 +860,29 @@ Rval EvaluateFinalRval(EvalContext *ctx, const Policy *policy,
     case RVAL_TYPE_LIST:
         for (Rlist *rp = RvalRlistValue(returnval); rp; rp = rp->next)
         {
-            if (rp->val.type == RVAL_TYPE_FNCALL)
+            switch (rp->val.type)
+            {
+            case RVAL_TYPE_FNCALL:
             {
                 FnCall *fp = RlistFnCallValue(rp);
-                FnCallResult res = FnCallEvaluate(ctx, policy, fp, pp);
-
+                rp->val = FnCallEvaluate(ctx, policy, fp, pp).rval;
                 FnCallDestroy(fp);
-                rp->val = res.rval;
+                break;
             }
-            else
-            {
-                if (EvalContextStackCurrentPromise(ctx))
+            case RVAL_TYPE_SCALAR:
+                if (EvalContextStackCurrentPromise(ctx) &&
+                    IsCf3VarString(RlistScalarValue(rp)))
                 {
-                    if (IsCf3VarString(RlistScalarValue(rp)))
-                    {
-                        newret = ExpandPrivateRval(ctx, NULL, "this", rp->val.item, rp->val.type);
-                        free(rp->val.item);
-                        rp->val.item = newret.item;
-                    }
+                    void *prior = rp->val.item;
+                    rp->val = ExpandPrivateRval(ctx, NULL, "this",
+                                                prior, RVAL_TYPE_SCALAR);
+                    free(prior);
                 }
+                /* else: returnval unchanged. */
+                break;
+            default:
+                assert(!"Bad type for entry in Rlist");
             }
-
-            /* returnval unchanged */
         }
         break;
 
@@ -899,6 +896,7 @@ Rval EvaluateFinalRval(EvalContext *ctx, const Policy *policy,
         break;
 
     default:
+        assert(returnval.item == NULL); /* else we're leaking it */
         returnval.item = NULL;
         returnval.type = RVAL_TYPE_NOPROMISEE;
         break;

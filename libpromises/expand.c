@@ -514,23 +514,17 @@ static void ExpandAndMapIteratorsFromScalar(EvalContext *ctx,
 
 /*********************************************************************/
 
-Rlist *ExpandList(EvalContext *ctx,
-                  const char *ns, const char *scope,
-                  const Rlist *list, int expandnaked)
+static Rval ExpandListEntry(EvalContext *ctx,
+                            const char *ns, const char *scope,
+                            int expandnaked, Rval entry)
 {
-    Rlist *start = NULL;
-    Rval returnval;
-
-    for (const Rlist *rp = list; rp != NULL; rp = rp->next)
+    if (entry.type == RVAL_TYPE_SCALAR &&
+        IsNakedVar(entry.item, '@'))
     {
-        if (!expandnaked && (rp->val.type == RVAL_TYPE_SCALAR) && IsNakedVar(RlistScalarValue(rp), '@'))
-        {
-            returnval = RvalNew(RlistScalarValue(rp), RVAL_TYPE_SCALAR);
-        }
-        else if ((rp->val.type == RVAL_TYPE_SCALAR) && IsNakedVar(RlistScalarValue(rp), '@'))
+        if (expandnaked)
         {
             char naked[CF_MAXVARSIZE];
-            GetNaked(naked, RlistScalarValue(rp));
+            GetNaked(naked, entry.item);
 
             if (!IsExpandable(naked))
             {
@@ -538,27 +532,33 @@ Rlist *ExpandList(EvalContext *ctx,
 
                 DataType value_type = CF_DATA_TYPE_NONE;
                 const void *value = EvalContextVariableGet(ctx, ref, &value_type);
+                VarRefDestroy(ref);
+
                 if (value)
                 {
-                    returnval = ExpandPrivateRval(ctx, ns, scope, value, DataTypeToRvalType(value_type));
+                    return ExpandPrivateRval(ctx, ns, scope, value,
+                                             DataTypeToRvalType(value_type));
                 }
-                else
-                {
-                    returnval = ExpandPrivateRval(ctx, ns, scope, rp->val.item, rp->val.type);
-                }
-
-                VarRefDestroy(ref);
-            }
-            else
-            {
-                returnval = ExpandPrivateRval(ctx, ns, scope, rp->val.item, rp->val.type);
             }
         }
         else
         {
-            returnval = ExpandPrivateRval(ctx, ns, scope, rp->val.item, rp->val.type);
+            return RvalNew(entry.item, RVAL_TYPE_SCALAR);
         }
+    }
 
+    return ExpandPrivateRval(ctx, ns, scope, entry.item, entry.type);
+}
+
+Rlist *ExpandList(EvalContext *ctx,
+                  const char *ns, const char *scope,
+                  const Rlist *list, int expandnaked)
+{
+    Rlist *start = NULL;
+
+    for (const Rlist *rp = list; rp != NULL; rp = rp->next)
+    {
+        Rval returnval = ExpandListEntry(ctx, ns, scope, expandnaked, rp->val);
         RlistAppend(&start, returnval.item, returnval.type);
         RvalDestroy(returnval);
     }

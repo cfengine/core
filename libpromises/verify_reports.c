@@ -118,7 +118,9 @@ PromiseResult VerifyReportPromise(EvalContext *ctx, const Promise *pp)
 static void ReportToLog(const char *message)
 {
     fprintf(stdout, "R: %s\n", message);
+#ifndef __MINGW32__
     syslog(LOG_NOTICE, "R: %s", message);
+#endif
 }
 
 static void ReportToFile(const char *logfile, const char *message)

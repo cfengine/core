@@ -96,7 +96,7 @@ static int PrependPatchItem(EvalContext *ctx, PackageItem ** list, char *item, P
 static int PrependMultiLinePackageItem(EvalContext *ctx, PackageItem ** list, char *item, int reset, const char *default_arch, Attributes a, const Promise *pp);
 static int PrependListPackageItem(EvalContext *ctx, PackageItem ** list, char *item, const char *default_arch, Attributes a, const Promise *pp);
 
-static PackageManager *NewPackageManager(PackageManager **lists, char *mgr, PackageAction pa, PackageActionPolicy x);
+static PackageManager *GetPackageManager(PackageManager **lists, char *mgr, PackageAction pa, PackageActionPolicy x);
 static void DeletePackageManagers(PackageManager *newlist);
 
 static char *PrefixLocalRepository(Rlist *repositories, char *package);
@@ -220,7 +220,7 @@ static int PackageSanityCheck(EvalContext *ctx, Attributes a, const Promise *pp)
              "You must supply a method for determining the name of existing packages e.g. use the standard library generic package_method");
         return false;
     }
-    
+
     if (a.packages.package_list_version_regex == NULL)
     {
         cfPS_HELPER_0ARG(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a,
@@ -438,7 +438,7 @@ static bool PackageListInstalledFromCommand(EvalContext *ctx, PackageItem **inst
     }
 
     FILE *fin;
-    
+
     if (a.packages.package_commands_useshell)
     {
         if ((fin = cf_popen_sh(a.packages.package_list_command, "r")) == NULL)
@@ -496,7 +496,7 @@ static bool PackageListInstalledFromCommand(EvalContext *ctx, PackageItem **inst
             {
                 continue;
             }
-            
+
             if (!PrependListPackageItem(ctx, installed_list, buf, default_arch, a, pp))
             {
                 Log(LOG_LEVEL_VERBOSE, "Package line '%s' did not match one of the package_list_(name|version|arch)_regex patterns", buf);
@@ -505,12 +505,12 @@ static bool PackageListInstalledFromCommand(EvalContext *ctx, PackageItem **inst
 
         }
     }
-    
+
     if (a.packages.package_multiline_start)
     {
         PrependMultiLinePackageItem(ctx, installed_list, buf, reset, default_arch, a, pp);
     }
-    
+
     free(buf);
     return cf_pclose(fin) == 0;
 }
@@ -636,7 +636,7 @@ static PackageItem *GetCachedPackageList(EvalContext *ctx, PackageManager *manag
 static int VerifyInstalledPackages(EvalContext *ctx, PackageManager **all_mgrs, const char *default_arch,
                                    Attributes a, const Promise *pp, PromiseResult *result)
 {
-    PackageManager *manager = NewPackageManager(all_mgrs, a.packages.package_list_command, PACKAGE_ACTION_NONE, PACKAGE_ACTION_POLICY_NONE);
+    PackageManager *manager = GetPackageManager(all_mgrs, a.packages.package_list_command, PACKAGE_ACTION_NONE, PACKAGE_ACTION_POLICY_NONE);
 
     if (manager == NULL)
     {
@@ -687,7 +687,6 @@ static int VerifyInstalledPackages(EvalContext *ctx, PackageManager **all_mgrs, 
             return false;
         }
     }
-    
 #endif /* !__MINGW32__ */
 
     ReportSoftware(INSTALLED_PACKAGE_LISTS);
@@ -941,7 +940,7 @@ static PromiseResult AddPackageToSchedule(EvalContext *ctx, const Attributes *a,
         return PROMISE_RESULT_WARN;
 
     case cfa_fix:
-        manager = NewPackageManager(&PACKAGE_SCHEDULE, mgr, pa, a->packages.package_changes);
+        manager = GetPackageManager(&PACKAGE_SCHEDULE, mgr, pa, a->packages.package_changes);
         PrependPackageItem(ctx, &(manager->pack_list), name, version, arch, pp);
         return PROMISE_RESULT_CHANGE;
 
@@ -966,7 +965,7 @@ static PromiseResult AddPatchToSchedule(EvalContext *ctx, const Attributes *a, c
 
     case cfa_fix:
 
-        manager = NewPackageManager(&PACKAGE_SCHEDULE, mgr, pa, a->packages.package_changes);
+        manager = GetPackageManager(&PACKAGE_SCHEDULE, mgr, pa, a->packages.package_changes);
         PrependPackageItem(ctx, &(manager->patch_list), name, version, arch, pp);
         return PROMISE_RESULT_CHANGE;
 
@@ -2344,7 +2343,8 @@ void CleanScheduledPackages(void)
 
 /** Utils **/
 
-static PackageManager *NewPackageManager(PackageManager **lists, char *mgr, PackageAction pa,
+static PackageManager *GetPackageManager(PackageManager **lists, char *mgr,
+                                         PackageAction pa,
                                          PackageActionPolicy policy)
 {
     PackageManager *np;

@@ -133,9 +133,7 @@ bool FnCallIsBuiltIn(Rval rval)
 
 FnCall *FnCallNew(const char *name, const Rlist *args)
 {
-    FnCall *fp;
-
-    fp = xmalloc(sizeof(FnCall));
+    FnCall *fp = xmalloc(sizeof(FnCall));
 
     fp->name = xstrdup(name);
     fp->args = RlistCopy(args);
@@ -147,7 +145,7 @@ FnCall *FnCallNew(const char *name, const Rlist *args)
 
 FnCall *FnCallCopy(const FnCall *f)
 {
-    return FnCallNew(f->name, RlistCopy(f->args));
+    return FnCallNew(f->name, f->args);
 }
 
 /*******************************************************************/

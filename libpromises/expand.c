@@ -576,7 +576,7 @@ Rval ExpandPrivateRval(EvalContext *ctx, const char *ns, const char *scope, cons
         break;
 
     case RVAL_TYPE_CONTAINER:
-        returnval = RvalNew(JsonCopy(rval_item), RVAL_TYPE_CONTAINER);
+        returnval = RvalNew(rval_item, RVAL_TYPE_CONTAINER);
         break;
 
     case RVAL_TYPE_NOPROMISEE:

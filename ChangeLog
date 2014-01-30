@@ -3,44 +3,43 @@
         Changes:
         - TLS authentication and fully encrypted network protocol. Changes
           specific to the new type of connections:
-            - There is the choice of switching to a new networking protocol, which
-              uses TLS for authentication, after which all dialog happens encrypted
-              within the established TLS session. The hub is still able to speak
-              the legacy protocol with old agents.
-            - For the connections using the new protocol, "admit" and "deny"
+            - The new networking protocol uses TLS for authentication, after
+              which all dialog is encrypted within the established TLS session.
+              cf-serverd is still able to speak the legacy protocol with old agents.
+            - For connections using the new protocol, "admit" and "deny"
               constraints in bundle server access_rules are being phased out,
               preferred constraints are now "admit_ips", "admit_hostnames",
               "admit_keys". Regular expressions are not allowed then, only CIDR
               notation for "admit_ips", exact "SHA=..." strings for "admit_keys",
               and exact hostnames (e.g. "cfengine.com") or subdomains (starting
               with dot, e.g. ".cfengine.com") for admit_hostnames.
+            - The 'skipverify' option in body server control is deprecated and
+              only left for compatibility; it does nothing
+            - cf-serverd does not hang up the connection if some request fails,
+              so that the client can add more requests.
             - For the connections using the new protocol, all of the paths in
               bundle server access_rules now differentiate between a directory and
               a file using the trailing slash. If the path exists then this is
               auto-detected and trailing slash appended automatically. You have to
               append a trailing slash manually to an inexistent or symbolic path
               (e.g.  "/path/to/$(connection.ip)/") to force recursive access.
-            - The 'skipverify' option in body server control is deprecated and
-              only left for compatibility; it does nothing
+        - Enable source file in agent copy_from promises to be a relative path.
+        - #TODO# Changes to logging output
+            - add process name and pid in syslog message (GitHub #789)
             - cf-serverd logging levels are now more standardised:
                   - INFO logs only failures
                   - VERBOSE logs successful requests as well
                   - DEBUG logs actual protocol traffic.
-            - cf-serverd does not hang up the connection if some request fails,
-              so that the client can add more requests.
-        - Enable source file in agent copy_from promises to be a relative path.
-        - #TODO# Changes to logging output
-            - add process name and pid in syslog message (GitHub #789)
+            - cf-serverd now logs the relevant client IP address on each message.
+            - Logging contexts to local database (cf_classes.tcdb) has been deprecated.
         - process_results default to AND'ing of set attributes if not specified (Redmine #3224)
         - interface is now canonified in sys.hardware_mac[interface] to align with sys.ipv4[interface] (Redmine #3418)
 
-        - Logging contexts to local database (cf_classes.tcdb) has been deprecated.
         - Linux flavor "SUSE" now correctly spelled with all uppercase in variables and class names
         (Redmine #3734).
         - $(this.promise_filename) and $(..._dirname) variables are now absolute paths. (Redmine #3839)
 
         New features:
-        - cf-serverd now logs the relevant client IP address on each message.
         - New promise type "users" for managing local user accounts.
         - New in 'bundle server access_rules'
             - Constraints "admit_ips", "admit_hostnames", "admit_keys"

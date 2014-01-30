@@ -315,8 +315,9 @@ static void *HandleConnection(ServerConnectionState *conn)
 
     /* Set logging prefix to be the IP address for all of thread's lifetime. */
 
-    /* Should be valid for all lifetime of the thread. Just make sure that
-     * after calling DeleteConn(), you exit right away. */
+    /* This stack-allocated struct should be valid for all the lifetime of the
+     * thread. Just make sure that after calling DeleteConn() (which frees
+     * ipaddr), you exit right away. */
     LoggingPrivContext log_ctx = {
         .log_hook = LogHook,
         .param = conn->ipaddr
@@ -408,8 +409,7 @@ static void *HandleConnection(ServerConnectionState *conn)
                         ConnectionInfoProtocolVersion(conn->conn_info));
     }
 
-    Log(LOG_LEVEL_INFO, "Connection closed, terminating thread",
-        conn->ipaddr);
+    Log(LOG_LEVEL_INFO, "Connection closed, terminating thread");
 
     if (!ThreadLock(cft_server_children))
     {

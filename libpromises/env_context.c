@@ -1183,8 +1183,8 @@ char *EvalContextStackPath(const EvalContext *ctx)
         case STACK_FRAME_TYPE_PROMISE_ITERATION:
             WriterWriteF(path, "/%s", frame->data.promise.owner->parent_promise_type->name);
             /* check if `promiser` contains a new line (may happen for "insert_lines") */
-            const char *promiser = frame->data.promise.owner->promiser;
-            char *nl = strchr(promiser, '\n');
+            const char *const promiser = frame->data.promise.owner->promiser;
+            const char *const nl = strchr(promiser, '\n');
             if (NULL == nl)
             {
                 WriterWriteF(path, "/'%s'", promiser);
@@ -1192,34 +1192,20 @@ char *EvalContextStackPath(const EvalContext *ctx)
             else
             {
                 /* `promiser` contains a newline: abbreviate it by taking the first and last few characters */
-                const int MAX_LEADING = 18;
-                const int MAX_TRAILING = 18;
-                const char *sep = "...";
-                char abbr[MAX_LEADING + MAX_TRAILING + strlen(sep) + 1];
-
-                const int first_line_len = nl - promiser + 1;
-
-                char *last_nl = strrchr(promiser, '\n');
-                const int last_line_len = strlen(promiser) - (last_nl - promiser);
-
-                abbr[0] = '\0';
-                if (first_line_len > MAX_LEADING)
+                const int MAX_FRAGMENT = 19;
+                static const char sep[] = "...";
+                char abbr[sizeof(sep) + 2 * MAX_FRAGMENT];
+                const int head = (nl > promiser + MAX_FRAGMENT) ? MAX_FRAGMENT : (nl - promiser);
+                const char * last_line = strrchr(promiser, '\n') + 1;
+                assert(last_line); /* not NULL, we know we have at least one '\n' */
+                const int tail = strlen(last_line);
+                if (tail > MAX_FRAGMENT)
                 {
-                    strncat(abbr, promiser, MAX_LEADING+1);
+                    last_line += tail - MAX_FRAGMENT;
                 }
-                else
-                {
-                    strncat(abbr, promiser, first_line_len-1);
-                }
-                strcat(abbr, sep);
-                if (last_line_len > MAX_TRAILING)
-                {
-                    strcat(abbr, promiser + strlen(promiser) - MAX_TRAILING);
-                }
-                else
-                {
-                    strcat(abbr, last_nl + 1);
-                }
+                memcpy(abbr, promiser, head);
+                strcpy(abbr + head, sep);
+                strcat(abbr, last_line);
                 WriterWriteF(path, "/'%s'", abbr);
             }
             break;

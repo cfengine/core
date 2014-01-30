@@ -91,9 +91,13 @@ PromiseResult FinishEditContext(EvalContext *ctx, EditContext *ec, Attributes a,
     PromiseResult result = PROMISE_RESULT_NOOP;
     if (DONTDO || (a.transaction.action == cfa_warn))
     {
-        if (ec && (!CompareToFile(ctx, ec->file_start, ec->filename, a, pp, &result)) && (ec->num_edits > 0))
+        if (ec &&
+            !CompareToFile(ctx, ec->file_start, ec->filename, a, pp, &result) &&
+            ec->num_edits > 0)
         {
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, a, "Should edit file '%s' but only a warning promised", ec->filename);
+            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, a,
+                 "Should edit file '%s' but only a warning promised",
+                 ec->filename);
             result = PROMISE_RESULT_WARN;
         }
         else
@@ -109,21 +113,21 @@ PromiseResult FinishEditContext(EvalContext *ctx, EditContext *ec, Attributes a,
             {
                 if (ec)
                 {
-                    cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "No edit changes to file '%s' need saving", ec->filename);
+                    cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a,
+                         "No edit changes to file '%s' need saving", ec->filename);
                 }
+            }
+            else if (SaveItemListAsFile(ec->file_start, ec->filename, a))
+            {
+                cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a,
+                     "Edit file '%s'", ec->filename);
+                result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
             }
             else
             {
-                if (SaveItemListAsFile(ec->file_start, ec->filename, a))
-                {
-                    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "Edit file '%s'", ec->filename);
-                    result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
-                }
-                else
-                {
-                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Unable to save file '%s' after editing", ec->filename);
-                    result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
-                }
+                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a,
+                     "Unable to save file '%s' after editing", ec->filename);
+                result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
             }
         }
 
@@ -134,35 +138,34 @@ PromiseResult FinishEditContext(EvalContext *ctx, EditContext *ec, Attributes a,
             {
                 if (ec)
                 {
-                    cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "No edit changes to xml file '%s' need saving", ec->filename);
+                    cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a,
+                         "No edit changes to xml file '%s' need saving", ec->filename);
                 }
+            }
+            else if (SaveXmlDocAsFile(ec->xmldoc, ec->filename, a))
+            {
+                cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a,
+                     "Edited xml file '%s'", ec->filename);
+                result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
             }
             else
             {
-                if (SaveXmlDocAsFile(ec->xmldoc, ec->filename, a))
-                {
-                    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "Edited xml file '%s'", ec->filename);
-                    result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
-                }
-                else
-                {
-                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Failed to edit XML file '%s'", ec->filename);
-                    result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
-                }
+                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a,
+                     "Failed to edit XML file '%s'", ec->filename);
+                result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
             }
             xmlFreeDoc(ec->xmldoc);
 #else
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Cannot edit XML files without LIBXML2");
+            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a,
+                 "Cannot edit XML files without LIBXML2");
             result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
 #endif
         }
     }
-    else
+    else if (ec)
     {
-        if (ec)
-        {
-            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "No edit changes to file '%s' need saving", ec->filename);
-        }
+        cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a,
+             "No edit changes to file '%s' need saving", ec->filename);
     }
 
     if (ec != NULL)

@@ -227,6 +227,13 @@ void Summarize()
         Log(LOG_LEVEL_VERBOSE, "IP '%s'", ip->name);
     }
 
+    Log(LOG_LEVEL_VERBOSE, "Host IPs allowed legacy connections:");
+
+    for (ip = SV.allowlegacyconnects; ip != NULL; ip = ip->next)
+    {
+        Log(LOG_LEVEL_VERBOSE, "IP '%s'", ip->name);
+    }
+
     Log(LOG_LEVEL_VERBOSE, "Users from whom we accept connections:");
 
     for (ip = SV.allowuserlist; ip != NULL; ip = ip->next)
@@ -443,6 +450,21 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericA
                     if (!IsItemIn(SV.trustkeylist, RlistScalarValue(rp)))
                     {
                         AppendItem(&SV.trustkeylist, RlistScalarValue(rp), cp->classes);
+                    }
+                }
+
+                continue;
+            }
+
+            if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_ALLOWLEGACYCONNECTS].lval) == 0)
+            {
+                Log(LOG_LEVEL_VERBOSE, "Setting allowing legacy connections from ...");
+
+                for (const Rlist *rp = value; rp != NULL; rp = rp->next)
+                {
+                    if (!IsItemIn(SV.allowlegacyconnects, RlistScalarValue(rp)))
+                    {
+                        AppendItem(&SV.allowlegacyconnects, RlistScalarValue(rp), cp->classes);
                     }
                 }
 

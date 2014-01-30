@@ -368,18 +368,9 @@ static void *HandleConnection(ServerConnectionState *conn)
         }
     }
 
-    switch (ConnectionInfoProtocolVersion(conn->conn_info))
-    {
-
-    case CF_PROTOCOL_CLASSIC:
-    {
-        while (BusyWithClassicConnection(conn->ctx, conn))
-        {
-        }
-        break;
-    }
-
-    case CF_PROTOCOL_TLS:
+    /* =========================  MAIN LOOPS  ========================= */
+    ProtocolVersion protocol_version = ConnectionInfoProtocolVersion(conn->conn_info);
+    if (protocol_version == CF_PROTOCOL_TLS)
     {
         ret = ServerTLSSessionEstablish(conn);
         if (ret == -1)
@@ -391,13 +382,31 @@ static void *HandleConnection(ServerConnectionState *conn)
         while (BusyWithNewProtocol(conn->ctx, conn))
         {
         }
-        break;
     }
+    else if (protocol_version == CF_PROTOCOL_CLASSIC)
+    {
+        /* This connection is legacy protocol. Do we allow it? */
+        if (!IsMatchItemIn(SV.allowlegacyconnects, MapAddress(conn->ipaddr)))
+        {
+            Log(LOG_LEVEL_INFO,
+                "Connection is not using latest protocol, denying");
+            DeleteConn(conn);
+            return NULL;
+        }
 
-    default:
+        while (BusyWithClassicConnection(conn->ctx, conn))
+        {
+        }
+    }
+    else
+    {
         UnexpectedError("HandleConnection: ProtocolVersion %d!",
                         ConnectionInfoProtocolVersion(conn->conn_info));
+        DeleteConn(conn);
+        return NULL;
     }
+    /* ============================================================ */
+
 
     Log(LOG_LEVEL_INFO, "Connection closed, terminating thread");
 

@@ -64,6 +64,7 @@ typedef struct
     Item *allowuserlist;                              /* "allowusers" */
     Item *multiconnlist;                              /* "allowallconnects" */
     Item *trustkeylist;                               /* "trustkeysfrom" */
+    Item *allowlegacyconnects;
     char *allowciphers;
 
     /* ACL for resource_type "path". */

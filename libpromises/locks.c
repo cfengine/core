@@ -864,14 +864,7 @@ void PurgeLocks(void)
 
     memset(&entry, 0, sizeof(entry));
 
-#ifdef LMDB
-    unsigned char ohash[EVP_MAX_MD_SIZE*2 + 1];
-    GenerateMd5Hash("lock_horizon", ohash);
-
-    if (ReadDB(dbp, ohash, &entry, sizeof(entry)))
-#else
     if (ReadDB(dbp, "lock_horizon", &entry, sizeof(entry)))
-#endif
     {
         if (now - entry.time < SECONDS_PER_WEEK * 4)
         {

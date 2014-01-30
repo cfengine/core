@@ -408,7 +408,7 @@ static void *HandleConnection(ServerConnectionState *conn)
                         ConnectionInfoProtocolVersion(conn->conn_info));
     }
 
-    Log(LOG_LEVEL_INFO, "Connection closed, terminating thread",
+    Log(LOG_LEVEL_INFO, "%s: Connection closed, terminating thread",
         conn->ipaddr);
 
     if (!ThreadLock(cft_server_children))

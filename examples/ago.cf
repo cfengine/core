@@ -61,6 +61,6 @@ body process_count anyprocs
 ###############################################################################
 #+begin_src example_output
 #@ ```
-#@ 2013-12-20T13:44:28-0500   notice: /default/testbundle: R: Found processes out of range
+#@ R: Found processes out of range
 #@ ```
 #+end_src

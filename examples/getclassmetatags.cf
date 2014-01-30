@@ -42,7 +42,7 @@ bundle agent example
 ###############################################################################
 #+begin_src example_output
 #@ ```
-#@ 2014-01-23T12:07:59-0500   notice: /default/example: R: Found tags: source=promise
-#@ 2014-01-23T12:07:59-0500   notice: /default/example: R: Found tags: mytag
+#@ R: Found tags: source=promise
+#@ R: Found tags: mytag
 #@ ```
 #+end_src

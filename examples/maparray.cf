@@ -42,9 +42,9 @@ bundle agent run
 ###############################################################################
 #+begin_src example_output
 #@ ```
-#@ 2013-12-20T13:44:31-0500   notice: /default/run: R: mapped array: key='1', value='2'
-#@ 2013-12-20T13:44:31-0500   notice: /default/run: R: mapped array: key='one', value='two'
-#@ 2013-12-20T13:44:31-0500   notice: /default/run: R: mapped array: key='3999', value='big'
-#@ 2013-12-20T13:44:31-0500   notice: /default/run: R: mapped array: key='3999', value='small'
+#@ R: mapped array: key='1', value='2'
+#@ R: mapped array: key='one', value='two'
+#@ R: mapped array: key='3999', value='big'
+#@ R: mapped array: key='3999', value='small'
 #@ ```
 #+end_src

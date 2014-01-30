@@ -60,10 +60,10 @@ bundle agent peers
 ###############################################################################
 #+begin_src example_output
 #@ ```
-#@ 2013-12-20T13:44:32-0500   notice: /default/peers: R: /tmp/cfe_hostlist mypeer may3
-#@ 2013-12-20T13:44:32-0500   notice: /default/peers: R: /tmp/cfe_hostlist myleader $(myleader)
-#@ 2013-12-20T13:44:32-0500   notice: /default/peers: R: /tmp/cfe_hostlist another leader may3
-#@ 2013-12-20T13:44:32-0500   notice: /default/peers: R: /tmp/cfe_hostlist another leader delta2
-#@ 2013-12-20T13:44:32-0500   notice: /default/peers: R: /tmp/cfe_hostlist another leader alpha
+#@ R: /tmp/cfe_hostlist mypeer may3
+#@ R: /tmp/cfe_hostlist myleader $(myleader)
+#@ R: /tmp/cfe_hostlist another leader may3
+#@ R: /tmp/cfe_hostlist another leader delta2
+#@ R: /tmp/cfe_hostlist another leader alpha
 #@ ```
 #+end_src

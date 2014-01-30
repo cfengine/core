@@ -60,10 +60,10 @@ bundle agent test
 ###############################################################################
 #+begin_src example_output
 #@ ```
-#@ 2014-01-28T08:03:15-0500   notice: /default/test: R: merging {"a":[1,2,3],"b":[]} with {"b":[4,5,6]} produced {"a":[1,2,3],"b":[4,5,6]}
-#@ 2014-01-28T08:03:15-0500   notice: /default/test: R: merging {"a":[1,2,3],"b":[]} with [4,5,6] produced {"a":[1,2,3],"b":[],"0":4,"1":5,"2":6}
-#@ 2014-01-28T08:03:15-0500   notice: /default/test: R: merging [4,5,6] with { "element1", "element2" } produced [4,5,6,"element1","element2"]
-#@ 2014-01-28T08:03:15-0500   notice: /default/test: R: merging {"a":[1,2,3],"b":[]} with array1 produced {"a":[1,2,3],"b":[],"mykey":["array_element1","array_element2"]}
-#@ 2014-01-28T08:03:15-0500   notice: /default/test: R: merging {"b":[4,5,6]} with array2 produced {"b":[4,5,6],"otherkey":"hello"}
+#@ R: merging {"a":[1,2,3],"b":[]} with {"b":[4,5,6]} produced {"a":[1,2,3],"b":[4,5,6]}
+#@ R: merging {"a":[1,2,3],"b":[]} with [4,5,6] produced {"a":[1,2,3],"b":[],"0":4,"1":5,"2":6}
+#@ R: merging [4,5,6] with { "element1", "element2" } produced [4,5,6,"element1","element2"]
+#@ R: merging {"a":[1,2,3],"b":[]} with array1 produced {"a":[1,2,3],"b":[],"mykey":["array_element1","array_element2"]}
+#@ R: merging {"b":[4,5,6]} with array2 produced {"b":[4,5,6],"otherkey":"hello"}
 #@ ```
 #+end_src

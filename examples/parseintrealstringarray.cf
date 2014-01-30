@@ -54,8 +54,8 @@ bundle agent test(f)
 ###############################################################################
 #+begin_src example_output
 #@ ```
-#@ 2013-12-20T13:44:32-0500   notice: /default/test: R: 1
-#@ 2013-12-20T13:44:32-0500   notice: /default/test: R: 3
-#@ 2013-12-20T13:44:32-0500   notice: /default/test: R: 5
+#@ R: 1
+#@ R: 3
+#@ R: 5
 #@ ```
 #+end_src

@@ -37,6 +37,6 @@ bundle agent example
 ###############################################################################
 #+begin_src example_output
 #@ ```
-#@ 2013-12-20T13:44:29-0500   notice: /default/example: R: downcased ABC = abc
+#@ R: downcased ABC = abc
 #@ ```
 #+end_src

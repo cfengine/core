@@ -43,6 +43,6 @@ bundle agent test
 ###############################################################################
 #+begin_src example_output
 #@ ```
-#@ 2013-12-20T12:51:16-0500   notice: /default/test: R: The path has slashes: /a/b/c/inputs
+#@ R: The path has slashes: /a/b/c/inputs
 #@ ```
 #+end_src

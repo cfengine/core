@@ -46,19 +46,19 @@ bundle agent test
 ###############################################################################
 #+begin_src example_output
 #@ ```
-#@ 2013-12-20T13:44:34-0500   notice: /default/test: R: Original list is 1
-#@ 2013-12-20T13:44:34-0500   notice: /default/test: R: Original list is 2
-#@ 2013-12-20T13:44:34-0500   notice: /default/test: R: Original list is 3
-#@ 2013-12-20T13:44:34-0500   notice: /default/test: R: Original list is one
-#@ 2013-12-20T13:44:34-0500   notice: /default/test: R: Original list is two
-#@ 2013-12-20T13:44:34-0500   notice: /default/test: R: Original list is three
-#@ 2013-12-20T13:44:34-0500   notice: /default/test: R: Original list is long string
-#@ 2013-12-20T13:44:34-0500   notice: /default/test: R: The reversed list is three
-#@ 2013-12-20T13:44:34-0500   notice: /default/test: R: The reversed list is two
-#@ 2013-12-20T13:44:34-0500   notice: /default/test: R: The reversed list is one
-#@ 2013-12-20T13:44:34-0500   notice: /default/test: R: The reversed list is long string
-#@ 2013-12-20T13:44:34-0500   notice: /default/test: R: The reversed list is 3
-#@ 2013-12-20T13:44:34-0500   notice: /default/test: R: The reversed list is 2
-#@ 2013-12-20T13:44:34-0500   notice: /default/test: R: The reversed list is 1
+#@ R: Original list is 1
+#@ R: Original list is 2
+#@ R: Original list is 3
+#@ R: Original list is one
+#@ R: Original list is two
+#@ R: Original list is three
+#@ R: Original list is long string
+#@ R: The reversed list is three
+#@ R: The reversed list is two
+#@ R: The reversed list is one
+#@ R: The reversed list is long string
+#@ R: The reversed list is 3
+#@ R: The reversed list is 2
+#@ R: The reversed list is 1
 #@ ```
 #+end_src

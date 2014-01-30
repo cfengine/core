@@ -59,14 +59,14 @@ bundle agent example
 ###############################################################################
 #+begin_src example_output
 #@ ```
-#@ 2013-12-20T13:44:32-0500   notice: /default/example: R: integers in /tmp/cfe_list_ints: 1
-#@ 2013-12-20T13:44:32-0500   notice: /default/example: R: integers in /tmp/cfe_list_ints: 2
-#@ 2013-12-20T13:44:32-0500   notice: /default/example: R: integers in /tmp/cfe_list_ints: 3
-#@ 2013-12-20T13:44:32-0500   notice: /default/example: R: strings in /tmp/cfe_list_strings: alpha
-#@ 2013-12-20T13:44:32-0500   notice: /default/example: R: strings in /tmp/cfe_list_strings: beta
-#@ 2013-12-20T13:44:32-0500   notice: /default/example: R: strings in /tmp/cfe_list_strings: gamma
-#@ 2013-12-20T13:44:32-0500   notice: /default/example: R: reals in /tmp/cfe_list_reals: 1.1
-#@ 2013-12-20T13:44:32-0500   notice: /default/example: R: reals in /tmp/cfe_list_reals: 2.2
-#@ 2013-12-20T13:44:32-0500   notice: /default/example: R: reals in /tmp/cfe_list_reals: 3
+#@ R: integers in /tmp/cfe_list_ints: 1
+#@ R: integers in /tmp/cfe_list_ints: 2
+#@ R: integers in /tmp/cfe_list_ints: 3
+#@ R: strings in /tmp/cfe_list_strings: alpha
+#@ R: strings in /tmp/cfe_list_strings: beta
+#@ R: strings in /tmp/cfe_list_strings: gamma
+#@ R: reals in /tmp/cfe_list_reals: 1.1
+#@ R: reals in /tmp/cfe_list_reals: 2.2
+#@ R: reals in /tmp/cfe_list_reals: 3
 #@ ```
 #+end_src

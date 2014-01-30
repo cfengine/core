@@ -49,6 +49,6 @@ bundle agent example
 ###############################################################################
 #+begin_src example_output
 #@ ```
-#@ 2013-12-20T13:44:28-0500   notice: /default/example: R: The secret changes have been accessed after the reference time
+#@ R: The secret changes have been accessed after the reference time
 #@ ```
 #+end_src

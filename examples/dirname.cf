@@ -37,6 +37,6 @@ bundle agent example
 ###############################################################################
 #+begin_src example_output
 #@ ```
-#@ 2013-12-20T13:44:28-0500   notice: /default/example: R: apache conf dir = /etc/apache2
+#@ R: apache conf dir = /etc/apache2
 #@ ```
 #+end_src

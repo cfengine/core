@@ -76,29 +76,29 @@ bundle agent test
 ###############################################################################
 #+begin_src example_output
 #@ ```
-#@ 2014-01-28T08:36:38-0500   notice: /default/test: R: The test1 list is 1
-#@ 2014-01-28T08:36:38-0500   notice: /default/test: R: The test1 list is 2
-#@ 2014-01-28T08:36:38-0500   notice: /default/test: R: The test1 list is 3
-#@ 2014-01-28T08:36:38-0500   notice: /default/test: R: The test1 list is one
-#@ 2014-01-28T08:36:38-0500   notice: /default/test: R: The test1 list is two
-#@ 2014-01-28T08:36:38-0500   notice: /default/test: R: The test1 list is three
-#@ 2014-01-28T08:36:38-0500   notice: /default/test: R: The test1 list is long string
-#@ 2014-01-28T08:36:38-0500   notice: /default/test: R: The test1 list is four
-#@ 2014-01-28T08:36:38-0500   notice: /default/test: R: The test1 list is fix
-#@ 2014-01-28T08:36:38-0500   notice: /default/test: R: The test1 list is six
-#@ 2014-01-28T08:36:38-0500   notice: /default/test: R: some() test1 1 passed
-#@ 2014-01-28T08:36:38-0500   notice: /default/test: R: some() test1 2 passed
-#@ 2014-01-28T08:36:38-0500   notice: /default/test: R: The test2 list is 1
-#@ 2014-01-28T08:36:38-0500   notice: /default/test: R: The test2 list is 2
-#@ 2014-01-28T08:36:38-0500   notice: /default/test: R: The test2 list is 3
-#@ 2014-01-28T08:36:38-0500   notice: /default/test: R: The test2 list is one
-#@ 2014-01-28T08:36:38-0500   notice: /default/test: R: The test2 list is two
-#@ 2014-01-28T08:36:38-0500   notice: /default/test: R: The test2 list is three
-#@ 2014-01-28T08:36:38-0500   notice: /default/test: R: The test2 list is long string
-#@ 2014-01-28T08:36:38-0500   notice: /default/test: R: The test2 list is four
-#@ 2014-01-28T08:36:38-0500   notice: /default/test: R: The test2 list is fix
-#@ 2014-01-28T08:36:38-0500   notice: /default/test: R: The test2 list is six
-#@ 2014-01-28T08:36:38-0500   notice: /default/test: R: some() test2 1 passed
-#@ 2014-01-28T08:36:38-0500   notice: /default/test: R: some() test2 2 passed
+#@ R: The test1 list is 1
+#@ R: The test1 list is 2
+#@ R: The test1 list is 3
+#@ R: The test1 list is one
+#@ R: The test1 list is two
+#@ R: The test1 list is three
+#@ R: The test1 list is long string
+#@ R: The test1 list is four
+#@ R: The test1 list is fix
+#@ R: The test1 list is six
+#@ R: some() test1 1 passed
+#@ R: some() test1 2 passed
+#@ R: The test2 list is 1
+#@ R: The test2 list is 2
+#@ R: The test2 list is 3
+#@ R: The test2 list is one
+#@ R: The test2 list is two
+#@ R: The test2 list is three
+#@ R: The test2 list is long string
+#@ R: The test2 list is four
+#@ R: The test2 list is fix
+#@ R: The test2 list is six
+#@ R: some() test2 1 passed
+#@ R: some() test2 2 passed
 #@ ```
 #+end_src

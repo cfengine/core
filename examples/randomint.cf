@@ -44,6 +44,6 @@ bundle agent randomint_example
 ###############################################################################
 #+begin_src example_output
 #@ ```
-#@ 2013-12-20T13:44:32-0500   notice: /default/randomint_example: R: The generated random number was above 3
+#@ R: The generated random number was above 3
 #@ ```
 #+end_src

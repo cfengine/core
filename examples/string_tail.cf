@@ -38,6 +38,6 @@ bundle agent example
 ###############################################################################
 #+begin_src example_output
 #@ ```
-#@ 2013-12-20T13:44:35-0500   notice: /default/example: R: end of abc = c
+#@ R: end of abc = c
 #@ ```
 #+end_src

@@ -42,8 +42,9 @@
 #include <eval_context.h>
 #include <actuator.h>
 
-static bool PrintFile(Attributes a);
+static bool PrintFile(const char *filename, size_t max_lines);
 static void ReportToFile(const char *logfile, const char *message);
+static void ReportToLog(const char *message);
 
 PromiseResult VerifyReportPromise(EvalContext *ctx, const Promise *pp)
 {
@@ -96,13 +97,13 @@ PromiseResult VerifyReportPromise(EvalContext *ctx, const Promise *pp)
     }
     else
     {
-        Log(LOG_LEVEL_NOTICE, "R: %s", pp->promiser);
+        ReportToLog(pp->promiser);
     }
 
     PromiseResult result = PROMISE_RESULT_NOOP;
     if (a.report.haveprintfile)
     {
-        if (!PrintFile(a))
+        if (!PrintFile(a.report.filename, a.report.numlines))
         {
             result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
         }
@@ -114,10 +115,16 @@ PromiseResult VerifyReportPromise(EvalContext *ctx, const Promise *pp)
     return result;
 }
 
+static void ReportToLog(const char *message)
+{
+    fprintf(stdout, "R: %s\n", message);
+    syslog(LOG_NOTICE, "R: %s", message);
+}
+
 static void ReportToFile(const char *logfile, const char *message)
 {
     FILE *fp = safe_fopen(logfile, "a");
-    if (fp == NULL)
+    if (!fp)
     {
         Log(LOG_LEVEL_ERR, "Could not open log file '%s', message '%s'. (fopen: %s)", logfile, message, GetErrorStr());
     }
@@ -128,25 +135,25 @@ static void ReportToFile(const char *logfile, const char *message)
     }
 }
 
-static bool PrintFile(Attributes a)
+static bool PrintFile(const char *filename, size_t max_lines)
 {
-    if (a.report.filename == NULL)
+    if (!filename)
     {
         Log(LOG_LEVEL_VERBOSE, "Printfile promise was incomplete, with no filename.");
         return false;
     }
 
-    FILE *fp = safe_fopen(a.report.filename, "r");
+    FILE *fp = safe_fopen(filename, "r");
     if (!fp)
     {
-        Log(LOG_LEVEL_ERR, "Printing of file '%s' was not possible. (fopen: %s)", a.report.filename, GetErrorStr());
+        Log(LOG_LEVEL_ERR, "Printing of file '%s' was not possible. (fopen: %s)", filename, GetErrorStr());
         return false;
     }
 
     size_t line_size = CF_BUFSIZE;
     char *line = xmalloc(line_size);
 
-    for (size_t i = 0; i < a.report.numlines; i++)
+    for (size_t i = 0; i < max_lines; i++)
     {
         if (CfReadLine(&line, &line_size, fp) == -1)
         {

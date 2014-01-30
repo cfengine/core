@@ -51,9 +51,9 @@ bundle agent yes
 ###############################################################################
 #+begin_src example_output
 #@ ```
-#@ 2013-12-20T13:48:00-0500   notice: /default/yes: R: Last / node in / path '/one/two/last1' = 'last1'
-#@ 2013-12-20T13:48:00-0500   notice: /default/yes: R: Last : node in : path 'one:two:last2' = 'last2'
-#@ 2013-12-20T13:48:00-0500   notice: /default/yes: R: Last / node in : path 'one:two:last2' = 'one:two:last2'
-#@ 2013-12-20T13:48:00-0500   notice: /default/yes: R: Last / node in /-terminated path '/one/two/' = ''
+#@ R: Last / node in / path '/one/two/last1' = 'last1'
+#@ R: Last : node in : path 'one:two:last2' = 'last2'
+#@ R: Last / node in : path 'one:two:last2' = 'one:two:last2'
+#@ R: Last / node in /-terminated path '/one/two/' = ''
 #@ ```
 #+end_src

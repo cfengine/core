@@ -46,6 +46,6 @@ bundle agent subtest(user)
 ###############################################################################
 #+begin_src example_output
 #@ ```
-#@ 2013-12-20T13:44:34-0500   notice: /default/subtest: R: User name mark is valid at exactly 4 letters
+#@ R: User name mark is valid at exactly 4 letters
 #@ ```
 #+end_src

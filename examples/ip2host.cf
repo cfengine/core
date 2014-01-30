@@ -46,6 +46,6 @@ bundle agent reverse_lookup
 ###############################################################################
 #+begin_src example_output
 #@ ```
-#@ 2014-01-11T10:14:41-0500   notice: /default/reverse_lookup: R: we got local4
+#@ R: we got local4
 #@ ```
 #+end_src

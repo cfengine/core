@@ -52,7 +52,7 @@ bundle agent example
 ###############################################################################
 #+begin_src example_output
 #@ ```
-#@ 2013-12-20T13:44:30-0500   notice: /default/example: R: Group exists by name
-#@ 2013-12-20T13:44:30-0500   notice: /default/example: R: Group exists by id
+#@ R: Group exists by name
+#@ R: Group exists by id
 #@ ```
 #+end_src

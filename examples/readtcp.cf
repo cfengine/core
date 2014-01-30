@@ -50,6 +50,6 @@ bundle agent example
 ###############################################################################
 #+begin_src example_output
 #@ ```
-#@ 2013-12-20T13:44:34-0500   notice: /default/example: R: Server is alive
+#@ R: Server is alive
 #@ ```
 #+end_src

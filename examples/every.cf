@@ -87,31 +87,31 @@ bundle agent test
 ###############################################################################
 #+begin_src example_output
 #@ ```
-#@ 2014-01-28T08:33:38-0500   notice: /default/test: R: The test list is 1
-#@ 2014-01-28T08:33:38-0500   notice: /default/test: R: The test list is 2
-#@ 2014-01-28T08:33:38-0500   notice: /default/test: R: The test list is 3
-#@ 2014-01-28T08:33:38-0500   notice: /default/test: R: The test list is one
-#@ 2014-01-28T08:33:38-0500   notice: /default/test: R: The test list is two
-#@ 2014-01-28T08:33:38-0500   notice: /default/test: R: The test list is three
-#@ 2014-01-28T08:33:38-0500   notice: /default/test: R: The test list is long string
-#@ 2014-01-28T08:33:38-0500   notice: /default/test: R: The test list is four
-#@ 2014-01-28T08:33:38-0500   notice: /default/test: R: The test list is fix
-#@ 2014-01-28T08:33:38-0500   notice: /default/test: R: The test list is six
-#@ 2014-01-28T08:33:38-0500   notice: /default/test: R: every() test passed: every element matches '.*'
-#@ 2014-01-28T08:33:38-0500   notice: /default/test: R: every() test passed: not every element matches '[0-9]'
-#@ 2014-01-28T08:33:38-0500   notice: /default/test: R: every() test passed: not every element matches '.'
-#@ 2014-01-28T08:33:38-0500   notice: /default/test: R: The test2 list is 1
-#@ 2014-01-28T08:33:38-0500   notice: /default/test: R: The test2 list is 2
-#@ 2014-01-28T08:33:38-0500   notice: /default/test: R: The test2 list is 3
-#@ 2014-01-28T08:33:38-0500   notice: /default/test: R: The test2 list is one
-#@ 2014-01-28T08:33:38-0500   notice: /default/test: R: The test2 list is two
-#@ 2014-01-28T08:33:38-0500   notice: /default/test: R: The test2 list is three
-#@ 2014-01-28T08:33:38-0500   notice: /default/test: R: The test2 list is long string
-#@ 2014-01-28T08:33:38-0500   notice: /default/test: R: The test2 list is four
-#@ 2014-01-28T08:33:38-0500   notice: /default/test: R: The test2 list is fix
-#@ 2014-01-28T08:33:38-0500   notice: /default/test: R: The test2 list is six
-#@ 2014-01-28T08:33:38-0500   notice: /default/test: R: every() test2 passed: every element matches '.*'
-#@ 2014-01-28T08:33:38-0500   notice: /default/test: R: every() test2 passed: not every element matches '[0-9]'
-#@ 2014-01-28T08:33:38-0500   notice: /default/test: R: every() test2 passed: not every element matches '.'
+#@ R: The test list is 1
+#@ R: The test list is 2
+#@ R: The test list is 3
+#@ R: The test list is one
+#@ R: The test list is two
+#@ R: The test list is three
+#@ R: The test list is long string
+#@ R: The test list is four
+#@ R: The test list is fix
+#@ R: The test list is six
+#@ R: every() test passed: every element matches '.*'
+#@ R: every() test passed: not every element matches '[0-9]'
+#@ R: every() test passed: not every element matches '.'
+#@ R: The test2 list is 1
+#@ R: The test2 list is 2
+#@ R: The test2 list is 3
+#@ R: The test2 list is one
+#@ R: The test2 list is two
+#@ R: The test2 list is three
+#@ R: The test2 list is long string
+#@ R: The test2 list is four
+#@ R: The test2 list is fix
+#@ R: The test2 list is six
+#@ R: every() test2 passed: every element matches '.*'
+#@ R: every() test2 passed: not every element matches '[0-9]'
+#@ R: every() test2 passed: not every element matches '.'
 #@ ```
 #+end_src

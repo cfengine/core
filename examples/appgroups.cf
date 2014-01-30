@@ -132,26 +132,26 @@ bundle agent appgroups(name, g)
 ###############################################################################
 #+begin_src example_output
 #@ ```
-#@ 2014-01-27T14:00:03-0500   notice: /default/run/methods/'go'/default/appgroups: R: appgroups: looking for Host1
-#@ 2014-01-27T14:00:03-0500   notice: /default/run/methods/'go'/default/appgroups: R: appgroups: apps: { "App1", "App2" }
-#@ 2014-01-27T14:00:03-0500   notice: /default/run/methods/'go'/default/appgroups: R: appgroups: hosts for App1: { "Host1", "Host2", "Host3" }
-#@ 2014-01-27T14:00:03-0500   notice: /default/run/methods/'go'/default/appgroups: R: appgroups: hosts for App2: { "Host1", "Host3" }
-#@ 2014-01-27T14:00:03-0500   notice: /default/run/methods/'go'/default/appgroups: R: appgroups: groups for App1: { "GrpA", "GrpB", "GrpC" }
-#@ 2014-01-27T14:00:03-0500   notice: /default/run/methods/'go'/default/appgroups: R: appgroups: groups for App2: { "GrpX", "GrpY", "GrpZ" }
-#@ 2014-01-27T14:00:03-0500   notice: /default/run/methods/'go'/default/appgroups: R: appgroups: Host1 is assigned App1
-#@ 2014-01-27T14:00:03-0500   notice: /default/run/methods/'go'/default/appgroups: R: appgroups: Host1 is assigned App2
-#@ 2014-01-27T14:00:03-0500   notice: /default/run/methods/'go'/default/appgroups: R: appgroups: all groups for Host1 = GrpA
-#@ 2014-01-27T14:00:03-0500   notice: /default/run/methods/'go'/default/appgroups: R: appgroups: all groups for Host1 = GrpX
-#@ 2014-01-27T14:00:03-0500   notice: /default/run/methods/'go'/default/appgroups: R: appgroups: all groups for Host1 = GrpB
-#@ 2014-01-27T14:00:03-0500   notice: /default/run/methods/'go'/default/appgroups: R: appgroups: all groups for Host1 = GrpC
-#@ 2014-01-27T14:00:03-0500   notice: /default/run/methods/'go'/default/appgroups: R: appgroups: all groups for Host1 = GrpY
-#@ 2014-01-27T14:00:03-0500   notice: /default/run/methods/'go'/default/appgroups: R: appgroups: all groups for Host1 = GrpZ
-#@ 2014-01-27T14:00:03-0500   notice: /default/run/methods/'go'/default/appgroups: R: appgroups: space-separated groups for Host1 = GrpA GrpB GrpC GrpX GrpY GrpZ
-#@ 2014-01-27T14:00:03-0500   notice: /default/run/methods/'go'/default/appgroups: R: appgroups: looking for Host2
-#@ 2014-01-27T14:00:03-0500   notice: /default/run/methods/'go'/default/appgroups: R: appgroups: Host2 is assigned App1
-#@ 2014-01-27T14:00:03-0500   notice: /default/run/methods/'go'/default/appgroups: R: appgroups: all groups for Host2 = GrpA
-#@ 2014-01-27T14:00:03-0500   notice: /default/run/methods/'go'/default/appgroups: R: appgroups: all groups for Host2 = GrpB
-#@ 2014-01-27T14:00:03-0500   notice: /default/run/methods/'go'/default/appgroups: R: appgroups: all groups for Host2 = GrpC
-#@ 2014-01-27T14:00:03-0500   notice: /default/run/methods/'go'/default/appgroups: R: appgroups: space-separated groups for Host2 = GrpA GrpB GrpC
+#@ R: appgroups: looking for Host1
+#@ R: appgroups: apps: { "App1", "App2" }
+#@ R: appgroups: hosts for App1: { "Host1", "Host2", "Host3" }
+#@ R: appgroups: hosts for App2: { "Host1", "Host3" }
+#@ R: appgroups: groups for App1: { "GrpA", "GrpB", "GrpC" }
+#@ R: appgroups: groups for App2: { "GrpX", "GrpY", "GrpZ" }
+#@ R: appgroups: Host1 is assigned App1
+#@ R: appgroups: Host1 is assigned App2
+#@ R: appgroups: all groups for Host1 = GrpA
+#@ R: appgroups: all groups for Host1 = GrpX
+#@ R: appgroups: all groups for Host1 = GrpB
+#@ R: appgroups: all groups for Host1 = GrpC
+#@ R: appgroups: all groups for Host1 = GrpY
+#@ R: appgroups: all groups for Host1 = GrpZ
+#@ R: appgroups: space-separated groups for Host1 = GrpA GrpB GrpC GrpX GrpY GrpZ
+#@ R: appgroups: looking for Host2
+#@ R: appgroups: Host2 is assigned App1
+#@ R: appgroups: all groups for Host2 = GrpA
+#@ R: appgroups: all groups for Host2 = GrpB
+#@ R: appgroups: all groups for Host2 = GrpC
+#@ R: appgroups: space-separated groups for Host2 = GrpA GrpB GrpC
 #@ ```
 #+end_src

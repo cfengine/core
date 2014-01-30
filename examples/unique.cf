@@ -49,7 +49,7 @@ bundle agent test
 ###############################################################################
 #+begin_src example_output
 #@ ```
-#@ 2013-12-20T13:44:35-0500   notice: /default/test: R: The test list is 1,2,3,one,two,three,long string,four,fix,six,one,two,three
-#@ 2013-12-20T13:44:35-0500   notice: /default/test: R: The unique elements of the test list: 1,2,3,one,two,three,long string,four,fix,six
+#@ R: The test list is 1,2,3,one,two,three,long string,four,fix,six,one,two,three
+#@ R: The unique elements of the test list: 1,2,3,one,two,three,long string,four,fix,six
 #@ ```
 #+end_src

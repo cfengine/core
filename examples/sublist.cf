@@ -61,49 +61,49 @@ bundle agent test
 ###############################################################################
 #+begin_src example_output
 #@ ```
-#@ 2013-12-20T13:44:35-0500   notice: /default/test: R: The test list is 1
-#@ 2013-12-20T13:44:35-0500   notice: /default/test: R: The test list is 2
-#@ 2013-12-20T13:44:35-0500   notice: /default/test: R: The test list is 3
-#@ 2013-12-20T13:44:35-0500   notice: /default/test: R: The test list is one
-#@ 2013-12-20T13:44:35-0500   notice: /default/test: R: The test list is two
-#@ 2013-12-20T13:44:35-0500   notice: /default/test: R: The test list is three
-#@ 2013-12-20T13:44:35-0500   notice: /default/test: R: The test list is long string
-#@ 2013-12-20T13:44:35-0500   notice: /default/test: R: The test list is four
-#@ 2013-12-20T13:44:35-0500   notice: /default/test: R: The test list is fix
-#@ 2013-12-20T13:44:35-0500   notice: /default/test: R: The test list is six
-#@ 2013-12-20T13:44:35-0500   notice: /default/test: R: The head(1) of the test list is 1
-#@ 2013-12-20T13:44:35-0500   notice: /default/test: R: The head(9999) of the test list is 1
-#@ 2013-12-20T13:44:35-0500   notice: /default/test: R: The head(9999) of the test list is 2
-#@ 2013-12-20T13:44:35-0500   notice: /default/test: R: The head(9999) of the test list is 3
-#@ 2013-12-20T13:44:35-0500   notice: /default/test: R: The head(9999) of the test list is one
-#@ 2013-12-20T13:44:35-0500   notice: /default/test: R: The head(9999) of the test list is two
-#@ 2013-12-20T13:44:35-0500   notice: /default/test: R: The head(9999) of the test list is three
-#@ 2013-12-20T13:44:35-0500   notice: /default/test: R: The head(9999) of the test list is long string
-#@ 2013-12-20T13:44:35-0500   notice: /default/test: R: The head(9999) of the test list is four
-#@ 2013-12-20T13:44:35-0500   notice: /default/test: R: The head(9999) of the test list is fix
-#@ 2013-12-20T13:44:35-0500   notice: /default/test: R: The head(9999) of the test list is six
-#@ 2013-12-20T13:44:35-0500   notice: /default/test: R: The tail(1) of the test list is six
-#@ 2013-12-20T13:44:35-0500   notice: /default/test: R: The tail(10) of the test list is 1
-#@ 2013-12-20T13:44:35-0500   notice: /default/test: R: The tail(10) of the test list is 2
-#@ 2013-12-20T13:44:35-0500   notice: /default/test: R: The tail(10) of the test list is 3
-#@ 2013-12-20T13:44:35-0500   notice: /default/test: R: The tail(10) of the test list is one
-#@ 2013-12-20T13:44:35-0500   notice: /default/test: R: The tail(10) of the test list is two
-#@ 2013-12-20T13:44:35-0500   notice: /default/test: R: The tail(10) of the test list is three
-#@ 2013-12-20T13:44:35-0500   notice: /default/test: R: The tail(10) of the test list is long string
-#@ 2013-12-20T13:44:35-0500   notice: /default/test: R: The tail(10) of the test list is four
-#@ 2013-12-20T13:44:35-0500   notice: /default/test: R: The tail(10) of the test list is fix
-#@ 2013-12-20T13:44:35-0500   notice: /default/test: R: The tail(10) of the test list is six
-#@ 2013-12-20T13:44:35-0500   notice: /default/test: R: The tail(2) of the test list is fix
-#@ 2013-12-20T13:44:35-0500   notice: /default/test: R: The tail(2) of the test list is six
-#@ 2013-12-20T13:44:35-0500   notice: /default/test: R: The tail(9999) of the test list is 1
-#@ 2013-12-20T13:44:35-0500   notice: /default/test: R: The tail(9999) of the test list is 2
-#@ 2013-12-20T13:44:35-0500   notice: /default/test: R: The tail(9999) of the test list is 3
-#@ 2013-12-20T13:44:35-0500   notice: /default/test: R: The tail(9999) of the test list is one
-#@ 2013-12-20T13:44:35-0500   notice: /default/test: R: The tail(9999) of the test list is two
-#@ 2013-12-20T13:44:35-0500   notice: /default/test: R: The tail(9999) of the test list is three
-#@ 2013-12-20T13:44:35-0500   notice: /default/test: R: The tail(9999) of the test list is long string
-#@ 2013-12-20T13:44:35-0500   notice: /default/test: R: The tail(9999) of the test list is four
-#@ 2013-12-20T13:44:35-0500   notice: /default/test: R: The tail(9999) of the test list is fix
-#@ 2013-12-20T13:44:35-0500   notice: /default/test: R: The tail(9999) of the test list is six
+#@ R: The test list is 1
+#@ R: The test list is 2
+#@ R: The test list is 3
+#@ R: The test list is one
+#@ R: The test list is two
+#@ R: The test list is three
+#@ R: The test list is long string
+#@ R: The test list is four
+#@ R: The test list is fix
+#@ R: The test list is six
+#@ R: The head(1) of the test list is 1
+#@ R: The head(9999) of the test list is 1
+#@ R: The head(9999) of the test list is 2
+#@ R: The head(9999) of the test list is 3
+#@ R: The head(9999) of the test list is one
+#@ R: The head(9999) of the test list is two
+#@ R: The head(9999) of the test list is three
+#@ R: The head(9999) of the test list is long string
+#@ R: The head(9999) of the test list is four
+#@ R: The head(9999) of the test list is fix
+#@ R: The head(9999) of the test list is six
+#@ R: The tail(1) of the test list is six
+#@ R: The tail(10) of the test list is 1
+#@ R: The tail(10) of the test list is 2
+#@ R: The tail(10) of the test list is 3
+#@ R: The tail(10) of the test list is one
+#@ R: The tail(10) of the test list is two
+#@ R: The tail(10) of the test list is three
+#@ R: The tail(10) of the test list is long string
+#@ R: The tail(10) of the test list is four
+#@ R: The tail(10) of the test list is fix
+#@ R: The tail(10) of the test list is six
+#@ R: The tail(2) of the test list is fix
+#@ R: The tail(2) of the test list is six
+#@ R: The tail(9999) of the test list is 1
+#@ R: The tail(9999) of the test list is 2
+#@ R: The tail(9999) of the test list is 3
+#@ R: The tail(9999) of the test list is one
+#@ R: The tail(9999) of the test list is two
+#@ R: The tail(9999) of the test list is three
+#@ R: The tail(9999) of the test list is long string
+#@ R: The tail(9999) of the test list is four
+#@ R: The tail(9999) of the test list is fix
+#@ R: The tail(9999) of the test list is six
 #@ ```
 #+end_src

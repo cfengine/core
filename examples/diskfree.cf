@@ -44,6 +44,6 @@ bundle agent example
 ###############################################################################
 #+begin_src example_output
 #@ ```
-#@ 2013-12-20T13:44:29-0500   notice: /default/example: R: The filesystem has free space
+#@ R: The filesystem has free space
 #@ ```
 #+end_src

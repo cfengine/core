@@ -43,6 +43,6 @@ bundle agent example
 ###############################################################################
 #+begin_src example_output
 #@ ```
-#@ 2013-12-20T13:44:30-0500   notice: /default/example: R: Directory exists..
+#@ R: Directory exists..
 #@ ```
 #+end_src

@@ -63,15 +63,15 @@ bundle agent fileinfo(f)
 ###############################################################################
 #+begin_src example_output
 #@ ```
-#@ 2014-01-11T07:39:40-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file filestat.cf.txt has size = 11
-#@ 2014-01-11T07:39:40-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file filestat.cf.txt has gid = 0
-#@ 2014-01-11T07:39:40-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file filestat.cf.txt has uid = 0
-#@ 2014-01-11T07:39:40-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file filestat.cf.txt has nlink = 1
-#@ 2014-01-11T07:39:40-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file filestat.cf.txt has mode = 33261
-#@ 2014-01-11T07:39:40-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file filestat.cf.txt has modeoct = 100755
-#@ 2014-01-11T07:39:40-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file filestat.cf.txt has permstr = -rwxr-xr-x
-#@ 2014-01-11T07:39:40-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file filestat.cf.txt has permoct = 755
-#@ 2014-01-11T07:39:40-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file filestat.cf.txt has type = regular file
-#@ 2014-01-11T07:39:40-0500   notice: /default/example/methods/'fileinfo'/default/fileinfo: R: fileinfo: file filestat.cf.txt has basename = filestat.cf.txt
+#@ R: fileinfo: file filestat.cf.txt has size = 11
+#@ R: fileinfo: file filestat.cf.txt has gid = 0
+#@ R: fileinfo: file filestat.cf.txt has uid = 0
+#@ R: fileinfo: file filestat.cf.txt has nlink = 1
+#@ R: fileinfo: file filestat.cf.txt has mode = 33261
+#@ R: fileinfo: file filestat.cf.txt has modeoct = 100755
+#@ R: fileinfo: file filestat.cf.txt has permstr = -rwxr-xr-x
+#@ R: fileinfo: file filestat.cf.txt has permoct = 755
+#@ R: fileinfo: file filestat.cf.txt has type = regular file
+#@ R: fileinfo: file filestat.cf.txt has basename = filestat.cf.txt
 #@ ```
 #+end_src

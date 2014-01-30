@@ -55,12 +55,12 @@ bundle agent run
 ###############################################################################
 #+begin_src example_output
 #@ ```
-#@ 2014-01-15T16:03:43-0500   notice: /default/run: R: version 2.5.6 => padded 000200050006
-#@ 2014-01-15T16:03:43-0500   notice: /default/run: R: %10.10s on 'x' => '         x'
-#@ 2014-01-15T16:03:43-0500   notice: /default/run: R: %-10.10s on 'x' => 'x         '
-#@ 2014-01-15T16:03:43-0500   notice: /default/run: R: %04d on '1' => '0001'
-#@ 2014-01-15T16:03:43-0500   notice: /default/run: R: %07.2f on '1' => '0001.00'
-#@ 2014-01-15T16:03:43-0500   notice: /default/run: R: you killed my father... => 'hello my name is Inigo Montoya'
-#@ 2014-01-15T16:03:43-0500   notice: /default/run: R: slist = { "2", "5", "6" }, container = {"x":"y","z":true}
+#@ R: version 2.5.6 => padded 000200050006
+#@ R: %10.10s on 'x' => '         x'
+#@ R: %-10.10s on 'x' => 'x         '
+#@ R: %04d on '1' => '0001'
+#@ R: %07.2f on '1' => '0001.00'
+#@ R: you killed my father... => 'hello my name is Inigo Montoya'
+#@ R: slist = { "2", "5", "6" }, container = {"x":"y","z":true}
 #@ ```
 #+end_src

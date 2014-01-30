@@ -39,6 +39,6 @@ bundle agent example
 ###############################################################################
 #+begin_src example_output
 #@ ```
-#@ 2013-12-20T13:44:30-0500   notice: /default/example: R: root's gid is 0
+#@ R: root's gid is 0
 #@ ```
 #+end_src

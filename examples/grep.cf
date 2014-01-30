@@ -48,11 +48,11 @@ bundle agent test
 ###############################################################################
 #+begin_src example_output
 #@ ```
-#@ 2014-01-28T08:25:33-0500   notice: /default/test: R: mylist: { "One", "Two", "Three", "Four", "Five" }
-#@ 2014-01-28T08:25:33-0500   notice: /default/test: R: Tlist: { "Two", "Three" }
-#@ 2014-01-28T08:25:33-0500   notice: /default/test: R: empty_list: { --empty-list-- }
-#@ 2014-01-28T08:25:33-0500   notice: /default/test: R: datalist: [1,2,3,"Tab","chive"]
-#@ 2014-01-28T08:25:33-0500   notice: /default/test: R: data_Tlist: { "Tab" }
-#@ 2014-01-28T08:25:33-0500   notice: /default/test: R: data_empty_list: { --empty-list-- }
+#@ R: mylist: { "One", "Two", "Three", "Four", "Five" }
+#@ R: Tlist: { "Two", "Three" }
+#@ R: empty_list: { --empty-list-- }
+#@ R: datalist: [1,2,3,"Tab","chive"]
+#@ R: data_Tlist: { "Tab" }
+#@ R: data_empty_list: { --empty-list-- }
 #@ ```
 #+end_src

@@ -49,6 +49,6 @@ bundle agent example
 ###############################################################################
 #+begin_src example_output
 #@ ```
-#@ 2013-12-20T13:44:31-0500   notice: /default/example: R: /tmp/later is older than /tmp/earlier
+#@ R: /tmp/later is older than /tmp/earlier
 #@ ```
 #+end_src

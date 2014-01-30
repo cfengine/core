@@ -47,6 +47,6 @@ bundle agent example
 ###############################################################################
 #+begin_src example_output
 #@ ```
-#@ 2013-12-20T13:44:32-0500   notice: /default/example: R: first 5 characters of /tmp/cfe_hostlist: alpha
+#@ R: first 5 characters of /tmp/cfe_hostlist: alpha
 #@ ```
 #+end_src

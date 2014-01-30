@@ -54,9 +54,9 @@ bundle agent example
 ###############################################################################
 #+begin_src example_output
 #@ ```
-#@ 2014-01-28T08:50:38-0500   notice: /default/example: R: By key: {"a":["b","c"],"d":["e","f"],"g":["h","i"],"j":["k","l"]}
-#@ 2014-01-28T08:50:38-0500   notice: /default/example: R: specific element by key a, offset 0: 'b'
-#@ 2014-01-28T08:50:38-0500   notice: /default/example: R: By int offset: [["a","b","c"],["d","e","f"],["g","h","i"],["j","k","l"]]
-#@ 2014-01-28T08:50:38-0500   notice: /default/example: R: specific element by int offset 2, 0: 'g'
+#@ R: By key: {"a":["b","c"],"d":["e","f"],"g":["h","i"],"j":["k","l"]}
+#@ R: specific element by key a, offset 0: 'b'
+#@ R: By int offset: [["a","b","c"],["d","e","f"],["g","h","i"],["j","k","l"]]
+#@ R: specific element by int offset 2, 0: 'g'
 #@ ```
 #+end_src

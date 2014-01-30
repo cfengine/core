@@ -69,21 +69,21 @@ bundle agent test
 ###############################################################################
 #+begin_src example_output
 #@ ```
-#@ 2014-01-13T18:40:14-0500   notice: /default/test: R: The test list is { "1", "2", "3", "one", "two", "three", "long string", "four", "fix", "six", "one", "two", "three" }
-#@ 2014-01-13T18:40:14-0500   notice: /default/test: R: element #1 of the test list: 2
-#@ 2014-01-13T18:40:14-0500   notice: /default/test: R: element #2 of the test list: 3
-#@ 2014-01-13T18:40:14-0500   notice: /default/test: R: element #6 of the test list: long string
-#@ 2014-01-13T18:40:14-0500   notice: /default/test: R: element #10 of the test list: one
-#@ 2014-01-13T18:40:14-0500   notice: /default/test: R: element #11 of the test list: two
-#@ 2014-01-13T18:40:14-0500   notice: /default/test: R: element #1000 of the test list: $(access[1000])
-#@ 2014-01-13T18:40:14-0500   notice: /default/test: R: element #0 of the test list: 1
-#@ 2014-01-13T18:40:14-0500   notice: /default/test: R: The test2 data container is [1,2,3,null]
-#@ 2014-01-13T18:40:14-0500   notice: /default/test: R: element #0 of the test2 data container: 1
-#@ 2014-01-13T18:40:14-0500   notice: /default/test: R: element #1 of the test2 data container: 2
-#@ 2014-01-13T18:40:14-0500   notice: /default/test: R: element #2 of the test2 data container: 3
-#@ 2014-01-13T18:40:14-0500   notice: /default/test: R: element #3 of the test2 data container: null
-#@ 2014-01-13T18:40:14-0500   notice: /default/test: R: The test3 data container is {"x":true,"y":"z"}
-#@ 2014-01-13T18:40:14-0500   notice: /default/test: R: element #x of the test3 data container: true
-#@ 2014-01-13T18:40:14-0500   notice: /default/test: R: element #y of the test3 data container: z
+#@ R: The test list is { "1", "2", "3", "one", "two", "three", "long string", "four", "fix", "six", "one", "two", "three" }
+#@ R: element #1 of the test list: 2
+#@ R: element #2 of the test list: 3
+#@ R: element #6 of the test list: long string
+#@ R: element #10 of the test list: one
+#@ R: element #11 of the test list: two
+#@ R: element #1000 of the test list: $(access[1000])
+#@ R: element #0 of the test list: 1
+#@ R: The test2 data container is [1,2,3,null]
+#@ R: element #0 of the test2 data container: 1
+#@ R: element #1 of the test2 data container: 2
+#@ R: element #2 of the test2 data container: 3
+#@ R: element #3 of the test2 data container: null
+#@ R: The test3 data container is {"x":true,"y":"z"}
+#@ R: element #x of the test3 data container: true
+#@ R: element #y of the test3 data container: z
 #@ ```
 #+end_src

@@ -39,9 +39,9 @@ bundle agent run
 ###############################################################################
 #+begin_src example_output
 #@ ```
-#@ 2013-12-23T13:46:50-0500   notice: /default/run: R: Variables matching 'default:sys.cf_version.*' = default:sys.cf_version_major
-#@ 2013-12-23T13:46:50-0500   notice: /default/run: R: Variables matching 'default:sys.cf_version.*' = default:sys.cf_version_patch
-#@ 2013-12-23T13:46:50-0500   notice: /default/run: R: Variables matching 'default:sys.cf_version.*' = default:sys.cf_version
-#@ 2013-12-23T13:46:50-0500   notice: /default/run: R: Variables matching 'default:sys.cf_version.*' = default:sys.cf_version_minor
+#@ R: Variables matching 'default:sys.cf_version.*' = default:sys.cf_version_major
+#@ R: Variables matching 'default:sys.cf_version.*' = default:sys.cf_version_patch
+#@ R: Variables matching 'default:sys.cf_version.*' = default:sys.cf_version
+#@ R: Variables matching 'default:sys.cf_version.*' = default:sys.cf_version_minor
 #@ ```
 #+end_src

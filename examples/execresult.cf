@@ -56,7 +56,7 @@ bundle agent example
 ###############################################################################
 #+begin_src example_output
 #@ ```
-#@ 2013-12-20T13:48:35-0500   notice: /default/example: R: /bin/ls /tmp/testhere returned 'a
+#@ R: /bin/ls /tmp/testhere returned 'a
 #@ b
 #@ c
 #@ d

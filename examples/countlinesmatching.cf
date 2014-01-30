@@ -39,6 +39,6 @@ bundle agent example
 ###############################################################################
 #+begin_src example_output
 #@ ```
-#@ 2013-12-20T13:44:28-0500   notice: /default/example: R: Found 1 lines matching
+#@ R: Found 1 lines matching
 #@ ```
 #+end_src

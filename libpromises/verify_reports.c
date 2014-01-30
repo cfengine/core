@@ -169,7 +169,7 @@ static bool PrintFile(const char *filename, size_t max_lines)
             }
         }
 
-        Log(LOG_LEVEL_ERR, "R: %s", line);
+        ReportToLog(line);
     }
 
     fclose(fp);

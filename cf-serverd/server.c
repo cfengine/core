@@ -124,9 +124,9 @@ void ServerEntryPoint(EvalContext *ctx, char *ipaddr, ConnectionInfo *info)
     }
 
     if ((now = time((time_t *) NULL)) == -1)
-       {
+    {
        now = 0;
-       }
+    }
 
     PurgeOldConnections(&SV.connectionlist, now);
 
@@ -147,15 +147,6 @@ void ServerEntryPoint(EvalContext *ctx, char *ipaddr, ConnectionInfo *info)
         }
 
         ThreadUnlock(cft_count);
-    }
-
-    if (SV.logconns)
-    {
-        Log(LOG_LEVEL_INFO, "Accepting connection from %s", ipaddr);
-    }
-    else
-    {
-        Log(LOG_LEVEL_INFO, "Accepting connection from %s", ipaddr);
     }
 
     snprintf(intime, 63, "%d", (int) now);
@@ -238,9 +229,9 @@ static void SpawnConnection(EvalContext *ctx, char *ipaddr, ConnectionInfo *info
     int sd_accepted = ConnectionInfoSocket(info);
     strlcpy(conn->ipaddr, ipaddr, CF_MAX_IP_LEN );
 
-    Log(LOG_LEVEL_VERBOSE, "New connection...(from %s, sd %d)",
+    Log(LOG_LEVEL_VERBOSE,
+        "New connection (from %s, sd %d), spawning new thread...",
         conn->ipaddr, sd_accepted);
-    Log(LOG_LEVEL_VERBOSE, "Spawning new thread...");
 
     ret = pthread_attr_init(&threadattrs);
     if (ret != 0)
@@ -317,13 +308,14 @@ static void *HandleConnection(ServerConnectionState *conn)
 
     /* This stack-allocated struct should be valid for all the lifetime of the
      * thread. Just make sure that after calling DeleteConn() (which frees
-     * ipaddr), you exit right away. */
+     * ipaddr), you exit the thread right away. */
     LoggingPrivContext log_ctx = {
         .log_hook = LogHook,
         .param = conn->ipaddr
     };
-
     LoggingPrivSetContext(&log_ctx);
+
+    Log(LOG_LEVEL_INFO, "Accepting connection");
 
     if (!ThreadLock(cft_server_children))
     {

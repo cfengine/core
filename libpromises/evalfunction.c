@@ -3287,7 +3287,7 @@ static FnCallResult FnCallFindfiles(EvalContext *ctx, ARG_UNUSED const Policy *p
     int argcount = 0;
     char id[CF_BUFSIZE];
 
-    snprintf(id, CF_BUFSIZE, "built-in FnCall findfiles-arg");
+    snprintf(id, CF_BUFSIZE, "built-in FnCall %s-arg", fp->name);
 
     /* We need to check all the arguments, ArgTemplate does not check varadic functions */
     for (const Rlist *arg = finalargs; arg; arg = arg->next)
@@ -3304,25 +3304,45 @@ static FnCallResult FnCallFindfiles(EvalContext *ctx, ARG_UNUSED const Policy *p
          arg;              /* We must have arg to proceed. */
          arg = arg->next)  /* arg steps forward every time. */
     {
-        char *pattern = RlistScalarValue(arg);
+        const char *pattern = RlistScalarValue(arg);
 #ifdef __MINGW32__
         RlistAppendScalarIdemp(&returnlist, pattern);
 #else /* !__MINGW32__ */
+
         glob_t globbuf;
-        if (0 == glob(pattern, 0, NULL, &globbuf))
+        int globflags = 0; // TODO: maybe add GLOB_BRACE later
+
+        const char* r_candidates[] = { "*", "*/*", "*/*/*", "*/*/*/*", "*/*/*/*/*", "*/*/*/*/*/*" };
+        bool starstar = strstr(pattern, "**");
+        const char** candidates = starstar ? r_candidates : NULL;
+        const int candidate_count = strstr(pattern, "**") ? 6 : 1;
+
+        for (int pi = 0; pi < candidate_count; pi++)
         {
-            for (int i = 0; i < globbuf.gl_pathc; i++)
+            char* expanded = starstar ? SearchAndReplace(pattern, "**", candidates[pi]) : (char*) pattern;
+
+            if (0 == glob(expanded, globflags, NULL, &globbuf))
             {
-                char* found = globbuf.gl_pathv[i];
-                char fname[CF_BUFSIZE];
-                snprintf(fname, CF_BUFSIZE, "%s", found);
-                Log(LOG_LEVEL_VERBOSE, "%s pattern '%s' found match '%s'", fp->name, pattern, fname);
-                RlistAppendScalarIdemp(&returnlist, fname);
+                for (int i = 0; i < globbuf.gl_pathc; i++)
+                {
+                    char* found = globbuf.gl_pathv[i];
+                    char fname[CF_BUFSIZE];
+                    // TODO: this truncates the filename and may be removed
+                    // if Rlist and the core are OK with that possibility
+                    strlcpy(fname, found, CF_BUFSIZE);
+                    Log(LOG_LEVEL_VERBOSE, "%s pattern '%s' found match '%s'", fp->name, pattern, fname);
+                    RlistAppendScalarIdemp(&returnlist, fname);
+                }
+
+                globfree(&globbuf);
             }
 
-            globfree(&globbuf);
+            if (starstar)
+            {
+                free(expanded);
+            }
         }
-#endif
+#endif /* __MINGW32__ */
     }
 
     // When no entries were found, mark the empty list

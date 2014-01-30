@@ -30,6 +30,8 @@ bundle agent run
 {
   vars:
       "findtmp" slist => findfiles("/[tT][mM][pP]");
+      # or find all .txt files under /tmp, up to 6 levels deep...
+      # "findtmp" slist => findfiles("/tmp/**/*.txt");
   reports:
       "All files that match '/[tT][mM][pP]' = $(findtmp)";
 }

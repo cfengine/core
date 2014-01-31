@@ -63,7 +63,7 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promi
 
 /*****************************************************************************/
 
-static int FileSanityChecks(EvalContext *ctx, char *path, Attributes a, const Promise *pp)
+static int FileSanityChecks(char *path, Attributes a, const Promise *pp)
 {
     if ((a.havelink) && (a.havecopy))
     {
@@ -202,7 +202,7 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promi
 
     Attributes a = GetFilesAttributes(ctx, pp);
 
-    if (!FileSanityChecks(ctx, path, a, pp))
+    if (!FileSanityChecks(path, a, pp))
     {
         return PROMISE_RESULT_NOOP;
     }

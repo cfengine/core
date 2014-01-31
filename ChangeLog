@@ -136,10 +136,16 @@
             - 'eval' - learned about SI units
             - 'readfile' - learned to read system files of unknown size like those in /proc
             - 'nth' - learned to look up by key in a data container holding a map
+            - 'string_split' - improved implementation, deprecates 'splitstring'
         - #TODO# support for LMDB in local data storage
         - #TODO# replace_patterns changes
         - #TODO# symlinks race avoidance
         - #TODO# cf-upgrade
+
+        Deprecations:
+        - 'splitstring' - deprecated by 'string_split'
+	- #TODO# 'track_value'
+	- #TODO# 'skipverify'
 
         Bug fixes: #TODO#
         - #TODO# goodness from evaluator and variable table refactoring

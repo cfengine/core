@@ -350,23 +350,22 @@ void StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
 
     WritePID("cf-serverd.pid");
     CollectCallStart(COLLECT_INTERVAL);
-    time_t last_validated_at = 0;
+
 
     while (!IsPendingTermination())
     {
         /* Note that this loop is executed from main thread only, but
-           ACTIVE_THREADS might still change from connectionthreads. */
-
+           ACTIVE_THREADS might still change from connection threads. */
         if (ThreadLock(cft_server_children))
         {
             if (ACTIVE_THREADS == 0)
             {
-                CheckFileChanges(ctx, policy, config, &last_validated_at);
+                CheckFileChanges(ctx, policy, config);
             }
             ThreadUnlock(cft_server_children);
         }
 
-        // Check whether we have established peering with a hub
+        /* Check whether we have established peering with a hub */
         if (CollectCallHasPending())
         {
             int waiting_queue = 0;
@@ -605,18 +604,18 @@ static void DeleteAuthList(Auth **list, Auth **list_tail)
     *list_tail = NULL;
 }
 
-void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *config,
-                      time_t *last_validated_at)
+void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
 {
-    time_t validated_at;
+    Log(LOG_LEVEL_DEBUG, "Checking file updates for input file '%s'",
+        config->input_file);
 
-    Log(LOG_LEVEL_DEBUG, "Checking file updates for input file '%s'", config->input_file);
+    time_t validated_at =
+        ReadTimestampFromPolicyValidatedMasterfiles(config, NULL);
 
-    validated_at = ReadTimestampFromPolicyValidatedMasterfiles(config, NULL);
-
-    if (*last_validated_at < validated_at)
+    if (config->agent_specific.daemon.last_validated_at < validated_at)
     {
-        *last_validated_at = validated_at;
+        /* Rereading policies now, so update timestamp. */
+        config->agent_specific.daemon.last_validated_at = validated_at;
 
         Log(LOG_LEVEL_VERBOSE, "New promises detected...");
 
@@ -628,48 +627,49 @@ void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *con
 
             EvalContextClear(ctx);
 
-            free(SV.allowciphers);
-            SV.allowciphers = NULL;
-
-            DeleteItemList(SV.trustkeylist);
-            DeleteItemList(SV.attackerlist);
-            DeleteItemList(SV.nonattackerlist);
-            DeleteItemList(SV.multiconnlist);
-
-            DeleteAuthList(&SV.admit, &SV.admittail);
-            DeleteAuthList(&SV.deny, &SV.denytail);
-
-            DeleteAuthList(&SV.varadmit, &SV.varadmittail);
-            DeleteAuthList(&SV.vardeny, &SV.vardenytail);
-
-            DeleteAuthList(&SV.roles, &SV.rolestail);
-
             strcpy(VDOMAIN, "undefined.domain");
 
-            SV.trustkeylist = NULL;
-            SV.attackerlist = NULL;
-            SV.nonattackerlist = NULL;
-            SV.multiconnlist = NULL;
+            /* Old ACLs */
+            DeleteAuthList(&SV.admit, &SV.admittail);
+            DeleteAuthList(&SV.deny, &SV.denytail);
+            DeleteAuthList(&SV.varadmit, &SV.varadmittail);
+            DeleteAuthList(&SV.vardeny, &SV.vardenytail);
+            DeleteAuthList(&SV.roles, &SV.rolestail);
 
+            /* body server control ACLs */
+            DeleteItemList(SV.trustkeylist);    SV.trustkeylist = NULL;
+            DeleteItemList(SV.attackerlist);    SV.attackerlist = NULL;
+            DeleteItemList(SV.nonattackerlist); SV.nonattackerlist = NULL;
+            DeleteItemList(SV.multiconnlist);   SV.multiconnlist = NULL;
+
+            /* New ACLs */
             acl_Free(paths_acl);    paths_acl = NULL;
             acl_Free(classes_acl);  classes_acl = NULL;
             acl_Free(vars_acl);     vars_acl = NULL;
             acl_Free(literals_acl); literals_acl = NULL;
             acl_Free(query_acl);    query_acl = NULL;
 
-            StringMapDestroy(SV.path_shortcuts);
-            SV.path_shortcuts = NULL;
-
-            PolicyDestroy(*policy);
-            *policy = NULL;
+            StringMapDestroy(SV.path_shortcuts);  SV.path_shortcuts = NULL;
+            free(SV.allowciphers);                SV.allowciphers = NULL;
+            PolicyDestroy(*policy);               *policy = NULL;
 
             /* STEP 2: Set Environment, Parse and Evaluate policy */
 
-            {
-                char *existing_policy_server = ReadPolicyServerFile(GetWorkDir());
-                SetPolicyServer(ctx, existing_policy_server);
-                free(existing_policy_server);
-            }
+            /*
+             * TODO why is this done separately here? What's the difference to
+             * calling the same steps as in cf-serverd.c:main()? Those are:
+             *   GenericAgentConfigApply();     // not here!
+             *   GenericAgentDiscoverContext(); // not here!
+             *   if (GenericAgentCheckPolicy()) // not here!
+             *     policy=GenericAgentLoadPolicy();
+             *   KeepPromises();
+             *   Summarize();
+             */
+
+            char *existing_policy_server = ReadPolicyServerFile(GetWorkDir());
+            SetPolicyServer(ctx, existing_policy_server);
+            free(existing_policy_server);
+
             UpdateLastPolicyUpdateTime(ctx);
 
             DetectEnvironment(ctx);

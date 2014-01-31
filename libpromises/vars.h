@@ -30,7 +30,7 @@
 
 size_t ExtractScalarPrefix(Buffer *out, const char *str, size_t len);
 bool ExtractScalarReference(Buffer *out, const char *str, size_t len, bool extract_inner);
-int UnresolvedArgs(Rlist *args);
+bool RlistIsUnresolved(const Rlist *args);
 bool IsQualifiedVariable(const char *var);
 
 bool StringContainsVar(const char *s, const char *v);

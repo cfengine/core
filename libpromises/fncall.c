@@ -298,7 +298,7 @@ FnCallResult FnCallEvaluate(EvalContext *ctx, const Policy *policy, FnCall *fp, 
 
     Rlist *expargs = NewExpArgs(ctx, policy, fp);
 
-    if (UnresolvedArgs(expargs))
+    if (RlistIsUnresolved(expargs))
     {
         DeleteExpArgs(expargs);
         return (FnCallResult) { FNCALL_FAILURE, { FnCallCopy(fp), RVAL_TYPE_FNCALL } };

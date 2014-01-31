@@ -262,14 +262,32 @@ PromiseResult VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_d
             return result;
         }
 
-        if (opts.drop_undefined && rval.type == RVAL_TYPE_LIST)
+        if (rval.type == RVAL_TYPE_LIST)
         {
-            for (Rlist *rp = rval.item; rp != NULL; rp = rp->next)
+            if (opts.drop_undefined)
             {
-                if (IsNakedVar(RlistScalarValue(rp), '@'))
+                for (Rlist *rp = RvalRlistValue(rval); rp; rp = rp->next)
                 {
-                    free(rp->val.item);
-                    rp->val.item = xstrdup(CF_NULL_VALUE);
+                    if (IsNakedVar(RlistScalarValue(rp), '@'))
+                    {
+                        free(rp->val.item);
+                        rp->val.item = xstrdup(CF_NULL_VALUE);
+                    }
+                }
+            }
+
+            for (const Rlist *rp = RvalRlistValue(rval); rp; rp = rp->next)
+            {
+                switch (rp->val.type)
+                {
+                case RVAL_TYPE_SCALAR:
+                    break;
+
+                default:
+                    // Cannot assign variable because value is a list containing a non-scalar item
+                    VarRefDestroy(ref);
+                    RvalDestroy(rval);
+                    return result;
                 }
             }
         }

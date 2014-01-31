@@ -39,11 +39,9 @@ static int IsCf3Scalar(char *str);
 
 /*******************************************************************/
 
-int UnresolvedArgs(Rlist *args)
+bool RlistIsUnresolved(const Rlist *list)
 {
-    Rlist *rp;
-
-    for (rp = args; rp != NULL; rp = rp->next)
+    for (const Rlist *rp = list; rp != NULL; rp = rp->next)
     {
         if (rp->val.type != RVAL_TYPE_SCALAR)
         {

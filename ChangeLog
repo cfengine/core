@@ -57,12 +57,12 @@
                 - '--eval-functions' controls whether cf-promises should evaluate functions
             - Colorized output for agent binaries with command line option '--color'
         - New language features
-            - New variable type 'data' for handling of structured data (ie JSON), 
+            - New variable type 'data' for handling of structured data (ie JSON),
               including supporting functions:
                 - 'data_readstringarray' - read a delimited file into a data map
                 - 'data_readstringarrayidx' - read a delimited file into a data array
                 - 'datastate' - create a data variable with currently set classes and variables
-                - 'datatype' - #TODO#
+                - 'datatype' - determine the type of the top element of a container
                 - 'format' - %S can be used to serialize 'data' containers into a string
                 - 'mergedata' - merge two data containers
                 - 'parsejson' - create a data container from a JSON string
@@ -75,7 +75,8 @@
                   of tags
                 - 'getclassmetatags' - returns list of meta tags for a class
                 - 'getvariablemetatags' - returns list of meta tags for a variable
-            - #TODO# transitive inputs
+            - 'body file control' has an 'inputs' attribute to include library files and other dependencies
+	    - bundlesequences can be built with bundlesmatching() based on bundle name and tags
         - New attributes in existing promise types and bodies
             - Introduced alias 'policy_server' for context 'am_policy_hub' (the latter will be deprecated)
             - New option 'preserve_all_lines' for insert_type in insert_lines promises
@@ -102,9 +103,9 @@
             - 'this.promiser_gid' - the group ID of the user running cf-agent
             - 'this.promiser_ppid' - the ID of the  parent process running cf-agent
         - New and improved functions
-            - 'bundlesmatching' - returns list of defined bundles matching a regex
+            - 'bundlesmatching' - returns list of defined bundles matching a regex and tags
             - 'canonifyuniquely' - converts a string into a unique, legal class name
-            - 'classesmatching' - returns list of set classes matching a regex
+            - 'classesmatching' - returns list of set classes matching a regex and tags
             - 'eval' - evaluates mathematical expressions
             - 'findfiles' - returns list of files matching a search pattern
             - 'makerule' - evaluates whether a target file needs to be rebuilt from sources
@@ -114,8 +115,8 @@
             - 'string_head', 'string_tail' - returns the beginning/end of a string
             - 'string_length' - returns the length of a string
             - 'string_reverse' - reverses a string
-            - 'variablesmatching' - returns a list of variables matching a regex
-            - 'variance' - returns the variance of numbers in a list
+            - 'variablesmatching' - returns a list of variables matching a regex and tags
+            - 'variance' - returns the variance of numbers in a list or container
         - #TODO# support for LMDB in local data storage
         - #TODO# replace_patterns changes
 

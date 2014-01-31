@@ -179,6 +179,7 @@ static PromiseResult VerifyProcessOp(EvalContext *ctx, Item *procdata, Attribute
 
     if (!out_of_range)
     {
+        DeleteItemList(killlist);
         return result;
     }
 

@@ -87,16 +87,14 @@ static Rlist *ContainerToRlist(const JsonElement *container)
     case JSON_ELEMENT_TYPE_CONTAINER:
         {
             JsonIterator iter = JsonIteratorInit(container);
-            const JsonElement *child = NULL;
+            const JsonElement *child;
 
-            while ((child = JsonIteratorNextValue(&iter)))
+            while (NULL != (child = JsonIteratorNextValue(&iter)))
             {
-                if (JsonGetElementType(child) != JSON_ELEMENT_TYPE_PRIMITIVE)
+                if (JsonGetElementType(child) == JSON_ELEMENT_TYPE_PRIMITIVE)
                 {
-                    continue;
+                    RlistAppendContainerPrimitive(&list, child);
                 }
-
-                RlistAppendContainerPrimitive(&list, child);
             }
         }
         break;
@@ -109,18 +107,18 @@ static void AppendIterationVariable(PromiseIterator *iter, CfAssoc *new_var)
 {
     SeqAppend(iter->vars, new_var);
 
+    Rlist *list_value = RvalRlistValue(new_var->rval);
+    Rlist *state = new_var->rval.item =
+        RlistPrepend(&list_value, CF_NULL_VALUE, RVAL_TYPE_SCALAR);
+    RlistAppendScalar(&list_value, CF_NULL_VALUE);
+
+    while (state && state->val.type == RVAL_TYPE_SCALAR &&
+           strcmp(RlistScalarValue(state), CF_NULL_VALUE) == 0)
     {
-        Rlist *list_value = RvalRlistValue(new_var->rval);
-        Rlist *state = new_var->rval.item = RlistPrepend(&list_value, CF_NULL_VALUE, RVAL_TYPE_SCALAR);
-        RlistAppendScalar(&list_value, CF_NULL_VALUE);
-
-        while (state && state->val.type == RVAL_TYPE_SCALAR && (strcmp(RlistScalarValue(state), CF_NULL_VALUE) == 0))
-        {
-            state = state->next;
-        }
-
-        SeqAppend(iter->var_states, state);
+        state = state->next;
     }
+
+    SeqAppend(iter->var_states, state);
 }
 
 PromiseIterator *PromiseIteratorNew(EvalContext *ctx, const Promise *pp, const Rlist *lists, const Rlist *containers)

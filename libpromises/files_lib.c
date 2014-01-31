@@ -338,7 +338,7 @@ int LoadFileAsItemList(Item **liststart, const char *file, EditDefaults edits)
         }
     }
 
-    FILE *fp = fp = safe_fopen(file, "r");
+    FILE *fp = safe_fopen(file, "r");
     if (!fp)
     {
         Log(LOG_LEVEL_INFO, "Couldn't read file '%s' for editing. (fopen: %s)", file, GetErrorStr());
@@ -349,6 +349,7 @@ int LoadFileAsItemList(Item **liststart, const char *file, EditDefaults edits)
 
     size_t line_size = CF_BUFSIZE;
     char *line = xmalloc(line_size);
+    bool result = true;
 
     for (;;)
     {
@@ -357,15 +358,12 @@ int LoadFileAsItemList(Item **liststart, const char *file, EditDefaults edits)
         {
             if (!feof(fp))
             {
-                Log(LOG_LEVEL_ERR, "Unable to read contents of '%s'. (fread: %s)", file, GetErrorStr());
-                fclose(fp);
-                free(line);
-                return false;
+                Log(LOG_LEVEL_ERR,
+                    "Unable to read contents of '%s'. (fread: %s)",
+                    file, GetErrorStr());
+                result = false;
             }
-            else
-            {
-                break;
-            }
+            break;
         }
 
         if (edits.joinlines && *(line + strlen(line) - 1) == '\\')
@@ -386,9 +384,10 @@ int LoadFileAsItemList(Item **liststart, const char *file, EditDefaults edits)
         BufferZero(concat);
     }
 
-    fclose(fp);
     free(line);
-    return true;
+    BufferDestroy(concat);
+    fclose(fp);
+    return result;
 }
 
 static bool DeleteDirectoryTreeInternal(const char *basepath, const char *path)

@@ -35,7 +35,7 @@ static void test_timestamp_regex(void)
     close(pipe_fd[0]);
     close(pipe_fd[1]);
     close(duplicate_stderr);
-    free(regex);
+    pcre_free(regex);
 }
 
 int main()

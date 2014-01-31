@@ -5246,11 +5246,17 @@ static FnCallResult FnCallReadFile(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const
     char *contents;
 
     char *filename = RlistScalarValue(finalargs);
-    int maxsize = IntFromString(RlistScalarValue(finalargs->next));
+    char *requested_max = RlistScalarValue(finalargs->next);
+    int maxsize = IntFromString(requested_max);
 
-    if (maxsize == 0 || maxsize > CF_BUFSIZE)
+    if (maxsize > CF_BUFSIZE)
     {
-        Log(LOG_LEVEL_INFO, "readfile(): max_size is more than internal limit " TOSTRING(CF_BUFSIZE));
+        Log(LOG_LEVEL_INFO, "%s: requested max size %s is more than the internal limit " TOSTRING(CF_BUFSIZE), fp->name, requested_max);
+        maxsize = CF_BUFSIZE;
+    }
+
+    if (maxsize == 0)
+    {
         maxsize = CF_BUFSIZE;
     }
 
@@ -6098,7 +6104,7 @@ static void *CfReadFile(const char *filename, int maxsize)
 
     if (truncated)
     {
-        Log(LOG_LEVEL_INFO, "CfReadFile: Truncating file '%s' to %d bytes as "
+        Log(LOG_LEVEL_VERBOSE, "CfReadFile: Truncating file '%s' to %d bytes as "
             "requested by maxsize parameter", filename, maxsize);
     }
 

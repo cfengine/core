@@ -569,6 +569,12 @@ static Policy *LoadPolicyInputFiles(EvalContext *ctx, GenericAgentConfig *config
         switch (resolved_input.type)
         {
         case RVAL_TYPE_SCALAR:
+            if (IsCf3VarString(RvalScalarValue(resolved_input)))
+            {
+                Log(LOG_LEVEL_ERR, "Unresolved variable '%s' in input list, cannot parse", RvalScalarValue(resolved_input));
+                break;
+            }
+
             aux_policy = LoadPolicyFile(ctx, config, GenericAgentResolveInputPath(config, RvalScalarValue(resolved_input)), parsed_files_and_checksums, failed_files);
             break;
 

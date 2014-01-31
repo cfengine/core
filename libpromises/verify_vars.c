@@ -38,6 +38,7 @@
 #include <vars.h>
 #include <matching.h>
 #include <syntax.h>
+#include <audit.h>
 
 typedef struct
 {
@@ -83,10 +84,24 @@ PromiseResult VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_d
     {
         DataType data_type = DataTypeFromString(opts.cp_save->lval);
 
-        FnCall *fp = (FnCall *) rval.item;
-
         if (opts.cp_save->rval.type == RVAL_TYPE_FNCALL)
         {
+            FnCall *fp = RvalFnCallValue(rval);
+            const FnCallType *fn = FnCallTypeGet(fp->name);
+            if (!fn)
+            {
+                assert(false && "Canary: should have been caught before this point");
+                FatalError(ctx, "While setting variable '%s' in bundle '%s', unknown function '%s'",
+                           pp->promiser, PromiseGetBundle(pp)->name, fp->name);
+            }
+
+            if (fn->dtype != DataTypeFromString(opts.cp_save->lval))
+            {
+                FatalError(ctx, "While setting variable '%s' in bundle '%s', variable declared type '%s' but function '%s' returns type '%s'",
+                           pp->promiser, PromiseGetBundle(pp)->name, opts.cp_save->lval,
+                           fp->name, DataTypeToString(fn->dtype));
+            }
+
             if (existing_value_type != DATA_TYPE_NONE)
             {
                 // Already did this

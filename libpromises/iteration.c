@@ -127,7 +127,7 @@ PromiseIterator *PromiseIteratorNew(EvalContext *ctx, const Promise *pp, const R
 {
     PromiseIterator *iter = xmalloc(sizeof(PromiseIterator));
 
-    iter->vars = SeqNew(RlistLen(lists), NULL);
+    iter->vars = SeqNew(RlistLen(lists), DeleteAssoc);
     iter->var_states = SeqNew(RlistLen(lists), NULL);
     iter->started = false;
 
@@ -167,6 +167,7 @@ PromiseIterator *PromiseIteratorNew(EvalContext *ctx, const Promise *pp, const R
 
         assert(dtype == CF_DATA_TYPE_CONTAINER);
 
+        /* Mimics NewAssoc() but bypassing extra copying of ->rval: */
         CfAssoc *new_var = xmalloc(sizeof(CfAssoc));
         new_var->lval = xstrdup(RlistScalarValue(rp));
         new_var->rval = (Rval) { ContainerToRlist(value), RVAL_TYPE_LIST };

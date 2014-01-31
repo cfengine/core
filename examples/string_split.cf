@@ -45,11 +45,11 @@ bundle agent test
 ###############################################################################
 #+begin_src example_output
 #@ ```
-#@ 2014-01-11T17:06:51+0100   notice: /default/test: R: split1: one
-#@ 2014-01-11T17:06:51+0100   notice: /default/test: R: split1: two
-#@ 2014-01-11T17:06:51+0100   notice: /default/test: R: split1: three
-#@ 2014-01-11T17:06:51+0100   notice: /default/test: R: split2: one:two:three
-#@ 2014-01-11T17:06:51+0100   notice: /default/test: R: split3: alpha:
-#@ 2014-01-11T17:06:51+0100   notice: /default/test: R: split3: :beta
+#@ R: split1: one
+#@ R: split1: two
+#@ R: split1: three
+#@ R: split2: one:two:three
+#@ R: split3: alpha:
+#@ R: split3: :beta
 #@ ```
 #+end_src

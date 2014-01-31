@@ -5705,7 +5705,10 @@ static FnCallResult FnCallSplitString(ARG_UNUSED EvalContext *ctx, ARG_UNUSED co
 
 /*********************************************************************/
 
-static FnCallResult FnCallStringSplit(ARG_UNUSED EvalContext *ctx, ARG_UNUSED FnCall *fp, Rlist *finalargs)
+static FnCallResult FnCallStringSplit(ARG_UNUSED EvalContext *ctx,
+                                      ARG_UNUSED const Policy *policy,
+                                      ARG_UNUSED const FnCall *fp,
+                                      const Rlist *finalargs)
 {
     /* 3 args: string, split_regex, max  */
     char *string = RlistScalarValue(finalargs);

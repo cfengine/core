@@ -629,7 +629,7 @@ static void ThisAgentInit(void)
   status which we need for setting returns
 */
 
-    snprintf(filename, CF_BUFSIZE, "%s/cfagent.%s.log", GetLogDir(), VSYSNAME.nodename);
+    snprintf(filename, CF_BUFSIZE, "%s/cfagent.%s.log", GetLogDir(), VFQNAME);
     MapName(filename);
 
     if ((fp = fopen(filename, "a")) != NULL)

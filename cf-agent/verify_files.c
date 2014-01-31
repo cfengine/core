@@ -683,7 +683,7 @@ static void LoadSetuid(Attributes a)
     edits.backup = BACKUP_OPTION_NO_BACKUP;
     edits.maxfilesize = 1000000;
 
-    snprintf(filename, CF_BUFSIZE, "%s/cfagent.%s.log", GetLogDir(), VSYSNAME.nodename);
+    snprintf(filename, CF_BUFSIZE, "%s/cfagent.%s.log", GetLogDir(), VFQNAME);
     MapName(filename);
 
     if (!LoadFileAsItemList(&VSETUIDLIST, filename, edits))
@@ -702,7 +702,7 @@ static PromiseResult SaveSetuid(EvalContext *ctx, Attributes a, const Promise *p
     b.edits.maxfilesize = 1000000;
 
     char filename[CF_BUFSIZE];
-    snprintf(filename, CF_BUFSIZE, "%s/cfagent.%s.log", GetLogDir(), VSYSNAME.nodename);
+    snprintf(filename, CF_BUFSIZE, "%s/cfagent.%s.log", GetLogDir(), VFQNAME);
     MapName(filename);
 
     PurgeItemList(&VSETUIDLIST, "SETUID/SETGID");

@@ -676,30 +676,6 @@ static void GetProcessColumnNames(char *proc, char **names, int *start, int *end
     }
 }
 
-#ifndef __MINGW32__
-static const char *GetProcessOptions(void)
-{
-    static char psopts[CF_BUFSIZE]; /* GLOBAL_R, no initialization needed */
-
-    if (IsGlobalZone())
-    {
-        snprintf(psopts, CF_BUFSIZE, "%s,zone", VPSOPTS[VSYSTEMHARDCLASS]);
-        return psopts;
-    }
-
-# ifdef __linux__
-    if (strncmp(VSYSNAME.release, "2.4", 3) == 0)
-    {
-        // No threads on 2.4 kernels
-        return "-eo user,pid,ppid,pgid,pcpu,pmem,vsz,pri,rss,stime,time,args";
-    }
-
-# endif
-
-    return VPSOPTS[VSYSTEMHARDCLASS];
-}
-#endif
-
 static int ExtractPid(char *psentry, char **names, int *end)
 {
     char *sp;
@@ -759,9 +735,7 @@ int LoadProcessTable(Item **procdata)
         return true;
     }
 
-    const char *psopts = GetProcessOptions();
-
-    snprintf(pscomm, CF_MAXLINKSIZE, "%s %s", VPSCOMM[VSYSTEMHARDCLASS], psopts);
+    snprintf(pscomm, CF_MAXLINKSIZE, "%s %s", VPSCOMM[VSYSTEMHARDCLASS], PSOPTS);
 
     Log(LOG_LEVEL_VERBOSE, "Observe process table with %s", pscomm);
 

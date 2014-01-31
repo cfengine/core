@@ -24,44 +24,6 @@
 
 #include <cf3.defs.h>
 
-const char *const DAY_TEXT[] =
-{
-    "Monday",
-    "Tuesday",
-    "Wednesday",
-    "Thursday",
-    "Friday",
-    "Saturday",
-    "Sunday",
-    NULL
-};
-
-const char *const MONTH_TEXT[] =
-{
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
-    NULL
-};
-
-const char *const SHIFT_TEXT[] =
-{
-    "Night",
-    "Morning",
-    "Afternoon",
-    "Evening",
-    NULL
-};
-
 const char *const CF_AGENTTYPES[] =   /* see enum cfagenttype */
 {
     CF_COMMONC,

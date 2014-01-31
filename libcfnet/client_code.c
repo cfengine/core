@@ -406,7 +406,7 @@ static AgentConnection *ServerConnection(const char *server, FileCopy fc, int *e
 
             if (!IdentifyAgent(conn->conn_info))
             {
-                Log(LOG_LEVEL_ERR, "Id-authentication for '%s' failed", VFQNAME);
+                Log(LOG_LEVEL_ERR, "Id-authentication with '%s' failed", server);
                 errno = EPERM;
                 DisconnectServer(conn);
                 *err = -2; // auth err

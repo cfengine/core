@@ -54,7 +54,8 @@ static pthread_attr_t threads_attrs; /* GLOBAL_T, initialized by pthread_attr_in
 static GenericAgentConfig *CheckOpts(int argc, char **argv);
 
 void ThisAgentInit(void);
-static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *config, ExecdConfig **execd_config, ExecConfig **exec_config, time_t *last_policy_reload);
+static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *config,
+                        ExecdConfig **execd_config, ExecConfig **exec_config);
 #ifndef __MINGW32__
 static void Apoptosis(void);
 #endif
@@ -313,12 +314,6 @@ void ThisAgentInit(void)
 /* Might be called back from NovaWin_StartExecService */
 void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, ExecdConfig **execd_config, ExecConfig **exec_config)
 {
-#if !defined(__MINGW32__)
-    time_t now = time(NULL);
-#endif
-
-    time_t last_policy_reload = 0;
-
     pthread_attr_init(&threads_attrs);
     pthread_attr_setdetachstate(&threads_attrs, PTHREAD_CREATE_DETACHED);
     pthread_attr_setstacksize(&threads_attrs, (size_t)2048*1024);
@@ -331,17 +326,8 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, E
         /* Kill previous instances of cf-execd if those are still running */
         Apoptosis();
     }
-#endif
 
-#ifdef __MINGW32__
-
-    if (!NO_FORK)
-    {
-        Log(LOG_LEVEL_VERBOSE, "Windows does not support starting processes in the background - starting in foreground");
-    }
-
-#else /* !__MINGW32__ */
-
+    time_t now = time(NULL);
     if ((!NO_FORK) && (fork() != 0))
     {
         Log(LOG_LEVEL_INFO, "cf-execd starting %.24s", ctime(&now));
@@ -353,7 +339,14 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, E
         ActAsDaemon();
     }
 
-#endif /* !__MINGW32__ */
+#else  /* __MINGW32__ */
+
+    if (!NO_FORK)
+    {
+        Log(LOG_LEVEL_VERBOSE, "Windows does not support starting processes in the background - starting in foreground");
+    }
+
+#endif
 
     WritePID("cf-execd.pid");
     signal(SIGINT, HandleSignalsForDaemon);
@@ -374,7 +367,7 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, E
     {
         while (!IsPendingTermination())
         {
-            if (ScheduleRun(ctx, &policy, config, execd_config, exec_config, &last_policy_reload))
+            if (ScheduleRun(ctx, &policy, config, execd_config, exec_config))
             {
                 Log(LOG_LEVEL_VERBOSE, "Sleeping for splaytime %d seconds", (*execd_config)->splay_time);
                 sleep((*execd_config)->splay_time);
@@ -474,17 +467,17 @@ typedef enum
     RELOAD_FULL
 } Reload;
 
-static Reload CheckNewPromises(const GenericAgentConfig *config, time_t *last_policy_reload)
+static Reload CheckNewPromises(GenericAgentConfig *config)
 {
-    time_t validated_at;
-
     Log(LOG_LEVEL_DEBUG, "Checking file updates for input file '%s'", config->input_file);
 
-    validated_at = ReadTimestampFromPolicyValidatedMasterfiles(config, NULL);
+    time_t validated_at =
+        ReadTimestampFromPolicyValidatedMasterfiles(config, NULL);
 
-    if (*last_policy_reload < validated_at)
+    if (config->agent_specific.daemon.last_validated_at < validated_at)
     {
-        *last_policy_reload = validated_at;
+        /* Rereading policies now, so update timestamp. */
+        config->agent_specific.daemon.last_validated_at = validated_at;
 
         Log(LOG_LEVEL_VERBOSE, "New promises detected...");
 
@@ -505,7 +498,8 @@ static Reload CheckNewPromises(const GenericAgentConfig *config, time_t *last_po
     return RELOAD_ENVIRONMENT;
 }
 
-static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *config, ExecdConfig **execd_config, ExecConfig **exec_config, time_t *last_policy_reload)
+static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *config,
+                        ExecdConfig **execd_config, ExecConfig **exec_config)
 {
     Log(LOG_LEVEL_VERBOSE, "Sleeping for pulse time %d seconds...", CFPULSETIME);
     sleep(CFPULSETIME);         /* 1 Minute resolution is enough */
@@ -514,7 +508,7 @@ static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *c
      * FIXME: this logic duplicates the one from cf-serverd.c. Unify ASAP.
      */
 
-    if (CheckNewPromises(config, last_policy_reload) == RELOAD_FULL)
+    if (CheckNewPromises(config) == RELOAD_FULL)
     {
         /* Full reload */
 

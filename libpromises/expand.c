@@ -1089,6 +1089,13 @@ static void ResolveControlBody(EvalContext *ctx, GenericAgentConfig *config, con
             config->ignore_missing_bundles = BooleanFromString(cp->rval.item);
         }
 
+        if (strcmp(cp->lval, CFG_CONTROLBODY[COMMON_CONTROL_SYSLOG_INCLUDE_PREFIX].lval) == 0)
+        {
+            Log(LOG_LEVEL_VERBOSE, "SET syslog_include_prefix %s", RvalScalarValue(cp->rval));
+            bool syslog_include_prefix = BooleanFromString(cp->rval.item);
+            LoggingSetSyslogIncludePrefix(syslog_include_prefix);
+        }
+
         if (strcmp(cp->lval, CFG_CONTROLBODY[COMMON_CONTROL_CACHE_SYSTEM_FUNCTIONS].lval) == 0)
         {
             Log(LOG_LEVEL_VERBOSE, "SET cache_system_functions %s", RvalScalarValue(cp->rval));

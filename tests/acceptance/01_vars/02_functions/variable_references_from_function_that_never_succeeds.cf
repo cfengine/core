@@ -1,0 +1,53 @@
+#######################################################
+#
+# Test that FnFailure results in unresolved references
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+}
+
+#######################################################
+
+bundle common test
+{
+  classes:
+      "resolved_found" expression => returnszero("$(command) resolved_a557d39e04d666075754b8f78ea17fbc175925d5 2>&1", "useshell");
+      "unresolved_found" expression => returnszero("$(command) unresolved_76201d0eaac49a884308358aa487147b4db70e8a 2>&1", "useshell");
+
+  vars:
+      "command" string => "$(sys.cf_agent) -K -f $(this.promise_filename).sub | $(G.grep) MARKER | $(G.grep)";
+}
+
+
+#######################################################
+
+bundle agent check
+{
+  classes:
+      "ok" and => { "!resolved_found", "unresolved_found" };
+
+  reports:
+    DEBUG.!resolved_found::
+      "Resolved variable not found";
+    DEBUG.resolved_found::
+      "Resolved variable found?!?!";
+    DEBUG.unresolved_found::
+      "Unresolved variable found";
+    DEBUG.!unresolved_found::
+      "Unresolved variable not found?!?!";
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

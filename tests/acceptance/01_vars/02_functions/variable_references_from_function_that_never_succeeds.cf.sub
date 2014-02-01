@@ -1,0 +1,20 @@
+#######################################################
+#
+# Subtest that FnFailure results in unresolved references
+#
+#######################################################
+
+body common control
+{
+      bundlesequence  => { test };
+}
+
+bundle agent test
+{
+  vars:
+      "unresolved_76201d0eaac49a884308358aa487147b4db70e8a" slist => { canonify($(missing)) };
+      "resolved_a557d39e04d666075754b8f78ea17fbc175925d5" slist => { "a", "b" };
+
+  reports:
+      "MARKER$(unresolved_76201d0eaac49a884308358aa487147b4db70e8a)MARKER MARKER$(resolved_a557d39e04d666075754b8f78ea17fbc175925d5)MARKER";
+}

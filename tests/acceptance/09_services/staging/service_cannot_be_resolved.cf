@@ -1,0 +1,53 @@
+#######################################################
+#
+# catch "Service ... cannot be resolved" inform message
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+}
+
+bundle common test
+{
+  classes:
+      "resolution_warning" expression => returnszero("$(command) Service | $(G.grep) 'cannot be resolved' 2>&1", "useshell");
+      "myservice_found" expression => returnszero("$(command) 4441a73c9b58ff7f2285c018ee7449f35ec89712 2>&1", "useshell");
+
+  vars:
+      "command" string => "$(sys.cf_agent) -KI -f $(this.promise_filename).sub | $(G.grep)";
+}
+
+#######################################################
+
+bundle agent check
+{
+  classes:
+      "ok" and => { "!resolution_warning", "myservice_found" };
+
+  reports:
+    DEBUG.resolution_warning::
+      "service bundle 'cannot be resolved' error was found";
+    DEBUG.!resolution_warning::
+      "service bundle 'cannot be resolved' error was NOT found";
+    DEBUG.myservice_found::
+      "myservice report 4441a73c9b58ff7f2285c018ee7449f35ec89712 was found";
+    DEBUG.!myservice_found::
+      "myservice report 4441a73c9b58ff7f2285c018ee7449f35ec89712 was NOT found";
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}
+
+### PROJECT_ID: core
+### CATEGORY_ID: 27

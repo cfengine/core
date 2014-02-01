@@ -1,0 +1,29 @@
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { build_linux_limits_conf };
+}
+
+bundle agent build_linux_limits_conf
+{
+  vars:
+      "limits[glob-dash-nofile]" string => "*        -    nofile        30000";
+      "values" slist => getvalues("limits");
+
+  files:
+      "$(G.testfile)"
+      create => "true",
+      edit_line => insert("@(build_linux_limits_conf.values)"),
+      edit_defaults => empty;
+}
+
+body edit_defaults empty
+{
+      empty_file_before_editing => "true";
+}
+
+bundle edit_line insert(str)
+{
+  insert_lines:
+      "$(str)";
+}

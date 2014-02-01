@@ -1,0 +1,80 @@
+#######################################################
+#
+# Call an edit_line bundle from another namespace
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+  files:
+      "$(G.testfile).expected"
+      create => "true",
+      edit_line => init_insert,
+      edit_defaults => init_empty;
+}
+
+bundle edit_line init_insert
+{
+  insert_lines:
+      "Hello";
+}
+
+bundle edit_line simple_insert(line)
+{
+  insert_lines:
+      "$(line)";
+}
+
+body edit_defaults init_empty
+{
+      empty_file_before_editing => "true";
+}
+
+#######################################################
+
+bundle agent test
+{
+  methods:
+      "jump" usebundle => testing_namespace:namespaced_test("$(G.testfile).actual");
+}
+
+#######################################################
+
+bundle agent check
+{
+  methods:
+      "any" usebundle => default_check_diff("$(G.testfile).actual",
+                                            "$(G.testfile).expected",
+                                            "$(this.promise_filename)");
+}
+
+#######################################################
+# NS
+#######################################################
+
+body file control
+{
+    namespace => "testing_namespace";
+}
+
+bundle agent namespaced_test(file)
+{
+  files:
+      "$(file)"
+      create => "true",
+      edit_defaults => default:init_empty,
+      classes => default:default_cf_sub_scoped_generic_classes("edit", "bundle"),
+      edit_line => default:simple_insert("Hello");
+}
+
+### PROJECT_ID: core
+### CATEGORY_ID: 27

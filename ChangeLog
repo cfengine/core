@@ -1,7 +1,6 @@
 3.6.0 Beta 1
 
         Changes:
-        - cf-serverd now reloads policies when they change without a restart
         - TLS authentication and fully encrypted network protocol. Changes
           specific to the new type of connections:
             - The new networking protocol uses TLS for authentication, after
@@ -159,6 +158,7 @@
         - 'abortclasses' fixed to work in common bundles and other cases
         - namespaced 'edit_line' bundles now work (Redmine#3781)
         - lists are interpolated in correct order (Redmine#3122)
+        - cf-serverd reloads policies properly when they change
 
 3.5.3
        Changes:

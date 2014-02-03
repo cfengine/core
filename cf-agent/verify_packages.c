@@ -2554,29 +2554,20 @@ int ExecPackageCommand(EvalContext *ctx, char *command, int verify, int setCmdCl
     return retval;
 }
 
-int PrependPackageItem(EvalContext *ctx, PackageItem ** list, const char *name, const char *version, const char *arch,
+int PrependPackageItem(EvalContext *ctx, PackageItem ** list,
+                       const char *name, const char *version, const char *arch,
                        const Promise *pp)
 {
-    PackageItem *pi;
-
-    if ((strlen(name) == 0) || (strlen(version) == 0) || (strlen(arch) == 0))
+    if (!list || !name[0] || !version[0] || !arch[0])
     {
         return false;
     }
 
     Log(LOG_LEVEL_VERBOSE, "Package (%s,%s,%s) [name,version,arch] found", name, version, arch);
 
-    pi = xmalloc(sizeof(PackageItem));
+    PackageItem *pi = xmalloc(sizeof(PackageItem));
 
-    if (list)
-    {
-        pi->next = *list;
-    }
-    else
-    {
-        pi->next = NULL;
-    }
-
+    pi->next = *list;
     pi->name = xstrdup(name);
     pi->version = xstrdup(version);
     pi->arch = xstrdup(arch);

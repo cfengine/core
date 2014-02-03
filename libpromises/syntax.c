@@ -875,27 +875,27 @@ static SyntaxTypeMatch CheckFnCallType(const char *s, DataType dtype)
         {
             /* Ok to allow fn calls of correct element-type in lists */
 
-            if (dt == CF_DATA_TYPE_STRING && dtype == DATA_TYPE_STRING_LIST)
+            if (dt == CF_DATA_TYPE_STRING && dtype == CF_DATA_TYPE_STRING_LIST)
             {
                 return SYNTAX_TYPE_MATCH_OK;
             }
 
-            if (dt == CF_DATA_TYPE_INT && dtype == DATA_TYPE_INT_LIST)
+            if (dt == CF_DATA_TYPE_INT && dtype == CF_DATA_TYPE_INT_LIST)
             {
                 return SYNTAX_TYPE_MATCH_OK;
             }
 
-            if (dt == CF_DATA_TYPE_REAL && dtype == DATA_TYPE_REAL_LIST)
+            if (dt == CF_DATA_TYPE_REAL && dtype == CF_DATA_TYPE_REAL_LIST)
             {
                 return SYNTAX_TYPE_MATCH_OK;
             }
 
-            if (dt == CF_DATA_TYPE_OPTION && dtype == DATA_TYPE_OPTION_LIST)
+            if (dt == CF_DATA_TYPE_OPTION && dtype == CF_DATA_TYPE_OPTION_LIST)
             {
                 return SYNTAX_TYPE_MATCH_OK;
             }
 
-            if (dt == CF_DATA_TYPE_CONTEXT && dtype == DATA_TYPE_CONTEXT_LIST)
+            if (dt == CF_DATA_TYPE_CONTEXT && dtype == CF_DATA_TYPE_CONTEXT_LIST)
             {
                 return SYNTAX_TYPE_MATCH_OK;
             }
@@ -924,7 +924,7 @@ static JsonElement *ConstraintSyntaxToJson(const ConstraintSyntax *constraint_sy
     JsonObjectAppendString(json_constraint, "status", SyntaxStatusToString(constraint_syntax->status));
     JsonObjectAppendString(json_constraint, "type", DataTypeToString(constraint_syntax->dtype));
 
-    if (constraint_syntax->dtype != CF_DATA_TYPE_BODY && constraint_syntax->dtype != DATA_TYPE_BUNDLE)
+    if (constraint_syntax->dtype != CF_DATA_TYPE_BODY && constraint_syntax->dtype != CF_DATA_TYPE_BUNDLE)
     {
         JsonObjectAppendString(json_constraint, "range", constraint_syntax->range.validation_string);
     }

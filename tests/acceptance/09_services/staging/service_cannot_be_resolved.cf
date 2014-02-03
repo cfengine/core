@@ -36,13 +36,13 @@ bundle agent check
 
   reports:
     DEBUG.resolution_warning::
-      "service bundle 'cannot be resolved' error was found";
+      "failure: service bundle 'cannot be resolved' error WAS found";
     DEBUG.!resolution_warning::
-      "service bundle 'cannot be resolved' error was NOT found";
+      "success: service bundle 'cannot be resolved' error was not found";
     DEBUG.myservice_found::
-      "myservice report 4441a73c9b58ff7f2285c018ee7449f35ec89712 was found";
+      "success: myservice report 4441a73c9b58ff7f2285c018ee7449f35ec89712 was found";
     DEBUG.!myservice_found::
-      "myservice report 4441a73c9b58ff7f2285c018ee7449f35ec89712 was NOT found";
+      "failure: myservice report 4441a73c9b58ff7f2285c018ee7449f35ec89712 was NOT found";
     ok::
       "$(this.promise_filename) Pass";
     !ok::

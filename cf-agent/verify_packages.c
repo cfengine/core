@@ -2409,16 +2409,16 @@ char *PrefixLocalRepository(Rlist *repositories, char *package)
 
     for (rp = repositories; rp != NULL; rp = rp->next)
     {
-        strncpy(path, RlistScalarValue(rp), CF_MAXVARSIZE);
-
-        AddSlash(path);
-
-        strcat(path, package);
-
-        if (stat(path, &sb) != -1)
+        if (strlcpy(path, RlistScalarValue(rp), sizeof(path)) < sizeof(path))
         {
-            snprintf(quotedPath, sizeof(quotedPath), "\"%s\"", path);
-            return quotedPath;
+            AddSlash(path);
+
+            if (strlcat(path, package, sizeof(path)) < sizeof(path) &&
+                stat(path, &sb) != -1)
+            {
+                snprintf(quotedPath, sizeof(quotedPath), "\"%s\"", path);
+                return quotedPath;
+            }
         }
     }
 

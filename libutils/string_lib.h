@@ -73,7 +73,7 @@ pcre *CompileRegex(const char *regex);
 bool StringMatchFull(const char *regex, const char *str);
 Seq *StringMatchCaptures(const char *regex, const char *str);
 
-int ReplaceStr(char *in, char *out, int outSz, char *from, char *to);
+bool ReplaceStr(const char *in, char *out, int outSz, const char *from, const char *to);
 
 bool IsStrIn(const char *str, const char *const strs[]);
 bool IsStrCaseIn(const char *str, const char *const strs[]);

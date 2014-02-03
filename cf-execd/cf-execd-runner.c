@@ -312,11 +312,8 @@ void LocalExec(const ExecConfig *config)
 
         if (print)
         {
-            char line_escaped[sizeof(line) * 2];
-
-            // we must escape print format chars (%) from output
-
-            ReplaceStr(line, line_escaped, sizeof(line_escaped), "%", "%%");
+            char *line_escaped = xmalloc(2 * line_size);
+            ReplaceStr(line, line_escaped, 2 * line_size, "%", "%%");
 
             fprintf(fp, "%s\n", line_escaped);
             count++;
@@ -335,7 +332,7 @@ void LocalExec(const ExecConfig *config)
             }
 
             line[0] = '\0';
-            line_escaped[0] = '\0';
+            free(line_escaped);
         }
     }
 

@@ -636,7 +636,7 @@ void ReplaceChar(char *in, char *out, int outSz, char from, char to)
 
 /* TODO replace with StringReplace. This one is pretty slow, calls strncmp
  * O(n) times even if string matches nowhere. */
-int ReplaceStr(char *in, char *out, int outSz, char *from, char *to)
+bool ReplaceStr(const char *in, char *out, int outSz, const char *from, const char *to)
 /* Replaces all occurences of strings 'from' to 'to' in preallocated
  * string 'out'. Returns true on success, false otherwise. */
 {

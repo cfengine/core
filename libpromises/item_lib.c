@@ -903,36 +903,27 @@ bool RawSaveItemList(const Item *liststart, const char *filename)
 Item *RawLoadItemList(const char *filename)
 {
     FILE *fp = safe_fopen(filename, "r");
-    if (fp == NULL)
+    if (fp)
     {
         return NULL;
     }
 
+    size_t line_size = CF_BUFSIZE;
+    char *line = xmalloc(line_size);
+
     Item *list = NULL;
-    for (;;)
+    while (CfReadLine(&line, &line_size, fp) != -1)
     {
-        char line[CF_BUFSIZE];
-        ssize_t res = CfReadLine(line, CF_BUFSIZE, fp);
-        if (res == 0)
-        {
-            if (fclose(fp) == -1)
-            {
-                DeleteItemList(list);
-                return NULL;
-            }
-            return list;
-        }
-
-        if (res == -1)
-        {
-            fclose(fp);
-            DeleteItemList(list);
-            return NULL;
-        }
-
-        if (strlen(line) != 0)
-        {
-            AppendItem(&list, line, NULL);
-        }
+        AppendItem(&list, line, NULL);
     }
+
+    free(line);
+
+    if (!feof(fp))
+    {
+        DeleteItemList(list);
+        list = NULL;
+    }
+
+    return list;
 }

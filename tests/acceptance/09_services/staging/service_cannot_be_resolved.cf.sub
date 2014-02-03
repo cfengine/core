@@ -1,0 +1,17 @@
+body common control
+{
+      inputs => { "../default.cf.sub" };
+      bundlesequence  => { test };
+}
+
+bundle agent test
+{
+  services:
+      "myservice" service_policy => "start";
+}
+
+bundle agent standard_services(service, state)
+{
+  reports:
+      "$(this.bundle): bringing $(service) into desired state $(state) 4441a73c9b58ff7f2285c018ee7449f35ec89712";
+}

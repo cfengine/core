@@ -275,18 +275,15 @@ static void ExpandAndMapIteratorsFromScalar(EvalContext *ctx, const char *scopei
     char *sp;
     Rval rval;
     Rlist *tmp_list = NULL;
-    char v[CF_BUFSIZE], var[CF_BUFSIZE], finalname[CF_BUFSIZE], buffer[CF_BUFSIZE];
+    char v[CF_BUFSIZE], var[CF_BUFSIZE], finalname[CF_BUFSIZE], *buffer;
 
     if (string == NULL)
     {
         return;
     }
 
-    if (length >= CF_BUFSIZE)
-    {
-        ProgrammingError("ExpandAndMapIteratorsFromScalar called with invalid strlen");
-    }
-
+    /* No return calls in this function, so free at the end */
+    buffer = xcalloc(length+1,sizeof(char));
     strncpy(buffer, string, length);
     buffer[length] = '\0';
 
@@ -422,6 +419,7 @@ static void ExpandAndMapIteratorsFromScalar(EvalContext *ctx, const char *scopei
             }
         }
     }
+    free(buffer);
 }
 
 /*********************************************************************/

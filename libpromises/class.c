@@ -60,13 +60,21 @@ void ClassInit(Class *cls, const char *ns, const char *name, bool is_soft, Conte
     cls->hash = ClassRefHash(cls->ns, cls->name);
 }
 
-void ClassDestroy(Class *cls)
+static void ClassDestroySoft(Class *cls)
 {
     if (cls)
     {
         free(cls->ns);
         free(cls->name);
         StringSetDestroy(cls->tags);
+    }
+}
+
+void ClassDestroy(Class *cls)
+{
+    if (cls)
+    {
+        ClassDestroySoft(cls);
         free(cls);
     }
 }
@@ -103,7 +111,7 @@ bool ClassTablePut(ClassTable *table, const char *ns, const char *name, bool is_
     Class *cls = ClassTableGet(table, ns, name);
     if (cls)
     {
-        ClassDestroy(cls);
+        ClassDestroySoft(cls);
         ClassInit(cls, ns, name, is_soft, scope);
         return true;
     }

@@ -88,6 +88,22 @@ static void test_default_ns(void)
     }
 }
 
+static void test_put_replace(void)
+{
+    ClassTable *t = ClassTableNew();
+    assert_false(ClassTablePut(t, NULL, "test", false, CONTEXT_SCOPE_NAMESPACE, NULL));
+    Class *cls = ClassTableGet(t, NULL, "test");
+    assert_true(cls);
+    assert_int_equal(CONTEXT_SCOPE_NAMESPACE, cls->scope);
+
+    assert_true(ClassTablePut(t, NULL, "test", true, CONTEXT_SCOPE_BUNDLE, NULL));
+    cls = ClassTableGet(t, NULL, "test");
+    assert_true(cls);
+    assert_int_equal(CONTEXT_SCOPE_BUNDLE, cls->scope);
+
+    ClassTableDestroy(t);
+}
+
 int main()
 {
     PRINT_TEST_BANNER();
@@ -96,6 +112,7 @@ int main()
         unit_test(test_default_ns),
         unit_test(test_ns),
         unit_test(test_class_ref),
+        unit_test(test_put_replace),
     };
 
     return run_tests(tests);

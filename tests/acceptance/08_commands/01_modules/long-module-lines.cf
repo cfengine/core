@@ -1,0 +1,109 @@
+#######################################################
+#
+# Test command modules with long lines
+# Redmine#4170: segfault on long lines
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+  vars:
+      "script_name" string => "$(G.cat) $(this.promise_filename).txt";
+
+}
+
+#######################################################
+
+bundle agent test
+{
+  commands:
+      "$(init.script_name)" module => "true";
+
+}
+
+#######################################################
+
+bundle agent check
+{
+  vars:
+      "scalars" slist => { "x4095", "x4094", "x4093" };
+      "lists" slist => { "zshort", "z4095" };
+
+      "bytes1024" string => "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
+      "bytes1000" string => "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef01234567";
+
+      "expected[x4095]" string => concat($(bytes1024),$(bytes1024),$(bytes1024),$(bytes1000),"89abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789x4095");
+      "expected[x4094]" string => concat($(bytes1024),$(bytes1024),$(bytes1024),$(bytes1000),"89abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef012345678x4094");
+      "expected[x4093]" string => concat($(bytes1024),$(bytes1024),$(bytes1024),$(bytes1000),"89abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef01234567x4093");
+
+      "longclass" string => "class678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012";
+
+      "expected_length[zshort]" int => "227";
+      "expected_length[z4095]" int => "293";
+      "actual_length[$(lists)]" int => length("cat.$(lists)");
+
+      "longclass_length" int => string_length($(longclass));
+      "expected_length[$(scalars)]" int => string_length("$(expected[$(scalars)])");
+      "actual_length[$(scalars)]" int => string_length("$(cat.$(scalars))");
+      "tail[$(scalars)]" string => string_tail("$(cat.$(scalars))", 256);
+
+  classes:
+      "match_$(scalars)" expression => strcmp("$(expected[$(scalars)])",
+                                              "$(cat.$(scalars))");
+      "match_length_$(scalars)" expression => strcmp("$(expected_length[$(scalars)])",
+                                                     "$(actual_length[$(scalars)])");
+
+      "match_length_$(lists)" expression => strcmp("$(expected_length[$(lists)])",
+                                                     "$(actual_length[$(lists)])");
+      "ok" and => { "$(longclass)",
+                    "match_x4095", "match_length_x4095",
+                    "match_x4094", "match_length_x4094",
+                    "match_x4093", "match_length_x4093",
+                    "match_length_zshort", "match_length_z4095",
+      };
+
+  reports:
+    DEBUG::
+      "tail(256) of $(scalars) = $(tail[$(scalars)])";
+
+      "Got the long class, $(longclass_length) bytes"
+      ifvarclass => "$(longclass)";
+
+      "Did NOT get the long class, $(longclass_length) bytes"
+      ifvarclass => "!$(longclass)";
+
+      "Got the length for list $(lists): $(actual_length[$(lists)])"
+      ifvarclass => "match_length_$(lists)";
+
+      "Did NOT get the length for list $(lists): actual $(actual_length[$(lists)]) vs expected $(expected_length[$(lists)])"
+      ifvarclass => "!match_length_$(lists)";
+
+      "Got the length for scalar $(scalars): $(actual_length[$(scalars)])"
+      ifvarclass => "match_length_$(scalars)";
+
+      "Did NOT get the length for scalar $(scalars): actual $(actual_length[$(scalars)]) vs expected $(expected_length[$(scalars)])"
+      ifvarclass => "!match_length_$(scalars)";
+
+      "Got the long $(scalars), actual $(actual_length[$(scalars)]) bytes, actual tail($(scalars), 256) = $(tail[$(scalars)])"
+      ifvarclass => "match_$(scalars)";
+
+      "Did NOT get the long $(scalars), actual $(actual_length[$(scalars)]) bytes, actual tail($(scalars), 256) = $(tail[$(scalars)])"
+      ifvarclass => "!match_$(scalars)";
+
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}
+
+### PROJECT_ID: core
+### CATEGORY_ID: 26

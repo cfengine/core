@@ -18,7 +18,7 @@ In order to build CFEngine you need the following tools and libraries installed:
 * OpenSSL library
 * PCRE library
 * POSIX threads (pthreads) library, if not provided by the operating system
-* Tokyo Cabinet or QDBM
+* LMDB (Lightning Memory-mapped DataBase), Tokyo Cabinet or QDBM
 
 * MySQL client library (optional)
 * PostgreSQL client library (optional)

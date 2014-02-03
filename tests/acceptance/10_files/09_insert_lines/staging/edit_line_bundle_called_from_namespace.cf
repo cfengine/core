@@ -22,7 +22,7 @@ bundle agent init
       edit_defaults => init_empty;
 }
 
-bundle edit_line init_insert(str)
+bundle edit_line init_insert
 {
   insert_lines:
       "Hello";

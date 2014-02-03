@@ -123,7 +123,9 @@
             - 'eval' - evaluates mathematical expressions
             - 'findfiles' - returns list of files matching a search pattern
             - 'makerule' - evaluates whether a target file needs to be rebuilt from sources
-            - 'max', 'mean', 'min' - returns maximum, mean and minimum in a container or list (sorted by a 'sort' method)
+            - 'sort' - can sort lexicographically, numerically (int or real), by IP, or by MAC
+            - 'max', 'min' - returns maximum and minimum in a container or list (sorted by a 'sort' method)
+            - 'mean' - returns numeric mean of a container or list
             - 'packagesmatching' - returns a filtered list of installed packages.
             - 'string_downcase', 'string_upcase' - returns the lower-/upper-case version of a string
             - 'string_head', 'string_tail' - returns the beginning/end of a string
@@ -131,8 +133,7 @@
             - 'string_reverse' - reverses a string
             - 'variablesmatching' - returns a list of variables matching a regex and tags
             - 'variance' - returns the variance of numbers in a list or container
-            - 'sort' - can sort lexicographically, numerically (int or real), by IP, or by MAC
-            - 'eval' - learned about SI units
+            - 'eval' - learned about SI k, m, g quantifiers, e.g. "100k"
             - 'readfile' - learned to read system files of unknown size like those in /proc
             - 'nth' - learned to look up by key in a data container holding a map
             - 'string_split' - improved implementation, deprecates 'splitstring'
@@ -252,7 +253,7 @@
        - cf-key: new options --trust-key/-t and --print-digest/-p
        - Class "failsafe_fallback" is defined in failsafe.cf when main policy contains errors and
          failsafe is run because of this
-       - add scope attribute for body classes (Redmine #2013) 
+       - add scope attribute for body classes (Redmine #2013)
        - Better diagnostics of parsing errors
        - Error messages from parser now show the context of error
        - new cf-agent option: --self-diagnostics
@@ -264,7 +265,7 @@
 
        Changes:
        - parser no longer allows ',' after promiser or promisee. must be either ';' or lval
-       - Make parser output in GCC compatible format the only supported format 
+       - Make parser output in GCC compatible format the only supported format
          (remove --gcc-brief-format flag)
 
        - Silence license warnings in Enterprise Free25 installations
@@ -272,7 +273,7 @@
        - command line option version (-V) now prints a shorter parsable version without graphic
        - implicit execution of server and common bundles taking arguments is skipped in cf-serverd.
        - WARNING: option --policy-server removed, require option to --bootstrap instead
-       - process promises don't log if processes are out of range unless you 
+       - process promises don't log if processes are out of range unless you
          run in verbose mode
        - reports promises are now allowed in any context (Redmine #2005)
        - cf-report has been removed
@@ -471,10 +472,10 @@
 	  or repaired already.
 
 	  ** WARNING: When upgrading, make sure that any existing use
-	              of depends_on does not make some promises being
-	              unintentionally ignored. This can happen if you are
-	              currently refering to non-existant or never-run handles
-	              in depends_on attributes.
+		      of depends_on does not make some promises being
+		      unintentionally ignored. This can happen if you are
+		      currently refering to non-existant or never-run handles
+		      in depends_on attributes.
 
 	- methods return values, initial implementation
 
@@ -1054,7 +1055,7 @@
 	a package, which is required by some managers.
 
 	Some of the threading code is rewritten and made more robust. This includes
-     	synchronizing access to the lastseen database from the server.
+	synchronizing access to the lastseen database from the server.
 
         Bad initialization of BSD flags fixed
 	Multiple variable expansion issues in control fixed for server and agent

@@ -661,9 +661,12 @@ static int VerifyInstalledPackages(EvalContext *ctx, PackageManager **all_mgrs, 
         return true;
     }
 
+    if (a.packages.package_list_command == NULL)
+    {
+        /* skip */
+    }
 #ifdef __MINGW32__
-
-    if (strcmp(a.packages.package_list_command, PACKAGE_LIST_COMMAND_WINAPI) == 0)
+    else if (strcmp(a.packages.package_list_command, PACKAGE_LIST_COMMAND_WINAPI) == 0)
     {
         if (!NovaWin_PackageListInstalledFromAPI(ctx, &(manager->pack_list), a, pp))
         {
@@ -671,26 +674,15 @@ static int VerifyInstalledPackages(EvalContext *ctx, PackageManager **all_mgrs, 
             return false;
         }
     }
+#endif /* !__MINGW32__ */
     else
     {
-        if(!PackageListInstalledFromCommand(ctx, &(manager->pack_list), default_arch, a, pp, result))
+        if (!PackageListInstalledFromCommand(ctx, &(manager->pack_list), default_arch, a, pp, result))
         {
             Log(LOG_LEVEL_ERR, "Could not get list of installed packages");
             return false;
         }
     }
-
-#else
-
-    if (a.packages.package_list_command)
-    {
-        if(!PackageListInstalledFromCommand(ctx, &(manager->pack_list), default_arch, a, pp, result))
-        {
-            Log(LOG_LEVEL_ERR, "Could not get list of installed packages");
-            return false;
-        }
-    }
-#endif /* !__MINGW32__ */
 
     ReportSoftware(INSTALLED_PACKAGE_LISTS);
 

@@ -2367,13 +2367,15 @@ static PackageManager *GetPackageManager(PackageManager **lists, char *mgr,
 
 static void DeletePackageItems(PackageItem * pi)
 {
-    if (pi)
+    while (pi)
     {
+        PackageItem *next = pi->next;
         free(pi->name);
         free(pi->version);
         free(pi->arch);
         PromiseDestroy(pi->pp);
         free(pi);
+        pi = next;
     }
 }
 

@@ -99,7 +99,7 @@ static int PrependListPackageItem(EvalContext *ctx, PackageItem ** list, char *i
 static PackageManager *GetPackageManager(PackageManager **lists, char *mgr, PackageAction pa, PackageActionPolicy x);
 static void DeletePackageManagers(PackageManager *newlist);
 
-static char *PrefixLocalRepository(Rlist *repositories, char *package);
+static const char *PrefixLocalRepository(const Rlist *repositories, const char *package);
 
 ENTERPRISE_VOID_FUNC_1ARG_DEFINE_STUB(void, ReportPatches, ARG_UNUSED PackageManager *, list)
 {
@@ -982,9 +982,7 @@ static PromiseResult SchedulePackageOp(EvalContext *ctx, const char *name, const
     char largestPackAvail[CF_MAXVARSIZE];
     char inst_ver[CF_MAXVARSIZE];
     char inst_arch[CF_MAXVARSIZE];
-    char idBuf[CF_MAXVARSIZE];
     char id[CF_EXPANDSIZE];
-    char *pathName = NULL;
     int package_select_in_range = false;
     PackageAction policy;
 
@@ -1148,10 +1146,10 @@ static PromiseResult SchedulePackageOp(EvalContext *ctx, const char *name, const
 
                 if (strncmp(id, "$(firstrepo)", 12) == 0)
                 {
-                    snprintf(idBuf, sizeof(idBuf), "%s", id + 12);
+                    const char *idBuf = id + 12;
 
                     // and add the correct repo
-                    pathName = PrefixLocalRepository(a.packages.package_file_repositories, idBuf);
+                    const char *pathName = PrefixLocalRepository(a.packages.package_file_repositories, idBuf);
 
                     if (pathName)
                     {
@@ -1981,11 +1979,12 @@ static int ExecuteSchedule(EvalContext *ctx, PackageManager *schedule, PackageAc
                     pp = pi->pp;
                     Attributes a = GetPackageAttributes(ctx, pp);
 
-                    char *sp, *offset = command_string + strlen(command_string);
+                    char *offset = command_string + strlen(command_string);
 
                     if ((a.packages.package_file_repositories) && ((action == PACKAGE_ACTION_ADD) || (action == PACKAGE_ACTION_UPDATE)))
                     {
-                        if ((sp = PrefixLocalRepository(a.packages.package_file_repositories, pi->name)) != NULL)
+                        const char *sp = PrefixLocalRepository(a.packages.package_file_repositories, pi->name);
+                        if (sp != NULL)
                         {
                             strcat(offset, sp);
                         }
@@ -2025,13 +2024,14 @@ static int ExecuteSchedule(EvalContext *ctx, PackageManager *schedule, PackageAc
                 {
                     if (pi->name)
                     {
-                        char *sp, *offset = command_string + strlen(command_string);
+                        char *offset = command_string + strlen(command_string);
 
                         if ((a.packages.package_file_repositories) && ((action == PACKAGE_ACTION_ADD) || (action == PACKAGE_ACTION_UPDATE)))
                         {
-                            if ((sp = PrefixLocalRepository(a.packages.package_file_repositories, pi->name)) != NULL)
+                            const char *sp = PrefixLocalRepository(a.packages.package_file_repositories, pi->name);
+                            if (sp != NULL)
                             {
-                                strcat(offset, sp);
+                                strcpy(offset, sp);
                             }
                             else
                             {
@@ -2040,7 +2040,7 @@ static int ExecuteSchedule(EvalContext *ctx, PackageManager *schedule, PackageAc
                         }
                         else
                         {
-                            strcat(offset, pi->name);
+                            strcpy(offset, pi->name);
                         }
 
                         strcat(command_string, " ");
@@ -2396,18 +2396,17 @@ static void DeletePackageManagers(PackageManager *newlist)
         next = np->next;
         DeletePackageItems(np->pack_list);
         free(np->manager);
-        free((char *) np);
+        free(np);
     }
 }
 
-char *PrefixLocalRepository(Rlist *repositories, char *package)
+const char *PrefixLocalRepository(const Rlist *repositories, const char *package)
 {
     static char quotedPath[CF_MAXVARSIZE]; /* GLOBAL_R, no need to initialize */
-    Rlist *rp;
     struct stat sb;
     char path[CF_BUFSIZE];
 
-    for (rp = repositories; rp != NULL; rp = rp->next)
+    for (const Rlist *rp = repositories; rp != NULL; rp = rp->next)
     {
         if (strlcpy(path, RlistScalarValue(rp), sizeof(path)) < sizeof(path))
         {

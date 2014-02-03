@@ -177,6 +177,7 @@ int main(int argc, char *argv[])
         ShowVariablesFormatted(ctx);
     }
 
+    PolicyDestroy(policy);
     GenericAgentConfigDestroy(config);
     EvalContextDestroy(ctx);
 }

@@ -6098,7 +6098,7 @@ static void *CfReadFile(const char *filename, int maxsize)
     }
 
     /* 0 means 'read until the end of file' */
-    size_t limit = maxsize ? maxsize : SIZE_MAX;
+    size_t limit = maxsize > 0 ? maxsize : SIZE_MAX;
     bool truncated = false;
     Writer *w = FileRead(filename, limit, &truncated);
 

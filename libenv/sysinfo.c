@@ -314,10 +314,10 @@ void DetectDomainName(EvalContext *ctx, const char *orig_nodename)
     EvalContextClassPutHard(ctx, VUQNAME, "source=agent,derived-from=sys.uqhost");
     EvalContextClassPutHard(ctx, VDOMAIN, "source=agent,derived-from=sys.domain");
 
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "host", nodename, DATA_TYPE_STRING, "source=agent");
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "uqhost", VUQNAME, DATA_TYPE_STRING, "source=agent");
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "fqhost", VFQNAME, DATA_TYPE_STRING, "inventory,source=agent,group=Host name");
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "domain", VDOMAIN, DATA_TYPE_STRING, "source=agent");
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "host", nodename, CF_DATA_TYPE_STRING, "source=agent");
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "uqhost", VUQNAME, CF_DATA_TYPE_STRING, "source=agent");
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "fqhost", VFQNAME, CF_DATA_TYPE_STRING, "inventory,source=agent,group=Host name");
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "domain", VDOMAIN, CF_DATA_TYPE_STRING, "source=agent");
 }
 
 /*******************************************************************/
@@ -332,24 +332,24 @@ void DiscoverVersion(EvalContext *ctx)
         char workbuf[CF_BUFSIZE];
 
         snprintf(workbuf, CF_MAXVARSIZE, "%d", major);
-        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "cf_version_major", workbuf, DATA_TYPE_STRING, "source=agent");
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "cf_version_major", workbuf, CF_DATA_TYPE_STRING, "source=agent");
         snprintf(workbuf, CF_MAXVARSIZE, "%d", minor);
-        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "cf_version_minor", workbuf, DATA_TYPE_STRING, "source=agent");
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "cf_version_minor", workbuf, CF_DATA_TYPE_STRING, "source=agent");
         snprintf(workbuf, CF_MAXVARSIZE, "%d", patch);
-        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "cf_version_patch", workbuf, DATA_TYPE_STRING, "source=agent");
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "cf_version_patch", workbuf, CF_DATA_TYPE_STRING, "source=agent");
 
         snprintf(workbuf, CF_BUFSIZE, "%s%cinputs%clib%c%d.%d", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR, FILE_SEPARATOR, major, minor);
-        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "libdir", workbuf, DATA_TYPE_STRING, "source=agent");
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "libdir", workbuf, CF_DATA_TYPE_STRING, "source=agent");
 
         snprintf(workbuf, CF_BUFSIZE, "lib%c%d.%d", FILE_SEPARATOR, major, minor);
-        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "local_libdir", workbuf, DATA_TYPE_STRING, "source=agent");
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "local_libdir", workbuf, CF_DATA_TYPE_STRING, "source=agent");
     }
     else
     {
-        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "cf_version_major", "BAD VERSION " VERSION, DATA_TYPE_STRING, "source=agent");
-        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "cf_version_minor", "BAD VERSION " VERSION, DATA_TYPE_STRING, "source=agent");
-        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "cf_version_patch", "BAD VERSION " VERSION, DATA_TYPE_STRING, "source=agent");
-        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "libdir", CFWORKDIR, DATA_TYPE_STRING, "source=agent");
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "cf_version_major", "BAD VERSION " VERSION, CF_DATA_TYPE_STRING, "source=agent");
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "cf_version_minor", "BAD VERSION " VERSION, CF_DATA_TYPE_STRING, "source=agent");
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "cf_version_patch", "BAD VERSION " VERSION, CF_DATA_TYPE_STRING, "source=agent");
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "libdir", CFWORKDIR, CF_DATA_TYPE_STRING, "source=agent");
     }
 }
 
@@ -429,14 +429,14 @@ static void GetNameInfo3(EvalContext *ctx)
     else
     {
         snprintf(workbuf, CF_BUFSIZE, "%jd", (intmax_t) tloc);
-        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "systime", workbuf, DATA_TYPE_INT, "time_based,source=agent");
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "systime", workbuf, CF_DATA_TYPE_INT, "time_based,source=agent");
         snprintf(workbuf, CF_BUFSIZE, "%jd", (intmax_t) tloc / SECONDS_PER_DAY);
-        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "sysday", workbuf, DATA_TYPE_INT, "time_based,source=agent");
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "sysday", workbuf, CF_DATA_TYPE_INT, "time_based,source=agent");
         i = GetUptimeMinutes(tloc);
         if (i != -1)
         {
             snprintf(workbuf, CF_BUFSIZE, "%d", i);
-            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "uptime", workbuf, DATA_TYPE_INT, "inventory,time_based,source=agent,group=Uptime minutes");
+            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "uptime", workbuf, CF_DATA_TYPE_INT, "inventory,time_based,source=agent,group=Uptime minutes");
         }
     }
 
@@ -461,7 +461,7 @@ static void GetNameInfo3(EvalContext *ctx)
                     found = true;
 
                     VSYSTEMHARDCLASS = (PlatformContext) i;
-                    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "class", CLASSTEXT[i], DATA_TYPE_STRING, "inventory,source=agent,group=OS type");
+                    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "class", CLASSTEXT[i], CF_DATA_TYPE_STRING, "inventory,source=agent,group=OS type");
                     break;
                 }
             }
@@ -503,33 +503,33 @@ static void GetNameInfo3(EvalContext *ctx)
         Log(LOG_LEVEL_ERR, "Chop was called on a string that seemed to have no terminator");
     }
 
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "date", workbuf, DATA_TYPE_STRING, "time_based,source=agent");
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "cdate", CanonifyName(workbuf), DATA_TYPE_STRING, "time_based,source=agent");
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "os", VSYSNAME.sysname, DATA_TYPE_STRING, "source=agent");
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "release", VSYSNAME.release, DATA_TYPE_STRING, "inventory,source=agent,group=OS kernel");
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "version", VSYSNAME.version, DATA_TYPE_STRING, "source=agent");
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "arch", VSYSNAME.machine, DATA_TYPE_STRING, "inventory,source=agent,group=Architecture");
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "workdir", CFWORKDIR, DATA_TYPE_STRING, "source=agent");
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "fstab", VFSTAB[VSYSTEMHARDCLASS], DATA_TYPE_STRING, "source=agent");
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "resolv", VRESOLVCONF[VSYSTEMHARDCLASS], DATA_TYPE_STRING, "source=agent");
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "maildir", VMAILDIR[VSYSTEMHARDCLASS], DATA_TYPE_STRING, "source=agent");
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "exports", VEXPORTS[VSYSTEMHARDCLASS], DATA_TYPE_STRING, "source=agent");
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "logdir", GetLogDir(), DATA_TYPE_STRING, "source=agent");
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "piddir", GetPidDir(), DATA_TYPE_STRING, "source=agent");
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "masterdir", GetMasterDir(), DATA_TYPE_STRING, "source=agent");
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "inputdir", GetInputDir(), DATA_TYPE_STRING, "source=agent");
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "date", workbuf, CF_DATA_TYPE_STRING, "time_based,source=agent");
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "cdate", CanonifyName(workbuf), CF_DATA_TYPE_STRING, "time_based,source=agent");
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "os", VSYSNAME.sysname, CF_DATA_TYPE_STRING, "source=agent");
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "release", VSYSNAME.release, CF_DATA_TYPE_STRING, "inventory,source=agent,group=OS kernel");
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "version", VSYSNAME.version, CF_DATA_TYPE_STRING, "source=agent");
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "arch", VSYSNAME.machine, CF_DATA_TYPE_STRING, "inventory,source=agent,group=Architecture");
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "workdir", CFWORKDIR, CF_DATA_TYPE_STRING, "source=agent");
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "fstab", VFSTAB[VSYSTEMHARDCLASS], CF_DATA_TYPE_STRING, "source=agent");
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "resolv", VRESOLVCONF[VSYSTEMHARDCLASS], CF_DATA_TYPE_STRING, "source=agent");
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "maildir", VMAILDIR[VSYSTEMHARDCLASS], CF_DATA_TYPE_STRING, "source=agent");
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "exports", VEXPORTS[VSYSTEMHARDCLASS], CF_DATA_TYPE_STRING, "source=agent");
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "logdir", GetLogDir(), CF_DATA_TYPE_STRING, "source=agent");
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "piddir", GetPidDir(), CF_DATA_TYPE_STRING, "source=agent");
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "masterdir", GetMasterDir(), CF_DATA_TYPE_STRING, "source=agent");
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "inputdir", GetInputDir(), CF_DATA_TYPE_STRING, "source=agent");
 
     snprintf(workbuf, CF_BUFSIZE, "%s%cbin", CFWORKDIR, FILE_SEPARATOR);
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "bindir", workbuf, DATA_TYPE_STRING, "source=agent");
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "bindir", workbuf, CF_DATA_TYPE_STRING, "source=agent");
 
     snprintf(workbuf, CF_BUFSIZE, "%s%cfailsafe.cf", GetInputDir(), FILE_SEPARATOR);
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "failsafe_policy_path", workbuf, DATA_TYPE_STRING, "source=agent");
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "failsafe_policy_path", workbuf, CF_DATA_TYPE_STRING, "source=agent");
 
     snprintf(workbuf, CF_BUFSIZE, "%s%cupdate.cf", GetInputDir(), FILE_SEPARATOR);
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "update_policy_path", workbuf, DATA_TYPE_STRING, "source=agent");
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "update_policy_path", workbuf, CF_DATA_TYPE_STRING, "source=agent");
 
 /* FIXME: type conversion */
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "cf_version", (char *) Version(), DATA_TYPE_STRING, "inventory,source=agent,group=CFEngine version");
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "cf_version", (char *) Version(), CF_DATA_TYPE_STRING, "inventory,source=agent,group=CFEngine version");
 
     DiscoverVersion(ctx);
 
@@ -540,7 +540,7 @@ static void GetNameInfo3(EvalContext *ctx)
         HashPubKey(PUBKEY, digest, CF_DEFAULT_DIGEST);
         HashPrintSafe(CF_DEFAULT_DIGEST, true, digest, pubkey_digest);
 
-        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "key_digest", pubkey_digest, DATA_TYPE_STRING, "inventory,source=agent,group=CFEngine ID");
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "key_digest", pubkey_digest, CF_DATA_TYPE_STRING, "inventory,source=agent,group=CFEngine ID");
 
         snprintf(workbuf, CF_MAXVARSIZE - 1, "PK_%s", pubkey_digest);
         CanonifyNameInPlace(workbuf);
@@ -572,7 +572,7 @@ static void GetNameInfo3(EvalContext *ctx)
         if (stat(name, &sb) != -1)
         {
             snprintf(quoteName, sizeof(quoteName), "\"%s\"", name);
-            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, shortname, quoteName, DATA_TYPE_STRING, "cfe_internal,source=agent");
+            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, shortname, quoteName, CF_DATA_TYPE_STRING, "cfe_internal,source=agent");
             have_component[i] = true;
         }
     }
@@ -593,7 +593,7 @@ static void GetNameInfo3(EvalContext *ctx)
         if (stat(name, &sb) != -1)
         {
             snprintf(quoteName, sizeof(quoteName), "\"%s\"", name);
-            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, shortname, quoteName, DATA_TYPE_STRING, "cfe_internal,source=agent");
+            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, shortname, quoteName, CF_DATA_TYPE_STRING, "cfe_internal,source=agent");
         }
     }
 
@@ -602,12 +602,12 @@ static void GetNameInfo3(EvalContext *ctx)
 #ifdef __MINGW32__
     if (NovaWin_GetWinDir(workbuf, sizeof(workbuf)))
     {
-        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "windir", workbuf, DATA_TYPE_STRING, "source=agent");
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "windir", workbuf, CF_DATA_TYPE_STRING, "source=agent");
     }
 
     if (NovaWin_GetSysDir(workbuf, sizeof(workbuf)))
     {
-        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "winsysdir", workbuf, DATA_TYPE_STRING, "source=agent");
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "winsysdir", workbuf, CF_DATA_TYPE_STRING, "source=agent");
 
         char filename[CF_BUFSIZE];
         if (snprintf(filename, sizeof(filename), "%s%s", workbuf, "\\WindowsPowerShell\\v1.0\\powershell.exe") < sizeof(filename))
@@ -622,19 +622,19 @@ static void GetNameInfo3(EvalContext *ctx)
 
     if (NovaWin_GetProgDir(workbuf, sizeof(workbuf)))
     {
-        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "winprogdir", workbuf, DATA_TYPE_STRING, "source=agent");
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "winprogdir", workbuf, CF_DATA_TYPE_STRING, "source=agent");
     }
 
 # ifdef _WIN64
 // only available on 64 bit windows systems
     if (NovaWin_GetEnv("PROGRAMFILES(x86)", workbuf, sizeof(workbuf)))
     {
-        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "winprogdir86", workbuf, DATA_TYPE_STRING, "source=agent");
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "winprogdir86", workbuf, CF_DATA_TYPE_STRING, "source=agent");
     }
 
 # else/* NOT _WIN64 */
 
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "winprogdir86", "", DATA_TYPE_STRING, "source=agent");
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "winprogdir86", "", CF_DATA_TYPE_STRING, "source=agent");
 
 # endif
 #endif /* !__MINGW32__ */
@@ -695,13 +695,13 @@ static void GetNameInfo3(EvalContext *ctx)
     }
 
     sp = xstrdup(CanonifyName(workbuf));
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "long_arch", sp, DATA_TYPE_STRING, "source=agent");
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "long_arch", sp, CF_DATA_TYPE_STRING, "source=agent");
     EvalContextClassPutHard(ctx, sp, "source=agent,derived-from=sys.long_arch");
     free(sp);
 
     snprintf(workbuf, CF_BUFSIZE, "%s_%s", VSYSNAME.sysname, VSYSNAME.machine);
     sp = xstrdup(CanonifyName(workbuf));
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "ostype", sp, DATA_TYPE_STRING, "source=agent");
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "ostype", sp, CF_DATA_TYPE_STRING, "source=agent");
     EvalContextClassPutHard(ctx, sp, "inventory,group=none,source=agent,derived-from=sys.ostype");
     free(sp);
 
@@ -744,7 +744,7 @@ static void GetNameInfo3(EvalContext *ctx)
     zid = getzoneid();
     getzonenamebyid(zid, zone, ZONENAME_MAX);
 
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "zone", zone, DATA_TYPE_STRING, "inventory,source=agent,group=Solaris zone");
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "zone", zone, CF_DATA_TYPE_STRING, "inventory,source=agent,group=Solaris zone");
     snprintf(vbuff, CF_BUFSIZE - 1, "zone_%s", zone);
     EvalContextClassPutHard(ctx, vbuff, "source=agent,derived-from=sys.zone");
 
@@ -792,7 +792,7 @@ static void Get3Environment(EvalContext *ctx)
         Log(LOG_LEVEL_ERR, "Chop was called on a string that seemed to have no terminator");
     }
 
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_MON, "env_time", value, DATA_TYPE_STRING, "time_based,source=agent");
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_MON, "env_time", value, CF_DATA_TYPE_STRING, "time_based,source=agent");
 
     Log(LOG_LEVEL_VERBOSE, "Loading environment...");
 
@@ -828,7 +828,7 @@ static void Get3Environment(EvalContext *ctx)
            
             Log(LOG_LEVEL_DEBUG, "Setting new monitoring list '%s' => '%s'", name, value);
             list = RlistParseShown(value);
-            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_MON, name, list, DATA_TYPE_STRING_LIST, "monitoring,source=environment");
+            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_MON, name, list, CF_DATA_TYPE_STRING_LIST, "monitoring,source=environment");
 
             RlistDestroy(list);
         }
@@ -836,7 +836,7 @@ static void Get3Environment(EvalContext *ctx)
         {
             sscanf(context, "%255[^=]=%255[^\n]", name, value);
 
-            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_MON, name, value, DATA_TYPE_STRING, "monitoring,source=environment");
+            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_MON, name, value, CF_DATA_TYPE_STRING, "monitoring,source=environment");
             Log(LOG_LEVEL_DEBUG, "Setting new monitoring scalar '%s' => '%s'", name, value);
         }
         else
@@ -884,8 +884,8 @@ void CreateHardClassesFromCanonification(EvalContext *ctx, const char *canonifie
 static void SetFlavour(EvalContext *ctx, const char *flavour)
 {
     EvalContextClassPutHard(ctx, flavour, "inventory,group=none,source=agent,derived-from=sys.flavor");
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "flavour", flavour, DATA_TYPE_STRING, "source=agent");
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "flavor", flavour, DATA_TYPE_STRING, "inventory,source=agent,group=OS");
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "flavour", flavour, CF_DATA_TYPE_STRING, "source=agent");
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "flavor", flavour, CF_DATA_TYPE_STRING, "inventory,source=agent,group=OS");
 }
 
 static void OSClasses(EvalContext *ctx)
@@ -1082,7 +1082,7 @@ static void OSClasses(EvalContext *ctx)
         }
     }
 
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "crontab", "", DATA_TYPE_STRING, "source=agent");
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "crontab", "", CF_DATA_TYPE_STRING, "source=agent");
 
 #endif /* __CYGWIN__ */
 
@@ -1139,7 +1139,7 @@ static void OSClasses(EvalContext *ctx)
             snprintf(vbuff, CF_BUFSIZE, "/var/spool/cron/crontabs/%s", pw->pw_name);
         }
 
-        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "crontab", vbuff, DATA_TYPE_STRING, "source=agent");
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "crontab", vbuff, CF_DATA_TYPE_STRING, "source=agent");
     }
 
 #endif
@@ -1161,17 +1161,17 @@ static void OSClasses(EvalContext *ctx)
 
     if (EvalContextClassGet(ctx, NULL, "redhat"))
     {
-        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "doc_root", "/var/www/html", DATA_TYPE_STRING, "source=agent");
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "doc_root", "/var/www/html", CF_DATA_TYPE_STRING, "source=agent");
     }
 
     if (EvalContextClassGet(ctx, NULL, "SUSE"))
     {
-        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "doc_root", "/srv/www/htdocs", DATA_TYPE_STRING, "source=agent");
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "doc_root", "/srv/www/htdocs", CF_DATA_TYPE_STRING, "source=agent");
     }
 
     if (EvalContextClassGet(ctx, NULL, "debian"))
     {
-        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "doc_root", "/var/www", DATA_TYPE_STRING, "source=agent");
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "doc_root", "/var/www", CF_DATA_TYPE_STRING, "source=agent");
     }
 }
 
@@ -2474,12 +2474,12 @@ static void GetCPUInfo(EvalContext *ctx)
 
     if (count == 1) {
         EvalContextClassPutHard(ctx, buf, "source=agent,derived-from=sys.cpus");  // "1_cpu" from init - change if buf is ever used above
-        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "cpus", "1", DATA_TYPE_STRING, "inventory,source=agent,group=CPU logical cores");
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "cpus", "1", CF_DATA_TYPE_STRING, "inventory,source=agent,group=CPU logical cores");
     } else {
         snprintf(buf, CF_SMALLBUF, "%d_cpus", count);
         EvalContextClassPutHard(ctx, buf, "source=agent,derived-from=sys.cpus");
         snprintf(buf, CF_SMALLBUF, "%d", count);
-        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "cpus", buf, DATA_TYPE_STRING, "inventory,source=agent,group=CPU logical cores");
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "cpus", buf, CF_DATA_TYPE_STRING, "inventory,source=agent,group=CPU logical cores");
     }
 }
 

@@ -296,28 +296,28 @@ FileComparator FileComparatorFromString(const char *s)
 
 static const char *const datatype_strings[] =
 {
-    [DATA_TYPE_STRING] = "string",
-    [DATA_TYPE_INT] = "int",
-    [DATA_TYPE_REAL] = "real",
-    [DATA_TYPE_STRING_LIST] = "slist",
-    [DATA_TYPE_INT_LIST] = "ilist",
-    [DATA_TYPE_REAL_LIST] = "rlist",
-    [DATA_TYPE_OPTION] = "option",
-    [DATA_TYPE_OPTION_LIST] = "olist",
-    [DATA_TYPE_BODY] = "body",
-    [DATA_TYPE_BUNDLE] = "bundle",
-    [DATA_TYPE_CONTEXT] = "context",
-    [DATA_TYPE_CONTEXT_LIST] = "clist",
-    [DATA_TYPE_INT_RANGE] = "irange",
-    [DATA_TYPE_REAL_RANGE] = "rrange",
-    [DATA_TYPE_COUNTER] = "counter",
-    [DATA_TYPE_CONTAINER] = "data",
-    [DATA_TYPE_NONE] = "none"
+    [CF_DATA_TYPE_STRING] = "string",
+    [CF_DATA_TYPE_INT] = "int",
+    [CF_DATA_TYPE_REAL] = "real",
+    [CF_DATA_TYPE_STRING_LIST] = "slist",
+    [CF_DATA_TYPE_INT_LIST] = "ilist",
+    [CF_DATA_TYPE_REAL_LIST] = "rlist",
+    [CF_DATA_TYPE_OPTION] = "option",
+    [CF_DATA_TYPE_OPTION_LIST] = "olist",
+    [CF_DATA_TYPE_BODY] = "body",
+    [CF_DATA_TYPE_BUNDLE] = "bundle",
+    [CF_DATA_TYPE_CONTEXT] = "context",
+    [CF_DATA_TYPE_CONTEXT_LIST] = "clist",
+    [CF_DATA_TYPE_INT_RANGE] = "irange",
+    [CF_DATA_TYPE_REAL_RANGE] = "rrange",
+    [CF_DATA_TYPE_COUNTER] = "counter",
+    [CF_DATA_TYPE_CONTAINER] = "data",
+    [CF_DATA_TYPE_NONE] = "none"
 };
 
 DataType DataTypeFromString(const char *name)
 {
-    for (int i = 0; i < DATA_TYPE_NONE; i++)
+    for (int i = 0; i < CF_DATA_TYPE_NONE; i++)
     {
         if (strcmp(datatype_strings[i], name) == 0)
         {
@@ -325,12 +325,12 @@ DataType DataTypeFromString(const char *name)
         }
     }
 
-    return DATA_TYPE_NONE;
+    return CF_DATA_TYPE_NONE;
 }
 
 const char *DataTypeToString(DataType type)
 {
-    assert(type < DATA_TYPE_NONE);
+    assert(type < CF_DATA_TYPE_NONE);
     return datatype_strings[type];
 }
 
@@ -346,7 +346,7 @@ DataType ConstraintSyntaxGetDataType(const ConstraintSyntax *body_syntax, const 
         }
     }
 
-    return DATA_TYPE_NONE;
+    return CF_DATA_TYPE_NONE;
 }
 
 /****************************************************************************/

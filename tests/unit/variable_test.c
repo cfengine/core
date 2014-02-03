@@ -7,7 +7,7 @@ static bool PutVar(VariableTable *table, char *var_str)
 {
     VarRef *ref = VarRefParse(var_str);
     Rval rval = (Rval) { var_str, RVAL_TYPE_SCALAR };
-    bool ret = VariableTablePut(table, ref, &rval, DATA_TYPE_STRING, NULL, NULL);
+    bool ret = VariableTablePut(table, ref, &rval, CF_DATA_TYPE_STRING, NULL, NULL);
     VarRefDestroy(ref);
     return ret;
 }
@@ -22,25 +22,25 @@ static VariableTable *ReferenceTable(void)
     {
         VarRef *ref = VarRefParse("scope1.array[one]");
         Rval rval = (Rval) { "scope1.array[one]", RVAL_TYPE_SCALAR };
-        assert_false(VariableTablePut(t, ref, &rval, DATA_TYPE_STRING, NULL, NULL));
+        assert_false(VariableTablePut(t, ref, &rval, CF_DATA_TYPE_STRING, NULL, NULL));
         VarRefDestroy(ref);
     }
     {
         VarRef *ref = VarRefParse("scope1.array[two]");
         Rval rval = (Rval) { "scope1.array[two]", RVAL_TYPE_SCALAR };
-        assert_false(VariableTablePut(t, ref, &rval, DATA_TYPE_STRING, NULL, NULL));
+        assert_false(VariableTablePut(t, ref, &rval, CF_DATA_TYPE_STRING, NULL, NULL));
         VarRefDestroy(ref);
     }
     {
         VarRef *ref = VarRefParse("scope1.array[two][three]");
         Rval rval = (Rval) { "scope1.array[two][three]", RVAL_TYPE_SCALAR };
-        assert_false(VariableTablePut(t, ref, &rval, DATA_TYPE_STRING, NULL, NULL));
+        assert_false(VariableTablePut(t, ref, &rval, CF_DATA_TYPE_STRING, NULL, NULL));
         VarRefDestroy(ref);
     }
     {
         VarRef *ref = VarRefParse("scope1.array[two][four]");
         Rval rval = (Rval) { "scope1.array[two][four]", RVAL_TYPE_SCALAR };
-        assert_false(VariableTablePut(t, ref, &rval, DATA_TYPE_STRING, NULL, NULL));
+        assert_false(VariableTablePut(t, ref, &rval, CF_DATA_TYPE_STRING, NULL, NULL));
         VarRefDestroy(ref);
     }
 
@@ -100,7 +100,7 @@ static void test_replace(void)
     TestGet(t, "scope1.lval1");
 
     Rval rval = (Rval) { "foo", RVAL_TYPE_SCALAR };
-    assert_true(VariableTablePut(t, ref, &rval, DATA_TYPE_STRING, NULL, NULL));
+    assert_true(VariableTablePut(t, ref, &rval, CF_DATA_TYPE_STRING, NULL, NULL));
 
     Variable *v = VariableTableGet(t, ref);
     assert_true(v != NULL);

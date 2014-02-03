@@ -135,7 +135,7 @@ PromiseIterator *PromiseIteratorNew(EvalContext *ctx, const Promise *pp, const R
     {
         VarRef *ref = VarRefParseFromBundle(RlistScalarValue(rp), PromiseGetBundle(pp));
 
-        DataType dtype = DATA_TYPE_NONE;
+        DataType dtype = CF_DATA_TYPE_NONE;
         const void *value = EvalContextVariableGet(ctx, ref, &dtype);
         if (!value)
         {
@@ -154,7 +154,7 @@ PromiseIterator *PromiseIteratorNew(EvalContext *ctx, const Promise *pp, const R
     {
         VarRef *ref = VarRefParseFromBundle(RlistScalarValue(rp), PromiseGetBundle(pp));
 
-        DataType dtype = DATA_TYPE_NONE;
+        DataType dtype = CF_DATA_TYPE_NONE;
         const JsonElement *value = EvalContextVariableGet(ctx, ref, &dtype);
         if (!value)
         {
@@ -165,12 +165,12 @@ PromiseIterator *PromiseIteratorNew(EvalContext *ctx, const Promise *pp, const R
 
         VarRefDestroy(ref);
 
-        assert(dtype == DATA_TYPE_CONTAINER);
+        assert(dtype == CF_DATA_TYPE_CONTAINER);
 
         CfAssoc *new_var = xmalloc(sizeof(CfAssoc));
         new_var->lval = xstrdup(RlistScalarValue(rp));
         new_var->rval = (Rval) { ContainerToRlist(value), RVAL_TYPE_LIST };
-        new_var->dtype = DATA_TYPE_STRING_LIST;
+        new_var->dtype = CF_DATA_TYPE_STRING_LIST;
 
         AppendIterationVariable(iter, new_var);
     }
@@ -438,14 +438,14 @@ void PromiseIteratorUpdateVariable(EvalContext *ctx, const PromiseIterator *iter
 
         switch (iter_var->dtype)
         {
-        case DATA_TYPE_STRING_LIST:
-            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, iter_var->lval, RlistScalarValue(state), DATA_TYPE_STRING, "source=promise");
+        case CF_DATA_TYPE_STRING_LIST:
+            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, iter_var->lval, RlistScalarValue(state), CF_DATA_TYPE_STRING, "source=promise");
             break;
-        case DATA_TYPE_INT_LIST:
-            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, iter_var->lval, RlistScalarValue(state), DATA_TYPE_INT, "source=promise");
+        case CF_DATA_TYPE_INT_LIST:
+            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, iter_var->lval, RlistScalarValue(state), CF_DATA_TYPE_INT, "source=promise");
             break;
-        case DATA_TYPE_REAL_LIST:
-            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, iter_var->lval, RlistScalarValue(state), DATA_TYPE_REAL, "source=promise");
+        case CF_DATA_TYPE_REAL_LIST:
+            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, iter_var->lval, RlistScalarValue(state), CF_DATA_TYPE_REAL, "source=promise");
             break;
         default:
             assert(false);

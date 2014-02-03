@@ -79,7 +79,7 @@ static bool CheckMeasureSanity(Measurement m, const Promise *pp)
         retval = false;
     }
 
-    if (m.data_type == DATA_TYPE_NONE)
+    if (m.data_type == CF_DATA_TYPE_NONE)
     {
         Log(LOG_LEVEL_ERR, "The promiser '%s' did not specify a data type", pp->promiser);
         PromiseRef(LOG_LEVEL_ERR, pp);
@@ -91,10 +91,10 @@ static bool CheckMeasureSanity(Measurement m, const Promise *pp)
         {
             switch (m.data_type)
             {
-            case DATA_TYPE_COUNTER:
-            case DATA_TYPE_STRING:
-            case DATA_TYPE_INT:
-            case DATA_TYPE_REAL:
+            case CF_DATA_TYPE_COUNTER:
+            case CF_DATA_TYPE_STRING:
+            case CF_DATA_TYPE_INT:
+            case CF_DATA_TYPE_REAL:
                 break;
 
             default:

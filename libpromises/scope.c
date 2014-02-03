@@ -134,7 +134,7 @@ void ScopeAugment(EvalContext *ctx, const Bundle *bp, const Promise *pp, const R
             
             GetNaked(naked, RlistScalarValue(rpr));
 
-            DataType value_type = DATA_TYPE_NONE;
+            DataType value_type = CF_DATA_TYPE_NONE;
             const void *value = NULL;
             if (pbp != NULL)
             {
@@ -151,19 +151,19 @@ void ScopeAugment(EvalContext *ctx, const Bundle *bp, const Promise *pp, const R
 
             switch (value_type)
             {
-            case DATA_TYPE_STRING_LIST:
-            case DATA_TYPE_INT_LIST:
-            case DATA_TYPE_REAL_LIST:
+            case CF_DATA_TYPE_STRING_LIST:
+            case CF_DATA_TYPE_INT_LIST:
+            case CF_DATA_TYPE_REAL_LIST:
                 {
                     VarRef *ref = VarRefParseFromBundle(lval, bp);
-                    EvalContextVariablePut(ctx, ref, value, DATA_TYPE_STRING_LIST, "source=promise");
+                    EvalContextVariablePut(ctx, ref, value, CF_DATA_TYPE_STRING_LIST, "source=promise");
                     VarRefDestroy(ref);
                 }
                 break;
-            case DATA_TYPE_CONTAINER:
+            case CF_DATA_TYPE_CONTAINER:
                 {
                     VarRef *ref = VarRefParseFromBundle(lval, bp);
-                    EvalContextVariablePut(ctx, ref, value, DATA_TYPE_CONTAINER, "source=promise");
+                    EvalContextVariablePut(ctx, ref, value, CF_DATA_TYPE_CONTAINER, "source=promise");
                     VarRefDestroy(ref);
                 }
                 break;
@@ -171,7 +171,7 @@ void ScopeAugment(EvalContext *ctx, const Bundle *bp, const Promise *pp, const R
                 {
                     Log(LOG_LEVEL_ERR, "List or container parameter '%s' not found while constructing scope '%s' - use @(scope.variable) in calling reference", naked, bp->name);
                     VarRef *ref = VarRefParseFromBundle(lval, bp);
-                    EvalContextVariablePut(ctx, ref, RlistScalarValue(rpr), DATA_TYPE_STRING, "source=promise");
+                    EvalContextVariablePut(ctx, ref, RlistScalarValue(rpr), CF_DATA_TYPE_STRING, "source=promise");
                     VarRefDestroy(ref);
                 }
                 break;
@@ -184,7 +184,7 @@ void ScopeAugment(EvalContext *ctx, const Bundle *bp, const Promise *pp, const R
             case RVAL_TYPE_SCALAR:
                 {
                     VarRef *ref = VarRefParseFromBundle(lval, bp);
-                    EvalContextVariablePut(ctx, ref, RvalScalarValue(rpr->val), DATA_TYPE_STRING, "source=promise");
+                    EvalContextVariablePut(ctx, ref, RvalScalarValue(rpr->val), CF_DATA_TYPE_STRING, "source=promise");
                     VarRefDestroy(ref);
                 }
                 break;
@@ -196,7 +196,7 @@ void ScopeAugment(EvalContext *ctx, const Bundle *bp, const Promise *pp, const R
                     if (rval.type == RVAL_TYPE_SCALAR)
                     {
                         VarRef *ref = VarRefParseFromBundle(lval, bp);
-                        EvalContextVariablePut(ctx, ref, RvalScalarValue(rval), DATA_TYPE_STRING, "source=promise");
+                        EvalContextVariablePut(ctx, ref, RvalScalarValue(rval), CF_DATA_TYPE_STRING, "source=promise");
                         VarRefDestroy(ref);
                     }
                     else
@@ -255,7 +255,7 @@ void ScopeMapBodyArgs(EvalContext *ctx, const Body *body, const Rlist *args)
         case RVAL_TYPE_FNCALL:
             {
                 FnCall *fp = RlistFnCallValue(arg);
-                arg_type = DATA_TYPE_NONE;
+                arg_type = CF_DATA_TYPE_NONE;
                 {
                     const FnCallType *fncall_type = FnCallTypeGet(fp->name);
                     if (fncall_type)

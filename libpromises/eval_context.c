@@ -1016,34 +1016,34 @@ void EvalContextStackPushPromiseFrame(EvalContext *ctx, const Promise *owner, bo
             strlcpy(path, PromiseGetBundle(owner)->source_path, CF_BUFSIZE);
         }
 
-        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promise_filename", path, DATA_TYPE_STRING, "source=promise");
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promise_filename", path, CF_DATA_TYPE_STRING, "source=promise");
 
         // We now make path just the directory name!
         DeleteSlash(path);
         ChopLastNode(path);
 
-        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promise_dirname", path, DATA_TYPE_STRING, "source=promise");
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promise_dirname", path, CF_DATA_TYPE_STRING, "source=promise");
         char number[CF_SMALLBUF];
         snprintf(number, CF_SMALLBUF, "%zu", owner->offset.line);
-        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promise_linenumber", number, DATA_TYPE_STRING, "source=promise");
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promise_linenumber", number, CF_DATA_TYPE_STRING, "source=promise");
     }
 
     char v[CF_MAXVARSIZE];
     snprintf(v, CF_MAXVARSIZE, "%d", (int) ctx->uid);
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser_uid", v, DATA_TYPE_INT, "source=agent");
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser_uid", v, CF_DATA_TYPE_INT, "source=agent");
     snprintf(v, CF_MAXVARSIZE, "%d", (int) ctx->gid);
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser_gid", v, DATA_TYPE_INT, "source=agent");
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser_gid", v, CF_DATA_TYPE_INT, "source=agent");
     snprintf(v, CF_MAXVARSIZE, "%d", (int) ctx->pid);
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser_pid", v, DATA_TYPE_INT, "source=agent");
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser_pid", v, CF_DATA_TYPE_INT, "source=agent");
     snprintf(v, CF_MAXVARSIZE, "%d", (int) ctx->ppid);
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser_ppid", v, DATA_TYPE_INT, "source=agent");
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser_ppid", v, CF_DATA_TYPE_INT, "source=agent");
 
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "bundle", PromiseGetBundle(owner)->name, DATA_TYPE_STRING, "source=promise");
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "namespace", PromiseGetNamespace(owner), DATA_TYPE_STRING, "source=promise");
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "bundle", PromiseGetBundle(owner)->name, CF_DATA_TYPE_STRING, "source=promise");
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "namespace", PromiseGetNamespace(owner), CF_DATA_TYPE_STRING, "source=promise");
 
     if (owner->has_subbundles)
     {
-        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser", owner->promiser, DATA_TYPE_STRING, "source=promise");
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser", owner->promiser, CF_DATA_TYPE_STRING, "source=promise");
     }
 }
 
@@ -1558,7 +1558,7 @@ bool EvalContextVariablePut(EvalContext *ctx,
                             const VarRef *ref, const void *value,
                             DataType type, const char *tags)
 {
-    assert(type != DATA_TYPE_NONE);
+    assert(type != CF_DATA_TYPE_NONE);
     assert(ref);
     assert(ref->lval);
     assert(value);
@@ -1645,7 +1645,7 @@ static Variable *VariableResolve(const EvalContext *ctx, const VarRef *ref)
             var = VariableTableGet(table, base_ref);
             VarRefDestroy(base_ref);
 
-            if (var && var->type == DATA_TYPE_CONTAINER)
+            if (var && var->type == CF_DATA_TYPE_CONTAINER)
             {
                 return var;
             }
@@ -1660,14 +1660,14 @@ const void  *EvalContextVariableGet(const EvalContext *ctx, const VarRef *ref, D
     Variable *var = VariableResolve(ctx, ref);
     if (var)
     {
-        if (var->ref->num_indices == 0 && ref->num_indices > 0 && var->type == DATA_TYPE_CONTAINER)
+        if (var->ref->num_indices == 0 && ref->num_indices > 0 && var->type == CF_DATA_TYPE_CONTAINER)
         {
             JsonElement *child = JsonSelect(RvalContainerValue(var->rval), ref->num_indices, ref->indices);
             if (child)
             {
                 if (type_out)
                 {
-                    *type_out = DATA_TYPE_CONTAINER;
+                    *type_out = CF_DATA_TYPE_CONTAINER;
                 }
                 return child;
             }
@@ -1684,7 +1684,7 @@ const void  *EvalContextVariableGet(const EvalContext *ctx, const VarRef *ref, D
 
     if (type_out)
     {
-        *type_out = DATA_TYPE_NONE;
+        *type_out = CF_DATA_TYPE_NONE;
     }
     return NULL;
 }

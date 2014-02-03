@@ -51,7 +51,7 @@ static int RegExMatchSubString(EvalContext *ctx, pcre *rx, const char *teststrin
                 char substring[CF_MAXVARSIZE];
                 char *index = StringFromLong(i);
                 strlcpy(substring, backref_start, MIN(CF_MAXVARSIZE, backref_len + 1));
-                EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_MATCH, index, substring, DATA_TYPE_STRING, "source=regex");
+                EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_MATCH, index, substring, CF_DATA_TYPE_STRING, "source=regex");
                 free(index);
             }
         }

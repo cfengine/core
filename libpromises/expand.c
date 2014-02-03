@@ -162,11 +162,11 @@ static PromiseResult ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp, Rli
             BufferZero(expbuf);
             ExpandScalar(ctx, NULL, "this", handle, expbuf);
             CanonifyNameInPlace(BufferGet(expbuf));
-            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "handle", BufferData(expbuf), DATA_TYPE_STRING, "source=promise");
+            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "handle", BufferData(expbuf), CF_DATA_TYPE_STRING, "source=promise");
         }
         else
         {
-            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "handle", PromiseID(pp), DATA_TYPE_STRING, "source=promise");
+            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "handle", PromiseID(pp), CF_DATA_TYPE_STRING, "source=promise");
         }
 
         const Promise *pexp = EvalContextStackPushPromiseIterationFrame(ctx, i, iter_ctx);
@@ -395,7 +395,7 @@ static void ExpandAndMapIteratorsFromScalar(EvalContext *ctx, const Bundle *bund
                     // var is the expanded name of the variable in its native context
                     // finalname will be the mapped name in the local context "this."
 
-                    DataType value_type = DATA_TYPE_NONE;
+                    DataType value_type = CF_DATA_TYPE_NONE;
                     const void *value = EvalContextVariableGet(ctx, inner_ref, &value_type);
                     if (value)
                     {
@@ -517,7 +517,7 @@ Rlist *ExpandList(EvalContext *ctx, const char *ns, const char *scope, const Rli
             {
                 VarRef *ref = VarRefParseFromScope(naked, scope);
 
-                DataType value_type = DATA_TYPE_NONE;
+                DataType value_type = CF_DATA_TYPE_NONE;
                 const void *value = EvalContextVariableGet(ctx, ref, &value_type);
                 if (value)
                 {
@@ -701,7 +701,7 @@ bool ExpandScalar(const EvalContext *ctx, const char *ns, const char *scope, con
         char name[CF_MAXVARSIZE] = "";
         if (!IsExpandable(BufferData(current_item)))
         {
-            DataType type = DATA_TYPE_NONE;
+            DataType type = CF_DATA_TYPE_NONE;
             const void *value = NULL;
             {
                 VarRef *ref = VarRefParseFromNamespaceAndScope(BufferData(current_item), ns, scope, CF_NS, '.');
@@ -713,16 +713,16 @@ bool ExpandScalar(const EvalContext *ctx, const char *ns, const char *scope, con
             {
                 switch (type)
                 {
-                case DATA_TYPE_STRING:
-                case DATA_TYPE_INT:
-                case DATA_TYPE_REAL:
+                case CF_DATA_TYPE_STRING:
+                case CF_DATA_TYPE_INT:
+                case CF_DATA_TYPE_REAL:
                     BufferAppend(out, value, strlen(value));
                     break;
 
-                case DATA_TYPE_STRING_LIST:
-                case DATA_TYPE_INT_LIST:
-                case DATA_TYPE_REAL_LIST:
-                case DATA_TYPE_NONE:
+                case CF_DATA_TYPE_STRING_LIST:
+                case CF_DATA_TYPE_INT_LIST:
+                case CF_DATA_TYPE_REAL_LIST:
+                case CF_DATA_TYPE_NONE:
                     if (varstring == '}')
                     {
                         snprintf(name, CF_MAXVARSIZE, "${%s}", BufferData(current_item));
@@ -790,7 +790,7 @@ Rval EvaluateFinalRval(EvalContext *ctx, const Policy *policy, const char *ns, c
         if (!IsExpandable(naked))
         {
             VarRef *ref = VarRefParseFromScope(naked, scope);
-            DataType value_type = DATA_TYPE_NONE;
+            DataType value_type = CF_DATA_TYPE_NONE;
             const void *value = EvalContextVariableGet(ctx, ref, &value_type);
 
             if (!value || DataTypeToRvalType(value_type) != RVAL_TYPE_LIST)
@@ -1072,8 +1072,8 @@ static void ResolveControlBody(EvalContext *ctx, GenericAgentConfig *config, con
             EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_SYS, "domain");
             EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_SYS, "fqhost");
             snprintf(VFQNAME, CF_MAXVARSIZE, "%s.%s", VUQNAME, VDOMAIN);
-            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "fqhost", VFQNAME, DATA_TYPE_STRING, "inventory,source=agent,group=Host name");
-            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "domain", VDOMAIN, DATA_TYPE_STRING, "source=agent");
+            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "fqhost", VFQNAME, CF_DATA_TYPE_STRING, "inventory,source=agent,group=Host name");
+            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "domain", VDOMAIN, CF_DATA_TYPE_STRING, "source=agent");
             EvalContextClassPutHard(ctx, VDOMAIN, "source=agent");
         }
 

@@ -44,29 +44,29 @@ RvalType DataTypeToRvalType(DataType datatype)
 {
     switch (datatype)
     {
-    case DATA_TYPE_BODY:
-    case DATA_TYPE_BUNDLE:
-    case DATA_TYPE_CONTEXT:
-    case DATA_TYPE_COUNTER:
-    case DATA_TYPE_INT:
-    case DATA_TYPE_INT_RANGE:
-    case DATA_TYPE_OPTION:
-    case DATA_TYPE_REAL:
-    case DATA_TYPE_REAL_RANGE:
-    case DATA_TYPE_STRING:
+    case CF_DATA_TYPE_BODY:
+    case CF_DATA_TYPE_BUNDLE:
+    case CF_DATA_TYPE_CONTEXT:
+    case CF_DATA_TYPE_COUNTER:
+    case CF_DATA_TYPE_INT:
+    case CF_DATA_TYPE_INT_RANGE:
+    case CF_DATA_TYPE_OPTION:
+    case CF_DATA_TYPE_REAL:
+    case CF_DATA_TYPE_REAL_RANGE:
+    case CF_DATA_TYPE_STRING:
         return RVAL_TYPE_SCALAR;
 
-    case DATA_TYPE_CONTEXT_LIST:
-    case DATA_TYPE_INT_LIST:
-    case DATA_TYPE_OPTION_LIST:
-    case DATA_TYPE_REAL_LIST:
-    case DATA_TYPE_STRING_LIST:
+    case CF_DATA_TYPE_CONTEXT_LIST:
+    case CF_DATA_TYPE_INT_LIST:
+    case CF_DATA_TYPE_OPTION_LIST:
+    case CF_DATA_TYPE_REAL_LIST:
+    case CF_DATA_TYPE_STRING_LIST:
         return RVAL_TYPE_LIST;
 
-    case DATA_TYPE_CONTAINER:
+    case CF_DATA_TYPE_CONTAINER:
         return RVAL_TYPE_CONTAINER;
 
-    case DATA_TYPE_NONE:
+    case CF_DATA_TYPE_NONE:
         return RVAL_TYPE_NOPROMISEE;
     }
 
@@ -1314,7 +1314,7 @@ void RlistFlatten(EvalContext *ctx, Rlist **list)
             if (!IsExpandable(naked))
             {
                 VarRef *ref = VarRefParse(naked);
-                DataType value_type = DATA_TYPE_NONE;
+                DataType value_type = CF_DATA_TYPE_NONE;
                 const void *value = EvalContextVariableGet(ctx, ref, &value_type);
                 VarRefDestroy(ref);
 

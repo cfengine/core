@@ -5,7 +5,6 @@ bundle agent old_bundle
                       "deprecated=3.6.0",
                       "deprecation-reason=Generic reimplementation",
                       "replaced-by=something_else",
-                      "deprecated",
                     };
 
 }

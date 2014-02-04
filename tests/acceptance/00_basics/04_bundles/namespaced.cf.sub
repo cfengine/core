@@ -1,9 +1,21 @@
 body file control
 {
-      namespace => "mytest";
+      namespace => "ns1";
 }
 
-bundle agent mytest
+bundle agent mytest(a)
+{
+  files:
+      "$(sys.workdir)/ppkeys/."
+      create => "true";
+}
+
+body file control
+{
+      namespace => "ns2";
+}
+
+bundle agent mytest(a,b)
 {
   files:
       "$(sys.workdir)/ppkeys/."

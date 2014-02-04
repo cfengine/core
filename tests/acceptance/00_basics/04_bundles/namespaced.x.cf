@@ -1,11 +1,9 @@
-# Redmine#4025
+# Redmine#4025: should fail
 
 body common control
 {
-      inputs => { "../../default.cf.sub", "namespaced.cf.sub" };
-      bundlesequence => { 
-                          ns1:mytest("x"),
-                          ns2:mytest("x", "y"),
+      inputs => { "../../default.cf.sub", "namespaced.cf.subx" };
+      bundlesequence => { mytest,
                           default("$(this.promise_filename)") };
       version => "1.0";
 }

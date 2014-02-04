@@ -283,9 +283,7 @@ static void ExpandAndMapIteratorsFromScalar(EvalContext *ctx, const char *scopei
     }
 
     /* No return calls in this function, so free at the end */
-    buffer = xcalloc(length+1,sizeof(char));
-    strncpy(buffer, string, length);
-    buffer[length] = '\0';
+    buffer = xstrndup(string, length);
 
     for (sp = buffer; (*sp != '\0'); sp++)
     {

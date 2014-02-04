@@ -1,0 +1,14 @@
+body file control
+{
+    namespace => "testing_namespace";
+}
+
+bundle edit_line simple_insert
+{
+  insert_lines:
+      "Hello";
+}
+
+
+### PROJECT_ID: core
+### CATEGORY_ID: 27

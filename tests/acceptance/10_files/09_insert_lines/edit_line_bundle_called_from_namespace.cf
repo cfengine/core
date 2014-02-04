@@ -6,7 +6,7 @@
 
 body common control
 {
-      inputs => { "../../default.cf.sub" };
+      inputs => { "../../default.cf.sub", "edit_line_bundle_called_from_namespace.cf.sub" };
       bundlesequence  => { default("$(this.promise_filename)") };
       version => "1.0";
 }
@@ -55,25 +55,6 @@ bundle agent check
       "any" usebundle => default_check_diff("$(G.testfile).actual",
                                             "$(G.testfile).expected",
                                             "$(this.promise_filename)");
-}
-
-#######################################################
-# NS
-#######################################################
-
-body file control
-{
-    namespace => "testing_namespace";
-}
-
-bundle agent namespaced_test(file)
-{
-  files:
-      "$(file)"
-      create => "true",
-      edit_defaults => default:init_empty,
-      classes => default:default_cf_sub_scoped_generic_classes("edit", "bundle"),
-      edit_line => default:simple_insert("Hello");
 }
 
 ### PROJECT_ID: core

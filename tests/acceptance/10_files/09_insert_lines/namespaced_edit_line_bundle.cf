@@ -6,7 +6,7 @@
 
 body common control
 {
-      inputs => { "../../default.cf.sub" };
+      inputs => { "../../default.cf.sub", "namespaced_edit_line_bundle.cf.sub" };
       bundlesequence  => { default("$(this.promise_filename)") };
       version => "1.0";
 }
@@ -53,22 +53,6 @@ bundle agent check
                                             "$(G.testfile).expected",
                                             "$(this.promise_filename)");
 }
-
-#######################################################
-# NS
-#######################################################
-
-body file control
-{
-    namespace => "testing_namespace";
-}
-
-bundle edit_line simple_insert
-{
-  insert_lines:
-      "Hello";
-}
-
 
 ### PROJECT_ID: core
 ### CATEGORY_ID: 27

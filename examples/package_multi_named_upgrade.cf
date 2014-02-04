@@ -1,0 +1,65 @@
+#  Copyright (C) Cfengine AS
+
+#  This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+
+#  This program is free software; you can redistribute it and/or modify it
+#  under the terms of the GNU General Public License as published by the
+#  Free Software Foundation; version 3.
+
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
+
+# To the extent this program is licensed as part of the Enterprise
+# versions of Cfengine, the applicable Commercial Open Source License
+# (COSL) may apply to this file if you as a licensee so wish it. See
+# included file COSL.txt.
+#
+
+
+# Upgrade multiple named packages
+#
+# This example upgrades the named packages to the specified
+# versions using the native package manager on either
+# an rpm or debian based host.
+#
+#+begin_src cfengine3
+body common control
+{
+    inputs => {"$(sys.libdir)/packages.cf"};
+    bundlesequence  => {"multi_named_upgrade"};
+    version => "1.0";
+}
+
+
+bundle agent multi_named_upgrade
+{
+    vars:
+        "package_name" slist => {"zip","gom"};   
+        "desired[zip]" string => "3.0-7";
+        "desired[gom]" string => "0.30.2-5.1";
+            
+    packages:
+
+        debian::
+
+            "$(package_name)"
+            package_policy => "update",
+            package_select => "==",
+            package_version => "$(desired[$(package_name)])",
+            package_method => apt_get;
+           
+        redhat::
+
+            "$(package_name)"
+            package_policy => "update",
+            package_select => "==",
+            package_version => "$(desired[$(package_name)])",
+            package_method => yum_rpm;
+}
+#+end_src

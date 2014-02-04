@@ -34,7 +34,7 @@ bundle agent test
       "cf-agent"
       restart_class => "restart_cf_agent",
       comment       => "restart_cf_agent should not be set because warnonly",
-      classes       => ifelse( "test_processess" ),
+      classes       => ifelse( "test_processes" ),
       action        => warnonly;
 
   reports:

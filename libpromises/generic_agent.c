@@ -1762,6 +1762,7 @@ void GenericAgentConfigDestroy(GenericAgentConfig *config)
         StringSetDestroy(config->heap_soft);
         StringSetDestroy(config->heap_negated);
         free(config->input_file);
+        free(config);
     }
 }
 

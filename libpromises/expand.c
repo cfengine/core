@@ -1008,15 +1008,18 @@ static void ResolveVariablesPromises(EvalContext *ctx, PromiseType *pt)
 
 void BundleResolve(EvalContext *ctx, const Bundle *bundle)
 {
-    Log(LOG_LEVEL_DEBUG, "Resolving variables in bundle '%s' '%s'", bundle->type, bundle->name);
+    Log(LOG_LEVEL_DEBUG, "Resolving variables in bundle '%s' '%s'",
+        bundle->type, bundle->name);
 
-    for (size_t j = 0; j < SeqLength(bundle->promise_types); j++)
+    if (strcmp(bundle->type, "common") == 0)
     {
-        PromiseType *sp = SeqAt(bundle->promise_types, j);
-
-        if (strcmp(bundle->type, "common") == 0 && strcmp(sp->name, "classes") == 0)
+        for (size_t j = 0; j < SeqLength(bundle->promise_types); j++)
         {
-            ResolveCommonClassPromises(ctx, sp);
+            PromiseType *sp = SeqAt(bundle->promise_types, j);
+            if (strcmp(sp->name, "classes") == 0)
+            {
+                ResolveCommonClassPromises(ctx, sp);
+            }
         }
     }
 
@@ -1029,7 +1032,6 @@ void BundleResolve(EvalContext *ctx, const Bundle *bundle)
             ResolveVariablesPromises(ctx, sp);
         }
     }
-
 }
 
 static void ResolveControlBody(EvalContext *ctx, GenericAgentConfig *config,

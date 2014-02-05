@@ -169,7 +169,22 @@ unsigned FnCallHash(const FnCall *fp, unsigned seed, unsigned max)
 
 FnCall *ExpandFnCall(EvalContext *ctx, const char *ns, const char *scope, const FnCall *f)
 {
-    return FnCallNew(f->name, ExpandList(ctx, ns, scope, f->args, false));
+    FnCall *result = NULL;
+    if (IsCf3VarString(f->name))
+    {
+        // e.g. usebundle => $(m)(arg0, arg1);
+        Buffer *buf = BufferNewWithCapacity(CF_MAXVARSIZE);
+        ExpandScalar(ctx, ns, scope, f->name, buf);
+
+        result = FnCallNew(BufferData(buf), ExpandList(ctx, ns, scope, f->args, false));
+        BufferDestroy(buf);
+    }
+    else
+    {
+        result = FnCallNew(f->name, ExpandList(ctx, ns, scope, f->args, false));
+    }
+
+    return result;
 }
 
 void FnCallWrite(Writer *writer, const FnCall *call)

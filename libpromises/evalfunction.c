@@ -6464,7 +6464,7 @@ void ModuleProtocol(EvalContext *ctx, char *command, const char *line, int print
     case '+':
         if (length > CF_MAXVARSIZE)
         {
-            Log(LOG_LEVEL_ERR, "Module protocol was given an overlong +class line (%ld bytes), skipping", length);
+            Log(LOG_LEVEL_ERR, "Module protocol was given an overlong +class line (%zd bytes), skipping", length);
             break;
         }
 
@@ -6482,7 +6482,7 @@ void ModuleProtocol(EvalContext *ctx, char *command, const char *line, int print
     case '-':
         if (length > CF_MAXVARSIZE)
         {
-            Log(LOG_LEVEL_ERR, "Module protocol was given an overlong -class line (%ld bytes), skipping", length);
+            Log(LOG_LEVEL_ERR, "Module protocol was given an overlong -class line (%zd bytes), skipping", length);
             break;
         }
 
@@ -6516,7 +6516,7 @@ void ModuleProtocol(EvalContext *ctx, char *command, const char *line, int print
     case '=':
         if (length > CF_BUFSIZE + 256)
         {
-            Log(LOG_LEVEL_ERR, "Module protocol was given an overlong variable =line (%ld bytes), skipping", length);
+            Log(LOG_LEVEL_ERR, "Module protocol was given an overlong variable =line (%zd bytes), skipping", length);
             break;
         }
 
@@ -6575,7 +6575,7 @@ void ModuleProtocol(EvalContext *ctx, char *command, const char *line, int print
     case '@':
         if (length > CF_BUFSIZE + 256 - 1)
         {
-            Log(LOG_LEVEL_ERR, "Module protocol was given an overlong variable @line (%ld bytes), skipping", length);
+            Log(LOG_LEVEL_ERR, "Module protocol was given an overlong variable @line (%zd bytes), skipping", length);
             break;
         }
 

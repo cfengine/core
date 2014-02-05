@@ -107,9 +107,13 @@ void ServerEntryPoint(EvalContext *ctx, char *ipaddr, ConnectionInfo *info)
         "Obtained IP address of '%s' on socket %d from accept",
         ipaddr, ConnectionInfoSocket(info));
 
+    /* TODO change nonattackerlist, attackerlist and especially connectionlist
+     *      to binary searched lists, or remove them from the main thread! */
     if ((SV.nonattackerlist) && (!IsMatchItemIn(SV.nonattackerlist, MapAddress(ipaddr))))
     {
-        Log(LOG_LEVEL_ERR, "Not allowing connection from non-authorized IP '%s'", ipaddr);
+        Log(LOG_LEVEL_ERR,
+            "Remote host '%s' not in allowconnects, denying connection",
+            ipaddr);
         cf_closesocket(ConnectionInfoSocket(info));
         ConnectionInfoDestroy(&info);
         return;
@@ -117,7 +121,9 @@ void ServerEntryPoint(EvalContext *ctx, char *ipaddr, ConnectionInfo *info)
 
     if (IsMatchItemIn(SV.attackerlist, MapAddress(ipaddr)))
     {
-        Log(LOG_LEVEL_ERR, "Denying connection from non-authorized IP '%s'", ipaddr);
+        Log(LOG_LEVEL_ERR,
+            "Remote host '%s' is in denyconnects, denying connection",
+            ipaddr);
         cf_closesocket(ConnectionInfoSocket(info));
         ConnectionInfoDestroy(&info);
         return;
@@ -140,7 +146,9 @@ void ServerEntryPoint(EvalContext *ctx, char *ipaddr, ConnectionInfo *info)
         if (IsItemIn(SV.connectionlist, MapAddress(ipaddr)))
         {
             ThreadUnlock(cft_count);
-            Log(LOG_LEVEL_ERR, "Denying repeated connection from '%s'", ipaddr);
+            Log(LOG_LEVEL_ERR,
+                "Remote host '%s' is not in allowallconnects, denying second simultaneous connection",
+                ipaddr);
             cf_closesocket(ConnectionInfoSocket(info));
             ConnectionInfoDestroy(&info);
             return;
@@ -239,7 +247,7 @@ static void SpawnConnection(EvalContext *ctx, char *ipaddr, ConnectionInfo *info
         Log(LOG_LEVEL_ERR,
             "SpawnConnection: Unable to initialize thread attributes (%s)",
             GetErrorStr());
-        goto err2;
+        goto err;
     }
     ret = pthread_attr_setdetachstate(&threadattrs, PTHREAD_CREATE_DETACHED);
     if (ret != 0)
@@ -247,7 +255,7 @@ static void SpawnConnection(EvalContext *ctx, char *ipaddr, ConnectionInfo *info
         Log(LOG_LEVEL_ERR,
             "SpawnConnection: Unable to set thread to detached state (%s).",
             GetErrorStr());
-        goto err1;
+        goto cleanup;
     }
     ret = pthread_attr_setstacksize(&threadattrs, 1024 * 1024);
     if (ret != 0)
@@ -266,12 +274,12 @@ static void SpawnConnection(EvalContext *ctx, char *ipaddr, ConnectionInfo *info
         Log(LOG_LEVEL_ERR,
             "Unable to spawn worker thread. (pthread_create: %s)",
             GetErrorStr());
-        goto err1;
+        goto cleanup;
     }
 
-  err1:
+  cleanup:
     pthread_attr_destroy(&threadattrs);
-  err2:
+  err:
     if (ret != 0)
     {
         Log(LOG_LEVEL_WARNING, "Thread is being handled from main loop!");

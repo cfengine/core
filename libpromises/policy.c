@@ -270,29 +270,54 @@ Body *PolicyGetBody(const Policy *policy, const char *ns, const char *type, cons
     return NULL;
 }
 
-Bundle *PolicyGetBundle(const Policy *policy, const char *ns, const char *type, const char *name)
+Bundle *PolicyGetBundle(const Policy *policy, const char *ns, const char *type, const char *given_bundle_name)
 {
+    Log(LOG_LEVEL_DEBUG, "Looking for bundle name %s of type %s in namespace %s",
+        given_bundle_name,
+        type ? type : "(not given)",
+        ns ? ns : "(not given)");
+
+    char *bare_bundle_name = StripNamespace(given_bundle_name);
+    char *given_bundle_namespace = QualifiedNameNamespaceComponent(given_bundle_name);
+
     for (size_t i = 0; i < SeqLength(policy->bundles); i++)
     {
         Bundle *bp = SeqAt(policy->bundles, i);
 
-        char *bundle_symbol = StripNamespace(name);
-
-        if ((!type || strcmp(bp->type, type) == 0) && ((strcmp(bundle_symbol, bp->name) == 0) || (strcmp(bp->name, name) == 0)))
+        if ((!type || strcmp(bp->type, type) == 0)
+            && ((strcmp(bare_bundle_name, bp->name) == 0)
+                || (strcmp(bp->name, given_bundle_name) == 0)))
         {
-            free(bundle_symbol);
-
             // allow namespace to be optionally matched
             if (ns && strcmp(bp->ns, ns) != 0)
             {
                 continue;
             }
+            else if (given_bundle_namespace && strcmp(bp->ns, given_bundle_namespace) != 0)
+            {
+                // a namespace was requested in the bundle name and it
+                // doesn't match this bundle's namespace
+                continue;
+            }
+            else if (!given_bundle_namespace && !ns && strcmp(bp->ns, NamespaceDefault()) != 0)
+            {
+                // a namespace was not requested in the bundle name,
+                // we are not asked for a specific namespace, and the
+                // current bundle is not in the default namespace
+                continue;
+            }
 
+            Log(LOG_LEVEL_DEBUG, "Found match: bundle %s:%s", bp->ns, bp->name);
+
+            free(bare_bundle_name);
+            free(given_bundle_namespace);
             return bp;
         }
 
-        free(bundle_symbol);
     }
+
+    free(bare_bundle_name);
+    free(given_bundle_namespace);
 
     return NULL;
 }

@@ -1,0 +1,26 @@
+body common control
+{
+  ignore_missing_bundles => "yes";
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+bundle agent init
+{
+vars:
+  "file" string => "$(this.promise_filename)";
+}
+
+bundle agent test
+{
+}
+
+bundle agent check
+{
+}
+
+body file control
+{
+  namespace => "should_fail";
+}

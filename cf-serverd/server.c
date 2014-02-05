@@ -78,23 +78,13 @@ ServerAccess SV = { 0 }; /* GLOBAL_P */
 
 char CFRUNCOMMAND[CF_MAXVARSIZE] = { 0 };                       /* GLOBAL_P */
 
-//******************************************************************/
-// LOCAL CONSTANTS
-//******************************************************************/
-
+/******************************************************************/
 
 static void SpawnConnection(EvalContext *ctx, char *ipaddr, ConnectionInfo *info);
 static void PurgeOldConnections(Item **list, time_t now);
 static void *HandleConnection(ServerConnectionState *conn);
 static ServerConnectionState *NewConn(EvalContext *ctx, ConnectionInfo *info);
 static void DeleteConn(ServerConnectionState *conn);
-
-//******************************************************************/
-// LOCAL STATE
-//******************************************************************/
-
-static int TRIES = 0; /* GLOBAL_X */
-
 
 /****************************************************************************/
 
@@ -307,6 +297,9 @@ static char *LogHook(LoggingPrivContext *log_ctx, ARG_UNUSED LogLevel level, con
     return StringConcatenate(3, ipaddr, "> ", message);
 }
 
+/* TRIES: counts the number of consecutive connections dropped. */
+static int TRIES = 0;
+
 static void *HandleConnection(ServerConnectionState *conn)
 {
     int ret;
@@ -325,27 +318,28 @@ static void *HandleConnection(ServerConnectionState *conn)
 
     Log(LOG_LEVEL_INFO, "Accepting connection");
 
-    if (!ThreadLock(cft_server_children))
+    /* We test if number of active threads is greater than max, if so we deny
+       connection, if it happened too many times within a short timeframe then we
+       kill ourself.TODO this test should be done *before* spawning the thread. */
+    ret = ThreadLock(cft_server_children);
+    if (!ret)
     {
+        Log(LOG_LEVEL_ERR, "Unable to thread-lock, closing connection!");
         DeleteConn(conn);
         return NULL;
     }
-
-    ACTIVE_THREADS++;
-
-    if (ACTIVE_THREADS >= CFD_MAXPROCESSES)
+    else if (ACTIVE_THREADS > CFD_MAXPROCESSES)
     {
-        ACTIVE_THREADS--;
-
-        if (TRIES++ > MAXTRIES) /* When to say we're hung / apoptosis threshold */
+        if (TRIES > MAXTRIES)
         {
+            /* This happens when no thread was freed while we had to drop 5
+             * consecutive connections, because none of the existing threads
+             * finished. */
             Log(LOG_LEVEL_ERR, "Server seems to be paralyzed. DOS attack? Committing apoptosis...");
             FatalError(conn->ctx, "Terminating");
         }
-
-        if (!ThreadUnlock(cft_server_children))
-        {
-        }
+        TRIES++;
+        ThreadUnlock(cft_server_children);
 
         Log(LOG_LEVEL_ERR, "Too many threads (>=%d) -- increase server maxconnections?", CFD_MAXPROCESSES);
         snprintf(output, CF_BUFSIZE, "BAD: Server is currently too busy -- increase maxconnections or splaytime?");
@@ -353,18 +347,14 @@ static void *HandleConnection(ServerConnectionState *conn)
         DeleteConn(conn);
         return NULL;
     }
-    else
-    {
-        ThreadUnlock(cft_server_children);
-    }
 
-    TRIES = 0;                  /* As long as there is activity, we're not stuck */
+    ACTIVE_THREADS++;
+    TRIES = 0;
+    ThreadUnlock(cft_server_children);
 
     DisableSendDelays(ConnectionInfoSocket(conn->conn_info));
 
-    struct timeval tv = {
-        .tv_sec = CONNTIMEOUT * 20,
-    };
+    struct timeval tv = { .tv_sec = CONNTIMEOUT * 20 };
     SetReceiveTimeout(ConnectionInfoSocket(conn->conn_info), &tv);
 
     if (ConnectionInfoConnectionStatus(conn->conn_info) != CF_CONNECTION_ESTABLISHED)
@@ -411,19 +401,13 @@ static void *HandleConnection(ServerConnectionState *conn)
 
     Log(LOG_LEVEL_INFO, "Connection closed, terminating thread");
 
-    if (!ThreadLock(cft_server_children))
+    ThreadLock(cft_server_children);
     {
+        ACTIVE_THREADS--;
         DeleteConn(conn);
-        return NULL;
     }
+    ThreadUnlock(cft_server_children);
 
-    ACTIVE_THREADS--;
-
-    if (!ThreadUnlock(cft_server_children))
-    {
-    }
-
-    DeleteConn(conn);
     return NULL;
 }
 

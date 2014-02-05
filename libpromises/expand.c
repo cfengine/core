@@ -1100,7 +1100,7 @@ static void ResolveControlBody(EvalContext *ctx, GenericAgentConfig *config,
             EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_SYS, "domain");
             EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_SYS, "fqhost");
             snprintf(VFQNAME, CF_MAXVARSIZE, "%s.%s", VUQNAME, VDOMAIN);
-            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "fqhost", VFQNAME, CF_DATA_TYPE_STRING, "inventory,source=agent,group=Host name");
+            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "fqhost", VFQNAME, CF_DATA_TYPE_STRING, "inventory,source=agent,attribute_name=Host name");
             EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "domain", VDOMAIN, CF_DATA_TYPE_STRING, "source=agent");
             EvalContextClassPutHard(ctx, VDOMAIN, "source=agent");
         }

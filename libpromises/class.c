@@ -224,7 +224,7 @@ ClassRef ClassRefParse(const char *expr)
     char *name_start = strchr(expr, ':');
     if (!name_start)
     {
-        return (ClassRef) { NULL, xstrdup(expr) };
+        return (ClassRef) { .ns = NULL, .name = xstrdup(expr) };
     }
     else
     {
@@ -234,7 +234,7 @@ ClassRef ClassRefParse(const char *expr)
             ns = xstrndup(expr, name_start - expr);
         }
         char *name = xstrdup(name_start + 1);
-        return (ClassRef) { ns, name };
+        return (ClassRef) { .ns = ns, .name = name };
     }
 }
 

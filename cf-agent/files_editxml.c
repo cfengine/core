@@ -145,10 +145,9 @@ static int XmlAttributeCount(xmlNodePtr node);
 /* Level                                                                     */
 /*****************************************************************************/
 
-int ScheduleEditXmlOperations(EvalContext *ctx, Bundle *bp, Attributes a, const Promise *parentp, EditContext *edcontext)
+int ScheduleEditXmlOperations(EvalContext *ctx, const Bundle *bp, Attributes a, const Promise *parentp, EditContext *edcontext)
 {
     enum editxmltypesequence type;
-    PromiseType *sp;
     char lockname[CF_BUFSIZE];
     CfLock thislock;
     int pass;
@@ -167,7 +166,8 @@ int ScheduleEditXmlOperations(EvalContext *ctx, Bundle *bp, Attributes a, const 
     {
         for (type = 0; EDITXMLTYPESEQUENCE[type] != NULL; type++)
         {
-            if ((sp = BundleGetPromiseType(bp, EDITXMLTYPESEQUENCE[type])) == NULL)
+            const PromiseType *sp = BundleGetPromiseType(bp, EDITXMLTYPESEQUENCE[type]);
+            if (!sp)
             {
                 continue;
             }

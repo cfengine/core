@@ -437,7 +437,7 @@ PromiseResult ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes
     void *vp;
     FnCall *fp;
     Rlist *args = NULL;
-    char edit_bundle_name[CF_BUFSIZE], lockname[CF_BUFSIZE], qualified_edit[CF_BUFSIZE], *method_deref;
+    char edit_bundle_name[CF_BUFSIZE], lockname[CF_BUFSIZE];
     CfLock thislock;
 
     snprintf(lockname, CF_BUFSIZE - 1, "fileedit-%s", filename);
@@ -478,25 +478,10 @@ PromiseResult ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes
             goto exit;
         }
 
-        if (strncmp(edit_bundle_name,"default:",strlen("default:")) == 0) // CF_NS == ':'
-        {
-            method_deref = strchr(edit_bundle_name, CF_NS) + 1;
-        }
-        else if ((strchr(edit_bundle_name, CF_NS) == NULL) && (strcmp(PromiseGetNamespace(pp), "default") != 0))
-        {
-            snprintf(qualified_edit, CF_BUFSIZE, "%s%c%s", PromiseGetNamespace(pp), CF_NS, edit_bundle_name);
-            method_deref = qualified_edit;
-        }
-        else            
-        {
-            method_deref = edit_bundle_name;
-        }        
+        Log(LOG_LEVEL_VERBOSE, "Handling file edits in edit_line bundle '%s'", edit_bundle_name);
 
-        Log(LOG_LEVEL_VERBOSE, "Handling file edits in edit_line bundle '%s'", method_deref);
-
-        Bundle *bp = NULL;
-
-        if ((bp = PolicyGetBundle(policy, NULL, "edit_line", method_deref)))
+        const Bundle *bp = EvalContextResolveCallExpression(ctx, policy, edit_bundle_name, "edit_line");
+        if (bp)
         {
             BannerSubBundle(bp, args);
 
@@ -510,7 +495,7 @@ PromiseResult ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes
         }
         else
         {
-            Log(LOG_LEVEL_ERR, "Did not find method '%s' in bundle '%s' for edit operation", method_deref, edit_bundle_name);
+            Log(LOG_LEVEL_ERR, "Did not find bundle '%s' for edit operation", edit_bundle_name);
         }
     }
 
@@ -532,20 +517,11 @@ PromiseResult ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes
         {
             goto exit;
         }
-
-        if (strncmp(edit_bundle_name,"default:",strlen("default:")) == 0) // CF_NS == ':'
-        {
-            method_deref = strchr(edit_bundle_name, CF_NS) + 1;
-        }
-        else
-        {
-            method_deref = edit_bundle_name;
-        }
         
-        Log(LOG_LEVEL_VERBOSE, "Handling file edits in edit_xml bundle '%s'", method_deref);
+        Log(LOG_LEVEL_VERBOSE, "Handling file edits in edit_xml bundle '%s'", edit_bundle_name);
 
-        Bundle *bp = NULL;
-        if ((bp = PolicyGetBundle(policy, NULL, "edit_xml", method_deref)))
+        const Bundle *bp = EvalContextResolveCallExpression(ctx, policy, edit_bundle_name, "edit_xml");
+        if (bp)
         {
             BannerSubBundle(bp, args);
 

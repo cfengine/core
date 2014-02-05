@@ -1751,6 +1751,43 @@ const void *EvalContextVariableControlCommonGet(const EvalContext *ctx, CommonCo
     return ret;
 }
 
+const Bundle *EvalContextResolveCallExpression(const EvalContext *ctx, const Policy *policy,
+                                               const char *callee_reference, const char *callee_type)
+{
+    // HACK: Because callee reference names are equivalent to class names, we abuse ClassRef here
+    ClassRef ref = ClassRefParse(callee_reference);
+    if (!ref.ns)
+    {
+        const char *ns = EvalContextCurrentNamespace(ctx);
+        if (ns && !strncmp(callee_reference, "default:", sizeof("default:"))) // ugh, must unhack!!
+        {
+            ref.ns = xstrdup(ns);
+        }
+        else
+        {
+            ref.ns = xstrdup(NamespaceDefault());
+        }
+    }
+    const Bundle *bp = NULL;
+    for (size_t i = 0; i < SeqLength(policy->bundles); i++)
+    {
+        const Bundle *curr_bp = SeqAt(policy->bundles, i);
+        if ((strcmp(curr_bp->type, callee_type) != 0) ||
+            (strcmp(curr_bp->name, ref.name) != 0) ||
+            !StringSafeEqual(curr_bp->ns, ref.ns))
+        {
+            continue;
+        }
+
+        bp = curr_bp;
+        break;
+    }
+
+    ClassRefDestroy(ref);
+    return bp;
+}
+
+
 bool EvalContextPromiseIsDone(const EvalContext *ctx, const Promise *pp)
 {
     return PromiseSetContains(ctx->promises_done, pp);

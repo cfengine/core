@@ -1061,7 +1061,13 @@ static void KeepPromiseBundles(EvalContext *ctx, const Policy *policy, GenericAg
 
         if (!config->ignore_missing_bundles)
         {
-            if (!(PolicyGetBundle(policy, NULL, "agent", name) || (PolicyGetBundle(policy, NULL, "common", name))))
+            const Bundle *bp = EvalContextResolveCallExpression(ctx, policy, name, "agent");
+            if (!bp)
+            {
+                bp = EvalContextResolveCallExpression(ctx, policy, name, "common");
+            }
+
+            if (!bp)
             {
                 Log(LOG_LEVEL_ERR, "Bundle '%s' listed in the bundlesequence was not found", name);
                 ok = false;
@@ -1109,16 +1115,29 @@ static void KeepPromiseBundles(EvalContext *ctx, const Policy *policy, GenericAg
             break;
         }
 
-        const Bundle *bp = NULL;
-        if ((bp = PolicyGetBundle(policy, NULL, "agent", name)) || (bp = PolicyGetBundle(policy, NULL, "common", name)))
+        const Bundle *bp = EvalContextResolveCallExpression(ctx, policy, name, "agent");
+        if (!bp)
+        {
+            bp = EvalContextResolveCallExpression(ctx, policy, name, "common");
+        }
+
+        if (bp)
         {
             BannerBundle(bp, args);
-
             EvalContextStackPushBundleFrame(ctx, bp, args, false);
-
             ScheduleAgentOperations(ctx, bp);
-
             EvalContextStackPopFrame(ctx);
+        }
+        else
+        {
+            if (config->ignore_missing_bundles)
+            {
+                Log(LOG_LEVEL_VERBOSE, "Ignoring missing bundle '%s'", name);
+            }
+            else
+            {
+                FatalError(ctx, "Bundlesequence contained unknown bundle reference '%s'", name);
+            }
         }
     }
 }

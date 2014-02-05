@@ -148,6 +148,14 @@ void EvalContextFunctionCachePut(EvalContext *ctx, const FnCall *fp, const Rlist
 
 const void  *EvalContextVariableControlCommonGet(const EvalContext *ctx, CommonControl lval);
 
+/**
+ * @brief Find a bundle for a bundle call, given a callee reference (in the form of ns:bundle), and a type of bundle.
+ *        This is requires EvalContext because the callee reference may be unqualified.
+ *        Hopefully this should go away in the future if we make a more generalized API to simply call a bundle,
+ *        but we have a few special rules around edit_line and so on.
+ */
+const Bundle *EvalContextResolveCallExpression(const EvalContext *ctx, const Policy *policy,
+                                               const char *callee_reference, const char *callee_type);
 
 /* - Parsing/evaluating expressions - */
 void ValidateClassSyntax(const char *str);

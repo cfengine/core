@@ -1403,7 +1403,7 @@ Constraint *BodyAppendConstraint(Body *body, const char *lval, Rval rval, const 
 
 /*******************************************************************/
 
-PromiseType *BundleGetPromiseType(Bundle *bp, const char *name)
+const PromiseType *BundleGetPromiseType(const Bundle *bp, const char *name)
 {
     // TODO: hiding error, remove and see what will crash
     if (bp == NULL)

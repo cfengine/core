@@ -236,7 +236,7 @@ Policy *PolicyFromJson(JsonElement *json_policy);
 void PolicyToString(const Policy *policy, Writer *writer);
 
 PromiseType *BundleAppendPromiseType(Bundle *bundle, const char *name);
-PromiseType *BundleGetPromiseType(Bundle *bp, const char *name);
+const PromiseType *BundleGetPromiseType(const Bundle *bp, const char *name);
 
 Constraint *BodyAppendConstraint(Body *body, const char *lval, Rval rval, const char *classes, bool references_body);
 

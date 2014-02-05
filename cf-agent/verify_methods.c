@@ -58,7 +58,6 @@ PromiseResult VerifyMethodsPromise(EvalContext *ctx, const Promise *pp)
 
 PromiseResult VerifyMethod(EvalContext *ctx, char *attrname, Attributes a, const Promise *pp)
 {
-    Bundle *bp;
     void *vp;
     FnCall *fp;
     Rlist *args = NULL;
@@ -97,14 +96,10 @@ PromiseResult VerifyMethod(EvalContext *ctx, char *attrname, Attributes a, const
 
     PromiseBanner(pp);
 
-    char ns[CF_MAXVARSIZE] = "";
-    char bundle_name[CF_MAXVARSIZE] = "";
-    SplitScopeName(BufferData(method_name), ns, bundle_name);
-
-    bp = PolicyGetBundle(PolicyFromPromise(pp), EmptyString(ns) ? NULL : ns, "agent", bundle_name);
+    const Bundle *bp = EvalContextResolveCallExpression(ctx, PromiseGetPolicy(pp), BufferData(method_name), "agent");
     if (!bp)
     {
-        bp = PolicyGetBundle(PolicyFromPromise(pp), EmptyString(ns) ? NULL : ns, "common", bundle_name);
+        bp = EvalContextResolveCallExpression(ctx, PromiseGetPolicy(pp), BufferData(method_name), "common");
     }
 
     PromiseResult result = PROMISE_RESULT_NOOP;

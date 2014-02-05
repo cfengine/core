@@ -178,7 +178,7 @@ static void test_policy_json_to_from(void)
         assert_true(main_bundle);
         {
             {
-                PromiseType *files = BundleGetPromiseType(main_bundle, "files");
+                const PromiseType *files = BundleGetPromiseType(main_bundle, "files");
                 assert_true(files);
                 assert_int_equal(1, SeqLength(files->promises));
 
@@ -217,7 +217,7 @@ static void test_policy_json_to_from(void)
             {
                 const char* reportOutput[2] = { "Hello, CFEngine", "Hello, world" };
                 const char* reportClass[2] = { "cfengine", "any" };
-                PromiseType *reports = BundleGetPromiseType(main_bundle, "reports");
+                const PromiseType *reports = BundleGetPromiseType(main_bundle, "reports");
                 assert_true(reports);
                 assert_int_equal(2, SeqLength(reports->promises));
 

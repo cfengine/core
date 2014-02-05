@@ -99,10 +99,9 @@ static int InsertFileAtLocation(EvalContext *ctx, Item **start, Item *begin_ptr,
 /* Level                                                                     */
 /*****************************************************************************/
 
-int ScheduleEditLineOperations(EvalContext *ctx, Bundle *bp, Attributes a, const Promise *parentp, EditContext *edcontext)
+int ScheduleEditLineOperations(EvalContext *ctx, const Bundle *bp, Attributes a, const Promise *parentp, EditContext *edcontext)
 {
     enum editlinetypesequence type;
-    PromiseType *sp;
     char lockname[CF_BUFSIZE];
     CfLock thislock;
     int pass;
@@ -123,7 +122,8 @@ int ScheduleEditLineOperations(EvalContext *ctx, Bundle *bp, Attributes a, const
     {
         for (type = 0; EDITLINETYPESEQUENCE[type] != NULL; type++)
         {
-            if ((sp = BundleGetPromiseType(bp, EDITLINETYPESEQUENCE[type])) == NULL)
+            const PromiseType *sp = BundleGetPromiseType(bp, EDITLINETYPESEQUENCE[type]);
+            if (!sp)
             {
                 continue;
             }

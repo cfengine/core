@@ -264,6 +264,8 @@ void MapIteratorsFromRval(EvalContext *ctx, const Bundle *bundle, Rval rval,
         break;
 
     case RVAL_TYPE_FNCALL:
+        ExpandAndMapIteratorsFromScalar(ctx, bundle, RvalFnCallValue(rval)->name,
+                                        strlen(RvalFnCallValue(rval)->name), 0, scalars, lists, containers, NULL);
         for (const Rlist *rp = RvalFnCallValue(rval)->args; rp; rp = rp->next)
         {
             Log(LOG_LEVEL_DEBUG, "Looking at arg for function-like object '%s'", RvalFnCallValue(rval)->name);

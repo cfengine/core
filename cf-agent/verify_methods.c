@@ -48,7 +48,15 @@ PromiseResult VerifyMethodsPromise(EvalContext *ctx, const Promise *pp)
 {
     Attributes a = GetMethodAttributes(ctx, pp);
 
-    PromiseResult result = VerifyMethod(ctx, "usebundle", a, pp);
+    const Constraint *cp = PromiseGetConstraint(pp, "usebundle");
+    if (!cp)
+    {
+        Log(LOG_LEVEL_VERBOSE, "Promise had no attribute 'usebundle', cannot call method");
+        return PROMISE_RESULT_FAIL;
+    }
+
+
+    PromiseResult result = VerifyMethod(ctx, cp->rval, a, pp);
     EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser");
 
     return result;
@@ -56,38 +64,38 @@ PromiseResult VerifyMethodsPromise(EvalContext *ctx, const Promise *pp)
 
 /*****************************************************************************/
 
-PromiseResult VerifyMethod(EvalContext *ctx, char *attrname, Attributes a, const Promise *pp)
+PromiseResult VerifyMethod(EvalContext *ctx, const Rval call, Attributes a, const Promise *pp)
 {
-    void *vp;
-    FnCall *fp;
-    Rlist *args = NULL;
-    CfLock thislock;
-    char lockname[CF_BUFSIZE];
+    assert(a.havebundle);
 
+    const Rlist *args = NULL;
     Buffer *method_name = BufferNew();
-    if (a.havebundle)
+    switch (call.type)
     {
-        if ((vp = PromiseGetConstraintAsRval(pp, attrname, RVAL_TYPE_FNCALL)))
+    case RVAL_TYPE_FNCALL:
         {
-            fp = (FnCall *) vp;
+            const FnCall *fp = RvalFnCallValue(call);
             ExpandScalar(ctx, PromiseGetBundle(pp)->ns, PromiseGetBundle(pp)->name, fp->name, method_name);
             args = fp->args;
         }
-        else if ((vp = PromiseGetConstraintAsRval(pp, attrname, RVAL_TYPE_SCALAR)))
+        break;
+
+    case RVAL_TYPE_SCALAR:
         {
-            ExpandScalar(ctx, PromiseGetBundle(pp)->ns, PromiseGetBundle(pp)->name, (char *) vp, method_name);
+            ExpandScalar(ctx, PromiseGetBundle(pp)->ns, PromiseGetBundle(pp)->name,
+                         RvalScalarValue(call), method_name);
             args = NULL;
         }
-        else
-        {
-            BufferDestroy(method_name);
-            return PROMISE_RESULT_NOOP;
-        }
+        break;
+
+    default:
+        BufferDestroy(method_name);
+        return PROMISE_RESULT_NOOP;
     }
 
+    char lockname[CF_BUFSIZE];
     GetLockName(lockname, "method", pp->promiser, args);
-
-    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a.transaction, pp, false);
+    CfLock thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a.transaction, pp, false);
     if (thislock.lock == NULL)
     {
         BufferDestroy(method_name);
@@ -147,10 +155,11 @@ PromiseResult VerifyMethod(EvalContext *ctx, char *attrname, Attributes a, const
             Log(LOG_LEVEL_ERR,
                   "A variable seems to have been used for the name of the method. In this case, the promiser also needs to contain the unique name of the method");
         }
-	cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a,
-	     "A method attempted to use a bundle '%s' that was apparently not defined",
-	     BufferData(method_name));
-	result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
+
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a,
+             "A method attempted to use a bundle '%s' that was apparently not defined",
+             BufferData(method_name));
+        result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
     }
 
     YieldCurrentLock(thislock);

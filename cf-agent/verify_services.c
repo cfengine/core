@@ -240,7 +240,8 @@ static PromiseResult DoVerifyServices(EvalContext *ctx, Attributes a, const Prom
 
     if (!DONTDO)
     {
-        result = PromiseResultUpdate(result, VerifyMethod(ctx, "service_bundle", a, pp));  // Send list of classes to set privately?
+        const Constraint *method_attrib = PromiseGetConstraint(pp, "service_bundle");
+        result = PromiseResultUpdate(result, VerifyMethod(ctx, method_attrib->rval, a, pp));  // Send list of classes to set privately?
     }
 
     return result;

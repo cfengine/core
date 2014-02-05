@@ -28,6 +28,6 @@
 #include <cf3.defs.h>
 
 PromiseResult VerifyMethodsPromise(EvalContext *ctx, const Promise *pp);
-PromiseResult VerifyMethod(EvalContext *ctx, char *attrname, Attributes a, const Promise *pp);
+PromiseResult VerifyMethod(EvalContext *ctx, const Rval call, Attributes a, const Promise *pp);
 
 #endif

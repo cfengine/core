@@ -891,7 +891,8 @@ static bool DoCreateUser(const char *puser, User u, enum cfopaction action,
 
         if (a->havebundle)
         {
-            VerifyMethod(ctx, "home_bundle", *a, pp);
+            const Constraint *method_attrib = PromiseGetConstraint(pp, "home_bundle");
+            VerifyMethod(ctx, method_attrib->rval, *a, pp);
             EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser");
         }
 

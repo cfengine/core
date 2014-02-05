@@ -3190,7 +3190,7 @@ static FnCallResult FnCallFindfiles(EvalContext *ctx, ARG_UNUSED const Policy *p
     {
         char *pattern = RlistScalarValue(arg);
 #ifdef __MINGW32__
-        RlistAppendScalarIdemp(&returnlist, xstrdup(pattern));
+        RlistAppendScalarIdemp(&returnlist, pattern);
 #else /* !__MINGW32__ */
         glob_t globbuf;
         if (0 == glob(pattern, 0, NULL, &globbuf))
@@ -3201,7 +3201,7 @@ static FnCallResult FnCallFindfiles(EvalContext *ctx, ARG_UNUSED const Policy *p
                 char fname[CF_BUFSIZE];
                 snprintf(fname, CF_BUFSIZE, "%s", found);
                 Log(LOG_LEVEL_VERBOSE, "%s pattern '%s' found match '%s'", fp->name, pattern, fname);
-                RlistAppendScalarIdemp(&returnlist, xstrdup(fname));
+                RlistAppendScalarIdemp(&returnlist, fname);
             }
 
             globfree(&globbuf);
@@ -4061,7 +4061,8 @@ static FnCallResult FnCallFormat(EvalContext *ctx, ARG_UNUSED const Policy *poli
         BufferAppend(buf, format, (check - format));
         Seq *s = NULL;
 
-        while (check && (s = StringMatchCaptures("^(%%|%[^diouxXeEfFgGaAcsCSpnm%]*?[diouxXeEfFgGaAcsCSpnm])([^%]*)(.*)$", check)))
+        while (check &&
+               (s = StringMatchCaptures("^(%%|%[^diouxXeEfFgGaAcsCSpnm%]*?[diouxXeEfFgGaAcsCSpnm])([^%]*)(.*)$", check)))
         {
             {
                 if (SeqLength(s) >= 2)
@@ -4082,6 +4083,7 @@ static FnCallResult FnCallFormat(EvalContext *ctx, ARG_UNUSED const Policy *poli
                     {
                         Log(LOG_LEVEL_ERR, "format() didn't have enough parameters");
                         BufferDestroy(buf);
+                        SeqDestroy(s);
                         return FnFailure();
                     }
 
@@ -4099,6 +4101,7 @@ static FnCallResult FnCallFormat(EvalContext *ctx, ARG_UNUSED const Policy *poli
                                   bad_modifiers[b],
                                   format_piece);
                             BufferDestroy(buf);
+                            SeqDestroy(s);
                             return FnFailure();
                         }
                     }
@@ -4197,6 +4200,7 @@ static FnCallResult FnCallFormat(EvalContext *ctx, ARG_UNUSED const Policy *poli
                                 Log(LOG_LEVEL_VERBOSE, "format() with %%S specifier needs a data container or a list instead of '%s'.",
                                     varname);
                                 BufferDestroy(buf);
+                                SeqDestroy(s);
                                 return FnFailure();
                             }
                         }
@@ -6095,7 +6099,7 @@ static void *CfReadFile(const char *filename, int maxsize)
     }
 
     /* 0 means 'read until the end of file' */
-    size_t limit = maxsize ? maxsize : SIZE_MAX;
+    size_t limit = maxsize > 0 ? maxsize : SIZE_MAX;
     bool truncated = false;
     Writer *w = FileRead(filename, limit, &truncated);
 

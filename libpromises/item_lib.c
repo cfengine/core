@@ -248,9 +248,7 @@ void IdempItemCount(Item **liststart, const char *itemstring, const char *classe
 
 Item *PrependItem(Item **liststart, const char *itemstring, const char *classes)
 {
-    Item *ip;
-
-    ip = xcalloc(1, sizeof(Item));
+    Item *ip = xcalloc(1, sizeof(Item));
 
     ip->name = xstrdup(itemstring);
     ip->next = *liststart;
@@ -648,7 +646,7 @@ void DeleteItemList(Item *item) /* delete starting from item */
             free(ip->classes);
         }
 
-        free((char *) ip);
+        free(ip);
     }
 }
 
@@ -656,8 +654,6 @@ void DeleteItemList(Item *item) /* delete starting from item */
 
 void DeleteItem(Item **liststart, Item *item)
 {
-    Item *ip, *sp;
-
     if (item != NULL)
     {
         if (item->name != NULL)
@@ -670,25 +666,25 @@ void DeleteItem(Item **liststart, Item *item)
             free(item->classes);
         }
 
-        sp = item->next;
-
         if (item == *liststart)
         {
-            *liststart = sp;
+            *liststart = item->next;
         }
         else
         {
-            for (ip = *liststart; (ip != NULL) && (ip->next != item) && (ip->next != NULL); ip = ip->next)
+            Item *ip = *liststart;
+            while (ip->next != item && ip->next != NULL)
             {
+                ip = ip->next;
             }
 
             if (ip != NULL)
             {
-                ip->next = sp;
+                ip->next = item->next;
             }
         }
 
-        free((char *) item);
+        free(item);
     }
 }
 
@@ -761,13 +757,10 @@ int DeleteItemGeneral(Item **list, const char *string, ItemMatchType type)
         {
             if (ip == *list)
             {
-                free((*list)->name);
-                if (ip->classes != NULL)
-                {
-                    free(ip->classes);
-                }
+                free(ip->name);
+                free(ip->classes);
                 *list = ip->next;
-                free((char *) ip);
+                free(ip);
                 return true;
             }
             else
@@ -780,11 +773,8 @@ int DeleteItemGeneral(Item **list, const char *string, ItemMatchType type)
                     }
 
                     free(ip->name);
-                    if (ip->classes != NULL)
-                    {
-                        free(ip->classes);
-                    }
-                    free((char *) ip);
+                    free(ip->classes);
+                    free(ip);
                 }
 
                 return true;

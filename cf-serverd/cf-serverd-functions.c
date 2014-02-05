@@ -132,7 +132,6 @@ static int GenerateAvahiConfig(const char *path);
 GenericAgentConfig *CheckOpts(int argc, char **argv)
 {
     extern char *optarg;
-    char ld_library_path[CF_BUFSIZE];
     int optindex = 0;
     int c;
     GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_SERVER);
@@ -180,10 +179,13 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
             break;
 
         case 'L':
+        {
+            static char ld_library_path[CF_BUFSIZE]; /* GLOBAL_A */
             Log(LOG_LEVEL_VERBOSE, "Setting LD_LIBRARY_PATH to '%s'", optarg);
             snprintf(ld_library_path, CF_BUFSIZE - 1, "LD_LIBRARY_PATH=%s", optarg);
             putenv(ld_library_path);
             break;
+        }
 
         case 'V':
             {

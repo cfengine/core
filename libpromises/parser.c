@@ -42,7 +42,8 @@ static void ParserStateReset(ParserState *p, bool discard)
     p->warnings = PARSER_WARNING_ALL;
     p->policy = NULL;
 
-    for (int i = CF_MAX_NESTING; i-- > 0;)
+    int i = CF_MAX_NESTING;
+    while (i-- > 0) /* Clear stacks from top down */
     {
         if (discard)
         {

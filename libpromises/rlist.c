@@ -160,12 +160,8 @@ Rlist *RlistKeyIn(Rlist *list, const char *key)
 {
     for (Rlist *rp = list; rp != NULL; rp = rp->next)
     {
-        if (rp->val.type != RVAL_TYPE_SCALAR)
-        {
-            continue;
-        }
-
-        if (strcmp(RlistScalarValue(rp), key) == 0)
+        if (rp->val.type == RVAL_TYPE_SCALAR &&
+            strcmp(RlistScalarValue(rp), key) == 0)
         {
             return rp;
         }
@@ -184,13 +180,9 @@ bool RlistMatchesRegexRlist(const Rlist *list, const Rlist *search)
 {
     for (const Rlist *rp = search; rp != NULL; rp = rp->next)
     {
-        if (rp->val.type != RVAL_TYPE_SCALAR)
-        {
-            continue;
-        }
-
-        // check for the current element in the search list
-        if (!RlistMatchesRegex(list, RlistScalarValue(search)))
+        if (rp->val.type == RVAL_TYPE_SCALAR &&
+            // check for the current element in the search list
+            !RlistMatchesRegex(list, RlistScalarValue(search)))
         {
             return false;
         }
@@ -212,12 +204,8 @@ bool RlistMatchesRegex(const Rlist *list, const char *regex)
 
     for (const Rlist *rp = list; rp != NULL; rp = rp->next)
     {
-        if (rp->val.type != RVAL_TYPE_SCALAR)
-        {
-            continue;
-        }
-
-        if (StringMatchFull(regex, RlistScalarValue(rp)))
+        if (rp->val.type == RVAL_TYPE_SCALAR &&
+            StringMatchFull(regex, RlistScalarValue(rp)))
         {
             return true;
         }
@@ -239,12 +227,8 @@ bool RlistIsInListOfRegex(const Rlist *list, const char *str)
 
     for (const Rlist *rp = list; rp != NULL; rp = rp->next)
     {
-        if (rp->val.type != RVAL_TYPE_SCALAR)
-        {
-            continue;
-        }
-
-        if (StringMatchFull(RlistScalarValue(rp), str))
+        if (rp->val.type == RVAL_TYPE_SCALAR &&
+            StringMatchFull(RlistScalarValue(rp), str))
         {
             return true;
         }
@@ -258,15 +242,9 @@ bool RlistIsInListOfRegex(const Rlist *list, const char *str)
 static Rval RvalCopyScalar(Rval rval)
 {
     assert(rval.type == RVAL_TYPE_SCALAR);
+    const char * src = rval.item ? rval.item : "";
 
-    if (rval.item)
-    {
-        return ((Rval) {xstrdup((const char *) rval.item), RVAL_TYPE_SCALAR});
-    }
-    else
-    {
-        return ((Rval) {xstrdup(""), RVAL_TYPE_SCALAR});
-    }
+    return (Rval) {xstrdup(src), RVAL_TYPE_SCALAR};
 }
 
 Rlist *RlistAppendRval(Rlist **start, Rval rval)
@@ -279,9 +257,10 @@ Rlist *RlistAppendRval(Rlist **start, Rval rval)
     }
     else
     {
-        Rlist *lp = NULL;
-        for (lp = *start; lp->next != NULL; lp = lp->next)
+        Rlist *lp = *start;
+        while (lp->next != NULL)
         {
+            lp = lp->next;
         }
 
         lp->next = rp;
@@ -329,18 +308,14 @@ Rval RvalCopy(Rval rval)
 
 /*******************************************************************/
 
-Rlist *RlistCopy(const Rlist *list)
+Rlist *RlistCopy(const Rlist *rp)
 {
     Rlist *start = NULL;
 
-    if (list == NULL)
-    {
-        return NULL;
-    }
-
-    for (const Rlist *rp = list; rp != NULL; rp = rp->next)
+    while (rp != NULL)
     {
         RlistAppendRval(&start, RvalCopy(rp->val));
+        rp = rp->next;
     }
 
     return start;
@@ -348,24 +323,20 @@ Rlist *RlistCopy(const Rlist *list)
 
 /*******************************************************************/
 
-void RlistDestroy(Rlist *list)
+void RlistDestroy(Rlist *rl)
 /* Delete an rlist and all its references */
 {
-    Rlist *rl, *next;
-
-    if (list != NULL)
+    while (rl != NULL)
     {
-        for (rl = list; rl != NULL; rl = next)
+        Rlist *next = rl->next;
+
+        if (rl->val.item)
         {
-            next = rl->next;
-
-            if (rl->val.item)
-            {
-                RvalDestroy(rl->val);
-            }
-
-            free(rl);
+            RvalDestroy(rl->val);
         }
+
+        free(rl);
+        rl = next;
     }
 }
 
@@ -373,26 +344,22 @@ void RlistDestroy(Rlist *list)
 
 Rlist *RlistAppendScalarIdemp(Rlist **start, const char *scalar)
 {
-    if (!RlistKeyIn(*start, scalar))
-    {
-        return RlistAppendScalar(start, scalar);
-    }
-    else
+    if (RlistKeyIn(*start, scalar))
     {
         return NULL;
     }
+
+    return RlistAppendScalar(start, scalar);
 }
 
 Rlist *RlistPrependScalarIdemp(Rlist **start, const char *scalar)
 {
-    if (!RlistKeyIn(*start, scalar))
-    {
-        return RlistPrepend(start, scalar, RVAL_TYPE_SCALAR);
-    }
-    else
+    if (RlistKeyIn(*start, scalar))
     {
         return NULL;
     }
+
+    return RlistPrepend(start, scalar, RVAL_TYPE_SCALAR);
 }
 
 Rlist *RlistAppendScalar(Rlist **start, const char *scalar)
@@ -578,6 +545,8 @@ static int LaunchParsingMachine(const char *str, Rlist **newlist)
     snatched[0]='\0';
     char *sn = NULL;
 
+    assert(newlist);
+
     while (current_state != ST_CLOSED && *s)
     {
         switch(current_state) {
@@ -759,28 +728,20 @@ static int LaunchParsingMachine(const char *str, Rlist **newlist)
     return 0;
 
 clean:
-    if (newlist)
-    {
-        RlistDestroy(*newlist);
-    }
+    RlistDestroy(*newlist);
+    assert(ret != 0);
     return ret;
 }
 
 Rlist *RlistParseString(const char *string)
 {
     Rlist *newlist = NULL;
-    int ret;
-
-    ret = LaunchParsingMachine(string, &newlist);
-
-    if (!ret)
-    {
-        return newlist;
-    }
-    else
+    if (LaunchParsingMachine(string, &newlist))
     {
         return NULL;
     }
+
+    return newlist;
 }
 
 /*******************************************************************/
@@ -821,8 +782,6 @@ void RvalDestroy(Rval rval)
 
 void RlistDestroyEntry(Rlist **liststart, Rlist *entry)
 {
-    Rlist *rp, *sp;
-
     if (entry != NULL)
     {
         if (entry->val.item)
@@ -830,7 +789,7 @@ void RlistDestroyEntry(Rlist **liststart, Rlist *entry)
             free(entry->val.item);
         }
 
-        sp = entry->next;
+        Rlist *sp = entry->next;
 
         if (entry == *liststart)
         {
@@ -838,14 +797,17 @@ void RlistDestroyEntry(Rlist **liststart, Rlist *entry)
         }
         else
         {
-            for (rp = *liststart; rp->next != entry; rp = rp->next)
+            Rlist *rp = *liststart;
+            while (rp->next != entry)
             {
+                rp = rp->next;
             }
 
+            assert(rp && rp->next == entry);
             rp->next = sp;
         }
 
-        free((char *) entry);
+        free(entry);
     }
 }
 
@@ -994,7 +956,6 @@ Rlist *RlistFromSplitRegex(const char *string, const char *regex, int max, bool 
  *       the (max-1)-th separator as the final list element, including any separators that may be embedded in it)
  */
 Rlist *RlistFromRegexSplitNoOverflow(const char *string, const char *regex, int max)
-
 {
     Rlist *liststart = NULL;
     char node[CF_MAXVARSIZE];
@@ -1014,7 +975,8 @@ Rlist *RlistFromRegexSplitNoOverflow(const char *string, const char *regex, int 
         return NULL;
     }
 
-    while ((count < max - 1) && StringMatchWithPrecompiledRegex(pattern, sp, &start, &end))
+    while (count < max - 1 &&
+           StringMatchWithPrecompiledRegex(pattern, sp, &start, &end))
     {
         assert(start < CF_MAXVARSIZE);
         memcpy(node, sp, start);
@@ -1039,29 +1001,38 @@ Rlist *RlistLast(Rlist *start)
     {
         return NULL;
     }
-    Rlist *rp;
-    for (rp = start; rp->next; rp = rp->next);
+    Rlist *rp = start;
+    while (rp->next != NULL)
+    {
+        rp = rp->next;
+    }
     return rp;
 }
 
-void RlistFilter(Rlist **list, bool (*KeepPredicate)(void *, void *), void *predicate_user_data, void (*DestroyItem)(void *))
+void RlistFilter(Rlist **list,
+                 bool (*KeepPredicate)(void *, void *), void *predicate_user_data,
+                 void (*DestroyItem)(void *))
 {
     assert(KeepPredicate);
+    Rlist *start = *list, *prev = NULL, *next;
 
-    Rlist *start = *list;
-    Rlist *prev = NULL;
-
-    for (Rlist *rp = start; rp;)
+    for (Rlist *rp = start; rp; rp = next)
     {
-        if (!KeepPredicate(RlistScalarValue(rp), predicate_user_data))
+        next = rp->next;
+        if (KeepPredicate(RlistScalarValue(rp), predicate_user_data))
+        {
+            prev = rp;
+        }
+        else
         {
             if (prev)
             {
-                prev->next = rp->next;
+                prev->next = next;
             }
             else
             {
-                *list = rp->next;
+                assert(rp == *list);
+                *list = next;
             }
 
             if (DestroyItem)
@@ -1070,15 +1041,8 @@ void RlistFilter(Rlist **list, bool (*KeepPredicate)(void *, void *), void *pred
                 rp->val.item = NULL;
             }
 
-            Rlist *next = rp->next;
             rp->next = NULL;
             RlistDestroy(rp);
-            rp = next;
-        }
-        else
-        {
-            prev = rp;
-            rp = rp->next;
         }
     }
 }
@@ -1296,13 +1260,13 @@ JsonElement *RvalToJson(Rval rval)
 
 void RlistFlatten(EvalContext *ctx, Rlist **list)
 {
-    Rlist *prev = NULL;
-    for (Rlist *rp = *list; rp != NULL;)
+    Rlist *prev = NULL, *next;
+    for (Rlist *rp = *list; rp != NULL; rp = next)
     {
+        next = rp->next;
         if (rp->val.type != RVAL_TYPE_SCALAR)
         {
             prev = rp;
-            rp = rp->next;
             continue;
         }
 
@@ -1324,7 +1288,6 @@ void RlistFlatten(EvalContext *ctx, Rlist **list)
                     {
                     case RVAL_TYPE_LIST:
                         {
-                            Rlist *next = rp->next;
                             RlistDestroyEntry(list, rp);
 
                             for (const Rlist *srp = value; srp != NULL; srp = srp->next)
@@ -1344,8 +1307,6 @@ void RlistFlatten(EvalContext *ctx, Rlist **list)
 
                                 prev = nrp;
                             }
-
-                            rp = next;
                         }
                         continue;
 
@@ -1358,6 +1319,5 @@ void RlistFlatten(EvalContext *ctx, Rlist **list)
         }
 
         prev = rp;
-        rp = rp->next;
     }
 }

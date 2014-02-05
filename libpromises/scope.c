@@ -240,6 +240,7 @@ void ScopeMapBodyArgs(EvalContext *ctx, const Body *body, const Rlist *args)
                 const char *lval = RlistScalarValue(param);
                 VarRef *ref = VarRefParseFromNamespaceAndScope(lval, NULL, "body", CF_NS, '.');
                 EvalContextVariablePut(ctx, ref, RvalScalarValue(arg->val), arg_type, "source=body");
+                VarRefDestroy(ref);
             }
             break;
 

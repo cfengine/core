@@ -328,6 +328,9 @@ Policy *PolicyMerge(Policy *a, Policy *b)
         bdp->parent_policy = result;
     }
 
+    /* Should result take over a release_id ? */
+    free(a->release_id);
+    free(b->release_id);
     free(a);
     free(b);
 

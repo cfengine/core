@@ -83,7 +83,6 @@ static Bundle *IsBundle(Seq *bundles, const char *ns, const char *name)
 Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
 {
     Promise *pcopy;
-    Rval returnval;
 
     pcopy = xcalloc(1, sizeof(Promise));
 
@@ -207,9 +206,9 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
                 {
                     Constraint *scp = SeqAt(bp->conlist, k);
 
-                    returnval = ExpandPrivateRval(ctx, NULL, "body", scp->rval.item, scp->rval.type);
                     if (IsDefinedClass(ctx, scp->classes))
                     {
+                        Rval returnval = ExpandPrivateRval(ctx, NULL, "body", scp->rval.item, scp->rval.type);
                         Constraint *scp_copy = PromiseAppendConstraint(pcopy, scp->lval, returnval, false);
                         scp_copy->offset = scp->offset;
                     }
@@ -234,16 +233,16 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
                     {
                         Constraint *scp = SeqAt(bp->conlist, k);
 
-                        Rval newrv = RvalCopy(scp->rval);
-                        if (newrv.type == RVAL_TYPE_LIST)
-                        {
-                            Rlist *new_list = RvalRlistValue(newrv);
-                            RlistFlatten(ctx, &new_list);
-                            newrv.item = new_list;
-                        }
-
                         if (IsDefinedClass(ctx, scp->classes))
                         {
+                            Rval newrv = RvalCopy(scp->rval);
+                            if (newrv.type == RVAL_TYPE_LIST)
+                            {
+                                Rlist *new_list = RvalRlistValue(newrv);
+                                RlistFlatten(ctx, &new_list);
+                                newrv.item = new_list;
+                            }
+
                             Constraint *scp_copy = PromiseAppendConstraint(pcopy, scp->lval, newrv, false);
                             scp_copy->offset = scp->offset;
                         }
@@ -269,16 +268,16 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
                     PromiseGetBundle(pp)->source_path);
             }
 
-            Rval newrv = RvalCopy(cp->rval);
-            if (newrv.type == RVAL_TYPE_LIST)
-            {
-                Rlist *new_list = RvalRlistValue(newrv);
-                RlistFlatten(ctx, &new_list);
-                newrv.item = new_list;
-            }
-
             if (IsDefinedClass(ctx, cp->classes))
             {
+                Rval newrv = RvalCopy(cp->rval);
+                if (newrv.type == RVAL_TYPE_LIST)
+                {
+                    Rlist *new_list = RvalRlistValue(newrv);
+                    RlistFlatten(ctx, &new_list);
+                    newrv.item = new_list;
+                }
+
                 Constraint *cp_copy = PromiseAppendConstraint(pcopy, cp->lval, newrv, false);
                 cp_copy->offset = cp->offset;
             }
@@ -292,12 +291,8 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
 
 Promise *ExpandDeRefPromise(EvalContext *ctx, const Promise *pp)
 {
-    Promise *pcopy;
-    Rval returnval, final;
-
-    pcopy = xcalloc(1, sizeof(Promise));
-
-    returnval = ExpandPrivateRval(ctx, NULL, "this", pp->promiser, RVAL_TYPE_SCALAR);
+    Promise *pcopy = xcalloc(1, sizeof(Promise));
+    Rval returnval = ExpandPrivateRval(ctx, NULL, "this", pp->promiser, RVAL_TYPE_SCALAR);
     pcopy->promiser = RvalScalarValue(returnval);
 
     if (pp->promisee.item)
@@ -334,8 +329,7 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const Promise *pp)
     for (size_t i = 0; i < SeqLength(pp->conlist); i++)
     {
         Constraint *cp = SeqAt(pp->conlist, i);
-
-        Rval returnval;
+        Rval final;
 
         if (ExpectedDataType(cp->lval) == CF_DATA_TYPE_BUNDLE)
         {
@@ -343,15 +337,17 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const Promise *pp)
         }
         else
         {
-            returnval = EvaluateFinalRval(ctx, PromiseGetPolicy(pp), NULL, "this", cp->rval, false, pp);
+            Rval returnval = EvaluateFinalRval(ctx, PromiseGetPolicy(pp), NULL, "this", cp->rval, false, pp);
             final = ExpandDanglers(ctx, NULL, "this", returnval, pp);
             RvalDestroy(returnval);
         }
 
+        bool kill_final = true;
         if (IsDefinedClass(ctx, cp->classes))
         {
             Constraint *cp_copy = PromiseAppendConstraint(pcopy, cp->lval, final, false);
             cp_copy->offset = cp->offset;
+            kill_final = false;
         }
 
         if (strcmp(cp->lval, "comment") == 0)
@@ -373,6 +369,10 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const Promise *pp)
                     DereferenceComment(pcopy);
                 }
             }
+        }
+        if (kill_final)
+        {
+            RvalDestroy(final);
         }
     }
 

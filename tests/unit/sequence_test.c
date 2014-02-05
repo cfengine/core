@@ -234,7 +234,7 @@ static void test_get_range(void)
 
     {
         Seq *sub_1 = SeqGetRange(seq, 0, 4);
-        assert (sub_1);
+        assert_true (sub_1 != NULL);
         assert_int_equal (sub_1->length, seq->length);
         assert_int_equal (SeqAt(sub_1, 0), SeqAt(seq, 0));
         assert_int_equal (SeqAt(sub_1, 1), SeqAt(seq, 1));
@@ -246,7 +246,7 @@ static void test_get_range(void)
 
     {
         Seq *sub_1 = SeqGetRange(seq, 2, 4);
-        assert (sub_1);
+        assert_true (sub_1 != NULL);
         assert_int_equal (sub_1->length, 4 - 2 + 1);
         assert_int_equal (SeqAt(sub_1, 0), SeqAt(seq, 2));
         assert_int_equal (SeqAt(sub_1, 1), SeqAt(seq, 3));
@@ -254,15 +254,8 @@ static void test_get_range(void)
         SeqSoftDestroy(sub_1);
     }
 
-    {
-        Seq *sub_1 = SeqGetRange(seq, 3, 6);
-        assert (!sub_1);
-    }
-
-    {
-        Seq *sub_1 = SeqGetRange(seq, 3, 2);
-        assert (!sub_1);
-    }
+    assert_true (!SeqGetRange(seq, 3, 6));
+    assert_true (!SeqGetRange(seq, 3, 2));
 
     SeqDestroy(seq);
 }

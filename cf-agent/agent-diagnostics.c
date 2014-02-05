@@ -128,7 +128,7 @@ AgentDiagnosticsResult AgentDiagnosticsCheckPublicKey(const char *workdir)
     }
     else if (sb.st_size != 426)
     {
-        res = AgentDiagnosticsResultNew(false, StringFormat("Public key at '%s' had size %zd bytes, expected 426 bytes", path, sb.st_size));
+        res = AgentDiagnosticsResultNew(false, StringFormat("Public key at '%s' had size %lld bytes, expected 426 bytes", path, (long long)sb.st_size));
     }
     else
     {

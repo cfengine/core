@@ -91,7 +91,6 @@ int sockaddr_AddrCompare(const void *sa1, const void *sa2)
 {
     int sa1_family = ((struct sockaddr *) sa1)->sa_family;
     int sa2_family = ((struct sockaddr *) sa2)->sa_family;
-    int result;
 
     if ((sa1_family != AF_INET && sa1_family != AF_INET6) ||
         (sa2_family != AF_INET && sa2_family != AF_INET6))
@@ -106,6 +105,7 @@ int sockaddr_AddrCompare(const void *sa1, const void *sa2)
         return (sa1_family == AF_INET) ? -1 : 1;
     }
 
+    int result;
     switch (sa1_family)
     {
     case AF_INET:
@@ -122,6 +122,7 @@ int sockaddr_AddrCompare(const void *sa1, const void *sa2)
     }
     default:
         assert(0);
+        result = 0;
     }
 
     return result;

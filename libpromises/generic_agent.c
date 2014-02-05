@@ -1083,8 +1083,8 @@ bool GenericAgentIsPolicyReloadNeeded(const GenericAgentConfig *config, const Po
     if (validated_at > time(NULL))
     {
         Log(LOG_LEVEL_INFO,
-            "Clock seems to have jumped back in time - mtime of %zd is newer than current time - touching it",
-            validated_at);
+            "Clock seems to have jumped back in time - mtime of %lld is newer than current time - touching it",
+            (long long)validated_at);
 
         WritePolicyValidatedFileToMasterfiles(config);
         return true;

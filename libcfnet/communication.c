@@ -148,9 +148,9 @@ int Hostname2IPString(char *dst, const char *hostname, size_t dst_size)
 
     if (dst_size < CF_MAX_IP_LEN)
     {
-        ProgrammingError("Hostname2IPString got %zu, needs at least"
+        ProgrammingError("Hostname2IPString got %llu, needs at least"
                          " %d length buffer for IPv6 portability!",
-                         dst_size, CF_MAX_IP_LEN);
+                         (unsigned long long)dst_size, CF_MAX_IP_LEN);
     }
 
     ret = getaddrinfo(hostname, NULL, &query, &response);

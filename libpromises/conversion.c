@@ -898,11 +898,11 @@ bool IsRealNumber(const char *s)
     return true;
 }
 
+#ifndef __MINGW32__
+
 /*******************************************************************/
 /* Unix-only functions                                             */
 /*******************************************************************/
-
-#ifndef __MINGW32__
 
 /****************************************************************************/
 /* Rlist to Uid/Gid lists                                                   */
@@ -910,6 +910,7 @@ bool IsRealNumber(const char *s)
 
 void UidListDestroy(UidList *uids)
 {
+
     while (uids)
     {
         UidList *ulp = uids;
@@ -1156,4 +1157,22 @@ gid_t Str2Gid(const char *gidbuff, char *groupcopy, const Promise *pp)
     return gid;
 }
 
-#endif /* !__MINGW32__ */
+#else /* !__MINGW32__ */
+
+/* Release everything NovaWin_Rlist2SidList() allocates: */
+void UidListDestroy(UidList *uids)
+{
+    while (uids)
+    {
+        UidList *ulp = uids;
+        uids = uids->next;
+        free(ulp);
+    }
+}
+
+void GidListDestroy(ARG_UNUSED GidList *gids)
+{
+    assert(gids == NULL);
+}
+
+#endif

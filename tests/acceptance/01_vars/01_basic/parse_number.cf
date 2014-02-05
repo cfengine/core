@@ -1,0 +1,97 @@
+#######################################################
+#
+# Test basic interpretation of digits as numbers.
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+  vars:
+      "digits" string => "42";
+      "zero"   string => "00000";
+      "negate" string => "-137";
+      "spacey" string => "17 
+	"; # Spaces ignored after number
+      "kilo"   string => "42k";
+      "kibi"   string => "42K";
+      "mega"   string => "42m";
+      "mibi"   string => "42M";
+      # NB: 42g fails on 32-bit - many places go via int, which overflows (Redmine 4404).
+      "giga"   string => "1g";
+      "gibi"   string => "1G";
+      "pi"     string => "3.141592653589793238462643383279502884197169399375105820974";
+      "nowt"   string => "-000.0000e137";
+      "nogiga" string => "0e0G   "; # quantifier and spaces
+      "me2pi"  string => "-.5354916555247646e-3M"; # minus exp(two pi)
+
+      "whole" slist => { "digits", "zero", "negate", "spacey",
+                         "kilo", "kibi", "mega", "mibi", "giga", "gibi" };
+      "float" slist => { "pi", "nowt", "nogiga", "me2pi" };
+
+      # Expected answers:
+      "round[digits]" string => "$(digits)";
+      "round[zero]"   string => "0";
+      "round[negate]" string => "$(negate)";
+      "round[spacey]" string => "17";
+      "round[kilo]"   string => "42000";
+      "round[kibi]"   string => "43008";
+      "round[mega]"   string => "42000000";
+      "round[mibi]"   string => "44040192";
+      "round[giga]"   string => "1000000000";
+      "round[gibi]"   string => "1073741824";
+    "ratio[$(whole)]" string => "$(round[$(whole)]).000000";
+      "ratio[pi]"     string => "3.14159265";
+      "ratio[nowt]"   string => "$(ratio[zero])";
+      "ratio[nogiga]" string => "$(ratio[zero])";
+      "ratio[me2pi]"  string => "535.491656";
+}
+
+#######################################################
+
+bundle agent test
+{
+  vars:
+      "round[$(init.whole)]"  int => "$(init.$(init.whole))";
+      "ratio[$(init.whole)]" real => "$(init.$(init.whole))";
+      "ratio[$(init.float)]" real => "$(init.$(init.float))";
+}
+
+
+#######################################################
+
+bundle agent check
+{
+  vars:
+      "float" slist => { @(init.whole), @(init.float) };
+
+  classes:
+      "whole_$(init.whole)" expression => strcmp("$(test.round[$(init.whole)])",
+                                                 "$(init.round[$(init.whole)])");
+      "float_$(float)" expression => strcmp("$(test.ratio[$(float)])",
+                                            "$(init.ratio[$(float)])");
+      "$(init.whole)" and => { "whole_$(init.whole)", "float_$(init.whole)" };
+      "$(init.float)" and => { "float_$(init.whole)" };
+      "iok" and => { @(init.whole) };
+      "rok" and => { @(init.float) };
+      "ok" and => { "iok", "rok" };
+
+  reports:
+    DEBUG.!iok::
+      "Read $(init.$(init.whole)) as int $(test.round[$(init.whole)]), expected $(init.round[$(init.whole)])";
+    DEBUG.!rok::
+      "Read $(init.$(float)) as real $(test.ratio[$(float)]), expected $(init.ratio[$(float)])";
+
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

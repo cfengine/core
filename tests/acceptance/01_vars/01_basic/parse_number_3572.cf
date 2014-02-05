@@ -1,0 +1,59 @@
+#######################################################
+#
+# Regression test for RedMine #3572.
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+  vars:
+      "digits" string => "42";
+}
+
+#######################################################
+
+bundle agent test
+{
+  vars:
+      "number" int => "$(init.digits)";
+      "floaty" real => "$(init.digits)";
+
+  # RedMine #3572: this stanza should make no difference, but actually
+  # caused the numbers to be unexpanded, hence not "42" but literally
+  # "$(init.digits)", which doesn't parse as a number !
+  classes:
+      "ignored" not => "any";
+  # (In fact, even an empty classes stanza provoked the bug - but is
+  # that even valid ?)
+}
+
+
+#######################################################
+
+bundle agent check
+{
+  classes:
+      "iok" expression => strcmp("$(test.number)", "$(init.digits)");
+      "rok" expression => strcmp("$(test.floaty)", "42.000000");
+      "ok" and => { "iok", "rok" };
+
+  reports:
+    DEBUG.!iok::
+      "Read $(init.digits) as int $(test.number)";
+    DEBUG.!rok::
+      "Read $(init.digits) as real $(test.floaty)";
+
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

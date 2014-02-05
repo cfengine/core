@@ -193,7 +193,7 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
         {
             EvalContextClassPutHard(ctx, "am_policy_hub", "source=bootstrap,deprecated,alias=policy_server");
             Log(LOG_LEVEL_VERBOSE, "Additional class defined: am_policy_hub");
-            EvalContextClassPutHard(ctx, "policy_server", "inventory,group=CFEngine roles,source=bootstrap");
+            EvalContextClassPutHard(ctx, "policy_server", "inventory,attribute_name=CFEngine roles,source=bootstrap");
             Log(LOG_LEVEL_VERBOSE, "Additional class defined: policy_server");
         }
     }
@@ -789,7 +789,7 @@ void CloseLog(void)
 
 ENTERPRISE_VOID_FUNC_1ARG_DEFINE_STUB(void, GenericAgentAddEditionClasses, EvalContext *, ctx)
 {
-    EvalContextClassPutHard(ctx, "community_edition", "inventory,group=none,source=agent");
+    EvalContextClassPutHard(ctx, "community_edition", "inventory,attribute_name=none,source=agent");
 }
 
 void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)

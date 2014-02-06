@@ -97,8 +97,9 @@ int TLSVerifyPeer(ConnectionInfo *conn_info, const char *remoteip, const char *u
                                           KeyPrintableHash(key));
     if (expected_rsa_key == NULL)
     {
-        Log(LOG_LEVEL_ERR, "Public key for host not found");
-        retval = 0;                                        /* KEY NOT FOUND */
+        Log(LOG_LEVEL_VERBOSE,
+            "Public key for remote host not found in ppkeys");
+        retval = 0;
         goto ret4;
     }
 
@@ -128,7 +129,9 @@ int TLSVerifyPeer(ConnectionInfo *conn_info, const char *remoteip, const char *u
     }
     else if (ret == 0 || ret == -1)
     {
-        retval = 0;       /* UNTRUSTED KEY, different from the expected one */
+        Log(LOG_LEVEL_VERBOSE,
+            "Public key for remote host compares different to the one in ppkeys");
+        retval = 0;
         goto ret6;
     }
     else

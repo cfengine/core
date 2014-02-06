@@ -922,7 +922,9 @@ Rlist *RlistFromSplitRegex(const char *string, const char *regex, int max, bool 
         }
 
         memset(node, 0, CF_MAXVARSIZE);
-        strncpy(node, sp, start);
+        /* silently drop tokens longer than CF_MAXVARSIZE,
+         * we don't want to propagate larger buffers down the Rlist */
+        strncpy(node, sp, MIN(start, CF_MAXVARSIZE-1));
 
         if (blanks || strlen(node) > 0)
         {

@@ -190,20 +190,55 @@ static PromiseResult VerifyServices(EvalContext *ctx, Attributes a, const Promis
 /* Level                                                                     */
 /*****************************************************************************/
 
-static PromiseResult DoVerifyServices(EvalContext *ctx, Attributes a, const Promise *pp)
+static FnCall *DefaultServiceBundleCall(const Promise *pp, ServicePolicy service_policy)
 {
-    FnCall *service_bundle = PromiseGetConstraintAsRval(pp, "service_bundle", RVAL_TYPE_FNCALL);
-    PromiseResult result = PROMISE_RESULT_NOOP;
-    if (!service_bundle)
+    Rlist *args = NULL;
+    switch (service_policy)
     {
-        service_bundle = PromiseGetConstraintAsRval(pp, "service_bundle", RVAL_TYPE_SCALAR);
+    case SERVICE_POLICY_START:
+        RlistAppend(&args, pp->promiser, RVAL_TYPE_SCALAR);
+        RlistAppend(&args, "start", RVAL_TYPE_SCALAR);
+        break;
+
+    case SERVICE_POLICY_RESTART:
+        RlistAppend(&args, pp->promiser, RVAL_TYPE_SCALAR);
+        RlistAppend(&args, "restart", RVAL_TYPE_SCALAR);
+        break;
+
+    case SERVICE_POLICY_RELOAD:
+        RlistAppend(&args, pp->promiser, RVAL_TYPE_SCALAR);
+        RlistAppend(&args, "restart", RVAL_TYPE_SCALAR);
+        break;
+
+    case SERVICE_POLICY_STOP:
+    case SERVICE_POLICY_DISABLE:
+    default:
+        RlistAppend(&args, pp->promiser, RVAL_TYPE_SCALAR);
+        RlistAppend(&args, "stop", RVAL_TYPE_SCALAR);
+        break;
     }
 
-    if (!service_bundle)
+    FnCall *call = FnCallNew("standard_services", args);
+    RlistDestroy(args);
+
+    return call;
+}
+
+static PromiseResult DoVerifyServices(EvalContext *ctx, Attributes a, const Promise *pp)
+{
+    Rval call;
     {
-        cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, a, "Service '%s' cannot be resolved as a bundle", pp->promiser);
-        return PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
+        const Constraint *cp = PromiseGetConstraint(pp, "service_bundle");
+        if (cp)
+        {
+            call = RvalCopy(cp->rval);
+        }
+        else
+        {
+            call = (Rval) { DefaultServiceBundleCall(pp, a.service.service_policy), RVAL_TYPE_FNCALL };
+        }
     }
+    a.havebundle = true;
 
     switch (a.service.service_policy)
     {
@@ -226,23 +261,13 @@ static PromiseResult DoVerifyServices(EvalContext *ctx, Attributes a, const Prom
         break;
     }
 
-    const Bundle *bp = PolicyGetBundle(PolicyFromPromise(pp), NULL, "agent", service_bundle->name);
-    if (!bp)
-    {
-        bp = PolicyGetBundle(PolicyFromPromise(pp), NULL, "common", service_bundle->name);
-    }
-
-    if (!bp)
-    {
-        cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, a, "Service '%s' could not be invoked successfully", pp->promiser);
-        result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
-    }
-
+    PromiseResult result = PROMISE_RESULT_NOOP;
     if (!DONTDO)
     {
-        const Constraint *method_attrib = PromiseGetConstraint(pp, "service_bundle");
-        result = PromiseResultUpdate(result, VerifyMethod(ctx, method_attrib->rval, a, pp));  // Send list of classes to set privately?
+        result = PromiseResultUpdate(result, VerifyMethod(ctx, call, a, pp));  // Send list of classes to set privately?
     }
+
+    RvalDestroy(call);
 
     return result;
 }

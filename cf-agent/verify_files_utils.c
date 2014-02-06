@@ -668,8 +668,8 @@ static PromiseResult SourceSearchAndCopy(EvalContext *ctx, char *from, char *to,
                                          const Promise *pp, dev_t rootdevice, CompressedArray **inode_cache, AgentConnection *conn)
 {
     struct stat sb, dsb;
-    char newfrom[CF_BUFSIZE];
-    char newto[CF_BUFSIZE];
+    /* TODO overflow check all these str*cpy()s in here! */
+    char newfrom[CF_BUFSIZE], newto[CF_BUFSIZE];
     Item *namecache = NULL;
     const struct dirent *dirp;
     AbstractDir *dirh;
@@ -687,7 +687,7 @@ static PromiseResult SourceSearchAndCopy(EvalContext *ctx, char *from, char *to,
 
     /* Check that dest dir exists before starting */
 
-    strncpy(newto, to, CF_BUFSIZE - 10);
+    strlcpy(newto, to, sizeof(newto) - 10);
     AddSlash(newto);
     strcat(newto, "dummy");
 
@@ -765,8 +765,8 @@ static PromiseResult SourceSearchAndCopy(EvalContext *ctx, char *from, char *to,
             AppendItem(&namecache, dirp->d_name, NULL);
         }
 
-        strncpy(newfrom, from, CF_BUFSIZE - 2); /* Assemble pathname */
-        strncpy(newto, to, CF_BUFSIZE - 2);
+        strlcpy(newfrom, from, sizeof(newfrom) - 2); /* Assemble pathname */
+        strlcpy(newto, to, sizeof(newto) - 2);
 
         if (!JoinPath(newfrom, dirp->d_name))
         {

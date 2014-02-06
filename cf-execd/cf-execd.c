@@ -162,7 +162,6 @@ int main(int argc, char *argv[])
         StartServer(ctx, policy, config, &execd_config, &exec_config);
     }
 
-    PolicyDestroy(policy);
     ExecConfigDestroy(exec_config);
     ExecdConfigDestroy(execd_config);
     GenericAgentConfigDestroy(config);

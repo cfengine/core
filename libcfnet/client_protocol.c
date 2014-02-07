@@ -78,7 +78,7 @@ int IdentifyAgent(ConnectionInfo *conn_info)
         struct sockaddr_storage myaddr = {0};
         socklen_t myaddr_len = sizeof(myaddr);
 
-        if (getsockname(ConnectionInfoSocket(conn_info), (struct sockaddr *) &myaddr, &myaddr_len) == -1)
+        if (getsockname(conn_info->sd, (struct sockaddr *) &myaddr, &myaddr_len) == -1)
         {
             Log(LOG_LEVEL_ERR, "Couldn't get socket address. (getsockname: %s)", GetErrorStr());
             return false;
@@ -450,10 +450,9 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
         }
 
         server_pubkey = RSAPublicKey_dup(newkey);
-        Key *key = KeyNew(server_pubkey, CF_DEFAULT_DIGEST);
-        ConnectionInfoSetKey(conn->conn_info, key);
         RSA_free(newkey);
     }
+    assert(server_pubkey != NULL);
 
 /* proposition C5 */
 
@@ -485,15 +484,16 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
 
     SendTransaction(conn->conn_info, out, encrypted_len, CF_DONE);
 
-    if (server_pubkey != NULL)
-    {
-        char buffer[EVP_MAX_MD_SIZE * 4];
-        unsigned int length = 0;
-        Log(LOG_LEVEL_VERBOSE, "Public key identity of host '%s' is: %s",
-            conn->remoteip, ConnectionInfoPrintableKeyHash(conn->conn_info));
-        SavePublicKey(conn->username, buffer, server_pubkey);       // FIXME: username is local
-        LastSaw(conn->remoteip, ConnectionInfoBinaryKeyHash(conn->conn_info, &length), LAST_SEEN_ROLE_CONNECT);
-    }
+    Key *key = KeyNew(server_pubkey, CF_DEFAULT_DIGEST);
+    conn->conn_info->remote_key = key;
+
+    Log(LOG_LEVEL_VERBOSE, "Public key identity of host '%s' is: %s",
+        conn->remoteip, KeyPrintableHash(conn->conn_info->remote_key));
+
+    SavePublicKey(conn->username, KeyPrintableHash(conn->conn_info->remote_key), server_pubkey);
+
+    unsigned int length = 0;
+    LastSaw(conn->remoteip, KeyBinaryHash(conn->conn_info->remote_key, &length), LAST_SEEN_ROLE_CONNECT);
 
     free(out);
 

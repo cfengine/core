@@ -34,36 +34,39 @@
 
   ConnectionInfo is used to abstract the underlying type of connection from our protocol implementation.
   It can hold both a normal socket connection and a TLS stream.
-
-  Notice that despite being reference counted, we will not detach this structure once shared in order to
-  modify it. This arises from the fact that we handle a couple of structures that are opaque to us, such
-  as RSA and SSL. We cannot copy those structures since they are completely opaque, therefore we cannot
-  modify this structure once it has been shared. As a safety measure, the copy will fail if the structure
-  is not ready.
-  */
+ */
 
 /**
   @brief Available protocol versions
+  @note  When connection is initialised ProtocolVersion is 0, i.e. undefined.
   */
 typedef enum
 {
-    /* When connection is initialised ProtocolVersion is 0, i.e. undefined. */
-    CF_PROTOCOL_UNDEFINED, /*!< Protocol not defined yet */
-    CF_PROTOCOL_CLASSIC, /*!< Normal CFEngine protocol */
-    CF_PROTOCOL_TLS /*!< TLS protocol */
+    CF_PROTOCOL_UNDEFINED,
+    CF_PROTOCOL_CLASSIC,
+    CF_PROTOCOL_TLS
 } ProtocolVersion;
 
 /**
   @brief States of the connection.
+  @note  Status of the connection so we can detect if we need to negotiate a new connection or not
   */
 typedef enum
 {
-    /* Status of the connection so we can detect if we need to negotiate a new connection or not */
-    CF_CONNECTION_NOT_ESTABLISHED, /*!< Connection not established yet */
-    CF_CONNECTION_ESTABLISHED /*!< Connection established */
+    CF_CONNECTION_NOT_ESTABLISHED,
+    CF_CONNECTION_ESTABLISHED
 } ConnectionStatus;
 
+struct ConnectionInfo {
+    ProtocolVersion type;
+    ConnectionStatus status;
+    int sd;                           /* Socket descriptor */
+    SSL *ssl;                         /* OpenSSL struct for TLS connections */
+    Key *remote_key;
+};
+
 typedef struct ConnectionInfo ConnectionInfo;
+
 
 /**
   @brief Creates a new ConnectionInfo structure.

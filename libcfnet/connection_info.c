@@ -27,18 +27,6 @@
 #include <refcount.h>
 #include <connection_info.h>
 
-/*
- * We define the structure on the C file to force people to use the API.
- * Do not move this declaration to the header file, otherwise this structure
- * will become modifiable without accessing the API.
- */
-struct ConnectionInfo {
-    ProtocolVersion type;
-    ConnectionStatus status;
-    int sd;                           /* Socket descriptor */
-    SSL *ssl;                         /* OpenSSL struct for TLS connections */
-    Key *remote_key;
-};
 
 ConnectionInfo *ConnectionInfoNew(void)
 {

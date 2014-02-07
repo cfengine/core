@@ -1068,6 +1068,7 @@ givearglist:           OP
                        {
                            ParserDebug("\tP:%s:%s:%s end givearglist for function %s, level %d\n", P.block,P.blocktype,P.blockid, P.currentfnid[P.arg_nesting], P.arg_nesting );
                            P.currentfncall[P.arg_nesting] = FnCallNew(P.currentfnid[P.arg_nesting],P.giveargs[P.arg_nesting]);
+                           RlistDestroy(P.giveargs[P.arg_nesting]);
                            P.giveargs[P.arg_nesting] = NULL;
                            strcpy(P.currentid,"");
                            free(P.currentfnid[P.arg_nesting]);

@@ -326,6 +326,7 @@ void MonitorStartServer(EvalContext *ctx, const Policy *policy)
     }
 
     PolicyDestroy(monitor_cfengine_policy);
+    YieldCurrentLock(thislock);
 }
 
 /*********************************************************************/

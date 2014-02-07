@@ -94,7 +94,6 @@ libpromises_la_SOURCES = \
         pipes.h pipes.c \
         processes_select.c processes_select.h \
         process_lib.h process_unix_priv.h \
-        promise_logging.c promise_logging.h \
         promises.c promises.h \
         prototypes3.h \
         rlist.c rlist.h \

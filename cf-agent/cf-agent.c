@@ -1208,6 +1208,7 @@ PromiseResult ScheduleAgentOperations(EvalContext *ctx, const Bundle *bp)
                 continue;
             }
 
+            EvalContextStackPushPromiseTypeFrame(ctx, sp);
             for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
             {
                 Promise *pp = SeqAt(sp->promises, ppi);
@@ -1217,12 +1218,14 @@ PromiseResult ScheduleAgentOperations(EvalContext *ctx, const Bundle *bp)
 
                 if (Abort(ctx))
                 {
+                    EvalContextStackPopFrame(ctx);
                     DeleteTypeContext(ctx, bp, type);
                     NoteBundleCompliance(bp, save_pr_kept, save_pr_repaired, save_pr_notkept);
                     return result;
                 }
             }
 
+            EvalContextStackPopFrame(ctx);
             DeleteTypeContext(ctx, bp, type);
         }
     }

@@ -130,6 +130,7 @@ int ScheduleEditLineOperations(EvalContext *ctx, const Bundle *bp, Attributes a,
 
             BannerSubPromiseType(ctx, bp->name, sp->name);
 
+            EvalContextStackPushPromiseTypeFrame(ctx, sp);
             for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
             {
                 Promise *pp = SeqAt(sp->promises, ppi);
@@ -139,9 +140,11 @@ int ScheduleEditLineOperations(EvalContext *ctx, const Bundle *bp, Attributes a,
                 if (Abort(ctx))
                 {
                     YieldCurrentLock(thislock);
+                    EvalContextStackPopFrame(ctx);
                     return false;
                 }
             }
+            EvalContextStackPopFrame(ctx);
         }
     }
 

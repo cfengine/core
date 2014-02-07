@@ -671,6 +671,9 @@ static void StackFrameDestroy(StackFrame *frame)
             StackFrameBodyDestroy(frame->data.body);
             break;
 
+        case STACK_FRAME_TYPE_PROMISE_TYPE:
+            break;
+
         case STACK_FRAME_TYPE_PROMISE:
             StackFramePromiseDestroy(frame->data.promise);
             break;
@@ -893,6 +896,15 @@ static StackFrame *StackFrameNewBody(const Body *owner)
     return frame;
 }
 
+static StackFrame *StackFrameNewPromiseType(const PromiseType *owner)
+{
+    StackFrame *frame = StackFrameNew(STACK_FRAME_TYPE_PROMISE_TYPE, true);
+
+    frame->data.promise_type.owner = owner;
+
+    return frame;
+}
+
 static StackFrame *StackFrameNewPromise(const Promise *owner)
 {
     StackFrame *frame = StackFrameNew(STACK_FRAME_TYPE_PROMISE, true);
@@ -959,7 +971,18 @@ void EvalContextStackPushBundleFrame(EvalContext *ctx, const Bundle *owner, cons
 
 void EvalContextStackPushBodyFrame(EvalContext *ctx, const Promise *caller, const Body *body, Rlist *args)
 {
-    assert((!LastStackFrame(ctx, 0) && strcmp("control", body->name) == 0) || LastStackFrame(ctx, 0)->type == STACK_FRAME_TYPE_BUNDLE);
+#ifndef NDEBUG
+    StackFrame *last_frame = LastStackFrame(ctx, 0);
+    if (last_frame)
+    {
+        assert(last_frame->type == STACK_FRAME_TYPE_PROMISE_TYPE);
+    }
+    else
+    {
+        assert(strcmp("control", body->name) == 0);
+    }
+#endif
+
 
     EvalContextStackPushFrame(ctx, StackFrameNewBody(body));
 
@@ -987,9 +1010,17 @@ void EvalContextStackPushBodyFrame(EvalContext *ctx, const Promise *caller, cons
     }
 }
 
-void EvalContextStackPushPromiseFrame(EvalContext *ctx, const Promise *owner, bool copy_bundle_context)
+void EvalContextStackPushPromiseTypeFrame(EvalContext *ctx, const PromiseType *owner)
 {
     assert(LastStackFrame(ctx, 0) && LastStackFrame(ctx, 0)->type == STACK_FRAME_TYPE_BUNDLE);
+
+    StackFrame *frame = StackFrameNewPromiseType(owner);
+    EvalContextStackPushFrame(ctx, frame);
+}
+
+void EvalContextStackPushPromiseFrame(EvalContext *ctx, const Promise *owner, bool copy_bundle_context)
+{
+    assert(LastStackFrame(ctx, 0) && LastStackFrame(ctx, 0)->type == STACK_FRAME_TYPE_PROMISE_TYPE);
 
     EvalContextVariableClearMatch(ctx);
 
@@ -1325,11 +1356,13 @@ char *EvalContextStackPath(const EvalContext *ctx)
             WriterWriteF(path, "/%s/%s", frame->data.bundle.owner->ns, frame->data.bundle.owner->name);
             break;
 
+        case STACK_FRAME_TYPE_PROMISE_TYPE:
+            WriterWriteF(path, "/%s", frame->data.promise_type.owner->name);
+
         case STACK_FRAME_TYPE_PROMISE:
             break;
 
         case STACK_FRAME_TYPE_PROMISE_ITERATION:
-            WriterWriteF(path, "/%s", frame->data.promise_iteration.owner->parent_promise_type->name);
             WriterWriteF(path, "/'%s'", frame->data.promise_iteration.owner->promiser);
             if (i == SeqLength(ctx->stack) - 1)
             {
@@ -1546,6 +1579,17 @@ static void VarRefStackQualify(const EvalContext *ctx, VarRef *ref)
     {
     case STACK_FRAME_TYPE_BODY:
         VarRefQualify(ref, NULL, SpecialScopeToString(SPECIAL_SCOPE_BODY));
+        break;
+
+    case STACK_FRAME_TYPE_PROMISE_TYPE:
+        {
+            StackFrame *last_last_frame = LastStackFrame(ctx, 1);
+            assert(last_last_frame);
+            assert(last_last_frame->type == STACK_FRAME_TYPE_BUNDLE);
+            VarRefQualify(ref,
+                          last_last_frame->data.bundle.owner->ns,
+                          last_last_frame->data.bundle.owner->name);
+        }
         break;
 
     case STACK_FRAME_TYPE_BUNDLE:

@@ -340,7 +340,9 @@ static void test_expand_promise_array_with_scalar_arg(void **state)
     Promise *promise = PromiseTypeAppendPromise(promise_type, "$(foo[$(bar)])", (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, "any");
 
     EvalContextStackPushBundleFrame(ctx, bundle, NULL, false);
+    EvalContextStackPushPromiseTypeFrame(ctx, promise_type);
     ExpandPromise(ctx, promise, actuator_expand_promise_array_with_scalar_arg, NULL);
+    EvalContextStackPopFrame(ctx);
     EvalContextStackPopFrame(ctx);
 
     PolicyDestroy(policy);
@@ -392,7 +394,9 @@ static void test_expand_promise_slist(void **state)
     Promise *promise = PromiseTypeAppendPromise(promise_type, "$(foo)", (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, "any");
 
     EvalContextStackPushBundleFrame(ctx, bundle, NULL, false);
+    EvalContextStackPushPromiseTypeFrame(ctx, promise_type);
     ExpandPromise(ctx, promise, actuator_expand_promise_slist, NULL);
+    EvalContextStackPopFrame(ctx);
     EvalContextStackPopFrame(ctx);
 
     assert_int_equal(2, actuator_state);
@@ -457,7 +461,9 @@ static void test_expand_promise_array_with_slist_arg(void **state)
     Promise *promise = PromiseTypeAppendPromise(promise_type, "$(arr[$(keys)])", (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, "any");
 
     EvalContextStackPushBundleFrame(ctx, bundle, NULL, false);
+    EvalContextStackPushPromiseTypeFrame(ctx, promise_type);
     ExpandPromise(ctx, promise, actuator_expand_promise_array_with_slist_arg, NULL);
+    EvalContextStackPopFrame(ctx);
     EvalContextStackPopFrame(ctx);
 
     assert_int_equal(2, actuator_state);

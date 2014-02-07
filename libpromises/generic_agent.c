@@ -1453,12 +1453,15 @@ static void VerifyPromises(EvalContext *ctx, const Policy *policy, GenericAgentC
         for (size_t j = 0; j < SeqLength(bp->promise_types); j++)
         {
             PromiseType *sp = SeqAt(bp->promise_types, j);
+            EvalContextStackPushPromiseTypeFrame(ctx, sp);
 
             for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
             {
                 Promise *pp = SeqAt(sp->promises, ppi);
                 ExpandPromise(ctx, pp, CommonEvalPromise, NULL);
             }
+
+            EvalContextStackPopFrame(ctx);
         }
 
         EvalContextStackPopFrame(ctx);

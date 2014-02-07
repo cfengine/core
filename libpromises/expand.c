@@ -966,6 +966,7 @@ static void ResolveCommonClassPromises(EvalContext *ctx, PromiseType *pt)
     assert(strcmp("classes", pt->name) == 0);
     assert(strcmp(pt->parent_bundle->type, "common") == 0);
 
+    EvalContextStackPushPromiseTypeFrame(ctx, pt);
     for (size_t i = 0; i < SeqLength(pt->promises); i++)
     {
         Promise *pp = SeqAt(pt->promises, i);
@@ -989,12 +990,14 @@ static void ResolveCommonClassPromises(EvalContext *ctx, PromiseType *pt)
 
         ExpandPromise(ctx, pp, VerifyClassPromise, NULL);
     }
+    EvalContextStackPopFrame(ctx);
 }
 
 static void ResolveVariablesPromises(EvalContext *ctx, PromiseType *pt)
 {
     assert(strcmp("vars", pt->name) == 0);
 
+    EvalContextStackPushPromiseTypeFrame(ctx, pt);
     for (size_t i = 0; i < SeqLength(pt->promises); i++)
     {
         Promise *pp = SeqAt(pt->promises, i);
@@ -1004,6 +1007,7 @@ static void ResolveVariablesPromises(EvalContext *ctx, PromiseType *pt)
         EvalContextStackPopFrame(ctx);
         EvalContextStackPopFrame(ctx);
     }
+    EvalContextStackPopFrame(ctx);
 }
 
 void BundleResolve(EvalContext *ctx, const Bundle *bundle)

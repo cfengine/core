@@ -40,9 +40,10 @@
 typedef enum
 {
     STACK_FRAME_TYPE_BUNDLE,
+    STACK_FRAME_TYPE_BODY,
+    STACK_FRAME_TYPE_PROMISE_TYPE,
     STACK_FRAME_TYPE_PROMISE,
-    STACK_FRAME_TYPE_PROMISE_ITERATION,
-    STACK_FRAME_TYPE_BODY
+    STACK_FRAME_TYPE_PROMISE_ITERATION
 } StackFrameType;
 
 typedef struct
@@ -69,6 +70,11 @@ typedef struct
 
 typedef struct
 {
+    const PromiseType *owner;
+} StackFramePromiseType;
+
+typedef struct
+{
     Promise *owner;
     const PromiseIterator *iter_ctx;
     size_t index;
@@ -83,6 +89,7 @@ typedef struct
     {
         StackFrameBundle bundle;
         StackFrameBody body;
+        StackFramePromiseType promise_type;
         StackFramePromise promise;
         StackFramePromiseIteration promise_iteration;
     } data;
@@ -124,6 +131,7 @@ void EvalContextClear(EvalContext *ctx);
 
 void EvalContextStackPushBundleFrame(EvalContext *ctx, const Bundle *owner, const Rlist *args, bool inherits_previous);
 void EvalContextStackPushBodyFrame(EvalContext *ctx, const Promise *caller, const Body *body, Rlist *args);
+void EvalContextStackPushPromiseTypeFrame(EvalContext *ctx, const PromiseType *owner);
 void EvalContextStackPushPromiseFrame(EvalContext *ctx, const Promise *owner, bool copy_bundle_context);
 Promise *EvalContextStackPushPromiseIterationFrame(EvalContext *ctx, size_t iteration_index, const PromiseIterator *iter_ctx);
 void EvalContextStackPopFrame(EvalContext *ctx);

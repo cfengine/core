@@ -1138,11 +1138,13 @@ static void GatherPromisedMeasures(EvalContext *ctx, const Policy *policy)
             {
                 PromiseType *sp = SeqAt(bp->promise_types, j);
 
+                EvalContextStackPushPromiseTypeFrame(ctx, sp);
                 for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
                 {
                     Promise *pp = SeqAt(sp->promises, ppi);
                     ExpandPromise(ctx, pp, KeepMonitorPromise, NULL);
                 }
+                EvalContextStackPopFrame(ctx);
             }
         }
 

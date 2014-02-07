@@ -573,12 +573,9 @@ static void AddOpenPorts(const char *name, const Item *value, Item **mon_data)
     PrintItemList(value, w);
     if (StringWriterLength(w) <= 1500)
     {
-        AppendItem(mon_data, StringWriterClose(w), NULL);
+        AppendItem(mon_data, StringWriterData(w), NULL);
     }
-    else
-    {
-        WriterClose(w);
-    }
+    WriterClose(w);
 }
 
 static void ArmClasses(Averages av)

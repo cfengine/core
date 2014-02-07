@@ -63,8 +63,8 @@ typedef enum
 static const struct option OPTIONS[] =
 {
     [PROMISES_OPTION_EVAL_FUNCTIONS] = {"eval-functions", optional_argument, 0, 0 },
-    [PROMISES_OPTION_SHOW_CLASSES] = {"show-classes", optional_argument, 0, 0 },
-    [PROMISES_OPTION_SHOW_VARIABLES] = {"show-vars", optional_argument, 0, 0 },
+    [PROMISES_OPTION_SHOW_CLASSES] = {"show-classes", no_argument, 0, 0 },
+    [PROMISES_OPTION_SHOW_VARIABLES] = {"show-vars", no_argument, 0, 0 },
     {"help", no_argument, 0, 'h'},
     {"bundlesequence", required_argument, 0, 'b'},
     {"debug", no_argument, 0, 'd'},

@@ -536,7 +536,7 @@ int cf_remote_stat(const char *file, struct stat *buf, const char *stattype, boo
 
     if (BadProtoReply(recvbuffer))
     {
-        Log(LOG_LEVEL_VERBOSE, "Server returned error '%s'",
+        Log(LOG_LEVEL_VERBOSE, "Server returned error: %s",
             recvbuffer + strlen("BAD: "));
         errno = EPERM;
         return -1;
@@ -1020,7 +1020,7 @@ int EncryptCopyRegularFileNet(const char *source, const char *dest, off_t size, 
 int CopyRegularFileNet(const char *source, const char *dest, off_t size, bool encrypt, AgentConnection *conn)
 {
     int dd, buf_size, n_read = 0, toget, towrite;
-    int done = false, tosend, value;
+    int tosend, value;
     char *buf, workbuf[CF_BUFSIZE], cfchangedstr[265];
 
     off_t n_read_total = 0;
@@ -1076,8 +1076,7 @@ int CopyRegularFileNet(const char *source, const char *dest, off_t size, bool en
           conn->this_server, source, (intmax_t)size);
 
     n_read_total = 0;
-    done = (n_read_total >= size);
-    while (!done)
+    while (n_read_total < size)
     {
         if ((size - n_read_total) >= buf_size)
         {
@@ -1169,9 +1168,6 @@ int CopyRegularFileNet(const char *source, const char *dest, off_t size, bool en
         }
 
         n_read_total += towrite;        /* n_read; */
-
-        /* Handle EOF without closing socket */
-        done = (n_read_total >= size);
     }
 
     /* If the file ends with a `hole', something needs to be written at
@@ -1372,7 +1368,7 @@ static AgentConnection *GetIdleConnectionToServer(const char *server)
     if (Hostname2IPString(ipaddr, server, sizeof(ipaddr)) == -1)
     {
         Log(LOG_LEVEL_WARNING,
-            "GetIdleConnectionToServer: could not resolve '%s'", server);
+            "Could not resolve: %s", server);
         return NULL;
     }
 
@@ -1466,7 +1462,7 @@ static void MarkServerOffline(const char *server)
     if (Hostname2IPString(ipaddr, server, sizeof(ipaddr)) == -1)
     {
         Log(LOG_LEVEL_ERR,
-            "MarkServerOffline: could not resolve '%s'", server);
+            "Could not resolve: %s", server);
         return;
     }
 
@@ -1513,7 +1509,7 @@ static void CacheServerConnection(AgentConnection *conn, const char *server)
     char ipaddr[CF_MAX_IP_LEN];
     if (Hostname2IPString(ipaddr, server, sizeof(ipaddr)) == -1)
     {
-        Log(LOG_LEVEL_ERR, "Could not resolve '%s'", server);
+        Log(LOG_LEVEL_ERR, "Failed to resolve: %s", server);
         return;
     }
 

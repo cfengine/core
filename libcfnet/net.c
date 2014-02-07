@@ -56,7 +56,7 @@ int SendTransaction(const ConnectionInfo *conn_info, const char *buffer, int len
 
     memcpy(work + CF_INBAND_OFFSET, buffer, len);
 
-    Log(LOG_LEVEL_DEBUG, "SendTransaction header:'%s'", work);
+    Log(LOG_LEVEL_DEBUG, "SendTransaction header: %s", work);
     LogRaw(LOG_LEVEL_DEBUG, "SendTransaction data: ",
            work + CF_INBAND_OFFSET, len);
 
@@ -113,7 +113,7 @@ int ReceiveTransaction(const ConnectionInfo *conn_info, char *buffer, int *more)
     if (ret != 2)
     {
         Log(LOG_LEVEL_ERR,
-            "ReceiveTransaction: Bad packet -- bogus header '%s'", proto);
+            "ReceiveTransaction: Bad packet -- bogus header: %s", proto);
         return -1;
     }
 

@@ -211,7 +211,7 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
         if ((PUBKEY == NULL) || (PRIVKEY == NULL))
         {
             char *pubkeyfile = PublicKeyFile(GetWorkDir());
-            Log(LOG_LEVEL_ERR, "No public/private key pair found at '%s'", pubkeyfile);
+            Log(LOG_LEVEL_ERR, "No public/private key pair found at: %s", pubkeyfile);
             free(pubkeyfile);
             return false;
         }
@@ -315,7 +315,7 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
 
     if (BadProtoReply(in))
     {
-        Log(LOG_LEVEL_ERR, "Bad protocol reply '%s'", in);
+        Log(LOG_LEVEL_ERR, "Bad protocol reply: %s", in);
         RSA_free(server_pubkey);
         return false;
     }
@@ -489,8 +489,8 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
     {
         char buffer[EVP_MAX_MD_SIZE * 4];
         unsigned int length = 0;
-        Log(LOG_LEVEL_VERBOSE, "Public key identity of host '%s' is '%s'", conn->remoteip,
-              ConnectionInfoPrintableKeyHash(conn->conn_info));
+        Log(LOG_LEVEL_VERBOSE, "Public key identity of host '%s' is: %s",
+            conn->remoteip, ConnectionInfoPrintableKeyHash(conn->conn_info));
         SavePublicKey(conn->username, buffer, server_pubkey);       // FIXME: username is local
         LastSaw(conn->remoteip, ConnectionInfoBinaryKeyHash(conn->conn_info, &length), LAST_SEEN_ROLE_CONNECT);
     }

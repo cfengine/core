@@ -210,7 +210,7 @@ static int AccessControl(EvalContext *ctx, const char *req_path, ServerConnectio
             if (stat(transpath, &statbuf) == -1)
             {
                 Log(LOG_LEVEL_INFO,
-                      "Warning cannot stat file object %s in admit/grant, or access list refers to dangling link\n",
+                      "Warning cannot stat file object %s in admit/grant, or access list refers to dangling link",
                       transpath);
                 continue;
             }
@@ -355,7 +355,7 @@ static int LiteralAccessControl(EvalContext *ctx, char *in, ServerConnectionStat
                     || (IsRegexItemIn(ctx, ap->accesslist, conn->hostname)))
                 {
                     access = true;
-                    Log(LOG_LEVEL_DEBUG, "Access privileges - match found\n");
+                    Log(LOG_LEVEL_DEBUG, "Access privileges - match found");
                 }
             }
         }
@@ -546,11 +546,11 @@ static int VerifyConnection(ServerConnectionState *conn, char buf[CF_BUFSIZE])
     ToLowerStrInplace(fqname);
 
     Log(LOG_LEVEL_VERBOSE,
-        "Allowing %s to connect without (re)checking ID\n", ipstring);
+        "Allowing %s to connect without (re)checking ID", ipstring);
     Log(LOG_LEVEL_VERBOSE,
-        "Non-verified Host ID is %s\n", fqname);
+        "Non-verified Host ID is %s", fqname);
     Log(LOG_LEVEL_VERBOSE,
-        "Non-verified User ID seems to be %s\n",
+        "Non-verified User ID seems to be %s",
         username);
 
     strlcpy(conn->hostname, fqname, CF_MAXVARSIZE);

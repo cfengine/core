@@ -63,8 +63,8 @@ typedef enum
 static const struct option OPTIONS[] =
 {
     [PROMISES_OPTION_EVAL_FUNCTIONS] = {"eval-functions", optional_argument, 0, 0 },
-    [PROMISES_OPTION_SHOW_CLASSES] = {"show-classes", optional_argument, 0, 0 },
-    [PROMISES_OPTION_SHOW_VARIABLES] = {"show-vars", optional_argument, 0, 0 },
+    [PROMISES_OPTION_SHOW_CLASSES] = {"show-classes", no_argument, 0, 0 },
+    [PROMISES_OPTION_SHOW_VARIABLES] = {"show-vars", no_argument, 0, 0 },
     {"help", no_argument, 0, 'h'},
     {"bundlesequence", required_argument, 0, 'b'},
     {"debug", no_argument, 0, 'd'},
@@ -89,8 +89,8 @@ static const struct option OPTIONS[] =
 static const char *const HINTS[] =
 {
     [PROMISES_OPTION_EVAL_FUNCTIONS] = "Evaluate functions during syntax checking (may catch more run-time errors). Possible values: 'yes', 'no'. Default is 'yes'",
-    [PROMISES_OPTION_SHOW_CLASSES] = "Show discovered classes, including those defined in policy",
-    [PROMISES_OPTION_SHOW_VARIABLES] = "Show discovered variables, including those defined in policy",
+    [PROMISES_OPTION_SHOW_CLASSES] = "Show discovered classes, including those defined in common bundles in policy",
+    [PROMISES_OPTION_SHOW_VARIABLES] = "Show discovered variables, including those defined anywhere in policy",
     "Print the help message",
     "Use the specified bundlesequence for verification",
     "Enable debugging output",

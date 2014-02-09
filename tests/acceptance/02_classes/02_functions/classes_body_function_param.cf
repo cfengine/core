@@ -1,0 +1,59 @@
+#######################################################
+#
+# Test that a classes body can take a function as a parameter
+# Redmine:4319 (https://cfengine.com/dev/issues/4319)
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+}
+
+#######################################################
+
+bundle agent test
+{
+  vars:
+    "filename" string => "this is a filename";
+
+  methods:
+    "test" usebundle => noop,
+      classes => if_repaired(canonify("define_a_class_$(filename)"));
+}
+
+#######################################################
+
+bundle agent noop
+{
+  reports:
+    !any::
+      "never";
+}
+
+bundle agent check
+{
+  classes:
+      "ok" expression => "any";
+
+  reports:
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}
+
+body classes if_repaired(x)
+# @brief Define class `x` if the promise has been repaired
+# @param x The name of the class
+{
+      promise_repaired => { "$(x)" };
+}
+

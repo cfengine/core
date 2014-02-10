@@ -86,16 +86,28 @@ struct EvalContext_
     char *launch_directory;
 };
 
-typedef struct
+static StackFrame *LastStackFrame(const EvalContext *ctx, size_t offset)
 {
-    const EvalContext *eval_context;
+    if (SeqLength(ctx->stack) <= offset)
+    {
+        return NULL;
+    }
+    return SeqAt(ctx->stack, SeqLength(ctx->stack) - 1 - offset);
+}
 
-    bool in_promise;
+static StackFrame *LastStackFrameByType(const EvalContext *ctx, StackFrameType type)
+{
+    for (size_t i = 0; i < SeqLength(ctx->stack); i++)
+    {
+        StackFrame *frame = LastStackFrame(ctx, i);
+        if (frame->type == type)
+        {
+            return frame;
+        }
+    }
 
-    char *stack_path;
-
-    RingBuffer *messages;
-} PromiseLoggingContext;
+    return NULL;
+}
 
 static LogLevel AdjustLogLevel(LogLevel base, LogLevel adjust)
 {
@@ -166,164 +178,18 @@ static LogLevel CalculateReportLevel(const Promise *pp)
 
 static char *LogHook(LoggingPrivContext *pctx, const char *message)
 {
-    PromiseLoggingContext *plctx = pctx->param;
+    const EvalContext *ctx = pctx->param;
 
-    if (plctx->in_promise)
+    StackFrame *last_frame = LastStackFrame(ctx, 0);
+    if (last_frame && last_frame->type == STACK_FRAME_TYPE_PROMISE_ITERATION)
     {
-        RingBufferAppend(plctx->messages, xstrdup(message));
-        return StringConcatenate(3, plctx->stack_path, ": ", message);
+        RingBufferAppend(last_frame->data.promise_iteration.log_messages, xstrdup(message));
+        return StringConcatenate(3, last_frame->path, ": ", message);
     }
     else
     {
         return xstrdup(message);
     }
-}
-
-static void PromiseLoggingInit(const EvalContext *eval_context, size_t max_messages)
-{
-    LoggingPrivContext *pctx = LoggingPrivGetContext();
-
-    if (pctx != NULL)
-    {
-        ProgrammingError("Promise logging: Still bound to another EvalContext");
-    }
-
-    PromiseLoggingContext *plctx = xcalloc(1, sizeof(PromiseLoggingContext));
-    plctx->eval_context = eval_context;
-    plctx->messages = RingBufferNew(max_messages, NULL, free);
-
-    pctx = xcalloc(1, sizeof(LoggingPrivContext));
-    pctx->param = plctx;
-    pctx->log_hook = &LogHook;
-
-    LoggingPrivSetContext(pctx);
-}
-
-static void PromiseLoggingPromiseEnter(const EvalContext *eval_context, const Promise *pp)
-{
-    LoggingPrivContext *pctx = LoggingPrivGetContext();
-    if (!pctx)
-    {
-        ProgrammingError("Promise logging: Unable to enter promise, not bound to EvalContext");
-    }
-
-    PromiseLoggingContext *plctx = pctx->param;
-    if (plctx->eval_context != eval_context)
-    {
-        ProgrammingError("Promise logging: Unable to enter promise, bound to EvalContext different from passed one");
-    }
-
-    assert(!plctx->in_promise);
-    plctx->in_promise = true;
-
-    plctx->stack_path = EvalContextStackPath(eval_context);
-    RingBufferClear(plctx->messages);
-    LoggingPrivSetLevels(CalculateLogLevel(pp), CalculateReportLevel(pp));
-}
-
-static void PromiseLoggingPromiseFinish(const EvalContext *eval_context, const Promise *pp)
-{
-    LoggingPrivContext *pctx = LoggingPrivGetContext();
-
-    if (pctx == NULL)
-    {
-        ProgrammingError("Promise logging: Unable to finish promise, not bound to EvalContext");
-    }
-
-    PromiseLoggingContext *plctx = pctx->param;
-
-    if (plctx->eval_context != eval_context)
-    {
-        ProgrammingError("Promise logging: Unable to finish promise, bound to EvalContext different from passed one");
-    }
-
-    if (EvalContextStackCurrentPromise(eval_context) != pp)
-    {
-        /*
-         * FIXME: There are still cases where promise passed here is not on top of stack
-         */
-        /* ProgrammingError("Logging: Attempt to finish promise not on top of stack"); */
-    }
-
-    assert(plctx->in_promise);
-    plctx->in_promise = false;
-
-    free(plctx->stack_path);
-    plctx->stack_path = NULL;
-
-    LoggingPrivSetLevels(LogGetGlobalLevel(), LogGetGlobalLevel());
-}
-
-static const RingBuffer *PromiseLoggingMessages(const EvalContext *ctx)
-{
-    LoggingPrivContext *pctx = LoggingPrivGetContext();
-
-    if (pctx == NULL)
-    {
-        ProgrammingError("Promise logging: Unable to finish promise, not bound to EvalContext");
-    }
-
-    PromiseLoggingContext *plctx = pctx->param;
-
-    if (plctx->eval_context != ctx)
-    {
-        ProgrammingError("Promise logging: Unable to finish promise, bound to EvalContext different from passed one");
-    }
-
-    return plctx->messages;
-}
-
-static void PromiseLoggingFinish(const EvalContext *eval_context)
-{
-    LoggingPrivContext *pctx = LoggingPrivGetContext();
-
-    if (pctx == NULL)
-    {
-        ProgrammingError("Promise logging: Unable to finish, PromiseLoggingInit was not called before");
-    }
-
-    PromiseLoggingContext *plctx = pctx->param;
-
-    if (plctx->eval_context != eval_context)
-    {
-        ProgrammingError("Promise logging: Unable to finish, passed EvalContext does not correspond to current one");
-    }
-
-    if (plctx->in_promise)
-    {
-        ProgrammingError("Promise logging: Unable to finish, promise is still active");
-    }
-
-    RingBufferDestroy(plctx->messages);
-    LoggingPrivSetContext(NULL);
-
-    free(plctx);
-    free(pctx);
-}
-
-
-
-static StackFrame *LastStackFrame(const EvalContext *ctx, size_t offset)
-{
-    if (SeqLength(ctx->stack) <= offset)
-    {
-        return NULL;
-    }
-    return SeqAt(ctx->stack, SeqLength(ctx->stack) - 1 - offset);
-}
-
-static StackFrame *LastStackFrameByType(const EvalContext *ctx, StackFrameType type)
-{
-    for (size_t i = 0; i < SeqLength(ctx->stack); i++)
-    {
-        StackFrame *frame = LastStackFrame(ctx, i);
-        if (frame->type == type)
-        {
-            return frame;
-        }
-    }
-
-    return NULL;
 }
 
 static const char *GetAgentAbortingContext(const EvalContext *ctx)
@@ -873,6 +739,7 @@ static void StackFramePromiseDestroy(StackFramePromise frame)
 static void StackFramePromiseIterationDestroy(StackFramePromiseIteration frame)
 {
     PromiseDestroy(frame.owner);
+    RingBufferDestroy(frame.log_messages);
 }
 
 static void StackFrameDestroy(StackFrame *frame)
@@ -955,7 +822,17 @@ EvalContext *EvalContextNew(void)
     ctx->promises_done = PromiseSetNew();
     ctx->function_cache = RBTreeNew(NULL, NULL, NULL,
                                     NULL, NULL, NULL);
-    PromiseLoggingInit(ctx, 5);
+
+    {
+        LoggingPrivContext *pctx = LoggingPrivGetContext();
+        assert(!pctx && "Logging context bound to something else");
+
+        pctx = xcalloc(1, sizeof(LoggingPrivContext));
+        pctx->param = ctx;
+        pctx->log_hook = &LogHook;
+
+        LoggingPrivSetContext(pctx);
+    }
 
     ctx->enterprise_state = EvalContextEnterpriseStateNew();
 
@@ -971,7 +848,11 @@ void EvalContextDestroy(EvalContext *ctx)
         free(ctx->launch_directory);
         EvalContextEnterpriseStateDestroy(ctx->enterprise_state);
 
-        PromiseLoggingFinish(ctx);
+        {
+            LoggingPrivContext *pctx = LoggingPrivGetContext();
+            free(pctx);
+            LoggingPrivSetContext(NULL);
+        }
 
         EvalContextDeleteIpAddresses(ctx);
 
@@ -1101,6 +982,8 @@ static StackFrame *StackFrameNewBundle(const Bundle *owner, bool inherit_previou
     frame->data.bundle.classes = ClassTableNew();
     frame->data.bundle.vars = VariableTableNew();
 
+
+
     return frame;
 }
 
@@ -1139,6 +1022,7 @@ static StackFrame *StackFrameNewPromiseIteration(Promise *owner, const PromiseIt
     frame->data.promise_iteration.owner = owner;
     frame->data.promise_iteration.iter_ctx = iter_ctx;
     frame->data.promise_iteration.index = index;
+    frame->data.promise_iteration.log_messages = RingBufferNew(5, NULL, free);
 
     return frame;
 }
@@ -1153,7 +1037,18 @@ void EvalContextStackFrameRemoveSoft(EvalContext *ctx, const char *context)
 
 static void EvalContextStackPushFrame(EvalContext *ctx, StackFrame *frame)
 {
+    StackFrame *last_frame = LastStackFrame(ctx, 0);
+    if (last_frame)
+    {
+        if (last_frame->type == STACK_FRAME_TYPE_PROMISE_ITERATION)
+        {
+            LoggingPrivSetLevels(LogGetGlobalLevel(), LogGetGlobalLevel());
+        }
+    }
+
     SeqAppend(ctx->stack, frame);
+
+    frame->path = EvalContextStackPath(ctx);
 }
 
 void EvalContextStackPushBundleFrame(EvalContext *ctx, const Bundle *owner, const Rlist *args, bool inherits_previous)
@@ -1311,14 +1206,9 @@ Promise *EvalContextStackPushPromiseIterationFrame(EvalContext *ctx, size_t iter
 
     Promise *pexp = ExpandDeRefPromise(ctx, LastStackFrame(ctx, 0)->data.promise.owner);
 
-    if (EvalContextStackCurrentPromise(ctx))
-    {
-        PromiseLoggingPromiseFinish(ctx, EvalContextStackCurrentPromise(ctx));
-    }
-
-    PromiseLoggingPromiseEnter(ctx, pexp);
-
     EvalContextStackPushFrame(ctx, StackFrameNewPromiseIteration(pexp, iter_ctx, iteration_index));
+
+    LoggingPrivSetLevels(CalculateLogLevel(pexp), CalculateReportLevel(pexp));
 
     return pexp;
 }
@@ -1343,7 +1233,7 @@ void EvalContextStackPopFrame(EvalContext *ctx)
         break;
 
     case STACK_FRAME_TYPE_PROMISE_ITERATION:
-        PromiseLoggingPromiseFinish(ctx, last_frame->data.promise_iteration.owner);
+        LoggingPrivSetLevels(LogGetGlobalLevel(), LogGetGlobalLevel());
         break;
 
     default:
@@ -1357,9 +1247,14 @@ void EvalContextStackPopFrame(EvalContext *ctx)
         FatalError(ctx, "cf-agent aborted on context '%s'", GetAgentAbortingContext(ctx));
     }
 
-    if (last_frame_type == STACK_FRAME_TYPE_PROMISE_ITERATION && EvalContextStackCurrentPromise(ctx))
+    last_frame = LastStackFrame(ctx, 0);
+    if (last_frame)
     {
-        PromiseLoggingPromiseEnter(ctx, EvalContextStackCurrentPromise(ctx));
+        if (last_frame->type == STACK_FRAME_TYPE_PROMISE_ITERATION)
+        {
+            const Promise *pp = EvalContextStackCurrentPromise(ctx);
+            LoggingPrivSetLevels(CalculateLogLevel(pp), CalculateReportLevel(pp));
+        }
     }
 }
 
@@ -1556,6 +1451,11 @@ const Bundle *EvalContextStackCurrentBundle(const EvalContext *ctx)
     return frame ? frame->data.bundle.owner : NULL;
 }
 
+const RingBuffer *EvalContextStackCurrentMessages(const EvalContext *ctx)
+{
+    StackFrame *frame = LastStackFrameByType(ctx, STACK_FRAME_TYPE_PROMISE_ITERATION);
+    return frame ? frame->data.promise_iteration.log_messages : NULL;
+}
 
 char *EvalContextStackPath(const EvalContext *ctx)
 {
@@ -2497,17 +2397,16 @@ void cfPS(EvalContext *ctx, LogLevel level, PromiseResult status, const Promise 
 
     va_list ap;
     va_start(ap, fmt);
-    VLog(level, fmt, ap);
+    char *msg = NULL;
+    xvasprintf(&msg, fmt, ap);
+    Log(level, "%s", msg);
     va_end(ap);
-
-    // TODO: the rest of this should go away soon
-    const RingBuffer *msgs = PromiseLoggingMessages(ctx);
-    const char *last_msg = RingBufferHead(msgs);
 
     /* Now complete the exits status classes and auditing */
 
     ClassAuditLog(ctx, pp, attr, status);
-    UpdatePromiseComplianceStatus(status, pp, last_msg);
+    UpdatePromiseComplianceStatus(status, pp, msg);
+    free(msg);
 }
 
 void SetChecksumUpdatesDefault(EvalContext *ctx, bool enabled)

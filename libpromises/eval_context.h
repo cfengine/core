@@ -36,6 +36,7 @@
 #include <class.h>
 #include <iteration.h>
 #include <rb-tree.h>
+#include <ring_buffer.h>
 
 typedef enum
 {
@@ -78,6 +79,7 @@ typedef struct
     Promise *owner;
     const PromiseIterator *iter_ctx;
     size_t index;
+    RingBuffer *log_messages;
 } StackFramePromiseIteration;
 
 typedef struct
@@ -93,6 +95,8 @@ typedef struct
         StackFramePromise promise;
         StackFramePromiseIteration promise_iteration;
     } data;
+
+    char *path;
 } StackFrame;
 
 TYPED_SET_DECLARE(Promise, const Promise *)
@@ -140,6 +144,7 @@ char *EvalContextStackPath(const EvalContext *ctx);
 StringSet *EvalContextStackPromisees(const EvalContext *ctx);
 const Promise *EvalContextStackCurrentPromise(const EvalContext *ctx);
 const Bundle *EvalContextStackCurrentBundle(const EvalContext *ctx);
+const RingBuffer *EvalContextStackCurrentMessages(const EvalContext *ctx);
 
 bool EvalContextVariablePut(EvalContext *ctx, const VarRef *ref, const void *value, DataType type, const char *tags);
 bool EvalContextVariablePutSpecial(EvalContext *ctx, SpecialScope scope, const char *lval, const void *value, DataType type, const char *tags);

@@ -190,7 +190,7 @@ AC_ARG_ENABLE(debug,
 AM_CONDITIONAL([NDEBUG], [test x"$debug" = x"no"])
 
 if test x"$debug" = x"yes"; then
-   CFLAGS="-g3 -O0 $CFLAGS"
+   CFLAGS="$CFLAGS -g3 -O0"
 else
    CFLAGS="-O2 -DNDEBUG $CFLAGS"
 fi

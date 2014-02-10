@@ -181,9 +181,13 @@ static char *LogHook(LoggingPrivContext *pctx, const char *message)
     const EvalContext *ctx = pctx->param;
 
     StackFrame *last_frame = LastStackFrame(ctx, 0);
-    if (last_frame && last_frame->type == STACK_FRAME_TYPE_PROMISE_ITERATION)
+    if (last_frame)
     {
-        RingBufferAppend(last_frame->data.promise_iteration.log_messages, xstrdup(message));
+        if (last_frame->type == STACK_FRAME_TYPE_PROMISE_ITERATION)
+        {
+            RingBufferAppend(last_frame->data.promise_iteration.log_messages, xstrdup(message));
+        }
+
         return StringConcatenate(3, last_frame->path, ": ", message);
     }
     else

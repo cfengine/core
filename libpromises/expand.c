@@ -117,6 +117,8 @@ since these cannot be mapped into "this" without some magic.
 PromiseResult ExpandPromise(EvalContext *ctx, const Promise *pp,
                             PromiseActuator *ActOnPromise, void *param)
 {
+    Log(LOG_LEVEL_VERBOSE, "Evaluating promise '%s'", pp->promiser);
+
     Rlist *lists = NULL;
     Rlist *scalars = NULL;
     Rlist *containers = NULL;

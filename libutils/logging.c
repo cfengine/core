@@ -264,19 +264,16 @@ void VLog(LogLevel level, const char *fmt, va_list ap)
  * @brief Logs binary data in #buf, with each byte translated to '.' if not
  *        printable. Message is prefixed with #prefix.
  */
-void LogRaw(LogLevel level, const char *prefix, void *buf, size_t buflen)
+void LogRaw(LogLevel level, const char *prefix, const void *buf, size_t buflen)
 {
     /* Translate non printable characters to printable ones. */
-    char *src = (char *) buf;
+    const char *src = (const char *) buf;
     char dst[buflen+1];
     size_t i;
 
     for (i = 0; i < buflen; i++)
     {
-        if (isprint(src[i]))
-            dst[i] = src[i];
-        else
-            dst[i] = '.';
+        dst[i] = isprint(src[i]) ? src[i] : '.';
     }
     dst[i] = '\0';
 

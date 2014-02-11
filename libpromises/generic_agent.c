@@ -1764,7 +1764,9 @@ void GenericAgentConfigDestroy(GenericAgentConfig *config)
         RlistDestroy(config->bundlesequence);
         StringSetDestroy(config->heap_soft);
         StringSetDestroy(config->heap_negated);
+        free(config->original_input_file);
         free(config->input_file);
+        free(config->input_dir);
         free(config);
     }
 }

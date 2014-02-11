@@ -211,7 +211,7 @@ bool PolicyCheckPartial(const Policy *policy, Seq *errors);
  */
 bool PolicyCheckRunnable(const EvalContext *ctx, const Policy *policy, Seq *errors, bool ignore_missing_bundles);
 
-Bundle *PolicyAppendBundle(Policy *policy, const char *ns, const char *name, const char *type, Rlist *args, const char *source_path);
+Bundle *PolicyAppendBundle(Policy *policy, const char *ns, const char *name, const char *type, const Rlist *args, const char *source_path);
 Body *PolicyAppendBody(Policy *policy, const char *ns, const char *name, const char *type, Rlist *args, const char *source_path);
 
 /**

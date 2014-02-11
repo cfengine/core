@@ -3825,7 +3825,7 @@ static FnCallResult FnCallUnique(EvalContext *ctx, ARG_UNUSED const Policy *poli
 /*********************************************************************/
 /* This function has been removed from the function list for now     */
 /*********************************************************************/
-
+#ifdef SUPPORT_FNCALL_DATATYPE
 static FnCallResult FnCallDatatype(EvalContext *ctx, ARG_UNUSED const Policy *policy, const FnCall *fp, const Rlist *finalargs)
 {
     const char* const varname = RlistScalarValue(finalargs);
@@ -3885,7 +3885,7 @@ static FnCallResult FnCallDatatype(EvalContext *ctx, ARG_UNUSED const Policy *po
 
     return (FnCallResult) { FNCALL_SUCCESS, { StringWriterClose(typestring), RVAL_TYPE_SCALAR } };
 }
-
+#endif /* unused code */
 /*********************************************************************/
 
 static FnCallResult FnCallNth(EvalContext *ctx, ARG_UNUSED const Policy *policy, const FnCall *fp, const Rlist *finalargs)

@@ -1175,8 +1175,9 @@ void PromiseTypeDestroy(PromiseType *promise_type)
     }
 }
 
-Bundle *PolicyAppendBundle(Policy *policy, const char *ns, const char *name, const char *type, Rlist *args,
-                     const char *source_path)
+Bundle *PolicyAppendBundle(Policy *policy,
+                           const char *ns, const char *name, const char *type,
+                           const Rlist *args, const char *source_path)
 {
     Bundle *bundle = xcalloc(1, sizeof(Bundle));
 

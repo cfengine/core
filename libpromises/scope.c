@@ -224,13 +224,27 @@ void ScopeMapBodyArgs(EvalContext *ctx, const Body *body, const Rlist *args)
 
     for (arg = args, param = body->args; arg != NULL && param != NULL; arg = arg->next, param = param->next)
     {
-        DataType arg_type = StringDataType(ctx, RlistScalarValue(arg));
-        DataType param_type = StringDataType(ctx, RlistScalarValue(param));
-
-        if (arg_type != param_type)
+        DataType arg_type = CF_DATA_TYPE_NONE;
+        switch (arg->val.type)
         {
-            Log(LOG_LEVEL_ERR, "Type mismatch between logical/formal parameters %s/%s", RlistScalarValue(arg), RlistScalarValue(param));
-            Log(LOG_LEVEL_ERR, "%s is %s whereas %s is %s", RlistScalarValue(arg), DataTypeToString(arg_type), RlistScalarValue(param), DataTypeToString(param_type));
+        case RVAL_TYPE_SCALAR:
+            arg_type = StringDataType(ctx, RlistScalarValue(arg));
+            break;
+
+        case RVAL_TYPE_FNCALL:
+            {
+                const FnCallType *fn = FnCallTypeGet(RlistFnCallValue(arg)->name);
+                if (!fn)
+                {
+                    FatalError(ctx, "Argument '%s' given to body '%s' is not a valid function",
+                               RlistFnCallValue(arg)->name, body->name);
+                }
+                arg_type = fn->dtype;
+            }
+            break;
+
+        default:
+            FatalError(ctx, "Cannot derive data type from Rval type %c", arg->val.type);
         }
 
         switch (arg->val.type)
@@ -274,14 +288,13 @@ void ScopeMapBodyArgs(EvalContext *ctx, const Body *body, const Rlist *args)
                 }
                 else
                 {
-                    FnCallDestroy(fp);
-
                     const char *lval = RlistScalarValue(param);
                     void *rval = res.rval.item;
 
                     VarRef *ref = VarRefParseFromNamespaceAndScope(lval, NULL, "body", CF_NS, '.');
                     EvalContextVariablePut(ctx, ref, rval, arg_type, "source=body");
                     VarRefDestroy(ref);
+                    RvalDestroy(res.rval);
                 }
             }
 

@@ -830,32 +830,41 @@ FileCopy GetCopyConstraints(const EvalContext *ctx, const Promise *pp)
 {
     FileCopy f;
     long min, max;
-    int pval;
+    const char *value;
 
     f.source = PromiseGetConstraintAsRval(pp, "source", RVAL_TYPE_SCALAR);
+    f.servers = PromiseGetConstraintAsList(ctx, "servers", pp);
 
-    const char *value = PromiseGetConstraintAsRval(pp, "compare", RVAL_TYPE_SCALAR);
-
+    value = PromiseGetConstraintAsRval(pp, "compare", RVAL_TYPE_SCALAR);
     if (value == NULL)
     {
         value = DEFAULT_COPYTYPE;
     }
-
     f.compare = FileComparatorFromString(value);
 
     value = PromiseGetConstraintAsRval(pp, "link_type", RVAL_TYPE_SCALAR);
-
     f.link_type = FileLinkTypeFromString(value);
-    f.servers = PromiseGetConstraintAsList(ctx, "servers", pp);
-    pval = PromiseGetConstraintAsInt(ctx, "portnumber", pp);
-    if (pval != CF_NOINT)
+
+    char *protocol_version = PromiseGetConstraintAsRval(pp, "protocol_version",
+                                                        RVAL_TYPE_SCALAR);
+
+    /* Default is undefined, which leaves the choice to body common. */
+    f.protocol_version = CF_PROTOCOL_UNDEFINED;
+    if (protocol_version != NULL)
     {
-        f.portnumber = (unsigned short) pval;
+        if (strcmp(protocol_version, "1") == 0 ||
+            strcmp(protocol_version, "classic") == 0)
+        {
+            f.protocol_version = CF_PROTOCOL_CLASSIC;
+        }
+        else if (strcmp(protocol_version, "2") == 0 ||
+                 strcmp(protocol_version, "latest") == 0)
+        {
+            f.protocol_version = CF_PROTOCOL_TLS;
+        }
     }
-    else
-    {
-        f.portnumber = 0;
-    }
+
+    f.port = PromiseGetConstraintAsRval(pp, "portnumber", RVAL_TYPE_SCALAR);
     f.timeout = (short) PromiseGetConstraintAsInt(ctx, "timeout", pp);
     f.link_instead = PromiseGetConstraintAsList(ctx, "linkcopy_patterns", pp);
     f.copy_links = PromiseGetConstraintAsList(ctx, "copylink_patterns", pp);

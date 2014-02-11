@@ -32,8 +32,7 @@ int FuzzySetMatch(const char *s1, const char *s2);
 bool FuzzyHostParse(const char *arg2);
 int FuzzyHostMatch(const char *arg0, const char *arg1, const char *basename);
 bool FuzzyMatchParse(const char *item);
-int ParseHostname(const char *hostname, char *new_hostname);
-
 bool IsInterfaceAddress(const Item *ip_addresses, const char *adr);
+void ParseHostPort(char *s, char **hostname, char **port);
 
 #endif

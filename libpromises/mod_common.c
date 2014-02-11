@@ -240,7 +240,7 @@ static bool ClassesParseTreeCheck(const Promise *pp, Seq *errors)
     return success;
 }
 
-const ConstraintSyntax CFG_CONTROLBODY[] =
+const ConstraintSyntax CFG_CONTROLBODY[COMMON_CONTROL_MAX + 1] =
 {
     ConstraintSyntaxNewStringList("bundlesequence", ".*", "List of promise bundles to verify in order", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewStringList("goal_patterns", "", "A list of regular expressions that match promisees/topics considered to be organizational goals", SYNTAX_STATUS_NORMAL),
@@ -258,6 +258,7 @@ const ConstraintSyntax CFG_CONTROLBODY[] =
     ConstraintSyntaxNewInt("syslog_port", CF_VALRANGE, "The port number of a UDP syslog service", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBool("fips_mode", "Activate full FIPS mode restrictions. Default value: false", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBool("cache_system_functions", "Cache the result of system functions. Default value: true", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewString("protocol_version", "1,classic,2,latest", "CFEngine protocol version to use when connecting to the server. Default: latest", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };
 
@@ -535,5 +536,5 @@ CommonControl CommonControlFromString(const char *lval)
         }
     }
 
-    return COMMON_CONTROL_NONE;
+    return COMMON_CONTROL_MAX;
 }

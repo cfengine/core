@@ -37,6 +37,9 @@
 #include <sequence.h>
 #include <logging.h>
 
+#include <cfnet.h>                       /* ProtocolVersion, CF_BUFSIZE etc */
+
+
 /*******************************************************************/
 /* Preprocessor tricks                                             */
 /*******************************************************************/
@@ -49,20 +52,14 @@
 /* Various defines                                                 */
 /*******************************************************************/
 
-#define CF_BUFSIZE 4096
-/* max size of plaintext in one transaction, see
-   net.c:SendTransaction(), leave space for encryption padding
-   (assuming max 64*8 = 512-bit cipher block size)*/
 #define CF_BILLION 1000000000L
 #define CF_EXPANDSIZE (2*CF_BUFSIZE)
 #define CF_BUFFERMARGIN 128
 #define CF_BLOWFISHSIZE 16
-#define CF_SMALLBUF 128
 #define CF_MAXVARSIZE 1024
 #define CF_MAXSIDSIZE 2048      /* Windows only: Max size (bytes) of security identifiers */
 #define CF_NONCELEN (CF_BUFSIZE/16)
 #define CF_MAXLINKSIZE 256
-#define CF_MAX_IP_LEN 64        /* TODO INET6_ADDRSTRLEN */
 #define CF_PROCCOLS 16
 #define CF_HASHTABLESIZE 8192
 #define CF_MACROALPHABET 61     /* a-z, A-Z plus a bit */
@@ -121,8 +118,6 @@
 #define CF_ANYCLASS "any"
 #define CF_SMALL_OFFSET 2
 
-#define CF_DONE 't'
-#define CF_MORE 'm'
 #define CF_NS ':'   // namespace character separator
 
 /*****************************************************************************/
@@ -459,7 +454,8 @@ typedef enum
     COMMON_CONTROL_SYSLOG_PORT,
     COMMON_CONTROL_FIPS_MODE,
     COMMON_CONTROL_CACHE_SYSTEM_FUNCTIONS,
-    COMMON_CONTROL_NONE
+    COMMON_CONTROL_PROTOCOL_VERSION,
+    COMMON_CONTROL_MAX
 } CommonControl;
 
 /*************************************************************************/
@@ -1016,38 +1012,6 @@ struct PackageItem_
     PackageItem *next;
 };
 
-/*************************************************************************/
-/* Files                                                                 */
-/*************************************************************************/
-
-typedef struct
-{
-    char *source;
-    char *destination;
-    FileComparator compare;
-    FileLinkType link_type;
-    Rlist *servers;
-    Rlist *link_instead;
-    Rlist *copy_links;
-    BackupOption backup;
-    int stealth;
-    int preserve;
-    int collapse;
-    int check_root;
-    int type_check;
-    int force_update;
-    int force_ipv4;
-    size_t min_size;            /* Safety margin not search criterion */
-    size_t max_size;
-    int trustkey;
-    int encrypt;
-    int verify;
-    int purge;
-    unsigned short portnumber;
-    short timeout;
-} FileCopy;
-
-/*************************************************************************/
 
 typedef struct
 {
@@ -1487,6 +1451,34 @@ typedef struct
     so we leave it to the compiler to optimize */
 
 #include <json.h>
+
+typedef struct
+{
+    const char *source;
+    const char *port;                               /* port or service name */
+    char *destination;
+    FileComparator compare;
+    FileLinkType link_type;
+    Rlist *servers;
+    Rlist *link_instead;
+    Rlist *copy_links;
+    BackupOption backup;
+    int stealth;
+    int preserve;
+    int collapse;
+    int check_root;
+    int type_check;
+    int force_update;
+    int force_ipv4;
+    size_t min_size;            /* Safety margin not search criterion */
+    size_t max_size;
+    int trustkey;
+    int encrypt;
+    int verify;
+    int purge;
+    short timeout;
+    ProtocolVersion protocol_version;
+} FileCopy;
 
 typedef struct
 {

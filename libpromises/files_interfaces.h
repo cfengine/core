@@ -28,7 +28,7 @@
 #include <cf3.defs.h>
 #include <cfnet.h>                                       /* AgentConnection */
 
-int cf_lstat(char *file, struct stat *buf, FileCopy fc, AgentConnection *conn);
+int cf_lstat(const char *file, struct stat *buf, FileCopy fc, AgentConnection *conn);
 
 /**
  * @brief Works exactly like posix 'getline', EXCEPT it does not include carriage return at the end.

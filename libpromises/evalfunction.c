@@ -1582,14 +1582,14 @@ static FnCallResult FnCallReadTcp(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const 
 
     conn = NewAgentConn(hostnameip);
 
-    FileCopy fc = {
-        .force_ipv4 = false,
-        .portnumber = portnum,
-    };
+    /* FileCopy fc = { */
+    /*     .force_ipv4 = false, */
+    /*     .portnumber = portnum, */
+    /* }; */
 
     /* TODO don't use ServerConnect, this is only for CFEngine connections! */
 
-    if (!ServerConnect(conn, hostnameip, fc))
+    /* if (!ServerConnect(conn, hostnameip, fc)) TODOOOOOOOOOOOOOOOOOOO*/
     {
         Log(LOG_LEVEL_INFO, "Couldn't open a tcp socket. (socket: %s)", GetErrorStr());
         DeleteAgentConn(conn);
@@ -2737,14 +2737,14 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx,
 
         conn = NewAgentConn(RlistScalarValue(rp));
 
-        FileCopy fc = {
-            .force_ipv4 = false,
-            .portnumber = portnum,
-        };
+        /* FileCopy fc = { */
+        /*     .force_ipv4 = false, */
+        /*     .portnumber = portnum, */
+        /* }; */
 
         /* TODO don't use ServerConnect, this is only for CFEngine connections! */
 
-        if (!ServerConnect(conn, RlistScalarValue(rp), fc))
+        /* if (!ServerConnect(conn, RlistScalarValue(rp), fc)) TODOOOOOOOOOOOOOOOO */
         {
             Log(LOG_LEVEL_INFO, "Couldn't open a tcp socket. (socket %s)", GetErrorStr());
             DeleteAgentConn(conn);

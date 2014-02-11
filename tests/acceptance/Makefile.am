@@ -1,4 +1,7 @@
-AM_CFLAGS = $(ENTERPRISE_CFLAGS) -I$(top_srcdir)/libpromises -I$(srcdir)/../../libutils
+AM_CFLAGS = $(ENTERPRISE_CFLAGS) \
+	-I$(top_srcdir)/libpromises \
+	-I$(top_srcdir)/libutils \
+	-I$(top_srcdir)/libcfnet
 
 noinst_PROGRAMS =
 

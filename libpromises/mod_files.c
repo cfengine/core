@@ -287,7 +287,7 @@ static const ConstraintSyntax copy_from_constraints[] =
      * 'source'
      */
     ConstraintSyntaxNewString("source", CF_PATHRANGE, "Reference source file from which to copy", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewStringList("servers", "[A-Za-z0-9_.:-]+", "List of servers in order of preference from which to copy", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewStringList("servers", "[A-Za-z0-9_.:-\\[\\]]+", "List of servers in order of preference from which to copy", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBool("collapse_destination_dir", "true/false Place files in subdirectories into the root destination directory during copy", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewOption("compare", "atime,mtime,ctime,digest,hash,exists,binary", "Menu option policy for comparing source and image file attributes. Default: mtime or ctime differs", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewOption("copy_backup", "true,false,timestamp", "Menu option policy for file backup/version control. Default value: true", SYNTAX_STATUS_NORMAL),
@@ -300,7 +300,7 @@ static const ConstraintSyntax copy_from_constraints[] =
     ConstraintSyntaxNewOption("link_type", CF_LINKRANGE, "Menu option for type of links to use when copying. Default value: symlink", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBool("force_update", "true/false force copy update always. Default value: false", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBool("force_ipv4", "true/false force use of ipv4 on ipv6 enabled network. Default value: false", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewInt("portnumber", "1,65535", "Port number to connect to on server host", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewString("portnumber", "", "Port number or service name to connect to on server host", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBool("preserve", "true/false whether to preserve file permissions on copied file. Default value: false", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBool("purge", "true/false purge files on client that do not match files on server when a depth_search is used. Default value: false", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBool("stealth", "true/false whether to preserve time stamps on copied file. Default value: false", SYNTAX_STATUS_NORMAL),
@@ -308,6 +308,7 @@ static const ConstraintSyntax copy_from_constraints[] =
     ConstraintSyntaxNewBool("trustkey", "true/false trust public keys from remote server if previously unknown. Default value: false", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBool("type_check", "true/false compare file types before copying and require match", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBool("verify", "true/false verify transferred file by hashing after copy (resource penalty). Default value: false", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewOption("protocol_version", "0,undefined,1,classic,2,latest", "CFEngine protocol version to use when connecting to the server. Default: undefined", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };
 

@@ -92,6 +92,7 @@ typedef struct
 
 } ServerAccess;
 
+/* TODO rename to IncomingConnection */
 struct ServerConnectionState_
 {
     ConnectionInfo *conn_info;

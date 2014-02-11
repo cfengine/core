@@ -28,22 +28,16 @@
 
 
 #include <platform.h>
-#include <connection_info.h>
 
-/* ************************************************ */
-/* The following were copied from cf3.defs.h and still exist there, TODO */
 
 /* max size of plaintext in one transaction, see
    net.c:SendTransaction(), leave space for encryption padding
-   (assuming max 64*8 = 512-bit cipher block size)*/
+   (assuming max 64*8 = 512-bit cipher block size). */
 #define CF_BUFSIZE 4096
 #define CF_SMALLBUF 128
-#define CF_MAX_IP_LEN 64        /* numerical ip length */
+#define CF_MAX_IP_LEN 64                    /* max IPv4/IPv6 address length */
 #define CF_DONE 't'
 #define CF_MORE 'm'
-/* ************************************************ */
-
-
 #define SOCKET_INVALID -1
 #define MAXIP4CHARLEN 16
 #define CF_RSA_PROTO_OFFSET 24
@@ -51,8 +45,35 @@
 #define CF_INBAND_OFFSET 8
 
 
-/* The only protocol we support inside TLS, for now... */
-#define CFNET_PROTOCOL_VERSION 1
+/**
+  Available protocol versions. When connection is initialised ProtocolVersion
+  is 0, i.e. undefined. It is after the call to ServerConnection() that
+  protocol version is decided, according to body copy_from and body common
+  control. All protocol numbers are numbered incrementally starting from 1.
+ */
+typedef enum
+{
+    CF_PROTOCOL_UNDEFINED = 0,
+    CF_PROTOCOL_CLASSIC = 1,
+    CF_PROTOCOL_TLS = 2                      /* Default for new connections */
+} ProtocolVersion;
+
+static const char * const PROTOCOL_VERSION_STRING[CF_PROTOCOL_TLS + 1] = {
+    "undefined",
+    "classic",
+    "latest"
+};
+
+typedef struct
+{
+    ProtocolVersion protocol_version : 3;
+    bool            cache_connection : 1;
+    bool            force_ipv4       : 1;
+    bool            trust_server     : 1;
+} ConnectionFlags;
+
+
+#include "connection_info.h"                       /* needs ProtocolVersion */
 
 
 /* TODO Shouldn't this be in libutils? */
@@ -66,6 +87,7 @@ typedef enum
     FILE_TYPE_CHAR_, /* Conflict with winbase.h */
     FILE_TYPE_SOCK
 } FileType;
+
 typedef struct Stat_ Stat;
 struct Stat_
 {
@@ -113,8 +135,9 @@ typedef struct
     unsigned char *session_key;
     char encryption_type;
     short error;
+    ConnectionFlags flags;        /* mostly copy_from connection attributes */
     char *this_server;
-    Stat *cache;             /* Cache for network connection (SYNCH result) */
+    Stat *cache;                        /* cache for stat() (SYNCH command) */
 } AgentConnection;
 
 

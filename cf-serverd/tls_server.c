@@ -217,6 +217,10 @@ int ServerNegotiateProtocol(const ConnectionInfo *conn_info)
 {
     int ret;
     char input[CF_SMALLBUF] = "";
+    /* The only protocol we support inside TLS, for now... */
+    const int SERVER_PROTOCOL_VERSION = CF_PROTOCOL_TLS;
+
+
 
     /* Send "CFE_v%d cf-serverd version". */
     char version_string[CF_MAXVARSIZE];
@@ -251,6 +255,7 @@ int ServerNegotiateProtocol(const ConnectionInfo *conn_info)
     }
 
     /* For now we support only one version, so just check they match... */
+    /* TODO value should not be hardcoded but compared to enum ProtocolVersion. */
     if (version_received == SERVER_PROTOCOL_VERSION)
     {
         char s[] = "OK\n";
@@ -985,9 +990,11 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
     /* We should only reach this point if something went really bad, and
      * close connection. In all other cases (like access denied) connection
      * shouldn't be closed.
-     * TODO So we need this function to return more than
-     * true/false. -1 for error, 0 on success, 1 on access denied. It can be
-     * an option if connection will close on denial. */
+
+     * TODO So we need this function to return more than true/false, because
+     * now we return true even when access is denied! E.g. return -1 for
+     * error, 0 on success, 1 on access denied. It can be an option if
+     * connection will close on denial. */
 
 protocol_error:
     strcpy(sendbuffer, "BAD: Request denied");

@@ -107,8 +107,11 @@ time_t CFSTARTTIME; /* GLOBAL_E, initialized later */
   Set in cf-serverd (from control body)/GenericAgentInitialize (defaults)
 
   Used in network code
+
+  TODO leave only the string.
 */
 int CFENGINE_PORT = 5308; /* GLOBAL_P GLOBAL_E */
+const char * const CFENGINE_PORT_STR = "5308";
 
 /*
   Set in cf-agent/cf-runagent (from control body).

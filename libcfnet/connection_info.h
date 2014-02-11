@@ -37,17 +37,6 @@
  */
 
 /**
-  @brief Available protocol versions
-  @note  When connection is initialised ProtocolVersion is 0, i.e. undefined.
-  */
-typedef enum
-{
-    CF_PROTOCOL_UNDEFINED,
-    CF_PROTOCOL_CLASSIC,
-    CF_PROTOCOL_TLS
-} ProtocolVersion;
-
-/**
   @brief States of the connection.
   @note  Status of the connection so we can detect if we need to negotiate a new connection or not
   */

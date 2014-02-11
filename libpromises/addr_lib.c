@@ -555,14 +555,37 @@ bool IsInterfaceAddress(const Item *ip_addresses, const char *adr)
     return false;
 }
 
-int ParseHostname(const char *name, char *hostname)
+/**
+ * Parses "hostname:port" or "[hostname]:port", where hostname may also be
+ * IPv4 or IPv6 address string.
+ *
+ * @WARNING modifies #s to NULL terminate hostname if followed by port.
+ */
+void ParseHostPort(char *s, char **hostname, char **port)
 {
-    int port;
-    if (sscanf(name, "%250[^:]:%d", hostname, &port) != 2)
+    char *h, *p;                              /* hostname, port temporaries */
+
+    if (s[0] == '[')                           /* IPv6 form: [address]:port */
     {
-        strlcpy(hostname, name, CF_MAXVARSIZE);
-        port = CFENGINE_PORT;
+        h = s + 1;
+        p = strchr(h, ']');
+        if (p != NULL)
+        {
+            *p = '\0';                           /* '\0'-terminate hostname */
+            p = (p[1] == ':') ? p+2 : NULL;
+        }
+    }
+    else                                       /* normal form: address:port */
+    {
+        h = s;
+        p = strchr(h, ':');
+        if (p != NULL)
+        {
+            *p = '\0';                           /* '\0'-terminate hostname */
+            p++;
+        }
     }
 
-    return port;
+    *hostname = (h[0] != '\0') ? h : NULL;
+    *port     = (p[0] != '\0') ? p : NULL;
 }

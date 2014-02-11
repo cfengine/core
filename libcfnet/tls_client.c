@@ -159,6 +159,11 @@ void TLSDeInitialize()
     }
 }
 
+
+/* The only protocol_version we support inside TLS, for now... */
+#define CFNET_PROTOCOL_VERSION 2
+
+
 /**
  * @return > 0: a mutually acceptable version was negotiated
  *           0: no agreement on version was reached

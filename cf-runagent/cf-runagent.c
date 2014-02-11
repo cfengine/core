@@ -403,21 +403,33 @@ static void ThisAgentInit(void)
 
 static int HailServer(EvalContext *ctx, char *host)
 {
+    assert(host != NULL);
+
     AgentConnection *conn;
-    char sendbuffer[CF_BUFSIZE], recvbuffer[CF_BUFSIZE], peer[CF_MAXVARSIZE],
+    char sendbuffer[CF_BUFSIZE], recvbuffer[CF_BUFSIZE],
         digest[CF_MAXVARSIZE], user[CF_SMALLBUF];
     bool gotkey;
     char reply[8];
+    bool trustkey;
 
-    FileCopy fc = {
-        .portnumber = (unsigned short) ParseHostname(host, peer),
-    };
+    char *hostname, *port;
+    ParseHostPort(host, &hostname, &port);
+
+    if (hostname == NULL || strcmp(hostname, "localhost") == 0)
+    {
+        Log(LOG_LEVEL_INFO, "No remote hosts were specified to connect to");
+        return false;
+    }
+    if (port == NULL)
+    {
+        port = "5308";
+    }
 
     char ipaddr[CF_MAX_IP_LEN];
-    if (Hostname2IPString(ipaddr, peer, sizeof(ipaddr)) == -1)
+    if (Hostname2IPString(ipaddr, hostname, sizeof(ipaddr)) == -1)
     {
         Log(LOG_LEVEL_ERR,
-            "HailServer: ERROR, could not resolve '%s'", peer);
+            "HailServer: ERROR, could not resolve '%s'", hostname);
         return false;
     }
 
@@ -428,17 +440,11 @@ static int HailServer(EvalContext *ctx, char *host)
     {
         Log(LOG_LEVEL_VERBOSE, "Using interactive key trust...");
 
-        gotkey = HavePublicKey(user, peer, digest) != NULL;
-
-        if (!gotkey)
-        {
-            gotkey = HavePublicKey(user, ipaddr, digest) != NULL;
-        }
-
+        gotkey = HavePublicKey(user, ipaddr, digest) != NULL;
         if (!gotkey)
         {
             printf("WARNING - You do not have a public key from host %s = %s\n",
-                   host, ipaddr);
+                   hostname, ipaddr);
             printf("          Do you want to accept one on trust? (yes/no)\n\n--> ");
 
             while (true)
@@ -456,13 +462,13 @@ static int HailServer(EvalContext *ctx, char *host)
                 if (strcmp(reply, "yes") == 0)
                 {
                     printf("Will trust the key...\n");
-                    fc.trustkey = true;
+                    trustkey = true;
                     break;
                 }
                 else if (strcmp(reply, "no") == 0)
                 {
                     printf("Will not trust the key...\n");
-                    fc.trustkey = false;
+                    trustkey = false;
                     break;
                 }
                 else
@@ -473,74 +479,45 @@ static int HailServer(EvalContext *ctx, char *host)
         }
     }
 
-/* Continue */
 
-#ifdef __MINGW32__
-
-    if (LEGACY_OUTPUT)
-    {
-        Log(LOG_LEVEL_INFO, "...........................................................................");
-        Log(LOG_LEVEL_INFO, " * Hailing %s : %u, with options \"%s\" (serial)", peer, fc.portnumber,
-              REMOTE_AGENT_OPTIONS);
-        Log(LOG_LEVEL_INFO, "...........................................................................");
-    }
-    else
-    {
-        Log(LOG_LEVEL_INFO, "Hailing '%s' : %u, with options '%s' (serial)", peer, fc.portnumber,
-            REMOTE_AGENT_OPTIONS);
-    }
-
-
-#else /* !__MINGW32__ */
-
+#ifndef __MINGW32__
     if (BACKGROUND)
     {
-        Log(LOG_LEVEL_INFO, "Hailing '%s' : %u, with options '%s' (parallel)", peer, fc.portnumber,
+        Log(LOG_LEVEL_INFO, "Hailing '%s' : %s, with options '%s' (parallel)", hostname, port,
               REMOTE_AGENT_OPTIONS);
     }
     else
+#endif
     {
         if (LEGACY_OUTPUT)
         {
             Log(LOG_LEVEL_INFO, "...........................................................................");
-            Log(LOG_LEVEL_INFO, " * Hailing %s : %u, with options \"%s\" (serial)", peer, fc.portnumber,
+            Log(LOG_LEVEL_INFO, " * Hailing %s : %s, with options \"%s\" (serial)", hostname, port,
                   REMOTE_AGENT_OPTIONS);
             Log(LOG_LEVEL_INFO, "...........................................................................");
         }
         else
         {
-            Log(LOG_LEVEL_INFO, "Hailing '%s' : %u, with options '%s' (serial)", peer, fc.portnumber,
+            Log(LOG_LEVEL_INFO, "Hailing '%s' : %s, with options '%s' (serial)", hostname, port,
                   REMOTE_AGENT_OPTIONS);
         }
     }
 
-#endif /* !__MINGW32__ */
+    ConnectionFlags connflags = {
+        .protocol_version = 0, /* TODO fetch from eval context common control */
+        .trust_server = trustkey
+    };
+    int err = 0;
+    conn = ServerConnection(hostname, port, CONNTIMEOUT, connflags, &err);
 
-    fc.servers = RlistFromSplitString(peer, '*');
-
-    if (fc.servers == NULL || strcmp(RlistScalarValue(fc.servers), "localhost") == 0)
+    if (conn == NULL)
     {
-        Log(LOG_LEVEL_INFO, "No hosts are registered to connect to");
+        Log(LOG_LEVEL_VERBOSE, "No suitable server responded to hail");
         return false;
     }
-    else
-    {
-        int err = 0;
-        conn = NewServerConnection(fc, false, &err, -1);
 
-        if (conn == NULL)
-        {
-            RlistDestroy(fc.servers);
-            Log(LOG_LEVEL_VERBOSE, "No suitable server responded to hail");
-            return false;
-        }
-    }
-
-/* Check trust interaction*/
-
-    HailExec(conn, peer, recvbuffer, sendbuffer);
-
-    RlistDestroy(fc.servers);
+    /* Send EXEC command. */
+    HailExec(conn, hostname, recvbuffer, sendbuffer);
 
     return true;
 }

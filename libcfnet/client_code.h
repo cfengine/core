@@ -25,34 +25,38 @@
 #ifndef CFENGINE_CLIENT_CODE_H
 #define CFENGINE_CLIENT_CODE_H
 
+
 #include <platform.h>
+#include <item_lib.h>
+
 #include <communication.h>
 
-/* TODO: Remove dependency on libpromises */
-#include <attributes.h>
-#include <item_lib.h>
 
 bool cfnet_init(void);
 void DetermineCfenginePort(void);
 /**
-  @param fc No idea
-  @param background Whether to cache the connection or not. Set to false to cache it.
-  @param err Set to 0 on success, -1 no server response, -2 authentication failure.
-  @param s Socket to use for the connection, only useful for call collect mode.
+  @param err Set to 0 on success, -1 no server responce, -2 authentication failure.
   */
-AgentConnection *NewServerConnection(FileCopy fc, bool background, int *err, int s);
+AgentConnection *ServerConnection(const char *server, const char *port,
+                                  unsigned int connect_timeout,
+                                  ConnectionFlags flags, int *err);
 void DisconnectServer(AgentConnection *conn);
 int cf_remote_stat(const char *file, struct stat *buf, const char *stattype, bool encrypt, AgentConnection *conn);
 int CompareHashNet(const char *file1, const char *file2, bool encrypt, AgentConnection *conn);
 int CopyRegularFileNet(const char *source, const char *dest, off_t size, bool encrypt, AgentConnection *conn);
-int ServerConnect(AgentConnection *conn, const char *host, FileCopy fc);
 
 Item *RemoteDirList(const char *dirname, bool encrypt, AgentConnection *conn);
 
 const Stat *ClientCacheLookup(AgentConnection *conn, const char *server_name, const char *file_name);
 
 /* Mark connection as free */
+AgentConnection *GetIdleConnectionToServer(const char *server);
+void MarkServerOffline(const char *server);
+bool ServerOffline(const char *server);
+void CacheServerConnection(AgentConnection *conn, const char *server);
 void ServerNotBusy(AgentConnection *conn);
 
 int TLSConnectCallCollect(ConnectionInfo *conn_info, const char *username);
+
+
 #endif

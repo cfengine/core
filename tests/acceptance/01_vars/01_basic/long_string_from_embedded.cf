@@ -1,0 +1,47 @@
+#######################################################
+#
+# Test that we dont crash when slist has very long elements 
+# Redmine:3957 (https://cfengine.com/dev/issues/3957)
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+}
+
+#######################################################
+
+bundle agent test
+{
+  vars:
+    "keys" slist => {
+"ssh-dss YavBsyK3sHDac4Gj4nDbVH9E7OfRPi16DADNOWGKEjWiBB0cCe0UY6xxEgcYuwOOl8HUGqqzLOByvUbo1hENDQldKFt8N7WIb2E9gXFtGm0Sf0NlYARALj1nhLju9hodpGxkr4vKioW1fZQBmBqsI7Ky8ZhzU5p4CAm4uCbxAZuiIhDTAcxj7RlDy3fe9WBw7v0cSIbu8E3zEbPn0VQjTduLCJtFOb5LvUxpxUsHMhHu0xS8DvXIwf7l83cQ0XZtwyIgbF3ZxjIZaPyYhKZRAV1qCze4BlcOerJeVYOiKjpXJlOoBprxy2SfEYVS4Khun0efkmsmBAfllKUUNCqsK9j6oWo7BvNbXqzkl2ULJd6h0LNy9jW8IXnnrfWknLGa7lksVmL3afSAufDAb7yRESaUP5KmcD3ghP3Nvu7fy9hz7nIAPgj2dQOwnFRbkv9Svoi9YmCtvBWYAcwIUVNJBmwXe5j5xJyt5vOyRSI2ooJ9mk69UOCsIM8PEnEXwtHcsg9fDjfu9ChFY2HWZPWeNXH05SATnSyLgclQsZcazhQXPoxZbcqR80mfuRX9ymEzNwZJ1jJUERnj9PZkSInu6mFVRjTaQjg8yvqMGRxWknP8aURCDh5rr4Na23jULVVI66heWOi7nzLqBg5U8GsbLsocM8zBam8bhXfU0KvpBo5wlUtHnDWHoMlS3ktr25ldrp3zLuywhHe5vGUbg2E0gr4xB3oPAyaDa3MGQiVXPfngu5CJhwIXmeN5JtIBA0S46ihg7lQ6IU8kAaRHwhWh3TokoNFOYE8R5i24gpYNF8dgCRGqSZIT5V7wuR3qG1Wau963ILuX8EFOSu7xDc5qnGTem3FwICTpSdnZNqpzRt4Ipqsn4Pa2tFFpHlzDwKFRPS7r8v4QX7acqdTSCUOuZ68GwDRlvHIz5mHUf1XLY3FH2InuWFsonJAZwmEbX5evWXFgyJHFlplQcGJvyNdL0T6oBmbG3ssSMoRnqnsk8XjGWtUyvYoQmOY8HWlMhf4V3v78C4k4TnCbN4LmnDYaDcnXMejrUMYDk6QwW3fdTF5ZyjJMy4ANu2fJfKysZMc1Cc== root@host1",
+"ssh-dss a58AZSxQlmcq33EBCW1GuhpkYCgUfr7o5A1arQZ2dr8I4kldCF76mpl6o2CFthZs4YUU8LewbIDDPqjhS2WwafTXeMEvPMtmLufk6E5njNy2WQtAnmGc9R21qIteTgikY9ubRCM3hlhzJ1wGSKCsE5oBHDQC0thk1ljJGHzsEl0AuVClkUq3yz4eWAsiRdbD9QY7ddD6zA61aHomuczKU5F0VvyO8gRQmWV7b6lysoUFcMgCPVf3UaDdg7L7vvBVkQN2vGCh9CCJz5OkBShlZVNaAXd5TkKJNmsTuBDscPyxeCBAk8sai69f1NNtTeAyWTtSu1KiqTDvD9aal93MhpZnPdOZzNr7etK4C7HuPD0uFjdvKZy1H55rpwNHnJ4GojqiNG1VvN5bGLa3sSLiKOngtMBCokdtHpZn2eHD7oLUROTIG3ZXqFGGvfKEP5zlpvJz3392n4PDQ7EKuNFPhyNQpVXEIAQEDcmeWMopVTGezLoFJG01hKMPxs5QWF7qetVLi1pCjmlUpqgE8c81WGxvMe7ooMtQbeVNulX3qBC3rZhYKtk0R5AA8JxmxHSLYlLFbtnR1PA97hnRvnvlfk92i7WL1hjJsMl29LOrubi554Dr9N2uVUrCFcPZMK45PY0TiRH82AKFmkM8mbM0rndJxoJobZsqRAGHVIkcS53hxMT69liRxlCyubwcxgDaqmeQnJU2Ug0YyFs1uxt4NT9laJ0CO2IxhkbmGeDGw1FJqKyc8Haov263cFMcB97I3gyNHccsAynQnxpMS1ltTFXalghuochdue4unbq0Ty2PfS4jPMkavBlMYN8UZdnyZHuUhycwBJri1Grv5kf2SP00P6NQhuB8kwjqoTG8ay5fKWvhDrVetd7tPuj4dMouHuDeaLJInc7Cz0S5tQOuMfRhpPqk1E8A0YnuNCyPDNuW75rkXZkxP9cYSVWeDa1wgOyNLZDTzYts82qiu9kxLbZ184jowJ8rru4UB20JRtoehnD2nGU1NfegD1qOBgQHtDuB18xggfvOgvUNXBrQpICSz0JqszpftAgV5TJq1FjOdjUo1kOCFuqqi6C4S0Siho== root@host2",};
+
+}
+
+#######################################################
+
+bundle agent check
+{
+  classes:
+      "ok" expression => "any",
+        comment => "If we made it to here, we didnt crash";
+
+  reports:
+    DEBUG::
+      "$(this.bundle): Got key $(test.keys)";
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

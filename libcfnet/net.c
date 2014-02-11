@@ -107,8 +107,7 @@ int ReceiveTransaction(const ConnectionInfo *conn_info, char *buffer, int *more)
     if (ret == -1 || ret == 0)
         return ret;
 
-    LogRaw(LOG_LEVEL_DEBUG, "ReceiveTransaction header: ",
-           proto, CF_INBAND_OFFSET);
+    LogRaw(LOG_LEVEL_DEBUG, "ReceiveTransaction header: ", proto, ret);
 
     ret = sscanf(proto, "%c %u", &status, &len);
     if (ret != 2)

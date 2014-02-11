@@ -28,60 +28,22 @@
 
 #include <cf-windows-functions.h>
 
-#if defined(__CYGWIN__)
+#if defined(__CYGWIN__) || defined(__ANDROID__)
 
-static const char *GetDefaultWorkDir(void)
-{
-    return WORKDIR;
-}
+#define GET_DEFAULT_DIRECTORY_DEFINE(FUNC, GLOBAL)  \
+static const char *GetDefault##FUNC##Dir(void)      \
+{                                                   \
+    return GLOBAL;                                  \
+}                                                   \
 
-static const char *GetDefaultLogDir(void)
-{
-    return LOGDIR;
-}
+/* getpwuid() on Android returns /data,
+ * so use compile-time default instead */
+GET_DEFAULT_DIRECTORY_DEFINE(Work, WORKDIR)
 
-static const char *GetDefaultPidDir(void)
-{
-    return PIDDIR;
-}
-
-static const char *GetDefaultInputDir(void)
-{
-    return INPUTDIR;
-}
-
-static const char *GetDefaultMasterDir(void)
-{
-    return MASTERDIR;
-}
-
-#elif defined(__ANDROID__)
-
-static const char *GetDefaultWorkDir(void)
-{
-    /* getpwuid() on Android returns /data, so use compile-time default instead */
-    return WORKDIR;
-}
-
-static const char *GetDefaultLogDir(void)
-{
-    return LOGDIR;
-}
-
-static const char *GetDefaultPidDir(void)
-{
-    return PIDDIR;
-}
-
-static const char *GetDefaultInputDir(void)
-{
-    return INPUTDIR;
-}
-
-static const char *GetDefaultMasterDir(void)
-{
-    return MASTERDIR;
-}
+GET_DEFAULT_DIRECTORY_DEFINE(Log, LOGDIR)
+GET_DEFAULT_DIRECTORY_DEFINE(Pid, PIDDIR)
+GET_DEFAULT_DIRECTORY_DEFINE(Input, INPUTDIR)
+GET_DEFAULT_DIRECTORY_DEFINE(Master, MASTERDIR)
 
 #elif !defined(__MINGW32__)
 
@@ -118,37 +80,22 @@ static const char *GetDefaultDir_helper(char dir[MAX_WORKDIR_LENGTH], const char
     }
 }
 
-static const char *GetDefaultWorkDir(void)
-{
-    static char workdir[MAX_WORKDIR_LENGTH] = ""; /* GLOBAL_C */
-    return GetDefaultDir_helper(workdir, WORKDIR, NULL);
-}
+#define GET_DEFAULT_DIRECTORY_DEFINE(FUNC, STATIC, GLOBAL, FOLDER)    \
+static const char *GetDefault##FUNC##Dir(void)                        \
+{                                                                     \
+    static char STATIC##dir[MAX_WORKDIR_LENGTH] = ""; /* GLOBAL_C */  \
+    return GetDefaultDir_helper(STATIC##dir, GLOBAL, FOLDER);         \
+}                                                                     \
 
-static const char *GetDefaultLogDir(void)
-{
-    static char logdir[MAX_WORKDIR_LENGTH] = ""; /* GLOBAL_C */
-    return GetDefaultDir_helper(logdir, LOGDIR, NULL);
-}
-
-static const char *GetDefaultPidDir(void)
-{
-    static char piddir[MAX_WORKDIR_LENGTH] = ""; /* GLOBAL_C */
-    return GetDefaultDir_helper(piddir, PIDDIR, NULL);
-}
-
-static const char *GetDefaultMasterDir(void)
-{
-    static char masterdir[MAX_WORKDIR_LENGTH] = ""; /* GLOBAL_C */
-    return GetDefaultDir_helper(masterdir, MASTERDIR, "masterfiles");
-}
-
-static const char *GetDefaultInputDir(void)
-{
-    static char inputdir[MAX_WORKDIR_LENGTH] = ""; /* GLOBAL_C */
-    return GetDefaultDir_helper(inputdir, INPUTDIR, "inputs");
-}
+GET_DEFAULT_DIRECTORY_DEFINE(Work, work, WORKDIR, NULL)
+GET_DEFAULT_DIRECTORY_DEFINE(Log, log, LOGDIR, NULL)
+GET_DEFAULT_DIRECTORY_DEFINE(Pid, pid, PIDDIR, NULL)
+GET_DEFAULT_DIRECTORY_DEFINE(Master, master, MASTERDIR, "masterfiles")
+GET_DEFAULT_DIRECTORY_DEFINE(Input, input, INPUTDIR, "inputs")
 
 #endif
+
+/*******************************************************************/
 
 const char *GetWorkDir(void)
 {
@@ -175,7 +122,7 @@ const char *GetInputDir(void)
 {
     const char *inputdir = getenv("CFENGINE_TEST_OVERRIDE_WORKDIR");
 
-    if (inputdir != NULL) 
+    if (inputdir != NULL)
     {
         static char workbuf[CF_BUFSIZE];
         snprintf(workbuf, CF_BUFSIZE, "%s%cinputs", inputdir, FILE_SEPARATOR);
@@ -198,7 +145,7 @@ const char *GetMasterDir(void)
 {
     const char *masterdir = getenv("CFENGINE_TEST_OVERRIDE_WORKDIR");
 
-    if (masterdir != NULL) 
+    if (masterdir != NULL)
     {
         static char workbuf[CF_BUFSIZE];
         snprintf(workbuf, CF_BUFSIZE, "%s%cmasterfiles", masterdir, FILE_SEPARATOR);

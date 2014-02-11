@@ -5284,38 +5284,31 @@ static FnCallResult FnCallReadFile(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const
 
 static FnCallResult ReadList(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const FnCall *fp, const Rlist *finalargs, DataType type)
 {
-    Rlist *rp, *newlist = NULL;
-    char fnname[CF_MAXVARSIZE], *file_buffer = NULL;
-    int noerrors = true, blanks = false;
+    const char *filename = RlistScalarValue(finalargs);
+    const char *comment = RlistScalarValue(finalargs->next);
+    const char *split = RlistScalarValue(finalargs->next->next);
+    const int maxent = IntFromString(RlistScalarValue(finalargs->next->next->next));
+    const int maxsize = IntFromString(RlistScalarValue(finalargs->next->next->next->next));
 
-    char *filename = RlistScalarValue(finalargs);
-    char *comment = RlistScalarValue(finalargs->next);
-    char *split = RlistScalarValue(finalargs->next->next);
-    int maxent = IntFromString(RlistScalarValue(finalargs->next->next->next));
-    int maxsize = IntFromString(RlistScalarValue(finalargs->next->next->next->next));
-
-    // Read once to validate structure of file in itemlist
-    snprintf(fnname, CF_MAXVARSIZE - 1, "read%slist", DataTypeToString(type));
-
-    file_buffer = (char *) CfReadFile(filename, maxsize);
-
-    if (file_buffer == NULL)
+    char *file_buffer = CfReadFile(filename, maxsize);
+    if (!file_buffer)
     {
         return FnFailure();
     }
+
+    bool blanks = false;
+    Rlist *newlist = NULL;
+    file_buffer = StripPatterns(file_buffer, comment, filename);
+    if (!file_buffer)
+    {
+        return (FnCallResult) { FNCALL_SUCCESS, { NULL, RVAL_TYPE_LIST } };
+    }
     else
     {
-        file_buffer = StripPatterns(file_buffer, comment, filename);
-
-        if (file_buffer == NULL)
-        {
-            return (FnCallResult) { FNCALL_SUCCESS, { NULL, RVAL_TYPE_LIST } };
-        }
-        else
-        {
-            newlist = RlistFromSplitRegex(file_buffer, split, maxent, blanks);
-        }
+        newlist = RlistFromSplitRegex(file_buffer, split, maxent, blanks);
     }
+
+    bool noerrors = true;
 
     switch (type)
     {
@@ -5323,7 +5316,7 @@ static FnCallResult ReadList(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const FnCal
         break;
 
     case CF_DATA_TYPE_INT:
-        for (rp = newlist; rp != NULL; rp = rp->next)
+        for (Rlist *rp = newlist; rp != NULL; rp = rp->next)
         {
             if (IntFromString(RlistScalarValue(rp)) == CF_NOINT)
             {
@@ -5335,7 +5328,7 @@ static FnCallResult ReadList(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const FnCal
         break;
 
     case CF_DATA_TYPE_REAL:
-        for (rp = newlist; rp != NULL; rp = rp->next)
+        for (Rlist *rp = newlist; rp != NULL; rp = rp->next)
         {
             double real_value = 0;
             if (!DoubleFromString(RlistScalarValue(rp), &real_value))
@@ -6575,6 +6568,7 @@ void ModuleProtocol(EvalContext *ctx, char *command, const char *line, int print
         break;
 
     case '@':
+        // TODO: should not need to exist. entry size matters, not line size. bufferize module protocol
         if (length > CF_BUFSIZE + 256 - 1)
         {
             Log(LOG_LEVEL_ERR, "Module protocol was given an overlong variable @line (%zd bytes), skipping", length);
@@ -6582,24 +6576,35 @@ void ModuleProtocol(EvalContext *ctx, char *command, const char *line, int print
         }
 
         content[0] = '\0';
-        // TODO: the variable name is limited to 256 to accomodate the
-        // context name once it's in the vartable.  Maybe this can be relaxed.
-
-        // TODO: the RlistParseString function can do at most CF_BUFSIZE-1
         sscanf(line + 1, "%256[^=]=%4095[^\n]", name, content);
 
         if (CheckID(name))
         {
-            Rlist *list = NULL;
-
-            list = RlistParseString(content);
-
-            if (NULL == list)
+            Rlist *list = RlistParseString(content);
+            if (!list)
             {
                 Log(LOG_LEVEL_ERR, "Module protocol could not parse variable %s's data content %s", name, content);
             }
             else
             {
+                bool has_oversize_entry = false;
+                for (const Rlist *rp = list; rp; rp = rp->next)
+                {
+                    size_t entry_size = strlen(RlistScalarValue(rp));
+                    if (entry_size > CF_MAXVARSIZE)
+                    {
+                        has_oversize_entry = true;
+                        break;
+                    }
+                }
+
+                if (has_oversize_entry)
+                {
+                    Log(LOG_LEVEL_ERR, "Module protocol was given a variable @ line with an oversize entry, skipping");
+                    RlistDestroy(list);
+                    break;
+                }
+
                 Log(LOG_LEVEL_VERBOSE, "Defined variable '%s' in context '%s' with value '%s'", name, context, content);
 
                 VarRef *ref = VarRefParseFromScope(name, context);

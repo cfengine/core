@@ -533,7 +533,7 @@ typedef enum
  @param[in] str: is the string to parse
  @param[out] newlist: rlist of elements found
 
- @retval 0: successful >0: failed
+ @retval 0: successful > 0: failed
  */
 static int LaunchParsingMachine(const char *str, Rlist **newlist)
 {
@@ -541,15 +541,14 @@ static int LaunchParsingMachine(const char *str, Rlist **newlist)
     state current_state = ST_OPENED;
     int ret;
 
-    char snatched[CF_MAXVARSIZE];
-    snatched[0]='\0';
-    char *sn = NULL;
+    Buffer *buf = BufferNewWithCapacity(CF_MAXVARSIZE);
 
     assert(newlist);
 
     while (current_state != ST_CLOSED && *s)
     {
-        switch(current_state) {
+        switch(current_state)
+        {
             case ST_ERROR:
                 Log(LOG_LEVEL_ERR, "Parsing error : Malformed string");
                 ret = 1;
@@ -576,13 +575,13 @@ static int LaunchParsingMachine(const char *str, Rlist **newlist)
                 }
                 else if (CLASS_START1(*s))
                 {
-                    sn=snatched;
+                    BufferZero(buf);
                     current_state = ST_ELM1;
                 }
                 else if (CLASS_START2(*s))
                 {
-                      sn=snatched; 
-                      current_state = ST_ELM2;
+                    BufferZero(buf);
+                    current_state = ST_ELM2;
                 }
                 else if (CLASS_ANY1(*s))
                 {
@@ -593,23 +592,13 @@ static int LaunchParsingMachine(const char *str, Rlist **newlist)
             case ST_ELM1:
                 if (CLASS_END1(*s))
                 {
-                    if (sn==NULL)
-                    {
-                        sn=snatched;
-                    }
-                    *sn='\0'; 
-                    RlistAppendScalar(newlist, snatched);
-                    sn=NULL;
+                    RlistAppendScalar(newlist, BufferData(buf));
+                    BufferZero(buf);
                     current_state = ST_END1;
                 }
                 else if (CLASS_ANY2(*s))
                 {
-                    if (sn==NULL)
-                    {
-                        sn=snatched;
-                    }
-                    *sn=*s;
-                    sn++; 
+                    BufferAppendChar(buf, *s);
                     current_state = ST_ELM1;
                 }
                 s++;
@@ -617,23 +606,13 @@ static int LaunchParsingMachine(const char *str, Rlist **newlist)
             case ST_ELM2:
                 if (CLASS_END2(*s))
                 {
-                    if (sn==NULL)
-                    {
-                        sn=snatched;
-                    }
-                    *sn='\0'; 
-                    RlistAppendScalar(newlist, snatched);
-                    sn=NULL; 
+                    RlistAppendScalar(newlist, BufferData(buf));
+                    BufferZero(buf);
                     current_state = ST_END2;
                 }
                 else if (CLASS_ANY3(*s))
                 {
-                    if (sn==NULL) 
-                    {
-                        sn=snatched;
-                    }
-                    *sn=*s;
-                    sn++;
+                    BufferAppendChar(buf, *s);
                     current_state = ST_ELM2;
                 }
                 s++;
@@ -896,55 +875,55 @@ Rlist *RlistFromSplitString(const char *string, char sep)
 
 /*******************************************************************/
 
-Rlist *RlistFromSplitRegex(const char *string, const char *regex, int max, bool blanks)
- /* Splits a string containing a separator like "," 
-    into a linked list of separate items, */
-// NOTE: this has a bad side-effect of creating scope match and variables,
-//       see RegExMatchSubString in matching.c - could leak memory
+Rlist *RlistFromSplitRegex(const char *string, const char *regex, size_t max_entries, bool allow_blanks)
 {
-    Rlist *liststart = NULL;
-    char node[CF_MAXVARSIZE];
-    int start, end;
-    int count = 0;
-
-    if (string == NULL)
+    assert(string);
+    if (!string)
     {
         return NULL;
     }
 
     const char *sp = string;
+    size_t entry_count = 0;
+    int start = 0;
+    int end = 0;
+    Rlist *result = NULL;
+    Buffer *buffer = BufferNewWithCapacity(CF_MAXVARSIZE);
 
-    while ((count < max) && StringMatch(regex, sp, &start, &end))
+    while ((entry_count < max_entries) && StringMatch(regex, sp, &start, &end))
     {
         if (end == 0)
         {
             break;
         }
 
-        memset(node, 0, CF_MAXVARSIZE);
-        strncpy(node, sp, start);
+        BufferZero(buffer);
+        BufferAppend(buffer, sp, start);
 
-        if (blanks || strlen(node) > 0)
+        if (allow_blanks || BufferSize(buffer) > 0)
         {
-            RlistAppendScalar(&liststart, node);
-            count++;
+            RlistAppendScalar(&result, BufferData(buffer));
+            entry_count++;
         }
 
         sp += end;
     }
 
-    if (count < max)
+    if (entry_count < max_entries)
     {
-        memset(node, 0, CF_MAXVARSIZE);
-        strncpy(node, sp, CF_MAXVARSIZE - 1);
+        BufferZero(buffer);
+        size_t remaining = strlen(sp);
+        BufferAppend(buffer, sp, remaining);
 
-        if ((blanks && sp != string) || strlen(node) > 0)
+        if ((allow_blanks && sp != string) || BufferSize(buffer) > 0)
         {
-            RlistAppendScalar(&liststart, node);
+            RlistAppendScalar(&result, BufferData(buffer));
         }
     }
 
-    return liststart;
+    BufferDestroy(buffer);
+
+    return result;
 }
 
 /*******************************************************************/

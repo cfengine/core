@@ -168,7 +168,7 @@ static int CheckACLSyntax(const char *file, Acl acl, const Promise *pp)
 
         if (!valid)             // wrong syntax in this ace
         {
-            Log(LOG_LEVEL_ERR, "The ACE '%s' contains errors", RlistScalarValue(rp));
+            Log(LOG_LEVEL_ERR, "ACL: The ACE '%s' contains errors", RlistScalarValue(rp));
             PromiseRef(LOG_LEVEL_ERR, pp);
             break;
         }
@@ -180,7 +180,7 @@ static int CheckACLSyntax(const char *file, Acl acl, const Promise *pp)
 
         if (!valid)             // wrong syntax in this ace
         {
-            Log(LOG_LEVEL_ERR, "The ACE '%s' contains errors", RlistScalarValue(rp));
+            Log(LOG_LEVEL_ERR, "ACL: The ACE '%s' contains errors", RlistScalarValue(rp));
             PromiseRef(LOG_LEVEL_ERR, pp);
             break;
         }
@@ -303,7 +303,7 @@ static int CheckACESyntax(char *ace, char *valid_ops, char *valid_nperms, int de
     }
     else
     {
-        Log(LOG_LEVEL_ERR, "ACE '%s' does not start with user:/group:/all", ace);
+        Log(LOG_LEVEL_ERR, "ACL: ACE '%s' does not start with user:/group:/all", ace);
         PromiseRef(LOG_LEVEL_ERR, pp);
         return false;
     }
@@ -312,7 +312,7 @@ static int CheckACESyntax(char *ace, char *valid_ops, char *valid_nperms, int de
     {
         if (*str == ':')
         {
-            Log(LOG_LEVEL_ERR, "ACE '%s': id cannot be empty or contain ':'", ace);
+            Log(LOG_LEVEL_ERR, "ACL: ACE '%s': id cannot be empty or contain ':'", ace);
             return false;
         }
 
@@ -328,7 +328,7 @@ static int CheckACESyntax(char *ace, char *valid_ops, char *valid_nperms, int de
             }
             else if (*str == '\0')
             {
-                Log(LOG_LEVEL_ERR, "Nothing following id string in ACE '%s'", ace);
+                Log(LOG_LEVEL_ERR, "ACL: Nothing following id string in ACE '%s'", ace);
                 return false;
             }
         }
@@ -339,7 +339,7 @@ static int CheckACESyntax(char *ace, char *valid_ops, char *valid_nperms, int de
 
     if (!valid_mode)
     {
-        Log(LOG_LEVEL_ERR, "Malformed mode-string in ACE '%s'", ace);
+        Log(LOG_LEVEL_ERR, "ACL: Malformed mode-string in ACE '%s'", ace);
         PromiseRef(LOG_LEVEL_ERR, pp);
         return false;
     }
@@ -356,7 +356,7 @@ static int CheckACESyntax(char *ace, char *valid_ops, char *valid_nperms, int de
 
     if (!valid_permt)
     {
-        Log(LOG_LEVEL_ERR, "Malformed perm_type syntax in ACE '%s'", ace);
+        Log(LOG_LEVEL_ERR, "ACL: Malformed perm_type syntax in ACE '%s'", ace);
         return false;
     }
 
@@ -401,7 +401,7 @@ static int CheckModeSyntax(char **mode_p, char *valid_ops, char *valid_nperms, c
             }
             else
             {
-                Log(LOG_LEVEL_ERR, "Invalid native permission '%c', or missing native end separator", *mode);
+                Log(LOG_LEVEL_ERR, "ACL: Invalid native permission '%c', or missing native end separator", *mode);
                 PromiseRef(LOG_LEVEL_ERR, pp);
                 valid = false;
                 break;
@@ -419,7 +419,7 @@ static int CheckModeSyntax(char **mode_p, char *valid_ops, char *valid_nperms, c
         }
         else
         {
-            Log(LOG_LEVEL_ERR, "Mode string contains invalid characters");
+            Log(LOG_LEVEL_ERR, "ACL: Mode string contains invalid characters");
             PromiseRef(LOG_LEVEL_ERR, pp);
             valid = false;
             break;

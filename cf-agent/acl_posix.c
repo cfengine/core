@@ -121,7 +121,7 @@ static int CheckPosixLinuxDefaultACEs(EvalContext *ctx, Rlist *aces, AclMethod m
         break;
 
     default:                   // unknown inheritance policy
-        Log(LOG_LEVEL_ERR, "Unknown inheritance policy - shouldn't happen");
+        Log(LOG_LEVEL_ERR, "Unknown ACL inheritance policy - shouldn't happen");
         retval = false;
         break;
     }
@@ -161,7 +161,7 @@ static int CheckPosixLinuxACEs(EvalContext *ctx, Rlist *aces, AclMethod method, 
 
     if ((acl_existing = acl_get_file(file_path, acl_type)) == NULL)
     {
-        Log(LOG_LEVEL_VERBOSE, "No ACL for '%s' could be read. (acl_get_file: %s)", file_path, GetErrorStr());
+        Log(LOG_LEVEL_ERR, "No ACL for '%s' could be read. (acl_get_file: %s)", file_path, GetErrorStr());
         return false;
     }
 
@@ -211,7 +211,7 @@ static int CheckPosixLinuxACEs(EvalContext *ctx, Rlist *aces, AclMethod method, 
 
         if (!ParseEntityPosixLinux(&cf_ace, ace_parsed, &has_mask))
         {
-            Log(LOG_LEVEL_ERR, "Error parsing entity in 'cf_ace'.");
+            Log(LOG_LEVEL_ERR, "ACL: Error parsing entity in 'cf_ace'.");
             acl_free((void *) acl_existing);
             acl_free((void *) acl_tmp);
             acl_free((void *) acl_new);
@@ -250,7 +250,7 @@ static int CheckPosixLinuxACEs(EvalContext *ctx, Rlist *aces, AclMethod method, 
             // loop iteration to be taken into account when applying mode below
             if ((acl_get_permset(ace_current, &perms) != 0))
             {
-                Log(LOG_LEVEL_ERR, "Error obtaining permset for 'ace_current' (acl_get_permset: %s)", GetErrorStr());
+                Log(LOG_LEVEL_ERR, "Error obtaining permission set for 'ace_current' (acl_get_permset: %s)", GetErrorStr());
                 acl_free((void *) acl_existing);
                 acl_free((void *) acl_tmp);
                 acl_free((void *) acl_new);
@@ -259,7 +259,7 @@ static int CheckPosixLinuxACEs(EvalContext *ctx, Rlist *aces, AclMethod method, 
 
             if (acl_clear_perms(perms) != 0)
             {
-                Log(LOG_LEVEL_ERR, "Error clearing permset for 'ace_current'. (acl_clear_perms: %s)", GetErrorStr());
+                Log(LOG_LEVEL_ERR, "Error clearing permission set for 'ace_current'. (acl_clear_perms: %s)", GetErrorStr());
                 acl_free((void *) acl_existing);
                 acl_free((void *) acl_tmp);
                 acl_free((void *) acl_new);
@@ -271,7 +271,7 @@ static int CheckPosixLinuxACEs(EvalContext *ctx, Rlist *aces, AclMethod method, 
 
         if (*cf_ace != ':')
         {
-            Log(LOG_LEVEL_ERR, "No separator before mode-string in 'cf_ace'");
+            Log(LOG_LEVEL_ERR, "ACL: No separator before mode-string in 'cf_ace'");
             acl_free((void *) acl_existing);
             acl_free((void *) acl_tmp);
             acl_free((void *) acl_new);
@@ -282,7 +282,7 @@ static int CheckPosixLinuxACEs(EvalContext *ctx, Rlist *aces, AclMethod method, 
 
         if (acl_get_permset(ace_current, &perms) != 0)
         {
-            Log(LOG_LEVEL_ERR, "Error obtaining permset for 'cf_ace'");
+            Log(LOG_LEVEL_ERR, "ACL: Error obtaining permission set for 'cf_ace'. (acl_get_permset: %s)", GetErrorStr());
             acl_free((void *) acl_existing);
             acl_free((void *) acl_tmp);
             acl_free((void *) acl_new);
@@ -291,7 +291,7 @@ static int CheckPosixLinuxACEs(EvalContext *ctx, Rlist *aces, AclMethod method, 
 
         if (!ParseModePosixLinux(cf_ace, perms))
         {
-            Log(LOG_LEVEL_ERR, "Error parsing mode-string in 'cf_ace'");
+            Log(LOG_LEVEL_ERR, "ACL: Error parsing mode-string in 'cf_ace'");
             acl_free((void *) acl_existing);
             acl_free((void *) acl_tmp);
             acl_free((void *) acl_new);
@@ -307,7 +307,7 @@ static int CheckPosixLinuxACEs(EvalContext *ctx, Rlist *aces, AclMethod method, 
     {
         if (acl_calc_mask(&acl_new) != 0)
         {
-            Log(LOG_LEVEL_ERR, "Error calculating new acl mask");
+            Log(LOG_LEVEL_ERR, "Error calculating new ACL mask");
             acl_free((void *) acl_existing);
             acl_free((void *) acl_tmp);
             acl_free((void *) acl_new);
@@ -428,7 +428,7 @@ static int CheckDefaultEqualsAccessACL(EvalContext *ctx, const char *file_path, 
             {
                 if ((acl_set_file(file_path, ACL_TYPE_DEFAULT, acl_access)) != 0)
                 {
-                    Log(LOG_LEVEL_ERR, "Could not set default ACL to access");
+                    Log(LOG_LEVEL_ERR, "Could not set default ACL to access on '%s'. (acl_set_file: %s)", file_path, GetErrorStr());
                     acl_free(acl_access);
                     acl_free(acl_default);
                     return false;
@@ -451,7 +451,7 @@ static int CheckDefaultEqualsAccessACL(EvalContext *ctx, const char *file_path, 
 
     default:
         retval = false;
-        Log(LOG_LEVEL_ERR, "Unable to compare access and default ACEs");
+        Log(LOG_LEVEL_ERR, "ACL: Unable to compare access and default ACEs");
     }
 
     acl_free(acl_access);
@@ -485,7 +485,7 @@ int CheckDefaultClearACL(EvalContext *ctx, const char *file_path, Attributes a, 
     switch (retv)
     {
     case -1:
-        Log(LOG_LEVEL_VERBOSE, "Couldn't retrieve ACE for '%s'. (acl_get_entry: %s)", file_path, GetErrorStr());
+        Log(LOG_LEVEL_ERR, "Couldn't retrieve ACE for '%s'. (acl_get_entry: %s)", file_path, GetErrorStr());
         retval = false;
         break;
 
@@ -517,7 +517,7 @@ int CheckDefaultClearACL(EvalContext *ctx, const char *file_path, Attributes a, 
             {
                 if (acl_set_file(file_path, ACL_TYPE_DEFAULT, acl_empty) != 0)
                 {
-                    Log(LOG_LEVEL_ERR, "Could not reset ACL for %s", file_path);
+                    Log(LOG_LEVEL_ERR, "Could not reset ACL for '%s'. (acl_set_file: %s)", file_path, GetErrorStr());
                     retval = false;
                     break;
                 }
@@ -568,7 +568,7 @@ static acl_entry_t FindACE(acl_t acl, acl_entry_t ace_find)
 
     if (more_aces == -1)
     {
-        Log(LOG_LEVEL_ERR, "Error reading acl. (acl_get_entry: %s)", GetErrorStr());
+        Log(LOG_LEVEL_ERR, "Error reading ACL. (acl_get_entry: %s)", GetErrorStr());
         return NULL;
     }
     else if (more_aces == 0)
@@ -661,13 +661,13 @@ static int ACLEquals(acl_t first, acl_t second)
 
     if ((first_cnt = ACECount(first)) == -1)
     {
-        Log(LOG_LEVEL_VERBOSE, "Couldn't count ACEs");
+        Log(LOG_LEVEL_ERR, "Couldn't count ACEs while comparing ACLs");
         return -1;
     }
 
     if ((second_cnt = ACECount(second)) == -1)
     {
-        Log(LOG_LEVEL_VERBOSE, "Couldn't count ACEs");
+        Log(LOG_LEVEL_ERR, "Couldn't count ACEs while comparing ACLs");
         return -1;
     }
 
@@ -914,7 +914,7 @@ static int ParseEntityPosixLinux(char **str, acl_entry_t ace, int *is_mask)
     }
     else
     {
-        Log(LOG_LEVEL_ERR, "ace does not start with user:/group:/all:/mask:");
+        Log(LOG_LEVEL_ERR, "ACE does not start with user:/group:/all:/mask:");
         return false;
     }
 
@@ -960,7 +960,7 @@ static int ParseModePosixLinux(char *mode, acl_permset_t perms)
     {
         if (acl_clear_perms(perms) != 0)
         {
-            Log(LOG_LEVEL_ERR, "Error clearing perms. (acl_clear_perms: %s)", GetErrorStr());
+            Log(LOG_LEVEL_ERR, "Error clearing permissions. (acl_clear_perms: %s)", GetErrorStr());
             return false;
         }
         else
@@ -1023,7 +1023,7 @@ static int ParseModePosixLinux(char *mode, acl_permset_t perms)
                 break;
 
             default:
-                Log(LOG_LEVEL_ERR, "No linux support for generic permission flag '%c'", *mode);
+                Log(LOG_LEVEL_ERR, "No Linux support for generic permission flag '%c'", *mode);
                 return false;
             }
 
@@ -1038,7 +1038,7 @@ static int ParseModePosixLinux(char *mode, acl_permset_t perms)
 
             if (retv != 0)
             {
-                Log(LOG_LEVEL_ERR, "Could not change ACE permission. (acl_[add|delete]_perms: %s)", GetErrorStr());
+                Log(LOG_LEVEL_ERR, "Could not change ACE permission. (acl_[add|delete]_perm: %s)", GetErrorStr());
                 return false;
             }
             mode++;
@@ -1067,7 +1067,7 @@ static int ParseModePosixLinux(char *mode, acl_permset_t perms)
                     break;
 
                 default:
-                    Log(LOG_LEVEL_ERR, "No linux support for native permission flag '%c'", *mode);
+                    Log(LOG_LEVEL_ERR, "No Linux support for native permission flag '%c'", *mode);
                     return false;
                 }
 

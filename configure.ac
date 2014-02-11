@@ -152,6 +152,7 @@ AS_IF([test x"$enable_fhs" = xyes], [
   INPUTDIR='default'
   LOGDIR='${localstatedir}/lib/cfengine'
   PIDDIR='${localstatedir}/lib/cfengine'
+  STATEDIR='default'
 ], [
   if test x"$prefix" = xNONE || test x"$prefix" = x/var/cfengine; then
     prefix=/var/cfengine
@@ -162,6 +163,7 @@ AS_IF([test x"$enable_fhs" = xyes], [
         INPUTDIR=default
         LOGDIR=$(cmd /c "echo %PROGRAMFILES%\\Cfengine" | sed 's/\\/\\\\/g')
         PIDDIR=$(cmd /c "echo %PROGRAMFILES%\\Cfengine" | sed 's/\\/\\\\/g')
+        STATEDIR=default
       ;;
       *)
         WORKDIR=/var/cfengine
@@ -169,6 +171,7 @@ AS_IF([test x"$enable_fhs" = xyes], [
         INPUTDIR=default
         LOGDIR=/var/cfengine
         PIDDIR=/var/cfengine
+        STATEDIR=default
       ;;
     esac
   else
@@ -177,6 +180,7 @@ AS_IF([test x"$enable_fhs" = xyes], [
     INPUTDIR="default"
     LOGDIR="${localstatedir}/cfengine"
     PIDDIR="${localstatedir}/cfengine"
+    STATEDIR="default"
   fi
 
   sbindir='${exec_prefix}/bin' # /var/cfengine/bin despite being sbin_?
@@ -1126,6 +1130,22 @@ adl_RECURSIVE_EVAL("${PIDDIR}", PIDDIR)
 AC_DEFINE_UNQUOTED(PIDDIR, "${PIDDIR}", [piddir location])
 AC_SUBST(piddir, "${PIDDIR}")
 
+AC_ARG_WITH(statedir,
+    [  --with-statedir=STATEDIR  default internal for state directory ],
+    [
+        if test x$withval != x ; then
+            STATEDIR=$withval
+        fi
+    ],
+)
+
+dnl Expand ${prefix} and whatnot in STATEDIR
+
+adl_RECURSIVE_EVAL("${STATEDIR}", STATEDIR)
+
+AC_DEFINE_UNQUOTED(STATEDIR, "${STATEDIR}", [State directory location])
+AC_SUBST(statedir, "${STATEDIR}")
+
 AC_ARG_WITH(shell, [AS_HELP_STRING([--with-shell=PATH],
                    [Specify path to POSIX-compatible shell (if not /bin/sh)])],
                    [],
@@ -1293,6 +1313,7 @@ AC_MSG_RESULT([-> Masterdir: $MASTERDIR])
 AC_MSG_RESULT([-> Inputdir: $INPUTDIR])
 AC_MSG_RESULT([-> Logdir: $LOGDIR])
 AC_MSG_RESULT([-> Piddir: $PIDDIR])
+AC_MSG_RESULT([-> Statedir: $STATEDIR])
 
 AC_MSG_RESULT( )
 

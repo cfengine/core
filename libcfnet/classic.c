@@ -48,8 +48,12 @@ static bool LastRecvTimedOut(void)
     return false;
 }
 
-/**
- * @return 0 if socket is closed.
+/** @brief Recieve up to toget bytes, plus a '\0', into buffer from sd.
+ * @param sd Socket descriptor
+ * @param buffer Buffer into which to read data
+ * @param toget Number of bytes to read; a '\0' shall be written after
+ * the data; buffer must have space for that.
+ * @return -1 on error; or actual length read.
  */
 int RecvSocketStream(int sd, char buffer[CF_BUFSIZE], int toget)
 {
@@ -61,33 +65,34 @@ int RecvSocketStream(int sd, char buffer[CF_BUFSIZE], int toget)
         return -1;
     }
 
-    for (already = 0; already != toget; already += got)
+    for (already = 0; already < toget; already += got)
     {
         got = recv(sd, buffer + already, toget - already, 0);
 
-        if ((got == -1) && (errno == EINTR))
-        {
-            continue;
-        }
-
-        if ((got == -1) && (LastRecvTimedOut()))
-        {
-            Log(LOG_LEVEL_ERR, "Timeout - remote end did not respond with the expected amount of data (received=%d, expecting=%d). (recv: %s)",
-                already, toget, GetErrorStr());
-            return -1;
-        }
-
         if (got == -1)
         {
-            Log(LOG_LEVEL_ERR, "Couldn't receive. (recv: %s)", GetErrorStr());
+            if (errno == EINTR)
+            {
+                continue;
+            }
+            else if (LastRecvTimedOut())
+            {
+                Log(LOG_LEVEL_ERR,
+                    "Timeout - remote end did not respond with the expected amount of data (received=%d, expecting=%d). (recv: %s)",
+                    already, toget, GetErrorStr());
+            }
+            else
+            {
+                Log(LOG_LEVEL_ERR, "Couldn't receive. (recv: %s)", GetErrorStr());
+            }
             return -1;
         }
-
-        if (got == 0)           /* doesn't happen unless sock is closed */
+        else if (got == 0) /* doesn't happen unless sock is closed */
         {
             break;
         }
     }
+    assert(already <= toget);
 
     buffer[already] = '\0';
     return already;

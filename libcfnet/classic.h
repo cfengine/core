@@ -24,9 +24,9 @@
 
 #ifndef CLASSIC_H
 #define CLASSIC_H
+#include <cf3.defs.h>
 
-
-int RecvSocketStream(int sd, char *buffer, int toget);
-int SendSocketStream(int sd, const char *buffer, int tosend);
+int RecvSocketStream(int sd, char buffer[CF_BUFSIZE], int toget);
+int SendSocketStream(int sd, const char buffer[CF_BUFSIZE], int tosend);
 
 #endif // CLASSIC_H

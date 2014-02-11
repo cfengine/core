@@ -47,9 +47,9 @@ GET_DEFAULT_DIRECTORY_DEFINE(Master, MASTERDIR)
 
 #elif !defined(__MINGW32__)
 
-#define MAX_WORKDIR_LENGTH (CF_BUFSIZE / 2)
+#define MAX_DIR_LENGTH (CF_BUFSIZE / 2)
 
-static const char *GetDefaultDir_helper(char dir[MAX_WORKDIR_LENGTH], const char *root_dir, const char *append_dir)
+static const char *GetDefaultDir_helper(char dir[MAX_DIR_LENGTH], const char *root_dir, const char *append_dir)
 {
     if (getuid() > 0)
     {
@@ -59,14 +59,14 @@ static const char *GetDefaultDir_helper(char dir[MAX_WORKDIR_LENGTH], const char
 
             if ( append_dir == NULL )
             {
-                if (snprintf(dir, MAX_WORKDIR_LENGTH, "%s/.cfagent", mpw->pw_dir) >= MAX_WORKDIR_LENGTH)
+                if (snprintf(dir, MAX_DIR_LENGTH, "%s/.cfagent", mpw->pw_dir) >= MAX_DIR_LENGTH)
                 {
                     return NULL;
                 }
             }
             else
             {
-                if (snprintf(dir, MAX_WORKDIR_LENGTH, "%s/.cfagent/%s", mpw->pw_dir, append_dir) >= MAX_WORKDIR_LENGTH)
+                if (snprintf(dir, MAX_DIR_LENGTH, "%s/.cfagent/%s", mpw->pw_dir, append_dir) >= MAX_DIR_LENGTH)
                 {
                     return NULL;
                 }
@@ -80,12 +80,12 @@ static const char *GetDefaultDir_helper(char dir[MAX_WORKDIR_LENGTH], const char
     }
 }
 
-#define GET_DEFAULT_DIRECTORY_DEFINE(FUNC, STATIC, GLOBAL, FOLDER)    \
-static const char *GetDefault##FUNC##Dir(void)                        \
-{                                                                     \
-    static char STATIC##dir[MAX_WORKDIR_LENGTH] = ""; /* GLOBAL_C */  \
-    return GetDefaultDir_helper(STATIC##dir, GLOBAL, FOLDER);         \
-}                                                                     \
+#define GET_DEFAULT_DIRECTORY_DEFINE(FUNC, STATIC, GLOBAL, FOLDER)  \
+static const char *GetDefault##FUNC##Dir(void)                      \
+{                                                                   \
+    static char STATIC##dir[MAX_DIR_LENGTH] = ""; /* GLOBAL_C */    \
+    return GetDefaultDir_helper(STATIC##dir, GLOBAL, FOLDER);       \
+}                                                                   \
 
 GET_DEFAULT_DIRECTORY_DEFINE(Work, work, WORKDIR, NULL)
 GET_DEFAULT_DIRECTORY_DEFINE(Log, log, LOGDIR, NULL)

@@ -363,47 +363,18 @@ int TLSRecv(SSL *ssl, char *buffer, int length)
     return received;
 }
 
-static bool find_newline(char *buffer, size_t *length)
+/* TODO: replace with a function taking a Buffer ! */
+ssize_t TLSRecvLine(SSL *ssl, char *buf, size_t buf_size)
 {
-    /*
-     * Look into the string until a new line is found.
-     * If found return true, if not found return false.
-     * The string will be truncated at the position of the first '\n'.
-     */
-    bool found = false;
-    if (buffer && (*length > 0))
-    {
-        size_t i = 0;
-        for (i = 0; i < *length; ++i)
-        {
-            if (buffer[i] == '\0')
-            {
-                break;
-            }
-            if (buffer[i] == '\n')
-            {
-                found = true;
-                buffer[i] = '\0';
-                *length = i;
-                break;
-            }
-        }
-    }
-    return found;
-}
-
-int TLSRecvLine(SSL *ssl, char *buf, size_t buf_size)
-{
-    int ret;
     size_t got = 0;
-    buf_size -= 1;               /* Reserve one space for terminating '\0' */
-    bool found = false;
+    buf[0] = '\0';
+    buf_size -= 1; /* Reserve one byte for terminating '\0' */
 
-    /* Repeat until we receive end of line. */
-    do
+    /* Repeat until we receive end of line or run out of space. */
+    while (got < buf_size)
     {
-        buf[got] = '\0';
-        ret = TLSRecv(ssl, &buf[got], buf_size - got);
+        char *tail = buf + got;
+        int ret = TLSRecv(ssl, tail, buf_size - got);
         if (ret <= 0)
         {
             Log(LOG_LEVEL_ERR,
@@ -411,16 +382,18 @@ int TLSRecvLine(SSL *ssl, char *buf, size_t buf_size)
                 buf);
             return -1;
         }
+        tail[ret] = '\0'; /* Tell strchr where to stop. */
+        char *nl = strchr(tail, '\n');
+        if (nl)
+        {
+            got = nl - buf;
+            assert(got <= buf_size);
+            *nl = '\0'; /* Truncate line at first '\n' */
+            return (ssize_t) got;
+        }
         got += ret;
-        found = find_newline(buf, &got);
     }
-    while ((!found) && (got < buf_size));
-    assert(got <= buf_size);
 
-    if (!found)
-    {
-        Log(LOG_LEVEL_ERR, "No new line found and the buffer is already full");
-        return -1;
-    }
-    return (int)got;
+    Log(LOG_LEVEL_ERR, "No new line found and the buffer is already full");
+    return -1;
 }

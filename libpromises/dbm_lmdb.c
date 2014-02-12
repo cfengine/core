@@ -39,6 +39,7 @@ struct DBPriv_
 {
     MDB_env *env;
     MDB_dbi dbi;
+    MDB_txn *wtxn;
     MDB_cursor *mc;
 };
 
@@ -111,7 +112,7 @@ DBPriv *DBPrivOpenDB(const char *dbpath)
         goto err;
     }
     txn = NULL;
-
+    db->wtxn = NULL;
     return db;
 
 err:
@@ -128,8 +129,24 @@ void DBPrivCloseDB(DBPriv *db)
     if (db->env)
     {
         mdb_env_close(db->env);
+        db->wtxn = NULL;
     }
     free(db);
+}
+
+void DBPrivCommit(DBPriv *db)
+{
+    if (db->wtxn)
+    {
+        int rc;
+        rc = mdb_txn_commit(db->wtxn);
+        if (rc)
+        {
+            Log(LOG_LEVEL_ERR, "Could not commit database dbi : %s",
+                  mdb_strerror(rc));
+        }
+        db->wtxn = NULL;
+    }
 }
 
 bool DBPrivHasKey(DBPriv *db, const void *key, int key_size)
@@ -261,6 +278,53 @@ bool DBPrivWrite(DBPriv *db, const void *key, int key_size, const void *value, i
                 Log(LOG_LEVEL_ERR, "Could not write: %s", mdb_strerror(rc));
                 mdb_txn_abort(txn);
             }
+        }
+    }
+    else
+    {
+        Log(LOG_LEVEL_ERR, "Could not create write txn: %s", mdb_strerror(rc));
+    }
+    return rc == MDB_SUCCESS;
+}
+
+bool DBPrivWriteNoCommit(DBPriv *db, const void *key, int key_size, const void *value, int value_size)
+{
+    MDB_val mkey, data;
+    int rc;
+    if (db->wtxn == NULL)
+    {
+        rc = mdb_txn_begin(db->env, NULL, 0, &db->wtxn);
+        if (rc == MDB_SUCCESS)
+        {
+            rc = mdb_open(db->wtxn, NULL, 0, &db->dbi);
+            if (rc)
+            {
+                Log(LOG_LEVEL_ERR, "Could not open database dbi : %s",
+                      mdb_strerror(rc));
+                db->wtxn = NULL;
+            }
+        }
+        else
+        {
+            Log(LOG_LEVEL_ERR, "Could not create wtxn: %s", mdb_strerror(rc));
+        }
+    }
+    else
+    {
+        rc = MDB_SUCCESS;
+    }
+    if (rc == MDB_SUCCESS)
+    {
+        mkey.mv_data = (void *)key;
+        mkey.mv_size = key_size;
+        data.mv_data = (void *)value;
+        data.mv_size = value_size;
+        rc = mdb_put(db->wtxn, db->dbi, &mkey, &data, 0);
+        if (rc != MDB_SUCCESS)
+        {
+            Log(LOG_LEVEL_ERR, "Could not write: %s", mdb_strerror(rc));
+            mdb_txn_abort(db->wtxn);
+            db->wtxn = NULL;
         }
     }
     else

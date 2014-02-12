@@ -213,6 +213,10 @@ void DBPrivCloseDB(DBPriv *db)
     free(db);
 }
 
+void DBPrivCommit(ARG_UNUSED DBPriv *db)
+{
+}
+
 bool DBPrivHasKey(DBPriv *db, const void *key, int key_size)
 {
     // FIXME: distinguish between "entry not found" and "error occured"
@@ -273,6 +277,11 @@ bool DBPrivWrite(DBPriv *db, const void *key, int key_size, const void *value, i
     int ret = Write(db->hdb, key, key_size, value, value_size);
 
     return ret;
+}
+
+bool DBPrivWriteNoCommit(DBPriv *db, const void *key, int key_size, const void *value, int value_size)
+{
+    return DBPrivWrite(db, key, key_size, value, value_size);
 }
 
 /*

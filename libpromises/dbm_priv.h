@@ -48,6 +48,7 @@ const char *DBPrivGetFileExtension(void);
  */
 DBPriv *DBPrivOpenDB(const char *dbpath);
 void DBPrivCloseDB(DBPriv *hdbp);
+void DBPrivCommit(DBPriv *hdbp);
 
 bool DBPrivHasKey(DBPriv *db, const void *key, int key_size);
 int DBPrivGetValueSize(DBPriv *db, const void *key, int key_size);
@@ -56,6 +57,9 @@ bool DBPrivRead(DBPriv *db, const void *key, int key_size,
             void *dest, int dest_size);
 
 bool DBPrivWrite(DBPriv *db, const void *key, int key_size,
+             const void *value, int value_size);
+
+bool DBPrivWriteNoCommit(DBPriv *db, const void *key, int key_size,
              const void *value, int value_size);
 
 bool DBPrivDelete(DBPriv *db, const void *key, int key_size);

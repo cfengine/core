@@ -99,7 +99,7 @@ static const char *const VNETSTAT[] =
 
 void MonNetworkInit(void)
 {
- 
+
     DeleteItemList(MON_TCP4);
     DeleteItemList(MON_TCP6);
     DeleteItemList(MON_UDP4);
@@ -107,17 +107,22 @@ void MonNetworkInit(void)
  
     MON_UDP4 = MON_UDP6 = MON_TCP4 = MON_TCP6 = NULL;
 
+    char vbuff[CF_BUFSIZE];
+    const char* const statedir = GetStateDir();
+
+    const char* file_names[] = { "cf_incoming", "cf_outgoing" };
+    size_t num_files = sizeof(file_names) / sizeof(char*);
+
     for (int i = 0; i < ATTR; i++)
     {
-        char vbuff[CF_BUFSIZE];
+        for (int j = 0; j < num_files; j++)
+        {
+            snprintf(vbuff, CF_BUFSIZE, "%s%c%s.%s",
+                     statedir, FILE_SEPARATOR, file_names[j], ECGSOCKS[i].name);
 
-        sprintf(vbuff, "%s/state/cf_incoming.%s", CFWORKDIR, ECGSOCKS[i].name);
-        MapName(vbuff);
-        CreateEmptyFile(vbuff);
-
-        sprintf(vbuff, "%s/state/cf_outgoing.%s", CFWORKDIR, ECGSOCKS[i].name);
-        MapName(vbuff);
-        CreateEmptyFile(vbuff);
+            MapName(vbuff);
+            CreateEmptyFile(vbuff);
+        }
     }
 }
 

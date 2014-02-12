@@ -7,7 +7,9 @@
 #######################################################
 
 #
-# Look for a file in /var/cfengine/state/line_counter_measure.log 
+# Look for a file in $STATEDIR/line_counter_measure.log
+#
+# $STATEDIR = $WORKDIR/state unless overridden at compile time.
 #
 
 bundle monitor watch

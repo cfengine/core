@@ -609,6 +609,8 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
     snprintf(vbuff, CF_BUFSIZE, "%s%c.", GetStateDir(), FILE_SEPARATOR);
     MakeParentDirectory(vbuff, force);
 
+    MakeParentDirectory(GetLogDir(), force);
+
     snprintf(vbuff, CF_BUFSIZE, "%s", GetInputDir());
 
     if (stat(vbuff, &sb) == -1)

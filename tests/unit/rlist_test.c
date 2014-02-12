@@ -163,9 +163,55 @@ static void test_reverse(void)
     Rlist *list = RlistFromSplitString("a,b,c", ',');
 
     RlistReverse(&list);
+    assert_int_equal(3, RlistLen(list));
     assert_string_equal("c", RlistScalarValue(list));
     assert_string_equal("b", RlistScalarValue(list->next));
     assert_string_equal("a", RlistScalarValue(list->next->next));
+
+    RlistDestroy(list);
+}
+
+static void test_split_escaped(void)
+{
+    Rlist *list = RlistFromSplitString("a\\,b\\c\\,d,w\\,x\\,y\\,z", ',');
+    assert_int_equal(2, RlistLen(list));
+    assert_string_equal("a,b\\c,d", RlistScalarValue(list));
+    assert_string_equal("w,x,y,z", RlistScalarValue(list->next));
+
+    RlistDestroy(list);
+}
+
+static void test_split_long(void)
+{
+    char buf[CF_MAXVARSIZE * 2], *tail = buf + CF_MAXVARSIZE;
+    memset(buf, '$', sizeof(buf) - 1);
+    buf[sizeof(buf) - 1] = '\0';
+    buf[CF_MAXVARSIZE - 1] = ',';
+
+    Rlist *list = RlistFromSplitString(buf, ',');
+    assert_int_equal(2, RlistLen(list));
+
+    assert_string_equal(tail, RlistScalarValue(list));
+    assert_string_equal(tail, RlistScalarValue(list->next));
+
+    RlistDestroy(list);
+}
+
+static void test_split_long_escaped(void)
+{
+    char buf[CF_MAXVARSIZE * 2 + 2], *tail = buf + CF_MAXVARSIZE + 1;
+    memset(buf, '$', sizeof(buf) - 1);
+    buf[sizeof(buf) - 1] = '\0';
+    buf[CF_MAXVARSIZE] = ',';
+    memcpy(buf + CF_MAXVARSIZE / 2, "\\,", 2);
+    memcpy(tail + CF_MAXVARSIZE / 2, "\\,", 2);
+
+    Rlist *list = RlistFromSplitString(buf, ',');
+    assert_int_equal(2, RlistLen(list));
+
+    tail[CF_MAXVARSIZE / 2] = '$'; /* blot out the back-slash */
+    assert_string_equal(tail + 1, RlistScalarValue(list));
+    assert_string_equal(tail + 1, RlistScalarValue(list->next));
 
     RlistDestroy(list);
 }
@@ -632,6 +678,9 @@ int main()
         unit_test(test_filter),
         unit_test(test_filter_everything),
         unit_test(test_reverse),
+        unit_test(test_split_escaped),
+        unit_test(test_split_long),
+        unit_test(test_split_long_escaped),
         unit_test(test_new_parser_success),
         unit_test(test_new_parser_failure),
         unit_test(test_regex_split),

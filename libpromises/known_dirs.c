@@ -43,6 +43,7 @@ GET_DEFAULT_DIRECTORY_DEFINE(Log, LOGDIR)
 GET_DEFAULT_DIRECTORY_DEFINE(Pid, PIDDIR)
 GET_DEFAULT_DIRECTORY_DEFINE(Input, INPUTDIR)
 GET_DEFAULT_DIRECTORY_DEFINE(Master, MASTERDIR)
+GET_DEFAULT_DIRECTORY_DEFINE(State, STATEDIR)
 
 #elif !defined(__MINGW32__)
 
@@ -91,6 +92,7 @@ GET_DEFAULT_DIRECTORY_DEFINE(Log, log, LOGDIR, NULL)
 GET_DEFAULT_DIRECTORY_DEFINE(Pid, pid, PIDDIR, NULL)
 GET_DEFAULT_DIRECTORY_DEFINE(Master, master, MASTERDIR, "masterfiles")
 GET_DEFAULT_DIRECTORY_DEFINE(Input, input, INPUTDIR, "inputs")
+GET_DEFAULT_DIRECTORY_DEFINE(State, state, STATEDIR, "state")
 
 #endif
 
@@ -133,7 +135,7 @@ const char *GetInputDir(void)
         snprintf(workbuf, CF_BUFSIZE, "%s%cinputs", GetWorkDir(), FILE_SEPARATOR);
         return MapName(workbuf);
     }
-    else
+    else /* inputdir defined at compile-time */
     {
         return GetDefaultInputDir();
     }
@@ -156,8 +158,30 @@ const char *GetMasterDir(void)
         snprintf(workbuf, CF_BUFSIZE, "%s%cmasterfiles", GetWorkDir(), FILE_SEPARATOR);
         return MapName(workbuf);
     }
-    else
+    else /* masterdir defined at compile-time */
     {
         return GetDefaultMasterDir();
+    }
+}
+
+const char *GetStateDir(void)
+{
+    const char *statedir = getenv("CFENGINE_TEST_OVERRIDE_WORKDIR");
+
+    if (statedir != NULL)
+    {
+        static char workbuf[CF_BUFSIZE];
+        snprintf(workbuf, CF_BUFSIZE, "%s%cstate", statedir, FILE_SEPARATOR);
+        return MapName(workbuf);
+    }
+    else if (strcmp(STATEDIR, "default") == 0 )
+    {
+        static char workbuf[CF_BUFSIZE];
+        snprintf(workbuf, CF_BUFSIZE, "%s%cstate", GetWorkDir(), FILE_SEPARATOR);
+        return MapName(workbuf);
+    }
+    else /* statedir defined at compile-time */
+    {
+        return GetDefaultStateDir();
     }
 }

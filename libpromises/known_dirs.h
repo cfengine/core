@@ -30,5 +30,6 @@ const char *GetLogDir(void);
 const char *GetPidDir(void);
 const char *GetMasterDir(void);
 const char *GetInputDir(void);
+const char *GetStateDir(void);
 
 #endif

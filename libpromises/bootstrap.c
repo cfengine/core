@@ -85,7 +85,7 @@ bool WriteAmPolicyHubFile(const char *workdir, bool am_policy_hub)
     char *filename = AmPolicyHubFilename(workdir);
     if (am_policy_hub)
     {
-        if (!GetAmPolicyHub(workdir))
+        if (!GetAmPolicyHub())
         {
             if (creat(filename, 0600) == -1)
             {
@@ -97,7 +97,7 @@ bool WriteAmPolicyHubFile(const char *workdir, bool am_policy_hub)
     }
     else
     {
-        if (GetAmPolicyHub(workdir))
+        if (GetAmPolicyHub())
         {
             if (unlink(filename) != 0)
             {
@@ -213,10 +213,10 @@ bool RemovePolicyServerFile(const char *workdir)
     return true;
 }
 
-bool GetAmPolicyHub(const char *workdir)
+bool GetAmPolicyHub(void)
 {
     char path[CF_BUFSIZE] = { 0 };
-    snprintf(path, sizeof(path), "%s/state/am_policy_hub", workdir);
+    snprintf(path, sizeof(path), "%s%cam_policy_hub", GetStateDir(), FILE_SEPARATOR);
     MapName(path);
 
     struct stat sb;

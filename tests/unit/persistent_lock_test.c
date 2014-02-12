@@ -1,6 +1,7 @@
 #include <cf3.defs.h>
 
 #include <locks.h>
+#include <known_dirs.h>
 
 #include <test.h>
 
@@ -12,7 +13,7 @@ static void tests_setup(void)
     mkdtemp(CFWORKDIR);
 
     char buf[CF_BUFSIZE];
-    snprintf(buf, CF_BUFSIZE, "%s/state", CFWORKDIR);
+    snprintf(buf, CF_BUFSIZE, "%s", GetStateDir());
     mkdir(buf, 0755);
 }
 

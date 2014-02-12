@@ -49,7 +49,7 @@ void AgentDiagnosticsRun(const char *workdir, const AgentDiagnosticCheck checks[
 AgentDiagnosticsResult AgentDiagnosticsCheckHavePrivateKey(const char *workdir);
 AgentDiagnosticsResult AgentDiagnosticsCheckHavePublicKey(const char *workdir);
 AgentDiagnosticsResult AgentDiagnosticsCheckIsBootstrapped(const char *workdir);
-AgentDiagnosticsResult AgentDiagnosticsCheckAmPolicyServer(const char *workdir);
+AgentDiagnosticsResult AgentDiagnosticsCheckAmPolicyServer(ARG_UNUSED const char *workdir);
 
 
 typedef AgentDiagnosticsResult (*AgentDiagnosticsResultNewFunction)(bool success, char *message);

@@ -58,9 +58,9 @@ bool WritePolicyServerFile(const char *workdir, const char *new_policy_server);
 bool RemovePolicyServerFile(const char *workdir);
 
 /**
- * @return True if the file WORKDIR/state/am_policy_hub exists
+ * @return True if the file STATEDIR/am_policy_hub exists
  */
-bool GetAmPolicyHub(const char *workdir);
+bool GetAmPolicyHub(void);
 
 /**
  * @brief Set the am_policy_hub marker file. If am_policy_hub is true, create the file. If false, delete it.

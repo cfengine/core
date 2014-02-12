@@ -1149,7 +1149,7 @@ static void KeepPromiseBundles(EvalContext *ctx, const Policy *policy, GenericAg
 static void AllClassesReport(const EvalContext *ctx)
 {
     char context_report_file[CF_BUFSIZE];
-    snprintf(context_report_file, CF_BUFSIZE, "%s/state/allclasses.txt", CFWORKDIR);
+    snprintf(context_report_file, CF_BUFSIZE, "%s%callclasses.txt", GetStateDir(), FILE_SEPARATOR);
 
     FILE *fp = NULL;
     if ((fp = fopen(context_report_file, "w")) == NULL)

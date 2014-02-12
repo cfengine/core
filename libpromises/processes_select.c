@@ -35,6 +35,7 @@
 #include <rlist.h>
 #include <policy.h>
 #include <zones.h>
+#include <known_dirs.h>
 
 static int SelectProcRangeMatch(char *name1, char *name2, int min, int max, char **names, char **line);
 static int SelectProcRegexMatch(char *name1, char *name2, char *regex, char **colNames, char **line);
@@ -808,8 +809,9 @@ int LoadProcessTable(Item **procdata)
     cf_pclose(prp);
 
 /* Now save the data */
+    const char* const statedir = GetStateDir();
 
-    snprintf(vbuff, CF_MAXVARSIZE, "%s/state/cf_procs", CFWORKDIR);
+    snprintf(vbuff, CF_MAXVARSIZE, "%s%ccf_procs", statedir, FILE_SEPARATOR);
     RawSaveItemList(*procdata, vbuff);
 
     CopyList(&rootprocs, *procdata);
@@ -828,11 +830,11 @@ int LoadProcessTable(Item **procdata)
         PrependItem(&rootprocs, otherprocs->name, NULL);
     }
 
-    snprintf(vbuff, CF_MAXVARSIZE, "%s/state/cf_rootprocs", CFWORKDIR);
+    snprintf(vbuff, CF_MAXVARSIZE, "%s%ccf_rootprocs", statedir, FILE_SEPARATOR);
     RawSaveItemList(rootprocs, vbuff);
     DeleteItemList(rootprocs);
 
-    snprintf(vbuff, CF_MAXVARSIZE, "%s/state/cf_otherprocs", CFWORKDIR);
+    snprintf(vbuff, CF_MAXVARSIZE, "%s%ccf_otherprocs", statedir, FILE_SEPARATOR);
     RawSaveItemList(otherprocs, vbuff);
     DeleteItemList(otherprocs);
 

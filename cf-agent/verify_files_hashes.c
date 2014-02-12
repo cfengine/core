@@ -33,6 +33,7 @@
 #include <files_hashes.h>
 #include <misc_lib.h>
 #include <eval_context.h>
+#include <known_dirs.h>
 
 /*
  * Key format:
@@ -379,7 +380,7 @@ void LogHashChange(const char *file, FileState status, char *msg, const Promise 
 
 /* This is inefficient but we don't want to lose any data */
 
-    snprintf(fname, CF_BUFSIZE, "%s/state/%s", CFWORKDIR, CF_FILECHANGE_NEW);
+    snprintf(fname, CF_BUFSIZE, "%s%c%s", GetStateDir(), FILE_SEPARATOR, CF_FILECHANGE_NEW);
     MapName(fname);
 
 #ifndef __MINGW32__

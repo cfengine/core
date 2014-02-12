@@ -190,7 +190,7 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
             return;
         }
 
-        if (GetAmPolicyHub(GetWorkDir()))
+        if (GetAmPolicyHub())
         {
             EvalContextClassPutHard(ctx, "am_policy_hub", "source=bootstrap,deprecated,alias=policy_server");
             Log(LOG_LEVEL_VERBOSE, "Additional class defined: am_policy_hub");
@@ -233,7 +233,7 @@ bool GenericAgentCheckPolicy(GenericAgentConfig *config, bool force_validation, 
             if (policy_check_ok && write_validated_file)
             {
                 WritePolicyValidatedFileToMasterfiles(config);
-                if (GetAmPolicyHub(GetWorkDir()))
+                if (GetAmPolicyHub())
                 {
                     WriteReleaseIdFileToMasterfiles();
                 }
@@ -1076,7 +1076,7 @@ static void GetPromisesValidatedFileFromMasterfiles(char *filename, size_t max_s
     }
     else if (MINUSF)
     {
-        snprintf(filename, max_size, "%s/state/validated_%s", CFWORKDIR, CanonifyName(config->original_input_file));
+        snprintf(filename, max_size, "%s%cvalidated_%s", GetStateDir(), FILE_SEPARATOR, CanonifyName(config->original_input_file));
     }
     else
     {
@@ -1377,15 +1377,15 @@ static void CheckWorkingDirectories(EvalContext *ctx)
         chmod(CFWORKDIR, (mode_t) (statbuf.st_mode & ~022));
     }
 
-    snprintf(vbuff, CF_BUFSIZE, "%s%cstate%c.", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
+    snprintf(vbuff, CF_BUFSIZE, "%s", GetStateDir());
     MakeParentDirectory(vbuff, false);
 
     Log(LOG_LEVEL_VERBOSE, "Checking integrity of the state database");
-    snprintf(vbuff, CF_BUFSIZE, "%s%cstate", CFWORKDIR, FILE_SEPARATOR);
+    snprintf(vbuff, CF_BUFSIZE, "%s", GetStateDir());
 
     if (stat(vbuff, &statbuf) == -1)
     {
-        snprintf(vbuff, CF_BUFSIZE, "%s%cstate%c.", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
+        snprintf(vbuff, CF_BUFSIZE, "%s", GetStateDir());
         MakeParentDirectory(vbuff, false);
 
         if (chown(vbuff, getuid(), getgid()) == -1)

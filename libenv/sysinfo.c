@@ -232,7 +232,7 @@ static const char *const VETCPASSWD[] =
 {
     [PLATFORM_CONTEXT_UNKNOWN] = "-",
     [PLATFORM_CONTEXT_OPENVZ] = "/etc/passwd",           /* virt_host_vz_vzps */
-    [PLATFORM_CONTEXT_HP] = "",                          /* hpux */
+    [PLATFORM_CONTEXT_HP] = "/etc/passwd",               /* hpux */
     [PLATFORM_CONTEXT_AIX] = "/etc/passwd",              /* aix */
     [PLATFORM_CONTEXT_LINUX] = "/etc/passwd",            /* linux */
     [PLATFORM_CONTEXT_SOLARIS] = "/etc/passwd",          /* solaris */
@@ -254,7 +254,7 @@ static const char *const VETCSHADOW[] =
 {
     [PLATFORM_CONTEXT_UNKNOWN] = "-",
     [PLATFORM_CONTEXT_OPENVZ] = "/etc/shadow",           /* virt_host_vz_vzps */
-    [PLATFORM_CONTEXT_HP] = "",                          /* hpux */
+    [PLATFORM_CONTEXT_HP] = "/etc/passwd",               /* hpux */
     [PLATFORM_CONTEXT_AIX] = "/etc/security/passwd",     /* aix */
     [PLATFORM_CONTEXT_LINUX] = "/etc/shadow",            /* linux */
     [PLATFORM_CONTEXT_SOLARIS] = "/etc/shadow",          /* solaris */
@@ -276,7 +276,7 @@ static const char *const VETCGROUP[] =
 {
     [PLATFORM_CONTEXT_UNKNOWN] = "-",
     [PLATFORM_CONTEXT_OPENVZ] = "/etc/group",            /* virt_host_vz_vzps */
-    [PLATFORM_CONTEXT_HP] = "",                          /* hpux */
+    [PLATFORM_CONTEXT_HP] = "/etc/group",                /* hpux */
     [PLATFORM_CONTEXT_AIX] = "/etc/group",               /* aix */
     [PLATFORM_CONTEXT_LINUX] = "/etc/group",             /* linux */
     [PLATFORM_CONTEXT_SOLARIS] = "/etc/group",           /* solaris */

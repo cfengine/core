@@ -161,7 +161,7 @@ static bool OpenTokyoDatabase(const char *filename, TCHDB **hdb)
     return true;
 }
 
-DBPriv *DBPrivOpenDB(const char *dbpath)
+DBPriv *DBPrivOpenDB(const char *dbpath, ARG_UNUSED dbid id)
 {
     DBPriv *db = xcalloc(1, sizeof(DBPriv));
 

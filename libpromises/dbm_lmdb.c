@@ -63,7 +63,7 @@ const char *DBPrivGetFileExtension(void)
 #define LMDB_MAXSIZE    104857600
 #endif
 
-DBPriv *DBPrivOpenDB(const char *dbpath)
+DBPriv *DBPrivOpenDB(const char *dbpath, dbid id)
 {
     DBPriv *db = xcalloc(1, sizeof(DBPriv));
     MDB_txn *txn = NULL;
@@ -83,7 +83,14 @@ DBPriv *DBPrivOpenDB(const char *dbpath)
               dbpath, mdb_strerror(rc));
         goto err;
     }
-    rc = mdb_env_open(db->env, dbpath, MDB_NOSUBDIR, 0644);
+    if (id != dbid_locks)
+    {
+        rc = mdb_env_open(db->env, dbpath, MDB_NOSUBDIR, 0644);
+    }
+    else
+    {
+        rc = mdb_env_open(db->env, dbpath, MDB_NOSUBDIR|MDB_NOSYNC, 0644);
+    }
     if (rc)
     {
         Log(LOG_LEVEL_ERR, "Could not open database %s: %s",

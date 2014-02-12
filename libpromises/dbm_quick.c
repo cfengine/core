@@ -111,7 +111,7 @@ const char *DBPrivGetFileExtension(void)
     return "qdbm";
 }
 
-DBPriv *DBPrivOpenDB(const char *filename)
+DBPriv *DBPrivOpenDB(const char *filename, ARG_UNUSED dbid id)
 {
     DBPriv *db = xcalloc(1, sizeof(DBPriv));
 

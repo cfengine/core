@@ -194,12 +194,12 @@ bool OpenDB(DBHandle **dbp, dbid id)
 
         if(lock_fd != -1)
         {
-            handle->priv = DBPrivOpenDB(handle->filename);
+            handle->priv = DBPrivOpenDB(handle->filename, id);
 
             if (handle->priv == DB_PRIV_DATABASE_BROKEN)
             {
                 DBPathMoveBroken(handle->filename);
-                handle->priv = DBPrivOpenDB(handle->filename);
+                handle->priv = DBPrivOpenDB(handle->filename, id);
                 if (handle->priv == DB_PRIV_DATABASE_BROKEN)
                 {
                     handle->priv = NULL;

@@ -1556,6 +1556,7 @@ bool EvalContextVariablePutSpecial(EvalContext *ctx, SpecialScope scope, const c
     case SPECIAL_SCOPE_BODY:
     case SPECIAL_SCOPE_THIS:
     case SPECIAL_SCOPE_MATCH:
+    case SPECIAL_SCOPE_USER:
         {
             VarRef *ref = VarRefParseFromScope(lval, SpecialScopeToString(scope));
             bool ret = EvalContextVariablePut(ctx, ref, value, type, tags);
@@ -1579,6 +1580,7 @@ bool EvalContextVariableRemoveSpecial(const EvalContext *ctx, SpecialScope scope
     case SPECIAL_SCOPE_EDIT:
     case SPECIAL_SCOPE_BODY:
     case SPECIAL_SCOPE_THIS:
+    case SPECIAL_SCOPE_USER:
         {
             VarRef *ref = VarRefParseFromScope(lval, SpecialScopeToString(scope));
             bool ret = EvalContextVariableRemove(ctx, ref);
@@ -1608,6 +1610,7 @@ static VariableTable *GetVariableTableForScope(const EvalContext *ctx,
     case SPECIAL_SCOPE_SYS:
     case SPECIAL_SCOPE_MON:
     case SPECIAL_SCOPE_CONST:
+    case SPECIAL_SCOPE_USER:
         assert(!ns || strcmp("default", ns) == 0);
         return ctx->global_variables;
 

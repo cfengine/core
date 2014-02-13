@@ -26,12 +26,14 @@ bundle agent test
 
     "one" expression => "any";
 
+
+  reports:
     "both_elements_are_classes"
-      expression => "any",
+      classes => if_ok("fail"),
       ifvarclass => and("one", "non_existing_class");
 
     "each_split_element_is_class"
-      expression => "any",
+      classes => if_ok("fail"),
       ifvarclass => and(splitstring("one,non_existing_class", ",", "20"));
 }
 
@@ -40,18 +42,20 @@ bundle agent test
 bundle agent check
 {
   classes:
-      "ok" expression => "!(each_split_element_is_class|both_elements_are_classes)";
+      "ok" expression => "!fail";
 
   reports:
     ok::
       "$(this.promise_filename) Pass";
+
     !ok::
       "$(this.promise_filename) FAIL";
 }
 
-body action immediate
-# @brief Evaluate the promise at every `cf-agent` execution.
+body classes if_ok(x)
+# @brief Define class `x` if the promise has been repaired
+# @param x The name of the class
 {
-      ifelapsed => "0";
+      promise_repaired => { "$(x)" };
+      promise_kept => { "$(x)" };
 }
-

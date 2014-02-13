@@ -23,17 +23,20 @@
 */
 
 #include <userinfo.h>
-
 #include <stdio.h>
+
+#ifndef _WIN32
 #include <sys/types.h>
 #include <pwd.h>
+#endif
 
 #include <eval_context.h>
 
 void GetCurrentUserInfo(EvalContext *ctx)
 {
-    struct passwd *pw;
-    if (( pw = getpwuid(getuid())) == NULL)
+#ifndef _WIN32
+    struct passwd *pw = getpwuid(getuid());
+    if (pw == NULL)
     {
         Log(LOG_LEVEL_ERR, "Unable to get username for uid '%ju'. (getpwuid: %s)", (uintmax_t)getuid(), GetErrorStr());
     }
@@ -51,4 +54,5 @@ void GetCurrentUserInfo(EvalContext *ctx)
         snprintf(buf, CF_BUFSIZE, "%i", pw->pw_gid);
         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_USER, "gid", buf, CF_DATA_TYPE_INT, "source=agent");
     }
+#endif
 }

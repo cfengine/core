@@ -63,10 +63,10 @@ bool RemovePolicyServerFile(const char *workdir);
 bool GetAmPolicyHub(void);
 
 /**
- * @brief Set the am_policy_hub marker file. If am_policy_hub is true, create the file. If false, delete it.
+ * @brief Set the STATEDIR/am_policy_hub marker file. If am_policy_hub is true, create the file. If false, delete it.
  * @return True if successful
  */
-bool WriteAmPolicyHubFile(const char *workdir, bool am_policy_hub);
+bool WriteAmPolicyHubFile(bool am_policy_hub);
 
 /**
  * @brief Write the builtin failsafe policy to the default location

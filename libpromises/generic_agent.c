@@ -165,7 +165,7 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
                 Log(LOG_LEVEL_INFO, "Not assuming role as policy server");
             }
 
-            WriteAmPolicyHubFile(CFWORKDIR, am_policy_server);
+            WriteAmPolicyHubFile(am_policy_server);
         }
 
         WritePolicyServerFile(GetWorkDir(), config->agent_specific.agent.bootstrap_policy_server);

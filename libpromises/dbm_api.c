@@ -69,6 +69,9 @@ static pthread_once_t db_shutdown_once = PTHREAD_ONCE_INIT; /* GLOBAL_T */
 
 /******************************************************************************/
 
+/* CSD TODO:
+ * need to revisit this again before --with-statedir can be deemed ready
+ */
 static const char *const DB_PATHS[] = {
     [dbid_classes] = "cf_classes",
     [dbid_variables] = "state/cf_variables",

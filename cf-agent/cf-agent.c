@@ -444,11 +444,13 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
                 const char *workdir = GetWorkDir();
                 const char *inputdir = GetInputDir();
                 const char *logdir = GetLogDir();
+                const char *statedir = GetStateDir();
                 strcpy(CFWORKDIR, workdir);
                 Writer *out = FileWriter(stdout);
                 WriterWriteF(out, "self-diagnostics for agent using workdir '%s'\n", workdir);
                 WriterWriteF(out, "self-diagnostics for agent using inputdir '%s'\n", inputdir);
                 WriterWriteF(out, "self-diagnostics for agent using logdir '%s'\n", logdir);
+                WriterWriteF(out, "self-diagnostics for agent using statedir '%s'\n", statedir);
 
                 AgentDiagnosticsRun(workdir, AgentDiagnosticsAllChecks(), out);
                 AgentDiagnosticsRunAllChecksNova(workdir, out, &AgentDiagnosticsRun, &AgentDiagnosticsResultNew);

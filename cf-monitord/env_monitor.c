@@ -117,15 +117,16 @@ void MonitorInitialize(void)
 {
     int i, j, k;
     char vbuff[CF_BUFSIZE];
+    const char* const statedir = GetStateDir();
 
-    sprintf(vbuff, "%s/state/cf_users", CFWORKDIR);
+    snprintf(vbuff, CF_BUFSIZE, "%s%ccf_users", statedir, FILE_SEPARATOR);
     MapName(vbuff);
     CreateEmptyFile(vbuff);
 
-    snprintf(ENVFILE_NEW, CF_BUFSIZE, "%s%c%s", GetStateDir(), FILE_SEPARATOR, CF_ENVNEW_FILE);
+    snprintf(ENVFILE_NEW, CF_BUFSIZE, "%s%c%s", statedir, FILE_SEPARATOR, CF_ENVNEW_FILE);
     MapName(ENVFILE_NEW);
 
-    snprintf(ENVFILE, CF_BUFSIZE, "%s%c%s", GetStateDir(), FILE_SEPARATOR, CF_ENV_FILE);
+    snprintf(ENVFILE, CF_BUFSIZE, "%s%c%s", statedir, FILE_SEPARATOR, CF_ENV_FILE);
     MapName(ENVFILE);
 
     MonEntropyClassesInit();

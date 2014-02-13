@@ -266,6 +266,7 @@ int main(int argc, char *argv[])
     Nova_NoteVarUsageDB(ctx);
     Nova_TrackExecution(config->input_file);
     PurgeLocks();
+    BackupLockDatabase();
 
     PolicyDestroy(policy); /* Can we safely do this earlier ? */
     if (config->agent_specific.agent.bootstrap_policy_server && !VerifyBootstrap())

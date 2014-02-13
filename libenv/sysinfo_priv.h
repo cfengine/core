@@ -29,6 +29,5 @@
 
 void DiscoverVersion(EvalContext *ctx);
 void DetectDomainName(EvalContext *ctx, const char *orig_nodename);
-int GetUptimeMinutes(time_t now);
 
 #endif

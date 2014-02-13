@@ -299,15 +299,16 @@ int TLSConnect(ConnectionInfo *conn_info, bool trust_server,
 
     /* Server might hang up here, after we sent identification! We
      * must get the "OK WELCOME" message for everything to be OK. */
+    static const char OK[] = "OK WELCOME";
+    size_t const oklen = sizeof(OK) - 1; /* OK's size includes its '\0' */
     char line[1024] = "";
-    ret = TLSRecvLine(ConnectionInfoSSL(conn_info), line, sizeof(line));
-    if (ret <= 0 ||
-        (strncmp(line, "OK WELCOME", strlen("OK WELCOME")) != 0))
+    ssize_t len = TLSRecvLine(ConnectionInfoSSL(conn_info), line, sizeof(line));
+    if (len < oklen || strncmp(line, OK, oklen) != 0)
     {
-        return 0;
+        return 0; /* Close, but no cigar :-( */
     }
 
-    return 1;
+    return 1; /* Success :-) */
 }
 
 /*****************************************************************************/

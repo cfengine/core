@@ -199,6 +199,10 @@ struct utsname
 #  define IPV6_V6ONLY 27
 # endif
 
+// Not available in MinGW headers unless you raise WINVER and _WIN32_WINNT, but
+// that is very badly supported in MinGW ATM.
+ULONGLONG WINAPI GetTickCount64(void);
+
 #else /* !__MINGW32__ */
 # include <syslog.h>
 #endif
@@ -270,6 +274,10 @@ int socketpair(int domain, int type, int protocol, int sv[2]);
 
 #if !HAVE_DECL_SETENV
 int setenv(const char *name, const char *value, int overwrite);
+#endif
+
+#if !HAVE_DECL_FSYNC
+int fsync(int fd);
 #endif
 
 #ifdef __APPLE__

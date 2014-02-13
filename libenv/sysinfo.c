@@ -2485,6 +2485,8 @@ static void GetCPUInfo(EvalContext *ctx)
 
 /******************************************************************/
 
+// Implemented in Windows specific section.
+#ifndef __MINGW32__
 int GetUptimeSeconds(time_t now)
 // Return the number of seconds the system has been online given the current
 // time() as an argument, or return -1 if unavailable or unimplemented.
@@ -2561,6 +2563,7 @@ int GetUptimeSeconds(time_t now)
 #error uptime is not implemented on this platform.
 #endif
 }
+#endif // !__MINGW32__
 
 int GetUptimeMinutes(time_t now)
 {

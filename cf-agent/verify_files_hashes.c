@@ -46,15 +46,15 @@ static char *NewIndexKey(char type, const char *name, int *size)
     char *chk_key;
 
 // Filename plus index_str in one block + \0
-
-    *size = strlen(name) + CF_INDEX_OFFSET + 1;
+    const int len = strlen(name);
+    *size = len + CF_INDEX_OFFSET + 1;
 
     chk_key = xcalloc(1, *size);
 
 // Data start after offset for index
 
-    strncpy(chk_key, FileHashName(type), CF_INDEX_FIELD_LEN);
-    strncpy(chk_key + CF_INDEX_OFFSET, name, strlen(name));
+    strlcpy(chk_key, FileHashName(type), CF_INDEX_FIELD_LEN);
+    memcpy(chk_key + CF_INDEX_OFFSET, name, len);
     return chk_key;
 }
 

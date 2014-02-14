@@ -109,7 +109,7 @@ Policy *ParserParseFile(AgentType agent_type, const char *path, unsigned int war
     P.warnings = warnings;
     P.warnings_error = warnings_error;
 
-    strncpy(P.filename, path, CF_MAXVARSIZE);
+    strlcpy(P.filename, path, CF_MAXVARSIZE);
 
     yyin = safe_fopen(path, "r");
     if (yyin == NULL)

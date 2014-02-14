@@ -1228,7 +1228,7 @@ int CfOpenDirectory(ServerConnectionState *conn, char *sendbuffer, char *oldDirn
             memset(sendbuffer, 0, CF_BUFSIZE);
         }
 
-        strncpy(sendbuffer + offset, dirp->d_name, CF_MAXLINKSIZE);
+        strlcpy(sendbuffer + offset, dirp->d_name, CF_MAXLINKSIZE);
         offset += strlen(dirp->d_name) + 1;     /* + zero byte separator */
     }
 
@@ -1281,7 +1281,7 @@ int CfSecOpenDirectory(ServerConnectionState *conn, char *sendbuffer, char *dirn
             memset(out, 0, CF_BUFSIZE);
         }
 
-        strncpy(sendbuffer + offset, dirp->d_name, CF_MAXLINKSIZE);
+        strlcpy(sendbuffer + offset, dirp->d_name, CF_MAXLINKSIZE);
         /* + zero byte separator */
         offset += strlen(dirp->d_name) + 1;
     }

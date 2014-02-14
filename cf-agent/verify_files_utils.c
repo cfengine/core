@@ -1029,16 +1029,16 @@ static PromiseResult LinkCopy(EvalContext *ctx, char *sourcefile, char *destfile
         {
             char vbuff[CF_BUFSIZE];
 
-            strcpy(vbuff, sourcefile);
+            strlcpy(vbuff, sourcefile, CF_BUFSIZE);
             ChopLastNode(vbuff);
             AddSlash(vbuff);
             strncat(vbuff, linkbuf, CF_BUFSIZE - 1);
-            strncpy(linkbuf, vbuff, CF_BUFSIZE - 1);
+            strlcpy(linkbuf, vbuff, CF_BUFSIZE);
         }
     }
     else
     {
-        strcpy(linkbuf, sourcefile);
+        strlcpy(linkbuf, sourcefile, CF_BUFSIZE);
     }
 
     lastnode = ReadLastNode(sourcefile);
@@ -1181,7 +1181,7 @@ bool CopyRegularFile(EvalContext *ctx, const char *source, const char *dest, str
         char *forkpointer = strstr(tmpstr, _PATH_RSRCFORKSPEC);
         *forkpointer = '\0';
 
-        strncpy(new, tmpstr, CF_BUFSIZE);
+        strlcpy(new, tmpstr, CF_BUFSIZE);
 
         free(tmpstr);
     }
@@ -1189,7 +1189,7 @@ bool CopyRegularFile(EvalContext *ctx, const char *source, const char *dest, str
     {
 #endif
 
-        strncpy(new, dest, CF_BUFSIZE);
+        strlcpy(new, dest, CF_BUFSIZE);
 
         if (!JoinSuffix(new, CF_NEW))
         {
@@ -1243,7 +1243,7 @@ bool CopyRegularFile(EvalContext *ctx, const char *source, const char *dest, str
 
         Log(LOG_LEVEL_DEBUG, "Backup file '%s'", source);
 
-        strncpy(backup, dest, CF_BUFSIZE);
+        strlcpy(backup, dest, CF_BUFSIZE);
 
         if (attr.copy.backup == BACKUP_OPTION_TIMESTAMP)
         {
@@ -1652,7 +1652,7 @@ static PromiseResult VerifyName(EvalContext *ctx, char *path, struct stat *sb, A
         {
             if (IsAbsPath(attr.rename.newname))
             {
-                strncpy(path, attr.rename.newname, CF_BUFSIZE - 1);
+                strlcpy(path, attr.rename.newname, CF_BUFSIZE);
             }
             else
             {
@@ -2415,7 +2415,7 @@ static PromiseResult CopyFileSources(EvalContext *ctx, char *destination, Attrib
 
     start = BeginMeasure();
 
-    strncpy(vbuff, destination, CF_BUFSIZE - 4);
+    strlcpy(vbuff, destination, CF_BUFSIZE - 3);
 
     if (S_ISDIR(ssb.st_mode))   /* could be depth_search */
     {
@@ -2604,7 +2604,7 @@ PromiseResult ScheduleLinkChildrenOperation(EvalContext *ctx, char *destination,
 
         /* Assemble pathnames */
 
-        strncpy(promiserpath, destination, CF_BUFSIZE - 1);
+        strlcpy(promiserpath, destination, CF_BUFSIZE);
         AddSlash(promiserpath);
 
         if (!JoinPath(promiserpath, dirp->d_name))
@@ -2615,7 +2615,7 @@ PromiseResult ScheduleLinkChildrenOperation(EvalContext *ctx, char *destination,
             return result;
         }
 
-        strncpy(sourcepath, source, CF_BUFSIZE - 1);
+        strlcpy(sourcepath, source, CF_BUFSIZE);
         AddSlash(sourcepath);
 
         if (!JoinPath(sourcepath, dirp->d_name))

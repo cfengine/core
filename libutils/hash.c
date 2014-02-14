@@ -254,7 +254,7 @@ int HashCopy(Hash *origin, Hash **destination)
     }
     *destination = xmalloc(sizeof(Hash));
     memcpy((*destination)->digest, origin->digest, origin->size);
-    strncpy((*destination)->printable, origin->printable, (EVP_MAX_MD_SIZE * 4) - 1);
+    strlcpy((*destination)->printable, origin->printable, (EVP_MAX_MD_SIZE * 4));
     (*destination)->method = origin->method;
     (*destination)->size = origin->size;
     return 0;

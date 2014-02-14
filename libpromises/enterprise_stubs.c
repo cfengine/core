@@ -204,7 +204,7 @@ ENTERPRISE_FUNC_4ARG_DEFINE_STUB(bool, ListHostsWithClass, EvalContext *, ctx, R
 
 ENTERPRISE_VOID_FUNC_2ARG_DEFINE_STUB(void, TranslatePath, char *, new, const char *, old)
 {
-    strncpy(new, old, CF_BUFSIZE - 1);
+    strlcpy(new, old, CF_BUFSIZE);
 }
 
 

@@ -5,6 +5,7 @@ libenv_la_SOURCES = \
         sysinfo.c sysinfo.h sysinfo_priv.h \
         time_classes.c time_classes.h \
 	unix_iface.c unix_iface.h \
+	ports.c ports.h \
         zones.c zones.h
 
 AM_CPPFLAGS = -I$(top_srcdir)/libutils

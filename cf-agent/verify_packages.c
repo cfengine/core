@@ -791,7 +791,7 @@ static PackageItem *GetCachedPackageList(EvalContext *ctx, PackageManager *manag
 
     if ((fin = fopen(name, "r")) == NULL)
     {
-        Log(LOG_LEVEL_INFO, "Cannot open the source log '%s' - you need to run a package discovery promise to create it in cf-agent. (fopen: %s)",
+        Log(LOG_LEVEL_ERR, "Cannot open the source log '%s' - you need to run a package discovery promise to create it in cf-agent. (fopen: %s)",
               name, GetErrorStr());
         return NULL;
     }

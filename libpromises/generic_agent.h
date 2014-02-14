@@ -39,6 +39,7 @@ typedef struct
     char *original_input_file;
     char *input_file;
     char *input_dir;
+    char *tag_release_dir;
 
     bool check_not_writable_by_others;
     bool check_runnable;
@@ -91,7 +92,7 @@ void GenericAgentWriteHelp(Writer *w, const char *comp, const struct option opti
 bool GenericAgentArePromisesValid(const GenericAgentConfig *config);
 time_t ReadTimestampFromPolicyValidatedMasterfiles(const GenericAgentConfig *config);
 
-bool GeneratePolicyReleaseIDFromMasterfiles(char release_id_out[CF_SHA1_LEN + 1]);
+bool GeneratePolicyReleaseID(char release_id_out[CF_SHA1_LEN + 1], const char *dirname);
 bool GenericAgentIsPolicyReloadNeeded(const GenericAgentConfig *config, const Policy *policy);
 
 void CloseLog(void);
@@ -111,5 +112,6 @@ void GenericAgentConfigApply(EvalContext *ctx, const GenericAgentConfig *config)
 
 void GenericAgentConfigSetInputFile(GenericAgentConfig *config, const char *inputdir, const char *input_file);
 void GenericAgentConfigSetBundleSequence(GenericAgentConfig *config, const Rlist *bundlesequence);
+bool GenericAgentTagReleaseDirectory(const GenericAgentConfig *config, const char *dirname);
 
 #endif

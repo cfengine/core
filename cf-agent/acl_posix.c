@@ -362,7 +362,7 @@ static int CheckPosixLinuxACEs(EvalContext *ctx, Rlist *aces, AclMethod method, 
     }
     else
     {
-        cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_NOOP, pp, a, "'%s' ACL on '%s' needs no modification.", acl_type_str, file_path);
+        cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "'%s' ACL on '%s' needs no modification.", acl_type_str, file_path);
     }
 
     acl_free((void *) acl_existing);
@@ -407,7 +407,7 @@ static int CheckDefaultEqualsAccessACL(EvalContext *ctx, const char *file_path, 
     switch (equals)
     {
     case 0:                    // they equal, as desired
-        cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_NOOP, pp, a, "Default ACL on '%s' needs no modification.", file_path);
+        cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "Default ACL on '%s' needs no modification.", file_path);
         retval = true;
         break;
 
@@ -490,7 +490,7 @@ int CheckDefaultClearACL(EvalContext *ctx, const char *file_path, Attributes a, 
         break;
 
     case 0:                    // no entries, as desired
-        cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_NOOP, pp, a, "Default ACL on '%s' needs no modification.", file_path);
+        cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "Default ACL on '%s' needs no modification.", file_path);
         retval = true;
         break;
 

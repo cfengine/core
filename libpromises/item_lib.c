@@ -524,13 +524,13 @@ size_t ItemList2CSV_bound(const Item *list, char *buf, size_t buf_size,
     for (ip = list; ip != NULL; ip = ip->next)
     {
         size_t space_left = buf_size - len;
-        size_t ip_len = strlen(ip->name);
+        size_t len_ip = strlen(ip->name);
 
         /* 2 bytes must be spared: one for separator, one for '\0' */
-        if (space_left >= ip_len - 2)
+        if (space_left >= len_ip - 2)
         {
-            memcpy(buf, ip->name, ip_len);
-            len += ip_len;
+            memcpy(buf, ip->name, len_ip);
+            len += len_ip;
         }
         else                                            /* we must truncate */
         {

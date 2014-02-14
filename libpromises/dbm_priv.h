@@ -46,8 +46,9 @@ const char *DBPrivGetFileExtension(void);
       away and attempt to open database again should be performed.
  * - valid pointer to DBPriv * in case database was opened successfully.
  */
-DBPriv *DBPrivOpenDB(const char *dbpath);
+DBPriv *DBPrivOpenDB(const char *dbpath, dbid id);
 void DBPrivCloseDB(DBPriv *hdbp);
+void DBPrivCommit(DBPriv *hdbp);
 
 bool DBPrivHasKey(DBPriv *db, const void *key, int key_size);
 int DBPrivGetValueSize(DBPriv *db, const void *key, int key_size);
@@ -56,6 +57,9 @@ bool DBPrivRead(DBPriv *db, const void *key, int key_size,
             void *dest, int dest_size);
 
 bool DBPrivWrite(DBPriv *db, const void *key, int key_size,
+             const void *value, int value_size);
+
+bool DBPrivWriteNoCommit(DBPriv *db, const void *key, int key_size,
              const void *value, int value_size);
 
 bool DBPrivDelete(DBPriv *db, const void *key, int key_size);

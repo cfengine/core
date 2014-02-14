@@ -111,7 +111,7 @@ const char *DBPrivGetFileExtension(void)
     return "qdbm";
 }
 
-DBPriv *DBPrivOpenDB(const char *filename)
+DBPriv *DBPrivOpenDB(const char *filename, ARG_UNUSED dbid id)
 {
     DBPriv *db = xcalloc(1, sizeof(DBPriv));
 
@@ -174,6 +174,10 @@ void DBPrivCloseDB(DBPriv *db)
     free(db);
 }
 
+void DBPrivCommit(ARG_UNUSED DBPriv *db)
+{
+}
+
 bool DBPrivRead(DBPriv *db, const void *key, int key_size, void *dest, int dest_size)
 {
     if (!Lock(db))
@@ -215,6 +219,11 @@ bool DBPrivWrite(DBPriv *db, const void *key, int key_size, const void *value, i
 
     Unlock(db);
     return true;
+}
+
+bool DBPrivWriteNoCommit(DBPriv *db, const void *key, int key_size, const void *value, int value_size)
+{
+    return DBPrivWrite(db, key, key_size, value, value_size);
 }
 
 bool DBPrivHasKey(DBPriv *db, const void *key, int key_size)

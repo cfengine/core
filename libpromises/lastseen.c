@@ -304,7 +304,9 @@ bool IsLastSeenCoherent(void)
 
     if (!OpenDB(&db, dbid_lastseen))
     {
-        Log(LOG_LEVEL_ERR, "Unable to open lastseen database");
+        char *db_path = DBIdToPath(WORKDIR, dbid_lastseen);
+        Log(LOG_LEVEL_ERR, "Unable to open lastseen database '%s'", db_path);
+        free(db_path);
         return false;
     }
 
@@ -444,7 +446,9 @@ bool DeleteIpFromLastSeen(const char *ip, char *digest)
 
     if (!OpenDB(&db, dbid_lastseen))
     {
-        Log(LOG_LEVEL_ERR, "Unable to open lastseen database");
+        char *db_path = DBIdToPath(WORKDIR, dbid_lastseen);
+        Log(LOG_LEVEL_ERR, "Unable to open lastseen database '%s'", db_path);
+        free(db_path);
         return false;
     }
 
@@ -509,7 +513,9 @@ bool DeleteDigestFromLastSeen(const char *key, char *ip)
 
     if (!OpenDB(&db, dbid_lastseen))
     {
-        Log(LOG_LEVEL_ERR, "Unable to open lastseen database");
+        char *db_path = DBIdToPath(WORKDIR, dbid_lastseen);
+        Log(LOG_LEVEL_ERR, "Unable to open lastseen database '%s'", db_path);
+        free(db_path);
         return false;
     }
     char bufkey[CF_BUFSIZE + 1];

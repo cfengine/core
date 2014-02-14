@@ -477,7 +477,7 @@ void EvalContextHeapPersistentSave(EvalContext *ctx, const char *name, unsigned 
                     now < existing_info->expires &&
                     strcmp(existing_info->tags, new_info->tags) == 0)
                 {
-                    Log(LOG_LEVEL_VERBOSE, "Persisent class '%s' is already in a preserved state --  %jd minutes to go",
+                    Log(LOG_LEVEL_VERBOSE, "Persistent class '%s' is already in a preserved state --  %jd minutes to go",
                         key, (intmax_t)((existing_info->expires - now) / 60));
                     CloseDB(dbp);
                     free(key);

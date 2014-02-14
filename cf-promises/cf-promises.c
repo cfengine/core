@@ -83,7 +83,6 @@ static const struct option OPTIONS[] =
     {"warn", optional_argument, 0, 'W'},
     {"legacy-output", no_argument, 0, 'l'},
     {"color", optional_argument, 0, 'C'},
-    {"tag-release", required_argument, 0, 'T'},
     {NULL, 0, 0, '\0'}
 };
 
@@ -110,7 +109,6 @@ static const char *const HINTS[] =
     "Pass comma-separated <warnings>|all to enable non-default warnings, or error=<warnings>|all",
     "Use legacy output format",
     "Enable colorized output. Possible values: 'always', 'auto', 'never'. If option is used, the default value is 'auto'",
-    "Tag a directory with promises.cf with cf_promises_validated and cf_promises_release_id",
     NULL
 };
 
@@ -130,20 +128,6 @@ int main(int argc, char *argv[])
     {
         Log(LOG_LEVEL_ERR, "Input files contain errors.");
         exit(EXIT_FAILURE);
-    }
-
-    if (config->tag_release_dir)
-    {
-        bool tagged = GenericAgentTagReleaseDirectory(config, config->tag_release_dir);
-        if (tagged)
-        {
-            Log(LOG_LEVEL_VERBOSE, "Release tagging done!");
-        }
-        else
-        {
-            Log(LOG_LEVEL_ERR, "The given directory could not be tagged, sorry.");
-            exit(EXIT_FAILURE);
-        }
     }
 
     if (SHOWREPORTS)
@@ -209,7 +193,7 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
     int c;
     GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_COMMON);
 
-    while ((c = getopt_long(argc, argv, "dvnIf:D:N:VSrxMb:i:p:s:cg:hW:lC::T:", OPTIONS, &optindex)) != EOF)
+    while ((c = getopt_long(argc, argv, "dvnIf:D:N:VSrxMb:i:p:s:cg:hW:lC::", OPTIONS, &optindex)) != EOF)
     {
         switch ((char) c)
         {
@@ -385,12 +369,6 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
             {
                 exit(EXIT_FAILURE);
             }
-            break;
-
-        case 'T':
-            GenericAgentConfigSetInputFile(config, optarg, "promises.cf");
-            MINUSF = true;
-            config->tag_release_dir = xstrdup(optarg);
             break;
 
         default:

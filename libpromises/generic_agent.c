@@ -74,9 +74,8 @@ static Policy *Cf3ParseFile(const GenericAgentConfig *config, const char *input_
 
 static Policy *LoadPolicyFile(EvalContext *ctx, GenericAgentConfig *config, const char *policy_file, StringSet *parsed_files_and_checksums, StringSet *failed_files);
 static bool WritePolicyValidatedFileToMasterfiles(const GenericAgentConfig *config);
-static void GetPromisesValidatedFileFromMasterfiles(char *filename, size_t max_size, const GenericAgentConfig *config, const char *maybe_dirname);
+static void GetPromisesValidatedFileFromMasterfiles(char *filename, size_t max_size, const GenericAgentConfig *config);
 static bool WriteReleaseIdFileToMasterfiles(void);
-static bool WriteReleaseIdFile(const char *filename, const char *dirname);
 static void GetReleaseIdFile(const char *base_path, char *filename, size_t max_size);
 
 static bool MissingInputFile(const char *input_file);
@@ -280,18 +279,21 @@ static JsonElement *ReadPolicyValidatedFileFromMasterfiles(const GenericAgentCon
 {
     char filename[CF_MAXVARSIZE];
 
-    GetPromisesValidatedFileFromMasterfiles(filename, sizeof(filename), config, NULL);
+    GetPromisesValidatedFileFromMasterfiles(filename, sizeof(filename), config);
 
     return ReadPolicyValidatedFile(filename);
 }
 
 /**
  * @brief Writes a file with a contained timestamp to mark a policy file as validated
- * @param filename the filename
  * @return True if successful.
  */
-static bool WritePolicyValidatedFile(ARG_UNUSED const GenericAgentConfig *config, const char *filename)
+static bool WritePolicyValidatedFileToMasterfiles(const GenericAgentConfig *config)
 {
+    char filename[CF_MAXVARSIZE];
+
+    GetPromisesValidatedFileFromMasterfiles(filename, sizeof(filename), config);
+
     if (!MakeParentDirectory(filename, true))
     {
         Log(LOG_LEVEL_ERR, "While writing policy validated marker file '%s', could not create directory (MakeParentDirectory: %s)", filename, GetErrorStr());
@@ -315,38 +317,6 @@ static bool WritePolicyValidatedFile(ARG_UNUSED const GenericAgentConfig *config
     JsonDestroy(info);
 
     return true;
-}
-
-/**
- * @brief Writes the policy validation file and release ID to a directory
- * @return True if successful.
- */
-bool GenericAgentTagReleaseDirectory(const GenericAgentConfig *config, const char *dirname)
-{
-    char filename[CF_MAXVARSIZE];
-    GetPromisesValidatedFileFromMasterfiles(filename, sizeof(filename), config, dirname);
-
-    bool wrote_validated = WritePolicyValidatedFile(config, filename);
-
-    if (!wrote_validated)
-    {
-        return false;
-    }
-
-    GetReleaseIdFile(dirname, filename, sizeof(filename));
-    return WriteReleaseIdFile(filename, dirname);
-}
-
-/**
- * @brief Writes a file in sys.masterdir or whereever -f points with a contained timestamp to mark a policy file as validated
- * @return True if successful.
- */
-static bool WritePolicyValidatedFileToMasterfiles(const GenericAgentConfig *config)
-{
-    char filename[CF_MAXVARSIZE];
-
-    GetPromisesValidatedFileFromMasterfiles(filename, sizeof(filename), config, NULL);
-    return WritePolicyValidatedFile(config, filename);
 }
 
 /**
@@ -390,21 +360,10 @@ static bool WriteReleaseIdFileToMasterfiles(void)
     char filename[CF_MAXVARSIZE];
 
     GetReleaseIdFile(GetMasterDir(), filename, sizeof(filename));
-    return WriteReleaseIdFile(filename, GetMasterDir());
-}
 
-/**
- * @brief Writes a file with a contained release ID based on git SHA,
- *        or file checksum if git SHA is not available.
- * @param filename the release_id file
- * @param dirname the directory to checksum or get the Git hash
- * @return True if successful
- */
-static bool WriteReleaseIdFile(const char *filename, const char *dirname)
-{
     char release_id[(2 * CF_SHA1_LEN) + 1];
 
-    bool have_release_id = GeneratePolicyReleaseID(release_id, dirname);
+    bool have_release_id = GeneratePolicyReleaseIDFromMasterfiles(release_id);
 
     if (!have_release_id)
     {
@@ -1008,8 +967,11 @@ static bool MissingInputFile(const char *input_file)
     return false;
 }
 
-bool GeneratePolicyReleaseID(char release_id_out[(2 * CF_SHA1_LEN) + 1], const char *policy_dir)
+bool GeneratePolicyReleaseIDFromMasterfiles(char release_id_out[(2 * CF_SHA1_LEN) + 1])
 {
+    char policy_dir[FILENAME_MAX + 1];
+    snprintf(policy_dir, FILENAME_MAX, "%s", GetMasterDir());
+
     {
         char git_filename[FILENAME_MAX + 1];
         snprintf(git_filename, FILENAME_MAX, "%s/.git/HEAD", policy_dir);
@@ -1065,25 +1027,18 @@ bool GeneratePolicyReleaseID(char release_id_out[(2 * CF_SHA1_LEN) + 1], const c
     return success;
 }
 
-/**
- * @brief Gets the promises_validated file name depending on context and options
- */
-static void GetPromisesValidatedFileFromMasterfiles(char *filename, size_t max_size, const GenericAgentConfig *config, const char *maybe_dirname)
+static void GetPromisesValidatedFileFromMasterfiles(char *filename, size_t max_size, const GenericAgentConfig *config)
 {
-    if (NULL != maybe_dirname)
-    {
-        snprintf(filename, max_size, "%s/cf_promises_validated", maybe_dirname);
-    }
-    else if (MINUSF)
+    if (MINUSF)
     {
         snprintf(filename, max_size, "%s/state/validated_%s", CFWORKDIR, CanonifyName(config->original_input_file));
+        MapName(filename);
     }
     else
     {
         snprintf(filename, max_size, "%s/cf_promises_validated", GetMasterDir());
+        MapName(filename);
     }
-
-    MapName(filename);
 }
 
 /**
@@ -1091,8 +1046,15 @@ static void GetPromisesValidatedFileFromMasterfiles(char *filename, size_t max_s
  */
 static void GetReleaseIdFile(const char *base_path, char *filename, size_t max_size)
 {
-    snprintf(filename, max_size, "%s/cf_promises_release_id", base_path);
-    MapName(filename);
+    if (MINUSF)
+    {
+        *filename = '\0';
+    }
+    else
+    {
+        snprintf(filename, max_size, "%s/cf_promises_release_id", base_path);
+        MapName(filename);
+    }
 }
 
 time_t ReadTimestampFromPolicyValidatedMasterfiles(const GenericAgentConfig *config)

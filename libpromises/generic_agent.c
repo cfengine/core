@@ -60,6 +60,7 @@
 #include <time_classes.h>
 #include <unix_iface.h>
 #include <constants.h>
+#include <userinfo.h>
 
 #include <cf-windows-functions.h>
 
@@ -124,6 +125,7 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
 
     EvalContextHeapPersistentLoadAll(ctx);
     LoadSystemConstants(ctx);
+    GetCurrentUserInfo(ctx);
 
     if (config->agent_type == AGENT_TYPE_AGENT && config->agent_specific.agent.bootstrap_policy_server)
     {

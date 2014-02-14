@@ -58,6 +58,8 @@ const char *SpecialScopeToString(SpecialScope scope)
         return "this";
     case SPECIAL_SCOPE_BODY:
         return "body";
+    case SPECIAL_SCOPE_USER:
+        return "user";
     default:
         ProgrammingError("Unhandled special scope");
     }
@@ -92,6 +94,10 @@ SpecialScope SpecialScopeFromString(const char *scope)
     else if (strcmp("body", scope) == 0)
     {
         return SPECIAL_SCOPE_BODY;
+    }
+    else if (strcmp("user", scope) == 0)
+    {
+        return SPECIAL_SCOPE_USER;
     }
     else
     {

@@ -847,10 +847,10 @@ void FreeStringArray(char **strs)
     for (i = 0; strs[i] != NULL; i++)
     {
         free(strs[i]);
+        strs[i] = NULL;
     }
 
     free(strs);
-    strs = NULL;
 }
 
 

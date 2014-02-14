@@ -82,7 +82,7 @@ DBPriv *DBPrivOpenDB(const char *dbpath)
               dbpath, mdb_strerror(rc));
         goto err;
     }
-    rc = mdb_env_open(db->env, dbpath, MDB_NOSUBDIR, 0644);
+    rc = mdb_env_open(db->env, dbpath, MDB_NOSUBDIR|MDB_NOSYNC, 0644);
     if (rc)
     {
         Log(LOG_LEVEL_ERR, "Could not open database %s: %s",

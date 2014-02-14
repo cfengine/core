@@ -144,7 +144,10 @@ int FileHashChanged(EvalContext *ctx, const char *filename, unsigned char digest
 
     if (!OpenDB(&dbp, dbid_checksums))
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Unable to open the hash database!");
+        char *db_path = DBIdToPath(WORKDIR, dbid_checksums);
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr,
+            "Unable to open the checksums database '%s'", db_path);
+        free(db_path);
         *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
         return false;
     }

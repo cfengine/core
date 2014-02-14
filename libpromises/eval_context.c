@@ -474,7 +474,7 @@ void EvalContextHeapPersistentSave(const char *context, const char *ns, unsigned
         {
             if (now < state.expires)
             {
-                Log(LOG_LEVEL_VERBOSE, "Persisent state '%s' is already in a preserved state --  %jd minutes to go",
+                Log(LOG_LEVEL_VERBOSE, "Persistent state '%s' is already in a preserved state --  %jd minutes to go",
                       name, (intmax_t)((state.expires - now) / 60));
                 CloseDB(dbp);
                 return;

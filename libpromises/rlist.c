@@ -793,59 +793,50 @@ void RlistDestroyEntry(Rlist **liststart, Rlist *entry)
 /*******************************************************************/
 
 /*
- * Copies from <from> to <to>, reading up to <len> characters from <from>,
- * stopping at first <sep>.
+ * Copies from <from> to <to>, writing up to <len> bytes, stopping
+ * before the first <sep>.
  *
  * \<sep> is not counted as the separator, but copied to <to> as <sep>.
  * Any other escape sequences are not supported.
+ *
+ * Returns the number of bytes read out of from; this may be more than
+ * the number written into to (which is at most len, including the
+ * terminating '\0').
  */
 static int SubStrnCopyChr(char *to, const char *from, int len, char sep)
 {
     char *sto = to;
     int count = 0;
+    assert(from && from[0]);
 
-    memset(to, 0, len);
-
-    if (from == NULL)
+    for (const char *sp = from; sto - to < len - 1 && sp[0] != '\0'; sp++)
     {
-        return 0;
-    }
-
-    if (from && (strlen(from) == 0))
-    {
-        return 0;
-    }
-
-    for (const char *sp = from; *sp != '\0'; sp++)
-    {
-        if (count > len - 1)
-        {
-            break;
-        }
-
-        if ((*sp == '\\') && (*(sp + 1) == sep))
+        if (sp[0] == '\\' && sp[1] == sep)
         {
             *sto++ = *++sp;
+            count += 2;
         }
-        else if (*sp == sep)
+        else if (sp[0] == sep)
         {
             break;
         }
         else
         {
-            *sto++ = *sp;
+            *sto++ = sp[0];
+            count++;
         }
-
-        count++;
     }
+    assert(sto - to < len);
+    *sto = '\0';
 
+    assert(count <= strlen(from));
     return count;
 }
 
 Rlist *RlistFromSplitString(const char *string, char sep)
- /* Splits a string containing a separator like "," 
-    into a linked list of separate items, supports
-    escaping separators, e.g. \, */
+/* Splits a string on a separator - e.g. "," - into a linked list of
+ * separate items.  Supports escaping separators - e.g. "\," isn't a
+ * separator, it contributes a simple "," in a list entry. */
 {
     if (string == NULL)
     {
@@ -854,18 +845,16 @@ Rlist *RlistFromSplitString(const char *string, char sep)
 
     Rlist *liststart = NULL;
     char node[CF_MAXVARSIZE];
-    int maxlen = strlen(string);
 
-    for (const char *sp = string; *sp != '\0'; sp++)
+    for (const char *sp = string; *sp != '\0';)
     {
-        if (*sp == '\0' || sp > string + maxlen)
-        {
-            break;
-        }
-
-        memset(node, 0, CF_MAXVARSIZE);
-
         sp += SubStrnCopyChr(node, sp, CF_MAXVARSIZE, sep);
+        assert(sp - string <= strlen(string));
+        if (*sp)
+        {
+            assert(*sp == sep && (sp == string || sp[-1] != '\\'));
+            sp++;
+        }
 
         RlistAppendScalar(&liststart, node);
     }

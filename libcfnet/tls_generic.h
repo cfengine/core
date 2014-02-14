@@ -93,13 +93,15 @@ int TLSRecv(SSL *ssl, char *buffer, int length);
 
 /**
  * @brief Receives character until a new line is found.
- * @return Line is '\0'-terminated and put in #line. Return value is line
- *         length (including '\0') or -1 in case of error.
+ * @param ssl SSL information.
+ * @param buf Buffer in which to store '\0'-terminated line read.
+ * @param buf_size Space available in buf.
+ * @return line length (excluding '\0') or -1 in case of error.
  *
  * @note This function is intended for line-oriented communication, this means
  *       the peer sends us one line and waits for reply, so that '\n' is the
  *       last character in the underlying SSL_read().
  */
-int TLSRecvLine(SSL *ssl, char *buf, size_t buf_size);
+ssize_t TLSRecvLine(SSL *ssl, char *buf, size_t buf_size);
 
 #endif

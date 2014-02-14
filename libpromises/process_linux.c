@@ -67,17 +67,19 @@ static bool GetProcessStat(pid_t pid, ProcessStat *state)
     }
 
     char stat[CF_BUFSIZE];
-    int res = FullRead(fd, stat, sizeof(stat));
+    int res = FullRead(fd, stat, sizeof(stat) - 1); /* -1 for the '\0', below */
     close(fd);
 
     if (res < 0)
     {
         return false;
     }
+    assert(res < CF_BUFSIZE);
+    stat[res] = '\0'; /* read() doesn't '\0'-terminate */
 
-    /* stat entry is of form <pid> (<task name>) <various info...>.  In order to
-       not to choke on weird task names, we search for closing parenthesis first */
-
+    /* stat entry is of form: <pid> (<task name>) <various info...>
+     * To avoid choking on weird task names, we search for the closing
+     * parenthesis first: */
     char *p = strrchr(stat, ')');
     if (p == NULL)
     {

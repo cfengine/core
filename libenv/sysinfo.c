@@ -823,21 +823,44 @@ static void Get3Environment(EvalContext *ctx)
 
         if (*context == '@')
         {
-            Rlist *list = NULL;
-            sscanf(context + 1, "%[^=]=%[^\n]", name, value);
-           
-            Log(LOG_LEVEL_DEBUG, "Setting new monitoring list '%s' => '%s'", name, value);
-            list = RlistParseShown(value);
-            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_MON, name, list, CF_DATA_TYPE_STRING_LIST, "monitoring,source=environment");
+            if (sscanf(context + 1, "%[^=]=%[^\n]", name, value) == 2)
+            {
+                Log(LOG_LEVEL_DEBUG,
+                    "Setting new monitoring list '%s' => '%s'",
+                    name, value);
+                Rlist *list = RlistParseShown(value);
+                EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_MON,
+                                              name, list,
+                                              CF_DATA_TYPE_STRING_LIST,
+                                              "monitoring,source=environment");
 
-            RlistDestroy(list);
+                RlistDestroy(list);
+            }
+            else
+            {
+                Log(LOG_LEVEL_ERR,
+                    "Failed to parse '%s' as '@variable=list' monitoring list",
+                    context);
+            }
         }
-        else if (strstr(context, "="))
+        else if (strchr(context, '='))
         {
-            sscanf(context, "%255[^=]=%255[^\n]", name, value);
-
-            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_MON, name, value, CF_DATA_TYPE_STRING, "monitoring,source=environment");
-            Log(LOG_LEVEL_DEBUG, "Setting new monitoring scalar '%s' => '%s'", name, value);
+            if (sscanf(context, "%255[^=]=%255[^\n]", name, value) == 2)
+            {
+                EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_MON,
+                                              name, value,
+                                              CF_DATA_TYPE_STRING,
+                                              "monitoring,source=environment");
+                Log(LOG_LEVEL_DEBUG,
+                    "Setting new monitoring scalar '%s' => '%s'",
+                    name, value);
+            }
+            else
+            {
+                Log(LOG_LEVEL_ERR,
+                    "Failed to parse '%s' as 'variable=value' monitoring scalar",
+                    context);
+            }
         }
         else
         {

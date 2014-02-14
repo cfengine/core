@@ -534,7 +534,7 @@ static void MailResult(const ExecConfig *config, const char *file)
     FILE *fp = fopen(file, "r");
     if (!fp)
     {
-        Log(LOG_LEVEL_INFO, "Couldn't open file '%s'. (fopen: %s)", file, GetErrorStr());
+        Log(LOG_LEVEL_ERR, "Couldn't open file '%s'. (fopen: %s)", file, GetErrorStr());
         return;
     }
 
@@ -560,7 +560,7 @@ static void MailResult(const ExecConfig *config, const char *file)
 
     if ((fp = fopen(file, "r")) == NULL)
     {
-        Log(LOG_LEVEL_INFO, "Couldn't open file '%s'. (fopen: %s)", file, GetErrorStr());
+        Log(LOG_LEVEL_ERR, "Couldn't open file '%s'. (fopen: %s)", file, GetErrorStr());
         return;
     }
 

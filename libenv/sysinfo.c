@@ -2508,8 +2508,10 @@ static void GetCPUInfo(EvalContext *ctx)
 
 /******************************************************************/
 
-int GetUptimeMinutes(time_t now)
-// Return the number of minutes the system has been online given the current
+// Implemented in Windows specific section.
+#ifndef __MINGW32__
+int GetUptimeSeconds(time_t now)
+// Return the number of seconds the system has been online given the current
 // time() as an argument, or return -1 if unavailable or unimplemented.
 {
 #ifdef CF_SYS_UPTIME_IMPLEMENTED
@@ -2579,13 +2581,16 @@ int GetUptimeMinutes(time_t now)
         boot_time = GetBootTimeFromUptimeCommand(now);
     }
 
-    return(boot_time > 0 ? ((now - boot_time) / SECONDS_PER_MINUTE) : -1);
+    return(boot_time > 0 ? (now - boot_time) : -1);
 #else
-// Native NT build: MINGW; NT build: NT
-// Maybe use "ULONGLONG WINAPI GetTickCount()" on Windows?
-    Log(LOG_LEVEL_VERBOSE, "$(sys.uptime) is not implemented on this platform");
-    return(-1);
+#error uptime is not implemented on this platform.
 #endif
+}
+#endif // !__MINGW32__
+
+int GetUptimeMinutes(time_t now)
+{
+    return GetUptimeSeconds(now) / SECONDS_PER_MINUTE;
 }
 
 /******************************************************************/

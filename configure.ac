@@ -882,6 +882,7 @@ AC_CHECK_DECLS(lstat)
 AC_CHECK_FUNCS(sleep)
 AC_CHECK_DECLS(socketpair, [], [], [[#include <sys/socket.h>]])
 AC_CHECK_DECLS(setenv)
+AC_CHECK_DECLS(fsync)
 
 dnl ######################################################################
 dnl Check for sa_len in struct sockaddr

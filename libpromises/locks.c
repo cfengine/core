@@ -38,6 +38,7 @@
 #include <eval_context.h>
 #include <misc_lib.h>
 #include <known_dirs.h>
+#include <sysinfo.h>
 
 #define CFLOGSIZE 1048576       /* Size of lock-log before rotation */
 #define CF_LOCKHORIZON ((time_t)(SECONDS_PER_WEEK * 4))
@@ -847,6 +848,112 @@ void GetLockName(char *lockname, const char *locktype, const char *base, const R
     }
 }
 
+static void CopyLockDatabaseAtomically(const char *from, const char *to,
+                                       const char *from_pretty_name, const char *to_pretty_name)
+{
+    char *tmp_file_name;
+    xasprintf(&tmp_file_name, "%s.tmp", to);
+
+    int from_fd = open(from, O_RDONLY | O_BINARY);
+    if (from_fd < 0)
+    {
+        Log(LOG_LEVEL_WARNING, "Could not open %s. (open: '%s')", from_pretty_name, GetErrorStr());
+        goto cleanup_1;
+    }
+
+    int to_fd = open(tmp_file_name, O_WRONLY | O_CREAT | O_TRUNC | O_BINARY, 0600);
+    if (to_fd < 0)
+    {
+        Log(LOG_LEVEL_WARNING, "Could not open %s temporary file. (open: '%s')", to_pretty_name, GetErrorStr());
+        goto cleanup_2;
+    }
+
+    char data[CF_BUFSIZE];
+    while (1)
+    {
+        int read_status = read(from_fd, data, sizeof(data));
+        if (read_status < 0)
+        {
+            Log(LOG_LEVEL_WARNING, "Could not read from %s. (read: '%s')", from_pretty_name, GetErrorStr());
+            goto cleanup_4;
+        }
+        else if (read_status == 0)
+        {
+            break;
+        }
+
+        int write_status = write(to_fd, data, read_status);
+        if (write_status < 0)
+        {
+            Log(LOG_LEVEL_WARNING, "Could not write to %s. (write: '%s')", to_pretty_name, GetErrorStr());
+            goto cleanup_4;
+        }
+        else if (write_status == 0)
+        {
+            Log(LOG_LEVEL_WARNING, "Could not write to %s. (write: 'Unknown error')", to_pretty_name);
+            goto cleanup_4;
+        }
+    }
+
+    // Make sure changes are persistent on disk, so database cannot get corrupted at system crash.
+    if (fsync(to_fd) != 0)
+    {
+        Log(LOG_LEVEL_WARNING, "Could not sync %s file to disk. (fsync: '%s')", to_pretty_name, GetErrorStr());
+        goto cleanup_4;
+    }
+
+    close(to_fd);
+    if (rename(tmp_file_name, to) != 0)
+    {
+        Log(LOG_LEVEL_WARNING, "Could not move %s into place. (rename: '%s')", to_pretty_name, GetErrorStr());
+        goto cleanup_3;
+    }
+
+    // Finished.
+    goto cleanup_3;
+
+cleanup_4:
+    close(to_fd);
+cleanup_3:
+    unlink(tmp_file_name);
+cleanup_2:
+    close(from_fd);
+cleanup_1:
+    free(tmp_file_name);
+}
+
+void BackupLockDatabase(void)
+{
+    WaitForCriticalSection();
+
+    char *db_path = DBIdToPath(GetWorkDir(), dbid_locks);
+    char *db_path_backup;
+    xasprintf(&db_path_backup, "%s.backup", db_path);
+
+    CopyLockDatabaseAtomically(db_path, db_path_backup, "lock database", "lock database backup");
+
+    free(db_path);
+    free(db_path_backup);
+
+    ReleaseCriticalSection();
+}
+
+static void RestoreLockDatabase(void)
+{
+    // We don't do any locking here (since we can't trust the database), but
+    // this should be right after bootup, so we should be the only one.
+    // Worst case someone else will just copy the same file to the same
+    // location.
+    char *db_path = DBIdToPath(GetWorkDir(), dbid_locks);
+    char *db_path_backup;
+    xasprintf(&db_path_backup, "%s.backup", db_path);
+
+    CopyLockDatabaseAtomically(db_path_backup, db_path, "lock database backup", "lock database");
+
+    free(db_path);
+    free(db_path_backup);
+}
+
 void PurgeLocks(void)
 {
     CF_DBC *dbcp;
@@ -930,9 +1037,41 @@ int WriteLock(const char *name)
     return 0;
 }
 
+static void VerifyThatDatabaseIsNotCorrupt_once(void)
+{
+    int uptime = GetUptimeSeconds(time(NULL));
+    if (uptime <= 0)
+    {
+        Log(LOG_LEVEL_VERBOSE, "Not able to determine uptime when verifying lock database. "
+            "Will assume the database is in order.");
+        return;
+    }
+
+    char *db_path = DBIdToPath(GetWorkDir(), dbid_locks);
+    struct stat statbuf;
+    if (stat(db_path, &statbuf) == 0)
+    {
+        if (statbuf.st_mtime < time(NULL) - uptime)
+        {
+            // We have rebooted since the database was last updated.
+            // Restore it from our backup.
+            RestoreLockDatabase();
+        }
+    }
+    free(db_path);
+}
+
+static void VerifyThatDatabaseIsNotCorrupt(void)
+{
+    static pthread_once_t uptime_verified = PTHREAD_ONCE_INIT;
+    pthread_once(&uptime_verified, &VerifyThatDatabaseIsNotCorrupt_once);
+}
+
 CF_DB *OpenLock()
 {
     CF_DB *dbp;
+
+    VerifyThatDatabaseIsNotCorrupt();
 
     if (!OpenDB(&dbp, dbid_locks))
     {

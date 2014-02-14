@@ -229,19 +229,18 @@ static Rlist *GetHostsFromLastseenDB(Item *addresses, time_t horizon, bool retur
 
 /*********************************************************************/
 
-static FnCallResult FnCallAnd(EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, const Rlist *finalargs)
+static FnCallResult FnCallAnd(EvalContext *ctx,
+                              ARG_UNUSED const Policy *policy,
+                              ARG_UNUSED const FnCall *fp,
+                              const Rlist *finalargs)
 {
-    char id[CF_BUFSIZE];
 
-    snprintf(id, CF_BUFSIZE, "built-in FnCall and-arg");
-
-/* We need to check all the arguments, ArgTemplate does not check varadic functions */
     for (const Rlist *arg = finalargs; arg; arg = arg->next)
     {
-        SyntaxTypeMatch err = CheckConstraintTypeMatch(id, arg->val, CF_DATA_TYPE_STRING, "", 1);
+        SyntaxTypeMatch err = CheckConstraintTypeMatch(fp->name, arg->val, CF_DATA_TYPE_STRING, "", 1);
         if (err != SYNTAX_TYPE_MATCH_OK && err != SYNTAX_TYPE_MATCH_ERROR_UNEXPANDED)
         {
-            FatalError(ctx, "in %s: %s", id, SyntaxTypeMatchToString(err));
+            FatalError(ctx, "Function '%s', %s", fp->name, SyntaxTypeMatchToString(err));
         }
     }
 

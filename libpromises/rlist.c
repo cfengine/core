@@ -369,7 +369,7 @@ Rlist *RlistAppendScalar(Rlist **start, const char *scalar)
 
 Rlist *RlistAppend(Rlist **start, const void *item, RvalType type)
 {
-    Rlist *rp, *lp = *start;
+    Rlist *lp = *start;
 
     switch (type)
     {
@@ -380,7 +380,7 @@ Rlist *RlistAppend(Rlist **start, const void *item, RvalType type)
         break;
 
     case RVAL_TYPE_LIST:
-        for (rp = (Rlist *) item; rp != NULL; rp = rp->next)
+        for (const Rlist *rp = item; rp; rp = rp->next)
         {
             lp = RlistAppendRval(start, RvalCopy(rp->val));
         }
@@ -392,7 +392,7 @@ Rlist *RlistAppend(Rlist **start, const void *item, RvalType type)
         return NULL;
     }
 
-    rp = xmalloc(sizeof(Rlist));
+    Rlist *rp = xmalloc(sizeof(Rlist));
 
     if (*start == NULL)
     {

@@ -208,7 +208,7 @@ static void LoadHistogram(void)
 
     if ((fp = fopen(filename, "r")) == NULL)
     {
-        Log(LOG_LEVEL_VERBOSE, "Unable to load histogram data. (fopen: %s)", GetErrorStr());
+        Log(LOG_LEVEL_ERR, "Unable to load histogram data from '%s' (fopen: %s)", filename, GetErrorStr());
         return;
     }
 
@@ -832,7 +832,7 @@ static void UpdateDistributions(EvalContext *ctx, char *timekey, Averages *av)
 
         if ((fp = fopen(filename, "w")) == NULL)
         {
-            Log(LOG_LEVEL_ERR, "Unable to save histograms. (fopen: %s)", GetErrorStr());
+            Log(LOG_LEVEL_ERR, "Unable to save histograms to '%s' (fopen: %s)", filename, GetErrorStr());
             return;
         }
 

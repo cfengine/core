@@ -158,14 +158,13 @@ bool LoadSecretKeys(void)
             return false;
         }
 
-        if ((PUBKEY = PEM_read_RSAPublicKey(fp, NULL, NULL,
-                                            (void *)priv_passphrase)) == NULL)
+        PUBKEY = PEM_read_RSAPublicKey(fp, NULL, NULL, (void *)priv_passphrase);
+        if (NULL == PUBKEY)
         {
             unsigned long err = ERR_get_error();
             Log(LOG_LEVEL_ERR,
                 "Error reading public key at '%s'. (PEM_read_RSAPublicKey: %s)",
                 pubkeyfile, ERR_reason_error_string(err));
-            PUBKEY = NULL;
             fclose(fp);
             free(pubkeyfile);
             return false;
@@ -176,7 +175,8 @@ bool LoadSecretKeys(void)
         fclose(fp);
     }
 
-    if ((BN_num_bits(PUBKEY->e) < 2) || (!BN_is_odd(PUBKEY->e)))
+    if (NULL != PUBKEY
+        && ((BN_num_bits(PUBKEY->e) < 2) || (!BN_is_odd(PUBKEY->e))))
     {
         Log(LOG_LEVEL_ERR, "The public key RSA exponent is too small or not odd");
         return false;
@@ -187,7 +187,8 @@ bool LoadSecretKeys(void)
 
 void PolicyHubUpdateKeys(const char *policy_server)
 {
-    if (GetAmPolicyHub(CFWORKDIR))
+    if (GetAmPolicyHub(CFWORKDIR)
+        && NULL != PUBKEY)
     {
         unsigned char digest[EVP_MAX_MD_SIZE + 1];
 
@@ -195,7 +196,10 @@ void PolicyHubUpdateKeys(const char *policy_server)
         {
             char buffer[EVP_MAX_MD_SIZE * 4];
             HashPubKey(PUBKEY, digest, CF_DEFAULT_DIGEST);
-            snprintf(dst_public_key_filename, CF_MAXVARSIZE, "%s/ppkeys/%s-%s.pub", CFWORKDIR, "root",
+            snprintf(dst_public_key_filename, CF_MAXVARSIZE,
+                     "%s/ppkeys/%s-%s.pub",
+                     CFWORKDIR,
+                     "root",
                      HashPrintSafe(CF_DEFAULT_DIGEST, true, digest, buffer));
             MapName(dst_public_key_filename);
         }

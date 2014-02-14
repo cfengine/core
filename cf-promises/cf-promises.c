@@ -132,7 +132,7 @@ int main(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
 
-    if (config->tag_release_dir)
+    if (NULL != config->tag_release_dir)
     {
         bool tagged = GenericAgentTagReleaseDirectory(config, config->tag_release_dir);
         if (tagged)
@@ -208,6 +208,7 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
     int optindex = 0;
     int c;
     GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_COMMON);
+    config->tag_release_dir = NULL;
 
     while ((c = getopt_long(argc, argv, "dvnIf:D:N:VSrxMb:i:p:s:cg:hW:lC::T:", OPTIONS, &optindex)) != EOF)
     {

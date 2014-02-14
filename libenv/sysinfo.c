@@ -44,6 +44,7 @@
 #include <known_dirs.h>
 #include <unix_iface.h>
 #include <files_lib.h>
+#include <ports.h>
 
 #include <cf-windows-functions.h>
 
@@ -2688,10 +2689,93 @@ static time_t GetBootTimeFromUptimeCommand(time_t now)
 }
 #endif
 
+typedef struct
+{
+    JsonElement *holder;
+    Rlist **portlist_holder;
+} sysinfo_port_processor_callback_context;
+
+void SysinfoPortProcessorFn (ARG_UNUSED const cf_netstat_type netstat_type, const cf_packet_type packet_type, const cf_port_state port_state,
+                             const char *netstat_line,
+                             const char *local_addr, const char *local_port,
+                             ARG_UNUSED const char *remote_addr, const char *remote_port,
+                             void *callback_context)
+{
+    if (cfn_listen != port_state
+        || strlen(local_port) < 1
+    )
+    {
+        return;
+    }
+
+    sysinfo_port_processor_callback_context *context = callback_context;
+    Rlist **portlist_holder = context->portlist_holder;
+
+    RlistAppendScalarIdemp(portlist_holder, local_port);
+
+    JsonElement *holder = context->holder;
+    JsonElement *entry = JsonObjectCreate(4);
+
+    JsonElement *local = JsonObjectCreate(2);
+    JsonObjectAppendString(local, "address", local_addr);
+    JsonObjectAppendString(local, "port", local_port);
+
+    JsonElement *remote = JsonObjectCreate(2);
+    JsonObjectAppendString(remote, "address", remote_addr);
+    JsonObjectAppendString(remote, "port", remote_port);
+
+    JsonObjectAppendObject(entry, "local", local);
+    JsonObjectAppendObject(entry, "remote", remote);
+
+    switch (packet_type)
+    {
+    case cfn_udp6:
+        JsonObjectAppendString(entry, "type", "udp6");
+        break;
+    case cfn_udp4:
+        JsonObjectAppendString(entry, "type", "udp");
+        break;
+    case cfn_tcp6:
+        JsonObjectAppendString(entry, "type", "tcp6");
+        break;
+    case cfn_tcp4:
+        JsonObjectAppendString(entry, "type", "tcp");
+        break;
+    default:
+        JsonObjectAppendString(entry, "type", "unknown");
+        break;
+    }
+
+    JsonObjectAppendString(entry, "line", netstat_line);
+
+    JsonArrayAppendObject(holder, entry);
+}
+
+void GetPorts(EvalContext *ctx)
+{
+    JsonElement *holder = JsonArrayCreate(50);
+    Rlist *portlist = NULL;
+    sysinfo_port_processor_callback_context callback_context = { holder, &portlist };
+
+    PortsFindListening(VSYSTEMHARDCLASS, &SysinfoPortProcessorFn, &callback_context);
+
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "netstat_ports", holder,
+                                  CF_DATA_TYPE_CONTAINER,
+                                  "inventory,netstat,source=agent");
+
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "ports_listening", portlist,
+                                  CF_DATA_TYPE_STRING_LIST,
+                                  "inventory,attribute_name=Ports Listening,source=agent");
+
+    JsonDestroy(holder);
+    RlistDestroy(portlist);
+}
+
 void DetectEnvironment(EvalContext *ctx)
 {
     GetNameInfo3(ctx);
     GetInterfacesInfo(ctx);
+    GetPorts(ctx);
     Get3Environment(ctx);
     BuiltinClasses(ctx);
     OSClasses(ctx);

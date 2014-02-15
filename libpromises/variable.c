@@ -77,34 +77,21 @@ bool VariableTablePut(VariableTable *table, const VarRef *ref,
 {
     assert(VarRefIsQualified(ref));
     bool result;
-    char* target = VarRefToString(ref, true);
-    Writer *logval = StringWriter();
-    WriterWriteF(logval, "variable '%s' => '", target);
-    free(target);
-    RvalWrite(logval, *rval);
-    WriterWrite(logval, "'");
 
     Variable *var = VariableTableGet(table, ref);
     if (var == NULL)
     {
-        Log(LOG_LEVEL_DEBUG, "Setting %s", StringWriterData(logval));
         var = VariableNew(VarRefCopy(ref), RvalCopy(*rval), type, StringSetFromString(tags, ','), promise);
         result = RBTreePut(table->vars, (void *)var->ref->hash, var);
     }
     else // if (!RvalsEqual(var->rval *rval) // TODO: implement-me !
     {
-        Writer *prior = StringWriter();
-        RvalWrite(prior, var->rval);
-        Log(LOG_LEVEL_DEBUG, "Modifying %s (was '%s')",
-            StringWriterData(logval), StringWriterData(prior));
-        WriterClose(prior);
         RvalDestroy(var->rval);
         var->rval = RvalCopy(*rval);
         var->type = type;
         var->promise = promise;
         result = true;
     }
-    WriterClose(logval);
     return result;
 }
 

@@ -716,11 +716,10 @@ static Policy *LoadPolicyFile(EvalContext *ctx, GenericAgentConfig *config, cons
             if (aux_policy)
             {
                 policy = PolicyMerge(policy, aux_policy);
+                PolicyResolve(ctx, policy, config);
             }
         }
     }
-
-    PolicyResolve(ctx, policy, config);
 
     if (body_file_control)
     {
@@ -734,6 +733,7 @@ static Policy *LoadPolicyFile(EvalContext *ctx, GenericAgentConfig *config, cons
             if (aux_policy)
             {
                 policy = PolicyMerge(policy, aux_policy);
+                PolicyResolve(ctx, policy, config);
             }
         }
     }

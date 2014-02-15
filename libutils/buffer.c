@@ -45,21 +45,21 @@ Buffer *BufferNew(void)
     return BufferNewWithCapacity(DEFAULT_BUFFER_CAPACITY);
 }
 
+static void ExpandIfNeeded(Buffer *buffer, unsigned int needed)
+{
+    if (needed >= buffer->capacity)
+    {
+        size_t new_capacity = UpperPowerOfTwo(needed + 1);
+        buffer->buffer = xrealloc(buffer->buffer, new_capacity);
+        buffer->capacity = new_capacity;
+    }
+}
+
 Buffer* BufferNewFrom(const char *data, unsigned int length)
 {
     Buffer *buffer = (Buffer *)xmalloc(sizeof(Buffer));
-    buffer->capacity = DEFAULT_BUFFER_CAPACITY;
-    buffer->buffer = (char *)xmalloc(buffer->capacity);
-    /*
-     * Check if we have enough space, otherwise create a larger buffer
-     */
-    if (length >= buffer->capacity)
-    {
-        unsigned int required_blocks = (length / DEFAULT_BUFFER_CAPACITY) + 1;
-        buffer->buffer = (char *)xrealloc(buffer->buffer, required_blocks * DEFAULT_BUFFER_CAPACITY);
-        buffer->capacity = required_blocks * DEFAULT_BUFFER_CAPACITY;
-        buffer->used = 0;
-    }
+    buffer->capacity = length + 1;
+    buffer->buffer = xmalloc(buffer->capacity);
     buffer->mode = BUFFER_BEHAVIOR_CSTRING;
     buffer->used = 0;
 
@@ -239,30 +239,21 @@ int BufferCompare(const Buffer *buffer1, const Buffer *buffer2)
     return 0;
 }
 
-void BufferSet(Buffer *buffer, char *bytes, unsigned int length)
+void BufferSet(Buffer *buffer, const char *bytes, unsigned int length)
 {
     assert(buffer);
     assert(bytes);
 
-    /*
-     * Check if we have enough space, otherwise create a larger buffer
-     */
-    if (length >= buffer->capacity)
-    {
-        unsigned int required_blocks = (length / DEFAULT_BUFFER_CAPACITY) + 1;
-        buffer->buffer = (char *)xrealloc(buffer->buffer, required_blocks * DEFAULT_BUFFER_CAPACITY);
-        buffer->capacity = required_blocks * DEFAULT_BUFFER_CAPACITY;
-        buffer->used = 0;
-    }
-    /*
-     * We have a buffer that is large enough, copy the data.
-     */
+    ExpandIfNeeded(buffer, buffer->used + length);
+
+    buffer->used = 0;
     unsigned int c = 0;
     unsigned int total = 0;
     for (c = 0; c < length; ++c)
     {
         buffer->buffer[c] = bytes[c];
-        if ((bytes[c] == '\0') && (buffer->mode = BUFFER_BEHAVIOR_CSTRING))
+        if ((bytes[c] == '\0')
+            && (buffer->mode = BUFFER_BEHAVIOR_CSTRING))
         {
             break;
         }
@@ -284,23 +275,14 @@ char *BufferGet(Buffer *buffer)
 
 void BufferAppend(Buffer *buffer, const char *bytes, unsigned int length)
 {
-    /*
-     * Check if we have enough space, otherwise create a larger buffer
-     */
-    if (buffer->used + length >= buffer->capacity)
-    {
-        unsigned int required_blocks = ((buffer->used + length)/ DEFAULT_BUFFER_CAPACITY) + 1;
-        buffer->buffer = (char *)xrealloc(buffer->buffer, required_blocks * DEFAULT_BUFFER_CAPACITY);
-        buffer->capacity = required_blocks * DEFAULT_BUFFER_CAPACITY;
-    }
-    /*
-     * We have a buffer that is large enough, copy the data.
-     */
+    ExpandIfNeeded(buffer, buffer->used + length);
+
     unsigned int total = 0;
     for (unsigned int c = 0; c < length; ++c)
     {
         buffer->buffer[c + buffer->used] = bytes[c];
-        if ((bytes[c] == '\0') && (buffer->mode = BUFFER_BEHAVIOR_CSTRING))
+        if ((bytes[c] == '\0')
+            && (buffer->mode = BUFFER_BEHAVIOR_CSTRING))
         {
             break;
         }
@@ -348,9 +330,8 @@ int BufferPrintf(Buffer *buffer, const char *format, ...)
          * Allocate a larger buffer and retry.
          * Now is when having a copy of the list pays off :-)
          */
-        unsigned int required_blocks = (printed / DEFAULT_BUFFER_CAPACITY) + 1;
-        buffer->buffer = (char *)xrealloc(buffer->buffer, required_blocks * DEFAULT_BUFFER_CAPACITY);
-        buffer->capacity = required_blocks * DEFAULT_BUFFER_CAPACITY;
+        ExpandIfNeeded(buffer, printed);
+
         buffer->used = 0;
         printed = vsnprintf(buffer->buffer, buffer->capacity, format, ap);
         buffer->used = printed;
@@ -381,9 +362,7 @@ int BufferVPrintf(Buffer *buffer, const char *format, va_list ap)
     int printed = vsnprintf(buffer->buffer, buffer->capacity, format, aq);
     if (printed >= buffer->capacity)
     {
-        unsigned int required_blocks = (printed / DEFAULT_BUFFER_CAPACITY) + 1;
-        buffer->buffer = (char *)xrealloc(buffer->buffer, required_blocks * DEFAULT_BUFFER_CAPACITY);
-        buffer->capacity = required_blocks * DEFAULT_BUFFER_CAPACITY;
+        ExpandIfNeeded(buffer, printed);
         buffer->used = 0;
         printed = vsnprintf(buffer->buffer, buffer->capacity, format, ap);
         buffer->used = printed;

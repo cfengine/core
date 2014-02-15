@@ -118,7 +118,7 @@ int BufferCompare(const Buffer *buffer1, const Buffer *buffer2);
   @param bytes Collection of bytes to be copied into the buffer.
   @param length Length of the collection of bytes.
   */
-void BufferSet(Buffer *buffer, char *bytes, unsigned int length);
+void BufferSet(Buffer *buffer, const char *bytes, unsigned int length);
 
 char *BufferGet(Buffer *buffer);
 

@@ -29,7 +29,6 @@ static void test_createBufferFrom(void)
     assert_true(buffer->buffer != NULL);
     assert_string_equal(data, buffer->buffer);
     assert_int_equal(buffer->mode, BUFFER_BEHAVIOR_CSTRING);
-    assert_int_equal(buffer->capacity, DEFAULT_BUFFER_CAPACITY);
     assert_int_equal(buffer->used, dataLength);
 
     BufferDestroy(buffer);
@@ -59,7 +58,6 @@ static void test_setBuffer(void)
     assert_int_equal(element0size, BufferSize(buffer));
     assert_string_equal(element0, buffer->buffer);
     assert_string_equal(element0, BufferData(buffer));
-    assert_int_equal(DEFAULT_BUFFER_CAPACITY, buffer->capacity);
     // Larger than the allocated buffer
     for (int i = 0; i < element1size; ++i)
     {
@@ -70,7 +68,6 @@ static void test_setBuffer(void)
     assert_int_equal(element1size, buffer->used);
     assert_string_equal(element1, buffer->buffer);
     assert_string_equal(element1, BufferData(buffer));
-    assert_int_equal(DEFAULT_BUFFER_CAPACITY * 3, buffer->capacity);
 
     /*
      * Boundary checks, BUFFER_SIZE-1, BUFFER_SIZE and BUFFER_SIZE+1

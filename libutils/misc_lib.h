@@ -26,6 +26,7 @@
 #define CFENGINE_MISC_LIB_H
 
 #include <compiler.h>
+#include <platform.h>
 
 /*
   In contrast to the standard C modulus operator (%), this gives
@@ -33,6 +34,8 @@
   UnsignedModulus(-1, 3) => 2.
 */
 unsigned long UnsignedModulus(long dividend, long divisor);
+
+size_t UpperPowerOfTwo(size_t v);
 
 void __ProgrammingError(const char *file, int lineno, const char *format, ...) \
     FUNC_ATTR_PRINTF(3, 4) FUNC_ATTR_NORETURN;

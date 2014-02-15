@@ -35,7 +35,6 @@
 #include <eval_context.h>
 
 #include <cf3.defs.h>
-#include <bufferlist.h>
 #include <verify_methods.h>
 
 #include <stdio.h>

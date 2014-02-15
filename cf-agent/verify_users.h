@@ -26,7 +26,6 @@
 #define CFENGINE_VERIFY_USERS_H
 
 #include <cf3.defs.h>
-#include <bufferlist.h>
 
 PromiseResult VerifyUsersPromise(EvalContext *ctx, const Promise *pp);
 

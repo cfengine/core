@@ -575,12 +575,12 @@ static int LaunchParsingMachine(const char *str, Rlist **newlist)
                 }
                 else if (CLASS_START1(*s))
                 {
-                    BufferZero(buf);
+                    BufferClear(buf);
                     current_state = ST_ELM1;
                 }
                 else if (CLASS_START2(*s))
                 {
-                    BufferZero(buf);
+                    BufferClear(buf);
                     current_state = ST_ELM2;
                 }
                 else if (CLASS_ANY1(*s))
@@ -593,7 +593,7 @@ static int LaunchParsingMachine(const char *str, Rlist **newlist)
                 if (CLASS_END1(*s))
                 {
                     RlistAppendScalar(newlist, BufferData(buf));
-                    BufferZero(buf);
+                    BufferClear(buf);
                     current_state = ST_END1;
                 }
                 else if (CLASS_ANY2(*s))
@@ -607,7 +607,7 @@ static int LaunchParsingMachine(const char *str, Rlist **newlist)
                 if (CLASS_END2(*s))
                 {
                     RlistAppendScalar(newlist, BufferData(buf));
-                    BufferZero(buf);
+                    BufferClear(buf);
                     current_state = ST_END2;
                 }
                 else if (CLASS_ANY3(*s))
@@ -886,7 +886,7 @@ Rlist *RlistFromSplitRegex(const char *string, const char *regex, size_t max_ent
             break;
         }
 
-        BufferZero(buffer);
+        BufferClear(buffer);
         BufferAppend(buffer, sp, start);
 
         if (allow_blanks || BufferSize(buffer) > 0)
@@ -900,7 +900,7 @@ Rlist *RlistFromSplitRegex(const char *string, const char *regex, size_t max_ent
 
     if (entry_count < max_entries)
     {
-        BufferZero(buffer);
+        BufferClear(buffer);
         size_t remaining = strlen(sp);
         BufferAppend(buffer, sp, remaining);
 

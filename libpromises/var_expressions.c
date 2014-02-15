@@ -269,7 +269,7 @@ VarRef *VarRefParseFromNamespaceAndScope(const char *qualified_name, const char 
                     if (open_count-- == 1)
                     {
                         indices[cur_index] = xstrdup(BufferData(buf));
-                        BufferZero(buf);
+                        BufferClear(buf);
                         continue;
                     }
                 }

@@ -36,8 +36,6 @@ Buffer *BufferNewWithCapacity(unsigned int initial_capacity)
     buffer->buffer[0] = '\0';
     buffer->mode = BUFFER_BEHAVIOR_CSTRING;
     buffer->used = 0;
-    RefCountNew(&(buffer->ref_count));
-    RefCountAttach(buffer->ref_count, buffer);
 
     return buffer;
 }
@@ -64,8 +62,7 @@ Buffer* BufferNewFrom(const char *data, unsigned int length)
     }
     buffer->mode = BUFFER_BEHAVIOR_CSTRING;
     buffer->used = 0;
-    RefCountNew(&(buffer->ref_count));
-    RefCountAttach(buffer->ref_count, buffer);
+
     /*
      * We have a buffer that is large enough, copy the data.
      */
@@ -91,55 +88,22 @@ void BufferDestroy(Buffer *buffer)
 {
     if (buffer)
     {
-        /*
-         * Here is how it goes, if we are shared then we cannot destroy the buffer
-         * we simply detach from it. If we are not shared we need to destroy the buffer
-         * and the RefCount.
-         */
-        if (RefCountIsShared(buffer->ref_count))
-        {
-            RefCountDetach(buffer->ref_count, buffer);
-        }
-        else
-        {
-            free(buffer->buffer);
-            RefCountDestroy(&(buffer->ref_count));
-        }
-
+        free(buffer->buffer);
         free(buffer);
     }
 }
 
 char *BufferClose(Buffer *buffer)
 {
-    char *detached;
-    if (RefCountIsShared(buffer->ref_count))
-    {
-        detached = xmemdup(buffer->buffer, buffer->used);
-        RefCountDetach(buffer->ref_count, buffer);
-    }
-    else
-    {
-        detached = buffer->buffer;
-        RefCountDestroy(&(buffer->ref_count));
-    }
-
+    char *detached = buffer->buffer;
     free(buffer);
+
     return detached;
 }
 
 Buffer *BufferCopy(const Buffer *source)
 {
-    Buffer *copy = xmalloc(sizeof(Buffer));
-
-    copy->capacity = source->capacity;
-    copy->mode = source->mode;
-    copy->used = source->used;
-    RefCountAttach(source->ref_count, copy);
-    copy->buffer = source->buffer;
-    copy->ref_count = source->ref_count;
-
-    return copy;
+    return BufferNewFrom(source->buffer, source->used);
 }
 
 int BufferCompare(const Buffer *buffer1, const Buffer *buffer2)
@@ -149,16 +113,10 @@ int BufferCompare(const Buffer *buffer1, const Buffer *buffer2)
 
     /*
      * Rules for comparison:
-     * 1. First check the refcount elements, if they are the same
-     * then the elements are the same.
      * 2. Check the content
      * 2.1. If modes are different, check until the first '\0'
      * 2.2. If sizes are different, check until the first buffer ends.
      */
-    if (RefCountIsEqual(buffer1->ref_count, buffer2->ref_count))
-    {
-        return 0;
-    }
     if (buffer1->mode == buffer2->mode)
     {
         if (buffer1->mode == BUFFER_BEHAVIOR_CSTRING)
@@ -286,33 +244,6 @@ void BufferSet(Buffer *buffer, char *bytes, unsigned int length)
     assert(buffer);
     assert(bytes);
 
-    if (RefCountIsShared(buffer->ref_count))
-    {
-        char *new_buffer = NULL;
-        new_buffer = (char *)xmalloc(buffer->capacity);
-        RefCount *ref_count = buffer->ref_count;
-        buffer->ref_count = NULL;
-        RefCountNew(&buffer->ref_count);
-        RefCountAttach(buffer->ref_count, buffer);
-        RefCountDetach(ref_count, buffer);
-        /*
-         * Ok, now we need to take care of the buffer.
-         * We copy the data so we have the same data in case of error.
-         */
-        unsigned int i = 0;
-        unsigned int used = 0;
-        for (i = 0; i < buffer->used; ++i)
-        {
-            new_buffer[i] = buffer->buffer[i];
-            if ((buffer->buffer[i] == '\0') && (buffer->mode == BUFFER_BEHAVIOR_CSTRING))
-            {
-                break;
-            }
-            ++used;
-        }
-        buffer->buffer = new_buffer;
-        buffer->used = used;
-    }
     /*
      * Check if we have enough space, otherwise create a larger buffer
      */
@@ -347,42 +278,12 @@ void BufferSet(Buffer *buffer, char *bytes, unsigned int length)
 char *BufferGet(Buffer *buffer)
 {
     assert(buffer);
-    if (RefCountIsShared(buffer->ref_count))
-    {
-        RefCountDetach(buffer->ref_count, buffer);
-        buffer->buffer = xmalloc(buffer->capacity);
-    }
     buffer->unsafe = true;
     return buffer->buffer;
 }
 
 void BufferAppend(Buffer *buffer, const char *bytes, unsigned int length)
 {
-    if (RefCountIsShared(buffer->ref_count))
-    {
-        char *new_buffer = NULL;
-        new_buffer = (char *)xmalloc(buffer->capacity);
-        RefCount *ref_count = buffer->ref_count;
-        buffer->ref_count = NULL;
-        RefCountNew(&buffer->ref_count);
-        RefCountAttach(buffer->ref_count, buffer);
-        RefCountDetach(ref_count, buffer);
-        /*
-         * Ok, now we need to take care of the buffer.
-         */
-        unsigned int used = 0;
-        for (unsigned int i = 0; i < buffer->used; ++i)
-        {
-            new_buffer[i] = buffer->buffer[i];
-            if ((buffer->buffer[i] == '\0') && (buffer->mode == BUFFER_BEHAVIOR_CSTRING))
-            {
-                break;
-            }
-            ++used;
-        }
-        buffer->buffer = new_buffer;
-        buffer->used = used;
-    }
     /*
      * Check if we have enough space, otherwise create a larger buffer
      */
@@ -431,7 +332,7 @@ int BufferPrintf(Buffer *buffer, const char *format, ...)
     va_list aq;
     va_start(ap, format);
     va_copy(aq, ap);
-    int printed = 0;
+
     /*
      * We don't know how big of a buffer we will need. It might be that we have enough space
      * or it might be that we don't have enough space. Unfortunately, we cannot reiterate over
@@ -440,33 +341,7 @@ int BufferPrintf(Buffer *buffer, const char *format, ...)
      * The tricky part is the implicit sharing and the reference counting, if we are not shared then
      * everything is easy, however if we are shared then we need a different strategy.
      */
-    if (RefCountIsShared(buffer->ref_count))
-    {
-        char *new_buffer = NULL;
-        new_buffer = (char *)xmalloc(buffer->capacity);
-        RefCount *ref_count = buffer->ref_count;
-        buffer->ref_count = NULL;
-        RefCountNew(&buffer->ref_count);
-        RefCountAttach(buffer->ref_count, buffer);
-        RefCountDetach(ref_count, buffer);
-        /*
-         * Ok, now we need to take care of the buffer.
-         */
-        unsigned int i = 0;
-        unsigned int used = 0;
-        for (i = 0; i < buffer->used; ++i)
-        {
-            new_buffer[i] = buffer->buffer[i];
-            if ((buffer->buffer[i] == '\0') && (buffer->mode == BUFFER_BEHAVIOR_CSTRING))
-            {
-                break;
-            }
-            ++used;
-        }
-        buffer->buffer = new_buffer;
-        buffer->used = used;
-    }
-    printed = vsnprintf(buffer->buffer, buffer->capacity, format, aq);
+    int printed = vsnprintf(buffer->buffer, buffer->capacity, format, aq);
     if (printed >= buffer->capacity)
     {
         /*
@@ -493,7 +368,7 @@ int BufferVPrintf(Buffer *buffer, const char *format, va_list ap)
 {
     va_list aq;
     va_copy(aq, ap);
-    int printed = 0;
+
     /*
      * We don't know how big of a buffer we will need. It might be that we have enough space
      * or it might be that we don't have enough space. Unfortunately, we cannot reiterate over
@@ -502,33 +377,8 @@ int BufferVPrintf(Buffer *buffer, const char *format, va_list ap)
      * The tricky part is the implicit sharing and the reference counting, if we are not shared then
      * everything is easy, however if we are shared then we need a different strategy.
      */
-    if (RefCountIsShared(buffer->ref_count))
-    {
-        char *new_buffer = NULL;
-        new_buffer = (char *)xmalloc(buffer->capacity);
-        RefCount *ref_count = buffer->ref_count;
-        buffer->ref_count = NULL;
-        RefCountNew(&buffer->ref_count);
-        RefCountAttach(buffer->ref_count, buffer);
-        RefCountDetach(ref_count, buffer);
-        /*
-         * Ok, now we need to take care of the buffer.
-         */
-        unsigned int i = 0;
-        unsigned int used = 0;
-        for (i = 0; i < buffer->used; ++i)
-        {
-            new_buffer[i] = buffer->buffer[i];
-            if ((buffer->buffer[i] == '\0') && (buffer->mode == BUFFER_BEHAVIOR_CSTRING))
-            {
-                break;
-            }
-            ++used;
-        }
-        buffer->buffer = new_buffer;
-        buffer->used = used;
-    }
-    printed = vsnprintf(buffer->buffer, buffer->capacity, format, aq);
+
+    int printed = vsnprintf(buffer->buffer, buffer->capacity, format, aq);
     if (printed >= buffer->capacity)
     {
         unsigned int required_blocks = (printed / DEFAULT_BUFFER_CAPACITY) + 1;
@@ -545,19 +395,8 @@ int BufferVPrintf(Buffer *buffer, const char *format, va_list ap)
     return printed;
 }
 
-void BufferZero(Buffer *buffer)
+void BufferClear(Buffer *buffer)
 {
-    /*
-     * 1. Detach if shared, allocate a new buffer
-     * 2. Mark used as zero.
-     */
-    if (RefCountIsShared(buffer->ref_count))
-    {
-        RefCountDetach(buffer->ref_count, buffer);
-        buffer->buffer = (char *)xmalloc(buffer->capacity);
-        RefCountNew(&buffer->ref_count);
-        RefCountAttach(buffer->ref_count, buffer);
-    }
     buffer->used = 0;
 	buffer->buffer[0] = '\0';
 }

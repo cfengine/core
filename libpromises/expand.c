@@ -170,7 +170,7 @@ static PromiseResult ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp,
         if (handle)
         {
             // This ordering is necessary to get automated canonification
-            BufferZero(expbuf);
+            BufferClear(expbuf);
             ExpandScalar(ctx, NULL, "this", handle, expbuf);
             CanonifyNameInPlace(BufferGet(expbuf));
             EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "handle", BufferData(expbuf), CF_DATA_TYPE_STRING, "source=promise");
@@ -359,7 +359,7 @@ static void ExpandAndMapIteratorsFromScalar(EvalContext *ctx,
         const char *sp = string + i;
 
         Rlist *tmp_list = NULL;
-        BufferZero(value);
+        BufferClear(value);
         if (ExtractScalarPrefix(value, sp, length - i))
         {
             if (full_expansion)
@@ -373,7 +373,7 @@ static void ExpandAndMapIteratorsFromScalar(EvalContext *ctx,
             sp += BufferSize(value);
             i += BufferSize(value);
 
-            BufferZero(value);
+            BufferClear(value);
 
             if (i >= length)
             {
@@ -383,7 +383,7 @@ static void ExpandAndMapIteratorsFromScalar(EvalContext *ctx,
 
         if (*sp == '$')
         {
-            BufferZero(value);
+            BufferClear(value);
             ExtractScalarReference(value, sp, length - i, true);
             if (BufferSize(value) > 0)
             {
@@ -668,7 +668,7 @@ bool ExpandScalar(const EvalContext *ctx,
             break;
         }
 
-        BufferZero(current_item);
+        BufferClear(current_item);
         ExtractScalarPrefix(current_item, sp, strlen(sp));
 
         BufferAppend(out, BufferData(current_item), BufferSize(current_item));
@@ -679,7 +679,7 @@ bool ExpandScalar(const EvalContext *ctx,
             break;
         }
 
-        BufferZero(var);
+        BufferClear(var);
         if (*sp == '$')
         {
             switch (*(sp + 1))
@@ -710,9 +710,9 @@ bool ExpandScalar(const EvalContext *ctx,
             }
         }
 
-        BufferZero(current_item);
+        BufferClear(current_item);
         {
-            BufferZero(temp);
+            BufferClear(temp);
             ExtractScalarReference(temp, sp, strlen(sp), true);
 
             if (IsCf3VarString(BufferData(temp)))
@@ -791,7 +791,7 @@ bool ExpandScalar(const EvalContext *ctx,
         }
 
         sp += increment;
-        BufferZero(current_item);
+        BufferClear(current_item);
     }
 
     BufferDestroy(var);

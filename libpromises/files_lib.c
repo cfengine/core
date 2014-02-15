@@ -381,7 +381,7 @@ int LoadFileAsItemList(Item **liststart, const char *file, EditDefaults edits)
             }
         }
 
-        BufferZero(concat);
+        BufferClear(concat);
     }
 
     free(line);

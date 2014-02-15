@@ -25,8 +25,7 @@
 #ifndef CFENGINE_BUFFER_H
 #define CFENGINE_BUFFER_H
 
-#include <stdarg.h>
-#include <refcount.h>
+#include <platform.h>
 #include <compiler.h>
 
 /**
@@ -59,7 +58,6 @@ typedef struct
     unsigned int capacity;
     unsigned int used;
     bool unsafe;
-    RefCount *ref_count;
 } Buffer;
 
 /**
@@ -180,7 +178,7 @@ int BufferVPrintf(Buffer *buffer, const char *format, va_list ap);
   @note This function might trigger a deep copy and a memory allocation if the buffer is shared.
   @param buffer Buffer to clear.
   */
-void BufferZero(Buffer *buffer);
+void BufferClear(Buffer *buffer);
 /**
   @brief Returns the size of the buffer.
   @param buffer

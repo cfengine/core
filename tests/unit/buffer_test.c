@@ -14,8 +14,6 @@ static void test_createBuffer(void)
     assert_int_equal(buffer->mode, BUFFER_BEHAVIOR_CSTRING);
     assert_int_equal(buffer->capacity, DEFAULT_BUFFER_CAPACITY);
     assert_int_equal(buffer->used, 0);
-    assert_true(buffer->ref_count != NULL);
-    assert_int_equal(buffer->ref_count->user_count, 1);
 
     BufferDestroy(buffer);
 }
@@ -33,8 +31,6 @@ static void test_createBufferFrom(void)
     assert_int_equal(buffer->mode, BUFFER_BEHAVIOR_CSTRING);
     assert_int_equal(buffer->capacity, DEFAULT_BUFFER_CAPACITY);
     assert_int_equal(buffer->used, dataLength);
-    assert_true(buffer->ref_count != NULL);
-    assert_int_equal(buffer->ref_count->user_count, 1);
 
     BufferDestroy(buffer);
     free (data);
@@ -135,7 +131,7 @@ static void test_zeroBuffer(void)
     element0pointer = buffer->buffer;
     assert_int_equal(element0size, buffer->used);
     assert_int_equal(element0size, BufferSize(buffer));
-    BufferZero(buffer);
+    BufferClear(buffer);
     assert_int_equal(DEFAULT_BUFFER_CAPACITY, buffer->capacity);
     assert_int_equal(0, buffer->used);
     assert_int_equal(0, BufferSize(buffer));
@@ -222,7 +218,7 @@ static void test_appendBuffer(void)
     /*
      * Zero the string and start again.
      */
-    BufferZero(buffer);
+    BufferClear(buffer);
     BufferAppend(buffer, element0, element0size);
     assert_int_equal(element0size, BufferSize(buffer));
     element0pointer = buffer->buffer;
@@ -250,7 +246,7 @@ static void test_appendBuffer(void)
     assert_string_equal(longAppend, buffer->buffer);
     assert_string_equal(longAppend, BufferData(buffer));
 
-    BufferZero(buffer);
+    BufferClear(buffer);
     /*
      * Boundary checks, BUFFER_SIZE-1, BUFFER_SIZE and BUFFER_SIZE+1
      */

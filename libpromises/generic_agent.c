@@ -165,7 +165,7 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
                 Log(LOG_LEVEL_INFO, "Not assuming role as policy server");
             }
 
-            WriteAmPolicyHubFile(CFWORKDIR, am_policy_server);
+            WriteAmPolicyHubFile(am_policy_server);
         }
 
         WritePolicyServerFile(GetWorkDir(), config->agent_specific.agent.bootstrap_policy_server);
@@ -190,7 +190,7 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
             return;
         }
 
-        if (GetAmPolicyHub(GetWorkDir()))
+        if (GetAmPolicyHub())
         {
             EvalContextClassPutHard(ctx, "am_policy_hub", "source=bootstrap,deprecated,alias=policy_server");
             Log(LOG_LEVEL_VERBOSE, "Additional class defined: am_policy_hub");
@@ -233,7 +233,7 @@ bool GenericAgentCheckPolicy(GenericAgentConfig *config, bool force_validation, 
             if (policy_check_ok && write_validated_file)
             {
                 WritePolicyValidatedFileToMasterfiles(config);
-                if (GetAmPolicyHub(GetWorkDir()))
+                if (GetAmPolicyHub())
                 {
                     WriteReleaseIdFileToMasterfiles();
                 }
@@ -850,8 +850,10 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
 
 /* Define trusted directories */
 
+    const char *workdir = GetWorkDir();
+
+    /* FIXME: does CFWORKDIR global get initialized here? Can we remove this block */
     {
-        const char *workdir = GetWorkDir();
         if (!workdir)
         {
             FatalError(ctx, "Error determining working directory");
@@ -870,18 +872,22 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
     OpenLog(LOG_USER);
     SetSyslogFacility(LOG_USER);
 
-    Log(LOG_LEVEL_VERBOSE, "Work directory is %s", CFWORKDIR);
+    Log(LOG_LEVEL_VERBOSE, "Work directory is %s", workdir);
 
     snprintf(vbuff, CF_BUFSIZE, "%s%cupdate.conf", GetInputDir(), FILE_SEPARATOR);
     MakeParentDirectory(vbuff, force);
-    snprintf(vbuff, CF_BUFSIZE, "%s%cbin%ccf-agent -D from_cfexecd", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
+    snprintf(vbuff, CF_BUFSIZE, "%s%cbin%ccf-agent -D from_cfexecd", workdir, FILE_SEPARATOR, FILE_SEPARATOR);
     MakeParentDirectory(vbuff, force);
-    snprintf(vbuff, CF_BUFSIZE, "%s%coutputs%cspooled_reports", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
+    snprintf(vbuff, CF_BUFSIZE, "%s%coutputs%cspooled_reports", workdir, FILE_SEPARATOR, FILE_SEPARATOR);
     MakeParentDirectory(vbuff, force);
-    snprintf(vbuff, CF_BUFSIZE, "%s%clastseen%cintermittencies", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
+    snprintf(vbuff, CF_BUFSIZE, "%s%clastseen%cintermittencies", workdir, FILE_SEPARATOR, FILE_SEPARATOR);
     MakeParentDirectory(vbuff, force);
-    snprintf(vbuff, CF_BUFSIZE, "%s%creports%cvarious", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
+    snprintf(vbuff, CF_BUFSIZE, "%s%creports%cvarious", workdir, FILE_SEPARATOR, FILE_SEPARATOR);
     MakeParentDirectory(vbuff, force);
+
+    MakeParentDirectory(GetLogDir(), force);
+    MakeParentDirectory(GetPidDir(), force);
+    MakeParentDirectory(GetStateDir(), force);
 
     snprintf(vbuff, CF_BUFSIZE, "%s", GetInputDir());
 
@@ -894,7 +900,7 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
         chmod(vbuff, sb.st_mode | 0700);
     }
 
-    snprintf(vbuff, CF_BUFSIZE, "%s%coutputs", CFWORKDIR, FILE_SEPARATOR);
+    snprintf(vbuff, CF_BUFSIZE, "%s%coutputs", workdir, FILE_SEPARATOR);
 
     if (stat(vbuff, &sb) == -1)
     {
@@ -905,7 +911,9 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
         chmod(vbuff, sb.st_mode | 0700);
     }
 
-    sprintf(ebuff, "%s%cstate%ccf_procs", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
+    const char* const statedir = GetStateDir();
+
+    sprintf(ebuff, "%s%ccf_procs", statedir, FILE_SEPARATOR);
     MakeParentDirectory(ebuff, force);
 
     if (stat(ebuff, &statbuf) == -1)
@@ -913,27 +921,27 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
         CreateEmptyFile(ebuff);
     }
 
-    sprintf(ebuff, "%s%cstate%ccf_rootprocs", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
+    sprintf(ebuff, "%s%ccf_rootprocs", statedir, FILE_SEPARATOR);
 
     if (stat(ebuff, &statbuf) == -1)
     {
         CreateEmptyFile(ebuff);
     }
 
-    sprintf(ebuff, "%s%cstate%ccf_otherprocs", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
+    sprintf(ebuff, "%s%ccf_otherprocs", statedir, FILE_SEPARATOR);
 
     if (stat(ebuff, &statbuf) == -1)
     {
         CreateEmptyFile(ebuff);
     }
 
-    sprintf(ebuff, "%s%cstate%cprevious_state%c", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR, FILE_SEPARATOR);
+    sprintf(ebuff, "%s%cprevious_state%c", statedir, FILE_SEPARATOR, FILE_SEPARATOR);
     MakeParentDirectory(ebuff, force);
 
-    sprintf(ebuff, "%s%cstate%cdiff%c", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR, FILE_SEPARATOR);
+    sprintf(ebuff, "%s%cdiff%c", statedir, FILE_SEPARATOR, FILE_SEPARATOR);
     MakeParentDirectory(ebuff, force);
 
-    sprintf(ebuff, "%s%cstate%cuntracked%c", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR, FILE_SEPARATOR);
+    sprintf(ebuff, "%s%cuntracked%c", statedir, FILE_SEPARATOR, FILE_SEPARATOR);
     MakeParentDirectory(ebuff, force);
 
     OpenNetwork();
@@ -946,7 +954,7 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
     if (config->agent_type != AGENT_TYPE_KEYGEN)
     {
         LoadSecretKeys();
-        char *bootstrapped_policy_server = ReadPolicyServerFile(CFWORKDIR);
+        char *bootstrapped_policy_server = ReadPolicyServerFile(workdir);
         PolicyHubUpdateKeys(bootstrapped_policy_server);
         free(bootstrapped_policy_server);
         cfnet_init();
@@ -1076,7 +1084,7 @@ static void GetPromisesValidatedFileFromMasterfiles(char *filename, size_t max_s
     }
     else if (MINUSF)
     {
-        snprintf(filename, max_size, "%s/state/validated_%s", CFWORKDIR, CanonifyName(config->original_input_file));
+        snprintf(filename, max_size, "%s%cvalidated_%s", GetStateDir(), FILE_SEPARATOR, CanonifyName(config->original_input_file));
     }
     else
     {
@@ -1377,15 +1385,15 @@ static void CheckWorkingDirectories(EvalContext *ctx)
         chmod(CFWORKDIR, (mode_t) (statbuf.st_mode & ~022));
     }
 
-    snprintf(vbuff, CF_BUFSIZE, "%s%cstate%c.", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
+    snprintf(vbuff, CF_BUFSIZE, "%s", GetStateDir());
     MakeParentDirectory(vbuff, false);
 
     Log(LOG_LEVEL_VERBOSE, "Checking integrity of the state database");
-    snprintf(vbuff, CF_BUFSIZE, "%s%cstate", CFWORKDIR, FILE_SEPARATOR);
+    snprintf(vbuff, CF_BUFSIZE, "%s", GetStateDir());
 
     if (stat(vbuff, &statbuf) == -1)
     {
-        snprintf(vbuff, CF_BUFSIZE, "%s%cstate%c.", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
+        snprintf(vbuff, CF_BUFSIZE, "%s", GetStateDir());
         MakeParentDirectory(vbuff, false);
 
         if (chown(vbuff, getuid(), getgid()) == -1)

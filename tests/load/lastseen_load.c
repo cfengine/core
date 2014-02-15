@@ -1,8 +1,11 @@
+#include <stdlib.h>
+#include <sys/stat.h>
 #include <cf3.defs.h>
 #include <dbm_api.h>
 #include <lastseen.h>
+#include <known_dirs.h>
 
-char CFWORKDIR[CF_BUFSIZE] = "/tmp";
+char CFWORKDIR[CF_BUFSIZE];
 
 
 void UpdateLastSawHost(const char *hostkey, const char *address,
@@ -12,6 +15,8 @@ int main()
 {
     snprintf(CFWORKDIR, CF_BUFSIZE, "/tmp/lastseen_migration_test.XXXXXX");
     mkdtemp(CFWORKDIR);
+    setenv("CFENGINE_TEST_OVERRIDE_WORKDIR", CFWORKDIR, true);
+    mkdir(GetStateDir(), (S_IRWXU | S_IRWXG | S_IRWXO));
 
     for (int i = 0; i < 1000000; ++i)
     {

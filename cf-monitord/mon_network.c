@@ -30,6 +30,7 @@
 #include <files_interfaces.h>
 #include <files_lib.h>
 #include <pipes.h>
+#include <known_dirs.h>
 
 /* Globals */
 
@@ -98,7 +99,7 @@ static const char *const VNETSTAT[] =
 
 void MonNetworkInit(void)
 {
- 
+
     DeleteItemList(MON_TCP4);
     DeleteItemList(MON_TCP6);
     DeleteItemList(MON_UDP4);
@@ -106,17 +107,22 @@ void MonNetworkInit(void)
  
     MON_UDP4 = MON_UDP6 = MON_TCP4 = MON_TCP6 = NULL;
 
+    char vbuff[CF_BUFSIZE];
+    const char* const statedir = GetStateDir();
+
+    const char* file_names[] = { "cf_incoming", "cf_outgoing" };
+    size_t num_files = sizeof(file_names) / sizeof(char*);
+
     for (int i = 0; i < ATTR; i++)
     {
-        char vbuff[CF_BUFSIZE];
+        for (int j = 0; j < num_files; j++)
+        {
+            snprintf(vbuff, CF_BUFSIZE, "%s%c%s.%s",
+                     statedir, FILE_SEPARATOR, file_names[j], ECGSOCKS[i].name);
 
-        sprintf(vbuff, "%s/state/cf_incoming.%s", CFWORKDIR, ECGSOCKS[i].name);
-        MapName(vbuff);
-        CreateEmptyFile(vbuff);
-
-        sprintf(vbuff, "%s/state/cf_outgoing.%s", CFWORKDIR, ECGSOCKS[i].name);
-        MapName(vbuff);
-        CreateEmptyFile(vbuff);
+            MapName(vbuff);
+            CreateEmptyFile(vbuff);
+        }
     }
 }
 
@@ -376,13 +382,17 @@ void MonNetworkGatherData(double *cf_this)
    the state is not smaller than the last or at least 40 minutes
    older. This mirrors the persistence of the maxima classes */
 
+    const char* const statedir = GetStateDir();
+
     for (i = 0; i < ATTR; i++)
     {
         struct stat statbuf;
         time_t now = time(NULL);
 
         Log(LOG_LEVEL_DEBUG, "save incoming '%s'", ECGSOCKS[i].name);
-        snprintf(vbuff, CF_MAXVARSIZE, "%s/state/cf_incoming.%s", CFWORKDIR, ECGSOCKS[i].name);
+
+        snprintf(vbuff, CF_MAXVARSIZE, "%s%ccf_incoming.%s", statedir, FILE_SEPARATOR, ECGSOCKS[i].name);
+
         if (stat(vbuff, &statbuf) != -1)
         {
             if ((ByteSizeList(in[i]) < statbuf.st_size) && (now < statbuf.st_mtime + 40 * 60))
@@ -405,7 +415,7 @@ void MonNetworkGatherData(double *cf_this)
         time_t now = time(NULL);
 
         Log(LOG_LEVEL_DEBUG, "save outgoing '%s'", ECGSOCKS[i].name);
-        snprintf(vbuff, CF_MAXVARSIZE, "%s/state/cf_outgoing.%s", CFWORKDIR, ECGSOCKS[i].name);
+        snprintf(vbuff, CF_MAXVARSIZE, "%s%ccf_outgoing.%s", statedir, FILE_SEPARATOR, ECGSOCKS[i].name);
 
         if (stat(vbuff, &statbuf) != -1)
         {

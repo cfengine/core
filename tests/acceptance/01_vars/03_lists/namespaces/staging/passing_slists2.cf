@@ -1,0 +1,33 @@
+# Redmine#4494
+
+# the agent should not abort when a bundle is passed a qualified slist
+# name that doesn't actually exist
+
+body common control
+{
+      inputs => { "../../../default.cf.sub" };
+      bundlesequence => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle agent init
+{
+}
+
+bundle agent test
+{
+  methods:
+      "watch" usebundle => watch(@(run.watch));
+}
+
+bundle agent check
+{
+  methods:
+      "pass" usebundle => default_passif("any", $(this.promise_filename));
+}
+
+bundle agent watch(given_watch)
+{
+  vars:
+      "watch" slist => { @(given_watch) };
+}

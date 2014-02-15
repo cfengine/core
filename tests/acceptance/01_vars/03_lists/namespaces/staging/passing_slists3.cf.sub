@@ -1,0 +1,74 @@
+# Redmine#4494
+
+# - passing a slist to a non-namespaced agent bundle (works)
+
+# - passing a slist to a namespaced agent bundle with no "classes" promises (works)
+
+# - passing a slist to a namespaced agent bundle with a "classes" promises (emits spurious "Failed to chdir..." message)
+
+
+body common control
+{
+      bundlesequence => { test };
+}
+
+bundle agent test
+{
+  vars:
+      "watch" slist => { "/" };
+
+  methods:
+      "watch" usebundle => watch(@(test.watch));
+      "nswatch" usebundle => ns:watch(@(test.watch));
+      "ns2watch" usebundle => ns2:watch(@(test.watch));
+}
+
+bundle agent watch(given_watch)
+{
+  classes:
+
+  vars:
+      "watch" slist => { @(given_watch) };
+
+  files:
+      "$(watch)";
+
+  reports:
+      "$(this.namespace):$(this.bundle): got local watch = $(watch)";
+}
+
+body file control
+{
+      namespace => "ns";
+}
+
+bundle agent watch(given_watch)
+{
+  classes:
+
+  vars:
+      "watch" slist => { @(given_watch) };
+
+  files:
+      "$(watch)";
+
+  reports:
+      "$(this.namespace):$(this.bundle): got local watch = $(watch)";
+}
+
+body file control
+{
+      namespace => "ns2";
+}
+
+bundle agent watch(given_watch)
+{
+  vars:
+      "watch" slist => { @(given_watch) };
+
+  files:
+      "$(watch)";
+
+  reports:
+      "$(this.namespace):$(this.bundle): got local watch = $(watch)";
+}

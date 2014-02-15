@@ -1,0 +1,33 @@
+# Redmine#4494
+
+# the agent should not try to process files promises on the unexpanded
+# version of a passed list
+
+# here, the error manifests as "Failed to chdir into @(given_watch)"
+# but it also generates a NOTKEPT compliance entry
+
+body common control
+{
+      inputs => { "../../../default.cf.sub" };
+      bundlesequence => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle agent init
+{
+}
+
+bundle agent test
+{
+  vars:
+      "output" string => execresult("$(sys.cf_agent) -K -f $(this.promise_filename).sub | $(G.grep) 'Failed to chdir' 2>&1", "useshell");
+}
+
+bundle agent check
+{
+  methods:
+      "pass" usebundle => default_check_regcmp(".*Failed to chdir into '@.given_watch.'.*",
+                                               $(test.output),
+                                               $(this.promise_filename),
+                                               "true");
+}

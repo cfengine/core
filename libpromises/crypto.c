@@ -29,7 +29,6 @@
 #include <files_interfaces.h>
 #include <files_hashes.h>
 #include <hashes.h>
-#include <logging.h>
 #include <pipes.h>
 #include <mutex.h>
 #include <known_dirs.h>
@@ -49,10 +48,10 @@ void CRYPTO_set_id_callback(unsigned long (*func)(void));
 static void RandomSeed(void);
 static void SetupOpenSSLThreadLocks(void);
 static void CleanupOpenSSLThreadLocks(void);
+LogLevel CryptoGetMissingKeyLogLevel();
 
 /* TODO move crypto.[ch] to libutils. Will need to remove all manipulation of
  * lastseen db. */
-
 
 static bool crypto_initialized = false; /* GLOBAL_X */
 
@@ -122,7 +121,7 @@ bool LoadSecretKeys(void)
         FILE *fp = fopen(privkeyfile, "r");
         if (!fp)
         {
-            Log(LOG_LEVEL_ERR,
+            Log(CryptoGetMissingKeyLogLevel(),
                 "Couldn't find a private key at '%s', use cf-key to get one. (fopen: %s)",
                 privkeyfile, GetErrorStr());
             free(privkeyfile);
@@ -151,7 +150,7 @@ bool LoadSecretKeys(void)
         FILE *fp = fopen(pubkeyfile, "r");
         if (!fp)
         {
-            Log(LOG_LEVEL_ERR,
+            Log(CryptoGetMissingKeyLogLevel(),
                 "Couldn't find a public key at '%s', use cf-key to get one (fopen: %s)",
                 pubkeyfile, GetErrorStr());
             free(pubkeyfile);
@@ -307,7 +306,7 @@ RSA *HavePublicKey(const char *username, const char *ipaddress, const char *dige
 
     if ((fp = fopen(newname, "r")) == NULL)
     {
-        Log(LOG_LEVEL_ERR, "Couldn't find a public key '%s'. (fopen: %s)", newname, GetErrorStr());
+        Log(CryptoGetMissingKeyLogLevel(), "Couldn't find a public key '%s'. (fopen: %s)", newname, GetErrorStr());
         return NULL;
     }
 
@@ -544,4 +543,13 @@ static void CleanupOpenSSLThreadLocks(void)
         pthread_mutex_destroy(&(cf_openssl_locks[i]));
     }
     OPENSSL_free(cf_openssl_locks);
+}
+
+LogLevel CryptoGetMissingKeyLogLevel(void)
+{
+#ifdef __MINGW32__
+    return LOG_LEVEL_ERR;
+#endif
+
+    return ((getuid() == 0 && NULL == getenv("FAKEROOTKEY")) ? LOG_LEVEL_ERR : LOG_LEVEL_VERBOSE);
 }

@@ -1,4 +1,7 @@
+#include <stdlib.h>
+#include <sys/stat.h>
 #include <cf3.defs.h>
+#include <known_dirs.h>
 
 #include <dbm_api.h>
 
@@ -194,6 +197,8 @@ int main(int argc, char **argv)
 
     xsnprintf(CFWORKDIR, CF_BUFSIZE, "/tmp/db_load.XXXXXX");
     mkdtemp(CFWORKDIR);
+    setenv("CFENGINE_TEST_OVERRIDE_WORKDIR", CFWORKDIR, true);
+    mkdir(GetStateDir(), (S_IRWXU | S_IRWXG | S_IRWXO));
 
     int numthreads = atoi(argv[1]);
 

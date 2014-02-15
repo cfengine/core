@@ -1,4 +1,7 @@
+#include <stdlib.h>
+#include <sys/stat.h>
 #include <test.h>
+#include <known_dirs.h>
 
 #include <cf3.defs.h>
 #include <dbm_api.h>
@@ -9,6 +12,8 @@ void tests_setup(void)
 {
     snprintf(CFWORKDIR, CF_BUFSIZE, "/tmp/db_test.XXXXXX");
     mkdtemp(CFWORKDIR);
+    setenv("CFENGINE_TEST_OVERRIDE_WORKDIR", CFWORKDIR, true);
+    mkdir(GetStateDir(), (S_IRWXU | S_IRWXG | S_IRWXO));
 }
 
 void tests_teardown(void)

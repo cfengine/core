@@ -120,69 +120,28 @@ const char *GetPidDir(void)
     return piddir == NULL ? GetDefaultPidDir() : piddir;
 }
 
-const char *GetInputDir(void)
-{
-    const char *inputdir = getenv("CFENGINE_TEST_OVERRIDE_WORKDIR");
+#define GET_DIRECTORY_DEFINE_FUNC_BODY(FUNC, VAR, GLOBAL, FOLDER)    \
+{                                                                    \
+    const char *VAR##dir = getenv("CFENGINE_TEST_OVERRIDE_WORKDIR"); \
+                                                                     \
+    static char workbuf[CF_BUFSIZE];                                 \
+                                                                     \
+    if (VAR##dir != NULL)                                            \
+    {                                                                \
+        snprintf(workbuf, CF_BUFSIZE, "%s/" #FOLDER, VAR##dir);      \
+    }                                                                \
+    else if (strcmp(GLOBAL##DIR, "default") == 0 )                   \
+    {                                                                \
+        snprintf(workbuf, CF_BUFSIZE, "%s/" #FOLDER, GetWorkDir()); \
+    }                                                                \
+    else /* VAR##dir defined at compile-time */                      \
+    {                                                                \
+        return GetDefault##FUNC##Dir();                              \
+    }                                                                \
+                                                                     \
+    return MapName(workbuf);                                         \
+}                                                                    \
 
-    if (inputdir != NULL)
-    {
-        static char workbuf[CF_BUFSIZE];
-        snprintf(workbuf, CF_BUFSIZE, "%s%cinputs", inputdir, FILE_SEPARATOR);
-        return MapName(workbuf);
-    }
-    else if (strcmp(INPUTDIR, "default") == 0 )
-    {
-        static char workbuf[CF_BUFSIZE];
-        snprintf(workbuf, CF_BUFSIZE, "%s%cinputs", GetWorkDir(), FILE_SEPARATOR);
-        return MapName(workbuf);
-    }
-    else /* inputdir defined at compile-time */
-    {
-        return GetDefaultInputDir();
-    }
-
-}
-
-const char *GetMasterDir(void)
-{
-    const char *masterdir = getenv("CFENGINE_TEST_OVERRIDE_WORKDIR");
-
-    if (masterdir != NULL)
-    {
-        static char workbuf[CF_BUFSIZE];
-        snprintf(workbuf, CF_BUFSIZE, "%s%cmasterfiles", masterdir, FILE_SEPARATOR);
-        return MapName(workbuf);
-    }
-    else if (strcmp(MASTERDIR, "default") == 0 )
-    {
-        static char workbuf[CF_BUFSIZE];
-        snprintf(workbuf, CF_BUFSIZE, "%s%cmasterfiles", GetWorkDir(), FILE_SEPARATOR);
-        return MapName(workbuf);
-    }
-    else /* masterdir defined at compile-time */
-    {
-        return GetDefaultMasterDir();
-    }
-}
-
-const char *GetStateDir(void)
-{
-    const char *statedir = getenv("CFENGINE_TEST_OVERRIDE_WORKDIR");
-
-    if (statedir != NULL)
-    {
-        static char workbuf[CF_BUFSIZE];
-        snprintf(workbuf, CF_BUFSIZE, "%s%cstate", statedir, FILE_SEPARATOR);
-        return MapName(workbuf);
-    }
-    else if (strcmp(STATEDIR, "default") == 0 )
-    {
-        static char workbuf[CF_BUFSIZE];
-        snprintf(workbuf, CF_BUFSIZE, "%s%cstate", GetWorkDir(), FILE_SEPARATOR);
-        return MapName(workbuf);
-    }
-    else /* statedir defined at compile-time */
-    {
-        return GetDefaultStateDir();
-    }
-}
+const char *GetInputDir(void) GET_DIRECTORY_DEFINE_FUNC_BODY(Input, input, INPUT, inputs)
+const char *GetMasterDir(void) GET_DIRECTORY_DEFINE_FUNC_BODY(Master, master, MASTER, masterfiles)
+const char *GetStateDir(void) GET_DIRECTORY_DEFINE_FUNC_BODY(State, state, STATE, state)

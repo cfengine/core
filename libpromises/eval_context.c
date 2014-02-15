@@ -1756,33 +1756,6 @@ bool EvalContextVariablePut(EvalContext *ctx,
 
     Rval rval = (Rval) { (void *)value, DataTypeToRvalType(type) };
 
-    // Look for outstanding lists in variable rvals
-    if (THIS_AGENT_TYPE == AGENT_TYPE_COMMON)
-    {
-        StackFrame *last_frame = LastStackFrame(ctx, 0);
-
-        if (last_frame && (last_frame->type == STACK_FRAME_TYPE_BUNDLE))
-        {
-            Rlist *listvars = NULL;
-            Rlist *scalars = NULL;
-            Rlist *containers = NULL;
-
-            MapIteratorsFromRval(ctx, EvalContextStackCurrentBundle(ctx),
-                                 rval, &scalars, &listvars, &containers);
-
-            if (listvars != NULL)
-            {
-                Log(LOG_LEVEL_ERR,
-                    "Redefinition of variable '%s' (embedded list in RHS)",
-                    ref->lval);
-            }
-
-            RlistDestroy(listvars);
-            RlistDestroy(scalars);
-            RlistDestroy(containers);
-        }
-    }
-
     VariableTable *table = GetVariableTableForScope(ctx, ref->ns, ref->scope);
     const Promise *pp = EvalContextStackCurrentPromise(ctx);
     VariableTablePut(table, ref, &rval, type, tags, pp ? pp->org_pp : pp);

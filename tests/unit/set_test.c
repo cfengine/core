@@ -5,13 +5,14 @@
 
 void test_stringset_from_string(void)
 {
-    StringSet *s = StringSetFromString("one,two, three four", ',');
+    StringSet *s = StringSetFromString("one,two, three four,,", ',');
 
     assert_true(StringSetContains(s, "one"));
     assert_true(StringSetContains(s, "two"));
     assert_true(StringSetContains(s, " three four"));
+    assert_true(StringSetContains(s, ""));
 
-    assert_int_equal(3, StringSetSize(s));
+    assert_int_equal(4, StringSetSize(s));
 
     StringSetDestroy(s);
 }

@@ -114,21 +114,34 @@ StringSet *StringSetFromString(const char *str, char delimiter)
 {
     StringSet *set = StringSetNew();
 
-    char delimiters[2] = { 0 };
-    delimiters[0] = delimiter;
-
-    if (NULL != str)
+    if (str)
     {
-        char *copy = xstrdup(str);
-        char *stringp = copy;
-        char *curr = NULL;
+        const char *prev = str;
+        const char *cur = str;
 
-        while ((curr = strsep(&stringp, delimiters)))
+        while (*cur != '\0')
         {
-            StringSetAdd(set, xstrdup(curr));
+            if (*cur == delimiter)
+            {
+                size_t len = cur - prev;
+                if (len > 0)
+                {
+                    StringSetAdd(set, xstrndup(prev, len));
+                }
+                else
+                {
+                    StringSetAdd(set, xstrdup(""));
+                }
+                prev = cur + 1;
+            }
+
+            cur++;
         }
 
-        free(copy);
+        if (cur > prev)
+        {
+            StringSetAdd(set, xstrndup(prev, cur - prev));
+        }
     }
 
     return set;

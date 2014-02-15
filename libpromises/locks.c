@@ -929,7 +929,7 @@ void BackupLockDatabase(void)
 {
     WaitForCriticalSection();
 
-    char *db_path = DBIdToPath(GetWorkDir(), dbid_locks);
+    char *db_path = DBIdToPath(GetStateDir(), dbid_locks);
     char *db_path_backup;
     xasprintf(&db_path_backup, "%s.backup", db_path);
 
@@ -947,7 +947,7 @@ static void RestoreLockDatabase(void)
     // this should be right after bootup, so we should be the only one.
     // Worst case someone else will just copy the same file to the same
     // location.
-    char *db_path = DBIdToPath(GetWorkDir(), dbid_locks);
+    char *db_path = DBIdToPath(GetStateDir(), dbid_locks);
     char *db_path_backup;
     xasprintf(&db_path_backup, "%s.backup", db_path);
 
@@ -1050,7 +1050,7 @@ static void VerifyThatDatabaseIsNotCorrupt_once(void)
         return;
     }
 
-    char *db_path = DBIdToPath(GetWorkDir(), dbid_locks);
+    char *db_path = DBIdToPath(GetStateDir(), dbid_locks);
     struct stat statbuf;
     if (stat(db_path, &statbuf) == 0)
     {

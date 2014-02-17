@@ -1463,7 +1463,7 @@ const RingBuffer *EvalContextStackCurrentMessages(const EvalContext *ctx)
 
 char *EvalContextStackPath(const EvalContext *ctx)
 {
-    Writer *path = StringWriter();
+    Buffer *path = BufferNew();
 
     for (size_t i = 0; i < SeqLength(ctx->stack); i++)
     {
@@ -1471,31 +1471,39 @@ char *EvalContextStackPath(const EvalContext *ctx)
         switch (frame->type)
         {
         case STACK_FRAME_TYPE_BODY:
-            WriterWriteF(path, "/%s", frame->data.body.owner->name);
+            BufferAppendChar(path, '/');
+            BufferAppend(path, frame->data.body.owner->name, CF_BUFSIZE);
             break;
 
         case STACK_FRAME_TYPE_BUNDLE:
-            WriterWriteF(path, "/%s/%s", frame->data.bundle.owner->ns, frame->data.bundle.owner->name);
+            BufferAppendChar(path, '/');
+            BufferAppend(path, frame->data.bundle.owner->ns, CF_BUFSIZE);
+            BufferAppendChar(path, '/');
+            BufferAppend(path, frame->data.bundle.owner->name, CF_BUFSIZE);
             break;
 
         case STACK_FRAME_TYPE_PROMISE_TYPE:
-            WriterWriteF(path, "/%s", frame->data.promise_type.owner->name);
+            BufferAppendChar(path, '/');
+            BufferAppend(path, frame->data.promise_type.owner->name, CF_BUFSIZE);
 
         case STACK_FRAME_TYPE_PROMISE:
             break;
 
         case STACK_FRAME_TYPE_PROMISE_ITERATION:
-            WriterWriteF(path, "/'%s'", frame->data.promise_iteration.owner->promiser);
+            BufferAppendChar(path, '/');
+            BufferAppendChar(path, '\'');
+            BufferAppend(path, frame->data.promise_iteration.owner->promiser, CF_BUFSIZE);
+            BufferAppendChar(path, '\'');
             if (i == SeqLength(ctx->stack) - 1)
             {
-                WriterWriteF(path, "[%llu]",
+                BufferAppendF(path, "[%llu]",
                              (unsigned long long)frame->data.promise_iteration.index);
             }
             break;
         }
     }
 
-    return StringWriterClose(path);
+    return BufferClose(path);
 }
 
 StringSet *EvalContextStackPromisees(const EvalContext *ctx)

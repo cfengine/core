@@ -267,7 +267,51 @@ void BufferAppend(Buffer *buffer, const char *bytes, unsigned int length)
 
 void BufferAppendChar(Buffer *buffer, char byte)
 {
-    BufferAppend(buffer, &byte, 1);
+    if (buffer->used < (buffer->capacity - 1))
+    {
+        buffer->buffer[buffer->used] = byte;
+        buffer->used++;
+
+        if (buffer->mode == BUFFER_BEHAVIOR_CSTRING)
+        {
+            buffer->buffer[buffer->used] = '\0';
+        }
+    }
+    else
+    {
+        BufferAppend(buffer, &byte, 1);
+    }
+}
+
+void BufferAppendF(Buffer *buffer, const char *format, ...)
+{
+    assert(buffer);
+    assert(format);
+
+    va_list ap;
+    va_list aq;
+    va_start(ap, format);
+    va_copy(aq, ap);
+
+    int printed = vsnprintf(buffer->buffer + buffer->used, buffer->capacity - buffer->used, format, aq);
+    if (printed >= (buffer->capacity - buffer->used))
+    {
+        /*
+         * Allocate a larger buffer and retry.
+         * Now is when having a copy of the list pays off :-)
+         */
+        ExpandIfNeeded(buffer, buffer->used + printed);
+
+        buffer->used = 0;
+        printed = vsnprintf(buffer->buffer + buffer->used, buffer->capacity - buffer->used, format, ap);
+        buffer->used += printed;
+    }
+    else
+    {
+        buffer->used += printed;
+    }
+    va_end(aq);
+    va_end(ap);
 }
 
 int BufferPrintf(Buffer *buffer, const char *format, ...)

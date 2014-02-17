@@ -139,6 +139,8 @@ char *BufferGet(Buffer *buffer);
   */
 void BufferAppend(Buffer *buffer, const char *bytes, unsigned int length);
 void BufferAppendChar(Buffer *buffer, char byte);
+void BufferAppendF(Buffer *buffer, const char *format, ...);
+
 
 /**
   @brief Stores complex data on the buffer.

@@ -704,9 +704,9 @@ CfLock AcquireLock(EvalContext *ctx, const char *operand, const char *host, time
     }
 
     // Look for existing (current) processes
+    lastcompleted = FindLock(cflock);
     if (!ignoreProcesses)
     {
-        lastcompleted = FindLock(cflock);
         elapsedtime = (time_t) (now - lastcompleted) / 60;
 
         if (lastcompleted != 0)

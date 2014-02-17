@@ -37,22 +37,21 @@ static size_t VarRefHash(const VarRef *ref)
 
     if (VarRefIsQualified(ref))
     {
-        const char *ns = "default";
-        int len = sizeof("default") - 1;
         if (ref->ns)
         {
-            ns = ref->ns;
-            len = strlen(ref->ns);
+            for (int i = 0; ref->ns[i] != '\0'; i++)
+            {
+                h += ref->ns[i];
+                h += (h << 10);
+                h ^= (h >> 6);
+            }
         }
-
-        for (int i = 0; i < len; i++)
+        else
         {
-            h += ns[i];
-            h += (h << 10);
-            h ^= (h >> 6);
+            h = 1195645448; // hash of "default"
         }
 
-        len = strlen(ref->scope);
+        int len = strlen(ref->scope);
         for (int i = 0; i < len; i++)
         {
             h += ref->scope[i];
@@ -61,8 +60,7 @@ static size_t VarRefHash(const VarRef *ref)
         }
     }
 
-    int len = strlen(ref->lval);
-    for (int i = 0; i < len; i++)
+    for (int i = 0; ref->lval[i] != '\0'; i++)
     {
         h += ref->lval[i];
         h += (h << 10);
@@ -71,8 +69,7 @@ static size_t VarRefHash(const VarRef *ref)
 
     for (size_t k = 0; k < ref->num_indices; k++)
     {
-        len = strlen(ref->indices[k]);
-        for (int i = 0; i < len; i++)
+        for (int i = 0; ref->indices[k][i] != '\0'; i++)
         {
             h += ref->indices[k][i];
             h += (h << 10);

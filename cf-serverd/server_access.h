@@ -21,14 +21,11 @@
  * @note: Currently these lists are binary searched, so after filling them up
  *        make sure you call StrList_Sort() to sort them.
  */
-struct resource_acl
+struct admitdeny_acl
 {
-    StrList *admit_ips;
-    StrList *admit_hostnames;
-    StrList *admit_keys;
-    StrList *deny_ips;
-    StrList *deny_hostnames;
-    StrList *deny_keys;
+    StrList *ips;                        /* admit_ips, deny_ips */
+    StrList *hostnames;                  /* admit_hostnames, deny_hostnames */
+    StrList *keys;                       /* admit_keys, deny_keys */
 };
 
 enum acl_type
@@ -58,8 +55,12 @@ struct acl
 //TODO    enum acl_type resource_type;
     size_t len;                        /* Length of the following arrays */
     size_t alloc_len;                  /* Used for realloc() economy  */
-    StrList *resource_names;    /* paths, class names, variables etc */
-    struct resource_acl acls[];
+    StrList *resource_names;           /* paths, class names, variables etc */
+    struct resource_acl
+    {
+        struct admitdeny_acl admit;
+        struct admitdeny_acl deny;
+    } acls[];
 };
 
 

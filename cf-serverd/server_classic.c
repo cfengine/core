@@ -203,14 +203,6 @@ static int AccessControl(EvalContext *ctx, const char *req_path, ServerConnectio
             res = true;
         }
 
-        /* Check if the accesslist allows everything (will not be covered by
-         * first check if transrequest is not absolute which is IMPOSSIBLE SO
-         * THIS IS CHECK IS ALWAYS COVERED BY THE FIRST ONE). */
-        /* if (strcmp(transpath, "/") == 0) */
-        /* { */
-        /*     res = true; */
-        /* } */
-
         if (res)
         {
             Log(LOG_LEVEL_VERBOSE, "Found a matching rule in access list (%s in %s)", transrequest, transpath);
@@ -250,11 +242,6 @@ static int AccessControl(EvalContext *ctx, const char *req_path, ServerConnectio
         }
     }
 
-    /* Make sure again that the entry in the admit path (WAT?) is a prefix of
-     * the requested path. What if transpath is uninitialised because there
-     * were no ADMIT entries? Oh man this is horrible... */
-    /* if (strncmp(transpath, transrequest, strlen(transpath)) == 0) */
-    /* { */
     for (Auth *dp = SV.deny; dp != NULL; dp = dp->next)
     {
         strncpy(transpath, dp->path, CF_BUFSIZE - 1);

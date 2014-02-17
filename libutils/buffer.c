@@ -29,10 +29,10 @@
 
 Buffer *BufferNewWithCapacity(unsigned int initial_capacity)
 {
-    Buffer *buffer = (Buffer *)xmalloc(sizeof(Buffer));
+    Buffer *buffer = xmalloc(sizeof(Buffer));
 
     buffer->capacity = initial_capacity;
-    buffer->buffer = (char *)xmalloc(buffer->capacity);
+    buffer->buffer = xmalloc(buffer->capacity);
     buffer->buffer[0] = '\0';
     buffer->mode = BUFFER_BEHAVIOR_CSTRING;
     buffer->used = 0;
@@ -57,30 +57,9 @@ static void ExpandIfNeeded(Buffer *buffer, unsigned int needed)
 
 Buffer* BufferNewFrom(const char *data, unsigned int length)
 {
-    Buffer *buffer = (Buffer *)xmalloc(sizeof(Buffer));
-    buffer->capacity = length + 1;
-    buffer->buffer = xmalloc(buffer->capacity);
-    buffer->mode = BUFFER_BEHAVIOR_CSTRING;
-    buffer->used = 0;
+    Buffer *buffer = BufferNewWithCapacity(length + 1);
+    BufferAppend(buffer, data, length);
 
-    /*
-     * We have a buffer that is large enough, copy the data.
-     */
-    unsigned int total = 0;
-    for (unsigned int c = 0; c < length; ++c)
-    {
-        buffer->buffer[c] = data[c];
-        if ((data[c] == '\0') && (buffer->mode == BUFFER_BEHAVIOR_CSTRING))
-        {
-            break;
-        }
-        ++total;
-    }
-    buffer->used = total;
-    if (buffer->mode == BUFFER_BEHAVIOR_CSTRING)
-    {
-        buffer->buffer[buffer->used] = '\0';
-    }
     return buffer;
 }
 
@@ -244,26 +223,9 @@ void BufferSet(Buffer *buffer, const char *bytes, unsigned int length)
     assert(buffer);
     assert(bytes);
 
-    ExpandIfNeeded(buffer, buffer->used + length);
+    BufferClear(buffer);
 
-    buffer->used = 0;
-    unsigned int c = 0;
-    unsigned int total = 0;
-    for (c = 0; c < length; ++c)
-    {
-        buffer->buffer[c] = bytes[c];
-        if ((bytes[c] == '\0')
-            && (buffer->mode = BUFFER_BEHAVIOR_CSTRING))
-        {
-            break;
-        }
-        ++total;
-    }
-    buffer->used = total;
-    if (buffer->mode == BUFFER_BEHAVIOR_CSTRING)
-    {
-        buffer->buffer[buffer->used] = '\0';
-    }
+    BufferAppend(buffer, bytes, length);
 }
 
 char *BufferGet(Buffer *buffer)
@@ -275,29 +237,36 @@ char *BufferGet(Buffer *buffer)
 
 void BufferAppend(Buffer *buffer, const char *bytes, unsigned int length)
 {
-    ExpandIfNeeded(buffer, buffer->used + length);
+    assert(buffer);
+    assert(bytes);
 
-    unsigned int total = 0;
-    for (unsigned int c = 0; c < length; ++c)
+    if (length == 0)
     {
-        buffer->buffer[c + buffer->used] = bytes[c];
-        if ((bytes[c] == '\0')
-            && (buffer->mode = BUFFER_BEHAVIOR_CSTRING))
-        {
-            break;
-        }
-        ++total;
+        return;
     }
-    buffer->used += total;
-    if (buffer->mode == BUFFER_BEHAVIOR_CSTRING)
+
+    switch (buffer->mode)
     {
-        buffer->buffer[buffer->used] = '\0';
+    case BUFFER_BEHAVIOR_CSTRING:
+        {
+            size_t actual_length = strnlen(bytes, length);
+            ExpandIfNeeded(buffer, buffer->used + actual_length + 1);
+            memcpy(buffer->buffer + buffer->used, bytes, actual_length);
+            buffer->used += actual_length;
+            buffer->buffer[buffer->used] = '\0';
+        }
+        break;
+
+    case BUFFER_BEHAVIOR_BYTEARRAY:
+        ExpandIfNeeded(buffer, buffer->used + length);
+        memcpy(buffer->buffer + buffer->used, bytes, length);
+        buffer->used += length;
+        break;
     }
 }
 
 void BufferAppendChar(Buffer *buffer, char byte)
 {
-    // TODO: can probably be optimized
     BufferAppend(buffer, &byte, 1);
 }
 

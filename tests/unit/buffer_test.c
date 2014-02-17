@@ -244,57 +244,62 @@ static void test_appendBuffer(void)
     assert_string_equal(longAppend, BufferData(buffer));
 
     BufferClear(buffer);
-    /*
-     * Boundary checks, BUFFER_SIZE-1, BUFFER_SIZE and BUFFER_SIZE+1
-     */
-    Buffer *bm1 = BufferNew();
-    Buffer *be = BufferNew();
-    Buffer *bp1 = BufferNew();
-    char buffer_m1[DEFAULT_BUFFER_CAPACITY - 1];
-    char buffer_0[DEFAULT_BUFFER_CAPACITY];
-    char buffer_p1[DEFAULT_BUFFER_CAPACITY + 1];
-    unsigned int bm1_size = DEFAULT_BUFFER_CAPACITY - 1;
-    unsigned int be_size = DEFAULT_BUFFER_CAPACITY;
-    unsigned int bp1_size = DEFAULT_BUFFER_CAPACITY + 1;
-    for (i = 0; i < DEFAULT_BUFFER_CAPACITY - 1; ++i)
-    {
-        buffer_m1[i] = 'c';
-        buffer_0[i] = 'd';
-        buffer_p1[i] = 'e';
-    }
-    /*
-     * One shorter, that means the buffer remains the same size as before.
-     */
-    buffer_m1[DEFAULT_BUFFER_CAPACITY - 2] = '\0';
-    BufferAppend(bm1, buffer_m1, bm1_size);
-    assert_int_equal(bm1_size, BufferSize(bm1));
-    assert_int_equal(bm1->capacity, DEFAULT_BUFFER_CAPACITY);
-    /*
-     * Same size, it should allocate one more block
-     */
-    buffer_0[DEFAULT_BUFFER_CAPACITY - 1] = '\0';
-    BufferAppend(be, buffer_0, be_size);
-    assert_int_equal(be_size, BufferSize(be));
-    assert_int_equal(be->capacity, 2 * DEFAULT_BUFFER_CAPACITY);
-    /*
-     * 1 more, it should allocate one more block
-     */
-    buffer_p1[DEFAULT_BUFFER_CAPACITY] = '\0';
-    BufferAppend(bp1, buffer_p1, bp1_size);
-    assert_int_equal(bp1_size, BufferSize(bp1));
-    assert_int_equal(bp1->capacity, 2 * DEFAULT_BUFFER_CAPACITY);
+
     /*
      * Destroy the buffer and good night.
      */
     free(shortAppend);
     free(longAppend);
     BufferDestroy(buffer);
-    BufferDestroy(bm1);
-    BufferDestroy(be);
-    BufferDestroy(bp1);
     free(element0);
     free(element1);
     free(element2);
+}
+
+static void test_append_boundaries(void)
+{
+    /*
+     * Boundary checks, BUFFER_SIZE-1, BUFFER_SIZE and BUFFER_SIZE+1
+     */
+    char buffer_m1[DEFAULT_BUFFER_CAPACITY - 1];
+    char buffer_0[DEFAULT_BUFFER_CAPACITY];
+    char buffer_p1[DEFAULT_BUFFER_CAPACITY + 1];
+    for (size_t i = 0; i < DEFAULT_BUFFER_CAPACITY - 1; ++i)
+    {
+        buffer_m1[i] = 'c';
+        buffer_0[i] = 'd';
+        buffer_p1[i] = 'e';
+    }
+
+    {
+        const unsigned int bm1_size = DEFAULT_BUFFER_CAPACITY - 1;
+        Buffer *bm1 = BufferNew();
+        buffer_m1[DEFAULT_BUFFER_CAPACITY - 2] = '\0';
+        BufferAppend(bm1, buffer_m1, bm1_size);
+        assert_int_equal(strlen(buffer_m1), BufferSize(bm1));
+        assert_int_equal(bm1->capacity, DEFAULT_BUFFER_CAPACITY);
+        BufferDestroy(bm1);
+    }
+
+    {
+        const unsigned int be_size = DEFAULT_BUFFER_CAPACITY;
+        Buffer *be = BufferNew();
+        buffer_0[DEFAULT_BUFFER_CAPACITY - 1] = '\0';
+        BufferAppend(be, buffer_0, be_size);
+        assert_int_equal(strlen(buffer_0), BufferSize(be));
+        assert_int_equal(be->capacity, 2 * DEFAULT_BUFFER_CAPACITY);
+        BufferDestroy(be);
+    }
+
+    {
+        const unsigned int bp1_size = DEFAULT_BUFFER_CAPACITY + 1;
+        Buffer *bp1 = BufferNew();
+        buffer_p1[DEFAULT_BUFFER_CAPACITY] = '\0';
+        BufferAppend(bp1, buffer_p1, bp1_size);
+        assert_int_equal(strlen(buffer_p1), BufferSize(bp1));
+        assert_int_equal(bp1->capacity, 2 * DEFAULT_BUFFER_CAPACITY);
+        BufferDestroy(bp1);
+    }
 }
 
 static void test_printf(void)
@@ -598,15 +603,16 @@ int main()
     PRINT_TEST_BANNER();
     const UnitTest tests[] =
     {
-        unit_test(test_createBuffer)
-        , unit_test(test_createBufferFrom)
-        , unit_test(test_destroyBuffer)
-        , unit_test(test_zeroBuffer)
-        , unit_test(test_copyCompareBuffer)
-        , unit_test(test_setBuffer)
-        , unit_test(test_appendBuffer)
-        , unit_test(test_printf)
-        , unit_test(test_vprintf)
+        unit_test(test_createBuffer),
+        unit_test(test_createBufferFrom),
+        unit_test(test_destroyBuffer),
+        unit_test(test_zeroBuffer),
+        unit_test(test_copyCompareBuffer),
+        unit_test(test_setBuffer),
+        unit_test(test_appendBuffer),
+        unit_test(test_append_boundaries),
+        unit_test(test_printf),
+        unit_test(test_vprintf)
     };
 
     return run_tests(tests);

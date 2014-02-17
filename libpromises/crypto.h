@@ -26,6 +26,7 @@
 #define CFENGINE_CRYPTO_H
 
 #include <platform.h>
+#include <logging.h>
 
 void CryptoInitialize(void);
 void CryptoDeInitialize(void);
@@ -41,5 +42,6 @@ void SavePublicKey(const char *username, const char *digest, const RSA *key);
 
 char *PublicKeyFile(const char *workdir);
 char *PrivateKeyFile(const char *workdir);
+LogLevel CryptoGetMissingKeyLogLevel();
 
 #endif

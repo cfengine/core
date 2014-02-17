@@ -84,12 +84,12 @@ bool TLSClientInitialize()
 
     if (PRIVKEY == NULL || PUBKEY == NULL)
     {
-        Log(LOG_LEVEL_WARNING,
+        Log(CryptoGetMissingKeyLogLevel(),
             "No public/private key pair is loaded, trying to reload");
         LoadSecretKeys();
         if (PRIVKEY == NULL || PUBKEY == NULL)
         {
-            Log(LOG_LEVEL_ERR,
+            Log(CryptoGetMissingKeyLogLevel(),
                 "No public/private key pair found");
             goto err2;
         }

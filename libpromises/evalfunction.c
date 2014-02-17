@@ -6783,7 +6783,7 @@ static const FnCallArg FILESTAT_DETAIL_ARGS[] =
 
 static const FnCallArg FILESEXIST_ARGS[] =
 {
-    {CF_NAKEDLRANGE, CF_DATA_TYPE_STRING, "Array identifier containing list"},
+    {CF_NAKEDLRANGE, CF_DATA_TYPE_STRING, "CFEngine list identifier"},
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
 
@@ -6924,8 +6924,8 @@ static const FnCallArg IPRANGE_ARGS[] =
 
 static const FnCallArg IRANGE_ARGS[] =
 {
-    {CF_INTRANGE, CF_DATA_TYPE_INT, "Integer"},
-    {CF_INTRANGE, CF_DATA_TYPE_INT, "Integer"},
+    {CF_INTRANGE, CF_DATA_TYPE_INT, "Integer start of range"},
+    {CF_INTRANGE, CF_DATA_TYPE_INT, "Integer end of range"},
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
 
@@ -7014,14 +7014,14 @@ static const FnCallArg LSDIRLIST_ARGS[] =
 static const FnCallArg MAPLIST_ARGS[] =
 {
     {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Pattern based on $(this) as original text"},
-    {CF_IDRANGE, CF_DATA_TYPE_STRING, "The name of the list variable to map"},
+    {CF_IDRANGE, CF_DATA_TYPE_STRING, "CFEngine list identifier, the list variable to map"},
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
 
 static const FnCallArg MAPARRAY_ARGS[] =
 {
     {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Pattern based on $(this.k) and $(this.v) as original text"},
-    {CF_IDRANGE, CF_DATA_TYPE_STRING, "The name of the array variable to map"},
+    {CF_IDRANGE, CF_DATA_TYPE_STRING, "CFEngine array identifier, the array variable to map"},
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
 
@@ -7270,14 +7270,14 @@ static const FnCallArg RETURNSZERO_ARGS[] =
 
 static const FnCallArg RRANGE_ARGS[] =
 {
-    {CF_REALRANGE, CF_DATA_TYPE_REAL, "Real number"},
-    {CF_REALRANGE, CF_DATA_TYPE_REAL, "Real number"},
+    {CF_REALRANGE, CF_DATA_TYPE_REAL, "Real number, start of range"},
+    {CF_REALRANGE, CF_DATA_TYPE_REAL, "Real number, end of range"},
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
 
 static const FnCallArg SELECTSERVERS_ARGS[] =
 {
-    {CF_NAKEDLRANGE, CF_DATA_TYPE_STRING, "The identifier of a cfengine list of hosts or addresses to contact"},
+    {CF_NAKEDLRANGE, CF_DATA_TYPE_STRING, "CFEngine list identifier, the list of hosts or addresses to contact"},
     {CF_VALRANGE, CF_DATA_TYPE_INT, "The port number"},
     {CF_ANYSTRING, CF_DATA_TYPE_STRING, "A query string"},
     {CF_ANYSTRING, CF_DATA_TYPE_STRING, "A regular expression to match success"},

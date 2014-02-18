@@ -296,7 +296,7 @@ const ConstraintSyntax CFA_CONTROLBODY[] =
     ConstraintSyntaxNewBool("secureinput", "true/false check whether input files are writable by unauthorized users. Default value: false", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewInt("sensiblecount", CF_VALRANGE, "Minimum number of files a mounted filesystem is expected to have. Default value: 2 files", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewInt("sensiblesize", CF_VALRANGE, "Minimum number of bytes a mounted filesystem is expected to have. Default value: 1000 bytes", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewBool("skipidentify", "Do not send IP/name during server connection because address resolution is broken. Default value: false", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewBool("skipidentify", "This option does nothing and retained for backward compatibility", SYNTAX_STATUS_REMOVED),
     ConstraintSyntaxNewStringList("suspiciousnames", "", "List of names to warn about if found during any file search", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBool("syslog", "true/false switches on output to syslog at the inform level. Default value: false", SYNTAX_STATUS_REMOVED),
     ConstraintSyntaxNewBool("track_value", "true/false switches on tracking of promise valuation. Default value: false", SYNTAX_STATUS_REMOVED),

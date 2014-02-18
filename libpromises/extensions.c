@@ -97,8 +97,11 @@ void *extension_library_open(const char *name)
     void *handle = shlib_open(path);
     if (!handle)
     {
+        Log(LOG_LEVEL_VERBOSE, "Could not open extension '%s' ('%s'): %s", name, path, GetErrorStr());
         return handle;
     }
+
+    Log(LOG_LEVEL_VERBOSE, "Opened extension '%s' successfully", name);
 
     // Version check, to avoid binary incompatible plugins.
     const char * (*GetExtensionLibraryVersion)() = shlib_load(handle, "GetExtensionLibraryVersion");

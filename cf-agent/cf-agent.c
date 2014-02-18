@@ -226,6 +226,7 @@ static const char *const HINTS[] =
 int main(int argc, char *argv[])
 {
     int ret = 0;
+    struct timespec start = BeginMeasure();
 
     EvalContext *ctx = EvalContextNew();
 
@@ -280,6 +281,8 @@ int main(int argc, char *argv[])
     EvalContextDestroy(ctx);
 
     GenerateDiffReports(config->input_file);
+    Nova_NoteAgentExecutionPerformance(config->input_file, start);
+
     GenericAgentConfigDestroy(config);
 
     return ret;

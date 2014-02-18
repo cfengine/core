@@ -77,3 +77,9 @@ ENTERPRISE_VOID_FUNC_1ARG_DEFINE_STUB(void, Nova_TrackExecution, ARG_UNUSED cons
 ENTERPRISE_VOID_FUNC_1ARG_DEFINE_STUB(void, GenerateDiffReports, ARG_UNUSED const char *, input_file)
 {
 }
+
+ENTERPRISE_VOID_FUNC_2ARG_DEFINE_STUB(void, Nova_NoteAgentExecutionPerformance,
+                                      ARG_UNUSED const char *, input_file,
+                                      ARG_UNUSED struct timespec, start)
+{
+}

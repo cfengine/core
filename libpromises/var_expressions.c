@@ -84,6 +84,21 @@ static size_t VarRefHash(const VarRef *ref)
     return (h & (INT_MAX - 1));
 }
 
+const VarRef VarRefConst(const char *ns, const char *scope, const char *lval)
+{
+    VarRef ref;
+
+    ref.ns = (char *)ns;
+    ref.scope = (char *)scope;
+    ref.lval = (char *)lval;
+    ref.num_indices = 0;
+    ref.indices = NULL;
+
+    ref.hash = VarRefHash(&ref);
+
+    return ref;
+}
+
 VarRef *VarRefCopy(const VarRef *ref)
 {
     VarRef *copy = xmalloc(sizeof(VarRef));

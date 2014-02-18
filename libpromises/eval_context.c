@@ -1555,25 +1555,19 @@ StringSet *EvalContextStackPromisees(const EvalContext *ctx)
 
 bool EvalContextVariablePutSpecial(EvalContext *ctx, SpecialScope scope, const char *lval, const void *value, DataType type, const char *tags)
 {
-    switch (scope)
+    if (strchr(lval, '['))
     {
-    case SPECIAL_SCOPE_SYS:
-    case SPECIAL_SCOPE_MON:
-    case SPECIAL_SCOPE_CONST:
-    case SPECIAL_SCOPE_EDIT:
-    case SPECIAL_SCOPE_BODY:
-    case SPECIAL_SCOPE_THIS:
-    case SPECIAL_SCOPE_MATCH:
-        {
-            VarRef *ref = VarRefParseFromScope(lval, SpecialScopeToString(scope));
-            bool ret = EvalContextVariablePut(ctx, ref, value, type, tags);
-            VarRefDestroy(ref);
-            return ret;
-        }
-
-    default:
-        assert(false);
-        return false;
+        // dealing with (legacy) array reference in lval, must parse
+        VarRef *ref = VarRefParseFromScope(lval, SpecialScopeToString(scope));
+        bool ret = EvalContextVariablePut(ctx, ref, value, type, tags);
+        VarRefDestroy(ref);
+        return ret;
+    }
+    else
+    {
+        // plain lval, skip parsing
+        const VarRef ref = VarRefConst(NULL, SpecialScopeToString(scope), lval);
+        return EvalContextVariablePut(ctx, &ref, value, type, tags);
     }
 }
 

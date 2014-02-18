@@ -219,7 +219,6 @@ static FnCall *DefaultServiceBundleCall(const Promise *pp, ServicePolicy service
     }
 
     FnCall *call = FnCallNew("standard_services", args);
-    RlistDestroy(args);
 
     return call;
 }

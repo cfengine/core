@@ -37,7 +37,7 @@ struct FnCall_
 
 bool FnCallIsBuiltIn(Rval rval);
 
-FnCall *FnCallNew(const char *name, const Rlist *args);
+FnCall *FnCallNew(const char *name, Rlist *args);
 FnCall *FnCallCopy(const FnCall *f);
 void FnCallDestroy(FnCall *fp);
 unsigned FnCallHash(const FnCall *fp, unsigned seed, unsigned max);

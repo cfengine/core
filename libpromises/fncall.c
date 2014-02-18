@@ -102,13 +102,6 @@ static Rlist *NewExpArgs(EvalContext *ctx, const Policy *policy, const FnCall *f
     return expanded_args;
 }
 
-/******************************************************************/
-
-static void DeleteExpArgs(Rlist *args)
-{
-    RlistDestroy(args);
-}
-
 /*******************************************************************/
 
 bool FnCallIsBuiltIn(Rval rval)
@@ -317,7 +310,7 @@ FnCallResult FnCallEvaluate(EvalContext *ctx, const Policy *policy, FnCall *fp, 
 
     if (RlistIsUnresolved(expargs))
     {
-        DeleteExpArgs(expargs);
+        RlistDestroy(expargs);
         return (FnCallResult) { FNCALL_FAILURE, { FnCallCopy(fp), RVAL_TYPE_FNCALL } };
     }
 
@@ -328,6 +321,7 @@ FnCallResult FnCallEvaluate(EvalContext *ctx, const Policy *policy, FnCall *fp, 
         FnCallWrite(w, fp);
         Log(LOG_LEVEL_DEBUG, "Using previously cached result for function '%s'", StringWriterData(w));
         WriterClose(w);
+        RlistDestroy(expargs);
 
         return (FnCallResult) { FNCALL_SUCCESS, RvalCopy(cached_rval) };
     }
@@ -336,7 +330,7 @@ FnCallResult FnCallEvaluate(EvalContext *ctx, const Policy *policy, FnCall *fp, 
 
     if (result.status == FNCALL_FAILURE)
     {
-        DeleteExpArgs(expargs);
+        RlistDestroy(expargs);
         return (FnCallResult) { FNCALL_FAILURE, { FnCallCopy(fp), RVAL_TYPE_FNCALL } };
     }
 
@@ -349,7 +343,8 @@ FnCallResult FnCallEvaluate(EvalContext *ctx, const Policy *policy, FnCall *fp, 
 
         EvalContextFunctionCachePut(ctx, fp, expargs, &result.rval);
     }
-    DeleteExpArgs(expargs);
+
+    RlistDestroy(expargs);
 
     return result;
 }

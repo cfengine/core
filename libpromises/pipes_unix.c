@@ -127,6 +127,12 @@ static pid_t CreatePipeAndFork(const char *type, int *pd)
 
     signal(SIGCHLD, SIG_DFL);
 
+    // Redmine #2971: reset SIGPIPE signal handler to have a sane behavior of piped commands within child
+    if (pid == 0)
+    {
+        signal(SIGPIPE, SIG_DFL);
+    }
+
     ALARM_PID = (pid != 0 ? pid : -1);
 
     return pid;

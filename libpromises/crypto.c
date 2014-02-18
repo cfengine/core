@@ -549,7 +549,7 @@ LogLevel CryptoGetMissingKeyLogLevel(void)
 {
 #ifdef __MINGW32__
     return LOG_LEVEL_ERR;
-#endif
-
+#else
     return ((getuid() == 0 && NULL == getenv("FAKEROOTKEY")) ? LOG_LEVEL_ERR : LOG_LEVEL_VERBOSE);
+#endif
 }

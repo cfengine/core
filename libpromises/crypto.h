@@ -42,6 +42,6 @@ void SavePublicKey(const char *username, const char *digest, const RSA *key);
 
 char *PublicKeyFile(const char *workdir);
 char *PrivateKeyFile(const char *workdir);
-LogLevel CryptoGetMissingKeyLogLevel();
+LogLevel CryptoGetMissingKeyLogLevel(void);
 
 #endif

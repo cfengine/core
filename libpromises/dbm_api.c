@@ -84,7 +84,6 @@ static const char *const DB_PATHS[] = {
     [dbid_measure] = "state/nova_measures",
     [dbid_static] = "state/nova_static",
     [dbid_scalars] = "state/nova_pscalar",
-    [dbid_promise_compliance] = "state/promise_compliance",
     [dbid_windows_registry] = "mswin",
     [dbid_cache] = "nova_cache",
     [dbid_license] = "nova_track",

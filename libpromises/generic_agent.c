@@ -604,6 +604,11 @@ static Policy *LoadPolicyInputFiles(EvalContext *ctx, GenericAgentConfig *config
             continue;
         }
 
+        if (IsExpandable(unresolved_input))
+        {
+            PolicyResolve(ctx, policy, config);
+        }
+
         Rval resolved_input = EvaluateFinalRval(ctx, policy, NULL, "sys", rp->val, true, NULL);
 
         Policy *aux_policy = NULL;
@@ -634,8 +639,6 @@ static Policy *LoadPolicyInputFiles(EvalContext *ctx, GenericAgentConfig *config
         }
 
         RvalDestroy(resolved_input);
-
-        PolicyResolve(ctx, policy, config);
     }
 
     return policy;

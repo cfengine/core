@@ -120,8 +120,8 @@ static const char *const HINTS[] =
 
 int main(int argc, char *argv[])
 {
-    EvalContext *ctx = EvalContextNew();
     GenericAgentConfig *config = CheckOpts(argc, argv);
+    EvalContext *ctx = EvalContextNew();
     GenericAgentConfigApply(ctx, config);
 
     GenericAgentDiscoverContext(ctx, config);

@@ -225,12 +225,10 @@ static const char *const HINTS[] =
 
 int main(int argc, char *argv[])
 {
-    int ret = 0;
     struct timespec start = BeginMeasure();
 
-    EvalContext *ctx = EvalContextNew();
-
     GenericAgentConfig *config = CheckOpts(argc, argv);
+    EvalContext *ctx = EvalContextNew();
     GenericAgentConfigApply(ctx, config);
 
     GenericAgentDiscoverContext(ctx, config);
@@ -270,6 +268,7 @@ int main(int argc, char *argv[])
     BackupLockDatabase();
 
     PolicyDestroy(policy); /* Can we safely do this earlier ? */
+    int ret = 0;
     if (config->agent_specific.agent.bootstrap_policy_server && !VerifyBootstrap())
     {
         RemovePolicyServerFile(GetWorkDir());

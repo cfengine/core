@@ -1,0 +1,91 @@
+#######################################################
+#
+# Test that _repaired classes are defined on template repair 
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+
+}
+
+#######################################################
+
+bundle agent init
+{
+  vars:
+      "origtestdir" string => dirname("$(this.promise_filename)");
+
+  files:
+      "$(G.testfile)"
+        create => "true",
+        comment => "Need to see if we define repair when file exists";
+}
+
+body delete init_delete
+{
+      dirlinks => "delete";
+      rmdirs   => "true";
+}
+
+#######################################################
+
+bundle agent test
+{
+  vars:
+      "template_file" string => "$(init.origtestdir)/demo.mustache";
+
+  files:
+      "$(G.testfile)"
+      edit_template => "$(template_file)",
+      template_method => "mustache",
+      classes => classes_generic("templated_file"),
+      template_data => readjson("$(init.origtestdir)/demo.json", 4096);
+
+  reports:
+    DEBUG::
+      "Rendering template file $(template_file) to $(G.testfile)";
+}
+
+body copy_from sync_cp(from)
+{
+      source => "$(from)";
+}
+
+body classes classes_generic(x)
+# @brief Define `x` prefixed/suffixed with promise outcome
+# @param x The unique part of the classes to be defined
+{
+      promise_repaired => { "promise_repaired_$(x)", "$(x)_repaired", "$(x)_ok", "$(x)_reached" };
+      repair_failed => { "repair_failed_$(x)", "$(x)_failed", "$(x)_not_ok", "$(x)_not_kept", "$(x)_not_repaired", "$(x)_reached" };
+      repair_denied => { "repair_denied_$(x)", "$(x)_denied", "$(x)_not_ok", "$(x)_not_kept", "$(x)_not_repaired", "$(x)_reached" };
+      repair_timeout => { "repair_timeout_$(x)", "$(x)_timeout", "$(x)_not_ok", "$(x)_not_kept", "$(x)_not_repaired", "$(x)_reached" };
+      promise_kept => { "promise_kept_$(x)", "$(x)_kept", "$(x)_ok", "$(x)_not_repaired", "$(x)_reached" };
+}
+#######################################################
+
+bundle agent check
+{
+  vars:
+      "expect" string => readfile("$(init.origtestdir)/demo.expected", 4096);
+      "actual" string => readfile("$(G.testfile)", 4096);
+
+  classes:
+      "content_ok" expression => regcmp("$(expect)", "$(actual)");
+      "repair_ok" expression => "templated_file_repaired";
+      "ok" and => { "content_ok", "repair_ok" };
+
+  reports:
+    DEBUG::
+      "expect: '$(expect)'";
+      "actual: '$(actual)'";
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}
+### PROJECT_ID: core
+### CATEGORY_ID: 27

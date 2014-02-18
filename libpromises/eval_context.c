@@ -775,6 +775,7 @@ static void StackFrameDestroy(StackFrame *frame)
             ProgrammingError("Unhandled stack frame type");
         }
 
+        free(frame->path);
         free(frame);
     }
 }
@@ -985,8 +986,6 @@ static StackFrame *StackFrameNewBundle(const Bundle *owner, bool inherit_previou
     frame->data.bundle.owner = owner;
     frame->data.bundle.classes = ClassTableNew();
     frame->data.bundle.vars = VariableTableNew();
-
-
 
     return frame;
 }

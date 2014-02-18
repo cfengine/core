@@ -250,6 +250,29 @@ commands:
     contain => useshell;
 }
 
+bundle agent default_cf_sub_makefile(file, str)
+{
+  files:
+      "$(file)"
+      create => "true",
+      edit_line => default_cf_sub_insert($(str)),
+      edit_defaults => default_cf_sub_empty;
+  reports:
+    DEBUG::
+      "$(this.bundle): creating $(file) with contents '$(str)'";
+}
+
+bundle edit_line default_cf_sub_insert(str)
+{
+  insert_lines:
+      "$(str)";
+}
+
+body edit_defaults default_cf_sub_empty
+{
+      empty_file_before_editing => "true";
+}
+
 body contain useshell
 {
   useshell => "true";

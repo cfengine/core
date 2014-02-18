@@ -1,0 +1,146 @@
+#######################################################
+#
+# Test hash()
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+  vars:
+      "base_null" string => "";
+      "base_easy" string => "test";
+      "base_hard" string => 'This is a test of
+the hash function!";';
+
+      "strings" slist => { "null", "easy", "hard" };
+
+      "$(strings)" string => "$(base_$(strings))
+";
+
+  methods:
+      "make $(strings)" usebundle => default_cf_sub_makefile("$(G.testfile).$(strings).txt", "$(base_$(strings))");
+}
+
+#######################################################
+
+bundle agent test
+{
+  vars:
+      "algos" slist => { "md5", "sha1", "sha256", "sha384", "sha512" };
+
+      # XXX # What do we do about testing the crypt hash-type?
+      #
+      "null_$(algos)" string => hash("$(init.null)", $(algos));
+
+      # Cfengine does not expand most \ characters, so use Perl :-)
+      "easy_$(algos)" string => hash("$(init.easy)", $(algos));
+
+      "hard_$(algos)" string => hash("$(init.hard)", $(algos));
+}
+
+#######################################################
+
+bundle agent check
+{
+  vars:
+      "null_md5" string => "68b329da9893e34099c7d8ad5cb9c940";
+      "null_sha1" string => "adc83b19e793491b1c6ea0fd8b46cd9f32e592fc";
+      "null_sha256" string => "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b";
+      "null_sha384" string => "ec664e889ed6c1b2763cacf7899d95b7f347373eb982e523419feea3aa362d891b3bf025f292267a5854049091789c3e";
+      "null_sha512" string => "be688838ca8686e5c90689bf2ab585cef1137c999b48c70b92f67a5c34dc15697b5d11c982ed6d71be1e1e7f7b4e0733884aa97c3f7a339a8ed03577cf74be09";
+
+      "easy_md5" string => "d8e8fca2dc0f896fd7cb4cb0031ba249";
+      "easy_sha1" string => "4e1243bd22c66e76c2ba9eddc1f91394e57f9f83";
+      "easy_sha256" string => "f2ca1bb6c7e907d06dafe4687e579fce76b37e4e93b7605022da52e6ccc26fd2";
+      "easy_sha384" string => "109bb6b5b6d5547c1ce03c7a8bd7d8f80c1cb0957f50c4f7fda04692079917e4f9cad52b878f3d8234e1a170b154b72d";
+      "easy_sha512" string => "0e3e75234abc68f4378a86b3f4b32a198ba301845b0cd6e50106e874345700cc6663a86c1ea125dc5e92be17c98f9a0f85ca9d5f595db2012f7cc3571945c123";
+
+      "hard_md5" string => "e80a705b338f8bd4e2525a2cec846233";
+      "hard_sha1" string => "305636f0563c179c71955612bff716648d2aa9bf";
+      "hard_sha256" string => "fbfa93af3ddc81df9f812a6d2eff1a40d53160692c81f9f8cfffa9b4562a1749";
+      "hard_sha384" string => "712843c71d5ca0b6a2b663251b8b5d08abe5fb55adc4445e6fdf759e5429a98f2c762a0f82612d4e42c4703474b58eb5";
+      "hard_sha512" string => "c9d45d2669a941d4e5014ac291fd0cac0c7717604476416cad118898f238a2887057269e70ac5cad972cf5b8cbb0673e985285b0cc69810d4fee507b8b89067c";
+
+      "algos" slist => { @(test.algos) };
+      "strings" slist => { @(init.strings) };
+  classes:
+      "ok_$(strings)_$(algos)" expression => strcmp("$(test.$(strings)_$(algos))", "$($(strings)_$(algos))");
+      "not_ok_$(strings)_$(algos)" not => strcmp("$(test.$(strings)_$(algos))", "$($(strings)_$(algos))");
+
+      "ok_hmatch_$(strings)_$(algos)" expression => hashmatch("$(G.testfile).$(strings).txt", $(algos), "$($(strings)_$(algos))");
+      "not_ok_hmatch_$(strings)_$(algos)" not => hashmatch("$(G.testfile).$(strings).txt", $(algos), "$($(strings)_$(algos))");
+
+      "ok_null" and => {
+                         "ok_null_md5",
+                         "ok_null_sha1",
+                         "ok_null_sha256",
+                         "ok_null_sha384",
+                         "ok_null_sha512",
+      };
+
+      "ok_easy" and => {
+                         "ok_easy_md5",
+                         "ok_easy_sha1",
+                         "ok_easy_sha256",
+                         "ok_easy_sha384",
+                         "ok_easy_sha512",
+      };
+
+      "ok_hard" and => {
+                         "ok_hard_md5",
+                         "ok_hard_sha1",
+                         "ok_hard_sha256",
+                         "ok_hard_sha384",
+                         "ok_hard_sha512",
+      };
+
+      "ok_hmatch_null" and => {
+                         "ok_hmatch_null_md5",
+                         "ok_hmatch_null_sha1",
+                         "ok_hmatch_null_sha256",
+                         "ok_hmatch_null_sha384",
+                         "ok_hmatch_null_sha512",
+      };
+
+      "ok_hmatch_easy" and => {
+                         "ok_hmatch_easy_md5",
+                         "ok_hmatch_easy_sha1",
+                         "ok_hmatch_easy_sha256",
+                         "ok_hmatch_easy_sha384",
+                         "ok_hmatch_easy_sha512",
+      };
+
+      "ok_hmatch_hard" and => {
+                         "ok_hmatch_hard_md5",
+                         "ok_hmatch_hard_sha1",
+                         "ok_hmatch_hard_sha256",
+                         "ok_hmatch_hard_sha384",
+                         "ok_hmatch_hard_sha512",
+      };
+
+      "ok" and => { "ok_null", "ok_easy", "ok_hard",
+                    "ok_hmatch_null", "ok_hmatch_easy", "ok_hmatch_hard" };
+
+  reports:
+    DEBUG::
+      "$(strings) / $(algos) is OK" ifvarclass => "ok_$(strings)_$(algos)";
+      "$(strings) / $(algos) failed, $(test.$(strings)_$(algos)) != $($(strings)_$(algos)) (original = $(init.$(strings)))"
+      ifvarclass => "not_ok_$(strings)_$(algos)";
+
+      "$(strings) / $(algos) hashmatch is OK" ifvarclass => "ok_hmatch_$(strings)_$(algos)";
+      "$(strings) / $(algos) hashmatch failed $($(strings)_$(algos)) against $(G.testfile).$(strings).txt"
+      ifvarclass => "not_ok_hmatch_$(strings)_$(algos)";
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

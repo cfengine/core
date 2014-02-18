@@ -36,6 +36,12 @@ bundle agent test
       "$(G.testfile)"
       move_obstructions => "true",
       link_from => test_link;
+
+   meta:
+     "tags" slist => { "test_suppress_fail" };
+   vars:
+     "test_suppress_fail" string => "windows";
+     "failure_issue_number" => "4608";
 }
 
 body link_from test_link

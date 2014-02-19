@@ -74,19 +74,14 @@ void EndMeasurePromise(struct timespec start, const Promise *pp)
 void EndMeasure(char *eventname, struct timespec start)
 {
     struct timespec stop;
-    int measured_ok = true;
-    double dt;
 
     if (clock_gettime(CLOCK_REALTIME, &stop) == -1)
     {
         Log(LOG_LEVEL_VERBOSE, "Clock gettime failure. (clock_gettime: %s)", GetErrorStr());
-        measured_ok = false;
     }
-
-    dt = (double) (stop.tv_sec - start.tv_sec) + (double) (stop.tv_nsec - start.tv_nsec) / (double) CF_BILLION;
-
-    if (measured_ok)
+    else
     {
+        double dt = (stop.tv_sec - start.tv_sec) + (stop.tv_nsec - start.tv_nsec) / (double) CF_BILLION;
         NotePerformance(eventname, start.tv_sec, dt);
     }
 }
@@ -96,20 +91,16 @@ void EndMeasure(char *eventname, struct timespec start)
 int EndMeasureValueMs(struct timespec start)
 {
     struct timespec stop;
-    int measured_ok = true;
-    double dt;
 
     if (clock_gettime(CLOCK_REALTIME, &stop) == -1)
     {
         Log(LOG_LEVEL_VERBOSE, "Clock gettime failure. (clock_gettime: %s)", GetErrorStr());
-        measured_ok = false;
     }
-
-    dt = (double) (stop.tv_sec - start.tv_sec) + (double) (stop.tv_nsec - start.tv_nsec) / (double) CF_BILLION;
-
-    if (measured_ok)
+    else
     {
-        return (int)(dt * 1000); // to [ms]
+        double dt = ((stop.tv_sec - start.tv_sec) * 1e3 + /* 1 s = 1e3 ms */
+                     (stop.tv_nsec - start.tv_nsec) / 1e6); /* 1e6 ns = 1 ms */
+        return (int)dt;
     }
 
     return -1;

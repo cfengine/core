@@ -49,10 +49,6 @@ if [ -f /usr/xpg4/bin/grep ]; then
   export PATH
 fi
 
-# Use only newline as token separator, not spaces.
-IFS='
-'
-
 #
 # Unset environment variables which might break runinng acceptance tests
 #
@@ -72,8 +68,21 @@ STAGING_TESTS=${STAGING_TESTS:-0}
 NETWORK_TESTS=${NETWORK_TESTS:-1}
 UNSAFE_TESTS=${UNSAFE_TESTS:-0}
 LIBXML2_TESTS=${LIBXML2_TESTS:-1}
-GAINROOT=${GAINROOT:-fakeroot}
 NO_CLEAN=0
+
+case "$OSTYPE" in
+  msys)
+    GAINROOT=${GAINROOT:-}
+    # Use hardlinks on Windows. Using symbolic links will work, but Msys creates a
+    # real copy, which eats disk space very quickly when you multiply with the number
+    # of tests.
+    LN_CMD="ln -f"
+    ;;
+  *)
+    GAINROOT=${GAINROOT:-fakeroot}
+    LN_CMD="ln -sf"
+    ;;
+esac
 
 PASSED_TESTS=0
 FAILED_TESTS=0
@@ -124,7 +133,7 @@ unix_seconds() {
 # echo
 
 usage() {
-  echo "testall [-h|--help] [-q|--quiet] [--gainroot=<command>] [--agent=<agent>] [--cfpromises=<cf-promises>] [--cfserverd=<cf-serverd>] [--cfkey=<cf-key>] [--no-nova] [--staging] [--unsafe] [--no-network] [--gdb] [--printlog] [<test> <test>...]"
+  echo "testall [-h|--help] [-q|--quiet] [--gainroot=<command>] [--agent=<agent>] [--cfpromises=<cf-promises>] [--cfserverd=<cf-serverd>] [--cfkey=<cf-key>] [--bindir=<bindir>] [--staging] [--unsafe] [--no-network] [--gdb] [--printlog] [<test> <test>...]"
   echo
   echo "If no test is given, all standard tests are run:"
   echo "  Tests with names of form <file>.cf are expected to run succesfully"
@@ -152,6 +161,9 @@ usage() {
   echo
   echo " --cfkey  provides a way to specify non-default cf-key location,"
   echo "               and defaults to $DEFCF_KEY."
+  echo
+  echo " --bindir  specifies the directory containing all the binaries."
+  echo "           Mutually exclusive with --agent and --cf* arguments."
   echo
   echo " --libtool specify non-default libtool location (only needed for --gdb)."
   echo "               defaults to $DEFLIBTOOL."
@@ -220,10 +232,15 @@ runtest() {
     $GAINROOT rm -rf "$WORKDIR"
     mkdir -p "$WORKDIR/bin" "$WORKDIR/tmp"
     chmod ugo+rwxt "$WORKDIR/tmp"
-    ln -sf "$AGENT" "$WORKDIR/bin"
-    ln -sf "$CF_PROMISES" "$WORKDIR/bin"
-    ln -sf "$CF_SERVERD" "$WORKDIR/bin"
-    ln -sf "$CF_KEY" "$WORKDIR/bin"
+    if [ -n "$BINDIR" ]; then
+      # Copy everything, because Windows depends on DLLs.
+      $LN_CMD "$BINDIR"/* "$WORKDIR/bin"
+    else
+      $LN_CMD "$AGENT" "$WORKDIR/bin"
+      $LN_CMD "$CF_PROMISES" "$WORKDIR/bin"
+      $LN_CMD "$CF_SERVERD" "$WORKDIR/bin"
+      $LN_CMD "$CF_KEY" "$WORKDIR/bin"
+    fi
     if uname | grep MINGW > /dev/null; then
         PLATFORM_WORKDIR="$(echo $WORKDIR | sed -e 's%^/\([a-cA-Z]\)/%\1:/%' | sed -e 's%/%\\%g')"
         DS="\\"
@@ -360,22 +377,6 @@ export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP CFENGINE_TEST_OVERRIDE_EXTENSION_LIBR
   fi
 }
 
-# We assume we're running this script from $objdir, $objdir/tests/acceptance,
-# or /var/cfengine/tests/acceptance.
-find_default_binary()
-{
-    [ -x "`pwd`/$2/$2" ] && eval $1=\""`pwd`/$2/$2"\"
-    [ -x "`pwd`/../../$2/$2" ] && eval $1=\""`pwd`/../../$2/$2"\"
-    [ -x "`pwd`/../../bin/$2" ] && eval $1=\""`pwd`/../../bin/$2"\"
-}
-find_default_binary DEFAGENT cf-agent
-find_default_binary DEFCF_PROMISES cf-promises
-find_default_binary DEFCF_SERVERD cf-serverd
-find_default_binary DEFCF_KEY cf-key
-
-[ -x "`pwd`/libtool" ] && DEFLIBTOOL="`pwd`/libtool"
-[ -x "`pwd`/../../libtool" ] && DEFLIBTOOL="`pwd`/../../libtool"
-
 while true; do
   case "$1" in
     -h|--help)
@@ -401,6 +402,8 @@ while true; do
       CF_SERVERD=${1#--cfserverd=};;
     --cfkey=*)
       CF_KEY=${1#--cfkey=};;
+    --bindir=*)
+      BINDIR=${1#--bindir=};;
     --libtool=*)
       LIBTOOL=${1#--libtool=};;
     --printlog)
@@ -417,6 +420,30 @@ while true; do
   esac
   shift
 done
+
+if [ -n "$AGENT" -o -n "$CF_PROMISES" -o -n "$CF_SERVERD" -o -n "$CF_KEY" ]; then
+  if [ -n "$BINDIR" ]; then
+    echo "--bindir is mutually exclusive with --agent and --cf* arguments"
+    exit 2
+  fi
+fi
+
+# We assume we're running this script from $objdir, $objdir/tests/acceptance,
+# or /var/cfengine/tests/acceptance.
+find_default_binary()
+{
+    [ -n "$BINDIR" -a -x "$BINDIR/$2" ] && eval $1=\""$BINDIR/$2"\"
+    [ -x "`pwd`/$2/$2" ] && eval $1=\""`pwd`/$2/$2"\"
+    [ -x "`pwd`/../../$2/$2" ] && eval $1=\""`pwd`/../../$2/$2"\"
+    [ -x "`pwd`/../../bin/$2" ] && eval $1=\""`pwd`/../../bin/$2"\"
+}
+find_default_binary DEFAGENT cf-agent
+find_default_binary DEFCF_PROMISES cf-promises
+find_default_binary DEFCF_SERVERD cf-serverd
+find_default_binary DEFCF_KEY cf-key
+
+[ -x "`pwd`/libtool" ] && DEFLIBTOOL="`pwd`/libtool"
+[ -x "`pwd`/../../libtool" ] && DEFLIBTOOL="`pwd`/../../libtool"
 
 AGENT=${AGENT:-${DEFAGENT}}
 CF_PROMISES=${CF_PROMISES:-${DEFCF_PROMISES}}
@@ -513,7 +540,7 @@ START_TIME=$(unix_seconds)
 for test in $TESTS; do
   echo "    "\<testcase name=\"$(basename $test)\" >> "$XMLTMP"
   echo "              "classname=\"$test\" >> "$XMLTMP"
-  runtest $AGENT "$test"
+  runtest "$AGENT" "$test"
   echo "    "\<\/testcase\> >> "$XMLTMP"
 done
 

@@ -71,7 +71,7 @@
 #include <ctype.h>
 
 
-static FnCallResult FilterInternal(EvalContext *ctx, const FnCall *fp, char *regex, char *name, int do_regex, int invert, long max);
+static FnCallResult FilterInternal(EvalContext *ctx, const FnCall *fp, const char *regex, const char *name, bool do_regex, bool invert, long max);
 static char* JsonPrimitiveToString(const JsonElement *el);
 
 static char *StripPatterns(char *file_buffer, const char *pattern, const char *filename);
@@ -3274,9 +3274,14 @@ static const Rlist *GetListReferenceArgument(const EvalContext *ctx, const const
 
 /*********************************************************************/
 
-static FnCallResult FilterInternal(EvalContext *ctx, const FnCall *fp, char *regex, char *name, int do_regex, int invert, long max)
+static FnCallResult FilterInternal(EvalContext *ctx,
+                                   const FnCall *fp,
+                                   const char *regex,
+                                   const char *name,
+                                   bool do_regex,
+                                   bool invert,
+                                   long max)
 {
-    //Log(LOG_LEVEL_DEBUG, "%s: regex %s, name %s, do_regex %d, invert %d, max %ld", fp->name, regex, name, do_regex, invert, max);
     DataType type = CF_DATA_TYPE_NONE;
     VarRef *ref = VarRefParse(name);
     const void *value = EvalContextVariableGet(ctx, ref, &type);
@@ -3423,6 +3428,7 @@ static FnCallResult FilterInternal(EvalContext *ctx, const FnCall *fp, char *reg
 
     if (contextmode)
     {
+        RlistDestroy(returnlist);
         return FnReturnContext(ret);
     }
 

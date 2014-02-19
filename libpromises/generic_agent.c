@@ -796,18 +796,15 @@ Policy *GenericAgentLoadPolicy(EvalContext *ctx, GenericAgentConfig *config)
         VerifyPromises(ctx, policy, config);
     }
 
-    if (!MINUSF)
+    JsonElement *validated_doc = ReadReleaseIdFileFromInputs();
+    if (validated_doc)
     {
-        JsonElement *validated_doc = ReadReleaseIdFileFromInputs();
-        if (validated_doc)
+        const char *release_id = JsonObjectGetAsString(validated_doc, "releaseId");
+        if (release_id)
         {
-            const char *release_id = JsonObjectGetAsString(validated_doc, "releaseId");
-            if (release_id)
-            {
-                policy->release_id = xstrndup(release_id, 2 * CF_SHA256_LEN);
-            }
-            JsonDestroy(validated_doc);
+            policy->release_id = xstrndup(release_id, 2 * CF_SHA256_LEN);
         }
+        JsonDestroy(validated_doc);
     }
 
     return policy;

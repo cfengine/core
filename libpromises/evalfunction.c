@@ -6859,14 +6859,14 @@ static const FnCallArg GROUPEXISTS_ARGS[] =
 static const FnCallArg HASH_ARGS[] =
 {
     {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Input text"},
-    {"md5,sha1,sha256,sha512,sha384,crypt", CF_DATA_TYPE_OPTION, "Hash or digest algorithm"},
+    {"md5,sha1,sha256,sha384,sha512", CF_DATA_TYPE_OPTION, "Hash or digest algorithm"},
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
 
 static const FnCallArg HASHMATCH_ARGS[] =
 {
     {CF_ABSPATHRANGE, CF_DATA_TYPE_STRING, "Filename to hash"},
-    {"md5,sha1,crypt,cf_sha224,cf_sha256,cf_sha384,cf_sha512", CF_DATA_TYPE_OPTION, "Hash or digest algorithm"},
+    {"md5,sha1,sha256,sha384,sha512", CF_DATA_TYPE_OPTION, "Hash or digest algorithm"},
     {CF_IDRANGE, CF_DATA_TYPE_STRING, "ASCII representation of hash for comparison"},
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };

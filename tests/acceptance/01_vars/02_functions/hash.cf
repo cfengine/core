@@ -45,9 +45,6 @@ bundle agent test
       "easy_$(algos)" string => hash("$(init.easy)", $(algos));
 
       "hard_$(algos)" string => hash("$(init.hard)", $(algos));
-
-      # make sure this doesn't blow up
-      "fake" string => hash("", "crypt");
 }
 
 #######################################################

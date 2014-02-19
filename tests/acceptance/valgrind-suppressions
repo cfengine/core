@@ -1,0 +1,68 @@
+##################################################
+#
+# Valgrind suppression file for acceptance tests
+#
+##################################################
+
+
+##################################################
+# libcrypto weirdness
+##################################################
+{
+   libcrypto-leak
+   Memcheck:Leak
+   ...
+   obj:*/libcrypto.so.*
+}
+{
+   libcrypto-cond
+   Memcheck:Cond
+   ...
+   obj:*/libcrypto.so.*
+}
+{
+   libcrypto-value8
+   Memcheck:Value8
+   ...
+   obj:*/libcrypto.so.*
+}
+
+################################################
+# Lex weirdness
+################################################
+{
+   lex-internal
+   Memcheck:Leak
+   ...
+   fun:yylex
+}
+
+################################################
+# libc weirdness
+################################################
+
+{
+   # This can probably be fixed by giving it a static buffer
+   gethostbyaddr-cannot-decide-on-const
+   Memcheck:Leak
+   ...
+   fun:gethostbyaddr
+   ...
+}
+
+################################################
+# CFEngine specific suppressions
+################################################
+
+{
+   # Not sure why this is not cleaned, separate threads maybe
+   cfe-private-logging-context
+   Memcheck:Leak
+   ...
+   fun:xcalloc
+   fun:GetCurrentThreadContext
+   fun:LoggingPrivGetContext
+   fun:EvalContextNew
+   ...
+}
+

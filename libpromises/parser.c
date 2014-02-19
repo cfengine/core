@@ -99,6 +99,12 @@ static void ParserStateReset(ParserState *p, bool discard)
     p->rval = RvalNew(NULL, RVAL_TYPE_NOPROMISEE);
 }
 
+static void ParserStateClean(ParserState *p)
+{
+    free(p->current_namespace);
+    p->current_namespace = NULL;
+}
+
 Policy *ParserParseFile(AgentType agent_type, const char *path, unsigned int warnings, unsigned int warnings_error)
 {
     ParserStateReset(&P, false);
@@ -135,11 +141,13 @@ Policy *ParserParseFile(AgentType agent_type, const char *path, unsigned int war
     {
         PolicyDestroy(P.policy);
         ParserStateReset(&P, true);
+        ParserStateClean(&P);
         return NULL;
     }
 
     Policy *policy = P.policy;
     ParserStateReset(&P, false);
+    ParserStateClean(&P);
     return policy;
 }
 

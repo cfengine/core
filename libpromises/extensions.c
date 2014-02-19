@@ -69,13 +69,17 @@ void extension_libraries_disable()
     enable_extension_libraries = false;
 }
 
+// LOG_LEVEL_DEBUG and LOG_LEVEL_VERBOSE have no effect here
+// because they happen before the generic agent has parsed its options!
 void *extension_library_open(const char *name)
 {
+    Log(LOG_LEVEL_DEBUG, "Checking for Enterprise extension plugin %s", name);
     if (!enable_extension_libraries)
     {
         return NULL;
     }
 
+    Log(LOG_LEVEL_DEBUG, "Enterprise extension plugin are enabled in the agent, proceeding with %s", name);
     if (getenv("CFENGINE_TEST_OVERRIDE_EXTENSION_LIBRARY_DO_CLOSE") == NULL)
     {
         // Only do loading checks if we are not doing tests.
@@ -92,19 +96,41 @@ void *extension_library_open(const char *name)
     {
         dir = GetWorkDir();
     }
+
     char path[strlen(dir) + strlen(lib) + strlen(name) + 2];
     sprintf(path, "%s%s/%s", dir, lib, name);
+
+    Log(LOG_LEVEL_DEBUG, "Trying to shlib_open Enterprise extension plugin %s from %s", name, path);
+
     void *handle = shlib_open(path);
     if (!handle)
     {
-        return handle;
+        Log(LOG_LEVEL_VERBOSE, "Could not shlib_open Enterprise extension plugin %s from %s", name, path);
+
+        // try to load from the real WORKDIR in case GetWorkDir returned the local workdir to the user
+        // We try this because enterprise "make install" is in WORKDIR, not per user
+        if (0 != strcmp(WORKDIR, dir))
+        {
+            sprintf(path, "%s%s/%s", WORKDIR, lib, name);
+
+            Log(LOG_LEVEL_DEBUG, "Trying to fallback shlib_open Enterprise extension plugin %s from workdir %s", name, path);
+            handle = shlib_open(path);
+
+            if (!handle)
+            {
+                Log(LOG_LEVEL_VERBOSE, "Fallback failed to shlib_open Enterprise extension plugin %s from workdir %s", name, path);
+                return handle;
+            }
+        }
     }
+
+    Log(LOG_LEVEL_VERBOSE, "Successfully did shlib_open of Enterprise extension plugin %s from %s", name, path);
 
     // Version check, to avoid binary incompatible plugins.
     const char * (*GetExtensionLibraryVersion)() = shlib_load(handle, "GetExtensionLibraryVersion");
     if (!GetExtensionLibraryVersion)
     {
-        Log(LOG_LEVEL_ERR, "Could not retreive version from extension plugin (%s). Not loading the plugin.", name);
+        Log(LOG_LEVEL_ERR, "Could not retreive version from Enterprise extension plugin (%s). Not loading the plugin.", name);
         goto close_and_fail;
     }
 
@@ -129,6 +155,8 @@ void *extension_library_open(const char *name)
             bin_major, bin_minor, bin_patch, name, plug_major, plug_minor, plug_patch);
         goto close_and_fail;
     }
+
+    Log(LOG_LEVEL_VERBOSE, "Successfully loaded Enterprise extension plugin %s from %s", name, path);
 
     return handle;
 

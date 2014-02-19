@@ -82,19 +82,54 @@ void *extension_library_open(const char *name)
         attempted_loading = true;
     }
 
+    const char *dirs_to_try[3] = { NULL };
     const char *dir = getenv("CFENGINE_TEST_OVERRIDE_EXTENSION_LIBRARY_DIR");
     char lib[] = "/lib";
     if (dir)
     {
         lib[0] = '\0';
+        dirs_to_try[0] = dir;
     }
     else
     {
-        dir = GetWorkDir();
+        dirs_to_try[0] = GetWorkDir();
+        if (strcmp(WORKDIR, dirs_to_try[0]) != 0)
+        {
+            // try to load from the real WORKDIR in case GetWorkDir returned the local workdir to the user
+            // We try this because enterprise "make install" is in WORKDIR, not per user
+            dirs_to_try[1] = WORKDIR;
+        }
     }
-    char path[strlen(dir) + strlen(lib) + strlen(name) + 2];
-    sprintf(path, "%s%s/%s", dir, lib, name);
-    void *handle = shlib_open(path);
+
+    void *handle = NULL;
+    for (int i = 0; dirs_to_try[i]; i++)
+    {
+        char path[strlen(dirs_to_try[i]) + strlen(lib) + strlen(name) + 2];
+        sprintf(path, "%s%s/%s", dirs_to_try[i], lib, name);
+
+        Log(LOG_LEVEL_DEBUG, "Trying to shlib_open extension plugin '%s' from '%s'", name, path);
+
+        handle = shlib_open(path);
+        if (handle)
+        {
+            Log(LOG_LEVEL_VERBOSE, "Successfully opened extension plugin '%s' from '%s'", name, path);
+            break;
+        }
+        else
+        {
+            const char *error;
+            if (errno == ENOENT)
+            {
+                error = "(not installed)";
+            }
+            else
+            {
+                error = GetErrorStr();
+            }
+            Log(LOG_LEVEL_VERBOSE, "Could not open extension plugin '%s' from '%s': %s", name, path, error);
+        }
+    }
+
     if (!handle)
     {
         return handle;
@@ -129,6 +164,8 @@ void *extension_library_open(const char *name)
             bin_major, bin_minor, bin_patch, name, plug_major, plug_minor, plug_patch);
         goto close_and_fail;
     }
+
+    Log(LOG_LEVEL_VERBOSE, "Successfully loaded extension plugin '%s'", name);
 
     return handle;
 

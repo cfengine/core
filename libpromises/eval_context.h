@@ -156,6 +156,8 @@ StringSet *EvalContextVariableTags(const EvalContext *ctx, const VarRef *ref);
 bool EvalContextVariableClearMatch(EvalContext *ctx);
 VariableTableIterator *EvalContextVariableTableIteratorNew(const EvalContext *ctx, const char *ns, const char *scope, const char *lval);
 
+bool EvalContextPromiseLockCacheContains(const EvalContext *ctx, const char *key);
+void EvalContextPromiseLockCachePut(EvalContext *ctx, const char *key);
 bool EvalContextFunctionCacheGet(const EvalContext *ctx, const FnCall *fp, const Rlist *args, Rval *rval_out);
 void EvalContextFunctionCachePut(EvalContext *ctx, const FnCall *fp, const Rlist *args, const Rval *rval);
 

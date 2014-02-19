@@ -71,6 +71,7 @@ struct EvalContext_
 
     VariableTable *match_variables;
 
+    StringSet *promise_lock_cache;
     StringSet *dependency_handles;
     RBTree *function_cache;
     PromiseSet *promises_done;
@@ -824,6 +825,7 @@ EvalContext *EvalContextNew(void)
     ctx->ppid = getppid();
 #endif
 
+    ctx->promise_lock_cache = StringSetNew();
     ctx->promises_done = PromiseSetNew();
     ctx->function_cache = RBTreeNew(NULL, NULL, NULL,
                                     NULL, NULL, NULL);
@@ -873,6 +875,7 @@ void EvalContextDestroy(EvalContext *ctx)
         StringSetDestroy(ctx->dependency_handles);
 
         PromiseSetDestroy(ctx->promises_done);
+        StringSetDestroy(ctx->promise_lock_cache);
 
         {
             RBTreeIterator *it = RBTreeIteratorNew(ctx->function_cache);
@@ -946,6 +949,8 @@ void EvalContextClear(EvalContext *ctx)
     EvalContextDeleteIpAddresses(ctx);
     VariableTableClear(ctx->global_variables, NULL, NULL, NULL);
     VariableTableClear(ctx->match_variables, NULL, NULL, NULL);
+    StringSetClear(ctx->promise_lock_cache);
+    RBTreeClear(ctx->function_cache);
     SeqClear(ctx->stack);
 }
 
@@ -1946,6 +1951,16 @@ void EvalContextMarkPromiseDone(EvalContext *ctx, const Promise *pp)
 void EvalContextMarkPromiseNotDone(EvalContext *ctx, const Promise *pp)
 {
     PromiseSetRemove(ctx->promises_done, pp->org_pp);
+}
+
+bool EvalContextPromiseLockCacheContains(const EvalContext *ctx, const char *key)
+{
+    return StringSetContains(ctx->promise_lock_cache, key);
+}
+
+void EvalContextPromiseLockCachePut(EvalContext *ctx, const char *key)
+{
+    StringSetAdd(ctx->promise_lock_cache, xstrdup(key));
 }
 
 bool EvalContextFunctionCacheGet(const EvalContext *ctx, const FnCall *fp, const Rlist *args, Rval *rval_out)

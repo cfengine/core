@@ -595,18 +595,11 @@ static CfLock CfLockNull(void)
 CfLock AcquireLock(EvalContext *ctx, const char *operand, const char *host, time_t now,
                    TransactionContext tc, const Promise *pp, bool ignoreProcesses)
 {
-    static StringSet *lock_cache = NULL; /* GLOBAL_X */
     unsigned char digest[EVP_MAX_MD_SIZE + 1];
 
     if (now == 0)
     {
         return CfLockNull();
-    }
-
-    // rbt is static, allocate it the first time
-    if (lock_cache == NULL)
-    {
-        lock_cache = StringSetNew();
     }
 
     /* Indicate as done if we tried ... as we have passed all class
@@ -631,13 +624,13 @@ CfLock AcquireLock(EvalContext *ctx, const char *operand, const char *host, time
     // As a backup to "done" we need something immune to re-use
     if (THIS_AGENT_TYPE == AGENT_TYPE_AGENT)
     {
-        if (StringSetContains(lock_cache, str_digest))
+        if (EvalContextPromiseLockCacheContains(ctx, str_digest))
         {
             Log(LOG_LEVEL_DEBUG, "This promise has already been verified");
             return CfLockNull();
         }
 
-        StringSetAdd(lock_cache, xstrdup(str_digest));
+        EvalContextPromiseLockCachePut(ctx, str_digest);
     }
 
     // Finally if we're supposed to ignore locks ... do the remaining stuff

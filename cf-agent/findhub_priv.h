@@ -38,8 +38,8 @@ typedef struct
 } HostProperties;
 
 void resolve_callback(AvahiServiceResolver *r,
-                      AVAHI_GCC_UNUSED AvahiIfIndex interface,
-                      AVAHI_GCC_UNUSED AvahiProtocol protocol,
+                      AvahiIfIndex interface,
+                      AvahiProtocol protocol,
                       AvahiResolverEvent event,
                       const char *name,
                       const char *type,
@@ -49,8 +49,8 @@ void resolve_callback(AvahiServiceResolver *r,
                       uint16_t port,
                       AvahiStringList *txt,
                       AvahiLookupFlags flags,
-                      AVAHI_GCC_UNUSED void* userdata
-                      );
+                      void* userdata);
+
 void browse_callback(AvahiServiceBrowser *b,
                      AvahiIfIndex interface,
                      AvahiProtocol protocol,
@@ -58,9 +58,10 @@ void browse_callback(AvahiServiceBrowser *b,
                      const char *name,
                      const char *type,
                      const char *domain,
-                     AVAHI_GCC_UNUSED AvahiLookupResultFlags flags,
+                     AvahiLookupResultFlags flags,
                      void *userdata);
+
 void client_callback(AvahiClient *c,
                      AvahiClientState state,
-                     AVAHI_GCC_UNUSED void *userdata);
+                     void *userdata);
 #endif

@@ -247,7 +247,15 @@ export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP CFENGINE_TEST_OVERRIDE_EXTENSION_LIBR
       printf "gdb --args " >> "$WORKDIR/runtest"
     fi
 
-    printf "\"$AGENT\" $VERBOSE -Kf \"$TEST\" -D AUTO,DEBUG 2>&1\n" >> "$WORKDIR/runtest"
+    if [ -n "$USE_VALGRIND" ]; then
+      if grep -q libtool < "$AGENT"; then
+        printf "\"$LIBTOOL\" --mode=execute " >> "$WORKDIR/runtest"
+      fi
+      printf "valgrind --leak-check=full --show-reachable=yes \"$AGENT\" $VERBOSE -Kf \"$TEST\" -D AUTO,DEBUG 2>&1\n" >> "$WORKDIR/runtest"
+    else
+      printf "\"$AGENT\" $VERBOSE -Kf \"$TEST\" -D AUTO,DEBUG 2>&1\n" >> "$WORKDIR/runtest"
+    fi
+
     chmod +x "$WORKDIR/runtest"
 
     if [ "$GDB" = 1 ]; then
@@ -505,11 +513,7 @@ START_TIME=$(unix_seconds)
 for test in $TESTS; do
   echo "    "\<testcase name=\"$(basename $test)\" >> "$XMLTMP"
   echo "              "classname=\"$test\" >> "$XMLTMP"
-  if [ -n "$USE_VALGRIND" ]; then
-    runtest "valgrind --leak-check=full --show-reachable=yes $AGENT" "$test"
-  else
-    runtest $AGENT "$test"
-  fi
+  runtest $AGENT "$test"
   echo "    "\<\/testcase\> >> "$XMLTMP"
 done
 

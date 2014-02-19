@@ -80,7 +80,7 @@ static bool GetProcessStat(pid_t pid, ProcessStat *state)
     /* stat entry is of form: <pid> (<task name>) <various info...>
      * To avoid choking on weird task names, we search for the closing
      * parenthesis first: */
-    char *p = strrchr(stat, ')');
+    char *p = memrchr(stat, ')', res);
     if (p == NULL)
     {
         /* Wrong field format! */

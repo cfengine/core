@@ -94,8 +94,8 @@ SKIPPED_TESTS=0
 # and find Perl for the unix_seconds() routine below. (Mantis #1254)
 #
 HAVE_DATE_PCT_S=
-date +%s >/dev/null 2>&1
-if [ $? -eq 0 ] ; then
+date +%s | grep %s >/dev/null 2>&1
+if [ $? -ne 0 ] ; then
   HAVE_DATE_PCT_S=1
 fi
 PERL=`which perl 2>/dev/null`

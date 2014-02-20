@@ -160,6 +160,7 @@ static const char *const CLASSATTRIBUTES[][3] =
     [PLATFORM_CONTEXT_DRAGONFLY] = {"dragonfly", ".*", ".*"},  /* dragonfly */
     [PLATFORM_CONTEXT_MINGW] = {"windows_nt.*", ".*", ".*"},       /* NT (native) */
     [PLATFORM_CONTEXT_VMWARE] = {"vmkernel", ".*", ".*"},   /* VMWARE / ESX */
+    [PLATFORM_CONTEXT_ANDROID] = {"android", ".*", ".*"},   /* android: Warning uname return linux */
 };
 
 static const char *const VRESOLVCONF[] =
@@ -182,6 +183,7 @@ static const char *const VRESOLVCONF[] =
     [PLATFORM_CONTEXT_DRAGONFLY] = "/etc/resolv.conf",         /* dragonfly */
     [PLATFORM_CONTEXT_MINGW] = "",                         /* mingw */
     [PLATFORM_CONTEXT_VMWARE] = "/etc/resolv.conf",         /* vmware */
+    [PLATFORM_CONTEXT_ANDROID] = "",                        /* android */
 };
 
 static const char *const VMAILDIR[] =
@@ -204,6 +206,7 @@ static const char *const VMAILDIR[] =
     [PLATFORM_CONTEXT_DRAGONFLY] = "/var/mail",                /* dragonfly */
     [PLATFORM_CONTEXT_MINGW] = "",                         /* mingw */
     [PLATFORM_CONTEXT_VMWARE] = "/var/spool/mail",          /* vmware */
+    [PLATFORM_CONTEXT_ANDROID] = "",                        /* android */
 };
 
 static const char *const VEXPORTS[] =
@@ -226,6 +229,7 @@ static const char *const VEXPORTS[] =
     [PLATFORM_CONTEXT_DRAGONFLY] = "/etc/exports",             /* dragonfly */
     [PLATFORM_CONTEXT_MINGW] = "",                         /* mingw */
     [PLATFORM_CONTEXT_VMWARE] = "none",                     /* vmware */
+    [PLATFORM_CONTEXT_ANDROID] = ""  ,                     /* android */
 };
 
 
@@ -389,6 +393,12 @@ static void GetNameInfo3(EvalContext *ctx)
 #ifdef _AIX
     snprintf(real_version, _SYS_NMLN, "%.80s.%.80s", VSYSNAME.version, VSYSNAME.release);
     strncpy(VSYSNAME.release, real_version, _SYS_NMLN);
+#endif
+#ifdef __ANDROID__
+    /*
+     * uname cannot differentiate android from linux
+     */
+    strcpy(VSYSNAME.sysname, "android");
 #endif
 
     ToLowerStrInplace(VSYSNAME.sysname);

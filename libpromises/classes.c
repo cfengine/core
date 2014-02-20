@@ -44,6 +44,7 @@ const char *const CLASSTEXT[] =
     [PLATFORM_CONTEXT_DRAGONFLY] = "dragonfly",
     [PLATFORM_CONTEXT_MINGW] = "windows",
     [PLATFORM_CONTEXT_VMWARE] = "vmware",
+    [PLATFORM_CONTEXT_ANDROID] = "android",
 };
 
 const char *const VPSCOMM[] =
@@ -66,6 +67,7 @@ const char *const VPSCOMM[] =
     [PLATFORM_CONTEXT_DRAGONFLY] = "/bin/ps",                  /* dragonfly */
     [PLATFORM_CONTEXT_MINGW] = "mingw-invalid",            /* mingw */
     [PLATFORM_CONTEXT_VMWARE] = "/bin/ps",                  /* vmware */
+    [PLATFORM_CONTEXT_ANDROID] = "/system/xbin/busybox ps",  /* android */
 };
 
 // linux after rhel 3: ps -eo user,pid,ppid,pgid,%cpu,%mem,vsize,ni,rss,stat,nlwp,stime,time,args
@@ -91,6 +93,7 @@ const char *const VPSOPTS[] =
     [PLATFORM_CONTEXT_DRAGONFLY] = "auxw",                     /* dragonfly */
     [PLATFORM_CONTEXT_MINGW] = "mingw-invalid",            /* mingw */
     [PLATFORM_CONTEXT_VMWARE] = "?",                        /* vmware */
+    [PLATFORM_CONTEXT_ANDROID] = "",                        /* android */
 };
 
 const char *const VFSTAB[] =
@@ -113,5 +116,6 @@ const char *const VFSTAB[] =
     [PLATFORM_CONTEXT_DRAGONFLY] = "/etc/fstab",               /* dragonfly */
     [PLATFORM_CONTEXT_MINGW] = "",                         /* mingw */
     [PLATFORM_CONTEXT_VMWARE] = "/etc/fstab",               /* vmware */
+    [PLATFORM_CONTEXT_ANDROID] = "",                         /* android */
 };
 

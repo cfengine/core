@@ -1,0 +1,30 @@
+body common control
+{
+  bundlesequence => { "access_rules" };
+  inputs => { "../../default.cf.sub" };
+}
+
+#########################################################
+# Server config
+#########################################################
+
+body server control
+{
+  port => "9882";
+
+  allowconnects         => { "127.0.0.1" , "::1" };
+  allowallconnects      => { "127.0.0.1" , "::1" };
+  trustkeysfrom         => { "127.0.0.1" , "::1" };
+}
+
+#########################################################
+
+bundle server access_rules()
+{
+  access:
+    "$(G.testroot)/"
+      admit => { "192.168.*", ".*", "10.*" },
+      deny  => { "127.0*" };                     # this matches nothing
+    "$(G.testdir)/"
+      deny => { ".*" };
+}

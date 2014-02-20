@@ -389,19 +389,16 @@ static FnCallResult FnCallGetEnv(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const P
 
 static FnCallResult FnCallGetUsers(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, const Rlist *finalargs)
 {
-    Rlist *newlist = NULL, *except_names, *except_uids;
-    struct passwd *pw;
+    const char *except_name = RlistScalarValue(finalargs);
+    const char *except_uid = RlistScalarValue(finalargs->next);
 
-/* begin fn specific content */
-
-    char *except_name = RlistScalarValue(finalargs);
-    char *except_uid = RlistScalarValue(finalargs->next);
-
-    except_names = RlistFromSplitString(except_name, ',');
-    except_uids = RlistFromSplitString(except_uid, ',');
+    Rlist *except_names = RlistFromSplitString(except_name, ',');
+    Rlist *except_uids = RlistFromSplitString(except_uid, ',');
 
     setpwent();
 
+    Rlist *newlist = NULL;
+    struct passwd *pw;
     while ((pw = getpwent()))
     {
         char *pw_uid_str = StringFromLong((int)pw->pw_uid);
@@ -415,6 +412,9 @@ static FnCallResult FnCallGetUsers(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const
     }
 
     endpwent();
+
+    RlistDestroy(except_names);
+    RlistDestroy(except_uids);
 
     return (FnCallResult) { FNCALL_SUCCESS, { newlist, RVAL_TYPE_LIST } };
 }

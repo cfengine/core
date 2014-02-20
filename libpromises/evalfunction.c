@@ -671,6 +671,7 @@ static FnCallResult FnCallClassMatch(EvalContext *ctx, ARG_UNUSED const Policy *
             if (!strcmp(regex,expr) || StringMatchFull(regex, expr))
             {
                 free(expr);
+                ClassTableIteratorDestroy(iter);
                 return FnReturnContext(true);
             }
 

@@ -998,17 +998,14 @@ static FnCallResult FnCallGetMetaTags(EvalContext *ctx, ARG_UNUSED const Policy 
     if (0 == strcmp(fp->name, "getvariablemetatags"))
     {
         VarRef *ref = VarRefParse(RlistScalarValue(finalargs));
-        if (NULL == ref)
-        {
-            Log(LOG_LEVEL_ERR, "%s called on unknown variable %s", fp->name, RlistScalarValue(finalargs));
-            return (FnCallResult) { FNCALL_FAILURE };
-        }
         tagset = EvalContextVariableTags(ctx, ref);
+        VarRefDestroy(ref);
     }
     else if (0 == strcmp(fp->name, "getclassmetatags"))
     {
         ClassRef ref = ClassRefParse(RlistScalarValue(finalargs));
         tagset = EvalContextClassTags(ctx, ref.ns, ref.name);
+        ClassRefDestroy(ref);
     }
     else
     {

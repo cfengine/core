@@ -1,0 +1,63 @@
+#######################################################
+#
+# Test regextract
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+  vars:
+      "text" string => "node-01-10.0";
+
+  classes:
+      "parsed_text" expression => regextract("^\w+-(\d+)-(\d+\.\d+)", "$(text)", "pair");
+
+  reports:
+    DEBUG.!parsed_text::
+      "Failed to parse $(text)";
+}
+
+#######################################################
+
+bundle agent test
+{
+  vars:
+      "lefts" string => "$(init.pair[1])";
+      "lefti" int => "$(init.pair[1])";
+      "rights" string => "$(init.pair[2])";
+      "rightr" real => "$(init.pair[2])";
+}
+
+
+#######################################################
+
+bundle agent check
+{
+  classes:
+      "sok" expression => strcmp("$(test.lefts):$(test.rights)", "01:10.0");
+      "iok" expression => strcmp("$(test.lefti)", "1");
+      "rok" expression => strcmp("$(test.rightr)", "10.000000");
+      "ok" and => { "sok", "iok", "rok" };
+
+  reports:
+    DEBUG.!iok::
+      "Parsed integer '$(test.lefti)' isn't 1";
+    DEBUG.!rok::
+      "Parsed real '$(test.rightr)' isn't 10.000000";
+    DEBUG.!sok::
+      "Parsed numbers '$(test.lefts)' and '$(test.rights)' aren't '01' and '10.0'";
+
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

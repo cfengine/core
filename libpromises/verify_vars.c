@@ -126,62 +126,67 @@ PromiseResult VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_d
         else
         {
             Buffer *conv = BufferNew();
+            bool malformed = false, misprint = false;
 
             if (strcmp(opts.cp_save->lval, "int") == 0)
             {
-                int printed = BufferPrintf(conv, "%ld", IntFromString(opts.cp_save->rval.item));
-                if (printed < 0)
+                long int asint = IntFromString(opts.cp_save->rval.item);
+                if (asint == CF_NOINT)
                 {
-                    /*
-                     * Even though there will be no problems with memory allocation, there
-                     * might be other problems.
-                     */
-                    UnexpectedError("Problems writing to buffer");
-                    VarRefDestroy(ref);
-                    BufferDestroy(conv);
-                    return PROMISE_RESULT_NOOP;
+                    malformed = true;
                 }
-                rval = RvalNew(BufferData(conv), opts.cp_save->rval.type);
-            }
-            else if (strcmp(opts.cp_save->lval, "real") == 0)
-            {
-                int printed = -1;
-                double real_value = 0.0;
-                if (DoubleFromString(opts.cp_save->rval.item, &real_value))
+                else if (0 > BufferPrintf(conv, "%ld", asint))
                 {
-                    printed = BufferPrintf(conv, "%lf", real_value);
+                    misprint = true;
                 }
                 else
                 {
-                    printed = BufferPrintf(conv, "(double conversion error)");
+                    rval = RvalNew(BufferData(conv), opts.cp_save->rval.type);
                 }
-
-                if (printed < 0)
+            }
+            else if (strcmp(opts.cp_save->lval, "real") == 0)
+            {
+                double real_value;
+                if (!DoubleFromString(opts.cp_save->rval.item, &real_value))
                 {
-                    /*
-                     * Even though there will be no problems with memory allocation, there
-                     * might be other problems.
-                     */
-                    UnexpectedError("Problems writing to buffer");
-                    VarRefDestroy(ref);
-                    BufferDestroy(conv);
-                    return PROMISE_RESULT_NOOP;
+                    malformed = true;
                 }
-                rval = RvalCopy((Rval) {(char *)BufferData(conv), opts.cp_save->rval.type});
+                else if (0 > BufferPrintf(conv, "%lf", real_value))
+                {
+                    misprint = true;
+                }
+                else
+                {
+                    rval = RvalNew(BufferData(conv), opts.cp_save->rval.type);
+                }
             }
             else
             {
                 rval = RvalCopy(opts.cp_save->rval);
             }
+            BufferDestroy(conv);
 
-            if (rval.type == RVAL_TYPE_LIST)
+            if (malformed)
+            {
+                /* Arises when opts->cp_save->rval.item isn't yet expanded. */
+                /* Has already been logged by *FromString */
+                VarRefDestroy(ref);
+                return PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
+            }
+            else if (misprint)
+            {
+                /* Even though no problems with memory allocation can
+                 * get here, there might be other problems. */
+                UnexpectedError("Problems writing to buffer");
+                VarRefDestroy(ref);
+                return PROMISE_RESULT_NOOP;
+            }
+            else if (rval.type == RVAL_TYPE_LIST)
             {
                 Rlist *rval_list = RvalRlistValue(rval);
                 RlistFlatten(ctx, &rval_list);
                 rval.item = rval_list;
             }
-
-            BufferDestroy(conv);
         }
 
         if (Epimenides(ctx, PromiseGetBundle(pp)->ns, PromiseGetBundle(pp)->name, pp->promiser, rval, 0))

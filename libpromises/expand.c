@@ -942,6 +942,7 @@ static void CopyLocalizedReferencesToBundleScope(EvalContext *ctx,
                     RlistFlatten(ctx, &list);
 
                     EvalContextVariablePut(ctx, mangled_ref, list, value_type, "source=agent");
+                    RlistDestroy(list);
                 }
                 break;
 

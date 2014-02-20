@@ -125,6 +125,7 @@ double EvaluateMathInfix(EvalContext *ctx, const char *input, char *failure)
     yyctx.result = 0;
     yyctx.stackp = -1;
     yymath_parse(&yyctx);
+    yyrelease(&yyctx);
     return yyctx.result;
 }
 

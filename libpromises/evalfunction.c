@@ -2044,11 +2044,12 @@ static FnCallResult FnCallJoin(EvalContext *ctx, ARG_UNUSED const Policy *policy
             while ((el = JsonIteratorNextValue(&iter)))
             {
                 char *value = JsonPrimitiveToString(el);
-                if (NULL != value)
+                if (value)
                 {
                     BufferAppend(buf, value, strlen(value));
                     trimto = BufferSize(buf);
                     BufferAppend(buf, join, strlen(join));
+                    free(value);
                 }
             }
         }

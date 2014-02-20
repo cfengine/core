@@ -93,7 +93,7 @@ void *SetIteratorNext(SetIterator *i);
                                                                         \
     void Prefix##SetClear(Prefix##Set *set)                             \
     {                                                                   \
-        return SetClear(set->impl);                                     \
+        SetClear(set->impl);                                            \
     }                                                                   \
                                                                         \
     size_t Prefix##SetSize(const Prefix##Set *set)                      \

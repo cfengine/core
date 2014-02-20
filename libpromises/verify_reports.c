@@ -74,6 +74,11 @@ PromiseResult VerifyReportPromise(EvalContext *ctx, const Promise *pp)
         VarRef *ref = VarRefParseFromBundle(unique_name, PromiseGetBundle(pp));
         EvalContextVariablePut(ctx, ref, pp->promiser, CF_DATA_TYPE_STRING, "source=bundle");
         VarRefDestroy(ref);
+
+        if (thislock.lock)
+        {
+            YieldCurrentLock(thislock);
+        }
         return PROMISE_RESULT_NOOP;
     }
     

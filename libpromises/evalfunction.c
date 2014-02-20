@@ -2517,6 +2517,7 @@ static FnCallResult FnCallMergeData(EvalContext *ctx, ARG_UNUSED const Policy *p
                 SeqDestroy(containers);
                 VarRefDestroy(ref);
                 SeqDestroy(toremove);
+                JsonDestroy(convert);
                 return FnFailure();
             }
             else

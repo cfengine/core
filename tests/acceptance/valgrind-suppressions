@@ -50,9 +50,28 @@
    ...
 }
 
+{
+   msgsnd_nocancel-param
+   Memcheck:Param
+   msgsnd(msgp->mtext)
+   fun:__msgsnd_nocancel
+   fun:send_fakem
+   ...
+}
+
+
 ################################################
 # CFEngine specific suppressions
 ################################################
+
+{
+   cfe-enterprise-extensions-remain-open
+   Memcheck:Leak
+   ...
+   fun:shlib_open
+   fun:extension_library_open
+   ...
+}
 
 {
    # Not sure why this is not cleaned, separate threads maybe

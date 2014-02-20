@@ -270,7 +270,7 @@ export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP CFENGINE_TEST_OVERRIDE_EXTENSION_LIBR
       printf "gdb --args " >> "$WORKDIR/runtest"
     fi
 
-    if [ -n "$USE_VALGRIND" ]; then
+    if [ -n "$USE_VALGRIND" ] && [ x"$EXPECTED_CRASH" = "x" ]; then
       if grep -q libtool < "$AGENT"; then
         printf "\"$LIBTOOL\" --mode=execute " >> "$WORKDIR/runtest"
       fi
@@ -392,6 +392,8 @@ while true; do
       QUIET=1;;
     --gainroot=*)
       GAINROOT=${1#--gainroot=};;
+    --valgrind)
+      USE_VALGRIND=1;;
     --staging)
       STAGING_TESTS=1;;
     --unsafe)

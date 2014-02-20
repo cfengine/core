@@ -268,7 +268,7 @@ export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP CFENGINE_TEST_OVERRIDE_EXTENSION_LIBR
       if grep -q libtool < "$AGENT"; then
         printf "\"$LIBTOOL\" --mode=execute " >> "$WORKDIR/runtest"
       fi
-      printf "valgrind --leak-check=full --show-reachable=yes \"$AGENT\" $VERBOSE -Kf \"$TEST\" -D AUTO,DEBUG 2>&1\n" >> "$WORKDIR/runtest"
+      printf "valgrind --leak-check=full --show-reachable=yes --suppressions=valgrind-suppressions \"$AGENT\" $VERBOSE -Kf \"$TEST\" -D AUTO,DEBUG 2>&1\n" >> "$WORKDIR/runtest"
     else
       printf "\"$AGENT\" $VERBOSE -Kf \"$TEST\" -D AUTO,DEBUG 2>&1\n" >> "$WORKDIR/runtest"
     fi

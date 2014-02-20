@@ -893,7 +893,7 @@ bool RawSaveItemList(const Item *liststart, const char *filename)
 Item *RawLoadItemList(const char *filename)
 {
     FILE *fp = safe_fopen(filename, "r");
-    if (fp)
+    if (!fp)
     {
         return NULL;
     }
@@ -914,6 +914,8 @@ Item *RawLoadItemList(const char *filename)
         DeleteItemList(list);
         list = NULL;
     }
+
+    fclose(fp);
 
     return list;
 }

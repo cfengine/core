@@ -66,3 +66,31 @@
    ...
 }
 
+{
+   cfe-global-server-list
+   Memcheck:Leak
+   ...
+   fun:SeqNew
+   fun:GetGlobalServerList
+   ...
+}
+
+{
+   cfe-global-dbm-handles
+   Memcheck:Leak
+   ...
+   fun:MapNameCopy
+   fun:DBIdToPath
+   fun:DBHandleGet
+   ...
+}
+
+{
+   cfe-global-children-fds
+   Memcheck:Leak
+   ...
+   fun:xcalloc
+   fun:InitChildrenFD
+   fun:CreatePipeAndFork
+   ...
+}

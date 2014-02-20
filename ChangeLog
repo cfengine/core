@@ -1,6 +1,10 @@
 3.6.0 Beta 1
 
         Changes:
+        - "-v" option for cf-execd and cf-serverd does not keep the agent
+          in the foreground, but lets it daemonize and verbose messages go
+          to syslog. Use '-F' explicitly to keep the processes in the
+          foreground.
         - TLS authentication and fully encrypted network protocol. Changes
           specific to the new type of connections:
             - The new networking protocol uses TLS for authentication, after

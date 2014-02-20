@@ -980,6 +980,7 @@ static StackFrame *StackFrameNew(StackFrameType type, bool inherit_previous)
 
     frame->type = type;
     frame->inherits_previous = inherit_previous;
+    frame->path = NULL;
 
     return frame;
 }
@@ -1056,6 +1057,7 @@ static void EvalContextStackPushFrame(EvalContext *ctx, StackFrame *frame)
 
     SeqAppend(ctx->stack, frame);
 
+    assert(!frame->path);
     frame->path = EvalContextStackPath(ctx);
 }
 

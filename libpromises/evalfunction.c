@@ -1874,6 +1874,7 @@ static FnCallResult FnCallGetValues(EvalContext *ctx, ARG_UNUSED const Policy *p
                 break;
             }
         }
+        VariableTableIteratorDestroy(iter);
     }
 
     VarRefDestroy(ref);

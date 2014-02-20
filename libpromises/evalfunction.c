@@ -1333,14 +1333,18 @@ static FnCallResult FnCallLastNode(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const
 
 /*******************************************************************/
 
-static FnCallResult FnCallDirname(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, const Rlist *finalargs)
+static FnCallResult FnCallDirname(ARG_UNUSED EvalContext *ctx,
+                                  ARG_UNUSED const Policy *policy,
+                                  ARG_UNUSED const FnCall *fp,
+                                  const Rlist *finalargs)
 {
-    char *dir = xstrdup(RlistScalarValue(finalargs));
+    char dir[PATH_MAX] = "";
+    strlcpy(dir, RlistScalarValue(finalargs), PATH_MAX);
 
     DeleteSlash(dir);
     ChopLastNode(dir);
 
-    return (FnCallResult) { FNCALL_SUCCESS, { dir, RVAL_TYPE_SCALAR } };
+    return FnReturn(dir);
 }
 
 /*********************************************************************/

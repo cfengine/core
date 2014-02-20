@@ -2972,7 +2972,7 @@ static FnCallResult FnCallFileStatDetails(ARG_UNUSED EvalContext *ctx, ARG_UNUSE
 
     if (lstat(path, &statbuf) == -1)
     {
-        return (FnCallResult) { FNCALL_FAILURE, { xstrdup(buffer), RVAL_TYPE_SCALAR } };
+        return FnFailure();
     }
     else
     {

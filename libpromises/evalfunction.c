@@ -6211,8 +6211,7 @@ static JsonElement* BuildData(ARG_UNUSED EvalContext *ctx, const char *file_buff
         for (const Rlist *rp = tokens; rp; rp = rp->next)
         {
             const char *token = RlistScalarValue(rp);
-
-            JsonArrayAppendString(linearray, xstrdup(token));
+            JsonArrayAppendString(linearray, token);
         }
 
         RlistDestroy(tokens);
@@ -6225,9 +6224,10 @@ static JsonElement* BuildData(ARG_UNUSED EvalContext *ctx, const char *file_buff
             }
             else
             {
-                char* key = xstrdup(JsonArrayGetAsString(linearray, 0));
+                char *key = xstrdup(JsonArrayGetAsString(linearray, 0));
                 JsonArrayRemoveRange(linearray, 0, 0);
                 JsonObjectAppendArray(ret, key, linearray);
+                free(key);
             }
 
             // only increase hcount if we actually got something

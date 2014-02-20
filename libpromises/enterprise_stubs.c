@@ -233,3 +233,12 @@ ENTERPRISE_VOID_FUNC_3ARG_DEFINE_STUB(void, EvalContextLogPromiseIterationOutcom
                                       ARG_UNUSED PromiseResult, result)
 {
 }
+
+ENTERPRISE_VOID_FUNC_3ARG_DEFINE_STUB(void, GetObservable, ARG_UNUSED int, i, ARG_UNUSED char *, name, ARG_UNUSED char *, desc)
+{
+    strcpy(name, OBS[i][0]);
+}
+
+ENTERPRISE_VOID_FUNC_1ARG_DEFINE_STUB(void, SetMeasurementPromises, ARG_UNUSED Item **, classlist)
+{
+}

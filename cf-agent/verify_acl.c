@@ -32,6 +32,7 @@
 #include <rlist.h>
 #include <eval_context.h>
 #include <cf-agent-enterprise-stubs.h>
+#include <cf-agent-windows-functions.h>
 
 // Valid operations (first char of mode)
 #define CF_VALID_OPS_METHOD_OVERWRITE "=+-"
@@ -85,7 +86,11 @@ PromiseResult VerifyACL(EvalContext *ctx, const char *file, Attributes a, const 
         break;
 
     case ACL_TYPE_NTFS_:
+#ifdef __MINGW32__
         result = PromiseResultUpdate(result, Nova_CheckNtACL(ctx, file, a.acl, a, pp));
+#else
+        Log(LOG_LEVEL_INFO, "NTFS ACLs are not supported on this system");
+#endif
         break;
 
     default:

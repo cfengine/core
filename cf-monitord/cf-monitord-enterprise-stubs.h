@@ -27,9 +27,6 @@
 
 #include <cf3.defs.h>
 
-ENTERPRISE_VOID_FUNC_3ARG_DECLARE(void, GetObservable, int, i, char *, name, char *, desc);
-ENTERPRISE_VOID_FUNC_1ARG_DECLARE(void, SetMeasurementPromises, Item **, classlist);
-
 ENTERPRISE_VOID_FUNC_0ARG_DECLARE(void, MonOtherInit);
 ENTERPRISE_VOID_FUNC_1ARG_DECLARE(void, MonOtherGatherData, double *, cf_this);
 

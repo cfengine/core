@@ -22,25 +22,15 @@
   included file COSL.txt.
 */
 
-#include <cf-monitord-enterprise-stubs.h>
+#ifndef CFAGENT_WINDOWS_FUNCTIONS_H
+#define CFAGENT_WINDOWS_FUNCTIONS_H
 
-ENTERPRISE_VOID_FUNC_0ARG_DEFINE_STUB(void, MonOtherInit)
-{
-}
+#ifdef __MINGW32__
 
-ENTERPRISE_VOID_FUNC_1ARG_DEFINE_STUB(void, MonOtherGatherData, ARG_UNUSED double *, cf_this)
-{
-}
+PromiseResult VerifyWindowsService(EvalContext *ctx, Attributes a, Promise *pp);
+PromiseResult Nova_CheckNtACL(EvalContext *ctx, const char *file_path, Acl acl,
+                              Attributes a, const Promise *pp);
 
-ENTERPRISE_VOID_FUNC_2ARG_DEFINE_STUB(void, HistoryUpdate, ARG_UNUSED EvalContext *, ctx, ARG_UNUSED Averages, newvals)
-{
-}
+#endif // __MINGW32__
 
-ENTERPRISE_FUNC_4ARG_DEFINE_STUB(PromiseResult, VerifyMeasurement,
-                                 ARG_UNUSED EvalContext *, ctx,
-                                 ARG_UNUSED double *, this,
-                                 ARG_UNUSED Attributes, a,
-                                 ARG_UNUSED const Promise *, pp)
-{
-    return PROMISE_RESULT_NOOP;
-}
+#endif // CFAGENT_WINDOWS_FUNCTIONS_H

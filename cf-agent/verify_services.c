@@ -35,6 +35,7 @@
 #include <policy.h>
 #include <scope.h>
 #include <cf-agent-enterprise-stubs.h>
+#include <cf-agent-windows-functions.h>
 #include <ornaments.h>
 #include <eval_context.h>
 
@@ -173,7 +174,11 @@ static PromiseResult VerifyServices(EvalContext *ctx, Attributes a, const Promis
     PromiseResult result = PROMISE_RESULT_NOOP;
     if (strcmp(a.service.service_type, "windows") == 0)
     {
+#ifdef __MINGW32__
         result = PromiseResultUpdate(result, VerifyWindowsService(ctx, a, pp));
+#else
+        Log(LOG_LEVEL_INFO, "Service type windows not supported on this platform.");
+#endif
     }
     else
     {

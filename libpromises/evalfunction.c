@@ -822,6 +822,10 @@ static StringSet *ClassesMatching(const EvalContext *ctx, ClassTableIterator *it
             {
                 StringSetAdd(matching, expr);
             }
+            else
+            {
+                free(expr);
+            }
         }
         else
         {

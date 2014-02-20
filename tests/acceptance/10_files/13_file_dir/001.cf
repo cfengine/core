@@ -102,7 +102,7 @@ bundle agent test
 
 body contain test_timeout
 {
-      exec_timeout => "2";
+      exec_timeout => "10";
 }
 
 body classes classes_generic(x)

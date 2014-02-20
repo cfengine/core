@@ -347,7 +347,7 @@ int ssl_server_init()
     }
     RSA_free(key);
 
-    assert(SSLSERVERCONTEXT == NULL);
+    assert_true(SSLSERVERCONTEXT == NULL);
     SSLSERVERCONTEXT = SSL_CTX_new(SSLv23_server_method());
     if (SSLSERVERCONTEXT == NULL)
     {
@@ -375,7 +375,7 @@ int ssl_server_init()
             "No public/private key pair is loaded, create one with cf-key");
         goto err2;
     }
-    assert(SSLSERVERCERT == NULL);
+    assert_true(SSLSERVERCERT == NULL);
     /* Generate self-signed cert valid from now to 50 years later. */
     {
         X509 *x509 = X509_new();
@@ -1084,10 +1084,10 @@ int EVP_PKEY_cmp(const EVP_PKEY *a, const EVP_PKEY *b)
  * int TLSRecv(SSL *ssl, char *buffer, int length);
  * int TLSRecvLine(SSL *ssl, char *buf, size_t buf_size);
  */
-#define ASSERT_IF_NOT_INITIALIZED assert_true(correctly_initialized)
+#define ASSERT_INITIALIZED assert_true(correctly_initialized)
 static void test_TLSVerifyCallback(void)
 {
-    ASSERT_IF_NOT_INITIALIZED;
+    ASSERT_INITIALIZED;
     /*
      * This function always returns 1.
      * We do this in order to be able to avoid the locking.
@@ -1113,7 +1113,7 @@ static void test_TLSVerifyCallback(void)
 
 static void test_TLSVerifyPeer(void)
 {
-    ASSERT_IF_NOT_INITIALIZED;
+    ASSERT_INITIALIZED;
     RESET_STATUS;
 
     SSL *ssl = NULL;
@@ -1280,7 +1280,7 @@ static void test_TLSVerifyPeer(void)
  */
 static void test_TLSBasicIO(void)
 {
-    ASSERT_IF_NOT_INITIALIZED;
+    ASSERT_INITIALIZED;
     RESET_STATUS;
     SSL *ssl = NULL;
     char output_buffer[] = "this is a buffer";
@@ -1415,4 +1415,3 @@ int main()
     tests_teardown();
     return result;
 }
-

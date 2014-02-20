@@ -1,7 +1,6 @@
 #include <test.h>
 
 #include <stdlib.h>
-#include <assert.h>
 
 #include <rlist.h>
 #include <string_lib.h>

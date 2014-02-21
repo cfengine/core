@@ -609,7 +609,7 @@ void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *con
 
     Log(LOG_LEVEL_DEBUG, "Checking file updates for input file '%s'", config->input_file);
 
-    validated_at = ReadTimestampFromPolicyValidatedMasterfiles(config);
+    validated_at = ReadTimestampFromPolicyValidatedMasterfiles(config, NULL);
 
     if (*last_policy_reload < validated_at)
     {

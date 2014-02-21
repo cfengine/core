@@ -78,6 +78,8 @@ static void GetPromisesValidatedFileFromMasterfiles(char *filename, size_t max_s
 static bool WriteReleaseIdFileToMasterfiles(void);
 static bool WriteReleaseIdFile(const char *filename, const char *dirname);
 static void GetReleaseIdFile(const char *base_path, char *filename, size_t max_size);
+bool GeneratePolicyReleaseIDFromTree(char release_id_out[GENERIC_AGENT_CHECKSUM_SIZE], const char *policy_dir);
+char* ReadChecksumFromPolicyValidatedMasterfiles(const GenericAgentConfig *config, const char *maybe_dirname);
 
 static bool MissingInputFile(const char *input_file);
 
@@ -276,11 +278,11 @@ static JsonElement *ReadPolicyValidatedFile(const char *filename)
     return validated_doc;
 }
 
-static JsonElement *ReadPolicyValidatedFileFromMasterfiles(const GenericAgentConfig *config)
+static JsonElement *ReadPolicyValidatedFileFromMasterfiles(const GenericAgentConfig *config, const char *maybe_dirname)
 {
     char filename[CF_MAXVARSIZE];
 
-    GetPromisesValidatedFileFromMasterfiles(filename, sizeof(filename), config, NULL);
+    GetPromisesValidatedFileFromMasterfiles(filename, sizeof(filename), config, maybe_dirname);
 
     return ReadPolicyValidatedFile(filename);
 }
@@ -290,7 +292,7 @@ static JsonElement *ReadPolicyValidatedFileFromMasterfiles(const GenericAgentCon
  * @param filename the filename
  * @return True if successful.
  */
-static bool WritePolicyValidatedFile(ARG_UNUSED const GenericAgentConfig *config, const char *filename)
+static bool WritePolicyValidatedFile(ARG_UNUSED const GenericAgentConfig *config, const char *filename, const char *checksum)
 {
     if (!MakeParentDirectory(filename, true))
     {
@@ -308,6 +310,11 @@ static bool WritePolicyValidatedFile(ARG_UNUSED const GenericAgentConfig *config
     JsonElement *info = JsonObjectCreate(3);
     JsonObjectAppendInteger(info, "timestamp", time(NULL));
 
+    if (NULL != checksum)
+    {
+        JsonObjectAppendString(info, "checksum", checksum);
+    }
+
     Writer *w = FileWriter(fdopen(fd, "w"));
     JsonWrite(w, info, 0);
 
@@ -323,10 +330,29 @@ static bool WritePolicyValidatedFile(ARG_UNUSED const GenericAgentConfig *config
  */
 bool GenericAgentTagReleaseDirectory(const GenericAgentConfig *config, const char *dirname)
 {
+    char tree_checksum[GENERIC_AGENT_CHECKSUM_SIZE];
+
+    bool have_tree_checksum = GeneratePolicyReleaseIDFromTree(tree_checksum, dirname);
+
+    if (have_tree_checksum)
+    {
+        char *validated_checksum_tmp = ReadChecksumFromPolicyValidatedMasterfiles(config, dirname);
+        bool equal =
+            NULL != validated_checksum_tmp
+            && 0 == strncmp(tree_checksum, validated_checksum_tmp, GENERIC_AGENT_CHECKSUM_SIZE);
+        free(validated_checksum_tmp);
+
+        if (equal)
+        {
+            Log(LOG_LEVEL_DEBUG, "The tree checksum of %s was the same as the validated policy checksum", dirname);
+            return true;
+        }
+    }
+
     char filename[CF_MAXVARSIZE];
     GetPromisesValidatedFileFromMasterfiles(filename, sizeof(filename), config, dirname);
 
-    bool wrote_validated = WritePolicyValidatedFile(config, filename);
+    bool wrote_validated = WritePolicyValidatedFile(config, filename, have_tree_checksum ? tree_checksum : NULL);
 
     if (!wrote_validated)
     {
@@ -338,7 +364,7 @@ bool GenericAgentTagReleaseDirectory(const GenericAgentConfig *config, const cha
 }
 
 /**
- * @brief Writes a file in sys.masterdir or whereever -f points with a contained timestamp to mark a policy file as validated
+ * @brief Writes a file in sys.masterdir or whereever -f points with a contained timestamp and checksum to mark a policy file as validated
  * @return True if successful.
  */
 static bool WritePolicyValidatedFileToMasterfiles(const GenericAgentConfig *config)
@@ -346,7 +372,18 @@ static bool WritePolicyValidatedFileToMasterfiles(const GenericAgentConfig *conf
     char filename[CF_MAXVARSIZE];
 
     GetPromisesValidatedFileFromMasterfiles(filename, sizeof(filename), config, NULL);
-    return WritePolicyValidatedFile(config, filename);
+
+    char dirname[PATH_MAX] = "";
+    strlcpy(dirname, filename, PATH_MAX);
+    DeleteSlash(dirname);
+    ChopLastNode(dirname);
+
+    char tree_checksum[GENERIC_AGENT_CHECKSUM_SIZE];
+    bool have_tree_checksum = GeneratePolicyReleaseIDFromTree(tree_checksum, dirname);
+
+    return WritePolicyValidatedFile(config,
+                                    filename,
+                                    have_tree_checksum ? tree_checksum : NULL);
 }
 
 /**
@@ -402,7 +439,7 @@ static bool WriteReleaseIdFileToMasterfiles(void)
  */
 static bool WriteReleaseIdFile(const char *filename, const char *dirname)
 {
-    char release_id[(2 * CF_SHA1_LEN) + 1];
+    char release_id[GENERIC_AGENT_CHECKSUM_SIZE];
 
     bool have_release_id = GeneratePolicyReleaseID(release_id, dirname);
 
@@ -1008,41 +1045,45 @@ static bool MissingInputFile(const char *input_file)
     return false;
 }
 
-bool GeneratePolicyReleaseID(char release_id_out[(2 * CF_SHA1_LEN) + 1], const char *policy_dir)
+// Git only.
+bool GeneratePolicyReleaseIDFromGit(char release_id_out[GENERIC_AGENT_CHECKSUM_SIZE], const char *policy_dir)
 {
-    {
-        char git_filename[FILENAME_MAX + 1];
-        snprintf(git_filename, FILENAME_MAX, "%s/.git/HEAD", policy_dir);
-        MapName(git_filename);
+    char git_filename[FILENAME_MAX + 1];
+    snprintf(git_filename, FILENAME_MAX, "%s/.git/HEAD", policy_dir);
+    MapName(git_filename);
 
-        FILE *git_file = fopen(git_filename, "r");
+    FILE *git_file = fopen(git_filename, "r");
+    if (git_file)
+    {
+        char git_head[128];
+        fscanf(git_file, "ref: %127s", git_head);
+        fclose(git_file);
+
+        snprintf(git_filename, FILENAME_MAX, "%s/.git/%s", policy_dir, git_head);
+        git_file = fopen(git_filename, "r");
         if (git_file)
         {
-            char git_head[128];
-            fscanf(git_file, "ref: %127s", git_head);
+            fscanf(git_file, "%40s", release_id_out);
             fclose(git_file);
-
-            snprintf(git_filename, FILENAME_MAX, "%s/.git/%s", policy_dir, git_head);
-            git_file = fopen(git_filename, "r");
-            if (git_file)
-            {
-                fscanf(git_file, "%40s", release_id_out);
-                fclose(git_file);
-                return true;
-            }
-            else
-            {
-                Log(LOG_LEVEL_DEBUG, "While generating policy release ID, found git head ref '%s', but unable to open (errno: %s)",
-                    policy_dir, GetErrorStr());
-            }
+            return true;
         }
         else
         {
-            Log(LOG_LEVEL_DEBUG, "While generating policy release ID, directory is '%s' not a git repository",
-                policy_dir);
+            Log(LOG_LEVEL_DEBUG, "While generating policy release ID, found git head ref '%s', but unable to open (errno: %s)",
+                policy_dir, GetErrorStr());
         }
     }
+    else
+    {
+        Log(LOG_LEVEL_DEBUG, "While generating policy release ID, directory is '%s' not a git repository",
+            policy_dir);
+    }
 
+    return false;
+}
+
+bool GeneratePolicyReleaseIDFromTree(char release_id_out[GENERIC_AGENT_CHECKSUM_SIZE], const char *policy_dir)
+{
     if (access(policy_dir, R_OK) != 0)
     {
         Log(LOG_LEVEL_ERR, "Cannot access policy directory '%s' to generate release ID", policy_dir);
@@ -1051,7 +1092,7 @@ bool GeneratePolicyReleaseID(char release_id_out[(2 * CF_SHA1_LEN) + 1], const c
 
     // fallback, produce some pseudo sha1 hash
     EVP_MD_CTX crypto_ctx;
-    EVP_DigestInit(&crypto_ctx, EVP_get_digestbyname(HashNameFromId(HASH_METHOD_SHA1)));
+    EVP_DigestInit(&crypto_ctx, EVP_get_digestbyname(HashNameFromId(GENERIC_AGENT_CHECKSUM_METHOD)));
 
     bool success = HashDirectoryTree(policy_dir,
                                      (const char *[]) { ".cf", ".dat", ".txt", ".conf", NULL},
@@ -1061,8 +1102,18 @@ bool GeneratePolicyReleaseID(char release_id_out[(2 * CF_SHA1_LEN) + 1], const c
     unsigned char digest[EVP_MAX_MD_SIZE + 1] = { 0 };
     EVP_DigestFinal(&crypto_ctx, digest, &md_len);
 
-    HashPrintSafe(HASH_METHOD_SHA1, false, digest, release_id_out);
+    HashPrintSafe(GENERIC_AGENT_CHECKSUM_METHOD, false, digest, release_id_out);
     return success;
+}
+
+bool GeneratePolicyReleaseID(char release_id_out[GENERIC_AGENT_CHECKSUM_SIZE], const char *policy_dir)
+{
+    if (GeneratePolicyReleaseIDFromGit(release_id_out, policy_dir))
+    {
+        return true;
+    }
+
+    return GeneratePolicyReleaseIDFromTree(release_id_out, policy_dir);
 }
 
 /**
@@ -1095,11 +1146,12 @@ static void GetReleaseIdFile(const char *base_path, char *filename, size_t max_s
     MapName(filename);
 }
 
-time_t ReadTimestampFromPolicyValidatedMasterfiles(const GenericAgentConfig *config)
+// TODO: refactor Read*FromPolicyValidatedMasterfiles
+time_t ReadTimestampFromPolicyValidatedMasterfiles(const GenericAgentConfig *config, const char *maybe_dirname)
 {
     time_t validated_at = 0;
     {
-        JsonElement *validated_doc = ReadPolicyValidatedFileFromMasterfiles(config);
+        JsonElement *validated_doc = ReadPolicyValidatedFileFromMasterfiles(config, maybe_dirname);
         if (validated_doc)
         {
             JsonElement *timestamp = JsonObjectGet(validated_doc, "timestamp");
@@ -1114,9 +1166,30 @@ time_t ReadTimestampFromPolicyValidatedMasterfiles(const GenericAgentConfig *con
     return validated_at;
 }
 
+// TODO: refactor Read*FromPolicyValidatedMasterfiles
+char* ReadChecksumFromPolicyValidatedMasterfiles(const GenericAgentConfig *config, const char *maybe_dirname)
+{
+    char *checksum_str = NULL;
+
+    {
+        JsonElement *validated_doc = ReadPolicyValidatedFileFromMasterfiles(config, maybe_dirname);
+        if (validated_doc)
+        {
+            JsonElement *checksum = JsonObjectGet(validated_doc, "checksum");
+            if (checksum )
+            {
+                checksum_str = xstrdup(JsonPrimitiveGetAsString(checksum));
+            }
+            JsonDestroy(validated_doc);
+        }
+    }
+
+    return checksum_str;
+}
+
 bool GenericAgentIsPolicyReloadNeeded(const GenericAgentConfig *config, const Policy *policy)
 {
-    time_t validated_at = ReadTimestampFromPolicyValidatedMasterfiles(config);
+    time_t validated_at = ReadTimestampFromPolicyValidatedMasterfiles(config, NULL);
 
     if (validated_at > time(NULL))
     {

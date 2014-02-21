@@ -937,6 +937,10 @@ static StringSet *VariablesMatching(const EvalContext *ctx, VariableTableIterato
             {
                 StringSetAdd(matching, expr);
             }
+            else
+            {
+                free(expr);
+            }
         }
         else
         {

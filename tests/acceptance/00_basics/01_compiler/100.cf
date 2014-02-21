@@ -25,6 +25,10 @@ bundle agent test
 {
   vars:
       "subout" string => execresult("$(sys.cf_agent) -Kvf $(this.promise_filename).sub | grep Comment", "useshell");
+  meta:
+      "tags" slist => { "test_skip_needs_work" };
+  vars:
+      "test_skip_needs_work" string => "windows";
 }
 
 #######################################################

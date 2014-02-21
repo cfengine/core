@@ -113,3 +113,21 @@
    fun:CreatePipeAndFork
    ...
 }
+
+{
+   cfe-global-process-table
+   Memcheck:Leak
+   ...
+   fun:AppendItem
+   fun:LoadProcessTable
+   ...
+}
+
+{
+   cfe-global-mounted-fs
+   Memcheck:Leak
+   ...
+   fun:SeqNew
+   fun:GetGlobalMountedFSList
+   ...
+}

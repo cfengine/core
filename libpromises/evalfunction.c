@@ -560,7 +560,7 @@ static FnCallResult FnCallHandlerHash(ARG_UNUSED EvalContext *ctx, ARG_UNUSED co
     char *string = RlistScalarValue(finalargs);
     char *typestring = RlistScalarValue(finalargs->next);
 
-    type = HashMethodFromString(typestring);
+    type = HashIdFromName(typestring);
 
     if (FIPS_MODE && type == HASH_METHOD_MD5)
     {
@@ -593,7 +593,7 @@ static FnCallResult FnCallHashMatch(ARG_UNUSED EvalContext *ctx, ARG_UNUSED cons
     char *typestring = RlistScalarValue(finalargs->next);
     char *compare = RlistScalarValue(finalargs->next->next);
 
-    type = HashMethodFromString(typestring);
+    type = HashIdFromName(typestring);
     HashFile(string, digest, type);
 
     char hashbuffer[EVP_MAX_MD_SIZE * 4];
@@ -1217,7 +1217,7 @@ static FnCallResult FnCallCanonify(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const
         unsigned char digest[EVP_MAX_MD_SIZE + 1];
         HashMethod type;
 
-        type = HashMethodFromString("sha1");
+        type = HashIdFromName("sha1");
         HashString(string, strlen(string), digest, type);
         snprintf(buf, CF_BUFSIZE, "%s_%s", string,
                  SkipHashType(HashPrintSafe(type, true, digest, hashbuffer)));

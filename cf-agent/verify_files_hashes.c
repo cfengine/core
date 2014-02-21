@@ -53,7 +53,7 @@ static char *NewIndexKey(char type, const char *name, int *size)
 
 // Data start after offset for index
 
-    strncpy(chk_key, FileHashName(type), CF_INDEX_FIELD_LEN);
+    strncpy(chk_key, HashNameFromId(type), CF_INDEX_FIELD_LEN);
     strncpy(chk_key + CF_INDEX_OFFSET, name, strlen(name));
     return chk_key;
 }
@@ -140,7 +140,7 @@ int FileHashChanged(EvalContext *ctx, const char *filename, unsigned char digest
     CF_DB *dbp;
     char buffer[EVP_MAX_MD_SIZE * 4];
 
-    size = FileHashSize(type);
+    size = HashSizeFromId(type);
 
     if (!OpenDB(&dbp, dbid_checksums))
     {
@@ -155,7 +155,7 @@ int FileHashChanged(EvalContext *ctx, const char *filename, unsigned char digest
         {
             if (digest[i] != dbdigest[i])
             {
-                Log(LOG_LEVEL_ERR, "Hash '%s' for '%s' changed!", FileHashName(type), filename);
+                Log(LOG_LEVEL_ERR, "Hash '%s' for '%s' changed!", HashNameFromId(type), filename);
 
                 if (pp->comment)
                 {
@@ -191,7 +191,7 @@ int FileHashChanged(EvalContext *ctx, const char *filename, unsigned char digest
     {
         /* Key was not found, so install it */
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_CHANGE, pp, attr, "File '%s' was not in '%s' database - new file found", filename,
-             FileHashName(type));
+             HashNameFromId(type));
         *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
         Log(LOG_LEVEL_DEBUG, "Storing checksum for '%s' in database '%s'", filename,
             HashPrintSafe(type, true, digest, buffer));

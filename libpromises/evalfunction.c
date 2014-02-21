@@ -5966,10 +5966,11 @@ static FnCallResult FnCallMakerule(EvalContext *ctx, ARG_UNUSED const Policy *po
 
         DataType input_list_type = CF_DATA_TYPE_NONE;
         const Rlist *input_list = EvalContextVariableGet(ctx, ref, &input_list_type);
+        VarRefDestroy(ref);
+
         if (!input_list)
         {
             Log(LOG_LEVEL_VERBOSE, "Function 'makerule' was promised a list called '%s' but this was not found", listvar);
-            VarRefDestroy(ref);
             return FnFailure();
         }
 
@@ -5979,7 +5980,7 @@ static FnCallResult FnCallMakerule(EvalContext *ctx, ARG_UNUSED const Policy *po
            return FnFailure();
        }
 
-       list = (Rlist *)input_list;
+       list = RlistCopy(input_list);
     }
 
     struct stat statbuf;
@@ -6005,6 +6006,7 @@ static FnCallResult FnCallMakerule(EvalContext *ctx, ARG_UNUSED const Policy *po
         if (lstat(RvalScalarValue(rp->val), &statbuf) == -1)
         {
             Log(LOG_LEVEL_INFO, "Function MAKERULE, source dependency %s was not readable",  RvalScalarValue(rp->val));
+            RlistDestroy(list);
             return FnFailure();
         }
         else
@@ -6015,6 +6017,8 @@ static FnCallResult FnCallMakerule(EvalContext *ctx, ARG_UNUSED const Policy *po
             }
         }
     }
+
+    RlistDestroy(list);
 
     return stale ? FnReturnContext(true) : FnFailure();
 }

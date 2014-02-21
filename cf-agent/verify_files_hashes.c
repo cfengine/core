@@ -135,7 +135,7 @@ static void DeleteHash(CF_DB *dbp, HashMethod type, const char *name)
 int FileHashChanged(EvalContext *ctx, const char *filename, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMethod type,
                     Attributes attr, const Promise *pp, PromiseResult *result)
 {
-    int i, size = 21;
+    int size;
     unsigned char dbdigest[EVP_MAX_MD_SIZE + 1];
     CF_DB *dbp;
     char buffer[EVP_MAX_MD_SIZE * 4];
@@ -151,35 +151,32 @@ int FileHashChanged(EvalContext *ctx, const char *filename, unsigned char digest
 
     if (ReadHash(dbp, type, filename, dbdigest))
     {
-        for (i = 0; i < size; i++)
+        if (memcmp(digest, dbdigest, size) != 0)
         {
-            if (digest[i] != dbdigest[i])
+            Log(LOG_LEVEL_ERR, "Hash '%s' for '%s' changed!", HashNameFromId(type), filename);
+
+            if (pp->comment)
             {
-                Log(LOG_LEVEL_ERR, "Hash '%s' for '%s' changed!", HashNameFromId(type), filename);
-
-                if (pp->comment)
-                {
-                    Log(LOG_LEVEL_ERR, "Preceding promise '%s'", pp->comment);
-                }
-
-                if (attr.change.update)
-                {
-                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_CHANGE, pp, attr, "Updating hash for '%s' to '%s'", filename,
-                         HashPrintSafe(type, true, digest, buffer));
-                    *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
-
-                    DeleteHash(dbp, type, filename);
-                    WriteHash(dbp, type, filename, digest);
-                }
-                else
-                {
-                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Hash for file '%s' changed", filename);
-                    *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
-                }
-
-                CloseDB(dbp);
-                return true;
+                Log(LOG_LEVEL_ERR, "Preceding promise '%s'", pp->comment);
             }
+
+            if (attr.change.update)
+            {
+                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_CHANGE, pp, attr, "Updating hash for '%s' to '%s'", filename,
+                     HashPrintSafe(type, true, digest, buffer));
+                *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
+
+                DeleteHash(dbp, type, filename);
+                WriteHash(dbp, type, filename, digest);
+            }
+            else
+            {
+                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Hash for file '%s' changed", filename);
+                *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
+            }
+
+            CloseDB(dbp);
+            return true;
         }
 
         cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, attr, "File hash for %s is correct", filename);

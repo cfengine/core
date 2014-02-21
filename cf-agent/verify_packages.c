@@ -2385,6 +2385,8 @@ static void DeletePackageManagers(PackageManager *np)
     {
         PackageManager *next = np->next;
         DeletePackageItems(np->pack_list);
+        DeletePackageItems(np->patch_list);
+        DeletePackageItems(np->patch_avail);
         free(np->manager);
         free(np);
         np = next;

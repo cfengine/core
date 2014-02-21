@@ -324,7 +324,8 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const Promise *pp)
     pcopy->conlist = SeqNew(10, ConstraintDestroy);
     pcopy->org_pp = pp->org_pp;
 
-/* No further type checking should be necessary here, already done by CheckConstraintTypeMatch */
+    /* No further type checking should be necessary here, already done
+     * by CheckConstraintTypeMatch */
 
     for (size_t i = 0; i < SeqLength(pp->conlist); i++)
     {
@@ -356,15 +357,19 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const Promise *pp)
             {
                 char err[CF_BUFSIZE];
 
-                snprintf(err, CF_BUFSIZE, "Comments can only be scalar objects, not %c in '%s'", final.type,
-                         pp->promiser);
+                snprintf(err, CF_BUFSIZE,
+                         "Comments can only be scalar objects, not %c in '%s'",
+                         final.type, pp->promiser);
                 yyerror(err);
             }
             else
             {
+                free(pcopy->comment);
                 pcopy->comment = final.item ? xstrdup(final.item) : NULL;
 
-                if (pcopy->comment && (strstr(pcopy->comment, "$(this.promiser)") || strstr(pcopy->comment, "${this.promiser}")))
+                if (pcopy->comment &&
+                    (strstr(pcopy->comment, "$(this.promiser)") ||
+                     strstr(pcopy->comment, "${this.promiser}")))
                 {
                     DereferenceComment(pcopy);
                 }

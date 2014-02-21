@@ -2750,5 +2750,5 @@ static char *GetDefaultArch(const char *command)
     Log(LOG_LEVEL_VERBOSE, "Default architecture for package manager is '%s'", arch);
 
     cf_pclose(fp);
-    return xstrdup(arch);
+    return arch;
 }

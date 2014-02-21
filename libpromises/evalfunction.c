@@ -6364,19 +6364,16 @@ static int BuildLineArray(EvalContext *ctx, const Bundle *bundle,
 
 static int ExecModule(EvalContext *ctx, char *command)
 {
-    FILE *pp;
-    char *sp = NULL;
-    char context[CF_BUFSIZE];
-    StringSet *tags = NULL;
-    int print = false;
-
-    context[0] = '\0';
-
-    if ((pp = cf_popen(command, "rt", true)) == NULL)
+    FILE *pp = cf_popen(command, "rt", true);
+    if (!pp)
     {
         Log(LOG_LEVEL_ERR, "Couldn't open pipe from '%s'. (cf_popen: %s)", command, GetErrorStr());
         return false;
     }
+
+    bool print = false;
+    char context[CF_BUFSIZE] = "";
+    StringSet *tags = StringSetNew();
 
     size_t line_size = CF_BUFSIZE;
     char *line = xmalloc(line_size);
@@ -6401,7 +6398,7 @@ static int ExecModule(EvalContext *ctx, char *command)
 
         print = false;
 
-        for (sp = line; *sp != '\0'; sp++)
+        for (const char *sp = line; *sp != '\0'; sp++)
         {
             if (!isspace((int) *sp))
             {
@@ -6410,13 +6407,10 @@ static int ExecModule(EvalContext *ctx, char *command)
             }
         }
 
-        ModuleProtocol(ctx, command, line, print, context, &tags);
+        ModuleProtocol(ctx, command, line, print, context, tags);
     }
 
-    if (NULL != tags)
-    {
-        StringSetDestroy(tags);
-    }
+    StringSetDestroy(tags);
 
     cf_pclose(pp);
     free(line);
@@ -6424,17 +6418,14 @@ static int ExecModule(EvalContext *ctx, char *command)
 }
 
 
-void ModuleProtocol(EvalContext *ctx, char *command, const char *line, int print, char* context, StringSet **tags)
+void ModuleProtocol(EvalContext *ctx, char *command, const char *line, int print, char* context, StringSet *tags)
 {
+    assert(tags);
+
     char name[CF_BUFSIZE], content[CF_BUFSIZE];
     char arg0[CF_BUFSIZE];
     char *filename;
     size_t length = strlen(line);
-
-    if (NULL == *tags)
-    {
-        *tags = StringSetNew();
-    }
 
     if (*context == '\0')
     {
@@ -6467,14 +6458,10 @@ void ModuleProtocol(EvalContext *ctx, char *command, const char *line, int print
         else if (1 == sscanf(line + 1, "meta=%1024[^\n]", content) && content[0] != '\0')
         {
             Log(LOG_LEVEL_VERBOSE, "Module set meta tags to '%s'", content);
-            if (NULL != *tags)
-            {
-                StringSetDestroy(*tags);
-                *tags = NULL;
-            }
+            StringSetClear(tags);
 
-            *tags = StringSetFromString(content, ',');
-            StringSetAdd(*tags, xstrdup("source=module"));
+            StringSetAddSplit(tags, content, ',');
+            StringSetAdd(tags, xstrdup("source=module"));
         }
         else
         {
@@ -6497,7 +6484,7 @@ void ModuleProtocol(EvalContext *ctx, char *command, const char *line, int print
         Log(LOG_LEVEL_VERBOSE, "Activating classes from module protocol: '%s'", content);
         if (CheckID(content))
         {
-            Buffer *tagbuf = StringSetToBuffer(*tags, ',');
+            Buffer *tagbuf = StringSetToBuffer(tags, ',');
             EvalContextClassPutSoft(ctx, content, CONTEXT_SCOPE_NAMESPACE, BufferData(tagbuf));
             BufferDestroy(tagbuf);
         }
@@ -6557,7 +6544,7 @@ void ModuleProtocol(EvalContext *ctx, char *command, const char *line, int print
             Log(LOG_LEVEL_VERBOSE, "Defined variable '%s' in context '%s' with value '%s'", name, context, content);
             VarRef *ref = VarRefParseFromScope(name, context);
 
-            Buffer *tagbuf = StringSetToBuffer(*tags, ',');
+            Buffer *tagbuf = StringSetToBuffer(tags, ',');
             EvalContextVariablePut(ctx, ref, content, CF_DATA_TYPE_STRING, BufferData(tagbuf));
             BufferDestroy(tagbuf);
 
@@ -6585,14 +6572,17 @@ void ModuleProtocol(EvalContext *ctx, char *command, const char *line, int print
             }
             else
             {
-                Log(LOG_LEVEL_VERBOSE, "Defined data container variable '%s' in context '%s' with value '%s'", name, context, BufferData(holder));
+                Log(LOG_LEVEL_VERBOSE, "Defined data container variable '%s' in context '%s' with value '%s'",
+                    name, context, BufferData(holder));
+
+                Buffer *tagbuf = StringSetToBuffer(tags, ',');
                 VarRef *ref = VarRefParseFromScope(name, context);
 
-                Buffer *tagbuf = StringSetToBuffer(*tags, ',');
                 EvalContextVariablePut(ctx, ref, json, CF_DATA_TYPE_CONTAINER, BufferData(tagbuf));
+                VarRefDestroy(ref);
                 BufferDestroy(tagbuf);
 
-                VarRefDestroy(ref);
+                JsonDestroy(json);
             }
 
             BufferDestroy(holder);
@@ -6643,11 +6633,12 @@ void ModuleProtocol(EvalContext *ctx, char *command, const char *line, int print
 
                 VarRef *ref = VarRefParseFromScope(name, context);
 
-                Buffer *tagbuf = StringSetToBuffer(*tags, ',');
+                Buffer *tagbuf = StringSetToBuffer(tags, ',');
                 EvalContextVariablePut(ctx, ref, list, CF_DATA_TYPE_STRING_LIST, BufferData(tagbuf));
                 BufferDestroy(tagbuf);
 
                 VarRefDestroy(ref);
+                RlistDestroy(list);
             }
         }
         break;

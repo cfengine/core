@@ -194,7 +194,6 @@ static ActionResult RepairExec(EvalContext *ctx, Attributes a,
     char cmdOutBuf[CF_BUFSIZE];
     int cmdOutBufPos = 0;
     int lineOutLen;
-    StringSet *module_tags = NULL;
     char module_context[CF_BUFSIZE];
 
     module_context[0] = '\0';
@@ -321,6 +320,8 @@ static ActionResult RepairExec(EvalContext *ctx, Attributes a,
             return ACTION_RESULT_FAILED;
         }
 
+        StringSet *module_tags = StringSetNew();
+
         size_t line_size = CF_BUFSIZE;
         char *line = xmalloc(line_size);
 
@@ -354,7 +355,7 @@ static ActionResult RepairExec(EvalContext *ctx, Attributes a,
 
             if (a.module)
             {
-                ModuleProtocol(ctx, cmdline, line, !a.contain.nooutput, module_context, &module_tags);
+                ModuleProtocol(ctx, cmdline, line, !a.contain.nooutput, module_context, module_tags);
             }
             else if ((!a.contain.nooutput) && (!EmptyString(line)))
             {
@@ -379,6 +380,7 @@ static ActionResult RepairExec(EvalContext *ctx, Attributes a,
             }
         }
 
+        StringSetDestroy(module_tags);
         free(line);
 
 #ifdef __MINGW32__

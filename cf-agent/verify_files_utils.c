@@ -1099,14 +1099,14 @@ static PromiseResult LinkCopy(EvalContext *ctx, char *sourcefile, char *destfile
         if (status == PROMISE_RESULT_CHANGE)
         {
             cfPS(ctx, LOG_LEVEL_INFO, status, pp, attr, "Created link '%s'", destfile);
-            result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
+            result = PromiseResultUpdate(result, status);
         }
         else if (status == PROMISE_RESULT_NOOP)
         {
-            cfPS(ctx, LOG_LEVEL_INFO, status, pp, attr, "Link '%s' as promised", destfile);
-            result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
+            cfPS(ctx, LOG_LEVEL_VERBOSE, status, pp, attr, "Link '%s' as promised", destfile);
+            result = PromiseResultUpdate(result, status);
         }
-        else
+        else // TODO: is this reachable?
         {
             cfPS(ctx, LOG_LEVEL_INFO, status, pp, attr, "Unable to create link '%s'", destfile);
             result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);

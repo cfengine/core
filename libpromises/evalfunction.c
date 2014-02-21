@@ -1689,6 +1689,7 @@ static FnCallResult FnCallRegArray(EvalContext *ctx, ARG_UNUSED const Policy *po
     bool found = false;
 
     VariableTableIterator *iter = EvalContextVariableTableIteratorNew(ctx, ref->ns, ref->scope, ref->lval);
+    VarRefDestroy(ref);
     Variable *var = NULL;
     while ((var = VariableTableIteratorNext(iter)))
     {

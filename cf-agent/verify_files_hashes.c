@@ -53,7 +53,7 @@ static char *NewIndexKey(char type, const char *name, int *size)
 
 // Data start after offset for index
 
-    strncpy(chk_key, FileHashName(type), CF_INDEX_FIELD_LEN);
+    strncpy(chk_key, HashNameFromId(type), CF_INDEX_FIELD_LEN);
     strncpy(chk_key + CF_INDEX_OFFSET, name, strlen(name));
     return chk_key;
 }
@@ -135,12 +135,12 @@ static void DeleteHash(CF_DB *dbp, HashMethod type, const char *name)
 int FileHashChanged(EvalContext *ctx, const char *filename, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMethod type,
                     Attributes attr, const Promise *pp, PromiseResult *result)
 {
-    int i, size = 21;
+    int size;
     unsigned char dbdigest[EVP_MAX_MD_SIZE + 1];
     CF_DB *dbp;
     char buffer[EVP_MAX_MD_SIZE * 4];
 
-    size = FileHashSize(type);
+    size = HashSizeFromId(type);
 
     if (!OpenDB(&dbp, dbid_checksums))
     {
@@ -151,35 +151,32 @@ int FileHashChanged(EvalContext *ctx, const char *filename, unsigned char digest
 
     if (ReadHash(dbp, type, filename, dbdigest))
     {
-        for (i = 0; i < size; i++)
+        if (memcmp(digest, dbdigest, size) != 0)
         {
-            if (digest[i] != dbdigest[i])
+            Log(LOG_LEVEL_NOTICE, "Hash '%s' for '%s' changed!", HashNameFromId(type), filename);
+
+            if (pp->comment)
             {
-                Log(LOG_LEVEL_ERR, "Hash '%s' for '%s' changed!", FileHashName(type), filename);
-
-                if (pp->comment)
-                {
-                    Log(LOG_LEVEL_ERR, "Preceding promise '%s'", pp->comment);
-                }
-
-                if (attr.change.update)
-                {
-                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_CHANGE, pp, attr, "Updating hash for '%s' to '%s'", filename,
-                         HashPrintSafe(type, true, digest, buffer));
-                    *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
-
-                    DeleteHash(dbp, type, filename);
-                    WriteHash(dbp, type, filename, digest);
-                }
-                else
-                {
-                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Hash for file '%s' changed", filename);
-                    *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
-                }
-
-                CloseDB(dbp);
-                return true;
+                Log(LOG_LEVEL_NOTICE, "Preceding promise '%s'", pp->comment);
             }
+
+            if (attr.change.update)
+            {
+                cfPS(ctx, LOG_LEVEL_NOTICE, PROMISE_RESULT_CHANGE, pp, attr, "Updating hash for '%s' to '%s'", filename,
+                     HashPrintSafe(type, true, digest, buffer));
+                *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
+
+                DeleteHash(dbp, type, filename);
+                WriteHash(dbp, type, filename, digest);
+            }
+            else
+            {
+                cfPS(ctx, LOG_LEVEL_NOTICE, PROMISE_RESULT_FAIL, pp, attr, "Hash for file '%s' changed", filename);
+                *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
+            }
+
+            CloseDB(dbp);
+            return true;
         }
 
         cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, attr, "File hash for %s is correct", filename);
@@ -190,8 +187,8 @@ int FileHashChanged(EvalContext *ctx, const char *filename, unsigned char digest
     else
     {
         /* Key was not found, so install it */
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_CHANGE, pp, attr, "File '%s' was not in '%s' database - new file found", filename,
-             FileHashName(type));
+        cfPS(ctx, LOG_LEVEL_NOTICE, PROMISE_RESULT_CHANGE, pp, attr, "File '%s' was not in '%s' database - new file found", filename,
+             HashNameFromId(type));
         *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
         Log(LOG_LEVEL_DEBUG, "Storing checksum for '%s' in database '%s'", filename,
             HashPrintSafe(type, true, digest, buffer));
@@ -328,7 +325,7 @@ void PurgeHashes(EvalContext *ctx, char *path, Attributes attr, const Promise *p
             }
             else
             {
-                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, attr, "File '%s' no longer exists", obj);
+                cfPS(ctx, LOG_LEVEL_NOTICE, PROMISE_RESULT_WARN, pp, attr, "File '%s' no longer exists", obj);
             }
 
             LogHashChange(obj, FILE_STATE_REMOVED, "File removed", pp);

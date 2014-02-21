@@ -1,0 +1,107 @@
+# Test that monitoring file status of an updated file gives right promises
+# status.
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+}
+
+bundle agent init
+{
+  files:
+      # Not in database.
+      "$(G.testfile).new"
+        create => "true";
+      # Should be in database.
+      "$(G.testfile).same"
+        create => "true",
+        changes => test_changes;
+      "$(G.testfile).updated"
+        create => "true",
+        changes => test_changes;
+}
+
+bundle agent test
+{
+  files:
+      "$(G.testfile).updated"
+        edit_line => insert_text;
+
+  methods:
+      "test_new" usebundle => test_new;
+      "test_same" usebundle => test_same;
+      "test_updated" usebundle => test_updated;
+}
+
+bundle edit_line insert_text
+{
+  insert_lines:
+      "Text";
+}
+
+bundle agent test_new
+{
+  files:
+      "$(G.testfile).new"
+        changes => test_changes,
+        classes => kept_repaired_notkept("test_new_kept", "test_new_repaired", "test_new_notkept");
+}
+
+bundle agent test_same
+{
+  files:
+      "$(G.testfile).same"
+        changes => test_changes,
+        classes => kept_repaired_notkept("test_same_kept", "test_same_repaired", "test_same_notkept");
+}
+
+bundle agent test_updated
+{
+  files:
+      "$(G.testfile).updated"
+        changes => test_changes,
+        classes => kept_repaired_notkept("test_updated_kept", "test_updated_repaired", "test_updated_notkept");
+}
+
+body changes test_changes
+{
+      hash           => "sha256";
+      report_changes => "all";
+      update_hashes  => "yes";
+}
+
+body classes kept_repaired_notkept(kept, repaired, notkept)
+{
+      promise_kept => { "$(kept)" };
+      promise_repaired => { "$(repaired)" };
+      repair_failed    => { "$(notkept)" };
+      repair_denied    => { "$(notkept)" };
+      repair_timeout   => { "$(notkept)" };
+}
+
+bundle agent check
+{
+  vars:
+      "classes_set" slist => classesmatching("test_.*");
+
+  classes:
+      "ok" and => { "test_new_repaired",
+                    "!test_new_notkept",
+                    "!test_same_repaired",
+                    "test_same_kept",
+                    "!test_same_notkept",
+                    "test_updated_repaired",
+                    "!test_updated_notkept",
+      };
+
+  reports:
+    DEBUG::
+      "Set classes: $(classes_set)";
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}
+### PROJECT_ID: core
+### CATEGORY_ID: 27

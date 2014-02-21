@@ -1051,7 +1051,7 @@ bool GeneratePolicyReleaseID(char release_id_out[(2 * CF_SHA1_LEN) + 1], const c
 
     // fallback, produce some pseudo sha1 hash
     EVP_MD_CTX crypto_ctx;
-    EVP_DigestInit(&crypto_ctx, EVP_get_digestbyname(FileHashName(HASH_METHOD_SHA1)));
+    EVP_DigestInit(&crypto_ctx, EVP_get_digestbyname(HashNameFromId(HASH_METHOD_SHA1)));
 
     bool success = HashDirectoryTree(policy_dir,
                                      (const char *[]) { ".cf", ".dat", ".txt", ".conf", NULL},

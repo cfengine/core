@@ -464,7 +464,7 @@ void PromiseRuntimeHash(const Promise *pp, const char *salt, unsigned char diges
     char *noRvalHash[] = { "mtime", "atime", "ctime", NULL };
     int doHash;
 
-    md = EVP_get_digestbyname(FileHashName(type));
+    md = EVP_get_digestbyname(HashNameFromId(type));
 
     EVP_DigestInit(&context, md);
 

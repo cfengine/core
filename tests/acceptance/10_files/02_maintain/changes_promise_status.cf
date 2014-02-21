@@ -52,10 +52,9 @@ bundle agent check
       "ok" and => { "!nosuchfile_kept",
                     "!nosuchfile_repaired",
                     "nosuchfile_notkept",
-                    # This one should not be set, but is. The promise has two results...
-                    # Hopefully we will solve this one once we remove cfPS() (Redmine 2452).
+                    # Kept state can be either set or unset depending on number of passes.
+                    # Let's not depend on either.
                     #"!newfile_kept",
-                    "newfile_kept", # <-- Remove this one later!
                     "newfile_repaired",
                     "!newfile_notkept",
                     "existingfile_kept",

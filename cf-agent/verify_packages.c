@@ -176,6 +176,7 @@ PromiseResult VerifyPackagesPromise(EvalContext *ctx, const Promise *pp)
     if (default_arch == NULL)
     {
         cfPS_HELPER_0ARG(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Unable to obtain default architecture for package manager - aborting");
+        YieldCurrentLock(thislock);
         return PROMISE_RESULT_FAIL;
     }
 
@@ -185,6 +186,7 @@ PromiseResult VerifyPackagesPromise(EvalContext *ctx, const Promise *pp)
     {
         cfPS_HELPER_0ARG(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Unable to obtain a list of installed packages - aborting");
         free(default_arch);
+        YieldCurrentLock(thislock);
         return PROMISE_RESULT_FAIL;
     }
 

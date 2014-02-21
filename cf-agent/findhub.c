@@ -36,7 +36,7 @@ static int CompareHosts(const void  *a, const void *b);
 
 void client_callback(AvahiClient *c,
                      AvahiClientState state,
-                     void *userdata)
+                     AVAHI_GCC_UNUSED void *userdata)
 {
     assert(c);
 
@@ -68,7 +68,9 @@ void browse_callback(AvahiServiceBrowser *b,
         return;
 
     case AVAHI_BROWSER_NEW:
-        if (!(avahi_service_resolver_new_ptr(c, interface, protocol, name ,type, domain, AVAHI_PROTO_UNSPEC, 0, resolve_callback, c)))
+        if ( !(avahi_service_resolver_new_ptr(c, interface, protocol, name,
+                                             type, domain, AVAHI_PROTO_UNSPEC, 0,
+                                             (AvahiServiceResolverCallback) resolve_callback, c)) )
         {
             Log(LOG_LEVEL_ERR, "Failed to resolve service '%s', error '%s'", name, avahi_strerror_ptr(avahi_client_errno_ptr(c)));
         }
@@ -96,10 +98,9 @@ void resolve_callback(AvahiServiceResolver *r,
                       const char *host_name,
                       const AvahiAddress *address,
                       uint16_t port,
-                      AvahiStringList *txt,
-                      AvahiLookupFlags flags,
-                      AVAHI_GCC_UNUSED void* userdata
-                      )
+                      AVAHI_GCC_UNUSED AvahiStringList *txt,
+                      AVAHI_GCC_UNUSED AvahiLookupFlags flags,
+                      AVAHI_GCC_UNUSED void* userdata)
 {
     HostProperties *hostprop = xcalloc(1, sizeof(HostProperties));
     assert(r);

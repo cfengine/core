@@ -102,6 +102,8 @@ static VersionCmpResult RunCmpCommand(EvalContext *ctx, const char *command, con
         return VERCMP_ERROR;
     }
 
+    BufferDestroy(expanded_command);
+
     return retcode == 0;
 }
 

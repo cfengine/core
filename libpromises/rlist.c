@@ -704,9 +704,11 @@ static int LaunchParsingMachine(const char *str, Rlist **newlist)
         goto clean;
     }
 
+    BufferDestroy(buf);
     return 0;
 
 clean:
+    BufferDestroy(buf);
     RlistDestroy(*newlist);
     assert(ret != 0);
     return ret;

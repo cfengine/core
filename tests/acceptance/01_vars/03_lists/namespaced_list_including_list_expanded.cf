@@ -1,0 +1,113 @@
+# Redmine#4445: Ensure that namespaced lists that include other lists are fully expanded
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle common g
+{
+  vars:
+    "policy_file" string => '
+body common control
+{
+      bundlesequence => { "go" };
+      version => "1.0";
+}
+
+bundle agent go
+{
+  methods:
+    "if you like then you better put a namespace on it"
+      usebundle => test:namespace_check;
+}
+
+body file control
+{
+  namespace => "test";
+}
+
+
+bundle agent namespace_check
+{
+  classes:
+    "server" expression => "any";
+
+  vars:
+      "packages" slist =>  { "mysql-client", "mysql-common" }, policy => "free";
+      "server_packages" slist => { "mysql-server", "mysql-server-core" }, policy => "free";
+
+      "all_packages" slist => { @(packages), @(server_packages) }, policy => "free";
+
+reports:
+  "$(all_packages)";
+}';
+
+}
+
+bundle agent init
+{
+  files:
+    "$(G.testfile)"
+      create => "true",
+      edit_defaults => empty,
+      edit_line => insert_lines("$(g.policy_file)"),
+      perms => m("600");
+}
+
+bundle agent test
+{
+  vars:
+    "agent_output" string => execresult("$(sys.cf_agent) -Kf $(G.testfile)", "noshell");
+}
+
+bundle agent check
+{
+  classes:
+    "unexpanded_list"
+      expression => regcmp(".*packages.*", $(test.agent_output)),
+      comment => "check to see if an included list is unexpanded";
+
+    "found_from_packages"
+      expression => regcmp(".*mysql-client.*", $(test.agent_output)),
+      comment => "found something food from one list";
+
+    "found_from_server_packages"
+      expression => regcmp(".*mysql-server.*", $(test.agent_output)),
+      comment => "found something food from one list";
+
+    "found_expected_output"
+      and => { "found_from_packages", "found_from_server_packages" },
+      comment => "Found something good from both included lists";
+
+
+    "ok" expression => "!unexpanded_list.found_expected_output";
+
+  reports:
+    ok::
+      "$(this.promise_filename) Pass";
+   !ok::
+      "$(this.promise_filename) FAIL";
+}
+
+
+bundle edit_line insert_lines(lines)
+{
+  insert_lines:
+
+      "$(lines)"
+      comment => "Append lines if they don't exist";
+}
+body perms m(mode)
+{
+      mode   => "$(mode)";
+}
+body edit_defaults empty
+{
+empty_file_before_editing => "true";
+edit_backup => "false";
+#max_file_size => "300000";
+}
+

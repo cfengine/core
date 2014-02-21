@@ -59,6 +59,41 @@
    ...
 }
 
+################################################
+# libxml2 weirdness
+################################################
+
+{
+   # appears to do things right on our side
+   libxml2-xmlDocDumpMemory
+   Memcheck:Leak
+   fun:malloc
+   ...
+   fun:xmlDocDumpFormatMemoryEnc
+   fun:XmlDocsEqualMem
+   ...
+}
+
+{
+   # appears to do things right on our side
+   libxml2-xmlSAXParseFileWithData
+   Memcheck:Leak
+   fun:malloc
+   ...
+   fun:xmlSAXParseFileWithData
+   fun:LoadFileAsXmlDoc
+   ...
+}
+
+{
+   libxml2-dlopen-lzma
+   Memcheck:Leak
+   ...
+   fun:_dl_open
+   ...
+   fun:__libxml2_xzread
+}
+
 
 ################################################
 # CFEngine specific suppressions
@@ -129,5 +164,14 @@
    ...
    fun:SeqNew
    fun:GetGlobalMountedFSList
+   ...
+}
+
+{
+   cfe-global-edit-anchors
+   Memcheck:Leak
+   ...
+   fun:PrependItem
+   fun:PromiseRecheckAllConstraints
    ...
 }

@@ -225,6 +225,9 @@ static const char *const HINTS[] =
 
 int main(int argc, char *argv[])
 {
+#ifdef HAVE_LIBXML2
+        xmlInitParser();
+#endif
     struct timespec start = BeginMeasure();
 
     GenericAgentConfig *config = CheckOpts(argc, argv);
@@ -283,6 +286,10 @@ int main(int argc, char *argv[])
     Nova_NoteAgentExecutionPerformance(config->input_file, start);
 
     GenericAgentConfigDestroy(config);
+
+#ifdef HAVE_LIBXML2
+        xmlCleanupParser();
+#endif
 
     return ret;
 }

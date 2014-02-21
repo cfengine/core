@@ -101,16 +101,16 @@ static bool XmlDocsEqualMem(xmlDocPtr doc1, xmlDocPtr doc2);
 static bool XmlNodesCompare(xmlNodePtr node1, xmlNodePtr node2, Attributes a, const Promise *pp);
 static bool XmlNodesCompareAttributes(xmlNodePtr node1, xmlNodePtr node2);
 static bool XmlNodesCompareNodes(xmlNodePtr node1, xmlNodePtr node2, Attributes a, const Promise *pp);
-static bool XmlNodesCompareTags(xmlNodePtr node1, xmlNodePtr node2);
+static bool XmlNodesCompareTags(const xmlNodePtr node1, const xmlNodePtr node2);
 static bool XmlNodesCompareText(xmlNodePtr node1, xmlNodePtr node2);
-static bool XmlNodesSubset(xmlNodePtr node1, xmlNodePtr node2, Attributes a, const Promise *pp);
-static bool XmlNodesSubsetOfAttributes(xmlNodePtr node1, xmlNodePtr node2);
-static bool XmlNodesSubsetOfNodes(xmlNodePtr node1, xmlNodePtr node2, Attributes a, const Promise *pp);
-static bool XmlNodesSubstringOfText(xmlNodePtr node1, xmlNodePtr node2);
+static bool XmlNodesSubset(const xmlNodePtr node1, const xmlNodePtr node2, Attributes a, const Promise *pp);
+static bool XmlNodesSubsetOfAttributes(const xmlNodePtr node1, const xmlNodePtr node2);
+static bool XmlNodesSubsetOfNodes(const xmlNodePtr node1, const xmlNodePtr node2, Attributes a, const Promise *pp);
+static bool XmlNodesSubstringOfText(const xmlNodePtr node1, const xmlNodePtr node2);
 static xmlAttrPtr XmlVerifyAttributeInNode(const xmlChar *attrname, xmlChar *attrvalue, xmlNodePtr node);
-static xmlChar* XmlVerifyTextInNodeExact(const xmlChar *text, xmlNodePtr node);
-static xmlChar* XmlVerifyTextInNodeSubstring(const xmlChar *text, xmlNodePtr node);
-static xmlNodePtr XmlVerifyNodeInNodeExact(xmlNodePtr node1, xmlNodePtr node2, Attributes a, const Promise *pp);
+static bool XmlVerifyTextInNodeExact(const xmlChar *text, const xmlNodePtr node);
+static bool XmlVerifyTextInNodeSubstring(const xmlChar *text, xmlNodePtr node);
+static bool XmlVerifyNodeInNodeExact(const xmlNodePtr node1, const xmlNodePtr node2, Attributes a, const Promise *pp);
 static xmlNodePtr XmlVerifyNodeInNodeSubset(xmlNodePtr node1, xmlNodePtr node2, Attributes a, const Promise *pp);
 
 //xpath build functionality
@@ -137,7 +137,7 @@ static bool XPathVerifyConvergence(const char* xpath);
 //helper functions
 static xmlChar *CharToXmlChar(char c[CF_BUFSIZE]);
 static bool ContainsRegex(const char* rawstring, const char* regex);
-static int XmlAttributeCount(xmlNodePtr node);
+static int XmlAttributeCount(const xmlNodePtr node);
 
 #endif
 
@@ -249,10 +249,8 @@ static PromiseResult KeepEditXmlPromise(EvalContext *ctx, const Promise *pp, voi
     {
         Attributes a = GetInsertionAttributes(ctx, pp);
 #ifdef HAVE_LIBXML2
-        xmlInitParser();
         PromiseResult result = PROMISE_RESULT_NOOP;
         VerifyXPathBuild(ctx, a, pp, edcontext, &result);
-        xmlCleanupParser();
         return result;
 #else
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Cannot edit XML files without LIBXML2.");
@@ -263,9 +261,7 @@ static PromiseResult KeepEditXmlPromise(EvalContext *ctx, const Promise *pp, voi
     {
         Attributes a = GetDeletionAttributes(ctx, pp);
 #ifdef HAVE_LIBXML2
-        xmlInitParser();
         PromiseResult result = VerifyTreeDeletions(ctx, a, pp, edcontext);
-        xmlCleanupParser();
         return result;
 #else
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Cannot edit XML files without LIBXML2");
@@ -276,9 +272,7 @@ static PromiseResult KeepEditXmlPromise(EvalContext *ctx, const Promise *pp, voi
     {
         Attributes a = GetInsertionAttributes(ctx, pp);
 #ifdef HAVE_LIBXML2
-        xmlInitParser();
         PromiseResult result = VerifyTreeInsertions(ctx, a, pp, edcontext);
-        xmlCleanupParser();
         return result;
 #else
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Cannot edit XML files without LIBXML2");
@@ -289,9 +283,7 @@ static PromiseResult KeepEditXmlPromise(EvalContext *ctx, const Promise *pp, voi
     {
         Attributes a = GetDeletionAttributes(ctx, pp);
 #ifdef HAVE_LIBXML2
-        xmlInitParser();
         PromiseResult result = VerifyAttributeDeletions(ctx, a, pp, edcontext);
-        xmlCleanupParser();
         return result;
 #else
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Cannot edit XML files without LIBXML2");
@@ -302,9 +294,7 @@ static PromiseResult KeepEditXmlPromise(EvalContext *ctx, const Promise *pp, voi
     {
         Attributes a = GetInsertionAttributes(ctx, pp);
 #ifdef HAVE_LIBXML2
-        xmlInitParser();
         PromiseResult result = VerifyAttributeSet(ctx, a, pp, edcontext);
-        xmlCleanupParser();
         return result;
 #else
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Cannot edit XML files without LIBXML2");
@@ -315,9 +305,7 @@ static PromiseResult KeepEditXmlPromise(EvalContext *ctx, const Promise *pp, voi
     {
         Attributes a = GetDeletionAttributes(ctx, pp);
 #ifdef HAVE_LIBXML2
-        xmlInitParser();
         PromiseResult result = VerifyTextDeletions(ctx, a, pp, edcontext);
-        xmlCleanupParser();
         return result;
 #else
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Cannot edit XML files without LIBXML2");
@@ -328,9 +316,7 @@ static PromiseResult KeepEditXmlPromise(EvalContext *ctx, const Promise *pp, voi
     {
         Attributes a = GetInsertionAttributes(ctx, pp);
 #ifdef HAVE_LIBXML2
-        xmlInitParser();
         PromiseResult result = VerifyTextSet(ctx, a, pp, edcontext);
-        xmlCleanupParser();
         return result;
 #else
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Cannot edit XML files without LIBXML2");
@@ -341,9 +327,7 @@ static PromiseResult KeepEditXmlPromise(EvalContext *ctx, const Promise *pp, voi
     {
         Attributes a = GetInsertionAttributes(ctx, pp);
 #ifdef HAVE_LIBXML2
-        xmlInitParser();
         PromiseResult result = VerifyTextInsertions(ctx, a, pp, edcontext);
-        xmlCleanupParser();
         return result;
 #else
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Cannot edit XML files without LIBXML2");
@@ -1143,12 +1127,9 @@ static bool InsertTreeInFile(EvalContext *ctx, char *rawtree, xmlDocPtr doc, Att
 static bool DeleteTreeInNode(EvalContext *ctx, char *rawtree, xmlDocPtr doc, xmlNodePtr docnode, Attributes a,
                              const Promise *pp, EditContext *edcontext, PromiseResult *result)
 {
-    xmlNodePtr treenode = NULL;
-    xmlNodePtr deletetree = NULL;
-    xmlChar *buf = NULL;
-
     //for parsing subtree from memory
-    if ((buf = CharToXmlChar(rawtree)) == NULL)
+    const xmlChar *buf = CharToXmlChar(rawtree);
+    if (!buf)
     {
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a,
              "Tree to be deleted '%s' at XPath '%s' in XML document '%s', was NOT successfully loaded into an XML buffer",
@@ -1158,20 +1139,24 @@ static bool DeleteTreeInNode(EvalContext *ctx, char *rawtree, xmlDocPtr doc, xml
     }
 
     //parse the subtree
+    xmlNodePtr treenode = NULL;
     if (xmlParseBalancedChunkMemory(doc, NULL, NULL, 0, buf, &treenode) != 0)
     {
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a,
              "Tree to be deleted '%s' at XPath '%s' in XML document '%s', was NOT parsed successfully",
              rawtree, a.xml.select_xpath, edcontext->filename);
         *result = PromiseResultUpdate(*result, PROMISE_RESULT_INTERRUPTED);
+        xmlFreeNode(treenode);
         return false;
     }
 
     //verify treenode exists inside docnode
+    xmlNodePtr deletetree = NULL;
     if ((deletetree = XmlVerifyNodeInNodeSubset(treenode, docnode, a, pp)) == NULL)
     {
         cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "The promised tree to be deleted '%s' does NOT exist, at XPath '%s' in XML document '%s' (promise kept)",
              rawtree, a.xml.select_xpath, edcontext->filename);
+        xmlFreeNode(treenode);
         return false;
     }
 
@@ -1181,26 +1166,41 @@ static bool DeleteTreeInNode(EvalContext *ctx, char *rawtree, xmlDocPtr doc, xml
              "Need to delete the promised tree '%s' at XPath '%s' in XML document '%s' - but only a warning was promised",
              rawtree, a.xml.select_xpath, edcontext->filename);
         *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
+        xmlFreeNode(treenode);
+        xmlFreeNode(deletetree);
         return true;
     }
 
     //remove the subtree from XML document
-    cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, "Deleting tree '%s' at XPath '%s' in XML document '%s'",
-         rawtree, a.xml.select_xpath, edcontext->filename);
+    cfPS(ctx,
+         LOG_LEVEL_VERBOSE,
+         PROMISE_RESULT_CHANGE,
+         pp,
+         a,
+         "Deleting tree '%s' at XPath '%s' in XML document '%s'",
+         rawtree,
+         a.xml.select_xpath,
+         edcontext->filename);
     *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
     xmlUnlinkNode(deletetree);
     xmlFreeNode(deletetree);
 
     //verify treenode no longer exists inside docnode
-    if (XmlVerifyNodeInNodeSubset(treenode, docnode, a, pp))
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a,
-             "The promised tree to be deleted '%s' was NOT successfully deleted, at XPath '%s' in XML document '%s'",
-             rawtree, a.xml.select_xpath, edcontext->filename);
-        *result = PromiseResultUpdate(*result, PROMISE_RESULT_INTERRUPTED);
-        return false;
+        xmlNodePtr ret = XmlVerifyNodeInNodeSubset(treenode, docnode, a, pp);
+        if (ret)
+        {
+            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a,
+                 "The promised tree to be deleted '%s' was NOT successfully deleted, at XPath '%s' in XML document '%s'",
+                 rawtree, a.xml.select_xpath, edcontext->filename);
+            *result = PromiseResultUpdate(*result, PROMISE_RESULT_INTERRUPTED);
+            xmlFreeNode(treenode);
+            xmlFreeNode(ret);
+            return false;
+        }
     }
 
+    xmlFreeNode(treenode);
     return true;
 }
 
@@ -1433,7 +1433,7 @@ static bool DeleteTextInNode(EvalContext *ctx, char *rawtext, xmlDocPtr doc, xml
     }
 
     //verify text exists inside docnode
-    if (XmlVerifyTextInNodeSubstring(text, docnode) == NULL)
+    if (!XmlVerifyTextInNodeSubstring(text, docnode))
     {
         cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a,
              "The promised text to be deleted '%s' does NOT exist, at XPath '%s' in XML document '%s' (promise kept)",
@@ -1474,7 +1474,7 @@ static bool DeleteTextInNode(EvalContext *ctx, char *rawtext, xmlDocPtr doc, xml
     }
 
     //verify text no longer exists inside docnode
-    if (XmlVerifyTextInNodeSubstring(text, docnode) != NULL)
+    if (XmlVerifyTextInNodeSubstring(text, docnode))
     {
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a,
              "The promised text '%s' was NOT deleted successfully, at XPath '%s' in XML document '%s'",
@@ -1504,7 +1504,7 @@ static bool SetTextInNode(EvalContext *ctx, char *rawtext, xmlDocPtr doc, xmlNod
     }
 
     //verify text does not exist inside docnode
-    if (XmlVerifyTextInNodeExact(text, docnode) != NULL)
+    if (XmlVerifyTextInNodeExact(text, docnode))
     {
         cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a,
              "The promised text to be set '%s' already exists, at XPath '%s' in XML document '%s' (promise kept)",
@@ -1545,7 +1545,7 @@ static bool SetTextInNode(EvalContext *ctx, char *rawtext, xmlDocPtr doc, xmlNod
     }
 
     //verify text was inserted
-    if (XmlVerifyTextInNodeExact(text, docnode) == NULL)
+    if (!XmlVerifyTextInNodeExact(text, docnode))
     {
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a,
              "The promised text '%s' was NOT set successfully, at XPath '%s' in XML document '%s'",
@@ -1575,7 +1575,7 @@ static bool InsertTextInNode(EvalContext *ctx, char *rawtext, xmlDocPtr doc, xml
     }
 
     //verify text does not exist inside docnode
-    if (XmlVerifyTextInNodeSubstring(text, docnode) != NULL)
+    if (XmlVerifyTextInNodeSubstring(text, docnode))
     {
         cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a,
              "The promised text to be inserted '%s' already exists, at XPath '%s' in XML document '%s' (promise kept)",
@@ -1617,7 +1617,7 @@ static bool InsertTextInNode(EvalContext *ctx, char *rawtext, xmlDocPtr doc, xml
     }
 
     //verify text was inserted
-    if (XmlVerifyTextInNodeSubstring(text, docnode) == NULL)
+    if (!XmlVerifyTextInNodeSubstring(text, docnode))
     {
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a,
              "The promised text '%s' was NOT inserted successfully, at XPath '%s' in XML document '%s'",
@@ -1873,10 +1873,9 @@ static bool XmlDocsEqualMem(xmlDocPtr doc1, xmlDocPtr doc2)
 
 /***************************************************************************/
 
-static bool XmlNodesCompare(xmlNodePtr node1, xmlNodePtr node2, Attributes a, const Promise *pp)
+static bool XmlNodesCompare(const xmlNodePtr node1, const xmlNodePtr node2, Attributes a, const Promise *pp)
 /* Does node1 contain all content(tag/attributes/text/nodes) found in node2? */
 {
-    xmlNodePtr copynode1, copynode2;
     int compare = true;
 
     if (!node1 && !node2)
@@ -1888,9 +1887,6 @@ static bool XmlNodesCompare(xmlNodePtr node1, xmlNodePtr node2, Attributes a, co
     {
         return false;
     }
-
-    copynode1 = xmlCopyNode(node1, 1);
-    copynode2 = xmlCopyNode(node2, 1);
 
     if (!XmlNodesCompareTags(node1, node2))
     {
@@ -1912,18 +1908,14 @@ static bool XmlNodesCompare(xmlNodePtr node1, xmlNodePtr node2, Attributes a, co
         compare = false;
     }
 
-    xmlFree(copynode1);
-    xmlFree(copynode2);
-
     return compare;
 }
 
 /*********************************************************************/
 
-static bool XmlNodesCompareAttributes(xmlNodePtr node1, xmlNodePtr node2)
+static bool XmlNodesCompareAttributes(const xmlNodePtr node1, const xmlNodePtr node2)
 /* Does node1 contain same attributes found in node2? */
 {
-    xmlNodePtr copynode1, copynode2;
     xmlAttrPtr attr1 = NULL;
     xmlAttrPtr attr2 = NULL;
     xmlChar *value = NULL;
@@ -1958,41 +1950,36 @@ static bool XmlNodesCompareAttributes(xmlNodePtr node1, xmlNodePtr node2)
         return false;
     }
 
-    copynode1 = xmlCopyNode(node1, 1);
-    copynode2 = xmlCopyNode(node2, 1);
-
     //get attribute list from node1 and node2
-    attr1 = copynode1->properties;
-    attr2 = copynode2->properties;
+    attr1 = node1->properties;
+    attr2 = node2->properties;
 
     //check that each attribute in node1 is in node2
     while (attr1)
     {
         value = xmlNodeGetContent(attr1->children);
 
-        if ((XmlVerifyAttributeInNode(attr1->name, value, copynode2)) == NULL)
+        if ((XmlVerifyAttributeInNode(attr1->name, value, node2)) == NULL)
         {
+            xmlFree(value);
             compare = false;
             break;
         }
+        xmlFree(value);
 
         attr1 = attr1->next;
         attr2 = attr2->next;
     }
-
-    xmlFree(copynode1);
-    xmlFree(copynode2);
 
     return compare;
 }
 
 /*********************************************************************/
 
-static bool XmlNodesCompareNodes(xmlNodePtr node1, xmlNodePtr node2, Attributes a, const Promise *pp)
+static bool XmlNodesCompareNodes(const xmlNodePtr node1, const xmlNodePtr node2, Attributes a, const Promise *pp)
 /* Does node1 contain same nodes found in node2? */
 {
-    xmlNodePtr copynode1, copynode2;
-    xmlNodePtr child1 = NULL;
+
     int count1, count2, compare = true;
 
     if (!node1 && !node2)
@@ -2013,34 +2000,30 @@ static bool XmlNodesCompareNodes(xmlNodePtr node1, xmlNodePtr node2, Attributes 
         return false;
     }
 
-    copynode1 = xmlCopyNode(node1, 1);
-    copynode2 = xmlCopyNode(node2, 1);
 
     //get node list from node1 and node2
-    child1 = xmlFirstElementChild(copynode1);
+    xmlNodePtr child1 = xmlFirstElementChild(node1);
 
     while (child1)
     {
-        if (XmlVerifyNodeInNodeExact(child1, copynode2, a, pp) == NULL)
+        if (!XmlVerifyNodeInNodeExact(child1, node2, a, pp))
         {
             compare = false;
             break;
         }
-        child1 = xmlNextElementSibling(copynode1);
+        child1 = xmlNextElementSibling(node1);
     }
 
-    xmlFree(copynode1);
-    xmlFree(copynode2);
+    xmlFreeNode(child1);
 
     return compare;
 }
 
 /*********************************************************************/
 
-static bool XmlNodesCompareTags(xmlNodePtr node1, xmlNodePtr node2)
+static bool XmlNodesCompareTags(const xmlNodePtr node1, const xmlNodePtr node2)
 /* Does node1 contain same tag found in node2? */
 {
-    xmlNodePtr copynode1, copynode2;
     int compare = true;
 
     if (!node1 && !node2)
@@ -2063,17 +2046,12 @@ static bool XmlNodesCompareTags(xmlNodePtr node1, xmlNodePtr node2)
         return false;
     }
 
-    copynode1 = xmlCopyNode(node1, 1);
-    copynode2 = xmlCopyNode(node2, 1);
-
     //check tag in node1 is the same as tag in node2
-    if (!xmlStrEqual(copynode1->name, copynode2->name))
+    if (!xmlStrEqual(node1->name, node2->name))
     {
         compare = false;
     }
 
-    xmlFree(copynode1);
-    xmlFree(copynode2);
     return compare;
 }
 
@@ -2119,10 +2097,9 @@ static bool XmlNodesCompareText(xmlNodePtr node1, xmlNodePtr node2)
 
 /*********************************************************************/
 
-static bool XmlNodesSubset(xmlNodePtr node1, xmlNodePtr node2, Attributes a, const Promise *pp)
+static bool XmlNodesSubset(const xmlNodePtr node1, const xmlNodePtr node2, Attributes a, const Promise *pp)
 /* Does node1 contain matching subset of content(tag/attributes/text/nodes) found in node2? */
 {
-    xmlNodePtr copynode1, copynode2;
     int subset = true;
 
     if (!node1 && !node2)
@@ -2134,9 +2111,6 @@ static bool XmlNodesSubset(xmlNodePtr node1, xmlNodePtr node2, Attributes a, con
     {
         return false;
     }
-
-    copynode1 = xmlCopyNode(node1, 1);
-    copynode2 = xmlCopyNode(node2, 1);
 
     if (!XmlNodesCompareTags(node1, node2))
     {
@@ -2158,20 +2132,15 @@ static bool XmlNodesSubset(xmlNodePtr node1, xmlNodePtr node2, Attributes a, con
         subset = false;
     }
 
-    xmlFree(copynode1);
-    xmlFree(copynode2);
-
     return subset;
 }
 
 /*********************************************************************/
 
-static bool XmlNodesSubsetOfAttributes(xmlNodePtr node1, xmlNodePtr node2)
+static bool XmlNodesSubsetOfAttributes(const xmlNodePtr node1, const xmlNodePtr node2)
 /* Does node1 contain matching subset of attributes found in node2? */
 {
-    xmlNodePtr copynode1, copynode2;
     xmlAttrPtr attr1 = NULL;
-    xmlChar *value = NULL;
     int subset = true;
 
     if (!node1 && !node2)
@@ -2194,38 +2163,33 @@ static bool XmlNodesSubsetOfAttributes(xmlNodePtr node1, xmlNodePtr node2)
         return false;
     }
 
-    copynode1 = xmlCopyNode(node1, 1);
-    copynode2 = xmlCopyNode(node2, 1);
-
     //get attribute list from node1
-    attr1 = copynode1->properties;
+    attr1 = node1->properties;
 
     //check that each attribute in node1 is in node2
     while (attr1)
     {
-        value = xmlNodeGetContent(attr1->children);
+        xmlChar *value = xmlNodeGetContent(attr1->children);
 
-        if ((XmlVerifyAttributeInNode(attr1->name, value, copynode2)) == NULL)
+        if ((XmlVerifyAttributeInNode(attr1->name, value, node2)) == NULL)
         {
             subset = false;
+            xmlFree(value);
             break;
         }
 
         attr1 = attr1->next;
+        xmlFree(value);
     }
-
-    xmlFree(copynode1);
-    xmlFree(copynode2);
 
     return subset;
 }
 
 /*********************************************************************/
 
-static bool XmlNodesSubsetOfNodes(xmlNodePtr node1, xmlNodePtr node2, Attributes a, const Promise *pp)
+static bool XmlNodesSubsetOfNodes(const xmlNodePtr node1, const xmlNodePtr node2, Attributes a, const Promise *pp)
 /* Does node1 contain matching subset of nodes found in node2? */
 {
-    xmlNodePtr copynode1, copynode2;
     xmlNodePtr child1 = NULL;
     int subset = true;
 
@@ -2239,35 +2203,27 @@ static bool XmlNodesSubsetOfNodes(xmlNodePtr node1, xmlNodePtr node2, Attributes
         return false;
     }
 
-    copynode1 = xmlCopyNode(node1, 1);
-    copynode2 = xmlCopyNode(node2, 1);
-
     //get node list from node1 and node2
-    child1 = xmlFirstElementChild(copynode1);
+    child1 = xmlFirstElementChild(node1);
 
     while (child1)
     {
-        if (XmlVerifyNodeInNodeExact(child1, copynode2, a, pp) == NULL)
+        if (!XmlVerifyNodeInNodeExact(child1, node2, a, pp))
         {
             subset = false;
             break;
         }
-        child1 = xmlNextElementSibling(copynode1);
+        child1 = xmlNextElementSibling(node1);
     }
-
-    xmlFree(copynode1);
-    xmlFree(copynode2);
 
     return subset;
 }
 
 /*********************************************************************/
 
-static bool XmlNodesSubstringOfText(xmlNodePtr node1, xmlNodePtr node2)
+static bool XmlNodesSubstringOfText(const xmlNodePtr node1, const xmlNodePtr node2)
 /* Does node1 contain matching substring of text found in node2? */
 {
-    xmlChar *text1, *text2;
-
     if (!node1 && !node2)
     {
         return true;
@@ -2278,30 +2234,34 @@ static bool XmlNodesSubstringOfText(xmlNodePtr node1, xmlNodePtr node2)
         return false;
     }
 
-    text1 = xmlNodeGetContent(node1->children);
-    text2 = xmlNodeGetContent(node2->children);
-
+    xmlChar *text1 = xmlNodeGetContent(node1->children);
     if (!text1)
     {
         return true;
     }
 
+    xmlChar *text2 = xmlNodeGetContent(node2->children);
     if (!text2)
     {
+        xmlFree(text1);
         return false;
     }
 
     if (!xmlStrstr(text2, text1))
     {
+        xmlFree(text1);
+        xmlFree(text2);
         return false;
     }
 
+    xmlFree(text1);
+    xmlFree(text2);
     return true;
 }
 
 /*********************************************************************/
 
-xmlAttrPtr XmlVerifyAttributeInNode(const xmlChar *name, xmlChar *value, xmlNodePtr node)
+xmlAttrPtr XmlVerifyAttributeInNode(const xmlChar *name, xmlChar *value, const xmlNodePtr node)
 /* Does node contain an attribute with given name and value?
    Returns a pointer to attribute found in node or NULL */
 {
@@ -2324,61 +2284,63 @@ xmlAttrPtr XmlVerifyAttributeInNode(const xmlChar *name, xmlChar *value, xmlNode
 
     if (!xmlStrEqual(value, value2))
     {
+        xmlFree(value2);
         return NULL;
     }
 
+    xmlFree(value2);
     return attr2;
 }
 
 /*********************************************************************/
 
-xmlChar* XmlVerifyTextInNodeExact(const xmlChar *text, xmlNodePtr node)
+bool XmlVerifyTextInNodeExact(const xmlChar *text, const xmlNodePtr node)
 /* Does node contain: text content exactly matching the givin string text?
    Returns a pointer to text content in node or NULL */
 {
-    xmlChar *text2;
-
     if (node == NULL)
     {
-        return NULL;
+        return false;
     }
 
-    text2 = xmlNodeGetContent(node->children);
+    xmlChar *text2 = xmlNodeGetContent(node->children);
 
     if (!xmlStrEqual(text2, text))
     {
-        return NULL;
+        xmlFree(text2);
+        return false;
     }
 
-    return text2;
+    xmlFree(text2);
+    return true;
 }
 
 /*********************************************************************/
 
-xmlChar* XmlVerifyTextInNodeSubstring(const xmlChar *text, xmlNodePtr node)
+bool XmlVerifyTextInNodeSubstring(const xmlChar *text, xmlNodePtr node)
 /* Does node contain: text content, contains substring, matching the given string of text?
    Returns a pointer to text content in node or NULL */
 {
-    xmlChar *text2 = NULL;
-
-    if (node == NULL)
+    if (!node)
     {
-        return NULL;
+        return false;
     }
 
-    text2 = xmlNodeGetContent(node->children);
+    xmlChar *text2 = xmlNodeGetContent(node->children);
 
     if (!xmlStrstr(text2, text))
     {
-        return NULL;
+        xmlFree(text2);
+        return false;
     }
 
-    return text2;
+    xmlFree(text2);
+    return true;
 }
 
 /*********************************************************************/
 
-xmlNodePtr XmlVerifyNodeInNodeExact(xmlNodePtr node1, xmlNodePtr node2, Attributes a, const Promise *pp)
+static bool XmlVerifyNodeInNodeExact(const xmlNodePtr node1, const xmlNodePtr node2, Attributes a, const Promise *pp)
 /* Does node2 contain a node with content matching all content in node1?
    Returns a pointer to node found in node2 or NULL */
 {
@@ -2386,12 +2348,12 @@ xmlNodePtr XmlVerifyNodeInNodeExact(xmlNodePtr node1, xmlNodePtr node2, Attribut
 
     if ((node1 == NULL) || (node2 == NULL))
     {
-        return NULL;
+        return false;
     }
 
     if ((comparenode = xmlFirstElementChild(node2)) == NULL)
     {
-        return NULL;
+        return false;
     }
 
     while (comparenode)
@@ -2399,12 +2361,12 @@ xmlNodePtr XmlVerifyNodeInNodeExact(xmlNodePtr node1, xmlNodePtr node2, Attribut
         if (XmlNodesCompare(node1, comparenode, a, pp))
         {
 
-            return comparenode;
+            return true;
         }
         comparenode = xmlNextElementSibling(comparenode);
     }
 
-    return NULL;
+    return true;
 }
 
 /*********************************************************************/
@@ -2413,28 +2375,28 @@ xmlNodePtr XmlVerifyNodeInNodeSubset(xmlNodePtr node1, xmlNodePtr node2, Attribu
 /* Does node2 contain: node with subset of content matching all content in node1?
    Returns a pointer to node found in node2 or NULL */
 {
-    xmlNodePtr comparenode = NULL;
-
     if ((node1 == NULL) || (node2 == NULL))
     {
-        return comparenode;
+        return NULL;
     }
 
-    if ((comparenode = xmlFirstElementChild(node2)) == NULL)
+    xmlNodePtr comparenode = xmlFirstElementChild(node2);
+    if (!comparenode)
     {
-        return comparenode;
+        return NULL;
     }
 
     while (comparenode)
     {
         if (XmlNodesSubset(node1, comparenode, a, pp))
         {
-
             return comparenode;
         }
+
         comparenode = xmlNextElementSibling(comparenode);
     }
 
+    xmlFree(comparenode);
     return NULL;
 }
 
@@ -2445,9 +2407,10 @@ xmlNodePtr PredicateExtractNode(char predicate[CF_BUFSIZE])
     xmlNodePtr node = NULL;
     xmlChar *name = NULL;
     xmlChar *value = NULL;
-    char rawname[CF_BUFSIZE] = { 0 }, rawvalue[CF_BUFSIZE] = { 0 }, *tok, *running;
+    char rawname[CF_BUFSIZE] = { 0 }, rawvalue[CF_BUFSIZE] = { 0 }, *tok;
 
-    running = xstrdup(predicate);
+    char *running_start = xstrdup(predicate);
+    char *running = running_start;
 
     //extract node name
     tok = strsep(&running, "| \"\'=");
@@ -2470,6 +2433,8 @@ xmlNodePtr PredicateExtractNode(char predicate[CF_BUFSIZE])
     //create a new node with name and value
     node = xmlNewNode(NULL, name);
     xmlNodeSetContent(node, value);
+
+    free(running_start);
 
     return node;
 }
@@ -2497,9 +2462,10 @@ static bool PredicateRemoveHead(char predicate[CF_BUFSIZE])
 xmlNodePtr XPathHeadExtractNode(EvalContext *ctx, char xpath[CF_BUFSIZE], Attributes a, const Promise *pp, PromiseResult *result)
 {
     xmlNodePtr node = NULL;
-    char head[CF_BUFSIZE] = {0}, *tok = NULL, *running;
+    char head[CF_BUFSIZE] = {0}, *tok = NULL;
 
-    running = xstrdup(xpath);
+    char *running_start = xstrdup(xpath);
+    char *running = running_start;
 
     //extract head substring from xpath
     tok = strsep(&running, "/");
@@ -2514,6 +2480,8 @@ xmlNodePtr XPathHeadExtractNode(EvalContext *ctx, char xpath[CF_BUFSIZE], Attrib
         cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_INTERRUPTED, pp, a, "Could not extract node '%s'", head);
         *result = PromiseResultUpdate(*result, PROMISE_RESULT_INTERRUPTED);
     }
+
+    free(running_start);
 
     return node;
 }
@@ -2546,10 +2514,11 @@ xmlNodePtr XPathSegmentExtractNode(char segment[CF_BUFSIZE])
 {
     xmlNodePtr node = NULL, prednode = NULL;
     xmlChar *name = NULL, *attrname = NULL, *attrvalue = NULL;
-    char predicate[CF_BUFSIZE] = { 0 }, rawname[CF_BUFSIZE] = { 0 }, rawvalue[CF_BUFSIZE] = { 0 }, *tok, *running;
+    char predicate[CF_BUFSIZE] = { 0 }, rawname[CF_BUFSIZE] = { 0 }, rawvalue[CF_BUFSIZE] = { 0 }, *tok;
     int hasname = false;
 
-    running = xstrdup(segment);
+    char *running_start = xstrdup(segment);
+    char *running = running_start;
 
     //extract name and predicate substrings from segment
     if (XPathHeadContainsNode(segment))
@@ -2589,28 +2558,31 @@ xmlNodePtr XPathSegmentExtractNode(char segment[CF_BUFSIZE])
             }
             else if (PredicateHeadContainsAttribute(predicate))
             {
-                running = xstrdup(predicate);
+                char *running_start2 = xstrdup(predicate);
+                char *running2 = running_start2;
 
                 //extract attribute name
-                tok = strsep(&running, "| @\"\'=");
+                tok = strsep(&running2, "| @\"\'=");
                 while (strcmp(tok, "") == 0)
                 {
-                    tok = strsep(&running, "| @\"\'=");
+                    tok = strsep(&running2, "| @\"\'=");
                 }
                 strcpy(rawname, tok);
                 attrname = CharToXmlChar(rawname);
 
                 //extract attribute value
-                tok = strsep(&running, "| @\"\'=");
+                tok = strsep(&running2, "| @\"\'=");
                 while (strcmp(tok, "") == 0)
                 {
-                    tok = strsep(&running, "| @\"\'=");
+                    tok = strsep(&running2, "| @\"\'=");
                 }
                 strcpy(rawvalue, tok);
                 attrvalue = CharToXmlChar(rawvalue);
 
                 //create a new attribute within node
                 xmlNewProp(node, attrname, attrvalue);
+
+                free(running_start2);
             }
 
             if (PredicateHasTail(predicate))
@@ -2623,6 +2595,9 @@ xmlNodePtr XPathSegmentExtractNode(char segment[CF_BUFSIZE])
             }
         }
     }
+
+    free(running_start);
+
     return node;
 }
 
@@ -2630,9 +2605,11 @@ xmlNodePtr XPathSegmentExtractNode(char segment[CF_BUFSIZE])
 
 char* XPathGetTail(char xpath[CF_BUFSIZE])
 {
-    char tmpstr[CF_BUFSIZE] = {0}, *tok = NULL, *running;
+    char tmpstr[CF_BUFSIZE] = {0}, *tok = NULL;
 
-    running = xstrdup(xpath);
+    char *running_start = xstrdup(xpath);
+    char *running = running_start;
+
     memset(xpath, 0, sizeof(char)*CF_BUFSIZE);
 
     if (XPathHasTail(running))
@@ -2658,6 +2635,8 @@ char* XPathGetTail(char xpath[CF_BUFSIZE])
         }
         strcpy(xpath, tmpstr);
     }
+
+    free(running_start);
 
     return xpath;
 }
@@ -2843,28 +2822,21 @@ static bool ContainsRegex(const char* rawstring, const char* regex)
 
 /*********************************************************************/
 
-static int XmlAttributeCount(xmlNodePtr node)
+static int XmlAttributeCount(const xmlNodePtr node)
 {
-    xmlNodePtr copynode;
-    xmlAttrPtr attr;
-    int count = 0;
-
     if (!node)
     {
-        return count;
+        return 0;
     }
 
-    copynode = xmlCopyNode(node, 1);
+    xmlAttrPtr attr = node->properties;
 
-    attr = copynode->properties;
-
+    int count = 0;
     while (attr)
     {
         count++;
         attr = attr->next;
     }
-
-    xmlFree(copynode);
 
     return count;
 }

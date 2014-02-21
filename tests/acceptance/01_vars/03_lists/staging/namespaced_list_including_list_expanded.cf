@@ -44,7 +44,7 @@ bundle agent namespace_check
 reports:
   "$(all_packages)";
 }';
-
+####### End of policy_file
 }
 
 bundle agent init
@@ -72,11 +72,11 @@ bundle agent check
 
     "found_from_packages"
       expression => regcmp(".*mysql-client.*", $(test.agent_output)),
-      comment => "found something food from one list";
+      comment => "found something good from one list";
 
     "found_from_server_packages"
       expression => regcmp(".*mysql-server.*", $(test.agent_output)),
-      comment => "found something food from one list";
+      comment => "found something good from one list";
 
     "found_expected_output"
       and => { "found_from_packages", "found_from_server_packages" },
@@ -106,8 +106,8 @@ body perms m(mode)
 }
 body edit_defaults empty
 {
-empty_file_before_editing => "true";
-edit_backup => "false";
-#max_file_size => "300000";
+      empty_file_before_editing => "true";
+      edit_backup => "false";
+      #max_file_size => "300000";
 }
 

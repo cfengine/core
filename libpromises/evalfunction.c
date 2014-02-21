@@ -3958,7 +3958,9 @@ static FnCallResult FnCallNth(EvalContext *ctx, ARG_UNUSED const Policy *policy,
             return FnFailure();
         }
 
-        return FnReturn(RlistScalarValue(return_list));
+        FnCallResult result = FnReturn(RlistScalarValue(return_list));
+        RlistDestroy(return_list);
+        return result;
     }
     else
     {

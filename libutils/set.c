@@ -110,11 +110,9 @@ Buffer *StringSetToBuffer(StringSet *set, const char delimiter)
     return buf;
 }
 
-StringSet *StringSetFromString(const char *str, char delimiter)
+void StringSetAddSplit(StringSet *set, const char *str, char delimiter)
 {
-    StringSet *set = StringSetNew();
-
-    if (str)
+    if (str) // TODO: remove this inconsistency, add assert(str)
     {
         const char *prev = str;
         const char *cur = str;
@@ -143,6 +141,13 @@ StringSet *StringSetFromString(const char *str, char delimiter)
             StringSetAdd(set, xstrndup(prev, cur - prev));
         }
     }
+}
+
+StringSet *StringSetFromString(const char *str, char delimiter)
+{
+    StringSet *set = StringSetNew();
+
+    StringSetAddSplit(set, str, delimiter);
 
     return set;
 }

@@ -73,7 +73,7 @@ int ListLen(const Item *list);
 int ByteSizeList(const Item *list);
 bool IsItemIn(const Item *list, const char *item);
 bool ListsCompare(const Item *list1, const Item *list2);
-int IsMatchItemIn(Item *list, const char *item);
+int IsMatchItemIn(const Item *list, const char *item);
 Item *ConcatLists(Item *list1, Item *list2);
 void CopyList(Item **dest, const Item *source);
 void IdempItemCount(Item **liststart, const char *itemstring, const char *classes);

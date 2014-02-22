@@ -184,3 +184,7 @@ libpromises_la_DEPENDENCIES = ../libutils/libutils.la ../libcfnet/libcfnet.la \
 
 ../libutils/libutils.la:
 	$(MAKE) -C ../libutils $(AM_MAKEFLAGS) libutils.la
+
+# This should be run by hand to generate bootstrap.inc
+bootstrap-inc:
+	perl ./text2cstring.pl failsafe.cf > bootstrap.inc

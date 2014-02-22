@@ -1,0 +1,193 @@
+################################################################################
+## CFEngine Bootstrap / Failsafe Policy ########################################
+################################################################################
+# THIS FILE REPRESENTS A FALL-BACK SOLUTION FOR THE PRIMARY FAILSAFE FILE.
+# IF THE PRIMARY FAILSAFE/UPDATE LOSES FUNCTIONALITY DUE TO MODIFICATIONS MADE
+# BY THE USER, CFENGINE WILL RECOVER BY USING THIS FALL-BACK BOOTSTRAPPED FILE.
+# NEVER EDIT THIS FILE, YOU WILL HAVE TO LOG ON TO EVERY NODE MANAGED BY
+# CFENGINE TO RECTIFY POTENTIAL ERRORS IF SOMETHING GOES WRONG.
+################################################################################
+
+body common control
+{
+      bundlesequence => { "cfe_internal_update" };
+}
+
+################################################################################
+
+body agent control
+{
+      skipidentify => "true";
+}
+
+################################################################################
+
+bundle agent cfe_internal_update
+{
+  classes:
+
+    any::
+      "have_ppkeys"
+      expression => fileexists("$(sys.workdir)/ppkeys/localhost.pub"),
+      handle => "cfe_internal_bootstrap_update_classes_have_ppkeys";
+      "have_promises_cf"
+      expression => fileexists("$(sys.inputdir)/promises.cf"),
+      handle => "cfe_internal_bootstrap_update_classes_have_promises_cf";
+
+      #
+
+  commands:
+
+    !have_ppkeys::
+      "$(sys.cf_key)"
+      handle => "cfe_internal_bootstrap_update_commands_generate_keys";
+
+      #
+
+  files:
+
+    !windows.have_ppkeys::
+      "$(sys.inputdir)"
+      handle => "cfe_internal_bootstrap_update_files_sys_workdir_inputs_not_windows",
+      copy_from => u_scp("$(sys.masterdir)"),
+      depth_search => u_recurse("inf"),
+      classes => repaired("got_policy");
+
+    windows.have_ppkeys::
+      "$(sys.inputdir)"
+      handle => "cfe_internal_bootstrap_update_files_sys_workdir_inputs_windows",
+      copy_from => u_scp("$(sys.masterdir)"),
+      depth_search => u_recurse("inf"),
+      classes => repaired("got_policy");
+
+      "$(sys.workdir)\\bin-twin\\."
+      handle => "cfe_internal_bootstrap_update_files_sys_workdir_bin_twin_windows",
+      comment => "Make sure we maintain a clone of the binaries and libraries for updating",
+      copy_from => u_cp("$(sys.workdir)\\bin\\."),
+      depth_search => u_recurse("1");
+
+      #
+
+  processes:
+
+    !windows.got_policy::
+      "cf-execd" restart_class => "start_exec",
+      handle => "cfe_internal_bootstrap_update_processes_start_cf_execd";
+    am_policy_hub.got_policy::
+      "cf-serverd" restart_class => "start_server",
+      handle => "cfe_internal_bootstrap_update_processes_start_cf_serverd";
+
+      #
+
+  commands:
+
+    start_exec.!windows::
+      "$(sys.cf_execd)"
+      handle => "cfe_internal_bootstrap_update_commands_check_sys_cf_execd_start",
+      classes => repaired("executor_started");
+    start_server::
+      "$(sys.cf_serverd)"
+      handle => "cfe_internal_bootstrap_update_commands_check_sys_cf_serverd_start",
+      action => ifwin_bg,
+      classes => repaired("server_started");
+
+      #
+
+  services:
+
+    windows.got_policy::
+      "CfengineNovaExec"
+      handle => "cfe_internal_bootstrap_update_services_windows_executor",
+      service_policy => "start",
+      service_method => bootstart,
+      classes => repaired("executor_started");
+
+      #
+
+  reports:
+
+    bootstrap_mode.am_policy_hub::
+      "This host assumes the role of policy server"
+      handle => "cfe_internal_bootstrap_update_reports_assume_policy_hub";
+    bootstrap_mode.!am_policy_hub::
+      "This autonomous node assumes the role of voluntary client"
+      handle => "cfe_internal_bootstrap_update_reports_assume_voluntary_client";
+    got_policy::
+      "Updated local policy from policy server"
+      handle => "cfe_internal_bootstrap_update_reports_got_policy";
+    !got_policy.!have_promises_cf.have_ppkeys::
+      "Failed to copy policy from policy server at $(sys.policy_hub):$(sys.masterdir)
+       Please check
+       * cf-serverd is running on $(sys.policy_hub)
+       * network connectivity to $(sys.policy_hub) on port 5308
+       * masterfiles 'body server control' - in particular allowconnects, trustkeysfrom and skipverify
+       * masterfiles 'bundle server' -> access: -> masterfiles -> admit/deny
+       It is often useful to restart cf-serverd in verbose mode (cf-serverd -v) on $(sys.policy_hub) to diagnose connection issues.
+       When updating masterfiles, wait (usually 5 minutes) for files to propagate to inputs on $(sys.policy_hub) before retrying."
+      handle => "cfe_internal_bootstrap_update_reports_did_not_get_policy";
+    server_started::
+      "Started the server"
+      handle => "cfe_internal_bootstrap_update_reports_started_serverd";
+    am_policy_hub.!server_started.!have_promises_cf.have_ppkeys::
+      "Failed to start the server"
+      handle => "cfe_internal_bootstrap_update_reports_failed_to_start_serverd";
+    executor_started::
+      "Started the scheduler"
+      handle => "cfe_internal_bootstrap_update_reports_started_execd";
+    !executor_started.!have_promises_cf.have_ppkeys::
+      "Did not start the scheduler"
+      handle => "cfe_internal_bootstrap_update_reports_failed_to_start_execd";
+    !executor_started.have_promises_cf::
+      "You are running a hard-coded failsafe. Please use the following command instead.
+        $(sys.cf_agent) -f $(sys.inputdir)/update.cf"
+      handle => "cfe_internal_bootstrap_update_reports_run_another_failsafe_instead";
+}
+
+############################################
+body classes repaired(x)
+{
+      promise_repaired => {"$(x)"};
+}
+############################################
+body perms u_p(p)
+{
+      mode  => "$(p)";
+}
+#############################################
+body copy_from u_scp(from)
+{
+      source      => "$(from)";
+      compare     => "digest";
+      trustkey    => "true";
+    !am_policy_hub::
+      servers => { "$(sys.policy_hub)" };
+}
+############################################
+body action u_background
+{
+      background => "true";
+}
+############################################
+body depth_search u_recurse(d)
+{
+      depth => "$(d)";
+      exclude_dirs => { "\.svn", "\.git" };
+}
+############################################
+body service_method bootstart
+{
+      service_autostart_policy => "boot_time";
+}
+############################################
+body action ifwin_bg
+{
+    windows::
+      background => "true";
+}
+############################################
+body copy_from u_cp(from)
+{
+      source          => "$(from)";
+      compare         => "digest";
+      copy_backup     => "false";
+}

@@ -1217,6 +1217,16 @@ static Policy *Cf3ParseFile(const GenericAgentConfig *config, const char *input_
         Log(LOG_LEVEL_ERR, "Can't stat file '%s' for parsing. (stat: %s)", input_path, GetErrorStr());
         exit(EXIT_FAILURE);
     }
+    else if (S_ISDIR(statbuf.st_mode))
+    {
+        if (config->ignore_missing_inputs)
+        {
+            return PolicyNew();
+        }
+
+        Log(LOG_LEVEL_ERR, "Can't parse directory '%s'.", input_path);
+        exit(EXIT_FAILURE);
+    }
 
 #ifndef _WIN32
     if (config->check_not_writable_by_others && (statbuf.st_mode & (S_IWGRP | S_IWOTH)))
@@ -1516,7 +1526,7 @@ static void VerifyPromises(EvalContext *ctx, const Policy *policy, GenericAgentC
         {
             if (!VerifyBundleSequence(ctx, policy, config))
             {
-                FatalError(ctx, "Errors in promise bundles");
+                FatalError(ctx, "Errors in promise bundles: could not verify bundlesequence");
             }
         }
     }

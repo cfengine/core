@@ -1,0 +1,23 @@
+# Redmine#4683: ensure directories and missing files don't abort when
+# ignore_missing_inputs is set
+
+body common control
+{
+      ignore_missing_inputs => "true";
+      inputs => { "/x.cf", "/", "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+}
+
+bundle agent init
+{
+}
+
+bundle agent test
+{
+}
+
+bundle agent check
+{
+  reports:
+      "$(this.promise_filename) Pass";
+}

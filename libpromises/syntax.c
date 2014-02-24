@@ -261,6 +261,7 @@ const char *SyntaxTypeMatchToString(SyntaxTypeMatch result)
         [SYNTAX_TYPE_MATCH_ERROR_STRING_UNIX_PERMISSION] = "Error parsing Unix permission string",
 
         [SYNTAX_TYPE_MATCH_ERROR_SCALAR_OUT_OF_RANGE] = "Scalar value is out of range",
+        [SYNTAX_TYPE_MATCH_ERROR_EMPTY_SCALAR_OUT_OF_RANGE] = "Empty scalar value is out of range",
 
         [SYNTAX_TYPE_MATCH_ERROR_INT_PARSE] = "Cannot parse value as integer",
         [SYNTAX_TYPE_MATCH_ERROR_INT_OUT_OF_RANGE] = "Integer is out of range",
@@ -508,6 +509,10 @@ static SyntaxTypeMatch CheckParseString(const char *lval, const char *s, const c
     if (IsCf3VarString(s))
     {
         return SYNTAX_TYPE_MATCH_ERROR_UNEXPANDED;
+    }
+    else if ('\0' == s[0])
+    {
+        return SYNTAX_TYPE_MATCH_ERROR_EMPTY_SCALAR_OUT_OF_RANGE;
     }
     else
     {

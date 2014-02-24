@@ -468,7 +468,7 @@ int ServerTLSSessionEstablish(ServerConnectionState *conn)
                     "%s: Explicitly trusting this key from now on.",
                     KeyPrintableHash(ConnectionInfoKey(conn->conn_info)));
 
-                SavePublicKey("root", KeyPrintableHash(ConnectionInfoKey(conn->conn_info)),
+                SavePublicKey(conn->username, KeyPrintableHash(ConnectionInfoKey(conn->conn_info)),
                               KeyRSA(ConnectionInfoKey(conn->conn_info)));
             }
             else

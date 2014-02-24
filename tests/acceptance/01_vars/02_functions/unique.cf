@@ -18,7 +18,9 @@ bundle agent init
   vars:
       "results" slist => {
                            "starting list = 1,2,3,one,two,three,long string,four,fix,six,one,two,three",
+                           "starting length = 13",
                            "unique list = 1,2,3,one,two,three,long string,four,fix,six",
+                           "unique length = 10",
       };
 
   files:
@@ -53,9 +55,11 @@ bundle agent test
                         "one", "two", "three",
       };
       "test_str" string => join(",", "test");
+      "test_len" int => length(test);
 
       "test_unique" slist => unique("test");
       "unique_str" string => join(",", "test_unique");
+      "unique_len" int => length(test_unique);
 
   files:
       "$(G.testfile).actual"
@@ -67,7 +71,9 @@ bundle edit_line test_insert
 {
   insert_lines:
       "starting list = $(test.test_str)";
+      "starting length = $(test.test_len)";
       "unique list = $(test.unique_str)";
+      "unique length = $(test.unique_len)";
 }
 
 #######################################################

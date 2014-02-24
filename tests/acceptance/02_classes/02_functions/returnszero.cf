@@ -31,6 +31,12 @@ bundle agent test
 {
   vars:
       "dummy" string => "dummy";
+
+  meta:
+      "tags" slist => { "test_suppress_fail" };
+  vars:
+      "test_suppress_fail" string => "windows";
+      "failure_issue_number" int => "4687";
 }
 
 #######################################################

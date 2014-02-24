@@ -31,6 +31,12 @@ bundle agent test
       "positive" int => diskfree("$(positive_disk)");
       "p" int => diskfree("$(p_disk)");
       "zero" int => diskfree("$(zero_disk)");
+
+  meta:
+      "tags" slist => { "test_suppress_fail" };
+  vars:
+      "test_suppress_fail" string => "windows";
+      "failure_issue_number" int => "4686";
 }
 
 #######################################################

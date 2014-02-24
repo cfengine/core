@@ -478,7 +478,7 @@ static Reload CheckNewPromises(const GenericAgentConfig *config, time_t *last_po
 
     Log(LOG_LEVEL_DEBUG, "Checking file updates for input file '%s'", config->input_file);
 
-    validated_at = ReadTimestampFromPolicyValidatedMasterfiles(config);
+    validated_at = ReadTimestampFromPolicyValidatedMasterfiles(config, NULL);
 
     if (*last_policy_reload < validated_at)
     {

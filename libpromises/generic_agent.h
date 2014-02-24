@@ -30,6 +30,9 @@
 #include <policy.h>
 #include <set.h>
 
+#define GENERIC_AGENT_CHECKSUM_SIZE ((2*CF_SHA1_LEN) + 1)
+#define GENERIC_AGENT_CHECKSUM_METHOD HASH_METHOD_SHA1
+
 typedef struct
 {
     AgentType agent_type;
@@ -90,9 +93,9 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config);
 ENTERPRISE_VOID_FUNC_1ARG_DECLARE(void, GenericAgentWriteVersion, Writer *, w);
 void GenericAgentWriteHelp(Writer *w, const char *comp, const struct option options[], const char *const hints[], bool accepts_file_argument);
 bool GenericAgentArePromisesValid(const GenericAgentConfig *config);
-time_t ReadTimestampFromPolicyValidatedMasterfiles(const GenericAgentConfig *config);
+time_t ReadTimestampFromPolicyValidatedMasterfiles(const GenericAgentConfig *config, const char *maybe_dirname);
 
-bool GeneratePolicyReleaseID(char release_id_out[CF_SHA1_LEN + 1], const char *dirname);
+bool GeneratePolicyReleaseID(char release_id_out[GENERIC_AGENT_CHECKSUM_SIZE], const char *dirname);
 bool GenericAgentIsPolicyReloadNeeded(const GenericAgentConfig *config, const Policy *policy);
 
 void CloseLog(void);

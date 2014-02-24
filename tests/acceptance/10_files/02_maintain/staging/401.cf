@@ -33,7 +33,7 @@ bundle agent init
 
 body copy_from init_copy
 {
-      source => "/etc/group";
+      source => "$(G.etc_group)";
       compare => "digest";
 }
 
@@ -55,7 +55,7 @@ bundle agent test
 
 body copy_from test_copy
 {
-      source => "/etc/motd";
+      source => "$(G.etc_motd)";
       compare => "digest";
 }
 

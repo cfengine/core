@@ -43,7 +43,7 @@ bundle agent init
 
   files:
       "$(G.testfile)"
-      copy_from => init_copy("/etc/group"),
+      copy_from => init_copy("$(G.etc_group)"),
       perms => init_perms("$(mode)", "$(owner)", "$(group)"),
       classes => init_set_class("pass2");
 }

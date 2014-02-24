@@ -23,7 +23,7 @@ bundle agent init
 
   files:
       "$(G.testfile)"
-      copy_from => local("/etc/group"),
+      copy_from => local("$(G.etc_group)"),
       perms => mode("666");
 }
 
@@ -56,7 +56,7 @@ bundle agent test
 {
   files:
       "$(G.testfile)"
-      copy_from => local("/etc/group"),	# Same file
+      copy_from => local("$(G.etc_group)"),	# Same file
       perms => mode("644"),		# Different mode
       classes => all_classes;
 }

@@ -20,13 +20,13 @@ bundle common g
       # This extracts the inode number of the symlink
       "Lcommand" string => 'printf "%d", (lstat("$(G.testfile)"))[1]';
 
-      "source" string => "/etc/group";
+      "source" string => "$(G.etc_group)";
       "source_command" string => 'printf "%d", (stat("$(g.source)"))[1]';
       "source_ino" string => execresult(
 					 "$(G.perl) -le '$(g.source_command)'",
 					 "noshell");
 
-      "target" string => "/etc/group";
+      "target" string => "$(G.etc_group)";
 }
 
 #######################################################

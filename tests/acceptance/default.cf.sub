@@ -25,7 +25,8 @@ vars:
   windows::
     "paths[mingw_msys_1_0_bin]" string     => "c:\\mingw\\msys\\1.0\\bin";
     "paths[msys_bin]" string               => "c:\\msys\\bin";
-    "paths[pstools]" string               => "c:\\PSTools";
+    "paths[pstools]" string                => "c:\\PSTools";
+    "paths[strawberry_perl_bin]" string    => "c:\\strawberry\\perl\\bin";
 
   any::
   "paths_indices" slist => getindices("paths");

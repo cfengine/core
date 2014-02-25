@@ -36,6 +36,9 @@ bundle agent test
 
       "load_$(X)" data => mergedata("load$(X)");
       "load_$(X)_$(Y)" data => mergedata("load$(X)", "load$(Y)");
+
+      "bad1" data => mergedata(missingvar);
+      "bad2" data => mergedata(load1, missingvar);
 }
 
 #######################################################

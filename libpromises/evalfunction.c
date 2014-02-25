@@ -2526,7 +2526,7 @@ static FnCallResult FnCallMergeData(EvalContext *ctx, ARG_UNUSED const Policy *p
 
             if (JsonLength(convert) < 1)
             {
-                Log(LOG_LEVEL_ERR, "%s: argument '%s' does not resolve to a container or a list", fp->name, RlistScalarValue(arg));
+                Log(LOG_LEVEL_VERBOSE, "%s: argument '%s' does not resolve to a container or a list or a CFEngine array", fp->name, RlistScalarValue(arg));
                 SeqDestroy(containers);
                 VarRefDestroy(ref);
                 SeqDestroy(toremove);

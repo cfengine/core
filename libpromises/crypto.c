@@ -547,9 +547,5 @@ static void CleanupOpenSSLThreadLocks(void)
 
 LogLevel CryptoGetMissingKeyLogLevel(void)
 {
-#ifdef __MINGW32__
-    return LOG_LEVEL_ERR;
-#else
     return ((getuid() == 0 && NULL == getenv("CFENGINE_TEST_OVERRIDE_WORKDIR")) ? LOG_LEVEL_ERR : LOG_LEVEL_VERBOSE);
-#endif
 }

@@ -175,3 +175,12 @@
    fun:PromiseRecheckAllConstraints
    ...
 }
+
+{
+   cfe-global-checkopts
+   Memcheck:Leak
+   ...
+   fun:StringSetFromString
+   fun:CheckOpts
+   ...
+}

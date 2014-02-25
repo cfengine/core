@@ -66,6 +66,7 @@ int RlistLen(const Rlist *start);
 bool RlistMatchesRegexRlist(const Rlist *list, const Rlist *search);
 bool RlistMatchesRegex(const Rlist *list, const char *str);
 bool RlistIsInListOfRegex(const Rlist *list, const char *str);
+bool RlistIsNullList(const Rlist *list);
 
 Rlist *RlistAppendRval(Rlist **start, Rval rval);
 

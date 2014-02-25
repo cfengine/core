@@ -214,6 +214,25 @@ bool RlistMatchesRegex(const Rlist *list, const char *regex)
     return false;
 }
 
+// TODO: cf_null lists should not be needed
+bool RlistIsNullList(const Rlist *list)
+{
+    for (const Rlist *rp = list; rp; rp = rp->next)
+    {
+        if (rp->val.type != RVAL_TYPE_SCALAR)
+        {
+            return false;
+        }
+
+        if (strcmp(CF_NULL_VALUE, RlistScalarValue(rp)) != 0)
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 bool RlistIsInListOfRegex(const Rlist *list, const char *str)
 /*
    Returns true if any of the "list" of regular expressions matches "str".

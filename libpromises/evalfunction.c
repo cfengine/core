@@ -2436,7 +2436,7 @@ static FnCallResult FnCallMergeData(EvalContext *ctx, ARG_UNUSED const Policy *p
     }
 
     Seq *containers = SeqNew(10, NULL);
-    Seq *toremove = SeqNew(10, NULL);
+    Seq *toremove = SeqNew(10, &JsonDestroy);
 
     for (const Rlist *arg = args; arg; arg = arg->next)
     {
@@ -2499,7 +2499,7 @@ static FnCallResult FnCallMergeData(EvalContext *ctx, ARG_UNUSED const Policy *p
                 switch (var->rval.type)
                 {
                 case RVAL_TYPE_SCALAR:
-                    JsonObjectAppendString(convert, var->ref->indices[0], xstrdup(var->rval.item));
+                    JsonObjectAppendString(convert, var->ref->indices[0], var->rval.item);
                     break;
 
                 case RVAL_TYPE_LIST:
@@ -2548,10 +2548,10 @@ static FnCallResult FnCallMergeData(EvalContext *ctx, ARG_UNUSED const Policy *p
 
     if (SeqLength(containers) == 1)
     {
-        JsonElement *first = SeqAt(containers, 0);
+        JsonElement *first = JsonCopy(SeqAt(containers, 0));
         SeqDestroy(containers);
         SeqDestroy(toremove);
-        return  (FnCallResult) { FNCALL_SUCCESS, (Rval) { JsonCopy(first), RVAL_TYPE_CONTAINER } };
+        return  (FnCallResult) { FNCALL_SUCCESS, (Rval) { first, RVAL_TYPE_CONTAINER } };
     }
     else
     {

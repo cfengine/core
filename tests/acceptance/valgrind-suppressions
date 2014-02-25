@@ -177,10 +177,10 @@
 }
 
 {
-   cfe-global-checkopts
+   cfe-global-repository
    Memcheck:Leak
    ...
-   fun:StringSetFromString
-   fun:CheckOpts
+   fun:xstrdup
+   fun:SetRepositoryLocation
    ...
 }

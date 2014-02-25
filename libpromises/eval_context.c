@@ -950,8 +950,20 @@ void EvalContextClear(EvalContext *ctx)
     VariableTableClear(ctx->global_variables, NULL, NULL, NULL);
     VariableTableClear(ctx->match_variables, NULL, NULL, NULL);
     StringSetClear(ctx->promise_lock_cache);
-    RBTreeClear(ctx->function_cache);
     SeqClear(ctx->stack);
+
+    {
+        RBTreeIterator *it = RBTreeIteratorNew(ctx->function_cache);
+        Rval *rval = NULL;
+        while (RBTreeIteratorNext(it, NULL, (void **)&rval))
+        {
+            RvalDestroy(*rval);
+            free(rval);
+        }
+        RBTreeIteratorDestroy(it);
+        RBTreeClear(ctx->function_cache);
+    }
+
 }
 
 StringSet *StringSetAddAllMatchingIterator(StringSet* base, StringSetIterator it, const char *filter_regex)

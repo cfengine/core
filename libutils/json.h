@@ -386,6 +386,7 @@ JsonElement *JsonSelect(JsonElement *element, size_t num_indices, char **indices
 JsonIterator JsonIteratorInit(const JsonElement *container);
 const char *JsonIteratorNextKey(JsonIterator *iter);
 const JsonElement *JsonIteratorNextValue(JsonIterator *iter);
+const JsonElement *JsonIteratorNextValueByType(JsonIterator *iter, JsonElementType type, bool skip_null);
 const char *JsonIteratorCurrentKey(const JsonIterator *iter);
 const JsonElement *JsonIteratorCurrentValue(const JsonIterator *iter);
 JsonElementType JsonIteratorCurrentElementType(const JsonIterator *iter);

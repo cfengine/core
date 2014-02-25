@@ -479,6 +479,27 @@ const JsonElement *JsonIteratorNextValue(JsonIterator *iter)
     return iter->container->container.children->data[iter->index++];
 }
 
+const JsonElement *JsonIteratorNextValueByType(JsonIterator *iter, JsonElementType type, bool skip_null)
+{
+    const JsonElement *e = NULL;
+    while ((e = JsonIteratorNextValue(iter)))
+    {
+        if (skip_null
+            && JsonGetElementType(e) == JSON_ELEMENT_TYPE_PRIMITIVE
+            && JsonGetPrimitiveType(e) == JSON_PRIMITIVE_TYPE_NULL)
+        {
+            continue;
+        }
+
+        if (e->type == type)
+        {
+            return e;
+        }
+    }
+
+    return NULL;
+}
+
 const JsonElement *JsonIteratorCurrentValue(const JsonIterator *iter)
 {
     assert(iter);

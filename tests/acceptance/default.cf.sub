@@ -5,7 +5,7 @@ vars:
     "cwd" string => execresult("C:\windows\system32\cmd.exe /C cd", "noshell");
     # Dir separator
     "DS" string => "\\";
-    "exeext" string => ".exe";
+    "exeext" slist => { ".exe", ".bat" };
   !windows::
     "cwd" string => execresult("/bin/pwd 2>/dev/null || /usr/bin/pwd", "useshell");
     # Dir separator
@@ -28,18 +28,19 @@ vars:
     "paths[msys_bin]" string               => "c:\\msys\\bin";
     "paths[pstools]" string                => "c:\\PSTools";
     "paths[strawberry_perl_bin]" string    => "c:\\strawberry\\perl\\bin";
+    "paths[local]" string                  => "$(this.promise_dirname)\\tool_wrappers";
 
   any::
   "paths_indices" slist => getindices("paths");
 
 classes:
-  "$(paths_indices)_$(cmds)" expression => fileexists("$(paths[$(paths_indices)])$(DS)$(cmds)$(exeext)");
-  "has_$(cmds)" expression => "$(paths_indices)_$(cmds)",
+  "$(paths_indices)_$(cmds)$(exeext)" expression => fileexists("$(paths[$(paths_indices)])$(DS)$(cmds)$(exeext)");
+  "has_$(cmds)"                       expression => fileexists("$(paths[$(paths_indices)])$(DS)$(cmds)$(exeext)"),
     scope => "namespace";
 
 vars:
   "$(cmds)" string => "$(paths[$(paths_indices)])$(DS)$(cmds)$(exeext)",
-    ifvarclass => "$(paths_indices)_$(cmds)";
+    ifvarclass => canonify("$(paths_indices)_$(cmds)$(exeext)");
 
 classes:
   "temp_declared" not => strcmp(getenv("TEMP", "65536"), "");

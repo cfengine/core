@@ -1300,7 +1300,8 @@ void RlistFlatten(EvalContext *ctx, Rlist **list)
                         continue;
 
                     default:
-                        ProgrammingError("List variable does not resolve to a list");
+                        Log(LOG_LEVEL_WARNING, "Attempted to dereference variable '%s' using @ but variable did not resolve to a list",
+                            RlistScalarValue(rp));
                         break;
                     }
                 }

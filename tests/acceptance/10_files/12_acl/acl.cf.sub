@@ -219,7 +219,7 @@ bundle agent init
                        };
 
   files:
-    "$(G.testdir)$(G.DS)file"
+    "$(G.testdir)$(const.dirsep)file"
       create => "true";
 }
 
@@ -241,8 +241,8 @@ bundle agent test_and_check(testname)
       "any" usebundle => test_exec("$(testname)", "$(G.testdir)");
       "any" usebundle => test_check("$(testname)", "$(G.testdir)");
     !use_dir::
-      "any" usebundle => test_exec("$(testname)", "$(G.testdir)$(G.DS)file");
-      "any" usebundle => test_check("$(testname)", "$(G.testdir)$(G.DS)file");
+      "any" usebundle => test_exec("$(testname)", "$(G.testdir)$(const.dirsep)file");
+      "any" usebundle => test_check("$(testname)", "$(G.testdir)$(const.dirsep)file");
 }
 
 bundle agent test_exec(testname, file)

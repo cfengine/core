@@ -77,12 +77,12 @@ body copy_from source_ext_no_preserve
 bundle agent check
 {
   vars:
-      "destination_ext_preserve_output" string => execresult("$(init.cmd) $(G.testdir)$(G.DS)destination_ext_preserve", "noshell");
-      "destination_ext_no_preserve_output" string => execresult("$(init.cmd) $(G.testdir)$(G.DS)destination_ext_no_preserve", "noshell");
+      "destination_ext_preserve_output" string => execresult("$(init.cmd) $(G.testdir)$(const.dirsep)destination_ext_preserve", "noshell");
+      "destination_ext_no_preserve_output" string => execresult("$(init.cmd) $(G.testdir)$(const.dirsep)destination_ext_no_preserve", "noshell");
 
     !windows::
-      "destination_plain_output" string => execresult("/bin/ls -lZ $(G.testdir)$(G.DS)destination_plain", "noshell");
-      "source_ext_output" string => execresult("$(init.cmd) $(G.testdir)$(G.DS)source_ext", "noshell");
+      "destination_plain_output" string => execresult("/bin/ls -lZ $(G.testdir)$(const.dirsep)destination_plain", "noshell");
+      "source_ext_output" string => execresult("$(init.cmd) $(G.testdir)$(const.dirsep)source_ext", "noshell");
 
   classes:
     !windows::

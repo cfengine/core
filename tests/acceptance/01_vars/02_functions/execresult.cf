@@ -41,21 +41,21 @@ bundle agent check
       "cwd" string => dirname("$(this.promise_filename)");
 
     windows::
-      "zero_rel" string => "type $(cwd)$(G.DS)text.txt";
-      "one_rel" string => "type $(cwd)$(G.DS)text.txt.doesnotexist";
+      "zero_rel" string => "type $(cwd)$(const.dirsep)text.txt";
+      "one_rel" string => "type $(cwd)$(const.dirsep)text.txt.doesnotexist";
       "nxe_rel" string => "nosuchprogramexists";
-      "zero_abs" string => "c:\windows\system32\cmd.exe /C type $(cwd)$(G.DS)text.txt";
-      "one_abs" string => "c:\windows\system32\cmd.exe /C type $(cwd)$(G.DS)text.txt.doesnotexist";
+      "zero_abs" string => "c:\windows\system32\cmd.exe /C type $(cwd)$(const.dirsep)text.txt";
+      "one_abs" string => "c:\windows\system32\cmd.exe /C type $(cwd)$(const.dirsep)text.txt.doesnotexist";
       "nxe_abs" string => "c:\xbin\nosuchprogramexists";
-      "zero_powershell" string => "Get-Content $(cwd)$(G.DS)text.txt";
-      "one_powershell" string => "Get-Content $(cwd)$(G.DS)text.txt.doesnotexist";
+      "zero_powershell" string => "Get-Content $(cwd)$(const.dirsep)text.txt";
+      "one_powershell" string => "Get-Content $(cwd)$(const.dirsep)text.txt.doesnotexist";
       "nxe_powershell" string => "nosuchprogramexists";
     !windows::
-      "zero_rel" string => "cat $(cwd)$(G.DS)text.txt";
-      "one_rel" string => "cat $(cwd)$(G.DS)text.txt.doesnotexist";
+      "zero_rel" string => "cat $(cwd)$(const.dirsep)text.txt";
+      "one_rel" string => "cat $(cwd)$(const.dirsep)text.txt.doesnotexist";
       "nxe_rel" string => "nosuchprogramexists";
-      "zero_abs" string => "/bin/cat $(cwd)$(G.DS)text.txt";
-      "one_abs" string => "/bin/cat $(cwd)$(G.DS)text.txt.doesnotexist";
+      "zero_abs" string => "/bin/cat $(cwd)$(const.dirsep)text.txt";
+      "one_abs" string => "/bin/cat $(cwd)$(const.dirsep)text.txt.doesnotexist";
       "nxe_abs" string => "/xbin/nosuchprogramexists";
 
   classes:

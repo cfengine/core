@@ -56,6 +56,7 @@ typedef enum
 /*******************************************************************/
 
 extern PlatformContext VSYSTEMHARDCLASS;
+extern PlatformContext VPSHARDCLASS; /* used to define which ps command to use*/
 extern const char *const CLASSTEXT[PLATFORM_CONTEXT_MAX];
 extern const char *const VPSCOMM[PLATFORM_CONTEXT_MAX];
 extern const char *const VPSOPTS[PLATFORM_CONTEXT_MAX];

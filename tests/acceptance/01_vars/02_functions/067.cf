@@ -40,6 +40,12 @@ body delete init_delete
 
 bundle agent test
 {
+  meta:
+      "tags" slist => { "test_skip_unsupported" };
+
+  vars:
+      "test_skip_unsupported" string => "windows";
+
   files:
       # Try to delete the lines that shouldn't be there anyway
       "$(G.testfile)"

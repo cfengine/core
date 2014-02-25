@@ -10,13 +10,13 @@ body common control
 bundle agent init
 {
   vars:
-      "expected[bindir]" string => "$(sys.workdir)/bin";
-      "expected[failsafe_policy_path]" string => "$(sys.workdir)/inputs/failsafe.cf";
-      "expected[inputdir]" string => "$(sys.workdir)/inputs";
-      "expected[libdir]" string => "$(sys.workdir)/inputs/lib/$(sys.cf_version_major).$(sys.cf_version_minor)";
-      "expected[local_libdir]" string => "lib/$(sys.cf_version_major).$(sys.cf_version_minor)";
-      "expected[masterdir]" string => "$(sys.workdir)/masterfiles";
-      "expected[update_policy_path]" string => "$(sys.workdir)/inputs/update.cf";
+      "expected[bindir]" string => "$(sys.workdir)$(G.DS)bin";
+      "expected[failsafe_policy_path]" string => "$(sys.workdir)$(G.DS)inputs$(G.DS)failsafe.cf";
+      "expected[inputdir]" string => "$(sys.workdir)$(G.DS)inputs";
+      "expected[libdir]" string => "$(sys.workdir)$(G.DS)inputs$(G.DS)lib$(G.DS)$(sys.cf_version_major).$(sys.cf_version_minor)";
+      "expected[local_libdir]" string => "lib$(G.DS)$(sys.cf_version_major).$(sys.cf_version_minor)";
+      "expected[masterdir]" string => "$(sys.workdir)$(G.DS)masterfiles";
+      "expected[update_policy_path]" string => "$(sys.workdir)$(G.DS)inputs$(G.DS)update.cf";
 
       "sysvars" slist => getindices("expected");
 }
@@ -32,7 +32,7 @@ bundle agent test
 bundle agent check
 {
   classes:
-      "$(init.sysvars)_ok" expression => regcmp("$(sys.$(init.sysvars))", "$(init.expected[$(init.sysvars)])");
+      "$(init.sysvars)_ok" expression => strcmp("$(sys.$(init.sysvars))", "$(init.expected[$(init.sysvars)])");
 
       "ok" and => { "inputdir_ok", "masterdir_ok", "libdir_ok", "bindir_ok", "failsafe_policy_path_ok", "update_policy_path_ok", "local_libdir_ok" };
 

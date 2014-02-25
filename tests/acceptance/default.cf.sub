@@ -24,8 +24,9 @@ vars:
     "paths[usr_contrib_bin]" string        => "/usr/contrib/bin";
   windows::
     "paths[mingw_msys_1_0_bin]" string     => "c:\\mingw\\msys\\1.0\\bin";
+    "paths[msys_1_0_bin]" string           => "c:\\msys\\1.0\\bin";
     "paths[msys_bin]" string               => "c:\\msys\\bin";
-    "paths[pstools]" string               => "c:\\PSTools";
+    "paths[pstools]" string                => "c:\\PSTools";
 
   any::
   "paths_indices" slist => getindices("paths");

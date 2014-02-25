@@ -23,14 +23,15 @@ bundle agent init
 
 bundle agent test
 {
-  vars:
-    any::
-      "uid_root" int => getuid("root");
-      "uid_daemon" int => getuid("daemon");
-
+  meta:
+    "tags" slist => { "test_skip_needs_work" };
+      
   vars:
    "test_skip_needs_work" string => "windows";
 
+    any::
+      "uid_root" int => getuid("root");
+      "uid_daemon" int => getuid("daemon");
     !darwin::
       "uid_bin" int => getuid("bin");
 
@@ -54,9 +55,6 @@ bundle agent test
       "num_root" string => "fixme";
       "num_daemon" string => "fixme";
       "num_bin" string => "fixme";
-      
-  meta:
-    "tags" slist => { "test_skip_needs_work" };
 }
 
 

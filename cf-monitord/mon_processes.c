@@ -75,7 +75,7 @@ static bool GatherProcessUsers(Item **userList, int *userListSz, int *numRootPro
     char pscomm[CF_BUFSIZE];
     char user[CF_MAXVARSIZE];
 
-    snprintf(pscomm, CF_BUFSIZE, "%s %s", VPSCOMM[VSYSTEMHARDCLASS], VPSOPTS[VSYSTEMHARDCLASS]);
+    snprintf(pscomm, CF_BUFSIZE, "%s %s", VPSCOMM[VPSHARDCLASS], VPSOPTS[VPSHARDCLASS]);
 
     if ((pp = cf_popen(pscomm, "r", true)) == NULL)
     {

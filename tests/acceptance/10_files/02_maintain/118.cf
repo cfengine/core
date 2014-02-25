@@ -38,6 +38,11 @@ bundle agent init
       create => "true",
       move_obstructions => "true",
       link_from => init_link;
+
+  meta:
+    "tags" slist => { "test_skip_unsupported" };
+  vars:
+    "test_skip_unsupported" string => "windows";
 }
 
 body link_from init_link

@@ -30,8 +30,8 @@ bundle agent test
 bundle agent check
 {
   vars:
-      "f1" string => "/etc/passwd";
-      "f2" string => "/etc/group";
+      "f1" string => "$(G.etc_passwd)";
+      "f2" string => "$(G.etc_group)";
       "f3" string => "/etc/NoFriggin'WayThisExi5ts";
 
       "s1" slist => { "$(f1)", "$(f2)" };

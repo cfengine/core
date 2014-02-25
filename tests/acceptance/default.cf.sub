@@ -25,7 +25,8 @@ vars:
   windows::
     "paths[mingw_msys_1_0_bin]" string     => "c:\\mingw\\msys\\1.0\\bin";
     "paths[msys_bin]" string               => "c:\\msys\\bin";
-    "paths[pstools]" string               => "c:\\PSTools";
+    "paths[pstools]" string                => "c:\\PSTools";
+    "paths[strawberry_perl_bin]" string    => "c:\\strawberry\\perl\\bin";
 
   any::
   "paths_indices" slist => getindices("paths");
@@ -43,6 +44,12 @@ classes:
   "temp_declared" not => strcmp(getenv("TEMP", "65536"), "");
 
 vars:
+    "etc" string => "$(this.promise_dirname)$(DS)dummy_etc";
+    "etc_motd" string => "$(this.promise_dirname)$(DS)dummy_etc$(DS)motd";
+    "etc_passwd" string => "$(this.promise_dirname)$(DS)dummy_etc$(DS)passwd";
+    "etc_shadow" string => "$(this.promise_dirname)$(DS)dummy_etc$(DS)shadow";
+    "etc_group" string => "$(this.promise_dirname)$(DS)dummy_etc$(DS)group";
+
   temp_declared::
     "testroot" string => getenv("TEMP", "65535");
     "testdir" string => concat(getenv("TEMP", "65535"), "$(DS)TEST.cfengine");

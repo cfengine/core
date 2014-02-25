@@ -28,9 +28,9 @@ bundle agent test
       "one_regex" string => "root:.*";
       "positive_regex" string => ".*:\d+:.*";
 
-      "zero" int => countlinesmatching("$(zero_regex)", "/etc/passwd");
-      "one" int => countlinesmatching("$(one_regex)", "/etc/passwd");
-      "positive" int => countlinesmatching("$(positive_regex)", "/etc/passwd");
+      "zero" int => countlinesmatching("$(zero_regex)", "$(G.etc_passwd)");
+      "one" int => countlinesmatching("$(one_regex)", "$(G.etc_passwd)");
+      "positive" int => countlinesmatching("$(positive_regex)", "$(G.etc_passwd)");
 }
 
 #######################################################

@@ -44,7 +44,7 @@ bundle agent do_test(val)
 
 body link_from test_link(type)
 {
-      source => "/etc/motd";
+      source => "$(G.etc_motd)";
       link_type => "$(type)";
 }
 

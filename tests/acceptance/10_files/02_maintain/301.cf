@@ -25,7 +25,7 @@ bundle agent init
   files:
       "$(G.testfile)"
       perms => init_mog,
-      copy_from => init_copy("/etc/group");
+      copy_from => init_copy("$(G.etc_group)");
 }
 
 body perms init_mog
@@ -48,7 +48,7 @@ bundle agent test
   files:
       "$(G.testfile)"
       perms => init_mog,
-      copy_from => init_copy("/etc/group"),
+      copy_from => init_copy("$(G.etc_group)"),
       classes => test_classes("success", "failure", "failure", "failure", "cxl_succ", "cxl_fail", "cxl_fail");
 }
 

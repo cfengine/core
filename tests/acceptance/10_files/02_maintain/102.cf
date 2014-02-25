@@ -49,7 +49,7 @@ bundle agent test
 
 body link_from test_link
 {
-      source => "/etc/group";
+      source => "$(G.etc_group)";
       link_type => "hardlink";
 }
 

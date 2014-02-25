@@ -16,7 +16,7 @@ body common control
 bundle common g
 {
   vars:
-      "srcfile" string => "/etc/group";
+      "srcfile" string => "$(G.etc_group)";
       #
       # This extracts the octal mode, and decimal nlink, uid, gid, size
       "command" string => 'printf "%05o" . " %d" x 4, (stat("$(G.testfile)"))[2]&07777, (stat(_))[3..5,7]';
@@ -48,7 +48,7 @@ bundle agent init
 
   files:
       "$(G.testfile)"
-      copy_from => init_copy("/etc/group"),
+      copy_from => init_copy("$(G.etc_group)"),
       perms => init_perms("$(mode)", "$(owner)", "$(group)"),
       classes => init_set_class("pass2");
 }

@@ -18,7 +18,7 @@ bundle common g
       # This extracts the octal mode, and decimal nlink, uid, gid, size
       "command" string => 'printf "%o" . " %d" x 4, (stat("$(G.testfile)"))[2]&07777, (stat(_))[3..5,7]';
 
-      "source" string => "/etc/group";
+      "source" string => "$(G.etc_group)";
       "source_command" string => 'printf "%d", (stat("$(g.source)"))[7]';
       "source_size" string => execresult(
 					  "$(G.perl) -le '$(g.source_command)'",
@@ -64,7 +64,7 @@ body perms test_og
 
 body copy_from test_copy
 {
-      source => "/etc/group";
+      source => "$(G.etc_group)";
       compare => "binary";
 }
 

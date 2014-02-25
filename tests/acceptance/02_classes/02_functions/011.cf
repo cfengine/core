@@ -33,8 +33,8 @@ bundle agent check
 {
   classes:
       "ok" xor => {
-                    isplain("/etc/passwd"),
-                    isplain("/etc"),
+                    isplain("$(G.etc_passwd)"),
+                    isplain("$(G.etc)"),
       };
 
   reports:

@@ -17,7 +17,7 @@ bundle common g
       # This extracts the octal mode, and decimal nlink, uid, gid, size
       "command" string => 'printf "%#o" . " %d" x 4, (stat("$(G.testfile)"))[2]&07777, (stat(_))[3..5,7]';
 
-      "source" string => "/etc/group";
+      "source" string => "$(G.etc_group)";
       "source_command" string => 'printf "%d", (stat("$(g.source)"))[7]';
       "source_size" string => execresult(
 					  "$(G.perl) -le '$(g.source_command)'",
@@ -37,7 +37,7 @@ bundle agent init
       create => "true";
 
       "$(G.testdir)/$(files)"
-      copy_from => init_copy("/etc/group");
+      copy_from => init_copy("$(G.etc_group)");
 }
 
 body copy_from init_copy(file)

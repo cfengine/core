@@ -25,6 +25,12 @@ bundle agent init
   files:
       "$(G.testfile)"
       delete => init_delete;
+
+  # No "perms->mode" support.
+  meta:
+      "tags" slist => { "test_skip_unsupported" };
+  vars:
+      "test_skip_unsupported" string => "windows";
 }
 
 body delete init_delete
@@ -49,7 +55,7 @@ bundle agent test
 
 body copy_from test_copy
 {
-      source => "/etc/group";
+      source => "$(G.etc_group)";
       compare => "mtime";
 }
 

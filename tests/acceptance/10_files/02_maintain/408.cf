@@ -34,7 +34,7 @@ bundle agent init
 
 body copy_from init_copy
 {
-      source => "/etc/group";
+      source => "$(G.etc_group)";
       compare => "digest";
 }
 

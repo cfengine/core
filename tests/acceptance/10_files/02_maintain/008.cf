@@ -49,7 +49,7 @@ bundle agent test
 
 body copy_from test_copy
 {
-      source => "/etc/group";
+      source => "$(G.etc_group)";
       compare => "exists";
 }
 

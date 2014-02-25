@@ -21,7 +21,7 @@ bundle agent init
       create => "true";
 
       "$(G.testdir)/$(files)"
-      copy_from => init_copy("/etc/group");
+      copy_from => init_copy("$(G.etc_group)");
 }
 
 body copy_from init_copy(file)

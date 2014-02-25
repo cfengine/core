@@ -24,13 +24,19 @@ bundle agent init
 bundle agent test
 {
   vars:
-      "positive_disk" string => "/etc";
-      "p_disk" string => "/etc/passwd";
+      "positive_disk" string => "$(G.etc)";
+      "p_disk" string => "$(G.etc_passwd)";
       "zero_disk" string => "/lkjqeroiu";
 
       "positive" int => diskfree("$(positive_disk)");
       "p" int => diskfree("$(p_disk)");
       "zero" int => diskfree("$(zero_disk)");
+
+  meta:
+      "tags" slist => { "test_suppress_fail" };
+  vars:
+      "test_suppress_fail" string => "windows";
+      "failure_issue_number" int => "4686";
 }
 
 #######################################################

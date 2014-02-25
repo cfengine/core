@@ -31,6 +31,12 @@ bundle agent test
 {
   vars:
       "dummy" string => "dummy";
+
+  meta:
+      "tags" slist => { "test_suppress_fail" };
+  vars:
+      "test_suppress_fail" string => "windows";
+      "failure_issue_number" int => "4687";
 }
 
 #######################################################
@@ -49,11 +55,11 @@ bundle agent check
       "one_powershell" string => "if (diff $(this.promise_filename) $(this.promise_filename).doesnotexit) { exit 1 } else { exit 0 }";
       "nxe_powershell" string => "nosuchprogramexists";
     !windows::
-      "zero_rel" string => "grep -q root /etc/passwd";
-      "one_rel" string => "grep -q gluequaggaunlikely /etc/passwd";
+      "zero_rel" string => "grep -q root $(G.etc_passwd)";
+      "one_rel" string => "grep -q gluequaggaunlikely $(G.etc_passwd)";
       "nxe_rel" string => "nosuchprogramexists";
-      "zero_abs" string => "$(G.grep) -q root /etc/passwd";
-      "one_abs" string => "$(G.grep) -q gluequaggaunlikely /etc/passwd";
+      "zero_abs" string => "$(G.grep) -q root $(G.etc_passwd)";
+      "one_abs" string => "$(G.grep) -q gluequaggaunlikely $(G.etc_passwd)";
       "nxe_abs" string => "/xbin/nosuchprogramexists";
 
   classes:

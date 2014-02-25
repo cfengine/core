@@ -379,3 +379,13 @@ bundle agent default_check_regcmp(regex, thestring, test, expected_mismatch)
     !matched.expected_mismatch::
       "$(test) Pass";
 }
+
+#######################################################
+# Pass the test if class
+
+bundle agent default_passif(classname, test)
+{
+  reports:
+      "$(test) Pass" ifvarclass => $(classname);
+      "$(test) FAIL" ifvarclass => "!$(classname)";
+}

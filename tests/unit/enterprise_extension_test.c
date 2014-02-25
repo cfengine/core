@@ -20,7 +20,7 @@ ENTERPRISE_FUNC_2ARG_DEFINE_STUB(int64_t, extension_function_broken, int32_t, sh
 
 static void test_extension_function_stub(void)
 {
-    setenv("CFENGINE_TEST_OVERRIDE_EXTENSION_LIBRARY_DIR", "nonexistingdir", 1);
+    putenv("CFENGINE_TEST_OVERRIDE_EXTENSION_LIBRARY_DIR=nonexistingdir");
 
     assert_int_equal(extension_function(2, 3), 5);
 
@@ -29,7 +29,7 @@ static void test_extension_function_stub(void)
 
 static void test_extension_function(void)
 {
-    setenv("CFENGINE_TEST_OVERRIDE_EXTENSION_LIBRARY_DIR", ".libs", 1);
+    putenv("CFENGINE_TEST_OVERRIDE_EXTENSION_LIBRARY_DIR=.libs");
 
     assert_int_equal(extension_function(2, 3), 6);
 
@@ -38,7 +38,7 @@ static void test_extension_function(void)
 
 static void test_extension_function_broken(void)
 {
-    setenv("CFENGINE_TEST_OVERRIDE_EXTENSION_LIBRARY_DIR", ".libs", 1);
+    putenv("CFENGINE_TEST_OVERRIDE_EXTENSION_LIBRARY_DIR=.libs");
 
     // This one should call the stub, even if the extension is available, because the
     // function signature is different.
@@ -49,8 +49,8 @@ static void test_extension_function_broken(void)
 
 static void test_extension_function_version_mismatch()
 {
-    setenv("CFENGINE_TEST_OVERRIDE_EXTENSION_LIBRARY_DIR", ".libs", 1);
-    setenv("CFENGINE_TEST_RETURN_VERSION", "1.1.1", 1);
+    putenv("CFENGINE_TEST_OVERRIDE_EXTENSION_LIBRARY_DIR=.libs");
+    putenv("CFENGINE_TEST_RETURN_VERSION=1.1.1");
 
     // This one should call the stub, even if the extension is available, because the
     // version is different.
@@ -62,7 +62,7 @@ static void test_extension_function_version_mismatch()
 
 int main()
 {
-    setenv("CFENGINE_TEST_OVERRIDE_EXTENSION_LIBRARY_DO_CLOSE", "1", 1);
+    putenv("CFENGINE_TEST_OVERRIDE_EXTENSION_LIBRARY_DO_CLOSE=1");
     PRINT_TEST_BANNER();
     const UnitTest tests[] =
     {

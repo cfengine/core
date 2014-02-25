@@ -272,10 +272,6 @@ char *strsep(char **stringp, const char *delim);
 int socketpair(int domain, int type, int protocol, int sv[2]);
 #endif
 
-#if !HAVE_DECL_SETENV
-int setenv(const char *name, const char *value, int overwrite);
-#endif
-
 #if !HAVE_DECL_FSYNC
 int fsync(int fd);
 #endif

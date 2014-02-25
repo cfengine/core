@@ -235,6 +235,15 @@ char *BufferGet(Buffer *buffer)
     return buffer->buffer;
 }
 
+void BufferAppendString(Buffer *buffer, const char *str)
+{
+    size_t len = strlen(str);
+    ExpandIfNeeded(buffer, buffer->used + len + 1);
+    memcpy(buffer->buffer + buffer->used, str, len);
+    buffer->used += len;
+    buffer->buffer[buffer->used] = '\0';
+}
+
 void BufferAppend(Buffer *buffer, const char *bytes, unsigned int length)
 {
     assert(buffer);

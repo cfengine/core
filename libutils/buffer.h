@@ -122,24 +122,10 @@ void BufferSet(Buffer *buffer, const char *bytes, unsigned int length);
 
 char *BufferGet(Buffer *buffer);
 
-
-/**
-  @brief Appends the collection of bytes at the end of the current buffer.
-
-  As with BufferSet(Buffer *buffer, char *bytes, unsigned int length), CString mode appends until a '\0' is found or up to
-  the specified length. The data is NULL terminated. In ByteArray mode length bytes are copied and '\0' are not taken into
-  account.
-  @note There is a big difference between CString mode and ByteArray mode. In CString mode the final '\0' character will be
-  overwritten and replaced with the content. In ByteArray mode there is no '\0', and therefore the last character is not replaced.
-  @note The data will be preserved if this operation fails, although it might be in a detached state.
-  @param buffer The buffer to operate on.
-  @param bytes The collection of bytes to be appended.
-  @param length The length of the data.
-  @return The number of bytes used or -1 in case of error.
-  */
 void BufferAppend(Buffer *buffer, const char *bytes, unsigned int length);
 void BufferAppendChar(Buffer *buffer, char byte);
 void BufferAppendF(Buffer *buffer, const char *format, ...);
+void BufferAppendString(Buffer *buffer, const char *str);
 
 
 /**

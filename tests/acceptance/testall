@@ -72,6 +72,7 @@ LIBXML2_TESTS=${LIBXML2_TESTS:-1}
 NO_CLEAN=0
 BASECLASSES="AUTO"
 EXTRACLASSES="DEBUG"
+VALGRIND_OPTS="--leak-check=full --show-reachable=yes --suppressions=valgrind-suppressions"
 
 case "$OSTYPE" in
   msys)
@@ -207,7 +208,9 @@ usage() {
   echo
   echo " --printlog   print the full test.log output immediately."
   echo
-  echo " --gdb   Run test under GDB"
+  echo " --gdb         Run test under GDB"
+  echo " --valgrind    Run test under Valgrind"
+  echo " --callgrind   Run test under valgrind --tool=callgrind"
   echo " --no-clean does not clean workdir after test finishes"
   echo "            (by default it gets cleaned only if test passed)."
 }
@@ -300,7 +303,7 @@ export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP CFENGINE_TEST_OVERRIDE_EXTENSION_LIBR
       if grep -q libtool < "$AGENT"; then
         printf "\"$LIBTOOL\" --mode=execute " >> "$WORKDIR/runtest"
       fi
-      printf "valgrind --leak-check=full --show-reachable=yes --suppressions=valgrind-suppressions \"$AGENT\" $VERBOSE -Kf \"$TEST\" -D ${BASECLASSES},${EXTRACLASSES} 2>&1\n" >> "$WORKDIR/runtest"
+      printf "valgrind ${VALGRIND_OPTS} \"$AGENT\" $VERBOSE -Kf \"$TEST\" -D ${BASECLASSES},${EXTRACLASSES} 2>&1\n" >> "$WORKDIR/runtest"
     else
       printf "\"$AGENT\" $VERBOSE -Kf \"$TEST\" -D ${BASECLASSES},${EXTRACLASSES} 2>&1\n" >> "$WORKDIR/runtest"
     fi
@@ -447,6 +450,9 @@ while true; do
       GAINROOT=${1#--gainroot=};;
     --valgrind)
       USE_VALGRIND=1;;
+    --callgrind)
+      USE_VALGRIND=1;
+      VALGRIND_OPTS="--suppressions=valgrind-suppressions --tool=callgrind";;
     --staging)
       STAGING_TESTS=1;;
     --unsafe)

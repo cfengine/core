@@ -39,6 +39,10 @@ bundle agent test
 
       "bad1" data => mergedata(missingvar);
       "bad2" data => mergedata(load1, missingvar);
+
+      "justastring" string => "me";
+      "bad3" data => mergedata(justastring);
+      "bad4" data => mergedata(load1, justastring);
 }
 
 #######################################################

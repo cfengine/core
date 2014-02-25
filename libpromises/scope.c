@@ -203,6 +203,7 @@ void ScopeAugment(EvalContext *ctx, const Bundle *bp, const Promise *pp, const R
                     {
                         Log(LOG_LEVEL_ERR, "Only functions returning scalars can be used as arguments");
                     }
+                    RvalDestroy(rval);
                 }
                 break;
             default:

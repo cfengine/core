@@ -47,6 +47,7 @@ extern char VPREFIX[];
 
 extern char VDOMAIN[CF_MAXVARSIZE];
 extern PlatformContext VSYSTEMHARDCLASS;
+extern PlatformContext VPSHARDCLASS; /* used to define which ps command to use*/
 extern char VFQNAME[];
 extern char VUQNAME[];
 

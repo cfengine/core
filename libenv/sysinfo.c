@@ -785,7 +785,7 @@ static void Get3Environment(EvalContext *ctx)
 
     if (stat(env, &statbuf) == -1)
     {
-        Log(LOG_LEVEL_VERBOSE, "Unable to detect environment from cf-monitord");
+        Log(LOG_LEVEL_ERR, "Unable to detect environment from cf-monitord");
         return;
     }
 

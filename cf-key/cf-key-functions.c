@@ -50,7 +50,7 @@ RSA* LoadPublicKey(const char* filename)
     fp = safe_fopen(filename, "r");
     if (fp == NULL)
     {
-        Log(LOG_LEVEL_ERR, "Cannot open file '%s'. (fopen: %s)", filename, GetErrorStr());
+        Log(LOG_LEVEL_ERR, "Cannot open public key file '%s' (fopen: %s)", filename, GetErrorStr());
         return NULL;
     };
 
@@ -58,7 +58,8 @@ RSA* LoadPublicKey(const char* filename)
                                      (void *)passphrase)) == NULL)
     {
         err = ERR_get_error();
-        Log(LOG_LEVEL_ERR, "Error reading public key. (PEM_read_RSAPublicKey: %s)",
+        Log(LOG_LEVEL_ERR, "Error while reading public key '%s' (PEM_read_RSAPublicKey: %s)",
+            filename,
             ERR_reason_error_string(err));
         fclose(fp);
         return NULL;
@@ -68,7 +69,7 @@ RSA* LoadPublicKey(const char* filename)
 
     if (BN_num_bits(key->e) < 2 || !BN_is_odd(key->e))
     {
-        Log(LOG_LEVEL_ERR, "RSA Exponent in key '%s' too small or not odd. (BN_num_bits: %s)",
+        Log(LOG_LEVEL_ERR, "Error while reading public key '%s' - RSA Exponent is too small or not odd. (BN_num_bits: %s)",
             filename, GetErrorStr());
         return NULL;
     };
@@ -190,12 +191,12 @@ int RemoveKeys(const char *input, bool must_be_coherent)
 
     if ((removed_input == -1) || (removed_equivalent == -1))
     {
-        Log(LOG_LEVEL_ERR, "Unable to remove keys for the entry %s", input);
+        Log(LOG_LEVEL_ERR, "Last seen database: unable to remove keys for the entry '%s'", input);
         return 255;
     }
     else if (removed_input + removed_equivalent == 0)
     {
-        Log(LOG_LEVEL_ERR, "No key file(s) for entry %s were found on the filesytem", input);
+        Log(LOG_LEVEL_ERR, "No key file(s) for entry '%s' were found on the filesytem", input);
         return 1;
     }
     else
@@ -237,7 +238,7 @@ void KeepKeyPromises(const char *public_key_file, const char *private_key_file)
         return;
     }
 
-    printf("Making a key pair for cfengine, please wait, this could take a minute...\n");
+    printf("Making a key pair for CFEngine, please wait, this could take a minute...\n");
 
 #ifdef OPENSSL_NO_DEPRECATED
     BN_set_word(rsa_bignum, 35);
@@ -250,7 +251,7 @@ void KeepKeyPromises(const char *public_key_file, const char *private_key_file)
 #endif
     {
         err = ERR_get_error();
-        Log(LOG_LEVEL_ERR, "Unable to generate key '%s'", ERR_reason_error_string(err));
+        Log(LOG_LEVEL_ERR, "Unable to generate cryptographic key '%s'", ERR_reason_error_string(err));
         return;
     }
 
@@ -258,13 +259,13 @@ void KeepKeyPromises(const char *public_key_file, const char *private_key_file)
 
     if (fd < 0)
     {
-        Log(LOG_LEVEL_ERR, "Open '%s' failed. (open: %s)", private_key_file, GetErrorStr());
+        Log(LOG_LEVEL_ERR, "Couldn't open private key file '%s' (open: %s)", private_key_file, GetErrorStr());
         return;
     }
 
     if ((fp = fdopen(fd, "w")) == NULL)
     {
-        Log(LOG_LEVEL_ERR, "Couldn't open private key '%s'. (fdopen: %s)", private_key_file, GetErrorStr());
+        Log(LOG_LEVEL_ERR, "Error while writing private key file '%s' (fdopen: %s)", private_key_file, GetErrorStr());
         close(fd);
         return;
     }
@@ -275,7 +276,7 @@ void KeepKeyPromises(const char *public_key_file, const char *private_key_file)
                                  strlen(passphrase), NULL, NULL))
     {
         err = ERR_get_error();
-        Log(LOG_LEVEL_ERR, "Couldn't write private key. (PEM_write_RSAPrivateKey: %s)", ERR_reason_error_string(err));
+        Log(LOG_LEVEL_ERR, "Couldn't write private key (PEM_write_RSAPrivateKey: %s)", ERR_reason_error_string(err));
         return;
     }
 
@@ -285,14 +286,14 @@ void KeepKeyPromises(const char *public_key_file, const char *private_key_file)
 
     if (fd < 0)
     {
-        Log(LOG_LEVEL_ERR, "Unable to open public key '%s'. (open: %s)",
+        Log(LOG_LEVEL_ERR, "Couldn't open public key file '%s' (open: %s)",
             public_key_file, GetErrorStr());
         return;
     }
 
     if ((fp = fdopen(fd, "w")) == NULL)
     {
-        Log(LOG_LEVEL_ERR, "Open '%s' failed. (fdopen: %s)", public_key_file, GetErrorStr());
+        Log(LOG_LEVEL_ERR, "Error while writing public key file '%s' (fdopen: %s)", public_key_file, GetErrorStr());
         close(fd);
         return;
     }
@@ -302,7 +303,7 @@ void KeepKeyPromises(const char *public_key_file, const char *private_key_file)
     if (!PEM_write_RSAPublicKey(fp, pair))
     {
         err = ERR_get_error();
-        Log(LOG_LEVEL_ERR, "Unable to write public key. (PEM_write_RSAPublicKey: %s)", ERR_reason_error_string(err));
+        Log(LOG_LEVEL_ERR, "Unable to write public key (PEM_write_RSAPublicKey: %s)", ERR_reason_error_string(err));
         return;
     }
 

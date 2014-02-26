@@ -10,13 +10,13 @@ body common control
 bundle agent init
 {
   vars:
-      "expected[bindir]" string => "$(sys.workdir)$(G.DS)bin";
-      "expected[failsafe_policy_path]" string => "$(sys.workdir)$(G.DS)inputs$(G.DS)failsafe.cf";
-      "expected[inputdir]" string => "$(sys.workdir)$(G.DS)inputs";
-      "expected[libdir]" string => "$(sys.workdir)$(G.DS)inputs$(G.DS)lib$(G.DS)$(sys.cf_version_major).$(sys.cf_version_minor)";
-      "expected[local_libdir]" string => "lib$(G.DS)$(sys.cf_version_major).$(sys.cf_version_minor)";
-      "expected[masterdir]" string => "$(sys.workdir)$(G.DS)masterfiles";
-      "expected[update_policy_path]" string => "$(sys.workdir)$(G.DS)inputs$(G.DS)update.cf";
+      "expected[bindir]" string => "$(sys.workdir)$(const.dirsep)bin";
+      "expected[failsafe_policy_path]" string => "$(sys.workdir)$(const.dirsep)inputs$(const.dirsep)failsafe.cf";
+      "expected[inputdir]" string => "$(sys.workdir)$(const.dirsep)inputs";
+      "expected[libdir]" string => "$(sys.workdir)$(const.dirsep)inputs$(const.dirsep)lib$(const.dirsep)$(sys.cf_version_major).$(sys.cf_version_minor)";
+      "expected[local_libdir]" string => "lib$(const.dirsep)$(sys.cf_version_major).$(sys.cf_version_minor)";
+      "expected[masterdir]" string => "$(sys.workdir)$(const.dirsep)masterfiles";
+      "expected[update_policy_path]" string => "$(sys.workdir)$(const.dirsep)inputs$(const.dirsep)update.cf";
 
       "sysvars" slist => getindices("expected");
 }

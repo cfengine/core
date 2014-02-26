@@ -64,7 +64,7 @@ bundle agent test
 
   commands:
     shell_specified::
-      "$(shellcmd) $(init.origtestdir)$(G.DS)text.txt"
+      "$(shellcmd) $(init.origtestdir)$(const.dirsep)text.txt"
         contain => shelltype;
 
   reports:

@@ -40,7 +40,7 @@ bundle agent check
 
   classes:
     !windows::
-      "ok" expression => regcmp(".*Succeeded.*", execresult("sudo su johndoe $(currentdir)$(G.DS)add_user_with_shell.txt", "useshell"));
+      "ok" expression => regcmp(".*Succeeded.*", execresult("sudo su johndoe $(currentdir)$(const.dirsep)add_user_with_shell.txt", "useshell"));
 
   reports:
     ok|windows::

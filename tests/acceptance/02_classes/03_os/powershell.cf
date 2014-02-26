@@ -34,7 +34,7 @@ bundle agent check
   classes:
       "ok" and => { "!windows", "!powershell" };
       # This relies on powershell being in the path, which it should be for a standard install.
-      "detected_powershell" expression => regcmp(".*Succeeded.*", execresult("powershell Get-Content $(G.cwd)$(G.DS)text.txt", "useshell"));
+      "detected_powershell" expression => regcmp(".*Succeeded.*", execresult("powershell Get-Content $(G.cwd)$(const.dirsep)text.txt", "useshell"));
       "ok" and => { "windows", "powershell", "detected_powershell" };
       "ok" and => { "windows", "!powershell", "!detected_powershell" };
 

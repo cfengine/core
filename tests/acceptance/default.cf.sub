@@ -4,7 +4,6 @@ vars:
   windows::
     "cwd" string => execresult("C:\windows\system32\cmd.exe /C cd", "noshell");
     # Dir separator
-    "DS" string => "\\";
     "exeext" slist => { ".exe", ".bat" };
   !windows::
     "cwd" string => execresult("/bin/pwd 2>/dev/null || /usr/bin/pwd", "useshell");

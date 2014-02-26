@@ -68,11 +68,11 @@ bundle edit_line file_edit
 bundle agent check
 {
   vars:
-      "file_ext_output" string => execresult("$(init.cmd) $(G.testdir)$(G.DS)file_ext", "noshell");
+      "file_ext_output" string => execresult("$(init.cmd) $(G.testdir)$(const.dirsep)file_ext", "noshell");
 
     !windows::
-      "file_plain_output" string => execresult("/bin/ls -lZ $(G.testdir)$(G.DS)file_plain", "noshell");
-      "basetest_ext_output" string => execresult("$(init.cmd) $(G.testdir)$(G.DS)basetest_ext", "noshell");
+      "file_plain_output" string => execresult("/bin/ls -lZ $(G.testdir)$(const.dirsep)file_plain", "noshell");
+      "basetest_ext_output" string => execresult("$(init.cmd) $(G.testdir)$(const.dirsep)basetest_ext", "noshell");
 
   classes:
     !windows::

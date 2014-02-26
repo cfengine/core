@@ -234,7 +234,7 @@ static PromiseResult VerifySQLPromise(EvalContext *ctx, Attributes a, const Prom
         }
         else
         {
-            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, a, "Table '%s' is not as promised", query);
+            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Table '%s' is not as promised", query);
             result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
         }
 

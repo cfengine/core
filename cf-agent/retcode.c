@@ -59,7 +59,7 @@ int VerifyCommandRetcode(EvalContext *ctx, int retcode, int fallback, Attributes
 
         if (RlistKeyIn(a.classes.retcode_failed, retcodeStr))
         {
-            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, a,
+            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a,
                  "Command related to promiser '%s' returned code defined as promise failed %d", pp->promiser,
                  retcode);
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
@@ -86,7 +86,7 @@ int VerifyCommandRetcode(EvalContext *ctx, int retcode, int fallback, Attributes
         }
         else
         {
-            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, a,
+            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a,
                  "Finished command related to promiser '%s' -- an error occurred, returned %d", pp->promiser,
                  retcode);
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);

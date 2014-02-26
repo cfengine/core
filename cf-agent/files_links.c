@@ -350,7 +350,7 @@ PromiseResult VerifyHardLink(EvalContext *ctx, char *destination, const char *so
 
     if (!S_ISREG(ssb.st_mode))
     {
-        cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, attr,
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr,
              "Source file '%s' is not a regular file, not appropriate to hard-link", to);
         return PROMISE_RESULT_WARN;
     }

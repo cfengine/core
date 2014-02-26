@@ -382,12 +382,12 @@ static PromiseResult CfCopyFile(EvalContext *ctx, char *sourcefile, char *destfi
             {
                 if (server)
                 {
-                    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, attr, "Copy from '%s:%s' failed", server, sourcefile);
+                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Copy from '%s:%s' failed", server, sourcefile);
                     result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
                 }
                 else
                 {
-                    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, attr, "Copy from 'localhost:%s' failed", sourcefile);
+                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Copy from 'localhost:%s' failed", sourcefile);
                     result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
                 }
             }
@@ -471,7 +471,7 @@ static PromiseResult CfCopyFile(EvalContext *ctx, char *sourcefile, char *destfi
                 ((S_ISFIFO(dsb.st_mode)) && (!S_ISFIFO(ssb.st_mode))) ||
                 ((S_ISLNK(dsb.st_mode)) && (!S_ISLNK(ssb.st_mode))))
             {
-                cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, attr,
+                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr,
                      "Promised file copy %s exists but type mismatch with source '%s'", destfile, sourcefile);
                 result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
                 return result;
@@ -970,7 +970,7 @@ static PromiseResult VerifyCopy(EvalContext *ctx, char *source, char *destinatio
             {
                 if (cf_stat(sourcefile, &ssb, attr.copy, conn) == -1)
                 {
-                    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, attr, "Can't stat source file (notlinked) '%s'. (stat: %s)",
+                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Can't stat source file (notlinked) '%s'. (stat: %s)",
                          sourcefile, GetErrorStr());
                     return PROMISE_RESULT_FAIL;
                 }
@@ -979,7 +979,7 @@ static PromiseResult VerifyCopy(EvalContext *ctx, char *source, char *destinatio
             {
                 if (cf_lstat(sourcefile, &ssb, attr.copy, conn) == -1)
                 {
-                    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, attr, "Can't stat source file '%s'. (lstat: %s)",
+                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Can't stat source file '%s'. (lstat: %s)",
                          sourcefile, GetErrorStr());
                     return PROMISE_RESULT_FAIL;
                 }
@@ -1219,7 +1219,7 @@ bool CopyRegularFile(EvalContext *ctx, const char *source, const char *dest, str
     {
         if (!CopyRegularFileDisk(source, new))
         {
-            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, attr, "Failed copying file '%s' to '%s'", source, new);
+            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Failed copying file '%s' to '%s'", source, new);
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
             return false;
         }
@@ -1300,7 +1300,7 @@ bool CopyRegularFile(EvalContext *ctx, const char *source, const char *dest, str
 
     if (lstat(new, &dstat) == -1)
     {
-        cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, attr, "Can't stat new file '%s' - another agent has picked it up?. (stat: %s)",
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Can't stat new file '%s' - another agent has picked it up?. (stat: %s)",
              new, GetErrorStr());
         *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
         return false;
@@ -1479,7 +1479,7 @@ static bool TransformFile(EvalContext *ctx, char *file, Attributes attr, const P
 
     if (!IsExecutable(CommandArg0(BufferData(command))))
     {
-        cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, attr, "Transformer '%s' for file '%s' failed", attr.transformer, file);
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Transformer '%s' for file '%s' failed", attr.transformer, file);
         *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
         BufferDestroy(command);
         return false;
@@ -1497,7 +1497,7 @@ static bool TransformFile(EvalContext *ctx, char *file, Attributes attr, const P
 
         if ((pop = cf_popen(BufferData(command), "r", true)) == NULL)
         {
-            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, attr, "Transformer '%s' for file '%s' failed", attr.transformer, file);
+            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Transformer '%s' for file '%s' failed", attr.transformer, file);
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
             YieldCurrentLock(thislock);
             BufferDestroy(command);
@@ -1883,7 +1883,7 @@ static PromiseResult TouchFile(EvalContext *ctx, char *path, Attributes attr, co
         }
         else
         {
-            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, attr,
+            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr,
                  "Touch '%s' failed to update timestamps. (utime: %s)", path, GetErrorStr());
             result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
         }
@@ -2383,7 +2383,7 @@ static PromiseResult VerifyCopiedFileAttributes(EvalContext *ctx, const char *sr
     {
         if (!CopyFileExtendedAttributesDisk(src, dest))
         {
-            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, attr, "Could not preserve extended attributes (ACLs and security contexts) on file '%s'", dest);
+            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Could not preserve extended attributes (ACLs and security contexts) on file '%s'", dest);
             result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
         }
     }
@@ -2401,7 +2401,7 @@ static PromiseResult CopyFileSources(EvalContext *ctx, char *destination, Attrib
 
     if (conn != NULL && (!conn->authenticated))
     {
-        cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, attr,
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr,
              "No authenticated source '%s' in files.copy_from promise",
              source);
         return PROMISE_RESULT_FAIL;
@@ -2409,7 +2409,7 @@ static PromiseResult CopyFileSources(EvalContext *ctx, char *destination, Attrib
 
     if (cf_stat(attr.copy.source, &ssb, attr.copy, conn) == -1)
     {
-        cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, attr,
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr,
              "Can't stat file '%s' in files.copy_from promise", source);
         return PROMISE_RESULT_FAIL;
     }
@@ -2426,7 +2426,7 @@ static PromiseResult CopyFileSources(EvalContext *ctx, char *destination, Attrib
 
     if (!MakeParentDirectory(vbuff, attr.move_obstructions))
     {
-        cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, attr,
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr,
              "Can't make directories for '%s' in files.copy_from promise",
              vbuff);
         return PROMISE_RESULT_FAIL;
@@ -2491,7 +2491,7 @@ PromiseResult ScheduleCopyOperation(EvalContext *ctx, char *destination, Attribu
 
         if (conn == NULL)
         {
-            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, attr, "No suitable server responded to hail");
+            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "No suitable server responded to hail");
             PromiseRef(LOG_LEVEL_INFO, pp);
             return PROMISE_RESULT_FAIL;
         }
@@ -3169,13 +3169,13 @@ bool VerifyOwner(EvalContext *ctx, const char *file, const Promise *pp, Attribut
 
     if (attr.perms.groups->next == NULL && attr.perms.groups->gid == CF_UNKNOWN_GROUP)  // Only one non.existent item
     {
-        cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, attr, "Unable to make file belong to an unknown group");
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Unable to make file belong to an unknown group");
         *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
     }
 
     if (attr.perms.owners->next == NULL && attr.perms.owners->uid == CF_UNKNOWN_OWNER)  // Only one non.existent item
     {
-        cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, attr, "Unable to make file belong to an unknown user");
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Unable to make file belong to an unknown user");
         *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
     }
 
@@ -3466,7 +3466,7 @@ bool CfCreateFile(EvalContext *ctx, char *file, const Promise *pp, Attributes at
 
     if (!IsAbsoluteFileName(file))
     {
-        cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, attr,
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr,
              "Cannot create a relative filename '%s' - has no invariant meaning. (creat: %s)", file, GetErrorStr());
         *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
         return false;
@@ -3480,7 +3480,7 @@ bool CfCreateFile(EvalContext *ctx, char *file, const Promise *pp, Attributes at
         {
             if (!MakeParentDirectory(file, attr.move_obstructions))
             {
-                cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, attr, "Error creating directories for '%s'. (creat: %s)",
+                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Error creating directories for '%s'. (creat: %s)",
                      file, GetErrorStr());
                 *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
                 return false;
@@ -3518,7 +3518,7 @@ bool CfCreateFile(EvalContext *ctx, char *file, const Promise *pp, Attributes at
 
             if ((fd = safe_creat(file, filemode)) == -1)
             {
-                cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, attr, "Error creating file '%s', mode '%04jo'. (creat: %s)",
+                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Error creating file '%s', mode '%04jo'. (creat: %s)",
                      file, (uintmax_t)filemode, GetErrorStr());
                 *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
                 umask(saveumask);

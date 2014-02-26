@@ -462,7 +462,7 @@ static PromiseResult VerifyMountPromise(EvalContext *ctx, char *name, Attributes
             }
             else
             {
-                cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, a,
+                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a,
                      "Filesystem '%s' was not mounted as promised, and no edits were promised in '%s'", name,
                      VFSTAB[VSYSTEMHARDCLASS]);
                 result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);

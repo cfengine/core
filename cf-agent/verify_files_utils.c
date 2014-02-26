@@ -1007,6 +1007,7 @@ static PromiseResult LinkCopy(EvalContext *ctx, char *sourcefile, char *destfile
 {
     Log(LOG_LEVEL_VERBOSE, "Windows does not support symbolic links");
     cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Windows can't link '%s' to '%s'", sourcefile, destfile);
+    return PROMISE_RESULT_FAIL;
 }
 #else                           /* !__MINGW32__ */
 {
@@ -1589,7 +1590,6 @@ static PromiseResult VerifyName(EvalContext *ctx, char *path, struct stat *sb, A
                     cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Error occurred while renaming '%s'. (rename: %s)",
                          path, GetErrorStr());
                     result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
-                    return PROMISE_RESULT_FAIL;
                 }
                 else
                 {
@@ -2401,7 +2401,7 @@ static PromiseResult CopyFileSources(EvalContext *ctx, char *destination, Attrib
 
     if (conn != NULL && (!conn->authenticated))
     {
-        cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, pp, attr,
+        cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, attr,
              "No authenticated source '%s' in files.copy_from promise",
              source);
         return PROMISE_RESULT_FAIL;
@@ -2593,6 +2593,7 @@ PromiseResult ScheduleLinkChildrenOperation(EvalContext *ctx, char *destination,
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr,
              "Can't open source of children to link '%s'. (opendir: %s)",
              attr.link.source, GetErrorStr());
+        result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
         return result;
     }
 
@@ -2994,7 +2995,7 @@ static int VerifyFinderType(EvalContext *ctx, const char *file, Attributes a, co
             {
                 cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Setting Finder Type code of '%s' to '%s' failed", file,
                      a.perms.findertype);
-                *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
+                *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
             }
 
             return retval;
@@ -3011,7 +3012,7 @@ static int VerifyFinderType(EvalContext *ctx, const char *file, Attributes a, co
     else
     {
         cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "Finder Type code of '%s' to '%s' is as promised", file, a.perms.findertype);
-        *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
+        *result = PromiseResultUpdate(*result, PROMISE_RESULT_NOOP);
         return 0;
     }
 }

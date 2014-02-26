@@ -33,6 +33,7 @@
 #include <man.h>
 #include <bootstrap.h>
 #include <string_lib.h>
+#include <loading.h>
 
 #include <time.h>
 
@@ -125,7 +126,7 @@ int main(int argc, char *argv[])
     GenericAgentConfigApply(ctx, config);
 
     GenericAgentDiscoverContext(ctx, config);
-    Policy *policy = GenericAgentLoadPolicy(ctx, config);
+    Policy *policy = LoadPolicy(ctx, config);
     if (!policy)
     {
         Log(LOG_LEVEL_ERR, "Input files contain errors.");

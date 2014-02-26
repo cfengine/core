@@ -36,6 +36,7 @@
 #include <sysinfo.h>
 #include <timeout.h>
 #include <time_classes.h>
+#include <loading.h>
 
 #include <cf-windows-functions.h>
 
@@ -130,7 +131,7 @@ int main(int argc, char *argv[])
     Policy *policy = NULL;
     if (GenericAgentCheckPolicy(config, false, false))
     {
-        policy = GenericAgentLoadPolicy(ctx, config);
+        policy = LoadPolicy(ctx, config);
     }
     else if (config->tty_interactive)
     {
@@ -141,7 +142,7 @@ int main(int argc, char *argv[])
         Log(LOG_LEVEL_ERR, "CFEngine was not able to get confirmation of promises from cf-promises, so going to failsafe");
         EvalContextClassPutHard(ctx, "failsafe_fallback", "attribute_name=Errors,source=agent");
         GenericAgentConfigSetInputFile(config, GetInputDir(), "failsafe.cf");
-        policy = GenericAgentLoadPolicy(ctx, config);
+        policy = LoadPolicy(ctx, config);
     }
 
     ThisAgentInit();
@@ -541,7 +542,7 @@ static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *c
 
         GenericAgentConfigSetBundleSequence(config, NULL);
 
-        *policy = GenericAgentLoadPolicy(ctx, config);
+        *policy = LoadPolicy(ctx, config);
         ExecConfigDestroy(*exec_config);
         ExecdConfigDestroy(*execd_config);
 

@@ -7,7 +7,7 @@
 #include <eval_context.h>
 #include <expand.h>
 
-static Policy *LoadPolicy(const char *filename)
+static Policy *TestParsePolicy(const char *filename)
 {
     char path[1024];
     sprintf(path, "%s/%s", TESTDATADIR, filename);
@@ -22,7 +22,7 @@ static void run_test_in_policy(const char *policy_filename, TestFn fn)
     GenericAgentConfig *agent_config = GenericAgentConfigNewDefault(
         AGENT_TYPE_EXECUTOR);
     EvalContext *ctx = EvalContextNew();
-    Policy *policy = LoadPolicy(policy_filename);
+    Policy *policy = TestParsePolicy(policy_filename);
     PolicyResolve(ctx, policy, agent_config);
 
     /* Setup global environment */

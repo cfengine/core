@@ -4,6 +4,7 @@
 #include <known_dirs.h>
 #include <eval_context.h>
 #include <sysinfo_priv.h>
+#include <loading.h>
 
 void test_load_masterfiles(void)
 {
@@ -15,7 +16,7 @@ void test_load_masterfiles(void)
     GenericAgentConfigSetInputFile(config, NULL,
                                    ABS_TOP_SRCDIR "/masterfiles/promises.cf");
 
-    Policy *masterfiles = GenericAgentLoadPolicy(ctx, config);
+    Policy *masterfiles = LoadPolicy(ctx, config);
     assert_true(masterfiles);
 
     PolicyDestroy(masterfiles);

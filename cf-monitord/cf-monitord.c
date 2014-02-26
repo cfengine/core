@@ -36,6 +36,7 @@
 #include <bootstrap.h>
 #include <timeout.h>
 #include <time_classes.h>
+#include <loading.h>
 
 typedef enum
 {
@@ -117,7 +118,7 @@ int main(int argc, char *argv[])
     GenericAgentConfigApply(ctx, config);
 
     GenericAgentDiscoverContext(ctx, config);
-    Policy *policy = GenericAgentLoadPolicy(ctx, config);
+    Policy *policy = LoadPolicy(ctx, config);
 
     ThisAgentInit(ctx);
     KeepPromises(ctx, policy);

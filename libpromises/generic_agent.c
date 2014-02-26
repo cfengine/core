@@ -67,17 +67,12 @@ static pthread_once_t pid_cleanup_once = PTHREAD_ONCE_INIT; /* GLOBAL_T */
 
 static char PIDFILE[CF_BUFSIZE] = ""; /* GLOBAL_C */
 
-static void VerifyPromises(EvalContext *ctx, const Policy *policy, GenericAgentConfig *config);
 static void CheckWorkingDirectories(EvalContext *ctx);
 
-static Policy *Cf3ParseFile(const GenericAgentConfig *config, const char *input_path);
-
-static Policy *LoadPolicyFile(EvalContext *ctx, GenericAgentConfig *config, const char *policy_file, StringSet *parsed_files_and_checksums, StringSet *failed_files);
 static bool WritePolicyValidatedFileToMasterfiles(const GenericAgentConfig *config);
 static void GetPromisesValidatedFileFromMasterfiles(char *filename, size_t max_size, const GenericAgentConfig *config, const char *maybe_dirname);
 static bool WriteReleaseIdFileToMasterfiles(void);
 static bool WriteReleaseIdFile(const char *filename, const char *dirname);
-static void GetReleaseIdFile(const char *base_path, char *filename, size_t max_size);
 bool GeneratePolicyReleaseIDFromTree(char release_id_out[GENERIC_AGENT_CHECKSUM_SIZE], const char *policy_dir);
 char* ReadChecksumFromPolicyValidatedMasterfiles(const GenericAgentConfig *config, const char *maybe_dirname);
 
@@ -86,7 +81,6 @@ static bool MissingInputFile(const char *input_file);
 #if !defined(__MINGW32__)
 static void OpenLog(int facility);
 #endif
-static bool VerifyBundleSequence(EvalContext *ctx, const Policy *policy, const GenericAgentConfig *config);
 
 /*****************************************************************************/
 
@@ -387,32 +381,6 @@ static bool WritePolicyValidatedFileToMasterfiles(const GenericAgentConfig *conf
 }
 
 /**
- * @brief Reads the release_id file from inputs and return a JsonElement.
- */
-static JsonElement *ReadReleaseIdFileFromInputs()
-{
-    char filename[CF_MAXVARSIZE];
-
-    GetReleaseIdFile(GetInputDir(), filename, sizeof(filename));
-
-    struct stat sb;
-    if (stat(filename, &sb) == -1)
-    {
-        return NULL;
-    }
-
-    JsonElement *validated_doc = NULL;
-    JsonParseError err = JsonParseFile(filename, 4096, &validated_doc);
-    if (err != JSON_PARSE_OK)
-    {
-        Log(LOG_LEVEL_WARNING, "Could not read release ID: '%s' did not contain valid JSON data. "
-            "(JsonParseFile: '%s')", filename, JsonParseErrorToString(err));
-    }
-
-    return validated_doc;
-}
-
-/**
  * @brief Writes a file with a contained release ID based on git SHA,
  *        or file checksum if git SHA is not available.
  * @return True if successful or if no release ID is needed (-f specified).
@@ -526,326 +494,8 @@ bool GenericAgentArePromisesValid(const GenericAgentConfig *config)
     return true;
 }
 
-static void ShowContext(EvalContext *ctx)
-{
-    Seq *hard_contexts = SeqNew(1000, NULL);
-    Seq *soft_contexts = SeqNew(1000, NULL);
-
-    {
-        ClassTableIterator *iter = EvalContextClassTableIteratorNewGlobal(ctx, NULL, true, true);
-        Class *cls = NULL;
-        while ((cls = ClassTableIteratorNext(iter)))
-        {
-            if (cls->is_soft)
-            {
-                SeqAppend(soft_contexts, cls->name);
-            }
-            else
-            {
-                SeqAppend(hard_contexts, cls->name);
-            }
-        }
-
-        ClassTableIteratorDestroy(iter);
-    }
-
-    SeqSort(soft_contexts, (SeqItemComparator)strcmp, NULL);
-    SeqSort(hard_contexts, (SeqItemComparator)strcmp, NULL);
 
 
-    {
-        Writer *w = NULL;
-        if (LEGACY_OUTPUT)
-        {
-            w = FileWriter(stdout);
-            WriterWriteF(w, "%s>  -> Hard classes = {", VPREFIX);
-        }
-        else
-        {
-            w = StringWriter();
-            WriterWrite(w, "Discovered hard classes:");
-        }
-
-        for (size_t i = 0; i < SeqLength(hard_contexts); i++)
-        {
-            const char *context = SeqAt(hard_contexts, i);
-            WriterWriteF(w, " %s", context);
-        }
-
-        if (LEGACY_OUTPUT)
-        {
-            WriterWrite(w, "}\n");
-            FileWriterDetach(w);
-        }
-        else
-        {
-            Log(LOG_LEVEL_VERBOSE, "%s", StringWriterData(w));
-            WriterClose(w);
-        }
-    }
-
-    {
-        Writer *w = NULL;
-        if (LEGACY_OUTPUT)
-        {
-            w = FileWriter(stdout);
-            WriterWriteF(w, "%s>  -> Additional classes = {", VPREFIX);
-        }
-        else
-        {
-            w = StringWriter();
-            WriterWrite(w, "Additional classes:");
-        }
-
-        for (size_t i = 0; i < SeqLength(soft_contexts); i++)
-        {
-            const char *context = SeqAt(soft_contexts, i);
-            WriterWriteF(w, " %s", context);
-        }
-
-        if (LEGACY_OUTPUT)
-        {
-            WriterWrite(w, "}\n");
-            FileWriterDetach(w);
-        }
-        else
-        {
-            if (SeqLength(soft_contexts) > 0)
-            {
-                Log(LOG_LEVEL_VERBOSE, "%s", StringWriterData(w));
-            }
-            WriterClose(w);
-        }
-    }
-
-    SeqDestroy(hard_contexts);
-    SeqDestroy(soft_contexts);
-}
-
-static Policy *LoadPolicyInputFiles(EvalContext *ctx, GenericAgentConfig *config, const Rlist *inputs, StringSet *parsed_files_and_checksums, StringSet *failed_files)
-{
-    Policy *policy = PolicyNew();
-
-    for (const Rlist *rp = inputs; rp; rp = rp->next)
-    {
-        if (rp->val.type != RVAL_TYPE_SCALAR)
-        {
-            Log(LOG_LEVEL_ERR, "Non-file object in inputs list");
-            continue;
-        }
-
-        const char *unresolved_input = RlistScalarValue(rp);
-
-        if (strcmp(CF_NULL_VALUE, unresolved_input) == 0)
-        {
-            continue;
-        }
-
-        if (IsExpandable(unresolved_input))
-        {
-            PolicyResolve(ctx, policy, config);
-        }
-
-        Rval resolved_input = EvaluateFinalRval(ctx, policy, NULL, "sys", rp->val, true, NULL);
-
-        Policy *aux_policy = NULL;
-        switch (resolved_input.type)
-        {
-        case RVAL_TYPE_SCALAR:
-            if (IsCf3VarString(RvalScalarValue(resolved_input)))
-            {
-                Log(LOG_LEVEL_ERR, "Unresolved variable '%s' in input list, cannot parse", RvalScalarValue(resolved_input));
-                break;
-            }
-
-            aux_policy = LoadPolicyFile(ctx, config, GenericAgentResolveInputPath(config, RvalScalarValue(resolved_input)), parsed_files_and_checksums, failed_files);
-            break;
-
-        case RVAL_TYPE_LIST:
-            aux_policy = LoadPolicyInputFiles(ctx, config, RvalRlistValue(resolved_input), parsed_files_and_checksums, failed_files);
-            break;
-
-        default:
-            ProgrammingError("Unknown type in input list for parsing: %d", resolved_input.type);
-            break;
-        }
-
-        if (aux_policy)
-        {
-            policy = PolicyMerge(policy, aux_policy);
-        }
-
-        RvalDestroy(resolved_input);
-    }
-
-    return policy;
-}
-
-static Policy *LoadPolicyFile(EvalContext *ctx, GenericAgentConfig *config, const char *policy_file, StringSet *parsed_files_and_checksums, StringSet *failed_files)
-{
-    Policy *policy = NULL;
-    unsigned char digest[EVP_MAX_MD_SIZE + 1] = { 0 };
-    char hashbuffer[EVP_MAX_MD_SIZE * 4] = { 0 };
-    char hashprintbuffer[CF_BUFSIZE] = { 0 };
-
-    HashFile(policy_file, digest, CF_DEFAULT_DIGEST);
-    snprintf(hashprintbuffer, CF_BUFSIZE - 1, "{checksum}%s",
-             HashPrintSafe(CF_DEFAULT_DIGEST, true, digest, hashbuffer));
-
-    Log(LOG_LEVEL_DEBUG, "Hashed policy file %s to %s", policy_file, hashprintbuffer);
-
-    if (StringSetContains(parsed_files_and_checksums, policy_file))
-    {
-        Log(LOG_LEVEL_VERBOSE, "Skipping loading of duplicate policy file %s", policy_file);
-        return NULL;
-    }
-    else if (StringSetContains(parsed_files_and_checksums, hashprintbuffer))
-    {
-        Log(LOG_LEVEL_VERBOSE, "Skipping loading of duplicate (detected by hash) policy file %s", policy_file);
-        return NULL;
-    }
-    else
-    {
-        Log(LOG_LEVEL_DEBUG, "Loading policy file %s", policy_file);
-    }
-
-    policy = Cf3ParseFile(config, policy_file);
-    // we keep the checksum and the policy file name to help debugging
-    StringSetAdd(parsed_files_and_checksums, xstrdup(policy_file));
-    StringSetAdd(parsed_files_and_checksums, xstrdup(hashprintbuffer));
-
-    if (policy)
-    {
-        Seq *errors = SeqNew(10, free);
-        if (!PolicyCheckPartial(policy, errors))
-        {
-            Writer *writer = FileWriter(stderr);
-            for (size_t i = 0; i < errors->length; i++)
-            {
-                PolicyErrorWrite(writer, errors->data[i]);
-            }
-            WriterClose(writer);
-            SeqDestroy(errors);
-
-            StringSetAdd(failed_files, xstrdup(policy_file));
-            return NULL;
-        }
-
-        SeqDestroy(errors);
-    }
-    else
-    {
-        StringSetAdd(failed_files, xstrdup(policy_file));
-        return NULL;
-    }
-
-    PolicyResolve(ctx, policy, config);
-
-    Body *body_common_control = PolicyGetBody(policy, NULL, "common", "control");
-    Body *body_file_control = PolicyGetBody(policy, NULL, "file", "control");
-
-    if (body_common_control)
-    {
-        Seq *potential_inputs = BodyGetConstraint(body_common_control, "inputs");
-        Constraint *cp = EffectiveConstraint(ctx, potential_inputs);
-        SeqDestroy(potential_inputs);
-
-        if (cp)
-        {
-            Policy *aux_policy = LoadPolicyInputFiles(ctx, config, RvalRlistValue(cp->rval), parsed_files_and_checksums, failed_files);
-            if (aux_policy)
-            {
-                policy = PolicyMerge(policy, aux_policy);
-                PolicyResolve(ctx, policy, config);
-            }
-        }
-    }
-
-    if (body_file_control)
-    {
-        Seq *potential_inputs = BodyGetConstraint(body_file_control, "inputs");
-        Constraint *cp = EffectiveConstraint(ctx, potential_inputs);
-        SeqDestroy(potential_inputs);
-
-        if (cp)
-        {
-            Policy *aux_policy = LoadPolicyInputFiles(ctx, config, RvalRlistValue(cp->rval), parsed_files_and_checksums, failed_files);
-            if (aux_policy)
-            {
-                policy = PolicyMerge(policy, aux_policy);
-                PolicyResolve(ctx, policy, config);
-            }
-        }
-    }
-
-    return policy;
-}
-
-Policy *GenericAgentLoadPolicy(EvalContext *ctx, GenericAgentConfig *config)
-{
-    StringSet *parsed_files_and_checksums = StringSetNew();
-    StringSet *failed_files = StringSetNew();
-
-    Policy *policy = LoadPolicyFile(ctx, config, config->input_file, parsed_files_and_checksums, failed_files);
-
-    if (StringSetSize(failed_files) > 0)
-    {
-        Log(LOG_LEVEL_ERR, "There are syntax errors in policy files");
-        exit(EXIT_FAILURE);
-    }
-
-    StringSetDestroy(parsed_files_and_checksums);
-    StringSetDestroy(failed_files);
-
-    {
-        Seq *errors = SeqNew(100, PolicyErrorDestroy);
-
-        if (PolicyCheckPartial(policy, errors))
-        {
-            if (!config->bundlesequence && (PolicyIsRunnable(policy) || config->check_runnable))
-            {
-                Log(LOG_LEVEL_VERBOSE, "Running full policy integrity checks");
-                PolicyCheckRunnable(ctx, policy, errors, config->ignore_missing_bundles);
-            }
-        }
-
-        if (SeqLength(errors) > 0)
-        {
-            Writer *writer = FileWriter(stderr);
-            for (size_t i = 0; i < errors->length; i++)
-            {
-                PolicyErrorWrite(writer, errors->data[i]);
-            }
-            WriterClose(writer);
-            exit(EXIT_FAILURE); // TODO: do not exit
-        }
-
-        SeqDestroy(errors);
-    }
-
-    if (LogGetGlobalLevel() >= LOG_LEVEL_VERBOSE)
-    {
-        ShowContext(ctx);
-    }
-
-    if (policy)
-    {
-        VerifyPromises(ctx, policy, config);
-    }
-
-    JsonElement *validated_doc = ReadReleaseIdFileFromInputs();
-    if (validated_doc)
-    {
-        const char *release_id = JsonObjectGetAsString(validated_doc, "releaseId");
-        if (release_id)
-        {
-            policy->release_id = xstrndup(release_id, 2 * CF_SHA256_LEN);
-        }
-        JsonDestroy(validated_doc);
-    }
-
-    return policy;
-}
 
 /*****************************************************************************/
 
@@ -1140,7 +790,7 @@ static void GetPromisesValidatedFileFromMasterfiles(char *filename, size_t max_s
 /**
  * @brief Gets the release_id file name in the given base_path.
  */
-static void GetReleaseIdFile(const char *base_path, char *filename, size_t max_size)
+void GetReleaseIdFile(const char *base_path, char *filename, size_t max_size)
 {
     snprintf(filename, max_size, "%s/cf_promises_release_id", base_path);
     MapName(filename);
@@ -1270,89 +920,6 @@ bool GenericAgentIsPolicyReloadNeeded(const GenericAgentConfig *config, const Po
     }
 
     return false;
-}
-
-/*
- * The difference between filename and input_input file is that the latter is the file specified by -f or
- * equivalently the file containing body common control. This will hopefully be squashed in later refactoring.
- */
-static Policy *Cf3ParseFile(const GenericAgentConfig *config, const char *input_path)
-{
-    struct stat statbuf;
-
-    if (stat(input_path, &statbuf) == -1)
-    {
-        if (config->ignore_missing_inputs)
-        {
-            return PolicyNew();
-        }
-
-        Log(LOG_LEVEL_ERR, "Can't stat file '%s' for parsing. (stat: %s)", input_path, GetErrorStr());
-        exit(EXIT_FAILURE);
-    }
-    else if (S_ISDIR(statbuf.st_mode))
-    {
-        if (config->ignore_missing_inputs)
-        {
-            return PolicyNew();
-        }
-
-        Log(LOG_LEVEL_ERR, "Can't parse directory '%s'.", input_path);
-        exit(EXIT_FAILURE);
-    }
-
-#ifndef _WIN32
-    if (config->check_not_writable_by_others && (statbuf.st_mode & (S_IWGRP | S_IWOTH)))
-    {
-        Log(LOG_LEVEL_ERR, "File %s (owner %ju) is writable by others (security exception)", input_path, (uintmax_t)statbuf.st_uid);
-        exit(EXIT_FAILURE);
-    }
-#endif
-
-    Log(LOG_LEVEL_VERBOSE, "Parsing file '%s'", input_path);
-
-    if (!FileCanOpen(input_path, "r"))
-    {
-        Log(LOG_LEVEL_ERR, "Can't open file '%s' for parsing", input_path);
-        exit(EXIT_FAILURE);
-    }
-
-    Policy *policy = NULL;
-    if (StringEndsWith(input_path, ".json"))
-    {
-        Writer *contents = FileRead(input_path, SIZE_MAX, NULL);
-        if (!contents)
-        {
-            Log(LOG_LEVEL_ERR, "Error reading JSON input file '%s'", input_path);
-            return NULL;
-        }
-        JsonElement *json_policy = NULL;
-        const char *data = StringWriterData(contents);
-        if (JsonParse(&data, &json_policy) != JSON_PARSE_OK)
-        {
-            Log(LOG_LEVEL_ERR, "Error parsing JSON input file '%s'", input_path);
-            WriterClose(contents);
-            return NULL;
-        }
-
-        policy = PolicyFromJson(json_policy);
-
-        JsonDestroy(json_policy);
-        WriterClose(contents);
-    }
-    else
-    {
-        if (config->agent_type == AGENT_TYPE_COMMON)
-        {
-            policy = ParserParseFile(config->agent_type, input_path, config->agent_specific.common.parser_warnings, config->agent_specific.common.parser_warnings_error);
-        }
-        else
-        {
-            policy = ParserParseFile(config->agent_type, input_path, 0, 0);
-        }
-    }
-
-    return policy;
 }
 
 /*******************************************************************/
@@ -1561,50 +1128,6 @@ const char *GenericAgentResolveInputPath(const GenericAgentConfig *config, const
     return MapName(input_path);
 }
 
-static void VerifyPromises(EvalContext *ctx, const Policy *policy, GenericAgentConfig *config)
-{
-
-/* Now look once through ALL the bundles themselves */
-
-    for (size_t i = 0; i < SeqLength(policy->bundles); i++)
-    {
-        Bundle *bp = SeqAt(policy->bundles, i);
-        EvalContextStackPushBundleFrame(ctx, bp, NULL, false);
-
-        for (size_t j = 0; j < SeqLength(bp->promise_types); j++)
-        {
-            PromiseType *sp = SeqAt(bp->promise_types, j);
-            EvalContextStackPushPromiseTypeFrame(ctx, sp);
-
-            for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
-            {
-                Promise *pp = SeqAt(sp->promises, ppi);
-                ExpandPromise(ctx, pp, CommonEvalPromise, NULL);
-            }
-
-            EvalContextStackPopFrame(ctx);
-        }
-
-        EvalContextStackPopFrame(ctx);
-    }
-
-    PolicyResolve(ctx, policy, config);
-
-    // TODO: need to move this inside PolicyCheckRunnable eventually.
-    if (!config->bundlesequence && config->check_runnable)
-    {
-        // only verify policy-defined bundlesequence for cf-agent, cf-promises
-        if ((config->agent_type == AGENT_TYPE_AGENT) ||
-            (config->agent_type == AGENT_TYPE_COMMON))
-        {
-            if (!VerifyBundleSequence(ctx, policy, config))
-            {
-                FatalError(ctx, "Errors in promise bundles: could not verify bundlesequence");
-            }
-        }
-    }
-}
-
 void GenericAgentWriteHelp(Writer *w, const char *component, const struct option options[], const char *const hints[], bool accepts_file_argument)
 {
     WriterWriteF(w, "Usage: %s [OPTION]...%s\n", component, accepts_file_argument ? " [FILE]" : "");
@@ -1686,59 +1209,6 @@ void WritePID(char *filename)
 
     fclose(fp);
 }
-
-static bool VerifyBundleSequence(EvalContext *ctx, const Policy *policy, const GenericAgentConfig *config)
-{
-    const Rlist *bundlesequence = EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_BUNDLESEQUENCE);
-    if (!bundlesequence)
-    {
-        Log(LOG_LEVEL_ERR, " No bundlesequence in the common control body");
-        return false;
-    }
-
-    const char *name;
-    int ok = true;
-    for (const Rlist *rp = bundlesequence; rp != NULL; rp = rp->next)
-    {
-        switch (rp->val.type)
-        {
-        case RVAL_TYPE_SCALAR:
-            name = RlistScalarValue(rp);
-            break;
-
-        case RVAL_TYPE_FNCALL:
-            name = RlistFnCallValue(rp)->name;
-            break;
-
-        default:
-            name = NULL;
-            ok = false;
-            {
-                Writer *w = StringWriter();
-                WriterWrite(w, "Illegal item found in bundlesequence '");
-                RvalWrite(w, rp->val);
-                WriterWrite(w, "'");
-                Log(LOG_LEVEL_ERR, "%s", StringWriterData(w));
-                WriterClose(w);
-            }
-            continue;
-        }
-
-        if (strcmp(name, CF_NULL_VALUE) == 0)
-        {
-            continue;
-        }
-
-        if (!config->ignore_missing_bundles && !PolicyGetBundle(policy, NULL, NULL, name))
-        {
-            Log(LOG_LEVEL_ERR, "Bundle '%s' listed in the bundlesequence is not a defined bundle", name);
-            ok = false;
-        }
-    }
-
-    return ok;
-}
-
 
 bool GenericAgentConfigParseArguments(GenericAgentConfig *config, int argc, char **argv)
 {

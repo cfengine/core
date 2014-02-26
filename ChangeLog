@@ -45,6 +45,7 @@
         - masterfiles
             - cf_promises_validated is now in JSON format
                 - timestamp key is epoch of last time validated
+        - cf-promises when run without --full-check (-c) no longer errors on missing bodies
 
         - Linux flavor "SUSE" now correctly spelled with all uppercase in variables and class names
         (Redmine #3734).

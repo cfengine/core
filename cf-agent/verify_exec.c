@@ -203,6 +203,7 @@ static ActionResult RepairExec(EvalContext *ctx, Attributes a,
         if (!IsExecutable(CommandArg0(pp->promiser)))
         {
             cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "'%s' promises to be executable but isn't", pp->promiser);
+            *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
 
             if (strchr(pp->promiser, ' '))
             {
@@ -248,12 +249,14 @@ static ActionResult RepairExec(EvalContext *ctx, Attributes a,
     if (DONTDO && (!a.contain.preview))
     {
         Log(LOG_LEVEL_ERR, "Would execute script '%s'", cmdline);
+        *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
         return ACTION_RESULT_OK;
     }
 
     if (a.transaction.action != cfa_fix)
     {
         Log(LOG_LEVEL_ERR, "Command '%s' needs to be executed, but only warning was promised", cmdline);
+        *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
         return ACTION_RESULT_OK;
     }
 

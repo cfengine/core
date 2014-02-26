@@ -317,7 +317,7 @@ static PromiseResult CfCopyFile(EvalContext *ctx, char *sourcefile, char *destfi
         {
             cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, attr, "Image file '%s' is non-existent and should be a copy of '%s'",
                  destfile, sourcefile);
-            return PROMISE_RESULT_WARN;
+            return PromiseResultUpdate(result, PROMISE_RESULT_WARN);
         }
 
         if ((S_ISREG(srcmode)) || ((S_ISLNK(srcmode)) && (attr.copy.link_type == FILE_LINK_TYPE_NONE)))
@@ -623,6 +623,7 @@ static PromiseResult PurgeLocalFiles(EvalContext *ctx, Item *filelist, const cha
             if (DONTDO || attr.transaction.action == cfa_warn)
             {
                 Log(LOG_LEVEL_ERR, "Need to purge '%s' from copy dest directory", filename);
+                result = PromiseResultUpdate(result, PROMISE_RESULT_WARN);
             }
             else
             {
@@ -2975,6 +2976,7 @@ static int VerifyFinderType(EvalContext *ctx, const char *file, Attributes a, co
             if (DONTDO)
             {
                 Log(LOG_LEVEL_INFO, "Promised to set Finder Type code of '%s' to '%s'", file, a.perms.findertype);
+                *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
                 return 0;
             }
 
@@ -2999,6 +3001,7 @@ static int VerifyFinderType(EvalContext *ctx, const char *file, Attributes a, co
 
         case cfa_warn:
             Log(LOG_LEVEL_ERR, "Darwin FinderType does not match -- not fixing.");
+            *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
             return 0;
 
         default:
@@ -3288,6 +3291,7 @@ bool VerifyOwner(EvalContext *ctx, const char *file, const Promise *pp, Attribut
             {
                 Log(LOG_LEVEL_ERR, "File '%s' is not owned by anybody in the passwd database", file);
                 Log(LOG_LEVEL_ERR, "(uid = %ju,gid = %ju)", (uintmax_t)sb->st_uid, (uintmax_t)sb->st_gid);
+                *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
                 break;
             }
 
@@ -3487,7 +3491,7 @@ bool CfCreateFile(EvalContext *ctx, char *file, const Promise *pp, Attributes at
         else
         {
             Log(LOG_LEVEL_ERR, "Warning promised, need to create directory '%s'", file);
-            *result = PromiseResultUpdate(*result, PROMISE_RESULT_NOOP);
+            *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
             return false;
         }
     }
@@ -3531,6 +3535,7 @@ bool CfCreateFile(EvalContext *ctx, char *file, const Promise *pp, Attributes at
         else
         {
             Log(LOG_LEVEL_ERR, "Warning promised, need to create file '%s'", file);
+            *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
             return false;
         }
     }

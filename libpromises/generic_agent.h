@@ -117,4 +117,5 @@ void GenericAgentConfigSetInputFile(GenericAgentConfig *config, const char *inpu
 void GenericAgentConfigSetBundleSequence(GenericAgentConfig *config, const Rlist *bundlesequence);
 bool GenericAgentTagReleaseDirectory(const GenericAgentConfig *config, const char *dirname);
 
+extern uint32_t bwlimit_kbytes; /* from libcfnet/net.c */
 #endif

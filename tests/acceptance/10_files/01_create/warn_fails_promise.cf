@@ -1,0 +1,66 @@
+#######################################################
+#
+# Test not
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+  vars:
+      "dummy" string => "dummy";
+}
+
+#######################################################
+
+bundle agent test
+{
+files:
+    "$(sys.workdir)"
+      create => "true",
+      classes => if_else("test1_pass", "test2_fail"),
+      action => warnonly;
+
+    "/I/do/not/exist"
+      create => "true",
+      classes => if_else("test2_fail", "test2_fail"),
+      action => warnonly;
+}
+
+body action warnonly
+{
+      action_policy => "warn";
+}
+
+body classes if_else(yes,no)
+{
+      promise_kept     => { "$(yes)" };
+      promise_repaired => { "$(yes)" };
+      repair_failed    => { "$(no)" };
+      repair_denied    => { "$(no)" };
+      repair_timeout   => { "$(no)" };
+}
+
+
+#######################################################
+
+bundle agent check
+{
+  classes:
+      "ok" expression => "test1_pass.(!test2_fail)";
+
+  reports:
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}
+

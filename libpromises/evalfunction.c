@@ -6199,9 +6199,9 @@ static JsonElement* BuildData(ARG_UNUSED EvalContext *ctx, const char *file_buff
             continue;
         }
 
-        if ((line)[line_len - 1] ==  '\r')
+        if (line[line_len - 1] ==  '\r')
         {
-            (line)[line_len - 1] = '\0';
+            line[line_len - 1] = '\0';
         }
 
         Rlist *tokens = RlistFromSplitRegex(line, split, 99999, true);
@@ -6232,8 +6232,6 @@ static JsonElement* BuildData(ARG_UNUSED EvalContext *ctx, const char *file_buff
             // only increase hcount if we actually got something
             hcount++;
         }
-
-        line++;
     }
 
     StringSetDestroy(lines);
@@ -6263,9 +6261,9 @@ static int BuildLineArray(EvalContext *ctx, const Bundle *bundle,
             continue;
         }
 
-        if ((line)[line_len - 1] ==  '\r')
+        if (line[line_len - 1] ==  '\r')
         {
-            (line)[line_len - 1] = '\0';
+            line[line_len - 1] = '\0';
         }
 
         char* first_index = NULL;

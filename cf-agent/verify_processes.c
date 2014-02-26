@@ -186,6 +186,7 @@ static PromiseResult VerifyProcessOp(EvalContext *ctx, Item *procdata, Attribute
     if (a.transaction.action == cfa_warn)
     {
         do_signals = false;
+        result = PromiseResultUpdate(result, PROMISE_RESULT_WARN);
     }
     else
     {

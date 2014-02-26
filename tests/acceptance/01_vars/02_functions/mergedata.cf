@@ -104,11 +104,11 @@ bundle agent check
       "actual_wrapped_array_$(X)" string => format("%S", "test.wrap_array_$(X)");
 
   classes:
-      "not_ok_$(X)_$(Y)" not => strcmp("$(actual_$(X)_$(Y))",
-                                       "$(expected_$(X)_$(Y))");
+      "ok_$(X)_$(Y)" expression => strcmp("$(actual_$(X)_$(Y))",
+                                          "$(expected_$(X)_$(Y))");
 
-      "not_ok_$(X)" not => strcmp("$(actual_$(X))",
-                                  "$(expected_$(X))");
+      "ok_$(X)" expression => strcmp("$(actual_$(X))",
+                                     "$(expected_$(X))");
 
       "not_ok_wrapped_key_$(X)" not => strcmp("$(actual_wrapped_key_$(X))",
                                              "$(expected_wrapped_key_$(X))");
@@ -121,7 +121,7 @@ bundle agent check
   reports:
     DEBUG::
       "$(X): actual $(actual_$(X)) != $(X) expected $(expected_$(X))"
-       ifvarclass => "not_ok_$(X)";
+       ifvarclass => "!ok_$(X)";
 
       "$(X): actual wrap key $(actual_wrapped_key_$(X)) != $(X) expected wrapped key $(expected_wrapped_key_$(X))"
        ifvarclass => "not_ok_wrapped_key_$(X)";
@@ -130,7 +130,7 @@ bundle agent check
        ifvarclass => "not_ok_wrapped_array_$(X)";
 
       "$(X)+$(Y): actual $(actual_$(X)_$(Y)) != $(X)+$(Y) expected $(expected_$(X)_$(Y))"
-       ifvarclass => "not_ok_$(X)_$(Y)";
+       ifvarclass => "!ok_$(X)_$(Y)";
 
     ok::
       "$(this.promise_filename) Pass";

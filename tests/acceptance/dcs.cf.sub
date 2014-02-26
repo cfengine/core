@@ -286,6 +286,31 @@ bundle agent dcs_sort(infile, outfile)
       contain => in_shell;
 }
 
+bundle agent dcs_check_state(bundlename, expected_file, test)
+{
+  vars:
+      "state" data => bundlestate($(bundlename));
+
+  methods:
+      "" usebundle => file_make("$(G.testdir)/template", "{{%state}}");
+      "" usebundle => file_make("$(G.testdir)/actual", "");
+      "any" usebundle => dcs_check_state_prep(@(state));
+      "any" usebundle => dcs_check_diff_expected("$(G.testdir)/actual",
+                                                $(expected_file),
+                                                $(test),
+                                                "no");
+}
+
+bundle agent dcs_check_state_prep(state_container)
+{
+  files:
+      "$(G.testdir)/actual"
+      create => "true",
+      edit_template => "$(G.testdir)/template",
+      template_data => mergedata('{ "state": state_container }'),
+      template_method => "mustache";
+}
+
 bundle agent dcs_check_diff(file1, file2, test)
 {
   methods:

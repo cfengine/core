@@ -8,7 +8,6 @@ vars:
   !windows::
     "cwd" string => execresult("/bin/pwd 2>/dev/null || /usr/bin/pwd", "useshell");
     # Dir separator
-    "DS" string => "/";
     "exeext" string => "";
 
   any::
@@ -33,33 +32,33 @@ vars:
   "paths_indices" slist => getindices("paths");
 
 classes:
-  "$(paths_indices)_$(cmds)$(exeext)" expression => fileexists("$(paths[$(paths_indices)])$(DS)$(cmds)$(exeext)");
-  "has_$(cmds)"                       expression => fileexists("$(paths[$(paths_indices)])$(DS)$(cmds)$(exeext)"),
+  "$(paths_indices)_$(cmds)$(exeext)" expression => fileexists("$(paths[$(paths_indices)])$(const.dirsep)$(cmds)$(exeext)");
+  "has_$(cmds)"                       expression => fileexists("$(paths[$(paths_indices)])$(const.dirsep)$(cmds)$(exeext)"),
     scope => "namespace";
 
 vars:
-  "$(cmds)" string => "$(paths[$(paths_indices)])$(DS)$(cmds)$(exeext)",
+  "$(cmds)" string => "$(paths[$(paths_indices)])$(const.dirsep)$(cmds)$(exeext)",
     ifvarclass => canonify("$(paths_indices)_$(cmds)$(exeext)");
 
 classes:
   "temp_declared" not => strcmp(getenv("TEMP", "65536"), "");
 
 vars:
-    "etc" string => "$(this.promise_dirname)$(DS)dummy_etc";
-    "etc_motd" string => "$(this.promise_dirname)$(DS)dummy_etc$(DS)motd";
-    "etc_passwd" string => "$(this.promise_dirname)$(DS)dummy_etc$(DS)passwd";
-    "etc_shadow" string => "$(this.promise_dirname)$(DS)dummy_etc$(DS)shadow";
-    "etc_group" string => "$(this.promise_dirname)$(DS)dummy_etc$(DS)group";
+    "etc" string => "$(this.promise_dirname)$(const.dirsep)dummy_etc";
+    "etc_motd" string => "$(this.promise_dirname)$(const.dirsep)dummy_etc$(const.dirsep)motd";
+    "etc_passwd" string => "$(this.promise_dirname)$(const.dirsep)dummy_etc$(const.dirsep)passwd";
+    "etc_shadow" string => "$(this.promise_dirname)$(const.dirsep)dummy_etc$(const.dirsep)shadow";
+    "etc_group" string => "$(this.promise_dirname)$(const.dirsep)dummy_etc$(const.dirsep)group";
 
   temp_declared::
     "testroot" string => getenv("TEMP", "65535");
-    "testdir" string => concat(getenv("TEMP", "65535"), "$(DS)TEST.cfengine");
-    "testfile" string => concat(getenv("TEMP", "65535"), "$(DS)TEST.cfengine");
+    "testdir" string => concat(getenv("TEMP", "65535"), "$(const.dirsep)TEST.cfengine");
+    "testfile" string => concat(getenv("TEMP", "65535"), "$(const.dirsep)TEST.cfengine");
 
   !temp_declared::
-    "testroot" string => "$(DS)tmp";
-    "testdir" string => "$(DS)tmp$(DS)TEST.cfengine";
-    "testfile" string => "$(DS)tmp$(DS)TEST.cfengine";
+    "testroot" string => "$(const.dirsep)tmp";
+    "testdir" string => "$(const.dirsep)tmp$(const.dirsep)TEST.cfengine";
+    "testfile" string => "$(const.dirsep)tmp$(const.dirsep)TEST.cfengine";
 
 }
 
@@ -97,7 +96,7 @@ methods:
 reports:
     !AUTO::
     "# You must either specify '-D AUTO' or run the following commands:";
-    "cf-agent -f .$(DS)$(filename) -b $(tests)";
+    "cf-agent -f .$(const.dirsep)$(filename) -b $(tests)";
 }
 
 #######################################################

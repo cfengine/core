@@ -547,5 +547,8 @@ static void CleanupOpenSSLThreadLocks(void)
 
 LogLevel CryptoGetMissingKeyLogLevel(void)
 {
-    return ((getuid() == 0 && NULL == getenv("CFENGINE_TEST_OVERRIDE_WORKDIR")) ? LOG_LEVEL_ERR : LOG_LEVEL_VERBOSE);
+    return ((getuid() == 0
+             && NULL == getenv("FAKEROOTKEY")
+             && NULL == getenv("CFENGINE_TEST_OVERRIDE_WORKDIR")
+            ) ? LOG_LEVEL_ERR : LOG_LEVEL_VERBOSE);
 }

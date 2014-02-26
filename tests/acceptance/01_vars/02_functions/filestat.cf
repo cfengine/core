@@ -70,6 +70,9 @@ bundle agent test
 
 bundle agent check
 {
+  meta:
+      "test_skip_unsupported" string => "windows";
+
   vars:
       "expected[size]" string => "42";
       "expected[mode]" string => "33152";

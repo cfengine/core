@@ -3339,13 +3339,11 @@ static FnCallResult FilterInternal(EvalContext *ctx,
                 RlistAppendScalar(&returnlist, RlistScalarValue(rp));
                 match_count++;
 
-                // exit early in case "some" is being called
                 if (0 == strcmp(fp->name, "some"))
                 {
                     break;
                 }
             }
-            // exit early in case "none" is being called
             else if (0 == strcmp(fp->name, "every"))
             {
                 total++;
@@ -3357,47 +3355,45 @@ static FnCallResult FilterInternal(EvalContext *ctx,
     }
     else if (NULL != json)
     {
-        if (JsonGetElementType(value) == JSON_ELEMENT_TYPE_CONTAINER)
+        if (JsonGetElementType(json) == JSON_ELEMENT_TYPE_CONTAINER)
         {
-            JsonIterator iter = JsonIteratorInit(value);
+            JsonIterator iter = JsonIteratorInit(json);
             const JsonElement *el = NULL;
             while ((el = JsonIteratorNextValue(&iter)) && match_count < max)
             {
-                char *value = JsonPrimitiveToString(el);
-                if (NULL != value)
+                char *val = JsonPrimitiveToString(el);
+                if (NULL != val)
                 {
                     bool found;
                     if (do_regex)
                     {
-                        found = StringMatchFull(regex, value);
+                        found = StringMatchFull(regex, val);
                     }
                     else
                     {
-                        found = (0==strcmp(regex, value));
+                        found = (0==strcmp(regex, val));
                     }
 
                     if (invert ? !found : found)
                     {
-                        RlistAppendScalar(&returnlist, value);
+                        RlistAppendScalar(&returnlist, val);
                         match_count++;
 
-                        // exit early in case "some" is being called
                         if (0 == strcmp(fp->name, "some"))
                         {
-                            free(value);
+                            free(val);
                             break;
                         }
                     }
-                    // exit early in case "none" is being called
                     else if (0 == strcmp(fp->name, "every"))
                     {
                         total++;
-                        free(value);
+                        free(val);
                         break;
                     }
 
                     total++;
-                    free(value);
+                    free(val);
                 }
             }
         }

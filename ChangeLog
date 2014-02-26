@@ -42,6 +42,9 @@
 	      "error".
         - process_results default to AND'ing of set attributes if not specified (Redmine #3224)
         - interface is now canonified in sys.hardware_mac[interface] to align with sys.ipv4[interface] (Redmine #3418)
+        - masterfiles
+            - cf_promises_validated is now in JSON format
+                - timestamp key is epoch of last time validated
 
         - Linux flavor "SUSE" now correctly spelled with all uppercase in variables and class names
         (Redmine #3734).
@@ -55,6 +58,8 @@
             - many standard library bundles and bodies, especially packages- and file-related, were revised and fixed
             - supports both Community and Enterprise
             - new 'inventory/' structure to provide dmidecode, LSB, etc. system inventory (configured mainly in def.cf)
+            - cf_promises_release_id contains the policy release ID which is the GIT HEAD SHA if available or hash of tree
+
         - New promise type "users" for managing local user accounts.
         - New in 'bundle server access_rules'
             - Constraints "admit_ips", "admit_hostnames", "admit_keys"

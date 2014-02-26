@@ -334,8 +334,6 @@ void StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
 
     if ((!NO_FORK) && (fork() != 0))
     {
-        Log(LOG_LEVEL_INFO,
-            "Backgrounding process, use -F switch to stay in the foreground.");
         _exit(EXIT_SUCCESS);
     }
 

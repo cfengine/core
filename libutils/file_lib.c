@@ -49,7 +49,9 @@ Writer *FileRead(const char *filename, size_t max_size, bool *truncated)
 {
     int fd = safe_open(filename, O_RDONLY);
     if (fd == -1)
+    {
         return NULL;
+    }
 
     Writer *w = FileReadFromFd(fd, max_size, truncated);
     close(fd);
@@ -58,33 +60,47 @@ Writer *FileRead(const char *filename, size_t max_size, bool *truncated)
 
 Writer *FileReadFromFd(int fd, size_t max_size, bool *truncated)
 {
+    if (truncated)
+    {
+        *truncated = false;
+    }
+
     Writer *w = StringWriter();
     for (;;)
     {
         char buf[READ_BUFSIZE];
         /* Reading more data than needed is deliberate. It is a truncation detection. */
         ssize_t read_ = read(fd, buf, READ_BUFSIZE);
+
         if (read_ == 0)
         {
-            if (truncated)
-                *truncated = false;
+            /* Done. */
             return w;
         }
-        if (read_ < 0)
+        else if (read_ < 0)
         {
-            if (errno == EINTR)
-                continue;
-            WriterClose(w);
-            return NULL;
+            if (errno != EINTR)
+            {
+                /* Something went wrong. */
+                WriterClose(w);
+                return NULL;
+            }
+            /* Else: interrupted - try again. */
         }
-        if (read_ + StringWriterLength(w) > max_size)
+        else if (read_ + StringWriterLength(w) > max_size)
         {
             WriterWriteLen(w, buf, max_size - StringWriterLength(w));
+            /* Reached limit - stop. */
             if (truncated)
+            {
                 *truncated = true;
+            }
             return w;
         }
-        WriterWriteLen(w, buf, read_);
+        else /* Filled buffer; copy and ask for more. */
+        {
+            WriterWriteLen(w, buf, read_);
+        }
     }
 }
 

@@ -22,30 +22,36 @@ bundle agent init
 
 bundle agent test
 {
+  meta:
+      "tags" slist => { "test_suppress_fail" };
+
   vars:
-      "p[root]" string => "/";
-      "d[root]" string => "/";
+      "test_suppress_fail" string => "windows";
+      "failure_issue_number" int => "4716";
 
-      "p[simple]" string => "/foo/bar";
-      "d[simple]" string => "/foo";
+      "p[root]" string => translatepath("/");
+      "d[root]" string => translatepath("/");
 
-      "p[slash]" string => "/foo/bar/";
-      "d[slash]" string => "/foo";
+      "p[simple]" string => translatepath("/foo/bar");
+      "d[simple]" string => translatepath("/foo");
 
-      "p[sub]" string => "/foo";
-      "d[sub]" string => "/";
+      "p[slash]" string => translatepath("/foo/bar/");
+      "d[slash]" string => translatepath("/foo");
 
-      "p[subslash]" string => "/foo/";
-      "d[subslash]" string => "/";
+      "p[sub]" string => translatepath("/foo");
+      "d[sub]" string => translatepath("/");
 
-      "p[multi]" string => "/foo/bar/baz";
-      "d[multi]" string => "/foo/bar";
+      "p[subslash]" string => translatepath("/foo/");
+      "d[subslash]" string => translatepath("/");
 
-      "p[multislash]" string => "/foo/bar/baz/";
-      "d[multislash]" string => "/foo/bar";
+      "p[multi]" string => translatepath("/foo/bar/baz");
+      "d[multi]" string => translatepath("/foo/bar");
 
-      "p[more]" string => "/a/b/c/d/e/f/g/h/i";
-      "d[more]" string => "/a/b/c/d/e/f/g/h";
+      "p[multislash]" string => translatepath("/foo/bar/baz/");
+      "d[multislash]" string => translatepath("/foo/bar");
+
+      "p[more]" string => translatepath("/a/b/c/d/e/f/g/h/i");
+      "d[more]" string => translatepath("/a/b/c/d/e/f/g/h");
 
       "keys" slist => getindices("p");
 

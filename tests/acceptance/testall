@@ -229,7 +229,7 @@ runtest() {
   ) >> "$LOG"
 
   if [ -n "$SKIP" ]; then
-    echo "              "time=\"NULL\"\> >> "$XMLTMP"
+    echo "              time=\"NULL\">" >> "$XMLTMP"
     RESULT=Skip
     RESULT_MSG="$SKIPREASON"
   else
@@ -296,7 +296,7 @@ export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP CFENGINE_TEST_OVERRIDE_EXTENSION_LIBR
     echo "Return code is $RETVAL." >> "$LOG"
 
     TEST_END_TIME=$(unix_seconds)
-    echo "              "time=\"$(($TEST_END_TIME - $TEST_START_TIME)) seconds\"\> >> "$XMLTMP"
+    echo "              time=\"$(($TEST_END_TIME - $TEST_START_TIME)) seconds\">" >> "$XMLTMP"
 
     RESULT_MSG=
     if [ -z "$EXPECTED_CRASH" ] && [ $RETVAL -ne 0 ]; then
@@ -369,9 +369,9 @@ export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP CFENGINE_TEST_OVERRIDE_EXTENSION_LIBR
 
     FAIL|XFAIL)
       echo $RESULT $TEST >> "$SUMMARY"
-      ( echo "        "\<failure type=\"$RESULT\"
-        echo "                 "message=\"$RESULT_MSG $TEST\"\>
-        echo "        $OUT"\<\/failure\>
+      ( echo "        <failure type=\"$RESULT\""
+        echo "                 message=\"$RESULT_MSG $TEST\">"
+        echo "        $OUT</failure>"
       ) >> "$XMLTMP"
       FAILED_TESTS=$(($FAILED_TESTS + 1))
       if [ "$RESULT" = "XFAIL" ]; then
@@ -381,8 +381,8 @@ export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP CFENGINE_TEST_OVERRIDE_EXTENSION_LIBR
 
     Skip)
       echo $RESULT $TEST >> "$SUMMARY"
-      ( echo "        "\<skipped type=\"$RESULT_MSG\"
-        echo "        $OUT"\<\/skipped\>
+      ( echo "        <skipped type=\"$RESULT_MSG\""
+        echo "        $OUT</skipped>"
       ) >> "$XMLTMP"
       SKIPPED_TESTS=$(($SKIPPED_TESTS + 1))
       ;;
@@ -406,7 +406,7 @@ export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP CFENGINE_TEST_OVERRIDE_EXTENSION_LIBR
 
   (
     echo
-    echo '  ==>' $RESULT_MSG
+    echo '  ==>' "$RESULT_MSG"
     echo
   ) >> "$LOG"
 }
@@ -571,27 +571,27 @@ START_TIME=$(unix_seconds)
 ) | tee "$LOG" | tee "$SUMMARY" >&7
 
 
-( echo \<\?xml version=\"1.0\" encoding=\"UTF-8\"\?\>
-  echo \<testsuite name=\"$(pwd)\"
-  echo "           "timestamp=\"$(date "+%F %T")\"
+( echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+  echo "<testsuite name=\"$(pwd)\""
+  echo "           timestamp=\"$(date "+%F %T")\""
   echo "           hostname=\"localhost\""
-  echo "           "tests=\"$TESTS_COUNT\"
+  echo "           tests=\"$TESTS_COUNT\""
 ) > "$XML"
 
   echo -n "" > "$XMLTMP"
 
 for test in $TESTS; do
-  echo "    "\<testcase name=\"$(basename $test)\" >> "$XMLTMP"
-  echo "              "classname=\"$test\" >> "$XMLTMP"
+  echo "    <testcase name=\"$(basename $test)\"" >> "$XMLTMP"
+  echo "              classname=\"$test\"" >> "$XMLTMP"
   runtest "$AGENT" "$test"
-  echo "    "\<\/testcase\> >> "$XMLTMP"
+  echo "    </testcase>" >> "$XMLTMP"
 done
 
 END_TIME=$(unix_seconds)
 
 ( echo
   echo ======================================================================
-  echo Testsuite finished at $(date  "+%F %T") \($(($END_TIME - $START_TIME)) seconds\)
+  echo "Testsuite finished at $(date  "+%F %T") ($(($END_TIME - $START_TIME)) seconds)"
 ) | tee -a "$LOG" | tee -a "$SUMMARY" >&7
 
 ( echo
@@ -606,14 +606,14 @@ END_TIME=$(unix_seconds)
   echo Total tests: $TESTS_COUNT
 ) | tee -a "$LOG" | tee -a "$SUMMARY"
 
-(  echo "           "failures=\"$FAILED_TESTS\"
-   echo "           "skipped=\"$SKIPPED_TESTS\"
-   echo "           "time=\"$(($END_TIME - $START_TIME)) seconds\"\>
+(  echo "           failures=\"$FAILED_TESTS\""
+   echo "           skipped=\"$SKIPPED_TESTS\""
+   echo "           time=\"$(($END_TIME - $START_TIME)) seconds\">"
 ) >> "$XML"
 
   cat "$XMLTMP" >> "$XML"
 
-  echo \<\/testsuite\> >> "$XML"
+  echo "</testsuite>" >> "$XML"
 
 if [ -n "$PRINTLOG" ]; then
   cat "$LOG"

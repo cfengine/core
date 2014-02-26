@@ -49,6 +49,7 @@ vars:
     "etc_passwd" string => "$(this.promise_dirname)$(const.dirsep)dummy_etc$(const.dirsep)passwd";
     "etc_shadow" string => "$(this.promise_dirname)$(const.dirsep)dummy_etc$(const.dirsep)shadow";
     "etc_group" string => "$(this.promise_dirname)$(const.dirsep)dummy_etc$(const.dirsep)group";
+    "etc_null" string => "$(this.promise_dirname)$(const.dirsep)dummy_etc$(const.dirsep)null";
 
   temp_declared::
     "testroot" string => getenv("TEMP", "65535");

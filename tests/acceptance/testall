@@ -87,7 +87,7 @@ esac
 
 PASSED_TESTS=0
 FAILED_TESTS=0
-FAILED_TO_CRASH_TESTS=0
+SUPPRESSED_FAILURES=0
 SKIPPED_TESTS=0
 
 #
@@ -228,7 +228,11 @@ runtest() {
     echo ----------------------------------------------------------------------
   ) >> "$LOG"
 
-  if [ -z "$SKIP" ]; then
+  if [ -n "$SKIP" ]; then
+    echo "              time=\"NULL\">" >> "$XMLTMP"
+    RESULT=Skip
+    RESULT_MSG="$SKIPREASON"
+  else
     TEST_START_TIME=$(unix_seconds)
 
     FLATNAME="$(echo "$TEST" | sed 's,[./],_,g')"
@@ -292,12 +296,42 @@ export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP CFENGINE_TEST_OVERRIDE_EXTENSION_LIBR
     echo "Return code is $RETVAL." >> "$LOG"
 
     TEST_END_TIME=$(unix_seconds)
-    echo "              "time=\"$(($TEST_END_TIME - $TEST_START_TIME)) seconds\"\> >> "$XMLTMP"
+    echo "              time=\"$(($TEST_END_TIME - $TEST_START_TIME)) seconds\">" >> "$XMLTMP"
 
-    if [ -z "$EXPECTED_CRASH" ]; then
-      ESCAPED_TEST="$(echo "$TEST" | sed -e 's/\./\\./g')"
-      if [ $RETVAL -eq 0 ] && echo "$OUT" | grep -q -e "R: .*$ESCAPED_TEST Pass"; then
+    RESULT_MSG=
+    if [ -z "$EXPECTED_CRASH" ] && [ $RETVAL -ne 0 ]; then
+      RESULT=FAIL
+    elif [ -z "$EXPECTED_CRASH" ]; then
+      # We need to be careful when matching test outcomes. Because of convergence
+      # passes, a test may output FAIL before it outputs Pass; in this case the
+      # latter trumps the former. Also be careful when matching an XFAIL; the
+      # test should not be allowed to output any other outcome in the same run,
+      # except for FAIL.
+
+      # Some states are output by default.cf.sub, therefore check for both TEST
+      # prefix and default.cf.sub prefix.
+      ESCAPED_TEST="$(echo "\($TEST\|default.cf.sub\)" | sed -e 's/\./\\./g')"
+      if echo "$OUT" | grep -q -e "R: .*$ESCAPED_TEST XFAIL"; then
+        # Check for other test case outcomes than fail. Should not happen.
+        if echo "$OUT" | grep -e "R: .*$ESCAPED_TEST " | grep -v -q -e "R: .*$ESCAPED_TEST X\?FAIL"; then
+          RESULT=FAIL
+          RESULT_MSG="FAIL (Tried to suppress nonexistent failure)"
+        else
+          REDMINE="$(echo "$OUT" | grep -e "R: .*$ESCAPED_TEST XFAIL" | sed -e "s,.*XFAIL/redmine\([0-9][0-9]*\).*,\1,")"
+          RESULT=XFAIL
+          RESULT_MSG="FAIL (Suppressed, Redmine #$REDMINE)"
+        fi
+      elif echo "$OUT" | grep -q -e "R: .*$ESCAPED_TEST FAIL/no_redmine_number"; then
+        RESULT=FAIL
+        RESULT_MSG="FAIL (Tried to suppress failure, but no Redmine issue number is provided)"
+      elif echo "$OUT" | grep -q -e "R: .*$ESCAPED_TEST Pass"; then
         RESULT=Pass
+      elif echo "$OUT" | grep -q -e "R: .*$ESCAPED_TEST Skip/unsupported"; then
+        RESULT=Skip
+        RESULT_MSG="Skipped (No platform support)"
+      elif echo "$OUT" | grep -q -e "R: .*$ESCAPED_TEST Skip/needs_work"; then
+        RESULT=Skip
+        RESULT_MSG="Skipped (Test needs work)"
       else
         RESULT=FAIL
       fi
@@ -305,82 +339,76 @@ export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP CFENGINE_TEST_OVERRIDE_EXTENSION_LIBR
       if [ $RETVAL -ne 0 ]; then
         RESULT=Pass
       else
-        RESULT="FAILed to crash"
+        RESULT=FAIL
+        RESULT_MSG="FAILed to crash"
       fi
     fi
 
-    if [ "$RESULT" = "Pass" -a "$NO_CLEAN" = "0" ]; then
+    if [ "x$RESULT_MSG" = "x" ]; then
+      RESULT_MSG=$RESULT
+    fi
+
+    if [ "$RESULT" != "FAIL" -a "$NO_CLEAN" = "0" ]; then
       $GAINROOT rm -rf "$WORKDIR"
     fi
 
-    if [ "$RESULT" != Pass ] && [ -e .succeeded/"$FLATNAME" ]; then
-      echo $RESULT $TEST '(UNEXPECTED FAILURE)' >> "$SUMMARY"
-      ( echo "        "\<failure type=\"UNEXPECTED FAILURE\"
-        echo "                 "message=\"$RESULT $TEST '(UNEXPECTED FAILURE)'\"\>
-        echo "        $OUT"\<\/failure\>
-      ) >> "$XMLTMP"
-    else
+    if [ "$RESULT" = "FAIL" ] && [ -e .succeeded/"$FLATNAME" ]; then
+      RESULT_MSG="$RESULT_MSG (UNEXPECTED FAILURE)"
+    fi
+  fi
+
+
+  case "$RESULT" in
+    Pass)
       echo $RESULT $TEST >> "$SUMMARY"
-      if [ "$RESULT" = FAIL ]; then
-        ( echo "        "\<failure type=\"FAIL\"
-          echo "                 "message=\"$RESULT $TEST\"\>
-          echo "        $OUT"\<\/failure\>
-        ) >> "$XMLTMP"
-      elif [ "$RESULT" = "FAILed to crash" ]; then
-        ( echo "        "\<failure type=\"FAILed to crash\"
-          echo "                 "message=\"$RESULT $TEST\"\>
-          echo "        $OUT"\<\/failure\>
-        ) >> "$XMLTMP"
-      fi
-    fi
-
-    if [ -z "$QUIET" ]; then
-      if [ "$RESULT" != Pass ] && [ -e .succeeded/"$FLATNAME" ]; then
-        echo $RESULT '(UNEXPECTED FAILURE)'
-      else
-        echo $RESULT
-      fi
-    else
-      if [ "$RESULT" = Pass ]; then
-        printf '.'
-      else
-        if [ -n "$EXPECTED_CRASH" ]; then
-          printf '!'
-        else
-          printf 'x'
-        fi
-      fi
-    fi
-
-    (
-      echo
-      echo '  ==>' $RESULT
-      echo
-    ) >> "$LOG"
-
-    if [ "$RESULT" = Pass ]; then
       PASSED_TESTS=$(($PASSED_TESTS + 1))
 
       mkdir -p '.succeeded'
       touch .succeeded/"$FLATNAME"
-    elif [ "$RESULT" = FAIL ]; then
+      ;;
+
+    FAIL|XFAIL)
+      echo $RESULT $TEST >> "$SUMMARY"
+      ( echo "        <failure type=\"$RESULT\""
+        echo "                 message=\"$RESULT_MSG $TEST\">"
+        echo "        $OUT</failure>"
+      ) >> "$XMLTMP"
       FAILED_TESTS=$(($FAILED_TESTS + 1))
-    elif [ "$RESULT" = "FAILed to crash" ]; then
-      FAILED_TO_CRASH_TESTS=$(($FAILED_TO_CRASH_TESTS + 1))
-    fi
+      if [ "$RESULT" = "XFAIL" ]; then
+        SUPPRESSED_FAILURES=$(($SUPPRESSED_FAILURES + 1))
+      fi
+      ;;
+
+    Skip)
+      echo $RESULT $TEST >> "$SUMMARY"
+      ( echo "        <skipped type=\"$RESULT_MSG\""
+        echo "        $OUT</skipped>"
+      ) >> "$XMLTMP"
+      SKIPPED_TESTS=$(($SKIPPED_TESTS + 1))
+      ;;
+  esac
+
+  if [ -z "$QUIET" ]; then
+    echo $RESULT_MSG
   else
-    echo "              "time=\"NULL\"\> >> "$XMLTMP"
-    echo Skip $TEST >> "$SUMMARY"
-    ( echo "        "\<skipped type=\"$SKIPREASON\"\>
-      echo "        "\<\/skipped\>
-    ) >> "$XMLTMP"
-    if [ -z "$QUIET" ]; then
-      echo Skipped
-    else
+    if [ "$RESULT" = Pass ]; then
+      printf '.'
+    elif [ "$RESULT" = Skip ]; then
       printf '-'
+    elif [ "$RESULT" = FAIL ]; then
+      if [ -n "$EXPECTED_CRASH" ]; then
+        printf '!'
+      else
+        printf 'x'
+      fi
     fi
-    SKIPPED_TESTS=$(($SKIPPED_TESTS + 1))
   fi
+
+  (
+    echo
+    echo '  ==>' "$RESULT_MSG"
+    echo
+  ) >> "$LOG"
 }
 
 while true; do
@@ -543,51 +571,55 @@ START_TIME=$(unix_seconds)
 ) | tee "$LOG" | tee "$SUMMARY" >&7
 
 
-( echo \<\?xml version=\"1.0\" encoding=\"UTF-8\"\?\>
-  echo \<testsuite name=\"$(pwd)\"
-  echo "           "timestamp=\"$(date "+%F %T")\"
+( echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+  echo "<testsuite name=\"$(pwd)\""
+  echo "           timestamp=\"$(date "+%F %T")\""
   echo "           hostname=\"localhost\""
-  echo "           "tests=\"$TESTS_COUNT\"
+  echo "           tests=\"$TESTS_COUNT\""
 ) > "$XML"
 
   echo -n "" > "$XMLTMP"
 
 for test in $TESTS; do
-  echo "    "\<testcase name=\"$(basename $test)\" >> "$XMLTMP"
-  echo "              "classname=\"$test\" >> "$XMLTMP"
+  echo "    <testcase name=\"$(basename $test)\"" >> "$XMLTMP"
+  echo "              classname=\"$test\"" >> "$XMLTMP"
   runtest "$AGENT" "$test"
-  echo "    "\<\/testcase\> >> "$XMLTMP"
+  echo "    </testcase>" >> "$XMLTMP"
 done
 
 END_TIME=$(unix_seconds)
 
 ( echo
   echo ======================================================================
-  echo Testsuite finished at $(date  "+%F %T") \($(($END_TIME - $START_TIME)) seconds\)
+  echo "Testsuite finished at $(date  "+%F %T") ($(($END_TIME - $START_TIME)) seconds)"
 ) | tee -a "$LOG" | tee -a "$SUMMARY" >&7
 
 ( echo
   echo Passed tests: $PASSED_TESTS
-  echo Failed tests: $FAILED_TESTS
-  echo Failed to crash tests: $FAILED_TO_CRASH_TESTS
+  echo -n Failed tests: $FAILED_TESTS
+  if [ $SUPPRESSED_FAILURES -gt 0 ]; then
+    echo " ($SUPPRESSED_FAILURES are known and suppressed)"
+  else
+    echo
+  fi
   echo Skipped tests: $SKIPPED_TESTS
   echo Total tests: $TESTS_COUNT
 ) | tee -a "$LOG" | tee -a "$SUMMARY"
 
-(  echo "           "failures=\"$FAILED_TESTS\"
-   echo "           "skipped=\"$SKIPPED_TESTS\"
-   echo "           "time=\"$(($END_TIME - $START_TIME)) seconds\"\>
+(  echo "           failures=\"$FAILED_TESTS\""
+   echo "           skipped=\"$SKIPPED_TESTS\""
+   echo "           time=\"$(($END_TIME - $START_TIME)) seconds\">"
 ) >> "$XML"
 
   cat "$XMLTMP" >> "$XML"
 
-  echo \<\/testsuite\> >> "$XML"
+  echo "</testsuite>" >> "$XML"
 
 if [ -n "$PRINTLOG" ]; then
   cat "$LOG"
 fi
 
-if [ "$FAILED_TESTS" -ne 0 ] || [ "$FAILED_TO_CRASH_TESTS" -ne 0 ]; then
+if [ "$FAILED_TESTS" -gt "$SUPPRESSED_FAILURES" ]; then
   exit 1
 else
   exit 0

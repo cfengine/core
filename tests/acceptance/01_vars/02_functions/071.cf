@@ -44,7 +44,7 @@ bundle agent test
 {
   vars:
       "known_val" int => filesize("$(G.testfile)");
-      "known_zero" int => filesize("/dev/null");
+      "known_zero" int => filesize("$(G.etc_null)");
       "unknown" int => filesize("/There/Is/nosuch/Name/as-this");
 }
 
@@ -52,19 +52,25 @@ bundle agent test
 
 bundle agent check
 {
+  vars:
+      windows::
+        "testfilesize" int => "29";
+      !windows::
+        "testfilesize" int => "27";
+
   classes:
       "var" expression => isvariable("test.unknown");
 
       "ok" and => {   
 		    "!var",
-		    strcmp("$(test.known_val)", "27"),
+		    strcmp("$(test.known_val)", "$(testfilesize)"),
 		    strcmp("$(test.known_zero)", "0"),
       };
 
   reports:
     DEBUG::
       "expected filesize($(G.testfile)) to be XXX, saw $(test.known_val)";
-      "expected filesize('/dev/null') to be 0, saw $(test.known_zero)";
+      "expected filesize($(G.etc_null)) to be 0, saw $(test.known_zero)";
       "expected filesize('UnknownFile') to be undefined, saw $(test.unknown)";
 
     ok::

@@ -23,6 +23,13 @@ bundle agent test
                                            $(this.promise_filename));
       "nullgrep" int => countlinesmatching("blue hippo, purple elephant, yellow submarine",
                                            $(this.promise_filename));
+
+      "test_suppress_fail" string => "windows";
+      "failure_issue_number" int => "4720";
+
+  meta:
+      "tags" slist => { "test_suppress_fail" };
+
 }
 
 bundle agent check

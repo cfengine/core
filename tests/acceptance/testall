@@ -231,7 +231,7 @@ runtest() {
   if [ -n "$SKIP" ]; then
     echo "              time=\"NULL\">" >> "$XMLTMP"
     RESULT=Skip
-    RESULT_MSG="$SKIPREASON"
+    RESULT_MSG="Skipped ($SKIPREASON)"
   else
     TEST_START_TIME=$(unix_seconds)
 

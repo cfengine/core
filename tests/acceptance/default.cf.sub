@@ -64,11 +64,13 @@ bundle common G
 vars:
   windows::
     "cwd" string => execresult("C:\windows\system32\cmd.exe /C cd", "noshell");
-    # Dir separator
+    # Use for redirection, not as a real file.
+    "dev_null" string => "nul";
     "exeext" slist => { ".exe", ".bat" };
   !windows::
     "cwd" string => execresult("/bin/pwd 2>/dev/null || /usr/bin/pwd", "useshell");
-    # Dir separator
+    # Use for redirection, not as a real file.
+    "dev_null" string => "/dev/null";
     "exeext" string => "";
 
   any::
@@ -110,6 +112,7 @@ vars:
     "etc_passwd" string => "$(this.promise_dirname)$(const.dirsep)dummy_etc$(const.dirsep)passwd";
     "etc_shadow" string => "$(this.promise_dirname)$(const.dirsep)dummy_etc$(const.dirsep)shadow";
     "etc_group" string => "$(this.promise_dirname)$(const.dirsep)dummy_etc$(const.dirsep)group";
+    # Use instead of /dev/null when you need a real empty file to open.
     "etc_null" string => "$(this.promise_dirname)$(const.dirsep)dummy_etc$(const.dirsep)null";
 
   temp_declared::
@@ -243,17 +246,17 @@ vars:
         "file2h" string => execresult("$(G.od) -c $(file2)", "useshell");
 
     DEBUG.check_ready.!no_difference.has_unified_diff::
-        "diffu" string => execresult("$(G.diff) -u $(file2) $(file1) 2>/dev/null", "useshell");
+        "diffu" string => execresult("$(G.diff) -u $(file2) $(file1) 2>$(G.dev_null)", "useshell");
     DEBUG.check_ready.!no_difference.!has_unified_diff::
-        "diffu" string => execresult("$(G.diff) -c $(file2) $(file1) 2>/dev/null", "useshell");
+        "diffu" string => execresult("$(G.diff) -c $(file2) $(file1) 2>$(G.dev_null)", "useshell");
 
 classes:
     "has_unified_diff" expression => returnszero(
-      "$(G.diff) -u /dev/null /dev/null >/dev/null 2>/dev/null", "useshell");
+      "$(G.diff) -u $(G.etc_null) $(G.etc_null) >$(G.dev_null) 2>&1", "useshell");
 
   c14n_files_created::
     "no_difference" expression => returnszero(
-        "$(G.diff) $(G.testfile).default-xml-check-diff-1 $(G.testfile).default-xml-check-diff-2 >/dev/null 2>/dev/null",
+        "$(G.diff) $(G.testfile).default-xml-check-diff-1 $(G.testfile).default-xml-check-diff-2 >$(G.dev_null) 2>&1",
         "useshell");
 
     "expected_difference" expression => strcmp("$(expected_difference)", "yes");
@@ -348,16 +351,16 @@ vars:
         "file2h" string => execresult("$(G.od) -c $(file2)", "useshell");
 
     DEBUG.check_ready.!no_difference.has_unified_diff::
-        "diffu" string => execresult("$(G.diff) -u $(file2) $(file1) 2>/dev/null", "useshell");
+        "diffu" string => execresult("$(G.diff) -u $(file2) $(file1) 2>$(G.dev_null)", "useshell");
     DEBUG.check_ready.!no_difference.!has_unified_diff::
-        "diffu" string => execresult("$(G.diff) -c $(file2) $(file1) 2>/dev/null", "useshell");
+        "diffu" string => execresult("$(G.diff) -c $(file2) $(file1) 2>$(G.dev_null)", "useshell");
 
 classes:
     "has_unified_diff" expression => returnszero(
-      "$(G.diff) -u /dev/null /dev/null >/dev/null 2>/dev/null", "useshell");
+      "$(G.diff) -u $(G.etc_null) $(G.etc_null) >$(G.dev_null) 2>&1", "useshell");
 
     "no_difference" expression => returnszero(
-        "$(G.diff) $(file1) $(file2) >/dev/null 2>/dev/null",
+        "$(G.diff) $(file1) $(file2) >$(G.dev_null) 2>&1",
         "useshell");
 
     "expected_difference" expression => strcmp("$(expected_difference)", "yes");

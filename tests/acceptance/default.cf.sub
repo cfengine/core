@@ -61,246 +61,246 @@
 
 bundle common G
 {
-vars:
-  windows::
-    "cwd" string => execresult("C:\windows\system32\cmd.exe /C cd", "noshell");
-    # Use for redirection, not as a real file.
-    "dev_null" string => "nul";
-    "exeext" slist => { ".exe", ".bat" };
-  !windows::
-    "cwd" string => execresult("/bin/pwd 2>/dev/null || /usr/bin/pwd", "useshell");
-    # Use for redirection, not as a real file.
-    "dev_null" string => "/dev/null";
-    "exeext" string => "";
+  vars:
+    windows::
+      "cwd" string => execresult("C:\windows\system32\cmd.exe /C cd", "noshell");
+      # Use for redirection, not as a real file.
+      "dev_null" string => "nul";
+      "exeext" slist => { ".exe", ".bat" };
+    !windows::
+      "cwd" string => execresult("/bin/pwd 2>/dev/null || /usr/bin/pwd", "useshell");
+      # Use for redirection, not as a real file.
+      "dev_null" string => "/dev/null";
+      "exeext" string => "";
 
-  any::
-  "cmds" slist => { "date", "diff", "echo", "egrep", "false", "grep", "gzip", "hexdump",
-                    "ln", "mkdir", "od", "perl", "printf", "pwd", "rm", "sort", "touch",
-                    "true", "wc", "cat", "sed", "psexec", "seq" };
+    any::
+      "cmds" slist => { "date", "diff", "echo", "egrep", "false", "grep", "gzip", "hexdump",
+                        "ln", "mkdir", "od", "perl", "printf", "pwd", "rm", "sort", "touch",
+                        "true", "wc", "cat", "sed", "psexec", "seq" };
 
-  !windows::
-    "paths[bin]" string                    => "/bin";
-    "paths[usr_bin]" string                => "/usr/bin";
-    "paths[usr_local_bin]" string          => "/usr/local/bin";
-    "paths[usr_contrib_bin]" string        => "/usr/contrib/bin";
-  windows::
-    "paths[mingw_msys_1_0_bin]" string     => "c:\\mingw\\msys\\1.0\\bin";
-    "paths[msys_1_0_bin]" string           => "c:\\msys\\1.0\\bin";
-    "paths[msys_bin]" string               => "c:\\msys\\bin";
-    "paths[pstools]" string                => "c:\\PSTools";
-    "paths[strawberry_perl_bin]" string    => "c:\\strawberry\\perl\\bin";
-    "paths[local]" string                  => "$(this.promise_dirname)\\tool_wrappers";
+    !windows::
+      "paths[bin]" string                    => "/bin";
+      "paths[usr_bin]" string                => "/usr/bin";
+      "paths[usr_local_bin]" string          => "/usr/local/bin";
+      "paths[usr_contrib_bin]" string        => "/usr/contrib/bin";
+    windows::
+      "paths[mingw_msys_1_0_bin]" string     => "c:\\mingw\\msys\\1.0\\bin";
+      "paths[msys_1_0_bin]" string           => "c:\\msys\\1.0\\bin";
+      "paths[msys_bin]" string               => "c:\\msys\\bin";
+      "paths[pstools]" string                => "c:\\PSTools";
+      "paths[strawberry_perl_bin]" string    => "c:\\strawberry\\perl\\bin";
+      "paths[local]" string                  => "$(this.promise_dirname)\\tool_wrappers";
 
-  any::
-  "paths_indices" slist => getindices("paths");
+    any::
+      "paths_indices" slist => getindices("paths");
 
-classes:
-  "$(paths_indices)_$(cmds)$(exeext)" expression => fileexists("$(paths[$(paths_indices)])$(const.dirsep)$(cmds)$(exeext)");
-  "has_$(cmds)"                       expression => fileexists("$(paths[$(paths_indices)])$(const.dirsep)$(cmds)$(exeext)"),
-    scope => "namespace";
+  classes:
+      "$(paths_indices)_$(cmds)$(exeext)" expression => fileexists("$(paths[$(paths_indices)])$(const.dirsep)$(cmds)$(exeext)");
+      "has_$(cmds)"                       expression => fileexists("$(paths[$(paths_indices)])$(const.dirsep)$(cmds)$(exeext)"),
+      scope => "namespace";
 
-vars:
-  "$(cmds)" string => "$(paths[$(paths_indices)])$(const.dirsep)$(cmds)$(exeext)",
-    ifvarclass => canonify("$(paths_indices)_$(cmds)$(exeext)");
+  vars:
+      "$(cmds)" string => "$(paths[$(paths_indices)])$(const.dirsep)$(cmds)$(exeext)",
+      ifvarclass => canonify("$(paths_indices)_$(cmds)$(exeext)");
 
-classes:
-  "temp_declared" not => strcmp(getenv("TEMP", "65536"), "");
+  classes:
+      "temp_declared" not => strcmp(getenv("TEMP", "65536"), "");
 
-vars:
-    "etc" string => "$(this.promise_dirname)$(const.dirsep)dummy_etc";
-    "etc_motd" string => "$(this.promise_dirname)$(const.dirsep)dummy_etc$(const.dirsep)motd";
-    "etc_passwd" string => "$(this.promise_dirname)$(const.dirsep)dummy_etc$(const.dirsep)passwd";
-    "etc_shadow" string => "$(this.promise_dirname)$(const.dirsep)dummy_etc$(const.dirsep)shadow";
-    "etc_group" string => "$(this.promise_dirname)$(const.dirsep)dummy_etc$(const.dirsep)group";
-    # Use instead of /dev/null when you need a real empty file to open.
-    "etc_null" string => "$(this.promise_dirname)$(const.dirsep)dummy_etc$(const.dirsep)null";
+  vars:
+      "etc" string => "$(this.promise_dirname)$(const.dirsep)dummy_etc";
+      "etc_motd" string => "$(this.promise_dirname)$(const.dirsep)dummy_etc$(const.dirsep)motd";
+      "etc_passwd" string => "$(this.promise_dirname)$(const.dirsep)dummy_etc$(const.dirsep)passwd";
+      "etc_shadow" string => "$(this.promise_dirname)$(const.dirsep)dummy_etc$(const.dirsep)shadow";
+      "etc_group" string => "$(this.promise_dirname)$(const.dirsep)dummy_etc$(const.dirsep)group";
+      # Use instead of /dev/null when you need a real empty file to open.
+      "etc_null" string => "$(this.promise_dirname)$(const.dirsep)dummy_etc$(const.dirsep)null";
 
-  temp_declared::
-    "testroot" string => getenv("TEMP", "65535");
-    "testdir" string => concat(getenv("TEMP", "65535"), "$(const.dirsep)TEST.cfengine");
-    "testfile" string => concat(getenv("TEMP", "65535"), "$(const.dirsep)TEST.cfengine");
+    temp_declared::
+      "testroot" string => getenv("TEMP", "65535");
+      "testdir" string => concat(getenv("TEMP", "65535"), "$(const.dirsep)TEST.cfengine");
+      "testfile" string => concat(getenv("TEMP", "65535"), "$(const.dirsep)TEST.cfengine");
 
-  !temp_declared::
-    "testroot" string => "$(const.dirsep)tmp";
-    "testdir" string => "$(const.dirsep)tmp$(const.dirsep)TEST.cfengine";
-    "testfile" string => "$(const.dirsep)tmp$(const.dirsep)TEST.cfengine";
+    !temp_declared::
+      "testroot" string => "$(const.dirsep)tmp";
+      "testdir" string => "$(const.dirsep)tmp$(const.dirsep)TEST.cfengine";
+      "testfile" string => "$(const.dirsep)tmp$(const.dirsep)TEST.cfengine";
 
 }
 
 bundle common paths_init(filename)
 {
-classes:
-  "filename_absolute" expression => regcmp("/.*", "$(filename)");
+  classes:
+      "filename_absolute" expression => regcmp("/.*", "$(filename)");
 }
 
 bundle common paths_absolute(filename)
 {
-vars:
-  filename_absolute::
-    "input_file"
+  vars:
+    filename_absolute::
+      "input_file"
       string => "$(filename)";
-  !filename_absolute::
-    "input_file"
+    !filename_absolute::
+      "input_file"
       string => "$(G.cwd)/$(filename)";
 }
 
 bundle agent default(filename)
 {
-methods:
-    "any" usebundle => test_precheck;
+  methods:
+      "any" usebundle => test_precheck;
 
-  proceed_with_test::
-    "any" usebundle => test_run("$(filename)");
+    proceed_with_test::
+      "any" usebundle => test_run("$(filename)");
 }
 
 bundle agent test_precheck
 {
-vars:
-    "test_skip_unsupported" slist => variablesmatching(".*_meta\.test_skip_unsupported");
-    "test_skip_needs_work" slist => variablesmatching(".*_meta\.test_skip_needs_work");
-    "test_suppress_fail" slist => variablesmatching(".*_meta\.test_suppress_fail");
-    "test_suppress_fail_metatags" slist => getvariablemetatags("$(test_suppress_fail)");
-    "test_suppress_fail_redmine" slist => filter("redmine.*", "test_suppress_fail_metatags", "true", "false", 1);
+  vars:
+      "test_skip_unsupported" slist => variablesmatching(".*_meta\.test_skip_unsupported");
+      "test_skip_needs_work" slist => variablesmatching(".*_meta\.test_skip_needs_work");
+      "test_suppress_fail" slist => variablesmatching(".*_meta\.test_suppress_fail");
+      "test_suppress_fail_metatags" slist => getvariablemetatags("$(test_suppress_fail)");
+      "test_suppress_fail_redmine" slist => filter("redmine.*", "test_suppress_fail_metatags", "true", "false", 1);
 
-classes:
-    "test_skip_unsupported_set" expression => some(".*", "test_skip_unsupported");
-    "test_skip_needs_work_set" expression => some(".*", "test_skip_needs_work");
-    "test_suppress_fail_set" expression => some(".*", "test_suppress_fail");
-    "test_suppress_fail_redmine_set" expression => some(".*", "test_suppress_fail_redmine");
+  classes:
+      "test_skip_unsupported_set" expression => some(".*", "test_skip_unsupported");
+      "test_skip_needs_work_set" expression => some(".*", "test_skip_needs_work");
+      "test_suppress_fail_set" expression => some(".*", "test_suppress_fail");
+      "test_suppress_fail_redmine_set" expression => some(".*", "test_suppress_fail_redmine");
 
-    "test_skip_unsupported_match" and => { "test_skip_unsupported_set", "$($(test_skip_unsupported))" };
-    "test_skip_needs_work_match" and => { "test_skip_needs_work_set", "$($(test_skip_needs_work))" };
-    "test_suppress_fail_match" and => { "test_suppress_fail_set", "$($(test_suppress_fail))" };
+      "test_skip_unsupported_match" and => { "test_skip_unsupported_set", "$($(test_skip_unsupported))" };
+      "test_skip_needs_work_match" and => { "test_skip_needs_work_set", "$($(test_skip_needs_work))" };
+      "test_suppress_fail_match" and => { "test_suppress_fail_set", "$($(test_suppress_fail))" };
 
-    "proceed_with_test"
+      "proceed_with_test"
       and => { "!test_skip_unsupported_match", "!test_skip_needs_work_match" },
       scope => "namespace";
 
-reports:
-  test_skip_unsupported_match::
-    "$(this.promise_filename) Skip/unsupported";
-  test_skip_needs_work_match::
-    "$(this.promise_filename) Skip/needs_work";
-  test_suppress_fail_match.test_suppress_fail_redmine_set::
-    "$(this.promise_filename) XFAIL/$(test_suppress_fail_redmine)";
-  test_suppress_fail_match.!test_suppress_fail_redmine_set::
-    "$(this.promise_filename) FAIL/no_redmine_number";
+  reports:
+    test_skip_unsupported_match::
+      "$(this.promise_filename) Skip/unsupported";
+    test_skip_needs_work_match::
+      "$(this.promise_filename) Skip/needs_work";
+    test_suppress_fail_match.test_suppress_fail_redmine_set::
+      "$(this.promise_filename) XFAIL/$(test_suppress_fail_redmine)";
+    test_suppress_fail_match.!test_suppress_fail_redmine_set::
+      "$(this.promise_filename) FAIL/no_redmine_number";
 }
 
 bundle agent test_run(filename)
 {
-vars:
-    "tests" slist => { "init", "test", "check" };
+  vars:
+      "tests" slist => { "init", "test", "check" };
 
-methods:
-    "any"
+  methods:
+      "any"
       usebundle => paths_init("$(filename)");
-    "any"
+      "any"
       usebundle => paths_absolute("$(filename)");
 
-  AUTO::
-    "any" usebundle => "$(tests)";
+    AUTO::
+      "any" usebundle => "$(tests)";
 
-reports:
+  reports:
     !AUTO::
-    "# You must either specify '-D AUTO' or run the following commands:";
-    "cf-agent -f .$(const.dirsep)$(filename) -b $(tests)";
+      "# You must either specify '-D AUTO' or run the following commands:";
+      "cf-agent -f .$(const.dirsep)$(filename) -b $(tests)";
 }
 
 #######################################################
 
 bundle agent default_sort(infile, outfile)
 {
-commands:
-    "$(G.sort) $(infile) > $(outfile)"
-    contain => default_shell_command;
+  commands:
+      "$(G.sort) $(infile) > $(outfile)"
+      contain => default_shell_command;
 }
 
 bundle agent default_check_diff(file1, file2, test)
 {
-methods:
-        "any" usebundle => check_diff("$(file1)", "$(file2)", "$(test)", "no");
+  methods:
+      "any" usebundle => check_diff("$(file1)", "$(file2)", "$(test)", "no");
 }
 
 bundle agent sorted_check_diff(file1, file2, test)
 {
-methods:
-        "any" usebundle => default_sort("$(file1)", "$(file1).sort");
-        "any" usebundle => default_sort("$(file2)", "$(file2).sort");
-        "any" usebundle => check_diff("$(file1).sort", "$(file2).sort", "$(test)", "no");
+  methods:
+      "any" usebundle => default_sort("$(file1)", "$(file1).sort");
+      "any" usebundle => default_sort("$(file2)", "$(file2).sort");
+      "any" usebundle => check_diff("$(file1).sort", "$(file2).sort", "$(test)", "no");
 }
 
 bundle agent xml_check_diff(file1, file2, test, expected_difference)
 {
-vars:
+  vars:
     DEBUG.check_ready.!no_difference::
-        "file1r" string => execresult("$(G.cwd)/xml-c14nize $(file1)", "noshell");
-        "file2r" string => execresult("$(G.cwd)/xml-c14nize $(file2)", "noshell");
+      "file1r" string => execresult("$(G.cwd)/xml-c14nize $(file1)", "noshell");
+      "file2r" string => execresult("$(G.cwd)/xml-c14nize $(file2)", "noshell");
 
     DEBUG.check_ready.!no_difference.has_hexdump::
-        "file1h" string => execresult("$(G.hexdump) -C $(file1)", "useshell");
-        "file2h" string => execresult("$(G.hexdump) -C $(file2)", "useshell");
+      "file1h" string => execresult("$(G.hexdump) -C $(file1)", "useshell");
+      "file2h" string => execresult("$(G.hexdump) -C $(file2)", "useshell");
 
     DEBUG.check_ready.!no_difference.!has_hexdump::
-        "file1h" string => execresult("$(G.od) -c $(file1)", "useshell");
-        "file2h" string => execresult("$(G.od) -c $(file2)", "useshell");
+      "file1h" string => execresult("$(G.od) -c $(file1)", "useshell");
+      "file2h" string => execresult("$(G.od) -c $(file2)", "useshell");
 
     DEBUG.check_ready.!no_difference.has_unified_diff::
-        "diffu" string => execresult("$(G.diff) -u $(file2) $(file1) 2>$(G.dev_null)", "useshell");
+      "diffu" string => execresult("$(G.diff) -u $(file2) $(file1) 2>$(G.dev_null)", "useshell");
     DEBUG.check_ready.!no_difference.!has_unified_diff::
-        "diffu" string => execresult("$(G.diff) -c $(file2) $(file1) 2>$(G.dev_null)", "useshell");
+      "diffu" string => execresult("$(G.diff) -c $(file2) $(file1) 2>$(G.dev_null)", "useshell");
 
-classes:
-    "has_unified_diff" expression => returnszero(
-      "$(G.diff) -u $(G.etc_null) $(G.etc_null) >$(G.dev_null) 2>&1", "useshell");
+  classes:
+      "has_unified_diff" expression => returnszero(
+                                                    "$(G.diff) -u $(G.etc_null) $(G.etc_null) >$(G.dev_null) 2>&1", "useshell");
 
-  c14n_files_created::
-    "no_difference" expression => returnszero(
-        "$(G.diff) $(G.testfile).default-xml-check-diff-1 $(G.testfile).default-xml-check-diff-2 >$(G.dev_null) 2>&1",
-        "useshell");
+    c14n_files_created::
+      "no_difference" expression => returnszero(
+                                                 "$(G.diff) $(G.testfile).default-xml-check-diff-1 $(G.testfile).default-xml-check-diff-2 >$(G.dev_null) 2>&1",
+                                                 "useshell");
 
-    "expected_difference" expression => strcmp("$(expected_difference)", "yes");
-    "check_ready" expression => "any";
+      "expected_difference" expression => strcmp("$(expected_difference)", "yes");
+      "check_ready" expression => "any";
 
-commands:
-    "$(G.cwd)/xml-c14nize $(file1) > $(G.testfile).default-xml-check-diff-1"
+  commands:
+      "$(G.cwd)/xml-c14nize $(file1) > $(G.testfile).default-xml-check-diff-1"
       contain => default_cf_sub_shell;
-    "$(G.cwd)/xml-c14nize $(file2) > $(G.testfile).default-xml-check-diff-2"
+      "$(G.cwd)/xml-c14nize $(file2) > $(G.testfile).default-xml-check-diff-2"
       contain => default_cf_sub_shell,
       classes => default_cf_sub_if_ok("c14n_files_created");
 
-reports:
+  reports:
     check_ready.no_difference.!expected_difference::
-    "$(test) Pass";
+      "$(test) Pass";
     check_ready.!no_difference.expected_difference::
-    "$(test) Pass";
+      "$(test) Pass";
     check_ready.!no_difference.!expected_difference::
-    "$(test) FAIL";
+      "$(test) FAIL";
     check_ready.no_difference.expected_difference::
-    "$(test) FAIL";
+      "$(test) FAIL";
 
     DEBUG.check_ready.!no_difference.!expected_difference::
-        "$(file1) and $(file2) differ:";
-        "$(file1): <$(file1r)>";
-        "$(file2): <$(file2r)>";
-        "dump $(file1):
+      "$(file1) and $(file2) differ:";
+      "$(file1): <$(file1r)>";
+      "$(file2): <$(file2r)>";
+      "dump $(file1):
 $(file1h)";
-        "dump $(file2):
+      "dump $(file2):
 $(file2h)";
-        "$(diffu)";
+      "$(diffu)";
     DEBUG.check_ready.no_difference.expected_difference::
-        "Contents of $(file1) and $(file) is the same.";
+      "Contents of $(file1) and $(file) is the same.";
 }
 
 body contain default_cf_sub_shell
 {
-useshell => "true";
+      useshell => "true";
 }
 
 body classes default_cf_sub_if_ok(x)
 {
-  promise_repaired => { "$(x)" };
-  promise_kept => { "$(x)" };
+      promise_repaired => { "$(x)" };
+      promise_kept => { "$(x)" };
 }
 
 body classes default_cf_sub_scoped_generic_classes(x, scope)
@@ -328,73 +328,73 @@ bundle agent default_cf_sub_report_generic_classes(x)
 # regardless of outcome.
 body classes default_cf_sub_set_class(x)
 {
-  promise_repaired => { "$(x)" };
-  promise_kept => { "$(x)" };
-  repair_failed => { "$(x)" };
-  repair_denied => { "$(x)" };
-  repair_timeout => { "$(x)" };
+      promise_repaired => { "$(x)" };
+      promise_kept => { "$(x)" };
+      repair_failed => { "$(x)" };
+      repair_denied => { "$(x)" };
+      repair_timeout => { "$(x)" };
 }
 
 bundle agent check_diff(file1, file2, test, expected_difference)
 {
-vars:
+  vars:
     DEBUG.check_ready.!no_difference::
-        "file1r" string => readfile("$(file1)", "99999999");
-        "file2r" string => readfile("$(file2)", "99999999");
+      "file1r" string => readfile("$(file1)", "99999999");
+      "file2r" string => readfile("$(file2)", "99999999");
 
     DEBUG_HEXDUMP.check_ready.!no_difference.has_hexdump::
-        "file1h" string => execresult("$(G.hexdump) -C $(file1)", "useshell");
-        "file2h" string => execresult("$(G.hexdump) -C $(file2)", "useshell");
+      "file1h" string => execresult("$(G.hexdump) -C $(file1)", "useshell");
+      "file2h" string => execresult("$(G.hexdump) -C $(file2)", "useshell");
 
     DEBUG_HEXDUMP.check_ready.!no_difference.!has_hexdump::
-        "file1h" string => execresult("$(G.od) -c $(file1)", "useshell");
-        "file2h" string => execresult("$(G.od) -c $(file2)", "useshell");
+      "file1h" string => execresult("$(G.od) -c $(file1)", "useshell");
+      "file2h" string => execresult("$(G.od) -c $(file2)", "useshell");
 
     DEBUG.check_ready.!no_difference.has_unified_diff::
-        "diffu" string => execresult("$(G.diff) -u $(file2) $(file1) 2>$(G.dev_null)", "useshell");
+      "diffu" string => execresult("$(G.diff) -u $(file2) $(file1) 2>$(G.dev_null)", "useshell");
     DEBUG.check_ready.!no_difference.!has_unified_diff::
-        "diffu" string => execresult("$(G.diff) -c $(file2) $(file1) 2>$(G.dev_null)", "useshell");
+      "diffu" string => execresult("$(G.diff) -c $(file2) $(file1) 2>$(G.dev_null)", "useshell");
 
-classes:
-    "has_unified_diff" expression => returnszero(
-      "$(G.diff) -u $(G.etc_null) $(G.etc_null) >$(G.dev_null) 2>&1", "useshell");
+  classes:
+      "has_unified_diff" expression => returnszero(
+                                                    "$(G.diff) -u $(G.etc_null) $(G.etc_null) >$(G.dev_null) 2>&1", "useshell");
 
-    "no_difference" expression => returnszero(
-        "$(G.diff) $(file1) $(file2) >$(G.dev_null) 2>&1",
-        "useshell");
+      "no_difference" expression => returnszero(
+                                                 "$(G.diff) $(file1) $(file2) >$(G.dev_null) 2>&1",
+                                                 "useshell");
 
-    "expected_difference" expression => strcmp("$(expected_difference)", "yes");
-    "check_ready" expression => "any";
+      "expected_difference" expression => strcmp("$(expected_difference)", "yes");
+      "check_ready" expression => "any";
 
-reports:
+  reports:
     check_ready.no_difference.!expected_difference::
-    "$(test) Pass";
+      "$(test) Pass";
     check_ready.!no_difference.expected_difference::
-    "$(test) Pass";
+      "$(test) Pass";
     check_ready.!no_difference.!expected_difference::
-    "$(test) FAIL";
+      "$(test) FAIL";
     check_ready.no_difference.expected_difference::
-    "$(test) FAIL";
+      "$(test) FAIL";
 
     DEBUG.check_ready.!no_difference.!expected_difference::
-        "FILES DIFFER BUT SHOULD BE THE SAME";
-        "CONTENTS OF $(file1):
+      "FILES DIFFER BUT SHOULD BE THE SAME";
+      "CONTENTS OF $(file1):
 $(file1r)";
-        "CONTENTS OF $(file2):
+      "CONTENTS OF $(file2):
 $(file2r)";
-        "$(diffu)";
+      "$(diffu)";
     DEBUG_HEXDUMP.check_ready.!no_difference.!expected_difference::
-        "hexdump $(file1):
+      "hexdump $(file1):
 $(file1h)";
-        "hexdump $(file2):
+      "hexdump $(file2):
 $(file2h)";
     DEBUG.check_ready.no_difference.expected_difference::
-        "Contents of $(file1) and $(file) are the same but should differ.";
+      "Contents of $(file1) and $(file) are the same but should differ.";
 }
 
 body contain default_shell_command
 {
-useshell => "true";
+      useshell => "true";
 }
 
 #######################################################
@@ -404,11 +404,11 @@ useshell => "true";
 
 bundle agent default_fini(file)
 {
-commands:
-  "$(G.rm) -rf $(file)*"
-    contain => useshell;
-  "$(G.rm) -rf $(sys.workdir)/state/cf_state.*"
-    contain => useshell;
+  commands:
+      "$(G.rm) -rf $(file)*"
+      contain => useshell;
+      "$(G.rm) -rf $(sys.workdir)/state/cf_state.*"
+      contain => useshell;
 }
 
 bundle agent default_cf_sub_makefile(file, str)
@@ -436,8 +436,8 @@ body edit_defaults default_cf_sub_empty
 
 body contain useshell
 {
-  useshell => "true";
-  chdir => "/";
+      useshell => "true";
+      chdir => "/";
 }
 
 #######################################################
@@ -471,7 +471,7 @@ bundle agent default_check_regcmp(regex, thestring, test, expected_mismatch)
   classes:
       "matched" expression => regcmp($(regex), $(thestring));
       "expected_mismatch" or => { strcmp($(expected_mismatch), "yes"),
-                                    strcmp($(expected_mismatch), "true") };
+                                  strcmp($(expected_mismatch), "true") };
   reports:
     DEBUG::
       "REGEX: '$(regex)'";

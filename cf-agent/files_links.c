@@ -98,7 +98,7 @@ PromiseResult VerifyLink(EvalContext *ctx, char *destination, const char *source
     {
         Log(LOG_LEVEL_INFO, "Source '%s' for linking is absent", absto);
         cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, pp, attr, "Unable to create link '%s' -> '%s', no source", destination, to);
-        return PROMISE_RESULT_WARN;
+        return PROMISE_RESULT_FAIL;
     }
 
     if ((!source_file_exists) && (attr.link.when_no_file == cfa_delete))
@@ -123,7 +123,7 @@ PromiseResult VerifyLink(EvalContext *ctx, char *destination, const char *source
             PromiseResult result = PROMISE_RESULT_NOOP;
             if (!MoveObstruction(ctx, destination, attr, pp, &result))
             {
-                cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, pp, attr, "Unable to create link '%s' -> '%s'", destination, to);
+                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Unable to create link '%s' -> '%s', failed to move obstruction", destination, to);
                 result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
                 return result;
             }
@@ -134,6 +134,7 @@ PromiseResult VerifyLink(EvalContext *ctx, char *destination, const char *source
             }
             else
             {
+                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Unable to create link '%s' -> '%s'", destination, to);
                 result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
             }
 
@@ -352,7 +353,7 @@ PromiseResult VerifyHardLink(EvalContext *ctx, char *destination, const char *so
     {
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr,
              "Source file '%s' is not a regular file, not appropriate to hard-link", to);
-        return PROMISE_RESULT_WARN;
+        return PROMISE_RESULT_FAIL;
     }
 
     Log(LOG_LEVEL_DEBUG, "Trying to hard link '%s' -> '%s'", destination, to);
@@ -390,6 +391,7 @@ PromiseResult VerifyHardLink(EvalContext *ctx, char *destination, const char *so
     PromiseResult result = PROMISE_RESULT_NOOP;
     if (!MoveObstruction(ctx, destination, attr, pp, &result))
     {
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Unable to create hard link '%s' -> '%s', unable to move obstruction", destination, to);
         result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
         return result;
     }
@@ -400,6 +402,7 @@ PromiseResult VerifyHardLink(EvalContext *ctx, char *destination, const char *so
     }
     else
     {
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Unable to create hard link '%s' -> '%s'", destination, to);
         result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
     }
 

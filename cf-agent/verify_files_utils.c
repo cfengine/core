@@ -638,21 +638,21 @@ static PromiseResult PurgeLocalFiles(EvalContext *ctx, Item *filelist, const cha
                 {
                     if (!DeleteDirectoryTree(filename))
                     {
-                        cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, pp, attr, "Unable to purge directory tree '%s'", filename);
+                        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Unable to purge directory tree '%s'", filename);
                         result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
                     }
                     else if (rmdir(filename) == -1)
                     {
                         if (errno != ENOENT)
                         {
-                            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, pp, attr, "Unable to purge directory '%s'", filename);
+                            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Unable to purge directory '%s'", filename);
                             result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
                         }
                     }
                 }
                 else if (unlink(filename) == -1)
                 {
-                    cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, pp, attr, "Couldn't delete '%s' while purging", filename);
+                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Couldn't delete '%s' while purging", filename);
                     result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
                 }
             }
@@ -926,7 +926,7 @@ static PromiseResult VerifyCopy(EvalContext *ctx, char *source, char *destinatio
 
         if ((dirh = AbstractDirOpen(sourcedir, attr.copy, conn)) == NULL)
         {
-            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, pp, attr, "Can't open directory '%s'. (opendir: %s)",
+            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Can't open directory '%s'. (opendir: %s)",
                  sourcedir, GetErrorStr());
             return PROMISE_RESULT_FAIL;
         }
@@ -1326,7 +1326,7 @@ bool CopyRegularFile(EvalContext *ctx, const char *source, const char *dest, str
 
         if (CompareFileHashes(source, new, &sstat, &dstat, attr.copy, conn))
         {
-            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, pp, attr,
+            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr,
                  "New file '%s' seems to have been corrupted in transit, aborting.", new);
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
 
@@ -1810,7 +1810,7 @@ static PromiseResult VerifyDelete(EvalContext *ctx, char *path, struct stat *sb,
             {
                 if (unlink(lastnode) == -1)
                 {
-                    cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, pp, attr, "Couldn't unlink '%s' tidying. (unlink: %s)",
+                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Couldn't unlink '%s' tidying. (unlink: %s)",
                          path, GetErrorStr());
                     result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
                 }
@@ -1848,7 +1848,7 @@ static PromiseResult VerifyDelete(EvalContext *ctx, char *path, struct stat *sb,
 
                 if (rmdir(buf) == -1)
                 {
-                    cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, pp, attr,
+                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr,
                          "Delete directory '%s' failed (cannot delete node called '%s'). (rmdir: %s)",
                          path, buf, GetErrorStr());
                     result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);

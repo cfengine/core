@@ -312,7 +312,7 @@ static int PackageSanityCheck(EvalContext *ctx, Attributes a, const Promise *pp)
 
     if (!a.packages.package_installed_regex)
     {
-        cfPS_HELPER_0ARG(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, pp, a, "!! Package installed regex undefined");
+        cfPS_HELPER_0ARG(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "!! Package installed regex undefined");
         return false;
     }
 
@@ -320,13 +320,13 @@ static int PackageSanityCheck(EvalContext *ctx, Attributes a, const Promise *pp)
     {
         if (!a.packages.package_verify_command)
         {
-            cfPS_HELPER_0ARG(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, pp, a,
+            cfPS_HELPER_0ARG(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a,
                  "!! Package verify policy is used, but no package_verify_command is defined");
             return false;
         }
         else if ((a.packages.package_noverify_returncode == CF_NOINT) && (a.packages.package_noverify_regex == NULL))
         {
-            cfPS_HELPER_0ARG(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, pp, a,
+            cfPS_HELPER_0ARG(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a,
                  "!! Package verify policy is used, but no definition of verification failiure is set (package_noverify_returncode or packages.package_noverify_regex)");
             return false;
         }
@@ -334,7 +334,7 @@ static int PackageSanityCheck(EvalContext *ctx, Attributes a, const Promise *pp)
 
     if ((a.packages.package_noverify_returncode != CF_NOINT) && (a.packages.package_noverify_regex))
     {
-        cfPS_HELPER_0ARG(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, pp, a,
+        cfPS_HELPER_0ARG(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a,
              "!! Both package_noverify_returncode and package_noverify_regex are defined, pick one of them");
         return false;
     }
@@ -344,7 +344,7 @@ static int PackageSanityCheck(EvalContext *ctx, Attributes a, const Promise *pp)
     {
         if (a.packages.package_delete_convention)
         {
-            cfPS_HELPER_0ARG(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, pp, a,
+            cfPS_HELPER_0ARG(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a,
                  "!! Dependency conflict: package_delete_command is not used, but package_delete_convention is defined.");
             return false;
         }
@@ -353,25 +353,25 @@ static int PackageSanityCheck(EvalContext *ctx, Attributes a, const Promise *pp)
     {
         if (a.packages.package_installed_regex)
         {
-            cfPS_HELPER_0ARG(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, pp, a,
+            cfPS_HELPER_0ARG(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a,
                  "!! Dependency conflict: package_list_command is not used, but package_installed_regex is defined.");
             return false;
         }
         if (a.packages.package_list_arch_regex)
         {
-            cfPS_HELPER_0ARG(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, pp, a,
+            cfPS_HELPER_0ARG(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a,
                  "!! Dependency conflict: package_list_command is not used, but package_arch_regex is defined.");
             return false;
         }
         if (a.packages.package_list_name_regex)
         {
-            cfPS_HELPER_0ARG(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, pp, a,
+            cfPS_HELPER_0ARG(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a,
                  "!! Dependency conflict: package_list_command is not used, but package_name_regex is defined.");
             return false;
         }
         if (a.packages.package_list_version_regex)
         {
-            cfPS_HELPER_0ARG(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, pp, a,
+            cfPS_HELPER_0ARG(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a,
                  "!! Dependency conflict: package_list_command is not used, but package_version_regex is defined.");
             return false;
         }
@@ -380,19 +380,19 @@ static int PackageSanityCheck(EvalContext *ctx, Attributes a, const Promise *pp)
     {
         if (a.packages.package_patch_arch_regex)
         {
-            cfPS_HELPER_0ARG(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, pp, a,
+            cfPS_HELPER_0ARG(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a,
                  "!! Dependency conflict: package_patch_command is not used, but package_patch_arch_regex is defined.");
             return false;
         }
         if (a.packages.package_patch_name_regex)
         {
-            cfPS_HELPER_0ARG(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, pp, a,
+            cfPS_HELPER_0ARG(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a,
                  "!! Dependency conflict: package_patch_command is not used, but package_patch_name_regex is defined.");
             return false;
         }
         if (a.packages.package_patch_version_regex)
         {
-            cfPS_HELPER_0ARG(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, pp, a,
+            cfPS_HELPER_0ARG(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a,
                  "!! Dependency conflict: package_patch_command is not used, but package_patch_version_regex is defined.");
             return false;
         }
@@ -401,7 +401,7 @@ static int PackageSanityCheck(EvalContext *ctx, Attributes a, const Promise *pp)
     {
         if (a.packages.package_patch_installed_regex)
         {
-            cfPS_HELPER_0ARG(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, pp, a,
+            cfPS_HELPER_0ARG(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a,
                  "!! Dependency conflict: package_patch_list_command is not used, but package_patch_installed_regex is defined.");
             return false;
         }
@@ -410,13 +410,13 @@ static int PackageSanityCheck(EvalContext *ctx, Attributes a, const Promise *pp)
     {
         if (a.packages.package_noverify_regex)
         {
-            cfPS_HELPER_0ARG(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, pp, a,
+            cfPS_HELPER_0ARG(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a,
                  "!! Dependency conflict: package_verify_command is not used, but package_noverify_regex is defined.");
             return false;
         }
         if (a.packages.package_noverify_returncode != CF_NOINT)
         {
-            cfPS_HELPER_0ARG(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, pp, a,
+            cfPS_HELPER_0ARG(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a,
                  "!! Dependency conflict: package_verify_command is not used, but package_noverify_returncode is defined.");
             return false;
         }
@@ -1100,7 +1100,7 @@ static PromiseResult SchedulePackageOp(EvalContext *ctx, const char *name, const
 
             if (a.packages.package_add_command == NULL)
             {
-                cfPS_HELPER_0ARG(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, pp, a, "Package add command undefined");
+                cfPS_HELPER_0ARG(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Package add command undefined");
                 BufferDestroy(expanded);
                 return PROMISE_RESULT_FAIL;
             }
@@ -1124,7 +1124,7 @@ static PromiseResult SchedulePackageOp(EvalContext *ctx, const char *name, const
 
             if (a.packages.package_delete_command == NULL)
             {
-                cfPS_HELPER_0ARG(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, pp, a, "Package delete command undefined");
+                cfPS_HELPER_0ARG(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Package delete command undefined");
                 BufferDestroy(expanded);
                 return PROMISE_RESULT_FAIL;
             }
@@ -1167,7 +1167,7 @@ static PromiseResult SchedulePackageOp(EvalContext *ctx, const char *name, const
     case PACKAGE_ACTION_REINSTALL:
         if (a.packages.package_delete_command == NULL)
         {
-            cfPS_HELPER_0ARG(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, pp, a, "Package delete command undefined");
+            cfPS_HELPER_0ARG(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Package delete command undefined");
             BufferDestroy(expanded);
             return PROMISE_RESULT_FAIL;
         }
@@ -1177,7 +1177,7 @@ static PromiseResult SchedulePackageOp(EvalContext *ctx, const char *name, const
             Log(LOG_LEVEL_VERBOSE, "Schedule package for reinstallation");
             if (a.packages.package_add_command == NULL)
             {
-                cfPS_HELPER_0ARG(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, pp, a, "Package add command undefined");
+                cfPS_HELPER_0ARG(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Package add command undefined");
                 BufferDestroy(expanded);
                 return PROMISE_RESULT_FAIL;
             }
@@ -1320,13 +1320,13 @@ static PromiseResult SchedulePackageOp(EvalContext *ctx, const char *name, const
 
                 if (a.packages.package_add_command == NULL)
                 {
-                    cfPS_HELPER_0ARG(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, pp, a, "Package add command undefined");
+                    cfPS_HELPER_0ARG(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Package add command undefined");
                     BufferDestroy(expanded);
                     return PROMISE_RESULT_FAIL;
                 }
                 if (a.packages.package_delete_command == NULL)
                 {
-                    cfPS_HELPER_0ARG(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, pp, a, "Package delete command undefined");
+                    cfPS_HELPER_0ARG(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Package delete command undefined");
                     BufferDestroy(expanded);
                     return PROMISE_RESULT_FAIL;
                 }
@@ -1881,7 +1881,7 @@ static int ExecuteSchedule(EvalContext *ctx, PackageManager *schedule, PackageAc
 
             if (a.packages.package_add_command == NULL)
             {
-                cfPS_HELPER_0ARG(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, pp, a, "Package add command undefined");
+                cfPS_HELPER_0ARG(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Package add command undefined");
                 return false;
             }
 
@@ -1897,7 +1897,7 @@ static int ExecuteSchedule(EvalContext *ctx, PackageManager *schedule, PackageAc
 
             if (a.packages.package_delete_command == NULL)
             {
-                cfPS_HELPER_0ARG(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, pp, a, "Package delete command undefined");
+                cfPS_HELPER_0ARG(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Package delete command undefined");
                 return false;
             }
 
@@ -1913,7 +1913,7 @@ static int ExecuteSchedule(EvalContext *ctx, PackageManager *schedule, PackageAc
 
             if (a.packages.package_update_command == NULL)
             {
-                cfPS_HELPER_0ARG(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, pp, a, "Package update command undefined");
+                cfPS_HELPER_0ARG(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Package update command undefined");
                 return false;
             }
 
@@ -1930,7 +1930,7 @@ static int ExecuteSchedule(EvalContext *ctx, PackageManager *schedule, PackageAc
 
             if (a.packages.package_verify_command == NULL)
             {
-                cfPS_HELPER_0ARG(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, pp, a, "Package verify command undefined");
+                cfPS_HELPER_0ARG(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Package verify command undefined");
                 return false;
             }
 
@@ -1941,7 +1941,7 @@ static int ExecuteSchedule(EvalContext *ctx, PackageManager *schedule, PackageAc
             break;
 
         default:
-            cfPS_HELPER_0ARG(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, pp, a, "Unknown action attempted");
+            cfPS_HELPER_0ARG(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Unknown action attempted");
             return false;
         }
 
@@ -2145,7 +2145,7 @@ static int ExecutePatch(EvalContext *ctx, PackageManager *schedule, PackageActio
 
             if (a.packages.package_patch_command == NULL)
             {
-                cfPS_HELPER_0ARG(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, pp, a, "Package patch command undefined");
+                cfPS_HELPER_0ARG(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Package patch command undefined");
                 *result = PromiseResultUpdate_HELPER(pp, *result, PROMISE_RESULT_FAIL);
                 return false;
             }
@@ -2155,7 +2155,7 @@ static int ExecutePatch(EvalContext *ctx, PackageManager *schedule, PackageActio
             break;
 
         default:
-            cfPS_HELPER_0ARG(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, pp, a, "Unknown action attempted");
+            cfPS_HELPER_0ARG(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Unknown action attempted");
             *result = PromiseResultUpdate_HELPER(pp, *result, PROMISE_RESULT_FAIL);
             return false;
         }

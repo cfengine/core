@@ -34,6 +34,9 @@ the hash function!";';
 
 bundle agent test
 {
+  meta:
+      "test_skip_needs_work" string => "windows";
+
   vars:
       "algos" slist => { "md5", "sha1", "sha256", "sha384", "sha512" };
 

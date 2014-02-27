@@ -368,14 +368,19 @@ void StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
         {
             int waiting_queue = 0;
             int new_client = CollectCallGetPending(&waiting_queue);
+            assert(new_client >= 0);
             if (waiting_queue > COLLECT_WINDOW)
             {
-                Log(LOG_LEVEL_INFO, "Closing collect call because it would take"
-                                    "longer than the allocated window [%d]", COLLECT_WINDOW);
+                Log(LOG_LEVEL_INFO,
+                    "Closing collect call with queue longer than the allocated window [%d > %d]",
+                    waiting_queue, COLLECT_WINDOW);
+                cf_closesocket(new_client);
             }
-            ConnectionInfo *info = ConnectionInfoNew();
-            if (info)
+            else
             {
+                ConnectionInfo *info = ConnectionInfoNew();
+                assert(info);
+
                 ConnectionInfoSetSocket(info, new_client);
                 ServerEntryPoint(ctx, POLICY_SERVER, info);
                 CollectCallMarkProcessed();

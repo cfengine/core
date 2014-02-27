@@ -216,6 +216,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
 
         case 'v':
             LogSetGlobalLevel(LOG_LEVEL_VERBOSE);
+            NO_FORK = true; // TODO: really?
             break;
 
         case 'n':

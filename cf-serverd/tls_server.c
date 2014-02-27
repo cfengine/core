@@ -401,16 +401,22 @@ int ServerTLSSessionEstablish(ServerConnectionState *conn)
                 ret = SSL_accept(ssl);
                 if (ret <= 0)
                 {
-                    Log(LOG_LEVEL_VERBOSE, "The accept operation was retried and failed");
-                    TLSLogError(ssl, LOG_LEVEL_ERR, "Connection handshake server", ret);
+                    Log(LOG_LEVEL_VERBOSE,
+                        "The accept operation was retried and failed");
+                    TLSLogError(ssl, LOG_LEVEL_ERR,
+                                "Connection handshake server", ret);
                     return -1;
                 }
-                Log(LOG_LEVEL_VERBOSE, "The accept operation was retried and succeeded");
+                Log(LOG_LEVEL_VERBOSE,
+                    "The accept operation was retried and succeeded");
             }
             else
             {
-                Log(LOG_LEVEL_VERBOSE, "The connect operation cannot be retried");
-                TLSLogError(ssl, LOG_LEVEL_ERR, "Connection handshake server", ret);
+                Log(LOG_LEVEL_VERBOSE,
+                    "The connect operation cannot be retried");
+                TLSLogError(ssl, LOG_LEVEL_ERR,
+                            "Connection handshake server",
+                            ret);
                 return -1;
             }
         }
@@ -618,10 +624,9 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
          * allowed per host, and the host could even set argv[0] in his EXEC
          * request, rather than only the arguments. */
 
-        if (acl_CheckPath(paths_acl, arg0,
-                          conn->ipaddr, conn->hostname,
-                          KeyPrintableHash(ConnectionInfoKey(conn->conn_info)))
-            == false)
+        if (!acl_CheckPath(paths_acl, arg0,
+                           conn->ipaddr, conn->hostname,
+                           KeyPrintableHash(ConnectionInfoKey(conn->conn_info))))
         {
             Log(LOG_LEVEL_INFO, "EXEC denied due to ACL for file: %s", arg0);
             RefuseAccess(conn, recvbuffer);
@@ -682,10 +687,9 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
         Log(LOG_LEVEL_VERBOSE, "%14s %7s %s",
             "Translated to:", "GET", filename);
 
-        if (acl_CheckPath(paths_acl, filename,
-                          conn->ipaddr, conn->hostname,
-                          KeyPrintableHash(ConnectionInfoKey(conn->conn_info)))
-            == false)
+        if (!acl_CheckPath(paths_acl, filename,
+                           conn->ipaddr, conn->hostname,
+                           KeyPrintableHash(ConnectionInfoKey(conn->conn_info))))
         {
             Log(LOG_LEVEL_INFO, "access denied to GET: %s", filename);
             RefuseAccess(conn, recvbuffer);
@@ -744,10 +748,9 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
         Log(LOG_LEVEL_VERBOSE, "%14s %7s %s",
             "Translated to:", "OPENDIR", filename);
 
-        if (acl_CheckPath(paths_acl, filename,
-                          conn->ipaddr, conn->hostname,
-                          KeyPrintableHash(ConnectionInfoKey(conn->conn_info)))
-            == false)
+        if (!acl_CheckPath(paths_acl, filename,
+                           conn->ipaddr, conn->hostname,
+                           KeyPrintableHash(ConnectionInfoKey(conn->conn_info))))
         {
             Log(LOG_LEVEL_INFO, "access denied to OPENDIR: %s", filename);
             RefuseAccess(conn, recvbuffer);
@@ -814,10 +817,9 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
         Log(LOG_LEVEL_VERBOSE, "%14s %7s %s",
             "Translated to:", "STAT", filename);
 
-        if (acl_CheckPath(paths_acl, filename,
-                          conn->ipaddr, conn->hostname,
-                          KeyPrintableHash(ConnectionInfoKey(conn->conn_info)))
-            == false)
+        if (!acl_CheckPath(paths_acl, filename,
+                           conn->ipaddr, conn->hostname,
+                           KeyPrintableHash(ConnectionInfoKey(conn->conn_info))))
         {
             Log(LOG_LEVEL_INFO, "access denied to STAT: %s", filename);
             RefuseAccess(conn, recvbuffer);
@@ -856,10 +858,9 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
         }
 
         /* TODO if this is literals_acl, then when should I check vars_acl? */
-        if (acl_CheckExact(literals_acl, var,
-                           conn->ipaddr, conn->hostname,
-                           KeyPrintableHash(ConnectionInfoKey(conn->conn_info)))
-            == false)
+        if (!acl_CheckExact(literals_acl, var,
+                            conn->ipaddr, conn->hostname,
+                            KeyPrintableHash(ConnectionInfoKey(conn->conn_info))))
         {
             Log(LOG_LEVEL_INFO, "access denied to variable: %s", var);
             RefuseAccess(conn, recvbuffer);
@@ -903,8 +904,7 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
 
                     /* Does this ACL apply to this host? */
                     if (access_CheckResource(racl, conn->ipaddr, conn->hostname,
-                                             KeyPrintableHash(ConnectionInfoKey(conn->conn_info)))
-                        == true)
+                                             KeyPrintableHash(ConnectionInfoKey(conn->conn_info))))
                     {
                         const char *allowed_classes_regex =
                             classes_acl->resource_names->list[i]->str;
@@ -942,10 +942,9 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
             goto protocol_error;
         }
 
-        if (acl_CheckExact(query_acl, name,
-                           conn->ipaddr, conn->hostname,
-                           KeyPrintableHash(ConnectionInfoKey(conn->conn_info)))
-            == false)
+        if (!acl_CheckExact(query_acl, name,
+                            conn->ipaddr, conn->hostname,
+                            KeyPrintableHash(ConnectionInfoKey(conn->conn_info))))
         {
             Log(LOG_LEVEL_INFO, "access denied to query: %s", query);
             RefuseAccess(conn, recvbuffer);
@@ -960,11 +959,9 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
         break;
     }
     case PROTOCOL_COMMAND_CALL_ME_BACK:
-
-        if (acl_CheckExact(query_acl, "collect_calls",
-                           conn->ipaddr, conn->hostname,
-                           KeyPrintableHash(ConnectionInfoKey(conn->conn_info)))
-            == false)
+        if (!acl_CheckExact(query_acl, "collect_calls",
+                            conn->ipaddr, conn->hostname,
+                            KeyPrintableHash(ConnectionInfoKey(conn->conn_info))))
         {
             Log(LOG_LEVEL_INFO,
                 "access denied to Call-Collect, check the ACL for class: collect_calls");
@@ -974,9 +971,8 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
 
         return ReceiveCollectCall(conn);
 
-
     case PROTOCOL_COMMAND_BAD:
-
+    default:
         Log(LOG_LEVEL_WARNING, "Unexpected protocol command: %s", recvbuffer);
     }
 

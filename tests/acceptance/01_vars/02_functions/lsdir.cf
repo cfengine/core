@@ -14,6 +14,10 @@ body common control
 bundle common files
 {
   vars:
+    # * in filenames not allowed on win
+    windows::
+      "names" slist => { "a", "bc", "d/e/f", "g/h/i/j", "klm/nop/qrs" };
+    !windows::
       "names" slist => { "a", "bc", "d/e/f", "g/h/i/j", "klm/nop/qrs", "tu/*" };
 }
 
@@ -56,7 +60,11 @@ bundle agent test
 bundle agent check
 {
   vars:
+    windows::
+      "expected[a]" string => "$(G.testdir)$(const.dirsep)a,$(G.testdir)$(const.dirsep)bc,$(G.testdir)$(const.dirsep)d,$(G.testdir)$(const.dirsep)g,$(G.testdir)$(const.dirsep)klm";
+    !windows::
       "expected[a]" string => "$(G.testdir)/a,$(G.testdir)/bc,$(G.testdir)/d,$(G.testdir)/g,$(G.testdir)/klm,$(G.testdir)/tu";
+
       "expected[b]" string => "";
 
       "expects" slist => getindices("expected");

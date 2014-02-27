@@ -1,0 +1,46 @@
+#######################################################
+#
+# Test that copying a file with double directory
+# separators work
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle agent init
+{
+}
+
+bundle agent test
+{
+  vars:
+    "regex" string => escape("$(const.dirsep)");
+    "orig_path" string => translatepath("$(this.promise_filename)");
+    "path_list" slist => splitstring("$(orig_path)", "$(regex)", 100);
+    "path" string => join("$(const.dirsep)$(const.dirsep)", "path_list");
+
+  files:
+    "$(G.testfile)"
+      copy_from => copy_body("$(path)");
+}
+
+body copy_from copy_body(file)
+{
+  source => "$(file)";
+}
+
+bundle agent check
+{
+  reports:
+    DEBUG::
+      "Tested pathname: '$(test.path)'";
+
+  methods:
+      "check" usebundle => default_check_diff("$(this.promise_filename)",
+                                              "$(G.testfile)", "$(this.promise_filename)");
+}

@@ -38,7 +38,7 @@ bundle agent test
 {
   meta:
     "test_suppress_fail" string => "windows",
-      meta => { "redmine4699" };
+      meta => { "redmine4730" };
 }
 
 bundle agent check

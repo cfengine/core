@@ -149,14 +149,8 @@ void ServerEntryPoint(EvalContext *ctx, char *ipaddr, ConnectionInfo *info)
         ThreadUnlock(cft_count);
     }
 
-    if (SV.logconns)
-    {
-        Log(LOG_LEVEL_INFO, "Accepting connection from %s", ipaddr);
-    }
-    else
-    {
-        Log(LOG_LEVEL_INFO, "Accepting connection from %s", ipaddr);
-    }
+    Log(SV.logconns ? LOG_LEVEL_INFO : LOG_LEVEL_VERBOSE,
+        "Accepting connection from %s", ipaddr);
 
     snprintf(intime, 63, "%d", (int) now);
 

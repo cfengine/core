@@ -56,7 +56,7 @@ bundle agent cfe_internal_update
     windows.have_ppkeys::
       "$(sys.inputdir)"
       handle => "cfe_internal_bootstrap_update_files_sys_workdir_inputs_windows",
-      copy_from => u_scp("$(sys.masterdir)"),
+      copy_from => u_scp("/var/cfengine/masterfiles"), # Not $(sys.masterdir) when referring to remote host.
       depth_search => u_recurse("inf"),
       classes => repaired("got_policy");
 

@@ -56,7 +56,7 @@
             "    windows.have_ppkeys::\n"
             "      \"$(sys.inputdir)\"\n"
             "      handle => \"cfe_internal_bootstrap_update_files_sys_workdir_inputs_windows\",\n"
-            "      copy_from => u_scp(\"$(sys.masterdir)\"),\n"
+            "      copy_from => u_scp(\"/var/cfengine/masterfiles\"), # Not $(sys.masterdir) when referring to remote host.\n"
             "      depth_search => u_recurse(\"inf\"),\n"
             "      classes => repaired(\"got_policy\");\n"
             "\n"

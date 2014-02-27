@@ -43,6 +43,7 @@
 #include <time_classes.h>
 #include <connection_info.h>
 #include <file_lib.h>
+#include <loading.h>
 
 #include "server_access.h"
 
@@ -674,7 +675,7 @@ void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *con
 
             time_t t = SetReferenceTime();
             UpdateTimeClasses(ctx, t);
-            *policy = GenericAgentLoadPolicy(ctx, config);
+            *policy = LoadPolicy(ctx, config);
             KeepPromises(ctx, *policy, config);
             Summarize();
         }

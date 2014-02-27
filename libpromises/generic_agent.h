@@ -86,7 +86,6 @@ ENTERPRISE_VOID_FUNC_2ARG_DECLARE(void, GenericAgentSetDefaultDigest, HashMethod
 const char *GenericAgentResolveInputPath(const GenericAgentConfig *config, const char *input_file);
 void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config);
 bool GenericAgentCheckPolicy(GenericAgentConfig *config, bool force_validation, bool write_validated_file);
-Policy *GenericAgentLoadPolicy(EvalContext *ctx, GenericAgentConfig *config);
 
 ENTERPRISE_VOID_FUNC_1ARG_DECLARE(void, GenericAgentAddEditionClasses, EvalContext *, ctx);
 void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config);
@@ -117,4 +116,5 @@ void GenericAgentConfigSetInputFile(GenericAgentConfig *config, const char *inpu
 void GenericAgentConfigSetBundleSequence(GenericAgentConfig *config, const Rlist *bundlesequence);
 bool GenericAgentTagReleaseDirectory(const GenericAgentConfig *config, const char *dirname);
 
+void GetReleaseIdFile(const char *base_path, char *filename, size_t max_size);
 #endif

@@ -8,7 +8,7 @@
 #include <item_lib.h>
 #include <bootstrap.h>
 
-static Policy *LoadPolicy(const char *filename)
+static Policy *TestParsePolicy(const char *filename)
 {
     char path[1024];
     sprintf(path, "%s/%s", TESTDATADIR, filename);
@@ -31,7 +31,7 @@ static void DumpErrors(Seq *errs)
 
 static Seq *LoadAndCheck(const char *filename)
 {
-    Policy *p = LoadPolicy(filename);
+    Policy *p = TestParsePolicy(filename);
 
     Seq *errs = SeqNew(10, PolicyErrorDestroy);
     PolicyCheckPartial(p, errs);
@@ -162,7 +162,7 @@ static void test_policy_json_to_from(void)
     EvalContext *ctx = EvalContextNew();
     Policy *policy = NULL;
     {
-        Policy *original = LoadPolicy("benchmark.cf");
+        Policy *original = TestParsePolicy("benchmark.cf");
         JsonElement *json = PolicyToJson(original);
         PolicyDestroy(original);
         policy = PolicyFromJson(json);
@@ -273,7 +273,7 @@ static void test_policy_json_offsets(void)
 {
     JsonElement *json = NULL;
     {
-        Policy *original = LoadPolicy("benchmark.cf");
+        Policy *original = TestParsePolicy("benchmark.cf");
         json = PolicyToJson(original);
         PolicyDestroy(original);
     }

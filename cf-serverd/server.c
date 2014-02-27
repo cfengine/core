@@ -302,7 +302,7 @@ static void DisableSendDelays(int sockfd)
 
 /*********************************************************************/
 
-static char *LogHook(LoggingPrivContext *log_ctx, const char *message)
+static char *LogHook(LoggingPrivContext *log_ctx, ARG_UNUSED LogLevel level, const char *message)
 {
     const char *ipaddr = log_ctx->param;
     return StringConcatenate(3, ipaddr, "> ", message);

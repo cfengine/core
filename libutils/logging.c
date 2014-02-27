@@ -240,7 +240,7 @@ void VLog(LogLevel level, const char *fmt, va_list ap)
 
     if (lctx->pctx && lctx->pctx->log_hook)
     {
-        hooked_msg = lctx->pctx->log_hook(lctx->pctx, msg);
+        hooked_msg = lctx->pctx->log_hook(lctx->pctx, level, msg);
     }
     else
     {

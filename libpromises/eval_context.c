@@ -186,7 +186,7 @@ static char *LogHook(LoggingPrivContext *pctx, LogLevel level, const char *messa
     {
         if (last_frame->type == STACK_FRAME_TYPE_PROMISE_ITERATION)
         {
-            if (level <= LOG_LEVEL_VERBOSE)
+            if (level <= LOG_LEVEL_INFO)
             {
                 RingBufferAppend(last_frame->data.promise_iteration.log_messages, xstrdup(message));
             }

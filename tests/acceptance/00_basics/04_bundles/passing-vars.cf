@@ -17,10 +17,9 @@ bundle agent test
       "x" string => "datax";
       "y" slist => { "datay1", "datay2" };
       "z" data => parsejson('{ "hello": "there" }');
-      "test_skip_needs_work" string => "windows";
 
   meta:
-      "tags" slist => { "test_skip_needs_work" };
+      "test_skip_needs_work" string => "windows";
 
   methods:
       "x" usebundle => see_scalar($(x));

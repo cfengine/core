@@ -35,8 +35,6 @@ bundle agent init
 
   # No numeric group support.
   meta:
-      "tags" slist => { "test_skip_unsupported" };
-  vars:
       "test_skip_unsupported" string => "windows";
 }
 

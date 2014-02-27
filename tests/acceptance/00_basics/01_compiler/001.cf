@@ -38,10 +38,8 @@ bundle agent test
       link_from => test_link;
 
    meta:
-     "tags" slist => { "test_suppress_fail" };
-   vars:
-     "test_suppress_fail" string => "windows";
-     "failure_issue_number" int => "4608";
+     "test_suppress_fail" string => "windows",
+       meta => { "redmine4608" };
 }
 
 body link_from test_link

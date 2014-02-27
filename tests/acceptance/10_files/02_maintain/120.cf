@@ -40,8 +40,6 @@ bundle agent init
       link_from => init_link;
 
   meta:
-    "tags" slist => { "test_skip_unsupported" };
-  vars:
     "test_skip_unsupported" string => "windows";
 }
 

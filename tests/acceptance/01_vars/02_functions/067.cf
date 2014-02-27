@@ -41,9 +41,6 @@ body delete init_delete
 bundle agent test
 {
   meta:
-      "tags" slist => { "test_skip_unsupported" };
-
-  vars:
       "test_skip_unsupported" string => "windows";
 
   files:

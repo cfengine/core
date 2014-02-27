@@ -56,11 +56,10 @@ bundle agent test
       "cnt" int => readstringarray("ary", "$(G.testfile)","^#.*",":+",10,14);
       "num" int => "3";
 
-      "test_suppress_fail" string => "windows";
-      "failure_issue_number" int => "4717";
 
   meta:
-      "tags" slist => { "test_suppress_fail" };
+      "test_suppress_fail" string => "windows",
+        meta => { "redmine4717" };
 
 }
 

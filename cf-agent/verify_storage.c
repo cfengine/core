@@ -187,9 +187,12 @@ static PromiseResult VerifyFileSystem(EvalContext *ctx, char *name, Attributes a
 
     if (S_ISLNK(statbuf.st_mode))
     {
-        KillGhostLink(ctx, name, a, pp);
-        return PROMISE_RESULT_NOOP;
+        PromiseResult result = PROMISE_RESULT_NOOP;
+        KillGhostLink(ctx, name, a, pp, &result);
+        return result;
     }
+
+    PromiseResult result = PROMISE_RESULT_NOOP;
 
     if (S_ISDIR(statbuf.st_mode))
     {
@@ -221,7 +224,7 @@ static PromiseResult VerifyFileSystem(EvalContext *ctx, char *name, Attributes a
             {
                 if (S_ISLNK(localstat.st_mode))
                 {
-                    KillGhostLink(ctx, buff, a, pp);
+                    KillGhostLink(ctx, buff, a, pp, &result);
                     continue;
                 }
 
@@ -236,8 +239,8 @@ static PromiseResult VerifyFileSystem(EvalContext *ctx, char *name, Attributes a
 
         if (sizeinbytes < 0)
         {
-            Log(LOG_LEVEL_VERBOSE, "Internal error: count of byte size was less than zero!");
-            return PROMISE_RESULT_NOOP;
+            Log(LOG_LEVEL_ERR, "Internal error: count of byte size was less than zero!");
+            return result;
         }
 
         if (sizeinbytes < a.volume.sensible_size)
@@ -256,7 +259,7 @@ static PromiseResult VerifyFileSystem(EvalContext *ctx, char *name, Attributes a
     }
 
     cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_NOOP, pp, a, "Filesystem '%s' content seems to be sensible as promised", name);
-    return PROMISE_RESULT_NOOP;
+    return result;
 }
 
 /*******************************************************************/

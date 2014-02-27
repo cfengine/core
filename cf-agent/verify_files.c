@@ -361,11 +361,11 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promi
         {
             if (a.havedepthsearch)
             {
-                PurgeHashes(ctx, NULL, a, pp);
+                result = PromiseResultUpdate(result, PurgeHashes(ctx, NULL, a, pp));
             }
             else
             {
-                PurgeHashes(ctx, path, a, pp);
+                result = PromiseResultUpdate(result, PurgeHashes(ctx, path, a, pp));
             }
         }
     }

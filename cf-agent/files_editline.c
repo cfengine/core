@@ -404,7 +404,7 @@ static PromiseResult VerifyLineDeletions(EvalContext *ctx, const Promise *pp, Ed
     {
         if (a.region.include_end || a.region.include_start)
         {
-            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_INTERRUPTED, pp, a,
+            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_INTERRUPTED, pp, a,
                  "The promised line deletion '%s' could not select an edit region in '%s' (this is a good thing, as policy suggests deleting the markers)",
                  pp->promiser, edcontext->filename);
         }

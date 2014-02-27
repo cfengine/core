@@ -223,7 +223,7 @@ static PromiseResult VerifyProcessOp(EvalContext *ctx, Item *procdata, Attribute
             }
         }
 
-        killed = DoAllSignals(ctx, killlist, a, pp);
+        killed = DoAllSignals(ctx, killlist, a, pp, &result);
     }
 
 /* delegated promise to restart killed or non-existent entries */
@@ -257,7 +257,7 @@ static PromiseResult VerifyProcessOp(EvalContext *ctx, Item *procdata, Attribute
 }
 
 #ifndef __MINGW32__
-int DoAllSignals(EvalContext *ctx, Item *siglist, Attributes a, const Promise *pp)
+int DoAllSignals(EvalContext *ctx, Item *siglist, Attributes a, const Promise *pp, PromiseResult *result)
 {
     Item *ip;
     Rlist *rp;
@@ -295,11 +295,13 @@ int DoAllSignals(EvalContext *ctx, Item *siglist, Attributes a, const Promise *p
                     cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, pp, a,
                          "Couldn't send promised signal '%s' (%d) to pid %jd (might be dead). (kill: %s)", RlistScalarValue(rp),
                          signal, (intmax_t)pid, GetErrorStr());
+                    *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
                 }
                 else
                 {
                     cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "Signalled '%s' (%d) to process %jd (%s)",
                          RlistScalarValue(rp), signal, (intmax_t)pid, ip->name);
+                    *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
                 }
             }
             else

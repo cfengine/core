@@ -409,7 +409,6 @@ static int ItemListsEqual(EvalContext *ctx, const Item *list1, const Item *list2
                 // If we want to see warnings, we need to scan the whole file
 
                 cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, a, "edit_line warning promised: - %s", ip1->name);
-                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, a, "edit_line warning promised: + %s", ip2->name);
                 *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
                 retval = false;
             }

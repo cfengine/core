@@ -277,7 +277,7 @@ int CompareBinaryFiles(const char *file1, const char *file2, struct stat *sstat,
     }
 }
 
-void PurgeHashes(EvalContext *ctx, char *path, Attributes attr, const Promise *pp)
+PromiseResult PurgeHashes(EvalContext *ctx, char *path, Attributes attr, const Promise *pp)
 /* Go through the database and purge records about non-existent files */
 {
     CF_DB *dbp;
@@ -289,7 +289,7 @@ void PurgeHashes(EvalContext *ctx, char *path, Attributes attr, const Promise *p
 
     if (!OpenDB(&dbp,dbid_checksums))
     {
-        return;
+        return PROMISE_RESULT_NOOP;
     }
 
     if (path)
@@ -299,7 +299,7 @@ void PurgeHashes(EvalContext *ctx, char *path, Attributes attr, const Promise *p
             DeleteDB(dbp, path);
         }
         CloseDB(dbp);
-        return;
+        return PROMISE_RESULT_NOOP;
     }
 
 /* Acquire a cursor for the database. */
@@ -308,11 +308,12 @@ void PurgeHashes(EvalContext *ctx, char *path, Attributes attr, const Promise *p
     {
         Log(LOG_LEVEL_INFO, "Unable to scan hash database");
         CloseDB(dbp);
-        return;
+        return PROMISE_RESULT_NOOP;
     }
 
     /* Walk through the database and print out the key/data pairs. */
 
+    PromiseResult result = PROMISE_RESULT_NOOP;
     while (NextDB(dbcp, &key, &ksize, &value, &vsize))
     {
         char *obj = (char *) key + CF_INDEX_OFFSET;
@@ -326,6 +327,7 @@ void PurgeHashes(EvalContext *ctx, char *path, Attributes attr, const Promise *p
             else
             {
                 cfPS(ctx, LOG_LEVEL_NOTICE, PROMISE_RESULT_WARN, pp, attr, "File '%s' no longer exists", obj);
+                result = PromiseResultUpdate(result, PROMISE_RESULT_WARN);
             }
 
             LogHashChange(obj, FILE_STATE_REMOVED, "File removed", pp);
@@ -334,6 +336,8 @@ void PurgeHashes(EvalContext *ctx, char *path, Attributes attr, const Promise *p
 
     DeleteDBCursor(dbcp);
     CloseDB(dbp);
+
+    return result;
 }
 
 

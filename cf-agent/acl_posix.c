@@ -417,7 +417,7 @@ static int CheckDefaultEqualsAccessACL(EvalContext *ctx, const char *file_path, 
         {
         case cfa_warn:
 
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, a, "Default ACL on '%s' needs to be copied from access ACL.",
+            cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, a, "Default ACL on '%s' needs to be copied from access ACL.",
                  file_path);
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
             break;
@@ -524,7 +524,7 @@ int CheckDefaultClearACL(EvalContext *ctx, const char *file_path, Attributes a, 
             }
 
             cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "Default ACL on '%s' successfully cleared", file_path);
-            *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
+            *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
             retval = true;
 
             break;

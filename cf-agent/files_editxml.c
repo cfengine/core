@@ -376,6 +376,7 @@ static bool VerifyXPathBuild(EvalContext *ctx, Attributes a, const Promise *pp, 
     if ((doc = edcontext->xmldoc) == NULL)
     {
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a, "Unable to load XML document");
+        *result = PromiseResultUpdate(*result, PROMISE_RESULT_INTERRUPTED);
         return false;
     }
 

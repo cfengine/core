@@ -480,9 +480,8 @@ static PromiseResult CfCopyFile(EvalContext *ctx, char *sourcefile, char *destfi
 
         if (ok_to_copy && (attr.transaction.action == cfa_warn))
         {
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, attr, "Image file '%s' exists but is not up to date wrt '%s'",
+            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, attr, "Image file '%s' exists but is not up to date wrt '%s' (only a warning has been promised)",
                  destfile, sourcefile);
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, attr, "Only a warning has been promised");
             result = PromiseResultUpdate(result, PROMISE_RESULT_WARN);
             return result;
         }
@@ -1111,7 +1110,7 @@ static PromiseResult LinkCopy(EvalContext *ctx, char *sourcefile, char *destfile
         else // TODO: is this reachable?
         {
             cfPS(ctx, LOG_LEVEL_INFO, status, pp, attr, "Unable to create link '%s'", destfile);
-            result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
+            result = PromiseResultUpdate(result, status);
         }
     }
 
@@ -1162,7 +1161,7 @@ bool CopyRegularFile(EvalContext *ctx, const char *source, const char *dest, str
         if ((CompressedArrayElementExists(*inode_cache, sstat.st_ino)) && (strcmp(dest, linkable) != 0))
         {
             unlink(dest);
-            MakeHardLink(ctx, dest, linkable, attr, pp);
+            MakeHardLink(ctx, dest, linkable, attr, pp, result);
             return true;
         }
     }
@@ -1978,7 +1977,7 @@ PromiseResult VerifyFileAttributes(EvalContext *ctx, const char *file, struct st
 #ifndef __MINGW32__
     if (S_ISLNK(dstat->st_mode))        /* No point in checking permission on a link */
     {
-        KillGhostLink(ctx, file, attr, pp);
+        KillGhostLink(ctx, file, attr, pp, &result);
         umask(maskvalue);
         return result;
     }
@@ -2179,7 +2178,7 @@ int DepthSearch(EvalContext *ctx, char *name, struct stat *sb, int rlevel, Attri
 
         if (S_ISLNK(lsb.st_mode))       /* should we ignore links? */
         {
-            if (!KillGhostLink(ctx, path, attr, pp))
+            if (!KillGhostLink(ctx, path, attr, pp, result))
             {
                 VerifyFileLeaf(ctx, path, &lsb, attr, pp, result);
             }

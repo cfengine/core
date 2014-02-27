@@ -516,7 +516,7 @@ static PromiseResult CfCopyFile(EvalContext *ctx, char *sourcefile, char *destfi
 
                         cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, attr, "Updated '%s' from source '%s' on '%s'", destfile,
                              sourcefile, source_host);
-                        result = PromiseResultUpdate(result, PROMISE_RESULT_INTERRUPTED);
+                        result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
                         result = PromiseResultUpdate(result, VerifyCopiedFileAttributes(ctx, sourcefile, destfile, &ssb, &dsb, attr, pp));
                     }
 

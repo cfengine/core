@@ -94,7 +94,7 @@ static void GetCPUInfo(EvalContext *ctx);
 static const char *CLASSATTRIBUTES[PLATFORM_CONTEXT_MAX][3] =
 {
     {"-", "-", "-"},            /* as appear here are matched. The fields are sysname and machine */
-    {"virt_host_vz_vzps", ".*", ".*"},      /* VZ Host with vzps installed (virt_host_vz_vzps) */
+    {"virt_host_vz_vzps", ".*", ".*"},      /* VZ Host with vzps installed */
     {"hp-ux", ".*", ".*"},      /* hpux */
     {"aix", ".*", ".*"},        /* aix */
     {"linux", ".*", ".*"},      /* linux */
@@ -2221,6 +2221,22 @@ static int Xen_Domain(EvalContext *ctx)
 }
 
 /******************************************************************/
+/*
+ * OpenVZ is a container-based virtualization for Linux.
+ * As a container based system, the host see all the processes of the
+ * guests, which give inconsistent results for processes promise type.
+ * On some installations, the tool /bin/vzps is present, which is an
+ * implementation of ps for vz system, so that it can see only local
+ * processes
+ *
+ * This method defines the classes
+ * * virt_host_vz on a host
+ * * virt_host_vz_vzps on a host with vzps installed
+ * * virt_guest_vz on a guest
+ *
+ * and if vzps is installed, it makes sure that vzps will be used for
+ * processes rather than ps
+ * */
 static void OpenVZ_Detect(EvalContext *ctx)
 {
 /* paths to file defining the type of vm (guest or host) */

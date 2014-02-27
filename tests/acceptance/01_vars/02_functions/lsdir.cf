@@ -65,6 +65,7 @@ bundle agent check
     !windows::
       "expected[a]" string => "$(G.testdir)/a,$(G.testdir)/bc,$(G.testdir)/d,$(G.testdir)/g,$(G.testdir)/klm,$(G.testdir)/tu";
 
+    any::
       "expected[b]" string => "";
 
       "expects" slist => getindices("expected");

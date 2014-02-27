@@ -126,18 +126,21 @@ PromiseResult VerifyMethod(EvalContext *ctx, const Rval call, Attributes a, cons
 
         switch (result)
         {
-        case PROMISE_RESULT_FAIL:
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Method '%s' failed in some repairs or aborted", bp->name);
+        case PROMISE_RESULT_NOOP:
+            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "Method '%s' verified", bp->name);
+            break;
+
+        case PROMISE_RESULT_WARN:
+            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_WARN, pp, a, "Method '%s' invoked repairs, but only warnings promised", bp->name);
             break;
 
         case PROMISE_RESULT_CHANGE:
             cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, "Method '%s' invoked repairs", bp->name);
             break;
 
-        default:
-            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "Method '%s' verified", bp->name);
+        default: // PROMISE_RESULT_FAIL, INTERRUPTED, DENIED, TIMEOUT
+            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Method '%s' failed in some repairs or aborted", bp->name);
             break;
-
         }
 
         for (const Rlist *rp = bp->args; rp; rp = rp->next)

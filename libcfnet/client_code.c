@@ -1447,7 +1447,7 @@ void ServerNotBusy(AgentConnection *conn)
         if (svp->conn == conn)
         {
             svp->busy = false;
-            Log(LOG_LEVEL_VERBOSE, "Existing connection just became free...");
+            Log(LOG_LEVEL_DEBUG, "Existing connection just became free...");
             return;
         }
     }

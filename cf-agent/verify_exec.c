@@ -398,7 +398,7 @@ static ActionResult RepairExec(EvalContext *ctx, Attributes a,
 
             if (ret == -1)
             {
-                cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, a, "Finished script '%s' - failed (abnormal termination)", pp->promiser);
+                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Finished script '%s' - failed (abnormal termination)", pp->promiser);
                 *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
             }
             else

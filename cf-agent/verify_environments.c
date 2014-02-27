@@ -610,7 +610,7 @@ static PromiseResult RunningVirt(EvalContext *ctx, virConnectPtr vc, Attributes 
     {
         if (virDomainGetInfo(dom, &info) == -1)
         {
-            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, a, "Unable to probe virtual domain '%s'", pp->promiser);
+            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Unable to probe virtual domain '%s'", pp->promiser);
             virDomainFree(dom);
             return PROMISE_RESULT_FAIL;
         }
@@ -744,7 +744,7 @@ static PromiseResult SuspendedVirt(EvalContext *ctx, virConnectPtr vc, Attribute
     {
         if (virDomainGetInfo(dom, &info) == -1)
         {
-            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, a, "Unable to probe virtual domain '%s'", pp->promiser);
+            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Unable to probe virtual domain '%s'", pp->promiser);
             result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
             virDomainFree(dom);
             return result;
@@ -829,7 +829,7 @@ static PromiseResult DownVirt(EvalContext *ctx, virConnectPtr vc, Attributes a, 
     {
         if (virDomainGetInfo(dom, &info) == -1)
         {
-            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, a, "Unable to probe virtual domain '%s'", pp->promiser);
+            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Unable to probe virtual domain '%s'", pp->promiser);
             result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
             virDomainFree(dom);
             return result;

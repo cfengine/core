@@ -60,7 +60,7 @@ int MoveObstruction(EvalContext *ctx, char *from, Attributes attr, const Promise
     {
         if (!attr.move_obstructions)
         {
-            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, pp, attr, "Object '%s' exists and is obstructing our promise", from);
+            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Object '%s' exists and is obstructing our promise", from);
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
             return false;
         }

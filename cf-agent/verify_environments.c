@@ -549,7 +549,7 @@ static PromiseResult CreateVirtDom(EvalContext *ctx, virConnectPtr vc, Attribute
 
         vp = virGetLastError();
 
-        cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, pp, a,
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a,
              "Failed to create a virtual domain '%s' - check spec for errors: '%s'", pp->promiser, vp->message);
         result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
 
@@ -577,7 +577,7 @@ static PromiseResult DeleteVirt(EvalContext *ctx, virConnectPtr vc, Attributes a
     {
         if (virDomainDestroy(dom) == -1)
         {
-            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, pp, a, "Failed to delete virtual domain '%s'", pp->promiser);
+            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Failed to delete virtual domain '%s'", pp->promiser);
             result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
         }
         else

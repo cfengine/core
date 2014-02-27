@@ -213,7 +213,7 @@ static PromiseResult VerifyProcessOp(EvalContext *ctx, Item *procdata, Attribute
                 }
                 else
                 {
-                    cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, pp, a,
+                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a,
                          "Process promise to stop '%s' could not be kept because '%s' the stop operator failed",
                          pp->promiser, a.process_stop);
                     result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
@@ -292,7 +292,7 @@ int DoAllSignals(EvalContext *ctx, Item *siglist, Attributes a, const Promise *p
 
                 if (kill((pid_t) pid, signal) < 0)
                 {
-                    cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, pp, a,
+                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a,
                          "Couldn't send promised signal '%s' (%d) to pid %jd (might be dead). (kill: %s)", RlistScalarValue(rp),
                          signal, (intmax_t)pid, GetErrorStr());
                     *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);

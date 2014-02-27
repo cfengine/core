@@ -97,7 +97,7 @@ PromiseResult VerifyLink(EvalContext *ctx, char *destination, const char *source
     if ((!source_file_exists) && (attr.link.when_no_file != cfa_force) && (attr.link.when_no_file != cfa_delete))
     {
         Log(LOG_LEVEL_INFO, "Source '%s' for linking is absent", absto);
-        cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, pp, attr, "Unable to create link '%s' -> '%s', no source", destination, to);
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Unable to create link '%s' -> '%s', no source", destination, to);
         return PROMISE_RESULT_FAIL;
     }
 
@@ -162,7 +162,7 @@ PromiseResult VerifyLink(EvalContext *ctx, char *destination, const char *source
 
                     if (unlink(destination) == -1)
                     {
-                        cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, pp, attr, "Link '%s' points to '%s' not '%s', error removing link",
+                        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Link '%s' points to '%s' not '%s', error removing link",
                              destination, linkbuf, to);
                         return PROMISE_RESULT_FAIL;
                     }
@@ -178,7 +178,7 @@ PromiseResult VerifyLink(EvalContext *ctx, char *destination, const char *source
             }
             else
             {
-                cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, pp, attr, "Link '%s' points to '%s' not '%s', not authorized to override",
+                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Link '%s' points to '%s' not '%s', not authorized to override",
                      destination, linkbuf, to);
                 return PROMISE_RESULT_FAIL;
             }

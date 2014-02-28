@@ -1517,7 +1517,7 @@ int BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *conn)
     case PROTOCOL_COMMAND_AUTH:
     case PROTOCOL_COMMAND_CONTEXTS:
     case PROTOCOL_COMMAND_BAD:
-        ProgrammingError("Unexpected protocol command");
+        Log(LOG_LEVEL_WARNING, "Unexpected protocol command");
     }
 
     strcpy(sendbuffer, "BAD: Request denied");

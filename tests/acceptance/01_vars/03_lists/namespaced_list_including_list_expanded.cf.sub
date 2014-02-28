@@ -1,0 +1,32 @@
+body common control
+{
+      bundlesequence => { "go" };
+      version => "1.0";
+}
+
+bundle agent go
+{
+  methods:
+    "if you like then you better put a namespace on it"
+      usebundle => test:namespace_check;
+}
+
+body file control
+{
+  namespace => "test";
+}
+
+bundle agent namespace_check
+{
+  classes:
+    "server" expression => "any";
+
+  vars:
+      "packages" slist =>  { "mysql-client", "mysql-common" }, policy => "free";
+      "server_packages" slist => { "mysql-server", "mysql-server-core" }, policy => "free";
+
+      "all_packages" slist => { @(packages), @(server_packages) }, policy => "free";
+
+reports:
+  "$(all_packages)";
+}

@@ -24,6 +24,10 @@ bundle common init
 
 bundle agent test
 {
+  meta:
+      "test_suppress_fail" string => "windows",
+        meta => { "redmine1884" };
+
   commands:
       "$(init.script_name)" module => "true";
 

@@ -5,19 +5,18 @@
 
 body common control
 {
-  bundlesequence => { "test" };
-  inputs => { "../../default.cf.sub" };
-  version => "1.0";
+      bundlesequence => { "test" };
+      inputs => { "../../default.cf.sub" };
+      version => "1.0";
 }
 
 bundle agent test
 {
   reports:
-    "$(this.promise_filename) Pass";
+      "$(this.promise_filename) Pass";
 }
 
 body copy_from dummy_copy_from
 {
-  portnumber => "5308";
+      portnumber => "5308";
 }
-

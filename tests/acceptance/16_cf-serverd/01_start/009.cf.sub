@@ -1,37 +1,38 @@
 #######################################################
 #
 # Test cf-serverd related promises, mtime simple copy localhost
+# TODO: implement
 #
 #######################################################
 
 body common control
 {
-  inputs => { "../../default.cf.sub" };
-  bundlesequence  => { default("$(this.promise_filename)") };
-  version => "1.0";
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
 }
 
 #######################################################
 
 bundle agent init
 {
-    reports:
+  reports:
 }
 
 #######################################################
 
-bundle agent test 
+bundle agent test
 {
-    reports:
+  reports:
 }
 
 #######################################################
 
 bundle agent check
 {
-classes:
-  "dummy" expression => regextract("(.*)\.sub", $(this.promise_filename), "fn");
+  classes:
+      "dummy" expression => regextract("(.*)\.sub", $(this.promise_filename), "fn");
 
-reports:
-  "$(fn[1]) Pass";
+  reports:
+      "$(fn[1]) Pass";
 }

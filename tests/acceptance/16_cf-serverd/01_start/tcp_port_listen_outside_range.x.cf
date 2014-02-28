@@ -5,19 +5,18 @@
 
 body common control
 {
-  bundlesequence => { "test" };
-  inputs => { "../../default.cf.sub" };
-  version => "1.0";
+      bundlesequence => { "test" };
+      inputs => { "../../default.cf.sub" };
+      version => "1.0";
 }
 
-body server control 
+body server control
 {
-  port => "65536";
+      port => "65536";
 }
 
 bundle agent test
 {
   reports:
-    "$(this.promise_filename) Pass";
+      "$(this.promise_filename) Pass";
 }
-

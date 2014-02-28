@@ -1,55 +1,62 @@
 body classes if_failed(x)
 {
-  repair_failed => { "$(x)" };
+      repair_failed => { "$(x)" };
 }
 
 body contain run_under_shell
 {
-  useshell => "useshell";
+      useshell => "useshell";
 }
 
 
 bundle agent generate_key
 {
-commands:
-  "$(sys.cf_key)";
+  commands:
+      "$(sys.cf_key)";
 }
 
 
 bundle agent start_server(server_name)
 {
-vars:
-  "cwd" string => dirname("$(this.promise_filename)");
+  vars:
+      "cwd" string => dirname("$(this.promise_filename)");
+      "dlog" string => "$(sys.workdir)/server-debug.$(server_name).log";
+      "conf" string => "$(cwd)/$(server_name).srv";
 
-commands:
-  "$(sys.cf_serverd) -Kf $(cwd)/$(server_name).srv"
-    classes => if_failed("server_failed");
+  commands:
+    !DEBUG::
+      "$(sys.cf_serverd) -Kf $(conf)"
+      classes => if_failed("server_failed");
+
+    DEBUG::
+      # Sleep 3 seconds since cf-serverd takes some time to start in debug mode.
+      "$(sys.cf_serverd) -Kdf $(conf) > $(dlog) 2>&1 &"
+      contain => run_under_shell,
+      handle => "run_debug_server",
+      classes => if_failed("server_failed");
+
+      "sleep 3"
+      depends_on => { "run_debug_server" },
+      contain => run_under_shell;
+
+  reports:
+    DEBUG::
+      "$(sys.cf_serverd)($(server_name)) was run in debug mode with configuration $(conf).  The logs will be in $(dlog)";
 }
-
-# Use this to get the server messages in server-debug.log.
-bundle agent start_server_debug(server_name)
-{
-vars:
-  "cwd" string => dirname("$(this.promise_filename)");
-
-commands:
-  # Sleep 3 seconds since cf-serverd takes some time to start in debug mode.
-  "$(sys.cf_serverd) -Kdf $(cwd)/$(server_name).srv >$(sys.workdir)/server-debug.log 2>&1 & sleep 3"
-    contain => run_under_shell,
-    classes => if_failed("server_failed");
-}
-
 
 bundle agent run_test(test_name)
 {
-commands:
-  "$(sys.cf_agent) -Kf $(test_name) -D DEBUG,AUTO,ok";
+  commands:
+    !DEBUG::
+      "$(sys.cf_agent) -Kf $(test_name) -D AUTO,ok";
+    DEBUG::
+      "$(sys.cf_agent) -Kf $(test_name) -D DEBUG,AUTO,ok";
 }
 
 
 bundle agent stop_server(server_name)
 {
-processes:
-  "$(server_name)"
-    signals => { "term", "kill" };
+  processes:
+      "$(server_name)"
+      signals => { "term", "kill" };
 }

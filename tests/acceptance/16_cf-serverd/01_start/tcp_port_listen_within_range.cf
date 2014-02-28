@@ -10,7 +10,7 @@ body common control
   version => "1.0";
 }
 
-body server control 
+body server control
 {
   port => "5308";
 }

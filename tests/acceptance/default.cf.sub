@@ -373,6 +373,17 @@ bundle agent default_cf_sub_makefile(file, str)
       "$(this.bundle): creating $(file) with contents '$(str)'";
 }
 
+bundle agent default_cf_sub_emptyfile(file)
+{
+  files:
+      "$(file)"
+      create => "true",
+      edit_defaults => default_cf_sub_empty;
+  reports:
+    DEBUG::
+      "$(this.bundle): creating empty $(file) with 0 size";
+}
+
 bundle edit_line default_cf_sub_insert(str)
 {
   insert_lines:

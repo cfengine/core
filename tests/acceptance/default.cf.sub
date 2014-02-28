@@ -1,62 +1,7 @@
 ########################################################################
 # Acceptance test framework.
 #
-# All tests should contain three bundles: init, test and check. In the
-# "body common control" this file should be included, and bundlesequence
-# should be set to default("$(this.promise_filename)").
-#
-# Output "$(this.promise_filename) Pass" for passing
-#    and "$(this.promise_filename) FAIL" for failing.
-#
-# If you want to use tools like grep, diff, touch, etc, please use the
-# $(G.grep) format so that the correct path to the tool is chosen by
-# this template. If a tool is missing you can add it to the list below.
-#
-# For tests that need to be skipped on certain platforms, you can add
-# special meta variables to one of the test bundles. These are the
-# possible variable names:
-#
-#   - test_skip_unsupported
-#       Skips a test because it makes no sense on that platform (e.g.
-#       symbolic links on Windows).
-#
-#   - test_skip_needs_work
-#       Skips a test because the test itself is not adapted to the
-#       platform (even if the functionality exists).
-#
-#   - test_suppress_fail
-#       Runs the test, but will accept failure. Use this when there is a
-#       real failure, but it is acceptable for the time being. This
-#       variable requires a meta tag on the the variable set to
-#       "redmine<number>", where <number> is a Redmine issue number.
-#
-# In all cases, the variable is expected to be set to a class expression
-# suitable for ifvarclass, where a positive match means that the test
-# will be skipped. So the expression '"test_skip_needs_work" string =>
-# "hpux|aix";' will skip the test on HP-UX and AIX, and nowhere else.
-#
-# Example:
-#   bundle agent test
-#   {
-#     meta:
-#       # Class expression giving platforms that should be skipped.
-#       "test_skip_unsupported" string => "hpux";
-#   }
-#
-#   bundle agent test
-#   {
-#     meta:
-#       # Class expression giving platforms that should be skipped.
-#       "test_skip_needs_work" string => "hpux";
-#   }
-#
-#   bundle agent test
-#   {
-#     meta:
-#       # Class expression giving platforms where we suppress a failure.
-#       "test_suppress_fail" string => "hpux",
-#         meta => { "redmine1234" };
-#   }
+# See README for details about writing test cases.
 ########################################################################
 
 bundle common G

@@ -1,8 +1,7 @@
-
 body common control
 {
-  bundlesequence => { "access_rules" };
-  inputs => { "../../default.cf.sub" };
+      bundlesequence => { "access_rules" };
+      inputs => { "../../default.cf.sub" };
 
 }
 
@@ -10,14 +9,14 @@ body common control
 # Server config
 #########################################################
 
-body server control 
+body server control
 
 {
-port => "9880";
+      port => "9880";
 
-allowconnects         => { "127.0.0.1" , "::1" };
-allowallconnects      => { "127.0.0.1" , "::1" };
-trustkeysfrom         => { "127.0.0.1" , "::1" };
+      allowconnects         => { "127.0.0.1" , "::1" };
+      allowallconnects      => { "127.0.0.1" , "::1" };
+      trustkeysfrom         => { "127.0.0.1" , "::1" };
 }
 
 #########################################################
@@ -25,8 +24,7 @@ trustkeysfrom         => { "127.0.0.1" , "::1" };
 bundle server access_rules()
 
 {
-access:
+  access:
 
-   # no access granted
+      # no access granted
 }
-

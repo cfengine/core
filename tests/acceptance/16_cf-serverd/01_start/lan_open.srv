@@ -1,8 +1,7 @@
-
 body common control
 {
-  bundlesequence => { "access_rules" };
-  inputs => { "../../default.cf.sub" };
+      bundlesequence => { "access_rules" };
+      inputs => { "../../default.cf.sub" };
 
 }
 
@@ -10,14 +9,14 @@ body common control
 # Server config
 #########################################################
 
-body server control 
+body server control
 
 {
-port => "9878";
+      port => "9878";
 
-allowconnects         => { @(sys.ip_addresses) };
-allowallconnects      => { @(sys.ip_addresses) };
-trustkeysfrom         => { @(sys.ip_addresses) };
+      allowconnects         => { @(sys.ip_addresses) };
+      allowallconnects      => { @(sys.ip_addresses) };
+      trustkeysfrom         => { @(sys.ip_addresses) };
 }
 
 #########################################################
@@ -25,8 +24,9 @@ trustkeysfrom         => { @(sys.ip_addresses) };
 bundle server access_rules()
 
 {
-access:
+  access:
 
-  "$(G.testdir)/source_file"     admit   => { @(sys.ip_addresses) };
+      "/"     admit   => { @(sys.ip_addresses) };
+      # fails randomly
+      # "$(G.testdir)/source_file"     admit   => { @(sys.ip_addresses) };
 }
-

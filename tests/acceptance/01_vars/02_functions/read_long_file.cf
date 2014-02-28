@@ -13,6 +13,10 @@ bundle agent init
 
 bundle agent test
 {
+  meta:
+      "test_suppress_fail" string => "windows",
+        meta => { "redmine4743" };
+
   vars:
       "value" slist => readstringlist("$(this.promise_filename).txt", "", "\n", 100000, 1000000);
 }

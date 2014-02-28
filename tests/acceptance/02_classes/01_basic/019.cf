@@ -23,6 +23,9 @@ bundle agent init
 
 bundle agent test
 {
+  meta:
+      "test_skip_unsupported" string => "windows";
+
   vars:
       "dummy" string => "dummy";
 }
@@ -33,7 +36,6 @@ bundle agent check
 {
   classes:
       "ok" xor => { userexists("root") };
-
 
   reports:
     ok::

@@ -33,6 +33,10 @@ six     three";
 
 bundle agent test
 {
+  meta:
+      "test_suppress_fail" string => "windows",
+        meta => { "redmine4742" };
+
   vars:
       "flen" int => parserealarray("float", "$(init.float)", "\s*#[^\n]*", "\s+", 1000, 36);
       "ilen" int => parseintarray("whole", "$(init.whole)", "\s*#[^\n]*", "\s+", 1000, 30);

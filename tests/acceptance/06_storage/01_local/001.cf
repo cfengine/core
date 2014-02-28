@@ -23,8 +23,14 @@ bundle agent init
 
 bundle agent test
 {
+  vars:
+    windows::
+      "path" string => "C:\\";
+    !windows::
+      "path" string => "/var";
+
   storage:
-      "/var"
+      "$(path)"
       volume => test_volume,
       classes => test_set_class("pass","fail");
 }

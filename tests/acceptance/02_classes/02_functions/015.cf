@@ -42,6 +42,10 @@ body link_from test_link(original)
 
 bundle agent test
 {
+  meta:
+      "test_suppress_fail" string => "windows",
+        meta => { "redmine4608" };
+
   vars:
       "dummy" string => "dummy";
 }

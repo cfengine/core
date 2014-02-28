@@ -127,6 +127,7 @@ static void KeepHardClasses(EvalContext *ctx)
 #ifdef HAVE_AVAHI_CLIENT_CLIENT_H
 #ifdef HAVE_AVAHI_COMMON_ADDRESS_H
 static int GenerateAvahiConfig(const char *path);
+#define SUPPORT_AVAHI_CONFIG
 #endif
 #endif
 
@@ -220,9 +221,9 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
         case 'x':
             Log(LOG_LEVEL_ERR, "Self-diagnostic functionality is retired.");
             exit(EXIT_SUCCESS);
+
         case 'A':
-#ifdef HAVE_AVAHI_CLIENT_CLIENT_H
-#ifdef HAVE_AVAHI_COMMON_ADDRESS_H
+#ifdef SUPPORT_AVAHI_CONFIG
             Log(LOG_LEVEL_NOTICE, "Generating Avahi configuration file.");
             if (GenerateAvahiConfig("/etc/avahi/services/cfengine-hub.service") != 0)
             {
@@ -230,10 +231,9 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
             }
             cf_popen("/etc/init.d/avahi-daemon restart", "r", true);
             Log(LOG_LEVEL_NOTICE, "Avahi configuration file generated successfuly.");
-            exit(EXIT_SUCCESS);
-#endif
-#endif
+#else
             Log(LOG_LEVEL_ERR, "Generating avahi configuration can only be done when avahi-daemon and libavahi are installed on the machine.");
+#endif
             exit(EXIT_SUCCESS);
 
         case 'C':
@@ -250,7 +250,6 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
                 FileWriterDetach(w);
             }
             exit(EXIT_FAILURE);
-
         }
     }
 
@@ -697,8 +696,7 @@ ENTERPRISE_VOID_FUNC_1ARG_DEFINE_STUB(void, FprintAvahiCfengineTag, FILE *, fp)
     fprintf(fp,"<name replace-wildcards=\"yes\" >CFEngine Community %s Policy Server on %s </name>\n", Version(), "%h");
 }
 
-#ifdef HAVE_AVAHI_CLIENT_CLIENT_H
-#ifdef HAVE_AVAHI_COMMON_ADDRESS_H
+#ifdef SUPPORT_AVAHI_CONFIG
 static int GenerateAvahiConfig(const char *path)
 {
     FILE *fout;
@@ -727,5 +725,4 @@ static int GenerateAvahiConfig(const char *path)
 
     return 0;
 }
-#endif
-#endif
+#endif /* SUPPORT_AVAHI_CONFIG */

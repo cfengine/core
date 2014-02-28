@@ -42,6 +42,10 @@ body package_method mock
 
 bundle agent test
 {
+  meta:
+      "test_suppress_fail" string => "windows",
+        meta => { "redmine4741" };
+
   vars:
       "all_packages" data => packagesmatching(".*", ".*", ".*", ".*");
       "all_string" string => storejson(all_packages);

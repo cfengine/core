@@ -38,6 +38,10 @@ last";
 
 bundle agent test
 {
+  meta:
+      "test_suppress_fail" string => "windows",
+        meta => { "redmine4733" };
+
   files:
       "$(G.testfile).actual"
       edit_line => test_insert;

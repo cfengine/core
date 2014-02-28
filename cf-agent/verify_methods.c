@@ -135,14 +135,18 @@ PromiseResult VerifyMethod(EvalContext *ctx, const Rval call, Attributes a, cons
             break;
 
         case PROMISE_RESULT_CHANGE:
-            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "Method '%s' invoked repairs", bp->name);
+            // the promises inside the invoked bundle have logged and reported REPAIRED compliance.
+            // No need to report the method as REPAIRED - make this message verbose, and over-ride compliance as KEPT.
+            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, "Method '%s' invoked repairs", bp->name);
+            result = PROMISE_RESULT_NOOP;
             break;
 
         case PROMISE_RESULT_FAIL:
+        case PROMISE_RESULT_DENIED:
             cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Method '%s' failed in some repairs", bp->name);
             break;
 
-        default: // PROMISE_RESULT_INTERRUPTED, DENIED, TIMEOUT
+        default: // PROMISE_RESULT_INTERRUPTED, TIMEOUT
             cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, a, "Method '%s' aborted in some repairs", bp->name);
             break;
         }

@@ -6,43 +6,13 @@
 
 body common control
 {
-  inputs => { "../../default.cf.sub" };
-  bundlesequence  => { default("$(this.promise_filename)") };
-  version => "1.0";
-}
-
-#######################################################
-
-body edit_defaults empty
-{
-  empty_file_before_editing => "true";
-  edit_backup => "false";
-}
-
-body delete clean
-{
-  rmdirs => "true";
-}
-
-bundle edit_line init_src_file
-{
-  insert_lines:
-   "This is the source file to copy $(sys.date) - always fresh";
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
 }
 
 bundle agent init
 {
-  files:
-
-    "$(G.testroot)/destination_file1"
-      delete => clean;
-    "$(G.testroot)/destination_file2"
-      delete => clean;
-
-    "$(G.testdir)/source_file"
-       create => "true",
-    edit_line => init_src_file,
-edit_defaults => empty;
 }
 
 #######################################################
@@ -50,40 +20,35 @@ edit_defaults => empty;
 body copy_from copy_from_port(port)
 
 {
-  source      => "$(G.testdir)/source_file";
-  servers     => { "127.0.0.1" };
-  portnumber => "$(port)";
-  trustkey => "true";
-}
-
-body classes if_repaired(x)
-{
-  promise_repaired => { "$(x)" };
+      source      => "$(G.testdir)/source_file";
+      servers     => { "127.0.0.1" };
+      portnumber => "$(port)";
+      trustkey => "true";
 }
 
 bundle agent test
 {
   files:
-    "$(G.testroot)/destination_file1"
-      copy_from => copy_from_port("9881"),	  # localhost_deny_one_directory
-      classes => if_repaired("repaired1");
-    "$(G.testroot)/destination_file2"
-      copy_from => copy_from_port("9882"),	  # localhost_deny_one_directory_with_regex
-      classes => if_repaired("repaired2");
+      "$(G.testroot)/destination_file1"
+      copy_from => copy_from_port("9881"),        # localhost_deny_one_directory
+      classes => default_cf_sub_if_repaired("repaired1");
+      "$(G.testroot)/destination_file2"
+      copy_from => copy_from_port("9882"),        # localhost_deny_one_directory_with_regex
+      classes => default_cf_sub_if_repaired("repaired2");
 }
 
 #######################################################
 
 bundle agent check
 {
-classes:
-  "dummy" expression =>
-    regextract("(.*)\.sub", $(this.promise_filename), "fn");
+  classes:
+      "dummy" expression =>
+      regextract("(.*)\.sub", $(this.promise_filename), "fn");
 
-reports:
-  # Both copies must fail
-  !repaired1.!repaired2::
-    "$(fn[1]) Pass";
-  repaired1|repaired2::
-    "$(fn[1]) FAIL";
+  reports:
+      # Both copies must fail
+    !repaired1.!repaired2::
+      "$(fn[1]) Pass";
+    repaired1|repaired2::
+      "$(fn[1]) FAIL";
 }

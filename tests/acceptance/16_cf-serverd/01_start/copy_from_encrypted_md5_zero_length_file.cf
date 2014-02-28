@@ -8,6 +8,8 @@ body common control
 bundle agent test
 {
   methods:
+      "any" usebundle => default_fini("$(G.testdir)/destination_file");
+      "any" usebundle => default_cf_sub_emptyfile("$(G.testdir)/source_file");
       "any" usebundle => generate_key;
       "any" usebundle => start_server("localhost_open");
       "any" usebundle => run_test("$(this.promise_filename).sub");

@@ -248,6 +248,11 @@ body classes default_cf_sub_if_ok(x)
       promise_kept => { "$(x)" };
 }
 
+body classes default_cf_sub_if_repaired(x)
+{
+      promise_repaired => { "$(x)" };
+}
+
 body classes default_cf_sub_scoped_generic_classes(x, scope)
 {
       scope => "$(scope)";
@@ -366,6 +371,17 @@ bundle agent default_cf_sub_makefile(file, str)
   reports:
     DEBUG::
       "$(this.bundle): creating $(file) with contents '$(str)'";
+}
+
+bundle agent default_cf_sub_emptyfile(file)
+{
+  files:
+      "$(file)"
+      create => "true",
+      edit_defaults => default_cf_sub_empty;
+  reports:
+    DEBUG::
+      "$(this.bundle): creating empty $(file) with 0 size";
 }
 
 bundle edit_line default_cf_sub_insert(str)

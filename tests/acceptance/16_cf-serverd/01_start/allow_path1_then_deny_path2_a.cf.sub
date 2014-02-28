@@ -6,43 +6,12 @@
 
 body common control
 {
-  inputs => { "../../default.cf.sub" };
-  bundlesequence  => { default("$(this.promise_filename)") };
-  version => "1.0";
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
 }
-
-#######################################################
-
-body edit_defaults empty
-{
-  empty_file_before_editing => "true";
-  edit_backup => "false";
-}
-
-body delete clean
-{
-  rmdirs => "true";
-}
-
-bundle edit_line init_src_file
-{
-  insert_lines:
-   "This is the source file to copy $(sys.date) - always fresh";
-}
-
 bundle agent init
 {
-  files:
-
-    "$(G.testroot)/destination_file1"
-      delete => clean;
-    "$(G.testroot)/destination_file2"
-      delete => clean;
-
-    "$(G.testroot)/source_file"
-       create => "true",
-    edit_line => init_src_file,
-edit_defaults => empty;
 }
 
 #######################################################
@@ -50,27 +19,27 @@ edit_defaults => empty;
 body copy_from copy_from_port(port)
 
 {
-  source      => "$(G.testroot)/source_file";
-  servers     => { "127.0.0.1" };
-  portnumber => "$(port)";
-  trustkey => "true";
+      source      => "$(G.testroot)/source_file";
+      servers     => { "127.0.0.1" };
+      portnumber => "$(port)";
+      trustkey => "true";
 }
 
 bundle agent test
 {
   files:
-    "$(G.testroot)/destination_file1" copy_from => copy_from_port("9881");	  # localhost_deny_one_directory
-    "$(G.testroot)/destination_file2" copy_from => copy_from_port("9882");	  # localhost_deny_one_directory_with_regex
+      "$(G.testroot)/destination_file1" copy_from => copy_from_port("9881");      # localhost_deny_one_directory
+      "$(G.testroot)/destination_file2" copy_from => copy_from_port("9882");      # localhost_deny_one_directory_with_regex
 }
 
 #######################################################
 
 bundle agent check
 {
-classes:
-  "dummy" expression => regextract("(.*)\.sub", $(this.promise_filename), "fn");
+  classes:
+      "dummy" expression => regextract("(.*)\.sub", $(this.promise_filename), "fn");
 
-methods:
-  "any" usebundle => default_check_diff("$(G.testroot)/source_file","$(G.testroot)/destination_file1","$(fn[1])");
-  "any" usebundle => default_check_diff("$(G.testroot)/source_file","$(G.testroot)/destination_file2","$(fn[1])");
+  methods:
+      "any" usebundle => default_check_diff("$(G.testroot)/source_file","$(G.testroot)/destination_file1","$(fn[1])");
+      "any" usebundle => default_check_diff("$(G.testroot)/source_file","$(G.testroot)/destination_file2","$(fn[1])");
 }

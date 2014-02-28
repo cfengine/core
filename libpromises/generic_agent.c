@@ -73,10 +73,8 @@ static bool WritePolicyValidatedFileToMasterfiles(const GenericAgentConfig *conf
 static void GetPromisesValidatedFileFromMasterfiles(char *filename, size_t max_size, const GenericAgentConfig *config, const char *maybe_dirname);
 static bool WriteReleaseIdFileToMasterfiles(void);
 static bool WriteReleaseIdFile(const char *filename, const char *dirname);
-static bool GeneratePolicyReleaseIDFromTree(char release_id_out[GENERIC_AGENT_CHECKSUM_SIZE], const char *policy_dir);
-static bool GeneratePolicyReleaseIDFromGit(char release_id_out[GENERIC_AGENT_CHECKSUM_SIZE], const char *policy_dir);
-static char* ReadChecksumFromPolicyValidatedMasterfiles(const GenericAgentConfig *config, const char *maybe_dirname);
-static char* ReadReleaseIdFromReleaseIdFileMasterfiles(const char *maybe_dirname);
+bool GeneratePolicyReleaseIDFromTree(char release_id_out[GENERIC_AGENT_CHECKSUM_SIZE], const char *policy_dir);
+char* ReadChecksumFromPolicyValidatedMasterfiles(const GenericAgentConfig *config, const char *maybe_dirname);
 
 static bool MissingInputFile(const char *input_file);
 
@@ -254,36 +252,20 @@ bool GenericAgentCheckPolicy(GenericAgentConfig *config, bool force_validation, 
     return false;
 }
 
-static JsonElement *ReadJsonFile(const char *filename)
+static JsonElement *ReadPolicyValidatedFile(const char *filename)
 {
     struct stat sb;
     if (stat(filename, &sb) == -1)
     {
-        Log(LOG_LEVEL_DEBUG, "Could not open JSON file %s", filename);
         return NULL;
     }
 
-    JsonElement *doc = NULL;
-    JsonParseError err = JsonParseFile(filename, 4096, &doc);
-
-    if (err != JSON_PARSE_OK
-        || NULL == doc)
+    JsonElement *validated_doc = NULL;
+    JsonParseError err = JsonParseFile(filename, 4096, &validated_doc);
+    if (err != JSON_PARSE_OK)
     {
-        Log(LOG_LEVEL_DEBUG, "Could not parse JSON file %s", filename);
-    }
-
-    return doc;
-}
-
-static JsonElement *ReadPolicyValidatedFile(const char *filename)
-{
-    JsonElement *validated_doc = ReadJsonFile(filename);
-    if (NULL == validated_doc)
-    {
-        Log(LOG_LEVEL_VERBOSE, "Could not parse policy_validated JSON file %s, using dummy data", filename);
+        // old style format for validated file, create dummy
         validated_doc = JsonObjectCreate(2);
-        struct stat sb;
-        stat(filename, &sb); // it's OK if this fails
         JsonObjectAppendInteger(validated_doc, "timestamp", sb.st_mtime);
     }
 
@@ -342,46 +324,8 @@ static bool WritePolicyValidatedFile(ARG_UNUSED const GenericAgentConfig *config
  */
 bool GenericAgentTagReleaseDirectory(const GenericAgentConfig *config, const char *dirname)
 {
-    char filename[CF_MAXVARSIZE];
-    char git_checksum[GENERIC_AGENT_CHECKSUM_SIZE];
-    bool have_git_checksum = GeneratePolicyReleaseIDFromGit(git_checksum, dirname);
-
-    Log(LOG_LEVEL_DEBUG, "Tagging directory %s for release", dirname);
-
-    // first, tag the release ID
-    GetReleaseIdFile(dirname, filename, sizeof(filename));
-    char *id = ReadReleaseIdFromReleaseIdFileMasterfiles(dirname);
-    if (NULL == id
-        || (have_git_checksum && 0 != strcmp(id, git_checksum)))
-    {
-        if (NULL == id)
-        {
-            Log(LOG_LEVEL_DEBUG, "The release_id of %s was missing", dirname);
-        }
-        else
-        {
-            Log(LOG_LEVEL_DEBUG, "The release_id of %s needs to be updated", dirname);
-        }
-
-        bool wrote_release = WriteReleaseIdFile(filename, dirname);
-        if (!wrote_release)
-        {
-            Log(LOG_LEVEL_VERBOSE, "The release_id file %s was NOT updated", filename);
-            free(id);
-            return false;
-        }
-        else
-        {
-            Log(LOG_LEVEL_DEBUG, "The release_id file %s was updated", filename);
-        }
-    }
-
-    free(id);
-
-    // now, tag the promises_validated
-    Log(LOG_LEVEL_DEBUG, "Tagging directory %s for validation", dirname);
-
     char tree_checksum[GENERIC_AGENT_CHECKSUM_SIZE];
+
     bool have_tree_checksum = GeneratePolicyReleaseIDFromTree(tree_checksum, dirname);
 
     if (have_tree_checksum)
@@ -398,24 +342,19 @@ bool GenericAgentTagReleaseDirectory(const GenericAgentConfig *config, const cha
             return true;
         }
     }
-    else
-    {
-        Log(LOG_LEVEL_DEBUG, "Could not checksum directory %s", dirname);
-    }
 
-    Log(LOG_LEVEL_DEBUG, "The promises_validated of %s needs to be updated", dirname);
+    char filename[CF_MAXVARSIZE];
     GetPromisesValidatedFileFromMasterfiles(filename, sizeof(filename), config, dirname);
 
     bool wrote_validated = WritePolicyValidatedFile(config, filename, have_tree_checksum ? tree_checksum : NULL);
 
     if (!wrote_validated)
     {
-        Log(LOG_LEVEL_VERBOSE, "The promises_validated file %s was NOT updated", filename);
         return false;
     }
 
-    Log(LOG_LEVEL_DEBUG, "The promises_validated file %s was updated", filename);
-    return true;
+    GetReleaseIdFile(dirname, filename, sizeof(filename));
+    return WriteReleaseIdFile(filename, dirname);
 }
 
 /**
@@ -855,39 +794,6 @@ void GetReleaseIdFile(const char *base_path, char *filename, size_t max_size)
 {
     snprintf(filename, max_size, "%s/cf_promises_release_id", base_path);
     MapName(filename);
-}
-
-static JsonElement *ReadReleaseIdFileFromMasterfiles(const char *maybe_dirname)
-{
-    char filename[CF_MAXVARSIZE];
-
-    GetReleaseIdFile(NULL == maybe_dirname ? GetMasterDir() : maybe_dirname,
-                     filename, sizeof(filename));
-
-    JsonElement *doc = ReadJsonFile(filename);
-    if (NULL == doc)
-    {
-        Log(LOG_LEVEL_VERBOSE, "Could not parse release_id JSON file %s", filename);
-    }
-
-    return doc;
-}
-
-static char* ReadReleaseIdFromReleaseIdFileMasterfiles(const char *maybe_dirname)
-{
-    JsonElement *doc = ReadReleaseIdFileFromMasterfiles(maybe_dirname);
-    char *id = NULL;
-    if (doc)
-    {
-        JsonElement *jid = JsonObjectGet(doc, "releaseId");
-        if (jid)
-        {
-            id = xstrdup(JsonPrimitiveGetAsString(jid));
-        }
-        JsonDestroy(doc);
-    }
-
-    return id;
 }
 
 // TODO: refactor Read*FromPolicyValidatedMasterfiles

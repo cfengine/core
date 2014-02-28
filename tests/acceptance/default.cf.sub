@@ -248,6 +248,11 @@ body classes default_cf_sub_if_ok(x)
       promise_kept => { "$(x)" };
 }
 
+body classes default_cf_sub_if_repaired(x)
+{
+      promise_repaired => { "$(x)" };
+}
+
 body classes default_cf_sub_scoped_generic_classes(x, scope)
 {
       scope => "$(scope)";

@@ -25,12 +25,7 @@ bundle agent test
 {
   commands:
       "$(G.true)"
-      classes => if_repaired("/test");
-}
-
-body classes if_repaired(z)
-{
-      promise_repaired => { "$(z)" };
+      classes => default_cf_sub_if_repaired("/test");
 }
 
 #######################################################

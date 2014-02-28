@@ -153,6 +153,7 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
         case 'd':
             LogSetGlobalLevel(LOG_LEVEL_DEBUG);
             NO_FORK = true;
+            break;
 
         case 'K':
             config->ignore_locks = true;

@@ -381,7 +381,7 @@ export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP CFENGINE_TEST_OVERRIDE_EXTENSION_LIBR
 
     Skip)
       echo $RESULT $TEST >> "$SUMMARY"
-      ( echo "        <skipped type=\"$RESULT_MSG\""
+      ( echo "        <skipped type=\"$RESULT_MSG\">"
         echo "        $OUT</skipped>"
       ) >> "$XMLTMP"
       SKIPPED_TESTS=$(($SKIPPED_TESTS + 1))

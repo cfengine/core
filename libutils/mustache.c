@@ -435,6 +435,12 @@ static bool Render(Writer *out, const char *start, const char *input, Seq *hash_
 {
     while (true)
     {
+        if (!input)
+        {
+            Log(LOG_LEVEL_ERR, "Unexpected end to Mustache template");
+            return false;
+        }
+
         Mustache tag = NextTag(input, delim_start, *delim_start_len, delim_end, *delim_end_len);
 
         {

@@ -2549,7 +2549,10 @@ int ExecPackageCommand(EvalContext *ctx, char *command, int verify, int setCmdCl
     }
     else if (setCmdClasses)     // generic return code check
     {
-        retval = VerifyCommandRetcode(ctx, packmanRetval, true, a, pp, result);
+        if (REPORT_THIS_PROMISE(pp))
+        {
+            retval = VerifyCommandRetcode(ctx, packmanRetval, true, a, pp, result);
+        }
     }
 
     return retval;

@@ -208,45 +208,46 @@ PromiseResult VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_d
 
         if (existing_value_type != CF_DATA_TYPE_NONE)
         {
-            if (opts.ok_redefine)    /* only on second iteration, else we ignore broken promises */
+            if (!opts.ok_redefine)    /* only on second iteration, else we ignore broken promises */
             {
-                EvalContextVariableRemove(ctx, ref);
-            }
-            else if (THIS_AGENT_TYPE == AGENT_TYPE_COMMON &&
+                if (THIS_AGENT_TYPE == AGENT_TYPE_COMMON &&
                      !CompareRval(existing_value, DataTypeToRvalType(existing_value_type),
                                   rval.item, rval.type))
-            {
-                switch (rval.type)
                 {
-                case RVAL_TYPE_SCALAR:
-                    Log(LOG_LEVEL_VERBOSE, "Redefinition of a constant scalar '%s', was '%s' now '%s'",
-                        pp->promiser, (const char *)existing_value, RvalScalarValue(rval));
-                    PromiseRef(LOG_LEVEL_VERBOSE, pp);
-                    break;
+                    switch (rval.type)
+                    {
+                    case RVAL_TYPE_SCALAR:
+                        Log(LOG_LEVEL_VERBOSE, "Redefinition of a constant scalar '%s', was '%s' now '%s'",
+                            pp->promiser, (const char *)existing_value, RvalScalarValue(rval));
+                        PromiseRef(LOG_LEVEL_VERBOSE, pp);
+                        break;
 
-                case RVAL_TYPE_LIST:
-                {
-                    Log(LOG_LEVEL_VERBOSE, "Redefinition of a constant list '%s'", pp->promiser);
-                    Writer *w = StringWriter();
-                    RlistWrite(w, existing_value);
-                    char *oldstr = StringWriterClose(w);
-                    Log(LOG_LEVEL_VERBOSE, "Old value '%s'", oldstr);
-                    free(oldstr);
+                    case RVAL_TYPE_LIST:
+                        {
+                            Log(LOG_LEVEL_VERBOSE, "Redefinition of a constant list '%s'", pp->promiser);
+                            Writer *w = StringWriter();
+                            RlistWrite(w, existing_value);
+                            char *oldstr = StringWriterClose(w);
+                            Log(LOG_LEVEL_VERBOSE, "Old value '%s'", oldstr);
+                            free(oldstr);
 
-                    w = StringWriter();
-                    RlistWrite(w, rval.item);
-                    char *newstr = StringWriterClose(w);
-                    Log(LOG_LEVEL_VERBOSE, " New value '%s'", newstr);
-                    free(newstr);
-                    PromiseRef(LOG_LEVEL_VERBOSE, pp);
+                            w = StringWriter();
+                            RlistWrite(w, rval.item);
+                            char *newstr = StringWriterClose(w);
+                            Log(LOG_LEVEL_VERBOSE, " New value '%s'", newstr);
+                            free(newstr);
+                            PromiseRef(LOG_LEVEL_VERBOSE, pp);
+                        }
+                        break;
+
+                    case RVAL_TYPE_CONTAINER:
+                    case RVAL_TYPE_FNCALL:
+                    case RVAL_TYPE_NOPROMISEE:
+                        break;
+                    }
                 }
-                break;
 
-                case RVAL_TYPE_CONTAINER:
-                case RVAL_TYPE_FNCALL:
-                case RVAL_TYPE_NOPROMISEE:
-                    break;
-                }
+                return result;
             }
         }
 
@@ -629,6 +630,8 @@ static ConvergeVariableOptions CollectConvergeVariableOptions(EvalContext *ctx, 
             {
                 opts.ok_redefine |= true;
             }
+
+            opts.ok_redefine &= allow_redefine;
         }
         else if (DataTypeFromString(cp->lval) != CF_DATA_TYPE_NONE)
         {

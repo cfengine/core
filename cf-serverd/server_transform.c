@@ -927,7 +927,7 @@ static void KeepFileAccessPromise(const EvalContext *ctx, const Promise *pp)
     {
         if (errno != ENOENT)                        /* something went wrong */
         {
-            goto err_too_long;
+            goto err_unknown;
         }
         else                      /* file does not exist, it doesn't matter */
         {
@@ -974,8 +974,14 @@ static void KeepFileAccessPromise(const EvalContext *ctx, const Promise *pp)
     return;
 
   err_too_long:
-        Log(LOG_LEVEL_ERR, "Path '%s' in access_rules is too long, ignoring!",
-            pp->promiser);
+        Log(LOG_LEVEL_ERR, "Path '%s' in access_rules is too long (%ld > %d), ignoring!",
+            pp->promiser, strlen(pp->promiser), PATH_MAX);
+        return;
+
+  err_unknown:
+        Log(LOG_LEVEL_ERR, "Path '%s' in access_rules gave error '%s', ignoring!",
+            pp->promiser, GetErrorStr());
+        return;
 }
 
 /*********************************************************************/

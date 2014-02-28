@@ -324,26 +324,23 @@ void StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
         Log(LOG_LEVEL_VERBOSE, "Listening for connections ...");
     }
 
-#ifdef __MINGW32__
-
     if (!NO_FORK)
     {
-        Log(LOG_LEVEL_VERBOSE, "Windows does not support starting processes in the background - starting in foreground");
-    }
+#ifdef __MINGW32__
+
+        Log(LOG_LEVEL_VERBOSE,
+            "Windows does not support starting processes in the background - running in foreground");
 
 #else /* !__MINGW32__ */
 
-    if ((!NO_FORK) && (fork() != 0))
-    {
-        _exit(EXIT_SUCCESS);
-    }
+        if (fork() != 0)
+        {
+            _exit(EXIT_SUCCESS);
+        }
 
-    if (!NO_FORK)
-    {
         ActAsDaemon();
-    }
-
 #endif /* !__MINGW32__ */
+    }
 
     WritePID("cf-serverd.pid");
 

@@ -28,4 +28,7 @@
 #include <cf3.defs.h>
 
 PromiseResult VerifyInterfacePromise(EvalContext *ctx, const Promise *pp);
+void DeleteInterfaceInfo(void);
+void DeleteBridgeInfo(void);
+
 #endif

@@ -64,7 +64,6 @@ static const ConstraintSyntax interface_constraints[] =
     ConstraintSyntaxNewStringList("ipv6_addresses", CF_IPRANGE, "A static IPV6 address", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBody("link_state", &linkstate_body, "The desired state of the interface link", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBody("proxy", &proxy_body, "For treating a remote device as a peripheral", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewBool("spanning_tree", "Spanning tree protocol active", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBool("purge_addresses", "Remove existing addresses from interface if not defined here", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };

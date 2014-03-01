@@ -35,25 +35,18 @@
 #include <pipes.h>
 #include <item_lib.h>
 
-typedef struct FIBState_ FIBState;
-
-struct FIBState_
-{
-    char *network;
-    char *gateway;
-    char *device;
-    FIBState *next;
-};
-
 #define CF_DEBIAN_IP_COMM "/sbin/ip"
 
 static int NetworkSanityCheck(Attributes a,  const Promise *pp);
 static void AssessNetworkingPromise(char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp);
 static int GetRouteInfo(FIBState **list, const Promise *pp);
 static void AssessStaticRoute(char *promiser, PromiseResult *result, EvalContext *ctx, FIBState *fib, const Attributes *a, const Promise *pp);
+
+#ifdef OS_LINUX
 static void AssessAdvertiseRoute(char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp);
 static void AssessLoadBalance(char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp);
 int ExecCommand(char *cmd, PromiseResult *result, const Promise *pp);
+#endif
 
 /****************************************************************************/
 
@@ -150,7 +143,7 @@ void AssessNetworkingPromise(char *promiser, PromiseResult *result, EvalContext 
     {
         AssessStaticRoute(promiser, result, ctx, fib, a, pp);
     }
-
+#ifdef OS_LINUX
     else if (a->haveadvertisedby)
     {
         AssessAdvertiseRoute(promiser, result, ctx, a, pp);
@@ -160,12 +153,14 @@ void AssessNetworkingPromise(char *promiser, PromiseResult *result, EvalContext 
     {
         AssessLoadBalance(promiser, result, ctx, a, pp);
     }
+#endif
 }
 
 /*************************************************************************/
 
 static int GetRouteInfo(FIBState **list, const Promise *pp)
 {
+#ifdef OS_LINUX
     FILE *pfp;
     size_t line_size = CF_BUFSIZE;
     char *line = xmalloc(line_size);
@@ -208,6 +203,7 @@ static int GetRouteInfo(FIBState **list, const Promise *pp)
 
     free(line);
     cf_pclose(pfp);
+#endif
     return true;
 }
 
@@ -215,6 +211,7 @@ static int GetRouteInfo(FIBState **list, const Promise *pp)
 
 static void AssessStaticRoute(char *promiser, PromiseResult *result, EvalContext *ctx, FIBState *fib, const Attributes *a, const Promise *pp)
 {
+#ifdef OS_LINUX
     FIBState *fip;
     char cmd[CF_BUFSIZE];
 
@@ -259,8 +256,10 @@ static void AssessStaticRoute(char *promiser, PromiseResult *result, EvalContext
             return;
         }
     }
+#endif
 }
 
+#ifdef OS_LINUX
 /*************************************************************************/
 
 static void AssessAdvertiseRoute(char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp)
@@ -274,3 +273,4 @@ static void AssessLoadBalance(char *promiser, PromiseResult *result, EvalContext
 {
     printf("Load balancing not yet implemented\n");
 }
+#endif

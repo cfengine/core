@@ -86,7 +86,7 @@ typedef enum
     TYPE_SEQUENCE_DEFAULTS,
     TYPE_SEQUENCE_CONTEXTS,
     TYPE_SEQUENCE_INTERFACES,
-    TYPE_SEQUENCE_NETWORKSS,
+    TYPE_SEQUENCE_NETWORKS,
     TYPE_SEQUENCE_USERS,
     TYPE_SEQUENCE_FILES,
     TYPE_SEQUENCE_PACKAGES,
@@ -1433,7 +1433,11 @@ static PromiseResult KeepAgentPromise(EvalContext *ctx, const Promise *pp, ARG_U
     }
     else if (strcmp("interfaces", pp->parent_promise_type->name) == 0)
     {
+        //get vlans and bridges for vars/classes
+        //vlan11 vlan11_on_eth1
+        //vlans[eth0]
         result = VerifyInterfacePromise(ctx, pp);
+        // update interfaces for vars/classes
     }
     else if (strcmp("networks", pp->parent_promise_type->name) == 0)
     {
@@ -1529,6 +1533,29 @@ static int NewTypeContext(TypeSequence type)
         }
         break;
 
+    case TYPE_SEQUENCE_INTERFACES:
+
+#ifdef OS_LINUX
+        if (!GetVlanInfo(&VLANS, pp))
+        {
+            Log(LOG_LEVEL_ERR, "Unable to read the vlans - cannot keep interface promises");
+            return false;
+        }
+
+        if (!GetInterfaceInfo(&NETINTERFACES, pp))
+        {
+            Log(LOG_LEVEL_ERR, "Unable to read the vlans - cannot keep interface promises");
+            return false;
+        }
+
+        if (!GetBridgeInfo(&NETBRIDGES, pp))
+        {
+            Log(LOG_LEVEL_ERR, "Unable to read the vlans - cannot keep interface promises");
+            return false;
+        }
+#endif
+        break;
+
     case TYPE_SEQUENCE_STORAGE:
 #ifndef __MINGW32__                   // TODO: Run if implemented on Windows
         if (SeqLength(GetGlobalMountedFSList()))
@@ -1570,6 +1597,15 @@ static void DeleteTypeContext(EvalContext *ctx, TypeSequence type)
     case TYPE_SEQUENCE_PACKAGES:
         ExecuteScheduledPackages(ctx);
         CleanScheduledPackages();
+        break;
+
+    case TYPE_SEQUENCE_INTERFACES:
+#ifdef OS_LINUX
+        DeleteItemList(VLANS);
+        VLANS = NULL;
+        DeleteBridgeInfo();
+        DeleteInterfaceInfo();
+#endif
         break;
 
     default:

@@ -930,6 +930,48 @@ struct PackageItem_
     PackageItem *next;
 };
 
+/*************************************************************************/
+/* Interfaces                                                            */
+/*************************************************************************/
+
+typedef struct LinkState_ LinkState;
+
+struct LinkState_
+{
+    char *name;
+    Rlist *v4_addresses;
+    char *v4_broadcast;
+    Rlist *v6_addresses;
+    char *hw_address;
+    bool multicast;
+    bool up;
+    int mtu;
+    int speed;
+    LinkState *next;
+};
+
+typedef struct Bridges_ Bridges;
+
+struct Bridges_
+{
+    char *name;
+    char *id;
+    Item *interfaces;
+    int stp;
+    Bridges *next;
+};
+
+typedef struct FIBState_ FIBState;
+
+struct FIBState_
+{
+    char *network;
+    char *gateway;
+    char *device;
+    FIBState *next;
+};
+
+/*************************************************************************/
 
 typedef struct
 {

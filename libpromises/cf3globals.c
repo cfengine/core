@@ -44,13 +44,15 @@ int CF_PERSISTENCE = 10; /* GLOBAL_P */
 AgentType THIS_AGENT_TYPE; /* GLOBAL_C, initialized later */
 
 Item *PROCESSTABLE = NULL; /* GLOBAL_X */
+Item *VLANS = NULL;          /* GLOBAL_X */
+Bridges *NETBRIDGES = NULL;  /* GLOBAL_X */
+LinkState *NETINTERFACES = NULL; /* GLOBAL_X */
 
 /*****************************************************************************/
 /* Internal data structures                                                  */
 /*****************************************************************************/
 
 int LASTSEENEXPIREAFTER = SECONDS_PER_WEEK; /* GLOBAL_P */
-
 char POLICY_SERVER[CF_MAX_IP_LEN] = ""; /* GLOBAL_X */
 
 /*****************************************************************************/

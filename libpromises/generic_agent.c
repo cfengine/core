@@ -207,7 +207,7 @@ static bool IsPolicyPrecheckNeeded(GenericAgentConfig *config, bool force_valida
         check_policy = true;
         Log(LOG_LEVEL_VERBOSE, "Input file is outside default repository, validating it");
     }
-    if (GenericAgentIsPolicyReloadNeeded(config, NULL))
+    if (GenericAgentIsPolicyReloadNeeded(config))
     {
         check_policy = true;
         Log(LOG_LEVEL_VERBOSE, "Input file is changed since last validation, validating it");
@@ -941,7 +941,7 @@ char* ReadChecksumFromPolicyValidatedMasterfiles(const GenericAgentConfig *confi
  * @NOTE Updates the config->agent_specific.daemon.last_validated_at timestamp
  *       used by serverd, execd etc daemons when checking for new policies.
  */
-bool GenericAgentIsPolicyReloadNeeded(GenericAgentConfig *config, const Policy *policy)
+bool GenericAgentIsPolicyReloadNeeded(const GenericAgentConfig *config)
 {
     time_t validated_at =
         ReadTimestampFromPolicyValidatedMasterfiles(config, NULL);
@@ -982,39 +982,6 @@ bool GenericAgentIsPolicyReloadNeeded(GenericAgentConfig *config, const Policy *
         if (IsNewerFileTree( (char *)GetInputDir(), validated_at))
         {
             Log(LOG_LEVEL_VERBOSE, "Quick search detected file changes");
-            return true;
-        }
-    }
-
-    if (policy)
-    {
-        const LogLevel missing_inputs_log_level = config->ignore_missing_inputs ? LOG_LEVEL_VERBOSE : LOG_LEVEL_ERR;
-
-        StringSet *input_files = PolicySourceFiles(policy);
-
-        StringSetIterator iter = StringSetIteratorInit(input_files);
-        const char *input_file = NULL;
-        bool reload_needed = false;
-
-        while ((input_file = StringSetIteratorNext(&iter)))
-        {
-            struct stat sb;
-            if (stat(input_file, &sb) == -1)
-            {
-                Log(missing_inputs_log_level, "Unreadable promise proposals at '%s'. (stat: %s)", input_file, GetErrorStr());
-                reload_needed = true;
-                break;
-            }
-            else if (sb.st_mtime > validated_at)
-            {
-                reload_needed = true;
-                break;
-            }
-        }
-
-        StringSetDestroy(input_files);
-        if (reload_needed)
-        {
             return true;
         }
     }

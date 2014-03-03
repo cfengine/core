@@ -46,6 +46,10 @@ body delete init_delete
 
 bundle agent test
 {
+  meta:
+      "test_suppress_fail" string => "windows",
+        meta => { "redmine4608" };
+
   files:
       "$(G.testfile)"
       create => "true",

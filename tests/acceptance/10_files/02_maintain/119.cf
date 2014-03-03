@@ -50,6 +50,10 @@ body link_from init_link
 
 bundle agent test
 {
+  meta:
+      "test_suppress_fail" string => "windows",
+        meta => { "redmine4608" };
+
   files:
       "$(G.testfile)"
       classes => test_if_ok("test_ok"),

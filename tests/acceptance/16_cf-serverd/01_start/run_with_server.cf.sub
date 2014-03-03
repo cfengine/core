@@ -24,32 +24,29 @@ bundle agent start_server(server_name)
       "conf" string => "$(cwd)/$(server_name).srv";
 
   commands:
-    !DEBUG::
+    !debug_mode::
       "$(sys.cf_serverd) -Kf $(conf)"
       classes => if_failed("server_failed");
 
-    DEBUG::
-      # Sleep 3 seconds since cf-serverd takes some time to start in debug mode.
+    debug_mode::
       "$(sys.cf_serverd) -Kdf $(conf) > $(dlog) 2>&1 &"
       contain => run_under_shell,
       handle => "run_debug_server",
       classes => if_failed("server_failed");
 
+      # Sleep 3 seconds since cf-serverd takes some time to start in debug mode.
       "sleep 3"
       depends_on => { "run_debug_server" },
       contain => run_under_shell;
 
   reports:
-    DEBUG::
+    debug_mode::
       "$(sys.cf_serverd)($(server_name)) was run in debug mode with configuration $(conf).  The logs will be in $(dlog)";
 }
 
 bundle agent run_test(test_name)
 {
   commands:
-    !DEBUG::
-      "$(sys.cf_agent) -Kf $(test_name) -D AUTO,ok";
-    DEBUG::
       "$(sys.cf_agent) -Kf $(test_name) -D DEBUG,AUTO,ok";
 }
 

@@ -45,6 +45,9 @@ body link_from ln_s(x) {
 
 bundle agent test
 {
+  meta:
+      "test_skip_unsupported" string => "windows";
+
   files:
       "$(G.testdir)/destdir/foo"
       copy_from => sync_cp("$(G.testdir)/srcdir/foo");

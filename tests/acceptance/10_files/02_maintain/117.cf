@@ -50,6 +50,9 @@ body link_from init_link
 
 bundle agent test
 {
+  meta:
+      "test_skip_unsupported" string => "windows";
+
   files:
       "$(G.testfile)"
       classes => init_if_failed("test_ok"),

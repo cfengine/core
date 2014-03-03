@@ -42,15 +42,8 @@ body delete init_delete
 bundle agent test
 {
   files:
-    windows::
       "$(G.testfile)"
-      repository => "/var/tmp",	# Intentionally wrong
-      move_obstructions => "true",
-      copy_from => test_copy;
-
-    !windows::
-      "$(G.testfile)"
-      repository => "c:\var\tmp",	# Intentionally wrong
+      repository => "non-absolute-path",	# Intentionally wrong
       move_obstructions => "true",
       copy_from => test_copy;
 }

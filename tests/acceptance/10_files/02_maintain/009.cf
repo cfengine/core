@@ -22,6 +22,9 @@ bundle common g
 
 bundle agent init
 {
+  meta:
+      "test_skip_unsupported" string => "windows";
+
   files:
       "$(G.testdir)/linkdir/"
       comment => "Create a directory.";

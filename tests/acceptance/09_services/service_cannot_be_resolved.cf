@@ -19,6 +19,10 @@ bundle agent init
 
 bundle common test
 {
+  meta:
+      "test_suppress_fail" string => "windows",
+        meta => { "redmine4772" };
+
   classes:
       "resolution_warning" expression => returnszero("$(command) Service | $(G.grep) 'cannot be resolved' 2>&1", "useshell");
       "myservice_found" expression => returnszero("$(command) 4441a73c9b58ff7f2285c018ee7449f35ec89712 2>&1", "useshell");

@@ -13,10 +13,7 @@ body common control
 
 body agent control
 {
-    windows::
-      default_repository => "/var/tmp";	# Intentionally wrong
-    !windows::
-      default_repository => "c:\var\tmp";	# Intentionally wrong
+      default_repository => "non-absolute-path"; # Intentionally wrong
 }
 
 bundle agent init

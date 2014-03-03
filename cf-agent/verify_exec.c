@@ -64,17 +64,13 @@ PromiseResult VerifyExecPromise(EvalContext *ctx, const Promise *pp)
 {
     Attributes a = GetExecAttributes(ctx, pp);
 
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser", pp->promiser, CF_DATA_TYPE_STRING, "source=promise");
-
     if (!SyntaxCheckExec(a, pp))
     {
-        EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser");
         return PROMISE_RESULT_FAIL;
     }
 
     if (PromiseKeptExec(a, pp))
     {
-        EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser");
         return PROMISE_RESULT_NOOP;
     }
 
@@ -83,7 +79,6 @@ PromiseResult VerifyExecPromise(EvalContext *ctx, const Promise *pp)
     free(lock_name);
     if (thislock.lock == NULL)
     {
-        EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser");
         return PROMISE_RESULT_SKIPPED;
     }
 
@@ -109,7 +104,6 @@ PromiseResult VerifyExecPromise(EvalContext *ctx, const Promise *pp)
     }
 
     YieldCurrentLock(thislock);
-    EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser");
 
     return result;
 }

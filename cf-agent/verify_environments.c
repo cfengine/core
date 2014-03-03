@@ -137,8 +137,6 @@ PromiseResult VerifyEnvironmentsPromise(EvalContext *ctx, const Promise *pp)
         }
 
         PromiseBanner(pp);
-        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser", pp->promiser, CF_DATA_TYPE_STRING, "source=promise");
-
         pexp = ExpandDeRefPromise(ctx, pp);
         result = VerifyEnvironments(ctx, a, pp);
         PromiseDestroy(pexp);

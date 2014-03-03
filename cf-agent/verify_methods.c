@@ -57,8 +57,6 @@ PromiseResult VerifyMethodsPromise(EvalContext *ctx, const Promise *pp)
 
 
     PromiseResult result = VerifyMethod(ctx, cp->rval, a, pp);
-    EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser");
-
     return result;
 }
 

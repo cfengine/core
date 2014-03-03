@@ -123,10 +123,8 @@ static PromiseResult VerifyProcesses(EvalContext *ctx, Attributes a, const Promi
         return PROMISE_RESULT_SKIPPED;
     }
 
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser", pp->promiser, CF_DATA_TYPE_STRING, "source=promise");
     PromiseBanner(pp);
     PromiseResult result = VerifyProcessOp(ctx, PROCESSTABLE, a, pp);
-    EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser");
 
     YieldCurrentLock(thislock);
 

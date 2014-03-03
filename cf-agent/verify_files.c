@@ -643,7 +643,6 @@ static PromiseResult FindFilePromiserObjects(EvalContext *ctx, const Promise *pp
     if (literal)
     {
         // Prime the promiser temporarily, may override later
-        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser", pp->promiser, CF_DATA_TYPE_STRING, "source=promise");
         result = PromiseResultUpdate(result, VerifyFilePromise(ctx, pp->promiser, pp));
     }
     else                        // Default is to expand regex paths

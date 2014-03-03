@@ -168,7 +168,6 @@ static PromiseResult VerifyServices(EvalContext *ctx, Attributes a, const Promis
         return PROMISE_RESULT_SKIPPED;
     }
 
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser", pp->promiser, CF_DATA_TYPE_STRING, "source=promise");
     PromiseBanner(pp);
 
     PromiseResult result = PROMISE_RESULT_NOOP;
@@ -185,7 +184,6 @@ static PromiseResult VerifyServices(EvalContext *ctx, Attributes a, const Promis
         result = PromiseResultUpdate(result, DoVerifyServices(ctx, a, pp));
     }
 
-    EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser");
     YieldCurrentLock(thislock);
 
     return result;

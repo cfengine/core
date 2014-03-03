@@ -892,7 +892,6 @@ static bool DoCreateUser(const char *puser, User u, enum cfopaction action,
         {
             const Constraint *method_attrib = PromiseGetConstraint(pp, "home_bundle");
             VerifyMethod(ctx, method_attrib->rval, *a, pp);
-            EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser");
         }
 
         if (u.policy != USER_STATE_LOCKED && u.password != NULL && strcmp (u.password, ""))

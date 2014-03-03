@@ -1533,29 +1533,6 @@ static int NewTypeContext(TypeSequence type)
         }
         break;
 
-    case TYPE_SEQUENCE_INTERFACES:
-
-#ifdef OS_LINUX
-        if (!GetVlanInfo(&VLANS, pp))
-        {
-            Log(LOG_LEVEL_ERR, "Unable to read the vlans - cannot keep interface promises");
-            return false;
-        }
-
-        if (!GetInterfaceInfo(&NETINTERFACES, pp))
-        {
-            Log(LOG_LEVEL_ERR, "Unable to read the vlans - cannot keep interface promises");
-            return false;
-        }
-
-        if (!GetBridgeInfo(&NETBRIDGES, pp))
-        {
-            Log(LOG_LEVEL_ERR, "Unable to read the vlans - cannot keep interface promises");
-            return false;
-        }
-#endif
-        break;
-
     case TYPE_SEQUENCE_STORAGE:
 #ifndef __MINGW32__                   // TODO: Run if implemented on Windows
         if (SeqLength(GetGlobalMountedFSList()))
@@ -1601,10 +1578,11 @@ static void DeleteTypeContext(EvalContext *ctx, TypeSequence type)
 
     case TYPE_SEQUENCE_INTERFACES:
 #ifdef OS_LINUX
-        DeleteItemList(VLANS);
-        VLANS = NULL;
-        DeleteBridgeInfo();
-        DeleteInterfaceInfo();
+
+        // If Cumulus of ifipdown2
+        printf("NOW EDIT %s ??\n", CF_DEBIAN_IFCONF);
+
+
 #endif
         break;
 

@@ -46,8 +46,7 @@ body link_from ln_s(x) {
 bundle agent test
 {
   meta:
-      "test_suppress_fail" string => "windows",
-        meta => { "redmine4608" };
+      "test_skip_unsupported" string => "windows";
 
   files:
       "$(G.testdir)/destdir/foo"

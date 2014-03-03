@@ -30,8 +30,12 @@ body delete init_delete
 
 bundle agent test
 {
+  meta:
+      "test_skip_unsupported" string => "windows";
+
   vars:
       "mode" string => "751";
+
   methods:
       "1" usebundle => test1; # create the directory
       "1" usebundle => test2($(mode)); # promise the directory with a trailing slash

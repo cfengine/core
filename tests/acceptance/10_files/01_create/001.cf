@@ -11,13 +11,6 @@ body common control
       version => "1.0";
 }
 
-bundle common g
-{
-  vars:
-      # This extracts the octal mode, and decimal nlink, uid, gid, size
-      "command" string => 'printf "%o" . " %d" x 4, (stat("$(G.testfile)"))[2]&07777, (stat(_))[3..5,7]';
-}
-
 #######################################################
 
 bundle agent init
@@ -52,8 +45,8 @@ bundle agent check
       "expect" string => "600 1 \d+ \d+ 0";
 
       "result" string => execresult(
-				     "$(G.perl) -l $(this.promise_dirname)$(const.dirsep)..$(const.dirsep)stat.pl $(G.testfile)",
-				     "noshell");
+	     "$(G.perl) -l $(this.promise_dirname)$(const.dirsep)..$(const.dirsep)stat.pl $(G.testfile)",
+	     "noshell");
 
   classes:
       "ok" expression => regcmp("$(expect)", "$(result)");

@@ -44,6 +44,9 @@ body delete init_delete
 
 bundle agent test
 {
+  meta:
+      "test_skip_unsupported" string => "windows";
+
   vars:
       "mode" string => execresult(
 				   "$(G.perl) -le 'printf \"%o\", (stat(\"$(g.source)\"))[2]&07777'",

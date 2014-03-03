@@ -12,6 +12,10 @@ bundle common config
   vars:
       "c" data => parsejson('{ "file": "dynamic.sub" }');
       "myfile" string => "$(c[file])";
+
+  reports:
+   DEBUG::
+     "myfile $(myfile)";
 }
 
 bundle agent init

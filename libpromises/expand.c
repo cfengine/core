@@ -745,7 +745,7 @@ bool ExpandScalar(const EvalContext *ctx,
                 case CF_DATA_TYPE_STRING:
                 case CF_DATA_TYPE_INT:
                 case CF_DATA_TYPE_REAL:
-                    BufferAppend(out, value, strlen(value));
+                    BufferAppendString(out, value);
                     break;
 
                 case CF_DATA_TYPE_STRING_LIST:
@@ -754,15 +754,32 @@ bool ExpandScalar(const EvalContext *ctx,
                 case CF_DATA_TYPE_NONE:
                     if (varstring == '}')
                     {
-                        snprintf(name, CF_MAXVARSIZE, "${%s}", BufferData(current_item));
+                        BufferAppendF(out, "${%s}", BufferData(current_item));
                     }
                     else
                     {
-                        snprintf(name, CF_MAXVARSIZE, "$(%s)", BufferData(current_item));
+                        BufferAppendF(out, "$(%s)", BufferData(current_item));
                     }
-
-                    BufferAppend(out, name, strlen(name));
                     returnval = false;
+                    break;
+
+                case CF_DATA_TYPE_CONTAINER:
+                    if (JsonGetElementType((JsonElement*)value) == JSON_ELEMENT_TYPE_PRIMITIVE)
+                    {
+                        BufferAppendString(out, JsonPrimitiveGetAsString((JsonElement*)value));
+                    }
+                    else
+                    {
+                        if (varstring == '}')
+                        {
+                            BufferAppendF(out, "${%s}", BufferData(current_item));
+                        }
+                        else
+                        {
+                            BufferAppendF(out, "$(%s)", BufferData(current_item));
+                        }
+                        returnval = false;
+                    }
                     break;
 
                 default:

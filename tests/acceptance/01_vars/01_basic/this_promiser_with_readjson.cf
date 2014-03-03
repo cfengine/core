@@ -1,0 +1,65 @@
+# Test that this.promiser can be used in a call with readjson
+# Redmine:4680 (https://cfengine.com/dev/issues/4680)
+
+body common control
+{
+      inputs => { "../../default.cf.sub", "namespaced-bundles.cf.sub1", "namespaced-bundles.cf.sub2" };
+      bundlesequence => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle agent init
+{
+  vars:
+      "cf_promises_validated_mock_data"
+        string => '{
+  "timestamp": 1393095384
+}';
+
+  files:
+    "$(G.testfile).cf_promises_validated"
+      create => "true",
+      edit_defaults => empty,
+      edit_line => insert_lines($(cf_promises_validated_mock_data)),
+      comment => "we need example data to parse";
+}
+
+bundle agent test
+{
+  vars:
+      "cf_promises_validated"
+        data => readjson("$(G.testfile).$(this.promiser)", 1K);
+
+      "printable"
+        string => format("%S", "cf_promises_validated");
+
+  reports:
+    DEBUG::
+      "$(printable)";
+}
+
+bundle agent check
+{
+  classes:
+      "ok" expression => strcmp("1393095384", $(test.cf_promises_validated[timestamp]));
+
+  reports:
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}
+
+
+body edit_defaults empty
+{
+  empty_file_before_editing => "true";
+  edit_backup => "false";
+}
+
+bundle edit_line insert_lines(lines)
+{
+  insert_lines:
+    "$(lines)";
+}
+

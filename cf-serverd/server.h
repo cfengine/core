@@ -91,31 +91,32 @@ typedef struct
 
 } ServerAccess;
 
-/**
- * @member trust Whether we'll blindly trust any key from the host, depends on
- *               the "trustkeysfrom" option in body server control. Default
- *               false, check for setting it is in CheckStoreKey().
- */
 struct ServerConnectionState_
 {
-    EvalContext *ctx;
     ConnectionInfo *conn_info;
-    int synchronized;
-    char hostname[CF_MAXVARSIZE];
-    char username[CF_MAXVARSIZE];
+    /* TODO sockaddr_storage, even though we can keep the text as cache. */
+    char ipaddr[CF_MAX_IP_LEN];
 #ifdef __MINGW32__
-    char sid[CF_MAXSIDSIZE];    /* we avoid dynamically allocated buffers due to potential memory leaks */
+    /* We avoid dynamically allocated buffers due to potential memory leaks,
+     * but this is still too big at 2K! */
+    char sid[CF_MAXSIDSIZE];
 #else
     uid_t uid;
 #endif
-    char ipaddr[CF_MAX_IP_LEN];
+    /* TODO move username, hostname etc to a new struct identity. */
+    char username[CF_MAXVARSIZE];
 
     /* TODO the following are useless with the new protocol */
+    char hostname[CF_MAXVARSIZE]; /* hostname is copied from client-supplied CAUTH command */
     int id_verified;
     int rsa_auth;
     int maproot;
     unsigned char *session_key;
     char encryption_type;
+
+    /* TODO pass it through function arguments, EvalContext has nothing to do
+     * with connection-specific data. */
+    EvalContext *ctx;
 };
 
 typedef struct

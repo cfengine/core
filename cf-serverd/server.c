@@ -78,23 +78,13 @@ ServerAccess SV = { 0 }; /* GLOBAL_P */
 
 char CFRUNCOMMAND[CF_MAXVARSIZE] = { 0 };                       /* GLOBAL_P */
 
-//******************************************************************/
-// LOCAL CONSTANTS
-//******************************************************************/
-
+/******************************************************************/
 
 static void SpawnConnection(EvalContext *ctx, char *ipaddr, ConnectionInfo *info);
 static void PurgeOldConnections(Item **list, time_t now);
 static void *HandleConnection(ServerConnectionState *conn);
 static ServerConnectionState *NewConn(EvalContext *ctx, ConnectionInfo *info);
 static void DeleteConn(ServerConnectionState *conn);
-
-//******************************************************************/
-// LOCAL STATE
-//******************************************************************/
-
-static int TRIES = 0; /* GLOBAL_X */
-
 
 /****************************************************************************/
 
@@ -107,9 +97,13 @@ void ServerEntryPoint(EvalContext *ctx, char *ipaddr, ConnectionInfo *info)
         "Obtained IP address of '%s' on socket %d from accept",
         ipaddr, ConnectionInfoSocket(info));
 
+    /* TODO change nonattackerlist, attackerlist and especially connectionlist
+     *      to binary searched lists, or remove them from the main thread! */
     if ((SV.nonattackerlist) && (!IsMatchItemIn(SV.nonattackerlist, MapAddress(ipaddr))))
     {
-        Log(LOG_LEVEL_ERR, "Not allowing connection from non-authorized IP '%s'", ipaddr);
+        Log(LOG_LEVEL_ERR,
+            "Remote host '%s' not in allowconnects, denying connection",
+            ipaddr);
         cf_closesocket(ConnectionInfoSocket(info));
         ConnectionInfoDestroy(&info);
         return;
@@ -117,16 +111,18 @@ void ServerEntryPoint(EvalContext *ctx, char *ipaddr, ConnectionInfo *info)
 
     if (IsMatchItemIn(SV.attackerlist, MapAddress(ipaddr)))
     {
-        Log(LOG_LEVEL_ERR, "Denying connection from non-authorized IP '%s'", ipaddr);
+        Log(LOG_LEVEL_ERR,
+            "Remote host '%s' is in denyconnects, denying connection",
+            ipaddr);
         cf_closesocket(ConnectionInfoSocket(info));
         ConnectionInfoDestroy(&info);
         return;
     }
 
     if ((now = time((time_t *) NULL)) == -1)
-       {
+    {
        now = 0;
-       }
+    }
 
     PurgeOldConnections(&SV.connectionlist, now);
 
@@ -140,22 +136,15 @@ void ServerEntryPoint(EvalContext *ctx, char *ipaddr, ConnectionInfo *info)
         if (IsItemIn(SV.connectionlist, MapAddress(ipaddr)))
         {
             ThreadUnlock(cft_count);
-            Log(LOG_LEVEL_ERR, "Denying repeated connection from '%s'", ipaddr);
+            Log(LOG_LEVEL_ERR,
+                "Remote host '%s' is not in allowallconnects, denying second simultaneous connection",
+                ipaddr);
             cf_closesocket(ConnectionInfoSocket(info));
             ConnectionInfoDestroy(&info);
             return;
         }
 
         ThreadUnlock(cft_count);
-    }
-
-    if (SV.logconns)
-    {
-        Log(LOG_LEVEL_INFO, "Accepting connection from %s", ipaddr);
-    }
-    else
-    {
-        Log(LOG_LEVEL_INFO, "Accepting connection from %s", ipaddr);
     }
 
     snprintf(intime, 63, "%d", (int) now);
@@ -238,9 +227,9 @@ static void SpawnConnection(EvalContext *ctx, char *ipaddr, ConnectionInfo *info
     int sd_accepted = ConnectionInfoSocket(info);
     strlcpy(conn->ipaddr, ipaddr, CF_MAX_IP_LEN );
 
-    Log(LOG_LEVEL_VERBOSE, "New connection...(from %s, sd %d)",
+    Log(LOG_LEVEL_VERBOSE,
+        "New connection (from %s, sd %d), spawning new thread...",
         conn->ipaddr, sd_accepted);
-    Log(LOG_LEVEL_VERBOSE, "Spawning new thread...");
 
     ret = pthread_attr_init(&threadattrs);
     if (ret != 0)
@@ -248,7 +237,7 @@ static void SpawnConnection(EvalContext *ctx, char *ipaddr, ConnectionInfo *info
         Log(LOG_LEVEL_ERR,
             "SpawnConnection: Unable to initialize thread attributes (%s)",
             GetErrorStr());
-        goto err2;
+        goto err;
     }
     ret = pthread_attr_setdetachstate(&threadattrs, PTHREAD_CREATE_DETACHED);
     if (ret != 0)
@@ -256,7 +245,7 @@ static void SpawnConnection(EvalContext *ctx, char *ipaddr, ConnectionInfo *info
         Log(LOG_LEVEL_ERR,
             "SpawnConnection: Unable to set thread to detached state (%s).",
             GetErrorStr());
-        goto err1;
+        goto cleanup;
     }
     ret = pthread_attr_setstacksize(&threadattrs, 1024 * 1024);
     if (ret != 0)
@@ -275,12 +264,12 @@ static void SpawnConnection(EvalContext *ctx, char *ipaddr, ConnectionInfo *info
         Log(LOG_LEVEL_ERR,
             "Unable to spawn worker thread. (pthread_create: %s)",
             GetErrorStr());
-        goto err1;
+        goto cleanup;
     }
 
-  err1:
+  cleanup:
     pthread_attr_destroy(&threadattrs);
-  err2:
+  err:
     if (ret != 0)
     {
         Log(LOG_LEVEL_WARNING, "Thread is being handled from main loop!");
@@ -308,6 +297,9 @@ static char *LogHook(LoggingPrivContext *log_ctx, ARG_UNUSED LogLevel level, con
     return StringConcatenate(3, ipaddr, "> ", message);
 }
 
+/* TRIES: counts the number of consecutive connections dropped. */
+static int TRIES = 0;
+
 static void *HandleConnection(ServerConnectionState *conn)
 {
     int ret;
@@ -317,35 +309,37 @@ static void *HandleConnection(ServerConnectionState *conn)
 
     /* This stack-allocated struct should be valid for all the lifetime of the
      * thread. Just make sure that after calling DeleteConn() (which frees
-     * ipaddr), you exit right away. */
+     * ipaddr), you exit the thread right away. */
     LoggingPrivContext log_ctx = {
         .log_hook = LogHook,
         .param = conn->ipaddr
     };
-
     LoggingPrivSetContext(&log_ctx);
 
-    if (!ThreadLock(cft_server_children))
+    Log(LOG_LEVEL_INFO, "Accepting connection");
+
+    /* We test if number of active threads is greater than max, if so we deny
+       connection, if it happened too many times within a short timeframe then we
+       kill ourself.TODO this test should be done *before* spawning the thread. */
+    ret = ThreadLock(cft_server_children);
+    if (!ret)
     {
+        Log(LOG_LEVEL_ERR, "Unable to thread-lock, closing connection!");
         DeleteConn(conn);
         return NULL;
     }
-
-    ACTIVE_THREADS++;
-
-    if (ACTIVE_THREADS >= CFD_MAXPROCESSES)
+    else if (ACTIVE_THREADS > CFD_MAXPROCESSES)
     {
-        ACTIVE_THREADS--;
-
-        if (TRIES++ > MAXTRIES) /* When to say we're hung / apoptosis threshold */
+        if (TRIES > MAXTRIES)
         {
+            /* This happens when no thread was freed while we had to drop 5
+             * consecutive connections, because none of the existing threads
+             * finished. */
             Log(LOG_LEVEL_ERR, "Server seems to be paralyzed. DOS attack? Committing apoptosis...");
             FatalError(conn->ctx, "Terminating");
         }
-
-        if (!ThreadUnlock(cft_server_children))
-        {
-        }
+        TRIES++;
+        ThreadUnlock(cft_server_children);
 
         Log(LOG_LEVEL_ERR, "Too many threads (>=%d) -- increase server maxconnections?", CFD_MAXPROCESSES);
         snprintf(output, CF_BUFSIZE, "BAD: Server is currently too busy -- increase maxconnections or splaytime?");
@@ -353,18 +347,14 @@ static void *HandleConnection(ServerConnectionState *conn)
         DeleteConn(conn);
         return NULL;
     }
-    else
-    {
-        ThreadUnlock(cft_server_children);
-    }
 
-    TRIES = 0;                  /* As long as there is activity, we're not stuck */
+    ACTIVE_THREADS++;
+    TRIES = 0;
+    ThreadUnlock(cft_server_children);
 
     DisableSendDelays(ConnectionInfoSocket(conn->conn_info));
 
-    struct timeval tv = {
-        .tv_sec = CONNTIMEOUT * 20,
-    };
+    struct timeval tv = { .tv_sec = CONNTIMEOUT * 20 };
     SetReceiveTimeout(ConnectionInfoSocket(conn->conn_info), &tv);
 
     if (ConnectionInfoConnectionStatus(conn->conn_info) != CF_CONNECTION_ESTABLISHED)
@@ -411,19 +401,13 @@ static void *HandleConnection(ServerConnectionState *conn)
 
     Log(LOG_LEVEL_INFO, "Connection closed, terminating thread");
 
-    if (!ThreadLock(cft_server_children))
+    ThreadLock(cft_server_children);
     {
+        ACTIVE_THREADS--;
         DeleteConn(conn);
-        return NULL;
     }
+    ThreadUnlock(cft_server_children);
 
-    ACTIVE_THREADS--;
-
-    if (!ThreadUnlock(cft_server_children))
-    {
-    }
-
-    DeleteConn(conn);
     return NULL;
 }
 

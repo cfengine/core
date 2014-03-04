@@ -58,14 +58,16 @@ bundle agent test
       "counter" string => "$(G.testdir)/counter";
 
   files:
+    windows::
       "$(G.testdir)"
-      windows::
-        transformer => "$(G.echo) $(this.promiser) >> $(counter)",
-      !windows::
-        transformer => "/bin/sh -c 'echo $(this.promiser) >> $(counter)'",
-      any::
-        file_select => test_plain,
-        depth_search => test_recurse;
+      transformer => "$(G.echo) $(this.promiser) >> $(counter)",
+      file_select => test_plain,
+      depth_search => test_recurse;
+    !windows::
+      "$(G.testdir)"
+      transformer => "/bin/sh -c 'echo $(this.promiser) >> $(counter)'",
+      file_select => test_plain,
+      depth_search => test_recurse;
 }
 
 body file_select test_plain

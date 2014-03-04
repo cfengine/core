@@ -48,13 +48,9 @@ body perms test_perms
 
 bundle agent check
 {
-  meta:
-    "test_suppress_fail" string => "any",
-      meta => { "redmine4791" };
-
   vars:
     !windows::
-      "expect[permoct]" string => "$(test.mode)";
+      "expect[modeoct]" string => "[0-9]+$(test.mode)";
     any::
       "expect[nlink]" string => "1";
       "expect[uid]" string => "\d+";

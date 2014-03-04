@@ -50,8 +50,8 @@
 
 
 /*
-  The only two exported function in this file is the following, used only in
-  cf-serverd-functions.c.
+  The only exported function in this file is the following, used only in
+  cf-serverd-functions.c:
 
   void ServerEntryPoint(EvalContext *ctx, char *ipaddr, ConnectionInfo *info);
 
@@ -63,6 +63,17 @@
 // GLOBAL STATE
 //******************************************************************
 
+/* TODO: rather than counting threads (within locks inside threads,
+ * with ugly "try, wait, umm, what now?" code in the main thread) it
+ * may make more sense to have a pool of persistent threads, managed
+ * along with a queue of work for them by an object that creates new
+ * threads on demand, up to its limit, when its queue is long enough
+ * to justify doing so.  We can then queue ServerConnectionState*s to
+ * be handled by the pool; we'll need to lock adding to the queue in
+ * main thread and popping tasks off it in the workers.  The object
+ * can then be responsible for sending a shutdown message to the
+ * threads at the end of our run and pthread_join()ing them.
+ */
 int ACTIVE_THREADS = 0; /* GLOBAL_X */
 
 int CFD_MAXPROCESSES = 0; /* GLOBAL_P */
@@ -85,7 +96,7 @@ char CFRUNCOMMAND[CF_MAXVARSIZE] = { 0 };                       /* GLOBAL_P */
 
 static void SpawnConnection(EvalContext *ctx, char *ipaddr, ConnectionInfo *info);
 static void PurgeOldConnections(Item **list, time_t now);
-static void *HandleConnection(ServerConnectionState *conn);
+static void *HandleConnection(void *conn);
 static ServerConnectionState *NewConn(EvalContext *ctx, ConnectionInfo *info);
 static void DeleteConn(ServerConnectionState *conn);
 
@@ -101,7 +112,6 @@ static int TRIES = 0; /* GLOBAL_X */
 void ServerEntryPoint(EvalContext *ctx, char *ipaddr, ConnectionInfo *info)
 {
     char intime[64];
-    time_t now;
 
     Log(LOG_LEVEL_VERBOSE,
         "Obtained IP address of '%s' on socket %d from accept",
@@ -123,10 +133,11 @@ void ServerEntryPoint(EvalContext *ctx, char *ipaddr, ConnectionInfo *info)
         return;
     }
 
-    if ((now = time((time_t *) NULL)) == -1)
-       {
+    time_t now = time(NULL);
+    if (now == -1)
+    {
        now = 0;
-       }
+    }
 
     PurgeOldConnections(&SV.connectionlist, now);
 
@@ -149,14 +160,8 @@ void ServerEntryPoint(EvalContext *ctx, char *ipaddr, ConnectionInfo *info)
         ThreadUnlock(cft_count);
     }
 
-    if (SV.logconns)
-    {
-        Log(LOG_LEVEL_INFO, "Accepting connection from %s", ipaddr);
-    }
-    else
-    {
-        Log(LOG_LEVEL_INFO, "Accepting connection from %s", ipaddr);
-    }
+    Log(SV.logconns ? LOG_LEVEL_INFO : LOG_LEVEL_VERBOSE,
+        "Accepting connection from %s", ipaddr);
 
     snprintf(intime, 63, "%d", (int) now);
 
@@ -177,7 +182,6 @@ void ServerEntryPoint(EvalContext *ctx, char *ipaddr, ConnectionInfo *info)
     }
 
     SpawnConnection(ctx, ipaddr, info);
-
 }
 
 /**********************************************************************/
@@ -235,11 +239,10 @@ static void SpawnConnection(EvalContext *ctx, char *ipaddr, ConnectionInfo *info
     pthread_attr_t threadattrs;
 
     conn = NewConn(ctx, info);
-    int sd_accepted = ConnectionInfoSocket(info);
     strlcpy(conn->ipaddr, ipaddr, CF_MAX_IP_LEN );
 
     Log(LOG_LEVEL_VERBOSE, "New connection...(from %s, sd %d)",
-        conn->ipaddr, sd_accepted);
+        conn->ipaddr, ConnectionInfoSocket(info));
     Log(LOG_LEVEL_VERBOSE, "Spawning new thread...");
 
     ret = pthread_attr_init(&threadattrs);
@@ -267,8 +270,7 @@ static void SpawnConnection(EvalContext *ctx, char *ipaddr, ConnectionInfo *info
         /* Continue with default thread stack size. */
     }
 
-    ret = pthread_create(&tid, &threadattrs,
-                         (void *(*)(void *)) HandleConnection, conn);
+    ret = pthread_create(&tid, &threadattrs, HandleConnection, conn);
     if (ret != 0)
     {
         errno = ret;
@@ -283,7 +285,7 @@ static void SpawnConnection(EvalContext *ctx, char *ipaddr, ConnectionInfo *info
   err2:
     if (ret != 0)
     {
-        Log(LOG_LEVEL_WARNING, "Thread is being handled from main loop!");
+        Log(LOG_LEVEL_WARNING, "Handling thread's work from main loop!");
         HandleConnection(conn);
     }
 }
@@ -308,8 +310,9 @@ static char *LogHook(LoggingPrivContext *log_ctx, ARG_UNUSED LogLevel level, con
     return StringConcatenate(3, ipaddr, "> ", message);
 }
 
-static void *HandleConnection(ServerConnectionState *conn)
+static void *HandleConnection(void *c)
 {
+    ServerConnectionState *conn = c;
     int ret;
     char output[CF_BUFSIZE];
 
@@ -333,7 +336,11 @@ static void *HandleConnection(ServerConnectionState *conn)
 
     ACTIVE_THREADS++;
 
-    if (ACTIVE_THREADS >= CFD_MAXPROCESSES)
+    if (ACTIVE_THREADS < CFD_MAXPROCESSES)
+    {
+        ThreadUnlock(cft_server_children);
+    }
+    else
     {
         ACTIVE_THREADS--;
 
@@ -345,6 +352,7 @@ static void *HandleConnection(ServerConnectionState *conn)
 
         if (!ThreadUnlock(cft_server_children))
         {
+            /* TODO: what ? */
         }
 
         Log(LOG_LEVEL_ERR, "Too many threads (>=%d) -- increase server maxconnections?", CFD_MAXPROCESSES);
@@ -352,10 +360,6 @@ static void *HandleConnection(ServerConnectionState *conn)
         SendTransaction(conn->conn_info, output, 0, CF_DONE);
         DeleteConn(conn);
         return NULL;
-    }
-    else
-    {
-        ThreadUnlock(cft_server_children);
     }
 
     TRIES = 0;                  /* As long as there is activity, we're not stuck */
@@ -421,6 +425,7 @@ static void *HandleConnection(ServerConnectionState *conn)
 
     if (!ThreadUnlock(cft_server_children))
     {
+        /* TODO: what ? */
     }
 
     DeleteConn(conn);

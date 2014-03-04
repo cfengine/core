@@ -30,9 +30,6 @@ body delete init_delete
 
 bundle agent test
 {
-  meta:
-      "test_skip_unsupported" string => "windows";
-
   vars:
       "mode" int => "0644";
 
@@ -54,22 +51,27 @@ body perms test_perms(m)
 bundle agent check
 {
   vars:
-      "expect" string => "$(test.mode) 1 0 0 0";
+    !windows::
+      "expect[permoct]" string => "$(test.mode)";
+    any::
+      "expect[nlink]" string => "1";
+      "expect[uid]" string => "\d+";
+      "expect[gid]" string => "\d+";
+      "expect[size]" string => "0";
 
-      "result" string => execresult(
-	     "$(G.perl) -l $(this.promise_dirname)$(const.dirsep)..$(const.dirsep)stat.pl $(G.testfile)",
-	     "noshell");
+      "fields" slist => getindices("expect");
+      "result[$(fields)]" string => filestat("$(G.testfile)", "$(fields)");
 
   classes:
-      "ok" expression => strcmp("$(expect)", "$(result)");
+      "not_ok" not => regcmp("$(expect[$(fields)])", "$(result[$(fields)])");
 
   reports:
     DEBUG::
-      "expected: '$(expect)'";
-      "got:      '$(result)'";
-    ok::
+      "expected: $(fields) = '$(expect[$(fields)])'";
+      "got:      $(fields) = '$(result[$(fields)])'";
+    !not_ok::
       "$(this.promise_filename) Pass";
-    !ok::
+    not_ok::
       "$(this.promise_filename) FAIL";
 }
 

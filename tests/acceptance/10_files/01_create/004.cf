@@ -30,9 +30,6 @@ body delete init_delete
 
 bundle agent test
 {
-  meta:
-      "test_skip_unsupported" string => "windows";
-
   vars:
       "mode" int => "01010";
 
@@ -52,14 +49,19 @@ body perms test_perms
 bundle agent check
 {
   vars:
-      "expect" string => "$(test.mode) 1 \d+ \d+ 0";
+    !windows::
+      "expect[permoct]" string => "$(test.mode)";
+    any::
+      "expect[nlink]" string => "1";
+      "expect[uid]" string => "\d+";
+      "expect[gid]" string => "\d+";
+      "expect[size]" string => "0";
 
-      "result" string => execresult(
-	     "$(G.perl) -l $(this.promise_dirname)$(const.dirsep)..$(const.dirsep)stat.pl $(G.testfile)",
-	     "noshell");
+      "fields" slist => getindices("expect");
+      "result[$(fields)]" string => filestat("$(G.testfile)", "$(fields)");
 
   classes:
-      "ok" expression => regcmp("$(expect)", "$(result)");
+      "not_ok" not => regcmp("$(expect[$(fields)])", "$(result[$(fields)])");
 
   #
   # OS X refuses to open(2) file you have no permissions for (which is required for safe_chmod),
@@ -67,11 +69,11 @@ bundle agent check
   #
   reports:
     DEBUG::
-      "expected: '$(expect)'";
-      "got:      '$(result)'";
-    ok|darwin::
+      "expected: $(fields) = '$(expect[$(fields)])'";
+      "got:      $(fields) = '$(result[$(fields)])'";
+    !not_ok|darwin::
       "$(this.promise_filename) Pass";
-    !ok&!darwin::
+    not_ok&!darwin::
       "$(this.promise_filename) FAIL";
 }
 

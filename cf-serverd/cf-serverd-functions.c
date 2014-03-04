@@ -608,8 +608,7 @@ void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *con
     Log(LOG_LEVEL_DEBUG, "Checking file updates for input file '%s'",
         config->input_file);
 
-    time_t validated_at =
-        ReadTimestampFromPolicyValidatedMasterfiles(config, NULL);
+    time_t validated_at = ReadTimestampFromPolicyValidatedFile(config, NULL);
 
     if (config->agent_specific.daemon.last_validated_at < validated_at)
     {

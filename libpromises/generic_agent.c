@@ -70,7 +70,7 @@ static char PIDFILE[CF_BUFSIZE] = ""; /* GLOBAL_C */
 static void CheckWorkingDirectories(EvalContext *ctx);
 
 static bool WritePolicyValidatedFileToMasterfiles(const GenericAgentConfig *config);
-static void GetPromisesValidatedFileFromMasterfiles(char *filename, size_t max_size, const GenericAgentConfig *config, const char *maybe_dirname);
+static void GetPromisesValidatedFile(char *filename, size_t max_size, const GenericAgentConfig *config, const char *maybe_dirname);
 static bool WriteReleaseIdFileToMasterfiles(void);
 static bool WriteReleaseIdFile(const char *filename, const char *dirname);
 static bool GeneratePolicyReleaseIDFromTree(char release_id_out[GENERIC_AGENT_CHECKSUM_SIZE], const char *policy_dir);
@@ -300,7 +300,7 @@ static JsonElement *ReadPolicyValidatedFileFromMasterfiles(const GenericAgentCon
 {
     char filename[CF_MAXVARSIZE];
 
-    GetPromisesValidatedFileFromMasterfiles(filename, sizeof(filename), config, maybe_dirname);
+    GetPromisesValidatedFile(filename, sizeof(filename), config, maybe_dirname);
 
     return ReadPolicyValidatedFile(filename);
 }
@@ -410,7 +410,7 @@ bool GenericAgentTagReleaseDirectory(const GenericAgentConfig *config, const cha
     }
 
     Log(LOG_LEVEL_DEBUG, "The promises_validated of %s needs to be updated", dirname);
-    GetPromisesValidatedFileFromMasterfiles(filename, sizeof(filename), config, dirname);
+    GetPromisesValidatedFile(filename, sizeof(filename), config, dirname);
 
     bool wrote_validated = WritePolicyValidatedFile(config, filename, have_tree_checksum ? tree_checksum : NULL);
 
@@ -432,7 +432,7 @@ static bool WritePolicyValidatedFileToMasterfiles(const GenericAgentConfig *conf
 {
     char filename[CF_MAXVARSIZE];
 
-    GetPromisesValidatedFileFromMasterfiles(filename, sizeof(filename), config, NULL);
+    GetPromisesValidatedFile(filename, sizeof(filename), config, NULL);
 
     char dirname[PATH_MAX] = "";
     strlcpy(dirname, filename, PATH_MAX);
@@ -836,7 +836,7 @@ bool GeneratePolicyReleaseID(char release_id_out[GENERIC_AGENT_CHECKSUM_SIZE], c
 /**
  * @brief Gets the promises_validated file name depending on context and options
  */
-static void GetPromisesValidatedFileFromMasterfiles(char *filename, size_t max_size, const GenericAgentConfig *config, const char *maybe_dirname)
+static void GetPromisesValidatedFile(char *filename, size_t max_size, const GenericAgentConfig *config, const char *maybe_dirname)
 {
     if (NULL != maybe_dirname)
     {
@@ -897,7 +897,7 @@ static char* ReadReleaseIdFromReleaseIdFileMasterfiles(const char *maybe_dirname
 }
 
 // TODO: refactor Read*FromPolicyValidatedMasterfiles
-time_t ReadTimestampFromPolicyValidatedMasterfiles(const GenericAgentConfig *config, const char *maybe_dirname)
+time_t ReadTimestampFromPolicyValidatedFile(const GenericAgentConfig *config, const char *maybe_dirname)
 {
     time_t validated_at = 0;
     {
@@ -943,8 +943,7 @@ char* ReadChecksumFromPolicyValidatedMasterfiles(const GenericAgentConfig *confi
  */
 bool GenericAgentIsPolicyReloadNeeded(const GenericAgentConfig *config)
 {
-    time_t validated_at =
-        ReadTimestampFromPolicyValidatedMasterfiles(config, NULL);
+    time_t validated_at = ReadTimestampFromPolicyValidatedFile(config, NULL);
 
     if (config->agent_type == AGENT_TYPE_SERVER ||
         config->agent_type == AGENT_TYPE_MONITOR ||

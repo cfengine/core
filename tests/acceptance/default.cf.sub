@@ -242,6 +242,11 @@ body contain default_cf_sub_shell
       useshell => "true";
 }
 
+body action default_cf_sub_immediate
+{
+      ifelapsed => "0";
+}
+
 body classes default_cf_sub_if_ok(x)
 {
       promise_repaired => { "$(x)" };
@@ -359,6 +364,39 @@ bundle agent default_fini(file)
       contain => useshell;
       "$(G.rm) -rf $(sys.workdir)/state/cf_state.*"
       contain => useshell;
+}
+
+bundle agent default_cf_sub_copydir(from, to)
+{
+  files:
+      "$(to)/."
+      create => "true",
+      depth_search => default_cf_sub_recurse("inf"),
+      copy_from => default_cf_sub_sync($(from));
+}
+
+bundle agent default_cf_sub_copyfile(from, to)
+{
+  files:
+      "$(to)"
+      create => "true",
+      copy_from => default_cf_sub_sync($(from));
+}
+
+body depth_search default_cf_sub_recurse(d)
+
+{
+      depth => "$(d)";
+      xdev  => "true";
+}
+
+body copy_from default_cf_sub_sync(f)
+{
+      source => "$(f)";
+      purge => "true";
+      preserve => "false";
+      type_check => "false";
+      compare => "digest";
 }
 
 bundle agent default_cf_sub_makefile(file, str)

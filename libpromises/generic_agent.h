@@ -100,7 +100,7 @@ bool GenericAgentArePromisesValid(const GenericAgentConfig *config);
 time_t ReadTimestampFromPolicyValidatedFile(const GenericAgentConfig *config, const char *maybe_dirname);
 
 bool GeneratePolicyReleaseID(char release_id_out[GENERIC_AGENT_CHECKSUM_SIZE], const char *dirname);
-bool GenericAgentIsPolicyReloadNeeded(const GenericAgentConfig *config);
+bool GenericAgentIsPolicyReloadNeeded(GenericAgentConfig *config);
 
 void CloseLog(void);
 Seq *ControlBodyConstraints(const Policy *policy, AgentType agent);
@@ -119,7 +119,7 @@ void GenericAgentConfigApply(EvalContext *ctx, const GenericAgentConfig *config)
 
 void GenericAgentConfigSetInputFile(GenericAgentConfig *config, const char *inputdir, const char *input_file);
 void GenericAgentConfigSetBundleSequence(GenericAgentConfig *config, const Rlist *bundlesequence);
-bool GenericAgentTagReleaseDirectory(const GenericAgentConfig *config, const char *dirname);
+bool GenericAgentTagReleaseDirectory(const GenericAgentConfig *config, const char *dirname, bool write_validated, bool write_release);
 
 void GetReleaseIdFile(const char *base_path, char *filename, size_t max_size);
 #endif

@@ -69,9 +69,8 @@ static char PIDFILE[CF_BUFSIZE] = ""; /* GLOBAL_C */
 
 static void CheckWorkingDirectories(EvalContext *ctx);
 
-static bool WritePolicyValidatedFileToMasterfiles(const GenericAgentConfig *config);
+static void GetAutotagDir(char *dirname, size_t max_size, const char *maybe_dirname);
 static void GetPromisesValidatedFile(char *filename, size_t max_size, const GenericAgentConfig *config, const char *maybe_dirname);
-static bool WriteReleaseIdFileToMasterfiles(void);
 static bool WriteReleaseIdFile(const char *filename, const char *dirname);
 static bool GeneratePolicyReleaseIDFromTree(char release_id_out[GENERIC_AGENT_CHECKSUM_SIZE], const char *policy_dir);
 static bool GeneratePolicyReleaseIDFromGit(char release_id_out[GENERIC_AGENT_CHECKSUM_SIZE], const char *policy_dir);
@@ -230,11 +229,10 @@ bool GenericAgentCheckPolicy(GenericAgentConfig *config, bool force_validation, 
             bool policy_check_ok = GenericAgentArePromisesValid(config);
             if (policy_check_ok && write_validated_file)
             {
-                WritePolicyValidatedFileToMasterfiles(config);
-                if (GetAmPolicyHub(GetWorkDir()))
-                {
-                    WriteReleaseIdFileToMasterfiles();
-                }
+                GenericAgentTagReleaseDirectory(config,
+                                                NULL, // use GetAutotagDir
+                                                write_validated_file, // true
+                                                GetAmPolicyHub(GetWorkDir())); // write release ID?
             }
 
             if (config->agent_specific.agent.bootstrap_policy_server && !policy_check_ok)
@@ -339,6 +337,7 @@ static bool WritePolicyValidatedFile(ARG_UNUSED const GenericAgentConfig *config
     WriterClose(w);
     JsonDestroy(info);
 
+    Log(LOG_LEVEL_VERBOSE, "Saved policy validated marker file '%s'", filename);
     return true;
 }
 
@@ -346,123 +345,100 @@ static bool WritePolicyValidatedFile(ARG_UNUSED const GenericAgentConfig *config
  * @brief Writes the policy validation file and release ID to a directory
  * @return True if successful.
  */
-bool GenericAgentTagReleaseDirectory(const GenericAgentConfig *config, const char *dirname)
+bool GenericAgentTagReleaseDirectory(const GenericAgentConfig *config, const char *dirname, bool write_validated, bool write_release)
 {
+    char local_dirname[FILENAME_MAX + 1];
+    if (NULL == dirname)
+    {
+        GetAutotagDir(local_dirname, FILENAME_MAX, NULL);
+        dirname = local_dirname;
+    }
+
     char filename[CF_MAXVARSIZE];
     char git_checksum[GENERIC_AGENT_CHECKSUM_SIZE];
     bool have_git_checksum = GeneratePolicyReleaseIDFromGit(git_checksum, dirname);
 
-    Log(LOG_LEVEL_DEBUG, "Tagging directory %s for release", dirname);
+    Log(LOG_LEVEL_DEBUG, "Tagging directory %s for release (write_validated: %s, write_release: %s)",
+        dirname,
+        write_validated ? "yes" : "no",
+        write_release ? "yes" : "no");
 
-    // first, tag the release ID
-    GetReleaseIdFile(dirname, filename, sizeof(filename));
-    char *id = ReadReleaseIdFromReleaseIdFileMasterfiles(dirname);
-    if (NULL == id
-        || (have_git_checksum && 0 != strcmp(id, git_checksum)))
+    if (write_release)
     {
-        if (NULL == id)
+        // first, tag the release ID
+        GetReleaseIdFile(dirname, filename, sizeof(filename));
+        char *id = ReadReleaseIdFromReleaseIdFileMasterfiles(dirname);
+        if (NULL == id
+            || (have_git_checksum && 0 != strcmp(id, git_checksum)))
         {
-            Log(LOG_LEVEL_DEBUG, "The release_id of %s was missing", dirname);
-        }
-        else
-        {
-            Log(LOG_LEVEL_DEBUG, "The release_id of %s needs to be updated", dirname);
+            if (NULL == id)
+            {
+                Log(LOG_LEVEL_DEBUG, "The release_id of %s was missing", dirname);
+            }
+            else
+            {
+                Log(LOG_LEVEL_DEBUG, "The release_id of %s needs to be updated", dirname);
+            }
+
+            bool wrote_release = WriteReleaseIdFile(filename, dirname);
+            if (!wrote_release)
+            {
+                Log(LOG_LEVEL_VERBOSE, "The release_id file %s was NOT updated", filename);
+                free(id);
+                return false;
+            }
+            else
+            {
+                Log(LOG_LEVEL_DEBUG, "The release_id file %s was updated", filename);
+            }
         }
 
-        bool wrote_release = WriteReleaseIdFile(filename, dirname);
-        if (!wrote_release)
-        {
-            Log(LOG_LEVEL_VERBOSE, "The release_id file %s was NOT updated", filename);
-            free(id);
-            return false;
-        }
-        else
-        {
-            Log(LOG_LEVEL_DEBUG, "The release_id file %s was updated", filename);
-        }
+        free(id);
     }
-
-    free(id);
 
     // now, tag the promises_validated
-    Log(LOG_LEVEL_DEBUG, "Tagging directory %s for validation", dirname);
-
-    char tree_checksum[GENERIC_AGENT_CHECKSUM_SIZE];
-    bool have_tree_checksum = GeneratePolicyReleaseIDFromTree(tree_checksum, dirname);
-
-    if (have_tree_checksum)
+    if (write_validated)
     {
-        char *validated_checksum_tmp = ReadChecksumFromPolicyValidatedMasterfiles(config, dirname);
-        bool equal =
-            NULL != validated_checksum_tmp
-            && 0 == strncmp(tree_checksum, validated_checksum_tmp, GENERIC_AGENT_CHECKSUM_SIZE);
-        free(validated_checksum_tmp);
+        Log(LOG_LEVEL_DEBUG, "Tagging directory %s for validation", dirname);
 
-        if (equal)
+        char tree_checksum[GENERIC_AGENT_CHECKSUM_SIZE];
+        bool have_tree_checksum = GeneratePolicyReleaseIDFromTree(tree_checksum, dirname);
+
+        if (have_tree_checksum)
         {
-            Log(LOG_LEVEL_DEBUG, "The tree checksum of %s was the same as the validated policy checksum", dirname);
-            return true;
+            char *validated_checksum_tmp = ReadChecksumFromPolicyValidatedMasterfiles(config, dirname);
+            bool equal =
+                NULL != validated_checksum_tmp
+                && 0 == strncmp(tree_checksum, validated_checksum_tmp, GENERIC_AGENT_CHECKSUM_SIZE);
+            free(validated_checksum_tmp);
+
+            if (equal)
+            {
+                Log(LOG_LEVEL_DEBUG, "The tree checksum of %s was the same as the validated policy checksum", dirname);
+                return true;
+            }
         }
-    }
-    else
-    {
-        Log(LOG_LEVEL_DEBUG, "Could not checksum directory %s", dirname);
-    }
+        else
+        {
+            Log(LOG_LEVEL_DEBUG, "Could not checksum directory %s", dirname);
+        }
 
-    Log(LOG_LEVEL_DEBUG, "The promises_validated of %s needs to be updated", dirname);
-    GetPromisesValidatedFile(filename, sizeof(filename), config, dirname);
+        Log(LOG_LEVEL_DEBUG, "The promises_validated of %s needs to be updated", dirname);
+        GetPromisesValidatedFile(filename, sizeof(filename), config, dirname);
 
-    bool wrote_validated = WritePolicyValidatedFile(config, filename, have_tree_checksum ? tree_checksum : NULL);
+        bool wrote_validated = WritePolicyValidatedFile(config, filename, have_tree_checksum ? tree_checksum : NULL);
 
-    if (!wrote_validated)
-    {
-        Log(LOG_LEVEL_VERBOSE, "The promises_validated file %s was NOT updated", filename);
-        return false;
-    }
+        if (!wrote_validated)
+        {
+            Log(LOG_LEVEL_VERBOSE, "The promises_validated file %s was NOT updated", filename);
+            return false;
+        }
 
-    Log(LOG_LEVEL_DEBUG, "The promises_validated file %s was updated", filename);
-    return true;
-}
-
-/**
- * @brief Writes a file in sys.masterdir or whereever -f points with a contained timestamp and checksum to mark a policy file as validated
- * @return True if successful.
- */
-static bool WritePolicyValidatedFileToMasterfiles(const GenericAgentConfig *config)
-{
-    char filename[CF_MAXVARSIZE];
-
-    GetPromisesValidatedFile(filename, sizeof(filename), config, NULL);
-
-    char dirname[PATH_MAX] = "";
-    strlcpy(dirname, filename, PATH_MAX);
-    DeleteSlash(dirname);
-    ChopLastNode(dirname);
-
-    char tree_checksum[GENERIC_AGENT_CHECKSUM_SIZE];
-    bool have_tree_checksum = GeneratePolicyReleaseIDFromTree(tree_checksum, dirname);
-
-    return WritePolicyValidatedFile(config,
-                                    filename,
-                                    have_tree_checksum ? tree_checksum : NULL);
-}
-
-/**
- * @brief Writes a file with a contained release ID based on git SHA,
- *        or file checksum if git SHA is not available.
- * @return True if successful or if no release ID is needed (-f specified).
- */
-static bool WriteReleaseIdFileToMasterfiles(void)
-{
-    if (MINUSF)
-    {
+        Log(LOG_LEVEL_DEBUG, "The promises_validated file %s was updated", filename);
         return true;
     }
 
-    char filename[CF_MAXVARSIZE];
-
-    GetReleaseIdFile(GetMasterDir(), filename, sizeof(filename));
-    return WriteReleaseIdFile(filename, GetMasterDir());
+    return true;
 }
 
 /**
@@ -499,6 +475,7 @@ static bool WriteReleaseIdFile(const char *filename, const char *dirname)
     WriterClose(w);
     JsonDestroy(info);
 
+    Log(LOG_LEVEL_VERBOSE, "Saved policy release ID file '%s'", filename);
     return true;
 }
 
@@ -838,24 +815,44 @@ bool GeneratePolicyReleaseID(char release_id_out[GENERIC_AGENT_CHECKSUM_SIZE], c
  */
 static void GetPromisesValidatedFile(char *filename, size_t max_size, const GenericAgentConfig *config, const char *maybe_dirname)
 {
-    if (NULL != maybe_dirname)
+    char dirname[FILENAME_MAX + 1];
+    GetAutotagDir(dirname, max_size, maybe_dirname);
+
+    if (NULL == maybe_dirname && MINUSF)
     {
-        snprintf(filename, max_size, "%s/cf_promises_validated", maybe_dirname);
-    }
-    else if (MINUSF)
-    {
-        snprintf(filename, max_size, "%s/state/validated_%s", CFWORKDIR, CanonifyName(config->original_input_file));
-    }
-    else if (GetAmPolicyHub(GetWorkDir()))
-    {
-        snprintf(filename, max_size, "%s/cf_promises_validated", GetMasterDir());
+        snprintf(filename, max_size, "%s/validated_%s", dirname, CanonifyName(config->original_input_file));
     }
     else
     {
-        snprintf(filename, max_size, "%s/cf_promises_validated", GetInputDir());
+        snprintf(filename, max_size, "%s/cf_promises_validated", dirname);
     }
 
     MapName(filename);
+}
+
+ /**
+ * @brief Gets the promises_validated file name depending on context and options
+ */
+static void GetAutotagDir(char *dirname, size_t max_size, const char *maybe_dirname)
+{
+    if (NULL != maybe_dirname)
+    {
+        strlcpy(dirname, maybe_dirname, max_size);
+    }
+    else if (MINUSF)
+    {
+        snprintf(dirname, max_size, "%s/state", CFWORKDIR);
+    }
+    else if (GetAmPolicyHub(GetWorkDir()))
+    {
+        strlcpy(dirname, GetMasterDir(), max_size);
+    }
+    else
+    {
+        strlcpy(dirname, GetInputDir(), max_size);
+    }
+
+    MapName(dirname);
 }
 
 /**
@@ -945,7 +942,7 @@ char* ReadChecksumFromPolicyValidatedMasterfiles(const GenericAgentConfig *confi
  * @NOTE Updates the config->agent_specific.daemon.last_validated_at timestamp
  *       used by serverd, execd etc daemons when checking for new policies.
  */
-bool GenericAgentIsPolicyReloadNeeded(const GenericAgentConfig *config)
+bool GenericAgentIsPolicyReloadNeeded(GenericAgentConfig *config)
 {
     time_t validated_at = ReadTimestampFromPolicyValidatedFile(config, NULL);
 
@@ -962,7 +959,10 @@ bool GenericAgentIsPolicyReloadNeeded(const GenericAgentConfig *config)
             "Clock seems to have jumped back in time, mtime of %jd is newer than current time, touching it",
             (intmax_t) validated_at);
 
-        WritePolicyValidatedFileToMasterfiles(config);
+        GenericAgentTagReleaseDirectory(config,
+                                        NULL, // use GetAutotagDir
+                                        true, // write validated
+                                        false); // write release ID
         return true;
     }
 

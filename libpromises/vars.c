@@ -298,10 +298,10 @@ size_t ExtractScalarPrefix(Buffer *out, const char *str, size_t len)
     else if (dollar_point > str)
     {
         size_t prefix_len = dollar_point - str;
-        if (prefix_len )
-
-
-        BufferAppend(out, str, prefix_len);
+        if (prefix_len > 0)
+        {
+            BufferAppend(out, str, prefix_len);
+        }
         return prefix_len;
     }
     return 0;

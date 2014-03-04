@@ -200,7 +200,8 @@ int ScheduleEditXmlOperations(EvalContext *ctx, const Bundle *bp, Attributes a, 
 /* Level                                                                   */
 /***************************************************************************/
 
-static PromiseResult KeepEditXmlPromise(EvalContext *ctx, const Promise *pp, void *param)
+static PromiseResult KeepEditXmlPromise(EvalContext *ctx, const Promise *pp,
+                                        ARG_UNUSED void *param)
 {
     PromiseBanner(pp);
 

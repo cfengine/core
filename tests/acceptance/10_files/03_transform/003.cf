@@ -59,7 +59,7 @@ bundle agent test
 
   files:
       "$(G.testdir)"
-      transformer => "/bin/sh -c 'echo $(this.promiser) >> $(counter)'",
+      transformer => "$(G.echo) $(this.promiser) >> $(counter)",
       file_select => test_plain,
       depth_search => test_recurse;
 }

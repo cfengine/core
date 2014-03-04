@@ -12,19 +12,6 @@ body common control
       version => "1.0";
 }
 
-bundle common g
-{
-  vars:
-      # This extracts the inode number
-      "command" string => 'printf "%d", (stat("$(G.testfile)"))[1]';
-
-      "source" string => "$(G.etc_group)";
-      "source_command" string => 'printf "%d", (stat("$(g.source)"))[1]';
-      "source_ino" string => execresult(
-					 "$(G.perl) -le '$(g.source_command)'",
-					 "noshell");
-}
-
 #######################################################
 
 bundle agent init
@@ -44,6 +31,9 @@ body delete init_delete
 
 bundle agent test
 {
+  vars:
+      "inode" string => filestat("$(G.etc_group)", "ino");
+
   files:
       "$(G.testfile)"
       create => "true",
@@ -61,16 +51,14 @@ body link_from test_link
 bundle agent check
 {
   vars:
-      "result" string => execresult(
-				     "$(G.perl) -le '$(g.command)'",
-				     "noshell");
+      "result" string => filestat("$(G.testfile)", "ino");
 
   classes:
-      "ok" expression => strcmp("$(g.source_ino)", "$(result)");
+      "ok" expression => strcmp("$(test.inode)", "$(result)");
 
   reports:
     DEBUG::
-      "expected: '$(g.source_ino)'";
+      "expected: '$(test.inode)'";
       "got:      '$(result)'";
     ok::
       "$(this.promise_filename) Pass";

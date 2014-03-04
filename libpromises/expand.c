@@ -1004,10 +1004,13 @@ ProtocolVersion ProtocolVersionParse(const char *s)
     {
         return CF_PROTOCOL_CLASSIC;
     }
-    else if (strcmp(s, "2") == 0 ||
-             strcmp(s, "latest") == 0)
+    else if (strcmp(s, "2") == 0)
     {
         return CF_PROTOCOL_TLS;
+    }
+    else if (strcmp(s, "latest") == 0)
+    {
+        return CF_PROTOCOL_LATEST;
     }
     else
     {

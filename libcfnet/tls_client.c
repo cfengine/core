@@ -160,12 +160,8 @@ void TLSDeInitialize()
 }
 
 
-/* The only protocol_version we support inside TLS, for now... */
-#define CFNET_PROTOCOL_VERSION 2
-
-
 /**
- * @return > 0: a mutually acceptable version was negotiated
+ * @return > 0: return value is a mutually acceptable version that was negotiated
  *           0: no agreement on version was reached
  *          -1: error
  */
@@ -177,11 +173,22 @@ int TLSClientNegotiateProtocol(const ConnectionInfo *conn_info)
     /* Receive CFE_v%d ... */
     ret = TLSRecvLine(ConnectionInfoSSL(conn_info), input, sizeof(input));
 
+    ProtocolVersion wanted_version;
+    if (conn_info->type == CF_PROTOCOL_UNDEFINED)
+    {
+        /* TODO parse CFE_v%d received and use that version if it's lower. */
+        wanted_version = CF_PROTOCOL_LATEST;
+    }
+    else
+    {
+        wanted_version = conn_info->type;
+    }
+
     /* Send "CFE_v%d cf-agent version". */
     char version_string[128];
     int len = snprintf(version_string, sizeof(version_string),
                        "CFE_v%d %s %s\n",
-                       CFNET_PROTOCOL_VERSION, "cf-agent", VERSION);
+                       wanted_version, "cf-agent", VERSION);
 
     ret = TLSSend(ConnectionInfoSSL(conn_info), version_string, len);
     if (ret != len)
@@ -193,7 +200,10 @@ int TLSClientNegotiateProtocol(const ConnectionInfo *conn_info)
     /* Receive OK */
     ret = TLSRecvLine(ConnectionInfoSSL(conn_info), input, sizeof(input));
     if (ret > 1 && strncmp(input, "OK", 2) == 0)
-        return 1;
+    {
+        return wanted_version;
+    }
+
     return 0;
 }
 
@@ -244,14 +254,7 @@ int TLSTry(ConnectionInfo *conn_info)
         return -1;
     }
     assert(SSLCLIENTCONTEXT != NULL && PRIVKEY != NULL && PUBKEY != NULL);
-    if (ConnectionInfoProtocolVersion(conn_info) == CF_PROTOCOL_TLS)
-    {
-        Log(LOG_LEVEL_WARNING,
-            "We are already on TLS mode, skipping initialization");
-        return 0;
-    }
 
-    ConnectionInfoSetProtocolVersion(conn_info, CF_PROTOCOL_TLS);
     ConnectionInfoSetSSL(conn_info, SSL_new(SSLCLIENTCONTEXT));
     SSL *ssl = ConnectionInfoSSL(conn_info);
     if (ssl == NULL)

@@ -218,9 +218,7 @@ int ServerNegotiateProtocol(const ConnectionInfo *conn_info)
     int ret;
     char input[CF_SMALLBUF] = "";
     /* The only protocol we support inside TLS, for now... */
-    const int SERVER_PROTOCOL_VERSION = CF_PROTOCOL_TLS;
-
-
+    const int SERVER_PROTOCOL_VERSION = CF_PROTOCOL_LATEST;
 
     /* Send "CFE_v%d cf-serverd version". */
     char version_string[CF_MAXVARSIZE];

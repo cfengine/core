@@ -226,6 +226,10 @@ int TLSConnect(ConnectionInfo *conn_info, bool trust_server,
         return -1;
     }
 
+    /* This contained the value we requested from the server, and now we put
+     * in the value that was negotiated. */
+    conn_info->type = ret;
+
     /* We continue by sending identification data. */
     ret = TLSClientSendIdentity(conn_info, username);
     if (ret == -1)
@@ -412,6 +416,10 @@ AgentConnection *ServerConnection(const char *server, const char *port,
         return NULL;
     }
 
+    /* Set the version to request. After TLSConnect() it will have the version
+     * we finally ended up with. */
+    conn->conn_info->type = flags.protocol_version;
+
     switch (flags.protocol_version)
     {
     case CF_PROTOCOL_UNDEFINED:
@@ -434,7 +442,7 @@ AgentConnection *ServerConnection(const char *server, const char *port,
             return NULL;
         }
         assert(ret == 1);
-        ConnectionInfoSetProtocolVersion(conn->conn_info, CF_PROTOCOL_TLS);
+
         ConnectionInfoSetConnectionStatus(conn->conn_info, CF_CONNECTION_ESTABLISHED);
         LastSaw1(conn->remoteip, ConnectionInfoPrintableKeyHash(conn->conn_info),
                  LAST_SEEN_ROLE_CONNECT);
@@ -442,7 +450,6 @@ AgentConnection *ServerConnection(const char *server, const char *port,
 
     case CF_PROTOCOL_CLASSIC:
 
-        ConnectionInfoSetProtocolVersion(conn->conn_info, CF_PROTOCOL_CLASSIC);
         conn->encryption_type = CfEnterpriseOptions();
 
         if (!IdentifyAgent(conn->conn_info))

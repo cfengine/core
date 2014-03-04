@@ -55,10 +55,14 @@ typedef enum
 {
     CF_PROTOCOL_UNDEFINED = 0,
     CF_PROTOCOL_CLASSIC = 1,
-    CF_PROTOCOL_TLS = 2                      /* Default for new connections */
+    /* --- Greater versions use TLS as secure communications layer --- */
+    CF_PROTOCOL_TLS = 2
 } ProtocolVersion;
 
-static const char * const PROTOCOL_VERSION_STRING[CF_PROTOCOL_TLS + 1] = {
+/* We use CF_PROTOCOL_LATEST as the default for new connections. */
+#define CF_PROTOCOL_LATEST CF_PROTOCOL_TLS
+
+static const char * const PROTOCOL_VERSION_STRING[CF_PROTOCOL_LATEST + 1] = {
     "undefined",
     "classic",
     "latest"

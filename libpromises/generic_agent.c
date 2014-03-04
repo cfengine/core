@@ -939,7 +939,13 @@ bool GenericAgentIsPolicyReloadNeeded(GenericAgentConfig *config, const Policy *
 {
     time_t validated_at =
         ReadTimestampFromPolicyValidatedMasterfiles(config, NULL);
-    config->agent_specific.daemon.last_validated_at = validated_at;
+
+    if (config->agent_type == AGENT_TYPE_SERVER ||
+        config->agent_type == AGENT_TYPE_MONITOR ||
+        config->agent_type == AGENT_TYPE_EXECUTOR)
+    {
+        config->agent_specific.daemon.last_validated_at = validated_at;
+    }
 
     if (validated_at > time(NULL))
     {

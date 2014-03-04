@@ -846,9 +846,13 @@ static void GetPromisesValidatedFile(char *filename, size_t max_size, const Gene
     {
         snprintf(filename, max_size, "%s/state/validated_%s", CFWORKDIR, CanonifyName(config->original_input_file));
     }
-    else
+    else if (GetAmPolicyHub(GetWorkDir()))
     {
         snprintf(filename, max_size, "%s/cf_promises_validated", GetMasterDir());
+    }
+    else
+    {
+        snprintf(filename, max_size, "%s/cf_promises_validated", GetInputDir());
     }
 
     MapName(filename);

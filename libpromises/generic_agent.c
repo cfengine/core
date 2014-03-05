@@ -931,15 +931,27 @@ char* ReadChecksumFromPolicyValidatedMasterfiles(const GenericAgentConfig *confi
     return checksum_str;
 }
 
-bool GenericAgentIsPolicyReloadNeeded(const GenericAgentConfig *config, const Policy *policy)
+/**
+ * @NOTE Updates the config->agent_specific.daemon.last_validated_at timestamp
+ *       used by serverd, execd etc daemons when checking for new policies.
+ */
+bool GenericAgentIsPolicyReloadNeeded(GenericAgentConfig *config, const Policy *policy)
 {
-    time_t validated_at = ReadTimestampFromPolicyValidatedMasterfiles(config, NULL);
+    time_t validated_at =
+        ReadTimestampFromPolicyValidatedMasterfiles(config, NULL);
+
+    if (config->agent_type == AGENT_TYPE_SERVER ||
+        config->agent_type == AGENT_TYPE_MONITOR ||
+        config->agent_type == AGENT_TYPE_EXECUTOR)
+    {
+        config->agent_specific.daemon.last_validated_at = validated_at;
+    }
 
     if (validated_at > time(NULL))
     {
         Log(LOG_LEVEL_INFO,
-            "Clock seems to have jumped back in time - mtime of %lld is newer than current time - touching it",
-            (long long)validated_at);
+            "Clock seems to have jumped back in time, mtime of %jd is newer than current time, touching it",
+            (intmax_t) validated_at);
 
         WritePolicyValidatedFileToMasterfiles(config);
         return true;

@@ -78,6 +78,11 @@ typedef struct
         {
             char *bootstrap_policy_server;
         } agent;
+        struct
+        {
+            /* Time of the last validated_at timestamp seen. */
+            time_t last_validated_at;
+        } daemon;                                     /* execd, serverd etc */
     } agent_specific;
 
 } GenericAgentConfig;
@@ -95,7 +100,7 @@ bool GenericAgentArePromisesValid(const GenericAgentConfig *config);
 time_t ReadTimestampFromPolicyValidatedMasterfiles(const GenericAgentConfig *config, const char *maybe_dirname);
 
 bool GeneratePolicyReleaseID(char release_id_out[GENERIC_AGENT_CHECKSUM_SIZE], const char *dirname);
-bool GenericAgentIsPolicyReloadNeeded(const GenericAgentConfig *config, const Policy *policy);
+bool GenericAgentIsPolicyReloadNeeded(GenericAgentConfig *config, const Policy *policy);
 
 void CloseLog(void);
 Seq *ControlBodyConstraints(const Policy *policy, AgentType agent);

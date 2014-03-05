@@ -115,7 +115,7 @@ bool WriteAmPolicyHubFile(const char *workdir, bool am_policy_hub)
  * already bootstrapped server re-parses its policies, and the
  * policy_server.dat file has been removed. Then this function will be called
  * with NULL as new_policy_server, and cf-serverd will keep running even
- * without a policy server set." */
+ * without a policy server set. */
 void SetPolicyServer(EvalContext *ctx, const char *new_policy_server)
 {
     if (new_policy_server)
@@ -130,6 +130,7 @@ void SetPolicyServer(EvalContext *ctx, const char *new_policy_server)
     }
 }
 
+/* Set "sys.last_policy_update" variable. */
 void UpdateLastPolicyUpdateTime(EvalContext *ctx)
 {
     // Get the timestamp on policy update
@@ -144,10 +145,10 @@ void UpdateLastPolicyUpdateTime(EvalContext *ctx)
             return;
         }
     }
-    
+
     char timebuf[26];
     cf_strtimestamp_local(sb.st_mtime, timebuf);
-    
+
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "last_policy_update", timebuf, CF_DATA_TYPE_STRING, "source=agent");
 }
 

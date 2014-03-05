@@ -53,7 +53,7 @@ bundle agent test
 
 body link_from test_link
 {
-      source => "$(G.testfile.SOURCE)";
+      source => "$(g.sourcefile)";
       link_type => "hardlink";
 }
 
@@ -62,7 +62,7 @@ body link_from test_link
 bundle agent check
 {
   vars:
-      "expect" string => filestat("$(G.testfile.SOURCE)", "ino");
+      "expect" string => filestat("$(g.sourcefile)", "ino");
       "result" string => filestat("$(G.testfile)", "ino");
 
   classes:

@@ -30,7 +30,7 @@ body delete init_delete
 bundle agent test
 {
   vars:
-      "mode" string => filestat("$(G.etc_group)", "mode");
+      "mode" string => filestat("$(G.etc_group)", "modeoct");
 
   files:
       "$(G.testfile)"
@@ -57,11 +57,11 @@ bundle agent check
 {
   vars:
     !windows::
-      "expect[permoct]" string => "$(test.mode)";
+      "expect[modeoct]" string => "$(test.mode)";
     any::
       "expect[nlink]" string => "1";
-      "expect[uid]" string => "\d+";
-      "expect[gid]" string => "\d+";
+      "expect[uid]" string => "3";
+      "expect[gid]" string => "3";
       "expect[size]" string => filestat("$(G.etc_group)", "size");
 
       "fields" slist => getindices("expect");

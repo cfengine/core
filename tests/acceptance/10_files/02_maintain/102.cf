@@ -66,8 +66,8 @@ bundle agent check
       "expect[permoct]" string => "$(test.mode)";
     any::
       "expect[nlink]" string => "1";
-      "expect[uid]" string => "\d+";
-      "expect[gid]" string => "\d+";
+      "expect[uid]" string => "0";
+      "expect[gid]" string => "0";
       "expect[size]" string => "0";
 
       "fields" slist => getindices("expect");

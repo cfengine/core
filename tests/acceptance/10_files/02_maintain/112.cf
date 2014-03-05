@@ -51,7 +51,7 @@ body link_from test_link
 bundle agent check
 {
   vars:
-      "result" string => filestat("$(G.testfile)", "ino");
+      "result" string => filestat(filestat("$(G.testfile)", "linktarget"), "ino");
 
   classes:
       "ok" expression => strcmp("$(test.inode)", "$(result)");

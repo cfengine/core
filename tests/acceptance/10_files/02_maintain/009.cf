@@ -67,15 +67,15 @@ bundle agent check
 {
   vars:
     !windows::
-      "expect[permoct]" string => "$(test.mode)";
+      "expect[modeoct]" string => "\d+$(test.mode)";
     any::
       "expect[nlink]" string => "1";
-      "expect[uid]" string => "\d+";
-      "expect[gid]" string => "\d+";
+      "expect[uid]" string => "0";
+      "expect[gid]" string => "0";
       "expect[size]" string => "0";
 
       "fields" slist => getindices("expect");
-      "result[$(fields)]" string => filestat("$(G.testfile)", "$(fields)");
+      "result[$(fields)]" string => filestat("$(G.testfile)$(const.dirsep)copy_file", "$(fields)");
 
   classes:
       "not_ok" not => regcmp("$(expect[$(fields)])", "$(result[$(fields)])");

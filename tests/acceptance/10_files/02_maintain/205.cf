@@ -69,9 +69,6 @@ body classes init_set_class(class)
 
 bundle agent test
 {
-  #meta:
-   #   "test_skip_unsupported" string => "windows";
-
   files:
       "$(G.testfile)"
       create => "true",

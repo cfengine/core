@@ -62,13 +62,13 @@ bundle common test
 bundle agent check
 {
   vars:
-    "expected" string => '{"111":222,"10.100.250.11":["cflin111"],"10.100.250.10":["cflin110"]}';
+    "expected" string => '{"111":222,"10.100.250.11":["cflin111"],"10.100.250.10":["cflin110"],"10.100.250.12":["cflin111"],"10.100.250.13":["cflin110"]}';
 
   classes:
       "ok" expression => strcmp($(test.result), $(check.expected));
 
   reports:
-    DEBUG::
+    DEBUG.inform_mode::
       "Expected: '$(check.expected)'";
       "Result:   '$(test.result)'";
     ok::

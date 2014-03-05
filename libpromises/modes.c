@@ -153,6 +153,13 @@ int ParseModeString(const char *modestring, mode_t *plusmask, mode_t *minusmask)
             state = which;
             affected = 07777;   /* TODO: Hard-coded; see below */
             sscanf(sp, "%o", &value);
+
+            /* stat() returns the file types in the mode, but they
+             * can't be set.  So we clear the file-type as per POSIX
+             * 2001 instead of erroring out, leaving just the
+             * permissions. */
+            value &= ~S_IFMT;
+            
             if (value > 07777)  /* TODO: Hardcoded !
                                    Is this correct for all sorts of Unix ?
                                    What about NT ?

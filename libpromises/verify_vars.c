@@ -247,6 +247,8 @@ PromiseResult VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_d
                     }
                 }
 
+                RvalDestroy(rval);
+                VarRefDestroy(ref);
                 return result;
             }
         }

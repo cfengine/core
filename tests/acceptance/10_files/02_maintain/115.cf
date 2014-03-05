@@ -69,7 +69,6 @@ bundle agent check
       };
 
   reports:
-      "XXX $(this.promise_dirname)";
     DEBUG::
       "expected:     '$(test.inode)'";
       "got:          '$(Lresult)' => '$(result)'";

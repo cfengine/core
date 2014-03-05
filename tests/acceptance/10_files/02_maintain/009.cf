@@ -68,10 +68,10 @@ bundle agent check
   vars:
     !windows::
       "expect[modeoct]" string => "\d+$(test.mode)";
-    any::
-      "expect[nlink]" string => "1";
       "expect[uid]" string => "0";
       "expect[gid]" string => "0";
+    any::
+      "expect[nlink]" string => "1";
       "expect[size]" string => "0";
 
       "fields" slist => getindices("expect");

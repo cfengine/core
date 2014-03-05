@@ -12,23 +12,6 @@ body common control
       version => "1.0";
 }
 
-bundle common g
-{
-  vars:
-      # This extracts the inode number of the linked file
-      "command" string => 'printf "%d", (stat("$(G.testfile)"))[1]';
-      # This extracts the inode number of the symlink
-      "Lcommand" string => 'printf "%d", (lstat("$(G.testfile)"))[1]';
-
-      "source" string => "/etc/group";
-      "source_command" string => 'printf "%d", (stat("$(g.source)"))[1]';
-      "source_ino" string => execresult(
-					 "$(G.perl) -le '$(g.source_command)'",
-					 "noshell");
-
-      "target" string => "/etc/group";
-}
-
 #######################################################
 
 bundle agent init
@@ -38,9 +21,6 @@ bundle agent init
       create => "true",
       move_obstructions => "true",
       link_from => init_link;
-
-  meta:
-    "test_skip_unsupported" string => "windows";
 }
 
 body link_from init_link
@@ -53,6 +33,12 @@ body link_from init_link
 
 bundle agent test
 {
+  meta:
+      "test_skip_needs_work" string => "any";
+
+  vars:
+      "inode" string => filestat("$(G.etc_group)", "ino");
+
   files:
       "$(G.testfile)"
       classes => test_if_ok("test_ok"),
@@ -61,7 +47,7 @@ bundle agent test
 
 body link_from test_link
 {
-      source => "$(g.target)";
+      source => "$(G.etc_group)";
       link_type => "symlink";
 }
 
@@ -75,30 +61,24 @@ body classes test_if_ok(c)
 bundle agent check
 {
   vars:
-      "result" string => execresult(
-				     "$(G.perl) -le '$(g.command)'",
-				     "noshell");
-      "Lresult" string => execresult(
-				      "$(G.perl) -le '$(g.Lcommand)'",
-				      "noshell");
+      "result" string => filestat(filestat("$(G.testfile)", "linktarget"), "ino");
+      "Lresult" string => filestat("$(G.testfile)", "ino");
 
       # This tells us where the link points
-      "Tcommand" string => 'print readlink "$(G.testfile)"';
-      "link_target" string => execresult(
-					  "$(G.perl) -le '$(Tcommand)'",
-					  "noshell");
+      "link_target" string => filestat("$(G.testfile)", "linktarget");
 
   classes:
-      "okL" not => strcmp("$(g.source_ino)", "$(Lresult)");
+      "okL" not => strcmp("$(test.inode)", "$(Lresult)");
       "ok" and => { "test_ok", "okL",
-                    strcmp("$(g.source_ino)", "$(result)"),
-                    strcmp("$(link_target)", "$(g.target)")
+                    strcmp("$(test.inode)", "$(result)"),
+                    strcmp("$(link_target)", "$(G.etc_group)")
       };
 
   reports:
     DEBUG::
-      "expected: '$(g.source_ino)'";
-      "got:      '$(G.testfile)' => '$(link_target)'";
+      "expected:     '$(test.inode)'";
+      "got:          '$(Lresult)' => '$(result)'";
+      "got this too: '$(G.etc_group)' => '$(link_target)'";
     ok::
       "$(this.promise_filename) Pass";
     !ok::

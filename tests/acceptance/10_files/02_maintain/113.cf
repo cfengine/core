@@ -12,12 +12,6 @@ body common control
       version => "1.0";
 }
 
-bundle common g
-{
-  vars:
-      "sourcefile" string => "$(G.testfile).SOURCE";
-}
-
 #######################################################
 
 bundle agent init
@@ -26,7 +20,7 @@ bundle agent init
       "$(G.testfile)"
       delete => init_delete;
 
-      "$(g.sourcefile)"
+      "$(G.testfile).SOURCE"
       create => "true";
 }
 
@@ -41,8 +35,7 @@ body delete init_delete
 bundle agent test
 {
   meta:
-      "test_suppress_fail" string => "windows",
-        meta => { "redmine4608" };
+      "test_skip_unsupported" string => "windows";
 
   files:
       "$(G.testfile)"
@@ -53,7 +46,7 @@ bundle agent test
 
 body link_from test_link
 {
-      source => "$(g.sourcefile)";
+      source => "$(G.testfile).SOURCE";
       link_type => "hardlink";
 }
 
@@ -62,7 +55,7 @@ body link_from test_link
 bundle agent check
 {
   vars:
-      "expect" string => filestat("$(g.sourcefile)", "ino");
+      "expect" string => filestat("$(G.testfile).SOURCE", "ino");
       "result" string => filestat("$(G.testfile)", "ino");
 
   classes:

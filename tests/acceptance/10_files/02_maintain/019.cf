@@ -11,13 +11,6 @@ body common control
       version => "1.0";
 }
 
-bundle common g
-{
-  vars:
-      "testfile" string => "$(G.testdir)/testfile";
-      "command" string => 'printf "%o %d", (stat("$(G.testfile).cfdisabled"))[2]&07777, (stat(_))[3]';
-}
-
 #######################################################
 
 bundle agent init
@@ -49,15 +42,22 @@ body rename disable_file {
 bundle agent check
 {
   vars:
-      "result" string => execresult("$(G.perl) -le '$(g.command)'", "noshell");
+      "expect[permoct]" string => "333";
+      "expect[nlink]" string => "1";
+
+      "fields" slist => getindices("expect");
+      "result[$(fields)]" string => filestat("$(G.testfile).cfdisabled", "$(fields)");
 
   classes:
-      "ok" expression => strcmp("333 1", "$(result)");
+      "not_ok" not => regcmp("$(expect[$(fields)])", "$(result[$(fields)])");
 
   reports:
-    ok::
+    DEBUG::
+      "expected: $(fields) = '$(expect[$(fields)])'";
+      "got:      $(fields) = '$(result[$(fields)])'";
+    !not_ok::
       "$(this.promise_filename) Pass";
-    !ok::
+    not_ok::
       "$(this.promise_filename) FAIL";
 }
 ### PROJECT_ID: core

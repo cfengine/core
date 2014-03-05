@@ -1,6 +1,6 @@
 #######################################################
 #
-# Test that symlinks are set aside while copying trees of directorise (Issue 569)
+# Test that symlinks are set aside while copying trees of directories (Issue 569)
 #
 #######################################################
 
@@ -11,19 +11,11 @@ body common control
       version => "1.0";
 }
 
-bundle common g
-{
-  vars:
-      # This extracts the octal mode, and decimal nlink, uid, gid, size
-      "type_command" string => 'use Fcntl; print Fcntl::S_ISDIR((lstat("$(G.testdir)/destdir"))[2]);';
-}
-
 #######################################################
 
 bundle agent init
 {
   files:
-      "$(G.testdir)/srcdir/";
       "$(G.testdir)/srcdir/foo"
       create => "true";
       "$(G.testdir)/realdestdir/"
@@ -76,16 +68,14 @@ body action if_elapsed(x)
       expireafter => "$(x)";
 }
 
-
 #######################################################
 
 bundle agent check
 {
   vars:
-      "expect" string => "1";
+      "expect" string => "directory";
+      "result" string => filestat("$(G.testdir)/destdir", "type");
 
-      "result" string => execresult(
-				     "$(G.perl) -le '$(g.type_command)'", "noshell");
   classes:
       "ok" expression => strcmp("$(expect)", "$(result)");
 

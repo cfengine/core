@@ -11,19 +11,6 @@ body common control
       version => "1.0";
 }
 
-bundle common g
-{
-  vars:
-      # This extracts the octal mode, and decimal nlink, uid, gid, size
-      "command" string => 'printf "%#o" . " %d" x 4, (stat("$(G.testfile)"))[2]&07777, (stat(_))[3..5,7]';
-
-      "source" string => "$(G.etc_group)";
-      "source_command" string => 'printf "%d", (stat("$(g.source)"))[7]';
-      "source_size" string => execresult(
-					  "$(G.perl) -le '$(g.source_command)'",
-					  "noshell");
-}
-
 #######################################################
 
 bundle agent init
@@ -60,15 +47,14 @@ bundle agent test
   files:
     windows::
       "$(G.testdir)"
-        transformer => "$(G.echo) $(this.promiser) >> $(counter)",
-        file_select => test_plain,
-        depth_search => test_recurse;
-
+      transformer => "$(G.echo) $(this.promiser) >> $(counter)",
+      file_select => test_plain,
+      depth_search => test_recurse;
     !windows::
       "$(G.testdir)"
-        transformer => "/bin/sh -c 'echo $(this.promiser) >> $(counter)'",
-        file_select => test_plain,
-        depth_search => test_recurse;
+      transformer => "/bin/sh -c 'echo $(this.promiser) >> $(counter)'",
+      file_select => test_plain,
+      depth_search => test_recurse;
 }
 
 body file_select test_plain

@@ -16,10 +16,6 @@ bundle common g
 {
   vars:
       "sourcefile" string => "$(G.testfile).SOURCE";
-
-      # This extracts the inode number
-      "command" string => 'printf "%d", (stat("$(G.testfile)"))[1]';
-
 }
 
 #######################################################
@@ -44,6 +40,10 @@ body delete init_delete
 
 bundle agent test
 {
+  meta:
+      "test_suppress_fail" string => "windows",
+        meta => { "redmine4608" };
+
   files:
       "$(G.testfile)"
       create => "true",
@@ -53,7 +53,7 @@ bundle agent test
 
 body link_from test_link
 {
-      source => "$(g.sourcefile)";
+      source => "$(G.testfile.SOURCE)";
       link_type => "hardlink";
 }
 
@@ -62,21 +62,15 @@ body link_from test_link
 bundle agent check
 {
   vars:
-      "source_command" string => 'printf "%d", (stat("$(g.sourcefile)"))[1]';
-      "source_ino" string => execresult(
-					 "$(G.perl) -le '$(source_command)'",
-					 "noshell");
-
-      "result" string => execresult(
-				     "$(G.perl) -le '$(g.command)'",
-				     "noshell");
+      "expect" string => filestat("$(G.testfile.SOURCE)", "ino");
+      "result" string => filestat("$(G.testfile)", "ino");
 
   classes:
-      "ok" expression => strcmp("$(source_ino)", "$(result)");
+      "ok" expression => strcmp("$(expect)", "$(result)");
 
   reports:
     DEBUG::
-      "expected: '$(source_ino)'";
+      "expected: '$(expect)'";
       "got:      '$(result)'";
     ok::
       "$(this.promise_filename) Pass";

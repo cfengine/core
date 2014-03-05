@@ -31,9 +31,9 @@ bundle agent init
       "group" string => "undefined-please-fix";
 
     pass2.!windows::
-      "expect[modeoct]" string => "$(test.mode)";
-      "expect[uid]" string => "0";
-      "expect[gid]" string => "0";
+      "expect[modeoct]" string => "101755";
+      "expect[uid]" string => "333";
+      "expect[gid]" string => "444";
 
     pass2.any::
       "expect[nlink]" string => "1";
@@ -88,7 +88,7 @@ bundle agent check
 {
   vars:
     !windows::
-      "expect[modeoct]" string => "$(test.perms)";
+      "expect[modeoct]" string => "101755";
       "expect[uid]" string => "333";
       "expect[gid]" string => "444";
     any::

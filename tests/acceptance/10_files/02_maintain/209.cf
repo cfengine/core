@@ -14,19 +14,6 @@ body common control
       cache_system_functions => "false";
 }
 
-bundle common g
-{
-  vars:
-      # This extracts the octal mode, and decimal nlink, uid, gid, size
-      "command" string => 'printf "%o" . " %d" x 4, (stat("$(G.testfile)"))[2]&07777, (stat(_))[3..5,7]';
-
-      "source" string => "$(G.etc_group)";
-      "source_command" string => 'printf "%d", (stat("$(g.source)"))[7]';
-      "source_size" string => execresult(
-					  "$(G.perl) -le '$(g.source_command)'",
-					  "noshell");
-}
-
 #######################################################
 
 bundle agent init
@@ -37,10 +24,15 @@ bundle agent init
       "owner" string => "786756";
       "group" string => "786756";
 
-    pass2::
-      "result" string => execresult(
-				     "$(G.perl) -le '$(g.command)'",
-				     "noshell");
+    pass2.!windows::
+      "expect[modeoct]" string => "\d+$(init.mode)";
+      "expect[uid]" string => "$(init.owner)";
+      "expect[gid]" string => "$(init.group)";
+
+    pass2.any::
+      "expect[nlink]" string => "1";
+      "expect[size]" string => filestat("$(G.etc_group)", "size");
+      "fields" slist => getindices("expect");
 
   files:
       "$(G.testfile)"
@@ -72,9 +64,6 @@ body classes init_set_class(class)
 
 bundle agent test
 {
-  meta:
-      "test_skip_unsupported" string => "windows";
-
   files:
       "$(G.testfile)"
       create => "true",
@@ -87,29 +76,32 @@ body perms test_perms
       groups => { "23459", "none" };        # Should change to 23459
 }
 
-
 #######################################################
 
 bundle agent check
 {
   vars:
-      "result" string => execresult(
-				     "$(G.perl) -le '$(g.command)'",
-				     "noshell");
+    !windows::
+      "expect[modeoct]" string => "\d+$(init.mode)";
+      "expect[uid]" string => "$(init.owner)";
+      "expect[gid]" string => "23459";
+    any::
+      "expect[nlink]" string => "1";
+      "expect[size]" string => filestat("$(G.etc_group)", "size");
 
-      "expected" string => "$(init.mode) 1 $(init.owner) 23459 $(g.source_size)";
+      "fields" slist => getindices("expect");
+      "result[$(fields)]" string => filestat("$(G.testfile)", "$(fields)");
 
   classes:
-      "ok" expression => strcmp("$(expected)", "$(result)");
+      "not_ok" not => regcmp("$(expect[$(fields)])", "$(result[$(fields)])");
 
   reports:
     DEBUG::
-      "init.result  is '$(init.result)'";
-      "expected     is '$(expected)'";
-      "check.result is '$(result)'";
-    ok::
+      "expected:    $(fields) = '$(expect[$(fields)])'";
+      "result:      $(fields) = '$(result[$(fields)])'";
+    !not_ok::
       "$(this.promise_filename) Pass";
-    !ok::
+    not_ok::
       "$(this.promise_filename) FAIL";
 }
 

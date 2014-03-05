@@ -25,7 +25,7 @@ bundle agent init
       "group" string => "786756";
 
     pass2.!windows::
-      "expect[modeoct]" string => "$(init.mode)";
+      "expect[modeoct]" string => "\d+$(init.mode)";
       "expect[uid]" string => "$(init.owner)";
       "expect[gid]" string => "$(init.group)";
 
@@ -64,9 +64,6 @@ body classes init_set_class(class)
 
 bundle agent test
 {
-  meta:
-      "test_skip_unsupported" string => "windows";
-
   files:
       "$(G.testfile)"
       create => "true",
@@ -87,7 +84,7 @@ bundle agent check
 {
   vars:
     !windows::
-      "expect[modeoct]" string => "$(init.mode)";
+      "expect[modeoct]" string => "\d+$(init.mode)";
       "expect[uid]" string => "12349";
       "expect[gid]" string => "$(init.group)";
     any::
@@ -96,7 +93,6 @@ bundle agent check
 
       "fields" slist => getindices("expect");
       "result[$(fields)]" string => filestat("$(G.testfile)", "$(fields)");
-      #"expected" string => "$(init.mode) 1 12349 $(init.group) $(g.source_size)";
 
   classes:
       "not_ok" not => regcmp("$(expect[$(fields)])", "$(result[$(fields)])");

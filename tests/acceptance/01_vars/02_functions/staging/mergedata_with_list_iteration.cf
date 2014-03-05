@@ -7,7 +7,7 @@
 body common control
 {
       inputs => { "../../default.cf.sub" };
-      bundlesequence  => { default("$(this.promise_filename)") };
+      bundlesequence  => { test_1, test_2, default("$(this.promise_filename)") };
       version => "1.0";
 }
 
@@ -24,7 +24,7 @@ bundle agent test_1
   vars:
     "hosts"
       meta => { "hosts" },
-      data => parsejson('{"10.100.250.11": [ "slot2" ], "10.100.250.10": [ "slot1" ]}');
+      data => parsejson('{"10.100.250.11": [ "slot2" ], "10.100.250.10": [ "slot1" ], "111": 222 }');
 }
 
 bundle agent test_2
@@ -34,13 +34,24 @@ bundle agent test_2
       meta => { "hosts" },
       data => parsejson('{"10.100.250.11": [ "cflin111" ], "10.100.250.10": [ "cflin110" ]}');
 }
+
+# this bundle is not in the bundlesequence and should not be evaluated
+bundle agent test_3
+{
+  vars:
+    "hosts"
+      meta => { "hosts" },
+      data => parsejson('{"10.100.250.12": [ "cflin111" ], "10.100.250.13": [ "cflin110" ]}');
+}
+
 bundle common test
 {
   vars:
     "variables" slist => variablesmatching(".*", "hosts");
     "sorted_vars" slist => sort("variables", "lex");
 
-    "merged" data => mergedata("$(sorted_vars)");
+    "merged" data => parsejson('{}');
+    "merged" data => mergedata(merged, $(sorted_vars));
 
     "result" string => format("%S", "merged");
 }
@@ -51,10 +62,10 @@ bundle common test
 bundle agent check
 {
   vars:
-    "expected" string => '{"10.100.250.11":["cflin111"],"10.100.250.10":["cflin110"]}';
+    "expected" string => '{"111":222,"10.100.250.11":["cflin111"],"10.100.250.10":["cflin110"]}';
 
   classes:
-      "ok" expression => strcmp($(test.result), $(check.expected)); 
+      "ok" expression => strcmp($(test.result), $(check.expected));
 
   reports:
     DEBUG::

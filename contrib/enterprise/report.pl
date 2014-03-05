@@ -11,8 +11,8 @@ use Data::Dumper;
 use Getopt::Long;
 
 my %outputs = (
-               csv => sub { my $data = decode_json( shift ); print_csv($data) },
-               html => sub { my $data = decode_json( shift ); print_html($data) },
+               csv => sub { my $data = decode_json( shift ); print_csv($data, shift) },
+               html => sub { my $data = decode_json( shift ); print_html($data, shift) },
                json => sub { print @_ },
               );
 
@@ -59,14 +59,19 @@ unless ($res->is_success)
  die $res->status_line;
 }
 
-print "Got data ", $res->content(), "\n" if $options{verbose};
-$outputs{$options{output}}->($res->content);
+print "Got data ", $res->as_string(), "\n" if $options{verbose};
+
+$outputs{$options{output}}->($res->content,
+                             $res->header("Content-Type"));
 
 exit 0;
 
 sub print_csv
 {
  my $data = shift;
+ my $ctype = shift || 'unknown';
+
+ print "Processing content type $ctype\n" if $options{verbose};
 
  foreach my $row (@{$data->{data}->[0]->{rows}})
  {
@@ -78,6 +83,9 @@ sub print_csv
 sub print_html
 {
  my $data = shift;
+ my $ctype = shift || 'unknown';
+
+ print "Processing content type $ctype\n" if $options{verbose};
 
  # trying to avoid requiring CPAN modules!  sorry this is so primitive!
  print "<html><body><table>\n";

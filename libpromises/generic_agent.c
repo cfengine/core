@@ -283,8 +283,14 @@ static JsonElement *ReadPolicyValidatedFile(const char *filename)
         Log(LOG_LEVEL_VERBOSE, "Could not parse policy_validated JSON file %s, using dummy data", filename);
         validated_doc = JsonObjectCreate(2);
         struct stat sb;
-        stat(filename, &sb); // it's OK if this fails
-        JsonObjectAppendInteger(validated_doc, "timestamp", sb.st_mtime);
+        if (stat(filename, &sb) != -1)
+        {
+            JsonObjectAppendInteger(validated_doc, "timestamp", sb.st_mtime);
+        }
+        else
+        {
+            JsonObjectAppendInteger(validated_doc, "timestamp", 0);
+        }
     }
 
     return validated_doc;

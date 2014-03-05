@@ -1142,7 +1142,8 @@ void EvalContextStackPushPromiseTypeFrame(EvalContext *ctx, const PromiseType *o
 
 void EvalContextStackPushPromiseFrame(EvalContext *ctx, const Promise *owner, bool copy_bundle_context)
 {
-    assert(LastStackFrame(ctx, 0) && LastStackFrame(ctx, 0)->type == STACK_FRAME_TYPE_PROMISE_TYPE);
+    assert(LastStackFrame(ctx, 0));
+    assert(LastStackFrame(ctx, 0)->type == STACK_FRAME_TYPE_PROMISE_TYPE);
 
     EvalContextVariableClearMatch(ctx);
 

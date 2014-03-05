@@ -35,7 +35,7 @@ bundle agent test_2
       data => parsejson('{"10.100.250.11": [ "cflin111" ], "10.100.250.10": [ "cflin110" ]}');
 }
 
-# this bundle is not in the bundlesequence and should not be evaluated
+# this bundle is not in the bundlesequence but will be evaluated
 bundle agent test_3
 {
   vars:

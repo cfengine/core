@@ -11,13 +11,6 @@ body common control
       version => "1.0";
 }
 
-bundle common g
-{
-  vars:
-      # This extracts the octal mode, and decimal nlink, uid, gid, size
-      "type_command" string => 'use Fcntl; print Fcntl::S_ISDIR((lstat("$(G.testdir)/destdir"))[2]);';
-}
-
 #######################################################
 
 bundle agent init
@@ -78,10 +71,9 @@ body depth_search recurse(d)
 bundle agent check
 {
   vars:
-      "expect" string => "";
+      "expect" string => "symlink";
+      "result" string => filestat("$(G.testdir)/destdir", "type");
 
-      "result" string => execresult(
-				     "$(G.perl) -le '$(g.type_command)'", "noshell");
   classes:
       "ok" expression => strcmp("$(expect)", "$(result)");
 

@@ -102,7 +102,7 @@ fi
 PERL=`which perl 2>/dev/null`
 
 # color!
-if [ "${CFENGINE_COLOR}" -eq "1" ]; then
+if [ "${CFENGINE_COLOR}" = "1" ]; then
     COLOR_SUCCESS="\\033[1;32m"
     COLOR_FAILURE="\\033[1;31m"
     COLOR_WARNING="\\033[1;33m"

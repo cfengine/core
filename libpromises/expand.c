@@ -199,17 +199,21 @@ static PromiseResult ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp,
 
         PromiseResult iteration_result = PROMISE_RESULT_NOOP;
         char *excluding_class_expr = NULL;
-        if (VarClassExcluded(ctx, pexp, &excluding_class_expr))
+        if (MissingDependencies(ctx, pexp))
+        {
+            iteration_result = PROMISE_RESULT_SKIPPED;
+        }
+        else if (VarClassExcluded(ctx, pexp, &excluding_class_expr))
         {
             if (LEGACY_OUTPUT)
             {
                 Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . ");
-                Log(LOG_LEVEL_VERBOSE, "Skipping whole next promise (%s), as var-context %s is not relevant", pp->promiser, excluding_class_expr ? excluding_class_expr : pp->classes);
+                Log(LOG_LEVEL_VERBOSE, "Skipping whole next promise (%s), as ifvarclass %s is not relevant", pp->promiser, excluding_class_expr ? excluding_class_expr : pp->classes);
                 Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . ");
             }
             else
             {
-                Log(LOG_LEVEL_VERBOSE, "Skipping next promise '%s', as var-context '%s' is not relevant", pp->promiser, excluding_class_expr ? excluding_class_expr : pp->classes);
+                Log(LOG_LEVEL_VERBOSE, "Skipping next promise '%s', as ifvarclass '%s' is not relevant", pp->promiser, excluding_class_expr ? excluding_class_expr : pp->classes);
             }
 
             iteration_result = PROMISE_RESULT_SKIPPED;

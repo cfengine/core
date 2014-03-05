@@ -684,40 +684,24 @@ void MarkPromiseHandleDone(EvalContext *ctx, const Promise *pp)
 
 /*****************************************************************************/
 
-int MissingDependencies(EvalContext *ctx, const Promise *pp)
-{
-    if (pp == NULL)
+bool MissingDependencies(EvalContext *ctx, const Promise *pp)
+{ 
+    for (const Rlist *rp = PromiseGetConstraintAsList(ctx, "depends_on", pp); rp; rp = rp->next)
     {
-        return false;
-    }
-
-    char name[CF_BUFSIZE], *d;
-    Rlist *rp, *deps = PromiseGetConstraintAsList(ctx, "depends_on", pp);
-    
-    for (rp = deps; rp != NULL; rp = rp->next)
-    {
-        if (strchr(RlistScalarValue(rp), ':'))
-        {
-            d = RlistScalarValue(rp);
-        }
-        else
-        {
-            snprintf(name, CF_BUFSIZE, "%s:%s", PromiseGetNamespace(pp), RlistScalarValue(rp));
-            d = name;
-        }
-
-        if (!StringSetContains(ctx->dependency_handles, d))
+        if (!StringSetContains(ctx->dependency_handles, RlistScalarValue(rp)))
         {
             if (LEGACY_OUTPUT)
             {
                 Log(LOG_LEVEL_VERBOSE, "\n");
                 Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . ");
-                Log(LOG_LEVEL_VERBOSE, "Skipping whole next promise (%s), as promise dependency %s has not yet been kept", pp->promiser, d);
+                Log(LOG_LEVEL_VERBOSE, "Skipping whole next promise (%s), as promise dependency %s has not yet been kept",
+                    pp->promiser, RlistScalarValue(rp));
                 Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . ");
             }
             else
             {
-                Log(LOG_LEVEL_VERBOSE, "Skipping next promise '%s', as promise dependency '%s' has not yet been kept", pp->promiser, d);
+                Log(LOG_LEVEL_VERBOSE, "Skipping next promise '%s', as promise dependency '%s' has not yet been kept",
+                    pp->promiser, RlistScalarValue(rp));
             }
 
             return true;

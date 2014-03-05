@@ -1386,11 +1386,6 @@ static PromiseResult KeepAgentPromise(EvalContext *ctx, const Promise *pp, ARG_U
     assert(param == NULL);
     struct timespec start = BeginMeasure();
 
-    if (MissingDependencies(ctx, pp))
-    {
-        return PROMISE_RESULT_SKIPPED;
-    }
-
     PromiseResult result = PROMISE_RESULT_NOOP;
 
     if (strcmp("meta", pp->parent_promise_type->name) == 0 || strcmp("vars", pp->parent_promise_type->name) == 0)

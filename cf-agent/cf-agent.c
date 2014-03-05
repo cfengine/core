@@ -1404,11 +1404,6 @@ static PromiseResult KeepAgentPromise(EvalContext *ctx, const Promise *pp, ARG_U
         return PROMISE_RESULT_SKIPPED;
     }
 
-    if (EvalContextPromiseIsDone(ctx, pp))
-    {
-        return PROMISE_RESULT_SKIPPED;
-    }
-
     if (VarClassExcluded(ctx, pp, &sp))
     {
         if (LEGACY_OUTPUT)

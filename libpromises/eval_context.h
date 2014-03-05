@@ -99,8 +99,6 @@ typedef struct
     char *path;
 } StackFrame;
 
-TYPED_SET_DECLARE(Promise, const Promise *)
-
 typedef enum
 {
     EVAL_OPTION_NONE = 0,
@@ -178,17 +176,6 @@ bool IsDefinedClass(const EvalContext *ctx, const char *context);
 
 bool EvalProcessResult(const char *process_result, StringSet *proc_attr);
 bool EvalFileResult(const char *file_result, StringSet *leaf_attr);
-
-/* - Promise status */
-bool EvalContextPromiseIsDone(const EvalContext *ctx, const Promise *pp);
-
-/* Those two functions are compromises: there are pieces of code which
- * manipulate promise 'doneness', and it's not simple to figure out how to
- * properly reimplement it. So for the time being, let particular pieces of code
- * continue to manipulate the state.
- */
-void EvalContextMarkPromiseDone(EvalContext *ctx, const Promise *pp);
-void EvalContextMarkPromiseNotDone(EvalContext *ctx, const Promise *pp);
 
 /* Various global options */
 void SetChecksumUpdatesDefault(EvalContext *ctx, bool enabled);

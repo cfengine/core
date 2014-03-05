@@ -38,20 +38,6 @@ static bool CheckMeasureSanity(Measurement m, const Promise *pp);
 
 PromiseResult VerifyMeasurementPromise(EvalContext *ctx, double *measurement, const Promise *pp)
 {
-    if (EvalContextPromiseIsDone(ctx, pp))
-    {
-        if (pp->comment)
-        {
-            Log(LOG_LEVEL_VERBOSE, "Skipping static observation '%s' (comment: %s), already done", pp->promiser, pp->comment);
-        }
-        else
-        {
-            Log(LOG_LEVEL_VERBOSE, "Skipping static observation '%s', already done", pp->promiser);
-        }
-
-        return PROMISE_RESULT_NOOP;
-    }
-
     PromiseBanner(pp);
 
     Attributes a = GetMeasurementAttributes(ctx, pp);

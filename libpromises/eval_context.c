@@ -74,7 +74,6 @@ struct EvalContext_
     StringSet *promise_lock_cache;
     StringSet *dependency_handles;
     RBTree *function_cache;
-    PromiseSet *promises_done;
 
     void *enterprise_state;
 
@@ -784,18 +783,6 @@ static void StackFrameDestroy(StackFrame *frame)
     }
 }
 
-static unsigned PointerHashFn(const void *p, ARG_UNUSED unsigned int seed, unsigned int max)
-{
-    return ((unsigned)(uintptr_t)p) % max;
-}
-
-static bool PointerEqualFn(const void *key1, const void *key2)
-{
-    return key1 == key2;
-}
-
-TYPED_SET_DEFINE(Promise, const Promise *, &PointerHashFn, &PointerEqualFn, NULL)
-
 EvalContext *EvalContextNew(void)
 {
     EvalContext *ctx = xmalloc(sizeof(EvalContext));
@@ -829,7 +816,6 @@ EvalContext *EvalContextNew(void)
 #endif
 
     ctx->promise_lock_cache = StringSetNew();
-    ctx->promises_done = PromiseSetNew();
     ctx->function_cache = RBTreeNew(NULL, NULL, NULL,
                                     NULL, NULL, NULL);
 
@@ -876,8 +862,6 @@ void EvalContextDestroy(EvalContext *ctx)
         VariableTableDestroy(ctx->match_variables);
 
         StringSetDestroy(ctx->dependency_handles);
-
-        PromiseSetDestroy(ctx->promises_done);
         StringSetDestroy(ctx->promise_lock_cache);
 
         {
@@ -1965,22 +1949,6 @@ const Bundle *EvalContextResolveCallExpression(const EvalContext *ctx, const Pol
 
     ClassRefDestroy(ref);
     return bp;
-}
-
-
-bool EvalContextPromiseIsDone(const EvalContext *ctx, const Promise *pp)
-{
-    return PromiseSetContains(ctx->promises_done, pp);
-}
-
-void EvalContextMarkPromiseDone(EvalContext *ctx, const Promise *pp)
-{
-    PromiseSetAdd(ctx->promises_done, pp->org_pp);
-}
-
-void EvalContextMarkPromiseNotDone(EvalContext *ctx, const Promise *pp)
-{
-    PromiseSetRemove(ctx->promises_done, pp->org_pp);
 }
 
 bool EvalContextPromiseLockCacheContains(const EvalContext *ctx, const char *key)

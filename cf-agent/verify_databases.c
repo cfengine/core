@@ -63,11 +63,6 @@ static int CheckRegistrySanity(Attributes a, const Promise *pp);
 
 PromiseResult VerifyDatabasePromises(EvalContext *ctx, const Promise *pp)
 {
-    if (EvalContextPromiseIsDone(ctx, pp))
-    {
-        return PROMISE_RESULT_NOOP;
-    }
-
     PromiseBanner(pp);
 
     Attributes a = GetDatabaseAttributes(ctx, pp);

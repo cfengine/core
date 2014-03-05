@@ -137,11 +137,6 @@ static int EvalClassExpression(EvalContext *ctx, Constraint *cp, const Promise *
         return false;
     }
 
-    if (EvalContextPromiseIsDone(ctx, pp))
-    {
-        return false;
-    }
-
     if (IsDefinedClass(ctx, pp->promiser))
     {
         if (PromiseGetConstraintAsInt(ctx, "persistence", pp) == 0)
@@ -279,8 +274,6 @@ static int EvalClassExpression(EvalContext *ctx, Constraint *cp, const Promise *
         }
 
         snprintf(buffer, CF_MAXVARSIZE - 1, "%s_%s", pp->promiser, RlistScalarValue(rp));
-        /* FIXME: figure why explicit mark and get rid of it */
-        EvalContextMarkPromiseDone(ctx, pp);
 
         if (strcmp(PromiseGetBundle(pp)->type, "common") == 0)
         {

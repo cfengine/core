@@ -595,43 +595,23 @@ static CfLock CfLockNull(void)
 CfLock AcquireLock(EvalContext *ctx, const char *operand, const char *host, time_t now,
                    TransactionContext tc, const Promise *pp, bool ignoreProcesses)
 {
-    unsigned char digest[EVP_MAX_MD_SIZE + 1];
-
     if (now == 0)
     {
         return CfLockNull();
     }
 
-    /* Indicate as done if we tried ... as we have passed all class
-       constraints now but we should only do this for level 0
-       promises. Sub routine bundles cannot be marked as done or it will
-       disallow iteration over bundles */
-    if (EvalContextPromiseIsDone(ctx, pp))
-    {
-        return CfLockNull();
-    }
-
-    if (EvalContextStackCurrentPromise(ctx))
-    {
-        // Must not set promise to be done for editfiles etc
-        EvalContextMarkPromiseDone(ctx, pp);
-    }
-
+    unsigned char digest[EVP_MAX_MD_SIZE + 1];
     PromiseRuntimeHash(pp, operand, digest, CF_DEFAULT_DIGEST);
     char str_digest[CF_BUFSIZE];
     HashPrintSafe(CF_DEFAULT_DIGEST, true, digest, str_digest);
 
-    // As a backup to "done" we need something immune to re-use
-    if (THIS_AGENT_TYPE == AGENT_TYPE_AGENT)
+    if (EvalContextPromiseLockCacheContains(ctx, str_digest))
     {
-        if (EvalContextPromiseLockCacheContains(ctx, str_digest))
-        {
-            Log(LOG_LEVEL_DEBUG, "This promise has already been verified");
-            return CfLockNull();
-        }
-
-        EvalContextPromiseLockCachePut(ctx, str_digest);
+        Log(LOG_LEVEL_DEBUG, "This promise has already been verified");
+        return CfLockNull();
     }
+
+    EvalContextPromiseLockCachePut(ctx, str_digest);
 
     // Finally if we're supposed to ignore locks ... do the remaining stuff
     if (EvalContextIsIgnoringLocks(ctx))

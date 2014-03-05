@@ -102,10 +102,9 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
         }
     }
 
-    if (pp->classes)
-    {
-        pcopy->classes = xstrdup(pp->classes);
-    }
+    assert(pp->classes);
+    pcopy->classes = xstrdup(pp->classes);
+
 
 /* FIXME: may it happen? */
     if ((pp->promisee.item != NULL && pcopy->promisee.item == NULL))
@@ -291,6 +290,9 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
 
 Promise *ExpandDeRefPromise(EvalContext *ctx, const Promise *pp)
 {
+    assert(pp->promiser);
+    assert(pp->classes);
+
     Promise *pcopy = xcalloc(1, sizeof(Promise));
     Rval returnval = ExpandPrivateRval(ctx, NULL, "this", pp->promiser, RVAL_TYPE_SCALAR);
     pcopy->promiser = RvalScalarValue(returnval);
@@ -304,19 +306,7 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const Promise *pp)
         pcopy->promisee = (Rval) {NULL, RVAL_TYPE_NOPROMISEE };
     }
 
-    if (pp->classes)
-    {
-        pcopy->classes = xstrdup(pp->classes);
-    }
-    else
-    {
-        pcopy->classes = xstrdup("any");
-    }
-
-    if (pcopy->promiser == NULL)
-    {
-        ProgrammingError("ExpandPromise returned NULL");
-    }
+    pcopy->classes = xstrdup(pp->classes);
 
     pcopy->parent_promise_type = pp->parent_promise_type;
     pcopy->offset.line = pp->offset.line;

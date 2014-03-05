@@ -1209,8 +1209,6 @@ static PromiseResult KeepMonitorPromise(EvalContext *ctx, const Promise *pp, ARG
     else if (strcmp("measurements", pp->parent_promise_type->name) == 0)
     {
         PromiseResult result = VerifyMeasurementPromise(ctx, CF_THIS, pp);
-        /* FIXME: Verify why this explicit promise status change is done */
-        EvalContextMarkPromiseNotDone(ctx, pp);
         return result;
     }
     else if (strcmp("reports", pp->parent_promise_type->name) == 0)

@@ -1257,33 +1257,27 @@ PromiseType *BundleAppendPromiseType(Bundle *bundle, const char *name)
 
 Promise *PromiseTypeAppendPromise(PromiseType *type, const char *promiser, Rval promisee, const char *classes)
 {
-    char *sp = NULL, *spe = NULL;
-
-    if (!type)
-    {
-        ProgrammingError("Attempt to add a promise without a type");
-    }
+    assert(promiser && "Missing promiser");
+    assert(type && "Missing promise type");
 
     Promise *pp = xcalloc(1, sizeof(Promise));
 
-    sp = xstrdup(promiser);
+    pp->promiser = xstrdup(promiser);
 
     if (classes && strlen(classes) > 0)
     {
-        spe = xstrdup(classes);
+        pp->classes = xstrdup(classes);
     }
     else
     {
-        spe = xstrdup("any");
+        pp->classes = xstrdup("any");
     }
 
     SeqAppend(type->promises, pp);
 
     pp->parent_promise_type = type;
 
-    pp->promiser = sp;
     pp->promisee = promisee;
-    pp->classes = spe;
     pp->has_subbundles = false;
     pp->conlist = SeqNew(10, ConstraintDestroy);
     pp->org_pp = pp;

@@ -60,10 +60,10 @@ bundle agent check
   vars:
     !windows::
       "expect[modeoct]" string => "$(test.mode)";
-    any::
-      "expect[nlink]" string => "1";
       "expect[uid]" string => "3";
       "expect[gid]" string => "3";
+    any::
+      "expect[nlink]" string => "1";
       "expect[size]" string => filestat("$(G.etc_group)", "size");
 
       "fields" slist => getindices("expect");

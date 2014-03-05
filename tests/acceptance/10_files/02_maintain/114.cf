@@ -12,21 +12,6 @@ body common control
       version => "1.0";
 }
 
-bundle common g
-{
-  vars:
-      # This extracts the inode number of the linked file
-      "command" string => 'printf "%d", (stat("$(G.testfile)"))[1]';
-      # This extracts the inode number of the symlink
-      "Lcommand" string => 'printf "%d", (lstat("$(G.testfile)"))[1]';
-
-      "source" string => "$(G.etc_group)";
-      "source_command" string => 'printf "%d", (stat("$(g.source)"))[1]';
-      "source_ino" string => execresult(
-					 "$(G.perl) -le '$(g.source_command)'",
-					 "noshell");
-}
-
 #######################################################
 
 bundle agent init
@@ -49,6 +34,9 @@ bundle agent test
   meta:
       "test_skip_unsupported" string => "windows";
 
+  vars:
+      "inode" string => filestat("$(G.etc_group)", "ino");
+
   files:
       "$(G.testfile)"
       create => "true",
@@ -67,20 +55,16 @@ body link_from test_link
 bundle agent check
 {
   vars:
-      "result" string => execresult(
-				     "$(G.perl) -le '$(g.command)'",
-				     "noshell");
-      "Lresult" string => execresult(
-				      "$(G.perl) -le '$(g.Lcommand)'",
-				      "noshell");
+      "result" string => filestat(filestat("$(G.testfile)", "linktarget"), "ino");
+      "Lresult" string => filestat("$(G.testfile)", "ino");
 
   classes:
-      "okL" not => strcmp("$(g.source_ino)", "$(Lresult)");
-      "ok" and => { "okL", strcmp("$(g.source_ino)", "$(result)") };
+      "okL" not => strcmp("$(test.inode)", "$(Lresult)");
+      "ok" and => { "okL", strcmp("$(test.inode)", "$(result)") };
 
   reports:
     DEBUG::
-      "expected: '$(g.source_ino)'";
+      "expected: '$(test.inode)'";
       "got:      '$(Lresult)' => '$(result)'";
     ok::
       "$(this.promise_filename) Pass";

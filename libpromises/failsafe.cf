@@ -10,7 +10,7 @@
 
 body common control
 {
-      bundlesequence => { "cfe_internal_update" };
+      bundlesequence => { "cfe_internal_update", "cfe_internal_call_update" };
 }
 
 ################################################################################
@@ -27,9 +27,11 @@ bundle agent cfe_internal_update
   classes:
 
     any::
+
       "have_ppkeys"
       expression => fileexists("$(sys.workdir)/ppkeys/localhost.pub"),
       handle => "cfe_internal_bootstrap_update_classes_have_ppkeys";
+
       "have_promises_cf"
       expression => fileexists("$(sys.inputdir)/promises.cf"),
       handle => "cfe_internal_bootstrap_update_classes_have_promises_cf";
@@ -39,6 +41,7 @@ bundle agent cfe_internal_update
   commands:
 
     !have_ppkeys::
+
       "$(sys.cf_key)"
       handle => "cfe_internal_bootstrap_update_commands_generate_keys";
 
@@ -47,6 +50,7 @@ bundle agent cfe_internal_update
   files:
 
     !windows.have_ppkeys::
+
       "$(sys.inputdir)"
       handle => "cfe_internal_bootstrap_update_files_sys_workdir_inputs_not_windows",
       copy_from => u_scp("$(sys.masterdir)"),
@@ -54,6 +58,7 @@ bundle agent cfe_internal_update
       classes => repaired("got_policy");
 
     windows.have_ppkeys::
+
       "$(sys.inputdir)"
       handle => "cfe_internal_bootstrap_update_files_sys_workdir_inputs_windows",
       copy_from => u_scp("/var/cfengine/masterfiles"), # Not $(sys.masterdir) when referring to remote host.
@@ -71,9 +76,12 @@ bundle agent cfe_internal_update
   processes:
 
     !windows.got_policy::
+
       "cf-execd" restart_class => "start_exec",
       handle => "cfe_internal_bootstrap_update_processes_start_cf_execd";
+
     am_policy_hub.got_policy::
+
       "cf-serverd" restart_class => "start_server",
       handle => "cfe_internal_bootstrap_update_processes_start_cf_serverd";
 
@@ -82,10 +90,13 @@ bundle agent cfe_internal_update
   commands:
 
     start_exec.!windows::
+
       "$(sys.cf_execd)"
       handle => "cfe_internal_bootstrap_update_commands_check_sys_cf_execd_start",
       classes => repaired("executor_started");
+
     start_server::
+
       "$(sys.cf_serverd)"
       handle => "cfe_internal_bootstrap_update_commands_check_sys_cf_serverd_start",
       action => ifwin_bg,
@@ -96,6 +107,7 @@ bundle agent cfe_internal_update
   services:
 
     windows.got_policy::
+
       "CfengineNovaExec"
       handle => "cfe_internal_bootstrap_update_services_windows_executor",
       service_policy => "start",
@@ -107,15 +119,22 @@ bundle agent cfe_internal_update
   reports:
 
     bootstrap_mode.am_policy_hub::
+
       "This host assumes the role of policy server"
       handle => "cfe_internal_bootstrap_update_reports_assume_policy_hub";
+
     bootstrap_mode.!am_policy_hub::
+
       "This autonomous node assumes the role of voluntary client"
       handle => "cfe_internal_bootstrap_update_reports_assume_voluntary_client";
+
     got_policy::
+
       "Updated local policy from policy server"
       handle => "cfe_internal_bootstrap_update_reports_got_policy";
+
     !got_policy.!have_promises_cf.have_ppkeys::
+
       "Failed to copy policy from policy server at $(sys.policy_hub):$(sys.masterdir)
        Please check
        * cf-serverd is running on $(sys.policy_hub)
@@ -125,24 +144,46 @@ bundle agent cfe_internal_update
        It is often useful to restart cf-serverd in verbose mode (cf-serverd -v) on $(sys.policy_hub) to diagnose connection issues.
        When updating masterfiles, wait (usually 5 minutes) for files to propagate to inputs on $(sys.policy_hub) before retrying."
       handle => "cfe_internal_bootstrap_update_reports_did_not_get_policy";
+
     server_started::
+
       "Started the server"
       handle => "cfe_internal_bootstrap_update_reports_started_serverd";
+
     am_policy_hub.!server_started.!have_promises_cf.have_ppkeys::
+
       "Failed to start the server"
       handle => "cfe_internal_bootstrap_update_reports_failed_to_start_serverd";
+
     executor_started::
+
       "Started the scheduler"
       handle => "cfe_internal_bootstrap_update_reports_started_execd";
+
     !executor_started.!have_promises_cf.have_ppkeys::
+
       "Did not start the scheduler"
       handle => "cfe_internal_bootstrap_update_reports_failed_to_start_execd";
+
     !executor_started.have_promises_cf::
+
       "You are running a hard-coded failsafe. Please use the following command instead.
         $(sys.cf_agent) -f $(sys.inputdir)/update.cf"
       handle => "cfe_internal_bootstrap_update_reports_run_another_failsafe_instead";
+      
 }
 
+################################################################################
+bundle agent cfe_internal_call_update
+{
+  commands:
+
+    any::
+
+      "$(sys.cf_agent) -f update.cf"
+      handle => "cfe_internal_call_update_commands_call_update_cf";
+
+}
 ############################################
 body classes repaired(x)
 {

@@ -1,0 +1,92 @@
+# Test depends_on
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle agent init
+{
+}
+
+bundle agent test
+{
+  vars:
+      "expandit" slist => { "hc2" };
+
+  methods:
+      "zebra" usebundle => zebra:zebra;
+
+  classes:
+      "c1" expression => "any",
+      scope => "namespace",
+      handle => "hc1",
+      depends_on => { };
+
+      "c2" expression => "any",
+      scope => "namespace",
+      handle => "hc2",
+      depends_on => { "hc1", "me2" };
+
+      "c3" expression => "any",
+      scope => "namespace",
+      handle => "hc3",
+      depends_on => { "$(expandit)" };
+
+      "c4" expression => "any",
+      scope => "namespace",
+      handle => "hc4",
+      depends_on => { "nosuchhandle" };
+
+      "c5" expression => "any",
+      scope => "namespace",
+      handle => "hc5",
+      depends_on => { "zebra.zebra" };
+
+      "c6" expression => "any",
+      scope => "namespace",
+      handle => "hc6",
+      depends_on => { "zebra:zebra" };
+
+  reports:
+      "me too" handle => "me2";
+}
+
+bundle agent check
+{
+  classes:
+      "ok" and => { "c1", "c2", "c3", "!c4", "!c5", "!c6",  };
+
+  reports:
+    DEBUG.!c1::
+      "bad: c1 was NOT defined";
+    DEBUG.!c2::
+      "bad: c2 was NOT defined";
+    DEBUG.!c3::
+      "bad: c3 was NOT defined";
+    DEBUG.c4::
+      "bad: c4 WAS defined";
+    DEBUG.c5::
+      "bad: c5 WAS defined";
+    DEBUG.c6::
+      "bad: c6 WAS defined";
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}
+
+body file control
+{
+      namespace => "zebra";
+}
+
+bundle agent zebra
+{
+  classes:
+      "zebra" expression => "any",
+      scope => "namespace",
+      handle => "zebra";
+}

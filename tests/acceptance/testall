@@ -101,6 +101,19 @@ if [ $? -ne 0 ] ; then
 fi
 PERL=`which perl 2>/dev/null`
 
+# color!
+if [ "${CFENGINE_COLOR}" -eq "1" ]; then
+    COLOR_SUCCESS="\\033[1;32m"
+    COLOR_FAILURE="\\033[1;31m"
+    COLOR_WARNING="\\033[1;33m"
+    COLOR_NORMAL="\\033[0;39m"
+else
+    COLOR_SUCCESS=
+    COLOR_FAILURE=
+    COLOR_WARNING=
+    COLOR_NORMAL=
+fi
+
 #
 # Obtain UNIX time(), using date +%s, Perl, or POSIX-compatible approach.
 #
@@ -139,6 +152,7 @@ usage() {
   echo "If no test is given, all standard tests are run:"
   echo "  Tests with names of form <file>.cf are expected to run succesfully"
   echo "  Tests with names of form <file>.x.cf are expected to crash"
+  echo "Set ${COLOR_SUCCESS}CFENGINE_COLOR=1${COLOR_NORMAL} to get ANSI color markers where appropriate."
   echo
   echo "If arguments are given, those are executed as tests"
   echo
@@ -205,16 +219,16 @@ runtest() {
 
   if [ "x$CRASHING_TESTS" = "x0" ] && [ "x$EXPECTED_CRASH" = "x1" ]; then
     SKIP=1
-    SKIPREASON="Crashing tests are disabled"
+    SKIPREASON="${COLOR_WARNING}Crashing tests are disabled${COLOR_NORMAL}"
   elif [ "x$STAGING_TESTS" = "x0" ] && echo "$TEST" | grep -q -e '/staging/'; then
     SKIP=1
-    SKIPREASON="Staging tests are disabled"
+    SKIPREASON="${COLOR_WARNING}Staging tests are disabled${COLOR_NORMAL}"
   elif [ "x$UNSAFE_TESTS" != "x1" ] && echo "$TEST" | grep -q -e '/unsafe/'; then
     SKIP=1
-    SKIPREASON="Unsafe tests are disabled"
+    SKIPREASON="${COLOR_WARNING}Unsafe tests are disabled${COLOR_NORMAL}"
   elif [ "x$NETWORK_TESTS" = "x0" ] && echo "$TEST" | grep -q -e '/network/'; then
     SKIP=1
-    SKIPREASON="Network-dependent tests are disabled"
+    SKIPREASON="${COLOR_WARNING}Network-dependent tests are disabled${COLOR_NORMAL}"
   elif [ "x$LIBXML2_TESTS" = "x0" ] && echo "$TEST" | grep -q -e '/11_xml_edits/'; then
     SKIP=1
     SKIPREASON="XML file editing tests are disabled"
@@ -231,7 +245,7 @@ runtest() {
   if [ -n "$SKIP" ]; then
     echo "              time=\"NULL\">" >> "$XMLTMP"
     RESULT=Skip
-    RESULT_MSG="Skipped ($SKIPREASON)"
+    RESULT_MSG="${COLOR_WARNING}Skipped ($SKIPREASON)${COLOR_NORMAL}"
   else
     TEST_START_TIME=$(unix_seconds)
 
@@ -315,32 +329,35 @@ export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP CFENGINE_TEST_OVERRIDE_EXTENSION_LIBR
         # Check for other test case outcomes than fail. Should not happen.
         if echo "$OUT" | grep -e "R: .*$ESCAPED_TEST " | grep -v -q -e "R: .*$ESCAPED_TEST X\?FAIL"; then
           RESULT=FAIL
-          RESULT_MSG="FAIL (Tried to suppress nonexistent failure)"
+          RESULT_MSG="${COLOR_FAILURE}FAIL (Tried to suppress nonexistent failure)${COLOR_NORMAL}"
         else
           REDMINE="$(echo "$OUT" | grep -e "R: .*$ESCAPED_TEST XFAIL" | sed -e "s,.*XFAIL/redmine\([0-9][0-9]*\).*,\1,")"
           RESULT=XFAIL
-          RESULT_MSG="FAIL (Suppressed, Redmine #$REDMINE)"
+          RESULT_MSG="${COLOR_WARNING}FAIL (Suppressed, Redmine #$REDMINE)${COLOR_NORMAL}"
         fi
       elif echo "$OUT" | grep -q -e "R: .*$ESCAPED_TEST FAIL/no_redmine_number"; then
         RESULT=FAIL
-        RESULT_MSG="FAIL (Tried to suppress failure, but no Redmine issue number is provided)"
+        RESULT_MSG="${COLOR_FAILURE}FAIL (Tried to suppress failure, but no Redmine issue number is provided)${COLOR_NORMAL}"
       elif echo "$OUT" | grep -q -e "R: .*$ESCAPED_TEST Pass"; then
         RESULT=Pass
+        RESULT_MSG="${COLOR_SUCCESS}Pass${COLOR_NORMAL}"
       elif echo "$OUT" | grep -q -e "R: .*$ESCAPED_TEST Skip/unsupported"; then
         RESULT=Skip
-        RESULT_MSG="Skipped (No platform support)"
+        RESULT_MSG="${COLOR_WARNING}Skipped (No platform support)${COLOR_NORMAL}"
       elif echo "$OUT" | grep -q -e "R: .*$ESCAPED_TEST Skip/needs_work"; then
         RESULT=Skip
-        RESULT_MSG="Skipped (Test needs work)"
+        RESULT_MSG="${COLOR_WARNING}Skipped (Test needs work)${COLOR_NORMAL}"
       else
         RESULT=FAIL
+        RESULT_MSG="${COLOR_FAILURE}FAIL${COLOR_NORMAL}"
       fi
     else
       if [ $RETVAL -ne 0 ]; then
         RESULT=Pass
+        RESULT_MSG="${COLOR_SUCCESS}Pass${COLOR_NORMAL}"
       else
         RESULT=FAIL
-        RESULT_MSG="FAILed to crash"
+        RESULT_MSG="${COLOR_FAILURE}FAILed to crash${COLOR_NORMAL}"
       fi
     fi
 
@@ -353,7 +370,7 @@ export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP CFENGINE_TEST_OVERRIDE_EXTENSION_LIBR
     fi
 
     if [ "$RESULT" = "FAIL" ] && [ -e .succeeded/"$FLATNAME" ]; then
-      RESULT_MSG="$RESULT_MSG (UNEXPECTED FAILURE)"
+      RESULT_MSG="${COLOR_FAILURE}$RESULT_MSG (UNEXPECTED FAILURE)${COLOR_NORMAL}"
     fi
   fi
 

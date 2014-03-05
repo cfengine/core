@@ -668,24 +668,14 @@ void EvalContextHeapAddAbortCurrentBundle(EvalContext *ctx, const char *context,
 
 /*****************************************************************************/
 
-void MarkPromiseHandleDone(EvalContext *ctx, const Promise *pp)
+bool MissingDependencies(EvalContext *ctx, const Promise *pp)
 {
-    char name[CF_BUFSIZE];
-    const char *handle = PromiseGetHandle(pp);
-
-    if (handle == NULL)
+    const Rlist *dependenies = PromiseGetConstraintAsList(ctx, "depends_on", pp);
+    if (RlistIsNullList(dependenies))
     {
-       return;
+        return false;
     }
 
-    snprintf(name, CF_BUFSIZE, "%s:%s", PromiseGetNamespace(pp), handle);
-    StringSetAdd(ctx->dependency_handles, xstrdup(name));
-}
-
-/*****************************************************************************/
-
-bool MissingDependencies(EvalContext *ctx, const Promise *pp)
-{ 
     for (const Rlist *rp = PromiseGetConstraintAsList(ctx, "depends_on", pp); rp; rp = rp->next)
     {
         if (!StringSetContains(ctx->dependency_handles, RlistScalarValue(rp)))
@@ -2270,13 +2260,19 @@ static void DoSummarizeTransaction(EvalContext *ctx, PromiseResult status, const
     SummarizeTransaction(ctx, tc, log_name);
 }
 
-static void NotifyDependantPromises(PromiseResult status, EvalContext *ctx, const Promise *pp)
+void NotifyDependantPromises(EvalContext *ctx, const Promise *pp, PromiseResult result)
 {
-    switch (status)
+    switch (result)
     {
     case PROMISE_RESULT_CHANGE:
     case PROMISE_RESULT_NOOP:
-        MarkPromiseHandleDone(ctx, pp);
+        {
+            const char *handle = PromiseGetHandle(pp);
+            if (handle)
+            {
+                StringSetAdd(ctx->dependency_handles, xstrdup(handle));
+            }
+        }
         break;
 
     default:
@@ -2294,7 +2290,6 @@ void ClassAuditLog(EvalContext *ctx, const Promise *pp, Attributes attr, Promise
     }
 
     SetPromiseOutcomeClasses(status, ctx, pp, attr.classes);
-    NotifyDependantPromises(status, ctx, pp);
     DoSummarizeTransaction(ctx, status, pp, attr.transaction);
 }
 

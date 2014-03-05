@@ -198,7 +198,7 @@ void EvalContextSetLaunchDirectory(EvalContext *ctx, const char *path);
 
 bool Abort(EvalContext *ctx);
 int VarClassExcluded(const EvalContext *ctx, const Promise *pp, char **classes);
-void MarkPromiseHandleDone(EvalContext *ctx, const Promise *pp);
+void NotifyDependantPromises(EvalContext *ctx, const Promise *pp, PromiseResult result);
 bool MissingDependencies(EvalContext *ctx, const Promise *pp);
 void cfPS(EvalContext *ctx, LogLevel level, PromiseResult status, const Promise *pp, Attributes attr, const char *fmt, ...) FUNC_ATTR_PRINTF(6, 7);
 

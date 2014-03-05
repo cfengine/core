@@ -228,6 +228,8 @@ static PromiseResult ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp,
             }
         }
 
+        NotifyDependantPromises(ctx, pexp, iteration_result);
+
         result = PromiseResultUpdate(result, iteration_result);
 
         EvalContextStackPopFrame(ctx);

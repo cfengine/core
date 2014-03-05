@@ -1388,22 +1388,6 @@ static PromiseResult KeepAgentPromise(EvalContext *ctx, const Promise *pp, ARG_U
     char *sp = NULL;
     struct timespec start = BeginMeasure();
 
-    if (!IsDefinedClass(ctx, pp->classes))
-    {
-        if (LEGACY_OUTPUT)
-        {
-            Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . ");
-            Log(LOG_LEVEL_VERBOSE, "Skipping whole next promise (%s), as context %s is not relevant", pp->promiser,
-                  pp->classes);
-            Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . ");
-        }
-        else
-        {
-            Log(LOG_LEVEL_VERBOSE, "Skipping next promise '%s', as context '%s' is not relevant", pp->promiser, pp->classes);
-        }
-        return PROMISE_RESULT_SKIPPED;
-    }
-
     if (VarClassExcluded(ctx, pp, &sp))
     {
         if (LEGACY_OUTPUT)

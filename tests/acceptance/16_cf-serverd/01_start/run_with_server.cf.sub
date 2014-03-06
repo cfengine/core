@@ -47,7 +47,10 @@ bundle agent start_server(server_name)
 bundle agent run_test(test_name)
 {
   commands:
+    !debug_mode::
       "$(sys.cf_agent) -Kf $(test_name) -D DEBUG,AUTO,ok";
+    debug_mode::
+      "$(sys.cf_agent) -Kdf $(test_name) -D DEBUG,AUTO,ok";
 }
 
 

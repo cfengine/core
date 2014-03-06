@@ -34,6 +34,17 @@
 #include <misc_lib.h>
 #include <eval_context.h>
 
+
+/*******************************************************************/
+/* Checksum database structures                                    */
+/*******************************************************************/
+
+typedef struct
+{
+    unsigned char mess_digest[EVP_MAX_MD_SIZE + 1];     /* Content digest */
+    unsigned char attr_digest[EVP_MAX_MD_SIZE + 1];     /* Attribute digest */
+} ChecksumValue;
+
 /*
  * Key format:
  *

@@ -80,7 +80,7 @@ static PromiseResult VerifyCopy(EvalContext *ctx, char *source, char *destinatio
 static PromiseResult TouchFile(EvalContext *ctx, char *path, Attributes attr, const Promise *pp);
 static PromiseResult VerifyFileAttributes(EvalContext *ctx, const char *file, struct stat *dstat, Attributes attr, const Promise *pp);
 static int PushDirState(EvalContext *ctx, char *name, struct stat *sb);
-static bool PopDirState(int goback, char *name, struct stat *sb, Recursion r);
+static bool PopDirState(int goback, char *name, struct stat *sb, DirectoryRecursion r);
 static bool CheckLinkSecurity(struct stat *sb, char *name);
 static int CompareForFileCopy(char *sourcefile, char *destfile, struct stat *ssb, struct stat *dsb, FileCopy fc, AgentConnection *conn);
 static void FileAutoDefine(EvalContext *ctx, char *destfile);
@@ -91,7 +91,7 @@ static int cf_stat(const char *file, struct stat *buf, FileCopy fc, AgentConnect
 #ifndef __MINGW32__
 static int cf_readlink(EvalContext *ctx, char *sourcefile, char *linkbuf, int buffsize, Attributes attr, const Promise *pp, AgentConnection *conn, PromiseResult *result);
 #endif
-static int SkipDirLinks(EvalContext *ctx, char *path, const char *lastnode, Recursion r);
+static int SkipDirLinks(EvalContext *ctx, char *path, const char *lastnode, DirectoryRecursion r);
 static int DeviceBoundary(struct stat *sb, dev_t rootdevice);
 static PromiseResult LinkCopy(EvalContext *ctx, char *sourcefile, char *destfile, struct stat *sb, Attributes attr,
                               const Promise *pp, CompressedArray **inode_cache, AgentConnection *conn);
@@ -2257,7 +2257,7 @@ static int PushDirState(EvalContext *ctx, char *name, struct stat *sb)
 /**
  * @return true if safe for agent to continue
  */
-static bool PopDirState(int goback, char *name, struct stat *sb, Recursion r)
+static bool PopDirState(int goback, char *name, struct stat *sb, DirectoryRecursion r)
 {
     if (goback && (r.travlinks))
     {
@@ -3120,7 +3120,7 @@ static int cf_readlink(EvalContext *ctx, char *sourcefile, char *linkbuf, int bu
 
 #endif /* !__MINGW32__ */
 
-static int SkipDirLinks(EvalContext *ctx, char *path, const char *lastnode, Recursion r)
+static int SkipDirLinks(EvalContext *ctx, char *path, const char *lastnode, DirectoryRecursion r)
 {
     if (r.exclude_dirs)
     {

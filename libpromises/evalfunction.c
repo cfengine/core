@@ -5917,7 +5917,7 @@ static FnCallResult FnCallDiskFree(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const
 {
     off_t df;
 
-    df = GetDiskUsage(RlistScalarValue(finalargs), cfabs);
+    df = GetDiskUsage(RlistScalarValue(finalargs), CF_SIZE_ABS);
 
     if (df == CF_INFINITY)
     {

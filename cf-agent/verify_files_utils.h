@@ -27,6 +27,7 @@
 
 #include <cf3.defs.h>
 #include <cfnet.h>                                       /* AgentConnection */
+#include <comparray.h>
 
 extern Item *VSETUIDLIST;
 extern const Rlist *SINGLE_COPY_LIST;

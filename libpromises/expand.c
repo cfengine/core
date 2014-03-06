@@ -43,6 +43,7 @@
 #include <conversion.h>
 #include <verify_classes.h>
 
+#define CF_MAPPEDLIST '#'
 
 static PromiseResult ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp,
                                         Rlist *lists, Rlist *containers,

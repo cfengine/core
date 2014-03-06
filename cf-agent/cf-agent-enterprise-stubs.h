@@ -26,7 +26,9 @@
 #define CFENGINE_CF_AGENT_ENTERPRISE_STUBS_H
 
 #include <cf3.defs.h>
+
 #include <cfnet.h>
+#include <comparray.h>
 
 #if defined(__MINGW32__)
 PromiseResult VerifyRegistryPromise(EvalContext *ctx, Attributes a, const Promise *pp);

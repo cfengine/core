@@ -35,6 +35,46 @@ struct FnCall_
     const Promise *caller;
 };
 
+typedef enum FnCallStatus
+{
+    FNCALL_SUCCESS,
+    FNCALL_FAILURE
+} FnCallStatus;
+
+typedef struct
+{
+    FnCallStatus status;
+    Rval rval;
+} FnCallResult;
+
+typedef struct
+{
+    const char *pattern;
+    DataType dtype;
+    const char *description;
+} FnCallArg;
+
+typedef enum
+{
+    FNCALL_OPTION_NONE = 0,
+    FNCALL_OPTION_VARARG = 1 << 0,
+    FNCALL_OPTION_CACHED = 1 << 1
+} FnCallOption;
+
+typedef struct
+{
+    const char *name;
+    DataType dtype;
+    const FnCallArg *args;
+    FnCallResult (*impl)(EvalContext *, const Policy *, const FnCall *, const Rlist *);
+    const char *description;
+    FnCallOption options;
+    FnCallCategory category;
+    SyntaxStatus status;
+} FnCallType;
+
+extern const FnCallType CF_FNCALL_TYPES[];
+
 bool FnCallIsBuiltIn(Rval rval);
 
 FnCall *FnCallNew(const char *name, Rlist *args);

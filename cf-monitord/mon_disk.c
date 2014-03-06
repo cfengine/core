@@ -45,7 +45,7 @@ void MonDiskGatherData(double *cf_this)
     char messages[CF_BUFSIZE];
 
     Log(LOG_LEVEL_VERBOSE, "Gathering disk data");
-    cf_this[ob_diskfree] = GetDiskUsage("/", cfpercent);
+    cf_this[ob_diskfree] = GetDiskUsage("/", CF_SIZE_PERCENT);
     Log(LOG_LEVEL_VERBOSE, "Disk free = %.0lf%%", cf_this[ob_diskfree]);
 
 /* Here would should have some detection based on OS type VSYSTEMHARDCLASS */

@@ -46,6 +46,7 @@
 #include <ornaments.h>
 #include <verify_classes.h>
 
+#define CF_MAX_REPLACE 20
 
 /*****************************************************************************/
 

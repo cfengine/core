@@ -116,7 +116,7 @@ int ExclusiveUnlockFile(int fd);
 
 /* storage_tools.c */
 
-off_t GetDiskUsage(char *file, enum cfsizes type);
+off_t GetDiskUsage(char *file, CfSize type);
 
 /* verify_reports.c */
 

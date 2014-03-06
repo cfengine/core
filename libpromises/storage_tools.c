@@ -39,7 +39,7 @@
 
 #ifndef __MINGW32__
 
-off_t GetDiskUsage(char *file, enum cfsizes type)
+off_t GetDiskUsage(char *file, CfSize type)
 {
 # if defined __sun || defined sco || defined __OpenBSD__ || (defined(__NetBSD__) && __NetBSD_Version__ >= 200040000)
     struct statvfs buf;
@@ -95,7 +95,7 @@ off_t GetDiskUsage(char *file, enum cfsizes type)
 
     Log(LOG_LEVEL_DEBUG, "GetDiskUsage(%s) = %" PRIdMAX "/%" PRIdMAX, file, (intmax_t) avail, (intmax_t) capacity);
 
-    if (type == cfabs)
+    if (type == CF_SIZE_ABS)
     {
         return avail;
     }

@@ -30,6 +30,10 @@
 #include <logging.h>
 #include <chflags.h>
 #include <audit.h>
+
+#define CF_DEFINECLASSES "classes"
+#define CF_TRANSACTION   "action"
+
 static FilePerms GetPermissionConstraints(const EvalContext *ctx, const Promise *pp);
 
 void ClearFilesAttributes(Attributes *whom)
@@ -97,20 +101,6 @@ Attributes GetFilesAttributes(const EvalContext *ctx, const Promise *pp)
     attr.haveclasses = PromiseGetConstraintAsBoolean(ctx, CF_DEFINECLASSES, pp);
     attr.classes = GetClassDefinitionConstraints(ctx, pp);
 
-    return attr;
-}
-
-/*******************************************************************/
-
-Attributes GetOutputsAttributes(const EvalContext *ctx, const Promise *pp)
-{
-    Attributes attr = { {0} };
-
-    attr.transaction = GetTransactionConstraints(ctx, pp);
-    attr.classes = GetClassDefinitionConstraints(ctx, pp);
-
-    attr.output.promiser_type = PromiseGetConstraintAsRval(pp, "promiser_type", RVAL_TYPE_SCALAR);
-    attr.output.level = PromiseGetConstraintAsRval(pp, "output_level", RVAL_TYPE_SCALAR);
     return attr;
 }
 
@@ -381,9 +371,9 @@ ExecContain GetExecContainConstraints(const EvalContext *ctx, const Promise *pp)
 
 /*******************************************************************/
 
-Recursion GetRecursionConstraints(const EvalContext *ctx, const Promise *pp)
+DirectoryRecursion GetRecursionConstraints(const EvalContext *ctx, const Promise *pp)
 {
-    Recursion r;
+    DirectoryRecursion r;
 
     r.travlinks = PromiseGetConstraintAsBoolean(ctx, "traverse_links", pp);
     r.rmdeadlinks = PromiseGetConstraintAsBoolean(ctx, "rmdeadlinks", pp);
@@ -719,11 +709,11 @@ FileDelete GetDeleteConstraints(const EvalContext *ctx, const Promise *pp)
 
     if (value && (strcmp(value, "keep") == 0))
     {
-        f.dirlinks = cfa_linkkeep;
+        f.dirlinks = TIDY_LINK_KEEP;
     }
     else
     {
-        f.dirlinks = cfa_linkdelete;
+        f.dirlinks = TIDY_LINK_DELETE;
     }
 
     f.rmdirs = PromiseGetConstraintAsBoolean(ctx, "rmdirs", pp);

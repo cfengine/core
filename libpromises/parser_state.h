@@ -29,6 +29,8 @@
 #include <rlist.h>
 #include <fncall.h>
 
+#define CF_MAX_NESTING 10
+
 typedef struct
 {
     AgentType agent_type;

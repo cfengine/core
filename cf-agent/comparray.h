@@ -27,12 +27,12 @@
 
 #include <cf3.defs.h>
 
-struct CompressedArray_
+typedef struct CompressedArray_
 {
     int key;
     char *value;
-    CompressedArray *next;
-};
+    struct CompressedArray_ *next;
+} CompressedArray;
 
 int FixCompressedArrayValue(int i, char *value, CompressedArray **start);
 void DeleteCompressedArray(CompressedArray *start);

@@ -110,7 +110,7 @@ Item *ListPersistentClasses()
         return NULL;
     }
 
-    CfState q;
+    PersistentClassInfo q;
     int ksize, vsize;
     char *key;
     void *value;
@@ -119,7 +119,7 @@ Item *ListPersistentClasses()
     Item *persistent_classes = NULL;
     while (NextDB(dbcp, &key, &ksize, &value, &vsize))
     {
-        memcpy(&q, value, sizeof(CfState));
+        memcpy(&q, value, sizeof(PersistentClassInfo));
 
         if (now > q.expires)
         {

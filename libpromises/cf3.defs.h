@@ -157,98 +157,6 @@ typedef enum
 
 #define CF_OBSERVABLES 100
 
-
-#include <statistics.h>
-
-typedef struct
-{
-    time_t t;
-    QPoint Q;
-} Event;
-
-typedef struct
-{
-    time_t last_seen;
-    QPoint Q[CF_OBSERVABLES];
-} Averages;
-
-/******************************************************************/
-
-typedef struct
-{
-    pid_t pid;
-    time_t time;
-    time_t process_start_time;
-} LockData;
-
-/*****************************************************************************/
-
-#ifdef __MINGW32__
-# define NULLFILE "nul"
-# define EXEC_SUFFIX ".exe"
-# define FILE_SEPARATOR '\\'
-# define FILE_SEPARATOR_STR "\\"
-#else
-# define NULLFILE "/dev/null"
-# define EXEC_SUFFIX ""
-# define FILE_SEPARATOR '/'
-# define FILE_SEPARATOR_STR "/"
-#endif /* !__MINGW32__ */
-
-#define CF_WORDSIZE 8           /* Number of bytes in a word */
-
-/*******************************************************************/
-
-typedef struct Item_ Item;
-
-// Indexed itemlist
-typedef struct
-{
-    Item *list[CF_ALPHABETSIZE];
-} AlphaList;
-
-/*******************************************************************/
-
-enum cfsizes
-{
-    cfabs,
-    cfpercent
-};
-
-/*******************************************************************/
-
-typedef enum
-{
-    CONTEXT_STATE_POLICY_RESET,                    /* Policy when trying to add already defined persistent states */
-    CONTEXT_STATE_POLICY_PRESERVE
-} ContextStatePolicy;
-
-/*******************************************************************/
-
-typedef enum
-{
-    PLATFORM_CONTEXT_UNKNOWN,
-    PLATFORM_CONTEXT_OPENVZ,
-    PLATFORM_CONTEXT_HP,
-    PLATFORM_CONTEXT_AIX,
-    PLATFORM_CONTEXT_LINUX,
-    PLATFORM_CONTEXT_SOLARIS,
-    PLATFORM_CONTEXT_FREEBSD,
-    PLATFORM_CONTEXT_NETBSD,
-    PLATFORM_CONTEXT_CRAYOS,
-    PLATFORM_CONTEXT_WINDOWS_NT,
-    PLATFORM_CONTEXT_SYSTEMV,
-    PLATFORM_CONTEXT_OPENBSD,
-    PLATFORM_CONTEXT_CFSCO,
-    PLATFORM_CONTEXT_DARWIN,
-    PLATFORM_CONTEXT_QNX,
-    PLATFORM_CONTEXT_DRAGONFLY,
-    PLATFORM_CONTEXT_MINGW,
-    PLATFORM_CONTEXT_VMWARE,
-    PLATFORM_CONTEXT_ANDROID,
-    PLATFORM_CONTEXT_MAX
-} PlatformContext;
-
 enum observables
 {
     ob_users,
@@ -326,14 +234,96 @@ enum observables
     ob_spare
 };
 
+#include <statistics.h>
+
+typedef struct
+{
+    time_t t;
+    QPoint Q;
+} Event;
+
+typedef struct
+{
+    time_t last_seen;
+    QPoint Q[CF_OBSERVABLES];
+} Averages;
+
+/******************************************************************/
+
+typedef struct
+{
+    pid_t pid;
+    time_t time;
+    time_t process_start_time;
+} LockData;
+
+/*****************************************************************************/
+
+#ifdef __MINGW32__
+# define NULLFILE "nul"
+# define EXEC_SUFFIX ".exe"
+# define FILE_SEPARATOR '\\'
+# define FILE_SEPARATOR_STR "\\"
+#else
+# define NULLFILE "/dev/null"
+# define EXEC_SUFFIX ""
+# define FILE_SEPARATOR '/'
+# define FILE_SEPARATOR_STR "/"
+#endif /* !__MINGW32__ */
+
+#define CF_WORDSIZE 8           /* Number of bytes in a word */
+
 /*******************************************************************/
 
-typedef struct CompressedArray_ CompressedArray;
+typedef struct Item_ Item;
+
+/*******************************************************************/
+
+typedef enum
+{
+    CF_SIZE_ABS,
+    CF_SIZE_PERCENT
+} CfSize;
+
+/*******************************************************************/
+
+typedef enum
+{
+    CONTEXT_STATE_POLICY_RESET,                    /* Policy when trying to add already defined persistent states */
+    CONTEXT_STATE_POLICY_PRESERVE
+} PersistentClassPolicy;
+
+/*******************************************************************/
+
+typedef enum
+{
+    PLATFORM_CONTEXT_UNKNOWN,
+    PLATFORM_CONTEXT_OPENVZ,
+    PLATFORM_CONTEXT_HP,
+    PLATFORM_CONTEXT_AIX,
+    PLATFORM_CONTEXT_LINUX,
+    PLATFORM_CONTEXT_SOLARIS,
+    PLATFORM_CONTEXT_FREEBSD,
+    PLATFORM_CONTEXT_NETBSD,
+    PLATFORM_CONTEXT_CRAYOS,
+    PLATFORM_CONTEXT_WINDOWS_NT,
+    PLATFORM_CONTEXT_SYSTEMV,
+    PLATFORM_CONTEXT_OPENBSD,
+    PLATFORM_CONTEXT_CFSCO,
+    PLATFORM_CONTEXT_DARWIN,
+    PLATFORM_CONTEXT_QNX,
+    PLATFORM_CONTEXT_DRAGONFLY,
+    PLATFORM_CONTEXT_MINGW,
+    PLATFORM_CONTEXT_VMWARE,
+    PLATFORM_CONTEXT_ANDROID,
+    PLATFORM_CONTEXT_MAX
+} PlatformContext;
 
 /*******************************************************************/
 
 typedef struct UidList_ UidList;
 
+// TODO: why do UIDs have their own list type? Clean up.
 struct UidList_
 {
 #ifdef __MINGW32__  // TODO: remove uid for NT ?
@@ -348,23 +338,13 @@ struct UidList_
 
 typedef struct GidList_ GidList;
 
+// TODO: why do UIDs have their own list type? Clean up.
 struct GidList_
 {
     gid_t gid;
     char *gidname;              /* when gid is -2 */
     GidList *next;
 };
-
-
-/*******************************************************************/
-/* Checksum database structures                                    */
-/*******************************************************************/
-
-typedef struct
-{
-    unsigned char mess_digest[EVP_MAX_MD_SIZE + 1];     /* Content digest */
-    unsigned char attr_digest[EVP_MAX_MD_SIZE + 1];     /* Attribute digest */
-} ChecksumValue;
 
 /*******************************************************************/
 /* File path manipulation primitives                               */
@@ -385,18 +365,12 @@ typedef struct
 /* Fundamental (meta) types                                              */
 /*************************************************************************/
 
-#define CF_MAPPEDLIST '#'
-
 #define CF_UNDEFINED -1
 #define CF_NOINT    -678L
 #define CF_UNDEFINED_ITEM (void *)0x1234
-#define CF_VARARGS 99
-#define CF_UNKNOWN_IP "location unknown"
 
 #define DEFAULTMODE ((mode_t)0755)
 
-#define CF_MAX_NESTING 10
-#define CF_MAX_REPLACE 20
 #define CF_DONEPASSES  4
 
 #define CFPULSETIME 60
@@ -404,9 +378,6 @@ typedef struct
 /*************************************************************************/
 /* Parsing and syntax tree structures                                    */
 /*************************************************************************/
-
-#define CF_DEFINECLASSES "classes"
-#define CF_TRANSACTION   "action"
 
 extern const int CF3_MODULES;
 
@@ -607,10 +578,6 @@ typedef enum
 /* Any non-empty string can be an absolute path under Unix */
 #define CF_PATHRANGE ".+"
 
-#define CF_LOGRANGE    "stdout|udp_syslog|(\042?[a-zA-Z]:\\\\.*)|(/.*)"
-
-#define CF_FACILITY "LOG_USER,LOG_DAEMON,LOG_LOCAL0,LOG_LOCAL1,LOG_LOCAL2,LOG_LOCAL3,LOG_LOCAL4,LOG_LOCAL5,LOG_LOCAL6,LOG_LOCAL7"
-
 // Put this here now for caching efficiency
 
 #define SOFTWARE_PACKAGES_CACHE "software_packages.csv"
@@ -698,46 +665,6 @@ typedef struct
     SyntaxStatus status;
 } PromiseTypeSyntax;
 
-typedef enum FnCallStatus
-{
-    FNCALL_SUCCESS,
-    FNCALL_FAILURE
-} FnCallStatus;
-
-typedef struct
-{
-    FnCallStatus status;
-    Rval rval;
-} FnCallResult;
-
-typedef struct
-{
-    const char *pattern;
-    DataType dtype;
-    const char *description;
-} FnCallArg;
-
-typedef enum
-{
-    FNCALL_OPTION_NONE = 0,
-    FNCALL_OPTION_VARARG = 1 << 0,
-    FNCALL_OPTION_CACHED = 1 << 1
-} FnCallOption;
-
-typedef struct
-{
-    const char *name;
-    DataType dtype;
-    const FnCallArg *args;
-    FnCallResult (*impl)(EvalContext *, const Policy *, const FnCall *, const Rlist *);
-    const char *description;
-    FnCallOption options;
-    FnCallCategory category;
-    SyntaxStatus status;
-} FnCallType;
-
-#define UNKNOWN_FUNCTION -1
-
 /*************************************************************************/
 
 typedef struct Constraint_ Constraint;
@@ -795,12 +722,6 @@ typedef enum
     BACKUP_OPTION_ROTATE,
     BACKUP_OPTION_REPOSITORY_STORE             /* for internal use only */
 } BackupOption;
-
-enum cftidylinks
-{
-    cfa_linkdelete,
-    cfa_linkkeep
-};
 
 enum cfnofile
 {
@@ -1006,7 +927,7 @@ typedef struct
     int include_basedir;
     Rlist *include_dirs;
     Rlist *exclude_dirs;
-} Recursion;
+} DirectoryRecursion;
 
 /*************************************************************************/
 
@@ -1046,7 +967,7 @@ typedef struct
     Rlist *kept;
     Rlist *interrupt;
     int persist;
-    ContextStatePolicy timer;
+    PersistentClassPolicy timer;
     Rlist *del_change;
     Rlist *del_kept;
     Rlist *del_notkept;
@@ -1065,18 +986,6 @@ typedef enum
     DATABASE_TYPE_POSTGRES,
     DATABASE_TYPE_NONE
 } DatabaseType;
-
-/*************************************************************************/
-/* Threading container                                                   */
-/*************************************************************************/
-
-typedef struct
-{
-    AgentType agent;
-    char *scopeid;
-    Promise *pp;
-    void *fnptr;
-} PromiseThread;
 
 /*************************************************************************/
 /* Package promises                                                      */
@@ -1143,8 +1052,8 @@ typedef struct
 typedef struct
 {
     unsigned int expires;
-    ContextStatePolicy policy;
-} CfState;
+    PersistentClassPolicy policy;
+} PersistentClassInfo;
 
 /*************************************************************************/
 
@@ -1189,7 +1098,11 @@ typedef struct
 
 typedef struct
 {
-    enum cftidylinks dirlinks;
+    enum
+    {
+        TIDY_LINK_DELETE,
+        TIDY_LINK_KEEP
+    } dirlinks;
     int rmdirs;
 } FileDelete;
 
@@ -1546,14 +1459,6 @@ typedef struct
 
 /*************************************************************************/
 
-typedef struct
-{
-    char *level;
-    char *promiser_type;
-} Outputs;
-
-/*************************************************************************/
-
 typedef enum
 {
     ENVIRONMENT_STATE_CREATE,
@@ -1585,7 +1490,6 @@ typedef struct
 
 typedef struct
 {
-    Outputs output;
     FileSelect select;
     FilePerms perms;
     FileCopy copy;
@@ -1613,7 +1517,7 @@ typedef struct
     int move_obstructions;
     int inherit;
 
-    Recursion recursion;
+    DirectoryRecursion recursion;
     TransactionContext transaction;
     DefineClasses classes;
 
@@ -1688,7 +1592,6 @@ extern const ConstraintSyntax CF_COMMON_BODIES[];
 extern const ConstraintSyntax CF_VARBODY[];
 extern const PromiseTypeSyntax *const CF_ALL_PROMISE_TYPES[];
 extern const ConstraintSyntax CFG_CONTROLBODY[];
-extern const FnCallType CF_FNCALL_TYPES[];
 extern const BodySyntax CONTROL_BODIES[];
 extern const ConstraintSyntax CFH_CONTROLBODY[];
 extern const PromiseTypeSyntax CF_COMMON_PROMISE_TYPES[];

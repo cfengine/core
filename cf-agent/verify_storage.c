@@ -295,7 +295,7 @@ static PromiseResult VerifyFreeSpace(EvalContext *ctx, char *file, Attributes a,
     if (a.volume.freespace < 0)
     {
         int threshold_percentage = -a.volume.freespace;
-        int free_percentage = GetDiskUsage(file, cfpercent);
+        int free_percentage = GetDiskUsage(file, CF_SIZE_PERCENT);
 
         if (free_percentage < threshold_percentage)
         {
@@ -308,7 +308,7 @@ static PromiseResult VerifyFreeSpace(EvalContext *ctx, char *file, Attributes a,
     else
     {
         off_t threshold = a.volume.freespace;
-        off_t free_bytes = GetDiskUsage(file, cfabs);
+        off_t free_bytes = GetDiskUsage(file, CF_SIZE_ABS);
 
         if (free_bytes < threshold)
         {

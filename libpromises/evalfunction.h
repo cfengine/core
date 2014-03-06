@@ -28,6 +28,7 @@
 #include <cf3.defs.h>
 #include <rlist.h>
 #include <set.h>
+#include <fncall.h>
 
 FnCallResult FnCallHostInNetgroup(EvalContext *ctx, const Policy *policy, const FnCall *fp, const Rlist *finalargs);
 

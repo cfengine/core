@@ -38,7 +38,7 @@ int NovaWin_FileExists(const char *fileName);
 int NovaWin_IsDir(char *fileName);
 int NovaWin_TakeFileOwnership(char *path);
 int NovaWin_SetFileOwnership(char *path, SID *sid);
-off_t NovaWin_GetDiskUsage(char *file, enum cfsizes type);
+off_t NovaWin_GetDiskUsage(char *file, CfSize type);
 
 /* win_log.c */
 

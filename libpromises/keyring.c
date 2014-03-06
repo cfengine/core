@@ -31,7 +31,7 @@
 
 bool HostKeyAddressUnknown(const char *value)
 {
-    if (strcmp(value, CF_UNKNOWN_IP) == 0)
+    if (strcmp(value, "location unknown") == 0)
     {
         return true;
     }

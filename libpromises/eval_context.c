@@ -457,10 +457,10 @@ bool EvalFileResult(const char *file_result, StringSet *leaf_attr)
 
 /*****************************************************************************/
 
-void EvalContextHeapPersistentSave(const char *context, const char *ns, unsigned int ttl_minutes, ContextStatePolicy policy)
+void EvalContextHeapPersistentSave(const char *context, const char *ns, unsigned int ttl_minutes, PersistentClassPolicy policy)
 {
     CF_DB *dbp;
-    CfState state;
+    PersistentClassInfo state;
     time_t now = time(NULL);
     char name[CF_BUFSIZE];
 
@@ -522,7 +522,7 @@ void EvalContextHeapPersistentLoadAll(EvalContext *ctx)
     char *key;
     void *value;
     time_t now = time(NULL);
-    CfState q;
+    PersistentClassInfo q;
 
     Banner("Loading persistent classes");
 
@@ -541,7 +541,7 @@ void EvalContextHeapPersistentLoadAll(EvalContext *ctx)
 
     while (NextDB(dbcp, &key, &ksize, &value, &vsize))
     {
-        memcpy((void *) &q, value, sizeof(CfState));
+        memcpy((void *) &q, value, sizeof(PersistentClassInfo));
 
         Log(LOG_LEVEL_DEBUG, "Found key persistent class key '%s'", key);
 
@@ -2006,7 +2006,7 @@ static bool IsPromiseValuableForLogging(const Promise *pp)
     return pp && (pp->parent_promise_type->name != NULL) && (!IsStrIn(pp->parent_promise_type->name, NO_LOG_TYPES));
 }
 
-static void AddAllClasses(EvalContext *ctx, const char *ns, const Rlist *list, unsigned int persistence_ttl, ContextStatePolicy policy, ContextScope context_scope)
+static void AddAllClasses(EvalContext *ctx, const char *ns, const Rlist *list, unsigned int persistence_ttl, PersistentClassPolicy policy, ContextScope context_scope)
 {
     for (const Rlist *rp = list; rp != NULL; rp = rp->next)
     {

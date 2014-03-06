@@ -26,6 +26,7 @@
 
 #include <server.h>
 
+#include <eval.h>
 #include <misc_lib.h>
 #include <eval_context.h>
 #include <files_names.h>
@@ -515,41 +516,29 @@ static void KeepContextBundles(EvalContext *ctx, const Policy *policy)
 
     for (size_t i = 0; i < SeqLength(policy->bundles); i++)
     {
-        Bundle *bp = SeqAt(policy->bundles, i);
+        const Bundle *bp = SeqAt(policy->bundles, i);
 
-        if ((strcmp(bp->type, CF_AGENTTYPES[AGENT_TYPE_SERVER]) == 0) || (strcmp(bp->type, CF_AGENTTYPES[AGENT_TYPE_COMMON]) == 0))
+        if ((strcmp(bp->type, CF_AGENTTYPES[AGENT_TYPE_SERVER]) != 0) && (strcmp(bp->type, CF_AGENTTYPES[AGENT_TYPE_COMMON]) != 0))
         {
-            if (RlistLen(bp->args) > 0)
-            {
-                Log(LOG_LEVEL_WARNING, "Cannot implicitly evaluate bundle '%s %s', as this bundle takes arguments.", bp->type, bp->name);
-                continue;
-            }
-
-            BannerBundle(bp, NULL);
-
-            EvalContextStackPushBundleFrame(ctx, bp, NULL, false);
-            for (size_t j = 0; j < SeqLength(bp->promise_types); j++)
-            {
-                PromiseType *sp = SeqAt(bp->promise_types, j);
-
-                if ((strcmp(sp->name, "vars") != 0) && (strcmp(sp->name, "classes") != 0))
-                {
-                    continue;
-                }
-
-                BannerPromiseType(bp->name, sp->name, 0);
-
-                EvalContextStackPushPromiseTypeFrame(ctx, sp);
-                for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
-                {
-                    Promise *pp = SeqAt(sp->promises, ppi);
-                    ExpandPromise(ctx, pp, KeepServerPromise, NULL);
-                }
-                EvalContextStackPopFrame(ctx);
-
-            }
-            EvalContextStackPopFrame(ctx);
+            continue;
         }
+
+        if (RlistLen(bp->args) > 0)
+        {
+            Log(LOG_LEVEL_WARNING, "Cannot implicitly evaluate bundle '%s %s', as this bundle takes arguments.", bp->type, bp->name);
+            continue;
+        }
+
+        static const char *type_sequence[] =
+        {
+            "meta",
+            "vars",
+            "defaults",
+            "classes",
+            NULL
+        };
+
+        EvalBundle(ctx, bp, NULL, false, 0, KeepServerPromise, NULL, type_sequence);
     }
 }
 
@@ -565,38 +554,30 @@ static void KeepPromiseBundles(EvalContext *ctx, const Policy *policy)
     {
         Bundle *bp = SeqAt(policy->bundles, i);
 
-        if ((strcmp(bp->type, CF_AGENTTYPES[AGENT_TYPE_SERVER]) == 0) || (strcmp(bp->type, CF_AGENTTYPES[AGENT_TYPE_COMMON]) == 0))
+        if ((strcmp(bp->type, CF_AGENTTYPES[AGENT_TYPE_SERVER]) != 0) && (strcmp(bp->type, CF_AGENTTYPES[AGENT_TYPE_COMMON]) != 0))
         {
-            if (RlistLen(bp->args) > 0)
-            {
-                Log(LOG_LEVEL_WARNING, "Cannot implicitly evaluate bundle '%s %s', as this bundle takes arguments.", bp->type, bp->name);
-                continue;
-            }
-
-            BannerBundle(bp, NULL);
-
-            EvalContextStackPushBundleFrame(ctx, bp, NULL, false);
-            for (size_t j = 0; j < SeqLength(bp->promise_types); j++)
-            {
-                PromiseType *sp = SeqAt(bp->promise_types, j);
-
-                if ((strcmp(sp->name, "access") != 0) && (strcmp(sp->name, "roles") != 0))
-                {
-                    continue;
-                }
-
-                BannerPromiseType(bp->name, sp->name, 0);
-
-                EvalContextStackPushPromiseTypeFrame(ctx, sp);
-                for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
-                {
-                    Promise *pp = SeqAt(sp->promises, ppi);
-                    ExpandPromise(ctx, pp, KeepServerPromise, NULL);
-                }
-                EvalContextStackPopFrame(ctx);
-            }
-            EvalContextStackPopFrame(ctx);
+            continue;
         }
+
+        if (RlistLen(bp->args) > 0)
+        {
+            Log(LOG_LEVEL_WARNING, "Cannot implicitly evaluate bundle '%s %s', as this bundle takes arguments.", bp->type, bp->name);
+            continue;
+        }
+
+        static const char *type_sequence[] =
+        {
+            "meta",
+            "vars",
+            "defaults",
+            "classes",
+            "access",
+            "roles",
+            "reports",
+            NULL
+        };
+
+        EvalBundle(ctx, bp, NULL, false, 0, KeepServerPromise, NULL, type_sequence);
     }
 }
 

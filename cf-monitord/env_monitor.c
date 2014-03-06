@@ -24,6 +24,7 @@
 
 #include <env_monitor.h>
 
+#include <eval.h>
 #include <eval_context.h>
 #include <mon.h>
 #include <granules.h>
@@ -1128,25 +1129,23 @@ static void GatherPromisedMeasures(EvalContext *ctx, const Policy *policy)
     for (size_t i = 0; i < SeqLength(policy->bundles); i++)
     {
         const Bundle *bp = SeqAt(policy->bundles, i);
-        EvalContextStackPushBundleFrame(ctx, bp, NULL, false);
-
-        if ((strcmp(bp->type, CF_AGENTTYPES[AGENT_TYPE_MONITOR]) == 0) || (strcmp(bp->type, CF_AGENTTYPES[AGENT_TYPE_COMMON]) == 0))
+        if ((strcmp(bp->type, CF_AGENTTYPES[AGENT_TYPE_MONITOR]) != 0) && (strcmp(bp->type, CF_AGENTTYPES[AGENT_TYPE_COMMON]) != 0))
         {
-            for (size_t j = 0; j < SeqLength(bp->promise_types); j++)
-            {
-                PromiseType *sp = SeqAt(bp->promise_types, j);
-
-                EvalContextStackPushPromiseTypeFrame(ctx, sp);
-                for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
-                {
-                    Promise *pp = SeqAt(sp->promises, ppi);
-                    ExpandPromise(ctx, pp, KeepMonitorPromise, NULL);
-                }
-                EvalContextStackPopFrame(ctx);
-            }
+            continue;
         }
 
-        EvalContextStackPopFrame(ctx);
+        static const char *const type_sequence[] =
+        {
+            "meta",
+            "vars",
+            "defaults",
+            "classes",
+            "measurements",
+            "reports",
+            NULL
+        };
+
+        EvalBundle(ctx, bp, NULL, false, 0, KeepMonitorPromise, NULL, type_sequence);
     }
 
     EvalContextClear(ctx);

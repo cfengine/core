@@ -24,7 +24,7 @@
 
 #include <files_editline.h>
 
-#include <actuator.h>
+#include <eval.h>
 #include <eval_context.h>
 #include <promises.h>
 #include <files_names.h>
@@ -62,18 +62,6 @@ enum editlinetypesequence
     elp_none
 };
 
-static const char *const EDITLINETYPESEQUENCE[] =
-{
-    "vars",
-    "classes",
-    "delete_lines",
-    "field_edits",
-    "insert_lines",
-    "replace_patterns",
-    "reports",
-    NULL
-};
-
 static PromiseResult KeepEditLinePromise(EvalContext *ctx, const Promise *pp, void *param);
 static PromiseResult VerifyLineDeletions(EvalContext *ctx, const Promise *pp, EditContext *edcontext);
 static PromiseResult VerifyColumnEdits(EvalContext *ctx, const Promise *pp, EditContext *edcontext);
@@ -102,7 +90,6 @@ static int InsertFileAtLocation(EvalContext *ctx, Item **start, Item *begin_ptr,
 
 int ScheduleEditLineOperations(EvalContext *ctx, const Bundle *bp, Attributes a, const Promise *parentp, EditContext *edcontext)
 {
-    enum editlinetypesequence type;
     char lockname[CF_BUFSIZE];
     CfLock thislock;
     int pass;
@@ -121,31 +108,23 @@ int ScheduleEditLineOperations(EvalContext *ctx, const Bundle *bp, Attributes a,
 
     for (pass = 1; pass < CF_DONEPASSES; pass++)
     {
-        for (type = 0; EDITLINETYPESEQUENCE[type] != NULL; type++)
+        static const char *const type_sequence[] =
         {
-            const PromiseType *sp = BundleGetPromiseType(bp, EDITLINETYPESEQUENCE[type]);
-            if (!sp)
-            {
-                continue;
-            }
+            "vars",
+            "classes",
+            "delete_lines",
+            "field_edits",
+            "insert_lines",
+            "replace_patterns",
+            "reports",
+            NULL
+        };
 
-            BannerSubPromiseType(ctx, bp->name, sp->name);
-
-            EvalContextStackPushPromiseTypeFrame(ctx, sp);
-            for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
-            {
-                Promise *pp = SeqAt(sp->promises, ppi);
-
-                ExpandPromise(ctx, pp, KeepEditLinePromise, edcontext);
-
-                if (Abort(ctx))
-                {
-                    YieldCurrentLock(thislock);
-                    EvalContextStackPopFrame(ctx);
-                    return false;
-                }
-            }
-            EvalContextStackPopFrame(ctx);
+        bool success = EvalBundle(ctx, bp, NULL, a.edits.inherit, pass, KeepEditLinePromise, edcontext, type_sequence);
+        if (!success)
+        {
+            YieldCurrentLock(thislock);
+            return false;
         }
     }
 

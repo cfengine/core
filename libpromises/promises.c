@@ -320,8 +320,12 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const Promise *pp)
     for (size_t i = 0; i < SeqLength(pp->conlist); i++)
     {
         Constraint *cp = SeqAt(pp->conlist, i);
-        Rval final;
+        if (!IsDefinedClass(ctx, cp->classes))
+        {
+            continue;
+        }
 
+        Rval final;
         if (ExpectedDataType(cp->lval) == CF_DATA_TYPE_BUNDLE)
         {
             final = ExpandBundleReference(ctx, NULL, "this", cp->rval);
@@ -333,13 +337,8 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const Promise *pp)
             RvalDestroy(returnval);
         }
 
-        bool kill_final = true;
-        if (IsDefinedClass(ctx, cp->classes))
-        {
-            Constraint *cp_copy = PromiseAppendConstraint(pcopy, cp->lval, final, false);
-            cp_copy->offset = cp->offset;
-            kill_final = false;
-        }
+        Constraint *cp_copy = PromiseAppendConstraint(pcopy, cp->lval, final, false);
+        cp_copy->offset = cp->offset;
 
         if (strcmp(cp->lval, "comment") == 0)
         {
@@ -360,10 +359,6 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const Promise *pp)
                     DereferenceComment(pcopy);
                 }
             }
-        }
-        if (kill_final)
-        {
-            RvalDestroy(final);
         }
     }
 

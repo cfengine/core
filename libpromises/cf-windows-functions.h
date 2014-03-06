@@ -25,6 +25,8 @@
 #ifndef CFENGINE_WINDOWS_FUNCTIONS_H
 #define CFENGINE_WINDOWS_FUNCTIONS_H
 
+#include <fncall.h>
+
 #ifdef __MINGW32__
 /* win_api.c */
 

@@ -23,7 +23,7 @@
 #+begin_src cfengine3
 body common control
 {
-      bundlesequence => { "test" };
+      bundlesequence => { "test", "test2" };
 }
 
 bundle agent test
@@ -56,6 +56,32 @@ bundle agent test
       "$(merged_d1_array1_str)";
       "$(merged_d2_array2_str)";
 }
+
+bundle agent test2
+{
+  vars:
+      "a"       data  => parsejson('{ "a": "1" }'), meta => { "mymerge" };
+      "b"       data  => parsejson('{ "b": "2" }'), meta => { "mymerge" };
+      "c"       data  => parsejson('{ "c": "3" }'), meta => { "mymerge" };
+      "d"       data  => parsejson('{ "d": "4" }'), meta => { "mymerge" };
+      "todo"    slist => variablesmatching(".*", "mymerge");
+
+  methods:
+      "go" usebundle => cmerge(@(todo)); # a, b, c, d
+
+  reports:
+      "$(this.bundle): merged containers with cmerge = $(cmerge.all_str)";
+}
+
+# note this bundle is in the standard library, in lib/3.6/bundles.cf
+bundle agent cmerge(varlist)
+{
+  vars:
+      "all" data => parsejson('[]');
+      "all" data => mergedata(all, $(varlist));
+      "all_str" string => format("%S", all);
+}
+
 #+end_src
 ###############################################################################
 #+begin_src example_output
@@ -65,5 +91,6 @@ bundle agent test
 #@ R: merging [4,5,6] with { "element1", "element2" } produced [4,5,6,"element1","element2"]
 #@ R: merging {"a":[1,2,3],"b":[]} with array1 produced {"a":[1,2,3],"b":[],"mykey":["array_element1","array_element2"]}
 #@ R: merging {"b":[4,5,6]} with array2 produced {"b":[4,5,6],"otherkey":"hello"}
+#@ R: test2: merged containers with cmerge = {"a":"1","b":"2","c":"3","d":"4"}
 #@ ```
 #+end_src

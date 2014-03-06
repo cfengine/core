@@ -1,3 +1,4 @@
+#
 body common control
 {
       inputs => { "../../default.cf.sub", "./run_with_server.cf.sub" };
@@ -7,6 +8,10 @@ body common control
 
 bundle agent test
 {
+  meta:
+      "test_suppress_fail" string => "windows",
+        meta => { "redmine4822" };
+
   methods:
       "any" usebundle => default_cf_sub_makefile("$(G.testdir)/destination_file",
                                                  "This is the source file to copy $(sys.date) - always fresh... more data!");

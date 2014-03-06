@@ -58,7 +58,8 @@ typedef enum {
     CSV_ERR_OK,
     CVS_ERR_MALFORMED,
     CSV_ERR_UNKNOWN_STATE,
-    CSV_ERR_UNEXPECTED_END
+    CSV_ERR_UNEXPECTED_END,
+    CSV_ERR_INVALID_INPUT
 } csv_parser_error; 
 
 
@@ -72,6 +73,13 @@ typedef enum {
  */
 static csv_parser_error LaunchCsvAutomata(const char *str, Seq **newlist)
 {
+    assert(str);
+
+    if (str == NULL || strlen(str) >= CSV_MAX_LLENGTH)
+    {
+        return CSV_ERR_INVALID_INPUT;
+    }
+
     const char *s = str;
     csv_state current_state = CSV_ST_NEW_LINE;
     csv_parser_error ret;

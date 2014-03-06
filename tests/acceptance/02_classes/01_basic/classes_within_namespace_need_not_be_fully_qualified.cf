@@ -1,0 +1,53 @@
+#######################################################
+#
+# Check that we can use a class defined from within a namespace, without having
+# to reference the namespace if we are also in that same namespace.
+# Ref: Redmine:4050 (https://cfengine.com/dev/issues/4050)
+#
+#######################################################
+
+body common control {
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle agent init {
+}
+
+bundle common test {
+}
+
+bundle agent check {
+  methods:
+    "check from namespace" usebundle => testing:check_namespace_classes;
+}
+
+body file control
+{
+  namespace => "testing";
+}
+
+bundle agent test_namespace_classes
+{
+  classes:
+    "class_defined_within_namespace_testing"
+      expression => "any",
+      scope => "namespace";
+}
+
+bundle agent check_namespace_classes
+{
+  classes:
+      "ok"
+        expression => "class_defined_within_namespace_testing",
+	comment => "Check that I am able to reference a namespaced class from
+		    within the same namespace without specifying the namespace
+                    the class is in";
+
+  reports:
+    ok::
+      "${this.promise_filename} Pass";
+    !ok::
+      "${this.promise_filename} FAIL";
+}

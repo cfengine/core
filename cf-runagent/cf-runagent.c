@@ -45,6 +45,7 @@
 #include <connection_info.h>
 #include <addr_lib.h>
 #include <loading.h>
+#include <expand.h>                                 /* ProtocolVersionParse */
 
 typedef enum
 {
@@ -503,8 +504,11 @@ static int HailServer(EvalContext *ctx, char *host)
         }
     }
 
+    const char *s =
+        EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_PROTOCOL_VERSION);
+
     ConnectionFlags connflags = {
-        .protocol_version = 0, /* TODO fetch from eval context common control */
+        .protocol_version = ProtocolVersionParse(s),
         .trust_server = trustkey
     };
     int err = 0;

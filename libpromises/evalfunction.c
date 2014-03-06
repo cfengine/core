@@ -1589,7 +1589,7 @@ static FnCallResult FnCallReadTcp(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const 
 
     /* TODO don't use ServerConnect, this is only for CFEngine connections! */
 
-    /* if (!ServerConnect(conn, hostnameip, fc)) TODOOOOOOOOOOOOOOOOOOO*/
+    /* if (!ServerConnect(conn, hostnameip, fc)) TODO */
     {
         Log(LOG_LEVEL_INFO, "Couldn't open a tcp socket. (socket: %s)", GetErrorStr());
         DeleteAgentConn(conn);
@@ -2744,7 +2744,7 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx,
 
         /* TODO don't use ServerConnect, this is only for CFEngine connections! */
 
-        /* if (!ServerConnect(conn, RlistScalarValue(rp), fc)) TODOOOOOOOOOOOOOOOO */
+        /* if (!ServerConnect(conn, RlistScalarValue(rp), fc)) TODO */
         {
             Log(LOG_LEVEL_INFO, "Couldn't open a tcp socket. (socket %s)", GetErrorStr());
             DeleteAgentConn(conn);

@@ -163,19 +163,6 @@ void DetermineCfenginePort()
     Log(LOG_LEVEL_VERBOSE, "Setting cfengine default port to %d", CFENGINE_PORT);
 }
 
-/*********************************************************************/
-
-/**
-  @param flags can be ORed from the following
-             CF_CONN_CACHE    Cache the connection TODO REVERSE LOGIC FROM BACKGROUND
-             CF_CONN_TRUSTKEY Trust the server blindly
-             CF_CONN_FORCEIPV4
-             CF_CONN_PROTO_V1
-             CF_CONN_PROTO_V2
-  @param err Set to 0 on success, -1 no server response, -2 authentication failure.
-  @param s Socket to use for the connection, only useful for call collect mode.
-  */
-
 /**
  * @return 1 success, 0 auth/ID error, -1 other error
  */
@@ -190,7 +177,7 @@ int TLSConnect(ConnectionInfo *conn_info, bool trust_server,
         return -1;
     }
 
-    /* TODO filename is local, fix. */
+    /* TODO username is local, fix. */
     ret = TLSVerifyPeer(conn_info, ipaddr, username);
 
     if (ret == -1)                                      /* error */

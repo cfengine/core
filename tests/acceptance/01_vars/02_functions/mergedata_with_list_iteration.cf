@@ -50,10 +50,10 @@ bundle common test
     "variables" slist => variablesmatching(".*", "hosts");
     "sorted_vars" slist => sort("variables", "lex");
 
-    "merged" data => parsejson('{}');
-    "merged" data => mergedata(merged, $(sorted_vars));
+    "merged" data => parsejson('{}'),                   policy => "free";
+    "merged" data => mergedata(merged, $(sorted_vars)), policy => "free";
 
-    "result" string => format("%S", "merged");
+    "result" string => format("%S", "merged"), policy => "free";
 }
 
 

@@ -77,9 +77,9 @@ bundle agent test2
 bundle agent cmerge(varlist)
 {
   vars:
-      "all" data => parsejson('[]');
-      "all" data => mergedata(all, $(varlist));
-      "all_str" string => format("%S", all);
+      "all"     data => parsejson('[]'),            policy => "free";
+      "all"     data => mergedata(all, $(varlist)), policy => "free";
+      "all_str" string => format("%S", all),        policy => "free";
 }
 
 #+end_src

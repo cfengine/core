@@ -395,6 +395,18 @@ body edit_defaults default_cf_sub_empty
       empty_file_before_editing => "true";
 }
 
+body perms default_cf_sub_mog(mode,user,group)
+{
+      owners => { "$(user)" };
+      groups => { "$(group)" };
+      mode   => "$(mode)";
+}
+
+body perms default_cf_sub_mode(mode)
+{
+      mode   => "$(mode)";
+}
+
 body contain useshell
 {
       useshell => "true";

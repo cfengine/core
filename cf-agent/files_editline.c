@@ -181,15 +181,18 @@ Bundle *MakeTemporaryBundleFromTemplate(EvalContext *ctx, Policy *policy, Attrib
         char context[CF_BUFSIZE] = "any";
         int lineno = 0;
         size_t level = 0;
-        char buffer[CF_BUFSIZE];
+
+        size_t buffer_size = CF_BUFSIZE;
+        char *buffer = xmalloc(buffer_size);
 
         for (;;)
         {
-            if (fgets(buffer, sizeof(buffer), fp) == NULL)
+            if (getline(&buffer, &buffer_size, fp) == -1)
             {
-                if (ferror(fp))
+                if (!feof(fp))
                 {
-                    UnexpectedError("Failed to read line from stream");
+                    Log(LOG_LEVEL_ERR, "While constructing template for '%s', error reading. (getline %s)",
+                        pp->promiser, GetErrorStr());
                     break;
                 }
                 else /* feof */
@@ -197,6 +200,7 @@ Bundle *MakeTemporaryBundleFromTemplate(EvalContext *ctx, Policy *policy, Attrib
                     break;
                 }
             }
+
             lineno++;
 
             // Check closing syntax
@@ -281,16 +285,15 @@ Bundle *MakeTemporaryBundleFromTemplate(EvalContext *ctx, Policy *policy, Attrib
                     else
                     {
                         //install independent promise line
-                        if (StripTrailingNewline(buffer, CF_EXPANDSIZE) == -1)
-                        {
-                            Log(LOG_LEVEL_ERR, "StripTrailingNewline was called on an overlong string");
-                        }
+                        StripTrailingNewline(buffer, buffer_size);
                         np = PromiseTypeAppendPromise(tp, buffer, (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, context);
                         PromiseAppendConstraint(np, "insert_type", RvalNew("preserve_all_lines", RVAL_TYPE_SCALAR), false);
                     }
                 }
             }
         }
+
+        free(buffer);
     }
 
     fclose(fp);

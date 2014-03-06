@@ -70,6 +70,8 @@ NETWORK_TESTS=${NETWORK_TESTS:-1}
 UNSAFE_TESTS=${UNSAFE_TESTS:-0}
 LIBXML2_TESTS=${LIBXML2_TESTS:-1}
 NO_CLEAN=0
+BASECLASSES="AUTO"
+EXTRACLASSES="DEBUG"
 
 case "$OSTYPE" in
   msys)
@@ -167,6 +169,12 @@ usage() {
   echo
   echo " --agent   provides a way to specify non-default cf-agent location,"
   echo "           and defaults to $DEFAGENT."
+  echo
+  echo " --baseclasses provides a way to override the default cf-agent classes,"
+  echo "           and defaults to ${BASECLASSES}.  Also can use --bc"
+  echo
+  echo " --extraclasses provides a way to append to the default cf-agent classes,"
+  echo "           and defaults to ${EXTRACLASSES}.  Also can use --ec"
   echo
   echo " --cfpromises  provides a way to specify non-default cf-promises location,"
   echo "               and defaults to $DEFCF_PROMISES."
@@ -292,9 +300,9 @@ export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP CFENGINE_TEST_OVERRIDE_EXTENSION_LIBR
       if grep -q libtool < "$AGENT"; then
         printf "\"$LIBTOOL\" --mode=execute " >> "$WORKDIR/runtest"
       fi
-      printf "valgrind --leak-check=full --show-reachable=yes --suppressions=valgrind-suppressions \"$AGENT\" $VERBOSE -Kf \"$TEST\" -D AUTO,DEBUG 2>&1\n" >> "$WORKDIR/runtest"
+      printf "valgrind --leak-check=full --show-reachable=yes --suppressions=valgrind-suppressions \"$AGENT\" $VERBOSE -Kf \"$TEST\" -D ${BASECLASSES},${EXTRACLASSES} 2>&1\n" >> "$WORKDIR/runtest"
     else
-      printf "\"$AGENT\" $VERBOSE -Kf \"$TEST\" -D AUTO,DEBUG 2>&1\n" >> "$WORKDIR/runtest"
+      printf "\"$AGENT\" $VERBOSE -Kf \"$TEST\" -D ${BASECLASSES},${EXTRACLASSES} 2>&1\n" >> "$WORKDIR/runtest"
     fi
 
     chmod +x "$WORKDIR/runtest"
@@ -451,6 +459,14 @@ while true; do
       CRASHING_TESTS=0;;
     --agent=*)
       AGENT=${1#--agent=};;
+    --baseclasses=*)
+      BASECLASSES=${1#--baseclasses=};;
+    --bc=*)
+      BASECLASSES=${1#--bc=};;
+    --extraclasses=*)
+      EXTRACLASSES=${1#--extraclasses=};;
+    --ec=*)
+      EXTRACLASSES=${1#--ec=};;
     --cfpromises=*)
       CF_PROMISES=${1#--cfpromises=};;
     --cfserverd=*)

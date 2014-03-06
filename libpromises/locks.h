@@ -41,4 +41,6 @@ int WriteLock(const char *lock);
 CF_DB *OpenLock(void);
 void CloseLock(CF_DB *dbp);
 
+void WaitForCriticalSection(const char *section_id);
+void ReleaseCriticalSection(const char *section_id);
 #endif

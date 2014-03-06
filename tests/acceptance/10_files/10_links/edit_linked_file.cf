@@ -33,6 +33,9 @@ body link_from link_init
 
 bundle agent test
 {
+  meta:
+      "test_skip_unsupported" string => "windows";
+
   files:
       "$(G.testdir)/link_dir/link"
       edit_line => edit_test;

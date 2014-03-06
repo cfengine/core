@@ -156,6 +156,26 @@ JsonElement *RvalContainerValue(Rval rval)
 }
 
 
+const char *RvalTypeToString(RvalType type)
+{
+    switch (type)
+    {
+    case RVAL_TYPE_CONTAINER:
+        return "data";
+    case RVAL_TYPE_FNCALL:
+        return "call";
+    case RVAL_TYPE_LIST:
+        return "list";
+    case RVAL_TYPE_NOPROMISEE:
+        return "null";
+    case RVAL_TYPE_SCALAR:
+        return "scalar";
+    }
+
+    assert(false && "never reach");
+    return NULL;
+}
+
 Rlist *RlistKeyIn(Rlist *list, const char *key)
 {
     for (Rlist *rp = list; rp != NULL; rp = rp->next)

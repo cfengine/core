@@ -345,12 +345,8 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const Promise *pp)
         {
             if (final.type != RVAL_TYPE_SCALAR)
             {
-                char err[CF_BUFSIZE];
-
-                snprintf(err, CF_BUFSIZE,
-                         "Comments can only be scalar objects, not %c in '%s'",
-                         final.type, pp->promiser);
-                yyerror(err);
+                Log(LOG_LEVEL_ERR, "Comments can only be scalar objects, not '%s' in '%s'",
+                    RvalTypeToString(final.type), pp->promiser);
             }
             else
             {

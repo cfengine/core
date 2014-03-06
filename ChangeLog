@@ -11,11 +11,11 @@
               constraints in bundle server access_rules are being phased
               out, preferred attributes are now "admit_ips", "deny_ips",
               "admit_hostnames", "deny_hostnames", "admit_keys",
-              "deny_keys". Regular expressions are not allowed then,
-              only CIDR notation for "admit_ips", exact "SHA=..."
-              strings for "admit_keys", and exact hostnames
+              "deny_keys". For these new attributes regular expressions
+              are not allowed, only CIDR notation for "admit/deny_ips", exact
+              "SHA=..." strings for "admit/deny_keys", and exact hostnames
               (e.g. "cfengine.com") or subdomains (starting with dot,
-              e.g. ".cfengine.com") for admit_hostnames.  (same rules
+              e.g. ".cfengine.com") for "admit/deny"_hostnames. Same rules
               apply to 'deny_*' attributes.
             - The 'skipverify' option in body server control is
               deprecated and only left for compatibility; it does
@@ -28,7 +28,7 @@
               slash. If the path exists then this is auto-detected and
               trailing slash appended automatically. You have to append
               a trailing slash manually to an inexistent or symbolic
-              path (e.g.  "/path/to/$(connection.ip)/") to force
+              path (e.g. "/path/to/$(connection.ip)/") to force
               recursive access.
         - Enable source file in agent copy_from promises to be a relative path.
         - #TODO# Changes to logging output

@@ -73,6 +73,8 @@ typedef enum {
  */
 static csv_parser_error LaunchCsvAutomata(const char *str, Seq **newlist)
 {
+    assert(str);
+
     if (str == NULL || strlen(str) >= CSV_MAX_LLENGTH)
     {
         return CSV_ERR_INVALID_INPUT;

@@ -2508,7 +2508,7 @@ static AgentConnection *FileCopyConnectionOpen(const EvalContext *ctx,
         conntimeout = CONNTIMEOUT;
     }
 
-    const char *port = (fc.port != NULL) ? fc.port : "5308";
+    const char *port = (fc.port != NULL) ? fc.port : CFENGINE_PORT_STR;
 
     AgentConnection *conn = NULL;
     if (flags.cache_connection)

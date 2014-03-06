@@ -473,8 +473,10 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericA
 
             if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_PORT_NUMBER].lval) == 0)
             {
-                CFENGINE_PORT = (short) IntFromString(value);
-                Log(LOG_LEVEL_VERBOSE, "Setting default port number to %d", CFENGINE_PORT);
+                CFENGINE_PORT = IntFromString(value);
+                strlcpy(CFENGINE_PORT_STR, value, sizeof(CFENGINE_PORT_STR));
+                Log(LOG_LEVEL_VERBOSE, "Setting default port number to %d",
+                    CFENGINE_PORT);
                 continue;
             }
 

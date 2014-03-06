@@ -133,6 +133,10 @@ static int FSWrite(const char *destination, int dd, const char *buf, size_t n_wr
     return true;
 }
 
+
+int CFENGINE_PORT = 5308;
+char CFENGINE_PORT_STR[16] = "5308";
+
 void DetermineCfenginePort()
 {
     struct servent *server;
@@ -141,6 +145,8 @@ void DetermineCfenginePort()
     if ((server = getservbyname(CFENGINE_SERVICE, "tcp")) != NULL)
     {
         CFENGINE_PORT = ntohs(server->s_port);
+        snprintf(CFENGINE_PORT_STR, sizeof(CFENGINE_PORT_STR),
+                 "%d", CFENGINE_PORT);
     }
     else
     {

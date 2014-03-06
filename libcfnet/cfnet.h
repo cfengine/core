@@ -30,6 +30,11 @@
 #include <platform.h>
 
 
+/* Only set with DetermineCfenginePort() and from cf-serverd */
+extern char CFENGINE_PORT_STR[16];                     /* GLOBAL_P GLOBAL_E */
+extern int CFENGINE_PORT;                              /* GLOBAL_P GLOBAL_E */
+
+
 /* max size of plaintext in one transaction, see
    net.c:SendTransaction(), leave space for encryption padding
    (assuming max 64*8 = 512-bit cipher block size). */

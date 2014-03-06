@@ -940,24 +940,6 @@ static void ResolveCommonClassPromises(EvalContext *ctx, PromiseType *pt)
     for (size_t i = 0; i < SeqLength(pt->promises); i++)
     {
         Promise *pp = SeqAt(pt->promises, i);
-
-        char *sp = NULL;
-        if (VarClassExcluded(ctx, pp, &sp))
-        {
-            if (LEGACY_OUTPUT)
-            {
-                Log(LOG_LEVEL_VERBOSE, "\n");
-                Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . ");
-                Log(LOG_LEVEL_VERBOSE, "Skipping whole next promise (%s), as var-context %s is not relevant", pp->promiser, sp);
-                Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . ");
-            }
-            else
-            {
-                Log(LOG_LEVEL_VERBOSE, "Skipping next promise '%s', as var-context '%s' is not relevant", pp->promiser, sp);
-            }
-            continue;
-        }
-
         ExpandPromise(ctx, pp, VerifyClassPromise, NULL);
     }
     EvalContextStackPopFrame(ctx);

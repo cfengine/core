@@ -306,42 +306,6 @@ static PromiseResult KeepEditLinePromise(EvalContext *ctx, const Promise *pp, vo
 {
     EditContext *edcontext = param;
 
-    char *sp = NULL;
-
-    if (!IsDefinedClass(ctx, pp->classes))
-    {
-        if (LEGACY_OUTPUT)
-        {
-            Log(LOG_LEVEL_VERBOSE, "\n");
-            Log(LOG_LEVEL_VERBOSE, "   .  .  .  .  .  .  .  .  .  .  .  .  .  .  . ");
-            Log(LOG_LEVEL_VERBOSE, "   Skipping whole next edit promise, as context %s is not relevant", pp->classes);
-            Log(LOG_LEVEL_VERBOSE, "   .  .  .  .  .  .  .  .  .  .  .  .  .  .  . ");
-        }
-        else
-        {
-            Log(LOG_LEVEL_VERBOSE, "Skipping next edit promise, as context '%s' is not relevant", pp->classes);
-        }
-        return PROMISE_RESULT_NOOP;
-    }
-
-    if (VarClassExcluded(ctx, pp, &sp))
-    {
-        if (LEGACY_OUTPUT)
-        {
-            Log(LOG_LEVEL_VERBOSE, "\n");
-            Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . ");
-            Log(LOG_LEVEL_VERBOSE, "Skipping whole next edit promise (%s), as var-context %s is not relevant",
-                  pp->promiser, sp);
-            Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . ");
-        }
-        else
-        {
-            Log(LOG_LEVEL_VERBOSE, "Skipping whole next edit promise '%s', as var-context '%s' is not relevant",
-                  pp->promiser, sp);
-        }
-        return PROMISE_RESULT_NOOP;
-    }
-
     PromiseBanner(pp);
 
     if (strcmp("classes", pp->parent_promise_type->name) == 0)

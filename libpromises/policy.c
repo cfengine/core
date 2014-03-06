@@ -2715,17 +2715,6 @@ void PromiseRecheckAllConstraints(const EvalContext *ctx, const Promise *pp)
 {
     static Item *EDIT_ANCHORS = NULL; /* GLOBAL_X */
 
-    if (!IsDefinedClass(ctx, pp->classes))
-    {
-        return;
-    }
-
-    char *sp = NULL;
-    if (VarClassExcluded(ctx, pp, &sp))
-    {
-        return;
-    }
-
     for (size_t i = 0; i < SeqLength(pp->conlist); i++)
     {
         Constraint *cp = SeqAt(pp->conlist, i);
@@ -2747,7 +2736,8 @@ void PromiseRecheckAllConstraints(const EvalContext *ctx, const Promise *pp)
     {
         /* Multiple additions with same criterion will not be convergent -- but ignore for empty file baseline */
 
-        if ((sp = PromiseGetConstraintAsRval(pp, "select_line_matching", RVAL_TYPE_SCALAR)))
+        const char *sp = PromiseGetConstraintAsRval(pp, "select_line_matching", RVAL_TYPE_SCALAR);
+        if (sp)
         {
             if (!IsExpandable(sp))
             {

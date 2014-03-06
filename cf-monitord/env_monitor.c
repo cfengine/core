@@ -1161,43 +1161,6 @@ static PromiseResult KeepMonitorPromise(EvalContext *ctx, const Promise *pp, ARG
 {
     assert(param == NULL);
 
-    char *sp = NULL;
-
-    if (!IsDefinedClass(ctx, pp->classes))
-    {
-        if (LEGACY_OUTPUT)
-        {
-            Log(LOG_LEVEL_VERBOSE, "\n");
-            Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . ");
-            Log(LOG_LEVEL_VERBOSE, "Skipping whole next promise (%s), as context %s is not relevant", pp->promiser,
-                  pp->classes);
-            Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . ");
-        }
-        else
-        {
-            Log(LOG_LEVEL_VERBOSE, "Skipping next promise '%s', as context '%s' is not relevant", pp->promiser, pp->classes);
-        }
-        return PROMISE_RESULT_NOOP;
-    }
-
-    if (VarClassExcluded(ctx, pp, &sp))
-    {
-        if (LEGACY_OUTPUT)
-        {
-            Log(LOG_LEVEL_VERBOSE, "\n");
-            Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . ");
-            Log(LOG_LEVEL_VERBOSE, "Skipping whole next promise (%s), as var-context %s is not relevant", pp->promiser,
-                  sp);
-            Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . ");
-        }
-        else
-        {
-            Log(LOG_LEVEL_VERBOSE, "Skipping next promise '%s', as var-context '%s' is not relevant", pp->promiser,
-                  sp);
-        }
-        return PROMISE_RESULT_NOOP;
-    }
-
     if (strcmp("vars", pp->parent_promise_type->name) == 0)
     {
         return PROMISE_RESULT_NOOP;

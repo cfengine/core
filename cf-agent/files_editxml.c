@@ -202,43 +202,6 @@ int ScheduleEditXmlOperations(EvalContext *ctx, const Bundle *bp, Attributes a, 
 
 static PromiseResult KeepEditXmlPromise(EvalContext *ctx, const Promise *pp, void *param)
 {
-    EditContext *edcontext = param;
-
-    char *sp = NULL;
-
-    if (!IsDefinedClass(ctx, pp->classes))
-    {
-        if (LEGACY_OUTPUT)
-        {
-            Log(LOG_LEVEL_VERBOSE, "\n");
-            Log(LOG_LEVEL_VERBOSE, "   .  .  .  .  .  .  .  .  .  .  .  .  .  .  . ");
-            Log(LOG_LEVEL_VERBOSE, "   Skipping whole next edit promise, as context %s is not relevant", pp->classes);
-            Log(LOG_LEVEL_VERBOSE, "   .  .  .  .  .  .  .  .  .  .  .  .  .  .  . ");
-        }
-        else
-        {
-            Log(LOG_LEVEL_VERBOSE, "Skipping next XML edit promise, as context '%s' is not relevant", pp->classes);
-        }
-        return PROMISE_RESULT_NOOP;
-    }
-
-    if (VarClassExcluded(ctx, pp, &sp))
-    {
-        if (LEGACY_OUTPUT)
-        {
-            Log(LOG_LEVEL_VERBOSE, "\n");
-            Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . ");
-            Log(LOG_LEVEL_VERBOSE, "Skipping whole next edit promise (%s), as var-context %s is not relevant",
-                  pp->promiser, sp);
-            Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . ");
-        }
-        else
-        {
-            Log(LOG_LEVEL_VERBOSE, "Skipping whole next edit promise '%s', as var-context '%s' is not relevant", pp->promiser, sp);
-        }
-        return PROMISE_RESULT_NOOP;
-    }
-
     PromiseBanner(pp);
 
     if (strcmp("classes", pp->parent_promise_type->name) == 0)
@@ -249,6 +212,7 @@ static PromiseResult KeepEditXmlPromise(EvalContext *ctx, const Promise *pp, voi
     {
         Attributes a = GetInsertionAttributes(ctx, pp);
 #ifdef HAVE_LIBXML2
+        EditContext *edcontext = param;
         PromiseResult result = PROMISE_RESULT_NOOP;
         VerifyXPathBuild(ctx, a, pp, edcontext, &result);
         return result;
@@ -261,6 +225,7 @@ static PromiseResult KeepEditXmlPromise(EvalContext *ctx, const Promise *pp, voi
     {
         Attributes a = GetDeletionAttributes(ctx, pp);
 #ifdef HAVE_LIBXML2
+        EditContext *edcontext = param;
         PromiseResult result = VerifyTreeDeletions(ctx, a, pp, edcontext);
         return result;
 #else
@@ -272,6 +237,7 @@ static PromiseResult KeepEditXmlPromise(EvalContext *ctx, const Promise *pp, voi
     {
         Attributes a = GetInsertionAttributes(ctx, pp);
 #ifdef HAVE_LIBXML2
+        EditContext *edcontext = param;
         PromiseResult result = VerifyTreeInsertions(ctx, a, pp, edcontext);
         return result;
 #else
@@ -283,6 +249,7 @@ static PromiseResult KeepEditXmlPromise(EvalContext *ctx, const Promise *pp, voi
     {
         Attributes a = GetDeletionAttributes(ctx, pp);
 #ifdef HAVE_LIBXML2
+        EditContext *edcontext = param;
         PromiseResult result = VerifyAttributeDeletions(ctx, a, pp, edcontext);
         return result;
 #else
@@ -294,6 +261,7 @@ static PromiseResult KeepEditXmlPromise(EvalContext *ctx, const Promise *pp, voi
     {
         Attributes a = GetInsertionAttributes(ctx, pp);
 #ifdef HAVE_LIBXML2
+        EditContext *edcontext = param;
         PromiseResult result = VerifyAttributeSet(ctx, a, pp, edcontext);
         return result;
 #else
@@ -305,6 +273,7 @@ static PromiseResult KeepEditXmlPromise(EvalContext *ctx, const Promise *pp, voi
     {
         Attributes a = GetDeletionAttributes(ctx, pp);
 #ifdef HAVE_LIBXML2
+        EditContext *edcontext = param;
         PromiseResult result = VerifyTextDeletions(ctx, a, pp, edcontext);
         return result;
 #else
@@ -316,6 +285,7 @@ static PromiseResult KeepEditXmlPromise(EvalContext *ctx, const Promise *pp, voi
     {
         Attributes a = GetInsertionAttributes(ctx, pp);
 #ifdef HAVE_LIBXML2
+        EditContext *edcontext = param;
         PromiseResult result = VerifyTextSet(ctx, a, pp, edcontext);
         return result;
 #else
@@ -327,6 +297,7 @@ static PromiseResult KeepEditXmlPromise(EvalContext *ctx, const Promise *pp, voi
     {
         Attributes a = GetInsertionAttributes(ctx, pp);
 #ifdef HAVE_LIBXML2
+        EditContext *edcontext = param;
         PromiseResult result = VerifyTextInsertions(ctx, a, pp, edcontext);
         return result;
 #else

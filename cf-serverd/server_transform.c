@@ -482,7 +482,7 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericA
 
             if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_BIND_TO_INTERFACE].lval) == 0)
             {
-                strncpy(BINDINTERFACE, value, CF_BUFSIZE - 1);
+                strlcpy(BINDINTERFACE, value, sizeof(BINDINTERFACE));
                 Log(LOG_LEVEL_VERBOSE, "Setting bindtointerface to '%s'", BINDINTERFACE);
                 continue;
             }

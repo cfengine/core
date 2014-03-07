@@ -66,7 +66,6 @@ static pthread_mutex_t cft_serverlist = PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP;
 static void NewClientCache(Stat *data, AgentConnection *conn);
 static void FlushFileStream(int sd, int toget);
 static int CacheStat(const char *file, struct stat *statbuf, const char *stattype, AgentConnection *conn);
-int TryConnect(AgentConnection *conn, struct timeval *tvp, struct sockaddr *cinp, int cinpSz);
 
 
 /**
@@ -244,125 +243,6 @@ int TLSConnect(ConnectionInfo *conn_info, bool trust_server,
     return 1; /* Success :-) */
 }
 
-/*****************************************************************************/
-
-/* TODO new function SocketConnect(), and change the evalfunction.c users to
- * posix connect() or the new one. */
-static bool OpenSocket(AgentConnection *conn,
-                       const char *host, const char *port,
-                       unsigned int connect_timeout,
-                       ConnectionFlags flags)
-{
-    if (port == NULL || *port == '\0')
-    {
-        port = CFENGINE_PORT_STR;
-    }
-
-    struct addrinfo *response, *ap;
-    struct addrinfo *response2, *ap2;
-    int err, connected = false;
-
-    struct addrinfo query = {
-        .ai_family = flags.force_ipv4 ? AF_INET : AF_UNSPEC,
-        .ai_socktype = SOCK_STREAM
-    };
-
-    if ((err = getaddrinfo(host, port, &query, &response)) != 0)
-    {
-        Log(LOG_LEVEL_INFO,
-              "Unable to find host or service %s : %s (%s)",
-              host, port, gai_strerror(err));
-        return false;
-    }
-
-    for (ap = response; ap != NULL; ap = ap->ai_next)
-    {
-        /* Convert address to string. */
-        char txtaddr[CF_MAX_IP_LEN] = "";
-        getnameinfo(ap->ai_addr, ap->ai_addrlen,
-                    txtaddr, sizeof(txtaddr),
-                    NULL, 0, NI_NUMERICHOST);
-        Log(LOG_LEVEL_VERBOSE,
-            "Connecting to host %s (address %s), port %s",
-            host, txtaddr, port);
-
-        ConnectionInfoSetSocket(conn->conn_info, socket(ap->ai_family, ap->ai_socktype, ap->ai_protocol));
-        if (ConnectionInfoSocket(conn->conn_info) == -1)
-        {
-            Log(LOG_LEVEL_ERR, "Couldn't open a socket. (socket: %s)", GetErrorStr());
-            continue;
-        }
-
-        /* Bind socket to specific interface, if requested. */
-        if (BINDINTERFACE[0] != '\0')
-        {
-            struct addrinfo query2 = {
-                .ai_family = flags.force_ipv4 ? AF_INET : AF_UNSPEC,
-                .ai_socktype = SOCK_STREAM,
-                /* returned address is for bind() */
-                query2.ai_flags = AI_PASSIVE
-            };
-
-            err = getaddrinfo(BINDINTERFACE, NULL, &query2, &response2);
-            if ((err) != 0)
-            {
-                Log(LOG_LEVEL_ERR,
-                    "Unable to lookup interface '%s' to bind. (getaddrinfo: %s)",
-                      BINDINTERFACE, gai_strerror(err));
-                cf_closesocket(ConnectionInfoSocket(conn->conn_info));
-                ConnectionInfoSetSocket(conn->conn_info, SOCKET_INVALID);
-                freeaddrinfo(response2);
-                freeaddrinfo(response);
-                return false;
-            }
-
-            for (ap2 = response2; ap2 != NULL; ap2 = ap2->ai_next)
-            {
-                if (bind(ConnectionInfoSocket(conn->conn_info), ap2->ai_addr, ap2->ai_addrlen) == 0)
-                {
-                    break;
-                }
-            }
-            freeaddrinfo(response2);
-        }
-
-        Log(LOG_LEVEL_VERBOSE, "Setting connect timeout to %u", connect_timeout);
-        struct timeval tv = { .tv_sec = connect_timeout };
-
-        if (TryConnect(conn, &tv, ap->ai_addr, ap->ai_addrlen))
-        {
-            Log(LOG_LEVEL_INFO, "Connected to %s port %s", txtaddr, port);
-
-            assert(sizeof(conn->remoteip) >= sizeof(txtaddr));
-            strcpy(conn->remoteip, txtaddr);
-            conn->family = ap->ai_family;
-            connected = true;
-            break;
-        }
-    }
-
-    if (!connected)
-    {
-        if (ConnectionInfoSocket(conn->conn_info) >= 0)                 /* not INVALID or OFFLINE socket */
-        {
-            cf_closesocket(ConnectionInfoSocket(conn->conn_info));
-            ConnectionInfoSetSocket(conn->conn_info, SOCKET_INVALID);
-        }
-    }
-
-    if (response != NULL)
-    {
-        freeaddrinfo(response);
-    }
-
-    if (!connected)
-    {
-        Log(LOG_LEVEL_VERBOSE, "Unable to connect to server %s: %s", host, GetErrorStr());
-        return false;
-    }
-    return true;
-}
-
 /**
  * @NOTE if #flags.protocol_version is CF_PROTOCOL_UNDEFINED, then latest
  *       protocol is used by default.
@@ -393,7 +273,16 @@ AgentConnection *ServerConnection(const char *server, const char *port,
     snprintf(conn->username, CF_SMALLBUF, "root");
 #endif
 
-    if (!OpenSocket(conn, server, port, connect_timeout, flags))
+    if (port == NULL || *port == '\0')
+    {
+        port = CFENGINE_PORT_STR;
+    }
+
+    char txtaddr[CF_MAX_IP_LEN] = "";
+    conn->conn_info->sd = SocketConnect(server, port, connect_timeout,
+                                        flags.force_ipv4,
+                                        txtaddr, sizeof(txtaddr));
+    if (conn->conn_info->sd == -1)
     {
         Log(LOG_LEVEL_INFO, "No server is responding on this port");
         DisconnectServer(conn);
@@ -401,13 +290,8 @@ AgentConnection *ServerConnection(const char *server, const char *port,
         return NULL;
     }
 
-    if (conn->conn_info->sd < 0)               /* INVALID or OFFLINE socket */
-    {
-        UnexpectedError("ServerConnect() succeeded but socket descriptor is %d!",
-                        conn->conn_info->sd);
-        *err = -1;
-        return NULL;
-    }
+    assert(sizeof(conn->remoteip) >= sizeof(txtaddr));
+    strcpy(conn->remoteip, txtaddr);
 
     /* Set the version to request. After TLSConnect() it will have the version
      * we finally ended up with. */
@@ -481,7 +365,7 @@ void DisconnectServer(AgentConnection *conn)
     /* Socket needs to be closed even after SSL_shutdown. */
     if (ConnectionInfoSocket(conn->conn_info) >= 0)                  /* Not INVALID or OFFLINE */
     {
-        if (ConnectionInfoProtocolVersion(conn->conn_info) == CF_PROTOCOL_TLS &&
+        if (ConnectionInfoProtocolVersion(conn->conn_info) >= CF_PROTOCOL_TLS &&
                 ConnectionInfoSSL(conn->conn_info) != NULL)
         {
             SSL_shutdown(ConnectionInfoSSL(conn->conn_info));
@@ -1528,105 +1412,3 @@ void ConnectionsCleanup(void)
     SeqClear(srvlist_tmp);
 }
 
-/*********************************************************************/
-
-#if !defined(__MINGW32__)
-
-#if defined(__hpux) && defined(__GNUC__)
-#pragma GCC diagnostic ignored "-Wstrict-aliasing"
-// HP-UX GCC type-pun warning on FD_SET() macro:
-// While the "fd_set" type is defined in /usr/include/sys/_fd_macros.h as a
-// struct of an array of "long" values in accordance with the XPG4 standard's
-// requirements, the macros for the FD operations "pretend it is an array of
-// int32_t's so the binary layout is the same for both Narrow and Wide
-// processes," as described in _fd_macros.h. In the FD_SET, FD_CLR, and
-// FD_ISSET macros at line 101, the result is cast to an "__fd_mask *" type,
-// which is defined as int32_t at _fd_macros.h:82.
-//
-// This conflict between the "long fds_bits[]" array in the XPG4-compliant
-// fd_set structure, and the cast to an int32_t - not long - pointer in the
-// macros, causes a type-pun warning if -Wstrict-aliasing is enabled.
-// The warning is merely a side effect of HP-UX working as designed,
-// so it can be ignored.
-#endif
-
-int TryConnect(AgentConnection *conn, struct timeval *tvp, struct sockaddr *cinp, int cinpSz)
-/** 
- * Tries a nonblocking connect and then restores blocking if
- * successful. Returns true on success, false otherwise.
- * NB! Do not use recv() timeout - see note below.
- **/
-{
-    int res;
-    long arg;
-    struct sockaddr_in emptyCin = { 0 };
-
-    if (!cinp)
-    {
-        cinp = (struct sockaddr *) &emptyCin;
-        cinpSz = sizeof(emptyCin);
-    }
-
-    /* set non-blocking socket */
-    arg = fcntl(ConnectionInfoSocket(conn->conn_info), F_GETFL, NULL);
-
-    if (fcntl(ConnectionInfoSocket(conn->conn_info), F_SETFL, arg | O_NONBLOCK) == -1)
-    {
-        Log(LOG_LEVEL_ERR, "Could not set socket to non-blocking mode. (fcntl: %s)", GetErrorStr());
-    }
-
-    res = connect(ConnectionInfoSocket(conn->conn_info), cinp, (socklen_t) cinpSz);
-
-    if (res < 0)
-    {
-        if (errno == EINPROGRESS)
-        {
-            fd_set myset;
-            int valopt;
-            socklen_t lon = sizeof(int);
-
-            FD_ZERO(&myset);
-
-            FD_SET(ConnectionInfoSocket(conn->conn_info), &myset);
-
-            /* now wait for connect, but no more than tvp.sec */
-            res = select(ConnectionInfoSocket(conn->conn_info) + 1, NULL, &myset, NULL, tvp);
-            if (getsockopt(ConnectionInfoSocket(conn->conn_info), SOL_SOCKET, SO_ERROR, (void *) (&valopt), &lon) != 0)
-            {
-                Log(LOG_LEVEL_ERR, "Could not check connection status. (getsockopt: %s)", GetErrorStr());
-                return false;
-            }
-
-            if (valopt || (res <= 0))
-            {
-                Log(LOG_LEVEL_INFO, "Error connecting to server (timeout): (getsockopt: %s)", GetErrorStr());
-                return false;
-            }
-        }
-        else
-        {
-            Log(LOG_LEVEL_INFO, "Error connecting to server. (connect: %s)", GetErrorStr());
-            return false;
-        }
-    }
-
-    /* connection suceeded; return to blocking mode */
-
-    if (fcntl(ConnectionInfoSocket(conn->conn_info), F_SETFL, arg) == -1)
-    {
-        Log(LOG_LEVEL_ERR, "Could not set socket to blocking mode. (fcntl: %s)", GetErrorStr());
-    }
-
-    if (SetReceiveTimeout(ConnectionInfoSocket(conn->conn_info), tvp) == -1)
-    {
-        Log(LOG_LEVEL_ERR, "Could not set socket timeout. (SetReceiveTimeout: %s)", GetErrorStr());
-    }
-
-    return true;
-}
-
-#if defined(__hpux) && defined(__GNUC__)
-#pragma GCC diagnostic warning "-Wstrict-aliasing"
-#endif
-
-#endif /* !defined(__MINGW32__) */

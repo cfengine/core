@@ -142,7 +142,7 @@ int VEXPIREAFTER = 120; /* GLOBAL_P */
 
   Utilized in server/client code to bind sockets.
 */
-char BINDINTERFACE[CF_BUFSIZE] = ""; /* GLOBAL_P */
+char BINDINTERFACE[CF_MAXVARSIZE]; /* GLOBAL_P */
 
 /*
   Set in cf-*.c:CheckOpts and GenericAgentConfigParseArguments.

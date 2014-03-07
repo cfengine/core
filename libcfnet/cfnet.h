@@ -133,7 +133,6 @@ struct Stat_
 
 typedef struct
 {
-    int family;                 /* AF_INET or AF_INET6 */
     ConnectionInfo *conn_info;
     int trust;                  /* true if key being accepted on trust */
     int authenticated;

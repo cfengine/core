@@ -36,4 +36,9 @@ int ReceiveTransaction(const ConnectionInfo *conn_info, char *buffer, int *more)
 
 int SetReceiveTimeout(int sd, const struct timeval *timeout);
 
+
+int SocketConnect(const char *host, const char *port,
+                  unsigned int connect_timeout, bool force_ipv4,
+                  char *txtaddr, size_t txtaddr_size);
+
 #endif

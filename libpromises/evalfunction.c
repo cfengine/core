@@ -44,7 +44,7 @@
 #include <hashes.h>
 #include <unix.h>
 #include <string_lib.h>
-#include <client_code.h>
+#include <net.h>                                           /* SocketConnect */
 #include <communication.h>
 #include <classic.h>                                    /* SendSocketStream */
 #include <pipes.h>
@@ -1547,52 +1547,37 @@ static FnCallResult FnCallSplayClass(EvalContext *ctx,
 
 /*********************************************************************/
 
-static FnCallResult FnCallReadTcp(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, const Rlist *finalargs)
- /* ReadTCP(localhost,80,'GET index.html',1000) */
+/* ReadTCP(localhost,80,'GET index.html',1000) */
+static FnCallResult FnCallReadTcp(ARG_UNUSED EvalContext *ctx,
+                                  ARG_UNUSED const Policy *policy,
+                                  ARG_UNUSED const FnCall *fp,
+                                  const Rlist *finalargs)
 {
-    AgentConnection *conn = NULL;
-    char buffer[CF_BUFSIZE];
-    int val = 0, n_read = 0;
-    short portnum;
-
-    memset(buffer, 0, sizeof(buffer));
-
-/* begin fn specific content */
-
     char *hostnameip = RlistScalarValue(finalargs);
     char *port = RlistScalarValue(finalargs->next);
     char *sendstring = RlistScalarValue(finalargs->next->next);
-    char *maxbytes = RlistScalarValue(finalargs->next->next->next);
+    ssize_t maxbytes = IntFromString(RlistScalarValue(finalargs->next->next->next));
 
-    val = IntFromString(maxbytes);
-    portnum = (short) IntFromString(port);
-
-    if (val < 0 || portnum < 0 || THIS_AGENT_TYPE == AGENT_TYPE_COMMON)
+    if (THIS_AGENT_TYPE == AGENT_TYPE_COMMON)
     {
         return FnFailure();
     }
 
-    if (val > CF_BUFSIZE - 1)
+    if (maxbytes < 0 || maxbytes > CF_BUFSIZE - 1)
     {
-        Log(LOG_LEVEL_ERR, "Too many bytes to read from TCP port '%s@%s'", port, hostnameip);
-        val = CF_BUFSIZE - CF_BUFFERMARGIN;
+        Log(LOG_LEVEL_VERBOSE,
+            "readtcp: invalid number of bytes %zd to read, defaulting to %d",
+            maxbytes, CF_BUFSIZE - 1);
+        maxbytes = CF_BUFSIZE - 1;
     }
 
-    Log(LOG_LEVEL_DEBUG, "Want to read %d bytes from port %d at '%s'", val, portnum, hostnameip);
-
-    conn = NewAgentConn(hostnameip);
-
-    /* FileCopy fc = { */
-    /*     .force_ipv4 = false, */
-    /*     .portnumber = portnum, */
-    /* }; */
-
-    /* TODO don't use ServerConnect, this is only for CFEngine connections! */
-
-    /* if (!ServerConnect(conn, hostnameip, fc)) TODO */
+    char txtaddr[CF_MAX_IP_LEN] = "";
+    int sd = SocketConnect(hostnameip, port, CONNTIMEOUT, false,
+                           txtaddr, sizeof(txtaddr));
+    if (sd == -1)
     {
-        Log(LOG_LEVEL_INFO, "Couldn't open a tcp socket. (socket: %s)", GetErrorStr());
-        DeleteAgentConn(conn);
+        Log(LOG_LEVEL_INFO, "readtcp: Couldn't connect. (socket: %s)",
+            GetErrorStr());
         return FnFailure();
     }
 
@@ -1602,11 +1587,10 @@ static FnCallResult FnCallReadTcp(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const 
         int result = 0;
         size_t length = strlen(sendstring);
         do {
-            result = send(ConnectionInfoSocket(conn->conn_info), sendstring, length, 0);
+            result = send(sd, sendstring, length, 0);
             if (result < 0)
             {
-                cf_closesocket(ConnectionInfoSocket(conn->conn_info));
-                DeleteAgentConn(conn);
+                cf_closesocket(sd);
                 return FnFailure();
             }
             else
@@ -1616,21 +1600,25 @@ static FnCallResult FnCallReadTcp(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const 
         } while (sent < length);
     }
 
-    if ((n_read = recv(ConnectionInfoSocket(conn->conn_info), buffer, val, 0)) == -1)
-    {
-    }
+    char recvbuf[CF_BUFSIZE];
+    ssize_t n_read = recv(sd, recvbuf, maxbytes, 0);
+    cf_closesocket(sd);
 
     if (n_read == -1)
     {
-        cf_closesocket(ConnectionInfoSocket(conn->conn_info));
-        DeleteAgentConn(conn);
+        Log(LOG_LEVEL_INFO, "readtcp: Error while receiving (%s)",
+            GetErrorStr());
         return FnFailure();
     }
 
-    cf_closesocket(ConnectionInfoSocket(conn->conn_info));
-    DeleteAgentConn(conn);
+    assert(n_read < sizeof(recvbuf));
+    recvbuf[n_read] = '\0';
 
-    return FnReturn(buffer);
+    Log(LOG_LEVEL_VERBOSE,
+        "readtcp: requested %zd maxbytes, got %zd bytes from %s",
+        maxbytes, n_read, txtaddr);
+
+    return FnReturn(recvbuf);
 }
 
 /*********************************************************************/
@@ -2635,19 +2623,12 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx,
                                         ARG_UNUSED const Policy *policy,
                                         const FnCall *fp,
                                         const Rlist *finalargs)
- /* ReadTCP(localhost,80,'GET index.html',1000) */
 {
-    AgentConnection *conn = NULL;
-    char buffer[CF_BUFSIZE], naked[CF_MAXVARSIZE];
-    int val = 0, n_read = 0, count = 0;
-    short portnum;
-    buffer[0] = '\0';
-
     const char *listvar = RlistScalarValue(finalargs);
     const char *port = RlistScalarValue(finalargs->next);
     const char *sendstring = RlistScalarValue(finalargs->next->next);
     const char *regex = RlistScalarValue(finalargs->next->next->next);
-    const char *maxbytes = RlistScalarValue(finalargs->next->next->next->next);
+    ssize_t maxbytes = IntFromString(RlistScalarValue(finalargs->next->next->next->next));
     char *array_lval = xstrdup(RlistScalarValue(finalargs->next->next->next->next->next));
 
     if (!IsQualifiedVariable(array_lval))
@@ -2668,6 +2649,8 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx,
             return FnFailure();
         }
     }
+
+    char naked[CF_MAXVARSIZE] = "";
 
     if (IsVarList(listvar))
     {
@@ -2702,115 +2685,114 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx,
         return FnFailure();
     }
 
-    val = IntFromString(maxbytes);
-    portnum = (short) IntFromString(port);
-
-    if (val < 0 || portnum < 0)
+    if (maxbytes < 0 || maxbytes > CF_BUFSIZE - 1)
     {
-        free(array_lval);
-        return FnFailure();
-    }
-
-    if (val > CF_BUFSIZE - 1)
-    {
-        Log(LOG_LEVEL_ERR, "Too many bytes specificed in selectservers");
-        val = CF_BUFSIZE - CF_BUFFERMARGIN;
+        Log(LOG_LEVEL_VERBOSE,
+            "selectservers: invalid number of bytes %zd to read, defaulting to %d",
+            maxbytes, CF_BUFSIZE - 1);
+        maxbytes = CF_BUFSIZE - 1;
     }
 
     if (THIS_AGENT_TYPE != AGENT_TYPE_AGENT)
     {
         free(array_lval);
-        return FnReturnF("%d", count);
+        return FnReturnF("%d", 0);
     }
 
     Policy *select_server_policy = PolicyNew();
     {
-        Bundle *bp = PolicyAppendBundle(select_server_policy, NamespaceDefault(), "select_server_bundle", "agent", NULL, NULL);
+        Bundle *bp = PolicyAppendBundle(select_server_policy, NamespaceDefault(),
+                                        "select_server_bundle", "agent", NULL, NULL);
         PromiseType *tp = BundleAppendPromiseType(bp, "select_server");
 
         PromiseTypeAppendPromise(tp, "function", (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, NULL);
     }
 
+    size_t count = 0;
     for (const Rlist *rp = hostnameip; rp != NULL; rp = rp->next)
     {
-        Log(LOG_LEVEL_DEBUG, "Want to read %d bytes from port %d at '%s'", val, portnum, RlistScalarValue(rp));
+        const char *host = RlistScalarValue(rp);
+        Log(LOG_LEVEL_DEBUG, "Want to read %zd bytes from %s port %s",
+            maxbytes, host, port);
 
-        conn = NewAgentConn(RlistScalarValue(rp));
-
-        /* FileCopy fc = { */
-        /*     .force_ipv4 = false, */
-        /*     .portnumber = portnum, */
-        /* }; */
-
-        /* TODO don't use ServerConnect, this is only for CFEngine connections! */
-
-        /* if (!ServerConnect(conn, RlistScalarValue(rp), fc)) TODO */
+        char txtaddr[CF_MAX_IP_LEN] = "";
+        int sd = SocketConnect(host, port, CONNTIMEOUT, false,
+                               txtaddr, sizeof(txtaddr));
+        if (sd == -1)
         {
-            Log(LOG_LEVEL_INFO, "Couldn't open a tcp socket. (socket %s)", GetErrorStr());
-            DeleteAgentConn(conn);
+            Log(LOG_LEVEL_VERBOSE, "Couldn't open a tcp socket. (socket %s)",
+                GetErrorStr());
             continue;
         }
 
         if (strlen(sendstring) > 0)
         {
-            if (SendSocketStream(ConnectionInfoSocket(conn->conn_info), sendstring, strlen(sendstring)) == -1)
+            if (SendSocketStream(sd, sendstring, strlen(sendstring)) == -1)
             {
-                cf_closesocket(ConnectionInfoSocket(conn->conn_info));
-                DeleteAgentConn(conn);
+                cf_closesocket(sd);
                 continue;
             }
 
-            if ((n_read = recv(ConnectionInfoSocket(conn->conn_info), buffer, val, 0)) == -1)
-            {
-            }
+            char recvbuf[CF_BUFSIZE];
+            ssize_t n_read = recv(sd, recvbuf, maxbytes, 0);
+            cf_closesocket(sd);
 
             if (n_read == -1)
             {
-                cf_closesocket(ConnectionInfoSocket(conn->conn_info));
-                DeleteAgentConn(conn);
                 continue;
             }
 
-            if (strlen(regex) == 0 || StringMatchFull(regex, buffer))
+            assert(n_read < sizeof(recvbuf));
+            recvbuf[n_read] = '\0';
+
+            if (strlen(regex) == 0 || StringMatchFull(regex, recvbuf))
             {
-                Log(LOG_LEVEL_VERBOSE, "Host '%s' is alive and responding correctly", RlistScalarValue(rp));
-                snprintf(buffer, CF_MAXVARSIZE - 1, "%s[%d]", array_lval, count);
+                count++;                                   /* query matches */
+
+                Log(LOG_LEVEL_VERBOSE,
+                    "selectservers: Got matching reply from host %s address %s",
+                    host, txtaddr);
+
+                char buffer[CF_MAXVARSIZE] = "";
+                snprintf(buffer, sizeof(buffer), "%s[%zu]", array_lval, count);
                 VarRef *ref = VarRefParse(buffer);
-                EvalContextVariablePut(ctx, ref, RvalScalarValue(rp->val), CF_DATA_TYPE_STRING, "source=function,function=selectservers");
+                EvalContextVariablePut(ctx, ref, host, CF_DATA_TYPE_STRING,
+                                       "source=function,function=selectservers");
                 VarRefDestroy(ref);
-                count++;
             }
         }
         else
         {
-            Log(LOG_LEVEL_VERBOSE, "Host '%s' is alive", RlistScalarValue(rp));
-            snprintf(buffer, CF_MAXVARSIZE - 1, "%s[%d]", array_lval, count);
+            count++;              /* If query is empty, all hosts are added */
+
+            Log(LOG_LEVEL_VERBOSE,
+                "selectservers: Got reply from host %s address %s",
+                host, txtaddr);
+
+            char buffer[CF_MAXVARSIZE] = "";
+            snprintf(buffer, sizeof(buffer), "%s[%zu]", array_lval, count);
             VarRef *ref = VarRefParse(buffer);
-            EvalContextVariablePut(ctx, ref, RvalScalarValue(rp->val), CF_DATA_TYPE_STRING, "source=function,function=selectservers");
+            EvalContextVariablePut(ctx, ref, host, CF_DATA_TYPE_STRING,
+                                   "source=function,function=selectservers");
             VarRefDestroy(ref);
 
-            if (IsDefinedClass(ctx, CanonifyName(RlistScalarValue(rp))))
+            /* TODO is this some kind of undocumented feature? */
+            if (IsDefinedClass(ctx, CanonifyName(host)))
             {
-                Log(LOG_LEVEL_VERBOSE, "This host is in the list and has promised to join the class '%s' - joined",
-                      array_lval);
-                EvalContextClassPutSoft(ctx, array_lval, CONTEXT_SCOPE_NAMESPACE, "source=function,function=selectservers");
+                Log(LOG_LEVEL_VERBOSE,
+                    "This host is in the list and has promised to join the class '%s' - joined",
+                    array_lval);
+                EvalContextClassPutSoft(ctx, array_lval, CONTEXT_SCOPE_NAMESPACE,
+                                        "source=function,function=selectservers");
             }
-
-            count++;
         }
-
-        cf_closesocket(ConnectionInfoSocket(conn->conn_info));
-        DeleteAgentConn(conn);
     }
 
     PolicyDestroy(select_server_policy);
     free(array_lval);
 
-/* Return the subset that is alive and responding correctly */
-
-/* Return the number of lines in array */
-
-    return FnReturnF("%d", count);
+    Log(LOG_LEVEL_VERBOSE, "selectservers: found %zu servers", count);
+    return FnReturnF("%zu", count);
 }
 
 

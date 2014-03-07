@@ -30,6 +30,8 @@
               a trailing slash manually to an inexistent or symbolic
               path (e.g. "/path/to/$(connection.ip)/") to force
               recursive access.
+        - port argument in readtcp() and selectservers() may be a
+          service name (e.g. "http", "pop3").
         - Enable source file in agent copy_from promises to be a relative path.
         - #TODO# Changes to logging output
             - add process name and pid in syslog message (GitHub #789)

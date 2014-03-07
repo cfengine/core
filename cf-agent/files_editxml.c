@@ -24,7 +24,7 @@
 
 #include <cf3.defs.h>
 
-#include <eval.h>
+#include <actuator.h>
 #include <eval_context.h>
 #include <promises.h>
 #include <files_names.h>
@@ -49,6 +49,22 @@ enum editxmltypesequence
     elx_delete,
     elx_insert,
     elx_none
+};
+
+static const char *const EDITXMLTYPESEQUENCE[] =
+{
+    "vars",
+    "classes",
+    "build_xpath",
+    "delete_tree",
+    "insert_tree",
+    "delete_attribute",
+    "set_attribute",
+    "delete_text",
+    "set_text",
+    "insert_text",
+    "reports",
+    NULL
 };
 
 static PromiseResult KeepEditXmlPromise(EvalContext *ctx, const Promise *pp, void *param);
@@ -131,6 +147,7 @@ static int XmlAttributeCount(const xmlNodePtr node);
 
 int ScheduleEditXmlOperations(EvalContext *ctx, const Bundle *bp, Attributes a, const Promise *parentp, EditContext *edcontext)
 {
+    enum editxmltypesequence type;
     char lockname[CF_BUFSIZE];
     CfLock thislock;
     int pass;
@@ -147,27 +164,31 @@ int ScheduleEditXmlOperations(EvalContext *ctx, const Bundle *bp, Attributes a, 
 
     for (pass = 1; pass < CF_DONEPASSES; pass++)
     {
-        static const char *const type_sequence[] =
+        for (type = 0; EDITXMLTYPESEQUENCE[type] != NULL; type++)
         {
-            "vars",
-            "classes",
-            "build_xpath",
-            "delete_tree",
-            "insert_tree",
-            "delete_attribute",
-            "set_attribute",
-            "delete_text",
-            "set_text",
-            "insert_text",
-            "reports",
-            NULL
-        };
+            const PromiseType *sp = BundleGetPromiseType(bp, EDITXMLTYPESEQUENCE[type]);
+            if (!sp)
+            {
+                continue;
+            }
 
-        bool success = EvalBundle(ctx, bp, NULL, a.edits.inherit, pass, KeepEditXmlPromise, edcontext, type_sequence);
-        if (!success)
-        {
-            YieldCurrentLock(thislock);
-            return false;
+            BannerSubPromiseType(ctx, bp->name, sp->name);
+
+            EvalContextStackPushPromiseTypeFrame(ctx, sp);
+            for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
+            {
+                Promise *pp = SeqAt(sp->promises, ppi);
+
+                ExpandPromise(ctx, pp, KeepEditXmlPromise, edcontext);
+
+                if (Abort(ctx))
+                {
+                    YieldCurrentLock(thislock);
+                    EvalContextStackPopFrame(ctx);
+                    return false;
+                }
+            }
+            EvalContextStackPopFrame(ctx);
         }
     }
 

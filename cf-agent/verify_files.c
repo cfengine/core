@@ -489,10 +489,12 @@ PromiseResult ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes
             BannerSubBundle(bp, args);
 
             EvalContextStackPushBundleFrame(ctx, bp, args, a.edits.inherit);
+
             BundleResolve(ctx, bp);
-            EvalContextStackPopFrame(ctx);
 
             ScheduleEditLineOperations(ctx, bp, a, pp, edcontext);
+
+            EvalContextStackPopFrame(ctx);
         }
         else
         {
@@ -528,9 +530,10 @@ PromiseResult ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes
 
             EvalContextStackPushBundleFrame(ctx, bp, args, a.edits.inherit);
             BundleResolve(ctx, bp);
-            EvalContextStackPopFrame(ctx);
 
             ScheduleEditXmlOperations(ctx, bp, a, pp, edcontext);
+
+            EvalContextStackPopFrame(ctx);
         }
     }
 
@@ -548,9 +551,10 @@ PromiseResult ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes
 
                 EvalContextStackPushBundleFrame(ctx, bp, args, a.edits.inherit);
                 BundleResolve(ctx, bp);
-                EvalContextStackPopFrame(ctx);
 
                 ScheduleEditLineOperations(ctx, bp, a, pp, edcontext);
+
+                EvalContextStackPopFrame(ctx);
 
                 if (edcontext->num_edits == 0)
                 {

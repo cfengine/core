@@ -2090,15 +2090,9 @@ static bool ExecuteSchedule(EvalContext *ctx, const PackageManager *schedule, Pa
     return true;
 }
 
-static int ExecutePatch(EvalContext *ctx, PackageManager *schedule, PackageAction action, PromiseResult *result)
+static int ExecutePatch(EvalContext *ctx, const PackageManager *schedule, PackageAction action, PromiseResult *result)
 {
-    PackageItem *pi;
-    PackageManager *pm;
-    int size, estimated_size, retval = true, verify = false;
-    char *command_string = NULL;
-    Promise *pp;
-
-    for (pm = schedule; pm != NULL; pm = pm->next)
+    for (const PackageManager *pm = schedule; pm != NULL; pm = pm->next)
     {
         if (pm->action != action)
         {
@@ -2110,16 +2104,15 @@ static int ExecutePatch(EvalContext *ctx, PackageManager *schedule, PackageActio
             continue;
         }
 
-        estimated_size = 0;
+        size_t estimated_size = 0;
 
-        for (pi = pm->patch_list; pi != NULL; pi = pi->next)
+        for (const PackageItem *pi = pm->patch_list; pi != NULL; pi = pi->next)
         {
-            size = strlen(pi->name) + strlen("  ");
+            size_t size = strlen(pi->name) + strlen("  ");
 
             switch (pm->policy)
             {
             case PACKAGE_ACTION_POLICY_INDIVIDUAL:
-
                 if (size > estimated_size)
                 {
                     estimated_size = size;
@@ -2127,7 +2120,6 @@ static int ExecutePatch(EvalContext *ctx, PackageManager *schedule, PackageActio
                 break;
 
             case PACKAGE_ACTION_POLICY_BULK:
-
                 estimated_size += size;
                 break;
 
@@ -2136,7 +2128,8 @@ static int ExecutePatch(EvalContext *ctx, PackageManager *schedule, PackageActio
             }
         }
 
-        pp = pm->patch_list->pp;
+        char *command_string = NULL;
+        const Promise *const pp = pm->patch_list->pp;
         Attributes a = GetPackageAttributes(ctx, pp);
 
         switch (action)
@@ -2168,7 +2161,7 @@ static int ExecutePatch(EvalContext *ctx, PackageManager *schedule, PackageActio
         {
             command_string[strlen(command_string) - 1] = '\0';
             Log(LOG_LEVEL_VERBOSE, "Command does not allow arguments");
-            if (ExecPackageCommand(ctx, command_string, verify, true, a, pp, result))
+            if (ExecPackageCommand(ctx, command_string, false, true, a, pp, result))
             {
                 Log(LOG_LEVEL_VERBOSE, "Package patching seemed to succeed (outcome cannot be promised by cf-agent)");
             }
@@ -2185,17 +2178,14 @@ static int ExecutePatch(EvalContext *ctx, PackageManager *schedule, PackageActio
 
             switch (pm->policy)
             {
-                int ok;
-
             case PACKAGE_ACTION_POLICY_INDIVIDUAL:
-
-                for (pi = pm->patch_list; pi != NULL; pi = pi->next)
+                for (const PackageItem *pi = pm->patch_list; pi != NULL; pi = pi->next)
                 {
                     char *offset = command_string + strlen(command_string);
 
                     strcat(offset, pi->name);
 
-                    if (ExecPackageCommand(ctx, command_string, verify, true, a, pp, result))
+                    if (ExecPackageCommand(ctx, command_string, false, true, a, pp, result))
                     {
                         Log(LOG_LEVEL_VERBOSE,
                             "Package schedule execution ok for '%s' (outcome cannot be promised by cf-agent)",
@@ -2216,8 +2206,7 @@ static int ExecutePatch(EvalContext *ctx, PackageManager *schedule, PackageActio
                 break;
 
             case PACKAGE_ACTION_POLICY_BULK:
-
-                for (pi = pm->patch_list; pi != NULL; pi = pi->next)
+                for (const PackageItem *pi = pm->patch_list; pi != NULL; pi = pi->next)
                 {
                     if (pi->name)
                     {
@@ -2226,9 +2215,9 @@ static int ExecutePatch(EvalContext *ctx, PackageManager *schedule, PackageActio
                     }
                 }
 
-                ok = ExecPackageCommand(ctx, command_string, verify, true, a, pp, result);
+                bool ok = ExecPackageCommand(ctx, command_string, false, true, a, pp, result);
 
-                for (pi = pm->patch_list; pi != NULL; pi = pi->next)
+                for (const PackageItem *pi = pm->patch_list; pi != NULL; pi = pi->next)
                 {
                     if (ok)
                     {
@@ -2254,17 +2243,17 @@ static int ExecutePatch(EvalContext *ctx, PackageManager *schedule, PackageActio
             }
 
         }
-    }
 
-    if (command_string)
-    {
-        free(command_string);
+        if (command_string)
+        {
+            free(command_string);
+        }
     }
 
 /* We have performed some operation on packages, our cache is invalid */
     InvalidateSoftwareCache();
 
-    return retval;
+    return true;
 }
 
 static PromiseResult ExecutePackageSchedule(EvalContext *ctx, PackageManager *schedule)

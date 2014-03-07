@@ -396,6 +396,12 @@ FILE *safe_fopen(const char *path, const char *mode)
             flags &= ~(O_RDONLY | O_WRONLY);
             flags |= O_RDWR;
             break;
+        case 'b':
+            flags |= O_BINARY;
+            break;
+        case 't':
+            flags |= O_TEXT;
+            break;
         default:
             break;
         }

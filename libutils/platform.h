@@ -856,6 +856,10 @@ struct timespec
 # define O_BINARY 0
 #endif
 
+#if !defined O_TEXT
+# define O_TEXT 0
+#endif
+
 #if defined(__MINGW32__)
 /* _mkdir(3) */
 # include <direct.h>

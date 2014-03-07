@@ -30,7 +30,7 @@ bundle agent init
 body password init_password
 {
   format => "plaintext";
-  data => "WrongPassword";
+  data => "Wrong0Password";
 }
 
 #######################################################
@@ -60,7 +60,7 @@ body password test_password
     data => "$(test.hash)";
   windows::
     format => "plaintext";
-    data => "NewPassword";
+    data => "New0Password";
 }
 
 #######################################################
@@ -93,7 +93,7 @@ bundle agent check
       "any" usebundle => user_has_password_hash("johndoe", "$(test.hash)", "hash_success", "hash_failure"),
         classes => default_cf_sub_set_class("hash_methods_run");
     windows::
-      "any" usebundle => user_has_password("johndoe", "NewPassword", "hash_success", "hash_failure"),
+      "any" usebundle => user_has_password("johndoe", "New0Password", "hash_success", "hash_failure"),
         classes => default_cf_sub_set_class("hash_methods_run");
 
   classes:

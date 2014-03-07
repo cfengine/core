@@ -1,0 +1,262 @@
+# Test that cf-promises -T tags a directory correctly
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle agent init
+{
+}
+
+bundle agent test
+{
+  vars:
+      "options" string => ifelse("verbose_mode", " -v ", "");
+      "dirs" slist => { $(G.testdir), $(sys.masterdir), $(sys.inputdir) };
+      "hubfile" slist => { "$(sys.workdir)/policy_server.dat", "$(sys.workdir)/state/am_policy_hub" };
+
+  methods:
+      "rm hub" usebundle => default_fini($(hubfile));
+
+      "run" usebundle => test_dorun("testdir", $(G.testdir), "$(sys.cf_promises) -T $(G.testdir) $(options)");
+      "run" usebundle => test_dorun("inputdir", $(sys.inputdir), "$(sys.cf_agent) -K $(options)");
+
+      # make this machine a hub
+      "mk hub" usebundle => default_cf_sub_makefile($(hubfile), "$(sys.host)");
+
+      "run" usebundle => test_dorun("masterdir", $(sys.masterdir), "$(sys.cf_agent) -K $(options)");
+}
+
+bundle agent test_dorun(name, dir, tagopt)
+{
+  vars:
+      "simulated_validated_ok" string => '
+{
+ "timestamp": 1234,
+ "checksum": "4b974a13b5473cfbf60edfb66b201a364d38960f"
+}
+';
+
+      "simulated_validated_bad" string => '
+{
+ "timestamp": 1234,
+ "checksum": "1234567890123456789012345678901234567890"
+}
+';
+
+  methods:
+  vars:
+      "masters" slist => { "promises.cf", "x.cf", "y.cf" };
+
+  methods:
+      "rsync"
+      usebundle => default_cf_sub_copydir("$(this.promise_dirname)/testdir",
+                                          $(dir));
+
+      "master2cf"
+      usebundle => default_cf_sub_copyfile("$(dir)/$(masters).master",
+                                           "$(dir)/$(masters)");
+
+      "make ignored file 1"
+      usebundle => default_cf_sub_makefile("$(dir)/ignoreme",
+                                           "fnord $(sys.date)");
+
+      "make ignored file 2"
+      usebundle => default_cf_sub_makefile("$(dir)/ignoredir/2",
+                                           "fnord $(sys.date)");
+
+      "tag1" usebundle => test_tag("1",
+                                   $(name),
+                                   $(tagopt),
+                                   "make new cf_promises_validated and cf_promises_release_id in $(dir)");
+      "read1" usebundle => test_read("1", $(name), $(dir));
+
+      "rm r_id" usebundle => default_fini($(test_read.rf));
+      "tag2" usebundle => test_tag("2",
+                                   $(name),
+                                   $(tagopt),
+                                   "recreate cf_promises_release_id even if cf_promises_validated is OK");
+      "read2" usebundle => test_read("2", $(name), $(dir));
+
+      "make good validated file"
+      usebundle => default_cf_sub_makefile("$(dir)/cf_promises_validated",
+                                           $(simulated_validated_ok));
+
+      "tag3" usebundle => test_tag("3",
+                                   $(name),
+                                   $(tagopt),
+                                   "don't touch good cf_promises_validated and cf_promises_release_id");
+      "read3" usebundle => test_read("3", $(name), $(dir));
+
+      "make bad validated file"
+      usebundle => default_cf_sub_makefile("$(dir)/cf_promises_validated",
+                                           $(simulated_validated_bad));
+
+      "tag4" usebundle => test_tag("4",
+                                   $(name),
+                                   $(tagopt),
+                                   "overwrite bad cf_promises_validated");
+      "read4" usebundle => test_read("4", $(name), $(dir));
+
+  reports:
+      "$(this.bundle): $(name) $(dir) '$(tagopt)'";
+}
+
+bundle agent test_tag(vary, topname, tagopt, desc)
+{
+  vars:
+      "uid" string => "$(topname)_$(vary)";
+
+  classes:
+      "tagged_$(uid)"
+      expression => returnszero("$(tagopt) -D$(uid)",
+                                "noshell"),
+      scope => "namespace";
+
+  reports:
+      "Case $(uid): $(desc)";
+
+    DEBUG::
+      "Case $(uid): failed to $(tagopt)"
+      ifvarclass => "!tagged_$(uid)";
+
+      "Case $(uid): tagged $(tagopt)"
+      ifvarclass => "tagged_$(uid)";
+}
+
+bundle agent test_read(suffix, topname, dir)
+{
+  vars:
+      "vf" string => "$(dir)/cf_promises_validated";
+      "rf" string => "$(dir)/cf_promises_release_id";
+      "uid" string => "$(topname)_$(suffix)";
+
+      "v_$(uid)" data => readjson($(vf), 4k),
+      ifvarclass => "have_vf_$(uid)";
+
+      "v_$(uid)_str" string => format("%S", "v_$(uid)"),
+      handle => "v_$(uid)_str",
+      ifvarclass => "have_vf_$(uid)";
+
+      "r_$(uid)" data => readjson($(rf), 4k),
+      ifvarclass => "have_rf_$(uid)";
+
+      "r_$(uid)_str" string => format("%S", "r_$(uid)"),
+      handle => "r_$(uid)_str",
+      ifvarclass => "have_rf_$(uid)";
+
+  classes:
+      "have_vf_$(uid)" expression => fileexists($(vf)),
+      scope => "namespace";
+
+      "have_rf_$(uid)" expression => fileexists($(rf)),
+      scope => "namespace";
+
+  reports:
+    DEBUG::
+      "Case $(uid): $(vf) = $(v_$(uid)_str)"
+      depends_on => { "v_$(uid)_str" },
+      ifvarclass => "have_vf_$(uid)";
+
+      "Case $(uid): Missing validation file $(vf)"
+      ifvarclass => "!have_vf_$(uid)";
+
+      "Case $(uid): $(rf) = $(r_$(uid)_str)"
+      depends_on => { "r_$(uid)_str" },
+      ifvarclass => "have_rf_$(uid)";
+
+      "Case $(uid): Missing release ID file $(rf)"
+      ifvarclass => "!have_rf_$(uid)";
+}
+
+bundle agent check
+{
+  vars:
+      "expected_checksum" string => "4b974a13b5473cfbf60edfb66b201a364d38960f";
+      "tops" slist => { "testdir", "masterdir", "inputdir" };
+      "tests" slist => { "1", "2", "3", "4" };
+
+  classes:
+
+      # exceptions
+
+      # the release ID is not recreated in a normal agent run if the
+      # promises validated file is OK, even on the hub
+      "correct_release_masterdir_2" expression => "any";
+
+      # the release ID is not generated when running on a non-hub
+      "correct_release_inputdir_$(tests)" expression => "any";
+
+      # normal testing
+      "correct_timestamp_$(tops)_1" expression => "any";
+      "correct_release_$(tops)_1" expression => strcmp("$(test_read.r_$(tops)_1[releaseId])",
+                                                       $(expected_checksum));
+      "correct_checksum_$(tops)_1" expression => strcmp("$(test_read.v_$(tops)_1[checksum])",
+                                                        $(expected_checksum));
+
+      "correct_timestamp_$(tops)_2" expression => "any";
+      "correct_release_$(tops)_2" expression => strcmp("$(test_read.r_$(tops)_2[releaseId])",
+                                                       $(expected_checksum));
+      "correct_checksum_$(tops)_2" expression => strcmp("$(test_read.v_$(tops)_2[checksum])",
+                                                        $(expected_checksum));
+
+      "correct_timestamp_$(tops)_3" expression => strcmp("$(test_read.v_$(tops)_3[timestamp])",
+                                                         "1234");
+      "correct_release_$(tops)_3" expression => strcmp("$(test_read.r_$(tops)_3[releaseId])",
+                                                       $(expected_checksum));
+      "correct_checksum_$(tops)_3" expression => strcmp("$(test_read.v_$(tops)_3[checksum])",
+                                                        $(expected_checksum));
+
+      # anything except the bad timestamp is OK
+      "correct_timestamp_$(tops)_4" not => strcmp("$(test_read.v_$(tops)_4[timestamp])",
+                                                  "1234");
+      "correct_release_$(tops)_4" expression => strcmp("$(test_read.r_$(tops)_4[releaseId])",
+                                                       $(expected_checksum));
+      "correct_checksum_$(tops)_4" expression => strcmp("$(test_read.v_$(tops)_4[checksum])",
+                                                        $(expected_checksum));
+
+      "ok" and => {
+                    "tagged_testdir_1", "correct_timestamp_testdir_1", "correct_release_testdir_1", "correct_checksum_testdir_1",
+                    "tagged_testdir_2", "correct_timestamp_testdir_2", "correct_release_testdir_2", "correct_checksum_testdir_2",
+                    "tagged_testdir_3", "correct_timestamp_testdir_3", "correct_release_testdir_3", "correct_checksum_testdir_3",
+                    "tagged_testdir_4", "correct_timestamp_testdir_4", "correct_release_testdir_4", "correct_checksum_testdir_4",
+
+                    "tagged_masterdir_1", "correct_timestamp_masterdir_1", "correct_release_masterdir_1", "correct_checksum_masterdir_1",
+                    "tagged_masterdir_2", "correct_timestamp_masterdir_2", "correct_release_masterdir_2", "correct_checksum_masterdir_2",
+                    "tagged_masterdir_3", "correct_timestamp_masterdir_3", "correct_release_masterdir_3", "correct_checksum_masterdir_3",
+                    "tagged_masterdir_4", "correct_timestamp_masterdir_4", "correct_release_masterdir_4", "correct_checksum_masterdir_4",
+
+                    "tagged_inputdir_1", "correct_timestamp_inputdir_1", "correct_release_inputdir_1", "correct_checksum_inputdir_1",
+                    "tagged_inputdir_2", "correct_timestamp_inputdir_2", "correct_release_inputdir_2", "correct_checksum_inputdir_2",
+                    "tagged_inputdir_3", "correct_timestamp_inputdir_3", "correct_release_inputdir_3", "correct_checksum_inputdir_3",
+                    "tagged_inputdir_4", "correct_timestamp_inputdir_4", "correct_release_inputdir_4", "correct_checksum_inputdir_4",
+      };
+
+  reports:
+    DEBUG::
+      "Case $(tops)_$(tests): the timestamp was correct or ignored"
+      ifvarclass => "correct_timestamp_$(tops)_$(tests)";
+
+      "Case $(tops)_$(tests): the timestamp was incorrect, actual $(test_read.v_$(tops)_$(tests)[timestamp])"
+      ifvarclass => "!correct_timestamp_$(tops)_$(tests)";
+
+      "Case $(tops)_$(tests): the checksum was correct ($(expected_checksum)) or ignored"
+      ifvarclass => "correct_checksum_$(tops)_$(tests)";
+
+      "Case $(tops)_$(tests): the checksum was incorrect, expected $(expected_checksum) vs. actual $(test_read.v_$(tops)_$(tests)[checksum])"
+      ifvarclass => "!correct_checksum_$(tops)_$(tests)";
+
+      "Case $(tops)_$(tests): the release ID was correct ($(expected_checksum)) or ignored"
+      ifvarclass => "correct_release_$(tops)_$(tests)";
+
+      "Case $(tops)_$(tests): the release ID was incorrect, expected $(expected_checksum) vs. actual $(test_read.r_$(tops)_$(tests)[releaseId])"
+      ifvarclass => "!correct_release_$(tops)_$(tests)";
+
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

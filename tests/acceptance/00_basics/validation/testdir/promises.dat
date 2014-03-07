@@ -1,0 +1,5 @@
+body common control
+{
+      inputs => { "x.cf", "y.cf" };
+      bundlesequence => { x, y };
+}

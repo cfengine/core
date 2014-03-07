@@ -135,7 +135,8 @@ int main(int argc, char *argv[])
 
     if (NULL != config->tag_release_dir)
     {
-        bool tagged = GenericAgentTagReleaseDirectory(config, config->tag_release_dir);
+        // write the validated file and the release ID
+        bool tagged = GenericAgentTagReleaseDirectory(config, config->tag_release_dir, true, true);
         if (tagged)
         {
             Log(LOG_LEVEL_VERBOSE, "Release tagging done!");

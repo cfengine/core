@@ -26,17 +26,6 @@ bundle agent test
       depth_search => recurse("inf");
 }
 
-body copy_from local_cp(from)
-{
-      source => "$(from)";
-}
-
-body depth_search recurse(d)
-{
-      depth => "$(d)";
-      xdev  => "true";
-}
-
 bundle agent check
 {
   vars:

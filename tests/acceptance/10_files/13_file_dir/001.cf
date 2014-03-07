@@ -43,39 +43,11 @@ bundle agent init
       args => "$(G.testdir)/backup/_tmp_TEST_cfengine_test";
 }
 
-body edit_defaults empty
-{
-      empty_file_before_editing => "true";
-      edit_backup => "false";
-}
-
 bundle edit_line test_insert(str)
 {
   insert_lines:
       "$(sys.date)";
 }
-
-body delete tidy
-
-{
-      dirlinks => "delete";
-      rmdirs   => "true";
-}
-
-body depth_search recurse(d)
-
-{
-      depth => "$(d)";
-      xdev  => "true";
-}
-
-body file_select all
-{
-
-      leaf_name => { ".*" };
-      file_result => "leaf_name";
-}
-
 
 #######################################################
 
@@ -103,22 +75,6 @@ bundle agent test
 body contain test_timeout
 {
       exec_timeout => "10";
-}
-
-body classes classes_generic(x)
-# Define x prefixed/suffixed with promise outcome
-{
-      promise_repaired => { "promise_repaired_$(x)", "$(x)_repaired", "$(x)_ok", "$(x)_reached" };
-      repair_failed => { "repair_failed_$(x)", "$(x)_failed", "$(x)_not_ok", "$(x)_not_kept", "$(x)_not_repaired", "$(x)_reached" };
-      repair_denied => { "repair_denied_$(x)", "$(x)_denied", "$(x)_not_ok", "$(x)_not_kept", "$(x)_not_repaired", "$(x)_reached" };
-      repair_timeout => { "repair_timeout_$(x)", "$(x)_timeout", "$(x)_not_ok", "$(x)_not_kept", "$(x)_not_repaired", "$(x)_reached" };
-      promise_kept => { "promise_kept_$(x)", "$(x)_kept", "$(x)_ok", "$(x)_not_repaired", "$(x)_reached" };
-}
-
-body classes if_ok(x)
-{
-      promise_repaired => { "$(x)" };
-      promise_kept => { "$(x)" };
 }
 
 #######################################################

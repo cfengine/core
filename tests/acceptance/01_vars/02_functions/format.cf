@@ -25,12 +25,6 @@ bundle agent init
       edit_line => init_insert;
 }
 
-body edit_defaults empty
-{
-      empty_file_before_editing => "true";
-      edit_backup => "false";
-}
-
 bundle edit_line init_insert
 {
   insert_lines:

@@ -100,7 +100,7 @@ files:
 bundle agent check
 {
   methods:
-      "any" usebundle => default_check_diff("$(G.testfile).expected",
+      "any" usebundle => dcs_check_diff("$(G.testfile).expected",
                                             "$(G.testfile).actual",
                                             "$(this.promise_filename)");
 }

@@ -30,7 +30,7 @@ bundle agent test
       group_primary => "",
       groups_secondary => { },
       description => "",
-      classes => default_cf_sub_if_ok("promise_ok");
+      classes => if_ok("promise_ok");
 }
 
 #######################################################
@@ -40,10 +40,10 @@ bundle agent check
   methods:
     any::
     "any" usebundle => user_is_in_any_secondary_group("johndoe", "sgroup_failure", "sgroup_success"),
-      classes => default_cf_sub_set_class("sgroup_methods_run");
+      classes => always("sgroup_methods_run");
 
     "any" usebundle => user_has_description("johndoe", "", "desc_success", "desc_failure"),
-      classes => default_cf_sub_set_class("desc_methods_run");
+      classes => always("desc_methods_run");
 
   classes:
       "ready" and => { "sgroup_methods_run", "desc_methods_run" };

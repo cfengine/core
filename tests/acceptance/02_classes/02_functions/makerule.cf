@@ -36,12 +36,6 @@ bundle agent test
          delete => tidy;
 }
 
-body delete tidy
-{
-dirlinks => "delete";
-rmdirs   => "true";
-}
-
 #######################################################
 
 bundle agent check

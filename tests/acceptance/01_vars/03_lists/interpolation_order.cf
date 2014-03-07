@@ -27,7 +27,7 @@ bundle agent check
       "joined" string => format("%S", "test.local");
 
   methods:
-      "check" usebundle => default_check_strcmp($(expected),
+      "check" usebundle => dcs_check_strcmp($(expected),
                                                 $(joined),
                                                 "$(this.promise_filename)",
                                                 "no");

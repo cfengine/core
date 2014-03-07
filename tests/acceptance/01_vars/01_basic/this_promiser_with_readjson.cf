@@ -49,17 +49,3 @@ bundle agent check
     !ok::
       "$(this.promise_filename) FAIL";
 }
-
-
-body edit_defaults empty
-{
-  empty_file_before_editing => "true";
-  edit_backup => "false";
-}
-
-bundle edit_line insert_lines(lines)
-{
-  insert_lines:
-    "$(lines)";
-}
-

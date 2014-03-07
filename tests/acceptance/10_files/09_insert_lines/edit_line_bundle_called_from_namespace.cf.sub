@@ -9,7 +9,7 @@ bundle agent namespaced_test(file)
       "$(file)"
       create => "true",
       edit_defaults => default:init_empty,
-      classes => default:default_cf_sub_scoped_generic_classes("edit", "bundle"),
+      classes => default:scoped_classes_generic("bundle", "edit"),
       edit_line => default:simple_insert("Hello");
 }
 

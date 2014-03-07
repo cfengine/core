@@ -86,9 +86,10 @@ bundle edit_line test_insert(filename)
 bundle agent check
 {
   methods:
-      "any" usebundle => check_diff("$(G.testfile).actual",
-                                    "$(G.testfile).expected",
-                                    "$(this.promise_filename)", "yes");
+      "any" usebundle => dcs_check_diff_expected("$(G.testfile).actual",
+                                                 "$(G.testfile).expected",
+                                                 "$(this.promise_filename)",
+                                                 "yes");
 }
 
 ### PROJECT_ID: core

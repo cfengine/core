@@ -49,7 +49,7 @@ bundle agent test
 bundle agent check
 {
   methods:
-      "any" usebundle => default_check_diff("$(G.testfile).actual",
+      "any" usebundle => dcs_check_diff("$(G.testfile).actual",
                                             "$(G.testfile).expected",
                                             "$(this.promise_filename)");
 }

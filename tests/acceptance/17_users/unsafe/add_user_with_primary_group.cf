@@ -66,7 +66,7 @@ bundle agent check
 {
   methods:
     "any" usebundle => user_is_in_primary_group("johndoe", "$(user_tests.group1)", "success", "failure"),
-      classes => default_cf_sub_set_class("methods_run");
+      classes => always("methods_run");
 
   files:
     !windows::

@@ -59,13 +59,6 @@ body copy_from sync_cp(from)
       preserve    => "true";
 }
 
-body depth_search recurse(d)
-
-{
-      depth => "$(d)";
-      xdev  => "true";
-}
-
 #######################################################
 
 bundle agent check

@@ -35,11 +35,6 @@ bundle agent test
 
 #######################################################
 
-body copy_from local_cp(from)
-{
-      source      => "$(from)";
-}
-
 body edit_defaults init_empty
 {
       empty_file_before_editing => "true";
@@ -50,7 +45,7 @@ body edit_defaults init_empty
 bundle agent check
 {
   methods:
-      "any" usebundle => default_check_diff("$(G.testfile).actual",
+      "any" usebundle => dcs_check_diff("$(G.testfile).actual",
                                             "$(G.testfile).expected",
                                             "$(this.promise_filename)");
 }

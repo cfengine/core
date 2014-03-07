@@ -77,29 +77,29 @@ bundle agent check
 {
   methods:
     "any" usebundle => user_has_uid("johndoe", "8765", "uid_success", "uid_failure"),
-      classes => default_cf_sub_set_class("uid_methods_run");
+      classes => always("uid_methods_run");
 
     "any" usebundle => user_is_in_primary_group("johndoe", "$(user_tests.group2)", "pgroup_success", "pgroup_failure"),
-      classes => default_cf_sub_set_class("pgroup_methods_run");
+      classes => always("pgroup_methods_run");
 
     "any" usebundle => user_is_in_secondary_group("johndoe", "$(user_tests.group1)", "sgroup_success", "sgroup_failure"),
-      classes => default_cf_sub_set_class("sgroup_methods_run");
+      classes => always("sgroup_methods_run");
 
     "any" usebundle => user_is_in_secondary_group("johndoe", "$(user_tests.group2)", "not_sgroup_failure", "not_sgroup_success"),
-      classes => default_cf_sub_set_class("not_sgroup_methods_run");
+      classes => always("not_sgroup_methods_run");
 
     "any" usebundle => user_has_home_dir("johndoe", "/johns_old_home_dir", "home_success", "home_failure"),
-      classes => default_cf_sub_set_class("home_methods_run");
+      classes => always("home_methods_run");
 
     "any" usebundle => user_has_shell("johndoe", "$(G.cat)", "shell_success", "shell_failure"),
-      classes => default_cf_sub_set_class("shell_methods_run");
+      classes => always("shell_methods_run");
 
     "any" usebundle => user_has_description("johndoe", "Good user", "desc_success", "desc_failure"),
-      classes => default_cf_sub_set_class("desc_methods_run");
+      classes => always("desc_methods_run");
 
     !windows::
       "any" usebundle => user_has_password_hash("johndoe", "$(init.hash)", "hash_success", "hash_failure"),
-        classes => default_cf_sub_set_class("hash_methods_run");
+        classes => always("hash_methods_run");
     windows::
       "any" usebundle => user_has_password("johndoe", "Wrong0P4SSW0RD", "hash_failure", "hash_success"),
         classes => default_cf_sub_set_class("hash_methods_run");

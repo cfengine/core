@@ -121,6 +121,7 @@ PromiseResult VerifyPackagesPromise(EvalContext *ctx, const Promise *pp)
 {
     CfLock thislock;
     char lockname[CF_BUFSIZE];
+    PromiseResult result = PROMISE_RESULT_NOOP;
 
     const char *reserved_vars[] = { "name", "version", "arch", "firstrepo", NULL };
     for (int c = 0; reserved_vars[c]; c++)
@@ -149,7 +150,8 @@ PromiseResult VerifyPackagesPromise(EvalContext *ctx, const Promise *pp)
     if (!PackageSanityCheck(ctx, a, pp))
     {
         Log(LOG_LEVEL_VERBOSE, "Package promise %s failed sanity check", pp->promiser);
-        return PROMISE_RESULT_FAIL;
+        result = PROMISE_RESULT_FAIL;
+        goto end;
     }
 
     PromiseBanner(pp);
@@ -161,7 +163,8 @@ PromiseResult VerifyPackagesPromise(EvalContext *ctx, const Promise *pp)
     thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a.transaction, pp, false);
     if (thislock.lock == NULL)
     {
-        return PROMISE_RESULT_SKIPPED;
+        result = PROMISE_RESULT_SKIPPED;
+        goto end;
     }
 
 // Start by reseting the root directory in case yum tries to glob regexs(!)
@@ -177,17 +180,18 @@ PromiseResult VerifyPackagesPromise(EvalContext *ctx, const Promise *pp)
     {
         cfPS_HELPER_0ARG(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Unable to obtain default architecture for package manager - aborting");
         YieldCurrentLock(thislock);
-        return PROMISE_RESULT_FAIL;
+        result = PROMISE_RESULT_FAIL;
+        goto end;
     }
 
     Log(LOG_LEVEL_VERBOSE, "Default package architecture for promise %s is '%s'", pp->promiser, default_arch);
-    PromiseResult result = PROMISE_RESULT_NOOP;
     if (!VerifyInstalledPackages(ctx, &INSTALLED_PACKAGE_LISTS, default_arch, a, pp, &result))
     {
         cfPS_HELPER_0ARG(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Unable to obtain a list of installed packages - aborting");
         free(default_arch);
         YieldCurrentLock(thislock);
-        return PROMISE_RESULT_FAIL;
+        result = PROMISE_RESULT_FAIL;
+        goto end;
     }
 
     free(default_arch);
@@ -207,10 +211,12 @@ PromiseResult VerifyPackagesPromise(EvalContext *ctx, const Promise *pp)
 
     YieldCurrentLock(thislock);
 
+end:
     if (!REPORT_THIS_PROMISE(pp))
     {
         // This will not be reported elsewhere, so give it kept outcome.
-        cfPS(ctx, LOG_LEVEL_DEBUG, PROMISE_RESULT_NOOP, pp, a, "Giving dummy package kept outcome");
+        result = PROMISE_RESULT_NOOP;
+        cfPS(ctx, LOG_LEVEL_DEBUG, result, pp, a, "Giving dummy package kept outcome");
     }
 
     return result;

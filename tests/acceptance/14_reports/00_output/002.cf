@@ -12,26 +12,27 @@ body common control
   version => "1.0";
 }
 
-
 bundle agent init
 {
 
 }
 
-
 bundle agent test
 {
-vars:
-  "subout" string => execresult("$(sys.cf_agent) -Kf $(this.promise_filename).sub", "noshell");
-}
+  meta:
+      "test_suppress_fail" string => "windows",
+        meta => { "redmine4745" };
 
+  vars:
+    "subout" string => execresult("$(sys.cf_agent) -Kf $(this.promise_filename).sub", "noshell");
+}
 
 bundle agent check
 {
-# If the output contains the string "$(sys.hardware_addresses)" then we
-# failed to expand the variable!
-classes:
-  "ok" not => regcmp(".*hardware_addresses.*", "$(test.subout)");
+  # If the output contains the string "$(sys.hardware_addresses)" then we
+  # failed to expand the variable!
+  classes:
+    "ok" not => regcmp(".*hardware_addresses.*", "$(test.subout)");
 
 reports:
   DEBUG::

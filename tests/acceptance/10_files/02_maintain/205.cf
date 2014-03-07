@@ -13,19 +13,6 @@ body common control
       cache_system_functions => "false";
 }
 
-bundle common g
-{
-  vars:
-      # This extracts the octal mode, and decimal nlink, uid, gid, size
-      "command" string => 'printf "%05o" . " %d" x 4, (stat("$(G.testfile)"))[2]&07777, (stat(_))[3..5,7]';
-
-      "source" string => "$(G.etc_group)";
-      "source_command" string => 'printf "%d", (stat("$(g.source)"))[7]';
-      "source_size" string => execresult(
-					  "$(G.perl) -le '$(g.source_command)'",
-					  "noshell");
-}
-
 #######################################################
 
 bundle agent init
@@ -43,14 +30,19 @@ bundle agent init
       "owner" string => "undefined-please-fix";
       "group" string => "undefined-please-fix";
 
-    pass2::
-      "result" string => execresult(
-				     "$(G.perl) -le '$(g.command)'",
-				     "noshell");
+    pass2.!windows::
+      "expect[modeoct]" string => "101755";
+      "expect[uid]" string => "0";
+      "expect[gid]" string => "0";
+
+    pass2.any::
+      "expect[nlink]" string => "1";
+      "expect[size]" string => "0";
+      "fields" slist => getindices("expect");
 
   files:
       "$(G.testfile)"
-      copy_from => init_copy("$(g.source)"),
+      copy_from => init_copy("$(G.etc_group)"),
       perms => init_perms("$(mode)", "$(owner)", "$(group)"),
       classes => init_set_class("pass2");
 }
@@ -77,9 +69,6 @@ body classes init_set_class(class)
 
 bundle agent test
 {
-  meta:
-      "test_skip_unsupported" string => "windows";
-
   files:
       "$(G.testfile)"
       create => "true",
@@ -101,28 +90,32 @@ body perms test_perms(m)
       # Still need unix_sv, sco, vmware
 }
 
-
 #######################################################
 
 bundle agent check
 {
   vars:
-      "result" string => execresult(
-				     "$(G.perl) -le '$(g.command)'",
-				     "noshell");
-      "expected" string => "01755 1 0 0 $(g.source_size)";
+    !windows::
+      "expect[modeoct]" string => "101755";
+      "expect[uid]" string => "0";
+      "expect[gid]" string => "0";
+    any::
+      "expect[nlink]" string => "1";
+      "expect[size]" string => filestat("$(G.etc_group)", "size");
+
+      "fields" slist => getindices("expect");
+      "result[$(fields)]" string => filestat("$(G.testfile)", "$(fields)");
 
   classes:
-      "ok" expression => strcmp("$(expected)", "$(result)");
+      "not_ok" not => regcmp("$(expect[$(fields)])", "$(result[$(fields)])");
 
   reports:
     DEBUG::
-      "init.result  is '$(init.result)'";
-      "expected     is '$(expected)'";
-      "check.result is '$(result)'";
-    ok::
+      "expected:    $(fields) = '$(expect[$(fields)])'";
+      "result:      $(fields) = '$(result[$(fields)])'";
+    !not_ok::
       "$(this.promise_filename) Pass";
-    !ok::
+    not_ok::
       "$(this.promise_filename) FAIL";
 }
 

@@ -210,7 +210,8 @@ PromiseResult VerifyPackagesPromise(EvalContext *ctx, const Promise *pp)
     if (!REPORT_THIS_PROMISE(pp))
     {
         // This will not be reported elsewhere, so give it kept outcome.
-        cfPS(ctx, LOG_LEVEL_DEBUG, PROMISE_RESULT_NOOP, pp, a, "Giving dummy package kept outcome");
+        result = PROMISE_RESULT_NOOP;
+        cfPS(ctx, LOG_LEVEL_DEBUG, result, pp, a, "Giving dummy package kept outcome");
     }
 
     return result;

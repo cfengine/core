@@ -595,7 +595,7 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
 /* On windows, use 'binary mode' as default for files */
 
 #ifdef __MINGW32__
-    _fmode = _O_BINARY;
+    //_fmode = _O_BINARY;
 #endif
 
     OpenLog(LOG_USER);

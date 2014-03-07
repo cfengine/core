@@ -32,6 +32,7 @@
 #include <pipes.h>
 #include <unix.h>
 #include <mutex.h>
+#include <signals.h>
 #include <exec_tools.h>
 #include <misc_lib.h>
 #include <file_lib.h>
@@ -250,9 +251,9 @@ void LocalExec(const ExecConfig *config)
     size_t line_size = CF_BUFSIZE;
     char *line = xmalloc(line_size);
 
-    for (;;)
+    while (!IsPendingTermination())
     {
-        if(!IsReadReady(fileno(pp), (config->agent_expireafter * SECONDS_PER_MINUTE)))
+        if (!IsReadReady(fileno(pp), (config->agent_expireafter * SECONDS_PER_MINUTE)))
         {
             char errmsg[CF_MAXVARSIZE];
             snprintf(errmsg, sizeof(errmsg), "cf-execd: !! Timeout waiting for output from agent (agent_expireafter=%d) - terminating it",

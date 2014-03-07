@@ -1883,7 +1883,7 @@ static bool ExecuteSchedule(EvalContext *ctx, const PackageManager *schedule, Pa
 
             if (a.packages.package_add_command == NULL)
             {
-                cfPS_HELPER_0ARG(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Package add command undefined");
+                ProgrammingError("Package add command undefined");
                 return false;
             }
 
@@ -1899,7 +1899,7 @@ static bool ExecuteSchedule(EvalContext *ctx, const PackageManager *schedule, Pa
 
             if (a.packages.package_delete_command == NULL)
             {
-                cfPS_HELPER_0ARG(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Package delete command undefined");
+                ProgrammingError("Package delete command undefined");
                 return false;
             }
 
@@ -1915,7 +1915,7 @@ static bool ExecuteSchedule(EvalContext *ctx, const PackageManager *schedule, Pa
 
             if (a.packages.package_update_command == NULL)
             {
-                cfPS_HELPER_0ARG(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Package update command undefined");
+                ProgrammingError("Package update command undefined");
                 return false;
             }
 
@@ -1932,7 +1932,7 @@ static bool ExecuteSchedule(EvalContext *ctx, const PackageManager *schedule, Pa
 
             if (a.packages.package_verify_command == NULL)
             {
-                cfPS_HELPER_0ARG(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Package verify command undefined");
+                ProgrammingError("Package verify command undefined");
                 return false;
             }
 
@@ -1943,7 +1943,7 @@ static bool ExecuteSchedule(EvalContext *ctx, const PackageManager *schedule, Pa
             break;
 
         default:
-            cfPS_HELPER_0ARG(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Unknown action attempted");
+            ProgrammingError("Unknown action attempted");
             return false;
         }
 

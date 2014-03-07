@@ -1229,15 +1229,20 @@ PromiseResult ScheduleAgentOperations(EvalContext *ctx, const Bundle *bp)
 
                 if (Abort(ctx))
                 {
-                    EvalContextStackPopFrame(ctx);
                     DeleteTypeContext(ctx, bp, type);
+                    EvalContextStackPopFrame(ctx);
                     NoteBundleCompliance(bp, save_pr_kept, save_pr_repaired, save_pr_notkept);
                     return result;
                 }
             }
 
-            EvalContextStackPopFrame(ctx);
             DeleteTypeContext(ctx, bp, type);
+            EvalContextStackPopFrame(ctx);
+
+            if (type == TYPE_SEQUENCE_CONTEXTS)
+            {
+                BundleResolve(ctx, bp);
+            }
         }
     }
 
@@ -1479,12 +1484,10 @@ static int NewTypeContext(TypeSequence type)
         break;
 
     case TYPE_SEQUENCE_FILES:
-
         ConnectionsInit();
         break;
 
     case TYPE_SEQUENCE_PROCESSES:
-
         if (!LoadProcessTable(&PROCESSTABLE))
         {
             Log(LOG_LEVEL_ERR, "Unable to read the process table - cannot keep process promises");
@@ -1493,7 +1496,6 @@ static int NewTypeContext(TypeSequence type)
         break;
 
     case TYPE_SEQUENCE_STORAGE:
-
 #ifndef __MINGW32__                   // TODO: Run if implemented on Windows
         if (SeqLength(GetGlobalMountedFSList()))
         {
@@ -1504,9 +1506,7 @@ static int NewTypeContext(TypeSequence type)
         break;
 
     default:
-
-        /* Initialization is not required */
-        ;
+        break;
     }
 
     return true;
@@ -1518,16 +1518,11 @@ static void DeleteTypeContext(EvalContext *ctx, const Bundle *bp, TypeSequence t
 {
     switch (type)
     {
-    case TYPE_SEQUENCE_CONTEXTS:
-        BundleResolve(ctx, bp);
-        break;
-
     case TYPE_SEQUENCE_ENVIRONMENTS:
         DeleteEnvironmentsContext();
         break;
 
     case TYPE_SEQUENCE_FILES:
-
         ConnectionsCleanup();
         break;
 
@@ -1539,17 +1534,12 @@ static void DeleteTypeContext(EvalContext *ctx, const Bundle *bp, TypeSequence t
         break;
 
     case TYPE_SEQUENCE_PACKAGES:
-
         ExecuteScheduledPackages(ctx);
-
         CleanScheduledPackages();
         break;
 
     default:
-
-        /* Deinitialization is not required */
-        ;
-
+        break;
     }
 }
 

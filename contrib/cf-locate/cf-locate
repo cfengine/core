@@ -12,6 +12,7 @@ use Getopt::Long;
 my %options = (
                full => 0,
                help => 0,
+               plain => 0,
                color => {
                          info => 'green',
                          heading => 'red',
@@ -22,8 +23,9 @@ my %options = (
 GetOptions(\%options,
            "help|h!",
            "full|f!",
+           "plain|p!",
            "color|c=s%",
-    );
+          );
 
 my $full = 0;
 my $regex = shift @ARGV;
@@ -31,24 +33,29 @@ my $rc = 0;
 
 unless (defined $regex)
 {
- $rc = 1;
- $options{help} = 1;
+    $rc = 1;
+    $options{help} = 1;
 }
 
 if ($options{help})
 {
- print "Syntax: $0 [-f|--full] [-h|--help] [-c|--color [info|heading|body]=color] BODY-OR-BUNDLE-REGEX PATH1 PATH2 ...\n\n";
+    print "Syntax: $0 [-f|--full] [-p|--plain] [-h|--help] [-c|--color [info|heading|body]=color] BODY-OR-BUNDLE-REGEX PATH1 PATH2 ...\n\n";
 
- # try to open README.md
- if (open my $doc, '<', sprintf('%s/%s', dirname($0), 'README.md'))
- {
-  while (<$doc>)
-  {
-   print;
-  }
- }
+    # try to open README.md
+    if (open my $doc, '<', sprintf('%s/%s', dirname($0), 'README.md'))
+    {
+        while (<$doc>)
+        {
+            print;
+        }
+    }
 
- exit $rc;
+    exit $rc;
+}
+
+if ($options{plain})
+{
+    $options{color} = {};
 }
 
 my @search = @ARGV;
@@ -61,45 +68,53 @@ find(\&wanted, @search);
 
 sub find_color
 {
- my $type = shift @_;
- return unless defined $type;
- return $options{color}->{$type};
+    my $type = shift @_;
+    return unless defined $type;
+    return $options{color}->{$type};
 }
 
 sub wrap_color
 {
- my $type = shift @_;
- my $text = shift @_;
+    my $type = shift @_;
+    my $text = shift @_;
 
- my $c = find_color($type);
- return $text unless defined $c;
- return color($c) . $text . color("reset");
+    my $c = find_color($type);
+    return $text unless defined $c;
+    return color($c) . $text . color("reset");
 }
 
 sub wanted
 {
- open my $f, '<', $_;
- my $found = 0;
+    open my $f, '<', $_;
+    my $found = 0;
 
- while (<$f>)
- {
- my $syntax = 'body';
-  if (m/^\s*(body|bundle).*$regex/)
-  {
-   print wrap_color('info',
-                    "-> body or bundle matching '$regex' found in $File::Find::name:$.\n");
-   $found = 1;
-   $syntax = 'heading';
-  }
+    while (<$f>)
+    {
+        my $syntax = 'body';
+        if (m/^\s*(body|bundle).*$regex/)
+        {
+            if ($options{plain})
+            {
+                print "\n";
+            }
+            else
+            {
+                print wrap_color('info',
+                                 "-> body or bundle matching '$regex' found in $File::Find::name:$.\n")
+            }
 
-  if ($found)
-  {
-   print wrap_color($syntax, $_);
-  }
+            $found = 1;
+            $syntax = 'heading';
+        }
 
-  if (!$options{full} || m/^\s*}\s*$/)
-  {
-   $found = 0;
-  }
- }
+        if ($found)
+        {
+            print wrap_color($syntax, $_);
+        }
+
+        if (!$options{full} || m/^\s*}\s*$/)
+        {
+            $found = 0;
+        }
+    }
 }

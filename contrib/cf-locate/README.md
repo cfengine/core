@@ -2,9 +2,13 @@
 
 This is a small perl script to help you locate and display bodies or bundles inside of your masterfiles.  It uses ANSI color sequences.
 
-It takes an optional `-f` or `--full` flag first, then a pattern, then a list of directories.
+It takes optional `-f` or `--full`; or `-p` or `--plain` flags first,
+then a pattern, then a list of directories.
 
 With `-f` specified, the whole body or bundle will be displayed.
+
+With `-p` specified, no color will be used, and the informational `->
+... found` message will be omitted.
 
 With `-h` specified, help will be displayed and then the script will exit.
 
@@ -17,7 +21,9 @@ times).  The defaults are:
      heading => 'red',
      body => 'yellow',
 
-So for example, `-c body=magenta` will print the definition bodies in magenta.  We're not saying it's the *right* color, mind you.  We like black on black 'coz it's slimming.
+So for example, `-c body=magenta` will print the definition bodies in
+magenta.  We're not saying it's the *right* color, mind you.  We like
+black on black 'coz it's slimming.
 
 ## Example
 

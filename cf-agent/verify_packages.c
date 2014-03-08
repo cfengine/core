@@ -2140,8 +2140,7 @@ static int ExecutePatch(EvalContext *ctx, const PackageManager *schedule, Packag
 
             if (a.packages.package_patch_command == NULL)
             {
-                cfPS_HELPER_0ARG(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Package patch command undefined");
-                *result = PromiseResultUpdate_HELPER(pp, *result, PROMISE_RESULT_FAIL);
+                ProgrammingError("Package patch command undefined");
                 return false;
             }
 
@@ -2150,8 +2149,7 @@ static int ExecutePatch(EvalContext *ctx, const PackageManager *schedule, Packag
             break;
 
         default:
-            cfPS_HELPER_0ARG(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Unknown action attempted");
-            *result = PromiseResultUpdate_HELPER(pp, *result, PROMISE_RESULT_FAIL);
+            ProgrammingError("Unknown action attempted");
             return false;
         }
 

@@ -22,9 +22,9 @@ bundle agent test
 
 bundle agent check
 {
-  reports:
-    validated_ok::
-      "$(this.promise_filename) Pass";
-    validated_not_ok::
-      "$(this.promise_filename) FAIL";
+  methods:
+      "" usebundle => dcs_passif_expected("validated_ok",
+                                          "validated_not_ok", # not expected
+                                          $(this.promise_filename)),
+      inherit => "true";
 }

@@ -7,10 +7,6 @@ body common control
       version => "1.0";
 }
 
-bundle agent init
-{
-}
-
 bundle agent test
 {
   vars:
@@ -56,26 +52,11 @@ bundle agent test
 
 bundle agent check
 {
-  classes:
-      "ok" and => { "c1", "c2", "c3", "!c4", "!c5", "!c6",  };
-
-  reports:
-    DEBUG.!c1::
-      "bad: c1 was NOT defined";
-    DEBUG.!c2::
-      "bad: c2 was NOT defined";
-    DEBUG.!c3::
-      "bad: c3 was NOT defined";
-    DEBUG.c4::
-      "bad: c4 WAS defined";
-    DEBUG.c5::
-      "bad: c5 WAS defined";
-    DEBUG.c6::
-      "bad: c6 WAS defined";
-    ok::
-      "$(this.promise_filename) Pass";
-    !ok::
-      "$(this.promise_filename) FAIL";
+  methods:
+      "" usebundle => dcs_passif_expected("c1,c2,c3", # expected
+                                          "c4,c5,c6", # not expected
+                                          $(this.promise_filename)),
+      inherit => "true";
 }
 
 body file control

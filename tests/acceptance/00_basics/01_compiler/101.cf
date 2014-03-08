@@ -13,14 +13,6 @@ body common control
 
 #######################################################
 
-bundle agent init
-{
-  vars:
-      "dummy" string => "dummy";
-}
-
-#######################################################
-
 bundle agent test
 {
   vars:
@@ -32,14 +24,8 @@ thing";
 
 bundle agent check
 {
-  classes:
-      "ok" expression => strcmp("$(test.mystring)", "something");
-
-  reports:
-    ok::
-      "$(this.promise_filename) Pass";
-    !ok::
-      "$(this.promise_filename) FAIL";
-    DEBUG::
-      "$(test.subout)";
+  methods:
+      "" usebundle => dcs_passif(strcmp($(test.mystring), "something"),
+                                 $(this.promise_filename)),
+      inherit => "true";
 }

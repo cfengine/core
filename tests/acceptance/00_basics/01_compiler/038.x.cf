@@ -14,15 +14,8 @@ body common control
 
 bundle agent init
 {
-  files:
-      "$(G.testfile)"
-      delete => init_delete;
-}
-
-body delete init_delete
-{
-      dirlinks => "delete";
-      rmdirs   => "true";
+  methods:
+      "1" usebundle => dcs_tidy($(G.testfile));
 }
 
 #######################################################
@@ -45,12 +38,10 @@ body action test_action
 
 bundle agent check
 {
+  methods:
+      "" usebundle => dcs_passif_filenotexists($(G.testfile),
+                                               $(this.promise_filename));
   reports:
     DEBUG::
       "This test should fail";
-    ok::
-      "$(this.promise_filename) Pass";
-    !ok::
-      "$(this.promise_filename) FAIL";
 }
-

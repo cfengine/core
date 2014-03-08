@@ -91,17 +91,26 @@ bundle common paths_absolute(filename)
 
 bundle agent default(filename)
 {
+  classes:
+      "have_test_run_$(bundles)" expression => "any";
+  vars:
+      "tests" slist => { "default:init", "default:test", "default:check" };
+      "bundles" slist => bundlesmatching("default:(init|test|check)");
+
   methods:
       "any" usebundle => test_precheck;
 
     proceed_with_test::
-      "any" usebundle => test_run("$(filename)");
+      "any" usebundle => test_run("$(filename)"), inherit => "true";
+
+  reports:
+    EXTRA.verbose_mode::
+      "$(this.bundle): found runnable bundle $(bundles)";
 }
 
 bundle agent test_run(filename)
 {
   vars:
-      "tests" slist => { "init", "test", "check" };
 
   methods:
       "any"
@@ -110,7 +119,8 @@ bundle agent test_run(filename)
       usebundle => paths_absolute("$(filename)");
 
     AUTO::
-      "any" usebundle => "$(tests)";
+      "any" usebundle => "$(default.tests)",
+      ifvarclass => canonify("have_test_run_$(default.tests)");
 
   reports:
     !AUTO::
@@ -289,6 +299,20 @@ bundle agent dcs_fini(file)
       contain => dcs_useshell;
       "$(G.rm) -rf $(sys.workdir)/state/cf_state.*"
       contain => dcs_useshell;
+
+  reports:
+    EXTRA::
+      "$(this.bundle): deleting $(file) with $(G.rm) -rf";
+}
+
+bundle agent dcs_tidy(file)
+{
+  files:
+      "$(file)" delete => tidy;
+
+  reports:
+    EXTRA::
+      "$(this.bundle): deleting $(file) with delete => tidy";
 }
 
 bundle agent dcs_copydir(from, to)
@@ -298,6 +322,10 @@ bundle agent dcs_copydir(from, to)
       create => "true",
       depth_search => dcs_recurse("inf"),
       copy_from => dcs_sync($(from));
+
+  reports:
+    EXTRA::
+      "$(this.bundle): copying directory $(from) to $(to)";
 }
 
 bundle agent dcs_copyfile(from, to)
@@ -306,6 +334,10 @@ bundle agent dcs_copyfile(from, to)
       "$(to)"
       create => "true",
       copy_from => dcs_sync($(from));
+
+  reports:
+    EXTRA::
+      "$(this.bundle): copying file $(from) to $(to)";
 }
 
 body depth_search dcs_recurse(d)
@@ -367,11 +399,29 @@ bundle agent dcs_hardlinkfile(from, to)
       "$(this.bundle): $(to) will point to $(from)";
 }
 
-
 body link_from dcs_hardlink(source)
 {
       source => $(source);
       link_type => "hardlink";
+}
+
+bundle agent dcs_linkfile(from, to, type)
+{
+  files:
+      "$(to)"
+      move_obstructions => "true",
+      link_from => dcs_link($(from), $(type));
+
+  reports:
+    EXTRA::
+      "$(this.bundle): $(to) will point to $(from) with link type $(type)";
+}
+
+
+body link_from dcs_link(source, type)
+{
+      source => $(source);
+      link_type => $(type);
 }
 
 #######################################################
@@ -463,4 +513,95 @@ bundle agent dcs_passif_fileexists(file, test)
       "$(this.bundle): $(file) did not exist!";
     EXTRA.__passif::
       "$(this.bundle): $(file) exists.";
+}
+
+bundle agent dcs_passif_filenotexists(file, test)
+{
+  classes:
+      "__passif" not => fileexists($(file));
+
+  methods:
+      "" usebundle => dcs_passif("__passif", $(test)), inherit => "true";
+
+  reports:
+    DEBUG.__passif::
+      "$(this.bundle): $(file) did not exist.";
+    EXTRA.!__passif::
+      "$(this.bundle): $(file) exists!";
+}
+
+bundle agent dcs_passif_expected(expected, not_expected, test)
+{
+  vars:
+      "ex" slist => splitstring($(expected), ",", 1000);
+      "notex" slist => splitstring($(not_expected), ",", 1000);
+      "e[$(ex)]" string => $(ex);
+      "e[$(notex)]" string => "!$(notex)";
+      "classes" slist => getvalues(e);
+
+  classes:
+      "__passif" and => { @(classes) };
+  methods:
+      "" usebundle => dcs_passif("__passif", $(test)), inherit => "true";
+
+  reports:
+    DEBUG::
+      "$(this.bundle): bad: $(ex) was NOT defined"
+      ifvarclass => "!$(ex)";
+
+      "$(this.bundle): bad: $(notex) WAS defined"
+      ifvarclass => "$(notex)";
+
+    EXTRA::
+      "$(this.bundle): good: $(ex) WAS defined"
+      ifvarclass => "$(ex)";
+
+      "$(this.bundle): good: $(notex) was NOT defined"
+      ifvarclass => "!$(notex)";
+}
+
+#######################################################
+
+bundle agent dcs_passif_output(wanted, unwanted, command, test)
+{
+  vars:
+      "subout" string => execresult($(command), "useshell");
+
+  classes:
+      "__passif_output_unwanted" expression => regcmp($(unwanted), $(subout));
+      "__passif_output_wanted" expression => regcmp($(wanted), $(subout));
+
+  methods:
+      "" usebundle => dcs_passif_expected("__passif_output_wanted", # expected
+                                          "__passif_output_unwanted", # not expected
+                                          $(test)),
+      inherit => "true";
+
+  reports:
+    DEBUG::
+      "$(this.bundle): bad: $(wanted) was NOT found in the output of $(command)"
+      ifvarclass => "!__passif_output_wanted";
+
+      "$(this.bundle): bad: $(unwanted) WAS found in the output of $(command)"
+      ifvarclass => "__passif_output_unwanted";
+
+    EXTRA::
+      "$(this.bundle): good: $(wanted) WAS found in the output of $(command)"
+      ifvarclass => "__passif_output_wanted";
+
+      "$(this.bundle): good: $(unwanted) was NOT found in the output of $(command)"
+      ifvarclass => "!__passif_output_unwanted";
+
+    DEBUG::
+      "$(this.bundle): the output of command '$(command)' was: $(subout)";
+}
+
+bundle agent dcs_passif_output1(wanted, command, test)
+{
+  methods:
+      "" usebundle => dcs_passif_output($(wanted), # expected
+                                        "^(unlikely data){400}$", # not expected
+                                        $(command),
+                                        $(test)),
+      inherit => "true";
 }

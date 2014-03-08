@@ -156,7 +156,7 @@ static void CheckAgentAccess(const Rlist *list, const Policy *policy);
 static void KeepControlPromises(EvalContext *ctx, const Policy *policy);
 static PromiseResult KeepAgentPromise(EvalContext *ctx, const Promise *pp, void *param);
 static int NewTypeContext(TypeSequence type);
-static void DeleteTypeContext(EvalContext *ctx, const Bundle *bp, TypeSequence type);
+static void DeleteTypeContext(EvalContext *ctx, TypeSequence type);
 static void ClassBanner(EvalContext *ctx, TypeSequence type);
 static PromiseResult ParallelFindAndVerifyFilesPromises(EvalContext *ctx, const Promise *pp);
 static bool VerifyBootstrap(void);
@@ -1229,14 +1229,14 @@ PromiseResult ScheduleAgentOperations(EvalContext *ctx, const Bundle *bp)
 
                 if (Abort(ctx))
                 {
-                    DeleteTypeContext(ctx, bp, type);
+                    DeleteTypeContext(ctx, type);
                     EvalContextStackPopFrame(ctx);
                     NoteBundleCompliance(bp, save_pr_kept, save_pr_repaired, save_pr_notkept);
                     return result;
                 }
             }
 
-            DeleteTypeContext(ctx, bp, type);
+            DeleteTypeContext(ctx, type);
             EvalContextStackPopFrame(ctx);
 
             if (type == TYPE_SEQUENCE_CONTEXTS)
@@ -1514,7 +1514,7 @@ static int NewTypeContext(TypeSequence type)
 
 /*********************************************************************/
 
-static void DeleteTypeContext(EvalContext *ctx, const Bundle *bp, TypeSequence type)
+static void DeleteTypeContext(EvalContext *ctx, TypeSequence type)
 {
     switch (type)
     {

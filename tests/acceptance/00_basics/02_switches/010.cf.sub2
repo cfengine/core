@@ -6,43 +6,27 @@
 
 body common control
 {
-  inputs => { "../../default.cf.sub" };
-  bundlesequence  => { default("$(this.promise_filename)") };
-  version => "1.0";
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
 }
 
-#######################################################
-
-bundle agent init
-{
-vars:
-        "dummy" string => "dummy";
-}
-
-#######################################################
-
-bundle agent test
-{
-vars:
-        "dummy" string => "dummy";
-}
 
 #######################################################
 
 bundle agent check
 {
-classes:
-    "dummy" expression => regextract("(.*)\.sub\d", $(this.promise_filename), "fn");
+  classes:
+      "dummy" expression => regextract("(.*)\.sub\d", $(this.promise_filename), "fn");
 
-reports:
+  reports:
     DEBUG::
-        "This is $(this.promise_filename)";
-        "This should only pass if you run it with the 'bingo' class defined";
-        "The main tester does NOT set it, but it is created in the 'setup'";
-        "config file, $(fn[1]).sub1";
+      "This is $(this.promise_filename)";
+      "This should only pass if you run it with the 'bingo' class defined";
+      "The main tester does NOT set it, but it is created in the 'setup'";
+      "config file, $(fn[1]).sub1";
     bingo::
-        "$(fn[1]) FAIL";
+      "$(fn[1]) FAIL";
     !bingo::
-        "$(fn[1]) Pass";
+      "$(fn[1]) Pass";
 }
-

@@ -13,34 +13,16 @@ body common control
 
 #######################################################
 
-bundle agent init
-{
-vars:
-        "dummy" string => "dummy";
-}
-
-#######################################################
-
-bundle agent test
-{
-vars:
-        "dummy" string => "dummy";
-}
-
-#######################################################
-
 bundle agent check
 {
-classes:
-    "dummy" expression => regextract("(.*)\.sub", $(this.promise_filename), "fn");
+  classes:
+      "dummy" expression => regextract("(.*)\.sub", $(this.promise_filename), "fn");
 
-reports:
+  methods:
+      "" usebundle => dcs_passif("!ok", "$(fn[1])"), inherit => "true";
+
+  reports:
     DEBUG::
-        "This should pass if you run it with: -N ok";
-        "Look at $(fn[1]) to see which flags are passed in";
-    ok::
-        "$(fn[1]) FAIL";
-    !ok::
-        "$(fn[1]) Pass";
+      "This should only pass if you do not run it with: -D ok";
+      "Look at $(fn[1]) to see which flags are passed in";
 }
-

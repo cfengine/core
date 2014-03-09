@@ -27,4 +27,3 @@ bundle agent test
       "Running: $(cmd)";
       "Test results come from $(this.promise_filename).sub";
 }
-

@@ -7,21 +7,15 @@ body common control
       version => "1.0";
 }
 
-bundle agent init
-{
-  vars:
-      "dummy" string => "dummy";
-}
-
 bundle agent test
 {
   files:
       "$(G.testdir)/foo.txt"
       create => "true",
-      action => log;
+      action => test_log;
 }
 
-body action log
+body action test_log
 {
       log_failed => "stdout";
       log_string => "";
@@ -29,7 +23,6 @@ body action log
 
 bundle agent check
 {
-  reports:
-    cfengine_3::
-      "$(this.promise_filename) Pass";
+  methods:
+      "" usebundle => dcs_pass($(this.promise_filename));
 }

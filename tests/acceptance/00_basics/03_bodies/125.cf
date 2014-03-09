@@ -10,9 +10,6 @@ body common control
 
 bundle agent init
 {
-  vars:
-      "dummy" string => "dummy";
-
   processes:
     any::
       "$(G.true)"
@@ -41,9 +38,9 @@ body classes bundle_class
 
 bundle agent check
 {
-  reports:
-    !cancel_this::
-      "$(this.promise_filename) Pass";
-    cancel_this|bundle_class::
-      "$(this.promise_filename) FAIL";
+  methods:
+      "" usebundle => dcs_passif_expected("", # expected
+                                          "cancel_this,bundle_class", # not expected
+                                          $(this.promise_filename)),
+      inherit => "true";
 }

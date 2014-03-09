@@ -72,6 +72,25 @@ bundle common G
 
 }
 
+bundle common dcs_strings
+{
+  vars:
+      "multiline_potatoes" string =>
+      "BEGIN
+    One potato
+    Two potato
+    Three potatoes
+    Four
+END";
+
+      "multiline_potatoes_lesser" string =>
+      "BEGIN
+    One potato
+    Three potatoes
+    Four
+END";
+}
+
 bundle common paths_init(filename)
 {
   classes:
@@ -94,7 +113,12 @@ bundle agent default(filename)
   classes:
       "have_test_run_$(bundles)" expression => "any";
   vars:
-      "tests" slist => { "default:init", "default:test", "default:check" };
+
+      "tests" slist => { "default:init",
+                         "default:test",
+                         "default:check"
+      };
+
       "bundles" slist => bundlesmatching("default:(init|test|check)");
 
   methods:
@@ -228,6 +252,53 @@ bundle agent dcs_report_generic_classes(x)
     DEBUG::
       "class '$(x)_$(choices)' was defined" ifvarclass => '$(x)_$(choices)';
       "class '$(x)_$(choices)' was NOT defined" ifvarclass => '!$(x)_$(choices)';
+}
+
+bundle agent dcs_generic_classes_to_string(x)
+{
+  vars:
+      "choices" slist => { "repaired", "failed", "denied", "timeout", "kept" };
+      "s[$(choices)]" string => "$(x)_$(choices)", ifvarclass => '$(x)_$(choices)';
+      "found_unsorted" slist => getvalues(s);
+      "found" slist => sort(found_unsorted, "lex");
+      "found_str" string => format("%S", found);
+
+  reports:
+      "$(found_str)" bundle_return_value_index => "str";
+}
+
+# These set/clear global classes, so they can be tested in another bundle
+body classes dcs_all_classes(prefix)
+{
+      promise_kept => { "$(prefix)_promise_kept" };
+      promise_repaired => { "$(prefix)_promise_repaired" };
+      repair_failed => { "$(prefix)_repair_failed" };
+      repair_denied => { "$(prefix)_repair_denied" };
+      repair_timeout => { "$(prefix)_repair_timeout" };
+      cancel_kept => { "$(prefix)_cancel_kept" };
+      cancel_repaired => { "$(prefix)_cancel_repaired" };
+      cancel_notkept => { "$(prefix)_cancel_notkept" };
+}
+
+bundle agent dcs_all_negative_classes(prefix)
+{
+      # These must be global classes so they can be tested in another bundle
+      # We set them here, so they can be (possibly) cleared later
+  classes:
+      "$(prefix)_cancel_kept"     expression => "any", scope => "namespace";
+      "$(prefix)_cancel_repaired" expression => "any", scope => "namespace";
+      "$(prefix)_cancel_notkept"  expression => "any", scope => "namespace";
+}
+
+bundle agent dcs_all_classes_to_string(prefix)
+{
+  vars:
+      "classes_all" slist => classesmatching("$(prefix)_.*_(kept|notkept|failed|denied|repaired|timeout)");
+      "classes" slist => sort(classes_all, "lex");
+      "found_str" string => format("%S", classes);
+
+  reports:
+      "$(found_str)" bundle_return_value_index => "str";
 }
 
 bundle agent dcs_check_diff_expected(file1, file2, test, expected_difference)
@@ -369,7 +440,7 @@ bundle agent dcs_makefile(file, str)
       "$(this.bundle): creating $(file) with contents '$(str)'";
 }
 
-bundle agent emptyfile(file)
+bundle agent dcs_emptyfile(file)
 {
   files:
       "$(file)"
@@ -433,18 +504,16 @@ bundle agent dcs_check_strcmp(strA, strB, test, expected_difference)
       "equal" expression => strcmp($(strA), $(strB));
       "expected_difference" or => { strcmp($(expected_difference), "yes"),
                                     strcmp($(expected_difference), "true") };
+
+      "__passif" xor => { "equal", "expected_difference" };
   reports:
-    DEBUG::
-      "STRING A: '$(strA)'";
-      "STRING B: '$(strB)'";
-    equal.!expected_difference::
+    EXTRA|!__passif::
+      "$(this.bundle): STRING A: '$(strA)'";
+      "$(this.bundle): STRING B: '$(strB)'";
+    __passif::
       "$(test) Pass";
-    equal.expected_difference::
+    !__passif::
       "$(test) FAIL";
-    !equal.!expected_difference::
-      "$(test) FAIL";
-    !equal.expected_difference::
-      "$(test) Pass";
 }
 
 #######################################################
@@ -456,18 +525,16 @@ bundle agent dcs_check_regcmp(regex, thestring, test, expected_mismatch)
       "matched" expression => regcmp($(regex), $(thestring));
       "expected_mismatch" or => { strcmp($(expected_mismatch), "yes"),
                                   strcmp($(expected_mismatch), "true") };
-  reports:
-    DEBUG::
-      "REGEX: '$(regex)'";
-      "STRING TO MATCH: '$(thestring)'";
-    matched.!expected_mismatch::
+
+      "__passif" xor => { "equal", "expected_difference" };
+reports:
+    EXTRA|!__passif::
+      "$(this.bundle): REGEX: '$(regex)'";
+      "$(this.bundle): STRING TO MATCH: '$(thestring)'";
+    __passif::
       "$(test) Pass";
-    matched.expected_mismatch::
+    !__passif::
       "$(test) FAIL";
-    !matched.!expected_mismatch::
-      "$(test) FAIL";
-    !matched.expected_mismatch::
-      "$(test) Pass";
 }
 
 #######################################################

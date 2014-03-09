@@ -16,7 +16,7 @@ bundle agent init
 {
   methods:
       "1" usebundle => dcs_fini($(G.testfile));
-      "2" usebundle => emptyfile("$(G.testfile).SOURCE");
+      "2" usebundle => dcs_emptyfile("$(G.testfile).SOURCE");
 }
 
 #######################################################

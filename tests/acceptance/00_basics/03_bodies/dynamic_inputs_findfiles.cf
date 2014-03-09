@@ -26,12 +26,8 @@ bundle agent dynamic
       "run" usebundle => $(todo);
 
   reports:
-    DEBUG::
+    EXTRA::
       "Found dynamic bundle: $(todo)";
-}
-
-bundle agent init
-{
 }
 
 bundle agent test
@@ -43,12 +39,8 @@ bundle agent test
 
 bundle agent check
 {
-  classes:
-      "ok" expression => "class_defined_from_included_bundle";
-
-  reports:
-    ok::
-      "$(this.promise_filename) Pass";
-    !ok::
-      "$(this.promise_filename) FAIL";
+  methods:
+      "" usebundle => dcs_passif("class_defined_from_included_bundle",
+                                 $(this.promise_filename)),
+      inherit => "true";
 }

@@ -2474,15 +2474,14 @@ static PromiseResult CopyFileSources(EvalContext *ctx, char *destination, Attrib
 static ProtocolVersion DecideProtocol(const EvalContext *ctx,
                                       ProtocolVersion copyfrom_setting)
 {
-    /* TODO we would like to get the common control setting from
-     * GenericAgentConfig. Given that we have only access to EvalContext here,
-     * we get the raw string and reparse it every time. */
-    const char *s =
-        EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_PROTOCOL_VERSION);
-    ProtocolVersion common_setting = ProtocolVersionParse(s);
-
     if (copyfrom_setting == CF_PROTOCOL_UNDEFINED)
     {
+        /* TODO we would like to get the common control setting from
+         * GenericAgentConfig. Given that we have only access to EvalContext here,
+         * we get the raw string and reparse it every time. */
+        const char *s = EvalContextVariableControlCommonGet(
+            ctx, COMMON_CONTROL_PROTOCOL_VERSION);
+        ProtocolVersion common_setting = ProtocolVersionParse(s);
         return common_setting;
     }
     else

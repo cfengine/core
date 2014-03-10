@@ -503,36 +503,33 @@ Item *SplitString(const char *string, char sep)
     into a linked list of separate items, */
 {
     Item *liststart = NULL;
-    const char *sp;
+    const char *sp = string;
     char before[CF_BUFSIZE];
     int i = 0;
 
-    for (sp = string; (*sp != '\0'); sp++, i++)
+    while (*sp != '\0')
     {
-        before[i] = *sp;
-
-        if (*sp == sep)
+        if (*sp != sep)
         {
-            /* Check the listsep is not escaped */
-
-            if ((sp > string) && (*(sp - 1) != '\\'))
-            {
-                before[i] = '\0';
-                PrependItem(&liststart, before, NULL);
-                i = -1;
-            }
-            else if ((sp > string) && (*(sp - 1) == '\\'))
-            {
-                i--;
-                before[i] = sep;
-            }
-            else
-            {
-                before[i] = '\0';
-                PrependItem(&liststart, before, NULL);
-                i = -1;
-            }
+            before[i] = *sp;
+            i++;
         }
+        else if (sp > string && sp[-1] == '\\')
+        {
+            /* Escaped use of list separator; over-write the backslash
+             * we copied last time round the loop (and don't increment
+             * i, so next time round we'll continue in the right
+             * place). */
+            before[i - 1] = sep;
+        }
+        else
+        {
+            before[i] = '\0';
+            PrependItem(&liststart, before, NULL);
+            i = 0;
+        }
+
+        sp++;
     }
 
     before[i] = '\0';

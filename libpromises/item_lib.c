@@ -989,10 +989,10 @@ Item *RawLoadItemList(const char *filename)
 
     if (!feof(fp))
     {
+        Log(LOG_LEVEL_ERR, "Error while reading item list from file: %s", filename);
         DeleteItemList(list);
         list = NULL;
     }
-
     fclose(fp);
 
     return ReverseItemList(list);

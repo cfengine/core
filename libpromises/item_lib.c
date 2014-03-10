@@ -72,6 +72,26 @@
 #define CYCLE_CHECK(lp, slow, toggle) /* skip */
 #endif
 
+#ifndef NDEBUG
+/* Only intended for use in assertions.  Note that its cost is O(list
+ * length), so you don't want to call it inside a loop over the
+ * list. */
+static bool ItemIsInList(const Item *list, const Item *item)
+{
+    CYCLE_DECLARE(list, slow, toggle);
+    while (list)
+    {
+        if (list == item)
+        {
+            return true;
+        }
+        list = list->next;
+        CYCLE_CHECK(list, slow, toggle);
+    }
+    return false;
+}
+#endif /* NDEBUG */
+
 /*******************************************************************/
 
 Item *ReverseItemList(Item *list)
@@ -85,6 +105,7 @@ Item *ReverseItemList(Item *list)
     {
         Item *here = list;
         list = here->next;
+        /* assert(!ItemIsInList(here, list)); // quadratic cost */
         here->next = tail;
         tail = here;
     }
@@ -467,6 +488,9 @@ Item *ConcatLists(Item *list1, Item *list2)
     Item *tail = EndOfList(list1);
     assert(tail != CF_UNDEFINED_ITEM);
     assert(tail->next == NULL);
+    /* If any entry in list1 is in list2, so is tail; so this is a
+     * sufficient check that we're not creating a loop: */
+    assert(!ItemIsInList(list2, tail));
     tail->next = list2;
     return list1;
 }

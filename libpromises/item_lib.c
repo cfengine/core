@@ -32,10 +32,54 @@
 #include <file_lib.h>
 #include <files_interfaces.h>
 
+#ifdef CYCLE_DETECTION
+/* While looping over entry lp in an Item list, advance slow half as
+ * fast as lp; let n be the number of steps it has fallen behind; this
+ * increases by one every second time round the loop.  If there's a
+ * cycle of length M, lp shall run round and round it; once slow gets
+ * into the loop, they shall be n % M steps apart; at most 2*M more
+ * times round the loop and n % M shall be 0 so lp == slow.  If the
+ * lead-in to the loop is of length L, this takes at most 2*(L+M)
+ * turns round the loop to discover the cycle.  The added cost is O(1)
+ * per time round the loop, so the typical O(list length) user doesn't
+ * change order when this is enabled, albeit the constant of
+ * proportionality is up.
+ *
+ * Note, however, that none of this works if you're messing with the
+ * structure (e.g. reversing or deleting) of the list as you go.
+ *
+ * To use the macros: before the loop, declare and initialize your
+ * loop variable; pass it as lp to CYCLE_DECLARE(), followed by two
+ * names not in use in your code.  Then, in the body of the loop,
+ * after advancing the loop variable, CYCLE_CHECK() the same three
+ * parameters.  This is apt to require a while loop where you might
+ * otherwise have used a for loop; you also need to make sure your
+ * loop doesn't continue past the checking.  When you compile with
+ * CYCLE_DETECTION defined, your function shall catch cycles, raising
+ * a ProgrammingError() if it sees one.
+ */
+#define CYCLE_DECLARE(lp, slow, toggle) \
+    const Item *slow = lp; bool toggle = false
+#define CYCLE_VERIFY(lp, slow) if (!lp) { /* skip */ }              \
+    else if (!slow) ProgrammingError("Loop-detector bug :-(");      \
+    else if (lp == slow) ProgrammingError("Found loop in Item list")
+#define CYCLE_CHECK(lp, slow, toggle) \
+    CYCLE_VERIFY(lp, slow);                                     \
+    if (toggle) { slow = slow->next; CYCLE_VERIFY(lp, slow); }  \
+    toggle = !toggle
+#else
+#define CYCLE_DECLARE(lp, slow, toggle) /* skip */
+#define CYCLE_CHECK(lp, slow, toggle) /* skip */
+#endif
+
 /*******************************************************************/
 
 Item *ReverseItemList(Item *list)
 {
+    /* TODO: cycle-detection, which is somewhat harder here, without
+     * turning this into a quadratic-cost function, albeit only when
+     * assert() is enabled.
+     */
     Item *tail = NULL;
     while (list)
     {
@@ -52,8 +96,10 @@ Item *ReverseItemList(Item *list)
 void PrintItemList(const Item *list, Writer *w)
 {
     WriterWriteChar(w, '{');
+    const Item *ip = list;
+    CYCLE_DECLARE(ip, slow, toggle);
 
-    for (const Item *ip = list; ip != NULL; ip = ip->next)
+    while (ip != NULL)
     {
         if (ip != list)
         {
@@ -63,6 +109,9 @@ void PrintItemList(const Item *list, Writer *w)
         WriterWriteChar(w, '\'');
         WriterWrite(w, ip->name);
         WriterWriteChar(w, '\'');
+
+        ip = ip->next;
+        CYCLE_CHECK(ip, slow, toggle);
     }
 
     WriterWriteChar(w, '}');
@@ -73,13 +122,17 @@ void PrintItemList(const Item *list, Writer *w)
 int ItemListSize(const Item *list)
 {
     int size = 0;
+    const Item *ip = list;
+    CYCLE_DECLARE(ip, slow, toggle);
 
-    for (const Item *ip = list; ip != NULL; ip = ip->next)
+    while (ip != NULL)
     {
         if (ip->name)
         {
             size += strlen(ip->name);
         }
+        ip = ip->next;
+        CYCLE_CHECK(ip, slow, toggle);
     }
 
     return size;
@@ -89,19 +142,21 @@ int ItemListSize(const Item *list)
 
 Item *ReturnItemIn(Item *list, const char *item)
 {
-    Item *ptr;
-
     if ((item == NULL) || (strlen(item) == 0))
     {
         return NULL;
     }
 
-    for (ptr = list; ptr != NULL; ptr = ptr->next)
+    Item *ptr = list;
+    CYCLE_DECLARE(ptr, slow, toggle);
+    while (ptr != NULL)
     {
         if (strcmp(ptr->name, item) == 0)
         {
             return ptr;
         }
+        ptr = ptr->next;
+        CYCLE_CHECK(ptr, slow, toggle);
     }
 
     return NULL;
@@ -111,19 +166,21 @@ Item *ReturnItemIn(Item *list, const char *item)
 
 Item *ReturnItemInClass(Item *list, const char *item, const char *classes)
 {
-    Item *ptr;
-
     if ((item == NULL) || (strlen(item) == 0))
     {
         return NULL;
     }
 
-    for (ptr = list; ptr != NULL; ptr = ptr->next)
+    Item *ptr = list;
+    CYCLE_DECLARE(ptr, slow, toggle);
+    while (ptr != NULL)
     {
         if ((strcmp(ptr->name, item) == 0) && (strcmp(ptr->classes, classes) == 0))
         {
             return ptr;
         }
+        ptr = ptr->next;
+        CYCLE_CHECK(ptr, slow, toggle);
     }
 
     return NULL;
@@ -159,12 +216,16 @@ bool IsItemIn(const Item *list, const char *item)
         return true;
     }
 
-    for (const Item *ptr = list; ptr != NULL; ptr = ptr->next)
+    const Item *ptr = list;
+    CYCLE_DECLARE(ptr, slow, toggle);
+    while (ptr != NULL)
     {
         if (strcmp(ptr->name, item) == 0)
         {
             return true;
         }
+        ptr = ptr->next;
+        CYCLE_CHECK(ptr, slow, toggle);
     }
 
     return false;
@@ -179,27 +240,33 @@ bool ListsCompare(const Item *list1, const Item *list2)
         return false;
     }
 
-    for (const Item *ptr = list1; ptr != NULL; ptr = ptr->next)
+    const Item *ptr = list1;
+    CYCLE_DECLARE(ptr, slow, toggle);
+    while (ptr != NULL)
     {
         if (IsItemIn(list2, ptr->name) == false)
         {
             return false;
         }
+        ptr = ptr->next;
+        CYCLE_CHECK(ptr, slow, toggle);
     }
 
     return true;
 }
 
-
 /*********************************************************************/
 
-Item *EndOfList(Item *start)
+Item *EndOfList(Item *ip)
 {
-    Item *ip, *prev = CF_UNDEFINED_ITEM;
+    Item *prev = CF_UNDEFINED_ITEM;
 
-    for (ip = start; ip != NULL; ip = ip->next)
+    CYCLE_DECLARE(ip, slow, toggle);
+    while (ip != NULL)
     {
         prev = ip;
+        ip = ip->next;
+        CYCLE_CHECK(ip, slow, toggle);
     }
 
     return prev;
@@ -309,7 +376,6 @@ void PrependFullItem(Item **liststart, const char *itemstring, const char *class
 
 void AppendItem(Item **liststart, const char *itemstring, const char *classes)
 {
-    Item *lp;
     Item *ip = xcalloc(1, sizeof(Item));
 
     ip->name = xstrdup(itemstring);
@@ -320,10 +386,8 @@ void AppendItem(Item **liststart, const char *itemstring, const char *classes)
     }
     else
     {
-        for (lp = *liststart; lp->next != NULL; lp = lp->next)
-        {
-        }
-
+        Item *lp = EndOfList(*liststart);
+        assert(lp != CF_UNDEFINED_ITEM);
         lp->next = ip;
     }
 
@@ -349,10 +413,14 @@ void PrependItemList(Item **liststart, const char *itemstring)
 int ListLen(const Item *list)
 {
     int count = 0;
+    const Item *ip = list;
+    CYCLE_DECLARE(ip, slow, toggle);
 
-    for (const Item *ip = list; ip != NULL; ip = ip->next)
+    while (ip != NULL)
     {
         count++;
+        ip = ip->next;
+        CYCLE_CHECK(ip, slow, toggle);
     }
 
     return count;
@@ -373,11 +441,15 @@ void CopyList(Item **dest, const Item *source)
         return;
     }
 
-    for (const Item *ip = source; ip != NULL; ip = ip->next)
+    const Item *ip = source;
+    CYCLE_DECLARE(ip, slow, toggle);
     Item *backwards = NULL;
+    while (ip != NULL)
     {
         PrependFullItem(&backwards, ip->name,
                         ip->classes, ip->counter, ip->time);
+        ip = ip->next;
+        CYCLE_CHECK(ip, slow, toggle);
     }
     *dest = ReverseItemList(backwards);
 }
@@ -388,25 +460,19 @@ Item *ConcatLists(Item *list1, Item *list2)
 /* Notes: * Refrain from freeing list2 after using ConcatLists
           * list1 must have at least one element in it */
 {
-    Item *endOfList1;
-
     if (list1 == NULL)
     {
         ProgrammingError("ConcatLists: first argument must have at least one element");
     }
-
-    for (endOfList1 = list1; endOfList1->next != NULL; endOfList1 = endOfList1->next)
-    {
-    }
-
-    endOfList1->next = list2;
+    Item *tail = EndOfList(list1);
+    assert(tail != CF_UNDEFINED_ITEM);
+    assert(tail->next == NULL);
+    tail->next = list2;
     return list1;
 }
 
 void InsertAfter(Item **filestart, Item *ptr, const char *string)
 {
-    Item *ip;
-
     if ((*filestart == NULL) || (ptr == CF_UNDEFINED_ITEM))
     {
         AppendItem(filestart, string, NULL);
@@ -419,7 +485,7 @@ void InsertAfter(Item **filestart, Item *ptr, const char *string)
         return;
     }
 
-    ip = xcalloc(1, sizeof(Item));
+    Item *ip = xcalloc(1, sizeof(Item));
 
     ip->next = ptr->next;
     ptr->next = ip;
@@ -507,21 +573,17 @@ Item *SplitStringAsItemList(const char *string, char sep)
 
 /*********************************************************************/
 
+/* NB: does not escape entries in list ! */
 char *ItemList2CSV(const Item *list)
 {
-    const Item *ip = NULL;
-    int len = 0;
-    char *s;
-
-    for (ip = list; ip != NULL; ip = ip->next)
-    {
-        len += strlen(ip->name) + 1;
-    }
-
-    s = xmalloc(len + 1);
+    /* After each entry, we need space for either a ',' (before the
+     * next entry) or a final '\0'. */
+    int len = ByteSizeList(list) + ListLen(list);
+    char *s = xmalloc(len);
     *s = '\0';
 
-    for (ip = list; ip != NULL; ip = ip->next)
+    /* No point cycle-checking; done while computing len. */
+    for (const Item *ip = list; ip != NULL; ip = ip->next)
     {
         strcat(s, ip->name);
 
@@ -530,6 +592,7 @@ char *ItemList2CSV(const Item *list)
             strcat(s, ",");
         }
     }
+    assert(strlen(s) + 1 == len);
 
     return s;
 }
@@ -544,10 +607,11 @@ char *ItemList2CSV(const Item *list)
 size_t ItemList2CSV_bound(const Item *list, char *buf, size_t buf_size,
                           char separator)
 {
-    const Item *ip;
     size_t len = 0;                                /* without counting '\0' */
+    const Item *ip = list;
+    CYCLE_DECLARE(ip, slow, toggle);
 
-    for (ip = list; ip != NULL; ip = ip->next)
+    while (ip != NULL)
     {
         size_t space_left = buf_size - len;
         size_t len_ip = strlen(ip->name);
@@ -571,6 +635,9 @@ size_t ItemList2CSV_bound(const Item *list, char *buf, size_t buf_size,
             buf[len] = separator;
             len++;
         }
+
+        ip = ip->next;
+        CYCLE_CHECK(ip, slow, toggle);
     }
 
     buf[len] = '\0';
@@ -583,20 +650,22 @@ size_t ItemList2CSV_bound(const Item *list, char *buf, size_t buf_size,
 
 void IncrementItemListCounter(Item *list, const char *item)
 {
-    Item *ptr;
-
     if ((item == NULL) || (strlen(item) == 0))
     {
         return;
     }
 
-    for (ptr = list; ptr != NULL; ptr = ptr->next)
+    Item *ptr = list;
+    CYCLE_DECLARE(ptr, slow, toggle);
+    while (ptr != NULL)
     {
         if (strcmp(ptr->name, item) == 0)
         {
             ptr->counter++;
             return;
         }
+        ptr = ptr->next;
+        CYCLE_CHECK(ptr, slow, toggle);
     }
 }
 
@@ -604,20 +673,22 @@ void IncrementItemListCounter(Item *list, const char *item)
 
 void SetItemListCounter(Item *list, const char *item, int value)
 {
-    Item *ptr;
-
     if ((item == NULL) || (strlen(item) == 0))
     {
         return;
     }
 
-    for (ptr = list; ptr != NULL; ptr = ptr->next)
+    Item *ptr = list;
+    CYCLE_DECLARE(ptr, slow, toggle);
+    while (ptr != NULL)
     {
         if (strcmp(ptr->name, item) == 0)
         {
             ptr->counter = value;
             return;
         }
+        ptr = ptr->next;
+        CYCLE_CHECK(ptr, slow, toggle);
     }
 }
 
@@ -631,7 +702,9 @@ int IsMatchItemIn(const Item *list, const char *item)
         return true;
     }
 
-    for (const Item *ptr = list; ptr != NULL; ptr = ptr->next)
+    const Item *ptr = list;
+    CYCLE_DECLARE(ptr, slow, toggle);
+    while (ptr != NULL)
     {
         if (FuzzySetMatch(ptr->name, item) == 0)
         {
@@ -645,12 +718,15 @@ int IsMatchItemIn(const Item *list, const char *item)
                 return (true);
             }
         }
+        ptr = ptr->next;
+        CYCLE_CHECK(ptr, slow, toggle);
     }
 
     return (false);
 }
 
 /*********************************************************************/
+/* Cycle-detection: you'll get a double free if there's a cycle. */
 
 void DeleteItemList(Item *item) /* delete starting from item */
 {
@@ -697,9 +773,11 @@ void DeleteItem(Item **liststart, Item *item)
         else
         {
             Item *ip = *liststart;
+            CYCLE_DECLARE(ip, slow, toggle);
             while (ip->next != item && ip->next != NULL)
             {
                 ip = ip->next;
+                CYCLE_CHECK(ip, slow, toggle);
             }
 
             if (ip != NULL)
@@ -731,7 +809,6 @@ void DeleteItem(Item **liststart, Item *item)
 
 int DeleteItemGeneral(Item **list, const char *string, ItemMatchType type)
 {
-    Item *ip, *last = NULL;
     int match = 0;
 
     if (list == NULL)
@@ -739,73 +816,74 @@ int DeleteItemGeneral(Item **list, const char *string, ItemMatchType type)
         return false;
     }
 
-    for (ip = *list; ip != NULL; ip = ip->next)
+    Item *ip = *list, *last = NULL;
+    CYCLE_DECLARE(ip, slow, toggle);
+    while (ip != NULL)
     {
-        if (ip->name == NULL)
+        if (ip->name != NULL)
         {
-            continue;
-        }
-
-        switch (type)
-        {
-        case ITEM_MATCH_TYPE_LITERAL_START_NOT:
-            match = (strncmp(ip->name, string, strlen(string)) != 0);
-            break;
-        case ITEM_MATCH_TYPE_LITERAL_START:
-            match = (strncmp(ip->name, string, strlen(string)) == 0);
-            break;
-        case ITEM_MATCH_TYPE_LITERAL_COMPLETE_NOT:
-            match = (strcmp(ip->name, string) != 0);
-            break;
-        case ITEM_MATCH_TYPE_LITERAL_COMPLETE:
-            match = (strcmp(ip->name, string) == 0);
-            break;
-        case ITEM_MATCH_TYPE_LITERAL_SOMEWHERE_NOT:
-            match = (strstr(ip->name, string) == NULL);
-            break;
-        case ITEM_MATCH_TYPE_LITERAL_SOMEWHERE:
-            match = (strstr(ip->name, string) != NULL);
-            break;
-        case ITEM_MATCH_TYPE_REGEX_COMPLETE_NOT:
-        case ITEM_MATCH_TYPE_REGEX_COMPLETE:
-            match = StringMatchFull(string, ip->name);
-
-            if (type == ITEM_MATCH_TYPE_REGEX_COMPLETE_NOT)
+            switch (type)
             {
-                match = !match;
-            }
-            break;
-        }
+            case ITEM_MATCH_TYPE_LITERAL_START_NOT:
+                match = (strncmp(ip->name, string, strlen(string)) != 0);
+                break;
+            case ITEM_MATCH_TYPE_LITERAL_START:
+                match = (strncmp(ip->name, string, strlen(string)) == 0);
+                break;
+            case ITEM_MATCH_TYPE_LITERAL_COMPLETE_NOT:
+                match = (strcmp(ip->name, string) != 0);
+                break;
+            case ITEM_MATCH_TYPE_LITERAL_COMPLETE:
+                match = (strcmp(ip->name, string) == 0);
+                break;
+            case ITEM_MATCH_TYPE_LITERAL_SOMEWHERE_NOT:
+                match = (strstr(ip->name, string) == NULL);
+                break;
+            case ITEM_MATCH_TYPE_LITERAL_SOMEWHERE:
+                match = (strstr(ip->name, string) != NULL);
+                break;
+            case ITEM_MATCH_TYPE_REGEX_COMPLETE_NOT:
+            case ITEM_MATCH_TYPE_REGEX_COMPLETE:
+                match = StringMatchFull(string, ip->name);
 
-        if (match)
-        {
-            if (ip == *list)
-            {
-                free(ip->name);
-                free(ip->classes);
-                *list = ip->next;
-                free(ip);
-                return true;
-            }
-            else
-            {
-                if (ip != NULL)
+                if (type == ITEM_MATCH_TYPE_REGEX_COMPLETE_NOT)
                 {
-                    if (last != NULL)
-                    {
-                        last->next = ip->next;
-                    }
+                    match = !match;
+                }
+                break;
+            }
 
+            if (match)
+            {
+                if (ip == *list)
+                {
                     free(ip->name);
                     free(ip->classes);
+                    *list = ip->next;
                     free(ip);
+                    return true;
                 }
+                else
+                {
+                    if (ip != NULL)
+                    {
+                        if (last != NULL)
+                        {
+                            last->next = ip->next;
+                        }
 
-                return true;
+                        free(ip->name);
+                        free(ip->classes);
+                        free(ip);
+                    }
+
+                    return true;
+                }
             }
-
+            last = ip;
         }
-        last = ip;
+        ip = ip->next;
+        CYCLE_CHECK(ip, slow, toggle);
     }
 
     return false;
@@ -865,11 +943,14 @@ int DeleteItemNotContaining(Item **list, const char *string)  /* delete first it
 int ByteSizeList(const Item *list)
 {
     int count = 0;
-    const Item *ip;
+    const Item *ip = list;
+    CYCLE_DECLARE(ip, slow, toggle);
 
-    for (ip = list; ip; ip = ip->next)
+    while (ip)
     {
         count += strlen(ip->name);
+        ip = ip->next;
+        CYCLE_CHECK(ip, slow, toggle);
     }
 
     return count;
@@ -894,9 +975,13 @@ bool RawSaveItemList(const Item *liststart, const char *filename)
         return false;
     }
 
-    for (const Item *ip = liststart; ip != NULL; ip = ip->next)
+    const Item *ip = liststart;
+    CYCLE_DECLARE(ip, slow, toggle);
+    while (ip != NULL)
     {
         fprintf(fp, "%s\n", ip->name);
+        ip = ip->next;
+        CYCLE_CHECK(ip, slow, toggle);
     }
 
     if (fclose(fp) == -1)

@@ -368,9 +368,8 @@ static void *HandleConnection(ServerConnectionState *conn)
         }
     }
 
-    /* =========================  MAIN LOOPS  ========================= */
     ProtocolVersion protocol_version = ConnectionInfoProtocolVersion(conn->conn_info);
-    if (protocol_version == CF_PROTOCOL_TLS)
+    if (protocol_version == CF_PROTOCOL_LATEST)
     {
         ret = ServerTLSSessionEstablish(conn);
         if (ret == -1)
@@ -378,12 +377,9 @@ static void *HandleConnection(ServerConnectionState *conn)
             DeleteConn(conn);
             return NULL;
         }
-
-        while (BusyWithNewProtocol(conn->ctx, conn))
-        {
-        }
     }
-    else if (protocol_version == CF_PROTOCOL_CLASSIC)
+    else if (protocol_version < CF_PROTOCOL_LATEST &&
+             protocol_version > CF_PROTOCOL_UNDEFINED)
     {
         /* This connection is legacy protocol. Do we allow it? */
         if (!IsMatchItemIn(SV.allowlegacyconnects, MapAddress(conn->ipaddr)))
@@ -393,10 +389,6 @@ static void *HandleConnection(ServerConnectionState *conn)
             DeleteConn(conn);
             return NULL;
         }
-
-        while (BusyWithClassicConnection(conn->ctx, conn))
-        {
-        }
     }
     else
     {
@@ -404,6 +396,21 @@ static void *HandleConnection(ServerConnectionState *conn)
                         ConnectionInfoProtocolVersion(conn->conn_info));
         DeleteConn(conn);
         return NULL;
+    }
+
+
+    /* =========================  MAIN LOOPS  ========================= */
+    if (protocol_version >= CF_PROTOCOL_TLS)
+    {
+        while (BusyWithNewProtocol(conn->ctx, conn))
+        {
+        }
+    }
+    else if (protocol_version == CF_PROTOCOL_CLASSIC)
+    {
+        while (BusyWithClassicConnection(conn->ctx, conn))
+        {
+        }
     }
     /* ============================================================ */
 

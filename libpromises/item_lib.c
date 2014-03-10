@@ -518,7 +518,7 @@ void InsertAfter(Item **filestart, Item *ptr, const char *string)
 }
 
 Item *SplitString(const char *string, char sep)
- /* Splits a string containing a separator like : 
+ /* Splits a string containing a separator like :
     into a linked list of separate items, */
 {
     Item *liststart = NULL;
@@ -563,7 +563,7 @@ Item *SplitString(const char *string, char sep)
 /*********************************************************************/
 
 Item *SplitStringAsItemList(const char *string, char sep)
- /* Splits a string containing a separator like : 
+ /* Splits a string containing a separator like :
     into a linked list of separate items, */
 {
     Item *liststart = NULL;
@@ -625,47 +625,57 @@ char *ItemList2CSV(const Item *list)
  * Write all strings in list to buffer #buf, separating them with
  * #separator. Watch out, no escaping happens.
  *
- * @return the length of #buf, which will be equal to #buf_size if string was
- *         truncated. #buf will come out as '\0' terminated.
+ * @return Final strlen(#buf), or #buf_size if string was truncated.
+ *         Always '\0'-terminates #buf (within #buf_size).
  */
 size_t ItemList2CSV_bound(const Item *list, char *buf, size_t buf_size,
                           char separator)
 {
-    size_t len = 0;                                /* without counting '\0' */
+    size_t space = buf_size - 1; /* Reserve one for a '\0' */
+    char *tail = buf; /* Point to end of what we've written. */
     const Item *ip = list;
     CYCLE_DECLARE(ip, slow, toggle);
 
     while (ip != NULL)
     {
-        size_t space_left = buf_size - len;
-        size_t len_ip = strlen(ip->name);
+        size_t len = strlen(ip->name);
+        assert(buf + buf_size == tail + space + 1);
 
-        /* 2 bytes must be spared: one for separator, one for '\0' */
-        if (space_left >= len_ip - 2)
+        if (space < len)                  /* We must truncate */
         {
-            memcpy(buf, ip->name, len_ip);
-            len += len_ip;
+            memcpy(tail, ip->name, space);
+            tail[space] = '\0';   /* a.k.a. buf[buf_size - 1] */
+            return buf_size;     /* This signifies truncation */
         }
-        else                                            /* we must truncate */
+        else
         {
-            memcpy(buf, ip->name, space_left - 1);
-            buf[buf_size - 1] = '\0';
-            return buf_size;                   /* This signifies truncation */
+            memcpy(tail, ip->name, len);
+            tail += len;
+            space -= len;
         }
 
         /* Output separator if list has more entries. */
         if (ip->next != NULL)
         {
-            buf[len] = separator;
-            len++;
+            if (space > 0)
+            {
+                *tail = separator;
+                tail++;
+                space--;
+            }
+            else /* truncation */
+            {
+                *tail = '\0';
+                return buf_size;
+            }
         }
 
         ip = ip->next;
         CYCLE_CHECK(ip, slow, toggle);
     }
 
-    buf[len] = '\0';
-    return len;
+    *tail = '\0';
+    return tail - buf;
 }
 
 /*********************************************************************/

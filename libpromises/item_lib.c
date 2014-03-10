@@ -545,28 +545,20 @@ Item *SplitStringAsItemList(const char *string, char sep)
     into a linked list of separate items, */
 {
     Item *liststart = NULL;
-    char format[9];
-    char node[CF_MAXVARSIZE];
+    char node[256];
+    char format[] = "%255[^\0]";
 
-    sprintf(format, "%%255[^%c]", sep); /* set format string to search */
+    /* Overwrite format's internal \0 with sep: */
+    format[strlen(format)] = sep;
+    assert(strlen(format) + 1 == sizeof(format) || sep == '\0');
 
     for (const char *sp = string; *sp != '\0'; sp++)
     {
-        memset(node, 0, CF_MAXVARSIZE);
-        sscanf(sp, format, node);
-
-        if (strlen(node) == 0)
+        if (sscanf(sp, format, node) == 1 &&
+            node[0] != '\0')
         {
-            continue;
-        }
-
-        sp += strlen(node) - 1;
-
-        PrependItem(&liststart, node, NULL);
-
-        if (*sp == '\0')
-        {
-            break;
+            sp += strlen(node) - 1;
+            PrependItem(&liststart, node, NULL);
         }
     }
 

@@ -374,9 +374,12 @@ void CopyList(Item **dest, const Item *source)
     }
 
     for (const Item *ip = source; ip != NULL; ip = ip->next)
+    Item *backwards = NULL;
     {
-        AppendItem(dest, ip->name, ip->classes);
+        PrependFullItem(&backwards, ip->name,
+                        ip->classes, ip->counter, ip->time);
     }
+    *dest = ReverseItemList(backwards);
 }
 
 /*********************************************************************/
@@ -444,7 +447,7 @@ Item *SplitString(const char *string, char sep)
             if ((sp > string) && (*(sp - 1) != '\\'))
             {
                 before[i] = '\0';
-                AppendItem(&liststart, before, NULL);
+                PrependItem(&liststart, before, NULL);
                 i = -1;
             }
             else if ((sp > string) && (*(sp - 1) == '\\'))
@@ -455,16 +458,16 @@ Item *SplitString(const char *string, char sep)
             else
             {
                 before[i] = '\0';
-                AppendItem(&liststart, before, NULL);
+                PrependItem(&liststart, before, NULL);
                 i = -1;
             }
         }
     }
 
     before[i] = '\0';
-    AppendItem(&liststart, before, "");
+    PrependItem(&liststart, before, "");
 
-    return liststart;
+    return ReverseItemList(liststart);
 }
 
 /*********************************************************************/
@@ -491,7 +494,7 @@ Item *SplitStringAsItemList(const char *string, char sep)
 
         sp += strlen(node) - 1;
 
-        AppendItem(&liststart, node, NULL);
+        PrependItem(&liststart, node, NULL);
 
         if (*sp == '\0')
         {
@@ -499,7 +502,7 @@ Item *SplitStringAsItemList(const char *string, char sep)
         }
     }
 
-    return liststart;
+    return ReverseItemList(liststart);
 }
 
 /*********************************************************************/
@@ -925,7 +928,7 @@ Item *RawLoadItemList(const char *filename)
     Item *list = NULL;
     while (CfReadLine(&line, &line_size, fp) != -1)
     {
-        AppendItem(&list, line, NULL);
+        PrependItem(&list, line, NULL);
     }
 
     free(line);
@@ -938,5 +941,5 @@ Item *RawLoadItemList(const char *filename)
 
     fclose(fp);
 
-    return list;
+    return ReverseItemList(list);
 }

@@ -302,7 +302,6 @@ static int TRIES = 0;
 static void *HandleConnection(ServerConnectionState *conn)
 {
     int ret;
-    char output[CF_BUFSIZE];
 
     /* Set logging prefix to be the IP address for all of thread's lifetime. */
 
@@ -334,15 +333,17 @@ static void *HandleConnection(ServerConnectionState *conn)
             /* This happens when no thread was freed while we had to drop 5
              * consecutive connections, because none of the existing threads
              * finished. */
-            Log(LOG_LEVEL_ERR, "Server seems to be paralyzed. DOS attack? Committing apoptosis...");
+            Log(LOG_LEVEL_CRIT,
+                "Server seems to be paralyzed. DOS attack? Committing apoptosis...");
             FatalError(conn->ctx, "Terminating");
         }
         TRIES++;
         ThreadUnlock(cft_server_children);
 
-        Log(LOG_LEVEL_ERR, "Too many threads (>=%d) -- increase server maxconnections?", CFD_MAXPROCESSES);
-        snprintf(output, CF_BUFSIZE, "BAD: Server is currently too busy -- increase maxconnections or splaytime?");
-        SendTransaction(conn->conn_info, output, 0, CF_DONE);
+        Log(LOG_LEVEL_ERR,
+            "Too many threads (%d > %d), dropping connection! Increase server maxconnections?",
+            ACTIVE_THREADS, CFD_MAXPROCESSES);
+
         DeleteConn(conn);
         return NULL;
     }

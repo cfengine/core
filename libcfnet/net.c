@@ -164,8 +164,8 @@ int ReceiveTransaction(const ConnectionInfo *conn_info, char *buffer, int *more)
 
 
 /**
-   Tries to connect() to server #host, returns the socket decriptor and the IP
-   address that succeeded in #txtaddr.
+   Tries to connect() to server #host, returns the socket descriptor and the
+   IP address that succeeded in #txtaddr.
 
    @param #txtaddr If connected successfully return the IP connected in
                    textual representation

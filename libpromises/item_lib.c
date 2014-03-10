@@ -857,31 +857,24 @@ int DeleteItemGeneral(Item **list, const char *string, ItemMatchType type)
             {
                 if (ip == *list)
                 {
-                    free(ip->name);
-                    free(ip->classes);
                     *list = ip->next;
-                    free(ip);
-                    return true;
                 }
                 else
                 {
-                    if (ip != NULL)
-                    {
-                        if (last != NULL)
-                        {
-                            last->next = ip->next;
-                        }
-
-                        free(ip->name);
-                        free(ip->classes);
-                        free(ip);
-                    }
-
-                    return true;
+                    assert(ip != NULL);
+                    assert(last != NULL);
+                    assert(last->next == ip);
+                    last->next = ip->next;
                 }
+
+                free(ip->name);
+                free(ip->classes);
+                free(ip);
+
+                return true;
             }
-            last = ip;
         }
+        last = ip;
         ip = ip->next;
         CYCLE_CHECK(ip, slow, toggle);
     }

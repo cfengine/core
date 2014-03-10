@@ -753,7 +753,7 @@ void DeleteItem(Item **liststart, Item *item)
         {
             Item *ip = *liststart;
             CYCLE_DECLARE(ip, slow, toggle);
-            while (ip->next != item && ip->next != NULL)
+            while (ip && ip->next != item)
             {
                 ip = ip->next;
                 CYCLE_CHECK(ip, slow, toggle);
@@ -761,6 +761,7 @@ void DeleteItem(Item **liststart, Item *item)
 
             if (ip != NULL)
             {
+                assert(ip->next == item);
                 ip->next = item->next;
             }
         }

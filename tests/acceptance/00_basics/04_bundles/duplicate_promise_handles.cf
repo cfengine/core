@@ -1,0 +1,39 @@
+# Test that we dont get errors about duplicate handles when using variables in
+# handle name that do not expand identically
+# Redmine:4682 (https://cfengine.com/dev/issues/4682)
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle agent init
+{
+  vars:
+    "duplicate"
+      handle => "$(this.handle)_$(this.promiser)",
+      string => "foo";
+}
+
+bundle agent test
+{
+  vars:
+    "duplicate"
+      handle => "$(this.handle)_$(this.promiser)",
+      string => "bar";
+}
+
+bundle agent check
+{
+  classes:
+      "ok" and => { "any" },
+        comment => "Policy validation failing will cause us to never reach this if the test fails";
+
+  reports:
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

@@ -12,7 +12,6 @@ body common control
 
 #######################################################
 
-
 bundle agent init
 {
   methods:

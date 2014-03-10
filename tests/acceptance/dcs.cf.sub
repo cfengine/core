@@ -515,7 +515,7 @@ bundle agent dcs_passif_fileexists(file, test)
       "$(this.bundle): $(file) exists.";
 }
 
-bundle agent dcs_passif_filenotexists(file, test)
+bundle agent dcs_passif_file_absent(file, test)
 {
   classes:
       "__passif" not => fileexists($(file));

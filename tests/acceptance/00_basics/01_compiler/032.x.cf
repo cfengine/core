@@ -32,7 +32,7 @@ bundle agent test
 bundle agent check
 {
   methods:
-      "" usebundle => dcs_passif_filenotexists($(G.testfile),
+      "" usebundle => dcs_passif_file_absent($(G.testfile),
                                                $(this.promise_filename));
   reports:
     DEBUG::

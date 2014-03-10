@@ -124,6 +124,7 @@ PromiseResult VerifyMethod(EvalContext *ctx, const Rval call, Attributes a, cons
 
         switch (result)
         {
+        case PROMISE_RESULT_SKIPPED:
         case PROMISE_RESULT_NOOP:
             cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "Method '%s' verified", bp->name);
             break;

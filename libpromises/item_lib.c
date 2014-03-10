@@ -163,7 +163,7 @@ int ItemListSize(const Item *list)
 
 Item *ReturnItemIn(Item *list, const char *item)
 {
-    if ((item == NULL) || (strlen(item) == 0))
+    if (item == NULL || item[0] == '\0')
     {
         return NULL;
     }
@@ -187,7 +187,7 @@ Item *ReturnItemIn(Item *list, const char *item)
 
 Item *ReturnItemInClass(Item *list, const char *item, const char *classes)
 {
-    if ((item == NULL) || (strlen(item) == 0))
+    if (item == NULL || item[0] == '\0')
     {
         return NULL;
     }
@@ -196,7 +196,8 @@ Item *ReturnItemInClass(Item *list, const char *item, const char *classes)
     CYCLE_DECLARE(ptr, slow, toggle);
     while (ptr != NULL)
     {
-        if ((strcmp(ptr->name, item) == 0) && (strcmp(ptr->classes, classes) == 0))
+        if (strcmp(ptr->name, item) == 0 &&
+            strcmp(ptr->classes, classes) == 0)
         {
             return ptr;
         }
@@ -211,28 +212,20 @@ Item *ReturnItemInClass(Item *list, const char *item, const char *classes)
 
 Item *ReturnItemAtIndex(Item *list, int index)
 {
-    Item *ptr;
-    int i = 0;
-
-    for (ptr = list; ptr != NULL; ptr = ptr->next)
+    Item *ptr = list;
+    for (int i = 0; ptr != NULL && i < index; i++)
     {
-
-        if (i == index)
-        {
-            return ptr;
-        }
-
-        i++;
+        ptr = ptr->next;
     }
 
-    return NULL;
+    return ptr;
 }
 
 /*********************************************************************/
 
 bool IsItemIn(const Item *list, const char *item)
 {
-    if ((item == NULL) || (strlen(item) == 0))
+    if (item == NULL || item[0] == '\0')
     {
         return true;
     }
@@ -295,15 +288,9 @@ Item *EndOfList(Item *ip)
 
 /*********************************************************************/
 
-
-/*********************************************************************/
-
 Item *IdempPrependItem(Item **liststart, const char *itemstring, const char *classes)
 {
-    Item *ip;
-
-    ip = ReturnItemIn(*liststart, itemstring);
-
+    Item *ip = ReturnItemIn(*liststart, itemstring);
     if (ip)
     {
         return ip;
@@ -317,10 +304,7 @@ Item *IdempPrependItem(Item **liststart, const char *itemstring, const char *cla
 
 Item *IdempPrependItemClass(Item **liststart, const char *itemstring, const char *classes)
 {
-    Item *ip;
-
-    ip = ReturnItemInClass(*liststart, itemstring, classes);
-
+    Item *ip = ReturnItemInClass(*liststart, itemstring, classes);
     if (ip)                     // already exists
     {
         return ip;
@@ -334,9 +318,9 @@ Item *IdempPrependItemClass(Item **liststart, const char *itemstring, const char
 
 void IdempItemCount(Item **liststart, const char *itemstring, const char *classes)
 {
-    Item *ip;
+    Item *ip = ReturnItemIn(*liststart, itemstring);
 
-    if ((ip = ReturnItemIn(*liststart, itemstring)))
+    if (ip)
     {
         ip->counter++;
     }
@@ -355,35 +339,33 @@ Item *PrependItem(Item **liststart, const char *itemstring, const char *classes)
     Item *ip = xcalloc(1, sizeof(Item));
 
     ip->name = xstrdup(itemstring);
-    ip->next = *liststart;
     if (classes != NULL)
     {
         ip->classes = xstrdup(classes);
     }
 
+    ip->next = *liststart;
     *liststart = ip;
 
-    return *liststart;
+    return ip;
 }
 
 /*********************************************************************/
 
 void PrependFullItem(Item **liststart, const char *itemstring, const char *classes, int counter, time_t t)
 {
-    Item *ip;
-
-    ip = xcalloc(1, sizeof(Item));
+    Item *ip = xcalloc(1, sizeof(Item));
 
     ip->name = xstrdup(itemstring);
     ip->next = *liststart;
     ip->counter = counter;
     ip->time = t;
-    *liststart = ip;
-
     if (classes != NULL)
     {
         ip->classes = xstrdup(classes);
     }
+
+    *liststart = ip;
 }
 
 /*********************************************************************/
@@ -400,6 +382,10 @@ void AppendItem(Item **liststart, const char *itemstring, const char *classes)
     Item *ip = xcalloc(1, sizeof(Item));
 
     ip->name = xstrdup(itemstring);
+    if (classes)
+    {
+        ip->classes = xstrdup(classes); /* unused now */
+    }
 
     if (*liststart == NULL)
     {
@@ -411,11 +397,6 @@ void AppendItem(Item **liststart, const char *itemstring, const char *classes)
         assert(lp != CF_UNDEFINED_ITEM);
         lp->next = ip;
     }
-
-    if (classes)
-    {
-        ip->classes = xstrdup(classes); /* unused now */
-    }
 }
 
 /*********************************************************************/
@@ -423,8 +404,8 @@ void AppendItem(Item **liststart, const char *itemstring, const char *classes)
 void PrependItemList(Item **liststart, const char *itemstring)
 {
     Item *ip = xcalloc(1, sizeof(Item));
-
     ip->name = xstrdup(itemstring);
+
     ip->next = *liststart;
     *liststart = ip;
 }
@@ -450,7 +431,7 @@ int ListLen(const Item *list)
 /***************************************************************************/
 
 void CopyList(Item **dest, const Item *source)
-/* Copy or concat lists */
+/* Copy a list. */
 {
     if (*dest != NULL)
     {
@@ -497,7 +478,7 @@ Item *ConcatLists(Item *list1, Item *list2)
 
 void InsertAfter(Item **filestart, Item *ptr, const char *string)
 {
-    if ((*filestart == NULL) || (ptr == CF_UNDEFINED_ITEM))
+    if (*filestart == NULL || ptr == CF_UNDEFINED_ITEM)
     {
         AppendItem(filestart, string, NULL);
         return;
@@ -684,7 +665,7 @@ size_t ItemList2CSV_bound(const Item *list, char *buf, size_t buf_size,
 
 void IncrementItemListCounter(Item *list, const char *item)
 {
-    if ((item == NULL) || (strlen(item) == 0))
+    if (item == NULL || item[0] == '\0')
     {
         return;
     }
@@ -707,7 +688,7 @@ void IncrementItemListCounter(Item *list, const char *item)
 
 void SetItemListCounter(Item *list, const char *item, int value)
 {
-    if ((item == NULL) || (strlen(item) == 0))
+    if (item == NULL || item[0] == '\0')
     {
         return;
     }
@@ -731,7 +712,7 @@ void SetItemListCounter(Item *list, const char *item, int value)
 int IsMatchItemIn(const Item *list, const char *item)
 /* Solve for possible regex/fuzzy models unified */
 {
-    if ((item == NULL) || (strlen(item) == 0))
+    if (item == NULL || item[0] == '\0')
     {
         return true;
     }
@@ -740,23 +721,17 @@ int IsMatchItemIn(const Item *list, const char *item)
     CYCLE_DECLARE(ptr, slow, toggle);
     while (ptr != NULL)
     {
-        if (FuzzySetMatch(ptr->name, item) == 0)
+        if (FuzzySetMatch(ptr->name, item) == 0 ||
+            (IsRegex(ptr->name) &&
+             StringMatchFull(ptr->name, item)))
         {
-            return (true);
-        }
-
-        if (IsRegex(ptr->name))
-        {
-            if (StringMatchFull(ptr->name, item))
-            {
-                return (true);
-            }
+            return true;
         }
         ptr = ptr->next;
         CYCLE_CHECK(ptr, slow, toggle);
     }
 
-    return (false);
+    return false;
 }
 
 /*********************************************************************/
@@ -764,23 +739,14 @@ int IsMatchItemIn(const Item *list, const char *item)
 
 void DeleteItemList(Item *item) /* delete starting from item */
 {
-    Item *ip, *next;
-
-    for (ip = item; ip != NULL; ip = next)
+    while (item != NULL)
     {
-        next = ip->next;        // save before free
+        Item *here = item;
+        item = here->next; /* before free()ing here */
 
-        if (ip->name != NULL)
-        {
-            free(ip->name);
-        }
-
-        if (ip->classes != NULL)
-        {
-            free(ip->classes);
-        }
-
-        free(ip);
+        free(here->name);
+        free(here->classes);
+        free(here);
     }
 }
 
@@ -790,16 +756,6 @@ void DeleteItem(Item **liststart, Item *item)
 {
     if (item != NULL)
     {
-        if (item->name != NULL)
-        {
-            free(item->name);
-        }
-
-        if (item->classes != NULL)
-        {
-            free(item->classes);
-        }
-
         if (item == *liststart)
         {
             *liststart = item->next;
@@ -820,6 +776,8 @@ void DeleteItem(Item **liststart, Item *item)
             }
         }
 
+        free(item->name);
+        free(item->classes);
         free(item);
     }
 }
@@ -985,7 +943,6 @@ int ByteSizeList(const Item *list)
 bool RawSaveItemList(const Item *liststart, const char *filename)
 {
     char new[CF_BUFSIZE], backup[CF_BUFSIZE];
-    FILE *fp;
 
     strcpy(new, filename);
     strcat(new, CF_EDITED);
@@ -995,7 +952,8 @@ bool RawSaveItemList(const Item *liststart, const char *filename)
 
     unlink(new);                /* Just in case of races */
 
-    if ((fp = safe_fopen(new, "w")) == NULL)
+    FILE *fp = safe_fopen(new, "w");
+    if (fp == NULL)
     {
         Log(LOG_LEVEL_ERR, "Couldn't write file '%s'. (fopen: %s)", new, GetErrorStr());
         return false;

@@ -79,7 +79,11 @@ void CopyList(Item **dest, const Item *source);
 void IdempItemCount(Item **liststart, const char *itemstring, const char *classes);
 Item *IdempPrependItem(Item **liststart, const char *itemstring, const char *classes);
 Item *IdempPrependItemClass(Item **liststart, const char *itemstring, const char *classes);
+Item *ReverseItemList(Item *list); /* Eats list, spits it out reversed. */
 Item *PrependItem(Item **liststart, const char *itemstring, const char *classes);
+/* Warning: AppendItem()'s cost is proportional to list length; it is
+ * usually cheaper to build a list using PrependItem, then reverse it;
+ * building it with AppendItem() is quadratic in length. */
 void AppendItem(Item **liststart, const char *itemstring, const char *classes);
 void DeleteItemList(Item *item);
 void DeleteItem(Item **liststart, Item *item);

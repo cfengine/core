@@ -33,6 +33,22 @@
 #include <files_interfaces.h>
 
 /*******************************************************************/
+
+Item *ReverseItemList(Item *list)
+{
+    Item *tail = NULL;
+    while (list)
+    {
+        Item *here = list;
+        list = here->next;
+        here->next = tail;
+        tail = here;
+    }
+    return tail;
+}
+
+/*******************************************************************/
+
 void PrintItemList(const Item *list, Writer *w)
 {
     WriterWriteChar(w, '{');
@@ -283,6 +299,13 @@ void PrependFullItem(Item **liststart, const char *itemstring, const char *class
 }
 
 /*********************************************************************/
+/* Warning: doing this a lot incurs quadratic costs, as we have to run
+ * to the end of the list each time.  If you're building long lists,
+ * it is usually better to build the list with PrependItemList() and
+ * then use ReverseItemList() to get the entries in the order you
+ * wanted; for modest-sized n, 2*n < n*n, even after you've applied
+ * different fixed scalings to the two sides.
+ */
 
 void AppendItem(Item **liststart, const char *itemstring, const char *classes)
 {

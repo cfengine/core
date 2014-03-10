@@ -605,6 +605,7 @@ PromiseResult ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes
             {
                 cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Error rendering mustache template '%s'", a.edit_template);
                 result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
+                JsonDestroy(default_template_data);
                 WriterClose(template_writer);
                 WriterClose(ouput_writer);
                 goto exit;

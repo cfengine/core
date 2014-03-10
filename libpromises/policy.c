@@ -871,7 +871,7 @@ bool PolicyCheckDuplicateHandles(const Policy *policy, Seq *errors)
 {
     bool success = true;
 
-    Set *used_handles = SetNew((MapHashFn)StringHash, (MapKeyEqualFn)StringSafeEqual, NULL);
+    Map *recorded = MapNew((MapHashFn)StringHash, (MapKeyEqualFn)StringSafeEqual, NULL, NULL);
 
     for (size_t bpi = 0; bpi < SeqLength(policy->bundles); bpi++)
     {
@@ -884,27 +884,37 @@ bool PolicyCheckDuplicateHandles(const Policy *policy, Seq *errors)
             for (size_t ppi = 0; ppi < SeqLength(promise_type->promises); ppi++)
             {
                 Promise *promise = SeqAt(promise_type->promises, ppi);
-
                 const char *handle = PromiseGetHandle(promise);
 
                 if (handle)
                 {
-                    if (SetContains(used_handles, handle))
+                    if (IsCf3VarString(handle))
                     {
-                        SeqAppend(errors, PolicyErrorNew(POLICY_ELEMENT_TYPE_PROMISE, promise,
-                                                         POLICY_ERROR_PROMISE_DUPLICATE_HANDLE, handle));
-                        success = false;
+                        // can't check dynamic handles
+                        continue;
+                    }
+
+                    const Promise *other_promise = MapGet(recorded, handle);
+                    if (other_promise)
+                    {
+                        // Need to make this smarter by comparing parsed expressions for equivalency.
+                        if (strcmp(promise->classes, other_promise->classes) == 0)
+                        {
+                            SeqAppend(errors, PolicyErrorNew(POLICY_ELEMENT_TYPE_PROMISE, promise,
+                                                             POLICY_ERROR_PROMISE_DUPLICATE_HANDLE, handle));
+                            success = false;
+                        }
                     }
                     else
                     {
-                        SetAdd(used_handles, (void *)handle); /* This Set does not free values */
+                        MapInsert(recorded, (void *)handle, (void *)promise);
                     }
                 }
             }
         }
     }
 
-    SetDestroy(used_handles);
+    MapDestroy(recorded);
 
     return success;
 }

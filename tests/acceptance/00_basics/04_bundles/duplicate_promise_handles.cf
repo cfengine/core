@@ -23,6 +23,14 @@ bundle agent test
     "duplicate"
       handle => "$(this.handle)_$(this.promiser)",
       string => "bar";
+
+
+  # Two promises with equal handle but different classes is allowed
+  reports:
+   debian::
+    "this is debian" handle => "os_handle";
+   redhat::
+    "this is redhat" handle => "os_handle";
 }
 
 bundle agent check

@@ -932,14 +932,9 @@ int ByteSizeList(const Item *list)
 
 bool RawSaveItemList(const Item *liststart, const char *filename)
 {
-    char new[CF_BUFSIZE], backup[CF_BUFSIZE];
-
+    char new[CF_BUFSIZE];
     strcpy(new, filename);
     strcat(new, CF_EDITED);
-
-    strcpy(backup, filename);
-    strcat(backup, CF_SAVED);
-
     unlink(new);                /* Just in case of races */
 
     FILE *fp = safe_fopen(new, "w");

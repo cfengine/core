@@ -809,8 +809,6 @@ void DeleteItem(Item **liststart, Item *item)
 
 int DeleteItemGeneral(Item **list, const char *string, ItemMatchType type)
 {
-    int match = 0;
-
     if (list == NULL)
     {
         return false;
@@ -822,35 +820,36 @@ int DeleteItemGeneral(Item **list, const char *string, ItemMatchType type)
     {
         if (ip->name != NULL)
         {
+            bool match = false, flip = false;
             switch (type)
             {
             case ITEM_MATCH_TYPE_LITERAL_START_NOT:
-                match = (strncmp(ip->name, string, strlen(string)) != 0);
-                break;
+                flip = true; /* and fall through */
             case ITEM_MATCH_TYPE_LITERAL_START:
                 match = (strncmp(ip->name, string, strlen(string)) == 0);
                 break;
+
             case ITEM_MATCH_TYPE_LITERAL_COMPLETE_NOT:
-                match = (strcmp(ip->name, string) != 0);
-                break;
+                flip = true; /* and fall through */
             case ITEM_MATCH_TYPE_LITERAL_COMPLETE:
                 match = (strcmp(ip->name, string) == 0);
                 break;
+
             case ITEM_MATCH_TYPE_LITERAL_SOMEWHERE_NOT:
-                match = (strstr(ip->name, string) == NULL);
-                break;
+                flip = true; /* and fall through */
             case ITEM_MATCH_TYPE_LITERAL_SOMEWHERE:
                 match = (strstr(ip->name, string) != NULL);
                 break;
+
             case ITEM_MATCH_TYPE_REGEX_COMPLETE_NOT:
+                flip = true; /* and fall through */
             case ITEM_MATCH_TYPE_REGEX_COMPLETE:
                 match = StringMatchFull(string, ip->name);
-
-                if (type == ITEM_MATCH_TYPE_REGEX_COMPLETE_NOT)
-                {
-                    match = !match;
-                }
                 break;
+            }
+            if (flip)
+            {
+                match = !match;
             }
 
             if (match)

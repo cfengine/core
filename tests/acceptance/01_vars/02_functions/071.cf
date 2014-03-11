@@ -54,7 +54,7 @@ bundle agent check
 {
   vars:
       windows::
-        "testfilesize" int => "29";
+        "testfilesize" int => "30";
       !windows::
         "testfilesize" int => "27";
 

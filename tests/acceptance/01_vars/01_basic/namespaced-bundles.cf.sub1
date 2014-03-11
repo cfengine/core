@@ -9,3 +9,10 @@ bundle agent unique
     DEBUG::
       "$(this.bundle): run";
 }
+
+bundle agent unique2(x,y)
+{
+  reports:
+    DEBUG::
+      "$(this.bundle): run($(x), $(y))";
+}

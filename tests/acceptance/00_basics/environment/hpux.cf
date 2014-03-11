@@ -11,16 +11,6 @@ body common control
       version => "1.0";
 }
 
-bundle agent init
-{
-}
-
-
-bundle agent test
-{
-}
-
-
 bundle agent check
 {
   vars:
@@ -41,13 +31,21 @@ bundle agent check
       "skipped" and => { "unknown_flavor", "unknown_arch" };
 
   reports:
-    DEBUG::
-      "check $(checks) was OK" ifvarclass => "ok_$(checks)";
-      "check $(checks) was not OK" ifvarclass => "!ok_$(checks).!unknown_$(checks)";
+    EXTRA::
+      "check $(checks) was OK: expected '$(expected[$(checks)])' matches sys.$(checks)" ifvarclass => "ok_$(checks)";
       "check $(checks) was unknown (skipped)" ifvarclass => "unknown_$(checks)";
 
-    ok||skipped::
-      "$(this.promise_filename) Pass";
-    !ok.!skipped::
-      "$(this.promise_filename) FAIL";
+    DEBUG::
+      "check $(checks) was not OK: expected '$(expected[$(checks)])' does not match sys.$(checks) = '$(sys.$(checks))'"
+      ifvarclass => "!ok_$(checks).!unknown_$(checks)";
+
+  methods:
+    !skipped::
+      "" usebundle => dcs_passif_expected("ok_flavor,ok_arch", # expected
+                                          "", # not expected
+                                          $(this.promise_filename)),
+      inherit => "true";
+
+    skipped::
+      "" usebundle => dcs_pass($(this.promise_filename));
 }

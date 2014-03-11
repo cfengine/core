@@ -41,10 +41,6 @@ body report_data_select test_report_filter
       classes_exclude => { "lala.*", "lalala.*" };
       variables_include => { "lala.*", "lalala.*" };
       variables_exclude => { "lala.*", "lalala.*" };
-      promise_notkept_log_include => { "lala.*", "lalala.*" };
-      promise_notkept_log_exclude => { "lala.*", "lalala.*" };
-      promise_repaired_log_include => { "lala.*", "lalala.*" };
-      promise_repaired_log_exclude => { "lala.*", "lalala.*" };
       monitoring_include => { "lala.*", "lalala.*" };
       monitoring_exclude => { "lala.*", "lalala.*" };
 }

@@ -121,6 +121,11 @@ bool ClassTablePut(ClassTable *table, const char *ns, const char *name, bool is_
         ClassInit(cls, ns, name, is_soft, scope);
         // NULL tags are OK (but you want to give good tags, don't you?)
         cls->tags = StringSetFromString(tags, ',');
+        if (!is_soft && !StringSetContains(cls->tags, "hc"))
+        {
+            StringSetAdd(cls->tags, xstrdup("hc"));
+        }
+
         return RBTreePut(table->classes, (void *)cls->hash, cls);
     }
 }

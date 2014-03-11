@@ -264,6 +264,7 @@ runtest() {
 
     # Prepare workdir
     WORKDIR="$BASE_WORKDIR/$FLATNAME"
+    OUTFILE=$WORKDIR/test.log
     $GAINROOT rm -rf "$WORKDIR"
     mkdir -p "$WORKDIR/bin" "$WORKDIR/tmp"
     chmod ugo+rwxt "$WORKDIR/tmp"
@@ -313,10 +314,10 @@ export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP CFENGINE_TEST_OVERRIDE_EXTENSION_LIBR
     if [ "$GDB" = 1 ]; then
       $GAINROOT "$WORKDIR/runtest"
     else
-      OUT=$($GAINROOT "$WORKDIR/runtest")
+      $GAINROOT "$WORKDIR/runtest" >$OUTFILE 2>&1
     fi
     RETVAL=$?
-    echo "$OUT" >> "$LOG"
+    cat $OUTFILE >> "$LOG"
     echo >> "$LOG"
     echo "Return code is $RETVAL." >> "$LOG"
 
@@ -336,26 +337,26 @@ export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP CFENGINE_TEST_OVERRIDE_EXTENSION_LIBR
       # Some states are output by default.cf.sub, therefore check for both TEST
       # prefix and default.cf.sub prefix.
       ESCAPED_TEST="$(echo "\($TEST\|default.cf.sub\)" | sed -e 's/\./\\./g')"
-      if echo "$OUT" | grep -q -e "R: .*$ESCAPED_TEST XFAIL"; then
+      if  grep -q -e "R: .*$ESCAPED_TEST XFAIL" $OUTFILE; then
         # Check for other test case outcomes than fail. Should not happen.
-        if echo "$OUT" | grep -e "R: .*$ESCAPED_TEST " | grep -v -q -e "R: .*$ESCAPED_TEST X\?FAIL"; then
+        if  grep -e "R: .*$ESCAPED_TEST " $OUTFILE | grep -v -q -e "R: .*$ESCAPED_TEST X\?FAIL"; then
           RESULT=FAIL
           RESULT_MSG="${COLOR_FAILURE}FAIL (Tried to suppress nonexistent failure)${COLOR_NORMAL}"
         else
-          REDMINE="$(echo "$OUT" | grep -e "R: .*$ESCAPED_TEST XFAIL" | sed -e "s,.*XFAIL/redmine\([0-9][0-9]*\).*,\1,")"
+          REDMINE="$(grep -e "R: .*$ESCAPED_TEST XFAIL" $OUTFILE | sed -e "s,.*XFAIL/redmine\([0-9][0-9]*\).*,\1,")"
           RESULT=XFAIL
           RESULT_MSG="${COLOR_WARNING}FAIL (Suppressed, Redmine #$REDMINE)${COLOR_NORMAL}"
         fi
-      elif echo "$OUT" | grep -q -e "R: .*$ESCAPED_TEST FAIL/no_redmine_number"; then
+      elif  grep -q -e "R: .*$ESCAPED_TEST FAIL/no_redmine_number" $OUTFILE; then
         RESULT=FAIL
         RESULT_MSG="${COLOR_FAILURE}FAIL (Tried to suppress failure, but no Redmine issue number is provided)${COLOR_NORMAL}"
-      elif echo "$OUT" | grep -q -e "R: .*$ESCAPED_TEST Pass"; then
+      elif  grep -q -e "R: .*$ESCAPED_TEST Pass" $OUTFILE; then
         RESULT=Pass
         RESULT_MSG="${COLOR_SUCCESS}Pass${COLOR_NORMAL}"
-      elif echo "$OUT" | grep -q -e "R: .*$ESCAPED_TEST Skip/unsupported"; then
+      elif  grep -q -e "R: .*$ESCAPED_TEST Skip/unsupported" $OUTFILE; then
         RESULT=Skip
         RESULT_MSG="${COLOR_WARNING}Skipped (No platform support)${COLOR_NORMAL}"
-      elif echo "$OUT" | grep -q -e "R: .*$ESCAPED_TEST Skip/needs_work"; then
+      elif  grep -q -e "R: .*$ESCAPED_TEST Skip/needs_work" $OUTFILE; then
         RESULT=Skip
         RESULT_MSG="${COLOR_WARNING}Skipped (Test needs work)${COLOR_NORMAL}"
       else
@@ -399,7 +400,8 @@ export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP CFENGINE_TEST_OVERRIDE_EXTENSION_LIBR
       echo $RESULT $TEST >> "$SUMMARY"
       ( echo "        <failure type=\"$RESULT\""
         echo "                 message=\"$RESULT_MSG $TEST\">"
-        echo "        $OUT</failure>"
+        cat $OUTFILE
+        echo "        </failure>"
       ) >> "$XMLTMP"
       FAILED_TESTS=$(($FAILED_TESTS + 1))
       if [ "$RESULT" = "XFAIL" ]; then
@@ -410,7 +412,8 @@ export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP CFENGINE_TEST_OVERRIDE_EXTENSION_LIBR
     Skip)
       echo $RESULT $TEST >> "$SUMMARY"
       ( echo "        <skipped type=\"$RESULT_MSG\">"
-        echo "        $OUT</skipped>"
+        cat $OUTFILE
+        echo "        </skipped>"
       ) >> "$XMLTMP"
       SKIPPED_TESTS=$(($SKIPPED_TESTS + 1))
       ;;

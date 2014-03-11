@@ -246,6 +246,18 @@ bool IsItemIn(const Item *list, const char *item)
 }
 
 /*********************************************************************/
+/* True precisely if the lists are of equal length and every entry of
+ * the first appears in the second.  As long as each list is known to
+ * have no duplication of its entries, this is equivalent to testing
+ * they have the same set of entries (ignoring order).
+ *
+ * This is not, in general, the same as the lists being equal !  They
+ * may have the same entries in different orders.  If the first list
+ * has some duplicate entries, the second list can have some entries
+ * not in the first, yet compare equal.  Two lists with the same set
+ * of entries but with different multiplicities are equal or different
+ * precisely if of equal length.
+ */
 
 bool ListsCompare(const Item *list1, const Item *list2)
 {

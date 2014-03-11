@@ -1,0 +1,56 @@
+#######################################################
+#
+# Test that this.promiser expands in classes bodies
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+  files:
+    "$(G.testdir)/testing/."
+      create => "true";
+ 
+    "$(G.testdir)/testing/foo"
+      create => "true";
+}
+
+#######################################################
+
+bundle agent test
+{
+  files:
+    linux::
+      "$(G.testdir)/."
+        depth_search => default_cf_sub_recurse("inf"),
+        transformer => "/bin/echo $(this.promiser)",
+        classes => default_cf_sub_scoped_generic_classes($(this.promiser), "namespace");
+}
+
+#######################################################
+
+bundle agent check
+{
+  vars:
+    "expected_class" string => canonify("$(G.testdir)/testing/./foo_reached");
+
+  classes:
+      "ok" expression => "$(expected_class)";
+
+  reports:
+    DEBUG::
+      "Expected Class: $(expected_class)";
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}
+

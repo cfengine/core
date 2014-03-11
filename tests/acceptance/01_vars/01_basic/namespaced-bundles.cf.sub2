@@ -9,3 +9,11 @@ bundle agent unique
     DEBUG::
       "$(this.bundle): run";
 }
+
+
+bundle agent unique2(justone)
+{
+  reports:
+    DEBUG::
+      "$(this.bundle): run($(justone))";
+}

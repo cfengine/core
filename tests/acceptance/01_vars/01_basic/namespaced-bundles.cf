@@ -18,6 +18,8 @@ bundle agent test
   methods:
       "1" usebundle => namespaced_bundles_1:unique;
       "2" usebundle => namespaced_bundles_2:unique;
+      "3" usebundle => namespaced_bundles_1:unique2("a", "b");
+      "4" usebundle => namespaced_bundles_2:unique2("one value");
 }
 
 bundle agent check

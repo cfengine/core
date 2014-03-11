@@ -234,9 +234,14 @@ ClassRef ClassRefParse(const char *expr)
     else
     {
         char *ns = NULL;
-        if (strncmp("default", expr, name_start - expr) != 0)
+        if ((name_start - expr) > 0)
         {
             ns = xstrndup(expr, name_start - expr);
+        }
+        else
+        {
+            // this would be invalid syntax
+            ns = xstrdup("");
         }
         char *name = xstrdup(name_start + 1);
         return (ClassRef) { .ns = ns, .name = name };

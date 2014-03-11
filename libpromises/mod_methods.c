@@ -58,7 +58,7 @@ static bool MethodsParseTreeCheck(const Promise *pp, Seq *errors)
                 // HACK: exploiting the fact that class-references and call-references are similar
                 FnCall *call = RvalFnCallValue(cp->rval);
                 ClassRef ref = ClassRefParse(call->name);
-                if (!ClassRefIsQualified(ref) && strncmp(call->name, "default:", sizeof("default:") - 1) != 0)
+                if (!ClassRefIsQualified(ref))
                 {
                     ClassRefQualify(&ref, PromiseGetNamespace(pp));
                 }

@@ -1903,7 +1903,7 @@ const Bundle *EvalContextResolveCallExpression(const EvalContext *ctx, const Pol
     if (!ClassRefIsQualified(ref))
     {
         const char *ns = EvalContextCurrentNamespace(ctx);
-        if (ns && strncmp(callee_reference, "default:", sizeof("default:") - 1) != 0) // ugh, must unhack!!
+        if (ns)
         {
             ClassRefQualify(&ref, ns);
         }

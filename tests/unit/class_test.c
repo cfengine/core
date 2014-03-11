@@ -15,7 +15,7 @@ static void test_class_ref(void)
 
     {
         ClassRef ref = ClassRefParse("default:class");
-        assert_true(ref.ns == NULL);
+        assert_string_equal("default", ref.ns);
         assert_string_equal("class", ref.name);
         char *expr = ClassRefToString(ref.ns, ref.name);
         assert_string_equal("class", expr);

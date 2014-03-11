@@ -1898,20 +1898,21 @@ const void *EvalContextVariableControlCommonGet(const EvalContext *ctx, CommonCo
 const Bundle *EvalContextResolveCallExpression(const EvalContext *ctx, const Policy *policy,
                                                const char *callee_reference, const char *callee_type)
 {
-    // HACK: Because callee reference names are equivalent to class names, we abuse ClassRef here
+    // HACK: Because call reference names are equivalent to class names, we abuse ClassRef here
     ClassRef ref = ClassRefParse(callee_reference);
-    if (!ref.ns)
+    if (!ClassRefIsQualified(ref))
     {
         const char *ns = EvalContextCurrentNamespace(ctx);
         if (ns && strncmp(callee_reference, "default:", sizeof("default:") - 1) != 0) // ugh, must unhack!!
         {
-            ref.ns = xstrdup(ns);
+            ClassRefQualify(&ref, ns);
         }
         else
         {
-            ref.ns = xstrdup(NamespaceDefault());
+            ClassRefQualify(&ref, NamespaceDefault());
         }
     }
+
     const Bundle *bp = NULL;
     for (size_t i = 0; i < SeqLength(policy->bundles); i++)
     {

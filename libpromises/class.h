@@ -41,6 +41,8 @@ typedef struct
 
 ClassRef ClassRefParse(const char *expr);
 char *ClassRefToString(const char *ns, const char *name);
+bool ClassRefIsQualified(ClassRef ref);
+void ClassRefQualify(ClassRef *ref, const char *ns);
 void ClassRefDestroy(ClassRef ref);
 
 #endif

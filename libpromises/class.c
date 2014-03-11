@@ -255,6 +255,17 @@ char *ClassRefToString(const char *ns, const char *name)
     }
 }
 
+bool ClassRefIsQualified(ClassRef ref)
+{
+    return ref.ns != NULL;
+}
+
+void ClassRefQualify(ClassRef *ref, const char *ns)
+{
+    free(ref->ns);
+    ref->ns = xstrdup(ns);
+}
+
 void ClassRefDestroy(ClassRef ref)
 {
     free(ref.ns);

@@ -9,7 +9,7 @@ bundle agent mytest(a)
       "ns1global" expression => "any", scope => "namespace";
 
   vars:
-    cfengine3::
+    cfengine_3::
       "ns1string" string => $(this.promise_dirname);
 
   files:
@@ -29,7 +29,7 @@ body file control
 bundle agent mytest(a,b)
 {
   classes:
-      "ns2global" expression => "cfengine3", scope => "namespace";
+      "ns2global" expression => "cfengine_3", scope => "namespace";
 
   vars:
       "ns2string" string => $(sys.fqhost);

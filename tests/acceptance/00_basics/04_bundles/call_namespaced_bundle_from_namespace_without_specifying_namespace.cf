@@ -1,0 +1,109 @@
+# Test that namespaced bundles that call other namespaced bundles can do so
+# without specifying their own namespace
+# Redmine:4289 (https://cfengine.com/dev/issues/4289)
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle agent init
+{
+  files:
+    "$(G.testfile)"
+      create => "true",
+      edit_defaults => empty,
+      edit_line => insert_lines($(g.policy_file_content));
+}
+
+bundle agent test
+{
+  vars:
+      "agent_output"
+        string => execresult("$(sys.cf_agent) -KIf $(G.testfile) -b testing:one", "noshell"); 
+
+}
+
+bundle agent check
+{
+  classes:
+      "OK_non_specified_namespace" expression => regcmp(".*OKI DOKI.*", $(test.agent_output));
+      "OK_specified_namespace" expression => regcmp(".*artichokie*", $(test.agent_output));
+
+      "ok" and => {
+                    "OK_non_specified_namespace",
+                    "OK_specified_namespace",
+                  };
+
+  reports:
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+
+    DEBUG::
+      "agent output: 
+===============================================================================
+$(test.agent_output)
+===============================================================================";
+}
+
+
+
+bundle common g
+{
+  vars:
+    "policy_file_content" string => '
+body file control
+{
+  namespace => "testing";
+}
+
+bundle agent one
+{
+  methods:
+    "call namespaced bundle from namespace"
+      usebundle => two;
+    "call namespaced bundle from namespace and specify the namespace"
+      usebundle => testing:three;
+}
+
+bundle agent two
+{
+  reports:
+    "OKI DOKI";
+}
+bundle agent three
+{
+  reports:
+    "artichokie";
+}
+';
+}
+
+
+
+body edit_defaults empty
+# @brief Empty the file before editing
+#
+# No backup is made
+{
+      empty_file_before_editing => "true";
+      edit_backup => "false";
+      #max_file_size => "300000";
+}
+
+bundle edit_line insert_lines(lines)
+# @brief Append `lines` if they don't exist in the file
+# @param lines The lines to be appended
+#
+# **See also:** [`insert_lines`][insert_lines] in
+# [`edit_line`][bundle edit_line]
+{
+  insert_lines:
+
+      "$(lines)"
+      comment => "Append lines if they don't exist";
+}

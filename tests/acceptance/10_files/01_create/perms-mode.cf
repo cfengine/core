@@ -39,6 +39,22 @@ bundle agent check
 {
   vars:
       "modes" slist => { @(test.modes) };
+    windows::
+      "win_r" string => "100444";
+      "win_w" string => "100666";
+      "expected" data => parsejson('
+{
+  "1": "$(win_r)",
+  "333": "$(win_w)",
+  "100": "$(win_r)",
+  "200": "$(win_w)",
+  "777": "$(win_w)",
+  "1111": "$(win_r)",
+  "1010": "$(win_r)",
+  "13400": "$(win_r)",
+}');
+
+    !windows::
       "expected" data => parsejson('
 {
   "1": "100001",
@@ -51,6 +67,7 @@ bundle agent check
   "13400": "103400",
 }');
 
+    any::
       "actual[$(modes)]" string => filestat("$(G.testdir)/$(modes)", "modeoct");
 
   classes:

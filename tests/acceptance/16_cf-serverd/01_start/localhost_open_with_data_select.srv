@@ -12,7 +12,7 @@ body common control
 body server control
 
 {
-      port => "9876";
+      port => "9883";
 
       allowconnects         => { "127.0.0.1" , "::1" };
       allowallconnects      => { "127.0.0.1" , "::1" };

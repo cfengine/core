@@ -178,7 +178,7 @@ static void PurgeOldConnections(Item **list, time_t now)
 
             next = ip->next;
 
-            if (now > then + 7200)
+            if (now > then + 2 * SECONDS_PER_HOUR)
             {
                 Log(LOG_LEVEL_VERBOSE,
                     "IP address '%s' has been more than two hours in connection list, purging",

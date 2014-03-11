@@ -11,28 +11,3 @@ body common control
   version => "1.0";
   host_licenses_paid => "0";
 }
-
-#######################################################
-
-bundle agent init
-{
-  vars:
-    "dummy" string => "dummy";
-}
-
-#######################################################
-
-bundle agent test
-{
-  vars:
-    "dummy" string => "dummy";
-}
-
-#######################################################
-
-bundle agent check
-{
-  vars:
-    "dummy" string => "dummy";
-}
-

@@ -13,34 +13,16 @@ body common control
 
 #######################################################
 
-bundle agent init
-{
-  vars:
-      "dummy" string => "dummy";
-}
-
-#######################################################
-
 bundle agent test
 {
-  vars:
-      "agent" string => execresult("$(sys.cf_agent) -Kf $(this.promise_filename).sub -D AUTO 2>&1", "useshell");
-}
-
-#######################################################
-
-bundle agent check
-{
-  classes:
-      "fail" expression => regcmp(".*Your configuration promises no host_licenses_paid in common control.*", $(test.agent));
+  methods:
+      "" usebundle => dcs_passif_output(".*", # wanted
+                                        ".*Your configuration promises no host_licenses_paid in common control.*", # unwanted
+                                        "$(sys.cf_agent) -Kvf $(this.promise_filename).sub -D AUTO 2>&1| grep host_licenses_paid",
+                                        $(this.promise_filename)),
+      inherit => "true";
 
   reports:
-    DEBUG::
+    EXTRA::
       "This should only pass if $(this.promise_filename).sub does not output anything about license";
-      "Output from $(this.promise_filename).sub: $(test.agent)";
-    !fail::
-      "$(this.promise_filename) Pass";
-    fail::
-      "$(this.promise_filename) FAIL";
 }
-

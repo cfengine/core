@@ -64,6 +64,9 @@ body classes all_classes
 
 bundle agent test
 {
+  meta:
+      "test_skip_needs_work" string => "windows";
+
   files:
       "$(G.testfile)"
       copy_from => local("$(G.etc_group)"),        # Same file

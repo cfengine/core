@@ -5,9 +5,20 @@ body file control
 
 bundle agent mytest(a)
 {
+  classes:
+      "ns1global" expression => "any", scope => "namespace";
+
+  vars:
+    cfengine3::
+      "ns1string" string => $(this.promise_dirname);
+
   files:
       "$(sys.workdir)/ppkeys/."
       create => "true";
+
+  reports:
+    EXTRA::
+      "$(this.bundle): ns1string = '$(ns1string)'";
 }
 
 body file control
@@ -17,7 +28,17 @@ body file control
 
 bundle agent mytest(a,b)
 {
+  classes:
+      "ns2global" expression => "cfengine3", scope => "namespace";
+
+  vars:
+      "ns2string" string => $(sys.fqhost);
+
   files:
       "$(sys.workdir)/ppkeys/."
       create => "true";
+
+  reports:
+    EXTRA::
+      "$(this.bundle): ns2string = '$(ns2string)'";
 }

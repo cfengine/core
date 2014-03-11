@@ -3,7 +3,7 @@
 body common control
 {
       inputs => { "../../default.cf.sub", "namespaced.cf.sub" };
-      bundlesequence => { 
+      bundlesequence => {
                           ns1:mytest("x"),
                           ns2:mytest("x", "y"),
                           default("$(this.promise_filename)") };
@@ -20,10 +20,26 @@ bundle agent test
 
 bundle agent check
 {
+  vars:
+      "checks" slist => { "ns1:ns1global", "ns2:ns2global",
+                          "ns1global", "ns2global",
+                          "ok_ns1string", "ok_ns2string"
+      };
+
   classes:
-      "ok" and => { "any" };
+      "ok_ns1string" expression => strcmp($(ns1:mytest.ns1string), $(this.promise_dirname));
+      "ok_ns2string" expression => strcmp($(ns2:mytest.ns2string), $(sys.fqhost));
+
+      "ok" and => { "ns1:ns1global", "ns2:ns2global",
+                    "!ns1global", "!ns2global",
+                    "ok_ns1string", "ok_ns2string",
+      };
 
   reports:
+    EXTRA::
+      "class $(checks) is ON" ifvarclass => $(checks);
+    EXTRA::
+      "class $(checks) is OFF" ifvarclass => "!$(checks)";
     ok::
       "$(this.promise_filename) Pass";
     !ok::

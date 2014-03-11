@@ -1903,7 +1903,7 @@ const Bundle *EvalContextResolveCallExpression(const EvalContext *ctx, const Pol
     if (!ref.ns)
     {
         const char *ns = EvalContextCurrentNamespace(ctx);
-        if (ns && !strncmp(callee_reference, "default:", sizeof("default:"))) // ugh, must unhack!!
+        if (ns && strncmp(callee_reference, "default:", sizeof("default:") - 1) != 0) // ugh, must unhack!!
         {
             ref.ns = xstrdup(ns);
         }

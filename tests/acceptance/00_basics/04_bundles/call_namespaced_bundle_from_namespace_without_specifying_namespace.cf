@@ -11,18 +11,13 @@ body common control
 
 bundle agent init
 {
-  files:
-    "$(G.testfile)"
-      create => "true",
-      edit_defaults => empty,
-      edit_line => insert_lines($(g.policy_file_content));
 }
 
 bundle agent test
 {
   vars:
       "agent_output"
-        string => execresult("$(sys.cf_agent) -KIf $(G.testfile) -b testing:one", "noshell"); 
+        string => execresult("$(sys.cf_agent) -KIf $(this.promise_filename).sub -b testing:one", "noshell"); 
 
 }
 
@@ -49,41 +44,6 @@ bundle agent check
 $(test.agent_output)
 ===============================================================================";
 }
-
-
-
-bundle common g
-{
-  vars:
-    "policy_file_content" string => '
-body file control
-{
-  namespace => "testing";
-}
-
-bundle agent one
-{
-  methods:
-    "call namespaced bundle from namespace"
-      usebundle => two;
-    "call namespaced bundle from namespace and specify the namespace"
-      usebundle => testing:three;
-}
-
-bundle agent two
-{
-  reports:
-    "OKI DOKI";
-}
-bundle agent three
-{
-  reports:
-    "artichokie";
-}
-';
-}
-
-
 
 body edit_defaults empty
 # @brief Empty the file before editing

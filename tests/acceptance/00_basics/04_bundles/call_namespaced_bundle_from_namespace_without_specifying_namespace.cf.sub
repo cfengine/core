@@ -1,0 +1,24 @@
+body file control
+{
+  namespace => "testing";
+}
+
+bundle agent one
+{
+  methods:
+    "call namespaced bundle from namespace"
+      usebundle => two;
+    "call namespaced bundle from namespace and specify the namespace"
+      usebundle => testing:three;
+}
+
+bundle agent two
+{
+  reports:
+    "OKI DOKI";
+}
+bundle agent three
+{
+  reports:
+    "artichokie";
+}

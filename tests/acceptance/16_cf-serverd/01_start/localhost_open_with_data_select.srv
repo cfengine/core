@@ -37,10 +37,6 @@ bundle server access_rules()
 
 body report_data_select test_report_filter
 {
-      classes_include => { "lala.*", "lalala.*" };
-      classes_exclude => { "lala.*", "lalala.*" };
-      variables_include => { "lala.*", "lalala.*" };
-      variables_exclude => { "lala.*", "lalala.*" };
       monitoring_include => { "lala.*", "lalala.*" };
       monitoring_exclude => { "lala.*", "lalala.*" };
 }

@@ -70,7 +70,6 @@ int DeleteItemNotMatching(Item **list, const char *string);
 int DeleteItemContaining(Item **list, const char *string);
 int DeleteItemNotContaining(Item **list, const char *string);
 int ListLen(const Item *list);
-int ByteSizeList(const Item *list);
 bool IsItemIn(const Item *list, const char *item);
 bool ListsCompare(const Item *list1, const Item *list2);
 int IsMatchItemIn(const Item *list, const char *item);

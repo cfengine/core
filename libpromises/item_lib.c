@@ -584,14 +584,17 @@ char *ItemList2CSV(const Item *list)
 {
     /* After each entry, we need space for either a ',' (before the
      * next entry) or a final '\0'. */
-    int len = ByteSizeList(list) + ListLen(list);
+    int len = ItemListSize(list) + ListLen(list);
     char *s = xmalloc(len);
     *s = '\0';
 
     /* No point cycle-checking; done while computing len. */
     for (const Item *ip = list; ip != NULL; ip = ip->next)
     {
-        strcat(s, ip->name);
+        if (ip->name)
+        {
+            strcat(s, ip->name);
+        }
 
         if (ip->next)
         {
@@ -925,22 +928,6 @@ int DeleteItemNotContaining(Item **list, const char *string)  /* delete first it
 }
 
 /*********************************************************************/
-
-int ByteSizeList(const Item *list)
-{
-    int count = 0;
-    const Item *ip = list;
-    CYCLE_DECLARE(ip, slow, toggle);
-
-    while (ip)
-    {
-        count += strlen(ip->name);
-        ip = ip->next;
-        CYCLE_CHECK(ip, slow, toggle);
-    }
-
-    return count;
-}
 
 bool RawSaveItemList(const Item *liststart, const char *filename)
 {

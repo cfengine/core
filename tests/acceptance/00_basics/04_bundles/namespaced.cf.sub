@@ -33,6 +33,7 @@ bundle agent mytest(a,b)
 
   vars:
       "ns2string" string => $(sys.fqhost);
+      "ns2string2" string => $(const.t);
 
   files:
       "$(sys.workdir)/ppkeys/."

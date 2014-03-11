@@ -23,16 +23,17 @@ bundle agent check
   vars:
       "checks" slist => { "ns1:ns1global", "ns2:ns2global",
                           "ns1global", "ns2global",
-                          "ok_ns1string", "ok_ns2string"
+                          "ok_ns1string", "ok_ns2string", "ok_ns2string2",
       };
 
   classes:
       "ok_ns1string" expression => strcmp($(ns1:mytest.ns1string), $(this.promise_dirname));
       "ok_ns2string" expression => strcmp($(ns2:mytest.ns2string), $(sys.fqhost));
+      "ok_ns2string2" expression => strcmp($(ns2:mytest.ns2string2), $(const.t));
 
       "ok" and => { "ns1:ns1global", "ns2:ns2global",
                     "!ns1global", "!ns2global",
-                    "ok_ns1string", "ok_ns2string",
+                    "ok_ns1string", "ok_ns2string", "ok_ns2string2",
       };
 
   reports:

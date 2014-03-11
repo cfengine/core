@@ -1332,8 +1332,10 @@ static bool EvalContextClassPut(EvalContext *ctx, const char *ns, const char *na
 
 static const char *EvalContextCurrentNamespace(const EvalContext *ctx)
 {
-    for (int i = SeqLength(ctx->stack) - 1; i >= 0; i--)
+    size_t i = SeqLength(ctx->stack);
+    while (i > 0)
     {
+        i--;
         StackFrame *frame = SeqAt(ctx->stack, i);
         switch (frame->type)
         {
@@ -1342,7 +1344,7 @@ static const char *EvalContextCurrentNamespace(const EvalContext *ctx)
         case STACK_FRAME_TYPE_BODY:
             return frame->data.body.owner->ns;
         default:
-            break;
+            break; /* out of the switch but not the loop ! */
         }
     }
 

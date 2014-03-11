@@ -1,0 +1,37 @@
+# Test depends_on with a canonify() function call
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle agent init
+{
+}
+
+bundle agent test
+{
+  classes:
+      # this works
+      "foo1" expression => "any",
+      depends_on => { canonify($(G.testfile)) };
+
+  methods:
+      "" usebundle => test2($(G.testfile));
+}
+
+bundle agent test2(file)
+{
+  classes:
+      # this fails
+      "foo2" expression => "any",
+      depends_on => { canonify($(file)) };
+}
+
+bundle agent check
+{
+  reports:
+      "$(this.promise_filename) Pass";
+}

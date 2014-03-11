@@ -7,29 +7,11 @@ body common control
       version => "1.0";
 }
 
-bundle agent init
-{
-  vars:
-      "dummy" string => "dummy";
-}
-
 bundle agent test
 {
-  vars:
-      "subout" string => execresult("${sys.cf_agent} -Kf ${this.promise_filename}.sub", "noshell");
+  methods:
+      "" usebundle => dcs_passif_output1(".*Unknown bundle type.*", # wanted
+                                         "$(sys.cf_agent) -Kvf $(this.promise_filename).sub | $(G.grep) Unknown",
+                                         $(this.promise_filename)),
+      inherit => "true";
 }
-
-bundle agent check
-{
-  classes:
-      "ok" expression => regcmp(".*Unknown bundle type.*", "${test.subout}");
-
-  reports:
-    DEBUG::
-      "$(test.subout)";
-    ok::
-      "$(this.promise_filename) Pass";
-    !ok::
-      "$(this.promise_filename) FAIL";
-}
-

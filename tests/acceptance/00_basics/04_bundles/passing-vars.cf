@@ -7,10 +7,6 @@ body common control
       version => "1.0";
 }
 
-bundle agent init
-{
-}
-
 bundle agent test
 {
   vars:
@@ -34,7 +30,7 @@ bundle agent see_scalar(svar)
       expression => strcmp($(svar), "datax");
 
   reports:
-    DEBUG::
+    EXTRA::
       "The passed-in string was $(svar)";
 }
 
@@ -48,37 +44,38 @@ bundle agent see_slist(lvar)
       expression => strcmp($(concat), "datay1,datay2");
 
   reports:
-    DEBUG::
+    EXTRA::
       "The passed-in slist was $(lvar)";
 }
 
 bundle agent see_data(cvar_passed)
 {
   vars:
-      "concat_passed" string => storejson(cvar_passed);
+      "concat_passed" string => format('%S', cvar_passed);
 
       "cvar_local" data => parsejson('{ "hello": "there" }');
-      "concat_local" string => storejson(cvar_local);
+      "concat_local" string => format('%S', cvar_local);
 
       # generates a warning about "can't find container named cvar_passed"
       "dummy" data => mergedata(cvar_local, cvar_passed);
 
   classes:
       "saw_data" scope => "namespace",
-      expression => strcmp($(concat_passed), '{
-  "hello": "there"
-}');
+      expression => strcmp($(concat_passed), '{"hello":"there"}');
 
   reports:
-    DEBUG::
+    EXTRA::
       "The passed-in container as string was $(concat_passed)";
       "The local container as string was $(concat_local)";
 }
 
 bundle agent check
 {
-  classes:
-      "ok" and => { "saw_scalar", "saw_slist", "saw_data" };
+  methods:
+      "" usebundle => dcs_passif_expected("saw_scalar,saw_slist,saw_data", # expected
+                                          "", # not expected
+                                          $(this.promise_filename)),
+      inherit => "true";
 
   reports:
     DEBUG.!saw_scalar::
@@ -87,8 +84,4 @@ bundle agent check
       "The slist passing didn't work";
     DEBUG.!saw_data::
       "The data passing didn't work";
-    ok::
-      "$(this.promise_filename) Pass";
-    !ok::
-      "$(this.promise_filename) FAIL";
 }

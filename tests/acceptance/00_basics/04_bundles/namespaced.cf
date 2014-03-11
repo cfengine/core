@@ -6,7 +6,8 @@ body common control
       bundlesequence => {
                           ns1:mytest("x"),
                           ns2:mytest("x", "y"),
-                          default("$(this.promise_filename)") };
+                          default("$(this.promise_filename)")
+      };
       version => "1.0";
 }
 

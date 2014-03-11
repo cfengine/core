@@ -678,6 +678,11 @@ bool MissingDependencies(EvalContext *ctx, const Promise *pp)
 
     for (const Rlist *rp = PromiseGetConstraintAsList(ctx, "depends_on", pp); rp; rp = rp->next)
     {
+        if (rp->val.type != RVAL_TYPE_SCALAR)
+        {
+            return true;
+        }
+
         if (!StringSetContains(ctx->dependency_handles, RlistScalarValue(rp)))
         {
             if (LEGACY_OUTPUT)

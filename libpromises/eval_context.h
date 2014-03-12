@@ -132,7 +132,7 @@ ClassTableIterator *EvalContextClassTableIteratorNewLocal(const EvalContext *ctx
 void EvalContextClear(EvalContext *ctx);
 
 void EvalContextStackPushBundleFrame(EvalContext *ctx, const Bundle *owner, const Rlist *args, bool inherits_previous);
-void EvalContextStackPushBodyFrame(EvalContext *ctx, const Promise *caller, const Body *body, Rlist *args);
+void EvalContextStackPushBodyFrame(EvalContext *ctx, const Promise *caller, const Body *body, const Rlist *args);
 void EvalContextStackPushPromiseTypeFrame(EvalContext *ctx, const PromiseType *owner);
 void EvalContextStackPushPromiseFrame(EvalContext *ctx, const Promise *owner, bool copy_bundle_context);
 Promise *EvalContextStackPushPromiseIterationFrame(EvalContext *ctx, size_t iteration_index, const PromiseIterator *iter_ctx);
@@ -167,8 +167,10 @@ const void  *EvalContextVariableControlCommonGet(const EvalContext *ctx, CommonC
  *        Hopefully this should go away in the future if we make a more generalized API to simply call a bundle,
  *        but we have a few special rules around edit_line and so on.
  */
-const Bundle *EvalContextResolveCallExpression(const EvalContext *ctx, const Policy *policy,
+const Bundle *EvalContextResolveBundleExpression(const EvalContext *ctx, const Policy *policy,
                                                const char *callee_reference, const char *callee_type);
+const Body *EvalContextResolveBodyExpression(const EvalContext *ctx, const Policy *policy,
+                                             const char *callee_reference, const char *callee_type);
 
 /* - Parsing/evaluating expressions - */
 void ValidateClassSyntax(const char *str);

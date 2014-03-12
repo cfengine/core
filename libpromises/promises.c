@@ -38,47 +38,6 @@
 
 static void DereferenceComment(Promise *pp);
 
-/*****************************************************************************/
-
-static Body *IsBody(Seq *bodies, const char *ns, const char *name)
-{
-    if (!ns)
-    {
-        ns = "default";
-    }
-
-    for (size_t i = 0; i < SeqLength(bodies); i++)
-    {
-        Body *bp = SeqAt(bodies, i);
-
-        if (strcmp(bp->ns, ns) == 0 && strcmp(bp->name, name) == 0)
-        {
-            return bp;
-        }
-    }
-
-    return NULL;
-}
-
-static Bundle *IsBundle(Seq *bundles, const char *ns, const char *name)
-{
-    if (!ns)
-    {
-        ns = "default";
-    }
-
-    for (size_t i = 0; i < SeqLength(bundles); i++)
-    {
-        Bundle *bp = SeqAt(bundles, i);
-
-        if (strcmp(bp->ns, ns) == 0 && strcmp(bp->name, name) == 0)
-        {
-            return bp;
-        }
-    }
-
-    return NULL;
-}
 
 Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
 {
@@ -126,42 +85,30 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
     {
         Constraint *cp = SeqAt(pp->conlist, i);
 
-        Body *bp = NULL;
-        FnCall *fp = NULL;
+        const Policy *policy = PolicyFromPromise(pp);
+        const Body *bp = NULL;
+        const Rlist *args = NULL;
+        const char *body_reference = NULL;
 
         /* A body template reference could look like a scalar or fn to the parser w/w () */
-        const Policy *policy = PolicyFromPromise(pp);
-        Seq *bodies = policy ? policy->bodies : NULL;
-
-        char body_ns[CF_MAXVARSIZE] = "";
-        char body_name[CF_MAXVARSIZE] = "";
-
         switch (cp->rval.type)
         {
         case RVAL_TYPE_SCALAR:
             if (cp->references_body)
             {
-                SplitScopeName(RvalScalarValue(cp->rval), body_ns, body_name);
-                if (EmptyString(body_ns))
-                {
-                    strncpy(body_ns, PromiseGetNamespace(pp), CF_MAXVARSIZE);
-                }
-                bp = IsBody(bodies, body_ns, body_name);
+                body_reference = RvalScalarValue(cp->rval);
+                bp = EvalContextResolveBodyExpression(ctx, policy, body_reference, cp->lval);
             }
-            fp = NULL;
+            args = NULL;
             break;
         case RVAL_TYPE_FNCALL:
-            fp = RvalFnCallValue(cp->rval);
-            SplitScopeName(fp->name, body_ns, body_name);
-            if (EmptyString(body_ns))
-            {
-                strncpy(body_ns, PromiseGetNamespace(pp), CF_MAXVARSIZE);
-            }
-            bp = IsBody(bodies, body_ns, body_name);
+            body_reference = RvalFnCallValue(cp->rval)->name;
+            bp = EvalContextResolveBodyExpression(ctx, policy, body_reference, cp->lval);
+            args = RvalFnCallValue(cp->rval)->args;
             break;
         default:
             bp = NULL;
-            fp = NULL;
+            args = NULL;
             break;
         }
 
@@ -169,14 +116,14 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
 
         if (bp)
         {
-            EvalContextStackPushBodyFrame(ctx, pcopy, bp, fp ? fp->args : NULL);
+            EvalContextStackPushBodyFrame(ctx, pcopy, bp, args);
 
             if (strcmp(bp->type, cp->lval) != 0)
             {
                 Log(LOG_LEVEL_ERR,
                     "Body type mismatch for body reference '%s' in promise "
                     "at line %llu of file '%s', '%s' does not equal '%s'",
-                    body_name, (unsigned long long)pp->offset.line,
+                    body_reference, (unsigned long long)pp->offset.line,
                     PromiseGetBundle(pp)->source_path, bp->type, cp->lval);
             }
 
@@ -188,16 +135,16 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
                 cp_copy->offset = cp->offset;
             }
 
-            if (bp->args != NULL)
+            if (bp->args)
             {
                 /* There are arguments to insert */
 
-                if (fp == NULL || fp->args == NULL)
+                if (!args)
                 {
                     Log(LOG_LEVEL_ERR,
                         "Argument mismatch for body reference '%s' in promise "
                         "at line %llu of file '%s'",
-                        body_name, (unsigned long long) pp->offset.line,
+                        body_reference, (unsigned long long) pp->offset.line,
                         PromiseGetBundle(pp)->source_path);
                 }
 
@@ -217,13 +164,13 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
             {
                 /* No arguments to deal with or body undeclared */
 
-                if (fp != NULL)
+                if (args)
                 {
                     Log(LOG_LEVEL_ERR,
-                        "An apparent body \"%s()\" was undeclared or could "
+                        "An apparent body '%s' was undeclared or could "
                         "have incorrect args, but used in a promise near "
                         "line %llu of %s (possible unquoted literal value)",
-                        body_name, (unsigned long long) pp->offset.line,
+                        RvalScalarValue(cp->rval), (unsigned long long) pp->offset.line,
                         PromiseGetBundle(pp)->source_path);
                 }
                 else
@@ -255,16 +202,23 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
         {
             const Policy *policy = PolicyFromPromise(pp);
 
-            if (cp->references_body &&
-                !IsBundle(policy->bundles,
-                          EmptyString(body_ns) ? NULL : body_ns, body_name))
+            if (cp->references_body)
             {
-                Log(LOG_LEVEL_ERR,
-                    "Apparent body \"%s()\" was undeclared, but "
-                    "used in a promise near line %llu of %s "
-                    "(possible unquoted literal value)",
-                    body_name, (unsigned long long)pp->offset.line,
-                    PromiseGetBundle(pp)->source_path);
+                const Bundle *callee = EvalContextResolveBundleExpression(ctx, policy, RvalScalarValue(cp->rval), "agent");
+                if (!callee)
+                {
+                    callee = EvalContextResolveBundleExpression(ctx, policy, RvalScalarValue(cp->rval), "common");
+                }
+
+                if (!callee)
+                {
+                    Log(LOG_LEVEL_ERR,
+                        "Apparent body '%s' was undeclared, but "
+                        "used in a promise near line %llu of %s "
+                        "(possible unquoted literal value)",
+                        RvalScalarValue(cp->rval), (unsigned long long)pp->offset.line,
+                        PromiseGetBundle(pp)->source_path);
+                }
             }
 
             if (IsDefinedClass(ctx, cp->classes))

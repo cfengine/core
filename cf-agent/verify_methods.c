@@ -102,10 +102,10 @@ PromiseResult VerifyMethod(EvalContext *ctx, const Rval call, Attributes a, cons
 
     PromiseBanner(pp);
 
-    const Bundle *bp = EvalContextResolveCallExpression(ctx, PromiseGetPolicy(pp), BufferData(method_name), "agent");
+    const Bundle *bp = EvalContextResolveBundleExpression(ctx, PromiseGetPolicy(pp), BufferData(method_name), "agent");
     if (!bp)
     {
-        bp = EvalContextResolveCallExpression(ctx, PromiseGetPolicy(pp), BufferData(method_name), "common");
+        bp = EvalContextResolveBundleExpression(ctx, PromiseGetPolicy(pp), BufferData(method_name), "common");
     }
 
     PromiseResult result = PROMISE_RESULT_NOOP;

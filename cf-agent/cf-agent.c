@@ -1075,10 +1075,10 @@ static void KeepPromiseBundles(EvalContext *ctx, const Policy *policy, GenericAg
 
         if (!config->ignore_missing_bundles)
         {
-            const Bundle *bp = EvalContextResolveCallExpression(ctx, policy, name, "agent");
+            const Bundle *bp = EvalContextResolveBundleExpression(ctx, policy, name, "agent");
             if (!bp)
             {
-                bp = EvalContextResolveCallExpression(ctx, policy, name, "common");
+                bp = EvalContextResolveBundleExpression(ctx, policy, name, "common");
             }
 
             if (!bp)
@@ -1129,10 +1129,10 @@ static void KeepPromiseBundles(EvalContext *ctx, const Policy *policy, GenericAg
             break;
         }
 
-        const Bundle *bp = EvalContextResolveCallExpression(ctx, policy, name, "agent");
+        const Bundle *bp = EvalContextResolveBundleExpression(ctx, policy, name, "agent");
         if (!bp)
         {
-            bp = EvalContextResolveCallExpression(ctx, policy, name, "common");
+            bp = EvalContextResolveBundleExpression(ctx, policy, name, "common");
         }
 
         if (bp)

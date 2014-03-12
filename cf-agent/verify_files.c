@@ -483,7 +483,7 @@ PromiseResult ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes
 
         Log(LOG_LEVEL_VERBOSE, "Handling file edits in edit_line bundle '%s'", edit_bundle_name);
 
-        const Bundle *bp = EvalContextResolveCallExpression(ctx, policy, edit_bundle_name, "edit_line");
+        const Bundle *bp = EvalContextResolveBundleExpression(ctx, policy, edit_bundle_name, "edit_line");
         if (bp)
         {
             BannerSubBundle(bp, args);
@@ -523,7 +523,7 @@ PromiseResult ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes
         
         Log(LOG_LEVEL_VERBOSE, "Handling file edits in edit_xml bundle '%s'", edit_bundle_name);
 
-        const Bundle *bp = EvalContextResolveCallExpression(ctx, policy, edit_bundle_name, "edit_xml");
+        const Bundle *bp = EvalContextResolveBundleExpression(ctx, policy, edit_bundle_name, "edit_xml");
         if (bp)
         {
             BannerSubBundle(bp, args);

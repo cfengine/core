@@ -53,10 +53,6 @@ bundle common test_common
 
 bundle agent test
 {
-  meta:
-      "test_suppress_fail" string => "windows",
-        meta => { "redmine4733" };
-
   files:
 
       "$(G.testfile).actual"

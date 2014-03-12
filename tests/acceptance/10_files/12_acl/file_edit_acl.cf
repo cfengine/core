@@ -51,6 +51,9 @@ body acl testacl
 
 bundle agent test
 {
+  meta:
+      "test_skip_needs_work" string => "windows";
+
   files:
       "$(G.testdir)/file_plain"
       edit_line => file_edit;

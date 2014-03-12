@@ -26,9 +26,6 @@ bundle agent test
   vars:
       "mystring" string => "some\
 thing";
-  meta:
-      "test_suppress_fail" string => "windows",
-        meta => { "redmine4670" };
 }
 
 #######################################################
@@ -46,4 +43,3 @@ bundle agent check
     DEBUG::
       "$(test.subout)";
 }
-

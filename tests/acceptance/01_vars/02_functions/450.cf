@@ -55,11 +55,6 @@ bundle agent test
   vars:
       "cnt" int => readstringarrayidx("ary", "$(G.testfile)","^#.*",":+",10,14);
       "num" int => "3";
-
-
-  meta:
-      "test_suppress_fail" string => "windows",
-        meta => { "redmine4717" };
 }
 
 #######################################################

@@ -48,6 +48,9 @@ body acl testacl
 
 bundle agent test
 {
+  meta:
+      "test_skip_needs_work" string => "windows";
+
   files:
       "$(G.testdir)/destination_plain"
       copy_from => source_plain;

@@ -40,6 +40,9 @@ body acl acl_sanity_check
 
 bundle agent test
 {
+  meta:
+      "test_skip_needs_work" string => "windows";
+
   vars:
     linux::
       "sanity_perms" string => execresult("$(init.cmd) $(G.testdir)$(const.dirsep)file 2>&1 | $(G.grep) -v 'Removing leading'", "noshell");

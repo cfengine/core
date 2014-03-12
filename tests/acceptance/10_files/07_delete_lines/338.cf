@@ -64,10 +64,6 @@ body edit_defaults init_empty
 
 bundle agent test
 {
-  meta:
-      "test_suppress_fail" string => "windows",
-        meta => { "redmine4733" };
-
   vars:
       "tstr" slist => { "Three" };
 

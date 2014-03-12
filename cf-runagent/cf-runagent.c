@@ -411,7 +411,7 @@ static int HailServer(EvalContext *ctx, char *host)
         digest[CF_MAXVARSIZE], user[CF_SMALLBUF];
     bool gotkey;
     char reply[8];
-    bool trustkey;
+    bool trustkey = false;
 
     char *hostname, *port;
     ParseHostPort(host, &hostname, &port);

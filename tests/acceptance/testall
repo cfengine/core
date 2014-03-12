@@ -216,6 +216,9 @@ usage() {
 }
 
 runtest() {
+  # Clear local variables
+  unset AGENT TEST EXPECTED_CRASH SKIP SKIPREASON RESULT RESULT_MSG TEST_START_TIME FLATNAME WORKDIR OUTFILE
+
   AGENT="$1"
   TEST="$2"
   if [ -z "$QUIET" ]; then
@@ -412,7 +415,6 @@ export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP CFENGINE_TEST_OVERRIDE_EXTENSION_LIBR
     Skip)
       echo $RESULT $TEST >> "$SUMMARY"
       ( echo "        <skipped type=\"$RESULT_MSG\">"
-        cat $OUTFILE
         echo "        </skipped>"
       ) >> "$XMLTMP"
       SKIPPED_TESTS=$(($SKIPPED_TESTS + 1))

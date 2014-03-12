@@ -7159,7 +7159,7 @@ static const FnCallArg STOREJSON_ARGS[] =
 static const FnCallArg READTCP_ARGS[] =
 {
     {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Host name or IP address of server socket"},
-    {CF_VALRANGE, CF_DATA_TYPE_INT, "Port number"},
+    {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Port number or service name"},
     {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Protocol query string"},
     {CF_VALRANGE, CF_DATA_TYPE_INT, "Maximum number of bytes to read"},
     {NULL, CF_DATA_TYPE_NONE, NULL}
@@ -7267,7 +7267,7 @@ static const FnCallArg RRANGE_ARGS[] =
 static const FnCallArg SELECTSERVERS_ARGS[] =
 {
     {CF_NAKEDLRANGE, CF_DATA_TYPE_STRING, "CFEngine list identifier, the list of hosts or addresses to contact"},
-    {CF_VALRANGE, CF_DATA_TYPE_INT, "The port number"},
+    {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Port number or service name."},
     {CF_ANYSTRING, CF_DATA_TYPE_STRING, "A query string"},
     {CF_ANYSTRING, CF_DATA_TYPE_STRING, "A regular expression to match success"},
     {CF_VALRANGE, CF_DATA_TYPE_INT, "Maximum number of bytes to read from server"},

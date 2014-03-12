@@ -110,7 +110,7 @@ struct ServerConnectionState_
 
     /* TODO the following are useless with the new protocol */
     char hostname[CF_MAXVARSIZE]; /* hostname is copied from client-supplied CAUTH command */
-    int id_verified;
+    int user_data_set;
     int rsa_auth;
     int maproot;
     unsigned char *session_key;

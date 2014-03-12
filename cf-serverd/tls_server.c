@@ -485,7 +485,7 @@ int ServerTLSSessionEstablish(ServerConnectionState *conn)
         }
 
         /* skipping CAUTH */
-        conn->id_verified = 1;
+        conn->user_data_set = 1;
         /* skipping SAUTH, allow access to read-only files */
         conn->rsa_auth = 1;
         LastSaw1(conn->ipaddr, KeyPrintableHash(ConnectionInfoKey(conn->conn_info)),
@@ -563,7 +563,7 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
 
     /* Legacy stuff only for old protocol */
     assert(conn->rsa_auth == 1);
-    assert(conn->id_verified == 1);
+    assert(conn->user_data_set == 1);
 
     received = ReceiveTransaction(conn->conn_info, recvbuffer, NULL);
     if (received == -1 || received == 0)

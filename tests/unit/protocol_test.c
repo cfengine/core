@@ -73,7 +73,7 @@ static void test_command_parser(void)
     parsed = GetCommandClassic("SMD5");
     assert_int_equal(expected, parsed);
     // CAUTH
-    expected = PROTOCOL_COMMAND_AUTH_CLEAR;
+    expected = PROTOCOL_COMMAND_AUTH_PLAIN;
     parsed = GetCommandClassic("CAUTH");
     assert_int_equal(expected, parsed);
     // SAUTH
@@ -388,7 +388,7 @@ static void test_command_parser(void)
     parsed = GetCommandClassic("SMD5 123");
     assert_int_equal(expected, parsed);
     // CAUTH
-    expected = PROTOCOL_COMMAND_AUTH_CLEAR;
+    expected = PROTOCOL_COMMAND_AUTH_PLAIN;
     parsed = GetCommandClassic("CAUTH 123");
     assert_int_equal(expected, parsed);
     // SAUTH

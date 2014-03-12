@@ -18,10 +18,19 @@ bundle agent test
 {
 }
 
+body classes always(x)
+{
+      promise_repaired => { $(x) };
+      repair_failed => { $(x) };
+      repair_denied => { $(x) };
+      repair_timeout => { $(x) };
+      promise_kept => { $(x) };
+}
+
 bundle agent check
 {
   vars:
-      "checks" slist => { "ns1:ns1global", "ns2:ns2global",
+      "checks" slist => { "ns1:ns1global", "ns2:ns2global", "ns1:ns1global_from_ppkeys", "ns1:ns1global_from_ppkeys_explicit",
                           "ns1global", "ns2global",
                           "ok_ns1string", "ok_ns2string", "ok_ns2string2",
       };
@@ -31,7 +40,7 @@ bundle agent check
       "ok_ns2string" expression => strcmp($(ns2:mytest.ns2string), $(sys.fqhost));
       "ok_ns2string2" expression => strcmp($(ns2:mytest.ns2string2), $(const.t));
 
-      "ok" and => { "ns1:ns1global", "ns2:ns2global",
+      "ok" and => { "ns1:ns1global", "ns2:ns2global", "ns1:ns1global_from_ppkeys", "ns1:ppkeys",
                     "!ns1global", "!ns2global",
                     "ok_ns1string", "ok_ns2string", "ok_ns2string2",
       };
@@ -41,6 +50,14 @@ bundle agent check
       "class $(checks) is ON" ifvarclass => $(checks);
     EXTRA::
       "class $(checks) is OFF" ifvarclass => "!$(checks)";
+    DEBUG.ns1:ns1global_from_ppkeys::
+      "ns1:ns1global_from_ppkeys is on as expected";
+    DEBUG.ns1:ns1global_from_ppkeys_explicit::
+      "ns1:ns1global_from_ppkeys_explicit is on as expected";
+    DEBUG.!ns1:ns1global_from_ppkeys::
+      "ns1:ns1global_from_ppkeys is NOT on as expected";
+    DEBUG.!ns1:ns1global_from_ppkeys_explicit::
+      "ns1:ns1global_from_ppkeys_explicit is NOT on as expected";
     ok::
       "$(this.promise_filename) Pass";
     !ok::

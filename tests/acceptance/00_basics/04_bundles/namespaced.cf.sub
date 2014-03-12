@@ -8,13 +8,17 @@ bundle agent mytest(a)
   classes:
       "ns1global" expression => "any", scope => "namespace";
 
+      "ns1global_from_ppkeys" expression => "ns1ppkeys", scope => "namespace"; # should be defined
+      "ns1global_from_ppkeys_explicit" expression => "ns1:ns1ppkeys", scope => "namespace"; # prefix should not be necessary
+
   vars:
     cfengine_3::
       "ns1string" string => $(this.promise_dirname);
 
   files:
       "$(sys.workdir)/ppkeys/."
-      create => "true";
+      create => "true",
+      classes => default:always("ns1ppkeys");
 
   reports:
     EXTRA::

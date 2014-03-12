@@ -22,7 +22,7 @@ body server control
 bundle server access_rules()
 {
   access:
-       "$(G.testroot)/"
+      "$(G.testroot)/"
       admit => { "192.168.*", ".*", "10.*" },
       deny  => { "127.0*" };                     # this matches nothing
       "$(G.testdir)/"

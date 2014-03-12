@@ -1,3 +1,4 @@
+
 body common control
 {
       bundlesequence => { "access_rules" };
@@ -28,3 +29,4 @@ bundle server access_rules()
 
       # no access granted
 }
+

@@ -186,7 +186,7 @@ int TLSConnect(ConnectionInfo *conn_info, bool trust_server,
 
     if (ret == 1)
     {
-        Log(LOG_LEVEL_INFO,
+        Log(LOG_LEVEL_VERBOSE,
             "Server is TRUSTED, received key %s MATCHES stored one.",
             ConnectionInfoPrintableKeyHash(conn_info));
     }
@@ -374,7 +374,7 @@ void DisconnectServer(AgentConnection *conn)
 
         cf_closesocket(ConnectionInfoSocket(conn->conn_info));
         ConnectionInfoSetSocket(conn->conn_info, SOCKET_INVALID);
-        Log(LOG_LEVEL_INFO, "Connection to %s is closed", conn->remoteip);
+        Log(LOG_LEVEL_VERBOSE, "Connection to %s is closed", conn->remoteip);
     }
     DeleteAgentConn(conn);
 }
@@ -1369,7 +1369,7 @@ static void FlushFileStream(int sd, int toget)
     int i;
     char buffer[2];
 
-    Log(LOG_LEVEL_INFO, "Flushing rest of file...%d bytes", toget);
+    Log(LOG_LEVEL_VERBOSE, "Flushing rest of file...%d bytes", toget);
 
     for (i = 0; i < toget; i++)
     {

@@ -47,7 +47,7 @@ bundle agent start_server(server_name)
 bundle agent run_test(test_name)
 {
   vars:
-      "dlog" string => "$(sys.workdir)/agent-debug.$(test_name).log";
+      "dlog" string => "$(sys.workdir)/agent-debug.log";
   commands:
     !debug_mode::
       "$(sys.cf_agent) -Kf $(test_name) -D DEBUG,AUTO,ok";

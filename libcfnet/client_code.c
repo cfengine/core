@@ -244,7 +244,7 @@ int TLSConnect(ConnectionInfo *conn_info, bool trust_server,
 }
 
 /**
- * @NOTE if #flags.protocol_version is CF_PROTOCOL_UNDEFINED, then latest
+ * @NOTE if #flags.protocol_version is CF_PROTOCOL_UNDEFINED, then classic
  *       protocol is used by default.
  */
 AgentConnection *ServerConnection(const char *server, const char *port,
@@ -293,14 +293,13 @@ AgentConnection *ServerConnection(const char *server, const char *port,
     assert(sizeof(conn->remoteip) >= sizeof(txtaddr));
     strcpy(conn->remoteip, txtaddr);
 
-    /* Set the version to request. After TLSConnect() it will have the version
-     * we finally ended up with. */
-    conn->conn_info->type = flags.protocol_version;
-
     switch (flags.protocol_version)
     {
-    case CF_PROTOCOL_UNDEFINED:
     case CF_PROTOCOL_TLS:
+
+        /* Set the version to request during protocol negotiation. After
+         * TLSConnect() it will have the version we finally ended up with. */
+        conn->conn_info->type = CF_PROTOCOL_LATEST;
 
         ret = TLSConnect(conn->conn_info, flags.trust_server,
                          conn->remoteip, conn->username);
@@ -325,8 +324,10 @@ AgentConnection *ServerConnection(const char *server, const char *port,
                  LAST_SEEN_ROLE_CONNECT);
         break;
 
+    case CF_PROTOCOL_UNDEFINED:
     case CF_PROTOCOL_CLASSIC:
 
+        conn->conn_info->type = CF_PROTOCOL_CLASSIC;
         conn->encryption_type = CfEnterpriseOptions();
 
         if (!IdentifyAgent(conn->conn_info))

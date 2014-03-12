@@ -1,3 +1,4 @@
+
 body common control
 {
       bundlesequence => { "access_rules" };
@@ -26,7 +27,6 @@ bundle server access_rules()
 {
   access:
 
-      "/"     admit   => { @(sys.ip_addresses) };
-      # fails randomly
-      # "$(G.testdir)/source_file"     admit   => { @(sys.ip_addresses) };
+  "$(G.testdir)/source_file"     admit   => { @(sys.ip_addresses) };
 }
+

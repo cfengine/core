@@ -231,6 +231,7 @@ int SocketConnect(const char *host, const char *port,
 
                     freeaddrinfo(response2);
                     freeaddrinfo(response);
+                    cf_closesocket(sd);
                     return -1;
                 }
 

@@ -3,26 +3,35 @@
         Changes:
         - TLS authentication and fully encrypted network protocol. Changes
           specific to the new type of connections:
-            - The new networking protocol uses TLS for authentication, after
-              which all dialog is encrypted within the established TLS session.
-              cf-serverd is still able to speak the legacy protocol with old agents.
+            - The new networking protocol uses TLS for authentication,
+              after which all dialog is encrypted within the established
+              TLS session.  cf-serverd is still able to speak the legacy
+              protocol with old agents.
             - For connections using the new protocol, "admit" and "deny"
-              constraints in bundle server access_rules are being phased out,
-              preferred constraints are now "admit_ips", "admit_hostnames",
-              "admit_keys". Regular expressions are not allowed then, only CIDR
-              notation for "admit_ips", exact "SHA=..." strings for "admit_keys",
-              and exact hostnames (e.g. "cfengine.com") or subdomains (starting
-              with dot, e.g. ".cfengine.com") for admit_hostnames.
-            - The 'skipverify' option in body server control is deprecated and
-              only left for compatibility; it does nothing
-            - cf-serverd does not hang up the connection if some request fails,
-              so that the client can add more requests.
-            - For the connections using the new protocol, all of the paths in
-              bundle server access_rules now differentiate between a directory and
-              a file using the trailing slash. If the path exists then this is
-              auto-detected and trailing slash appended automatically. You have to
-              append a trailing slash manually to an inexistent or symbolic path
-              (e.g.  "/path/to/$(connection.ip)/") to force recursive access.
+              constraints in bundle server access_rules are being phased
+              out, preferred attributes are now "admit_ips", "deny_ips",
+              "admit_hostnames", "deny_hostnames", "admit_keys",
+              "deny_keys". For these new attributes regular expressions
+              are not allowed, only CIDR notation for "admit/deny_ips", exact
+              "SHA=..." strings for "admit/deny_keys", and exact hostnames
+              (e.g. "cfengine.com") or subdomains (starting with dot,
+              e.g. ".cfengine.com") for "admit/deny"_hostnames. Same rules
+              apply to 'deny_*' attributes.
+            - The 'skipverify' option in body server control is
+              deprecated and only left for compatibility; it does
+              nothing
+            - cf-serverd does not hang up the connection if some request
+              fails, so that the client can add more requests.
+            - For the connections using the new protocol, all of the
+              paths in bundle server access_rules now differentiate
+              between a directory and a file using the trailing
+              slash. If the path exists then this is auto-detected and
+              trailing slash appended automatically. You have to append
+              a trailing slash manually to an inexistent or symbolic
+              path (e.g. "/path/to/$(connection.ip)/") to force
+              recursive access.
+        - port argument in readtcp() and selectservers() may be a
+          service name (e.g. "http", "pop3").
         - Enable source file in agent copy_from promises to be a relative path.
         - #TODO# Changes to logging output
             - add process name and pid in syslog message (GitHub #789)
@@ -30,7 +39,8 @@
                   - INFO logs only failures
                   - VERBOSE logs successful requests as well
                   - DEBUG logs actual protocol traffic.
-            - cf-serverd now logs the relevant client IP address on each message.
+            - cf-serverd now logs the relevant client IP address on
+              each message.
             - Logging contexts to local database (cf_classes.tcdb) has been deprecated.
             - 'usebundle' promisees are logged for all the bundle promises
             - output from 'reports' promises has nothing prefixed except 'R: '
@@ -42,11 +52,12 @@
             - cf_promises_validated is now in JSON format
                 - timestamp key is epoch of last time validated
         - cf-promises when run without --full-check (-c) no longer errors on missing bodies
-
         - Linux flavor "SUSE" now correctly spelled with all uppercase in variables and class names
-        (Redmine #3734).
+          (Redmine #3734).
         - $(this.promise_filename) and $(..._dirname) variables are now absolute paths. (Redmine #3839)
         - including the same file multiple times in 'body control inputs' is not an error
+        - portnumber in body copy_from now supports service names like
+          "cfengine", "pop3" etc, check /etc/services for more.
 
         New features:
 	- masterfiles
@@ -58,15 +69,23 @@
             - cf_promises_release_id contains the policy release ID which is the GIT HEAD SHA if available or hash of tree
 
         - New promise type "users" for managing local user accounts.
+        - New attribute "allowlegacyconnects" in body server control, which
+          enables serving policy via non-latest cfengine protocol, to the given
+          list of hosts.
+        - New attribute "protocolversion" in body copy_from. Allowed values
+          at the moment: "0" or "undefined", "classic" or "1", "latest" or
+          "2". By leaving it undefined the latest protocol is used.
         - New in 'bundle server access_rules'
-            - Constraints "admit_ips", "admit_hostnames", "admit_keys"
-            - "admit_keys" adds the new functionality of controlling access according to
-              host identity, regardless of the connecting IP.
+            - Attributes "admit_ips", "admit_hostnames", "admit_keys",
+              "deny_ips", "deny_hostnames", "deny_keys"
+            - "admit_keys" and "deny_keys" add the new functionality
+              of controlling access according to host identity,
+              regardless of the connecting IP.
             - These new constaints and the paths in access_rules, can contain
               special variables "$(connection.ip)", "$(connection.hostname)",
               "$(connection.key)", which are expanded dynamically for every
               received connection.
-            - New "shortcut" constraint in bundle server access_rules used to
+            - New "shortcut" attribute in bundle server access_rules used to
               dynamically expand non-absolute request paths.
         - New command line options for agent binaries
             - New options to cf-promises

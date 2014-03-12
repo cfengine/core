@@ -174,18 +174,18 @@ int ServerTLSPeek(ConnectionInfo *conn_info)
     ssize_t got = recv(ConnectionInfoSocket(conn_info), buf, sizeof(buf), MSG_PEEK);
     if (got == -1)
     {
-        Log(LOG_LEVEL_ERR, "TCP connection: %s", GetErrorStr());
+        Log(LOG_LEVEL_ERR, "TCP receive error: %s", GetErrorStr());
         return -1;
     }
     else if (got == 0)
     {
-        Log(LOG_LEVEL_ERR,
+        Log(LOG_LEVEL_NOTICE,
             "Peer closed TCP connection without sending data!");
         return -1;
     }
     else if (got < peek_size)
     {
-        Log(LOG_LEVEL_WARNING,
+        Log(LOG_LEVEL_NOTICE,
             "Peer sent only %lld bytes! Considering the protocol as Classic",
             (long long)got);
         ConnectionInfoSetProtocolVersion(conn_info, CF_PROTOCOL_CLASSIC);
@@ -217,6 +217,8 @@ int ServerNegotiateProtocol(const ConnectionInfo *conn_info)
 {
     int ret;
     char input[CF_SMALLBUF] = "";
+    /* The only protocol we support inside TLS, for now... */
+    const int SERVER_PROTOCOL_VERSION = CF_PROTOCOL_LATEST;
 
     /* Send "CFE_v%d cf-serverd version". */
     char version_string[CF_MAXVARSIZE];
@@ -227,7 +229,7 @@ int ServerNegotiateProtocol(const ConnectionInfo *conn_info)
     ret = TLSSend(ConnectionInfoSSL(conn_info), version_string, len);
     if (ret != len)
     {
-        Log(LOG_LEVEL_ERR, "Connection was hung up!");
+        Log(LOG_LEVEL_NOTICE, "Connection was hung up!");
         return -1;
     }
 
@@ -235,7 +237,7 @@ int ServerNegotiateProtocol(const ConnectionInfo *conn_info)
     ret = TLSRecvLine(ConnectionInfoSSL(conn_info), input, sizeof(input));
     if (ret <= 0)
     {
-        Log(LOG_LEVEL_ERR,
+        Log(LOG_LEVEL_NOTICE,
             "Client closed connection early! He probably does not trust our key...");
         return -1;
     }
@@ -244,13 +246,14 @@ int ServerNegotiateProtocol(const ConnectionInfo *conn_info)
     ret = sscanf(input, "CFE_v%d", &version_received);
     if (ret != 1)
     {
-        Log(LOG_LEVEL_ERR,
+        Log(LOG_LEVEL_NOTICE,
             "Protocol version negotiation failed! Received: %s",
             input);
         return -1;
     }
 
     /* For now we support only one version, so just check they match... */
+    /* TODO value should not be hardcoded but compared to enum ProtocolVersion. */
     if (version_received == SERVER_PROTOCOL_VERSION)
     {
         char s[] = "OK\n";
@@ -260,7 +263,7 @@ int ServerNegotiateProtocol(const ConnectionInfo *conn_info)
     {
         char s[] = "BAD unsupported protocol version\n";
         TLSSend(ConnectionInfoSSL(conn_info), s, sizeof(s)-1);
-        Log(LOG_LEVEL_ERR,
+        Log(LOG_LEVEL_NOTICE,
             "Client advertises unsupported protocol version: %d", version_received);
         version_received = 0;
     }
@@ -307,7 +310,7 @@ int ServerIdentifyClient(const ConnectionInfo *conn_info,
             }
             else
             {
-                Log(LOG_LEVEL_ERR, "IDENTITY parameter too long: %s=%s",
+                Log(LOG_LEVEL_NOTICE, "Received too long IDENTITY: %s=%s",
                     word1, word2);
                 return -1;
             }
@@ -339,7 +342,7 @@ int ServerSendWelcome(const ServerConnectionState *conn)
                            "USERNAME", conn->username);
         if (ret >= sizeof(s) - len)
         {
-            Log(LOG_LEVEL_ERR, "Sending OK WELCOME message truncated: %s", s);
+            Log(LOG_LEVEL_NOTICE, "Sending OK WELCOME message truncated: %s", s);
             return -1;
         }
         len += ret;
@@ -402,7 +405,7 @@ int ServerTLSSessionEstablish(ServerConnectionState *conn)
                 if (ret <= 0)
                 {
                     Log(LOG_LEVEL_VERBOSE, "The accept operation was retried and failed");
-                    TLSLogError(ssl, LOG_LEVEL_ERR, "Connection handshake server", ret);
+                    TLSLogError(ssl, LOG_LEVEL_NOTICE, "Connection handshake server", ret);
                     return -1;
                 }
                 Log(LOG_LEVEL_VERBOSE, "The accept operation was retried and succeeded");
@@ -410,7 +413,7 @@ int ServerTLSSessionEstablish(ServerConnectionState *conn)
             else
             {
                 Log(LOG_LEVEL_VERBOSE, "The connect operation cannot be retried");
-                TLSLogError(ssl, LOG_LEVEL_ERR, "Connection handshake server", ret);
+                TLSLogError(ssl, LOG_LEVEL_NOTICE, "Connection handshake server", ret);
                 return -1;
             }
         }
@@ -473,8 +476,10 @@ int ServerTLSSessionEstablish(ServerConnectionState *conn)
             }
             else
             {
-                Log(LOG_LEVEL_ERR, "TRUST FAILED, WARNING: possible MAN IN THE MIDDLE attack, dropping connection!");
-                Log(LOG_LEVEL_ERR, "Open server's ACL if you really want to start trusting this new key.");
+                Log(LOG_LEVEL_NOTICE,
+                    "TRUST FAILED, WARNING: possible MAN IN THE MIDDLE attack, dropping connection!");
+                Log(LOG_LEVEL_NOTICE,
+                    "Open server's ACL if you really want to start trusting this new key.");
                 return -1;
             }
         }
@@ -983,9 +988,11 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
     /* We should only reach this point if something went really bad, and
      * close connection. In all other cases (like access denied) connection
      * shouldn't be closed.
-     * TODO So we need this function to return more than
-     * true/false. -1 for error, 0 on success, 1 on access denied. It can be
-     * an option if connection will close on denial. */
+
+     * TODO So we need this function to return more than true/false, because
+     * now we return true even when access is denied! E.g. return -1 for
+     * error, 0 on success, 1 on access denied. It can be an option if
+     * connection will close on denial. */
 
 protocol_error:
     strcpy(sendbuffer, "BAD: Request denied");

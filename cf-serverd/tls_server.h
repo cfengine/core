@@ -34,10 +34,6 @@
 #include <server.h>                                /* ServerConnectionState */
 
 
-/* The only protocol we support inside TLS, for now... */
-#define SERVER_PROTOCOL_VERSION 1
-
-
 bool ServerTLSInitialize();
 int ServerTLSPeek(ConnectionInfo *conn_info);
 int ServerNegotiateProtocol(const ConnectionInfo *conn_info);

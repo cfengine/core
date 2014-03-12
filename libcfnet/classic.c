@@ -25,7 +25,6 @@
 
 #include <classic.h>
 
-#include <cfnet.h>
 #include <logging.h>
 #include <misc_lib.h>
 
@@ -48,11 +47,12 @@ static bool LastRecvTimedOut(void)
     return false;
 }
 
-/** @brief Recieve up to toget bytes, plus a '\0', into buffer from sd.
+/**
+ * @brief Recieve up to #toget bytes, plus a '\0', into buffer from sd.
  * @param sd Socket descriptor
  * @param buffer Buffer into which to read data
  * @param toget Number of bytes to read; a '\0' shall be written after
- * the data; buffer must have space for that.
+ *        the data; buffer must have space for that.
  * @return -1 on error; or actual length read.
  */
 int RecvSocketStream(int sd, char buffer[CF_BUFSIZE], int toget)

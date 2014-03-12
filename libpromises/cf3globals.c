@@ -104,13 +104,6 @@ int CF_DEFAULT_DIGEST_LEN; /* GLOBAL_C, initialized later */
 time_t CFSTARTTIME; /* GLOBAL_E, initialized later */
 
 /*
-  Set in cf-serverd (from control body)/GenericAgentInitialize (defaults)
-
-  Used in network code
-*/
-int CFENGINE_PORT = 5308; /* GLOBAL_P GLOBAL_E */
-
-/*
   Set in cf-agent/cf-runagent (from control body).
 
   Used as a timeout for socket operations in network code.
@@ -149,7 +142,7 @@ int VEXPIREAFTER = 120; /* GLOBAL_P */
 
   Utilized in server/client code to bind sockets.
 */
-char BINDINTERFACE[CF_BUFSIZE] = ""; /* GLOBAL_P */
+char BINDINTERFACE[CF_MAXVARSIZE]; /* GLOBAL_P */
 
 /*
   Set in cf-*.c:CheckOpts and GenericAgentConfigParseArguments.

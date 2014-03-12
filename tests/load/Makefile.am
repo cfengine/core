@@ -1,7 +1,12 @@
 # Those tests use stub functions interposition which does not work (yet)
 # under OS X. Another way of stubbing functions from libpromises is needed.
 if !XNU
-AM_CFLAGS = $(ENTERPRISE_CFLAGS) -I$(srcdir)/../../libpromises -I$(srcdir)/../../libutils -I../../libpromises
+AM_CFLAGS = $(ENTERPRISE_CFLAGS) \
+	-I$(srcdir)/../../libpromises \
+	-I$(srcdir)/../../libutils \
+	-I$(srcdir)/../../libcfnet \
+	-I../../libpromises
+
 
 EXTRA_DIST = run_db_load
 

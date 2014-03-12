@@ -189,10 +189,16 @@ static int AccessControl(EvalContext *ctx, const char *req_path, ServerConnectio
         strncpy(transpath, ap->path, CF_BUFSIZE - 1);
         MapName(transpath);
 
-        /* If transpath is a parent directory of transrequest. */
-        if ((strlen(transrequest) > strlen(transpath))
-            && (strncmp(transpath, transrequest, strlen(transpath)) == 0)
-            && (transrequest[strlen(transpath)] == FILE_SEPARATOR))
+        /* If everything is allowed */
+        if ((strcmp(transpath, FILE_SEPARATOR_STR) == 0)
+            ||
+            /* or if transpath is a parent directory of transrequest */
+            (strlen(transrequest) > strlen(transpath)
+            && strncmp(transpath, transrequest, strlen(transpath)) == 0
+            && transrequest[strlen(transpath)] == FILE_SEPARATOR)
+            ||
+            /* or if it's an exact match */
+            (strcmp(transpath, transrequest) == 0))
         {
             res = true;
         }
@@ -210,7 +216,7 @@ static int AccessControl(EvalContext *ctx, const char *req_path, ServerConnectio
             if (stat(transpath, &statbuf) == -1)
             {
                 Log(LOG_LEVEL_INFO,
-                      "Warning cannot stat file object %s in admit/grant, or access list refers to dangling link\n",
+                      "Warning cannot stat file object %s in admit/grant, or access list refers to dangling link",
                       transpath);
                 continue;
             }
@@ -247,12 +253,16 @@ static int AccessControl(EvalContext *ctx, const char *req_path, ServerConnectio
         strncpy(transpath, dp->path, CF_BUFSIZE - 1);
         MapName(transpath);
 
-        /* If entry is parent dir, or exact match. */
-        if ((strlen(transrequest) > strlen(transpath) &&
+        /* If everything is denied */
+        if ((strcmp(transpath, FILE_SEPARATOR_STR) == 0)
+            ||
+            /* or if transpath is a parent directory of transrequest */
+            (strlen(transrequest) > strlen(transpath) &&
              strncmp(transpath, transrequest, strlen(transpath)) == 0 &&
              transrequest[strlen(transpath)] == FILE_SEPARATOR)
             ||
-            strcmp(transpath, transrequest) == 0)
+            /* or if it's an exact match */
+            (strcmp(transpath, transrequest) == 0))
         {
             if ((IsMatchItemIn(dp->accesslist, MapAddress(conn->ipaddr))) ||
                 (IsRegexItemIn(ctx, dp->accesslist, conn->hostname)))
@@ -355,7 +365,7 @@ static int LiteralAccessControl(EvalContext *ctx, char *in, ServerConnectionStat
                     || (IsRegexItemIn(ctx, ap->accesslist, conn->hostname)))
                 {
                     access = true;
-                    Log(LOG_LEVEL_DEBUG, "Access privileges - match found\n");
+                    Log(LOG_LEVEL_DEBUG, "Access privileges - match found");
                 }
             }
         }
@@ -546,11 +556,11 @@ static int VerifyConnection(ServerConnectionState *conn, char buf[CF_BUFSIZE])
     ToLowerStrInplace(fqname);
 
     Log(LOG_LEVEL_VERBOSE,
-        "Allowing %s to connect without (re)checking ID\n", ipstring);
+        "Allowing %s to connect without (re)checking ID", ipstring);
     Log(LOG_LEVEL_VERBOSE,
-        "Non-verified Host ID is %s\n", fqname);
+        "Non-verified Host ID is %s", fqname);
     Log(LOG_LEVEL_VERBOSE,
-        "Non-verified User ID seems to be %s\n",
+        "Non-verified User ID seems to be %s",
         username);
 
     strlcpy(conn->hostname, fqname, CF_MAXVARSIZE);

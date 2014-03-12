@@ -64,6 +64,7 @@ typedef struct
     Item *allowuserlist;                              /* "allowusers" */
     Item *multiconnlist;                              /* "allowallconnects" */
     Item *trustkeylist;                               /* "trustkeysfrom" */
+    Item *allowlegacyconnects;
     char *allowciphers;
 
     /* ACL for resource_type "path". */
@@ -91,6 +92,7 @@ typedef struct
 
 } ServerAccess;
 
+/* TODO rename to IncomingConnection */
 struct ServerConnectionState_
 {
     ConnectionInfo *conn_info;

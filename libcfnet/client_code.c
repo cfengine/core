@@ -32,18 +32,14 @@
 #include <tls_generic.h>              /* TLSVerifyPeer */
 #include <dir.h>
 #include <unix.h>
-#include <dir_priv.h>
+#include <dir_priv.h>                          /* AllocateDirentForFilename */
 #include <client_protocol.h>
-#include <crypto.h>
+#include <crypto.h>         /* CryptoInitialize,SavePublicKey,EncryptString */
 #include <logging.h>
-#include <files_hashes.h>
-#include <files_copy.h>
-#include <mutex.h>
-#include <rlist.h>
-#include <policy.h>
-#include <item_lib.h>
-#include <files_lib.h>
-#include <string_lib.h>
+#include <files_hashes.h>                                       /* HashFile */
+#include <mutex.h>                                            /* ThreadLock */
+#include <files_lib.h>                               /* FullWrite,safe_open */
+#include <string_lib.h>                           /* MemSpan,MemSpanInverse */
 #include <misc_lib.h>                                   /* ProgrammingError */
 
 #include <lastseen.h>                                           /* LastSaw */
@@ -68,21 +64,8 @@ typedef struct
 static pthread_mutex_t cft_serverlist = PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP; /* GLOBAL_T */
 
 static void NewClientCache(Stat *data, AgentConnection *conn);
-static void CacheServerConnection(AgentConnection *conn, const char *server);
-static void MarkServerOffline(const char *server);
-static AgentConnection *GetIdleConnectionToServer(const char *server);
-static bool ServerOffline(const char *server);
 static void FlushFileStream(int sd, int toget);
 static int CacheStat(const char *file, struct stat *statbuf, const char *stattype, AgentConnection *conn);
-/**
-  @param err Set to 0 on success, -1 no server responce, -2 authentication failure.
-  */
-static AgentConnection *ServerConnection(const char *server, FileCopy fc, int *err, int s);
-
-int TryConnect(AgentConnection *conn, struct timeval *tvp, struct sockaddr *cinp, int cinpSz);
-
-
-ProtocolVersion SELECTED_PROTOCOL = CF_PROTOCOL_TLS; /* TODO command line / body common control policy option */ /* GLOBAL_P */
 
 
 /**
@@ -149,6 +132,10 @@ static int FSWrite(const char *destination, int dd, const char *buf, size_t n_wr
     return true;
 }
 
+
+int CFENGINE_PORT = 5308;
+char CFENGINE_PORT_STR[16] = "5308";
+
 void DetermineCfenginePort()
 {
     struct servent *server;
@@ -157,6 +144,8 @@ void DetermineCfenginePort()
     if ((server = getservbyname(CFENGINE_SERVICE, "tcp")) != NULL)
     {
         CFENGINE_PORT = ntohs(server->s_port);
+        snprintf(CFENGINE_PORT_STR, sizeof(CFENGINE_PORT_STR),
+                 "%d", CFENGINE_PORT);
     }
     else
     {
@@ -173,65 +162,6 @@ void DetermineCfenginePort()
     Log(LOG_LEVEL_VERBOSE, "Setting cfengine default port to %d", CFENGINE_PORT);
 }
 
-/*********************************************************************/
-
-AgentConnection *NewServerConnection(FileCopy fc, bool background, int *err, int s)
-{
-    AgentConnection *conn = NULL;
-    Rlist *rp = NULL;
-
-    for (rp = fc.servers; rp != NULL; rp = rp->next)
-    {
-        const char *servername = RlistScalarValue(rp);
-
-        if (ServerOffline(servername))
-        {
-            continue;
-        }
-
-        if (background)
-        {
-            ThreadLock(&cft_serverlist);
-            Seq *srvlist_tmp = GetGlobalServerList();
-            ThreadUnlock(&cft_serverlist);
-
-            /* TODO not return NULL if >= CFA_MAXTREADS ? */
-            if (SeqLength(srvlist_tmp) < CFA_MAXTHREADS)
-            {
-                /* If background connection was requested, then don't cache it
-                 * in SERVERLIST since it will be closed right afterwards. */
-                conn = ServerConnection(servername, fc, err, s);
-                return conn;
-            }
-        }
-        else
-        {
-            conn = GetIdleConnectionToServer(servername);
-            if (conn != NULL)
-            {
-                *err = 0;
-                return conn;
-            }
-
-            /* This is first usage, need to open */
-            conn = ServerConnection(servername, fc, err, s);
-            if (conn != NULL)
-            {
-                CacheServerConnection(conn, servername);
-                return conn;
-            }
-
-            /* This server failed, trying next in list. */
-            Log(LOG_LEVEL_INFO, "Unable to establish connection with %s",
-                servername);
-            MarkServerOffline(servername);
-        }
-    }
-
-    Log(LOG_LEVEL_ERR, "Unable to establish any connection with server.");
-    return NULL;
-}
-
 /**
  * @return 1 success, 0 auth/ID error, -1 other error
  */
@@ -246,9 +176,7 @@ int TLSConnect(ConnectionInfo *conn_info, bool trust_server,
         return -1;
     }
 
-    /* TODO fix, we identify hub user with our own username, because
-     * we store key filenames as "user-key.pub" and we need a
-     * username. We might as well hard-code root... */
+    /* TODO username is local, fix. */
     ret = TLSVerifyPeer(conn_info, ipaddr, username);
 
     if (ret == -1)                                      /* error */
@@ -290,6 +218,10 @@ int TLSConnect(ConnectionInfo *conn_info, bool trust_server,
         return -1;
     }
 
+    /* This contained the value we requested from the server, and now we put
+     * in the value that was negotiated. */
+    conn_info->type = ret;
+
     /* We continue by sending identification data. */
     ret = TLSClientSendIdentity(conn_info, username);
     if (ret == -1)
@@ -311,127 +243,119 @@ int TLSConnect(ConnectionInfo *conn_info, bool trust_server,
     return 1; /* Success :-) */
 }
 
-/*****************************************************************************/
-
-static AgentConnection *ServerConnection(const char *server, FileCopy fc, int *err, int s)
+/**
+ * @NOTE if #flags.protocol_version is CF_PROTOCOL_UNDEFINED, then classic
+ *       protocol is used by default.
+ */
+AgentConnection *ServerConnection(const char *server, const char *port,
+                                  unsigned int connect_timeout,
+                                  ConnectionFlags flags, int *err)
 {
     AgentConnection *conn = NULL;
     int ret;
     *err = 0;
 
-#if !defined(__MINGW32__)
-    signal(SIGPIPE, SIG_IGN);
-#endif /* !__MINGW32__ */
+    conn = NewAgentConn(server);
+    conn->flags = flags;
 
 #if !defined(__MINGW32__)
+    signal(SIGPIPE, SIG_IGN);
+
     sigset_t signal_mask;
     sigemptyset(&signal_mask);
     sigaddset(&signal_mask, SIGPIPE);
     pthread_sigmask(SIG_BLOCK, &signal_mask, NULL);
-#endif
 
-    conn = NewAgentConn(server);
-
-/* username of the client - say root from Windows */
-
-#ifdef __MINGW32__
-    snprintf(conn->username, CF_SMALLBUF, "root");
-#else
     /* FIXME: username is local */
     GetCurrentUserName(conn->username, CF_SMALLBUF);
-#endif /* !__MINGW32__ */
+#else
+    /* Always say "root" as username from windows. */
+    snprintf(conn->username, CF_SMALLBUF, "root");
+#endif
 
-    /* TODO fix, this was supposed to check if the connection is cached (open
-     * or unreachable). However conn was just alloc'd so it's always INVALID */
-    if (ConnectionInfoSocket(conn->conn_info) == SOCKET_INVALID)
+    if (port == NULL || *port == '\0')
     {
-        if (-1 == s)
-        {
-            if (!ServerConnect(conn, server, fc))
-            {
-                Log(LOG_LEVEL_INFO, "No server is responding on this port");
-                DisconnectServer(conn);
-                *err = -1;
-                return NULL;
-            }
-
-            if (ConnectionInfoSocket(conn->conn_info) < 0)                      /* INVALID or OFFLINE socket */
-            {
-                UnexpectedError("ServerConnect() succeeded but socket descriptor is %d!",
-                                ConnectionInfoSocket(conn->conn_info));
-                *err = -1;
-                return NULL;
-            }
-        }
-        else
-        {
-            /*
-             * In this mode the connection is already opened, most likely
-             * because of Call Collect.
-             * We don't need to connect to the server, we just need to populate
-             * the required structures.
-             */
-        }
-
-        switch (SELECTED_PROTOCOL)
-        {
-        case CF_PROTOCOL_TLS:
-
-            ret = TLSConnect(conn->conn_info, fc.trustkey,
-                             conn->remoteip, conn->username);
-
-            if (ret == -1)                                      /* Error */
-            {
-                DisconnectServer(conn);
-                *err = -1;
-                return NULL;
-            }
-            else if (ret == 0)                             /* Auth/ID error */
-            {
-                DisconnectServer(conn);
-                errno = EPERM;
-                *err = -2;
-                return NULL;
-            }
-            assert(ret == 1);
-            ConnectionInfoSetProtocolVersion(conn->conn_info, CF_PROTOCOL_TLS);
-            ConnectionInfoSetConnectionStatus(conn->conn_info, CF_CONNECTION_ESTABLISHED);
-            LastSaw1(conn->remoteip, ConnectionInfoPrintableKeyHash(conn->conn_info),
-                     LAST_SEEN_ROLE_CONNECT);
-            break;
-
-        case CF_PROTOCOL_CLASSIC:
-
-            ConnectionInfoSetProtocolVersion(conn->conn_info, CF_PROTOCOL_CLASSIC);
-            conn->encryption_type = CfEnterpriseOptions();
-
-            if (!IdentifyAgent(conn->conn_info))
-            {
-                Log(LOG_LEVEL_ERR, "Id-authentication for '%s' failed", VFQNAME);
-                errno = EPERM;
-                DisconnectServer(conn);
-                *err = -2; // auth err
-                return NULL;
-            }
-
-            if (!AuthenticateAgent(conn, fc.trustkey))
-            {
-                Log(LOG_LEVEL_ERR, "Authentication dialogue with '%s' failed", server);
-                errno = EPERM;
-                DisconnectServer(conn);
-                *err = -2; // auth err
-                return NULL;
-            }
-            ConnectionInfoSetConnectionStatus(conn->conn_info, CF_CONNECTION_ESTABLISHED);
-            break;
-
-        default:
-            ProgrammingError("ServerConnection: ProtocolVersion %d!",
-                             SELECTED_PROTOCOL);
-        }
-        conn->authenticated = true;
+        port = CFENGINE_PORT_STR;
     }
 
+    char txtaddr[CF_MAX_IP_LEN] = "";
+    conn->conn_info->sd = SocketConnect(server, port, connect_timeout,
+                                        flags.force_ipv4,
+                                        txtaddr, sizeof(txtaddr));
+    if (conn->conn_info->sd == -1)
+    {
+        Log(LOG_LEVEL_INFO, "No server is responding on this port");
+        DisconnectServer(conn);
+        *err = -1;
+        return NULL;
+    }
+
+    assert(sizeof(conn->remoteip) >= sizeof(txtaddr));
+    strcpy(conn->remoteip, txtaddr);
+
+    switch (flags.protocol_version)
+    {
+    case CF_PROTOCOL_TLS:
+
+        /* Set the version to request during protocol negotiation. After
+         * TLSConnect() it will have the version we finally ended up with. */
+        conn->conn_info->type = CF_PROTOCOL_LATEST;
+
+        ret = TLSConnect(conn->conn_info, flags.trust_server,
+                         conn->remoteip, conn->username);
+
+        if (ret == -1)                                      /* Error */
+        {
+            DisconnectServer(conn);
+            *err = -1;
+            return NULL;
+        }
+        else if (ret == 0)                             /* Auth/ID error */
+        {
+            DisconnectServer(conn);
+            errno = EPERM;
+            *err = -2;
+            return NULL;
+        }
+        assert(ret == 1);
+
+        ConnectionInfoSetConnectionStatus(conn->conn_info, CF_CONNECTION_ESTABLISHED);
+        LastSaw1(conn->remoteip, ConnectionInfoPrintableKeyHash(conn->conn_info),
+                 LAST_SEEN_ROLE_CONNECT);
+        break;
+
+    case CF_PROTOCOL_UNDEFINED:
+    case CF_PROTOCOL_CLASSIC:
+
+        conn->conn_info->type = CF_PROTOCOL_CLASSIC;
+        conn->encryption_type = CfEnterpriseOptions();
+
+        if (!IdentifyAgent(conn->conn_info))
+        {
+            Log(LOG_LEVEL_ERR, "Id-authentication for '%s' failed", VFQNAME);
+            errno = EPERM;
+            DisconnectServer(conn);
+            *err = -2; // auth err
+            return NULL;
+        }
+
+        if (!AuthenticateAgent(conn, flags.trust_server))
+        {
+            Log(LOG_LEVEL_ERR, "Authentication dialogue with '%s' failed", server);
+            errno = EPERM;
+            DisconnectServer(conn);
+            *err = -2; // auth err
+            return NULL;
+        }
+        ConnectionInfoSetConnectionStatus(conn->conn_info, CF_CONNECTION_ESTABLISHED);
+        break;
+
+    default:
+        ProgrammingError("ServerConnection: ProtocolVersion %d!",
+                         flags.protocol_version);
+    }
+
+    conn->authenticated = true;
     return conn;
 }
 
@@ -442,7 +366,7 @@ void DisconnectServer(AgentConnection *conn)
     /* Socket needs to be closed even after SSL_shutdown. */
     if (ConnectionInfoSocket(conn->conn_info) >= 0)                  /* Not INVALID or OFFLINE */
     {
-        if (ConnectionInfoProtocolVersion(conn->conn_info) == CF_PROTOCOL_TLS &&
+        if (ConnectionInfoProtocolVersion(conn->conn_info) >= CF_PROTOCOL_TLS &&
                 ConnectionInfoSSL(conn->conn_info) != NULL)
         {
             SSL_shutdown(ConnectionInfoSSL(conn->conn_info));
@@ -522,7 +446,7 @@ int cf_remote_stat(const char *file, struct stat *buf, const char *stattype, boo
 
     if (ReceiveTransaction(conn->conn_info, recvbuffer, NULL) == -1)
     {
-        /* TODO mark connection as closed, or better remove from cache */
+        /* TODO mark connection in the cache as closed. */
         return -1;
     }
 
@@ -536,7 +460,7 @@ int cf_remote_stat(const char *file, struct stat *buf, const char *stattype, boo
 
     if (BadProtoReply(recvbuffer))
     {
-        Log(LOG_LEVEL_VERBOSE, "Server returned error '%s'",
+        Log(LOG_LEVEL_VERBOSE, "Server returned error: %s",
             recvbuffer + strlen("BAD: "));
         errno = EPERM;
         return -1;
@@ -590,7 +514,7 @@ int cf_remote_stat(const char *file, struct stat *buf, const char *stattype, boo
 
         if (ReceiveTransaction(conn->conn_info, recvbuffer, NULL) == -1)
         {
-            /* TODO mark connection as closed, or better remove from cache */
+            /* TODO mark connection in the cache as closed. */
             return -1;
         }
 
@@ -718,7 +642,7 @@ Item *RemoteDirList(const char *dirname, bool encrypt, AgentConnection *conn)
     {
         if ((n = ReceiveTransaction(conn->conn_info, recvbuffer, NULL)) == -1)
         {
-            /* TODO mark connection as closed, or better remove from cache */
+            /* TODO mark connection in the cache as closed. */
             return NULL;
         }
 
@@ -853,7 +777,7 @@ int CompareHashNet(const char *file1, const char *file2, bool encrypt, AgentConn
 
     if (ReceiveTransaction(conn->conn_info, recvbuffer, NULL) == -1)
     {
-        /* TODO mark connection as closed, or better remove from cache */
+        /* TODO mark connection in the cache as closed. */
         Log(LOG_LEVEL_ERR, "Failed receive. (ReceiveTransaction: %s)", GetErrorStr());
         Log(LOG_LEVEL_VERBOSE,  "No answer from host, assuming checksum ok to avoid remote copy for now...");
         return false;
@@ -1020,7 +944,7 @@ int EncryptCopyRegularFileNet(const char *source, const char *dest, off_t size, 
 int CopyRegularFileNet(const char *source, const char *dest, off_t size, bool encrypt, AgentConnection *conn)
 {
     int dd, buf_size, n_read = 0, toget, towrite;
-    int done = false, tosend, value;
+    int tosend, value;
     char *buf, workbuf[CF_BUFSIZE], cfchangedstr[265];
 
     off_t n_read_total = 0;
@@ -1076,8 +1000,7 @@ int CopyRegularFileNet(const char *source, const char *dest, off_t size, bool en
           conn->this_server, source, (intmax_t)size);
 
     n_read_total = 0;
-    done = (n_read_total >= size);
-    while (!done)
+    while (n_read_total < size)
     {
         if ((size - n_read_total) >= buf_size)
         {
@@ -1169,9 +1092,6 @@ int CopyRegularFileNet(const char *source, const char *dest, off_t size, bool en
         }
 
         n_read_total += towrite;        /* n_read; */
-
-        /* Handle EOF without closing socket */
-        done = (n_read_total >= size);
     }
 
     /* If the file ends with a `hole', something needs to be written at
@@ -1195,136 +1115,9 @@ int CopyRegularFileNet(const char *source, const char *dest, off_t size, bool en
     return true;
 }
 
-
-/*********************************************************************/
-/* Level 2                                                           */
 /*********************************************************************/
 
-int ServerConnect(AgentConnection *conn, const char *host, FileCopy fc)
-{
-    int port = fc.portnumber ? fc.portnumber : CFENGINE_PORT;
-    char servname[CF_MAXVARSIZE];
-    struct timeval tv = { 0 };
-
-    snprintf(servname, CF_MAXVARSIZE, "%d", port);
-
-    Log(LOG_LEVEL_VERBOSE, "Set cfengine port number to %d", port);
-
-    if ((fc.timeout == (short) CF_NOINT) || (fc.timeout <= 0))
-    {
-        tv.tv_sec = CONNTIMEOUT;
-    }
-    else
-    {
-        tv.tv_sec = fc.timeout;
-    }
-
-    Log(LOG_LEVEL_VERBOSE, "Set connection timeout to %jd",
-          (intmax_t) tv.tv_sec);
-    tv.tv_usec = 0;
-
-    struct addrinfo query = { 0 }, *response, *ap;
-    struct addrinfo query2 = { 0 }, *response2, *ap2;
-    int err, connected = false;
-
-    memset(&query, 0, sizeof(query));
-    query.ai_family = fc.force_ipv4 ? AF_INET : AF_UNSPEC;
-    query.ai_socktype = SOCK_STREAM;
-
-    if ((err = getaddrinfo(host, servname, &query, &response)) != 0)
-    {
-        Log(LOG_LEVEL_INFO,
-              "Unable to find host or service: (%s/%d): %s",
-              host, port, gai_strerror(err));
-        return false;
-    }
-
-    for (ap = response; ap != NULL; ap = ap->ai_next)
-    {
-        /* Convert address to string. */
-        char txtaddr[CF_MAX_IP_LEN] = "";
-        getnameinfo(ap->ai_addr, ap->ai_addrlen,
-                    txtaddr, sizeof(txtaddr),
-                    NULL, 0, NI_NUMERICHOST);
-        Log(LOG_LEVEL_VERBOSE, "Connecting to host %s (address %s) on port %d",
-              host, txtaddr, port);
-
-        ConnectionInfoSetSocket(conn->conn_info, socket(ap->ai_family, ap->ai_socktype, ap->ai_protocol));
-        if (ConnectionInfoSocket(conn->conn_info) == -1)
-        {
-            Log(LOG_LEVEL_ERR, "Couldn't open a socket. (socket: %s)", GetErrorStr());
-            continue;
-        }
-
-        /* Bind socket to specific interface, if requested. */
-        if (BINDINTERFACE[0] != '\0')
-        {
-            memset(&query2, 0, sizeof(query2));
-            query2.ai_family = fc.force_ipv4 ? AF_INET : AF_UNSPEC;
-            query2.ai_socktype = SOCK_STREAM;
-            /* returned address is for bind() */
-            query2.ai_flags = AI_PASSIVE;
-
-            err = getaddrinfo(BINDINTERFACE, NULL, &query2, &response2);
-            if ((err) != 0)
-            {
-                Log(LOG_LEVEL_ERR,
-                    "Unable to lookup interface '%s' to bind. (getaddrinfo: %s)",
-                      BINDINTERFACE, gai_strerror(err));
-                cf_closesocket(ConnectionInfoSocket(conn->conn_info));
-                ConnectionInfoSetSocket(conn->conn_info, SOCKET_INVALID);
-                freeaddrinfo(response2);
-                freeaddrinfo(response);
-                return false;
-            }
-
-            for (ap2 = response2; ap2 != NULL; ap2 = ap2->ai_next)
-            {
-                if (bind(ConnectionInfoSocket(conn->conn_info), ap2->ai_addr, ap2->ai_addrlen) == 0)
-                {
-                    break;
-                }
-            }
-            freeaddrinfo(response2);
-        }
-
-        if (TryConnect(conn, &tv, ap->ai_addr, ap->ai_addrlen))
-        {
-            Log(LOG_LEVEL_INFO, "Connected to %s on port %d", txtaddr, port);
-
-            assert(sizeof(conn->remoteip) >= sizeof(txtaddr));
-            strcpy(conn->remoteip, txtaddr);
-            conn->family = ap->ai_family;
-            connected = true;
-            break;
-        }
-    }
-
-    if (!connected)
-    {
-        if (ConnectionInfoSocket(conn->conn_info) >= 0)                 /* not INVALID or OFFLINE socket */
-        {
-            cf_closesocket(ConnectionInfoSocket(conn->conn_info));
-            ConnectionInfoSetSocket(conn->conn_info, SOCKET_INVALID);
-        }
-    }
-
-    if (response != NULL)
-    {
-        freeaddrinfo(response);
-    }
-
-    if (!connected)
-    {
-        Log(LOG_LEVEL_VERBOSE, "Unable to connect to server %s: %s", host, GetErrorStr());
-        return false;
-    }
-    return true;
-}
-
-/*********************************************************************/
-
-static bool ServerOffline(const char *server)
+bool ServerOffline(const char *server)
 {
     char ipaddr[CF_MAX_IP_LEN];
     if (Hostname2IPString(ipaddr, server, sizeof(ipaddr)) == -1)
@@ -1366,13 +1159,13 @@ static bool ServerOffline(const char *server)
     return false;
 }
 
-static AgentConnection *GetIdleConnectionToServer(const char *server)
+AgentConnection *GetIdleConnectionToServer(const char *server)
 {
     char ipaddr[CF_MAX_IP_LEN];
     if (Hostname2IPString(ipaddr, server, sizeof(ipaddr)) == -1)
     {
         Log(LOG_LEVEL_WARNING,
-            "GetIdleConnectionToServer: could not resolve '%s'", server);
+            "Could not resolve: %s", server);
         return NULL;
     }
 
@@ -1456,7 +1249,7 @@ void ServerNotBusy(AgentConnection *conn)
 
 /*********************************************************************/
 
-static void MarkServerOffline(const char *server)
+void MarkServerOffline(const char *server)
 /* Unable to contact the server so don't waste time trying for
    other connections, mark it offline */
 {
@@ -1466,7 +1259,7 @@ static void MarkServerOffline(const char *server)
     if (Hostname2IPString(ipaddr, server, sizeof(ipaddr)) == -1)
     {
         Log(LOG_LEVEL_ERR,
-            "MarkServerOffline: could not resolve '%s'", server);
+            "Could not resolve: %s", server);
         return;
     }
 
@@ -1507,13 +1300,13 @@ static void MarkServerOffline(const char *server)
 
 /*********************************************************************/
 
-static void CacheServerConnection(AgentConnection *conn, const char *server)
+void CacheServerConnection(AgentConnection *conn, const char *server)
 /* First time we open a connection, so store it */
 {
     char ipaddr[CF_MAX_IP_LEN];
     if (Hostname2IPString(ipaddr, server, sizeof(ipaddr)) == -1)
     {
-        Log(LOG_LEVEL_ERR, "Could not resolve '%s'", server);
+        Log(LOG_LEVEL_ERR, "Failed to resolve: %s", server);
         return;
     }
 
@@ -1620,105 +1413,3 @@ void ConnectionsCleanup(void)
     SeqClear(srvlist_tmp);
 }
 
-/*********************************************************************/
-
-#if !defined(__MINGW32__)
-
-#if defined(__hpux) && defined(__GNUC__)
-#pragma GCC diagnostic ignored "-Wstrict-aliasing"
-// HP-UX GCC type-pun warning on FD_SET() macro:
-// While the "fd_set" type is defined in /usr/include/sys/_fd_macros.h as a
-// struct of an array of "long" values in accordance with the XPG4 standard's
-// requirements, the macros for the FD operations "pretend it is an array of
-// int32_t's so the binary layout is the same for both Narrow and Wide
-// processes," as described in _fd_macros.h. In the FD_SET, FD_CLR, and
-// FD_ISSET macros at line 101, the result is cast to an "__fd_mask *" type,
-// which is defined as int32_t at _fd_macros.h:82.
-//
-// This conflict between the "long fds_bits[]" array in the XPG4-compliant
-// fd_set structure, and the cast to an int32_t - not long - pointer in the
-// macros, causes a type-pun warning if -Wstrict-aliasing is enabled.
-// The warning is merely a side effect of HP-UX working as designed,
-// so it can be ignored.
-#endif
-
-int TryConnect(AgentConnection *conn, struct timeval *tvp, struct sockaddr *cinp, int cinpSz)
-/** 
- * Tries a nonblocking connect and then restores blocking if
- * successful. Returns true on success, false otherwise.
- * NB! Do not use recv() timeout - see note below.
- **/
-{
-    int res;
-    long arg;
-    struct sockaddr_in emptyCin = { 0 };
-
-    if (!cinp)
-    {
-        cinp = (struct sockaddr *) &emptyCin;
-        cinpSz = sizeof(emptyCin);
-    }
-
-    /* set non-blocking socket */
-    arg = fcntl(ConnectionInfoSocket(conn->conn_info), F_GETFL, NULL);
-
-    if (fcntl(ConnectionInfoSocket(conn->conn_info), F_SETFL, arg | O_NONBLOCK) == -1)
-    {
-        Log(LOG_LEVEL_ERR, "Could not set socket to non-blocking mode. (fcntl: %s)", GetErrorStr());
-    }
-
-    res = connect(ConnectionInfoSocket(conn->conn_info), cinp, (socklen_t) cinpSz);
-
-    if (res < 0)
-    {
-        if (errno == EINPROGRESS)
-        {
-            fd_set myset;
-            int valopt;
-            socklen_t lon = sizeof(int);
-
-            FD_ZERO(&myset);
-
-            FD_SET(ConnectionInfoSocket(conn->conn_info), &myset);
-
-            /* now wait for connect, but no more than tvp.sec */
-            res = select(ConnectionInfoSocket(conn->conn_info) + 1, NULL, &myset, NULL, tvp);
-            if (getsockopt(ConnectionInfoSocket(conn->conn_info), SOL_SOCKET, SO_ERROR, (void *) (&valopt), &lon) != 0)
-            {
-                Log(LOG_LEVEL_ERR, "Could not check connection status. (getsockopt: %s)", GetErrorStr());
-                return false;
-            }
-
-            if (valopt || (res <= 0))
-            {
-                Log(LOG_LEVEL_INFO, "Error connecting to server (timeout): (getsockopt: %s)", GetErrorStr());
-                return false;
-            }
-        }
-        else
-        {
-            Log(LOG_LEVEL_INFO, "Error connecting to server. (connect: %s)", GetErrorStr());
-            return false;
-        }
-    }
-
-    /* connection suceeded; return to blocking mode */
-
-    if (fcntl(ConnectionInfoSocket(conn->conn_info), F_SETFL, arg) == -1)
-    {
-        Log(LOG_LEVEL_ERR, "Could not set socket to blocking mode. (fcntl: %s)", GetErrorStr());
-    }
-
-    if (SetReceiveTimeout(ConnectionInfoSocket(conn->conn_info), tvp) == -1)
-    {
-        Log(LOG_LEVEL_ERR, "Could not set socket timeout. (SetReceiveTimeout: %s)", GetErrorStr());
-    }
-
-    return true;
-}
-
-#if defined(__hpux) && defined(__GNUC__)
-#pragma GCC diagnostic warning "-Wstrict-aliasing"
-#endif
-
-#endif /* !defined(__MINGW32__) */

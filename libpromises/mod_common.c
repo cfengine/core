@@ -240,7 +240,7 @@ static bool ClassesParseTreeCheck(const Promise *pp, Seq *errors)
     return success;
 }
 
-const ConstraintSyntax CFG_CONTROLBODY[] =
+const ConstraintSyntax CFG_CONTROLBODY[COMMON_CONTROL_MAX + 1] =
 {
     ConstraintSyntaxNewStringList("bundlesequence", ".*", "List of promise bundles to verify in order", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewStringList("goal_patterns", "", "A list of regular expressions that match promisees/topics considered to be organizational goals", SYNTAX_STATUS_NORMAL),
@@ -258,6 +258,7 @@ const ConstraintSyntax CFG_CONTROLBODY[] =
     ConstraintSyntaxNewInt("syslog_port", CF_VALRANGE, "The port number of a UDP syslog service", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBool("fips_mode", "Activate full FIPS mode restrictions. Default value: false", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBool("cache_system_functions", "Cache the result of system functions. Default value: true", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewString("protocol_version", "1,classic,2,latest", "CFEngine protocol version to use when connecting to the server. Default: latest", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };
 
@@ -333,6 +334,7 @@ const ConstraintSyntax CFS_CONTROLBODY[SERVER_CONTROL_NONE + 1] =
     ConstraintSyntaxNewStringList("trustkeysfrom", "", "List of IPs from whom we accept public keys on trust", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBool("listen", "true/false enable server daemon to listen on defined port. Default value: true", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("allowciphers", "", "List of ciphers the server accepts. For Syntax help see man page for \"openssl ciphers\". Default is \"AES256-GCM-SHA384:AES256-SHA\"", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewStringList("allowlegacyconnects", "", "List of IPs from whom we accept legacy protocol connections", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };
 
@@ -534,5 +536,5 @@ CommonControl CommonControlFromString(const char *lval)
         }
     }
 
-    return COMMON_CONTROL_NONE;
+    return COMMON_CONTROL_MAX;
 }

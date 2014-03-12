@@ -67,7 +67,6 @@ int ACTIVE_THREADS = 0; /* GLOBAL_X */
 
 int CFD_MAXPROCESSES = 0; /* GLOBAL_P */
 bool DENYBADCLOCKS = true; /* GLOBAL_P */
-
 int MAXTRIES = 5; /* GLOBAL_P */
 bool LOGENCRYPT = false; /* GLOBAL_P */
 int COLLECT_INTERVAL = 0; /* GLOBAL_P */
@@ -303,7 +302,6 @@ static int TRIES = 0;
 static void *HandleConnection(ServerConnectionState *conn)
 {
     int ret;
-    char output[CF_BUFSIZE];
 
     /* Set logging prefix to be the IP address for all of thread's lifetime. */
 
@@ -335,15 +333,17 @@ static void *HandleConnection(ServerConnectionState *conn)
             /* This happens when no thread was freed while we had to drop 5
              * consecutive connections, because none of the existing threads
              * finished. */
-            Log(LOG_LEVEL_ERR, "Server seems to be paralyzed. DOS attack? Committing apoptosis...");
+            Log(LOG_LEVEL_CRIT,
+                "Server seems to be paralyzed. DOS attack? Committing apoptosis...");
             FatalError(conn->ctx, "Terminating");
         }
         TRIES++;
         ThreadUnlock(cft_server_children);
 
-        Log(LOG_LEVEL_ERR, "Too many threads (>=%d) -- increase server maxconnections?", CFD_MAXPROCESSES);
-        snprintf(output, CF_BUFSIZE, "BAD: Server is currently too busy -- increase maxconnections or splaytime?");
-        SendTransaction(conn->conn_info, output, 0, CF_DONE);
+        Log(LOG_LEVEL_ERR,
+            "Too many threads (%d > %d), dropping connection! Increase server maxconnections?",
+            ACTIVE_THREADS, CFD_MAXPROCESSES);
+
         DeleteConn(conn);
         return NULL;
     }
@@ -368,18 +368,8 @@ static void *HandleConnection(ServerConnectionState *conn)
         }
     }
 
-    switch (ConnectionInfoProtocolVersion(conn->conn_info))
-    {
-
-    case CF_PROTOCOL_CLASSIC:
-    {
-        while (BusyWithClassicConnection(conn->ctx, conn))
-        {
-        }
-        break;
-    }
-
-    case CF_PROTOCOL_TLS:
+    ProtocolVersion protocol_version = ConnectionInfoProtocolVersion(conn->conn_info);
+    if (protocol_version == CF_PROTOCOL_LATEST)
     {
         ret = ServerTLSSessionEstablish(conn);
         if (ret == -1)
@@ -387,17 +377,44 @@ static void *HandleConnection(ServerConnectionState *conn)
             DeleteConn(conn);
             return NULL;
         }
+    }
+    else if (protocol_version < CF_PROTOCOL_LATEST &&
+             protocol_version > CF_PROTOCOL_UNDEFINED)
+    {
+        /* This connection is legacy protocol. Do we allow it? */
+        if (SV.allowlegacyconnects != NULL &&           /* By default we do */
+            !IsMatchItemIn(SV.allowlegacyconnects, MapAddress(conn->ipaddr)))
+        {
+            Log(LOG_LEVEL_INFO,
+                "Connection is not using latest protocol, denying");
+            DeleteConn(conn);
+            return NULL;
+        }
+    }
+    else
+    {
+        UnexpectedError("HandleConnection: ProtocolVersion %d!",
+                        ConnectionInfoProtocolVersion(conn->conn_info));
+        DeleteConn(conn);
+        return NULL;
+    }
 
+
+    /* =========================  MAIN LOOPS  ========================= */
+    if (protocol_version >= CF_PROTOCOL_TLS)
+    {
         while (BusyWithNewProtocol(conn->ctx, conn))
         {
         }
-        break;
     }
+    else if (protocol_version == CF_PROTOCOL_CLASSIC)
+    {
+        while (BusyWithClassicConnection(conn->ctx, conn))
+        {
+        }
+    }
+    /* ============================================================ */
 
-    default:
-        UnexpectedError("HandleConnection: ProtocolVersion %d!",
-                        ConnectionInfoProtocolVersion(conn->conn_info));
-    }
 
     Log(LOG_LEVEL_INFO, "Connection closed, terminating thread");
 

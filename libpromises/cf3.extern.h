@@ -31,9 +31,8 @@ extern bool LEGACY_OUTPUT;
 
 extern pid_t ALARM_PID;
 extern RSA *PRIVKEY, *PUBKEY;
-extern char BINDINTERFACE[CF_BUFSIZE];
 
-extern int CFENGINE_PORT;
+extern char BINDINTERFACE[CF_MAXVARSIZE];
 extern time_t CONNTIMEOUT;
 
 extern char CFWORKDIR[CF_BUFSIZE];

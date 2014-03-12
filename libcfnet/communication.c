@@ -35,7 +35,6 @@ AgentConnection *NewAgentConn(const char *server_name)
     AgentConnection *conn = xcalloc(1, sizeof(AgentConnection));
     ConnectionInfo *info = ConnectionInfoNew();
     conn->conn_info = info;
-    conn->family = AF_INET;
     conn->trust = false;
     conn->encryption_type = 'c';
     conn->this_server = xstrdup(server_name);

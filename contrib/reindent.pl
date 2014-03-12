@@ -21,14 +21,26 @@ my %extra = (
                          ],
             );
 
+my %modes = map { $_ => 1 } values %handlers;
 my $homedir = dirname($0);
+my $mode_override;
 
 foreach my $f (@ARGV)
 {
-    next unless -f $f;
+    if (exists $modes{$f})
+    {
+        $mode_override = $f;
+    }
+    else
+    {
+        next unless -f $f;
+    }
+
     my ($name,$path,$suffix) = fileparse($f, keys %handlers);
 
-    if (exists $handlers{$suffix})
+    my $mode = $handlers{$suffix} || $mode_override;
+
+    if ($mode)
     {
         my @extra = exists $extra{$handlers{$suffix}} ? @{$extra{$handlers{$suffix}}} : ();
         my $locals = "$homedir/dir-locals.el";
@@ -39,7 +51,7 @@ foreach my $f (@ARGV)
                '-l' => 'cfengine-code-style.el',
                '-l' => 'cfengine.el',
                '--visit' => $f,
-               '--eval' => "($handlers{$suffix})",
+               '--eval' => "($mode)",
                @extra,
                '--eval' => '(indent-region (point-min) (point-max) nil)',
                '--eval' => '(save-some-buffers t)');

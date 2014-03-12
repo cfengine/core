@@ -189,10 +189,16 @@ static int AccessControl(EvalContext *ctx, const char *req_path, ServerConnectio
         strncpy(transpath, ap->path, CF_BUFSIZE - 1);
         MapName(transpath);
 
-        /* If transpath is a parent directory of transrequest. */
-        if ((strlen(transrequest) > strlen(transpath))
-            && (strncmp(transpath, transrequest, strlen(transpath)) == 0)
-            && (transrequest[strlen(transpath)] == FILE_SEPARATOR))
+        /* If everything is allowed */
+        if ((strcmp(transpath, FILE_SEPARATOR_STR) == 0)
+            ||
+            /* or if transpath is a parent directory of transrequest */
+            (strlen(transrequest) > strlen(transpath)
+            && strncmp(transpath, transrequest, strlen(transpath)) == 0
+            && transrequest[strlen(transpath)] == FILE_SEPARATOR)
+            ||
+            /* or if it's an exact match */
+            (strcmp(transpath, transrequest) == 0))
         {
             res = true;
         }
@@ -247,12 +253,16 @@ static int AccessControl(EvalContext *ctx, const char *req_path, ServerConnectio
         strncpy(transpath, dp->path, CF_BUFSIZE - 1);
         MapName(transpath);
 
-        /* If entry is parent dir, or exact match. */
-        if ((strlen(transrequest) > strlen(transpath) &&
+        /* If everything is denied */
+        if ((strcmp(transpath, FILE_SEPARATOR_STR) == 0)
+            ||
+            /* or if transpath is a parent directory of transrequest */
+            (strlen(transrequest) > strlen(transpath) &&
              strncmp(transpath, transrequest, strlen(transpath)) == 0 &&
              transrequest[strlen(transpath)] == FILE_SEPARATOR)
             ||
-            strcmp(transpath, transrequest) == 0)
+            /* or if it's an exact match */
+            (strcmp(transpath, transrequest) == 0))
         {
             if ((IsMatchItemIn(dp->accesslist, MapAddress(conn->ipaddr))) ||
                 (IsRegexItemIn(ctx, dp->accesslist, conn->hostname)))

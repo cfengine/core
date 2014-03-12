@@ -382,7 +382,8 @@ static void *HandleConnection(ServerConnectionState *conn)
              protocol_version > CF_PROTOCOL_UNDEFINED)
     {
         /* This connection is legacy protocol. Do we allow it? */
-        if (!IsMatchItemIn(SV.allowlegacyconnects, MapAddress(conn->ipaddr)))
+        if (SV.allowlegacyconnects != NULL &&           /* By default we do */
+            !IsMatchItemIn(SV.allowlegacyconnects, MapAddress(conn->ipaddr)))
         {
             Log(LOG_LEVEL_INFO,
                 "Connection is not using latest protocol, denying");

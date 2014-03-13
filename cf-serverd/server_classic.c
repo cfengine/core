@@ -922,6 +922,9 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
         {
             err = ERR_get_error();
             Log(LOG_LEVEL_ERR, "Private decrypt failed = %s", ERR_reason_error_string(err));
+            BN_free(counter_challenge);
+            free(out);
+            KeyDestroy(&key);
             return false;
         }
 

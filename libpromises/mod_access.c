@@ -56,16 +56,20 @@ static bool AccessParseTreeCheck(const Promise *pp, Seq *errors);
 
 static const ConstraintSyntax report_data_select_constraints[] =
 {
-    ConstraintSyntaxNewStringList("classes_include", CF_ANYSTRING, "List of regex filters for class names to be included into class report", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewStringList("classes_exclude", CF_ANYSTRING, "List of regex filters for class names to be excluded from class report", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewStringList("variables_include", CF_ANYSTRING, "List of regex filters for variable full qielified path to be included into variables report", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewStringList("variables_exclude", CF_ANYSTRING, "List of regex filters for variable full qielified path to be excluded from variables report", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewStringList("promise_notkept_log_include", CF_ANYSTRING, "List of regex filters for handle name to be included into promise not kept log report", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewStringList("promise_notkept_log_exclude", CF_ANYSTRING, "List of regex filters for handle name to be excluded from promise not kept log report", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewStringList("promise_repaired_log_include", CF_ANYSTRING, "List of regex filters for handle name to be included into promise repaired log report", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewStringList("promise_repaired_log_exclude", CF_ANYSTRING, "List of regex filters for handle name to be excluded from promise repaired log report", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewStringList("classes_include", CF_ANYSTRING, "List of regex filters for class names to be included into class report", SYNTAX_STATUS_DEPRECATED),
+    ConstraintSyntaxNewStringList("classes_exclude", CF_ANYSTRING, "List of regex filters for class names to be excluded from class report", SYNTAX_STATUS_DEPRECATED),
+    ConstraintSyntaxNewStringList("variables_include", CF_ANYSTRING, "List of regex filters for variable full qualified path to be included into variables report", SYNTAX_STATUS_DEPRECATED),
+    ConstraintSyntaxNewStringList("variables_exclude", CF_ANYSTRING, "List of regex filters for variable full qualified path to be excluded from variables report", SYNTAX_STATUS_DEPRECATED),
+    ConstraintSyntaxNewStringList("promise_notkept_log_include", CF_ANYSTRING, "List of regex filters for handle name to be included into promise not kept log report", SYNTAX_STATUS_DEPRECATED),
+    ConstraintSyntaxNewStringList("promise_notkept_log_exclude", CF_ANYSTRING, "List of regex filters for handle name to be excluded from promise not kept log report", SYNTAX_STATUS_DEPRECATED),
+    ConstraintSyntaxNewStringList("promise_repaired_log_include", CF_ANYSTRING, "List of regex filters for handle name to be included into promise repaired log report", SYNTAX_STATUS_DEPRECATED),
+    ConstraintSyntaxNewStringList("promise_repaired_log_exclude", CF_ANYSTRING, "List of regex filters for handle name to be excluded from promise repaired log report", SYNTAX_STATUS_DEPRECATED),
     ConstraintSyntaxNewStringList("monitoring_include", CF_ANYSTRING, "List of regex filters for slot name to be included from monitoring report", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewStringList("monitoring_exclude", CF_ANYSTRING, "List of regex filters for slot name to be excluded from monitoring report", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewStringList("metatags_include", CF_ANYSTRING, "List of regex filters for metatags to be included into reports", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewStringList("metatags_exclude", CF_ANYSTRING, "List of regex filters for metatags to be excluded from reports", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewStringList("promise_handle_include", CF_ANYSTRING, "List of regex filters for promise handle to be included into reports", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewStringList("promise_handle_exclude", CF_ANYSTRING, "List of regex filters for promise handle to be excluded from reports", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };
 

@@ -1,0 +1,58 @@
+# Redmine#4683: dynamic inputs should work from readstringlist
+
+body common control
+{
+      inputs => { "../../default.cf.sub", @(runlist.inputs) };
+      bundlesequence  => { prep_runlist, runlist, default("$(this.promise_filename)") };
+}
+
+# workaround: reading the data has to be separate from...
+bundle common prep_runlist
+{
+  vars:
+      "generated_inputs" string => "$(this.promise_filename).txt";
+      "inputs_pre" slist => readstringlist($(prep_runlist.generated_inputs),
+                                           "\s*#[^\n]*",
+                                           "\n",
+                                           99999,
+                                           9999999);
+  reports:
+    EXTRA::
+      "$(this.bundle) reading inputs from file $(runlist.generated_inputs)";
+}
+
+# ...the usage of the data
+bundle common runlist
+{
+  vars:
+      "inputs" slist => maplist("$(this.promise_dirname)/$(this)", "prep_runlist.inputs_pre");
+
+  reports:
+    EXTRA::
+      "$(this.bundle) got inputs '$(runlist.inputs)'";
+}
+
+bundle agent init
+{
+}
+
+bundle agent test
+{
+}
+
+bundle agent check
+{
+  classes:
+      "ok" and => { "included_info_global_class" };
+
+  reports:
+    DEBUG.!included_info_global_class::
+      "BAD: The global class from the included file was not defined";
+    EXTRA.included_info_global_class::
+      "Good: The global class from the included file was defined";
+
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

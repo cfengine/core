@@ -615,7 +615,9 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
     {
         FatalError(ctx, " No access to WORKSPACE/inputs dir");
     }
-    else
+
+    /* if directory does not have all user bits set (u+rwx) */
+    if ((sb.st_mode & 0700) != 0700)
     {
         chmod(vbuff, sb.st_mode | 0700);
     }
@@ -626,7 +628,9 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
     {
         FatalError(ctx, " No access to WORKSPACE/outputs dir");
     }
-    else
+
+    /* if directory does not have all user bits set (u+rwx) */
+    if ((sb.st_mode & 0700) != 0700)
     {
         chmod(vbuff, sb.st_mode | 0700);
     }
@@ -1085,18 +1089,36 @@ static void CheckWorkingDirectories(EvalContext *ctx)
     snprintf(vbuff, CF_BUFSIZE, "%s%c.", workdir, FILE_SEPARATOR);
     MakeParentDirectory(vbuff, false);
 
-    Log(LOG_LEVEL_VERBOSE, "Making sure that locks are private...");
+    Log(LOG_LEVEL_VERBOSE, "Making sure that internal directories are private...");
 
-    if (chown(workdir, getuid(), getgid()) == -1)
+    Log(LOG_LEVEL_VERBOSE, "Checking integrity of the trusted workdir");
+
+    if (stat(workdir, &statbuf) == -1)
     {
-        Log(LOG_LEVEL_ERR, "Unable to set owner on '%s'' to '%ju.%ju'. (chown: %s)", workdir, (uintmax_t)getuid(),
-            (uintmax_t)getgid(), GetErrorStr());
+        FatalError(ctx,"Unable to stat workdir directory '%s'! (stat: %s)\n",
+                   workdir, GetErrorStr());
     }
 
-    if (stat(workdir, &statbuf) != -1)
+    /* fix improper uid/gid ownership on workdir */
+    if (statbuf.st_uid != getuid() || statbuf.st_gid != getgid())
     {
-        /* change permissions go-w */
-        chmod(workdir, (mode_t) (statbuf.st_mode & ~022));
+        if (chown(workdir, getuid(), getgid()) == -1)
+        {
+            const char* error_reason = GetErrorStr();
+
+            Log(LOG_LEVEL_ERR, "Unable to set ownership on '%s' to '%ju.%ju'. (chown: %s)",
+                workdir, (uintmax_t)getuid(), (uintmax_t)getgid(), error_reason);
+        }
+    }
+
+    /* ensure workdir permissions are go-w */
+    if ((statbuf.st_mode & 022) != 0)
+    {
+        if (chmod(workdir, (mode_t) (statbuf.st_mode & ~022)) == -1);
+        {
+            Log(LOG_LEVEL_ERR, "Unable to set permissions on '%s' to go-w. (chmod: %s)",
+                workdir, GetErrorStr());
+        }
     }
 
     MakeParentDirectory(GetStateDir(), false);

@@ -70,7 +70,6 @@ int DeleteItemNotMatching(Item **list, const char *string);
 int DeleteItemContaining(Item **list, const char *string);
 int DeleteItemNotContaining(Item **list, const char *string);
 int ListLen(const Item *list);
-int ByteSizeList(const Item *list);
 bool IsItemIn(const Item *list, const char *item);
 bool ListsCompare(const Item *list1, const Item *list2);
 int IsMatchItemIn(const Item *list, const char *item);
@@ -79,7 +78,11 @@ void CopyList(Item **dest, const Item *source);
 void IdempItemCount(Item **liststart, const char *itemstring, const char *classes);
 Item *IdempPrependItem(Item **liststart, const char *itemstring, const char *classes);
 Item *IdempPrependItemClass(Item **liststart, const char *itemstring, const char *classes);
+Item *ReverseItemList(Item *list); /* Eats list, spits it out reversed. */
 Item *PrependItem(Item **liststart, const char *itemstring, const char *classes);
+/* Warning: AppendItem()'s cost is proportional to list length; it is
+ * usually cheaper to build a list using PrependItem, then reverse it;
+ * building it with AppendItem() is quadratic in length. */
 void AppendItem(Item **liststart, const char *itemstring, const char *classes);
 void DeleteItemList(Item *item);
 void DeleteItem(Item **liststart, Item *item);

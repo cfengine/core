@@ -386,7 +386,8 @@ void MonNetworkGatherData(double *cf_this)
         snprintf(vbuff, CF_MAXVARSIZE, "%s/state/cf_incoming.%s", CFWORKDIR, ECGSOCKS[i].name);
         if (stat(vbuff, &statbuf) != -1)
         {
-            if ((ByteSizeList(in[i]) < statbuf.st_size) && (now < statbuf.st_mtime + 40 * 60))
+            if (ItemListSize(in[i]) < statbuf.st_size &&
+                now < statbuf.st_mtime + 40 * 60)
             {
                 Log(LOG_LEVEL_VERBOSE, "New state '%s' is smaller, retaining old for 40 mins longer", ECGSOCKS[i].name);
                 DeleteItemList(in[i]);
@@ -410,7 +411,8 @@ void MonNetworkGatherData(double *cf_this)
 
         if (stat(vbuff, &statbuf) != -1)
         {
-            if ((ByteSizeList(out[i]) < statbuf.st_size) && (now < statbuf.st_mtime + 40 * 60))
+            if (ItemListSize(out[i]) < statbuf.st_size &&
+                now < statbuf.st_mtime + 40 * 60)
             {
                 Log(LOG_LEVEL_VERBOSE, "New state '%s' is smaller, retaining old for 40 mins longer", ECGSOCKS[i].name);
                 DeleteItemList(out[i]);

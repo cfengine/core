@@ -52,6 +52,7 @@ static void SetBundleAborted(EvalContext *ctx);
 static bool EvalContextStackFrameContainsSoft(const EvalContext *ctx, const char *context);
 static bool EvalContextHeapContainsSoft(const EvalContext *ctx, const char *ns, const char *name);
 static bool EvalContextHeapContainsHard(const EvalContext *ctx, const char *name);
+static const char *EvalContextCurrentNamespace(const EvalContext *ctx);
 
 struct EvalContext_
 {
@@ -351,9 +352,38 @@ static ExpressionValue EvalTokenAsClass(const char *classname, void *param)
 {
     const EvalContext *ctx = param;
     ClassRef ref = ClassRefParse(classname);
+    if (ClassRefIsQualified(ref))
+    {
+        if (strcmp(ref.ns, NamespaceDefault()) == 0)
+        {
+            if (EvalContextHeapContainsHard(ctx, ref.name))
+            {
+                ClassRefDestroy(ref);
+                return true;
+            }
+        }
+    }
+    else
+    {
+        if (EvalContextHeapContainsHard(ctx, ref.name))
+        {
+            ClassRefDestroy(ref);
+            return true;
+        }
 
+        const char *ns = EvalContextCurrentNamespace(ctx);
+        if (ns)
+        {
+            ClassRefQualify(&ref, ns);
+        }
+        else
+        {
+            ClassRefQualify(&ref, NamespaceDefault());
+        }
+    }
+
+    assert(ClassRefIsQualified(ref));
     bool classy = (strcmp("any", ref.name) == 0 ||
-                   (!ref.ns && EvalContextHeapContainsHard(ctx, ref.name)) ||
                    EvalContextHeapContainsSoft(ctx, ref.ns, ref.name) ||
                    EvalContextStackFrameContainsSoft(ctx, ref.name));
 

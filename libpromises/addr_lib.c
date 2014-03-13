@@ -559,7 +559,9 @@ bool IsInterfaceAddress(const Item *ip_addresses, const char *adr)
  * Parses "hostname:port" or "[hostname]:port", where hostname may also be
  * IPv4 or IPv6 address string.
  *
- * @WARNING modifies #s to NULL terminate hostname if followed by port.
+ * @param hostname will point to the hostname, or NULL if no or empty hostname
+ * @param port will point to the port, or NULL if no or empty port
+ * @WARNING modifies #s to '\0' terminate hostname if followed by port.
  */
 void ParseHostPort(char *s, char **hostname, char **port)
 {
@@ -586,6 +588,6 @@ void ParseHostPort(char *s, char **hostname, char **port)
         }
     }
 
-    *hostname = (h[0] != '\0') ? h : NULL;
-    *port     = (p[0] != '\0') ? p : NULL;
+    *hostname =              (h[0] != '\0') ? h : NULL;
+    *port     = (p != NULL && p[0] != '\0') ? p : NULL;
 }

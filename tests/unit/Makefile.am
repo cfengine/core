@@ -96,7 +96,8 @@ check_PROGRAMS = \
 	queue_test \
 	matching_test \
 	ring_buffer_test \
-	strlist_test
+	strlist_test \
+	addr_lib_test
 
 if HAVE_AVAHI_CLIENT
 if HAVE_AVAHI_COMMON

@@ -30,12 +30,14 @@
 static const ConstraintSyntax linkstate_constraints[] =
 {
     ConstraintSyntaxNewBool("bonding", "If true, the Link Aggregation Control Protocol is enabled to bond interfaces", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewOption("manager", "cfengine,native,nativefirst", "Which source of configuration is considered authoritative?", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewOption("state", "up,down", "Status of interface", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewOption("duplex", "half,full,auto", "Duplex wiring configuration", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewOption("spanning_tree", "on,off", "Status of local spanning tree protocol", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewInt("mtu", CF_INTRANGE, "MTU setting", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewInt("speed", CF_INTRANGE, "Link speed in MB/s", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewInt("minimum_allowed_aggregation", CF_INTRANGE, "Smallest number of links up to allow bonding", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewInt("minimum_bond_aggregation", CF_INTRANGE, "Smallest number of links up to allow bonding", SYNTAX_STATUS_NORMAL),
+
     ConstraintSyntaxNewNull()
 };
 
@@ -55,6 +57,7 @@ static const BodySyntax proxy_body = BodySyntaxNew("proxy", proxy_constraints, N
 
 static const ConstraintSyntax interface_constraints[] =
 {
+    ConstraintSyntaxNewBool("delete", "Delete an interface or bridge altogether", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewStringList("bridge_interfaces", "", "List of interfaces to bridge with IP forwarding", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewStringList("aggregate", "", "List of interfaces to bond with LACP", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewStringList("tagged_vlans", "", "List of labelled (trunk) vlan identifers for this interface", SYNTAX_STATUS_NORMAL),

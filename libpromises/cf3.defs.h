@@ -1386,6 +1386,10 @@ typedef struct
 
 typedef struct
 {
+    bool delete;
+
+    // XOR
+
     char *untagged_vlan;
     Rlist *tagged_vlans;
     Rlist *bridge_interfaces;
@@ -1399,6 +1403,7 @@ typedef struct
     int purge;
     char *duplex;
     char *spanning;
+    char *manager;
     bool bonding;
     int min_bonding;
     // Proxy body

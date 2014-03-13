@@ -44,7 +44,6 @@
 static int InterfaceSanityCheck(EvalContext *ctx, Attributes a,  const Promise *pp);
 static void AssessInterfacePromise(char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp);
 
-#ifdef OS_LINUX
 static void AssessDebianInterfacePromise(char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp);
 static void AssessDebianTaggedVlan(char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp);
 static int GetVlanInfo(Item **list, const Promise *pp, const char *interface);
@@ -62,9 +61,10 @@ static void AssessLACPBond(char *promiser, PromiseResult *result, EvalContext *c
 static void AssessDeviceAlias(char *promiser, PromiseResult *result, EvalContext *ctx, LinkState *ifs, const Attributes *a, const Promise *pp);
 static Rlist *IPV4Addresses(LinkState *ifs, char *interface);
 static Rlist *IPV6Addresses(LinkState *ifs, char *interface);
-static void CheckBridgeNative(char *promiser, PromiseResult *result);
+static int CheckBridgeNative(char *promiser, PromiseResult *result, const Promise *pp);
 static void CheckInterfaceOptions(char *promiser, PromiseResult *result, EvalContext *ctx, LinkState *ifs, const Attributes *a, const Promise *pp);
-#endif
+static bool CheckExistingInterfacePromise(char *promiser, LinkState *ifs);
+static bool CheckImplicitInterfacePromise(char *promiser, LinkState *ifs);
 
 /****************************************************************************/
 
@@ -176,8 +176,6 @@ static int InterfaceSanityCheck(EvalContext *ctx, Attributes a,  const Promise *
 
 void AssessInterfacePromise(char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp)
 {
-#ifdef OS_LINUX
-
     if (IsDefinedClass(ctx,"linux"))
     {
         AssessDebianInterfacePromise(promiser, result, ctx, a, pp);
@@ -188,27 +186,24 @@ void AssessInterfacePromise(char *promiser, PromiseResult *result, EvalContext *
         *result = PROMISE_RESULT_INTERRUPTED;
         return;
     }
-
-#endif
 }
 
 /****************************************************************************/
 /* Level 1                                                                  */
 /****************************************************************************/
 
-#ifdef OS_LINUX
-
 static void AssessDebianInterfacePromise(char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp)
 {
     LinkState *netinterfaces = NULL;
+    char cmd[CF_BUFSIZE];
 
     if (!GetInterfaceInformation(&netinterfaces, pp))
     {
         Log(LOG_LEVEL_ERR, "Unable to read the vlans - cannot keep interface promises");
-        return false;
+        return;
     }
 
-    if (a->interfaces.delete)
+    if (a->interface.delete)
     {
         // delete it, if it makes sense
         printf("NOT IMPLEMENTED YET\n");
@@ -224,14 +219,13 @@ static void AssessDebianInterfacePromise(char *promiser, PromiseResult *result, 
             *result = PROMISE_RESULT_FAIL;
         }
 
-        return true;
+        return;
     }
 
     if (a->haveipv4)
     {
         AssessIPv4Config(promiser, result, ctx, IPV4Addresses(netinterfaces, promiser), a, pp);
-        DeleteRlist
-            }
+    }
 
     if (a->haveipv6)
     {
@@ -290,7 +284,7 @@ static void AssessDebianTaggedVlan(char *promiser, PromiseResult *result, EvalCo
     if (!GetVlanInfo(&vlans, pp, promiser))
     {
         Log(LOG_LEVEL_ERR, "Unable to read the vlans - cannot keep interface promises");
-        return false;
+        return;
     }
 
     for (rp = a->interface.tagged_vlans; rp != NULL; rp = rp->next)
@@ -510,6 +504,8 @@ static void CheckInterfaceOptions(char *promiser, PromiseResult *result, EvalCon
        ip link set dev ppp0 mtu 1400
        Change the MTU the ppp0 device.
     */
+
+// if (a->interface.mtu != ifs-->)
 }
 
 /****************************************************************************/
@@ -521,7 +517,7 @@ static void AssessBridge(char *promiser, PromiseResult *result, EvalContext *ctx
 
     if ((strcmp(a->interface.manager, "native") == 0) || (strcmp(a->interface.manager, "nativefirst") == 0))
     {
-        if (CheckBridgeNative(promiser, result))
+        if (CheckBridgeNative(promiser, result, pp))
         {
             return;
         }
@@ -533,12 +529,10 @@ static void AssessBridge(char *promiser, PromiseResult *result, EvalContext *ctx
         }
     }
 
-// Turn to CFEngine methods for promise keeping
-
     if (!GetBridgeInfo(&bridges, pp))
     {
         Log(LOG_LEVEL_ERR, "Unable to read the vlans - cannot keep interface promises");
-        return false;
+        return;
     }
 
     for (rp = a->interface.bridge_interfaces; rp != NULL; rp = rp->next)
@@ -546,7 +540,8 @@ static void AssessBridge(char *promiser, PromiseResult *result, EvalContext *ctx
         // The interfaces have to exist already, with an IP address configured
         // They might or might not be promised - could be VLANs, virtual etc
 
-        if (CheckExistingInterfacePromise(ip->val.item) || CheckImplicitIntefacePromise())
+        if (CheckExistingInterfacePromise(rp->val.item, ifs) ||
+            CheckImplicitInterfacePromise(rp->val.item, ifs))
         {
         }
         else
@@ -574,34 +569,40 @@ static void AssessBridge(char *promiser, PromiseResult *result, EvalContext *ctx
 
 /****************************************************************************/
 
-static void CheckBridgeNative(char *promiser, PromiseResult *result)
+static int CheckBridgeNative(char *promiser, PromiseResult *result, const Promise *pp)
 {
-    char *promiser, PromiseResult *result,
-        char cmd[CF_BUFSIZE];
+    char comm[CF_BUFSIZE];
 
-    snprintf(comm, CF_BUFSIZE, "ifquery --check %s --with-depends", pp->promiser);
+    snprintf(comm, CF_BUFSIZE, "ifquery --check %s --with-depends", promiser);
 
-    if ((ExecCommand(cmd, result, pp) == 0))
+    if ((ExecCommand(comm, result, pp) == 0))
     {
         // Promise ostensibly kept
-        return;
+        return true;
     }
 
-    snprintf(comm, CF_BUFSIZE, "ifup %s --with-depends", pp->promiser);
+    snprintf(comm, CF_BUFSIZE, "ifup %s --with-depends", promiser);
 
-    if ((ExecCommand(cmd, result, pp) == 0))
+    if ((ExecCommand(comm, result, pp) == 0))
     {
-        return;
+        return true;
     }
 
     Log(LOG_LEVEL_INFO, "Bridge interfaces missing", promiser);
     *result = PROMISE_RESULT_FAIL;
+    return false;
+}
 
+/****************************************************************************/
 
-    if (*result == PROMISE_RESULT_NOOP)
-    {
-        return;
-    }
+static bool CheckExistingInterfacePromise(char *promiser, LinkState *ifs)
+{
+}
+
+/****************************************************************************/
+
+static bool CheckImplicitInterfacePromise(char *promiser, LinkState *ifs)
+{
 }
 
 /****************************************************************************/
@@ -653,17 +654,11 @@ static void AssessLACPBond(char *promiser, PromiseResult *result, EvalContext *c
 
 static void AssessDeviceAlias(char *promiser, PromiseResult *result, EvalContext *ctx, LinkState *ifs, const Attributes *a, const Promise *pp)
 {
-    char cmd[CF_BUFSIZE];
-    int ret, vlan_id;
+    char cmd[CF_BUFSIZE], interface[CF_SMALLBUF];
+    int vlan_id;
+    LinkState *lsp;
 
-    vlan_id = atoi((char *)rp->val.item);
-
-    if (vlan_id == 1)
-    {
-        Log(LOG_LEVEL_ERR, "VLAN 1 may not be tagged/access as per 802.1D standard");
-        *result = PROMISE_RESULT_FAIL;
-        continue;
-    }
+    vlan_id = atoi((char *)a->interface.untagged_vlan);
 
     if (vlan_id == 0)
     {
@@ -671,7 +666,7 @@ static void AssessDeviceAlias(char *promiser, PromiseResult *result, EvalContext
         DataType type = CF_DATA_TYPE_NONE;
 
         // Non-numeric alias (like JunOS) have to be looked up in VLAN_ALIASES[]
-        snprintf(vlan_lookup, CF_MAXVARSIZE, "VLAN_ALIASES[%s]", (char *)rp->val.item);
+        snprintf(vlan_lookup, CF_MAXVARSIZE, "VLAN_ALIASES[%s]", (char *)a->interface.untagged_vlan);
 
         VarRef *ref = VarRefParse(vlan_lookup);
         const void *value = EvalContextVariableGet(ctx, ref, &type);
@@ -690,11 +685,19 @@ static void AssessDeviceAlias(char *promiser, PromiseResult *result, EvalContext
         }
     }
 
-    for ifs
+    snprintf(interface, CF_SMALLBUF, "%s:%d", promiser, vlan_id);
 
-        Log(LOG_LEVEL_VERBOSE, "Did not find untagged VLAN %d on %s (i.e. virtual device %s:%d)", vlan_id, promiser, promiser, vlan_id);
+    for (lsp = ifs; lsp != NULL; lsp = lsp->next)
+    {
+        if (strcmp(lsp->name, interface) == 0)
+        {
+            return;
+        }
+    }
 
-    snprintf(cmd, CF_BUFSIZE, "%s link set dev %s:%d up", CF_DEBIAN_IP_COMM, pp->promiser, vlan_id);
+    Log(LOG_LEVEL_VERBOSE, "Did not find untagged VLAN %d on %s (i.e. virtual device %s)", vlan_id, promiser, interface);
+
+    snprintf(cmd, CF_BUFSIZE, "%s link set dev %s up", CF_DEBIAN_IP_COMM, interface);
 
     if ((ExecCommand(cmd, result, pp) != 0))
     {
@@ -827,7 +830,7 @@ static int GetVlanInfo(Item **list, const Promise *pp, const char *interface)
         CfReadLine(&line, &line_size, fp);
         sscanf(line, "%s | %d | %s", ifname, &id, ifparent);
 
-        if (strcmp(ifparent, promiser) == 0)
+        if (strcmp(ifparent, interface) == 0)
         {
             PrependFullItem(list, ifname, NULL, id, 0);
         }
@@ -1016,8 +1019,8 @@ static void DeleteInterfaceInfo(LinkState *interfaces)
     for (lp = interfaces; lp != NULL; lp = next)
     {
         free(lp->name);
-        DeleteRlist(lp->v4_adresses);
-        DeleteRlist(lp->v6_adresses);
+        RlistDestroy(lp->v4_addresses);
+        RlistDestroy(lp->v6_addresses);
         free(lp->hw_address);
         next = lp->next;
         free((char *)lp);
@@ -1030,7 +1033,7 @@ static void DeleteBridgeInfo(Bridges *bridges)
 {
     Bridges *bp, *next;
 
-    for (bp = bridges; bp != NULL; bp = bp->next)
+    for (bp = bridges; bp != NULL; bp = next)
     {
         free(bp->name);
         free(bp->id);
@@ -1039,5 +1042,3 @@ static void DeleteBridgeInfo(Bridges *bridges)
         free((char *)bp);
     }
 }
-
-#endif

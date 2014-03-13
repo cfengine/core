@@ -1577,13 +1577,10 @@ static void DeleteTypeContext(EvalContext *ctx, TypeSequence type)
         break;
 
     case TYPE_SEQUENCE_INTERFACES:
-#ifdef OS_LINUX
 
         // If Cumulus of ifipdown2
-        printf("NOW EDIT %s ??\n", CF_DEBIAN_IFCONF);
+        printf("NOW EDIT /etc/networks/interfaces ??\n");
 
-
-#endif
         break;
 
     default:

@@ -18,17 +18,20 @@ bundle agent generate_key
 
 bundle agent start_server(server_name)
 {
+  classes:
+      "debug_server" expression => "debug_mode";
+
   vars:
       "cwd" string => dirname("$(this.promise_filename)");
       "dlog" string => "$(sys.workdir)/server-debug.$(server_name).log";
       "conf" string => "$(cwd)/$(server_name).srv";
 
   commands:
-    !debug_mode::
+    !debug_server::
       "$(sys.cf_serverd) -Kf $(conf)"
       classes => if_failed("server_failed");
 
-    debug_mode::
+    debug_server::
       "$(sys.cf_serverd) -Kdf $(conf) > $(dlog) 2>&1 &"
       contain => run_under_shell,
       handle => "run_debug_server",
@@ -40,24 +43,27 @@ bundle agent start_server(server_name)
       contain => run_under_shell;
 
   reports:
-    debug_mode::
+    debug_server::
       "$(sys.cf_serverd)($(server_name)) was run in debug mode with configuration $(conf).  The logs will be in $(dlog)";
 }
 
 bundle agent run_test(test_name)
 {
+  classes:
+      "debug_client" expression => "debug_mode";
+
   vars:
       "dlog" string => "$(sys.workdir)/agent-debug.log";
   commands:
-    !debug_mode::
+    !debug_client::
       "$(sys.cf_agent) -KIf $(test_name) -D DEBUG,AUTO,ok 2>&1 | tee $(dlog)"
       contain => run_under_shell;
-    debug_mode::
+    debug_client::
       "$(sys.cf_agent) -Kdf $(test_name) -D DEBUG,AUTO,ok 2>&1 | tee $(dlog)"
       contain => run_under_shell;
 
   reports:
-    debug_mode::
+    debug_client::
       "$(sys.cf_agent) was run in debug mode with configuration $(test_name).  The logs will be in $(dlog)";
 }
 

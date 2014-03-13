@@ -12,6 +12,10 @@ bundle agent test
       "test_suppress_fail" string => "windows",
         meta => { "redmine4822" };
 
+  classes:
+      "debug_server" expression => "any", scope => "namespace";
+      "debug_client" expression => "any", scope => "namespace";
+
   methods:
       "any" usebundle => default_cf_sub_makefile("$(G.testdir)/destination_file",
                                                  "This is the source file to copy $(sys.date) - always fresh... more data!");

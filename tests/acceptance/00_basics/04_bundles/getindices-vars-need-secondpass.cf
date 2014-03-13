@@ -1,0 +1,48 @@
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence => {
+                          default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle agent init
+{
+}
+
+bundle agent test
+{
+  vars:
+      "x" slist => { "PARAM1", "PARAM2" };
+
+      "conf[internal1]" string => "internalvalue1";
+      "conf[internal2]" string => "internalvalue2";
+      "conf[$(x)]" string => "$(x)";
+
+      "keys_unsorted" slist => getindices("conf");
+      "keys" slist => sort(keys_unsorted, "lex");
+      "keys_str" string => format("%S", keys);
+
+  reports:
+    DEBUG::
+      "conf[$(keys_unsorted)] = $(conf[$(keys_unsorted)])";
+}
+
+bundle agent check
+{
+  vars:
+      "expected" string => '{ "PARAM1", "PARAM2", "internal1", "internal2" }';
+
+  classes:
+      "ok" expression => strcmp($(test.keys_str),
+                                $(expected));
+
+  reports:
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+
+    DEBUG.!ok::
+      "Expected $(expected), actual $(test.keys_str)";
+}

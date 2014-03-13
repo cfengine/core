@@ -1709,11 +1709,13 @@ Interfaces GetInterfaceConstraints(const EvalContext *ctx, const Promise *pp)
     i.v4_broadcast  = PromiseGetConstraintAsRval(pp, "ipv4_broadcast", RVAL_TYPE_SCALAR);
     i.duplex = PromiseGetConstraintAsRval(pp, "duplex", RVAL_TYPE_SCALAR);
     i.state = PromiseGetConstraintAsRval(pp, "state", RVAL_TYPE_SCALAR);
+    i.manager = PromiseGetConstraintAsRval(pp, "state", RVAL_TYPE_SCALAR);
     i.aggregate = PromiseGetConstraintAsList(ctx, "aggregate", pp);
     i.state = PromiseGetConstraintAsRval(pp, "state", RVAL_TYPE_SCALAR);
     i.spanning = PromiseGetConstraintAsRval(pp, "spanning", RVAL_TYPE_SCALAR);
     i.bonding = PromiseGetConstraintAsBoolean(ctx, "bonding", pp);
     i.purge = PromiseGetConstraintAsBoolean(ctx, "purge_addresses", pp);
+    i.delete = PromiseGetConstraintAsBoolean(ctx, "delete", pp);
     i.mtu = PromiseGetConstraintAsInt(ctx, "mtu", pp);
     i.speed = PromiseGetConstraintAsInt(ctx, "speed", pp);
     i.min_bonding = PromiseGetConstraintAsInt(ctx, "min_bonding", pp);

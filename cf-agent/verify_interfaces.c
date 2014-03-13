@@ -51,8 +51,8 @@ static int GetVlanInfo(Item **list, const Promise *pp, const char *interface);
 static int GetInterfaceInformation(LinkState **list, const Promise *pp);
 static void DeleteInterfaceInfo(LinkState *interfaces);
 static int GetBridgeInfo(Bridges **list, const Promise *pp);
-static int NewVLAN(int vlan_id, char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp);
-static int DeleteVLAN(int vlan_id, char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp);
+static int NewTaggedVLAN(int vlan_id, char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp);
+static int DeleteTaggedVLAN(int vlan_id, char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp);
 static void DeleteBridgeInfo(Bridges *bridges);
 int ExecCommand(char *cmd, PromiseResult *result, const Promise *pp);
 static void AssessIPv4Config(char *promiser, PromiseResult *result, EvalContext *ctx, Rlist *addresses, const Attributes *a, const Promise *pp);
@@ -62,6 +62,8 @@ static void AssessLACPBond(char *promiser, PromiseResult *result, EvalContext *c
 static void AssessDeviceAlias(char *promiser, PromiseResult *result, EvalContext *ctx, LinkState *ifs, const Attributes *a, const Promise *pp);
 static Rlist *IPV4Addresses(LinkState *ifs, char *interface);
 static Rlist *IPV6Addresses(LinkState *ifs, char *interface);
+static void CheckBridgeNative(char *promiser, PromiseResult *result);
+static void CheckInterfaceOptions(char *promiser, PromiseResult *result, EvalContext *ctx, LinkState *ifs, const Attributes *a, const Promise *pp);
 #endif
 
 /****************************************************************************/
@@ -125,6 +127,13 @@ PromiseResult VerifyInterfacePromise(EvalContext *ctx, const Promise *pp)
 
 static int InterfaceSanityCheck(EvalContext *ctx, Attributes a,  const Promise *pp)
 {
+    if (a.interface.delete && a.interface.state && (strcmp(a.interface.state, "up") == 0))
+    {
+        Log(LOG_LEVEL_ERR, "Cannot delete an interface if it is configured to be up in promise '%s'", pp->promiser);
+        PromiseRef(LOG_LEVEL_ERR, pp);
+        return false;
+    }
+
     if (a.havebridge && (a.haveipv4 || a.haveipv6))
     {
         Log(LOG_LEVEL_ERR, "Can't set IP address on bridge virtual interface for 'interfaces' promise '%s'", pp->promiser);
@@ -199,10 +208,30 @@ static void AssessDebianInterfacePromise(char *promiser, PromiseResult *result, 
         return false;
     }
 
+    if (a->interfaces.delete)
+    {
+        // delete it, if it makes sense
+        printf("NOT IMPLEMENTED YET\n");
+        return;
+    }
+
+    if (a->interface.state && strcmp(a->interface.state, "down") == 0)
+    {
+        snprintf(cmd, CF_BUFSIZE, "%s link set dev %s down", CF_DEBIAN_IP_COMM, promiser);
+
+        if (!ExecCommand(cmd, result, pp))
+        {
+            *result = PROMISE_RESULT_FAIL;
+        }
+
+        return true;
+    }
+
     if (a->haveipv4)
     {
         AssessIPv4Config(promiser, result, ctx, IPV4Addresses(netinterfaces, promiser), a, pp);
-    }
+        DeleteRlist
+            }
 
     if (a->haveipv6)
     {
@@ -216,31 +245,32 @@ static void AssessDebianInterfacePromise(char *promiser, PromiseResult *result, 
 
     if (a->haveuvlan)
     {
-        AssessDeviceAlias(promiser, result, ctx, NETINTERFACES, a, pp);
+        AssessDeviceAlias(promiser, result, ctx, netinterfaces, a, pp);
     }
 
     if (a->havebridge)
     {
-        // Handle dependencies here - maybe defer
-        if (promise not kept -- interfaces)
-        {
-        }
-
-        AssessBridge(promiser, result, ctx, NETINTERFACES, a, pp);
+        AssessBridge(promiser, result, ctx, netinterfaces, a, pp);
     }
 
     if (a->haveaggr)
     {
-        AssessLACPBond(promiser, result, ctx, NETINTERFACES, a, pp);
+        AssessLACPBond(promiser, result, ctx, netinterfaces, a, pp);
     }
 
-    /* DO ADD OPTIONS Link State
-       ip link show
-       Shows the state of all network interfaces on the system.
+    CheckInterfaceOptions(promiser, result, ctx, netinterfaces, a, pp);
 
-       ip link set dev ppp0 mtu 1400
-       Change the MTU the ppp0 device.
-    */
+    if (strcmp(a->interface.state, "up") == 0)
+    {
+        snprintf(cmd, CF_BUFSIZE, "%s link set dev %s up", CF_DEBIAN_IP_COMM, promiser);
+
+        if (!ExecCommand(cmd, result, pp))
+        {
+            *result = PROMISE_RESULT_FAIL;
+        }
+
+        return;
+    }
 
     DeleteInterfaceInfo(netinterfaces);
 
@@ -314,7 +344,7 @@ static void AssessDebianTaggedVlan(char *promiser, PromiseResult *result, EvalCo
             continue;
         }
 
-        if (!NewVLAN(vlan_id, promiser, result, ctx, a, pp))
+        if (!NewTaggedVLAN(vlan_id, promiser, result, ctx, a, pp))
         {
             // Something's wrong...
             return;
@@ -325,7 +355,7 @@ static void AssessDebianTaggedVlan(char *promiser, PromiseResult *result, EvalCo
 
     for (ip = vlans; ip != NULL; ip=ip->next)
     {
-        DeleteVLAN(vlan_id, promiser, result, ctx, a, pp);
+        DeleteTaggedVLAN(vlan_id, promiser, result, ctx, a, pp);
     }
 
     DeleteItemList(vlans);
@@ -333,12 +363,12 @@ static void AssessDebianTaggedVlan(char *promiser, PromiseResult *result, EvalCo
 
 /****************************************************************************/
 
-static int NewVLAN(int vlan_id, char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp)
+static int NewTaggedVLAN(int vlan_id, char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp)
 {
     char cmd[CF_BUFSIZE];
     int ret;
 
-    Log(LOG_LEVEL_VERBOSE, "Did not find VLAN %d on %s (i.e. virtual device %s.%d)", vlan_id, promiser, promiser, vlan_id);
+    Log(LOG_LEVEL_VERBOSE, "Did not find tagged VLAN %d on %s (i.e. virtual device %s.%d)", vlan_id, promiser, promiser, vlan_id);
 
     snprintf(cmd, CF_BUFSIZE, "%s add %s %d", CF_DEBIAN_VLAN_COMMAND, pp->promiser, vlan_id);
 
@@ -354,7 +384,7 @@ static int NewVLAN(int vlan_id, char *promiser, PromiseResult *result, EvalConte
 
 /****************************************************************************/
 
-static int DeleteVLAN(int vlan_id, char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp)
+static int DeleteTaggedVLAN(int vlan_id, char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp)
 {
     char cmd[CF_BUFSIZE];
     int ret;
@@ -422,7 +452,6 @@ static void AssessIPv4Config(char *promiser, PromiseResult *result, EvalContext 
             }
         }
     }
-
 }
 
 /****************************************************************************/
@@ -472,10 +501,39 @@ static void AssessIPv6Config(char *promiser, PromiseResult *result, EvalContext 
 
 /****************************************************************************/
 
+static void CheckInterfaceOptions(char *promiser, PromiseResult *result, EvalContext *ctx, LinkState *ifs, const Attributes *a, const Promise *pp)
+{
+    /* DO ADD OPTIONS Link State
+       ip link show
+       Shows the state of all network interfaces on the system.
+
+       ip link set dev ppp0 mtu 1400
+       Change the MTU the ppp0 device.
+    */
+}
+
+/****************************************************************************/
+
 static void AssessBridge(char *promiser, PromiseResult *result, EvalContext *ctx, LinkState *ifs, const Attributes *a, const Promise *pp)
 {
     Bridges *bridges = NULL;
     Rlist *rp;
+
+    if ((strcmp(a->interface.manager, "native") == 0) || (strcmp(a->interface.manager, "nativefirst") == 0))
+    {
+        if (CheckBridgeNative(promiser, result))
+        {
+            return;
+        }
+        else if (strcmp(a->interface.manager, "nativefirst") != 0)
+        {
+            Log(LOG_LEVEL_ERR, "Unable to configure interface with native tools - CFEngine cannot keep interface promises");
+            *result = PROMISE_RESULT_FAIL;
+            return;
+        }
+    }
+
+// Turn to CFEngine methods for promise keeping
 
     if (!GetBridgeInfo(&bridges, pp))
     {
@@ -483,12 +541,19 @@ static void AssessBridge(char *promiser, PromiseResult *result, EvalContext *ctx
         return false;
     }
 
-    // Check dependencies
-    // ifs is the list of net interfaces
-
     for (rp = a->interface.bridge_interfaces; rp != NULL; rp = rp->next)
     {
-        // Any interfaces missing?
+        // The interfaces have to exist already, with an IP address configured
+        // They might or might not be promised - could be VLANs, virtual etc
+
+        if (CheckExistingInterfacePromise(ip->val.item) || CheckImplicitIntefacePromise())
+        {
+        }
+        else
+        {
+            *result = PROMISE_RESULT_FAIL;
+            return;
+        }
     }
 
     // Check umbrella - could try both these commands
@@ -500,9 +565,43 @@ static void AssessBridge(char *promiser, PromiseResult *result, EvalContext *ctx
          ip link add name br0 type bridge
          ip link set dev ${interface name} master ${bridge name}
          ip link set dev eth0 master br0
+
+         SET OPTIONS
     */
 
     DeleteBridgeInfo(bridges);
+}
+
+/****************************************************************************/
+
+static void CheckBridgeNative(char *promiser, PromiseResult *result)
+{
+    char *promiser, PromiseResult *result,
+        char cmd[CF_BUFSIZE];
+
+    snprintf(comm, CF_BUFSIZE, "ifquery --check %s --with-depends", pp->promiser);
+
+    if ((ExecCommand(cmd, result, pp) == 0))
+    {
+        // Promise ostensibly kept
+        return;
+    }
+
+    snprintf(comm, CF_BUFSIZE, "ifup %s --with-depends", pp->promiser);
+
+    if ((ExecCommand(cmd, result, pp) == 0))
+    {
+        return;
+    }
+
+    Log(LOG_LEVEL_INFO, "Bridge interfaces missing", promiser);
+    *result = PROMISE_RESULT_FAIL;
+
+
+    if (*result == PROMISE_RESULT_NOOP)
+    {
+        return;
+    }
 }
 
 /****************************************************************************/
@@ -514,7 +613,7 @@ static void AssessLACPBond(char *promiser, PromiseResult *result, EvalContext *c
 
 /*
 
-  An inrerface cannot belong to multiple bonds
+  An interface cannot belong to multiple bonds
   Slave ports in a bond must all be set to the same speed/duplex etc
   A bond cannot enslave vlan virt interfaces
 
@@ -591,11 +690,9 @@ static void AssessDeviceAlias(char *promiser, PromiseResult *result, EvalContext
         }
     }
 
-    // ip link set dev eth0:0 up
+    for ifs
 
-    if interface exists
-
-                     Log(LOG_LEVEL_VERBOSE, "Did not find untagged VLAN %d on %s (i.e. virtual device %s:%d)", vlan_id, promiser, promiser, vlan_id);
+        Log(LOG_LEVEL_VERBOSE, "Did not find untagged VLAN %d on %s (i.e. virtual device %s:%d)", vlan_id, promiser, promiser, vlan_id);
 
     snprintf(cmd, CF_BUFSIZE, "%s link set dev %s:%d up", CF_DEBIAN_IP_COMM, pp->promiser, vlan_id);
 
@@ -646,6 +743,12 @@ int ExecCommand(char *cmd, PromiseResult *result, const Promise *pp)
     FILE *pfp;
     size_t line_size = CF_BUFSIZE;
 
+    if (DONTDO)
+    {
+        Log(LOG_LEVEL_VERBOSE, "Need to execute command '%s' for net/interface configuration", cmd);
+        return true;
+    }
+
     if ((pfp = cf_popen(cmd, "r", true)) == NULL)
     {
         Log(LOG_LEVEL_ERR, "Unable to execute '%s'", cmd);
@@ -695,7 +798,7 @@ static int GetVlanInfo(Item **list, const Promise *pp, const char *interface)
     char ifname[CF_SMALLBUF];
     char ifparent[CF_SMALLBUF];
 
-// kernel: modprobe 8021q
+// kernel: modprobe 8021q must be done before running this
 
 /*
   host$ sudo more /proc/net/vlan/config
@@ -709,7 +812,7 @@ static int GetVlanInfo(Item **list, const Promise *pp, const char *interface)
 
     if ((fp = safe_fopen(CF_DEBIAN_VLAN_FILE, "r")) == NULL)
     {
-        Log(LOG_LEVEL_ERR, "Unable to open '%s'", CF_DEBIAN_VLAN_FILE);
+        Log(LOG_LEVEL_ERR, "Unable to open '%s' - try modprobe 8021q to install driver", CF_DEBIAN_VLAN_FILE);
         PromiseRef(LOG_LEVEL_ERR, pp);
         return false;
     }

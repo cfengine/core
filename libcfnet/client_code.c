@@ -324,7 +324,7 @@ AgentConnection *ServerConnection(const char *server, const char *port,
                  LAST_SEEN_ROLE_CONNECT);
         break;
 
-    case CF_PROTOCOL_UNDEFINED:
+    case CF_PROTOCOL_UNDEFINED:              /* Default is classic protocol */
     case CF_PROTOCOL_CLASSIC:
 
         conn->conn_info->type = CF_PROTOCOL_CLASSIC;

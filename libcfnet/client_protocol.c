@@ -193,16 +193,14 @@ static bool SetSessionKey(AgentConnection *conn)
     return true;
 }
 
-int AuthenticateAgent(AgentConnection *conn, bool trust_key)
+int AuthenticateAgent(AgentConnection *conn, bool trust_server)
 {
     char sendbuffer[CF_EXPANDSIZE], in[CF_BUFSIZE], *out, *decrypted_cchall;
     BIGNUM *nonce_challenge, *bn = NULL;
     unsigned long err;
     unsigned char digest[EVP_MAX_MD_SIZE];
     int encrypted_len, nonce_len = 0, len, session_size;
-    bool implicitly_trust_server;
     char enterprise_field = 'c';
-    RSA *server_pubkey = NULL;
 
     if ((PUBKEY == NULL) || (PRIVKEY == NULL))
     {
@@ -241,44 +239,58 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
         HashString(in, nonce_len, digest, HASH_METHOD_MD5);
     }
 
-/* We assume that the server bound to the remote socket is the official one i.e. = root's */
+// Server pubkey is what we want to has as a unique ID
 
-    /* Ask the server to send us the public key if we don't have it. */
-    if ((server_pubkey = HavePublicKeyByIP(conn->username, conn->remoteip)))
+    /* Ask the server to send us the public key ('n') if we are set to trust
+     * any key. */
+    RSA *server_pubkey = NULL;
+    char do_we_have_key;            /* character to send with SAUTH command */
+    if (trust_server)
     {
-        implicitly_trust_server = false;
-        encrypted_len = RSA_size(server_pubkey);
+        do_we_have_key = 'n';                  /* ask server for public key */
+        encrypted_len = nonce_len;
     }
     else
     {
-        implicitly_trust_server = true;
-        encrypted_len = nonce_len;
+        do_we_have_key = 'y';
+        server_pubkey = HavePublicKeyByIP(conn->username, conn->remoteip);
+        if (server_pubkey == NULL)
+        {
+            Log(LOG_LEVEL_ERR,
+                "Can't find server key for %s, and trustkey was set to false!",
+                conn->remoteip);
+            return false;
+        }
+        encrypted_len = RSA_size(server_pubkey);
     }
 
-// Server pubkey is what we want to has as a unique ID
-
     snprintf(sendbuffer, sizeof(sendbuffer), "SAUTH %c %d %d %c",
-             implicitly_trust_server ? 'n': 'y',
-             encrypted_len, nonce_len, enterprise_field);
+             do_we_have_key, encrypted_len, nonce_len, enterprise_field);
 
     out = xmalloc(encrypted_len);
 
-    if (server_pubkey != NULL)
+    if (trust_server)
     {
+        /* Send challenge unencrypted. */
+        assert(encrypted_len == nonce_len);
+        memcpy(sendbuffer + CF_RSA_PROTO_OFFSET, in, encrypted_len);
+    }
+    else
+    {
+        /* Encrypt challenge with server's public key. */
+        assert(server_pubkey != NULL);
         if (RSA_public_encrypt(nonce_len, in, out, server_pubkey, RSA_PKCS1_PADDING) <= 0)
         {
             err = ERR_get_error();
-            Log(LOG_LEVEL_ERR, "Public encryption failed. (RSA_public_encrypt: %s)", ERR_reason_error_string(err));
+            Log(LOG_LEVEL_ERR,
+                "Public encryption failed. (RSA_public_encrypt: %s)",
+                ERR_reason_error_string(err));
             free(out);
             RSA_free(server_pubkey);
             return false;
         }
 
         memcpy(sendbuffer + CF_RSA_PROTO_OFFSET, out, encrypted_len);
-    }
-    else
-    {
-        memcpy(sendbuffer + CF_RSA_PROTO_OFFSET, in, nonce_len);
     }
 
 /* proposition C1 - Send challenge / nonce */
@@ -308,7 +320,9 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
 
     if (ReceiveTransaction(conn->conn_info, in, NULL) == -1)
     {
-        Log(LOG_LEVEL_ERR, "Protocol transaction broken off (1). (ReceiveTransaction: %s)", GetErrorStr());
+        Log(LOG_LEVEL_ERR,
+            "Protocol transaction broken off (1). (ReceiveTransaction: %s)",
+            GetErrorStr());
         RSA_free(server_pubkey);
         return false;
     }
@@ -327,38 +341,35 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
 
     if (ReceiveTransaction(conn->conn_info, in, NULL) == -1)
     {
-        Log(LOG_LEVEL_ERR, "Protocol transaction broken off (2). (ReceiveTransaction: %s)", GetErrorStr());
+        Log(LOG_LEVEL_ERR, "Protocol transaction broken off (2). (ReceiveTransaction: %s)",
+            GetErrorStr());
         RSA_free(server_pubkey);
         return false;
     }
 
-    if ((HashesMatch(digest, in, CF_DEFAULT_DIGEST)) || (HashesMatch(digest, in, HASH_METHOD_MD5)))  // Legacy
+    /* Was challenge response correct? */
+    if (HashesMatch(digest, in, CF_DEFAULT_DIGEST) ||
+        HashesMatch(digest, in, HASH_METHOD_MD5))             // Legacy
     {
-        if (implicitly_trust_server == false)        /* challenge reply was correct */
+        if (trust_server)
         {
-            Log(LOG_LEVEL_VERBOSE, ".....................[.h.a.i.l.].................................");
-            Log(LOG_LEVEL_VERBOSE, "Strong authentication of server '%s' connection confirmed", conn->this_server);
+            Log(LOG_LEVEL_VERBOSE,
+                "Trusting server identity, promise to accept key from '%s' = '%s'",
+                conn->this_server, conn->remoteip);
         }
         else
         {
-            if (trust_key)
-            {
-                Log(LOG_LEVEL_VERBOSE, "Trusting server identity, promise to accept key from '%s' = '%s'", conn->this_server,
-                      conn->remoteip);
-            }
-            else
-            {
-                Log(LOG_LEVEL_ERR, "Not authorized to trust public key of server '%s' (trustkey = false)",
-                      conn->this_server);
-                RSA_free(server_pubkey);
-                return false;
-            }
+            Log(LOG_LEVEL_VERBOSE,
+                ".....................[.h.a.i.l.].................................");
+            Log(LOG_LEVEL_VERBOSE,
+                "Strong authentication of server '%s' connection confirmed",
+                conn->this_server);
         }
     }
     else
     {
-        Log(LOG_LEVEL_ERR, "Challenge response from server '%s/%s' was incorrect", conn->this_server,
-             conn->remoteip);
+        Log(LOG_LEVEL_ERR, "Challenge response from server '%s/%s' was incorrect",
+            conn->this_server, conn->remoteip);
         RSA_free(server_pubkey);
         return false;
     }

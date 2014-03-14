@@ -2788,7 +2788,7 @@ static SyntaxTypeMatch ConstraintCheckType(const Constraint *cp)
         }
     }
 
-    if (THIS_AGENT_TYPE != AGENT_TYPE_COMMON && cp->type == POLICY_ELEMENT_TYPE_PROMISE)
+    if (cp->type == POLICY_ELEMENT_TYPE_PROMISE)
     {
         PromiseType *promise_type = cp->parent.promise->parent_promise_type;
 

@@ -498,7 +498,7 @@ void GetInterfacesInfo(EvalContext *ctx)
                  * interface. */
                 if (!address_set && !(ifr.ifr_flags & IFF_LOOPBACK))
                 {
-                    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "ipv4", txtaddr, CF_DATA_TYPE_STRING, "source=agent");
+                    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "ipv4", txtaddr, CF_DATA_TYPE_STRING, "inventory,source=agent");
 
                     strcpy(VIPADDRESS, txtaddr);
                     Log(LOG_LEVEL_VERBOSE, "IP address of host set to %s",

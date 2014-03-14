@@ -974,12 +974,14 @@ static void KeepFileAccessPromise(const EvalContext *ctx, const Promise *pp)
     return;
 
   err_too_long:
-        Log(LOG_LEVEL_ERR, "Path '%s' in access_rules is too long (%ld > %d), ignoring!",
+        Log(LOG_LEVEL_ERR,
+            "Path '%s' in access_rules is too long (%zu > %d), ignoring!",
             pp->promiser, strlen(pp->promiser), PATH_MAX);
         return;
 
   err_unknown:
-        Log(LOG_LEVEL_ERR, "Path '%s' in access_rules gave error '%s', ignoring!",
+        Log(LOG_LEVEL_ERR,
+            "Path '%s' in access_rules gave error '%s', ignoring!",
             pp->promiser, GetErrorStr());
         return;
 }

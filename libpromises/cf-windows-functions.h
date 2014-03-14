@@ -97,6 +97,10 @@ int NovaWin_PackageListInstalledFromAPI(EvalContext *ctx, PackageItem ** pkgList
 
 bool IsReadReady(int fd, int timeout_sec);
 
+/* win_common.c */
+
+void InitializeWindows(void);
+
 #endif /* __MINGW32__ */
 
 #endif // CFENGINE_WINDOWS_FUNCTIONS_H

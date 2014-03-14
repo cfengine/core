@@ -920,9 +920,9 @@ static void KeepFileAccessPromise(const EvalContext *ctx, const Promise *pp)
     memcpy(path, pp->promiser, path_len + 1);
 
     /* Resolve symlinks and canonicalise access_rules path. */
-    int ret = PreprocessRequestPath(path, sizeof(path));
+    size_t ret2 = PreprocessRequestPath(path, sizeof(path));
 
-    if (ret == -1)
+    if (ret2 == (size_t) -1)
     {
         if (errno != ENOENT)                        /* something went wrong */
         {
@@ -940,8 +940,8 @@ static void KeepFileAccessPromise(const EvalContext *ctx, const Promise *pp)
     else                                 /* file exists, path canonicalised */
     {
         /* If it's a directory append trailing '/'. */
+        path_len = ret2;
         int is_dir = IsDirReal(path);
-        path_len = ret;
         if (is_dir == 1 && path[path_len - 1] != FILE_SEPARATOR)
         {
             if (path_len + 2 > sizeof(path))
@@ -974,12 +974,14 @@ static void KeepFileAccessPromise(const EvalContext *ctx, const Promise *pp)
     return;
 
   err_too_long:
-        Log(LOG_LEVEL_ERR, "Path '%s' in access_rules is too long (%ld > %d), ignoring!",
+        Log(LOG_LEVEL_ERR,
+            "Path '%s' in access_rules is too long (%zu > %d), ignoring!",
             pp->promiser, strlen(pp->promiser), PATH_MAX);
         return;
 
   err_unknown:
-        Log(LOG_LEVEL_ERR, "Path '%s' in access_rules gave error '%s', ignoring!",
+        Log(LOG_LEVEL_ERR,
+            "Path '%s' in access_rules gave error '%s', ignoring!",
             pp->promiser, GetErrorStr());
         return;
 }

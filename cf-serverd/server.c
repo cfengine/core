@@ -448,7 +448,7 @@ static ServerConnectionState *NewConn(EvalContext *ctx, ConnectionInfo *info)
     conn = xcalloc(1, sizeof(*conn));
     conn->ctx = ctx;
     conn->conn_info = info;
-    conn->id_verified = false;
+    conn->user_data_set = false;
     conn->rsa_auth = false;
     conn->hostname[0] = '\0';
     conn->ipaddr[0] = '\0';

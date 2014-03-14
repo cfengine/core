@@ -3878,7 +3878,6 @@ static FnCallResult FnCallNth(EvalContext *ctx, ARG_UNUSED const Policy *policy,
     const char* const varname = RlistScalarValue(finalargs);
 
     const char* const key = RlistScalarValue(finalargs->next);
-    long index = IntFromString(key);
 
     VarRef *ref = VarRefParse(varname);
     DataType type = CF_DATA_TYPE_NONE;
@@ -3902,6 +3901,7 @@ static FnCallResult FnCallNth(EvalContext *ctx, ARG_UNUSED const Policy *policy,
             }
             else if (JSON_CONTAINER_TYPE_ARRAY == ct)
             {
+                long index = IntFromString(key);
                 if (index >= 0 && index < JsonLength(value))
                 {
                     jelement = JsonAt(jholder, index);
@@ -3942,6 +3942,7 @@ static FnCallResult FnCallNth(EvalContext *ctx, ARG_UNUSED const Policy *policy,
         }
 
         const Rlist *return_list = NULL;
+        long index = IntFromString(key);
         for (return_list = input_list; return_list && index--; return_list = return_list->next);
 
         if (!return_list)

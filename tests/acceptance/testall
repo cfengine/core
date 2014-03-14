@@ -340,26 +340,26 @@ export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP CFENGINE_TEST_OVERRIDE_EXTENSION_LIBR
       # Some states are output by default.cf.sub, therefore check for both TEST
       # prefix and default.cf.sub prefix.
       ESCAPED_TEST="$(echo "($TEST|default.cf.sub)" | sed -e 's/\./\\./g')"
-      if grep -E -q -e "R: .*$ESCAPED_TEST XFAIL" $OUTFILE; then
+      if egrep -q -e "R: .*$ESCAPED_TEST XFAIL" $OUTFILE; then
         # Check for other test case outcomes than fail. Should not happen.
-        if grep -E -e "R: .*$ESCAPED_TEST " $OUTFILE | grep -E -v -q -e "R: .*$ESCAPED_TEST X?FAIL"; then
+        if egrep -e "R: .*$ESCAPED_TEST " $OUTFILE | egrep -v -q -e "R: .*$ESCAPED_TEST X?FAIL"; then
           RESULT=FAIL
           RESULT_MSG="${COLOR_FAILURE}FAIL (Tried to suppress nonexistent failure)${COLOR_NORMAL}"
         else
-          REDMINE="$(grep -E -e "R: .*$ESCAPED_TEST XFAIL" $OUTFILE | sed -e "s,.*XFAIL/redmine\([0-9][0-9]*\).*,\1,")"
+          REDMINE="$(egrep -e "R: .*$ESCAPED_TEST XFAIL" $OUTFILE | sed -e "s,.*XFAIL/redmine\([0-9][0-9]*\).*,\1,")"
           RESULT=XFAIL
           RESULT_MSG="${COLOR_WARNING}FAIL (Suppressed, Redmine #$REDMINE)${COLOR_NORMAL}"
         fi
-      elif grep -E -q -e "R: .*$ESCAPED_TEST FAIL/no_redmine_number" $OUTFILE; then
+      elif egrep -q -e "R: .*$ESCAPED_TEST FAIL/no_redmine_number" $OUTFILE; then
         RESULT=FAIL
         RESULT_MSG="${COLOR_FAILURE}FAIL (Tried to suppress failure, but no Redmine issue number is provided)${COLOR_NORMAL}"
-      elif grep -E -q -e "R: .*$ESCAPED_TEST Pass" $OUTFILE; then
+      elif egrep -q -e "R: .*$ESCAPED_TEST Pass" $OUTFILE; then
         RESULT=Pass
         RESULT_MSG="${COLOR_SUCCESS}Pass${COLOR_NORMAL}"
-      elif grep -E -q -e "R: .*$ESCAPED_TEST Skip/unsupported" $OUTFILE; then
+      elif egrep -q -e "R: .*$ESCAPED_TEST Skip/unsupported" $OUTFILE; then
         RESULT=Skip
         RESULT_MSG="${COLOR_WARNING}Skipped (No platform support)${COLOR_NORMAL}"
-      elif grep -E -q -e "R: .*$ESCAPED_TEST Skip/needs_work" $OUTFILE; then
+      elif egrep -q -e "R: .*$ESCAPED_TEST Skip/needs_work" $OUTFILE; then
         RESULT=Skip
         RESULT_MSG="${COLOR_WARNING}Skipped (Test needs work)${COLOR_NORMAL}"
       else

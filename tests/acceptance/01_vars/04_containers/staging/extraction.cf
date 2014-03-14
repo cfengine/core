@@ -1,0 +1,53 @@
+#######################################################
+#
+# Redmine#4301: "Couldn't find extracted variable"
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+}
+
+#######################################################
+
+bundle agent test
+{
+  vars:
+      "config" data => parsejson('{"*.alert": "root"}');
+
+  files:
+      "$(G.testfile).actual"
+      create => "true",
+      edit_line => test_set_line_based("test.config", " ", "\s+", ".*", "\s*#\s*");
+}
+
+# this is the stdlib set_line_based cut down
+bundle edit_line test_set_line_based(v, sep, bp, kp, cp)
+{
+
+  vars:
+      # even though it's not used in the iteration, the vkeys variable
+      # is required for the test to fail
+      "vkeys" slist => getindices("$(v)");
+      "i" slist => grep($(kp), vkeys);
+
+      # Escape the value (had a problem with special characters and regex's)
+      "ev[$(i)]" string => escape("$($(v)[$(i)])");
+}
+
+#######################################################
+
+bundle agent check
+{
+  reports:
+      "$(this.promise_filename) Pass";
+}

@@ -268,7 +268,7 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promi
         ChopLastNode(basedir);
         if (safe_chdir(basedir))
         {
-            Log(LOG_LEVEL_ERR, "Failed to chdir into '%s'", basedir);
+            Log(LOG_LEVEL_ERR, "Failed to chdir into '%s'. (chdir: '%s')", basedir, GetErrorStr());
         }
     }
 

@@ -939,12 +939,14 @@ typedef struct LinkState_ LinkState;
 struct LinkState_
 {
     char *name;
+    char *parent;
     Rlist *v4_addresses;
     char *v4_broadcast;
     Rlist *v6_addresses;
     char *hw_address;
     bool multicast;
     bool up;
+    bool is_parent;
     int mtu;
     int speed;
     LinkState *next;
@@ -1393,7 +1395,7 @@ typedef struct
     char *untagged_vlan;
     Rlist *tagged_vlans;
     Rlist *bridge_interfaces;
-    Rlist *aggregate;
+    Rlist *bond_interfaces;
     Rlist *v6_addresses;
     Rlist *v4_addresses;
     char *v4_broadcast;
@@ -1552,7 +1554,7 @@ typedef struct
     int havebundle;
     int havepackages;
     int havebridge;
-    int haveaggr;
+    int havebond;
     int haveipv4;
     int haveipv6;
     int haveuvlan;

@@ -26,6 +26,6 @@
 #define CFENGINE_VERIFY_INTERFACES_H
 
 #include <cf3.defs.h>
-
+int ExecCommand(char *cmd, PromiseResult *result, const Promise *pp);
 PromiseResult VerifyInterfacePromise(EvalContext *ctx, const Promise *pp);
 #endif

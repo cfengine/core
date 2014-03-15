@@ -1,0 +1,36 @@
+#
+# Unresolved variables end up in reports and files prommises
+#
+
+body common control
+{
+      bundlesequence => { run };
+}
+
+bundle agent run
+{
+  classes:
+      "dim_found" expression => regcmp("^[1-9][0-9]*$", $(dim));
+
+  vars:
+      "data" string => "PURPLE_DINOSAUR: Ubuntu";
+      "dim" int => parsestringarray(
+                                     "lsb",
+                                     $(data),
+                                     "\s*#[^\n]*",
+                                     "\s*:\s+",
+                                     "15",
+                                     "4095"
+      );
+
+    dim_found::
+      "PURPLE_DINOSAUR" string => canonify("$(lsb[PURPLE_DINOSAUR][1])");
+
+  files:
+      "$(PURPLE_DINOSAUR)" create => "true";
+      "$(sys.workdir)/state/anotherfile" create => $(PURPLE_DINOSAUR);
+
+  reports:
+    dim_found::
+      "$(this.bundle): value = $(PURPLE_DINOSAUR)";
+}

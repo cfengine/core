@@ -37,7 +37,7 @@ static const ConstraintSyntax linkstate_constraints[] =
     ConstraintSyntaxNewInt("mtu", CF_INTRANGE, "MTU setting", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewInt("speed", CF_INTRANGE, "Link speed in MB/s", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewInt("minimum_bond_aggregation", CF_INTRANGE, "Smallest number of links up to allow bonding", SYNTAX_STATUS_NORMAL),
-
+    ConstraintSyntaxNewOption("ospf_link_type", "broadcast,non-broadcast,point-to-multipoint,point-to-point", "Network type across this interface", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };
 
@@ -59,7 +59,7 @@ static const ConstraintSyntax interface_constraints[] =
 {
     ConstraintSyntaxNewBool("delete", "Delete an interface or bridge altogether", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewStringList("bridge_interfaces", "", "List of interfaces to bridge with IP forwarding", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewStringList("aggregate", "", "List of interfaces to bond with LACP", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewStringList("bond_interfaces", "", "List of interfaces to bond with LACP", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewStringList("tagged_vlans", "", "List of labelled (trunk) vlan identifers for this interface", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("untagged_vlan", CF_IDRANGE, "Unlabelled (access) vlan", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewStringList("ipv4_addresses", CF_IPRANGE, "A static IPV4 address", SYNTAX_STATUS_NORMAL),
@@ -79,8 +79,12 @@ static const ConstraintSyntax relay_constraints[] =
     ConstraintSyntaxNewInt("rip_timeout", CF_INTRANGE, "RIP timeout on updates", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBool("rip_split_horizon", "RIP Horizon control", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBool("rip_passive", "Passive mode", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewBool("ospf_stub", "Stub area", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewInt("ospf_area", CF_INTRANGE, "OSPF Link database area number", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewBool("ospf_passive", "Passive mode", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewInt("ospf_hello_interval", CF_INTRANGE, "OSPF Link database area number", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewString("ospf_auth_key", CF_ANYSTRING, "Athentication password", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewString("ospf_auth_digest", CF_ANYSTRING, "Athentication digest", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewInt("ospf_priority", CF_INTRANGE, "OSPF Link database area number", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };
 

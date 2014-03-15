@@ -53,7 +53,6 @@ static int GetBridgeInfo(Bridges **list, const Promise *pp);
 static int NewTaggedVLAN(int vlan_id, char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp);
 static int DeleteTaggedVLAN(int vlan_id, char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp);
 static void DeleteBridgeInfo(Bridges *bridges);
-int ExecCommand(char *cmd, PromiseResult *result, const Promise *pp);
 static void AssessIPv4Config(char *promiser, PromiseResult *result, EvalContext *ctx, Rlist *addresses, const Attributes *a, const Promise *pp);
 static void AssessIPv6Config(char *promiser, PromiseResult *result, EvalContext *ctx, Rlist *addresses, const Attributes *a, const Promise *pp);
 static void AssessBridge(char *promiser, PromiseResult *result, EvalContext *ctx, LinkState *ifs, const Attributes *a, const Promise *pp);
@@ -148,9 +147,9 @@ static int InterfaceSanityCheck(EvalContext *ctx, Attributes a,  const Promise *
         return false;
     }
 
-    if (a.haveaggr && a.havebridge)
+    if (a.havebond && a.havebridge)
     {
-        Log(LOG_LEVEL_ERR, "Bonded/aggregate interface is not a bridge in 'interfaces' promise '%s'", pp->promiser);
+        Log(LOG_LEVEL_ERR, "Can't be both a bond and a bridge in 'interfaces' promise '%s'", pp->promiser);
         PromiseRef(LOG_LEVEL_ERR, pp);
         return false;
     }
@@ -162,9 +161,9 @@ static int InterfaceSanityCheck(EvalContext *ctx, Attributes a,  const Promise *
         return false;
     }
 
-    if (a.havetvlan + a.haveuvlan + a.havebridge + a.haveaggr > 1)
+    if (a.havetvlan + a.haveuvlan + a.havebridge + a.havebond > 1)
     {
-        Log(LOG_LEVEL_ERR, "'interfaces' promise for '%s' cannot contain vlan, bridge, aggregate at same time", pp->promiser);
+        Log(LOG_LEVEL_ERR, "'interfaces' promise for '%s' cannot contain vlan, bridge, aggregate/bond at same time", pp->promiser);
         PromiseRef(LOG_LEVEL_ERR, pp);
         return false;
     }
@@ -247,7 +246,7 @@ static void AssessDebianInterfacePromise(char *promiser, PromiseResult *result, 
         AssessBridge(promiser, result, ctx, netinterfaces, a, pp);
     }
 
-    if (a->haveaggr)
+    if (a->havebond)
     {
         AssessLACPBond(promiser, result, ctx, netinterfaces, a, pp);
     }
@@ -608,9 +607,10 @@ static bool CheckImplicitInterfacePromise(char *promiser, LinkState *ifs)
 /****************************************************************************/
 
 static void AssessLACPBond(char *promiser, PromiseResult *result, EvalContext *ctx, LinkState *ifs, const Attributes *a, const Promise *pp)
-{
 
-    printf("BONDING not yet impelemented\n");
+{
+    if (a->interface.bond_interfaces)
+        printf("BONDING not yet impelemented\n");
 
 /*
 
@@ -855,6 +855,7 @@ static int GetInterfaceInformation(LinkState **list, const Promise *pp)
     char if_name[CF_SMALLBUF];
     char endline[CF_BUFSIZE];
     char comm[CF_BUFSIZE];
+    char *sp;
     int mtu = CF_NOINT;
     LinkState *entry = NULL;
 
@@ -892,7 +893,7 @@ static int GetInterfaceInformation(LinkState **list, const Promise *pp)
 
             sscanf(line, "%*[^>]> mtu %d %[^\n]", &mtu, endline);
 
-            if (strstr(endline, "UP>")) // The intended link state is in <..>, the actual is after "state"
+            if (strstr(endline, "state UP")) // The intended link state is in <..>, the actual is after "state"
             {
                 entry->up = true;
             }
@@ -902,6 +903,26 @@ static int GetInterfaceInformation(LinkState **list, const Promise *pp)
             }
 
             entry->mtu = mtu;
+
+            if (strstr(line, "SLAVE"))
+            {
+                if ((sp = strstr(endline, "master"))) // The interface seems to be subordinate to an aggregate
+                {
+                    char parent_interface[CF_SMALLBUF];
+
+                    parent_interface[0] = '\0';
+                    sscanf(sp, "master %s", parent_interface);
+
+                    if (parent_interface[0] != '\0')
+                    {
+                        entry->parent = strdup(parent_interface);
+                    }
+                }
+            }
+            else if (strstr(line, "MASTER"))
+            {
+                entry->is_parent = true;
+            }
         }
         else
         {

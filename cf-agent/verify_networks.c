@@ -23,6 +23,7 @@
 */
 
 #include <verify_networks.h>
+#include <verify_interfaces.h>
 #include <attributes.h>
 #include <eval_context.h>
 #include <ornaments.h>
@@ -41,12 +42,8 @@ static int NetworkSanityCheck(Attributes a,  const Promise *pp);
 static void AssessNetworkingPromise(char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp);
 static int GetRouteInfo(FIBState **list, const Promise *pp);
 static void AssessStaticRoute(char *promiser, PromiseResult *result, EvalContext *ctx, FIBState *fib, const Attributes *a, const Promise *pp);
-
-
 static void AssessAdvertiseRoute(char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp);
 static void AssessLoadBalance(char *promiser, PromiseResult *result, EvalContext *ctx, const Attributes *a, const Promise *pp);
-int ExecCommand(char *cmd, PromiseResult *result, const Promise *pp);
-
 
 /****************************************************************************/
 

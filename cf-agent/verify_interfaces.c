@@ -1201,7 +1201,6 @@ static void GetInterfaceOptions(Promise *pp, int *full, int *speed, int *autoneg
                 *full = true;
             }
         }
-
     }
 
     free(line);

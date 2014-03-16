@@ -948,7 +948,6 @@ struct LinkState_
     bool up;
     bool is_parent;
     int mtu;
-    int speed;
     LinkState *next;
 };
 
@@ -1407,6 +1406,7 @@ typedef struct
     char *spanning;
     char *manager;
     bool bonding;
+    bool autoneg;
     int min_bonding;
     // Proxy body
 } Interfaces;
